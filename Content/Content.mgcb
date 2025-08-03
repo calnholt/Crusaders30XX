@@ -13,3 +13,12 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin NewRocker.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:NewRocker.spritefont
+
+#end NewRocker.spritefont
+

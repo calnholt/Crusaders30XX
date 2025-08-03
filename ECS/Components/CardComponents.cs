@@ -18,6 +18,11 @@ namespace Crusaders30XX.ECS.Components
         public CardRarity Rarity { get; set; } = CardRarity.Common;
         public string ImagePath { get; set; } = "";
         
+        // New properties for the card system
+        public CardColor Color { get; set; } = CardColor.White;
+        public CostType CardCostType { get; set; } = CostType.NoCost;
+        public int BlockValue { get; set; } = 0;
+        
         public enum CardType
         {
             Attack,
@@ -33,6 +38,21 @@ namespace Crusaders30XX.ECS.Components
             Uncommon,
             Rare,
             Legendary
+        }
+        
+        public enum CardColor
+        {
+            White,
+            Red,
+            Black
+        }
+        
+        public enum CostType
+        {
+            NoCost,
+            Red,
+            White,
+            Black
         }
     }
     
@@ -64,6 +84,20 @@ namespace Crusaders30XX.ECS.Components
         
         public int MaxHandSize { get; set; } = 10;
         public int DrawPerTurn { get; set; } = 5;
+    }
+    
+    /// <summary>
+    /// Component for managing the player's hand display
+    /// </summary>
+    public class HandDisplay : IComponent
+    {
+        public Entity Owner { get; set; }
+        
+        public Vector2 Position { get; set; } = Vector2.Zero;
+        public float CardSpacing { get; set; } = 120f;
+        public float CardWidth { get; set; } = 100f;
+        public float CardHeight { get; set; } = 150f;
+        public bool IsVisible { get; set; } = true;
     }
     
     /// <summary>

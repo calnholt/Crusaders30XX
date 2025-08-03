@@ -1,3 +1,4 @@
+C:\Users\Calvin\Documents\Crusaders30XX\bin\Debug\net8.0\Content\NewRocker.xnb
 C:\Users\Calvin\Documents\Crusaders30XX\bin\Debug\net8.0\Crusaders30XX.exe
 C:\Users\Calvin\Documents\Crusaders30XX\bin\Debug\net8.0\Crusaders30XX.deps.json
 C:\Users\Calvin\Documents\Crusaders30XX\bin\Debug\net8.0\Crusaders30XX.runtimeconfig.json
@@ -23,6 +24,7 @@ C:\Users\Calvin\Documents\Crusaders30XX\obj\Debug\net8.0\Crusaders30XX.Generated
 C:\Users\Calvin\Documents\Crusaders30XX\obj\Debug\net8.0\Crusaders30XX.AssemblyInfoInputs.cache
 C:\Users\Calvin\Documents\Crusaders30XX\obj\Debug\net8.0\Crusaders30XX.AssemblyInfo.cs
 C:\Users\Calvin\Documents\Crusaders30XX\obj\Debug\net8.0\Crusaders30XX.csproj.CoreCompileInputs.cache
+C:\Users\Calvin\Documents\Crusaders30XX\obj\Debug\net8.0\Crusaders30XX.sourcelink.json
 C:\Users\Calvin\Documents\Crusaders30XX\obj\Debug\net8.0\Crusaders30XX.csproj.CopyComplete
 C:\Users\Calvin\Documents\Crusaders30XX\obj\Debug\net8.0\Crusaders30XX.dll
 C:\Users\Calvin\Documents\Crusaders30XX\obj\Debug\net8.0\refint\Crusaders30XX.dll

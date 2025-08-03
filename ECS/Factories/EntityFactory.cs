@@ -1,6 +1,7 @@
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -225,6 +226,88 @@ namespace Crusaders30XX.ECS.Factories
         {
             return CreateCard(world, name, description, cost, 
                 CardData.CardType.Power, CardData.CardRarity.Uncommon);
+        }
+
+        /// <summary>
+        /// Creates a hand of demo cards based on provided card definitions
+        /// </summary>
+        public static List<Entity> CreateDemoHand(World world)
+        {
+            var hand = new List<Entity>();
+
+            // Red Cards
+            hand.Add(CreateCard(world, "Strike", "6 damage, if Courage ≥ 5: +3 damage", 0, CardData.CardType.Attack, CardData.CardRarity.Common, "", CardData.CardColor.Red, new List<CardData.CardColor>(), 3));
+            hand.Add(CreateCard(world, "Crush", "10 damage, if Courage ≥ 5: Stun", 0, CardData.CardType.Attack, CardData.CardRarity.Common, "", CardData.CardColor.Red, new List<CardData.CardColor>(), 3));
+            hand.Add(CreateCard(world, "Devastate", "If Courage ≥ 10: Lose 10 Courage, deal 30 damage", 0, CardData.CardType.Attack, CardData.CardRarity.Rare, "", CardData.CardColor.Red, new List<CardData.CardColor> { CardData.CardColor.Red }, 3));
+
+            // White Cards
+            hand.Add(CreateCard(world, "Empower", "Gain +2 Power", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, new List<CardData.CardColor>(), 3));
+            hand.Add(CreateCard(world, "Sharpen Blade", "Weapon gains +4 damage this turn and loses Once Per Turn", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, new List<CardData.CardColor>(), 3));
+            hand.Add(CreateCard(world, "Enrage", "Gain 3 Courage", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, new List<CardData.CardColor>(), 3));
+            hand.Add(CreateCard(world, "Siphon", "8 damage, heal amount dealt", 0, CardData.CardType.Attack, CardData.CardRarity.Uncommon, "", CardData.CardColor.White, new List<CardData.CardColor> { CardData.CardColor.Red }, 3));
+            hand.Add(CreateCard(world, "Charge", "Next attack gains +5 damage", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, new List<CardData.CardColor>(), 3));
+
+            // Black Cards (block value 6)
+            hand.Add(CreateCard(world, "Anticipate", "Gain 15 Block", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.Black, new List<CardData.CardColor> { CardData.CardColor.Black }, 6));
+            hand.Add(CreateCard(world, "Mark", "Enemy gains Mark. If Courage ≥ 5: Gain 1 Temperance", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.Black, new List<CardData.CardColor>(), 6));
+            hand.Add(CreateCard(world, "Finisher", "12 damage. If Courage ≥ 5 and this kills an enemy: Gain 1 Temperance", 0, CardData.CardType.Attack, CardData.CardRarity.Rare, "", CardData.CardColor.Black, new List<CardData.CardColor> { CardData.CardColor.Red }, 6));
+            hand.Add(CreateCard(world, "Impervious", "Until next turn: immune to enemy attack abilities", 0, CardData.CardType.Skill, CardData.CardRarity.Rare, "", CardData.CardColor.Black, new List<CardData.CardColor> { CardData.CardColor.White }, 6));
+            hand.Add(CreateCard(world, "Rapid Reflexes", "Next turn: blocks return to your hand after the monster turn", 0, CardData.CardType.Skill, CardData.CardRarity.Uncommon, "", CardData.CardColor.Black, new List<CardData.CardColor>(), 6));
+
+            return hand;
+        }
+
+        // Overload for CreateCard to support color, cost type, and block value
+        public static Entity CreateCard(World world, string name, string description, int cost,
+            CardData.CardType type, CardData.CardRarity rarity, string imagePath,
+            CardData.CardColor color, List<CardData.CardColor> costColors, int blockValue)
+        {
+            var entity = world.CreateEntity($"Card_{name}");
+
+            var cardData = new CardData
+            {
+                Name = name,
+                Description = description,
+                Cost = cost,
+                Type = type,
+                Rarity = rarity,
+                ImagePath = imagePath,
+                Color = color,
+                CardCostType = costColors.Count > 0 ? (CardData.CostType)costColors[0] : CardData.CostType.NoCost,
+                BlockValue = blockValue
+            };
+
+            var cardInPlay = new CardInPlay
+            {
+                EnergyCost = cost,
+                IsPlayable = true
+            };
+
+            var transform = new Transform
+            {
+                Position = Vector2.Zero,
+                Scale = Vector2.One
+            };
+
+            var sprite = new Sprite
+            {
+                TexturePath = imagePath,
+                IsVisible = true
+            };
+
+            var uiElement = new UIElement
+            {
+                Bounds = new Rectangle(0, 0, 100, 150), // Default card size
+                IsInteractable = true
+            };
+
+            world.AddComponent(entity, cardData);
+            world.AddComponent(entity, cardInPlay);
+            world.AddComponent(entity, transform);
+            world.AddComponent(entity, sprite);
+            world.AddComponent(entity, uiElement);
+
+            return entity;
         }
     }
 } 
