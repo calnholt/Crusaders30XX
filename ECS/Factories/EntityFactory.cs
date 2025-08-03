@@ -233,28 +233,26 @@ namespace Crusaders30XX.ECS.Factories
         /// </summary>
         public static List<Entity> CreateDemoHand(World world)
         {
-            var hand = new List<Entity>();
+            return [
+                // Red Cards
+                CreateCard(world, "Strike", "6 damage, if Courage ≥ 5: +3 damage", 0, CardData.CardType.Attack, CardData.CardRarity.Common, "", CardData.CardColor.Red, [], 3),
+                CreateCard(world, "Crush", "10 damage, if Courage ≥ 5: Stun", 0, CardData.CardType.Attack, CardData.CardRarity.Common, "", CardData.CardColor.Red, [], 3),
+                CreateCard(world, "Devastate", "If Courage ≥ 10: Lose 10 Courage, deal 30 damage", 0, CardData.CardType.Attack, CardData.CardRarity.Rare, "", CardData.CardColor.Red, [CardData.CardColor.Red], 3),
 
-            // Red Cards
-            hand.Add(CreateCard(world, "Strike", "6 damage, if Courage ≥ 5: +3 damage", 0, CardData.CardType.Attack, CardData.CardRarity.Common, "", CardData.CardColor.Red, new List<CardData.CardColor>(), 3));
-            hand.Add(CreateCard(world, "Crush", "10 damage, if Courage ≥ 5: Stun", 0, CardData.CardType.Attack, CardData.CardRarity.Common, "", CardData.CardColor.Red, new List<CardData.CardColor>(), 3));
-            hand.Add(CreateCard(world, "Devastate", "If Courage ≥ 10: Lose 10 Courage, deal 30 damage", 0, CardData.CardType.Attack, CardData.CardRarity.Rare, "", CardData.CardColor.Red, new List<CardData.CardColor> { CardData.CardColor.Red }, 3));
+                // White Cards
+                CreateCard(world, "Empower", "Gain +2 Power", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, [], 3),
+                CreateCard(world, "Sharpen Blade", "Weapon gains +4 damage this turn and loses Once Per Turn", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, [], 3),
+                CreateCard(world, "Enrage", "Gain 3 Courage", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, [], 3),
+                CreateCard(world, "Siphon", "8 damage, heal amount dealt", 0, CardData.CardType.Attack, CardData.CardRarity.Uncommon, "", CardData.CardColor.White, [CardData.CardColor.Red], 3),
+                CreateCard(world, "Charge", "Next attack gains +5 damage", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, [], 3),
 
-            // White Cards
-            hand.Add(CreateCard(world, "Empower", "Gain +2 Power", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, new List<CardData.CardColor>(), 3));
-            hand.Add(CreateCard(world, "Sharpen Blade", "Weapon gains +4 damage this turn and loses Once Per Turn", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, new List<CardData.CardColor>(), 3));
-            hand.Add(CreateCard(world, "Enrage", "Gain 3 Courage", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, new List<CardData.CardColor>(), 3));
-            hand.Add(CreateCard(world, "Siphon", "8 damage, heal amount dealt", 0, CardData.CardType.Attack, CardData.CardRarity.Uncommon, "", CardData.CardColor.White, new List<CardData.CardColor> { CardData.CardColor.Red }, 3));
-            hand.Add(CreateCard(world, "Charge", "Next attack gains +5 damage", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, new List<CardData.CardColor>(), 3));
-
-            // Black Cards (block value 6)
-            hand.Add(CreateCard(world, "Anticipate", "Gain 15 Block", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.Black, new List<CardData.CardColor> { CardData.CardColor.Black }, 6));
-            hand.Add(CreateCard(world, "Mark", "Enemy gains Mark. If Courage ≥ 5: Gain 1 Temperance", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.Black, new List<CardData.CardColor>(), 6));
-            hand.Add(CreateCard(world, "Finisher", "12 damage. If Courage ≥ 5 and this kills an enemy: Gain 1 Temperance", 0, CardData.CardType.Attack, CardData.CardRarity.Rare, "", CardData.CardColor.Black, new List<CardData.CardColor> { CardData.CardColor.Red }, 6));
-            hand.Add(CreateCard(world, "Impervious", "Until next turn: immune to enemy attack abilities", 0, CardData.CardType.Skill, CardData.CardRarity.Rare, "", CardData.CardColor.Black, new List<CardData.CardColor> { CardData.CardColor.White }, 6));
-            hand.Add(CreateCard(world, "Rapid Reflexes", "Next turn: blocks return to your hand after the monster turn", 0, CardData.CardType.Skill, CardData.CardRarity.Uncommon, "", CardData.CardColor.Black, new List<CardData.CardColor>(), 6));
-
-            return hand;
+                // Black Cards (block value 6)
+                CreateCard(world, "Anticipate", "Gain 15 Block", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.Black, [CardData.CardColor.Black], 6),
+                CreateCard(world, "Mark", "Enemy gains Mark. If Courage ≥ 5: Gain 1 Temperance", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.Black, [], 6),
+                CreateCard(world, "Finisher", "12 damage. If Courage ≥ 5 and this kills an enemy: Gain 1 Temperance", 0, CardData.CardType.Attack, CardData.CardRarity.Rare, "", CardData.CardColor.Black, [CardData.CardColor.Red], 6),
+                CreateCard(world, "Impervious", "Until next turn: immune to enemy attack abilities", 0, CardData.CardType.Skill, CardData.CardRarity.Rare, "", CardData.CardColor.Black, [CardData.CardColor.White], 6),
+                CreateCard(world, "Rapid Reflexes", "Next turn: blocks return to your hand after the monster turn", 0, CardData.CardType.Skill, CardData.CardRarity.Uncommon, "", CardData.CardColor.Black, [], 6)
+            ];
         }
 
         // Overload for CreateCard to support color, cost type, and block value
