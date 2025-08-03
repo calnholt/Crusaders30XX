@@ -17,13 +17,15 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly Dictionary<string, Texture2D> _textureCache = new();
         private SpriteFont _font;
+        private readonly DeckManagementSystem _deckSystem;
         
-        public HandDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font) 
+        public HandDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font, DeckManagementSystem deckSystem) 
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             _font = font;
+            _deckSystem = deckSystem;
         }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -44,26 +46,54 @@ namespace Crusaders30XX.ECS.Systems
             
             if (transform == null || cardData == null) return;
             
-            // Get all cards in hand
-            var cardsInHand = GetRelevantEntities().ToList();
-            var cardIndex = cardsInHand.IndexOf(entity);
+            // Find the deck entity and check if this card is in the hand
+            var deckEntities = EntityManager.GetEntitiesWithComponent<Deck>();
+            var deckEntity = deckEntities.FirstOrDefault();
             
-            if (cardIndex >= 0)
+            if (deckEntity != null)
             {
-                // Position cards at the bottom of the screen
-                float screenWidth = _graphicsDevice.Viewport.Width;
-                float cardWidth = 100f;
-                float cardSpacing = 120f;
-                float startX = (screenWidth - (cardsInHand.Count * cardSpacing)) / 2f;
-                float y = _graphicsDevice.Viewport.Height - 200f; // 200 pixels from bottom
-                
-                transform.Position = new Vector2(startX + (cardIndex * cardSpacing), y);
-                
-                // Update UI bounds for interaction
-                var uiElement = entity.GetComponent<UIElement>();
-                if (uiElement != null)
+                var deck = deckEntity.GetComponent<Deck>();
+                if (deck != null && deck.Hand.Contains(entity))
                 {
-                    uiElement.Bounds = new Rectangle((int)transform.Position.X - 50, (int)transform.Position.Y - 75, 100, 150);
+                    // Get the index of this card in the hand
+                    var cardIndex = deck.Hand.IndexOf(entity);
+                    
+                    if (cardIndex >= 0)
+                    {
+                        // Position cards at the bottom of the screen
+                        float screenWidth = _graphicsDevice.Viewport.Width;
+                        float cardSpacing = 120f;
+                        float startX = (screenWidth - (deck.Hand.Count * cardSpacing)) / 2f;
+                        float y = _graphicsDevice.Viewport.Height - 200f; // 200 pixels from bottom
+                        
+                        transform.Position = new Vector2(startX + (cardIndex * cardSpacing), y);
+                        
+                        // Update UI bounds for interaction
+                        var uiElement = entity.GetComponent<UIElement>();
+                        if (uiElement != null)
+                        {
+                            uiElement.Bounds = new Rectangle((int)transform.Position.X - 50, (int)transform.Position.Y - 75, 100, 150);
+                        }
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Triggers deck shuffling and drawing of cards
+        /// </summary>
+        public void TriggerDeckShuffleAndDraw(int drawCount = 4)
+        {
+            // Find the deck entity
+            var deckEntities = EntityManager.GetEntitiesWithComponent<Deck>();
+            var deckEntity = deckEntities.FirstOrDefault();
+            
+            if (deckEntity != null)
+            {
+                var deck = deckEntity.GetComponent<Deck>();
+                if (deck != null && _deckSystem != null)
+                {
+                    _deckSystem.ShuffleAndDraw(deck, drawCount);
                 }
             }
         }
@@ -73,15 +103,27 @@ namespace Crusaders30XX.ECS.Systems
         /// </summary>
         public void DrawHand()
         {
-            var cardsInHand = GetRelevantEntities().OrderBy(e => 
-            {
-                var transform = e.GetComponent<Transform>();
-                return transform?.Position.X ?? 0f;
-            });
+            // Find the deck entity and get cards that are actually in the hand
+            var deckEntities = EntityManager.GetEntitiesWithComponent<Deck>();
+            var deckEntity = deckEntities.FirstOrDefault();
             
-            foreach (var entity in cardsInHand)
+            if (deckEntity != null)
             {
-                DrawCard(entity);
+                var deck = deckEntity.GetComponent<Deck>();
+                if (deck != null)
+                {
+                    // Only draw cards that are actually in the hand
+                    var cardsInHand = deck.Hand.OrderBy(e => 
+                    {
+                        var transform = e.GetComponent<Transform>();
+                        return transform?.Position.X ?? 0f;
+                    });
+                    
+                    foreach (var entity in cardsInHand)
+                    {
+                        DrawCard(entity);
+                    }
+                }
             }
         }
         

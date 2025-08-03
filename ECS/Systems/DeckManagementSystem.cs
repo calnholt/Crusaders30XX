@@ -111,5 +111,45 @@ namespace Crusaders30XX.ECS.Systems
                 deck.DiscardPile.Add(card);
             }
         }
+        
+        /// <summary>
+        /// Draws multiple cards from the deck to the hand
+        /// </summary>
+        public int DrawCards(Deck deck, int count)
+        {
+            int drawnCount = 0;
+            
+            for (int i = 0; i < count; i++)
+            {
+                if (DrawCard(deck))
+                {
+                    drawnCount++;
+                }
+                else
+                {
+                    break; // No more cards to draw
+                }
+            }
+            
+            return drawnCount;
+        }
+        
+        /// <summary>
+        /// Shuffles the deck and draws the specified number of cards
+        /// </summary>
+        public int ShuffleAndDraw(Deck deck, int drawCount)
+        {
+            // First, move all cards from hand and discard pile back to draw pile
+            deck.DrawPile.AddRange(deck.Hand);
+            deck.DrawPile.AddRange(deck.DiscardPile);
+            deck.Hand.Clear();
+            deck.DiscardPile.Clear();
+            
+            // Shuffle the draw pile
+            ShuffleDrawPile(deck);
+            
+            // Draw the specified number of cards
+            return DrawCards(deck, drawCount);
+        }
     }
 } 

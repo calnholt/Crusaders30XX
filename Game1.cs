@@ -63,11 +63,14 @@ public class Game1 : Game
 
         // Create systems that need SpriteBatch
         _renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, GraphicsDevice);
-        _handDisplaySystem = new HandDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _handDisplaySystem = new HandDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _deckManagementSystem);
         
         // Add systems to world
         _world.AddSystem(_renderingSystem);
         _world.AddSystem(_handDisplaySystem);
+
+        // Trigger initial deck shuffle and draw
+        _handDisplaySystem.TriggerDeckShuffleAndDraw(4);
 
         // TODO: use this.Content to load your game content here
     }
@@ -86,12 +89,12 @@ public class Game1 : Game
         // Create demo hand of cards
         var demoHand = EntityFactory.CreateDemoHand(_world);
         
-        // Add cards to deck
+        // Add cards to deck's draw pile (not hand)
         var deck = deckEntity.GetComponent<Crusaders30XX.ECS.Components.Deck>();
         if (deck != null)
         {
             deck.Cards.AddRange(demoHand);
-            deck.Hand.AddRange(demoHand);
+            deck.DrawPile.AddRange(demoHand); // Add to draw pile instead of hand
         }
         
         // Create some enemies
