@@ -19,6 +19,7 @@ public class Game1 : Game
     private InputSystem _inputSystem;
     private DeckManagementSystem _deckManagementSystem;
     private CombatSystem _combatSystem;
+    private CardDisplaySystem _cardDisplaySystem;
     private HandDisplaySystem _handDisplaySystem;
 
     public Game1()
@@ -28,8 +29,8 @@ public class Game1 : Game
         IsMouseVisible = true;
         
         // Set window size
-        _graphics.PreferredBackBufferWidth = 1280;
-        _graphics.PreferredBackBufferHeight = 720;
+        _graphics.PreferredBackBufferWidth = 1920;
+        _graphics.PreferredBackBufferHeight = 1080;
         _graphics.ApplyChanges();
     }
 
@@ -63,10 +64,12 @@ public class Game1 : Game
 
         // Create systems that need SpriteBatch
         _renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, GraphicsDevice);
-        _handDisplaySystem = new HandDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _deckManagementSystem);
+        _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _handDisplaySystem = new HandDisplaySystem(_world.EntityManager, GraphicsDevice);
         
         // Add systems to world
         _world.AddSystem(_renderingSystem);
+        _world.AddSystem(_cardDisplaySystem);
         _world.AddSystem(_handDisplaySystem);
 
         // Trigger initial deck shuffle and draw

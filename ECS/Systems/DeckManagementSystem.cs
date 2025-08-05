@@ -1,6 +1,7 @@
 using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,11 @@ namespace Crusaders30XX.ECS.Systems
     /// </summary>
     public class DeckManagementSystem : Core.System
     {
-        public DeckManagementSystem(EntityManager entityManager) : base(entityManager) { }
+        public DeckManagementSystem(EntityManager entityManager) : base(entityManager) 
+        {
+            // Subscribe to deck management events
+            EventManager.Subscribe<DeckShuffleDrawEvent>(OnDeckShuffleDrawEvent);
+        }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
         {
@@ -132,6 +137,25 @@ namespace Crusaders30XX.ECS.Systems
             }
             
             return drawnCount;
+        }
+        
+        /// <summary>
+        /// Event handler for deck shuffle and draw events
+        /// </summary>
+        private void OnDeckShuffleDrawEvent(DeckShuffleDrawEvent evt)
+        {
+            var deck = evt.Deck.GetComponent<Deck>();
+            if (deck != null)
+            {
+                var drawnCards = ShuffleAndDraw(deck, evt.DrawCount);
+                
+                // Publish event for cards drawn
+                EventManager.Publish(new CardsDrawnEvent
+                {
+                    Deck = evt.Deck,
+                    DrawnCards = deck.Hand.ToList()
+                });
+            }
         }
         
         /// <summary>

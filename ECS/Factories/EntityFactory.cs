@@ -235,9 +235,9 @@ namespace Crusaders30XX.ECS.Factories
         {
             return [
                 // Red Cards
-                CreateCard(world, "Strike", "6 damage, if Courage ≥ 5: +3 damage", 0, CardData.CardType.Attack, CardData.CardRarity.Common, "", CardData.CardColor.Red, [], 3),
-                CreateCard(world, "Crush", "10 damage, if Courage ≥ 5: Stun", 0, CardData.CardType.Attack, CardData.CardRarity.Common, "", CardData.CardColor.Red, [], 3),
-                CreateCard(world, "Devastate", "If Courage ≥ 10: Lose 10 Courage, deal 30 damage", 0, CardData.CardType.Attack, CardData.CardRarity.Rare, "", CardData.CardColor.Red, [CardData.CardColor.Red], 3),
+                CreateCard(world, "Strike", "6 damage, if Courage >= 5: +3 damage", 0, CardData.CardType.Attack, CardData.CardRarity.Common, "", CardData.CardColor.Red, [], 3),
+                CreateCard(world, "Crush", "10 damage, if Courage >= 5: Stun", 0, CardData.CardType.Attack, CardData.CardRarity.Common, "", CardData.CardColor.Red, [], 3),
+                CreateCard(world, "Devastate", "If Courage >= 10: Lose 10 Courage, deal 30 damage", 0, CardData.CardType.Attack, CardData.CardRarity.Rare, "", CardData.CardColor.Red, [CardData.CardColor.Red], 3),
 
                 // White Cards
                 CreateCard(world, "Empower", "Gain +2 Power", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, [], 3),
@@ -248,8 +248,8 @@ namespace Crusaders30XX.ECS.Factories
 
                 // Black Cards (block value 6)
                 CreateCard(world, "Anticipate", "Gain 15 Block", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.Black, [CardData.CardColor.Black], 6),
-                CreateCard(world, "Mark", "Enemy gains Mark. If Courage ≥ 5: Gain 1 Temperance", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.Black, [], 6),
-                CreateCard(world, "Finisher", "12 damage. If Courage ≥ 5 and this kills an enemy: Gain 1 Temperance", 0, CardData.CardType.Attack, CardData.CardRarity.Rare, "", CardData.CardColor.Black, [CardData.CardColor.Red], 6),
+                CreateCard(world, "Mark", "Enemy gains Mark. If Courage >= 5: Gain 1 Temperance", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.Black, [], 6),
+                CreateCard(world, "Finisher", "12 damage. If Courage >= 5 and this kills an enemy: Gain 1 Temperance", 0, CardData.CardType.Attack, CardData.CardRarity.Rare, "", CardData.CardColor.Black, [CardData.CardColor.Red], 6),
                 CreateCard(world, "Impervious", "Until next turn: immune to enemy attack abilities", 0, CardData.CardType.Skill, CardData.CardRarity.Rare, "", CardData.CardColor.Black, [CardData.CardColor.White], 6),
                 CreateCard(world, "Rapid Reflexes", "Next turn: blocks return to your hand after the monster turn", 0, CardData.CardType.Skill, CardData.CardRarity.Uncommon, "", CardData.CardColor.Black, [], 6)
             ];

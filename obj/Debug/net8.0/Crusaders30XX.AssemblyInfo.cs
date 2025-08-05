@@ -11,9 +11,9 @@ using System;
 using System.Reflection;
 
 [assembly: System.Reflection.AssemblyCompanyAttribute("Crusaders30XX")]
-[assembly: System.Reflection.AssemblyConfigurationAttribute("Debug\\")]
+[assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fe23a24d552c69293bb95c289e743548acc0ff2c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+16a8f4545e8aff7b517e7c5b8548309e0d567dbf")]
 [assembly: System.Reflection.AssemblyProductAttribute("Crusaders30XX")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Crusaders30XX")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
