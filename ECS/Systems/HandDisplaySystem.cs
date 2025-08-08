@@ -98,22 +98,10 @@ namespace Crusaders30XX.ECS.Systems
                         // Z-order (ensures proper overlapping)
                         transform.ZOrder = CardConfig.HAND_Z_BASE + (cardIndex * CardConfig.HAND_Z_STEP) + (hovered ? CardConfig.HAND_Z_HOVER_BOOST : 0);
 
-                        // Update AABB bounds (axis-aligned) that contain potential rotated card
-                        int w = CardConfig.CARD_WIDTH;
-                        int h = CardConfig.CARD_HEIGHT;
-                        float absCos = Math.Abs(cos);
-                        float absSin = Math.Abs((float)Math.Sin(angleRad));
-                        int aabbW = (int)(w * absCos + h * absSin);
-                        int aabbH = (int)(h * absCos + w * absSin);
-
+                        // Update UI bounds to match actual visual card rect (axis-aligned)
                         if (ui != null)
                         {
-                            ui.Bounds = new Rectangle(
-                                (int)transform.Position.X - aabbW / 2,
-                                (int)transform.Position.Y - aabbH / 2,
-                                aabbW,
-                                aabbH
-                            );
+                            ui.Bounds = CardConfig.GetCardBounds(transform.Position);
                         }
                     }
                 }
