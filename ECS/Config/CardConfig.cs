@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Config
@@ -27,6 +28,22 @@ namespace Crusaders30XX.ECS.Config
         public const int CARD_GAP = 50; // editable gap between cards' edges
         public const float CARD_SPACING = (float)(CARD_WIDTH + CARD_GAP);
         public const float HAND_BOTTOM_MARGIN = 200f; // pixels from bottom of screen
+
+        // Hand fan (splay) settings
+        public const float HAND_FAN_MAX_ANGLE_DEG = 15f;   // max tilt angle at edges
+        public const float HAND_FAN_RADIUS = 380f;         // controls vertical arc curvature
+        public const float HAND_FAN_CURVE_OFFSET = 0f;     // additional vertical offset
+        public const float HAND_HOVER_LIFT = 40f;          // pixels to lift hovered card
+        public const float HAND_HOVER_SCALE = 1.0f;        // reserved for future scale-up
+        public const int HAND_Z_BASE = 100;
+        public const int HAND_Z_STEP = 1;
+        public const int HAND_Z_HOVER_BOOST = 1000;
+
+        public static float DegToRad(float deg) => (float)(Math.PI / 180.0) * deg;
+
+        // Tweening (movement smoothing)
+        // Higher = snappier interpolation toward target per second
+        public const float HAND_TWEEN_SPEED = 12f;
         
         // Card border thickness for visual
         public const int CARD_BORDER_THICKNESS = 2;

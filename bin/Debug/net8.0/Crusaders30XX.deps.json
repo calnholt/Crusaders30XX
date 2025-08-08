@@ -9,6 +9,7 @@
       "Crusaders30XX/1.0.0": {
         "dependencies": {
           "MonoGame.Content.Builder.Task": "3.8.4",
+          "MonoGame.Extended": "4.0.4",
           "MonoGame.Framework.DesktopGL": "3.8.4"
         },
         "runtime": {
@@ -16,6 +17,14 @@
         }
       },
       "MonoGame.Content.Builder.Task/3.8.4": {},
+      "MonoGame.Extended/4.0.4": {
+        "runtime": {
+          "lib/net8.0/MonoGame.Extended.dll": {
+            "assemblyVersion": "4.0.4.0",
+            "fileVersion": "4.0.4.0"
+          }
+        }
+      },
       "MonoGame.Framework.DesktopGL/3.8.4": {
         "dependencies": {
           "MonoGame.Library.OpenAL": "1.23.1.10",
@@ -130,6 +139,13 @@
       "sha512": "sha512-Oc/tp6liQ34BkBCrdQO23JDf1Z8r11kKeL9oXSlEfUiRSQYs7C0TYaKIjhfYGjSRaV7JaFIisLDToWpnf7ztKg==",
       "path": "monogame.content.builder.task/3.8.4",
       "hashPath": "monogame.content.builder.task.3.8.4.nupkg.sha512"
+    },
+    "MonoGame.Extended/4.0.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-4CXSHzChnp72GXZo/RoK+iKL7nm1X1XI6uer/osbSjyT+YGhXwnta6+P5+ZnwNp+NyeZtYuN+q/9L98pJgYCHQ==",
+      "path": "monogame.extended/4.0.4",
+      "hashPath": "monogame.extended.4.0.4.nupkg.sha512"
     },
     "MonoGame.Framework.DesktopGL/3.8.4": {
       "type": "package",

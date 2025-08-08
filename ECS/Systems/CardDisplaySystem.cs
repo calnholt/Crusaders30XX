@@ -60,7 +60,6 @@ namespace Crusaders30XX.ECS.Systems
         public void DrawCard(Entity entity, Vector2 position)
         {
             var cardData = entity.GetComponent<CardData>();
-            var sprite = entity.GetComponent<Sprite>();
             
             if (cardData == null) return;
             
@@ -158,31 +157,6 @@ namespace Crusaders30XX.ECS.Systems
             _pixelTexture?.Dispose();
         }
         
-        private void DrawCardTextClamped(Vector2 cardPosition, Vector2 desiredAbsolutePosition, string text, Color color, float scale)
-        {
-            try
-            {
-                var cardRect = CardConfig.GetCardVisualRect(cardPosition);
-                var textSize = _font.MeasureString(text) * scale;
-
-                // Compute clamped X
-                float minX = cardRect.Left + CardConfig.TEXT_MARGIN_X;
-                float maxX = cardRect.Right - CardConfig.TEXT_MARGIN_X - textSize.X;
-                float clampedX = MathHelper.Clamp(desiredAbsolutePosition.X, minX, Math.Max(minX, maxX));
-
-                // Compute clamped Y
-                float minY = cardRect.Top + CardConfig.TEXT_MARGIN_Y;
-                float maxY = cardRect.Bottom - CardConfig.TEXT_MARGIN_Y - textSize.Y;
-                float clampedY = MathHelper.Clamp(desiredAbsolutePosition.Y, minY, Math.Max(minY, maxY));
-
-                _spriteBatch.DrawString(_font, text, new Vector2(clampedX, clampedY), color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Font rendering error: {ex.Message}");
-            }
-        }
-
         private void DrawCardTextWrapped(Vector2 cardPosition, Vector2 desiredAbsolutePosition, string text, Color color, float scale)
         {
             try

@@ -31,10 +31,10 @@ namespace Crusaders30XX.ECS.Systems
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
             // Update card positions based on hand layout
-            UpdateCardPosition(entity);
+            UpdateCardPosition(entity, gameTime);
         }
         
-        private void UpdateCardPosition(Entity entity)
+        private void UpdateCardPosition(Entity entity, GameTime gameTime)
         {
             var transform = entity.GetComponent<Transform>();
             var cardData = entity.GetComponent<CardData>();
@@ -55,18 +55,65 @@ namespace Crusaders30XX.ECS.Systems
                     
                     if (cardIndex >= 0)
                     {
-                        // Position cards at the bottom of the screen using constants
+                        // Compute fan layout positions around bottom-center pivot
+                        int count = deck.Hand.Count;
                         float screenWidth = _graphicsDevice.Viewport.Width;
-                        float startX = (screenWidth - (deck.Hand.Count * CardConfig.CARD_SPACING)) / 2f;
-                        float y = _graphicsDevice.Viewport.Height - CardConfig.HAND_BOTTOM_MARGIN;
-                        
-                        transform.Position = new Vector2(startX + (cardIndex * CardConfig.CARD_SPACING), y);
-                        
-                        // Update UI bounds for interaction using centralized config
-                        var uiElement = entity.GetComponent<UIElement>();
-                        if (uiElement != null)
+                        float screenHeight = _graphicsDevice.Viewport.Height;
+
+                        var pivot = new Vector2(screenWidth / 2f, screenHeight - CardConfig.HAND_BOTTOM_MARGIN);
+
+                        // normalized index t in [-1, 1]
+                        float mid = (count - 1) * 0.5f;
+                        float t = (count == 1) ? 0f : (cardIndex - mid) / Math.Max(1f, mid);
+
+                        // angle and vertical arc offset
+                        float angleDeg = t * CardConfig.HAND_FAN_MAX_ANGLE_DEG;
+                        float angleRad = CardConfig.DegToRad(angleDeg);
+
+                        // Horizontal spread based on spacing
+                        float x = pivot.X + t * CardConfig.CARD_SPACING;
+
+                        // Vertical arc using a circular approximation
+                        float cos = (float)Math.Cos(angleRad);
+                        float yArc = -CardConfig.HAND_FAN_RADIUS * (1f - cos);
+                        float y = pivot.Y + CardConfig.HAND_FAN_CURVE_OFFSET + yArc;
+
+                        // Hover lift
+                        var ui = entity.GetComponent<UIElement>();
+                        bool hovered = ui?.IsHovered == true;
+                        if (hovered)
                         {
-                            uiElement.Bounds = CardConfig.GetCardBounds(transform.Position);
+                            y -= CardConfig.HAND_HOVER_LIFT;
+                        }
+
+                        // Apply transform with smooth tween toward target (frame-rate independent)
+                        var current = transform.Position;
+                        var target = new Vector2(x, y);
+                        float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                        float alpha = 1f - (float)Math.Exp(-CardConfig.HAND_TWEEN_SPEED * dt);
+                        transform.Position = Vector2.Lerp(current, target, MathHelper.Clamp(alpha, 0f, 1f));
+                        transform.Rotation = angleRad; // reserved for future visual rotation support
+                        transform.Scale = new Vector2(CardConfig.HAND_HOVER_SCALE, CardConfig.HAND_HOVER_SCALE);
+
+                        // Z-order (ensures proper overlapping)
+                        transform.ZOrder = CardConfig.HAND_Z_BASE + (cardIndex * CardConfig.HAND_Z_STEP) + (hovered ? CardConfig.HAND_Z_HOVER_BOOST : 0);
+
+                        // Update AABB bounds (axis-aligned) that contain potential rotated card
+                        int w = CardConfig.CARD_WIDTH;
+                        int h = CardConfig.CARD_HEIGHT;
+                        float absCos = Math.Abs(cos);
+                        float absSin = Math.Abs((float)Math.Sin(angleRad));
+                        int aabbW = (int)(w * absCos + h * absSin);
+                        int aabbH = (int)(h * absCos + w * absSin);
+
+                        if (ui != null)
+                        {
+                            ui.Bounds = new Rectangle(
+                                (int)transform.Position.X - aabbW / 2,
+                                (int)transform.Position.Y - aabbH / 2,
+                                aabbW,
+                                aabbH
+                            );
                         }
                     }
                 }
@@ -115,7 +162,7 @@ namespace Crusaders30XX.ECS.Systems
                     var cardsInHand = deck.Hand.OrderBy(e => 
                     {
                         var transform = e.GetComponent<Transform>();
-                        return transform?.Position.X ?? 0f;
+                        return transform?.ZOrder ?? 0;
                     });
                     
                     foreach (var entity in cardsInHand)
