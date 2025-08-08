@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Core;
@@ -21,6 +21,7 @@ public class Game1 : Game
     private CombatSystem _combatSystem;
     private CardDisplaySystem _cardDisplaySystem;
     private HandDisplaySystem _handDisplaySystem;
+    private CardHighlightSystem _cardHighlightSystem;
 
     public Game1()
     {
@@ -62,11 +63,14 @@ public class Game1 : Game
         // Load the NewRocker SpriteFont
         _font = Content.Load<SpriteFont>("NewRocker");
 
-        // Create systems that need SpriteBatch
+
+        _cardHighlightSystem = new CardHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, GraphicsDevice);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _handDisplaySystem = new HandDisplaySystem(_world.EntityManager, GraphicsDevice);
+
         
+        _world.AddSystem(_cardHighlightSystem);
         // Add systems to world
         _world.AddSystem(_renderingSystem);
         _world.AddSystem(_cardDisplaySystem);
@@ -114,10 +118,10 @@ public class Game1 : Game
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
 
-        // Update ECS World
+        // Update ECS World (this includes input processing)
         _world.Update(gameTime);
         
-        // Update input system
+        // Update input system AFTER world update to store previous state
         _inputSystem.UpdateInput();
 
         base.Update(gameTime);
@@ -134,6 +138,9 @@ public class Game1 : Game
         
         // Draw hand of cards
         _handDisplaySystem.DrawHand();
+        
+        // Draw card highlights
+        _cardHighlightSystem.Draw(gameTime);
         
         // Draw text using the NewRocker font
         if (_font != null)

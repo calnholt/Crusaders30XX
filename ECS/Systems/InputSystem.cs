@@ -36,7 +36,15 @@ namespace Crusaders30XX.ECS.Systems
             var mousePosition = mouseState.Position;
             
             // Check if mouse is hovering over UI element
+            bool wasHovered = uiElement.IsHovered;
             uiElement.IsHovered = uiElement.Bounds.Contains(mousePosition);
+            
+            // Debug output for hover state changes (only for cards)
+            var cardData = entity.GetComponent<CardData>();
+            if (cardData != null && wasHovered != uiElement.IsHovered)
+            {
+                Console.WriteLine($"Card {cardData.Name} hover changed: {wasHovered} -> {uiElement.IsHovered} at mouse pos {mousePosition} bounds {uiElement.Bounds}");
+            }
             
             // Check for clicks
             if (uiElement.IsHovered && 

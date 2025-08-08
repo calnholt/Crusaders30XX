@@ -48,7 +48,7 @@ namespace Crusaders30XX.ECS.Factories
             
             var uiElement = new UIElement
             {
-                Bounds = new Rectangle(0, 0, 100, 150), // Default card size
+                Bounds = new Rectangle(0, 0, 200, 300), // Match actual card visual size
                 IsInteractable = true
             };
             
@@ -295,7 +295,7 @@ namespace Crusaders30XX.ECS.Factories
 
             var uiElement = new UIElement
             {
-                Bounds = new Rectangle(0, 0, 100, 150), // Default card size
+                Bounds = new Rectangle(0, 0, 200, 300), // Match actual card visual size
                 IsInteractable = true
             };
 

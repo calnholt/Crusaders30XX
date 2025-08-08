@@ -17,6 +17,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly Dictionary<string, Texture2D> _textureCache = new();
         private SpriteFont _font;
+        private Texture2D _pixelTexture; // Reuse texture for card backgrounds
         
         public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font) 
             : base(entityManager)
@@ -24,6 +25,10 @@ namespace Crusaders30XX.ECS.Systems
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             _font = font;
+            
+            // Create a single pixel texture that we can reuse
+            _pixelTexture = new Texture2D(_graphicsDevice, 1, 1);
+            _pixelTexture.SetData(new[] { Color.White });
             
             // Subscribe to card render events
             EventManager.Subscribe<CardRenderEvent>(OnCardRenderEvent);
@@ -129,17 +134,22 @@ namespace Crusaders30XX.ECS.Systems
             // Create a simple rectangle for the card background
             var rect = new Rectangle((int)position.X - 50, (int)position.Y - 75, 200, 300);
             
-            // Draw filled rectangle
-            var texture = new Texture2D(_graphicsDevice, 1, 1);
-            texture.SetData(new[] { Color.White });
-            
-            _spriteBatch.Draw(texture, rect, color);
+            // Draw filled rectangle using the reusable pixel texture
+            _spriteBatch.Draw(_pixelTexture, rect, color);
             
             // Draw border
-            _spriteBatch.Draw(texture, new Rectangle(rect.X, rect.Y, rect.Width, 2), Color.Black); // Top
-            _spriteBatch.Draw(texture, new Rectangle(rect.X, rect.Y, 2, rect.Height), Color.Black); // Left
-            _spriteBatch.Draw(texture, new Rectangle(rect.X + rect.Width - 2, rect.Y, 2, rect.Height), Color.Black); // Right
-            _spriteBatch.Draw(texture, new Rectangle(rect.X, rect.Y + rect.Height - 2, rect.Width, 2), Color.Black); // Bottom
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X, rect.Y, rect.Width, 2), Color.Black); // Top
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X, rect.Y, 2, rect.Height), Color.Black); // Left
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X + rect.Width - 2, rect.Y, 2, rect.Height), Color.Black); // Right
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X, rect.Y + rect.Height - 2, rect.Width, 2), Color.Black); // Bottom
+        }
+        
+        /// <summary>
+        /// Dispose of resources when the system is destroyed
+        /// </summary>
+        public void Dispose()
+        {
+            _pixelTexture?.Dispose();
         }
         
         private void DrawCardText(Vector2 position, string text, Color color, float scale, Vector2 offset)

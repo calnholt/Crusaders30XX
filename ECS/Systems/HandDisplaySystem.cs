@@ -62,11 +62,11 @@ namespace Crusaders30XX.ECS.Systems
                         
                         transform.Position = new Vector2(startX + (cardIndex * cardSpacing), y);
                         
-                        // Update UI bounds for interaction
+                        // Update UI bounds for interaction (match actual card visual positioning: position - 50, position - 75)
                         var uiElement = entity.GetComponent<UIElement>();
                         if (uiElement != null)
                         {
-                            uiElement.Bounds = new Rectangle((int)transform.Position.X - 50, (int)transform.Position.Y - 75, 100, 150);
+                            uiElement.Bounds = new Rectangle((int)transform.Position.X - 50, (int)transform.Position.Y - 75, 200, 300);
                         }
                     }
                 }
