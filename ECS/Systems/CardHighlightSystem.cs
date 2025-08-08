@@ -1,6 +1,7 @@
 using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Config;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -86,13 +87,8 @@ namespace Crusaders30XX.ECS.Systems
         
         private void DrawCardHighlight(Entity cardEntity, Vector2 position, GameTime gameTime)
         {
-            // Create a highlight rectangle around the card
-            var highlightRect = new Rectangle(
-                (int)position.X - 55, 
-                (int)position.Y - 80, 
-                210, 
-                310
-            );
+            // Create highlight rectangle using centralized config
+            var highlightRect = CardConfig.GetCardHighlightRect(position);
             
             // Add pulsing effect based on individual card hover time
             var pulseSpeed = 3.0f; // Increased speed for better responsiveness
@@ -102,17 +98,53 @@ namespace Crusaders30XX.ECS.Systems
             
             // Draw highlight border with pulsing effect
             var borderColor = Color.Yellow * pulseAmount;
-            var borderThickness = 3;
+            var borderThickness = CardConfig.HIGHLIGHT_BORDER_THICKNESS;
             
-            // Draw highlight border (no filled background to avoid covering the card)
-            // Top border
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(highlightRect.X, highlightRect.Y, highlightRect.Width, borderThickness), borderColor);
-            // Bottom border
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(highlightRect.X, highlightRect.Y + highlightRect.Height - borderThickness, highlightRect.Width, borderThickness), borderColor);
-            // Left border
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(highlightRect.X, highlightRect.Y, borderThickness, highlightRect.Height), borderColor);
+            // Draw highlight border (no filled background). Trim only sides to avoid overlapping at corners.
+            // Top border (full width)
+            _spriteBatch.Draw(
+                _pixelTexture,
+                new Rectangle(
+                    highlightRect.X,
+                    highlightRect.Y,
+                    highlightRect.Width,
+                    borderThickness
+                ),
+                borderColor
+            );
+            // Bottom border (full width)
+            _spriteBatch.Draw(
+                _pixelTexture,
+                new Rectangle(
+                    highlightRect.X,
+                    highlightRect.Y + highlightRect.Height - borderThickness,
+                    highlightRect.Width,
+                    borderThickness
+                ),
+                borderColor
+            );
+            // Left border (trim top/bottom by thickness)
+            _spriteBatch.Draw(
+                _pixelTexture,
+                new Rectangle(
+                    highlightRect.X,
+                    highlightRect.Y + borderThickness,
+                    borderThickness,
+                    highlightRect.Height - (borderThickness * 2)
+                ),
+                borderColor
+            );
             // Right border
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(highlightRect.X + highlightRect.Width - borderThickness, highlightRect.Y, borderThickness, highlightRect.Height), borderColor);
+            _spriteBatch.Draw(
+                _pixelTexture,
+                new Rectangle(
+                    highlightRect.X + highlightRect.Width - borderThickness,
+                    highlightRect.Y + borderThickness,
+                    borderThickness,
+                    highlightRect.Height - (borderThickness * 2)
+                ),
+                borderColor
+            );
         }
         
         /// <summary>

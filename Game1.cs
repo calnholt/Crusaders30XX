@@ -146,7 +146,6 @@ public class Game1 : Game
         if (_font != null)
         {
             _spriteBatch.DrawString(_font, "Crusaders 30XX", new Vector2(50, 50), Color.White);
-            _spriteBatch.DrawString(_font, "NewRocker Font Demo", new Vector2(50, 100), Color.Yellow);
         }
         
         _spriteBatch.End();

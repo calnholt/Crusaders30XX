@@ -2,6 +2,7 @@ using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Config;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -54,19 +55,18 @@ namespace Crusaders30XX.ECS.Systems
                     
                     if (cardIndex >= 0)
                     {
-                        // Position cards at the bottom of the screen
+                        // Position cards at the bottom of the screen using constants
                         float screenWidth = _graphicsDevice.Viewport.Width;
-                        float cardSpacing = 250f;
-                        float startX = (screenWidth - (deck.Hand.Count * cardSpacing)) / 2f;
-                        float y = _graphicsDevice.Viewport.Height - 200f; // 200 pixels from bottom
+                        float startX = (screenWidth - (deck.Hand.Count * CardConfig.CARD_SPACING)) / 2f;
+                        float y = _graphicsDevice.Viewport.Height - CardConfig.HAND_BOTTOM_MARGIN;
                         
-                        transform.Position = new Vector2(startX + (cardIndex * cardSpacing), y);
+                        transform.Position = new Vector2(startX + (cardIndex * CardConfig.CARD_SPACING), y);
                         
-                        // Update UI bounds for interaction (match actual card visual positioning: position - 50, position - 75)
+                        // Update UI bounds for interaction using centralized config
                         var uiElement = entity.GetComponent<UIElement>();
                         if (uiElement != null)
                         {
-                            uiElement.Bounds = new Rectangle((int)transform.Position.X - 50, (int)transform.Position.Y - 75, 200, 300);
+                            uiElement.Bounds = CardConfig.GetCardBounds(transform.Position);
                         }
                     }
                 }

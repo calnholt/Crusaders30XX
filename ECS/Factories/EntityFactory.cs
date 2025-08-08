@@ -1,5 +1,6 @@
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Config;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
@@ -48,7 +49,7 @@ namespace Crusaders30XX.ECS.Factories
             
             var uiElement = new UIElement
             {
-                Bounds = new Rectangle(0, 0, 200, 300), // Match actual card visual size
+                Bounds = new Rectangle(0, 0, CardConfig.CARD_WIDTH, CardConfig.CARD_HEIGHT), // Use centralized config
                 IsInteractable = true
             };
             
@@ -295,7 +296,7 @@ namespace Crusaders30XX.ECS.Factories
 
             var uiElement = new UIElement
             {
-                Bounds = new Rectangle(0, 0, 200, 300), // Match actual card visual size
+                Bounds = new Rectangle(0, 0, CardConfig.CARD_WIDTH, CardConfig.CARD_HEIGHT), // Use centralized config
                 IsInteractable = true
             };
 

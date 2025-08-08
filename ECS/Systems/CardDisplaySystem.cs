@@ -2,6 +2,7 @@ using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Config;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -69,18 +70,22 @@ namespace Crusaders30XX.ECS.Systems
             // Draw card background
             DrawCardBackground(position, cardColor);
             
-            DrawCardText(position, cardData.Name, Color.Black, 0.8f, new Vector2(-35, -70));
+            // Name text (wrapped within card bounds)
+            DrawCardTextWrapped(position, CardConfig.GetNameTextPosition(position), cardData.Name, Color.Black, CardConfig.NAME_SCALE);
             
             // Draw cost
             string costText = GetCostText(cardData.CardCostType);
-            DrawCardText(position, costText, costColor, 0.6f, new Vector2(-35, -35));
+            DrawCardTextWrapped(position, CardConfig.GetCostTextPosition(position), costText, costColor, CardConfig.COST_SCALE);
             
-            DrawCardText(position, cardData.Description, Color.Black, 0.4f, new Vector2(-35, 10));
+            DrawCardTextWrapped(position, CardConfig.GetDescriptionTextPosition(position), cardData.Description, Color.Black, CardConfig.DESCRIPTION_SCALE);
             
-            // Draw block value if applicable
+            // Draw block value as blue number bottom-right
             if (cardData.BlockValue > 0)
             {
-                DrawCardText(position, $"Block: {cardData.BlockValue}", Color.Cyan, 0.5f, new Vector2(0, 60));
+                string blockText = cardData.BlockValue.ToString();
+                var measured = _font.MeasureString(blockText) * CardConfig.BLOCK_NUMBER_SCALE;
+                var drawPos = CardConfig.GetBlockNumberPosition(position, measured);
+                _spriteBatch.DrawString(_font, blockText, drawPos, Color.CornflowerBlue, 0f, Vector2.Zero, CardConfig.BLOCK_NUMBER_SCALE, SpriteEffects.None, 0f);
             }
         }
         
@@ -131,17 +136,18 @@ namespace Crusaders30XX.ECS.Systems
         
         private void DrawCardBackground(Vector2 position, Color color)
         {
-            // Create a simple rectangle for the card background
-            var rect = new Rectangle((int)position.X - 50, (int)position.Y - 75, 200, 300);
+            // Create card background rectangle using centralized config
+            var rect = CardConfig.GetCardVisualRect(position);
             
             // Draw filled rectangle using the reusable pixel texture
             _spriteBatch.Draw(_pixelTexture, rect, color);
             
-            // Draw border
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X, rect.Y, rect.Width, 2), Color.Black); // Top
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X, rect.Y, 2, rect.Height), Color.Black); // Left
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X + rect.Width - 2, rect.Y, 2, rect.Height), Color.Black); // Right
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X, rect.Y + rect.Height - 2, rect.Width, 2), Color.Black); // Bottom
+            // Draw border using config thickness
+            var borderThickness = CardConfig.CARD_BORDER_THICKNESS;
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X, rect.Y, rect.Width, borderThickness), Color.Black); // Top
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X, rect.Y, borderThickness, rect.Height), Color.Black); // Left
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X + rect.Width - borderThickness, rect.Y, borderThickness, rect.Height), Color.Black); // Right
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X, rect.Y + rect.Height - borderThickness, rect.Width, borderThickness), Color.Black); // Bottom
         }
         
         /// <summary>
@@ -152,19 +158,125 @@ namespace Crusaders30XX.ECS.Systems
             _pixelTexture?.Dispose();
         }
         
-        private void DrawCardText(Vector2 position, string text, Color color, float scale, Vector2 offset)
+        private void DrawCardTextClamped(Vector2 cardPosition, Vector2 desiredAbsolutePosition, string text, Color color, float scale)
         {
             try
             {
-                var textSize = _font.MeasureString(text);
-                var textPosition = position + offset;
-                // Position text relative to card's left edge instead of centering
-                var drawPosition = textPosition;
-                _spriteBatch.DrawString(_font, text, drawPosition, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                var cardRect = CardConfig.GetCardVisualRect(cardPosition);
+                var textSize = _font.MeasureString(text) * scale;
+
+                // Compute clamped X
+                float minX = cardRect.Left + CardConfig.TEXT_MARGIN_X;
+                float maxX = cardRect.Right - CardConfig.TEXT_MARGIN_X - textSize.X;
+                float clampedX = MathHelper.Clamp(desiredAbsolutePosition.X, minX, Math.Max(minX, maxX));
+
+                // Compute clamped Y
+                float minY = cardRect.Top + CardConfig.TEXT_MARGIN_Y;
+                float maxY = cardRect.Bottom - CardConfig.TEXT_MARGIN_Y - textSize.Y;
+                float clampedY = MathHelper.Clamp(desiredAbsolutePosition.Y, minY, Math.Max(minY, maxY));
+
+                _spriteBatch.DrawString(_font, text, new Vector2(clampedX, clampedY), color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Font rendering error: {ex.Message}");
+            }
+        }
+
+        private void DrawCardTextWrapped(Vector2 cardPosition, Vector2 desiredAbsolutePosition, string text, Color color, float scale)
+        {
+            try
+            {
+                var cardRect = CardConfig.GetCardVisualRect(cardPosition);
+                float minX = cardRect.Left + CardConfig.TEXT_MARGIN_X;
+                float maxX = cardRect.Right - CardConfig.TEXT_MARGIN_X;
+                float availableWidth = Math.Max(0f, maxX - desiredAbsolutePosition.X);
+
+                // Fallback if desired position is outside, start at minX
+                float startX = MathHelper.Clamp(desiredAbsolutePosition.X, minX, maxX);
+                if (availableWidth <= 0f)
+                {
+                    startX = minX;
+                    availableWidth = Math.Max(0f, maxX - minX);
+                }
+
+                float lineHeight = _font.LineSpacing * scale;
+                float y = desiredAbsolutePosition.Y;
+                float maxY = cardRect.Bottom - CardConfig.TEXT_MARGIN_Y - lineHeight;
+
+                foreach (var line in WrapText(text, availableWidth, scale))
+                {
+                    if (y > maxY) break; // stop if out of vertical space
+
+                    // Clamp line horizontally (handles very long tokens case)
+                    var measured = _font.MeasureString(line) * scale;
+                    float clampedX = MathHelper.Clamp(startX, minX, Math.Max(minX, maxX - measured.X));
+                    _spriteBatch.DrawString(_font, line, new Vector2(clampedX, y), color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+
+                    y += lineHeight;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Font rendering error: {ex.Message}");
+            }
+        }
+
+        private IEnumerable<string> WrapText(string text, float maxLineWidth, float scale)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                yield break;
+            }
+
+            string[] words = text.Split(' ');
+            string currentLine = string.Empty;
+
+            foreach (var word in words)
+            {
+                string testLine = string.IsNullOrEmpty(currentLine) ? word : currentLine + " " + word;
+                float lineWidth = _font.MeasureString(testLine).X * scale;
+
+                if (lineWidth <= maxLineWidth)
+                {
+                    currentLine = testLine;
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(currentLine))
+                    {
+                        yield return currentLine;
+                        currentLine = word; // start new line with the current word
+                    }
+                    else
+                    {
+                        // Single word longer than line: hard-break by characters
+                        string longWord = word;
+                        string partial = string.Empty;
+                        foreach (char c in longWord)
+                        {
+                            string attempt = partial + c;
+                            if (_font.MeasureString(attempt).X * scale <= maxLineWidth)
+                            {
+                                partial = attempt;
+                            }
+                            else
+                            {
+                                if (partial.Length > 0)
+                                {
+                                    yield return partial;
+                                }
+                                partial = c.ToString();
+                            }
+                        }
+                        currentLine = partial;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(currentLine))
+            {
+                yield return currentLine;
             }
         }
     }
