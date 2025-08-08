@@ -46,7 +46,7 @@ namespace Crusaders30XX.ECS.Config
         public const float HAND_TWEEN_SPEED = 12f;
         
         // Card border thickness for visual
-        public const int CARD_BORDER_THICKNESS = 2;
+        public const int CARD_BORDER_THICKNESS = 3;
 
         // Text layout settings
         public const int TEXT_MARGIN_X = 16;

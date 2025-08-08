@@ -60,31 +60,38 @@ namespace Crusaders30XX.ECS.Systems
         public void DrawCard(Entity entity, Vector2 position)
         {
             var cardData = entity.GetComponent<CardData>();
+            var transform = entity.GetComponent<Transform>();
             
             if (cardData == null) return;
             
             var cardColor = GetCardColor(cardData.Color);
             var costColor = GetCostColor(cardData.CardCostType);
             
-            // Draw card background
-            DrawCardBackground(position, cardColor);
+            // Draw card background (rotated if transform has rotation)
+            float rotation = transform?.Rotation ?? 0f;
+            DrawCardBackgroundRotated(position, rotation, cardColor);
+
+            // Compute actual visual center from rect so text aligns exactly with background
+            var cardRectForCenter = CardConfig.GetCardVisualRect(position);
+            var cardCenter = new Vector2(cardRectForCenter.X + cardRectForCenter.Width / 2f, cardRectForCenter.Y + cardRectForCenter.Height / 2f);
             
-            // Name text (wrapped within card bounds)
-            DrawCardTextWrapped(position, CardConfig.GetNameTextPosition(position), cardData.Name, Color.Black, CardConfig.NAME_SCALE);
+            // Name text (wrapped within card width), rotated with card
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(CardConfig.NAME_OFFSET_X, CardConfig.NAME_OFFSET_Y), cardData.Name, Color.Black, CardConfig.NAME_SCALE);
             
             // Draw cost
             string costText = GetCostText(cardData.CardCostType);
-            DrawCardTextWrapped(position, CardConfig.GetCostTextPosition(position), costText, costColor, CardConfig.COST_SCALE);
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(CardConfig.COST_OFFSET_X, CardConfig.COST_OFFSET_Y), costText, costColor, CardConfig.COST_SCALE);
             
-            DrawCardTextWrapped(position, CardConfig.GetDescriptionTextPosition(position), cardData.Description, Color.Black, CardConfig.DESCRIPTION_SCALE);
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(CardConfig.DESCRIPTION_OFFSET_X, CardConfig.DESCRIPTION_OFFSET_Y), cardData.Description, Color.Black, CardConfig.DESCRIPTION_SCALE);
             
             // Draw block value as blue number bottom-right
             if (cardData.BlockValue > 0)
             {
                 string blockText = cardData.BlockValue.ToString();
                 var measured = _font.MeasureString(blockText) * CardConfig.BLOCK_NUMBER_SCALE;
-                var drawPos = CardConfig.GetBlockNumberPosition(position, measured);
-                _spriteBatch.DrawString(_font, blockText, drawPos, Color.CornflowerBlue, 0f, Vector2.Zero, CardConfig.BLOCK_NUMBER_SCALE, SpriteEffects.None, 0f);
+                float localX = CardConfig.CARD_WIDTH - CardConfig.BLOCK_NUMBER_MARGIN_X - measured.X;
+                float localY = CardConfig.CARD_HEIGHT - CardConfig.BLOCK_NUMBER_MARGIN_Y - measured.Y;
+                DrawCardTextRotatedSingle(cardCenter, rotation, new Vector2(localX, localY), blockText, Color.CornflowerBlue, CardConfig.BLOCK_NUMBER_SCALE);
             }
         }
         
@@ -133,20 +140,61 @@ namespace Crusaders30XX.ECS.Systems
             };
         }
         
-        private void DrawCardBackground(Vector2 position, Color color)
+        private void DrawCardBackgroundRotated(Vector2 position, float rotation, Color color)
         {
-            // Create card background rectangle using centralized config
+            // Compute rect centered on position
             var rect = CardConfig.GetCardVisualRect(position);
-            
-            // Draw filled rectangle using the reusable pixel texture
-            _spriteBatch.Draw(_pixelTexture, rect, color);
-            
-            // Draw border using config thickness
-            var borderThickness = CardConfig.CARD_BORDER_THICKNESS;
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X, rect.Y, rect.Width, borderThickness), Color.Black); // Top
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X, rect.Y, borderThickness, rect.Height), Color.Black); // Left
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X + rect.Width - borderThickness, rect.Y, borderThickness, rect.Height), Color.Black); // Right
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X, rect.Y + rect.Height - borderThickness, rect.Width, borderThickness), Color.Black); // Bottom
+            var center = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
+
+            // Draw filled body using 1x1 pixel scaled and rotated about its center (0.5, 0.5)
+            _spriteBatch.Draw(
+                _pixelTexture,
+                position: center,
+                sourceRectangle: null,
+                color: color,
+                rotation: rotation,
+                origin: new Vector2(0.5f, 0.5f),
+                scale: new Vector2(rect.Width, rect.Height),
+                effects: SpriteEffects.None,
+                layerDepth: 0f
+            );
+
+            // Draw borders as four thin quads positioned relative to center, rotated
+            int bt = CardConfig.CARD_BORDER_THICKNESS;
+            float halfW = rect.Width / 2f;
+            float halfH = rect.Height / 2f;
+
+            void DrawBorder(Vector2 offsetLocal, float width, float height)
+            {
+                // rotate offset
+                float cos = (float)Math.Cos(rotation);
+                float sin = (float)Math.Sin(rotation);
+                var offsetWorld = new Vector2(
+                    offsetLocal.X * cos - offsetLocal.Y * sin,
+                    offsetLocal.X * sin + offsetLocal.Y * cos
+                );
+                var segCenter = center + offsetWorld;
+                _spriteBatch.Draw(
+                    _pixelTexture,
+                    position: segCenter,
+                    sourceRectangle: null,
+                    color: Color.Black,
+                    rotation: rotation,
+                    origin: new Vector2(0.5f, 0.5f),
+                    scale: new Vector2(width, height),
+                    effects: SpriteEffects.None,
+                    layerDepth: 0f
+                );
+            }
+
+            // Top (full width, thickness bt) offset upward to top edge center
+            DrawBorder(new Vector2(0f, -(halfH - bt / 2f)), rect.Width, bt);
+            // Bottom
+            DrawBorder(new Vector2(0f, +(halfH - bt / 2f)), rect.Width, bt);
+            // Left
+            DrawBorder(new Vector2(-(halfW - bt / 2f), 0f), bt, rect.Height);
+            // Right
+            DrawBorder(new Vector2(+(halfW - bt / 2f), 0f), bt, rect.Height);
         }
         
         /// <summary>
@@ -157,38 +205,51 @@ namespace Crusaders30XX.ECS.Systems
             _pixelTexture?.Dispose();
         }
         
-        private void DrawCardTextWrapped(Vector2 cardPosition, Vector2 desiredAbsolutePosition, string text, Color color, float scale)
+        // New: draw wrapped text in card-local space rotated with the card
+        private void DrawCardTextWrappedRotated(Vector2 cardCenterPosition, float rotation, Vector2 localOffsetFromTopLeft, string text, Color color, float scale)
         {
             try
             {
-                var cardRect = CardConfig.GetCardVisualRect(cardPosition);
-                float minX = cardRect.Left + CardConfig.TEXT_MARGIN_X;
-                float maxX = cardRect.Right - CardConfig.TEXT_MARGIN_X;
-                float availableWidth = Math.Max(0f, maxX - desiredAbsolutePosition.X);
-
-                // Fallback if desired position is outside, start at minX
-                float startX = MathHelper.Clamp(desiredAbsolutePosition.X, minX, maxX);
-                if (availableWidth <= 0f)
-                {
-                    startX = minX;
-                    availableWidth = Math.Max(0f, maxX - minX);
-                }
-
+                float maxLineWidth = CardConfig.CARD_WIDTH - (CardConfig.TEXT_MARGIN_X * 2);
                 float lineHeight = _font.LineSpacing * scale;
-                float y = desiredAbsolutePosition.Y;
-                float maxY = cardRect.Bottom - CardConfig.TEXT_MARGIN_Y - lineHeight;
 
-                foreach (var line in WrapText(text, availableWidth, scale))
+                // Convert card-local from top-left to local centered coordinates
+                float startLocalX = -CardConfig.CARD_WIDTH / 2f + localOffsetFromTopLeft.X;
+                float startLocalY = -CardConfig.CARD_HEIGHT / 2f + localOffsetFromTopLeft.Y;
+
+                float currentY = startLocalY;
+                foreach (var line in WrapText(text, maxLineWidth, scale))
                 {
-                    if (y > maxY) break; // stop if out of vertical space
+                    // Position of this line's top-left in card-local coords
+                    var local = new Vector2(startLocalX, currentY);
+                    // Rotate to world
+                    float cos = (float)Math.Cos(rotation);
+                    float sin = (float)Math.Sin(rotation);
+                    var rotated = new Vector2(local.X * cos - local.Y * sin, local.X * sin + local.Y * cos);
+                    var world = cardCenterPosition + rotated;
 
-                    // Clamp line horizontally (handles very long tokens case)
-                    var measured = _font.MeasureString(line) * scale;
-                    float clampedX = MathHelper.Clamp(startX, minX, Math.Max(minX, maxX - measured.X));
-                    _spriteBatch.DrawString(_font, line, new Vector2(clampedX, y), color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-
-                    y += lineHeight;
+                    _spriteBatch.DrawString(_font, line, world, color, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                    currentY += lineHeight;
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Font rendering error: {ex.Message}");
+            }
+        }
+
+        // New: draw a single unwrapped line rotated; localOffsetFromTopLeft is in card-local (unrotated) pixels
+        private void DrawCardTextRotatedSingle(Vector2 cardCenterPosition, float rotation, Vector2 localOffsetFromTopLeft, string text, Color color, float scale)
+        {
+            try
+            {
+                float localX = -CardConfig.CARD_WIDTH / 2f + localOffsetFromTopLeft.X;
+                float localY = -CardConfig.CARD_HEIGHT / 2f + localOffsetFromTopLeft.Y;
+                float cos = (float)Math.Cos(rotation);
+                float sin = (float)Math.Sin(rotation);
+                var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
+                var world = cardCenterPosition + rotated;
+                _spriteBatch.DrawString(_font, text, world, color, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
             }
             catch (Exception ex)
             {

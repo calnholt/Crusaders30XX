@@ -78,14 +78,14 @@ namespace Crusaders30XX.ECS.Systems
                         
                         if (uiElement != null && transform != null && uiElement.IsHovered)
                         {
-                            DrawCardHighlight(cardEntity, transform.Position, gameTime);
+                            DrawCardHighlight(cardEntity, transform.Position, transform.Rotation, gameTime);
                         }
                     }
                 }
             }
         }
         
-        private void DrawCardHighlight(Entity cardEntity, Vector2 position, GameTime gameTime)
+        private void DrawCardHighlight(Entity cardEntity, Vector2 position, float rotation, GameTime gameTime)
         {
             // Create highlight rectangle using centralized config
             var highlightRect = CardConfig.GetCardHighlightRect(position);
@@ -100,51 +100,37 @@ namespace Crusaders30XX.ECS.Systems
             var borderColor = Color.Yellow * pulseAmount;
             var borderThickness = CardConfig.HIGHLIGHT_BORDER_THICKNESS;
             
-            // Draw highlight border (no filled background). Trim only sides to avoid overlapping at corners.
-            // Top border (full width)
-            _spriteBatch.Draw(
-                _pixelTexture,
-                new Rectangle(
-                    highlightRect.X,
-                    highlightRect.Y,
-                    highlightRect.Width,
-                    borderThickness
-                ),
-                borderColor
-            );
-            // Bottom border (full width)
-            _spriteBatch.Draw(
-                _pixelTexture,
-                new Rectangle(
-                    highlightRect.X,
-                    highlightRect.Y + highlightRect.Height - borderThickness,
-                    highlightRect.Width,
-                    borderThickness
-                ),
-                borderColor
-            );
-            // Left border (trim top/bottom by thickness)
-            _spriteBatch.Draw(
-                _pixelTexture,
-                new Rectangle(
-                    highlightRect.X,
-                    highlightRect.Y + borderThickness,
-                    borderThickness,
-                    highlightRect.Height - (borderThickness * 2)
-                ),
-                borderColor
-            );
-            // Right border
-            _spriteBatch.Draw(
-                _pixelTexture,
-                new Rectangle(
-                    highlightRect.X + highlightRect.Width - borderThickness,
-                    highlightRect.Y + borderThickness,
-                    borderThickness,
-                    highlightRect.Height - (borderThickness * 2)
-                ),
-                borderColor
-            );
+            // Draw rotated highlight border around card center
+            var center = new Vector2(highlightRect.X + highlightRect.Width / 2f, highlightRect.Y + highlightRect.Height / 2f);
+            float halfW = highlightRect.Width / 2f;
+            float halfH = highlightRect.Height / 2f;
+            float cos = (float)Math.Cos(rotation);
+            float sin = (float)Math.Sin(rotation);
+
+            Vector2 Rotate(Vector2 v) => new Vector2(v.X * cos - v.Y * sin, v.X * sin + v.Y * cos);
+
+            void DrawSeg(Vector2 localOffset, float width, float height)
+            {
+                var off = Rotate(localOffset);
+                var segCenter = center + off;
+                _spriteBatch.Draw(
+                    _pixelTexture,
+                    position: segCenter,
+                    sourceRectangle: null,
+                    color: borderColor,
+                    rotation: rotation,
+                    origin: new Vector2(0.5f, 0.5f),
+                    scale: new Vector2(width, height),
+                    effects: SpriteEffects.None,
+                    layerDepth: 0f
+                );
+            }
+
+            // Top / Bottom / Left / Right
+            DrawSeg(new Vector2(0f, -(halfH - borderThickness / 2f)), highlightRect.Width, borderThickness);
+            DrawSeg(new Vector2(0f, +(halfH - borderThickness / 2f)), highlightRect.Width, borderThickness);
+            DrawSeg(new Vector2(-(halfW - borderThickness / 2f), 0f), borderThickness, highlightRect.Height);
+            DrawSeg(new Vector2(+(halfW - borderThickness / 2f), 0f), borderThickness, highlightRect.Height);
         }
         
         /// <summary>
