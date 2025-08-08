@@ -1,5 +1,6 @@
 using System;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Config;
 using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -29,35 +30,89 @@ namespace Crusaders30XX.ECS.Systems
         
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
-            var uiElement = entity.GetComponent<UIElement>();
-            if (uiElement == null || !uiElement.IsInteractable) return;
-            
+            // Defer hover resolution to a single pass so only the top-most UI under mouse is hovered
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            if (!IsActive) return;
+
             var mouseState = Mouse.GetState();
             var mousePosition = mouseState.Position;
-            
-            // Check if mouse is hovering over UI element
-            bool wasHovered = uiElement.IsHovered;
-            uiElement.IsHovered = uiElement.Bounds.Contains(mousePosition);
-            
-            // Debug output for hover state changes (only for cards)
-            var cardData = entity.GetComponent<CardData>();
-            if (cardData != null && wasHovered != uiElement.IsHovered)
+
+            // Collect all interactable UI elements
+            var uiEntities = GetRelevantEntities()
+                .Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), IsCard = e.GetComponent<CardData>() != null })
+                .Where(x => x.UI != null && x.UI.IsInteractable)
+                .ToList();
+
+            // Reset hover flags
+            foreach (var x in uiEntities)
             {
-                Console.WriteLine($"Card {cardData.Name} hover changed: {wasHovered} -> {uiElement.IsHovered} at mouse pos {mousePosition} bounds {uiElement.Bounds}");
+                x.UI.IsHovered = false;
             }
-            
-            // Check for clicks
-            if (uiElement.IsHovered && 
-                mouseState.LeftButton == ButtonState.Pressed && 
-                _previousMouseState.LeftButton == ButtonState.Released)
+
+            // Find top-most under mouse by ZOrder
+            var top = uiEntities
+                .Where(x => IsUnderMouse(x, mousePosition))
+                .OrderByDescending(x => x.T?.ZOrder ?? 0)
+                .FirstOrDefault();
+
+            if (top != null)
             {
-                uiElement.IsClicked = true;
-                HandleUIClick(entity);
+                top.UI.IsHovered = true;
+
+                // Handle click on the top-most only
+                if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released)
+                {
+                    top.UI.IsClicked = true;
+                    HandleUIClick(top.E);
+                }
+                else
+                {
+                    top.UI.IsClicked = false;
+                }
             }
-            else
+
+            // Optionally debug hover changes per card (limited to top)
+            var cardData = top?.E.GetComponent<CardData>();
+            if (cardData != null)
             {
-                uiElement.IsClicked = false;
+                // You can log if needed
             }
+
+            _previousMouseState = mouseState;
+            _previousKeyboardState = Keyboard.GetState();
+        }
+
+        private static bool IsUnderMouse(dynamic x, Point mousePosition)
+        {
+            if (!x.IsCard)
+            {
+                // Fallback to AABB for non-card UI
+                return x.UI.Bounds.Contains(mousePosition);
+            }
+
+            // Rotated-rect hit test for cards
+            var transform = x.T as Transform;
+            if (transform == null) return x.UI.Bounds.Contains(mousePosition);
+
+            // Use the same visual center as rendering does
+            var rect = CardConfig.GetCardVisualRect(transform.Position);
+            Vector2 center = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
+            float rotation = transform.Rotation;
+            float cos = (float)System.Math.Cos(rotation);
+            float sin = (float)System.Math.Sin(rotation);
+
+            Vector2 m = new Vector2(mousePosition.X, mousePosition.Y);
+            Vector2 d = m - center;
+            // rotate mouse into card local space (inverse rotation)
+            float localX = d.X * cos + d.Y * sin;
+            float localY = -d.X * sin + d.Y * cos;
+
+            float halfW = CardConfig.CARD_WIDTH / 2f;
+            float halfH = CardConfig.CARD_HEIGHT / 2f;
+            return (localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH);
         }
         
         private void HandleUIClick(Entity entity)

@@ -86,19 +86,6 @@ namespace Crusaders30XX.ECS.Components
         public int DrawPerTurn { get; set; } = 5;
     }
     
-    /// <summary>
-    /// Component for managing the player's hand display
-    /// </summary>
-    public class HandDisplay : IComponent
-    {
-        public Entity Owner { get; set; }
-        
-        public Vector2 Position { get; set; } = Vector2.Zero;
-        public float CardSpacing { get; set; } = 120f;
-        public float CardWidth { get; set; } = 100f;
-        public float CardHeight { get; set; } = 150f;
-        public bool IsVisible { get; set; } = true;
-    }
     
     /// <summary>
     /// Component for the player entity
