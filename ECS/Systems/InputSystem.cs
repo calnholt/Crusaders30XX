@@ -54,6 +54,21 @@ namespace Crusaders30XX.ECS.Systems
                 .Where(x => x.UI != null && x.UI.IsInteractable)
                 .ToList();
 
+            // If a modal is open, restrict interactions to modal UI only
+            var modalEntity = EntityManager.GetEntitiesWithComponent<CardListModal>().FirstOrDefault();
+            bool isModalOpen = false;
+            if (modalEntity != null)
+            {
+                var modal = modalEntity.GetComponent<CardListModal>();
+                isModalOpen = modal != null && modal.IsOpen;
+            }
+            if (isModalOpen)
+            {
+                uiEntities = uiEntities
+                    .Where(x => x.E.GetComponent<CardListModalClose>() != null)
+                    .ToList();
+            }
+
             // Reset hover flags
             foreach (var x in uiEntities)
             {
