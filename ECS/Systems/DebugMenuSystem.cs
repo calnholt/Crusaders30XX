@@ -50,34 +50,81 @@ namespace Crusaders30XX.ECS.Systems
             if (menu == null || transform == null || ui == null) return;
             if (!menu.IsOpen) return;
 
-            // Panel
-            var panelRect = ui.Bounds;
-            DrawFilledRect(panelRect, Color.Black * 0.6f);
-            DrawRect(panelRect, Color.White, 2);
+            // Layout constants
+            int viewportW = _graphicsDevice.Viewport.Width;
+            int viewportH = _graphicsDevice.Viewport.Height;
+            int margin = 20;
+            int panelWidth = 280;
+            int padding = 12;
+            int spacing = 10;
+            int buttonHeight = 34;
+            float titleScale = 0.6f;
+            float sectionScale = 0.55f;
+            float buttonTextScale = 0.55f;
 
-            // Title
+            // Compute dynamic panel placement (top-right)
+            int panelX = viewportW - panelWidth - margin;
+            int panelY = margin + 60; // a bit lower from top edge
+
+            int cursorY = panelY + padding;
+
+            // First pass: measure and record button rects without drawing
+            int measureCursorY = cursorY;
+            var buttons = EntityManager.GetEntitiesWithComponent<UIButton>().ToList();
+            var plannedButtons = new List<(Entity entity, Rectangle rect, string label)>();
+
             if (_font != null)
             {
-                _spriteBatch.DrawString(_font, "Debug Menu", new Vector2(panelRect.X + 10, panelRect.Y + 10), Color.White);
-                _spriteBatch.DrawString(_font, "Hand", new Vector2(panelRect.X + 10, panelRect.Y + 50), Color.LightGreen);
+                measureCursorY += (int)(_font.LineSpacing * titleScale) + spacing; // Debug Menu title
+                measureCursorY += (int)(_font.LineSpacing * sectionScale) + spacing; // Hand section header
             }
-
-            // Buttons under Hand section
-            var buttons = EntityManager.GetEntitiesWithComponent<UIButton>().ToList();
             foreach (var btnEntity in buttons)
             {
                 var btn = btnEntity.GetComponent<UIButton>();
                 var btnUI = btnEntity.GetComponent<UIElement>();
                 if (btn == null || btnUI == null) continue;
+                var rect = new Rectangle(panelX + padding, measureCursorY, panelWidth - padding * 2, buttonHeight);
+                plannedButtons.Add((btnEntity, rect, btn.Label));
+                measureCursorY += buttonHeight + spacing;
+            }
 
-                var rect = btnUI.Bounds;
-                var bgColor = btnUI.IsHovered ? Color.DimGray : Color.Gray;
-                DrawFilledRect(rect, bgColor * 0.9f);
+            // Compute panel rect from measured content
+            int panelHeight = (measureCursorY - spacing) - panelY + padding;
+            var panelRect = new Rectangle(panelX, panelY, panelWidth, Math.Max(panelHeight, padding * 2 + 40));
+            ui.Bounds = panelRect; // keep UI bounds updated
+
+            // Draw panel first (so content appears on top)
+            DrawFilledRect(panelRect, new Color(15, 30, 55) * 0.95f);
+            DrawRect(panelRect, Color.White, 2);
+
+            // Second pass: draw headers and buttons, updating bounds for hit-test
+            int drawCursorY = cursorY;
+            if (_font != null)
+            {
+                DrawStringScaled("Debug Menu", new Vector2(panelX + padding, drawCursorY), Color.White, titleScale);
+                drawCursorY += (int)(_font.LineSpacing * titleScale) + spacing;
+                DrawStringScaled("Hand", new Vector2(panelX + padding, drawCursorY), Color.LightGreen, sectionScale);
+                drawCursorY += (int)(_font.LineSpacing * sectionScale) + spacing;
+            }
+            foreach (var planned in plannedButtons)
+            {
+                var btn = planned.entity.GetComponent<UIButton>();
+                var btnUI = planned.entity.GetComponent<UIElement>();
+                var rect = new Rectangle(planned.rect.X, drawCursorY, planned.rect.Width, planned.rect.Height);
+                btnUI.Bounds = rect; // sync bounds now
+
+                var bgColor = btnUI.IsHovered ? new Color(120, 120, 120) : new Color(70, 70, 70);
+                DrawFilledRect(rect, bgColor);
                 DrawRect(rect, Color.White, 1);
-                if (_font != null && !string.IsNullOrEmpty(btn.Label))
+
+                if (_font != null && !string.IsNullOrEmpty(planned.label))
                 {
-                    _spriteBatch.DrawString(_font, btn.Label, new Vector2(rect.X + 10, rect.Y + 10), Color.White);
+                    var size = _font.MeasureString(planned.label) * buttonTextScale;
+                    int textX = rect.X + (int)((rect.Width - size.X) / 2f);
+                    int textY = rect.Y + (int)((rect.Height - size.Y) / 2f);
+                    DrawStringScaled(planned.label, new Vector2(textX, textY), Color.White, buttonTextScale);
                 }
+                drawCursorY += buttonHeight + spacing;
             }
         }
 
@@ -96,6 +143,12 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.Draw(_pixel, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
             // right
             _spriteBatch.Draw(_pixel, new Rectangle(rect.Right - thickness, rect.Y, thickness, rect.Height), color);
+        }
+
+        private void DrawStringScaled(string text, Vector2 position, Color color, float scale)
+        {
+            if (_font == null || string.IsNullOrEmpty(text)) return;
+            _spriteBatch.DrawString(_font, text, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
     }
 }
