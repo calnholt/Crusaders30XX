@@ -83,6 +83,7 @@ public class Game1 : Game
         _world.AddSystem(_cardDisplaySystem);
         _world.AddSystem(_handDisplaySystem);
         _world.AddSystem(_debugCommandSystem);
+        _world.AddSystem(_drawPileDisplaySystem);
 
         EventManager.Publish(new RequestDrawCardsEvent { Count = 4 });
         // TODO: use this.Content to load your game content here
