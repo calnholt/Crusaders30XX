@@ -22,6 +22,11 @@ namespace Crusaders30XX.ECS.Config
         public const int HIGHLIGHT_HEIGHT = CARD_HEIGHT + (HIGHLIGHT_BORDER_THICKNESS * 2); // 310
         public const int HIGHLIGHT_OFFSET_X = CARD_OFFSET_X + HIGHLIGHT_BORDER_THICKNESS;   // 105
         public const int HIGHLIGHT_OFFSET_Y = CARD_OFFSET_Y + HIGHLIGHT_BORDER_THICKNESS;   // 180
+        // Highlight glow settings
+        public const int HIGHLIGHT_GLOW_LAYERS = 10;          // number of glow shells
+        public const float HIGHLIGHT_GLOW_SPREAD = 0.01f;    // expansion per layer (relative scale)
+        public const float HIGHLIGHT_MAX_ALPHA = 0.6f;       // maximum alpha cap per glow layer
+        public static readonly Color HIGHLIGHT_GLOW_COLOR = Color.Gold; // base glow color
         
         // Hand layout settings
         // Distance between adjacent card centers = CARD_WIDTH + CARD_GAP

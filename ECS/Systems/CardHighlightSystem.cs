@@ -123,23 +123,32 @@ namespace Crusaders30XX.ECS.Systems
             // Start at max on new hover using cosine (1 -> -1 range mapped to 0.2..1.0)
             var pulseAmount = (float)(Math.Cos(hoverDuration * pulseSpeed) * 0.4 + 0.6);
             
-            // Rounded highlight (translucent fill with rounded edges) with pulsing alpha
-            var borderColor = Color.Yellow * pulseAmount * 0.6f;
+            // Soft glow: draw multiple expanded rounded rects with decreasing alpha
             int radius = Math.Max(0, CardConfig.CARD_CORNER_RADIUS + CardConfig.HIGHLIGHT_BORDER_THICKNESS);
-            var rounded = GetRoundedRectTexture(highlightRect.Width, highlightRect.Height, radius);
-
+            var baseTex = GetRoundedRectTexture(highlightRect.Width, highlightRect.Height, radius);
             var center = new Vector2(highlightRect.X + highlightRect.Width / 2f, highlightRect.Y + highlightRect.Height / 2f);
-            _spriteBatch.Draw(
-                rounded,
-                position: center,
-                sourceRectangle: null,
-                color: borderColor,
-                rotation: rotation,
-                origin: new Vector2(rounded.Width / 2f, rounded.Height / 2f),
-                scale: Vector2.One,
-                effects: SpriteEffects.None,
-                layerDepth: 0f
-            );
+
+            // Layered glow
+            int layers = CardConfig.HIGHLIGHT_GLOW_LAYERS;
+            float spread = CardConfig.HIGHLIGHT_GLOW_SPREAD; // how much each layer expands
+            Color glowColor = CardConfig.HIGHLIGHT_GLOW_COLOR;
+            for (int i = layers; i >= 1; i--)
+            {
+                float scale = 1f + i * spread;
+                // Fade out quickly per layer; start bright on pulse reset
+                float layerAlpha = MathHelper.Clamp(pulseAmount * (0.22f / i), 0f, CardConfig.HIGHLIGHT_MAX_ALPHA);
+                _spriteBatch.Draw(
+                    baseTex,
+                    position: center,
+                    sourceRectangle: null,
+                    color: glowColor * layerAlpha,
+                    rotation: rotation,
+                    origin: new Vector2(baseTex.Width / 2f, baseTex.Height / 2f),
+                    scale: new Vector2(scale, scale),
+                    effects: SpriteEffects.None,
+                    layerDepth: 0f
+                );
+            }
         }
         
         /// <summary>
