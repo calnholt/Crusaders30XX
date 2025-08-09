@@ -22,6 +22,14 @@ namespace Crusaders30XX.ECS.Events
         public Vector2 Position { get; set; }
         public float Scale { get; set; } = 1f;
     }
+
+    /// <summary>
+    /// Event published just before rendering a specific card to allow a highlight to draw beneath it
+    /// </summary>
+    public class CardHighlightRenderEvent
+    {
+        public Entity Card { get; set; }
+    }
     
     /// <summary>
     /// Event published when cards in hand need to be positioned

@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Config;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.ECS.Rendering;
 using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
@@ -17,6 +18,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private readonly Dictionary<string, Texture2D> _textureCache = new();
+        private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
         private SpriteFont _font;
         private Texture2D _pixelTexture; // Reuse texture for card backgrounds
         
@@ -52,6 +54,8 @@ namespace Crusaders30XX.ECS.Systems
         /// </summary>
         private void OnCardRenderEvent(CardRenderEvent evt)
         {
+            // Allow highlight to draw beneath this specific card
+            EventManager.Publish(new CardHighlightRenderEvent { Card = evt.Card });
             DrawCard(evt.Card, evt.Position);
         }
 
@@ -65,12 +69,14 @@ namespace Crusaders30XX.ECS.Systems
                 float originalRotation = transform.Rotation;
                 // Ensure no rotation for grid preview
                 transform.Rotation = 0f;
+                EventManager.Publish(new CardHighlightRenderEvent { Card = evt.Card });
                 DrawCard(evt.Card, evt.Position);
                 transform.Scale = originalScale;
                 transform.Rotation = originalRotation;
             }
             else
             {
+                EventManager.Publish(new CardHighlightRenderEvent { Card = evt.Card });
                 DrawCard(evt.Card, evt.Position);
             }
         }
@@ -167,55 +173,52 @@ namespace Crusaders30XX.ECS.Systems
             var rect = CardConfig.GetCardVisualRect(position);
             var center = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
 
-            // Draw filled body using 1x1 pixel scaled and rotated about its center (0.5, 0.5)
+            int radius = CardConfig.CARD_CORNER_RADIUS;
+            int bt = CardConfig.CARD_BORDER_THICKNESS;
+
+            // Draw rounded border as outer rounded rect in border color, then inset fill
+            var outer = GetRoundedRectTexture(rect.Width, rect.Height, Math.Max(0, radius));
+            var inner = GetRoundedRectTexture(
+                Math.Max(1, rect.Width - bt * 2),
+                Math.Max(1, rect.Height - bt * 2),
+                Math.Max(0, radius - bt)
+            );
+
+            // Outer (border)
             _spriteBatch.Draw(
-                _pixelTexture,
+                outer,
                 position: center,
                 sourceRectangle: null,
-                color: color,
+                color: Color.Black,
                 rotation: rotation,
-                origin: new Vector2(0.5f, 0.5f),
-                scale: new Vector2(rect.Width, rect.Height),
+                origin: new Vector2(outer.Width / 2f, outer.Height / 2f),
+                scale: Vector2.One,
                 effects: SpriteEffects.None,
                 layerDepth: 0f
             );
 
-            // Draw borders as four thin quads positioned relative to center, rotated
-            int bt = CardConfig.CARD_BORDER_THICKNESS;
-            float halfW = rect.Width / 2f;
-            float halfH = rect.Height / 2f;
+            // Inner (fill), inset by border thickness in local space
+            // We achieve inset by using a smaller texture and drawing with same center
+            _spriteBatch.Draw(
+                inner,
+                position: center,
+                sourceRectangle: null,
+                color: color,
+                rotation: rotation,
+                origin: new Vector2(inner.Width / 2f, inner.Height / 2f),
+                scale: Vector2.One,
+                effects: SpriteEffects.None,
+                layerDepth: 0f
+            );
+        }
 
-            void DrawBorder(Vector2 offsetLocal, float width, float height)
-            {
-                // rotate offset
-                float cos = (float)Math.Cos(rotation);
-                float sin = (float)Math.Sin(rotation);
-                var offsetWorld = new Vector2(
-                    offsetLocal.X * cos - offsetLocal.Y * sin,
-                    offsetLocal.X * sin + offsetLocal.Y * cos
-                );
-                var segCenter = center + offsetWorld;
-                _spriteBatch.Draw(
-                    _pixelTexture,
-                    position: segCenter,
-                    sourceRectangle: null,
-                    color: Color.Black,
-                    rotation: rotation,
-                    origin: new Vector2(0.5f, 0.5f),
-                    scale: new Vector2(width, height),
-                    effects: SpriteEffects.None,
-                    layerDepth: 0f
-                );
-            }
-
-            // Top (full width, thickness bt) offset upward to top edge center
-            DrawBorder(new Vector2(0f, -(halfH - bt / 2f)), rect.Width, bt);
-            // Bottom
-            DrawBorder(new Vector2(0f, +(halfH - bt / 2f)), rect.Width, bt);
-            // Left
-            DrawBorder(new Vector2(-(halfW - bt / 2f), 0f), bt, rect.Height);
-            // Right
-            DrawBorder(new Vector2(+(halfW - bt / 2f), 0f), bt, rect.Height);
+        private Texture2D GetRoundedRectTexture(int width, int height, int radius)
+        {
+            var key = (width, height, radius);
+            if (_roundedRectCache.TryGetValue(key, out var tex)) return tex;
+            var texture = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, width, height, radius);
+            _roundedRectCache[key] = texture;
+            return texture;
         }
         
         /// <summary>
@@ -224,6 +227,11 @@ namespace Crusaders30XX.ECS.Systems
         public void Dispose()
         {
             _pixelTexture?.Dispose();
+            foreach (var tex in _roundedRectCache.Values)
+            {
+                tex?.Dispose();
+            }
+            _roundedRectCache.Clear();
         }
         
         // New: draw wrapped text in card-local space rotated with the card

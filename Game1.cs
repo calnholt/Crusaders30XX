@@ -137,12 +137,9 @@ public class Game1 : Game
         
         // Draw ECS World
         _renderingSystem.Draw();
-        
-        // Draw hand of cards
+
+        // Draw hand of cards on top of highlights
         _handDisplaySystem.DrawHand();
-        
-        // Draw card highlights
-        _cardHighlightSystem.Draw(gameTime);
 
         // Draw debug menu if open
         _debugMenuSystem.Draw();

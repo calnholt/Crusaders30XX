@@ -47,10 +47,11 @@ namespace Crusaders30XX.ECS.Config
         
         // Card border thickness for visual
         public const int CARD_BORDER_THICKNESS = 3;
+        public const int CARD_CORNER_RADIUS = 18;
 
         // Draw pile display settings
-        public const int DRAW_PILE_WIDTH = 120;
-        public const int DRAW_PILE_HEIGHT = 160;
+        public const int DRAW_PILE_WIDTH = 60;
+        public const int DRAW_PILE_HEIGHT = 80;
         public const int DRAW_PILE_MARGIN = 20;
         public const float DRAW_PILE_TEXT_SCALE = 0.8f;
 
