@@ -152,6 +152,18 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
+            var discardPileClickable = entity.GetComponent<DiscardPileClickable>();
+            if (discardPileClickable != null)
+            {
+                // Open generic modal with discard pile content
+                var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                var deck = deckEntity?.GetComponent<Deck>();
+                if (deck != null)
+                {
+                    EventManager.Publish(new OpenCardListModalEvent { Title = "Discard Pile", Cards = deck.DiscardPile.ToList() });
+                }
+            }
+
             var cardListModalClose = entity.GetComponent<CardListModalClose>();
             if (cardListModalClose != null)
             {

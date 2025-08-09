@@ -26,6 +26,7 @@ public class Game1 : Game
     private DebugMenuSystem _debugMenuSystem;
     private DebugCommandSystem _debugCommandSystem;
     private DrawPileDisplaySystem _drawPileDisplaySystem;
+    private DiscardPileDisplaySystem _discardPileDisplaySystem;
     private CardListModalSystem _cardListModalSystem;
 
     public Game1()
@@ -76,6 +77,7 @@ public class Game1 : Game
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
         _drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _discardPileDisplaySystem = new DiscardPileDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _cardListModalSystem = new CardListModalSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
 
         
@@ -86,6 +88,7 @@ public class Game1 : Game
         _world.AddSystem(_handDisplaySystem);
         _world.AddSystem(_debugCommandSystem);
         _world.AddSystem(_drawPileDisplaySystem);
+        _world.AddSystem(_discardPileDisplaySystem);
         _world.AddSystem(_cardListModalSystem);
 
         EventManager.Publish(new RequestDrawCardsEvent { Count = 4 });
@@ -146,6 +149,9 @@ public class Game1 : Game
 
         // Draw draw pile count (bottom-right)
         _drawPileDisplaySystem.Draw();
+
+        // Draw discard pile count (bottom-left)
+        _discardPileDisplaySystem.Draw();
 
         // Draw card list modal if open
         _cardListModalSystem.Draw();

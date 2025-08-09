@@ -191,6 +191,14 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marker component for the clickable discard pile UI area
+    /// </summary>
+    public class DiscardPileClickable : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
     /// Component representing a generic card list modal
     /// </summary>
     public class CardListModal : IComponent
