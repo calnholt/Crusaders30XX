@@ -26,6 +26,7 @@ public class Game1 : Game
     private DebugMenuSystem _debugMenuSystem;
     private DebugCommandSystem _debugCommandSystem;
     private DrawPileDisplaySystem _drawPileDisplaySystem;
+    private DrawPileModalSystem _drawPileModalSystem;
 
     public Game1()
     {
@@ -75,6 +76,7 @@ public class Game1 : Game
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
         _drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _drawPileModalSystem = new DrawPileModalSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -84,6 +86,7 @@ public class Game1 : Game
         _world.AddSystem(_handDisplaySystem);
         _world.AddSystem(_debugCommandSystem);
         _world.AddSystem(_drawPileDisplaySystem);
+        _world.AddSystem(_drawPileModalSystem);
 
         EventManager.Publish(new RequestDrawCardsEvent { Count = 4 });
         // TODO: use this.Content to load your game content here
@@ -146,12 +149,9 @@ public class Game1 : Game
 
         // Draw draw pile count (bottom-right)
         _drawPileDisplaySystem.Draw();
-        
-        // Draw text using the NewRocker font
-        if (_font != null)
-        {
-            _spriteBatch.DrawString(_font, "Crusaders 30XX", new Vector2(50, 50), Color.White);
-        }
+
+        // Draw draw pile modal if open
+        _drawPileModalSystem.Draw();
         
         _spriteBatch.End();
 

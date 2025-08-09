@@ -38,6 +38,7 @@ namespace Crusaders30XX.ECS.Systems
                 case "RedrawHand":
                     EventManager.Publish(new RedrawHandEvent { DrawCount = 4 });
                     break;
+                // no-op for draw pile modal: handled by modal system, not debug menu
             }
         }
     }

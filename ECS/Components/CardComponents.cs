@@ -183,6 +183,31 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marker component for the clickable draw pile UI area
+    /// </summary>
+    public class DrawPileClickable : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
+    /// Component representing a modal that shows draw pile contents
+    /// </summary>
+    public class DrawPileModal : IComponent
+    {
+        public Entity Owner { get; set; }
+        public bool IsOpen { get; set; } = false;
+    }
+
+    /// <summary>
+    /// Marker for the modal close button (X) of the draw pile modal
+    /// </summary>
+    public class DrawPileModalClose : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
     /// Component for a simple in-game debug menu state
     /// </summary>
     public class DebugMenu : IComponent

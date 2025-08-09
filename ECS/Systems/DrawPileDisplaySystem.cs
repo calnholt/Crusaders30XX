@@ -94,6 +94,21 @@ namespace Crusaders30XX.ECS.Systems
                 var pos = new Vector2(scaledRect.Center.X - size.X / 2f, scaledRect.Center.Y - size.Y / 2f);
                 _spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
             }
+
+            // Ensure a clickable UI entity exists and stays in sync for hit-testing
+            var clickable = EntityManager.GetEntitiesWithComponent<DrawPileClickable>().FirstOrDefault();
+            if (clickable == null)
+            {
+                clickable = EntityManager.CreateEntity("UIPanel_DrawPileClickable");
+                EntityManager.AddComponent(clickable, new DrawPileClickable());
+                EntityManager.AddComponent(clickable, new Transform { Position = new Vector2(scaledRect.X, scaledRect.Y), ZOrder = 10000 });
+                EntityManager.AddComponent(clickable, new UIElement { Bounds = scaledRect, IsInteractable = true, Tooltip = "View Draw Pile" });
+            }
+            else
+            {
+                var ui = clickable.GetComponent<UIElement>();
+                if (ui != null) ui.Bounds = scaledRect;
+            }
         }
 
         private void DrawBorder(Rectangle r, Color color, int thickness)

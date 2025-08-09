@@ -139,6 +139,18 @@ namespace Crusaders30XX.ECS.Systems
                 // Publish debug command event based on button command
                 EventManager.Publish(new DebugCommandEvent { Command = button.Command });
             }
+
+            var drawPileClickable = entity.GetComponent<DrawPileClickable>();
+            if (drawPileClickable != null)
+            {
+                EventManager.Publish(new OpenDrawPileModalEvent());
+            }
+
+            var drawPileModalClose = entity.GetComponent<DrawPileModalClose>();
+            if (drawPileModalClose != null)
+            {
+                EventManager.Publish(new CloseDrawPileModalEvent());
+            }
         }
         
         private void HandleCardClick(Entity entity)

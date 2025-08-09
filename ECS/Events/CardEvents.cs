@@ -38,6 +38,9 @@ namespace Crusaders30XX.ECS.Events
     {
         public int DrawCount { get; set; } = 4;
     }
+
+    public class OpenDrawPileModalEvent { }
+    public class CloseDrawPileModalEvent { }
     
     /// <summary>
     /// Event published when deck shuffling and drawing is requested
