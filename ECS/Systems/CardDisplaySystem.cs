@@ -84,12 +84,12 @@ namespace Crusaders30XX.ECS.Systems
             
             DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(CardConfig.DESCRIPTION_OFFSET_X, CardConfig.DESCRIPTION_OFFSET_Y), cardData.Description, Color.Black, CardConfig.DESCRIPTION_SCALE);
             
-            // Draw block value as blue number bottom-right
+            // Draw block value as blue number bottom-left
             if (cardData.BlockValue > 0)
             {
                 string blockText = cardData.BlockValue.ToString();
                 var measured = _font.MeasureString(blockText) * CardConfig.BLOCK_NUMBER_SCALE;
-                float localX = CardConfig.CARD_WIDTH - CardConfig.BLOCK_NUMBER_MARGIN_X - measured.X;
+                float localX = CardConfig.BLOCK_NUMBER_MARGIN_X;
                 float localY = CardConfig.CARD_HEIGHT - CardConfig.BLOCK_NUMBER_MARGIN_Y - measured.Y;
                 DrawCardTextRotatedSingle(cardCenter, rotation, new Vector2(localX, localY), blockText, Color.CornflowerBlue, CardConfig.BLOCK_NUMBER_SCALE);
             }

@@ -27,13 +27,13 @@ namespace Crusaders30XX.ECS.Config
         // Distance between adjacent card centers = CARD_WIDTH + CARD_GAP
         public const int CARD_GAP = 50; // editable gap between cards' edges
         public const float CARD_SPACING = (float)(CARD_WIDTH + CARD_GAP);
-        public const float HAND_BOTTOM_MARGIN = 200f; // pixels from bottom of screen
+        public const float HAND_BOTTOM_MARGIN = 150f; // pixels from bottom of screen
 
         // Hand fan (splay) settings
-        public const float HAND_FAN_MAX_ANGLE_DEG = 15f;   // max tilt angle at edges
-        public const float HAND_FAN_RADIUS = 380f;         // controls vertical arc curvature
+        public const float HAND_FAN_MAX_ANGLE_DEG = 5f;   // max tilt angle at edges
+        public const float HAND_FAN_RADIUS = 0f;         // controls vertical arc curvature
         public const float HAND_FAN_CURVE_OFFSET = 0f;     // additional vertical offset
-        public const float HAND_HOVER_LIFT = 40f;          // pixels to lift hovered card
+        public const float HAND_HOVER_LIFT = 10f;          // pixels to lift hovered card
         public const float HAND_HOVER_SCALE = 1.0f;        // reserved for future scale-up
         public const int HAND_Z_BASE = 100;
         public const int HAND_Z_STEP = 1;
@@ -129,11 +129,11 @@ namespace Crusaders30XX.ECS.Config
             return new Vector2(rect.X + TEXT_MARGIN_X, rect.Bottom - 60);
         }
 
-        // Computes bottom-right anchored block number top-left position given measured size
+        // Computes bottom-left anchored block number top-left position given measured size
         public static Vector2 GetBlockNumberPosition(Vector2 position, Vector2 measuredTextSize)
         {
             var rect = GetCardVisualRect(position);
-            float x = rect.Right - BLOCK_NUMBER_MARGIN_X - measuredTextSize.X;
+            float x = rect.Left + BLOCK_NUMBER_MARGIN_X;
             float y = rect.Bottom - BLOCK_NUMBER_MARGIN_Y - measuredTextSize.Y;
             return new Vector2(x, y);
         }

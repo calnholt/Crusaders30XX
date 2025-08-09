@@ -103,14 +103,6 @@ public class Game1 : Game
             deck.Cards.AddRange(demoHand);
             deck.DrawPile.AddRange(demoHand); // Add to draw pile instead of hand
         }
-        
-        // Create some enemies
-        var enemy1 = EntityFactory.CreateEnemy(_world, "Goblin", 30, new Vector2(800, 200));
-        var enemy2 = EntityFactory.CreateEnemy(_world, "Orc", 50, new Vector2(900, 200));
-        
-        // Create UI elements
-        var endTurnButton = EntityFactory.CreateUIElement(_world, "EndTurnButton", 
-            new Rectangle(1100, 600, 150, 50), "button");
     }
 
     protected override void Update(GameTime gameTime)
