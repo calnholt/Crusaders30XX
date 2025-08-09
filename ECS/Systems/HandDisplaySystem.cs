@@ -79,6 +79,14 @@ namespace Crusaders30XX.ECS.Systems
                         float yArc = CardConfig.HAND_FAN_RADIUS * (1f - cos);
                         float y = pivot.Y + CardConfig.HAND_FAN_CURVE_OFFSET + yArc;
 
+                        // If this card just appeared (default position), spawn it offscreen to the right (due east)
+                        if (transform.Position == Vector2.Zero)
+                        {
+                            float spawnX = _graphicsDevice.Viewport.Width + CardConfig.CARD_WIDTH * 1.5f;
+                            float spawnY = pivot.Y + CardConfig.HAND_FAN_CURVE_OFFSET;
+                            transform.Position = new Vector2(spawnX, spawnY);
+                        }
+
                         // Hover lift
                         var ui = entity.GetComponent<UIElement>();
                         bool hovered = ui?.IsHovered == true;
