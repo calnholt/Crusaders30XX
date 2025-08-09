@@ -19,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteFont _font;
         private readonly Texture2D _pixel;
         private double _pulseTimeRemaining = 0.0;
-        private const double PulseDuration = 0.35; // seconds
+        private const double PulseDuration = 0.15; // seconds
         private const float PulseAmplitude = 0.12f; // 12% size bump at peak
 
         public DrawPileDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
@@ -85,13 +85,14 @@ namespace Crusaders30XX.ECS.Systems
             // Border
             DrawBorder(scaledRect, Color.White, 2);
 
-            // Count text centered
+            // Count text centered (scale pulses with panel)
             if (_font != null)
             {
                 string text = deck.DrawPile.Count.ToString();
-                var size = _font.MeasureString(text) * CardConfig.DRAW_PILE_TEXT_SCALE;
+                float textScale = CardConfig.DRAW_PILE_TEXT_SCALE * scale;
+                var size = _font.MeasureString(text) * textScale;
                 var pos = new Vector2(scaledRect.Center.X - size.X / 2f, scaledRect.Center.Y - size.Y / 2f);
-                _spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, CardConfig.DRAW_PILE_TEXT_SCALE, SpriteEffects.None, 0f);
+                _spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
             }
         }
 
