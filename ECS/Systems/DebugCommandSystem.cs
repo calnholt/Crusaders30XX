@@ -35,6 +35,9 @@ namespace Crusaders30XX.ECS.Systems
                 case "DrawCard":
                     EventManager.Publish(new RequestDrawCardsEvent { Count = 1 });
                     break;
+                case "RedrawHand":
+                    EventManager.Publish(new RedrawHandEvent { DrawCount = 4 });
+                    break;
             }
         }
     }

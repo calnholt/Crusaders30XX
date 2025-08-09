@@ -30,6 +30,14 @@ namespace Crusaders30XX.ECS.Events
     {
         public string Command { get; set; }
     }
+
+    /// <summary>
+    /// Event to request discarding the hand, shuffling, and drawing a fresh hand
+    /// </summary>
+    public class RedrawHandEvent
+    {
+        public int DrawCount { get; set; } = 4;
+    }
     
     /// <summary>
     /// Event published when deck shuffling and drawing is requested

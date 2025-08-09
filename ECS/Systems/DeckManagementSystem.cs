@@ -18,6 +18,7 @@ namespace Crusaders30XX.ECS.Systems
             // Subscribe to deck management events
             EventManager.Subscribe<DeckShuffleDrawEvent>(OnDeckShuffleDrawEvent);
             EventManager.Subscribe<RequestDrawCardsEvent>(OnRequestDrawCards);
+            EventManager.Subscribe<RedrawHandEvent>(OnRedrawHandEvent);
         }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -35,6 +36,36 @@ namespace Crusaders30XX.ECS.Systems
 
             DrawCards(deck, Math.Max(1, evt.Count));
 
+        }
+
+        private void OnRedrawHandEvent(RedrawHandEvent evt)
+        {
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            if (deckEntity == null) return;
+            var deck = deckEntity.GetComponent<Deck>();
+            if (deck == null) return;
+
+            // Move current hand to discard, then reshuffle, then draw
+            // Move current hand to discard and reset their transforms, so re-drawn cards animate from spawn
+            foreach (var c in deck.Hand)
+            {
+                var t = c.GetComponent<Transform>();
+                if (t != null)
+                {
+                    t.Position = Vector2.Zero;
+                    t.Rotation = 0f;
+                }
+            }
+            deck.DiscardPile.AddRange(deck.Hand);
+            deck.Hand.Clear();
+            ShuffleDrawPile(deck);
+            DrawCards(deck, evt.DrawCount);
+
+            EventManager.Publish(new CardsDrawnEvent
+            {
+                Deck = deckEntity,
+                DrawnCards = deck.Hand.ToList()
+            });
         }
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
@@ -110,6 +141,13 @@ namespace Crusaders30XX.ECS.Systems
             {
                 var card = deck.DrawPile[0];
                 deck.DrawPile.RemoveAt(0);
+                // Reset transform so the HandDisplaySystem spawns it from offscreen east
+                var transform = card.GetComponent<Transform>();
+                if (transform != null)
+                {
+                    transform.Position = Vector2.Zero;
+                    transform.Rotation = 0f;
+                }
                 deck.Hand.Add(card);
                 return true;
             }

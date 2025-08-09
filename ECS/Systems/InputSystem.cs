@@ -174,6 +174,12 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(drawButton, new Transform { Position = new Vector2(1800, 260), ZOrder = 5001 });
                 EntityManager.AddComponent(drawButton, new UIElement { Bounds = new Rectangle(1730, 240, 140, 40), IsInteractable = true, Tooltip = "Draw 1 card" });
                 EntityManager.AddComponent(drawButton, new UIButton { Label = "Draw Card", Command = "DrawCard" });
+
+                // Add a button: Hand -> Redraw (discard, shuffle, draw 4)
+                var redrawButton = EntityManager.CreateEntity("DebugButton_Redraw");
+                EntityManager.AddComponent(redrawButton, new Transform { Position = new Vector2(1800, 300), ZOrder = 5001 });
+                EntityManager.AddComponent(redrawButton, new UIElement { Bounds = new Rectangle(1730, 285, 140, 40), IsInteractable = true, Tooltip = "Discard hand, shuffle, draw 4" });
+                EntityManager.AddComponent(redrawButton, new UIButton { Label = "Redraw", Command = "RedrawHand" });
             }
             else
             {
