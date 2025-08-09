@@ -2,6 +2,7 @@ using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Config;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
@@ -39,6 +40,13 @@ namespace Crusaders30XX.ECS.Systems
 
             var mouseState = Mouse.GetState();
             var mousePosition = mouseState.Position;
+            var keyboardState = Keyboard.GetState();
+
+            // Toggle debug menu on D key press (edge-triggered)
+            if (keyboardState.IsKeyDown(Keys.D) && !_previousKeyboardState.IsKeyDown(Keys.D))
+            {
+                ToggleDebugMenu();
+            }
 
             // Collect all interactable UI elements
             var uiEntities = GetRelevantEntities()
@@ -82,7 +90,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             _previousMouseState = mouseState;
-            _previousKeyboardState = Keyboard.GetState();
+            _previousKeyboardState = keyboardState;
         }
 
         private static bool IsUnderMouse(dynamic x, Point mousePosition)
@@ -124,6 +132,13 @@ namespace Crusaders30XX.ECS.Systems
                 // Handle card click
                 HandleCardClick(entity);
             }
+
+            var button = entity.GetComponent<UIButton>();
+            if (button != null)
+            {
+                // Publish debug command event based on button command
+                EventManager.Publish(new DebugCommandEvent { Command = button.Command });
+            }
         }
         
         private void HandleCardClick(Entity entity)
@@ -141,6 +156,36 @@ namespace Crusaders30XX.ECS.Systems
         {
             _previousMouseState = Mouse.GetState();
             _previousKeyboardState = Keyboard.GetState();
+        }
+
+        private void ToggleDebugMenu()
+        {
+            // Find or create a debug menu entity
+            var menuEntity = EntityManager.GetEntitiesWithComponent<DebugMenu>().FirstOrDefault();
+            if (menuEntity == null)
+            {
+                menuEntity = EntityManager.CreateEntity("DebugMenu");
+                EntityManager.AddComponent(menuEntity, new DebugMenu { IsOpen = true });
+                EntityManager.AddComponent(menuEntity, new Transform { Position = new Vector2(1800, 200), ZOrder = 5000 });
+                EntityManager.AddComponent(menuEntity, new UIElement { Bounds = new Rectangle(1750, 150, 150, 300), IsInteractable = true });
+
+                // Add a button: Hand -> Draw Card
+                var drawButton = EntityManager.CreateEntity("DebugButton_DrawCard");
+                EntityManager.AddComponent(drawButton, new Transform { Position = new Vector2(1800, 260), ZOrder = 5001 });
+                EntityManager.AddComponent(drawButton, new UIElement { Bounds = new Rectangle(1730, 240, 140, 40), IsInteractable = true, Tooltip = "Draw 1 card" });
+                EntityManager.AddComponent(drawButton, new UIButton { Label = "Draw Card", Command = "DrawCard" });
+            }
+            else
+            {
+                var menu = menuEntity.GetComponent<DebugMenu>();
+                menu.IsOpen = !menu.IsOpen;
+                // Toggle interactability for children as well
+                foreach (var e in EntityManager.GetEntitiesWithComponent<UIButton>())
+                {
+                    var ui = e.GetComponent<UIElement>();
+                    if (ui != null) ui.IsInteractable = menu.IsOpen;
+                }
+            }
         }
     }
 } 

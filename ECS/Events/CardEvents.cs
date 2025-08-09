@@ -22,6 +22,14 @@ namespace Crusaders30XX.ECS.Events
         public float ScreenWidth { get; set; }
         public float ScreenHeight { get; set; }
     }
+
+    /// <summary>
+    /// Event published when a debug UI button is clicked
+    /// </summary>
+    public class DebugCommandEvent
+    {
+        public string Command { get; set; }
+    }
     
     /// <summary>
     /// Event published when deck shuffling and drawing is requested
@@ -39,5 +47,13 @@ namespace Crusaders30XX.ECS.Events
     {
         public Entity Deck { get; set; }
         public System.Collections.Generic.List<Entity> DrawnCards { get; set; }
+    }
+
+    /// <summary>
+    /// Event to request drawing N cards from the current deck without reshuffling
+    /// </summary>
+    public class RequestDrawCardsEvent
+    {
+        public int Count { get; set; } = 1;
     }
 } 

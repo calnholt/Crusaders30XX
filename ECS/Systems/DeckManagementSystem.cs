@@ -17,6 +17,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             // Subscribe to deck management events
             EventManager.Subscribe<DeckShuffleDrawEvent>(OnDeckShuffleDrawEvent);
+            EventManager.Subscribe<RequestDrawCardsEvent>(OnRequestDrawCards);
         }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -24,6 +25,17 @@ namespace Crusaders30XX.ECS.Systems
             return EntityManager.GetEntitiesWithComponent<Deck>();
         }
         
+        private void OnRequestDrawCards(RequestDrawCardsEvent evt)
+        {
+            // Find the first deck and draw count cards
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            if (deckEntity == null) return;
+            var deck = deckEntity.GetComponent<Deck>();
+            if (deck == null) return;
+
+            DrawCards(deck, Math.Max(1, evt.Count));
+
+        }
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
             var deck = entity.GetComponent<Deck>();
@@ -135,7 +147,12 @@ namespace Crusaders30XX.ECS.Systems
                     break; // No more cards to draw
                 }
             }
-            
+            // Optionally publish CardsDrawnEvent reflecting current hand for UI updates
+            EventManager.Publish(new CardsDrawnEvent
+            {
+                Deck = deck.Owner,
+                DrawnCards = deck.Hand.ToList()
+            });
             return drawnCount;
         }
         

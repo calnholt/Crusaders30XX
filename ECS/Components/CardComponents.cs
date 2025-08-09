@@ -181,6 +181,25 @@ namespace Crusaders30XX.ECS.Components
             Rotate
         }
     }
+
+    /// <summary>
+    /// Component for a simple in-game debug menu state
+    /// </summary>
+    public class DebugMenu : IComponent
+    {
+        public Entity Owner { get; set; }
+        public bool IsOpen { get; set; } = false;
+    }
+
+    /// <summary>
+    /// Component for a generic UI button
+    /// </summary>
+    public class UIButton : IComponent
+    {
+        public Entity Owner { get; set; }
+        public string Label { get; set; } = "";
+        public string Command { get; set; } = ""; // e.g., "DrawCard"
+    }
     
     /// <summary>
     /// Component for game state management
