@@ -25,7 +25,7 @@ namespace Crusaders30XX.ECS.Config
         
         // Hand layout settings
         // Distance between adjacent card centers = CARD_WIDTH + CARD_GAP
-        public const int CARD_GAP = 50; // editable gap between cards' edges
+        public const int CARD_GAP = -20; // editable gap between cards' edges
         public const float CARD_SPACING = (float)(CARD_WIDTH + CARD_GAP);
         public const float HAND_BOTTOM_MARGIN = 150f; // pixels from bottom of screen
 

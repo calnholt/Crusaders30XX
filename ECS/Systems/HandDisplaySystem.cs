@@ -70,8 +70,10 @@ namespace Crusaders30XX.ECS.Systems
                         float angleDeg = t * CardConfig.HAND_FAN_MAX_ANGLE_DEG;
                         float angleRad = CardConfig.DegToRad(angleDeg);
 
-                        // Horizontal spread based on spacing
-                        float x = pivot.X + t * CardConfig.CARD_SPACING;
+                        // Horizontal spread scales with hand size
+                        // Use unnormalized index delta so width grows with number of cards
+                        float indexDelta = cardIndex - mid; // [-mid, +mid]
+                        float x = pivot.X + indexDelta * CardConfig.CARD_SPACING;
 
                         // Vertical arc using a circular approximation
                         float cos = (float)Math.Cos(angleRad);
