@@ -25,6 +25,7 @@ public class Game1 : Game
     private CardHighlightSystem _cardHighlightSystem;
     private DebugMenuSystem _debugMenuSystem;
     private DebugCommandSystem _debugCommandSystem;
+    private DrawPileDisplaySystem _drawPileDisplaySystem;
 
     public Game1()
     {
@@ -73,6 +74,7 @@ public class Game1 : Game
         _handDisplaySystem = new HandDisplaySystem(_world.EntityManager, GraphicsDevice);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
+        _drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -140,6 +142,9 @@ public class Game1 : Game
 
         // Draw debug menu if open
         _debugMenuSystem.Draw();
+
+        // Draw draw pile count (bottom-right)
+        _drawPileDisplaySystem.Draw();
         
         // Draw text using the NewRocker font
         if (_font != null)
