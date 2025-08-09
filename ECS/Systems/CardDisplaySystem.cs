@@ -33,6 +33,7 @@ namespace Crusaders30XX.ECS.Systems
             
             // Subscribe to card render events
             EventManager.Subscribe<CardRenderEvent>(OnCardRenderEvent);
+            EventManager.Subscribe<CardRenderScaledEvent>(OnCardRenderScaledEvent);
         }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -52,6 +53,26 @@ namespace Crusaders30XX.ECS.Systems
         private void OnCardRenderEvent(CardRenderEvent evt)
         {
             DrawCard(evt.Card, evt.Position);
+        }
+
+        private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
+        {
+            var transform = evt.Card.GetComponent<Transform>();
+            Vector2 originalScale = transform?.Scale ?? Vector2.One;
+            if (transform != null)
+            {
+                transform.Scale = new Vector2(evt.Scale, evt.Scale);
+                float originalRotation = transform.Rotation;
+                // Ensure no rotation for grid preview
+                transform.Rotation = 0f;
+                DrawCard(evt.Card, evt.Position);
+                transform.Scale = originalScale;
+                transform.Rotation = originalRotation;
+            }
+            else
+            {
+                DrawCard(evt.Card, evt.Position);
+            }
         }
         
         /// <summary>

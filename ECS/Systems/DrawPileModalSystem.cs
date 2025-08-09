@@ -21,12 +21,12 @@ namespace Crusaders30XX.ECS.Systems
         private readonly Texture2D _pixel;
 
         private const int ModalMargin = 40;
-        private const int Padding = 16;
-        private const int GridCellW = CardConfig.CARD_WIDTH / 2;
-        private const int GridCellH = CardConfig.CARD_HEIGHT / 2;
+        private const int Padding = 32;
+        private const int GridCellW = CardConfig.CARD_WIDTH;
+        private const int GridCellH = CardConfig.CARD_HEIGHT;
         private const int GridGap = 12;
         private const float TitleScale = 0.7f;
-        private const float NameScale = 0.45f;
+        private const float CardScale = 1.0f;
 
         public DrawPileModalSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
             : base(entityManager)
@@ -110,13 +110,15 @@ namespace Crusaders30XX.ECS.Systems
             foreach (var cd in cards)
             {
                 var cell = new Rectangle(gridX + col * (GridCellW + GridGap), gridY, GridCellW, GridCellH);
-                // Cell background
-                _spriteBatch.Draw(_pixel, cell, new Color(25, 40, 70));
-                DrawBorder(cell, Color.White * 0.6f, 1);
-                // Card name centered
-                var textSize = _font.MeasureString(cd.Name) * NameScale;
-                var textPos = new Vector2(cell.Center.X - textSize.X / 2f, cell.Center.Y - textSize.Y / 2f);
-                _spriteBatch.DrawString(_font, cd.Name, textPos, Color.White, 0f, Vector2.Zero, NameScale, SpriteEffects.None, 0f);
+                // Render the actual card scaled in the cell center
+                var cardEntity = cd.Owner;
+                Vector2 center = new Vector2(cell.Center.X, cell.Center.Y);
+                EventManager.Publish(new CardRenderScaledEvent
+                {
+                    Card = cardEntity,
+                    Position = center,
+                    Scale = CardScale
+                });
 
                 col++;
                 if (col >= maxCols)

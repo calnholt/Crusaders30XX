@@ -12,6 +12,16 @@ namespace Crusaders30XX.ECS.Events
         public Vector2 Position { get; set; }
         public bool IsInHand { get; set; }
     }
+
+    /// <summary>
+    /// Event published to render a card at a position with a uniform scale factor
+    /// </summary>
+    public class CardRenderScaledEvent
+    {
+        public Entity Card { get; set; }
+        public Vector2 Position { get; set; }
+        public float Scale { get; set; } = 1f;
+    }
     
     /// <summary>
     /// Event published when cards in hand need to be positioned
