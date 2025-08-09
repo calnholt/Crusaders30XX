@@ -191,18 +191,20 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
-    /// Component representing a modal that shows draw pile contents
+    /// Component representing a generic card list modal
     /// </summary>
-    public class DrawPileModal : IComponent
+    public class CardListModal : IComponent
     {
         public Entity Owner { get; set; }
         public bool IsOpen { get; set; } = false;
+        public string Title { get; set; } = "";
+        public List<Entity> Cards { get; set; } = new();
     }
 
     /// <summary>
-    /// Marker for the modal close button (X) of the draw pile modal
+    /// Marker for the modal close button (X) of the card list modal
     /// </summary>
-    public class DrawPileModalClose : IComponent
+    public class CardListModalClose : IComponent
     {
         public Entity Owner { get; set; }
     }

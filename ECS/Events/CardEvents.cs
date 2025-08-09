@@ -1,4 +1,5 @@
 using Crusaders30XX.ECS.Core;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Events
@@ -57,8 +58,13 @@ namespace Crusaders30XX.ECS.Events
         public int DrawCount { get; set; } = 4;
     }
 
-    public class OpenDrawPileModalEvent { }
-    public class CloseDrawPileModalEvent { }
+    public class OpenCardListModalEvent
+    {
+        public string Title { get; set; }
+        public List<Entity> Cards { get; set; }
+    }
+
+    public class CloseCardListModalEvent { }
     
     /// <summary>
     /// Event published when deck shuffling and drawing is requested

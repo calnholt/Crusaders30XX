@@ -26,7 +26,7 @@ public class Game1 : Game
     private DebugMenuSystem _debugMenuSystem;
     private DebugCommandSystem _debugCommandSystem;
     private DrawPileDisplaySystem _drawPileDisplaySystem;
-    private DrawPileModalSystem _drawPileModalSystem;
+    private CardListModalSystem _cardListModalSystem;
 
     public Game1()
     {
@@ -76,7 +76,7 @@ public class Game1 : Game
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
         _drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
-        _drawPileModalSystem = new DrawPileModalSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _cardListModalSystem = new CardListModalSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -86,7 +86,7 @@ public class Game1 : Game
         _world.AddSystem(_handDisplaySystem);
         _world.AddSystem(_debugCommandSystem);
         _world.AddSystem(_drawPileDisplaySystem);
-        _world.AddSystem(_drawPileModalSystem);
+        _world.AddSystem(_cardListModalSystem);
 
         EventManager.Publish(new RequestDrawCardsEvent { Count = 4 });
         // TODO: use this.Content to load your game content here
@@ -147,8 +147,8 @@ public class Game1 : Game
         // Draw draw pile count (bottom-right)
         _drawPileDisplaySystem.Draw();
 
-        // Draw draw pile modal if open
-        _drawPileModalSystem.Draw();
+        // Draw card list modal if open
+        _cardListModalSystem.Draw();
         
         _spriteBatch.End();
 

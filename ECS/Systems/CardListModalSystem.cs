@@ -11,9 +11,9 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Crusaders30XX.ECS.Systems
 {
     /// <summary>
-    /// Displays a modal listing the draw pile contents in an alphabetical grid with a close button.
+    /// Displays a modal listing an arbitrary set of cards in an alphabetical grid with a close button.
     /// </summary>
-    public class DrawPileModalSystem : Core.System
+    public class CardListModalSystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Systems
         private const float TitleScale = 0.7f;
         private const float CardScale = 1.0f;
 
-        public DrawPileModalSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+        public CardListModalSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
@@ -37,13 +37,13 @@ namespace Crusaders30XX.ECS.Systems
             _pixel = new Texture2D(graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
 
-            EventManager.Subscribe<OpenDrawPileModalEvent>(_ => OpenModal());
-            EventManager.Subscribe<CloseDrawPileModalEvent>(_ => CloseModal());
+            EventManager.Subscribe<OpenCardListModalEvent>(OpenModal);
+            EventManager.Subscribe<CloseCardListModalEvent>(_ => CloseModal());
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
         {
-            return EntityManager.GetEntitiesWithComponent<DrawPileModal>();
+            return EntityManager.GetEntitiesWithComponent<CardListModal>();
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
@@ -52,7 +52,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var modalEntity = GetRelevantEntities().FirstOrDefault();
             if (modalEntity == null) return;
-            var modal = modalEntity.GetComponent<DrawPileModal>();
+            var modal = modalEntity.GetComponent<CardListModal>();
             if (modal == null || !modal.IsOpen) return;
 
             int w = _graphicsDevice.Viewport.Width;
@@ -66,7 +66,7 @@ namespace Crusaders30XX.ECS.Systems
             DrawBorder(rect, Color.White, 3);
 
             int cursorY = rect.Y + Padding;
-            _spriteBatch.DrawString(_font, "Draw Pile", new Vector2(rect.X + Padding, cursorY), Color.White, 0f, Vector2.Zero, TitleScale, SpriteEffects.None, 0f);
+            _spriteBatch.DrawString(_font, modal.Title ?? "Cards", new Vector2(rect.X + Padding, cursorY), Color.White, 0f, Vector2.Zero, TitleScale, SpriteEffects.None, 0f);
             cursorY += (int)(_font.LineSpacing * TitleScale) + Padding;
 
             // Close button (top-right)
@@ -77,13 +77,13 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.DrawString(_font, "X", new Vector2(closeRect.Center.X - xSize.X / 2f, closeRect.Center.Y - xSize.Y / 2f), Color.White, 0f, Vector2.Zero, 0.6f, SpriteEffects.None, 0f);
 
             // Sync a clickable close entity
-            var closeBtn = EntityManager.GetEntitiesWithComponent<DrawPileModalClose>().FirstOrDefault();
+            var closeBtn = EntityManager.GetEntitiesWithComponent<CardListModalClose>().FirstOrDefault();
             if (closeBtn == null)
             {
-                closeBtn = EntityManager.CreateEntity("DrawPileModal_Close");
+                closeBtn = EntityManager.CreateEntity("CardListModal_Close");
                 EntityManager.AddComponent(closeBtn, new Transform { Position = new Vector2(closeRect.X, closeRect.Y), ZOrder = 20000 });
                 EntityManager.AddComponent(closeBtn, new UIElement { Bounds = closeRect, IsInteractable = true, Tooltip = "Close" });
-                EntityManager.AddComponent(closeBtn, new DrawPileModalClose());
+                EntityManager.AddComponent(closeBtn, new CardListModalClose());
             }
             else
             {
@@ -91,12 +91,8 @@ namespace Crusaders30XX.ECS.Systems
                 if (ui != null) ui.Bounds = closeRect;
             }
 
-            // Fetch and sort cards
-            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-            if (deckEntity == null) return;
-            var deck = deckEntity.GetComponent<Deck>();
-            if (deck == null) return;
-            var cards = deck.DrawPile
+            // Fetch and sort provided cards
+            var cards = (modal.Cards ?? new List<Entity>())
                 .Select(e => e.GetComponent<CardData>())
                 .Where(cd => cd != null)
                 .OrderBy(cd => cd.Name)
@@ -137,26 +133,31 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.Draw(_pixel, new Rectangle(r.Right - thickness, r.Y, thickness, r.Height), color);
         }
 
-        private void OpenModal()
+        private void OpenModal(OpenCardListModalEvent evt)
         {
-            var modal = EntityManager.GetEntitiesWithComponent<DrawPileModal>().FirstOrDefault();
+            var modal = EntityManager.GetEntitiesWithComponent<CardListModal>().FirstOrDefault();
             if (modal == null)
             {
-                modal = EntityManager.CreateEntity("DrawPileModal");
-                EntityManager.AddComponent(modal, new DrawPileModal { IsOpen = true });
+                modal = EntityManager.CreateEntity("CardListModal");
+                EntityManager.AddComponent(modal, new CardListModal { IsOpen = true, Title = evt.Title, Cards = evt.Cards ?? new List<Entity>() });
             }
             else
             {
-                var cmp = modal.GetComponent<DrawPileModal>();
-                if (cmp != null) cmp.IsOpen = true;
+                var cmp = modal.GetComponent<CardListModal>();
+                if (cmp != null)
+                {
+                    cmp.Title = evt.Title;
+                    cmp.Cards = evt.Cards ?? new List<Entity>();
+                    cmp.IsOpen = true;
+                }
             }
         }
 
         private void CloseModal()
         {
-            var modal = EntityManager.GetEntitiesWithComponent<DrawPileModal>().FirstOrDefault();
+            var modal = EntityManager.GetEntitiesWithComponent<CardListModal>().FirstOrDefault();
             if (modal == null) return;
-            var cmp = modal.GetComponent<DrawPileModal>();
+            var cmp = modal.GetComponent<CardListModal>();
             if (cmp != null) cmp.IsOpen = false;
         }
     }

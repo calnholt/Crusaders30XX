@@ -143,13 +143,19 @@ namespace Crusaders30XX.ECS.Systems
             var drawPileClickable = entity.GetComponent<DrawPileClickable>();
             if (drawPileClickable != null)
             {
-                EventManager.Publish(new OpenDrawPileModalEvent());
+                // Open generic modal with draw pile content
+                var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                var deck = deckEntity?.GetComponent<Deck>();
+                if (deck != null)
+                {
+                    EventManager.Publish(new OpenCardListModalEvent { Title = "Draw Pile", Cards = deck.DrawPile.ToList() });
+                }
             }
 
-            var drawPileModalClose = entity.GetComponent<DrawPileModalClose>();
-            if (drawPileModalClose != null)
+            var cardListModalClose = entity.GetComponent<CardListModalClose>();
+            if (cardListModalClose != null)
             {
-                EventManager.Publish(new CloseDrawPileModalEvent());
+                EventManager.Publish(new CloseCardListModalEvent());
             }
         }
         
