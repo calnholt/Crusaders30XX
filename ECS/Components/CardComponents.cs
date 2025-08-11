@@ -183,6 +183,14 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marker component for the player portrait anchor Transform used by UI systems
+    /// </summary>
+    public class PlayerPortraitAnchor : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
     /// Marker component for the clickable draw pile UI area
     /// </summary>
     public class DrawPileClickable : IComponent

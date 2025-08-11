@@ -1,7 +1,9 @@
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -25,6 +27,8 @@ namespace Crusaders30XX.ECS.Systems
         private const float BreathSpeedHz = 0.25f;        // cycles per second
 
         // (Particle logic moved to PlayerWispParticleSystem)
+        private Entity _anchorEntity;
+        private Transform _anchorTransform;
 
         public PlayerDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Texture2D crusaderTexture)
             : base(entityManager)
@@ -32,6 +36,25 @@ namespace Crusaders30XX.ECS.Systems
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             _crusaderTexture = crusaderTexture;
+
+            // Find or create a shared portrait anchor entity
+            _anchorEntity = EntityManager.GetEntitiesWithComponent<PlayerPortraitAnchor>().FirstOrDefault();
+            if (_anchorEntity == null)
+            {
+                _anchorEntity = EntityManager.CreateEntity("PlayerPortraitAnchor");
+                _anchorTransform = new Transform { Position = Vector2.Zero, Scale = Vector2.One, Rotation = 0f, ZOrder = 0 };
+                EntityManager.AddComponent(_anchorEntity, _anchorTransform);
+                EntityManager.AddComponent(_anchorEntity, new PlayerPortraitAnchor());
+            }
+            else
+            {
+                _anchorTransform = _anchorEntity.GetComponent<Transform>();
+                if (_anchorTransform == null)
+                {
+                    _anchorTransform = new Transform();
+                    EntityManager.AddComponent(_anchorEntity, _anchorTransform);
+                }
+            }
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -43,6 +66,25 @@ namespace Crusaders30XX.ECS.Systems
         public override void Update(GameTime gameTime)
         {
             _elapsedSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            // Update shared anchor transform so other systems (e.g., wisps) can follow
+            if (_crusaderTexture != null && _anchorTransform != null)
+            {
+                int viewportW = _graphicsDevice.Viewport.Width;
+                int viewportH = _graphicsDevice.Viewport.Height;
+
+                float desiredHeight = ScreenHeightCoverage * viewportH;
+                float baseScale = desiredHeight / _crusaderTexture.Height;
+                float phase = 2f * System.MathF.PI * BreathSpeedHz * _elapsedSeconds;
+                float breathFactor = 1f + (BreathScaleAmplitude * 0.5f) * System.MathF.Cos(phase);
+                float scale = baseScale * breathFactor;
+
+                var position = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
+                _anchorTransform.Position = position;
+                _anchorTransform.Scale = new Vector2(scale, scale);
+                _anchorTransform.Rotation = 0f;
+                _anchorTransform.ZOrder = 0;
+            }
             base.Update(gameTime);
         }
 

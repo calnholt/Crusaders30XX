@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -14,16 +15,11 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
-        private readonly Texture2D _crusaderTexture; // used for sizing/anchor only
+        private readonly Texture2D _crusaderTexture; // used for sizing
 
         private float _elapsedSeconds;
 
-        // Portrait alignment (duplicated to match PlayerDisplaySystem)
-        private const float ScreenHeightCoverage = 0.3f;
-        private const float CenterOffsetX = -600f;
-        private const float CenterOffsetY = 0f;
-        private const float BreathScaleAmplitude = 0.06f;
-        private const float BreathSpeedHz = 0.25f;
+        // Uses Transform from PlayerPortraitAnchor instead of duplicating layout constants
 
         // Wispy particle settings
         private const float WispSpawnRatePerSecond = 7.5f;
@@ -76,7 +72,11 @@ namespace Crusaders30XX.ECS.Systems
             EnsureWispTexture();
             if (_crusaderTexture == null) return;
 
-            GetPortraitTransform(out var portraitPosition, out var portraitScale, out _, out var texW, out var texH);
+            if (!TryGetAnchor(out var anchorTransform)) return;
+            var portraitPosition = anchorTransform.Position;
+            var portraitScale = anchorTransform.Scale.X; // uniform scale
+            float texW = _crusaderTexture.Width;
+            float texH = _crusaderTexture.Height;
 
             // Spawn new wisps based on rate, accumulating fractional spawns
             _spawnAccumulator += WispSpawnRatePerSecond * dt;
@@ -113,8 +113,11 @@ namespace Crusaders30XX.ECS.Systems
         public void Draw()
         {
             if (_wispTexture == null || _crusaderTexture == null) return;
-
-            GetPortraitTransform(out var portraitPosition, out var portraitScale, out _, out var texW, out var texH);
+            if (!TryGetAnchor(out var anchorTransform)) return;
+            var portraitPosition = anchorTransform.Position;
+            var portraitScale = anchorTransform.Scale.X;
+            float texW = _crusaderTexture.Width;
+            float texH = _crusaderTexture.Height;
             DrawWisps(portraitPosition, portraitScale, texW, texH);
         }
 
@@ -204,21 +207,13 @@ namespace Crusaders30XX.ECS.Systems
             _wispTexture.SetData(data);
         }
 
-        private void GetPortraitTransform(out Vector2 position, out float scale, out Vector2 origin, out float texW, out float texH)
+        private bool TryGetAnchor(out Components.Transform transform)
         {
-            int viewportW = _graphicsDevice.Viewport.Width;
-            int viewportH = _graphicsDevice.Viewport.Height;
-
-            float desiredHeight = ScreenHeightCoverage * viewportH;
-            float baseScale = desiredHeight / _crusaderTexture.Height;
-            float phase = 2f * MathF.PI * BreathSpeedHz * _elapsedSeconds;
-            float breathFactor = 1f + (BreathScaleAmplitude * 0.5f) * MathF.Cos(phase);
-            scale = baseScale * breathFactor;
-
-            texW = _crusaderTexture.Width;
-            texH = _crusaderTexture.Height;
-            origin = new Vector2(texW / 2f, texH / 2f);
-            position = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
+            transform = null;
+            var anchor = EntityManager.GetEntitiesWithComponent<Components.PlayerPortraitAnchor>().FirstOrDefault();
+            if (anchor == null) return false;
+            transform = anchor.GetComponent<Components.Transform>();
+            return transform != null;
         }
     }
 }
