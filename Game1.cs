@@ -28,6 +28,7 @@ public class Game1 : Game
     private DrawPileDisplaySystem _drawPileDisplaySystem;
     private DiscardPileDisplaySystem _discardPileDisplaySystem;
     private CardListModalSystem _cardListModalSystem;
+    private PlayerDisplaySystem _playerDisplaySystem;
 
     public Game1()
     {
@@ -79,6 +80,9 @@ public class Game1 : Game
         _drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _discardPileDisplaySystem = new DiscardPileDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _cardListModalSystem = new CardListModalSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        // Load Crusader portrait texture and create player display system
+        var crusaderTexture = Content.Load<Texture2D>("Crusader");
+        _playerDisplaySystem = new PlayerDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, crusaderTexture);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -90,6 +94,7 @@ public class Game1 : Game
         _world.AddSystem(_drawPileDisplaySystem);
         _world.AddSystem(_discardPileDisplaySystem);
         _world.AddSystem(_cardListModalSystem);
+        _world.AddSystem(_playerDisplaySystem);
 
         EventManager.Publish(new RequestDrawCardsEvent { Count = 4 });
         // TODO: use this.Content to load your game content here
@@ -140,6 +145,9 @@ public class Game1 : Game
         
         // Draw ECS World
         _renderingSystem.Draw();
+
+        // Draw player portrait (middle-left)
+        _playerDisplaySystem.Draw();
 
         // Draw hand of cards on top of highlights
         _handDisplaySystem.DrawHand();

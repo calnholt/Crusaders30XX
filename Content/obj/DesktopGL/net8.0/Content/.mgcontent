@@ -5,8 +5,10 @@
   <Config />
   <SourceFiles>
     <File>C:/Users/Calvin/Documents/Crusaders30XX/Content/NewRocker.spritefont</File>
+    <File>C:/Users/Calvin/Documents/Crusaders30XX/Content/Crusader.png</File>
   </SourceFiles>
   <DestFiles>
+    <File xsi:nil="true" />
     <File xsi:nil="true" />
   </DestFiles>
 </SourceFileCollection>

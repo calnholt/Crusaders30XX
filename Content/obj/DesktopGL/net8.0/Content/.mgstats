@@ -1,2 +1,3 @@
 Source File,Dest File,Processor Type,Content Type,Source File Size,Dest File Size,Build Seconds
+"C:/Users/Calvin/Documents/Crusaders30XX/Content/Crusader.png","C:/Users/Calvin/Documents/Crusaders30XX/Content/bin/DesktopGL/Content/Crusader.xnb","TextureProcessor","Texture2DContent",604590,580053,0.1107718
 "C:/Users/Calvin/Documents/Crusaders30XX/Content/NewRocker.spritefont","C:/Users/Calvin/Documents/Crusaders30XX/Content/bin/DesktopGL/Content/NewRocker.xnb","FontDescriptionProcessor","SpriteFontContent",443,136217,0.1173074
