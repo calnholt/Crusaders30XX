@@ -22,26 +22,26 @@ namespace Crusaders30XX.ECS.Systems
         // Uses Transform from PlayerPortraitAnchor instead of duplicating layout constants
 
         // Wispy particle settings
-        private const float WispSpawnRatePerSecond = 7.5f;
-        private const int WispMaxCount = 96;
-        private const float WispMinLifetime = 2.4f;
-        private const float WispMaxLifetime = 3f;
+        private const float WispSpawnRatePerSecond = 10f;
+        private const int WispMaxCount = 150;
+        private const float WispMinLifetime = 3f;
+        private const float WispMaxLifetime = 4f;
         private const float WispMinSpeed = 40f;   // px/sec upward
         private const float WispMaxSpeed = 56f;
-        private const float WispMinSwayAmplitude = 10f; // px
-        private const float WispMaxSwayAmplitude = 26f;
+        private const float WispMinSwayAmplitude = 5f; // px
+        private const float WispMaxSwayAmplitude = 15f;
         private const float WispMinSwayHz = 0.7f;
-        private const float WispMaxSwayHz = 1.6f;
+        private const float WispMaxSwayHz = 1f;
 
         // Adjustable visual radius range in pixels (core circle), before glow multiplier
-        private float _wispMinRadiusPx = 10f;
-        private float _wispMaxRadiusPx = 22f;
+        private float _wispMinRadiusPx = 5f;
+        private float _wispMaxRadiusPx = 10f;
         public float WispMinRadiusPx { get => _wispMinRadiusPx; set => _wispMinRadiusPx = MathF.Max(0.1f, MathF.Min(value, _wispMaxRadiusPx)); }
         public float WispMaxRadiusPx { get => _wispMaxRadiusPx; set => _wispMaxRadiusPx = MathF.Max(value, _wispMinRadiusPx); }
 
         // Transparency controls (multipliers applied after lifetime fade)
-        private float _wispCoreAlphaMultiplier = 0.9f;
-        private float _wispGlowAlphaMultiplier = 0.5f;
+        private float _wispCoreAlphaMultiplier = 1f;
+        private float _wispGlowAlphaMultiplier = 1f;
 
         private readonly List<WispParticle> _wisps = new();
         private readonly Random _random = new Random();
@@ -135,7 +135,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             // Spawn region: around lower half of portrait, small random ring around center
             float halfW = 0.45f * texW * portraitScale;
-            float halfH = 0.25f * texH * portraitScale; // bias lower area
+            float halfH = 0.4f * texH * portraitScale; // bias lower area
             float rx = (float)(_random.NextDouble() * 2 - 1);
             float ry = (float)(_random.NextDouble() * 2 - 1);
             var spawnOffset = new Vector2(rx * halfW, ry * halfH + 0.2f * texH * portraitScale);
