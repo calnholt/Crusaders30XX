@@ -24,14 +24,24 @@ namespace Crusaders30XX.ECS.Systems
         // Wispy particle settings
         private const float WispSpawnRatePerSecond = 7.5f;
         private const int WispMaxCount = 96;
-        private const float WispMinLifetime = 1.2f;
-        private const float WispMaxLifetime = 2.4f;
-        private const float WispMinSpeed = 28f;   // px/sec upward
+        private const float WispMinLifetime = 2.4f;
+        private const float WispMaxLifetime = 3f;
+        private const float WispMinSpeed = 40f;   // px/sec upward
         private const float WispMaxSpeed = 56f;
         private const float WispMinSwayAmplitude = 10f; // px
         private const float WispMaxSwayAmplitude = 26f;
         private const float WispMinSwayHz = 0.7f;
         private const float WispMaxSwayHz = 1.6f;
+
+        // Adjustable visual radius range in pixels (core circle), before glow multiplier
+        private float _wispMinRadiusPx = 10f;
+        private float _wispMaxRadiusPx = 22f;
+        public float WispMinRadiusPx { get => _wispMinRadiusPx; set => _wispMinRadiusPx = MathF.Max(0.1f, MathF.Min(value, _wispMaxRadiusPx)); }
+        public float WispMaxRadiusPx { get => _wispMaxRadiusPx; set => _wispMaxRadiusPx = MathF.Max(value, _wispMinRadiusPx); }
+
+        // Transparency controls (multipliers applied after lifetime fade)
+        private float _wispCoreAlphaMultiplier = 0.9f;
+        private float _wispGlowAlphaMultiplier = 0.5f;
 
         private readonly List<WispParticle> _wisps = new();
         private readonly Random _random = new Random();
@@ -130,6 +140,12 @@ namespace Crusaders30XX.ECS.Systems
             float ry = (float)(_random.NextDouble() * 2 - 1);
             var spawnOffset = new Vector2(rx * halfW, ry * halfH + 0.2f * texH * portraitScale);
 
+            // Convert desired pixel radius to sprite scale based on radial texture radius
+            float texRadius = _wispTexture != null ? _wispTexture.Width / 2f : 24f;
+            float desiredRadiusPx = MathHelper.Lerp(_wispMinRadiusPx, _wispMaxRadiusPx, (float)_random.NextDouble())
+                                     * (0.7f + 0.3f * portraitScale);
+            float sizeScale = desiredRadiusPx / texRadius;
+
             var p = new WispParticle
             {
                 StartPosition = portraitPosition + spawnOffset,
@@ -139,7 +155,7 @@ namespace Crusaders30XX.ECS.Systems
                 SwayAmplitude = MathHelper.Lerp(WispMinSwayAmplitude, WispMaxSwayAmplitude, (float)_random.NextDouble()) * (0.6f + 0.4f * portraitScale),
                 SwayAngularVelocity = MathHelper.TwoPi * MathHelper.Lerp(WispMinSwayHz, WispMaxSwayHz, (float)_random.NextDouble()),
                 SwayPhase = MathHelper.TwoPi * (float)_random.NextDouble(),
-                SizeScale = (0.55f + 0.9f * (float)_random.NextDouble()) * (0.7f + 0.3f * portraitScale)
+                SizeScale = sizeScale
             };
 
             _wisps.Add(p);
@@ -171,8 +187,8 @@ namespace Crusaders30XX.ECS.Systems
 
                 // scale grows slightly as it rises
                 float s = p.SizeScale * (1f + 0.15f * t);
-                var colorCore = new Color(r, g, b) * (0.70f * alpha);
-                var colorGlow = new Color(r, g, b) * (0.25f * alpha);
+                var colorCore = new Color(r, g, b) * (_wispCoreAlphaMultiplier * alpha);
+                var colorGlow = new Color(r, g, b) * (_wispGlowAlphaMultiplier * alpha);
 
                 var originPx = new Vector2(_wispTexture.Width / 2f, _wispTexture.Height / 2f);
 
