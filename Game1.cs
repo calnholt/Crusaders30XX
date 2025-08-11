@@ -84,7 +84,7 @@ public class Game1 : Game
         // Load Crusader portrait texture and create player systems
         var crusaderTexture = Content.Load<Texture2D>("Crusader");
         _playerDisplaySystem = new PlayerDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, crusaderTexture);
-        _playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, crusaderTexture);
+        _playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
 
         
         _world.AddSystem(_cardHighlightSystem);

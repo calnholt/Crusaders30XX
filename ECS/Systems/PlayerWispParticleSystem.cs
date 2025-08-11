@@ -15,7 +15,6 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
-        private readonly Texture2D _crusaderTexture; // used for sizing
 
         private float _elapsedSeconds;
 
@@ -60,12 +59,11 @@ namespace Crusaders30XX.ECS.Systems
             public float SizeScale;
         }
 
-        public PlayerWispParticleSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Texture2D crusaderTexture)
+        public PlayerWispParticleSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
-            _crusaderTexture = crusaderTexture;
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -80,13 +78,12 @@ namespace Crusaders30XX.ECS.Systems
             _elapsedSeconds += dt;
 
             EnsureWispTexture();
-            if (_crusaderTexture == null) return;
+            if (!TryGetAnchor(out var anchorTransform, out var portraitInfo)) return;
 
-            if (!TryGetAnchor(out var anchorTransform)) return;
             var portraitPosition = anchorTransform.Position;
             var portraitScale = anchorTransform.Scale.X; // uniform scale
-            float texW = _crusaderTexture.Width;
-            float texH = _crusaderTexture.Height;
+            float texW = portraitInfo?.TextureWidth ?? 0;
+            float texH = portraitInfo?.TextureHeight ?? 0;
 
             // Spawn new wisps based on rate, accumulating fractional spawns
             _spawnAccumulator += WispSpawnRatePerSecond * dt;
@@ -122,12 +119,12 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
-            if (_wispTexture == null || _crusaderTexture == null) return;
-            if (!TryGetAnchor(out var anchorTransform)) return;
+            if (_wispTexture == null) return;
+            if (!TryGetAnchor(out var anchorTransform, out var portraitInfo)) return;
             var portraitPosition = anchorTransform.Position;
             var portraitScale = anchorTransform.Scale.X;
-            float texW = _crusaderTexture.Width;
-            float texH = _crusaderTexture.Height;
+            float texW = portraitInfo?.TextureWidth ?? 0;
+            float texH = portraitInfo?.TextureHeight ?? 0;
             DrawWisps(portraitPosition, portraitScale, texW, texH);
         }
 
@@ -223,12 +220,14 @@ namespace Crusaders30XX.ECS.Systems
             _wispTexture.SetData(data);
         }
 
-        private bool TryGetAnchor(out Components.Transform transform)
+        private bool TryGetAnchor(out Components.Transform transform, out Components.PlayerPortraitInfo info)
         {
             transform = null;
+            info = null;
             var anchor = EntityManager.GetEntitiesWithComponent<Components.PlayerPortraitAnchor>().FirstOrDefault();
             if (anchor == null) return false;
             transform = anchor.GetComponent<Components.Transform>();
+            info = anchor.GetComponent<Components.PlayerPortraitInfo>();
             return transform != null;
         }
     }

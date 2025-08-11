@@ -45,6 +45,7 @@ namespace Crusaders30XX.ECS.Systems
                 _anchorTransform = new Transform { Position = Vector2.Zero, Scale = Vector2.One, Rotation = 0f, ZOrder = 0 };
                 EntityManager.AddComponent(_anchorEntity, _anchorTransform);
                 EntityManager.AddComponent(_anchorEntity, new PlayerPortraitAnchor());
+                EntityManager.AddComponent(_anchorEntity, new PlayerPortraitInfo { TextureWidth = _crusaderTexture?.Width ?? 0, TextureHeight = _crusaderTexture?.Height ?? 0 });
             }
             else
             {
@@ -54,6 +55,14 @@ namespace Crusaders30XX.ECS.Systems
                     _anchorTransform = new Transform();
                     EntityManager.AddComponent(_anchorEntity, _anchorTransform);
                 }
+                var info = _anchorEntity.GetComponent<PlayerPortraitInfo>();
+                if (info == null)
+                {
+                    info = new PlayerPortraitInfo();
+                    EntityManager.AddComponent(_anchorEntity, info);
+                }
+                info.TextureWidth = _crusaderTexture?.Width ?? 0;
+                info.TextureHeight = _crusaderTexture?.Height ?? 0;
             }
         }
 

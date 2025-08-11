@@ -191,6 +191,16 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Holds metadata about the player portrait drawing, such as source texture size.
+    /// </summary>
+    public class PlayerPortraitInfo : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int TextureWidth { get; set; }
+        public int TextureHeight { get; set; }
+    }
+
+    /// <summary>
     /// Marker component for the clickable draw pile UI area
     /// </summary>
     public class DrawPileClickable : IComponent
