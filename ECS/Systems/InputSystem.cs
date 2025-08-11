@@ -48,6 +48,12 @@ namespace Crusaders30XX.ECS.Systems
                 ToggleDebugMenu();
             }
 
+            // Toggle profiler overlay on P key press (edge-triggered)
+            if (keyboardState.IsKeyDown(Keys.P) && !_previousKeyboardState.IsKeyDown(Keys.P))
+            {
+                ToggleProfilerOverlay();
+            }
+
             // Collect all interactable UI elements
             var uiEntities = GetRelevantEntities()
                 .Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), IsCard = e.GetComponent<CardData>() != null })
@@ -236,6 +242,21 @@ namespace Crusaders30XX.ECS.Systems
                     var ui = e.GetComponent<UIElement>();
                     if (ui != null) ui.IsInteractable = menu.IsOpen;
                 }
+            }
+        }
+
+        private void ToggleProfilerOverlay()
+        {
+            var e = EntityManager.GetEntitiesWithComponent<ProfilerOverlay>().FirstOrDefault();
+            if (e == null)
+            {
+                e = EntityManager.CreateEntity("ProfilerOverlay");
+                EntityManager.AddComponent(e, new ProfilerOverlay { IsOpen = true });
+            }
+            else
+            {
+                var p = e.GetComponent<ProfilerOverlay>();
+                p.IsOpen = !p.IsOpen;
             }
         }
     }

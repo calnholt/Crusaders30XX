@@ -20,7 +20,7 @@ namespace Crusaders30XX.ECS.Systems
         // Visual tuning
         private const float ScreenHeightCoverage = 0.3f; // portrait height relative to viewport height
         private const float CenterOffsetX = -600f; // horizontal offset (+right, -left) from screen center
-        private const float CenterOffsetY = 0f; // vertical offset (+down, -up) from screen center
+        private const float CenterOffsetY = -100f; // vertical offset (+down, -up) from screen center
 
         // Breathing animation (ease in/out)
         private const float BreathScaleAmplitude = 0.06f; // total swing around base (± amplitude/2)

@@ -201,6 +201,15 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// State for the on-screen profiler overlay
+    /// </summary>
+    public class ProfilerOverlay : IComponent
+    {
+        public Entity Owner { get; set; }
+        public bool IsOpen { get; set; } = false;
+    }
+
+    /// <summary>
     /// Marker component for the clickable draw pile UI area
     /// </summary>
     public class DrawPileClickable : IComponent

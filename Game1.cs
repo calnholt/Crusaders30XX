@@ -30,6 +30,7 @@ public class Game1 : Game
     private CardListModalSystem _cardListModalSystem;
     private PlayerDisplaySystem _playerDisplaySystem;
     private PlayerWispParticleSystem _playerWispParticleSystem;
+    private ProfilerSystem _profilerSystem;
 
     public Game1()
     {
@@ -85,6 +86,7 @@ public class Game1 : Game
         var crusaderTexture = Content.Load<Texture2D>("Crusader");
         _playerDisplaySystem = new PlayerDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, crusaderTexture);
         _playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -98,6 +100,7 @@ public class Game1 : Game
         _world.AddSystem(_cardListModalSystem);
         _world.AddSystem(_playerDisplaySystem);
         _world.AddSystem(_playerWispParticleSystem);
+        _world.AddSystem(_profilerSystem);
 
         EventManager.Publish(new RequestDrawCardsEvent { Count = 4 });
         // TODO: use this.Content to load your game content here
@@ -170,6 +173,9 @@ public class Game1 : Game
         // Draw card list modal if open
         _cardListModalSystem.Draw();
         
+        // Draw profiler overlay last
+        _profilerSystem.Draw();
+
         _spriteBatch.End();
 
         base.Draw(gameTime);
