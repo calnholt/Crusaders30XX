@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -38,10 +39,20 @@ namespace Crusaders30XX.ECS.Systems
         private byte _graphGridLineAlpha = 12;    // more transparent grid lines
         public byte GraphBackgroundAlpha { get => _graphBackgroundAlpha; set => _graphBackgroundAlpha = value; }
         public byte GraphGridLineAlpha { get => _graphGridLineAlpha; set => _graphGridLineAlpha = value; }
+        private int _sidePanelWidth = 520;        // width reserved for top-list panel on the right (adjust for big fonts)
+        private int _sidePanelPadding = 12;       // inner padding for side panel text
+        private int _betweenPanelsGap = 24;       // space between graph and side panel
+        public int SidePanelWidth { get => _sidePanelWidth; set => _sidePanelWidth = Math.Max(160, value); }
+        public int SidePanelPadding { get => _sidePanelPadding; set => _sidePanelPadding = Math.Max(4, value); }
+        public int BetweenPanelsGap { get => _betweenPanelsGap; set => _betweenPanelsGap = Math.Max(0, value); }
 
         private Texture2D _whiteTex;
         private float _whiteAlphaMultiplier = 1f;
         public float WhiteAlphaMultiplier { get => _whiteAlphaMultiplier; set => _whiteAlphaMultiplier = MathHelper.Clamp(value, 0f, 1f); }
+        
+        // Table text (top draw list) scaling
+        private float _tableTextScale = .5f;
+        public float TableTextScale { get => _tableTextScale; set => _tableTextScale = MathHelper.Clamp(value, 0.5f, 3f); }
 
         public ProfilerSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
             : base(entityManager)
@@ -127,7 +138,8 @@ namespace Crusaders30XX.ECS.Systems
             // Graph area
             int gx = panelX + AxisLabelWidth + 12;
             int gy = panelY + Math.Max(_headerBaseHeight, (int)(lineH * 2 + _headerPadding * 2));
-            int gw = Math.Max(1, panelW - (gx - panelX) - 12);
+            int reservedRight = _sidePanelWidth + _betweenPanelsGap;
+            int gw = Math.Max(1, panelW - (gx - panelX) - 12 - reservedRight);
             int gh = Math.Max(1, panelH - Math.Max(_headerBaseHeight, (int)(lineH * 2 + _headerPadding * 2)) - 16);
 
             // Y-axis ticks and labels (0..GraphMaxFps)
@@ -166,6 +178,71 @@ namespace Crusaders30XX.ECS.Systems
                 string lastLabel = $"{lastFps:0}";
                 _spriteBatch.DrawString(_font, lastLabel, new Vector2(lx - 32, ly - 16), Color.Cyan);
             }
+
+            // Top draw hotspots list (right of graph)
+            var top = FrameProfiler.GetTopSamples(5);
+            int listPanelX = panelX + panelW - _sidePanelWidth;
+            int listX = listPanelX + _sidePanelPadding;
+            int listY = gy;
+            int listMaxWidth = _sidePanelWidth - _sidePanelPadding * 2;
+            float tableScale = _tableTextScale;
+            float tableLineH = _font.LineSpacing * tableScale;
+            DrawStringClippedScaled("Top Draw (ms / calls)", new Vector2(listX, listY), Color.White, listMaxWidth, tableScale);
+            listY += (int)(tableLineH + 4);
+            // Column widths based on font metrics (scaled)
+            float col1W = _font.MeasureString("00.00").X * tableScale + 12f; // time column
+            float col2W = _font.MeasureString("(000)").X * tableScale + 16f; // calls column
+            foreach (var s in top)
+            {
+                string col1 = $"{s.TotalMs:0.00}";
+                string col2 = $"({s.Calls})";
+                float nameMax = listMaxWidth - col1W - col2W;
+                _spriteBatch.DrawString(_font, col1, new Vector2(listX, listY), Color.White, 0f, Vector2.Zero, tableScale, SpriteEffects.None, 0f);
+                _spriteBatch.DrawString(_font, col2, new Vector2(listX + col1W, listY), Color.White, 0f, Vector2.Zero, tableScale, SpriteEffects.None, 0f);
+                DrawStringClippedScaled(s.Name, new Vector2(listX + col1W + col2W, listY), Color.White, (int)nameMax, tableScale);
+                listY += (int)tableLineH;
+            }
+
+            // Divider between graph and list
+            int dividerX = panelX + panelW - _sidePanelWidth - _betweenPanelsGap / 2;
+            DrawRect(new Rectangle(dividerX, gy, 2, gh), new Color(255, 255, 255, 16));
+        }
+
+        private void DrawStringClipped(string text, Vector2 position, Color color, int maxWidth)
+        {
+            float width = _font.MeasureString(text).X;
+            if (width <= maxWidth)
+            {
+                _spriteBatch.DrawString(_font, text, position, color);
+                return;
+            }
+            const string ellipsis = "...";
+            float ellipsisWidth = _font.MeasureString(ellipsis).X;
+            string s = text;
+            // Trim characters until it fits
+            while (s.Length > 0 && _font.MeasureString(s).X + ellipsisWidth > maxWidth)
+            {
+                s = s.Substring(0, s.Length - 1);
+            }
+            _spriteBatch.DrawString(_font, s + ellipsis, position, color);
+        }
+
+        private void DrawStringClippedScaled(string text, Vector2 position, Color color, int maxWidth, float scale)
+        {
+            float width = _font.MeasureString(text).X * scale;
+            if (width <= maxWidth)
+            {
+                _spriteBatch.DrawString(_font, text, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                return;
+            }
+            const string ellipsis = "...";
+            float ellipsisWidth = _font.MeasureString(ellipsis).X * scale;
+            string s = text;
+            while (s.Length > 0 && _font.MeasureString(s).X * scale + ellipsisWidth > maxWidth)
+            {
+                s = s.Substring(0, s.Length - 1);
+            }
+            _spriteBatch.DrawString(_font, s + ellipsis, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
 
         private void EnsureWhiteTexture()

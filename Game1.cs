@@ -148,33 +148,36 @@ public class Game1 : Game
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
         _spriteBatch.Begin();
+
+        // Begin profiling frame
+        Crusaders30XX.Diagnostics.FrameProfiler.BeginFrame();
         
         // Draw ECS World
-        _renderingSystem.Draw();
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("RenderingSystem.Draw", () => _renderingSystem.Draw());
 
         // Draw player portrait (middle-left)
-        _playerDisplaySystem.Draw();
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("PlayerDisplaySystem.Draw", () => _playerDisplaySystem.Draw());
 
         // Draw wisps around the portrait
-        _playerWispParticleSystem.Draw();
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("PlayerWispParticleSystem.Draw", () => _playerWispParticleSystem.Draw());
 
         // Draw hand of cards on top of highlights
-        _handDisplaySystem.DrawHand();
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("HandDisplaySystem.DrawHand", () => _handDisplaySystem.DrawHand());
 
         // Draw debug menu if open
-        _debugMenuSystem.Draw();
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("DebugMenuSystem.Draw", () => _debugMenuSystem.Draw());
 
         // Draw draw pile count (bottom-right)
-        _drawPileDisplaySystem.Draw();
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("DrawPileDisplaySystem.Draw", () => _drawPileDisplaySystem.Draw());
 
         // Draw discard pile count (bottom-left)
-        _discardPileDisplaySystem.Draw();
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", () => _discardPileDisplaySystem.Draw());
 
         // Draw card list modal if open
-        _cardListModalSystem.Draw();
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("CardListModalSystem.Draw", () => _cardListModalSystem.Draw());
         
         // Draw profiler overlay last
-        _profilerSystem.Draw();
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("ProfilerSystem.Draw", () => _profilerSystem.Draw());
 
         _spriteBatch.End();
 
