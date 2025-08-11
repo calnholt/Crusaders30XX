@@ -1,6 +1,7 @@
 using Crusaders30XX.ECS.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -22,6 +23,8 @@ namespace Crusaders30XX.ECS.Systems
         // Breathing animation (ease in/out)
         private const float BreathScaleAmplitude = 0.06f; // total swing around base (± amplitude/2)
         private const float BreathSpeedHz = 0.25f;        // cycles per second
+
+        // (Particle logic moved to PlayerWispParticleSystem)
 
         public PlayerDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Texture2D crusaderTexture)
             : base(entityManager)
@@ -78,7 +81,10 @@ namespace Crusaders30XX.ECS.Systems
                 effects: SpriteEffects.None,
                 layerDepth: 0f
             );
+
+            // (Wisps drawn by PlayerWispParticleSystem)
         }
+        
     }
 }
 
