@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Crusaders30XX")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f9d4c2807b3547837f9f8b0730132fac184c8e63")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d00d79470397c72531754a9a430dd2f58aa738ff")]
 [assembly: System.Reflection.AssemblyProductAttribute("Crusaders30XX")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Crusaders30XX")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
