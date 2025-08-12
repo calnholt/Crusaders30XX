@@ -6,8 +6,14 @@
   <SourceFiles>
     <File>/Users/calvinholt/Documents/projects/Crusaders30XX/Content/NewRocker.spritefont</File>
     <File>/Users/calvinholt/Documents/projects/Crusaders30XX/Content/Crusader.png</File>
+    <File>/Users/calvinholt/Documents/projects/Crusaders30XX/Content/desert-background.png</File>
+    <File>/Users/calvinholt/Documents/projects/Crusaders30XX/Content/forest-background.png</File>
+    <File>/Users/calvinholt/Documents/projects/Crusaders30XX/Content/cathedral-background.png</File>
   </SourceFiles>
   <DestFiles>
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />
   </DestFiles>

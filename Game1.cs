@@ -25,6 +25,7 @@ public class Game1 : Game
     private CardDisplaySystem _cardDisplaySystem;
     private HandDisplaySystem _handDisplaySystem;
     private CardHighlightSystem _cardHighlightSystem;
+    private BattleBackgroundSystem _battleBackgroundSystem;
     private DebugMenuSystem _debugMenuSystem;
     private DebugCommandSystem _debugCommandSystem;
     private DrawPileDisplaySystem _drawPileDisplaySystem;
@@ -95,6 +96,7 @@ public class Game1 : Game
 
 
         _cardHighlightSystem = new CardHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, GraphicsDevice);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _handDisplaySystem = new HandDisplaySystem(_world.EntityManager, GraphicsDevice);
@@ -122,6 +124,9 @@ public class Game1 : Game
         _world.AddSystem(_playerDisplaySystem);
         _world.AddSystem(_playerWispParticleSystem);
         _world.AddSystem(_profilerSystem);
+
+        // Set initial location background via enum
+        EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Cathedral });
 
         EventManager.Publish(new RequestDrawCardsEvent { Count = 4 });
         // TODO: use this.Content to load your game content here
@@ -173,6 +178,9 @@ public class Game1 : Game
         // Begin profiling frame
         Crusaders30XX.Diagnostics.FrameProfiler.BeginFrame();
         
+        // Draw background first
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("BattleBackgroundSystem.Draw", () => _battleBackgroundSystem.Draw());
+
         // Draw ECS World
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("RenderingSystem.Draw", () => _renderingSystem.Draw());
 

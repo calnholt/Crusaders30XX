@@ -34,6 +34,7 @@ C:/Users/Calvin/Documents/Crusaders30XX/obj/Debug/net8.0/ref/Crusaders30XX.dll
 C:/Users/Calvin/Documents/Crusaders30XX/bin/Debug/net8.0/MonoGame.Extended.dll
 C:/Users/Calvin/Documents/Crusaders30XX/bin/Debug/net8.0/Content/Crusader.xnb
 /Users/calvinholt/Documents/projects/Crusaders30XX/bin/Debug/net8.0/Content/Crusader.xnb
+/Users/calvinholt/Documents/projects/Crusaders30XX/bin/Debug/net8.0/Content/desert-background.xnb
 /Users/calvinholt/Documents/projects/Crusaders30XX/bin/Debug/net8.0/Content/NewRocker.xnb
 /Users/calvinholt/Documents/projects/Crusaders30XX/bin/Debug/net8.0/Crusaders30XX
 /Users/calvinholt/Documents/projects/Crusaders30XX/bin/Debug/net8.0/Crusaders30XX.deps.json
@@ -68,3 +69,5 @@ C:/Users/Calvin/Documents/Crusaders30XX/bin/Debug/net8.0/Content/Crusader.xnb
 /Users/calvinholt/Documents/projects/Crusaders30XX/obj/Debug/net8.0/Crusaders30XX.pdb
 /Users/calvinholt/Documents/projects/Crusaders30XX/obj/Debug/net8.0/Crusaders30XX.genruntimeconfig.cache
 /Users/calvinholt/Documents/projects/Crusaders30XX/obj/Debug/net8.0/ref/Crusaders30XX.dll
+/Users/calvinholt/Documents/projects/Crusaders30XX/bin/Debug/net8.0/Content/forest-background.xnb
+/Users/calvinholt/Documents/projects/Crusaders30XX/bin/Debug/net8.0/Content/cathedral-background.xnb
