@@ -160,7 +160,7 @@ namespace Crusaders30XX.ECS.Systems
             if (ddEntity == null)
             {
                 ddEntity = EntityManager.CreateEntity("DebugMenu_TabDropdown");
-                var dd = new UIDropdown { Items = systems.Select(s => s.name).ToList(), SelectedIndex = Math.Clamp(menu.ActiveTabIndex, 0, systems.Count - 1), RowHeight = 28, TextScale = textScale };
+                var dd = new UIDropdown { Items = systems.Select(s => s.name).ToList(), SelectedIndex = Math.Clamp(menu.ActiveTabIndex, 0, systems.Count - 1), RowHeight = 36, TextScale = textScale };
                 var ddBounds = new Rectangle(panelX + padding, cursorY, panelWidth - padding * 2, 36);
                 EntityManager.AddComponent(ddEntity, dd);
                 EntityManager.AddComponent(ddEntity, new UIElement { Bounds = ddBounds, IsInteractable = true });
@@ -174,6 +174,7 @@ namespace Crusaders30XX.ECS.Systems
                 var tDD = ddEntity.GetComponent<Transform>();
                 dd.Items = systems.Select(s => s.name).ToList();
                 dd.SelectedIndex = Math.Clamp(menu.ActiveTabIndex, 0, systems.Count - 1);
+                dd.RowHeight = 36;
                 uiDD.Bounds = new Rectangle(panelX + padding, cursorY, panelWidth - padding * 2, 36);
                 if (tDD != null)
                 {
@@ -190,6 +191,14 @@ namespace Crusaders30XX.ECS.Systems
             string ddLabel = (ddCurrent.SelectedIndex >= 0 && ddCurrent.SelectedIndex < ddCurrent.Items.Count) ? ddCurrent.Items[ddCurrent.SelectedIndex] : "";
             DrawStringScaled(ddLabel, new Vector2(ddUI.Bounds.X + 8, ddUI.Bounds.Y + 4), Color.White, textScale);
 
+            // Triangle indicator at right side (down when closed, up when open)
+            int triW = 12;
+            int triH = 8;
+            int triRight = ddUI.Bounds.Right - 10;
+            int triCenterY = ddUI.Bounds.Y + ddUI.Bounds.Height / 2;
+            var triRect = new Rectangle(triRight - triW, triCenterY - triH / 2, triW, triH);
+            if (ddCurrent.IsOpen) DrawTriangleUp(triRect, Color.White); else DrawTriangleDown(triRect, Color.White);
+
             if (click && ddUI.Bounds.Contains(mouse.Position))
             {
                 ddCurrent.IsOpen = !ddCurrent.IsOpen;
@@ -199,8 +208,8 @@ namespace Crusaders30XX.ECS.Systems
             bool drawListAfter = ddCurrent.IsOpen;
             int deferredItemCount = ddCurrent.Items.Count;
             int deferredRowH = ddCurrent.RowHeight;
-            // Open the dropdown list upwards so it doesn't cover the action buttons below
-            var deferredListRect = new Rectangle(ddUI.Bounds.X, ddUI.Bounds.Y - deferredItemCount * deferredRowH, ddUI.Bounds.Width, deferredItemCount * deferredRowH);
+            // Open the dropdown list downward
+            var deferredListRect = new Rectangle(ddUI.Bounds.X, ddUI.Bounds.Bottom, ddUI.Bounds.Width, deferredItemCount * deferredRowH);
 
             if (ddCurrent.SelectedIndex != menu.ActiveTabIndex)
             {
@@ -538,6 +547,35 @@ namespace Crusaders30XX.ECS.Systems
                 s = s.Substring(0, s.Length - 1);
             }
             _spriteBatch.DrawString(_font, s + ellipsis, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+        }
+
+        // Simple rasterized triangle draw helpers using the 1x1 pixel texture
+        private void DrawTriangleDown(Rectangle r, Color color)
+        {
+            int rows = Math.Max(1, r.Height);
+            for (int i = 0; i < rows; i++)
+            {
+                // Grow width from top to bottom
+                float t = (i + 1) / (float)rows;
+                int w = Math.Max(1, (int)Math.Round(r.Width * t));
+                int x = r.X + (r.Width - w) / 2;
+                int y = r.Y + i;
+                _spriteBatch.Draw(_pixel, new Rectangle(x, y, w, 1), color);
+            }
+        }
+
+        private void DrawTriangleUp(Rectangle r, Color color)
+        {
+            int rows = Math.Max(1, r.Height);
+            for (int i = 0; i < rows; i++)
+            {
+                // Shrink width from top to bottom
+                float t = 1f - (i / (float)rows);
+                int w = Math.Max(1, (int)Math.Round(r.Width * t));
+                int x = r.X + (r.Width - w) / 2;
+                int y = r.Y + i;
+                _spriteBatch.Draw(_pixel, new Rectangle(x, y, w, 1), color);
+            }
         }
     }
 }
