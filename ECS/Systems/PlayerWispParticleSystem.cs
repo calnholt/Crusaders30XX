@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -11,6 +12,7 @@ namespace Crusaders30XX.ECS.Systems
     /// Draws glowing red wisps around the player portrait area.
     /// Anchors to the same transform as PlayerDisplaySystem.
     /// </summary>
+    [DebugTab("PlayerWispParticleSystem")] 
     public class PlayerWispParticleSystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
@@ -20,27 +22,58 @@ namespace Crusaders30XX.ECS.Systems
 
         // Uses Transform from PlayerPortraitAnchor instead of duplicating layout constants
 
-        // Wispy particle settings
-        private const float WispSpawnRatePerSecond = 10f;
-        private const int WispMaxCount = 150;
-        private const float WispMinLifetime = 3f;
-        private const float WispMaxLifetime = 4f;
-        private const float WispMinSpeed = 40f;   // px/sec upward
-        private const float WispMaxSpeed = 56f;
-        private const float WispMinSwayAmplitude = 5f; // px
-        private const float WispMaxSwayAmplitude = 15f;
-        private const float WispMinSwayHz = 0.7f;
-        private const float WispMaxSwayHz = 1f;
+        // Wispy particle settings (runtime adjustable)
+        private float _spawnRatePerSecond = 10f;
+        [DebugEditable(DisplayName = "Spawn Rate (per sec)", Step = 0.5f, Min = 0f, Max = 200f)]
+        public float SpawnRatePerSecond { get => _spawnRatePerSecond; set => _spawnRatePerSecond = MathF.Max(0f, value); }
+
+        private int _maxCount = 150;
+        [DebugEditable(DisplayName = "Max Particles", Step = 10f, Min = 0f, Max = 2000f)]
+        public int MaxCount { get => _maxCount; set => _maxCount = Math.Max(0, value); }
+
+        private float _minLifetime = 3f;
+        private float _maxLifetime = 4f;
+        [DebugEditable(DisplayName = "Min Lifetime (s)", Step = 0.1f, Min = 0.05f, Max = 30f)]
+        public float MinLifetime { get => _minLifetime; set => _minLifetime = MathF.Max(0.05f, MathF.Min(value, _maxLifetime)); }
+        [DebugEditable(DisplayName = "Max Lifetime (s)", Step = 0.1f, Min = 0.05f, Max = 30f)]
+        public float MaxLifetime { get => _maxLifetime; set => _maxLifetime = MathF.Max(value, _minLifetime); }
+
+        private float _minSpeed = 40f;   // px/sec upward
+        private float _maxSpeed = 56f;
+        [DebugEditable(DisplayName = "Min Up Speed", Step = 1f, Min = 0f, Max = 2000f)]
+        public float MinSpeed { get => _minSpeed; set => _minSpeed = MathF.Max(0f, MathF.Min(value, _maxSpeed)); }
+        [DebugEditable(DisplayName = "Max Up Speed", Step = 1f, Min = 0f, Max = 2000f)]
+        public float MaxSpeed { get => _maxSpeed; set => _maxSpeed = MathF.Max(value, _minSpeed); }
+
+        private float _minSwayAmplitude = 5f; // px
+        private float _maxSwayAmplitude = 15f;
+        [DebugEditable(DisplayName = "Min Sway Amp (px)", Step = 0.5f, Min = 0f, Max = 500f)]
+        public float MinSwayAmplitude { get => _minSwayAmplitude; set => _minSwayAmplitude = MathF.Max(0f, MathF.Min(value, _maxSwayAmplitude)); }
+        [DebugEditable(DisplayName = "Max Sway Amp (px)", Step = 0.5f, Min = 0f, Max = 500f)]
+        public float MaxSwayAmplitude { get => _maxSwayAmplitude; set => _maxSwayAmplitude = MathF.Max(value, _minSwayAmplitude); }
+
+        private float _minSwayHz = 0.7f;
+        private float _maxSwayHz = 1f;
+        [DebugEditable(DisplayName = "Min Sway Hz", Step = 0.05f, Min = 0f, Max = 10f)]
+        public float MinSwayHz { get => _minSwayHz; set => _minSwayHz = MathF.Max(0f, MathF.Min(value, _maxSwayHz)); }
+        [DebugEditable(DisplayName = "Max Sway Hz", Step = 0.05f, Min = 0f, Max = 10f)]
+        public float MaxSwayHz { get => _maxSwayHz; set => _maxSwayHz = MathF.Max(value, _minSwayHz); }
 
         // Adjustable visual radius range in pixels (core circle), before glow multiplier
         private float _wispMinRadiusPx = 5f;
         private float _wispMaxRadiusPx = 10f;
+        [DebugEditable(DisplayName = "Min Radius (px)", Step = 0.5f, Min = 0.1f, Max = 200f)]
         public float WispMinRadiusPx { get => _wispMinRadiusPx; set => _wispMinRadiusPx = MathF.Max(0.1f, MathF.Min(value, _wispMaxRadiusPx)); }
+        [DebugEditable(DisplayName = "Max Radius (px)", Step = 0.5f, Min = 0.1f, Max = 400f)]
         public float WispMaxRadiusPx { get => _wispMaxRadiusPx; set => _wispMaxRadiusPx = MathF.Max(value, _wispMinRadiusPx); }
 
         // Transparency controls (multipliers applied after lifetime fade)
         private float _wispCoreAlphaMultiplier = 1f;
         private float _wispGlowAlphaMultiplier = 1f;
+        [DebugEditable(DisplayName = "Core Alpha Mult", Step = 0.05f, Min = 0f, Max = 2f)]
+        public float WispCoreAlphaMultiplier { get => _wispCoreAlphaMultiplier; set => _wispCoreAlphaMultiplier = MathHelper.Clamp(value, 0f, 2f); }
+        [DebugEditable(DisplayName = "Glow Alpha Mult", Step = 0.05f, Min = 0f, Max = 2f)]
+        public float WispGlowAlphaMultiplier { get => _wispGlowAlphaMultiplier; set => _wispGlowAlphaMultiplier = MathHelper.Clamp(value, 0f, 2f); }
 
         private readonly List<WispParticle> _wisps = new();
         private readonly Random _random = new Random();
@@ -86,12 +119,12 @@ namespace Crusaders30XX.ECS.Systems
             float texH = portraitInfo?.TextureHeight ?? 0;
 
             // Spawn new wisps based on rate, accumulating fractional spawns
-            _spawnAccumulator += WispSpawnRatePerSecond * dt;
+            _spawnAccumulator += _spawnRatePerSecond * dt;
             int toSpawn = (int)_spawnAccumulator;
             if (toSpawn > 0)
             {
                 _spawnAccumulator -= toSpawn;
-                for (int i = 0; i < toSpawn && _wisps.Count < WispMaxCount; i++)
+                for (int i = 0; i < toSpawn && _wisps.Count < _maxCount; i++)
                 {
                     SpawnWisp(portraitPosition, portraitScale, texW, texH);
                 }
@@ -147,10 +180,10 @@ namespace Crusaders30XX.ECS.Systems
             {
                 StartPosition = portraitPosition + spawnOffset,
                 Age = 0f,
-                Lifetime = MathHelper.Lerp(WispMinLifetime, WispMaxLifetime, (float)_random.NextDouble()),
-                UpwardSpeed = MathHelper.Lerp(WispMinSpeed, WispMaxSpeed, (float)_random.NextDouble()),
-                SwayAmplitude = MathHelper.Lerp(WispMinSwayAmplitude, WispMaxSwayAmplitude, (float)_random.NextDouble()) * (0.6f + 0.4f * portraitScale),
-                SwayAngularVelocity = MathHelper.TwoPi * MathHelper.Lerp(WispMinSwayHz, WispMaxSwayHz, (float)_random.NextDouble()),
+                Lifetime = MathHelper.Lerp(_minLifetime, _maxLifetime, (float)_random.NextDouble()),
+                UpwardSpeed = MathHelper.Lerp(_minSpeed, _maxSpeed, (float)_random.NextDouble()),
+                SwayAmplitude = MathHelper.Lerp(_minSwayAmplitude, _maxSwayAmplitude, (float)_random.NextDouble()) * (0.6f + 0.4f * portraitScale),
+                SwayAngularVelocity = MathHelper.TwoPi * MathHelper.Lerp(_minSwayHz, _maxSwayHz, (float)_random.NextDouble()),
                 SwayPhase = MathHelper.TwoPi * (float)_random.NextDouble(),
                 SizeScale = sizeScale
             };

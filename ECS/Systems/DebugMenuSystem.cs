@@ -115,7 +115,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Tab bar height
-            int tabH = 26;
+            int tabH = 36;
             int tabBarY = measureY;
             measureY += tabH + spacing;
 
@@ -151,7 +151,7 @@ namespace Crusaders30XX.ECS.Systems
             // Draw tabs
             int tabX = panelX + padding;
             int tabY = cursorY;
-            int tabH2 = 26;
+            int tabH2 = 36;
             for (int i = 0; i < systems.Count; i++)
             {
                 string tab = systems[i].name;
