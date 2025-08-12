@@ -77,7 +77,7 @@ public class Game1 : Game
         _renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, GraphicsDevice);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _handDisplaySystem = new HandDisplaySystem(_world.EntityManager, GraphicsDevice);
-        _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _world.SystemManager);
         _debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
         _drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _discardPileDisplaySystem = new DiscardPileDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);

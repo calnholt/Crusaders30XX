@@ -54,6 +54,14 @@ namespace Crusaders30XX.ECS.Core
         }
         
         /// <summary>
+        /// Gets all systems.
+        /// </summary>
+        public IEnumerable<System> GetAllSystems()
+        {
+            return _systems;
+        }
+        
+        /// <summary>
         /// Updates all systems
         /// </summary>
         public void Update(GameTime gameTime)
