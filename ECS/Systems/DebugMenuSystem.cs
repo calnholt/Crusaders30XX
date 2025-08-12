@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Systems
         private Texture2D _pixel;
         private MouseState _prevMouse;
         private DateTime _lastDrawTime = DateTime.UtcNow;
+        private float _scrollOffset = 0f; // vertical scroll for panel content
 
         private class HoldState
         {
@@ -134,7 +135,12 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             int panelHeight = measureY - panelY + padding;
-            var panelRect = new Rectangle(panelX, panelY, panelWidth, panelHeight);
+            // Constrain panel height to viewport with a bottom margin
+            int bottomMargin = 40;
+            int maxPanelHeight = Math.Max(120, _graphicsDevice.Viewport.Height - bottomMargin - panelY);
+            bool needScroll = panelHeight > maxPanelHeight;
+            int displayHeight = needScroll ? maxPanelHeight : panelHeight;
+            var panelRect = new Rectangle(panelX, panelY, panelWidth, displayHeight);
             ui.Bounds = panelRect;
 
             // Draw panel and title
@@ -148,35 +154,94 @@ namespace Crusaders30XX.ECS.Systems
                 cursorY += (int)(_font.LineSpacing * titleScale) + spacing;
             }
 
-            // Draw tabs
-            int tabX = panelX + padding;
-            int tabY = cursorY;
-            int tabH2 = 36;
-            for (int i = 0; i < systems.Count; i++)
+            // Dropdown for tabs
+            // Create/find a dropdown entity to manage selection
+            var ddEntity = EntityManager.GetEntitiesWithComponent<UIDropdown>().FirstOrDefault(e => e.GetComponent<UIDropdown>().Owner == e);
+            if (ddEntity == null)
             {
-                string tab = systems[i].name;
-                int tabW = (int)(_font.MeasureString(tab).X * textScale) + 24;
-                var rect = new Rectangle(tabX, tabY, tabW, tabH2);
-                var bg = (i == menu.ActiveTabIndex) ? new Color(60, 90, 140) : new Color(50, 50, 50);
-                DrawFilledRect(rect, bg);
-                DrawRect(rect, Color.White, 1);
-                DrawStringScaled(tab, new Vector2(rect.X + 10, rect.Y + 4), Color.White, textScale);
-
-                if (click && rect.Contains(mouse.Position))
-                    menu.ActiveTabIndex = i;
-
-                tabX += tabW + 6;
+                ddEntity = EntityManager.CreateEntity("DebugMenu_TabDropdown");
+                var dd = new UIDropdown { Items = systems.Select(s => s.name).ToList(), SelectedIndex = Math.Clamp(menu.ActiveTabIndex, 0, systems.Count - 1), RowHeight = 28, TextScale = textScale };
+                var ddBounds = new Rectangle(panelX + padding, cursorY, panelWidth - padding * 2, 36);
+                EntityManager.AddComponent(ddEntity, dd);
+                EntityManager.AddComponent(ddEntity, new UIElement { Bounds = ddBounds, IsInteractable = true });
+                // Set very high Z so dropdown (and especially its options) stays on top of other UI
+                EntityManager.AddComponent(ddEntity, new Transform { Position = new Vector2(ddBounds.X, ddBounds.Y), ZOrder = 50000 });
             }
-            cursorY = tabY + tabH2 + spacing;
+            else
+            {
+                var dd = ddEntity.GetComponent<UIDropdown>();
+                var uiDD = ddEntity.GetComponent<UIElement>();
+                var tDD = ddEntity.GetComponent<Transform>();
+                dd.Items = systems.Select(s => s.name).ToList();
+                dd.SelectedIndex = Math.Clamp(menu.ActiveTabIndex, 0, systems.Count - 1);
+                uiDD.Bounds = new Rectangle(panelX + padding, cursorY, panelWidth - padding * 2, 36);
+                if (tDD != null)
+                {
+                    // Boost ZOrder while open to ensure options render above everything and capture hover
+                    tDD.ZOrder = dd.IsOpen ? 60000 : 50000;
+                }
+            }
+            var ddCurrent = ddEntity.GetComponent<UIDropdown>();
+            var ddUI = ddEntity.GetComponent<UIElement>();
 
-            // Fields for active tab
+            // Draw dropdown closed state (the bar)
+            DrawFilledRect(ddUI.Bounds, new Color(35, 35, 35));
+            DrawRect(ddUI.Bounds, Color.White, 1);
+            string ddLabel = (ddCurrent.SelectedIndex >= 0 && ddCurrent.SelectedIndex < ddCurrent.Items.Count) ? ddCurrent.Items[ddCurrent.SelectedIndex] : "";
+            DrawStringScaled(ddLabel, new Vector2(ddUI.Bounds.X + 8, ddUI.Bounds.Y + 4), Color.White, textScale);
+
+            if (click && ddUI.Bounds.Contains(mouse.Position))
+            {
+                ddCurrent.IsOpen = !ddCurrent.IsOpen;
+            }
+
+            // Defer drawing the open list until AFTER fields so it overlays everything
+            bool drawListAfter = ddCurrent.IsOpen;
+            int deferredItemCount = ddCurrent.Items.Count;
+            int deferredRowH = ddCurrent.RowHeight;
+            // Open the dropdown list upwards so it doesn't cover the action buttons below
+            var deferredListRect = new Rectangle(ddUI.Bounds.X, ddUI.Bounds.Y - deferredItemCount * deferredRowH, ddUI.Bounds.Width, deferredItemCount * deferredRowH);
+
+            if (ddCurrent.SelectedIndex != menu.ActiveTabIndex)
+            {
+                menu.ActiveTabIndex = Math.Clamp(ddCurrent.SelectedIndex, 0, systems.Count - 1);
+            }
+            int dropdownHeight = ddUI.Bounds.Height;
+            cursorY += dropdownHeight + spacing;
+
+            // Scroll handling for content below the dropdown
+            int headerHeight = cursorY - panelY; // title + dropdown + spacing consumed so far
+            int scrollAreaHeight = Math.Max(0, displayHeight - headerHeight - padding);
+            float maxScroll = Math.Max(0, (panelHeight - headerHeight - padding) - scrollAreaHeight);
+            if (!needScroll)
+            {
+                _scrollOffset = 0f;
+            }
+            else
+            {
+                int wheelDelta = mouse.ScrollWheelValue - _prevMouse.ScrollWheelValue; // + when scrolled up
+                float deltaPixels = -(wheelDelta / 120f) * 48f; // ~48px per notch
+                _scrollOffset = MathHelper.Clamp(_scrollOffset + deltaPixels, 0f, maxScroll);
+            }
+            int yOffset = -(int)Math.Round(_scrollOffset);
+
+            // Visible region bounds for culling
+            int visibleTop = panelY + headerHeight;
+            int visibleBottom = panelY + displayHeight - padding;
+
+            // Fields for active tab (scrollable)
             foreach (var m in members)
             {
                 var (label, getter, setter, type, attr) = m;
                 string display = string.IsNullOrWhiteSpace(attr.DisplayName) ? label : attr.DisplayName;
                 object val = getter();
 
-                var rowRect = new Rectangle(panelX + padding, cursorY, panelWidth - padding * 2, rowH);
+                var rowRect = new Rectangle(panelX + padding, cursorY + yOffset, panelWidth - padding * 2, rowH);
+                if (rowRect.Bottom < visibleTop || rowRect.Y > visibleBottom)
+                {
+                    cursorY += rowH + spacing;
+                    continue;
+                }
                 DrawFilledRect(rowRect, new Color(30, 30, 30));
                 DrawRect(rowRect, Color.White, 1);
                 int right = rowRect.Right - 8;
@@ -277,11 +342,15 @@ namespace Crusaders30XX.ECS.Systems
                 cursorY += rowH + spacing;
             }
 
-            // Buttons section (existing)
+            // Buttons section (existing) - also scrollable
             var uiButtons = EntityManager.GetEntitiesWithComponent<UIButton>().ToList();
             if (_font != null && uiButtons.Count > 0)
             {
-                DrawStringScaled("Buttons", new Vector2(panelX + padding, cursorY), Color.LightGreen, textScale);
+                int headerY = cursorY + yOffset;
+                if (headerY + (int)(_font.LineSpacing * textScale) >= visibleTop && headerY <= visibleBottom)
+                {
+                    DrawStringScaled("Buttons", new Vector2(panelX + padding, headerY), Color.LightGreen, textScale);
+                }
                 cursorY += (int)(_font.LineSpacing * textScale) + spacing;
 
                 foreach (var e in uiButtons)
@@ -290,7 +359,12 @@ namespace Crusaders30XX.ECS.Systems
                     var btnUI = e.GetComponent<UIElement>();
                     if (btn == null || btnUI == null) continue;
 
-                    var rect = new Rectangle(panelX + padding, cursorY, panelWidth - padding * 2, buttonH);
+                    var rect = new Rectangle(panelX + padding, cursorY + yOffset, panelWidth - padding * 2, buttonH);
+                    if (rect.Bottom < visibleTop || rect.Y > visibleBottom)
+                    {
+                        cursorY += buttonH + spacing;
+                        continue;
+                    }
                     btnUI.Bounds = rect;
 
                     var bgColor = btnUI.IsHovered ? new Color(120, 120, 120) : new Color(70, 70, 70);
@@ -305,6 +379,28 @@ namespace Crusaders30XX.ECS.Systems
                         DrawStringScaled(btn.Label, new Vector2(textX, textY), Color.White, textScale);
                     }
                     cursorY += buttonH + spacing;
+                }
+            }
+
+            // Finally, if dropdown is open, draw its list on top of everything else in the panel
+            if (drawListAfter)
+            {
+                DrawFilledRect(deferredListRect, new Color(25, 25, 25));
+                DrawRect(deferredListRect, Color.White, 1);
+                for (int i = 0; i < deferredItemCount; i++)
+                {
+                    var itemRect = new Rectangle(deferredListRect.X, deferredListRect.Y + i * deferredRowH, deferredListRect.Width, deferredRowH);
+                    bool hover = itemRect.Contains(mouse.Position);
+                    if (hover) DrawFilledRect(itemRect, new Color(60, 60, 60));
+                    DrawStringScaled(systems[i].name, new Vector2(itemRect.X + 8, itemRect.Y + 4), Color.White, textScale);
+                    DrawRect(itemRect, Color.White, 1);
+                    if (click && hover)
+                    {
+                        var dd = ddEntity.GetComponent<UIDropdown>();
+                        dd.SelectedIndex = i;
+                        dd.IsOpen = false;
+                        menu.ActiveTabIndex = i;
+                    }
                 }
             }
 

@@ -265,6 +265,19 @@ namespace Crusaders30XX.ECS.Components
     }
     
     /// <summary>
+    /// Component for a generic dropdown UI control used by the debug menu
+    /// </summary>
+    public class UIDropdown : IComponent
+    {
+        public Entity Owner { get; set; }
+        public List<string> Items { get; set; } = new();
+        public int SelectedIndex { get; set; } = 0;
+        public bool IsOpen { get; set; } = false;
+        public int RowHeight { get; set; } = 28;
+        public float TextScale { get; set; } = 0.55f;
+    }
+    
+    /// <summary>
     /// Component for game state management
     /// </summary>
     public class GameState : IComponent
