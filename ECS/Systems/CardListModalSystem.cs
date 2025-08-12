@@ -22,8 +22,8 @@ namespace Crusaders30XX.ECS.Systems
 
         private const int ModalMargin = 40;
         private const int Padding = 32;
-        private const int GridCellW = CardConfig.CARD_WIDTH;
-        private const int GridCellH = CardConfig.CARD_HEIGHT;
+        private static int GridCellW => CardConfig.CARD_WIDTH;
+        private static int GridCellH => CardConfig.CARD_HEIGHT;
         private const int GridGap = 12;
         private const float TitleScale = 0.7f;
         private const float CardScale = 1.0f;

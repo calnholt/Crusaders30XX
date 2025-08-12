@@ -5,6 +5,8 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Config;
+using System;
 
 namespace Crusaders30XX;
 
@@ -37,11 +39,30 @@ public class Game1 : Game
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
+        Window.AllowUserResizing = true;
         
-        // Set window size
-        _graphics.PreferredBackBufferWidth = 1920;
-        _graphics.PreferredBackBufferHeight = 1080;
+        // Set window size dynamically, clamped to 1920x1080
+        var displayMode = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
+        int targetWidth = Math.Min(1920, displayMode.Width);
+        int targetHeight = Math.Min(1080, displayMode.Height);
+        _graphics.PreferredBackBufferWidth = targetWidth;
+        _graphics.PreferredBackBufferHeight = targetHeight;
+        CardConfig.SetScaleFromViewportHeight(targetHeight);
         _graphics.ApplyChanges();
+
+        // Clamp user resize to the maximum of 1920x1080
+        Window.ClientSizeChanged += (sender, args) =>
+        {
+            int newWidth = Math.Min(1920, Window.ClientBounds.Width);
+            int newHeight = Math.Min(1080, Window.ClientBounds.Height);
+            if (newWidth != _graphics.PreferredBackBufferWidth || newHeight != _graphics.PreferredBackBufferHeight)
+            {
+            _graphics.PreferredBackBufferWidth = newWidth;
+            _graphics.PreferredBackBufferHeight = newHeight;
+            CardConfig.SetScaleFromViewportHeight(newHeight);
+                _graphics.ApplyChanges();
+            }
+        };
     }
 
     protected override void Initialize()

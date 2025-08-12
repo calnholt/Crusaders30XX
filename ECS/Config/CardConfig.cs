@@ -8,20 +8,62 @@ namespace Crusaders30XX.ECS.Config
     /// </summary>
     public static class CardConfig
     {
-        // Card Visual Dimensions
-        public const int CARD_WIDTH = 250;
-        public const int CARD_HEIGHT = 350;
+        // Global UI scale derived from viewport height (relative to 1080p)
+        private const float BASELINE_HEIGHT = 1080f;
+        public static float UIScale { get; private set; } = 1.0f;
+
+        public static void SetScaleFromViewportHeight(int viewportHeight)
+        {
+            // Clamp to avoid degenerate sizes on very small windows
+            float scale = Math.Max(0.4f, Math.Min(1.0f, viewportHeight / BASELINE_HEIGHT));
+            UIScale = scale;
+        }
+
+        // Base (reference) dimensions at 1080p
+        private const int BASE_CARD_WIDTH = 250;
+        private const int BASE_CARD_HEIGHT = 350;
+        private const int BASE_CARD_OFFSET_Y_EXTRA = 25;
+        private const int BASE_HIGHLIGHT_BORDER_THICKNESS = 5;
+        private const int BASE_CARD_GAP = -20;
+        private const float BASE_HAND_BOTTOM_MARGIN = 150f;
+        private const float BASE_HAND_FAN_MAX_ANGLE_DEG = 5f;
+        private const float BASE_HAND_FAN_RADIUS = 0f;
+        private const float BASE_HAND_FAN_CURVE_OFFSET = 0f;
+        private const float BASE_HAND_HOVER_LIFT = 10f;
+        private const float BASE_HAND_HOVER_SCALE = 1.0f;
+        private const int BASE_HAND_Z_BASE = 100;
+        private const int BASE_HAND_Z_STEP = 1;
+        private const int BASE_HAND_Z_HOVER_BOOST = 1000;
+        private const int BASE_CARD_BORDER_THICKNESS = 3;
+        private const int BASE_CARD_CORNER_RADIUS = 18;
+        private const int BASE_DRAW_PILE_WIDTH = 60;
+        private const int BASE_DRAW_PILE_HEIGHT = 80;
+        private const int BASE_DRAW_PILE_MARGIN = 20;
+        private const float BASE_DRAW_PILE_TEXT_SCALE = 0.8f;
+        private const int BASE_TEXT_MARGIN_X = 16;
+        private const int BASE_TEXT_MARGIN_Y = 16;
+        private const float BASE_NAME_SCALE = 0.7f;
+        private const float BASE_COST_SCALE = 0.6f;
+        private const float BASE_DESCRIPTION_SCALE = 0.4f;
+        private const float BASE_BLOCK_SCALE = 0.5f;
+        private const float BASE_BLOCK_NUMBER_SCALE = 0.9f;
+        private const int BASE_BLOCK_NUMBER_MARGIN_X = 14;
+        private const int BASE_BLOCK_NUMBER_MARGIN_Y = 12;
+
+        // Scaled properties
+        public static int CARD_WIDTH => (int)Math.Round(BASE_CARD_WIDTH * UIScale);
+        public static int CARD_HEIGHT => (int)Math.Round(BASE_CARD_HEIGHT * UIScale);
         
         // Card positioning offsets (relative to transform position)
-        public const int CARD_OFFSET_X = CARD_WIDTH / 2;   // 100 - center the card horizontally
-        public const int CARD_OFFSET_Y = (CARD_HEIGHT / 2) + 25;  // 175 - center vertically with slight offset
+        public static int CARD_OFFSET_X => CARD_WIDTH / 2;
+        public static int CARD_OFFSET_Y => (CARD_HEIGHT / 2) + (int)Math.Round(BASE_CARD_OFFSET_Y_EXTRA * UIScale);
         
         // Highlight border dimensions (slightly larger than card)
-        public const int HIGHLIGHT_BORDER_THICKNESS = 5;
-        public const int HIGHLIGHT_WIDTH = CARD_WIDTH + (HIGHLIGHT_BORDER_THICKNESS * 2);   // 210
-        public const int HIGHLIGHT_HEIGHT = CARD_HEIGHT + (HIGHLIGHT_BORDER_THICKNESS * 2); // 310
-        public const int HIGHLIGHT_OFFSET_X = CARD_OFFSET_X + HIGHLIGHT_BORDER_THICKNESS;   // 105
-        public const int HIGHLIGHT_OFFSET_Y = CARD_OFFSET_Y + HIGHLIGHT_BORDER_THICKNESS;   // 180
+        public static int HIGHLIGHT_BORDER_THICKNESS => (int)Math.Max(1, Math.Round(BASE_HIGHLIGHT_BORDER_THICKNESS * UIScale));
+        public static int HIGHLIGHT_WIDTH => CARD_WIDTH + (HIGHLIGHT_BORDER_THICKNESS * 2);
+        public static int HIGHLIGHT_HEIGHT => CARD_HEIGHT + (HIGHLIGHT_BORDER_THICKNESS * 2);
+        public static int HIGHLIGHT_OFFSET_X => CARD_OFFSET_X + HIGHLIGHT_BORDER_THICKNESS;
+        public static int HIGHLIGHT_OFFSET_Y => CARD_OFFSET_Y + HIGHLIGHT_BORDER_THICKNESS;
         // Highlight glow settings
         public const int HIGHLIGHT_GLOW_LAYERS = 10;          // number of glow shells
         public const float HIGHLIGHT_GLOW_SPREAD = 0.01f;    // expansion per layer (relative scale)
@@ -30,19 +72,19 @@ namespace Crusaders30XX.ECS.Config
         
         // Hand layout settings
         // Distance between adjacent card centers = CARD_WIDTH + CARD_GAP
-        public const int CARD_GAP = -20; // editable gap between cards' edges
-        public const float CARD_SPACING = (float)(CARD_WIDTH + CARD_GAP);
-        public const float HAND_BOTTOM_MARGIN = 150f; // pixels from bottom of screen
+        public static int CARD_GAP => (int)Math.Round(BASE_CARD_GAP * UIScale);
+        public static float CARD_SPACING => CARD_WIDTH + CARD_GAP;
+        public static float HAND_BOTTOM_MARGIN => BASE_HAND_BOTTOM_MARGIN * UIScale; // pixels from bottom of screen
 
         // Hand fan (splay) settings
-        public const float HAND_FAN_MAX_ANGLE_DEG = 5f;   // max tilt angle at edges
-        public const float HAND_FAN_RADIUS = 0f;         // controls vertical arc curvature
-        public const float HAND_FAN_CURVE_OFFSET = 0f;     // additional vertical offset
-        public const float HAND_HOVER_LIFT = 10f;          // pixels to lift hovered card
-        public const float HAND_HOVER_SCALE = 1.0f;        // reserved for future scale-up
-        public const int HAND_Z_BASE = 100;
-        public const int HAND_Z_STEP = 1;
-        public const int HAND_Z_HOVER_BOOST = 1000;
+        public static float HAND_FAN_MAX_ANGLE_DEG => BASE_HAND_FAN_MAX_ANGLE_DEG;   // max tilt angle at edges (not scaled)
+        public static float HAND_FAN_RADIUS => BASE_HAND_FAN_RADIUS * UIScale;         // controls vertical arc curvature
+        public static float HAND_FAN_CURVE_OFFSET => BASE_HAND_FAN_CURVE_OFFSET * UIScale;     // additional vertical offset
+        public static float HAND_HOVER_LIFT => BASE_HAND_HOVER_LIFT * UIScale;          // pixels to lift hovered card
+        public static float HAND_HOVER_SCALE => BASE_HAND_HOVER_SCALE;        // reserved for future scale-up
+        public static int HAND_Z_BASE => BASE_HAND_Z_BASE;
+        public static int HAND_Z_STEP => BASE_HAND_Z_STEP;
+        public static int HAND_Z_HOVER_BOOST => BASE_HAND_Z_HOVER_BOOST;
 
         public static float DegToRad(float deg) => (float)(Math.PI / 180.0) * deg;
 
@@ -51,36 +93,36 @@ namespace Crusaders30XX.ECS.Config
         public const float HAND_TWEEN_SPEED = 12f;
         
         // Card border thickness for visual
-        public const int CARD_BORDER_THICKNESS = 3;
-        public const int CARD_CORNER_RADIUS = 18;
+        public static int CARD_BORDER_THICKNESS => (int)Math.Max(1, Math.Round(BASE_CARD_BORDER_THICKNESS * UIScale));
+        public static int CARD_CORNER_RADIUS => (int)Math.Max(2, Math.Round(BASE_CARD_CORNER_RADIUS * UIScale));
 
         // Draw pile display settings
-        public const int DRAW_PILE_WIDTH = 60;
-        public const int DRAW_PILE_HEIGHT = 80;
-        public const int DRAW_PILE_MARGIN = 20;
-        public const float DRAW_PILE_TEXT_SCALE = 0.8f;
+        public static int DRAW_PILE_WIDTH => (int)Math.Round(BASE_DRAW_PILE_WIDTH * UIScale);
+        public static int DRAW_PILE_HEIGHT => (int)Math.Round(BASE_DRAW_PILE_HEIGHT * UIScale);
+        public static int DRAW_PILE_MARGIN => (int)Math.Round(BASE_DRAW_PILE_MARGIN * UIScale);
+        public static float DRAW_PILE_TEXT_SCALE => BASE_DRAW_PILE_TEXT_SCALE * UIScale;
 
         // Text layout settings
-        public const int TEXT_MARGIN_X = 16;
-        public const int TEXT_MARGIN_Y = 16;
+        public static int TEXT_MARGIN_X => (int)Math.Round(BASE_TEXT_MARGIN_X * UIScale);
+        public static int TEXT_MARGIN_Y => (int)Math.Round(BASE_TEXT_MARGIN_Y * UIScale);
 
         // Text scales
-        public const float NAME_SCALE = 0.7f;
-        public const float COST_SCALE = 0.6f;
-        public const float DESCRIPTION_SCALE = 0.4f;
-        public const float BLOCK_SCALE = 0.5f;
+        public static float NAME_SCALE => BASE_NAME_SCALE * UIScale;
+        public static float COST_SCALE => BASE_COST_SCALE * UIScale;
+        public static float DESCRIPTION_SCALE => BASE_DESCRIPTION_SCALE * UIScale;
+        public static float BLOCK_SCALE => BASE_BLOCK_SCALE * UIScale;
 
         // Text offsets relative to card's top-left corner
-        public const int NAME_OFFSET_X = TEXT_MARGIN_X;
-        public const int NAME_OFFSET_Y = TEXT_MARGIN_Y;
-        public const int COST_OFFSET_X = TEXT_MARGIN_X;
-        public const int COST_OFFSET_Y = TEXT_MARGIN_Y + 34; // below name
-        public const int DESCRIPTION_OFFSET_X = TEXT_MARGIN_X;
-        public const int DESCRIPTION_OFFSET_Y = TEXT_MARGIN_Y + 84; // below cost
+        public static int NAME_OFFSET_X => TEXT_MARGIN_X;
+        public static int NAME_OFFSET_Y => TEXT_MARGIN_Y;
+        public static int COST_OFFSET_X => TEXT_MARGIN_X;
+        public static int COST_OFFSET_Y => TEXT_MARGIN_Y + (int)Math.Round(34 * UIScale); // below name
+        public static int DESCRIPTION_OFFSET_X => TEXT_MARGIN_X;
+        public static int DESCRIPTION_OFFSET_Y => TEXT_MARGIN_Y + (int)Math.Round(84 * UIScale); // below cost
         // Block number bottom-right settings
-        public const float BLOCK_NUMBER_SCALE = 0.9f;
-        public const int BLOCK_NUMBER_MARGIN_X = 14;
-        public const int BLOCK_NUMBER_MARGIN_Y = 12;
+        public static float BLOCK_NUMBER_SCALE => BASE_BLOCK_NUMBER_SCALE * UIScale;
+        public static int BLOCK_NUMBER_MARGIN_X => (int)Math.Round(BASE_BLOCK_NUMBER_MARGIN_X * UIScale);
+        public static int BLOCK_NUMBER_MARGIN_Y => (int)Math.Round(BASE_BLOCK_NUMBER_MARGIN_Y * UIScale);
         
         /// <summary>
         /// Gets a rectangle for the card visual positioned at the given point

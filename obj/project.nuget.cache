@@ -1,17 +1,20 @@
 {
   "version": 2,
-  "dgSpecHash": "HGOw6vF33x8K6BGNbxW0IFTDoKhr05cFjxKju8kZg2IqADomoyVa7LUqGp2lcqKyjT2oduhlxud3TL2nFD+mUw==",
+  "dgSpecHash": "EGbXUCB8Bh8=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Calvin\\Documents\\Crusaders30XX\\Crusaders30XX.csproj",
+  "projectFilePath": "/Users/calvinholt/Documents/projects/Crusaders30XX/Crusaders30XX.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Calvin\\.nuget\\packages\\monogame.content.builder.task\\3.8.4\\monogame.content.builder.task.3.8.4.nupkg.sha512",
-    "C:\\Users\\Calvin\\.nuget\\packages\\monogame.extended\\4.0.4\\monogame.extended.4.0.4.nupkg.sha512",
-    "C:\\Users\\Calvin\\.nuget\\packages\\monogame.framework.desktopgl\\3.8.4\\monogame.framework.desktopgl.3.8.4.nupkg.sha512",
-    "C:\\Users\\Calvin\\.nuget\\packages\\monogame.library.openal\\1.23.1.10\\monogame.library.openal.1.23.1.10.nupkg.sha512",
-    "C:\\Users\\Calvin\\.nuget\\packages\\monogame.library.sdl\\2.32.2.1\\monogame.library.sdl.2.32.2.1.nupkg.sha512",
-    "C:\\Users\\Calvin\\.nuget\\packages\\nvorbis\\0.10.4\\nvorbis.0.10.4.nupkg.sha512",
-    "C:\\Users\\Calvin\\.nuget\\packages\\system.memory\\4.5.3\\system.memory.4.5.3.nupkg.sha512",
-    "C:\\Users\\Calvin\\.nuget\\packages\\system.valuetuple\\4.5.0\\system.valuetuple.4.5.0.nupkg.sha512"
+    "/Users/calvinholt/.nuget/packages/monogame.content.builder.task/3.8.4/monogame.content.builder.task.3.8.4.nupkg.sha512",
+    "/Users/calvinholt/.nuget/packages/monogame.extended/4.0.4/monogame.extended.4.0.4.nupkg.sha512",
+    "/Users/calvinholt/.nuget/packages/monogame.framework.desktopgl/3.8.4/monogame.framework.desktopgl.3.8.4.nupkg.sha512",
+    "/Users/calvinholt/.nuget/packages/monogame.library.openal/1.23.1.10/monogame.library.openal.1.23.1.10.nupkg.sha512",
+    "/Users/calvinholt/.nuget/packages/monogame.library.sdl/2.32.2.1/monogame.library.sdl.2.32.2.1.nupkg.sha512",
+    "/Users/calvinholt/.nuget/packages/nvorbis/0.10.4/nvorbis.0.10.4.nupkg.sha512",
+    "/Users/calvinholt/.nuget/packages/system.memory/4.5.3/system.memory.4.5.3.nupkg.sha512",
+    "/Users/calvinholt/.nuget/packages/system.valuetuple/4.5.0/system.valuetuple.4.5.0.nupkg.sha512",
+    "/Users/calvinholt/.nuget/packages/microsoft.netcore.app.ref/8.0.19/microsoft.netcore.app.ref.8.0.19.nupkg.sha512",
+    "/Users/calvinholt/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.19/microsoft.aspnetcore.app.ref.8.0.19.nupkg.sha512",
+    "/Users/calvinholt/.nuget/packages/microsoft.netcore.app.host.osx-x64/8.0.19/microsoft.netcore.app.host.osx-x64.8.0.19.nupkg.sha512"
   ],
   "logs": []
 }
