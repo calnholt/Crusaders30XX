@@ -127,7 +127,17 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         
-        public int Amount { get; set; } = 3;
+        public int Amount { get; set; } = 0;
+    }
+    
+    /// <summary>
+    /// Optional resource component representing Temperance for an entity (e.g., the player)
+    /// </summary>
+    public class Temperance : IComponent
+    {
+        public Entity Owner { get; set; }
+        
+        public int Amount { get; set; } = 0;
     }
     
     /// <summary>

@@ -36,6 +36,7 @@ public class Game1 : Game
     private CathedralLightingSystem _cathedralLightingSystem;
     private ProfilerSystem _profilerSystem;
     private CourageDisplaySystem _courageDisplaySystem;
+    private TemperanceDisplaySystem _temperanceDisplaySystem;
 
     public Game1()
     {
@@ -113,6 +114,7 @@ public class Game1 : Game
         _cathedralLightingSystem = new CathedralLightingSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _courageDisplaySystem = new CourageDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
 
         
@@ -129,6 +131,7 @@ public class Game1 : Game
         _world.AddSystem(_cathedralLightingSystem);
         _world.AddSystem(_playerWispParticleSystem);
         _world.AddSystem(_courageDisplaySystem);
+        _world.AddSystem(_temperanceDisplaySystem);
         _world.AddSystem(_profilerSystem);
 
         // Set initial location background via enum
@@ -201,6 +204,8 @@ public class Game1 : Game
 
         // Draw courage badge below the portrait
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("CourageDisplaySystem.Draw", () => _courageDisplaySystem.Draw());
+        // Draw temperance badge next to courage
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("TemperanceDisplaySystem.Draw", () => _temperanceDisplaySystem.Draw());
 
         // Draw hand of cards on top of highlights
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("HandDisplaySystem.DrawHand", () => _handDisplaySystem.DrawHand());

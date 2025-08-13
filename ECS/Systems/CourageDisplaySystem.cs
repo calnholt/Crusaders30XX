@@ -35,6 +35,12 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Text Scale Divisor", Step = 1, Min = 1, Max = 200)]
 		public int TextScaleDivisor { get; set; } = 26;
 
+		[DebugEditable(DisplayName = "Text Offset X", Step = 1, Min = -500, Max = 500)]
+		public int TextOffsetX { get; set; } = 0;
+
+		[DebugEditable(DisplayName = "Text Offset Y", Step = 1, Min = -500, Max = 500)]
+		public int TextOffsetY { get; set; } = 0;
+
 		public CourageDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
 			: base(entityManager)
 		{
@@ -118,7 +124,7 @@ namespace Crusaders30XX.ECS.Systems
 			string text = Math.Max(0, courage.Amount).ToString();
 			float textScale = Math.Min(1.0f, innerRadius / Math.Max(1f, TextScaleDivisor)); // heuristic scale with size
 			var textSize = _font.MeasureString(text) * textScale;
-			var textPos = new Vector2(center.X - textSize.X / 2f, center.Y - textSize.Y / 2f);
+			var textPos = new Vector2(center.X - textSize.X / 2f + TextOffsetX, center.Y - textSize.Y / 2f + TextOffsetY);
 			_spriteBatch.DrawString(_font, text, textPos, Color.White, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
 		}
 
