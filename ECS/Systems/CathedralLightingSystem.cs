@@ -24,11 +24,16 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Random _random = new Random();
 
 		private readonly List<Beam> _beams = new();
+		private float _spawnAccumulator;
 
 		// --- Runtime adjustable settings (debug menu) ---
 		private int _numberOfBeams = 6;
-		[DebugEditable(DisplayName = "Beams", Step = 1f, Min = 1f, Max = 24f)]
+		[DebugEditable(DisplayName = "Max Concurrent Beams", Step = 1f, Min = 1f, Max = 48f)]
 		public int NumberOfBeams { get => _numberOfBeams; set => _numberOfBeams = Math.Max(1, value); }
+
+		private float _spawnRatePerSecond = 0.6f;
+		[DebugEditable(DisplayName = "Spawn Rate (per sec)", Step = 0.1f, Min = 0f, Max = 10f)]
+		public float SpawnRatePerSecond { get => _spawnRatePerSecond; set => _spawnRatePerSecond = MathHelper.Clamp(value, 0f, 10f); }
 
 		private float _beamBaseThicknessPx = 140f;
 		[DebugEditable(DisplayName = "Beam Thickness (px)", Step = 1f, Min = 4f, Max = 2000f)]
@@ -58,6 +63,20 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Length Overscan", Step = 0.01f, Min = 1f, Max = 2f)]
 		public float LengthOverscan { get => _lengthOverscan; set => _lengthOverscan = MathHelper.Clamp(value, 1f, 2f); }
 
+		private float _minLifetime = 2.5f;
+		private float _maxLifetime = 6.0f;
+		[DebugEditable(DisplayName = "Min Lifetime (s)", Step = 0.1f, Min = 0.1f, Max = 60f)]
+		public float MinLifetime { get => _minLifetime; set => _minLifetime = MathHelper.Clamp(value, 0.1f, _maxLifetime); }
+		[DebugEditable(DisplayName = "Max Lifetime (s)", Step = 0.1f, Min = 0.1f, Max = 60f)]
+		public float MaxLifetime { get => _maxLifetime; set => _maxLifetime = Math.Max(value, _minLifetime); }
+
+		private float _fadeInFraction = 0.25f;
+		private float _fadeOutFraction = 0.35f;
+		[DebugEditable(DisplayName = "Fade In Fraction", Step = 0.01f, Min = 0.01f, Max = 0.9f)]
+		public float FadeInFraction { get => _fadeInFraction; set => _fadeInFraction = MathHelper.Clamp(value, 0.01f, 0.9f); }
+		[DebugEditable(DisplayName = "Fade Out Fraction", Step = 0.01f, Min = 0.01f, Max = 0.9f)]
+		public float FadeOutFraction { get => _fadeOutFraction; set => _fadeOutFraction = MathHelper.Clamp(value, 0.01f, 0.9f); }
+
 		private struct Beam
 		{
 			public float OffsetPx;           // perpendicular offset from top-right anchor along normal
@@ -65,6 +84,8 @@ namespace Crusaders30XX.ECS.Systems
 			public float Phase1;             // radians for cloud layer 1
 			public float Phase2;             // radians for cloud layer 2
 			public float IntensityBias;      // baseline multiplier per-beam
+			public float Age;                // seconds
+			public float Lifetime;           // seconds
 		}
 
 		public CathedralLightingSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
@@ -85,7 +106,22 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_elapsedSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
 			EnsureBeamTexture();
-			EnsureBeamsInitialized();
+			if (_isActive)
+			{
+				SpawnBeams((float)gameTime.ElapsedGameTime.TotalSeconds);
+				// update existing beams and cull expired
+				for (int i = _beams.Count - 1; i >= 0; i--)
+				{
+					var b = _beams[i];
+					b.Age += (float)gameTime.ElapsedGameTime.TotalSeconds;
+					if (b.Age >= b.Lifetime)
+					{
+						_beams.RemoveAt(i);
+						continue;
+					}
+					_beams[i] = b;
+				}
+			}
 			base.Update(gameTime);
 		}
 
@@ -118,6 +154,12 @@ namespace Crusaders30XX.ECS.Systems
 				float layer2 = 0.5f + 0.5f * MathF.Sin(MathHelper.TwoPi * _cloudSpeedHz2 * t + b.Phase2 + b.OffsetPx * 0.01f);
 				float clouds = layer1 * layer2; // simple 2-layer interference
 				float intensity = _baseAlpha * (b.IntensityBias * (0.5f + 0.5f * (1f - _variationAmount + _variationAmount * clouds)));
+				// lifetime envelope: ease-in then ease-out
+				float lifeT = b.Lifetime > 0f ? MathHelper.Clamp(b.Age / b.Lifetime, 0f, 1f) : 1f;
+				float aIn = MathF.Min(1f, _fadeInFraction > 0f ? lifeT / _fadeInFraction : 1f);
+				float aOut = MathF.Min(1f, _fadeOutFraction > 0f ? (1f - lifeT) / _fadeOutFraction : 1f);
+				float lifeAlpha = MathF.Pow(aIn * aOut, 1.2f);
+				intensity *= lifeAlpha;
 				intensity = MathHelper.Clamp(intensity, 0f, 1f);
 
 				float thickness = _beamBaseThicknessPx * b.ThicknessJitter * (0.9f + 0.2f * clouds);
@@ -142,34 +184,47 @@ namespace Crusaders30XX.ECS.Systems
 				// Fallback: activate if texture name suggests cathedral
 				_isActive = evt.TexturePath.IndexOf("cathedral", StringComparison.OrdinalIgnoreCase) >= 0;
 			}
+			if (!_isActive)
+			{
+				_beams.Clear();
+				_spawnAccumulator = 0f;
+			}
 		}
 
-		private void EnsureBeamsInitialized()
+		private void SpawnBeams(float dt)
 		{
-			if (_beams.Count == _numberOfBeams) return;
-			_beams.Clear();
-			if (_numberOfBeams <= 0) return;
-
-			for (int i = 0; i < _numberOfBeams; i++)
+			if (_spawnRatePerSecond <= 0f || _numberOfBeams <= 0) return;
+			_spawnAccumulator += _spawnRatePerSecond * dt;
+			int toSpawn = (int)_spawnAccumulator;
+			if (toSpawn <= 0) return;
+			_spawnAccumulator -= toSpawn;
+			for (int i = 0; i < toSpawn && _beams.Count < _numberOfBeams; i++)
 			{
-				float u = _numberOfBeams == 1 ? 0.5f : (i / (float)(_numberOfBeams - 1)); // [0..1]
-				float offset = MathHelper.Lerp(-_beamSpreadPx, _beamSpreadPx, u);
-				// add subtle jitter to avoid perfect uniformity
-				offset += (float)(_random.NextDouble() * 40.0 - 20.0);
-				float thicknessJitter = 0.9f + 0.2f * (float)_random.NextDouble();
-				float phase1 = MathHelper.TwoPi * (float)_random.NextDouble();
-				float phase2 = MathHelper.TwoPi * (float)_random.NextDouble();
-				float bias = 0.85f + 0.3f * (float)_random.NextDouble();
-
-				_beams.Add(new Beam
-				{
-					OffsetPx = offset,
-					ThicknessJitter = thicknessJitter,
-					Phase1 = phase1,
-					Phase2 = phase2,
-					IntensityBias = bias
-				});
+				SpawnOneBeam();
 			}
+		}
+
+		private void SpawnOneBeam()
+		{
+			// random offset across spread with slight jitter
+			float offset = MathHelper.Lerp(-_beamSpreadPx, _beamSpreadPx, (float)_random.NextDouble());
+			offset += (float)(_random.NextDouble() * 40.0 - 20.0);
+			float thicknessJitter = 0.9f + 0.2f * (float)_random.NextDouble();
+			float phase1 = MathHelper.TwoPi * (float)_random.NextDouble();
+			float phase2 = MathHelper.TwoPi * (float)_random.NextDouble();
+			float bias = 0.85f + 0.3f * (float)_random.NextDouble();
+			float lifetime = MathHelper.Lerp(_minLifetime, _maxLifetime, (float)_random.NextDouble());
+
+			_beams.Add(new Beam
+			{
+				OffsetPx = offset,
+				ThicknessJitter = thicknessJitter,
+				Phase1 = phase1,
+				Phase2 = phase2,
+				IntensityBias = bias,
+				Age = 0f,
+				Lifetime = lifetime
+			});
 		}
 
 		private void EnsureBeamTexture()
