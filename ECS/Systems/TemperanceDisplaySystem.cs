@@ -22,25 +22,25 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Debug-adjustable fields
 		[DebugEditable(DisplayName = "Triangle Size", Step = 1, Min = 8, Max = 512)]
-		public int TriangleSize { get; set; } = 50; // pixels (width == height)
+		public int TriangleSize { get; set; } = 62; // pixels (width == height)
 
 		[DebugEditable(DisplayName = "Outline Thickness", Step = 1, Min = 1, Max = 50)]
-		public int OutlineThickness { get; set; } = 2;
+		public int OutlineThickness { get; set; } = 4;
 
 		[DebugEditable(DisplayName = "Anchor Offset X", Step = 2, Min = -2000, Max = 2000)]
 		public int AnchorOffsetX { get; set; } = 60; // to the right of Courage by default
 
 		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -2000, Max = 2000)]
-		public int AnchorOffsetY { get; set; } = 208; // align with Courage default
+		public int AnchorOffsetY { get; set; } = 206; // align with Courage default
 
 		[DebugEditable(DisplayName = "Text Scale Divisor", Step = 1, Min = 1, Max = 200)]
 		public int TextScaleDivisor { get; set; } = 24;
 
 		[DebugEditable(DisplayName = "Text Offset X", Step = 1, Min = -500, Max = 500)]
-		public int TextOffsetX { get; set; } = 0;
+		public int TextOffsetX { get; set; } = 1;
 
 		[DebugEditable(DisplayName = "Text Offset Y", Step = 1, Min = -500, Max = 500)]
-		public int TextOffsetY { get; set; } = 0;
+		public int TextOffsetY { get; set; } = 6;
 
 		public TemperanceDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
 			: base(entityManager)

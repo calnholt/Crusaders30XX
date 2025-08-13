@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
+using System.Diagnostics;
+using System.Text;
 using System.Reflection;
 using Microsoft.Xna.Framework.Input;
 
@@ -39,6 +41,7 @@ namespace Crusaders30XX.ECS.Systems
         }
 
         private HoldState _hold;
+        private DateTime _copiedStatusUntil = DateTime.MinValue;
 
         public DebugMenuSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font, SystemManager systemManager)
             : base(entityManager)
@@ -151,6 +154,28 @@ namespace Crusaders30XX.ECS.Systems
             if (_font != null)
             {
                 DrawStringScaled("Debug Menu", new Vector2(panelX + padding, cursorY), Color.White, titleScale);
+                // Copy Settings button at top-right
+                int btnW = 160;
+                int btnH = 36;
+                var copyRect = new Rectangle(panelX + panelWidth - padding - btnW, cursorY, btnW, btnH);
+                bool hoverCopy = copyRect.Contains(mouse.Position);
+                var copyBg = hoverCopy ? new Color(120, 120, 120) : new Color(70, 70, 70);
+                DrawFilledRect(copyRect, copyBg);
+                DrawRect(copyRect, Color.White, 1);
+                DrawStringScaled("Copy Settings", new Vector2(copyRect.X + 8, copyRect.Y + 3), Color.White, textScale);
+                if (click && hoverCopy)
+                {
+                    var activeSys = systems[menu.ActiveTabIndex].sys;
+                    string export = BuildSettingsExport(activeSys);
+                    TryCopyToClipboard(export);
+                    _copiedStatusUntil = DateTime.UtcNow.AddSeconds(1.5);
+                }
+                // transient copied label
+                if (DateTime.UtcNow < _copiedStatusUntil)
+                {
+                    DrawStringScaled("Copied!", new Vector2(copyRect.X - 80, copyRect.Y + 3), Color.LightGreen, textScale);
+                }
+
                 cursorY += (int)(_font.LineSpacing * titleScale) + spacing;
             }
 
@@ -420,6 +445,58 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             _prevMouse = mouse;
+        }
+
+        private static string BuildSettingsExport(Core.System system)
+        {
+            var sb = new StringBuilder();
+            string systemName = system.GetType().Name;
+            sb.AppendLine($"{systemName} settings - update the system with these values:");
+            var members = GetEditableMembers(system);
+            foreach (var (label, get, _, type, _attr) in members)
+            {
+                object v = get();
+                if (type == typeof(int) || type == typeof(byte))
+                {
+                    sb.AppendLine($"{label}={Convert.ToInt32(v)}");
+                }
+                else if (type == typeof(float))
+                {
+                    sb.AppendLine($"{label}={Convert.ToSingle(v):0.###}");
+                }
+            }
+            return sb.ToString();
+        }
+
+        private static void TryCopyToClipboard(string text)
+        {
+            try
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    var psi = new ProcessStartInfo("cmd.exe", "/c clip")
+                    {
+                        UseShellExecute = false,
+                        RedirectStandardInput = true,
+                        CreateNoWindow = true
+                    };
+                    using var p = Process.Start(psi);
+                    if (p != null)
+                    {
+                        p.StandardInput.Write(text);
+                        p.StandardInput.Close();
+                        p.WaitForExit(2000);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("[Clipboard] Copy not supported on this OS. Export below:\n" + text);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Clipboard] Failed: " + ex.Message + "\n" + text);
+            }
         }
 
         private static IEnumerable<(string name, Core.System sys)> GetAnnotatedSystems(IEnumerable<Core.System> systems)

@@ -191,7 +191,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Top draw hotspots list (right of graph)
-            var top = FrameProfiler.GetTopSamples(5);
+            var top = FrameProfiler.GetTopSamples(10);
             int listPanelX = panelX + panelW - _sidePanelWidth;
             int listX = listPanelX + _sidePanelPadding;
             int listY = gy;
