@@ -206,7 +206,12 @@ namespace Crusaders30XX.ECS.Systems
 
             // Defer drawing the open list until AFTER fields so it overlays everything
             bool drawListAfter = ddCurrent.IsOpen;
-            int deferredItemCount = ddCurrent.Items.Count;
+            // Build visible options list excluding the currently selected item
+            var visibleOptions = systems
+                .Select((s, idx) => (index: idx, name: s.name))
+                .Where(t => t.index != ddCurrent.SelectedIndex)
+                .ToList();
+            int deferredItemCount = visibleOptions.Count;
             int deferredRowH = ddCurrent.RowHeight;
             // Open the dropdown list downward
             var deferredListRect = new Rectangle(ddUI.Bounds.X, ddUI.Bounds.Bottom, ddUI.Bounds.Width, deferredItemCount * deferredRowH);
@@ -392,23 +397,24 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Finally, if dropdown is open, draw its list on top of everything else in the panel
-            if (drawListAfter)
+            if (drawListAfter && deferredItemCount > 0)
             {
                 DrawFilledRect(deferredListRect, new Color(25, 25, 25));
                 DrawRect(deferredListRect, Color.White, 1);
-                for (int i = 0; i < deferredItemCount; i++)
+                for (int row = 0; row < deferredItemCount; row++)
                 {
-                    var itemRect = new Rectangle(deferredListRect.X, deferredListRect.Y + i * deferredRowH, deferredListRect.Width, deferredRowH);
+                    var (actualIndex, label) = visibleOptions[row];
+                    var itemRect = new Rectangle(deferredListRect.X, deferredListRect.Y + row * deferredRowH, deferredListRect.Width, deferredRowH);
                     bool hover = itemRect.Contains(mouse.Position);
                     if (hover) DrawFilledRect(itemRect, new Color(60, 60, 60));
-                    DrawStringScaled(systems[i].name, new Vector2(itemRect.X + 8, itemRect.Y + 4), Color.White, textScale);
+                    DrawStringScaled(label, new Vector2(itemRect.X + 8, itemRect.Y + 4), Color.White, textScale);
                     DrawRect(itemRect, Color.White, 1);
                     if (click && hover)
                     {
                         var dd = ddEntity.GetComponent<UIDropdown>();
-                        dd.SelectedIndex = i;
+                        dd.SelectedIndex = actualIndex;
                         dd.IsOpen = false;
-                        menu.ActiveTabIndex = i;
+                        menu.ActiveTabIndex = actualIndex;
                     }
                 }
             }

@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Systems
     /// Draws glowing red wisps around the player portrait area.
     /// Anchors to the same transform as PlayerDisplaySystem.
     /// </summary>
-    [DebugTab("PlayerWispParticleSystem")] 
+    [DebugTab("PlayerWisps")] 
     public class PlayerWispParticleSystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
