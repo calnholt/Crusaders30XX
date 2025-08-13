@@ -27,6 +27,11 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Spawn Rate (per sec)", Step = 0.5f, Min = 0f, Max = 200f)]
         public float SpawnRatePerSecond { get => _spawnRatePerSecond; set => _spawnRatePerSecond = MathF.Max(0f, value); }
 
+        // Courage mapping: how much Courage corresponds to maximum particle density
+        private int _courageAtMaxWisps = 10;
+        [DebugEditable(DisplayName = "Courage At Max Wisps", Step = 1f, Min = 1f, Max = 100f)]
+        public int CourageAtMaxWisps { get => _courageAtMaxWisps; set => _courageAtMaxWisps = Math.Max(1, value); }
+
         private int _maxCount = 150;
         [DebugEditable(DisplayName = "Max Particles", Step = 10f, Min = 0f, Max = 2000f)]
         public int MaxCount { get => _maxCount; set => _maxCount = Math.Max(0, value); }
@@ -110,6 +115,14 @@ namespace Crusaders30XX.ECS.Systems
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             _elapsedSeconds += dt;
 
+            // Determine intensity from player's Courage
+            float intensity = GetCourageIntensity();
+            if (intensity <= 0f)
+            {
+                _wisps.Clear();
+                return;
+            }
+
             EnsureWispTexture();
             if (!TryGetAnchor(out var anchorTransform, out var portraitInfo)) return;
 
@@ -118,13 +131,15 @@ namespace Crusaders30XX.ECS.Systems
             float texW = portraitInfo?.TextureWidth ?? 0;
             float texH = portraitInfo?.TextureHeight ?? 0;
 
-            // Spawn new wisps based on rate, accumulating fractional spawns
-            _spawnAccumulator += _spawnRatePerSecond * dt;
+            // Spawn new wisps based on rate scaled by Courage, accumulating fractional spawns
+            float effectiveSpawnRate = _spawnRatePerSecond * intensity;
+            _spawnAccumulator += effectiveSpawnRate * dt;
             int toSpawn = (int)_spawnAccumulator;
             if (toSpawn > 0)
             {
                 _spawnAccumulator -= toSpawn;
-                for (int i = 0; i < toSpawn && _wisps.Count < _maxCount; i++)
+                int effectiveMax = (int)MathF.Round(_maxCount * intensity);
+                for (int i = 0; i < toSpawn && _wisps.Count < effectiveMax; i++)
                 {
                     SpawnWisp(portraitPosition, portraitScale, texW, texH);
                 }
@@ -251,6 +266,24 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
             _wispTexture.SetData(data);
+        }
+
+        private float GetCourageIntensity()
+        {
+            try
+            {
+                var player = EntityManager.GetEntitiesWithComponent<Components.Player>()
+                    .FirstOrDefault(e => e.HasComponent<Components.Courage>());
+                if (player == null) return 0f;
+                var courage = player.GetComponent<Components.Courage>();
+                int amount = Math.Max(0, courage?.Amount ?? 0);
+                if (amount <= 0) return 0f;
+                return MathHelper.Clamp(amount / (float)_courageAtMaxWisps, 0f, 1f);
+            }
+            catch
+            {
+                return 0f;
+            }
         }
 
         private bool TryGetAnchor(out Components.Transform transform, out Components.PlayerPortraitInfo info)

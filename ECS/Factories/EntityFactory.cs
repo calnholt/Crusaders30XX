@@ -96,7 +96,7 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, sprite);
             
             // Attach Courage resource component by default (optional mechanics can read presence)
-            world.AddComponent(entity, new Courage { Amount = 5 });
+            world.AddComponent(entity, new Courage { Amount = 0 });
             // Attach Temperance resource component by default
             world.AddComponent(entity, new Temperance { Amount = 0 });
             // Attach StoredBlock resource component by default
