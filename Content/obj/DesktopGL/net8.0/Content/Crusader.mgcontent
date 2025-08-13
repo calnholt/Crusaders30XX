@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <SourceFile>/Users/calvinholt/Documents/projects/Crusaders30XX/Content/Crusader.png</SourceFile>
-  <SourceTime>2025-08-12T17:11:36.717161-04:00</SourceTime>
-  <DestFile>/Users/calvinholt/Documents/projects/Crusaders30XX/Content/bin/DesktopGL/Content/Crusader.xnb</DestFile>
-  <DestTime>2025-08-12T17:11:58.895966-04:00</DestTime>
+  <SourceFile>C:/Users/Calvin/Documents/Crusaders30XX/Content/Crusader.png</SourceFile>
+  <SourceTime>2025-08-10T19:40:33.4496841-04:00</SourceTime>
+  <DestFile>C:/Users/Calvin/Documents/Crusaders30XX/Content/bin/DesktopGL/Content/Crusader.xnb</DestFile>
+  <DestTime>2025-08-13T06:44:49.1201176-04:00</DestTime>
   <Importer>TextureImporter</Importer>
   <ImporterTime>2025-06-02T06:31:02-04:00</ImporterTime>
   <Processor>TextureProcessor</Processor>

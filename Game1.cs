@@ -33,6 +33,7 @@ public class Game1 : Game
     private CardListModalSystem _cardListModalSystem;
     private PlayerDisplaySystem _playerDisplaySystem;
     private PlayerWispParticleSystem _playerWispParticleSystem;
+    private CathedralLightingSystem _cathedralLightingSystem;
     private ProfilerSystem _profilerSystem;
 
     public Game1()
@@ -108,6 +109,7 @@ public class Game1 : Game
         // Load Crusader portrait texture and create player systems
         var crusaderTexture = Content.Load<Texture2D>("Crusader");
         _playerDisplaySystem = new PlayerDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, crusaderTexture);
+        _cathedralLightingSystem = new CathedralLightingSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
 
@@ -122,6 +124,7 @@ public class Game1 : Game
         _world.AddSystem(_discardPileDisplaySystem);
         _world.AddSystem(_cardListModalSystem);
         _world.AddSystem(_playerDisplaySystem);
+        _world.AddSystem(_cathedralLightingSystem);
         _world.AddSystem(_playerWispParticleSystem);
         _world.AddSystem(_profilerSystem);
 
@@ -180,6 +183,9 @@ public class Game1 : Game
         
         // Draw background first
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("BattleBackgroundSystem.Draw", () => _battleBackgroundSystem.Draw());
+
+        // Cathedral lighting beams (under foreground elements)
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("CathedralLightingSystem.Draw", () => _cathedralLightingSystem.Draw());
 
         // Draw ECS World
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("RenderingSystem.Draw", () => _renderingSystem.Draw());
