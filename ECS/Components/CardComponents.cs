@@ -121,6 +121,16 @@ namespace Crusaders30XX.ECS.Components
     }
     
     /// <summary>
+    /// Optional resource component representing Courage for an entity (e.g., the player)
+    /// </summary>
+    public class Courage : IComponent
+    {
+        public Entity Owner { get; set; }
+        
+        public int Amount { get; set; } = 0;
+    }
+    
+    /// <summary>
     /// Component for positioning and rendering
     /// </summary>
     public class Transform : IComponent
