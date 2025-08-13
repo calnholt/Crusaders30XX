@@ -139,6 +139,16 @@ namespace Crusaders30XX.ECS.Components
         
         public int Amount { get; set; } = 0;
     }
+
+    /// <summary>
+    /// Resource component representing Stored Block for an entity (e.g., the player)
+    /// </summary>
+    public class StoredBlock : IComponent
+    {
+        public Entity Owner { get; set; }
+
+        public int Amount { get; set; } = 0;
+    }
     
     /// <summary>
     /// Component for positioning and rendering
