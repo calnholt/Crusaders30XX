@@ -140,6 +140,7 @@ public class Game1 : Game
         _world.AddSystem(_courageManagerSystem);
         _world.AddSystem(_profilerSystem);
         _world.AddSystem(_debugMenuSystem);
+        _world.AddSystem(_battleBackgroundSystem);
 
         // Set initial location background via enum
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Cathedral });

@@ -3,18 +3,24 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
     /// <summary>
         /// Renders a battle background with cover scaling (no stretch). Anchors to bottom; centers horizontally.
     /// </summary>
+    [DebugTab("Battle Background")]
     public class BattleBackgroundSystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private readonly Microsoft.Xna.Framework.Content.ContentManager _content;
         private Texture2D _background;
+
+        // Debug-adjustable vertical offset for background positioning
+        [DebugEditable(DisplayName = "Offset Y", Step = 2, Min = -2000, Max = 2000)]
+        public int OffsetY { get; set; } = 0;
 
         public BattleBackgroundSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Microsoft.Xna.Framework.Content.ContentManager content)
             : base(entityManager)
@@ -84,7 +90,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // Position: anchor bottom (prioritize showing bottom), center horizontally
             int x = (viewportW - drawW) / 2;
-            int y = viewportH - drawH;
+            int y = viewportH - drawH + OffsetY;
 
             var dest = new Rectangle(x, y, drawW, drawH);
             _spriteBatch.Draw(_background, dest, Color.White);
