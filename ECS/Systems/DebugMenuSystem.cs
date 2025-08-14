@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Events;
 using System.Diagnostics;
 using System.Text;
 using System.Reflection;
@@ -90,7 +91,7 @@ namespace Crusaders30XX.ECS.Systems
             int padding = 12;
             int spacing = 8;
             int rowH = 36;
-            int buttonH = 22;
+            int buttonH = 36;
             float titleScale = 0.6f;
             float textScale = 0.55f;
 
@@ -419,6 +420,7 @@ namespace Crusaders30XX.ECS.Systems
                     }
                     cursorY += buttonH + spacing;
                 }
+
             }
 
             // Finally, if dropdown is open, draw its list on top of everything else in the panel

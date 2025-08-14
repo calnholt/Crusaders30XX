@@ -38,6 +38,7 @@ public class Game1 : Game
     private CourageDisplaySystem _courageDisplaySystem;
     private TemperanceDisplaySystem _temperanceDisplaySystem;
     private StoredBlockDisplaySystem _storedBlockDisplaySystem;
+    private CourageManagerSystem _courageManagerSystem;
 
     public Game1()
     {
@@ -117,6 +118,7 @@ public class Game1 : Game
         _courageDisplaySystem = new CourageDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _storedBlockDisplaySystem = new StoredBlockDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _courageManagerSystem = new CourageManagerSystem(_world.EntityManager);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
 
         
@@ -135,6 +137,7 @@ public class Game1 : Game
         _world.AddSystem(_courageDisplaySystem);
         _world.AddSystem(_temperanceDisplaySystem);
         _world.AddSystem(_storedBlockDisplaySystem);
+        _world.AddSystem(_courageManagerSystem);
         _world.AddSystem(_profilerSystem);
 
         // Set initial location background via enum

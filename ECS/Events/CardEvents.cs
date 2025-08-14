@@ -51,6 +51,14 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Increases or decreases the player's Courage by Delta
+    /// </summary>
+    public class ModifyCourageEvent
+    {
+        public int Delta { get; set; } = 0;
+    }
+
+    /// <summary>
     /// Event to request discarding the hand, shuffling, and drawing a fresh hand
     /// </summary>
     public class RedrawHandEvent

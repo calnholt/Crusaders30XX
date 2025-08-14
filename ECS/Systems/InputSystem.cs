@@ -231,6 +231,18 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(redrawButton, new Transform { Position = new Vector2(1800, 300), ZOrder = 5001 });
                 EntityManager.AddComponent(redrawButton, new UIElement { Bounds = new Rectangle(1730, 285, 140, 40), IsInteractable = true, Tooltip = "Discard hand, shuffle, draw 4" });
                 EntityManager.AddComponent(redrawButton, new UIButton { Label = "Redraw", Command = "RedrawHand" });
+
+                // Add a button: Courage -> Increase by 1
+                var incCourageButton = EntityManager.CreateEntity("DebugButton_IncreaseCourage");
+                EntityManager.AddComponent(incCourageButton, new Transform { Position = new Vector2(1800, 340), ZOrder = 5001 });
+                EntityManager.AddComponent(incCourageButton, new UIElement { Bounds = new Rectangle(1730, 325, 140, 40), IsInteractable = true, Tooltip = "+1 Courage" });
+                EntityManager.AddComponent(incCourageButton, new UIButton { Label = "+ Courage", Command = "IncreaseCourage" });
+
+                // Add a button: Courage -> Decrease by 1
+                var decCourageButton = EntityManager.CreateEntity("DebugButton_DecreaseCourage");
+                EntityManager.AddComponent(decCourageButton, new Transform { Position = new Vector2(1800, 380), ZOrder = 5001 });
+                EntityManager.AddComponent(decCourageButton, new UIElement { Bounds = new Rectangle(1730, 365, 140, 40), IsInteractable = true, Tooltip = "-1 Courage" });
+                EntityManager.AddComponent(decCourageButton, new UIButton { Label = "- Courage", Command = "DecreaseCourage" });
             }
             else
             {
