@@ -17,6 +17,7 @@ namespace Crusaders30XX.ECS.Systems
     /// <summary>
     /// System to render a simple toggleable debug menu and its buttons
     /// </summary>
+    [DebugTab("Debug Menu")]
     public class DebugMenuSystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
@@ -29,6 +30,61 @@ namespace Crusaders30XX.ECS.Systems
         private float _scrollOffset = 0f; // vertical scroll for panel content
         private bool _dragging = false;
         private Point _dragOffset;
+
+        // Editable layout and behavior settings
+		[DebugEditable(DisplayName = "Margin", Step = 1, Min = 0, Max = 200)]
+		public int Margin { get; set; } = 74;
+
+		[DebugEditable(DisplayName = "Panel Width", Step = 10, Min = 200, Max = 1000)]
+		public int PanelWidth { get; set; } = 430;
+
+		[DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 64)]
+		public int Padding { get; set; } = 9;
+
+		[DebugEditable(DisplayName = "Spacing", Step = 1, Min = 0, Max = 64)]
+		public int Spacing { get; set; } = 3;
+
+		[DebugEditable(DisplayName = "Row Height", Step = 1, Min = 24, Max = 80)]
+		public int RowHeight { get; set; } = 34;
+
+        [DebugEditable(DisplayName = "Button Height", Step = 1, Min = 24, Max = 80)]
+        public int ButtonHeight { get; set; } = 36;
+
+		[DebugEditable(DisplayName = "Title Scale", Step = 0.05f, Min = 0.2f, Max = 2.0f)]
+		public float TitleScale { get; set; } = 0.7f;
+
+        [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.2f, Max = 2.0f)]
+        public float TextScale { get; set; } = 0.55f;
+
+        [DebugEditable(DisplayName = "Tab Height", Step = 1, Min = 20, Max = 80)]
+        public int TabHeight { get; set; } = 36;
+
+		[DebugEditable(DisplayName = "Panel Border Thickness", Step = 1, Min = 1, Max = 8)]
+		public int PanelBorderThickness { get; set; } = 1;
+
+		[DebugEditable(DisplayName = "Bottom Margin", Step = 2, Min = 0, Max = 200)]
+		public int BottomMargin { get; set; } = 0;
+
+        [DebugEditable(DisplayName = "Dropdown Row Height", Step = 1, Min = 20, Max = 80)]
+        public int DropdownRowHeight { get; set; } = 36;
+
+		[DebugEditable(DisplayName = "Copy Button Width", Step = 5, Min = 80, Max = 320)]
+		public int CopyButtonWidth { get; set; } = 155;
+
+		[DebugEditable(DisplayName = "Triangle Width", Step = 1, Min = 6, Max = 32)]
+		public int TriangleWidth { get; set; } = 10;
+
+        [DebugEditable(DisplayName = "Triangle Height", Step = 1, Min = 6, Max = 32)]
+        public int TriangleHeight { get; set; } = 8;
+
+		[DebugEditable(DisplayName = "Triangle Right Padding", Step = 1, Min = 0, Max = 40)]
+		public int TriangleRightPadding { get; set; } = 15;
+
+		[DebugEditable(DisplayName = "Scroll Pixels / Notch", Step = 2, Min = 8, Max = 200)]
+		public float ScrollPixelsPerNotch { get; set; } = 16f;
+
+		[DebugEditable(DisplayName = "Initial Offset Y", Step = 2, Min = 0, Max = 400)]
+		public int InitialOffsetY { get; set; } = 50;
 
         private class HoldState
         {
@@ -86,22 +142,14 @@ namespace Crusaders30XX.ECS.Systems
             _lastDrawTime = now;
             bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
 
-            // Layout constants
+            // Layout values
             int viewportW = _graphicsDevice.Viewport.Width;
-            int margin = 20;
-            int panelWidth = 420;
-            int padding = 12;
-            int spacing = 8;
-            int rowH = 36;
-            int buttonH = 36;
-            float titleScale = 0.6f;
-            float textScale = 0.55f;
 
             // Initialize saved panel position on first open
             if (!menu.IsPositionSet)
             {
-                menu.PanelX = viewportW - panelWidth - margin;
-                menu.PanelY = margin + 60;
+                menu.PanelX = viewportW - PanelWidth - Margin;
+                menu.PanelY = Margin + InitialOffsetY;
                 menu.IsPositionSet = true;
             }
 
@@ -116,10 +164,10 @@ namespace Crusaders30XX.ECS.Systems
             var systems = GetAnnotatedSystems(_systemManager.GetAllSystems()).OrderBy(t => t.name).ToList();
             if (systems.Count == 0)
             {
-                var panelRectEmpty = new Rectangle(panelX, panelY, panelWidth, 80);
+                var panelRectEmpty = new Rectangle(panelX, panelY, PanelWidth, 80);
                 ui.Bounds = panelRectEmpty;
                 DrawFilledRect(panelRectEmpty, new Color(15, 30, 55) * 0.95f);
-                DrawRect(panelRectEmpty, Color.White, 2);
+                DrawRect(panelRectEmpty, Color.White, PanelBorderThickness);
                 _prevMouse = mouse;
                 return;
             }
@@ -127,51 +175,51 @@ namespace Crusaders30XX.ECS.Systems
                 menu.ActiveTabIndex = 0;
 
             // First pass: measure height
-            int measureY = panelY + padding;
+            int measureY = panelY + Padding;
             if (_font != null)
             {
-                measureY += (int)(_font.LineSpacing * titleScale) + spacing; // title height
+                measureY += (int)(_font.LineSpacing * TitleScale) + Spacing; // title height
             }
 
             // Tab bar height
-            int tabH = 36;
+            int tabH = TabHeight;
             int tabBarY = measureY;
-            measureY += tabH + spacing;
+            measureY += tabH + Spacing;
 
             // Active tab fields count
             var active = systems[menu.ActiveTabIndex];
             var members = GetEditableMembers(active.sys);
             int fieldsCount = members.Count;
-            measureY += fieldsCount * (rowH + spacing);
+            measureY += fieldsCount * (RowHeight + Spacing);
 
             // Buttons section (existing UIButtons)
             var buttons = EntityManager.GetEntitiesWithComponent<UIButton>().ToList();
             if (_font != null && buttons.Count > 0)
             {
-                measureY += (int)(_font.LineSpacing * textScale) + spacing; // header
-                measureY += buttons.Count * (buttonH + spacing);
+                measureY += (int)(_font.LineSpacing * TextScale) + Spacing; // header
+                measureY += buttons.Count * (ButtonHeight + Spacing);
             }
 
-            int panelHeight = measureY - panelY + padding;
+            int panelHeight = measureY - panelY + Padding;
             // Constrain panel height to viewport with a bottom margin
-            int bottomMargin = 40;
+            int bottomMargin = BottomMargin;
             int maxPanelHeight = Math.Max(120, _graphicsDevice.Viewport.Height - bottomMargin - panelY);
             bool needScroll = panelHeight > maxPanelHeight;
             int displayHeight = needScroll ? maxPanelHeight : panelHeight;
-            var panelRect = new Rectangle(panelX, panelY, panelWidth, displayHeight);
+            var panelRect = new Rectangle(panelX, panelY, PanelWidth, displayHeight);
             ui.Bounds = panelRect;
 
             // Draw panel and title
             DrawFilledRect(panelRect, new Color(15, 30, 55) * 0.95f);
-            DrawRect(panelRect, Color.White, 2);
+            DrawRect(panelRect, Color.White, PanelBorderThickness);
 
-            int cursorY = panelY + padding;
+            int cursorY = panelY + Padding;
             if (_font != null)
             {
                 // Title label rect for dragging
-                var titleSize = _font.MeasureString("Debug Menu") * titleScale;
-                var titleRect = new Rectangle(panelX + padding, cursorY, (int)Math.Ceiling(titleSize.X), (int)Math.Ceiling(titleSize.Y));
-                DrawStringScaled("Debug Menu", new Vector2(panelX + padding, cursorY), Color.White, titleScale);
+                var titleSize = _font.MeasureString("Debug Menu") * TitleScale;
+                var titleRect = new Rectangle(panelX + Padding, cursorY, (int)Math.Ceiling(titleSize.X), (int)Math.Ceiling(titleSize.Y));
+                DrawStringScaled("Debug Menu", new Vector2(panelX + Padding, cursorY), Color.White, TitleScale);
                 // Handle drag start when pressing on title label
                 if (mouseJustPressed && titleRect.Contains(mouse.Position))
                 {
@@ -194,31 +242,31 @@ namespace Crusaders30XX.ECS.Systems
                     int titleW = (int)Math.Ceiling(titleSize.X);
                     int titleH = (int)Math.Ceiling(titleSize.Y);
                     // Keep the title label fully on-screen: clamp panel position so (panel + padding) within [0, viewport - titleSize]
-                    int minPanelX = -padding;
-                    int maxPanelX = viewportWClamped - titleW - padding;
-                    int minPanelY = -padding;
-                    int maxPanelY = viewportHClamped - titleH - padding;
+                    int minPanelX = -Padding;
+                    int maxPanelX = viewportWClamped - titleW - Padding;
+                    int minPanelY = -Padding;
+                    int maxPanelY = viewportHClamped - titleH - Padding;
                     newX = Math.Max(minPanelX, Math.Min(newX, maxPanelX));
                     newY = Math.Max(minPanelY, Math.Min(newY, maxPanelY));
                     menu.PanelX = newX;
                     menu.PanelY = newY;
                     panelX = newX;
                     panelY = newY;
-                    panelRect = new Rectangle(panelX, panelY, panelWidth, displayHeight);
+                    panelRect = new Rectangle(panelX, panelY, PanelWidth, displayHeight);
                     ui.Bounds = panelRect;
                     // Update titleRect X/Y for hit test continuity during the same frame
-                    titleRect.X = panelX + padding;
-                    titleRect.Y = panelY + padding;
+                    titleRect.X = panelX + Padding;
+                    titleRect.Y = panelY + Padding;
                 }
                 // Copy Settings button at top-right
-                int btnW = 160;
-                int btnH = 36;
-                var copyRect = new Rectangle(panelX + panelWidth - padding - btnW, cursorY, btnW, btnH);
+                int btnW = CopyButtonWidth;
+                int btnH = ButtonHeight;
+                var copyRect = new Rectangle(panelX + PanelWidth - Padding - btnW, cursorY, btnW, btnH);
                 bool hoverCopy = copyRect.Contains(mouse.Position);
                 var copyBg = hoverCopy ? new Color(120, 120, 120) : new Color(70, 70, 70);
                 DrawFilledRect(copyRect, copyBg);
                 DrawRect(copyRect, Color.White, 1);
-                DrawStringScaled("Copy Settings", new Vector2(copyRect.X + 8, copyRect.Y + 3), Color.White, textScale);
+                DrawStringScaled("Copy Settings", new Vector2(copyRect.X + 8, copyRect.Y + 3), Color.White, TextScale);
                 if (click && hoverCopy)
                 {
                     var activeSys = systems[menu.ActiveTabIndex].sys;
@@ -229,10 +277,10 @@ namespace Crusaders30XX.ECS.Systems
                 // transient copied label
                 if (DateTime.UtcNow < _copiedStatusUntil)
                 {
-                    DrawStringScaled("Copied!", new Vector2(copyRect.X - 80, copyRect.Y + 3), Color.LightGreen, textScale);
+                    DrawStringScaled("Copied!", new Vector2(copyRect.X - 80, copyRect.Y + 3), Color.LightGreen, TextScale);
                 }
 
-                cursorY += (int)(_font.LineSpacing * titleScale) + spacing;
+                cursorY += (int)(_font.LineSpacing * TitleScale) + Spacing;
             }
 
             // Dropdown for tabs
@@ -241,8 +289,8 @@ namespace Crusaders30XX.ECS.Systems
             if (ddEntity == null)
             {
                 ddEntity = EntityManager.CreateEntity("DebugMenu_TabDropdown");
-                var dd = new UIDropdown { Items = systems.Select(s => s.name).ToList(), SelectedIndex = Math.Clamp(menu.ActiveTabIndex, 0, systems.Count - 1), RowHeight = 36, TextScale = textScale };
-                var ddBounds = new Rectangle(panelX + padding, cursorY, panelWidth - padding * 2, 36);
+                var dd = new UIDropdown { Items = systems.Select(s => s.name).ToList(), SelectedIndex = Math.Clamp(menu.ActiveTabIndex, 0, systems.Count - 1), RowHeight = DropdownRowHeight, TextScale = TextScale };
+                var ddBounds = new Rectangle(panelX + Padding, cursorY, PanelWidth - Padding * 2, DropdownRowHeight);
                 EntityManager.AddComponent(ddEntity, dd);
                 EntityManager.AddComponent(ddEntity, new UIElement { Bounds = ddBounds, IsInteractable = true });
                 // Set very high Z so dropdown (and especially its options) stays on top of other UI
@@ -255,8 +303,9 @@ namespace Crusaders30XX.ECS.Systems
                 var tDD = ddEntity.GetComponent<Transform>();
                 dd.Items = systems.Select(s => s.name).ToList();
                 dd.SelectedIndex = Math.Clamp(menu.ActiveTabIndex, 0, systems.Count - 1);
-                dd.RowHeight = 36;
-                uiDD.Bounds = new Rectangle(panelX + padding, cursorY, panelWidth - padding * 2, 36);
+                dd.RowHeight = DropdownRowHeight;
+                dd.TextScale = TextScale;
+                uiDD.Bounds = new Rectangle(panelX + Padding, cursorY, PanelWidth - Padding * 2, DropdownRowHeight);
                 if (tDD != null)
                 {
                     // Boost ZOrder while open to ensure options render above everything and capture hover
@@ -270,12 +319,12 @@ namespace Crusaders30XX.ECS.Systems
             DrawFilledRect(ddUI.Bounds, new Color(35, 35, 35));
             DrawRect(ddUI.Bounds, Color.White, 1);
             string ddLabel = (ddCurrent.SelectedIndex >= 0 && ddCurrent.SelectedIndex < ddCurrent.Items.Count) ? ddCurrent.Items[ddCurrent.SelectedIndex] : "";
-            DrawStringScaled(ddLabel, new Vector2(ddUI.Bounds.X + 8, ddUI.Bounds.Y + 4), Color.White, textScale);
+            DrawStringScaled(ddLabel, new Vector2(ddUI.Bounds.X + 8, ddUI.Bounds.Y + 4), Color.White, TextScale);
 
             // Triangle indicator at right side (down when closed, up when open)
-            int triW = 12;
-            int triH = 8;
-            int triRight = ddUI.Bounds.Right - 10;
+            int triW = TriangleWidth;
+            int triH = TriangleHeight;
+            int triRight = ddUI.Bounds.Right - TriangleRightPadding;
             int triCenterY = ddUI.Bounds.Y + ddUI.Bounds.Height / 2;
             var triRect = new Rectangle(triRight - triW, triCenterY - triH / 2, triW, triH);
             if (ddCurrent.IsOpen) DrawTriangleUp(triRect, Color.White); else DrawTriangleDown(triRect, Color.White);
@@ -302,12 +351,12 @@ namespace Crusaders30XX.ECS.Systems
                 menu.ActiveTabIndex = Math.Clamp(ddCurrent.SelectedIndex, 0, systems.Count - 1);
             }
             int dropdownHeight = ddUI.Bounds.Height;
-            cursorY += dropdownHeight + spacing;
+            cursorY += dropdownHeight + Spacing;
 
             // Scroll handling for content below the dropdown
-            int headerHeight = cursorY - panelY; // title + dropdown + spacing consumed so far
-            int scrollAreaHeight = Math.Max(0, displayHeight - headerHeight - padding);
-            float maxScroll = Math.Max(0, (panelHeight - headerHeight - padding) - scrollAreaHeight);
+            int headerHeight = cursorY - panelY; // title + dropdown + Spacing consumed so far
+            int scrollAreaHeight = Math.Max(0, displayHeight - headerHeight - Padding);
+            float maxScroll = Math.Max(0, (panelHeight - headerHeight - Padding) - scrollAreaHeight);
             if (!needScroll)
             {
                 _scrollOffset = 0f;
@@ -315,14 +364,14 @@ namespace Crusaders30XX.ECS.Systems
             else
             {
                 int wheelDelta = mouse.ScrollWheelValue - _prevMouse.ScrollWheelValue; // + when scrolled up
-                float deltaPixels = -(wheelDelta / 120f) * 48f; // ~48px per notch
+                float deltaPixels = -(wheelDelta / 120f) * ScrollPixelsPerNotch; // adjustable px per notch
                 _scrollOffset = MathHelper.Clamp(_scrollOffset + deltaPixels, 0f, maxScroll);
             }
             int yOffset = -(int)Math.Round(_scrollOffset);
 
             // Visible region bounds for culling
             int visibleTop = panelY + headerHeight;
-            int visibleBottom = panelY + displayHeight - padding;
+            int visibleBottom = panelY + displayHeight - Padding;
 
             // Fields for active tab (scrollable)
             foreach (var m in members)
@@ -331,10 +380,10 @@ namespace Crusaders30XX.ECS.Systems
                 string display = string.IsNullOrWhiteSpace(attr.DisplayName) ? label : attr.DisplayName;
                 object val = getter();
 
-                var rowRect = new Rectangle(panelX + padding, cursorY + yOffset, panelWidth - padding * 2, rowH);
+                var rowRect = new Rectangle(panelX + Padding, cursorY + yOffset, PanelWidth - Padding * 2, RowHeight);
                 if (rowRect.Bottom < visibleTop || rowRect.Y > visibleBottom)
                 {
-                    cursorY += rowH + spacing;
+                    cursorY += RowHeight + Spacing;
                     continue;
                 }
                 DrawFilledRect(rowRect, new Color(30, 30, 30));
@@ -344,39 +393,39 @@ namespace Crusaders30XX.ECS.Systems
                 if (type == typeof(bool))
                 {
                     string vs = ((bool)val) ? "ON" : "OFF";
-                    var txtSize = _font.MeasureString(vs) * textScale;
-                    var valRect = new Rectangle(right - (int)txtSize.X - 10, rowRect.Y + 3, (int)txtSize.X + 10, rowH - 6);
+                    var txtSize = _font.MeasureString(vs) * TextScale;
+                    var valRect = new Rectangle(right - (int)txtSize.X - 10, rowRect.Y + 3, (int)txtSize.X + 10, RowHeight - 6);
                     // Label clipped to available space
                     int labelMaxWidth = Math.Max(0, valRect.X - 6 - (rowRect.X + 8));
-                    DrawStringClippedScaled(display, new Vector2(rowRect.X + 8, rowRect.Y + 4), Color.LightGray, labelMaxWidth, textScale);
+                    DrawStringClippedScaled(display, new Vector2(rowRect.X + 8, rowRect.Y + 4), Color.LightGray, labelMaxWidth, TextScale);
                     DrawFilledRect(valRect, new Color(70, 70, 70));
                     DrawRect(valRect, Color.White, 1);
-                    DrawStringScaled(vs, new Vector2(valRect.X + 5, valRect.Y + 2), Color.White, textScale);
+                    DrawStringScaled(vs, new Vector2(valRect.X + 5, valRect.Y + 2), Color.White, TextScale);
                     if (click && valRect.Contains(mouse.Position)) setter(!(bool)val);
                 }
                 else if (type == typeof(int) || type == typeof(float) || type == typeof(byte))
                 {
                     int btnW = 22;
-                    var plusRect = new Rectangle(right - btnW, rowRect.Y + 3, btnW, rowH - 6);
-                    var valRect = new Rectangle(plusRect.X - 100, rowRect.Y + 3, 100, rowH - 6);
-                    var minusRect = new Rectangle(valRect.X - btnW, rowRect.Y + 3, btnW, rowH - 6);
+                    var plusRect = new Rectangle(right - btnW, rowRect.Y + 3, btnW, RowHeight - 6);
+                    var valRect = new Rectangle(plusRect.X - 100, rowRect.Y + 3, 100, RowHeight - 6);
+                    var minusRect = new Rectangle(valRect.X - btnW, rowRect.Y + 3, btnW, RowHeight - 6);
 
                     // Label clipped to available space
                     int labelMaxWidth = Math.Max(0, minusRect.X - 6 - (rowRect.X + 8));
-                    DrawStringClippedScaled(display, new Vector2(rowRect.X + 8, rowRect.Y + 4), Color.LightGray, labelMaxWidth, textScale);
+                    DrawStringClippedScaled(display, new Vector2(rowRect.X + 8, rowRect.Y + 4), Color.LightGray, labelMaxWidth, TextScale);
 
                     DrawFilledRect(minusRect, new Color(70, 70, 70));
                     DrawRect(minusRect, Color.White, 1);
-                    DrawStringScaled("-", new Vector2(minusRect.X + 7, minusRect.Y + 2), Color.White, textScale);
+                    DrawStringScaled("-", new Vector2(minusRect.X + 7, minusRect.Y + 2), Color.White, TextScale);
 
                     DrawFilledRect(valRect, new Color(50, 50, 50));
                     DrawRect(valRect, Color.White, 1);
                     string vs = type == typeof(float) ? $"{Convert.ToSingle(val):0.###}" : Convert.ToInt32(val).ToString();
-                    DrawStringScaled(vs, new Vector2(valRect.X + 6, valRect.Y + 2), Color.White, textScale);
+                    DrawStringScaled(vs, new Vector2(valRect.X + 6, valRect.Y + 2), Color.White, TextScale);
 
                     DrawFilledRect(plusRect, new Color(70, 70, 70));
                     DrawRect(plusRect, Color.White, 1);
-                    DrawStringScaled("+", new Vector2(plusRect.X + 6, plusRect.Y + 2), Color.White, textScale);
+                    DrawStringScaled("+", new Vector2(plusRect.X + 6, plusRect.Y + 2), Color.White, TextScale);
 
                     float step = attr.Step <= 0f ? 1f : attr.Step;
                     if (click)
@@ -425,16 +474,16 @@ namespace Crusaders30XX.ECS.Systems
                 else
                 {
                     string vs = val?.ToString() ?? "null";
-                    var txtSize = _font.MeasureString(vs) * textScale;
-                    var valRect = new Rectangle(right - (int)txtSize.X - 10, rowRect.Y + 3, (int)txtSize.X + 10, rowH - 6);
+                    var txtSize = _font.MeasureString(vs) * TextScale;
+                    var valRect = new Rectangle(right - (int)txtSize.X - 10, rowRect.Y + 3, (int)txtSize.X + 10, RowHeight - 6);
                     int labelMaxWidth = Math.Max(0, valRect.X - 6 - (rowRect.X + 8));
-                    DrawStringClippedScaled(display, new Vector2(rowRect.X + 8, rowRect.Y + 4), Color.LightGray, labelMaxWidth, textScale);
+                    DrawStringClippedScaled(display, new Vector2(rowRect.X + 8, rowRect.Y + 4), Color.LightGray, labelMaxWidth, TextScale);
                     DrawFilledRect(valRect, new Color(50, 50, 50));
                     DrawRect(valRect, Color.White, 1);
-                    DrawStringScaled(vs, new Vector2(valRect.X + 5, valRect.Y + 2), Color.White, textScale);
+                    DrawStringScaled(vs, new Vector2(valRect.X + 5, valRect.Y + 2), Color.White, TextScale);
                 }
 
-                cursorY += rowH + spacing;
+                cursorY += RowHeight + Spacing;
             }
 
             // Buttons section (existing) - also scrollable
@@ -442,11 +491,11 @@ namespace Crusaders30XX.ECS.Systems
             if (_font != null && uiButtons.Count > 0)
             {
                 int headerY = cursorY + yOffset;
-                if (headerY + (int)(_font.LineSpacing * textScale) >= visibleTop && headerY <= visibleBottom)
+                if (headerY + (int)(_font.LineSpacing * TextScale) >= visibleTop && headerY <= visibleBottom)
                 {
-                    DrawStringScaled("Buttons", new Vector2(panelX + padding, headerY), Color.LightGreen, textScale);
+                    DrawStringScaled("Buttons", new Vector2(panelX + Padding, headerY), Color.LightGreen, TextScale);
                 }
-                cursorY += (int)(_font.LineSpacing * textScale) + spacing;
+                cursorY += (int)(_font.LineSpacing * TextScale) + Spacing;
 
                 foreach (var e in uiButtons)
                 {
@@ -454,10 +503,10 @@ namespace Crusaders30XX.ECS.Systems
                     var btnUI = e.GetComponent<UIElement>();
                     if (btn == null || btnUI == null) continue;
 
-                    var rect = new Rectangle(panelX + padding, cursorY + yOffset, panelWidth - padding * 2, buttonH);
+                    var rect = new Rectangle(panelX + Padding, cursorY + yOffset, PanelWidth - Padding * 2, ButtonHeight);
                     if (rect.Bottom < visibleTop || rect.Y > visibleBottom)
                     {
-                        cursorY += buttonH + spacing;
+                        cursorY += ButtonHeight + Spacing;
                         continue;
                     }
                     btnUI.Bounds = rect;
@@ -468,12 +517,12 @@ namespace Crusaders30XX.ECS.Systems
 
                     if (_font != null && !string.IsNullOrEmpty(btn.Label))
                     {
-                        var size = _font.MeasureString(btn.Label) * textScale;
+                        var size = _font.MeasureString(btn.Label) * TextScale;
                         int textX = rect.X + (int)((rect.Width - size.X) / 2f);
                         int textY = rect.Y + (int)((rect.Height - size.Y) / 2f);
-                        DrawStringScaled(btn.Label, new Vector2(textX, textY), Color.White, textScale);
+                        DrawStringScaled(btn.Label, new Vector2(textX, textY), Color.White, TextScale);
                     }
-                    cursorY += buttonH + spacing;
+                    cursorY += ButtonHeight + Spacing;
                 }
 
             }
@@ -489,7 +538,7 @@ namespace Crusaders30XX.ECS.Systems
                     var itemRect = new Rectangle(deferredListRect.X, deferredListRect.Y + row * deferredRowH, deferredListRect.Width, deferredRowH);
                     bool hover = itemRect.Contains(mouse.Position);
                     if (hover) DrawFilledRect(itemRect, new Color(60, 60, 60));
-                    DrawStringScaled(label, new Vector2(itemRect.X + 8, itemRect.Y + 4), Color.White, textScale);
+                DrawStringScaled(label, new Vector2(itemRect.X + 8, itemRect.Y + 4), Color.White, TextScale);
                     DrawRect(itemRect, Color.White, 1);
                     if (click && hover)
                     {
