@@ -142,7 +142,7 @@ public class Game1 : Game
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_battleBackgroundSystem);
 
-        // Set initial location background via enum
+        // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Cathedral });
 
         EventManager.Publish(new RequestDrawCardsEvent { Count = 4 });

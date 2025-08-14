@@ -1,6 +1,7 @@
 using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
@@ -44,20 +45,40 @@ namespace Crusaders30XX.ECS.Systems
         {
             try
             {
-                string path = null;
+                // Ensure a single Battlefield component exists; update to requested location when provided.
+                Battlefield battlefield = null;
+                foreach (var e in EntityManager.GetEntitiesWithComponent<Battlefield>())
+                {
+                    battlefield = e.GetComponent<Battlefield>();
+                    if (battlefield != null) break;
+                }
+                if (battlefield == null)
+                {
+                    var worldEntity = EntityManager.CreateEntity("Battlefield");
+                    battlefield = new Battlefield();
+                    EntityManager.AddComponent(worldEntity, battlefield);
+                }
+
                 if (evt.Location.HasValue)
                 {
-                    path = evt.Location.Value switch
+                    battlefield.Location = evt.Location.Value;
+                }
+
+                // Load the background texture from the Battlefield location unless an explicit path is given.
+                string path = null;
+                if (!string.IsNullOrWhiteSpace(evt.TexturePath))
+                {
+                    path = evt.TexturePath;
+                }
+                else
+                {
+                    path = battlefield.Location switch
                     {
                         BattleLocation.Desert => "desert-background",
                         BattleLocation.Forest => "forest-background",
                         BattleLocation.Cathedral => "cathedral-background",
                         _ => null
                     };
-                }
-                if (!string.IsNullOrWhiteSpace(evt.TexturePath))
-                {
-                    path = evt.TexturePath;
                 }
                 if (!string.IsNullOrWhiteSpace(path))
                 {

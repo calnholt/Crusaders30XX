@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.ECS.Components;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -93,7 +94,6 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			EventManager.Subscribe<ChangeBattleLocationEvent>(OnChangeLocation);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -104,6 +104,21 @@ namespace Crusaders30XX.ECS.Systems
 
 		public override void Update(GameTime gameTime)
 		{
+			// Read current battlefield location from component and toggle activity accordingly
+			Battlefield battlefield = null;
+			foreach (var e in EntityManager.GetEntitiesWithComponent<Battlefield>())
+			{
+				battlefield = e.GetComponent<Battlefield>();
+				if (battlefield != null) break;
+			}
+			bool shouldBeActive = battlefield != null && battlefield.Location == BattleLocation.Cathedral;
+			if (_isActive && !shouldBeActive)
+			{
+				_beams.Clear();
+				_spawnAccumulator = 0f;
+			}
+			_isActive = shouldBeActive;
+
 			_elapsedSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
 			EnsureBeamTexture();
 			if (_isActive)
@@ -172,24 +187,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void OnChangeLocation(ChangeBattleLocationEvent evt)
-		{
-			if (evt == null) return;
-			if (evt.Location.HasValue)
-			{
-				_isActive = evt.Location.Value == BattleLocation.Cathedral;
-			}
-			else if (!string.IsNullOrWhiteSpace(evt.TexturePath))
-			{
-				// Fallback: activate if texture name suggests cathedral
-				_isActive = evt.TexturePath.IndexOf("cathedral", StringComparison.OrdinalIgnoreCase) >= 0;
-			}
-			if (!_isActive)
-			{
-				_beams.Clear();
-				_spawnAccumulator = 0f;
-			}
-		}
+		// Event handler removed; system now reads Battlefield component each Update
 
 		private void SpawnBeams(float dt)
 		{

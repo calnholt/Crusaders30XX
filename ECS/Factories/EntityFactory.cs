@@ -1,5 +1,6 @@
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Config;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -173,6 +174,9 @@ namespace Crusaders30XX.ECS.Factories
             };
             
             world.AddComponent(entity, gameState);
+
+            // Ensure a Battlefield world component exists with a default location
+            world.AddComponent(entity, new Battlefield { Location = BattleLocation.Desert });
             
             return entity;
         }

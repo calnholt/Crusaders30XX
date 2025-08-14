@@ -1,4 +1,5 @@
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
@@ -333,5 +334,15 @@ namespace Crusaders30XX.ECS.Components
             Victory,
             Defeat
         }
+    }
+
+    /// <summary>
+    /// Singleton-like world component describing the current battlefield location.
+    /// Other systems read this instead of subscribing to an event.
+    /// </summary>
+    public class Battlefield : IComponent
+    {
+        public Entity Owner { get; set; }
+        public BattleLocation Location { get; set; } = BattleLocation.Desert;
     }
 } 
