@@ -220,29 +220,7 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(menuEntity, new Transform { Position = new Vector2(1800, 200), ZOrder = 5000 });
                 EntityManager.AddComponent(menuEntity, new UIElement { Bounds = new Rectangle(1750, 150, 150, 300), IsInteractable = true });
 
-                // Add a button: Hand -> Draw Card
-                var drawButton = EntityManager.CreateEntity("DebugButton_DrawCard");
-                EntityManager.AddComponent(drawButton, new Transform { Position = new Vector2(1800, 260), ZOrder = 5001 });
-                EntityManager.AddComponent(drawButton, new UIElement { Bounds = new Rectangle(1730, 240, 140, 40), IsInteractable = true, Tooltip = "Draw 1 card" });
-                EntityManager.AddComponent(drawButton, new UIButton { Label = "Draw Card", Command = "DrawCard" });
-
-                // Add a button: Hand -> Redraw (discard, shuffle, draw 4)
-                var redrawButton = EntityManager.CreateEntity("DebugButton_Redraw");
-                EntityManager.AddComponent(redrawButton, new Transform { Position = new Vector2(1800, 300), ZOrder = 5001 });
-                EntityManager.AddComponent(redrawButton, new UIElement { Bounds = new Rectangle(1730, 285, 140, 40), IsInteractable = true, Tooltip = "Discard hand, shuffle, draw 4" });
-                EntityManager.AddComponent(redrawButton, new UIButton { Label = "Redraw", Command = "RedrawHand" });
-
-                // Add a button: Courage -> Increase by 1
-                var incCourageButton = EntityManager.CreateEntity("DebugButton_IncreaseCourage");
-                EntityManager.AddComponent(incCourageButton, new Transform { Position = new Vector2(1800, 340), ZOrder = 5001 });
-                EntityManager.AddComponent(incCourageButton, new UIElement { Bounds = new Rectangle(1730, 325, 140, 40), IsInteractable = true, Tooltip = "+1 Courage" });
-                EntityManager.AddComponent(incCourageButton, new UIButton { Label = "+ Courage", Command = "IncreaseCourage" });
-
-                // Add a button: Courage -> Decrease by 1
-                var decCourageButton = EntityManager.CreateEntity("DebugButton_DecreaseCourage");
-                EntityManager.AddComponent(decCourageButton, new Transform { Position = new Vector2(1800, 380), ZOrder = 5001 });
-                EntityManager.AddComponent(decCourageButton, new UIElement { Bounds = new Rectangle(1730, 365, 140, 40), IsInteractable = true, Tooltip = "-1 Courage" });
-                EntityManager.AddComponent(decCourageButton, new UIButton { Label = "- Courage", Command = "DecreaseCourage" });
+                // No need to spawn legacy debug buttons; the DebugMenuSystem now discovers actions via DebugActionAttribute
             }
             else
             {

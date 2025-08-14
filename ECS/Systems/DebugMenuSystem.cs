@@ -192,13 +192,13 @@ namespace Crusaders30XX.ECS.Systems
             int fieldsCount = members.Count;
             measureY += fieldsCount * (RowHeight + Spacing);
 
-            // Buttons section (existing UIButtons)
-            var buttons = EntityManager.GetEntitiesWithComponent<UIButton>().ToList();
-            if (_font != null && buttons.Count > 0)
-            {
-                measureY += (int)(_font.LineSpacing * TextScale) + Spacing; // header
-                measureY += buttons.Count * (ButtonHeight + Spacing);
-            }
+			// Buttons section from DebugActionAttribute on the active system
+			var actionMethods = GetDebugActions(active.sys);
+			if (_font != null && actionMethods.Count > 0)
+			{
+				measureY += (int)(_font.LineSpacing * TextScale) + Spacing; // header
+				measureY += actionMethods.Count * (ButtonHeight + Spacing);
+			}
 
             int panelHeight = measureY - panelY + Padding;
             // Constrain panel height to viewport with a bottom margin
@@ -486,9 +486,8 @@ namespace Crusaders30XX.ECS.Systems
                 cursorY += RowHeight + Spacing;
             }
 
-            // Buttons section (existing) - also scrollable
-            var uiButtons = EntityManager.GetEntitiesWithComponent<UIButton>().ToList();
-            if (_font != null && uiButtons.Count > 0)
+			// Buttons section (DebugAction methods) - also scrollable
+			if (_font != null && actionMethods.Count > 0)
             {
                 int headerY = cursorY + yOffset;
                 if (headerY + (int)(_font.LineSpacing * TextScale) >= visibleTop && headerY <= visibleBottom)
@@ -497,31 +496,38 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 cursorY += (int)(_font.LineSpacing * TextScale) + Spacing;
 
-                foreach (var e in uiButtons)
+				foreach (var am in actionMethods)
                 {
-                    var btn = e.GetComponent<UIButton>();
-                    var btnUI = e.GetComponent<UIElement>();
-                    if (btn == null || btnUI == null) continue;
-
-                    var rect = new Rectangle(panelX + Padding, cursorY + yOffset, PanelWidth - Padding * 2, ButtonHeight);
+					var rect = new Rectangle(panelX + Padding, cursorY + yOffset, PanelWidth - Padding * 2, ButtonHeight);
                     if (rect.Bottom < visibleTop || rect.Y > visibleBottom)
                     {
                         cursorY += ButtonHeight + Spacing;
                         continue;
                     }
-                    btnUI.Bounds = rect;
-
-                    var bgColor = btnUI.IsHovered ? new Color(120, 120, 120) : new Color(70, 70, 70);
+					var bgColor = new Color(70, 70, 70);
                     DrawFilledRect(rect, bgColor);
                     DrawRect(rect, Color.White, 1);
 
-                    if (_font != null && !string.IsNullOrEmpty(btn.Label))
+					if (_font != null)
                     {
-                        var size = _font.MeasureString(btn.Label) * TextScale;
+						string label = am.label;
+						var size = _font.MeasureString(label) * TextScale;
                         int textX = rect.X + (int)((rect.Width - size.X) / 2f);
                         int textY = rect.Y + (int)((rect.Height - size.Y) / 2f);
-                        DrawStringScaled(btn.Label, new Vector2(textX, textY), Color.White, TextScale);
+						DrawStringScaled(label, new Vector2(textX, textY), Color.White, TextScale);
                     }
+					// Handle click
+					if (click && rect.Contains(mouse.Position))
+					{
+						try
+						{
+							am.method.Invoke(active.sys, Array.Empty<object>());
+						}
+						catch (Exception ex)
+						{
+							Console.WriteLine($"[DebugMenu] Action '{am.label}' failed: {ex.Message}");
+						}
+					}
                     cursorY += ButtonHeight + Spacing;
                 }
 
@@ -572,6 +578,20 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
             return sb.ToString();
+        }
+
+        private static List<(string label, MethodInfo method)> GetDebugActions(Core.System system)
+        {
+            var actions = new List<(string, MethodInfo)>();
+            var t = system.GetType();
+            foreach (var m in t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
+            {
+                var attr = m.GetCustomAttribute<DebugActionAttribute>();
+                if (attr == null) continue;
+                if (m.GetParameters().Length != 0) continue; // only parameterless for now
+                actions.Add((string.IsNullOrWhiteSpace(attr.DisplayName) ? m.Name : attr.DisplayName, m));
+            }
+            return actions;
         }
 
         private static void TryCopyToClipboard(string text)

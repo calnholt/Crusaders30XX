@@ -22,6 +22,18 @@ namespace Crusaders30XX.Diagnostics
         public float Min { get; set; } = float.NaN;
         public float Max { get; set; } = float.NaN;
     }
+
+	[AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
+	public sealed class DebugActionAttribute : Attribute
+	{
+		public string DisplayName { get; }
+		public int Order { get; set; }
+
+		public DebugActionAttribute(string displayName)
+		{
+			DisplayName = displayName;
+		}
+	}
 }
 
 

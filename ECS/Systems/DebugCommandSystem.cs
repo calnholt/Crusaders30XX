@@ -5,17 +5,18 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
     /// <summary>
     /// System that listens to DebugCommandEvent and triggers corresponding actions
     /// </summary>
+    [Crusaders30XX.Diagnostics.DebugTab("Commands")]
     public class DebugCommandSystem : Core.System
     {
         public DebugCommandSystem(EntityManager entityManager) : base(entityManager)
         {
-            EventManager.Subscribe<DebugCommandEvent>(OnDebugCommand);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -28,24 +29,29 @@ namespace Crusaders30XX.ECS.Systems
         {
         }
 
-        private void OnDebugCommand(DebugCommandEvent evt)
+        // Debug actions discoverable by the DebugMenuSystem
+        [DebugAction("Draw Card")]
+        public void Debug_DrawCard()
         {
-            switch (evt.Command)
-            {
-                case "DrawCard":
-                    EventManager.Publish(new RequestDrawCardsEvent { Count = 1 });
-                    break;
-                case "RedrawHand":
-                    EventManager.Publish(new RedrawHandEvent { DrawCount = 4 });
-                    break;
-                case "IncreaseCourage":
-                    EventManager.Publish(new ModifyCourageEvent { Delta = 1 });
-                    break;
-                case "DecreaseCourage":
-                    EventManager.Publish(new ModifyCourageEvent { Delta = -1 });
-                    break;
-                // no-op for draw pile modal: handled by modal system, not debug menu
-            }
+            EventManager.Publish(new RequestDrawCardsEvent { Count = 1 });
+        }
+
+        [DebugAction("Redraw Hand")]
+        public void Debug_RedrawHand()
+        {
+            EventManager.Publish(new RedrawHandEvent { DrawCount = 4 });
+        }
+
+        [DebugAction("+ Courage")]
+        public void Debug_IncreaseCourage()
+        {
+            EventManager.Publish(new ModifyCourageEvent { Delta = 1 });
+        }
+
+        [DebugAction("- Courage")]
+        public void Debug_DecreaseCourage()
+        {
+            EventManager.Publish(new ModifyCourageEvent { Delta = -1 });
         }
     }
 }
