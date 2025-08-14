@@ -27,6 +27,8 @@ namespace Crusaders30XX.ECS.Systems
         private MouseState _prevMouse;
         private DateTime _lastDrawTime = DateTime.UtcNow;
         private float _scrollOffset = 0f; // vertical scroll for panel content
+        private bool _dragging = false;
+        private Point _dragOffset;
 
         private class HoldState
         {
@@ -95,8 +97,20 @@ namespace Crusaders30XX.ECS.Systems
             float titleScale = 0.6f;
             float textScale = 0.55f;
 
-            int panelX = viewportW - panelWidth - margin;
-            int panelY = margin + 60;
+            // Initialize saved panel position on first open
+            if (!menu.IsPositionSet)
+            {
+                menu.PanelX = viewportW - panelWidth - margin;
+                menu.PanelY = margin + 60;
+                menu.IsPositionSet = true;
+            }
+
+            // Allow dragging by the title label area
+            bool mouseDown = mouse.LeftButton == ButtonState.Pressed;
+            bool mouseJustPressed = mouseDown && _prevMouse.LeftButton == ButtonState.Released;
+
+            int panelX = menu.PanelX;
+            int panelY = menu.PanelY;
 
             // Build tabs from annotated systems
             var systems = GetAnnotatedSystems(_systemManager.GetAllSystems()).OrderBy(t => t.name).ToList();
@@ -154,7 +168,48 @@ namespace Crusaders30XX.ECS.Systems
             int cursorY = panelY + padding;
             if (_font != null)
             {
+                // Title label rect for dragging
+                var titleSize = _font.MeasureString("Debug Menu") * titleScale;
+                var titleRect = new Rectangle(panelX + padding, cursorY, (int)Math.Ceiling(titleSize.X), (int)Math.Ceiling(titleSize.Y));
                 DrawStringScaled("Debug Menu", new Vector2(panelX + padding, cursorY), Color.White, titleScale);
+                // Handle drag start when pressing on title label
+                if (mouseJustPressed && titleRect.Contains(mouse.Position))
+                {
+                    _dragging = true;
+                    _dragOffset = new Point(mouse.X - panelX, mouse.Y - panelY);
+                }
+                // Release drag on mouse up
+                if (!mouseDown)
+                {
+                    _dragging = false;
+                }
+                // Apply dragging movement
+                if (_dragging)
+                {
+                    int newX = mouse.X - _dragOffset.X;
+                    int newY = mouse.Y - _dragOffset.Y;
+                    // Clamp so the title label remains fully on-screen
+                    int viewportWClamped = _graphicsDevice.Viewport.Width;
+                    int viewportHClamped = _graphicsDevice.Viewport.Height;
+                    int titleW = (int)Math.Ceiling(titleSize.X);
+                    int titleH = (int)Math.Ceiling(titleSize.Y);
+                    // Keep the title label fully on-screen: clamp panel position so (panel + padding) within [0, viewport - titleSize]
+                    int minPanelX = -padding;
+                    int maxPanelX = viewportWClamped - titleW - padding;
+                    int minPanelY = -padding;
+                    int maxPanelY = viewportHClamped - titleH - padding;
+                    newX = Math.Max(minPanelX, Math.Min(newX, maxPanelX));
+                    newY = Math.Max(minPanelY, Math.Min(newY, maxPanelY));
+                    menu.PanelX = newX;
+                    menu.PanelY = newY;
+                    panelX = newX;
+                    panelY = newY;
+                    panelRect = new Rectangle(panelX, panelY, panelWidth, displayHeight);
+                    ui.Bounds = panelRect;
+                    // Update titleRect X/Y for hit test continuity during the same frame
+                    titleRect.X = panelX + padding;
+                    titleRect.Y = panelY + padding;
+                }
                 // Copy Settings button at top-right
                 int btnW = 160;
                 int btnH = 36;

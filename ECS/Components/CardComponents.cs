@@ -282,6 +282,10 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
         public bool IsOpen { get; set; } = false;
         public int ActiveTabIndex { get; set; } = 0;
+        // Persisted panel position and init flag for draggable debug menu
+        public int PanelX { get; set; } = 0;
+        public int PanelY { get; set; } = 0;
+        public bool IsPositionSet { get; set; } = false;
     }
 
     /// <summary>
