@@ -30,6 +30,12 @@ namespace Crusaders30XX.ECS.Systems
         private float _scrollOffset = 0f; // vertical scroll for panel content
         private bool _dragging = false;
         private Point _dragOffset;
+		// Caches to avoid repeated reflection and list building every frame
+		private List<(string name, Core.System sys)> _annotatedSystemsCache;
+		private readonly Dictionary<Type, List<(string label, Func<object> get, Action<object> set, Type type, DebugEditableAttribute attr)>> _editableMembersCache
+			= new();
+		private readonly Dictionary<Type, List<(string label, MethodInfo method)>> _debugActionsCache
+			= new();
 
         // Editable layout and behavior settings
 		[DebugEditable(DisplayName = "Margin", Step = 1, Min = 0, Max = 200)]
@@ -160,8 +166,8 @@ namespace Crusaders30XX.ECS.Systems
             int panelX = menu.PanelX;
             int panelY = menu.PanelY;
 
-            // Build tabs from annotated systems
-            var systems = GetAnnotatedSystems(_systemManager.GetAllSystems()).OrderBy(t => t.name).ToList();
+			// Build tabs from annotated systems (cached)
+			var systems = GetAnnotatedSystemsCached();
             if (systems.Count == 0)
             {
                 var panelRectEmpty = new Rectangle(panelX, panelY, PanelWidth, 80);
@@ -188,12 +194,12 @@ namespace Crusaders30XX.ECS.Systems
 
             // Active tab fields count
             var active = systems[menu.ActiveTabIndex];
-            var members = GetEditableMembers(active.sys);
+			var members = GetEditableMembersCached(active.sys);
             int fieldsCount = members.Count;
             measureY += fieldsCount * (RowHeight + Spacing);
 
 			// Buttons section from DebugActionAttribute on the active system
-			var actionMethods = GetDebugActions(active.sys);
+			var actionMethods = GetDebugActionsCached(active.sys);
 			if (_font != null && actionMethods.Count > 0)
 			{
 				measureY += (int)(_font.LineSpacing * TextScale) + Spacing; // header
@@ -559,7 +565,7 @@ namespace Crusaders30XX.ECS.Systems
             _prevMouse = mouse;
         }
 
-        private static string BuildSettingsExport(Core.System system)
+		private static string BuildSettingsExport(Core.System system)
         {
             var sb = new StringBuilder();
             string systemName = system.GetType().Name;
@@ -579,6 +585,35 @@ namespace Crusaders30XX.ECS.Systems
             }
             return sb.ToString();
         }
+
+		private List<(string name, Core.System sys)> GetAnnotatedSystemsCached()
+		{
+			if (_annotatedSystemsCache == null)
+			{
+				_annotatedSystemsCache = GetAnnotatedSystems(_systemManager.GetAllSystems())
+					.OrderBy(t => t.name)
+					.ToList();
+			}
+			return _annotatedSystemsCache;
+		}
+
+		private List<(string label, Func<object> get, Action<object> set, Type type, DebugEditableAttribute attr)> GetEditableMembersCached(Core.System system)
+		{
+			var type = system.GetType();
+			if (_editableMembersCache.TryGetValue(type, out var cached)) return cached;
+			var computed = GetEditableMembers(system);
+			_editableMembersCache[type] = computed;
+			return computed;
+		}
+
+		private List<(string label, MethodInfo method)> GetDebugActionsCached(Core.System system)
+		{
+			var type = system.GetType();
+			if (_debugActionsCache.TryGetValue(type, out var cached)) return cached;
+			var computed = GetDebugActions(system);
+			_debugActionsCache[type] = computed;
+			return computed;
+		}
 
         private static List<(string label, MethodInfo method)> GetDebugActions(Core.System system)
         {
