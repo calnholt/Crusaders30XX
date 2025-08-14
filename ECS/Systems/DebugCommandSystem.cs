@@ -53,6 +53,24 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new ModifyCourageEvent { Delta = -1 });
         }
+
+        [DebugAction("Set Battlefield: Desert")]
+        public void Debug_SetBattlefield_Desert()
+        {
+            EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
+        }
+
+        [DebugAction("Set Battlefield: Forest")]
+        public void Debug_SetBattlefield_Forest()
+        {
+            EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Forest });
+        }
+
+        [DebugAction("Set Battlefield: Cathedral")]
+        public void Debug_SetBattlefield_Cathedral()
+        {
+            EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Cathedral });
+        }
     }
 }
 

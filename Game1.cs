@@ -21,7 +21,6 @@ public class Game1 : Game
     private RenderingSystem _renderingSystem;
     private InputSystem _inputSystem;
     private DeckManagementSystem _deckManagementSystem;
-    private CombatSystem _combatSystem;
     private CardDisplaySystem _cardDisplaySystem;
     private HandDisplaySystem _handDisplaySystem;
     private CardHighlightSystem _cardHighlightSystem;
@@ -79,12 +78,10 @@ public class Game1 : Game
         // Create systems that don't need SpriteBatch
         _inputSystem = new InputSystem(_world.EntityManager);
         _deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
-        _combatSystem = new CombatSystem(_world.EntityManager);
         
         // Add systems to world
         _world.AddSystem(_inputSystem);
         _world.AddSystem(_deckManagementSystem);
-        _world.AddSystem(_combatSystem);
         
         // Create initial game entities
         CreateInitialGameState();
