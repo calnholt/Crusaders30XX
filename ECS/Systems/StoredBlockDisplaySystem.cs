@@ -22,7 +22,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Debug fields
 		[DebugEditable(DisplayName = "Square Width", Step = 1, Min = 8, Max = 512)]
-		public int SquareWidth { get; set; } = 56;
+		public int SquareWidth { get; set; } = 44;
 
 		[DebugEditable(DisplayName = "Square Height", Step = 1, Min = 8, Max = 512)]
 		public int SquareHeight { get; set; } = 52;
@@ -31,7 +31,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int OutlineThickness { get; set; } = 2;
 
 		[DebugEditable(DisplayName = "Anchor Offset X", Step = 2, Min = -2000, Max = 2000)]
-		public int AnchorOffsetX { get; set; } = 130;
+		public int AnchorOffsetX { get; set; } = 124;
 
 		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -2000, Max = 2000)]
 		public int AnchorOffsetY { get; set; } = 208;
