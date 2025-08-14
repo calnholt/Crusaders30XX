@@ -60,6 +60,16 @@ namespace Crusaders30XX.ECS.Systems
         [Crusaders30XX.Diagnostics.DebugEditable(DisplayName = "White Alpha Multiplier", Step = 0.05f, Min = 0f, Max = 1f)]
         public float WhiteAlphaMultiplier { get => _whiteAlphaMultiplier; set => _whiteAlphaMultiplier = MathHelper.Clamp(value, 0f, 1f); }
         
+        // Minimal caching to reduce per-frame allocations/measurements
+        private static readonly int[] YTicks = new[] { 0, 30, 60, 90, (int)GraphMaxFps };
+        private int _cachedHeaderHeight;
+        private int _cachedHeaderBaseHeight;
+        private int _cachedHeaderPadding;
+        private float _cachedLineSpacing;
+        private float _cachedTableScale = -1f;
+        private float _cachedCol1W;
+        private float _cachedCol2W;
+
         // Table text (top draw list) scaling
         private float _tableTextScale = .5f;
         [Crusaders30XX.Diagnostics.DebugEditable(DisplayName = "Table Text Scale", Step = 0.05f, Min = 0.5f, Max = 3f)]
@@ -134,8 +144,8 @@ namespace Crusaders30XX.ECS.Systems
             string msStr = lastDt > 0 ? $"Frame: {(lastDt * 1000f):0.0} ms" : "Frame: -- ms";
 
             float lineH = _font.LineSpacing;
-            // compute header height dynamically to fit two lines + padding
-            int headerHeight = Math.Max(_headerBaseHeight, (int)(lineH * 2 + _headerPadding * 2));
+            // compute header height dynamically to fit two lines + padding (cached)
+            int headerHeight = GetHeaderHeightCached();
 
             var titlePos = new Vector2(panelX + _headerPadding, panelY + _headerPadding);
             var fpsPos = new Vector2(panelX + _headerPadding, panelY + _headerPadding + lineH);
@@ -148,14 +158,13 @@ namespace Crusaders30XX.ECS.Systems
 
             // Graph area
             int gx = panelX + AxisLabelWidth + 12;
-            int gy = panelY + Math.Max(_headerBaseHeight, (int)(lineH * 2 + _headerPadding * 2));
+            int gy = panelY + headerHeight;
             int reservedRight = _sidePanelWidth + _betweenPanelsGap;
             int gw = Math.Max(1, panelW - (gx - panelX) - 12 - reservedRight);
-            int gh = Math.Max(1, panelH - Math.Max(_headerBaseHeight, (int)(lineH * 2 + _headerPadding * 2)) - 16);
+            int gh = Math.Max(1, panelH - headerHeight - 16);
 
             // Y-axis ticks and labels (0..GraphMaxFps)
-            int[] ticks = [0, 30, 60, 90, (int)GraphMaxFps];
-            foreach (int t in ticks)
+            foreach (int t in YTicks)
             {
                 int ty = gy + gh - (int)(gh * (t / GraphMaxFps));
                 // tick line
@@ -200,9 +209,10 @@ namespace Crusaders30XX.ECS.Systems
             float tableLineH = _font.LineSpacing * tableScale;
             DrawStringClippedScaled("Top Draw (ms / calls)", new Vector2(listX, listY), Color.White, listMaxWidth, tableScale);
             listY += (int)(tableLineH + 4);
-            // Column widths based on font metrics (scaled)
-            float col1W = _font.MeasureString("00.00").X * tableScale + 12f; // time column
-            float col2W = _font.MeasureString("(000)").X * tableScale + 16f; // calls column
+            // Column widths based on font metrics (scaled) - cached by scale
+            EnsureTableMetricsCached();
+            float col1W = _cachedCol1W;
+            float col2W = _cachedCol2W;
             foreach (var s in top)
             {
                 string col1 = $"{s.TotalMs:0.00}";
@@ -254,6 +264,32 @@ namespace Crusaders30XX.ECS.Systems
                 s = s.Substring(0, s.Length - 1);
             }
             _spriteBatch.DrawString(_font, s + ellipsis, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+        }
+
+        private int GetHeaderHeightCached()
+        {
+            // Recompute only if inputs changed (line spacing, base height, padding)
+            if (_cachedHeaderHeight <= 0 ||
+                _cachedHeaderBaseHeight != _headerBaseHeight ||
+                _cachedHeaderPadding != _headerPadding ||
+                Math.Abs(_cachedLineSpacing - _font.LineSpacing) > 0.01f)
+            {
+                _cachedHeaderBaseHeight = _headerBaseHeight;
+                _cachedHeaderPadding = _headerPadding;
+                _cachedLineSpacing = _font.LineSpacing;
+                _cachedHeaderHeight = Math.Max(_headerBaseHeight, (int)(_cachedLineSpacing * 2 + _headerPadding * 2));
+            }
+            return _cachedHeaderHeight;
+        }
+
+        private void EnsureTableMetricsCached()
+        {
+            if (_cachedTableScale < 0f || Math.Abs(_cachedTableScale - _tableTextScale) > 0.0001f)
+            {
+                _cachedTableScale = _tableTextScale;
+                _cachedCol1W = _font.MeasureString("00.00").X * _cachedTableScale + 12f;
+                _cachedCol2W = _font.MeasureString("(000)").X * _cachedTableScale + 16f;
+            }
         }
 
         private void EnsureWhiteTexture()

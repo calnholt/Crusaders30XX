@@ -30,6 +30,9 @@ namespace Crusaders30XX.ECS.Systems
         private float _scrollOffset = 0f; // vertical scroll for panel content
         private bool _dragging = false;
         private Point _dragOffset;
+
+        // TODO: Caches populate on first use; if systems are added/removed at runtime or their reflected members change dynamically, we can add an explicit invalidation later.
+        
 		// Caches to avoid repeated reflection and list building every frame
 		private List<(string name, Core.System sys)> _annotatedSystemsCache;
 		private readonly Dictionary<Type, List<(string label, Func<object> get, Action<object> set, Type type, DebugEditableAttribute attr)>> _editableMembersCache
