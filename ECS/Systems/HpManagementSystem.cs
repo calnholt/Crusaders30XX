@@ -51,14 +51,14 @@ namespace Crusaders30XX.ECS.Systems
 		}
 
 		// Debug action: Lose X HP
-		[DebugActionInt("Lose HP", Step = 1, Min = 1, Max = 999, Default = 1)]
+		[DebugActionInt("Lose HP", Step = 1, Min = 1, Max = 999, Default = 10)]
 		public void Debug_LoseHp(int amount)
 		{
 			EventManager.Publish(new ModifyHpEvent { Delta = -System.Math.Abs(amount) });
 		}
 
 		// Debug action: Heal X HP
-		[DebugActionInt("Heal HP", Step = 1, Min = 1, Max = 999, Default = 1)]
+		[DebugActionInt("Heal HP", Step = 1, Min = 1, Max = 999, Default = 10)]
 		public void Debug_HealHp(int amount)
 		{
 			EventManager.Publish(new ModifyHpEvent { Delta = System.Math.Abs(amount) });

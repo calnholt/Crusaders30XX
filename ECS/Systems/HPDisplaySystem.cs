@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
@@ -26,6 +27,8 @@ namespace Crusaders30XX.ECS.Systems
 		private int _cachedRoundedHeight;
 		private int _cachedCornerRadius;
 		private SpriteFont _font;
+		private class FillAnimState { public float Start; public float End; public float Displayed; public float Elapsed; public float Duration; }
+		private readonly Dictionary<int, FillAnimState> _animByEntityId = new Dictionary<int, FillAnimState>();
 
 		[DebugEditable(DisplayName = "Bar Width", Step = 2, Min = 10, Max = 2000)]
 		public int BarWidth { get; set; } = 290;
@@ -42,6 +45,15 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 64)]
 		public int CornerRadius { get; set; } = 12;
 
+		[DebugEditable(DisplayName = "Fill % / Sec", Step = 0.1f, Min = 0.1f, Max = 10f)]
+		public float FillPercentPerSecond { get; set; } = 0.5f;
+
+		[DebugEditable(DisplayName = "Tween Seconds", Step = 0.05f, Min = 0.05f, Max = 5f)]
+		public float FillTweenSeconds { get; set; } = 0.2f;
+
+		[DebugEditable(DisplayName = "Ease Exponent", Step = 0.1f, Min = 1f, Max = 5f)]
+		public float FillEaseExponent { get; set; } = 2.5f;
+
 		// Pill look controls (do not modify texture creation)
 		[DebugEditable(DisplayName = "Highlight Opacity", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float HighlightOpacity { get; set; } = 0.45f;
@@ -50,7 +62,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int HighlightHeight { get; set; } = 13;
 
 		[DebugEditable(DisplayName = "Highlight Offset Y", Step = 1, Min = -200, Max = 200)]
-		public int HighlightOffsetY { get; set; } = 1;
+		public int HighlightOffsetY { get; set; } = 0;
 
 		public HPDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
 			: base(entityManager)
@@ -67,7 +79,51 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<Crusaders30XX.ECS.Components.HP>();
 		}
 
-		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+		protected override void UpdateEntity(Entity entity, GameTime gameTime)
+		{
+			var hp = entity.GetComponent<Crusaders30XX.ECS.Components.HP>();
+			if (hp == null) return;
+			float targetPct = hp.Max > 0 ? MathHelper.Clamp(hp.Current / (float)hp.Max, 0f, 1f) : 0f;
+			if (!_animByEntityId.TryGetValue(entity.Id, out var state))
+			{
+				state = new FillAnimState { Start = targetPct, End = targetPct, Displayed = targetPct, Elapsed = 0f, Duration = Math.Max(0.001f, FillTweenSeconds) };
+				_animByEntityId[entity.Id] = state;
+			}
+			// Start a new tween if target changed
+			if (System.Math.Abs(state.End - targetPct) > 0.0001f)
+			{
+				state.Start = state.Displayed;
+				state.End = targetPct;
+				state.Elapsed = 0f;
+				state.Duration = Math.Max(0.001f, FillTweenSeconds);
+			}
+			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+			state.Elapsed += dt;
+			float t = state.Duration <= 0f ? 1f : MathHelper.Clamp(state.Elapsed / state.Duration, 0f, 1f);
+			float eased = EaseInOutPow(t, FillEaseExponent);
+			state.Displayed = MathHelper.Lerp(state.Start, state.End, eased);
+			_animByEntityId[entity.Id] = state;
+		}
+
+		private static float MoveTowards(float current, float target, float maxDelta)
+		{
+			if (System.Math.Abs(target - current) <= maxDelta) return target;
+			return current + System.Math.Sign(target - current) * maxDelta;
+		}
+
+		private static float EaseInOutPow(float t, float power)
+		{
+			t = MathHelper.Clamp(t, 0f, 1f);
+			float p = System.Math.Max(1f, power);
+			if (t < 0.5f)
+			{
+				return 0.5f * (float)System.Math.Pow(t * 2f, p);
+			}
+			else
+			{
+				return 1f - 0.5f * (float)System.Math.Pow((1f - t) * 2f, p);
+			}
+		}
 
 		public void Draw()
 		{
@@ -113,7 +169,8 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Draw(_roundedBack, backRect, new Color((byte)40, (byte)40, (byte)40));
 
 			// Fill
-			float pct = hp.Max > 0 ? MathHelper.Clamp(hp.Current / (float)hp.Max, 0f, 1f) : 0f;
+			float targetPctForDraw = hp.Max > 0 ? MathHelper.Clamp(hp.Current / (float)hp.Max, 0f, 1f) : 0f;
+			float pct = _animByEntityId.TryGetValue(hpEntity.Id, out var s) ? s.Displayed : targetPctForDraw;
 			int fillW = (int)Math.Round(width * pct);
 			var fillRect = new Rectangle(x, y, Math.Max(0, fillW), height);
 			var fillColor = Color.Lerp(new Color((byte)120, (byte)0, (byte)0), new Color((byte)255, (byte)40, (byte)40), pct);
