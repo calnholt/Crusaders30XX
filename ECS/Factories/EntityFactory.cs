@@ -102,6 +102,8 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new Temperance { Amount = 0 });
             // Attach StoredBlock resource component by default
             world.AddComponent(entity, new StoredBlock { Amount = 0 });
+            // Attach HP component
+            world.AddComponent(entity, new HP { Max = 100, Current = 100 });
             
             return entity;
         }

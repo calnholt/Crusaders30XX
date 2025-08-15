@@ -38,6 +38,7 @@ public class Game1 : Game
     private TemperanceDisplaySystem _temperanceDisplaySystem;
     private StoredBlockDisplaySystem _storedBlockDisplaySystem;
     private CourageManagerSystem _courageManagerSystem;
+    private HPDisplaySystem _hpDisplaySystem;
 
     public Game1()
     {
@@ -116,6 +117,7 @@ public class Game1 : Game
         _temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _storedBlockDisplaySystem = new StoredBlockDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _courageManagerSystem = new CourageManagerSystem(_world.EntityManager);
+        _hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
 
         
@@ -138,6 +140,7 @@ public class Game1 : Game
         _world.AddSystem(_profilerSystem);
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_battleBackgroundSystem);
+        _world.AddSystem(_hpDisplaySystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Cathedral });
@@ -213,6 +216,9 @@ public class Game1 : Game
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("TemperanceDisplaySystem.Draw", () => _temperanceDisplaySystem.Draw());
         // Draw stored block badge next to temperance
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("StoredBlockDisplaySystem.Draw", () => _storedBlockDisplaySystem.Draw());
+
+        // Draw HP bar under player
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("HPDisplaySystem.Draw", () => _hpDisplaySystem.Draw());
 
         // Draw hand of cards on top of highlights
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("HandDisplaySystem.DrawHand", () => _handDisplaySystem.DrawHand());

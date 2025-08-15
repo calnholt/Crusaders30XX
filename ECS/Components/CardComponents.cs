@@ -345,4 +345,14 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
         public BattleLocation Location { get; set; } = BattleLocation.Desert;
     }
+
+    /// <summary>
+    /// Generic hit points component
+    /// </summary>
+    public class HP : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int Max { get; set; } = 100;
+        public int Current { get; set; } = 100;
+    }
 } 
