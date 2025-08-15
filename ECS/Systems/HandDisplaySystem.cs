@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Config;
+using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -13,9 +14,41 @@ namespace Crusaders30XX.ECS.Systems
     /// <summary>
     /// System for managing the display of cards in the player's hand
     /// </summary>
+    [DebugTab("Hand Display")] 
     public class HandDisplaySystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
+        
+        // Hand layout settings (moved from CardConfig)
+        [DebugEditable(DisplayName = "Bottom Margin", Step = 2f, Min = 0f, Max = 1000f)]
+        public float HandBottomMargin { get; set; } = 150f;
+
+        [DebugEditable(DisplayName = "Max Angle (deg)", Step = 0.5f, Min = 0f, Max = 45f)]
+        public float HandFanMaxAngleDeg { get; set; } = 5f;
+
+        [DebugEditable(DisplayName = "Arc Radius", Step = 2f, Min = 0f, Max = 2000f)]
+        public float HandFanRadius { get; set; } = 0f;
+
+        [DebugEditable(DisplayName = "Curve Offset Y", Step = 2f, Min = -1000f, Max = 1000f)]
+        public float HandFanCurveOffset { get; set; } = 0f;
+
+        [DebugEditable(DisplayName = "Hover Lift", Step = 1f, Min = 0f, Max = 200f)]
+        public float HandHoverLift { get; set; } = 10f;
+
+        [DebugEditable(DisplayName = "Hover Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
+        public float HandHoverScale { get; set; } = 1.0f;
+
+        [DebugEditable(DisplayName = "Z Base", Step = 1, Min = -10000, Max = 10000)]
+        public int HandZBase { get; set; } = 100;
+
+        [DebugEditable(DisplayName = "Z Step", Step = 1, Min = -1000, Max = 1000)]
+        public int HandZStep { get; set; } = 1;
+
+        [DebugEditable(DisplayName = "Z Hover Boost", Step = 10, Min = 0, Max = 10000)]
+        public int HandZHoverBoost { get; set; } = 1000;
+
+        [DebugEditable(DisplayName = "Tween Speed", Step = 0.5f, Min = 0.1f, Max = 60f)]
+        public float HandTweenSpeed { get; set; } = 12f;
         
         public HandDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice) 
             : base(entityManager)
@@ -60,14 +93,14 @@ namespace Crusaders30XX.ECS.Systems
                         float screenWidth = _graphicsDevice.Viewport.Width;
                         float screenHeight = _graphicsDevice.Viewport.Height;
 
-                        var pivot = new Vector2(screenWidth / 2f, screenHeight - CardConfig.HAND_BOTTOM_MARGIN);
+                        var pivot = new Vector2(screenWidth / 2f, screenHeight - HandBottomMargin);
 
                         // normalized index t in [-1, 1]
                         float mid = (count - 1) * 0.5f;
                         float t = (count == 1) ? 0f : (cardIndex - mid) / Math.Max(1f, mid);
 
                         // angle and vertical arc offset
-                        float angleDeg = t * CardConfig.HAND_FAN_MAX_ANGLE_DEG;
+                        float angleDeg = t * HandFanMaxAngleDeg;
                         float angleRad = CardConfig.DegToRad(angleDeg);
 
                         // Horizontal spread scales with hand size
@@ -78,36 +111,33 @@ namespace Crusaders30XX.ECS.Systems
                         // Vertical arc using a circular approximation
                         float cos = (float)Math.Cos(angleRad);
                         // Ends lower (greater Y), center higher (smaller Y)
-                        float yArc = CardConfig.HAND_FAN_RADIUS * (1f - cos);
-                        float y = pivot.Y + CardConfig.HAND_FAN_CURVE_OFFSET + yArc;
+                        float yArc = HandFanRadius * (1f - cos);
+                        float y = pivot.Y + HandFanCurveOffset + yArc;
 
                         // If this card just appeared (default position), spawn it offscreen to the right (due east)
                         if (transform.Position == Vector2.Zero)
                         {
                             float spawnX = _graphicsDevice.Viewport.Width + CardConfig.CARD_WIDTH * 1.5f;
-                            float spawnY = pivot.Y + CardConfig.HAND_FAN_CURVE_OFFSET;
+                            float spawnY = pivot.Y + HandFanCurveOffset;
                             transform.Position = new Vector2(spawnX, spawnY);
                         }
 
                         // Hover lift
                         var ui = entity.GetComponent<UIElement>();
                         bool hovered = ui?.IsHovered == true;
-                        if (hovered)
-                        {
-                            y -= CardConfig.HAND_HOVER_LIFT;
-                        }
+                        if (hovered) { y -= HandHoverLift; }
 
                         // Apply transform with smooth tween toward target (frame-rate independent)
                         var current = transform.Position;
                         var target = new Vector2(x, y);
                         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-                        float alpha = 1f - (float)Math.Exp(-CardConfig.HAND_TWEEN_SPEED * dt);
+                        float alpha = 1f - (float)Math.Exp(-HandTweenSpeed * dt);
                         transform.Position = Vector2.Lerp(current, target, MathHelper.Clamp(alpha, 0f, 1f));
                         transform.Rotation = angleRad; // reserved for future visual rotation support
-                        transform.Scale = new Vector2(CardConfig.HAND_HOVER_SCALE, CardConfig.HAND_HOVER_SCALE);
+                        transform.Scale = new Vector2(HandHoverScale, HandHoverScale);
 
                         // Z-order (ensures proper overlapping)
-                        transform.ZOrder = CardConfig.HAND_Z_BASE + (cardIndex * CardConfig.HAND_Z_STEP) + (hovered ? CardConfig.HAND_Z_HOVER_BOOST : 0);
+                        transform.ZOrder = HandZBase + (cardIndex * HandZStep) + (hovered ? HandZHoverBoost : 0);
 
                         // Update UI bounds to axis-aligned bounding box of the rotated card
                         if (ui != null)

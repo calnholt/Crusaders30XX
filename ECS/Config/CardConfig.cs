@@ -25,15 +25,7 @@ namespace Crusaders30XX.ECS.Config
         private const int BASE_CARD_OFFSET_Y_EXTRA = 25;
         private const int BASE_HIGHLIGHT_BORDER_THICKNESS = 5;
         private const int BASE_CARD_GAP = -20;
-        private const float BASE_HAND_BOTTOM_MARGIN = 150f;
-        private const float BASE_HAND_FAN_MAX_ANGLE_DEG = 5f;
-        private const float BASE_HAND_FAN_RADIUS = 0f;
-        private const float BASE_HAND_FAN_CURVE_OFFSET = 0f;
-        private const float BASE_HAND_HOVER_LIFT = 10f;
-        private const float BASE_HAND_HOVER_SCALE = 1.0f;
-        private const int BASE_HAND_Z_BASE = 100;
-        private const int BASE_HAND_Z_STEP = 1;
-        private const int BASE_HAND_Z_HOVER_BOOST = 1000;
+        // Hand layout defaults moved to HandDisplaySystem with debug controls
         private const int BASE_CARD_BORDER_THICKNESS = 3;
         private const int BASE_CARD_CORNER_RADIUS = 18;
         private const int BASE_DRAW_PILE_WIDTH = 60;
@@ -74,23 +66,13 @@ namespace Crusaders30XX.ECS.Config
         // Distance between adjacent card centers = CARD_WIDTH + CARD_GAP
         public static int CARD_GAP => (int)Math.Round(BASE_CARD_GAP * UIScale);
         public static float CARD_SPACING => CARD_WIDTH + CARD_GAP;
-        public static float HAND_BOTTOM_MARGIN => BASE_HAND_BOTTOM_MARGIN * UIScale; // pixels from bottom of screen
-
-        // Hand fan (splay) settings
-        public static float HAND_FAN_MAX_ANGLE_DEG => BASE_HAND_FAN_MAX_ANGLE_DEG;   // max tilt angle at edges (not scaled)
-        public static float HAND_FAN_RADIUS => BASE_HAND_FAN_RADIUS * UIScale;         // controls vertical arc curvature
-        public static float HAND_FAN_CURVE_OFFSET => BASE_HAND_FAN_CURVE_OFFSET * UIScale;     // additional vertical offset
-        public static float HAND_HOVER_LIFT => BASE_HAND_HOVER_LIFT * UIScale;          // pixels to lift hovered card
-        public static float HAND_HOVER_SCALE => BASE_HAND_HOVER_SCALE;        // reserved for future scale-up
-        public static int HAND_Z_BASE => BASE_HAND_Z_BASE;
-        public static int HAND_Z_STEP => BASE_HAND_Z_STEP;
-        public static int HAND_Z_HOVER_BOOST => BASE_HAND_Z_HOVER_BOOST;
+        // Hand layout settings relocated to HandDisplaySystem
 
         public static float DegToRad(float deg) => (float)(Math.PI / 180.0) * deg;
 
         // Tweening (movement smoothing)
         // Higher = snappier interpolation toward target per second
-        public const float HAND_TWEEN_SPEED = 12f;
+        // Tween speed relocated to HandDisplaySystem
         
         // Card border thickness for visual
         public static int CARD_BORDER_THICKNESS => (int)Math.Max(1, Math.Round(BASE_CARD_BORDER_THICKNESS * UIScale));
