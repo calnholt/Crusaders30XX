@@ -355,4 +355,27 @@ namespace Crusaders30XX.ECS.Components
         public int Max { get; set; } = 100;
         public int Current { get; set; } = 100;
     }
+
+    /// <summary>
+    /// Shared visual settings for cards; systems read/write this singleton component to stay in sync.
+    /// </summary>
+    public class CardVisualSettings : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int CardWidth { get; set; }
+        public int CardHeight { get; set; }
+        public int CardGap { get; set; }
+        public int CardBorderThickness { get; set; }
+        public int CardCornerRadius { get; set; }
+        public int HighlightBorderThickness { get; set; }
+        public int TextMarginX { get; set; }
+        public int TextMarginY { get; set; }
+        public float NameScale { get; set; }
+        public float CostScale { get; set; }
+        public float DescriptionScale { get; set; }
+        public float BlockScale { get; set; }
+        public float BlockNumberScale { get; set; }
+        public int BlockNumberMarginX { get; set; }
+        public int BlockNumberMarginY { get; set; }
+    }
 } 

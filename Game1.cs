@@ -39,6 +39,7 @@ public class Game1 : Game
     private StoredBlockDisplaySystem _storedBlockDisplaySystem;
     private CourageManagerSystem _courageManagerSystem;
     private HPDisplaySystem _hpDisplaySystem;
+    private CardVisualSettingsDebugSystem _cardVisualSettingsDebugSystem;
 
     public Game1()
     {
@@ -118,6 +119,7 @@ public class Game1 : Game
         _storedBlockDisplaySystem = new StoredBlockDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _courageManagerSystem = new CourageManagerSystem(_world.EntityManager);
         _hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _cardVisualSettingsDebugSystem = new CardVisualSettingsDebugSystem(_world.EntityManager);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
 
         
@@ -141,6 +143,7 @@ public class Game1 : Game
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_battleBackgroundSystem);
         _world.AddSystem(_hpDisplaySystem);
+        _world.AddSystem(_cardVisualSettingsDebugSystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Cathedral });

@@ -6,13 +6,16 @@ using Crusaders30XX.ECS.Config;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Crusaders30XX.ECS.Systems
 {
     /// <summary>
     /// System for rendering individual cards with their visual elements
     /// </summary>
+    [DebugTab("Card Display")]
     public class CardDisplaySystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
@@ -21,6 +24,13 @@ namespace Crusaders30XX.ECS.Systems
         private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
         private SpriteFont _font;
         private Texture2D _pixelTexture; // Reuse texture for card backgrounds
+        private CardVisualSettings _settings;
+
+        // Adjustable overrides; when nonzero, override settings component
+        [DebugEditable(DisplayName = "Card Corner Radius", Step = 1, Min = 0, Max = 64)]
+        public int CornerRadiusOverride { get; set; } = 0;
+        [DebugEditable(DisplayName = "Card Border Thickness", Step = 1, Min = 0, Max = 32)]
+        public int BorderThicknessOverride { get; set; } = 0;
         
         public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font) 
             : base(entityManager)
@@ -99,26 +109,27 @@ namespace Crusaders30XX.ECS.Systems
             DrawCardBackgroundRotated(position, rotation, cardColor);
 
             // Compute actual visual center from rect so text aligns exactly with background
-            var cardRectForCenter = CardConfig.GetCardVisualRect(position);
+            EnsureSettings();
+            var cardRectForCenter = GetCardVisualRect(position);
             var cardCenter = new Vector2(cardRectForCenter.X + cardRectForCenter.Width / 2f, cardRectForCenter.Y + cardRectForCenter.Height / 2f);
             
             // Name text (wrapped within card width), rotated with card
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(CardConfig.NAME_OFFSET_X, CardConfig.NAME_OFFSET_Y), cardData.Name, Color.Black, CardConfig.NAME_SCALE);
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY), cardData.Name, Color.Black, _settings.NameScale);
             
             // Draw cost
             string costText = GetCostText(cardData.CardCostType);
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(CardConfig.COST_OFFSET_X, CardConfig.COST_OFFSET_Y), costText, costColor, CardConfig.COST_SCALE);
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(34 * CardConfig.UIScale)), costText, costColor, _settings.CostScale);
             
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(CardConfig.DESCRIPTION_OFFSET_X, CardConfig.DESCRIPTION_OFFSET_Y), cardData.Description, Color.Black, CardConfig.DESCRIPTION_SCALE);
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(84 * CardConfig.UIScale)), cardData.Description, Color.Black, _settings.DescriptionScale);
             
             // Draw block value as blue number bottom-left
             if (cardData.BlockValue > 0)
             {
                 string blockText = cardData.BlockValue.ToString();
-                var measured = _font.MeasureString(blockText) * CardConfig.BLOCK_NUMBER_SCALE;
-                float localX = CardConfig.BLOCK_NUMBER_MARGIN_X;
-                float localY = CardConfig.CARD_HEIGHT - CardConfig.BLOCK_NUMBER_MARGIN_Y - measured.Y;
-                DrawCardTextRotatedSingle(cardCenter, rotation, new Vector2(localX, localY), blockText, Color.CornflowerBlue, CardConfig.BLOCK_NUMBER_SCALE);
+                var measured = _font.MeasureString(blockText) * _settings.BlockNumberScale;
+                float localX = _settings.BlockNumberMarginX;
+                float localY = _settings.CardHeight - _settings.BlockNumberMarginY - measured.Y;
+                DrawCardTextRotatedSingle(cardCenter, rotation, new Vector2(localX, localY), blockText, Color.CornflowerBlue, _settings.BlockNumberScale);
             }
         }
         
@@ -170,11 +181,12 @@ namespace Crusaders30XX.ECS.Systems
         private void DrawCardBackgroundRotated(Vector2 position, float rotation, Color color)
         {
             // Compute rect centered on position
-            var rect = CardConfig.GetCardVisualRect(position);
+            EnsureSettings();
+            var rect = GetCardVisualRect(position);
             var center = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
 
-            int radius = CardConfig.CARD_CORNER_RADIUS;
-            int bt = CardConfig.CARD_BORDER_THICKNESS;
+            int radius = CornerRadiusOverride > 0 ? CornerRadiusOverride : _settings.CardCornerRadius;
+            int bt = BorderThicknessOverride > 0 ? BorderThicknessOverride : _settings.CardBorderThickness;
 
             // Draw rounded border as outer rounded rect in border color, then inset fill
             var outer = GetRoundedRectTexture(rect.Width, rect.Height, Math.Max(0, radius));
@@ -233,18 +245,65 @@ namespace Crusaders30XX.ECS.Systems
             }
             _roundedRectCache.Clear();
         }
+
+        private void EnsureSettings()
+        {
+            if (_settings != null) return;
+            // Find or create settings singleton on a shared entity
+            var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
+            if (settingsEntity == null)
+            {
+                settingsEntity = EntityManager.CreateEntity("CardVisualSettings");
+                var settings = new CardVisualSettings
+                {
+                    CardWidth = CardConfig.CARD_WIDTH,
+                    CardHeight = CardConfig.CARD_HEIGHT,
+                    CardGap = CardConfig.CARD_GAP,
+                    CardBorderThickness = CardConfig.CARD_BORDER_THICKNESS,
+                    CardCornerRadius = CardConfig.CARD_CORNER_RADIUS,
+                    HighlightBorderThickness = CardConfig.HIGHLIGHT_BORDER_THICKNESS,
+                    TextMarginX = CardConfig.TEXT_MARGIN_X,
+                    TextMarginY = CardConfig.TEXT_MARGIN_Y,
+                    NameScale = CardConfig.NAME_SCALE,
+                    CostScale = CardConfig.COST_SCALE,
+                    DescriptionScale = CardConfig.DESCRIPTION_SCALE,
+                    BlockScale = CardConfig.BLOCK_SCALE,
+                    BlockNumberScale = CardConfig.BLOCK_NUMBER_SCALE,
+                    BlockNumberMarginX = CardConfig.BLOCK_NUMBER_MARGIN_X,
+                    BlockNumberMarginY = CardConfig.BLOCK_NUMBER_MARGIN_Y
+                };
+                EntityManager.AddComponent(settingsEntity, settings);
+                _settings = settings;
+            }
+            else
+            {
+                _settings = settingsEntity.GetComponent<CardVisualSettings>();
+            }
+        }
+
+        private Rectangle GetCardVisualRect(Vector2 position)
+        {
+            EnsureSettings();
+            return new Rectangle(
+                (int)position.X - _settings.CardWidth / 2,
+                (int)position.Y - (_settings.CardHeight / 2 + (int)Math.Round(25 * CardConfig.UIScale)),
+                _settings.CardWidth,
+                _settings.CardHeight
+            );
+        }
         
         // New: draw wrapped text in card-local space rotated with the card
         private void DrawCardTextWrappedRotated(Vector2 cardCenterPosition, float rotation, Vector2 localOffsetFromTopLeft, string text, Color color, float scale)
         {
             try
             {
-                float maxLineWidth = CardConfig.CARD_WIDTH - (CardConfig.TEXT_MARGIN_X * 2);
+                EnsureSettings();
+                float maxLineWidth = _settings.CardWidth - (_settings.TextMarginX * 2);
                 float lineHeight = _font.LineSpacing * scale;
 
                 // Convert card-local from top-left to local centered coordinates
-                float startLocalX = -CardConfig.CARD_WIDTH / 2f + localOffsetFromTopLeft.X;
-                float startLocalY = -CardConfig.CARD_HEIGHT / 2f + localOffsetFromTopLeft.Y;
+                float startLocalX = -_settings.CardWidth / 2f + localOffsetFromTopLeft.X;
+                float startLocalY = -_settings.CardHeight / 2f + localOffsetFromTopLeft.Y;
 
                 float currentY = startLocalY;
                 foreach (var line in WrapText(text, maxLineWidth, scale))
@@ -272,8 +331,9 @@ namespace Crusaders30XX.ECS.Systems
         {
             try
             {
-                float localX = -CardConfig.CARD_WIDTH / 2f + localOffsetFromTopLeft.X;
-                float localY = -CardConfig.CARD_HEIGHT / 2f + localOffsetFromTopLeft.Y;
+                EnsureSettings();
+                float localX = -_settings.CardWidth / 2f + localOffsetFromTopLeft.X;
+                float localY = -_settings.CardHeight / 2f + localOffsetFromTopLeft.Y;
                 float cos = (float)Math.Cos(rotation);
                 float sin = (float)Math.Sin(rotation);
                 var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
