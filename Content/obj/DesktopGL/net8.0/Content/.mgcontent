@@ -6,11 +6,13 @@
   <SourceFiles>
     <File>C:/Users/Calvin/Documents/Crusaders30XX/Content/NewRocker.spritefont</File>
     <File>C:/Users/Calvin/Documents/Crusaders30XX/Content/Crusader.png</File>
+    <File>C:/Users/Calvin/Documents/Crusaders30XX/Content/Demon.png</File>
     <File>C:/Users/Calvin/Documents/Crusaders30XX/Content/desert-background.png</File>
     <File>C:/Users/Calvin/Documents/Crusaders30XX/Content/forest-background.png</File>
     <File>C:/Users/Calvin/Documents/Crusaders30XX/Content/cathedral-background.png</File>
   </SourceFiles>
   <DestFiles>
+    <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />

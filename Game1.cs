@@ -43,6 +43,7 @@ public class Game1 : Game
     private HpManagementSystem _hpManagementSystem;
     private BattlePhaseSystem _battlePhaseSystem;
     private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
+    private EnemyDisplaySystem _enemyDisplaySystem;
 
     public Game1()
     {
@@ -128,6 +129,7 @@ public class Game1 : Game
         _hpManagementSystem = new HpManagementSystem(_world.EntityManager);
         _battlePhaseSystem = new BattlePhaseSystem(_world.EntityManager);
         _battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -155,6 +157,7 @@ public class Game1 : Game
         _world.AddSystem(_hpManagementSystem);
         _world.AddSystem(_battlePhaseSystem);
         _world.AddSystem(_battlePhaseDisplaySystem);
+        _world.AddSystem(_enemyDisplaySystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
@@ -222,6 +225,8 @@ public class Game1 : Game
 
         // Draw player portrait (middle-left)
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("PlayerDisplaySystem.Draw", () => _playerDisplaySystem.Draw());
+        // Draw enemy portrait(s)
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("EnemyDisplaySystem.Draw", () => _enemyDisplaySystem.Draw());
 
         // Draw wisps around the portrait
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("PlayerWispParticleSystem.Draw", () => _playerWispParticleSystem.Draw());

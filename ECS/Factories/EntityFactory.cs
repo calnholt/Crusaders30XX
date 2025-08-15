@@ -208,6 +208,14 @@ namespace Crusaders30XX.ECS.Factories
                 });
             }
             
+            // Create a default enemy (Demon) with HP
+            var enemyEntity = world.CreateEntity("Enemy_Demon");
+            var enemy = new Enemy { Name = "Demon", Type = EnemyType.Demon, MaxHealth = 80, CurrentHealth = 80 };
+            var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
+            world.AddComponent(enemyEntity, enemy);
+            world.AddComponent(enemyEntity, enemyTransform);
+            world.AddComponent(enemyEntity, new HP { Max = enemy.MaxHealth, Current = enemy.CurrentHealth });
+            
             return entity;
         }
         

@@ -112,3 +112,4 @@ C:\Users\Calvin\Documents\Crusaders30XX\obj\Debug\net8.0\refint\Crusaders30XX.dl
 C:\Users\Calvin\Documents\Crusaders30XX\obj\Debug\net8.0\Crusaders30XX.pdb
 C:\Users\Calvin\Documents\Crusaders30XX\obj\Debug\net8.0\Crusaders30XX.genruntimeconfig.cache
 C:\Users\Calvin\Documents\Crusaders30XX\obj\Debug\net8.0\ref\Crusaders30XX.dll
+C:\Users\Calvin\Documents\Crusaders30XX\bin\Debug\net8.0\Content\Demon.xnb

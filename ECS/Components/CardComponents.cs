@@ -113,12 +113,19 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         
+        public EnemyType Type { get; set; } = EnemyType.Demon;
+
         public string Name { get; set; } = "";
         public int MaxHealth { get; set; } = 50;
         public int CurrentHealth { get; set; } = 50;
         public int Block { get; set; } = 0;
         public List<Entity> Intentions { get; set; } = new();
         public int IntentIndex { get; set; } = 0;
+    }
+
+    public enum EnemyType
+    {
+        Demon
     }
     
     /// <summary>
