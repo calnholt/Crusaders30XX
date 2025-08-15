@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Max Concurrent Beams", Step = 1f, Min = 1f, Max = 48f)]
 		public int NumberOfBeams { get => _numberOfBeams; set => _numberOfBeams = Math.Max(1, value); }
 
-		private float _spawnRatePerSecond = 0.6f;
+		private float _spawnRatePerSecond = 0.8f;
 		[DebugEditable(DisplayName = "Spawn Rate (per sec)", Step = 0.1f, Min = 0f, Max = 10f)]
 		public float SpawnRatePerSecond { get => _spawnRatePerSecond; set => _spawnRatePerSecond = MathHelper.Clamp(value, 0f, 10f); }
 

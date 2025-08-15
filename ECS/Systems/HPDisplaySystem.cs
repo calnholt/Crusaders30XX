@@ -29,6 +29,7 @@ namespace Crusaders30XX.ECS.Systems
 		private SpriteFont _font;
 		private class FillAnimState { public float Start; public float End; public float Displayed; public float Elapsed; public float Duration; }
 		private readonly Dictionary<int, FillAnimState> _animByEntityId = new Dictionary<int, FillAnimState>();
+		private float _accumSeconds;
 
 		[DebugEditable(DisplayName = "Bar Width", Step = 2, Min = 10, Max = 2000)]
 		public int BarWidth { get; set; } = 290;
@@ -53,6 +54,31 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Ease Exponent", Step = 0.1f, Min = 1f, Max = 5f)]
 		public float FillEaseExponent { get; set; } = 2.5f;
+
+		// Low-HP flashing
+		[DebugEditable(DisplayName = "Flash Enabled")]
+		public bool FlashEnabled { get; set; } = true;
+
+		[DebugEditable(DisplayName = "Flash Threshold %", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float FlashThresholdPercent { get; set; } = 0.20f;
+
+		[DebugEditable(DisplayName = "Flash Hz", Step = 0.1f, Min = 0.1f, Max = 10f)]
+		public float FlashFrequencyHz { get; set; } = 2.0f;
+
+		[DebugEditable(DisplayName = "Flash Min Intensity", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float FlashMinIntensity { get; set; } = 0.25f;
+
+		[DebugEditable(DisplayName = "Flash Max Intensity", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float FlashMaxIntensity { get; set; } = 1.0f;
+
+		[DebugEditable(DisplayName = "Flash Overlay Strength", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float FlashOverlayStrength { get; set; } = 0.6f; // kept for compatibility; not used when opacity flashing
+
+		[DebugEditable(DisplayName = "Flash Alpha Min", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float FlashAlphaMin { get; set; } = 0.35f;
+
+		[DebugEditable(DisplayName = "Flash Alpha Max", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float FlashAlphaMax { get; set; } = 1.0f;
 
 		// Pill look controls (do not modify texture creation)
 		[DebugEditable(DisplayName = "Highlight Opacity", Step = 0.05f, Min = 0f, Max = 1f)]
@@ -99,6 +125,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			state.Elapsed += dt;
+			_accumSeconds += dt;
 			float t = state.Duration <= 0f ? 1f : MathHelper.Clamp(state.Elapsed / state.Duration, 0f, 1f);
 			float eased = EaseInOutPow(t, FillEaseExponent);
 			state.Displayed = MathHelper.Lerp(state.Start, state.End, eased);
@@ -173,7 +200,16 @@ namespace Crusaders30XX.ECS.Systems
 			float pct = _animByEntityId.TryGetValue(hpEntity.Id, out var s) ? s.Displayed : targetPctForDraw;
 			int fillW = (int)Math.Round(width * pct);
 			var fillRect = new Rectangle(x, y, Math.Max(0, fillW), height);
-			var fillColor = Color.Lerp(new Color((byte)120, (byte)0, (byte)0), new Color((byte)255, (byte)40, (byte)40), pct);
+			var fillColorBase = Color.Lerp(new Color((byte)120, (byte)0, (byte)0), new Color((byte)255, (byte)40, (byte)40), pct);
+			float alphaFactor = 1f;
+			if (FlashEnabled && targetPctForDraw <= MathHelper.Clamp(FlashThresholdPercent, 0f, 1f))
+			{
+				float phase = (float)System.Math.Sin(MathHelper.TwoPi * Math.Max(0.01f, FlashFrequencyHz) * _accumSeconds);
+				float norm = 0.5f * (phase + 1f); // 0..1
+				float intensity = MathHelper.Lerp(MathHelper.Clamp(FlashMinIntensity, 0f, 1f), MathHelper.Clamp(FlashMaxIntensity, 0f, 1f), norm);
+				alphaFactor = MathHelper.Lerp(MathHelper.Clamp(FlashAlphaMin, 0f, 1f), MathHelper.Clamp(FlashAlphaMax, 0f, 1f), intensity);
+			}
+			var fillColor = Color.FromNonPremultiplied(fillColorBase.R, fillColorBase.G, fillColorBase.B, (int)MathHelper.Clamp(255f * alphaFactor, 0f, 255f));
 			// For the fill, draw the rounded texture but clip to fill width via destination width
 			if (fillRect.Width > 0)
 			{
@@ -188,7 +224,7 @@ namespace Crusaders30XX.ECS.Systems
 					var bandDest = new Rectangle(x, destY, fillRect.Width, bandH);
 					int srcBandY = Math.Max(0, (height - bandH) / 2);
 					var bandSrc = new Rectangle(0, srcBandY, srcW, bandH);
-					var tint = Color.FromNonPremultiplied(255, 255, 255, (int)(MathHelper.Clamp(HighlightOpacity, 0f, 1f) * 255f));
+					var tint = Color.FromNonPremultiplied(255, 255, 255, (int)(MathHelper.Clamp(HighlightOpacity * alphaFactor, 0f, 1f) * 255f));
 					_spriteBatch.Draw(_roundedHighlight, bandDest, bandSrc, tint);
 				}
 			}
