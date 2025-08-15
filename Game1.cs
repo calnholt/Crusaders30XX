@@ -41,6 +41,8 @@ public class Game1 : Game
     private HPDisplaySystem _hpDisplaySystem;
     private CardVisualSettingsDebugSystem _cardVisualSettingsDebugSystem;
     private HpManagementSystem _hpManagementSystem;
+    private BattlePhaseSystem _battlePhaseSystem;
+    private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
 
     public Game1()
     {
@@ -124,6 +126,8 @@ public class Game1 : Game
         _cardVisualSettingsDebugSystem = new CardVisualSettingsDebugSystem(_world.EntityManager);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _hpManagementSystem = new HpManagementSystem(_world.EntityManager);
+        _battlePhaseSystem = new BattlePhaseSystem(_world.EntityManager);
+        _battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -149,6 +153,8 @@ public class Game1 : Game
         _world.AddSystem(_hpDisplaySystem);
         _world.AddSystem(_cardVisualSettingsDebugSystem);
         _world.AddSystem(_hpManagementSystem);
+        _world.AddSystem(_battlePhaseSystem);
+        _world.AddSystem(_battlePhaseDisplaySystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
@@ -219,6 +225,9 @@ public class Game1 : Game
 
         // Draw wisps around the portrait
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("PlayerWispParticleSystem.Draw", () => _playerWispParticleSystem.Draw());
+
+        // Draw corner phase label and potential transition banner
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", () => _battlePhaseDisplaySystem.Draw());
 
         // Draw courage badge below the portrait
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("CourageDisplaySystem.Draw", () => _courageDisplaySystem.Draw());

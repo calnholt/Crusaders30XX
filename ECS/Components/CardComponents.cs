@@ -347,6 +347,25 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Enumerates the high-level phases of a battle.
+    /// </summary>
+    public enum BattlePhase
+    {
+        StartOfBattle,
+        Block,
+        Action
+    }
+
+    /// <summary>
+    /// Singleton-like world component that tracks the current battle phase.
+    /// </summary>
+    public class BattlePhaseState : IComponent
+    {
+        public Entity Owner { get; set; }
+        public BattlePhase Phase { get; set; } = BattlePhase.StartOfBattle;
+    }
+
+    /// <summary>
     /// Generic hit points component
     /// </summary>
     public class HP : IComponent
