@@ -30,6 +30,8 @@ namespace Crusaders30XX.ECS.Systems
 		private float _cachedEdgeFalloffPower;
 		private float _cachedEdgeNoiseAmount;
 		private float _cachedEdgeNoiseScale;
+		private float _cachedEndCapSoftness;
+		private float _cachedEndCapPower;
 		private readonly List<Cloud> _clouds = new();
 		private float _spawnAccumulator;
 
@@ -50,28 +52,28 @@ namespace Crusaders30XX.ECS.Systems
 		public int MaxClouds { get; set; } = 400;
 
 		[DebugEditable(DisplayName = "Spawn Rate (per sec)", Step = 0.1f, Min = 0f, Max = 20f)]
-		public float SpawnRatePerSecond { get; set; } = 4.4f;
+		public float SpawnRatePerSecond { get; set; } = 10f;
 
 		[DebugEditable(DisplayName = "Min Thickness (px)", Step = 1, Min = 1, Max = 1000)]
-		public int MinThicknessPx { get; set; } = 229;
+		public int MinThicknessPx { get; set; } = 400;
 
 		[DebugEditable(DisplayName = "Max Thickness (px)", Step = 1, Min = 1, Max = 2000)]
-		public int MaxThicknessPx { get; set; } = 353;
+		public int MaxThicknessPx { get; set; } = 500;
 
 		[DebugEditable(DisplayName = "Min Length (px)", Step = 1, Min = 1, Max = 4000)]
 		public int MinLengthPx { get; set; } = 220;
 
 		[DebugEditable(DisplayName = "Max Length (px)", Step = 1, Min = 1, Max = 8000)]
-		public int MaxLengthPx { get; set; } = 480;
+		public int MaxLengthPx { get; set; } = 536;
 
 		[DebugEditable(DisplayName = "Min Speed (px/s)", Step = 1, Min = -2000, Max = 2000)]
 		public float MinSpeedPxPerSec { get; set; } = 84f;
 
 		[DebugEditable(DisplayName = "Max Speed (px/s)", Step = 1, Min = -2000, Max = 2000)]
-		public float MaxSpeedPxPerSec { get; set; } = 137f;
+		public float MaxSpeedPxPerSec { get; set; } = 160f;
 
 		[DebugEditable(DisplayName = "Base Alpha", Step = 0.05f, Min = 0f, Max = 1f)]
-		public float BaseAlpha { get; set; } = 0.2f;
+		public float BaseAlpha { get; set; } = 0.3f;
 
 		[DebugEditable(DisplayName = "Alpha Jitter", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float AlphaJitter { get; set; } = 0.1f;
@@ -99,6 +101,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Edge Noise Scale", Step = 0.01f, Min = 0.01f, Max = 1f)]
 		public float EdgeNoiseScale { get; set; } = 0.20f;
+
+		[DebugEditable(DisplayName = "End Cap Softness (0..0.5)", Step = 0.02f, Min = 0.02f, Max = 0.5f)]
+		public float EndCapSoftnessFraction { get; set; } = 0.49f;
+
+		[DebugEditable(DisplayName = "End Cap Power", Step = 0.1f, Min = 0.5f, Max = 4f)]
+		public float EndCapPower { get; set; } = 1.2f;
 
 		[DebugEditable(DisplayName = "Tint R", Step = 1, Min = 0, Max = 255)]
 		public int TintR { get; set; } = 232;
@@ -135,12 +143,18 @@ namespace Crusaders30XX.ECS.Systems
 				_clouds.Clear();
 				_spawnAccumulator = 0f;
 			}
+			// Detect activation edge to seed initial clouds so we enter in medias res
+			bool wasActive = _isActive;
 			_isActive = shouldBeActive;
 
 			_elapsed += (float)gameTime.ElapsedGameTime.TotalSeconds;
 			EnsureCloudTexture();
 			if (_isActive)
 			{
+				if (!wasActive)
+				{
+					SeedInitialClouds();
+				}
 				SpawnClouds((float)gameTime.ElapsedGameTime.TotalSeconds);
 				float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 				int viewportW = _graphicsDevice.Viewport.Width;
@@ -225,6 +239,38 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
+		private void SeedInitialClouds()
+		{
+			if (MaxClouds <= 0) return;
+			int viewportW = _graphicsDevice.Viewport.Width;
+			int viewportH = _graphicsDevice.Viewport.Height;
+			int desired = Math.Min(MaxClouds, (int)(MaxClouds * 0.6f));
+			for (int i = 0; i < desired && _clouds.Count < MaxClouds; i++)
+			{
+				float height = MathHelper.Clamp(MinThicknessPx + (float)_random.NextDouble() * (MaxThicknessPx - MinThicknessPx), MinThicknessPx, MaxThicknessPx);
+				float length = MathHelper.Clamp(MinLengthPx + (float)_random.NextDouble() * (MaxLengthPx - MinLengthPx), MinLengthPx, MaxLengthPx);
+				float speed = MathHelper.Clamp(MinSpeedPxPerSec + (float)_random.NextDouble() * (MaxSpeedPxPerSec - MinSpeedPxPerSec), -2000f, 2000f);
+				float alpha = MathHelper.Clamp(BaseAlpha + ((float)_random.NextDouble() * 2f - 1f) * AlphaJitter, 0f, 1f);
+				float y = (float)_random.NextDouble() * viewportH;
+				float seed = (float)_random.NextDouble() * 1000f;
+				// distribute X across a band spanning left off-screen to right edge so some are already on-screen
+				float xMin = -viewportW - 200f;
+				float xMax = viewportW + 100f;
+				float x = MathHelper.Lerp(xMin, xMax, (float)_random.NextDouble());
+				_clouds.Add(new Cloud
+				{
+					Position = new Vector2(x, y),
+					LengthPx = length,
+					HeightPx = height,
+					SpeedX = Math.Max(5f, speed),
+					Alpha = alpha,
+					YDriftAmp = YDriftAmplitudePx * (0.6f + 0.8f * (float)_random.NextDouble()),
+					YDriftHz = MathHelper.Lerp(YDriftHzMin, YDriftHzMax, (float)_random.NextDouble()),
+					Seed = seed
+				});
+			}
+		}
+
 		private void EnsureCloudTexture()
 		{
 			// Rebuild if parameters affecting the shape changed
@@ -234,7 +280,9 @@ namespace Crusaders30XX.ECS.Systems
 					Math.Abs(_cachedCornerRadiusFraction - CornerRadiusFraction) < 0.0001f &&
 					Math.Abs(_cachedEdgeFalloffPower - EdgeFalloffPower) < 0.0001f &&
 					Math.Abs(_cachedEdgeNoiseAmount - EdgeNoiseAmount) < 0.0001f &&
-					Math.Abs(_cachedEdgeNoiseScale - EdgeNoiseScale) < 0.0001f)
+					Math.Abs(_cachedEdgeNoiseScale - EdgeNoiseScale) < 0.0001f &&
+					Math.Abs(_cachedEndCapSoftness - EndCapSoftnessFraction) < 0.0001f &&
+					Math.Abs(_cachedEndCapPower - EndCapPower) < 0.0001f)
 				{
 					return;
 				}
@@ -276,6 +324,16 @@ namespace Crusaders30XX.ECS.Systems
 						float edge = 1f - a; // stronger near edge
 						a *= 1f - MathHelper.Clamp(EdgeNoiseAmount * edge * n, 0f, 1f);
 					}
+
+					// additional end-cap softening to ensure rounded ends along the length
+					float u = (x + 0.5f) / texW; // 0..1 along length
+					float s = MathHelper.Clamp(EndCapSoftnessFraction, 0.02f, 0.5f);
+					// smoothstep from both ends toward center
+					float inL = MathHelper.Clamp(u / s, 0f, 1f); inL = inL * inL * (3f - 2f * inL);
+					float inR = MathHelper.Clamp((1f - u) / s, 0f, 1f); inR = inR * inR * (3f - 2f * inR);
+					float cap = inL * inR;
+					cap = (float)Math.Pow(cap, Math.Max(0.5f, EndCapPower));
+					a *= cap;
 					data[y * texW + x] = Color.FromNonPremultiplied(255, 255, 255, (int)(a * 255));
 				}
 			}
@@ -285,6 +343,8 @@ namespace Crusaders30XX.ECS.Systems
 			_cachedEdgeFalloffPower = EdgeFalloffPower;
 			_cachedEdgeNoiseAmount = EdgeNoiseAmount;
 			_cachedEdgeNoiseScale = EdgeNoiseScale;
+			_cachedEndCapSoftness = EndCapSoftnessFraction;
+			_cachedEndCapPower = EndCapPower;
 		}
 	}
 }
