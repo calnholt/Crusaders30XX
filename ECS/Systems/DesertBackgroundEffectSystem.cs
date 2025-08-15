@@ -23,7 +23,13 @@ namespace Crusaders30XX.ECS.Systems
 
 		private bool _isActive;
 		private float _elapsed;
-		private Texture2D _cloudTexture; // radial gradient circle (white), tinted at draw
+		private Texture2D _cloudTexture; // pill alpha texture (white), tinted at draw
+		// cached params to know when to rebuild texture
+		private int _cachedSoftEdgePx;
+		private float _cachedCornerRadiusFraction;
+		private float _cachedEdgeFalloffPower;
+		private float _cachedEdgeNoiseAmount;
+		private float _cachedEdgeNoiseScale;
 		private readonly List<Cloud> _clouds = new();
 		private float _spawnAccumulator;
 
@@ -41,34 +47,34 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Debug-editable settings
 		[DebugEditable(DisplayName = "Max Clouds", Step = 1, Min = 0, Max = 400)]
-		public int MaxClouds { get; set; } = 80;
+		public int MaxClouds { get; set; } = 400;
 
 		[DebugEditable(DisplayName = "Spawn Rate (per sec)", Step = 0.1f, Min = 0f, Max = 20f)]
 		public float SpawnRatePerSecond { get; set; } = 4.4f;
 
 		[DebugEditable(DisplayName = "Min Thickness (px)", Step = 1, Min = 1, Max = 1000)]
-		public int MinThicknessPx { get; set; } = 36;
+		public int MinThicknessPx { get; set; } = 229;
 
 		[DebugEditable(DisplayName = "Max Thickness (px)", Step = 1, Min = 1, Max = 2000)]
-		public int MaxThicknessPx { get; set; } = 96;
+		public int MaxThicknessPx { get; set; } = 353;
 
 		[DebugEditable(DisplayName = "Min Length (px)", Step = 1, Min = 1, Max = 4000)]
-		public int MinLengthPx { get; set; } = 120;
+		public int MinLengthPx { get; set; } = 220;
 
 		[DebugEditable(DisplayName = "Max Length (px)", Step = 1, Min = 1, Max = 8000)]
 		public int MaxLengthPx { get; set; } = 480;
 
 		[DebugEditable(DisplayName = "Min Speed (px/s)", Step = 1, Min = -2000, Max = 2000)]
-		public float MinSpeedPxPerSec { get; set; } = 50f;
+		public float MinSpeedPxPerSec { get; set; } = 84f;
 
 		[DebugEditable(DisplayName = "Max Speed (px/s)", Step = 1, Min = -2000, Max = 2000)]
-		public float MaxSpeedPxPerSec { get; set; } = 100f;
+		public float MaxSpeedPxPerSec { get; set; } = 137f;
 
 		[DebugEditable(DisplayName = "Base Alpha", Step = 0.05f, Min = 0f, Max = 1f)]
-		public float BaseAlpha { get; set; } = 0.05f;
+		public float BaseAlpha { get; set; } = 0.2f;
 
 		[DebugEditable(DisplayName = "Alpha Jitter", Step = 0.05f, Min = 0f, Max = 1f)]
-		public float AlphaJitter { get; set; } = 0.05f;
+		public float AlphaJitter { get; set; } = 0.1f;
 
 		[DebugEditable(DisplayName = "Y Drift Amp (px)", Step = 1, Min = 0, Max = 200)]
 		public int YDriftAmplitudePx { get; set; } = 16;
@@ -82,8 +88,17 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Corner Radius Fraction", Step = 0.02f, Min = 0f, Max = 0.5f)]
 		public float CornerRadiusFraction { get; set; } = 0.5f; // fraction of height
 
-		[DebugEditable(DisplayName = "Soft Edge Px", Step = 1, Min = 0, Max = 64)]
+		[DebugEditable(DisplayName = "Soft Edge Px", Step = 1, Min = 0, Max = 96)]
 		public int SoftEdgePx { get; set; } = 46;
+
+		[DebugEditable(DisplayName = "Edge Falloff Power", Step = 0.1f, Min = 0.1f, Max = 5f)]
+		public float EdgeFalloffPower { get; set; } = 2.0f;
+
+		[DebugEditable(DisplayName = "Edge Noise Amount", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float EdgeNoiseAmount { get; set; } = 0.25f;
+
+		[DebugEditable(DisplayName = "Edge Noise Scale", Step = 0.01f, Min = 0.01f, Max = 1f)]
+		public float EdgeNoiseScale { get; set; } = 0.20f;
 
 		[DebugEditable(DisplayName = "Tint R", Step = 1, Min = 0, Max = 255)]
 		public int TintR { get; set; } = 232;
@@ -212,7 +227,20 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void EnsureCloudTexture()
 		{
-			if (_cloudTexture != null) return;
+			// Rebuild if parameters affecting the shape changed
+			if (_cloudTexture != null)
+			{
+				if (_cachedSoftEdgePx == SoftEdgePx &&
+					Math.Abs(_cachedCornerRadiusFraction - CornerRadiusFraction) < 0.0001f &&
+					Math.Abs(_cachedEdgeFalloffPower - EdgeFalloffPower) < 0.0001f &&
+					Math.Abs(_cachedEdgeNoiseAmount - EdgeNoiseAmount) < 0.0001f &&
+					Math.Abs(_cachedEdgeNoiseScale - EdgeNoiseScale) < 0.0001f)
+				{
+					return;
+				}
+				_cloudTexture.Dispose();
+				_cloudTexture = null;
+			}
 			int texW = 256; // base pill texture; scaled per cloud
 			int texH = 64;
 			_cloudTexture = new Texture2D(_graphicsDevice, texW, texH, false, SurfaceFormat.Color);
@@ -236,12 +264,27 @@ namespace Crusaders30XX.ECS.Systems
 					float inside = Math.Min(Math.Max(qx, qy), 0f);
 					float dist = outside + inside - radius; // <0 inside
 					float a = 1f - MathHelper.Clamp((dist + soft) / Math.Max(0.0001f, soft), 0f, 1f);
-					// subtle softening even inside
+					// adjustable falloff shaping and softening
+					a = (float)Math.Pow(MathHelper.Clamp(a, 0f, 1f), Math.Max(0.1f, EdgeFalloffPower));
 					a = a * a * (3f - 2f * a);
+					// edge noise to add hazy irregular border
+					if (EdgeNoiseAmount > 0f)
+					{
+						float ns = Math.Max(0.01f, EdgeNoiseScale);
+						float n = (float)(Math.Sin((x * 12.9898 * ns) + (y * 78.233 * ns)) * 43758.5453);
+						n = n - (float)Math.Floor(n);
+						float edge = 1f - a; // stronger near edge
+						a *= 1f - MathHelper.Clamp(EdgeNoiseAmount * edge * n, 0f, 1f);
+					}
 					data[y * texW + x] = Color.FromNonPremultiplied(255, 255, 255, (int)(a * 255));
 				}
 			}
 			_cloudTexture.SetData(data);
+			_cachedSoftEdgePx = SoftEdgePx;
+			_cachedCornerRadiusFraction = CornerRadiusFraction;
+			_cachedEdgeFalloffPower = EdgeFalloffPower;
+			_cachedEdgeNoiseAmount = EdgeNoiseAmount;
+			_cachedEdgeNoiseScale = EdgeNoiseScale;
 		}
 	}
 }
