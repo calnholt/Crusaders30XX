@@ -118,9 +118,9 @@ namespace Crusaders30XX.ECS.Systems
             
             // Draw cost
             string costText = GetCostText(cardData.CardCostType);
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(34 * CardConfig.UIScale)), costText, costColor, _settings.CostScale);
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(34 * _settings.UIScale)), costText, costColor, _settings.CostScale);
             
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(84 * CardConfig.UIScale)), cardData.Description, Color.Black, _settings.DescriptionScale);
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)), cardData.Description, Color.Black, _settings.DescriptionScale);
             
             // Draw block value as blue number bottom-left
             if (cardData.BlockValue > 0)
@@ -283,10 +283,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private Rectangle GetCardVisualRect(Vector2 position)
         {
-            EnsureSettings();
+            if (_settings == null) _settings = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>();
             return new Rectangle(
                 (int)position.X - _settings.CardWidth / 2,
-                (int)position.Y - (_settings.CardHeight / 2 + (int)Math.Round(25 * CardConfig.UIScale)),
+                (int)position.Y - (_settings.CardHeight / 2 + _settings.CardOffsetYExtra),
                 _settings.CardWidth,
                 _settings.CardHeight
             );

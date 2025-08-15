@@ -362,8 +362,10 @@ namespace Crusaders30XX.ECS.Components
     public class CardVisualSettings : IComponent
     {
         public Entity Owner { get; set; }
+        public float UIScale { get; set; }
         public int CardWidth { get; set; }
         public int CardHeight { get; set; }
+        public int CardOffsetYExtra { get; set; }
         public int CardGap { get; set; }
         public int CardBorderThickness { get; set; }
         public int CardCornerRadius { get; set; }

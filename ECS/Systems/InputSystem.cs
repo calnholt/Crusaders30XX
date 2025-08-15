@@ -114,7 +114,7 @@ namespace Crusaders30XX.ECS.Systems
             _previousKeyboardState = keyboardState;
         }
 
-        private static bool IsUnderMouse(dynamic x, Point mousePosition)
+        private bool IsUnderMouse(dynamic x, Point mousePosition)
         {
             if (!x.IsCard)
             {
@@ -127,8 +127,13 @@ namespace Crusaders30XX.ECS.Systems
             if (transform == null) return x.UI.Bounds.Contains(mousePosition);
 
             // Use the same visual center as rendering does
-            var rect = CardConfig.GetCardVisualRect(transform.Position);
-            Vector2 center = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
+            // Compute card center using shared CardVisualSettings
+            var settingsEntity = this.EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
+            var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+            int cw = cvs?.CardWidth ?? 250;
+            int ch = cvs?.CardHeight ?? 350;
+            int offsetY = (ch / 2) + (int)Math.Round((cvs?.UIScale ?? 1f) * 25);
+            Vector2 center = new Vector2(transform.Position.X, transform.Position.Y - offsetY + ch / 2f);
             float rotation = transform.Rotation;
             float cos = (float)System.Math.Cos(rotation);
             float sin = (float)System.Math.Sin(rotation);
@@ -139,8 +144,8 @@ namespace Crusaders30XX.ECS.Systems
             float localX = d.X * cos + d.Y * sin;
             float localY = -d.X * sin + d.Y * cos;
 
-            float halfW = CardConfig.CARD_WIDTH / 2f;
-            float halfH = CardConfig.CARD_HEIGHT / 2f;
+            float halfW = cw / 2f;
+            float halfH = ch / 2f;
             return (localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH);
         }
         

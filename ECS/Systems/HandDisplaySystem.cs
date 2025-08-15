@@ -106,7 +106,11 @@ namespace Crusaders30XX.ECS.Systems
                         // Horizontal spread scales with hand size
                         // Use unnormalized index delta so width grows with number of cards
                         float indexDelta = cardIndex - mid; // [-mid, +mid]
-                        float x = pivot.X + indexDelta * CardConfig.CARD_SPACING;
+                        // Use shared settings for spacing
+                        var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
+                        var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+                        float cardSpacing = (cvs != null) ? (cvs.CardWidth + cvs.CardGap) : (CardConfig.CARD_WIDTH + CardConfig.CARD_GAP);
+                        float x = pivot.X + indexDelta * cardSpacing;
 
                         // Vertical arc using a circular approximation
                         float cos = (float)Math.Cos(angleRad);
@@ -117,7 +121,7 @@ namespace Crusaders30XX.ECS.Systems
                         // If this card just appeared (default position), spawn it offscreen to the right (due east)
                         if (transform.Position == Vector2.Zero)
                         {
-                            float spawnX = _graphicsDevice.Viewport.Width + CardConfig.CARD_WIDTH * 1.5f;
+                            float spawnX = _graphicsDevice.Viewport.Width + ((cvs?.CardWidth ?? CardConfig.CARD_WIDTH) * 1.5f);
                             float spawnY = pivot.Y + HandFanCurveOffset;
                             transform.Position = new Vector2(spawnX, spawnY);
                         }
@@ -142,8 +146,8 @@ namespace Crusaders30XX.ECS.Systems
                         // Update UI bounds to axis-aligned bounding box of the rotated card
                         if (ui != null)
                         {
-                            int w = CardConfig.CARD_WIDTH;
-                            int h = CardConfig.CARD_HEIGHT;
+                            int w = cvs?.CardWidth ?? CardConfig.CARD_WIDTH;
+                            int h = cvs?.CardHeight ?? CardConfig.CARD_HEIGHT;
                             float absCos = Math.Abs(cos);
                             float absSin = Math.Abs((float)Math.Sin(angleRad));
                             int aabbW = (int)(w * absCos + h * absSin);

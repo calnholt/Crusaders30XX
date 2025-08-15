@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Config;
+using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,6 +13,7 @@ namespace Crusaders30XX.ECS.Systems
     /// <summary>
     /// Renders a draw pile rectangle at bottom-right with the current draw pile count
     /// </summary>
+    [DebugTab("Draw Pile Display")]
     public class DrawPileDisplaySystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
@@ -21,6 +23,15 @@ namespace Crusaders30XX.ECS.Systems
         private double _pulseTimeRemaining = 0.0;
         private const double PulseDuration = 0.15; // seconds
         private const float PulseAmplitude = 0.12f; // 12% size bump at peak
+
+        [DebugEditable(DisplayName = "Panel Width", Step = 1, Min = 10, Max = 2000)]
+        public int PanelWidth { get; set; } = 60;
+        [DebugEditable(DisplayName = "Panel Height", Step = 1, Min = 10, Max = 2000)]
+        public int PanelHeight { get; set; } = 80;
+        [DebugEditable(DisplayName = "Panel Margin", Step = 1, Min = 0, Max = 500)]
+        public int PanelMargin { get; set; } = 20;
+        [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.1f, Max = 10f)]
+        public float TextScale { get; set; } = 0.8f;
 
         public DrawPileDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
             : base(entityManager)
@@ -60,9 +71,9 @@ namespace Crusaders30XX.ECS.Systems
             int w = _graphicsDevice.Viewport.Width;
             int h = _graphicsDevice.Viewport.Height;
 
-            int rectW = CardConfig.DRAW_PILE_WIDTH;
-            int rectH = CardConfig.DRAW_PILE_HEIGHT;
-            int m = CardConfig.DRAW_PILE_MARGIN;
+            int rectW = PanelWidth;
+            int rectH = PanelHeight;
+            int m = PanelMargin;
             var rect = new Rectangle(w - rectW - m, h - rectH - m, rectW, rectH);
 
             // Pulse scale factor
@@ -89,7 +100,7 @@ namespace Crusaders30XX.ECS.Systems
             if (_font != null)
             {
                 string text = deck.DrawPile.Count.ToString();
-                float textScale = CardConfig.DRAW_PILE_TEXT_SCALE * scale;
+                float textScale = TextScale * scale;
                 var size = _font.MeasureString(text) * textScale;
                 var pos = new Vector2(scaledRect.Center.X - size.X / 2f, scaledRect.Center.Y - size.Y / 2f);
                 _spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);

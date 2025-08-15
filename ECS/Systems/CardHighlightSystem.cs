@@ -2,6 +2,7 @@ using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Config;
+using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Rendering;
@@ -14,6 +15,7 @@ namespace Crusaders30XX.ECS.Systems
     /// <summary>
     /// System for highlighting cards when hovered over
     /// </summary>
+    [DebugTab("Card Highlight")]
     public class CardHighlightSystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
@@ -23,6 +25,20 @@ namespace Crusaders30XX.ECS.Systems
         private double _lastTotalSeconds = 0.0; // From Update(gameTime)
         private double _pulseStartSeconds = 0.0; // When current hovered started pulsing
         private Entity _currentHovered;
+        
+        // Debug-adjustable highlight settings
+        [DebugEditable(DisplayName = "Glow Layers", Step = 1, Min = 1, Max = 50)]
+        public int GlowLayers { get; set; } = 10;
+        [DebugEditable(DisplayName = "Glow Spread", Step = 0.001f, Min = 0f, Max = 0.2f)]
+        public float GlowSpread { get; set; } = 0.01f;
+        [DebugEditable(DisplayName = "Max Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+        public float MaxAlpha { get; set; } = 0.6f;
+        [DebugEditable(DisplayName = "Glow Color R", Step = 1, Min = 0, Max = 255)]
+        public int GlowColorR { get; set; } = 255;
+        [DebugEditable(DisplayName = "Glow Color G", Step = 1, Min = 0, Max = 255)]
+        public int GlowColorG { get; set; } = 215;
+        [DebugEditable(DisplayName = "Glow Color B", Step = 1, Min = 0, Max = 255)]
+        public int GlowColorB { get; set; } = 0;
         
         public CardHighlightSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch) 
             : base(entityManager)
@@ -114,8 +130,25 @@ namespace Crusaders30XX.ECS.Systems
 
         private void DrawCardHighlight(Entity cardEntity, Vector2 position, float rotation, GameTime gameTime)
         {
-            // Create highlight rectangle using centralized config
-            var highlightRect = CardConfig.GetCardHighlightRect(position);
+            // Create highlight rectangle based on shared CardVisualSettings
+            var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
+            var s = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+            int cw = s?.CardWidth ?? 250;
+            int ch = s?.CardHeight ?? 350;
+            int offsetYExtra = s?.CardOffsetYExtra ?? (int)Math.Round((s?.UIScale ?? 1f) * 25);
+            int th = s?.HighlightBorderThickness ?? 5;
+            var cardRect = new Rectangle(
+                (int)position.X - cw / 2,
+                (int)position.Y - (ch / 2 + offsetYExtra),
+                cw,
+                ch
+            );
+            var highlightRect = new Rectangle(
+                cardRect.X - th,
+                cardRect.Y - th,
+                cardRect.Width + th * 2,
+                cardRect.Height + th * 2
+            );
 
             // Add pulsing effect based on individual card hover time
             var pulseSpeed = 3.0f; // Increased speed for better responsiveness
@@ -124,19 +157,19 @@ namespace Crusaders30XX.ECS.Systems
             var pulseAmount = (float)(Math.Cos(hoverDuration * pulseSpeed) * 0.4 + 0.6);
             
             // Soft glow: draw multiple expanded rounded rects with decreasing alpha
-            int radius = Math.Max(0, CardConfig.CARD_CORNER_RADIUS + CardConfig.HIGHLIGHT_BORDER_THICKNESS);
+            int radius = Math.Max(0, (s?.CardCornerRadius ?? 18) + th);
             var baseTex = GetRoundedRectTexture(highlightRect.Width, highlightRect.Height, radius);
             var center = new Vector2(highlightRect.X + highlightRect.Width / 2f, highlightRect.Y + highlightRect.Height / 2f);
 
             // Layered glow
-            int layers = CardConfig.HIGHLIGHT_GLOW_LAYERS;
-            float spread = CardConfig.HIGHLIGHT_GLOW_SPREAD; // how much each layer expands
-            Color glowColor = CardConfig.HIGHLIGHT_GLOW_COLOR;
+            int layers = GlowLayers;
+            float spread = GlowSpread; // how much each layer expands
+            Color glowColor = new Color((byte)GlowColorR, (byte)GlowColorG, (byte)GlowColorB);
             for (int i = layers; i >= 1; i--)
             {
                 float scale = 1f + i * spread;
                 // Fade out quickly per layer; start bright on pulse reset
-                float layerAlpha = MathHelper.Clamp(pulseAmount * (0.22f / i), 0f, CardConfig.HIGHLIGHT_MAX_ALPHA);
+                float layerAlpha = MathHelper.Clamp(pulseAmount * (0.22f / i), 0f, MaxAlpha);
                 _spriteBatch.Draw(
                     baseTex,
                     position: center,
