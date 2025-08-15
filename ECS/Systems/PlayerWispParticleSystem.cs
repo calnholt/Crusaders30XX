@@ -20,8 +20,6 @@ namespace Crusaders30XX.ECS.Systems
 
         private float _elapsedSeconds;
 
-        // Uses Transform from PlayerPortraitAnchor instead of duplicating layout constants
-
         // Wispy particle settings (runtime adjustable)
         private float _spawnRatePerSecond = 10f;
         [DebugEditable(DisplayName = "Spawn Rate (per sec)", Step = 0.5f, Min = 0f, Max = 200f)]
@@ -286,14 +284,14 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private bool TryGetAnchor(out Components.Transform transform, out Components.PlayerPortraitInfo info)
+        private bool TryGetAnchor(out Components.Transform transform, out Components.PortraitInfo info)
         {
             transform = null;
             info = null;
-            var anchor = EntityManager.GetEntitiesWithComponent<Components.PlayerPortraitAnchor>().FirstOrDefault();
+            var anchor = EntityManager.GetEntitiesWithComponent<Components.Player>().FirstOrDefault();
             if (anchor == null) return false;
             transform = anchor.GetComponent<Components.Transform>();
-            info = anchor.GetComponent<Components.PlayerPortraitInfo>();
+            info = anchor.GetComponent<Components.PortraitInfo>();
             return transform != null;
         }
     }

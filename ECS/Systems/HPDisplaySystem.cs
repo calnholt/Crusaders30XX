@@ -38,10 +38,10 @@ namespace Crusaders30XX.ECS.Systems
 		public int BarHeight { get; set; } = 22;
 
 		[DebugEditable(DisplayName = "Offset X", Step = 2, Min = -2000, Max = 2000)]
-		public int OffsetX { get; set; } = 46;
+		public int OffsetX { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Offset Y", Step = 2, Min = -2000, Max = 2000)]
-		public int OffsetY { get; set; } = 56;
+		public int OffsetY { get; set; } = 26;
 
 		[DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 64)]
 		public int CornerRadius { get; set; } = 12;
@@ -154,26 +154,30 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
-			var hpEntity = GetRelevantEntities().FirstOrDefault();
-			if (hpEntity == null) return;
-			var hp = hpEntity.GetComponent<Crusaders30XX.ECS.Components.HP>();
-			if (hp == null) return;
+			var entities = GetRelevantEntities().ToList();
+			if (entities.Count == 0) return;
 
-			// Anchor under player portrait for now
-			var anchor = EntityManager.GetEntitiesWithComponent<PlayerPortraitAnchor>().FirstOrDefault();
-			if (anchor == null) return;
-			var t = anchor.GetComponent<Transform>();
-			var info = anchor.GetComponent<PlayerPortraitInfo>();
-			if (t == null) return;
+			foreach (var hpEntity in entities)
+			{
+				var hp = hpEntity.GetComponent<Crusaders30XX.ECS.Components.HP>();
+				var parentTransform = hpEntity.GetComponent<Transform>();
+				if (hp == null || parentTransform == null) continue;
 
-			int width = Math.Max(4, BarWidth);
-			int height = Math.Max(2, BarHeight);
+				int width = Math.Max(4, BarWidth);
+				int height = Math.Max(2, BarHeight);
 
-			// Position directly below the player portrait using unscaled height (do not include portrait scale)
-			float halfPortraitHeight = (info != null) ? (info.TextureHeight * 0.5f) : 0f;
-			var center = new Vector2(t.Position.X + OffsetX, t.Position.Y + halfPortraitHeight + OffsetY);
-			int x = (int)Math.Round(center.X - width / 2f);
-			int y = (int)Math.Round(center.Y - height / 2f);
+				// Position below the entity's portrait, using base (stable) scale if provided
+				float visualHalfHeight = 0f;
+				var pInfo = hpEntity.GetComponent<PortraitInfo>();
+				if (pInfo != null)
+				{
+					float baseScale = (pInfo.BaseScale > 0f) ? pInfo.BaseScale : 1f;
+					visualHalfHeight = System.Math.Max(visualHalfHeight, (pInfo.TextureHeight * baseScale) * 0.5f);
+				}
+				// Center X aligns to entity; OffsetX shifts from center, OffsetY moves downward/upward
+				var center = new Vector2(parentTransform.Position.X + OffsetX, parentTransform.Position.Y + visualHalfHeight + OffsetY);
+				int x = (int)Math.Round(center.X - width / 2f);
+				int y = (int)Math.Round(center.Y - height / 2f);
 
 			// Prepare rounded textures (cache per size)
 			int radius = Math.Max(0, Math.Min(CornerRadius, Math.Min(width, height) / 2));
@@ -192,14 +196,14 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Background rounded rect (dark gray)
-			var backRect = new Rectangle(x, y, width, height);
-			_spriteBatch.Draw(_roundedBack, backRect, new Color((byte)40, (byte)40, (byte)40));
+				var backRect = new Rectangle(x, y, width, height);
+				_spriteBatch.Draw(_roundedBack, backRect, new Color((byte)40, (byte)40, (byte)40));
 
 			// Fill
-			float targetPctForDraw = hp.Max > 0 ? MathHelper.Clamp(hp.Current / (float)hp.Max, 0f, 1f) : 0f;
-			float pct = _animByEntityId.TryGetValue(hpEntity.Id, out var s) ? s.Displayed : targetPctForDraw;
-			int fillW = (int)Math.Round(width * pct);
-			var fillRect = new Rectangle(x, y, Math.Max(0, fillW), height);
+				float targetPctForDraw = hp.Max > 0 ? MathHelper.Clamp(hp.Current / (float)hp.Max, 0f, 1f) : 0f;
+				float pct = _animByEntityId.TryGetValue(hpEntity.Id, out var s) ? s.Displayed : targetPctForDraw;
+				int fillW = (int)Math.Round(width * pct);
+				var fillRect = new Rectangle(x, y, Math.Max(0, fillW), height);
 			var fillColorBase = Color.Lerp(new Color((byte)120, (byte)0, (byte)0), new Color((byte)255, (byte)40, (byte)40), pct);
 			float alphaFactor = 1f;
 			if (FlashEnabled && targetPctForDraw <= MathHelper.Clamp(FlashThresholdPercent, 0f, 1f))
@@ -230,13 +234,14 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Centered HP text: "current/max"
-			if (_font != null)
-			{
-				string hpText = $"{Math.Max(0, hp.Current)}/{Math.Max(0, hp.Max)}";
-				var textSize = _font.MeasureString(hpText);
-				float scale = Math.Min(1f, Math.Min(width / Math.Max(1f, textSize.X), height / Math.Max(1f, textSize.Y)));
-				var textPos = new Vector2(x + width / 2f - (textSize.X * scale) / 2f, y + height / 2f - (textSize.Y * scale) / 2f);
-				_spriteBatch.DrawString(_font, hpText, textPos, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+				if (_font != null)
+				{
+					string hpText = $"{Math.Max(0, hp.Current)}/{Math.Max(0, hp.Max)}";
+					var textSize = _font.MeasureString(hpText);
+					float scale = Math.Min(1f, Math.Min(width / Math.Max(1f, textSize.X), height / Math.Max(1f, textSize.Y)));
+					var textPos = new Vector2(x + width / 2f - (textSize.X * scale) / 2f, y + height / 2f - (textSize.Y * scale) / 2f);
+					_spriteBatch.DrawString(_font, hpText, textPos, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+				}
 			}
 		}
 

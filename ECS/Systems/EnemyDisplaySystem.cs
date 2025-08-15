@@ -52,6 +52,18 @@ namespace Crusaders30XX.ECS.Systems
 				float scale = desiredHeight / tex.Height;
 				var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
 				var pos = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
+				// Keep the entity's transform in sync so other systems (e.g., HP bars) can reference it
+				t.Position = pos;
+				// Share scale and texture dims for accurate HP positioning if needed
+				var info = e.GetComponent<PortraitInfo>();
+				if (info == null)
+				{
+					return;
+				}
+				info.TextureWidth = tex.Width;
+				info.TextureHeight = tex.Height;
+				info.CurrentScale = scale;
+				info.BaseScale = desiredHeight / tex.Height;
 				_spriteBatch.Draw(tex, position: pos, sourceRectangle: null, color: Color.White, rotation: 0f, origin: origin, scale: scale, effects: SpriteEffects.None, layerDepth: 0f);
 			}
 		}

@@ -220,22 +220,18 @@ namespace Crusaders30XX.ECS.Components
         }
     }
 
-    /// <summary>
-    /// Marker component for the player portrait anchor Transform used by UI systems
-    /// </summary>
-    public class PlayerPortraitAnchor : IComponent
-    {
-        public Entity Owner { get; set; }
-    }
 
     /// <summary>
-    /// Holds metadata about the player portrait drawing, such as source texture size.
+    /// Shared portrait metadata for any entity drawn as a character/portrait.
+    /// Systems set TextureWidth/Height once the texture is known and keep CurrentScale updated.
     /// </summary>
-    public class PlayerPortraitInfo : IComponent
+    public class PortraitInfo : IComponent
     {
         public Entity Owner { get; set; }
         public int TextureWidth { get; set; }
         public int TextureHeight { get; set; }
+        public float CurrentScale { get; set; } = 1f; // actual draw scale this frame (may breathe)
+        public float BaseScale { get; set; } = 1f;    // stable baseline scale for layout (no breathing)
     }
 
     /// <summary>

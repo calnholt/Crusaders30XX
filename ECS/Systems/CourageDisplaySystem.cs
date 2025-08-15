@@ -29,7 +29,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int OutlineThickness { get; set; } = 2;
 
 		[DebugEditable(DisplayName = "Vertical Offset From Anchor", Step = 2, Min = -1000, Max = 1000)]
-		public int AnchorOffsetY { get; set; } = 208;
+		public int AnchorOffsetY { get; set; } = 230;
 
 		[DebugEditable(DisplayName = "Text Scale Divisor", Step = 1, Min = 1, Max = 200)]
 		public int TextScaleDivisor { get; set; } = 26;
@@ -66,10 +66,10 @@ namespace Crusaders30XX.ECS.Systems
 			if (courage == null) return;
 
 			// Find the portrait anchor (created by PlayerDisplaySystem)
-			var anchor = EntityManager.GetEntitiesWithComponent<PlayerPortraitAnchor>().FirstOrDefault();
+			var anchor = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			if (anchor == null) return;
 			var anchorTransform = anchor.GetComponent<Transform>();
-			var portraitInfo = anchor.GetComponent<PlayerPortraitInfo>();
+			var portraitInfo = anchor.GetComponent<PortraitInfo>();
 			if (anchorTransform == null || portraitInfo == null || _font == null) return;
 
 			// Fully decouple from portrait breathing and UI scaling: fixed pixel size and fixed offset

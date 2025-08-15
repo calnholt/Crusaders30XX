@@ -37,33 +37,26 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch = spriteBatch;
             _crusaderTexture = crusaderTexture;
 
-            // Find or create a shared portrait anchor entity
-            _anchorEntity = EntityManager.GetEntitiesWithComponent<PlayerPortraitAnchor>().FirstOrDefault();
+            // Use the actual player entity as the portrait anchor
+            _anchorEntity = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             if (_anchorEntity == null)
             {
-                _anchorEntity = EntityManager.CreateEntity("PlayerPortraitAnchor");
-                _anchorTransform = new Transform { Position = Vector2.Zero, Scale = Vector2.One, Rotation = 0f, ZOrder = 0 };
-                EntityManager.AddComponent(_anchorEntity, _anchorTransform);
-                EntityManager.AddComponent(_anchorEntity, new PlayerPortraitAnchor());
-                EntityManager.AddComponent(_anchorEntity, new PlayerPortraitInfo { TextureWidth = _crusaderTexture?.Width ?? 0, TextureHeight = _crusaderTexture?.Height ?? 0 });
+                return;
             }
-            else
+            _anchorTransform = _anchorEntity.GetComponent<Transform>();
+            if (_anchorTransform == null)
             {
-                _anchorTransform = _anchorEntity.GetComponent<Transform>();
-                if (_anchorTransform == null)
-                {
-                    _anchorTransform = new Transform();
-                    EntityManager.AddComponent(_anchorEntity, _anchorTransform);
-                }
-                var info = _anchorEntity.GetComponent<PlayerPortraitInfo>();
-                if (info == null)
-                {
-                    info = new PlayerPortraitInfo();
-                    EntityManager.AddComponent(_anchorEntity, info);
-                }
-                info.TextureWidth = _crusaderTexture?.Width ?? 0;
-                info.TextureHeight = _crusaderTexture?.Height ?? 0;
+                _anchorTransform = new Transform();
+                EntityManager.AddComponent(_anchorEntity, _anchorTransform);
             }
+            var info = _anchorEntity.GetComponent<PortraitInfo>();
+            if (info == null)
+            {
+                info = new PortraitInfo();
+                EntityManager.AddComponent(_anchorEntity, info);
+            }
+            info.TextureWidth = _crusaderTexture?.Width ?? 0;
+            info.TextureHeight = _crusaderTexture?.Height ?? 0;
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -91,6 +84,8 @@ namespace Crusaders30XX.ECS.Systems
                 var position = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
                 _anchorTransform.Position = position;
                 _anchorTransform.Scale = new Vector2(scale, scale);
+                var pinfo = _anchorEntity.GetComponent<PortraitInfo>();
+                if (pinfo != null) { pinfo.CurrentScale = scale; pinfo.BaseScale = desiredHeight / (_crusaderTexture?.Height ?? 1); }
                 _anchorTransform.Rotation = 0f;
                 _anchorTransform.ZOrder = 0;
             }

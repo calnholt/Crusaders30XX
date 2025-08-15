@@ -91,10 +91,18 @@ namespace Crusaders30XX.ECS.Factories
                 TexturePath = "player",
                 IsVisible = true
             };
+
+            var portraitInfo = new PortraitInfo {
+                CurrentScale = 0,
+                Owner = entity,
+                TextureHeight = 0,
+                TextureWidth = 0,
+            };
             
             world.AddComponent(entity, player);
             world.AddComponent(entity, transform);
             world.AddComponent(entity, sprite);
+            world.AddComponent(entity, portraitInfo);
             
             // Attach Courage resource component by default (optional mechanics can read presence)
             world.AddComponent(entity, new Courage { Amount = 0 });
@@ -134,10 +142,17 @@ namespace Crusaders30XX.ECS.Factories
                 TexturePath = "enemy",
                 IsVisible = true
             };
+            var portraitInfo = new PortraitInfo {
+                CurrentScale = 0,
+                Owner = entity,
+                TextureHeight = 0,
+                TextureWidth = 0,
+            };
             
             world.AddComponent(entity, enemy);
             world.AddComponent(entity, transform);
             world.AddComponent(entity, sprite);
+            world.AddComponent(entity, portraitInfo);
             
             return entity;
         }
@@ -208,13 +223,14 @@ namespace Crusaders30XX.ECS.Factories
                 });
             }
             
-            // Create a default enemy (Demon) with HP
+            // Create a default enemy (Demon) with HP and portrait info
             var enemyEntity = world.CreateEntity("Enemy_Demon");
             var enemy = new Enemy { Name = "Demon", Type = EnemyType.Demon, MaxHealth = 80, CurrentHealth = 80 };
             var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
             world.AddComponent(enemyEntity, enemy);
             world.AddComponent(enemyEntity, enemyTransform);
             world.AddComponent(enemyEntity, new HP { Max = enemy.MaxHealth, Current = enemy.CurrentHealth });
+            world.AddComponent(enemyEntity, new PortraitInfo { TextureWidth = 0, TextureHeight = 0, CurrentScale = 1f });
             
             return entity;
         }

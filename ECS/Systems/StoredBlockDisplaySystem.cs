@@ -34,7 +34,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int AnchorOffsetX { get; set; } = 124;
 
 		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -2000, Max = 2000)]
-		public int AnchorOffsetY { get; set; } = 208;
+		public int AnchorOffsetY { get; set; } = 230;
 
 		[DebugEditable(DisplayName = "Text Scale Divisor", Step = 1, Min = 1, Max = 200)]
 		public int TextScaleDivisor { get; set; } = 54;
@@ -69,10 +69,10 @@ namespace Crusaders30XX.ECS.Systems
 			var stored = player.GetComponent<StoredBlock>();
 			if (stored == null) return;
 
-			var anchor = EntityManager.GetEntitiesWithComponent<PlayerPortraitAnchor>().FirstOrDefault();
+			var anchor = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			if (anchor == null) return;
 			var t = anchor.GetComponent<Transform>();
-			var info = anchor.GetComponent<PlayerPortraitInfo>();
+			var info = anchor.GetComponent<PortraitInfo>();
 			if (t == null || info == null || _font == null) return;
 
 			int w = Math.Max(8, SquareWidth);

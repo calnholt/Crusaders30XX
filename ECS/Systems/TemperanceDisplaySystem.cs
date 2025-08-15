@@ -31,7 +31,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int AnchorOffsetX { get; set; } = 60; // to the right of Courage by default
 
 		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -2000, Max = 2000)]
-		public int AnchorOffsetY { get; set; } = 206; // align with Courage default
+		public int AnchorOffsetY { get; set; } = 228; // align with Courage default
 
 		[DebugEditable(DisplayName = "Text Scale Divisor", Step = 1, Min = 1, Max = 200)]
 		public int TextScaleDivisor { get; set; } = 24;
@@ -64,10 +64,10 @@ namespace Crusaders30XX.ECS.Systems
 			var temperance = player.GetComponent<Temperance>();
 			if (temperance == null) return;
 
-			var anchor = EntityManager.GetEntitiesWithComponent<PlayerPortraitAnchor>().FirstOrDefault();
+			var anchor = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			if (anchor == null) return;
 			var t = anchor.GetComponent<Transform>();
-			var info = anchor.GetComponent<PlayerPortraitInfo>();
+			var info = anchor.GetComponent<PortraitInfo>();
 			if (t == null || info == null || _font == null) return;
 
 			int sizeOuter = Math.Max(8, TriangleSize);
