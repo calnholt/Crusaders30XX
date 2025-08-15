@@ -71,6 +71,12 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Cathedral });
         }
+
+        [DebugActionInt("Player: Deal Damage", Step = 1, Min = 1, Max = 999, Default = 5)]
+        public void Debug_PlayerDealDamage(int amount)
+        {
+            EventManager.Publish(new ModifyHpEvent { Delta = -System.Math.Abs(amount) });
+        }
     }
 }
 

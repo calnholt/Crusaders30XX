@@ -39,6 +39,8 @@ namespace Crusaders30XX.ECS.Systems
 			= new();
 		private readonly Dictionary<Type, List<(string label, MethodInfo method)>> _debugActionsCache
 			= new();
+		private readonly Dictionary<Type, List<(string label, MethodInfo method, DebugActionIntAttribute meta, int current)>> _debugActionsIntCache
+			= new();
 
         // Editable layout and behavior settings
 		[DebugEditable(DisplayName = "Margin", Step = 1, Min = 0, Max = 200)]
@@ -203,10 +205,11 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Buttons section from DebugActionAttribute on the active system
 			var actionMethods = GetDebugActionsCached(active.sys);
-			if (_font != null && actionMethods.Count > 0)
+			var actionIntMethods = GetDebugActionsIntCached(active.sys);
+			if (_font != null && (actionMethods.Count > 0 || actionIntMethods.Count > 0))
 			{
 				measureY += (int)(_font.LineSpacing * TextScale) + Spacing; // header
-				measureY += actionMethods.Count * (ButtonHeight + Spacing);
+				measureY += (actionMethods.Count + actionIntMethods.Count) * (ButtonHeight + Spacing);
 			}
 
             int panelHeight = measureY - panelY + Padding;
@@ -495,8 +498,8 @@ namespace Crusaders30XX.ECS.Systems
                 cursorY += RowHeight + Spacing;
             }
 
-			// Buttons section (DebugAction methods) - also scrollable
-			if (_font != null && actionMethods.Count > 0)
+			// Buttons section (DebugAction and DebugActionInt) - also scrollable
+			if (_font != null && (actionMethods.Count > 0 || actionIntMethods.Count > 0))
             {
                 int headerY = cursorY + yOffset;
                 if (headerY + (int)(_font.LineSpacing * TextScale) >= visibleTop && headerY <= visibleBottom)
@@ -540,6 +543,42 @@ namespace Crusaders30XX.ECS.Systems
                     cursorY += ButtonHeight + Spacing;
                 }
 
+				// Render int-parameter actions
+				for (int i = 0; i < actionIntMethods.Count; i++)
+				{
+					var ai = actionIntMethods[i];
+					var rect = new Rectangle(panelX + Padding, cursorY + yOffset, PanelWidth - Padding * 2, ButtonHeight);
+					if (rect.Bottom < visibleTop || rect.Y > visibleBottom)
+					{
+						cursorY += ButtonHeight + Spacing;
+						continue;
+					}
+					DrawFilledRect(rect, new Color(70, 70, 70));
+					DrawRect(rect, Color.White, 1);
+					string label = ai.label + $" ({ai.current})";
+					var size = _font.MeasureString(label) * TextScale;
+					int textX = rect.X + 8;
+					int textY = rect.Y + (int)((rect.Height - size.Y) / 2f);
+					DrawStringScaled(label, new Vector2(textX, textY), Color.White, TextScale);
+					int btnW = 22;
+					var applyRect = new Rectangle(rect.Right - btnW, rect.Y + 3, btnW, rect.Height - 6);
+					var plusRect = new Rectangle(applyRect.X - btnW - 4, rect.Y + 3, btnW, rect.Height - 6);
+					var minusRect = new Rectangle(plusRect.X - btnW - 4, rect.Y + 3, btnW, rect.Height - 6);
+					DrawFilledRect(minusRect, new Color(60,60,60)); DrawRect(minusRect, Color.White, 1); DrawStringScaled("-", new Vector2(minusRect.X + 7, minusRect.Y + 2), Color.White, TextScale);
+					DrawFilledRect(plusRect, new Color(60,60,60)); DrawRect(plusRect, Color.White, 1); DrawStringScaled("+", new Vector2(plusRect.X + 6, plusRect.Y + 2), Color.White, TextScale);
+					DrawFilledRect(applyRect, new Color(60,60,60)); DrawRect(applyRect, Color.White, 1); DrawStringScaled(">", new Vector2(applyRect.X + 6, applyRect.Y + 2), Color.White, TextScale);
+					if (click)
+					{
+						if (minusRect.Contains(mouse.Position)) { ai.current = (int)System.Math.Max(ai.meta.Min, System.Math.Min(ai.meta.Max, ai.current - (int)System.Math.Round(ai.meta.Step))); actionIntMethods[i] = ai; }
+						else if (plusRect.Contains(mouse.Position)) { ai.current = (int)System.Math.Max(ai.meta.Min, System.Math.Min(ai.meta.Max, ai.current + (int)System.Math.Round(ai.meta.Step))); actionIntMethods[i] = ai; }
+						else if (applyRect.Contains(mouse.Position))
+						{
+							try { ai.method.Invoke(active.sys, new object[] { ai.current }); }
+							catch (System.Exception ex) { System.Console.WriteLine($"[DebugMenu] Action-int '{ai.label}' failed: {ex.Message}"); }
+						}
+					}
+					cursorY += ButtonHeight + Spacing;
+				}
             }
 
             // Finally, if dropdown is open, draw its list on top of everything else in the panel
@@ -563,6 +602,7 @@ namespace Crusaders30XX.ECS.Systems
                         menu.ActiveTabIndex = actualIndex;
                     }
                 }
+
             }
 
             _prevMouse = mouse;
@@ -630,6 +670,31 @@ namespace Crusaders30XX.ECS.Systems
                 actions.Add((string.IsNullOrWhiteSpace(attr.DisplayName) ? m.Name : attr.DisplayName, m));
             }
             return actions;
+        }
+
+        private List<(string label, MethodInfo method, DebugActionIntAttribute meta, int current)> GetDebugActionsIntCached(Core.System system)
+        {
+            var type = system.GetType();
+            if (_debugActionsIntCache.TryGetValue(type, out var cached)) return cached;
+            var computed = GetDebugActionsInt(system);
+            _debugActionsIntCache[type] = computed;
+            return computed;
+        }
+
+        private static List<(string label, MethodInfo method, DebugActionIntAttribute meta, int current)> GetDebugActionsInt(Core.System system)
+        {
+            var list = new List<(string, MethodInfo, DebugActionIntAttribute, int)>();
+            var t = system.GetType();
+            foreach (var m in t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
+            {
+                var attr = m.GetCustomAttribute<DebugActionIntAttribute>();
+                if (attr == null) continue;
+                var ps = m.GetParameters();
+                if (ps.Length != 1 || ps[0].ParameterType != typeof(int)) continue;
+                int current = attr.Default;
+                list.Add((string.IsNullOrWhiteSpace(attr.DisplayName) ? m.Name : attr.DisplayName, m, attr, current));
+            }
+            return list;
         }
 
         private static void TryCopyToClipboard(string text)
