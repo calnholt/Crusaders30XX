@@ -32,6 +32,7 @@ public class Game1 : Game
     private PlayerDisplaySystem _playerDisplaySystem;
     private PlayerWispParticleSystem _playerWispParticleSystem;
     private CathedralLightingSystem _cathedralLightingSystem;
+    private DesertBackgroundEffectSystem _desertBackgroundEffectSystem;
     private ProfilerSystem _profilerSystem;
     private CourageDisplaySystem _courageDisplaySystem;
     private TemperanceDisplaySystem _temperanceDisplaySystem;
@@ -113,6 +114,7 @@ public class Game1 : Game
         var crusaderTexture = Content.Load<Texture2D>("Crusader");
         _playerDisplaySystem = new PlayerDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, crusaderTexture);
         _cathedralLightingSystem = new CathedralLightingSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _desertBackgroundEffectSystem = new DesertBackgroundEffectSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _courageDisplaySystem = new CourageDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
@@ -135,6 +137,7 @@ public class Game1 : Game
         _world.AddSystem(_cardListModalSystem);
         _world.AddSystem(_playerDisplaySystem);
         _world.AddSystem(_cathedralLightingSystem);
+        _world.AddSystem(_desertBackgroundEffectSystem);
         _world.AddSystem(_playerWispParticleSystem);
         _world.AddSystem(_courageDisplaySystem);
         _world.AddSystem(_temperanceDisplaySystem);
@@ -205,6 +208,8 @@ public class Game1 : Game
 
         // Cathedral lighting beams (under foreground elements)
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("CathedralLightingSystem.Draw", () => _cathedralLightingSystem.Draw());
+        // Desert haze clouds (under foreground elements)
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", () => _desertBackgroundEffectSystem.Draw());
 
         // Draw ECS World
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("RenderingSystem.Draw", () => _renderingSystem.Draw());
