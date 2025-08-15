@@ -2,7 +2,6 @@ using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Config;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -101,7 +100,7 @@ namespace Crusaders30XX.ECS.Systems
 
                         // angle and vertical arc offset
                         float angleDeg = t * HandFanMaxAngleDeg;
-                        float angleRad = CardConfig.DegToRad(angleDeg);
+                        float angleRad = (float)(Math.PI / 180.0) * angleDeg;
 
                         // Horizontal spread scales with hand size
                         // Use unnormalized index delta so width grows with number of cards
@@ -109,7 +108,8 @@ namespace Crusaders30XX.ECS.Systems
                         // Use shared settings for spacing
                         var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
                         var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
-                        float cardSpacing = (cvs != null) ? (cvs.CardWidth + cvs.CardGap) : (CardConfig.CARD_WIDTH + CardConfig.CARD_GAP);
+                        float cardSpacing = (cvs != null) ? (cvs.CardWidth + cvs.CardGap) : 0f;
+                        if (cardSpacing <= 0f) { cardSpacing = 250 + (-20); }
                         float x = pivot.X + indexDelta * cardSpacing;
 
                         // Vertical arc using a circular approximation
@@ -121,7 +121,7 @@ namespace Crusaders30XX.ECS.Systems
                         // If this card just appeared (default position), spawn it offscreen to the right (due east)
                         if (transform.Position == Vector2.Zero)
                         {
-                            float spawnX = _graphicsDevice.Viewport.Width + ((cvs?.CardWidth ?? CardConfig.CARD_WIDTH) * 1.5f);
+                            float spawnX = _graphicsDevice.Viewport.Width + ((cvs?.CardWidth ?? 250) * 1.5f);
                             float spawnY = pivot.Y + HandFanCurveOffset;
                             transform.Position = new Vector2(spawnX, spawnY);
                         }
@@ -146,8 +146,8 @@ namespace Crusaders30XX.ECS.Systems
                         // Update UI bounds to axis-aligned bounding box of the rotated card
                         if (ui != null)
                         {
-                            int w = cvs?.CardWidth ?? CardConfig.CARD_WIDTH;
-                            int h = cvs?.CardHeight ?? CardConfig.CARD_HEIGHT;
+                            int w = cvs?.CardWidth ?? 250;
+                            int h = cvs?.CardHeight ?? 350;
                             float absCos = Math.Abs(cos);
                             float absSin = Math.Abs((float)Math.Sin(angleRad));
                             int aabbW = (int)(w * absCos + h * absSin);

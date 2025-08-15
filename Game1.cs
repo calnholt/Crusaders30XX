@@ -5,7 +5,6 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Config;
 using System;
 
 namespace Crusaders30XX;
@@ -54,7 +53,7 @@ public class Game1 : Game
         int targetHeight = Math.Min(1080, displayMode.Height);
         _graphics.PreferredBackBufferWidth = targetWidth;
         _graphics.PreferredBackBufferHeight = targetHeight;
-        CardConfig.SetScaleFromViewportHeight(targetHeight);
+        // UIScale now lives in CardVisualSettings; initial seeding happens in EntityFactory
         _graphics.ApplyChanges();
 
         // Clamp user resize to the maximum of 1920x1080
@@ -66,7 +65,7 @@ public class Game1 : Game
             {
             _graphics.PreferredBackBufferWidth = newWidth;
             _graphics.PreferredBackBufferHeight = newHeight;
-            CardConfig.SetScaleFromViewportHeight(newHeight);
+            // Adjust UIScale via CardVisualSettingsDebugSystem if desired
                 _graphics.ApplyChanges();
             }
         };

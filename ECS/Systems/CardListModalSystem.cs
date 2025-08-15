@@ -3,7 +3,6 @@ using System.Linq;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Config;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -22,8 +21,24 @@ namespace Crusaders30XX.ECS.Systems
 
         private const int ModalMargin = 40;
         private const int Padding = 32;
-        private static int GridCellW => CardConfig.CARD_WIDTH;
-        private static int GridCellH => CardConfig.CARD_HEIGHT;
+        private int GridCellW
+        {
+            get
+            {
+                var e = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
+                var s = e?.GetComponent<CardVisualSettings>();
+                return s?.CardWidth ?? 250;
+            }
+        }
+        private int GridCellH
+        {
+            get
+            {
+                var e = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
+                var s = e?.GetComponent<CardVisualSettings>();
+                return s?.CardHeight ?? 350;
+            }
+        }
         private const int GridGap = 12;
         private const float TitleScale = 0.7f;
         private const float CardScale = 1.0f;

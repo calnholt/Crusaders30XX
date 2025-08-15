@@ -1,7 +1,6 @@
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Config;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,7 +50,7 @@ namespace Crusaders30XX.ECS.Factories
             
             var uiElement = new UIElement
             {
-                Bounds = new Rectangle(0, 0, CardConfig.CARD_WIDTH, CardConfig.CARD_HEIGHT), // Use centralized config
+                Bounds = new Rectangle(0, 0, 250, 350),
                 IsInteractable = true
             };
             
@@ -186,7 +185,7 @@ namespace Crusaders30XX.ECS.Factories
             if (cvsEntity == null)
             {
                 cvsEntity = world.CreateEntity("CardVisualSettings");
-                float sU = Crusaders30XX.ECS.Config.CardConfig.UIScale;
+                float sU = 1.0f; // starting UI scale
                 world.AddComponent(cvsEntity, new CardVisualSettings
                 {
                     UIScale = sU,
@@ -338,7 +337,7 @@ namespace Crusaders30XX.ECS.Factories
 
             var uiElement = new UIElement
             {
-                Bounds = new Rectangle(0, 0, CardConfig.CARD_WIDTH, CardConfig.CARD_HEIGHT), // Use centralized config
+                Bounds = new Rectangle(0, 0, 250, 350),
                 IsInteractable = true
             };
 

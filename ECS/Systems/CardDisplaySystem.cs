@@ -2,7 +2,6 @@ using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Config;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Rendering;
@@ -109,7 +108,6 @@ namespace Crusaders30XX.ECS.Systems
             DrawCardBackgroundRotated(position, rotation, cardColor);
 
             // Compute actual visual center from rect so text aligns exactly with background
-            EnsureSettings();
             var cardRectForCenter = GetCardVisualRect(position);
             var cardCenter = new Vector2(cardRectForCenter.X + cardRectForCenter.Width / 2f, cardRectForCenter.Y + cardRectForCenter.Height / 2f);
             
@@ -181,7 +179,6 @@ namespace Crusaders30XX.ECS.Systems
         private void DrawCardBackgroundRotated(Vector2 position, float rotation, Color color)
         {
             // Compute rect centered on position
-            EnsureSettings();
             var rect = GetCardVisualRect(position);
             var center = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
 
@@ -246,41 +243,6 @@ namespace Crusaders30XX.ECS.Systems
             _roundedRectCache.Clear();
         }
 
-        private void EnsureSettings()
-        {
-            if (_settings != null) return;
-            // Find or create settings singleton on a shared entity
-            var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-            if (settingsEntity == null)
-            {
-                settingsEntity = EntityManager.CreateEntity("CardVisualSettings");
-                var settings = new CardVisualSettings
-                {
-                    CardWidth = CardConfig.CARD_WIDTH,
-                    CardHeight = CardConfig.CARD_HEIGHT,
-                    CardGap = CardConfig.CARD_GAP,
-                    CardBorderThickness = CardConfig.CARD_BORDER_THICKNESS,
-                    CardCornerRadius = CardConfig.CARD_CORNER_RADIUS,
-                    HighlightBorderThickness = CardConfig.HIGHLIGHT_BORDER_THICKNESS,
-                    TextMarginX = CardConfig.TEXT_MARGIN_X,
-                    TextMarginY = CardConfig.TEXT_MARGIN_Y,
-                    NameScale = CardConfig.NAME_SCALE,
-                    CostScale = CardConfig.COST_SCALE,
-                    DescriptionScale = CardConfig.DESCRIPTION_SCALE,
-                    BlockScale = CardConfig.BLOCK_SCALE,
-                    BlockNumberScale = CardConfig.BLOCK_NUMBER_SCALE,
-                    BlockNumberMarginX = CardConfig.BLOCK_NUMBER_MARGIN_X,
-                    BlockNumberMarginY = CardConfig.BLOCK_NUMBER_MARGIN_Y
-                };
-                EntityManager.AddComponent(settingsEntity, settings);
-                _settings = settings;
-            }
-            else
-            {
-                _settings = settingsEntity.GetComponent<CardVisualSettings>();
-            }
-        }
-
         private Rectangle GetCardVisualRect(Vector2 position)
         {
             if (_settings == null) _settings = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>();
@@ -297,7 +259,6 @@ namespace Crusaders30XX.ECS.Systems
         {
             try
             {
-                EnsureSettings();
                 float maxLineWidth = _settings.CardWidth - (_settings.TextMarginX * 2);
                 float lineHeight = _font.LineSpacing * scale;
 
@@ -331,7 +292,6 @@ namespace Crusaders30XX.ECS.Systems
         {
             try
             {
-                EnsureSettings();
                 float localX = -_settings.CardWidth / 2f + localOffsetFromTopLeft.X;
                 float localY = -_settings.CardHeight / 2f + localOffsetFromTopLeft.Y;
                 float cos = (float)Math.Cos(rotation);

@@ -46,24 +46,25 @@ namespace Crusaders30XX.ECS.Systems
 			if (e == null)
 			{
 				e = EntityManager.CreateEntity("CardVisualSettings");
-				float sU = Crusaders30XX.ECS.Config.CardConfig.UIScale;
 				var s = new CardVisualSettings
 				{
-					CardWidth = (int)System.Math.Round(BASE_CARD_WIDTH * sU),
-					CardHeight = (int)System.Math.Round(BASE_CARD_HEIGHT * sU),
-					CardGap = (int)System.Math.Round(BASE_CARD_GAP * sU),
-					CardBorderThickness = (int)System.Math.Max(1, System.Math.Round(BASE_CARD_BORDER_THICKNESS * sU)),
-					CardCornerRadius = (int)System.Math.Max(2, System.Math.Round(BASE_CARD_CORNER_RADIUS * sU)),
-					HighlightBorderThickness = (int)System.Math.Max(1, System.Math.Round(BASE_HIGHLIGHT_BORDER_THICKNESS * sU)),
-					TextMarginX = (int)System.Math.Round(BASE_TEXT_MARGIN_X * sU),
-					TextMarginY = (int)System.Math.Round(BASE_TEXT_MARGIN_Y * sU),
-					NameScale = BASE_NAME_SCALE * sU,
-					CostScale = BASE_COST_SCALE * sU,
-					DescriptionScale = BASE_DESCRIPTION_SCALE * sU,
-					BlockScale = BASE_BLOCK_SCALE * sU,
-					BlockNumberScale = BASE_BLOCK_NUMBER_SCALE * sU,
-					BlockNumberMarginX = (int)System.Math.Round(BASE_BLOCK_NUMBER_MARGIN_X * sU),
-					BlockNumberMarginY = (int)System.Math.Round(BASE_BLOCK_NUMBER_MARGIN_Y * sU)
+					UIScale = 1f,
+					CardWidth = BASE_CARD_WIDTH,
+					CardHeight = BASE_CARD_HEIGHT,
+					CardOffsetYExtra = 25,
+					CardGap = BASE_CARD_GAP,
+					CardBorderThickness = BASE_CARD_BORDER_THICKNESS,
+					CardCornerRadius = BASE_CARD_CORNER_RADIUS,
+					HighlightBorderThickness = BASE_HIGHLIGHT_BORDER_THICKNESS,
+					TextMarginX = BASE_TEXT_MARGIN_X,
+					TextMarginY = BASE_TEXT_MARGIN_Y,
+					NameScale = BASE_NAME_SCALE,
+					CostScale = BASE_COST_SCALE,
+					DescriptionScale = BASE_DESCRIPTION_SCALE,
+					BlockScale = BASE_BLOCK_SCALE,
+					BlockNumberScale = BASE_BLOCK_NUMBER_SCALE,
+					BlockNumberMarginX = BASE_BLOCK_NUMBER_MARGIN_X,
+					BlockNumberMarginY = BASE_BLOCK_NUMBER_MARGIN_Y
 				};
 				EntityManager.AddComponent(e, s);
 				return s;
@@ -71,11 +72,17 @@ namespace Crusaders30XX.ECS.Systems
 			return e.GetComponent<CardVisualSettings>();
 		}
 
+		[DebugEditable(DisplayName = "UI Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
+		public float UIScale { get => EnsureSettings().UIScale; set => EnsureSettings().UIScale = Math.Max(0.1f, value); }
+
 		[DebugEditable(DisplayName = "Card Width", Step = 1, Min = 10, Max = 2000)]
 		public int CardWidth { get => EnsureSettings().CardWidth; set => EnsureSettings().CardWidth = Math.Max(10, value); }
 
 		[DebugEditable(DisplayName = "Card Height", Step = 1, Min = 10, Max = 2000)]
 		public int CardHeight { get => EnsureSettings().CardHeight; set => EnsureSettings().CardHeight = Math.Max(10, value); }
+
+		[DebugEditable(DisplayName = "Card Offset Y Extra", Step = 1, Min = -500, Max = 500)]
+		public int CardOffsetYExtra { get => EnsureSettings().CardOffsetYExtra; set => EnsureSettings().CardOffsetYExtra = value; }
 
 		[DebugEditable(DisplayName = "Card Gap", Step = 1, Min = -500, Max = 500)]
 		public int CardGap { get => EnsureSettings().CardGap; set => EnsureSettings().CardGap = value; }
@@ -115,6 +122,29 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Block Number Margin Y", Step = 1, Min = 0, Max = 500)]
 		public int BlockNumberMarginY { get => EnsureSettings().BlockNumberMarginY; set => EnsureSettings().BlockNumberMarginY = Math.Max(0, value); }
+
+		[DebugAction("Apply Defaults (250x350 etc.)")]
+		public void ApplyDefaults()
+		{
+			var s = EnsureSettings();
+			s.UIScale = 1f;
+			s.CardWidth = 250;
+			s.CardHeight = 350;
+			s.CardOffsetYExtra = 25;
+			s.CardGap = -20;
+			s.CardBorderThickness = 3;
+			s.CardCornerRadius = 18;
+			s.HighlightBorderThickness = 5;
+			s.TextMarginX = 16;
+			s.TextMarginY = 16;
+			s.NameScale = 0.7f;
+			s.CostScale = 0.6f;
+			s.DescriptionScale = 0.4f;
+			s.BlockScale = 0.5f;
+			s.BlockNumberScale = 0.9f;
+			s.BlockNumberMarginX = 14;
+			s.BlockNumberMarginY = 12;
+		}
 	}
 }
 
