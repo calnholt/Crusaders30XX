@@ -81,26 +81,80 @@
 - [ ] Test: HP changes on on-hit; logs on on-blocked
   - [ ] Use Debug Menu → Combat Debug → “Phase 8 Test: Resolve (no block) then Resolve (blocked)” and observe effects/logs
 
-## Phase 9 — Intent display (optional initial UI)
-- [ ] `IntentDisplaySystem`
-  - [ ] Draw attack name and “Blocked?” state using live evaluation
-- [ ] Test: telegraph visible; “Blocked?” flips after `CardPlayed(Red)`
+## Phase 9 — UI: Enemy intents and attack resolution display (incremental)
 
-## Phase 10 — Content and repository wiring
+### Phase 9A — Above-enemy intent pips (current turn)
+- [ ] `EnemyIntentPipsSystem` (UI)
+  - [ ] Render small circles above the enemy equal to count of `AttackIntent.Planned` for THIS turn
+  - [ ] Highlight the next-to-resolve pip (lowest `ResolveStep`)
+- [ ] Tests
+  - [ ] Plan intents (To Block Phase) → correct number of pips shown
+  - [ ] Replan (StartEnemyTurn again) → pip count updates
+
+### Phase 9B — Above-enemy intent pips (next turn preview)
+- [ ] Extend data model or add `NextTurnAttackIntent` (simple stub list for now)
+- [ ] Extend `EnemyIntentPipsSystem` to render a secondary row (smaller/faded) for NEXT turn planned count
+- [ ] Tests
+  - [ ] Manually seed next-turn intents via a debug action → second row appears with correct count
+
+### Phase 9C — Attack resolution banner (skeleton)
+- [ ] `EnemyAttackDisplaySystem` (center banner)
+  - [ ] Display attack name and base damage (sum of on-hit “Damage” entries) for the CURRENT resolving context
+  - [ ] Display list of blocking conditions (raw from `conditionsBlocked` tree; leaf-only listing for now)
+- [ ] Tests
+  - [ ] On resolve start (debug trigger), banner appears with name + base damage + condition list
+
+### Phase 9D — Live condition status updates
+- [ ] Bind condition evaluation to banner (green/red per leaf) using `ConditionService`
+- [ ] Update when `BlockCardPlayed` events arrive (via existing tracker)
+- [ ] Tests
+  - [ ] Simulate `BlockCardPlayed Red` → corresponding leaf turns satisfied on banner
+
+### Phase 9E — Damage prediction (full vs actual) with StoredBlock
+- [ ] `DamagePredictionService`
+  - [ ] Compute FullDamage: sum of on-hit Damage for current `AttackDefinition`
+  - [ ] Track assigned block for the attack context (new counters in `BlockProgress`, e.g., `assignedBlockTotal`)
+  - [ ] Compute ActualDamage = max(0, FullDamage - (StoredBlock.Amount + assignedBlockTotal))
+- [ ] Extend banner to show “Full” vs “After Blocks” values
+- [ ] Tests
+  - [ ] With StoredBlock only → verify reduction shown
+  - [ ] After assigning a blocking card (see Phase 10) → actual damage updates
+
+### Phase 9F — Banner updates during resolution
+- [ ] When an effect applies (e.g., Damage or ApplyStatus), ensure banner stays in sync until `AttackResolved`
+- [ ] Tests
+  - [ ] Resolve unblocked → banner shows full damage, then clears on `AttackResolved`
+  - [ ] Resolve blocked → banner shows reduced damage and condition met, then clears
+
+## Phase 10 — Using cards from hand as blocking (interaction)
+- [ ] Events
+  - [ ] `BlockAssignmentChanged { contextId, cardId, deltaBlock, color }`
+- [ ] Systems
+  - [ ] `HandBlockInteractionSystem`: allow selecting a hand card to assign/unassign to the CURRENT attack context during Block phase
+  - [ ] Update `BlockProgress.Counters[contextId]["assignedBlockTotal"] += deltaBlock`
+  - [ ] Publish `BlockCardPlayed` (for condition leaves) when appropriate
+- [ ] UI
+  - [ ] Simple affordance: click a hand card while in Block phase toggles assignment to current context
+  - [ ] Visual feedback on assigned cards (outline/flag)
+- [ ] Tests
+  - [ ] Assign/unassign a card → counters change; banner’s actual damage updates
+  - [ ] Condition leaves react to `BlockCardPlayed` emitted by assignment
+
+## Phase 11 — Content and repository wiring
 - [ ] Load repository at startup
   - [ ] Load path: `ECS/Data/Enemies/`
   - [ ] Provide repository to `EnemyIntentPlanningSystem`
 - [ ] Ensure `demon_bite.json` matches the design doc
 - [ ] Test: entering Block plans demon bite and can be resolved
 
-## Phase 11 — Debug UX
+## Phase 12 — Debug UX
 - [ ] New debug tab: “Enemy Combat (JSON)”
   - [ ] Buttons: “Load Attacks”, “Plan Next Turn”, “Resolve Next Intent”
   - [ ] Buttons: “Simulate CardPlayed(Red/White/Black)”
   - [ ] Button: “Print BlockProgress snapshot”
 - [ ] Test: each command works without crashes
 
-## Phase 12 — Extensions (post-vertical slice)
+## Phase 13 — Extensions (post-vertical slice)
 - [ ] More leaves: `MaintainBlockGE`, `EnergySpentGE`, `HandContainsColor`, `HasStatus`
 - [ ] More effects: `GainBlock`, `Draw`, `Heal`, `PublishEvent`
 - [ ] Enemy cooldowns/weights on `EnemyArsenal`
