@@ -45,6 +45,7 @@ public class Game1 : Game
     private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
     private EnemyDisplaySystem _enemyDisplaySystem;
     private EnemyIntentPipsSystem _enemyIntentPipsSystem;
+    private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
     private AttackDataDebugSystem _attackDataDebugSystem;
     private CombatDebugSystem _combatDebugSystem;
     private CombatEventsDebugSystem _combatEventsDebugSystem;
@@ -139,6 +140,7 @@ public class Game1 : Game
         _battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _attackDataDebugSystem = new AttackDataDebugSystem(_world.EntityManager);
         _combatDebugSystem = new CombatDebugSystem(_world.EntityManager);
         _combatEventsDebugSystem = new CombatEventsDebugSystem(_world.EntityManager);
@@ -175,13 +177,14 @@ public class Game1 : Game
         _world.AddSystem(_battlePhaseDisplaySystem);
         _world.AddSystem(_enemyDisplaySystem);
         _world.AddSystem(_enemyIntentPipsSystem);
-        _world.AddSystem(_attackDataDebugSystem);
-        _world.AddSystem(_combatDebugSystem);
-        _world.AddSystem(_combatEventsDebugSystem);
+        // _world.AddSystem(_attackDataDebugSystem);
+        // _world.AddSystem(_combatDebugSystem);
+        // _world.AddSystem(_combatEventsDebugSystem);
         _world.AddSystem(_enemyIntentPlanningSystem);
         _world.AddSystem(_blockConditionTrackingSystem);
         _world.AddSystem(_attackResolutionSystem);
         _world.AddSystem(_effectApplicationSystem);
+        _world.AddSystem(_enemyAttackDisplaySystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
@@ -253,6 +256,8 @@ public class Game1 : Game
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("EnemyDisplaySystem.Draw", () => _enemyDisplaySystem.Draw());
         // Draw enemy intent pips above enemy
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", () => _enemyIntentPipsSystem.Draw());
+        // Draw center attack banner when a current intent exists
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", () => _enemyAttackDisplaySystem.Draw());
 
         // Draw wisps around the portrait
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("PlayerWispParticleSystem.Draw", () => _playerWispParticleSystem.Draw());

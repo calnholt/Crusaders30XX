@@ -94,13 +94,13 @@
 ### Phase 9B — Above-enemy intent pips (next turn preview)
 - [x] Extend data model or add `NextTurnAttackIntent` (simple stub list for now)
 - [x] Extend `EnemyIntentPipsSystem` to render a secondary row (smaller/faded) for NEXT turn planned count
-- [ ] Tests
-  - [ ] Manually seed next-turn intents via a debug action → second row appears with correct count
+- [x] Tests
+  - [x] Manually seed next-turn intents via a debug action → second row appears with correct count
 
 ### Phase 9C — Attack resolution banner (skeleton)
-- [ ] `EnemyAttackDisplaySystem` (center banner)
-  - [ ] Display attack name and base damage (sum of on-hit “Damage” entries) for the CURRENT resolving context
-  - [ ] Display list of blocking conditions (raw from `conditionsBlocked` tree; leaf-only listing for now)
+- [x] `EnemyAttackDisplaySystem` (center banner)
+  - [x] Display attack name and base damage (sum of on-hit “Damage” entries) for the CURRENT resolving context
+  - [x] Display list of blocking conditions (raw from `conditionsBlocked` tree; leaf-only listing for now)
 - [ ] Tests
   - [ ] On resolve start (debug trigger), banner appears with name + base damage + condition list
 
