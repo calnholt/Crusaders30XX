@@ -1,0 +1,91 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Data.Attacks;
+
+namespace Crusaders30XX.ECS.Systems
+{
+	public static class ConditionService
+	{
+		public static bool Evaluate(ConditionNode node, string contextId, EntityManager entityManager, Entity attacker = null, Entity target = null)
+		{
+			if (node == null) return false;
+			return EvaluateNode(node, contextId, entityManager, attacker, target);
+		}
+
+		private static bool EvaluateNode(ConditionNode node, string contextId, EntityManager entityManager, Entity attacker, Entity target)
+		{
+			switch (node.kind)
+			{
+				case "All":
+					if (node.children == null || node.children.Length == 0) return true;
+					foreach (var c in node.children)
+					{
+						if (!EvaluateNode(c, contextId, entityManager, attacker, target)) return false;
+					}
+					return true;
+				case "Any":
+					if (node.children == null || node.children.Length == 0) return false;
+					foreach (var c in node.children)
+					{
+						if (EvaluateNode(c, contextId, entityManager, attacker, target)) return true;
+					}
+					return false;
+				case "Not":
+					if (node.children == null || node.children.Length != 1) return false;
+					return !EvaluateNode(node.children[0], contextId, entityManager, attacker, target);
+				case "Leaf":
+					return EvaluateLeaf(node, contextId, entityManager, attacker, target);
+				default:
+					return false;
+			}
+		}
+
+		private static bool EvaluateLeaf(ConditionNode node, string contextId, EntityManager entityManager, Entity attacker, Entity target)
+		{
+			string type = node.leafType ?? string.Empty;
+			switch (type)
+			{
+				case "PlayColorAtLeastN":
+					return Leaf_PlayColorAtLeastN(node.@params, contextId, entityManager);
+				default:
+					return false;
+			}
+		}
+
+		private static bool Leaf_PlayColorAtLeastN(Dictionary<string, string> parameters, string contextId, EntityManager entityManager)
+		{
+			if (parameters == null) return false;
+			if (!parameters.TryGetValue("color", out var colorStr)) return false;
+			if (!parameters.TryGetValue("n", out var nStr)) return false;
+			if (!int.TryParse(nStr, out var n)) return false;
+			string color = NormalizeColorKey(colorStr);
+			string key = $"played_{color}";
+			var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+			var progress = player?.GetComponent<BlockProgress>();
+			if (progress == null) return false;
+			if (!progress.Counters.TryGetValue(contextId, out var counters)) return false;
+			int value = counters.TryGetValue(key, out var v) ? v : 0;
+			return value >= n;
+		}
+
+		private static string NormalizeColorKey(string color)
+		{
+			string c = (color ?? string.Empty).Trim().ToLowerInvariant();
+			switch (c)
+			{
+				case "r":
+				case "red": return "Red";
+				case "w":
+				case "white": return "White";
+				case "b":
+				case "black": return "Black";
+				default: return char.ToUpperInvariant(color[0]) + color.Substring(1);
+			}
+		}
+	}
+}
+
+

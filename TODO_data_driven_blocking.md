@@ -54,10 +54,10 @@
   - [ ] Use Debug Menu → Combat Debug → “Phase 5 Test: Simulate CardPlayed Red and Print Counters” after a `StartEnemyTurn` has planned intents
 
 ## Phase 6 — Condition evaluation service
-- [ ] `ConditionService`
-  - [ ] Evaluate `ConditionNode` with context (attacker, target, `BlockProgress` by `ContextId`)
-  - [ ] Composites: `All`, `Any`, `Not`
-  - [ ] Leaf: `PlayColorAtLeastN` (params: `color`, `n`)
+- [x] `ConditionService`
+  - [x] Evaluate `ConditionNode` with context (attacker, target, `BlockProgress` by `ContextId`)
+  - [x] Composites: `All`, `Any`, `Not`
+  - [x] Leaf: `PlayColorAtLeastN` (params: `color`, `n`)
 - [ ] Tests
   - [ ] Simple unit-like checks on nodes with fake counters
   - [ ] Debug button prints evaluation for the current planned attack

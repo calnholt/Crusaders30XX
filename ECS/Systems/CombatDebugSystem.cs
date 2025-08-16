@@ -81,6 +81,48 @@ namespace Crusaders30XX.ECS.Systems
 				System.Console.WriteLine($"[CombatDebug] Ctx {ctx} played_Red={val}");
 			}
 		}
+
+		[DebugAction("Phase 6 Test: Evaluate current intent block condition")] 
+		public void Phase6Test_EvaluateCurrentIntent()
+		{
+			var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+			if (enemy == null)
+			{
+				System.Console.WriteLine("[CombatDebug] No enemy with AttackIntent found");
+				return;
+			}
+			var intent = enemy.GetComponent<AttackIntent>();
+			if (intent == null || intent.Planned.Count == 0)
+			{
+				System.Console.WriteLine("[CombatDebug] No planned attacks to evaluate");
+				return;
+			}
+			var pa = intent.Planned[0];
+			// Load def via repository
+			string root = FindProjectRootContaining("Crusaders30XX.csproj");
+			if (string.IsNullOrEmpty(root)) { System.Console.WriteLine("[CombatDebug] Could not locate project root"); return; }
+			var dir = System.IO.Path.Combine(root, "ECS", "Data", "Enemies");
+			var defs = Crusaders30XX.ECS.Data.Attacks.AttackRepository.LoadFromFolder(dir);
+			if (!defs.TryGetValue(pa.AttackId, out var def)) { System.Console.WriteLine("[CombatDebug] Attack def not found: " + pa.AttackId); return; }
+			bool blocked = Crusaders30XX.ECS.Systems.ConditionService.Evaluate(def.conditionsBlocked, pa.ContextId, EntityManager, enemy, null);
+			System.Console.WriteLine($"[CombatDebug] Evaluate '{def.name}' blocked={blocked}");
+		}
+
+		private static string FindProjectRootContaining(string filename)
+		{
+			try
+			{
+				var dir = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
+				for (int i = 0; i < 6 && dir != null; i++)
+				{
+					var candidate = System.IO.Path.Combine(dir.FullName, filename);
+					if (System.IO.File.Exists(candidate)) return dir.FullName;
+					dir = dir.Parent;
+				}
+			}
+			catch { }
+			return null;
+		}
 	}
 }
 
