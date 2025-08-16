@@ -27,13 +27,13 @@
   - [ ] Use Debug Menu → Combat Debug → "Phase 2 Test: Print Combat Components"; verify Player has BlockProgress, Enemy has EnemyArsenal (includes demon_bite) and AttackIntent list (may be empty initially)
 
 ## Phase 3 — Events
-- [ ] Add combat events (`ECS/Events/CombatEvents.cs`)
-  - [ ] `StartEnemyTurn`, `EndEnemyTurn`
-  - [ ] `IntentPlanned { AttackId, ContextId, Step, TelegraphText }`
-  - [ ] `CardPlayed { Entity Card, string Color }`
-  - [ ] `ResolveAttack { string ContextId }`
-  - [ ] `ApplyEffect { EffectType, Amount, Status, Stacks, Source, Target }`
-  - [ ] `AttackResolved { ContextId, WasBlocked }`
+- [x] Add combat events (`ECS/Events/CombatEvents.cs`)
+  - [x] `StartEnemyTurn`, `EndEnemyTurn`
+  - [x] `IntentPlanned { AttackId, ContextId, Step, TelegraphText }`
+  - [x] `CardPlayed { Entity Card, string Color }`
+  - [x] `ResolveAttack { string ContextId }`
+  - [x] `ApplyEffect { EffectType, Amount, Status, Stacks, Source, Target }`
+  - [x] `AttackResolved { ContextId, WasBlocked }`
 - [x] Test: temporary subscribers log when each event fires
   - [x] Use Debug Menu → Combat Events (Debug) → publish sample events and confirm console logs appear
 
