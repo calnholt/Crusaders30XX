@@ -142,6 +142,21 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<AttackIntent>();
 		}
 
+		[DebugAction("Replay Impact Animation")]
+		public void Debug_ReplayImpactAnimation()
+		{
+			// Trigger a fresh impact sequence even if one is currently playing
+			_impactActive = true;
+			_justImpacted = true;
+			_squashElapsedSeconds = 0f;
+			_flashElapsedSeconds = 0f;
+			_shockwaveElapsedSeconds = 0f;
+			_craterElapsedSeconds = 0f;
+			_shakeElapsedSeconds = 0f;
+			_debris.Clear();
+			SpawnDebris();
+		}
+
 		protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime)
 		{
 			var intent = entity.GetComponent<AttackIntent>();
