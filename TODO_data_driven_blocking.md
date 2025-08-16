@@ -75,10 +75,11 @@
 - [ ] Tests: without BlockCardPlayed → on-hit damage; after `BlockCardPlayed(Red)` → on-blocked effects
 
 ## Phase 8 — Effect application
-- [ ] `EffectApplicationSystem`
-  - [ ] `Damage` → publish `ModifyHpEvent { Delta = -amount }`
-  - [ ] `ApplyStatus` → log-only for now (wire status later)
+- [x] `EffectApplicationSystem`
+  - [x] `Damage` → publish `ModifyHpEvent { Delta = -amount }`
+  - [x] `ApplyStatus` → log-only for now (wire status later)
 - [ ] Test: HP changes on on-hit; logs on on-blocked
+  - [ ] Use Debug Menu → Combat Debug → “Phase 8 Test: Resolve (no block) then Resolve (blocked)” and observe effects/logs
 
 ## Phase 9 — Intent display (optional initial UI)
 - [ ] `IntentDisplaySystem`

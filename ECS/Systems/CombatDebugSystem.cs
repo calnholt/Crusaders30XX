@@ -122,6 +122,26 @@ namespace Crusaders30XX.ECS.Systems
 			Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.ResolveAttack { ContextId = pa.ContextId });
 		}
 
+		[DebugAction("Phase 8 Test: Resolve (no block) then Resolve (blocked)")]
+		public void Phase8Test_ResolveTwice()
+		{
+			var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+			var intent = enemy?.GetComponent<AttackIntent>();
+			var pa = intent?.Planned.FirstOrDefault();
+			if (pa == null) { System.Console.WriteLine("[CombatDebug] No planned attacks to resolve"); return; }
+			// First resolve: no BlockCardPlayed
+			Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.ResolveAttack { ContextId = pa.ContextId });
+			// Re-plan to get a fresh context
+			Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.StartEnemyTurn());
+			enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+			intent = enemy?.GetComponent<AttackIntent>();
+			pa = intent?.Planned.FirstOrDefault();
+			if (pa == null) { System.Console.WriteLine("[CombatDebug] No planned attacks after replan"); return; }
+			// Simulate block and resolve
+			Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.BlockCardPlayed { Color = "Red" });
+			Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.ResolveAttack { ContextId = pa.ContextId });
+		}
+
 		private static string FindProjectRootContaining(string filename)
 		{
 			try
