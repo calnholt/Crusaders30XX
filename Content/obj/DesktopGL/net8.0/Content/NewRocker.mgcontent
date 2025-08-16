@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <SourceFile>/Users/calvinholt/Documents/projects/Crusaders30XX/Content/NewRocker.spritefont</SourceFile>
-  <SourceTime>2025-08-12T17:11:36.7188679-04:00</SourceTime>
-  <DestFile>/Users/calvinholt/Documents/projects/Crusaders30XX/Content/bin/DesktopGL/Content/NewRocker.xnb</DestFile>
-  <DestTime>2025-08-16T15:27:54.6221652-04:00</DestTime>
+  <SourceFile>C:/Users/Calvin/Documents/Crusaders30XX/Content/NewRocker.spritefont</SourceFile>
+  <SourceTime>2025-08-03T11:27:52.5095652-04:00</SourceTime>
+  <DestFile>C:/Users/Calvin/Documents/Crusaders30XX/Content/bin/DesktopGL/Content/NewRocker.xnb</DestFile>
+  <DestTime>2025-08-16T18:03:33.0562186-04:00</DestTime>
   <Importer>FontDescriptionImporter</Importer>
   <ImporterTime>2025-06-02T06:31:02-04:00</ImporterTime>
   <Processor>FontDescriptionProcessor</Processor>
