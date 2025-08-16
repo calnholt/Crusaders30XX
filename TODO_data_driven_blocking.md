@@ -46,11 +46,12 @@
 - [ ] Test: using debug “To Block Phase” → see `IntentPlanned` log and enemy `AttackIntent` populated
 
 ## Phase 5 — Tracking block progress
-- [ ] `BlockConditionTrackingSystem`
-  - [ ] Subscribe to `CardPlayed`
-  - [ ] For each active `PlannedAttack`, increment counters in player `BlockProgress` under that `ContextId`
-  - [ ] Counter keys for initial leaves: `played_Red`, `played_White`, `played_Black`
+- [x] `BlockConditionTrackingSystem`
+  - [x] Subscribe to `CardPlayed`
+  - [x] For each active `PlannedAttack`, increment counters in player `BlockProgress` under that `ContextId`
+  - [x] Counter keys for initial leaves: `played_Red`, `played_White`, `played_Black`
 - [ ] Test: debug actions “Simulate CardPlayed(Red/White/Black)” increment counters; print snapshot
+  - [ ] Use Debug Menu → Combat Debug → “Phase 5 Test: Simulate CardPlayed Red and Print Counters” after a `StartEnemyTurn` has planned intents
 
 ## Phase 6 — Condition evaluation service
 - [ ] `ConditionService`

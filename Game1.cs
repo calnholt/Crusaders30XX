@@ -48,6 +48,7 @@ public class Game1 : Game
     private CombatDebugSystem _combatDebugSystem;
     private CombatEventsDebugSystem _combatEventsDebugSystem;
     private EnemyIntentPlanningSystem _enemyIntentPlanningSystem;
+    private BlockConditionTrackingSystem _blockConditionTrackingSystem;
 
     public Game1()
     {
@@ -138,6 +139,7 @@ public class Game1 : Game
         _combatDebugSystem = new CombatDebugSystem(_world.EntityManager);
         _combatEventsDebugSystem = new CombatEventsDebugSystem(_world.EntityManager);
         _enemyIntentPlanningSystem = new EnemyIntentPlanningSystem(_world.EntityManager);
+        _blockConditionTrackingSystem = new BlockConditionTrackingSystem(_world.EntityManager);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -170,6 +172,7 @@ public class Game1 : Game
         _world.AddSystem(_combatDebugSystem);
         _world.AddSystem(_combatEventsDebugSystem);
         _world.AddSystem(_enemyIntentPlanningSystem);
+        _world.AddSystem(_blockConditionTrackingSystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });

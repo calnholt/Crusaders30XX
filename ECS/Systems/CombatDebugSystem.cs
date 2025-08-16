@@ -63,6 +63,24 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 		}
+
+		[DebugAction("Phase 5 Test: Simulate BlockCardPlayed Red and Print Counters")]
+		public void Phase5Test_SimulateCardPlayedRed()
+		{
+			Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.BlockCardPlayed { Card = null, Color = "Red" });
+			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+			var prog = player?.GetComponent<BlockProgress>();
+			if (prog == null || prog.Counters.Count == 0)
+			{
+				System.Console.WriteLine("[CombatDebug] No BlockProgress counters yet");
+				return;
+			}
+			foreach (var (ctx, counters) in prog.Counters)
+			{
+				var val = counters.TryGetValue("played_Red", out var n) ? n : 0;
+				System.Console.WriteLine($"[CombatDebug] Ctx {ctx} played_Red={val}");
+			}
+		}
 	}
 }
 
