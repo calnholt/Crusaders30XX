@@ -92,8 +92,8 @@
   - [ ] Replan (StartEnemyTurn again) → pip count updates
 
 ### Phase 9B — Above-enemy intent pips (next turn preview)
-- [ ] Extend data model or add `NextTurnAttackIntent` (simple stub list for now)
-- [ ] Extend `EnemyIntentPipsSystem` to render a secondary row (smaller/faded) for NEXT turn planned count
+- [x] Extend data model or add `NextTurnAttackIntent` (simple stub list for now)
+- [x] Extend `EnemyIntentPipsSystem` to render a secondary row (smaller/faded) for NEXT turn planned count
 - [ ] Tests
   - [ ] Manually seed next-turn intents via a debug action → second row appears with correct count
 

@@ -55,26 +55,71 @@ namespace Crusaders30XX.ECS.Systems
 					intent = new AttackIntent();
 					EntityManager.AddComponent(enemy, intent);
 				}
-				// Simple: clear and plan first available attack for this turn
-				intent.Planned.Clear();
-				string chosenId = arsenal.AttackIds[0];
-				if (!_attackDefs.TryGetValue(chosenId, out var def)) continue;
-				string ctx = Guid.NewGuid().ToString("N");
-				intent.Planned.Add(new PlannedAttack
+				var next = enemy.GetComponent<NextTurnAttackIntent>();
+				if (next == null)
 				{
-					AttackId = chosenId,
-					ResolveStep = System.Math.Max(1, def.resolveStep),
-					ContextId = ctx,
-					WasBlocked = false
-				});
-				EventManager.Publish(new IntentPlanned
+					next = new NextTurnAttackIntent();
+					EntityManager.AddComponent(enemy, next);
+				}
+
+				if (intent.Planned.Count == 0 && next.Planned.Count == 0)
 				{
-					AttackId = chosenId,
-					ContextId = ctx,
-					Step = def.resolveStep,
-					TelegraphText = def.name
-				});
+					// First turn: generate both this turn and next turn
+					intent.Planned.Clear();
+					PlanOne(arsenal, intent);
+					next.Planned.Clear();
+					PlanOne(arsenal, next);
+				}
+				else
+				{
+					// Subsequent turns: promote next -> current, then generate new next
+					intent.Planned.Clear();
+					intent.Planned.AddRange(next.Planned.Select(pa => new PlannedAttack
+					{
+						AttackId = pa.AttackId,
+						ResolveStep = pa.ResolveStep,
+						ContextId = Guid.NewGuid().ToString("N"),
+						WasBlocked = false
+					}));
+					// publish intents for UI
+					foreach (var pa in intent.Planned)
+					{
+						if (_attackDefs.TryGetValue(pa.AttackId, out var def2))
+						{
+							EventManager.Publish(new IntentPlanned
+							{
+								AttackId = pa.AttackId,
+								ContextId = pa.ContextId,
+								Step = def2.resolveStep,
+								TelegraphText = def2.name
+							});
+						}
+					}
+					next.Planned.Clear();
+					PlanOne(arsenal, next);
+				}
 			}
+		}
+
+		private void PlanOne(EnemyArsenal arsenal, dynamic targetIntent)
+		{
+			string chosenId = arsenal.AttackIds[0];
+			if (!_attackDefs.TryGetValue(chosenId, out var def)) return;
+			string ctx = Guid.NewGuid().ToString("N");
+			targetIntent.Planned.Add(new PlannedAttack
+			{
+				AttackId = chosenId,
+				ResolveStep = System.Math.Max(1, def.resolveStep),
+				ContextId = ctx,
+				WasBlocked = false
+			});
+			EventManager.Publish(new IntentPlanned
+			{
+				AttackId = chosenId,
+				ContextId = ctx,
+				Step = def.resolveStep,
+				TelegraphText = def.name
+			});
 		}
 
 		private static string FindProjectRootContaining(string filename)

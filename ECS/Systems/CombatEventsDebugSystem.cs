@@ -33,6 +33,23 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new StartEnemyTurn());
 		}
 
+		[DebugAction("Seed NextTurn intents (2 items)")]
+		public void Debug_SeedNextTurnIntents()
+		{
+			var enemy = EntityManager.GetEntitiesWithComponent<Crusaders30XX.ECS.Components.Enemy>().FirstOrDefault();
+			if (enemy == null) { Console.WriteLine("[EventsDebug] No enemy found"); return; }
+			var next = enemy.GetComponent<Crusaders30XX.ECS.Components.NextTurnAttackIntent>();
+			if (next == null)
+			{
+				next = new Crusaders30XX.ECS.Components.NextTurnAttackIntent();
+				EntityManager.AddComponent(enemy, next);
+			}
+			next.Planned.Clear();
+			next.Planned.Add(new Crusaders30XX.ECS.Components.PlannedAttack { AttackId = "demon_bite", ResolveStep = 1, ContextId = "next_a" });
+			next.Planned.Add(new Crusaders30XX.ECS.Components.PlannedAttack { AttackId = "demon_bite", ResolveStep = 2, ContextId = "next_b" });
+			Console.WriteLine("[EventsDebug] Seeded next-turn intents = 2");
+		}
+
 		[DebugAction("Publish BlockCardPlayed (Red)")]
 		public void Debug_PublishCardPlayedRed()
 		{

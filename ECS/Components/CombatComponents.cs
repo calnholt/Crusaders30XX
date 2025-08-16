@@ -21,6 +21,15 @@ namespace Crusaders30XX.ECS.Components
 		public List<PlannedAttack> Planned { get; set; } = new();
 	}
 
+	/// <summary>
+	/// Optional preview list of planned attacks for the next turn.
+	/// </summary>
+	public class NextTurnAttackIntent : IComponent
+	{
+		public Entity Owner { get; set; }
+		public List<PlannedAttack> Planned { get; set; } = new();
+	}
+
 	public class PlannedAttack
 	{
 		public string AttackId;
