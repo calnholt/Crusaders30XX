@@ -717,6 +717,69 @@ namespace Crusaders30XX.ECS.Systems
                         p.WaitForExit(2000);
                     }
                 }
+                else if (OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst())
+                {
+                    var psi = new ProcessStartInfo("/usr/bin/pbcopy")
+                    {
+                        UseShellExecute = false,
+                        RedirectStandardInput = true,
+                        CreateNoWindow = true
+                    };
+                    using var p = Process.Start(psi);
+                    if (p != null)
+                    {
+                        p.StandardInput.Write(text);
+                        p.StandardInput.Close();
+                        p.WaitForExit(2000);
+                    }
+                }
+                else if (OperatingSystem.IsLinux())
+                {
+                    bool copied = false;
+                    try
+                    {
+                        var psi = new ProcessStartInfo("xclip", "-selection clipboard")
+                        {
+                            UseShellExecute = false,
+                            RedirectStandardInput = true,
+                            CreateNoWindow = true
+                        };
+                        using var p = Process.Start(psi);
+                        if (p != null)
+                        {
+                            p.StandardInput.Write(text);
+                            p.StandardInput.Close();
+                            p.WaitForExit(2000);
+                            copied = p.ExitCode == 0;
+                        }
+                    }
+                    catch { }
+                    if (!copied)
+                    {
+                        try
+                        {
+                            var psi2 = new ProcessStartInfo("xsel", "--clipboard --input")
+                            {
+                                UseShellExecute = false,
+                                RedirectStandardInput = true,
+                                CreateNoWindow = true
+                            };
+                            using var p2 = Process.Start(psi2);
+                            if (p2 != null)
+                            {
+                                p2.StandardInput.Write(text);
+                                p2.StandardInput.Close();
+                                p2.WaitForExit(2000);
+                                copied = p2.ExitCode == 0;
+                            }
+                        }
+                        catch { }
+                    }
+                    if (!copied)
+                    {
+                        Console.WriteLine("[Clipboard] xclip/xsel not available. Export below:\n" + text);
+                    }
+                }
                 else
                 {
                     Console.WriteLine("[Clipboard] Copy not supported on this OS. Export below:\n" + text);
