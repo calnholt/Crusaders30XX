@@ -5,9 +5,9 @@
 
 ## Phase 1 — Data model and loader
 - [x] Add models for JSON attacks (`ECS/Data/Attacks/AttackDefinition.cs`)
-  - [ ] `AttackDefinition`
-  - [ ] `ConditionNode`
-  - [ ] `EffectDefinition`
+  - [X] `AttackDefinition`
+  - [X] `ConditionNode`
+  - [X] `EffectDefinition`
 - [x] Add repository/loader (`ECS/Data/Attacks/AttackRepository.cs`)
   - [x] Load all `*.json` under `ECS/Data/Enemies/` into `Dictionary<string, AttackDefinition>`
   - [x] Basic error handling + console logs on load
@@ -23,7 +23,7 @@
 - [x] Initialize usage
   - [x] Ensure Player has `BlockProgress`
   - [x] Ensure an Enemy has `EnemyArsenal` with `["demon_bite"]`
-- [ ] Test: debug print confirms components exist at runtime
+- [X] Test: debug print confirms components exist at runtime
   - [x] Use Debug Menu → Combat Debug → "Phase 2 Test: Print Combat Components"; verify Player has BlockProgress, Enemy has EnemyArsenal (includes demon_bite) and AttackIntent list (may be empty initially)
 
 ## Phase 3 — Events
@@ -71,15 +71,15 @@
   - [x] Publish `AttackResolved`
 - [x] Debug helpers
   - [x] “Resolve Next Intent” button publishes `ResolveAttack` for the first pending intent
-  - [ ] Optional: auto-transition to Action to trigger resolution
-- [ ] Tests: without BlockCardPlayed → on-hit damage; after `BlockCardPlayed(Red)` → on-blocked effects
+  - [X] Optional: auto-transition to Action to trigger resolution
+- [X] Tests: without BlockCardPlayed → on-hit damage; after `BlockCardPlayed(Red)` → on-blocked effects
 
 ## Phase 8 — Effect application
 - [x] `EffectApplicationSystem`
   - [x] `Damage` → publish `ModifyHpEvent { Delta = -amount }`
   - [x] `ApplyStatus` → log-only for now (wire status later)
-- [ ] Test: HP changes on on-hit; logs on on-blocked
-  - [ ] Use Debug Menu → Combat Debug → “Phase 8 Test: Resolve (no block) then Resolve (blocked)” and observe effects/logs
+- [X] Test: HP changes on on-hit; logs on on-blocked
+  - [X] Use Debug Menu → Combat Debug → “Phase 8 Test: Resolve (no block) then Resolve (blocked)” and observe effects/logs
 
 ## Phase 9 — UI: Enemy intents and attack resolution display (incremental)
 
@@ -87,9 +87,9 @@
 - [x] `EnemyIntentPipsSystem` (UI)
   - [x] Render small circles above the enemy equal to count of `AttackIntent.Planned` for THIS turn
   - [x] Highlight the next-to-resolve pip (lowest `ResolveStep`)
-- [ ] Tests
-  - [ ] Plan intents (To Block Phase) → correct number of pips shown
-  - [ ] Replan (StartEnemyTurn again) → pip count updates
+- [X] Tests
+  - [X] Plan intents (To Block Phase) → correct number of pips shown
+  - [X] Replan (StartEnemyTurn again) → pip count updates
 
 ### Phase 9B — Above-enemy intent pips (next turn preview)
 - [x] Extend data model or add `NextTurnAttackIntent` (simple stub list for now)
