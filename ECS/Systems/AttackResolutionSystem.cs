@@ -1,0 +1,88 @@
+using System;
+using System.Linq;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Data.Attacks;
+
+namespace Crusaders30XX.ECS.Systems
+{
+	/// <summary>
+	/// Resolves planned attacks by evaluating conditions and publishing ApplyEffect events
+	/// for either on-hit or on-blocked outcomes. Emits AttackResolved at the end.
+	/// </summary>
+	public class AttackResolutionSystem : Core.System
+	{
+		public AttackResolutionSystem(EntityManager entityManager) : base(entityManager)
+		{
+			EventManager.Subscribe<ResolveAttack>(OnResolveAttack);
+		}
+
+		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+		{
+			return EntityManager.GetEntitiesWithComponent<AttackIntent>();
+		}
+
+		protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime) { }
+
+		private void OnResolveAttack(ResolveAttack e)
+		{
+			if (string.IsNullOrEmpty(e.ContextId)) return;
+			// Find the planned attack by context
+			var enemy = GetRelevantEntities().FirstOrDefault(en => en.GetComponent<AttackIntent>().Planned.Any(pa => pa.ContextId == e.ContextId));
+			if (enemy == null) return;
+			var intent = enemy.GetComponent<AttackIntent>();
+			var pa = intent.Planned.FirstOrDefault(x => x.ContextId == e.ContextId);
+			if (pa == null) return;
+
+			// Load definition
+			string root = FindProjectRootContaining("Crusaders30XX.csproj");
+			if (string.IsNullOrEmpty(root)) return;
+			var dir = System.IO.Path.Combine(root, "ECS", "Data", "Enemies");
+			var defs = AttackRepository.LoadFromFolder(dir);
+			if (!defs.TryGetValue(pa.AttackId, out var def)) return;
+
+			bool blocked = ConditionService.Evaluate(def.conditionsBlocked, pa.ContextId, EntityManager, enemy, null);
+			pa.WasBlocked = blocked;
+
+			var target = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+			var source = enemy;
+			var effects = blocked ? def.effectsOnBlocked : def.effectsOnHit;
+			if (effects != null)
+			{
+				foreach (var eff in effects)
+				{
+					EventManager.Publish(new ApplyEffect
+					{
+						EffectType = eff.type,
+						Amount = eff.amount,
+						Status = eff.status,
+						Stacks = eff.stacks,
+						Source = source,
+						Target = target
+					});
+				}
+			}
+
+			EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blocked });
+		}
+
+		private static string FindProjectRootContaining(string filename)
+		{
+			try
+			{
+				var dir = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
+				for (int i = 0; i < 6 && dir != null; i++)
+				{
+					var candidate = System.IO.Path.Combine(dir.FullName, filename);
+					if (System.IO.File.Exists(candidate)) return dir.FullName;
+					dir = dir.Parent;
+				}
+			}
+			catch { }
+			return null;
+		}
+	}
+}
+
+

@@ -108,6 +108,20 @@ namespace Crusaders30XX.ECS.Systems
 			System.Console.WriteLine($"[CombatDebug] Evaluate '{def.name}' blocked={blocked}");
 		}
 
+		[DebugAction("Phase 7 Test: Resolve Next Intent")]
+		public void Phase7Test_ResolveNextIntent()
+		{
+			var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+			var intent = enemy?.GetComponent<AttackIntent>();
+			var pa = intent?.Planned.FirstOrDefault();
+			if (pa == null)
+			{
+				System.Console.WriteLine("[CombatDebug] No planned attacks to resolve");
+				return;
+			}
+			Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.ResolveAttack { ContextId = pa.ContextId });
+		}
+
 		private static string FindProjectRootContaining(string filename)
 		{
 			try

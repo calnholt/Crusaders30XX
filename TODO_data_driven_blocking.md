@@ -24,13 +24,13 @@
   - [x] Ensure Player has `BlockProgress`
   - [x] Ensure an Enemy has `EnemyArsenal` with `["demon_bite"]`
 - [ ] Test: debug print confirms components exist at runtime
-  - [ ] Use Debug Menu → Combat Debug → "Phase 2 Test: Print Combat Components"; verify Player has BlockProgress, Enemy has EnemyArsenal (includes demon_bite) and AttackIntent list (may be empty initially)
+  - [x] Use Debug Menu → Combat Debug → "Phase 2 Test: Print Combat Components"; verify Player has BlockProgress, Enemy has EnemyArsenal (includes demon_bite) and AttackIntent list (may be empty initially)
 
 ## Phase 3 — Events
 - [x] Add combat events (`ECS/Events/CombatEvents.cs`)
   - [x] `StartEnemyTurn`, `EndEnemyTurn`
   - [x] `IntentPlanned { AttackId, ContextId, Step, TelegraphText }`
-  - [x] `CardPlayed { Entity Card, string Color }`
+  - [x] `BlockCardPlayed { Entity Card, string Color }`
   - [x] `ResolveAttack { string ContextId }`
   - [x] `ApplyEffect { EffectType, Amount, Status, Stacks, Source, Target }`
   - [x] `AttackResolved { ContextId, WasBlocked }`
@@ -43,36 +43,36 @@
   - [x] Create `PlannedAttack` with `ContextId = Guid`, `ResolveStep = 1`
   - [x] Store in enemy `AttackIntent`, publish `IntentPlanned`
 - [x] Battle phase integration: when `BattlePhaseSystem` enters Block → publish `StartEnemyTurn`
-- [ ] Test: using debug “To Block Phase” → see `IntentPlanned` log and enemy `AttackIntent` populated
+- [x] Test: using debug “To Block Phase” → see `IntentPlanned` log and enemy `AttackIntent` populated
 
 ## Phase 5 — Tracking block progress
 - [x] `BlockConditionTrackingSystem`
-  - [x] Subscribe to `CardPlayed`
+  - [x] Subscribe to `BlockCardPlayed`
   - [x] For each active `PlannedAttack`, increment counters in player `BlockProgress` under that `ContextId`
   - [x] Counter keys for initial leaves: `played_Red`, `played_White`, `played_Black`
-- [ ] Test: debug actions “Simulate CardPlayed(Red/White/Black)” increment counters; print snapshot
-  - [ ] Use Debug Menu → Combat Debug → “Phase 5 Test: Simulate CardPlayed Red and Print Counters” after a `StartEnemyTurn` has planned intents
+- [x] Test: debug actions “Simulate BlockCardPlayed (Red/White/Black)” increment counters; print snapshot
+  - [x] Use Debug Menu → Combat Debug → “Phase 5 Test: Simulate BlockCardPlayed Red and Print Counters” after a `StartEnemyTurn` has planned intents
 
 ## Phase 6 — Condition evaluation service
 - [x] `ConditionService`
   - [x] Evaluate `ConditionNode` with context (attacker, target, `BlockProgress` by `ContextId`)
   - [x] Composites: `All`, `Any`, `Not`
   - [x] Leaf: `PlayColorAtLeastN` (params: `color`, `n`)
-- [ ] Tests
-  - [ ] Simple unit-like checks on nodes with fake counters
-  - [ ] Debug button prints evaluation for the current planned attack
+- [x] Tests
+  - [x] Simple unit-like checks on nodes with fake counters
+  - [x] Debug button prints evaluation for the current planned attack
 
 ## Phase 7 — Attack resolution
-- [ ] `AttackResolutionSystem`
-  - [ ] On `ResolveAttack(ContextId)`, find `PlannedAttack`
-  - [ ] Evaluate `conditionsBlocked` via `ConditionService`
-  - [ ] If blocked → enqueue `ApplyEffect` for each `effectsOnBlocked`
-  - [ ] Else → enqueue `ApplyEffect` for each `effectsOnHit`
-  - [ ] Publish `AttackResolved`
-- [ ] Debug helpers
-  - [ ] “Resolve Next Intent” button publishes `ResolveAttack` for the first pending intent
+- [x] `AttackResolutionSystem`
+  - [x] On `ResolveAttack(ContextId)`, find `PlannedAttack`
+  - [x] Evaluate `conditionsBlocked` via `ConditionService`
+  - [x] If blocked → enqueue `ApplyEffect` for each `effectsOnBlocked`
+  - [x] Else → enqueue `ApplyEffect` for each `effectsOnHit`
+  - [x] Publish `AttackResolved`
+- [x] Debug helpers
+  - [x] “Resolve Next Intent” button publishes `ResolveAttack` for the first pending intent
   - [ ] Optional: auto-transition to Action to trigger resolution
-- [ ] Tests: without card played → on-hit damage; after `CardPlayed(Red)` → on-blocked effects
+- [ ] Tests: without BlockCardPlayed → on-hit damage; after `BlockCardPlayed(Red)` → on-blocked effects
 
 ## Phase 8 — Effect application
 - [ ] `EffectApplicationSystem`
