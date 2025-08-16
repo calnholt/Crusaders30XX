@@ -80,6 +80,10 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			state.Phase = next;
 			_phaseTimer = 0f;
+			if (next == BattlePhase.Block)
+			{
+				EventManager.Publish(new StartEnemyTurn());
+			}
 		}
 
 		private void OnChangePhase(ChangeBattlePhaseEvent evt)

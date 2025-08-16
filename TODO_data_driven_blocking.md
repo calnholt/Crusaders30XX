@@ -38,11 +38,11 @@
   - [x] Use Debug Menu → Combat Events (Debug) → publish sample events and confirm console logs appear
 
 ## Phase 4 — Intent planning
-- [ ] `EnemyIntentPlanningSystem`
-  - [ ] On `StartEnemyTurn`, pick 1 attack from `EnemyArsenal` (start with first id)
-  - [ ] Create `PlannedAttack` with `ContextId = Guid`, `ResolveStep = 1`
-  - [ ] Store in enemy `AttackIntent`, publish `IntentPlanned`
-- [ ] Battle phase integration: when `BattlePhaseSystem` enters Block → publish `StartEnemyTurn`
+- [x] `EnemyIntentPlanningSystem`
+  - [x] On `StartEnemyTurn`, pick 1 attack from `EnemyArsenal` (start with first id)
+  - [x] Create `PlannedAttack` with `ContextId = Guid`, `ResolveStep = 1`
+  - [x] Store in enemy `AttackIntent`, publish `IntentPlanned`
+- [x] Battle phase integration: when `BattlePhaseSystem` enters Block → publish `StartEnemyTurn`
 - [ ] Test: using debug “To Block Phase” → see `IntentPlanned` log and enemy `AttackIntent` populated
 
 ## Phase 5 — Tracking block progress
