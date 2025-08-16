@@ -44,6 +44,7 @@ public class Game1 : Game
     private BattlePhaseSystem _battlePhaseSystem;
     private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
     private EnemyDisplaySystem _enemyDisplaySystem;
+    private EnemyIntentPipsSystem _enemyIntentPipsSystem;
     private AttackDataDebugSystem _attackDataDebugSystem;
     private CombatDebugSystem _combatDebugSystem;
     private CombatEventsDebugSystem _combatEventsDebugSystem;
@@ -137,6 +138,7 @@ public class Game1 : Game
         _battlePhaseSystem = new BattlePhaseSystem(_world.EntityManager);
         _battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _attackDataDebugSystem = new AttackDataDebugSystem(_world.EntityManager);
         _combatDebugSystem = new CombatDebugSystem(_world.EntityManager);
         _combatEventsDebugSystem = new CombatEventsDebugSystem(_world.EntityManager);
@@ -172,6 +174,7 @@ public class Game1 : Game
         _world.AddSystem(_battlePhaseSystem);
         _world.AddSystem(_battlePhaseDisplaySystem);
         _world.AddSystem(_enemyDisplaySystem);
+        _world.AddSystem(_enemyIntentPipsSystem);
         _world.AddSystem(_attackDataDebugSystem);
         _world.AddSystem(_combatDebugSystem);
         _world.AddSystem(_combatEventsDebugSystem);
@@ -248,6 +251,8 @@ public class Game1 : Game
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("PlayerDisplaySystem.Draw", () => _playerDisplaySystem.Draw());
         // Draw enemy portrait(s)
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("EnemyDisplaySystem.Draw", () => _enemyDisplaySystem.Draw());
+        // Draw enemy intent pips above enemy
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", () => _enemyIntentPipsSystem.Draw());
 
         // Draw wisps around the portrait
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("PlayerWispParticleSystem.Draw", () => _playerWispParticleSystem.Draw());

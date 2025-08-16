@@ -84,9 +84,9 @@
 ## Phase 9 — UI: Enemy intents and attack resolution display (incremental)
 
 ### Phase 9A — Above-enemy intent pips (current turn)
-- [ ] `EnemyIntentPipsSystem` (UI)
-  - [ ] Render small circles above the enemy equal to count of `AttackIntent.Planned` for THIS turn
-  - [ ] Highlight the next-to-resolve pip (lowest `ResolveStep`)
+- [x] `EnemyIntentPipsSystem` (UI)
+  - [x] Render small circles above the enemy equal to count of `AttackIntent.Planned` for THIS turn
+  - [x] Highlight the next-to-resolve pip (lowest `ResolveStep`)
 - [ ] Tests
   - [ ] Plan intents (To Block Phase) → correct number of pips shown
   - [ ] Replan (StartEnemyTurn again) → pip count updates
