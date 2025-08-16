@@ -110,6 +110,8 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new Temperance { Amount = 0 });
             // Attach StoredBlock resource component by default
             world.AddComponent(entity, new StoredBlock { Amount = 0 });
+            // Attach BlockProgress tracker for data-driven blocking
+            world.AddComponent(entity, new BlockProgress());
             // Attach HP component
             world.AddComponent(entity, new HP { Max = 100, Current = 100 });
             
@@ -153,6 +155,9 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, transform);
             world.AddComponent(entity, sprite);
             world.AddComponent(entity, portraitInfo);
+            // Seed enemy with an arsenal + empty intent list for planning
+            world.AddComponent(entity, new EnemyArsenal { AttackIds = new List<string> { "demon_bite" } });
+            world.AddComponent(entity, new AttackIntent());
             
             return entity;
         }
@@ -231,6 +236,9 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(enemyEntity, enemyTransform);
             world.AddComponent(enemyEntity, new HP { Max = enemy.MaxHealth, Current = enemy.CurrentHealth });
             world.AddComponent(enemyEntity, new PortraitInfo { TextureWidth = 0, TextureHeight = 0, CurrentScale = 1f });
+            // Seed arsenal and intent for JSON-driven planning
+            world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = new List<string> { "demon_bite" } });
+            world.AddComponent(enemyEntity, new AttackIntent());
             
             return entity;
         }

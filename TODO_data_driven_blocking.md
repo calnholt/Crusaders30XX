@@ -16,14 +16,15 @@
 - [x] Test: temporary debug action logs number of loaded attacks and prints `demon_bite`
 
 ## Phase 2 — ECS components
-- [ ] Add combat components (`ECS/Components/CombatComponents.cs`)
-  - [ ] `EnemyArsenal { List<string> AttackIds }`
-  - [ ] `AttackIntent { List<PlannedAttack> Planned }` + `PlannedAttack { AttackId, ResolveStep, ContextId, WasBlocked }`
-  - [ ] `BlockProgress { Dictionary<string /*contextId*/, Dictionary<string,int> /*counters*/> }`
-- [ ] Initialize usage
-  - [ ] Ensure Player has `BlockProgress`
-  - [ ] Ensure an Enemy has `EnemyArsenal` with `["demon_bite"]`
+- [x] Add combat components (`ECS/Components/CombatComponents.cs`)
+  - [x] `EnemyArsenal { List<string> AttackIds }`
+  - [x] `AttackIntent { List<PlannedAttack> Planned }` + `PlannedAttack { AttackId, ResolveStep, ContextId, WasBlocked }`
+  - [x] `BlockProgress { Dictionary<string /*contextId*/, Dictionary<string,int> /*counters*/> }`
+- [x] Initialize usage
+  - [x] Ensure Player has `BlockProgress`
+  - [x] Ensure an Enemy has `EnemyArsenal` with `["demon_bite"]`
 - [ ] Test: debug print confirms components exist at runtime
+  - [ ] Use Debug Menu → Combat Debug → "Phase 2 Test: Print Combat Components"; verify Player has BlockProgress, Enemy has EnemyArsenal (includes demon_bite) and AttackIntent list (may be empty initially)
 
 ## Phase 3 — Events
 - [ ] Add combat events (`ECS/Events/CombatEvents.cs`)
@@ -33,7 +34,8 @@
   - [ ] `ResolveAttack { string ContextId }`
   - [ ] `ApplyEffect { EffectType, Amount, Status, Stacks, Source, Target }`
   - [ ] `AttackResolved { ContextId, WasBlocked }`
-- [ ] Test: temporary subscribers log when each event fires
+- [x] Test: temporary subscribers log when each event fires
+  - [x] Use Debug Menu → Combat Events (Debug) → publish sample events and confirm console logs appear
 
 ## Phase 4 — Intent planning
 - [ ] `EnemyIntentPlanningSystem`
