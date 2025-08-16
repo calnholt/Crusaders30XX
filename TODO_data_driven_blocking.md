@@ -4,16 +4,16 @@
 - [ ] Status legend: [ ] todo, [x] done, [~] in progress
 
 ## Phase 1 — Data model and loader
-- [ ] Add models for JSON attacks (`ECS/Data/Attacks/AttackDefinition.cs`)
+- [x] Add models for JSON attacks (`ECS/Data/Attacks/AttackDefinition.cs`)
   - [ ] `AttackDefinition`
   - [ ] `ConditionNode`
   - [ ] `EffectDefinition`
-- [ ] Add repository/loader (`ECS/Data/Attacks/AttackRepository.cs`)
-  - [ ] Load all `*.json` under `ECS/Data/Enemies/` into `Dictionary<string, AttackDefinition>`
-  - [ ] Basic error handling + console logs on load
-- [ ] Add sample attack JSON (`ECS/Data/Enemies/demon_bite.json`)
+- [x] Add repository/loader (`ECS/Data/Attacks/AttackRepository.cs`)
+  - [x] Load all `*.json` under `ECS/Data/Enemies/` into `Dictionary<string, AttackDefinition>`
+  - [x] Basic error handling + console logs on load
+- [x] Add sample attack JSON (`ECS/Data/Enemies/demon_bite.json`)
   - [ ] Block if played ≥1 Red card; else deal 14 damage; if blocked apply Weak(1)
-- [ ] Test: temporary debug action logs number of loaded attacks and prints `demon_bite`
+- [x] Test: temporary debug action logs number of loaded attacks and prints `demon_bite`
 
 ## Phase 2 — ECS components
 - [ ] Add combat components (`ECS/Components/CombatComponents.cs`)

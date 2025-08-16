@@ -44,6 +44,7 @@ public class Game1 : Game
     private BattlePhaseSystem _battlePhaseSystem;
     private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
     private EnemyDisplaySystem _enemyDisplaySystem;
+    private AttackDataDebugSystem _attackDataDebugSystem;
 
     public Game1()
     {
@@ -130,6 +131,7 @@ public class Game1 : Game
         _battlePhaseSystem = new BattlePhaseSystem(_world.EntityManager);
         _battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _attackDataDebugSystem = new AttackDataDebugSystem(_world.EntityManager);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -158,6 +160,7 @@ public class Game1 : Game
         _world.AddSystem(_battlePhaseSystem);
         _world.AddSystem(_battlePhaseDisplaySystem);
         _world.AddSystem(_enemyDisplaySystem);
+        _world.AddSystem(_attackDataDebugSystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
