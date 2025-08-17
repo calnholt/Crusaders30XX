@@ -106,15 +106,15 @@
 
 ### Phase 9D — Live condition status updates
 - [x] Bind condition evaluation to banner (green/red per leaf) using `ConditionService`
-- [ ] Update when `BlockCardPlayed` events arrive (via existing tracker)
-- [ ] Tests
-  - [ ] Simulate `BlockCardPlayed Red` → corresponding leaf turns satisfied on banner
+- [x] Update when `BlockCardPlayed` events arrive (via existing tracker)
+- [x] Tests
+  - [x] Simulate `BlockCardPlayed Red` → corresponding leaf turns satisfied on banner
 
 ### Phase 9E — Damage prediction (full vs actual) with StoredBlock
 - [ ] `DamagePredictionService`
-  - [ ] Compute FullDamage: sum of on-hit Damage for current `AttackDefinition`
-  - [ ] Track assigned block for the attack context (new counters in `BlockProgress`, e.g., `assignedBlockTotal`)
-  - [ ] Compute ActualDamage = max(0, FullDamage - (StoredBlock.Amount + assignedBlockTotal))
+- [ ] Compute FullDamage: sum of on-hit Damage for current `AttackDefinition`
+- [ ] Track assigned block for the attack context (new counters in `BlockProgress`, e.g., `assignedBlockTotal`)
+- [ ] Compute ActualDamage = max(0, FullDamage - (StoredBlock.Amount + assignedBlockTotal))
 - [ ] Extend banner to show “Full” vs “After Blocks” values
 - [ ] Tests
   - [ ] With StoredBlock only → verify reduction shown

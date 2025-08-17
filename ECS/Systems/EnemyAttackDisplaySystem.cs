@@ -225,10 +225,22 @@ namespace Crusaders30XX.ECS.Systems
 			// Summarize effects that also happen when NOT blocked (in addition to on-hit)
 			string notBlockedSummary = SummarizeEffects(def.effectsOnNotBlocked);
 
-			// Compose lines: Name, Damage, Leaf conditions (with live status)
+			// Compose lines: Name, Damage, prediction, and Leaf conditions (with live status)
 			var lines = new System.Collections.Generic.List<(string text, float scale, Color color)>();
 			lines.Add((def.name, TitleScale, Color.White));
-			lines.Add(($"Damage: {baseDamage}", TextScale, Color.White));
+			// Prediction (Full vs After Blocks) with safety guards
+			int fullDmg = 0;
+			int actualDmg = 0;
+			try
+			{
+				fullDmg = DamagePredictionService.ComputeFullDamage(def);
+				actualDmg = DamagePredictionService.ComputeActualDamage(def, EntityManager, pa.ContextId);
+			}
+			catch (System.Exception ex)
+			{
+				System.Console.WriteLine($"[EnemyAttackDisplay] Prediction error: {ex.Message}");
+			}
+			lines.Add(($"Damage: {baseDamage}  |  Predicted: {fullDmg} -> {actualDmg}", TextScale, Color.White));
 			if (!string.IsNullOrEmpty(notBlockedSummary))
 			{
 				lines.Add(($"On not blocked: {notBlockedSummary}", TextScale, Color.OrangeRed));
