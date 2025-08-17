@@ -101,11 +101,11 @@
 - [x] `EnemyAttackDisplaySystem` (center banner)
   - [x] Display attack name and base damage (sum of on-hit “Damage” entries) for the CURRENT resolving context
   - [x] Display list of blocking conditions (raw from `conditionsBlocked` tree; leaf-only listing for now)
-- [ ] Tests
-  - [ ] On resolve start (debug trigger), banner appears with name + base damage + condition list
+- [x] Tests
+  - [x] On resolve start (debug trigger), banner appears with name + base damage + condition list
 
 ### Phase 9D — Live condition status updates
-- [ ] Bind condition evaluation to banner (green/red per leaf) using `ConditionService`
+- [x] Bind condition evaluation to banner (green/red per leaf) using `ConditionService`
 - [ ] Update when `BlockCardPlayed` events arrive (via existing tracker)
 - [ ] Tests
   - [ ] Simulate `BlockCardPlayed Red` → corresponding leaf turns satisfied on banner

@@ -222,11 +222,11 @@ namespace Crusaders30XX.ECS.Systems
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
 
-			// Compose lines: Name, Damage, Leaf conditions
+			// Compose lines: Name, Damage, Leaf conditions (with live status)
 			var lines = new System.Collections.Generic.List<(string text, float scale, Color color)>();
 			lines.Add((def.name, TitleScale, Color.White));
 			lines.Add(($"Damage: {baseDamage}", TextScale, Color.White));
-			AppendLeafConditions(def.conditionsBlocked, lines);
+			AppendLeafConditionsWithStatus(def.conditionsBlocked, pa.ContextId, enemy, lines);
 
 			// Measure and draw a simple panel in the center
 			int pad = System.Math.Max(0, PanelPadding);
@@ -342,22 +342,24 @@ namespace Crusaders30XX.ECS.Systems
 			return def;
 		}
 
-		private void AppendLeafConditions(ConditionNode node, System.Collections.Generic.List<(string text, float scale, Color color)> lines)
+		private void AppendLeafConditionsWithStatus(ConditionNode node, string contextId, Entity attacker, System.Collections.Generic.List<(string text, float scale, Color color)> lines)
 		{
 			if (node == null) return;
 			if (node.kind == "Leaf")
 			{
 				if (!string.IsNullOrEmpty(node.leafType))
 				{
+					bool satisfied = ConditionService.Evaluate(node, contextId, EntityManager, attacker, null);
+					Color statusColor = satisfied ? Color.LimeGreen : Color.IndianRed;
 					if (node.leafType == "PlayColorAtLeastN")
 					{
 						var color = node.@params != null && node.@params.TryGetValue("color", out var c) ? c : "?";
 						var n = node.@params != null && node.@params.TryGetValue("n", out var nStr) ? nStr : "?";
-						lines.Add(($"Condition: Play {n} {color}", TextScale, Color.LightGray));
+						lines.Add(($"Condition: Play {n} {color}", TextScale, statusColor));
 					}
 					else
 					{
-						lines.Add(($"Condition: {node.leafType}", TextScale, Color.LightGray));
+						lines.Add(($"Condition: {node.leafType}", TextScale, statusColor));
 					}
 				}
 				return;
@@ -366,7 +368,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				foreach (var c in node.children)
 				{
-					AppendLeafConditions(c, lines);
+					AppendLeafConditionsWithStatus(c, contextId, attacker, lines);
 				}
 			}
 		}

@@ -177,9 +177,9 @@ public class Game1 : Game
         _world.AddSystem(_battlePhaseDisplaySystem);
         _world.AddSystem(_enemyDisplaySystem);
         _world.AddSystem(_enemyIntentPipsSystem);
-        // _world.AddSystem(_attackDataDebugSystem);
-        // _world.AddSystem(_combatDebugSystem);
-        // _world.AddSystem(_combatEventsDebugSystem);
+        _world.AddSystem(_attackDataDebugSystem);
+        _world.AddSystem(_combatDebugSystem);
+        _world.AddSystem(_combatEventsDebugSystem);
         _world.AddSystem(_enemyIntentPlanningSystem);
         _world.AddSystem(_blockConditionTrackingSystem);
         _world.AddSystem(_attackResolutionSystem);
