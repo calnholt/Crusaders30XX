@@ -222,10 +222,17 @@ namespace Crusaders30XX.ECS.Systems
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
 
+			// Summarize effects that also happen when NOT blocked (in addition to on-hit)
+			string notBlockedSummary = SummarizeEffects(def.effectsOnNotBlocked);
+
 			// Compose lines: Name, Damage, Leaf conditions (with live status)
 			var lines = new System.Collections.Generic.List<(string text, float scale, Color color)>();
 			lines.Add((def.name, TitleScale, Color.White));
 			lines.Add(($"Damage: {baseDamage}", TextScale, Color.White));
+			if (!string.IsNullOrEmpty(notBlockedSummary))
+			{
+				lines.Add(($"On not blocked: {notBlockedSummary}", TextScale, Color.OrangeRed));
+			}
 			AppendLeafConditionsWithStatus(def.conditionsBlocked, pa.ContextId, enemy, lines);
 
 			// Measure and draw a simple panel in the center
@@ -371,6 +378,30 @@ namespace Crusaders30XX.ECS.Systems
 					AppendLeafConditionsWithStatus(c, contextId, attacker, lines);
 				}
 			}
+		}
+
+		private static string SummarizeEffects(EffectDefinition[] effects)
+		{
+			if (effects == null || effects.Length == 0) return string.Empty;
+			var parts = new System.Collections.Generic.List<string>();
+			foreach (var e in effects)
+			{
+				switch (e.type)
+				{
+					case "Damage":
+						parts.Add($"Damage {e.amount}");
+						break;
+					case "ApplyStatus":
+						var st = string.IsNullOrEmpty(e.status) ? "Status" : e.status;
+						var stacks = e.stacks > 0 ? e.stacks.ToString() : "1";
+						parts.Add($"{st}({stacks})");
+						break;
+					default:
+						parts.Add(e.type);
+						break;
+				}
+			}
+			return string.Join(", ", parts);
 		}
 
 		private void DrawRect(Rectangle rect, Color color, int thickness)
