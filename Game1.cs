@@ -46,6 +46,7 @@ public class Game1 : Game
     private EnemyDisplaySystem _enemyDisplaySystem;
     private EnemyIntentPipsSystem _enemyIntentPipsSystem;
     private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
+    private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
     private AttackDataDebugSystem _attackDataDebugSystem;
     private CombatDebugSystem _combatDebugSystem;
     private CombatEventsDebugSystem _combatEventsDebugSystem;
@@ -53,6 +54,7 @@ public class Game1 : Game
     private BlockConditionTrackingSystem _blockConditionTrackingSystem;
     private AttackResolutionSystem _attackResolutionSystem;
     private EffectApplicationSystem _effectApplicationSystem;
+    private HandBlockInteractionSystem _handBlockInteractionSystem;
     private StoredBlockManagementSystem _storedBlockManagementSystem;
 
     public Game1()
@@ -142,6 +144,7 @@ public class Game1 : Game
         _enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _attackDataDebugSystem = new AttackDataDebugSystem(_world.EntityManager);
         _combatDebugSystem = new CombatDebugSystem(_world.EntityManager);
         _combatEventsDebugSystem = new CombatEventsDebugSystem(_world.EntityManager);
@@ -149,6 +152,7 @@ public class Game1 : Game
         _blockConditionTrackingSystem = new BlockConditionTrackingSystem(_world.EntityManager);
         _attackResolutionSystem = new AttackResolutionSystem(_world.EntityManager);
         _effectApplicationSystem = new EffectApplicationSystem(_world.EntityManager);
+        _handBlockInteractionSystem = new HandBlockInteractionSystem(_world.EntityManager);
         _storedBlockManagementSystem = new StoredBlockManagementSystem(_world.EntityManager);
 
         
@@ -187,6 +191,8 @@ public class Game1 : Game
         _world.AddSystem(_attackResolutionSystem);
         _world.AddSystem(_effectApplicationSystem);
         _world.AddSystem(_enemyAttackDisplaySystem);
+        _world.AddSystem(_assignedBlockCardsDisplaySystem);
+        _world.AddSystem(_handBlockInteractionSystem);
         _world.AddSystem(_storedBlockManagementSystem);
 
         // Set initial location via event which seeds the Battlefield component
@@ -261,6 +267,7 @@ public class Game1 : Game
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", () => _enemyIntentPipsSystem.Draw());
         // Draw center attack banner when a current intent exists
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", () => _enemyAttackDisplaySystem.Draw());
+        Crusaders30XX.Diagnostics.FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", () => _assignedBlockCardsDisplaySystem.Draw());
 
         // Draw wisps around the portrait
         Crusaders30XX.Diagnostics.FrameProfiler.Measure("PlayerWispParticleSystem.Draw", () => _playerWispParticleSystem.Draw());

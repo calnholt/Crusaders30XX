@@ -120,12 +120,6 @@
   - [ ] With StoredBlock only → verify reduction shown
   - [ ] After assigning a blocking card (see Phase 10) → actual damage updates
 
-### Phase 9F — Banner updates during resolution
-- [ ] When an effect applies (e.g., Damage or ApplyStatus), ensure banner stays in sync until `AttackResolved`
-- [ ] Tests
-  - [ ] Resolve unblocked → banner shows full damage, then clears on `AttackResolved`
-  - [ ] Resolve blocked → banner shows reduced damage and condition met, then clears
-
 ## Phase 10 — Using cards from hand as blocking (interaction)
 - [ ] Events
   - [ ] `BlockAssignmentChanged { contextId, cardId, deltaBlock, color }`

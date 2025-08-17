@@ -384,6 +384,8 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
+        
+
 		private static string SummarizeEffects(EffectDefinition[] effects)
 		{
 			if (effects == null || effects.Length == 0) return string.Empty;
