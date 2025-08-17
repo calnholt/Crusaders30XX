@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Events;
 using System;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX;
 
@@ -199,17 +200,13 @@ public class Game1 : Game
     private void CreateInitialGameState()
     {
         // Create game state
-        var gameStateEntity = EntityFactory.CreateGameState(_world);
-        
+        EntityFactory.CreateGameState(_world);
         // Create player
-        var playerEntity = EntityFactory.CreatePlayer(_world);
-        
+        EntityFactory.CreatePlayer(_world);
         // Create deck
         var deckEntity = EntityFactory.CreateDeck(_world);
-        
         // Create demo hand of cards
         var demoHand = EntityFactory.CreateDemoHand(_world);
-        
         // Add cards to deck's draw pile (not hand)
         var deck = deckEntity.GetComponent<Crusaders30XX.ECS.Components.Deck>();
         if (deck != null)
@@ -239,64 +236,28 @@ public class Game1 : Game
 
         _spriteBatch.Begin();
 
-        // Begin profiling frame
-        Crusaders30XX.Diagnostics.FrameProfiler.BeginFrame();
-        
-        // Draw background first
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("BattleBackgroundSystem.Draw", () => _battleBackgroundSystem.Draw());
-
-        // Cathedral lighting beams (under foreground elements)
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("CathedralLightingSystem.Draw", () => _cathedralLightingSystem.Draw());
-        // Desert haze clouds (under foreground elements)
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", () => _desertBackgroundEffectSystem.Draw());
-
-        // Draw ECS World
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("RenderingSystem.Draw", () => _renderingSystem.Draw());
-
-        // Draw player portrait (middle-left)
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("PlayerDisplaySystem.Draw", () => _playerDisplaySystem.Draw());
-        // Draw enemy portrait(s)
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("EnemyDisplaySystem.Draw", () => _enemyDisplaySystem.Draw());
-        // Draw enemy intent pips above enemy
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", () => _enemyIntentPipsSystem.Draw());
-        // Draw center attack banner when a current intent exists
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", () => _enemyAttackDisplaySystem.Draw());
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", () => _assignedBlockCardsDisplaySystem.Draw());
-
-        // Draw wisps around the portrait
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("PlayerWispParticleSystem.Draw", () => _playerWispParticleSystem.Draw());
-
-        // Draw corner phase label and potential transition banner
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", () => _battlePhaseDisplaySystem.Draw());
-
-        // Draw courage badge below the portrait
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("CourageDisplaySystem.Draw", () => _courageDisplaySystem.Draw());
-        // Draw temperance badge next to courage
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("TemperanceDisplaySystem.Draw", () => _temperanceDisplaySystem.Draw());
-        // Draw stored block badge next to temperance
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("StoredBlockDisplaySystem.Draw", () => _storedBlockDisplaySystem.Draw());
-
-        // Draw HP bar under player
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("HPDisplaySystem.Draw", () => _hpDisplaySystem.Draw());
-
-        // Draw hand of cards on top of highlights
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("HandDisplaySystem.DrawHand", () => _handDisplaySystem.DrawHand());
-
-        // Draw debug menu if open
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("DebugMenuSystem.Draw", () => _debugMenuSystem.Draw());
-
-        // Draw draw pile count (bottom-right)
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("DrawPileDisplaySystem.Draw", () => _drawPileDisplaySystem.Draw());
-
-        // Draw discard pile count (bottom-left)
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", () => _discardPileDisplaySystem.Draw());
-
-        // Draw card list modal if open
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("CardListModalSystem.Draw", () => _cardListModalSystem.Draw());
-        
-        // Draw profiler overlay last
-        Crusaders30XX.Diagnostics.FrameProfiler.Measure("ProfilerSystem.Draw", () => _profilerSystem.Draw());
-
+        FrameProfiler.BeginFrame();
+        FrameProfiler.Measure("BattleBackgroundSystem.Draw", () => _battleBackgroundSystem.Draw());
+        FrameProfiler.Measure("CathedralLightingSystem.Draw", () => _cathedralLightingSystem.Draw());
+        FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", () => _desertBackgroundEffectSystem.Draw());
+        FrameProfiler.Measure("RenderingSystem.Draw", () => _renderingSystem.Draw());
+        FrameProfiler.Measure("PlayerDisplaySystem.Draw", () => _playerDisplaySystem.Draw());
+        FrameProfiler.Measure("EnemyDisplaySystem.Draw", () => _enemyDisplaySystem.Draw());
+        FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", () => _enemyIntentPipsSystem.Draw());
+        FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", () => _enemyAttackDisplaySystem.Draw());
+        FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", () => _assignedBlockCardsDisplaySystem.Draw());
+        FrameProfiler.Measure("PlayerWispParticleSystem.Draw", () => _playerWispParticleSystem.Draw());
+        FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", () => _battlePhaseDisplaySystem.Draw());
+        FrameProfiler.Measure("CourageDisplaySystem.Draw", () => _courageDisplaySystem.Draw());
+        FrameProfiler.Measure("TemperanceDisplaySystem.Draw", () => _temperanceDisplaySystem.Draw());
+        FrameProfiler.Measure("StoredBlockDisplaySystem.Draw", () => _storedBlockDisplaySystem.Draw());
+        FrameProfiler.Measure("HPDisplaySystem.Draw", () => _hpDisplaySystem.Draw());
+        FrameProfiler.Measure("HandDisplaySystem.DrawHand", () => _handDisplaySystem.DrawHand());
+        FrameProfiler.Measure("DebugMenuSystem.Draw", () => _debugMenuSystem.Draw());
+        FrameProfiler.Measure("DrawPileDisplaySystem.Draw", () => _drawPileDisplaySystem.Draw());
+        FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", () => _discardPileDisplaySystem.Draw());
+        FrameProfiler.Measure("CardListModalSystem.Draw", () => _cardListModalSystem.Draw());
+        FrameProfiler.Measure("ProfilerSystem.Draw", () => _profilerSystem.Draw());
         _spriteBatch.End();
 
         base.Draw(gameTime);
