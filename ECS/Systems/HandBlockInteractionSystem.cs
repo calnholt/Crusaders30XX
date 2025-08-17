@@ -86,7 +86,8 @@ namespace Crusaders30XX.ECS.Systems
 							StartScale = t.Scale.X,
 							TargetScale = 0.35f,
 							Phase = AssignedBlockCard.PhaseState.Pullback,
-							Elapsed = 0f
+							Elapsed = 0f,
+							AssignedAtTicks = System.DateTime.UtcNow.Ticks
 						};
 						EntityManager.AddComponent(card, abc);
 					}
@@ -101,6 +102,7 @@ namespace Crusaders30XX.ECS.Systems
 						}
 						else
 						{
+							// Add back to rightmost slot
 							deckComp.Hand.Add(card);
 						}
 					}

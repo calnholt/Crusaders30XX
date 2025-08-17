@@ -65,6 +65,7 @@ namespace Crusaders30XX.ECS.Components
 		public Entity Owner { get; set; }
 		public string ContextId { get; set; }
 		public int BlockAmount { get; set; }
+		public long AssignedAtTicks { get; set; }
 		public enum PhaseState { Pullback, Launch, Impact, Idle, Returning }
 		public PhaseState Phase { get; set; } = PhaseState.Pullback;
 		public Microsoft.Xna.Framework.Vector2 StartPos { get; set; }

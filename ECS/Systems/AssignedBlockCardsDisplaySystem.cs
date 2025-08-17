@@ -56,6 +56,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		public override void Update(GameTime gameTime)
 		{
+			// Edge-detect click once per frame for all cards
+			var mouseNow = Microsoft.Xna.Framework.Input.Mouse.GetState();
+			_clickEdgeThisFrame = mouseNow.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed && _prevMouse.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+			_mouseNow = mouseNow;
+
 			base.Update(gameTime);
 			// Process any returns after the main iteration to avoid collection-modified errors
 			if (_pendingReturn.Count > 0)
@@ -72,6 +77,43 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				_pendingReturn.Clear();
 			}
+			// Handle click against all assigned cards (topmost first)
+			if (_clickEdgeThisFrame)
+			{
+				var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+				var pa = enemy?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();
+				if (pa != null)
+				{
+					var list = GetRelevantEntities()
+						.Where(e => e.GetComponent<AssignedBlockCard>()?.ContextId == pa.ContextId)
+						.OrderByDescending(e => e.GetComponent<AssignedBlockCard>().AssignedAtTicks)
+						.ToList();
+					for (int i = 0; i < list.Count; i++)
+					{
+						var card = list[i];
+						var abc = card.GetComponent<AssignedBlockCard>();
+						if (abc == null) continue;
+						int cw = (int)(CardDrawWidth * abc.CurrentScale);
+						int ch = (int)(CardDrawHeight * abc.CurrentScale);
+						var hit = new Rectangle((int)(abc.CurrentPos.X - cw / 2f), (int)(abc.CurrentPos.Y - ch / 2f), cw, ch);
+						if (hit.Contains(_mouseNow.Position))
+						{
+							abc.Phase = AssignedBlockCard.PhaseState.Returning;
+							abc.Elapsed = 0f;
+							Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.BlockAssignmentChanged
+							{
+								ContextId = pa.ContextId,
+								Card = card,
+								DeltaBlock = -abc.BlockAmount,
+								Color = null
+							});
+							break;
+						}
+					}
+				}
+			}
+
+			_prevMouse = mouseNow;
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
@@ -110,7 +152,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				var list = GetRelevantEntities()
 					.Where(e => e.GetComponent<AssignedBlockCard>()?.ContextId == pa.ContextId)
-					.OrderBy(e => e.Id)
+					.OrderBy(e => e.GetComponent<AssignedBlockCard>().AssignedAtTicks) // oldest to newest left->right
 					.ToList();
 				indexInContext = list.FindIndex(e => e == entity);
 				countInContext = list.Count;
@@ -196,7 +238,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (pa == null) return;
 			var list = GetRelevantEntities().Where(e => e.GetComponent<AssignedBlockCard>()?.ContextId == pa.ContextId).ToList();
 			if (list.Count == 0) return;
-			for (int i = 0; i < list.Count; i++)
+			// Draw newest on top: reverse order for render
+			for (int i = list.Count - 1; i >= 0; i--)
 			{
 				var card = list[i];
 				var abc = card.GetComponent<AssignedBlockCard>();
@@ -214,6 +257,8 @@ namespace Crusaders30XX.ECS.Systems
 		}
 
 		private Microsoft.Xna.Framework.Input.MouseState _prevMouse;
+		private Microsoft.Xna.Framework.Input.MouseState _mouseNow;
+		private bool _clickEdgeThisFrame;
 	}
 }
 
