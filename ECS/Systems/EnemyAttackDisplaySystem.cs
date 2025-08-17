@@ -252,6 +252,7 @@ namespace Crusaders30XX.ECS.Systems
 			Vector2 shake = Vector2.Zero;
 			float squashX = 1f;
 			float squashY = 1f;
+			float contentScale = 1f;
 			if (_impactActive)
 			{
 				float t = System.Math.Clamp(_squashElapsedSeconds / System.Math.Max(0.0001f, SquashDurationSeconds), 0f, 1f);
@@ -259,7 +260,8 @@ namespace Crusaders30XX.ECS.Systems
 				float back = 1f + (OvershootIntensity) * (float)System.Math.Pow(1f - t, 3);
 				squashX = MathHelper.Lerp(SquashXFactor, 1f, t) * back;
 				squashY = MathHelper.Lerp(SquashYFactor, 1f, t) / back;
-				panelScale *= 1f; // keep content scale stable; squash applies to panel dimensions below
+				// Scale content with the squash so text remains inside the panel
+				contentScale = System.Math.Min(squashX, squashY);
 				if (_shakeElapsedSeconds < ShakeDurationSeconds && ShakeAmplitudePx > 0)
 				{
 					float shakeT = 1f - System.Math.Clamp(_shakeElapsedSeconds / System.Math.Max(0.0001f, ShakeDurationSeconds), 0f, 1f);
@@ -324,13 +326,13 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Content
-			float y = rect.Y + pad * panelScale;
+			float y = rect.Y + pad * panelScale * contentScale;
 			foreach (var (text, baseScale, color) in lines)
 			{
-				float s = baseScale * panelScale;
-				_spriteBatch.DrawString(_font, text, new Vector2(rect.X + pad * panelScale, y), color, 0f, Vector2.Zero, s, SpriteEffects.None, 0f);
+				float s = baseScale * panelScale * contentScale;
+				_spriteBatch.DrawString(_font, text, new Vector2(rect.X + pad * panelScale * contentScale, y), color, 0f, Vector2.Zero, s, SpriteEffects.None, 0f);
 				var sz = _font.MeasureString(text);
-				y += sz.Y * s + LineSpacingExtra * panelScale;
+				y += sz.Y * s + LineSpacingExtra * panelScale * contentScale;
 			}
 		}
 
