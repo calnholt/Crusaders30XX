@@ -32,14 +32,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void EnsureAttackDefsLoaded()
 		{
 			if (_attackDefs != null) return;
-			string root = FindProjectRootContaining("Crusaders30XX.csproj");
-			if (string.IsNullOrEmpty(root))
-			{
-				_attackDefs = new();
-				return;
-			}
-			string dir = System.IO.Path.Combine(root, "ECS", "Data", "Enemies");
-			_attackDefs = AttackRepository.LoadFromFolder(dir);
+			_attackDefs = Crusaders30XX.ECS.Data.Attacks.AttackDefinitionCache.GetAll();
 		}
 
 		private void OnStartEnemyTurn()

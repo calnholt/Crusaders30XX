@@ -15,13 +15,13 @@ namespace Crusaders30XX.ECS.Systems
 		private Texture2D _pixel;
 
 		[DebugEditable(DisplayName = "Pip Radius", Step = 1, Min = 2, Max = 64)]
-		public int PipRadius { get; set; } = 8;
+		public int PipRadius { get; set; } = 9;
 		[DebugEditable(DisplayName = "Pip Gap", Step = 1, Min = 0, Max = 64)]
 		public int PipGap { get; set; } = 10;
 		[DebugEditable(DisplayName = "Offset Y", Step = 2, Min = -400, Max = 400)]
-		public int OffsetY { get; set; } = -160;
+		public int OffsetY { get; set; } = -210;
 		[DebugEditable(DisplayName = "Row Gap", Step = 1, Min = 0, Max = 64)]
-		public int RowGap { get; set; } = 14;
+		public int RowGap { get; set; } = 16;
 
 		public EnemyIntentPipsSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)

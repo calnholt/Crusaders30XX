@@ -35,12 +35,8 @@ namespace Crusaders30XX.ECS.Systems
 			var pa = intent.Planned.FirstOrDefault(x => x.ContextId == e.ContextId);
 			if (pa == null) return;
 
-			// Load definition
-			string root = FindProjectRootContaining("Crusaders30XX.csproj");
-			if (string.IsNullOrEmpty(root)) return;
-			var dir = System.IO.Path.Combine(root, "ECS", "Data", "Enemies");
-			var defs = AttackRepository.LoadFromFolder(dir);
-			if (!defs.TryGetValue(pa.AttackId, out var def)) return;
+			// Load definition via shared cache
+			if (!AttackDefinitionCache.TryGet(pa.AttackId, out var def)) return;
 
 			bool blocked = ConditionService.Evaluate(def.conditionsBlocked, pa.ContextId, EntityManager, enemy, null);
 			pa.WasBlocked = blocked;

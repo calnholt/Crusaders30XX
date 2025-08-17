@@ -99,11 +99,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			var pa = intent.Planned[0];
 			// Load def via repository
-			string root = FindProjectRootContaining("Crusaders30XX.csproj");
-			if (string.IsNullOrEmpty(root)) { System.Console.WriteLine("[CombatDebug] Could not locate project root"); return; }
-			var dir = System.IO.Path.Combine(root, "ECS", "Data", "Enemies");
-			var defs = Crusaders30XX.ECS.Data.Attacks.AttackRepository.LoadFromFolder(dir);
-			if (!defs.TryGetValue(pa.AttackId, out var def)) { System.Console.WriteLine("[CombatDebug] Attack def not found: " + pa.AttackId); return; }
+			if (!Crusaders30XX.ECS.Data.Attacks.AttackDefinitionCache.TryGet(pa.AttackId, out var def)) { System.Console.WriteLine("[CombatDebug] Attack def not found: " + pa.AttackId); return; }
 			bool blocked = Crusaders30XX.ECS.Systems.ConditionService.Evaluate(def.conditionsBlocked, pa.ContextId, EntityManager, enemy, null);
 			System.Console.WriteLine($"[CombatDebug] Evaluate '{def.name}' blocked={blocked}");
 		}

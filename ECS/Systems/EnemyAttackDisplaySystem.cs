@@ -338,11 +338,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private AttackDefinition LoadAttackDefinition(string id)
 		{
-			var root = FindProjectRootContaining("Crusaders30XX.csproj");
-			if (string.IsNullOrEmpty(root)) return null;
-			var dir = System.IO.Path.Combine(root, "ECS", "Data", "Enemies");
-			var defs = AttackRepository.LoadFromFolder(dir);
-			defs.TryGetValue(id, out var def);
+			Crusaders30XX.ECS.Data.Attacks.AttackDefinitionCache.TryGet(id, out var def);
 			return def;
 		}
 
@@ -439,21 +435,6 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private static string FindProjectRootContaining(string filename)
-		{
-			try
-			{
-				var dir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
-				for (int i = 0; i < 6 && dir != null; i++)
-				{
-					var candidate = System.IO.Path.Combine(dir.FullName, filename);
-					if (System.IO.File.Exists(candidate)) return dir.FullName;
-					dir = dir.Parent;
-				}
-			}
-			catch { }
-			return null;
-		}
 	}
 }
 
