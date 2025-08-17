@@ -98,13 +98,19 @@ namespace Crusaders30XX.ECS.Systems
 		public int FlashMaxAlpha { get; set; } = 180;
 
 		[DebugEditable(DisplayName = "Shockwave Duration (s)", Step = 0.02f, Min = 0f, Max = 1.5f)]
-		public float ShockwaveDurationSeconds { get; set; } = 0.35f;
+		public float ShockwaveDurationSeconds { get; set; } = 0.49f;
 
 		[DebugEditable(DisplayName = "Shockwave Max Expand (px)", Step = 2, Min = 0, Max = 400)]
-		public int ShockwaveMaxExpandPx { get; set; } = 60;
+		public int ShockwaveMaxExpandPx { get; set; } = 132;
 
 		[DebugEditable(DisplayName = "Shockwave Thickness (px)", Step = 1, Min = 1, Max = 20)]
 		public int ShockwaveThicknessPx { get; set; } = 6;
+
+		[DebugEditable(DisplayName = "Shockwave Start Alpha", Step = 5, Min = 0, Max = 255)]
+		public int ShockwaveStartAlpha { get; set; } = 180;
+
+		[DebugEditable(DisplayName = "Shockwave FadeOut (s)", Step = 0.02f, Min = 0f, Max = 1.5f)]
+		public float ShockwaveFadeOutSeconds { get; set; } = 0.07f;
 
 		[DebugEditable(DisplayName = "Crater Duration (s)", Step = 0.02f, Min = 0f, Max = 1.5f)]
 		public float CraterDurationSeconds { get; set; } = 0.45f;
@@ -117,16 +123,16 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Debris
 		[DebugEditable(DisplayName = "Debris Count", Step = 1, Min = 0, Max = 100)]
-		public int DebrisCount { get; set; } = 18;
+		public int DebrisCount { get; set; } = 100;
 
 		[DebugEditable(DisplayName = "Debris Speed Min", Step = 5, Min = 0, Max = 600)]
-		public int DebrisSpeedMin { get; set; } = 160;
+		public int DebrisSpeedMin { get; set; } = 210;
 
 		[DebugEditable(DisplayName = "Debris Speed Max", Step = 5, Min = 0, Max = 800)]
-		public int DebrisSpeedMax { get; set; } = 360;
+		public int DebrisSpeedMax { get; set; } = 420;
 
 		[DebugEditable(DisplayName = "Debris Lifetime (s)", Step = 0.05f, Min = 0f, Max = 2f)]
-		public float DebrisLifetimeSeconds { get; set; } = 0.6f;
+		public float DebrisLifetimeSeconds { get; set; } = 0.8f;
 
 		public EnemyAttackDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
 		{
@@ -277,14 +283,6 @@ namespace Crusaders30XX.ECS.Systems
 				_spriteBatch.Draw(_pixel, rect, new Color(255, 255, 255, System.Math.Clamp(fa, 0, 255)));
 			}
 
-			// Shockwave ring
-			if (_impactActive && _shockwaveElapsedSeconds < ShockwaveDurationSeconds && ShockwaveThicknessPx > 0 && ShockwaveMaxExpandPx > 0)
-			{
-				float rt = System.Math.Clamp(_shockwaveElapsedSeconds / System.Math.Max(0.0001f, ShockwaveDurationSeconds), 0f, 1f);
-				int expand = (int)System.Math.Round(ShockwaveMaxExpandPx * rt);
-				DrawRing(new Rectangle(rect.X - expand, rect.Y - expand, rect.Width + expand * 2, rect.Height + expand * 2), new Color(255, 255, 255, (int)(180 * (1f - rt))), System.Math.Max(1, ShockwaveThicknessPx));
-			}
-
 			// Crater (darkened expanding rect)
 			if (_impactActive && _craterElapsedSeconds < CraterDurationSeconds && CraterMaxAlpha > 0)
 			{
@@ -293,6 +291,20 @@ namespace Crusaders30XX.ECS.Systems
 				int ca = (int)System.Math.Round(CraterMaxAlpha * (1f - ct));
 				var craterRect = new Rectangle(rect.X - cexp, rect.Y - cexp, rect.Width + cexp * 2, rect.Height + cexp * 2);
 				_spriteBatch.Draw(_pixel, craterRect, new Color(10, 10, 10, System.Math.Clamp(ca, 0, 255)));
+			}
+
+			// Shockwave ring (draw after crater so it remains visible while fading)
+			if (_impactActive && _shockwaveElapsedSeconds < (ShockwaveDurationSeconds + ShockwaveFadeOutSeconds) && ShockwaveThicknessPx > 0 && ShockwaveMaxExpandPx > 0)
+			{
+				float expandT = System.Math.Clamp(_shockwaveElapsedSeconds / System.Math.Max(0.0001f, ShockwaveDurationSeconds), 0f, 1f);
+				int expand = (int)System.Math.Round(ShockwaveMaxExpandPx * expandT);
+				float totalDuration = ShockwaveDurationSeconds + ShockwaveFadeOutSeconds;
+				float totalT = System.Math.Clamp(_shockwaveElapsedSeconds / System.Math.Max(0.0001f, totalDuration), 0f, 1f);
+				int alpha = (int)System.Math.Round(ShockwaveStartAlpha * (1f - totalT));
+				alpha = System.Math.Clamp(alpha, 0, 255);
+				float aNorm = alpha / 255f;
+				var premulColor = new Color((int)System.Math.Round(255f * aNorm), (int)System.Math.Round(255f * aNorm), (int)System.Math.Round(255f * aNorm), alpha);
+				DrawRing(new Rectangle(rect.X - expand, rect.Y - expand, rect.Width + expand * 2, rect.Height + expand * 2), premulColor, System.Math.Max(1, ShockwaveThicknessPx));
 			}
 
 			// Debris
