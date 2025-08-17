@@ -47,8 +47,6 @@ public class Game1 : Game
     private EnemyIntentPipsSystem _enemyIntentPipsSystem;
     private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
     private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
-    private AttackDataDebugSystem _attackDataDebugSystem;
-    private CombatDebugSystem _combatDebugSystem;
     private CombatEventsDebugSystem _combatEventsDebugSystem;
     private EnemyIntentPlanningSystem _enemyIntentPlanningSystem;
     private BlockConditionTrackingSystem _blockConditionTrackingSystem;
@@ -145,8 +143,6 @@ public class Game1 : Game
         _enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
-        _attackDataDebugSystem = new AttackDataDebugSystem(_world.EntityManager);
-        _combatDebugSystem = new CombatDebugSystem(_world.EntityManager);
         _combatEventsDebugSystem = new CombatEventsDebugSystem(_world.EntityManager);
         _enemyIntentPlanningSystem = new EnemyIntentPlanningSystem(_world.EntityManager);
         _blockConditionTrackingSystem = new BlockConditionTrackingSystem(_world.EntityManager);
@@ -183,8 +179,6 @@ public class Game1 : Game
         _world.AddSystem(_battlePhaseDisplaySystem);
         _world.AddSystem(_enemyDisplaySystem);
         _world.AddSystem(_enemyIntentPipsSystem);
-        _world.AddSystem(_attackDataDebugSystem);
-        _world.AddSystem(_combatDebugSystem);
         _world.AddSystem(_combatEventsDebugSystem);
         _world.AddSystem(_enemyIntentPlanningSystem);
         _world.AddSystem(_blockConditionTrackingSystem);
