@@ -28,6 +28,7 @@ namespace Crusaders30XX.ECS.Systems
         private MouseState _prevMouse;
         private DateTime _lastDrawTime = DateTime.UtcNow;
         private float _scrollOffset = 0f; // vertical scroll for panel content
+        private float _dropdownScrollOffset = 0f; // vertical scroll for open dropdown list
         private bool _dragging = false;
         private Point _dragOffset;
 
@@ -152,6 +153,7 @@ namespace Crusaders30XX.ECS.Systems
             double dt = (now - _lastDrawTime).TotalSeconds;
             _lastDrawTime = now;
             bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
+            bool clickForContent = click;
 
             // Layout values
             int viewportW = _graphicsDevice.Viewport.Width;
@@ -356,7 +358,12 @@ namespace Crusaders30XX.ECS.Systems
             int deferredItemCount = visibleOptions.Count;
             int deferredRowH = ddCurrent.RowHeight;
             // Open the dropdown list downward
-            var deferredListRect = new Rectangle(ddUI.Bounds.X, ddUI.Bounds.Bottom, ddUI.Bounds.Width, deferredItemCount * deferredRowH);
+            var deferredListRectFull = new Rectangle(ddUI.Bounds.X, ddUI.Bounds.Bottom, ddUI.Bounds.Width, deferredItemCount * deferredRowH);
+            int availableBelow = Math.Max(0, _graphicsDevice.Viewport.Height - ddUI.Bounds.Bottom - 8);
+            int listTotalHeight = deferredItemCount * deferredRowH;
+            int listDisplayHeight = Math.Min(listTotalHeight, availableBelow);
+            var deferredListRect = new Rectangle(ddUI.Bounds.X, ddUI.Bounds.Bottom, ddUI.Bounds.Width, listDisplayHeight);
+            bool dropdownNeedScroll = listTotalHeight > listDisplayHeight;
 
             if (ddCurrent.SelectedIndex != menu.ActiveTabIndex)
             {
@@ -380,6 +387,11 @@ namespace Crusaders30XX.ECS.Systems
                 _scrollOffset = MathHelper.Clamp(_scrollOffset + deltaPixels, 0f, maxScroll);
             }
             int yOffset = -(int)Math.Round(_scrollOffset);
+            // If dropdown open and mouse is over its area, suppress clicks to content behind
+            if (drawListAfter && deferredListRect.Contains(mouse.Position))
+            {
+                clickForContent = false;
+            }
 
             // Visible region bounds for culling
             int visibleTop = panelY + headerHeight;
@@ -413,7 +425,7 @@ namespace Crusaders30XX.ECS.Systems
                     DrawFilledRect(valRect, new Color(70, 70, 70));
                     DrawRect(valRect, Color.White, 1);
                     DrawStringScaled(vs, new Vector2(valRect.X + 5, valRect.Y + 2), Color.White, TextScale);
-                    if (click && valRect.Contains(mouse.Position)) setter(!(bool)val);
+                    if (clickForContent && valRect.Contains(mouse.Position)) setter(!(bool)val);
                 }
                 else if (type == typeof(int) || type == typeof(float) || type == typeof(byte))
                 {
@@ -529,7 +541,7 @@ namespace Crusaders30XX.ECS.Systems
 						DrawStringScaled(label, new Vector2(textX, textY), Color.White, TextScale);
                     }
 					// Handle click
-					if (click && rect.Contains(mouse.Position))
+					if (clickForContent && rect.Contains(mouse.Position))
 					{
 						try
 						{
@@ -567,7 +579,7 @@ namespace Crusaders30XX.ECS.Systems
 					DrawFilledRect(minusRect, new Color(60,60,60)); DrawRect(minusRect, Color.White, 1); DrawStringScaled("-", new Vector2(minusRect.X + 7, minusRect.Y + 2), Color.White, TextScale);
 					DrawFilledRect(plusRect, new Color(60,60,60)); DrawRect(plusRect, Color.White, 1); DrawStringScaled("+", new Vector2(plusRect.X + 6, plusRect.Y + 2), Color.White, TextScale);
 					DrawFilledRect(applyRect, new Color(60,60,60)); DrawRect(applyRect, Color.White, 1); DrawStringScaled(">", new Vector2(applyRect.X + 6, applyRect.Y + 2), Color.White, TextScale);
-					if (click)
+					if (clickForContent)
 					{
 						if (minusRect.Contains(mouse.Position)) { ai.current = (int)System.Math.Max(ai.meta.Min, System.Math.Min(ai.meta.Max, ai.current - (int)System.Math.Round(ai.meta.Step))); actionIntMethods[i] = ai; }
 						else if (plusRect.Contains(mouse.Position)) { ai.current = (int)System.Math.Max(ai.meta.Min, System.Math.Min(ai.meta.Max, ai.current + (int)System.Math.Round(ai.meta.Step))); actionIntMethods[i] = ai; }
@@ -586,23 +598,46 @@ namespace Crusaders30XX.ECS.Systems
             {
                 DrawFilledRect(deferredListRect, new Color(25, 25, 25));
                 DrawRect(deferredListRect, Color.White, 1);
-                for (int row = 0; row < deferredItemCount; row++)
+                int listTotalHeight2 = deferredItemCount * deferredRowH;
+                int listDisplayHeight2 = deferredListRect.Height;
+                bool dropdownNeedScroll2 = listTotalHeight2 > listDisplayHeight2;
+                int firstRow = 0;
+                float rowOffset = 0f;
+                if (dropdownNeedScroll2)
                 {
-                    var (actualIndex, label) = visibleOptions[row];
-                    var itemRect = new Rectangle(deferredListRect.X, deferredListRect.Y + row * deferredRowH, deferredListRect.Width, deferredRowH);
+                    int wheelDelta = mouse.ScrollWheelValue - _prevMouse.ScrollWheelValue;
+                    float deltaPixels = -(wheelDelta / 120f) * ScrollPixelsPerNotch;
+                    float maxDD = System.Math.Max(0, listTotalHeight2 - listDisplayHeight2);
+                    _dropdownScrollOffset = MathHelper.Clamp(_dropdownScrollOffset + deltaPixels, 0f, maxDD);
+                    firstRow = (int)System.Math.Floor(_dropdownScrollOffset / deferredRowH);
+                    rowOffset = _dropdownScrollOffset - firstRow * deferredRowH;
+                }
+                int rowsToDraw = System.Math.Min(deferredItemCount - firstRow, (int)System.Math.Ceiling(deferredListRect.Height / (float)deferredRowH) + 1);
+                for (int i = 0; i < rowsToDraw; i++)
+                {
+                    int rowIndex = firstRow + i;
+                    if (rowIndex < 0 || rowIndex >= deferredItemCount) continue;
+                    var (actualIndex, label) = visibleOptions[rowIndex];
+                    int itemY = deferredListRect.Y + (int)System.Math.Round(i * deferredRowH - rowOffset);
+                    var itemRect = new Rectangle(deferredListRect.X, itemY, deferredListRect.Width, deferredRowH);
                     bool hover = itemRect.Contains(mouse.Position);
                     if (hover) DrawFilledRect(itemRect, new Color(60, 60, 60));
-                DrawStringScaled(label, new Vector2(itemRect.X + 8, itemRect.Y + 4), Color.White, TextScale);
+                    DrawStringScaled(label, new Vector2(itemRect.X + 8, itemRect.Y + 4), Color.White, TextScale);
                     DrawRect(itemRect, Color.White, 1);
-                    if (click && hover)
+                }
+                if (click && deferredListRect.Contains(mouse.Position))
+                {
+                    int relY = mouse.Y - deferredListRect.Y + (int)_dropdownScrollOffset;
+                    int sel = relY / deferredRowH;
+                    if (sel >= 0 && sel < deferredItemCount)
                     {
+                        var (actualIndex, _label) = visibleOptions[sel];
                         var dd = ddEntity.GetComponent<UIDropdown>();
                         dd.SelectedIndex = actualIndex;
                         dd.IsOpen = false;
                         menu.ActiveTabIndex = actualIndex;
                     }
                 }
-
             }
 
             _prevMouse = mouse;

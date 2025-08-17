@@ -6,7 +6,7 @@ using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
-	[DebugTab("Combat Debug")]
+	[DebugTab("Stored Block Management")]
 	public class StoredBlockManagementSystem : Core.System
 	{
 		public StoredBlockManagementSystem(EntityManager entityManager) : base(entityManager)
