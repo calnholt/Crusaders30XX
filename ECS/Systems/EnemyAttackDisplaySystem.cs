@@ -345,6 +345,22 @@ namespace Crusaders30XX.ECS.Systems
 				var sz = _font.MeasureString(text);
 				y += sz.Y * s + LineSpacingExtra * panelScale * contentScale;
 			}
+
+			// Update banner anchor transform at center-bottom of rect
+			var anchorEntity = EntityManager.GetEntitiesWithComponent<Crusaders30XX.ECS.Components.EnemyAttackBannerAnchor>().FirstOrDefault();
+			if (anchorEntity == null)
+			{
+				anchorEntity = EntityManager.CreateEntity("EnemyAttackBannerAnchor");
+				EntityManager.AddComponent(anchorEntity, new Crusaders30XX.ECS.Components.EnemyAttackBannerAnchor());
+				EntityManager.AddComponent(anchorEntity, new Transform());
+			}
+			var anchorTransform = anchorEntity.GetComponent<Transform>();
+			if (anchorTransform != null)
+			{
+				anchorTransform.Position = new Vector2(rect.X + rect.Width / 2f, rect.Bottom);
+				anchorTransform.Scale = Vector2.One;
+				anchorTransform.Rotation = 0f;
+			}
 		}
 
 		private AttackDefinition LoadAttackDefinition(string id)

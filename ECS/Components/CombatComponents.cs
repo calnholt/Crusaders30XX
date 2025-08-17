@@ -49,6 +49,15 @@ namespace Crusaders30XX.ECS.Components
 	}
 
 	/// <summary>
+	/// Marker component; an entity with this and a Transform defines the enemy attack banner anchor position.
+	/// The Transform.Position is the center-bottom point of the banner.
+	/// </summary>
+	public class EnemyAttackBannerAnchor : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
+
+	/// <summary>
 	/// Marks a card as currently assigned as block to a specific attack context and carries its animation state.
 	/// </summary>
 	public class AssignedBlockCard : IComponent

@@ -7,7 +7,7 @@ using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
-	[DebugTab("Combat Debug")]
+	[DebugTab("Assigned Block Display")]
 	public class AssignedBlockCardsDisplaySystem : Core.System
 	{
 		private readonly GraphicsDevice _graphicsDevice;
@@ -19,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Anchor Offset X", Step = 2, Min = -1000, Max = 1000)]
 		public int AnchorOffsetX { get; set; } = 0;
 		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -1000, Max = 1000)]
-		public int AnchorOffsetY { get; set; } = 120;
+		public int AnchorOffsetY { get; set; } = -210;
 		[DebugEditable(DisplayName = "Slot Spacing X", Step = 2, Min = 10, Max = 200)]
 		public int SlotSpacingX { get; set; } = 56;
 		[DebugEditable(DisplayName = "Card Draw W", Step = 2, Min = 20, Max = 300)]
@@ -36,6 +36,9 @@ namespace Crusaders30XX.ECS.Systems
 		public float ImpactSeconds { get; set; } = 0.12f;
 		[DebugEditable(DisplayName = "Return Seconds", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float ReturnSeconds { get; set; } = 0.18f;
+
+		[DebugEditable(DisplayName = "Above Gap (px)", Step = 1, Min = 0, Max = 100)]
+		public int AboveGap { get; set; } = 8;
 
 		public AssignedBlockCardsDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
 		{
@@ -102,15 +105,26 @@ namespace Crusaders30XX.ECS.Systems
 			// Only animate if for this context; otherwise keep as-is
 			bool forCurrent = abc.ContextId == pa.ContextId;
 			int indexInContext = 0;
+			int countInContext = 1;
 			if (forCurrent)
 			{
-				var list = GetRelevantEntities().Where(e => e.GetComponent<AssignedBlockCard>()?.ContextId == pa.ContextId).ToList();
+				var list = GetRelevantEntities()
+					.Where(e => e.GetComponent<AssignedBlockCard>()?.ContextId == pa.ContextId)
+					.OrderBy(e => e.Id)
+					.ToList();
 				indexInContext = list.FindIndex(e => e == entity);
+				countInContext = list.Count;
 			}
 
-			// Compute slot target near screen center
-			var center = new Vector2(_graphicsDevice.Viewport.Width / 2f + AnchorOffsetX, _graphicsDevice.Viewport.Height / 2f + AnchorOffsetY);
-			var slotTarget = new Vector2(center.X + indexInContext * SlotSpacingX, center.Y);
+			// Compute slot target from banner anchor if available, else screen center
+			var anchor = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault()?.GetComponent<Transform>();
+			var basePoint = anchor.Position;
+			var center = new Vector2(basePoint.X + AnchorOffsetX, basePoint.Y + AnchorOffsetY);
+			float offsetIndex = indexInContext - (countInContext - 1) * 0.5f;
+			// Place centers so that cards sit above the banner baseline
+			float targetHalfH = CardDrawHeight * TargetScale * 0.5f;
+			float slotY = center.Y - targetHalfH - AboveGap;
+			var slotTarget = new Vector2(center.X + offsetIndex * SlotSpacingX, slotY);
 			abc.TargetPos = slotTarget;
 
 			switch (abc.Phase)
@@ -138,7 +152,14 @@ namespace Crusaders30XX.ECS.Systems
 					float p = ImpactSeconds <= 0f ? 1f : MathHelper.Clamp(abc.Elapsed / ImpactSeconds, 0f, 1f);
 					abc.CurrentPos = abc.TargetPos + new Vector2(0, (1f - p) * 6f);
 					abc.CurrentScale = TargetScale * (1f + 0.08f * (1f - p));
-					if (p >= 1f) { abc.Phase = AssignedBlockCard.PhaseState.Idle; }
+					if (p >= 1f) { abc.Phase = AssignedBlockCard.PhaseState.Idle; abc.Elapsed = 0f; }
+					break;
+				}
+				case AssignedBlockCard.PhaseState.Idle:
+				{
+					float slide = 1f - (float)System.Math.Exp(-10f * dt);
+					abc.CurrentPos = Vector2.Lerp(abc.CurrentPos, abc.TargetPos, slide);
+					abc.CurrentScale = MathHelper.Lerp(abc.CurrentScale, TargetScale, slide);
 					break;
 				}
 				case AssignedBlockCard.PhaseState.Returning:
