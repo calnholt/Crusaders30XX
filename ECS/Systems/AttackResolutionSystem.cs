@@ -43,10 +43,11 @@ namespace Crusaders30XX.ECS.Systems
 
 			var target = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var source = enemy;
-			var effects = blocked ? def.effectsOnBlocked : def.effectsOnHit;
-			if (effects != null)
+			// Always apply on-hit; if NOT blocked, also apply on-not-blocked
+			void ApplyEffects(Crusaders30XX.ECS.Data.Attacks.EffectDefinition[] list)
 			{
-				foreach (var eff in effects)
+				if (list == null) return;
+				foreach (var eff in list)
 				{
 					EventManager.Publish(new ApplyEffect
 					{
@@ -58,6 +59,12 @@ namespace Crusaders30XX.ECS.Systems
 						Target = target
 					});
 				}
+			}
+
+			ApplyEffects(def.effectsOnHit);
+			if (!blocked)
+			{
+				ApplyEffects(def.effectsOnNotBlocked);
 			}
 
 			EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blocked });

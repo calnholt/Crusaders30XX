@@ -10,7 +10,7 @@
     ]
   },
   "effectsOnHit": [ { "type": "Damage", "amount": 14 } ],
-  "effectsOnBlocked": [ { "type": "ApplyStatus", "status": "Weak", "stacks": 1 } ]
+  "effectsOnNotBlocked": [ { "type": "ApplyStatus", "status": "Bleed", "stacks": 1 } ]
 }
 
 
