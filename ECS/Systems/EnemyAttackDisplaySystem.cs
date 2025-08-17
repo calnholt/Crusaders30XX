@@ -218,29 +218,21 @@ namespace Crusaders30XX.ECS.Systems
 			var def = LoadAttackDefinition(pa.AttackId);
 			if (def == null) return;
 
-			int baseDamage = (def.effectsOnHit ?? System.Array.Empty<EffectDefinition>())
+			int baseDamage = DamagePredictionService.ComputeFullDamage(def);
+			int extraNotBlockedDamage = (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
 
 			// Summarize effects that also happen when NOT blocked (in addition to on-hit)
 			string notBlockedSummary = SummarizeEffects(def.effectsOnNotBlocked);
 
-			// Compose lines: Name, Damage, prediction, and Leaf conditions (with live status)
+			// Compose lines: Name, Damage (final + prevented breakdown), and Leaf conditions (with live status)
 			var lines = new System.Collections.Generic.List<(string text, float scale, Color color)>();
 			lines.Add((def.name, TitleScale, Color.White));
-			// Prediction (Full vs After Blocks) with safety guards
-			int fullDmg = 0;
-			int actualDmg = 0;
-			try
-			{
-				fullDmg = DamagePredictionService.ComputeFullDamage(def);
-				actualDmg = DamagePredictionService.ComputeActualDamage(def, EntityManager, pa.ContextId);
-			}
-			catch (System.Exception ex)
-			{
-				System.Console.WriteLine($"[EnemyAttackDisplay] Prediction error: {ex.Message}");
-			}
-			lines.Add(($"Damage: {baseDamage}  |  Predicted: {fullDmg} -> {actualDmg}", TextScale, Color.White));
+			bool isBlocked = ConditionService.Evaluate(def.conditionsBlocked, pa.ContextId, EntityManager, enemy, null);
+			int actual = DamagePredictionService.ComputeActualDamage(def, EntityManager, pa.ContextId);
+			int prevented = DamagePredictionService.ComputePreventedDamage(def, EntityManager, pa.ContextId, isBlocked);
+			lines.Add(($"Damage: {actual} (preventing {prevented})", TextScale, Color.White));
 			if (!string.IsNullOrEmpty(notBlockedSummary))
 			{
 				lines.Add(($"On not blocked: {notBlockedSummary}", TextScale, Color.OrangeRed));
