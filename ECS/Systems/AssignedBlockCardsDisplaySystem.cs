@@ -65,15 +65,17 @@ namespace Crusaders30XX.ECS.Systems
 			// Process any returns after the main iteration to avoid collection-modified errors
 			if (_pendingReturn.Count > 0)
 			{
-				var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 				for (int i = 0; i < _pendingReturn.Count; i++)
 				{
 					var card = _pendingReturn[i];
-					if (deck != null)
+					Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.CardMoveRequested
 					{
-						deck.Hand.Add(card);
-					}
-					EntityManager.RemoveComponent<AssignedBlockCard>(card);
+						Card = card,
+						Deck = deckEntity,
+						Destination = Crusaders30XX.ECS.Components.CardZoneType.Hand,
+						Reason = "ReturnAfterAssignment"
+					});
 				}
 				_pendingReturn.Clear();
 			}

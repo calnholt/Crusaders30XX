@@ -69,42 +69,30 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				// Move card out of hand and attach animation component when assigning; return when unassigning
 				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-				var deckComp = deckEntity?.GetComponent<Deck>();
 				var t = card.GetComponent<Transform>();
-				if (deckComp != null && t != null)
+				if (deckEntity != null && t != null)
 				{
 					if (assigning)
 					{
-						deckComp.Hand.Remove(card);
-						var abc = new AssignedBlockCard
+						EventManager.Publish(new CardMoveRequested
 						{
+							Card = card,
+							Deck = deckEntity,
+							Destination = CardZoneType.AssignedBlock,
 							ContextId = pa.ContextId,
-							BlockAmount = blockVal,
-							StartPos = t.Position,
-							CurrentPos = t.Position,
-							TargetPos = t.Position, // will be set by animation system
-							StartScale = t.Scale.X,
-							TargetScale = 0.35f,
-							Phase = AssignedBlockCard.PhaseState.Pullback,
-							Elapsed = 0f,
-							AssignedAtTicks = System.DateTime.UtcNow.Ticks
-						};
-						EntityManager.AddComponent(card, abc);
+							Reason = "AssignBlock"
+						});
 					}
 					else
 					{
-						var abc = card.GetComponent<AssignedBlockCard>();
-						if (abc != null)
+						EventManager.Publish(new CardMoveRequested
 						{
-							abc.Phase = AssignedBlockCard.PhaseState.Returning;
-							abc.Elapsed = 0f;
-							abc.TargetScale = 1f;
-						}
-						else
-						{
-							// Add back to rightmost slot
-							deckComp.Hand.Add(card);
-						}
+							Card = card,
+							Deck = deckEntity,
+							Destination = CardZoneType.Hand,
+							ContextId = pa.ContextId,
+							Reason = "UnassignReturn"
+						});
 					}
 				}
 				break; // Only one card per click

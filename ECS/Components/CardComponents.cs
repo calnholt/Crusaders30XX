@@ -402,4 +402,28 @@ namespace Crusaders30XX.ECS.Components
         public int BlockNumberMarginX { get; set; }
         public int BlockNumberMarginY { get; set; }
     }
+
+    /// <summary>
+    /// Enumerates the zone a card currently belongs to. Useful for transitioning toward a fully component-driven zone model.
+    /// </summary>
+    public enum CardZoneType
+    {
+        DrawPile,
+        Hand,
+        DiscardPile,
+        ExhaustPile,
+        AssignedBlock
+    }
+
+    /// <summary>
+    /// Optional per-card component declaring its current zone and order within that zone.
+    /// Currently not required by existing systems, but provided to enable a future migration away from Deck lists.
+    /// </summary>
+    public class CardZone : IComponent
+    {
+        public Entity Owner { get; set; }
+        public Entity DeckEntity { get; set; }
+        public CardZoneType Zone { get; set; } = CardZoneType.DrawPile;
+        public int Index { get; set; } = 0;
+    }
 } 

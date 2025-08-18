@@ -1,6 +1,7 @@
 using Crusaders30XX.ECS.Core;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Crusaders30XX.ECS.Components;
 
 namespace Crusaders30XX.ECS.Events
 {
@@ -98,5 +99,29 @@ namespace Crusaders30XX.ECS.Events
     public class RequestDrawCardsEvent
     {
         public int Count { get; set; } = 1;
+    }
+
+    /// <summary>
+    /// Event to request moving a card into a destination zone. A single authoritative system should handle this.
+    /// </summary>
+    public class CardMoveRequested
+    {
+        public Entity Card { get; set; }
+        public Entity Deck { get; set; }
+        public CardZoneType Destination { get; set; }
+        public string ContextId { get; set; }
+        public string Reason { get; set; }
+    }
+
+    /// <summary>
+    /// Event published after a card has been moved between zones.
+    /// </summary>
+    public class CardMoved
+    {
+        public Entity Card { get; set; }
+        public Entity Deck { get; set; }
+        public CardZoneType From { get; set; }
+        public CardZoneType To { get; set; }
+        public string ContextId { get; set; }
     }
 } 

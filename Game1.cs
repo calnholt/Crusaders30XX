@@ -55,6 +55,7 @@ public class Game1 : Game
     private EffectApplicationSystem _effectApplicationSystem;
     private HandBlockInteractionSystem _handBlockInteractionSystem;
     private StoredBlockManagementSystem _storedBlockManagementSystem;
+    private CardZoneSystem _cardZoneSystem;
 
     public Game1()
     {
@@ -119,6 +120,7 @@ public class Game1 : Game
         _renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, GraphicsDevice);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _handDisplaySystem = new HandDisplaySystem(_world.EntityManager, GraphicsDevice);
+        _cardZoneSystem = new CardZoneSystem(_world.EntityManager);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _world.SystemManager);
         _debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
         _drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
@@ -158,6 +160,7 @@ public class Game1 : Game
         _world.AddSystem(_renderingSystem);
         _world.AddSystem(_cardDisplaySystem);
         _world.AddSystem(_handDisplaySystem);
+        _world.AddSystem(_cardZoneSystem);
         _world.AddSystem(_debugCommandSystem);
         _world.AddSystem(_drawPileDisplaySystem);
         _world.AddSystem(_discardPileDisplaySystem);
