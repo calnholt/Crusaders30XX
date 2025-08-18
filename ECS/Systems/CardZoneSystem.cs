@@ -34,7 +34,7 @@ namespace Crusaders30XX.ECS.Systems
 
             var from = GetZoneOf(deck, evt.Card);
 
-            // Remove from all known deck lists first
+            // Remove from all known deck lists first to avoid duplicates
             deck.DrawPile.Remove(evt.Card);
             deck.Hand.Remove(evt.Card);
             deck.DiscardPile.Remove(evt.Card);
@@ -44,12 +44,16 @@ namespace Crusaders30XX.ECS.Systems
             {
                 case CardZoneType.Hand:
                 {
+                    // When returning to hand, remove assignment component and ensure we don't duplicate in hand
                     var abc = evt.Card.GetComponent<AssignedBlockCard>();
                     if (abc != null)
                     {
                         EntityManager.RemoveComponent<AssignedBlockCard>(evt.Card);
                     }
-                    deck.Hand.Add(evt.Card);
+                    if (!deck.Hand.Contains(evt.Card))
+                    {
+                        deck.Hand.Add(evt.Card);
+                    }
                     var t = evt.Card.GetComponent<Transform>();
                     if (t != null && t.Position == Vector2.Zero)
                     {
@@ -80,6 +84,8 @@ namespace Crusaders30XX.ECS.Systems
                         };
                         EntityManager.AddComponent(evt.Card, abc);
                     }
+                    // Ensure the card is not still in hand to prevent later clicks from finding it
+                    deck.Hand.Remove(evt.Card);
                     break;
                 }
                 case CardZoneType.DiscardPile:

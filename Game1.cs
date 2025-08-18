@@ -161,6 +161,7 @@ public class Game1 : Game
         _world.AddSystem(_cardDisplaySystem);
         _world.AddSystem(_handDisplaySystem);
         _world.AddSystem(_cardZoneSystem);
+        _world.AddSystem(_handBlockInteractionSystem);
         _world.AddSystem(_debugCommandSystem);
         _world.AddSystem(_drawPileDisplaySystem);
         _world.AddSystem(_discardPileDisplaySystem);
@@ -190,7 +191,6 @@ public class Game1 : Game
         _world.AddSystem(_effectApplicationSystem);
         _world.AddSystem(_enemyAttackDisplaySystem);
         _world.AddSystem(_assignedBlockCardsDisplaySystem);
-        _world.AddSystem(_handBlockInteractionSystem);
         _world.AddSystem(_storedBlockManagementSystem);
 
         // Set initial location via event which seeds the Battlefield component

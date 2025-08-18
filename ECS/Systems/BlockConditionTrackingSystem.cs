@@ -16,6 +16,7 @@ namespace Crusaders30XX.ECS.Systems
 		public BlockConditionTrackingSystem(EntityManager em) : base(em)
 		{
 			EventManager.Subscribe<BlockCardPlayed>(OnBlockCardPlayed);
+			EventManager.Subscribe<BlockAssignmentChanged>(OnBlockAssignmentChanged);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -61,6 +62,45 @@ namespace Crusaders30XX.ECS.Systems
 					progress.Counters[ctx] = counters;
 				}
 				counters[counterKey] = counters.TryGetValue(counterKey, out var val) ? val + 1 : 1;
+			}
+		}
+
+		private void OnBlockAssignmentChanged(BlockAssignmentChanged e)
+		{
+			if (e == null || string.IsNullOrEmpty(e.ContextId)) return;
+			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+			if (player == null) return;
+			var progress = player.GetComponent<BlockProgress>();
+			if (progress == null)
+			{
+				progress = new BlockProgress();
+				EntityManager.AddComponent(player, progress);
+			}
+			if (!progress.Counters.TryGetValue(e.ContextId, out var counters) || counters == null)
+			{
+				counters = new Dictionary<string, int>();
+				progress.Counters[e.ContextId] = counters;
+			}
+
+			// Maintain running total of assigned block for this context
+			int currentAssigned = counters.TryGetValue("assignedBlockTotal", out var cur) ? cur : 0;
+			int nextAssigned = currentAssigned + e.DeltaBlock;
+			if (nextAssigned < 0) nextAssigned = 0;
+			counters["assignedBlockTotal"] = nextAssigned;
+
+			// Adjust color play count so leaf conditions revert on unassign
+			if (!string.IsNullOrWhiteSpace(e.Color))
+			{
+				string color = NormalizeColorKey(e.Color);
+				string counterKey = $"played_{color}";
+				if (e.DeltaBlock < 0)
+				{
+					int curCount = counters.TryGetValue(counterKey, out var v) ? v : 0;
+					int next = curCount - 1;
+					if (next < 0) next = 0;
+					counters[counterKey] = next;
+				}
+				// For positive DeltaBlock, OnBlockCardPlayed already incremented played_{color}
 			}
 		}
 

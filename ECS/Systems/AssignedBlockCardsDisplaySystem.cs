@@ -102,12 +102,13 @@ namespace Crusaders30XX.ECS.Systems
 						{
 							abc.Phase = AssignedBlockCard.PhaseState.Returning;
 							abc.Elapsed = 0f;
+							var cardData = card.GetComponent<CardData>();
 							Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.BlockAssignmentChanged
 							{
 								ContextId = pa.ContextId,
 								Card = card,
 								DeltaBlock = -abc.BlockAmount,
-								Color = null
+								Color = cardData?.Color.ToString()
 							});
 							break;
 						}
@@ -137,6 +138,20 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					abc.Phase = AssignedBlockCard.PhaseState.Returning;
 					abc.Elapsed = 0f;
+					// Publish unassign so counters and damage update even if the top-level click handler didn't catch this card
+					var enemy2 = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+					var pa2 = enemy2?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();
+					var cd = entity.GetComponent<CardData>();
+					if (pa2 != null)
+					{
+						Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.BlockAssignmentChanged
+						{
+							ContextId = pa2.ContextId,
+							Card = entity,
+							DeltaBlock = -abc.BlockAmount,
+							Color = cd?.Color.ToString()
+						});
+					}
 				}
 			}
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;

@@ -46,54 +46,25 @@ namespace Crusaders30XX.ECS.Systems
 				var data = card.GetComponent<CardData>();
 				if (ui == null || data == null) continue;
 				if (!ui.Bounds.Contains(mouse.Position)) continue;
-				// Toggle assignment: simple +5/-5 for now; color from card
+				// Assign this card as block (always assign from hand); color from card
 				int blockVal = System.Math.Max(1, data.BlockValue);
-				// Check current aggregate to decide toggle
-				int currentAssigned = 0;
-				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-				var progress = player?.GetComponent<BlockProgress>();
-				if (progress != null && progress.Counters.TryGetValue(pa.ContextId, out var counters) && counters != null)
-				{
-					currentAssigned = counters.TryGetValue("assignedBlockTotal", out var v) ? v : 0;
-				}
-				// If this card likely already assigned, remove; otherwise add
-				// We approximate by checking presence of some amount; in a full impl we would track per-card entries
-				bool assigning = currentAssigned < blockVal;
-				int delta = assigning ? blockVal : -blockVal;
 				string color = data.Color.ToString();
-				EventManager.Publish(new BlockAssignmentChanged { ContextId = pa.ContextId, Card = card, DeltaBlock = delta, Color = color });
-				// Emit BlockCardPlayed for condition leaves if adding
-				if (delta > 0)
-				{
-					EventManager.Publish(new BlockCardPlayed { Card = card, Color = color });
-				}
-				// Move card out of hand and attach animation component when assigning; return when unassigning
+				EventManager.Publish(new BlockAssignmentChanged { ContextId = pa.ContextId, Card = card, DeltaBlock = blockVal, Color = color });
+				// Emit BlockCardPlayed for condition leaves
+				EventManager.Publish(new BlockCardPlayed { Card = card, Color = color });
+				// Move card out of hand into AssignedBlock zone; unassign is handled by clicking assigned banner
 				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 				var t = card.GetComponent<Transform>();
 				if (deckEntity != null && t != null)
 				{
-					if (assigning)
+					EventManager.Publish(new CardMoveRequested
 					{
-						EventManager.Publish(new CardMoveRequested
-						{
-							Card = card,
-							Deck = deckEntity,
-							Destination = CardZoneType.AssignedBlock,
-							ContextId = pa.ContextId,
-							Reason = "AssignBlock"
-						});
-					}
-					else
-					{
-						EventManager.Publish(new CardMoveRequested
-						{
-							Card = card,
-							Deck = deckEntity,
-							Destination = CardZoneType.Hand,
-							ContextId = pa.ContextId,
-							Reason = "UnassignReturn"
-						});
-					}
+						Card = card,
+						Deck = deckEntity,
+						Destination = CardZoneType.AssignedBlock,
+						ContextId = pa.ContextId,
+						Reason = "AssignBlock"
+					});
 				}
 				break; // Only one card per click
 			}
