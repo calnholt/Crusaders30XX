@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<StartEnemyTurn>(_ => Console.WriteLine("[EventsDebug] StartEnemyTurn"));
 			EventManager.Subscribe<EndEnemyTurn>(_ => Console.WriteLine("[EventsDebug] EndEnemyTurn"));
 			EventManager.Subscribe<IntentPlanned>(e => Console.WriteLine($"[EventsDebug] IntentPlanned id={e.AttackId} ctx={e.ContextId} step={e.Step}"));
-			EventManager.Subscribe<BlockCardPlayed>(e => Console.WriteLine($"[EventsDebug] BlockCardPlayed color={e.Color} card={(e.Card != null ? e.Card.Name : "null")}"));
+			EventManager.Subscribe<BlockAssignmentAdded>(e => Console.WriteLine($"[EventsDebug] BlockCardPlayed color={e.Color} card={(e.Card != null ? e.Card.Name : "null")}"));
 			EventManager.Subscribe<ResolveAttack>(e => Console.WriteLine($"[EventsDebug] ResolveAttack ctx={e.ContextId}"));
 			EventManager.Subscribe<ApplyEffect>(e => Console.WriteLine($"[EventsDebug] ApplyEffect type={e.EffectType} amt={e.Amount} status={e.Status} stacks={e.Stacks}"));
 			EventManager.Subscribe<AttackResolved>(e => Console.WriteLine($"[EventsDebug] AttackResolved ctx={e.ContextId} blocked={e.WasBlocked}"));
@@ -54,7 +54,7 @@ namespace Crusaders30XX.ECS.Systems
 		public void Debug_PublishCardPlayedRed()
 		{
 			var anyCard = EntityManager.GetEntitiesWithComponent<Crusaders30XX.ECS.Components.CardData>().FirstOrDefault();
-			EventManager.Publish(new BlockCardPlayed { Card = anyCard, Color = "Red" });
+			EventManager.Publish(new BlockAssignmentAdded { Card = anyCard, Color = "Red" });
 		}
 
 		[DebugAction("Publish ResolveAttack (ctx=test_ctx)")]

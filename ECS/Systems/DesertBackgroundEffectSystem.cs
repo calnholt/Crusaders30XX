@@ -182,8 +182,6 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (!_isActive || _cloudTexture == null) return;
 
-			int viewportW = _graphicsDevice.Viewport.Width;
-			int viewportH = _graphicsDevice.Viewport.Height;
 			var tintBase = new Color((byte)Math.Clamp(TintR, 0, 255), (byte)Math.Clamp(TintG, 0, 255), (byte)Math.Clamp(TintB, 0, 255));
 
 			for (int i = 0; i < _clouds.Count; i++)
@@ -215,7 +213,6 @@ namespace Crusaders30XX.ECS.Systems
 			if (toSpawn <= 0) return;
 			_spawnAccumulator -= toSpawn;
 
-			int viewportW = _graphicsDevice.Viewport.Width;
 			int viewportH = _graphicsDevice.Viewport.Height;
 			for (int i = 0; i < toSpawn && _clouds.Count < MaxClouds; i++)
 			{

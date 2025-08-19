@@ -13,11 +13,6 @@ namespace Crusaders30XX.ECS.Events
 		public string TelegraphText;
 	}
 
-	public class BlockCardPlayed
-	{
-		public Entity Card;
-		public string Color; // "Red" | "White" | "Black"
-	}
 
 	public class ResolveAttack
 	{

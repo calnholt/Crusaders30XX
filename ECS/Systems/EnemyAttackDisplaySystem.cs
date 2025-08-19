@@ -230,7 +230,7 @@ namespace Crusaders30XX.ECS.Systems
 			var lines = new System.Collections.Generic.List<(string text, float scale, Color color)>();
 			lines.Add((def.name, TitleScale, Color.White));
 			bool isBlocked = ConditionService.Evaluate(def.conditionsBlocked, pa.ContextId, EntityManager, enemy, null);
-			int actual = DamagePredictionService.ComputeActualDamage(def, EntityManager, pa.ContextId);
+			int actual = DamagePredictionService.ComputeActualDamage(def, EntityManager, pa.ContextId, isBlocked);
 			int prevented = DamagePredictionService.ComputePreventedDamage(def, EntityManager, pa.ContextId, isBlocked);
 			lines.Add(($"Damage: {actual} (preventing {prevented})", TextScale, Color.White));
 			if (!string.IsNullOrEmpty(notBlockedSummary))
@@ -378,11 +378,11 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					bool satisfied = ConditionService.Evaluate(node, contextId, EntityManager, attacker, null);
 					Color statusColor = satisfied ? Color.LimeGreen : Color.IndianRed;
-					if (node.leafType == "PlayColorAtLeastN")
+					if (node.leafType == "PlayColorAtLeastN" || node.leafType == "PlayAtLeastN")
 					{
-						var color = node.@params != null && node.@params.TryGetValue("color", out var c) ? c : "?";
+						var color = node.@params != null && node.@params.TryGetValue("color", out var c) ? c : null;
 						var n = node.@params != null && node.@params.TryGetValue("n", out var nStr) ? nStr : "?";
-						lines.Add(($"Condition: Play {n} {color}", TextScale, statusColor));
+						lines.Add(($"Condition: Block with {n} {color ?? "card"}", TextScale, statusColor));
 					}
 					else
 					{
@@ -411,7 +411,7 @@ namespace Crusaders30XX.ECS.Systems
 				switch (e.type)
 				{
 					case "Damage":
-						parts.Add($"Damage {e.amount}");
+						parts.Add($"+{e.amount} damage");
 						break;
 					case "ApplyStatus":
 						var st = string.IsNullOrEmpty(e.status) ? "Status" : e.status;

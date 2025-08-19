@@ -15,8 +15,8 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		public BlockConditionTrackingSystem(EntityManager em) : base(em)
 		{
-			EventManager.Subscribe<BlockCardPlayed>(OnBlockCardPlayed);
-			EventManager.Subscribe<BlockAssignmentChanged>(OnBlockAssignmentChanged);
+			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
+			EventManager.Subscribe<BlockAssignmentRemoved>(OnBlockAssignmentRemoved);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime) { }
 
-		private void OnBlockCardPlayed(BlockCardPlayed e)
+		private void OnBlockAssignmentAdded(BlockAssignmentAdded e)
 		{
 			if (string.IsNullOrWhiteSpace(e.Color)) return;
 			string color = NormalizeColorKey(e.Color);
@@ -62,10 +62,15 @@ namespace Crusaders30XX.ECS.Systems
 					progress.Counters[ctx] = counters;
 				}
 				counters[counterKey] = counters.TryGetValue(counterKey, out var val) ? val + 1 : 1;
+				// Only increment generic played_cards on actual add event, not on BlockCardPlayed to avoid double count
+				int currentAssigned = counters.TryGetValue("assignedBlockTotal", out var cur) ? cur : 0;
+				int nextAssigned = currentAssigned + (e.DeltaBlock > 0 ? e.DeltaBlock : 0);
+				counters["assignedBlockTotal"] = nextAssigned;
+				counters["played_cards"] = counters.TryGetValue("played_cards", out var played) ? played + 1 : 1;
 			}
 		}
 
-		private void OnBlockAssignmentChanged(BlockAssignmentChanged e)
+		private void OnBlockAssignmentRemoved(BlockAssignmentRemoved e)
 		{
 			if (e == null || string.IsNullOrEmpty(e.ContextId)) return;
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
@@ -102,6 +107,9 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				// For positive DeltaBlock, OnBlockCardPlayed already incremented played_{color}
 			}
+			int pc = counters.TryGetValue("played_cards", out var played) ? played - 1 : 0;
+			if (pc < 0) pc = 0;
+			counters["played_cards"] = pc;
 		}
 
 		private static string NormalizeColorKey(string color)

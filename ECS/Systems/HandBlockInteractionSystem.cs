@@ -49,9 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 				// Assign this card as block (always assign from hand); color from card
 				int blockVal = System.Math.Max(1, data.BlockValue);
 				string color = data.Color.ToString();
-				EventManager.Publish(new BlockAssignmentChanged { ContextId = pa.ContextId, Card = card, DeltaBlock = blockVal, Color = color });
-				// Emit BlockCardPlayed for condition leaves
-				EventManager.Publish(new BlockCardPlayed { Card = card, Color = color });
+				EventManager.Publish(new BlockAssignmentAdded { Card = card, Color = color, DeltaBlock = data.BlockValue });
 				// Move card out of hand into AssignedBlock zone; unassign is handled by clicking assigned banner
 				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 				var t = card.GetComponent<Transform>();

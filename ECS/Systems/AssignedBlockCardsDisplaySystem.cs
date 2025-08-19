@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -105,7 +106,7 @@ namespace Crusaders30XX.ECS.Systems
 							abc.Phase = AssignedBlockCard.PhaseState.Returning;
 							abc.Elapsed = 0f;
 							var cardData = card.GetComponent<CardData>();
-							Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.BlockAssignmentChanged
+							EventManager.Publish(new BlockAssignmentRemoved
 							{
 								ContextId = pa.ContextId,
 								Card = card,
@@ -146,7 +147,7 @@ namespace Crusaders30XX.ECS.Systems
 					var cd = entity.GetComponent<CardData>();
 					if (pa2 != null)
 					{
-						Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.BlockAssignmentChanged
+						EventManager.Publish(new BlockAssignmentRemoved
 						{
 							ContextId = pa2.ContextId,
 							Card = entity,

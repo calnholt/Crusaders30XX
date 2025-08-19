@@ -38,13 +38,16 @@ namespace Crusaders30XX.ECS.Systems
 			if (!progress.Counters.TryGetValue(contextId, out var counters) || counters == null) return 0;
 			return counters.TryGetValue("assignedBlockTotal", out var val) ? val : 0;
 		}
-		public static int ComputeActualDamage(AttackDefinition definition, EntityManager entityManager, string contextId)
+		public static int ComputeActualDamage(AttackDefinition definition, EntityManager entityManager, string contextId, bool isBlocked)
 		{
 			int full = ComputeFullDamage(definition);
 			int stored = GetStoredBlockAmount(entityManager);
 			int assigned = GetAssignedBlockForContext(entityManager, contextId);
+			int preventedBlockCondition = isBlocked ? (definition.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
+				.Where(e => e.type == "Damage")
+				.Sum(e => e.amount) : 0;
 			int reduced = stored + assigned;
-			int actual = full - reduced;
+			int actual = full - reduced - preventedBlockCondition;
 			return actual < 0 ? 0 : actual;
 		}
 

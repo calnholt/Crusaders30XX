@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -67,7 +68,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugAction("Phase 5 Test: Simulate BlockCardPlayed Red and Print Counters")]
 		public void Phase5Test_SimulateCardPlayedRed()
 		{
-			Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.BlockCardPlayed { Card = null, Color = "Red" });
+			Crusaders30XX.ECS.Core.EventManager.Publish(new BlockAssignmentAdded { Card = null, Color = "Red" });
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var prog = player?.GetComponent<BlockProgress>();
 			if (prog == null || prog.Counters.Count == 0)
@@ -134,7 +135,7 @@ namespace Crusaders30XX.ECS.Systems
 			pa = intent?.Planned.FirstOrDefault();
 			if (pa == null) { System.Console.WriteLine("[CombatDebug] No planned attacks after replan"); return; }
 			// Simulate block and resolve
-			Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.BlockCardPlayed { Color = "Red" });
+			Crusaders30XX.ECS.Core.EventManager.Publish(new BlockAssignmentAdded { Color = "Red" });
 			Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.ResolveAttack { ContextId = pa.ContextId });
 		}
 

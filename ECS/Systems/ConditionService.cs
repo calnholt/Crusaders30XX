@@ -50,9 +50,25 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				case "PlayColorAtLeastN":
 					return Leaf_PlayColorAtLeastN(node.@params, contextId, entityManager);
+				case "PlayAtLeastN":
+					return Leaf_PlayAtLeastN(node.@params, contextId, entityManager);
 				default:
 					return false;
 			}
+		}
+
+		private static bool Leaf_PlayAtLeastN(Dictionary<string, string> parameters, string contextId, EntityManager entityManager)
+		{
+			if (parameters == null) return false;
+			if (!parameters.TryGetValue("n", out var nStr)) return false;
+			if (!int.TryParse(nStr, out var n)) return false;
+			string key = "played_cards";
+			var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+			var progress = player?.GetComponent<BlockProgress>();
+			if (progress == null) return false;
+			if (!progress.Counters.TryGetValue(contextId, out var counters)) return false;
+			int value = counters.TryGetValue(key, out var v) ? v : 0;
+			return value >= n;
 		}
 
 		private static bool Leaf_PlayColorAtLeastN(Dictionary<string, string> parameters, string contextId, EntityManager entityManager)
