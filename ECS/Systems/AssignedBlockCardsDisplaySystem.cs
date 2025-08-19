@@ -95,6 +95,8 @@ namespace Crusaders30XX.ECS.Systems
 						var card = list[i];
 						var abc = card.GetComponent<AssignedBlockCard>();
 						if (abc == null) continue;
+						// Prevent unassign clicks until the card has reached its target slot (Idle or Impact)
+						if (!(abc.Phase == AssignedBlockCard.PhaseState.Idle || abc.Phase == AssignedBlockCard.PhaseState.Impact)) continue;
 						int cw = (int)(CardDrawWidth * abc.CurrentScale);
 						int ch = (int)(CardDrawHeight * abc.CurrentScale);
 						var hit = new Rectangle((int)(abc.CurrentPos.X - cw / 2f), (int)(abc.CurrentPos.Y - ch / 2f), cw, ch);
