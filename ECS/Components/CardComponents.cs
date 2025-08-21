@@ -196,6 +196,15 @@ namespace Crusaders30XX.ECS.Components
         public bool IsClicked { get; set; } = false;
         public bool IsInteractable { get; set; } = true;
         public string Tooltip { get; set; } = "";
+        public TooltipPosition TooltipPosition { get; set; } = TooltipPosition.Above;
+    }
+    
+    public enum TooltipPosition
+    {
+        Above,
+        Below,
+        Right,
+        Left
     }
     
     /// <summary>
