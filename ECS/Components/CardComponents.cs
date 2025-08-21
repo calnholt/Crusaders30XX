@@ -199,6 +199,14 @@ namespace Crusaders30XX.ECS.Components
     }
     
     /// <summary>
+    /// Marker for the courage hover area used to show a tooltip.
+    /// </summary>
+    public class CourageTooltipAnchor : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+    
+    /// <summary>
     /// Component for animation
     /// </summary>
     public class Animation : IComponent
