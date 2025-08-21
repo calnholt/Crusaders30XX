@@ -32,11 +32,16 @@ namespace Crusaders30XX.ECS.Systems
 		public static int GetAssignedBlockForContext(EntityManager entityManager, string contextId)
 		{
 			if (string.IsNullOrEmpty(contextId)) return 0;
-			var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-			var progress = player?.GetComponent<BlockProgress>();
-			if (progress == null) return 0;
-			if (!progress.Counters.TryGetValue(contextId, out var counters) || counters == null) return 0;
-			return counters.TryGetValue("assignedBlockTotal", out var val) ? val : 0;
+			// Use EnemyAttackProgress exclusively
+			foreach (var e in entityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
+			{
+				var p = e.GetComponent<EnemyAttackProgress>();
+				if (p != null && p.ContextId == contextId)
+				{
+					return p.AssignedBlockTotal;
+				}
+			}
+			return 0;
 		}
 		public static int ComputeActualDamage(AttackDefinition definition, EntityManager entityManager, string contextId, bool isBlocked)
 		{

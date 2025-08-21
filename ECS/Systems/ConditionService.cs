@@ -62,13 +62,17 @@ namespace Crusaders30XX.ECS.Systems
 			if (parameters == null) return false;
 			if (!parameters.TryGetValue("n", out var nStr)) return false;
 			if (!int.TryParse(nStr, out var n)) return false;
-			string key = "played_cards";
-			var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-			var progress = player?.GetComponent<BlockProgress>();
-			if (progress == null) return false;
-			if (!progress.Counters.TryGetValue(contextId, out var counters)) return false;
-			int value = counters.TryGetValue(key, out var v) ? v : 0;
-			return value >= n;
+			// Use EnemyAttackProgress counters
+			foreach (var e in entityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
+			{
+				var p = e.GetComponent<EnemyAttackProgress>();
+				if (p != null && p.ContextId == contextId)
+				{
+					int valueTyped = p.PlayedCards;
+					return valueTyped >= n;
+				}
+			}
+			return false;
 		}
 
 		private static bool Leaf_PlayColorAtLeastN(Dictionary<string, string> parameters, string contextId, EntityManager entityManager)
@@ -78,13 +82,23 @@ namespace Crusaders30XX.ECS.Systems
 			if (!parameters.TryGetValue("n", out var nStr)) return false;
 			if (!int.TryParse(nStr, out var n)) return false;
 			string color = NormalizeColorKey(colorStr);
-			string key = $"played_{color}";
-			var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-			var progress = player?.GetComponent<BlockProgress>();
-			if (progress == null) return false;
-			if (!progress.Counters.TryGetValue(contextId, out var counters)) return false;
-			int value = counters.TryGetValue(key, out var v) ? v : 0;
-			return value >= n;
+			// Use EnemyAttackProgress counters
+			foreach (var e in entityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
+			{
+				var p = e.GetComponent<EnemyAttackProgress>();
+				if (p != null && p.ContextId == contextId)
+				{
+					int typedVal = color switch
+					{
+						"Red" => p.PlayedRed,
+						"White" => p.PlayedWhite,
+						"Black" => p.PlayedBlack,
+						_ => 0
+					};
+					return typedVal >= n;
+				}
+			}
+			return false;
 		}
 
 		private static string NormalizeColorKey(string color)

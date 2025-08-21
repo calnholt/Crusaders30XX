@@ -48,9 +48,8 @@ public class Game1 : Game
     private EnemyIntentPipsSystem _enemyIntentPipsSystem;
     private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
     private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
-    private CombatEventsDebugSystem _combatEventsDebugSystem;
     private EnemyIntentPlanningSystem _enemyIntentPlanningSystem;
-    private BlockConditionTrackingSystem _blockConditionTrackingSystem;
+    private EnemyAttackProgressManagementSystem _enemyAttackProgressManagementSystem;
     private AttackResolutionSystem _attackResolutionSystem;
     private EffectApplicationSystem _effectApplicationSystem;
     private HandBlockInteractionSystem _handBlockInteractionSystem;
@@ -146,9 +145,9 @@ public class Game1 : Game
         _enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
-        _combatEventsDebugSystem = new CombatEventsDebugSystem(_world.EntityManager);
         _enemyIntentPlanningSystem = new EnemyIntentPlanningSystem(_world.EntityManager);
-        _blockConditionTrackingSystem = new BlockConditionTrackingSystem(_world.EntityManager);
+        _enemyAttackProgressManagementSystem = new EnemyAttackProgressManagementSystem(_world.EntityManager);
+        // _blockConditionTrackingSystem = new BlockConditionTrackingSystem(_world.EntityManager);
         _attackResolutionSystem = new AttackResolutionSystem(_world.EntityManager);
         _effectApplicationSystem = new EffectApplicationSystem(_world.EntityManager);
         _handBlockInteractionSystem = new HandBlockInteractionSystem(_world.EntityManager);
@@ -184,9 +183,9 @@ public class Game1 : Game
         _world.AddSystem(_battlePhaseDisplaySystem);
         _world.AddSystem(_enemyDisplaySystem);
         _world.AddSystem(_enemyIntentPipsSystem);
-        _world.AddSystem(_combatEventsDebugSystem);
         _world.AddSystem(_enemyIntentPlanningSystem);
-        _world.AddSystem(_blockConditionTrackingSystem);
+        _world.AddSystem(_enemyAttackProgressManagementSystem);
+        // _world.AddSystem(_blockConditionTrackingSystem);
         _world.AddSystem(_attackResolutionSystem);
         _world.AddSystem(_effectApplicationSystem);
         _world.AddSystem(_enemyAttackDisplaySystem);

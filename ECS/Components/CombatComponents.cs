@@ -38,14 +38,29 @@ namespace Crusaders30XX.ECS.Components
 		public bool WasBlocked;
 	}
 
+
 	/// <summary>
-	/// Tracks per-attack block progress counters keyed by contextId.
-	/// Example: Counters[contextId]["played_Red"] = 1
+	/// Per-attack, per-context progress data used by UI and logic. One entity per contextId.
 	/// </summary>
-	public class BlockProgress : IComponent
+	public class EnemyAttackProgress : IComponent
 	{
 		public Entity Owner { get; set; }
-		public Dictionary<string, Dictionary<string, int>> Counters { get; set; } = new();
+
+		public string ContextId { get; set; }
+		public Entity Enemy { get; set; }
+		public string AttackId { get; set; }
+
+		// Typed counters replacing generic dictionary keys
+		public int AssignedBlockTotal { get; set; }
+		public int PlayedCards { get; set; }
+		public int PlayedRed { get; set; }
+		public int PlayedWhite { get; set; }
+		public int PlayedBlack { get; set; }
+
+		// Derived values for display and resolution previews
+		public bool IsBlocked { get; set; }
+		public int ActualDamage { get; set; }
+		public int PreventedDamage { get; set; }
 	}
 
 	/// <summary>
