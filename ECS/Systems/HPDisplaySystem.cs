@@ -80,6 +80,19 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Flash Alpha Max", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float FlashAlphaMax { get; set; } = 1.0f;
 
+		// Incoming damage overlay flashing (previews potential HP loss)
+		[DebugEditable(DisplayName = "Incoming Damage Flash Enabled")]
+		public bool IncomingDamageFlashEnabled { get; set; } = true;
+
+		[DebugEditable(DisplayName = "Incoming Damage Flash Hz", Step = 0.1f, Min = 0.1f, Max = 10f)]
+		public float IncomingDamageFlashHz { get; set; } = 0.4f;
+
+		[DebugEditable(DisplayName = "Incoming Damage Alpha Min", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float IncomingDamageAlphaMin { get; set; } = 0.1f;
+
+		[DebugEditable(DisplayName = "Incoming Damage Alpha Max", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float IncomingDamageAlphaMax { get; set; } = 0.45f;
+
 		// Pill look controls (do not modify texture creation)
 		[DebugEditable(DisplayName = "Highlight Opacity", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float HighlightOpacity { get; set; } = 0.45f;
@@ -230,6 +243,47 @@ namespace Crusaders30XX.ECS.Systems
 					var bandSrc = new Rectangle(0, srcBandY, srcW, bandH);
 					var tint = Color.FromNonPremultiplied(255, 255, 255, (int)(MathHelper.Clamp(HighlightOpacity * alphaFactor, 0f, 1f) * 255f));
 					_spriteBatch.Draw(_roundedHighlight, bandDest, bandSrc, tint);
+				}
+			}
+
+			// Incoming damage overlay on player's HP bar: flash a segment representing potential HP loss
+			var isPlayer = hpEntity.GetComponent<Crusaders30XX.ECS.Components.Player>() != null;
+			if (isPlayer && IncomingDamageFlashEnabled && hp.Max > 0)
+			{
+				int totalIncoming = 0;
+				foreach (var e in EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
+				{
+					var p = e.GetComponent<EnemyAttackProgress>();
+					if (p != null && p.ActualDamage > 0) totalIncoming += p.ActualDamage;
+				}
+				if (totalIncoming > 0)
+				{
+					float dmgPct = MathHelper.Clamp(totalIncoming / (float)hp.Max, 0f, 1f);
+					int dmgPixels = (int)System.Math.Round(width * dmgPct);
+					int overlayW = System.Math.Max(0, System.Math.Min(fillW, dmgPixels));
+					if (overlayW > 0)
+					{
+						int overlayX = x + System.Math.Max(0, fillW - overlayW);
+						var overlayRect = new Rectangle(overlayX, y, overlayW, height);
+						float phase = (float)System.Math.Sin(MathHelper.TwoPi * System.Math.Max(0.01f, IncomingDamageFlashHz) * _accumSeconds);
+						float norm = 0.5f * (phase + 1f);
+						float a = MathHelper.Lerp(MathHelper.Clamp(IncomingDamageAlphaMin, 0f, 1f), MathHelper.Clamp(IncomingDamageAlphaMax, 0f, 1f), norm);
+						var dmgColor = Color.FromNonPremultiplied(255, 255, 255, (int)System.Math.Round(a * 255f));
+						int srcW2 = System.Math.Max(1, overlayW);
+						bool atRightCap = (fillW >= width);
+						if (atRightCap)
+						{
+							// Align source to the right edge so the overlay inherits the bar's rounded cap
+							int srcX = System.Math.Max(0, width - srcW2);
+							var src2 = new Rectangle(srcX, 0, srcW2, height);
+							_spriteBatch.Draw(_roundedFill, overlayRect, src2, dmgColor);
+						}
+						else
+						{
+							// Inside the bar (not reaching the right cap): draw a flat rectangle to avoid inner rounding
+							_spriteBatch.Draw(_pixel, overlayRect, dmgColor);
+						}
+					}
 				}
 			}
 
