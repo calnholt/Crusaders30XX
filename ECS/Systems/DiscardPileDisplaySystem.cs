@@ -41,6 +41,7 @@ namespace Crusaders30XX.ECS.Systems
             _font = font;
             _pixel = new Texture2D(graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
+            EventManager.Subscribe<CardMoved>(OnCardMoved);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -126,6 +127,14 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Bottom - thickness, r.Width, thickness), color);
             _spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Y, thickness, r.Height), color);
             _spriteBatch.Draw(_pixel, new Rectangle(r.Right - thickness, r.Y, thickness, r.Height), color);
+        }
+
+        private void OnCardMoved(CardMoved evt)
+        {
+            if (evt.To == CardZoneType.DiscardPile)
+            {
+                _pulseTimeRemaining = PulseDuration;
+            }
         }
     }
 }

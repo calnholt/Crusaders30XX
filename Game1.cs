@@ -56,6 +56,7 @@ public class Game1 : Game
     private HandBlockInteractionSystem _handBlockInteractionSystem;
     private StoredBlockManagementSystem _storedBlockManagementSystem;
     private CardZoneSystem _cardZoneSystem;
+    private AssignedBlocksToDiscardSystem _assignedBlocksToDiscardSystem;
 
     public Game1()
     {
@@ -154,6 +155,7 @@ public class Game1 : Game
         _effectApplicationSystem = new EffectApplicationSystem(_world.EntityManager);
         _handBlockInteractionSystem = new HandBlockInteractionSystem(_world.EntityManager);
         _storedBlockManagementSystem = new StoredBlockManagementSystem(_world.EntityManager);
+        _assignedBlocksToDiscardSystem = new AssignedBlocksToDiscardSystem(_world.EntityManager, GraphicsDevice);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -193,6 +195,7 @@ public class Game1 : Game
         _world.AddSystem(_effectApplicationSystem);
         _world.AddSystem(_enemyAttackDisplaySystem);
         _world.AddSystem(_assignedBlockCardsDisplaySystem);
+        _world.AddSystem(_assignedBlocksToDiscardSystem);
         _world.AddSystem(_storedBlockManagementSystem);
 
         // Set initial location via event which seeds the Battlefield component

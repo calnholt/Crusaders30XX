@@ -52,6 +52,9 @@ namespace Crusaders30XX.ECS.Systems
 				case BattlePhase.Block:
 					// Stay in Block until an external call transitions; placeholder no-op
 					break;
+				case BattlePhase.ProcessEnemyAttack:
+					// Processing step handled by dedicated systems
+					break;
 				case BattlePhase.Action:
 					// Action phase progresses via gameplay; placeholder no-op
 					break;

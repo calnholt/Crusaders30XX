@@ -121,6 +121,18 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Crater Max Alpha", Step = 5, Min = 0, Max = 255)]
 		public int CraterMaxAlpha { get; set; } = 120;
 
+		// Confirm button tuning
+		[DebugEditable(DisplayName = "Confirm Button Offset Y", Step = 2, Min = -600, Max = 600)]
+		public int ConfirmButtonOffsetY { get; set; } = 60;
+		[DebugEditable(DisplayName = "Confirm Button Width", Step = 2, Min = 20, Max = 600)]
+		public int ConfirmButtonWidth { get; set; } = 160;
+		[DebugEditable(DisplayName = "Confirm Button Height", Step = 2, Min = 16, Max = 200)]
+		public int ConfirmButtonHeight { get; set; } = 44;
+		[DebugEditable(DisplayName = "Confirm Button Text Scale", Step = 0.05f, Min = 0.3f, Max = 3f)]
+		public float ConfirmButtonTextScale { get; set; } = 0.7f;
+		[DebugEditable(DisplayName = "Confirm Button Z", Step = 10, Min = -100000, Max = 100000)]
+		public int ConfirmButtonZ { get; set; } = 3000;
+
 		// Debris
 		[DebugEditable(DisplayName = "Debris Count", Step = 1, Min = 0, Max = 100)]
 		public int DebrisCount { get; set; } = 100;
@@ -141,6 +153,40 @@ namespace Crusaders30XX.ECS.Systems
 			_font = font;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			Crusaders30XX.ECS.Core.EventManager.Subscribe<Crusaders30XX.ECS.Events.DebugCommandEvent>(evt =>
+			{
+				if (evt.Command == "ConfirmEnemyAttack")
+				{
+					OnConfirmPressed();
+				}
+			});
+		}
+
+		private void OnConfirmPressed()
+		{
+			// Transition to processing phase
+			var stateEntity = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault();
+			if (stateEntity == null)
+			{
+				stateEntity = EntityManager.CreateEntity("BattlePhaseState");
+				EntityManager.AddComponent(stateEntity, new BattlePhaseState { Phase = BattlePhase.ProcessEnemyAttack });
+			}
+			else
+			{
+				var s = stateEntity.GetComponent<BattlePhaseState>();
+				if (s != null) s.Phase = BattlePhase.ProcessEnemyAttack;
+			}
+
+			// Publish resolve for the current context (logic system will do effects)
+			var enemy = GetRelevantEntities().FirstOrDefault();
+			var intent = enemy?.GetComponent<AttackIntent>();
+			var ctx = intent?.Planned?.FirstOrDefault()?.ContextId;
+			if (!string.IsNullOrEmpty(ctx))
+			{
+				Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.ResolveAttack { ContextId = ctx });
+				// Also trigger assigned-blocks-to-discard animation kickoff event
+				Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.DebugCommandEvent { Command = "AnimateAssignedBlocksToDiscard" });
+			}
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -358,6 +404,40 @@ namespace Crusaders30XX.ECS.Systems
 				_spriteBatch.DrawString(_font, text, new Vector2(rect.X + pad * panelScale * contentScale, y), color, 0f, Vector2.Zero, s, SpriteEffects.None, 0f);
 				var sz = _font.MeasureString(text);
 				y += sz.Y * s + LineSpacingExtra * panelScale * contentScale;
+			}
+
+			// Confirm button below panel
+			var btnRect = new Rectangle(
+				(int)(rect.X + rect.Width / 2f - ConfirmButtonWidth / 2f),
+				rect.Bottom + ConfirmButtonOffsetY,
+				ConfirmButtonWidth,
+				ConfirmButtonHeight
+			);
+			_spriteBatch.Draw(_pixel, btnRect, new Color(40, 120, 40, 220));
+			DrawRect(btnRect, Color.White, 2);
+			if (_font != null)
+			{
+				string label = "Confirm";
+				var size = _font.MeasureString(label) * ConfirmButtonTextScale;
+				var posText = new Vector2(btnRect.Center.X - size.X / 2f, btnRect.Center.Y - size.Y / 2f);
+				_spriteBatch.DrawString(_font, label, posText, Color.White, 0f, Vector2.Zero, ConfirmButtonTextScale, SpriteEffects.None, 0f);
+			}
+
+			// Ensure a clickable UI entity exists and stays in sync
+			var confirmBtn = EntityManager.GetEntitiesWithComponent<UIButton>().FirstOrDefault(e => e.GetComponent<UIButton>().Command == "ConfirmEnemyAttack");
+			if (confirmBtn == null)
+			{
+				confirmBtn = EntityManager.CreateEntity("UIButton_ConfirmEnemyAttack");
+				EntityManager.AddComponent(confirmBtn, new UIButton { Label = "Confirm", Command = "ConfirmEnemyAttack" });
+				EntityManager.AddComponent(confirmBtn, new Transform { Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ConfirmButtonZ });
+				EntityManager.AddComponent(confirmBtn, new UIElement { Bounds = btnRect, IsInteractable = true });
+			}
+			else
+			{
+				var ui = confirmBtn.GetComponent<UIElement>();
+				var tr = confirmBtn.GetComponent<Transform>();
+				if (ui != null) ui.Bounds = btnRect;
+				if (tr != null) tr.ZOrder = ConfirmButtonZ;
 			}
 
 			// Update banner anchor transform at center-bottom of rect

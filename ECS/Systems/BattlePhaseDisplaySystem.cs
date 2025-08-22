@@ -147,6 +147,7 @@ namespace Crusaders30XX.ECS.Systems
 				BattlePhase.StartOfBattle => "Start of Battle",
 				BattlePhase.Block => "Block Phase",
 				BattlePhase.Action => "Action Phase",
+				BattlePhase.ProcessEnemyAttack => "Processing Enemy Attack",
 				_ => p.ToString()
 			};
 		}

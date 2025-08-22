@@ -57,6 +57,14 @@ namespace Crusaders30XX.ECS.Systems
 
 		public override void Update(GameTime gameTime)
 		{
+			// If we're processing the enemy attack, this system should not accept input or retarget cards
+			var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase ?? BattlePhase.StartOfBattle;
+			bool isProcessing = phase == BattlePhase.ProcessEnemyAttack;
+			if (isProcessing)
+			{
+				base.Update(gameTime);
+				return;
+			}
 			// Edge-detect click once per frame for all cards
 			var mouseNow = Microsoft.Xna.Framework.Input.Mouse.GetState();
 			_clickEdgeThisFrame = mouseNow.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed && _prevMouse.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released;

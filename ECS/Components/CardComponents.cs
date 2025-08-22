@@ -373,7 +373,8 @@ namespace Crusaders30XX.ECS.Components
     {
         StartOfBattle,
         Block,
-        Action
+        Action,
+        ProcessEnemyAttack
     }
 
     /// <summary>
@@ -444,3 +445,23 @@ namespace Crusaders30XX.ECS.Components
         public int Index { get; set; } = 0;
     }
 } 
+
+// New component used to animate assigned block cards flying to the discard pile
+namespace Crusaders30XX.ECS.Components
+{
+    public class CardToDiscardFlight : IComponent
+    {
+        public Entity Owner { get; set; }
+        public Microsoft.Xna.Framework.Vector2 StartPos { get; set; }
+        public Microsoft.Xna.Framework.Vector2 TargetPos { get; set; }
+        public float StartDelaySeconds { get; set; }
+        public float DurationSeconds { get; set; }
+        public float ArcHeightPx { get; set; }
+        public float ElapsedSeconds { get; set; }
+        public bool Started { get; set; }
+        public float StartScale { get; set; } = 0.35f;
+        public float EndScale { get; set; } = 0.3f;
+        public string ContextId { get; set; }
+        public bool Completed { get; set; }
+    }
+}
