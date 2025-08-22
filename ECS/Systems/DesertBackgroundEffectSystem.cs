@@ -52,13 +52,13 @@ namespace Crusaders30XX.ECS.Systems
 		public int MaxClouds { get; set; } = 400;
 
 		[DebugEditable(DisplayName = "Spawn Rate (per sec)", Step = 0.1f, Min = 0f, Max = 20f)]
-		public float SpawnRatePerSecond { get; set; } = 10f;
+		public float SpawnRatePerSecond { get; set; } = 20f;
 
 		[DebugEditable(DisplayName = "Min Thickness (px)", Step = 1, Min = 1, Max = 1000)]
-		public int MinThicknessPx { get; set; } = 400;
+		public int MinThicknessPx { get; set; } = 300;
 
 		[DebugEditable(DisplayName = "Max Thickness (px)", Step = 1, Min = 1, Max = 2000)]
-		public int MaxThicknessPx { get; set; } = 500;
+		public int MaxThicknessPx { get; set; } = 800;
 
 		[DebugEditable(DisplayName = "Min Length (px)", Step = 1, Min = 1, Max = 4000)]
 		public int MinLengthPx { get; set; } = 220;
@@ -67,10 +67,10 @@ namespace Crusaders30XX.ECS.Systems
 		public int MaxLengthPx { get; set; } = 536;
 
 		[DebugEditable(DisplayName = "Min Speed (px/s)", Step = 1, Min = -2000, Max = 2000)]
-		public float MinSpeedPxPerSec { get; set; } = 84f;
+		public float MinSpeedPxPerSec { get; set; } = 30f;
 
 		[DebugEditable(DisplayName = "Max Speed (px/s)", Step = 1, Min = -2000, Max = 2000)]
-		public float MaxSpeedPxPerSec { get; set; } = 160f;
+		public float MaxSpeedPxPerSec { get; set; } = 400f;
 
 		[DebugEditable(DisplayName = "Base Alpha", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float BaseAlpha { get; set; } = 0.3f;
@@ -100,7 +100,7 @@ namespace Crusaders30XX.ECS.Systems
 		public float EdgeNoiseAmount { get; set; } = 0.25f;
 
 		[DebugEditable(DisplayName = "Edge Noise Scale", Step = 0.01f, Min = 0.01f, Max = 1f)]
-		public float EdgeNoiseScale { get; set; } = 0.20f;
+		public float EdgeNoiseScale { get; set; } = 0.2f;
 
 		[DebugEditable(DisplayName = "End Cap Softness (0..0.5)", Step = 0.02f, Min = 0.02f, Max = 0.5f)]
 		public float EndCapSoftnessFraction { get; set; } = 0.49f;
