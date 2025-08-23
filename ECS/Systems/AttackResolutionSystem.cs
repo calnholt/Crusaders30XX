@@ -44,7 +44,7 @@ namespace Crusaders30XX.ECS.Systems
 			var target = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var source = enemy;
 			// Always apply on-hit; if NOT blocked, also apply on-not-blocked
-			void ApplyEffects(Crusaders30XX.ECS.Data.Attacks.EffectDefinition[] list)
+			void ApplyEffects(EffectDefinition[] list)
 			{
 				if (list == null) return;
 				foreach (var eff in list)
@@ -70,21 +70,6 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blocked });
 		}
 
-		private static string FindProjectRootContaining(string filename)
-		{
-			try
-			{
-				var dir = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
-				for (int i = 0; i < 6 && dir != null; i++)
-				{
-					var candidate = System.IO.Path.Combine(dir.FullName, filename);
-					if (System.IO.File.Exists(candidate)) return dir.FullName;
-					dir = dir.Parent;
-				}
-			}
-			catch { }
-			return null;
-		}
 	}
 }
 

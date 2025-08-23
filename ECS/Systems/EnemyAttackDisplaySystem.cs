@@ -44,6 +44,13 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly System.Collections.Generic.List<DebrisParticle> _debris = new System.Collections.Generic.List<DebrisParticle>();
 		private static readonly System.Random _rand = new System.Random();
 
+		// Absorb tween (panel -> enemy)
+		[DebugEditable(DisplayName = "Absorb Duration (s)", Step = 0.02f, Min = 0.05f, Max = 3f)]
+		public float AbsorbDurationSeconds { get; set; } = 0.2f;
+		[DebugEditable(DisplayName = "Absorb Target Y Offset", Step = 2, Min = -400, Max = 400)]
+		public int AbsorbTargetYOffset { get; set; } = -40;
+		private float _absorbElapsedSeconds = 0f;
+
 		[DebugEditable(DisplayName = "Center Offset X", Step = 2, Min = -1000, Max = 1000)]
 		public int OffsetX { get; set; } = 0;
 
@@ -186,6 +193,29 @@ namespace Crusaders30XX.ECS.Systems
 				Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.ResolveAttack { ContextId = ctx });
 				// Also trigger assigned-blocks-to-discard animation kickoff event
 				Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.DebugCommandEvent { Command = "AnimateAssignedBlocksToDiscard" });
+				// Enemy absorb pulse
+				Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.DebugCommandEvent { Command = "EnemyAbsorbPulse" });
+				// Seed processing context with assigned block total for this context
+				var prog = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>()
+					.FirstOrDefault(e => e.GetComponent<EnemyAttackProgress>()?.ContextId == ctx)?.GetComponent<EnemyAttackProgress>();
+				int assigned = prog?.AssignedBlockTotal ?? 0;
+				var procE = EntityManager.GetEntitiesWithComponent<AttackProcessingContext>().FirstOrDefault();
+				if (procE == null)
+				{
+					procE = EntityManager.CreateEntity("AttackProcessingContext");
+					EntityManager.AddComponent(procE, new AttackProcessingContext { ContextId = ctx, RemainingAssignedBlock = assigned });
+				}
+				else
+				{
+					var apc = procE.GetComponent<AttackProcessingContext>();
+					if (apc == null)
+					{
+						apc = new AttackProcessingContext();
+						EntityManager.AddComponent(procE, apc);
+					}
+					apc.ContextId = ctx;
+					apc.RemainingAssignedBlock = assigned;
+				}
 			}
 		}
 
@@ -219,6 +249,7 @@ namespace Crusaders30XX.ECS.Systems
 				_justImpacted = false;
 				_lastContextId = null;
 				_debris.Clear();
+				_absorbElapsedSeconds = 0f;
 				return;
 			}
 
@@ -251,6 +282,16 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					_justImpacted = false;
 				}
+			}
+			// Update absorb tween timer based on battle phase
+			var phaseNow = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase ?? BattlePhase.StartOfBattle;
+			if (phaseNow == BattlePhase.ProcessEnemyAttack)
+			{
+				_absorbElapsedSeconds += dt;
+			}
+			else
+			{
+				_absorbElapsedSeconds = 0f;
 			}
 		}
 
@@ -317,6 +358,21 @@ namespace Crusaders30XX.ECS.Systems
 			var center = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY);
 			Vector2 approachPos = center;
 			float panelScale = 1f;
+			// During processing, tween panel toward enemy center and scale down to 0
+			var phaseNow = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase ?? BattlePhase.StartOfBattle;
+			if (phaseNow == BattlePhase.ProcessEnemyAttack)
+			{
+				var enemyT = enemy?.GetComponent<Transform>();
+				if (enemyT != null)
+				{
+					float dur = System.Math.Max(0.05f, AbsorbDurationSeconds);
+					float tTween = MathHelper.Clamp(_absorbElapsedSeconds / dur, 0f, 1f);
+					float ease = 1f - (float)System.Math.Pow(1f - tTween, 3);
+					var targetPos = enemyT.Position + new Vector2(0, AbsorbTargetYOffset);
+					approachPos = Vector2.Lerp(center, targetPos, ease);
+					panelScale = MathHelper.Lerp(1f, 0f, ease);
+				}
+			}
 			int bgAlpha = System.Math.Clamp(BackgroundAlpha, 0, 255);
 
 			// Impact phase visuals: squash/stretch + shake/flash/shockwave/crater
@@ -406,38 +462,43 @@ namespace Crusaders30XX.ECS.Systems
 				y += sz.Y * s + LineSpacingExtra * panelScale * contentScale;
 			}
 
-			// Confirm button below panel
-			var btnRect = new Rectangle(
-				(int)(rect.X + rect.Width / 2f - ConfirmButtonWidth / 2f),
-				rect.Bottom + ConfirmButtonOffsetY,
-				ConfirmButtonWidth,
-				ConfirmButtonHeight
-			);
-			_spriteBatch.Draw(_pixel, btnRect, new Color(40, 120, 40, 220));
-			DrawRect(btnRect, Color.White, 2);
-			if (_font != null)
+			// Confirm button below panel (hide during processing phase)
+			var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase ?? BattlePhase.StartOfBattle;
+			bool showConfirm = phase != BattlePhase.ProcessEnemyAttack;
+			if (showConfirm)
 			{
-				string label = "Confirm";
-				var size = _font.MeasureString(label) * ConfirmButtonTextScale;
-				var posText = new Vector2(btnRect.Center.X - size.X / 2f, btnRect.Center.Y - size.Y / 2f);
-				_spriteBatch.DrawString(_font, label, posText, Color.White, 0f, Vector2.Zero, ConfirmButtonTextScale, SpriteEffects.None, 0f);
-			}
+				var btnRect = new Rectangle(
+					(int)(rect.X + rect.Width / 2f - ConfirmButtonWidth / 2f),
+					rect.Bottom + ConfirmButtonOffsetY,
+					ConfirmButtonWidth,
+					ConfirmButtonHeight
+				);
+				_spriteBatch.Draw(_pixel, btnRect, new Color(40, 120, 40, 220));
+				DrawRect(btnRect, Color.White, 2);
+				if (_font != null)
+				{
+					string label = "Confirm";
+					var size = _font.MeasureString(label) * ConfirmButtonTextScale;
+					var posText = new Vector2(btnRect.Center.X - size.X / 2f, btnRect.Center.Y - size.Y / 2f);
+					_spriteBatch.DrawString(_font, label, posText, Color.White, 0f, Vector2.Zero, ConfirmButtonTextScale, SpriteEffects.None, 0f);
+				}
 
-			// Ensure a clickable UI entity exists and stays in sync
-			var confirmBtn = EntityManager.GetEntitiesWithComponent<UIButton>().FirstOrDefault(e => e.GetComponent<UIButton>().Command == "ConfirmEnemyAttack");
-			if (confirmBtn == null)
-			{
-				confirmBtn = EntityManager.CreateEntity("UIButton_ConfirmEnemyAttack");
-				EntityManager.AddComponent(confirmBtn, new UIButton { Label = "Confirm", Command = "ConfirmEnemyAttack" });
-				EntityManager.AddComponent(confirmBtn, new Transform { Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ConfirmButtonZ });
-				EntityManager.AddComponent(confirmBtn, new UIElement { Bounds = btnRect, IsInteractable = true });
-			}
-			else
-			{
-				var ui = confirmBtn.GetComponent<UIElement>();
-				var tr = confirmBtn.GetComponent<Transform>();
-				if (ui != null) ui.Bounds = btnRect;
-				if (tr != null) tr.ZOrder = ConfirmButtonZ;
+				// Ensure a clickable UI entity exists and stays in sync
+				var confirmBtn = EntityManager.GetEntitiesWithComponent<UIButton>().FirstOrDefault(e => e.GetComponent<UIButton>().Command == "ConfirmEnemyAttack");
+				if (confirmBtn == null)
+				{
+					confirmBtn = EntityManager.CreateEntity("UIButton_ConfirmEnemyAttack");
+					EntityManager.AddComponent(confirmBtn, new UIButton { Label = "Confirm", Command = "ConfirmEnemyAttack" });
+					EntityManager.AddComponent(confirmBtn, new Transform { Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ConfirmButtonZ });
+					EntityManager.AddComponent(confirmBtn, new UIElement { Bounds = btnRect, IsInteractable = true });
+				}
+				else
+				{
+					var ui = confirmBtn.GetComponent<UIElement>();
+					var tr = confirmBtn.GetComponent<Transform>();
+					if (ui != null) ui.Bounds = btnRect;
+					if (tr != null) tr.ZOrder = ConfirmButtonZ;
+				}
 			}
 
 			// Update banner anchor transform at center-bottom of rect

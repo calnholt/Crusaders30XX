@@ -53,11 +53,11 @@ public class Game1 : Game
     private EnemyIntentPlanningSystem _enemyIntentPlanningSystem;
     private EnemyAttackProgressManagementSystem _enemyAttackProgressManagementSystem;
     private AttackResolutionSystem _attackResolutionSystem;
-    private EffectApplicationSystem _effectApplicationSystem;
     private HandBlockInteractionSystem _handBlockInteractionSystem;
     private StoredBlockManagementSystem _storedBlockManagementSystem;
     private CardZoneSystem _cardZoneSystem;
     private AssignedBlocksToDiscardSystem _assignedBlocksToDiscardSystem;
+    private EnemyDamageManagerSystem _enemyDamageManagerSystem;
 
     public Game1()
     {
@@ -154,10 +154,10 @@ public class Game1 : Game
         _enemyAttackProgressManagementSystem = new EnemyAttackProgressManagementSystem(_world.EntityManager);
         // _blockConditionTrackingSystem = new BlockConditionTrackingSystem(_world.EntityManager);
         _attackResolutionSystem = new AttackResolutionSystem(_world.EntityManager);
-        _effectApplicationSystem = new EffectApplicationSystem(_world.EntityManager);
         _handBlockInteractionSystem = new HandBlockInteractionSystem(_world.EntityManager);
         _storedBlockManagementSystem = new StoredBlockManagementSystem(_world.EntityManager);
         _assignedBlocksToDiscardSystem = new AssignedBlocksToDiscardSystem(_world.EntityManager, GraphicsDevice);
+        _enemyDamageManagerSystem = new EnemyDamageManagerSystem(_world.EntityManager);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -195,11 +195,11 @@ public class Game1 : Game
         _world.AddSystem(_enemyAttackProgressManagementSystem);
         // _world.AddSystem(_blockConditionTrackingSystem);
         _world.AddSystem(_attackResolutionSystem);
-        _world.AddSystem(_effectApplicationSystem);
         _world.AddSystem(_enemyAttackDisplaySystem);
         _world.AddSystem(_assignedBlockCardsDisplaySystem);
         _world.AddSystem(_assignedBlocksToDiscardSystem);
         _world.AddSystem(_storedBlockManagementSystem);
+        _world.AddSystem(_enemyDamageManagerSystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });

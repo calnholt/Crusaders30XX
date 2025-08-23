@@ -14,6 +14,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly Microsoft.Xna.Framework.Content.ContentManager _content;
 		private Texture2D _demonTexture;
+		private float _pulseTimerSeconds;
+		private readonly float _pulseDurationSeconds = 0.25f;
 
 		[DebugEditable(DisplayName = "Screen Height Coverage", Step = 0.02f, Min = 0.05f, Max = 1f)]
 		public float ScreenHeightCoverage { get; set; } = 0.30f;
@@ -28,6 +30,13 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_content = content;
+			Crusaders30XX.ECS.Core.EventManager.Subscribe<Crusaders30XX.ECS.Events.DebugCommandEvent>(evt =>
+			{
+				if (evt.Command == "EnemyAbsorbPulse")
+				{
+					_pulseTimerSeconds = _pulseDurationSeconds;
+				}
+			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -35,7 +44,13 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<Enemy>();
 		}
 
-		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+		protected override void UpdateEntity(Entity entity, GameTime gameTime)
+		{
+			if (_pulseTimerSeconds > 0f)
+			{
+				_pulseTimerSeconds = System.Math.Max(0f, _pulseTimerSeconds - (float)gameTime.ElapsedGameTime.TotalSeconds);
+			}
+		}
 
 		public void Draw()
 		{
@@ -50,6 +65,12 @@ namespace Crusaders30XX.ECS.Systems
 				int viewportH = _graphicsDevice.Viewport.Height;
 				float desiredHeight = ScreenHeightCoverage * viewportH;
 				float scale = desiredHeight / tex.Height;
+				if (_pulseTimerSeconds > 0f)
+				{
+					float tp = 1f - (_pulseTimerSeconds / _pulseDurationSeconds);
+					float bump = 1f + 0.15f * (float)System.Math.Sin(tp * System.Math.PI);
+					scale *= bump;
+				}
 				var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
 				var pos = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
 				// Keep the entity's transform in sync so other systems (e.g., HP bars) can reference it

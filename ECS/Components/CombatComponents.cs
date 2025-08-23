@@ -73,6 +73,17 @@ namespace Crusaders30XX.ECS.Components
 	}
 
 	/// <summary>
+	/// Ephemeral data for the currently processing enemy attack.
+	/// Tracks remaining assigned block to be consumed before StoredBlock/HP.
+	/// </summary>
+	public class AttackProcessingContext : IComponent
+	{
+		public Entity Owner { get; set; }
+		public string ContextId { get; set; }
+		public int RemainingAssignedBlock { get; set; }
+	}
+
+	/// <summary>
 	/// Marks a card as currently assigned as block to a specific attack context and carries its animation state.
 	/// </summary>
 	public class AssignedBlockCard : IComponent
