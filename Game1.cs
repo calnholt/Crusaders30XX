@@ -173,11 +173,11 @@ public class Game1 : Game
         _world.AddSystem(_cathedralLightingSystem);
         _world.AddSystem(_desertBackgroundEffectSystem);
         _world.AddSystem(_playerWispParticleSystem);
+        _world.AddSystem(_tooltipDisplaySystem);
         _world.AddSystem(_courageDisplaySystem);
         _world.AddSystem(_temperanceDisplaySystem);
         _world.AddSystem(_storedBlockDisplaySystem);
         _world.AddSystem(_courageManagerSystem);
-        _world.AddSystem(_tooltipDisplaySystem);
         _world.AddSystem(_profilerSystem);
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_battleBackgroundSystem);
@@ -260,12 +260,12 @@ public class Game1 : Game
         FrameProfiler.Measure("TemperanceDisplaySystem.Draw", () => _temperanceDisplaySystem.Draw());
         FrameProfiler.Measure("StoredBlockDisplaySystem.Draw", () => _storedBlockDisplaySystem.Draw());
         FrameProfiler.Measure("HPDisplaySystem.Draw", () => _hpDisplaySystem.Draw());
-        FrameProfiler.Measure("TooltipDisplaySystem.Draw", () => _tooltipDisplaySystem.Draw());
         FrameProfiler.Measure("HandDisplaySystem.DrawHand", () => _handDisplaySystem.DrawHand());
         FrameProfiler.Measure("DebugMenuSystem.Draw", () => _debugMenuSystem.Draw());
         FrameProfiler.Measure("DrawPileDisplaySystem.Draw", () => _drawPileDisplaySystem.Draw());
         FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", () => _discardPileDisplaySystem.Draw());
         FrameProfiler.Measure("CardListModalSystem.Draw", () => _cardListModalSystem.Draw());
+        FrameProfiler.Measure("TooltipDisplaySystem.Draw", () => _tooltipDisplaySystem.Draw());
         FrameProfiler.Measure("ProfilerSystem.Draw", () => _profilerSystem.Draw());
         _spriteBatch.End();
 

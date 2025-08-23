@@ -13,20 +13,20 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphics;
 
-        [DebugEditable(DisplayName = "Start Delay Between Cards (s)", Step = 0.02f, Min = 0f, Max = 2f)]
-        public float StartDelayBetweenCardsSeconds { get; set; } = 0.12f;
+        		[DebugEditable(DisplayName = "Start Delay Between Cards (s)", Step = 0.02f, Min = 0f, Max = 2f)]
+		public float StartDelayBetweenCardsSeconds { get; set; } = 0.1f;
 
-        [DebugEditable(DisplayName = "Flight Duration (s)", Step = 0.02f, Min = 0.05f, Max = 2f)]
-        public float FlightDurationSeconds { get; set; } = 0.35f;
+		[DebugEditable(DisplayName = "Flight Duration (s)", Step = 0.02f, Min = 0.05f, Max = 2f)]
+		public float FlightDurationSeconds { get; set; } = 0.21f;
 
-        [DebugEditable(DisplayName = "Arc Height (px)", Step = 2, Min = 0, Max = 600)]
-        public int ArcHeightPx { get; set; } = 80;
+		[DebugEditable(DisplayName = "Arc Height (px)", Step = 2, Min = 0, Max = 600)]
+		public int ArcHeightPx { get; set; } = 180;
 
-        [DebugEditable(DisplayName = "End Scale", Step = 0.02f, Min = 0.1f, Max = 1.2f)]
-        public float EndScale { get; set; } = 0.3f;
+		[DebugEditable(DisplayName = "End Scale", Step = 0.02f, Min = 0.1f, Max = 1.2f)]
+		public float EndScale { get; set; } = 0.14f;
 
-        [DebugEditable(DisplayName = "Auto Advance To Action (s)", Step = 0.05f, Min = 0f, Max = 5f)]
-        public float AutoAdvanceSeconds { get; set; } = 0.6f;
+		[DebugEditable(DisplayName = "Auto Advance To Action (s)", Step = 0.05f, Min = 0f, Max = 5f)]
+		public float AutoAdvanceSeconds { get; set; } = 0.3f;
 
         private float _phaseElapsed;
 
