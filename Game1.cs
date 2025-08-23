@@ -39,6 +39,7 @@ public class Game1 : Game
     private TemperanceDisplaySystem _temperanceDisplaySystem;
     private StoredBlockDisplaySystem _storedBlockDisplaySystem;
     private CourageManagerSystem _courageManagerSystem;
+    private TemperanceManagerSystem _temperanceManagerSystem;
     private TooltipDisplaySystem _tooltipDisplaySystem;
     private HPDisplaySystem _hpDisplaySystem;
     private CardVisualSettingsDebugSystem _cardVisualSettingsDebugSystem;
@@ -137,6 +138,7 @@ public class Game1 : Game
         _temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _storedBlockDisplaySystem = new StoredBlockDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _courageManagerSystem = new CourageManagerSystem(_world.EntityManager);
+        _temperanceManagerSystem = new TemperanceManagerSystem(_world.EntityManager);
         _tooltipDisplaySystem = new TooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _cardVisualSettingsDebugSystem = new CardVisualSettingsDebugSystem(_world.EntityManager);
@@ -178,6 +180,7 @@ public class Game1 : Game
         _world.AddSystem(_temperanceDisplaySystem);
         _world.AddSystem(_storedBlockDisplaySystem);
         _world.AddSystem(_courageManagerSystem);
+        _world.AddSystem(_temperanceManagerSystem);
         _world.AddSystem(_profilerSystem);
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_battleBackgroundSystem);
