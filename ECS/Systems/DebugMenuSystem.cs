@@ -48,7 +48,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int Margin { get; set; } = 74;
 
 		[DebugEditable(DisplayName = "Panel Width", Step = 10, Min = 200, Max = 1000)]
-		public int PanelWidth { get; set; } = 430;
+		public int PanelWidth { get; set; } = 500;
 
 		[DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 64)]
 		public int Padding { get; set; } = 9;

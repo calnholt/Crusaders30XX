@@ -259,8 +259,8 @@ public class Game1 : Game
         FrameProfiler.Measure("CourageDisplaySystem.Draw", () => _courageDisplaySystem.Draw());
         FrameProfiler.Measure("TemperanceDisplaySystem.Draw", () => _temperanceDisplaySystem.Draw());
         FrameProfiler.Measure("StoredBlockDisplaySystem.Draw", () => _storedBlockDisplaySystem.Draw());
-        FrameProfiler.Measure("TooltipDisplaySystem.Draw", () => _tooltipDisplaySystem.Draw());
         FrameProfiler.Measure("HPDisplaySystem.Draw", () => _hpDisplaySystem.Draw());
+        FrameProfiler.Measure("TooltipDisplaySystem.Draw", () => _tooltipDisplaySystem.Draw());
         FrameProfiler.Measure("HandDisplaySystem.DrawHand", () => _handDisplaySystem.DrawHand());
         FrameProfiler.Measure("DebugMenuSystem.Draw", () => _debugMenuSystem.Draw());
         FrameProfiler.Measure("DrawPileDisplaySystem.Draw", () => _drawPileDisplaySystem.Draw());

@@ -25,13 +25,26 @@ namespace Crusaders30XX.ECS.Systems
 		public int Padding { get; set; } = 8;
 
 		[DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 64)]
-		public int CornerRadius { get; set; } = 8;
+		public int CornerRadius { get; set; } = 4;
 
 		[DebugEditable(DisplayName = "Fade Seconds", Step = 0.05f, Min = 0.05f, Max = 1.5f)]
-		public float FadeSeconds { get; set; } = 0.2f;
+		public float FadeSeconds { get; set; } = 0.1f;
 
 		[DebugEditable(DisplayName = "Max Alpha", Step = 5, Min = 0, Max = 255)]
 		public int MaxAlpha { get; set; } = 220;
+
+		[DebugEditable(DisplayName = "Text Scale", Step = 0.1f, Min = 0.5f, Max = 2.0f)]
+		public float TextScale { get; set; } = 0.5f;
+
+		[DebugEditable(DisplayName = "Text Color R", Step = 1, Min = 0, Max = 255)]
+		public int TextColorR { get; set; } = 255;
+
+		[DebugEditable(DisplayName = "Text Color G", Step = 1, Min = 0, Max = 255)]
+		public int TextColorG { get; set; } = 255;
+
+		[DebugEditable(DisplayName = "Text Color B", Step = 1, Min = 0, Max = 255)]
+		public int TextColorB { get; set; } = 255;
+
 
 		private class FadeState { public float Alpha01; public bool TargetVisible; public Rectangle Rect; public string Text; }
 		private readonly System.Collections.Generic.Dictionary<int, FadeState> _fadeByEntityId = new();
@@ -75,7 +88,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				string text = top.UI.Tooltip;
 				int pad = System.Math.Max(0, Padding);
-				var size = _font.MeasureString(text);
+				var size = _font.MeasureString(text) * TextScale;
 				int w = (int)System.Math.Ceiling(size.X) + pad * 2;
 				int h = (int)System.Math.Ceiling(size.Y) + pad * 2;
 
@@ -145,21 +158,15 @@ namespace Crusaders30XX.ECS.Systems
 
 				int alpha = (int)System.Math.Round(MaxAlpha * fs.Alpha01);
 				var backColor = new Color(0, 0, 0, System.Math.Clamp(alpha, 0, 255));
-				_spriteBatch.Draw(_rounded, fs.Rect, backColor);
-				DrawBorder(fs.Rect, Color.White, 2);
+				_spriteBatch.Draw(_rounded, fs.Rect, null, backColor, 0f, Vector2.Zero, SpriteEffects.None, 0.999f);
+				// DrawBorder(fs.Rect, Color.White, 2);
 				int pad = System.Math.Max(0, Padding);
 				var textPos = new Vector2(fs.Rect.X + pad, fs.Rect.Y + pad);
-				_spriteBatch.DrawString(_font, fs.Text, textPos, Color.White * fs.Alpha01);
+				var textColor = new Color(TextColorR, TextColorG, TextColorB, 255) * fs.Alpha01;
+				_spriteBatch.DrawString(_font, fs.Text, textPos, textColor, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 1.0f);
 			}
 		}
 
-		private void DrawBorder(Rectangle r, Color color, int thickness)
-		{
-			_spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Y, r.Width, thickness), color);
-			_spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Bottom - thickness, r.Width, thickness), color);
-			_spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Y, thickness, r.Height), color);
-			_spriteBatch.Draw(_pixel, new Rectangle(r.Right - thickness, r.Y, thickness, r.Height), color);
-		}
 	}
 }
 
