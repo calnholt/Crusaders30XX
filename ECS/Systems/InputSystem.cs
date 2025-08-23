@@ -163,10 +163,6 @@ namespace Crusaders30XX.ECS.Systems
             {
                 // Publish debug command event based on button command
                 EventManager.Publish(new DebugCommandEvent { Command = button.Command });
-                if (button.Command == "ConfirmEnemyAttack")
-                {
-                    EventManager.Publish(new Crusaders30XX.ECS.Events.DebugCommandEvent { Command = "ConfirmEnemyAttack" });
-                }
             }
 
             var drawPileClickable = entity.GetComponent<DrawPileClickable>();
