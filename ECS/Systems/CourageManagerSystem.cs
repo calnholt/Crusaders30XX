@@ -40,7 +40,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnCardMoved(CardMoved evt)
 		{
 			// When assigned blocks land in discard, grant Courage for red cards
-			if (evt.To != CardZoneType.DiscardPile || evt.Card == null) return;
+			if (evt.To != CardZoneType.DiscardPile && evt.From != CardZoneType.AssignedBlock) return;
 			var data = evt.Card.GetComponent<CardData>();
 			if (data == null) return;
 			if (data.Color != CardData.CardColor.Red) return;
