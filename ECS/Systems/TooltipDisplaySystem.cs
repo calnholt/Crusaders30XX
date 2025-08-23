@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -47,7 +48,7 @@ namespace Crusaders30XX.ECS.Systems
 
 
 		private class FadeState { public float Alpha01; public bool TargetVisible; public Rectangle Rect; public string Text; }
-		private readonly System.Collections.Generic.Dictionary<int, FadeState> _fadeByEntityId = new();
+		private readonly Dictionary<int, FadeState> _fadeByEntityId = new();
 
 		public TooltipDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
 			: base(entityManager)
@@ -59,7 +60,7 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel.SetData(new[] { Color.White });
 		}
 
-		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
 			return EntityManager.GetEntitiesWithComponent<UIElement>();
 		}

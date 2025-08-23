@@ -48,7 +48,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Absorb tween (panel -> enemy)
 		[DebugEditable(DisplayName = "Absorb Duration (s)", Step = 0.02f, Min = 0.05f, Max = 3f)]
-		public float AbsorbDurationSeconds { get; set; } = 0.2f;
+		public float AbsorbDurationSeconds { get; set; } = 0.4f;
 		[DebugEditable(DisplayName = "Absorb Target Y Offset", Step = 2, Min = -400, Max = 400)]
 		public int AbsorbTargetYOffset { get; set; } = -40;
 		private float _absorbElapsedSeconds = 0f;

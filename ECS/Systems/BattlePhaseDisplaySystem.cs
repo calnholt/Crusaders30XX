@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
@@ -58,7 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel.SetData(new[] { Color.White });
 		}
 
-		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
 			return EntityManager.GetEntitiesWithComponent<BattlePhaseState>();
 		}
@@ -66,7 +67,7 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			var state = entity.GetComponent<BattlePhaseState>();
-			if (state == null) return;
+			if (state == null || state.Phase == BattlePhase.ProcessEnemyAttack) return;
 			if (!_playedInitial)
 			{
 				_playedInitial = true;
