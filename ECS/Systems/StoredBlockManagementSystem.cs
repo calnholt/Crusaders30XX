@@ -3,6 +3,8 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.Diagnostics;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -14,13 +16,13 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<ModifyStoredBlock>(OnModifyStoredBlock);
 		}
 
-		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
 			// Stateless; nothing to iterate in Update
 			return System.Array.Empty<Entity>();
 		}
 
-		protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime) { }
+		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
 		private void OnModifyStoredBlock(ModifyStoredBlock e)
 		{

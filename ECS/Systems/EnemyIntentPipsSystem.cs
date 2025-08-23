@@ -37,7 +37,7 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<Enemy>().Where(e => e.HasComponent<AttackIntent>());
 		}
 
-		protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime) { }
+		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
 		public void Draw()
 		{

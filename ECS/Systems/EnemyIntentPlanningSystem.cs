@@ -5,6 +5,8 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Attacks;
+using Microsoft.Xna.Framework;
+using System.IO;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -21,18 +23,18 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<StartEnemyTurn>(_ => OnStartEnemyTurn());
 		}
 
-		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
 			// Operates on enemies with EnemyArsenal
 			return EntityManager.GetEntitiesWithComponent<EnemyArsenal>();
 		}
 
-		protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime) { }
+		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
 		private void EnsureAttackDefsLoaded()
 		{
 			if (_attackDefs != null) return;
-			_attackDefs = Crusaders30XX.ECS.Data.Attacks.AttackDefinitionCache.GetAll();
+			_attackDefs = AttackDefinitionCache.GetAll();
 		}
 
 		private void OnStartEnemyTurn()
@@ -119,11 +121,11 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			try
 			{
-				var dir = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
+				var dir = new DirectoryInfo(AppContext.BaseDirectory);
 				for (int i = 0; i < 6 && dir != null; i++)
 				{
-					var candidate = System.IO.Path.Combine(dir.FullName, filename);
-					if (System.IO.File.Exists(candidate)) return dir.FullName;
+					var candidate = Path.Combine(dir.FullName, filename);
+					if (File.Exists(candidate)) return dir.FullName;
 					dir = dir.Parent;
 				}
 			}

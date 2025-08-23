@@ -5,6 +5,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework.Input;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -15,7 +17,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font;
 		private readonly Texture2D _pixel;
-		private readonly System.Collections.Generic.List<Entity> _pendingReturn = new();
+		private readonly List<Entity> _pendingReturn = new();
 
 		[DebugEditable(DisplayName = "Anchor Offset X", Step = 2, Min = -1000, Max = 1000)]
 		public int AnchorOffsetX { get; set; } = 0;
@@ -67,7 +69,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			// Edge-detect click once per frame for all cards
 			var mouseNow = Microsoft.Xna.Framework.Input.Mouse.GetState();
-			_clickEdgeThisFrame = mouseNow.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed && _prevMouse.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+			_clickEdgeThisFrame = mouseNow.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
 			_mouseNow = mouseNow;
 
 			base.Update(gameTime);
@@ -78,7 +80,7 @@ namespace Crusaders30XX.ECS.Systems
 				for (int i = 0; i < _pendingReturn.Count; i++)
 				{
 					var card = _pendingReturn[i];
-					Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.CardMoveRequested
+					EventManager.Publish(new CardMoveRequested
 					{
 						Card = card,
 						Deck = deckEntity,
@@ -137,8 +139,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (abc == null) return;
 			// Click to return to hand when idle on the banner
 			var ui = entity.GetComponent<UIElement>();
-			var mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
-			bool click = mouse.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed && _prevMouse.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+			var mouse = Mouse.GetState();
+			bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
 			if (click && (abc.Phase == AssignedBlockCard.PhaseState.Idle || abc.Phase == AssignedBlockCard.PhaseState.Impact))
 			{
 				// Build a rect around CurrentPos to hit-test since we draw manually
@@ -284,8 +286,8 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private Microsoft.Xna.Framework.Input.MouseState _prevMouse;
-		private Microsoft.Xna.Framework.Input.MouseState _mouseNow;
+		private MouseState _prevMouse;
+		private MouseState _mouseNow;
 		private bool _clickEdgeThisFrame;
 	}
 }

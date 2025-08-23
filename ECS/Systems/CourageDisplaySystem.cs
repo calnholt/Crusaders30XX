@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -18,8 +19,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font;
-		private readonly System.Collections.Generic.Dictionary<(int radius, uint edgeKey), Texture2D> _circleTextures = new();
-		private readonly System.Collections.Generic.Dictionary<(int outer, int thickness), Texture2D> _ringTextures = new();
+		private readonly Dictionary<(int radius, uint edgeKey), Texture2D> _circleTextures = new();
+		private readonly Dictionary<(int outer, int thickness), Texture2D> _ringTextures = new();
 
 		// Debug-adjustable fields
 		[DebugEditable(DisplayName = "Circle Radius", Step = 1, Min = 1, Max = 300)]
@@ -48,7 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 			_font = font;
 		}
 
-		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
 			// Render courage for the first entity that has Player and Courage
 			return EntityManager.GetEntitiesWithComponent<Player>()

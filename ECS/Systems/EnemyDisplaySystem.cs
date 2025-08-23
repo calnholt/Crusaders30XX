@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Crusaders30XX.ECS.Systems
@@ -13,7 +14,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly Microsoft.Xna.Framework.Content.ContentManager _content;
+		private readonly ContentManager _content;
 		private Texture2D _demonTexture;
 		private float _pulseTimerSeconds;
 		private readonly float _pulseDurationSeconds = 0.25f;
@@ -29,20 +30,20 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Attack Animation Duration (s)", Step = .01f, Min = 0.01f, Max = 2f)]
 		public float _attackAnimDuration = 0.5f;
 
-		public EnemyDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Microsoft.Xna.Framework.Content.ContentManager content)
+		public EnemyDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_content = content;
-			Crusaders30XX.ECS.Core.EventManager.Subscribe<Crusaders30XX.ECS.Events.DebugCommandEvent>(evt =>
+			EventManager.Subscribe<DebugCommandEvent>(evt =>
 			{
 				if (evt.Command == "EnemyAbsorbPulse")
 				{
 					_pulseTimerSeconds = _pulseDurationSeconds;
 				}
 			});
-			Crusaders30XX.ECS.Core.EventManager.Subscribe<Crusaders30XX.ECS.Events.EnemyAbsorbComplete>(evt =>
+			EventManager.Subscribe<EnemyAbsorbComplete>(evt =>
 			{
 				// Start a brief attack animation timer; on completion, signal impact
 				_attackAnimTimer = _attackAnimDuration;

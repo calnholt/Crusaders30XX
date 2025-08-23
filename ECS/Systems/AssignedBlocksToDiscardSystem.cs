@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphics;
 
-        		[DebugEditable(DisplayName = "Start Delay Between Cards (s)", Step = 0.02f, Min = 0f, Max = 2f)]
+        [DebugEditable(DisplayName = "Start Delay Between Cards (s)", Step = 0.02f, Min = 0f, Max = 2f)]
 		public float StartDelayBetweenCardsSeconds { get; set; } = 0.1f;
 
 		[DebugEditable(DisplayName = "Flight Duration (s)", Step = 0.02f, Min = 0.05f, Max = 2f)]

@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
+using Microsoft.Xna.Framework.Content;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -16,14 +17,14 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
-        private readonly Microsoft.Xna.Framework.Content.ContentManager _content;
+        private readonly ContentManager _content;
         private Texture2D _background;
 
         // Debug-adjustable vertical offset for background positioning
         [DebugEditable(DisplayName = "Offset Y", Step = 2, Min = -2000, Max = 2000)]
         public int OffsetY { get; set; } = 0;
 
-        public BattleBackgroundSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Microsoft.Xna.Framework.Content.ContentManager content)
+        public BattleBackgroundSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;

@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -12,13 +13,13 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		public HandBlockInteractionSystem(EntityManager entityManager) : base(entityManager) { }
 
-		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
 			// Operates on hand cards; return empty and drive via Update
 			return System.Array.Empty<Entity>();
 		}
 
-		protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime) { }
+		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
 		public override void Update(GameTime gameTime)
 		{

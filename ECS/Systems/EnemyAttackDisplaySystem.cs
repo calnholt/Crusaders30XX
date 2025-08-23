@@ -5,6 +5,8 @@ using Crusaders30XX.ECS.Data.Attacks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Events;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -161,7 +163,7 @@ namespace Crusaders30XX.ECS.Systems
 			_font = font;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
-			Crusaders30XX.ECS.Core.EventManager.Subscribe<Crusaders30XX.ECS.Events.DebugCommandEvent>(evt =>
+			EventManager.Subscribe<DebugCommandEvent>(evt =>
 			{
 				if (evt.Command == "ConfirmEnemyAttack")
 				{
@@ -191,11 +193,11 @@ namespace Crusaders30XX.ECS.Systems
 			var ctx = intent?.Planned?.FirstOrDefault()?.ContextId;
 			if (!string.IsNullOrEmpty(ctx))
 			{
-				Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.ResolveAttack { ContextId = ctx });
+				EventManager.Publish(new ResolveAttack { ContextId = ctx });
 				// Also trigger assigned-blocks-to-discard animation kickoff event
-				Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.DebugCommandEvent { Command = "AnimateAssignedBlocksToDiscard" });
+				EventManager.Publish(new DebugCommandEvent { Command = "AnimateAssignedBlocksToDiscard" });
 				// Enemy absorb pulse
-				Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.DebugCommandEvent { Command = "EnemyAbsorbPulse" });
+				EventManager.Publish(new DebugCommandEvent { Command = "EnemyAbsorbPulse" });
 				// No per-attack context required; damage manager reads EnemyAttackProgress totals
 			}
 		}
@@ -274,7 +276,7 @@ namespace Crusaders30XX.ECS.Systems
 				_absorbElapsedSeconds += dt;
 				if (_absorbElapsedSeconds >= AbsorbDurationSeconds && !_absorbCompleteFired)
 				{
-					Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.EnemyAbsorbComplete { ContextId = intent.Planned[0].ContextId });
+					EventManager.Publish(new EnemyAbsorbComplete { ContextId = intent.Planned[0].ContextId });
 					_absorbCompleteFired = true;
 				}
 			}
@@ -510,7 +512,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private AttackDefinition LoadAttackDefinition(string id)
 		{
-			Crusaders30XX.ECS.Data.Attacks.AttackDefinitionCache.TryGet(id, out var def);
+			AttackDefinitionCache.TryGet(id, out var def);
 			return def;
 		}
 
@@ -524,7 +526,7 @@ namespace Crusaders30XX.ECS.Systems
 			return null;
 		}
 
-		private void AppendLeafConditionsWithStatus(ConditionNode node, string contextId, Entity attacker, System.Collections.Generic.List<(string text, float scale, Color color)> lines)
+		private void AppendLeafConditionsWithStatus(ConditionNode node, string contextId, Entity attacker, List<(string text, float scale, Color color)> lines)
 		{
 			if (node == null) return;
 			if (node.kind == "Leaf")
@@ -599,15 +601,6 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_spriteBatch.Draw(_pixel, inner, new Color(0, 0, 0, 0));
 			}
-		}
-
-		private static float EaseOutBack(float start, float end, float t, float overshoot)
-		{
-			// Standard easeOutBack on [0,1], remapped to [start,end]
-			float c1 = overshoot;
-			float c3 = c1 + 1f;
-			float eased = 1f + c3 * (float)System.Math.Pow(t - 1f, 3) + c1 * (float)System.Math.Pow(t - 1f, 2);
-			return start + (end - start) * eased;
 		}
 
 		private void SpawnDebris()

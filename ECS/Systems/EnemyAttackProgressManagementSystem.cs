@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Attacks;
+using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -25,7 +26,7 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<AttackIntent>();
 		}
 
-		protected override void UpdateEntity(Entity enemy, Microsoft.Xna.Framework.GameTime gameTime)
+		protected override void UpdateEntity(Entity enemy, GameTime gameTime)
 		{
 			var intent = enemy.GetComponent<AttackIntent>();
 			if (intent == null) return;
