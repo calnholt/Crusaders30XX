@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -16,6 +17,8 @@ namespace Crusaders30XX.ECS.Systems
 		private Texture2D _demonTexture;
 		private float _pulseTimerSeconds;
 		private readonly float _pulseDurationSeconds = 0.25f;
+		private Vector2 _attackOffset = new Vector2(-80f, -20f);
+		private Vector2 _attackTargetPos;
 
 		[DebugEditable(DisplayName = "Screen Height Coverage", Step = 0.02f, Min = 0.05f, Max = 1f)]
 		public float ScreenHeightCoverage { get; set; } = 0.30f;
@@ -23,6 +26,8 @@ namespace Crusaders30XX.ECS.Systems
 		public int CenterOffsetX { get; set; } = 520;
 		[DebugEditable(DisplayName = "Center Offset Y", Step = 5, Min = -2000, Max = 2000)]
 		public int CenterOffsetY { get; set; } = -100;
+		[DebugEditable(DisplayName = "Attack Animation Duration (s)", Step = .01f, Min = 0.01f, Max = 2f)]
+		public float _attackAnimDuration = 0.5f;
 
 		public EnemyDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Microsoft.Xna.Framework.Content.ContentManager content)
 			: base(entityManager)
@@ -37,6 +42,16 @@ namespace Crusaders30XX.ECS.Systems
 					_pulseTimerSeconds = _pulseDurationSeconds;
 				}
 			});
+			Crusaders30XX.ECS.Core.EventManager.Subscribe<Crusaders30XX.ECS.Events.EnemyAbsorbComplete>(evt =>
+			{
+				// Start a brief attack animation timer; on completion, signal impact
+				_attackAnimTimer = _attackAnimDuration;
+				_pendingContextId = evt.ContextId;
+				// Capture current player position as target (find Player Transform)
+				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+				var pt = player?.GetComponent<Transform>();
+				_attackTargetPos = pt?.Position ?? Vector2.Zero;
+			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -44,11 +59,23 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<Enemy>();
 		}
 
+		private float _attackAnimTimer;
+		private string _pendingContextId;
+
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			if (_pulseTimerSeconds > 0f)
 			{
 				_pulseTimerSeconds = System.Math.Max(0f, _pulseTimerSeconds - (float)gameTime.ElapsedGameTime.TotalSeconds);
+			}
+			if (_attackAnimTimer > 0f)
+			{
+				_attackAnimTimer = System.Math.Max(0f, _attackAnimTimer - (float)gameTime.ElapsedGameTime.TotalSeconds);
+				if (_attackAnimTimer == 0f && !string.IsNullOrEmpty(_pendingContextId))
+				{
+					Crusaders30XX.ECS.Core.EventManager.Publish(new EnemyAttackImpactNow { ContextId = _pendingContextId });
+					_pendingContextId = null;
+				}
 			}
 		}
 
@@ -72,7 +99,19 @@ namespace Crusaders30XX.ECS.Systems
 					scale *= bump;
 				}
 				var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
-				var pos = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
+				var basePos = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
+				var pos = basePos;
+				// Simple smash animation: move toward player then back
+				if (_attackAnimTimer > 0f)
+				{
+					float ta = 1f - (_attackAnimTimer / _attackAnimDuration); // 0->1
+					float outPhase = System.Math.Min(0.5f, ta) * 2f; // 0..1 over first half
+					float backPhase = System.Math.Max(0f, ta - 0.5f) * 2f; // 0..1 over second half
+					// move toward player position plus attack offset, then back
+					Vector2 outPos = _attackTargetPos + _attackOffset;
+					Vector2 mid = Vector2.Lerp(basePos, outPos, 1f - (float)System.Math.Pow(1f - outPhase, 3));
+					pos = Vector2.Lerp(mid, basePos, backPhase);
+				}
 				// Keep the entity's transform in sync so other systems (e.g., HP bars) can reference it
 				t.Position = pos;
 				// Share scale and texture dims for accurate HP positioning if needed

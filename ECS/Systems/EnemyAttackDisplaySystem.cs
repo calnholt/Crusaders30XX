@@ -50,6 +50,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Absorb Target Y Offset", Step = 2, Min = -400, Max = 400)]
 		public int AbsorbTargetYOffset { get; set; } = -40;
 		private float _absorbElapsedSeconds = 0f;
+		private bool _absorbCompleteFired = false;
 
 		[DebugEditable(DisplayName = "Center Offset X", Step = 2, Min = -1000, Max = 1000)]
 		public int OffsetX { get; set; } = 0;
@@ -230,6 +231,7 @@ namespace Crusaders30XX.ECS.Systems
 				_lastContextId = null;
 				_debris.Clear();
 				_absorbElapsedSeconds = 0f;
+				_absorbCompleteFired = false;
 				return;
 			}
 
@@ -247,6 +249,8 @@ namespace Crusaders30XX.ECS.Systems
 				_shakeElapsedSeconds = 0f;
 				_debris.Clear();
 				SpawnDebris();
+				_absorbElapsedSeconds = 0f;
+				_absorbCompleteFired = false;
 			}
 
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -268,10 +272,16 @@ namespace Crusaders30XX.ECS.Systems
 			if (phaseNow == BattlePhase.ProcessEnemyAttack)
 			{
 				_absorbElapsedSeconds += dt;
+				if (_absorbElapsedSeconds >= AbsorbDurationSeconds && !_absorbCompleteFired)
+				{
+					Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.EnemyAbsorbComplete { ContextId = intent.Planned[0].ContextId });
+					_absorbCompleteFired = true;
+				}
 			}
 			else
 			{
 				_absorbElapsedSeconds = 0f;
+				_absorbCompleteFired = false;
 			}
 		}
 

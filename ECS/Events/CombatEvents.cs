@@ -34,6 +34,18 @@ namespace Crusaders30XX.ECS.Events
 		public string ContextId;
 		public bool WasBlocked;
 	}
+
+	// Fired when the absorb tween completes and the enemy is about to attack
+	public class EnemyAbsorbComplete
+	{
+		public string ContextId;
+	}
+
+	// Fired when the enemy attack animation should deal damage to the player
+	public class EnemyAttackImpactNow
+	{
+		public string ContextId;
+	}
 }
 
 

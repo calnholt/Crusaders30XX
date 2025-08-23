@@ -15,6 +15,7 @@ namespace Crusaders30XX.ECS.Systems
         public EnemyDamageManagerSystem(EntityManager entityManager) : base(entityManager)
         {
             EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
+            EventManager.Subscribe<EnemyAttackImpactNow>(OnImpactNow);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -27,7 +28,19 @@ namespace Crusaders30XX.ECS.Systems
         private void OnApplyEffect(ApplyEffect e)
         {
             if ((e.EffectType ?? string.Empty) != "Damage") return;
-            int incoming = System.Math.Max(0, e.Amount);
+            // Accumulate incoming damage; apply on EnemyAttackImpactNow
+            int amt = System.Math.Max(0, e.Amount);
+            _pendingDamage += amt;
+        }
+
+        private int _pendingDamage;
+
+        private void OnImpactNow(EnemyAttackImpactNow e)
+        {
+            int incoming = _pendingDamage;
+            _pendingDamage = 0;
+            if (incoming <= 0) return;
+
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             if (player == null) return;
 
