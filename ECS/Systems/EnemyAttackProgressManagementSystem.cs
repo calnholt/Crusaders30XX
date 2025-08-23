@@ -181,6 +181,7 @@ namespace Crusaders30XX.ECS.Systems
 			p.IsBlocked = isBlocked;
 			p.ActualDamage = actual;
 			p.PreventedDamage = stored + p.AssignedBlockTotal + preventedBlockCondition;
+			p.DamageBeforePrevention = full; // actual + prevented (by definition of ComputeFullDamage)
 		}
 
 		private static string NormalizeColorKey(string color)

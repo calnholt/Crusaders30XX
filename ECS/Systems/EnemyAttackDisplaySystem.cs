@@ -195,27 +195,7 @@ namespace Crusaders30XX.ECS.Systems
 				Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.DebugCommandEvent { Command = "AnimateAssignedBlocksToDiscard" });
 				// Enemy absorb pulse
 				Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.DebugCommandEvent { Command = "EnemyAbsorbPulse" });
-				// Seed processing context with assigned block total for this context
-				var prog = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>()
-					.FirstOrDefault(e => e.GetComponent<EnemyAttackProgress>()?.ContextId == ctx)?.GetComponent<EnemyAttackProgress>();
-				int assigned = prog?.AssignedBlockTotal ?? 0;
-				var procE = EntityManager.GetEntitiesWithComponent<AttackProcessingContext>().FirstOrDefault();
-				if (procE == null)
-				{
-					procE = EntityManager.CreateEntity("AttackProcessingContext");
-					EntityManager.AddComponent(procE, new AttackProcessingContext { ContextId = ctx, RemainingAssignedBlock = assigned });
-				}
-				else
-				{
-					var apc = procE.GetComponent<AttackProcessingContext>();
-					if (apc == null)
-					{
-						apc = new AttackProcessingContext();
-						EntityManager.AddComponent(procE, apc);
-					}
-					apc.ContextId = ctx;
-					apc.RemainingAssignedBlock = assigned;
-				}
+				// No per-attack context required; damage manager reads EnemyAttackProgress totals
 			}
 		}
 

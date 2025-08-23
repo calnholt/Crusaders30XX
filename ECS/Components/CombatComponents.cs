@@ -61,6 +61,7 @@ namespace Crusaders30XX.ECS.Components
 		public bool IsBlocked { get; set; }
 		public int ActualDamage { get; set; }
 		public int PreventedDamage { get; set; }
+		public int DamageBeforePrevention { get; set; }
 	}
 
 	/// <summary>
@@ -72,16 +73,7 @@ namespace Crusaders30XX.ECS.Components
 		public Entity Owner { get; set; }
 	}
 
-	/// <summary>
-	/// Ephemeral data for the currently processing enemy attack.
-	/// Tracks remaining assigned block to be consumed before StoredBlock/HP.
-	/// </summary>
-	public class AttackProcessingContext : IComponent
-	{
-		public Entity Owner { get; set; }
-		public string ContextId { get; set; }
-		public int RemainingAssignedBlock { get; set; }
-	}
+
 
 	/// <summary>
 	/// Marks a card as currently assigned as block to a specific attack context and carries its animation state.

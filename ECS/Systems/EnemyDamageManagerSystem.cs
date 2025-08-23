@@ -31,13 +31,15 @@ namespace Crusaders30XX.ECS.Systems
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             if (player == null) return;
 
-            // 1) Consume assigned block for current processing context first
-            var apcE = EntityManager.GetEntitiesWithComponent<AttackProcessingContext>().FirstOrDefault();
-            var apc = apcE?.GetComponent<AttackProcessingContext>();
-            if (apc != null && apc.RemainingAssignedBlock > 0 && incoming > 0)
+            // 1) Consume assigned block for the current context from EnemyAttackProgress
+            var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+            var ctx = enemy?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault()?.ContextId;
+            if (!string.IsNullOrEmpty(ctx) && incoming > 0)
             {
-                int useAssigned = System.Math.Min(apc.RemainingAssignedBlock, incoming);
-                apc.RemainingAssignedBlock -= useAssigned;
+                var prog = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>()
+                    .FirstOrDefault(e2 => e2.GetComponent<EnemyAttackProgress>()?.ContextId == ctx)?.GetComponent<EnemyAttackProgress>();
+                int assigned = prog?.AssignedBlockTotal ?? 0;
+                int useAssigned = System.Math.Min(assigned, incoming);
                 incoming -= useAssigned;
             }
 

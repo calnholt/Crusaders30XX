@@ -40,15 +40,16 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnCardMoved(CardMoved evt)
 		{
 			// When assigned blocks land in discard, grant Courage for red cards
-			if (evt.To != CardZoneType.DiscardPile && evt.From != CardZoneType.AssignedBlock) return;
-			var data = evt.Card.GetComponent<CardData>();
-			if (data == null) return;
-			if (data.Color != CardData.CardColor.Red) return;
-			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-			if (player == null) return;
-			var c = player.GetComponent<Courage>();
-			if (c == null) { c = new Courage(); EntityManager.AddComponent(player, c); }
-			c.Amount = Math.Max(0, c.Amount + 1);
+			if (evt.To == CardZoneType.DiscardPile && evt.From == CardZoneType.AssignedBlock) {
+				var data = evt.Card.GetComponent<CardData>();
+				if (data == null) return;
+				if (data.Color != CardData.CardColor.Red) return;
+				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+				if (player == null) return;
+				var c = player.GetComponent<Courage>();
+				if (c == null) { c = new Courage(); EntityManager.AddComponent(player, c); }
+				c.Amount = Math.Max(0, c.Amount + 1);
+			}
 		}
 	}
 }
