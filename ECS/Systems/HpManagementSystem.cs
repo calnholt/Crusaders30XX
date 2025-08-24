@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.Diagnostics;
+using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -20,7 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<HP>();
 		}
 
-		protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime) { }
+		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
 		private void OnModifyHp(ModifyHpEvent e)
 		{

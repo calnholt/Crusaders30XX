@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -17,7 +18,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<CardMoved>(OnCardMoved);
         }
 
-        protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+        protected override IEnumerable<Entity> GetRelevantEntities()
         {
             return Array.Empty<Entity>();
         }
@@ -39,5 +40,4 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
 
