@@ -83,6 +83,13 @@ namespace Crusaders30XX.ECS.Events
         public Entity Deck { get; set; }
         public int DrawCount { get; set; }
     }
+        /// <summary>
+    /// Event published when deck shuffling is requested
+    /// </summary>
+    public class DeckShuffleEvent
+    {
+        public Entity Deck { get; set; }
+    }
     
     /// <summary>
     /// Event published when cards are drawn from deck

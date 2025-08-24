@@ -49,13 +49,14 @@ namespace Crusaders30XX.ECS.Core
         {
             if (_active == null)
             {
-                if (_rules.Count > 0)
-                {
-                    _active = _rules.Dequeue();
-                }
-                else if (_triggers.Count > 0)
+                // Triggers get priority when idle so they can stall just like rules
+                if (_triggers.Count > 0)
                 {
                     _active = _triggers.Dequeue();
+                }
+                else if (_rules.Count > 0)
+                {
+                    _active = _rules.Dequeue();
                 }
 
                 if (_active != null)

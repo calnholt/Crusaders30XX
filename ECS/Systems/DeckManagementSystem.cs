@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<DeckShuffleDrawEvent>(OnDeckShuffleDrawEvent);
             EventManager.Subscribe<RequestDrawCardsEvent>(OnRequestDrawCards);
             EventManager.Subscribe<RedrawHandEvent>(OnRedrawHandEvent);
+            EventManager.Subscribe<DeckShuffleEvent>(OnDeckShuffleEvent);
         }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -194,6 +195,18 @@ namespace Crusaders30XX.ECS.Systems
             return drawnCount;
         }
         
+        /// <summary>
+        /// Event handler for deck shuffle event
+        /// </summary>
+        private void OnDeckShuffleEvent(DeckShuffleEvent evt)
+        {
+            // Support null Deck in event by defaulting to the first deck entity
+            var deckEntity = evt.Deck ?? EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck == null) return;
+            ShuffleDrawPile(deck);
+        }
+
         /// <summary>
         /// Event handler for deck shuffle and draw events
         /// </summary>

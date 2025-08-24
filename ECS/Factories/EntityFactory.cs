@@ -154,7 +154,7 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, sprite);
             world.AddComponent(entity, portraitInfo);
             // Seed enemy with an arsenal + empty intent list for planning
-            world.AddComponent(entity, new EnemyArsenal { AttackIds = new List<string> { "demon_bite" } });
+            world.AddComponent(entity, new EnemyArsenal { AttackIds = new List<string> { "demon_bite",  "demon_bite_2" } });
             world.AddComponent(entity, new AttackIntent());
             
             return entity;

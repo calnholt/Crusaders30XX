@@ -191,11 +191,9 @@ namespace Crusaders30XX.ECS.Systems
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();
 			var ctx = intent?.Planned?.FirstOrDefault()?.ContextId;
+			// TODO: implement system to enqueue rules
 			EventQueue.EnqueueRule(new QueuedDiscardAssignedBlocksEvent(EntityManager, ctx));
-			// Next rules steps: start attack animation, then wait for impact signal
-			// Important ordering: resolve the attack BEFORE the impact so damage is pending
 			EventQueue.EnqueueRule(new QueuedResolveAttackEvent(ctx));
-			// Then run the enemy's attack animation and wait for impact to apply pending damage
 			EventQueue.EnqueueRule(new QueuedStartEnemyAttackAnimation(ctx));
 			EventQueue.EnqueueRule(new QueuedWaitImpactEvent(ctx));
 		}

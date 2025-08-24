@@ -207,6 +207,7 @@ public class Game1 : Game
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
 
+        EventManager.Publish(new DeckShuffleEvent { });
         EventManager.Publish(new RequestDrawCardsEvent { Count = 4 });
         // TODO: use this.Content to load your game content here
     }
