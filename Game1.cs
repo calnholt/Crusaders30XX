@@ -58,6 +58,7 @@ public class Game1 : Game
     private CardZoneSystem _cardZoneSystem;
     private AssignedBlocksToDiscardSystem _assignedBlocksToDiscardSystem;
     private EnemyDamageManagerSystem _enemyDamageManagerSystem;
+    private EventQueueSystem _eventQueueSystem;
 
     public Game1()
     {
@@ -144,6 +145,7 @@ public class Game1 : Game
         _cardVisualSettingsDebugSystem = new CardVisualSettingsDebugSystem(_world.EntityManager);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _hpManagementSystem = new HpManagementSystem(_world.EntityManager);
+        _eventQueueSystem = new EventQueueSystem(_world.EntityManager);
         _battlePhaseSystem = new BattlePhaseSystem(_world.EntityManager);
         _battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
@@ -167,6 +169,7 @@ public class Game1 : Game
         _world.AddSystem(_handDisplaySystem);
         _world.AddSystem(_cardZoneSystem);
         _world.AddSystem(_handBlockInteractionSystem);
+        _world.AddSystem(_eventQueueSystem);
         _world.AddSystem(_debugCommandSystem);
         _world.AddSystem(_drawPileDisplaySystem);
         _world.AddSystem(_discardPileDisplaySystem);
