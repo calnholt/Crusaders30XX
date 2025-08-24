@@ -46,6 +46,12 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public string ContextId;
 	}
+
+	// New: explicit signal to start the enemy's attack animation
+	public class StartEnemyAttackAnimation
+	{
+		public string ContextId;
+	}
 }
 
 

@@ -187,19 +187,17 @@ namespace Crusaders30XX.ECS.Systems
 				if (s != null) s.Phase = BattlePhase.ProcessEnemyAttack;
 			}
 
-			// Publish resolve for the current context (logic system will do effects)
+			// Enqueue: Discard assigned blocks as the first step
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();
 			var ctx = intent?.Planned?.FirstOrDefault()?.ContextId;
-			if (!string.IsNullOrEmpty(ctx))
-			{
-				EventManager.Publish(new ResolveAttack { ContextId = ctx });
-				// Also trigger assigned-blocks-to-discard animation kickoff event
-				EventManager.Publish(new DebugCommandEvent { Command = "AnimateAssignedBlocksToDiscard" });
-				// Enemy absorb pulse
-				EventManager.Publish(new DebugCommandEvent { Command = "EnemyAbsorbPulse" });
-				// No per-attack context required; damage manager reads EnemyAttackProgress totals
-			}
+			EventQueue.EnqueueRule(new QueuedDiscardAssignedBlocksEvent(EntityManager, ctx));
+			// Next rules steps: start attack animation, then wait for impact signal
+			// Important ordering: resolve the attack BEFORE the impact so damage is pending
+			EventQueue.EnqueueRule(new QueuedResolveAttackEvent(ctx));
+			// Then run the enemy's attack animation and wait for impact to apply pending damage
+			EventQueue.EnqueueRule(new QueuedStartEnemyAttackAnimation(ctx));
+			EventQueue.EnqueueRule(new QueuedWaitImpactEvent(ctx));
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

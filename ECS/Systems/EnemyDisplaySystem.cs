@@ -43,7 +43,7 @@ namespace Crusaders30XX.ECS.Systems
 					_pulseTimerSeconds = _pulseDurationSeconds;
 				}
 			});
-			EventManager.Subscribe<EnemyAbsorbComplete>(evt =>
+			EventManager.Subscribe<StartEnemyAttackAnimation>(evt =>
 			{
 				// Start a brief attack animation timer; on completion, signal impact
 				_attackAnimTimer = _attackAnimDuration;
