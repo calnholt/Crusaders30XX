@@ -1,8 +1,8 @@
 {
-  "id": "demon_bite_2",
+  "id": "demon_swipe",
   "name": "Shredding Bite",
   "target": "Player",
-  "resolveStep": 1,
+  "resolveStep": 2,
   "conditionsBlocked": {
     "kind": "All",
     "children": [

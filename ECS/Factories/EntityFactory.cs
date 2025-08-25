@@ -154,7 +154,7 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, sprite);
             world.AddComponent(entity, portraitInfo);
             // Seed enemy with an arsenal + empty intent list for planning
-            world.AddComponent(entity, new EnemyArsenal { AttackIds = new List<string> { "demon_bite",  "demon_bite_2" } });
+            world.AddComponent(entity, new EnemyArsenal { AttackIds = new List<string> { "demon_bite",  "demon_swipe" } });
             world.AddComponent(entity, new AttackIntent());
             
             return entity;
@@ -235,7 +235,7 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(enemyEntity, new HP { Max = enemy.MaxHealth, Current = enemy.CurrentHealth });
             world.AddComponent(enemyEntity, new PortraitInfo { TextureWidth = 0, TextureHeight = 0, CurrentScale = 1f });
             // Seed arsenal and intent for JSON-driven planning
-            world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = new List<string> { "demon_bite" } });
+            world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = new List<string> { "demon_bite", "demon_swipe" } });
             world.AddComponent(enemyEntity, new AttackIntent());
             
             return entity;

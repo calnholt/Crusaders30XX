@@ -61,9 +61,9 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					// First turn: generate both this turn and next turn
 					intent.Planned.Clear();
-					PlanOne(arsenal, intent);
+					PlanTurn(arsenal, intent);
 					next.Planned.Clear();
-					PlanOne(arsenal, next);
+					PlanTurn(arsenal, next);
 				}
 				else
 				{
@@ -91,47 +91,34 @@ namespace Crusaders30XX.ECS.Systems
 						}
 					}
 					next.Planned.Clear();
-					PlanOne(arsenal, next);
+					PlanTurn(arsenal, next);
 				}
 			}
 		}
 
-		private void PlanOne(EnemyArsenal arsenal, dynamic targetIntent)
+		private void PlanTurn(EnemyArsenal arsenal, dynamic targetIntent)
 		{
-			string chosenId = arsenal.AttackIds[0];
-			if (!_attackDefs.TryGetValue(chosenId, out var def)) return;
-			string ctx = Guid.NewGuid().ToString("N");
-			targetIntent.Planned.Add(new PlannedAttack
+			foreach (var chosenId in arsenal.AttackIds.Take(2))
 			{
-				AttackId = chosenId,
-				ResolveStep = System.Math.Max(1, def.resolveStep),
-				ContextId = ctx,
-				WasBlocked = false
-			});
-			EventManager.Publish(new IntentPlanned
-			{
-				AttackId = chosenId,
-				ContextId = ctx,
-				Step = def.resolveStep,
-				TelegraphText = def.name
-			});
-		}
-
-		private static string FindProjectRootContaining(string filename)
-		{
-			try
-			{
-				var dir = new DirectoryInfo(AppContext.BaseDirectory);
-				for (int i = 0; i < 6 && dir != null; i++)
+				if (!_attackDefs.TryGetValue(chosenId, out var def)) continue;
+				string ctx = Guid.NewGuid().ToString("N");
+				targetIntent.Planned.Add(new PlannedAttack
 				{
-					var candidate = Path.Combine(dir.FullName, filename);
-					if (File.Exists(candidate)) return dir.FullName;
-					dir = dir.Parent;
-				}
+					AttackId = chosenId,
+					ResolveStep = System.Math.Max(1, def.resolveStep),
+					ContextId = ctx,
+					WasBlocked = false
+				});
+				EventManager.Publish(new IntentPlanned
+				{
+					AttackId = chosenId,
+					ContextId = ctx,
+					Step = def.resolveStep,
+					TelegraphText = def.name
+				});
 			}
-			catch { }
-			return null;
 		}
+
 	}
 }
 
