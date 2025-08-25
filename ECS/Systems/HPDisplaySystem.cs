@@ -251,10 +251,24 @@ namespace Crusaders30XX.ECS.Systems
 			if (isPlayer && IncomingDamageFlashEnabled && hp.Max > 0)
 			{
 				int totalIncoming = 0;
-				foreach (var e in EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
+				// Only consider the active intent(s): the first planned attack per enemy
+				var activeCtxIds = EntityManager.GetEntitiesWithComponent<AttackIntent>()
+					.Select(en => en.GetComponent<AttackIntent>())
+					.Where(ai => ai != null && ai.Planned.Count > 0)
+					.Select(ai => ai.Planned[0]?.ContextId)
+					.Where(ctx => !string.IsNullOrEmpty(ctx))
+					.ToList();
+
+				if (activeCtxIds.Count > 0)
 				{
-					var p = e.GetComponent<EnemyAttackProgress>();
-					if (p != null && p.ActualDamage > 0) totalIncoming += p.ActualDamage;
+					foreach (var e in EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
+					{
+						var p = e.GetComponent<EnemyAttackProgress>();
+						if (p != null && p.ActualDamage > 0 && activeCtxIds.Contains(p.ContextId))
+						{
+							totalIncoming += p.ActualDamage;
+						}
+					}
 				}
 				if (totalIncoming > 0)
 				{
