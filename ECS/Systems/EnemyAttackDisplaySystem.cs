@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
 using System.Collections.Generic;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -176,16 +177,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			// Transition to processing phase
 			var stateEntity = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault();
-			if (stateEntity == null)
-			{
-				stateEntity = EntityManager.CreateEntity("BattlePhaseState");
-				EntityManager.AddComponent(stateEntity, new BattlePhaseState { Phase = BattlePhase.ProcessEnemyAttack });
-			}
-			else
-			{
-				var s = stateEntity.GetComponent<BattlePhaseState>();
-				if (s != null) s.Phase = BattlePhase.ProcessEnemyAttack;
-			}
+			var s = stateEntity.GetComponent<BattlePhaseState>();
+			if (s != null) s.Phase = BattlePhase.ProcessEnemyAttack;
 
 			// Enqueue: Discard assigned blocks as the first step
 			var enemy = GetRelevantEntities().FirstOrDefault();
@@ -194,6 +187,7 @@ namespace Crusaders30XX.ECS.Systems
 			// TODO: implement system to enqueue rules
 			EventQueue.EnqueueRule(new QueuedDiscardAssignedBlocksEvent(EntityManager, ctx));
 			EventQueue.EnqueueRule(new QueuedResolveAttackEvent(ctx));
+			EventQueue.EnqueueRule(new QueuedWaitAbsorbEvent(ctx));
 			EventQueue.EnqueueRule(new QueuedStartEnemyAttackAnimation(ctx));
 			EventQueue.EnqueueRule(new QueuedWaitImpactEvent(ctx));
 			EventQueue.EnqueueRule(new QueuedAdvanceToNextPlannedAttackEvent(EntityManager, ctx));
@@ -221,6 +215,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime)
 		{
+			var phaseNow = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault().GetComponent<BattlePhaseState>().Phase;
+			if (phaseNow == BattlePhase.Block) { 
+				_absorbElapsedSeconds = 0f;
+				_absorbCompleteFired = false;
+			}
 			var intent = entity.GetComponent<AttackIntent>();
 			if (intent == null || intent.Planned.Count == 0)
 			{
@@ -229,8 +228,6 @@ namespace Crusaders30XX.ECS.Systems
 				_justImpacted = false;
 				_lastContextId = null;
 				_debris.Clear();
-				_absorbElapsedSeconds = 0f;
-				_absorbCompleteFired = false;
 				return;
 			}
 
@@ -248,8 +245,6 @@ namespace Crusaders30XX.ECS.Systems
 				_shakeElapsedSeconds = 0f;
 				_debris.Clear();
 				SpawnDebris();
-				_absorbElapsedSeconds = 0f;
-				_absorbCompleteFired = false;
 			}
 
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -267,20 +262,14 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 			// Update absorb tween timer based on battle phase
-			var phaseNow = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase ?? BattlePhase.StartOfBattle;
 			if (phaseNow == BattlePhase.ProcessEnemyAttack)
 			{
 				_absorbElapsedSeconds += dt;
-				if (_absorbElapsedSeconds >= AbsorbDurationSeconds && !_absorbCompleteFired)
+				if (_absorbElapsedSeconds >= AbsorbDurationSeconds)
 				{
 					EventManager.Publish(new EnemyAbsorbComplete { ContextId = intent.Planned[0].ContextId });
 					_absorbCompleteFired = true;
 				}
-			}
-			else
-			{
-				_absorbElapsedSeconds = 0f;
-				_absorbCompleteFired = false;
 			}
 		}
 
@@ -289,6 +278,7 @@ namespace Crusaders30XX.ECS.Systems
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();
 			if (intent == null || intent.Planned.Count == 0 || _font == null) return;
+			if (_absorbCompleteFired) return;
 
 			var pa = intent.Planned[0];
 			var def = LoadAttackDefinition(pa.AttackId);
@@ -352,15 +342,12 @@ namespace Crusaders30XX.ECS.Systems
 			if (phaseNow == BattlePhase.ProcessEnemyAttack)
 			{
 				var enemyT = enemy?.GetComponent<Transform>();
-				if (enemyT != null)
-				{
-					float dur = System.Math.Max(0.05f, AbsorbDurationSeconds);
-					float tTween = MathHelper.Clamp(_absorbElapsedSeconds / dur, 0f, 1f);
-					float ease = 1f - (float)System.Math.Pow(1f - tTween, 3);
-					var targetPos = enemyT.Position + new Vector2(0, AbsorbTargetYOffset);
-					approachPos = Vector2.Lerp(center, targetPos, ease);
-					panelScale = MathHelper.Lerp(1f, 0f, ease);
-				}
+				var dur = System.Math.Max(0.05f, AbsorbDurationSeconds);
+				float tTween = MathHelper.Clamp(_absorbElapsedSeconds / dur, 0f, 1f);
+				float ease = 1f - (float)System.Math.Pow(1f - tTween, 3);
+				var targetPos = enemyT.Position + new Vector2(0, AbsorbTargetYOffset);
+				approachPos = Vector2.Lerp(center, targetPos, ease);
+				panelScale = MathHelper.Lerp(1f, 0f, ease);
 			}
 			int bgAlpha = System.Math.Clamp(BackgroundAlpha, 0, 255);
 

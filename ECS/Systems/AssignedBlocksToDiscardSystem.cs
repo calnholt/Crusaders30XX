@@ -61,10 +61,9 @@ namespace Crusaders30XX.ECS.Systems
                 UpdateEntity(flights[i], gameTime);
             }
 
-            // If no flights remain and enough time passed, advance to Action
-            if (!GetRelevantEntities().Any() && AutoAdvanceSeconds > 0f && _phaseElapsed >= AutoAdvanceSeconds)
+            // Do not auto-advance phase here; queued rules orchestrate transitions
+            if (!GetRelevantEntities().Any())
             {
-                EventManager.Publish(new ChangeBattlePhaseEvent { Next = BattlePhase.Action });
                 _phaseElapsed = 0f;
             }
         }
