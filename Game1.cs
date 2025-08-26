@@ -47,6 +47,7 @@ public class Game1 : Game
     private BattlePhaseSystem _battlePhaseSystem;
     private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
     private EnemyDisplaySystem _enemyDisplaySystem;
+    private EnemyTurnStarterSystem _enemyTurnStarterSystem;
     private EnemyIntentPipsSystem _enemyIntentPipsSystem;
     private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
     private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
@@ -149,6 +150,7 @@ public class Game1 : Game
         _battlePhaseSystem = new BattlePhaseSystem(_world.EntityManager);
         _battlePhaseSystem.Initialize();
         _battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _enemyTurnStarterSystem = new EnemyTurnStarterSystem(_world.EntityManager);
         _enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
@@ -193,6 +195,7 @@ public class Game1 : Game
         _world.AddSystem(_hpManagementSystem);
         _world.AddSystem(_battlePhaseSystem);
         _world.AddSystem(_battlePhaseDisplaySystem);
+        _world.AddSystem(_enemyTurnStarterSystem);
         _world.AddSystem(_enemyDisplaySystem);
         _world.AddSystem(_enemyIntentPipsSystem);
         _world.AddSystem(_enemyIntentPlanningSystem);
