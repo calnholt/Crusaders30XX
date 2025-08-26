@@ -196,6 +196,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventQueue.EnqueueRule(new QueuedResolveAttackEvent(ctx));
 			EventQueue.EnqueueRule(new QueuedStartEnemyAttackAnimation(ctx));
 			EventQueue.EnqueueRule(new QueuedWaitImpactEvent(ctx));
+			EventQueue.EnqueueRule(new QueuedAdvanceToNextPlannedAttackEvent(EntityManager, ctx));
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

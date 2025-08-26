@@ -147,6 +147,7 @@ public class Game1 : Game
         _hpManagementSystem = new HpManagementSystem(_world.EntityManager);
         _eventQueueSystem = new EventQueueSystem(_world.EntityManager);
         _battlePhaseSystem = new BattlePhaseSystem(_world.EntityManager);
+        _battlePhaseSystem.Initialize();
         _battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);

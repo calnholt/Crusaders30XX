@@ -85,7 +85,18 @@ namespace Crusaders30XX.ECS.Systems
 			_phaseTimer = 0f;
 			if (next == BattlePhase.Block)
 			{
-				EventManager.Publish(new StartEnemyTurn());
+				// Only start a new enemy turn if there are no current planned attacks.
+				// This prevents mid-turn replanning when advancing to the next planned attack.
+				bool hasPlanned = EntityManager.GetEntitiesWithComponent<AttackIntent>()
+					.Any(e =>
+					{
+						var i = e.GetComponent<AttackIntent>();
+						return i != null && i.Planned != null && i.Planned.Count > 0;
+					});
+				if (!hasPlanned)
+				{
+					EventManager.Publish(new StartEnemyTurn());
+				}
 			}
 		}
 
