@@ -201,9 +201,12 @@ namespace Crusaders30XX.ECS.Systems
             var cardInPlay = entity.GetComponent<CardInPlay>();
             if (cardInPlay != null && cardInPlay.IsPlayable)
             {
-                // Try to play the card
-                // This would typically trigger a card playing system
-                Console.WriteLine($"Card clicked: {entity.GetComponent<CardData>()?.Name}");
+                // If we're in Action phase, request to play; otherwise, ignore (Block handled elsewhere)
+                var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase ?? BattlePhase.StartOfBattle;
+                if (phase == BattlePhase.Action)
+                {
+                    EventManager.Publish(new PlayCardRequested { Card = entity });
+                }
             }
         }
         

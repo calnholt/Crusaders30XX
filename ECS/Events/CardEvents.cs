@@ -131,4 +131,13 @@ namespace Crusaders30XX.ECS.Events
         public CardZoneType To { get; set; }
         public string ContextId { get; set; }
     }
+
+    /// <summary>
+    /// Request to play a card during the Action phase.
+    /// The handling system should validate phase/zone and resolve effects.
+    /// </summary>
+    public class PlayCardRequested
+    {
+        public Entity Card { get; set; }
+    }
 } 

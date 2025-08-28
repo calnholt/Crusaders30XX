@@ -319,30 +319,65 @@ namespace Crusaders30XX.ECS.Factories
         }
 
         /// <summary>
-        /// Creates a hand of demo cards based on provided card definitions
+        /// Creates a set of demo cards from JSON definitions in ECS/Data/Cards
+        /// Description format: "X damage. If courage is >= threshold, this deals bonus damage instead."
         /// </summary>
         public static List<Entity> CreateDemoHand(World world)
         {
-            return [
-                // Red Cards
-                CreateCard(world, "Strike", "6 damage, if Courage >= 5: +3 damage", 0, CardData.CardType.Attack, CardData.CardRarity.Common, "", CardData.CardColor.Red, [], 3),
-                CreateCard(world, "Crush", "10 damage, if Courage >= 5: Stun", 0, CardData.CardType.Attack, CardData.CardRarity.Common, "", CardData.CardColor.Red, [], 3),
-                CreateCard(world, "Devastate", "If Courage >= 10: Lose 10 Courage, deal 30 damage", 0, CardData.CardType.Attack, CardData.CardRarity.Rare, "", CardData.CardColor.Red, [CardData.CardColor.Red], 3),
+            var result = new List<Entity>();
+            var all = Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.GetAll()
+                .Values
+                .OrderBy(d => d.id)
+                .ToList();
+            foreach (var def in all)
+            {
+                var name = def.name ?? def.id ?? "Card";
+                var color = ParseColor(def.color);
+                int blockValue = (color == CardData.CardColor.Black) ? 6 : 3;
+                // Use text from JSON directly
+                string description = def.text ?? "";
+                var entity = CreateCard(
+                    world,
+                    name,
+                    description,
+                    0,
+                    CardData.CardType.Attack,
+                    ParseRarity(def.rarity),
+                    "",
+                    color,
+                    new List<CardData.CardColor>(),
+                    blockValue
+                );
+                result.Add(entity);
+            }
+            return result;
+        }
 
-                // White Cards
-                CreateCard(world, "Empower", "Gain +2 Power", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, [], 3),
-                CreateCard(world, "Sharpen Blade", "Weapon gains +4 damage this turn and loses Once Per Turn", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, [], 3),
-                CreateCard(world, "Enrage", "Gain 3 Courage", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, [], 3),
-                CreateCard(world, "Siphon", "8 damage, heal amount dealt", 0, CardData.CardType.Attack, CardData.CardRarity.Uncommon, "", CardData.CardColor.White, [CardData.CardColor.Red], 3),
-                CreateCard(world, "Charge", "Next attack gains +5 damage", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.White, [], 3),
+        // Dynamic description generation removed; we now use JSON 'text' exclusively
 
-                // Black Cards (block value 6)
-                CreateCard(world, "Anticipate", "Gain 15 Block", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.Black, [CardData.CardColor.Black], 6),
-                CreateCard(world, "Mark", "Enemy gains Mark. If Courage >= 5: Gain 1 Temperance", 0, CardData.CardType.Skill, CardData.CardRarity.Common, "", CardData.CardColor.Black, [], 6),
-                CreateCard(world, "Finisher", "12 damage. If Courage >= 5 and this kills an enemy: Gain 1 Temperance", 0, CardData.CardType.Attack, CardData.CardRarity.Rare, "", CardData.CardColor.Black, [CardData.CardColor.Red], 6),
-                CreateCard(world, "Impervious", "Until next turn: immune to enemy attack abilities", 0, CardData.CardType.Skill, CardData.CardRarity.Rare, "", CardData.CardColor.Black, [CardData.CardColor.White], 6),
-                CreateCard(world, "Rapid Reflexes", "Next turn: blocks return to your hand after the monster turn", 0, CardData.CardType.Skill, CardData.CardRarity.Uncommon, "", CardData.CardColor.Black, [], 6)
-            ];
+        private static CardData.CardColor ParseColor(string color)
+        {
+            if (string.IsNullOrEmpty(color)) return CardData.CardColor.White;
+            switch (color.Trim().ToLowerInvariant())
+            {
+                case "red": return CardData.CardColor.Red;
+                case "black": return CardData.CardColor.Black;
+                case "white":
+                default: return CardData.CardColor.White;
+            }
+        }
+
+        private static CardData.CardRarity ParseRarity(string rarity)
+        {
+            if (string.IsNullOrEmpty(rarity)) return CardData.CardRarity.Common;
+            switch (rarity.Trim().ToLowerInvariant())
+            {
+                case "uncommon": return CardData.CardRarity.Uncommon;
+                case "rare": return CardData.CardRarity.Rare;
+                case "legendary": return CardData.CardRarity.Legendary;
+                case "common":
+                default: return CardData.CardRarity.Common;
+            }
         }
 
         // Overload for CreateCard to support color, cost type, and block value

@@ -1,0 +1,8 @@
+{
+  "id": "strike",
+  "name": "Strike",
+  "target": "Enemy",
+  "color": "Red",
+  "rarity": "Common",
+  "text": "Deal 10 damage."
+}

@@ -1,0 +1,9 @@
+{
+  "id": "strike_3",
+  "name": "Strike 3",
+  "target": "Enemy",
+  "color": "Red",
+  "rarity": "Common",
+  "text": "Deal 7 damage. If your Courage is >= 3, deal 13 damage instead."
+}
+

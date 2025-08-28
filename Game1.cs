@@ -60,6 +60,7 @@ public class Game1 : Game
     private AssignedBlocksToDiscardSystem _assignedBlocksToDiscardSystem;
     private EnemyDamageManagerSystem _enemyDamageManagerSystem;
     private EventQueueSystem _eventQueueSystem;
+    private CardPlaySystem _cardPlaySystem;
 
     public Game1()
     {
@@ -163,6 +164,7 @@ public class Game1 : Game
         _storedBlockManagementSystem = new StoredBlockManagementSystem(_world.EntityManager);
         _assignedBlocksToDiscardSystem = new AssignedBlocksToDiscardSystem(_world.EntityManager, GraphicsDevice);
         _enemyDamageManagerSystem = new EnemyDamageManagerSystem(_world.EntityManager);
+        _cardPlaySystem = new CardPlaySystem(_world.EntityManager);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -207,6 +209,7 @@ public class Game1 : Game
         _world.AddSystem(_assignedBlocksToDiscardSystem);
         _world.AddSystem(_storedBlockManagementSystem);
         _world.AddSystem(_enemyDamageManagerSystem);
+        _world.AddSystem(_cardPlaySystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
