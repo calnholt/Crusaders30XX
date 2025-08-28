@@ -127,22 +127,14 @@ namespace Crusaders30XX.ECS.Systems
 			var textPos = new Vector2(center.X - textSize.X / 2f + TextOffsetX, center.Y - textSize.Y / 2f + TextOffsetY);
 			_spriteBatch.DrawString(_font, text, textPos, Color.White, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
 
-			// Ensure a hoverable UI element exists over the courage circle for tooltip
+			// Update hoverable UI element bounds over the courage circle for tooltip (entity pre-created in factory)
 			var hover = EntityManager.GetEntitiesWithComponent<CourageTooltipAnchor>().FirstOrDefault();
 			int diameter = radius * 2;
 			var hitRect = new Rectangle((int)(center.X - radius), (int)(center.Y - radius), diameter, diameter);
-			if (hover == null)
-			{
-				hover = EntityManager.CreateEntity("UI_CourageTooltip");
-				EntityManager.AddComponent(hover, new CourageTooltipAnchor());
-				EntityManager.AddComponent(hover, new Transform { Position = new Vector2(hitRect.X, hitRect.Y), ZOrder = 10001 });
-				EntityManager.AddComponent(hover, new UIElement { Bounds = hitRect, IsInteractable = true, Tooltip = "Courage" });
-			}
-			else
-			{
-				var ui = hover.GetComponent<UIElement>();
-				if (ui != null) ui.Bounds = hitRect;
-			}
+			var ui = hover.GetComponent<UIElement>();
+			if (ui != null) ui.Bounds = hitRect;
+			var ht = hover.GetComponent<Transform>();
+			if (ht != null) ht.Position = new Vector2(hitRect.X, hitRect.Y);
 		}
 
 		private Texture2D GetOrCreateCircleTexture(int radius, Color edgeColor)

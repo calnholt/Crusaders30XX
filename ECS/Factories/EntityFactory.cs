@@ -113,6 +113,24 @@ namespace Crusaders30XX.ECS.Factories
             // Attach HP component
             world.AddComponent(entity, new HP { Max = 100, Current = 100 });
             
+            // Pre-create Courage tooltip hover entity (bounds updated by CourageDisplaySystem)
+            var courageTooltip = world.CreateEntity("UI_CourageTooltip");
+            world.AddComponent(courageTooltip, new CourageTooltipAnchor());
+            world.AddComponent(courageTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
+            world.AddComponent(courageTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Courage" });
+
+            // Pre-create Temperance tooltip hover entity (bounds updated by TemperanceDisplaySystem)
+            var temperanceTooltip = world.CreateEntity("UI_TemperanceTooltip");
+            world.AddComponent(temperanceTooltip, new TemperanceTooltipAnchor());
+            world.AddComponent(temperanceTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
+            world.AddComponent(temperanceTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Temperance" });
+
+            // Pre-create Stored Block tooltip hover entity (bounds updated by StoredBlockDisplaySystem)
+            var storedBlockTooltip = world.CreateEntity("UI_StoredBlockTooltip");
+            world.AddComponent(storedBlockTooltip, new StoredBlockTooltipAnchor());
+            world.AddComponent(storedBlockTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
+            world.AddComponent(storedBlockTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Stored Block" });
+
             return entity;
         }
         

@@ -97,6 +97,14 @@ namespace Crusaders30XX.ECS.Systems
 			var size = _font.MeasureString(text) * textScale;
 			var pos = new Vector2(center.X - size.X / 2f + TextOffsetX, center.Y - size.Y / 2f + TextOffsetY);
 			_spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+
+			// Update hoverable UI element bounds over the stored block square for tooltip (entity pre-created in factory)
+			var hover = EntityManager.GetEntitiesWithComponent<StoredBlockTooltipAnchor>().FirstOrDefault();
+			var hitRect = outerRect; // use the exact outer rect as hit area
+			var ui = hover.GetComponent<UIElement>();
+			if (ui != null) ui.Bounds = hitRect;
+			var ht = hover.GetComponent<Transform>();
+			if (ht != null) ht.Position = new Vector2(hitRect.X, hitRect.Y);
 		}
 
 

@@ -114,6 +114,15 @@ namespace Crusaders30XX.ECS.Systems
 			var size = _font.MeasureString(text) * textScale;
 			var pos = new Vector2(center.X - size.X / 2f + TextOffsetX, center.Y - size.Y / 2f + TextOffsetY);
 			_spriteBatch.DrawString(_font, text, pos, Color.Black, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+
+			// Update hoverable UI element bounds over the temperance triangle for tooltip (entity pre-created in factory)
+			var hover = EntityManager.GetEntitiesWithComponent<TemperanceTooltipAnchor>().FirstOrDefault();
+			int diameter = sizeOuter; // approximate square around triangle
+			var hitRect = new Rectangle((int)(center.X - diameter / 2f), (int)(center.Y - diameter / 2f), diameter, diameter);
+			var ui = hover.GetComponent<UIElement>();
+			if (ui != null) ui.Bounds = hitRect;
+			var ht = hover.GetComponent<Transform>();
+			if (ht != null) ht.Position = new Vector2(hitRect.X, hitRect.Y);
 		}
 
 		private Texture2D GetOrCreateTriangle(int size)

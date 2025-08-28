@@ -216,6 +216,22 @@ namespace Crusaders30XX.ECS.Components
     }
     
     /// <summary>
+    /// Marker for the temperance hover area used to show a tooltip.
+    /// </summary>
+    public class TemperanceTooltipAnchor : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+    
+    /// <summary>
+    /// Marker for the stored block hover area used to show a tooltip.
+    /// </summary>
+    public class StoredBlockTooltipAnchor : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+    
+    /// <summary>
     /// Component for animation
     /// </summary>
     public class Animation : IComponent
