@@ -48,13 +48,73 @@ namespace Crusaders30XX.ECS.Systems
                 if (!CardDefinitionCache.TryGet(alt, out def)) return;
             }
 
-            int totalDamage = ComputeDamageFromId(def.id);
-
-            // Apply damage to first enemy
+            // Publish explicit effects per card id
             var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
-            if (enemy != null && totalDamage != 0)
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
+            switch (def.id)
             {
-                EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -System.Math.Abs(totalDamage) });
+                case "strike":
+                {
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -10 });
+                    break;
+                }
+                case "strike_2":
+                {
+                    int dmg = courage >= 2 ? 12 : 8; // 8 base, +4 bonus
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
+                    break;
+                }
+                case "strike_3":
+                {
+                    int dmg = courage >= 3 ? 13 : 7; // 7 base, +6 bonus
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
+                    break;
+                }
+                case "strike_4":
+                {
+                    int dmg = courage >= 4 ? 14 : 6; // 6 base, +8 bonus
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
+                    break;
+                }
+                case "strike_5":
+                {
+                    int dmg = courage >= 5 ? 15 : 5; // 5 base, +10 bonus
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
+                    break;
+                }
+                case "strike_6":
+                {
+                    int dmg = courage >= 6 ? 16 : 4; // 4 base, +12 bonus
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
+                    break;
+                }
+                case "strike_7":
+                {
+                    int dmg = courage >= 7 ? 17 : 3; // 3 base, +14 bonus
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
+                    break;
+                }
+                case "strike_8":
+                {
+                    int dmg = courage >= 8 ? 18 : 2; // 2 base, +16 bonus
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
+                    break;
+                }
+                case "strike_9":
+                {
+                    int dmg = courage >= 9 ? 19 : 1; // 1 base, +18 bonus
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
+                    break;
+                }
+                case "strike_10":
+                {
+                    int dmg = courage >= 10 ? 20 : 0; // 0 base, +20 bonus
+                    if (dmg > 0) EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
+                    break;
+                }
+                default:
+                    break;
             }
 
             // Move the played card to discard
@@ -65,26 +125,7 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private int ComputeDamageFromId(string id)
-        {
-            if (string.IsNullOrEmpty(id)) return 0;
-            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-            int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
-            switch (id)
-            {
-                case "strike": return 10;
-                case "strike_2": return courage >= 2 ? (8 + 4) : 8;
-                case "strike_3": return courage >= 3 ? (7 + 6) : 7;
-                case "strike_4": return courage >= 4 ? (6 + 8) : 6;
-                case "strike_5": return courage >= 5 ? (5 + 10) : 5;
-                case "strike_6": return courage >= 6 ? (4 + 12) : 4;
-                case "strike_7": return courage >= 7 ? (3 + 14) : 3;
-                case "strike_8": return courage >= 8 ? (2 + 16) : 2;
-                case "strike_9": return courage >= 9 ? (1 + 18) : 1;
-                case "strike_10": return courage >= 10 ? (0 + 20) : 0;
-                default: return 0;
-            }
-        }
+        
     }
 }
 
