@@ -60,34 +60,23 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (e == null || string.IsNullOrWhiteSpace(e.Color)) return;
 			string color = NormalizeColorKey(e.Color);
+			if (string.IsNullOrEmpty(e.ContextId)) return;
 
-			// Match existing behavior: increment for all active planned contexts
-			var contexts = new List<(Entity enemy, string ctxId, string attackId)>();
-			foreach (var enemy in EntityManager.GetEntitiesWithComponent<AttackIntent>())
+			// Update only the specific context this assignment targets
+			var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>()
+				.FirstOrDefault(en => en.GetComponent<AttackIntent>()?.Planned?.Any(pa => pa.ContextId == e.ContextId) == true);
+			if (enemy == null) return;
+			var attackId = enemy.GetComponent<AttackIntent>().Planned.First(pa => pa.ContextId == e.ContextId).AttackId;
+			var p = FindOrCreateProgress(e.ContextId, enemy, attackId);
+			p.PlayedCards = SafeInc(p.PlayedCards);
+			switch (color)
 			{
-				var intent = enemy.GetComponent<AttackIntent>();
-				if (intent == null) continue;
-				foreach (var pa in intent.Planned)
-				{
-					if (!string.IsNullOrEmpty(pa.ContextId))
-						contexts.Add((enemy, pa.ContextId, pa.AttackId));
-				}
+				case "Red": p.PlayedRed = SafeInc(p.PlayedRed); break;
+				case "White": p.PlayedWhite = SafeInc(p.PlayedWhite); break;
+				case "Black": p.PlayedBlack = SafeInc(p.PlayedBlack); break;
 			}
-
-			foreach (var (enemy, ctx, attackId) in contexts)
-			{
-				var p = FindOrCreateProgress(ctx, enemy, attackId);
-				// Increment typed counters
-				p.PlayedCards = SafeInc(p.PlayedCards);
-				switch (color)
-				{
-					case "Red": p.PlayedRed = SafeInc(p.PlayedRed); break;
-					case "White": p.PlayedWhite = SafeInc(p.PlayedWhite); break;
-					case "Black": p.PlayedBlack = SafeInc(p.PlayedBlack); break;
-				}
-				if (e.DeltaBlock > 0) p.AssignedBlockTotal = SafeInc(p.AssignedBlockTotal, e.DeltaBlock);
-				Recompute(p);
-			}
+			if (e.DeltaBlock > 0) p.AssignedBlockTotal = SafeInc(p.AssignedBlockTotal, e.DeltaBlock);
+			Recompute(p);
 		}
 
 		private void OnBlockAssignmentRemoved(BlockAssignmentRemoved e)

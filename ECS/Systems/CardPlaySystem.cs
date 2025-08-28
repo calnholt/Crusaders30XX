@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
             if (evt?.Card == null) return;
 
             // Only in Action phase
-            var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase ?? BattlePhase.StartOfBattle;
+            var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase;
             if (phase != BattlePhase.Action) return;
 
             var data = evt.Card.GetComponent<CardData>();
