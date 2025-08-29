@@ -48,9 +48,21 @@ namespace Crusaders30XX.ECS.Systems
                 if (!CardDefinitionCache.TryGet(alt, out def)) return;
             }
 
+            // Gate by Action Points unless the card is a free action
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            var ap = player?.GetComponent<ActionPoints>();
+            bool isFree = def.isFreeAction;
+            if (!isFree)
+            {
+                int currentAp = ap?.Current ?? 0;
+                if (currentAp <= 0)
+                {
+                    return; // cannot play without AP
+                }
+            }
+
             // Publish explicit effects per card id
             var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
-            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
             switch (def.id)
             {
@@ -122,6 +134,12 @@ namespace Crusaders30XX.ECS.Systems
             if (deckEntity != null)
             {
                 EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PlayCard" });
+            }
+
+            // Consume 1 AP if not a free action
+            if (!isFree)
+            {
+                EventManager.Publish(new ModifyActionPointsEvent { Delta = -1 });
             }
         }
 

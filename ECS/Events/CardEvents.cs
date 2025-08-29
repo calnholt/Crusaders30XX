@@ -140,4 +140,22 @@ namespace Crusaders30XX.ECS.Events
     {
         public Entity Card { get; set; }
     }
+
+    /// <summary>
+    /// Increase or decrease the player's Action Points (AP) by Delta.
+    /// Clamped at zero; no explicit max is enforced here.
+    /// </summary>
+    public class ModifyActionPointsEvent
+    {
+        public int Delta { get; set; } = 0;
+    }
+
+    /// <summary>
+    /// Event fired when entering the Action phase to initialize action points for the player.
+    /// Carry additional data in the future if needed.
+    /// </summary>
+    public class StartPlayerTurn
+    {
+        public int StartingActionPoints { get; set; } = 1;
+    }
 } 

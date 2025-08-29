@@ -36,9 +36,11 @@ public class Game1 : Game
     private DesertBackgroundEffectSystem _desertBackgroundEffectSystem;
     private ProfilerSystem _profilerSystem;
     private CourageDisplaySystem _courageDisplaySystem;
+    private ActionPointDisplaySystem _actionPointDisplaySystem;
     private TemperanceDisplaySystem _temperanceDisplaySystem;
     private StoredBlockDisplaySystem _storedBlockDisplaySystem;
     private CourageManagerSystem _courageManagerSystem;
+    private ActionPointManagementSystem _actionPointManagementSystem;
     private TemperanceManagerSystem _temperanceManagerSystem;
     private TooltipDisplaySystem _tooltipDisplaySystem;
     private HPDisplaySystem _hpDisplaySystem;
@@ -138,9 +140,11 @@ public class Game1 : Game
         _desertBackgroundEffectSystem = new DesertBackgroundEffectSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _courageDisplaySystem = new CourageDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _actionPointDisplaySystem = new ActionPointDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _storedBlockDisplaySystem = new StoredBlockDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _courageManagerSystem = new CourageManagerSystem(_world.EntityManager);
+        _actionPointManagementSystem = new ActionPointManagementSystem(_world.EntityManager);
         _temperanceManagerSystem = new TemperanceManagerSystem(_world.EntityManager);
         _tooltipDisplaySystem = new TooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
@@ -186,9 +190,11 @@ public class Game1 : Game
         _world.AddSystem(_tooltipDisplaySystem);
         _world.AddSystem(_courageDisplaySystem);
         _world.AddSystem(_temperanceDisplaySystem);
+        _world.AddSystem(_actionPointDisplaySystem);
         _world.AddSystem(_storedBlockDisplaySystem);
         _world.AddSystem(_courageManagerSystem);
         _world.AddSystem(_temperanceManagerSystem);
+        _world.AddSystem(_actionPointManagementSystem);
         _world.AddSystem(_profilerSystem);
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_battleBackgroundSystem);
@@ -272,6 +278,7 @@ public class Game1 : Game
         FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", () => _battlePhaseDisplaySystem.Draw());
         FrameProfiler.Measure("CourageDisplaySystem.Draw", () => _courageDisplaySystem.Draw());
         FrameProfiler.Measure("TemperanceDisplaySystem.Draw", () => _temperanceDisplaySystem.Draw());
+        FrameProfiler.Measure("ActionPointDisplaySystem.Draw", () => _actionPointDisplaySystem.Draw());
         FrameProfiler.Measure("StoredBlockDisplaySystem.Draw", () => _storedBlockDisplaySystem.Draw());
         FrameProfiler.Measure("HPDisplaySystem.Draw", () => _hpDisplaySystem.Draw());
         FrameProfiler.Measure("HandDisplaySystem.DrawHand", () => _handDisplaySystem.DrawHand());

@@ -137,6 +137,16 @@ namespace Crusaders30XX.ECS.Components
         
         public int Amount { get; set; } = 0;
     }
+
+    /// <summary>
+    /// Per-turn resource representing the player's available action points during the Action phase.
+    /// </summary>
+    public class ActionPoints : IComponent
+    {
+        public Entity Owner { get; set; }
+
+        public int Current { get; set; } = 0;
+    }
     
     /// <summary>
     /// Optional resource component representing Temperance for an entity (e.g., the player)

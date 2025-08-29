@@ -10,6 +10,7 @@ namespace Crusaders30XX.ECS.Data.Cards
         public string color { get; set; } = "Red";     // Red | White | Black
         public string rarity { get; set; } = "Common"; // Common | Uncommon | Rare | Legendary
         public string text { get; set; }
+        public bool isFreeAction { get; set; }
     }
 }
 

@@ -108,6 +108,8 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new Courage { Amount = 0 });
             // Attach Temperance resource component by default
             world.AddComponent(entity, new Temperance { Amount = 0 });
+            // Attach Action Points component by default
+            world.AddComponent(entity, new ActionPoints { Current = 0 });
             // Attach StoredBlock resource component by default
             world.AddComponent(entity, new StoredBlock { Amount = 0 });
             // Attach HP component
@@ -124,6 +126,11 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(temperanceTooltip, new TemperanceTooltipAnchor());
             world.AddComponent(temperanceTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
             world.AddComponent(temperanceTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Temperance" });
+
+            // Pre-create Action Points tooltip hover entity (bounds updated by ActionPointDisplaySystem)
+            var apTooltip = world.CreateEntity("UI_APTooltip");
+            world.AddComponent(apTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
+            world.AddComponent(apTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Action Points" });
 
             // Pre-create Stored Block tooltip hover entity (bounds updated by StoredBlockDisplaySystem)
             var storedBlockTooltip = world.CreateEntity("UI_StoredBlockTooltip");
@@ -236,7 +243,7 @@ namespace Crusaders30XX.ECS.Factories
                     TextMarginY = (int)System.Math.Round(16 * sU),
                     NameScale = 0.7f * sU,
                     CostScale = 0.6f * sU,
-                    DescriptionScale = 0.4f * sU,
+                    DescriptionScale = 0.5f * sU,
                     BlockScale = 0.5f * sU,
                     BlockNumberScale = 0.9f * sU,
                     BlockNumberMarginX = (int)System.Math.Round(14 * sU),

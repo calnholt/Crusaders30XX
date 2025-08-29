@@ -112,13 +112,13 @@ namespace Crusaders30XX.ECS.Systems
             var cardCenter = new Vector2(cardRectForCenter.X + cardRectForCenter.Width / 2f, cardRectForCenter.Y + cardRectForCenter.Height / 2f);
             
             // Name text (wrapped within card width), rotated with card
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY), cardData.Name, Color.Black, _settings.NameScale);
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY), cardData.Name, Color.White, _settings.NameScale);
             
             // Draw cost
             string costText = GetCostText(cardData.CardCostType);
             DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(34 * _settings.UIScale)), costText, costColor, _settings.CostScale);
             
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)), cardData.Description, Color.Black, _settings.DescriptionScale);
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)), cardData.Description, Color.White, _settings.DescriptionScale);
             
             // Draw block value as blue number bottom-left
             if (cardData.BlockValue > 0)
@@ -147,7 +147,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             return color switch
             {
-                CardData.CardColor.Red => Color.Red,
+                CardData.CardColor.Red => Color.DarkRed,
                 CardData.CardColor.White => Color.White,
                 CardData.CardColor.Black => Color.DarkGray,
                 _ => Color.Gray
