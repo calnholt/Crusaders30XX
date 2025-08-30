@@ -29,6 +29,7 @@ namespace Crusaders30XX.ECS.Systems
 			var current = state.Phase;
 			if (current == BattlePhase.Block && _lastPhase != BattlePhase.Block)
 			{
+				System.Console.WriteLine("[EnemyTurnStarterSystem] Entered Block phase");
 				bool hasPlanned = EntityManager.GetEntitiesWithComponent<AttackIntent>()
 					.Any(e =>
 					{
@@ -37,6 +38,7 @@ namespace Crusaders30XX.ECS.Systems
 					});
 				if (!hasPlanned)
 				{
+					System.Console.WriteLine("[EnemyTurnStarterSystem] Publishing StartEnemyTurn");
 					EventManager.Publish(new StartEnemyTurn());
 				}
 			}

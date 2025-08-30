@@ -15,6 +15,7 @@ namespace Crusaders30XX.ECS.Systems
         public CardZoneSystem(EntityManager entityManager) : base(entityManager)
         {
             EventManager.Subscribe<CardMoveRequested>(OnCardMoveRequested);
+            System.Console.WriteLine("[CardZoneSystem] Subscribed to CardMoveRequested");
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -26,6 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardMoveRequested(CardMoveRequested evt)
         {
+            System.Console.WriteLine($"[CardZoneSystem] CardMoveRequested card={evt.Card?.Id} to={evt.Destination} reason={evt.Reason}");
             if (evt == null || evt.Card == null) return;
 
             var deckEntity = evt.Deck ?? EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
@@ -53,6 +55,14 @@ namespace Crusaders30XX.ECS.Systems
                     if (!deck.Hand.Contains(evt.Card))
                     {
                         deck.Hand.Add(evt.Card);
+                    }
+                    // Make card interactable in hand
+                    var uiH = evt.Card.GetComponent<UIElement>();
+                    if (uiH != null)
+                    {
+                        uiH.IsInteractable = true;
+                        uiH.IsHovered = false;
+                        uiH.IsClicked = false;
                     }
                     var t = evt.Card.GetComponent<Transform>();
                     if (t != null && t.Position == Vector2.Zero)
@@ -86,21 +96,56 @@ namespace Crusaders30XX.ECS.Systems
                     }
                     // Ensure the card is not still in hand to prevent later clicks from finding it
                     deck.Hand.Remove(evt.Card);
+                    // Make assigned block cards non-interactable as cards (interactions happen via assigned UI)
+                    var uiA = evt.Card.GetComponent<UIElement>();
+                    if (uiA != null)
+                    {
+                        uiA.IsInteractable = false;
+                        uiA.IsHovered = false;
+                        uiA.IsClicked = false;
+                    }
                     break;
                 }
                 case CardZoneType.DiscardPile:
                 {
                     deck.DiscardPile.Add(evt.Card);
+                    // Disable interactions for discarded cards
+                    var uiD = evt.Card.GetComponent<UIElement>();
+                    if (uiD != null)
+                    {
+                        uiD.IsInteractable = false;
+                        uiD.IsHovered = false;
+                        uiD.IsClicked = false;
+                    }
+                    // Push discarded cards behind UI
+                    var t = evt.Card.GetComponent<Transform>();
+                    if (t != null) t.ZOrder = -10000;
                     break;
                 }
                 case CardZoneType.DrawPile:
                 {
                     deck.DrawPile.Add(evt.Card);
+                    // Not interactable in draw pile
+                    var uiDP = evt.Card.GetComponent<UIElement>();
+                    if (uiDP != null)
+                    {
+                        uiDP.IsInteractable = false;
+                        uiDP.IsHovered = false;
+                        uiDP.IsClicked = false;
+                    }
                     break;
                 }
                 case CardZoneType.ExhaustPile:
                 {
                     deck.ExhaustPile.Add(evt.Card);
+                    // Not interactable in exhaust pile
+                    var uiE = evt.Card.GetComponent<UIElement>();
+                    if (uiE != null)
+                    {
+                        uiE.IsInteractable = false;
+                        uiE.IsHovered = false;
+                        uiE.IsClicked = false;
+                    }
                     break;
                 }
             }
@@ -113,6 +158,7 @@ namespace Crusaders30XX.ECS.Systems
                 To = evt.Destination,
                 ContextId = evt.ContextId
             });
+            System.Console.WriteLine($"[CardZoneSystem] CardMoved from={from} to={evt.Destination}");
         }
 
         private static CardZoneType GetZoneOf(Deck deck, Entity card)

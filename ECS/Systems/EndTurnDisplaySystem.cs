@@ -49,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 if (evt.Command == "EndTurn")
                 {
+                    System.Console.WriteLine("[EndTurnDisplaySystem] DebugCommand EndTurn received");
                     OnEndTurnPressed();
                 }
             });

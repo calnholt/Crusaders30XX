@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
 			EventManager.Subscribe<BlockAssignmentRemoved>(OnBlockAssignmentRemoved);
 			EventManager.Subscribe<ModifyStoredBlock>(_ => RecomputeAll());
+			System.Console.WriteLine("[EnemyAttackProgressManagementSystem] Subscribed to BlockAssignmentAdded, BlockAssignmentRemoved, ModifyStoredBlock");
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -58,6 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnBlockAssignmentAdded(BlockAssignmentAdded e)
 		{
+			System.Console.WriteLine($"[EnemyAttackProgressManagementSystem] BlockAssignmentAdded ctx={e.ContextId} color={e.Color} delta={e.DeltaBlock}");
 			if (e == null || string.IsNullOrWhiteSpace(e.Color)) return;
 			string color = NormalizeColorKey(e.Color);
 			if (string.IsNullOrEmpty(e.ContextId)) return;
@@ -81,6 +83,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnBlockAssignmentRemoved(BlockAssignmentRemoved e)
 		{
+			System.Console.WriteLine($"[EnemyAttackProgressManagementSystem] BlockAssignmentRemoved ctx={e.ContextId} color={e.Color} delta={e.DeltaBlock}");
 			if (e == null || string.IsNullOrEmpty(e.ContextId)) return;
 
 			// Find the owning enemy and attack for this context

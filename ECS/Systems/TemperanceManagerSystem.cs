@@ -16,6 +16,7 @@ namespace Crusaders30XX.ECS.Systems
         public TemperanceManagerSystem(EntityManager entityManager) : base(entityManager)
         {
             EventManager.Subscribe<CardMoved>(OnCardMoved);
+            System.Console.WriteLine("[TemperanceManagerSystem] Subscribed to CardMoved");
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -27,6 +28,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardMoved(CardMoved evt)
         {
+            System.Console.WriteLine($"[TemperanceManagerSystem] OnCardMoved from={evt.From} to={evt.To}");
             // When assigned blocks land in discard, grant Temperance for white cards
             if (evt.To == CardZoneType.DiscardPile && evt.From == CardZoneType.AssignedBlock) {
               var data = evt.Card.GetComponent<CardData>();

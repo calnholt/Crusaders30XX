@@ -17,6 +17,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
             EventManager.Subscribe<EnemyAttackImpactNow>(OnImpactNow);
+            System.Console.WriteLine("[EnemyDamageManagerSystem] Subscribed to ApplyEffect, EnemyAttackImpactNow");
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -38,6 +39,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnImpactNow(EnemyAttackImpactNow e)
         {
+            System.Console.WriteLine($"[EnemyDamageManagerSystem] EnemyAttackImpactNow context={e.ContextId} pending={_pendingDamage}");
             int incoming = _pendingDamage;
             _pendingDamage = 0;
             if (incoming <= 0) return;

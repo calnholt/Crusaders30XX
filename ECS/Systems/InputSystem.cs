@@ -199,10 +199,22 @@ namespace Crusaders30XX.ECS.Systems
         private void HandleCardClick(Entity entity)
         {
             var cardData = entity.GetComponent<CardData>();
-            Console.WriteLine($"[InputSystem]: {cardData.Name}");
-            var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault().GetComponent<BattlePhaseState>().Phase;
+            var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>().Phase;
+            Console.WriteLine($"[InputSystem] Card clicked name={cardData?.Name} phase={phase}");
             if (phase == BattlePhase.Action)
             {
+                var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                var deck = deckEntity?.GetComponent<Deck>();
+                if (deck == null)
+                {
+                    Console.WriteLine("[InputSystem] No deck found; ignoring card click");
+                    return;
+                }
+                if (!deck.Hand.Contains(entity))
+                {
+                    Console.WriteLine("[InputSystem] Clicked card is not in hand; ignoring");
+                    return;
+                }
                 EventManager.Publish(new PlayCardRequested { Card = entity });
             }
         }

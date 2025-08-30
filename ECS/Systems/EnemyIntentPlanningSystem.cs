@@ -20,7 +20,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		public EnemyIntentPlanningSystem(EntityManager em) : base(em)
 		{
-			EventManager.Subscribe<StartEnemyTurn>(_ => OnStartEnemyTurn());
+			EventManager.Subscribe<StartEnemyTurn>(_ => { System.Console.WriteLine("[EnemyIntentPlanningSystem] StartEnemyTurn received"); OnStartEnemyTurn(); });
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -39,6 +39,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnStartEnemyTurn()
 		{
+			System.Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
 			EnsureAttackDefsLoaded();
 			foreach (var enemy in GetRelevantEntities())
 			{

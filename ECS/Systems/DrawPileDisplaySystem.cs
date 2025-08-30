@@ -42,6 +42,7 @@ namespace Crusaders30XX.ECS.Systems
             _pixel.SetData(new[] { Color.White });
 
             EventManager.Subscribe<CardsDrawnEvent>(OnCardsDrawn);
+            System.Console.WriteLine("[DrawPileDisplaySystem] Subscribed to CardsDrawnEvent");
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

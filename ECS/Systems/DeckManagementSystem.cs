@@ -35,6 +35,7 @@ namespace Crusaders30XX.ECS.Systems
             var deck = deckEntity.GetComponent<Deck>();
             if (deck == null) return;
 
+            System.Console.WriteLine($"[DeckManagementSystem] OnRequestDrawCards count={evt.Count} hand={deck.Hand.Count} drawPile={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
             DrawCards(deck, Math.Max(1, evt.Count));
 
         }
@@ -46,6 +47,7 @@ namespace Crusaders30XX.ECS.Systems
             var deck = deckEntity.GetComponent<Deck>();
             if (deck == null) return;
 
+            System.Console.WriteLine($"[DeckManagementSystem] OnRedrawHand drawCount={evt.DrawCount} before hand={deck.Hand.Count} drawPile={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
             // Move current hand to discard, then reshuffle, then draw
             // Move current hand to discard and reset their transforms, so re-drawn cards animate from spawn
             foreach (var c in deck.Hand)
@@ -67,6 +69,7 @@ namespace Crusaders30XX.ECS.Systems
                 Deck = deckEntity,
                 DrawnCards = deck.Hand.ToList()
             });
+            System.Console.WriteLine($"[DeckManagementSystem] OnRedrawHand after hand={deck.Hand.Count} drawPile={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
         }
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
@@ -179,7 +182,9 @@ namespace Crusaders30XX.ECS.Systems
             var deckEntity = evt.Deck ?? EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             var deck = deckEntity?.GetComponent<Deck>();
             if (deck == null) return;
+            System.Console.WriteLine($"[DeckManagementSystem] OnDeckShuffle drawPile(before)={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
             ShuffleDrawPile(deck);
+            System.Console.WriteLine($"[DeckManagementSystem] OnDeckShuffle drawPile(after)={deck.DrawPile.Count}");
         }
 
         /// <summary>
@@ -190,6 +195,7 @@ namespace Crusaders30XX.ECS.Systems
             var deck = evt.Deck.GetComponent<Deck>();
             if (deck != null)
             {
+                System.Console.WriteLine($"[DeckManagementSystem] OnDeckShuffleDraw drawCount={evt.DrawCount} hand(before)={deck.Hand.Count}");
                 var drawnCards = ShuffleAndDraw(deck, evt.DrawCount);
                 
                 // Publish event for cards drawn
@@ -198,6 +204,7 @@ namespace Crusaders30XX.ECS.Systems
                     Deck = evt.Deck,
                     DrawnCards = deck.Hand.ToList()
                 });
+                System.Console.WriteLine($"[DeckManagementSystem] OnDeckShuffleDraw drawn={drawnCards} hand(after)={deck.Hand.Count}");
             }
         }
         

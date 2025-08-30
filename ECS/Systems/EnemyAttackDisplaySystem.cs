@@ -168,6 +168,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				if (evt.Command == "ConfirmEnemyAttack")
 				{
+					System.Console.WriteLine("[EnemyAttackDisplaySystem] DebugCommand ConfirmEnemyAttack received");
 					OnConfirmPressed();
 				}
 			});

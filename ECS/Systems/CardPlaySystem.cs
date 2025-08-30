@@ -18,6 +18,7 @@ namespace Crusaders30XX.ECS.Systems
         public CardPlaySystem(EntityManager entityManager) : base(entityManager)
         {
             EventManager.Subscribe<PlayCardRequested>(OnPlayCardRequested);
+            System.Console.WriteLine("[CardPlaySystem] Subscribed to PlayCardRequested");
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -33,7 +34,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // Only in Action phase
             var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase;
-            if (phase != BattlePhase.Action) return;
+            if (phase != BattlePhase.Action) { System.Console.WriteLine($"[CardPlaySystem] Ignored play, phase={phase}"); return; }
 
             var data = evt.Card.GetComponent<CardData>();
             if (data == null) return;
@@ -57,6 +58,7 @@ namespace Crusaders30XX.ECS.Systems
                 int currentAp = ap?.Current ?? 0;
                 if (currentAp <= 0)
                 {
+                    System.Console.WriteLine("[CardPlaySystem] Ignored play, AP=0");
                     return; // cannot play without AP
                 }
             }
@@ -64,11 +66,13 @@ namespace Crusaders30XX.ECS.Systems
             // Publish explicit effects per card id
             var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
             int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
+            System.Console.WriteLine($"[CardPlaySystem] Resolving card id={def.id} name={data.Name}");
             switch (def.id)
             {
                 case "strike":
                 {
                     EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -10 });
+                    System.Console.WriteLine("[CardPlaySystem] Applied strike -10");
                     break;
                 }
                 case "strike_2":
@@ -126,6 +130,7 @@ namespace Crusaders30XX.ECS.Systems
                     break;
                 }
                 default:
+                    System.Console.WriteLine($"[CardPlaySystem] No effect for id={def.id}");
                     break;
             }
 
@@ -134,12 +139,14 @@ namespace Crusaders30XX.ECS.Systems
             if (deckEntity != null)
             {
                 EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PlayCard" });
+                System.Console.WriteLine("[CardPlaySystem] Requested move to DiscardPile");
             }
 
             // Consume 1 AP if not a free action
             if (!isFree)
             {
                 EventManager.Publish(new ModifyActionPointsEvent { Delta = -1 });
+                System.Console.WriteLine("[CardPlaySystem] Consumed 1 AP");
             }
         }
 

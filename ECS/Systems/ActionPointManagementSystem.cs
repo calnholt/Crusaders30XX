@@ -17,6 +17,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangePhase);
 			EventManager.Subscribe<ModifyActionPointsEvent>(OnModifyAp);
+			System.Console.WriteLine("[ActionPointManagementSystem] Subscribed to ChangeBattlePhaseEvent, ModifyActionPointsEvent");
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -28,6 +29,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnChangePhase(ChangeBattlePhaseEvent evt)
 		{
+			System.Console.WriteLine($"[ActionPointManagementSystem] OnChangePhase next={evt.Next}");
 			if (evt == null) return;
 			if (evt.Next != BattlePhase.Action) return;
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
@@ -47,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnModifyAp(ModifyActionPointsEvent evt)
 		{
+			System.Console.WriteLine($"[ActionPointManagementSystem] OnModifyAp delta={evt.Delta}");
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			if (player == null) return;
 			var ap = player.GetComponent<ActionPoints>();

@@ -17,6 +17,7 @@ namespace Crusaders30XX.ECS.Systems
 		public AttackResolutionSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<ResolveAttack>(OnResolveAttack);
+			System.Console.WriteLine("[AttackResolutionSystem] Subscribed to ResolveAttack");
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

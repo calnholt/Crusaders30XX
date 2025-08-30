@@ -27,6 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 		public void Initialize()
 		{
 			Crusaders30XX.ECS.Core.EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangePhase);
+			System.Console.WriteLine("[BattlePhaseSystem] Subscribed to ChangeBattlePhaseEvent");
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -102,6 +103,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnChangePhase(ChangeBattlePhaseEvent evt)
 		{
+			System.Console.WriteLine($"[BattlePhaseSystem] ChangeBattlePhaseEvent next={evt.Next}");
 			var s = GetOrCreatePhaseState();
 			TransitionTo(s, evt.Next);
 		}

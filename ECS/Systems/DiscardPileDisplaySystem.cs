@@ -42,6 +42,7 @@ namespace Crusaders30XX.ECS.Systems
             _pixel = new Texture2D(graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
             EventManager.Subscribe<CardMoved>(OnCardMoved);
+            System.Console.WriteLine("[DiscardPileDisplaySystem] Subscribed to CardMoved");
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

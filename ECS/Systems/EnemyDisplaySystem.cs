@@ -41,6 +41,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (evt.Command == "EnemyAbsorbPulse")
 				{
 					_pulseTimerSeconds = _pulseDurationSeconds;
+					System.Console.WriteLine("[EnemyDisplaySystem] DebugCommand EnemyAbsorbPulse received");
 				}
 			});
 			EventManager.Subscribe<StartEnemyAttackAnimation>(evt =>
@@ -48,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 				// Start a brief attack animation timer; on completion, signal impact
 				_attackAnimTimer = _attackAnimDuration;
 				_pendingContextId = evt.ContextId;
+				System.Console.WriteLine($"[EnemyDisplaySystem] StartEnemyAttackAnimation context={evt.ContextId}");
 				// Capture current player position as target (find Player Transform)
 				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 				var pt = player?.GetComponent<Transform>();
