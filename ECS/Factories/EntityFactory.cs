@@ -114,6 +114,9 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new StoredBlock { Amount = 0 });
             // Attach HP component
             world.AddComponent(entity, new HP { Max = 100, Current = 100 });
+            // Attach starting Intellect and MaxHandSize stats
+            world.AddComponent(entity, new Intellect { Value = 4 });
+            world.AddComponent(entity, new MaxHandSize { Value = 5 });
             
             // Pre-create Courage tooltip hover entity (bounds updated by CourageDisplaySystem)
             var courageTooltip = world.CreateEntity("UI_CourageTooltip");

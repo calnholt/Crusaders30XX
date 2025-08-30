@@ -48,24 +48,28 @@ namespace Crusaders30XX.ECS.Systems
 				var intent = e.GetComponent<AttackIntent>();
 				if (t == null || info == null || intent == null) continue;
 				int count = intent.Planned.Count;
-				if (count <= 0) continue;
 
 				// Compute row center above enemy
 				var center = new Vector2(t.Position.X, t.Position.Y + OffsetY);
-				int diameter = PipRadius * 2;
-				int totalWidth = count * diameter + (count - 1) * PipGap;
-				int startX = (int)System.Math.Round(center.X - totalWidth / 2f);
 
-				// Determine the next-to-resolve step (min ResolveStep)
-				int minStep = intent.Planned.Min(p => p.ResolveStep);
-
-				for (int i = 0; i < count; i++)
+				// Current turn pips (if any)
+				if (count > 0)
 				{
-					var pa = intent.Planned[i];
-					int x = startX + i * (diameter + PipGap) + PipRadius;
-					int y = (int)center.Y;
-					bool isNext = pa.ResolveStep == minStep;
-					DrawCircle(new Vector2(x, y), PipRadius, isNext ? Color.Yellow : Color.LightGray, 2);
+					int diameter = PipRadius * 2;
+					int totalWidth = count * diameter + (count - 1) * PipGap;
+					int startX = (int)System.Math.Round(center.X - totalWidth / 2f);
+
+					// Determine the next-to-resolve step (min ResolveStep)
+					int minStep = intent.Planned.Min(p => p.ResolveStep);
+
+					for (int i = 0; i < count; i++)
+					{
+						var pa = intent.Planned[i];
+						int x = startX + i * (diameter + PipGap) + PipRadius;
+						int y = (int)center.Y;
+						bool isNext = pa.ResolveStep == minStep;
+						DrawCircle(new Vector2(x, y), PipRadius, isNext ? Color.Yellow : Color.LightGray, 2);
+					}
 				}
 
 				// Next turn preview row (smaller/faded) if present

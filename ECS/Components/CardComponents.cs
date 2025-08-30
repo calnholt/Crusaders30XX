@@ -167,6 +167,26 @@ namespace Crusaders30XX.ECS.Components
 
         public int Amount { get; set; } = 0;
     }
+
+    /// <summary>
+    /// Player stat for how many cards to draw at start of Block phase.
+    /// </summary>
+    public class Intellect : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int Value { get; set; } = 0;
+    }
+
+    /// <summary>
+    /// Player stat for maximum cards allowed in hand.
+    /// A separate component allows UI and effects to modify it independently
+    /// from the Deck's internal limit; a sync system keeps Deck.MaxHandSize aligned.
+    /// </summary>
+    public class MaxHandSize : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int Value { get; set; } = 5;
+    }
     
     /// <summary>
     /// Component for positioning and rendering

@@ -63,6 +63,9 @@ public class Game1 : Game
     private EnemyDamageManagerSystem _enemyDamageManagerSystem;
     private EventQueueSystem _eventQueueSystem;
     private CardPlaySystem _cardPlaySystem;
+    private EndTurnDisplaySystem _endTurnDisplaySystem;
+    private BlockPhaseDrawSystem _blockPhaseDrawSystem;
+    private HandSizeSyncSystem _handSizeSyncSystem;
 
     public Game1()
     {
@@ -159,6 +162,7 @@ public class Game1 : Game
         _enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _endTurnDisplaySystem = new EndTurnDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _enemyIntentPlanningSystem = new EnemyIntentPlanningSystem(_world.EntityManager);
         _enemyAttackProgressManagementSystem = new EnemyAttackProgressManagementSystem(_world.EntityManager);
@@ -169,6 +173,8 @@ public class Game1 : Game
         _assignedBlocksToDiscardSystem = new AssignedBlocksToDiscardSystem(_world.EntityManager, GraphicsDevice);
         _enemyDamageManagerSystem = new EnemyDamageManagerSystem(_world.EntityManager);
         _cardPlaySystem = new CardPlaySystem(_world.EntityManager);
+        _blockPhaseDrawSystem = new BlockPhaseDrawSystem(_world.EntityManager);
+        _handSizeSyncSystem = new HandSizeSyncSystem(_world.EntityManager);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -211,11 +217,14 @@ public class Game1 : Game
         // _world.AddSystem(_blockConditionTrackingSystem);
         _world.AddSystem(_attackResolutionSystem);
         _world.AddSystem(_enemyAttackDisplaySystem);
+        _world.AddSystem(_endTurnDisplaySystem);
         _world.AddSystem(_assignedBlockCardsDisplaySystem);
         _world.AddSystem(_assignedBlocksToDiscardSystem);
         _world.AddSystem(_storedBlockManagementSystem);
         _world.AddSystem(_enemyDamageManagerSystem);
         _world.AddSystem(_cardPlaySystem);
+        _world.AddSystem(_blockPhaseDrawSystem);
+        _world.AddSystem(_handSizeSyncSystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
@@ -273,6 +282,7 @@ public class Game1 : Game
         FrameProfiler.Measure("EnemyDisplaySystem.Draw", () => _enemyDisplaySystem.Draw());
         FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", () => _enemyIntentPipsSystem.Draw());
         FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", () => _enemyAttackDisplaySystem.Draw());
+        FrameProfiler.Measure("EndTurnDisplaySystem.Draw", () => _endTurnDisplaySystem.Draw());
         FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", () => _assignedBlockCardsDisplaySystem.Draw());
         FrameProfiler.Measure("PlayerWispParticleSystem.Draw", () => _playerWispParticleSystem.Draw());
         FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", () => _battlePhaseDisplaySystem.Draw());
