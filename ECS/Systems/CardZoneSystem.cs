@@ -133,6 +133,14 @@ namespace Crusaders30XX.ECS.Systems
                         uiDP.IsHovered = false;
                         uiDP.IsClicked = false;
                     }
+                    // Reset transform so highlight hit-test uses proper defaults when re-drawn
+                    var tdp = evt.Card.GetComponent<Transform>();
+                    if (tdp != null)
+                    {
+                        tdp.Rotation = 0f;
+                        if (tdp.Position == Vector2.Zero) { tdp.Position = Vector2.Zero; }
+                        tdp.Scale = Vector2.One;
+                    }
                     break;
                 }
                 case CardZoneType.ExhaustPile:

@@ -128,6 +128,14 @@ namespace Crusaders30XX.ECS.Systems
                     transform.Rotation = 0f;
                 }
                 deck.Hand.Add(card);
+                // Ensure UI becomes interactable again when a card enters the hand
+                var ui = card.GetComponent<UIElement>();
+                if (ui != null)
+                {
+                    ui.IsInteractable = true;
+                    ui.IsHovered = false;
+                    ui.IsClicked = false;
+                }
                 return true;
             }
             
