@@ -142,7 +142,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Confirm Button Text Scale", Step = 0.05f, Min = 0.3f, Max = 3f)]
 		public float ConfirmButtonTextScale { get; set; } = 0.7f;
 		[DebugEditable(DisplayName = "Confirm Button Z", Step = 10, Min = -100000, Max = 100000)]
-		public int ConfirmButtonZ { get; set; } = 3000;
+		public int ConfirmButtonZ { get; set; } = 20000;
 
 		// Debris
 		[DebugEditable(DisplayName = "Debris Count", Step = 1, Min = 0, Max = 100)]
@@ -474,7 +474,7 @@ namespace Crusaders30XX.ECS.Systems
 					var ui = confirmBtn.GetComponent<UIElement>();
 					var tr = confirmBtn.GetComponent<Transform>();
 					if (ui != null) ui.Bounds = btnRect;
-					if (tr != null) tr.ZOrder = ConfirmButtonZ;
+					if (tr != null) { tr.ZOrder = ConfirmButtonZ; tr.Position = new Vector2(btnRect.X, btnRect.Y); }
 				}
 			}
 

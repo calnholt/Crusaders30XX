@@ -81,10 +81,17 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Find top-most under mouse by ZOrder
-            var top = uiEntities
-                .Where(x => IsUnderMouse(x, mousePosition))
+            // Use UI.Bounds for non-card UI, rotated-hit for cards; ignore very small bounds
+            var underMouse = uiEntities
+                .Where(x =>
+                {
+                    // Reject degenerate bounds
+                    if (x.UI.Bounds.Width < 2 || x.UI.Bounds.Height < 2) return false;
+                    return IsUnderMouse(x, mousePosition);
+                })
                 .OrderByDescending(x => x.T?.ZOrder ?? 0)
-                .FirstOrDefault();
+                .ToList();
+            var top = underMouse.FirstOrDefault();
 
             if (top != null)
             {
