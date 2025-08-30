@@ -58,19 +58,6 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
-    /// Component for cards that are currently in play
-    /// </summary>
-    public class CardInPlay : IComponent
-    {
-        public Entity Owner { get; set; }
-        
-        public bool IsExhausted { get; set; } = false;
-        public bool IsUpgraded { get; set; } = false;
-        public int EnergyCost { get; set; } = 0;
-        public bool IsPlayable { get; set; } = true;
-    }
-    
-    /// <summary>
     /// Component for entities that represent a deck
     /// </summary>
     public class Deck : IComponent
@@ -95,9 +82,7 @@ namespace Crusaders30XX.ECS.Components
         public int MaxHealth { get; set; } = 100;
         public int CurrentHealth { get; set; } = 100;
         public int MaxEnergy { get; set; } = 3;
-        public int CurrentEnergy { get; set; } = 3;
         public int Block { get; set; } = 0;
-        public int Gold { get; set; } = 0;
         
         public Entity DeckEntity { get; set; }
         public Entity HandEntity { get; set; }
@@ -116,8 +101,6 @@ namespace Crusaders30XX.ECS.Components
         public int MaxHealth { get; set; } = 50;
         public int CurrentHealth { get; set; } = 50;
         public int Block { get; set; } = 0;
-        public List<Entity> Intentions { get; set; } = new();
-        public int IntentIndex { get; set; } = 0;
     }
 
     public enum EnemyType
@@ -476,17 +459,6 @@ namespace Crusaders30XX.ECS.Components
         AssignedBlock
     }
 
-    /// <summary>
-    /// Optional per-card component declaring its current zone and order within that zone.
-    /// Currently not required by existing systems, but provided to enable a future migration away from Deck lists.
-    /// </summary>
-    public class CardZone : IComponent
-    {
-        public Entity Owner { get; set; }
-        public Entity DeckEntity { get; set; }
-        public CardZoneType Zone { get; set; } = CardZoneType.DrawPile;
-        public int Index { get; set; } = 0;
-    }
 } 
 
 // New component used to animate assigned block cards flying to the discard pile

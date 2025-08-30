@@ -30,12 +30,6 @@ namespace Crusaders30XX.ECS.Factories
                 ImagePath = imagePath
             };
             
-            var cardInPlay = new CardInPlay
-            {
-                EnergyCost = cost,
-                IsPlayable = true
-            };
-            
             var transform = new Transform
             {
                 Position = Vector2.Zero,
@@ -55,7 +49,6 @@ namespace Crusaders30XX.ECS.Factories
             };
             
             world.AddComponent(entity, cardData);
-            world.AddComponent(entity, cardInPlay);
             world.AddComponent(entity, transform);
             world.AddComponent(entity, sprite);
             world.AddComponent(entity, uiElement);
@@ -75,9 +68,7 @@ namespace Crusaders30XX.ECS.Factories
                 MaxHealth = 100,
                 CurrentHealth = 100,
                 MaxEnergy = 3,
-                CurrentEnergy = 3,
                 Block = 0,
-                Gold = 0
             };
             
             var transform = new Transform
@@ -145,50 +136,6 @@ namespace Crusaders30XX.ECS.Factories
         }
         
         /// <summary>
-        /// Creates an enemy entity
-        /// </summary>
-        public static Entity CreateEnemy(World world, string name, int maxHealth, Vector2 position)
-        {
-            var entity = world.CreateEntity(name);
-            
-            var enemy = new Enemy
-            {
-                Name = name,
-                MaxHealth = maxHealth,
-                CurrentHealth = maxHealth,
-                Block = 0
-            };
-            
-            var transform = new Transform
-            {
-                Position = position,
-                Scale = Vector2.One
-            };
-            
-            var sprite = new Sprite
-            {
-                TexturePath = "enemy",
-                IsVisible = true
-            };
-            var portraitInfo = new PortraitInfo {
-                CurrentScale = 0,
-                Owner = entity,
-                TextureHeight = 0,
-                TextureWidth = 0,
-            };
-            
-            world.AddComponent(entity, enemy);
-            world.AddComponent(entity, transform);
-            world.AddComponent(entity, sprite);
-            world.AddComponent(entity, portraitInfo);
-            // Seed enemy with an arsenal + empty intent list for planning
-            world.AddComponent(entity, new EnemyArsenal { AttackIds = new List<string> { "demon_bite",  "demon_swipe" } });
-            world.AddComponent(entity, new AttackIntent());
-            
-            return entity;
-        }
-        
-        /// <summary>
         /// Creates a deck entity
         /// </summary>
         public static Entity CreateDeck(World world, string name = "Deck")
@@ -252,7 +199,7 @@ namespace Crusaders30XX.ECS.Factories
             
             // Create a default enemy (Demon) with HP and portrait info
             var enemyEntity = world.CreateEntity("Enemy_Demon");
-            var enemy = new Enemy { Name = "Demon", Type = EnemyType.Demon, MaxHealth = 80, CurrentHealth = 80 };
+            var enemy = new Enemy { Name = "Demon", Type = EnemyType.Demon, MaxHealth = 60, CurrentHealth = 60 };
             var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
             world.AddComponent(enemyEntity, enemy);
             world.AddComponent(enemyEntity, enemyTransform);
@@ -406,12 +353,6 @@ namespace Crusaders30XX.ECS.Factories
                 BlockValue = blockValue
             };
 
-            var cardInPlay = new CardInPlay
-            {
-                EnergyCost = cost,
-                IsPlayable = true
-            };
-
             var transform = new Transform
             {
                 Position = Vector2.Zero,
@@ -431,7 +372,6 @@ namespace Crusaders30XX.ECS.Factories
             };
 
             world.AddComponent(entity, cardData);
-            world.AddComponent(entity, cardInPlay);
             world.AddComponent(entity, transform);
             world.AddComponent(entity, sprite);
             world.AddComponent(entity, uiElement);
