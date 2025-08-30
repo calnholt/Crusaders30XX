@@ -64,8 +64,7 @@ public class Game1 : Game
     private EventQueueSystem _eventQueueSystem;
     private CardPlaySystem _cardPlaySystem;
     private EndTurnDisplaySystem _endTurnDisplaySystem;
-    private BlockPhaseDrawSystem _blockPhaseDrawSystem;
-    private HandSizeSyncSystem _handSizeSyncSystem;
+    private BattlePhaseDrawSystem _battlePhaseDrawSystem;
 
     public Game1()
     {
@@ -173,8 +172,7 @@ public class Game1 : Game
         _assignedBlocksToDiscardSystem = new AssignedBlocksToDiscardSystem(_world.EntityManager, GraphicsDevice);
         _enemyDamageManagerSystem = new EnemyDamageManagerSystem(_world.EntityManager);
         _cardPlaySystem = new CardPlaySystem(_world.EntityManager);
-        _blockPhaseDrawSystem = new BlockPhaseDrawSystem(_world.EntityManager);
-        _handSizeSyncSystem = new HandSizeSyncSystem(_world.EntityManager);
+        _battlePhaseDrawSystem = new BattlePhaseDrawSystem(_world.EntityManager);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -223,14 +221,12 @@ public class Game1 : Game
         _world.AddSystem(_storedBlockManagementSystem);
         _world.AddSystem(_enemyDamageManagerSystem);
         _world.AddSystem(_cardPlaySystem);
-        _world.AddSystem(_blockPhaseDrawSystem);
-        _world.AddSystem(_handSizeSyncSystem);
+        _world.AddSystem(_battlePhaseDrawSystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
 
         EventManager.Publish(new DeckShuffleEvent { });
-        EventManager.Publish(new RequestDrawCardsEvent { Count = 4 });
         // TODO: use this.Content to load your game content here
     }
     

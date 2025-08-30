@@ -56,7 +56,7 @@ namespace Crusaders30XX.ECS.Components
             Black
         }
     }
-    
+
     /// <summary>
     /// Component for cards that are currently in play
     /// </summary>
@@ -82,9 +82,6 @@ namespace Crusaders30XX.ECS.Components
         public List<Entity> DiscardPile { get; set; } = new();
         public List<Entity> ExhaustPile { get; set; } = new();
         public List<Entity> Hand { get; set; } = new();
-        
-        public int MaxHandSize { get; set; } = 10;
-        public int DrawPerTurn { get; set; } = 5;
     }
     
     

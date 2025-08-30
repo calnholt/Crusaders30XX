@@ -25,7 +25,6 @@ Components hold data and should be lightweight. Key components include:
 
 #### Card Components
 - `CardData`: Basic card information (name, description, cost, type, rarity)
-- `CardInPlay`: Runtime card state (exhausted, upgraded, energy cost, playable)
 
 #### Game State Components
 - `Player`: Player stats (health, energy, block, gold)

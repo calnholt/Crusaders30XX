@@ -195,11 +195,7 @@ namespace Crusaders30XX.ECS.Factories
         {
             var entity = world.CreateEntity(name);
             
-            var deck = new Deck
-            {
-                MaxHandSize = 10,
-                DrawPerTurn = 5
-            };
+            var deck = new Deck {};
             
             world.AddComponent(entity, deck);
             

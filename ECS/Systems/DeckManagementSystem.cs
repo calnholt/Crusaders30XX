@@ -70,32 +70,6 @@ namespace Crusaders30XX.ECS.Systems
         }
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
-            var deck = entity.GetComponent<Deck>();
-            if (deck == null) return;
-            
-            // Ensure all cards are properly categorized
-            CategorizeCards(deck);
-        }
-        
-        private void CategorizeCards(Deck deck)
-        {
-            // Move cards to appropriate piles based on their state
-            var allCards = deck.Cards.ToList();
-            
-            foreach (var card in allCards)
-            {
-                var cardInPlay = card.GetComponent<CardInPlay>();
-                if (cardInPlay != null && cardInPlay.IsExhausted)
-                {
-                    if (!deck.ExhaustPile.Contains(card))
-                    {
-                        deck.DrawPile.Remove(card);
-                        deck.DiscardPile.Remove(card);
-                        deck.Hand.Remove(card);
-                        deck.ExhaustPile.Add(card);
-                    }
-                }
-            }
         }
         
         /// <summary>
@@ -137,8 +111,9 @@ namespace Crusaders30XX.ECS.Systems
                     return false; // No cards to draw
                 }
             }
-            
-            if (deck.DrawPile.Count > 0 && deck.Hand.Count < deck.MaxHandSize)
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            var maxHandSize = player.GetComponent<MaxHandSize>().Value;
+            if (deck.DrawPile.Count > 0 && deck.Hand.Count < maxHandSize)
             {
                 var card = deck.DrawPile[0];
                 deck.DrawPile.RemoveAt(0);

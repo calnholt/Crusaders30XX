@@ -198,15 +198,12 @@ namespace Crusaders30XX.ECS.Systems
         
         private void HandleCardClick(Entity entity)
         {
-            var cardInPlay = entity.GetComponent<CardInPlay>();
-            if (cardInPlay != null && cardInPlay.IsPlayable)
+            var cardData = entity.GetComponent<CardData>();
+            Console.WriteLine($"[InputSystem]: {cardData.Name}");
+            var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault().GetComponent<BattlePhaseState>().Phase;
+            if (phase == BattlePhase.Action)
             {
-                // If we're in Action phase, request to play; otherwise, ignore (Block handled elsewhere)
-                var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase ?? BattlePhase.StartOfBattle;
-                if (phase == BattlePhase.Action)
-                {
-                    EventManager.Publish(new PlayCardRequested { Card = entity });
-                }
+                EventManager.Publish(new PlayCardRequested { Card = entity });
             }
         }
         
