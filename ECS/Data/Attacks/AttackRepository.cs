@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Crusaders30XX.ECS.Data.Attacks
 {
@@ -16,8 +17,23 @@ namespace Crusaders30XX.ECS.Data.Attacks
 				try
 				{
 					var json = File.ReadAllText(file);
-					var def = JsonSerializer.Deserialize<AttackDefinition>(json, opts);
-					if (def?.id != null) map[def.id] = def;
+					// Detect whether this file is a single AttackDefinition or an Enemy file with an 'attacks' array
+					var root = JsonNode.Parse(json);
+					if (root == null) continue;
+					if (root["attacks"] is JsonArray attacksArray)
+					{
+						foreach (var attackNode in attacksArray)
+						{
+							if (attackNode == null) continue;
+							var def = attackNode.Deserialize<AttackDefinition>(opts);
+							if (def?.id != null) map[def.id] = def;
+						}
+					}
+					else
+					{
+						var def = JsonSerializer.Deserialize<AttackDefinition>(json, opts);
+						if (def?.id != null) map[def.id] = def;
+					}
 				}
 				catch (System.Exception ex)
 				{

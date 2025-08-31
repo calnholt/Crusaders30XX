@@ -1,6 +1,7 @@
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Data.Enemies;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -197,17 +198,8 @@ namespace Crusaders30XX.ECS.Factories
                 });
             }
             
-            // Create a default enemy (Demon) with HP and portrait info
-            var enemyEntity = world.CreateEntity("Enemy_Demon");
-            var enemy = new Enemy { Name = "Demon", Type = EnemyType.Demon, MaxHealth = 60, CurrentHealth = 60 };
-            var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
-            world.AddComponent(enemyEntity, enemy);
-            world.AddComponent(enemyEntity, enemyTransform);
-            world.AddComponent(enemyEntity, new HP { Max = enemy.MaxHealth, Current = enemy.CurrentHealth });
-            world.AddComponent(enemyEntity, new PortraitInfo { TextureWidth = 0, TextureHeight = 0, CurrentScale = 1f });
-            // Seed arsenal and intent for JSON-driven planning
-            world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = new List<string> { "demon_bite", "demon_swipe" } });
-            world.AddComponent(enemyEntity, new AttackIntent());
+            // Create a default enemy from ID (fully driven by enemy JSON)
+            var enemyEntity = CreateEnemyFromId(world, "demon");
             
             return entity;
         }
@@ -376,6 +368,27 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, sprite);
             world.AddComponent(entity, uiElement);
 
+            return entity;
+        }
+
+        public static Entity CreateEnemyFromId(World world, string enemyId)
+        {
+            var all = EnemyDefinitionCache.GetAll();
+            if (!all.TryGetValue(enemyId, out var def))
+            {
+                System.Console.WriteLine($"[EntityFactory] Enemy id '{enemyId}' not found. Falling back to basic demon.");
+                def = new EnemyDefinition { id = enemyId, name = enemyId, hp = 60, attackIds = new List<string>() };
+            }
+
+            var entity = world.CreateEntity($"Enemy_{def.id}");
+            var enemy = new Enemy { Name = def.name ?? def.id, Type = EnemyType.Demon, MaxHealth = def.hp, CurrentHealth = def.hp };
+            var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
+            world.AddComponent(entity, enemy);
+            world.AddComponent(entity, enemyTransform);
+            world.AddComponent(entity, new HP { Max = enemy.MaxHealth, Current = enemy.CurrentHealth });
+            world.AddComponent(entity, new PortraitInfo { TextureWidth = 0, TextureHeight = 0, CurrentScale = 1f });
+            world.AddComponent(entity, new EnemyArsenal { AttackIds = new List<string>(def.attackIds) });
+            world.AddComponent(entity, new AttackIntent());
             return entity;
         }
     }
