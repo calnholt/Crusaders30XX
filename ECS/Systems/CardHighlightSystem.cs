@@ -27,15 +27,27 @@ namespace Crusaders30XX.ECS.Systems
         
         // Debug-adjustable highlight settings
         [DebugEditable(DisplayName = "Glow Layers", Step = 1, Min = 1, Max = 50)]
-        public int GlowLayers { get; set; } = 10;
+        public int GlowLayers { get; set; } = 50;
         [DebugEditable(DisplayName = "Glow Spread", Step = 0.001f, Min = 0f, Max = 0.2f)]
-        public float GlowSpread { get; set; } = 0.01f;
+        public float GlowSpread { get; set; } = 0.005f;
+        [DebugEditable(DisplayName = "Glow Spread Speed", Step = 0.1f, Min = 0f, Max = 20f)]
+        public float GlowSpreadSpeed { get; set; } = 2.5f;
+        [DebugEditable(DisplayName = "Glow Spread Amplitude", Step = 0.01f, Min = 0f, Max = 1f)]
+        public float GlowSpreadAmplitude { get; set; } = 0.25f;
         [DebugEditable(DisplayName = "Max Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
-        public float MaxAlpha { get; set; } = 0.6f;
+        public float MaxAlpha { get; set; } = 0.05f;
+        [DebugEditable(DisplayName = "Pulse Speed", Step = 0.1f, Min = 0.1f, Max = 20f)]
+        public float GlowPulseSpeed { get; set; } = 2.0f;
+        [DebugEditable(DisplayName = "Easing Power", Step = 0.1f, Min = 0.2f, Max = 5f)]
+        public float GlowEasingPower { get; set; } = 0.8f;
+        [DebugEditable(DisplayName = "Min Pulse Intensity", Step = 0.01f, Min = 0f, Max = 1f)]
+        public float GlowMinIntensity { get; set; } = 0.30f;
+        [DebugEditable(DisplayName = "Max Pulse Intensity", Step = 0.01f, Min = 0f, Max = 1f)]
+        public float GlowMaxIntensity { get; set; } = 0.8f;
         [DebugEditable(DisplayName = "Glow Color R", Step = 1, Min = 0, Max = 255)]
-        public int GlowColorR { get; set; } = 255;
+        public int GlowColorR { get; set; } = 0;
         [DebugEditable(DisplayName = "Glow Color G", Step = 1, Min = 0, Max = 255)]
-        public int GlowColorG { get; set; } = 215;
+        public int GlowColorG { get; set; } = 0;
         [DebugEditable(DisplayName = "Glow Color B", Step = 1, Min = 0, Max = 255)]
         public int GlowColorB { get; set; } = 0;
         
@@ -150,10 +162,11 @@ namespace Crusaders30XX.ECS.Systems
             );
 
             // Add pulsing effect based on individual card hover time
-            var pulseSpeed = 3.0f; // Increased speed for better responsiveness
             var hoverDuration = gameTime.TotalGameTime.TotalSeconds - _pulseStartSeconds;
-            // Start at max on new hover using cosine (1 -> -1 range mapped to 0.2..1.0)
-            var pulseAmount = (float)(Math.Cos(hoverDuration * pulseSpeed) * 0.4 + 0.6);
+            // Cosine pulse mapped to 0..1, then eased and remapped to [GlowMinIntensity..GlowMaxIntensity]
+            float pulse01 = (float)(Math.Cos(hoverDuration * GlowPulseSpeed) * 0.5f + 0.5f);
+            float eased = (float)Math.Pow(MathHelper.Clamp(pulse01, 0f, 1f), GlowEasingPower);
+            float pulseAmount = MathHelper.Lerp(MathHelper.Clamp(GlowMinIntensity, 0f, 1f), MathHelper.Clamp(GlowMaxIntensity, 0f, 1f), eased);
             
             // Soft glow: draw multiple expanded rounded rects with decreasing alpha
             int radius = Math.Max(0, (s?.CardCornerRadius ?? 18) + th);
@@ -166,7 +179,9 @@ namespace Crusaders30XX.ECS.Systems
             Color glowColor = new Color((byte)GlowColorR, (byte)GlowColorG, (byte)GlowColorB);
             for (int i = layers; i >= 1; i--)
             {
-                float scale = 1f + i * spread;
+                // Temporal spread animation (gently expand/contract the glow)
+                float spreadAnim = 1f + GlowSpreadAmplitude * (float)Math.Sin(hoverDuration * GlowSpreadSpeed);
+                float scale = 1f + i * spread * spreadAnim;
                 // Fade out quickly per layer; start bright on pulse reset
                 float layerAlpha = MathHelper.Clamp(pulseAmount * (0.22f / i), 0f, MaxAlpha);
                 _spriteBatch.Draw(

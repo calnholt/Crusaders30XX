@@ -127,7 +127,7 @@ public class Game1 : Game
         _cardHighlightSystem = new CardHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, GraphicsDevice);
-        _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, Content);
         _handDisplaySystem = new HandDisplaySystem(_world.EntityManager, GraphicsDevice);
         _cardZoneSystem = new CardZoneSystem(_world.EntityManager);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _world.SystemManager);

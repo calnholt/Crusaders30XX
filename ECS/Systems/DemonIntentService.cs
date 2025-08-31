@@ -32,13 +32,13 @@ namespace Crusaders30XX.ECS.Systems
 				switch (phase)
 				{
 					case 0: // turn 1
-						return ["demon_bite"];
+						return ["bite"];
 					case 1: // turn 2
-						return ["demon_swipe"];
+						return ["swipe"];
 					case 2: // turn 3
-						return ["demon_bite", "demon_swipe"];
+						return ["bite", "swipe"];
 					default:
-						return ["demon_bite"];
+						return ["bite"];
 				}
 			}
 

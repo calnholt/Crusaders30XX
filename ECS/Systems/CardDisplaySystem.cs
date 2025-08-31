@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
@@ -19,6 +20,7 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
+        private readonly ContentManager _content;
         private readonly Dictionary<string, Texture2D> _textureCache = new();
         private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
         private SpriteFont _font;
@@ -30,13 +32,24 @@ namespace Crusaders30XX.ECS.Systems
         public int CornerRadiusOverride { get; set; } = 0;
         [DebugEditable(DisplayName = "Card Border Thickness", Step = 1, Min = 0, Max = 32)]
         public int BorderThicknessOverride { get; set; } = 0;
+
+        // Debug-adjustable shield icon layout
+        [DebugEditable(DisplayName = "Shield Icon Height", Step = 1, Min = 8, Max = 128)]
+        public int ShieldIconHeight { get; set; } = 36;
+        [DebugEditable(DisplayName = "Shield Icon Gap", Step = 1, Min = 0, Max = 64)]
+        public int ShieldIconGap { get; set; } = 4;
+        [DebugEditable(DisplayName = "Shield Icon Offset X", Step = 1, Min = -200, Max = 200)]
+        public int ShieldIconOffsetX { get; set; } = 0;
+        [DebugEditable(DisplayName = "Shield Icon Offset Y", Step = 1, Min = -200, Max = 200)]
+        public int ShieldIconOffsetY { get; set; } = -6;
         
-        public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font) 
+        public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font, ContentManager content) 
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             _font = font;
+            _content = content;
             
             // Create a single pixel texture that we can reuse
             _pixelTexture = new Texture2D(_graphicsDevice, 1, 1);
@@ -120,14 +133,31 @@ namespace Crusaders30XX.ECS.Systems
             
             DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)), cardData.Description, Color.White, _settings.DescriptionScale);
             
-            // Draw block value as blue number bottom-left
+            // Draw block value and shield icon at bottom-left
             if (cardData.BlockValue > 0)
             {
                 string blockText = cardData.BlockValue.ToString();
-                var measured = _font.MeasureString(blockText) * _settings.BlockNumberScale;
-                float localX = _settings.BlockNumberMarginX;
-                float localY = _settings.CardHeight - _settings.BlockNumberMarginY - measured.Y;
-                DrawCardTextRotatedSingle(cardCenter, rotation, new Vector2(localX, localY), blockText, Color.CornflowerBlue, _settings.BlockNumberScale);
+                var textSize = _font.MeasureString(blockText) * _settings.BlockNumberScale;
+                float marginX = _settings.BlockNumberMarginX;
+                float marginY = _settings.BlockNumberMarginY;
+                float baselineY = _settings.CardHeight - marginY;
+
+                // First draw the number
+                float numberLocalX = marginX;
+                float numberLocalY = baselineY - textSize.Y;
+                DrawCardTextRotatedSingle(cardCenter, rotation, new Vector2(numberLocalX, numberLocalY), blockText, Color.White, _settings.BlockNumberScale);
+
+                // Then draw the shield icon to the right
+                var shield = GetOrLoadTexture("shield");
+                if (shield != null)
+                {
+                    float iconHeight = Math.Max(8f, ShieldIconHeight * _settings.UIScale);
+                    float iconWidth = shield.Height > 0 ? iconHeight * (shield.Width / (float)shield.Height) : iconHeight;
+                    float gap = Math.Max(0f, ShieldIconGap * _settings.UIScale);
+                    float iconLocalX = numberLocalX + textSize.X + gap + ShieldIconOffsetX;
+                    float iconLocalY = baselineY - iconHeight + ShieldIconOffsetY;
+                    DrawTextureRotatedLocal(cardCenter, rotation, new Vector2(iconLocalX, iconLocalY), shield, new Vector2(iconWidth, iconHeight), Color.White);
+                }
             }
         }
         
@@ -252,6 +282,36 @@ namespace Crusaders30XX.ECS.Systems
                 _settings.CardWidth,
                 _settings.CardHeight
             );
+        }
+
+        private Texture2D GetOrLoadTexture(string assetName)
+        {
+            if (string.IsNullOrEmpty(assetName)) return null;
+            if (_textureCache.TryGetValue(assetName, out var tex) && tex != null) return tex;
+            try
+            {
+                var loaded = _content.Load<Texture2D>(assetName);
+                _textureCache[assetName] = loaded;
+                return loaded;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        // Draws a texture at a card-local top-left offset with the same rotation as the card
+        private void DrawTextureRotatedLocal(Vector2 cardCenterPosition, float rotation, Vector2 localOffsetFromTopLeft, Texture2D texture, Vector2 targetSize, Color color)
+        {
+            if (texture == null) return;
+            float localX = -_settings.CardWidth / 2f + localOffsetFromTopLeft.X;
+            float localY = -_settings.CardHeight / 2f + localOffsetFromTopLeft.Y;
+            float cos = (float)Math.Cos(rotation);
+            float sin = (float)Math.Sin(rotation);
+            var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
+            var world = cardCenterPosition + rotated;
+            var scale = new Vector2(targetSize.X / texture.Width, targetSize.Y / texture.Height);
+            _spriteBatch.Draw(texture, world, sourceRectangle: null, color: color, rotation: rotation, origin: Vector2.Zero, scale: scale, effects: SpriteEffects.None, layerDepth: 0f);
         }
         
         // New: draw wrapped text in card-local space rotated with the card

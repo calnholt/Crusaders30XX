@@ -4,7 +4,7 @@
   "hp": 60,
   "attacks": [
     {
-      "id": "demon_bite",
+      "id": "bite",
       "name": "Rending Bite",
       "target": "Player",
       "conditionsBlocked": {
@@ -33,8 +33,8 @@
       ]
     },
     {
-      "id": "demon_swipe",
-      "name": "Shredding Bite",
+      "id": "swipe",
+      "name": "Shredding Swipe",
       "target": "Player",
       "conditionsBlocked": {
         "kind": "All",
