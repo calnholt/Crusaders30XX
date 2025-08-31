@@ -80,6 +80,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			currentIntent.Planned.Clear();
 			nextIntent.Planned.Clear();
+			int index = 0;
 			foreach (var chosenId in arsenal.AttackIds.Take(2))
 			{
 				if (!_attackDefs.TryGetValue(chosenId, out var def)) continue;
@@ -87,7 +88,7 @@ namespace Crusaders30XX.ECS.Systems
 				currentIntent.Planned.Add(new PlannedAttack
 				{
 					AttackId = chosenId,
-					ResolveStep = System.Math.Max(1, def.resolveStep),
+					ResolveStep = System.Math.Max(1, index + 1),
 					ContextId = ctx,
 					WasBlocked = false
 				});
@@ -95,9 +96,10 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					AttackId = chosenId,
 					ContextId = ctx,
-					Step = def.resolveStep,
+					Step = System.Math.Max(1, index + 1),
 					TelegraphText = def.name
 				});
+				index++;
 			}
 		}
 

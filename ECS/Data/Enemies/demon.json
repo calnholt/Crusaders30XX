@@ -7,7 +7,6 @@
       "id": "demon_bite",
       "name": "Rending Bite",
       "target": "Player",
-      "resolveStep": 1,
       "conditionsBlocked": {
         "kind": "All",
         "children": [
@@ -37,7 +36,6 @@
       "id": "demon_swipe",
       "name": "Shredding Bite",
       "target": "Player",
-      "resolveStep": 2,
       "conditionsBlocked": {
         "kind": "All",
         "children": [

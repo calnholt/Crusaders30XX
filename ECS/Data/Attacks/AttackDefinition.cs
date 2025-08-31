@@ -7,7 +7,6 @@ namespace Crusaders30XX.ECS.Data.Attacks
 		public string id { get; set; }
 		public string name { get; set; }
 		public string target { get; set; } = "Player";
-		public int resolveStep { get; set; } = 1;
 		public ConditionNode conditionsBlocked { get; set; }
 		public EffectDefinition[] effectsOnHit { get; set; } = System.Array.Empty<EffectDefinition>();
 		public EffectDefinition[] effectsOnNotBlocked { get; set; } = System.Array.Empty<EffectDefinition>();

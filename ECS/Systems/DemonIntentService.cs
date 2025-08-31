@@ -4,6 +4,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Data.Attacks;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -28,14 +29,23 @@ namespace Crusaders30XX.ECS.Systems
 
 			IEnumerable<string> SelectForTurn(int t)
 			{
-				if (ids.Count == 1) return ids;
-				int a = (t % ids.Count + ids.Count) % ids.Count;
-				int b = ((t + 1) % ids.Count + ids.Count) % ids.Count;
-				return new[] { ids[a], ids[b] };
+				int phase = ((t % 3) + 3) % 3; // 0,1,2 cycling
+				switch (phase)
+				{
+					case 0: // turn 1
+						return new[] { "demon_bite" };
+					case 1: // turn 2
+						return new[] { "demon_swipe" };
+					case 2: // turn 3
+						return new[] { "demon_bite", "demon_swipe" };
+					default:
+						return new[] { "demon_bite" };
+				}
 			}
 
 			void AddPlanned(IEnumerable<string> attackIds, dynamic target)
 			{
+				int index = 0;
 				foreach (var id in attackIds)
 				{
 					if (!attackDefs.TryGetValue(id, out var def)) continue;
@@ -43,7 +53,7 @@ namespace Crusaders30XX.ECS.Systems
 					target.Planned.Add(new PlannedAttack
 					{
 						AttackId = id,
-						ResolveStep = Math.Max(1, def.resolveStep),
+						ResolveStep = System.Math.Max(1, index + 1),
 						ContextId = ctx,
 						WasBlocked = false
 					});
@@ -51,9 +61,10 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						AttackId = id,
 						ContextId = ctx,
-						Step = def.resolveStep,
+						Step = System.Math.Max(1, index + 1),
 						TelegraphText = def.name
 					});
+					index++;
 				}
 			}
 
