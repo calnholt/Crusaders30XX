@@ -119,6 +119,13 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.RemoveComponent<CardToDiscardFlight>(entity);
                 // Clear AssignedBlockCard if still present
                 EntityManager.RemoveComponent<AssignedBlockCard>(entity);
+                // Clear any tooltip/hovers applied while assigned as block
+                var ui = entity.GetComponent<UIElement>();
+                if (ui != null)
+                {
+                    ui.Tooltip = string.Empty;
+                    ui.IsHovered = false;
+                }
             }
         }
 

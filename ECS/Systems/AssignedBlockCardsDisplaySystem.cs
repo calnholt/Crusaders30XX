@@ -17,6 +17,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font;
 		private readonly Texture2D _pixel;
+		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
 		private readonly List<Entity> _pendingReturn = new();
 
 		[DebugEditable(DisplayName = "Anchor Offset X", Step = 2, Min = -1000, Max = 1000)]
@@ -30,18 +31,24 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Card Draw H", Step = 2, Min = 20, Max = 400)]
 		public int CardDrawHeight { get; set; } = 110;
 		[DebugEditable(DisplayName = "Target Scale", Step = 0.02f, Min = 0.1f, Max = 1.0f)]
-		public float TargetScale { get; set; } = 0.35f;
+		public float TargetScale { get; set; } = 0.43f;
 		[DebugEditable(DisplayName = "Pullback Seconds", Step = 0.01f, Min = 0f, Max = 1f)]
-		public float PullbackSeconds { get; set; } = 0.12f;
+		public float PullbackSeconds { get; set; } = 0.0f;
 		[DebugEditable(DisplayName = "Launch Seconds", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float LaunchSeconds { get; set; } = 0.18f;
 		[DebugEditable(DisplayName = "Impact Seconds", Step = 0.01f, Min = 0f, Max = 1f)]
-		public float ImpactSeconds { get; set; } = 0.12f;
+		public float ImpactSeconds { get; set; } = 0.00f;
 		[DebugEditable(DisplayName = "Return Seconds", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float ReturnSeconds { get; set; } = 0.18f;
 
 		[DebugEditable(DisplayName = "Above Gap (px)", Step = 1, Min = 0, Max = 100)]
 		public int AboveGap { get; set; } = 8;
+		[DebugEditable(DisplayName = "Block Text Scale", Step = 0.05f, Min = 0.2f, Max = 2.0f)]
+		public float BlockTextScale { get; set; } = 0.8f;
+		[DebugEditable(DisplayName = "Assigned Corner Radius", Step = 1, Min = 0, Max = 64)]
+		public int AssignedCornerRadius { get; set; } = 6;
+		[DebugEditable(DisplayName = "Assigned Background Alpha", Step = 1, Min = 0, Max = 255)]
+		public int AssignedBackgroundAlpha { get; set; } = 225;
 
 		public AssignedBlockCardsDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
 		{
@@ -308,12 +315,50 @@ namespace Crusaders30XX.ECS.Systems
 				int cw = (int)(CardDrawWidth * abc.CurrentScale);
 				int ch = (int)(CardDrawHeight * abc.CurrentScale);
 				var rect = new Rectangle((int)(pos.X - cw / 2f), (int)(pos.Y - ch / 2f), cw, ch);
-				_spriteBatch.Draw(_pixel, rect, new Color(200, 200, 200, 220));
+				// Determine colors based on card color
+				var cd = card.GetComponent<CardData>();
+				Color bg;
+				Color fg;
+				switch (cd?.Color)
+				{
+					case CardData.CardColor.Red:
+						bg = Color.DarkRed;
+						fg = Color.White;
+						break;
+					case CardData.CardColor.Black:
+						bg = Color.Black;
+						fg = Color.White;
+						break;
+					case CardData.CardColor.White:
+					default:
+						bg = Color.White;
+						fg = Color.Black;
+						break;
+				}
+				bg = new Color(bg.R, bg.G, bg.B, (byte)System.Math.Clamp(AssignedBackgroundAlpha, 0, 255));
+				int radius = System.Math.Max(0, AssignedCornerRadius);
+				var rounded = GetRoundedRectTexture(rect.Width, rect.Height, radius);
+				var center = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
+				_spriteBatch.Draw(rounded, center, null, bg, 0f, new Vector2(rounded.Width / 2f, rounded.Height / 2f), Vector2.One, SpriteEffects.None, 0f);
 				if (_font != null)
 				{
-					_spriteBatch.DrawString(_font, $"{abc.BlockAmount}", new Vector2(rect.X + 6, rect.Y + 6), Color.Black, 0f, Vector2.Zero, 0.5f, SpriteEffects.None, 0f);
+					string text = $"{abc.BlockAmount}";
+					float textScale = MathHelper.Clamp(BlockTextScale, 0.2f, 2.0f);
+					var textSize = _font.MeasureString(text) * textScale;
+					float tx = rect.X + (rect.Width - textSize.X) * 0.5f;
+					float ty = rect.Y + (rect.Height - textSize.Y) * 0.5f;
+					_spriteBatch.DrawString(_font, text, new Vector2(tx, ty), fg, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
 				}
 			}
+		}
+
+		private Texture2D GetRoundedRectTexture(int width, int height, int radius)
+		{
+			var key = (width, height, radius);
+			if (_roundedRectCache.TryGetValue(key, out var tex)) return tex;
+			var texture = Crusaders30XX.ECS.Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, width, height, radius);
+			_roundedRectCache[key] = texture;
+			return texture;
 		}
 
 		private MouseState _prevMouse;
