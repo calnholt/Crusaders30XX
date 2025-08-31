@@ -167,6 +167,36 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 			}
+
+			// Update tooltip hover ONLY when card is assigned on the banner (not in hand)
+			{
+				var enemyTip = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+				var paTip = enemyTip?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();
+				bool isForCurrentContext = paTip != null && abc.ContextId == paTip.ContextId;
+				bool showDuringPhase = abc.Phase == AssignedBlockCard.PhaseState.Idle || abc.Phase == AssignedBlockCard.PhaseState.Impact || abc.Phase == AssignedBlockCard.PhaseState.Launch || abc.Phase == AssignedBlockCard.PhaseState.Pullback;
+				bool shouldShowTooltip = isForCurrentContext && showDuringPhase;
+				if (ui == null)
+				{
+					ui = new UIElement { IsInteractable = true };
+					EntityManager.AddComponent(entity, ui);
+				}
+				if (shouldShowTooltip)
+				{
+					int cw = (int)(CardDrawWidth * abc.CurrentScale);
+					int ch = (int)(CardDrawHeight * abc.CurrentScale);
+					var hoverRect = new Rectangle((int)(abc.CurrentPos.X - cw / 2f), (int)(abc.CurrentPos.Y - ch / 2f), cw, ch);
+					ui.Bounds = hoverRect;
+					ui.IsHovered = hoverRect.Contains(mouse.Position);
+					var cardDataForTooltip = entity.GetComponent<CardData>();
+					ui.Tooltip = cardDataForTooltip?.Name ?? string.Empty;
+				}
+				else
+				{
+					// Clear tooltip and hover when not assigned
+					ui.IsHovered = false;
+					ui.Tooltip = string.Empty;
+				}
+			}
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			abc.Elapsed += dt;
 
