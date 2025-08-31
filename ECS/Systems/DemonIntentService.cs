@@ -19,15 +19,14 @@ namespace Crusaders30XX.ECS.Systems
 			current.Planned.Clear();
 			next.Planned.Clear();
 
-			// Example sequencing based on turnNumber using the arsenal order
-			// Turn 1: first two attacks
-			// Turn 2: second and first (swap)
-			// Turn 3+: cycle through pairs
 			var ids = arsenal.AttackIds.ToList();
 			if (ids.Count == 0) return;
 
 			IEnumerable<string> SelectForTurn(int t)
 			{
+        if (t > 6) {
+          return ["bite", "swipe"];
+        }
 				int phase = ((t % 3) + 3) % 3; // 0,1,2 cycling
 				switch (phase)
 				{

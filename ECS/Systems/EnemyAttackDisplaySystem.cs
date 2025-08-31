@@ -439,9 +439,9 @@ namespace Crusaders30XX.ECS.Systems
 				y += sz.Y * s + LineSpacingExtra * panelScale * contentScale;
 			}
 
-			// Confirm button below panel (hide during processing phase)
-			var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase ?? BattlePhase.StartOfBattle;
-			bool showConfirm = phase != BattlePhase.ProcessEnemyAttack;
+			// Confirm button below panel (only show in Block phase)
+			var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault().GetComponent<BattlePhaseState>().Phase;
+			bool showConfirm = phase == BattlePhase.Block;
 			if (showConfirm)
 			{
 				var btnRect = new Rectangle(
@@ -473,8 +473,22 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					var ui = confirmBtn.GetComponent<UIElement>();
 					var tr = confirmBtn.GetComponent<Transform>();
-					if (ui != null) ui.Bounds = btnRect;
+					if (ui != null) { ui.Bounds = btnRect; ui.IsInteractable = true; }
 					if (tr != null) { tr.ZOrder = ConfirmButtonZ; tr.Position = new Vector2(btnRect.X, btnRect.Y); }
+				}
+			}
+			else
+			{
+				// Hide/disable confirm button when not in Block phase
+				var confirmBtn = EntityManager.GetEntitiesWithComponent<UIButton>().FirstOrDefault(e => e.GetComponent<UIButton>().Command == "ConfirmEnemyAttack");
+				if (confirmBtn != null)
+				{
+					var ui = confirmBtn.GetComponent<UIElement>();
+					if (ui != null)
+					{
+						ui.IsInteractable = false;
+						ui.Bounds = new Rectangle(0, 0, 0, 0);
+					}
 				}
 			}
 
