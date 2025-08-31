@@ -160,7 +160,7 @@ namespace Crusaders30XX.ECS.Factories
             var gameState = new GameState
             {
                 CurrentPhase = GameState.GamePhase.MainMenu,
-                TurnNumber = 1,
+                TurnNumber = 0,
                 IsPlayerTurn = true,
                 IsGameOver = false
             };
@@ -204,7 +204,7 @@ namespace Crusaders30XX.ECS.Factories
             if (biEntity == null)
             {
                 biEntity = world.CreateEntity("BattleInfo");
-                world.AddComponent(biEntity, new BattleInfo { TurnNumber = 1 });
+                world.AddComponent(biEntity, new BattleInfo { TurnNumber = 0 });
             }
             // Create a default enemy from ID (fully driven by enemy JSON)
             var enemyEntity = CreateEnemyFromId(world, "demon");

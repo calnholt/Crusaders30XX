@@ -96,6 +96,11 @@ namespace Crusaders30XX.ECS.Systems
 					});
 				if (!hasPlanned)
 				{
+					// Advance enemy turn number BEFORE planning so planners see the updated value
+					var biEntity = EntityManager.GetEntitiesWithComponent<BattleInfo>().FirstOrDefault();
+					var bi = biEntity?.GetComponent<BattleInfo>();
+					bi.TurnNumber++;
+					System.Console.WriteLine($"[BattlePhaseSystem] Advancing to enemy turn {bi.TurnNumber}");
 					EventManager.Publish(new StartEnemyTurn());
 				}
 			}

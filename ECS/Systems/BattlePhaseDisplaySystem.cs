@@ -101,7 +101,7 @@ namespace Crusaders30XX.ECS.Systems
 			int xRight = vw + LabelOffsetX;
 			string label = PhaseToString(state.Phase);
 			var battleInfo = EntityManager.GetEntitiesWithComponent<BattleInfo>().FirstOrDefault()?.GetComponent<BattleInfo>();
-			if (battleInfo != null)
+			if (battleInfo != null && battleInfo.TurnNumber > 0)
 			{
 				label += $" ({battleInfo.TurnNumber})";
 			}

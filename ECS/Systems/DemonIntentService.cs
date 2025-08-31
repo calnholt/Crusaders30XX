@@ -4,7 +4,6 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Data.Attacks;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -32,12 +31,12 @@ namespace Crusaders30XX.ECS.Systems
 				int phase = ((t % 3) + 3) % 3; // 0,1,2 cycling
 				switch (phase)
 				{
+					case 0: // turn 1
+						return ["demon_bite"];
 					case 1: // turn 2
 						return ["demon_swipe"];
 					case 2: // turn 3
 						return ["demon_bite", "demon_swipe"];
-					case 0: // turn 1
-						return ["demon_bite"];
 					default:
 						return ["demon_bite"];
 				}

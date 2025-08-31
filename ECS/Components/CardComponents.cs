@@ -367,7 +367,7 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
         
         public GamePhase CurrentPhase { get; set; } = GamePhase.MainMenu;
-        public int TurnNumber { get; set; } = 1;
+        public int TurnNumber { get; set; } = 0;
         public bool IsPlayerTurn { get; set; } = true;
         public bool IsGameOver { get; set; } = false;
         
@@ -420,7 +420,7 @@ namespace Crusaders30XX.ECS.Components
     public class BattleInfo : IComponent
     {
         public Entity Owner { get; set; }
-        public int TurnNumber { get; set; } = 1;
+        public int TurnNumber { get; set; } = 0;
     }
 
     /// <summary>
