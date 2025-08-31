@@ -420,7 +420,7 @@ namespace Crusaders30XX.ECS.Components
     public class BattleInfo : IComponent
     {
         public Entity Owner { get; set; }
-        public int TurnNumber { get; set; } = 0;
+        public int TurnNumber { get; set; } = 1;
     }
 
     /// <summary>

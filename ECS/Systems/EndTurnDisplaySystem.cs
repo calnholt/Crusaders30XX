@@ -65,7 +65,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnEndTurnPressed()
         {
-            EventManager.Publish(new ChangeBattlePhaseEvent { Next = BattlePhase.Block });
+            EventManager.Publish(new ChangeBattlePhaseEvent { Previous = BattlePhase.Action, Next = BattlePhase.Block });
         }
 
         [DebugAction("Trigger End Turn Now")]

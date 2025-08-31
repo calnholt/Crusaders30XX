@@ -71,6 +71,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				else
 				{
+					System.Console.WriteLine($"[EnemyIntentPlanningSystem] Planning {enemyId} attacks, turn {turnNumber}");
 					service.Plan(enemy, arsenal, intent, next, turnNumber, _attackDefs);
 				}
 			}

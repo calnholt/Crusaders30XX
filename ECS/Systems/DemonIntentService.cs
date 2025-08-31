@@ -32,14 +32,14 @@ namespace Crusaders30XX.ECS.Systems
 				int phase = ((t % 3) + 3) % 3; // 0,1,2 cycling
 				switch (phase)
 				{
-					case 0: // turn 1
-						return new[] { "demon_bite" };
 					case 1: // turn 2
-						return new[] { "demon_swipe" };
+						return ["demon_swipe"];
 					case 2: // turn 3
-						return new[] { "demon_bite", "demon_swipe" };
+						return ["demon_bite", "demon_swipe"];
+					case 0: // turn 1
+						return ["demon_bite"];
 					default:
-						return new[] { "demon_bite" };
+						return ["demon_bite"];
 				}
 			}
 

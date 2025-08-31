@@ -29,14 +29,14 @@ namespace Crusaders30XX.ECS.Systems
 			var e = EntityManager.GetEntitiesWithComponent<BattleInfo>().FirstOrDefault();
 			if (e != null) return e.GetComponent<BattleInfo>();
 			var world = EntityManager.CreateEntity("BattleInfo");
-			var info = new BattleInfo { TurnNumber = 0 };
+			var info = new BattleInfo { TurnNumber = 1 };
 			EntityManager.AddComponent(world, info);
 			return info;
 		}
 
 		private void OnChangePhase(ChangeBattlePhaseEvent evt)
 		{
-			if (evt.Next == BattlePhase.Block)
+			if (evt.Previous == BattlePhase.Action)
 			{
 				var info = GetOrCreateBattleInfo();
 				info.TurnNumber++;

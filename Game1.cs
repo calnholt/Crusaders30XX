@@ -65,6 +65,7 @@ public class Game1 : Game
     private CardPlaySystem _cardPlaySystem;
     private EndTurnDisplaySystem _endTurnDisplaySystem;
     private BattlePhaseDrawSystem _battlePhaseDrawSystem;
+    private BattleInfoSystem _battleInfoSystem;
 
     public Game1()
     {
@@ -173,6 +174,7 @@ public class Game1 : Game
         _enemyDamageManagerSystem = new EnemyDamageManagerSystem(_world.EntityManager);
         _cardPlaySystem = new CardPlaySystem(_world.EntityManager);
         _battlePhaseDrawSystem = new BattlePhaseDrawSystem(_world.EntityManager);
+        _battleInfoSystem = new BattleInfoSystem(_world.EntityManager);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -222,6 +224,7 @@ public class Game1 : Game
         _world.AddSystem(_enemyDamageManagerSystem);
         _world.AddSystem(_cardPlaySystem);
         _world.AddSystem(_battlePhaseDrawSystem);
+        _world.AddSystem(_battleInfoSystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });

@@ -100,6 +100,11 @@ namespace Crusaders30XX.ECS.Systems
 			int vw = _graphicsDevice.Viewport.Width;
 			int xRight = vw + LabelOffsetX;
 			string label = PhaseToString(state.Phase);
+			var battleInfo = EntityManager.GetEntitiesWithComponent<BattleInfo>().FirstOrDefault()?.GetComponent<BattleInfo>();
+			if (battleInfo != null)
+			{
+				label += $" ({battleInfo.TurnNumber})";
+			}
 			var size = _font.MeasureString(label) * LabelScale;
 			var pos = new Vector2(xRight - size.X, LabelOffsetY);
 			_spriteBatch.DrawString(_font, label, pos + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
