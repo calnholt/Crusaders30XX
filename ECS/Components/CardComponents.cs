@@ -96,6 +96,7 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
         
         public EnemyType Type { get; set; } = EnemyType.Demon;
+        public string Id { get; set; } = "demon";
 
         public string Name { get; set; } = "";
         public int MaxHealth { get; set; } = 50;
@@ -410,6 +411,16 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         public BattlePhase Phase { get; set; } = BattlePhase.StartOfBattle;
+    }
+
+    /// <summary>
+    /// Tracks battle metadata such as the current enemy turn number.
+    /// TurnNumber starts at 0 and increments when transitioning to Block for a new enemy turn.
+    /// </summary>
+    public class BattleInfo : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int TurnNumber { get; set; } = 0;
     }
 
     /// <summary>

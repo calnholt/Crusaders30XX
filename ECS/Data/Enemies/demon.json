@@ -13,9 +13,8 @@
         "children": [
           {
             "kind": "Leaf",
-            "leafType": "PlayColorAtLeastN",
+            "leafType": "PlayAtLeastN",
             "params": {
-              "color": "Red",
               "n": "1"
             }
           }
@@ -61,7 +60,7 @@
       "effectsOnNotBlocked": [
         {
           "type": "Damage",
-          "amount": 10
+          "amount": 3
         }
       ]
     }

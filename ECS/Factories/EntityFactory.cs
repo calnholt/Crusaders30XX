@@ -200,6 +200,14 @@ namespace Crusaders30XX.ECS.Factories
             
             // Create a default enemy from ID (fully driven by enemy JSON)
             var enemyEntity = CreateEnemyFromId(world, "demon");
+
+            // Ensure BattleInfo singleton exists
+            var biEntity = world.EntityManager.GetEntitiesWithComponent<BattleInfo>().FirstOrDefault();
+            if (biEntity == null)
+            {
+                biEntity = world.CreateEntity("BattleInfo");
+                world.AddComponent(biEntity, new BattleInfo { TurnNumber = 0 });
+            }
             
             return entity;
         }
@@ -381,7 +389,7 @@ namespace Crusaders30XX.ECS.Factories
             }
 
             var entity = world.CreateEntity($"Enemy_{def.id}");
-            var enemy = new Enemy { Name = def.name ?? def.id, Type = EnemyType.Demon, MaxHealth = def.hp, CurrentHealth = def.hp };
+            var enemy = new Enemy { Id = def.id, Name = def.name ?? def.id, Type = EnemyType.Demon, MaxHealth = def.hp, CurrentHealth = def.hp };
             var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
             world.AddComponent(entity, enemy);
             world.AddComponent(entity, enemyTransform);

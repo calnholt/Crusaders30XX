@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Attacks;
 using Microsoft.Xna.Framework;
 using System.IO;
+using Crusaders30XX.ECS.Data.Enemies;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -41,10 +42,13 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			System.Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
 			EnsureAttackDefsLoaded();
+			int turnNumber = GetCurrentTurnNumber();
 			foreach (var enemy in GetRelevantEntities())
 			{
 				var arsenal = enemy.GetComponent<EnemyArsenal>();
 				if (arsenal == null || arsenal.AttackIds.Count == 0) continue;
+				var enemyCmp = enemy.GetComponent<Enemy>();
+				string enemyId = enemyCmp?.Id ?? "demon";
 				var intent = enemy.GetComponent<AttackIntent>();
 				if (intent == null)
 				{
@@ -58,52 +62,29 @@ namespace Crusaders30XX.ECS.Systems
 					EntityManager.AddComponent(enemy, next);
 				}
 
-				if (intent.Planned.Count == 0 && next.Planned.Count == 0)
+				// Use per-enemy intent service to (re)plan
+				IEnemyIntentService service = CreateServiceForEnemy(enemyId);
+				if (service == null)
 				{
-					// First turn: generate both this turn and next turn
-					intent.Planned.Clear();
-					PlanTurn(arsenal, intent);
-					next.Planned.Clear();
-					PlanTurn(arsenal, next);
+					System.Console.WriteLine($"[EnemyIntentPlanningSystem] No intent service for enemy '{enemyId}', falling back to round-robin.");
+					PlanRoundRobin(arsenal, intent, next);
 				}
 				else
 				{
-					// Subsequent turns: promote next -> current, then generate new next
-					intent.Planned.Clear();
-					intent.Planned.AddRange(next.Planned.Select(pa => new PlannedAttack
-					{
-						AttackId = pa.AttackId,
-						ResolveStep = pa.ResolveStep,
-						ContextId = Guid.NewGuid().ToString("N"),
-						WasBlocked = false
-					}));
-					// publish intents for UI
-					foreach (var pa in intent.Planned)
-					{
-						if (_attackDefs.TryGetValue(pa.AttackId, out var def2))
-						{
-							EventManager.Publish(new IntentPlanned
-							{
-								AttackId = pa.AttackId,
-								ContextId = pa.ContextId,
-								Step = def2.resolveStep,
-								TelegraphText = def2.name
-							});
-						}
-					}
-					next.Planned.Clear();
-					PlanTurn(arsenal, next);
+					service.Plan(enemy, arsenal, intent, next, turnNumber, _attackDefs);
 				}
 			}
 		}
 
-		private void PlanTurn(EnemyArsenal arsenal, dynamic targetIntent)
+		private void PlanRoundRobin(EnemyArsenal arsenal, dynamic currentIntent, dynamic nextIntent)
 		{
+			currentIntent.Planned.Clear();
+			nextIntent.Planned.Clear();
 			foreach (var chosenId in arsenal.AttackIds.Take(2))
 			{
 				if (!_attackDefs.TryGetValue(chosenId, out var def)) continue;
 				string ctx = Guid.NewGuid().ToString("N");
-				targetIntent.Planned.Add(new PlannedAttack
+				currentIntent.Planned.Add(new PlannedAttack
 				{
 					AttackId = chosenId,
 					ResolveStep = System.Math.Max(1, def.resolveStep),
@@ -117,6 +98,22 @@ namespace Crusaders30XX.ECS.Systems
 					Step = def.resolveStep,
 					TelegraphText = def.name
 				});
+			}
+		}
+
+		private int GetCurrentTurnNumber()
+		{
+			var infoEntity = EntityManager.GetEntitiesWithComponent<BattleInfo>().FirstOrDefault();
+			var info = infoEntity?.GetComponent<BattleInfo>();
+			return info?.TurnNumber ?? 0;
+		}
+
+		private IEnemyIntentService CreateServiceForEnemy(string enemyId)
+		{
+			switch (enemyId)
+			{
+				case "demon": return new DemonIntentService();
+				default: return null;
 			}
 		}
 
