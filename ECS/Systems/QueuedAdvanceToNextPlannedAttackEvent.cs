@@ -31,20 +31,20 @@ namespace Crusaders30XX.ECS.Systems
 			// Remove the resolved planned attack by context id
 			var enemy = _entityManager.GetEntitiesWithComponent<AttackIntent>()
 				.FirstOrDefault(en => en.GetComponent<AttackIntent>().Planned.Any(pa => pa.ContextId == _contextId));
-			if (enemy != null)
+			var intent = enemy.GetComponent<AttackIntent>();
+			if (intent != null)
 			{
-				var intent = enemy.GetComponent<AttackIntent>();
-				if (intent != null)
-				{
-					int idx = intent.Planned.FindIndex(p => p.ContextId == _contextId);
-					if (idx >= 0) intent.Planned.RemoveAt(idx);
-				}
+				int idx = intent.Planned.FindIndex(p => p.ContextId == _contextId);
+				if (idx >= 0) intent.Planned.RemoveAt(idx);
 			}
 
 			// Defer phase advancement decision to PhaseCoordinator
+			var hasNext = intent != null && intent.Planned != null && intent.Planned.Count > 0;
 			EventManager.Publish(new ProceedToNextPhase());
-			EventManager.Publish(new ProceedToNextPhase());
-			EventManager.Publish(new ProceedToNextPhase());
+			if (!hasNext) {
+				EventManager.Publish(new ProceedToNextPhase());
+				EventManager.Publish(new ProceedToNextPhase());
+			}
 
 			State = EventQueue.EventState.Complete;
 		}

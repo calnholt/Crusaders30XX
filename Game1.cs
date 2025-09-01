@@ -67,6 +67,7 @@ public class Game1 : Game
     private EndTurnDisplaySystem _endTurnDisplaySystem;
     private BattlePhaseDrawSystem _battlePhaseDrawSystem;
     private PhaseCoordinatorSystem _phaseCoordinatorSystem;
+    private EnemyStunAutoSkipSystem _enemyStunAutoSkipSystem;
 
     public Game1()
     {
@@ -175,6 +176,7 @@ public class Game1 : Game
         _cardPlaySystem = new CardPlaySystem(_world.EntityManager);
         _battlePhaseDrawSystem = new BattlePhaseDrawSystem(_world.EntityManager);
         _phaseCoordinatorSystem = new PhaseCoordinatorSystem(_world.EntityManager);
+        _enemyStunAutoSkipSystem = new EnemyStunAutoSkipSystem(_world.EntityManager);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -225,6 +227,7 @@ public class Game1 : Game
         _world.AddSystem(_cardPlaySystem);
         _world.AddSystem(_battlePhaseDrawSystem);
         _world.AddSystem(_phaseCoordinatorSystem);
+        _world.AddSystem(_enemyStunAutoSkipSystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });

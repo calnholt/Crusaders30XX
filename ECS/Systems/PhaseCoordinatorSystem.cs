@@ -30,7 +30,7 @@ namespace Crusaders30XX.ECS.Systems
 			var e = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
 			if (e != null) return e.GetComponent<PhaseState>();
 			var world = EntityManager.CreateEntity("PhaseState");
-			var ps = new PhaseState { Main = MainPhase.StartBattle, Sub = SubPhase.None, TurnNumber = 0 };
+			var ps = new PhaseState { Main = MainPhase.StartBattle, Sub = SubPhase.None, TurnNumber = 1 };
 			EntityManager.AddComponent(world, ps);
 			return ps;
 		}
@@ -59,8 +59,6 @@ namespace Crusaders30XX.ECS.Systems
 							EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyAttack, Previous = SubPhase.Block });
 							break;
 						case SubPhase.EnemyAttack:
-							ps.Sub = SubPhase.EnemyEnd;
-              
               // If any planned attacks remain on any enemy, go back to Block for re-assignment; otherwise go to Action
               bool hasNext = EntityManager.GetEntitiesWithComponent<AttackIntent>()
                   .Any(en =>
@@ -68,13 +66,16 @@ namespace Crusaders30XX.ECS.Systems
                       var i = en.GetComponent<AttackIntent>();
                       return i != null && i.Planned != null && i.Planned.Count > 0;
                   });
+              Console.WriteLine($"[PhaseCoordinatorSystem] does enemy have another planned attack: {hasNext}");
               if (hasNext)
               {
-                  EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyAttack, Previous = SubPhase.Block });
+                ps.Sub = SubPhase.Block;
+                EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Block, Previous = SubPhase.EnemyAttack });
               }
               else
               {
-                  EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyEnd, Previous = SubPhase.EnemyAttack });
+                ps.Sub = SubPhase.EnemyEnd;
+                EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyEnd, Previous = SubPhase.EnemyAttack });
               }
 							break;
 						case SubPhase.EnemyEnd:

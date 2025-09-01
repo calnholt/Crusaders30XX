@@ -18,10 +18,11 @@ namespace Crusaders30XX.ECS.Systems
 	public class EnemyIntentPlanningSystem : Core.System
 	{
 		private Dictionary<string, AttackDefinition> _attackDefs;
+		private bool _isFirstLoad = true;
 
 		public EnemyIntentPlanningSystem(EntityManager em) : base(em)
 		{
-			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ => { System.Console.WriteLine("[EnemyIntentPlanningSystem] StartEnemyTurn received"); OnStartEnemyTurn(_); });
+			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnStartEnemyTurn);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -40,42 +41,44 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnStartEnemyTurn(ChangeBattlePhaseEvent evt)
 		{
-			if (evt.Current != SubPhase.EnemyStart) return;
-
-			System.Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
-			EnsureAttackDefsLoaded();
-			int turnNumber = GetCurrentTurnNumber();
-			foreach (var enemy in GetRelevantEntities())
+			if ((_isFirstLoad && evt.Current == SubPhase.EnemyStart) || (evt.Current == SubPhase.PlayerStart && !_isFirstLoad))
 			{
-				var arsenal = enemy.GetComponent<EnemyArsenal>();
-				if (arsenal == null || arsenal.AttackIds.Count == 0) continue;
-				var enemyCmp = enemy.GetComponent<Enemy>();
-				string enemyId = enemyCmp?.Id ?? "demon";
-				var intent = enemy.GetComponent<AttackIntent>();
-				if (intent == null)
+				System.Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
+				EnsureAttackDefsLoaded();
+				int turnNumber = GetCurrentTurnNumber();
+				foreach (var enemy in GetRelevantEntities())
 				{
-					intent = new AttackIntent();
-					EntityManager.AddComponent(enemy, intent);
-				}
-				var next = enemy.GetComponent<NextTurnAttackIntent>();
-				if (next == null)
-				{
-					next = new NextTurnAttackIntent();
-					EntityManager.AddComponent(enemy, next);
-				}
+					var arsenal = enemy.GetComponent<EnemyArsenal>();
+					if (arsenal == null || arsenal.AttackIds.Count == 0) continue;
+					var enemyCmp = enemy.GetComponent<Enemy>();
+					string enemyId = enemyCmp?.Id ?? "demon";
+					var intent = enemy.GetComponent<AttackIntent>();
+					if (intent == null)
+					{
+						intent = new AttackIntent();
+						EntityManager.AddComponent(enemy, intent);
+					}
+					var next = enemy.GetComponent<NextTurnAttackIntent>();
+					if (next == null)
+					{
+						next = new NextTurnAttackIntent();
+						EntityManager.AddComponent(enemy, next);
+					}
 
-				// Use per-enemy intent service to (re)plan
-				IEnemyIntentService service = CreateServiceForEnemy(enemyId);
-				if (service == null)
-				{
-					System.Console.WriteLine($"[EnemyIntentPlanningSystem] No intent service for enemy '{enemyId}', falling back to round-robin.");
-					PlanRoundRobin(arsenal, intent, next);
+					// Use per-enemy intent service to (re)plan
+					IEnemyIntentService service = CreateServiceForEnemy(enemyId);
+					if (service == null)
+					{
+						System.Console.WriteLine($"[EnemyIntentPlanningSystem] No intent service for enemy '{enemyId}', falling back to round-robin.");
+						PlanRoundRobin(arsenal, intent, next);
+					}
+					else
+					{
+						System.Console.WriteLine($"[EnemyIntentPlanningSystem] Planning {enemyId} attacks, turn {turnNumber}");
+						service.Plan(enemy, arsenal, intent, next, turnNumber, _attackDefs);
+					}
 				}
-				else
-				{
-					System.Console.WriteLine($"[EnemyIntentPlanningSystem] Planning {enemyId} attacks, turn {turnNumber}");
-					service.Plan(enemy, arsenal, intent, next, turnNumber, _attackDefs);
-				}
+				_isFirstLoad = false;
 			}
 		}
 
@@ -108,9 +111,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		private int GetCurrentTurnNumber()
 		{
-			var infoEntity = EntityManager.GetEntitiesWithComponent<BattleInfo>().FirstOrDefault();
-			var info = infoEntity?.GetComponent<BattleInfo>();
-			return info?.TurnNumber ?? 0;
+			var infoEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+			var info = infoEntity.GetComponent<PhaseState>();
+			return _isFirstLoad ? 0 : info.TurnNumber;
 		}
 
 		private IEnemyIntentService CreateServiceForEnemy(string enemyId)
