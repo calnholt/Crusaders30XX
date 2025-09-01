@@ -55,6 +55,7 @@ public class Game1 : Game
     private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
     private EnemyIntentPlanningSystem _enemyIntentPlanningSystem;
     private EnemyAttackProgressManagementSystem _enemyAttackProgressManagementSystem;
+    private StunnedOverlaySystem _stunnedOverlaySystem;
     private AttackResolutionSystem _attackResolutionSystem;
     private HandBlockInteractionSystem _handBlockInteractionSystem;
     private StoredBlockManagementSystem _storedBlockManagementSystem;
@@ -165,6 +166,7 @@ public class Game1 : Game
         _assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _enemyIntentPlanningSystem = new EnemyIntentPlanningSystem(_world.EntityManager);
         _enemyAttackProgressManagementSystem = new EnemyAttackProgressManagementSystem(_world.EntityManager);
+        _stunnedOverlaySystem = new StunnedOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         // _blockConditionTrackingSystem = new BlockConditionTrackingSystem(_world.EntityManager);
         _attackResolutionSystem = new AttackResolutionSystem(_world.EntityManager);
         _handBlockInteractionSystem = new HandBlockInteractionSystem(_world.EntityManager);
@@ -212,6 +214,7 @@ public class Game1 : Game
         _world.AddSystem(_enemyIntentPipsSystem);
         _world.AddSystem(_enemyIntentPlanningSystem);
         _world.AddSystem(_enemyAttackProgressManagementSystem);
+        _world.AddSystem(_stunnedOverlaySystem);
         // _world.AddSystem(_blockConditionTrackingSystem);
         _world.AddSystem(_attackResolutionSystem);
         _world.AddSystem(_enemyAttackDisplaySystem);
@@ -278,6 +281,7 @@ public class Game1 : Game
         FrameProfiler.Measure("EnemyDisplaySystem.Draw", () => _enemyDisplaySystem.Draw());
         FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", () => _enemyIntentPipsSystem.Draw());
         FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", () => _enemyAttackDisplaySystem.Draw());
+        FrameProfiler.Measure("StunnedOverlaySystem.Draw", () => _stunnedOverlaySystem.Draw());
         FrameProfiler.Measure("EndTurnDisplaySystem.Draw", () => _endTurnDisplaySystem.Draw());
         FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", () => _assignedBlockCardsDisplaySystem.Draw());
         FrameProfiler.Measure("PlayerWispParticleSystem.Draw", () => _playerWispParticleSystem.Draw());

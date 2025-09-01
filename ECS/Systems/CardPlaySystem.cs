@@ -129,6 +129,21 @@ namespace Crusaders30XX.ECS.Systems
                     if (dmg > 0) EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
                     break;
                 }
+                case "stun":
+                {
+                    if (enemy != null)
+                    {
+                        var stun = enemy.GetComponent<Stun>();
+                        if (stun == null)
+                        {
+                            stun = new Stun { Stacks = 0 };
+                            EntityManager.AddComponent(enemy, stun);
+                        }
+                        stun.Stacks += 1;
+                        System.Console.WriteLine($"[CardPlaySystem] Applied stun. Stacks={stun.Stacks}");
+                    }
+                    break;
+                }
                 default:
                     System.Console.WriteLine($"[CardPlaySystem] No effect for id={def.id}");
                     break;

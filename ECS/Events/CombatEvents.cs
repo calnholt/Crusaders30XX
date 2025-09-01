@@ -52,6 +52,12 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public string ContextId;
 	}
+
+	// Shows a temporary "Stunned!" overlay on the enemy
+	public class ShowStunnedOverlay
+	{
+		public string ContextId;
+	}
 }
 
 

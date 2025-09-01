@@ -38,6 +38,15 @@ namespace Crusaders30XX.ECS.Components
 		public bool WasBlocked;
 	}
 
+	/// <summary>
+	/// Tracks stun stacks on an enemy. Each stack skips one planned attack when it would resolve.
+	/// </summary>
+	public class Stun : IComponent
+	{
+		public Entity Owner { get; set; }
+		public int Stacks { get; set; } = 0;
+	}
+
 
 	/// <summary>
 	/// Per-attack, per-context progress data used by UI and logic. One entity per contextId.
