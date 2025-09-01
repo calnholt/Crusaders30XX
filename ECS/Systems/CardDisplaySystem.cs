@@ -125,13 +125,15 @@ namespace Crusaders30XX.ECS.Systems
             var cardCenter = new Vector2(cardRectForCenter.X + cardRectForCenter.Width / 2f, cardRectForCenter.Y + cardRectForCenter.Height / 2f);
             
             // Name text (wrapped within card width), rotated with card
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY), cardData.Name, Color.White, _settings.NameScale);
+            var textColor = GetCardTextColor(cardData.Color);
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY), cardData.Name, textColor, _settings.NameScale);
             
             // Draw cost
             string costText = GetCostText(cardData.CardCostType);
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(34 * _settings.UIScale)), costText, costColor, _settings.CostScale);
+            var costTextColor = (cardData.Color == CardData.CardColor.White) ? textColor : costColor;
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(34 * _settings.UIScale)), costText, costTextColor, _settings.CostScale);
             
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)), cardData.Description, Color.White, _settings.DescriptionScale);
+            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)), cardData.Description, textColor, _settings.DescriptionScale);
             
             // Draw block value and shield icon at bottom-left
             if (cardData.BlockValue > 0)
@@ -145,7 +147,7 @@ namespace Crusaders30XX.ECS.Systems
                 // First draw the number
                 float numberLocalX = marginX;
                 float numberLocalY = baselineY - textSize.Y;
-                DrawCardTextRotatedSingle(cardCenter, rotation, new Vector2(numberLocalX, numberLocalY), blockText, Color.White, _settings.BlockNumberScale);
+                DrawCardTextRotatedSingle(cardCenter, rotation, new Vector2(numberLocalX, numberLocalY), blockText, textColor, _settings.BlockNumberScale);
 
                 // Then draw the shield icon to the right
                 var shield = GetOrLoadTexture("shield");
@@ -193,6 +195,17 @@ namespace Crusaders30XX.ECS.Systems
                 CardData.CostType.Black => Color.DarkGray,
                 _ => Color.Gray
             };
+        }
+
+        private Color GetCardTextColor(CardData.CardColor color)
+        {
+            switch (color)
+            {
+                case CardData.CardColor.White:
+                    return Color.Black;
+                default:
+                    return Color.White;
+            }
         }
         
         private string GetCostText(CardData.CostType costType)

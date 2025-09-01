@@ -1,0 +1,9 @@
+{
+  "id": "stun",
+  "name": "Stun",
+  "target": "Enemy",
+  "color": "White",
+  "rarity": "Common",
+  "text": "Stun."
+}
+
