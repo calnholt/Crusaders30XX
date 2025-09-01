@@ -33,7 +33,6 @@ namespace Crusaders30XX.ECS.Systems
 		private float _flashElapsedSeconds = 0f;
 		private float _shockwaveElapsedSeconds = 0f;
 		private float _craterElapsedSeconds = 0f;
-		private bool _sentProceedPhaseEvt = false;
 
 		private struct DebrisParticle
 		{
@@ -172,12 +171,11 @@ namespace Crusaders30XX.ECS.Systems
 					OnConfirmPressed();
 				}
 			});
-			EventManager.Subscribe<ProceedToNextPhase>(evt => _sentProceedPhaseEvt = false);
 		}
 
 		private void OnConfirmPressed()
 		{
-			EventManager.Publish(new ProceedToNextPhase());
+			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyAttack, Previous = SubPhase.Block });
 			// Enqueue: Discard assigned blocks as the first step
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();

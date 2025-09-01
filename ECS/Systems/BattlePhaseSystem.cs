@@ -42,7 +42,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (phase.Main == MainPhase.StartBattle) {
 					if (AutoAdvanceStartSeconds > 0f && _phaseTimer >= AutoAdvanceStartSeconds)
 					{
-						EventManager.Publish(new ProceedToNextPhase { });
+						EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart });
+						EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Block });
 					}
 			}
 

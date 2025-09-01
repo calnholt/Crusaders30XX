@@ -399,7 +399,7 @@ namespace Crusaders30XX.ECS.Components
     {
         StartBattle,
         EnemyTurn,
-        PlayerAction
+        PlayerTurn
     }
 
     public enum SubPhase

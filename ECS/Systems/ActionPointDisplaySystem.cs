@@ -45,7 +45,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			// Only render during Action phase
 			var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
-			if (phase.Main != MainPhase.PlayerAction) return;
+			if (phase.Main != MainPhase.PlayerTurn) return;
 			var player = GetRelevantEntities().FirstOrDefault();
 			if (player == null) return;
 			var t = player.GetComponent<Transform>();

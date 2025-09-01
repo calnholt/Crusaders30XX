@@ -55,11 +55,25 @@ namespace Crusaders30XX.ECS.Systems
 				if (stun.Stacks <= 0 || intent.Planned.Count == 0) break;
 			}
 			// If we skipped, let coordinator pick the next phase
-			if (skippedAny)
+			if (HasNextAttack())
 			{
-				EventManager.Publish(new ProceedToNextPhase());
+				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Block, Previous = SubPhase.EnemyAttack });
+			}
+			else {
+				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyEnd, Previous = SubPhase.Block });
+				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.PlayerStart, Previous = SubPhase.EnemyEnd });
 			}
 		}
+
+    private bool HasNextAttack() {
+      return EntityManager.GetEntitiesWithComponent<AttackIntent>()
+          .Any(en =>
+          {
+              var i = en.GetComponent<AttackIntent>();
+              return i != null && i.Planned != null && i.Planned.Count > 0;
+          });
+    }
+
 	}
 }
 

@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		public PhaseCoordinatorSystem(EntityManager em) : base(em)
 		{
-			EventManager.Subscribe<ProceedToNextPhase>(_ => OnProceed());
+			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -35,75 +35,24 @@ namespace Crusaders30XX.ECS.Systems
 			return ps;
 		}
 
-		private void OnProceed()
+		private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
 		{
 			var ps = GetOrCreate();
-			switch (ps.Main)
-			{
-				case MainPhase.StartBattle:
-					ps.Main = MainPhase.EnemyTurn; 
-          ps.Sub = SubPhase.EnemyStart; 
-          ps.TurnNumber = 1;
-					EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart, Previous = SubPhase.None });
-          EventManager.Publish(new ProceedToNextPhase {  });
-					break;
-				case MainPhase.EnemyTurn:
-					switch (ps.Sub)
-					{
-						case SubPhase.EnemyStart:
-							ps.Sub = SubPhase.Block;
-							EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Block, Previous = SubPhase.None });
-							break;
-						case SubPhase.Block:
-							ps.Sub = SubPhase.EnemyAttack;
-							EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyAttack, Previous = SubPhase.Block });
-							break;
-						case SubPhase.EnemyAttack:
-              // If any planned attacks remain on any enemy, go back to Block for re-assignment; otherwise go to Action
-              bool hasNext = EntityManager.GetEntitiesWithComponent<AttackIntent>()
-                  .Any(en =>
-                  {
-                      var i = en.GetComponent<AttackIntent>();
-                      return i != null && i.Planned != null && i.Planned.Count > 0;
-                  });
-              Console.WriteLine($"[PhaseCoordinatorSystem] does enemy have another planned attack: {hasNext}");
-              if (hasNext)
-              {
-                ps.Sub = SubPhase.Block;
-                EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Block, Previous = SubPhase.EnemyAttack });
-              }
-              else
-              {
-                ps.Sub = SubPhase.EnemyEnd;
-                EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyEnd, Previous = SubPhase.EnemyAttack });
-              }
-							break;
-						case SubPhase.EnemyEnd:
-							ps.Sub = SubPhase.PlayerStart; ps.Main = MainPhase.PlayerAction;
-							EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.PlayerStart, Previous = SubPhase.EnemyEnd });
-							break;
-					}
-					break;
-				case MainPhase.PlayerAction:
-					switch (ps.Sub)
-					{
-						case SubPhase.PlayerStart:
-							ps.Sub = SubPhase.Action;
-							EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Action, Previous = SubPhase.PlayerStart });
-							break;
-						case SubPhase.Action:
-							ps.Sub = SubPhase.PlayerEnd;
-							EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.PlayerEnd, Previous = SubPhase.Action });
-							break;
-						case SubPhase.PlayerEnd:
-							ps.Main = MainPhase.EnemyTurn; ps.Sub = SubPhase.EnemyStart; ps.TurnNumber++;
-							EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart, Previous = SubPhase.PlayerEnd });
-							break;
-					}
-					break;
-			}
-      Console.WriteLine($"[PhaseCoordinatorSystem]: update phase - {ps.Main}: {ps.Sub}");
+      if (evt.Current == SubPhase.EnemyStart) {
+        ps.TurnNumber++;
+      }
+      if (evt.Current == SubPhase.EnemyStart || evt.Current == SubPhase.Block || evt.Current == SubPhase.EnemyAttack || evt.Current == SubPhase.EnemyEnd) {
+        ps.Main = MainPhase.EnemyTurn;
+      }
+      else if (evt.Current == SubPhase.None) {
+        ps.Main = MainPhase.StartBattle;
+      }
+      else {
+        ps.Main = MainPhase.PlayerTurn;
+      }
+      ps.Sub = evt.Current;
 		}
+
 	}
 }
 

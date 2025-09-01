@@ -38,12 +38,14 @@ namespace Crusaders30XX.ECS.Systems
 				if (idx >= 0) intent.Planned.RemoveAt(idx);
 			}
 
-			// Defer phase advancement decision to PhaseCoordinator
 			var hasNext = intent != null && intent.Planned != null && intent.Planned.Count > 0;
-			EventManager.Publish(new ProceedToNextPhase());
-			if (!hasNext) {
-				EventManager.Publish(new ProceedToNextPhase());
-				EventManager.Publish(new ProceedToNextPhase());
+			if (hasNext) {
+				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Block, Previous = SubPhase.EnemyAttack });
+			}
+			else {
+				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyEnd, Previous = SubPhase.Block });
+				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.PlayerStart, Previous = SubPhase.EnemyEnd });
+				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Action, Previous = SubPhase.PlayerStart });
 			}
 
 			State = EventQueue.EventState.Complete;
