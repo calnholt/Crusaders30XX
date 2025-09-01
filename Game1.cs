@@ -181,6 +181,7 @@ public class Game1 : Game
         
         _world.AddSystem(_cardHighlightSystem);
         // Add systems to world
+        _world.AddSystem(_enemyStunAutoSkipSystem);
         _world.AddSystem(_renderingSystem);
         _world.AddSystem(_cardDisplaySystem);
         _world.AddSystem(_handDisplaySystem);
@@ -226,8 +227,7 @@ public class Game1 : Game
         _world.AddSystem(_enemyDamageManagerSystem);
         _world.AddSystem(_cardPlaySystem);
         _world.AddSystem(_battlePhaseDrawSystem);
-        // _world.AddSystem(_phaseCoordinatorSystem);
-        _world.AddSystem(_enemyStunAutoSkipSystem);
+        _world.AddSystem(_phaseCoordinatorSystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });

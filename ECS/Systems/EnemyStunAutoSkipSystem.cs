@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -43,7 +44,6 @@ namespace Crusaders30XX.ECS.Systems
 			var intent = entity.GetComponent<AttackIntent>();
 			if (intent == null || intent.Planned == null || intent.Planned.Count == 0) return;
 			int toSkip = System.Math.Min(stun.Stacks, intent.Planned.Count);
-			bool skippedAny = false;
 			for (int i = 0; i < toSkip; i++)
 			{
 				var ctx = intent.Planned[0].ContextId;
@@ -51,17 +51,18 @@ namespace Crusaders30XX.ECS.Systems
 				EventManager.Publish(new ShowStunnedOverlay { ContextId = ctx });
 				intent.Planned.RemoveAt(0);
 				stun.Stacks -= 1;
-				skippedAny = true;
 				if (stun.Stacks <= 0 || intent.Planned.Count == 0) break;
 			}
-			// If we skipped, let coordinator pick the next phase
 			if (HasNextAttack())
 			{
+				Console.WriteLine("[EnemyStunAutoSkipSystem] has another attack");
 				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Block, Previous = SubPhase.EnemyAttack });
 			}
 			else {
+				Console.WriteLine("[EnemyStunAutoSkipSystem] does not have another attack");
 				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyEnd, Previous = SubPhase.Block });
 				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.PlayerStart, Previous = SubPhase.EnemyEnd });
+				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Action, Previous = SubPhase.PlayerStart });
 			}
 		}
 
