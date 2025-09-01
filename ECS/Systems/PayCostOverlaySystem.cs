@@ -1,0 +1,384 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Events;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace Crusaders30XX.ECS.Systems
+{
+    /// <summary>
+    /// Renders and manages the overlay used to pay color costs by discarding cards.
+    /// </summary>
+    public class PayCostOverlaySystem : Core.System
+    {
+        private readonly GraphicsDevice _graphicsDevice;
+        private readonly SpriteBatch _spriteBatch;
+        private readonly SpriteFont _font;
+        private readonly Texture2D _pixel;
+
+        private const float FadeInDurationSec = 0.15f;
+
+        public PayCostOverlaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+            : base(entityManager)
+        {
+            _graphicsDevice = graphicsDevice;
+            _spriteBatch = spriteBatch;
+            _font = font;
+            _pixel = new Texture2D(graphicsDevice, 1, 1);
+            _pixel.SetData(new[] { Color.White });
+
+            EventManager.Subscribe<OpenPayCostOverlayEvent>(OnOpen);
+            EventManager.Subscribe<ClosePayCostOverlayEvent>(_ => Close());
+            EventManager.Subscribe<PayCostCandidateClicked>(OnCandidateClicked);
+            EventManager.Subscribe<PayCostCancelRequested>(_ => Close());
+        }
+
+        protected override IEnumerable<Entity> GetRelevantEntities()
+        {
+            return EntityManager.GetEntitiesWithComponent<PayCostOverlayState>();
+        }
+
+        protected override void UpdateEntity(Entity entity, GameTime gameTime)
+        {
+            var state = entity.GetComponent<PayCostOverlayState>();
+            if (state == null || !state.IsOpen) return;
+            state.OpenElapsedSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
+        }
+
+        private void EnsureStateEntityExists()
+        {
+            var e = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+            if (e == null)
+            {
+                e = EntityManager.CreateEntity("PayCostOverlay");
+                EntityManager.AddComponent(e, new PayCostOverlayState { IsOpen = false });
+            }
+            // Ensure a cancel button entity exists (bounds updated in Draw)
+            var cancel = EntityManager.GetEntitiesWithComponent<PayCostCancelButton>().FirstOrDefault();
+            if (cancel == null)
+            {
+                cancel = EntityManager.CreateEntity("PayCostOverlay_Cancel");
+                EntityManager.AddComponent(cancel, new Transform { Position = Vector2.Zero, ZOrder = 20000 });
+                EntityManager.AddComponent(cancel, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Cancel" });
+                EntityManager.AddComponent(cancel, new PayCostCancelButton());
+            }
+        }
+
+        private void OnOpen(OpenPayCostOverlayEvent evt)
+        {
+            if (evt == null || evt.CardToPlay == null) return;
+            EnsureStateEntityExists();
+            var e = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+            var state = e.GetComponent<PayCostOverlayState>();
+            state.IsOpen = true;
+            state.CardToPlay = evt.CardToPlay;
+            state.RequiredCosts = (evt.RequiredCosts ?? new List<string>()).ToList();
+            state.SelectedCards.Clear();
+            state.OpenElapsedSeconds = 0f;
+
+            // Stage the card: remove it from hand and record original index
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck != null)
+            {
+                state.OriginalHandIndex = deck.Hand.IndexOf(state.CardToPlay);
+                if (state.OriginalHandIndex >= 0)
+                {
+                    deck.Hand.RemoveAt(state.OriginalHandIndex);
+                }
+            }
+            // Disable staged card interactions and set its z-order high
+            var stagedUI = state.CardToPlay.GetComponent<UIElement>();
+            if (stagedUI != null)
+            {
+                stagedUI.IsInteractable = false;
+                stagedUI.IsHovered = false;
+                stagedUI.IsClicked = false;
+            }
+            var stagedT = state.CardToPlay.GetComponent<Transform>();
+            if (stagedT != null)
+            {
+                stagedT.ZOrder = 30000;
+            }
+
+            // Update interactability of remaining hand cards to only those viable to pay costs
+            UpdateInteractablesForRemainingCosts(state);
+        }
+
+        private void Close()
+        {
+            var e = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+            if (e == null) return;
+            var state = e.GetComponent<PayCostOverlayState>();
+            if (state != null)
+            {
+                // If the play was canceled (overlay is closing without PayCostSatisfied), restore staged card to hand
+                bool restoring = state.CardToPlay != null && state.RequiredCosts.Count > 0; // if not satisfied
+                if (restoring)
+                {
+                    var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                    var deck = deckEntity?.GetComponent<Deck>();
+                    if (deck != null && state.CardToPlay != null)
+                    {
+                        int insertIndex = state.OriginalHandIndex;
+                        if (insertIndex < 0 || insertIndex > deck.Hand.Count) insertIndex = deck.Hand.Count;
+                        deck.Hand.Insert(insertIndex, state.CardToPlay);
+                        // Reset transform so the hand system repositions it
+                        var t = state.CardToPlay.GetComponent<Transform>();
+                        if (t != null)
+                        {
+                            t.Position = Vector2.Zero;
+                            t.Rotation = 0f;
+                        }
+                    }
+                }
+                // Restore interactability for all hand cards
+                RestoreHandInteractables();
+
+                // Reset overlay state
+                state.IsOpen = false;
+                state.CardToPlay = null;
+                state.RequiredCosts.Clear();
+                state.SelectedCards.Clear();
+                state.OpenElapsedSeconds = 0f;
+                state.OriginalHandIndex = -1;
+            }
+        }
+
+        private static bool TryConsumeCostForCard(List<string> remainingCosts, CardData.CardColor candidateColor, out int consumedIndex)
+        {
+            consumedIndex = -1;
+            // Prefer consuming a specific matching color first
+            for (int i = 0; i < remainingCosts.Count; i++)
+            {
+                string c = remainingCosts[i];
+                if ((c == "Red" && candidateColor == CardData.CardColor.Red) ||
+                    (c == "White" && candidateColor == CardData.CardColor.White) ||
+                    (c == "Black" && candidateColor == CardData.CardColor.Black))
+                {
+                    consumedIndex = i;
+                    return true;
+                }
+            }
+            // Otherwise consume an Any slot if available
+            for (int i = 0; i < remainingCosts.Count; i++)
+            {
+                if (remainingCosts[i] == "Any")
+                {
+                    consumedIndex = i;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void OnCandidateClicked(PayCostCandidateClicked evt)
+        {
+            var stateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+            if (stateEntity == null) return;
+            var state = stateEntity.GetComponent<PayCostOverlayState>();
+            if (state == null || !state.IsOpen || evt?.Card == null) return;
+
+            // Only allow selecting from current hand and not the card being played
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck == null) return;
+            if (!deck.Hand.Contains(evt.Card)) return;
+            if (evt.Card == state.CardToPlay) return;
+
+            var cd = evt.Card.GetComponent<CardData>();
+            if (cd == null) return;
+
+            // Avoid selecting the same card twice
+            if (state.SelectedCards.Contains(evt.Card)) return;
+
+            // Check if this card can satisfy one of the remaining costs
+            if (TryConsumeCostForCard(state.RequiredCosts, cd.Color, out int idx))
+            {
+                // Consume that cost slot and record selection
+                state.RequiredCosts.RemoveAt(idx);
+                state.SelectedCards.Add(evt.Card);
+                // Disable this card's interactions immediately
+                var uiSel = evt.Card.GetComponent<UIElement>();
+                if (uiSel != null)
+                {
+                    uiSel.IsInteractable = false;
+                    uiSel.IsHovered = false;
+                    uiSel.IsClicked = false;
+                }
+
+                // If all requirements satisfied, discard selected and complete
+                if (state.RequiredCosts.Count == 0)
+                {
+                    foreach (var c in state.SelectedCards)
+                    {
+                        EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PayCost" });
+                    }
+                    EventManager.Publish(new PayCostSatisfied { CardToPlay = state.CardToPlay, PaymentCards = new List<Entity>(state.SelectedCards) });
+                    Close();
+                }
+                else
+                {
+                    // Update which remaining hand cards are viable based on new remaining requirements
+                    UpdateInteractablesForRemainingCosts(state);
+                }
+            }
+        }
+
+        private string BuildCostPhrase(IEnumerable<string> costs)
+        {
+            var list = costs.ToList();
+            if (list.Count == 0) return "";
+            var groups = list
+                .GroupBy(c => c)
+                .Select(g => g.Count() > 1 ? $"{g.Count()} {g.Key}" : g.Key)
+                .ToList();
+            return string.Join(", ", groups);
+        }
+
+        public void Draw()
+        {
+            var stateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+            if (stateEntity == null) return;
+            var state = stateEntity.GetComponent<PayCostOverlayState>();
+            if (state == null || !state.IsOpen) return;
+
+            int w = _graphicsDevice.Viewport.Width;
+            int h = _graphicsDevice.Viewport.Height;
+
+            float t = MathHelper.Clamp(state.OpenElapsedSeconds / FadeInDurationSec, 0f, 1f);
+            // EaseOutQuad
+            float eased = 1f - (1f - t) * (1f - t);
+            byte alpha = (byte)(eased * 200);
+
+            // Full-screen dim overlay
+            _spriteBatch.Draw(_pixel, new Rectangle(0, 0, w, h), new Color(0f, 0f, 0f, alpha / 255f));
+
+            // Center text
+            var cd = state.CardToPlay?.GetComponent<CardData>();
+            string cardName = cd?.Name ?? "Card";
+            string phrase = BuildCostPhrase(state.RequiredCosts.Concat(state.SelectedCards.Select(e => ""))); // we only want original display; Selected used to trigger completion
+            // For stable text, compute from initial requirements = Selected + Remaining
+            var initialReq = new List<string>(state.RequiredCosts);
+            // Add placeholders for selected to reconstruct original count
+            for (int i = 0; i < state.SelectedCards.Count; i++) initialReq.Add("_"); // placeholders ignored
+            // Build text from total required via CardToPlay definition
+            // Safer: fetch from CardDefinition
+            var defTextCosts = GetDefinitionCosts(state.CardToPlay);
+            string costText = BuildCostPhrase(defTextCosts);
+            string line = $"Discard {costText} to pay for {cardName}";
+            var size = _font.MeasureString(line);
+            _spriteBatch.DrawString(_font, line, new Vector2(w / 2f - size.X / 2f, h / 2f - size.Y / 2f), Color.White);
+
+            // Draw the staged card in the center, slightly above the text
+            var centerPos = new Vector2(w / 2f, h / 2f - size.Y);
+            if (state.CardToPlay != null)
+            {
+                EventManager.Publish(new CardRenderScaledEvent { Card = state.CardToPlay, Position = centerPos, Scale = 1.1f });
+            }
+
+            // Cancel button (top-right)
+            var btnRect = new Rectangle(w - 28 - 24, 24, 28, 28);
+            float btnAlpha = Math.Min(1f, (alpha + 55) / 255f);
+            _spriteBatch.Draw(_pixel, btnRect, new Color(70f / 255f, 70f / 255f, 70f / 255f, btnAlpha));
+            DrawBorder(btnRect, Color.White, 2);
+            var xSize = _font.MeasureString("X") * 0.6f;
+            _spriteBatch.DrawString(_font, "X", new Vector2(btnRect.Center.X - xSize.X / 2f, btnRect.Center.Y - xSize.Y / 2f), Color.White, 0f, Vector2.Zero, 0.6f, SpriteEffects.None, 0f);
+
+            // Sync clickable cancel bounds entity
+            var cancel = EntityManager.GetEntitiesWithComponent<PayCostCancelButton>().FirstOrDefault();
+            if (cancel == null)
+            {
+                EnsureStateEntityExists();
+                cancel = EntityManager.GetEntitiesWithComponent<PayCostCancelButton>().FirstOrDefault();
+            }
+            var ui = cancel?.GetComponent<UIElement>();
+            if (ui != null)
+            {
+                ui.Bounds = btnRect;
+            }
+        }
+
+        private void RestoreHandInteractables()
+        {
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck == null) return;
+            foreach (var c in deck.Hand)
+            {
+                var ui = c.GetComponent<UIElement>();
+                if (ui != null)
+                {
+                    ui.IsInteractable = true;
+                    ui.IsHovered = false;
+                    ui.IsClicked = false;
+                }
+            }
+        }
+
+        private static bool IsCardViableForCosts(Entity card, List<string> remainingCosts)
+        {
+            var cd = card.GetComponent<CardData>();
+            if (cd == null) return false;
+            // Card is viable if it can satisfy at least one remaining requirement
+            foreach (var c in remainingCosts)
+            {
+                if (c == "Any") return true;
+                if (c == "Red" && cd.Color == CardData.CardColor.Red) return true;
+                if (c == "White" && cd.Color == CardData.CardColor.White) return true;
+                if (c == "Black" && cd.Color == CardData.CardColor.Black) return true;
+            }
+            return false;
+        }
+
+        private void UpdateInteractablesForRemainingCosts(PayCostOverlayState state)
+        {
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck == null) return;
+            foreach (var c in deck.Hand)
+            {
+                if (c == state.CardToPlay) continue;
+                var ui = c.GetComponent<UIElement>();
+                if (ui == null) continue;
+                bool viable = IsCardViableForCosts(c, state.RequiredCosts);
+                ui.IsInteractable = viable;
+                if (!viable)
+                {
+                    ui.IsHovered = false;
+                    ui.IsClicked = false;
+                }
+            }
+        }
+
+        private List<string> GetDefinitionCosts(Entity card)
+        {
+            if (card == null) return new List<string>();
+            var data = card.GetComponent<CardData>();
+            if (data == null) return new List<string>();
+
+            // Lookup JSON definition to read cost array
+            string id = (data.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+            if (string.IsNullOrEmpty(id)) return new List<string>();
+            if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
+            {
+                string alt = (data.Name ?? string.Empty).Trim().ToLowerInvariant();
+                if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(alt, out def)) return new List<string>();
+            }
+            return (def.cost ?? Array.Empty<string>()).ToList();
+        }
+
+        private void DrawBorder(Rectangle rect, Color color, int thickness)
+        {
+            _spriteBatch.Draw(_pixel, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
+            _spriteBatch.Draw(_pixel, new Rectangle(rect.X, rect.Bottom - thickness, rect.Width, thickness), color);
+            _spriteBatch.Draw(_pixel, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
+            _spriteBatch.Draw(_pixel, new Rectangle(rect.Right - thickness, rect.Y, thickness, rect.Height), color);
+        }
+    }
+}
+
+

@@ -65,6 +65,7 @@ public class Game1 : Game
     private EventQueueSystem _eventQueueSystem;
     private CardPlaySystem _cardPlaySystem;
     private EndTurnDisplaySystem _endTurnDisplaySystem;
+    private PayCostOverlaySystem _payCostOverlaySystem;
     private DrawHandSystem _battlePhaseDrawSystem;
     private PhaseCoordinatorSystem _phaseCoordinatorSystem;
     private EnemyStunAutoSkipSystem _enemyStunAutoSkipSystem;
@@ -164,6 +165,7 @@ public class Game1 : Game
         _enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _endTurnDisplaySystem = new EndTurnDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _payCostOverlaySystem = new PayCostOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _enemyIntentPlanningSystem = new EnemyIntentPlanningSystem(_world.EntityManager);
         _enemyAttackProgressManagementSystem = new EnemyAttackProgressManagementSystem(_world.EntityManager);
         _stunnedOverlaySystem = new StunnedOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
@@ -301,6 +303,8 @@ public class Game1 : Game
         FrameProfiler.Measure("CardListModalSystem.Draw", () => _cardListModalSystem.Draw());
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", () => _tooltipDisplaySystem.Draw());
         FrameProfiler.Measure("ProfilerSystem.Draw", () => _profilerSystem.Draw());
+        // Draw the pay-cost overlay last so it sits above all other UI
+        FrameProfiler.Measure("PayCostOverlaySystem.Draw", () => _payCostOverlaySystem.Draw());
         _spriteBatch.End();
 
         base.Draw(gameTime);

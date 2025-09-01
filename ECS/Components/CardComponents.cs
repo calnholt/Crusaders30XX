@@ -360,6 +360,28 @@ namespace Crusaders30XX.ECS.Components
     }
     
     /// <summary>
+    /// State for the pay-cost overlay flow.
+    /// </summary>
+    public class PayCostOverlayState : IComponent
+    {
+        public Entity Owner { get; set; }
+        public bool IsOpen { get; set; } = false;
+        public Entity CardToPlay { get; set; }
+        public List<string> RequiredCosts { get; set; } = new(); // "Red","White","Black","Any"
+        public List<Entity> SelectedCards { get; set; } = new();
+        public float OpenElapsedSeconds { get; set; } = 0f;
+        public int OriginalHandIndex { get; set; } = -1;
+    }
+
+    /// <summary>
+    /// Marker for the cancel button inside the pay-cost overlay.
+    /// </summary>
+    public class PayCostCancelButton : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+    
+    /// <summary>
     /// Component for game state management
     /// </summary>
     public class GameState : IComponent

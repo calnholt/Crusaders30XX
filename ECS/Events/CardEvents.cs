@@ -139,6 +139,8 @@ namespace Crusaders30XX.ECS.Events
     public class PlayCardRequested
     {
         public Entity Card { get; set; }
+        // When true, downstream systems should not prompt for resource/cost payment.
+        public bool CostsPaid { get; set; } = false;
     }
 
     /// <summary>
@@ -148,6 +150,43 @@ namespace Crusaders30XX.ECS.Events
     public class ModifyActionPointsEvent
     {
         public int Delta { get; set; } = 0;
+    }
+
+    /// <summary>
+    /// Opens the pay-cost overlay for a specific card with required costs.
+    /// </summary>
+    public class OpenPayCostOverlayEvent
+    {
+        public Entity CardToPlay { get; set; }
+        public System.Collections.Generic.List<string> RequiredCosts { get; set; } = new(); // values: "Red","White","Black","Any"
+    }
+
+    /// <summary>
+    /// Closes the pay-cost overlay if open.
+    /// </summary>
+    public class ClosePayCostOverlayEvent { }
+
+    /// <summary>
+    /// Emitted by input when a card is clicked while the pay-cost overlay is open.
+    /// </summary>
+    public class PayCostCandidateClicked
+    {
+        public Entity Card { get; set; }
+    }
+
+    /// <summary>
+    /// User requested to cancel paying costs and abort the play.
+    /// </summary>
+    public class PayCostCancelRequested { }
+
+    /// <summary>
+    /// Emitted when cost payment has been satisfied and the selected cards have been discarded.
+    /// Re-dispatches play of the original card with CostsPaid=true.
+    /// </summary>
+    public class PayCostSatisfied
+    {
+        public Entity CardToPlay { get; set; }
+        public System.Collections.Generic.List<Entity> PaymentCards { get; set; } = new();
     }
 
 } 

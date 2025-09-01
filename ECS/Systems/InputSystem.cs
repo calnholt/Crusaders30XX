@@ -74,6 +74,21 @@ namespace Crusaders30XX.ECS.Systems
                     .ToList();
             }
 
+            // If pay-cost overlay is open, restrict interactions to: cancel button and hand cards
+            var payEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+            bool isPayOpen = false;
+            if (payEntity != null)
+            {
+                var st = payEntity.GetComponent<PayCostOverlayState>();
+                isPayOpen = st != null && st.IsOpen;
+            }
+            if (isPayOpen)
+            {
+                uiEntities = uiEntities
+                    .Where(x => x.E.GetComponent<PayCostCancelButton>() != null || x.IsCard)
+                    .ToList();
+            }
+
             // Reset hover flags
             foreach (var x in uiEntities)
             {
@@ -162,7 +177,17 @@ namespace Crusaders30XX.ECS.Systems
             if (cardData != null)
             {
                 // Handle card click
-                HandleCardClick(entity);
+                // If pay-cost overlay is open, treat card click as candidate for payment instead of play
+                var payStateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+                var payState = payStateEntity?.GetComponent<PayCostOverlayState>();
+                if (payState != null && payState.IsOpen)
+                {
+                    EventManager.Publish(new PayCostCandidateClicked { Card = entity });
+                }
+                else
+                {
+                    HandleCardClick(entity);
+                }
             }
 
             var button = entity.GetComponent<UIButton>();
@@ -170,6 +195,12 @@ namespace Crusaders30XX.ECS.Systems
             {
                 // Publish debug command event based on button command
                 EventManager.Publish(new DebugCommandEvent { Command = button.Command });
+            }
+
+            var payCancel = entity.GetComponent<PayCostCancelButton>();
+            if (payCancel != null)
+            {
+                EventManager.Publish(new PayCostCancelRequested());
             }
 
             var drawPileClickable = entity.GetComponent<DrawPileClickable>();
