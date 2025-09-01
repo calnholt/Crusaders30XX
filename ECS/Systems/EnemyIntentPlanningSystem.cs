@@ -46,6 +46,11 @@ namespace Crusaders30XX.ECS.Systems
 				System.Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
 				EnsureAttackDefsLoaded();
 				int turnNumber = GetCurrentTurnNumber();
+				// When planning during PlayerStart, we are planning for the upcoming enemy turn
+				if (!_isFirstLoad && evt.Current == SubPhase.PlayerStart)
+				{
+					turnNumber += 1;
+				}
 				foreach (var enemy in GetRelevantEntities())
 				{
 					var arsenal = enemy.GetComponent<EnemyArsenal>();
@@ -113,7 +118,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var infoEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
 			var info = infoEntity.GetComponent<PhaseState>();
-			return _isFirstLoad ? 0 : info.TurnNumber;
+			return info.TurnNumber;
 		}
 
 		private IEnemyIntentService CreateServiceForEnemy(string enemyId)

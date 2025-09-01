@@ -27,7 +27,8 @@ namespace Crusaders30XX.ECS.Systems
         if (t > 6) {
           return ["bite", "swipe"];
         }
-				int phase = ((t % 3) + 3) % 3; // 0,1,2 cycling
+				int cycle = 3;
+				int phase = ((t % cycle) + cycle) % cycle; // 0,1,2 cycling
 				switch (phase)
 				{
 					case 0: // turn 1
