@@ -43,7 +43,8 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Shadow Offset", Step = 1, Min = 0, Max = 20)]
 		public int ShadowOffset { get; set; } = 2;
 
-		private SubPhase _lastPhase = SubPhase.None;
+		private SubPhase _lastPhase = SubPhase.StartBattle;
+		private int _lastTurn = 0;
 		private bool _transitionActive;
 		private float _transitionT; // seconds in current transition
 		private string _transitionText = string.Empty;
@@ -67,21 +68,29 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			var phase = entity.GetComponent<PhaseState>();
-			if (phase.Sub == SubPhase.EnemyAttack) return;
 			if (!_playedInitial)
 			{
 				_playedInitial = true;
 				_lastPhase = phase.Sub;
 				_transitionActive = true;
 				_transitionT = 0f;
-				_transitionText = PhaseToString(_lastPhase);
+				_lastTurn = phase.TurnNumber;
+				_transitionText = SubPhaseToString(_lastPhase);
 			}
-			else if (phase.Sub != _lastPhase)
+			else if (_lastTurn != phase.TurnNumber)
+			{
+				_lastPhase = phase.Sub;
+				_lastTurn = phase.TurnNumber;
+				_transitionActive = true;
+				_transitionT = 0f;
+				_transitionText = SubPhaseToString(_lastPhase);
+			}
+			else if (_lastPhase != phase.Sub)
 			{
 				_lastPhase = phase.Sub;
 				_transitionActive = true;
 				_transitionT = 0f;
-				_transitionText = PhaseToString(_lastPhase);
+				_transitionText = SubPhaseToString(_lastPhase);
 			}
 			if (_transitionActive)
 			{
@@ -97,7 +106,7 @@ namespace Crusaders30XX.ECS.Systems
 			var state = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
 			int vw = _graphicsDevice.Viewport.Width;
 			int xRight = vw + LabelOffsetX;
-			string label = $"{state.Main} - {state.Sub} ({state.TurnNumber})";
+			string label = $"{MainPhaseToString(state.Main)} - {SubPhaseToString(state.Sub)} ({state.TurnNumber})";
 			var size = _font.MeasureString(label) * LabelScale;
 			var pos = new Vector2(xRight - size.X, LabelOffsetY);
 			_spriteBatch.DrawString(_font, label, pos + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
@@ -105,7 +114,6 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (_transitionActive)
 			{
-				float total = Math.Max(0.01f, TransitionInSeconds + TransitionHoldSeconds + TransitionOutSeconds);
 				float t = _transitionT;
 				float inEnd = TransitionInSeconds;
 				float holdEnd = TransitionInSeconds + TransitionHoldSeconds;
@@ -139,14 +147,24 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private static string PhaseToString(SubPhase sp)
+		private static string MainPhaseToString(MainPhase p)
+		{
+			return p switch
+			{
+				MainPhase.EnemyTurn => "Enemy Turn",
+				MainPhase.PlayerTurn => "Player Turn",
+				MainPhase.StartBattle => "Start of Battle",
+				_ => p.ToString()
+			};
+		}
+		private static string SubPhaseToString(SubPhase sp)
 		{
 			return sp switch
 			{
-				SubPhase.None => "Start of Battle",
+				SubPhase.StartBattle => "Start of Battle",
 				SubPhase.Block => "Block Phase",
 				SubPhase.Action => "Action Phase",
-				SubPhase.EnemyAttack => "Processing Enemy Attack",
+				SubPhase.EnemyAttack => "Enemy Attacking",
 				_ => sp.ToString()
 			};
 		}

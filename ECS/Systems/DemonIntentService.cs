@@ -24,7 +24,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			IEnumerable<string> SelectForTurn(int t)
 			{
-        if (t > 6) {
+        if (t >= 6) {
           return ["bite", "swipe"];
         }
 				int cycle = 3;

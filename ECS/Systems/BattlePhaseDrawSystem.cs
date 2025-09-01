@@ -11,10 +11,10 @@ namespace Crusaders30XX.ECS.Systems
 	/// - On StartOfBattle entry: draw up to Intellect (respect MaxHandSize)
 	/// - On Block entry from phases other than StartOfBattle and ProcessEnemyAttack: draw up to Intellect
 	/// </summary>
-	public class BattlePhaseDrawSystem : Core.System
+	public class DrawHandSystem : Core.System
 	{
 
-		public BattlePhaseDrawSystem(EntityManager entityManager) : base(entityManager)
+		public DrawHandSystem(EntityManager entityManager) : base(entityManager)
 		{
 			var s = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ => {

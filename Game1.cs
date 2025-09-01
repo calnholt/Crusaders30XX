@@ -65,7 +65,7 @@ public class Game1 : Game
     private EventQueueSystem _eventQueueSystem;
     private CardPlaySystem _cardPlaySystem;
     private EndTurnDisplaySystem _endTurnDisplaySystem;
-    private BattlePhaseDrawSystem _battlePhaseDrawSystem;
+    private DrawHandSystem _battlePhaseDrawSystem;
     private PhaseCoordinatorSystem _phaseCoordinatorSystem;
     private EnemyStunAutoSkipSystem _enemyStunAutoSkipSystem;
 
@@ -174,7 +174,7 @@ public class Game1 : Game
         _assignedBlocksToDiscardSystem = new AssignedBlocksToDiscardSystem(_world.EntityManager, GraphicsDevice);
         _enemyDamageManagerSystem = new EnemyDamageManagerSystem(_world.EntityManager);
         _cardPlaySystem = new CardPlaySystem(_world.EntityManager);
-        _battlePhaseDrawSystem = new BattlePhaseDrawSystem(_world.EntityManager);
+        _battlePhaseDrawSystem = new DrawHandSystem(_world.EntityManager);
         _phaseCoordinatorSystem = new PhaseCoordinatorSystem(_world.EntityManager);
         _enemyStunAutoSkipSystem = new EnemyStunAutoSkipSystem(_world.EntityManager);
 

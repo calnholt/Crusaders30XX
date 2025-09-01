@@ -166,7 +166,7 @@ namespace Crusaders30XX.ECS.Factories
             };
             
 			var phaseState = world.CreateEntity("PhaseState");
-			var ps = new PhaseState { Main = MainPhase.StartBattle, Sub = SubPhase.None, TurnNumber = 0 };
+			var ps = new PhaseState { Main = MainPhase.StartBattle, Sub = SubPhase.StartBattle, TurnNumber = 0 };
 			world.AddComponent(phaseState, ps);
 
             world.AddComponent(entity, gameState);

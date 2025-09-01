@@ -404,7 +404,7 @@ namespace Crusaders30XX.ECS.Components
 
     public enum SubPhase
     {
-        None,
+        StartBattle,
         // Enemy sub-phases
         EnemyStart,
         Block,
@@ -420,7 +420,7 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         public MainPhase Main { get; set; } = MainPhase.StartBattle;
-        public SubPhase Sub { get; set; } = SubPhase.None;
+        public SubPhase Sub { get; set; } = SubPhase.StartBattle;
         public int TurnNumber { get; set; } = 0; // enemy turn counter
     }
 

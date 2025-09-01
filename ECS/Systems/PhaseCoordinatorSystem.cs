@@ -30,7 +30,7 @@ namespace Crusaders30XX.ECS.Systems
 			var e = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
 			if (e != null) return e.GetComponent<PhaseState>();
 			var world = EntityManager.CreateEntity("PhaseState");
-			var ps = new PhaseState { Main = MainPhase.StartBattle, Sub = SubPhase.None, TurnNumber = 1 };
+			var ps = new PhaseState { Main = MainPhase.StartBattle, Sub = SubPhase.StartBattle, TurnNumber = 1 };
 			EntityManager.AddComponent(world, ps);
 			return ps;
 		}
@@ -44,7 +44,7 @@ namespace Crusaders30XX.ECS.Systems
       if (evt.Current == SubPhase.EnemyStart || evt.Current == SubPhase.Block || evt.Current == SubPhase.EnemyAttack || evt.Current == SubPhase.EnemyEnd) {
         ps.Main = MainPhase.EnemyTurn;
       }
-      else if (evt.Current == SubPhase.None) {
+      else if (evt.Current == SubPhase.StartBattle) {
         ps.Main = MainPhase.StartBattle;
       }
       else {
