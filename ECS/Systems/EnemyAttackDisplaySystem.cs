@@ -29,11 +29,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Impact animation flow (spawn centered -> impact)
 		private bool _impactActive = false;
-		private bool _justImpacted = false;
 		private float _squashElapsedSeconds = 0f;
 		private float _flashElapsedSeconds = 0f;
 		private float _shockwaveElapsedSeconds = 0f;
 		private float _craterElapsedSeconds = 0f;
+		private bool _sentProceedPhaseEvt = false;
 
 		private struct DebrisParticle
 		{
@@ -172,20 +172,17 @@ namespace Crusaders30XX.ECS.Systems
 					OnConfirmPressed();
 				}
 			});
+			EventManager.Subscribe<ProceedToNextPhase>(evt => _sentProceedPhaseEvt = false);
 		}
 
 		private void OnConfirmPressed()
 		{
-			// Transition to processing phase
-			var stateEntity = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault();
-			var s = stateEntity.GetComponent<BattlePhaseState>();
-			if (s != null) s.Phase = BattlePhase.ProcessEnemyAttack;
-
+			EventManager.Publish(new ProceedToNextPhase());
 			// Enqueue: Discard assigned blocks as the first step
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();
 			var ctx = intent?.Planned?.FirstOrDefault()?.ContextId;
-			// TODO: implement system to enqueue rules
+			// Defer resolution/phase to coordinator; enqueue the standard sequence
 			EventQueue.EnqueueRule(new QueuedDiscardAssignedBlocksEvent(EntityManager, ctx));
 			EventQueue.EnqueueRule(new QueuedResolveAttackEvent(ctx));
 			EventQueue.EnqueueRule(new QueuedWaitAbsorbEvent(ctx));
@@ -204,7 +201,6 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			// Trigger a fresh impact sequence even if one is currently playing
 			_impactActive = true;
-			_justImpacted = true;
 			_squashElapsedSeconds = 0f;
 			_flashElapsedSeconds = 0f;
 			_shockwaveElapsedSeconds = 0f;
@@ -216,8 +212,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime)
 		{
-			var phaseNow = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault().GetComponent<BattlePhaseState>().Phase;
-			if (phaseNow == BattlePhase.Block) { 
+			var phaseNow = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>().Sub;
+			if (phaseNow == SubPhase.Block) { 
 				_absorbElapsedSeconds = 0f;
 				_absorbCompleteFired = false;
 			}
@@ -226,7 +222,6 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_impactActive = false;
 				_impactActive = false;
-				_justImpacted = false;
 				_lastContextId = null;
 				_debris.Clear();
 				return;
@@ -238,7 +233,6 @@ namespace Crusaders30XX.ECS.Systems
 				_lastContextId = currentContextId;
 				// Spawn centered and trigger immediate impact sequence
 				_impactActive = true;
-				_justImpacted = true;
 				_squashElapsedSeconds = 0f;
 				_flashElapsedSeconds = 0f;
 				_shockwaveElapsedSeconds = 0f;
@@ -257,13 +251,9 @@ namespace Crusaders30XX.ECS.Systems
 				_craterElapsedSeconds += dt;
 				_shakeElapsedSeconds += dt;
 				UpdateDebris(dt);
-				if (_squashElapsedSeconds > SquashDurationSeconds && _flashElapsedSeconds > FlashDurationSeconds && _shockwaveElapsedSeconds > ShockwaveDurationSeconds)
-				{
-					_justImpacted = false;
-				}
 			}
 			// Update absorb tween timer based on battle phase
-			if (phaseNow == BattlePhase.ProcessEnemyAttack)
+			if (phaseNow == SubPhase.EnemyAttack)
 			{
 				_absorbElapsedSeconds += dt;
 				if (_absorbElapsedSeconds >= AbsorbDurationSeconds)
@@ -339,8 +329,8 @@ namespace Crusaders30XX.ECS.Systems
 			Vector2 approachPos = center;
 			float panelScale = 1f;
 			// During processing, tween panel toward enemy center and scale down to 0
-			var phaseNow = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase ?? BattlePhase.StartOfBattle;
-			if (phaseNow == BattlePhase.ProcessEnemyAttack)
+			var phaseNow = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>().Sub;
+			if (phaseNow == SubPhase.EnemyAttack)
 			{
 				var enemyT = enemy?.GetComponent<Transform>();
 				var dur = System.Math.Max(0.05f, AbsorbDurationSeconds);
@@ -440,8 +430,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Confirm button below panel (only show in Block phase)
-			var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault().GetComponent<BattlePhaseState>().Phase;
-			bool showConfirm = phase == BattlePhase.Block;
+			bool showConfirm = phaseNow == SubPhase.Block;
 			if (showConfirm)
 			{
 				var btnRect = new Rectangle(

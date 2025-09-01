@@ -43,7 +43,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Shadow Offset", Step = 1, Min = 0, Max = 20)]
 		public int ShadowOffset { get; set; } = 2;
 
-		private BattlePhase _lastPhase = BattlePhase.StartOfBattle;
+		private SubPhase _lastPhase = SubPhase.None;
 		private bool _transitionActive;
 		private float _transitionT; // seconds in current transition
 		private string _transitionText = string.Empty;
@@ -61,24 +61,24 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
-			return EntityManager.GetEntitiesWithComponent<BattlePhaseState>();
+			return EntityManager.GetEntitiesWithComponent<PhaseState>();
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			var state = entity.GetComponent<BattlePhaseState>();
-			if (state == null || state.Phase == BattlePhase.ProcessEnemyAttack) return;
+			var phase = entity.GetComponent<PhaseState>();
+			if (phase.Sub == SubPhase.EnemyAttack) return;
 			if (!_playedInitial)
 			{
 				_playedInitial = true;
-				_lastPhase = state.Phase;
+				_lastPhase = phase.Sub;
 				_transitionActive = true;
 				_transitionT = 0f;
 				_transitionText = PhaseToString(_lastPhase);
 			}
-			else if (state.Phase != _lastPhase)
+			else if (phase.Sub != _lastPhase)
 			{
-				_lastPhase = state.Phase;
+				_lastPhase = phase.Sub;
 				_transitionActive = true;
 				_transitionT = 0f;
 				_transitionText = PhaseToString(_lastPhase);
@@ -94,17 +94,10 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			if (_font == null) return;
-			var state = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>();
-			if (state == null) return;
-
+			var state = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
 			int vw = _graphicsDevice.Viewport.Width;
 			int xRight = vw + LabelOffsetX;
-			string label = PhaseToString(state.Phase);
-			var battleInfo = EntityManager.GetEntitiesWithComponent<BattleInfo>().FirstOrDefault()?.GetComponent<BattleInfo>();
-			if (battleInfo != null && battleInfo.TurnNumber > 0)
-			{
-				label += $" ({battleInfo.TurnNumber})";
-			}
+			string label = $"{state.Main} - {state.Sub} ({state.TurnNumber})";
 			var size = _font.MeasureString(label) * LabelScale;
 			var pos = new Vector2(xRight - size.X, LabelOffsetY);
 			_spriteBatch.DrawString(_font, label, pos + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
@@ -146,15 +139,15 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private static string PhaseToString(BattlePhase p)
+		private static string PhaseToString(SubPhase sp)
 		{
-			return p switch
+			return sp switch
 			{
-				BattlePhase.StartOfBattle => "Start of Battle",
-				BattlePhase.Block => "Block Phase",
-				BattlePhase.Action => "Action Phase",
-				BattlePhase.ProcessEnemyAttack => "Processing Enemy Attack",
-				_ => p.ToString()
+				SubPhase.None => "Start of Battle",
+				SubPhase.Block => "Block Phase",
+				SubPhase.Action => "Action Phase",
+				SubPhase.EnemyAttack => "Processing Enemy Attack",
+				_ => sp.ToString()
 			};
 		}
 

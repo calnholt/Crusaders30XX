@@ -150,12 +150,4 @@ namespace Crusaders30XX.ECS.Events
         public int Delta { get; set; } = 0;
     }
 
-    /// <summary>
-    /// Event fired when entering the Action phase to initialize action points for the player.
-    /// Carry additional data in the future if needed.
-    /// </summary>
-    public class StartPlayerTurn
-    {
-        public int StartingActionPoints { get; set; } = 1;
-    }
 } 

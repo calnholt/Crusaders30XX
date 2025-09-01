@@ -33,8 +33,8 @@ namespace Crusaders30XX.ECS.Systems
             if (evt?.Card == null) return;
 
             // Only in Action phase
-            var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase;
-            if (phase != BattlePhase.Action) { System.Console.WriteLine($"[CardPlaySystem] Ignored play, phase={phase}"); return; }
+            var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
+            if (phase.Sub != SubPhase.Action) { System.Console.WriteLine($"[CardPlaySystem] Ignored play, phase={phase}"); return; }
 
             var data = evt.Card.GetComponent<CardData>();
             if (data == null) return;

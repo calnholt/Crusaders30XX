@@ -41,21 +41,10 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 
-			// If any planned attacks remain on any enemy, go back to Block for re-assignment; otherwise go to Action
-			bool hasNext = _entityManager.GetEntitiesWithComponent<AttackIntent>()
-				.Any(en =>
-				{
-					var i = en.GetComponent<AttackIntent>();
-					return i != null && i.Planned != null && i.Planned.Count > 0;
-				});
-			if (hasNext)
-			{
-				EventManager.Publish(new ChangeBattlePhaseEvent { Next = BattlePhase.Block });
-			}
-			else
-			{
-				EventManager.Publish(new ChangeBattlePhaseEvent { Next = BattlePhase.Action });
-			}
+			// Defer phase advancement decision to PhaseCoordinator
+			EventManager.Publish(new ProceedToNextPhase());
+			EventManager.Publish(new ProceedToNextPhase());
+			EventManager.Publish(new ProceedToNextPhase());
 
 			State = EventQueue.EventState.Complete;
 		}

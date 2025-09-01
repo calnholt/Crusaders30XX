@@ -393,24 +393,35 @@ namespace Crusaders30XX.ECS.Components
         public BattleLocation Location { get; set; } = BattleLocation.Desert;
     }
 
-    /// <summary>
-    /// Enumerates the high-level phases of a battle.
-    /// </summary>
-    public enum BattlePhase
+
+    // New phase model with main/sub-phases
+    public enum MainPhase
     {
-        StartOfBattle,
-        Block,
-        Action,
-        ProcessEnemyAttack
+        StartBattle,
+        EnemyTurn,
+        PlayerAction
     }
 
-    /// <summary>
-    /// Singleton-like world component that tracks the current battle phase.
-    /// </summary>
-    public class BattlePhaseState : IComponent
+    public enum SubPhase
+    {
+        None,
+        // Enemy sub-phases
+        EnemyStart,
+        Block,
+        EnemyAttack,
+        EnemyEnd,
+        // Player sub-phases
+        PlayerStart,
+        Action,
+        PlayerEnd
+    }
+
+    public class PhaseState : IComponent
     {
         public Entity Owner { get; set; }
-        public BattlePhase Phase { get; set; } = BattlePhase.StartOfBattle;
+        public MainPhase Main { get; set; } = MainPhase.StartBattle;
+        public SubPhase Sub { get; set; } = SubPhase.None;
+        public int TurnNumber { get; set; } = 0; // enemy turn counter
     }
 
     /// <summary>

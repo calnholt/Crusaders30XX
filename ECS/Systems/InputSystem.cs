@@ -206,9 +206,9 @@ namespace Crusaders30XX.ECS.Systems
         private void HandleCardClick(Entity entity)
         {
             var cardData = entity.GetComponent<CardData>();
-            var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>().Phase;
+            var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
             Console.WriteLine($"[InputSystem] Card clicked name={cardData?.Name} phase={phase}");
-            if (phase == BattlePhase.Action)
+            if (phase.Sub == SubPhase.Action)
             {
                 var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 var deck = deckEntity?.GetComponent<Deck>();

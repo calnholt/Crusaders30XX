@@ -13,13 +13,15 @@ namespace Crusaders30XX.ECS.Systems
 	/// </summary>
 	public class BattlePhaseDrawSystem : Core.System
 	{
-		private BattlePhase _lastPhase = BattlePhase.StartOfBattle;
-		private bool _didStartDraw;
 
 		public BattlePhaseDrawSystem(EntityManager entityManager) : base(entityManager)
 		{
-			var s = entityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>();
-			if (s != null) _lastPhase = s.Phase;
+			var s = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ => {
+				if (_.Current == SubPhase.EnemyStart) {
+					DrawUpToIntellect();
+				}
+			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -27,37 +29,8 @@ namespace Crusaders30XX.ECS.Systems
 			return System.Array.Empty<Entity>();
 		}
 
-		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
-
-		public override void Update(GameTime gameTime)
+		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			base.Update(gameTime);
-			var state = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>();
-			if (state == null) return;
-			var current = state.Phase;
-
-			if (current == BattlePhase.StartOfBattle)
-			{
-				if (!_didStartDraw)
-				{
-					DrawUpToIntellect();
-					_didStartDraw = true;
-				}
-			}
-			else
-			{
-				_didStartDraw = false;
-			}
-
-			if (current == BattlePhase.Block && _lastPhase != BattlePhase.Block)
-			{
-				if (_lastPhase != BattlePhase.ProcessEnemyAttack && _lastPhase != BattlePhase.StartOfBattle)
-				{
-					DrawUpToIntellect();
-				}
-			}
-
-			_lastPhase = current;
 		}
 
 		private void DrawUpToIntellect()

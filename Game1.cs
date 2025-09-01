@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Events;
 using System;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Components;
 
 namespace Crusaders30XX;
 
@@ -49,7 +50,6 @@ public class Game1 : Game
     private BattlePhaseSystem _battlePhaseSystem;
     private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
     private EnemyDisplaySystem _enemyDisplaySystem;
-    private EnemyTurnStarterSystem _enemyTurnStarterSystem;
     private EnemyIntentPipsSystem _enemyIntentPipsSystem;
     private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
     private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
@@ -66,6 +66,7 @@ public class Game1 : Game
     private CardPlaySystem _cardPlaySystem;
     private EndTurnDisplaySystem _endTurnDisplaySystem;
     private BattlePhaseDrawSystem _battlePhaseDrawSystem;
+    private PhaseCoordinatorSystem _phaseCoordinatorSystem;
 
     public Game1()
     {
@@ -156,9 +157,7 @@ public class Game1 : Game
         _hpManagementSystem = new HpManagementSystem(_world.EntityManager);
         _eventQueueSystem = new EventQueueSystem(_world.EntityManager);
         _battlePhaseSystem = new BattlePhaseSystem(_world.EntityManager);
-        _battlePhaseSystem.Initialize();
         _battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
-        _enemyTurnStarterSystem = new EnemyTurnStarterSystem(_world.EntityManager);
         _enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
@@ -175,6 +174,7 @@ public class Game1 : Game
         _enemyDamageManagerSystem = new EnemyDamageManagerSystem(_world.EntityManager);
         _cardPlaySystem = new CardPlaySystem(_world.EntityManager);
         _battlePhaseDrawSystem = new BattlePhaseDrawSystem(_world.EntityManager);
+        _phaseCoordinatorSystem = new PhaseCoordinatorSystem(_world.EntityManager);
 
         
         _world.AddSystem(_cardHighlightSystem);
@@ -209,7 +209,6 @@ public class Game1 : Game
         _world.AddSystem(_hpManagementSystem);
         _world.AddSystem(_battlePhaseSystem);
         _world.AddSystem(_battlePhaseDisplaySystem);
-        _world.AddSystem(_enemyTurnStarterSystem);
         _world.AddSystem(_enemyDisplaySystem);
         _world.AddSystem(_enemyIntentPipsSystem);
         _world.AddSystem(_enemyIntentPlanningSystem);
@@ -225,6 +224,7 @@ public class Game1 : Game
         _world.AddSystem(_enemyDamageManagerSystem);
         _world.AddSystem(_cardPlaySystem);
         _world.AddSystem(_battlePhaseDrawSystem);
+        _world.AddSystem(_phaseCoordinatorSystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
@@ -244,7 +244,7 @@ public class Game1 : Game
         // Create demo hand of cards
         var demoHand = EntityFactory.CreateDemoHand(_world);
         // Add cards to deck's draw pile (not hand)
-        var deck = deckEntity.GetComponent<Crusaders30XX.ECS.Components.Deck>();
+        var deck = deckEntity.GetComponent<Deck>();
         if (deck != null)
         {
             deck.Cards.AddRange(demoHand);

@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -17,7 +18,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangePhase);
 			EventManager.Subscribe<ModifyActionPointsEvent>(OnModifyAp);
-			System.Console.WriteLine("[ActionPointManagementSystem] Subscribed to ChangeBattlePhaseEvent, ModifyActionPointsEvent");
+			Console.WriteLine("[ActionPointManagementSystem] Subscribed to ChangeBattlePhaseEvent, ModifyActionPointsEvent");
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -29,22 +30,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnChangePhase(ChangeBattlePhaseEvent evt)
 		{
-			System.Console.WriteLine($"[ActionPointManagementSystem] OnChangePhase next={evt.Next}");
-			if (evt == null) return;
-			if (evt.Next != BattlePhase.Action) return;
-			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-			if (player == null) return;
-			var ap = player.GetComponent<ActionPoints>();
-			if (ap == null)
-			{
-				ap = new ActionPoints { Current = 1 };
-				EntityManager.AddComponent(player, ap);
-			}
-			else
-			{
+			if (evt.Current == SubPhase.PlayerStart) {
+				Console.WriteLine($"[ActionPointManagementSystem] OnChangePhase - set AP to 1");
+				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+				var ap = player.GetComponent<ActionPoints>();
 				ap.Current = 1;
 			}
-			EventManager.Publish(new StartPlayerTurn { StartingActionPoints = 1 });
 		}
 
 		private void OnModifyAp(ModifyActionPointsEvent evt)

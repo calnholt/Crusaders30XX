@@ -21,7 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		public EnemyIntentPlanningSystem(EntityManager em) : base(em)
 		{
-			EventManager.Subscribe<StartEnemyTurn>(_ => { System.Console.WriteLine("[EnemyIntentPlanningSystem] StartEnemyTurn received"); OnStartEnemyTurn(); });
+			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ => { System.Console.WriteLine("[EnemyIntentPlanningSystem] StartEnemyTurn received"); OnStartEnemyTurn(_); });
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -38,8 +38,10 @@ namespace Crusaders30XX.ECS.Systems
 			_attackDefs = AttackDefinitionCache.GetAll();
 		}
 
-		private void OnStartEnemyTurn()
+		private void OnStartEnemyTurn(ChangeBattlePhaseEvent evt)
 		{
+			if (evt.Current != SubPhase.EnemyStart) return;
+
 			System.Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
 			EnsureAttackDefsLoaded();
 			int turnNumber = GetCurrentTurnNumber();

@@ -44,8 +44,8 @@ namespace Crusaders30XX.ECS.Systems
 
         public override void Update(GameTime gameTime)
         {
-            var state = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>();
-            if (state == null || state.Phase != BattlePhase.ProcessEnemyAttack)
+            var state = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
+            if (state.Sub != SubPhase.EnemyAttack)
             {
                 base.Update(gameTime);
                 return;

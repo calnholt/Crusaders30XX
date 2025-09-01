@@ -65,7 +65,9 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnEndTurnPressed()
         {
-            EventManager.Publish(new ChangeBattlePhaseEvent { Previous = BattlePhase.Action, Next = BattlePhase.Block });
+            EventManager.Publish(new ProceedToNextPhase { });
+            EventManager.Publish(new ProceedToNextPhase());
+            EventManager.Publish(new ProceedToNextPhase());
         }
 
         [DebugAction("Trigger End Turn Now")]
@@ -92,8 +94,8 @@ namespace Crusaders30XX.ECS.Systems
         public void Draw()
         {
             // Only show in Action phase
-            var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase ?? BattlePhase.StartOfBattle;
-            if (phase != BattlePhase.Action || _font == null) return;
+            var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
+            if (phase.Sub != SubPhase.Action) return;
 
             var vp = _graphicsDevice.Viewport;
             var btnRect = GetButtonRect(vp);

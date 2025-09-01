@@ -67,8 +67,8 @@ namespace Crusaders30XX.ECS.Systems
 		public override void Update(GameTime gameTime)
 		{
 			// If we're processing the enemy attack, this system should not accept input or retarget cards
-			var phase = EntityManager.GetEntitiesWithComponent<BattlePhaseState>().FirstOrDefault()?.GetComponent<BattlePhaseState>()?.Phase ?? BattlePhase.StartOfBattle;
-			bool isProcessing = phase == BattlePhase.ProcessEnemyAttack;
+			var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
+			bool isProcessing = phase.Sub == SubPhase.EnemyAttack;
 			if (isProcessing)
 			{
 				base.Update(gameTime);
