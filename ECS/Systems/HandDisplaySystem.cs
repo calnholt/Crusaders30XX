@@ -210,7 +210,31 @@ namespace Crusaders30XX.ECS.Systems
                         return transform?.ZOrder ?? 0;
                     });
                     
-                    foreach (var entity in cardsInHand)
+                    // If pay-cost overlay is open, hide cards that are not viable to pay remaining costs,
+                    // and hide any cards already selected for payment.
+                    var payStateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+                    var payState = payStateEntity?.GetComponent<PayCostOverlayState>();
+                    bool isPayOpen = payState != null && payState.IsOpen;
+
+                    bool IsViable(Entity e)
+                    {
+                        if (!isPayOpen) return true;
+                        if (payState.SelectedCards.Contains(e)) return false;
+                        var cd = e.GetComponent<CardData>();
+                        if (cd == null) return false;
+                        foreach (var req in payState.RequiredCosts)
+                        {
+                            if (req == "Any") return true;
+                            if (req == "Red" && cd.Color == CardData.CardColor.Red) return true;
+                            if (req == "White" && cd.Color == CardData.CardColor.White) return true;
+                            if (req == "Black" && cd.Color == CardData.CardColor.Black) return true;
+                        }
+                        return false;
+                    }
+
+                    var toDraw = isPayOpen ? cardsInHand.Where(IsViable) : cardsInHand;
+
+                    foreach (var entity in toDraw)
                     {
                         var transform = entity.GetComponent<Transform>();
                         if (transform != null)

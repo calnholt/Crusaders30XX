@@ -6,12 +6,14 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
     /// <summary>
     /// Renders and manages the overlay used to pay color costs by discarding cards.
     /// </summary>
+    [DebugTab("Pay Cost Overlay")] 
     public class PayCostOverlaySystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
@@ -19,7 +21,29 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteFont _font;
         private readonly Texture2D _pixel;
 
-        private const float FadeInDurationSec = 0.15f;
+        [DebugEditable(DisplayName = "Fade In (s)", Step = 0.05f, Min = 0.01f, Max = 1.0f)]
+        public float FadeInDurationSec { get; set; } = 0.5f;
+
+        [DebugEditable(DisplayName = "Overlay Alpha", Step = 0.05f, Min = 0.1f, Max = 1.0f)]
+        public float OverlayAlpha { get; set; } = 0.5f; // 0..1
+
+        [DebugEditable(DisplayName = "Staged Scale", Step = 0.05f, Min = 0.5f, Max = 2.0f)]
+        public float StagedCardScale { get; set; } = 1.1f;
+
+        [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.5f, Max = 2.0f)]
+        public float TextScale { get; set; } = 1.0f;
+
+        [DebugEditable(DisplayName = "Text Offset X", Step = 1f, Min = -1000f, Max = 1000f)]
+        public float TextOffsetX { get; set; } = 0f;
+
+        [DebugEditable(DisplayName = "Text Offset Y", Step = 1f, Min = -1000f, Max = 1000f)]
+        public float TextOffsetY { get; set; } = -375f;
+
+        [DebugEditable(DisplayName = "Card Offset X", Step = 1f, Min = -2000f, Max = 2000f)]
+        public float CardOffsetX { get; set; } = 0f;
+
+        [DebugEditable(DisplayName = "Card Offset Y", Step = 1f, Min = -2000f, Max = 2000f)]
+        public float CardOffsetY { get; set; } = 0f;
 
         public PayCostOverlaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
             : base(entityManager)
@@ -239,7 +263,7 @@ namespace Crusaders30XX.ECS.Systems
             return string.Join(", ", groups);
         }
 
-        public void Draw()
+        public void DrawBackdrop()
         {
             var stateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
             if (stateEntity == null) return;
@@ -252,37 +276,46 @@ namespace Crusaders30XX.ECS.Systems
             float t = MathHelper.Clamp(state.OpenElapsedSeconds / FadeInDurationSec, 0f, 1f);
             // EaseOutQuad
             float eased = 1f - (1f - t) * (1f - t);
-            byte alpha = (byte)(eased * 200);
+            float alphaF = MathHelper.Clamp(eased * OverlayAlpha, 0f, 1f);
 
-            // Full-screen dim overlay
-            _spriteBatch.Draw(_pixel, new Rectangle(0, 0, w, h), new Color(0f, 0f, 0f, alpha / 255f));
+            // Full-screen dim overlay only
+            _spriteBatch.Draw(_pixel, new Rectangle(0, 0, w, h), new Color(0f, 0f, 0f, alphaF));
+        }
 
-            // Center text
+        public void DrawForeground()
+        {
+            var stateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+            if (stateEntity == null) return;
+            var state = stateEntity.GetComponent<PayCostOverlayState>();
+            if (state == null || !state.IsOpen) return;
+
+            int w = _graphicsDevice.Viewport.Width;
+            int h = _graphicsDevice.Viewport.Height;
+
+            float t = MathHelper.Clamp(state.OpenElapsedSeconds / FadeInDurationSec, 0f, 1f);
+            float eased = 1f - (1f - t) * (1f - t);
+            float alphaF = MathHelper.Clamp(eased * OverlayAlpha, 0f, 1f);
+
+            // Text
             var cd = state.CardToPlay?.GetComponent<CardData>();
             string cardName = cd?.Name ?? "Card";
-            string phrase = BuildCostPhrase(state.RequiredCosts.Concat(state.SelectedCards.Select(e => ""))); // we only want original display; Selected used to trigger completion
-            // For stable text, compute from initial requirements = Selected + Remaining
-            var initialReq = new List<string>(state.RequiredCosts);
-            // Add placeholders for selected to reconstruct original count
-            for (int i = 0; i < state.SelectedCards.Count; i++) initialReq.Add("_"); // placeholders ignored
-            // Build text from total required via CardToPlay definition
-            // Safer: fetch from CardDefinition
             var defTextCosts = GetDefinitionCosts(state.CardToPlay);
             string costText = BuildCostPhrase(defTextCosts);
             string line = $"Discard {costText} to pay for {cardName}";
             var size = _font.MeasureString(line);
-            _spriteBatch.DrawString(_font, line, new Vector2(w / 2f - size.X / 2f, h / 2f - size.Y / 2f), Color.White);
+            var textPos = new Vector2(w / 2f - (size.X * TextScale) / 2f + TextOffsetX, h / 2f - (size.Y * TextScale) / 2f + TextOffsetY);
+            _spriteBatch.DrawString(_font, line, textPos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
 
-            // Draw the staged card in the center, slightly above the text
-            var centerPos = new Vector2(w / 2f, h / 2f - size.Y);
+            // Staged card above the dim
+            var centerPos = new Vector2(w / 2f + CardOffsetX, h / 2f - (size.Y * TextScale) + CardOffsetY);
             if (state.CardToPlay != null)
             {
-                EventManager.Publish(new CardRenderScaledEvent { Card = state.CardToPlay, Position = centerPos, Scale = 1.1f });
+                EventManager.Publish(new CardRenderScaledEvent { Card = state.CardToPlay, Position = centerPos, Scale = StagedCardScale });
             }
 
             // Cancel button (top-right)
             var btnRect = new Rectangle(w - 28 - 24, 24, 28, 28);
-            float btnAlpha = Math.Min(1f, (alpha + 55) / 255f);
+            float btnAlpha = Math.Min(1f, alphaF + 0.2f);
             _spriteBatch.Draw(_pixel, btnRect, new Color(70f / 255f, 70f / 255f, 70f / 255f, btnAlpha));
             DrawBorder(btnRect, Color.White, 2);
             var xSize = _font.MeasureString("X") * 0.6f;

@@ -230,6 +230,7 @@ public class Game1 : Game
         _world.AddSystem(_cardPlaySystem);
         _world.AddSystem(_battlePhaseDrawSystem);
         _world.AddSystem(_phaseCoordinatorSystem);
+        _world.AddSystem(_payCostOverlaySystem);
 
         // Set initial location via event which seeds the Battlefield component
         EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
@@ -296,6 +297,7 @@ public class Game1 : Game
         FrameProfiler.Measure("ActionPointDisplaySystem.Draw", () => _actionPointDisplaySystem.Draw());
         FrameProfiler.Measure("StoredBlockDisplaySystem.Draw", () => _storedBlockDisplaySystem.Draw());
         FrameProfiler.Measure("HPDisplaySystem.Draw", () => _hpDisplaySystem.Draw());
+        FrameProfiler.Measure("PayCostOverlaySystem.DrawBackdrop", () => _payCostOverlaySystem.DrawBackdrop());
         FrameProfiler.Measure("HandDisplaySystem.DrawHand", () => _handDisplaySystem.DrawHand());
         FrameProfiler.Measure("DebugMenuSystem.Draw", () => _debugMenuSystem.Draw());
         FrameProfiler.Measure("DrawPileDisplaySystem.Draw", () => _drawPileDisplaySystem.Draw());
@@ -303,8 +305,7 @@ public class Game1 : Game
         FrameProfiler.Measure("CardListModalSystem.Draw", () => _cardListModalSystem.Draw());
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", () => _tooltipDisplaySystem.Draw());
         FrameProfiler.Measure("ProfilerSystem.Draw", () => _profilerSystem.Draw());
-        // Draw the pay-cost overlay last so it sits above all other UI
-        FrameProfiler.Measure("PayCostOverlaySystem.Draw", () => _payCostOverlaySystem.Draw());
+        FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", () => _payCostOverlaySystem.DrawForeground());
         _spriteBatch.End();
 
         base.Draw(gameTime);
