@@ -250,6 +250,12 @@ namespace Crusaders30XX.ECS.Systems
                     if (dmg > 0) EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
                     break;
                 }
+                case "stab":
+                {
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -8 });
+                    EventManager.Publish(new ModifyCourageEvent { Delta = -1 });
+                    break;
+                }
                 case "stun":
                 {
                     if (enemy != null)

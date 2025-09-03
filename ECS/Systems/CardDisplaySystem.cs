@@ -50,6 +50,14 @@ namespace Crusaders30XX.ECS.Systems
         public int CostPipGap { get; set; } = 6;
         [DebugEditable(DisplayName = "Cost Pip Outline Fraction", Step = 0.01f, Min = 0f, Max = 0.5f)]
         public float CostPipOutlineFrac { get; set; } = 0.13f;
+
+        // Debug-adjustable AP text
+        [DebugEditable(DisplayName = "AP Text Scale", Step = 0.05f, Min = 0.3f, Max = 2.0f)]
+        public float APTextScale { get; set; } = 0.5f;
+        [DebugEditable(DisplayName = "AP Bottom Margin Y", Step = 1, Min = 0, Max = 200)]
+        public int APBottomMarginY { get; set; } = 14;
+        [DebugEditable(DisplayName = "AP Offset X", Step = 1, Min = -200, Max = 200)]
+        public int APOffsetX { get; set; } = 0;
         
         public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font, ContentManager content) 
             : base(entityManager)
@@ -157,7 +165,7 @@ namespace Crusaders30XX.ECS.Systems
             
             // Draw cost pips (colored circles with yellow outline) under the name
             DrawCostPips(cardCenter, rotation, _settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(34 * _settings.UIScale), cardData);
-            
+
             DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)), cardData.Description, textColor, _settings.DescriptionScale);
             
             // Draw block value and shield icon at bottom-left
@@ -186,6 +194,14 @@ namespace Crusaders30XX.ECS.Systems
                     DrawTextureRotatedLocal(cardCenter, rotation, new Vector2(iconLocalX, iconLocalY), shield, new Vector2(iconWidth, iconHeight), Color.White);
                 }
             }
+
+            // Draw AP cost text at bottom-center: 0AP if free action else 1AP
+            bool isFree = GetIsFreeAction(entity);
+            string apText = isFree ? "0AP" : "1AP";
+            var apSize = _font.MeasureString(apText) * APTextScale;
+            float apLocalX = (_settings.CardWidth - apSize.X) / 2f + APOffsetX;
+            float apLocalY = _settings.CardHeight - APBottomMarginY - apSize.Y;
+            DrawCardTextRotatedSingle(cardCenter, rotation, new Vector2(apLocalX, apLocalY), apText, textColor, APTextScale);
         }
         
         /// <summary>
@@ -206,7 +222,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 CardData.CardColor.Red => Color.DarkRed,
                 CardData.CardColor.White => Color.White,
-                CardData.CardColor.Black => Color.DarkGray,
+                CardData.CardColor.Black => Color.Black,
                 _ => Color.Gray
             };
         }
@@ -327,6 +343,23 @@ namespace Crusaders30XX.ECS.Systems
             }
             tex.SetData(data);
             return tex;
+        }
+
+        private bool GetIsFreeAction(Entity card)
+        {
+            try
+            {
+                var data = card.GetComponent<CardData>();
+                string id = (data?.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+                if (string.IsNullOrEmpty(id)) return false;
+                if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
+                {
+                    string alt = (data?.Name ?? string.Empty).Trim().ToLowerInvariant();
+                    if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(alt, out def)) return false;
+                }
+                return def.isFreeAction;
+            }
+            catch { return false; }
         }
         
         private void DrawCardBackgroundRotated(Vector2 position, float rotation, Color color)

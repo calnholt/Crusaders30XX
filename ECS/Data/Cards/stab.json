@@ -1,0 +1,10 @@
+{
+  "id": "stab",
+  "name": "Stab",
+  "target": "Enemy",
+  "color": "Black",
+  "rarity": "Common",
+  "text": "Deal 8 damage and lose 1 courage.",
+  "isFreeAction": true
+}
+

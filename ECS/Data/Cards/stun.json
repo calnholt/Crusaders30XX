@@ -5,6 +5,7 @@
   "color": "White",
   "rarity": "Common",
   "text": "Stun.",
-  "cost": [ "Red", "Red" ]
+  "cost": [ "Red" ],
+  "isFreeAction": true
 }
 
