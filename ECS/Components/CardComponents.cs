@@ -21,7 +21,8 @@ namespace Crusaders30XX.ECS.Components
         
         // New properties for the card system
         public CardColor Color { get; set; } = CardColor.White;
-        public CostType CardCostType { get; set; } = CostType.NoCost;
+        public CostType CardCostType { get; set; } = CostType.NoCost; // legacy single-cost
+        public List<CostType> CostArray { get; set; } = new();       // new multi-cost
         public int BlockValue { get; set; } = 0;
         
         public enum CardType
@@ -53,7 +54,8 @@ namespace Crusaders30XX.ECS.Components
             NoCost,
             Red,
             White,
-            Black
+            Black,
+            Any
         }
     }
 

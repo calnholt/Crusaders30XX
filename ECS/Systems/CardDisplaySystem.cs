@@ -42,6 +42,14 @@ namespace Crusaders30XX.ECS.Systems
         public int ShieldIconOffsetX { get; set; } = 0;
         [DebugEditable(DisplayName = "Shield Icon Offset Y", Step = 1, Min = -200, Max = 200)]
         public int ShieldIconOffsetY { get; set; } = -6;
+
+        // Debug-adjustable cost pip visuals
+        [DebugEditable(DisplayName = "Cost Pip Diameter", Step = 1, Min = 6, Max = 128)]
+        public int CostPipDiameter { get; set; } = 21;
+        [DebugEditable(DisplayName = "Cost Pip Gap", Step = 1, Min = 0, Max = 64)]
+        public int CostPipGap { get; set; } = 6;
+        [DebugEditable(DisplayName = "Cost Pip Outline Fraction", Step = 0.01f, Min = 0f, Max = 0.5f)]
+        public float CostPipOutlineFrac { get; set; } = 0.13f;
         
         public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font, ContentManager content) 
             : base(entityManager)
@@ -128,10 +136,8 @@ namespace Crusaders30XX.ECS.Systems
             var textColor = GetCardTextColor(cardData.Color);
             DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY), cardData.Name, textColor, _settings.NameScale);
             
-            // Draw cost
-            string costText = GetCostText(cardData.CardCostType);
-            var costTextColor = (cardData.Color == CardData.CardColor.White) ? textColor : costColor;
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(34 * _settings.UIScale)), costText, costTextColor, _settings.CostScale);
+            // Draw cost pips (colored circles with yellow outline) under the name
+            DrawCostPips(cardCenter, rotation, _settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(34 * _settings.UIScale), cardData);
             
             DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)), cardData.Description, textColor, _settings.DescriptionScale);
             
@@ -190,9 +196,10 @@ namespace Crusaders30XX.ECS.Systems
         {
             return costType switch
             {
-                CardData.CostType.Red => Color.Red,
+                CardData.CostType.Red => Color.DarkRed,
                 CardData.CostType.White => Color.White,
-                CardData.CostType.Black => Color.DarkGray,
+                CardData.CostType.Black => Color.Black,
+                CardData.CostType.Any => Color.Gray,
                 _ => Color.Gray
             };
         }
@@ -208,15 +215,99 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
         
-        private string GetCostText(CardData.CostType costType)
+        private void DrawCostPips(Vector2 cardCenter, float rotation, int localOffsetX, int localOffsetY, CardData data)
         {
-            return costType switch
+            var costs = (data.CostArray != null && data.CostArray.Count > 0)
+                ? data.CostArray
+                : (data.CardCostType != CardData.CostType.NoCost ? new List<CardData.CostType> { data.CardCostType } : new List<CardData.CostType>());
+            if (costs.Count == 0) return;
+
+            // Circle sizing and spacing based on UI scale
+            float diameter = Math.Max(6f, CostPipDiameter * _settings.UIScale);
+            float radius = diameter / 2f;
+            float gap = Math.Max(0f, CostPipGap * _settings.UIScale);
+            float totalWidth = costs.Count * diameter + (costs.Count - 1) * gap;
+
+            // Start X so pips are left-aligned from localOffsetX
+            float startLocalX = localOffsetX;
+            float y = localOffsetY + radius; // center of circles on this Y line
+
+            for (int i = 0; i < costs.Count; i++)
             {
-                CardData.CostType.Red => "Red",
-                CardData.CostType.White => "White",
-                CardData.CostType.Black => "Black",
-                _ => "Free"
-            };
+                float x = startLocalX + i * (diameter + gap) + radius;
+                var costType = costs[i];
+                var fill = GetCostColor(costType);
+                var outline = GetConditionalOutlineColor(data.Color, costType);
+                DrawCirclePipRotated(cardCenter, rotation, new Vector2(x, y), radius, fill, outline);
+            }
+        }
+
+        private Color? GetConditionalOutlineColor(CardData.CardColor cardColor, CardData.CostType costType)
+        {
+            // Only outline when card color matches the cost color, with specific outline color rules
+            if (cardColor == CardData.CardColor.Red && costType == CardData.CostType.Red)
+                return Color.Black;
+            if (cardColor == CardData.CardColor.White && costType == CardData.CostType.White)
+                return Color.Black;
+            if (cardColor == CardData.CardColor.Black && costType == CardData.CostType.Black)
+                return Color.White;
+            return null; // no outline
+        }
+
+        private void DrawCirclePipRotated(Vector2 cardCenter, float rotation, Vector2 localCenterFromTopLeft, float radius, Color fillColor, Color? outlineColor)
+        {
+            // Create/reuse a circle texture for fill and outline
+            int textureSize = (int)Math.Ceiling(radius * 2);
+            if (textureSize < 2) textureSize = 2;
+            var key = ($"circle_{textureSize}");
+            if (!_textureCache.TryGetValue(key, out var circleTex) || circleTex == null)
+            {
+                circleTex = CreateCircleTexture(textureSize);
+                _textureCache[key] = circleTex;
+            }
+
+            // Compute world position with rotation
+            float localX = -_settings.CardWidth / 2f + localCenterFromTopLeft.X;
+            float localY = -_settings.CardHeight / 2f + localCenterFromTopLeft.Y;
+            float cos = (float)Math.Cos(rotation);
+            float sin = (float)Math.Sin(rotation);
+            var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
+            var worldCenter = cardCenter + rotated;
+
+            // Optional outline
+            if (outlineColor.HasValue)
+            {
+                float outlineScale = 1f;
+                _spriteBatch.Draw(circleTex, worldCenter, null, outlineColor.Value, rotation, new Vector2(textureSize / 2f, textureSize / 2f), outlineScale, SpriteEffects.None, 0f);
+                // Fill inside outline slightly smaller (centered)
+                float fillScale = Math.Max(0f, 1f - CostPipOutlineFrac * 2f);
+                _spriteBatch.Draw(circleTex, worldCenter, null, fillColor, rotation, new Vector2(textureSize / 2f, textureSize / 2f), fillScale, SpriteEffects.None, 0f);
+            }
+            else
+            {
+                // No outline: draw just the filled circle centered
+                _spriteBatch.Draw(circleTex, worldCenter, null, fillColor, rotation, new Vector2(textureSize / 2f, textureSize / 2f), 1f, SpriteEffects.None, 0f);
+            }
+        }
+
+        private Texture2D CreateCircleTexture(int diameter)
+        {
+            var tex = new Texture2D(_graphicsDevice, diameter, diameter);
+            var data = new Color[diameter * diameter];
+            float r = diameter / 2f;
+            float r2 = r * r;
+            for (int y = 0; y < diameter; y++)
+            {
+                for (int x = 0; x < diameter; x++)
+                {
+                    float dx = x - r + 0.5f;
+                    float dy = y - r + 0.5f;
+                    float dist2 = dx * dx + dy * dy;
+                    data[y * diameter + x] = dist2 <= r2 ? Color.White : Color.Transparent;
+                }
+            }
+            tex.SetData(data);
+            return tex;
         }
         
         private void DrawCardBackgroundRotated(Vector2 position, float rotation, Color color)
@@ -437,4 +528,4 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
     }
-} 
+}

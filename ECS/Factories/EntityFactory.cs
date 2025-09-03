@@ -305,6 +305,28 @@ namespace Crusaders30XX.ECS.Factories
                     new List<CardData.CardColor>(),
                     blockValue
                 );
+                // Populate multi-cost array from JSON
+                var cd = entity.GetComponent<CardData>();
+                if (cd != null)
+                {
+                    cd.CostArray = new List<CardData.CostType>();
+                    if (def.cost != null)
+                    {
+                        foreach (var c in def.cost)
+                        {
+                            var ct = ParseCostType(c);
+                            if (ct != CardData.CostType.NoCost) cd.CostArray.Add(ct);
+                        }
+                    }
+                    // Legacy single-cost compatibility (use the first non-Any if present)
+                    var firstSpecific = cd.CostArray.FirstOrDefault(x => x == CardData.CostType.Red || x == CardData.CostType.White || x == CardData.CostType.Black);
+                    if (firstSpecific != CardData.CostType.NoCost)
+                        cd.CardCostType = firstSpecific;
+                    else if (cd.CostArray.Any(x => x == CardData.CostType.Any))
+                        cd.CardCostType = CardData.CostType.Any;
+                    else
+                        cd.CardCostType = CardData.CostType.NoCost;
+                }
                 result.Add(entity);
             }
             return result;
@@ -334,6 +356,19 @@ namespace Crusaders30XX.ECS.Factories
                 case "legendary": return CardData.CardRarity.Legendary;
                 case "common":
                 default: return CardData.CardRarity.Common;
+            }
+        }
+
+        private static CardData.CostType ParseCostType(string cost)
+        {
+            if (string.IsNullOrEmpty(cost)) return CardData.CostType.NoCost;
+            switch (cost.Trim().ToLowerInvariant())
+            {
+                case "red": return CardData.CostType.Red;
+                case "white": return CardData.CostType.White;
+                case "black": return CardData.CostType.Black;
+                case "any": return CardData.CostType.Any;
+                default: return CardData.CostType.NoCost;
             }
         }
 
