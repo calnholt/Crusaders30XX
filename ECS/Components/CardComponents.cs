@@ -373,6 +373,9 @@ namespace Crusaders30XX.ECS.Components
         public List<Entity> SelectedCards { get; set; } = new();
         public float OpenElapsedSeconds { get; set; } = 0f;
         public int OriginalHandIndex { get; set; } = -1;
+        // Tween state for staged card movement
+        public Microsoft.Xna.Framework.Vector2 StagedStartPos { get; set; } = Microsoft.Xna.Framework.Vector2.Zero;
+        public float StagedMoveElapsedSeconds { get; set; } = 0f;
     }
 
     /// <summary>

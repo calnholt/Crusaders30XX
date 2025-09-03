@@ -22,13 +22,16 @@ namespace Crusaders30XX.ECS.Systems
         private readonly Texture2D _pixel;
 
         [DebugEditable(DisplayName = "Fade In (s)", Step = 0.05f, Min = 0.01f, Max = 1.0f)]
-        public float FadeInDurationSec { get; set; } = 0.5f;
+        public float FadeInDurationSec { get; set; } = 0.25f;
 
         [DebugEditable(DisplayName = "Overlay Alpha", Step = 0.05f, Min = 0.1f, Max = 1.0f)]
         public float OverlayAlpha { get; set; } = 0.5f; // 0..1
 
         [DebugEditable(DisplayName = "Staged Scale", Step = 0.05f, Min = 0.5f, Max = 2.0f)]
         public float StagedCardScale { get; set; } = 1.1f;
+        
+        [DebugEditable(DisplayName = "Staged Move (s)", Step = 0.05f, Min = 0.01f, Max = 1.0f)]
+        public float StagedMoveDurationSec { get; set; } = 0.25f;
 
         [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.5f, Max = 2.0f)]
         public float TextScale { get; set; } = 1.0f;
@@ -69,7 +72,9 @@ namespace Crusaders30XX.ECS.Systems
         {
             var state = entity.GetComponent<PayCostOverlayState>();
             if (state == null || !state.IsOpen) return;
-            state.OpenElapsedSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            state.OpenElapsedSeconds += dt;
+            state.StagedMoveElapsedSeconds += dt;
         }
 
         private void EnsureStateEntityExists()
@@ -125,6 +130,9 @@ namespace Crusaders30XX.ECS.Systems
             var stagedT = state.CardToPlay.GetComponent<Transform>();
             if (stagedT != null)
             {
+                // Record start for tween and elevate Z
+                state.StagedStartPos = stagedT.Position;
+                state.StagedMoveElapsedSeconds = 0f;
                 stagedT.ZOrder = 30000;
             }
 
@@ -310,7 +318,14 @@ namespace Crusaders30XX.ECS.Systems
             var centerPos = new Vector2(w / 2f + CardOffsetX, h / 2f - (size.Y * TextScale) + CardOffsetY);
             if (state.CardToPlay != null)
             {
-                EventManager.Publish(new CardRenderScaledEvent { Card = state.CardToPlay, Position = centerPos, Scale = StagedCardScale });
+                // Tween from original hand position to center using ease-out quad
+                Vector2 start = state.StagedStartPos;
+                Vector2 target = centerPos;
+                float tm = MathHelper.Clamp(state.StagedMoveElapsedSeconds / Math.Max(0.001f, StagedMoveDurationSec), 0f, 1f);
+                float ease = 1f - (1f - tm) * (1f - tm);
+                Vector2 pos = start + (target - start) * ease;
+                EventManager.Publish(new CardRenderScaledEvent { Card = state.CardToPlay, Position = pos, Scale = StagedCardScale });
+                state.StagedMoveElapsedSeconds += (float)(1.0 / 60.0); // approximate; real dt added in Update would be better
             }
 
             // Cancel button (top-right)

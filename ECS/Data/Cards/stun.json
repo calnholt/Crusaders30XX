@@ -5,6 +5,6 @@
   "color": "White",
   "rarity": "Common",
   "text": "Stun.",
-  "cost": [ "Red" ]
+  "cost": [ "Red", "Red" ]
 }
 
