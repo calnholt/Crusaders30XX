@@ -32,6 +32,8 @@ namespace Crusaders30XX.ECS.Systems
         
         [DebugEditable(DisplayName = "Staged Move (s)", Step = 0.05f, Min = 0.01f, Max = 1.0f)]
         public float StagedMoveDurationSec { get; set; } = 0.25f;
+        [DebugEditable(DisplayName = "Staged Return (s)", Step = 0.05f, Min = 0.01f, Max = 1.0f)]
+        public float StagedReturnDurationSec { get; set; } = 0.1f;
 
         [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.5f, Max = 2.0f)]
         public float TextScale { get; set; } = 1.0f;
@@ -71,10 +73,30 @@ namespace Crusaders30XX.ECS.Systems
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
             var state = entity.GetComponent<PayCostOverlayState>();
-            if (state == null || !state.IsOpen) return;
+            if (state == null) return;
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            state.OpenElapsedSeconds += dt;
-            state.StagedMoveElapsedSeconds += dt;
+            if (state.IsOpen)
+            {
+                state.OpenElapsedSeconds += dt;
+                state.StagedMoveElapsedSeconds += dt;
+            }
+            if (state.IsReturning)
+            {
+                state.ReturnElapsedSeconds += dt;
+                if (state.ReturnElapsedSeconds >= StagedMoveDurationSec)
+                {
+                    // End of return tween; fully close overlay and clear staged flags
+                    state.IsReturning = false;
+                    state.IsOpen = false;
+                    state.CardToPlay = null;
+                    state.RequiredCosts.Clear();
+                    state.SelectedCards.Clear();
+                    state.OpenElapsedSeconds = 0f;
+                    state.StagedMoveElapsedSeconds = 0f;
+                    state.ReturnElapsedSeconds = 0f;
+                    state.OriginalHandIndex = -1;
+                }
+            }
         }
 
         private void EnsureStateEntityExists()
@@ -162,21 +184,37 @@ namespace Crusaders30XX.ECS.Systems
                         var t = state.CardToPlay.GetComponent<Transform>();
                         if (t != null)
                         {
-                            t.Position = Vector2.Zero;
+                            // Return to the original on-screen position so HandDisplaySystem tweens back smoothly
+                            t.Position = state.StagedStartPos;
                             t.Rotation = 0f;
+                            t.ZOrder = 0;
                         }
                     }
                 }
                 // Restore interactability for all hand cards
                 RestoreHandInteractables();
 
-                // Reset overlay state
-                state.IsOpen = false;
-                state.CardToPlay = null;
-                state.RequiredCosts.Clear();
-                state.SelectedCards.Clear();
-                state.OpenElapsedSeconds = 0f;
-                state.OriginalHandIndex = -1;
+                if (restoring)
+                {
+                    // Begin return tween for staged card from center back to original hand index
+                    state.IsReturning = true;
+                    state.ReturnElapsedSeconds = 0f;
+                    // Keep overlay open briefly to animate the card back
+                    state.IsOpen = true;
+                }
+                else
+                {
+                    // Successful pay: do not return to hand; close immediately
+                    state.IsReturning = false;
+                    state.ReturnElapsedSeconds = 0f;
+                    state.IsOpen = false;
+                    state.CardToPlay = null;
+                    state.RequiredCosts.Clear();
+                    state.SelectedCards.Clear();
+                    state.OpenElapsedSeconds = 0f;
+                    state.StagedMoveElapsedSeconds = 0f;
+                    state.OriginalHandIndex = -1;
+                }
             }
         }
 
@@ -318,14 +356,26 @@ namespace Crusaders30XX.ECS.Systems
             var centerPos = new Vector2(w / 2f + CardOffsetX, h / 2f - (size.Y * TextScale) + CardOffsetY);
             if (state.CardToPlay != null)
             {
-                // Tween from original hand position to center using ease-out quad
-                Vector2 start = state.StagedStartPos;
-                Vector2 target = centerPos;
-                float tm = MathHelper.Clamp(state.StagedMoveElapsedSeconds / Math.Max(0.001f, StagedMoveDurationSec), 0f, 1f);
-                float ease = 1f - (1f - tm) * (1f - tm);
-                Vector2 pos = start + (target - start) * ease;
+                Vector2 pos;
+                if (!state.IsReturning)
+                {
+                    // Tween from hand to center (ease-out)
+                    Vector2 start = state.StagedStartPos;
+                    Vector2 target = centerPos;
+                    float tm = MathHelper.Clamp(state.StagedMoveElapsedSeconds / Math.Max(0.001f, StagedMoveDurationSec), 0f, 1f);
+                    float ease = 1f - (1f - tm) * (1f - tm);
+                    pos = start + (target - start) * ease;
+                }
+                else
+                {
+                    // Tween back from center to original position (ease-in)
+                    Vector2 start = centerPos;
+                    Vector2 target = state.StagedStartPos;
+                    float tm = MathHelper.Clamp(state.ReturnElapsedSeconds / Math.Max(0.001f, StagedReturnDurationSec), 0f, 1f);
+                    float easeIn = tm * tm; // ease-in
+                    pos = start + (target - start) * easeIn;
+                }
                 EventManager.Publish(new CardRenderScaledEvent { Card = state.CardToPlay, Position = pos, Scale = StagedCardScale });
-                state.StagedMoveElapsedSeconds += (float)(1.0 / 60.0); // approximate; real dt added in Update would be better
             }
 
             // Cancel button (top-right)

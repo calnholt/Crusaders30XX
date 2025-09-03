@@ -376,6 +376,8 @@ namespace Crusaders30XX.ECS.Components
         // Tween state for staged card movement
         public Microsoft.Xna.Framework.Vector2 StagedStartPos { get; set; } = Microsoft.Xna.Framework.Vector2.Zero;
         public float StagedMoveElapsedSeconds { get; set; } = 0f;
+        public bool IsReturning { get; set; } = false;
+        public float ReturnElapsedSeconds { get; set; } = 0f;
     }
 
     /// <summary>
