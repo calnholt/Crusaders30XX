@@ -154,6 +154,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 // Record start for tween and elevate Z
                 state.StagedStartPos = stagedT.Position;
+                state.StagedStartRotation = stagedT.Rotation;
                 state.StagedMoveElapsedSeconds = 0f;
                 stagedT.ZOrder = 30000;
             }
@@ -314,7 +315,7 @@ namespace Crusaders30XX.ECS.Systems
             var stateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
             if (stateEntity == null) return;
             var state = stateEntity.GetComponent<PayCostOverlayState>();
-            if (state == null || !state.IsOpen) return;
+            if (state == null || !state.IsOpen || state.IsReturning) return;
 
             int w = _graphicsDevice.Viewport.Width;
             int h = _graphicsDevice.Viewport.Height;
@@ -333,7 +334,7 @@ namespace Crusaders30XX.ECS.Systems
             var stateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
             if (stateEntity == null) return;
             var state = stateEntity.GetComponent<PayCostOverlayState>();
-            if (state == null || !state.IsOpen) return;
+            if (state == null || !(state.IsOpen || state.IsReturning)) return;
 
             int w = _graphicsDevice.Viewport.Width;
             int h = _graphicsDevice.Viewport.Height;
@@ -342,21 +343,25 @@ namespace Crusaders30XX.ECS.Systems
             float eased = 1f - (1f - t) * (1f - t);
             float alphaF = MathHelper.Clamp(eased * OverlayAlpha, 0f, 1f);
 
-            // Text
+            // If returning, skip overlay text/buttons and only draw the staged card tweening back
             var cd = state.CardToPlay?.GetComponent<CardData>();
             string cardName = cd?.Name ?? "Card";
             var defTextCosts = GetDefinitionCosts(state.CardToPlay);
             string costText = BuildCostPhrase(defTextCosts);
             string line = $"Discard {costText} to pay for {cardName}";
             var size = _font.MeasureString(line);
-            var textPos = new Vector2(w / 2f - (size.X * TextScale) / 2f + TextOffsetX, h / 2f - (size.Y * TextScale) / 2f + TextOffsetY);
-            _spriteBatch.DrawString(_font, line, textPos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+            if (!state.IsReturning)
+            {
+                var textPos = new Vector2(w / 2f - (size.X * TextScale) / 2f + TextOffsetX, h / 2f - (size.Y * TextScale) / 2f + TextOffsetY);
+                _spriteBatch.DrawString(_font, line, textPos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+            }
 
             // Staged card above the dim
             var centerPos = new Vector2(w / 2f + CardOffsetX, h / 2f - (size.Y * TextScale) + CardOffsetY);
             if (state.CardToPlay != null)
             {
                 Vector2 pos;
+                float rot;
                 if (!state.IsReturning)
                 {
                     // Tween from hand to center (ease-out)
@@ -365,6 +370,9 @@ namespace Crusaders30XX.ECS.Systems
                     float tm = MathHelper.Clamp(state.StagedMoveElapsedSeconds / Math.Max(0.001f, StagedMoveDurationSec), 0f, 1f);
                     float ease = 1f - (1f - tm) * (1f - tm);
                     pos = start + (target - start) * ease;
+                    // Rotate from starting rotation to 0 while moving to center
+                    float startRot = state.StagedStartRotation;
+                    rot = MathHelper.Lerp(startRot, 0f, ease);
                 }
                 else
                 {
@@ -374,29 +382,38 @@ namespace Crusaders30XX.ECS.Systems
                     float tm = MathHelper.Clamp(state.ReturnElapsedSeconds / Math.Max(0.001f, StagedReturnDurationSec), 0f, 1f);
                     float easeIn = tm * tm; // ease-in
                     pos = start + (target - start) * easeIn;
+                    // Rotate back from 0 to original rotation while returning
+                    float startRot = 0f;
+                    rot = MathHelper.Lerp(startRot, state.StagedStartRotation, easeIn);
                 }
-                EventManager.Publish(new CardRenderScaledEvent { Card = state.CardToPlay, Position = pos, Scale = StagedCardScale });
+                // Temporarily override rotation for draw by mutating transform, then restore
+                var tcmp = state.CardToPlay.GetComponent<Transform>();
+                if (tcmp != null) tcmp.Rotation = rot;
+                EventManager.Publish(new CardRenderScaledRotatedEvent { Card = state.CardToPlay, Position = pos, Scale = StagedCardScale });
             }
 
-            // Cancel button (top-right)
-            var btnRect = new Rectangle(w - 28 - 24, 24, 28, 28);
-            float btnAlpha = Math.Min(1f, alphaF + 0.2f);
-            _spriteBatch.Draw(_pixel, btnRect, new Color(70f / 255f, 70f / 255f, 70f / 255f, btnAlpha));
-            DrawBorder(btnRect, Color.White, 2);
-            var xSize = _font.MeasureString("X") * 0.6f;
-            _spriteBatch.DrawString(_font, "X", new Vector2(btnRect.Center.X - xSize.X / 2f, btnRect.Center.Y - xSize.Y / 2f), Color.White, 0f, Vector2.Zero, 0.6f, SpriteEffects.None, 0f);
+            if (!state.IsReturning)
+            {
+                // Cancel button (top-right)
+                var btnRect = new Rectangle(w - 28 - 24, 24, 28, 28);
+                float btnAlpha = Math.Min(1f, alphaF + 0.2f);
+                _spriteBatch.Draw(_pixel, btnRect, new Color(70f / 255f, 70f / 255f, 70f / 255f, btnAlpha));
+                DrawBorder(btnRect, Color.White, 2);
+                var xSize = _font.MeasureString("X") * 0.6f;
+                _spriteBatch.DrawString(_font, "X", new Vector2(btnRect.Center.X - xSize.X / 2f, btnRect.Center.Y - xSize.Y / 2f), Color.White, 0f, Vector2.Zero, 0.6f, SpriteEffects.None, 0f);
 
-            // Sync clickable cancel bounds entity
-            var cancel = EntityManager.GetEntitiesWithComponent<PayCostCancelButton>().FirstOrDefault();
-            if (cancel == null)
-            {
-                EnsureStateEntityExists();
-                cancel = EntityManager.GetEntitiesWithComponent<PayCostCancelButton>().FirstOrDefault();
-            }
-            var ui = cancel?.GetComponent<UIElement>();
-            if (ui != null)
-            {
-                ui.Bounds = btnRect;
+                // Sync clickable cancel bounds entity
+                var cancel = EntityManager.GetEntitiesWithComponent<PayCostCancelButton>().FirstOrDefault();
+                if (cancel == null)
+                {
+                    EnsureStateEntityExists();
+                    cancel = EntityManager.GetEntitiesWithComponent<PayCostCancelButton>().FirstOrDefault();
+                }
+                var ui = cancel?.GetComponent<UIElement>();
+                if (ui != null)
+                {
+                    ui.Bounds = btnRect;
+                }
             }
         }
 

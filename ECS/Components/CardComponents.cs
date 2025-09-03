@@ -378,6 +378,7 @@ namespace Crusaders30XX.ECS.Components
         public float StagedMoveElapsedSeconds { get; set; } = 0f;
         public bool IsReturning { get; set; } = false;
         public float ReturnElapsedSeconds { get; set; } = 0f;
+        public float StagedStartRotation { get; set; } = 0f;
     }
 
     /// <summary>

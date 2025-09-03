@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
         public float HandFanCurveOffset { get; set; } = 0f;
 
         [DebugEditable(DisplayName = "Hover Lift", Step = 1f, Min = 0f, Max = 200f)]
-        public float HandHoverLift { get; set; } = 10f;
+        public float HandHoverLift { get; set; } = 0f;
 
         [DebugEditable(DisplayName = "Hover Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
         public float HandHoverScale { get; set; } = 1.0f;

@@ -26,6 +26,16 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Event to render a card at a position with a uniform scale factor, preserving the card's current rotation.
+    /// </summary>
+    public class CardRenderScaledRotatedEvent
+    {
+        public Entity Card { get; set; }
+        public Vector2 Position { get; set; }
+        public float Scale { get; set; } = 1f;
+    }
+
+    /// <summary>
     /// Event published just before rendering a specific card to allow a highlight to draw beneath it
     /// </summary>
     public class CardHighlightRenderEvent
