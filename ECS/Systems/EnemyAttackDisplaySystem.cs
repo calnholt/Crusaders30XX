@@ -171,6 +171,19 @@ namespace Crusaders30XX.ECS.Systems
 					OnConfirmPressed();
 				}
 			});
+
+			// Clear any transient visuals when leaving Enemy phases
+			EventManager.Subscribe<ChangeBattlePhaseEvent>(evt =>
+			{
+				if (evt.Current != SubPhase.Block && evt.Current != SubPhase.EnemyAttack)
+				{
+					_impactActive = false;
+					_absorbElapsedSeconds = 0f;
+					_absorbCompleteFired = false;
+					_lastContextId = null;
+					_debris.Clear();
+				}
+			});
 		}
 
 		private void OnConfirmPressed()
@@ -267,6 +280,9 @@ namespace Crusaders30XX.ECS.Systems
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();
 			if (intent == null || intent.Planned.Count == 0 || _font == null) return;
+			// Only render during enemy phases (Block / EnemyAttack)
+			var phaseNowForDraw = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>().Sub;
+			if (phaseNowForDraw != SubPhase.Block && phaseNowForDraw != SubPhase.EnemyAttack) return;
 			if (_absorbCompleteFired) return;
 
 			var pa = intent.Planned[0];

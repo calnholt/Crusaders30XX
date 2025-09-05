@@ -85,9 +85,8 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "stun":
                 {
-                    var stun = enemy.GetComponent<Stun>();
-                    stun.Stacks += 1;
-                    System.Console.WriteLine($"[CardPlayService] Applied stun. Stacks={stun.Stacks}");
+                    // Delegate stun application to centralized system via event
+                    EventManager.Publish(new ApplyStun { Delta = +1 });
                     break;
                 }
                 default:

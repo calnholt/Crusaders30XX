@@ -58,6 +58,12 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public string ContextId;
 	}
+
+	// Request to apply stun stacks to the enemy (positive to add, negative to remove)
+	public class ApplyStun
+	{
+		public int Delta;
+	}
 }
 
 

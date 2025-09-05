@@ -44,7 +44,8 @@ namespace Crusaders30XX.ECS.Components
 	public class Stun : IComponent
 	{
 		public Entity Owner { get; set; }
-		public int Stacks { get; set; } = 0;
+		public int Stacks { get; set; } = 0; // consumable stacks applied to the next Block phase
+		public int PendingStacks { get; set; } = 0; // stacks gained during Enemy turn; promoted after current attack
 	}
 
 

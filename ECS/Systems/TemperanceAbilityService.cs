@@ -15,9 +15,8 @@ namespace Crusaders30XX.ECS.Systems
           {
             case "radiance":
             {
-              var stun = enemy.GetComponent<Stun>();
-              stun.Stacks += 1;
-              System.Console.WriteLine("[TemperanceAbilityService] Applied stun. Stacks={stun.Stacks}");
+              // Example temperance ability that stuns instead of heals per user's edit
+              EventManager.Publish(new ApplyStun { Delta = +1 });
               break;
             }
             default:
