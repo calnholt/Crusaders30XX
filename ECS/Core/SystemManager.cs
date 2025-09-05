@@ -66,7 +66,9 @@ namespace Crusaders30XX.ECS.Core
         /// </summary>
         public void Update(GameTime gameTime)
         {
-            foreach (var system in _systems)
+            // Iterate over a snapshot to avoid modification during enumeration
+            var snapshot = _systems.ToArray();
+            foreach (var system in snapshot)
             {
                 system.Update(gameTime);
             }
