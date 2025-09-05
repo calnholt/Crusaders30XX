@@ -98,6 +98,16 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						int x2 = nStartX + i * (nDiameter + PipGap) + nRadius;
 						DrawCircle(new Vector2(x2, y2), nRadius, new Color(200, 200, 200, 180), 2);
+						if (next.Planned[i].IsStunned)
+						{
+							// Draw red X over the next-turn pip
+							var a = new Vector2(x2 - nRadius + 2, y2 - nRadius + 2);
+							var b = new Vector2(x2 + nRadius - 2, y2 + nRadius - 2);
+							var c = new Vector2(x2 - nRadius + 2, y2 + nRadius - 2);
+							var d = new Vector2(x2 + nRadius - 2, y2 - nRadius + 2);
+							DrawLine(a, b, Color.Red, 2);
+							DrawLine(c, d, Color.Red, 2);
+						}
 					}
 				}
 			}

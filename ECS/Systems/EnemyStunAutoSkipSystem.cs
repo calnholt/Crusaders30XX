@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using System;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -11,6 +12,7 @@ namespace Crusaders30XX.ECS.Systems
 	/// During Block phase, automatically skip as many leading planned attacks as there are stun stacks.
 	/// Emits ShowStunnedOverlay for each skipped attack.
 	/// </summary>
+	[DebugTab("Stun System")] 
 	public class EnemyStunAutoSkipSystem : Core.System
 	{
 		private float _blockGraceTimerSeconds = 0f;
@@ -42,23 +44,43 @@ namespace Crusaders30XX.ECS.Systems
 			if (enemy == null) return;
 			var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
 			bool enemyTurn = phase != null && phase.Main == MainPhase.EnemyTurn;
-			bool duringAttack = enemyTurn && phase.Sub == SubPhase.EnemyAttack;
 			var intent = enemy.GetComponent<AttackIntent>();
-			if (intent == null || intent.Planned == null || intent.Planned.Count == 0) return;
-			int startIdx = duringAttack ? System.Math.Min(1, intent.Planned.Count - 1) : 0;
+			var next = enemy.GetComponent<NextTurnAttackIntent>();
+			if ((intent == null || intent.Planned == null) && (next == null || next.Planned == null)) return;
 			int toApply = System.Math.Max(0, e.Delta);
+
+			int currentStartIdx = enemyTurn ? 1 : 0;
+			int nextStartIdx = 0;
+
+			bool TryMarkInList(System.Collections.Generic.List<PlannedAttack> list, ref int startIndex, string listName)
+			{
+				if (list == null || list.Count == 0) return false;
+				for (int i = System.Math.Max(0, startIndex); i < list.Count; i++)
+				{
+					if (!list[i].IsStunned)
+					{
+						list[i].IsStunned = true;
+						System.Console.WriteLine($"[EnemyStunAutoSkipSystem] Marked {listName} index {i} as stunned");
+						startIndex = i + 1;
+						return true;
+					}
+				}
+				return false;
+			}
+
 			for (int k = 0; k < toApply; k++)
 			{
-				int idx = -1;
-				for (int i = startIdx; i < intent.Planned.Count; i++)
+				bool marked = false;
+				// Enemy turn: never mark current (start at 1). Player turn: start at 0.
+				if (intent != null)
 				{
-					if (!intent.Planned[i].IsStunned)
-					{ idx = i; break; }
+					marked = TryMarkInList(intent.Planned, ref currentStartIdx, "current");
 				}
-				if (idx < 0) break;
-				intent.Planned[idx].IsStunned = true;
-				System.Console.WriteLine($"[EnemyStunAutoSkipSystem] Marked planned attack index {idx} as stunned");
-				startIdx = idx + 1; // subsequent deltas move forward
+				if (!marked && next != null)
+				{
+					marked = TryMarkInList(next.Planned, ref nextStartIdx, "next-turn");
+				}
+				if (!marked) break;
 			}
 		}
 
@@ -69,12 +91,16 @@ namespace Crusaders30XX.ECS.Systems
 			if (_blockGraceTimerSeconds > 0f) return;
 			var intent = entity.GetComponent<AttackIntent>();
 			if (intent == null || intent.Planned == null || intent.Planned.Count == 0) return;
+			bool removedAny = false;
 			while (intent.Planned.Count > 0 && intent.Planned[0].IsStunned)
 			{
 				var ctx = intent.Planned[0].ContextId;
 				EventManager.Publish(new ShowStunnedOverlay { ContextId = ctx });
 				intent.Planned.RemoveAt(0);
+				removedAny = true;
 			}
+			// Only transition phases if we actually consumed stunned attacks this tick
+			if (!removedAny) return;
 			if (HasNextAttack())
 			{
 				Console.WriteLine("[EnemyStunAutoSkipSystem] has another attack");
@@ -96,6 +122,12 @@ namespace Crusaders30XX.ECS.Systems
               return i != null && i.Planned != null && i.Planned.Count > 0;
           });
     }
+
+		[DebugAction("Apply Stun")]
+		public void Debug_ApplyStun()
+		{
+			EventManager.Publish<ApplyStun>(new ApplyStun { Delta = 1 } );
+		}
 
 	}
 }
