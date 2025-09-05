@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		public void Plan(Entity enemy, EnemyArsenal arsenal, AttackIntent current, NextTurnAttackIntent next, int turnNumber, Dictionary<string, AttackDefinition> attackDefs)
 		{
-			current.Planned.Clear();
+			// Do not clear current; it may contain promoted entries with IsStunned flags
 			next.Planned.Clear();
 
 			var ids = arsenal.AttackIds.ToList();
@@ -44,7 +44,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			void AddPlanned(IEnumerable<string> attackIds, dynamic target)
 			{
-				int index = 0;
+				int index = (target.Planned is System.Collections.Generic.List<PlannedAttack> l) ? l.Count : 0;
 				foreach (var id in attackIds)
 				{
 					if (!attackDefs.TryGetValue(id, out var def)) continue;
@@ -67,7 +67,13 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 
-			AddPlanned(SelectForTurn(Math.Max(0, turnNumber - 1)), current);
+			// If current is empty (e.g., first turn), plan current for this turn
+			if (current.Planned.Count == 0)
+			{
+				AddPlanned(SelectForTurn(System.Math.Max(0, turnNumber - 1)), current);
+			}
+
+			// Plan next-turn preview here
 			AddPlanned(SelectForTurn(Math.Max(0, turnNumber)), next);
 		}
 	}

@@ -41,16 +41,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnStartEnemyTurn(ChangeBattlePhaseEvent evt)
 		{
-			if ((_isFirstLoad && evt.Current == SubPhase.EnemyStart) || (evt.Current == SubPhase.PlayerStart && !_isFirstLoad))
+			// Plan ONLY at EnemyStart. PlayerStart should not re-plan, to preserve any IsStunned flags on previews.
+			if (evt.Current == SubPhase.EnemyStart)
 			{
 				System.Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
 				EnsureAttackDefsLoaded();
 				int turnNumber = GetCurrentTurnNumber();
-				// When planning during PlayerStart, we are planning for the upcoming enemy turn
-				if (!_isFirstLoad && evt.Current == SubPhase.PlayerStart)
-				{
-					turnNumber += 1;
-				}
 				foreach (var enemy in GetRelevantEntities())
 				{
 					var arsenal = enemy.GetComponent<EnemyArsenal>();
@@ -70,7 +66,14 @@ namespace Crusaders30XX.ECS.Systems
 						EntityManager.AddComponent(enemy, next);
 					}
 
-					// Use per-enemy intent service to (re)plan
+					// Promote next -> current if current is empty
+					if (intent.Planned.Count == 0 && next.Planned.Count > 0)
+					{
+						intent.Planned = next.Planned;
+						next.Planned = new List<PlannedAttack>();
+					}
+
+					// Use per-enemy intent service to plan next-turn preview (service will skip clearing current if non-empty)
 					IEnemyIntentService service = CreateServiceForEnemy(enemyId);
 					if (service == null)
 					{
