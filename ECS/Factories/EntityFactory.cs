@@ -415,7 +415,6 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new PortraitInfo { TextureWidth = 0, TextureHeight = 0, CurrentScale = 1f });
             world.AddComponent(entity, new EnemyArsenal { AttackIds = new List<string>(def.attackIds) });
             world.AddComponent(entity, new AttackIntent());
-            world.AddComponent(entity, new Stun { Stacks = 0 });
             return entity;
         }
     }

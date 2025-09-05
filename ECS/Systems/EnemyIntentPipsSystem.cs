@@ -62,14 +62,13 @@ namespace Crusaders30XX.ECS.Systems
 					// Determine the next-to-resolve step (min ResolveStep)
 					int minStep = intent.Planned.Min(p => p.ResolveStep);
 
-					var stun = e.GetComponent<Stun>();
 					for (int i = 0; i < count; i++)
 					{
 						var pa = intent.Planned[i];
 						int x = startX + i * (diameter + PipGap) + PipRadius;
 						int y = (int)center.Y;
 						bool isNext = pa.ResolveStep == minStep;
-						bool isStunned = stun != null && stun.Stacks > 0 && (i < stun.Stacks);
+						bool isStunned = pa.IsStunned;
 						var pipColor = isStunned ? Color.DarkGray : (isNext ? Color.Yellow : Color.LightGray);
 						DrawCircle(new Vector2(x, y), PipRadius, pipColor, 2);
 						if (isStunned)

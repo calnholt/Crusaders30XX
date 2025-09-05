@@ -36,17 +36,10 @@ namespace Crusaders30XX.ECS.Components
 		public int ResolveStep;
 		public string ContextId;
 		public bool WasBlocked;
+		public bool IsStunned;
 	}
 
-	/// <summary>
-	/// Tracks stun stacks on an enemy. Each stack skips one planned attack when it would resolve.
-	/// </summary>
-	public class Stun : IComponent
-	{
-		public Entity Owner { get; set; }
-		public int Stacks { get; set; } = 0; // consumable stacks applied to the next Block phase
-		public int PendingStacks { get; set; } = 0; // stacks gained during Enemy turn; promoted after current attack
-	}
+	// Stun is now tracked per PlannedAttack via IsStunned flag
 
 
 	/// <summary>
