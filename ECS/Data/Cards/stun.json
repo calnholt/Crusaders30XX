@@ -4,7 +4,7 @@
   "target": "Enemy",
   "color": "White",
   "rarity": "Common",
-  "text": "Stun.",
+  "text": "Stun the enemy.",
   "cost": [ "Red" ],
   "isFreeAction": true
 }

@@ -1,0 +1,8 @@
+{
+  "id": "radiance",
+  "name": "Radiance",
+  "target": "Enemy",
+  "text": "Heal 3HP.",
+  "threshold": 1
+}
+

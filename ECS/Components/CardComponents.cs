@@ -142,6 +142,15 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Player's currently equipped Temperance ability (by id). At most one should be equipped.
+    /// </summary>
+    public class EquippedTemperanceAbility : IComponent
+    {
+        public Entity Owner { get; set; }
+        public string AbilityId { get; set; } = "";
+    }
+
+    /// <summary>
     /// Resource component representing Stored Block for an entity (e.g., the player)
     /// </summary>
     public class StoredBlock : IComponent

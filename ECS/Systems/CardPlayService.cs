@@ -80,22 +80,14 @@ namespace Crusaders30XX.ECS.Systems
                 case "stab":
                 {
                     EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -8 });
-                    EventManager.Publish(new ModifyCourageEvent { Delta = -1 });
+                    EventManager.Publish(new ModifyCourageEvent { Delta = -2 });
                     break;
                 }
                 case "stun":
                 {
-                    if (enemy != null)
-                    {
-                        var stun = enemy.GetComponent<Stun>();
-                        if (stun == null)
-                        {
-                            stun = new Stun { Stacks = 0 };
-                            entityManager.AddComponent(enemy, stun);
-                        }
-                        stun.Stacks += 1;
-                        System.Console.WriteLine($"[CardPlayService] Applied stun. Stacks={stun.Stacks}");
-                    }
+                    var stun = enemy.GetComponent<Stun>();
+                    stun.Stacks += 1;
+                    System.Console.WriteLine($"[CardPlayService] Applied stun. Stacks={stun.Stacks}");
                     break;
                 }
                 default:

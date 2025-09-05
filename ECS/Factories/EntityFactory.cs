@@ -90,11 +90,16 @@ namespace Crusaders30XX.ECS.Factories
                 TextureHeight = 0,
                 TextureWidth = 0,
             };
+            var equippedTemperanceAbility = new EquippedTemperanceAbility {
+                AbilityId = "radiance",
+                Owner = entity
+            };
             
             world.AddComponent(entity, player);
             world.AddComponent(entity, transform);
             world.AddComponent(entity, sprite);
             world.AddComponent(entity, portraitInfo);
+            world.AddComponent(entity, equippedTemperanceAbility);
             
             // Attach Courage resource component by default (optional mechanics can read presence)
             world.AddComponent(entity, new Courage { Amount = 0 });
@@ -248,32 +253,6 @@ namespace Crusaders30XX.ECS.Factories
             return entity;
         }
         
-        /// <summary>
-        /// Creates a basic attack card
-        /// </summary>
-        public static Entity CreateAttackCard(World world, string name, int damage, int cost = 1)
-        {
-            return CreateCard(world, name, $"Deal {damage} damage", cost, 
-                CardData.CardType.Attack, CardData.CardRarity.Common);
-        }
-        
-        /// <summary>
-        /// Creates a basic skill card
-        /// </summary>
-        public static Entity CreateSkillCard(World world, string name, string description, int cost = 1)
-        {
-            return CreateCard(world, name, description, cost, 
-                CardData.CardType.Skill, CardData.CardRarity.Common);
-        }
-        
-        /// <summary>
-        /// Creates a basic power card
-        /// </summary>
-        public static Entity CreatePowerCard(World world, string name, string description, int cost = 2)
-        {
-            return CreateCard(world, name, description, cost, 
-                CardData.CardType.Power, CardData.CardRarity.Uncommon);
-        }
 
         /// <summary>
         /// Creates a set of demo cards from JSON definitions in ECS/Data/Cards
@@ -436,6 +415,7 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new PortraitInfo { TextureWidth = 0, TextureHeight = 0, CurrentScale = 1f });
             world.AddComponent(entity, new EnemyArsenal { AttackIds = new List<string>(def.attackIds) });
             world.AddComponent(entity, new AttackIntent());
+            world.AddComponent(entity, new Stun { Stacks = 0 });
             return entity;
         }
     }

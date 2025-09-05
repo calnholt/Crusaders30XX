@@ -16,7 +16,8 @@ namespace Crusaders30XX.ECS.Systems
         public TemperanceManagerSystem(EntityManager entityManager) : base(entityManager)
         {
             EventManager.Subscribe<CardMoved>(OnCardMoved);
-            System.Console.WriteLine("[TemperanceManagerSystem] Subscribed to CardMoved");
+            EventManager.Subscribe<ModifyTemperanceEvent>(OnModifyTemperance);
+            System.Console.WriteLine("[TemperanceManagerSystem] Subscribed to CardMoved, ModifyTemperanceEvent");
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -38,6 +39,34 @@ namespace Crusaders30XX.ECS.Systems
               var t = player.GetComponent<Temperance>();
               if (t == null) { t = new Temperance(); EntityManager.AddComponent(player, t); }
               t.Amount = Math.Max(0, t.Amount + 1);
+              TryTriggerTemperanceAbility(player, t);
+            }
+        }
+
+        private void OnModifyTemperance(ModifyTemperanceEvent evt)
+        {
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            if (player == null) return;
+            var t = player.GetComponent<Temperance>();
+            if (t == null) { t = new Temperance(); EntityManager.AddComponent(player, t); }
+            int before = t.Amount;
+            t.Amount = Math.Max(0, t.Amount + evt.Delta);
+            System.Console.WriteLine($"[TemperanceManagerSystem] Temperance changed {before} -> {t.Amount}");
+            TryTriggerTemperanceAbility(player, t);
+        }
+
+        private void TryTriggerTemperanceAbility(Entity player, Temperance t)
+        {
+            var equipped = player.GetComponent<EquippedTemperanceAbility>();
+            if (equipped == null || string.IsNullOrEmpty(equipped.AbilityId)) return;
+
+            if (!Crusaders30XX.ECS.Data.Temperance.TemperanceAbilityDefinitionCache.TryGet(equipped.AbilityId, out var def)) return;
+            if (def.threshold <= 0) return;
+            while (t.Amount >= def.threshold)
+            {
+                // Spend threshold and activate
+                t.Amount -= def.threshold;
+                TemperanceAbilityService.Activate(EntityManager, equipped.AbilityId);
             }
         }
     }
