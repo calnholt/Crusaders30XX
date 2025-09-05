@@ -83,10 +83,11 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Resolve threshold from equipped ability (default to 3 if unavailable)
 			int threshold = 3;
+			Crusaders30XX.ECS.Data.Temperance.TemperanceAbilityDefinition def = null;
 			var equipped = player.GetComponent<EquippedTemperanceAbility>();
 			if (equipped != null && !string.IsNullOrEmpty(equipped.AbilityId))
 			{
-				if (Crusaders30XX.ECS.Data.Temperance.TemperanceAbilityDefinitionCache.TryGet(equipped.AbilityId, out var def) && def != null)
+				if (Crusaders30XX.ECS.Data.Temperance.TemperanceAbilityDefinitionCache.TryGet(equipped.AbilityId, out def) && def != null)
 				{
 					threshold = Math.Max(1, def.threshold);
 				}
@@ -134,7 +135,11 @@ namespace Crusaders30XX.ECS.Systems
 			var hover = EntityManager.GetEntitiesWithComponent<TemperanceTooltipAnchor>().FirstOrDefault();
 			var hitRect = new Rectangle(startX, y, totalW, texH);
 			var ui = hover.GetComponent<UIElement>();
-			if (ui != null) ui.Bounds = hitRect;
+			if (ui != null)
+			{
+				ui.Bounds = hitRect;
+				// Tooltip content is initialized in the factory; bounds only are updated here
+			}
 			var ht = hover.GetComponent<Transform>();
 			if (ht != null) ht.Position = new Vector2(hitRect.X, hitRect.Y);
 		}

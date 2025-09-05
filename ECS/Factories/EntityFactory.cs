@@ -2,6 +2,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Enemies;
+using Crusaders30XX.ECS.Data.Temperance;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -125,7 +126,14 @@ namespace Crusaders30XX.ECS.Factories
             var temperanceTooltip = world.CreateEntity("UI_TemperanceTooltip");
             world.AddComponent(temperanceTooltip, new TemperanceTooltipAnchor());
             world.AddComponent(temperanceTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-            world.AddComponent(temperanceTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Temperance" });
+            string temperanceTooltipText = "Temperance";
+            if (TemperanceAbilityDefinitionCache.TryGet(equippedTemperanceAbility.AbilityId, out var tempDef) && tempDef != null)
+            {
+                string nm = string.IsNullOrWhiteSpace(tempDef.name) ? equippedTemperanceAbility.AbilityId : tempDef.name;
+                string tx = tempDef.text ?? string.Empty;
+                temperanceTooltipText = nm + "\n\n" + tx;
+            }
+            world.AddComponent(temperanceTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = temperanceTooltipText });
 
             // Pre-create Action Points tooltip hover entity (bounds updated by ActionPointDisplaySystem)
             var apTooltip = world.CreateEntity("UI_APTooltip");

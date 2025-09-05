@@ -2,7 +2,7 @@
   "id": "radiance",
   "name": "Radiance",
   "target": "Enemy",
-  "text": "Heal 3HP.",
-  "threshold": 7
+  "text": "Stun the enemy.",
+  "threshold": 4
 }
 
