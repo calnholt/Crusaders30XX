@@ -3,6 +3,6 @@
   "name": "Radiance",
   "target": "Enemy",
   "text": "Heal 3HP.",
-  "threshold": 1
+  "threshold": 7
 }
 

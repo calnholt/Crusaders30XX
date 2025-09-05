@@ -220,6 +220,16 @@ namespace Crusaders30XX.ECS.Components
         public string Tooltip { get; set; } = "";
         public TooltipPosition TooltipPosition { get; set; } = TooltipPosition.Above;
     }
+
+    /// <summary>
+    /// Anchor published by HPDisplaySystem describing the last drawn HP bar rectangle for an entity.
+    /// Used by other UI systems to align elements relative to the HP bar.
+    /// </summary>
+    public class HPBarAnchor : IComponent
+    {
+        public Entity Owner { get; set; }
+        public Microsoft.Xna.Framework.Rectangle Rect { get; set; }
+    }
     
     public enum TooltipPosition
     {

@@ -211,6 +211,17 @@ namespace Crusaders30XX.ECS.Systems
 			// Background rounded rect (dark gray)
 				var backRect = new Rectangle(x, y, width, height);
 				_spriteBatch.Draw(_roundedBack, backRect, new Color((byte)40, (byte)40, (byte)40));
+				// Publish/update HP bar anchor rect for this entity
+				var anchor = hpEntity.GetComponent<HPBarAnchor>();
+				if (anchor == null)
+				{
+					anchor = new HPBarAnchor { Rect = backRect };
+					EntityManager.AddComponent(hpEntity, anchor);
+				}
+				else
+				{
+					anchor.Rect = backRect;
+				}
 
 			// Fill
 				float targetPctForDraw = hp.Max > 0 ? MathHelper.Clamp(hp.Current / (float)hp.Max, 0f, 1f) : 0f;
