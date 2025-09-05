@@ -4,7 +4,7 @@
   "target": "Enemy",
   "color": "Black",
   "rarity": "Common",
-  "text": "Deal 8 damage and lose 1 courage.",
+  "text": "As an additional cost, lose 2 courage.\n\nDeal 8 damage.",
   "isFreeAction": true
 }
 

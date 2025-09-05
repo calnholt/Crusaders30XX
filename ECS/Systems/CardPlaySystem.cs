@@ -50,6 +50,13 @@ namespace Crusaders30XX.ECS.Systems
                 if (!CardDefinitionCache.TryGet(alt, out def)) return;
             }
 
+            // Evaluate any additional costs/requirements tied to the card id
+            if (!EvaluateAdditionalCostService.CanPay(EntityManager, def.id))
+            {
+                System.Console.WriteLine($"[CardPlaySystem] Additional cost check failed for id={def.id}; aborting play");
+                return;
+            }
+
             // Gate by Action Points unless the card is a free action
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             var ap = player?.GetComponent<ActionPoints>();
