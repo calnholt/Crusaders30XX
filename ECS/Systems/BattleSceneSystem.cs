@@ -146,7 +146,6 @@ namespace Crusaders30XX.ECS.Systems
 				deck.Cards.AddRange(demoHand);
 				deck.DrawPile.AddRange(demoHand);
 			}
-			// Ensure systems are present BEFORE publishing events they listen to
 			AddBattleSystems();
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
 			EventManager.Publish(new DeckShuffleEvent { });
