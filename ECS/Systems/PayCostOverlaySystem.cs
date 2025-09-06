@@ -438,6 +438,16 @@ namespace Crusaders30XX.ECS.Systems
         {
             var cd = card.GetComponent<CardData>();
             if (cd == null) return false;
+            // Disallow using weapons to pay costs
+            try
+            {
+                string id = (cd.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+                if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
+                {
+                    if (def.isWeapon) return false;
+                }
+            }
+            catch { }
             // Card is viable if it can satisfy at least one remaining requirement
             foreach (var c in remainingCosts)
             {

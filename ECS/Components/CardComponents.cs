@@ -151,6 +151,16 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Player's currently equipped weapon by id (e.g., "hammer"). Weapon is not in the deck.
+    /// </summary>
+    public class EquippedWeapon : IComponent
+    {
+        public Entity Owner { get; set; }
+        public string WeaponId { get; set; } = "";
+        public Entity SpawnedEntity { get; set; }
+    }
+
+    /// <summary>
     /// Resource component representing Stored Block for an entity (e.g., the player)
     /// </summary>
     public class StoredBlock : IComponent

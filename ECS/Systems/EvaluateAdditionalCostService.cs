@@ -21,6 +21,19 @@ namespace Crusaders30XX.ECS.Systems
                     }
                     return true;
                 }
+                case "hammer":
+                {
+                    // Additional cost from weapon_hammer.json: "lose 3 courage"
+                    var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                    var courageCmp = player?.GetComponent<Courage>();
+                    int courage = courageCmp?.Amount ?? 0;
+                    if (courage < 3)
+                    {
+                        System.Console.WriteLine("[AdditionalCost] Cannot play 'hammer': requires at least 3 Courage to lose");
+                        return false;
+                    }
+                    return true;
+                }
                 default:
                     return true;
             }

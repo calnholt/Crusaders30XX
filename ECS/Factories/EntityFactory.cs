@@ -101,6 +101,8 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, sprite);
             world.AddComponent(entity, portraitInfo);
             world.AddComponent(entity, equippedTemperanceAbility);
+            // Equip default weapon (not in deck)
+            world.AddComponent(entity, new EquippedWeapon { WeaponId = "hammer" });
             
             // Attach Courage resource component by default (optional mechanics can read presence)
             world.AddComponent(entity, new Courage { Amount = 0 });
@@ -275,6 +277,7 @@ namespace Crusaders30XX.ECS.Factories
                 .ToList();
             foreach (var def in all)
             {
+                if (def.isWeapon) continue; // weapons are not in the deck
                 var name = def.name ?? def.id ?? "Card";
                 var color = ParseColor(def.color);
                 int blockValue = (color == CardData.CardColor.Black) ? 6 : 3;

@@ -9,6 +9,7 @@ using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.ECS.Data.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -153,7 +154,36 @@ namespace Crusaders30XX.ECS.Systems
             
             // Draw card background (rotated if transform has rotation)
             float rotation = transform?.Rotation ?? 0f;
-            DrawCardBackgroundRotated(position, rotation, cardColor);
+            // If this is a weapon and we're not in Action phase, gray it out
+            Color bgColor = cardColor;
+            try
+            {
+                string id = (cardData.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+                if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
+                {
+                    if (def.isWeapon)
+                    {
+                        var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+                        var ui = entity.GetComponent<UIElement>();
+                        // Detect if pay-cost overlay is active; when active, do not override interactability
+                        var payStateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+                        var payState = payStateEntity?.GetComponent<PayCostOverlayState>();
+                        bool overlayActive = payState != null && (payState.IsOpen || payState.IsReturning);
+                        if (phase != null && phase.Sub != SubPhase.Action)
+                        {
+                            bgColor = Color.DimGray;
+                            if (ui != null) ui.IsInteractable = false;
+                        }
+                        else if (!overlayActive)
+                        {
+                            // Ensure weapon becomes interactable during Action only when no overlay is active
+                            if (ui != null) ui.IsInteractable = true;
+                        }
+                    }
+                }
+            }
+            catch { }
+            DrawCardBackgroundRotated(position, rotation, bgColor);
 
             // Compute actual visual center from rect so text aligns exactly with background
             var cardRectForCenter = GetCardVisualRect(position);
@@ -168,8 +198,18 @@ namespace Crusaders30XX.ECS.Systems
 
             DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)), cardData.Description, textColor, _settings.DescriptionScale);
             
-            // Draw block value and shield icon at bottom-left
-            if (cardData.BlockValue > 0)
+            // Draw block value and shield icon at bottom-left, but hide for weapons
+            bool isWeapon = false;
+            try
+            {
+                string idW = (cardData.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+                if (!string.IsNullOrEmpty(idW) && CardDefinitionCache.TryGet(idW, out var defW))
+                {
+                    isWeapon = defW.isWeapon;
+                }
+            }
+            catch { }
+            if (!isWeapon && cardData.BlockValue > 0)
             {
                 string blockText = cardData.BlockValue.ToString();
                 var textSize = _font.MeasureString(blockText) * _settings.BlockNumberScale;

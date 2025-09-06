@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Data.Cards
         public string text { get; set; }
         public bool isFreeAction { get; set; }
         public string[] cost { get; set; } = [];
+        public bool isWeapon { get; set; } = false;
     }
 }
 

@@ -85,8 +85,13 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "stun":
                 {
-                    // Delegate stun application to centralized system via event
                     EventManager.Publish(new ApplyStun { Delta = +1 });
+                    break;
+                }
+                case "hammer":
+                {
+                    EventManager.Publish(new ModifyCourageEvent { Delta = -3 });
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -30 });
                     break;
                 }
                 default:

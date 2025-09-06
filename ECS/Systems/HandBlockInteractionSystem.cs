@@ -47,6 +47,16 @@ namespace Crusaders30XX.ECS.Systems
 				var data = card.GetComponent<CardData>();
 				if (ui == null || data == null) continue;
 				if (!ui.Bounds.Contains(mouse.Position)) continue;
+				// Skip weapons: they cannot be assigned as block
+				try
+				{
+					string id = (data.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+					if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
+					{
+						if (def.isWeapon) { break; }
+					}
+				}
+				catch { }
 				// Assign this card as block (always assign from hand); color from card
 				int blockVal = System.Math.Max(1, data.BlockValue);
 				string color = data.Color.ToString();

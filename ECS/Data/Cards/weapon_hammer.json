@@ -1,0 +1,10 @@
+{
+  "id": "hammer",
+  "name": "Hammer",
+  "target": "Enemy",
+  "color": "White",
+  "rarity": "Common",
+  "text": "As an additional cost, lose 3 courage.\n\nDeal 30 damage.",
+  "cost": [ "Red", "Red" ],
+  "isWeapon": true
+}

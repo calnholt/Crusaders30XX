@@ -50,6 +50,9 @@ namespace Crusaders30XX.ECS.Systems
                 if (!CardDefinitionCache.TryGet(alt, out def)) return;
             }
 
+            // Weapons can only be played during Action phase (already gated) and cannot be used to pay costs of other cards
+            bool isWeapon = def.isWeapon;
+
             // Evaluate any additional costs/requirements tied to the card id
             if (!EvaluateAdditionalCostService.CanPay(EntityManager, def.id))
             {
@@ -194,12 +197,23 @@ namespace Crusaders30XX.ECS.Systems
             // Delegate per-card effects to service
             CardPlayService.Resolve(EntityManager, def.id, data.Name);
 
-            // Move the played card to discard
+            // Move the played card to discard unless it's a weapon (weapons leave hand but do not go to discard)
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             if (deckEntity != null)
             {
-                EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PlayCard" });
-                System.Console.WriteLine("[CardPlaySystem] Requested move to DiscardPile");
+                if (isWeapon)
+                {
+                    // Remove from hand without adding to discard/exhaust; stays out until re-added by phase rules
+                    // CardZoneSystem will remove from lists when destination not specified; emulate by not re-adding
+                    var deck = deckEntity.GetComponent<Deck>();
+                    deck?.Hand.Remove(evt.Card);
+                    System.Console.WriteLine("[CardPlaySystem] Weapon used; removed from hand without discarding");
+                }
+                else
+                {
+                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PlayCard" });
+                    System.Console.WriteLine("[CardPlaySystem] Requested move to DiscardPile");
+                }
             }
 
             // Consume 1 AP if not a free action
