@@ -102,7 +102,7 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, portraitInfo);
             world.AddComponent(entity, equippedTemperanceAbility);
             // Equip default weapon (not in deck)
-            world.AddComponent(entity, new EquippedWeapon { WeaponId = "hammer" });
+            world.AddComponent(entity, new EquippedWeapon { WeaponId = "sword" });
             
             // Attach Courage resource component by default (optional mechanics can read presence)
             world.AddComponent(entity, new Courage { Amount = 0 });

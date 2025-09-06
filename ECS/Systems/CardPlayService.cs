@@ -94,7 +94,7 @@ namespace Crusaders30XX.ECS.Systems
                     break;
                 }
                 // weapons
-                case "hammer":
+                case "sword":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = -3 });
                     EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -30 });

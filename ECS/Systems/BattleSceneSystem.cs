@@ -69,6 +69,7 @@ namespace Crusaders30XX.ECS.Systems
 		private PhaseCoordinatorSystem _phaseCoordinatorSystem;
 		private EnemyStunAutoSkipSystem _enemyStunAutoSkipSystem;
 		private PayCostOverlaySystem _payCostOverlaySystem;
+		private CantPlayCardMessageSystem _cantPlayCardMessageSystem;
 		private WeaponManagementSystem _weaponManagementSystem;
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(em)
@@ -97,33 +98,34 @@ namespace Crusaders30XX.ECS.Systems
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Battle) return;
 			// Draw in the same order as previously in Game1
-			if (_battleBackgroundSystem != null) _battleBackgroundSystem.Draw();
-			if (_cathedralLightingSystem != null) _cathedralLightingSystem.Draw();
-			if (_desertBackgroundEffectSystem != null) _desertBackgroundEffectSystem.Draw();
-			if (_renderingSystem != null) _renderingSystem.Draw();
-			if (_playerDisplaySystem != null) _playerDisplaySystem.Draw();
-			if (_enemyDisplaySystem != null) _enemyDisplaySystem.Draw();
-			if (_enemyIntentPipsSystem != null) _enemyIntentPipsSystem.Draw();
-			if (_enemyAttackDisplaySystem != null) _enemyAttackDisplaySystem.Draw();
-			if (_stunnedOverlaySystem != null) _stunnedOverlaySystem.Draw();
-			if (_endTurnDisplaySystem != null) _endTurnDisplaySystem.Draw();
-			if (_assignedBlockCardsDisplaySystem != null) _assignedBlockCardsDisplaySystem.Draw();
-			if (_playerWispParticleSystem != null) _playerWispParticleSystem.Draw();
-			if (_battlePhaseDisplaySystem != null) _battlePhaseDisplaySystem.Draw();
-			if (_courageDisplaySystem != null) _courageDisplaySystem.Draw();
-			if (_temperanceDisplaySystem != null) _temperanceDisplaySystem.Draw();
-			if (_actionPointDisplaySystem != null) _actionPointDisplaySystem.Draw();
-			if (_storedBlockDisplaySystem != null) _storedBlockDisplaySystem.Draw();
-			if (_hpDisplaySystem != null) _hpDisplaySystem.Draw();
-			if (_payCostOverlaySystem != null) _payCostOverlaySystem.DrawBackdrop();
-			if (_handDisplaySystem != null) _handDisplaySystem.DrawHand();
-			if (_debugMenuSystem != null) _debugMenuSystem.Draw();
-			if (_drawPileDisplaySystem != null) _drawPileDisplaySystem.Draw();
-			if (_discardPileDisplaySystem != null) _discardPileDisplaySystem.Draw();
-			if (_cardListModalSystem != null) _cardListModalSystem.Draw();
-			if (_tooltipDisplaySystem != null) _tooltipDisplaySystem.Draw();
-			if (_profilerSystem != null) _profilerSystem.Draw();
-			if (_payCostOverlaySystem != null) _payCostOverlaySystem.DrawForeground();
+			_battleBackgroundSystem.Draw();
+			_cathedralLightingSystem.Draw();
+			_desertBackgroundEffectSystem.Draw();
+			_renderingSystem.Draw();
+			_playerDisplaySystem.Draw();
+			_enemyDisplaySystem.Draw();
+			_enemyIntentPipsSystem.Draw();
+			_enemyAttackDisplaySystem.Draw();
+			_stunnedOverlaySystem.Draw();
+			_endTurnDisplaySystem.Draw();
+			_assignedBlockCardsDisplaySystem.Draw();
+			_playerWispParticleSystem.Draw();
+			_battlePhaseDisplaySystem.Draw();
+			_courageDisplaySystem.Draw();
+			_temperanceDisplaySystem.Draw();
+			_actionPointDisplaySystem.Draw();
+			_storedBlockDisplaySystem.Draw();
+			_hpDisplaySystem.Draw();
+			_payCostOverlaySystem.DrawBackdrop();
+			_handDisplaySystem.DrawHand();
+			_debugMenuSystem.Draw();
+			_drawPileDisplaySystem.Draw();
+			_discardPileDisplaySystem.Draw();
+			_cardListModalSystem.Draw();
+			_tooltipDisplaySystem.Draw();
+			_profilerSystem.Draw();
+			_payCostOverlaySystem.DrawForeground();
+			_cantPlayCardMessageSystem.Draw();
 		}
 
 		private void StartBattle()
@@ -196,6 +198,7 @@ namespace Crusaders30XX.ECS.Systems
 			_endTurnDisplaySystem = new EndTurnDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_payCostOverlaySystem = new PayCostOverlaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
+			_cantPlayCardMessageSystem = new CantPlayCardMessageSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_enemyIntentPlanningSystem = new EnemyIntentPlanningSystem(_world.EntityManager);
 			_enemyAttackProgressManagementSystem = new EnemyAttackProgressManagementSystem(_world.EntityManager);
 			_stunnedOverlaySystem = new StunnedOverlaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
@@ -263,6 +266,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_weaponManagementSystem);
 			_world.AddSystem(_payCostOverlaySystem);
 			_world.AddSystem(_cardHighlightSystem);
+			_world.AddSystem(_cantPlayCardMessageSystem);
 		}
 
 	}

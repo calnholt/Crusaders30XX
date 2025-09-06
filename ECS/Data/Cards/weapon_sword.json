@@ -1,6 +1,6 @@
 {
-  "id": "hammer",
-  "name": "Hammer",
+  "id": "sword",
+  "name": "Sword",
   "target": "Enemy",
   "color": "White",
   "rarity": "Common",

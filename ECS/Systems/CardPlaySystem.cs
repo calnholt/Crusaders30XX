@@ -189,6 +189,7 @@ namespace Crusaders30XX.ECS.Systems
                     else
                     {
                         System.Console.WriteLine("[CardPlaySystem] Cannot satisfy cost requirements; aborting play");
+                        EventManager.Publish(new CantPlayCardMessage { Message = "Can't pay card's cost!" });
                         return;
                     }
                 }

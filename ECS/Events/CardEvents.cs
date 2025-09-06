@@ -199,4 +199,13 @@ namespace Crusaders30XX.ECS.Events
         public System.Collections.Generic.List<Entity> PaymentCards { get; set; } = new();
     }
 
+    /// <summary>
+    /// UI message indicating why a card cannot be played.
+    /// Systems can subscribe to display a transient on-screen notification.
+    /// </summary>
+    public class CantPlayCardMessage
+    {
+        public string Message { get; set; } = "";
+    }
+
 } 
