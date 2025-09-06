@@ -113,7 +113,7 @@ namespace Crusaders30XX.ECS.Factories
             // Attach StoredBlock resource component by default
             world.AddComponent(entity, new StoredBlock { Amount = 0 });
             // Attach HP component
-            world.AddComponent(entity, new HP { Max = 100, Current = 100 });
+            world.AddComponent(entity, new HP { Max = 50, Current = 50 });
             // Attach starting Intellect and MaxHandSize stats
             world.AddComponent(entity, new Intellect { Value = 4 });
             world.AddComponent(entity, new MaxHandSize { Value = 5 });

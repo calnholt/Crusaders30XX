@@ -93,6 +93,12 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ModifyCourageEvent { Delta = +3 });
                     break;
                 }
+                case "inspiration":
+                {
+                    EventManager.Publish(new RequestDrawCardsEvent { Count = 2 });
+                    EventManager.Publish(new ModifyTemperanceEvent { Delta = 1 });
+                    break;
+                }
                 // weapons
                 case "sword":
                 {

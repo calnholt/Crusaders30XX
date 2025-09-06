@@ -53,12 +53,6 @@ namespace Crusaders30XX.ECS.Systems
             // Weapons can only be played during Action phase (already gated) and cannot be used to pay costs of other cards
             bool isWeapon = def.isWeapon;
 
-            // Evaluate any additional costs/requirements tied to the card id
-            if (!EvaluateAdditionalCostService.CanPay(EntityManager, def.id))
-            {
-                System.Console.WriteLine($"[CardPlaySystem] Additional cost check failed for id={def.id}; aborting play");
-                return;
-            }
 
             // Gate by Action Points unless the card is a free action
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
@@ -69,9 +63,16 @@ namespace Crusaders30XX.ECS.Systems
                 int currentAp = ap?.Current ?? 0;
                 if (currentAp <= 0)
                 {
-                    System.Console.WriteLine("[CardPlaySystem] Ignored play, AP=0");
+                    EventManager.Publish(new CantPlayCardMessage { Message = "Not enough action points!" });
                     return; // cannot play without AP
                 }
+            }
+
+            // Evaluate any additional costs/requirements tied to the card id
+            if (!EvaluateAdditionalCostService.CanPay(EntityManager, def.id))
+            {
+                System.Console.WriteLine($"[CardPlaySystem] Additional cost check failed for id={def.id}; aborting play");
+                return;
             }
 
             // If costs are not yet paid, determine if payment is needed and either auto-resolve or open overlay
@@ -124,72 +125,72 @@ namespace Crusaders30XX.ECS.Systems
                         return remaining.Count == 0;
                     }
 
-                    if (CanSatisfy(requiredCosts, handOthers, out var autoPicks))
-                    {
-                        // Deterministic auto-pick when each specific color has exactly the needed count, and Any is exact
-                        int needRed = requiredCosts.Count(c => c == "Red");
-                        int needWhite = requiredCosts.Count(c => c == "White");
-                        int needBlack = requiredCosts.Count(c => c == "Black");
-                        int needAny = requiredCosts.Count(c => c == "Any");
-                        var redCards = handOthers.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.Red).ToList();
-                        var whiteCards = handOthers.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.White).ToList();
-                        var blackCards = handOthers.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.Black).ToList();
-                        var deterministic = new List<Entity>();
-                        bool specificExact = (needRed == redCards.Count || needRed == 0)
-                                           && (needWhite == whiteCards.Count || needWhite == 0)
-                                           && (needBlack == blackCards.Count || needBlack == 0);
-                        if (specificExact)
-                        {
-                            if (needRed == redCards.Count) deterministic.AddRange(redCards);
-                            if (needWhite == whiteCards.Count) deterministic.AddRange(whiteCards);
-                            if (needBlack == blackCards.Count) deterministic.AddRange(blackCards);
-                            var remaining = handOthers.Except(deterministic).ToList();
-                            if (needAny == 0 || remaining.Count == needAny)
-                            {
-                                if (needAny > 0) deterministic.AddRange(remaining);
-                                if (deterministic.Count == requiredCosts.Count)
-                                {
-                                    // Auto-discard deterministic set and continue
-                                    foreach (var p in deterministic)
-                                    {
-                                        EventManager.Publish(new CardMoveRequested { Card = p, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
-                                    }
-                                    EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
-                                    return;
-                                }
-                            }
-                        }
-                        if (autoPicks.Count == 1 && handOthers.Count == 1)
-                        {
-                            // Single deterministic discard -> auto pay and continue
-                            System.Console.WriteLine("[CardPlaySystem] Auto-paying cost with only available card");
-                            EventManager.Publish(new CardMoveRequested { Card = autoPicks[0], Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
-                            // Re-dispatch play with CostsPaid=true
-                            EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
-                            return;
-                        }
-                        else if (requiredCosts.All(c => c == "Any") && autoPicks.Count == requiredCosts.Count && handOthers.Count == autoPicks.Count)
-                        {
-                            // Exact number of cards equal to Any requirement -> auto pay all
-                            foreach (var p in autoPicks)
-                            {
-                                EventManager.Publish(new CardMoveRequested { Card = p, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
-                            }
-                            EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
-                            return;
-                        }
-                        else
-                        {
-                            // Open overlay to let player choose among options
-                            System.Console.WriteLine("[CardPlaySystem] Opening pay-cost overlay");
-                            EventManager.Publish(new OpenPayCostOverlayEvent { CardToPlay = evt.Card, RequiredCosts = requiredCosts });
-                            return;
-                        }
-                    }
-                    else
+                    bool canSatisfy = CanSatisfy(requiredCosts, handOthers, out var autoPicks);
+
+                    if (!canSatisfy)
                     {
                         System.Console.WriteLine("[CardPlaySystem] Cannot satisfy cost requirements; aborting play");
                         EventManager.Publish(new CantPlayCardMessage { Message = "Can't pay card's cost!" });
+                        return;
+                    }
+
+                    // Deterministic auto-pick when each specific color has exactly the needed count, and Any is exact
+                    int needRed = requiredCosts.Count(c => c == "Red");
+                    int needWhite = requiredCosts.Count(c => c == "White");
+                    int needBlack = requiredCosts.Count(c => c == "Black");
+                    int needAny = requiredCosts.Count(c => c == "Any");
+                    var redCards = handOthers.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.Red).ToList();
+                    var whiteCards = handOthers.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.White).ToList();
+                    var blackCards = handOthers.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.Black).ToList();
+                    var deterministic = new List<Entity>();
+                    bool specificExact = (needRed == redCards.Count || needRed == 0)
+                                        && (needWhite == whiteCards.Count || needWhite == 0)
+                                        && (needBlack == blackCards.Count || needBlack == 0);
+                    if (specificExact)
+                    {
+                        if (needRed == redCards.Count) deterministic.AddRange(redCards);
+                        if (needWhite == whiteCards.Count) deterministic.AddRange(whiteCards);
+                        if (needBlack == blackCards.Count) deterministic.AddRange(blackCards);
+                        var remaining = handOthers.Except(deterministic).ToList();
+                        if (needAny == 0 || remaining.Count == needAny)
+                        {
+                            if (needAny > 0) deterministic.AddRange(remaining);
+                            if (deterministic.Count == requiredCosts.Count)
+                            {
+                                // Auto-discard deterministic set and continue
+                                foreach (var p in deterministic)
+                                {
+                                    EventManager.Publish(new CardMoveRequested { Card = p, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
+                                }
+                                EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
+                                return;
+                            }
+                        }
+                    }
+                    if (autoPicks.Count == 1 && handOthers.Count == 1)
+                    {
+                        // Single deterministic discard -> auto pay and continue
+                        System.Console.WriteLine("[CardPlaySystem] Auto-paying cost with only available card");
+                        EventManager.Publish(new CardMoveRequested { Card = autoPicks[0], Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
+                        // Re-dispatch play with CostsPaid=true
+                        EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
+                        return;
+                    }
+                    else if (requiredCosts.All(c => c == "Any") && autoPicks.Count == requiredCosts.Count && handOthers.Count == autoPicks.Count)
+                    {
+                        // Exact number of cards equal to Any requirement -> auto pay all
+                        foreach (var p in autoPicks)
+                        {
+                            EventManager.Publish(new CardMoveRequested { Card = p, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
+                        }
+                        EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
+                        return;
+                    }
+                    else
+                    {
+                        // Open overlay to let player choose among options
+                        System.Console.WriteLine("[CardPlaySystem] Opening pay-cost overlay");
+                        EventManager.Publish(new OpenPayCostOverlayEvent { CardToPlay = evt.Card, RequiredCosts = requiredCosts });
                         return;
                     }
                 }

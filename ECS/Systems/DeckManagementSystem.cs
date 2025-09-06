@@ -35,7 +35,7 @@ namespace Crusaders30XX.ECS.Systems
             var deck = deckEntity.GetComponent<Deck>();
             if (deck == null) return;
 
-            System.Console.WriteLine($"[DeckManagementSystem] OnRequestDrawCards count={evt.Count} hand={deck.Hand.Count} drawPile={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
+            Console.WriteLine($"[DeckManagementSystem] OnRequestDrawCards count={evt.Count} hand={deck.Hand.Count} drawPile={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
             DrawCards(deck, Math.Max(1, evt.Count));
 
         }
@@ -114,9 +114,7 @@ namespace Crusaders30XX.ECS.Systems
                     return false; // No cards to draw
                 }
             }
-            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-            var maxHandSize = player.GetComponent<MaxHandSize>().Value;
-            if (deck.DrawPile.Count > 0 && deck.Hand.Count < maxHandSize)
+            if (deck.DrawPile.Count > 0)
             {
                 var card = deck.DrawPile[0];
                 deck.DrawPile.RemoveAt(0);
