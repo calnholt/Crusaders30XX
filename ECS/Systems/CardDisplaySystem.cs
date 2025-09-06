@@ -234,6 +234,22 @@ namespace Crusaders30XX.ECS.Systems
                     DrawTextureRotatedLocal(cardCenter, rotation, new Vector2(iconLocalX, iconLocalY), shield, new Vector2(iconWidth, iconHeight), Color.White);
                 }
             }
+            else if (isWeapon)
+            {
+                // Draw a sword icon at bottom-left for weapon cards (same size as shield icon)
+                var sword = GetOrLoadTexture("sword");
+                if (sword != null)
+                {
+                    float marginX = _settings.BlockNumberMarginX;
+                    float marginY = _settings.BlockNumberMarginY;
+                    float baselineY = _settings.CardHeight - marginY;
+                    float iconHeight = Math.Max(8f, ShieldIconHeight * _settings.UIScale);
+                    float iconWidth = sword.Height > 0 ? iconHeight * (sword.Width / (float)sword.Height) : iconHeight;
+                    float iconLocalX = marginX + ShieldIconOffsetX;
+                    float iconLocalY = baselineY - iconHeight + ShieldIconOffsetY;
+                    DrawTextureRotatedLocal(cardCenter, rotation, new Vector2(iconLocalX, iconLocalY), sword, new Vector2(iconWidth, iconHeight), Color.White);
+                }
+            }
 
             // Draw AP cost text at bottom-center: 0AP if free action else 1AP
             bool isFree = GetIsFreeAction(entity);

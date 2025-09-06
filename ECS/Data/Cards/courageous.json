@@ -1,0 +1,10 @@
+{
+  "id": "courageous",
+  "name": "Courageous",
+  "target": "Player",
+  "color": "Black",
+  "rarity": "Common",
+  "text": "Gain three courage.",
+  "isFreeAction": true
+}
+

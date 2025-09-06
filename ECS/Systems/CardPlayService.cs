@@ -88,6 +88,12 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ApplyStun { Delta = +1 });
                     break;
                 }
+                case "courageous":
+                {
+                    EventManager.Publish(new ModifyCourageEvent { Delta = +3 });
+                    break;
+                }
+                // weapons
                 case "hammer":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = -3 });

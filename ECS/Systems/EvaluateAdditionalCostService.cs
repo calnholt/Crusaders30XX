@@ -23,7 +23,6 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "hammer":
                 {
-                    // Additional cost from weapon_hammer.json: "lose 3 courage"
                     var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                     var courageCmp = player?.GetComponent<Courage>();
                     int courage = courageCmp?.Amount ?? 0;
