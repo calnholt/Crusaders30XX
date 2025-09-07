@@ -79,10 +79,13 @@ namespace Crusaders30XX.ECS.Systems
                     var abc = evt.Card.GetComponent<AssignedBlockCard>();
                     if (abc == null)
                     {
+                        var cd = evt.Card.GetComponent<CardData>();
+                        var bg = ResolveCardBgColor(cd?.Color ?? CardData.CardColor.White);
+                        var fg = ResolveFgForBg(bg);
                         abc = new AssignedBlockCard
                         {
                             ContextId = evt.ContextId,
-                            BlockAmount = System.Math.Max(1, evt.Card.GetComponent<CardData>()?.BlockValue ?? 1),
+                            BlockAmount = System.Math.Max(1, cd?.BlockValue ?? 1),
                             StartPos = t?.Position ?? Vector2.Zero,
                             CurrentPos = t?.Position ?? Vector2.Zero,
                             TargetPos = t?.Position ?? Vector2.Zero,
@@ -90,7 +93,12 @@ namespace Crusaders30XX.ECS.Systems
                             TargetScale = 0.35f,
                             Phase = AssignedBlockCard.PhaseState.Pullback,
                             Elapsed = 0f,
-                            AssignedAtTicks = System.DateTime.UtcNow.Ticks
+                            AssignedAtTicks = System.DateTime.UtcNow.Ticks,
+                            IsEquipment = false,
+                            ColorKey = NormalizeColorKey(cd?.Color.ToString() ?? "White"),
+                            Tooltip = cd?.Name ?? string.Empty,
+                            DisplayBgColor = bg,
+                            DisplayFgColor = fg
                         };
                         EntityManager.AddComponent(evt.Card, abc);
                     }
@@ -167,6 +175,34 @@ namespace Crusaders30XX.ECS.Systems
                 ContextId = evt.ContextId
             });
             System.Console.WriteLine($"[CardZoneSystem] CardMoved from={from} to={evt.Destination}");
+        }
+
+        private static string NormalizeColorKey(string c)
+        {
+            if (string.IsNullOrWhiteSpace(c)) return "White";
+            switch (c.Trim().ToLowerInvariant())
+            {
+                case "r": case "red": return "Red";
+                case "w": case "white": return "White";
+                case "b": case "black": return "Black";
+                default: return char.ToUpperInvariant(c[0]) + c.Substring(1);
+            }
+        }
+
+        private static Microsoft.Xna.Framework.Color ResolveCardBgColor(CardData.CardColor color)
+        {
+            switch (color)
+            {
+                case CardData.CardColor.Red: return Microsoft.Xna.Framework.Color.DarkRed;
+                case CardData.CardColor.Black: return Microsoft.Xna.Framework.Color.Black;
+                case CardData.CardColor.White:
+                default: return Microsoft.Xna.Framework.Color.White;
+            }
+        }
+
+        private static Microsoft.Xna.Framework.Color ResolveFgForBg(Microsoft.Xna.Framework.Color bg)
+        {
+            return (bg == Microsoft.Xna.Framework.Color.White) ? Microsoft.Xna.Framework.Color.Black : Microsoft.Xna.Framework.Color.White;
         }
 
         private static CardZoneType GetZoneOf(Deck deck, Entity card)

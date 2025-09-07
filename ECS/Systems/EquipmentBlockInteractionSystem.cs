@@ -95,7 +95,12 @@ namespace Crusaders30XX.ECS.Systems
 						StartScale = t?.Scale.X ?? 1f,
 						TargetScale = 0.35f,
 						Phase = AssignedBlockCard.PhaseState.Pullback,
-						Elapsed = 0f
+						Elapsed = 0f,
+						IsEquipment = true,
+						ColorKey = NormalizeColorKey(color),
+						Tooltip = BuildEquipmentTooltip(comp),
+						DisplayBgColor = ResolveEquipmentBgColor(color),
+						DisplayFgColor = ResolveFgForBg(ResolveEquipmentBgColor(color))
 					};
 					EntityManager.AddComponent(eqEntity, abc);
 				}
@@ -106,6 +111,11 @@ namespace Crusaders30XX.ECS.Systems
 					abc.AssignedAtTicks = System.DateTime.UtcNow.Ticks;
 					abc.Phase = AssignedBlockCard.PhaseState.Pullback;
 					abc.Elapsed = 0f;
+					abc.IsEquipment = true;
+					abc.ColorKey = NormalizeColorKey(color);
+					abc.Tooltip = BuildEquipmentTooltip(comp);
+					abc.DisplayBgColor = ResolveEquipmentBgColor(color);
+					abc.DisplayFgColor = ResolveFgForBg(abc.DisplayBgColor);
 				}
 
 				// Prevent UI hover-interaction while assigned
@@ -115,6 +125,47 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			_prev = mouse;
+		}
+		private static string NormalizeColorKey(string c)
+		{
+			if (string.IsNullOrWhiteSpace(c)) return "White";
+			switch (c.Trim().ToLowerInvariant())
+			{
+				case "r": case "red": return "Red";
+				case "w": case "white": return "White";
+				case "b": case "black": return "Black";
+				default: return char.ToUpperInvariant(c[0]) + c.Substring(1);
+			}
+		}
+
+		private static Microsoft.Xna.Framework.Color ResolveEquipmentBgColor(string c)
+		{
+			switch ((c ?? "").Trim().ToLowerInvariant())
+			{
+				case "red": return Microsoft.Xna.Framework.Color.DarkRed;
+				case "black": return Microsoft.Xna.Framework.Color.Black;
+				case "white": return Microsoft.Xna.Framework.Color.White;
+				default: return Microsoft.Xna.Framework.Color.Gray;
+			}
+		}
+
+		private static Microsoft.Xna.Framework.Color ResolveFgForBg(Microsoft.Xna.Framework.Color bg)
+		{
+			return (bg == Microsoft.Xna.Framework.Color.White) ? Microsoft.Xna.Framework.Color.Black : Microsoft.Xna.Framework.Color.White;
+		}
+
+		private static string BuildEquipmentTooltip(EquippedEquipment item)
+		{
+			try
+			{
+				if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null)
+				{
+					string name = string.IsNullOrWhiteSpace(def.name) ? item.EquipmentId : def.name;
+					return name;
+				}
+			}
+			catch { }
+			return item.EquipmentId ?? string.Empty;
 		}
 	}
 }
