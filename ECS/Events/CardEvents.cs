@@ -36,20 +36,18 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
-    /// Event published just before rendering a specific card to allow a highlight to draw beneath it
+    /// Unified highlight render event for both cards and equipment. Carries the UIElement and Transform for accurate bounds/rotation.
     /// </summary>
-    public class CardHighlightRenderEvent
+    public class HighlightRenderEvent
     {
-        public Entity Card { get; set; }
+        public Entity Entity { get; set; }
+        public Transform Transform { get; set; }
+        public UIElement UI { get; set; }
     }
 
-    /// <summary>
-    /// Event published just before rendering a specific equipment UI tile to allow a highlight to draw beneath it
-    /// </summary>
-    public class EquipmentHighlightRenderEvent
-    {
-        public Entity Equipment { get; set; }
-    }
+    // Legacy events retained for compatibility. Prefer HighlightRenderEvent.
+    public class CardHighlightRenderEvent { public Entity Card { get; set; } }
+    public class EquipmentHighlightRenderEvent { public Entity Equipment { get; set; } }
     
     /// <summary>
     /// Event published when cards in hand need to be positioned

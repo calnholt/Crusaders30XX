@@ -95,7 +95,9 @@ namespace Crusaders30XX.ECS.Systems
         private void OnCardRenderEvent(CardRenderEvent evt)
         {
             // Allow highlight to draw beneath this specific card
-            EventManager.Publish(new CardHighlightRenderEvent { Card = evt.Card });
+            var t = evt.Card.GetComponent<Transform>();
+            var ui = evt.Card.GetComponent<UIElement>();
+            EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
             DrawCard(evt.Card, evt.Position);
         }
 
@@ -109,14 +111,18 @@ namespace Crusaders30XX.ECS.Systems
                 float originalRotation = transform.Rotation;
                 // Ensure no rotation for grid preview
                 transform.Rotation = 0f;
-                EventManager.Publish(new CardHighlightRenderEvent { Card = evt.Card });
+                var t = evt.Card.GetComponent<Transform>();
+                var ui = evt.Card.GetComponent<UIElement>();
+                EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
                 DrawCard(evt.Card, evt.Position);
                 transform.Scale = originalScale;
                 transform.Rotation = originalRotation;
             }
             else
             {
-                EventManager.Publish(new CardHighlightRenderEvent { Card = evt.Card });
+                var t = evt.Card.GetComponent<Transform>();
+                var ui = evt.Card.GetComponent<UIElement>();
+                EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
                 DrawCard(evt.Card, evt.Position);
             }
         }
@@ -128,13 +134,17 @@ namespace Crusaders30XX.ECS.Systems
             if (transform != null)
             {
                 transform.Scale = new Vector2(evt.Scale, evt.Scale);
-                EventManager.Publish(new CardHighlightRenderEvent { Card = evt.Card });
+                var t = evt.Card.GetComponent<Transform>();
+                var ui = evt.Card.GetComponent<UIElement>();
+                EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
                 DrawCard(evt.Card, evt.Position);
                 transform.Scale = originalScale;
             }
             else
             {
-                EventManager.Publish(new CardHighlightRenderEvent { Card = evt.Card });
+                var t2 = evt.Card.GetComponent<Transform>();
+                var ui2 = evt.Card.GetComponent<UIElement>();
+                EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t2, UI = ui2 });
                 DrawCard(evt.Card, evt.Position);
             }
         }

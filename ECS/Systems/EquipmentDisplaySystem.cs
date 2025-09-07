@@ -111,7 +111,9 @@ namespace Crusaders30XX.ECS.Systems
 					UpdateTooltip(item, bgRect);
 					UpdateClickable(item, bgRect);
 					// Publish highlight event BEFORE drawing contents so glow appears beneath
-					Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.EquipmentHighlightRenderEvent { Equipment = item.Owner });
+					var tEquip = item.Owner.GetComponent<Transform>();
+					var uiEquip = item.Owner.GetComponent<UIElement>();
+					Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.HighlightRenderEvent { Entity = item.Owner, Transform = tEquip, UI = uiEquip });
 					// Now draw background and contents
 					DrawRoundedBackground(bgRect, fillColor);
 

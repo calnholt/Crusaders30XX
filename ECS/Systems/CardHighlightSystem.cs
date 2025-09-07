@@ -40,30 +40,30 @@ namespace Crusaders30XX.ECS.Systems
             _pixelTexture = new Texture2D(_graphicsDevice, 1, 1);
             _pixelTexture.SetData(new[] { Color.White });
 
-            EventManager.Subscribe<CardHighlightRenderEvent>(evt =>
+            EventManager.Subscribe<HighlightRenderEvent>(evt =>
             {
-                // We don't get GameTime here; render on-demand by using last known hover timing
-                // This event is invoked immediately before the card draws each frame
-                var t = evt.Card.GetComponent<Transform>();
-                var ui = evt.Card.GetComponent<UIElement>();
-                if (t == null || ui == null || !ui.IsHovered) return;
-                // Use last gameTime.TotalGameTime captured during Update for consistent pulse timing
-                var fakeGameTime = new GameTime(TimeSpan.FromSeconds(_lastTotalSeconds), TimeSpan.Zero);
-                DrawCardHighlight(evt.Card, t.Position, t.Rotation, fakeGameTime);
-            });
-
-            // Equipment highlight pre-render event (emitted by EquipmentDisplaySystem before drawing tiles)
-            EventManager.Subscribe<EquipmentHighlightRenderEvent>(evt =>
-            {
-                var ui = evt.Equipment.GetComponent<UIElement>();
+                // Unified highlight render for cards and equipment
+                var t = evt.Transform ?? evt.Entity.GetComponent<Transform>();
+                var ui = evt.UI ?? evt.Entity.GetComponent<UIElement>();
                 if (ui == null || !ui.IsHovered) return;
-                if (!ReferenceEquals(evt.Equipment, _currentEquipmentHovered))
+                if (!ReferenceEquals(evt.Entity, _currentHovered))
                 {
-                    _currentEquipmentHovered = evt.Equipment;
-                    _pulseStartSecondsEquipment = _lastTotalSeconds; // reset pulse for equipment
+                    _currentHovered = evt.Entity;
+                    _pulseStartSeconds = _lastTotalSeconds;
                 }
-                var fake = new GameTime(TimeSpan.FromSeconds(_lastTotalSeconds), TimeSpan.Zero);
-                DrawEquipmentHighlight(ui.Bounds, fake);
+                var fakeGameTime = new GameTime(TimeSpan.FromSeconds(_lastTotalSeconds), TimeSpan.Zero);
+                Rectangle targetRect;
+                float rot = 0f;
+                if (evt.Entity.GetComponent<CardData>() != null && t != null)
+                {
+                    targetRect = ComputeCardBounds(evt.Entity, t.Position);
+                    rot = t.Rotation;
+                }
+                else
+                {
+                    targetRect = ui.Bounds;
+                }
+                DrawHighlight(targetRect, rot, fakeGameTime);
             });
         }
         
@@ -101,7 +101,8 @@ namespace Crusaders30XX.ECS.Systems
             var t = cardEntity.GetComponent<Transform>();
             var ui = cardEntity.GetComponent<UIElement>();
             if (t == null || ui == null || !ui.IsHovered) return;
-            DrawCardHighlight(cardEntity, t.Position, t.Rotation, gameTime);
+            var rect = ComputeCardBounds(cardEntity, t.Position);
+            DrawHighlight(rect, t.Rotation, gameTime);
         }
         
         /// <summary>
@@ -125,59 +126,59 @@ namespace Crusaders30XX.ECS.Systems
                         
                         if (uiElement != null && transform != null && uiElement.IsHovered)
                         {
-                            DrawCardHighlight(cardEntity, transform.Position, transform.Rotation, gameTime);
+                            var rect = ComputeCardBounds(cardEntity, transform.Position);
+                            DrawHighlight(rect, transform.Rotation, gameTime);
                         }
                     }
                 }
             }
         }
 
-        private void DrawCardHighlight(Entity cardEntity, Vector2 position, float rotation, GameTime gameTime)
+        private Rectangle ComputeCardBounds(Entity cardEntity, Vector2 position)
         {
-            // Create highlight rectangle based on shared CardVisualSettings
             var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
             var s = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
             int cw = s?.CardWidth ?? 250;
             int ch = s?.CardHeight ?? 350;
             int offsetYExtra = s?.CardOffsetYExtra ?? (int)Math.Round((s?.UIScale ?? 1f) * 25);
-            int th = s?.HighlightBorderThickness ?? 5;
-            var cardRect = new Rectangle(
+            return new Rectangle(
                 (int)position.X - cw / 2,
                 (int)position.Y - (ch / 2 + offsetYExtra),
                 cw,
                 ch
             );
+        }
+
+        private void DrawHighlight(Rectangle targetRect, float rotation, GameTime gameTime)
+        {
+            var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
+            var s = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+            int th = s?.HighlightBorderThickness ?? 5;
             var highlightRect = new Rectangle(
-                cardRect.X - th,
-                cardRect.Y - th,
-                cardRect.Width + th * 2,
-                cardRect.Height + th * 2
+                targetRect.X - th,
+                targetRect.Y - th,
+                targetRect.Width + th * 2,
+                targetRect.Height + th * 2
             );
 
-            // Add pulsing effect based on individual card hover time
             var hoverDuration = gameTime.TotalGameTime.TotalSeconds - _pulseStartSeconds;
-            // Cosine pulse mapped to 0..1, then eased and remapped to [GlowMinIntensity..GlowMaxIntensity]
             var esEntity = EntityManager.GetEntitiesWithComponent<EquipmentHighlightSettings>().FirstOrDefault();
             var es = esEntity?.GetComponent<EquipmentHighlightSettings>() ?? new EquipmentHighlightSettings();
             float pulse01 = (float)(Math.Cos(hoverDuration * es.GlowPulseSpeed) * 0.5f + 0.5f);
             float eased = (float)Math.Pow(MathHelper.Clamp(pulse01, 0f, 1f), es.GlowEasingPower);
             float pulseAmount = MathHelper.Lerp(MathHelper.Clamp(es.GlowMinIntensity, 0f, 1f), MathHelper.Clamp(es.GlowMaxIntensity, 0f, 1f), eased);
-            
-            // Soft glow: draw multiple expanded rounded rects with decreasing alpha
+
             int radius = Math.Max(0, (s?.CardCornerRadius ?? 18) + th);
             var baseTex = GetRoundedRectTexture(highlightRect.Width, highlightRect.Height, radius);
             var center = new Vector2(highlightRect.X + highlightRect.Width / 2f, highlightRect.Y + highlightRect.Height / 2f);
 
-            // Layered glow
             int layers = es.GlowLayers;
-            float spread = es.GlowSpread; // how much each layer expands
+            float spread = es.GlowSpread;
             Color glowColor = new Color((byte)es.GlowColorR, (byte)es.GlowColorG, (byte)es.GlowColorB);
             for (int i = layers; i >= 1; i--)
             {
-                // Temporal spread animation (gently expand/contract the glow)
                 float spreadAnim = 1f + es.GlowSpreadAmplitude * (float)Math.Sin(hoverDuration * es.GlowSpreadSpeed);
                 float scale = 1f + i * spread * spreadAnim;
-                // Fade out quickly per layer; start bright on pulse reset
                 float layerAlpha = MathHelper.Clamp(pulseAmount * (0.22f / i), 0f, es.MaxAlpha);
                 _spriteBatch.Draw(
                     baseTex,
@@ -193,46 +194,6 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private void DrawEquipmentHighlight(Rectangle bounds, GameTime gameTime)
-        {
-            var settings = EntityManager.GetEntitiesWithComponent<EquipmentHighlightSettings>().FirstOrDefault()?.GetComponent<EquipmentHighlightSettings>() ?? new EquipmentHighlightSettings();
-            int th = Math.Max(0, settings.HighlightBorderThickness);
-            int radius = Math.Max(0, settings.CornerRadius + th);
-            var highlightRect = new Rectangle(
-                bounds.X - th,
-                bounds.Y - th,
-                bounds.Width + th * 2,
-                bounds.Height + th * 2
-            );
-
-            var baseTex = GetRoundedRectTexture(highlightRect.Width, highlightRect.Height, radius);
-            var center = new Vector2(highlightRect.X + highlightRect.Width / 2f, highlightRect.Y + highlightRect.Height / 2f);
-
-            var hoverDuration = gameTime.TotalGameTime.TotalSeconds - _pulseStartSecondsEquipment;
-            float pulse01 = (float)(Math.Cos(hoverDuration * settings.GlowPulseSpeed) * 0.5f + 0.5f);
-            float eased = (float)Math.Pow(MathHelper.Clamp(pulse01, 0f, 1f), settings.GlowEasingPower);
-            float pulseAmount = MathHelper.Lerp(MathHelper.Clamp(settings.GlowMinIntensity, 0f, 1f), MathHelper.Clamp(settings.GlowMaxIntensity, 0f, 1f), eased);
-
-            Color glowColor = new Color((byte)settings.GlowColorR, (byte)settings.GlowColorG, (byte)settings.GlowColorB);
-            for (int i = settings.GlowLayers; i >= 1; i--)
-            {
-                float spreadAnim = 1f + settings.GlowSpreadAmplitude * (float)Math.Sin(hoverDuration * settings.GlowSpreadSpeed);
-                float scale = 1f + i * settings.GlowSpread * spreadAnim;
-                float layerAlpha = MathHelper.Clamp(pulseAmount * (0.22f / i), 0f, settings.MaxAlpha);
-                _spriteBatch.Draw(
-                    baseTex,
-                    position: center,
-                    sourceRectangle: null,
-                    color: glowColor * layerAlpha,
-                    rotation: 0f,
-                    origin: new Vector2(baseTex.Width / 2f, baseTex.Height / 2f),
-                    scale: new Vector2(scale, scale),
-                    effects: SpriteEffects.None,
-                    layerDepth: 0f
-                );
-            }
-        }
-        
         /// <summary>
         /// Dispose of resources when the system is destroyed
         /// </summary>
