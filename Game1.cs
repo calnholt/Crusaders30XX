@@ -21,56 +21,6 @@ public class Game1 : Game
     
     // ECS System
     private World _world;
-    // private RenderingSystem _renderingSystem;
-    // private InputSystem _inputSystem;
-    // private DeckManagementSystem _deckManagementSystem;
-    // private CardDisplaySystem _cardDisplaySystem;
-    // private HandDisplaySystem _handDisplaySystem;
-    // private CardHighlightSystem _cardHighlightSystem;
-    // private BattleBackgroundSystem _battleBackgroundSystem;
-    // private DebugMenuSystem _debugMenuSystem;
-    // private DebugCommandSystem _debugCommandSystem;
-    // private DrawPileDisplaySystem _drawPileDisplaySystem;
-    // private DiscardPileDisplaySystem _discardPileDisplaySystem;
-    // private CardListModalSystem _cardListModalSystem;
-    // private PlayerDisplaySystem _playerDisplaySystem;
-    // private PlayerWispParticleSystem _playerWispParticleSystem;
-    // private CathedralLightingSystem _cathedralLightingSystem;
-    // private DesertBackgroundEffectSystem _desertBackgroundEffectSystem;
-    // private ProfilerSystem _profilerSystem;
-    // private CourageDisplaySystem _courageDisplaySystem;
-    // private ActionPointDisplaySystem _actionPointDisplaySystem;
-    // private TemperanceDisplaySystem _temperanceDisplaySystem;
-    // private StoredBlockDisplaySystem _storedBlockDisplaySystem;
-    // private CourageManagerSystem _courageManagerSystem;
-    // private ActionPointManagementSystem _actionPointManagementSystem;
-    // private TemperanceManagerSystem _temperanceManagerSystem;
-    // private TooltipDisplaySystem _tooltipDisplaySystem;
-    // private HPDisplaySystem _hpDisplaySystem;
-    // private CardVisualSettingsDebugSystem _cardVisualSettingsDebugSystem;
-    // private HpManagementSystem _hpManagementSystem;
-    // private BattlePhaseSystem _battlePhaseSystem;
-    // private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
-    // private EnemyDisplaySystem _enemyDisplaySystem;
-    // private EnemyIntentPipsSystem _enemyIntentPipsSystem;
-    // private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
-    // private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
-    // private EnemyIntentPlanningSystem _enemyIntentPlanningSystem;
-    // private EnemyAttackProgressManagementSystem _enemyAttackProgressManagementSystem;
-    // private StunnedOverlaySystem _stunnedOverlaySystem;
-    // private AttackResolutionSystem _attackResolutionSystem;
-    // private HandBlockInteractionSystem _handBlockInteractionSystem;
-    // private StoredBlockManagementSystem _storedBlockManagementSystem;
-    // private CardZoneSystem _cardZoneSystem;
-    // private AssignedBlocksToDiscardSystem _assignedBlocksToDiscardSystem;
-    // private EnemyDamageManagerSystem _enemyDamageManagerSystem;
-    // private EventQueueSystem _eventQueueSystem;
-    // private CardPlaySystem _cardPlaySystem;
-    // private EndTurnDisplaySystem _endTurnDisplaySystem;
-    // private PayCostOverlaySystem _payCostOverlaySystem;
-    // private DrawHandSystem _battlePhaseDrawSystem;
-    // private PhaseCoordinatorSystem _phaseCoordinatorSystem;
-    // private EnemyStunAutoSkipSystem _enemyStunAutoSkipSystem;
 
     public Game1()
     {
@@ -107,17 +57,6 @@ public class Game1 : Game
     {
         // Initialize ECS World
         _world = new World();
-        
-        // Create systems that don't need SpriteBatch
-        // _inputSystem = new InputSystem(_world.EntityManager);
-        // _deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
-        
-        // Add systems to world
-        // _world.AddSystem(_inputSystem);
-        // _world.AddSystem(_deckManagementSystem);
-        
-        // Menu/Battle scene systems manage initialization
-
         base.Initialize();
     }
 
@@ -144,25 +83,6 @@ public class Game1 : Game
         // TODO: use this.Content to load your game content here
     }
     
-    private void CreateInitialGameState()
-    {
-        // Create game state
-        EntityFactory.CreateGameState(_world);
-        // Create player
-        EntityFactory.CreatePlayer(_world);
-        // Create deck
-        var deckEntity = EntityFactory.CreateDeck(_world);
-        // Create demo hand of cards
-        var demoHand = EntityFactory.CreateDemoHand(_world);
-        // Add cards to deck's draw pile (not hand)
-        var deck = deckEntity.GetComponent<Deck>();
-        if (deck != null)
-        {
-            deck.Cards.AddRange(demoHand);
-            deck.DrawPile.AddRange(demoHand); // Add to draw pile instead of hand
-        }
-    }
-
     protected override void Update(GameTime gameTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
