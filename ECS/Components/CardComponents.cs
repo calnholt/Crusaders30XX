@@ -551,6 +551,28 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Shared highlight visual settings for equipment panel items.
+    /// </summary>
+    public class EquipmentHighlightSettings : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int GlowLayers { get; set; } = 40;
+        public float GlowSpread { get; set; } = 0.006f;
+        public float GlowSpreadSpeed { get; set; } = 2.5f;
+        public float GlowSpreadAmplitude { get; set; } = 0.22f;
+        public float MaxAlpha { get; set; } = 0.06f;
+        public float GlowPulseSpeed { get; set; } = 2.0f;
+        public float GlowEasingPower { get; set; } = 0.8f;
+        public float GlowMinIntensity { get; set; } = 0.30f;
+        public float GlowMaxIntensity { get; set; } = 0.8f;
+        public int CornerRadius { get; set; } = 23;
+        public int HighlightBorderThickness { get; set; } = 4;
+        public int GlowColorR { get; set; } = 0;
+        public int GlowColorG { get; set; } = 0;
+        public int GlowColorB { get; set; } = 0;
+    }
+
+    /// <summary>
     /// Enumerates the zone a card currently belongs to. Useful for transitioning toward a fully component-driven zone model.
     /// </summary>
     public enum CardZoneType

@@ -42,6 +42,14 @@ namespace Crusaders30XX.ECS.Events
     {
         public Entity Card { get; set; }
     }
+
+    /// <summary>
+    /// Event published just before rendering a specific equipment UI tile to allow a highlight to draw beneath it
+    /// </summary>
+    public class EquipmentHighlightRenderEvent
+    {
+        public Entity Equipment { get; set; }
+    }
     
     /// <summary>
     /// Event published when cards in hand need to be positioned

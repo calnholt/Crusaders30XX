@@ -24,32 +24,11 @@ namespace Crusaders30XX.ECS.Systems
         private double _lastTotalSeconds = 0.0; // From Update(gameTime)
         private double _pulseStartSeconds = 0.0; // When current hovered started pulsing
         private Entity _currentHovered;
+        // Equipment highlight tracking (separate pulse timer)
+        private double _pulseStartSecondsEquipment = 0.0;
+        private Entity _currentEquipmentHovered;
         
-        // Debug-adjustable highlight settings
-        [DebugEditable(DisplayName = "Glow Layers", Step = 1, Min = 1, Max = 50)]
-        public int GlowLayers { get; set; } = 50;
-        [DebugEditable(DisplayName = "Glow Spread", Step = 0.001f, Min = 0f, Max = 0.2f)]
-        public float GlowSpread { get; set; } = 0.005f;
-        [DebugEditable(DisplayName = "Glow Spread Speed", Step = 0.1f, Min = 0f, Max = 20f)]
-        public float GlowSpreadSpeed { get; set; } = 2.5f;
-        [DebugEditable(DisplayName = "Glow Spread Amplitude", Step = 0.01f, Min = 0f, Max = 1f)]
-        public float GlowSpreadAmplitude { get; set; } = 0.25f;
-        [DebugEditable(DisplayName = "Max Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
-        public float MaxAlpha { get; set; } = 0.05f;
-        [DebugEditable(DisplayName = "Pulse Speed", Step = 0.1f, Min = 0.1f, Max = 20f)]
-        public float GlowPulseSpeed { get; set; } = 2.0f;
-        [DebugEditable(DisplayName = "Easing Power", Step = 0.1f, Min = 0.2f, Max = 5f)]
-        public float GlowEasingPower { get; set; } = 0.8f;
-        [DebugEditable(DisplayName = "Min Pulse Intensity", Step = 0.01f, Min = 0f, Max = 1f)]
-        public float GlowMinIntensity { get; set; } = 0.30f;
-        [DebugEditable(DisplayName = "Max Pulse Intensity", Step = 0.01f, Min = 0f, Max = 1f)]
-        public float GlowMaxIntensity { get; set; } = 0.8f;
-        [DebugEditable(DisplayName = "Glow Color R", Step = 1, Min = 0, Max = 255)]
-        public int GlowColorR { get; set; } = 0;
-        [DebugEditable(DisplayName = "Glow Color G", Step = 1, Min = 0, Max = 255)]
-        public int GlowColorG { get; set; } = 0;
-        [DebugEditable(DisplayName = "Glow Color B", Step = 1, Min = 0, Max = 255)]
-        public int GlowColorB { get; set; } = 0;
+        // Highlight settings now come from EquipmentHighlightSettings via HighlightSettingsSystem
         
         public CardHighlightSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch) 
             : base(entityManager)
@@ -71,6 +50,20 @@ namespace Crusaders30XX.ECS.Systems
                 // Use last gameTime.TotalGameTime captured during Update for consistent pulse timing
                 var fakeGameTime = new GameTime(TimeSpan.FromSeconds(_lastTotalSeconds), TimeSpan.Zero);
                 DrawCardHighlight(evt.Card, t.Position, t.Rotation, fakeGameTime);
+            });
+
+            // Equipment highlight pre-render event (emitted by EquipmentDisplaySystem before drawing tiles)
+            EventManager.Subscribe<EquipmentHighlightRenderEvent>(evt =>
+            {
+                var ui = evt.Equipment.GetComponent<UIElement>();
+                if (ui == null || !ui.IsHovered) return;
+                if (!ReferenceEquals(evt.Equipment, _currentEquipmentHovered))
+                {
+                    _currentEquipmentHovered = evt.Equipment;
+                    _pulseStartSecondsEquipment = _lastTotalSeconds; // reset pulse for equipment
+                }
+                var fake = new GameTime(TimeSpan.FromSeconds(_lastTotalSeconds), TimeSpan.Zero);
+                DrawEquipmentHighlight(ui.Bounds, fake);
             });
         }
         
@@ -164,9 +157,11 @@ namespace Crusaders30XX.ECS.Systems
             // Add pulsing effect based on individual card hover time
             var hoverDuration = gameTime.TotalGameTime.TotalSeconds - _pulseStartSeconds;
             // Cosine pulse mapped to 0..1, then eased and remapped to [GlowMinIntensity..GlowMaxIntensity]
-            float pulse01 = (float)(Math.Cos(hoverDuration * GlowPulseSpeed) * 0.5f + 0.5f);
-            float eased = (float)Math.Pow(MathHelper.Clamp(pulse01, 0f, 1f), GlowEasingPower);
-            float pulseAmount = MathHelper.Lerp(MathHelper.Clamp(GlowMinIntensity, 0f, 1f), MathHelper.Clamp(GlowMaxIntensity, 0f, 1f), eased);
+            var esEntity = EntityManager.GetEntitiesWithComponent<EquipmentHighlightSettings>().FirstOrDefault();
+            var es = esEntity?.GetComponent<EquipmentHighlightSettings>() ?? new EquipmentHighlightSettings();
+            float pulse01 = (float)(Math.Cos(hoverDuration * es.GlowPulseSpeed) * 0.5f + 0.5f);
+            float eased = (float)Math.Pow(MathHelper.Clamp(pulse01, 0f, 1f), es.GlowEasingPower);
+            float pulseAmount = MathHelper.Lerp(MathHelper.Clamp(es.GlowMinIntensity, 0f, 1f), MathHelper.Clamp(es.GlowMaxIntensity, 0f, 1f), eased);
             
             // Soft glow: draw multiple expanded rounded rects with decreasing alpha
             int radius = Math.Max(0, (s?.CardCornerRadius ?? 18) + th);
@@ -174,22 +169,62 @@ namespace Crusaders30XX.ECS.Systems
             var center = new Vector2(highlightRect.X + highlightRect.Width / 2f, highlightRect.Y + highlightRect.Height / 2f);
 
             // Layered glow
-            int layers = GlowLayers;
-            float spread = GlowSpread; // how much each layer expands
-            Color glowColor = new Color((byte)GlowColorR, (byte)GlowColorG, (byte)GlowColorB);
+            int layers = es.GlowLayers;
+            float spread = es.GlowSpread; // how much each layer expands
+            Color glowColor = new Color((byte)es.GlowColorR, (byte)es.GlowColorG, (byte)es.GlowColorB);
             for (int i = layers; i >= 1; i--)
             {
                 // Temporal spread animation (gently expand/contract the glow)
-                float spreadAnim = 1f + GlowSpreadAmplitude * (float)Math.Sin(hoverDuration * GlowSpreadSpeed);
+                float spreadAnim = 1f + es.GlowSpreadAmplitude * (float)Math.Sin(hoverDuration * es.GlowSpreadSpeed);
                 float scale = 1f + i * spread * spreadAnim;
                 // Fade out quickly per layer; start bright on pulse reset
-                float layerAlpha = MathHelper.Clamp(pulseAmount * (0.22f / i), 0f, MaxAlpha);
+                float layerAlpha = MathHelper.Clamp(pulseAmount * (0.22f / i), 0f, es.MaxAlpha);
                 _spriteBatch.Draw(
                     baseTex,
                     position: center,
                     sourceRectangle: null,
                     color: glowColor * layerAlpha,
                     rotation: rotation,
+                    origin: new Vector2(baseTex.Width / 2f, baseTex.Height / 2f),
+                    scale: new Vector2(scale, scale),
+                    effects: SpriteEffects.None,
+                    layerDepth: 0f
+                );
+            }
+        }
+
+        private void DrawEquipmentHighlight(Rectangle bounds, GameTime gameTime)
+        {
+            var settings = EntityManager.GetEntitiesWithComponent<EquipmentHighlightSettings>().FirstOrDefault()?.GetComponent<EquipmentHighlightSettings>() ?? new EquipmentHighlightSettings();
+            int th = Math.Max(0, settings.HighlightBorderThickness);
+            int radius = Math.Max(0, settings.CornerRadius + th);
+            var highlightRect = new Rectangle(
+                bounds.X - th,
+                bounds.Y - th,
+                bounds.Width + th * 2,
+                bounds.Height + th * 2
+            );
+
+            var baseTex = GetRoundedRectTexture(highlightRect.Width, highlightRect.Height, radius);
+            var center = new Vector2(highlightRect.X + highlightRect.Width / 2f, highlightRect.Y + highlightRect.Height / 2f);
+
+            var hoverDuration = gameTime.TotalGameTime.TotalSeconds - _pulseStartSecondsEquipment;
+            float pulse01 = (float)(Math.Cos(hoverDuration * settings.GlowPulseSpeed) * 0.5f + 0.5f);
+            float eased = (float)Math.Pow(MathHelper.Clamp(pulse01, 0f, 1f), settings.GlowEasingPower);
+            float pulseAmount = MathHelper.Lerp(MathHelper.Clamp(settings.GlowMinIntensity, 0f, 1f), MathHelper.Clamp(settings.GlowMaxIntensity, 0f, 1f), eased);
+
+            Color glowColor = new Color((byte)settings.GlowColorR, (byte)settings.GlowColorG, (byte)settings.GlowColorB);
+            for (int i = settings.GlowLayers; i >= 1; i--)
+            {
+                float spreadAnim = 1f + settings.GlowSpreadAmplitude * (float)Math.Sin(hoverDuration * settings.GlowSpreadSpeed);
+                float scale = 1f + i * settings.GlowSpread * spreadAnim;
+                float layerAlpha = MathHelper.Clamp(pulseAmount * (0.22f / i), 0f, settings.MaxAlpha);
+                _spriteBatch.Draw(
+                    baseTex,
+                    position: center,
+                    sourceRectangle: null,
+                    color: glowColor * layerAlpha,
+                    rotation: 0f,
                     origin: new Vector2(baseTex.Width / 2f, baseTex.Height / 2f),
                     scale: new Vector2(scale, scale),
                     effects: SpriteEffects.None,

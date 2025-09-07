@@ -107,6 +107,12 @@ namespace Crusaders30XX.ECS.Systems
 					int bgH = IconSize + BgPadding * 2;
 					var bgRect = new Rectangle(x, y, bgW, bgH);
 					var fillColor = ResolveFillColor(item);
+					// Update tooltip and hover state before publishing highlight so hover is accurate
+					UpdateTooltip(item, bgRect);
+					UpdateClickable(item, bgRect);
+					// Publish highlight event BEFORE drawing contents so glow appears beneath
+					Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.EquipmentHighlightRenderEvent { Equipment = item.Owner });
+					// Now draw background and contents
 					DrawRoundedBackground(bgRect, fillColor);
 
 					// Draw icon fixed to the top-left of the rounded square
@@ -120,9 +126,7 @@ namespace Crusaders30XX.ECS.Systems
 					// Draw block value and shield icon at bottom-left
 					DrawBlockAndShield(item, bgRect, fillColor);
 
-					// Create/update tooltip hover rect and clickable bounds for interaction
-					UpdateTooltip(item, bgRect);
-					UpdateClickable(item, bgRect);
+					// (tooltip/hover already updated above)
 					// Persist return target on AssignedBlockCard if currently assigned
 					// Do not update assigned.ReturnTargetPos here; set at click time for accuracy
 
@@ -142,6 +146,9 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			ui.Bounds = rect;
 			ui.IsInteractable = true;
+			// Update hover state so EquipmentHighlightSystem can render glow like CardHighlightSystem
+			var mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
+			ui.IsHovered = rect.Contains(mouse.Position);
 			ui.Tooltip = BuildTooltipText(item);
 			// Place a transform so z-order sits above background UI if needed
 			var t = item.Owner.GetComponent<Transform>();

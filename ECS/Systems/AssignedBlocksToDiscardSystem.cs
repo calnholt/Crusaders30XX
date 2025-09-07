@@ -104,7 +104,7 @@ namespace Crusaders30XX.ECS.Systems
 
             if (p >= 1f && !flight.Completed)
             {
-                // Move to discard zone
+                // Move to discard zone or restore equipment
                 flight.Completed = true;
                 var isEquipment = entity.GetComponent<EquippedEquipment>() != null;
                 if (isEquipment)
@@ -160,7 +160,7 @@ namespace Crusaders30XX.ECS.Systems
             int panelW = 60; // defaults in DiscardPileDisplaySystem
             int panelH = 80;
             int margin = 20;
-            var target = new Vector2(margin + panelW * 0.5f, h - margin - panelH * 0.5f);
+            var discardTarget = new Vector2(margin + panelW * 0.5f, h - margin - panelH * 0.5f);
 
             var assigned = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>()
                 .Where(e => e.GetComponent<AssignedBlockCard>()?.ContextId == ctx)
@@ -174,10 +174,12 @@ namespace Crusaders30XX.ECS.Systems
                 var t = card.GetComponent<Transform>();
                 if (t == null) { t = new Transform(); EntityManager.AddComponent(card, t); t.Position = abc.CurrentPos; t.Scale = new Vector2(abc.CurrentScale, abc.CurrentScale); }
 
+                // For equipment, fly back to its saved return target (left panel), else fly to discard
+                Vector2 targetPos = abc.IsEquipment && abc.ReturnTargetPos != Vector2.Zero ? abc.ReturnTargetPos : discardTarget;
                 var flight = new CardToDiscardFlight
                 {
                     StartPos = abc.CurrentPos,
-                    TargetPos = target,
+                    TargetPos = targetPos,
                     StartDelaySeconds = StartDelayBetweenCardsSeconds * i,
                     DurationSeconds = FlightDurationSeconds,
                     ArcHeightPx = ArcHeightPx,
