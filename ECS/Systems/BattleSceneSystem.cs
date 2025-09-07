@@ -216,7 +216,7 @@ namespace Crusaders30XX.ECS.Systems
 			_enemyStunAutoSkipSystem = new EnemyStunAutoSkipSystem(_world.EntityManager);
 			_weaponManagementSystem = new WeaponManagementSystem(_world.EntityManager);
 			_equipmentManagerSystem = new EquipmentManagerSystem(_world.EntityManager);
-			_equipmentDisplaySystem = new EquipmentDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			_equipmentDisplaySystem = new EquipmentDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
 
 			// Register
