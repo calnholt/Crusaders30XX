@@ -1,0 +1,21 @@
+{
+  "id": "lightning_grieves",
+  "name": "Lightning Grieves",
+  "slot": "Legs",
+  "block": 4,
+  "blockUses": 1,
+  "color": "Black",
+  "abilities": [
+    {
+      "id": "lightning_grieves",
+      "type": "Activate",
+      "effect": "GainActionPoint",
+      "effectCount": 1,
+      "destroyOnActivate": true,
+      "text": "Gain 1 action point. Destroy this.",
+      "isFreeAction": true
+    }
+  ]
+}
+
+

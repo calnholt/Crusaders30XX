@@ -14,6 +14,7 @@ namespace Crusaders30XX.ECS.Systems
         public EquipmentUsedManagementSystem(EntityManager entityManager) : base(entityManager)
         {
             EventManager.Subscribe<EquipmentUseResolved>(OnEquipmentUseResolved);
+            EventManager.Subscribe<EquipmentDestroyed>(OnEquipmentDestroyed);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -38,6 +39,20 @@ namespace Crusaders30XX.ECS.Systems
             state.UsesByEquipmentId.TryGetValue(evt.EquipmentId, out current);
             long next = (long)current + evt.Delta;
             state.UsesByEquipmentId[evt.EquipmentId] = next < 0 ? 0 : (int)next;
+        }
+
+        private void OnEquipmentDestroyed(EquipmentDestroyed evt)
+        {
+            if (evt == null || string.IsNullOrEmpty(evt.EquipmentId)) return;
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            if (player == null) return;
+            var state = player.GetComponent<EquipmentUsedState>();
+            if (state == null)
+            {
+                state = new EquipmentUsedState();
+                EntityManager.AddComponent(player, state);
+            }
+            state.DestroyedEquipmentIds.Add(evt.EquipmentId);
         }
     }
 }

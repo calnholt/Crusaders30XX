@@ -580,6 +580,7 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         public Dictionary<string, int> UsesByEquipmentId { get; set; } = new Dictionary<string, int>();
+        public System.Collections.Generic.HashSet<string> DestroyedEquipmentIds { get; set; } = new System.Collections.Generic.HashSet<string>();
     }
 
     /// <summary>

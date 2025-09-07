@@ -232,4 +232,12 @@ namespace Crusaders30XX.ECS.Events
         public int Delta { get; set; } = 1;
     }
 
+    /// <summary>
+    /// Emitted when an equipment is destroyed by activation.
+    /// </summary>
+    public class EquipmentDestroyed
+    {
+        public string EquipmentId { get; set; }
+    }
+
 } 
