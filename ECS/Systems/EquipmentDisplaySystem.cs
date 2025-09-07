@@ -167,11 +167,34 @@ namespace Crusaders30XX.ECS.Systems
 						DrawRoundedBackground(bgRect, fillColor);
 					}
 
-					// Draw icon fixed to the top-left of the rounded square
+					// Draw icon within padding, preserving aspect ratio
 					var tex = GetOrLoadIcon(type);
 					if (tex != null)
 					{
-						var iconRect = new Rectangle(bgRect.X + IconPaddingX, bgRect.Y + IconPaddingY, IconSize, IconSize);
+						int targetH = IconSize;
+						int targetW = IconSize;
+						if (tex.Width > 0 && tex.Height > 0)
+						{
+							float aspect = tex.Width / (float)tex.Height;
+							if (aspect >= 1f)
+							{
+								targetW = IconSize;
+								targetH = (int)System.Math.Round(IconSize / aspect);
+							}
+							else
+							{
+								targetH = IconSize;
+								targetW = (int)System.Math.Round(IconSize * aspect);
+							}
+						}
+						int innerX = bgRect.X + IconPaddingX;
+						int innerY = bgRect.Y + IconPaddingY;
+						// Center the icon within the padded area if one dimension is smaller due to aspect fit
+						int padBoxW = IconSize;
+						int padBoxH = IconSize;
+						int drawX = innerX + (padBoxW - targetW) / 2;
+						int drawY = innerY + (padBoxH - targetH) / 2;
+						var iconRect = new Rectangle(drawX, drawY, targetW, targetH);
 						_spriteBatch.Draw(tex, iconRect, Color.White);
 					}
 
