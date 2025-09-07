@@ -150,13 +150,17 @@ namespace Crusaders30XX.ECS.Systems
 					int bgH = IconSize + BgPadding * 2;
 					var bgRect = new Rectangle(x, y, bgW, bgH);
 					var fillColor = ResolveFillColor(item);
+					bool disabledNow = IsDisabledForBlock(item);
 					// Update tooltip and hover state before publishing highlight so hover is accurate
 					UpdateTooltip(item, bgRect);
 					UpdateClickable(item, bgRect);
-					// Publish highlight event BEFORE drawing contents so glow appears beneath
+					// Publish highlight event BEFORE drawing contents so glow appears beneath, unless disabled
 					var tEquip = item.Owner.GetComponent<Transform>();
 					var uiEquip = item.Owner.GetComponent<UIElement>();
-					EventManager.Publish(new Crusaders30XX.ECS.Events.HighlightRenderEvent { Entity = item.Owner, Transform = tEquip, UI = uiEquip });
+					if (!disabledNow)
+					{
+						EventManager.Publish(new Crusaders30XX.ECS.Events.HighlightRenderEvent { Entity = item.Owner, Transform = tEquip, UI = uiEquip });
+					}
 					// Now draw background and contents, with optional pulse
 					float pulseScale = GetCurrentPulseScale();
 					if (pulseScale != 1f)
@@ -165,12 +169,12 @@ namespace Crusaders30XX.ECS.Systems
 						int scaledH = (int)System.Math.Round(bgRect.Height * pulseScale);
 						var center = new Vector2(bgRect.X + bgRect.Width / 2f, bgRect.Y + bgRect.Height / 2f);
 						var scaled = new Rectangle((int)(center.X - scaledW / 2f), (int)(center.Y - scaledH / 2f), scaledW, scaledH);
-						DrawRoundedBackground(scaled, fillColor);
+						DrawRoundedBackground(scaled, disabledNow ? DisabledFill(fillColor) : fillColor);
 						bgRect = scaled;
 					}
 					else
 					{
-						DrawRoundedBackground(bgRect, fillColor);
+						DrawRoundedBackground(bgRect, disabledNow ? DisabledFill(fillColor) : fillColor);
 					}
 
 					// Draw icon within padding, preserving aspect ratio
@@ -201,7 +205,7 @@ namespace Crusaders30XX.ECS.Systems
 						int drawX = innerX + (padBoxW - targetW) / 2;
 						int drawY = innerY + (padBoxH - targetH) / 2;
 						var iconRect = new Rectangle(drawX, drawY, targetW, targetH);
-						_spriteBatch.Draw(tex, iconRect, Color.White);
+						_spriteBatch.Draw(tex, iconRect, disabledNow ? Color.Gray : Color.White);
 					}
 
 					// Draw block value and shield icon at bottom-left
@@ -214,6 +218,29 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				y += (IconSize + BgPadding * 2) + RowGap;
 			}
+		}
+
+		private bool IsDisabledForBlock(EquippedEquipment item)
+		{
+			// Disabled if out of uses during enemy turn
+			var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+			bool isEnemyTurnBlock = phase != null && phase.Main == MainPhase.EnemyTurn && phase.Sub == SubPhase.Block;
+			int total = 0; int used = 0;
+			try
+			{
+				if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null) total = System.Math.Max(0, def.blockUses);
+				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+				var state = player?.GetComponent<EquipmentUsedState>();
+				if (state != null && !string.IsNullOrEmpty(item.EquipmentId) && state.UsesByEquipmentId.TryGetValue(item.EquipmentId, out var v)) used = v;
+			}
+			catch { }
+			return isEnemyTurnBlock && total > 0 && used >= total;
+		}
+
+		private Color DisabledFill(Color baseFill)
+		{
+			// Dim the fill color to indicate disabled
+			return new Color((byte)(baseFill.R * 0.4f), (byte)(baseFill.G * 0.4f), (byte)(baseFill.B * 0.4f), (byte)(MathHelper.Clamp(BgOpacity * 255f, 0f, 255f)));
 		}
 
 		private void UpdateClickable(EquippedEquipment item, Rectangle rect)
@@ -229,6 +256,12 @@ namespace Crusaders30XX.ECS.Systems
 			// Update hover state so EquipmentHighlightSystem can render glow like CardHighlightSystem
 			var mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
 			ui.IsHovered = rect.Contains(mouse.Position);
+			// Disable interaction when out of uses during enemy turn
+			if (IsDisabledForBlock(item))
+			{
+				ui.IsInteractable = false;
+				ui.IsHovered = false;
+			}
 			ui.Tooltip = BuildTooltipText(item);
 			// Place a transform so z-order sits above background UI if needed
 			var t = item.Owner.GetComponent<Transform>();
