@@ -105,26 +105,41 @@ namespace Crusaders30XX.ECS.Systems
             if (p >= 1f && !flight.Completed)
             {
                 // Move to discard zone
-                var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 flight.Completed = true;
-                EventManager.Publish(new CardMoveRequested
+                var isEquipment = entity.GetComponent<EquippedEquipment>() != null;
+                if (isEquipment)
                 {
-                    Card = entity,
-                    Deck = deckEntity,
-                    Destination = CardZoneType.DiscardPile,
-                    ContextId = flight.ContextId,
-                    Reason = "AssignedBlockToDiscard"
-                });
-                // Remove animation component
-                EntityManager.RemoveComponent<CardToDiscardFlight>(entity);
-                // Clear AssignedBlockCard if still present
-                EntityManager.RemoveComponent<AssignedBlockCard>(entity);
-                // Clear any tooltip/hovers applied while assigned as block
-                var ui = entity.GetComponent<UIElement>();
-                if (ui != null)
+                    // For equipment, just clear assignment and return to Default zone (no discard)
+                    var zone = entity.GetComponent<EquipmentZone>();
+                    if (zone == null) { zone = new EquipmentZone(); EntityManager.AddComponent(entity, zone); }
+                    zone.Zone = EquipmentZoneType.Default;
+                    EntityManager.RemoveComponent<CardToDiscardFlight>(entity);
+                    EntityManager.RemoveComponent<AssignedBlockCard>(entity);
+                    var uiE = entity.GetComponent<UIElement>();
+                    if (uiE != null) { uiE.IsHovered = false; uiE.IsInteractable = true; uiE.Tooltip = string.Empty; }
+                }
+                else
                 {
-                    ui.Tooltip = string.Empty;
-                    ui.IsHovered = false;
+                    var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                    EventManager.Publish(new CardMoveRequested
+                    {
+                        Card = entity,
+                        Deck = deckEntity,
+                        Destination = CardZoneType.DiscardPile,
+                        ContextId = flight.ContextId,
+                        Reason = "AssignedBlockToDiscard"
+                    });
+                    // Remove animation component
+                    EntityManager.RemoveComponent<CardToDiscardFlight>(entity);
+                    // Clear AssignedBlockCard if still present
+                    EntityManager.RemoveComponent<AssignedBlockCard>(entity);
+                    // Clear any tooltip/hovers applied while assigned as block
+                    var ui = entity.GetComponent<UIElement>();
+                    if (ui != null)
+                    {
+                        ui.Tooltip = string.Empty;
+                        ui.IsHovered = false;
+                    }
                 }
             }
         }

@@ -87,13 +87,27 @@ namespace Crusaders30XX.ECS.Systems
 				for (int i = 0; i < _pendingReturn.Count; i++)
 				{
 					var card = _pendingReturn[i];
-					EventManager.Publish(new CardMoveRequested
+					bool isEquipment = card.GetComponent<EquippedEquipment>() != null;
+					if (isEquipment)
 					{
-						Card = card,
-						Deck = deckEntity,
-						Destination = Crusaders30XX.ECS.Components.CardZoneType.Hand,
-						Reason = "ReturnAfterAssignment"
-					});
+						// Clear assignment and return equipment to default zone
+						EntityManager.RemoveComponent<AssignedBlockCard>(card);
+						var zone = card.GetComponent<EquipmentZone>();
+						if (zone == null) { zone = new EquipmentZone(); EntityManager.AddComponent(card, zone); }
+						zone.Zone = EquipmentZoneType.Default;
+						var ui = card.GetComponent<UIElement>();
+						if (ui != null) { ui.IsInteractable = true; ui.IsHovered = false; ui.Tooltip = string.Empty; }
+					}
+					else
+					{
+						EventManager.Publish(new CardMoveRequested
+						{
+							Card = card,
+							Deck = deckEntity,
+							Destination = Crusaders30XX.ECS.Components.CardZoneType.Hand,
+							Reason = "ReturnAfterAssignment"
+						});
+					}
 				}
 				_pendingReturn.Clear();
 			}
@@ -195,7 +209,24 @@ namespace Crusaders30XX.ECS.Systems
 					ui.Bounds = hoverRect;
 					ui.IsHovered = hoverRect.Contains(mouse.Position);
 					var cardDataForTooltip = entity.GetComponent<CardData>();
-					ui.Tooltip = cardDataForTooltip?.Name ?? string.Empty;
+					var equipForTooltip = entity.GetComponent<EquippedEquipment>();
+					if (equipForTooltip != null)
+					{
+						string tip = equipForTooltip.EquipmentId;
+						try
+						{
+							if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(equipForTooltip.EquipmentId, out var def) && def != null)
+							{
+								tip = string.IsNullOrWhiteSpace(def.name) ? equipForTooltip.EquipmentId : def.name;
+							}
+						}
+						catch { }
+						ui.Tooltip = tip;
+					}
+					else
+					{
+						ui.Tooltip = cardDataForTooltip?.Name ?? string.Empty;
+					}
 				}
 				else
 				{
@@ -315,25 +346,49 @@ namespace Crusaders30XX.ECS.Systems
 				int cw = (int)(CardDrawWidth * abc.CurrentScale);
 				int ch = (int)(CardDrawHeight * abc.CurrentScale);
 				var rect = new Rectangle((int)(pos.X - cw / 2f), (int)(pos.Y - ch / 2f), cw, ch);
-				// Determine colors based on card color
+				// Determine colors based on card color or equipment color
 				var cd = card.GetComponent<CardData>();
+				var eq = card.GetComponent<EquippedEquipment>();
 				Color bg;
 				Color fg;
-				switch (cd?.Color)
+				if (eq != null)
 				{
-					case CardData.CardColor.Red:
-						bg = Color.DarkRed;
-						fg = Color.White;
-						break;
-					case CardData.CardColor.Black:
-						bg = Color.Black;
-						fg = Color.White;
-						break;
-					case CardData.CardColor.White:
-					default:
-						bg = Color.White;
-						fg = Color.Black;
-						break;
+					Color fill = Color.Gray;
+					try
+					{
+						if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(eq.EquipmentId, out var def) && def != null)
+						{
+							switch ((def.color ?? "").Trim().ToLowerInvariant())
+							{
+								case "red": fill = Color.DarkRed; break;
+								case "black": fill = Color.Black; break;
+								case "white": fill = Color.White; break;
+								default: fill = Color.Gray; break;
+							}
+						}
+					}
+					catch { }
+					bg = fill;
+					fg = (fill == Color.White) ? Color.Black : Color.White;
+				}
+				else
+				{
+					switch (cd?.Color)
+					{
+						case CardData.CardColor.Red:
+							bg = Color.DarkRed;
+							fg = Color.White;
+							break;
+						case CardData.CardColor.Black:
+							bg = Color.Black;
+							fg = Color.White;
+							break;
+						case CardData.CardColor.White:
+						default:
+							bg = Color.White;
+							fg = Color.Black;
+							break;
+					}
 				}
 				bg = new Color(bg.R, bg.G, bg.B, (byte)System.Math.Clamp(AssignedBackgroundAlpha, 0, 255));
 				int radius = System.Math.Max(0, AssignedCornerRadius);

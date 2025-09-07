@@ -567,6 +567,22 @@ namespace Crusaders30XX.ECS.Components
 // New component used to animate assigned block cards flying to the discard pile
 namespace Crusaders30XX.ECS.Components
 {
+    /// <summary>
+    /// Zone state for an equipment entity: either visible in the left panel (Default)
+    /// or currently assigned as block (hidden in panel, shown via AssignedBlockCardsDisplaySystem).
+    /// </summary>
+    public class EquipmentZone : IComponent
+    {
+        public Entity Owner { get; set; }
+        public EquipmentZoneType Zone { get; set; } = EquipmentZoneType.Default;
+    }
+
+    public enum EquipmentZoneType
+    {
+        Default,
+        AssignedBlock
+    }
+
     public class CardToDiscardFlight : IComponent
     {
         public Entity Owner { get; set; }

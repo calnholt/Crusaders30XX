@@ -85,6 +85,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Gather equipment for this player
 			var equipment = EntityManager.GetEntitiesWithComponent<EquippedEquipment>()
 				.Where(e => e.GetComponent<EquippedEquipment>().EquippedOwner == player)
+				.Where(e => (e.GetComponent<EquipmentZone>()?.Zone ?? EquipmentZoneType.Default) == EquipmentZoneType.Default)
 				.Select(e => e.GetComponent<EquippedEquipment>())
 				.ToList();
 
@@ -119,12 +120,38 @@ namespace Crusaders30XX.ECS.Systems
 					// Draw block value and shield icon at bottom-left
 					DrawBlockAndShield(item, bgRect, fillColor);
 
-					// Create/update tooltip hover rect
+					// Create/update tooltip hover rect and clickable bounds for interaction
 					UpdateTooltip(item, bgRect);
+					UpdateClickable(item, bgRect);
 
 					x += bgW + ColGap;
 				}
 				y += (IconSize + BgPadding * 2) + RowGap;
+			}
+		}
+
+		private void UpdateClickable(EquippedEquipment item, Rectangle rect)
+		{
+			var ui = item.Owner.GetComponent<UIElement>();
+			if (ui == null)
+			{
+				ui = new UIElement { IsInteractable = true };
+				EntityManager.AddComponent(item.Owner, ui);
+			}
+			ui.Bounds = rect;
+			ui.IsInteractable = true;
+			ui.Tooltip = BuildTooltipText(item);
+			// Place a transform so z-order sits above background UI if needed
+			var t = item.Owner.GetComponent<Transform>();
+			if (t == null)
+			{
+				t = new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 };
+				EntityManager.AddComponent(item.Owner, t);
+			}
+			else
+			{
+				t.Position = new Vector2(rect.X, rect.Y);
+				t.ZOrder = 10001;
 			}
 		}
 
@@ -163,11 +190,9 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def))
 				{
-					// def.block may be string or numeric in JSON; handle both by parsing to int
-					if (def != null && def.block != null)
+					if (def != null)
 					{
-						int parsed;
-						if (int.TryParse(def.block.ToString(), out parsed)) block = parsed;
+						block = System.Math.Max(0, def.block);
 					}
 				}
 			}
