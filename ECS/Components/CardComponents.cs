@@ -575,6 +575,7 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         public EquipmentZoneType Zone { get; set; } = EquipmentZoneType.Default;
+        public Microsoft.Xna.Framework.Vector2 LastPanelCenter { get; set; } = Microsoft.Xna.Framework.Vector2.Zero;
     }
 
     public enum EquipmentZoneType

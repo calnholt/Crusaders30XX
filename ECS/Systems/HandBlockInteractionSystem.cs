@@ -66,6 +66,8 @@ namespace Crusaders30XX.ECS.Systems
 				var t = card.GetComponent<Transform>();
 				if (deckEntity != null && t != null)
 				{
+					// Record the click-time hand position as the return target on the AssignedBlockCard
+					var startPos = t.Position;
 					EventManager.Publish(new CardMoveRequested
 					{
 						Card = card,
@@ -74,6 +76,12 @@ namespace Crusaders30XX.ECS.Systems
 						ContextId = pa.ContextId,
 						Reason = "AssignBlock"
 					});
+					// After move request (handled synchronously), set ReturnTargetPos so unassign knows where to go
+					var abc = card.GetComponent<AssignedBlockCard>();
+					if (abc != null)
+					{
+						abc.ReturnTargetPos = startPos;
+					}
 				}
 				break; // Only one card per click
 			}

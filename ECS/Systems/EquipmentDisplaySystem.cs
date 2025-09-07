@@ -123,6 +123,12 @@ namespace Crusaders30XX.ECS.Systems
 					// Create/update tooltip hover rect and clickable bounds for interaction
 					UpdateTooltip(item, bgRect);
 					UpdateClickable(item, bgRect);
+					// Persist return target on AssignedBlockCard if currently assigned
+					var assigned = item.Owner.GetComponent<AssignedBlockCard>();
+					if (assigned != null && assigned.IsEquipment)
+					{
+						assigned.ReturnTargetPos = new Vector2(bgRect.X + bgRect.Width * 0.5f, bgRect.Y + bgRect.Height * 0.5f);
+					}
 
 					x += bgW + ColGap;
 				}

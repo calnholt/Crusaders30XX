@@ -142,7 +142,7 @@ namespace Crusaders30XX.ECS.Systems
 								ContextId = pa.ContextId,
 								Card = card,
 								DeltaBlock = -abc.BlockAmount,
-								Color = cardData?.Color.ToString()
+								Color = abc.ColorKey
 							});
 							break;
 						}
@@ -289,8 +289,8 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					float p = ReturnSeconds <= 0f ? 1f : MathHelper.Clamp(abc.Elapsed / ReturnSeconds, 0f, 1f);
 					float ease = 1f - (float)System.Math.Pow(1f - p, 3);
-					var handTarget = new Vector2(_graphicsDevice.Viewport.Width * 0.5f, _graphicsDevice.Viewport.Height * 0.88f);
-					abc.CurrentPos = Vector2.Lerp(abc.CurrentPos, handTarget, ease);
+					Vector2 target = abc.ReturnTargetPos;
+					abc.CurrentPos = Vector2.Lerp(abc.CurrentPos, target, ease);
 					abc.CurrentScale = MathHelper.Lerp(abc.CurrentScale, 1f, ease);
 					if (p >= 1f)
 					{
@@ -361,6 +361,8 @@ namespace Crusaders30XX.ECS.Systems
 		private MouseState _prevMouse;
 		private MouseState _mouseNow;
 		private bool _clickEdgeThisFrame;
+
+
 	}
 }
 

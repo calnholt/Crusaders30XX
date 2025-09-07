@@ -100,7 +100,8 @@ namespace Crusaders30XX.ECS.Systems
 						ColorKey = NormalizeColorKey(color),
 						Tooltip = BuildEquipmentTooltip(comp),
 						DisplayBgColor = ResolveEquipmentBgColor(color),
-						DisplayFgColor = ResolveFgForBg(ResolveEquipmentBgColor(color))
+						DisplayFgColor = ResolveFgForBg(ResolveEquipmentBgColor(color)),
+						ReturnTargetPos = Vector2.Zero
 					};
 					EntityManager.AddComponent(eqEntity, abc);
 				}
@@ -116,6 +117,7 @@ namespace Crusaders30XX.ECS.Systems
 					abc.Tooltip = BuildEquipmentTooltip(comp);
 					abc.DisplayBgColor = ResolveEquipmentBgColor(color);
 					abc.DisplayFgColor = ResolveFgForBg(abc.DisplayBgColor);
+					abc.ReturnTargetPos = Vector2.Zero;
 				}
 
 				// Prevent UI hover-interaction while assigned
