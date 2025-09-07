@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Data.Equipment;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -113,6 +114,24 @@ namespace Crusaders30XX.ECS.Systems
                     var zone = entity.GetComponent<EquipmentZone>();
                     if (zone == null) { zone = new EquipmentZone(); EntityManager.AddComponent(entity, zone); }
                     zone.Zone = EquipmentZoneType.Default;
+                    // Mirror card resolution rewards: red equipment grants Courage, white grants Temperance
+                    try
+                    {
+                        var eq = entity.GetComponent<EquippedEquipment>();
+                        if (eq != null && EquipmentDefinitionCache.TryGet(eq.EquipmentId, out var def) && def != null)
+                        {
+                            string c = (def.color ?? string.Empty).Trim().ToLowerInvariant();
+                            if (c == "red" || c == "r")
+                            {
+                                EventManager.Publish(new ModifyCourageEvent { Delta = 1 });
+                            }
+                            else if (c == "white" || c == "w")
+                            {
+                                EventManager.Publish(new ModifyTemperanceEvent { Delta = 1 });
+                            }
+                        }
+                    }
+                    catch { }
                     EntityManager.RemoveComponent<CardToDiscardFlight>(entity);
                     EntityManager.RemoveComponent<AssignedBlockCard>(entity);
                     var uiE = entity.GetComponent<UIElement>();
