@@ -8,6 +8,7 @@
   "abilities": [
     {
       "id": "first_5_courage_draw1",
+      "type": "Trigger",
       "trigger": "CourageGainedThreshold",
       "threshold": 5,
       "oncePerBattle": true,

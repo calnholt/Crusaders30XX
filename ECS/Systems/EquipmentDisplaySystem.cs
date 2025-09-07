@@ -60,6 +60,12 @@ namespace Crusaders30XX.ECS.Systems
 		public int ShieldOffsetX { get; set; } = 0;
 		[DebugEditable(DisplayName = "Shield Offset Y", Step = 1, Min = -200, Max = 200)]
 		public int ShieldOffsetY { get; set; } = -2;
+		[DebugEditable(DisplayName = "Checkmark Size", Step = 1, Min = 6, Max = 256)]
+		public int CheckmarkSize { get; set; } = 35;
+		[DebugEditable(DisplayName = "Checkmark Offset X", Step = 1, Min = -200, Max = 200)]
+		public int CheckmarkOffsetX { get; set; } = 9;
+		[DebugEditable(DisplayName = "Checkmark Offset Y", Step = 1, Min = -200, Max = 200)]
+		public int CheckmarkOffsetY { get; set; } = -9;
 
 		public EquipmentDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
 			: base(entityManager)
@@ -113,7 +119,7 @@ namespace Crusaders30XX.ECS.Systems
 					// Publish highlight event BEFORE drawing contents so glow appears beneath
 					var tEquip = item.Owner.GetComponent<Transform>();
 					var uiEquip = item.Owner.GetComponent<UIElement>();
-					Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.HighlightRenderEvent { Entity = item.Owner, Transform = tEquip, UI = uiEquip });
+					EventManager.Publish(new Crusaders30XX.ECS.Events.HighlightRenderEvent { Entity = item.Owner, Transform = tEquip, UI = uiEquip });
 					// Now draw background and contents
 					DrawRoundedBackground(bgRect, fillColor);
 
@@ -127,11 +133,8 @@ namespace Crusaders30XX.ECS.Systems
 
 					// Draw block value and shield icon at bottom-left
 					DrawBlockAndShield(item, bgRect, fillColor);
-
-					// (tooltip/hover already updated above)
-					// Persist return target on AssignedBlockCard if currently assigned
-					// Do not update assigned.ReturnTargetPos here; set at click time for accuracy
-
+					// Draw once-per-battle checkmark if any ability has oncePerBattle=true
+					DrawOncePerBattleCheck(item, bgRect);
 					x += bgW + ColGap;
 				}
 				y += (IconSize + BgPadding * 2) + RowGap;
@@ -164,6 +167,58 @@ namespace Crusaders30XX.ECS.Systems
 				t.Position = new Vector2(rect.X, rect.Y);
 				t.ZOrder = 10001;
 			}
+		}
+
+		private void DrawOncePerBattleCheck(EquippedEquipment item, Rectangle bgRect)
+		{
+			try
+			{
+				if (!Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) || def == null || def.abilities == null)
+				{
+					return;
+				}
+				// Only show if a once-per-battle ability for THIS equipment has already triggered this battle
+				var owner = item.EquippedOwner ?? EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+				var st = owner?.GetComponent<BattleStateInfo>();
+				bool shouldShow = false;
+				if (st != null && st.TriggeredThisBattle != null)
+				{
+					foreach (var a in def.abilities)
+					{
+						if (a.oncePerBattle && !string.IsNullOrWhiteSpace(a.id) && st.TriggeredThisBattle.Contains(a.id))
+						{
+							shouldShow = true;
+							break;
+						}
+					}
+				}
+				if (!shouldShow) return;
+				int size = Math.Max(6, CheckmarkSize);
+				float boxX = bgRect.Right - size + CheckmarkOffsetX;
+				float boxY = bgRect.Top + CheckmarkOffsetY;
+				var p1 = new Microsoft.Xna.Framework.Vector2(boxX + size * 0.15f, boxY + size * 0.55f);
+				var p2 = new Microsoft.Xna.Framework.Vector2(boxX + size * 0.40f, boxY + size * 0.82f);
+				var p3 = new Microsoft.Xna.Framework.Vector2(boxX + size * 0.90f, boxY + size * 0.20f);
+				float thickness = Math.Max(2f, size * 0.14f);
+				DrawCheckLine(p1, p2, thickness, Microsoft.Xna.Framework.Color.Black);
+				DrawCheckLine(p2, p3, thickness, Microsoft.Xna.Framework.Color.Black);
+			}
+			catch { }
+		}
+
+		private void DrawCheckLine(Microsoft.Xna.Framework.Vector2 start, Microsoft.Xna.Framework.Vector2 end, float thickness, Microsoft.Xna.Framework.Color color)
+		{
+			if (!_iconCache.TryGetValue("_px1", out var px) || px == null)
+			{
+				px = new Texture2D(_graphicsDevice, 1, 1);
+				px.SetData(new[] { Microsoft.Xna.Framework.Color.White });
+				_iconCache["_px1"] = px;
+			}
+			Microsoft.Xna.Framework.Vector2 edge = end - start;
+			float len = edge.Length();
+			if (len <= 0.0001f) return;
+			float ang = (float)System.Math.Atan2(edge.Y, edge.X);
+			_spriteBatch.Draw(px, position: start, sourceRectangle: null, color: color, rotation: ang, origin: new Microsoft.Xna.Framework.Vector2(0f, 0.5f), scale: new Microsoft.Xna.Framework.Vector2(len, thickness), effects: SpriteEffects.None, layerDepth: 0f);
 		}
 
 		private void DrawRoundedBackground(Rectangle rect, Color fill)

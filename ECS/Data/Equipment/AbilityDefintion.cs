@@ -8,6 +8,7 @@ namespace Crusaders30XX.ECS.Data.Equipment
 	public class AbilityDefinition
 	{
 		public string id { get; set; }
+		public string type { get; set; } // e.g., "Trigger, Activate, etc."
 		public string trigger { get; set; } // e.g., "CourageGainedThreshold"
 		public int threshold { get; set; } = 1;
 		public bool oncePerBattle { get; set; } = false;
