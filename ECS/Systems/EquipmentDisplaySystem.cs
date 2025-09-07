@@ -126,10 +126,12 @@ namespace Crusaders30XX.ECS.Systems
 			if (player == null) return;
 
 			// Gather equipment for this player
-			var equipment = EntityManager.GetEntitiesWithComponent<EquippedEquipment>()
+			var allEquipmentForPlayer = EntityManager.GetEntitiesWithComponent<EquippedEquipment>()
 				.Where(e => e.GetComponent<EquippedEquipment>().EquippedOwner == player)
-				.Where(e => (e.GetComponent<EquipmentZone>()?.Zone ?? EquipmentZoneType.Default) == EquipmentZoneType.Default)
 				.Select(e => e.GetComponent<EquippedEquipment>())
+				.ToList();
+			var equipment = allEquipmentForPlayer
+				.Where(eq => (eq.Owner.GetComponent<EquipmentZone>()?.Zone ?? EquipmentZoneType.Default) == EquipmentZoneType.Default)
 				.ToList();
 
 			if (equipment.Count == 0) return;
@@ -140,10 +142,12 @@ namespace Crusaders30XX.ECS.Systems
 			int rowHeight = (IconSize + BgPadding * 2) + RowGap;
 			foreach (var type in order)
 			{
+				bool hasAnyOfType = allEquipmentForPlayer.Any(eq => string.Equals(eq.EquipmentType, type, StringComparison.OrdinalIgnoreCase));
+				if (!hasAnyOfType) { continue; }
 				var items = equipment.Where(eq => string.Equals(eq.EquipmentType, type, StringComparison.OrdinalIgnoreCase)).ToList();
+				// Draw items in a row if any are visible
 				if (items.Count > 0)
 				{
-					// Draw items in a row
 					int x = LeftMargin;
 					foreach (var item in items)
 					{
@@ -227,7 +231,7 @@ namespace Crusaders30XX.ECS.Systems
 						x += bgW + ColGap;
 					}
 				}
-				y += rowHeight;
+				y += rowHeight; // reserve row space for this equipment type to prevent vertical shifting
 			}
 		}
 
