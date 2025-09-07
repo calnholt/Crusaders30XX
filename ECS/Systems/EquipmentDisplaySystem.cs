@@ -169,10 +169,14 @@ namespace Crusaders30XX.ECS.Systems
 					// Update tooltip and hover state before publishing highlight so hover is accurate
 					UpdateTooltip(item, bgRect);
 					UpdateClickable(item, bgRect);
-					// Publish highlight event BEFORE drawing contents so glow appears beneath, unless disabled
+					// Publish highlight event on hover unless disabled; during Player Action phase only if item has Activate ability
 					var tEquip = item.Owner.GetComponent<Transform>();
 					var uiEquip = item.Owner.GetComponent<UIElement>();
-					if (!disabledNow)
+					bool allowHighlight = true;
+					var phaseNow = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+					bool isPlayerAction = phaseNow != null && phaseNow.Main == MainPhase.PlayerTurn && phaseNow.Sub == SubPhase.Action;
+					if (isPlayerAction && !HasActivateAbility(item)) allowHighlight = false;
+					if (!disabledNow && allowHighlight)
 					{
 						EventManager.Publish(new Crusaders30XX.ECS.Events.HighlightRenderEvent { Entity = item.Owner, Transform = tEquip, UI = uiEquip });
 					}
@@ -510,7 +514,14 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						foreach (var a in def.abilities)
 						{
-							if (!string.IsNullOrWhiteSpace(a.text)) parts.Add(a.text);
+							string text = string.Empty;
+							if (!string.IsNullOrWhiteSpace(a.text)) {
+								if (a.type == "Activate") {
+									text += "Activate: ";
+								}
+							}
+							text += a.text;
+							parts.Add(text);
 						}
 					}
 					string abilities = string.Join("\n", parts);
@@ -524,6 +535,19 @@ namespace Crusaders30XX.ECS.Systems
 		private Texture2D SafeLoadTexture(string asset)
 		{
 			try { return _content.Load<Texture2D>(asset); } catch { return null; }
+		}
+
+		private bool HasActivateAbility(EquippedEquipment item)
+		{
+			try
+			{
+				if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null && def.abilities != null)
+				{
+					return def.abilities.Any(a => a.type == "Activate");
+				}
+			}
+			catch { }
+			return false;
 		}
 
 		private Color ResolveFillColor(EquippedEquipment item)
