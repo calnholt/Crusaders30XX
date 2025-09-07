@@ -27,6 +27,11 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
 		private readonly Dictionary<int, Entity> _tooltipByEquipEntityId = new();
 
+		private double _pulseTimeRemaining = 0.0;
+		private const double PulseDurationSeconds = 0.18; // similar to draw pile
+		private const float PulseAmplitude = 0.12f; // 12% size bump
+		private double _lastDt = 0.0;
+
 		// Layout constants (pixels)
 		[DebugEditable(DisplayName = "Left Margin", Step = 2, Min = 0, Max = 2000)]
 		public int LeftMargin { get; set; } = 8;
@@ -74,6 +79,21 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 			_content = content;
 			_font = font;
+			Crusaders30XX.ECS.Core.EventManager.Subscribe<Crusaders30XX.ECS.Events.EquipmentAbilityTriggered>(OnEquipmentAbilityTriggered);
+		}
+
+		private void OnEquipmentAbilityTriggered(Crusaders30XX.ECS.Events.EquipmentAbilityTriggered evt)
+		{
+			// Trigger a brief pulse when any equipment ability triggers
+			_pulseTimeRemaining = PulseDurationSeconds;
+		}
+
+		private float GetCurrentPulseScale()
+		{
+			if (_pulseTimeRemaining <= 0.0) return 1f;
+			float t = (float)(1.0 - (_pulseTimeRemaining / PulseDurationSeconds));
+			float wave = (float)System.Math.Sin(t * System.Math.PI);
+			return 1f + PulseAmplitude * wave;
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -83,8 +103,19 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
+		public override void Update(GameTime gameTime)
+		{
+			_lastDt = gameTime.ElapsedGameTime.TotalSeconds;
+			base.Update(gameTime);
+		}
+
 		public void Draw()
 		{
+			// Update pulse timer
+			if (_pulseTimeRemaining > 0.0)
+			{
+				_pulseTimeRemaining = System.Math.Max(0.0, _lastDt > 0 ? _pulseTimeRemaining - _lastDt : _pulseTimeRemaining);
+			}
 			var player = GetRelevantEntities().FirstOrDefault();
 			if (player == null) return;
 
@@ -120,8 +151,21 @@ namespace Crusaders30XX.ECS.Systems
 					var tEquip = item.Owner.GetComponent<Transform>();
 					var uiEquip = item.Owner.GetComponent<UIElement>();
 					EventManager.Publish(new Crusaders30XX.ECS.Events.HighlightRenderEvent { Entity = item.Owner, Transform = tEquip, UI = uiEquip });
-					// Now draw background and contents
-					DrawRoundedBackground(bgRect, fillColor);
+					// Now draw background and contents, with optional pulse
+					float pulseScale = GetCurrentPulseScale();
+					if (pulseScale != 1f)
+					{
+						int scaledW = (int)System.Math.Round(bgRect.Width * pulseScale);
+						int scaledH = (int)System.Math.Round(bgRect.Height * pulseScale);
+						var center = new Vector2(bgRect.X + bgRect.Width / 2f, bgRect.Y + bgRect.Height / 2f);
+						var scaled = new Rectangle((int)(center.X - scaledW / 2f), (int)(center.Y - scaledH / 2f), scaledW, scaledH);
+						DrawRoundedBackground(scaled, fillColor);
+						bgRect = scaled;
+					}
+					else
+					{
+						DrawRoundedBackground(bgRect, fillColor);
+					}
 
 					// Draw icon fixed to the top-left of the rounded square
 					var tex = GetOrLoadIcon(type);

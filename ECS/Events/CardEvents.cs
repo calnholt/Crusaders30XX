@@ -214,4 +214,13 @@ namespace Crusaders30XX.ECS.Events
         public string Message { get; set; } = "";
     }
 
+    /// <summary>
+    /// Emitted when an equipment's ability triggers, for UI pulse/feedback.
+    /// </summary>
+    public class EquipmentAbilityTriggered
+    {
+        public Entity Equipment { get; set; }
+        public string EquipmentId { get; set; }
+    }
+
 } 

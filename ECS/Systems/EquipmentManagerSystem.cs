@@ -57,6 +57,16 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						EquipmentAbilityService.Activate(EntityManager, ability);
 						if (ability.oncePerBattle) st.TriggeredThisBattle.Add(ability.id);
+						// Emit pulse event for UI feedback
+						var equipEntity = EntityManager.GetEntitiesWithComponent<EquippedEquipment>()
+							.FirstOrDefault(en => en.GetComponent<EquippedEquipment>()?.EquippedOwner == player
+								&& !string.IsNullOrWhiteSpace(en.GetComponent<EquippedEquipment>()?.EquipmentId)
+								&& Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(en.GetComponent<EquippedEquipment>().EquipmentId, out var def2)
+								&& def2?.abilities?.Any(a => a.id == ability.id) == true);
+						if (equipEntity != null)
+						{
+							EventManager.Publish(new EquipmentAbilityTriggered { Equipment = equipEntity, EquipmentId = equipEntity.GetComponent<EquippedEquipment>()?.EquipmentId });
+						}
 					}
 				}
 			}
