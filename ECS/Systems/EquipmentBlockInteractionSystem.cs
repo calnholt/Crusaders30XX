@@ -101,12 +101,20 @@ namespace Crusaders30XX.ECS.Systems
 					var abc = eqEntity.GetComponent<AssignedBlockCard>();
 					if (abc == null)
 					{
-						abc = new AssignedBlockCard { ContextId = ctx, BlockAmount = blockVal, AssignedAtTicks = System.DateTime.UtcNow.Ticks, StartPos = t?.Position ?? Vector2.Zero, CurrentPos = t?.Position ?? Vector2.Zero, TargetPos = t?.Position ?? Vector2.Zero, StartScale = t?.Scale.X ?? 1f, TargetScale = 0.35f, Phase = AssignedBlockCard.PhaseState.Pullback, Elapsed = 0f, IsEquipment = true, ColorKey = NormalizeColorKey(color), Tooltip = BuildEquipmentTooltip(comp), DisplayBgColor = ResolveEquipmentBgColor(color), DisplayFgColor = ResolveFgForBg(ResolveEquipmentBgColor(color)), ReturnTargetPos = Vector2.Zero, EquipmentType = comp.EquipmentType };
+						var equipZone = eqEntity.GetComponent<EquipmentZone>();
+						var uiElem = eqEntity.GetComponent<UIElement>();
+						var uiCenter = uiElem != null ? new Vector2(uiElem.Bounds.X + uiElem.Bounds.Width * 0.5f, uiElem.Bounds.Y + uiElem.Bounds.Height * 0.5f) : (t?.Position ?? Vector2.Zero);
+						var returnPos = (equipZone != null && equipZone.LastPanelCenter != Vector2.Zero) ? equipZone.LastPanelCenter : uiCenter;
+						abc = new AssignedBlockCard { ContextId = ctx, BlockAmount = blockVal, AssignedAtTicks = System.DateTime.UtcNow.Ticks, StartPos = t?.Position ?? Vector2.Zero, CurrentPos = t?.Position ?? Vector2.Zero, TargetPos = t?.Position ?? Vector2.Zero, StartScale = t?.Scale.X ?? 1f, TargetScale = 0.35f, Phase = AssignedBlockCard.PhaseState.Pullback, Elapsed = 0f, IsEquipment = true, ColorKey = NormalizeColorKey(color), Tooltip = BuildEquipmentTooltip(comp), DisplayBgColor = ResolveEquipmentBgColor(color), DisplayFgColor = ResolveFgForBg(ResolveEquipmentBgColor(color)), ReturnTargetPos = returnPos, EquipmentType = comp.EquipmentType };
 						EntityManager.AddComponent(eqEntity, abc);
 					}
 					else
 					{
-						abc.ContextId = ctx; abc.BlockAmount = blockVal; abc.AssignedAtTicks = System.DateTime.UtcNow.Ticks; abc.Phase = AssignedBlockCard.PhaseState.Pullback; abc.Elapsed = 0f; abc.IsEquipment = true; abc.ColorKey = NormalizeColorKey(color); abc.Tooltip = BuildEquipmentTooltip(comp); abc.DisplayBgColor = ResolveEquipmentBgColor(color); abc.DisplayFgColor = ResolveFgForBg(abc.DisplayBgColor); abc.ReturnTargetPos = Vector2.Zero; abc.EquipmentType = comp.EquipmentType;
+						var equipZone = eqEntity.GetComponent<EquipmentZone>();
+						var uiElem = eqEntity.GetComponent<UIElement>();
+						var uiCenter = uiElem != null ? new Vector2(uiElem.Bounds.X + uiElem.Bounds.Width * 0.5f, uiElem.Bounds.Y + uiElem.Bounds.Height * 0.5f) : (t?.Position ?? Vector2.Zero);
+						var returnPos = (equipZone != null && equipZone.LastPanelCenter != Vector2.Zero) ? equipZone.LastPanelCenter : uiCenter;
+						abc.ContextId = ctx; abc.BlockAmount = blockVal; abc.AssignedAtTicks = System.DateTime.UtcNow.Ticks; abc.Phase = AssignedBlockCard.PhaseState.Pullback; abc.Elapsed = 0f; abc.IsEquipment = true; abc.ColorKey = NormalizeColorKey(color); abc.Tooltip = BuildEquipmentTooltip(comp); abc.DisplayBgColor = ResolveEquipmentBgColor(color); abc.DisplayFgColor = ResolveFgForBg(abc.DisplayBgColor); abc.ReturnTargetPos = returnPos; abc.EquipmentType = comp.EquipmentType;
 					}
 					break;
 				}
@@ -120,8 +128,11 @@ namespace Crusaders30XX.ECS.Systems
 							var act = def.abilities.FirstOrDefault(a => a.type == "Activate");
 							if (act != null)
 							{
+								// prevent re-activation in the same turn
+								if (usedState != null && usedState.ActivatedThisTurn.Contains(comp.EquipmentId)) { _prev = mouse; return; }
 								if (!act.isFreeAction) { EventManager.Publish(new ModifyActionPointsEvent { Delta = -1 }); }
 								EquipmentAbilityService.ActivateByEquipmentId(EntityManager, comp.EquipmentId);
+								EventManager.Publish(new EquipmentActivated { EquipmentId = comp.EquipmentId });
 							}
 						}
 					}

@@ -15,6 +15,8 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Subscribe<EquipmentUseResolved>(OnEquipmentUseResolved);
             EventManager.Subscribe<EquipmentDestroyed>(OnEquipmentDestroyed);
+            EventManager.Subscribe<EquipmentActivated>(OnEquipmentActivated);
+            EventManager.Subscribe<ChangeBattlePhaseEvent>(OnPhaseChanged);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -53,6 +55,30 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(player, state);
             }
             state.DestroyedEquipmentIds.Add(evt.EquipmentId);
+        }
+
+        private void OnEquipmentActivated(EquipmentActivated evt)
+        {
+            if (evt == null || string.IsNullOrEmpty(evt.EquipmentId)) return;
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            if (player == null) return;
+            var state = player.GetComponent<EquipmentUsedState>();
+            if (state == null)
+            {
+                state = new EquipmentUsedState();
+                EntityManager.AddComponent(player, state);
+            }
+            state.ActivatedThisTurn.Add(evt.EquipmentId);
+        }
+
+        private void OnPhaseChanged(ChangeBattlePhaseEvent evt)
+        {
+            if (evt.Current == SubPhase.EnemyStart)
+            {
+                var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                var state = player?.GetComponent<EquipmentUsedState>();
+                if (state != null) state.ActivatedThisTurn.Clear();
+            }
         }
     }
 }

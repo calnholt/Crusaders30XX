@@ -137,18 +137,28 @@ namespace Crusaders30XX.ECS.Systems
 			// Group and order types
 			string[] order = new[] { "Head", "Chest", "Arms", "Legs" };
 			int y = TopMargin;
+			int rowHeight = (IconSize + BgPadding * 2) + RowGap;
 			foreach (var type in order)
 			{
 				var items = equipment.Where(eq => string.Equals(eq.EquipmentType, type, StringComparison.OrdinalIgnoreCase)).ToList();
-				if (items.Count == 0) continue;
-				// Draw items in a row
-				int x = LeftMargin;
-				foreach (var item in items)
+				if (items.Count > 0)
 				{
+					// Draw items in a row
+					int x = LeftMargin;
+					foreach (var item in items)
+					{
 					// Resolve equipment definition for visuals and tooltip
 					int bgW = IconSize + BgPadding * 2;
 					int bgH = IconSize + BgPadding * 2;
 					var bgRect = new Rectangle(x, y, bgW, bgH);
+					// Persist panel center for return animations
+					var zoneState = item.Owner.GetComponent<EquipmentZone>();
+					if (zoneState == null)
+					{
+						zoneState = new EquipmentZone();
+						EntityManager.AddComponent(item.Owner, zoneState);
+					}
+					zoneState.LastPanelCenter = new Vector2(bgRect.X + bgRect.Width * 0.5f, bgRect.Y + bgRect.Height * 0.5f);
 					var fillColor = ResolveFillColor(item);
 					bool disabledNow = IsDisabledForBlock(item);
 					// Update tooltip and hover state before publishing highlight so hover is accurate
@@ -214,9 +224,10 @@ namespace Crusaders30XX.ECS.Systems
 					DrawOncePerBattleCheck(item, bgRect);
 					// Draw usage {remaining}/{total}
 					DrawUsageCounter(item, bgRect, fillColor);
-					x += bgW + ColGap;
+						x += bgW + ColGap;
+					}
 				}
-				y += (IconSize + BgPadding * 2) + RowGap;
+				y += rowHeight;
 			}
 		}
 

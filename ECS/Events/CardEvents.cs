@@ -240,4 +240,12 @@ namespace Crusaders30XX.ECS.Events
         public string EquipmentId { get; set; }
     }
 
+    /// <summary>
+    /// Emitted when a player activates an equipment's Activate ability this turn.
+    /// </summary>
+    public class EquipmentActivated
+    {
+        public string EquipmentId { get; set; }
+    }
+
 } 
