@@ -94,6 +94,7 @@ namespace Crusaders30XX.ECS.Components
 		public Microsoft.Xna.Framework.Color DisplayBgColor { get; set; } = Microsoft.Xna.Framework.Color.White;
 		public Microsoft.Xna.Framework.Color DisplayFgColor { get; set; } = Microsoft.Xna.Framework.Color.Black;
 		public Microsoft.Xna.Framework.Vector2 ReturnTargetPos { get; set; } = Microsoft.Xna.Framework.Vector2.Zero;
+		public string EquipmentType { get; set; } = string.Empty; // Head | Chest | Arms | Legs for equipment
 		public enum PhaseState { Pullback, Launch, Impact, Idle, Returning }
 		public PhaseState Phase { get; set; } = PhaseState.Pullback;
 		public Microsoft.Xna.Framework.Vector2 StartPos { get; set; }

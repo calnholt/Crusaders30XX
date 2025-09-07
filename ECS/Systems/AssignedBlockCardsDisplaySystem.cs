@@ -7,6 +7,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Content;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -15,6 +16,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
+		private readonly ContentManager _content;
 		private readonly SpriteFont _font;
 		private readonly Texture2D _pixel;
 		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
@@ -50,11 +52,21 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Assigned Background Alpha", Step = 1, Min = 0, Max = 255)]
 		public int AssignedBackgroundAlpha { get; set; } = 225;
 
-		public AssignedBlockCardsDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
+		[DebugEditable(DisplayName = "Equip Icon Height", Step = 1, Min = 8, Max = 128)]
+		public int EquipIconHeight { get; set; } = 99;
+		[DebugEditable(DisplayName = "Equip Icon Gap", Step = 1, Min = 0, Max = 64)]
+		public int EquipIconGap { get; set; } = 6;
+		[DebugEditable(DisplayName = "Equip Icon Offset X", Step = 1, Min = -200, Max = 200)]
+		public int EquipIconOffsetX { get; set; } = 0;
+		[DebugEditable(DisplayName = "Equip Icon Offset Y", Step = 1, Min = -200, Max = 200)]
+		public int EquipIconOffsetY { get; set; } = 10;
+
+		public AssignedBlockCardsDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font, ContentManager content) : base(em)
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
 			_font = font;
+			_content = content;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 		}
@@ -345,6 +357,20 @@ namespace Crusaders30XX.ECS.Systems
 					float tx = rect.X + (rect.Width - textSize.X) * 0.5f;
 					float ty = rect.Y + (rect.Height - textSize.Y) * 0.5f;
 					_spriteBatch.DrawString(_font, text, new Vector2(tx, ty), fg, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+					// If this assignment is equipment and idle (not moving), draw the equipment type icon centered above the rect
+					if (abc.IsEquipment && abc.Phase == AssignedBlockCard.PhaseState.Idle && !string.IsNullOrWhiteSpace(abc.EquipmentType))
+					{
+						var tex = SafeLoadIcon(abc.EquipmentType);
+						if (tex != null)
+						{
+							float iconH = System.Math.Max(8, EquipIconHeight) * abc.CurrentScale;
+							float iconW = tex.Height > 0 ? iconH * (tex.Width / (float)tex.Height) : iconH;
+							float gap = System.Math.Max(0, EquipIconGap);
+							float iconX = rect.X + rect.Width * 0.5f - iconW * 0.5f + EquipIconOffsetX;
+							float iconY = rect.Y - gap - iconH + EquipIconOffsetY;
+							_spriteBatch.Draw(tex, new Rectangle((int)iconX, (int)iconY, (int)iconW, (int)iconH), Color.White);
+						}
+					}
 				}
 			}
 		}
@@ -356,6 +382,13 @@ namespace Crusaders30XX.ECS.Systems
 			var texture = Crusaders30XX.ECS.Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, width, height, radius);
 			_roundedRectCache[key] = texture;
 			return texture;
+		}
+
+		private Texture2D SafeLoadIcon(string type)
+		{
+			string key = (type ?? string.Empty).Trim().ToLowerInvariant();
+			string assetName = key; // expects head.png, chest.png, arms.png, legs.png
+			try { return _content.Load<Texture2D>(assetName); } catch { return null; }
 		}
 
 		private MouseState _prevMouse;

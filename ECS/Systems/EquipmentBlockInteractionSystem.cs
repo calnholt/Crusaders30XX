@@ -81,6 +81,7 @@ namespace Crusaders30XX.ECS.Systems
 
 				// Create AssignedBlockCard animation state so AssignedBlockCardsDisplaySystem can animate/display it
 				var t = eqEntity.GetComponent<Transform>();
+				var returnCenter = new Vector2(ui.Bounds.X + ui.Bounds.Width * 0.5f, ui.Bounds.Y + ui.Bounds.Height * 0.5f);
 				var abc = eqEntity.GetComponent<AssignedBlockCard>();
 				if (abc == null)
 				{
@@ -101,7 +102,8 @@ namespace Crusaders30XX.ECS.Systems
 						Tooltip = BuildEquipmentTooltip(comp),
 						DisplayBgColor = ResolveEquipmentBgColor(color),
 						DisplayFgColor = ResolveFgForBg(ResolveEquipmentBgColor(color)),
-						ReturnTargetPos = Vector2.Zero
+						ReturnTargetPos = returnCenter,
+						EquipmentType = comp.EquipmentType
 					};
 					EntityManager.AddComponent(eqEntity, abc);
 				}
@@ -117,7 +119,8 @@ namespace Crusaders30XX.ECS.Systems
 					abc.Tooltip = BuildEquipmentTooltip(comp);
 					abc.DisplayBgColor = ResolveEquipmentBgColor(color);
 					abc.DisplayFgColor = ResolveFgForBg(abc.DisplayBgColor);
-					abc.ReturnTargetPos = Vector2.Zero;
+					abc.ReturnTargetPos = returnCenter;
+					abc.EquipmentType = comp.EquipmentType;
 				}
 
 				// Prevent UI hover-interaction while assigned

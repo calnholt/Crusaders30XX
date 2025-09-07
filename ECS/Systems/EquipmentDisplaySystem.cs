@@ -124,11 +124,7 @@ namespace Crusaders30XX.ECS.Systems
 					UpdateTooltip(item, bgRect);
 					UpdateClickable(item, bgRect);
 					// Persist return target on AssignedBlockCard if currently assigned
-					var assigned = item.Owner.GetComponent<AssignedBlockCard>();
-					if (assigned != null && assigned.IsEquipment)
-					{
-						assigned.ReturnTargetPos = new Vector2(bgRect.X + bgRect.Width * 0.5f, bgRect.Y + bgRect.Height * 0.5f);
-					}
+					// Do not update assigned.ReturnTargetPos here; set at click time for accuracy
 
 					x += bgW + ColGap;
 				}
