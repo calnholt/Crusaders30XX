@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Data.Equipment
 		public bool oncePerBattle { get; set; } = false;
 		public string effect { get; set; } // e.g., "DrawCards"
 		public int effectCount { get; set; } = 1;
+		public string text { get; set; }
 		public Dictionary<string, string> parameters { get; set; } = new();
 	}
 }
