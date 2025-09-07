@@ -73,14 +73,15 @@ namespace Crusaders30XX.ECS.Systems
 			return st;
 		}
 
-		private IEnumerable<AbilityDefintion> EnumerateEquippedAbilities(Entity player)
+		private IEnumerable<AbilityDefinition> EnumerateEquippedAbilities(Entity player)
 		{
-			var eq = player.GetComponent<EquippedEquipment>();
-			if (eq == null) yield break;
-			foreach (var id in new[] { eq.HeadId, eq.ChestId, eq.ArmsId, eq.LegsId })
+			var equipmentEntities = EntityManager.GetEntitiesWithComponent<EquippedEquipment>()
+				.Where(e => e.GetComponent<EquippedEquipment>().EquippedOwner == player);
+			foreach (var e in equipmentEntities)
 			{
-				if (string.IsNullOrWhiteSpace(id)) continue;
-				if (!EquipmentDefinitionCache.TryGet(id, out var def) || def?.abilities == null) continue;
+				var comp = e.GetComponent<EquippedEquipment>();
+				if (comp == null || string.IsNullOrWhiteSpace(comp.EquipmentId)) continue;
+				if (!EquipmentDefinitionCache.TryGet(comp.EquipmentId, out var def) || def?.abilities == null) continue;
 				foreach (var a in def.abilities) yield return a;
 			}
 		}

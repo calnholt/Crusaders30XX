@@ -7,10 +7,10 @@ namespace Crusaders30XX.ECS.Data.Equipment
 		public string id { get; set; }
 		public string name { get; set; }
 		public string slot { get; set; } // Head | Chest | Arms | Legs
-		public string block { get; set; }
-		public string blockUses { get; set; }
+		public int block { get; set; }
+		public int blockUses { get; set; }
 		public string color { get; set; }
-		public List<AbilityDefintion> abilities { get; set; } = new();
+		public List<AbilityDefinition> abilities { get; set; } = new();
 	}
 }
 

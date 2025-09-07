@@ -104,8 +104,9 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, equippedTemperanceAbility);
             // Equip default weapon (not in deck)
             world.AddComponent(entity, new EquippedWeapon { WeaponId = "sword" });
-            // Equip default equipment
-            world.AddComponent(entity, new EquippedEquipment { HeadId = "head_focus" });
+            // Equip default equipment: create a separate entity per equipped item for flexibility (multiple per slot)
+            var headEquip = world.CreateEntity("Equip_Head_Focus");
+            world.AddComponent(headEquip, new EquippedEquipment { EquippedOwner = entity, EquipmentId = "head_focus", EquipmentType = "Head" });
             
             // Attach Courage resource component by default (optional mechanics can read presence)
             world.AddComponent(entity, new Courage { Amount = 0 });

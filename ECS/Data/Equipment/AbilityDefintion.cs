@@ -5,7 +5,7 @@ namespace Crusaders30XX.ECS.Data.Equipment
 	/// <summary>
 	/// Defines a single equipment ability in data. Note: name intentionally spelled AbilityDefintion per user request.
 	/// </summary>
-	public class AbilityDefintion
+	public class AbilityDefinition
 	{
 		public string id { get; set; }
 		public string trigger { get; set; } // e.g., "CourageGainedThreshold"

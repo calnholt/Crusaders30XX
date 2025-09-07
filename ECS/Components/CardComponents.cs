@@ -190,16 +190,16 @@ namespace Crusaders30XX.ECS.Components
         public int Value { get; set; } = 5;
     }
 
+
 	/// <summary>
-	/// Player's equipped equipment by slot.
+	/// A single equipped item. Multiple instances may exist, each referencing the owning player.
 	/// </summary>
 	public class EquippedEquipment : IComponent
 	{
 		public Entity Owner { get; set; }
-		public string HeadId { get; set; } = "";
-		public string ChestId { get; set; } = "";
-		public string ArmsId { get; set; } = "";
-		public string LegsId { get; set; } = "";
+		public Entity EquippedOwner { get; set; } // player entity that owns this equipment
+		public string EquipmentId { get; set; } = ""; // id of equipment definition
+		public string EquipmentType { get; set; } = ""; // Head | Chest | Arms | Legs | etc
 	}
 
 	/// <summary>
