@@ -165,6 +165,7 @@ namespace Crusaders30XX.ECS.Systems
 					zoneState.LastPanelCenter = new Vector2(bgRect.X + bgRect.Width * 0.5f, bgRect.Y + bgRect.Height * 0.5f);
 					var fillColor = ResolveFillColor(item);
 					bool disabledNow = IsDisabledForBlock(item);
+					bool destroyedNow = IsDestroyed(item);
 					// Update tooltip and hover state before publishing highlight so hover is accurate
 					UpdateTooltip(item, bgRect);
 					UpdateClickable(item, bgRect);
@@ -228,6 +229,11 @@ namespace Crusaders30XX.ECS.Systems
 					DrawOncePerBattleCheck(item, bgRect);
 					// Draw usage {remaining}/{total}
 					DrawUsageCounter(item, bgRect, fillColor);
+					// Overlay yellow X if destroyed
+					if (destroyedNow)
+					{
+						DrawDestroyedX(bgRect);
+					}
 						x += bgW + ColGap;
 					}
 				}
@@ -372,6 +378,36 @@ namespace Crusaders30XX.ECS.Systems
 			if (len <= 0.0001f) return;
 			float ang = (float)System.Math.Atan2(edge.Y, edge.X);
 			_spriteBatch.Draw(px, position: start, sourceRectangle: null, color: color, rotation: ang, origin: new Microsoft.Xna.Framework.Vector2(0f, 0.5f), scale: new Microsoft.Xna.Framework.Vector2(len, thickness), effects: SpriteEffects.None, layerDepth: 0f);
+		}
+
+		private bool IsDestroyed(EquippedEquipment item)
+		{
+			try
+			{
+				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+				var state = player?.GetComponent<EquipmentUsedState>();
+				if (state == null || string.IsNullOrEmpty(item.EquipmentId)) return false;
+				return state.DestroyedEquipmentIds.Contains(item.EquipmentId);
+			}
+			catch { return false; }
+		}
+
+		private void DrawDestroyedX(Rectangle rect)
+		{
+			// Reuse 1x1 pixel from icon cache
+			if (!_iconCache.TryGetValue("_px1", out var px) || px == null)
+			{
+				px = new Texture2D(_graphicsDevice, 1, 1);
+				px.SetData(new[] { Microsoft.Xna.Framework.Color.White });
+				_iconCache["_px1"] = px;
+			}
+			var start1 = new Vector2(rect.Left + 6, rect.Top + 6);
+			var end1 = new Vector2(rect.Right - 6, rect.Bottom - 6);
+			var start2 = new Vector2(rect.Right - 6, rect.Top + 6);
+			var end2 = new Vector2(rect.Left + 6, rect.Bottom - 6);
+			var color = new Color(255, 215, 0); // golden yellow
+			DrawCheckLine(start1, end1, 6f, color);
+			DrawCheckLine(start2, end2, 6f, color);
 		}
 
 		private void DrawRoundedBackground(Rectangle rect, Color fill)
