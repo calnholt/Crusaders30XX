@@ -71,6 +71,7 @@ namespace Crusaders30XX.ECS.Systems
 		private PayCostOverlaySystem _payCostOverlaySystem;
 		private CantPlayCardMessageSystem _cantPlayCardMessageSystem;
 		private WeaponManagementSystem _weaponManagementSystem;
+		private EquipmentManagerSystem _equipmentManagerSystem;
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(em)
 		{
@@ -212,6 +213,7 @@ namespace Crusaders30XX.ECS.Systems
 			_phaseCoordinatorSystem = new PhaseCoordinatorSystem(_world.EntityManager);
 			_enemyStunAutoSkipSystem = new EnemyStunAutoSkipSystem(_world.EntityManager);
 			_weaponManagementSystem = new WeaponManagementSystem(_world.EntityManager);
+			_equipmentManagerSystem = new EquipmentManagerSystem(_world.EntityManager);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
 
 			// Register
@@ -264,6 +266,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_battlePhaseDrawSystem);
 			_world.AddSystem(_phaseCoordinatorSystem);
 			_world.AddSystem(_weaponManagementSystem);
+			_world.AddSystem(_equipmentManagerSystem);
 			_world.AddSystem(_payCostOverlaySystem);
 			_world.AddSystem(_cardHighlightSystem);
 			_world.AddSystem(_cantPlayCardMessageSystem);

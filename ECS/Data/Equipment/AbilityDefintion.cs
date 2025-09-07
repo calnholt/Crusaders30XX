@@ -1,0 +1,20 @@
+using System.Collections.Generic;
+
+namespace Crusaders30XX.ECS.Data.Equipment
+{
+	/// <summary>
+	/// Defines a single equipment ability in data. Note: name intentionally spelled AbilityDefintion per user request.
+	/// </summary>
+	public class AbilityDefintion
+	{
+		public string id { get; set; }
+		public string trigger { get; set; } // e.g., "CourageGainedThreshold"
+		public int threshold { get; set; } = 1;
+		public bool oncePerBattle { get; set; } = false;
+		public string effect { get; set; } // e.g., "DrawCards"
+		public int effectCount { get; set; } = 1;
+		public Dictionary<string, string> parameters { get; set; } = new();
+	}
+}
+
+

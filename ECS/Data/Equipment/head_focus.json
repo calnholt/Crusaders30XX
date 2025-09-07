@@ -1,0 +1,18 @@
+{
+  "id": "head_focus",
+  "name": "Focus Visor",
+  "slot": "Head",
+  "text": "The first time you gain 5 Courage in a battle, draw a card.",
+  "abilities": [
+    {
+      "id": "first_5_courage_draw1",
+      "trigger": "CourageGainedThreshold",
+      "threshold": 5,
+      "oncePerBattle": true,
+      "effect": "DrawCards",
+      "effectCount": 1
+    }
+  ]
+}
+
+

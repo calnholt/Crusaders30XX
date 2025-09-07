@@ -189,6 +189,28 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
         public int Value { get; set; } = 5;
     }
+
+	/// <summary>
+	/// Player's equipped equipment by slot.
+	/// </summary>
+	public class EquippedEquipment : IComponent
+	{
+		public Entity Owner { get; set; }
+		public string HeadId { get; set; } = "";
+		public string ChestId { get; set; } = "";
+		public string ArmsId { get; set; } = "";
+		public string LegsId { get; set; } = "";
+	}
+
+	/// <summary>
+	/// Per-battle state: counters and once-per-battle flags for triggers.
+	/// </summary>
+	public class BattleStateInfo : IComponent
+	{
+		public Entity Owner { get; set; }
+		public int CourageGainedThisBattle { get; set; } = 0;
+		public HashSet<string> TriggeredThisBattle { get; set; } = new();
+	}
     
     /// <summary>
     /// Component for positioning and rendering

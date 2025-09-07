@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Enemies;
 using Crusaders30XX.ECS.Data.Temperance;
+using Crusaders30XX.ECS.Data.Equipment;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -103,6 +104,8 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, equippedTemperanceAbility);
             // Equip default weapon (not in deck)
             world.AddComponent(entity, new EquippedWeapon { WeaponId = "sword" });
+            // Equip default equipment
+            world.AddComponent(entity, new EquippedEquipment { HeadId = "head_focus" });
             
             // Attach Courage resource component by default (optional mechanics can read presence)
             world.AddComponent(entity, new Courage { Amount = 0 });
