@@ -71,6 +71,12 @@ namespace Crusaders30XX.ECS.Systems
 		public int CheckmarkOffsetX { get; set; } = 9;
 		[DebugEditable(DisplayName = "Checkmark Offset Y", Step = 1, Min = -200, Max = 200)]
 		public int CheckmarkOffsetY { get; set; } = -9;
+		[DebugEditable(DisplayName = "Usage Text Scale", Step = 0.05f, Min = 0.3f, Max = 3f)]
+		public float UsageTextScale { get; set; } = 0.55f;
+		[DebugEditable(DisplayName = "Usage Offset X", Step = 1, Min = -200, Max = 200)]
+		public int UsageOffsetX { get; set; } = -6;
+		[DebugEditable(DisplayName = "Usage Offset Y", Step = 1, Min = -200, Max = 200)]
+		public int UsageOffsetY { get; set; } = -6;
 
 		public EquipmentDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
 			: base(entityManager)
@@ -202,6 +208,8 @@ namespace Crusaders30XX.ECS.Systems
 					DrawBlockAndShield(item, bgRect, fillColor);
 					// Draw once-per-battle checkmark if any ability has oncePerBattle=true
 					DrawOncePerBattleCheck(item, bgRect);
+					// Draw usage {remaining}/{total}
+					DrawUsageCounter(item, bgRect, fillColor);
 					x += bgW + ColGap;
 				}
 				y += (IconSize + BgPadding * 2) + RowGap;
@@ -269,6 +277,36 @@ namespace Crusaders30XX.ECS.Systems
 				float thickness = Math.Max(2f, size * 0.14f);
 				DrawCheckLine(p1, p2, thickness, Microsoft.Xna.Framework.Color.Black);
 				DrawCheckLine(p2, p3, thickness, Microsoft.Xna.Framework.Color.Black);
+			}
+			catch { }
+		}
+
+		private void DrawUsageCounter(EquippedEquipment item, Rectangle bgRect, Color fillColor)
+		{
+			if (_font == null) return;
+			try
+			{
+				int total = 0;
+				if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null)
+				{
+					total = System.Math.Max(0, def.blockUses);
+				}
+				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+				int used = 0;
+				if (player != null)
+				{
+					var state = player.GetComponent<EquipmentUsedState>();
+					if (state != null && !string.IsNullOrEmpty(item.EquipmentId) && state.UsesByEquipmentId.TryGetValue(item.EquipmentId, out var val)) used = val;
+				}
+				int remaining = System.Math.Max(0, total - used);
+				string text = $"{remaining}/{total}";
+				float scale = UsageTextScale;
+				var size = _font.MeasureString(text) * scale;
+				int x = bgRect.Right - (int)System.Math.Round(size.X) + UsageOffsetX;
+				int y = bgRect.Bottom - (int)System.Math.Round(size.Y) + UsageOffsetY;
+				// Match block text visibility: black on white fill, white otherwise
+				var textColor = (fillColor == Color.White) ? Color.Black : Color.White;
+				_spriteBatch.DrawString(_font, text, new Vector2(x, y), textColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 			}
 			catch { }
 		}

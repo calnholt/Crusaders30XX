@@ -73,6 +73,7 @@ namespace Crusaders30XX.ECS.Systems
 		private WeaponManagementSystem _weaponManagementSystem;
 		private EquipmentManagerSystem _equipmentManagerSystem;
 		private EquipmentDisplaySystem _equipmentDisplaySystem;
+		private EquipmentUsedManagementSystem _equipmentUsedManagementSystem;
 		private HighlightSettingsSystem _equipmentHighlightSettingsDebugSystem;
 		private EquipmentBlockInteractionSystem _equipmentBlockInteractionSystem;
 
@@ -219,6 +220,7 @@ namespace Crusaders30XX.ECS.Systems
 			_weaponManagementSystem = new WeaponManagementSystem(_world.EntityManager);
 			_equipmentManagerSystem = new EquipmentManagerSystem(_world.EntityManager);
 			_equipmentDisplaySystem = new EquipmentDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
+			_equipmentUsedManagementSystem = new EquipmentUsedManagementSystem(_world.EntityManager);
 			_equipmentHighlightSettingsDebugSystem = new HighlightSettingsSystem(_world.EntityManager);
 			_equipmentBlockInteractionSystem = new EquipmentBlockInteractionSystem(_world.EntityManager);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
@@ -275,6 +277,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_weaponManagementSystem);
 			_world.AddSystem(_equipmentManagerSystem);
 			_world.AddSystem(_equipmentDisplaySystem);
+			_world.AddSystem(_equipmentUsedManagementSystem);
 			_world.AddSystem(_equipmentHighlightSettingsDebugSystem);
 			_world.AddSystem(_equipmentBlockInteractionSystem);
 			_world.AddSystem(_payCostOverlaySystem);

@@ -114,6 +114,12 @@ namespace Crusaders30XX.ECS.Systems
                     var zone = entity.GetComponent<EquipmentZone>();
                     if (zone == null) { zone = new EquipmentZone(); EntityManager.AddComponent(entity, zone); }
                     zone.Zone = EquipmentZoneType.Default;
+                    // Update usage count for this equipment id
+                    var eqComp = entity.GetComponent<EquippedEquipment>();
+                    if (eqComp != null && !string.IsNullOrEmpty(eqComp.EquipmentId))
+                    {
+                        EventManager.Publish(new EquipmentUseResolved { EquipmentId = eqComp.EquipmentId, Delta = 1 });
+                    }
                     // Mirror card resolution rewards: red equipment grants Courage, white grants Temperance
                     try
                     {

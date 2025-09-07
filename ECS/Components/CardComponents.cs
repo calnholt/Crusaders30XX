@@ -573,6 +573,16 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Tracks how many times each equipment id has been used to block this battle.
+    /// Attach to the player entity.
+    /// </summary>
+    public class EquipmentUsedState : IComponent
+    {
+        public Entity Owner { get; set; }
+        public Dictionary<string, int> UsesByEquipmentId { get; set; } = new Dictionary<string, int>();
+    }
+
+    /// <summary>
     /// Enumerates the zone a card currently belongs to. Useful for transitioning toward a fully component-driven zone model.
     /// </summary>
     public enum CardZoneType

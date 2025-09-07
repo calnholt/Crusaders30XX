@@ -223,4 +223,13 @@ namespace Crusaders30XX.ECS.Events
         public string EquipmentId { get; set; }
     }
 
+    /// <summary>
+    /// Emitted when an equipment use should be counted (e.g., after resolving attack where it was used to block)
+    /// </summary>
+    public class EquipmentUseResolved
+    {
+        public string EquipmentId { get; set; }
+        public int Delta { get; set; } = 1;
+    }
+
 } 

@@ -113,6 +113,8 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new Courage { Amount = 0 });
             // Attach Temperance resource component by default
             world.AddComponent(entity, new Temperance { Amount = 0 });
+            // Attach EquipmentUsedState tracker
+            world.AddComponent(entity, new EquipmentUsedState());
             // Attach Action Points component by default
             world.AddComponent(entity, new ActionPoints { Current = 0 });
             // Attach StoredBlock resource component by default
