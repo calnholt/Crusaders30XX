@@ -52,6 +52,7 @@ namespace Crusaders30XX.ECS.Systems
 		private EnemyDisplaySystem _enemyDisplaySystem;
 		private EnemyIntentPipsSystem _enemyIntentPipsSystem;
 		private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
+		private CardPlayedAnimationSystem _cardPlayedAnimationSystem;
 		private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
 		private EnemyIntentPlanningSystem _enemyIntentPlanningSystem;
 		private EnemyAttackProgressManagementSystem _enemyAttackProgressManagementSystem;
@@ -123,6 +124,7 @@ namespace Crusaders30XX.ECS.Systems
 			_hpDisplaySystem.Draw();
 			_payCostOverlaySystem.DrawBackdrop();
 			_handDisplaySystem.DrawHand();
+			_cardPlayedAnimationSystem.Draw();
 			_equipmentDisplaySystem.Draw();
 			_debugMenuSystem.Draw();
 			_drawPileDisplaySystem.Draw();
@@ -201,6 +203,7 @@ namespace Crusaders30XX.ECS.Systems
 			_enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
+			_cardPlayedAnimationSystem = new CardPlayedAnimationSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_endTurnDisplaySystem = new EndTurnDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font, _content);
 			_payCostOverlaySystem = new PayCostOverlaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
@@ -266,6 +269,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_stunnedOverlaySystem);
 			_world.AddSystem(_attackResolutionSystem);
 			_world.AddSystem(_enemyAttackDisplaySystem);
+			_world.AddSystem(_cardPlayedAnimationSystem);
 			_world.AddSystem(_endTurnDisplaySystem);
 			_world.AddSystem(_assignedBlockCardsDisplaySystem);
 			_world.AddSystem(_assignedBlocksToDiscardSystem);

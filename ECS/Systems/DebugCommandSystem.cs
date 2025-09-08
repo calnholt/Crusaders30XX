@@ -77,6 +77,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new ModifyHpEvent { Delta = -System.Math.Abs(amount) });
         }
+        [DebugActionInt("Gain AP", Step = 1, Min = 1, Max = 999, Default = 5)]
+        public void Debug_GainAp(int amount)
+        {
+            EventManager.Publish(new ModifyActionPointsEvent { Delta = System.Math.Abs(amount) });
+        }
     }
 }
 
