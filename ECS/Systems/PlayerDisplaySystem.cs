@@ -17,11 +17,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly Texture2D _crusaderTexture;
         private float _elapsedSeconds;
-        private float _attackAnimTimer;
-        private Vector2 _attackTargetPos;
-        private readonly float _attackAnimDuration = 0.5f;
-        private readonly Vector2 _attackOffset = new Vector2(80f, -20f);
-        private Vector2 _attackDrawOffset = Vector2.Zero;
+        private Vector2 _attackDrawOffset = Vector2.Zero; // now sourced from PlayerAnimationState
 
         // Visual tuning
         private const float ScreenHeightCoverage = 0.3f; // portrait height relative to viewport height
@@ -64,15 +60,7 @@ namespace Crusaders30XX.ECS.Systems
             info.TextureWidth = _crusaderTexture?.Width ?? 0;
             info.TextureHeight = _crusaderTexture?.Height ?? 0;
 
-            // Subscribe to start player attack animation
-            Crusaders30XX.ECS.Core.EventManager.Subscribe<StartPlayerAttackAnimation>(_ =>
-            {
-                _attackAnimTimer = _attackAnimDuration;
-                // Target the enemy's current position
-                var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
-                var et = enemy?.GetComponent<Transform>();
-                _attackTargetPos = et?.Position ?? Vector2.Zero;
-            });
+            // No animation logic here; handled by PlayerAnimationSystem
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -98,24 +86,9 @@ namespace Crusaders30XX.ECS.Systems
                 float scale = baseScale * breathFactor;
 
                 var basePosition = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
-                // Simple smash animation toward enemy then back; store as draw offset so shared Transform stays stable
-                _attackDrawOffset = Vector2.Zero;
-                if (_attackAnimTimer > 0f)
-                {
-                    _attackAnimTimer = Math.Max(0f, _attackAnimTimer - (float)gameTime.ElapsedGameTime.TotalSeconds);
-                    float ta = 1f - (_attackAnimTimer / _attackAnimDuration); // 0->1
-                    float outPhase = Math.Min(0.5f, ta) * 2f; // 0..1 first half
-                    float backPhase = Math.Max(0f, ta - 0.5f) * 2f; // 0..1 second half
-                    Vector2 outPos = _attackTargetPos + _attackOffset;
-                    Vector2 mid = Vector2.Lerp(basePosition, outPos, 1f - (float)Math.Pow(1f - outPhase, 3));
-                    var animPos = Vector2.Lerp(mid, basePosition, backPhase);
-                    _attackDrawOffset = animPos - basePosition;
-                    if (_attackAnimTimer == 0f)
-                    {
-                        // Signal impact at the end
-                        Crusaders30XX.ECS.Core.EventManager.Publish(new PlayerAttackImpactNow());
-                    }
-                }
+                // Draw offset now maintained by PlayerAnimationSystem via PlayerAnimationState
+                var anim = _anchorEntity.GetComponent<PlayerAnimationState>();
+                _attackDrawOffset = anim?.DrawOffset ?? Vector2.Zero;
                 // Keep the Transform reflecting the base position and scale only
                 _anchorTransform.Position = basePosition;
                 _anchorTransform.Scale = new Vector2(scale, scale);

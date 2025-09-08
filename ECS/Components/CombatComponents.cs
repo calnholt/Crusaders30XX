@@ -76,6 +76,19 @@ namespace Crusaders30XX.ECS.Components
 		public Entity Owner { get; set; }
 	}
 
+	/// <summary>
+	/// Holds transient animation state for the player portrait (offsets, timers).
+	/// Read by display; mutated by PlayerAnimationSystem.
+	/// </summary>
+	public class PlayerAnimationState : IComponent
+	{
+		public Entity Owner { get; set; }
+		public Microsoft.Xna.Framework.Vector2 DrawOffset { get; set; }
+		public float AttackAnimTimer { get; set; }
+		public float AttackAnimDuration { get; set; } = 0.5f;
+		public Microsoft.Xna.Framework.Vector2 AttackTargetPos { get; set; }
+	}
+
 
 
 	/// <summary>

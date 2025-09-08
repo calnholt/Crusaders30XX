@@ -33,6 +33,7 @@ namespace Crusaders30XX.ECS.Systems
 		private CardListModalSystem _cardListModalSystem;
 		private PlayerDisplaySystem _playerDisplaySystem;
 		private PlayerWispParticleSystem _playerWispParticleSystem;
+		private PlayerAnimationSystem _playerAnimationSystem;
 		private CathedralLightingSystem _cathedralLightingSystem;
 		private DesertBackgroundEffectSystem _desertBackgroundEffectSystem;
 		private ProfilerSystem _profilerSystem;
@@ -185,6 +186,7 @@ namespace Crusaders30XX.ECS.Systems
 			_cathedralLightingSystem = new CathedralLightingSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_desertBackgroundEffectSystem = new DesertBackgroundEffectSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_playerAnimationSystem = new PlayerAnimationSystem(_world.EntityManager);
 			_courageDisplaySystem = new CourageDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_actionPointDisplaySystem = new ActionPointDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
@@ -246,6 +248,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_cathedralLightingSystem);
 			_world.AddSystem(_desertBackgroundEffectSystem);
 			_world.AddSystem(_playerWispParticleSystem);
+			_world.AddSystem(_playerAnimationSystem);
 			_world.AddSystem(_tooltipDisplaySystem);
 			_world.AddSystem(_courageDisplaySystem);
 			_world.AddSystem(_temperanceDisplaySystem);
