@@ -2,6 +2,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.ECS.Events;
 using System;
 using System.Linq;
 
@@ -16,6 +17,11 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly Texture2D _crusaderTexture;
         private float _elapsedSeconds;
+        private float _attackAnimTimer;
+        private Vector2 _attackTargetPos;
+        private readonly float _attackAnimDuration = 0.5f;
+        private readonly Vector2 _attackOffset = new Vector2(80f, -20f);
+        private Vector2 _attackDrawOffset = Vector2.Zero;
 
         // Visual tuning
         private const float ScreenHeightCoverage = 0.3f; // portrait height relative to viewport height
@@ -57,6 +63,16 @@ namespace Crusaders30XX.ECS.Systems
             }
             info.TextureWidth = _crusaderTexture?.Width ?? 0;
             info.TextureHeight = _crusaderTexture?.Height ?? 0;
+
+            // Subscribe to start player attack animation
+            Crusaders30XX.ECS.Core.EventManager.Subscribe<StartPlayerAttackAnimation>(_ =>
+            {
+                _attackAnimTimer = _attackAnimDuration;
+                // Target the enemy's current position
+                var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+                var et = enemy?.GetComponent<Transform>();
+                _attackTargetPos = et?.Position ?? Vector2.Zero;
+            });
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -81,8 +97,27 @@ namespace Crusaders30XX.ECS.Systems
                 float breathFactor = 1f + (BreathScaleAmplitude * 0.5f) * System.MathF.Cos(phase);
                 float scale = baseScale * breathFactor;
 
-                var position = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
-                _anchorTransform.Position = position;
+                var basePosition = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
+                // Simple smash animation toward enemy then back; store as draw offset so shared Transform stays stable
+                _attackDrawOffset = Vector2.Zero;
+                if (_attackAnimTimer > 0f)
+                {
+                    _attackAnimTimer = Math.Max(0f, _attackAnimTimer - (float)gameTime.ElapsedGameTime.TotalSeconds);
+                    float ta = 1f - (_attackAnimTimer / _attackAnimDuration); // 0->1
+                    float outPhase = Math.Min(0.5f, ta) * 2f; // 0..1 first half
+                    float backPhase = Math.Max(0f, ta - 0.5f) * 2f; // 0..1 second half
+                    Vector2 outPos = _attackTargetPos + _attackOffset;
+                    Vector2 mid = Vector2.Lerp(basePosition, outPos, 1f - (float)Math.Pow(1f - outPhase, 3));
+                    var animPos = Vector2.Lerp(mid, basePosition, backPhase);
+                    _attackDrawOffset = animPos - basePosition;
+                    if (_attackAnimTimer == 0f)
+                    {
+                        // Signal impact at the end
+                        Crusaders30XX.ECS.Core.EventManager.Publish(new PlayerAttackImpactNow());
+                    }
+                }
+                // Keep the Transform reflecting the base position and scale only
+                _anchorTransform.Position = basePosition;
                 _anchorTransform.Scale = new Vector2(scale, scale);
                 var pinfo = _anchorEntity.GetComponent<PortraitInfo>();
                 if (pinfo != null) { pinfo.CurrentScale = scale; pinfo.BaseScale = desiredHeight / (_crusaderTexture?.Height ?? 1); }
@@ -97,24 +132,13 @@ namespace Crusaders30XX.ECS.Systems
         public void Draw()
         {
             if (_crusaderTexture == null) return;
+            if (_anchorTransform == null) return;
 
-            int viewportW = _graphicsDevice.Viewport.Width;
-            int viewportH = _graphicsDevice.Viewport.Height;
-
-            // Base scale to cover a portion of the screen height
-            float desiredHeight = ScreenHeightCoverage * viewportH;
-            float baseScale = desiredHeight / _crusaderTexture.Height;
-
-            // Smooth breathing factor centered around 1.0 using cosine for ease-in/out
-            float phase = 2f * System.MathF.PI * BreathSpeedHz * _elapsedSeconds;
-            float breathFactor = 1f + (BreathScaleAmplitude * 0.5f) * System.MathF.Cos(phase);
-            float scale = baseScale * breathFactor;
-
-            // Center alignment with adjustable offset; scale about texture center for stable breathing
             float texW = _crusaderTexture.Width;
             float texH = _crusaderTexture.Height;
             var origin = new Vector2(texW / 2f, texH / 2f); // center pivot
-            var position = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
+            var position = _anchorTransform.Position + _attackDrawOffset;
+            var scale = _anchorTransform.Scale.X; // uniform scale set during Update()
 
             _spriteBatch.Draw(
                 _crusaderTexture,

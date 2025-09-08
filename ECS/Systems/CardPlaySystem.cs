@@ -196,6 +196,14 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
+            // If this card has an attack animation, enqueue a player attack animation sequence that will play serially
+            if (string.Equals(def.target, "Enemy", System.StringComparison.OrdinalIgnoreCase)
+                && string.Equals(def.animation, "Attack", System.StringComparison.OrdinalIgnoreCase))
+            {
+                EventQueue.EnqueueRule(new QueuedStartPlayerAttackAnimation());
+                EventQueue.EnqueueRule(new QueuedWaitPlayerImpactEvent());
+            }
+
             // Delegate per-card effects to service
             CardPlayService.Resolve(EntityManager, def.id, data.Name);
 

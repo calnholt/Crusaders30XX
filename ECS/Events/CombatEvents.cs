@@ -53,6 +53,10 @@ namespace Crusaders30XX.ECS.Events
 		public string ContextId;
 	}
 
+	// Player attack animation start and impact events
+	public class StartPlayerAttackAnimation { }
+	public class PlayerAttackImpactNow { }
+
 	// Shows a temporary "Stunned!" overlay on the enemy
 	public class ShowStunnedOverlay
 	{
