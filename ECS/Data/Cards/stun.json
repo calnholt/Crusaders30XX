@@ -6,6 +6,7 @@
   "rarity": "Common",
   "text": "Stun the enemy.",
   "cost": [ "Red" ],
-  "isFreeAction": true
+  "isFreeAction": true,
+  "animation": "Attack"
 }
 

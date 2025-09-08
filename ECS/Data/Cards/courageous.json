@@ -5,6 +5,7 @@
   "color": "Black",
   "rarity": "Common",
   "text": "Gain three courage.",
-  "isFreeAction": true
+  "isFreeAction": true,
+  "animation": "Buff"
 }
 

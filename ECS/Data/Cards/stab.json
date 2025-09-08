@@ -5,6 +5,7 @@
   "color": "Black",
   "rarity": "Common",
   "text": "As an additional cost, lose 2 courage.\n\nDeal 8 damage.",
-  "isFreeAction": true
+  "isFreeAction": true,
+  "animation": "Attack"
 }
 

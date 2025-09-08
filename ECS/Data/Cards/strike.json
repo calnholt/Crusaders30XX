@@ -4,5 +4,6 @@
   "target": "Enemy",
   "color": "Red",
   "rarity": "Common",
-  "text": "Deal 10 damage."
+  "text": "Deal 10 damage.",
+  "animation": "Attack"
 }
