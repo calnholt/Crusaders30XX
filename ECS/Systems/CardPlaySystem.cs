@@ -197,11 +197,18 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // If this card has an attack animation, enqueue a player attack animation sequence that will play serially
-            if (string.Equals(def.target, "Enemy", System.StringComparison.OrdinalIgnoreCase)
-                && string.Equals(def.animation, "Attack", System.StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(def.animation, "Attack", System.StringComparison.OrdinalIgnoreCase))
             {
                 EventQueue.EnqueueRule(new QueuedStartPlayerAttackAnimation());
                 EventQueue.EnqueueRule(new QueuedWaitPlayerImpactEvent());
+            }
+            else if (string.Equals(def.animation, "Buff", System.StringComparison.OrdinalIgnoreCase))
+            {
+                // Play a non-attack squash-stretch on the player before resolving, without blocking other inputs
+                System.Console.WriteLine($"[CardPlaySystem] Buff");
+                EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<StartBuffAnimation>(
+                    "Trigger.PlayerBuffAnim", new StartBuffAnimation { TargetIsPlayer = true }
+                ));
             }
 
             // Delegate per-card effects to service

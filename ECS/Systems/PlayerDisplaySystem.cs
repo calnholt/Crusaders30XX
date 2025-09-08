@@ -23,12 +23,6 @@ namespace Crusaders30XX.ECS.Systems
         private const float ScreenHeightCoverage = 0.3f; // portrait height relative to viewport height
         private const float CenterOffsetX = -600f; // horizontal offset (+right, -left) from screen center
         private const float CenterOffsetY = -100f; // vertical offset (+down, -up) from screen center
-
-        // Breathing animation (ease in/out)
-        private const float BreathScaleAmplitude = 0.06f; // total swing around base (± amplitude/2)
-        private const float BreathSpeedHz = 0.25f;        // cycles per second
-
-        // (Particle logic moved to PlayerWispParticleSystem)
         private Entity _anchorEntity;
         private Transform _anchorTransform;
 
@@ -60,7 +54,6 @@ namespace Crusaders30XX.ECS.Systems
             info.TextureWidth = _crusaderTexture?.Width ?? 0;
             info.TextureHeight = _crusaderTexture?.Height ?? 0;
 
-            // No animation logic here; handled by PlayerAnimationSystem
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -81,9 +74,7 @@ namespace Crusaders30XX.ECS.Systems
 
                 float desiredHeight = ScreenHeightCoverage * viewportH;
                 float baseScale = desiredHeight / _crusaderTexture.Height;
-                float phase = 2f * System.MathF.PI * BreathSpeedHz * _elapsedSeconds;
-                float breathFactor = 1f + (BreathScaleAmplitude * 0.5f) * System.MathF.Cos(phase);
-                float scale = baseScale * breathFactor;
+                float scale = baseScale; // no breathing
 
                 var basePosition = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
                 // Draw offset now maintained by PlayerAnimationSystem via PlayerAnimationState
@@ -111,7 +102,7 @@ namespace Crusaders30XX.ECS.Systems
             float texH = _crusaderTexture.Height;
             var origin = new Vector2(texW / 2f, texH / 2f); // center pivot
             var position = _anchorTransform.Position + _attackDrawOffset;
-            var scale = _anchorTransform.Scale.X; // uniform scale set during Update()
+            var scaleVec = _anchorTransform.Scale; // may be non-uniform when buff anim plays
 
             _spriteBatch.Draw(
                 _crusaderTexture,
@@ -120,7 +111,7 @@ namespace Crusaders30XX.ECS.Systems
                 color: Color.White,
                 rotation: 0f,
                 origin: origin,
-                scale: scale,
+                scale: scaleVec,
                 effects: SpriteEffects.None,
                 layerDepth: 0f
             );

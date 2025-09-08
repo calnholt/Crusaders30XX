@@ -30,6 +30,27 @@ namespace Crusaders30XX.ECS.Systems
 				var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
 				anim.AttackTargetPos = enemy?.GetComponent<Transform>()?.Position ?? Vector2.Zero;
 			});
+			EventManager.Subscribe<StartBuffAnimation>(evt =>
+			{
+				// Apply squash-stretch to the requested target (player or enemy) over timed keyframes
+				if (evt == null) return;
+				if (evt.TargetIsPlayer)
+				{
+					var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+					if (player == null) return;
+					EnsureHasAnimState(player);
+					EnsureScaleAnim(player, out var scaleAnim);
+					EnqueueBuffKeyframes(scaleAnim);
+				}
+				else
+				{
+					var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+					if (enemy == null) return;
+					EnsureHasAnimState(enemy);
+					EnsureScaleAnim(enemy, out var scaleAnim);
+					EnqueueBuffKeyframes(scaleAnim);
+				}
+			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -58,6 +79,97 @@ namespace Crusaders30XX.ECS.Systems
 				if (anim.AttackAnimTimer == 0f)
 				{
 					EventManager.Publish(new PlayerAttackImpactNow());
+				}
+			}
+			// Update scale keyframe animation if present
+			if (_scaleAnims.TryGetValue(entity.Id, out var sa))
+			{
+				sa.Update(dt);
+				if (sa.IsComplete)
+				{
+					_scaleAnims.Remove(entity.Id);
+				}
+				else
+				{
+					// Apply current scale as a multiplier of the base (non-uniform allowed)
+					var baseScale = t.Scale;
+					baseScale.X *= sa.CurrentScale.X;
+					baseScale.Y *= sa.CurrentScale.Y;
+					t.Scale = baseScale;
+				}
+			}
+		}
+		private void EnsureHasAnimState(Entity e)
+		{
+			var st = e.GetComponent<PlayerAnimationState>();
+			if (st == null)
+			{
+				st = new PlayerAnimationState();
+				EntityManager.AddComponent(e, st);
+			}
+		}
+
+		// Simple per-entity scale keyframe animation state
+		private readonly System.Collections.Generic.Dictionary<int, ScaleAnim> _scaleAnims = new();
+
+		private void EnsureScaleAnim(Entity e, out ScaleAnim sa)
+		{
+			if (!_scaleAnims.TryGetValue(e.Id, out sa))
+			{
+				sa = new ScaleAnim();
+				_scaleAnims[e.Id] = sa;
+			}
+		}
+
+		private void EnqueueBuffKeyframes(ScaleAnim sa)
+		{
+			// Reset and add the anime.js-inspired keyframes with durations (seconds)
+			sa.Reset();
+			sa.AddKeyframe(new Vector2(1.25f, 0.75f), 0.288f);
+			sa.AddKeyframe(new Vector2(0.75f, 1.25f), 0.096f);
+			sa.AddKeyframe(new Vector2(1.15f, 0.85f), 0.096f);
+			sa.AddKeyframe(new Vector2(0.95f, 1.05f), 0.144f);
+			sa.AddKeyframe(new Vector2(1.05f, 0.95f), 0.096f);
+			sa.AddKeyframe(new Vector2(1f, 1f), 0.240f);
+		}
+
+		private class ScaleAnim
+		{
+			private struct Kf { public Vector2 Scale; public float Duration; }
+			private readonly System.Collections.Generic.List<Kf> _kfs = new();
+			private int _index;
+			private float _elapsed;
+			public Vector2 CurrentScale = new Vector2(1f, 1f);
+			public bool IsComplete => _index >= _kfs.Count;
+
+			public void Reset()
+			{
+				_kfs.Clear();
+				_index = 0;
+				_elapsed = 0f;
+				CurrentScale = new Vector2(1f, 1f);
+			}
+
+			public void AddKeyframe(Vector2 scale, float durationSec)
+			{
+				_kfs.Add(new Kf { Scale = scale, Duration = System.Math.Max(0.0001f, durationSec) });
+			}
+
+			public void Update(float dt)
+			{
+				if (IsComplete) return;
+				_elapsed += dt;
+				float dur = _kfs[_index].Duration;
+				float t = System.Math.Clamp(_elapsed / dur, 0f, 1f);
+				// easeInOutQuad
+				float eased = t < 0.5f ? 2f * t * t : 1f - System.MathF.Pow(-2f * t + 2f, 2f) / 2f;
+				Vector2 from = (_index == 0) ? new Vector2(1f, 1f) : _kfs[_index - 1].Scale;
+				Vector2 to = _kfs[_index].Scale;
+				CurrentScale = Vector2.Lerp(from, to, eased);
+				if (_elapsed >= dur)
+				{
+					_index++;
+					_elapsed = 0f;
 				}
 			}
 		}

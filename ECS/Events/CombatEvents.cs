@@ -57,6 +57,12 @@ namespace Crusaders30XX.ECS.Events
 	public class StartPlayerAttackAnimation { }
 	public class PlayerAttackImpactNow { }
 
+	// Generic buff animation start for either player or enemy
+	public class StartBuffAnimation
+	{
+		public bool TargetIsPlayer;
+	}
+
 	// Shows a temporary "Stunned!" overlay on the enemy
 	public class ShowStunnedOverlay
 	{
