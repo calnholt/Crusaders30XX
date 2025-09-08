@@ -63,6 +63,11 @@ namespace Crusaders30XX.ECS.Events
 		public bool TargetIsPlayer;
 	}
 
+	public class BuffAnimationComplete
+	{
+		public bool TargetIsPlayer;
+	}
+
 	// Shows a temporary "Stunned!" overlay on the enemy
 	public class ShowStunnedOverlay
 	{

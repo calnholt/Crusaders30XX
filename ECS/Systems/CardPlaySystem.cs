@@ -204,11 +204,9 @@ namespace Crusaders30XX.ECS.Systems
             }
             else if (string.Equals(def.animation, "Buff", System.StringComparison.OrdinalIgnoreCase))
             {
-                // Play a non-attack squash-stretch on the player before resolving, without blocking other inputs
                 System.Console.WriteLine($"[CardPlaySystem] Buff");
-                EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<StartBuffAnimation>(
-                    "Trigger.PlayerBuffAnim", new StartBuffAnimation { TargetIsPlayer = true }
-                ));
+                EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
+                EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
             }
 
             // Delegate per-card effects to service

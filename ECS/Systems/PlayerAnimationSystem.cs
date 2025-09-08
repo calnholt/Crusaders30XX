@@ -65,6 +65,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (anim == null || t == null) return;
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			anim.DrawOffset = Vector2.Zero;
+			anim.ScaleMultiplier = new Vector2(1f, 1f);
 			if (anim.AttackAnimTimer > 0f)
 			{
 				anim.AttackAnimTimer = System.Math.Max(0f, anim.AttackAnimTimer - dt);
@@ -91,11 +92,8 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				else
 				{
-					// Apply current scale as a multiplier of the base (non-uniform allowed)
-					var baseScale = t.Scale;
-					baseScale.X *= sa.CurrentScale.X;
-					baseScale.Y *= sa.CurrentScale.Y;
-					t.Scale = baseScale;
+					// Store scale multiplier on state so display can combine with base scale without stomping other effects
+					anim.ScaleMultiplier = sa.CurrentScale;
 				}
 			}
 		}
@@ -131,6 +129,7 @@ namespace Crusaders30XX.ECS.Systems
 			sa.AddKeyframe(new Vector2(0.95f, 1.05f), 0.144f);
 			sa.AddKeyframe(new Vector2(1.05f, 0.95f), 0.096f);
 			sa.AddKeyframe(new Vector2(1f, 1f), 0.240f);
+			sa.OnComplete = () => { EventManager.Publish(new BuffAnimationComplete { TargetIsPlayer = true }); };
 		}
 
 		private class ScaleAnim
@@ -141,6 +140,7 @@ namespace Crusaders30XX.ECS.Systems
 			private float _elapsed;
 			public Vector2 CurrentScale = new Vector2(1f, 1f);
 			public bool IsComplete => _index >= _kfs.Count;
+			public System.Action OnComplete;
 
 			public void Reset()
 			{
@@ -170,6 +170,10 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					_index++;
 					_elapsed = 0f;
+					if (IsComplete)
+					{
+						OnComplete?.Invoke();
+					}
 				}
 			}
 		}

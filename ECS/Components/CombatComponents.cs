@@ -84,6 +84,7 @@ namespace Crusaders30XX.ECS.Components
 	{
 		public Entity Owner { get; set; }
 		public Microsoft.Xna.Framework.Vector2 DrawOffset { get; set; }
+		public Microsoft.Xna.Framework.Vector2 ScaleMultiplier { get; set; } = new Microsoft.Xna.Framework.Vector2(1f, 1f);
 		public float AttackAnimTimer { get; set; }
 		public float AttackAnimDuration { get; set; } = 0.5f;
 		public Microsoft.Xna.Framework.Vector2 AttackTargetPos { get; set; }

@@ -102,7 +102,13 @@ namespace Crusaders30XX.ECS.Systems
             float texH = _crusaderTexture.Height;
             var origin = new Vector2(texW / 2f, texH / 2f); // center pivot
             var position = _anchorTransform.Position + _attackDrawOffset;
-            var scaleVec = _anchorTransform.Scale; // may be non-uniform when buff anim plays
+            var scaleVec = _anchorTransform.Scale; // base scale
+            var animState = _anchorEntity.GetComponent<PlayerAnimationState>();
+            if (animState != null)
+            {
+                scaleVec.X *= animState.ScaleMultiplier.X;
+                scaleVec.Y *= animState.ScaleMultiplier.Y;
+            }
 
             _spriteBatch.Draw(
                 _crusaderTexture,
