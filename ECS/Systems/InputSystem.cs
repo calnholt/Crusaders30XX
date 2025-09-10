@@ -41,11 +41,7 @@ namespace Crusaders30XX.ECS.Systems
             var mousePosition = mouseState.Position;
             var keyboardState = Keyboard.GetState();
 
-            // Toggle debug menu on D key press (edge-triggered)
-            if (keyboardState.IsKeyDown(Keys.D) && !_previousKeyboardState.IsKeyDown(Keys.D))
-            {
-                ToggleDebugMenu();
-            }
+            // Debug menu toggle is handled globally in Game1 to be scene-independent
 
             // Toggle profiler overlay on P key press (edge-triggered)
             if (keyboardState.IsKeyDown(Keys.P) && !_previousKeyboardState.IsKeyDown(Keys.P))
@@ -263,31 +259,7 @@ namespace Crusaders30XX.ECS.Systems
             _previousKeyboardState = Keyboard.GetState();
         }
 
-        private void ToggleDebugMenu()
-        {
-            // Find or create a debug menu entity
-            var menuEntity = EntityManager.GetEntitiesWithComponent<DebugMenu>().FirstOrDefault();
-            if (menuEntity == null)
-            {
-                menuEntity = EntityManager.CreateEntity("DebugMenu");
-                EntityManager.AddComponent(menuEntity, new DebugMenu { IsOpen = true });
-                EntityManager.AddComponent(menuEntity, new Transform { Position = new Vector2(1800, 200), ZOrder = 5000 });
-                EntityManager.AddComponent(menuEntity, new UIElement { Bounds = new Rectangle(1750, 150, 150, 300), IsInteractable = true });
-
-                // No need to spawn legacy debug buttons; the DebugMenuSystem now discovers actions via DebugActionAttribute
-            }
-            else
-            {
-                var menu = menuEntity.GetComponent<DebugMenu>();
-                menu.IsOpen = !menu.IsOpen;
-                // Toggle interactability for children as well
-                foreach (var e in EntityManager.GetEntitiesWithComponent<UIButton>())
-                {
-                    var ui = e.GetComponent<UIElement>();
-                    if (ui != null) ui.IsInteractable = menu.IsOpen;
-                }
-            }
-        }
+        // Debug menu toggle removed from here; see Game1.ToggleDebugMenu()
 
         private void ToggleProfilerOverlay()
         {

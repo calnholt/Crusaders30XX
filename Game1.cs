@@ -17,6 +17,8 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
     private SpriteFont _font;
+    private DebugMenuSystem _debugMenuSystem;
+    private KeyboardState _prevKeyboard;
     
     
     // ECS System
@@ -77,20 +79,30 @@ public class Game1 : Game
         // Add parent scene systems only
         var menuSceneSystem = new MenuSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         var battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
+        _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _world.SystemManager);
         _world.AddSystem(menuSceneSystem);
         _world.AddSystem(battleSceneSystem);
+        _world.AddSystem(_debugMenuSystem);
 
         // TODO: use this.Content to load your game content here
     }
     
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+        var kb = Keyboard.GetState();
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || kb.IsKeyDown(Keys.Escape))
             Exit();
+
+        // Global debug menu toggle so it's available in the main menu too
+        if (kb.IsKeyDown(Keys.D) && !_prevKeyboard.IsKeyDown(Keys.D))
+        {
+            ToggleDebugMenu();
+        }
 
         // Update ECS World (this includes input processing)
         _world.Update(gameTime);
 
+        _prevKeyboard = kb;
         base.Update(gameTime);
     }
 
@@ -104,8 +116,32 @@ public class Game1 : Game
         var battleScene = _world.SystemManager.GetSystem<BattleSceneSystem>();
         menuScene?.Draw();
         battleScene?.Draw();
+        _debugMenuSystem.Draw();
         _spriteBatch.End();
 
         base.Draw(gameTime);
+    }
+
+    private void ToggleDebugMenu()
+    {
+        var em = _world.EntityManager;
+        var menuEntity = em.GetEntitiesWithComponent<DebugMenu>().FirstOrDefault();
+        if (menuEntity == null)
+        {
+            menuEntity = _world.CreateEntity("DebugMenu");
+            _world.AddComponent(menuEntity, new DebugMenu { IsOpen = true });
+            _world.AddComponent(menuEntity, new Transform { Position = new Vector2(1800, 200), ZOrder = 5000 });
+            _world.AddComponent(menuEntity, new UIElement { Bounds = new Rectangle(1750, 150, 150, 300), IsInteractable = true });
+        }
+        else
+        {
+            var menu = menuEntity.GetComponent<DebugMenu>();
+            menu.IsOpen = !menu.IsOpen;
+            foreach (var e in em.GetEntitiesWithComponent<UIButton>())
+            {
+                var ui = e.GetComponent<UIElement>();
+                if (ui != null) ui.IsInteractable = menu.IsOpen;
+            }
+        }
     }
 }

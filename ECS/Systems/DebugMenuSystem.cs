@@ -32,6 +32,10 @@ namespace Crusaders30XX.ECS.Systems
         private bool _dragging = false;
         private Point _dragOffset;
 
+        // Cache invalidation triggers
+        private string _systemsSignatureSnapshot = string.Empty;
+        private SceneId _lastSceneId = SceneId.Menu;
+
         // TODO: Caches populate on first use; if systems are added/removed at runtime or their reflected members change dynamically, we can add an explicit invalidation later.
         
 		// Caches to avoid repeated reflection and list building every frame
@@ -138,6 +142,8 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
+            // Invalidate debug menu caches when scene or system set changes
+            TryInvalidateCachesOnSceneOrSystemsChange();
             var menuEntity = GetRelevantEntities().FirstOrDefault();
             if (menuEntity == null) return;
 
@@ -641,6 +647,29 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             _prevMouse = mouse;
+        }
+
+        private void TryInvalidateCachesOnSceneOrSystemsChange()
+        {
+            try
+            {
+                // Scene change detection
+                var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+                var currentScene = scene?.Current ?? _lastSceneId;
+                // Systems signature: count + names to detect add/remove
+                var systems = _systemManager.GetAllSystems().Select(s => s.GetType().FullName).OrderBy(n => n);
+                string sig = string.Join("|", systems);
+                if (currentScene != _lastSceneId || !string.Equals(sig, _systemsSignatureSnapshot, StringComparison.Ordinal))
+                {
+                    _annotatedSystemsCache = null; // force rebuild
+                    _editableMembersCache.Clear();
+                    _debugActionsCache.Clear();
+                    _debugActionsIntCache.Clear();
+                    _lastSceneId = currentScene;
+                    _systemsSignatureSnapshot = sig;
+                }
+            }
+            catch { }
         }
 
 		private static string BuildSettingsExport(Core.System system)

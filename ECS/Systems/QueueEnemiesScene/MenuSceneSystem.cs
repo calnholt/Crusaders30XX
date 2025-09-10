@@ -29,25 +29,25 @@ namespace Crusaders30XX.ECS.Systems
 		public int GridColumns { get; set; } = 4;
 
 		[DebugEditable(DisplayName = "Button Width", Step = 4, Min = 40, Max = 1000)]
-		public int ButtonWidth { get; set; } = 220;
+		public int ButtonWidth { get; set; } = 348;
 
 		[DebugEditable(DisplayName = "Button Height", Step = 4, Min = 40, Max = 1000)]
-		public int ButtonHeight { get; set; } = 140;
+		public int ButtonHeight { get; set; } = 324;
 
 		[DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 64)]
-		public int CornerRadius { get; set; } = 18;
+		public int CornerRadius { get; set; } = 49;
 
 		[DebugEditable(DisplayName = "Grid Padding", Step = 2, Min = 0, Max = 200)]
-		public int GridPadding { get; set; } = 20;
+		public int GridPadding { get; set; } = 12;
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.3f, Max = 3f)]
-		public float TextScale { get; set; } = 0.9f;
+		public float TextScale { get; set; } = 1f;
 
 		[DebugEditable(DisplayName = "Top List Height", Step = 4, Min = 20, Max = 600)]
-		public int TopListHeight { get; set; } = 100;
+		public int TopListHeight { get; set; } = 108;
 
 		[DebugEditable(DisplayName = "Top List Image Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
-		public float TopListImageScale { get; set; } = 0.9f;
+		public float TopListImageScale { get; set; } = 0.8f;
 
 		[DebugEditable(DisplayName = "Confirm Width", Step = 4, Min = 40, Max = 600)]
 		public int ConfirmWidth { get; set; } = 200;
@@ -56,7 +56,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int ConfirmHeight { get; set; } = 48;
 
 		[DebugEditable(DisplayName = "Grid Image Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
-		public float GridImageScale { get; set; } = 0.9f;
+		public float GridImageScale { get; set; } = 0.95f;
 
 		public MenuSceneSystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content, SpriteFont font) : base(em)
 		{
@@ -174,11 +174,11 @@ namespace Crusaders30XX.ECS.Systems
 				// Button background
 				if (_rounded != null)
 				{
-					_spriteBatch.Draw(_rounded, rect, Color.Black);
+					_spriteBatch.Draw(_rounded, rect, Color.White);
 				}
 				else
 				{
-					_spriteBatch.Draw(_pixel, rect, Color.Black);
+					_spriteBatch.Draw(_pixel, rect, Color.White);
 				}
 				// Enemy image (PNG)
 				var def = kv.Value;
@@ -211,8 +211,8 @@ namespace Crusaders30XX.ECS.Systems
 				for (int idx = 0; idx < qe.EnemyIds.Count; idx++)
 				{
 					var rct = new Rectangle(sx, sy, itemW, itemH);
-					if (_rounded != null) _spriteBatch.Draw(_rounded, rct, Color.Black);
-					else _spriteBatch.Draw(_pixel, rct, Color.Black);
+					if (_rounded != null) _spriteBatch.Draw(_rounded, rct, Color.White);
+					else _spriteBatch.Draw(_pixel, rct, Color.White);
 					string id = qe.EnemyIds[idx];
 					EnemyDefinition def;
 					EnemyDefinitionCache.TryGet(id, out def);

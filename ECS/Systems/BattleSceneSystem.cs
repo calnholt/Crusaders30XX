@@ -26,7 +26,6 @@ namespace Crusaders30XX.ECS.Systems
 		private HandDisplaySystem _handDisplaySystem;
 		private CardHighlightSystem _cardHighlightSystem;
 		private BattleBackgroundSystem _battleBackgroundSystem;
-		private DebugMenuSystem _debugMenuSystem;
 		private DebugCommandSystem _debugCommandSystem;
 		private DrawPileDisplaySystem _drawPileDisplaySystem;
 		private DiscardPileDisplaySystem _discardPileDisplaySystem;
@@ -128,7 +127,6 @@ namespace Crusaders30XX.ECS.Systems
 			_handDisplaySystem.DrawHand();
 			_cardPlayedAnimationSystem.Draw();
 			_equipmentDisplaySystem.Draw();
-			_debugMenuSystem.Draw();
 			_drawPileDisplaySystem.Draw();
 			_discardPileDisplaySystem.Draw();
 			_cardListModalSystem.Draw();
@@ -191,7 +189,6 @@ namespace Crusaders30XX.ECS.Systems
 			_cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font, _content);
 			_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
-			_debugMenuSystem = new DebugMenuSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font, _world.SystemManager);
 			_debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
 			_drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_discardPileDisplaySystem = new DiscardPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
@@ -274,7 +271,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_temperanceManagerSystem);
 			_world.AddSystem(_actionPointManagementSystem);
 			_world.AddSystem(_profilerSystem);
-			_world.AddSystem(_debugMenuSystem);
 			_world.AddSystem(_battleBackgroundSystem);
 			_world.AddSystem(_hpDisplaySystem);
 			_world.AddSystem(_cardVisualSettingsDebugSystem);
