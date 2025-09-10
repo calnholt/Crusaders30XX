@@ -161,6 +161,19 @@ namespace Crusaders30XX.ECS.Systems
 				deck.DrawPile.AddRange(demoHand);
 			}
 			AddBattleSystems();
+			// Spawn selected enemy (index 0) if any queued; otherwise default handled by CreateGameState
+			var queued = _world.EntityManager.GetEntitiesWithComponent<QueuedEnemies>().FirstOrDefault()?.GetComponent<QueuedEnemies>();
+			if (queued != null && queued.EnemyIds.Count > 0)
+			{
+				// Remove any default enemy created during CreateGameState
+				var existingEnemies = _world.EntityManager.GetEntitiesWithComponent<Enemy>().ToList();
+				foreach (var e in existingEnemies)
+				{
+					_world.EntityManager.DestroyEntity(e.Id);
+				}
+				var id0 = queued.EnemyIds[0];
+				EntityFactory.CreateEnemyFromId(_world, id0);
+			}
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
 			EventManager.Publish(new DeckShuffleEvent { });
 
