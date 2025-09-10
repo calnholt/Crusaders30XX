@@ -1,5 +1,5 @@
 {
-  "id": "head_focus",
+  "id": "focus_visor",
   "name": "Focus Visor",
   "slot": "Head",
   "block": 5,
@@ -7,14 +7,14 @@
   "color": "Red",
   "abilities": [
     {
-      "id": "first_5_courage_draw1",
+      "id": "first_7_courage_draw1",
       "type": "Trigger",
       "trigger": "CourageGainedThreshold",
-      "threshold": 5,
+      "threshold": 7,
       "oncePerBattle": true,
       "effect": "DrawCards",
       "effectCount": 1,
-      "text": "The first time you gain 5 Courage in a battle, draw a card."
+      "text": "The first time you have 7 Courage in a battle, draw a card."
     }
   ]
 }

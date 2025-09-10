@@ -106,7 +106,7 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new EquippedWeapon { WeaponId = "sword" });
             world.AddComponent(
                 world.CreateEntity("Equip_Head"), 
-                new EquippedEquipment { EquippedOwner = entity, EquipmentId = "head_focus", EquipmentType = "Head" }
+                new EquippedEquipment { EquippedOwner = entity, EquipmentId = "focus_visor", EquipmentType = "Head" }
             );
             world.AddComponent(
                 world.CreateEntity("Equip_Head"), 

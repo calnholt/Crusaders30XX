@@ -37,6 +37,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (courage == null) return;
 			int old = courage.Amount;
 			courage.Amount = Math.Max(0, old + evt.Delta);
+			var st = player.GetComponent<BattleStateInfo>();
 		}
 
 		private void OnCardMoved(CardMoved evt)

@@ -46,14 +46,14 @@ namespace Crusaders30XX.ECS.Systems
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			if (player == null) return;
 			var st = GetOrCreateState(player);
-			st.CourageGainedThisBattle += e.Delta;
+			var courage = player.GetComponent<Courage>();
 
 			foreach (var ability in EnumerateEquippedAbilities(player))
 			{
 				if (ability.trigger == "CourageGainedThreshold")
 				{
 					if (ability.oncePerBattle && st.TriggeredThisBattle.Contains(ability.id)) continue;
-					if (st.CourageGainedThisBattle >= Math.Max(1, ability.threshold))
+					if (courage.Amount >= Math.Max(1, ability.threshold))
 					{
 						EquipmentAbilityService.Activate(EntityManager, ability);
 						if (ability.oncePerBattle) st.TriggeredThisBattle.Add(ability.id);
