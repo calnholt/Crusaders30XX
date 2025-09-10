@@ -29,8 +29,14 @@ namespace Crusaders30XX.ECS.Systems
 			if (target == null) return;
 			var hp = target.GetComponent<HP>();
 			if (hp == null) return;
+			int before = hp.Current;
 			int nv = hp.Current + e.Delta;
 			hp.Current = System.Math.Max(0, System.Math.Min(hp.Max, nv));
+			// If this is the player and we crossed to zero, publish PlayerDied once
+			if (before > 0 && hp.Current == 0 && target.HasComponent<Player>())
+			{
+				EventManager.Publish(new Crusaders30XX.ECS.Events.PlayerDied { Player = target });
+			}
 		}
 
 		private void OnSetHp(SetHpEvent e)
@@ -39,7 +45,12 @@ namespace Crusaders30XX.ECS.Systems
 			if (target == null) return;
 			var hp = target.GetComponent<HP>();
 			if (hp == null) return;
+			int before = hp.Current;
 			hp.Current = System.Math.Max(0, System.Math.Min(hp.Max, e.Value));
+			if (before > 0 && hp.Current == 0 && target.HasComponent<Player>())
+			{
+				EventManager.Publish(new Crusaders30XX.ECS.Events.PlayerDied { Player = target });
+			}
 		}
 
 		private Entity ResolveTarget(Entity explicitTarget)

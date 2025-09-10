@@ -72,6 +72,7 @@ namespace Crusaders30XX.ECS.Systems
 		private EnemyStunAutoSkipSystem _enemyStunAutoSkipSystem;
 		private PayCostOverlaySystem _payCostOverlaySystem;
 		private CantPlayCardMessageSystem _cantPlayCardMessageSystem;
+		private GameOverOverlayDisplaySystem _gameOverOverlayDisplaySystem;
 		private WeaponManagementSystem _weaponManagementSystem;
 		private EquipmentManagerSystem _equipmentManagerSystem;
 		private EquipmentDisplaySystem _equipmentDisplaySystem;
@@ -135,6 +136,7 @@ namespace Crusaders30XX.ECS.Systems
 			_profilerSystem.Draw();
 			_payCostOverlaySystem.DrawForeground();
 			_cantPlayCardMessageSystem.Draw();
+			_gameOverOverlayDisplaySystem?.Draw();
 		}
 
 		private void StartBattle()
@@ -210,6 +212,7 @@ namespace Crusaders30XX.ECS.Systems
 			_assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font, _content);
 			_payCostOverlaySystem = new PayCostOverlaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_cantPlayCardMessageSystem = new CantPlayCardMessageSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
+			_gameOverOverlayDisplaySystem = new GameOverOverlayDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_enemyIntentPlanningSystem = new EnemyIntentPlanningSystem(_world.EntityManager);
 			_enemyAttackProgressManagementSystem = new EnemyAttackProgressManagementSystem(_world.EntityManager);
 			_stunnedOverlaySystem = new StunnedOverlaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
@@ -290,6 +293,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_payCostOverlaySystem);
 			_world.AddSystem(_cardHighlightSystem);
 			_world.AddSystem(_cantPlayCardMessageSystem);
+			_world.AddSystem(_gameOverOverlayDisplaySystem);
 		}
 
 	}

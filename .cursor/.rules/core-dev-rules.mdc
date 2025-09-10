@@ -1,0 +1,13 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+#STRICT RULES
+
+##CODING STANDARDS
+
+- When making new systems, always add the appropriate DebugEditable and DebugTab attributes.
+- Use imports, do not reference like this: "Crusaders30XX.ECS.Data.Cards".
+- Prioritize readability over complexity - if it's more lines but easier to follow, that's good.

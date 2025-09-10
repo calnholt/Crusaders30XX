@@ -21,6 +21,14 @@ namespace Crusaders30XX.ECS.Events
         public Entity Target { get; set; }
         public int Value { get; set; }
     }
+
+    /// <summary>
+    /// Emitted when the player entity's HP reaches 0 for the first time.
+    /// </summary>
+    public class PlayerDied
+    {
+        public Entity Player { get; set; }
+    }
 }
 
 
