@@ -23,6 +23,20 @@ namespace Crusaders30XX.ECS.Components
 		public Entity Owner { get; set; }
 		public List<string> EnemyIds { get; set; } = new List<string>();
 	}
+
+	public class EntityListOverlay : IComponent
+	{
+		public Crusaders30XX.ECS.Core.Entity Owner { get; set; }
+		public bool IsOpen { get; set; } = false;
+		public int PanelX { get; set; } = 40;
+		public int PanelY { get; set; } = 40;
+		public int PanelWidth { get; set; } = 520;
+		public int PanelHeight { get; set; } = 600;
+		public float TextScale { get; set; } = 0.6f;
+		public int RowHeight { get; set; } = 24;
+		public int Padding { get; set; } = 8;
+		public float ScrollOffset { get; set; } = 0f;
+	}
 }
 
 

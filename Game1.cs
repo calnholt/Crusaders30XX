@@ -18,6 +18,7 @@ public class Game1 : Game
     private SpriteBatch _spriteBatch;
     private SpriteFont _font;
     private DebugMenuSystem _debugMenuSystem;
+    private EntityListOverlaySystem _entityListOverlaySystem;
     private KeyboardState _prevKeyboard;
     
     
@@ -80,9 +81,11 @@ public class Game1 : Game
         var menuSceneSystem = new MenuSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         var battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _world.SystemManager);
+        _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _world.AddSystem(menuSceneSystem);
         _world.AddSystem(battleSceneSystem);
         _world.AddSystem(_debugMenuSystem);
+        _world.AddSystem(_entityListOverlaySystem);
 
         // TODO: use this.Content to load your game content here
     }
@@ -97,6 +100,12 @@ public class Game1 : Game
         if (kb.IsKeyDown(Keys.D) && !_prevKeyboard.IsKeyDown(Keys.D))
         {
             ToggleDebugMenu();
+        }
+
+        // Entity list overlay toggle: Shift + W
+        if ((kb.IsKeyDown(Keys.LeftShift) || kb.IsKeyDown(Keys.RightShift)) && kb.IsKeyDown(Keys.W) && !_prevKeyboard.IsKeyDown(Keys.W))
+        {
+            ToggleEntityListOverlay();
         }
 
         // Update ECS World (this includes input processing)
@@ -117,6 +126,7 @@ public class Game1 : Game
         menuScene?.Draw();
         battleScene?.Draw();
         _debugMenuSystem.Draw();
+        _entityListOverlaySystem?.Draw();
         _spriteBatch.End();
 
         base.Draw(gameTime);
@@ -142,6 +152,22 @@ public class Game1 : Game
                 var ui = e.GetComponent<UIElement>();
                 if (ui != null) ui.IsInteractable = menu.IsOpen;
             }
+        }
+    }
+
+    private void ToggleEntityListOverlay()
+    {
+        var em = _world.EntityManager;
+        var overlayEntity = em.GetEntitiesWithComponent<EntityListOverlay>().FirstOrDefault();
+        if (overlayEntity == null)
+        {
+            overlayEntity = _world.CreateEntity("EntityListOverlay");
+            _world.AddComponent(overlayEntity, new EntityListOverlay { IsOpen = true });
+        }
+        else
+        {
+            var o = overlayEntity.GetComponent<EntityListOverlay>();
+            o.IsOpen = !o.IsOpen;
         }
     }
 }
