@@ -83,8 +83,6 @@ namespace Crusaders30XX.ECS.Components
         
         public int MaxHealth { get; set; } = 100;
         public int CurrentHealth { get; set; } = 100;
-        public int MaxEnergy { get; set; } = 3;
-        public int Block { get; set; } = 0;
         
         public Entity DeckEntity { get; set; }
         public Entity HandEntity { get; set; }

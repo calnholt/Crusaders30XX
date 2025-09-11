@@ -17,6 +17,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Subscribe<CardMoved>(OnCardMoved);
             EventManager.Subscribe<ModifyTemperanceEvent>(OnModifyTemperance);
+            EventManager.Subscribe<SetTemperanceEvent>(OnSetTemperanceEvent);
             System.Console.WriteLine("[TemperanceManagerSystem] Subscribed to CardMoved, ModifyTemperanceEvent");
         }
 
@@ -53,6 +54,13 @@ namespace Crusaders30XX.ECS.Systems
             t.Amount = Math.Max(0, t.Amount + evt.Delta);
             System.Console.WriteLine($"[TemperanceManagerSystem] Temperance changed {before} -> {t.Amount}");
             TryTriggerTemperanceAbility(player, t);
+        }
+        private void OnSetTemperanceEvent(SetTemperanceEvent evt)
+        {
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            if (player == null) return;
+            var t = player.GetComponent<Temperance>();
+            t.Amount = evt.Amount;
         }
 
         private void TryTriggerTemperanceAbility(Entity player, Temperance t)

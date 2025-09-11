@@ -47,6 +47,19 @@ namespace Crusaders30XX.ECS.Core
             
             _entities.Remove(entityId);
         }
+
+        public void DestroyEntity(string identifier)
+        {
+            if (string.IsNullOrWhiteSpace(identifier)) return;
+            if (int.TryParse(identifier, out var intId))
+            {
+                DestroyEntity(intId);
+                return;
+            }
+            var entity = GetEntity(identifier);
+            if (entity == null) return;
+            DestroyEntity(entity.Id);
+        }
         
         /// <summary>
         /// Adds a component to an entity
@@ -135,6 +148,16 @@ namespace Crusaders30XX.ECS.Core
         public Entity GetEntity(int entityId)
         {
             return _entities.TryGetValue(entityId, out var entity) ? entity : null;
+        }
+        
+        /// <summary>
+        /// Gets the first active entity by its Name (exact match).
+        /// Returns null if not found.
+        /// </summary>
+        public Entity GetEntity(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+            return _entities.Values.FirstOrDefault(e => e.IsActive && string.Equals(e.Name, name, StringComparison.Ordinal));
         }
         
         /// <summary>

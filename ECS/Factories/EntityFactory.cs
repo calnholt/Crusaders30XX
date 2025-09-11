@@ -70,8 +70,6 @@ namespace Crusaders30XX.ECS.Factories
             {
                 MaxHealth = 100,
                 CurrentHealth = 100,
-                MaxEnergy = 3,
-                Block = 0,
             };
             
             var transform = new Transform
@@ -109,7 +107,7 @@ namespace Crusaders30XX.ECS.Factories
                 new EquippedEquipment { EquippedOwner = entity, EquipmentId = "focus_visor", EquipmentType = "Head" }
             );
             world.AddComponent(
-                world.CreateEntity("Equip_Head"), 
+                world.CreateEntity("Equip_Legs"), 
                 new EquippedEquipment { EquippedOwner = entity, EquipmentId = "lightning_grieves", EquipmentType = "Legs" }
             );
             // Attach Courage resource component by default (optional mechanics can read presence)
@@ -127,6 +125,9 @@ namespace Crusaders30XX.ECS.Factories
             // Attach starting Intellect and MaxHandSize stats
             world.AddComponent(entity, new Intellect { Value = 4 });
             world.AddComponent(entity, new MaxHandSize { Value = 5 });
+
+            var st = new BattleStateInfo { Owner = entity };
+            world.AddComponent(entity, st);
             
             // Pre-create Courage tooltip hover entity (bounds updated by CourageDisplaySystem)
             var courageTooltip = world.CreateEntity("UI_CourageTooltip");
@@ -418,7 +419,7 @@ namespace Crusaders30XX.ECS.Factories
                 def = new EnemyDefinition { id = enemyId, name = enemyId, hp = 60, attackIds = new List<string>() };
             }
 
-            var entity = world.CreateEntity($"Enemy_{def.id}");
+            var entity = world.CreateEntity($"Enemy");
             var enemy = new Enemy { Id = def.id, Name = def.name ?? def.id, Type = EnemyType.Demon, MaxHealth = def.hp, CurrentHealth = def.hp };
             var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
             world.AddComponent(entity, enemy);

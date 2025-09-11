@@ -555,7 +555,9 @@ namespace Crusaders30XX.ECS.Systems
 						}
 						catch (Exception ex)
 						{
-							Console.WriteLine($"[DebugMenu] Action '{am.label}' failed: {ex.Message}");
+							var tie = ex as System.Reflection.TargetInvocationException;
+							var root = tie?.InnerException ?? ex;
+							Console.WriteLine($"[DebugMenu] Action '{am.label}' failed:\n{root}");
 						}
 					}
                     cursorY += ButtonHeight + Spacing;
@@ -592,7 +594,12 @@ namespace Crusaders30XX.ECS.Systems
 						else if (applyRect.Contains(mouse.Position))
 						{
 							try { ai.method.Invoke(active.sys, new object[] { ai.current }); }
-							catch (System.Exception ex) { System.Console.WriteLine($"[DebugMenu] Action-int '{ai.label}' failed: {ex.Message}"); }
+							catch (System.Exception ex)
+							{
+								var tie = ex as System.Reflection.TargetInvocationException;
+								var root = tie?.InnerException ?? ex;
+								System.Console.WriteLine($"[DebugMenu] Action-int '{ai.label}' failed:\n{root}");
+							}
 						}
 					}
 					cursorY += ButtonHeight + Spacing;

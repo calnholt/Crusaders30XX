@@ -6,6 +6,10 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public int Delta; // positive to add, negative to consume
 	}
+	public class SetStoredBlock
+	{
+		public int Amount; // positive to add, negative to consume
+	}
 
 	public class BlockAssignmentAdded
 	{

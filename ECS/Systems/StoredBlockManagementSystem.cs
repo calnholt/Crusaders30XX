@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using System.Diagnostics.Tracing;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -14,6 +15,7 @@ namespace Crusaders30XX.ECS.Systems
 		public StoredBlockManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<ModifyStoredBlock>(OnModifyStoredBlock);
+			EventManager.Subscribe<SetStoredBlock>(OnSetStoredBlock);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -27,15 +29,15 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnModifyStoredBlock(ModifyStoredBlock e)
 		{
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-			if (player == null) return;
 			var stored = player.GetComponent<StoredBlock>();
-			if (stored == null)
-			{
-				stored = new StoredBlock();
-				EntityManager.AddComponent(player, stored);
-			}
 			long next = (long)stored.Amount + e.Delta;
 			stored.Amount = next < 0 ? 0 : (int)next;
+		}
+		private void OnSetStoredBlock(SetStoredBlock e)
+		{
+			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+			var stored = player.GetComponent<StoredBlock>();
+			stored.Amount = e.Amount;
 		}
 
 		[DebugActionInt("Modify Stored Block", Step = 1, Min = -999, Max = 999, Default = 5)]

@@ -15,6 +15,7 @@ namespace Crusaders30XX.ECS.Systems
 		public CourageManagerSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourage);
+			EventManager.Subscribe<SetCourageEvent>(OnSetCourageEvent);
 			EventManager.Subscribe<CardMoved>(OnCardMoved);
 			System.Console.WriteLine("[CourageManagerSystem] Subscribed to ModifyCourageEvent, CardMoved");
 		}
@@ -38,6 +39,17 @@ namespace Crusaders30XX.ECS.Systems
 			int old = courage.Amount;
 			courage.Amount = Math.Max(0, old + evt.Delta);
 			var st = player.GetComponent<BattleStateInfo>();
+		}
+
+		private void OnSetCourageEvent(SetCourageEvent evt)
+		{
+			System.Console.WriteLine($"[CourageManagerSystem] OnSetCourageEvent amount={evt.Amount}");
+			var player = EntityManager.GetEntitiesWithComponent<Player>()
+				.FirstOrDefault(e => e.HasComponent<Courage>());
+			if (player == null) return;
+			var courage = player.GetComponent<Courage>();
+			if (courage == null) return;
+			courage.Amount = evt.Amount;
 		}
 
 		private void OnCardMoved(CardMoved evt)

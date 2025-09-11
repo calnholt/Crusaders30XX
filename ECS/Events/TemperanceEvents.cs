@@ -10,6 +10,10 @@ namespace Crusaders30XX.ECS.Events
     {
         public int Delta { get; set; } = 0;
     }
+    public class SetTemperanceEvent
+    {
+        public int Amount { get; set; } = 0;
+    }
 }
 
 

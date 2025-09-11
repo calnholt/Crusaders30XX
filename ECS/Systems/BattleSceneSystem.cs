@@ -7,9 +7,11 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.Diagnostics;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
+	[DebugTab("Battle Scene System")]
 	public class BattleSceneSystem : Core.System
 	{
 		private readonly SystemManager _systemManager;
@@ -18,6 +20,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
 		private readonly SpriteFont _font;
+		private bool _isFirstLoad = true;
 
 		// Battle systems (logic and draw). Only present while in Battle
 		private InputSystem _inputSystem;
@@ -140,6 +143,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void StartBattle()
 		{
+			if (!_isFirstLoad) 
+			{
+				NextBattle();
+				return;
+			}
+			_isFirstLoad = false;
 			var sceneEntity = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
 			if (sceneEntity == null)
 			{
@@ -179,6 +188,51 @@ namespace Crusaders30XX.ECS.Systems
 			scene.Current = SceneId.Battle;
 		}
 
+		public void NextBattle () 
+		{
+			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
+			EventManager.Publish(new SetTemperanceEvent{ Amount = 0 });
+			EventManager.Publish(new SetStoredBlock{ Amount = 0 });
+			// TODO: should handle through events rather than directly but im lazy right now
+			var player = EntityManager.GetEntity("Player");
+			var battleStateInfo = player.GetComponent<BattleStateInfo>();
+			battleStateInfo.CourageGainedThisBattle = 0;
+			battleStateInfo.TriggeredThisBattle.Clear();
+			var playerHp = player.GetComponent<HP>();
+			playerHp.Current = 50;
+			EntityManager.DestroyEntity("Enemy");
+			var queuedEntity = EntityManager.GetEntity("QueuedEnemies");
+			var queued = queuedEntity.GetComponent<QueuedEnemies>();
+			queued.EnemyIds.RemoveAt(0);
+			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, queued.EnemyIds[0]);
+			
+			var oldDeckEntity = EntityManager.GetEntity("Deck");
+			var oldDeck = oldDeckEntity.GetComponent<Deck>();
+			oldDeck.Cards.ForEach(card => EntityManager.DestroyEntity(card.Id));
+			EntityManager.DestroyEntity("Deck");
+
+			var deckEntity = EntityFactory.CreateDeck(_world);
+			var demoHand = EntityFactory.CreateDemoHand(_world);
+			var deck = deckEntity.GetComponent<Deck>();
+			if (deck != null)
+			{
+				deck.Cards.AddRange(demoHand);
+				deck.DrawPile.AddRange(demoHand);
+			}
+
+			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
+			phaseState.TurnNumber = 0;
+
+
+			EventManager.Publish(new DeckShuffleEvent { });
+			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle });
+		}
+		
+		[DebugAction("Next Battle")]
+		public void Debug_NextBattle() 
+		{
+			EventManager.Publish(new StartBattleRequested {  });
+		}
 		private void AddBattleSystems()
 		{
 			// Construct

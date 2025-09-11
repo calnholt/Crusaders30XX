@@ -74,6 +74,13 @@ namespace Crusaders30XX.ECS.Events
     {
         public int Delta { get; set; } = 0;
     }
+    /// <summary>
+    /// Sets the player's Courage
+    /// </summary>
+    public class SetCourageEvent
+    {
+        public int Amount { get; set; } = 0;
+    }
 
     /// <summary>
     /// Event to request discarding the hand, shuffling, and drawing a fresh hand

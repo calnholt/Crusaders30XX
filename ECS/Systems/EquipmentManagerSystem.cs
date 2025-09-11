@@ -30,7 +30,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnPhaseChanged(ChangeBattlePhaseEvent e)
 		{
-			if (e.Current == SubPhase.StartBattle || e.Current == SubPhase.EnemyStart)
+			if (e.Current == SubPhase.StartBattle)
 			{
 				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 				if (player == null) return;

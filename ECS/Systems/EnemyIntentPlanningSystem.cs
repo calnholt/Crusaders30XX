@@ -75,16 +75,8 @@ namespace Crusaders30XX.ECS.Systems
 
 					// Use per-enemy intent service to plan next-turn preview (service will skip clearing current if non-empty)
 					IEnemyIntentService service = CreateServiceForEnemy(enemyId);
-					if (service == null)
-					{
-						System.Console.WriteLine($"[EnemyIntentPlanningSystem] No intent service for enemy '{enemyId}', falling back to round-robin.");
-						PlanRoundRobin(arsenal, intent, next);
-					}
-					else
-					{
-						System.Console.WriteLine($"[EnemyIntentPlanningSystem] Planning {enemyId} attacks, turn {turnNumber}");
-						service.Plan(enemy, arsenal, intent, next, turnNumber, _attackDefs);
-					}
+					System.Console.WriteLine($"[EnemyIntentPlanningSystem] Planning {enemyId} attacks, turn {turnNumber}");
+					service.Plan(enemy, arsenal, intent, next, turnNumber, _attackDefs);
 				}
 				_isFirstLoad = false;
 			}
