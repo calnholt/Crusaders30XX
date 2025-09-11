@@ -182,19 +182,10 @@ namespace Crusaders30XX.ECS.Factories
         {
             var entity = world.CreateEntity("GameState");
             
-            var gameState = new GameState
-            {
-                CurrentPhase = GameState.GamePhase.MainMenu,
-                TurnNumber = 0,
-                IsPlayerTurn = true,
-                IsGameOver = false
-            };
-            
 			var phaseState = world.CreateEntity("PhaseState");
 			var ps = new PhaseState { Main = MainPhase.StartBattle, Sub = SubPhase.StartBattle, TurnNumber = 0 };
 			world.AddComponent(phaseState, ps);
 
-            world.AddComponent(entity, gameState);
 
             // Ensure a Battlefield world component exists with a default location
             world.AddComponent(entity, new Battlefield { Location = BattleLocation.Desert });

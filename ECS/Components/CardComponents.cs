@@ -439,30 +439,6 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
     }
-    
-    /// <summary>
-    /// Component for game state management
-    /// </summary>
-    public class GameState : IComponent
-    {
-        public Entity Owner { get; set; }
-        
-        public GamePhase CurrentPhase { get; set; } = GamePhase.MainMenu;
-        public int TurnNumber { get; set; } = 0;
-        public bool IsPlayerTurn { get; set; } = true;
-        public bool IsGameOver { get; set; } = false;
-        
-        public enum GamePhase
-        {
-            MainMenu,
-            Map,
-            Combat,
-            Shop,
-            Event,
-            Victory,
-            Defeat
-        }
-    }
 
     /// <summary>
     /// Singleton-like world component describing the current battlefield location.

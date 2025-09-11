@@ -65,7 +65,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
 		{
-			return EntityManager.GetEntitiesWithComponent<GameState>();
+			return EntityManager.GetEntitiesWithComponent<SceneState>();
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)

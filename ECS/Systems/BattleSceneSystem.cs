@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -105,36 +106,36 @@ namespace Crusaders30XX.ECS.Systems
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Battle) return;
 			// Draw in the same order as previously in Game1
-			_battleBackgroundSystem.Draw();
-			_cathedralLightingSystem.Draw();
-			_desertBackgroundEffectSystem.Draw();
-			_renderingSystem.Draw();
-			_playerDisplaySystem.Draw();
-			_enemyDisplaySystem.Draw();
-			_enemyIntentPipsSystem.Draw();
-			_enemyAttackDisplaySystem.Draw();
-			_stunnedOverlaySystem.Draw();
-			_endTurnDisplaySystem.Draw();
-			_assignedBlockCardsDisplaySystem.Draw();
-			_playerWispParticleSystem.Draw();
-			_battlePhaseDisplaySystem.Draw();
-			_courageDisplaySystem.Draw();
-			_temperanceDisplaySystem.Draw();
-			_actionPointDisplaySystem.Draw();
-			_storedBlockDisplaySystem.Draw();
-			_hpDisplaySystem.Draw();
-			_payCostOverlaySystem.DrawBackdrop();
-			_handDisplaySystem.DrawHand();
-			_cardPlayedAnimationSystem.Draw();
-			_equipmentDisplaySystem.Draw();
-			_drawPileDisplaySystem.Draw();
-			_discardPileDisplaySystem.Draw();
-			_cardListModalSystem.Draw();
-			_tooltipDisplaySystem.Draw();
-			_profilerSystem.Draw();
-			_payCostOverlaySystem.DrawForeground();
-			_cantPlayCardMessageSystem.Draw();
-			_gameOverOverlayDisplaySystem?.Draw();
+			FrameProfiler.Measure("BattleBackgroundSystem.Draw", _battleBackgroundSystem.Draw);
+			FrameProfiler.Measure("CathedralLightingSystem.Draw", _cathedralLightingSystem.Draw);
+			FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", _desertBackgroundEffectSystem.Draw);
+			FrameProfiler.Measure("RenderingSystem.Draw", _renderingSystem.Draw);
+			FrameProfiler.Measure("PlayerDisplaySystem.Draw", _playerDisplaySystem.Draw);
+			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);
+			FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", _enemyIntentPipsSystem.Draw);
+			FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", _enemyAttackDisplaySystem.Draw);
+			FrameProfiler.Measure("StunnedOverlaySystem.Draw", _stunnedOverlaySystem.Draw);
+			FrameProfiler.Measure("EndTurnDisplaySystem.Draw", _endTurnDisplaySystem.Draw);
+			FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", _assignedBlockCardsDisplaySystem.Draw);
+			FrameProfiler.Measure("PlayerWispParticleSystem.Draw", _playerWispParticleSystem.Draw);
+			FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", _battlePhaseDisplaySystem.Draw);
+			FrameProfiler.Measure("CourageDisplaySystem.Draw", _courageDisplaySystem.Draw);
+			FrameProfiler.Measure("TemperanceDisplaySystem.Draw", _temperanceDisplaySystem.Draw);
+			FrameProfiler.Measure("ActionPointDisplaySystem.Draw", _actionPointDisplaySystem.Draw);
+			FrameProfiler.Measure("StoredBlockDisplaySystem.Draw", _storedBlockDisplaySystem.Draw);
+			FrameProfiler.Measure("HPDisplaySystem.Draw", _hpDisplaySystem.Draw);
+			FrameProfiler.Measure("PayCostOverlaySystem.DrawBackdrop", _payCostOverlaySystem.DrawBackdrop);
+			FrameProfiler.Measure("HandDisplaySystem.DrawHand", _handDisplaySystem.DrawHand);
+			FrameProfiler.Measure("CardPlayedAnimationSystem.Draw", _cardPlayedAnimationSystem.Draw);
+			FrameProfiler.Measure("EquipmentDisplaySystem.Draw", _equipmentDisplaySystem.Draw);
+			FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
+			FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
+			FrameProfiler.Measure("CardListModalSystem.Draw", _cardListModalSystem.Draw);
+			FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipDisplaySystem.Draw);
+			FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
+			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
+			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
+			if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
 		}
 
 		private void StartBattle()
