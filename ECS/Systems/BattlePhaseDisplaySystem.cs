@@ -106,7 +106,15 @@ namespace Crusaders30XX.ECS.Systems
 			var state = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
 			int vw = _graphicsDevice.Viewport.Width;
 			int xRight = vw + LabelOffsetX;
-			string label = $"{MainPhaseToString(state.Main)} - {SubPhaseToString(state.Sub)} ({state.TurnNumber})";
+			string label = "";
+			if (state.Main == MainPhase.StartBattle)
+			{
+				label = $"{MainPhaseToString(state.Main)}";
+			}
+			else 
+			{
+				label = $"{MainPhaseToString(state.Main)} - {SubPhaseToString(state.Sub)} ({state.TurnNumber})";
+			}
 			var size = _font.MeasureString(label) * LabelScale;
 			var pos = new Vector2(xRight - size.X, LabelOffsetY);
 			_spriteBatch.DrawString(_font, label, pos + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
