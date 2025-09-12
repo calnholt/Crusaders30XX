@@ -37,6 +37,10 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EventManager.Publish(new Crusaders30XX.ECS.Events.PlayerDied { Player = target });
 			}
+			if (before > 0 && hp.Current == 0 && target.HasComponent<Enemy>())
+			{
+				EventManager.Publish(new Crusaders30XX.ECS.Events.StartBattleRequested { });
+			}
 		}
 
 		private void OnSetHp(SetHpEvent e)
