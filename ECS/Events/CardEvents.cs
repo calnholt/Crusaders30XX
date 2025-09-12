@@ -255,4 +255,13 @@ namespace Crusaders30XX.ECS.Events
         public string EquipmentId { get; set; }
     }
 
+    /// <summary>
+    /// Emitted when a medal triggers so UI can animate the corresponding icon.
+    /// </summary>
+    public class MedalTriggered
+    {
+        public Entity MedalEntity { get; set; }
+        public string MedalId { get; set; }
+    }
+
 } 

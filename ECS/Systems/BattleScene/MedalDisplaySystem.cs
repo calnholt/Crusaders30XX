@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Content;
 using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Data.Medals;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -20,6 +21,8 @@ namespace Crusaders30XX.ECS.Systems
 		private Texture2D _medalTex;
 		private Texture2D _roundedCache;
 		private int _roundedW, _roundedH, _roundedR;
+		private readonly Dictionary<int, float> _bounceByEntityId = new Dictionary<int, float>();
+		private double _lastDt = 0.0;
 
 		// Layout/debug controls
 		[DebugEditable(DisplayName = "Left Margin", Step = 2, Min = 0, Max = 2000)]
@@ -37,6 +40,16 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Background Opacity", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float BgOpacity { get; set; } = 0.75f;
 
+		// Pulse/jiggle animation tuning
+		[DebugEditable(DisplayName = "Pulse Duration (s)", Step = 0.05f, Min = 0.1f, Max = 2f)]
+		public float PulseDurationSeconds { get; set; } = 1.4f;
+		[DebugEditable(DisplayName = "Pulse Scale Amp", Step = 0.01f, Min = 0f, Max = 0.6f)]
+		public float PulseScaleAmplitude { get; set; } = 0.6f;
+		[DebugEditable(DisplayName = "Jiggle Degrees", Step = 0.5f, Min = 0f, Max = 45f)]
+		public float JiggleDegrees { get; set; } = 10.5f;
+		[DebugEditable(DisplayName = "Pulse Frequency (Hz)", Step = 0.1f, Min = 0.5f, Max = 8f)]
+		public float PulseFrequencyHz { get; set; } = 3f;
+
 		public MedalDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
 			: base(entityManager)
 		{
@@ -45,6 +58,13 @@ namespace Crusaders30XX.ECS.Systems
 			_content = content;
 			_font = font;
 			TryLoadAssets();
+			Crusaders30XX.ECS.Core.EventManager.Subscribe<Crusaders30XX.ECS.Events.MedalTriggered>(OnMedalTriggered);
+		}
+
+		private void OnMedalTriggered(Crusaders30XX.ECS.Events.MedalTriggered evt)
+		{
+			if (evt?.MedalEntity == null) return;
+			_bounceByEntityId[evt.MedalEntity.Id] = 0f; // start bounce timer
 		}
 
 		private void TryLoadAssets()
@@ -58,6 +78,24 @@ namespace Crusaders30XX.ECS.Systems
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+
+		public override void Update(GameTime gameTime)
+		{
+			_lastDt = gameTime.ElapsedGameTime.TotalSeconds;
+			// Decay active bounces over time
+			if (_bounceByEntityId.Count > 0)
+			{
+				var keys = _bounceByEntityId.Keys.ToList();
+				for (int i = 0; i < keys.Count; i++)
+				{
+					int id = keys[i];
+					float t = _bounceByEntityId[id];
+					t += (float)_lastDt;
+					if (t >= 0.5f) _bounceByEntityId.Remove(id); else _bounceByEntityId[id] = t;
+				}
+			}
+			base.Update(gameTime);
+		}
 
 		public void Draw()
 		{
@@ -79,28 +117,43 @@ namespace Crusaders30XX.ECS.Systems
 				byte a = (byte)Microsoft.Xna.Framework.MathHelper.Clamp(BgOpacity * 255f, 0f, 255f);
 				DrawRoundedBackground(rect, new Color((byte)0, (byte)0, (byte)0, a));
 				UpdateTooltipForMedal(m, rect);
-				DrawMedalIcon(rect);
+				// Jiggle/pulse the medal icon only
+				float scale = 1f;
+				float rotation = 0f;
+				if (_bounceByEntityId.TryGetValue(m.Owner.Id, out var tPulse))
+				{
+					float dur = System.Math.Max(0.1f, PulseDurationSeconds);
+					float norm = MathHelper.Clamp(tPulse / dur, 0f, 1f);
+					float env = (1f - norm);
+					env *= env; // quadratic decay
+					float phase = MathHelper.TwoPi * PulseFrequencyHz * tPulse;
+					float s = (float)System.Math.Sin(phase);
+					scale = 1f + PulseScaleAmplitude * env * s;
+					float jiggleRad = MathHelper.ToRadians(JiggleDegrees);
+					rotation = jiggleRad * env * (float)System.Math.Sin(phase * 1.2f);
+				}
+				DrawMedalIcon(rect, scale, rotation);
 				x += bgW + SpacingX;
 			}
 		}
 
-		private void DrawMedalIcon(Rectangle bgRect)
+		private void DrawMedalIcon(Rectangle bgRect, float scale, float rotationRad)
 		{
 			if (_medalTex == null) return;
-			// Fit medal into IconSize preserving aspect ratio
-			int targetW = IconSize;
-			int targetH = IconSize;
+			// Compute base uniform scale to fit within IconSize
+			float baseScale = 1f;
 			if (_medalTex.Width > 0 && _medalTex.Height > 0)
 			{
-				float aspect = _medalTex.Width / (float)_medalTex.Height;
-				if (aspect >= 1f) { targetW = IconSize; targetH = (int)System.Math.Round(IconSize / aspect); }
-				else { targetH = IconSize; targetW = (int)System.Math.Round(IconSize * aspect); }
+				float sx = IconSize / (float)_medalTex.Width;
+				float sy = IconSize / (float)_medalTex.Height;
+				baseScale = System.Math.Min(sx, sy);
 			}
-			int innerX = bgRect.X + BgPadding;
-			int innerY = bgRect.Y + BgPadding;
-			int drawX = innerX + (IconSize - targetW) / 2;
-			int drawY = innerY + (IconSize - targetH) / 2;
-			_spriteBatch.Draw(_medalTex, new Rectangle(drawX, drawY, targetW, targetH), Color.White);
+			float finalScale = baseScale * System.Math.Max(0.1f, scale);
+			// Center of inner padded square
+			float centerX = bgRect.X + BgPadding + IconSize / 2f;
+			float centerY = bgRect.Y + BgPadding + IconSize / 2f;
+			var origin = new Vector2(_medalTex.Width / 2f, _medalTex.Height / 2f);
+			_spriteBatch.Draw(_medalTex, new Vector2(centerX, centerY), null, Color.White, rotationRad, origin, finalScale, SpriteEffects.None, 0f);
 		}
 
 		private void UpdateTooltipForMedal(EquippedMedal medal, Rectangle rect)
@@ -156,7 +209,13 @@ namespace Crusaders30XX.ECS.Systems
 			var center = new Vector2(rect.X + w / 2f, rect.Y + h / 2f);
 			_spriteBatch.Draw(_roundedCache, center, null, fill, 0f, new Vector2(_roundedCache.Width / 2f, _roundedCache.Height / 2f), 1f, SpriteEffects.None, 0f);
 		}
-	}
+
+    [DebugAction("Animation Test")]
+    public void debug_animation() 
+    {
+      EventManager.Publish(new MedalTriggered { MedalEntity = EntityManager.GetEntity("Medal_StLuke"), MedalId = "st_luke" });
+    }
+  }
 }
 
 

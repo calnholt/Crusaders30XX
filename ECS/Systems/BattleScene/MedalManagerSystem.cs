@@ -77,6 +77,13 @@ namespace Crusaders30XX.ECS.Systems
 			int healAmount = (int)Math.Floor(missing * 0.7f);
 			if (healAmount <= 0) return;
 			EventManager.Publish(new ModifyHpEvent { Target = player, Delta = healAmount });
+			// Emit UI trigger event for medal animation
+			var medalEntity = EntityManager.GetEntitiesWithComponent<EquippedMedal>()
+				.FirstOrDefault(e => e.GetComponent<EquippedMedal>()?.EquippedOwner == player && e.GetComponent<EquippedMedal>()?.MedalId == medal.id);
+			if (medalEntity != null)
+			{
+				EventManager.Publish(new Crusaders30XX.ECS.Events.MedalTriggered { MedalEntity = medalEntity, MedalId = medal.id });
+			}
 		}
 	}
 }
