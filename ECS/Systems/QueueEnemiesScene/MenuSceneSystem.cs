@@ -82,13 +82,13 @@ namespace Crusaders30XX.ECS.Systems
 			bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
 
 			// Ensure queued enemies component exists
-			var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEnemies>().FirstOrDefault();
+			var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
 			if (qeEntity == null)
 			{
-				qeEntity = EntityManager.CreateEntity("QueuedEnemies");
-				EntityManager.AddComponent(qeEntity, new QueuedEnemies());
+				qeEntity = EntityManager.CreateEntity("QueuedEvents");
+				EntityManager.AddComponent(qeEntity, new QueuedEvents());
 			}
-			var qe = qeEntity.GetComponent<QueuedEnemies>();
+			var qe = qeEntity.GetComponent<QueuedEvents>();
 			qe.CurrentIndex = 0;
 
 			int vw = _graphicsDevice.Viewport.Width;
@@ -113,7 +113,7 @@ namespace Crusaders30XX.ECS.Systems
 				var rect = new Rectangle(x, y, cellW, cellH);
 				if (click && rect.Contains(mouse.Position))
 				{
-					qe.EnemyIds.Add(kv.Key);
+					qe.Events.Add(new QueuedEvent { EventType = QueuedEventType.Enemy, EventId = kv.Key });
 				}
 				i++;
 			}
@@ -123,12 +123,12 @@ namespace Crusaders30XX.ECS.Systems
 			int sy = GridPadding;
 			int itemW = 180;
 			int itemH = TopListHeight - GridPadding * 2;
-			for (int idx = 0; idx < qe.EnemyIds.Count; idx++)
+			for (int idx = 0; idx < qe.Events.Count; idx++)
 			{
 				var rct = new Rectangle(sx, sy, itemW, itemH);
 				if (click && rct.Contains(mouse.Position))
 				{
-					qe.EnemyIds.RemoveAt(idx);
+					qe.Events.RemoveAt(idx);
 					break;
 				}
 				sx += itemW + GridPadding;
@@ -136,7 +136,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Confirm button
 			var confirmRect = new Rectangle((vw - ConfirmWidth) / 2, vh - GridPadding - ConfirmHeight, ConfirmWidth, ConfirmHeight);
-			if (click && confirmRect.Contains(mouse.Position) && qe.EnemyIds.Count > 0)
+			if (click && confirmRect.Contains(mouse.Position) && qe.Events.Count > 0)
 			{
 				EventManager.Publish(new StartBattleRequested());
 			}
@@ -201,7 +201,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Selection list at top
-			var qe = EntityManager.GetEntitiesWithComponent<QueuedEnemies>().FirstOrDefault()?.GetComponent<QueuedEnemies>();
+			var qe = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<QueuedEvents>();
 			if (qe != null)
 			{
 				int sx = GridPadding;
@@ -209,12 +209,12 @@ namespace Crusaders30XX.ECS.Systems
 				int itemW = 180;
 				int itemH = TopListHeight - GridPadding * 2;
 				EnsureRounded(itemW, itemH, CornerRadius);
-				for (int idx = 0; idx < qe.EnemyIds.Count; idx++)
+				for (int idx = 0; idx < qe.Events.Count; idx++)
 				{
 					var rct = new Rectangle(sx, sy, itemW, itemH);
 					if (_rounded != null) _spriteBatch.Draw(_rounded, rct, Color.White);
 					else _spriteBatch.Draw(_pixel, rct, Color.White);
-					string id = qe.EnemyIds[idx];
+					string id = qe.Events[idx].EventId;
 					EnemyDefinition def;
 					EnemyDefinitionCache.TryGet(id, out def);
 					var tex = def != null ? TryGetEnemyTexture(def) : null;

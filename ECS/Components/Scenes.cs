@@ -18,11 +18,26 @@ namespace Crusaders30XX.ECS.Components
 	/// <summary>
 	/// Holds a queue of enemy ids selected from the menu to spawn when battle starts.
 	/// </summary>
-	public class QueuedEnemies : IComponent
+	public class QueuedEvents : IComponent
 	{
 		public Entity Owner { get; set; }
-		public List<string> EnemyIds { get; set; } = new List<string>();
+		public List<QueuedEvent> Events { get; set; } = new List<QueuedEvent>();
 		public int CurrentIndex = 0;
+	}
+
+	public class QueuedEvent 
+	{
+		public string EventId;
+		public QueuedEventType EventType = QueuedEventType.Enemy;
+
+	}
+
+	public enum QueuedEventType
+	{
+		Enemy,
+		Event,
+		Shop,
+		Church
 	}
 
 	public class EntityListOverlay : IComponent

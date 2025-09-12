@@ -170,8 +170,8 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			AddBattleSystems();
 			// Spawn selected enemy (index 0) if any queued; otherwise default handled by CreateGameState
-			var queued = _world.EntityManager.GetEntitiesWithComponent<QueuedEnemies>().FirstOrDefault()?.GetComponent<QueuedEnemies>();
-			if (queued != null && queued.EnemyIds.Count > 0)
+			var queued = _world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<QueuedEvents>();
+			if (queued != null && queued.Events.Count > 0)
 			{
 				// Remove any default enemy created during CreateGameState
 				var existingEnemies = _world.EntityManager.GetEntitiesWithComponent<Enemy>().ToList();
@@ -179,7 +179,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					_world.EntityManager.DestroyEntity(e.Id);
 				}
-				var id0 = queued.EnemyIds[queued.CurrentIndex++];
+				var id0 = queued.Events[queued.CurrentIndex++].EventId;
 				EntityFactory.CreateEnemyFromId(_world, id0);
 			}
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
@@ -201,8 +201,8 @@ namespace Crusaders30XX.ECS.Systems
 			var playerHp = player.GetComponent<HP>();
 			playerHp.Current = 50;
 			EntityManager.DestroyEntity("Enemy");
-			var queuedEntity = EntityManager.GetEntity("QueuedEnemies");
-			var queued = queuedEntity.GetComponent<QueuedEnemies>();
+			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
+			var queued = queuedEntity.GetComponent<QueuedEvents>();
 			// first battle after already loading (super messy)
 			if (queued.CurrentIndex == 0)
 			{
@@ -211,7 +211,7 @@ namespace Crusaders30XX.ECS.Systems
 				equipmentUsedState.DestroyedEquipmentIds.Clear();
 				equipmentUsedState.UsesByEquipmentId.Clear();
 			}
-			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, queued.EnemyIds[queued.CurrentIndex++]);
+			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, queued.Events[queued.CurrentIndex++].EventId);
 			
 			var oldDeckEntity = EntityManager.GetEntity("Deck");
 			var oldDeck = oldDeckEntity.GetComponent<Deck>();
