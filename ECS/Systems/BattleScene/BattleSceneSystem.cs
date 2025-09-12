@@ -56,6 +56,7 @@ namespace Crusaders30XX.ECS.Systems
 		private EnemyDisplaySystem _enemyDisplaySystem;
 		private EnemyIntentPipsSystem _enemyIntentPipsSystem;
 		private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
+		private QueuedEventsDisplaySystem _queuedEventsDisplaySystem;
 		private CardPlayedAnimationSystem _cardPlayedAnimationSystem;
 		private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
 		private EnemyIntentPlanningSystem _enemyIntentPlanningSystem;
@@ -117,6 +118,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", _enemyIntentPipsSystem.Draw);
 			FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", _enemyAttackDisplaySystem.Draw);
+			FrameProfiler.Measure("QueuedEventsDisplaySystem.Draw", _queuedEventsDisplaySystem.Draw);
 			FrameProfiler.Measure("StunnedOverlaySystem.Draw", _stunnedOverlaySystem.Draw);
 			FrameProfiler.Measure("EndTurnDisplaySystem.Draw", _endTurnDisplaySystem.Draw);
 			FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", _assignedBlockCardsDisplaySystem.Draw);
@@ -171,6 +173,7 @@ namespace Crusaders30XX.ECS.Systems
 			AddBattleSystems();
 			// Spawn selected enemy (index 0) if any queued; otherwise default handled by CreateGameState
 			var queued = _world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<QueuedEvents>();
+			queued.CurrentIndex++;
 			if (queued != null && queued.Events.Count > 0)
 			{
 				// Remove any default enemy created during CreateGameState
@@ -179,7 +182,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					_world.EntityManager.DestroyEntity(e.Id);
 				}
-				var id0 = queued.Events[queued.CurrentIndex++].EventId;
+				var id0 = queued.Events[queued.CurrentIndex].EventId;
 				EntityFactory.CreateEnemyFromId(_world, id0);
 			}
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
@@ -204,14 +207,14 @@ namespace Crusaders30XX.ECS.Systems
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
 			// first battle after already loading (super messy)
-			if (queued.CurrentIndex == 0)
+			if (queued.CurrentIndex < 0)
 			{
 				var equipmentUsedState = player.GetComponent<EquipmentUsedState>();
 				equipmentUsedState.ActivatedThisTurn.Clear();
 				equipmentUsedState.DestroyedEquipmentIds.Clear();
 				equipmentUsedState.UsesByEquipmentId.Clear();
 			}
-			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, queued.Events[queued.CurrentIndex++].EventId);
+			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, queued.Events[++queued.CurrentIndex].EventId);
 			
 			var oldDeckEntity = EntityManager.GetEntity("Deck");
 			var oldDeck = oldDeckEntity.GetComponent<Deck>();
@@ -279,6 +282,7 @@ namespace Crusaders30XX.ECS.Systems
 			_enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
+			_queuedEventsDisplaySystem = new QueuedEventsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_cardPlayedAnimationSystem = new CardPlayedAnimationSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_endTurnDisplaySystem = new EndTurnDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font, _content);
@@ -346,6 +350,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_stunnedOverlaySystem);
 			_world.AddSystem(_attackResolutionSystem);
 			_world.AddSystem(_enemyAttackDisplaySystem);
+			_world.AddSystem(_queuedEventsDisplaySystem);
 			_world.AddSystem(_cardPlayedAnimationSystem);
 			_world.AddSystem(_endTurnDisplaySystem);
 			_world.AddSystem(_assignedBlockCardsDisplaySystem);

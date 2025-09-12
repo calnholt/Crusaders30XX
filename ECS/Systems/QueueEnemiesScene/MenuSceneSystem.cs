@@ -89,7 +89,6 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(qeEntity, new QueuedEvents());
 			}
 			var qe = qeEntity.GetComponent<QueuedEvents>();
-			qe.CurrentIndex = 0;
 
 			int vw = _graphicsDevice.Viewport.Width;
 			int vh = _graphicsDevice.Viewport.Height;
