@@ -559,6 +559,16 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// A single equipped medal. Multiple instances may exist, each referencing the owning player.
+    /// </summary>
+    public class EquippedMedal : IComponent
+    {
+        public Entity Owner { get; set; }
+        public Entity EquippedOwner { get; set; } // player entity that owns this medal
+        public string MedalId { get; set; } = ""; // id of medal definition
+    }
+
+    /// <summary>
     /// Enumerates the zone a card currently belongs to. Useful for transitioning toward a fully component-driven zone model.
     /// </summary>
     public enum CardZoneType

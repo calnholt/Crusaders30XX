@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Enemies;
 using Crusaders30XX.ECS.Data.Temperance;
 using Crusaders30XX.ECS.Data.Equipment;
+using Crusaders30XX.ECS.Data.Medals;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -122,6 +123,11 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new StoredBlock { Amount = 0 });
             // Attach HP component
             world.AddComponent(entity, new HP { Max = 50, Current = 50 });
+            // Equip default medals (can equip multiple later). For now, just st_luke.
+            world.AddComponent(
+                world.CreateEntity("Medal_StLuke"),
+                new EquippedMedal { EquippedOwner = entity, MedalId = "st_luke" }
+            );
             // Attach starting Intellect and MaxHandSize stats
             world.AddComponent(entity, new Intellect { Value = 4 });
             world.AddComponent(entity, new MaxHandSize { Value = 5 });
