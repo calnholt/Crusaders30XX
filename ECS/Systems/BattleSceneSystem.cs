@@ -179,7 +179,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					_world.EntityManager.DestroyEntity(e.Id);
 				}
-				var id0 = queued.EnemyIds[0];
+				var id0 = queued.EnemyIds[queued.CurrentIndex++];
 				EntityFactory.CreateEnemyFromId(_world, id0);
 			}
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
@@ -188,7 +188,7 @@ namespace Crusaders30XX.ECS.Systems
 			scene.Current = SceneId.Battle;
 		}
 
-		public void NextBattle () 
+		public void NextBattle() 
 		{
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
 			EventManager.Publish(new SetTemperanceEvent{ Amount = 0 });
@@ -203,8 +203,15 @@ namespace Crusaders30XX.ECS.Systems
 			EntityManager.DestroyEntity("Enemy");
 			var queuedEntity = EntityManager.GetEntity("QueuedEnemies");
 			var queued = queuedEntity.GetComponent<QueuedEnemies>();
-			queued.EnemyIds.RemoveAt(0);
-			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, queued.EnemyIds[0]);
+			// first battle after already loading (super messy)
+			if (queued.CurrentIndex == 0)
+			{
+				var equipmentUsedState = player.GetComponent<EquipmentUsedState>();
+				equipmentUsedState.ActivatedThisTurn.Clear();
+				equipmentUsedState.DestroyedEquipmentIds.Clear();
+				equipmentUsedState.UsesByEquipmentId.Clear();
+			}
+			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, queued.EnemyIds[queued.CurrentIndex++]);
 			
 			var oldDeckEntity = EntityManager.GetEntity("Deck");
 			var oldDeck = oldDeckEntity.GetComponent<Deck>();
@@ -214,7 +221,6 @@ namespace Crusaders30XX.ECS.Systems
 			var deckEntity = EntityFactory.CreateDeck(_world);
 			var demoHand = EntityFactory.CreateDemoHand(_world);
 			var deck = deckEntity.GetComponent<Deck>();
-			if (deck != null)
 			{
 				deck.Cards.AddRange(demoHand);
 				deck.DrawPile.AddRange(demoHand);
@@ -223,9 +229,10 @@ namespace Crusaders30XX.ECS.Systems
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
 			phaseState.TurnNumber = 0;
 
+			EntityManager.GetEntity("SceneState").GetComponent<SceneState>().Current = SceneId.Battle;
 
 			EventManager.Publish(new DeckShuffleEvent { });
-			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle });
+			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
 		}
 		
 		[DebugAction("Next Battle")]

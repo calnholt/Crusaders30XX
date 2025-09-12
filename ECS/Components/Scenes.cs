@@ -22,6 +22,7 @@ namespace Crusaders30XX.ECS.Components
 	{
 		public Entity Owner { get; set; }
 		public List<string> EnemyIds { get; set; } = new List<string>();
+		public int CurrentIndex = 0;
 	}
 
 	public class EntityListOverlay : IComponent

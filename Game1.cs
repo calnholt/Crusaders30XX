@@ -123,8 +123,20 @@ public class Game1 : Game
         // Delegate drawing to active parent systems
         var menuScene = _world.SystemManager.GetSystem<MenuSceneSystem>();
         var battleScene = _world.SystemManager.GetSystem<BattleSceneSystem>();
-        menuScene?.Draw();
-        battleScene?.Draw();
+        var scene = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
+        switch(scene.Current)
+        {
+            case SceneId.Menu:
+            {
+                menuScene?.Draw();
+                break;
+            }
+            case SceneId.Battle:
+            {
+                battleScene?.Draw();
+                break;
+            }
+        }
         _debugMenuSystem.Draw();
         _entityListOverlaySystem?.Draw();
         _spriteBatch.End();

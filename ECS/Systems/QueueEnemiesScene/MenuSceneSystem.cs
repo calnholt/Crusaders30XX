@@ -89,6 +89,7 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(qeEntity, new QueuedEnemies());
 			}
 			var qe = qeEntity.GetComponent<QueuedEnemies>();
+			qe.CurrentIndex = 0;
 
 			int vw = _graphicsDevice.Viewport.Width;
 			int vh = _graphicsDevice.Viewport.Height;
