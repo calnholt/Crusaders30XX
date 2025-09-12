@@ -34,6 +34,9 @@ namespace Crusaders30XX.ECS.Systems
 		private float _shockwaveElapsedSeconds = 0f;
 		private float _craterElapsedSeconds = 0f;
 
+		// Prevent repeated confirm presses for the same attack context
+		private readonly System.Collections.Generic.HashSet<string> _confirmedForContext = new System.Collections.Generic.HashSet<string>();
+
 		private struct DebrisParticle
 		{
 			public Vector2 Position;
@@ -188,11 +191,25 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnConfirmPressed()
 		{
-			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyAttack, Previous = SubPhase.Block });
-			// Enqueue: Discard assigned blocks as the first step
+			// Determine current context id first
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();
 			var ctx = intent?.Planned?.FirstOrDefault()?.ContextId;
+			if (string.IsNullOrEmpty(ctx)) return;
+			// Lock confirm for this context immediately to avoid double presses
+			_confirmedForContext.Add(ctx);
+			var confirmBtn = EntityManager.GetEntitiesWithComponent<UIButton>().FirstOrDefault(e => e.GetComponent<UIButton>().Command == "ConfirmEnemyAttack");
+			if (confirmBtn != null)
+			{
+				var ui = confirmBtn.GetComponent<UIElement>();
+				if (ui != null)
+				{
+					ui.IsInteractable = false;
+					ui.Bounds = new Rectangle(0, 0, 0, 0);
+				}
+			}
+			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyAttack, Previous = SubPhase.Block });
+			// Enqueue: Discard assigned blocks as the first step
 			// Defer resolution/phase to coordinator; enqueue the standard sequence
 			EventQueue.EnqueueRule(new QueuedDiscardAssignedBlocksEvent(EntityManager, ctx));
 			EventQueue.EnqueueRule(new QueuedResolveAttackEvent(ctx));
@@ -242,6 +259,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (_lastContextId != currentContextId)
 			{
 				_lastContextId = currentContextId;
+				// New context: reset confirm lock for previous and ensure button can show again
+				_confirmedForContext.RemoveWhere(id => id != currentContextId);
 				// Spawn centered and trigger immediate impact sequence
 				_impactActive = true;
 				_squashElapsedSeconds = 0f;
@@ -444,7 +463,8 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Confirm button below panel (only show in Block phase)
-			bool showConfirm = phaseNow == SubPhase.Block;
+			
+			bool showConfirm = phaseNow == SubPhase.Block && !_confirmedForContext.Contains(pa.ContextId);
 			if (showConfirm)
 			{
 				var btnRect = new Rectangle(
@@ -463,35 +483,40 @@ namespace Crusaders30XX.ECS.Systems
 					_spriteBatch.DrawString(_font, label, posText, Color.White, 0f, Vector2.Zero, ConfirmButtonTextScale, SpriteEffects.None, 0f);
 				}
 
-				// Ensure a clickable UI entity exists and stays in sync
-				var confirmBtn = EntityManager.GetEntitiesWithComponent<UIButton>().FirstOrDefault(e => e.GetComponent<UIButton>().Command == "ConfirmEnemyAttack");
-				if (confirmBtn == null)
+				// Ensure a single clickable UI entity exists and stays in sync
+				var confirmBtns = EntityManager.GetEntitiesWithComponent<UIButton>()
+					.Where(e => e.GetComponent<UIButton>().Command == "ConfirmEnemyAttack")
+					.ToList();
+				Entity primaryBtn = confirmBtns.FirstOrDefault();
+				// Destroy any extras to avoid ghost clickables
+				for (int i = 1; i < confirmBtns.Count; i++)
 				{
-					confirmBtn = EntityManager.CreateEntity("UIButton_ConfirmEnemyAttack");
-					EntityManager.AddComponent(confirmBtn, new UIButton { Label = "Confirm", Command = "ConfirmEnemyAttack" });
-					EntityManager.AddComponent(confirmBtn, new Transform { Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ConfirmButtonZ });
-					EntityManager.AddComponent(confirmBtn, new UIElement { Bounds = btnRect, IsInteractable = true });
+					EntityManager.DestroyEntity(confirmBtns[i].Id);
+				}
+				if (primaryBtn == null)
+				{
+					primaryBtn = EntityManager.CreateEntity("UIButton_ConfirmEnemyAttack");
+					EntityManager.AddComponent(primaryBtn, new UIButton { Label = "Confirm", Command = "ConfirmEnemyAttack" });
+					EntityManager.AddComponent(primaryBtn, new Transform { Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ConfirmButtonZ });
+					EntityManager.AddComponent(primaryBtn, new UIElement { Bounds = btnRect, IsInteractable = true });
 				}
 				else
 				{
-					var ui = confirmBtn.GetComponent<UIElement>();
-					var tr = confirmBtn.GetComponent<Transform>();
+					var ui = primaryBtn.GetComponent<UIElement>();
+					var tr = primaryBtn.GetComponent<Transform>();
 					if (ui != null) { ui.Bounds = btnRect; ui.IsInteractable = true; }
 					if (tr != null) { tr.ZOrder = ConfirmButtonZ; tr.Position = new Vector2(btnRect.X, btnRect.Y); }
 				}
 			}
 			else
 			{
-				// Hide/disable confirm button when not in Block phase
-				var confirmBtn = EntityManager.GetEntitiesWithComponent<UIButton>().FirstOrDefault(e => e.GetComponent<UIButton>().Command == "ConfirmEnemyAttack");
-				if (confirmBtn != null)
+				// Hide and destroy confirm buttons when not visible
+				var confirmBtns = EntityManager.GetEntitiesWithComponent<UIButton>()
+					.Where(e => e.GetComponent<UIButton>().Command == "ConfirmEnemyAttack")
+					.ToList();
+				foreach (var b in confirmBtns)
 				{
-					var ui = confirmBtn.GetComponent<UIElement>();
-					if (ui != null)
-					{
-						ui.IsInteractable = false;
-						ui.Bounds = new Rectangle(0, 0, 0, 0);
-					}
+					EntityManager.DestroyEntity(b.Id);
 				}
 			}
 

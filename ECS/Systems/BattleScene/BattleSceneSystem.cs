@@ -367,6 +367,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_equipmentManagerSystem);
 			_world.AddSystem(_medalManagerSystem);
 			_world.AddSystem(_equipmentDisplaySystem);
+			_world.AddSystem(_medalDisplaySystem);
 			_world.AddSystem(_equipmentUsedManagementSystem);
 			_world.AddSystem(_equipmentHighlightSettingsDebugSystem);
 			_world.AddSystem(_equipmentBlockInteractionSystem);
