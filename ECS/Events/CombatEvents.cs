@@ -79,6 +79,9 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public int Delta;
 	}
+
+	// Fired when a battle is won (enemy defeated), to trigger scene transition
+	public class BattleWon { }
 }
 
 

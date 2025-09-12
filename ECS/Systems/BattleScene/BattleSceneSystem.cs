@@ -85,6 +85,7 @@ namespace Crusaders30XX.ECS.Systems
 		private EquipmentUsedManagementSystem _equipmentUsedManagementSystem;
 		private HighlightSettingsSystem _equipmentHighlightSettingsDebugSystem;
 		private EquipmentBlockInteractionSystem _equipmentBlockInteractionSystem;
+		private BattleTransitionDisplaySystem _battleTransitionDisplaySystem;
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(em)
 		{
@@ -143,6 +144,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
 			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
+			FrameProfiler.Measure("BattleTransitionDisplaySystem.Draw", _battleTransitionDisplaySystem.Draw);
 			if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
 		}
 
@@ -210,6 +212,7 @@ namespace Crusaders30XX.ECS.Systems
 			// first battle after already loading (super messy)
 			if (queued.CurrentIndex < 0)
 			{
+				player.GetComponent<HP>().Current = 50;
 				var equipmentUsedState = player.GetComponent<EquipmentUsedState>();
 				equipmentUsedState.ActivatedThisTurn.Clear();
 				equipmentUsedState.DestroyedEquipmentIds.Clear();
@@ -307,6 +310,7 @@ namespace Crusaders30XX.ECS.Systems
 			_medalManagerSystem = new MedalManagerSystem(_world.EntityManager);
 			_equipmentDisplaySystem = new EquipmentDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
 			_medalDisplaySystem = new MedalDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
+			_battleTransitionDisplaySystem = new BattleTransitionDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_equipmentUsedManagementSystem = new EquipmentUsedManagementSystem(_world.EntityManager);
 			_equipmentHighlightSettingsDebugSystem = new HighlightSettingsSystem(_world.EntityManager);
 			_equipmentBlockInteractionSystem = new EquipmentBlockInteractionSystem(_world.EntityManager);
@@ -375,6 +379,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_cardHighlightSystem);
 			_world.AddSystem(_cantPlayCardMessageSystem);
 			_world.AddSystem(_gameOverOverlayDisplaySystem);
+			_world.AddSystem(_battleTransitionDisplaySystem);
 		}
 
 	}

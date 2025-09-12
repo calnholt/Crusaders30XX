@@ -58,10 +58,10 @@ namespace Crusaders30XX.ECS.Systems
 			_content = content;
 			_font = font;
 			TryLoadAssets();
-			Crusaders30XX.ECS.Core.EventManager.Subscribe<Crusaders30XX.ECS.Events.MedalTriggered>(OnMedalTriggered);
+			EventManager.Subscribe<MedalTriggered>(OnMedalTriggered);
 		}
 
-		private void OnMedalTriggered(Crusaders30XX.ECS.Events.MedalTriggered evt)
+		private void OnMedalTriggered(MedalTriggered evt)
 		{
 			if (evt?.MedalEntity == null) return;
 			_bounceByEntityId[evt.MedalEntity.Id] = 0f; // start bounce timer
@@ -72,7 +72,7 @@ namespace Crusaders30XX.ECS.Systems
 			try { _medalTex = _content.Load<Texture2D>("medal"); } catch { _medalTex = null; }
 		}
 
-		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
 			return EntityManager.GetEntitiesWithComponent<Player>();
 		}
@@ -114,7 +114,7 @@ namespace Crusaders30XX.ECS.Systems
 				int bgW = IconSize + BgPadding * 2;
 				int bgH = IconSize + BgPadding * 2;
 				var rect = new Rectangle(x, y, bgW, bgH);
-				byte a = (byte)Microsoft.Xna.Framework.MathHelper.Clamp(BgOpacity * 255f, 0f, 255f);
+				byte a = (byte)MathHelper.Clamp(BgOpacity * 255f, 0f, 255f);
 				DrawRoundedBackground(rect, new Color((byte)0, (byte)0, (byte)0, a));
 				UpdateTooltipForMedal(m, rect);
 				// Jiggle/pulse the medal icon only
@@ -203,7 +203,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (rebuild)
 			{
 				_roundedCache?.Dispose();
-				_roundedCache = Crusaders30XX.ECS.Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, r);
+				_roundedCache = Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, r);
 				_roundedW = w; _roundedH = h; _roundedR = r;
 			}
 			var center = new Vector2(rect.X + w / 2f, rect.Y + h / 2f);
