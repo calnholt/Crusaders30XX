@@ -99,6 +99,11 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ModifyTemperanceEvent { Delta = 1 });
                     break;
                 }
+                case "anoint_the_sick":
+                {
+                    EventManager.Publish(new ModifyHpEvent { Target = player, Delta = 3 });
+                    break;
+                }
                 // weapons
                 case "sword":
                 {

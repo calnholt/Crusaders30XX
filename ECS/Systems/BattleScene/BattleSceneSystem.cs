@@ -212,7 +212,6 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			};
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
-			EventManager.Publish(new SetTemperanceEvent{ Amount = 0 });
 			EventManager.Publish(new SetStoredBlock{ Amount = 0 });
 			// TODO: should handle through events rather than directly but im lazy right now
 			var player = EntityManager.GetEntity("Player");

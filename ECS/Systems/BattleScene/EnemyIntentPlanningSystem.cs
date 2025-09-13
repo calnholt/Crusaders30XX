@@ -157,6 +157,7 @@ namespace Crusaders30XX.ECS.Systems
 			switch (enemyId)
 			{
 				case "demon": return new DemonIntentService();
+				case "succubus": return new SuccubusIntentService();
 				default: return null;
 			}
 		}

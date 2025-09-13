@@ -92,6 +92,35 @@
           "amount": 1
         }
       ]
+    },
+    {
+      "id": "enthralling_gaze",
+      "name": "Enthralling Gaze",
+      "target": "Player",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "PlayAtLeastN",
+            "params": {
+              "n": "1"
+            }
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 5
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "Damage",
+          "amount": 3
+        }
+      ]
     }
   ]
 }

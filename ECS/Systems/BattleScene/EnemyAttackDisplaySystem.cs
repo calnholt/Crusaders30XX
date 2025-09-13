@@ -602,6 +602,9 @@ namespace Crusaders30XX.ECS.Systems
 						var stacks = e.stacks > 0 ? e.stacks.ToString() : "1";
 						parts.Add($"{st}({stacks})");
 						break;
+					case "LoseCourage":
+						parts.Add($"Lose {e.amount} courage");
+						break;
 					default:
 						parts.Add(e.type);
 						break;
