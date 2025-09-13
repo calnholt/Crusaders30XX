@@ -166,6 +166,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			ui.Bounds = rect;
 			ui.IsInteractable = true;
+			ui.TooltipPosition = TooltipPosition.Below; // show tooltip below and centered when possible
 			var mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
 			ui.IsHovered = rect.Contains(mouse.Position);
 			ui.Tooltip = BuildMedalTooltip(medal);

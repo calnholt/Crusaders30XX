@@ -1,0 +1,7 @@
+- Deals X damage, gain X courage equal to the number of reds blocked with last turn
+- 
+
+
+medals:
+- start battle with +X courage / temperance
+

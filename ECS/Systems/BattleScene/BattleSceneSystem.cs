@@ -200,7 +200,17 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void NextBattle() 
 		{
-			Console.WriteLine("NextBattle");
+			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
+			var queued = queuedEntity.GetComponent<QueuedEvents>();
+			Console.WriteLine($"queued.Events.Count: {queued.Events.Count}, queued.CurrentIndex: {queued.CurrentIndex}");
+			if (queued.Events.Count == queued.CurrentIndex + 1)
+			{
+				var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
+				scene.Current = SceneId.Menu;
+				queued.CurrentIndex = -1;
+				queued.Events.Clear();
+				return;
+			};
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
 			EventManager.Publish(new SetTemperanceEvent{ Amount = 0 });
 			EventManager.Publish(new SetStoredBlock{ Amount = 0 });
@@ -210,12 +220,12 @@ namespace Crusaders30XX.ECS.Systems
 			battleStateInfo.CourageGainedThisBattle = 0;
 			battleStateInfo.TriggeredThisBattle.Clear();
 			EntityManager.DestroyEntity("Enemy");
-			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
-			var queued = queuedEntity.GetComponent<QueuedEvents>();
+
 			// first battle after already loading (super messy)
 			if (queued.CurrentIndex < 0)
 			{
-				player.GetComponent<HP>().Current = 50;
+				player.GetComponent<HP>().Current = 40;
+				player.GetComponent<HP>().Max = 40;
 				var equipmentUsedState = player.GetComponent<EquipmentUsedState>();
 				equipmentUsedState.ActivatedThisTurn.Clear();
 				equipmentUsedState.DestroyedEquipmentIds.Clear();
@@ -235,15 +245,22 @@ namespace Crusaders30XX.ECS.Systems
 				deck.Cards.AddRange(demoHand);
 				deck.DrawPile.AddRange(demoHand);
 			}
+			EventManager.Publish(new DeckShuffleEvent { });
 
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
+			if (phaseState.TurnNumber > 0) {
+				EventManager.Publish(new ShowTransition { StartBattle = false });
+				TimerScheduler.Schedule(0.55f, () => {
+					EntityManager.GetEntity("SceneState").GetComponent<SceneState>().Current = SceneId.Battle;
+					EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
+				});
+			}
+			else
+			{
+				EntityManager.GetEntity("SceneState").GetComponent<SceneState>().Current = SceneId.Battle;
+				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
+			}
 			phaseState.TurnNumber = 0;
-
-			EntityManager.GetEntity("SceneState").GetComponent<SceneState>().Current = SceneId.Battle;
-
-			EventManager.Publish(new DeckShuffleEvent { });
-			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
-
 		}
 		
 		[DebugAction("Next Battle")]

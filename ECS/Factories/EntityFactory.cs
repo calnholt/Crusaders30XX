@@ -67,11 +67,7 @@ namespace Crusaders30XX.ECS.Factories
         {
             var entity = world.CreateEntity(name);
             
-            var player = new Player
-            {
-                MaxHealth = 100,
-                CurrentHealth = 100,
-            };
+            var player = new Player{};
             
             var transform = new Transform
             {
@@ -122,7 +118,7 @@ namespace Crusaders30XX.ECS.Factories
             // Attach StoredBlock resource component by default
             world.AddComponent(entity, new StoredBlock { Amount = 0 });
             // Attach HP component
-            world.AddComponent(entity, new HP { Max = 50, Current = 50 });
+            world.AddComponent(entity, new HP { Max = 40, Current = 40 });
             // Equip default medals (can equip multiple later). For now, just st_luke.
             world.AddComponent(
                 world.CreateEntity("Medal_StMichael"),

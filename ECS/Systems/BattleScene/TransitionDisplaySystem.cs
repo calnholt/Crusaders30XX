@@ -163,11 +163,17 @@ namespace Crusaders30XX.ECS.Systems
 			_t = 0f;
 		}
 
-		[DebugAction("Preview Wipe (no restart)")]
+		[DebugAction("Preview Wipe (visual only)")]
 		private void Debug_PreviewWipe()
 		{
 			_suppressNextStartBattleRequest = true;
 			BeginWipeIn(new ShowTransition { StartBattle = false });
+		}
+		[DebugAction("Preview Wipe (actually proceeds)")]
+		private void Debug_PreviewWipeRestart()
+		{
+			_suppressNextStartBattleRequest = true;
+			BeginWipeIn(new ShowTransition { StartBattle = true });
 		}
 	}
 }

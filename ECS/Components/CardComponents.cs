@@ -81,9 +81,6 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         
-        public int MaxHealth { get; set; } = 100;
-        public int CurrentHealth { get; set; } = 100;
-        
         public Entity DeckEntity { get; set; }
         public Entity HandEntity { get; set; }
     }
@@ -99,8 +96,8 @@ namespace Crusaders30XX.ECS.Components
         public string Id { get; set; } = "demon";
 
         public string Name { get; set; } = "";
-        public int MaxHealth { get; set; } = 50;
-        public int CurrentHealth { get; set; } = 50;
+        public int MaxHealth { get; set; } = 40;
+        public int CurrentHealth { get; set; } = 40;
         public int Block { get; set; } = 0;
     }
 
@@ -495,8 +492,8 @@ namespace Crusaders30XX.ECS.Components
     public class HP : IComponent
     {
         public Entity Owner { get; set; }
-        public int Max { get; set; } = 100;
-        public int Current { get; set; } = 100;
+        public int Max { get; set; } = 40;
+        public int Current { get; set; } = 40;
     }
 
     /// <summary>
