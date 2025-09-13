@@ -8,12 +8,13 @@ using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
-	[DebugTab("Battle Transition")] 
+	[DebugTab("Transition")] 
 	public class TransitionDisplaySystem : Core.System
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly Texture2D _pixel;
+		private readonly SpriteFont _font;
 
 		// Animation state
 		private enum Phase { Idle, WipeIn, Hold, WipeOut }
@@ -24,17 +25,24 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Wipe Duration (s)", Step = 0.05f, Min = 0.05f, Max = 3f)]
 		public float WipeDurationSeconds { get; set; } = 0.55f;
 		[DebugEditable(DisplayName = "Hold Black (s)", Step = 0.05f, Min = 0f, Max = 2f)]
-		public float HoldSeconds { get; set; } = 0.1f;
+		public float HoldSeconds { get; set; } = 0.2f;
 		[DebugEditable(DisplayName = "Angle Degrees", Step = 1f, Min = -90f, Max = 90f)]
 		public float AngleDegrees { get; set; } = 40f; // diagonal like Star Wars
 		[DebugEditable(DisplayName = "Color Alpha", Step = 5, Min = 0, Max = 255)]
 		public int Alpha { get; set; } = 255;
 
-		public TransitionDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+		[DebugEditable(DisplayName = "Text Scale", Step = 0.1f, Min = 0.5f, Max = 6f)]
+		public float TextScale { get; set; } = 2.5f;
+
+		[DebugEditable(DisplayName = "Pulse Amplitude", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float PulseAmplitude { get; set; } = 0.05f;
+
+		public TransitionDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
+			_font = font;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			EventManager.Subscribe<ShowTransition>(BeginWipeIn);
@@ -118,6 +126,33 @@ namespace Crusaders30XX.ECS.Systems
 				float dx = tan * y0;
 				var rect = new Rectangle((int)(startBase + startShift + dx), (int)y0, (int)System.Math.Ceiling(fillLen), stripeThickness);
 				_spriteBatch.Draw(_pixel, rect, color);
+			}
+
+			// Reveal centered white text when the wipe overlaps the screen center (or during Hold)
+			bool coveredAtCenter = false;
+			{
+				float centerY = vh * 0.5f;
+				float centerX = vw * 0.5f;
+				float dxCenter = tan * centerY;
+				float startX = startBase + startShift + dxCenter;
+				float endX = startX + fillLen;
+				coveredAtCenter = centerX >= startX && centerX <= endX;
+			}
+			if (_phase == Phase.Hold) coveredAtCenter = true;
+
+			if (coveredAtCenter && _font != null)
+			{
+				string text = "Deus Vult!";
+				float scale = TextScale;
+				if (_phase == Phase.Hold && HoldSeconds > 0f && PulseAmplitude > 0f)
+				{
+					float n = MathHelper.Clamp(_t / System.Math.Max(0.0001f, HoldSeconds), 0f, 1f);
+					// Single quick pulse over the hold window
+					scale *= 1f + PulseAmplitude * (float)System.Math.Sin(System.Math.PI * n);
+				}
+				var size = _font.MeasureString(text) * scale;
+				var pos = new Vector2((vw - size.X) * 0.5f, (vh - size.Y) * 0.5f);
+				_spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 			}
 		}
 
