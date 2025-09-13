@@ -8,6 +8,7 @@ namespace Crusaders30XX.ECS.Data.Equipment
 	public class AbilityDefinition
 	{
 		public string id { get; set; }
+		public string equipmentId { get; set; }
 		public string type { get; set; } // e.g., "Trigger, Activate, etc."
 		public string trigger { get; set; } // e.g., "CourageGainedThreshold"
 		public int threshold { get; set; } = 1;
@@ -19,6 +20,7 @@ namespace Crusaders30XX.ECS.Data.Equipment
 		// Activate-specific flags
 		public bool isFreeAction { get; set; } = false;
 		public bool destroyOnActivate { get; set; } = false;
+		public string target { get; set; } = "Enemy";
 	}
 }
 

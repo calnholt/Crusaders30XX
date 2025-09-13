@@ -91,7 +91,7 @@
       "effectsOnHit": [
         {
           "type": "Damage",
-          "amount": 5
+          "amount": 3
         }
       ],
       "effectsOnNotBlocked": [

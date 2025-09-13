@@ -8,16 +8,28 @@ namespace Crusaders30XX.ECS.Systems
 {
 	internal static class EquipmentAbilityService
 	{
-		public static void Activate(EntityManager entityManager, AbilityDefinition ability)
+		public static void Activate(EntityManager entityManager, string equipmentId, AbilityDefinition ability)
 		{
 			Console.WriteLine($"[EquipmentAbilityService] Executing equipment effect for {ability.id}");
+			var player = entityManager.GetEntity("Player");
+			var enemy = entityManager.GetEntity("Enemy");
 			switch (ability.effect)
 			{
 				case "DrawCards":
 					EventManager.Publish(new RequestDrawCardsEvent { Count = System.Math.Max(1, ability.effectCount) });
+					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
+					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
+					break;
+				case "DealDamage":
+					EventManager.Publish(new ModifyHpEvent { Target = ability.target == "Enemy" ? enemy : player, Delta = (ability.effectCount * -1) });
+					EventManager.Publish(new EquipmentUseResolved { EquipmentId = equipmentId, Delta = 1 });
+					EventQueue.EnqueueRule(new QueuedStartPlayerAttackAnimation());
+					EventQueue.EnqueueRule(new QueuedWaitPlayerImpactEvent());
 					break;
 				case "GainActionPoint":
 					EventManager.Publish(new ModifyActionPointsEvent { Delta = System.Math.Max(1, ability.effectCount) });
+					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
+					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;
 				default:
 					Console.WriteLine($"[EquipmentAbilityService] No effect handler for {ability.effect}");
@@ -30,7 +42,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (!EquipmentDefinitionCache.TryGet(equipmentId, out var def) || def?.abilities == null) return;
 			var ability = def.abilities.FirstOrDefault(a => a.type == "Activate");
 			if (ability == null) return;
-			Activate(entityManager, ability);
+			Activate(entityManager, equipmentId, ability);
 			if (ability.destroyOnActivate)
 			{
 				EventManager.Publish(new EquipmentDestroyed { EquipmentId = equipmentId });

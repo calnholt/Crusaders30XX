@@ -22,7 +22,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (pool.Count == 0) return Enumerable.Empty<string>();
 
 			// Decide number of attacks: 3 or 4. Chance of 4 increases with turn number
-			double p4 = Math.Min(0.85, 0.30 + 0.08 * Math.Max(0, turnNumber)); // 30% base, +8% per turn, capped at 85%
+			double p4 = Math.Min(0.85, 0.1 + 0.05 * Math.Max(0, turnNumber));
 			int count = (_random.NextDouble() < p4) ? 4 : 3;
 
 			// Weights (duplicates allowed). Give enthralling_gaze a higher chance

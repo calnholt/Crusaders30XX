@@ -107,6 +107,10 @@ namespace Crusaders30XX.ECS.Factories
                 world.CreateEntity("Equip_Legs"), 
                 new EquippedEquipment { EquippedOwner = entity, EquipmentId = "lightning_grieves", EquipmentType = "Legs" }
             );
+            world.AddComponent(
+                world.CreateEntity("Equip_Arms"), 
+                new EquippedEquipment { EquippedOwner = entity, EquipmentId = "purging_bracers", EquipmentType = "Arms" }
+            );
             // Attach Courage resource component by default (optional mechanics can read presence)
             world.AddComponent(entity, new Courage { Amount = 0 });
             // Attach Temperance resource component by default

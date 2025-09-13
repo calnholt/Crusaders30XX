@@ -17,6 +17,17 @@ namespace Crusaders30XX.ECS.Data.Equipment
 				{
 					var json = File.ReadAllText(file);
 					var def = JsonSerializer.Deserialize<EquipmentDefinition>(json, opts);
+					// Ensure abilities know their owning equipment id
+					if (def?.abilities != null)
+					{
+						foreach (var ability in def.abilities)
+						{
+							if (ability != null && string.IsNullOrEmpty(ability.equipmentId))
+							{
+								ability.equipmentId = def.id;
+							}
+						}
+					}
 					if (def?.id != null) map[def.id] = def;
 				}
 				catch (System.Exception ex)

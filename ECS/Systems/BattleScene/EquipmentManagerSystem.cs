@@ -55,7 +55,7 @@ namespace Crusaders30XX.ECS.Systems
 					if (ability.oncePerBattle && st.TriggeredThisBattle.Contains(ability.id)) continue;
 					if (courage.Amount >= Math.Max(1, ability.threshold))
 					{
-						EquipmentAbilityService.Activate(EntityManager, ability);
+						EquipmentAbilityService.Activate(EntityManager, ability.id, ability);
 						if (ability.oncePerBattle) st.TriggeredThisBattle.Add(ability.id);
 						// Emit pulse event for UI feedback
 						var equipEntity = EntityManager.GetEntitiesWithComponent<EquippedEquipment>()
