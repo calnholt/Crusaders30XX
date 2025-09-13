@@ -57,14 +57,20 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void ActivateMedal(Entity player, MedalDefinition medal)
 		{
+			var medalEntity = EntityManager.GetEntitiesWithComponent<EquippedMedal>()
+				.FirstOrDefault(e => e.GetComponent<EquippedMedal>()?.EquippedOwner == player && e.GetComponent<EquippedMedal>()?.MedalId == medal.id);
 			switch (medal.id)
 			{
 				case "st_luke":
 					ApplyStLuke(player, medal);
 					break;
+				case "st_michael":
+					EventManager.Publish(new ModifyCourageEvent { Delta = 3 });
+					break;
 				default:
 					break;
 			}
+			EventManager.Publish(new MedalTriggered { MedalEntity = medalEntity, MedalId = medal.id });
 		}
 
 		private void ApplyStLuke(Entity player, MedalDefinition medal)
@@ -77,13 +83,6 @@ namespace Crusaders30XX.ECS.Systems
 			int healAmount = (int)Math.Floor(missing * 0.7f);
 			if (healAmount <= 0) return;
 			EventManager.Publish(new ModifyHpEvent { Target = player, Delta = healAmount });
-			// Emit UI trigger event for medal animation
-			var medalEntity = EntityManager.GetEntitiesWithComponent<EquippedMedal>()
-				.FirstOrDefault(e => e.GetComponent<EquippedMedal>()?.EquippedOwner == player && e.GetComponent<EquippedMedal>()?.MedalId == medal.id);
-			if (medalEntity != null)
-			{
-				EventManager.Publish(new Crusaders30XX.ECS.Events.MedalTriggered { MedalEntity = medalEntity, MedalId = medal.id });
-			}
 		}
 	}
 }

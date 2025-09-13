@@ -22,11 +22,11 @@ namespace Crusaders30XX.ECS.Systems
 		private bool _suppressNextStartBattleRequest = false; // one-shot debug preview flag
 
 		[DebugEditable(DisplayName = "Wipe Duration (s)", Step = 0.05f, Min = 0.05f, Max = 3f)]
-		public float WipeDurationSeconds { get; set; } = 0.5f;
+		public float WipeDurationSeconds { get; set; } = 0.65f;
 		[DebugEditable(DisplayName = "Hold Black (s)", Step = 0.05f, Min = 0f, Max = 2f)]
-		public float HoldSeconds { get; set; } = 0.4f;
+		public float HoldSeconds { get; set; } = 0f;
 		[DebugEditable(DisplayName = "Angle Degrees", Step = 1f, Min = -90f, Max = 90f)]
-		public float AngleDegrees { get; set; } = -40f; // diagonal like Star Wars
+		public float AngleDegrees { get; set; } = 40f; // diagonal like Star Wars
 		[DebugEditable(DisplayName = "Color Alpha", Step = 5, Min = 0, Max = 255)]
 		public int Alpha { get; set; } = 255;
 
@@ -98,10 +98,10 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Build a covering parallelogram whose width expands with p
 			// Ensure full coverage for any angle by computing total length considering diagonal span
-			int stripes = 64;
+			int stripes = 128;
 			int stripeThickness = (int)System.Math.Ceiling(vh / (float)stripes) + 2;
 			byte a = (byte)System.Math.Clamp(Alpha, 0, 255);
-			var color = new Color((byte)0, (byte)0, (byte)0, a);
+			var color = Color.DarkRed;
 			float tan = (float)System.Math.Tan(angle);
 			float dxSpan = tan * vh; // total horizontal offset from top to bottom
 			float dxMin = System.Math.Min(0f, dxSpan);

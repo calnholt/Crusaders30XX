@@ -19,6 +19,7 @@ public class Game1 : Game
     private SpriteFont _font;
     private DebugMenuSystem _debugMenuSystem;
     private EntityListOverlaySystem _entityListOverlaySystem;
+    private BattleTransitionDisplaySystem _transitionDisplaySystem;
     private KeyboardState _prevKeyboard;
     
     
@@ -82,10 +83,13 @@ public class Game1 : Game
         var battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _world.SystemManager);
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _transitionDisplaySystem = new BattleTransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _world.AddSystem(menuSceneSystem);
         _world.AddSystem(battleSceneSystem);
+        _world.AddSystem(new TimerSchedulerSystem(_world.EntityManager));
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_entityListOverlaySystem);
+        _world.AddSystem(_transitionDisplaySystem);
 
         // TODO: use this.Content to load your game content here
     }
@@ -139,6 +143,7 @@ public class Game1 : Game
         }
         _debugMenuSystem.Draw();
         _entityListOverlaySystem?.Draw();
+        _transitionDisplaySystem?.Draw();
         _spriteBatch.End();
 
         base.Draw(gameTime);

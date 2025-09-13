@@ -1,3 +1,4 @@
+using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 
 namespace Crusaders30XX.ECS.Events
@@ -81,7 +82,11 @@ namespace Crusaders30XX.ECS.Events
 	}
 
 	// Fired when a battle is won (enemy defeated), to trigger scene transition
-	public class BattleWon { }
+	public class BattleWon 
+	{ 
+	}
+
+
 }
 
 

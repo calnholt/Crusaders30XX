@@ -125,6 +125,10 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new HP { Max = 50, Current = 50 });
             // Equip default medals (can equip multiple later). For now, just st_luke.
             world.AddComponent(
+                world.CreateEntity("Medal_StMichael"),
+                new EquippedMedal { EquippedOwner = entity, MedalId = "st_michael" }
+            );
+            world.AddComponent(
                 world.CreateEntity("Medal_StLuke"),
                 new EquippedMedal { EquippedOwner = entity, MedalId = "st_luke" }
             );
