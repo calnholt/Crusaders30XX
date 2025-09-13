@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
-		private Texture2D _demonTexture;
+		private Texture2D _enemyTexture;
 		private float _pulseTimerSeconds;
 		private readonly float _pulseDurationSeconds = 0.25f;
 		private Vector2 _attackOffset = new Vector2(-80f, -20f);
@@ -133,12 +133,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private Texture2D GetTextureFor(EnemyType type)
 		{
-			if (type == EnemyType.Demon)
-			{
-				if (_demonTexture == null) _demonTexture = _content.Load<Texture2D>("Demon");
-				return _demonTexture;
-			}
-			return null;
+			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
+			var queued = queuedEntity.GetComponent<QueuedEvents>();
+			_enemyTexture = _content.Load<Texture2D>(queued.Events[queued.CurrentIndex].EventId);
+			return _enemyTexture;
 		}
 	}
 }

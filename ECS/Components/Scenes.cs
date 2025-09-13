@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Components
 		public Entity Owner { get; set; }
 		public List<QueuedEvent> Events { get; set; } = new List<QueuedEvent>();
 		public int CurrentIndex = -1;
+		public bool IsFirst = false;
 	}
 
 	public class QueuedEvent 

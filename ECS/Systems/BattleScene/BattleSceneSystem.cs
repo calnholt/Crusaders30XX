@@ -248,19 +248,11 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new DeckShuffleEvent { });
 
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
-			if (phaseState.TurnNumber > 0) {
-				EventManager.Publish(new ShowTransition { StartBattle = false });
-				TimerScheduler.Schedule(0.55f, () => {
-					EntityManager.GetEntity("SceneState").GetComponent<SceneState>().Current = SceneId.Battle;
-					EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
-				});
-			}
-			else
-			{
-				EntityManager.GetEntity("SceneState").GetComponent<SceneState>().Current = SceneId.Battle;
-				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
-			}
 			phaseState.TurnNumber = 0;
+			EntityManager.GetEntity("SceneState").GetComponent<SceneState>().Current = SceneId.Battle;
+			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
+
+			// TODO: show transition on first battle after going back to menu
 		}
 		
 		[DebugAction("Next Battle")]

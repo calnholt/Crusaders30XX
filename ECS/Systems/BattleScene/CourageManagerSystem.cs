@@ -16,6 +16,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourage);
 			EventManager.Subscribe<SetCourageEvent>(OnSetCourageEvent);
+			EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
 			EventManager.Subscribe<CardMoved>(OnCardMoved);
 			System.Console.WriteLine("[CourageManagerSystem] Subscribed to ModifyCourageEvent, CardMoved");
 		}
@@ -50,6 +51,18 @@ namespace Crusaders30XX.ECS.Systems
 			var courage = player.GetComponent<Courage>();
 			if (courage == null) return;
 			courage.Amount = evt.Amount;
+		}
+
+		private void OnApplyEffect(ApplyEffect evt)
+		{
+			// Translate data-driven effects to resource changes
+			string type = evt.EffectType ?? string.Empty;
+			if (type != "LoseCourage") return;
+			// Only apply if the target is the player
+			if (evt.Target == null || !evt.Target.HasComponent<Player>()) return;
+			int amt = Math.Max(0, evt.Amount);
+			if (amt <= 0) amt = 1; // default to 1 if unspecified or invalid
+			EventManager.Publish(new ModifyCourageEvent { Delta = -amt });
 		}
 
 		private void OnCardMoved(CardMoved evt)

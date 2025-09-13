@@ -1,0 +1,97 @@
+{
+  "name": "Succubus",
+  "id": "succubus",
+  "hp": 60,
+  "attacks": [
+    {
+      "id": "velvet_fangs",
+      "name": "Velvet Fangs",
+      "target": "Player",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "PlayColorAtLeastN",
+            "params": {
+              "color": "Red",
+              "n": "1"
+            }
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 5
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "LoseCourage",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "bewitching_kiss",
+      "name": "Bewitching Kiss",
+      "target": "Player",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "PlayColorAtLeastN",
+            "params": {
+              "color": "White",
+              "n": "1"
+            }
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 5
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "LoseCourage",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "soul_siphon",
+      "name": "Soul Siphon",
+      "target": "Player",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "PlayColorAtLeastN",
+            "params": {
+              "color": "Black",
+              "n": "1"
+            }
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 5
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "LoseCourage",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

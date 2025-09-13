@@ -233,8 +233,9 @@ namespace Crusaders30XX.ECS.Factories
                 biEntity = world.CreateEntity("BattleInfo");
                 world.AddComponent(biEntity, new BattleInfo { TurnNumber = 0 });
             }
-            // Create a default enemy from ID (fully driven by enemy JSON)
-            var enemyEntity = CreateEnemyFromId(world, "demon");
+            var queuedEntity = world.EntityManager.GetEntity("QueuedEvents");
+			var queued = queuedEntity.GetComponent<QueuedEvents>();
+            var enemyEntity = CreateEnemyFromId(world, queued.Events[queued.CurrentIndex + 1].EventId);
             
             return entity;
         }

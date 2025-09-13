@@ -22,7 +22,7 @@
       "effectsOnHit": [
         {
           "type": "Damage",
-          "amount": 14
+          "amount": 16
         }
       ],
       "effectsOnNotBlocked": [
@@ -52,7 +52,7 @@
       "effectsOnHit": [
         {
           "type": "Damage",
-          "amount": 14
+          "amount": 16
         }
       ],
       "effectsOnNotBlocked": [

@@ -73,12 +73,48 @@ namespace Crusaders30XX.ECS.Systems
 						next.Planned = new List<PlannedAttack>();
 					}
 
-					// Use per-enemy intent service to plan next-turn preview (service will skip clearing current if non-empty)
+					// Use per-enemy intent service to select attack IDs; centralized planning handles clears, context IDs, and telegraphs
 					IEnemyIntentService service = CreateServiceForEnemy(enemyId);
+					if (service == null) continue;
 					System.Console.WriteLine($"[EnemyIntentPlanningSystem] Planning {enemyId} attacks, turn {turnNumber}");
-					service.Plan(enemy, arsenal, intent, next, turnNumber, _attackDefs);
+					// Always clear the next-turn preview before populating
+					next.Planned.Clear();
+					// If current (this turn) is empty, fill it using the prior turn's selection
+					if (intent.Planned.Count == 0)
+					{
+						var currentIds = service.SelectForTurn(enemy, arsenal, Math.Max(0, turnNumber - 1));
+						AddPlanned(currentIds, intent);
+					}
+					// Plan next-turn preview using this turn's selection
+					var nextIds = service.SelectForTurn(enemy, arsenal, Math.Max(0, turnNumber));
+					AddPlanned(nextIds, next);
 				}
 				_isFirstLoad = false;
+			}
+		}
+
+		private void AddPlanned(IEnumerable<string> attackIds, dynamic target)
+		{
+			int index = (target.Planned is List<PlannedAttack> l) ? l.Count : 0;
+			foreach (var id in attackIds)
+			{
+				if (!_attackDefs.TryGetValue(id, out var def)) continue;
+				string ctx = Guid.NewGuid().ToString("N");
+				target.Planned.Add(new PlannedAttack
+				{
+					AttackId = id,
+					ResolveStep = System.Math.Max(1, index + 1),
+					ContextId = ctx,
+					WasBlocked = false
+				});
+				EventManager.Publish(new IntentPlanned
+				{
+					AttackId = id,
+					ContextId = ctx,
+					Step = System.Math.Max(1, index + 1),
+					TelegraphText = def.name
+				});
+				index++;
 			}
 		}
 

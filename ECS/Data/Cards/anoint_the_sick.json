@@ -1,0 +1,11 @@
+{
+  "id": "anoint_the_sick",
+  "name": "Anoint the Sick",
+  "target": "Player",
+  "color": "White",
+  "rarity": "Common",
+  "text": "Heal 3 HP.",
+  "isFreeAction": true,
+  "animation": "Buff"
+}
+
