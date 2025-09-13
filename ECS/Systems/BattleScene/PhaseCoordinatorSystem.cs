@@ -28,11 +28,7 @@ namespace Crusaders30XX.ECS.Systems
 		private PhaseState GetOrCreate()
 		{
 			var e = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
-			if (e != null) return e.GetComponent<PhaseState>();
-			var world = EntityManager.CreateEntity("PhaseState");
-			var ps = new PhaseState { Main = MainPhase.StartBattle, Sub = SubPhase.StartBattle, TurnNumber = 1 };
-			EntityManager.AddComponent(world, ps);
-			return ps;
+			return e.GetComponent<PhaseState>();
 		}
 
 		private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)

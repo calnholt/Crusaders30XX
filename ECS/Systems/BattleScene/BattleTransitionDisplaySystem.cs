@@ -9,7 +9,7 @@ using Crusaders30XX.Diagnostics;
 namespace Crusaders30XX.ECS.Systems
 {
 	[DebugTab("Battle Transition")] 
-	public class BattleTransitionDisplaySystem : Core.System
+	public class TransitionDisplaySystem : Core.System
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
@@ -22,22 +22,22 @@ namespace Crusaders30XX.ECS.Systems
 		private bool _suppressNextStartBattleRequest = false; // one-shot debug preview flag
 
 		[DebugEditable(DisplayName = "Wipe Duration (s)", Step = 0.05f, Min = 0.05f, Max = 3f)]
-		public float WipeDurationSeconds { get; set; } = 0.65f;
+		public float WipeDurationSeconds { get; set; } = 0.55f;
 		[DebugEditable(DisplayName = "Hold Black (s)", Step = 0.05f, Min = 0f, Max = 2f)]
-		public float HoldSeconds { get; set; } = 0f;
+		public float HoldSeconds { get; set; } = 0.1f;
 		[DebugEditable(DisplayName = "Angle Degrees", Step = 1f, Min = -90f, Max = 90f)]
 		public float AngleDegrees { get; set; } = 40f; // diagonal like Star Wars
 		[DebugEditable(DisplayName = "Color Alpha", Step = 5, Min = 0, Max = 255)]
 		public int Alpha { get; set; } = 255;
 
-		public BattleTransitionDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+		public TransitionDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
-			EventManager.Subscribe<BattleWon>(_ => BeginWipeIn());
+			EventManager.Subscribe<ShowTransition>(BeginWipeIn);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -121,8 +121,9 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void BeginWipeIn()
+		private void BeginWipeIn(ShowTransition transition)
 		{
+			_suppressNextStartBattleRequest = !transition.StartBattle;
 			_phase = Phase.WipeIn;
 			_t = 0f;
 		}
@@ -131,7 +132,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void Debug_PreviewWipe()
 		{
 			_suppressNextStartBattleRequest = true;
-			BeginWipeIn();
+			BeginWipeIn(new ShowTransition { StartBattle = false });
 		}
 	}
 }

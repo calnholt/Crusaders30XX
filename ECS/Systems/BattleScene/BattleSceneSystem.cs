@@ -190,15 +190,17 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
 			EventManager.Publish(new DeckShuffleEvent { });
-			EventManager.Publish(new BattleWon { });
-			TimerScheduler.Schedule(0.1f, () => {
+			EventManager.Publish(new ShowTransition { StartBattle = false });
+			TimerScheduler.Schedule(0.55f, () => {
 				scene.Current = SceneId.Battle;
+				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
 			});
 
 		}
 
 		public void NextBattle() 
 		{
+			Console.WriteLine("NextBattle");
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
 			EventManager.Publish(new SetTemperanceEvent{ Amount = 0 });
 			EventManager.Publish(new SetStoredBlock{ Amount = 0 });
@@ -241,6 +243,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			EventManager.Publish(new DeckShuffleEvent { });
 			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
+
 		}
 		
 		[DebugAction("Next Battle")]
