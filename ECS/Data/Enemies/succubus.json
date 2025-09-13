@@ -30,6 +30,10 @@
         {
           "type": "LoseCourage",
           "amount": 1
+        },
+        {
+          "type": "Damage",
+          "amount": 2
         }
       ]
     },
@@ -60,6 +64,10 @@
         {
           "type": "LoseCourage",
           "amount": 1
+        },
+        {
+          "type": "Damage",
+          "amount": 2
         }
       ]
     },
@@ -90,6 +98,10 @@
         {
           "type": "LoseCourage",
           "amount": 1
+        },
+        {
+          "type": "Damage",
+          "amount": 2
         }
       ]
     },
