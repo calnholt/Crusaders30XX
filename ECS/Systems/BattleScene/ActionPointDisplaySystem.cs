@@ -4,12 +4,14 @@ using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
 	/// Draws the player's Action Points as red pips on a rounded black background below the player portrait.
 	/// </summary>
+	[DebugTab("Action Points")]
 	public class ActionPointDisplaySystem : Core.System
 	{
 		private readonly GraphicsDevice _graphicsDevice;
@@ -20,12 +22,23 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly System.Collections.Generic.Dictionary<(int w,int h,int r), Texture2D> _bgCache = new();
 
 		// Layout settings
-		public int PipDiameter { get; set; } = 18;
-		public int PipSpacing { get; set; } = 6;
-		public int PaddingX { get; set; } = 12;
-		public int PaddingY { get; set; } = 8;
-		public int CornerRadius { get; set; } = 10;
-		public int AnchorOffsetY { get; set; } = 290;
+		[DebugEditable(DisplayName = "Pip Diameter", Step = 1, Min = 2, Max = 64)]
+		public int PipDiameter { get; set; } = 12;
+
+		[DebugEditable(DisplayName = "Pip Spacing", Step = 1, Min = 0, Max = 64)]
+		public int PipSpacing { get; set; } = 7;
+
+		[DebugEditable(DisplayName = "Padding X", Step = 1, Min = 0, Max = 64)]
+		public int PaddingX { get; set; } = 6;
+
+		[DebugEditable(DisplayName = "Padding Y", Step = 1, Min = 0, Max = 64)]
+		public int PaddingY { get; set; } = 6;
+
+		[DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 64)]
+		public int CornerRadius { get; set; } = 6;
+
+		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -400, Max = 800)]
+		public int AnchorOffsetY { get; set; } = 272;
 
 		public ActionPointDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
@@ -74,6 +87,29 @@ namespace Crusaders30XX.ECS.Systems
 			// Background
 			var bg = GetOrCreateBackground(bgW, bgH, radius);
 			_spriteBatch.Draw(bg, position: topLeft, color: Color.Black);
+
+			// Update hoverable UI element for tooltip (entity pre-created in factory as UI_APTooltip)
+			var apHover = EntityManager.GetEntitiesWithComponent<UIElement>()
+				.FirstOrDefault(e =>
+				{
+					var ui = e.GetComponent<UIElement>();
+					return ui != null && (ui.Tooltip?.Contains("Action Points") ?? false);
+				});
+			if (apHover != null)
+			{
+				var ui = apHover.GetComponent<UIElement>();
+				var ht = apHover.GetComponent<Transform>();
+				var hitRect = new Rectangle((int)topLeft.X, (int)topLeft.Y, bgW, bgH);
+				if (ui != null)
+				{
+					ui.Bounds = hitRect;
+					ui.Tooltip = $"{count} Action Point{(count == 1 ? "" : "s")}";
+				}
+				if (ht != null)
+				{
+					ht.Position = new Vector2(hitRect.X, hitRect.Y);
+				}
+			}
 
 			// Pips
 			var pip = GetOrCreatePipTexture(d);

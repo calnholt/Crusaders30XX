@@ -288,6 +288,7 @@ namespace Crusaders30XX.ECS.Systems
 				ui.IsHovered = false;
 			}
 			ui.Tooltip = BuildTooltipText(item);
+			ui.TooltipPosition = TooltipPosition.Right;
 			// Place a transform so z-order sits above background UI if needed
 			var t = item.Owner.GetComponent<Transform>();
 			if (t == null)
@@ -486,7 +487,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				uiEntity = EntityManager.CreateEntity($"UI_EquipTooltip_{item.Owner.Id}");
 				EntityManager.AddComponent(uiEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 });
-				EntityManager.AddComponent(uiEntity, new UIElement { Bounds = rect, IsInteractable = true, Tooltip = BuildTooltipText(item) });
+				EntityManager.AddComponent(uiEntity, new UIElement { Bounds = rect, IsInteractable = true, Tooltip = BuildTooltipText(item), TooltipPosition = TooltipPosition.Right });
 				_tooltipByEquipEntityId[item.Owner.Id] = uiEntity;
 			}
 			else
@@ -498,6 +499,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					ui.Bounds = rect;
 					ui.Tooltip = BuildTooltipText(item);
+					ui.TooltipPosition = TooltipPosition.Right;
 				}
 			}
 		}
