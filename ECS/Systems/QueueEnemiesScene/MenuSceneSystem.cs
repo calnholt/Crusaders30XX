@@ -58,6 +58,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Grid Image Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
 		public float GridImageScale { get; set; } = 0.95f;
 
+		[DebugEditable(DisplayName = "Menu Y Offset", Step = 4, Min = -400, Max = 800)]
+		public int MenuYOffset { get; set; } = 60;
+
 		public MenuSceneSystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content, SpriteFont font) : base(em)
 		{
 			_graphicsDevice = gd;
@@ -92,7 +95,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			int vw = _graphicsDevice.Viewport.Width;
 			int vh = _graphicsDevice.Viewport.Height;
-			int gridTop = TopListHeight + GridPadding;
+			int gridTop = TopListHeight + GridPadding + MenuYOffset;
 			int usableH = vh - gridTop - GridPadding - ConfirmHeight - GridPadding;
 			int col = System.Math.Max(1, GridColumns);
 			int cellW = ButtonWidth;
@@ -154,12 +157,20 @@ namespace Crusaders30XX.ECS.Systems
 			// Cache rounded background for buttons
 			EnsureRounded(ButtonWidth, ButtonHeight, CornerRadius);
 
-			int gridTop = TopListHeight + GridPadding;
+			int gridTop = TopListHeight + GridPadding + MenuYOffset;
 			int col = System.Math.Max(1, GridColumns);
 			int cellW = ButtonWidth;
 			int cellH = ButtonHeight;
 			int totalW = col * cellW + (col - 1) * GridPadding;
 			int startX = System.Math.Max(0, (vw - totalW) / 2);
+
+			// Instructional text (drawn here to ensure SpriteBatch is active)
+			string help = "Click on enemies to add to queue to battle, the press Confirm to start";
+			var helpSize = _font.MeasureString(help) * 0.8f;
+			float helpX = (vw - helpSize.X) / 2f;
+			float helpY = System.Math.Max(GridPadding, gridTop - GridPadding - helpSize.Y - 4f);
+			_spriteBatch.DrawString(_font, help, new Vector2(helpX + 1, helpY + 1), Color.Black, 0f, Vector2.Zero, 0.8f, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, help, new Vector2(helpX, helpY), Color.White, 0f, Vector2.Zero, 0.8f, SpriteEffects.None, 0f);
 
 			// Enemy buttons grid
 			var all = EnemyDefinitionCache.GetAll();
