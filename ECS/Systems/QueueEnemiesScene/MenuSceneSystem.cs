@@ -43,7 +43,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int GridPadding { get; set; } = 12;
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.3f, Max = 3f)]
-		public float TextScale { get; set; } = 1f;
+		public float TextScale { get; set; } = 0.25f;
 
 		[DebugEditable(DisplayName = "Top List Height", Step = 4, Min = 20, Max = 600)]
 		public int TopListHeight { get; set; } = 108;
@@ -216,8 +216,8 @@ namespace Crusaders30XX.ECS.Systems
 			var helpSize = _font.MeasureString(help) * 0.8f;
 			float helpX = (vw - helpSize.X) / 2f;
 			float helpY = System.Math.Max(GridPadding, gridTop - GridPadding - helpSize.Y - 4f);
-			_spriteBatch.DrawString(_font, help, new Vector2(helpX + 1, helpY + 1), Color.Black, 0f, Vector2.Zero, 0.8f, SpriteEffects.None, 0f);
-			_spriteBatch.DrawString(_font, help, new Vector2(helpX, helpY), Color.White, 0f, Vector2.Zero, 0.8f, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, help, new Vector2(helpX + 1, helpY + 1), Color.Black, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, help, new Vector2(helpX, helpY), Color.White, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
 
 			// Enemy buttons grid
 			var all = EnemyDefinitionCache.GetAll();
@@ -295,8 +295,8 @@ namespace Crusaders30XX.ECS.Systems
 			var ctext = "Confirm";
 			var csize = _font.MeasureString(ctext) * 0.9f;
 			var cpos = new Vector2(confirmRect.X + (ConfirmWidth - csize.X) / 2f, confirmRect.Y + (ConfirmHeight - csize.Y) / 2f);
-			_spriteBatch.DrawString(_font, ctext, cpos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.9f, SpriteEffects.None, 0f);
-			_spriteBatch.DrawString(_font, ctext, cpos, Color.White, 0f, Vector2.Zero, 0.9f, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, ctext, cpos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.225f, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, ctext, cpos, Color.White, 0f, Vector2.Zero, 0.225f, SpriteEffects.None, 0f);
 
 			// How To Play button (left of Confirm)
 			if (ShowHowToButton != 0)
@@ -309,8 +309,8 @@ namespace Crusaders30XX.ECS.Systems
 				var htext = "How To Play";
 				var hsize = _font.MeasureString(htext) * 0.8f;
 				var hpos = new Vector2(howRect.X + (howW - hsize.X) / 2f, howRect.Y + (howH - hsize.Y) / 2f);
-				_spriteBatch.DrawString(_font, htext, hpos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.8f, SpriteEffects.None, 0f);
-				_spriteBatch.DrawString(_font, htext, hpos, Color.White, 0f, Vector2.Zero, 0.8f, SpriteEffects.None, 0f);
+				_spriteBatch.DrawString(_font, htext, hpos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
+				_spriteBatch.DrawString(_font, htext, hpos, Color.White, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
 			}
 		}
 

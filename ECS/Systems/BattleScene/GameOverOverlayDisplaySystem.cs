@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Systems
 		public float TextFadeOutSeconds { get; set; } = 2.75f;
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.2f, Max = 3f)]
-		public float TextScale { get; set; } = 2.5f;
+		public float TextScale { get; set; } = 0.625f;
 
 		[DebugEditable(DisplayName = "Text Offset X", Step = 1f, Min = -1000f, Max = 1000f)]
 		public float TextOffsetX { get; set; } = 0f;

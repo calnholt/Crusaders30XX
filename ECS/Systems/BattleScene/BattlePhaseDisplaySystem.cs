@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Label Offset Y", Step = 2, Min = -2000, Max = 2000)]
 		public int LabelOffsetY { get; set; } = 14;
 		[DebugEditable(DisplayName = "Label Scale", Step = 0.05f, Min = 0.2f, Max = 3f)]
-		public float LabelScale { get; set; } = 0.6f;
+		public float LabelScale { get; set; } = 0.15f;
 
 		// Transition banner
 		[DebugEditable(DisplayName = "Trans In (s)", Step = 0.05f, Min = 0.05f, Max = 5f)]
@@ -39,7 +39,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Trans Y Offset", Step = 2, Min = -2000, Max = 2000)]
 		public int TransitionOffsetY { get; set; } = 140;
 		[DebugEditable(DisplayName = "Trans Scale", Step = 0.05f, Min = 0.2f, Max = 4f)]
-		public float TransitionScale { get; set; } = 1.25f;
+		public float TransitionScale { get; set; } = 0.3125f;
 		[DebugEditable(DisplayName = "Shadow Offset", Step = 1, Min = 0, Max = 20)]
 		public int ShadowOffset { get; set; } = 2;
 

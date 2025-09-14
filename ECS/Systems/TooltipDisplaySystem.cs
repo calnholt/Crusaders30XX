@@ -35,7 +35,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int MaxAlpha { get; set; } = 220;
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.1f, Min = 0.5f, Max = 2.0f)]
-		public float TextScale { get; set; } = 0.5f;
+		public float TextScale { get; set; } = 0.125f;
 
 		[DebugEditable(DisplayName = "Text Color R", Step = 1, Min = 0, Max = 255)]
 		public int TextColorR { get; set; } = 255;

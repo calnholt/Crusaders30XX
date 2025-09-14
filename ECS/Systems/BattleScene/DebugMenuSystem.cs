@@ -67,10 +67,10 @@ namespace Crusaders30XX.ECS.Systems
         public int ButtonHeight { get; set; } = 36;
 
 		[DebugEditable(DisplayName = "Title Scale", Step = 0.05f, Min = 0.2f, Max = 2.0f)]
-		public float TitleScale { get; set; } = 0.7f;
+		public float TitleScale { get; set; } = 0.175f;
 
         [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.2f, Max = 2.0f)]
-        public float TextScale { get; set; } = 0.55f;
+        public float TextScale { get; set; } = 0.1375f;
 
         [DebugEditable(DisplayName = "Tab Height", Step = 1, Min = 20, Max = 80)]
         public int TabHeight { get; set; } = 36;

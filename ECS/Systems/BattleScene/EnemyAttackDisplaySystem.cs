@@ -73,10 +73,10 @@ namespace Crusaders30XX.ECS.Systems
 		public int BackgroundAlpha { get; set; } = 200;
 
 		[DebugEditable(DisplayName = "Title Scale", Step = 0.05f, Min = 0.3f, Max = 2.5f)]
-		public float TitleScale { get; set; } = 1f;
+		public float TitleScale { get; set; } = 0.25f;
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.3f, Max = 2.5f)]
-		public float TextScale { get; set; } = 0.55f;
+		public float TextScale { get; set; } = 0.1375f;
 
 		[DebugEditable(DisplayName = "Line Spacing Extra", Step = 1, Min = 0, Max = 20)]
 		public int LineSpacingExtra { get; set; } = 8;
@@ -142,7 +142,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Confirm Button Height", Step = 2, Min = 16, Max = 200)]
 		public int ConfirmButtonHeight { get; set; } = 44;
 		[DebugEditable(DisplayName = "Confirm Button Text Scale", Step = 0.05f, Min = 0.3f, Max = 3f)]
-		public float ConfirmButtonTextScale { get; set; } = 0.7f;
+		public float ConfirmButtonTextScale { get; set; } = 0.175f;
 		[DebugEditable(DisplayName = "Confirm Button Z", Step = 10, Min = -100000, Max = 100000)]
 		public int ConfirmButtonZ { get; set; } = 20000;
 

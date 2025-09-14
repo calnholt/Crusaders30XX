@@ -36,7 +36,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int AnchorOffsetY { get; set; } = 224;
 
 		[DebugEditable(DisplayName = "Text Scale Divisor", Step = 1, Min = 1, Max = 200)]
-		public int TextScaleDivisor { get; set; } = 22;
+		public int TextScaleDivisor { get; set; } = 88;
 
 		[DebugEditable(DisplayName = "Text Offset X", Step = 1, Min = -500, Max = 500)]
 		public int TextOffsetX { get; set; } = 0;

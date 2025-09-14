@@ -34,7 +34,7 @@ namespace Crusaders30XX.ECS.Systems
         public int ButtonZ { get; set; } = 4000;
 
         [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.2f, Max = 2.5f)]
-        public float ButtonTextScale { get; set; } = 0.8f;
+        public float ButtonTextScale { get; set; } = 0.2f;
 
         public EndTurnDisplaySystem(EntityManager entityManager, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(entityManager)
         {

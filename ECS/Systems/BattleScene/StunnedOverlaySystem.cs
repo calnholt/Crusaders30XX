@@ -43,8 +43,8 @@ namespace Crusaders30XX.ECS.Systems
 			string s = "Stunned!";
 			var size = _font.MeasureString(s) * 0.8f;
 			var textPos = new Vector2(t.Position.X - size.X / 2f, t.Position.Y - info.TextureHeight * info.CurrentScale / 2f - 40);
-			_spriteBatch.DrawString(_font, s, textPos + new Vector2(2, 2), Color.Black * 0.6f, 0f, Vector2.Zero, 0.8f, SpriteEffects.None, 0f);
-			_spriteBatch.DrawString(_font, s, textPos, Color.White, 0f, Vector2.Zero, 0.8f, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, s, textPos + new Vector2(2, 2), Color.Black * 0.6f, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, s, textPos, Color.White, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
 		}
 	}
 }

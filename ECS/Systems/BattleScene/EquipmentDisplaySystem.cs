@@ -54,7 +54,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Icon Padding Y", Step = 1, Min = 0, Max = 256)]
 		public int IconPaddingY { get; set; } = 8;
 		[DebugEditable(DisplayName = "Block Text Scale", Step = 0.05f, Min = 0.2f, Max = 3f)]
-		public float BlockTextScale { get; set; } = 0.75f;
+		public float BlockTextScale { get; set; } = 0.1875f;
 		[DebugEditable(DisplayName = "Shield Icon Height", Step = 1, Min = 8, Max = 128)]
 		public int ShieldIconHeight { get; set; } = 36;
 		[DebugEditable(DisplayName = "Shield Gap", Step = 1, Min = 0, Max = 64)]
@@ -72,7 +72,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Checkmark Offset Y", Step = 1, Min = -200, Max = 200)]
 		public int CheckmarkOffsetY { get; set; } = -9;
 		[DebugEditable(DisplayName = "Usage Text Scale", Step = 0.05f, Min = 0.3f, Max = 3f)]
-		public float UsageTextScale { get; set; } = 0.55f;
+		public float UsageTextScale { get; set; } = 0.1375f;
 		[DebugEditable(DisplayName = "Usage Offset X", Step = 1, Min = -200, Max = 200)]
 		public int UsageOffsetX { get; set; } = -6;
 		[DebugEditable(DisplayName = "Usage Offset Y", Step = 1, Min = -200, Max = 200)]

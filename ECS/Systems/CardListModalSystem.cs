@@ -40,7 +40,7 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
         private const int GridGap = 12;
-        private const float TitleScale = 0.7f;
+        private const float TitleScale = 0.175f;
         private const float CardScale = 1.0f;
 
         public CardListModalSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
@@ -89,7 +89,7 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.Draw(_pixel, closeRect, new Color(70, 70, 70));
             DrawBorder(closeRect, Color.White, 2);
             var xSize = _font.MeasureString("X") * 0.6f;
-            _spriteBatch.DrawString(_font, "X", new Vector2(closeRect.Center.X - xSize.X / 2f, closeRect.Center.Y - xSize.Y / 2f), Color.White, 0f, Vector2.Zero, 0.6f, SpriteEffects.None, 0f);
+                _spriteBatch.DrawString(_font, "X", new Vector2(closeRect.Center.X - xSize.X / 2f, closeRect.Center.Y - xSize.Y / 2f), Color.White, 0f, Vector2.Zero, 0.15f, SpriteEffects.None, 0f);
 
             // Sync a clickable close entity
             var closeBtn = EntityManager.GetEntitiesWithComponent<CardListModalClose>().FirstOrDefault();

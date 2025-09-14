@@ -30,7 +30,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int PanelHeight { get; set; } = 620;
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.3f, Max = 2f)]
-		public float TextScale { get; set; } = 0.7f;
+		public float TextScale { get; set; } = 0.175f;
 
 		public HowToPlayOverlaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
 		{
@@ -101,8 +101,8 @@ namespace Crusaders30XX.ECS.Systems
 			string title = "How To Play";
 			var tsize = _font.MeasureString(title) * 0.9f;
 			var tpos = new Vector2(rect.X + (w - tsize.X) / 2f, rect.Y + 16);
-			_spriteBatch.DrawString(_font, title, tpos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.9f, SpriteEffects.None, 0f);
-			_spriteBatch.DrawString(_font, title, tpos, Color.White, 0f, Vector2.Zero, 0.9f, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, title, tpos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.225f, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, title, tpos, Color.White, 0f, Vector2.Zero, 0.225f, SpriteEffects.None, 0f);
 
 			// Reserve bottom space for close hint (outside scrollable content)
 			string hint = "Click anywhere to close";
@@ -153,7 +153,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Close hint
 			var hpos = new Vector2(rect.X + (w - hsize.X) / 2f, rect.Bottom - hsize.Y - 12);
-			_spriteBatch.DrawString(_font, hint, hpos, Color.Gray, 0f, Vector2.Zero, 0.6f, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, hint, hpos, Color.Gray, 0f, Vector2.Zero, 0.15f, SpriteEffects.None, 0f);
 		}
 
 		private IEnumerable<string> WrapText(string text, float scale, int maxWidth)

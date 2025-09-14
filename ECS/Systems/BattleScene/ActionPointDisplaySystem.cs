@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int RightPaddingFromDiscard { get; set; } = 15;
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.1f, Max = 5f)]
-		public float TextScale { get; set; } = 0.8f;
+		public float TextScale { get; set; } = 0.2f;
 
 		public ActionPointDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
 			: base(entityManager)

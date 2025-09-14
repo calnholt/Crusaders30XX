@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int Alpha { get; set; } = 255;
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.1f, Min = 0.5f, Max = 6f)]
-		public float TextScale { get; set; } = 2.5f;
+		public float TextScale { get; set; } = 0.625f;
 
 		[DebugEditable(DisplayName = "Pulse Amplitude", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float PulseAmplitude { get; set; } = 0.05f;

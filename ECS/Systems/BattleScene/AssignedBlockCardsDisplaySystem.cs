@@ -46,7 +46,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Above Gap (px)", Step = 1, Min = 0, Max = 100)]
 		public int AboveGap { get; set; } = 8;
 		[DebugEditable(DisplayName = "Block Text Scale", Step = 0.05f, Min = 0.2f, Max = 2.0f)]
-		public float BlockTextScale { get; set; } = 0.8f;
+		public float BlockTextScale { get; set; } = 0.2f;
 		[DebugEditable(DisplayName = "Assigned Corner Radius", Step = 1, Min = 0, Max = 64)]
 		public int AssignedCornerRadius { get; set; } = 6;
 		[DebugEditable(DisplayName = "Assigned Background Alpha", Step = 1, Min = 0, Max = 255)]
