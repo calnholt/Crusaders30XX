@@ -22,11 +22,11 @@ namespace Crusaders30XX.ECS.Systems
 		private const int BASE_HIGHLIGHT_BORDER_THICKNESS = 5;
 		private const int BASE_TEXT_MARGIN_X = 16;
 		private const int BASE_TEXT_MARGIN_Y = 16;
-		private const float BASE_NAME_SCALE = 0.175f;
-		private const float BASE_COST_SCALE = 0.15f;
-		private const float BASE_DESCRIPTION_SCALE = 0.1f;
-		private const float BASE_BLOCK_SCALE = 0.5f;
-		private const float BASE_BLOCK_NUMBER_SCALE = 0.225f;
+		private const float BASE_NAME_SCALE = 0.04375f;
+		private const float BASE_COST_SCALE = 0.0375f;
+		private const float BASE_DESCRIPTION_SCALE = 0.025f;
+		private const float BASE_BLOCK_SCALE = 0.125f;
+		private const float BASE_BLOCK_NUMBER_SCALE = 0.05625f;
 		private const int BASE_BLOCK_NUMBER_MARGIN_X = 14;
 		private const int BASE_BLOCK_NUMBER_MARGIN_Y = 12;
 
@@ -138,11 +138,11 @@ namespace Crusaders30XX.ECS.Systems
 			s.HighlightBorderThickness = 5;
 			s.TextMarginX = 16;
 			s.TextMarginY = 16;
-			s.NameScale = 0.7f;
+			s.NameScale = 0.175f;
 			s.CostScale = 0.6f;
-			s.DescriptionScale = 0.4f;
+			s.DescriptionScale = 0.1f;
 			s.BlockScale = 0.5f;
-			s.BlockNumberScale = 0.9f;
+			s.BlockNumberScale = 0.225f;
 			s.BlockNumberMarginX = 14;
 			s.BlockNumberMarginY = 12;
 		}

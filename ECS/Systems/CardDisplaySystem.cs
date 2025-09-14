@@ -54,7 +54,7 @@ namespace Crusaders30XX.ECS.Systems
 
         // Debug-adjustable AP text
         [DebugEditable(DisplayName = "AP Text Scale", Step = 0.05f, Min = 0.3f, Max = 2.0f)]
-        public float APTextScale { get; set; } = 0.5f;
+        public float APTextScale { get; set; } = 0.125f;
         [DebugEditable(DisplayName = "AP Bottom Margin Y", Step = 1, Min = 0, Max = 200)]
         public int APBottomMarginY { get; set; } = 14;
         [DebugEditable(DisplayName = "AP Offset X", Step = 1, Min = -200, Max = 200)]

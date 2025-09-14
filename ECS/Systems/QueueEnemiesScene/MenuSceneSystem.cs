@@ -213,7 +213,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Instructional text (drawn here to ensure SpriteBatch is active)
 			string help = "Click on enemies to add to queue to battle, the press Confirm to start";
-			var helpSize = _font.MeasureString(help) * 0.8f;
+			var helpSize = _font.MeasureString(help) * 0.2f;
 			float helpX = (vw - helpSize.X) / 2f;
 			float helpY = System.Math.Max(GridPadding, gridTop - GridPadding - helpSize.Y - 4f);
 			_spriteBatch.DrawString(_font, help, new Vector2(helpX + 1, helpY + 1), Color.Black, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
@@ -293,7 +293,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (_rounded != null) _spriteBatch.Draw(_rounded, confirmRect, Color.Black);
 			else _spriteBatch.Draw(_pixel, confirmRect, Color.Black);
 			var ctext = "Confirm";
-			var csize = _font.MeasureString(ctext) * 0.9f;
+			var csize = _font.MeasureString(ctext) * 0.225f;
 			var cpos = new Vector2(confirmRect.X + (ConfirmWidth - csize.X) / 2f, confirmRect.Y + (ConfirmHeight - csize.Y) / 2f);
 			_spriteBatch.DrawString(_font, ctext, cpos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.225f, SpriteEffects.None, 0f);
 			_spriteBatch.DrawString(_font, ctext, cpos, Color.White, 0f, Vector2.Zero, 0.225f, SpriteEffects.None, 0f);
@@ -307,7 +307,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (_rounded != null) _spriteBatch.Draw(_rounded, howRect, Color.Black);
 				else _spriteBatch.Draw(_pixel, howRect, Color.Black);
 				var htext = "How To Play";
-				var hsize = _font.MeasureString(htext) * 0.8f;
+				var hsize = _font.MeasureString(htext) * 0.2f;
 				var hpos = new Vector2(howRect.X + (howW - hsize.X) / 2f, howRect.Y + (howH - hsize.Y) / 2f);
 				_spriteBatch.DrawString(_font, htext, hpos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
 				_spriteBatch.DrawString(_font, htext, hpos, Color.White, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
