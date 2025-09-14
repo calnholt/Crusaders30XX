@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
 		private float _accumSeconds;
 
 		[DebugEditable(DisplayName = "Bar Width", Step = 2, Min = 10, Max = 2000)]
-		public int BarWidth { get; set; } = 290;
+		public int BarWidth { get; set; } = 200;
 
 		[DebugEditable(DisplayName = "Bar Height", Step = 1, Min = 4, Max = 200)]
 		public int BarHeight { get; set; } = 22;

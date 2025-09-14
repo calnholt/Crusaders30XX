@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Data.Equipment
 		public bool isFreeAction { get; set; } = false;
 		public bool destroyOnActivate { get; set; } = false;
 		public string target { get; set; } = "Enemy";
+		public bool requiresUseOnActivate { get; set; } = false;
 	}
 }
 

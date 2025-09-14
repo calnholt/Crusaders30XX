@@ -25,6 +25,8 @@ namespace Crusaders30XX.ECS.Systems
 		private System.Collections.Generic.Dictionary<string, Texture2D> _enemyTextureCache = new System.Collections.Generic.Dictionary<string, Texture2D>();
 		private MouseState _prevMouse;
 
+		private HowToPlayOverlaySystem _howToPlayOverlaySystem;
+
 		[DebugEditable(DisplayName = "Columns", Step = 1, Min = 1, Max = 10)]
 		public int GridColumns { get; set; } = 4;
 
@@ -61,6 +63,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Menu Y Offset", Step = 4, Min = -400, Max = 800)]
 		public int MenuYOffset { get; set; } = 60;
 
+		[DebugEditable(DisplayName = "Show HowTo Button", Step = 1, Min = 0, Max = 1)]
+		public int ShowHowToButton { get; set; } = 1;
+
 		public MenuSceneSystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content, SpriteFont font) : base(em)
 		{
 			_graphicsDevice = gd;
@@ -70,6 +75,7 @@ namespace Crusaders30XX.ECS.Systems
 			_prevMouse = Mouse.GetState();
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			_howToPlayOverlaySystem = new HowToPlayOverlaySystem(EntityManager, _graphicsDevice, _spriteBatch, _font);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -83,6 +89,24 @@ namespace Crusaders30XX.ECS.Systems
 			if (scene == null || scene.Current != SceneId.Menu) return;
 			var mouse = Mouse.GetState();
 			bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
+
+			// If How To Play overlay is open, close it on any click and block underlying interactions
+			var howOverlay = EntityManager.GetEntitiesWithComponent<HowToPlayOverlay>().FirstOrDefault()?.GetComponent<HowToPlayOverlay>();
+			if (howOverlay != null && howOverlay.IsOpen)
+			{
+				// Pump overlay input (mouse wheel scroll)
+				_howToPlayOverlaySystem?.UpdateFromMenu();
+				// Only close on overlay-managed edge, not here
+				if (false && click)
+				{
+					howOverlay.IsOpen = false;
+					_prevMouse = mouse;
+					return;
+				}
+				// While open, do not process other menu interactions
+				_prevMouse = mouse;
+				return;
+			}
 
 			// Ensure queued enemies component exists
 			var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
@@ -141,6 +165,29 @@ namespace Crusaders30XX.ECS.Systems
 			if (click && confirmRect.Contains(mouse.Position) && qe.Events.Count > 0)
 			{
 				EventManager.Publish(new StartBattleRequested());
+			}
+
+			// How To Play button click (left of Confirm)
+			if (ShowHowToButton != 0)
+			{
+				int howW = ConfirmWidth;
+				int howH = ConfirmHeight;
+				var howRect = new Rectangle(confirmRect.X - GridPadding - howW, confirmRect.Y, howW, howH);
+				if (click && howRect.Contains(mouse.Position))
+				{
+					var h = EntityManager.GetEntitiesWithComponent<HowToPlayOverlay>().FirstOrDefault();
+					if (h == null)
+					{
+						h = EntityManager.CreateEntity("HowToOverlay");
+						EntityManager.AddComponent(h, new HowToPlayOverlay { IsOpen = true });
+						EntityManager.AddComponent(h, new Transform { Position = Vector2.Zero, ZOrder = 30000 });
+					}
+					else
+					{
+						var st = h.GetComponent<HowToPlayOverlay>();
+						if (st != null) st.IsOpen = true;
+					}
+				}
 			}
 
 			_prevMouse = mouse;
@@ -208,6 +255,7 @@ namespace Crusaders30XX.ECS.Systems
 				_spriteBatch.DrawString(_font, name, pos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
 				_spriteBatch.DrawString(_font, name, pos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
 				i++;
+				FrameProfiler.Measure("HowToPlayOverlaySystem.Draw", _howToPlayOverlaySystem.Draw);
 			}
 
 			// Selection list at top
@@ -249,6 +297,21 @@ namespace Crusaders30XX.ECS.Systems
 			var cpos = new Vector2(confirmRect.X + (ConfirmWidth - csize.X) / 2f, confirmRect.Y + (ConfirmHeight - csize.Y) / 2f);
 			_spriteBatch.DrawString(_font, ctext, cpos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.9f, SpriteEffects.None, 0f);
 			_spriteBatch.DrawString(_font, ctext, cpos, Color.White, 0f, Vector2.Zero, 0.9f, SpriteEffects.None, 0f);
+
+			// How To Play button (left of Confirm)
+			if (ShowHowToButton != 0)
+			{
+				int howW = ConfirmWidth;
+				int howH = ConfirmHeight;
+				var howRect = new Rectangle(confirmRect.X - GridPadding - howW, confirmRect.Y, howW, howH);
+				if (_rounded != null) _spriteBatch.Draw(_rounded, howRect, Color.Black);
+				else _spriteBatch.Draw(_pixel, howRect, Color.Black);
+				var htext = "How To Play";
+				var hsize = _font.MeasureString(htext) * 0.8f;
+				var hpos = new Vector2(howRect.X + (howW - hsize.X) / 2f, howRect.Y + (howH - hsize.Y) / 2f);
+				_spriteBatch.DrawString(_font, htext, hpos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.8f, SpriteEffects.None, 0f);
+				_spriteBatch.DrawString(_font, htext, hpos, Color.White, 0f, Vector2.Zero, 0.8f, SpriteEffects.None, 0f);
+			}
 		}
 
 		private void EnsureRounded(int w, int h, int radius)

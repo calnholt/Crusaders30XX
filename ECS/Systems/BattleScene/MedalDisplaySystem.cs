@@ -18,7 +18,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
 		private SpriteFont _font;
-		private Texture2D _medalTex;
+		private Texture2D _fallbackMedalTex;
+		private readonly Dictionary<string, Texture2D> _medalTexById = new Dictionary<string, Texture2D>();
 		private Texture2D _roundedCache;
 		private int _roundedW, _roundedH, _roundedR;
 		private readonly Dictionary<int, float> _bounceByEntityId = new Dictionary<int, float>();
@@ -26,29 +27,29 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Layout/debug controls
 		[DebugEditable(DisplayName = "Left Margin", Step = 2, Min = 0, Max = 2000)]
-		public int LeftMargin { get; set; } = 10;
+		public int LeftMargin { get; set; } = 0;
 		[DebugEditable(DisplayName = "Top Margin", Step = 2, Min = 0, Max = 2000)]
 		public int TopMargin { get; set; } = 10;
 		[DebugEditable(DisplayName = "Icon Size", Step = 1, Min = 8, Max = 512)]
-		public int IconSize { get; set; } = 48;
+		public int IconSize { get; set; } = 105;
 		[DebugEditable(DisplayName = "Spacing X", Step = 1, Min = 0, Max = 256)]
-		public int SpacingX { get; set; } = 10;
+		public int SpacingX { get; set; } = 0;
 		[DebugEditable(DisplayName = "Background Corner Radius", Step = 1, Min = 0, Max = 64)]
 		public int BgCornerRadius { get; set; } = 16;
 		[DebugEditable(DisplayName = "Background Padding", Step = 1, Min = 0, Max = 64)]
-		public int BgPadding { get; set; } = 8;
+		public int BgPadding { get; set; } = 0;
 		[DebugEditable(DisplayName = "Background Opacity", Step = 0.05f, Min = 0f, Max = 1f)]
-		public float BgOpacity { get; set; } = 0.75f;
+		public float BgOpacity { get; set; } = 0f;
 
 		// Pulse/jiggle animation tuning
 		[DebugEditable(DisplayName = "Pulse Duration (s)", Step = 0.05f, Min = 0.1f, Max = 2f)]
-		public float PulseDurationSeconds { get; set; } = 1.4f;
+		public float PulseDurationSeconds { get; set; } = 1f;
 		[DebugEditable(DisplayName = "Pulse Scale Amp", Step = 0.01f, Min = 0f, Max = 0.6f)]
-		public float PulseScaleAmplitude { get; set; } = 0.6f;
+		public float PulseScaleAmplitude { get; set; } = 0.5f;
 		[DebugEditable(DisplayName = "Jiggle Degrees", Step = 0.5f, Min = 0f, Max = 45f)]
-		public float JiggleDegrees { get; set; } = 10.5f;
+		public float JiggleDegrees { get; set; } = 12.5f;
 		[DebugEditable(DisplayName = "Pulse Frequency (Hz)", Step = 0.1f, Min = 0.5f, Max = 8f)]
-		public float PulseFrequencyHz { get; set; } = 3f;
+		public float PulseFrequencyHz { get; set; } = 2.5f;
 
 		public MedalDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
 			: base(entityManager)
@@ -69,7 +70,18 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void TryLoadAssets()
 		{
-			try { _medalTex = _content.Load<Texture2D>("medal"); } catch { _medalTex = null; }
+			try { _fallbackMedalTex = _content.Load<Texture2D>("medal"); } catch { _fallbackMedalTex = null; }
+		}
+
+		private Texture2D GetMedalTexture(string medalId)
+		{
+			if (string.IsNullOrWhiteSpace(medalId)) return _fallbackMedalTex;
+			if (_medalTexById.TryGetValue(medalId, out var cached) && cached != null) return cached;
+			Texture2D tex = null;
+			try { tex = _content.Load<Texture2D>(medalId); }
+			catch { tex = _fallbackMedalTex; }
+			_medalTexById[medalId] = tex;
+			return tex;
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -114,8 +126,7 @@ namespace Crusaders30XX.ECS.Systems
 				int bgW = IconSize + BgPadding * 2;
 				int bgH = IconSize + BgPadding * 2;
 				var rect = new Rectangle(x, y, bgW, bgH);
-				byte a = (byte)MathHelper.Clamp(BgOpacity * 255f, 0f, 255f);
-				DrawRoundedBackground(rect, new Color((byte)0, (byte)0, (byte)0, a));
+				// Backgrounds removed: draw medals without black rounded panels
 				UpdateTooltipForMedal(m, rect);
 				// Jiggle/pulse the medal icon only
 				float scale = 1f;
@@ -132,28 +143,36 @@ namespace Crusaders30XX.ECS.Systems
 					float jiggleRad = MathHelper.ToRadians(JiggleDegrees);
 					rotation = jiggleRad * env * (float)System.Math.Sin(phase * 1.2f);
 				}
-				DrawMedalIcon(rect, scale, rotation);
-				x += bgW + SpacingX;
+				var medalTex = GetMedalTexture(m.MedalId);
+				var drawnRect = DrawMedalIcon(rect, medalTex, scale, rotation);
+				// Use the actual drawn sprite width so SpacingX is the visual gap between medals
+				x = drawnRect.Right + SpacingX;
 			}
 		}
 
-		private void DrawMedalIcon(Rectangle bgRect, float scale, float rotationRad)
+		private Rectangle DrawMedalIcon(Rectangle bgRect, Texture2D tex, float scale, float rotationRad)
 		{
-			if (_medalTex == null) return;
+			if (tex == null) return Rectangle.Empty;
 			// Compute base uniform scale to fit within IconSize
 			float baseScale = 1f;
-			if (_medalTex.Width > 0 && _medalTex.Height > 0)
+			if (tex.Width > 0 && tex.Height > 0)
 			{
-				float sx = IconSize / (float)_medalTex.Width;
-				float sy = IconSize / (float)_medalTex.Height;
+				float sx = IconSize / (float)tex.Width;
+				float sy = IconSize / (float)tex.Height;
 				baseScale = System.Math.Min(sx, sy);
 			}
 			float finalScale = baseScale * System.Math.Max(0.1f, scale);
 			// Center of inner padded square
 			float centerX = bgRect.X + BgPadding + IconSize / 2f;
 			float centerY = bgRect.Y + BgPadding + IconSize / 2f;
-			var origin = new Vector2(_medalTex.Width / 2f, _medalTex.Height / 2f);
-			_spriteBatch.Draw(_medalTex, new Vector2(centerX, centerY), null, Color.White, rotationRad, origin, finalScale, SpriteEffects.None, 0f);
+			var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
+			// Compute drawn bounds for spacing and tooltip
+			int drawW = (int)System.Math.Round(tex.Width * finalScale);
+			int drawH = (int)System.Math.Round(tex.Height * finalScale);
+			int left = (int)System.Math.Round(centerX - drawW / 2f);
+			int top = (int)System.Math.Round(centerY - drawH / 2f);
+			_spriteBatch.Draw(tex, new Vector2(centerX, centerY), null, Color.White, rotationRad, origin, finalScale, SpriteEffects.None, 0f);
+			return new Rectangle(left, top, drawW, drawH);
 		}
 
 		private void UpdateTooltipForMedal(EquippedMedal medal, Rectangle rect)
@@ -195,21 +214,6 @@ namespace Crusaders30XX.ECS.Systems
 			return medal.MedalId;
 		}
 
-		private void DrawRoundedBackground(Rectangle rect, Color fill)
-		{
-			int w = rect.Width;
-			int h = rect.Height;
-			int r = System.Math.Max(0, BgCornerRadius);
-			bool rebuild = _roundedCache == null || _roundedW != w || _roundedH != h || _roundedR != r;
-			if (rebuild)
-			{
-				_roundedCache?.Dispose();
-				_roundedCache = Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, r);
-				_roundedW = w; _roundedH = h; _roundedR = r;
-			}
-			var center = new Vector2(rect.X + w / 2f, rect.Y + h / 2f);
-			_spriteBatch.Draw(_roundedCache, center, null, fill, 0f, new Vector2(_roundedCache.Width / 2f, _roundedCache.Height / 2f), 1f, SpriteEffects.None, 0f);
-		}
 
     [DebugAction("Animation Test")]
     public void debug_animation() 

@@ -34,6 +34,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Anchor Offset X", Step = 2, Min = -2000, Max = 2000)]
 		public int AnchorOffsetX { get; set; } = 124;
 
+		[DebugEditable(DisplayName = "Courage Right Padding", Step = 1, Min = -128, Max = 128)]
+		public int CourageRightPadding { get; set; } = 8;
+
 		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -2000, Max = 2000)]
 		public int AnchorOffsetY { get; set; } = 230;
 
@@ -69,6 +72,16 @@ namespace Crusaders30XX.ECS.Systems
 			if (player == null) return;
 			var stored = player.GetComponent<StoredBlock>();
 			if (stored == null) return;
+			if (stored.Amount <= 0)
+			{
+				// Also hide tooltip/hit area when not visible
+				var hoverZero = EntityManager.GetEntitiesWithComponent<StoredBlockTooltipAnchor>().FirstOrDefault();
+				var uiZero = hoverZero != null ? hoverZero.GetComponent<UIElement>() : null;
+				if (uiZero != null) uiZero.Bounds = new Rectangle(0, 0, 0, 0);
+				var htZero = hoverZero != null ? hoverZero.GetComponent<Transform>() : null;
+				if (htZero != null) htZero.Position = Vector2.Zero;
+				return;
+			}
 
 			var anchor = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			if (anchor == null) return;
@@ -80,8 +93,20 @@ namespace Crusaders30XX.ECS.Systems
 			int h = Math.Max(8, SquareHeight);
 			int outline = Math.Max(1, OutlineThickness);
 
-			// Position to the right of temperance by default
-			var center = new Vector2(t.Position.X + AnchorOffsetX, t.Position.Y + AnchorOffsetY);
+			// Prefer anchoring to the right of Courage if available; otherwise use portrait offsets
+			Vector2 center;
+			var courageHover = EntityManager.GetEntitiesWithComponent<CourageTooltipAnchor>().FirstOrDefault();
+			var courageUi = courageHover != null ? courageHover.GetComponent<UIElement>() : null;
+			if (courageUi != null && courageUi.Bounds.Width > 0 && courageUi.Bounds.Height > 0)
+			{
+				int xLeft = courageUi.Bounds.Right + Math.Max(-128, CourageRightPadding);
+				int yMid = courageUi.Bounds.Y + courageUi.Bounds.Height / 2;
+				center = new Vector2(xLeft + w / 2f, yMid);
+			}
+			else
+			{
+				center = new Vector2(t.Position.X + AnchorOffsetX, t.Position.Y + AnchorOffsetY);
+			}
 
 			// Draw outer white rectangle and inner black rectangle for border effect
 			int x = (int)Math.Round(center.X - w / 2f);

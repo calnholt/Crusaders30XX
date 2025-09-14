@@ -24,16 +24,19 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Debug-adjustable fields
 		[DebugEditable(DisplayName = "Circle Radius", Step = 1, Min = 1, Max = 300)]
-		public int CircleRadius { get; set; } = 25;
+		public int CircleRadius { get; set; } = 20;
 
 		[DebugEditable(DisplayName = "Outline Thickness", Step = 1, Min = 1, Max = 50)]
 		public int OutlineThickness { get; set; } = 2;
 
+		[DebugEditable(DisplayName = "HP Bar Right Padding", Step = 1, Min = -128, Max = 128)]
+		public int HpBarRightPadding { get; set; } = 8;
+
 		[DebugEditable(DisplayName = "Vertical Offset From Anchor", Step = 2, Min = -1000, Max = 1000)]
-		public int AnchorOffsetY { get; set; } = 230;
+		public int AnchorOffsetY { get; set; } = 224;
 
 		[DebugEditable(DisplayName = "Text Scale Divisor", Step = 1, Min = 1, Max = 200)]
-		public int TextScaleDivisor { get; set; } = 26;
+		public int TextScaleDivisor { get; set; } = 22;
 
 		[DebugEditable(DisplayName = "Text Offset X", Step = 1, Min = -500, Max = 500)]
 		public int TextOffsetX { get; set; } = 0;
@@ -78,8 +81,20 @@ namespace Crusaders30XX.ECS.Systems
 			int outlineThickness = Math.Max(1, OutlineThickness);
 			if (radius < outlineThickness + 2) radius = outlineThickness + 2; // ensure inner radius stays positive
 
-			// Center position for the badge below the portrait anchor center using a fixed pixel offset (no scaling)
-			var center = new Vector2(anchorTransform.Position.X, anchorTransform.Position.Y + AnchorOffsetY);
+			// Compute center position. Prefer anchoring to the right of the player's HP bar if available;
+			// fall back to portrait anchor with a vertical offset.
+			Vector2 center;
+			var hpAnchor = playerEntity.GetComponent<HPBarAnchor>();
+			if (hpAnchor != null && hpAnchor.Rect.Width > 0 && hpAnchor.Rect.Height > 0)
+			{
+				int xRight = hpAnchor.Rect.X + hpAnchor.Rect.Width;
+				int yMid = hpAnchor.Rect.Y + hpAnchor.Rect.Height / 2;
+				center = new Vector2(xRight + Math.Max(-128, HpBarRightPadding) + radius, yMid);
+			}
+			else
+			{
+				center = new Vector2(anchorTransform.Position.X, anchorTransform.Position.Y + AnchorOffsetY);
+			}
 
 			// Fetch cached filled circle textures of the required radii
 			var outerTex = GetOrCreateCircleTexture(radius, Color.White);

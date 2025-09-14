@@ -2,18 +2,19 @@
   "id": "purging_bracers",
   "name": "Purging Bracers",
   "slot": "Arms",
-  "block": 2,
-  "blockUses": 4,
+  "block": 1,
+  "blockUses": 3,
   "color": "White",
   "abilities": [
     {
       "id": "purging_bracers",
       "type": "Activate",
       "effect": "DealDamage",
-      "effectCount": 2,
+      "effectCount": 3,
       "destroyOnActivate": false,
       "target": "Enemy",
-      "text": "Deal 2 damage to the enemy.",
+      "requiresUseOnActivate": true,
+      "text": "Deal 3 damage to the enemy.",
       "isFreeAction": true
     }
   ]

@@ -123,7 +123,7 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
         // Delegate drawing to active parent systems
         var menuScene = _world.SystemManager.GetSystem<MenuSceneSystem>();
         var battleScene = _world.SystemManager.GetSystem<BattleSceneSystem>();

@@ -3,6 +3,8 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Equipment;
 using System;
 using System.Linq;
+using Crusaders30XX.ECS.Components;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -41,7 +43,12 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (!EquipmentDefinitionCache.TryGet(equipmentId, out var def) || def?.abilities == null) return;
 			var ability = def.abilities.FirstOrDefault(a => a.type == "Activate");
+			Console.WriteLine($"[EquipmentAbilityService] ActivateByEquipmentId: {equipmentId} ability: {ability?.effect}");
 			if (ability == null) return;
+			var timesUsed = entityManager.GetEntitiesWithComponent<EquipmentUsedState>().FirstOrDefault().GetComponent<EquipmentUsedState>().UsesByEquipmentId?.GetValueOrDefault(equipmentId);
+			if (timesUsed == null) timesUsed = 0;
+			Console.WriteLine($"[EquipmentAbilityService] ActivateByEquipmentId: {equipmentId} timesUsed: {timesUsed}");
+			if (ability.requiresUseOnActivate && timesUsed >= def.blockUses) return;
 			Activate(entityManager, equipmentId, ability);
 			if (ability.destroyOnActivate)
 			{
