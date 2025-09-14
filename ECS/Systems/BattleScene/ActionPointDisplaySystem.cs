@@ -9,42 +9,32 @@ using Crusaders30XX.Diagnostics;
 namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
-	/// Draws the player's Action Points as red pips on a rounded black background below the player portrait.
+	/// Draws the player's Action Points as text "{number}AP" centered inside a black AA circle
+	/// positioned to the right of the discard pile panel.
 	/// </summary>
 	[DebugTab("Action Points")]
 	public class ActionPointDisplaySystem : Core.System
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-
-		// Cached textures keyed by (w,h,r)
-		private Texture2D _pipTexture;
-		private readonly System.Collections.Generic.Dictionary<(int w,int h,int r), Texture2D> _bgCache = new();
+		private readonly SpriteFont _font;
 
 		// Layout settings
-		[DebugEditable(DisplayName = "Pip Diameter", Step = 1, Min = 2, Max = 64)]
-		public int PipDiameter { get; set; } = 12;
+		[DebugEditable(DisplayName = "Circle Radius", Step = 1, Min = 8, Max = 400)]
+		public int CircleRadius { get; set; } = 40;
 
-		[DebugEditable(DisplayName = "Pip Spacing", Step = 1, Min = 0, Max = 64)]
-		public int PipSpacing { get; set; } = 7;
+		[DebugEditable(DisplayName = "Right Padding From Discard", Step = 1, Min = -200, Max = 400)]
+		public int RightPaddingFromDiscard { get; set; } = 15;
 
-		[DebugEditable(DisplayName = "Padding X", Step = 1, Min = 0, Max = 64)]
-		public int PaddingX { get; set; } = 6;
+		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.1f, Max = 5f)]
+		public float TextScale { get; set; } = 0.8f;
 
-		[DebugEditable(DisplayName = "Padding Y", Step = 1, Min = 0, Max = 64)]
-		public int PaddingY { get; set; } = 6;
-
-		[DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 64)]
-		public int CornerRadius { get; set; } = 6;
-
-		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -400, Max = 800)]
-		public int AnchorOffsetY { get; set; } = 272;
-
-		public ActionPointDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+		public ActionPointDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
+			_font = font;
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -62,31 +52,44 @@ namespace Crusaders30XX.ECS.Systems
 			var player = GetRelevantEntities().FirstOrDefault();
 			if (player == null) return;
 			var t = player.GetComponent<Transform>();
-			var info = player.GetComponent<PortraitInfo>();
 			var ap = player.GetComponent<ActionPoints>();
-			if (t == null || info == null || ap == null) return;
+			if (t == null || ap == null) return;
 
 			int count = System.Math.Max(0, ap.Current);
-			if (count <= 0) return;
 
-			int d = System.Math.Max(4, PipDiameter);
-			int spacing = System.Math.Max(0, PipSpacing);
-			int padX = System.Math.Max(0, PaddingX);
-			int padY = System.Math.Max(0, PaddingY);
-			int radius = System.Math.Max(0, CornerRadius);
+			// Position relative to discard pile clickable
+			var discardClickable = EntityManager.GetEntitiesWithComponent<DiscardPileClickable>().FirstOrDefault();
+			Rectangle? discardRect = null;
+			if (discardClickable != null)
+			{
+				var uiDP = discardClickable.GetComponent<UIElement>();
+				if (uiDP != null && uiDP.Bounds.Width > 0 && uiDP.Bounds.Height > 0) discardRect = uiDP.Bounds;
+			}
+			int r = System.Math.Max(4, CircleRadius);
+			var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, r);
+			Vector2 center;
+			if (discardRect.HasValue)
+			{
+				var dr = discardRect.Value;
+				center = new Vector2(dr.Right + System.Math.Max(-200, RightPaddingFromDiscard) + r, dr.Y + dr.Height / 2f);
+			}
+			else
+			{
+				center = new Vector2(120, _graphicsDevice.Viewport.Height - 120);
+			}
 
-			int innerWidth = count * d + (count - 1) * spacing;
-			int innerHeight = d;
-			int bgW = innerWidth + padX * 2;
-			int bgH = innerHeight + padY * 2;
+			// Draw black filled circle
+			_spriteBatch.Draw(circle, new Vector2(center.X - r, center.Y - r), Color.Black);
 
-			// Center below portrait anchor
-			var center = new Vector2(t.Position.X, t.Position.Y + AnchorOffsetY);
-			var topLeft = new Vector2(center.X - bgW / 2f, center.Y - bgH / 2f);
-
-			// Background
-			var bg = GetOrCreateBackground(bgW, bgH, radius);
-			_spriteBatch.Draw(bg, position: topLeft, color: Color.Black);
+			// Draw text {number}AP centered
+			if (_font != null)
+			{
+				string label = $"{count}AP";
+				float ts = System.Math.Max(0.1f, TextScale);
+				var size = _font.MeasureString(label) * ts;
+				var pos = new Vector2(center.X - size.X / 2f, center.Y - size.Y / 2f);
+				_spriteBatch.DrawString(_font, label, pos, Color.White, 0f, Vector2.Zero, ts, SpriteEffects.None, 0f);
+			}
 
 			// Update hoverable UI element for tooltip (entity pre-created in factory as UI_APTooltip)
 			var apHover = EntityManager.GetEntitiesWithComponent<UIElement>()
@@ -99,7 +102,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				var ui = apHover.GetComponent<UIElement>();
 				var ht = apHover.GetComponent<Transform>();
-				var hitRect = new Rectangle((int)topLeft.X, (int)topLeft.Y, bgW, bgH);
+				var hitRect = new Rectangle((int)(center.X - r), (int)(center.Y - r), r * 2, r * 2);
 				if (ui != null)
 				{
 					ui.Bounds = hitRect;
@@ -110,56 +113,9 @@ namespace Crusaders30XX.ECS.Systems
 					ht.Position = new Vector2(hitRect.X, hitRect.Y);
 				}
 			}
-
-			// Pips
-			var pip = GetOrCreatePipTexture(d);
-			float startX = topLeft.X + padX + d / 2f;
-			float y = topLeft.Y + padY + d / 2f;
-			for (int i = 0; i < count; i++)
-			{
-				var pos = new Vector2(startX + i * (d + spacing), y);
-				_spriteBatch.Draw(pip, position: pos, sourceRectangle: null, color: Color.Red, rotation: 0f, origin: new Vector2(d / 2f, d / 2f), scale: Vector2.One, effects: SpriteEffects.None, layerDepth: 0f);
-			}
-		}
-
-		private Texture2D GetOrCreateBackground(int w, int h, int r)
-		{
-			var key = (w, h, r);
-			if (_bgCache.TryGetValue(key, out var tex) && tex != null) return tex;
-			tex = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, r);
-			_bgCache[key] = tex;
-			return tex;
-		}
-
-		private Texture2D GetOrCreatePipTexture(int diameter)
-		{
-			if (_pipTexture != null && _pipTexture.Width == diameter && _pipTexture.Height == diameter) return _pipTexture;
-			_pipTexture?.Dispose();
-			_pipTexture = CreateFilledCircleTexture(_graphicsDevice, diameter);
-			return _pipTexture;
-		}
-
-		private static Texture2D CreateFilledCircleTexture(GraphicsDevice device, int diameter)
-		{
-			int r = System.Math.Max(1, diameter / 2);
-			int w = r * 2;
-			int h = r * 2;
-			var tex = new Texture2D(device, w, h);
-			var data = new Color[w * h];
-			int r2 = r * r;
-			for (int y = 0; y < h; y++)
-			{
-				int dy = y - r;
-				for (int x = 0; x < w; x++)
-				{
-					int dx = x - r;
-					data[y * w + x] = (dx * dx + dy * dy) <= r2 ? Color.White : Color.Transparent;
-				}
-			}
-			tex.SetData(data);
-			return tex;
 		}
 	}
 }
+
 
 

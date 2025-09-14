@@ -185,24 +185,9 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (radius < 1) radius = 1;
 			if (_circleByRadius.TryGetValue(radius, out var tex)) return tex;
-			int d = radius * 2;
-			// Use rounded-rect factory logic: With corner radius == half, square becomes a circle
-			// Manual fill to avoid dependency; generate true circle bitmap
-			var circle = new Texture2D(_graphicsDevice, d, d);
-			var data = new Color[d * d];
-			int r2 = radius * radius;
-			for (int y = 0; y < d; y++)
-			{
-				int dy = y - radius;
-				for (int x = 0; x < d; x++)
-				{
-					int dx = x - radius;
-					data[y * d + x] = (dx * dx + dy * dy) <= r2 ? Color.White : Color.Transparent;
-				}
-			}
-			circle.SetData(data);
-			_circleByRadius[radius] = circle;
-			return circle;
+			tex = Crusaders30XX.ECS.Rendering.PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, radius);
+			_circleByRadius[radius] = tex;
+			return tex;
 		}
 
 		private Texture2D TryGetEnemyTexture(string enemyId)

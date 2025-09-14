@@ -281,7 +281,7 @@ namespace Crusaders30XX.ECS.Systems
 			_playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_playerAnimationSystem = new PlayerAnimationSystem(_world.EntityManager);
 			_courageDisplaySystem = new CourageDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
-			_actionPointDisplaySystem = new ActionPointDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_actionPointDisplaySystem = new ActionPointDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_storedBlockDisplaySystem = new StoredBlockDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_courageManagerSystem = new CourageManagerSystem(_world.EntityManager);

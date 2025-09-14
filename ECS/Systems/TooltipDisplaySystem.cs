@@ -26,7 +26,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int Padding { get; set; } = 8;
 
 		[DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 64)]
-		public int CornerRadius { get; set; } = 4;
+		public int CornerRadius { get; set; } = 8;
 
 		[DebugEditable(DisplayName = "Fade Seconds", Step = 0.05f, Min = 0.05f, Max = 1.5f)]
 		public float FadeSeconds { get; set; } = 0.1f;

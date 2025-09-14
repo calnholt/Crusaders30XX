@@ -121,8 +121,16 @@ namespace Crusaders30XX.ECS.Systems
             {
                 var ui = endBtn.GetComponent<UIElement>();
                 var tr = endBtn.GetComponent<Transform>();
-                if (ui != null) ui.Bounds = btnRect;
-                if (tr != null) tr.ZOrder = ButtonZ;
+                if (ui != null)
+                {
+                    ui.Bounds = btnRect;
+                    ui.IsInteractable = true; // keep clickable in case other systems disabled
+                }
+                if (tr != null)
+                {
+                    tr.ZOrder = ButtonZ;
+                    tr.Position = new Vector2(btnRect.X, btnRect.Y);
+                }
             }
         }
     }
