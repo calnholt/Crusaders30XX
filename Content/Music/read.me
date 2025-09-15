@@ -1,0 +1,28 @@
+How to convert MP3 to OGG (Vorbis) for MonoGame DesktopGL
+
+1) Install ffmpeg (one-time)
+   - Using winget (silent):
+     winget install --id=Gyan.FFmpeg -e --silent
+
+   - If the terminal doesn't see ffmpeg immediately, either open a new terminal
+     or locate it directly under %LOCALAPPDATA%\Microsoft\WinGet\Packages.
+
+2) Convert MP3 -> OGG (Vorbis)
+   - From the project root:
+     ffmpeg -y -i Content/Music/clash_of_shadows.mp3 -c:a libvorbis Content/Music/clash_of_shadows.ogg
+
+3) Content pipeline settings (Content/Content.mgcb)
+   - Use OggImporter and SongProcessor for the .ogg asset:
+     #begin Music/clash_of_shadows.ogg
+     /importer:OggImporter
+     /processor:SongProcessor
+     /build:Music/clash_of_shadows.ogg
+
+4) Load in code
+   - Use the asset path without extension:
+     Content.Load<Song>("Music/clash_of_shadows");
+
+Notes
+ - DesktopGL prefers .ogg (Vorbis) for songs; using OggImporter avoids SongImporter errors.
+ - If you switch tracks or add new songs, repeat step 2 and add an entry like step 3.
+

@@ -71,9 +71,9 @@ namespace Crusaders30XX.ECS.Systems
         private float _cachedCol2W;
 
         // Table text (top draw list) scaling
-        private float _tableTextScale = .5f;
+        private float _tableTextScale = .125f;
         [Crusaders30XX.Diagnostics.DebugEditable(DisplayName = "Table Text Scale", Step = 0.05f, Min = 0.5f, Max = 3f)]
-        public float TableTextScale { get => _tableTextScale; set => _tableTextScale = MathHelper.Clamp(value, 0.5f, 3f); }
+        public float TableTextScale { get => _tableTextScale; set => _tableTextScale = MathHelper.Clamp(value, 0.1f, 3f); }
 
         public ProfilerSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
             : base(entityManager)
@@ -152,9 +152,9 @@ namespace Crusaders30XX.ECS.Systems
             float fpsWidth = _font.MeasureString(fpsStr).X;
             var msPos = new Vector2(fpsPos.X + fpsWidth + 24f, fpsPos.Y);
 
-            _spriteBatch.DrawString(_font, title, titlePos, Color.White);
-            _spriteBatch.DrawString(_font, fpsStr, fpsPos, Color.White);
-            _spriteBatch.DrawString(_font, msStr, msPos, Color.White);
+            _spriteBatch.DrawString(_font, title, titlePos, Color.White, 0f, Vector2.Zero, _tableTextScale, SpriteEffects.None, 0f);
+            _spriteBatch.DrawString(_font, fpsStr, fpsPos, Color.White, 0f, Vector2.Zero, _tableTextScale, SpriteEffects.None, 0f);
+            _spriteBatch.DrawString(_font, msStr, msPos, Color.White, 0f, Vector2.Zero, _tableTextScale, SpriteEffects.None, 0f);
 
             // Graph area
             int gx = panelX + AxisLabelWidth + 12;
@@ -171,7 +171,7 @@ namespace Crusaders30XX.ECS.Systems
                 DrawRect(new Rectangle(gx, ty, gw, 1), new Color(255, 255, 255, (int)_graphGridLineAlpha));
                 // label at left
                 var labelPos = new Vector2(panelX + 10, ty - 8);
-                _spriteBatch.DrawString(_font, t.ToString(), labelPos, Color.White);
+                _spriteBatch.DrawString(_font, t.ToString(), labelPos, Color.White, 0f, Vector2.Zero, _tableTextScale, SpriteEffects.None, 0f);
             }
 
             // Plot line of FPS over time (higher is better)
@@ -196,7 +196,7 @@ namespace Crusaders30XX.ECS.Systems
                 int lx = gx + gw - 2;
                 int ly = gy + gh - (int)(gh * (lastFps / GraphMaxFps));
                 string lastLabel = $"{lastFps:0}";
-                _spriteBatch.DrawString(_font, lastLabel, new Vector2(lx - 32, ly - 16), Color.Cyan);
+                _spriteBatch.DrawString(_font, lastLabel, new Vector2(lx - 32, ly - 16), Color.Cyan, 0f, Vector2.Zero, _tableTextScale, SpriteEffects.None, 0f);
             }
 
             // Top draw hotspots list (right of graph)

@@ -191,6 +191,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
 			EventManager.Publish(new DeckShuffleEvent { });
 			EventManager.Publish(new ShowTransition { StartBattle = false });
+			EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
 			TimerScheduler.Schedule(0.55f, () => {
 				scene.Current = SceneId.Battle;
 				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
@@ -231,20 +232,8 @@ namespace Crusaders30XX.ECS.Systems
 				equipmentUsedState.UsesByEquipmentId.Clear();
 			}
 			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, queued.Events[++queued.CurrentIndex].EventId);
-			
-			var oldDeckEntity = EntityManager.GetEntity("Deck");
-			var oldDeck = oldDeckEntity.GetComponent<Deck>();
-			oldDeck.Cards.ForEach(card => EntityManager.DestroyEntity(card.Id));
-			EntityManager.DestroyEntity("Deck");
 
-			var deckEntity = EntityFactory.CreateDeck(_world);
-			var demoHand = EntityFactory.CreateDemoHand(_world);
-			var deck = deckEntity.GetComponent<Deck>();
-			{
-				deck.Cards.AddRange(demoHand);
-				deck.DrawPile.AddRange(demoHand);
-			}
-			EventManager.Publish(new DeckShuffleEvent { });
+			EventManager.Publish(new ResetDeckEvent { });
 
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
 			phaseState.TurnNumber = 0;

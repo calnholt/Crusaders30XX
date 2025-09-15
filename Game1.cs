@@ -90,6 +90,8 @@ public class Game1 : Game
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_entityListOverlaySystem);
         _world.AddSystem(_transitionDisplaySystem);
+        // Global music manager
+        _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 
         // TODO: use this.Content to load your game content here
     }

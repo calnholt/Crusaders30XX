@@ -115,6 +115,16 @@ namespace Crusaders30XX.ECS.Events
     }
     
     /// <summary>
+    /// Event to reset the deck: move all cards from Hand and Discard back into the Draw pile,
+    /// excluding the equipped weapon card.
+    /// </summary>
+    public class ResetDeckEvent
+    {
+        // If null, the first entity with a Deck will be used
+        public Entity Deck { get; set; }
+    }
+    
+    /// <summary>
     /// Event published when cards are drawn from deck
     /// </summary>
     public class CardsDrawnEvent
@@ -262,6 +272,37 @@ namespace Crusaders30XX.ECS.Events
     {
         public Entity MedalEntity { get; set; }
         public string MedalId { get; set; }
+    }
+
+    /// <summary>
+    /// Supported music tracks for background playback.
+    /// </summary>
+    public enum MusicTrack
+    {
+        None = 0,
+        Menu = 1,
+        Battle = 2
+    }
+
+    /// <summary>
+    /// Request to change currently playing music.
+    /// </summary>
+    public class ChangeMusicTrack
+    {
+        public MusicTrack Track { get; set; } = MusicTrack.None;
+        public float Volume { get; set; } = 0.2f; // 0..1
+        public bool Loop { get; set; } = true;
+        public bool Fade { get; set; } = true;
+        public float FadeSeconds { get; set; } = 0.5f;
+    }
+
+    /// <summary>
+    /// Request to stop current music playback (with optional fade out).
+    /// </summary>
+    public class StopMusic
+    {
+        public bool Fade { get; set; } = true;
+        public float FadeSeconds { get; set; } = 0.5f;
     }
 
 } 

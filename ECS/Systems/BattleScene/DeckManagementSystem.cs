@@ -20,6 +20,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<RequestDrawCardsEvent>(OnRequestDrawCards);
             EventManager.Subscribe<RedrawHandEvent>(OnRedrawHandEvent);
             EventManager.Subscribe<DeckShuffleEvent>(OnDeckShuffleEvent);
+            EventManager.Subscribe<ResetDeckEvent>(OnResetDeckEvent);
         }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -230,6 +231,66 @@ namespace Crusaders30XX.ECS.Systems
             
             // Draw the specified number of cards
             return DrawCards(deck, drawCount);
+        }
+
+        /// <summary>
+        /// Moves all non-weapon cards from Hand and Discard back into the Draw pile and shuffles.
+        /// Weapon card (from EquippedWeapon) is excluded from movement.
+        /// </summary>
+        private void ResetDeckExcludingWeapon(Deck deck)
+        {
+            if (deck == null) return;
+
+            // Identify the equipped weapon entity if any
+            Entity weapon = null;
+            try
+            {
+                var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                var equipped = player?.GetComponent<EquippedWeapon>();
+                weapon = equipped?.SpawnedEntity;
+            }
+            catch { }
+
+            // Collect non-weapon cards from hand and discard
+            var toReturn = new List<Entity>();
+            foreach (var c in deck.Hand)
+            {
+                if (weapon != null && ReferenceEquals(c, weapon)) continue;
+                toReturn.Add(c);
+            }
+            foreach (var c in deck.DiscardPile)
+            {
+                if (weapon != null && ReferenceEquals(c, weapon)) continue;
+                toReturn.Add(c);
+            }
+
+            // Clear from original zones (preserve weapon in hand if present)
+            if (toReturn.Count > 0)
+            {
+                // Remove each from both lists to be safe
+                foreach (var c in toReturn)
+                {
+                    deck.Hand.Remove(c);
+                    deck.DiscardPile.Remove(c);
+                }
+                deck.DrawPile.AddRange(toReturn);
+            }
+
+            // Shuffle draw pile after returning
+            ShuffleDrawPile(deck);
+        }
+
+        /// <summary>
+        /// Event handler for ResetDeckEvent
+        /// </summary>
+        private void OnResetDeckEvent(ResetDeckEvent evt)
+        {
+            var deckEntity = evt.Deck ?? EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck == null) return;
+            System.Console.WriteLine($"[DeckManagementSystem] OnResetDeck before hand={deck.Hand.Count} draw={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
+            ResetDeckExcludingWeapon(deck);
+            System.Console.WriteLine($"[DeckManagementSystem] OnResetDeck after hand={deck.Hand.Count} draw={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
         }
     }
 } 

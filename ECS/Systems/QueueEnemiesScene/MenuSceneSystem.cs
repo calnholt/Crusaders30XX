@@ -333,12 +333,14 @@ namespace Crusaders30XX.ECS.Systems
 			string contentName = char.ToUpperInvariant(key[0]) + key.Substring(1);
 			try
 			{
+				Console.WriteLine($"Loading enemy texture: {key}");
 				var tex = _content.Load<Texture2D>(contentName);
 				_enemyTextureCache[key] = tex;
 				return tex;
 			}
 			catch
 			{
+				Console.WriteLine($"Error loading enemy texture: {key}");
 				_enemyTextureCache[key] = null;
 				return null;
 			}

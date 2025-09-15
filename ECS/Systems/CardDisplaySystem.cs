@@ -357,15 +357,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private void DrawCirclePipRotated(Vector2 cardCenter, float rotation, Vector2 localCenterFromTopLeft, float radius, Color fillColor, Color? outlineColor)
         {
-            // Create/reuse a circle texture for fill and outline
-            int textureSize = (int)Math.Ceiling(radius * 2);
-            if (textureSize < 2) textureSize = 2;
-            var key = ($"circle_{textureSize}");
-            if (!_textureCache.TryGetValue(key, out var circleTex) || circleTex == null)
-            {
-                circleTex = CreateCircleTexture(textureSize);
-                _textureCache[key] = circleTex;
-            }
+            // Use cached anti-aliased circle texture from PrimitiveTextureFactory
+            int radiusTex = Math.Max(1, (int)Math.Ceiling(radius));
+            var circleTex = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, radiusTex);
+            int textureSize = circleTex.Width; // equals radiusTex * 2
 
             // Compute world position with rotation
             float localX = -_settings.CardWidth / 2f + localCenterFromTopLeft.X;

@@ -49,7 +49,7 @@ namespace Crusaders30XX.ECS.Components
 		public int PanelY { get; set; } = 40;
 		public int PanelWidth { get; set; } = 520;
 		public int PanelHeight { get; set; } = 600;
-		public float TextScale { get; set; } = 0.6f;
+		public float TextScale { get; set; } = 0.15f;
 		public int RowHeight { get; set; } = 24;
 		public int Padding { get; set; } = 8;
 		public float ScrollOffset { get; set; } = 0f;

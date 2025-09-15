@@ -36,7 +36,7 @@ namespace Crusaders30XX.ECS.Systems
         public float StagedReturnDurationSec { get; set; } = 0.1f;
 
         [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.5f, Max = 2.0f)]
-        public float TextScale { get; set; } = 1.0f;
+        public float TextScale { get; set; } = 0.25f;
 
         [DebugEditable(DisplayName = "Text Offset X", Step = 1f, Min = -1000f, Max = 1000f)]
         public float TextOffsetX { get; set; } = 0f;
