@@ -40,12 +40,24 @@ namespace Crusaders30XX.ECS.Systems
 
 			var hasNext = intent != null && intent.Planned != null && intent.Planned.Count > 0;
 			if (hasNext) {
-				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Block, Previous = SubPhase.EnemyAttack });
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.Block",
+					new ChangeBattlePhaseEvent { Current = SubPhase.Block }
+				));
 			}
 			else {
-				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyEnd, Previous = SubPhase.Block });
-				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.PlayerStart, Previous = SubPhase.EnemyEnd });
-				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Action, Previous = SubPhase.PlayerStart });
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.EnemyEnd",
+					new ChangeBattlePhaseEvent { Current = SubPhase.EnemyEnd }
+				));
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.PlayerStart",
+					new ChangeBattlePhaseEvent { Current = SubPhase.PlayerStart }
+				));
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.Action",
+					new ChangeBattlePhaseEvent { Current = SubPhase.Action }
+				));
 			}
 
 			State = EventQueue.EventState.Complete;

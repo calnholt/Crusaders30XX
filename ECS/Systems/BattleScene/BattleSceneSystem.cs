@@ -200,8 +200,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (queued.Events.Count == queued.CurrentIndex + 1)
 			{
 				var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
-				scene.Current = SceneId.Menu;
 				ResetEntitiesAfterBattle();
+				scene.Current = SceneId.Menu;
 				return;
 			};
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });

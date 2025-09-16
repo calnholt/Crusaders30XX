@@ -104,13 +104,25 @@ namespace Crusaders30XX.ECS.Systems
 			if (HasNextAttack())
 			{
 				Console.WriteLine("[EnemyStunAutoSkipSystem] has another attack");
-				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Block, Previous = SubPhase.EnemyAttack });
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.Block",
+					new ChangeBattlePhaseEvent { Current = SubPhase.Block }
+				));
 			}
 			else {
 				Console.WriteLine("[EnemyStunAutoSkipSystem] does not have another attack");
-				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyEnd, Previous = SubPhase.Block });
-				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.PlayerStart, Previous = SubPhase.EnemyEnd });
-				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Action, Previous = SubPhase.PlayerStart });
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.EnemyEnd",
+					new ChangeBattlePhaseEvent { Current = SubPhase.EnemyEnd }
+				));
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.PlayerStart",
+					new ChangeBattlePhaseEvent { Current = SubPhase.PlayerStart }
+				));
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.Action",
+					new ChangeBattlePhaseEvent { Current = SubPhase.Action }
+				));
 			}
 		}
 

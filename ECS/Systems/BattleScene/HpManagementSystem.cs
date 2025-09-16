@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -40,8 +41,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (before > 0 && hp.Current == 0 && target.HasComponent<Enemy>())
 			{
 				TimerScheduler.Schedule(1f, () => {
-					EventManager.Publish(new LoadSceneEvent { Scene = SceneId.Battle });
-					EventQueue.Clear();
+					Console.WriteLine("[HpManagementSystem] Enemy died, execute transition");
+					EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
 				});
 			}
 		}
