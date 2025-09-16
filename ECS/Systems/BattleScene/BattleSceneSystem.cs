@@ -51,7 +51,6 @@ namespace Crusaders30XX.ECS.Systems
 		private HPDisplaySystem _hpDisplaySystem;
 		private CardVisualSettingsDebugSystem _cardVisualSettingsDebugSystem;
 		private HpManagementSystem _hpManagementSystem;
-		private BattlePhaseSystem _battlePhaseSystem;
 		private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
 		private EnemyDisplaySystem _enemyDisplaySystem;
 		private EnemyIntentPipsSystem _enemyIntentPipsSystem;
@@ -218,7 +217,17 @@ namespace Crusaders30XX.ECS.Systems
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
 			phaseState.TurnNumber = 0;
 			EntityManager.GetEntity("SceneState").GetComponent<SceneState>().Current = SceneId.Battle;
-			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
+			EventQueueBridge.EnqueueTriggerAction("BattleSceneSystem.StartBattle", () => {
+				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.EnemyStart",
+					new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart }
+				));
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.Block",
+					new ChangeBattlePhaseEvent { Current = SubPhase.Block }
+				));
+			}, 2f);
 		}
 		
 		[DebugAction("Next Battle")]
@@ -260,7 +269,6 @@ namespace Crusaders30XX.ECS.Systems
 			_profilerSystem = new ProfilerSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_hpManagementSystem = new HpManagementSystem(_world.EntityManager);
 			_eventQueueSystem = new EventQueueSystem(_world.EntityManager);
-			_battlePhaseSystem = new BattlePhaseSystem(_world.EntityManager);
 			_battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -326,7 +334,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_hpDisplaySystem);
 			_world.AddSystem(_cardVisualSettingsDebugSystem);
 			_world.AddSystem(_hpManagementSystem);
-			_world.AddSystem(_battlePhaseSystem);
 			_world.AddSystem(_battlePhaseDisplaySystem);
 			_world.AddSystem(_enemyDisplaySystem);
 			_world.AddSystem(_enemyIntentPipsSystem);

@@ -67,6 +67,71 @@ namespace Crusaders30XX.ECS.Core
                 EventManager.Unsubscribe(_handler);
             }
         }
+
+        /// <summary>
+        /// A queued trigger that executes an arbitrary Action immediately when it starts, then waits a fixed time before completing.
+        /// This lets you run any block of code and intentionally stall the queue for visual pacing or timing.
+        /// </summary>
+        public class TriggerActionThenWait : EventQueue.IQueuedEvent
+        {
+            public string Name { get; }
+            public object Payload { get; }
+            public EventQueue.EventState State { get; set; } = EventQueue.EventState.Pending;
+
+            private readonly Action _action;
+            private float _remainingSeconds;
+
+            public TriggerActionThenWait(string name, Action action, float waitSeconds, object payload = null)
+            {
+                if (action == null) throw new ArgumentNullException(nameof(action));
+                Name = name;
+                _action = action;
+                _remainingSeconds = Math.Max(0f, waitSeconds);
+                // Default payload is the wait duration for easy introspection if none provided
+                Payload = payload ?? waitSeconds;
+            }
+
+            public void StartResolving()
+            {
+                // Execute immediately
+                _action();
+
+                if (_remainingSeconds > 0f)
+                {
+                    State = EventQueue.EventState.Waiting;
+                }
+                else
+                {
+                    State = EventQueue.EventState.Complete;
+                }
+            }
+
+            public void Update(float deltaSeconds)
+            {
+                if (State != EventQueue.EventState.Waiting) return;
+                _remainingSeconds -= Math.Max(0f, deltaSeconds);
+                if (_remainingSeconds <= 0f)
+                {
+                    State = EventQueue.EventState.Complete;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper to enqueue a trigger that runs an Action and then waits for a duration before allowing the next event.
+        /// </summary>
+        public static void EnqueueTriggerAction(string name, Action action, float waitSeconds, object payload = null)
+        {
+            EventQueue.EnqueueTrigger(new TriggerActionThenWait(name, action, waitSeconds, payload));
+        }
+
+        /// <summary>
+        /// Overload with an auto-generated name.
+        /// </summary>
+        public static void EnqueueTriggerAction(Action action, float waitSeconds)
+        {
+            EnqueueTriggerAction("TriggerActionThenWait", action, waitSeconds);
+        }
     }
 }
 

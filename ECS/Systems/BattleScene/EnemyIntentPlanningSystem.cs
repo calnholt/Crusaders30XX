@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private Dictionary<string, AttackDefinition> _attackDefs;
 		private bool _isFirstLoad = true;
+		private int _lastPlannedTurnNumber = -1;
 
 		public EnemyIntentPlanningSystem(EntityManager em) : base(em)
 		{
@@ -44,9 +45,14 @@ namespace Crusaders30XX.ECS.Systems
 			// Plan ONLY at EnemyStart. PlayerStart should not re-plan, to preserve any IsStunned flags on previews.
 			if (evt.Current == SubPhase.EnemyStart)
 			{
+				int turnNumber = GetCurrentTurnNumber();
+				// Guard: prevent multiple plans for the same EnemyStart turn
+				if (_lastPlannedTurnNumber == turnNumber)
+				{
+					return;
+				}
 				System.Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
 				EnsureAttackDefsLoaded();
-				int turnNumber = GetCurrentTurnNumber();
 				foreach (var enemy in GetRelevantEntities())
 				{
 					var arsenal = enemy.GetComponent<EnemyArsenal>();
@@ -89,6 +95,7 @@ namespace Crusaders30XX.ECS.Systems
 					var nextIds = service.SelectForTurn(enemy, arsenal, Math.Max(0, turnNumber));
 					AddPlanned(nextIds, next);
 				}
+				_lastPlannedTurnNumber = turnNumber;
 				_isFirstLoad = false;
 			}
 		}
