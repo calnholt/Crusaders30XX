@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -20,9 +21,10 @@ namespace Crusaders30XX.ECS.Systems
 		private enum Phase { Idle, WipeIn, Hold, WipeOut }
 		private Phase _phase = Phase.Idle;
 		private float _t = 0f; // time within current phase
-		private bool _suppressNextStartBattleRequest = false; // one-shot debug preview flag
+		private bool _suppressLoadScene = false; // one-shot debug preview flag
+        private SceneId _nextScene;
 
-		[DebugEditable(DisplayName = "Wipe Duration (s)", Step = 0.05f, Min = 0.05f, Max = 3f)]
+        [DebugEditable(DisplayName = "Wipe Duration (s)", Step = 0.05f, Min = 0.05f, Max = 3f)]
 		public float WipeDurationSeconds { get; set; } = 0.55f;
 		[DebugEditable(DisplayName = "Hold Black (s)", Step = 0.05f, Min = 0f, Max = 2f)]
 		public float HoldSeconds { get; set; } = 0.2f;
@@ -66,21 +68,23 @@ namespace Crusaders30XX.ECS.Systems
 					if (_t >= WipeDurationSeconds)
 					{
 						// Fully black now; start hold and request next battle
-						_phase = Phase.Hold; _t = 0f;
-						if (!_suppressNextStartBattleRequest)
-						{
-							EventManager.Publish(new StartBattleRequested { });
-						}
-						else
-						{
-							// reset the one-shot flag after a preview run
-							_suppressNextStartBattleRequest = false;
-						}
+						_phase = Phase.Hold; 
+						_t = 0f;
 					}
 					break;
 				case Phase.Hold:
 					if (_t >= HoldSeconds)
 					{
+						if (!_suppressLoadScene)
+						{
+							Console.WriteLine($"[TransitionDisplaySystem] Loading scene: {_nextScene}");
+							EventManager.Publish(new LoadSceneEvent { Scene = _nextScene });
+						}
+						else
+						{
+							// reset the one-shot flag after a preview run
+							_suppressLoadScene = false;
+						}
 						_phase = Phase.WipeOut; _t = 0f;
 					}
 					break;
@@ -158,7 +162,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void BeginWipeIn(ShowTransition transition)
 		{
-			_suppressNextStartBattleRequest = !transition.StartBattle;
+			_suppressLoadScene = transition.Scene == SceneId.None;
+			_nextScene = transition.Scene;
 			_phase = Phase.WipeIn;
 			_t = 0f;
 		}
@@ -166,14 +171,14 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugAction("Preview Wipe (visual only)")]
 		private void Debug_PreviewWipe()
 		{
-			_suppressNextStartBattleRequest = true;
-			BeginWipeIn(new ShowTransition { StartBattle = false });
+			_suppressLoadScene = true;
+			BeginWipeIn(new ShowTransition { Scene = SceneId.None });
 		}
 		[DebugAction("Preview Wipe (actually proceeds)")]
 		private void Debug_PreviewWipeRestart()
 		{
-			_suppressNextStartBattleRequest = true;
-			BeginWipeIn(new ShowTransition { StartBattle = true });
+			_suppressLoadScene = true;
+			BeginWipeIn(new ShowTransition { Scene = SceneId.Battle });
 		}
 	}
 }

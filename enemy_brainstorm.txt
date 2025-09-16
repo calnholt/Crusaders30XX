@@ -2,3 +2,4 @@
 - puts bad cards in deck
 - discard effect
 - only 1 free action per turn
+- tanky enemy

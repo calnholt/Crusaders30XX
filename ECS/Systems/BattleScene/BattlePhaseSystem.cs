@@ -42,8 +42,14 @@ namespace Crusaders30XX.ECS.Systems
 			if (phase.Main == MainPhase.StartBattle) {
 					if (AutoAdvanceStartSeconds > 0f && _phaseTimer >= AutoAdvanceStartSeconds)
 					{
-						EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart });
-						EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Block });
+						EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+							"Rule.ChangePhase.EnemyStart",
+							new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart }
+						));
+						EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+							"Rule.ChangePhase.Block",
+							new ChangeBattlePhaseEvent { Current = SubPhase.Block }
+						));
 					}
 			}
 

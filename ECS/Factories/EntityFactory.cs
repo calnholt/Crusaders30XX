@@ -237,10 +237,6 @@ namespace Crusaders30XX.ECS.Factories
                 biEntity = world.CreateEntity("BattleInfo");
                 world.AddComponent(biEntity, new BattleInfo { TurnNumber = 0 });
             }
-            var queuedEntity = world.EntityManager.GetEntity("QueuedEvents");
-			var queued = queuedEntity.GetComponent<QueuedEvents>();
-            var enemyEntity = CreateEnemyFromId(world, queued.Events[queued.CurrentIndex + 1].EventId);
-            
             return entity;
         }
         
@@ -288,10 +284,11 @@ namespace Crusaders30XX.ECS.Factories
                 .Values
                 .OrderBy(d => d.id)
                 .ToList();
+            int i = 0;
             foreach (var def in all)
             {
                 if (def.isWeapon) continue; // weapons are not in the deck
-                var name = def.name ?? def.id ?? "Card";
+                var name = def.name ?? def.id ?? $"Card_{i}";
                 var color = ParseColor(def.color);
                 int blockValue = (color == CardData.CardColor.Black) ? 6 : 3;
                 // Use text from JSON directly
@@ -331,6 +328,7 @@ namespace Crusaders30XX.ECS.Factories
                         cd.CardCostType = CardData.CostType.NoCost;
                 }
                 result.Add(entity);
+                i++;
             }
             return result;
         }

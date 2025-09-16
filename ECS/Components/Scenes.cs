@@ -6,7 +6,8 @@ namespace Crusaders30XX.ECS.Components
 	public enum SceneId
 	{
 		Menu,
-		Battle
+		Battle,
+		None
 	}
 
 	public class SceneState : IComponent

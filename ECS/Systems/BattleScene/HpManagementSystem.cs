@@ -40,7 +40,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (before > 0 && hp.Current == 0 && target.HasComponent<Enemy>())
 			{
 				TimerScheduler.Schedule(1f, () => {
-					EventManager.Publish(new ShowTransition { StartBattle = true });
+					EventManager.Publish(new LoadSceneEvent { Scene = SceneId.Battle });
 					EventQueue.Clear();
 				});
 			}

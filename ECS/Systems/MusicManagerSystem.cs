@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
@@ -13,6 +14,7 @@ namespace Crusaders30XX.ECS.Systems
     /// Centralized background music manager. Listens for ChangeMusicTrack events
     /// and plays the corresponding Song. Uses MediaPlayer for playback.
     /// </summary>
+    [DebugTab("Music Manager")]
     public class MusicManagerSystem : Core.System
     {
         private readonly ContentManager _content;
@@ -25,6 +27,8 @@ namespace Crusaders30XX.ECS.Systems
         private float _startVolume = 0.2f;
         private Song _pendingSong;
         private bool _pendingLoop;
+        [DebugEditable(DisplayName = "Mute")]
+        public bool Mute { get; set; } = true;
 
         public MusicManagerSystem(EntityManager entityManager, ContentManager content) : base(entityManager)
         {
@@ -45,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
+            if (Mute) return;
             if (_fading)
             {
                 _fadeElapsed += (float)gameTime.ElapsedGameTime.TotalSeconds;

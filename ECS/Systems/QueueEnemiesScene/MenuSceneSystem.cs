@@ -164,7 +164,7 @@ namespace Crusaders30XX.ECS.Systems
 			var confirmRect = new Rectangle((vw - ConfirmWidth) / 2, vh - GridPadding - ConfirmHeight, ConfirmWidth, ConfirmHeight);
 			if (click && confirmRect.Contains(mouse.Position) && qe.Events.Count > 0)
 			{
-				EventManager.Publish(new StartBattleRequested());
+				EventManager.Publish(new ShowTransition{ Scene = SceneId.Battle });
 			}
 
 			// How To Play button click (left of Confirm)

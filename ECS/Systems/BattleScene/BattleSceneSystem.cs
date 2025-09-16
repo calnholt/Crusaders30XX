@@ -95,6 +95,11 @@ namespace Crusaders30XX.ECS.Systems
 			_content = content;
 			_font = font;
 			EventManager.Subscribe<StartBattleRequested>(_ => StartBattle());
+			EventManager.Subscribe<LoadSceneEvent>(_ => {
+				if (_.Scene != SceneId.Battle) return;
+				if (_isFirstLoad) CreateBattleSceneEntities();
+				StartBattle();
+			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -146,23 +151,13 @@ namespace Crusaders30XX.ECS.Systems
 			if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
 		}
 
-		private void StartBattle()
-		{
-			if (!_isFirstLoad) 
-			{
-				NextBattle();
-				return;
-			}
-			_isFirstLoad = false;
+		private void CreateBattleSceneEntities() {
 			var sceneEntity = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
 			if (sceneEntity == null)
 			{
 				sceneEntity = EntityManager.CreateEntity("SceneState");
 				EntityManager.AddComponent(sceneEntity, new SceneState { Current = SceneId.Menu });
 			}
-			var scene = sceneEntity.GetComponent<SceneState>();
-			if (scene.Current == SceneId.Battle) return;
-
 			EntityFactory.CreateGameState(_world);
 			EntityFactory.CreatePlayer(_world);
 			var deckEntity = EntityFactory.CreateDeck(_world);
@@ -174,42 +169,39 @@ namespace Crusaders30XX.ECS.Systems
 				deck.DrawPile.AddRange(demoHand);
 			}
 			AddBattleSystems();
-			// Spawn selected enemy (index 0) if any queued; otherwise default handled by CreateGameState
-			var queued = _world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<QueuedEvents>();
-			queued.CurrentIndex++;
-			if (queued != null && queued.Events.Count > 0)
-			{
-				// Remove any default enemy created during CreateGameState
-				var existingEnemies = _world.EntityManager.GetEntitiesWithComponent<Enemy>().ToList();
-				foreach (var e in existingEnemies)
-				{
-					_world.EntityManager.DestroyEntity(e.Id);
-				}
-				var id0 = queued.Events[queued.CurrentIndex].EventId;
-				EntityFactory.CreateEnemyFromId(_world, id0);
-			}
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
 			EventManager.Publish(new DeckShuffleEvent { });
-			EventManager.Publish(new ShowTransition { StartBattle = false });
-			EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
-			TimerScheduler.Schedule(0.55f, () => {
-				scene.Current = SceneId.Battle;
-				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
-			});
-
+				_isFirstLoad = false;
 		}
 
-		public void NextBattle() 
+		private void ResetEntitiesAfterBattle() {
+			var player = EntityManager.GetEntity("Player");
+			player.GetComponent<HP>().Current = 40;
+			player.GetComponent<HP>().Max = 40;
+			var equipmentUsedState = player.GetComponent<EquipmentUsedState>();
+			equipmentUsedState.ActivatedThisTurn.Clear();
+			equipmentUsedState.DestroyedEquipmentIds.Clear();
+			equipmentUsedState.UsesByEquipmentId.Clear();
+			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
+			var queued = queuedEntity.GetComponent<QueuedEvents>();
+			queued.CurrentIndex = -1;
+			queued.Events.Clear();
+		}
+
+		public void StartBattle() 
 		{
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
-			Console.WriteLine($"queued.Events.Count: {queued.Events.Count}, queued.CurrentIndex: {queued.CurrentIndex}");
+			if (queued.CurrentIndex == 0) 
+			{
+				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
+			}
+			// all battles are done, go to menu
 			if (queued.Events.Count == queued.CurrentIndex + 1)
 			{
 				var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
 				scene.Current = SceneId.Menu;
-				queued.CurrentIndex = -1;
-				queued.Events.Clear();
+				ResetEntitiesAfterBattle();
 				return;
 			};
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
@@ -220,27 +212,13 @@ namespace Crusaders30XX.ECS.Systems
 			battleStateInfo.CourageGainedThisBattle = 0;
 			battleStateInfo.TriggeredThisBattle.Clear();
 			EntityManager.DestroyEntity("Enemy");
-
-			// first battle after already loading (super messy)
-			if (queued.CurrentIndex < 0)
-			{
-				player.GetComponent<HP>().Current = 40;
-				player.GetComponent<HP>().Max = 40;
-				var equipmentUsedState = player.GetComponent<EquipmentUsedState>();
-				equipmentUsedState.ActivatedThisTurn.Clear();
-				equipmentUsedState.DestroyedEquipmentIds.Clear();
-				equipmentUsedState.UsesByEquipmentId.Clear();
-			}
+			Console.WriteLine($"queued.Events.Count: {queued.Events.Count}, queued.CurrentIndex: {queued.CurrentIndex}");
 			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, queued.Events[++queued.CurrentIndex].EventId);
-
 			EventManager.Publish(new ResetDeckEvent { });
-
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
 			phaseState.TurnNumber = 0;
 			EntityManager.GetEntity("SceneState").GetComponent<SceneState>().Current = SceneId.Battle;
 			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
-
-			// TODO: show transition on first battle after going back to menu
 		}
 		
 		[DebugAction("Next Battle")]
