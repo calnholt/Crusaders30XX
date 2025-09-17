@@ -1,7 +1,7 @@
 {
   "name": "Demon",
   "id": "demon",
-  "hp": 60,
+  "hp": 63,
   "attacks": [
     {
       "id": "bite",
@@ -12,23 +12,20 @@
         "children": [
           {
             "kind": "Leaf",
-            "leafType": "PlayAtLeastN",
-            "params": {
-              "n": "1"
-            }
+            "leafType": "OnHit"
           }
         ]
       },
       "effectsOnHit": [
         {
           "type": "Damage",
-          "amount": 16
+          "amount": 7
         }
       ],
       "effectsOnNotBlocked": [
         {
-          "type": "Damage",
-          "amount": 10
+          "type": "Burn",
+          "amount": 2
         }
       ]
     },

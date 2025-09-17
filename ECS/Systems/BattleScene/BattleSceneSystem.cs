@@ -178,8 +178,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void ResetEntitiesAfterBattle() {
 			var player = EntityManager.GetEntity("Player");
-			player.GetComponent<HP>().Current = 40;
-			player.GetComponent<HP>().Max = 40;
+			player.GetComponent<HP>().Current = 20;
+			player.GetComponent<HP>().Max = 20;
 			var equipmentUsedState = player.GetComponent<EquipmentUsedState>();
 			equipmentUsedState.ActivatedThisTurn.Clear();
 			equipmentUsedState.DestroyedEquipmentIds.Clear();

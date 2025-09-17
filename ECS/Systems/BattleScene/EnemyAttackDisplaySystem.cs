@@ -568,6 +568,10 @@ namespace Crusaders30XX.ECS.Systems
 						var n = node.@params != null && node.@params.TryGetValue("n", out var nStr) ? nStr : "?";
 						lines.Add(($"Condition: Block with {n} {color ?? "card"}", TextScale, statusColor));
 					}
+					else if (node.leafType == "OnHit")
+					{
+						lines.Add(("Condition: Fully block the attack", TextScale, statusColor));
+					}
 					else
 					{
 						lines.Add(($"Condition: {node.leafType}", TextScale, statusColor));
@@ -597,10 +601,8 @@ namespace Crusaders30XX.ECS.Systems
 					case "Damage":
 						parts.Add($"+{e.amount} damage");
 						break;
-					case "ApplyStatus":
-						var st = string.IsNullOrEmpty(e.status) ? "Status" : e.status;
-						var stacks = e.stacks > 0 ? e.stacks.ToString() : "1";
-						parts.Add($"{st}({stacks})");
+					case "Burn":
+						parts.Add($"Gain {e.amount} burn stacks");
 						break;
 					case "LoseCourage":
 						parts.Add($"Lose {e.amount} courage");

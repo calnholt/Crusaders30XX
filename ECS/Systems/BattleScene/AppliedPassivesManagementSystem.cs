@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Crusaders30XX.Diagnostics;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -17,6 +18,16 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
             EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
+            EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
+
+        }
+
+        private void OnApplyEffect(ApplyEffect effect)
+        {
+            if (effect.EffectType.Equals("Burn"))
+            {
+                OnApplyPassive(new ApplyPassiveEvent{ Delta = effect.Amount, Owner = effect.Target, Type = AppliedPassiveType.Burn });
+            }
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

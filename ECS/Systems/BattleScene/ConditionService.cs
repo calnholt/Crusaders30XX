@@ -52,6 +52,8 @@ namespace Crusaders30XX.ECS.Systems
 					return Leaf_PlayColorAtLeastN(node.@params, contextId, entityManager);
 				case "PlayAtLeastN":
 					return Leaf_PlayAtLeastN(node.@params, contextId, entityManager);
+				case "OnHit":
+					return Leaf_OnHit(node.@params, contextId, entityManager);
 				default:
 					return false;
 			}
@@ -99,6 +101,12 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 			return false;
+		}
+
+		private static bool Leaf_OnHit(Dictionary<string, string> parameters, string contextId, EntityManager entityManager)
+		{
+			var progress = entityManager.GetEntitiesWithComponent<EnemyAttackProgress>().FirstOrDefault().GetComponent<EnemyAttackProgress>();
+			return progress.PreventedDamage >= progress.DamageBeforePrevention;
 		}
 
 		private static string NormalizeColorKey(string color)

@@ -290,7 +290,7 @@ namespace Crusaders30XX.ECS.Factories
                 if (def.isWeapon) continue; // weapons are not in the deck
                 var name = def.name ?? def.id ?? $"Card_{i}";
                 var color = ParseColor(def.color);
-                int blockValue = (color == CardData.CardColor.Black) ? 6 : 3;
+                int blockValue = (color == CardData.CardColor.Black) ? 4 : 3;
                 // Use text from JSON directly
                 string description = def.text ?? "";
                 var entity = CreateCard(
