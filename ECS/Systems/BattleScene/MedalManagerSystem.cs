@@ -63,40 +63,60 @@ namespace Crusaders30XX.ECS.Systems
 			var medalEntity = EntityManager.GetEntitiesWithComponent<EquippedMedal>()
 				.FirstOrDefault(e => e.GetComponent<EquippedMedal>()?.EquippedOwner == player && e.GetComponent<EquippedMedal>()?.MedalId == medal.id);
 
-			bool applied = false;
+			if (!CanTriggerMedal(player, medal)) return;
+
+			EventQueueBridge.EnqueueTriggerAction(() =>
+			{
+				EventManager.Publish(new MedalTriggered { MedalEntity = medalEntity, MedalId = medal.id });
+				ApplyMedalEffect(player, medal);
+			}, ActivationDelaySeconds);
+		}
+
+		private bool CanTriggerMedal(Entity player, MedalDefinition medal)
+		{
 			switch (medal.id)
 			{
 				case "st_luke":
-					applied = ApplyStLuke(player, medal);
-					break;
+					return GetStLukeHealAmount(player) > 0;
+				case "st_michael":
+					return true;
+				default:
+					return false;
+			}
+		}
+
+		private void ApplyMedalEffect(Entity player, MedalDefinition medal)
+		{
+			switch (medal.id)
+			{
+				case "st_luke":
+					{
+						int healAmount = GetStLukeHealAmount(player);
+						if (healAmount > 0)
+						{
+							EventManager.Publish(new ModifyHpEvent { Target = player, Delta = healAmount });
+						}
+						break;
+					}
 				case "st_michael":
 					EventManager.Publish(new ModifyCourageEvent { Delta = 3 });
-					applied = true;
 					break;
 				default:
 					break;
 			}
-			if (applied)
-			{
-				EventQueueBridge.EnqueueTriggerAction(() => 
-				{
-					EventManager.Publish(new MedalTriggered { MedalEntity = medalEntity, MedalId = medal.id });
-				}, ActivationDelaySeconds);
-			}
 		}
 
-		private bool ApplyStLuke(Entity player, MedalDefinition medal)
+		private int GetStLukeHealAmount(Entity player)
 		{
 			var hp = player.GetComponent<HP>();
-			if (hp == null) return false;
+			if (hp == null) return 0;
 			int missing = Math.Max(0, hp.Max - hp.Current);
-			if (missing <= 0) return false;
-			// Heal 70% of missing health (rounded down)
+			if (missing <= 0) return 0;
 			int healAmount = (int)Math.Floor(missing * 0.7f);
-			if (healAmount <= 0) return false;
-			EventManager.Publish(new ModifyHpEvent { Target = player, Delta = healAmount });
-			return true;
+			return Math.Max(0, healAmount);
 		}
+
+
 	}
 }
 

@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Wipe Duration (s)", Step = 0.05f, Min = 0.05f, Max = 3f)]
 		public float WipeDurationSeconds { get; set; } = 0.55f;
 		[DebugEditable(DisplayName = "Hold Black (s)", Step = 0.05f, Min = 0f, Max = 2f)]
-		public float HoldSeconds { get; set; } = 0.2f;
+		public float HoldSeconds { get; set; } = 0.5f;
 		[DebugEditable(DisplayName = "Angle Degrees", Step = 1f, Min = -90f, Max = 90f)]
 		public float AngleDegrees { get; set; } = 40f; // diagonal like Star Wars
 		[DebugEditable(DisplayName = "Color Alpha", Step = 5, Min = 0, Max = 255)]

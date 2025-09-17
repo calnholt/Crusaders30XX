@@ -95,8 +95,8 @@ namespace Crusaders30XX.ECS.Systems
 			while (intent.Planned.Count > 0 && intent.Planned[0].IsStunned)
 			{
 				var ctx = intent.Planned[0].ContextId;
-				EventManager.Publish(new ShowStunnedOverlay { ContextId = ctx });
 				intent.Planned.RemoveAt(0);
+				EventManager.Publish(new ShowStunnedOverlay { ContextId = ctx });
 				removedAny = true;
 			}
 			// Only transition phases if we actually consumed stunned attacks this tick

@@ -82,6 +82,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new ModifyActionPointsEvent { Delta = System.Math.Abs(amount) });
         }
+        [DebugActionInt("Apply Burn", Step = 1, Min = 1, Max = 999, Default = 3)]
+        public void Debug_ApplyBurn(int amount)
+        {
+            EventManager.Publish(new ApplyPassiveEvent { Owner = EntityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Burn, Delta = amount });
+        }
     }
 }
 

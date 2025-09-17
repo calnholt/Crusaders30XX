@@ -624,4 +624,16 @@ namespace Crusaders30XX.ECS.Components
         public string ContextId { get; set; }
         public bool Completed { get; set; }
     }
+
+    public class AppliedPassives : IComponent
+    {
+        public Entity Owner { get; set; }
+        public Dictionary<AppliedPassiveType, int> Passives { get; set; } = new Dictionary<AppliedPassiveType, int>();
+    }
+
+    public enum AppliedPassiveType
+    {
+        Burn,
+        Power,
+    }
 }

@@ -17,6 +17,11 @@ namespace Crusaders30XX.ECS.Systems
 
             switch (cardId)
             {
+                case "burn":
+                {
+                    EventManager.Publish(new ApplyPassiveEvent { Owner = enemy, Type = AppliedPassiveType.Burn, Delta = +3 });
+                    break;
+                }
                 case "strike":
                 {
                     EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -10 });

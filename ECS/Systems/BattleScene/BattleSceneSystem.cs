@@ -49,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 		private TemperanceManagerSystem _temperanceManagerSystem;
 		private TooltipDisplaySystem _tooltipDisplaySystem;
 		private HPDisplaySystem _hpDisplaySystem;
+		private AppliedPassivesDisplaySystem _appliedPassivesDisplaySystem;
 		private CardVisualSettingsDebugSystem _cardVisualSettingsDebugSystem;
 		private HpManagementSystem _hpManagementSystem;
 		private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
@@ -84,6 +85,7 @@ namespace Crusaders30XX.ECS.Systems
 		private EquipmentUsedManagementSystem _equipmentUsedManagementSystem;
 		private HighlightSettingsSystem _equipmentHighlightSettingsDebugSystem;
 		private EquipmentBlockInteractionSystem _equipmentBlockInteractionSystem;
+		private AppliedPassivesManagementSystem _appliedPassivesManagementSystem;
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(em)
 		{
@@ -135,6 +137,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("ActionPointDisplaySystem.Draw", _actionPointDisplaySystem.Draw);
 			FrameProfiler.Measure("StoredBlockDisplaySystem.Draw", _storedBlockDisplaySystem.Draw);
 			FrameProfiler.Measure("HPDisplaySystem.Draw", _hpDisplaySystem.Draw);
+			FrameProfiler.Measure("AppliedPassivesDisplaySystem.Draw", _appliedPassivesDisplaySystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawBackdrop", _payCostOverlaySystem.DrawBackdrop);
 			FrameProfiler.Measure("HandDisplaySystem.DrawHand", _handDisplaySystem.DrawHand);
 			FrameProfiler.Measure("CardPlayedAnimationSystem.Draw", _cardPlayedAnimationSystem.Draw);
@@ -210,9 +213,21 @@ namespace Crusaders30XX.ECS.Systems
 			var battleStateInfo = player.GetComponent<BattleStateInfo>();
 			battleStateInfo.CourageGainedThisBattle = 0;
 			battleStateInfo.TriggeredThisBattle.Clear();
+			// Initialize/Reset per-battle applied passives on player
+			var playerPassives = player.GetComponent<AppliedPassives>();
+			if (playerPassives == null)
+			{
+				_world.AddComponent(player, new AppliedPassives());
+			}
+			else
+			{
+				playerPassives.Passives.Clear();
+			}
 			EntityManager.DestroyEntity("Enemy");
 			Console.WriteLine($"queued.Events.Count: {queued.Events.Count}, queued.CurrentIndex: {queued.CurrentIndex}");
 			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, queued.Events[++queued.CurrentIndex].EventId);
+			// Initialize per-battle applied passives on enemy
+			_world.AddComponent(nextEnemy, new AppliedPassives());
 			EventManager.Publish(new ResetDeckEvent { });
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
 			phaseState.TurnNumber = 0;
@@ -265,6 +280,7 @@ namespace Crusaders30XX.ECS.Systems
 			_temperanceManagerSystem = new TemperanceManagerSystem(_world.EntityManager);
 			_tooltipDisplaySystem = new TooltipDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
+			_appliedPassivesDisplaySystem = new AppliedPassivesDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_cardVisualSettingsDebugSystem = new CardVisualSettingsDebugSystem(_world.EntityManager);
 			_profilerSystem = new ProfilerSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_hpManagementSystem = new HpManagementSystem(_world.EntityManager);
@@ -300,6 +316,7 @@ namespace Crusaders30XX.ECS.Systems
 			_equipmentUsedManagementSystem = new EquipmentUsedManagementSystem(_world.EntityManager);
 			_equipmentHighlightSettingsDebugSystem = new HighlightSettingsSystem(_world.EntityManager);
 			_equipmentBlockInteractionSystem = new EquipmentBlockInteractionSystem(_world.EntityManager);
+			_appliedPassivesManagementSystem = new AppliedPassivesManagementSystem(_world.EntityManager);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
 
 			// Register
@@ -332,6 +349,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_profilerSystem);
 			_world.AddSystem(_battleBackgroundSystem);
 			_world.AddSystem(_hpDisplaySystem);
+			_world.AddSystem(_appliedPassivesDisplaySystem);
 			_world.AddSystem(_cardVisualSettingsDebugSystem);
 			_world.AddSystem(_hpManagementSystem);
 			_world.AddSystem(_battlePhaseDisplaySystem);
@@ -360,6 +378,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_equipmentUsedManagementSystem);
 			_world.AddSystem(_equipmentHighlightSettingsDebugSystem);
 			_world.AddSystem(_equipmentBlockInteractionSystem);
+			_world.AddSystem(_appliedPassivesManagementSystem);
 			_world.AddSystem(_payCostOverlaySystem);
 			_world.AddSystem(_cardHighlightSystem);
 			_world.AddSystem(_cantPlayCardMessageSystem);

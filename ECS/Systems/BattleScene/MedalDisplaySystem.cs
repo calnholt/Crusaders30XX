@@ -43,13 +43,13 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Pulse/jiggle animation tuning
 		[DebugEditable(DisplayName = "Pulse Duration (s)", Step = 0.05f, Min = 0.1f, Max = 2f)]
-		public float PulseDurationSeconds { get; set; } = 1f;
+		public float PulseDurationSeconds { get; set; } = 0.5f;
 		[DebugEditable(DisplayName = "Pulse Scale Amp", Step = 0.01f, Min = 0f, Max = 0.6f)]
-		public float PulseScaleAmplitude { get; set; } = 0.5f;
+		public float PulseScaleAmplitude { get; set; } = 0.44f;
 		[DebugEditable(DisplayName = "Jiggle Degrees", Step = 0.5f, Min = 0f, Max = 45f)]
-		public float JiggleDegrees { get; set; } = 12.5f;
+		public float JiggleDegrees { get; set; } = 5f;
 		[DebugEditable(DisplayName = "Pulse Frequency (Hz)", Step = 0.1f, Min = 0.5f, Max = 8f)]
-		public float PulseFrequencyHz { get; set; } = 2.5f;
+		public float PulseFrequencyHz { get; set; } = 1.7f;
 
 		public MedalDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
 			: base(entityManager)
