@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -46,12 +47,31 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Text Scale", Step = 0.01f, Min = 0.05f, Max = 2f)]
         public float TextScale { get; set; } = 0.12f;
 
+        [DebugEditable(DisplayName = "Ripple Seconds", Step = 0.05f, Min = 0.05f, Max = 2f)]
+        public float RippleSeconds { get; set; } = 0.35f;
+
+        [DebugEditable(DisplayName = "Ripple Max Scale", Step = 0.05f, Min = 1f, Max = 3f)]
+        public float RippleMaxScale { get; set; } = 2.35f;
+
+        [DebugEditable(DisplayName = "Ripple Min Alpha", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float RippleMinAlpha { get; set; } = 0f;
+
+        private class Ripple
+        {
+            public float Elapsed;
+            public float Duration;
+        }
+
+        // Track a transient ripple per owner+passive key
+        private readonly System.Collections.Generic.Dictionary<(int ownerId, AppliedPassiveType type), Ripple> _ripples = new();
+
         public AppliedPassivesDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             _font = font;
+            EventManager.Subscribe<PassiveTriggered>(OnPassiveTriggered);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -59,7 +79,26 @@ namespace Crusaders30XX.ECS.Systems
             return EntityManager.GetEntitiesWithComponent<AppliedPassives>();
         }
 
-        protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+        protected override void UpdateEntity(Entity entity, GameTime gameTime)
+        {
+            // Progress ripple animations once per frame (anchor on smallest entity id that matches)
+            var ids = EntityManager.GetEntitiesWithComponent<AppliedPassives>().Select(en => en.Id).ToList();
+            if (ids.Count == 0) return;
+            int anchorId = ids.Min();
+            if (entity.Id != anchorId) return;
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (dt <= 0f || _ripples.Count == 0) return;
+            var keys = _ripples.Keys.ToList();
+            foreach (var k in keys)
+            {
+                var rp = _ripples[k];
+                rp.Elapsed += dt;
+                if (rp.Elapsed >= rp.Duration)
+                {
+                    _ripples.Remove(k);
+                }
+            }
+        }
 
         public void Draw()
         {
@@ -107,14 +146,36 @@ namespace Crusaders30XX.ECS.Systems
                     int w = chipWidths[i];
                     int h = (int)System.Math.Ceiling(sizes[i].Y) + PadY * 2;
                     EnsureRounded(w, h, System.Math.Min(CornerRadius, System.Math.Min(w, h) / 2));
-                    var rect = new Rectangle(x, baseY, w, h);
-                    var bg = Color.FromNonPremultiplied(BgR, BgG, BgB, BgA);
-                    _spriteBatch.Draw(_roundedBg, rect, bg);
+                    // Ripple overlay (independent of chip background)
+                    var key = (e.Id, items[i].Type);
+                    if (_ripples.TryGetValue(key, out var rp))
+                    {
+                        float progress = MathHelper.Clamp(rp.Elapsed / System.Math.Max(0.0001f, rp.Duration), 0f, 1f);
+                        float scale = MathHelper.Lerp(1f, RippleMaxScale, progress);
+                        float alpha = MathHelper.Lerp(1f, RippleMinAlpha, progress);
+                        int scaledW = (int)System.Math.Round(w * scale);
+                        int scaledH = (int)System.Math.Round(h * scale);
+                        int cx = x + w / 2;
+                        int cy = baseY + h / 2;
+                        var rippleRect = new Rectangle(cx - scaledW / 2, cy - scaledH / 2, scaledW, scaledH);
+                        var rippleColor = Color.FromNonPremultiplied(BgR, BgG, BgB, (byte)System.Math.Round(MathHelper.Clamp(alpha, 0f, 1f) * 255f));
+                        _spriteBatch.Draw(_roundedBg, rippleRect, rippleColor);
+                    }
+                    // Base chip
+                    var chipRect = new Rectangle(x, baseY, w, h);
+                    var chipBg = Color.FromNonPremultiplied(BgR, BgG, BgB, (byte)BgA);
+                    _spriteBatch.Draw(_roundedBg, chipRect, chipBg);
                     var textPos = new Vector2(x + (w - sizes[i].X) / 2f, baseY + (h - sizes[i].Y) / 2f);
                     _spriteBatch.DrawString(_font, items[i].Label, textPos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
                     x += w + Spacing;
                 }
             }
+        }
+
+        private void OnPassiveTriggered(PassiveTriggered e)
+        {
+            if (e?.Owner == null) return;
+            _ripples[(e.Owner.Id, e.Type)] = new Ripple { Elapsed = 0f, Duration = System.Math.Max(0.05f, RippleSeconds) };
         }
 
         private void EnsureRounded(int w, int h, int r)
@@ -125,6 +186,12 @@ namespace Crusaders30XX.ECS.Systems
                 _roundedBg = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, r);
                 _cacheW = w; _cacheH = h; _cacheR = r;
             }
+        }
+        [DebugAction("Simulate Burn Trigger")]
+        public void Debug_SimulateBurnTrigger()
+        {
+            EventManager.Publish(new PassiveTriggered { Owner = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn });
+            EventManager.Publish(new PassiveTriggered { Owner = EntityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Burn });
         }
     }
 }

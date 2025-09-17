@@ -13,6 +13,16 @@ namespace Crusaders30XX.ECS.Events
         public AppliedPassiveType Type { get; set; }
         public int Delta { get; set; }
     }
+
+    /// <summary>
+    /// Emitted when a passive effect actually triggers (e.g., Burn deals damage).
+    /// Used by UI to play feedback animations.
+    /// </summary>
+    public class PassiveTriggered
+    {
+        public Entity Owner { get; set; }
+        public AppliedPassiveType Type { get; set; }
+    }
 }
 
 

@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -51,7 +52,11 @@ namespace Crusaders30XX.ECS.Systems
             // Burn: deal 1 damage to the owner per stack
             if (ap.Passives.TryGetValue(AppliedPassiveType.Burn, out int burnStacks) && burnStacks > 0)
             {
-                EventManager.Publish(new ModifyHpEvent { Target = owner, Delta = -burnStacks });
+                EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Burn", () =>
+                {
+                    EventManager.Publish(new ModifyHpEvent { Target = owner, Delta = -burnStacks });
+                    EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Burn });
+                }, .15f);
             }
         }
 
@@ -67,8 +72,7 @@ namespace Crusaders30XX.ECS.Systems
             }
             if (ap == null) return;
 
-            int current = 0;
-            ap.Passives.TryGetValue(e.Type, out current);
+            ap.Passives.TryGetValue(e.Type, out int current);
             int next = current + e.Delta;
             if (next <= 0)
             {

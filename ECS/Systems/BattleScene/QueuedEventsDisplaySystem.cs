@@ -59,6 +59,10 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Smooth Kernel Size", Step = 2, Min = 1, Max = 9)]
 		public int SmoothKernelSize { get; set; } = 3; // odd preferred
 
+		// Appearance
+		[DebugEditable(DisplayName = "Node Alpha", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float NodeAlpha { get; set; } = 0.75f;
+
 		public QueuedEventsDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
 		{
@@ -139,7 +143,9 @@ namespace Crusaders30XX.ECS.Systems
 				int r = radii[i];
 				var circle = GetCircle(r);
 				var pos = new Vector2(System.MathF.Round(cx - r), (float)(y - r));
-				_spriteBatch.Draw(circle, position: pos, color: Color.White);
+				byte nodeA = (byte)System.Math.Round(MathHelper.Clamp(NodeAlpha, 0f, 1f) * 255f);
+				var nodeColor = Color.FromNonPremultiplied(255, 255, 255, nodeA);
+				_spriteBatch.Draw(circle, position: pos, color: nodeColor);
 
 				// If enemy, draw its image centered within the node
 				var evt = qe.Events[i];
