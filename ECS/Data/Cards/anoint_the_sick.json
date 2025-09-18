@@ -4,8 +4,9 @@
   "target": "Player",
   "color": "White",
   "rarity": "Common",
-  "text": "Heal 3 HP.",
+  "text": "Heal 4 HP.",
   "isFreeAction": true,
-  "animation": "Buff"
+  "animation": "Buff",
+  "block": 2
 }
 

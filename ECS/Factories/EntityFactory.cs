@@ -8,6 +8,7 @@ using Crusaders30XX.ECS.Data.Medals;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.ECS.Data.Loadouts;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -74,7 +75,7 @@ namespace Crusaders30XX.ECS.Factories
                 Position = new Vector2(100, 300),
                 Scale = Vector2.One
             };
-            
+            var loadout = LoadoutDefinitionCache.TryGet("loadout_1", out var def) ? def : null;
             var sprite = new Sprite
             {
                 TexturePath = "player",
@@ -98,18 +99,22 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, portraitInfo);
             world.AddComponent(entity, equippedTemperanceAbility);
             // Equip default weapon (not in deck)
-            world.AddComponent(entity, new EquippedWeapon { WeaponId = "sword" });
+            world.AddComponent(entity, new EquippedWeapon { WeaponId = loadout.weaponId });
             world.AddComponent(
                 world.CreateEntity("Equip_Head"), 
-                new EquippedEquipment { EquippedOwner = entity, EquipmentId = "focus_visor", EquipmentType = "Head" }
+                new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.headId, EquipmentType = "Head" }
             );
             world.AddComponent(
                 world.CreateEntity("Equip_Legs"), 
-                new EquippedEquipment { EquippedOwner = entity, EquipmentId = "lightning_grieves", EquipmentType = "Legs" }
+                new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.legsId, EquipmentType = "Legs" }
             );
             world.AddComponent(
                 world.CreateEntity("Equip_Arms"), 
-                new EquippedEquipment { EquippedOwner = entity, EquipmentId = "purging_bracers", EquipmentType = "Arms" }
+                new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.armsId, EquipmentType = "Arms" }
+            );
+            world.AddComponent(
+                world.CreateEntity("Equip_Chest"), 
+                new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.chestId, EquipmentType = "Chest" }
             );
             // Attach Courage resource component by default (optional mechanics can read presence)
             world.AddComponent(entity, new Courage { Amount = 0 });
@@ -124,14 +129,13 @@ namespace Crusaders30XX.ECS.Factories
             // Attach HP component
             world.AddComponent(entity, new HP { Max = 30, Current = 30 });
             // Equip default medals (can equip multiple later). For now, just st_luke.
-            world.AddComponent(
-                world.CreateEntity("Medal_StMichael"),
-                new EquippedMedal { EquippedOwner = entity, MedalId = "st_michael" }
-            );
-            world.AddComponent(
-                world.CreateEntity("Medal_StLuke"),
-                new EquippedMedal { EquippedOwner = entity, MedalId = "st_luke" }
-            );
+            foreach (var medalId in loadout.medalIds)
+            {
+                world.AddComponent(
+                    world.CreateEntity($"Medal_{medalId}"),
+                    new EquippedMedal { EquippedOwner = entity, MedalId = medalId }
+                );
+            }
             // Attach starting Intellect and MaxHandSize stats
             world.AddComponent(entity, new Intellect { Value = 4 });
             world.AddComponent(entity, new MaxHandSize { Value = 5 });
@@ -290,7 +294,7 @@ namespace Crusaders30XX.ECS.Factories
                 if (def.isWeapon) continue; // weapons are not in the deck
                 var name = def.name ?? def.id ?? $"Card_{i}";
                 var color = ParseColor(def.color);
-                int blockValue = (color == CardData.CardColor.Black) ? 4 : 3;
+                int blockValue = def.block + (color == CardData.CardColor.Black ? 1 : 0);
                 // Use text from JSON directly
                 string description = def.text ?? "";
                 var entity = CreateCard(

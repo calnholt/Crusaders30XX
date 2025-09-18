@@ -5,6 +5,7 @@
   "color": "Red",
   "rarity": "Common",
   "text": "Deal 5 damage. If your Courage is >= 5, deal 15 damage instead.",
-  "animation": "Attack"
+  "animation": "Attack",
+  "block": 3
 }
 

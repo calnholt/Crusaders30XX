@@ -1,0 +1,12 @@
+{
+  "id": "vindicate",
+  "name": "Vindicate",
+  "target": "Enemy",
+  "color": "Red",
+  "cost": [ "Red", "Any" ],
+  "rarity": "Common",
+  "text": "Deal 15 damage plus X damage, where 2X is your courage. Lose all courage.",
+  "animation": "Attack",
+  "block": 3
+}
+

@@ -1,0 +1,31 @@
+{
+  "id": "loadout_1",
+  "name": "Tinkering",
+  "cardIds": [
+    "strike",
+    "strike_2",
+    "strike_3",
+    "strike_4",
+    "strike_5",
+    "strike_6",
+    "strike_7",
+    "strike_8",
+    "strike_9",
+    "strike_10",
+    "stab",
+    "stun",
+    "anoint_the_sick",
+    "burn",
+    "courageous"
+  ],
+  "weaponId": "sword",
+  "temperanceId": "radiance",
+  "chestId": "pierced_heart_plate",
+  "legsId": "lightning_grieves",
+  "armsId": "purging_bracers",
+  "headId": "focus_visor",
+  "medalIds": [
+    "st_michael",
+    "st_luke"
+  ]
+}

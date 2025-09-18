@@ -15,6 +15,10 @@ namespace Crusaders30XX.ECS.Systems
 			Console.WriteLine($"[EquipmentAbilityService] Executing equipment effect for {ability.id}");
 			var player = entityManager.GetEntity("Player");
 			var enemy = entityManager.GetEntity("Enemy");
+			if (ability.requiresUseOnActivate)
+			{
+				EventManager.Publish(new EquipmentUseResolved { EquipmentId = equipmentId, Delta = 1 });
+			}
 			switch (ability.effect)
 			{
 				case "DrawCards":
@@ -24,12 +28,16 @@ namespace Crusaders30XX.ECS.Systems
 					break;
 				case "DealDamage":
 					EventManager.Publish(new ModifyHpEvent { Target = ability.target == "Enemy" ? enemy : player, Delta = (ability.effectCount * -1) });
-					EventManager.Publish(new EquipmentUseResolved { EquipmentId = equipmentId, Delta = 1 });
 					EventQueue.EnqueueRule(new QueuedStartPlayerAttackAnimation());
 					EventQueue.EnqueueRule(new QueuedWaitPlayerImpactEvent());
 					break;
 				case "GainActionPoint":
 					EventManager.Publish(new ModifyActionPointsEvent { Delta = System.Math.Max(1, ability.effectCount) });
+					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
+					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
+					break;
+				case "GainCourage":
+					EventManager.Publish(new ModifyCourageEvent { Delta = System.Math.Max(1, ability.effectCount) });
 					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
 					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;

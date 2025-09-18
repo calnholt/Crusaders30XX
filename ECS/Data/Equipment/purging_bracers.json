@@ -10,11 +10,11 @@
       "id": "purging_bracers",
       "type": "Activate",
       "effect": "DealDamage",
-      "effectCount": 3,
+      "effectCount": 5,
       "destroyOnActivate": false,
       "target": "Enemy",
       "requiresUseOnActivate": true,
-      "text": "Deal 3 damage to the enemy.",
+      "text": "Deal 5 damage to the enemy.",
       "isFreeAction": true
     }
   ]

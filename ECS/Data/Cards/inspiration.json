@@ -6,6 +6,7 @@
   "rarity": "Common",
   "text": "Draw 2 cards and gain 1 temperance.",
   "isFreeAction": true,
-  "animation": "Buff"
+  "animation": "Buff",
+  "block": 2
 }
 

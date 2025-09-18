@@ -4,8 +4,8 @@
   "target": "Player",
   "color": "Black",
   "rarity": "Common",
-  "text": "Gain three courage.",
-  "isFreeAction": true,
-  "animation": "Buff"
+  "text": "Gain three courage. End your turn.",
+  "animation": "Buff",
+  "block": 2
 }
 

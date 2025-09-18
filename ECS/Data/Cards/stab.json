@@ -4,8 +4,9 @@
   "target": "Enemy",
   "color": "Black",
   "rarity": "Common",
-  "text": "As an additional cost, lose 2 courage.\n\nDeal 8 damage.",
+  "text": "As an additional cost, lose 2 courage.\n\nDeal 10 damage.",
   "isFreeAction": true,
-  "animation": "Attack"
+  "animation": "Attack",
+  "block": 3
 }
 

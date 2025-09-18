@@ -1,0 +1,11 @@
+{
+  "id": "dowse_with_holy_water",
+  "name": "Dowse with Holy Water",
+  "target": "Player",
+  "color": "Red",
+  "rarity": "Common",
+  "text": "Your next attack this turn deals +10 damage.",
+  "animation": "Buff",  
+  "block": 2
+}
+

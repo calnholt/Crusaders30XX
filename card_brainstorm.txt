@@ -5,3 +5,13 @@
 medals:
 - start battle with +X courage / temperance
 
+
+ATTACKS:
+- cost 2 ANY - deal 15 damage + mark
+- cost 1 Black - deal 10 damage + 4 stored block
+
+BUFFS
+- attack gains apply X burn, where X is your courage, then lose 5 courage.
+- +10 damage
+- +4 damage, +3 stored blocked
+- all
