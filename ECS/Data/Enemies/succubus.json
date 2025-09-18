@@ -7,16 +7,13 @@
       "id": "velvet_fangs",
       "name": "Velvet Fangs",
       "target": "Player",
+      "positionType": "Linker",
       "conditionsBlocked": {
         "kind": "All",
         "children": [
           {
             "kind": "Leaf",
-            "leafType": "PlayColorAtLeastN",
-            "params": {
-              "color": "Red",
-              "n": "1"
-            }
+            "leafType": "OnHit"
           }
         ]
       },
@@ -29,7 +26,7 @@
       "effectsOnNotBlocked": [
         {
           "type": "LoseCourage",
-          "amount": 1
+          "amount": 3
         },
         {
           "type": "Damage",
@@ -41,16 +38,13 @@
       "id": "bewitching_kiss",
       "name": "Bewitching Kiss",
       "target": "Player",
+      "positionType": "Linker",
       "conditionsBlocked": {
         "kind": "All",
         "children": [
           {
             "kind": "Leaf",
-            "leafType": "PlayColorAtLeastN",
-            "params": {
-              "color": "White",
-              "n": "1"
-            }
+            "leafType": "OnHit"
           }
         ]
       },
@@ -63,7 +57,7 @@
       "effectsOnNotBlocked": [
         {
           "type": "LoseCourage",
-          "amount": 1
+          "amount": 3
         },
         {
           "type": "Damage",
@@ -75,16 +69,13 @@
       "id": "soul_siphon",
       "name": "Soul Siphon",
       "target": "Player",
+      "positionType": "Starter",
       "conditionsBlocked": {
         "kind": "All",
         "children": [
           {
             "kind": "Leaf",
-            "leafType": "PlayColorAtLeastN",
-            "params": {
-              "color": "Black",
-              "n": "1"
-            }
+            "leafType": "OnHit"
           }
         ]
       },
@@ -97,7 +88,7 @@
       "effectsOnNotBlocked": [
         {
           "type": "LoseCourage",
-          "amount": 1
+          "amount": 3
         },
         {
           "type": "Damage",
@@ -109,15 +100,13 @@
       "id": "enthralling_gaze",
       "name": "Enthralling Gaze",
       "target": "Player",
+      "positionType": "Ender",
       "conditionsBlocked": {
         "kind": "All",
         "children": [
           {
             "kind": "Leaf",
-            "leafType": "PlayAtLeastN",
-            "params": {
-              "n": "1"
-            }
+            "leafType": "OnHit"
           }
         ]
       },
@@ -128,6 +117,45 @@
         }
       ],
       "effectsOnNotBlocked": [
+        {
+          "type": "Damage",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "id": "crushing_adoration",
+      "name": "Crushing Adoration",
+      "target": "Player",
+      "positionType": "Ender",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "OnHit"
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 10
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "LoseCourage",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "teasing_nip",
+      "name": "Teasing Nip",
+      "target": "Player",
+      "positionType": "Starter",
+      "effectsOnHit": [
         {
           "type": "Damage",
           "amount": 3

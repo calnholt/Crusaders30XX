@@ -4,9 +4,10 @@
   "hp": 63,
   "attacks": [
     {
-      "id": "bite",
-      "name": "Rending Bite",
+      "id": "razor_maw",
+      "name": "Razor Maw",
       "target": "Player",
+      "positionType": "Ender",
       "conditionsBlocked": {
         "kind": "All",
         "children": [
@@ -25,22 +26,22 @@
       "effectsOnNotBlocked": [
         {
           "type": "Burn",
-          "amount": 2
+          "amount": 1
         }
       ]
     },
     {
-      "id": "swipe",
-      "name": "Shredding Swipe",
+      "id": "punishing_swipe",
+      "name": "Punishing Swipe",
       "target": "Player",
+      "positionType": "Linker",
       "conditionsBlocked": {
         "kind": "All",
         "children": [
           {
             "kind": "Leaf",
-            "leafType": "PlayColorAtLeastN",
+            "leafType": "PlayAtLeastN",
             "params": {
-              "color": "Red",
               "n": "1"
             }
           }
@@ -49,10 +50,103 @@
       "effectsOnHit": [
         {
           "type": "Damage",
-          "amount": 16
+          "amount": 2
         }
       ],
       "effectsOnNotBlocked": [
+        {
+          "type": "Damage",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "id": "scorching_claw",
+      "name": "Scorching Claw",
+      "target": "Player",
+      "positionType": "Ender",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "OnHit"
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 3
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "Burn",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "id": "rending_claw",
+      "name": "Rending Claw",
+      "target": "Player",
+      "positionType": "Linker",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "OnHit"
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 5
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "Burn",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "infernal_execution",
+      "name": "Infernal Execution",
+      "target": "Player",
+      "positionType": "Ender",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "OnHit"
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 10
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "Burn",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "gouging_jab",
+      "name": "Gouging Jab",
+      "target": "Player",
+      "positionType": "Starter",
+      "effectsOnHit": [
         {
           "type": "Damage",
           "amount": 3

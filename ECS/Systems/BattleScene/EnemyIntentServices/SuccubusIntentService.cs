@@ -14,51 +14,71 @@ namespace Crusaders30XX.ECS.Systems
 
 		public IEnumerable<string> SelectForTurn(Entity enemy, EnemyArsenal arsenal, int turnNumber)
 		{
-			// Allowed attack ids for Succubus
-			var allowed = new List<string> { "velvet_fangs", "bewitching_kiss", "soul_siphon", "enthralling_gaze" };
-			var pool = (arsenal?.AttackIds != null && arsenal.AttackIds.Count > 0)
-				? allowed.Where(id => arsenal.AttackIds.Contains(id)).ToList()
-				: allowed;
-			if (pool.Count == 0) return Enumerable.Empty<string>();
+			var availableIds = (arsenal?.AttackIds != null && arsenal.AttackIds.Count > 0)
+				? arsenal.AttackIds.ToList()
+				: new List<string> { "velvet_fangs", "bewitching_kiss", "soul_siphon", "enthralling_gaze", "crushing_adoration", "teasing_nip" };
+			if (availableIds.Count == 0) return Enumerable.Empty<string>();
 
-			// Decide number of attacks: 3 or 4. Chance of 4 increases with turn number
-			double p4 = Math.Min(0.85, 0.1 + 0.05 * Math.Max(0, turnNumber));
-			int count = (_random.NextDouble() < p4) ? 4 : 3;
-
-			// Weights (duplicates allowed). Give enthralling_gaze a higher chance
-			var weights = new Dictionary<string, double>();
-			foreach (var id in pool)
+			var defs = AttackDefinitionCache.GetAll();
+			bool HasDef(string id) => defs.TryGetValue(id, out var _);
+			string GetPos(string id)
 			{
-				double w = (id == "enthralling_gaze") ? 2.0 : 1.0;
-				weights[id] = w;
+				return defs.TryGetValue(id, out var def) && !string.IsNullOrEmpty(def.positionType)
+					? def.positionType
+					: "Linker";
 			}
 
-			// Sample with replacement according to weights
-			var selected = new List<string>(count);
-			double total = weights.Values.Sum();
-			for (int i = 0; i < count; i++)
+			var startersOrLinkers = availableIds.Where(id => HasDef(id) && (GetPos(id) == "Starter" || GetPos(id) == "Linker")).ToList();
+			var enders = availableIds.Where(id => HasDef(id) && GetPos(id) == "Ender" && id != "crushing_adoration").ToList();
+			bool hasFinisher = availableIds.Contains("crushing_adoration");
+			bool hasJab = availableIds.Contains("teasing_nip");
+
+			// Either one attack (big finisher) or two (starter/linker + ender, not big finisher)
+			bool chooseOne = _random.Next(2) == 0 && hasFinisher;
+			if (chooseOne)
 			{
-				double r = _random.NextDouble() * total;
-				double acc = 0;
-				string pick = pool[0];
-				foreach (var kv in weights)
+				return ["crushing_adoration"]; // single big finisher
+			}
+
+			string ChooseRandom(IReadOnlyList<string> list) => list.Count == 0 ? null : list[_random.Next(list.Count)];
+			var first = ChooseRandom(startersOrLinkers);
+			if (first == null)
+			{
+				var fallback = availableIds.Where(id => id != "crushing_adoration").ToList();
+				first = ChooseRandom(fallback);
+			}
+			var second = ChooseRandom(enders);
+			if (second == null)
+			{
+				var anyEnder = availableIds.Where(id => GetPos(id) == "Ender" && id != "crushing_adoration").ToList();
+				second = ChooseRandom(anyEnder);
+				if (second == null)
 				{
-					acc += kv.Value;
-					if (r <= acc) { pick = kv.Key; break; }
+					second = ChooseRandom(availableIds);
 				}
-				selected.Add(pick);
 			}
 
-			// Shuffle order
-			for (int i = selected.Count - 1; i > 0; i--)
+			var result = new List<string>();
+			if (first != null) result.Add(first);
+			if (second != null && second != first) result.Add(second);
+
+			// 10% chance to add a third attack (teasing_nip) at a random index
+			if (hasJab && _random.NextDouble() < 0.10)
 			{
-				int j = _random.Next(i + 1);
-				(var a, var b) = (selected[i], selected[j]);
-				selected[i] = b;
-				selected[j] = a;
+				if (!result.Contains("teasing_nip"))
+				{
+					int insertIndex = _random.Next(result.Count + 1);
+					result.Insert(insertIndex, "teasing_nip");
+				}
 			}
 
-			return selected;
+			if (result.Count == 0)
+			{
+				if (hasFinisher) return ["crushing_adoration"];
+				return [availableIds[0]];
+			}
+
+			return result;
 		}
 	}
 }

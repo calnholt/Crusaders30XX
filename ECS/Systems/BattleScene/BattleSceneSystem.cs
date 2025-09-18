@@ -36,6 +36,7 @@ namespace Crusaders30XX.ECS.Systems
 		private CardListModalSystem _cardListModalSystem;
 		private PlayerDisplaySystem _playerDisplaySystem;
 		private PlayerWispParticleSystem _playerWispParticleSystem;
+		private PlayerTemperanceActivationDisplaySystem _playerTemperanceActivationDisplaySystem;
 		private PlayerAnimationSystem _playerAnimationSystem;
 		private CathedralLightingSystem _cathedralLightingSystem;
 		private DesertBackgroundEffectSystem _desertBackgroundEffectSystem;
@@ -131,6 +132,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("EndTurnDisplaySystem.Draw", _endTurnDisplaySystem.Draw);
 			FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", _assignedBlockCardsDisplaySystem.Draw);
 			FrameProfiler.Measure("PlayerWispParticleSystem.Draw", _playerWispParticleSystem.Draw);
+			FrameProfiler.Measure("PlayerTemperanceActivationDisplaySystem.Draw", _playerTemperanceActivationDisplaySystem.Draw);
 			FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", _battlePhaseDisplaySystem.Draw);
 			FrameProfiler.Measure("CourageDisplaySystem.Draw", _courageDisplaySystem.Draw);
 			FrameProfiler.Measure("TemperanceDisplaySystem.Draw", _temperanceDisplaySystem.Draw);
@@ -178,8 +180,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void ResetEntitiesAfterBattle() {
 			var player = EntityManager.GetEntity("Player");
-			player.GetComponent<HP>().Current = 20;
-			player.GetComponent<HP>().Max = 20;
+			player.GetComponent<HP>().Current = 30;
+			player.GetComponent<HP>().Max = 30;
 			var equipmentUsedState = player.GetComponent<EquipmentUsedState>();
 			equipmentUsedState.ActivatedThisTurn.Clear();
 			equipmentUsedState.DestroyedEquipmentIds.Clear();
@@ -270,6 +272,7 @@ namespace Crusaders30XX.ECS.Systems
 			_cathedralLightingSystem = new CathedralLightingSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_desertBackgroundEffectSystem = new DesertBackgroundEffectSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_playerTemperanceActivationDisplaySystem = new PlayerTemperanceActivationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, crusaderTexture);
 			_playerAnimationSystem = new PlayerAnimationSystem(_world.EntityManager);
 			_courageDisplaySystem = new CourageDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_actionPointDisplaySystem = new ActionPointDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
@@ -338,6 +341,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_desertBackgroundEffectSystem);
 			_world.AddSystem(_playerWispParticleSystem);
 			_world.AddSystem(_playerAnimationSystem);
+			_world.AddSystem(_playerTemperanceActivationDisplaySystem);
 			_world.AddSystem(_tooltipDisplaySystem);
 			_world.AddSystem(_courageDisplaySystem);
 			_world.AddSystem(_temperanceDisplaySystem);

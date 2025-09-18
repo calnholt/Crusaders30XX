@@ -122,7 +122,7 @@ namespace Crusaders30XX.ECS.Factories
             // Attach StoredBlock resource component by default
             world.AddComponent(entity, new StoredBlock { Amount = 0 });
             // Attach HP component
-            world.AddComponent(entity, new HP { Max = 40, Current = 40 });
+            world.AddComponent(entity, new HP { Max = 30, Current = 30 });
             // Equip default medals (can equip multiple later). For now, just st_luke.
             world.AddComponent(
                 world.CreateEntity("Medal_StMichael"),

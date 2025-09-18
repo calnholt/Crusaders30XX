@@ -308,7 +308,6 @@ namespace Crusaders30XX.ECS.Systems
 			var def = LoadAttackDefinition(pa.AttackId);
 			if (def == null) return;
 
-			int baseDamage = DamagePredictionService.ComputeFullDamage(def);
 			int extraNotBlockedDamage = (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
@@ -319,24 +318,14 @@ namespace Crusaders30XX.ECS.Systems
 			// Compose lines: Name, Damage (final + prevented breakdown), and Leaf conditions (with live status)
 			var lines = new System.Collections.Generic.List<(string text, float scale, Color color)>();
 			lines.Add((def.name, TitleScale, Color.White));
-			int actual;
-			int prevented;
-			{
-				var progress = FindEnemyAttackProgress(pa.ContextId);
-				if (progress != null)
-				{
-					bool isBlocked = progress.IsBlocked;
-					actual = progress.ActualDamage;
-					prevented = progress.PreventedDamage;
-				}
-				else
-				{
-					bool isBlocked = ConditionService.Evaluate(def.conditionsBlocked, pa.ContextId, EntityManager, enemy, null);
-					actual = DamagePredictionService.ComputeActualDamage(def, EntityManager, pa.ContextId, isBlocked);
-					prevented = DamagePredictionService.ComputePreventedDamage(def, EntityManager, pa.ContextId, isBlocked);
-				}
-			}
-			lines.Add(($"Damage: {actual} (preventing {prevented})", TextScale, Color.White));
+			var progress = FindEnemyAttackProgress(pa.ContextId);
+			bool isConditionMet = progress.IsConditionMet;
+			int actual = progress.ActualDamage;
+			int prevented = progress.PreventedDamage;
+			int baseDamage = progress.BaseDamage;
+			int additionalConditionalDamage = progress.AdditionalConditionalDamageTotal;
+			int damageDisplay = Math.Max(0, baseDamage - prevented);
+			lines.Add(($"Damage: {damageDisplay}{(!isConditionMet && additionalConditionalDamage > 0 ? $" + {additionalConditionalDamage}" : "")} (preventing {prevented})", TextScale, Color.White));
 			if (!string.IsNullOrEmpty(notBlockedSummary))
 			{
 				lines.Add(($"On not blocked: {notBlockedSummary}", TextScale, Color.OrangeRed));

@@ -5,7 +5,6 @@
   "color": "White",
   "rarity": "Common",
   "text": "Apply burn 3 stacks.",
-  "isFreeAction": true,
   "animation": "Attack"
 }
 

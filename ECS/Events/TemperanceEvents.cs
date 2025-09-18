@@ -14,6 +14,16 @@ namespace Crusaders30XX.ECS.Events
     {
         public int Amount { get; set; } = 0;
     }
+
+    /// <summary>
+    /// Emitted when the player's Temperance ability activates.
+    /// Used to drive player-focused VFX.
+    /// </summary>
+    public class TriggerTemperance
+    {
+        public Entity Owner { get; set; }
+        public string AbilityId { get; set; }
+    }
 }
 
 

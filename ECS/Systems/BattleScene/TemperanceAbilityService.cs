@@ -12,6 +12,10 @@ namespace Crusaders30XX.ECS.Systems
         {
           var enemy = entityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
           var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+          if (player != null)
+          {
+            EventManager.Publish(new TriggerTemperance { Owner = player, AbilityId = abilityId });
+          }
           switch (abilityId)
           {
             case "radiance":

@@ -106,14 +106,14 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "anoint_the_sick":
                 {
-                    EventManager.Publish(new ModifyHpEvent { Target = player, Delta = 5 });
+                    EventManager.Publish(new ModifyHpEvent { Target = player, Delta = 3 });
                     break;
                 }
                 // weapons
                 case "sword":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = -3 });
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -30 });
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -20 });
                     break;
                 }
                 default:

@@ -92,6 +92,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new ApplyPassiveEvent { Owner = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = amount });
         }
+        [DebugAction("Activate Temperance")]
+        public void Debug_ActivateTemperance()
+        {
+            EventManager.Publish(new TriggerTemperance { Owner = EntityManager.GetEntity("Player"), AbilityId = "radiance" });
+        }
     }
 }
 

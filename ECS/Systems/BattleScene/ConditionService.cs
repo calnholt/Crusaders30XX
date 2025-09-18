@@ -54,6 +54,8 @@ namespace Crusaders30XX.ECS.Systems
 					return Leaf_PlayAtLeastN(node.@params, contextId, entityManager);
 				case "OnHit":
 					return Leaf_OnHit(node.@params, contextId, entityManager);
+				case "BlockN":
+					return Leaf_BlockN(node.@params, contextId, entityManager);
 				default:
 					return false;
 			}
@@ -106,7 +108,23 @@ namespace Crusaders30XX.ECS.Systems
 		private static bool Leaf_OnHit(Dictionary<string, string> parameters, string contextId, EntityManager entityManager)
 		{
 			var progress = entityManager.GetEntitiesWithComponent<EnemyAttackProgress>().FirstOrDefault().GetComponent<EnemyAttackProgress>();
-			return progress.PreventedDamage >= progress.DamageBeforePrevention;
+			return progress.AssignedBlockTotal >= progress.BaseDamage;
+		}
+
+		private static bool Leaf_BlockN(Dictionary<string, string> parameters, string contextId, EntityManager entityManager)
+		{
+			if (parameters == null) return false;
+			if (!parameters.TryGetValue("n", out var nStr)) return false;
+			if (!int.TryParse(nStr, out var n)) return false;
+			foreach (var e in entityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
+			{
+				var p = e.GetComponent<EnemyAttackProgress>();
+				if (p != null && p.ContextId == contextId)
+				{
+					return p.AssignedBlockTotal >= n;
+				}
+			}
+			return false;
 		}
 
 		private static string NormalizeColorKey(string color)
