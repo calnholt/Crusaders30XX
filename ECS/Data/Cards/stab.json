@@ -2,7 +2,6 @@
   "id": "stab",
   "name": "Stab",
   "target": "Enemy",
-  "color": "Black",
   "rarity": "Common",
   "text": "As an additional cost, lose 2 courage.\n\nDeal 10 damage.",
   "isFreeAction": true,

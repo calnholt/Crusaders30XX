@@ -7,7 +7,6 @@ namespace Crusaders30XX.ECS.Data.Cards
         public string id { get; set; }
         public string name { get; set; }
         public string target { get; set; } = "Enemy"; // "Enemy" | "Player"
-        public string color { get; set; } = "Red";     // Red | White | Black
         public string rarity { get; set; } = "Common"; // Common | Uncommon | Rare | Legendary
         public string text { get; set; }
         public string animation { get; set; }

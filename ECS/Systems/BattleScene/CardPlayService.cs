@@ -106,7 +106,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "anoint_the_sick":
                 {
-                    EventManager.Publish(new ModifyHpEvent { Target = player, Delta = 3 });
+                    EventManager.Publish(new ModifyHpEvent { Target = player, Delta = 4 });
                     break;
                 }
                 // weapons

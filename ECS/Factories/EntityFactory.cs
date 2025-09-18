@@ -283,63 +283,66 @@ namespace Crusaders30XX.ECS.Factories
         /// </summary>
         public static List<Entity> CreateDemoHand(World world)
         {
-            var result = new List<Entity>();
-            var all = Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.GetAll()
-                .Values
-                .OrderBy(d => d.id)
-                .ToList();
-            int i = 0;
-            foreach (var def in all)
-            {
-                if (def.isWeapon) continue; // weapons are not in the deck
-                var name = def.name ?? def.id ?? $"Card_{i}";
-                var color = ParseColor(def.color);
-                int blockValue = def.block + (color == CardData.CardColor.Black ? 1 : 0);
-                // Use text from JSON directly
-                string description = def.text ?? "";
-                var entity = CreateCard(
-                    world,
-                    name,
-                    description,
-                    0,
-                    CardData.CardType.Attack,
-                    ParseRarity(def.rarity),
-                    "",
-                    color,
-                    new List<CardData.CardColor>(),
-                    blockValue
-                );
-                // Populate multi-cost array from JSON
-                var cd = entity.GetComponent<CardData>();
-                if (cd != null)
-                {
-                    cd.CostArray = new List<CardData.CostType>();
-                    if (def.cost != null)
-                    {
-                        foreach (var c in def.cost)
-                        {
-                            var ct = ParseCostType(c);
-                            if (ct != CardData.CostType.NoCost) cd.CostArray.Add(ct);
-                        }
-                    }
-                    // Legacy single-cost compatibility (use the first non-Any if present)
-                    var firstSpecific = cd.CostArray.FirstOrDefault(x => x == CardData.CostType.Red || x == CardData.CostType.White || x == CardData.CostType.Black);
-                    if (firstSpecific != CardData.CostType.NoCost)
-                        cd.CardCostType = firstSpecific;
-                    else if (cd.CostArray.Any(x => x == CardData.CostType.Any))
-                        cd.CardCostType = CardData.CostType.Any;
-                    else
-                        cd.CardCostType = CardData.CostType.NoCost;
-                }
-                result.Add(entity);
-                i++;
-            }
-            return result;
+			var result = new List<Entity>();
+			var loadout = LoadoutDefinitionCache.TryGet("loadout_1", out var lo) ? lo : null;
+			if (loadout == null || loadout.cardIds == null || loadout.cardIds.Count == 0) return result;
+			foreach (var entry in loadout.cardIds)
+			{
+				if (string.IsNullOrWhiteSpace(entry)) continue;
+				string cardId = entry;
+				CardData.CardColor color = CardData.CardColor.White;
+				int sep = entry.IndexOf('|');
+				if (sep >= 0)
+				{
+					cardId = entry.Substring(0, sep);
+					var colorKey = entry.Substring(sep + 1);
+					color = ParseColor(colorKey);
+				}
+				if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(cardId, out var def) || def == null) continue;
+				if (def.isWeapon) continue; // weapons are not in the deck
+				var name = def.name ?? def.id ?? cardId;
+				int blockValue = def.block + (color == CardData.CardColor.Black ? 1 : 0);
+				string description = def.text ?? string.Empty;
+				var entity = CreateCard(
+					world,
+					name,
+					description,
+					0,
+					CardData.CardType.Attack,
+					ParseRarity(def.rarity),
+					string.Empty,
+					color,
+					new List<CardData.CardColor>(),
+					blockValue
+				);
+				var cd = entity.GetComponent<CardData>();
+				if (cd != null)
+				{
+					cd.CostArray = new List<CardData.CostType>();
+					if (def.cost != null)
+					{
+						foreach (var c in def.cost)
+						{
+							var ct = ParseCostType(c);
+							if (ct != CardData.CostType.NoCost) cd.CostArray.Add(ct);
+						}
+					}
+					var firstSpecific = cd.CostArray.FirstOrDefault(x => x == CardData.CostType.Red || x == CardData.CostType.White || x == CardData.CostType.Black);
+					if (firstSpecific != CardData.CostType.NoCost)
+						cd.CardCostType = firstSpecific;
+					else if (cd.CostArray.Any(x => x == CardData.CostType.Any))
+						cd.CardCostType = CardData.CostType.Any;
+					else
+						cd.CardCostType = CardData.CostType.NoCost;
+				}
+				result.Add(entity);
+			}
+			return result;
         }
 
         // Dynamic description generation removed; we now use JSON 'text' exclusively
 
-        private static CardData.CardColor ParseColor(string color)
+		private static CardData.CardColor ParseColor(string color)
         {
             if (string.IsNullOrEmpty(color)) return CardData.CardColor.White;
             switch (color.Trim().ToLowerInvariant())

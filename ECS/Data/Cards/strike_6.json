@@ -2,7 +2,6 @@
   "id": "strike_6",
   "name": "Strike 6",
   "target": "Enemy",
-  "color": "Red",
   "rarity": "Common",
   "text": "Deal 4 damage. If your Courage is >= 6, deal 16 damage instead.",
   "animation": "Attack",

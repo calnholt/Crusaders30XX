@@ -84,9 +84,9 @@ namespace Crusaders30XX.ECS.Systems
 				Type = CardData.CardType.Attack,
 				Rarity = ParseRarity(def.rarity),
 				ImagePath = string.Empty,
-				Color = ParseColor(def.color),
+				Color = CardData.CardColor.White,
 				CardCostType = CardData.CostType.NoCost,
-				BlockValue = (def.color?.Trim().ToLowerInvariant() == "black" ? 6 : 3)
+				BlockValue = 3
 			};
 			cd.CostArray = new System.Collections.Generic.List<CardData.CostType>();
 			if (def.cost != null)
@@ -120,17 +120,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private static CardData.CardColor ParseColor(string color)
-		{
-			if (string.IsNullOrEmpty(color)) return CardData.CardColor.White;
-			switch (color.Trim().ToLowerInvariant())
-			{
-				case "red": return CardData.CardColor.Red;
-				case "black": return CardData.CardColor.Black;
-				case "white":
-				default: return CardData.CardColor.White;
-			}
-		}
+        // Weapon color now irrelevant; derived from loadout for non-weapon cards.
 
 		private static CardData.CostType ParseCostType(string cost)
 		{

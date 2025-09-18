@@ -2,7 +2,6 @@
   "id": "strike_9",
   "name": "Strike 9",
   "target": "Enemy",
-  "color": "Red",
   "rarity": "Common",
   "text": "Deal 1 damage. If your Courage is >= 9, deal 19 damage instead.",
   "animation": "Attack",

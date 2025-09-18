@@ -2,7 +2,6 @@
   "id": "burn",
   "name": "Burn",
   "target": "Enemy",
-  "color": "White",
   "rarity": "Common",
   "text": "Apply burn 3 stacks. If you courage is >= 5, gain 1 action point.",
   "block": 2,
