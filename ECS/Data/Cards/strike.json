@@ -3,8 +3,8 @@
   "name": "Strike",
   "target": "Enemy",
   "rarity": "Common",
-  "valuesParse": [1, 10],
-  "text": "As an additional cost, lose {1} courage.\n\nDeal {2} damage.",
+  "valuesParse": [10, 50, 2],
+  "text": "Deal {1} damage. {2}% chance to gain {3} courage.",
   "animation": "Attack",
   "block": 3
 }

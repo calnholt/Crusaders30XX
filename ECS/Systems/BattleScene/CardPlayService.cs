@@ -29,7 +29,7 @@ namespace Crusaders30XX.ECS.Systems
                 case "burn":
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Owner = enemy, Type = AppliedPassiveType.Burn, Delta = +values[0] });
-                    if (courage > values[1]) 
+                    if (courage >= values[1]) 
                     {
                         EventManager.Publish(new ModifyActionPointsEvent { Delta = values[2] });
                         EventManager.Publish(new ModifyCourageEvent { Delta = -values[3] });
@@ -67,8 +67,11 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "strike":
                 {
-                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
-                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -values[1], DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -values[0], DamageType = ModifyTypeEnum.Attack });
+                    if (System.Random.Shared.Next(0, 100) < values[1])
+                    {
+                        EventManager.Publish(new ModifyActionPointsEvent { Delta = values[2] });
+                    }
                     break;
                 }
                 case "stun":

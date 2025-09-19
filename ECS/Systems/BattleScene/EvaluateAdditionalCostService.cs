@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using System;
+using Crusaders30XX.ECS.Data.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -10,15 +11,16 @@ namespace Crusaders30XX.ECS.Systems
     {
         public static bool CanPay(EntityManager entityManager, string cardId)
         {
+            CardDefinitionCache.TryGet(cardId, out CardDefinition def);
             switch (cardId)
             {
                 case "stab":
                 {
                     var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                     int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
-                    if (courage < 2)
+                    if (courage < def.valuesParse[0])
                     {
-                        EventManager.Publish(new CantPlayCardMessage { Message = "Requires 2 courage!" });
+                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {def.valuesParse[0]} courage!" });
                         return false;
                     }
                     return true;
@@ -28,9 +30,9 @@ namespace Crusaders30XX.ECS.Systems
                     var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                     var courageCmp = player?.GetComponent<Courage>();
                     int courage = courageCmp?.Amount ?? 0;
-                    if (courage < 3)
+                    if (courage < def.valuesParse[0])
                     {
-                        EventManager.Publish(new CantPlayCardMessage { Message = "Requires 3 courage!" });
+                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {def.valuesParse[0]} courage!" });
                         return false;
                     }
                     return true;

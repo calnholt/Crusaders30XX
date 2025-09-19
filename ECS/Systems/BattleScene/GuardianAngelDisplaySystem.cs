@@ -215,18 +215,18 @@ namespace Crusaders30XX.ECS.Systems
 			TimerScheduler.Schedule(0.5f, () => {
 				if (e.Current == SubPhase.StartBattle)
 				{
-					ShowBubble("You don't scare us!", BubbleDuration);
+					ShowBubble("You don't scare us! :P", BubbleDuration);
 				}
 				else if (e.Current == SubPhase.Action)
 				{
-					ShowBubble("We're not going to let you get away with that!", BubbleDuration);
+					ShowBubble("We're not going to let you get away with that! ^^;", BubbleDuration);
 				}
 			});
 		}
 
 		private void OnTriggerTemperance(TriggerTemperance e)
 		{
-			ShowBubble("Don't call it a comeback!", BubbleDuration);
+			ShowBubble("Don't call it a comeback! ^_^", BubbleDuration);
 		}
 
 		private void OnLoadSceneEvent(LoadSceneEvent @event)

@@ -263,6 +263,17 @@ namespace Crusaders30XX.ECS.Systems
             var cd = evt.Card.GetComponent<CardData>();
             if (cd == null) return;
 
+            // Hard guard: weapons cannot be used to pay costs under any circumstance
+            try
+            {
+                string id = (cd.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+                if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
+                {
+                    if (def.isWeapon) return;
+                }
+            }
+            catch { }
+
             // Avoid selecting the same card twice
             if (state.SelectedCards.Contains(evt.Card)) return;
 
