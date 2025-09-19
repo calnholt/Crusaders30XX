@@ -65,9 +65,18 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnEndTurnPressed()
         {
-            EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.PlayerEnd, Previous = SubPhase.Action });
-            EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart, Previous = SubPhase.PlayerEnd });
-            EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.Block, Previous = SubPhase.EnemyStart });
+            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+                "Rule.ChangePhase.PlayerEnd",
+                new ChangeBattlePhaseEvent { Current = SubPhase.PlayerEnd, Previous = SubPhase.Action }
+            ));
+            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+                "Rule.ChangePhase.EnemyStart",
+                new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart, Previous = SubPhase.PlayerEnd }
+            ));
+            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+                "Rule.ChangePhase.Block",
+                new ChangeBattlePhaseEvent { Current = SubPhase.Block, Previous = SubPhase.EnemyStart }
+            ));
         }
 
         [DebugAction("Trigger End Turn Now")]

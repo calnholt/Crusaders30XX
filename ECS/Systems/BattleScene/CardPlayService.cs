@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Data.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -14,78 +15,56 @@ namespace Crusaders30XX.ECS.Systems
             int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
 
             System.Console.WriteLine($"[CardPlayService] Resolving card id={cardId} name={cardName}");
+            CardDefinitionCache.TryGet(cardId, out CardDefinition def);
+            var values = def.valuesParse;
 
             switch (cardId)
             {
+                case "anoint_the_sick":
+                {
+                    EventManager.Publish(new ModifyHpEvent { Target = player, Delta = values[0] });
+                    break;
+                }
                 case "burn":
                 {
-                    EventManager.Publish(new ApplyPassiveEvent { Owner = enemy, Type = AppliedPassiveType.Burn, Delta = +3 });
+                    EventManager.Publish(new ApplyPassiveEvent { Owner = enemy, Type = AppliedPassiveType.Burn, Delta = +values[0] });
                     break;
                 }
-                case "strike":
+                case "courageous":
                 {
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -10 });
-                    System.Console.WriteLine("[CardPlayService] Applied strike -10");
+                    EventManager.Publish(new ModifyCourageEvent { Delta = +values[0] });
+                    EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
                     break;
                 }
-                case "strike_2":
+                case "dowse_with_holy_water":
                 {
-                    int dmg = courage >= 2 ? 12 : 8;
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
+                    // TODO: implement buffing attacks - may need to create AttackRequestEvent that initiates the actual ModifyHpEvent
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = +values[0] });
                     break;
                 }
-                case "strike_3":
+                case "inspiration":
                 {
-                    int dmg = courage >= 3 ? 13 : 7;
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
+                    EventManager.Publish(new RequestDrawCardsEvent { Count = values[0] });
+                    EventManager.Publish(new ModifyTemperanceEvent { Delta = values[1] });
                     break;
                 }
-                case "strike_4":
+                case "seize":
                 {
-                    int dmg = courage >= 4 ? 14 : 6;
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
-                    break;
-                }
-                case "strike_5":
-                {
-                    int dmg = courage >= 5 ? 15 : 5;
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
-                    break;
-                }
-                case "strike_6":
-                {
-                    int dmg = courage >= 6 ? 16 : 4;
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
-                    break;
-                }
-                case "strike_7":
-                {
-                    int dmg = courage >= 7 ? 17 : 3;
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
-                    break;
-                }
-                case "strike_8":
-                {
-                    int dmg = courage >= 8 ? 18 : 2;
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
-                    break;
-                }
-                case "strike_9":
-                {
-                    int dmg = courage >= 9 ? 19 : 1;
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
-                    break;
-                }
-                case "strike_10":
-                {
-                    int dmg = courage >= 10 ? 20 : 0;
-                    if (dmg > 0) EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -dmg });
+                    // TODO: implement turn tracking dictionary component
+                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -values[1] });
                     break;
                 }
                 case "stab":
                 {
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -8 });
-                    EventManager.Publish(new ModifyCourageEvent { Delta = -2 });
+                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -values[1] });
+                    break;
+                }
+                case "strike":
+                {
+                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -values[1] });
                     break;
                 }
                 case "stun":
@@ -93,27 +72,18 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ApplyStun { Delta = +1 });
                     break;
                 }
-                case "courageous":
+                case "vindicate":
                 {
-                    EventManager.Publish(new ModifyCourageEvent { Delta = +3 });
-                    break;
-                }
-                case "inspiration":
-                {
-                    EventManager.Publish(new RequestDrawCardsEvent { Count = 2 });
-                    EventManager.Publish(new ModifyTemperanceEvent { Delta = 1 });
-                    break;
-                }
-                case "anoint_the_sick":
-                {
-                    EventManager.Publish(new ModifyHpEvent { Target = player, Delta = 4 });
+                    int damage = values[0] + courage * 2;
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -damage });
+                    EventManager.Publish(new SetCourageEvent { Amount = 0 });
                     break;
                 }
                 // weapons
                 case "sword":
                 {
-                    EventManager.Publish(new ModifyCourageEvent { Delta = -3 });
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -20 });
+                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
+                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -values[1] });
                     break;
                 }
                 default:

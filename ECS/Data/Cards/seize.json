@@ -3,7 +3,8 @@
   "name": "Seize",
   "target": "Enemy",
   "rarity": "Common",
-  "text": "Deal 8 damage. If you lost courage during the action phase, deal 16 damage instead.",
+  "valuesParse": [8, 16],
+  "text": "Deal {1} damage. If you lost courage during the action phase, deal {2} damage instead.",
   "animation": "Attack",
   "block": 3
 }

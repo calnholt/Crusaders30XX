@@ -3,7 +3,8 @@
   "name": "Stab",
   "target": "Enemy",
   "rarity": "Common",
-  "text": "As an additional cost, lose 2 courage.\n\nDeal 10 damage.",
+  "valuesParse": [2, 10],
+  "text": "As an additional cost, lose {1} courage.\n\nDeal {2} damage.",
   "isFreeAction": true,
   "animation": "Attack",
   "block": 3
