@@ -185,6 +185,7 @@ namespace Crusaders30XX.ECS.Systems
 			var player = EntityManager.GetEntity("Player");
 			player.GetComponent<HP>().Current = 30;
 			player.GetComponent<HP>().Max = 30;
+			EventManager.Publish(new SetTemperanceEvent{ Amount = 0 });
 			var equipmentUsedState = player.GetComponent<EquipmentUsedState>();
 			equipmentUsedState.ActivatedThisTurn.Clear();
 			equipmentUsedState.DestroyedEquipmentIds.Clear();

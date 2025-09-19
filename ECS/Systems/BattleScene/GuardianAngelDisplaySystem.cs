@@ -140,6 +140,7 @@ namespace Crusaders30XX.ECS.Systems
             // Listen for phase changes to show speech bubbles
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
             EventManager.Subscribe<TriggerTemperance>(OnTriggerTemperance);
+            EventManager.Subscribe<LoadSceneEvent>(OnLoadSceneEvent);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -226,6 +227,11 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnTriggerTemperance(TriggerTemperance e)
 		{
 			ShowBubble("Don't call it a comeback!", BubbleDuration);
+		}
+
+		private void OnLoadSceneEvent(LoadSceneEvent @event)
+		{
+			_bubbleActive = false;
 		}
 
 		private void ShowBubble(string text, float duration)

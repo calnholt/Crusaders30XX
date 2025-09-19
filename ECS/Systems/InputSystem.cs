@@ -80,9 +80,27 @@ namespace Crusaders30XX.ECS.Systems
             }
             if (isPayOpen)
             {
+                // While pay-cost overlay is open, only allow cancel button and HAND cards as candidates
+                var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                var deck = deckEntity?.GetComponent<Deck>();
                 uiEntities = uiEntities
-                    .Where(x => x.E.GetComponent<PayCostCancelButton>() != null || x.IsCard)
+                    .Where(x => x.E.GetComponent<PayCostCancelButton>() != null || (x.IsCard && deck != null && deck.Hand.Contains(x.E)))
                     .ToList();
+            }
+
+            // During Action phase (normal play), only hand cards should be clickable among card UIs
+            var phaseEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+            var phaseState = phaseEntity?.GetComponent<PhaseState>();
+            if (!isPayOpen && phaseState != null && phaseState.Sub == SubPhase.Action)
+            {
+                var deckEntity2 = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                var deck2 = deckEntity2?.GetComponent<Deck>();
+                if (deck2 != null)
+                {
+                    uiEntities = uiEntities
+                        .Where(x => !x.IsCard || deck2.Hand.Contains(x.E))
+                        .ToList();
+                }
             }
 
             // Reset hover flags

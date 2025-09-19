@@ -42,6 +42,13 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnStartEnemyTurn(ChangeBattlePhaseEvent evt)
 		{
+			// Reset planning guard when a new battle starts so turn 0 can plan again
+			if (evt.Current == SubPhase.StartBattle)
+			{
+				_lastPlannedTurnNumber = -1;
+				_isFirstLoad = true;
+				return;
+			}
 			// Plan ONLY at EnemyStart. PlayerStart should not re-plan, to preserve any IsStunned flags on previews.
 			if (evt.Current == SubPhase.EnemyStart)
 			{
