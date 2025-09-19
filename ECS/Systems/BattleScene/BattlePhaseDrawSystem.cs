@@ -64,6 +64,10 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EventManager.Publish(new RequestDrawCardsEvent { Count = toDraw });
 			}
+			if (deck.DrawPile.Count == 0)
+			{
+				EventManager.Publish(new PlayerDied { Player = EntityManager.GetEntity("Player") });
+			}
 		}
 	}
 }

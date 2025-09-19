@@ -386,26 +386,6 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private Texture2D CreateCircleTexture(int diameter)
-        {
-            var tex = new Texture2D(_graphicsDevice, diameter, diameter);
-            var data = new Color[diameter * diameter];
-            float r = diameter / 2f;
-            float r2 = r * r;
-            for (int y = 0; y < diameter; y++)
-            {
-                for (int x = 0; x < diameter; x++)
-                {
-                    float dx = x - r + 0.5f;
-                    float dy = y - r + 0.5f;
-                    float dist2 = dx * dx + dy * dy;
-                    data[y * diameter + x] = dist2 <= r2 ? Color.White : Color.Transparent;
-                }
-            }
-            tex.SetData(data);
-            return tex;
-        }
-
         private bool GetIsFreeAction(Entity card)
         {
             try

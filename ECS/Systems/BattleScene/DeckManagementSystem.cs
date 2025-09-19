@@ -103,17 +103,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (deck.DrawPile.Count == 0)
             {
-                // Reshuffle discard pile into draw pile
-                if (deck.DiscardPile.Count > 0)
-                {
-                    deck.DrawPile.AddRange(deck.DiscardPile);
-                    deck.DiscardPile.Clear();
-                    ShuffleDrawPile(deck);
-                }
-                else
-                {
-                    return false; // No cards to draw
-                }
+                return false; // No cards to draw
             }
             if (deck.DrawPile.Count > 0)
             {

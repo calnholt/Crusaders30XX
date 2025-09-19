@@ -222,6 +222,7 @@ namespace Crusaders30XX.ECS.Systems
 					ui.IsHovered = hoverRect.Contains(mouse.Position);
 					// Tooltip now comes from AssignedBlockCard
 					ui.Tooltip = abc.Tooltip ?? string.Empty;
+					ui.TooltipPosition = TooltipPosition.Above;
 				}
 				else
 				{
@@ -251,9 +252,17 @@ namespace Crusaders30XX.ECS.Systems
 				countInContext = list.Count;
 			}
 
-			// Compute slot target from banner anchor if available, else screen center
-			var anchor = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault()?.GetComponent<Transform>();
-			var basePoint = anchor.Position;
+			// Compute slot target from banner anchor if available, else viewport center
+			var anchorT = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault()?.GetComponent<Transform>();
+			Vector2 basePoint;
+			if (anchorT != null)
+			{
+				basePoint = anchorT.Position;
+			}
+			else
+			{
+				basePoint = new Vector2(_graphicsDevice.Viewport.Width * 0.5f, _graphicsDevice.Viewport.Height * 0.5f);
+			}
 			var center = new Vector2(basePoint.X + AnchorOffsetX, basePoint.Y + AnchorOffsetY);
 			float offsetIndex = indexInContext - (countInContext - 1) * 0.5f;
 			// Place centers so that cards sit above the banner baseline

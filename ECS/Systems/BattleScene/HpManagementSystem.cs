@@ -38,7 +38,7 @@ namespace Crusaders30XX.ECS.Systems
 			// If this is the player and we crossed to zero, publish PlayerDied once
 			if (before > 0 && hp.Current == 0 && target.HasComponent<Player>())
 			{
-				EventManager.Publish(new Crusaders30XX.ECS.Events.PlayerDied { Player = target });
+				EventManager.Publish(new PlayerDied { Player = target });
 			}
 			if (before > 0 && hp.Current == 0 && target.HasComponent<Enemy>())
 			{
@@ -59,7 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 			hp.Current = System.Math.Max(0, System.Math.Min(hp.Max, e.Value));
 			if (before > 0 && hp.Current == 0 && target.HasComponent<Player>())
 			{
-				EventManager.Publish(new Crusaders30XX.ECS.Events.PlayerDied { Player = target });
+				EventManager.Publish(new PlayerDied { Player = target });
 			}
 		}
 
