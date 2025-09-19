@@ -76,10 +76,18 @@ namespace Crusaders30XX.ECS.Systems
 			string name = def.name ?? def.id ?? "Weapon";
 			// Create minimal card like EntityFactory.CreateCard
 			var e = EntityManager.CreateEntity($"Card_{name}");
+			string description = def.text;
+			if (!string.IsNullOrEmpty(def.text) && def.valuesParse != null && def.valuesParse.Length > 0)
+			{
+				for (int i = 0; i < def.valuesParse.Length; i++)
+				{
+						description = description.Replace($"{{{i + 1}}}", def.valuesParse[i].ToString());
+				}
+			}
 			var cd = new CardData
 			{
 				Name = name,
-				Description = def.text ?? string.Empty,
+				Description = description,
 				Cost = 0,
 				Type = CardData.CardType.Attack,
 				Rarity = ParseRarity(def.rarity),

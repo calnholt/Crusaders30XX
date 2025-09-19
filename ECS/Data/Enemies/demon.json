@@ -1,7 +1,7 @@
 {
   "name": "Demon",
   "id": "demon",
-  "hp": 63,
+  "hp": 100,
   "attacks": [
     {
       "id": "razor_maw",

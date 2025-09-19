@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Data.Loadouts;
+using Crusaders30XX.ECS.Data.Cards;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -298,11 +299,18 @@ namespace Crusaders30XX.ECS.Factories
 					var colorKey = entry.Substring(sep + 1);
 					color = ParseColor(colorKey);
 				}
-				if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(cardId, out var def) || def == null) continue;
+				if (!CardDefinitionCache.TryGet(cardId, out var def) || def == null) continue;
 				if (def.isWeapon) continue; // weapons are not in the deck
 				var name = def.name ?? def.id ?? cardId;
 				int blockValue = def.block + (color == CardData.CardColor.Black ? 1 : 0);
-				string description = def.text ?? string.Empty;
+				string description = def.text;
+				if (!string.IsNullOrEmpty(def.text) && def.valuesParse != null && def.valuesParse.Length > 0)
+				{
+					for (int i = 0; i < def.valuesParse.Length; i++)
+					{
+							description = description.Replace($"{{{i + 1}}}", def.valuesParse[i].ToString());
+					}
+				}
 				var entity = CreateCard(
 					world,
 					name,

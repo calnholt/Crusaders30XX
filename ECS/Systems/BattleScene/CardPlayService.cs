@@ -23,6 +23,11 @@ namespace Crusaders30XX.ECS.Systems
                 case "anoint_the_sick":
                 {
                     EventManager.Publish(new ModifyHpEvent { Target = player, Delta = values[0] });
+                    if (courage > values[1]) 
+                    {
+                        EventManager.Publish(new ModifyActionPointsEvent { Delta = values[2] });
+                        EventManager.Publish(new ModifyCourageEvent { Delta = -values[3] });
+                    }
                     break;
                 }
                 case "burn":
@@ -38,7 +43,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "dowse_with_holy_water":
                 {
-                    // TODO: implement buffing attacks - may need to create AttackRequestEvent that initiates the actual ModifyHpEvent
+                    EventManager.Publish(new ApplyPassiveEvent { Owner = player, Type = AppliedPassiveType.DowseWithHolyWater, Delta = +1 });
                     EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = +values[0] });
                     break;
                 }

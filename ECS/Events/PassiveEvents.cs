@@ -15,6 +15,15 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Remove all stacks/instances of a passive type from the specified entity.
+    /// </summary>
+    public class RemovePassive
+    {
+        public Entity Owner { get; set; }
+        public AppliedPassiveType Type { get; set; }
+    }
+
+    /// <summary>
     /// Emitted when a passive effect actually triggers (e.g., Burn deals damage).
     /// Used by UI to play feedback animations.
     /// </summary>

@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
             EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
             EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
+            EventManager.Subscribe<RemovePassive>(OnRemovePassive);
 
         }
 
@@ -27,6 +28,10 @@ namespace Crusaders30XX.ECS.Systems
             if (effect.EffectType.Equals("Burn"))
             {
                 OnApplyPassive(new ApplyPassiveEvent{ Delta = effect.Amount, Owner = effect.Target, Type = AppliedPassiveType.Burn });
+            }
+            else if (effect.EffectType.Equals("DowseWithHolyWater"))
+            {
+                OnApplyPassive(new ApplyPassiveEvent{ Delta = effect.Amount, Owner = effect.Target, Type = AppliedPassiveType.DowseWithHolyWater });
             }
         }
 
@@ -93,6 +98,17 @@ namespace Crusaders30XX.ECS.Systems
             else
             {
                 ap.Passives[e.Type] = next;
+            }
+        }
+
+        private void OnRemovePassive(RemovePassive e)
+        {
+            if (e == null || e.Owner == null) return;
+            var ap = e.Owner.GetComponent<AppliedPassives>();
+            if (ap == null || ap.Passives == null) return;
+            if (ap.Passives.ContainsKey(e.Type))
+            {
+                ap.Passives.Remove(e.Type);
             }
         }
     }

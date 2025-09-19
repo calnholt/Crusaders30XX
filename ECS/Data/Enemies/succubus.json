@@ -1,7 +1,7 @@
 {
   "name": "Succubus",
   "id": "succubus",
-  "hp": 60,
+  "hp": 100,
   "attacks": [
     {
       "id": "velvet_fangs",
