@@ -55,6 +55,7 @@ namespace Crusaders30XX.ECS.Systems
 		private HpManagementSystem _hpManagementSystem;
 		private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
 		private EnemyDisplaySystem _enemyDisplaySystem;
+		private GuardianAngelDisplaySystem _guardianAngelDisplaySystem;
 		private EnemyIntentPipsSystem _enemyIntentPipsSystem;
 		private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
 		private QueuedEventsDisplaySystem _queuedEventsDisplaySystem;
@@ -125,6 +126,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", _desertBackgroundEffectSystem.Draw);
 			FrameProfiler.Measure("RenderingSystem.Draw", _renderingSystem.Draw);
 			FrameProfiler.Measure("PlayerDisplaySystem.Draw", _playerDisplaySystem.Draw);
+			FrameProfiler.Measure("GuardianAngelDisplaySystem.Draw", _guardianAngelDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", _enemyIntentPipsSystem.Draw);
 			FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", _enemyAttackDisplaySystem.Draw);
@@ -290,6 +292,7 @@ namespace Crusaders30XX.ECS.Systems
 			_eventQueueSystem = new EventQueueSystem(_world.EntityManager);
 			_battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			_guardianAngelDisplaySystem = new GuardianAngelDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_queuedEventsDisplaySystem = new QueuedEventsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
@@ -338,6 +341,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_discardPileDisplaySystem);
 			_world.AddSystem(_cardListModalSystem);
 			_world.AddSystem(_playerDisplaySystem);
+			_world.AddSystem(_guardianAngelDisplaySystem);
 			_world.AddSystem(_cathedralLightingSystem);
 			_world.AddSystem(_desertBackgroundEffectSystem);
 			_world.AddSystem(_playerWispParticleSystem);

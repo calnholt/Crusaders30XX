@@ -1,0 +1,243 @@
+using System.Linq;
+using System.Collections.Generic;
+using System;
+using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace Crusaders30XX.ECS.Systems
+{
+    [DebugTab("Guardian Angel")]
+    public class GuardianAngelDisplaySystem : Core.System
+    {
+        private readonly GraphicsDevice _graphicsDevice;
+        private readonly SpriteBatch _spriteBatch;
+        private readonly ContentManager _content;
+        private Texture2D _angelTexture;
+        private Texture2D _pixel;
+
+        private float _t;
+		private float _rot; // smoothed rotation follower (radians)
+		private Vector2 _pos;
+		private float _spawnAccumulator;
+		private static readonly Random _rand = new Random();
+		private struct DustParticle
+		{
+			public Vector2 Position;
+			public Vector2 Velocity;
+			public float Age;
+			public float Lifetime;
+			public float Size;
+			public float FlickerPeriod;
+			public float FlickerOffset;
+		}
+		private readonly List<DustParticle> _dust = new List<DustParticle>();
+
+        // Placement relative to player
+        [DebugEditable(DisplayName = "Offset X", Step = 5, Min = -2000, Max = 2000)]
+		public int OffsetX { get; set; } = 215;
+        [DebugEditable(DisplayName = "Offset Y", Step = 5, Min = -2000, Max = 2000)]
+        public int OffsetY { get; set; } = -135;
+
+        // Motion settings
+        [DebugEditable(DisplayName = "Base Radius X", Step = 5, Min = 0, Max = 2000)]
+		public int RadiusX { get; set; } = 70;
+        [DebugEditable(DisplayName = "Base Radius Y", Step = 5, Min = 0, Max = 2000)]
+		public int RadiusY { get; set; } = 25;
+        [DebugEditable(DisplayName = "Figure Eight Mix", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float FigureEightMix { get; set; } = 0.73f; // 0: ellipse, 1: classic 8
+        [DebugEditable(DisplayName = "Angular Speed", Step = 0.05f, Min = 0.05f, Max = 10f)]
+		public float AngularSpeed { get; set; } = 1.15f; // radians per second multiplier
+        [DebugEditable(DisplayName = "Vertical Bob Amplitude", Step = 1, Min = 0, Max = 1000)]
+        public int VerticalBob { get; set; } = 7;
+        [DebugEditable(DisplayName = "Vertical Bob Speed", Step = 0.05f, Min = 0.05f, Max = 10f)]
+        public float VerticalBobSpeed { get; set; } = 1.15f;
+
+        // Appearance
+        [DebugEditable(DisplayName = "Scale", Step = 0.01f, Min = 0.05f, Max = 4f)]
+        public float Scale { get; set; } = 0.08f;
+        [DebugEditable(DisplayName = "Alpha", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float Alpha { get; set; } = 1f;
+		[DebugEditable(DisplayName = "Rotation Magnitude", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float RotationMagnitude { get; set; } = 0f;
+		[DebugEditable(DisplayName = "Rotation Follow", Step = 0.01f, Min = 0.01f, Max = 1f)]
+		public float RotationFollow { get; set; } = 0.33f;
+
+		// Sparkle dust trail settings
+		[DebugEditable(DisplayName = "Dust Spawn Rate (per sec)", Step = 1, Min = 0, Max = 200)]
+		public int DustSpawnRate { get; set; } = 14;
+		[DebugEditable(DisplayName = "Dust Speed Min", Step = 1, Min = 0, Max = 2000)]
+		public int DustSpeedMin { get; set; } = 22;
+		[DebugEditable(DisplayName = "Dust Speed Max", Step = 1, Min = 0, Max = 2000)]
+		public int DustSpeedMax { get; set; } = 43;
+		[DebugEditable(DisplayName = "Dust Angle Min (deg)", Step = 1, Min = -180, Max = 180)]
+		public int DustAngleMinDeg { get; set; } = 180; // around downward
+		[DebugEditable(DisplayName = "Dust Angle Max (deg)", Step = 1, Min = -180, Max = 180)]
+		public int DustAngleMaxDeg { get; set; } = 160;
+		[DebugEditable(DisplayName = "Dust Lifetime Min (s)", Step = 0.01f, Min = 0.01f, Max = 5f)]
+		public float DustLifetimeMin { get; set; } = 0.6f;
+		[DebugEditable(DisplayName = "Dust Lifetime Max (s)", Step = 0.01f, Min = 0.01f, Max = 5f)]
+		public float DustLifetimeMax { get; set; } = 1.38f;
+		[DebugEditable(DisplayName = "Dust Size Min", Step = 0.01f, Min = 0.01f, Max = 3f)]
+		public float DustSizeMin { get; set; } = 0.9f;
+		[DebugEditable(DisplayName = "Dust Size Max", Step = 0.01f, Min = 0.01f, Max = 3f)]
+		public float DustSizeMax { get; set; } = 3f;
+		[DebugEditable(DisplayName = "Flicker Period Min (s)", Step = 0.01f, Min = 0.01f, Max = 2f)]
+		public float FlickerPeriodMin { get; set; } = 0.09f;
+		[DebugEditable(DisplayName = "Flicker Period Max (s)", Step = 0.01f, Min = 0.01f, Max = 2f)]
+		public float FlickerPeriodMax { get; set; } = 0.62f;
+
+        public GuardianAngelDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
+            : base(entityManager)
+        {
+            _graphicsDevice = graphicsDevice;
+            _spriteBatch = spriteBatch;
+			_content = content;
+			_pixel = new Texture2D(graphicsDevice, 1, 1);
+			_pixel.SetData(new[] { Color.White });
+        }
+
+        protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+        {
+            return System.Array.Empty<Entity>();
+        }
+
+        protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+
+        public override void Update(GameTime gameTime)
+        {
+			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+			_t += dt;
+
+			// Compute current guardian position for spawning dust in Update
+			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+			var pt = player?.GetComponent<Transform>();
+			if (pt != null)
+			{
+				Vector2 baseRight = pt.Position + new Vector2(OffsetX, OffsetY);
+				float ang = _t * AngularSpeed;
+				float xEllipse = MathF.Cos(ang);
+				float yEllipse = MathF.Sin(ang);
+				float xEight = MathF.Sin(ang);
+				float yEight = MathF.Sin(2f * ang);
+				float x = xEllipse * (1f - FigureEightMix) + xEight * FigureEightMix;
+				float y = yEllipse * (1f - FigureEightMix) + yEight * FigureEightMix;
+				Vector2 motion = new Vector2(x * RadiusX, y * RadiusY);
+				float bob = MathF.Sin(_t * VerticalBobSpeed) * VerticalBob;
+				motion.Y += bob;
+				_pos = baseRight + motion;
+			}
+
+			// Spawn dust based on accumulator
+			_spawnAccumulator += DustSpawnRate * dt;
+			while (_spawnAccumulator >= 1f)
+			{
+				_spawnAccumulator -= 1f;
+				SpawnDust(_pos);
+			}
+
+			// Update dust particles
+			for (int i = _dust.Count - 1; i >= 0; i--)
+			{
+				var p = _dust[i];
+				p.Age += dt;
+				if (p.Age >= p.Lifetime)
+				{
+					_dust.RemoveAt(i);
+					continue;
+				}
+				p.Position += p.Velocity * dt;
+				// Slight gravity to emphasize fall
+				p.Velocity.Y += 220f * dt;
+				_dust[i] = p;
+			}
+            base.Update(gameTime);
+        }
+
+		private void SpawnDust(Vector2 origin)
+		{
+			if (_pixel == null) return;
+			float speed = Lerp(DustSpeedMin, DustSpeedMax, (float)_rand.NextDouble());
+			float angleDeg = Lerp(DustAngleMinDeg, DustAngleMaxDeg, (float)_rand.NextDouble());
+			float rad = MathHelper.ToRadians(angleDeg);
+			Vector2 dir = new Vector2(MathF.Cos(rad), MathF.Sin(rad));
+			float lifetime = Lerp(DustLifetimeMin, DustLifetimeMax, (float)_rand.NextDouble());
+			float size = Lerp(DustSizeMin, DustSizeMax, (float)_rand.NextDouble());
+			float flicker = Lerp(FlickerPeriodMin, FlickerPeriodMax, (float)_rand.NextDouble());
+			_dust.Add(new DustParticle
+			{
+				Position = origin,
+				Velocity = dir * speed,
+				Age = 0f,
+				Lifetime = lifetime,
+				Size = size,
+				FlickerPeriod = flicker,
+				FlickerOffset = (float)_rand.NextDouble() * flicker
+			});
+		}
+
+		private static float Lerp(float a, float b, float t) => a + (b - a) * t;
+
+        public void Draw()
+        {
+			if (_angelTexture == null)
+            {
+                // Content pipeline builds guardian_angel.png without extension
+                _angelTexture = _content.Load<Texture2D>("guardian_angel");
+                if (_angelTexture == null) return;
+            }
+
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            var pt = player?.GetComponent<Transform>();
+            if (pt == null) return;
+
+            Vector2 baseRight = pt.Position + new Vector2(OffsetX, OffsetY);
+
+            float ang = _t * AngularSpeed;
+
+			// Blend between an ellipse and a figure eight (Lissajous-like):
+            // ellipse: (cos t, sin t)
+            // figure-eight: (sin t, sin 2t)
+            float xEllipse = System.MathF.Cos(ang);
+            float yEllipse = System.MathF.Sin(ang);
+            float xEight = System.MathF.Sin(ang);
+            float yEight = System.MathF.Sin(2f * ang);
+            float x = xEllipse * (1f - FigureEightMix) + xEight * FigureEightMix;
+            float y = yEllipse * (1f - FigureEightMix) + yEight * FigureEightMix;
+
+            // Apply radii
+            Vector2 motion = new Vector2(x * RadiusX, y * RadiusY);
+
+			// Add a gentle vertical bob on top for smoothness
+            float bob = System.MathF.Sin(_t * VerticalBobSpeed) * VerticalBob;
+            motion.Y += bob;
+
+			Vector2 pos = baseRight + motion;
+			_pos = pos;
+
+			var origin = new Vector2(_angelTexture.Width / 2f, _angelTexture.Height / 2f);
+			// No rotation
+			float rotation = 0f;
+
+            var color = Color.White * Alpha;
+			// Draw dust behind the angel
+			for (int i = 0; i < _dust.Count; i++)
+			{
+				var p = _dust[i];
+				float lifeT = MathF.Min(1f, p.Age / MathF.Max(0.0001f, p.Lifetime));
+				float alpha = (1f - lifeT) * (0.6f + 0.4f * MathF.Sin(((p.Age + p.FlickerOffset) / MathF.Max(0.0001f, p.FlickerPeriod)) * MathF.Tau));
+				var c = new Color(255, 245, 230) * MathHelper.Clamp(alpha, 0f, 1f);
+				float s = p.Size;
+				_spriteBatch.Draw(_pixel, p.Position, null, c, 0f, Vector2.Zero, new Vector2(s, s), SpriteEffects.None, 0f);
+			}
+
+			// Draw angel
+			_spriteBatch.Draw(_angelTexture, pos, null, color, rotation, origin, Scale, SpriteEffects.None, 0f);
+        }
+    }
+}
+
+
