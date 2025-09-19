@@ -52,7 +52,7 @@ namespace Crusaders30XX.ECS.Core
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error in event handler: {ex.Message}");
+                        Console.WriteLine($"Error in event handler: {ex}");
                     }
                 }
             }
