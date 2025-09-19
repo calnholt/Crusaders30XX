@@ -263,7 +263,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // Draw AP cost text at bottom-center: 0AP if free action else 1AP
             bool isFree = GetIsFreeAction(entity);
-            string apText = isFree ? "0AP" : "1AP";
+            string apText = isFree ? "Free" : "1AP";
             var apSize = _font.MeasureString(apText) * APTextScale;
             float apLocalX = (_settings.CardWidth - apSize.X) / 2f + APOffsetX;
             float apLocalY = _settings.CardHeight - APBottomMarginY - apSize.Y;

@@ -9,7 +9,16 @@ namespace Crusaders30XX.ECS.Events
     public class ModifyHpEvent
     {
         public Entity Target { get; set; }
+        public Entity Source { get; set; }
         public int Delta { get; set; }
+        public ModifyTypeEnum DamageType { get; set; } = ModifyTypeEnum.Attack;
+
+    }
+    public enum ModifyTypeEnum
+    {
+        Attack,
+        Effect,
+        Heal,
     }
 
     /// <summary>

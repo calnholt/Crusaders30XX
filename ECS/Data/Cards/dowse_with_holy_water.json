@@ -5,6 +5,7 @@
   "rarity": "Common",
   "valuesParse": [10],
   "text": "Your next attack this turn deals +{1} damage.",
+  "isFreeAction": true,
   "animation": "Buff",  
   "block": 2
 }

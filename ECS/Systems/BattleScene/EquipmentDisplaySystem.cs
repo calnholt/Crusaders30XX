@@ -315,11 +315,11 @@ namespace Crusaders30XX.ECS.Systems
 				var owner = item.EquippedOwner ?? EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 				var st = owner?.GetComponent<BattleStateInfo>();
 				bool shouldShow = false;
-				if (st != null && st.TriggeredThisBattle != null)
+				if (st != null && st.EquipmentTriggeredThisBattle != null)
 				{
 					foreach (var a in def.abilities)
 					{
-						if (a.oncePerBattle && !string.IsNullOrWhiteSpace(a.id) && st.TriggeredThisBattle.Contains(a.id))
+						if (a.oncePerBattle && !string.IsNullOrWhiteSpace(a.id) && st.EquipmentTriggeredThisBattle.Contains(a.id))
 						{
 							shouldShow = true;
 							break;

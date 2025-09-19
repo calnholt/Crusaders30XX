@@ -35,8 +35,7 @@ namespace Crusaders30XX.ECS.Systems
 				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 				if (player == null) return;
 				var st = GetOrCreateState(player);
-				st.CourageGainedThisBattle = 0;
-				st.TriggeredThisBattle.Clear();
+				st.EquipmentTriggeredThisBattle.Clear();
 			}
 		}
 
@@ -52,16 +51,16 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				if (ability.trigger == "CourageGainedThreshold")
 				{
-					if (ability.oncePerBattle && st.TriggeredThisBattle.Contains(ability.id)) continue;
+					if (ability.oncePerBattle && st.EquipmentTriggeredThisBattle.Contains(ability.id)) continue;
 					if (courage.Amount >= Math.Max(1, ability.threshold))
 					{
 						EquipmentAbilityService.Activate(EntityManager, ability.id, ability);
-						if (ability.oncePerBattle) st.TriggeredThisBattle.Add(ability.id);
+						if (ability.oncePerBattle) st.EquipmentTriggeredThisBattle.Add(ability.id);
 						// Emit pulse event for UI feedback
 						var equipEntity = EntityManager.GetEntitiesWithComponent<EquippedEquipment>()
 							.FirstOrDefault(en => en.GetComponent<EquippedEquipment>()?.EquippedOwner == player
 								&& !string.IsNullOrWhiteSpace(en.GetComponent<EquippedEquipment>()?.EquipmentId)
-								&& Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(en.GetComponent<EquippedEquipment>().EquipmentId, out var def2)
+								&& EquipmentDefinitionCache.TryGet(en.GetComponent<EquippedEquipment>().EquipmentId, out var def2)
 								&& def2?.abilities?.Any(a => a.id == ability.id) == true);
 						if (equipEntity != null)
 						{

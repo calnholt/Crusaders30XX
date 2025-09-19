@@ -75,7 +75,7 @@ namespace Crusaders30XX.ECS.Systems
             // 3) Remaining goes to HP
             if (incoming > 0)
             {
-                EventManager.Publish(new ModifyHpEvent { Target = player, Delta = -incoming });
+                EventManager.Publish(new ModifyHpEvent { Source = enemy, Target = player, Delta = -incoming });
             }
         }
     }

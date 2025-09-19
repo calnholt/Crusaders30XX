@@ -31,7 +31,9 @@ namespace Crusaders30XX.ECS.Systems
 			var hp = target.GetComponent<HP>();
 			if (hp == null) return;
 			int before = hp.Current;
-			int nv = hp.Current + e.Delta;
+			// TODO: iterate through applied passives and apply their effects
+			int passiveDelta = AppliedPassivesService.GetPassiveDelta(e);
+			int nv = hp.Current + e.Delta + passiveDelta;
 			hp.Current = System.Math.Max(0, System.Math.Min(hp.Max, nv));
 			// If this is the player and we crossed to zero, publish PlayerDied once
 			if (before > 0 && hp.Current == 0 && target.HasComponent<Player>())

@@ -4,7 +4,7 @@
   "target": "Enemy",
   "rarity": "Common",
   "valuesParse": [8, 16],
-  "text": "Deal {1} damage. If you lost courage during the action phase, deal {2} damage instead.",
+  "text": "Deal {1} damage. If you have lost courage during this action phase, deal {2} damage instead.",
   "animation": "Attack",
   "block": 3
 }

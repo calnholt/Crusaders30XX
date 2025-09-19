@@ -203,9 +203,19 @@ namespace Crusaders30XX.ECS.Components
 	public class BattleStateInfo : IComponent
 	{
 		public Entity Owner { get; set; }
-		public int CourageGainedThisBattle { get; set; } = 0;
-		public HashSet<string> TriggeredThisBattle { get; set; } = new();
+		public HashSet<string> EquipmentTriggeredThisBattle { get; set; } = new();
+        public Dictionary<TrackingTypeEnum, int> RunTracking { get; set; } = new();
+        public Dictionary<TrackingTypeEnum, int> BattleTracking { get; set; } = new();
+        public Dictionary<TrackingTypeEnum, int> TurnTracking { get; set; } = new();
+        public Dictionary<TrackingTypeEnum, int> PhaseTracking { get; set; } = new();
+
 	}
+
+    public enum TrackingTypeEnum
+    {
+        CourageGained,
+        CourageLost
+    }
     
     /// <summary>
     /// Component for positioning and rendering

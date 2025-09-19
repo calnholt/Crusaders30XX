@@ -45,17 +45,19 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
         {
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
             if (evt == null) return;
-            if (evt.Current == SubPhase.EnemyStart)
+            if (evt.Current == SubPhase.PlayerEnd)
             {
-                var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
-                if (enemy == null) return;
+                RemoveTurnPassives(player);
+            }
+            else if (evt.Current == SubPhase.EnemyStart)
+            {
                 ApplyStartOfTurnPassives(enemy);
             }
             else if (evt.Current == SubPhase.PlayerStart)
             {
-                var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-                if (player == null) return;
                 ApplyStartOfTurnPassives(player);
             }
         }
@@ -70,7 +72,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Burn", () =>
                 {
-                    EventManager.Publish(new ModifyHpEvent { Target = owner, Delta = -burnStacks });
+                    EventManager.Publish(new ModifyHpEvent { Source = owner, Target = owner, Delta = -burnStacks, DamageType = ModifyTypeEnum.Effect });
                     EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Burn });
                 }, .15f);
             }
@@ -110,6 +112,12 @@ namespace Crusaders30XX.ECS.Systems
             {
                 ap.Passives.Remove(e.Type);
             }
+        }
+
+        private void RemoveTurnPassives(Entity owner)
+        {
+            Console.WriteLine($"[AppliedPassivesManagementSystem] RemoveTurnPassives - remove DowseWithHolyWater");
+            EventManager.Publish(new RemovePassive { Owner = owner, Type = AppliedPassiveType.DowseWithHolyWater });
         }
     }
 }

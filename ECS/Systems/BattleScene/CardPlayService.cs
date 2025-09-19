@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var enemy = entityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
             var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            var battleStateInfo = player.GetComponent<BattleStateInfo>();
             int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
 
             System.Console.WriteLine($"[CardPlayService] Resolving card id={cardId} name={cardName}");
@@ -22,17 +23,17 @@ namespace Crusaders30XX.ECS.Systems
             {
                 case "anoint_the_sick":
                 {
-                    EventManager.Publish(new ModifyHpEvent { Target = player, Delta = values[0] });
-                    if (courage > values[1]) 
-                    {
-                        EventManager.Publish(new ModifyActionPointsEvent { Delta = values[2] });
-                        EventManager.Publish(new ModifyCourageEvent { Delta = -values[3] });
-                    }
+                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = player, Delta = +values[0], DamageType = ModifyTypeEnum.Heal });
                     break;
                 }
                 case "burn":
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Owner = enemy, Type = AppliedPassiveType.Burn, Delta = +values[0] });
+                    if (courage > values[1]) 
+                    {
+                        EventManager.Publish(new ModifyActionPointsEvent { Delta = values[2] });
+                        EventManager.Publish(new ModifyCourageEvent { Delta = -values[3] });
+                    }
                     break;
                 }
                 case "courageous":
@@ -43,8 +44,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "dowse_with_holy_water":
                 {
-                    EventManager.Publish(new ApplyPassiveEvent { Owner = player, Type = AppliedPassiveType.DowseWithHolyWater, Delta = +1 });
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = +values[0] });
+                    EventManager.Publish(new ApplyPassiveEvent { Owner = player, Type = AppliedPassiveType.DowseWithHolyWater, Delta = 1 });
                     break;
                 }
                 case "inspiration":
@@ -55,21 +55,20 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "seize":
                 {
-                    // TODO: implement turn tracking dictionary component
-                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -values[1] });
+                    battleStateInfo.PhaseTracking.TryGetValue(TrackingTypeEnum.CourageLost, out var courageLost);
+                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -(courageLost > 0 ? values[1] : values[0]), DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
                 case "stab":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -values[1] });
+                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -values[1], DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
                 case "strike":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -values[1] });
+                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -values[1], DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
                 case "stun":
@@ -80,7 +79,7 @@ namespace Crusaders30XX.ECS.Systems
                 case "vindicate":
                 {
                     int damage = values[0] + courage * 2;
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -damage });
+                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -damage, DamageType = ModifyTypeEnum.Attack });
                     EventManager.Publish(new SetCourageEvent { Amount = 0 });
                     break;
                 }
@@ -88,7 +87,7 @@ namespace Crusaders30XX.ECS.Systems
                 case "sword":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
-                    EventManager.Publish(new ModifyHpEvent { Target = enemy, Delta = -values[1] });
+                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -values[1], DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
                 default:

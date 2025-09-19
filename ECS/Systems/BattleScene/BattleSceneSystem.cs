@@ -87,6 +87,7 @@ namespace Crusaders30XX.ECS.Systems
 		private HighlightSettingsSystem _equipmentHighlightSettingsDebugSystem;
 		private EquipmentBlockInteractionSystem _equipmentBlockInteractionSystem;
 		private AppliedPassivesManagementSystem _appliedPassivesManagementSystem;
+		private BattleStateInfoManagementSystem _battleStateInfoManagementSystem;
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(em)
 		{
@@ -213,8 +214,7 @@ namespace Crusaders30XX.ECS.Systems
 			// TODO: should handle through events rather than directly but im lazy right now
 			var player = EntityManager.GetEntity("Player");
 			var battleStateInfo = player.GetComponent<BattleStateInfo>();
-			battleStateInfo.CourageGainedThisBattle = 0;
-			battleStateInfo.TriggeredThisBattle.Clear();
+			battleStateInfo.EquipmentTriggeredThisBattle.Clear();
 			// Initialize/Reset per-battle applied passives on player
 			var playerPassives = player.GetComponent<AppliedPassives>();
 			if (playerPassives == null)
@@ -320,6 +320,7 @@ namespace Crusaders30XX.ECS.Systems
 			_equipmentHighlightSettingsDebugSystem = new HighlightSettingsSystem(_world.EntityManager);
 			_equipmentBlockInteractionSystem = new EquipmentBlockInteractionSystem(_world.EntityManager);
 			_appliedPassivesManagementSystem = new AppliedPassivesManagementSystem(_world.EntityManager);
+			_battleStateInfoManagementSystem = new BattleStateInfoManagementSystem(_world.EntityManager);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
 
 			// Register
@@ -383,6 +384,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_equipmentHighlightSettingsDebugSystem);
 			_world.AddSystem(_equipmentBlockInteractionSystem);
 			_world.AddSystem(_appliedPassivesManagementSystem);
+			_world.AddSystem(_battleStateInfoManagementSystem);
 			_world.AddSystem(_payCostOverlaySystem);
 			_world.AddSystem(_cardHighlightSystem);
 			_world.AddSystem(_cantPlayCardMessageSystem);

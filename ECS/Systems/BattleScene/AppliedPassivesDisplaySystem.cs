@@ -6,19 +6,17 @@ using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Systems
 {
     [DebugTab("Passives Display")]
     public class AppliedPassivesDisplaySystem : Core.System
     {
-        private readonly GraphicsDevice _graphicsDevice;
-        private readonly SpriteBatch _spriteBatch;
-        private readonly SpriteFont _font;
-        private Texture2D _roundedBg;
-        private int _cacheW;
-        private int _cacheH;
-        private int _cacheR;
+		private readonly GraphicsDevice _graphicsDevice;
+		private readonly SpriteBatch _spriteBatch;
+		private readonly SpriteFont _font;
+		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedCache = new();
 
         [DebugEditable(DisplayName = "Offset Y", Step = 1, Min = -500, Max = 500)]
         public int OffsetY { get; set; } = 4;
@@ -133,7 +131,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
 
                 // Render each passive as "<stacks> <Name>" chip, left-to-right centered under entity
-                var items = ap.Passives.Select(kv => new { Type = kv.Key, Count = kv.Value, Label = $"{kv.Value} {kv.Key}" }).ToList();
+                var items = ap.Passives.Select(kv => new { Type = kv.Key, Count = kv.Value, Label = $"{kv.Value} {StringUtils.ToSentenceCase(kv.Key.ToString())}" }).ToList();
                 if (items.Count == 0) continue;
 
                 var sizes = items.Select(it => _font.MeasureString(it.Label) * TextScale).ToList();
@@ -141,11 +139,12 @@ namespace Crusaders30XX.ECS.Systems
                 int totalWidth = chipWidths.Sum() + System.Math.Max(0, (items.Count - 1) * Spacing);
                 int x = baseX - totalWidth / 2;
 
-                for (int i = 0; i < items.Count; i++)
+				for (int i = 0; i < items.Count; i++)
                 {
                     int w = chipWidths[i];
                     int h = (int)System.Math.Ceiling(sizes[i].Y) + PadY * 2;
-                    EnsureRounded(w, h, System.Math.Min(CornerRadius, System.Math.Min(w, h) / 2));
+					int r = System.Math.Min(CornerRadius, System.Math.Min(w, h) / 2);
+					var chipTexture = GetRounded(w, h, r);
                     // Ripple overlay (independent of chip background)
                     var key = (e.Id, items[i].Type);
                     if (_ripples.TryGetValue(key, out var rp))
@@ -159,12 +158,12 @@ namespace Crusaders30XX.ECS.Systems
                         int cy = baseY + h / 2;
                         var rippleRect = new Rectangle(cx - scaledW / 2, cy - scaledH / 2, scaledW, scaledH);
                         var rippleColor = Color.FromNonPremultiplied(BgR, BgG, BgB, (byte)System.Math.Round(MathHelper.Clamp(alpha, 0f, 1f) * 255f));
-                        _spriteBatch.Draw(_roundedBg, rippleRect, rippleColor);
+						_spriteBatch.Draw(chipTexture, rippleRect, rippleColor);
                     }
                     // Base chip
                     var chipRect = new Rectangle(x, baseY, w, h);
                     var chipBg = Color.FromNonPremultiplied(BgR, BgG, BgB, (byte)BgA);
-                    _spriteBatch.Draw(_roundedBg, chipRect, chipBg);
+					_spriteBatch.Draw(chipTexture, chipRect, chipBg);
                     var textPos = new Vector2(x + (w - sizes[i].X) / 2f, baseY + (h - sizes[i].Y) / 2f);
                     _spriteBatch.DrawString(_font, items[i].Label, textPos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
                     x += w + Spacing;
@@ -178,15 +177,14 @@ namespace Crusaders30XX.ECS.Systems
             _ripples[(e.Owner.Id, e.Type)] = new Ripple { Elapsed = 0f, Duration = System.Math.Max(0.05f, RippleSeconds) };
         }
 
-        private void EnsureRounded(int w, int h, int r)
-        {
-            if (_roundedBg == null || _cacheW != w || _cacheH != h || _cacheR != r)
-            {
-                _roundedBg?.Dispose();
-                _roundedBg = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, r);
-                _cacheW = w; _cacheH = h; _cacheR = r;
-            }
-        }
+		private Texture2D GetRounded(int w, int h, int r)
+		{
+			var key = (w, h, r);
+			if (_roundedCache.TryGetValue(key, out var tex)) return tex;
+			var created = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, r);
+			_roundedCache[key] = created;
+			return created;
+		}
         [DebugAction("Simulate Burn Trigger")]
         public void Debug_SimulateBurnTrigger()
         {
