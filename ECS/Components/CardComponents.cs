@@ -370,6 +370,7 @@ namespace Crusaders30XX.ECS.Components
         public bool IsOpen { get; set; } = false;
         public string Title { get; set; } = "";
         public List<Entity> Cards { get; set; } = new();
+        public int ScrollOffset { get; set; } = 0;
     }
 
     /// <summary>

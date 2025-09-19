@@ -24,6 +24,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
             EventManager.Subscribe<TrackingEvent>(OnTrackingEvent);
             EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourage);
+            EventManager.Subscribe<SetCourageEvent>(OnSetCourageEvent);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -92,6 +93,14 @@ namespace Crusaders30XX.ECS.Systems
         {
           var st = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault().GetComponent<BattleStateInfo>();
           OnTrackingEvent(new TrackingEvent { Type = e.Delta > 0 ? TrackingTypeEnum.CourageGained : TrackingTypeEnum.CourageLost, Delta = Math.Abs(e.Delta) });
+        }
+        private void OnSetCourageEvent(SetCourageEvent e)
+        {
+          var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+          var st = player.GetComponent<BattleStateInfo>();
+          var courage = player.GetComponent<Courage>();
+          var delta = courage.Amount - e.Amount;
+          OnTrackingEvent(new TrackingEvent { Type = delta > 0 ? TrackingTypeEnum.CourageGained : TrackingTypeEnum.CourageLost, Delta = Math.Abs(delta) });
         }
     }
 }

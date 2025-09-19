@@ -21,13 +21,19 @@ namespace Crusaders30XX.ECS.Systems
         
         // Hand layout settings (moved from CardConfig)
         [DebugEditable(DisplayName = "Bottom Margin", Step = 2f, Min = 0f, Max = 1000f)]
-        public float HandBottomMargin { get; set; } = 150f;
+        public float HandBottomMargin { get; set; } = 168f;
 
         [DebugEditable(DisplayName = "Max Angle (deg)", Step = 0.5f, Min = 0f, Max = 45f)]
         public float HandFanMaxAngleDeg { get; set; } = 5f;
 
         [DebugEditable(DisplayName = "Arc Radius", Step = 2f, Min = 0f, Max = 2000f)]
         public float HandFanRadius { get; set; } = 0f;
+
+        // Height difference between center and ends of the fan. If > 0, this
+        // overrides radius-based curvature to make tuning intuitive. The ends
+        // will be lowered by at most this many pixels relative to the center.
+        [DebugEditable(DisplayName = "Curve Height", Step = 1f, Min = 0f, Max = 500f)]
+        public float HandFanCurveHeight { get; set; } = 24f;
 
         [DebugEditable(DisplayName = "Curve Offset Y", Step = 2f, Min = -1000f, Max = 1000f)]
         public float HandFanCurveOffset { get; set; } = 0f;
@@ -99,9 +105,9 @@ namespace Crusaders30XX.ECS.Systems
                         float mid = (count - 1) * 0.5f;
                         float t = (count == 1) ? 0f : (cardIndex - mid) / Math.Max(1f, mid);
 
-                        // angle and vertical arc offset
-                        float angleDeg = t * HandFanMaxAngleDeg;
-                        float angleRad = (float)(Math.PI / 180.0) * angleDeg;
+                        // angle (in radians) based on normalized index
+                        float maxAngleRad = (float)(Math.PI / 180.0) * HandFanMaxAngleDeg;
+                        float angleRad = t * maxAngleRad;
 
                         // Horizontal spread scales with hand size
                         // Use unnormalized index delta so width grows with number of cards
@@ -113,10 +119,23 @@ namespace Crusaders30XX.ECS.Systems
                         if (cardSpacing <= 0f) { cardSpacing = 250 + (-20); }
                         float x = pivot.X + indexDelta * cardSpacing;
 
-                        // Vertical arc using a circular approximation
-                        float cos = (float)Math.Cos(angleRad);
-                        // Ends lower (greater Y), center higher (smaller Y)
-                        float yArc = HandFanRadius * (1f - cos);
+                        // Vertical arc
+                        // If curve height is specified, scale curvature so the ends are lowered by
+                        // exactly HandFanCurveHeight regardless of angle settings. Otherwise fall back
+                        // to the legacy radius-based formula.
+                        float yArc;
+                        if (HandFanCurveHeight > 0f && maxAngleRad > 0f)
+                        {
+                            float denom = 1f - (float)Math.Cos(Math.Max(0.0001f, maxAngleRad));
+                            float numer = 1f - (float)Math.Cos(Math.Abs(angleRad));
+                            float factor = numer / denom; // 0 at center, 1 at ends
+                            yArc = HandFanCurveHeight * factor;
+                        }
+                        else
+                        {
+                            float cos = (float)Math.Cos(angleRad);
+                            yArc = HandFanRadius * (1f - cos);
+                        }
                         float y = pivot.Y + HandFanCurveOffset + yArc;
 
                         // If this card just appeared (default position), spawn it offscreen to the right (due east)
@@ -169,7 +188,7 @@ namespace Crusaders30XX.ECS.Systems
                         {
                             int w = cvs?.CardWidth ?? 250;
                             int h = cvs?.CardHeight ?? 350;
-                            float absCos = Math.Abs(cos);
+                            float absCos = Math.Abs((float)Math.Cos(angleRad));
                             float absSin = Math.Abs((float)Math.Sin(angleRad));
                             int aabbW = (int)(w * absCos + h * absSin);
                             int aabbH = (int)(h * absCos + w * absSin);

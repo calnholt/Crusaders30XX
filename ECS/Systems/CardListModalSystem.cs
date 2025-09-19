@@ -6,21 +6,29 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
     /// <summary>
     /// Displays a modal listing an arbitrary set of cards in an alphabetical grid with a close button.
     /// </summary>
+    [DebugTab("Card List Modal")]
     public class CardListModalSystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font;
         private readonly Texture2D _pixel;
-
-        private const int ModalMargin = 40;
-        private const int Padding = 32;
+        private int? _lastWheel;
+        [DebugEditable(DisplayName = "Modal Margin", Step = 1, Min = 0, Max = 200)]
+        public int ModalMargin { get; set; } = 40;
+        [DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 200)]
+        public int Padding { get; set; } = 32;
+        [DebugEditable(DisplayName = "Close Size", Step = 1, Min = 0, Max = 200)]
+        public int CloseSize { get; set; } = 28;
+        [DebugEditable(DisplayName = "Scroll Step", Step = 1, Min = 0, Max = 200)]
+        public int ScrollStep { get; set; } = 40;
         private int GridCellW
         {
             get
@@ -77,7 +85,8 @@ namespace Crusaders30XX.ECS.Systems
             // Dim background overlay
             _spriteBatch.Draw(_pixel, new Rectangle(0, 0, w, h), new Color(0, 0, 0, 180));
             // Panel
-            _spriteBatch.Draw(_pixel, rect, new Color(15, 25, 45) * 0.98f);
+            var panelColor = new Color(15, 25, 45) * 0.98f;
+            _spriteBatch.Draw(_pixel, rect, panelColor);
             DrawBorder(rect, Color.White, 3);
 
             int cursorY = rect.Y + Padding;
@@ -85,11 +94,15 @@ namespace Crusaders30XX.ECS.Systems
             cursorY += (int)(_font.LineSpacing * TitleScale) + Padding;
 
             // Close button (top-right)
-            var closeRect = new Rectangle(rect.Right - Padding - 28, rect.Y + Padding, 28, 28);
+            var closeRect = new Rectangle(rect.Right - Padding - CloseSize, rect.Y + Padding, CloseSize, CloseSize);
             _spriteBatch.Draw(_pixel, closeRect, new Color(70, 70, 70));
             DrawBorder(closeRect, Color.White, 2);
-            var xSize = _font.MeasureString("X") * 0.6f;
-                _spriteBatch.DrawString(_font, "X", new Vector2(closeRect.Center.X - xSize.X / 2f, closeRect.Center.Y - xSize.Y / 2f), Color.White, 0f, Vector2.Zero, 0.15f, SpriteEffects.None, 0f);
+            // Center the X label precisely in the button
+            string xLabel = "X";
+            float xScale = 0.15f;
+            var xMeasure = _font.MeasureString(xLabel) * xScale;
+            Vector2 xPos = new Vector2(closeRect.Center.X - xMeasure.X / 2f, closeRect.Center.Y - xMeasure.Y / 2f);
+            _spriteBatch.DrawString(_font, xLabel, xPos, Color.White, 0f, Vector2.Zero, xScale, SpriteEffects.None, 0f);
 
             // Sync a clickable close entity
             var closeBtn = EntityManager.GetEntitiesWithComponent<CardListModalClose>().FirstOrDefault();
@@ -116,11 +129,54 @@ namespace Crusaders30XX.ECS.Systems
             // Grid within rect
             int gridX = rect.X + Padding;
             int gridY = cursorY;
+            // Nudge first row down by the card's internal top offset so its top isn't clipped
+            var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
+            var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+            int topNudge = Math.Max(0, cvs?.CardOffsetYExtra ?? 0);
+            gridY += topNudge;
             int maxCols = Math.Max(1, (rect.Width - Padding * 2 + GridGap) / (GridCellW + GridGap));
             int col = 0;
+
+            // Calculate content height and clamp scroll
+            int rows = (cards.Count + maxCols - 1) / maxCols;
+            int contentHeight = Math.Max(0, rows * (GridCellH + GridGap) - GridGap + topNudge);
+            int visibleHeight = rect.Bottom - cursorY - Padding;
+            int maxScroll = Math.Max(0, contentHeight - visibleHeight);
+
+            // Handle mouse wheel scrolling within content area
+            var mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
+            var contentRect = new Rectangle(rect.X + Padding, cursorY, rect.Width - Padding * 2, visibleHeight);
+            if (contentRect.Contains(mouse.Position))
+            {
+                int delta = mouse.ScrollWheelValue;
+                if (_lastWheel.HasValue)
+                {
+                    int diff = delta - _lastWheel.Value;
+                    if (diff != 0)
+                    {
+                        modal.ScrollOffset -= Math.Sign(diff) * ScrollStep;
+                        if (modal.ScrollOffset < 0) modal.ScrollOffset = 0;
+                        if (modal.ScrollOffset > maxScroll) modal.ScrollOffset = maxScroll;
+                    }
+                }
+                _lastWheel = delta;
+            }
+            else
+            {
+                _lastWheel = mouse.ScrollWheelValue;
+            }
+
+            // Clip drawing to the content area with scissor rectangle
+            var prevScissor = _graphicsDevice.ScissorRectangle;
+            var prevState = _graphicsDevice.RasterizerState;
+            var clipRect = new Rectangle(rect.X + Padding, cursorY, rect.Width - Padding * 2, visibleHeight);
+            _graphicsDevice.ScissorRectangle = clipRect;
+            _graphicsDevice.RasterizerState = new RasterizerState { ScissorTestEnable = true };
+
+            int startY = gridY - modal.ScrollOffset;
             foreach (var cd in cards)
             {
-                var cell = new Rectangle(gridX + col * (GridCellW + GridGap), gridY, GridCellW, GridCellH);
+                var cell = new Rectangle(gridX + col * (GridCellW + GridGap), startY, GridCellW, GridCellH);
                 // Render the actual card scaled in the cell center
                 var cardEntity = cd.Owner;
                 Vector2 center = new Vector2(cell.Center.X, cell.Center.Y);
@@ -135,9 +191,19 @@ namespace Crusaders30XX.ECS.Systems
                 if (col >= maxCols)
                 {
                     col = 0;
-                    gridY += GridCellH + GridGap;
+                    startY += GridCellH + GridGap;
                 }
             }
+
+            // Mask overflow (belt-and-suspenders in case scissor is disabled)
+            var topMask = new Rectangle(rect.X + Padding, rect.Y + Padding, rect.Width - Padding * 2, Math.Max(0, contentRect.Y - (rect.Y + Padding)));
+            var botMask = new Rectangle(rect.X + Padding, contentRect.Bottom, rect.Width - Padding * 2, Math.Max(0, (rect.Bottom - Padding) - contentRect.Bottom));
+            if (topMask.Height > 0) _spriteBatch.Draw(_pixel, topMask, panelColor);
+            if (botMask.Height > 0) _spriteBatch.Draw(_pixel, botMask, panelColor);
+
+            // Restore scissor state
+            _graphicsDevice.RasterizerState = prevState;
+            _graphicsDevice.ScissorRectangle = prevScissor;
         }
 
         private void DrawBorder(Rectangle r, Color color, int thickness)
@@ -154,7 +220,7 @@ namespace Crusaders30XX.ECS.Systems
             if (modal == null)
             {
                 modal = EntityManager.CreateEntity("CardListModal");
-                EntityManager.AddComponent(modal, new CardListModal { IsOpen = true, Title = evt.Title, Cards = evt.Cards ?? new List<Entity>() });
+                EntityManager.AddComponent(modal, new CardListModal { IsOpen = true, Title = evt.Title, Cards = evt.Cards ?? new List<Entity>(), ScrollOffset = 0 });
             }
             else
             {
@@ -164,6 +230,7 @@ namespace Crusaders30XX.ECS.Systems
                     cmp.Title = evt.Title;
                     cmp.Cards = evt.Cards ?? new List<Entity>();
                     cmp.IsOpen = true;
+                    cmp.ScrollOffset = 0;
                 }
             }
         }

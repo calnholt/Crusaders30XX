@@ -17,6 +17,7 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
     private SpriteFont _font;
+    private RasterizerState _spriteRasterizer;
     private DebugMenuSystem _debugMenuSystem;
     private EntityListOverlaySystem _entityListOverlaySystem;
     private TransitionDisplaySystem _transitionDisplaySystem;
@@ -67,6 +68,7 @@ public class Game1 : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
+        _spriteRasterizer = new RasterizerState { ScissorTestEnable = true, CullMode = CullMode.None };
 
         // Load the NewRocker SpriteFont
         _font = Content.Load<SpriteFont>("NewRocker");
@@ -125,7 +127,7 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
+        _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
         // Delegate drawing to active parent systems
         var menuScene = _world.SystemManager.GetSystem<MenuSceneSystem>();
         var battleScene = _world.SystemManager.GetSystem<BattleSceneSystem>();

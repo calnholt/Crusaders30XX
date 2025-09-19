@@ -25,6 +25,7 @@ namespace Crusaders30XX.ECS.Systems
         private float _t;
 		private float _rot; // smoothed rotation follower (radians)
 		private Vector2 _pos;
+		private Vector2 _prevPos;
 		private float _spawnAccumulator;
 		private static readonly Random _rand = new Random();
 		private struct DustParticle
@@ -84,6 +85,10 @@ namespace Crusaders30XX.ECS.Systems
 		public int DustSpeedMin { get; set; } = 22;
 		[DebugEditable(DisplayName = "Dust Speed Max", Step = 1, Min = 0, Max = 2000)]
 		public int DustSpeedMax { get; set; } = 43;
+		[DebugEditable(DisplayName = "Dust Align To Motion")]
+		public bool DustAlignToMotion { get; set; } = true;
+		[DebugEditable(DisplayName = "Dust Cone Half-Angle (deg)", Step = 1, Min = 0, Max = 180)]
+		public int DustConeHalfAngleDeg { get; set; } = 35;
 		[DebugEditable(DisplayName = "Dust Angle Min (deg)", Step = 1, Min = -180, Max = 180)]
 		public int DustAngleMinDeg { get; set; } = 180; // around downward
 		[DebugEditable(DisplayName = "Dust Angle Max (deg)", Step = 1, Min = -180, Max = 180)]
@@ -160,6 +165,7 @@ namespace Crusaders30XX.ECS.Systems
 			var pt = player?.GetComponent<Transform>();
 			if (pt != null)
 			{
+				var oldPos = _pos;
 				Vector2 baseRight = pt.Position + new Vector2(OffsetX, OffsetY);
 				float ang = _t * AngularSpeed;
 				float xEllipse = MathF.Cos(ang);
@@ -172,6 +178,7 @@ namespace Crusaders30XX.ECS.Systems
 				float bob = MathF.Sin(_t * VerticalBobSpeed) * VerticalBob;
 				motion.Y += bob;
 				_pos = baseRight + motion;
+				_prevPos = oldPos;
 			}
 
 			// Spawn dust based on accumulator
@@ -247,9 +254,23 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (_pixel == null) return;
 			float speed = Lerp(DustSpeedMin, DustSpeedMax, (float)_rand.NextDouble());
-			float angleDeg = Lerp(DustAngleMinDeg, DustAngleMaxDeg, (float)_rand.NextDouble());
-			float rad = MathHelper.ToRadians(angleDeg);
-			Vector2 dir = new Vector2(MathF.Cos(rad), MathF.Sin(rad));
+			Vector2 dir;
+			if (DustAlignToMotion)
+			{
+				Vector2 vel = _pos - _prevPos;
+				if (vel.LengthSquared() < 0.0001f) vel = new Vector2(-1f, 0f);
+				float baseRad = MathF.Atan2(vel.Y, vel.X) + MathF.PI; // spray backward
+				float halfRad = MathHelper.ToRadians(DustConeHalfAngleDeg);
+				float offset = Lerp(-halfRad, halfRad, (float)_rand.NextDouble());
+				float rad = baseRad + offset;
+				dir = new Vector2(MathF.Cos(rad), MathF.Sin(rad));
+			}
+			else
+			{
+				float angleDeg = Lerp(DustAngleMinDeg, DustAngleMaxDeg, (float)_rand.NextDouble());
+				float rad = MathHelper.ToRadians(angleDeg);
+				dir = new Vector2(MathF.Cos(rad), MathF.Sin(rad));
+			}
 			float lifetime = Lerp(DustLifetimeMin, DustLifetimeMax, (float)_rand.NextDouble());
 			float size = Lerp(DustSizeMin, DustSizeMax, (float)_rand.NextDouble());
 			float flicker = Lerp(FlickerPeriodMin, FlickerPeriodMax, (float)_rand.NextDouble());
