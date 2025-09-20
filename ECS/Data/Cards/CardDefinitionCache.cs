@@ -27,6 +27,7 @@ namespace Crusaders30XX.ECS.Data.Cards
             {
                 var folder = ResolveFolderPath();
                 _cache = CardRepository.LoadFromFolder(folder);
+                PostProcessDefinitions(_cache);
             }
         }
 
@@ -39,6 +40,28 @@ namespace Crusaders30XX.ECS.Data.Cards
                 {
                     var folder = ResolveFolderPath();
                     _cache = CardRepository.LoadFromFolder(folder);
+                    PostProcessDefinitions(_cache);
+                }
+            }
+        }
+
+        // Replace placeholders in text using valuesParse so all systems see resolved text.
+        private static void PostProcessDefinitions(Dictionary<string, CardDefinition> cache)
+        {
+            if (cache == null) return;
+            foreach (var kv in cache)
+            {
+                var def = kv.Value;
+                if (def == null) continue;
+                if (!string.IsNullOrEmpty(def?.text) && def.valuesParse != null && def.valuesParse.Length > 0)
+                {
+                    string resolved = def.text;
+                    for (int i = 0; i < def.valuesParse.Length; i++)
+                    {
+                        // Replace occurrences like {1}, {2}, ... with corresponding values
+                        resolved = resolved.Replace($"{{{i + 1}}}", def.valuesParse[i].ToString());
+                    }
+                    def.text = resolved;
                 }
             }
         }

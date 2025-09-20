@@ -191,7 +191,7 @@ namespace Crusaders30XX.ECS.Systems
                             // Ensure weapon becomes interactable during Action only when no overlay is active
 							if (ui != null) ui.IsInteractable = true;
 							// Use weapon-specific visuals: light yellow background
-							bgColor = Color.Gold;
+							bgColor = new Color(215, 186, 147);
                         }
                     }
                 }

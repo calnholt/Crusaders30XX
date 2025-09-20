@@ -84,6 +84,7 @@ namespace Crusaders30XX.ECS.Systems
 		private EquipmentManagerSystem _equipmentManagerSystem;
 		private MedalManagerSystem _medalManagerSystem;
 		private MedalDisplaySystem _medalDisplaySystem;
+		private EquippedWeaponDisplaySystem _equippedWeaponDisplaySystem;
 		private EquipmentDisplaySystem _equipmentDisplaySystem;
 		private EquipmentUsedManagementSystem _equipmentUsedManagementSystem;
 		private HighlightSettingsSystem _equipmentHighlightSettingsDebugSystem;
@@ -149,6 +150,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("HandDisplaySystem.DrawHand", _handDisplaySystem.DrawHand);
 			FrameProfiler.Measure("CardPlayedAnimationSystem.Draw", _cardPlayedAnimationSystem.Draw);
 			FrameProfiler.Measure("EquipmentDisplaySystem.Draw", _equipmentDisplaySystem.Draw);
+			FrameProfiler.Measure("EquippedWeaponDisplaySystem.Draw", _equippedWeaponDisplaySystem.Draw);
 			FrameProfiler.Measure("MedalDisplaySystem.Draw", _medalDisplaySystem.Draw);
 			FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
 			FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
@@ -322,6 +324,7 @@ namespace Crusaders30XX.ECS.Systems
 			_equipmentManagerSystem = new EquipmentManagerSystem(_world.EntityManager);
 			_medalManagerSystem = new MedalManagerSystem(_world.EntityManager);
 			_equipmentDisplaySystem = new EquipmentDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
+			_equippedWeaponDisplaySystem = new EquippedWeaponDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_medalDisplaySystem = new MedalDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
 			_equipmentUsedManagementSystem = new EquipmentUsedManagementSystem(_world.EntityManager);
 			_equipmentHighlightSettingsDebugSystem = new HighlightSettingsSystem(_world.EntityManager);
@@ -388,6 +391,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_equipmentManagerSystem);
 			_world.AddSystem(_medalManagerSystem);
 			_world.AddSystem(_equipmentDisplaySystem);
+			_world.AddSystem(_equippedWeaponDisplaySystem);
 			_world.AddSystem(_medalDisplaySystem);
 			_world.AddSystem(_equipmentUsedManagementSystem);
 			_world.AddSystem(_equipmentHighlightSettingsDebugSystem);

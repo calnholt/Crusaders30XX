@@ -131,6 +131,11 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(storedBlockTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
             world.AddComponent(storedBlockTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Stored Block" });
 
+            // Pre-create Weapon tooltip hover entity (bounds updated by EquippedWeaponDisplaySystem)
+            var weaponTooltip = world.CreateEntity("UI_WeaponTooltip");
+            world.AddComponent(weaponTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
+            world.AddComponent(weaponTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Weapon" });
+
             return entity;
         }
         
@@ -227,14 +232,7 @@ namespace Crusaders30XX.ECS.Factories
 				if (def.isWeapon) continue; // weapons are not in the deck
 				var name = def.name ?? def.id ?? cardId;
 				int blockValue = def.block + (color == CardData.CardColor.Black ? 1 : 0);
-				string description = def.text;
-				if (!string.IsNullOrEmpty(def.text) && def.valuesParse != null && def.valuesParse.Length > 0)
-				{
-					for (int i = 0; i < def.valuesParse.Length; i++)
-					{
-							description = description.Replace($"{{{i + 1}}}", def.valuesParse[i].ToString());
-					}
-				}
+                string description = def.text; // already resolved in CardDefinitionCache
 				var entity = CreateCard(
 					world,
 					name,

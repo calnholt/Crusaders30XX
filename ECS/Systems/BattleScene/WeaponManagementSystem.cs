@@ -32,31 +32,58 @@ namespace Crusaders30XX.ECS.Systems
 			var deck = deckEntity?.GetComponent<Deck>();
 			if (deck == null) return;
 
-			var weapon = FindOrCreateEquippedWeapon(deck);
-			if (weapon == null) return;
+			bool isPlayerTurn = evt.Current == SubPhase.PlayerStart || evt.Current == SubPhase.Action || evt.Current == SubPhase.PlayerEnd;
 
-			// If not in hand, add to hand
-			if (!deck.Hand.Contains(weapon))
+			if (isPlayerTurn)
 			{
-				deck.Hand.Insert(0, weapon);
-				var ui = weapon.GetComponent<UIElement>();
-				if (ui != null)
+				// Ensure a weapon exists and is at hand index 0
+				var weapon = FindOrCreateEquippedWeapon(deck);
+				if (weapon == null) return;
+				if (!deck.Hand.Contains(weapon))
 				{
-					ui.IsInteractable = true;
-					ui.IsHovered = false;
-					ui.IsClicked = false;
+					deck.Hand.Insert(0, weapon);
+					var ui = weapon.GetComponent<UIElement>();
+					if (ui != null)
+					{
+						ui.IsInteractable = true;
+						ui.IsHovered = false;
+						ui.IsClicked = false;
+					}
+				}
+				else
+				{
+					// Ensure weapon stays at index 0
+					int idx = deck.Hand.IndexOf(weapon);
+					if (idx > 0)
+					{
+						deck.Hand.RemoveAt(idx);
+						deck.Hand.Insert(0, weapon);
+					}
 				}
 			}
 			else
 			{
-				// Ensure weapon stays at index 0
-				int idx = deck.Hand.IndexOf(weapon);
-				if (idx > 0)
+				// Remove weapon from hand during non-player phases, if it exists
+				var weapon = GetEquippedWeaponEntityIfSpawned();
+				if (weapon != null && deck.Hand.Contains(weapon))
 				{
-					deck.Hand.RemoveAt(idx);
-					deck.Hand.Insert(0, weapon);
+					deck.Hand.Remove(weapon);
+					var ui = weapon.GetComponent<UIElement>();
+					if (ui != null)
+					{
+						ui.IsInteractable = false;
+						ui.IsHovered = false;
+						ui.IsClicked = false;
+					}
 				}
 			}
+		}
+
+		private Entity GetEquippedWeaponEntityIfSpawned()
+		{
+			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+			var equipped = player?.GetComponent<EquippedWeapon>();
+			return equipped?.SpawnedEntity;
 		}
 
 		private Entity FindOrCreateEquippedWeapon(Deck deck)
@@ -78,14 +105,7 @@ namespace Crusaders30XX.ECS.Systems
 			string name = def.name ?? def.id ?? "Weapon";
 			// Create minimal card like EntityFactory.CreateCard
 			var e = EntityManager.CreateEntity($"Card_{name}");
-			string description = def.text;
-			if (!string.IsNullOrEmpty(def.text) && def.valuesParse != null && def.valuesParse.Length > 0)
-			{
-				for (int i = 0; i < def.valuesParse.Length; i++)
-				{
-						description = description.Replace($"{{{i + 1}}}", def.valuesParse[i].ToString());
-				}
-			}
+            string description = def.text; // already resolved in CardDefinitionCache
 			var cd = new CardData
 			{
 				Name = name,
