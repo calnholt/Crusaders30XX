@@ -39,7 +39,10 @@ namespace Crusaders30XX.ECS.Systems
                 case "courageous":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = +values[0] });
-                    EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
+                    // brief delay so cards in hand are updated
+                    TimerScheduler.Schedule(.05f, () => {
+                        EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
+                    });
                     break;
                 }
                 case "dowse_with_holy_water":

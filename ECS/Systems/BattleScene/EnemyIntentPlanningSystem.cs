@@ -119,7 +119,8 @@ namespace Crusaders30XX.ECS.Systems
 					AttackId = id,
 					ResolveStep = System.Math.Max(1, index + 1),
 					ContextId = ctx,
-					WasBlocked = false
+					WasBlocked = false,
+					IsAmbush = true
 				});
 				EventManager.Publish(new IntentPlanned
 				{

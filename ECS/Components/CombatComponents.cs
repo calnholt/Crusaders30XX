@@ -37,6 +37,7 @@ namespace Crusaders30XX.ECS.Components
 		public string ContextId;
 		public bool WasBlocked;
 		public bool IsStunned;
+		public bool IsAmbush;
 	}
 
 	// Stun is now tracked per PlannedAttack via IsStunned flag
