@@ -82,7 +82,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "vindicate":
                 {
-                    int damage = values[0] + courage * 2;
+                    int damage = values[0] + (courage * values[1]);
                     EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -damage, DamageType = ModifyTypeEnum.Attack });
                     EventManager.Publish(new SetCourageEvent { Amount = 0 });
                     break;

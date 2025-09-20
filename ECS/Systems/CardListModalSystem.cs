@@ -26,9 +26,9 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 200)]
         public int Padding { get; set; } = 32;
         [DebugEditable(DisplayName = "Close Size", Step = 1, Min = 0, Max = 200)]
-        public int CloseSize { get; set; } = 28;
+        public int CloseSize { get; set; } = 40;
         [DebugEditable(DisplayName = "Scroll Step", Step = 1, Min = 0, Max = 200)]
-        public int ScrollStep { get; set; } = 40;
+        public int ScrollStep { get; set; } = 100;
         private int GridCellW
         {
             get
