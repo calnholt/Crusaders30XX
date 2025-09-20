@@ -1,7 +1,7 @@
 {
   "name": "Succubus",
   "id": "succubus",
-  "hp": 100,
+  "hp": 75,
   "attacks": [
     {
       "id": "velvet_fangs",
@@ -26,38 +26,7 @@
       "effectsOnNotBlocked": [
         {
           "type": "LoseCourage",
-          "amount": 3
-        },
-        {
-          "type": "Damage",
           "amount": 2
-        }
-      ]
-    },
-    {
-      "id": "bewitching_kiss",
-      "name": "Bewitching Kiss",
-      "target": "Player",
-      "positionType": "Linker",
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
-      },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 5
-        }
-      ],
-      "effectsOnNotBlocked": [
-        {
-          "type": "LoseCourage",
-          "amount": 3
         },
         {
           "type": "Damage",
@@ -70,6 +39,7 @@
       "name": "Soul Siphon",
       "target": "Player",
       "positionType": "Starter",
+      "ambushPercentage": 25,
       "conditionsBlocked": {
         "kind": "All",
         "children": [
@@ -128,6 +98,7 @@
       "name": "Crushing Adoration",
       "target": "Player",
       "positionType": "Ender",
+      "ambushPercentage": 10,
       "conditionsBlocked": {
         "kind": "All",
         "children": [
@@ -146,7 +117,7 @@
       "effectsOnNotBlocked": [
         {
           "type": "LoseCourage",
-          "amount": 6
+          "amount": 1
         }
       ]
     },
@@ -155,6 +126,7 @@
       "name": "Teasing Nip",
       "target": "Player",
       "positionType": "Starter",
+      "ambushPercentage": 100,
       "effectsOnHit": [
         {
           "type": "Damage",

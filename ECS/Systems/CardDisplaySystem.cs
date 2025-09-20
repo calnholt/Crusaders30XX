@@ -159,35 +159,39 @@ namespace Crusaders30XX.ECS.Systems
             
             if (cardData == null) return;
             
-            var cardColor = GetCardColor(cardData.Color);
-            var costColor = GetCostColor(cardData.CardCostType);
+			var cardColor = GetCardColor(cardData.Color);
+			var costColor = GetCostColor(cardData.CardCostType);
             
             // Draw card background (rotated if transform has rotation)
             float rotation = transform?.Rotation ?? 0f;
             // If this is a weapon and we're not in Action phase, gray it out
-            Color bgColor = cardColor;
+			Color bgColor = cardColor;
+			bool isWeaponDetected = false;
             try
             {
                 string id = (cardData.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
                 if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
                 {
-                    if (def.isWeapon)
+					if (def.isWeapon)
                     {
+						isWeaponDetected = true;
                         var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
                         var ui = entity.GetComponent<UIElement>();
                         // Detect if pay-cost overlay is active; when active, do not override interactability
                         var payStateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
                         var payState = payStateEntity?.GetComponent<PayCostOverlayState>();
                         bool overlayActive = payState != null && (payState.IsOpen || payState.IsReturning);
-                        if (phase != null && phase.Sub != SubPhase.Action)
+						if (phase != null && phase.Sub != SubPhase.Action)
                         {
                             bgColor = Color.DimGray;
                             if (ui != null) ui.IsInteractable = false;
                         }
-                        else if (!overlayActive)
+						else if (!overlayActive)
                         {
                             // Ensure weapon becomes interactable during Action only when no overlay is active
-                            if (ui != null) ui.IsInteractable = true;
+							if (ui != null) ui.IsInteractable = true;
+							// Use weapon-specific visuals: light yellow background
+							bgColor = Color.Gold;
                         }
                     }
                 }
@@ -200,7 +204,7 @@ namespace Crusaders30XX.ECS.Systems
             var cardCenter = new Vector2(cardRectForCenter.X + cardRectForCenter.Width / 2f, cardRectForCenter.Y + cardRectForCenter.Height / 2f);
             
             // Name text (wrapped within card width), rotated with card
-            var textColor = GetCardTextColor(cardData.Color);
+			var textColor = isWeaponDetected ? Color.Black : GetCardTextColor(cardData.Color);
             DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY), cardData.Name, textColor, _settings.NameScale);
             
             // Draw cost pips (colored circles with yellow outline) under the name
@@ -289,6 +293,7 @@ namespace Crusaders30XX.ECS.Systems
                 CardData.CardColor.Red => Color.DarkRed,
                 CardData.CardColor.White => Color.White,
                 CardData.CardColor.Black => Color.Black,
+                CardData.CardColor.Yellow => Color.LightYellow,
                 _ => Color.Gray
             };
         }

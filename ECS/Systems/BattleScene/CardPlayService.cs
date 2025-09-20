@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Cards;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -72,7 +73,7 @@ namespace Crusaders30XX.ECS.Systems
                 case "strike":
                 {
                     EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -values[0], DamageType = ModifyTypeEnum.Attack });
-                    if (System.Random.Shared.Next(0, 100) < values[1])
+                    if (Random.Shared.Next(0, 100) <= values[1])
                     {
                         EventManager.Publish(new ModifyActionPointsEvent { Delta = values[2] });
                     }

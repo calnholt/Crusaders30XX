@@ -52,7 +52,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (ability.trigger == "CourageGainedThreshold")
 				{
 					if (ability.oncePerBattle && st.EquipmentTriggeredThisBattle.Contains(ability.id)) continue;
-					if ((courage.Amount + e.Delta) >= Math.Max(1, ability.threshold))
+					if (courage.Amount >= Math.Max(1, ability.threshold))
 					{
 						EquipmentAbilityService.Activate(EntityManager, ability.id, ability);
 						if (ability.oncePerBattle) st.EquipmentTriggeredThisBattle.Add(ability.id);

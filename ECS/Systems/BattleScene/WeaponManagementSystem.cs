@@ -3,6 +3,8 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
+using Crusaders30XX.ECS.Data.Cards;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -65,13 +67,13 @@ namespace Crusaders30XX.ECS.Systems
 			if (equipped == null || string.IsNullOrWhiteSpace(equipped.WeaponId)) return null;
 			if (equipped.SpawnedEntity != null) return equipped.SpawnedEntity;
 			// Create a new card entity from definition id
-			if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(equipped.WeaponId, out var def)) return null;
+			if (!CardDefinitionCache.TryGet(equipped.WeaponId, out var def)) return null;
 			var weapon = CreateWeaponEntity(def);
 			equipped.SpawnedEntity = weapon;
 			return weapon;
 		}
 
-		private Entity CreateWeaponEntity(Crusaders30XX.ECS.Data.Cards.CardDefinition def)
+		private Entity CreateWeaponEntity(CardDefinition def)
 		{
 			string name = def.name ?? def.id ?? "Weapon";
 			// Create minimal card like EntityFactory.CreateCard
@@ -92,11 +94,11 @@ namespace Crusaders30XX.ECS.Systems
 				Type = CardData.CardType.Attack,
 				Rarity = ParseRarity(def.rarity),
 				ImagePath = string.Empty,
-				Color = CardData.CardColor.White,
+				Color = CardData.CardColor.Yellow,
 				CardCostType = CardData.CostType.NoCost,
 				BlockValue = 3
 			};
-			cd.CostArray = new System.Collections.Generic.List<CardData.CostType>();
+			cd.CostArray = new List<CardData.CostType>();
 			if (def.cost != null)
 			{
 				foreach (var c in def.cost)

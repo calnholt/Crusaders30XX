@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var availableIds = (arsenal?.AttackIds != null && arsenal.AttackIds.Count > 0)
 				? arsenal.AttackIds.ToList()
-				: new List<string> { "velvet_fangs", "bewitching_kiss", "soul_siphon", "enthralling_gaze", "crushing_adoration", "teasing_nip" };
+				: new List<string> { "velvet_fangs", "soul_siphon", "enthralling_gaze", "crushing_adoration", "teasing_nip" };
 			if (availableIds.Count == 0) return Enumerable.Empty<string>();
 
 			var defs = AttackDefinitionCache.GetAll();

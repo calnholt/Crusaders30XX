@@ -18,49 +18,6 @@ namespace Crusaders30XX.ECS.Factories
     /// </summary>
     public static class EntityFactory
     {
-        /// <summary>
-        /// Creates a new card entity
-        /// </summary>
-        public static Entity CreateCard(World world, string name, string description, int cost, 
-            CardData.CardType type, CardData.CardRarity rarity, string imagePath = "")
-        {
-            var entity = world.CreateEntity($"Card_{name}");
-            
-            var cardData = new CardData
-            {
-                Name = name,
-                Description = description,
-                Cost = cost,
-                Type = type,
-                Rarity = rarity,
-                ImagePath = imagePath
-            };
-            
-            var transform = new Transform
-            {
-                Position = Vector2.Zero,
-                Scale = Vector2.One
-            };
-            
-            var sprite = new Sprite
-            {
-                TexturePath = imagePath,
-                IsVisible = true
-            };
-            
-            var uiElement = new UIElement
-            {
-                Bounds = new Rectangle(0, 0, 250, 350),
-                IsInteractable = true
-            };
-            
-            world.AddComponent(entity, cardData);
-            world.AddComponent(entity, transform);
-            world.AddComponent(entity, sprite);
-            world.AddComponent(entity, uiElement);
-            
-            return entity;
-        }
         
         /// <summary>
         /// Creates a player entity
@@ -245,39 +202,6 @@ namespace Crusaders30XX.ECS.Factories
             return entity;
         }
         
-        /// <summary>
-        /// Creates a UI element entity
-        /// </summary>
-        public static Entity CreateUIElement(World world, string name, Rectangle bounds, string texturePath = "")
-        {
-            var entity = world.CreateEntity(name);
-            
-            var transform = new Transform
-            {
-                Position = new Vector2(bounds.X, bounds.Y),
-                Scale = Vector2.One
-            };
-            
-            var sprite = new Sprite
-            {
-                TexturePath = texturePath,
-                IsVisible = true
-            };
-            
-            var uiElement = new UIElement
-            {
-                Bounds = bounds,
-                IsInteractable = true
-            };
-            
-            world.AddComponent(entity, transform);
-            world.AddComponent(entity, sprite);
-            world.AddComponent(entity, uiElement);
-            
-            return entity;
-        }
-        
-
         /// <summary>
         /// Creates a set of demo cards from JSON definitions in ECS/Data/Cards
         /// Description format: "X damage. If courage is >= threshold, this deals bonus damage instead."

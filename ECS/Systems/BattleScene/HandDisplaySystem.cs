@@ -262,6 +262,16 @@ namespace Crusaders30XX.ECS.Systems
                         if (payState.SelectedCards.Contains(e)) return false;
                         var cd = e.GetComponent<CardData>();
                         if (cd == null) return false;
+						// Never allow the weapon to be used to pay costs; hide it
+						try
+						{
+							string id = (cd.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+							if (!string.IsNullOrEmpty(id) && CardDefinitionCache.TryGet(id, out var def))
+							{
+								if (def.isWeapon) return false;
+							}
+						}
+						catch { }
                         foreach (var req in payState.RequiredCosts)
                         {
                             if (req == "Any") return true;

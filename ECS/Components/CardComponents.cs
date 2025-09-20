@@ -46,7 +46,8 @@ namespace Crusaders30XX.ECS.Components
         {
             White,
             Red,
-            Black
+            Black,
+            Yellow
         }
         
         public enum CostType

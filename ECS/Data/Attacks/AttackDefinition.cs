@@ -8,6 +8,7 @@ namespace Crusaders30XX.ECS.Data.Attacks
 		public string name { get; set; }
 		public string target { get; set; } = "Player";
 		public string positionType { get; set; } = "Linker"; // "Starter" | "Linker" | "Ender"
+		public int ambushPercentage { get; set; } = -1;
 		public ConditionNode conditionsBlocked { get; set; }
 		public EffectDefinition[] effectsOnHit { get; set; } = System.Array.Empty<EffectDefinition>();
 		public EffectDefinition[] effectsOnNotBlocked { get; set; } = System.Array.Empty<EffectDefinition>();

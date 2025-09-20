@@ -92,6 +92,7 @@
       "name": "Rending Claw",
       "target": "Player",
       "positionType": "Linker",
+      "ambushPercentage": 15,
       "conditionsBlocked": {
         "kind": "All",
         "children": [
@@ -119,6 +120,7 @@
       "name": "Infernal Execution",
       "target": "Player",
       "positionType": "Ender",
+      "ambushPercentage": 10,
       "conditionsBlocked": {
         "kind": "All",
         "children": [
@@ -146,6 +148,7 @@
       "name": "Gouging Jab",
       "target": "Player",
       "positionType": "Starter",
+      "ambushPercentage": 75,
       "effectsOnHit": [
         {
           "type": "Damage",

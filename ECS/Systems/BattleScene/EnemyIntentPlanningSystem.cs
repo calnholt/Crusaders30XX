@@ -120,7 +120,7 @@ namespace Crusaders30XX.ECS.Systems
 					ResolveStep = System.Math.Max(1, index + 1),
 					ContextId = ctx,
 					WasBlocked = false,
-					// IsAmbush = true
+					IsAmbush = Random.Shared.Next(0, 100) < def.ambushPercentage
 				});
 				EventManager.Publish(new IntentPlanned
 				{
