@@ -58,6 +58,7 @@ namespace Crusaders30XX.ECS.Systems
 		private GuardianAngelDisplaySystem _guardianAngelDisplaySystem;
 		private EnemyIntentPipsSystem _enemyIntentPipsSystem;
 		private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
+		private AmbushDisplaySystem _ambushDisplaySystem;
 		private QueuedEventsDisplaySystem _queuedEventsDisplaySystem;
 		private CardPlayedAnimationSystem _cardPlayedAnimationSystem;
 		private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
@@ -130,6 +131,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", _enemyIntentPipsSystem.Draw);
 			FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", _enemyAttackDisplaySystem.Draw);
+			FrameProfiler.Measure("AmbushDisplaySystem.Draw", _ambushDisplaySystem.Draw);
 			FrameProfiler.Measure("QueuedEventsDisplaySystem.Draw", _queuedEventsDisplaySystem.Draw);
 			FrameProfiler.Measure("StunnedOverlaySystem.Draw", _stunnedOverlaySystem.Draw);
 			FrameProfiler.Measure("EndTurnDisplaySystem.Draw", _endTurnDisplaySystem.Draw);
@@ -296,6 +298,7 @@ namespace Crusaders30XX.ECS.Systems
 			_guardianAngelDisplaySystem = new GuardianAngelDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
+			_ambushDisplaySystem = new AmbushDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_queuedEventsDisplaySystem = new QueuedEventsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_cardPlayedAnimationSystem = new CardPlayedAnimationSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_endTurnDisplaySystem = new EndTurnDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
@@ -370,6 +373,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_stunnedOverlaySystem);
 			_world.AddSystem(_attackResolutionSystem);
 			_world.AddSystem(_enemyAttackDisplaySystem);
+			_world.AddSystem(_ambushDisplaySystem);
 			_world.AddSystem(_queuedEventsDisplaySystem);
 			_world.AddSystem(_cardPlayedAnimationSystem);
 			_world.AddSystem(_endTurnDisplaySystem);

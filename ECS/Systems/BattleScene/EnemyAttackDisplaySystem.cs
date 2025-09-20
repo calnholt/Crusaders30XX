@@ -302,6 +302,9 @@ namespace Crusaders30XX.ECS.Systems
 			// Only render during enemy phases (Block / EnemyAttack)
 			var phaseNowForDraw = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>().Sub;
 			if (phaseNowForDraw != SubPhase.Block && phaseNowForDraw != SubPhase.EnemyAttack) return;
+			// Gate display during ambush intro
+			var ambushState = EntityManager.GetEntitiesWithComponent<AmbushState>().FirstOrDefault()?.GetComponent<AmbushState>();
+			if (ambushState != null && ambushState.IsActive && ambushState.IntroActive) return;
 			if (_absorbCompleteFired) return;
 
 			var pa = intent.Planned[0];

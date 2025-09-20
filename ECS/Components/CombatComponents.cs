@@ -123,6 +123,20 @@ namespace Crusaders30XX.ECS.Components
 		public float Elapsed { get; set; } = 0f;
 		public bool ImpactPlayed { get; set; } = false;
 	}
+
+	/// <summary>
+	/// Singleton component holding ambush overlay/timer state for the current ambush context.
+	/// </summary>
+	public class AmbushState : IComponent
+	{
+		public Entity Owner { get; set; }
+		public string ContextId { get; set; }
+		public bool IsActive { get; set; }
+		public bool IntroActive { get; set; }
+		public float TimerDurationSeconds { get; set; } = 20f;
+		public float TimerRemainingSeconds { get; set; } = 0f;
+		public bool FiredAutoConfirm { get; set; } = false;
+	}
 }
 
 
