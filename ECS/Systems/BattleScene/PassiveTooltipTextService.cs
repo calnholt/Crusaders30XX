@@ -1,0 +1,25 @@
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Utils;
+using Crusaders30XX.ECS.Data.Cards;
+
+namespace Crusaders30XX.ECS.Systems
+{
+  internal static class PassiveTooltipTextService
+  {
+    public static string GetText(AppliedPassiveType type, bool isPlayer, int stacks)
+    {
+      switch (type)
+      {
+        case AppliedPassiveType.Burn:
+          return $"At the start of {(isPlayer ? "your" : "the enemy's")} turn, {(isPlayer ? "you take" : "it takes")} {stacks} damage.";
+        case AppliedPassiveType.DowseWithHolyWater:
+          CardDefinitionCache.TryGet("dowse_with_holy_water", out var def);
+          return $"Your next attack this turn deals +{def.valuesParse[0] * stacks} damage.";
+        default:
+          return StringUtils.ToSentenceCase(type.ToString());
+      }
+    }
+  }
+}
+
+

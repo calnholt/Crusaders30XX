@@ -1,5 +1,15 @@
-- eats courage, grows stronger
+- eats courage, grows stronger (?)
 - puts bad cards in deck
-- discard effect
-- only 1 free action per turn
-- tanky enemy
+- mill cards
+- spider - lots of ambush, on hits decrease ambush time
+- armor value - decreases damage from attacks by X, encourages bigger attacks
+- wounded value - increases damage from attacks by X, encourages more individual attacks
+- attacks that on hit specifically destroys highlighted card(s) in hand
+- thorns - when attacked take X thorn damage
+
+
+
+
+generic attack pool?
+
+

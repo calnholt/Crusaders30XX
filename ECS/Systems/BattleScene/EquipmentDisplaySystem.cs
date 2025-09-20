@@ -519,10 +519,18 @@ namespace Crusaders30XX.ECS.Systems
 							string text = string.Empty;
 							if (!string.IsNullOrWhiteSpace(a.text)) {
 								if (a.type == "Activate") {
-									text += "Activate: ";
+									text += $"Activate ({(a.isFreeAction ? "free action" : "1AP")}): ";
 								}
 							}
 							text += a.text;
+							if (a.requiresUseOnActivate)
+							{
+								text += " Lose one use.";
+							}
+							if (a.destroyOnActivate)
+							{
+								text += " Destroy this.";
+							}
 							parts.Add(text);
 						}
 					}

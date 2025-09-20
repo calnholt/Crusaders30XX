@@ -4,7 +4,7 @@
   "target": "Enemy",
   "valuesParse": [2, 3],
   "rarity": "Common",
-  "text": "As an additional cost, lose {1} courage.\n\nDeal {2} damage.",
+  "text": "As an additional cost, lose {1} courage. Deal {2} damage.",
   "isFreeAction": true,
   "isWeapon": true,
   "animation": "Attack"

@@ -12,7 +12,7 @@
       "effect": "GainActionPoint",
       "effectCount": 1,
       "destroyOnActivate": true,
-      "text": "Gain 1 action point. Destroy this.",
+      "text": "Gain 1 action point.",
       "isFreeAction": true
     }
   ]

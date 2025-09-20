@@ -17,6 +17,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font;
 		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedCache = new();
+        private readonly System.Collections.Generic.Dictionary<(int ownerId, AppliedPassiveType type), Entity> _tooltipUiByKey = new();
 
         [DebugEditable(DisplayName = "Offset Y", Step = 1, Min = -500, Max = 500)]
         public int OffsetY { get; set; } = 4;
@@ -105,6 +106,7 @@ namespace Crusaders30XX.ECS.Systems
 
             foreach (var e in entities)
             {
+                bool isPlayer = e.GetComponent<Player>() != null;
                 var ap = e.GetComponent<AppliedPassives>();
                 var t = e.GetComponent<Transform>();
                 if (ap == null || ap.Passives == null || ap.Passives.Count == 0 || t == null) continue;
@@ -166,6 +168,7 @@ namespace Crusaders30XX.ECS.Systems
 					_spriteBatch.Draw(chipTexture, chipRect, chipBg);
                     var textPos = new Vector2(x + (w - sizes[i].X) / 2f, baseY + (h - sizes[i].Y) / 2f);
                     _spriteBatch.DrawString(_font, items[i].Label, textPos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+                    UpdateTooltipUi(key, chipRect, PassiveTooltipTextService.GetText(items[i].Type, isPlayer, items[i].Count));
                     x += w + Spacing;
                 }
             }
@@ -185,6 +188,34 @@ namespace Crusaders30XX.ECS.Systems
 			_roundedCache[key] = created;
 			return created;
 		}
+
+        private void UpdateTooltipUi((int ownerId, AppliedPassiveType type) key, Rectangle rect, string text)
+        {
+            if (!_tooltipUiByKey.TryGetValue(key, out var uiEntity) || uiEntity == null)
+            {
+                uiEntity = EntityManager.CreateEntity($"UI_PassiveTooltip_{key.ownerId}_{key.type}");
+                EntityManager.AddComponent(uiEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 });
+                EntityManager.AddComponent(uiEntity, new UIElement { Bounds = rect, IsInteractable = true, Tooltip = text ?? string.Empty, TooltipPosition = TooltipPosition.Below });
+                _tooltipUiByKey[key] = uiEntity;
+            }
+            else
+            {
+                var tr = uiEntity.GetComponent<Transform>();
+                if (tr != null)
+                {
+                    tr.Position = new Vector2(rect.X, rect.Y);
+                    tr.ZOrder = 10001;
+                }
+                var ui = uiEntity.GetComponent<UIElement>();
+                if (ui != null)
+                {
+                    ui.Bounds = rect;
+                    ui.Tooltip = text ?? string.Empty;
+                    ui.TooltipPosition = TooltipPosition.Below;
+                    ui.IsInteractable = true;
+                }
+            }
+        }
         [DebugAction("Simulate Burn Trigger")]
         public void Debug_SimulateBurnTrigger()
         {

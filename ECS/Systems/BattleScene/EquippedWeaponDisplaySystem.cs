@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Data.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -159,19 +160,11 @@ namespace Crusaders30XX.ECS.Systems
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             var ew = player?.GetComponent<EquippedWeapon>();
             if (ew == null || string.IsNullOrWhiteSpace(ew.WeaponId)) return "Weapon";
-            // Use name/text from card definition cache if available
-            string name = ew.WeaponId;
-            string desc = string.Empty;
-            try
-            {
-                if (ECS.Data.Cards.CardDefinitionCache.TryGet(ew.WeaponId, out var def) && def != null)
-                {
-                    name = string.IsNullOrWhiteSpace(def.name) ? ew.WeaponId : def.name;
-                    desc = def.text ?? string.Empty;
-                }
-            }
-            catch { }
-            return string.IsNullOrWhiteSpace(desc) ? name : (name + "\n\n" + desc);
+            CardDefinitionCache.TryGet(ew.WeaponId, out var def);
+            string name = $"{def.name} - {(def.isFreeAction ? "free action" : "1AP")}";
+            string desc = def.text ?? string.Empty;
+            string cost = (def.cost != null && def.cost.Length > 0) ? $"Cost: {string.Join(", ", def.cost)}" : string.Empty;
+            return $"{name} {(cost != string.Empty ? $"\n{cost}" : string.Empty)}\n\n{desc}";
         }
     }
 }
