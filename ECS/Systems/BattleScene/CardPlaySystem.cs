@@ -86,6 +86,37 @@ namespace Crusaders30XX.ECS.Systems
                     var deck = deckEntityForCost?.GetComponent<Deck>();
                     if (deck == null) return;
                     var handOthers = deck.Hand.Where(c => c != evt.Card).ToList();
+                    // Exclude weapons from being considered as payment candidates
+                    List<Entity> handNonWeapons = new List<Entity>();
+                    foreach (var e in handOthers)
+                    {
+                        var cdOther = e.GetComponent<CardData>();
+                        if (cdOther == null)
+                        {
+                            handNonWeapons.Add(e);
+                            continue;
+                        }
+                        try
+                        {
+                            string oid = (cdOther.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+                            if (!string.IsNullOrEmpty(oid) && CardDefinitionCache.TryGet(oid, out var odef))
+                            {
+                                if (!odef.isWeapon)
+                                {
+                                    handNonWeapons.Add(e);
+                                }
+                            }
+                            else
+                            {
+                                // If no definition found, treat as non-weapon to avoid false negatives
+                                handNonWeapons.Add(e);
+                            }
+                        }
+                        catch
+                        {
+                            handNonWeapons.Add(e);
+                        }
+                    }
 
                     // Helper to attempt greedy satisfaction of remaining requirements
                     bool CanSatisfy(List<string> req, List<Entity> candidates, out List<Entity> picks)
@@ -125,7 +156,7 @@ namespace Crusaders30XX.ECS.Systems
                         return remaining.Count == 0;
                     }
 
-                    bool canSatisfy = CanSatisfy(requiredCosts, handOthers, out var autoPicks);
+                    bool canSatisfy = CanSatisfy(requiredCosts, handNonWeapons, out var autoPicks);
 
                     if (!canSatisfy)
                     {
@@ -139,9 +170,9 @@ namespace Crusaders30XX.ECS.Systems
                     int needWhite = requiredCosts.Count(c => c == "White");
                     int needBlack = requiredCosts.Count(c => c == "Black");
                     int needAny = requiredCosts.Count(c => c == "Any");
-                    var redCards = handOthers.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.Red).ToList();
-                    var whiteCards = handOthers.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.White).ToList();
-                    var blackCards = handOthers.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.Black).ToList();
+                    var redCards = handNonWeapons.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.Red).ToList();
+                    var whiteCards = handNonWeapons.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.White).ToList();
+                    var blackCards = handNonWeapons.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.Black).ToList();
                     var deterministic = new List<Entity>();
                     bool specificExact = (needRed == redCards.Count || needRed == 0)
                                         && (needWhite == whiteCards.Count || needWhite == 0)
@@ -151,7 +182,7 @@ namespace Crusaders30XX.ECS.Systems
                         if (needRed == redCards.Count) deterministic.AddRange(redCards);
                         if (needWhite == whiteCards.Count) deterministic.AddRange(whiteCards);
                         if (needBlack == blackCards.Count) deterministic.AddRange(blackCards);
-                        var remaining = handOthers.Except(deterministic).ToList();
+                        var remaining = handNonWeapons.Except(deterministic).ToList();
                         if (needAny == 0 || remaining.Count == needAny)
                         {
                             if (needAny > 0) deterministic.AddRange(remaining);
@@ -167,7 +198,7 @@ namespace Crusaders30XX.ECS.Systems
                             }
                         }
                     }
-                    if (autoPicks.Count == 1 && handOthers.Count == 1)
+                    if (autoPicks.Count == 1 && handNonWeapons.Count == 1)
                     {
                         // Single deterministic discard -> auto pay and continue
                         System.Console.WriteLine("[CardPlaySystem] Auto-paying cost with only available card");
@@ -176,7 +207,7 @@ namespace Crusaders30XX.ECS.Systems
                         EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
                         return;
                     }
-                    else if (requiredCosts.All(c => c == "Any") && autoPicks.Count == requiredCosts.Count && handOthers.Count == autoPicks.Count)
+                    else if (requiredCosts.All(c => c == "Any") && autoPicks.Count == requiredCosts.Count && handNonWeapons.Count == autoPicks.Count)
                     {
                         // Exact number of cards equal to Any requirement -> auto pay all
                         foreach (var p in autoPicks)
