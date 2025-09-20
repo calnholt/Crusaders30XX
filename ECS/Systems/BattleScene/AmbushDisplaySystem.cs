@@ -26,8 +26,14 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly System.Random _rand = new System.Random();
 
 		// Debug-editable tuning
-		[DebugEditable(DisplayName = "Intro Duration (s)", Step = 0.05f, Min = 0.2f, Max = 5f)]
-		public float IntroDurationSeconds { get; set; } = 0.7f;
+		[DebugEditable(DisplayName = "Intro Drop Duration (s)", Step = 0.05f, Min = 0.05f, Max = 3f)]
+		public float IntroDropDurationSeconds { get; set; } = 0.3f;
+
+		[DebugEditable(DisplayName = "Intro Hold Duration (s)", Step = 0.05f, Min = 0f, Max = 3f)]
+		public float IntroHoldDurationSeconds { get; set; } = 0.3f;
+
+		[DebugEditable(DisplayName = "Intro Shrink Duration (s)", Step = 0.05f, Min = 0.05f, Max = 3f)]
+		public float IntroShrinkDurationSeconds { get; set; } = 0.1f;
 
 		[DebugEditable(DisplayName = "Text Scale Base", Step = 0.05f, Min = 0.2f, Max = 2f)]
 		public float TextScaleBase { get; set; } = 0.6f;
@@ -43,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Intro Shake Amplitude (px)", Step = 1, Min = 0, Max = 30)]
 		public int IntroShakeAmplitudePx { get; set; } = 1;
+
 
 		[DebugEditable(DisplayName = "Meter Width", Step = 5, Min = 100, Max = 800)]
 		public int MeterWidth { get; set; } = 500;
@@ -63,7 +70,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int MeterFillAlpha { get; set; } = 240;
 
 		[DebugEditable(DisplayName = "Default Timer (s)", Step = 1, Min = 1, Max = 60)]
-		public int DefaultTimerSeconds { get; set; } = 60;
+		public int DefaultTimerSeconds { get; set; } = 15;
 
 		public AmbushDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
 		{
@@ -144,7 +151,11 @@ namespace Crusaders30XX.ECS.Systems
 			if (st.IsActive && phase == SubPhase.Block)
 			{
 				_introElapsed += dt;
-				if (st.IntroActive && _introElapsed >= IntroDurationSeconds)
+				float dropDurChk = System.Math.Max(0.0001f, IntroDropDurationSeconds);
+				float holdDurChk = System.Math.Max(0f, IntroHoldDurationSeconds);
+				float shrinkDurChk = System.Math.Max(0.0001f, IntroShrinkDurationSeconds);
+				float totalChk = dropDurChk + holdDurChk + shrinkDurChk;
+				if (st.IntroActive && _introElapsed >= totalChk)
 				{
 					st.IntroActive = false;
 				}
@@ -179,13 +190,41 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				// Big red "Ambush!" with drop-in + shake + overshoot scale
 				string text = "Ambush!";
-				float t = MathHelper.Clamp(_introElapsed / System.Math.Max(0.0001f, IntroDurationSeconds), 0f, 1f);
-				float ease = 1f - (float)System.Math.Pow(1f - t, 3);
-				float scale = TextScaleBase + TextScaleOvershoot * (1f - (float)System.Math.Cos(ease * System.MathF.PI));
+				float dropDur = System.Math.Max(0.0001f, IntroDropDurationSeconds);
+				float holdDur = System.Math.Max(0f, IntroHoldDurationSeconds);
+				float shrinkDur = System.Math.Max(0.0001f, IntroShrinkDurationSeconds);
+				float total = dropDur + holdDur + shrinkDur;
+				float t = MathHelper.Clamp(_introElapsed / total, 0f, 1f);
+				float tSecs = _introElapsed;
+				float scale;
+				float easeDrop = 1f - (float)System.Math.Pow(1f - MathHelper.Clamp(tSecs / dropDur, 0f, 1f), 3);
+				float appearScale = TextScaleBase + TextScaleOvershoot * (1f - (float)System.Math.Cos(easeDrop * System.MathF.PI));
+				if (tSecs <= dropDur)
+				{
+					scale = appearScale;
+				}
+				else if (tSecs <= dropDur + holdDur)
+				{
+					scale = appearScale;
+				}
+				else
+				{
+					float stp = MathHelper.Clamp((tSecs - dropDur - holdDur) / shrinkDur, 0f, 1f);
+					float shrinkEase = 1f - (float)System.Math.Pow(1f - stp, 2);
+					scale = MathHelper.Lerp(appearScale, 0f, shrinkEase);
+				}
 				// Drop from top
 				float yStart = vy * (TextStartYPercent / 100f);
 				float yEnd = vy * (TextEndYPercent / 100f);
-				float yPos = MathHelper.Lerp(yStart, yEnd, ease);
+				float yPos;
+				if (tSecs <= dropDur)
+				{
+					yPos = MathHelper.Lerp(yStart, yEnd, easeDrop);
+				}
+				else
+				{
+					yPos = yEnd;
+				}
 				int shakeAmp = IntroShakeAmplitudePx;
 				int sx = _rand.Next(-shakeAmp, shakeAmp + 1);
 				int sy = _rand.Next(-shakeAmp, shakeAmp + 1);
