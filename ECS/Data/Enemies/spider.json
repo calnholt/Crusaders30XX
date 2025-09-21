@@ -1,7 +1,8 @@
 {
   "name": "Spider",
   "id": "spider",
-  "hp": 75,
+  "hp": 100,
+  "genericAttackAmbushPercentage": 100,
   "attacks": [
     {
       "id": "suffocating_silk",
@@ -40,7 +41,7 @@
       "effectsOnHit": [
         {
           "type": "Damage",
-          "amount": 5
+          "amount": 3
         }
       ]
     },
@@ -90,13 +91,13 @@
       "effectsOnHit": [
         {
           "type": "Damage",
-          "amount": 2
+          "amount": 1
         }
       ],
       "effectsOnNotBlocked": [
         {
           "type": "Damage",
-          "amount": 3,
+          "amount": 5,
           "percentage": 50
         }
       ]

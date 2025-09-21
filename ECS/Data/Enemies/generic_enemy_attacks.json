@@ -5,6 +5,7 @@
       "name": "Have No Mercy",
       "target": "Player",
       "positionType": "Ender",
+      "isGeneric": true,
       "conditionsBlocked": {
         "kind": "All",
         "children": [

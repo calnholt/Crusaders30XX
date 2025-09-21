@@ -12,6 +12,8 @@ namespace Crusaders30XX.ECS.Systems
     /// </summary>
     public class MarkedForSpecificDiscardSystem : Core.System
     {
+		private string _lastContextId = null;
+		private readonly System.Random _random = new System.Random();
         public MarkedForSpecificDiscardSystem(EntityManager entityManager) : base(entityManager)
         {
             // When the phase leaves Block/EnemyAttack, clear marks
@@ -20,6 +22,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (evt.Current != SubPhase.Block && evt.Current != SubPhase.EnemyAttack)
                 {
                     ClearExistingSpecificDiscardMarks();
+					_lastContextId = null;
                 }
             });
         }
@@ -32,9 +35,15 @@ namespace Crusaders30XX.ECS.Systems
         protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime)
         {
             var intent = entity.GetComponent<AttackIntent>();
-            if (intent == null || intent.Planned.Count == 0) { ClearExistingSpecificDiscardMarks(); return; }
+			if (intent == null || intent.Planned.Count == 0) { ClearExistingSpecificDiscardMarks(); _lastContextId = null; return; }
 
             var ctx = intent.Planned[0].ContextId;
+			if (_lastContextId != ctx)
+			{
+				// New attack context: clear previous marks once and remember this context
+				ClearExistingSpecificDiscardMarks();
+				_lastContextId = ctx;
+			}
             TryPreselectSpecificDiscards(ctx);
         }
 
@@ -44,7 +53,7 @@ namespace Crusaders30XX.ECS.Systems
             return def;
         }
 
-        private void TryPreselectSpecificDiscards(string contextId)
+		private void TryPreselectSpecificDiscards(string contextId)
         {
             try
             {
@@ -56,11 +65,12 @@ namespace Crusaders30XX.ECS.Systems
                 if (def == null || def.effectsOnNotBlocked == null) return;
                 int amount = def.effectsOnNotBlocked.Where(e => e.type == "DiscardSpecificCard").Sum(e => e.amount);
                 if (amount <= 0) { ClearExistingSpecificDiscardMarks(); return; }
+				// If already selected for this context, persist selections (do not reseed on block assignments)
+				bool alreadySelected = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>()
+					.Any(e => e.GetComponent<MarkedForSpecificDiscard>()?.ContextId == contextId);
+				if (alreadySelected) return;
 
-                // Clear any previous marks first
-                ClearExistingSpecificDiscardMarks();
-
-                // Select deterministic cards from hand (excluding weapon card)
+				// Select random cards from hand (excluding weapon card)
                 var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 var deck = deckEntity?.GetComponent<Deck>();
                 if (deck == null) return;
@@ -72,22 +82,24 @@ namespace Crusaders30XX.ECS.Systems
                     weapon = player?.GetComponent<EquippedWeapon>()?.SpawnedEntity;
                 }
                 catch { }
-                var candidates = deck.Hand.Where(c => !ReferenceEquals(c, weapon)).ToList();
-                int pick = System.Math.Min(amount, candidates.Count);
-                for (int i = 0; i < pick; i++)
-                {
-                    var card = candidates[i];
-                    var mark = card.GetComponent<MarkedForSpecificDiscard>();
-                    if (mark == null)
-                    {
-                        mark = new MarkedForSpecificDiscard { ContextId = contextId };
-                        EntityManager.AddComponent(card, mark);
-                    }
-                    else
-                    {
-                        mark.ContextId = contextId;
-                    }
-                }
+				var candidates = deck.Hand.Where(c => !ReferenceEquals(c, weapon)).ToList();
+				int pick = System.Math.Min(amount, candidates.Count);
+				if (pick <= 0) return;
+				// Shuffle candidates and take the first N
+				var selected = candidates.OrderBy(_ => _random.Next()).Take(pick).ToList();
+				foreach (var card in selected)
+				{
+					var mark = card.GetComponent<MarkedForSpecificDiscard>();
+					if (mark == null)
+					{
+						mark = new MarkedForSpecificDiscard { ContextId = contextId };
+						EntityManager.AddComponent(card, mark);
+					}
+					else
+					{
+						mark.ContextId = contextId;
+					}
+				}
             }
             catch { }
         }

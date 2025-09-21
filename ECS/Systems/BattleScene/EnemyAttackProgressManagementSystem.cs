@@ -188,16 +188,16 @@ namespace Crusaders30XX.ECS.Systems
 			p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
-			int preventedBlockCondition = isConditionMet ? (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
+			int preventedDamageFromBlockCondition = isConditionMet ? (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount) : 0;
 			int reduced = stored + p.AssignedBlockTotal;
-			int actual = full - reduced - preventedBlockCondition;
+			int actual = full - reduced - preventedDamageFromBlockCondition;
 			if (actual < 0) actual = 0;
 
 			p.IsConditionMet = isConditionMet;
 			p.ActualDamage = actual;
-			p.PreventedDamage = stored + p.AssignedBlockTotal + (isConditionMet ? preventedBlockCondition : 0);
+			p.PreventedDamage = stored + p.AssignedBlockTotal + (isConditionMet ? preventedDamageFromBlockCondition : 0);
 			p.DamageBeforePrevention = full; // actual + prevented (by definition of ComputeFullDamage)
 		}
 

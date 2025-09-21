@@ -56,6 +56,7 @@ namespace Crusaders30XX.ECS.Systems
 						EffectType = eff.type,
 						Amount = eff.amount,
 						Status = eff.status,
+						Percentage = eff.percentage,
 						Stacks = eff.stacks,
 						Source = source,
 						Target = target

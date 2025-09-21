@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -31,7 +32,9 @@ namespace Crusaders30XX.ECS.Systems
         {
             if ((e.EffectType ?? string.Empty) != "Damage") return;
             // Accumulate incoming damage; apply on EnemyAttackImpactNow
-            int amt = System.Math.Max(0, e.Amount);
+            Console.WriteLine($"[EnemyDamageManagerSystem] ApplyEffect {e.EffectType} {e.Amount} {e.Percentage}");
+            if (e.Percentage != 100 && Random.Shared.Next(0, 100) > e.Percentage) return;
+            int amt = Math.Max(0, e.Amount);
             _pendingDamage += amt;
         }
 

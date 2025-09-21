@@ -8,7 +8,8 @@ namespace Crusaders30XX.ECS.Data.Attacks
 		public string name { get; set; }
 		public string target { get; set; } = "Player";
 		public string positionType { get; set; } = "Linker"; // "Starter" | "Linker" | "Ender"
-		public int ambushPercentage { get; set; } = -1;
+		public int ambushPercentage { get; set; } = 0;
+		public bool isGeneric { get; set; } = false;
 		public ConditionNode conditionsBlocked { get; set; }
 		public EffectDefinition[] effectsOnHit { get; set; } = System.Array.Empty<EffectDefinition>();
 		public EffectDefinition[] effectsOnNotBlocked { get; set; } = System.Array.Empty<EffectDefinition>();
@@ -29,6 +30,7 @@ namespace Crusaders30XX.ECS.Data.Attacks
 		public string status { get; set; } // for ApplyStatus
 		public int stacks { get; set; } = 0;
 		public string target { get; set; } // optional override ("Self" etc.)
+		public int percentage { get; set; } = 100;
 	}
 }
 

@@ -595,7 +595,15 @@ namespace Crusaders30XX.ECS.Systems
 				switch (e.type)
 				{
 					case "Damage":
-						parts.Add($"+{e.amount} damage");
+						if (e.percentage != 100)
+						{
+							parts.Add($"{e.percentage}% chance for +{e.amount} damage");
+						}
+						else
+						{
+							parts.Add($"+{e.amount} damage");
+						}
+					
 						break;
 					case "Burn":
 						parts.Add($"Gain {e.amount} burn stacks");
@@ -603,15 +611,18 @@ namespace Crusaders30XX.ECS.Systems
 					case "LoseCourage":
 						parts.Add($"Lose {e.amount} courage");
 						break;
-				case "DiscardSpecificCard":
-					{
-						var markedCards = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>()
-							.Where(e => e.GetComponent<MarkedForSpecificDiscard>().ContextId == contextId)
-							.Select(e => e.GetComponent<CardData>()?.Name ?? "Card")
-							.ToList();
-						parts.Add($"Discard: {string.Join(", ", markedCards)}");
+					case "DiscardSpecificCard":
+						{
+							var markedCards = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>()
+								.Where(e => e.GetComponent<MarkedForSpecificDiscard>().ContextId == contextId)
+								.Select(e => e.GetComponent<CardData>()?.Name ?? "Card")
+								.ToList();
+							parts.Add($"Discard: {string.Join(", ", markedCards)}");
+							break;
+						}
+					case "Slow":
+						parts.Add($"Gain {e.amount} slow stacks");
 						break;
-					}
 					default:
 						parts.Add(e.type);
 						break;

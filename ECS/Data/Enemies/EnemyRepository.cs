@@ -31,6 +31,12 @@ namespace Crusaders30XX.ECS.Data.Enemies
 						hp = hpNode != null ? hpNode.GetValue<int>() : 1,
 						attackIds = new List<string>()
 					};
+					// optional: generic ambush percentage for generic attacks
+					var genAmbushNode = root["genericAttackAmbushPercentage"];
+					if (genAmbushNode != null)
+					{
+						try { def.genericAttackAmbushPercentage = genAmbushNode.GetValue<int>(); } catch { }
+					}
 					// attacks: either an array of objects with 'id' or 'attackIds' array of strings
 					if (root["attacks"] is JsonArray attacksArray)
 					{

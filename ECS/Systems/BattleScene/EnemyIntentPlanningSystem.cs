@@ -96,31 +96,37 @@ namespace Crusaders30XX.ECS.Systems
 					if (intent.Planned.Count == 0)
 					{
 						var currentIds = service.SelectForTurn(enemy, arsenal, Math.Max(0, turnNumber - 1));
-						AddPlanned(currentIds, intent);
+						AddPlanned(currentIds, intent, enemyId);
 					}
 					// Plan next-turn preview using this turn's selection
 					var nextIds = service.SelectForTurn(enemy, arsenal, Math.Max(0, turnNumber));
-					AddPlanned(nextIds, next);
+					{
+						AddPlanned(nextIds, next, enemyId);
+					}
 				}
 				_lastPlannedTurnNumber = turnNumber;
 				_isFirstLoad = false;
 			}
 		}
 
-		private void AddPlanned(IEnumerable<string> attackIds, dynamic target)
+		private void AddPlanned(IEnumerable<string> attackIds, dynamic target, string enemyId)
 		{
 			int index = (target.Planned is List<PlannedAttack> l) ? l.Count : 0;
 			foreach (var id in attackIds)
 			{
 				if (!_attackDefs.TryGetValue(id, out var def)) continue;
 				string ctx = Guid.NewGuid().ToString("N");
+				EnemyDefinitionCache.TryGet(enemyId, out var enemyDef);
+				AttackDefinitionCache.TryGet(id, out var attackDef);
+				Console.WriteLine($"[EnemyIntentPlanningSystem] AddPlanned id:{id} enemyId:{enemyId} isGeneric:{attackDef.isGeneric} genericAmbushPercentage:{enemyDef.genericAttackAmbushPercentage} ambushPercentage:{def.ambushPercentage}");
+				int ambushChance = attackDef.isGeneric ? enemyDef.genericAttackAmbushPercentage : def.ambushPercentage;
 				target.Planned.Add(new PlannedAttack
 				{
 					AttackId = id,
 					ResolveStep = System.Math.Max(1, index + 1),
 					ContextId = ctx,
 					WasBlocked = false,
-					IsAmbush = Random.Shared.Next(0, 100) < def.ambushPercentage
+					IsAmbush = ambushChance > 0 && Random.Shared.Next(0, 100) < ambushChance
 				});
 				EventManager.Publish(new IntentPlanned
 				{

@@ -8,6 +8,7 @@ namespace Crusaders30XX.ECS.Data.Enemies
 		public string name { get; set; }
 		public int hp { get; set; } = 1;
 		public List<string> attackIds { get; set; } = new();
+		public int genericAttackAmbushPercentage { get; set; } = 0;
 	}
 }
 
