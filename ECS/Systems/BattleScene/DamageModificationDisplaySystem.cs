@@ -1,0 +1,212 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace Crusaders30XX.ECS.Systems
+{
+    /// <summary>
+    /// Displays floating damage/heal text when HP is modified.
+    /// Subscribes to ModifyHpEvent; spawns ephemeral floaters at target body center.
+    /// </summary>
+    [DebugTab("Damage/Healing Text")]
+    public class DamageModificationDisplaySystem : Core.System
+    {
+        private readonly GraphicsDevice _graphicsDevice;
+        private readonly SpriteBatch _spriteBatch;
+        private readonly SpriteFont _font;
+
+        private class Floater
+        {
+            public int TargetEntityId;
+            public Vector2 StartWorldPos;
+            public float AgeSeconds;
+            public float LifetimeSeconds;
+            public int Amount; // signed; negative damage, positive heal
+            public bool IsHeal;
+            public float PopScale; // 0..1 internal state
+        }
+
+        private readonly List<Floater> _floaters = new List<Floater>();
+
+        // Debug controls
+        [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.2f, Max = 3.0f)]
+        public float BaseTextScale { get; set; } = 0.5f;
+
+        [DebugEditable(DisplayName = "Pop Duration (s)", Step = 0.01f, Min = 0.01f, Max = 1.0f)]
+        public float PopDurationSeconds { get; set; } = 0.12f;
+
+        [DebugEditable(DisplayName = "Float Duration (s)", Step = 0.05f, Min = 0.1f, Max = 4.0f)]
+        public float FloatDurationSeconds { get; set; } = 1.2f;
+
+        [DebugEditable(DisplayName = "Rise Pixels", Step = 2, Min = -400, Max = 400)]
+        public int RisePixels { get; set; } = 52;
+
+        [DebugEditable(DisplayName = "Horizontal Jitter", Step = 1, Min = 0, Max = 120)]
+        public int HorizontalJitter { get; set; } = 8;
+
+        [DebugEditable(DisplayName = "Damage R", Step = 1, Min = 0, Max = 255)]
+        public int DamageR { get; set; } = 220;
+        [DebugEditable(DisplayName = "Damage G", Step = 1, Min = 0, Max = 255)]
+        public int DamageG { get; set; } = 60;
+        [DebugEditable(DisplayName = "Damage B", Step = 1, Min = 0, Max = 255)]
+        public int DamageB { get; set; } = 60;
+
+        [DebugEditable(DisplayName = "Heal R", Step = 1, Min = 0, Max = 255)]
+        public int HealR { get; set; } = 255;
+        [DebugEditable(DisplayName = "Heal G", Step = 1, Min = 0, Max = 255)]
+        public int HealG { get; set; } = 255;
+        [DebugEditable(DisplayName = "Heal B", Step = 1, Min = 0, Max = 255)]
+        public int HealB { get; set; } = 255;
+
+        [DebugEditable(DisplayName = "Max Concurrent", Step = 1, Min = 1, Max = 64)]
+        public int MaxConcurrent { get; set; } = 16;
+
+        [DebugEditable(DisplayName = "Spawn From HPBar Center")] 
+        public bool SpawnFromHpBarCenter { get; set; } = false;
+
+        public DamageModificationDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+            : base(entityManager)
+        {
+            _graphicsDevice = graphicsDevice;
+            _spriteBatch = spriteBatch;
+            _font = font;
+            EventManager.Subscribe<ModifyHpEvent>(OnModifyHp);
+        }
+
+        protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+        {
+            // Presentation-only; reacts to events
+            return System.Array.Empty<Entity>();
+        }
+
+        protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+
+        public override void Update(GameTime gameTime)
+        {
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            for (int i = _floaters.Count - 1; i >= 0; i--)
+            {
+                var f = _floaters[i];
+                f.AgeSeconds += dt;
+                if (PopDurationSeconds > 0f)
+                {
+                    float tp = MathHelper.Clamp(f.AgeSeconds / PopDurationSeconds, 0f, 1f);
+                    float overshoot = 1.2f;
+                    float s = tp < 1f ? MathHelper.Lerp(0.2f, overshoot, 1f - (float)Math.Pow(1f - tp, 3f)) : 1f;
+                    f.PopScale = s;
+                }
+                else
+                {
+                    f.PopScale = 1f;
+                }
+                bool expired = f.AgeSeconds >= f.LifetimeSeconds;
+                if (expired)
+                {
+                    _floaters.RemoveAt(i);
+                    continue;
+                }
+                _floaters[i] = f;
+            }
+            base.Update(gameTime);
+        }
+
+        private void OnModifyHp(ModifyHpEvent e)
+        {
+            var target = ResolveTarget(e.Target);
+            if (target == null) return;
+            int amt = e.Delta;
+            if (amt == 0) return;
+            bool isHeal = amt > 0;
+            if (_floaters.Count >= MaxConcurrent)
+            {
+                // Drop oldest
+                _floaters.RemoveAt(0);
+            }
+
+            Vector2 center = ComputeBodyCenter(target);
+            if (SpawnFromHpBarCenter)
+            {
+                var anchor = target.GetComponent<HPBarAnchor>();
+                if (anchor != null)
+                {
+                    center = new Vector2(anchor.Rect.X + anchor.Rect.Width / 2f, anchor.Rect.Y + anchor.Rect.Height / 2f);
+                }
+            }
+
+            // Small random x jitter so multiple floaters are readable
+            float jx = HorizontalJitter > 0 ? (Random.Shared.NextSingle() * 2f - 1f) * HorizontalJitter : 0f;
+
+            _floaters.Add(new Floater
+            {
+                TargetEntityId = target.Id,
+                StartWorldPos = new Vector2(center.X + jx, center.Y),
+                Amount = Math.Abs(amt),
+                IsHeal = isHeal,
+                AgeSeconds = 0f,
+                LifetimeSeconds = Math.Max(0.05f, FloatDurationSeconds),
+                PopScale = 0f
+            });
+        }
+
+        private Entity ResolveTarget(Entity explicitTarget)
+        {
+            if (explicitTarget != null) return explicitTarget;
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            if (player != null) return player;
+            return EntityManager.GetEntitiesWithComponent<HP>().FirstOrDefault();
+        }
+
+        private Vector2 ComputeBodyCenter(Entity entity)
+        {
+            var t = entity.GetComponent<Transform>();
+            if (t == null) return Vector2.Zero;
+            var portrait = entity.GetComponent<PortraitInfo>();
+            if (portrait != null && portrait.TextureWidth > 0 && portrait.TextureHeight > 0)
+            {
+                // Use portrait center
+                return t.Position;
+            }
+            return t.Position;
+        }
+
+        public void Draw()
+        {
+            if (_font == null) return;
+            if (_floaters.Count == 0) return;
+
+            // Draw pass
+            foreach (var f in _floaters)
+            {
+                float t01 = MathHelper.Clamp(f.AgeSeconds / Math.Max(0.0001f, f.LifetimeSeconds), 0f, 1f);
+                // Rise with ease-out
+                float rise = RisePixels * (1f - (float)Math.Pow(1f - t01, 2f));
+                var pos = new Vector2(f.StartWorldPos.X, f.StartWorldPos.Y - rise);
+                // Fade out towards the end
+                float fadeStart = 0.4f; // start fading after 40% lifetime
+                float alpha = 1f;
+                if (t01 > fadeStart)
+                {
+                    float ft = (t01 - fadeStart) / (1f - fadeStart);
+                    alpha = MathHelper.Clamp(1f - ft, 0f, 1f);
+                }
+
+                string text = (f.IsHeal ? "+" : "-") + f.Amount.ToString();
+                float scale = BaseTextScale * Math.Max(0.1f, f.PopScale);
+                var color = f.IsHeal ? new Color(HealR, HealG, HealB) : new Color(DamageR, DamageG, DamageB);
+                color *= alpha;
+                // Center text
+                var size = _font.MeasureString(text) * scale;
+                var drawPos = new Vector2(pos.X - size.X / 2f, pos.Y - size.Y / 2f);
+                _spriteBatch.DrawString(_font, text, drawPos, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            }
+        }
+    }
+}
+
+

@@ -60,6 +60,7 @@ namespace Crusaders30XX.ECS.Systems
 		private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
 		private AmbushDisplaySystem _ambushDisplaySystem;
 		private QueuedEventsDisplaySystem _queuedEventsDisplaySystem;
+		private DamageModificationDisplaySystem _damageModificationDisplaySystem;
 		private CardPlayedAnimationSystem _cardPlayedAnimationSystem;
 		private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
 		private EnemyIntentPlanningSystem _enemyIntentPlanningSystem;
@@ -136,6 +137,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", _enemyAttackDisplaySystem.Draw);
 			FrameProfiler.Measure("AmbushDisplaySystem.Draw", _ambushDisplaySystem.Draw);
 			FrameProfiler.Measure("QueuedEventsDisplaySystem.Draw", _queuedEventsDisplaySystem.Draw);
+			FrameProfiler.Measure("DamageModificationDisplaySystem.Draw", _damageModificationDisplaySystem.Draw);
 			FrameProfiler.Measure("StunnedOverlaySystem.Draw", _stunnedOverlaySystem.Draw);
 			FrameProfiler.Measure("EndTurnDisplaySystem.Draw", _endTurnDisplaySystem.Draw);
 			FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", _assignedBlockCardsDisplaySystem.Draw);
@@ -305,6 +307,7 @@ namespace Crusaders30XX.ECS.Systems
 			_enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_ambushDisplaySystem = new AmbushDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_queuedEventsDisplaySystem = new QueuedEventsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			_damageModificationDisplaySystem = new DamageModificationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_cardPlayedAnimationSystem = new CardPlayedAnimationSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_endTurnDisplaySystem = new EndTurnDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font, _content);
@@ -384,6 +387,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_enemyAttackDisplaySystem);
 			_world.AddSystem(_ambushDisplaySystem);
 			_world.AddSystem(_queuedEventsDisplaySystem);
+			_world.AddSystem(_damageModificationDisplaySystem);
 			_world.AddSystem(_cardPlayedAnimationSystem);
 			_world.AddSystem(_endTurnDisplaySystem);
 			_world.AddSystem(_assignedBlockCardsDisplaySystem);
