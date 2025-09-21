@@ -276,6 +276,16 @@ namespace Crusaders30XX.ECS.Components
         Right,
         Left
     }
+
+    /// <summary>
+    /// Marks a card in hand that has been preselected to be discarded by an enemy effect
+    /// for a specific attack context.
+    /// </summary>
+    public class MarkedForSpecificDiscard : IComponent
+    {
+        public Entity Owner { get; set; }
+        public string ContextId { get; set; }
+    }
     
     /// <summary>
     /// Marker for the courage hover area used to show a tooltip.

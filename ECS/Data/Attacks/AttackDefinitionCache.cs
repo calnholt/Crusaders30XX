@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Crusaders30XX.ECS.Data.Attacks
 {
@@ -27,6 +29,7 @@ namespace Crusaders30XX.ECS.Data.Attacks
 			{
 				var folder = ResolveFolderPath();
 				_cache = AttackRepository.LoadFromFolder(folder);
+				LoadGenericAttacksIntoCache();
 			}
 		}
 
@@ -39,8 +42,34 @@ namespace Crusaders30XX.ECS.Data.Attacks
 				{
 					var folder = ResolveFolderPath();
 					_cache = AttackRepository.LoadFromFolder(folder);
+					LoadGenericAttacksIntoCache();
 				}
 			}
+		}
+
+		private static void LoadGenericAttacksIntoCache()
+		{
+			try
+			{
+				string root = FindProjectRootContaining("Crusaders30XX.csproj");
+				if (string.IsNullOrEmpty(root)) return;
+				string path = Path.Combine(root, "ECS", "Data", "Attacks", "generic_enemy_attacks.json");
+				if (!File.Exists(path)) return;
+				var json = File.ReadAllText(path);
+				var node = JsonNode.Parse(json);
+				if (node == null) return;
+				if (node["attacks"] is JsonArray arr)
+				{
+					var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+					foreach (var attackNode in arr)
+					{
+						if (attackNode == null) continue;
+						var def = attackNode.Deserialize<AttackDefinition>(opts);
+						if (def?.id != null) _cache[def.id] = def;
+					}
+				}
+			}
+			catch { }
 		}
 
 		private static string ResolveFolderPath()

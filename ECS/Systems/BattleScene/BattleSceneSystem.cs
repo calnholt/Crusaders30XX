@@ -91,6 +91,7 @@ namespace Crusaders30XX.ECS.Systems
 		private EquipmentBlockInteractionSystem _equipmentBlockInteractionSystem;
 		private AppliedPassivesManagementSystem _appliedPassivesManagementSystem;
 		private BattleStateInfoManagementSystem _battleStateInfoManagementSystem;
+		private DiscardSpecificCardHighlightSystem _discardSpecificCardHighlightSystem;
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(em)
 		{
@@ -159,6 +160,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
 			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
+			FrameProfiler.Measure("DiscardSpecificCardHighlightSystem.Draw", _discardSpecificCardHighlightSystem.Draw);
 			if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
 		}
 
@@ -331,6 +333,7 @@ namespace Crusaders30XX.ECS.Systems
 			_equipmentBlockInteractionSystem = new EquipmentBlockInteractionSystem(_world.EntityManager);
 			_appliedPassivesManagementSystem = new AppliedPassivesManagementSystem(_world.EntityManager);
 			_battleStateInfoManagementSystem = new BattleStateInfoManagementSystem(_world.EntityManager);
+			_discardSpecificCardHighlightSystem = new DiscardSpecificCardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
 
 			// Register
@@ -402,6 +405,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_cardHighlightSystem);
 			_world.AddSystem(_cantPlayCardMessageSystem);
 			_world.AddSystem(_gameOverOverlayDisplaySystem);
+			_world.AddSystem(_discardSpecificCardHighlightSystem);
 		}
 
 	}

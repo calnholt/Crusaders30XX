@@ -67,9 +67,47 @@ namespace Crusaders30XX.ECS.Systems
 			if (!blocked)
 			{
 				ApplyEffects(def.effectsOnNotBlocked);
+				HandleDiscardSpecificCards(def, pa.ContextId);
 			}
 
 			EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blocked });
+		}
+
+		private void HandleDiscardSpecificCards(AttackDefinition def, string contextId)
+		{
+			try
+			{
+				if (def == null || def.effectsOnNotBlocked == null) return;
+				int amount = def.effectsOnNotBlocked.Where(e => e.type == "DiscardSpecificCard").Sum(e => e.amount);
+				if (amount <= 0) return;
+				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+				var deck = deckEntity?.GetComponent<Deck>();
+				if (deck == null) return;
+				var selected = deck.Hand
+					.Where(c => {
+						var m = c.GetComponent<MarkedForSpecificDiscard>();
+						return m != null && m.ContextId == contextId;
+					})
+					.Take(amount)
+					.ToList();
+				foreach (var c in selected)
+				{
+					deck.Hand.Remove(c);
+					deck.DiscardPile.Add(c);
+					EntityManager.RemoveComponent<MarkedForSpecificDiscard>(c);
+					EventManager.Publish(new CardMoved { Card = c, Deck = deckEntity, From = CardZoneType.Hand, To = CardZoneType.DiscardPile, ContextId = contextId });
+				}
+				// Clear any leftover marks for this context
+				foreach (var c in deck.Hand)
+				{
+					var m = c.GetComponent<MarkedForSpecificDiscard>();
+					if (m != null && m.ContextId == contextId)
+					{
+						EntityManager.RemoveComponent<MarkedForSpecificDiscard>(c);
+					}
+				}
+			}
+			catch { }
 		}
 
 	}

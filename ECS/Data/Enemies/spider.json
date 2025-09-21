@@ -1,0 +1,34 @@
+{
+  "name": "Spider",
+  "id": "spider",
+  "hp": 80,
+  "attacks": [
+    {
+      "id": "have_no_mercy",
+      "name": "Have No Mercy",
+      "target": "Player",
+      "positionType": "Ender",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "OnHit"
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 7
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "DiscardSpecificCard",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

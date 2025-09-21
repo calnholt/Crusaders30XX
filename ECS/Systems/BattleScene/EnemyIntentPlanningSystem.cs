@@ -173,6 +173,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				case "demon": return new DemonIntentService();
 				case "succubus": return new SuccubusIntentService();
+				case "spider": return new SpiderIntentService();
 				default: return null;
 			}
 		}
