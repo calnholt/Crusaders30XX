@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -14,6 +15,14 @@ namespace Crusaders30XX.ECS.Data.Attacks
 		public static Dictionary<string, AttackDefinition> GetAll()
 		{
 			EnsureLoaded();
+			if (_cache != null)
+			{
+				foreach (var kv in _cache)
+				{
+					var def = kv.Value;
+					Console.WriteLine($" - {kv.Key}: {def?.name}");
+				}
+			}
 			return _cache;
 		}
 

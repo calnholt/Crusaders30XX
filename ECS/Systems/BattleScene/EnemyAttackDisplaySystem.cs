@@ -271,8 +271,7 @@ namespace Crusaders30XX.ECS.Systems
 				_debris.Clear();
 				SpawnDebris();
 
-				// Preselect specific cards for discard if this attack specifies it
-				TryPreselectSpecificDiscards(currentContextId);
+				// Specific discard preselection is handled by MarkedForSpecificDiscardSystem
 			}
 
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -538,86 +537,7 @@ namespace Crusaders30XX.ECS.Systems
 			return def;
 		}
 
-		private void TryPreselectSpecificDiscards(string contextId)
-		{
-			try
-			{
-				var enemy = GetRelevantEntities().FirstOrDefault();
-				var intent = enemy?.GetComponent<AttackIntent>();
-				var pa = intent?.Planned?.FirstOrDefault(x => x.ContextId == contextId);
-				if (pa == null) return;
-				var def = LoadAttackDefinition(pa.AttackId);
-				if (def == null || def.effectsOnNotBlocked == null) return;
-				int amount = def.effectsOnNotBlocked.Where(e => e.type == "DiscardSpecificCard").Sum(e => e.amount);
-				if (amount <= 0) { ClearExistingSpecificDiscardMarks(); return; }
 
-				// Clear any previous marks first
-				ClearExistingSpecificDiscardMarks();
-
-				// Select deterministic cards from hand (excluding weapon card)
-				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-				var deck = deckEntity?.GetComponent<Deck>();
-				if (deck == null) return;
-				// Identify weapon to exclude
-				Entity weapon = null;
-				try
-				{
-					var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-					weapon = player?.GetComponent<EquippedWeapon>()?.SpawnedEntity;
-				}
-				catch { }
-				var candidates = deck.Hand.Where(c => !ReferenceEquals(c, weapon)).ToList();
-				int pick = Math.Min(amount, candidates.Count);
-				for (int i = 0; i < pick; i++)
-				{
-					var card = candidates[i];
-					var mark = card.GetComponent<MarkedForSpecificDiscard>();
-					if (mark == null)
-					{
-						mark = new MarkedForSpecificDiscard { ContextId = contextId };
-						EntityManager.AddComponent(card, mark);
-					}
-					else
-					{
-						mark.ContextId = contextId;
-					}
-				}
-			}
-			catch { }
-		}
-
-		private void ClearExistingSpecificDiscardMarks()
-		{
-			try
-			{
-				foreach (var e in EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>())
-				{
-					EntityManager.RemoveComponent<MarkedForSpecificDiscard>(e);
-				}
-			}
-			catch { }
-		}
-
-		private List<Entity> GetSelectedDiscards(string contextId)
-		{
-			var list = new List<Entity>();
-			try
-			{
-				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-				var deck = deckEntity?.GetComponent<Deck>();
-				if (deck == null) return list;
-				foreach (var c in deck.Hand)
-				{
-					var mark = c.GetComponent<MarkedForSpecificDiscard>();
-					if (mark != null && mark.ContextId == contextId)
-					{
-						list.Add(c);
-					}
-				}
-			}
-			catch { }
-			return list;
-		}
 
 		private EnemyAttackProgress FindEnemyAttackProgress(string contextId)
 		{
@@ -689,14 +609,7 @@ namespace Crusaders30XX.ECS.Systems
 							.Where(e => e.GetComponent<MarkedForSpecificDiscard>().ContextId == contextId)
 							.Select(e => e.GetComponent<CardData>()?.Name ?? "Card")
 							.ToList();
-						if (markedCards.Count > 0)
-						{
-							parts.Add($"Discard: {string.Join(", ", markedCards)}");
-						}
-						else
-						{
-							parts.Add("Discard: [preselected cards]");
-						}
+						parts.Add($"Discard: {string.Join(", ", markedCards)}");
 						break;
 					}
 					default:

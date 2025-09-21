@@ -40,10 +40,7 @@
         "children": [
           {
             "kind": "Leaf",
-            "leafType": "PlayAtLeastN",
-            "params": {
-              "n": "1"
-            }
+            "leafType": "OnHit"
           }
         ]
       },

@@ -657,6 +657,7 @@ namespace Crusaders30XX.ECS.Components
     {
         Burn,
         Power,
-        DowseWithHolyWater
+        DowseWithHolyWater,
+        Slow,
     }
 }

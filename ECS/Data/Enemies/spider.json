@@ -1,13 +1,14 @@
 {
   "name": "Spider",
   "id": "spider",
-  "hp": 80,
+  "hp": 75,
   "attacks": [
     {
-      "id": "have_no_mercy",
-      "name": "Have No Mercy",
+      "id": "suffocating_silk",
+      "name": "Suffocating Silk",
       "target": "Player",
       "positionType": "Ender",
+      "ambushPercentage": 75,
       "conditionsBlocked": {
         "kind": "All",
         "children": [
@@ -20,13 +21,83 @@
       "effectsOnHit": [
         {
           "type": "Damage",
-          "amount": 7
+          "amount": 4
         }
       ],
       "effectsOnNotBlocked": [
         {
-          "type": "DiscardSpecificCard",
+          "type": "Slow",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "id": "rafterfall_ambush",
+      "name": "Rafterfall Ambush",
+      "target": "Player",
+      "positionType": "Starter",
+      "ambushPercentage": 100,
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "id": "mandible_breaker",
+      "name": "Mandible Breaker",
+      "target": "Player",
+      "positionType": "Ender",
+      "ambushPercentage": 75,
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "OnHit"
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 8
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "Slow",
           "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "fang_feint",
+      "name": "Fang Feint",
+      "target": "Player",
+      "positionType": "Starter",
+      "ambushPercentage": 50,
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "OnHit"
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 2
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "Damage",
+          "amount": 3,
+          "percentage": 50
         }
       ]
     }

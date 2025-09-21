@@ -124,7 +124,7 @@ namespace Crusaders30XX.ECS.Systems
 					st.IsActive = true;
 					st.IntroActive = true;
 					st.ContextId = pa.ContextId;
-					st.TimerDurationSeconds = System.Math.Max(1f, DefaultTimerSeconds);
+					st.TimerDurationSeconds = System.Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
 					st.TimerRemainingSeconds = st.TimerDurationSeconds;
 				}
 				else
@@ -142,7 +142,7 @@ namespace Crusaders30XX.ECS.Systems
 				st.IsActive = true;
 				st.IntroActive = true;
 				st.ContextId = pa.ContextId;
-				st.TimerDurationSeconds = System.Math.Max(1f, DefaultTimerSeconds);
+				st.TimerDurationSeconds = System.Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
 				st.TimerRemainingSeconds = st.TimerDurationSeconds;
 			}
 
@@ -340,6 +340,13 @@ namespace Crusaders30XX.ECS.Systems
 					_spriteBatch.Draw(_pixel, new Rectangle(x + System.Math.Max(0, w - thickness), yy, thickness, 1), color);
 				}
 			}
+		}
+
+		private int GetSlowStacks()
+		{
+			var ap = EntityManager.GetEntitiesWithComponent<AppliedPassives>().FirstOrDefault()?.GetComponent<AppliedPassives>();
+			if (ap == null) return 0;
+			return ap.Passives.TryGetValue(AppliedPassiveType.Slow, out int stacks) ? stacks : 0;
 		}
 	}
 }

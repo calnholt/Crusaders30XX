@@ -33,6 +33,10 @@ namespace Crusaders30XX.ECS.Systems
             {
                 OnApplyPassive(new ApplyPassiveEvent{ Delta = effect.Amount, Owner = effect.Target, Type = AppliedPassiveType.DowseWithHolyWater });
             }
+            else if (effect.EffectType.Equals("Slow"))
+            {
+                OnApplyPassive(new ApplyPassiveEvent{ Delta = effect.Amount, Owner = effect.Target, Type = AppliedPassiveType.Slow });
+            }
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

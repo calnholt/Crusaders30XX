@@ -15,6 +15,8 @@ namespace Crusaders30XX.ECS.Systems
         case AppliedPassiveType.DowseWithHolyWater:
           CardDefinitionCache.TryGet("dowse_with_holy_water", out var def);
           return $"Your next attack this turn deals +{def.valuesParse[0] * stacks} damage.";
+        case AppliedPassiveType.Slow:
+          return $"Ambush attacks are {stacks} second{(stacks == 1 ? "" : "s")} faster.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }
