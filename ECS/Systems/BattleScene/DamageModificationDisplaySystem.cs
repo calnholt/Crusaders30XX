@@ -21,9 +21,10 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font;
 
-        private class Floater
+		private class Floater
         {
-            public int TargetEntityId;
+			public int TargetEntityId;
+			public Entity Target;
             public Vector2 StartWorldPos;
             public float AgeSeconds;
             public float LifetimeSeconds;
@@ -49,6 +50,18 @@ namespace Crusaders30XX.ECS.Systems
 
         [DebugEditable(DisplayName = "Horizontal Jitter", Step = 1, Min = 0, Max = 120)]
         public int HorizontalJitter { get; set; } = 8;
+
+		[DebugEditable(DisplayName = "Offset % X (-1..1)", Step = 0.01f, Min = -1f, Max = 1f)]
+		public float OffsetPercentX { get; set; } = 0f;
+
+		[DebugEditable(DisplayName = "Offset % Y (-1..1)", Step = 0.01f, Min = -1f, Max = 1f)]
+		public float OffsetPercentY { get; set; } = -.5f;
+
+		[DebugEditable(DisplayName = "Offset X", Step = 1, Min = -2000, Max = 2000)]
+		public int OffsetX { get; set; } = 0;
+
+		[DebugEditable(DisplayName = "Offset Y", Step = 1, Min = -2000, Max = 2000)]
+		public int OffsetY { get; set; } = 0;
 
         [DebugEditable(DisplayName = "Damage R", Step = 1, Min = 0, Max = 255)]
         public int DamageR { get; set; } = 220;
@@ -145,6 +158,7 @@ namespace Crusaders30XX.ECS.Systems
             _floaters.Add(new Floater
             {
                 TargetEntityId = target.Id,
+                Target = target,
                 StartWorldPos = new Vector2(center.X + jx, center.Y),
                 Amount = Math.Abs(amt),
                 IsHeal = isHeal,
@@ -186,7 +200,28 @@ namespace Crusaders30XX.ECS.Systems
                 float t01 = MathHelper.Clamp(f.AgeSeconds / Math.Max(0.0001f, f.LifetimeSeconds), 0f, 1f);
                 // Rise with ease-out
                 float rise = RisePixels * (1f - (float)Math.Pow(1f - t01, 2f));
-                var pos = new Vector2(f.StartWorldPos.X, f.StartWorldPos.Y - rise);
+			// Start from target body center each frame so percentage offsets follow the target
+			var currentCenter = ComputeBodyCenter(f.Target);
+			var pos = new Vector2(currentCenter.X, currentCenter.Y - rise);
+			// Apply percentage offsets relative to target visual bounds if available, else screen center as fallback
+			float px = 0f, py = 0f;
+			var pInfo = f.Target?.GetComponent<PortraitInfo>();
+			if (pInfo != null && pInfo.TextureWidth > 0 && pInfo.TextureHeight > 0)
+			{
+				float baseScale = (pInfo.BaseScale > 0f) ? pInfo.BaseScale : 1f;
+				float halfW = (pInfo.TextureWidth * baseScale) * 0.5f;
+				float halfH = (pInfo.TextureHeight * baseScale) * 0.5f;
+				px = OffsetPercentX * halfW;
+				py = OffsetPercentY * halfH;
+			}
+			else
+			{
+				// Fallback: use viewport half-size to interpret percents
+				px = OffsetPercentX * (_graphicsDevice.Viewport.Width / 2f);
+				py = OffsetPercentY * (_graphicsDevice.Viewport.Height / 2f);
+			}
+			pos.X += px + OffsetX;
+			pos.Y += py + OffsetY;
                 // Fade out towards the end
                 float fadeStart = 0.4f; // start fading after 40% lifetime
                 float alpha = 1f;
