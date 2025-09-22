@@ -20,23 +20,15 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
             EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
             EventManager.Subscribe<RemovePassive>(OnRemovePassive);
+            EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);
 
         }
 
         private void OnApplyEffect(ApplyEffect effect)
         {
-            if (effect.EffectType.Equals("Burn"))
-            {
-                OnApplyPassive(new ApplyPassiveEvent{ Delta = effect.Amount, Owner = effect.Target, Type = AppliedPassiveType.Burn });
-            }
-            else if (effect.EffectType.Equals("DowseWithHolyWater"))
-            {
-                OnApplyPassive(new ApplyPassiveEvent{ Delta = effect.Amount, Owner = effect.Target, Type = AppliedPassiveType.DowseWithHolyWater });
-            }
-            else if (effect.EffectType.Equals("Slow"))
-            {
-                OnApplyPassive(new ApplyPassiveEvent{ Delta = effect.Amount, Owner = effect.Target, Type = AppliedPassiveType.Slow });
-            }
+            var typeName = effect.EffectType ?? string.Empty;
+            if (!Enum.TryParse<AppliedPassiveType>(typeName, true, out var passiveType)) return;
+            OnApplyPassive(new ApplyPassiveEvent { Delta = effect.Amount, Owner = effect.Target, Type = passiveType });
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -118,9 +110,20 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
+        private void OnUpdatePassive(UpdatePassive e)
+        {
+            if (e == null || e.Owner == null) return;
+            var ap = e.Owner.GetComponent<AppliedPassives>();
+            if (ap == null || ap.Passives == null) return;
+            ap.Passives[e.Type] = ap.Passives[e.Type] + e.Delta;
+            if (ap.Passives[e.Type] <= 0)
+            {
+                ap.Passives.Remove(e.Type);
+            }
+        }
+
         private void RemoveTurnPassives(Entity owner)
         {
-            Console.WriteLine($"[AppliedPassivesManagementSystem] RemoveTurnPassives - remove DowseWithHolyWater");
             EventManager.Publish(new RemovePassive { Owner = owner, Type = AppliedPassiveType.DowseWithHolyWater });
         }
     }

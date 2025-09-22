@@ -22,11 +22,12 @@ namespace Crusaders30XX.ECS.Systems
 				.Sum(e => e.amount);
 		}
 
-		public static int GetStoredBlockAmount(EntityManager entityManager)
+		public static int GetAegisAmount(EntityManager entityManager)
 		{
 			var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-			var stored = player?.GetComponent<StoredBlock>();
-			return stored?.Amount ?? 0;
+			var passives = player?.GetComponent<AppliedPassives>()?.Passives;
+			if (passives == null) return 0;
+			return passives.TryGetValue(AppliedPassiveType.Aegis, out var aegis) ? aegis : 0;
 		}
 
 		public static int GetAssignedBlockForContext(EntityManager entityManager, string contextId)
@@ -46,24 +47,24 @@ namespace Crusaders30XX.ECS.Systems
 		public static int ComputeActualDamage(AttackDefinition definition, EntityManager entityManager, string contextId, bool isBlocked)
 		{
 			int full = ComputeFullDamage(definition);
-			int stored = GetStoredBlockAmount(entityManager);
+			int aegis = GetAegisAmount(entityManager);
 			int assigned = GetAssignedBlockForContext(entityManager, contextId);
 			int preventedBlockCondition = isBlocked ? (definition.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount) : 0;
-			int reduced = stored + assigned;
+			int reduced = aegis + assigned;
 			int actual = full - reduced - preventedBlockCondition;
 			return actual < 0 ? 0 : actual;
 		}
 
     public static int ComputePreventedDamage(AttackDefinition definition, EntityManager entityManager, string contextId, bool isBlocked)
     {
-      int stored = GetStoredBlockAmount(entityManager);
+      int aegis = GetAegisAmount(entityManager);
       int assigned = GetAssignedBlockForContext(entityManager, contextId);
       int preventedBlockCondition = isBlocked ? (definition.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount) : 0;
-      return stored + assigned + preventedBlockCondition;
+      return aegis + assigned + preventedBlockCondition;
     }
 
 	}

@@ -17,6 +17,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"Your next attack this turn deals +{def.valuesParse[0] * stacks} damage.";
         case AppliedPassiveType.Slow:
           return $"Ambush attacks are {stacks} second{(stacks == 1 ? "" : "s")} faster.";
+        case AppliedPassiveType.Aegis:
+          return $"Prevents the next {stacks} damage from any source.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

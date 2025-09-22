@@ -9,7 +9,7 @@ using System;
 namespace Crusaders30XX.ECS.Systems
 {
     /// <summary>
-    /// Applies incoming damage to the player: subtracts from StoredBlock first, then from HP.
+    /// Applies incoming damage to the player: subtracts from aegis first, then from HP.
     /// Listens to ApplyEffect(Damage) events.
     /// </summary>
     public class EnemyDamageManagerSystem : Core.System
@@ -62,15 +62,16 @@ namespace Crusaders30XX.ECS.Systems
                 incoming -= useAssigned;
             }
 
-            // 2) Then consume StoredBlock
+            // 2) Then consume aegis
             if (incoming > 0)
             {
-                var stored = player.GetComponent<StoredBlock>();
-                int sb = stored?.Amount ?? 0;
-                int use = System.Math.Min(sb, incoming);
+                var passives = player?.GetComponent<AppliedPassives>()?.Passives;
+                if (passives == null) return;
+                int prevent = passives.TryGetValue(AppliedPassiveType.Aegis, out var aegis) ? aegis : 0;
+                int use = System.Math.Min(prevent, incoming);
                 if (use > 0)
                 {
-                    EventManager.Publish(new ModifyStoredBlock { Delta = -use });
+                    EventManager.Publish(new UpdatePassive { Owner = player, Type = AppliedPassiveType.Aegis, Delta = -use });
                     incoming -= use;
                 }
             }

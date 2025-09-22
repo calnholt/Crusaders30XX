@@ -32,6 +32,15 @@ namespace Crusaders30XX.ECS.Events
         public Entity Owner { get; set; }
         public AppliedPassiveType Type { get; set; }
     }
+    /// <summary>
+    /// Update the stacks of a passive on an entity.
+    /// </summary>
+    public class UpdatePassive
+    {
+        public Entity Owner { get; set; }
+        public AppliedPassiveType Type { get; set; }
+        public int Delta { get; set; }
+    }
 }
 
 

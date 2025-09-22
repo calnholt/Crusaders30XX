@@ -82,8 +82,6 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new EquipmentUsedState());
             // Attach Action Points component by default
             world.AddComponent(entity, new ActionPoints { Current = 0 });
-            // Attach StoredBlock resource component by default
-            world.AddComponent(entity, new StoredBlock { Amount = 0 });
             // Attach HP component
             world.AddComponent(entity, new HP { Max = 30, Current = 30 });
             // Equip default medals (can equip multiple later). For now, just st_luke.
@@ -124,12 +122,6 @@ namespace Crusaders30XX.ECS.Factories
             var apTooltip = world.CreateEntity("UI_APTooltip");
             world.AddComponent(apTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
             world.AddComponent(apTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Action Points" });
-
-            // Pre-create Stored Block tooltip hover entity (bounds updated by StoredBlockDisplaySystem)
-            var storedBlockTooltip = world.CreateEntity("UI_StoredBlockTooltip");
-            world.AddComponent(storedBlockTooltip, new StoredBlockTooltipAnchor());
-            world.AddComponent(storedBlockTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-            world.AddComponent(storedBlockTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Stored Block" });
 
             // Pre-create Weapon tooltip hover entity (bounds updated by EquippedWeaponDisplaySystem)
             var weaponTooltip = world.CreateEntity("UI_WeaponTooltip");

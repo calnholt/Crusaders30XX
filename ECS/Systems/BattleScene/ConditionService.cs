@@ -108,7 +108,7 @@ namespace Crusaders30XX.ECS.Systems
 		private static bool Leaf_OnHit(Dictionary<string, string> parameters, string contextId, EntityManager entityManager)
 		{
 			var progress = entityManager.GetEntitiesWithComponent<EnemyAttackProgress>().FirstOrDefault().GetComponent<EnemyAttackProgress>();
-			return progress.AssignedBlockTotal >= progress.BaseDamage;
+			return progress.AssignedBlockTotal + progress.PreventedDamage >= progress.BaseDamage;
 		}
 
 		private static bool Leaf_BlockN(Dictionary<string, string> parameters, string contextId, EntityManager entityManager)

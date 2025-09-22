@@ -44,7 +44,6 @@ namespace Crusaders30XX.ECS.Systems
 		private CourageDisplaySystem _courageDisplaySystem;
 		private ActionPointDisplaySystem _actionPointDisplaySystem;
 		private TemperanceDisplaySystem _temperanceDisplaySystem;
-		private StoredBlockDisplaySystem _storedBlockDisplaySystem;
 		private CourageManagerSystem _courageManagerSystem;
 		private ActionPointManagementSystem _actionPointManagementSystem;
 		private TemperanceManagerSystem _temperanceManagerSystem;
@@ -69,7 +68,6 @@ namespace Crusaders30XX.ECS.Systems
 		private StunnedOverlaySystem _stunnedOverlaySystem;
 		private AttackResolutionSystem _attackResolutionSystem;
 		private HandBlockInteractionSystem _handBlockInteractionSystem;
-		private StoredBlockManagementSystem _storedBlockManagementSystem;
 		private CardZoneSystem _cardZoneSystem;
 		private AssignedBlocksToDiscardSystem _assignedBlocksToDiscardSystem;
 		private EnemyDamageManagerSystem _enemyDamageManagerSystem;
@@ -147,7 +145,6 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("CourageDisplaySystem.Draw", _courageDisplaySystem.Draw);
 			FrameProfiler.Measure("TemperanceDisplaySystem.Draw", _temperanceDisplaySystem.Draw);
 			FrameProfiler.Measure("ActionPointDisplaySystem.Draw", _actionPointDisplaySystem.Draw);
-			FrameProfiler.Measure("StoredBlockDisplaySystem.Draw", _storedBlockDisplaySystem.Draw);
 			FrameProfiler.Measure("HPDisplaySystem.Draw", _hpDisplaySystem.Draw);
 			FrameProfiler.Measure("AppliedPassivesDisplaySystem.Draw", _appliedPassivesDisplaySystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawBackdrop", _payCostOverlaySystem.DrawBackdrop);
@@ -222,7 +219,6 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			};
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
-			EventManager.Publish(new SetStoredBlock{ Amount = 0 });
 			// TODO: should handle through events rather than directly but im lazy right now
 			var player = EntityManager.GetEntity("Player");
 			var battleStateInfo = player.GetComponent<BattleStateInfo>();
@@ -289,7 +285,6 @@ namespace Crusaders30XX.ECS.Systems
 			_courageDisplaySystem = new CourageDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_actionPointDisplaySystem = new ActionPointDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
-			_storedBlockDisplaySystem = new StoredBlockDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_courageManagerSystem = new CourageManagerSystem(_world.EntityManager);
 			_actionPointManagementSystem = new ActionPointManagementSystem(_world.EntityManager);
 			_temperanceManagerSystem = new TemperanceManagerSystem(_world.EntityManager);
@@ -320,7 +315,6 @@ namespace Crusaders30XX.ECS.Systems
 			_stunnedOverlaySystem = new StunnedOverlaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_attackResolutionSystem = new AttackResolutionSystem(_world.EntityManager);
 			_handBlockInteractionSystem = new HandBlockInteractionSystem(_world.EntityManager);
-			_storedBlockManagementSystem = new StoredBlockManagementSystem(_world.EntityManager);
 			_assignedBlocksToDiscardSystem = new AssignedBlocksToDiscardSystem(_world.EntityManager, _graphicsDevice);
 			_enemyDamageManagerSystem = new EnemyDamageManagerSystem(_world.EntityManager);
 			_cardPlaySystem = new CardPlaySystem(_world.EntityManager);
@@ -366,7 +360,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_courageDisplaySystem);
 			_world.AddSystem(_temperanceDisplaySystem);
 			_world.AddSystem(_actionPointDisplaySystem);
-			_world.AddSystem(_storedBlockDisplaySystem);
 			_world.AddSystem(_courageManagerSystem);
 			_world.AddSystem(_temperanceManagerSystem);
 			_world.AddSystem(_actionPointManagementSystem);
@@ -392,7 +385,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_endTurnDisplaySystem);
 			_world.AddSystem(_assignedBlockCardsDisplaySystem);
 			_world.AddSystem(_assignedBlocksToDiscardSystem);
-			_world.AddSystem(_storedBlockManagementSystem);
 			_world.AddSystem(_enemyDamageManagerSystem);
 			_world.AddSystem(_cardPlaySystem);
 			_world.AddSystem(_battlePhaseDrawSystem);

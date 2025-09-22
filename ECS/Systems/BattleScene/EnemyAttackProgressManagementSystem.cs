@@ -19,8 +19,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
 			EventManager.Subscribe<BlockAssignmentRemoved>(OnBlockAssignmentRemoved);
-			EventManager.Subscribe<ModifyStoredBlock>(_ => RecomputeAll());
-			System.Console.WriteLine("[EnemyAttackProgressManagementSystem] Subscribed to BlockAssignmentAdded, BlockAssignmentRemoved, ModifyStoredBlock");
+			EventManager.Subscribe<ApplyPassiveEvent>(_ => RecomputeAll());
+			EventManager.Subscribe<RemovePassive>(_ => RecomputeAll());
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -174,7 +174,7 @@ namespace Crusaders30XX.ECS.Systems
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
 			int full = DamagePredictionService.ComputeFullDamage(def);
-			int stored = DamagePredictionService.GetStoredBlockAmount(EntityManager);
+			int aegis = DamagePredictionService.GetAegisAmount(EntityManager);
 			// Compute assigned block directly from AssignedBlockCard components for this context
 			int assignedFromCardsAndEquipment = 0;
 			foreach (var e in EntityManager.GetEntitiesWithComponent<AssignedBlockCard>())
@@ -191,13 +191,13 @@ namespace Crusaders30XX.ECS.Systems
 			int preventedDamageFromBlockCondition = isConditionMet ? (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount) : 0;
-			int reduced = stored + p.AssignedBlockTotal;
+			int reduced = aegis + p.AssignedBlockTotal;
 			int actual = full - reduced - preventedDamageFromBlockCondition;
 			if (actual < 0) actual = 0;
 
 			p.IsConditionMet = isConditionMet;
 			p.ActualDamage = actual;
-			p.PreventedDamage = stored + p.AssignedBlockTotal + (isConditionMet ? preventedDamageFromBlockCondition : 0);
+			p.PreventedDamage = aegis + p.AssignedBlockTotal + (isConditionMet ? preventedDamageFromBlockCondition : 0);
 			p.DamageBeforePrevention = full; // actual + prevented (by definition of ComputeFullDamage)
 		}
 

@@ -157,16 +157,6 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
-    /// Resource component representing Stored Block for an entity (e.g., the player)
-    /// </summary>
-    public class StoredBlock : IComponent
-    {
-        public Entity Owner { get; set; }
-
-        public int Amount { get; set; } = 0;
-    }
-
-    /// <summary>
     /// Player stat for how many cards to draw at start of Block phase.
     /// </summary>
     public class Intellect : IComponent
@@ -299,14 +289,6 @@ namespace Crusaders30XX.ECS.Components
     /// Marker for the temperance hover area used to show a tooltip.
     /// </summary>
     public class TemperanceTooltipAnchor : IComponent
-    {
-        public Entity Owner { get; set; }
-    }
-    
-    /// <summary>
-    /// Marker for the stored block hover area used to show a tooltip.
-    /// </summary>
-    public class StoredBlockTooltipAnchor : IComponent
     {
         public Entity Owner { get; set; }
     }
@@ -659,5 +641,6 @@ namespace Crusaders30XX.ECS.Components
         Power,
         DowseWithHolyWater,
         Slow,
+        Aegis,
     }
 }
