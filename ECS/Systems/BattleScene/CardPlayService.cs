@@ -29,7 +29,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "burn":
                 {
-                    EventManager.Publish(new ApplyPassiveEvent { Owner = enemy, Type = AppliedPassiveType.Burn, Delta = +values[0] });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Burn, Delta = +values[0] });
                     if (courage >= values[1]) 
                     {
                         EventManager.Publish(new ModifyActionPointsEvent { Delta = values[2] });
@@ -48,7 +48,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "dowse_with_holy_water":
                 {
-                    EventManager.Publish(new ApplyPassiveEvent { Owner = player, Type = AppliedPassiveType.DowseWithHolyWater, Delta = 1 });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.DowseWithHolyWater, Delta = 1 });
                     break;
                 }
                 case "inspiration":
@@ -81,7 +81,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "stun":
                 {
-                    EventManager.Publish(new ApplyStun { Delta = +1 });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Stun, Delta = 1 });
                     break;
                 }
                 case "vindicate":

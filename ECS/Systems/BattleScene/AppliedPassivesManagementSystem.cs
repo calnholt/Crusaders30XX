@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var typeName = effect.EffectType ?? string.Empty;
             if (!Enum.TryParse<AppliedPassiveType>(typeName, true, out var passiveType)) return;
-            OnApplyPassive(new ApplyPassiveEvent { Delta = effect.Amount, Owner = effect.Target, Type = passiveType });
+            OnApplyPassive(new ApplyPassiveEvent { Delta = effect.Amount, Target = effect.Target, Type = passiveType });
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -56,13 +56,16 @@ namespace Crusaders30XX.ECS.Systems
             {
                 ApplyStartOfTurnPassives(player);
             }
+            else if (evt.Current == SubPhase.PreBlock)
+            {
+                ApplyStartOfPreBlockPassives(enemy);
+            }
         }
 
         private void ApplyStartOfTurnPassives(Entity owner)
         {
             var ap = owner.GetComponent<AppliedPassives>();
             if (ap == null || ap.Passives == null || ap.Passives.Count == 0) return;
-
             // Burn: deal 1 damage to the owner per stack
             if (ap.Passives.TryGetValue(AppliedPassiveType.Burn, out int burnStacks) && burnStacks > 0)
             {
@@ -74,15 +77,39 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
+        private void ApplyStartOfPreBlockPassives(Entity owner)
+        {
+            var ap = owner.GetComponent<AppliedPassives>();
+            if (ap == null || ap.Passives == null || ap.Passives.Count == 0) return;
+
+            if (ap.Passives.TryGetValue(AppliedPassiveType.Stun, out int stunStacks) && stunStacks > 0)
+            {
+                var intent = owner.GetComponent<AttackIntent>();
+			    if (intent == null || intent.Planned == null || intent.Planned.Count == 0) return;
+                var count = stunStacks > intent.Planned.Count ? intent.Planned.Count : stunStacks;
+                for (int i = 0; i < count; i++)
+                {
+                    EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Stun", () =>
+                    {
+                        EventManager.Publish(new ShowStunnedOverlay { ContextId = owner.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault()?.ContextId });
+                        EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Stun });
+                        EventManager.Publish(new UpdatePassive { Owner = owner, Type = AppliedPassiveType.Stun, Delta = -1 });
+                        var ctx = intent.Planned[0].ContextId;
+                        intent.Planned.RemoveAt(0);
+                    }, .4f);
+                }
+            }
+        }
+
         private void OnApplyPassive(ApplyPassiveEvent e)
         {
-            if (e == null || e.Owner == null) return;
-            var ap = e.Owner.GetComponent<AppliedPassives>();
+            if (e == null || e.Target == null) return;
+            var ap = e.Target.GetComponent<AppliedPassives>();
             if (ap == null)
             {
                 // Create if missing on the target entity
-                EntityManager.AddComponent(e.Owner, new AppliedPassives());
-                ap = e.Owner.GetComponent<AppliedPassives>();
+                EntityManager.AddComponent(e.Target, new AppliedPassives());
+                ap = e.Target.GetComponent<AppliedPassives>();
             }
             if (ap == null) return;
 

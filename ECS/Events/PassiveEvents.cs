@@ -9,7 +9,7 @@ namespace Crusaders30XX.ECS.Events
     /// </summary>
     public class ApplyPassiveEvent
     {
-        public Entity Owner { get; set; }
+        public Entity Target { get; set; }
         public AppliedPassiveType Type { get; set; }
         public int Delta { get; set; }
     }

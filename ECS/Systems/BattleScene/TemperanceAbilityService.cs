@@ -20,7 +20,7 @@ namespace Crusaders30XX.ECS.Systems
           {
             case "radiance":
             {
-              EventManager.Publish(new ApplyStun { Delta = +1 });
+              EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Stun, Delta = 1 });
               break;
             }
             default:

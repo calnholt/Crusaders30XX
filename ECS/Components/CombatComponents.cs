@@ -36,7 +36,6 @@ namespace Crusaders30XX.ECS.Components
 		public int ResolveStep;
 		public string ContextId;
 		public bool WasBlocked;
-		public bool IsStunned;
 		public bool IsAmbush;
 	}
 
@@ -57,6 +56,7 @@ namespace Crusaders30XX.ECS.Components
 		// Typed counters replacing generic dictionary keys
 		public int AssignedBlockTotal { get; set; }
 		public int AdditionalConditionalDamageTotal { get; set; }
+		public int PreventedDamageFromBlockCondition { get; set; }
 		public int PlayedCards { get; set; }
 		public int PlayedRed { get; set; }
 		public int PlayedWhite { get; set; }
@@ -65,9 +65,10 @@ namespace Crusaders30XX.ECS.Components
 		// Derived values for display and resolution previews
 		public bool IsConditionMet { get; set; }
 		public int ActualDamage { get; set; }
-		public int PreventedDamage { get; set; }
+		public int AegisTotal { get; set; }
 		public int DamageBeforePrevention { get; set; }
 		public int BaseDamage { get; set; }
+        public int TotalPreventedDamage { get; internal set; }
     }
 
 	/// <summary>

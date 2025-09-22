@@ -85,17 +85,22 @@ namespace Crusaders30XX.ECS.Systems
         [DebugActionInt("Apply Burn (enemy)", Step = 1, Min = 1, Max = 999, Default = 3)]
         public void Debug_ApplyBurn(int amount)
         {
-            EventManager.Publish(new ApplyPassiveEvent { Owner = EntityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Burn, Delta = amount });
+            EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Burn, Delta = amount });
         }
         [DebugActionInt("Apply Burn (player)", Step = 1, Min = 1, Max = 999, Default = 3)]
         public void Debug_ApplyBurnPlayer(int amount)
         {
-            EventManager.Publish(new ApplyPassiveEvent { Owner = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = amount });
+            EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = amount });
         }
         [DebugAction("Activate Temperance")]
         public void Debug_ActivateTemperance()
         {
             EventManager.Publish(new TriggerTemperance { Owner = EntityManager.GetEntity("Player"), AbilityId = "radiance" });
+        }
+        [DebugAction("Apply Stun")]
+        public void Debug_ApplyStun()
+        {
+            EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Stun, Delta = 1 });
         }
     }
 }

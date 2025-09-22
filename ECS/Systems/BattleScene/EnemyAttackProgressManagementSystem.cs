@@ -60,7 +60,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void PrintProgress(EnemyAttackProgress p)
 		{
-			Console.WriteLine($"[EnemyAttackProgressManagementSystem] Progress p={p.ContextId} playedCards={p.PlayedCards} playedRed={p.PlayedRed} playedWhite={p.PlayedWhite} playedBlack={p.PlayedBlack} assignedBlockTotal={p.AssignedBlockTotal} additionalConditionalDamageTotal={p.AdditionalConditionalDamageTotal} isConditionMet={p.IsConditionMet} actualDamage={p.ActualDamage} preventedDamage={p.PreventedDamage} damageBeforePrevention={p.DamageBeforePrevention} baseDamage={p.BaseDamage}");
+			Console.WriteLine($"[EnemyAttackProgressManagementSystem] Progress p={p.ContextId} playedCards={p.PlayedCards} playedRed={p.PlayedRed} playedWhite={p.PlayedWhite} playedBlack={p.PlayedBlack} assignedBlockTotal={p.AssignedBlockTotal} additionalConditionalDamageTotal={p.AdditionalConditionalDamageTotal} isConditionMet={p.IsConditionMet} actualDamage={p.ActualDamage} preventedDamage={p.AegisTotal} damageBeforePrevention={p.DamageBeforePrevention} baseDamage={p.BaseDamage}");
 		}
 
 		private void OnBlockAssignmentAdded(BlockAssignmentAdded e)
@@ -139,7 +139,7 @@ namespace Crusaders30XX.ECS.Systems
 				PlayedBlack = 0,
 				IsConditionMet = false,
 				ActualDamage = 0,
-				PreventedDamage = 0
+				AegisTotal = 0
 			};
 			EntityManager.AddComponent(entity, comp);
 			return comp;
@@ -169,12 +169,10 @@ namespace Crusaders30XX.ECS.Systems
 			if (p == null || string.IsNullOrEmpty(p.AttackId)) return;
 			if (!AttackDefinitionCache.TryGet(p.AttackId, out var def) || def == null) return;
 
-			bool isConditionMet = ConditionService.Evaluate(def.conditionsBlocked, p.ContextId, EntityManager, p.Enemy, null);
-			p.BaseDamage = (def.effectsOnHit ?? System.Array.Empty<EffectDefinition>())
-				.Where(e => e.type == "Damage")
-				.Sum(e => e.amount);
+
 			int full = DamagePredictionService.ComputeFullDamage(def);
 			int aegis = DamagePredictionService.GetAegisAmount(EntityManager);
+			p.AegisTotal = aegis;
 			// Compute assigned block directly from AssignedBlockCard components for this context
 			int assignedFromCardsAndEquipment = 0;
 			foreach (var e in EntityManager.GetEntitiesWithComponent<AssignedBlockCard>())
@@ -188,6 +186,10 @@ namespace Crusaders30XX.ECS.Systems
 			p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
+			bool isConditionMet = ConditionService.Evaluate(def.conditionsBlocked, p.ContextId, EntityManager, p.Enemy, null);
+			p.BaseDamage = (def.effectsOnHit ?? System.Array.Empty<EffectDefinition>())
+				.Where(e => e.type == "Damage")
+				.Sum(e => e.amount);
 			int preventedDamageFromBlockCondition = isConditionMet ? (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount) : 0;
@@ -197,8 +199,8 @@ namespace Crusaders30XX.ECS.Systems
 
 			p.IsConditionMet = isConditionMet;
 			p.ActualDamage = actual;
-			p.PreventedDamage = aegis + p.AssignedBlockTotal + (isConditionMet ? preventedDamageFromBlockCondition : 0);
-			p.DamageBeforePrevention = full; // actual + prevented (by definition of ComputeFullDamage)
+			p.PreventedDamageFromBlockCondition = preventedDamageFromBlockCondition;
+			p.TotalPreventedDamage = aegis + preventedDamageFromBlockCondition + assignedFromCardsAndEquipment;
 		}
 
 		private static string NormalizeColorKey(string color)

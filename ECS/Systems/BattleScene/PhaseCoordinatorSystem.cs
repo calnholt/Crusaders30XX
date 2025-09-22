@@ -37,7 +37,7 @@ namespace Crusaders30XX.ECS.Systems
       if (evt.Current == SubPhase.EnemyStart) {
         ps.TurnNumber++;
       }
-      if (evt.Current == SubPhase.EnemyStart || evt.Current == SubPhase.Block || evt.Current == SubPhase.EnemyAttack || evt.Current == SubPhase.EnemyEnd) {
+      if (evt.Current == SubPhase.EnemyStart || evt.Current == SubPhase.PreBlock || evt.Current == SubPhase.Block || evt.Current == SubPhase.EnemyAttack || evt.Current == SubPhase.EnemyEnd) {
         ps.Main = MainPhase.EnemyTurn;
       }
       else if (evt.Current == SubPhase.StartBattle) {

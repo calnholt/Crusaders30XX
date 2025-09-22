@@ -41,6 +41,10 @@ namespace Crusaders30XX.ECS.Systems
 			var hasNext = intent != null && intent.Planned != null && intent.Planned.Count > 0;
 			if (hasNext) {
 				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.PreBlock",
+					new ChangeBattlePhaseEvent { Current = SubPhase.PreBlock }
+				));
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
 					"Rule.ChangePhase.Block",
 					new ChangeBattlePhaseEvent { Current = SubPhase.Block }
 				));

@@ -19,6 +19,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"Ambush attacks are {stacks} second{(stacks == 1 ? "" : "s")} faster.";
         case AppliedPassiveType.Aegis:
           return $"Prevents the next {stacks} damage from any source.";
+        case AppliedPassiveType.Stun:
+          return $"Skips the next {stacks} attack{(stacks > 1 ? "s" : "")}.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

@@ -76,7 +76,6 @@ namespace Crusaders30XX.ECS.Systems
 		private EndTurnDisplaySystem _endTurnDisplaySystem;
 		private DrawHandSystem _battlePhaseDrawSystem;
 		private PhaseCoordinatorSystem _phaseCoordinatorSystem;
-		private EnemyStunAutoSkipSystem _enemyStunAutoSkipSystem;
 		private PayCostOverlaySystem _payCostOverlaySystem;
 		private CantPlayCardMessageSystem _cantPlayCardMessageSystem;
 		private GameOverOverlayDisplaySystem _gameOverOverlayDisplaySystem;
@@ -233,6 +232,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				playerPassives.Passives.Clear();
 			}
+			EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = 1 });
 			EntityManager.DestroyEntity("Enemy");
 			Console.WriteLine($"queued.Events.Count: {queued.Events.Count}, queued.CurrentIndex: {queued.CurrentIndex}");
 			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, queued.Events[++queued.CurrentIndex].EventId);
@@ -247,6 +247,10 @@ namespace Crusaders30XX.ECS.Systems
 				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
 					"Rule.ChangePhase.EnemyStart",
 					new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart }
+				));
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.PreBlock",
+					new ChangeBattlePhaseEvent { Current = SubPhase.PreBlock }
 				));
 				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
 					"Rule.ChangePhase.Block",
@@ -320,7 +324,6 @@ namespace Crusaders30XX.ECS.Systems
 			_cardPlaySystem = new CardPlaySystem(_world.EntityManager);
 			_battlePhaseDrawSystem = new DrawHandSystem(_world.EntityManager);
 			_phaseCoordinatorSystem = new PhaseCoordinatorSystem(_world.EntityManager);
-			_enemyStunAutoSkipSystem = new EnemyStunAutoSkipSystem(_world.EntityManager);
 			_weaponManagementSystem = new WeaponManagementSystem(_world.EntityManager);
 			_equipmentManagerSystem = new EquipmentManagerSystem(_world.EntityManager);
 			_medalManagerSystem = new MedalManagerSystem(_world.EntityManager);
@@ -338,7 +341,6 @@ namespace Crusaders30XX.ECS.Systems
 			// Register
 			_world.AddSystem(_inputSystem);
 			_world.AddSystem(_deckManagementSystem);
-			_world.AddSystem(_enemyStunAutoSkipSystem);
 			_world.AddSystem(_renderingSystem);
 			_world.AddSystem(_cardDisplaySystem);
 			_world.AddSystem(_handDisplaySystem);

@@ -473,6 +473,7 @@ namespace Crusaders30XX.ECS.Components
         StartBattle,
         // Enemy sub-phases
         EnemyStart,
+        PreBlock,
         Block,
         EnemyAttack,
         EnemyEnd,
@@ -642,5 +643,6 @@ namespace Crusaders30XX.ECS.Components
         DowseWithHolyWater,
         Slow,
         Aegis,
+        Stun
     }
 }
