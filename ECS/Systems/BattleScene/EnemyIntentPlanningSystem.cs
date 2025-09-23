@@ -49,7 +49,6 @@ namespace Crusaders30XX.ECS.Systems
 				_isFirstLoad = true;
 				return;
 			}
-			// Plan ONLY at EnemyStart. PlayerStart should not re-plan, to preserve any IsStunned flags on previews.
 			if (evt.Current == SubPhase.EnemyStart)
 			{
 				int turnNumber = GetCurrentTurnNumber();

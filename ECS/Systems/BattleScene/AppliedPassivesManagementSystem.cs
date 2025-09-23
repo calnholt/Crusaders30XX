@@ -85,6 +85,7 @@ namespace Crusaders30XX.ECS.Systems
             if (ap.Passives.TryGetValue(AppliedPassiveType.Stun, out int stunStacks) && stunStacks > 0)
             {
                 var intent = owner.GetComponent<AttackIntent>();
+                Console.WriteLine($"[AppliedPassivesManagementSystem] ApplyStartOfPreBlockPassives stunStacks:{stunStacks} intent.Planned.Count:{intent.Planned.Count}");
 			    if (intent == null || intent.Planned == null || intent.Planned.Count == 0) return;
                 var count = stunStacks > intent.Planned.Count ? intent.Planned.Count : stunStacks;
                 for (int i = 0; i < count; i++)
@@ -96,6 +97,22 @@ namespace Crusaders30XX.ECS.Systems
                         EventManager.Publish(new UpdatePassive { Owner = owner, Type = AppliedPassiveType.Stun, Delta = -1 });
                         var ctx = intent.Planned[0].ContextId;
                         intent.Planned.RemoveAt(0);
+                        if (intent.Planned.Count == 0)
+                        {
+                            EventQueue.Clear();
+                            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+                                "Rule.ChangePhase.EnemyEnd",
+                                new ChangeBattlePhaseEvent { Current = SubPhase.EnemyEnd }
+                            ));
+                            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+                                "Rule.ChangePhase.PlayerStart",
+                                new ChangeBattlePhaseEvent { Current = SubPhase.PlayerStart }
+                            ));
+                            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+                                "Rule.ChangePhase.Action",
+                                new ChangeBattlePhaseEvent { Current = SubPhase.Action }
+                            ));
+                        }
                     }, .4f);
                 }
             }

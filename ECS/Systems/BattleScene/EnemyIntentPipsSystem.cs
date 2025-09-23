@@ -54,7 +54,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					var psEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
 					var ps = psEntity?.GetComponent<PhaseState>();
-					isEnemyTurn = ps != null && ps.Main == MainPhase.EnemyTurn;
+					isEnemyTurn = ps != null && ps.Main == MainPhase.EnemyTurn && (ps.Sub == SubPhase.Block || ps.Sub == SubPhase.EnemyAttack || ps.Sub == SubPhase.EnemyEnd);
 				}
 
 				// Determine how many upcoming attacks should be crossed out based on stun stacks on the enemy
@@ -87,14 +87,22 @@ namespace Crusaders30XX.ECS.Systems
 							.Select((pa, idx) => new { idx, step = pa.ResolveStep })
 							.OrderBy(x => x.step)
 							.ToList();
-						int skip = (isEnemyTurn && order.Count > 0) ? 1 : 0; // cannot stun the current attack during enemy turn
-						for (int oi = 0; oi < order.Count; oi++)
+						for (int oi = 0; oi < order.Count && remainingToCross > 0; oi++)
 						{
-							if (oi < skip) continue;
-							if (remainingToCross <= 0) break;
-							var x = order[oi];
-							crossedCurrent[x.idx] = true;
+							crossedCurrent[order[oi].idx] = true;
 							remainingToCross--;
+						}
+						// During the enemy turn, shift crossed pips one index to the right for display
+						if (isEnemyTurn)
+						{
+							var shifted = new bool[count];
+							for (int ci = 0; ci < count; ci++)
+							{
+								if (!crossedCurrent[ci]) continue;
+								int si = ci + 1;
+								if (si < count) shifted[si] = true;
+							}
+							crossedCurrent = shifted;
 						}
 					}
 
