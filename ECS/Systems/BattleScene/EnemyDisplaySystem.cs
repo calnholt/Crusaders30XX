@@ -23,10 +23,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Screen Height Coverage", Step = 0.02f, Min = 0.05f, Max = 1f)]
 		public float ScreenHeightCoverage { get; set; } = 0.30f;
-		[DebugEditable(DisplayName = "Center Offset X", Step = 5, Min = -2000, Max = 2000)]
-		public int CenterOffsetX { get; set; } = 520;
-		[DebugEditable(DisplayName = "Center Offset Y", Step = 5, Min = -2000, Max = 2000)]
-		public int CenterOffsetY { get; set; } = -100;
+		[DebugEditable(DisplayName = "Center Offset X (% of width)", Step = 0.01f, Min = -1.0f, Max = 1.0f)]
+		public float CenterOffsetXPct { get; set; } = 0.3f; // positive = right, negative = left
+		[DebugEditable(DisplayName = "Center Offset Y (% of height)", Step = 0.01f, Min = -1.0f, Max = 1.0f)]
+		public float CenterOffsetYPct { get; set; } = -0.10f; // positive = down, negative = up
 		[DebugEditable(DisplayName = "Attack Animation Duration (s)", Step = .01f, Min = 0.01f, Max = 2f)]
 		public float _attackAnimDuration = 0.5f;
 
@@ -102,7 +102,10 @@ namespace Crusaders30XX.ECS.Systems
 					scale *= bump;
 				}
 				var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
-				var basePos = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
+				var basePos = new Vector2(
+					viewportW * (0.5f + CenterOffsetXPct),
+					viewportH * (0.5f + CenterOffsetYPct)
+				);
 				var pos = basePos;
 				// Simple smash animation: move toward player then back
 				if (_attackAnimTimer > 0f)

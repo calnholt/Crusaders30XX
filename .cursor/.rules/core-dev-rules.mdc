@@ -1,13 +1,14 @@
 ---
-description:
+description: Core development standards for Crusaders30XX (applies to C# source files)
 globs:
+  - "**/*.cs"
 alwaysApply: true
 ---
 
-#STRICT RULES
+# STRICT RULES
 
-##CODING STANDARDS
+## CODING STANDARDS
 
-- When making new systems, always add the appropriate DebugEditable and DebugTab attributes.
+- When making new systems, always add the appropriate DebugEditable and DebugTab attributes if there is a Draw function.
 - Use imports, do not reference like this: "Crusaders30XX.ECS.Data.Cards".
 - Prioritize readability over complexity - if it's more lines but easier to follow, that's good.

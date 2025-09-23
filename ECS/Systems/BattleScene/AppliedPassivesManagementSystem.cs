@@ -85,8 +85,7 @@ namespace Crusaders30XX.ECS.Systems
             if (ap.Passives.TryGetValue(AppliedPassiveType.Stun, out int stunStacks) && stunStacks > 0)
             {
                 var intent = owner.GetComponent<AttackIntent>();
-                Console.WriteLine($"[AppliedPassivesManagementSystem] ApplyStartOfPreBlockPassives stunStacks:{stunStacks} intent.Planned.Count:{intent.Planned.Count}");
-			    if (intent == null || intent.Planned == null || intent.Planned.Count == 0) return;
+                if (intent == null || intent.Planned == null || intent.Planned.Count == 0) return;
                 var count = stunStacks > intent.Planned.Count ? intent.Planned.Count : stunStacks;
                 for (int i = 0; i < count; i++)
                 {

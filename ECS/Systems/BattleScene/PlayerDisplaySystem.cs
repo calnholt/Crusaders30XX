@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.Diagnostics;
 using System;
 using System.Linq;
 
@@ -11,6 +12,7 @@ namespace Crusaders30XX.ECS.Systems
     /// <summary>
     /// Renders the player's character portrait (Crusader) on the middle-left of the screen.
     /// </summary>
+    [DebugTab("Player Display")]
     public class PlayerDisplaySystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
@@ -20,9 +22,14 @@ namespace Crusaders30XX.ECS.Systems
         private Vector2 _attackDrawOffset = Vector2.Zero; // now sourced from PlayerAnimationState
 
         // Visual tuning
-        private const float ScreenHeightCoverage = 0.3f; // portrait height relative to viewport height
-        private const float CenterOffsetX = -600f; // horizontal offset (+right, -left) from screen center
-        private const float CenterOffsetY = -100f; // vertical offset (+down, -up) from screen center
+        [DebugEditable(DisplayName = "Portrait Height (% of screen height)", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
+        public float ScreenHeightCoverage { get; set; } = 0.30f; // relative to viewport height
+
+        [DebugEditable(DisplayName = "Center Offset X (% of width)", Step = 0.01f, Min = -1.0f, Max = 1.0f)]
+        public float CenterOffsetXPct { get; set; } = -0.26f; // negative = left, positive = right
+
+        [DebugEditable(DisplayName = "Center Offset Y (% of height)", Step = 0.01f, Min = -1.0f, Max = 1.0f)]
+        public float CenterOffsetYPct { get; set; } = -0.11f; // negative = up, positive = down
         private Entity _anchorEntity;
         private Transform _anchorTransform;
 
@@ -76,7 +83,11 @@ namespace Crusaders30XX.ECS.Systems
                 float baseScale = desiredHeight / _crusaderTexture.Height;
                 float scale = baseScale; // no breathing
 
-                var basePosition = new Vector2(viewportW / 2f + CenterOffsetX, viewportH / 2f + CenterOffsetY);
+                // Center plus percentage-based offsets of the viewport size
+                var basePosition = new Vector2(
+                    viewportW * (0.5f + CenterOffsetXPct),
+                    viewportH * (0.5f + CenterOffsetYPct)
+                );
                 // Draw offset now maintained by PlayerAnimationSystem via PlayerAnimationState
                 var anim = _anchorEntity.GetComponent<PlayerAnimationState>();
                 _attackDrawOffset = anim?.DrawOffset ?? Vector2.Zero;

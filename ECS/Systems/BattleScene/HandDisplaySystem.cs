@@ -18,6 +18,14 @@ namespace Crusaders30XX.ECS.Systems
     public class HandDisplaySystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
+		
+		// Auto scale for smaller screens
+		[DebugEditable(DisplayName = "Auto Scale Threshold Height", Step = 10f, Min = 200f, Max = 4000f)]
+		public int AutoScaleThresholdHeight { get; set; } = 1080;
+		[DebugEditable(DisplayName = "Min Card Scale", Step = 0.05f, Min = 0.3f, Max = 1.0f)]
+		public float MinCardScale { get; set; } = 0.75f;
+		[DebugEditable(DisplayName = "Scale Curve Power", Step = 0.1f, Min = 0.1f, Max = 4f)]
+		public float CardScalePower { get; set; } = 1.0f;
         
         // Hand layout settings (moved from CardConfig)
         [DebugEditable(DisplayName = "Bottom Margin", Step = 2f, Min = 0f, Max = 1000f)]
@@ -61,6 +69,71 @@ namespace Crusaders30XX.ECS.Systems
         {
             _graphicsDevice = graphicsDevice;
         }
+
+		// Baseline snapshot of CardVisualSettings captured once to compute scaled values from
+		private bool _baselineCaptured;
+		private int _baseCardWidth, _baseCardHeight, _baseCardGap, _baseCardBorderThickness, _baseCardCornerRadius, _baseHighlightBorderThickness;
+		private int _baseTextMarginX, _baseTextMarginY, _baseBlockNumberMarginX, _baseBlockNumberMarginY, _baseCardOffsetYExtra;
+		private float _baseUIScale, _baseNameScale, _baseCostScale, _baseDescriptionScale, _baseBlockScale, _baseBlockNumberScale;
+		private float _lastAppliedScale = -1f;
+
+		private void CaptureBaselineIfNeeded(CardVisualSettings s)
+		{
+			if (_baselineCaptured || s == null) return;
+			_baseUIScale = s.UIScale;
+			_baseCardWidth = s.CardWidth;
+			_baseCardHeight = s.CardHeight;
+			_baseCardOffsetYExtra = s.CardOffsetYExtra;
+			_baseCardGap = s.CardGap;
+			_baseCardBorderThickness = s.CardBorderThickness;
+			_baseCardCornerRadius = s.CardCornerRadius;
+			_baseHighlightBorderThickness = s.HighlightBorderThickness;
+			_baseTextMarginX = s.TextMarginX;
+			_baseTextMarginY = s.TextMarginY;
+			_baseNameScale = s.NameScale;
+			_baseCostScale = s.CostScale;
+			_baseDescriptionScale = s.DescriptionScale;
+			_baseBlockScale = s.BlockScale;
+			_baseBlockNumberScale = s.BlockNumberScale;
+			_baseBlockNumberMarginX = s.BlockNumberMarginX;
+			_baseBlockNumberMarginY = s.BlockNumberMarginY;
+			_baselineCaptured = true;
+		}
+
+		private void ApplyViewportScalingIfNeeded(CardVisualSettings s)
+		{
+			if (s == null) return;
+			CaptureBaselineIfNeeded(s);
+			if (!_baselineCaptured) return;
+
+			int vh = _graphicsDevice.Viewport.Height;
+			float baseH = System.Math.Max(1, AutoScaleThresholdHeight);
+			float raw = vh >= baseH ? 1f : (vh / baseH);
+			float scaled = System.MathF.Pow(System.MathF.Max(MinCardScale, System.MathF.Min(1f, raw)), System.MathF.Max(0.1f, CardScalePower));
+			if (System.MathF.Abs(scaled - _lastAppliedScale) < 0.001f) return; // no change
+			_lastAppliedScale = scaled;
+
+			// Scale integer dimensions and margins
+			s.CardWidth = System.Math.Max(10, (int)System.MathF.Round(_baseCardWidth * scaled));
+			s.CardHeight = System.Math.Max(10, (int)System.MathF.Round(_baseCardHeight * scaled));
+			s.CardOffsetYExtra = (int)System.MathF.Round(_baseCardOffsetYExtra * scaled);
+			s.CardGap = (int)System.MathF.Round(_baseCardGap * scaled);
+			s.CardBorderThickness = System.Math.Max(0, (int)System.MathF.Round(_baseCardBorderThickness * scaled));
+			s.CardCornerRadius = System.Math.Max(0, (int)System.MathF.Round(_baseCardCornerRadius * scaled));
+			s.HighlightBorderThickness = System.Math.Max(0, (int)System.MathF.Round(_baseHighlightBorderThickness * scaled));
+			s.TextMarginX = System.Math.Max(0, (int)System.MathF.Round(_baseTextMarginX * scaled));
+			s.TextMarginY = System.Math.Max(0, (int)System.MathF.Round(_baseTextMarginY * scaled));
+			s.BlockNumberMarginX = System.Math.Max(0, (int)System.MathF.Round(_baseBlockNumberMarginX * scaled));
+			s.BlockNumberMarginY = System.Math.Max(0, (int)System.MathF.Round(_baseBlockNumberMarginY * scaled));
+
+			// Scale float text scales and UI scale coherently
+			s.UIScale = _baseUIScale * scaled;
+			s.NameScale = _baseNameScale * scaled;
+			s.CostScale = _baseCostScale * scaled;
+			s.DescriptionScale = _baseDescriptionScale * scaled;
+			s.BlockScale = _baseBlockScale * scaled;
+			s.BlockNumberScale = _baseBlockNumberScale * scaled;
+		}
         
         protected override IEnumerable<Entity> GetRelevantEntities()
         {
@@ -114,7 +187,9 @@ namespace Crusaders30XX.ECS.Systems
                         float indexDelta = cardIndex - mid; // [-mid, +mid]
                         // Use shared settings for spacing
                         var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-                        var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+						var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+						// Apply viewport-aware scaling to card visuals (1080p baseline -> scale down below)
+						ApplyViewportScalingIfNeeded(cvs);
                         float cardSpacing = (cvs != null) ? (cvs.CardWidth + cvs.CardGap) : 0f;
                         if (cardSpacing <= 0f) { cardSpacing = 250 + (-20); }
                         float x = pivot.X + indexDelta * cardSpacing;
