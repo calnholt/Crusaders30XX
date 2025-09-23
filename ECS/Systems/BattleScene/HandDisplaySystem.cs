@@ -172,7 +172,13 @@ namespace Crusaders30XX.ECS.Systems
                         float screenWidth = _graphicsDevice.Viewport.Width;
                         float screenHeight = _graphicsDevice.Viewport.Height;
 
-                        var pivot = new Vector2(screenWidth / 2f, screenHeight - HandBottomMargin);
+						// Scale bottom margin for small screens using the same scaling power
+						int vh = _graphicsDevice.Viewport.Height;
+						float baseH = System.Math.Max(1, AutoScaleThresholdHeight);
+						float rawScale = vh >= baseH ? 1f : (vh / baseH);
+						float marginScale = System.MathF.Pow(System.MathF.Max(MinCardScale, System.MathF.Min(1f, rawScale)), System.MathF.Max(0.1f, CardScalePower));
+						float bottomMarginScaled = HandBottomMargin * marginScale;
+						var pivot = new Vector2(screenWidth / 2f, screenHeight - bottomMarginScaled);
 
                         // normalized index t in [-1, 1]
                         float mid = (count - 1) * 0.5f;
