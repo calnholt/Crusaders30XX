@@ -643,6 +643,8 @@ namespace Crusaders30XX.ECS.Components
         DowseWithHolyWater,
         Slow,
         Aegis,
-        Stun
+        Stun,
+        Armor,
+        Wounded
     }
 }

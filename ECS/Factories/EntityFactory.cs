@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Cards;
+using System;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -366,6 +367,13 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new PortraitInfo { TextureWidth = 0, TextureHeight = 0, CurrentScale = 1f });
             world.AddComponent(entity, new EnemyArsenal { AttackIds = new List<string>(def.attackIds) });
             world.AddComponent(entity, new AttackIntent());
+            world.AddComponent(entity, new AppliedPassives());
+            foreach (var passive in def.passives)
+            {
+                Enum.TryParse<AppliedPassiveType>(passive.type, true, out var passiveType);
+                Console.WriteLine($"[EntityFactory] loading passives {passiveType} {passive.amount}");
+                EventManager.Publish(new ApplyPassiveEvent { Target = entity, Delta = passive.amount, Type = passiveType});
+            }
             return entity;
         }
     }

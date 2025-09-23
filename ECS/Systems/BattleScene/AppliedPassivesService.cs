@@ -11,20 +11,33 @@ namespace Crusaders30XX.ECS.Systems
     {
       public static int GetPassiveDelta(ModifyHpEvent e)
       {
-        var additional = 0;
-        var passives = e.Source.GetComponent<AppliedPassives>().Passives;
+        var delta = 0;
+        var sourcePassives = e.Source.GetComponent<AppliedPassives>().Passives;
+        var targetPassives = e.Target.GetComponent<AppliedPassives>().Passives;
         // var phaseState = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
-        Console.WriteLine($"[AppliedPassivesService] GetPassiveDelta - passives: {passives.Count}");
-        if (passives.ContainsKey(AppliedPassiveType.DowseWithHolyWater) && e.DamageType == ModifyTypeEnum.Attack)
+        Console.WriteLine($"[AppliedPassivesService] GetPassiveDelta - passives: {sourcePassives.Count}");
+        if (sourcePassives.ContainsKey(AppliedPassiveType.DowseWithHolyWater) && e.DamageType == ModifyTypeEnum.Attack)
         {
-          Console.WriteLine($"[AppliedPassivesService] GetPassiveDelta - DowseWithHolyWater");
-          passives.TryGetValue(AppliedPassiveType.DowseWithHolyWater, out var amount);
+          Console.WriteLine($"[AppliedPassivesService] applying DowseWithHolyWater");
+          sourcePassives.TryGetValue(AppliedPassiveType.DowseWithHolyWater, out var amount);
           CardDefinitionCache.TryGet("dowse_with_holy_water", out var def);
-          additional += def.valuesParse[0] * amount;
+          delta += def.valuesParse[0] * amount;
           EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.DowseWithHolyWater });
         }
-        Console.WriteLine($"[AppliedPassivesService] GetPassiveDelta - additional: {additional}");
-        return -additional;
+        if (targetPassives.ContainsKey(AppliedPassiveType.Armor) && e.DamageType == ModifyTypeEnum.Attack)
+        {
+          Console.WriteLine($"[AppliedPassivesService] applying Armor");
+          targetPassives.TryGetValue(AppliedPassiveType.Armor, out var amount);
+          delta -= amount;
+        }
+        if (targetPassives.ContainsKey(AppliedPassiveType.Wounded))
+        {
+          Console.WriteLine($"[AppliedPassivesService] applying Wounded");
+          targetPassives.TryGetValue(AppliedPassiveType.Wounded, out var amount);
+          delta += amount;
+        }
+        Console.WriteLine($"[AppliedPassivesService] GetPassiveDelta - delta: {delta}");
+        return -delta;
       }
     }
 }

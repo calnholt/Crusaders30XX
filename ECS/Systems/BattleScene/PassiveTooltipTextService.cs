@@ -21,6 +21,10 @@ namespace Crusaders30XX.ECS.Systems
           return $"Prevents the next {stacks} damage from any source.";
         case AppliedPassiveType.Stun:
           return $"Skips the next {stacks} attack{(stacks > 1 ? "s" : "")}.";
+        case AppliedPassiveType.Armor:
+          return $"Takes {stacks} less damage from attacks.";
+        case AppliedPassiveType.Wounded:
+          return $"Takes {stacks} more damage from all sources.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

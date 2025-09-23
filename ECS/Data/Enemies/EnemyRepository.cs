@@ -54,6 +54,15 @@ namespace Crusaders30XX.ECS.Data.Enemies
 							if (!string.IsNullOrEmpty(aid)) def.attackIds.Add(aid);
 						}
 					}
+					if (root["passives"] is JsonArray passivesArray)
+					{
+						foreach (var passive in passivesArray)
+						{
+							string type = (string)passive["type"];
+							int amount = (int)passive["amount"];
+							def.passives.Add(new PassiveDefinition { type = type, amount = amount });
+						}
+					}
 					map[def.id] = def;
 				}
 				catch (System.Exception ex)

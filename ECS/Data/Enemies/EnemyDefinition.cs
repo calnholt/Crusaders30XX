@@ -9,6 +9,13 @@ namespace Crusaders30XX.ECS.Data.Enemies
 		public int hp { get; set; } = 1;
 		public List<string> attackIds { get; set; } = new();
 		public int genericAttackAmbushPercentage { get; set; } = 0;
+		public List<PassiveDefinition> passives {get; set; } = [];
+	}
+
+	public class PassiveDefinition
+	{
+		public string type { get; set ; }
+		public int amount { get; set; }
 	}
 }
 
