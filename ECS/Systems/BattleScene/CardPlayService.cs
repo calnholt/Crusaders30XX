@@ -24,7 +24,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 case "anoint_the_sick":
                 {
-                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = player, Delta = +values[0], DamageType = ModifyTypeEnum.Heal });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = player, Delta = +values[0], DamageType = ModifyTypeEnum.Heal });
                     break;
                 }
                 case "burn":
@@ -55,24 +55,24 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     EventManager.Publish(new RequestDrawCardsEvent { Count = values[0] });
                     EventManager.Publish(new ModifyTemperanceEvent { Delta = values[1] });
-                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = player, Delta = -values[2], DamageType = ModifyTypeEnum.Effect });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = player, Delta = -values[2], DamageType = ModifyTypeEnum.Effect });
                     break;
                 }
                 case "seize":
                 {
                     battleStateInfo.PhaseTracking.TryGetValue(TrackingTypeEnum.CourageLost, out var courageLost);
-                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -(courageLost > 0 ? values[1] : values[0]), DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = enemy, Delta = -(courageLost > 0 ? values[1] : values[0]), DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
                 case "stab":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
-                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -values[1], DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = enemy, Delta = -values[1], DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
                 case "strike":
                 {
-                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -values[0], DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = enemy, Delta = -values[0], DamageType = ModifyTypeEnum.Attack });
                     if (Random.Shared.Next(0, 100) <= values[1])
                     {
                         EventManager.Publish(new ModifyActionPointsEvent { Delta = values[2] });
@@ -87,7 +87,7 @@ namespace Crusaders30XX.ECS.Systems
                 case "vindicate":
                 {
                     int damage = values[0] + (courage * values[1]);
-                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -damage, DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = enemy, Delta = -damage, DamageType = ModifyTypeEnum.Attack });
                     EventManager.Publish(new SetCourageEvent { Amount = 0 });
                     break;
                 }
@@ -95,7 +95,7 @@ namespace Crusaders30XX.ECS.Systems
                 case "sword":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
-                    EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = -values[1], DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = enemy, Delta = -values[1], DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
                 default:

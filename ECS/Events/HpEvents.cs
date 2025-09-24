@@ -6,19 +6,26 @@ namespace Crusaders30XX.ECS.Events
     /// Adjust HP by Delta (negative to lose HP, positive to heal).
     /// If Target is null, applies to the first Player entity with an HP component.
     /// </summary>
-    public class ModifyHpEvent
+    public class ModifyHpRequestEvent
     {
         public Entity Target { get; set; }
         public Entity Source { get; set; }
         public int Delta { get; set; }
         public ModifyTypeEnum DamageType { get; set; } = ModifyTypeEnum.Attack;
-
     }
     public enum ModifyTypeEnum
     {
         Attack,
         Effect,
         Heal,
+    }
+
+    public class ModifyHpEvent
+    {
+        public Entity Target { get; set; }
+        public Entity Source { get; set; }
+        public int Delta { get; set; }
+        public ModifyTypeEnum DamageType { get; set; } = ModifyTypeEnum.Attack;
     }
 
     /// <summary>

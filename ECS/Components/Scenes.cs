@@ -6,6 +6,7 @@ namespace Crusaders30XX.ECS.Components
 	public enum SceneId
 	{
 		Menu,
+		Customization,
 		Battle,
 		None
 	}
@@ -54,6 +55,18 @@ namespace Crusaders30XX.ECS.Components
 		public int RowHeight { get; set; } = 24;
 		public int Padding { get; set; } = 8;
 		public float ScrollOffset { get; set; } = 0f;
+	}
+
+	/// <summary>
+	/// State for the Customization scene: working deck list and scroll positions.
+	/// </summary>
+	public class CustomizationState : IComponent
+	{
+		public Crusaders30XX.ECS.Core.Entity Owner { get; set; }
+		public System.Collections.Generic.List<string> WorkingCardIds { get; set; } = new System.Collections.Generic.List<string>();
+		public System.Collections.Generic.List<string> OriginalCardIds { get; set; } = new System.Collections.Generic.List<string>();
+		public int LeftScroll { get; set; } = 0;
+		public int RightScroll { get; set; } = 0;
 	}
 }
 

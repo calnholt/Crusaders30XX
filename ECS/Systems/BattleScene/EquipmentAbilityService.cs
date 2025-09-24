@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;
 				case "DealDamage":
-					EventManager.Publish(new ModifyHpEvent { Source = player, Target = enemy, Delta = (ability.effectCount * -1), DamageType = ModifyTypeEnum.Attack });
+					EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = enemy, Delta = (ability.effectCount * -1), DamageType = ModifyTypeEnum.Attack });
 					EventQueue.EnqueueRule(new QueuedStartPlayerAttackAnimation());
 					EventQueue.EnqueueRule(new QueuedWaitPlayerImpactEvent());
 					break;

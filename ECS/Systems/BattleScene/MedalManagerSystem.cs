@@ -94,7 +94,7 @@ namespace Crusaders30XX.ECS.Systems
 						int healAmount = GetStLukeHealAmount(player);
 						if (healAmount > 0)
 						{
-							EventManager.Publish(new ModifyHpEvent { Source = player, Target = player, Delta = healAmount });
+							EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = player, Delta = healAmount });
 						}
 						break;
 					}

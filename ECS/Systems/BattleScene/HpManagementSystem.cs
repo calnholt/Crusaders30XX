@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		public HpManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
-			EventManager.Subscribe<ModifyHpEvent>(OnModifyHp);
+			EventManager.Subscribe<ModifyHpRequestEvent>(OnModifyHpRequest);
 			EventManager.Subscribe<SetHpEvent>(OnSetHp);
 		}
 
@@ -24,7 +24,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
-		private void OnModifyHp(ModifyHpEvent e)
+		private void OnModifyHpRequest(ModifyHpRequestEvent e)
 		{
 			var target = ResolveTarget(e.Target);
 			if (target == null) return;
@@ -33,7 +33,9 @@ namespace Crusaders30XX.ECS.Systems
 			int before = hp.Current;
 			// TODO: iterate through applied passives and apply their effects
 			int passiveDelta = AppliedPassivesService.GetPassiveDelta(e);
-			int nv = hp.Current + e.Delta + passiveDelta;
+			int newDelta = e.Delta + passiveDelta;
+			int nv = hp.Current + newDelta;
+			EventManager.Publish(new ModifyHpEvent { Source = e.Source, Target = target, Delta = newDelta, DamageType = e.DamageType });
 			hp.Current = System.Math.Max(0, System.Math.Min(hp.Max, nv));
 			// If this is the player and we crossed to zero, publish PlayerDied once
 			if (before > 0 && hp.Current == 0 && target.HasComponent<Player>())
@@ -76,14 +78,14 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugActionInt("Lose HP", Step = 1, Min = 1, Max = 999, Default = 10)]
 		public void Debug_LoseHp(int amount)
 		{
-			EventManager.Publish(new ModifyHpEvent { Source = EntityManager.GetEntity("Player"), Target = EntityManager.GetEntity("Player"), Delta = -System.Math.Abs(amount) });
+			EventManager.Publish(new ModifyHpRequestEvent { Source = EntityManager.GetEntity("Player"), Target = EntityManager.GetEntity("Player"), Delta = -System.Math.Abs(amount) });
 		}
 
 		// Debug action: Heal X HP
 		[DebugActionInt("Heal HP", Step = 1, Min = 1, Max = 999, Default = 10)]
 		public void Debug_HealHp(int amount)
 		{
-			EventManager.Publish(new ModifyHpEvent { Source = EntityManager.GetEntity("Player"), Target = EntityManager.GetEntity("Player"), Delta = System.Math.Abs(amount) });
+			EventManager.Publish(new ModifyHpRequestEvent { Source = EntityManager.GetEntity("Player"), Target = EntityManager.GetEntity("Player"), Delta = System.Math.Abs(amount) });
 		}
 	}
 }

@@ -21,6 +21,8 @@ public class Game1 : Game
     private DebugMenuSystem _debugMenuSystem;
     private EntityListOverlaySystem _entityListOverlaySystem;
     private TransitionDisplaySystem _transitionDisplaySystem;
+    private CardDisplaySystem _cardDisplaySystem;
+
     private KeyboardState _prevKeyboard;
     
     
@@ -78,20 +80,25 @@ public class Game1 : Game
         if (sceneEntity == null)
         {
             sceneEntity = _world.CreateEntity("SceneState");
-            _world.AddComponent(sceneEntity, new SceneState { Current = SceneId.Menu });
+            _world.AddComponent(sceneEntity, new SceneState { Current = SceneId.Customization });
         }
+        EntityFactory.CreateCardVisualSettings(_world);
         // Add parent scene systems only
         var menuSceneSystem = new MenuSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         var battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
+        var customizationRootSystem = new CustomizationRootSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _world.SystemManager);
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, Content);
         _world.AddSystem(menuSceneSystem);
         _world.AddSystem(battleSceneSystem);
+        _world.AddSystem(customizationRootSystem);
         _world.AddSystem(new TimerSchedulerSystem(_world.EntityManager));
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_entityListOverlaySystem);
         _world.AddSystem(_transitionDisplaySystem);
+        _world.AddSystem(_cardDisplaySystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 
@@ -137,6 +144,12 @@ public class Game1 : Game
             case SceneId.Menu:
             {
                 menuScene?.Draw();
+                break;
+            }
+            case SceneId.Customization:
+            {
+                var cust = _world.SystemManager.GetSystem<CustomizationRootSystem>();
+                cust?.Draw();
                 break;
             }
             case SceneId.Battle:

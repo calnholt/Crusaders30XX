@@ -71,7 +71,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Burn", () =>
                 {
-                    EventManager.Publish(new ModifyHpEvent { Source = owner, Target = owner, Delta = -burnStacks, DamageType = ModifyTypeEnum.Effect });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = owner, Target = owner, Delta = -burnStacks, DamageType = ModifyTypeEnum.Effect });
                     EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Burn });
                 }, .15f);
             }

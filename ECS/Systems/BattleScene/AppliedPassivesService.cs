@@ -9,7 +9,7 @@ namespace Crusaders30XX.ECS.Systems
 {
     internal static class AppliedPassivesService
     {
-      public static int GetPassiveDelta(ModifyHpEvent e)
+      public static int GetPassiveDelta(ModifyHpRequestEvent e)
       {
         var delta = 0;
         var sourcePassives = e.Source.GetComponent<AppliedPassives>().Passives;

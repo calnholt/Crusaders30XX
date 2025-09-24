@@ -161,34 +161,6 @@ namespace Crusaders30XX.ECS.Factories
             // Ensure a Battlefield world component exists with a default location
             world.AddComponent(entity, new Battlefield { Location = BattleLocation.Desert });
 
-            // Ensure CardVisualSettings singleton exists
-            var cvsEntity = world.EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-            if (cvsEntity == null)
-            {
-                cvsEntity = world.CreateEntity("CardVisualSettings");
-                float sU = 1.0f; // starting UI scale
-                world.AddComponent(cvsEntity, new CardVisualSettings
-                {
-                    UIScale = sU,
-                    CardWidth = (int)System.Math.Round(250 * sU),
-                    CardHeight = (int)System.Math.Round(350 * sU),
-                    CardOffsetYExtra = (int)System.Math.Round(25 * sU),
-                    CardGap = (int)System.Math.Round(-20 * sU),
-                    CardBorderThickness = (int)System.Math.Max(1, System.Math.Round(3 * sU)),
-                    CardCornerRadius = (int)System.Math.Max(2, System.Math.Round(18 * sU)),
-                    HighlightBorderThickness = (int)System.Math.Max(1, System.Math.Round(5 * sU)),
-                    TextMarginX = (int)System.Math.Round(16 * sU),
-                    TextMarginY = (int)System.Math.Round(16 * sU),
-                    NameScale = 0.175f * sU,
-                    CostScale = 0.6f * sU,
-                    DescriptionScale = 0.125f * sU,
-                    BlockScale = 0.5f * sU,
-                    BlockNumberScale = 0.225f * sU,
-                    BlockNumberMarginX = (int)System.Math.Round(14 * sU),
-                    BlockNumberMarginY = (int)System.Math.Round(12 * sU)
-                });
-            }
-            
 
             // Ensure BattleInfo singleton exists
             var biEntity = world.EntityManager.GetEntitiesWithComponent<BattleInfo>().FirstOrDefault();
@@ -197,6 +169,33 @@ namespace Crusaders30XX.ECS.Factories
                 biEntity = world.CreateEntity("BattleInfo");
                 world.AddComponent(biEntity, new BattleInfo { TurnNumber = 0 });
             }
+            return entity;
+        }
+
+        public static Entity CreateCardVisualSettings(World world)
+        {
+            float sU = 1.0f; // starting UI scale
+            var entity = world.CreateEntity("CardVisualSettings");
+            world.AddComponent(entity, new CardVisualSettings
+            {
+                UIScale = sU,
+                CardWidth = (int)System.Math.Round(250 * sU),
+                CardHeight = (int)System.Math.Round(350 * sU),
+                CardOffsetYExtra = (int)System.Math.Round(25 * sU),
+                CardGap = (int)System.Math.Round(-20 * sU),
+                CardBorderThickness = (int)System.Math.Max(1, System.Math.Round(3 * sU)),
+                CardCornerRadius = (int)System.Math.Max(2, System.Math.Round(18 * sU)),
+                HighlightBorderThickness = (int)System.Math.Max(1, System.Math.Round(5 * sU)),
+                TextMarginX = (int)System.Math.Round(16 * sU),
+                TextMarginY = (int)System.Math.Round(16 * sU),
+                NameScale = 0.175f * sU,
+                CostScale = 0.6f * sU,
+                DescriptionScale = 0.125f * sU,
+                BlockScale = 0.5f * sU,
+                BlockNumberScale = 0.225f * sU,
+                BlockNumberMarginX = (int)System.Math.Round(14 * sU),
+                BlockNumberMarginY = (int)System.Math.Round(12 * sU)
+            });
             return entity;
         }
         
