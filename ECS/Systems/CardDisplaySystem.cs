@@ -158,6 +158,7 @@ namespace Crusaders30XX.ECS.Systems
             var transform = entity.GetComponent<Transform>();
             
             if (cardData == null) return;
+            float visualScale = transform?.Scale.X ?? 1f;
             
 			var cardColor = GetCardColor(cardData.Color);
 			var costColor = GetCostColor(cardData.CardCostType);
@@ -197,20 +198,20 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
             catch { }
-            DrawCardBackgroundRotated(position, rotation, bgColor);
+            DrawCardBackgroundRotatedScaled(position, rotation, bgColor, visualScale);
 
             // Compute actual visual center from rect so text aligns exactly with background
-            var cardRectForCenter = GetCardVisualRect(position);
+            var cardRectForCenter = GetCardVisualRectScaled(position, visualScale);
             var cardCenter = new Vector2(cardRectForCenter.X + cardRectForCenter.Width / 2f, cardRectForCenter.Y + cardRectForCenter.Height / 2f);
             
             // Name text (wrapped within card width), rotated with card
 			var textColor = isWeaponDetected ? Color.Black : GetCardTextColor(cardData.Color);
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY), cardData.Name, textColor, _settings.NameScale);
+            DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, _settings.TextMarginY * visualScale), cardData.Name, textColor, _settings.NameScale * visualScale, visualScale);
             
             // Draw cost pips (colored circles with yellow outline) under the name
-            DrawCostPips(cardCenter, rotation, _settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(34 * _settings.UIScale), cardData);
+            DrawCostPipsScaled(cardCenter, rotation, (int)(_settings.TextMarginX * visualScale), (int)Math.Round((_settings.TextMarginY + 34 * _settings.UIScale) * visualScale), cardData, visualScale);
 
-            DrawCardTextWrappedRotated(cardCenter, rotation, new Vector2(_settings.TextMarginX, _settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)), cardData.Description, textColor, _settings.DescriptionScale);
+            DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, (_settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)) * visualScale), cardData.Description, textColor, _settings.DescriptionScale * visualScale, visualScale);
             
             // Draw block value and shield icon at bottom-left, but hide for weapons
             bool isWeapon = false;
@@ -226,26 +227,26 @@ namespace Crusaders30XX.ECS.Systems
             if (!isWeapon && cardData.BlockValue > 0)
             {
                 string blockText = cardData.BlockValue.ToString();
-                var textSize = _font.MeasureString(blockText) * _settings.BlockNumberScale;
-                float marginX = _settings.BlockNumberMarginX;
-                float marginY = _settings.BlockNumberMarginY;
-                float baselineY = _settings.CardHeight - marginY;
+                var textSize = _font.MeasureString(blockText) * (_settings.BlockNumberScale * visualScale);
+                float marginX = _settings.BlockNumberMarginX * visualScale;
+                float marginY = _settings.BlockNumberMarginY * visualScale;
+                float baselineY = _settings.CardHeight * visualScale - marginY;
 
                 // First draw the number
                 float numberLocalX = marginX;
                 float numberLocalY = baselineY - textSize.Y;
-                DrawCardTextRotatedSingle(cardCenter, rotation, new Vector2(numberLocalX, numberLocalY), blockText, textColor, _settings.BlockNumberScale);
+                DrawCardTextRotatedSingleScaled(cardCenter, rotation, new Vector2(numberLocalX, numberLocalY), blockText, textColor, _settings.BlockNumberScale * visualScale, visualScale);
 
                 // Then draw the shield icon to the right
                 var shield = GetOrLoadTexture("shield");
                 if (shield != null)
                 {
-                    float iconHeight = Math.Max(8f, ShieldIconHeight * _settings.UIScale);
+                    float iconHeight = Math.Max(8f, ShieldIconHeight * _settings.UIScale * visualScale);
                     float iconWidth = shield.Height > 0 ? iconHeight * (shield.Width / (float)shield.Height) : iconHeight;
-                    float gap = Math.Max(0f, ShieldIconGap * _settings.UIScale);
-                    float iconLocalX = numberLocalX + textSize.X + gap + ShieldIconOffsetX;
-                    float iconLocalY = baselineY - iconHeight + ShieldIconOffsetY;
-                    DrawTextureRotatedLocal(cardCenter, rotation, new Vector2(iconLocalX, iconLocalY), shield, new Vector2(iconWidth, iconHeight), Color.White);
+                    float gap = Math.Max(0f, ShieldIconGap * _settings.UIScale * visualScale);
+                    float iconLocalX = numberLocalX + textSize.X + gap + ShieldIconOffsetX * visualScale;
+                    float iconLocalY = baselineY - iconHeight + ShieldIconOffsetY * visualScale;
+                    DrawTextureRotatedLocalScaled(cardCenter, rotation, new Vector2(iconLocalX, iconLocalY), shield, new Vector2(iconWidth, iconHeight), Color.White, visualScale);
                 }
             }
             else if (isWeapon)
@@ -254,24 +255,24 @@ namespace Crusaders30XX.ECS.Systems
                 var sword = GetOrLoadTexture("sword");
                 if (sword != null)
                 {
-                    float marginX = _settings.BlockNumberMarginX;
-                    float marginY = _settings.BlockNumberMarginY;
-                    float baselineY = _settings.CardHeight - marginY;
-                    float iconHeight = Math.Max(8f, ShieldIconHeight * _settings.UIScale);
+                    float marginX = _settings.BlockNumberMarginX * visualScale;
+                    float marginY = _settings.BlockNumberMarginY * visualScale;
+                    float baselineY = _settings.CardHeight * visualScale - marginY;
+                    float iconHeight = Math.Max(8f, ShieldIconHeight * _settings.UIScale * visualScale);
                     float iconWidth = sword.Height > 0 ? iconHeight * (sword.Width / (float)sword.Height) : iconHeight;
-                    float iconLocalX = marginX + ShieldIconOffsetX;
-                    float iconLocalY = baselineY - iconHeight + ShieldIconOffsetY;
-                    DrawTextureRotatedLocal(cardCenter, rotation, new Vector2(iconLocalX, iconLocalY), sword, new Vector2(iconWidth, iconHeight), Color.White);
+                    float iconLocalX = marginX + ShieldIconOffsetX * visualScale;
+                    float iconLocalY = baselineY - iconHeight + ShieldIconOffsetY * visualScale;
+                    DrawTextureRotatedLocalScaled(cardCenter, rotation, new Vector2(iconLocalX, iconLocalY), sword, new Vector2(iconWidth, iconHeight), Color.White, visualScale);
                 }
             }
 
             // Draw AP cost text at bottom-center: 0AP if free action else 1AP
             bool isFree = GetIsFreeAction(entity);
             string apText = isFree ? "Free" : "1AP";
-            var apSize = _font.MeasureString(apText) * APTextScale;
-            float apLocalX = (_settings.CardWidth - apSize.X) / 2f + APOffsetX;
-            float apLocalY = _settings.CardHeight - APBottomMarginY - apSize.Y;
-            DrawCardTextRotatedSingle(cardCenter, rotation, new Vector2(apLocalX, apLocalY), apText, textColor, APTextScale);
+            var apSize = _font.MeasureString(apText) * (APTextScale * visualScale);
+            float apLocalX = (_settings.CardWidth * visualScale - apSize.X) / 2f + APOffsetX * visualScale;
+            float apLocalY = _settings.CardHeight * visualScale - (APBottomMarginY * visualScale) - apSize.Y;
+            DrawCardTextRotatedSingleScaled(cardCenter, rotation, new Vector2(apLocalX, apLocalY), apText, textColor, APTextScale * visualScale, visualScale);
         }
         
         /// <summary>
@@ -321,7 +322,7 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
         
-        private void DrawCostPips(Vector2 cardCenter, float rotation, int localOffsetX, int localOffsetY, CardData data)
+        private void DrawCostPipsScaled(Vector2 cardCenter, float rotation, int localOffsetX, int localOffsetY, CardData data, float overallScale)
         {
             var costs = (data.CostArray != null && data.CostArray.Count > 0)
                 ? data.CostArray
@@ -329,9 +330,9 @@ namespace Crusaders30XX.ECS.Systems
             if (costs.Count == 0) return;
 
             // Circle sizing and spacing based on UI scale
-            float diameter = Math.Max(6f, CostPipDiameter * _settings.UIScale);
+            float diameter = Math.Max(6f, CostPipDiameter * _settings.UIScale * overallScale);
             float radius = diameter / 2f;
-            float gap = Math.Max(0f, CostPipGap * _settings.UIScale);
+            float gap = Math.Max(0f, CostPipGap * _settings.UIScale * overallScale);
             float totalWidth = costs.Count * diameter + (costs.Count - 1) * gap;
 
             // Start X so pips are left-aligned from localOffsetX
@@ -344,7 +345,7 @@ namespace Crusaders30XX.ECS.Systems
                 var costType = costs[i];
                 var fill = GetCostColor(costType);
                 var outline = GetConditionalOutlineColor(data.Color, costType);
-                DrawCirclePipRotated(cardCenter, rotation, new Vector2(x, y), radius, fill, outline);
+                DrawCirclePipRotatedScaled(cardCenter, rotation, new Vector2(x, y), radius, fill, outline, overallScale);
             }
         }
 
@@ -360,7 +361,7 @@ namespace Crusaders30XX.ECS.Systems
             return null; // no outline
         }
 
-        private void DrawCirclePipRotated(Vector2 cardCenter, float rotation, Vector2 localCenterFromTopLeft, float radius, Color fillColor, Color? outlineColor)
+        private void DrawCirclePipRotatedScaled(Vector2 cardCenter, float rotation, Vector2 localCenterFromTopLeft, float radius, Color fillColor, Color? outlineColor, float overallScale)
         {
             // Use cached anti-aliased circle texture from PrimitiveTextureFactory
             int radiusTex = Math.Max(1, (int)Math.Ceiling(radius));
@@ -368,8 +369,8 @@ namespace Crusaders30XX.ECS.Systems
             int textureSize = circleTex.Width; // equals radiusTex * 2
 
             // Compute world position with rotation
-            float localX = -_settings.CardWidth / 2f + localCenterFromTopLeft.X;
-            float localY = -_settings.CardHeight / 2f + localCenterFromTopLeft.Y;
+            float localX = -_settings.CardWidth * overallScale / 2f + localCenterFromTopLeft.X;
+            float localY = -_settings.CardHeight * overallScale / 2f + localCenterFromTopLeft.Y;
             float cos = (float)Math.Cos(rotation);
             float sin = (float)Math.Sin(rotation);
             var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
@@ -408,14 +409,14 @@ namespace Crusaders30XX.ECS.Systems
             catch { return false; }
         }
         
-        private void DrawCardBackgroundRotated(Vector2 position, float rotation, Color color)
+        private void DrawCardBackgroundRotatedScaled(Vector2 position, float rotation, Color color, float scale)
         {
             // Compute rect centered on position
-            var rect = GetCardVisualRect(position);
+            var rect = GetCardVisualRectScaled(position, scale);
             var center = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
 
-            int radius = CornerRadiusOverride > 0 ? CornerRadiusOverride : _settings.CardCornerRadius;
-            int bt = BorderThicknessOverride > 0 ? BorderThicknessOverride : _settings.CardBorderThickness;
+            int radius = (int)Math.Round((CornerRadiusOverride > 0 ? CornerRadiusOverride : _settings.CardCornerRadius) * scale);
+            int bt = (int)Math.Round((BorderThicknessOverride > 0 ? BorderThicknessOverride : _settings.CardBorderThickness) * scale);
 
             // Draw rounded border as outer rounded rect in border color, then inset fill
             var outer = GetRoundedRectTexture(rect.Width, rect.Height, Math.Max(0, radius));
@@ -475,14 +476,17 @@ namespace Crusaders30XX.ECS.Systems
             _roundedRectCache.Clear();
         }
 
-        private Rectangle GetCardVisualRect(Vector2 position)
+        private Rectangle GetCardVisualRectScaled(Vector2 position, float scale)
         {
             if (_settings == null) _settings = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>();
+            int w = (int)Math.Round(_settings.CardWidth * scale);
+            int h = (int)Math.Round(_settings.CardHeight * scale);
+            int offsetY = (int)Math.Round((_settings.CardOffsetYExtra) * scale);
             return new Rectangle(
-                (int)position.X - _settings.CardWidth / 2,
-                (int)position.Y - (_settings.CardHeight / 2 + _settings.CardOffsetYExtra),
-                _settings.CardWidth,
-                _settings.CardHeight
+                (int)position.X - w / 2,
+                (int)position.Y - (h / 2 + offsetY),
+                w,
+                h
             );
         }
 
@@ -502,12 +506,12 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        // Draws a texture at a card-local top-left offset with the same rotation as the card
-        private void DrawTextureRotatedLocal(Vector2 cardCenterPosition, float rotation, Vector2 localOffsetFromTopLeft, Texture2D texture, Vector2 targetSize, Color color)
+        // Draws a texture at a card-local top-left offset with the same rotation and visual scale as the card
+        private void DrawTextureRotatedLocalScaled(Vector2 cardCenterPosition, float rotation, Vector2 localOffsetFromTopLeft, Texture2D texture, Vector2 targetSize, Color color, float overallScale)
         {
             if (texture == null) return;
-            float localX = -_settings.CardWidth / 2f + localOffsetFromTopLeft.X;
-            float localY = -_settings.CardHeight / 2f + localOffsetFromTopLeft.Y;
+            float localX = -_settings.CardWidth * overallScale / 2f + localOffsetFromTopLeft.X;
+            float localY = -_settings.CardHeight * overallScale / 2f + localOffsetFromTopLeft.Y;
             float cos = (float)Math.Cos(rotation);
             float sin = (float)Math.Sin(rotation);
             var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
@@ -517,16 +521,16 @@ namespace Crusaders30XX.ECS.Systems
         }
         
         // New: draw wrapped text in card-local space rotated with the card
-        private void DrawCardTextWrappedRotated(Vector2 cardCenterPosition, float rotation, Vector2 localOffsetFromTopLeft, string text, Color color, float scale)
+        private void DrawCardTextWrappedRotatedScaled(Vector2 cardCenterPosition, float rotation, Vector2 localOffsetFromTopLeft, string text, Color color, float scale, float overallScale)
         {
             try
             {
-                float maxLineWidth = _settings.CardWidth - (_settings.TextMarginX * 2);
+                float maxLineWidth = _settings.CardWidth * overallScale - (_settings.TextMarginX * overallScale * 2);
                 float lineHeight = _font.LineSpacing * scale;
 
                 // Convert card-local from top-left to local centered coordinates
-                float startLocalX = -_settings.CardWidth / 2f + localOffsetFromTopLeft.X;
-                float startLocalY = -_settings.CardHeight / 2f + localOffsetFromTopLeft.Y;
+                float startLocalX = -_settings.CardWidth * overallScale / 2f + localOffsetFromTopLeft.X;
+                float startLocalY = -_settings.CardHeight * overallScale / 2f + localOffsetFromTopLeft.Y;
 
                 float currentY = startLocalY;
                 foreach (var line in WrapText(text, maxLineWidth, scale))
@@ -550,12 +554,12 @@ namespace Crusaders30XX.ECS.Systems
         }
 
         // New: draw a single unwrapped line rotated; localOffsetFromTopLeft is in card-local (unrotated) pixels
-        private void DrawCardTextRotatedSingle(Vector2 cardCenterPosition, float rotation, Vector2 localOffsetFromTopLeft, string text, Color color, float scale)
+        private void DrawCardTextRotatedSingleScaled(Vector2 cardCenterPosition, float rotation, Vector2 localOffsetFromTopLeft, string text, Color color, float scale, float overallScale)
         {
             try
             {
-                float localX = -_settings.CardWidth / 2f + localOffsetFromTopLeft.X;
-                float localY = -_settings.CardHeight / 2f + localOffsetFromTopLeft.Y;
+                float localX = -_settings.CardWidth * overallScale / 2f + localOffsetFromTopLeft.X;
+                float localY = -_settings.CardHeight * overallScale / 2f + localOffsetFromTopLeft.Y;
                 float cos = (float)Math.Cos(rotation);
                 float sin = (float)Math.Sin(rotation);
                 var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);

@@ -80,7 +80,7 @@ public class Game1 : Game
         if (sceneEntity == null)
         {
             sceneEntity = _world.CreateEntity("SceneState");
-            _world.AddComponent(sceneEntity, new SceneState { Current = SceneId.Customization });
+            _world.AddComponent(sceneEntity, new SceneState { Current = SceneId.Menu });
         }
         EntityFactory.CreateCardVisualSettings(_world);
         // Add parent scene systems only

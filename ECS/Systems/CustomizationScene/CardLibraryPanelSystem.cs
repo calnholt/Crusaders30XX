@@ -127,52 +127,23 @@ namespace Crusaders30XX.ECS.Systems
             string key = $"Lib_{def.id}_{color}";
             var e = EntityManager.GetEntity(key);
             if (e != null) return e;
-            e = EntityManager.CreateEntity(key);
-            string name = def.name ?? def.id;
-            int block = def.block + (color == CardData.CardColor.Black ? 1 : 0);
-            var cardData = new CardData
-            {
-                Name = name,
-                Description = def.text,
-                Cost = 0,
-                Type = CardData.CardType.Attack,
-                Rarity = CardData.CardRarity.Common,
-                ImagePath = string.Empty,
-                Color = color,
-                BlockValue = block
-            };
-            cardData.CostArray = new System.Collections.Generic.List<CardData.CostType>();
-            if (def.cost != null)
-            {
-                foreach (var c in def.cost)
-                {
-                    var ct = ParseCostType(c);
-                    if (ct != CardData.CostType.NoCost) cardData.CostArray.Add(ct);
-                }
-            }
-            var firstSpecific = cardData.CostArray.FirstOrDefault(x => x == CardData.CostType.Red || x == CardData.CostType.White || x == CardData.CostType.Black);
-            if (firstSpecific != CardData.CostType.NoCost) cardData.CardCostType = firstSpecific;
-            else if (cardData.CostArray.Any(x => x == CardData.CostType.Any)) cardData.CardCostType = CardData.CostType.Any;
-            else cardData.CardCostType = CardData.CostType.NoCost;
-
-            EntityManager.AddComponent(e, cardData);
-            EntityManager.AddComponent(e, new Transform { Position = Vector2.Zero, Scale = Vector2.One });
-            EntityManager.AddComponent(e, new Sprite { TexturePath = string.Empty, IsVisible = true });
-            EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, GetCvs().CardWidth, GetCvs().CardHeight), IsInteractable = true });
-            return e;
-        }
-
-        private CardData.CostType ParseCostType(string cost)
-        {
-            if (string.IsNullOrEmpty(cost)) return CardData.CostType.NoCost;
-            switch (cost.Trim().ToLowerInvariant())
-            {
-                case "red": return CardData.CostType.Red;
-                case "white": return CardData.CostType.White;
-                case "black": return CardData.CostType.Black;
-                case "any": return CardData.CostType.Any;
-                default: return CardData.CostType.NoCost;
-            }
+            // Use shared factory to ensure consistent card creation
+            var worldShim = new Crusaders30XX.ECS.Core.World();
+            // worldShim not used to manage systems; we only need entity structure
+            // Reuse this EntityManager by assigning created entity here
+            var created = Crusaders30XX.ECS.Factories.EntityFactory.CreateCardFromDefinition(worldShim, def.id, color);
+            if (created == null) return null;
+            // Migrate created components into this EntityManager under a new entity named key
+            var final = EntityManager.CreateEntity(key);
+            var cd = created.GetComponent<CardData>();
+            var tr = created.GetComponent<Transform>();
+            var sp = created.GetComponent<Sprite>();
+            var ui = created.GetComponent<UIElement>();
+            EntityManager.AddComponent(final, cd);
+            EntityManager.AddComponent(final, tr);
+            EntityManager.AddComponent(final, sp);
+            EntityManager.AddComponent(final, ui);
+            return final;
         }
 
         private CardVisualSettings GetCvs()

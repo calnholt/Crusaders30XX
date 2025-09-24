@@ -225,37 +225,11 @@ namespace Crusaders30XX.ECS.Factories
 				var name = def.name ?? def.id ?? cardId;
 				int blockValue = def.block + (color == CardData.CardColor.Black ? 1 : 0);
                 string description = def.text; // already resolved in CardDefinitionCache
-				var entity = CreateCard(
-					world,
-					name,
-					description,
-					0,
-					CardData.CardType.Attack,
-					ParseRarity(def.rarity),
-					string.Empty,
-					color,
-					new List<CardData.CardColor>(),
-					blockValue
-				);
+                var entity = CreateCardFromDefinition(world, cardId, color);
 				var cd = entity.GetComponent<CardData>();
 				if (cd != null)
 				{
-					cd.CostArray = new List<CardData.CostType>();
-					if (def.cost != null)
-					{
-						foreach (var c in def.cost)
-						{
-							var ct = ParseCostType(c);
-							if (ct != CardData.CostType.NoCost) cd.CostArray.Add(ct);
-						}
-					}
-					var firstSpecific = cd.CostArray.FirstOrDefault(x => x == CardData.CostType.Red || x == CardData.CostType.White || x == CardData.CostType.Black);
-					if (firstSpecific != CardData.CostType.NoCost)
-						cd.CardCostType = firstSpecific;
-					else if (cd.CostArray.Any(x => x == CardData.CostType.Any))
-						cd.CardCostType = CardData.CostType.Any;
-					else
-						cd.CardCostType = CardData.CostType.NoCost;
+                    // already initialized in CreateCardFromDefinition
 				}
 				result.Add(entity);
 			}
@@ -302,49 +276,48 @@ namespace Crusaders30XX.ECS.Factories
             }
         }
 
-        // Overload for CreateCard to support color, cost type, and block value
-        public static Entity CreateCard(World world, string name, string description, int cost,
-            CardData.CardType type, CardData.CardRarity rarity, string imagePath,
-            CardData.CardColor color, List<CardData.CardColor> costColors, int blockValue)
+        // Helper: create card entity from CardDefinition id and color
+        public static Entity CreateCardFromDefinition(World world, string cardId, CardData.CardColor color)
         {
-            var entity = world.CreateEntity($"Card_{name}");
+            if (!CardDefinitionCache.TryGet(cardId, out var def) || def == null) return null;
+            if (def.isWeapon) return null; // only non-weapons for deck/library
+            string name = def.name ?? def.id ?? cardId;
+            int blockValue = def.block + (color == CardData.CardColor.Black ? 1 : 0);
+            var entity = world.CreateEntity($"Card_{name}_{color}");
 
             var cardData = new CardData
             {
                 Name = name,
-                Description = description,
-                Cost = cost,
-                Type = type,
-                Rarity = rarity,
-                ImagePath = imagePath,
+                Description = def.text,
+                Cost = 0,
+                Type = CardData.CardType.Attack,
+                Rarity = ParseRarity(def.rarity),
+                ImagePath = string.Empty,
                 Color = color,
-                CardCostType = costColors.Count > 0 ? (CardData.CostType)costColors[0] : CardData.CostType.NoCost,
                 BlockValue = blockValue
             };
-
-            var transform = new Transform
+            cardData.CostArray = new List<CardData.CostType>();
+            if (def.cost != null)
             {
-                Position = Vector2.Zero,
-                Scale = Vector2.One
-            };
+                foreach (var c in def.cost)
+                {
+                    var ct = ParseCostType(c);
+                    if (ct != CardData.CostType.NoCost) cardData.CostArray.Add(ct);
+                }
+            }
+            var firstSpecific = cardData.CostArray.FirstOrDefault(x => x == CardData.CostType.Red || x == CardData.CostType.White || x == CardData.CostType.Black);
+            if (firstSpecific != CardData.CostType.NoCost) cardData.CardCostType = firstSpecific;
+            else if (cardData.CostArray.Any(x => x == CardData.CostType.Any)) cardData.CardCostType = CardData.CostType.Any;
+            else cardData.CardCostType = CardData.CostType.NoCost;
 
-            var sprite = new Sprite
-            {
-                TexturePath = imagePath,
-                IsVisible = true
-            };
-
-            var uiElement = new UIElement
-            {
-                Bounds = new Rectangle(0, 0, 250, 350),
-                IsInteractable = true
-            };
+            var transform = new Transform { Position = Vector2.Zero, Scale = Vector2.One };
+            var sprite = new Sprite { TexturePath = string.Empty, IsVisible = true };
+            var uiElement = new UIElement { Bounds = new Rectangle(0, 0, 250, 350), IsInteractable = true };
 
             world.AddComponent(entity, cardData);
             world.AddComponent(entity, transform);
             world.AddComponent(entity, sprite);
             world.AddComponent(entity, uiElement);
-
             return entity;
         }
 
