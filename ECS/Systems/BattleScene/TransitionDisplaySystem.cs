@@ -174,22 +174,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void EnsureTransitionFlag(bool active)
 		{
-			var e = EntityManager.GetEntity("TransitionState");
-			if (e == null)
-			{
-				e = EntityManager.CreateEntity("TransitionState");
-				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0,0,0,0), IsInteractable = false });
-			}
-			// Reuse UIElement.IsHovered as a simple flag container to avoid a new component type
-			var ui = e.GetComponent<UIElement>();
-			if (ui == null)
-			{
-				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0,0,0,0), IsInteractable = false, IsHovered = active });
-			}
-			else
-			{
-				ui.IsHovered = active;
-			}
+			TransitionStateSingleton.IsActive = active;
 		}
 
 		[DebugAction("Preview Wipe (visual only)")]

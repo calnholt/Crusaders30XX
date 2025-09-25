@@ -90,8 +90,7 @@ namespace Crusaders30XX.ECS.Systems
 			var mouse = Mouse.GetState();
 			bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
 			// Block clicks during scene transition
-			var ts = EntityManager.GetEntity("TransitionState")?.GetComponent<UIElement>();
-			if (ts != null && ts.IsHovered)
+			if (TransitionStateSingleton.IsActive)
 			{
 				_prevMouse = mouse;
 				return;
