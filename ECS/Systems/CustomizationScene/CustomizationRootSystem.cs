@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
         private CustomizationSceneSystem _customizationSceneSystem;
         private CardLibraryPanelSystem _libraryPanelSystem;
         private LoadoutDeckPanelSystem _deckPanelSystem;
+        private LoadoutEditSystem _loadoutEditSystem;
 
         public CustomizationRootSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice gd, SpriteBatch sb, ContentManager content, SpriteFont font) : base(em)
         {
@@ -33,10 +34,12 @@ namespace Crusaders30XX.ECS.Systems
             _customizationSceneSystem = new CustomizationSceneSystem(EntityManager, _graphicsDevice, _spriteBatch, _font);
             _libraryPanelSystem = new CardLibraryPanelSystem(EntityManager, _graphicsDevice, _spriteBatch, _font);
             _deckPanelSystem = new LoadoutDeckPanelSystem(EntityManager, _graphicsDevice, _spriteBatch, _font);
+            _loadoutEditSystem = new LoadoutEditSystem(EntityManager);
 
             world.AddSystem(_customizationSceneSystem);
             world.AddSystem(_libraryPanelSystem);
             world.AddSystem(_deckPanelSystem);
+            world.AddSystem(_loadoutEditSystem);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

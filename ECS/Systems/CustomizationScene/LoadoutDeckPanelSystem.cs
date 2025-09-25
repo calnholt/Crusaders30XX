@@ -78,8 +78,11 @@ namespace Crusaders30XX.ECS.Systems
                 st.RightScroll = System.Math.Max(0, st.RightScroll - delta / 2);
             }
 
+            // Build sorted view of working cards for consistent draw/click order
+            var sortedEntriesForClick = GetSortedWorkingEntries(st);
+
             // Clamp scroll to content height (so clicks align with visible content)
-            int totalItemsForClamp = st.WorkingCardIds.Count;
+            int totalItemsForClamp = sortedEntriesForClick.Count;
             int rowsForClamp = System.Math.Max(0, (totalItemsForClamp + col - 1) / col);
             int cardScaledHForClamp = (int)(cardH * CardScale);
             int gapsTotalForClamp = rowsForClamp > 0 ? (rowsForClamp - 1) * RowGap : 0;
@@ -89,17 +92,10 @@ namespace Crusaders30XX.ECS.Systems
 
             // Layout for click detection only (drawing handled in Draw)
             int idx = 0;
-            foreach (var entry in st.WorkingCardIds)
+            foreach (var view in sortedEntriesForClick)
             {
-                string id = entry;
-                var color = CardData.CardColor.White;
-                int sep = entry.IndexOf('|');
-                if (sep >= 0)
-                {
-                    id = entry.Substring(0, sep);
-                    var colorKey = entry.Substring(sep + 1);
-                    color = ParseColor(colorKey);
-                }
+                string id = view.id;
+                var color = view.color;
                 if (!CardDefinitionCache.TryGet(id, out var def) || def == null) { idx++; continue; }
                 if (def.isWeapon) { idx++; continue; }
 
@@ -111,7 +107,7 @@ namespace Crusaders30XX.ECS.Systems
                 var rect = new Rectangle(x - (int)(cardW * CardScale / 2), y - (int)(cardH * CardScale / 2), (int)(cardW * CardScale), (int)(cardH * CardScale));
                 if (click && rect.Contains(mouse.Position))
                 {
-                    st.WorkingCardIds.RemoveAt(idx);
+                    EventManager.Publish(new RemoveCardFromLoadoutRequested { CardKey = view.key, Index = null });
                     break;
                 }
                 idx++;
@@ -133,8 +129,10 @@ namespace Crusaders30XX.ECS.Systems
             int colW = (int)(cardW * CardScale) + 20;
             int col = System.Math.Max(1, Columns);
 
+            var sortedEntries = GetSortedWorkingEntries(st);
+
             // Clamp scroll to content height
-            int totalItems = st.WorkingCardIds.Count;
+            int totalItems = sortedEntries.Count;
             int rows = System.Math.Max(0, (totalItems + col - 1) / col);
             int cardScaledH = (int)(cardH * CardScale);
             int gapsTotal = rows > 0 ? (rows - 1) * RowGap : 0;
@@ -148,17 +146,10 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.Draw(_pixel, bgRect, new Color(0, 0, 0, 160));
 
             int idx = 0;
-            foreach (var entry in st.WorkingCardIds)
+            foreach (var view in sortedEntries)
             {
-                string id = entry;
-                var color = CardData.CardColor.White;
-                int sep = entry.IndexOf('|');
-                if (sep >= 0)
-                {
-                    id = entry.Substring(0, sep);
-                    var colorKey = entry.Substring(sep + 1);
-                    color = ParseColor(colorKey);
-                }
+                string id = view.id;
+                var color = view.color;
                 if (!CardDefinitionCache.TryGet(id, out var def) || def == null) { idx++; continue; }
                 if (def.isWeapon) { idx++; continue; }
                 var card = EnsureTempCard(def, color);
@@ -255,6 +246,42 @@ namespace Crusaders30XX.ECS.Systems
                 case "any": return CardData.CostType.Any;
                 default: return CardData.CostType.NoCost;
             }
+        }
+
+        private System.Collections.Generic.List<(string key, string id, CardData.CardColor color, string name)> GetSortedWorkingEntries(Crusaders30XX.ECS.Components.CustomizationState st)
+        {
+            var result = new System.Collections.Generic.List<(string key, string id, CardData.CardColor color, string name)>();
+            foreach (var entry in st.WorkingCardIds)
+            {
+                string id = entry;
+                var color = CardData.CardColor.White;
+                int sep = entry.IndexOf('|');
+                if (sep >= 0)
+                {
+                    id = entry.Substring(0, sep);
+                    var colorKey = entry.Substring(sep + 1);
+                    color = ParseColor(colorKey);
+                }
+                if (!CardDefinitionCache.TryGet(id, out var def) || def == null) continue;
+                if (def.isWeapon) continue;
+                string name = (def.name ?? def.id) ?? string.Empty;
+                result.Add((entry, id, color, name));
+            }
+            int ColorOrder(CardData.CardColor c)
+            {
+                switch (c)
+                {
+                    case CardData.CardColor.White: return 0;
+                    case CardData.CardColor.Red: return 1;
+                    case CardData.CardColor.Black: return 2;
+                    default: return 3;
+                }
+            }
+            result = result
+                .OrderBy(t => t.name.ToLowerInvariant())
+                .ThenBy(t => ColorOrder(t.color))
+                .ToList();
+            return result;
         }
     }
 }

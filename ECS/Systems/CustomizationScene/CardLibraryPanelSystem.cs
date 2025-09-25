@@ -80,10 +80,25 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Build flat list of cards (all definitions * 3 colors). Only handle input here.
-            var defs = CardDefinitionCache.GetAll().Values.Where(d => !d.isWeapon).ToList();
+            var defs = CardDefinitionCache.GetAll().Values
+                .Where(d => !d.isWeapon)
+                .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
+                .ToList();
+            // We'll layout by color order within each definition sequence: White, Red, Black
+            CardData.CardColor[] colorOrder = new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black };
+            // Build set of ids currently in working loadout to filter from library
+            var inDeckSet = new System.Collections.Generic.HashSet<string>(st.WorkingCardIds);
 
             // Clamp scroll to content height
-            int totalItems = defs.Count * 3;
+            int totalItems = 0;
+            foreach (var def in defs)
+            {
+                foreach (var color in colorOrder)
+                {
+                    string key = (def.id ?? def.name).ToLowerInvariant() + "|" + color.ToString();
+                    if (!inDeckSet.Contains(key)) totalItems++;
+                }
+            }
             int rows = System.Math.Max(0, (totalItems + col - 1) / col);
             int cardScaledH = (int)(cardH * CardScale);
             int gapsTotal = rows > 0 ? (rows - 1) * RowGap : 0;
@@ -94,19 +109,21 @@ namespace Crusaders30XX.ECS.Systems
             int idx = 0;
             foreach (var def in defs)
             {
-                foreach (var color in new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black })
+                foreach (var color in colorOrder)
                 {
+                    string entry = (def.id ?? def.name).ToLowerInvariant() + "|" + color.ToString();
+                    if (inDeckSet.Contains(entry)) continue; // skip those already in deck
+
                     int r = idx / col;
                     int c = idx % col;
                     int x = panelX + c * colW + (colW / 2);
                     int y = panelY + HeaderHeight + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.LeftScroll;
 
-                    // Click to add to working deck
+                    // Click to add to working deck via event
                     var rect = new Rectangle(x - (int)(cardW * CardScale / 2), y - (int)(cardH * CardScale / 2), (int)(cardW * CardScale), (int)(cardH * CardScale));
                     if (click && rect.Contains(mouse.Position))
                     {
-                        string entry = (def.id ?? def.name).ToLowerInvariant() + "|" + color.ToString();
-                        st.WorkingCardIds.Add(entry);
+                        EventManager.Publish(new AddCardToLoadoutRequested { CardKey = entry });
                     }
                     idx++;
                 }
@@ -132,12 +149,20 @@ namespace Crusaders30XX.ECS.Systems
             var bgRect = new Rectangle(panelX, panelY, PanelWidth, panelH);
             _spriteBatch.Draw(_pixel, bgRect, new Color(0, 0, 0, 160));
 
-            var defs = CardDefinitionCache.GetAll().Values.Where(d => !d.isWeapon).ToList();
+            var defs = CardDefinitionCache.GetAll().Values
+                .Where(d => !d.isWeapon)
+                .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
+                .ToList();
+            CardData.CardColor[] colorOrder2 = new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black };
+            var inDeckSet = new System.Collections.Generic.HashSet<string>(st.WorkingCardIds);
             int idx = 0;
             foreach (var def in defs)
             {
-                foreach (var color in new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black })
+                foreach (var color in colorOrder2)
                 {
+                    string entry = (def.id ?? def.name).ToLowerInvariant() + "|" + color.ToString();
+                    if (inDeckSet.Contains(entry)) continue;
+
                     int r = idx / col;
                     int c = idx % col;
                     int x = panelX + c * colW + (colW / 2);

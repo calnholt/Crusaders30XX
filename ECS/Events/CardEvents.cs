@@ -305,4 +305,22 @@ namespace Crusaders30XX.ECS.Events
         public float FadeSeconds { get; set; } = 0.5f;
     }
 
+    /// <summary>
+    /// Request to add a card (by key id|Color) to the current loadout in customization.
+    /// </summary>
+    public class AddCardToLoadoutRequested
+    {
+        public string CardKey { get; set; }
+    }
+
+    /// <summary>
+    /// Request to remove a specific card from the current loadout in customization.
+    /// Index is preferred to disambiguate duplicates; if null, remove first match of CardKey.
+    /// </summary>
+    public class RemoveCardFromLoadoutRequested
+    {
+        public string CardKey { get; set; }
+        public int? Index { get; set; }
+    }
+
 } 
