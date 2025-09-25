@@ -167,6 +167,13 @@ namespace Crusaders30XX.ECS.Systems
 				EventManager.Publish(new ShowTransition{ Scene = SceneId.Battle });
 			}
 
+			// Customize button (right of Confirm) -> go to Customization scene
+			var customizeRect = new Rectangle(confirmRect.Right + GridPadding, confirmRect.Y, ConfirmWidth, ConfirmHeight);
+			if (click && customizeRect.Contains(mouse.Position))
+			{
+				EventManager.Publish(new ShowTransition { Scene = SceneId.Customization });
+			}
+
 			// How To Play button click (left of Confirm)
 			if (ShowHowToButton != 0)
 			{
@@ -311,6 +318,21 @@ namespace Crusaders30XX.ECS.Systems
 				var hpos = new Vector2(howRect.X + (howW - hsize.X) / 2f, howRect.Y + (howH - hsize.Y) / 2f);
 				_spriteBatch.DrawString(_font, htext, hpos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
 				_spriteBatch.DrawString(_font, htext, hpos, Color.White, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
+			}
+
+			// Customize button (right of Confirm)
+			{
+				int custW = ConfirmWidth;
+				int custH = ConfirmHeight;
+				var customizeRect = new Rectangle(confirmRect.Right + GridPadding, confirmRect.Y, custW, custH);
+				EnsureRounded(custW, custH, CornerRadius);
+				if (_rounded != null) _spriteBatch.Draw(_rounded, customizeRect, Color.Black);
+				else _spriteBatch.Draw(_pixel, customizeRect, Color.Black);
+				var t = "Customize";
+				var ts = _font.MeasureString(t) * 0.2f;
+				var tp = new Vector2(customizeRect.X + (custW - ts.X) / 2f, customizeRect.Y + (custH - ts.Y) / 2f);
+				_spriteBatch.DrawString(_font, t, tp + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
+				_spriteBatch.DrawString(_font, t, tp, Color.White, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
 			}
 		}
 

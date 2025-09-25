@@ -6,6 +6,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Data.Loadouts;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -55,6 +56,7 @@ namespace Crusaders30XX.ECS.Systems
 
             var saveRect = new Rectangle(vw / 2 - ButtonWidth - Padding, vh - Padding - ButtonHeight, ButtonWidth, ButtonHeight);
             var cancelRect = new Rectangle(vw / 2 + Padding, vh - Padding - ButtonHeight, ButtonWidth, ButtonHeight);
+            var exitRect = new Rectangle(cancelRect.Right + Padding, vh - Padding - ButtonHeight, ButtonWidth, ButtonHeight);
 
             if (click)
             {
@@ -67,6 +69,7 @@ namespace Crusaders30XX.ECS.Systems
                     }
                 }
                 else if (cancelRect.Contains(mouse.Position)) RevertWorking();
+                else if (exitRect.Contains(mouse.Position)) EventManager.Publish(new ShowTransition { Scene = SceneId.Menu });
             }
 
             _prevMouse = mouse;
@@ -82,6 +85,7 @@ namespace Crusaders30XX.ECS.Systems
             // Buttons
             var saveRect = new Rectangle(vw / 2 - ButtonWidth - Padding, vh - Padding - ButtonHeight, ButtonWidth, ButtonHeight);
             var cancelRect = new Rectangle(vw / 2 + Padding, vh - Padding - ButtonHeight, ButtonWidth, ButtonHeight);
+            var exitRect = new Rectangle(cancelRect.Right + Padding, vh - Padding - ButtonHeight, ButtonWidth, ButtonHeight);
             bool canSave = false;
             try
             {
@@ -91,6 +95,7 @@ namespace Crusaders30XX.ECS.Systems
             catch {}
             DrawButton(saveRect, canSave ? "SAVE" : $"SAVE ({(EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>()?.WorkingCardIds?.Count ?? 0)}/{Crusaders30XX.ECS.Data.Loadouts.DeckRules.RequiredDeckSize})");
             DrawButton(cancelRect, "CANCEL");
+            DrawButton(exitRect, "EXIT");
         }
 
         private void DrawButton(Rectangle rect, string label)
@@ -128,7 +133,15 @@ namespace Crusaders30XX.ECS.Systems
         {
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null) return;
-            st.WorkingCardIds = new List<string>(st.OriginalCardIds);
+            // Reload from saved loadout definition to ensure full revert to on-disk state
+            LoadoutDefinition def;
+            if (!LoadoutDefinitionCache.TryGet("loadout_1", out def) || def == null)
+            {
+                def = new LoadoutDefinition { id = "loadout_1", name = "Loadout 1" };
+            }
+            var saved = new List<string>(def.cardIds ?? new List<string>());
+            st.WorkingCardIds = saved;
+            st.OriginalCardIds = new List<string>(saved);
         }
 
         private void SaveWorkingToDisk()

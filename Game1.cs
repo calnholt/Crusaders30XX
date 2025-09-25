@@ -26,6 +26,10 @@ public class Game1 : Game
     private InputSystem _inputSystem;
 
     private KeyboardState _prevKeyboard;
+
+    private MenuSceneSystem _menuSceneSystem;
+    private BattleSceneSystem _battleSceneSystem;
+    private CustomizationRootSystem _customizationRootSystem;
     
     
     // ECS System
@@ -60,6 +64,14 @@ public class Game1 : Game
                 _graphics.ApplyChanges();
             }
         };
+        // TODO: do elsewhere
+        EventManager.Subscribe<LoadSceneEvent>(_ => {
+            var scene = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
+            if (_.Scene == scene.Current) {
+                return;
+            }
+            scene.Current = _.Scene;
+        });
     }
 
     protected override void Initialize()
@@ -86,18 +98,18 @@ public class Game1 : Game
         }
         EntityFactory.CreateCardVisualSettings(_world);
         // Add parent scene systems only
-        var menuSceneSystem = new MenuSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
-        var battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
-        var customizationRootSystem = new CustomizationRootSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
+        _menuSceneSystem = new MenuSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
+        _battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
+        _customizationRootSystem = new CustomizationRootSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _world.SystemManager);
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, Content);
         _renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, GraphicsDevice);
         _inputSystem = new InputSystem(_world.EntityManager);
-        _world.AddSystem(menuSceneSystem);
-        _world.AddSystem(battleSceneSystem);
-        _world.AddSystem(customizationRootSystem);
+        _world.AddSystem(_menuSceneSystem);
+        _world.AddSystem(_battleSceneSystem);
+        _world.AddSystem(_customizationRootSystem);
         _world.AddSystem(new TimerSchedulerSystem(_world.EntityManager));
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_entityListOverlaySystem);
@@ -142,25 +154,22 @@ public class Game1 : Game
 
         _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
         // Delegate drawing to active parent systems
-        var menuScene = _world.SystemManager.GetSystem<MenuSceneSystem>();
-        var battleScene = _world.SystemManager.GetSystem<BattleSceneSystem>();
         var scene = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
         switch(scene.Current)
         {
             case SceneId.Menu:
             {
-                menuScene?.Draw();
+                _menuSceneSystem.Draw();
                 break;
             }
             case SceneId.Customization:
             {
-                var cust = _world.SystemManager.GetSystem<CustomizationRootSystem>();
-                cust?.Draw();
+                _customizationRootSystem.Draw();
                 break;
             }
             case SceneId.Battle:
             {
-                battleScene?.Draw();
+                _battleSceneSystem.Draw();
                 break;
             }
         }
