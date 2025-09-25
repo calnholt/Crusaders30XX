@@ -310,23 +310,26 @@ namespace Crusaders30XX.ECS.Factories
                 def = new EnemyDefinition { id = enemyId, name = enemyId, hp = 60, attackIds = new List<string>() };
             }
 
-            var entity = world.CreateEntity($"Enemy");
+            var enemyEntity = world.CreateEntity($"Enemy");
             var enemy = new Enemy { Id = def.id, Name = def.name ?? def.id, Type = EnemyType.Demon, MaxHealth = def.hp, CurrentHealth = def.hp };
             var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
-            world.AddComponent(entity, enemy);
-            world.AddComponent(entity, enemyTransform);
-            world.AddComponent(entity, new HP { Max = enemy.MaxHealth, Current = enemy.CurrentHealth });
-            world.AddComponent(entity, new PortraitInfo { TextureWidth = 0, TextureHeight = 0, CurrentScale = 1f });
-            world.AddComponent(entity, new EnemyArsenal { AttackIds = new List<string>(def.attackIds) });
-            world.AddComponent(entity, new AttackIntent());
-            world.AddComponent(entity, new AppliedPassives());
+            world.AddComponent(enemyEntity, enemy);
+            world.AddComponent(enemyEntity, enemyTransform);
+            world.AddComponent(enemyEntity, new HP { Max = enemy.MaxHealth, Current = enemy.CurrentHealth });
+            world.AddComponent(enemyEntity, new PortraitInfo { TextureWidth = 0, TextureHeight = 0, CurrentScale = 1f });
+            world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = new List<string>(def.attackIds) });
+            world.AddComponent(enemyEntity, new AttackIntent());
+            world.AddComponent(enemyEntity, new AppliedPassives());
+
+            var playerEntity = world.EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+
             foreach (var passive in def.passives)
             {
                 Enum.TryParse<AppliedPassiveType>(passive.type, true, out var passiveType);
                 Console.WriteLine($"[EntityFactory] loading passives {passiveType} {passive.amount}");
-                EventManager.Publish(new ApplyPassiveEvent { Target = entity, Delta = passive.amount, Type = passiveType});
+                EventManager.Publish(new ApplyPassiveEvent { Target = passive.target == "Player" ? playerEntity : enemyEntity, Delta = passive.amount, Type = passiveType});
             }
-            return entity;
+            return enemyEntity;
         }
     }
 } 

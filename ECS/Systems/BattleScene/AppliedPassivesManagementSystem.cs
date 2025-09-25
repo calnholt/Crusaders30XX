@@ -75,6 +75,13 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Burn });
                 }, .15f);
             }
+            if (ap.Passives.TryGetValue(AppliedPassiveType.Webbing, out int webbingStacks) && webbingStacks > 0)
+            {
+                EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Webbing", () =>
+                {
+                    EventManager.Publish(new ApplyPassiveEvent { Target = owner, Type = AppliedPassiveType.Slow, Delta = webbingStacks });
+                }, .15f);
+            }
         }
 
         private void ApplyStartOfPreBlockPassives(Entity owner)

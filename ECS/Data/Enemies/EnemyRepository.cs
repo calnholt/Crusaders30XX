@@ -60,7 +60,8 @@ namespace Crusaders30XX.ECS.Data.Enemies
 						{
 							string type = (string)passive["type"];
 							int amount = (int)passive["amount"];
-							def.passives.Add(new PassiveDefinition { type = type, amount = amount });
+							string target = (string)passive["target"];
+							def.passives.Add(new PassiveDefinition { type = type, amount = amount, target = target });
 						}
 					}
 					map[def.id] = def;

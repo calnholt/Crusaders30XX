@@ -3,6 +3,13 @@
   "id": "spider",
   "hp": 100,
   "genericAttackAmbushPercentage": 100,
+  "passives": [
+    {
+      "type": "Webbing",
+      "amount": 1,
+      "target": "Player"
+    }
+  ],
   "attacks": [
     {
       "id": "suffocating_silk",

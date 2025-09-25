@@ -25,6 +25,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"Takes {stacks} less damage from attacks.";
         case AppliedPassiveType.Wounded:
           return $"Takes {stacks} more damage from all sources.";
+        case AppliedPassiveType.Webbing:
+          return $"At the start of your turn, gain {stacks} slow.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

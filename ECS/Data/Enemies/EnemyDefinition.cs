@@ -16,6 +16,7 @@ namespace Crusaders30XX.ECS.Data.Enemies
 	{
 		public string type { get; set ; }
 		public int amount { get; set; }
+		public string target { get; set; }
 	}
 }
 

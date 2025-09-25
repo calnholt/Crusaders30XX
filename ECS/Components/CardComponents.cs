@@ -637,6 +637,7 @@ namespace Crusaders30XX.ECS.Components
         Aegis,
         Stun,
         Armor,
-        Wounded
+        Wounded,
+        Webbing
     }
 }
