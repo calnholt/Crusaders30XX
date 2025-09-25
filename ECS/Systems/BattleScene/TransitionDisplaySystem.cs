@@ -61,6 +61,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			if (_phase == Phase.Idle) return;
+			// While transition is active, publish a global flag entity for other systems to consult
+			EnsureTransitionFlag(true);
 			_t += dt;
 			switch (_phase)
 			{
@@ -92,6 +94,7 @@ namespace Crusaders30XX.ECS.Systems
 					if (_t >= WipeDurationSeconds)
 					{
 						_phase = Phase.Idle; _t = 0f;
+						EnsureTransitionFlag(false);
 					}
 					break;
 			}
@@ -166,6 +169,27 @@ namespace Crusaders30XX.ECS.Systems
 			_nextScene = transition.Scene;
 			_phase = Phase.WipeIn;
 			_t = 0f;
+			EnsureTransitionFlag(true);
+		}
+
+		private void EnsureTransitionFlag(bool active)
+		{
+			var e = EntityManager.GetEntity("TransitionState");
+			if (e == null)
+			{
+				e = EntityManager.CreateEntity("TransitionState");
+				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0,0,0,0), IsInteractable = false });
+			}
+			// Reuse UIElement.IsHovered as a simple flag container to avoid a new component type
+			var ui = e.GetComponent<UIElement>();
+			if (ui == null)
+			{
+				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0,0,0,0), IsInteractable = false, IsHovered = active });
+			}
+			else
+			{
+				ui.IsHovered = active;
+			}
 		}
 
 		[DebugAction("Preview Wipe (visual only)")]

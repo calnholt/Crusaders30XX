@@ -89,6 +89,13 @@ namespace Crusaders30XX.ECS.Systems
 			if (scene == null || scene.Current != SceneId.Menu) return;
 			var mouse = Mouse.GetState();
 			bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
+			// Block clicks during scene transition
+			var ts = EntityManager.GetEntity("TransitionState")?.GetComponent<UIElement>();
+			if (ts != null && ts.IsHovered)
+			{
+				_prevMouse = mouse;
+				return;
+			}
 
 			// If How To Play overlay is open, close it on any click and block underlying interactions
 			var howOverlay = EntityManager.GetEntitiesWithComponent<HowToPlayOverlay>().FirstOrDefault()?.GetComponent<HowToPlayOverlay>();
