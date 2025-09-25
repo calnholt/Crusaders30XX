@@ -23,9 +23,9 @@ namespace Crusaders30XX.ECS.Systems
 		private bool _isFirstLoad = true;
 
 		// Battle systems (logic and draw). Only present while in Battle
-		private InputSystem _inputSystem;
+	
 		private DeckManagementSystem _deckManagementSystem;
-		private RenderingSystem _renderingSystem;
+
 		private HandDisplaySystem _handDisplaySystem;
 		private CardHighlightSystem _cardHighlightSystem;
 		private BattleBackgroundSystem _battleBackgroundSystem;
@@ -125,7 +125,6 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("BattleBackgroundSystem.Draw", _battleBackgroundSystem.Draw);
 			FrameProfiler.Measure("CathedralLightingSystem.Draw", _cathedralLightingSystem.Draw);
 			FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", _desertBackgroundEffectSystem.Draw);
-			FrameProfiler.Measure("RenderingSystem.Draw", _renderingSystem.Draw);
 			FrameProfiler.Measure("PlayerDisplaySystem.Draw", _playerDisplaySystem.Draw);
 			FrameProfiler.Measure("GuardianAngelDisplaySystem.Draw", _guardianAngelDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);
@@ -264,11 +263,9 @@ namespace Crusaders30XX.ECS.Systems
 		private void AddBattleSystems()
 		{
 			// Construct
-			_inputSystem = new InputSystem(_world.EntityManager);
 			_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
 			_cardHighlightSystem = new CardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
-			_renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, _graphicsDevice);
 			_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
 			_debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
@@ -335,9 +332,7 @@ namespace Crusaders30XX.ECS.Systems
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
 
 			// Register
-			_world.AddSystem(_inputSystem);
 			_world.AddSystem(_deckManagementSystem);
-			_world.AddSystem(_renderingSystem);
 			_world.AddSystem(_handDisplaySystem);
 			_world.AddSystem(_cardZoneSystem);
 			_world.AddSystem(_handBlockInteractionSystem);

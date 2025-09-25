@@ -16,10 +16,11 @@ namespace Crusaders30XX.ECS.Systems
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font;
+        private readonly Texture2D _pixel;
         private MouseState _prevMouse;
 
         [DebugEditable(DisplayName = "Right Panel Width", Step = 4, Min = 100, Max = 2000)]
-        public int PanelWidth { get; set; } = 980;
+        public int PanelWidth { get; set; } = 468;
         [DebugEditable(DisplayName = "Row Gap", Step = 1, Min = 0, Max = 64)]
         public int RowGap { get; set; } = 18;
         [DebugEditable(DisplayName = "Top Margin", Step = 2, Min = 0, Max = 200)]
@@ -29,12 +30,23 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Card Scale", Step = 0.05f, Min = 0.1f, Max = 1.0f)]
         public float CardScale { get; set; } = 0.55f;
 
+        [DebugEditable(DisplayName = "Header Height", Step = 2, Min = 0, Max = 200)]
+        public int HeaderHeight { get; set; } = 86;
+        [DebugEditable(DisplayName = "Header Text Scale", Step = 0.01f, Min = 0.1f, Max = 2.0f)]
+        public float HeaderTextScale { get; set; } = 0.35f;
+        [DebugEditable(DisplayName = "Header Pad X", Step = 1, Min = 0, Max = 200)]
+        public int HeaderPadX { get; set; } = 12;
+        [DebugEditable(DisplayName = "Header Pad Y", Step = 1, Min = 0, Max = 200)]
+        public int HeaderPadY { get; set; } = 6;
+
         public LoadoutDeckPanelSystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
         {
             _graphicsDevice = gd;
             _spriteBatch = sb;
             _font = font;
             _prevMouse = Mouse.GetState();
+            _pixel = new Texture2D(_graphicsDevice, 1, 1);
+            _pixel.SetData(new[] { Color.White });
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -66,6 +78,15 @@ namespace Crusaders30XX.ECS.Systems
                 st.RightScroll = System.Math.Max(0, st.RightScroll - delta / 2);
             }
 
+            // Clamp scroll to content height (so clicks align with visible content)
+            int totalItemsForClamp = st.WorkingCardIds.Count;
+            int rowsForClamp = System.Math.Max(0, (totalItemsForClamp + col - 1) / col);
+            int cardScaledHForClamp = (int)(cardH * CardScale);
+            int gapsTotalForClamp = rowsForClamp > 0 ? (rowsForClamp - 1) * RowGap : 0;
+            int contentHeightForClamp = HeaderHeight + TopMargin + rowsForClamp * cardScaledHForClamp + gapsTotalForClamp;
+            int maxScrollForClamp = System.Math.Max(0, contentHeightForClamp - panelH);
+            if (st.RightScroll > maxScrollForClamp) st.RightScroll = maxScrollForClamp;
+
             // Layout for click detection only (drawing handled in Draw)
             int idx = 0;
             foreach (var entry in st.WorkingCardIds)
@@ -85,7 +106,7 @@ namespace Crusaders30XX.ECS.Systems
                 int r = idx / col;
                 int c = idx % col;
                 int x = panelX + c * colW + (colW / 2);
-                int y = panelY + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.RightScroll;
+                int y = panelY + HeaderHeight + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.RightScroll;
 
                 var rect = new Rectangle(x - (int)(cardW * CardScale / 2), y - (int)(cardH * CardScale / 2), (int)(cardW * CardScale), (int)(cardH * CardScale));
                 if (click && rect.Contains(mouse.Position))
@@ -112,6 +133,20 @@ namespace Crusaders30XX.ECS.Systems
             int colW = (int)(cardW * CardScale) + 20;
             int col = System.Math.Max(1, Columns);
 
+            // Clamp scroll to content height
+            int totalItems = st.WorkingCardIds.Count;
+            int rows = System.Math.Max(0, (totalItems + col - 1) / col);
+            int cardScaledH = (int)(cardH * CardScale);
+            int gapsTotal = rows > 0 ? (rows - 1) * RowGap : 0;
+            int contentHeight = HeaderHeight + TopMargin + rows * cardScaledH + gapsTotal;
+            int maxScroll = System.Math.Max(0, contentHeight - _graphicsDevice.Viewport.Height);
+            if (st.RightScroll > maxScroll) st.RightScroll = maxScroll;
+
+            // Background
+            int panelH = _graphicsDevice.Viewport.Height;
+            var bgRect = new Rectangle(panelX, panelY, PanelWidth, panelH);
+            _spriteBatch.Draw(_pixel, bgRect, new Color(0, 0, 0, 160));
+
             int idx = 0;
             foreach (var entry in st.WorkingCardIds)
             {
@@ -131,9 +166,24 @@ namespace Crusaders30XX.ECS.Systems
                 int r = idx / col;
                 int c = idx % col;
                 int x = panelX + c * colW + (colW / 2);
-                int y = panelY + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.RightScroll;
+                int y = panelY + HeaderHeight + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.RightScroll;
                 EventManager.Publish(new CardRenderScaledEvent { Card = card, Position = new Vector2(x, y), Scale = CardScale });
                 idx++;
+            }
+
+            // Header drawn last so it overlays scrolled content
+            var headerRect = new Rectangle(panelX, panelY, PanelWidth, HeaderHeight);
+            _spriteBatch.Draw(_pixel, headerRect, new Color(30, 30, 30, 220));
+
+            // Resolve loadout name
+            string header = "Loadout";
+            var defOk = Crusaders30XX.ECS.Data.Loadouts.LoadoutDefinitionCache.TryGet("loadout_1", out var loadoutDef) && loadoutDef != null;
+            if (defOk && !string.IsNullOrEmpty(loadoutDef.name)) header = loadoutDef.name;
+            if (_font != null)
+            {
+                var pos = new Vector2(panelX + HeaderPadX, panelY + HeaderPadY);
+                _spriteBatch.DrawString(_font, header, pos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, HeaderTextScale, SpriteEffects.None, 0f);
+                _spriteBatch.DrawString(_font, header, pos, Color.White, 0f, Vector2.Zero, HeaderTextScale, SpriteEffects.None, 0f);
             }
         }
 

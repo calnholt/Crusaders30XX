@@ -41,7 +41,8 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = +values[0] });
                     // brief delay so cards in hand are updated
-                    TimerScheduler.Schedule(.05f, () => {
+                    // TODO: cards can still be played because animation prolongs
+                    TimerScheduler.Schedule(.01f, () => {
                         EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
                     });
                     break;

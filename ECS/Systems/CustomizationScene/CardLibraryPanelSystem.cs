@@ -16,18 +16,28 @@ namespace Crusaders30XX.ECS.Systems
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font;
+        private readonly Texture2D _pixel;
         private MouseState _prevMouse;
 
         [DebugEditable(DisplayName = "Left Panel Width", Step = 4, Min = 100, Max = 2000)]
-        public int PanelWidth { get; set; } = 880;
+        public int PanelWidth { get; set; } = 640;
         [DebugEditable(DisplayName = "Row Gap", Step = 1, Min = 0, Max = 64)]
         public int RowGap { get; set; } = 18;
         [DebugEditable(DisplayName = "Top Margin", Step = 2, Min = 0, Max = 200)]
-        public int TopMargin { get; set; } = 24;
+        public int TopMargin { get; set; } = 32;
         [DebugEditable(DisplayName = "Grid Columns", Step = 1, Min = 1, Max = 6)]
-        public int Columns { get; set; } = 2;
+        public int Columns { get; set; } = 3;
         [DebugEditable(DisplayName = "Card Scale", Step = 0.05f, Min = 0.1f, Max = 1.0f)]
-        public float CardScale { get; set; } = 0.45f;
+        public float CardScale { get; set; } = 0.75f;
+
+        [DebugEditable(DisplayName = "Header Height", Step = 2, Min = 0, Max = 200)]
+        public int HeaderHeight { get; set; } = 82;
+        [DebugEditable(DisplayName = "Header Text Scale", Step = 0.01f, Min = 0.1f, Max = 2.0f)]
+        public float HeaderTextScale { get; set; } = 0.35f;
+        [DebugEditable(DisplayName = "Header Pad X", Step = 1, Min = 0, Max = 200)]
+        public int HeaderPadX { get; set; } = 12;
+        [DebugEditable(DisplayName = "Header Pad Y", Step = 1, Min = 0, Max = 200)]
+        public int HeaderPadY { get; set; } = 6;
 
         public CardLibraryPanelSystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
         {
@@ -35,6 +45,8 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch = sb;
             _font = font;
             _prevMouse = Mouse.GetState();
+            _pixel = new Texture2D(_graphicsDevice, 1, 1);
+            _pixel.SetData(new[] { Color.White });
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -69,6 +81,16 @@ namespace Crusaders30XX.ECS.Systems
 
             // Build flat list of cards (all definitions * 3 colors). Only handle input here.
             var defs = CardDefinitionCache.GetAll().Values.Where(d => !d.isWeapon).ToList();
+
+            // Clamp scroll to content height
+            int totalItems = defs.Count * 3;
+            int rows = System.Math.Max(0, (totalItems + col - 1) / col);
+            int cardScaledH = (int)(cardH * CardScale);
+            int gapsTotal = rows > 0 ? (rows - 1) * RowGap : 0;
+            int contentHeight = HeaderHeight + TopMargin + rows * cardScaledH + gapsTotal;
+            int maxScroll = System.Math.Max(0, contentHeight - panelH);
+            if (st.LeftScroll > maxScroll) st.LeftScroll = maxScroll;
+
             int idx = 0;
             foreach (var def in defs)
             {
@@ -77,7 +99,7 @@ namespace Crusaders30XX.ECS.Systems
                     int r = idx / col;
                     int c = idx % col;
                     int x = panelX + c * colW + (colW / 2);
-                    int y = panelY + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.LeftScroll;
+                    int y = panelY + HeaderHeight + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.LeftScroll;
 
                     // Click to add to working deck
                     var rect = new Rectangle(x - (int)(cardW * CardScale / 2), y - (int)(cardH * CardScale / 2), (int)(cardW * CardScale), (int)(cardH * CardScale));
@@ -102,8 +124,13 @@ namespace Crusaders30XX.ECS.Systems
             int cardH = GetCvs().CardHeight;
             int panelX = 0;
             int panelY = 0;
+            int panelH = _graphicsDevice.Viewport.Height;
             int colW = (int)(cardW * CardScale) + 20;
             int col = System.Math.Max(1, Columns);
+
+            // Background
+            var bgRect = new Rectangle(panelX, panelY, PanelWidth, panelH);
+            _spriteBatch.Draw(_pixel, bgRect, new Color(0, 0, 0, 160));
 
             var defs = CardDefinitionCache.GetAll().Values.Where(d => !d.isWeapon).ToList();
             int idx = 0;
@@ -114,11 +141,22 @@ namespace Crusaders30XX.ECS.Systems
                     int r = idx / col;
                     int c = idx % col;
                     int x = panelX + c * colW + (colW / 2);
-                    int y = panelY + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.LeftScroll;
+                    int y = panelY + HeaderHeight + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.LeftScroll;
                     var tempCard = EnsureTempCard(def, color);
                     EventManager.Publish(new CardRenderScaledEvent { Card = tempCard, Position = new Vector2(x, y), Scale = CardScale });
                     idx++;
                 }
+            }
+
+            // Header drawn last so it overlays scrolled content
+            var headerRect = new Rectangle(panelX, panelY, PanelWidth, HeaderHeight);
+            _spriteBatch.Draw(_pixel, headerRect, new Color(30, 30, 30, 220));
+            if (_font != null)
+            {
+                string header = "Available";
+                var pos = new Vector2(panelX + HeaderPadX, panelY + HeaderPadY);
+                _spriteBatch.DrawString(_font, header, pos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, HeaderTextScale, SpriteEffects.None, 0f);
+                _spriteBatch.DrawString(_font, header, pos, Color.White, 0f, Vector2.Zero, HeaderTextScale, SpriteEffects.None, 0f);
             }
         }
 
