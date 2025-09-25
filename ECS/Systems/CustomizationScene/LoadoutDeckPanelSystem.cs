@@ -20,15 +20,15 @@ namespace Crusaders30XX.ECS.Systems
         private MouseState _prevMouse;
 
         [DebugEditable(DisplayName = "Right Panel Width", Step = 4, Min = 100, Max = 2000)]
-        public int PanelWidth { get; set; } = 468;
+        public int PanelWidth { get; set; } = 620;
         [DebugEditable(DisplayName = "Row Gap", Step = 1, Min = 0, Max = 64)]
         public int RowGap { get; set; } = 18;
         [DebugEditable(DisplayName = "Top Margin", Step = 2, Min = 0, Max = 200)]
-        public int TopMargin { get; set; } = 24;
+        public int TopMargin { get; set; } = 30;
         [DebugEditable(DisplayName = "Grid Columns", Step = 1, Min = 1, Max = 6)]
         public int Columns { get; set; } = 3;
         [DebugEditable(DisplayName = "Card Scale", Step = 0.05f, Min = 0.1f, Max = 1.0f)]
-        public float CardScale { get; set; } = 0.55f;
+        public float CardScale { get; set; } = 0.75f;
 
         [DebugEditable(DisplayName = "Header Height", Step = 2, Min = 0, Max = 200)]
         public int HeaderHeight { get; set; } = 86;

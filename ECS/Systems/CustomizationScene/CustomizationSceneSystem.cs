@@ -58,7 +58,14 @@ namespace Crusaders30XX.ECS.Systems
 
             if (click)
             {
-                if (saveRect.Contains(mouse.Position)) SaveWorkingToDisk();
+                if (saveRect.Contains(mouse.Position))
+                {
+                    var stc = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
+                    if (stc != null && stc.WorkingCardIds != null && stc.WorkingCardIds.Count == Crusaders30XX.ECS.Data.Loadouts.DeckRules.RequiredDeckSize)
+                    {
+                        SaveWorkingToDisk();
+                    }
+                }
                 else if (cancelRect.Contains(mouse.Position)) RevertWorking();
             }
 
@@ -75,7 +82,14 @@ namespace Crusaders30XX.ECS.Systems
             // Buttons
             var saveRect = new Rectangle(vw / 2 - ButtonWidth - Padding, vh - Padding - ButtonHeight, ButtonWidth, ButtonHeight);
             var cancelRect = new Rectangle(vw / 2 + Padding, vh - Padding - ButtonHeight, ButtonWidth, ButtonHeight);
-            DrawButton(saveRect, "SAVE");
+            bool canSave = false;
+            try
+            {
+                var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
+                canSave = st != null && st.WorkingCardIds != null && st.WorkingCardIds.Count == Crusaders30XX.ECS.Data.Loadouts.DeckRules.RequiredDeckSize;
+            }
+            catch {}
+            DrawButton(saveRect, canSave ? "SAVE" : $"SAVE ({(EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>()?.WorkingCardIds?.Count ?? 0)}/{Crusaders30XX.ECS.Data.Loadouts.DeckRules.RequiredDeckSize})");
             DrawButton(cancelRect, "CANCEL");
         }
 
@@ -83,11 +97,14 @@ namespace Crusaders30XX.ECS.Systems
         {
             var pixel = new Texture2D(_graphicsDevice, 1, 1);
             pixel.SetData(new[] { Color.White });
-            _spriteBatch.Draw(pixel, rect, Color.Black);
+            bool isDisabled = label.StartsWith("SAVE (");
+            _spriteBatch.Draw(pixel, rect, isDisabled ? new Color(40, 40, 40) : Color.Black);
             var size = _font.MeasureString(label) * 0.25f;
             var pos = new Vector2(rect.X + (rect.Width - size.X) / 2f, rect.Y + (rect.Height - size.Y) / 2f);
-            _spriteBatch.DrawString(_font, label, pos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
-            _spriteBatch.DrawString(_font, label, pos, Color.White, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
+            var textShadow = isDisabled ? new Color(70, 70, 70) : Color.Black;
+            var textMain = isDisabled ? new Color(170, 170, 170) : Color.White;
+            _spriteBatch.DrawString(_font, label, pos + new Vector2(1, 1), textShadow, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
+            _spriteBatch.DrawString(_font, label, pos, textMain, 0f, Vector2.Zero, 0.25f, SpriteEffects.None, 0f);
             pixel.Dispose();
         }
 

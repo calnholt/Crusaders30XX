@@ -47,6 +47,11 @@ namespace Crusaders30XX.ECS.Systems
                     });
                     break;
                 }
+                case "divine_protection":
+                {
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = +values[0] });
+                    break;
+                }
                 case "dowse_with_holy_water":
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.DowseWithHolyWater, Delta = 1 });

@@ -2,7 +2,6 @@
   "id": "loadout_1",
   "name": "Tinkering",
   "cardIds": [
-    "anoint_the_sick|White",
     "anoint_the_sick|Red",
     "anoint_the_sick|Black",
     "burn|White",
@@ -31,7 +30,8 @@
     "stun|Black",
     "vindicate|White",
     "vindicate|Red",
-    "vindicate|Black"
+    "vindicate|Black",
+    "divine_protection|White"
   ],
   "weaponId": "sword",
   "temperanceId": "radiance",
