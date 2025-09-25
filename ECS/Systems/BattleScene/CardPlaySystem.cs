@@ -40,15 +40,10 @@ namespace Crusaders30XX.ECS.Systems
             var data = evt.Card.GetComponent<CardData>();
             if (data == null) return;
 
-            // Lookup by normalized name -> id (e.g., "Strike 3" -> "strike_3")
-            string id = (data.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+            // Use CardId directly for lookup
+            string id = data.CardId ?? string.Empty;
             if (string.IsNullOrEmpty(id)) return;
-            if (!CardDefinitionCache.TryGet(id, out var def))
-            {
-                // Fallback: try raw name without spaces (compat)
-                string alt = (data.Name ?? string.Empty).Trim().ToLowerInvariant();
-                if (!CardDefinitionCache.TryGet(alt, out def)) return;
-            }
+            if (!CardDefinitionCache.TryGet(id, out var def)) return;
 
             // Weapons can only be played during Action phase (already gated) and cannot be used to pay costs of other cards
             bool isWeapon = def.isWeapon;
@@ -98,7 +93,7 @@ namespace Crusaders30XX.ECS.Systems
                         }
                         try
                         {
-                            string oid = (cdOther.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+                            string oid = cdOther.CardId ?? string.Empty;
                             if (!string.IsNullOrEmpty(oid) && CardDefinitionCache.TryGet(oid, out var odef))
                             {
                                 if (!odef.isWeapon)
@@ -241,7 +236,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Delegate per-card effects to service
-            CardPlayService.Resolve(EntityManager, def.id, data.Name);
+            CardPlayService.Resolve(EntityManager, def.id, def.name ?? def.id);
 
             // Move the played card to discard unless it's a weapon (weapons leave hand but do not go to discard)
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();

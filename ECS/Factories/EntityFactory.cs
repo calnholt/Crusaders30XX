@@ -282,33 +282,13 @@ namespace Crusaders30XX.ECS.Factories
             if (!CardDefinitionCache.TryGet(cardId, out var def) || def == null) return null;
             if (def.isWeapon) return null; // only non-weapons for deck/library
             string name = def.name ?? def.id ?? cardId;
-            int blockValue = def.block + (color == CardData.CardColor.Black ? 1 : 0);
             var entity = world.CreateEntity($"Card_{name}_{color}");
 
             var cardData = new CardData
             {
-                Name = name,
-                Description = def.text,
-                Cost = 0,
-                Type = CardData.CardType.Attack,
-                Rarity = ParseRarity(def.rarity),
-                ImagePath = string.Empty,
-                Color = color,
-                BlockValue = blockValue
+                CardId = cardId,
+                Color = color
             };
-            cardData.CostArray = new List<CardData.CostType>();
-            if (def.cost != null)
-            {
-                foreach (var c in def.cost)
-                {
-                    var ct = ParseCostType(c);
-                    if (ct != CardData.CostType.NoCost) cardData.CostArray.Add(ct);
-                }
-            }
-            var firstSpecific = cardData.CostArray.FirstOrDefault(x => x == CardData.CostType.Red || x == CardData.CostType.White || x == CardData.CostType.Black);
-            if (firstSpecific != CardData.CostType.NoCost) cardData.CardCostType = firstSpecific;
-            else if (cardData.CostArray.Any(x => x == CardData.CostType.Any)) cardData.CardCostType = CardData.CostType.Any;
-            else cardData.CardCostType = CardData.CostType.NoCost;
 
             var transform = new Transform { Position = Vector2.Zero, Scale = Vector2.One };
             var sprite = new Sprite { TexturePath = string.Empty, IsVisible = true };

@@ -160,8 +160,10 @@ namespace Crusaders30XX.ECS.Systems
             if (cardData == null) return;
             float visualScale = transform?.Scale.X ?? 1f;
             
-			var cardColor = GetCardColor(cardData.Color);
-			var costColor = GetCostColor(cardData.CardCostType);
+            var cardColor = GetCardColor(cardData.Color);
+            // Resolve definition from CardId
+            CardDefinition def = null;
+            bool hasDef = !string.IsNullOrWhiteSpace(cardData.CardId) && CardDefinitionCache.TryGet(cardData.CardId, out def) && def != null;
             
             // Draw card background (rotated if transform has rotation)
             float rotation = transform?.Rotation ?? 0f;
@@ -170,10 +172,9 @@ namespace Crusaders30XX.ECS.Systems
 			bool isWeaponDetected = false;
             try
             {
-                string id = (cardData.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
-                if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
+                if (hasDef)
                 {
-					if (def.isWeapon)
+                    if (def.isWeapon)
                     {
 						isWeaponDetected = true;
                         var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
@@ -205,28 +206,24 @@ namespace Crusaders30XX.ECS.Systems
             var cardCenter = new Vector2(cardRectForCenter.X + cardRectForCenter.Width / 2f, cardRectForCenter.Y + cardRectForCenter.Height / 2f);
             
             // Name text (wrapped within card width), rotated with card
-			var textColor = isWeaponDetected ? Color.Black : GetCardTextColor(cardData.Color);
-            DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, _settings.TextMarginY * visualScale), cardData.Name, textColor, _settings.NameScale * visualScale, visualScale);
+            var textColor = isWeaponDetected ? Color.Black : GetCardTextColor(cardData.Color);
+            string displayName = hasDef ? (def.name ?? def.id ?? cardData.CardId) : (cardData.CardId ?? string.Empty);
+            DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, _settings.TextMarginY * visualScale), displayName, textColor, _settings.NameScale * visualScale, visualScale);
             
             // Draw cost pips (colored circles with yellow outline) under the name
-            DrawCostPipsScaled(cardCenter, rotation, (int)(_settings.TextMarginX * visualScale), (int)Math.Round((_settings.TextMarginY + 34 * _settings.UIScale) * visualScale), cardData, visualScale);
+            var defCosts = hasDef ? (def.cost ?? Array.Empty<string>()) : Array.Empty<string>();
+            DrawCostPipsScaled(cardCenter, rotation, (int)(_settings.TextMarginX * visualScale), (int)Math.Round((_settings.TextMarginY + 34 * _settings.UIScale) * visualScale), cardData.Color, defCosts, visualScale);
 
-            DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, (_settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)) * visualScale), cardData.Description, textColor, _settings.DescriptionScale * visualScale, visualScale);
+            string displayText = hasDef ? (def.text ?? string.Empty) : string.Empty;
+            DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, (_settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)) * visualScale), displayText, textColor, _settings.DescriptionScale * visualScale, visualScale);
             
             // Draw block value and shield icon at bottom-left, but hide for weapons
-            bool isWeapon = false;
-            try
+            bool isWeapon = hasDef && def.isWeapon;
+            int blockValueToShow = 0;
+            if (hasDef) { blockValueToShow = def.block + (cardData.Color == CardData.CardColor.Black ? 1 : 0); }
+            if (!isWeapon && blockValueToShow > 0)
             {
-                string idW = (cardData.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
-                if (!string.IsNullOrEmpty(idW) && CardDefinitionCache.TryGet(idW, out var defW))
-                {
-                    isWeapon = defW.isWeapon;
-                }
-            }
-            catch { }
-            if (!isWeapon && cardData.BlockValue > 0)
-            {
-                string blockText = cardData.BlockValue.ToString();
+                string blockText = blockValueToShow.ToString();
                 var textSize = _font.MeasureString(blockText) * (_settings.BlockNumberScale * visualScale);
                 float marginX = _settings.BlockNumberMarginX * visualScale;
                 float marginY = _settings.BlockNumberMarginY * visualScale;
@@ -299,16 +296,17 @@ namespace Crusaders30XX.ECS.Systems
             };
         }
         
-        private Color GetCostColor(CardData.CostType costType)
+        private Color GetCostColor(string costType)
         {
-            return costType switch
+            if (string.IsNullOrWhiteSpace(costType)) return Color.Gray;
+            switch (costType.Trim().ToLowerInvariant())
             {
-                CardData.CostType.Red => Color.DarkRed,
-                CardData.CostType.White => Color.White,
-                CardData.CostType.Black => Color.Black,
-                CardData.CostType.Any => Color.Gray,
-                _ => Color.Gray
-            };
+                case "red": return Color.DarkRed;
+                case "white": return Color.White;
+                case "black": return Color.Black;
+                case "any": return Color.Gray;
+                default: return Color.Gray;
+            }
         }
 
         private Color GetCardTextColor(CardData.CardColor color)
@@ -322,41 +320,38 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
         
-        private void DrawCostPipsScaled(Vector2 cardCenter, float rotation, int localOffsetX, int localOffsetY, CardData data, float overallScale)
+        private void DrawCostPipsScaled(Vector2 cardCenter, float rotation, int localOffsetX, int localOffsetY, CardData.CardColor cardColor, string[] costs, float overallScale)
         {
-            var costs = (data.CostArray != null && data.CostArray.Count > 0)
-                ? data.CostArray
-                : (data.CardCostType != CardData.CostType.NoCost ? new List<CardData.CostType> { data.CardCostType } : new List<CardData.CostType>());
-            if (costs.Count == 0) return;
+            if (costs == null || costs.Length == 0) return;
 
             // Circle sizing and spacing based on UI scale
             float diameter = Math.Max(6f, CostPipDiameter * _settings.UIScale * overallScale);
             float radius = diameter / 2f;
             float gap = Math.Max(0f, CostPipGap * _settings.UIScale * overallScale);
-            float totalWidth = costs.Count * diameter + (costs.Count - 1) * gap;
+            float totalWidth = costs.Length * diameter + (costs.Length - 1) * gap;
 
             // Start X so pips are left-aligned from localOffsetX
             float startLocalX = localOffsetX;
             float y = localOffsetY + radius; // center of circles on this Y line
 
-            for (int i = 0; i < costs.Count; i++)
+            for (int i = 0; i < costs.Length; i++)
             {
                 float x = startLocalX + i * (diameter + gap) + radius;
                 var costType = costs[i];
                 var fill = GetCostColor(costType);
-                var outline = GetConditionalOutlineColor(data.Color, costType);
+                var outline = GetConditionalOutlineColor(cardColor, costType);
                 DrawCirclePipRotatedScaled(cardCenter, rotation, new Vector2(x, y), radius, fill, outline, overallScale);
             }
         }
 
-        private Color? GetConditionalOutlineColor(CardData.CardColor cardColor, CardData.CostType costType)
+        private Color? GetConditionalOutlineColor(CardData.CardColor cardColor, string costType)
         {
             // Only outline when card color matches the cost color, with specific outline color rules
-            if (cardColor == CardData.CardColor.Red && costType == CardData.CostType.Red)
+            if (cardColor == CardData.CardColor.Red && EqualsIgnoreCase(costType, "red"))
                 return Color.Black;
-            if (cardColor == CardData.CardColor.White && costType == CardData.CostType.White)
+            if (cardColor == CardData.CardColor.White && EqualsIgnoreCase(costType, "white"))
                 return Color.Black;
-            if (cardColor == CardData.CardColor.Black && costType == CardData.CostType.Black)
+            if (cardColor == CardData.CardColor.Black && EqualsIgnoreCase(costType, "black"))
                 return Color.White;
             return null; // no outline
         }
@@ -397,16 +392,19 @@ namespace Crusaders30XX.ECS.Systems
             try
             {
                 var data = card.GetComponent<CardData>();
-                string id = (data?.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+                string id = data?.CardId ?? string.Empty;
                 if (string.IsNullOrEmpty(id)) return false;
-                if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
-                {
-                    string alt = (data?.Name ?? string.Empty).Trim().ToLowerInvariant();
-                    if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(alt, out def)) return false;
-                }
+                if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def) || def == null) return false;
                 return def.isFreeAction;
             }
             catch { return false; }
+        }
+
+        private static bool EqualsIgnoreCase(string a, string b)
+        {
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+            return string.Equals(a.Trim(), b.Trim(), StringComparison.OrdinalIgnoreCase);
         }
         
         private void DrawCardBackgroundRotatedScaled(Vector2 position, float rotation, Color color, float scale)

@@ -266,7 +266,7 @@ namespace Crusaders30XX.ECS.Systems
             // Hard guard: weapons cannot be used to pay costs under any circumstance
             try
             {
-                string id = (cd.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+                string id = cd.CardId ?? string.Empty;
                 if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
                 {
                     if (def.isWeapon) return;
@@ -356,7 +356,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // If returning, skip overlay text/buttons and only draw the staged card tweening back
             var cd = state.CardToPlay?.GetComponent<CardData>();
-            string cardName = cd?.Name ?? "Card";
+            string cardName = ResolveCardName(cd);
             var defTextCosts = GetDefinitionCosts(state.CardToPlay);
             string costText = BuildCostPhrase(defTextCosts);
             string line = $"Discard {costText} to pay for {cardName}";
@@ -452,7 +452,7 @@ namespace Crusaders30XX.ECS.Systems
             // Disallow using weapons to pay costs
             try
             {
-                string id = (cd.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+                string id = cd.CardId ?? string.Empty;
                 if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
                 {
                     if (def.isWeapon) return false;
@@ -497,14 +497,25 @@ namespace Crusaders30XX.ECS.Systems
             if (data == null) return new List<string>();
 
             // Lookup JSON definition to read cost array
-            string id = (data.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+            string id = data.CardId ?? string.Empty;
             if (string.IsNullOrEmpty(id)) return new List<string>();
-            if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
-            {
-                string alt = (data.Name ?? string.Empty).Trim().ToLowerInvariant();
-                if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(alt, out def)) return new List<string>();
-            }
+            if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def)) return new List<string>();
             return (def.cost ?? Array.Empty<string>()).ToList();
+        }
+
+        private static string ResolveCardName(CardData cd)
+        {
+            if (cd == null) return "Card";
+            try
+            {
+                string id = cd.CardId ?? string.Empty;
+                if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def) && def != null)
+                {
+                    return def.name ?? def.id ?? id;
+                }
+            }
+            catch { }
+            return cd.CardId ?? "Card";
         }
 
         private void DrawBorder(Rectangle rect, Color color, int thickness)

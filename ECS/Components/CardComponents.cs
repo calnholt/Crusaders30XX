@@ -12,18 +12,10 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         
-        public string Name { get; set; } = "";
-        public string Description { get; set; } = "";
-        public int Cost { get; set; } = 0;
-        public CardType Type { get; set; } = CardType.Attack;
-        public CardRarity Rarity { get; set; } = CardRarity.Common;
-        public string ImagePath { get; set; } = "";
+        public string CardId { get; set; } = ""; // id of CardDefinition
         
-        // New properties for the card system
+        // Instance-specific properties for the card entity
         public CardColor Color { get; set; } = CardColor.White;
-        public CostType CardCostType { get; set; } = CostType.NoCost; // legacy single-cost
-        public List<CostType> CostArray { get; set; } = new();       // new multi-cost
-        public int BlockValue { get; set; } = 0;
         
         public enum CardType
         {

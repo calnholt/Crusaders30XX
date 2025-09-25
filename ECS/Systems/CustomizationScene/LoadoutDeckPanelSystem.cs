@@ -184,32 +184,11 @@ namespace Crusaders30XX.ECS.Systems
             var e = EntityManager.GetEntity(key);
             if (e != null) return e;
             e = EntityManager.CreateEntity(key);
-            string name = def.name ?? def.id;
-            int block = def.block + (color == CardData.CardColor.Black ? 1 : 0);
             var cardData = new CardData
             {
-                Name = name,
-                Description = def.text,
-                Cost = 0,
-                Type = CardData.CardType.Attack,
-                Rarity = CardData.CardRarity.Common,
-                ImagePath = string.Empty,
-                Color = color,
-                BlockValue = block
+                CardId = def.id,
+                Color = color
             };
-            cardData.CostArray = new System.Collections.Generic.List<CardData.CostType>();
-            if (def.cost != null)
-            {
-                foreach (var c in def.cost)
-                {
-                    var ct = ParseCostType(c);
-                    if (ct != CardData.CostType.NoCost) cardData.CostArray.Add(ct);
-                }
-            }
-            var firstSpecific = cardData.CostArray.FirstOrDefault(x => x == CardData.CostType.Red || x == CardData.CostType.White || x == CardData.CostType.Black);
-            if (firstSpecific != CardData.CostType.NoCost) cardData.CardCostType = firstSpecific;
-            else if (cardData.CostArray.Any(x => x == CardData.CostType.Any)) cardData.CardCostType = CardData.CostType.Any;
-            else cardData.CardCostType = CardData.CostType.NoCost;
 
             EntityManager.AddComponent(e, cardData);
             EntityManager.AddComponent(e, new Transform { Position = Vector2.Zero, Scale = Vector2.One });
@@ -235,18 +214,7 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private CardData.CostType ParseCostType(string cost)
-        {
-            if (string.IsNullOrEmpty(cost)) return CardData.CostType.NoCost;
-            switch (cost.Trim().ToLowerInvariant())
-            {
-                case "red": return CardData.CostType.Red;
-                case "white": return CardData.CostType.White;
-                case "black": return CardData.CostType.Black;
-                case "any": return CardData.CostType.Any;
-                default: return CardData.CostType.NoCost;
-            }
-        }
+        // Cost parsing no longer needed here; costs are rendered directly from CardDefinition
 
         private System.Collections.Generic.List<(string key, string id, CardData.CardColor color, string name)> GetSortedWorkingEntries(Crusaders30XX.ECS.Components.CustomizationState st)
         {

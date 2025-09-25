@@ -100,33 +100,16 @@ namespace Crusaders30XX.ECS.Systems
 			return weapon;
 		}
 
-		private Entity CreateWeaponEntity(CardDefinition def)
+        private Entity CreateWeaponEntity(CardDefinition def)
 		{
 			string name = def.name ?? def.id ?? "Weapon";
 			// Create minimal card like EntityFactory.CreateCard
 			var e = EntityManager.CreateEntity($"Card_{name}");
-            string description = def.text; // already resolved in CardDefinitionCache
-			var cd = new CardData
-			{
-				Name = name,
-				Description = description,
-				Cost = 0,
-				Type = CardData.CardType.Attack,
-				Rarity = ParseRarity(def.rarity),
-				ImagePath = string.Empty,
-				Color = CardData.CardColor.Yellow,
-				CardCostType = CardData.CostType.NoCost,
-				BlockValue = 3
-			};
-			cd.CostArray = new List<CardData.CostType>();
-			if (def.cost != null)
-			{
-				foreach (var c in def.cost)
-				{
-					var ct = ParseCostType(c);
-					if (ct != CardData.CostType.NoCost) cd.CostArray.Add(ct);
-				}
-			}
+            var cd = new CardData
+            {
+                CardId = def.id,
+                Color = CardData.CardColor.Yellow
+            };
 			var t = new Transform { Position = Vector2.Zero, Scale = Vector2.One };
 			var s = new Sprite { TexturePath = string.Empty, IsVisible = true };
 			var ui = new UIElement { Bounds = new Rectangle(0, 0, 250, 350), IsInteractable = true };
@@ -152,18 +135,7 @@ namespace Crusaders30XX.ECS.Systems
 
         // Weapon color now irrelevant; derived from loadout for non-weapon cards.
 
-		private static CardData.CostType ParseCostType(string cost)
-		{
-			if (string.IsNullOrEmpty(cost)) return CardData.CostType.NoCost;
-			switch (cost.Trim().ToLowerInvariant())
-			{
-				case "red": return CardData.CostType.Red;
-				case "white": return CardData.CostType.White;
-				case "black": return CardData.CostType.Black;
-				case "any": return CardData.CostType.Any;
-				default: return CardData.CostType.NoCost;
-			}
-		}
+        // Cost parsing no longer needed here; costs are read directly from CardDefinition
 	}
 }
 

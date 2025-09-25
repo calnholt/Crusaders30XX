@@ -230,7 +230,6 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				playerPassives.Passives.Clear();
 			}
-			EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = 1 });
 			EntityManager.DestroyEntity("Enemy");
 			Console.WriteLine($"queued.Events.Count: {queued.Events.Count}, queued.CurrentIndex: {queued.CurrentIndex}");
 			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, queued.Events[++queued.CurrentIndex].EventId);

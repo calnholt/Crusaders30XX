@@ -44,6 +44,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			if (before > 0 && hp.Current == 0 && target.HasComponent<Enemy>())
 			{
+				EventQueue.Clear();
 				TimerScheduler.Schedule(1f, () => {
 					Console.WriteLine("[HpManagementSystem] Enemy died, execute transition");
 					EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });

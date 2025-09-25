@@ -613,10 +613,23 @@ namespace Crusaders30XX.ECS.Systems
 						break;
 					case "DiscardSpecificCard":
 						{
-							var markedCards = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>()
-								.Where(e => e.GetComponent<MarkedForSpecificDiscard>().ContextId == contextId)
-								.Select(e => e.GetComponent<CardData>()?.Name ?? "Card")
-								.ToList();
+                            var markedCards = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>()
+                                .Where(e => e.GetComponent<MarkedForSpecificDiscard>().ContextId == contextId)
+                                .Select(e =>
+                                {
+                                    var cd = e.GetComponent<CardData>();
+                                    if (cd == null) return "Card";
+                                    try
+                                    {
+                                        if (Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
+                                        {
+                                            return def.name ?? def.id ?? "Card";
+                                        }
+                                    }
+                                    catch { }
+                                    return cd.CardId ?? "Card";
+                                })
+                                .ToList();
 							parts.Add($"Discard: {string.Join(", ", markedCards)}");
 							break;
 						}

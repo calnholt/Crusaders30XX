@@ -246,7 +246,7 @@ namespace Crusaders30XX.ECS.Systems
                         bool isWeapon = false;
                         try
                         {
-                            string id = (cardData.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+                            string id = cardData.CardId ?? string.Empty;
                             if (!string.IsNullOrEmpty(id) && CardDefinitionCache.TryGet(id, out var def))
                             {
                                 isWeapon = def.isWeapon;
@@ -346,7 +346,7 @@ namespace Crusaders30XX.ECS.Systems
 						// Never allow the weapon to be used to pay costs; hide it
 						try
 						{
-							string id = (cd.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
+							string id = cd.CardId ?? string.Empty;
 							if (!string.IsNullOrEmpty(id) && CardDefinitionCache.TryGet(id, out var def))
 							{
 								if (def.isWeapon) return false;

@@ -85,7 +85,7 @@ namespace Crusaders30XX.ECS.Systems
                         abc = new AssignedBlockCard
                         {
                             ContextId = evt.ContextId,
-                            BlockAmount = System.Math.Max(1, cd?.BlockValue ?? 1),
+                            BlockAmount = System.Math.Max(1, ResolveBlockAmount(cd)),
                             StartPos = t?.Position ?? Vector2.Zero,
                             CurrentPos = t?.Position ?? Vector2.Zero,
                             TargetPos = t?.Position ?? Vector2.Zero,
@@ -96,7 +96,7 @@ namespace Crusaders30XX.ECS.Systems
                             AssignedAtTicks = System.DateTime.UtcNow.Ticks,
                             IsEquipment = false,
                             ColorKey = NormalizeColorKey(cd?.Color.ToString() ?? "White"),
-                            Tooltip = cd?.Name ?? string.Empty,
+                            Tooltip = ResolveCardName(cd),
                             DisplayBgColor = bg,
                             DisplayFgColor = fg
                         };
@@ -203,6 +203,35 @@ namespace Crusaders30XX.ECS.Systems
         private static Microsoft.Xna.Framework.Color ResolveFgForBg(Microsoft.Xna.Framework.Color bg)
         {
             return (bg == Microsoft.Xna.Framework.Color.White) ? Microsoft.Xna.Framework.Color.Black : Microsoft.Xna.Framework.Color.White;
+        }
+
+        private static int ResolveBlockAmount(CardData cd)
+        {
+            if (cd == null) return 1;
+            try
+            {
+                if (Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
+                {
+                    int baseBlock = def.block;
+                    return baseBlock + (cd.Color == CardData.CardColor.Black ? 1 : 0);
+                }
+            }
+            catch { }
+            return 1;
+        }
+
+        private static string ResolveCardName(CardData cd)
+        {
+            if (cd == null) return string.Empty;
+            try
+            {
+                if (Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
+                {
+                    return def.name ?? def.id ?? cd.CardId ?? string.Empty;
+                }
+            }
+            catch { }
+            return cd.CardId ?? string.Empty;
         }
 
         private static CardZoneType GetZoneOf(Deck deck, Entity card)

@@ -47,20 +47,27 @@ namespace Crusaders30XX.ECS.Systems
 				var data = card.GetComponent<CardData>();
 				if (ui == null || data == null) continue;
 				if (!ui.Bounds.Contains(mouse.Position)) continue;
-				// Skip weapons: they cannot be assigned as block
+                // Skip weapons: they cannot be assigned as block
 				try
 				{
-					string id = (data.Name ?? string.Empty).Trim().ToLowerInvariant().Replace(' ', '_');
-					if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
+                    string id = data.CardId ?? string.Empty;
+                    if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
 					{
 						if (def.isWeapon) { break; }
 					}
 				}
 				catch { }
-				// Assign this card as block (always assign from hand); color from card
-				int blockVal = System.Math.Max(1, data.BlockValue);
-				string color = data.Color.ToString();
-				EventManager.Publish(new BlockAssignmentAdded { ContextId = pa.ContextId, Card = card, Color = color, DeltaBlock = data.BlockValue });
+                // Assign this card as block (always assign from hand); color from card
+                int baseBlock = 0;
+                try
+                {
+                    var ok = Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(data.CardId ?? string.Empty, out var def2);
+                    if (ok && def2 != null) baseBlock = def2.block;
+                }
+                catch { }
+                int blockVal = System.Math.Max(1, baseBlock + (data.Color == CardData.CardColor.Black ? 1 : 0));
+                string color = data.Color.ToString();
+                EventManager.Publish(new BlockAssignmentAdded { ContextId = pa.ContextId, Card = card, Color = color, DeltaBlock = blockVal });
 				// Move card out of hand into AssignedBlock zone; unassign is handled by clicking assigned banner
 				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 				var t = card.GetComponent<Transform>();
