@@ -22,6 +22,8 @@ public class Game1 : Game
     private EntityListOverlaySystem _entityListOverlaySystem;
     private TransitionDisplaySystem _transitionDisplaySystem;
     private CardDisplaySystem _cardDisplaySystem;
+    private RenderingSystem _renderingSystem;
+    private InputSystem _inputSystem;
 
     private KeyboardState _prevKeyboard;
     
@@ -91,6 +93,8 @@ public class Game1 : Game
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, Content);
+        _renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, GraphicsDevice);
+        _inputSystem = new InputSystem(_world.EntityManager);
         _world.AddSystem(menuSceneSystem);
         _world.AddSystem(battleSceneSystem);
         _world.AddSystem(customizationRootSystem);
@@ -99,6 +103,8 @@ public class Game1 : Game
         _world.AddSystem(_entityListOverlaySystem);
         _world.AddSystem(_transitionDisplaySystem);
         _world.AddSystem(_cardDisplaySystem);
+        _world.AddSystem(_renderingSystem);
+        _world.AddSystem(_inputSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 
