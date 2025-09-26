@@ -8,6 +8,7 @@ using Crusaders30XX.ECS.Events;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
+using Crusaders30XX.ECS.Data.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -222,13 +223,16 @@ namespace Crusaders30XX.ECS.Systems
 					ui.IsHovered = hoverRect.Contains(mouse.Position);
 					// Tooltip now comes from AssignedBlockCard
 					ui.Tooltip = abc.Tooltip ?? string.Empty;
+					ui.TooltipOffsetPx = 10;
 					ui.TooltipPosition = TooltipPosition.Above;
 				}
 				else
 				{
 					// Clear tooltip and hover when not assigned
 					ui.IsHovered = false;
-					ui.Tooltip = string.Empty;
+					CardDefinitionCache.TryGet(ui.Owner.GetComponent<CardData>().CardId, out var def);
+					ui.Tooltip = def.tooltip;
+					ui.TooltipOffsetPx = 30;	
 				}
 			}
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;

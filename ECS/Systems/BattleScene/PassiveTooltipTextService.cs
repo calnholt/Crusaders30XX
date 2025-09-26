@@ -27,6 +27,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"Takes {stacks} more damage from all sources.";
         case AppliedPassiveType.Webbing:
           return $"At the start of your turn, gain {stacks} slow.";
+        case AppliedPassiveType.Inferno:
+          return $"At the start of your turn, gain {stacks} burn {(stacks == 1 ? "" : "s")}.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

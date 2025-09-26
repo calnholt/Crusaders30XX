@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using Crusaders30XX.ECS.Systems;
 
 namespace Crusaders30XX.ECS.Data.Cards
 {
@@ -63,6 +64,12 @@ namespace Crusaders30XX.ECS.Data.Cards
                     }
                     def.text = resolved;
                 }
+                // Compute keyword tooltip once per definition
+                try
+                {
+                    def.tooltip = KeywordTooltipTextService.GetTooltip(def.text);
+                }
+                catch { }
             }
         }
 

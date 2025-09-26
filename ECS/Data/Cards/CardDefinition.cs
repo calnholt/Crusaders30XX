@@ -15,6 +15,7 @@ namespace Crusaders30XX.ECS.Data.Cards
         public bool isWeapon { get; set; } = false;
         public int block { get; set; } = 0;
         public int[] valuesParse { get; set; } = [];
+        public string tooltip { get; set; }
     }
 }
 

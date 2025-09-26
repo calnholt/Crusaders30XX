@@ -1,0 +1,12 @@
+{
+  "id": "heavens_glory",
+  "name": "Heaven's Glory",
+  "target": "Enemy",
+  "rarity": "Common",
+  "valuesParse": [1],
+  "cost": ["Any"],
+  "text": "The enemy gains {1} inferno.",
+  "isFreeAction": true,
+  "animation": "Attack",
+  "block": 3
+}

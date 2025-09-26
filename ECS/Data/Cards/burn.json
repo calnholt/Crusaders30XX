@@ -4,7 +4,7 @@
   "target": "Enemy",
   "rarity": "Common",
   "valuesParse": [4, 3, 1, 1],
-  "text": "Apply burn {1} stacks. If you courage is >= {2}, gain {3} action point and lose {4} courage.",
+  "text": "Apply {1} burn to the enemy. If you courage is >= {2}, gain {3} action point and lose {4} courage.",
   "block": 2,
   "animation": "Attack"
 }

@@ -66,7 +66,14 @@ namespace Crusaders30XX.ECS.Systems
         {
             var ap = owner.GetComponent<AppliedPassives>();
             if (ap == null || ap.Passives == null || ap.Passives.Count == 0) return;
-            // Burn: deal 1 damage to the owner per stack
+            if (ap.Passives.TryGetValue(AppliedPassiveType.Inferno, out int infernoStacks) && infernoStacks > 0)
+            {
+                EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Inferno", () =>
+                {
+                    EventManager.Publish(new ApplyPassiveEvent { Target = owner, Type = AppliedPassiveType.Burn, Delta = infernoStacks });
+                    EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Inferno });
+                }, .15f);
+            }
             if (ap.Passives.TryGetValue(AppliedPassiveType.Burn, out int burnStacks) && burnStacks > 0)
             {
                 EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Burn", () =>

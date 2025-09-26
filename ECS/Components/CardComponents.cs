@@ -239,6 +239,7 @@ namespace Crusaders30XX.ECS.Components
         public bool IsInteractable { get; set; } = true;
         public string Tooltip { get; set; } = "";
         public TooltipPosition TooltipPosition { get; set; } = TooltipPosition.Above;
+        public int TooltipOffsetPx { get; set; } = 6; // gap from element to tooltip
     }
 
     /// <summary>
@@ -638,6 +639,7 @@ namespace Crusaders30XX.ECS.Components
         Stun,
         Armor,
         Wounded,
-        Webbing
+        Webbing,
+        Inferno
     }
 }

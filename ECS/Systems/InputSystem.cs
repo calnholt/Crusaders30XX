@@ -253,6 +253,7 @@ namespace Crusaders30XX.ECS.Systems
             var cardData = entity.GetComponent<CardData>();
             var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
             Console.WriteLine($"[InputSystem] Card clicked id={cardData?.CardId} phase={phase}");
+            if (phase == null) return;
             if (phase.Sub == SubPhase.Action)
             {
                 var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();

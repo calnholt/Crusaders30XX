@@ -96,22 +96,23 @@ namespace Crusaders30XX.ECS.Systems
 				// Position based on UI.TooltipPosition
 				int rx = top.UI.Bounds.X;
 				int ry = top.UI.Bounds.Y;
+				int gap = System.Math.Max(0, top.UI.TooltipOffsetPx);
 				switch (top.UI.TooltipPosition)
 				{
 					case TooltipPosition.Above:
 						rx = top.UI.Bounds.X + (top.UI.Bounds.Width - w) / 2;
-						ry = top.UI.Bounds.Y - h - 6;
+						ry = top.UI.Bounds.Y - h - gap;
 						break;
 					case TooltipPosition.Below:
 						rx = top.UI.Bounds.X + (top.UI.Bounds.Width - w) / 2;
-						ry = top.UI.Bounds.Bottom + 6;
+						ry = top.UI.Bounds.Bottom + gap;
 						break;
 					case TooltipPosition.Right:
-						rx = top.UI.Bounds.Right + 6;
+						rx = top.UI.Bounds.Right + gap;
 						ry = top.UI.Bounds.Y + (top.UI.Bounds.Height - h) / 2;
 						break;
 					case TooltipPosition.Left:
-						rx = top.UI.Bounds.X - w - 6;
+						rx = top.UI.Bounds.X - w - gap;
 						ry = top.UI.Bounds.Y + (top.UI.Bounds.Height - h) / 2;
 						break;
 				}

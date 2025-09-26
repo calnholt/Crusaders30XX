@@ -11,6 +11,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Cards;
 using System;
+using Crusaders30XX.ECS.Systems;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -292,12 +293,18 @@ namespace Crusaders30XX.ECS.Factories
 
             var transform = new Transform { Position = Vector2.Zero, Scale = Vector2.One };
             var sprite = new Sprite { TexturePath = string.Empty, IsVisible = true };
-            var uiElement = new UIElement { Bounds = new Rectangle(0, 0, 250, 350), IsInteractable = true };
+            var uiElement = new UIElement { Bounds = new Rectangle(0, 0, 250, 350), IsInteractable = true, TooltipPosition = TooltipPosition.Above, TooltipOffsetPx = 30 };
 
             world.AddComponent(entity, cardData);
             world.AddComponent(entity, transform);
             world.AddComponent(entity, sprite);
             world.AddComponent(entity, uiElement);
+
+            // Set tooltip from definition (precomputed in CardDefinitionCache)
+            if (!string.IsNullOrEmpty(def.tooltip))
+            {
+                uiElement.Tooltip = def.tooltip;
+            }
             return entity;
         }
 
