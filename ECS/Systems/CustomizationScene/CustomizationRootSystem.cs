@@ -34,8 +34,8 @@ namespace Crusaders30XX.ECS.Systems
 
             // Construct sub-systems (drawn via Draw())
             _customizationSceneSystem = new CustomizationSceneSystem(EntityManager, _graphicsDevice, _spriteBatch, _font);
-            _libraryPanelSystem = new CardLibraryPanelSystem(EntityManager, _graphicsDevice, _spriteBatch, _font);
-            _deckPanelSystem = new LoadoutDeckPanelSystem(EntityManager, _graphicsDevice, _spriteBatch, _font);
+            _libraryPanelSystem = new CardLibraryPanelSystem(EntityManager, _world, _graphicsDevice, _spriteBatch, _font);
+            _deckPanelSystem = new LoadoutDeckPanelSystem(EntityManager, _world, _graphicsDevice, _spriteBatch, _font);
             _loadoutEditSystem = new LoadoutEditSystem(EntityManager);
             _deckInfoDisplaySystem = new DeckInfoDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _font);
             _backgroundSystem = new CustomizationBackgroundSystem(EntityManager, _graphicsDevice, _spriteBatch, _content);

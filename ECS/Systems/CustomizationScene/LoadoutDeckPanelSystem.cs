@@ -3,10 +3,13 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Cards;
+using Crusaders30XX.ECS.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.Diagnostics;
+using System.Collections.Generic;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -17,7 +20,9 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font;
         private readonly Texture2D _pixel;
+        private readonly World _world;
         private MouseState _prevMouse;
+        private readonly Dictionary<string, int> _cardEntityIds = new Dictionary<string, int>();
 
         [DebugEditable(DisplayName = "Right Panel Width", Step = 4, Min = 100, Max = 2000)]
         public int PanelWidth { get; set; } = 620;
@@ -39,17 +44,30 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Header Pad Y", Step = 1, Min = 0, Max = 200)]
         public int HeaderPadY { get; set; } = 6;
 
-        public LoadoutDeckPanelSystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
+        public LoadoutDeckPanelSystem(EntityManager em, World world, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
         {
+            _world = world;
             _graphicsDevice = gd;
             _spriteBatch = sb;
             _font = font;
             _prevMouse = Mouse.GetState();
             _pixel = new Texture2D(_graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
+            EventManager.Subscribe<ShowTransition>(_ => OnShowTransition());
         }
 
-        protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+        private void OnShowTransition()
+        {
+            if (_cardEntityIds.Count == 0) return;
+            Console.WriteLine("[LoadoutDeckPanelSystem] Clearing cached deck card entities");
+            foreach (var entityId in _cardEntityIds.Values)
+            {
+                EntityManager.DestroyEntity(entityId);
+            }
+            _cardEntityIds.Clear();
+        }
+
+        protected override IEnumerable<Entity> GetRelevantEntities()
         {
             return EntityManager.GetEntitiesWithComponent<SceneState>();
         }
@@ -70,12 +88,12 @@ namespace Crusaders30XX.ECS.Systems
             int panelY = 0;
             int panelH = _graphicsDevice.Viewport.Height;
             int colW = (int)(cardW * CardScale) + 20;
-            int col = System.Math.Max(1, Columns);
+            int col = Math.Max(1, Columns);
 
             if (new Rectangle(panelX, panelY, PanelWidth, panelH).Contains(mouse.Position))
             {
                 int delta = mouse.ScrollWheelValue - _prevMouse.ScrollWheelValue;
-                st.RightScroll = System.Math.Max(0, st.RightScroll - delta / 2);
+                st.RightScroll = Math.Max(0, st.RightScroll - delta / 2);
             }
 
             // Build sorted view of working cards for consistent draw/click order
@@ -83,11 +101,11 @@ namespace Crusaders30XX.ECS.Systems
 
             // Clamp scroll to content height (so clicks align with visible content)
             int totalItemsForClamp = sortedEntriesForClick.Count;
-            int rowsForClamp = System.Math.Max(0, (totalItemsForClamp + col - 1) / col);
+            int rowsForClamp = Math.Max(0, (totalItemsForClamp + col - 1) / col);
             int cardScaledHForClamp = (int)(cardH * CardScale);
             int gapsTotalForClamp = rowsForClamp > 0 ? (rowsForClamp - 1) * RowGap : 0;
             int contentHeightForClamp = HeaderHeight + TopMargin + rowsForClamp * cardScaledHForClamp + gapsTotalForClamp;
-            int maxScrollForClamp = System.Math.Max(0, contentHeightForClamp - panelH);
+            int maxScrollForClamp = Math.Max(0, contentHeightForClamp - panelH);
             if (st.RightScroll > maxScrollForClamp) st.RightScroll = maxScrollForClamp;
 
             // Layout for click detection only (drawing handled in Draw)
@@ -127,17 +145,17 @@ namespace Crusaders30XX.ECS.Systems
             int panelX = vw - PanelWidth;
             int panelY = 0;
             int colW = (int)(cardW * CardScale) + 20;
-            int col = System.Math.Max(1, Columns);
+            int col = Math.Max(1, Columns);
 
             var sortedEntries = GetSortedWorkingEntries(st);
 
             // Clamp scroll to content height
             int totalItems = sortedEntries.Count;
-            int rows = System.Math.Max(0, (totalItems + col - 1) / col);
+            int rows = Math.Max(0, (totalItems + col - 1) / col);
             int cardScaledH = (int)(cardH * CardScale);
             int gapsTotal = rows > 0 ? (rows - 1) * RowGap : 0;
             int contentHeight = HeaderHeight + TopMargin + rows * cardScaledH + gapsTotal;
-            int maxScroll = System.Math.Max(0, contentHeight - _graphicsDevice.Viewport.Height);
+            int maxScroll = Math.Max(0, contentHeight - _graphicsDevice.Viewport.Height);
             if (st.RightScroll > maxScroll) st.RightScroll = maxScroll;
 
             // Background
@@ -158,7 +176,10 @@ namespace Crusaders30XX.ECS.Systems
                 int c = idx % col;
                 int x = panelX + c * colW + (colW / 2);
                 int y = panelY + HeaderHeight + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.RightScroll;
-                EventManager.Publish(new CardRenderScaledEvent { Card = card, Position = new Vector2(x, y), Scale = CardScale });
+                if (card != null)
+                {
+                    EventManager.Publish(new CardRenderScaledEvent { Card = card, Position = new Vector2(x, y), Scale = CardScale });
+                }
                 idx++;
             }
 
@@ -180,21 +201,21 @@ namespace Crusaders30XX.ECS.Systems
 
         private Entity EnsureTempCard(CardDefinition def, CardData.CardColor color)
         {
-            string key = $"Deck_{def.id}_{color}";
-            var e = EntityManager.GetEntity(key);
-            if (e != null) return e;
-            e = EntityManager.CreateEntity(key);
-            var cardData = new CardData
+            if (TransitionStateSingleton.IsActive) return null;
+            string key = $"{def.id}|{color}";
+            if (_cardEntityIds.TryGetValue(key, out var existingId))
             {
-                CardId = def.id,
-                Color = color
-            };
+                var existing = EntityManager.GetEntity(existingId);
+                if (existing != null) return existing;
+                _cardEntityIds.Remove(key);
+            }
 
-            EntityManager.AddComponent(e, cardData);
-            EntityManager.AddComponent(e, new Transform { Position = Vector2.Zero, Scale = Vector2.One });
-            EntityManager.AddComponent(e, new Sprite { TexturePath = string.Empty, IsVisible = true });
-            EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, GetCvs().CardWidth, GetCvs().CardHeight), IsInteractable = true });
-            return e;
+            var created = EntityFactory.CreateCardFromDefinition(_world, def.id, color);
+            if (created != null)
+            {
+                _cardEntityIds[key] = created.Id;
+            }
+            return created;
         }
 
         private CardVisualSettings GetCvs()
@@ -216,9 +237,9 @@ namespace Crusaders30XX.ECS.Systems
 
         // Cost parsing no longer needed here; costs are rendered directly from CardDefinition
 
-        private System.Collections.Generic.List<(string key, string id, CardData.CardColor color, string name)> GetSortedWorkingEntries(Crusaders30XX.ECS.Components.CustomizationState st)
+        private List<(string key, string id, CardData.CardColor color, string name)> GetSortedWorkingEntries(CustomizationState st)
         {
-            var result = new System.Collections.Generic.List<(string key, string id, CardData.CardColor color, string name)>();
+            var result = new List<(string key, string id, CardData.CardColor color, string name)>();
             foreach (var entry in st.WorkingCardIds)
             {
                 string id = entry;

@@ -109,14 +109,19 @@ namespace Crusaders30XX.ECS.Systems
             {
                 transform.Scale = new Vector2(evt.Scale, evt.Scale);
                 float originalRotation = transform.Rotation;
-                // Ensure no rotation for grid preview
+                Vector2 originalPosition = transform.Position;
+                // Ensure no rotation for grid preview and sync position to render position
                 transform.Rotation = 0f;
+                transform.Position = evt.Position;
                 var t = evt.Card.GetComponent<Transform>();
                 var ui = evt.Card.GetComponent<UIElement>();
                 EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
                 DrawCard(evt.Card, evt.Position);
+                // Restore original transform after drawing
                 transform.Scale = originalScale;
                 transform.Rotation = originalRotation;
+                transform.Position = originalPosition;
+                if (ui != null) ui.Bounds = GetCardVisualRectScaled(evt.Position, evt.Scale);
             }
             else
             {
@@ -134,11 +139,17 @@ namespace Crusaders30XX.ECS.Systems
             if (transform != null)
             {
                 transform.Scale = new Vector2(evt.Scale, evt.Scale);
+                Vector2 originalPosition = transform.Position;
+                // Preserve rotation but sync position for accurate highlight/bounds
+                transform.Position = evt.Position;
                 var t = evt.Card.GetComponent<Transform>();
                 var ui = evt.Card.GetComponent<UIElement>();
                 EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
                 DrawCard(evt.Card, evt.Position);
+                // Restore transform and update bounds
                 transform.Scale = originalScale;
+                transform.Position = originalPosition;
+                if (ui != null) ui.Bounds = GetCardVisualRectScaled(evt.Position, evt.Scale);
             }
             else
             {

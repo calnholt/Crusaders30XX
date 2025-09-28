@@ -30,6 +30,7 @@ public class Game1 : Game
     private MenuSceneSystem _menuSceneSystem;
     private BattleSceneSystem _battleSceneSystem;
     private CustomizationRootSystem _customizationRootSystem;
+    private TooltipDisplaySystem _tooltipDisplaySystem;
     
     
     // ECS System
@@ -107,6 +108,7 @@ public class Game1 : Game
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, Content);
         _renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, GraphicsDevice);
         _inputSystem = new InputSystem(_world.EntityManager);
+        _tooltipDisplaySystem = new TooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
         _world.AddSystem(_customizationRootSystem);
@@ -117,6 +119,7 @@ public class Game1 : Game
         _world.AddSystem(_cardDisplaySystem);
         _world.AddSystem(_renderingSystem);
         _world.AddSystem(_inputSystem);
+        _world.AddSystem(_tooltipDisplaySystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 
@@ -173,6 +176,7 @@ public class Game1 : Game
                 break;
             }
         }
+        _tooltipDisplaySystem.Draw();
         _debugMenuSystem.Draw();
         _entityListOverlaySystem?.Draw();
         _transitionDisplaySystem?.Draw();

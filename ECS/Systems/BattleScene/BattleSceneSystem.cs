@@ -46,7 +46,6 @@ namespace Crusaders30XX.ECS.Systems
 		private CourageManagerSystem _courageManagerSystem;
 		private ActionPointManagementSystem _actionPointManagementSystem;
 		private TemperanceManagerSystem _temperanceManagerSystem;
-		private TooltipDisplaySystem _tooltipDisplaySystem;
 		private HPDisplaySystem _hpDisplaySystem;
 		private AppliedPassivesDisplaySystem _appliedPassivesDisplaySystem;
 		private CardVisualSettingsDebugSystem _cardVisualSettingsDebugSystem;
@@ -153,7 +152,6 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
 			FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
 			FrameProfiler.Measure("CardListModalSystem.Draw", _cardListModalSystem.Draw);
-			FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipDisplaySystem.Draw);
 			FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
 			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
@@ -284,7 +282,6 @@ namespace Crusaders30XX.ECS.Systems
 			_courageManagerSystem = new CourageManagerSystem(_world.EntityManager);
 			_actionPointManagementSystem = new ActionPointManagementSystem(_world.EntityManager);
 			_temperanceManagerSystem = new TemperanceManagerSystem(_world.EntityManager);
-			_tooltipDisplaySystem = new TooltipDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_appliedPassivesDisplaySystem = new AppliedPassivesDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_cardVisualSettingsDebugSystem = new CardVisualSettingsDebugSystem(_world.EntityManager);
@@ -347,7 +344,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_playerWispParticleSystem);
 			_world.AddSystem(_playerAnimationSystem);
 			_world.AddSystem(_playerTemperanceActivationDisplaySystem);
-			_world.AddSystem(_tooltipDisplaySystem);
 			_world.AddSystem(_courageDisplaySystem);
 			_world.AddSystem(_temperanceDisplaySystem);
 			_world.AddSystem(_actionPointDisplaySystem);

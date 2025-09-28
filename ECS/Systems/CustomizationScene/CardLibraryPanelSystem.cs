@@ -7,17 +7,23 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Factories;
+using System;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
 {
     [DebugTab("Card Library Panel")]
     public class CardLibraryPanelSystem : Core.System
     {
+        private readonly World _world;
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font;
         private readonly Texture2D _pixel;
         private MouseState _prevMouse;
+        private bool _isInitialized = false;
+		private readonly Dictionary<string, int> _cardEntityIds = new Dictionary<string, int>();
 
         [DebugEditable(DisplayName = "Left Panel Width", Step = 4, Min = 100, Max = 2000)]
         public int PanelWidth { get; set; } = 640;
@@ -39,17 +45,31 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Header Pad Y", Step = 1, Min = 0, Max = 200)]
         public int HeaderPadY { get; set; } = 6;
 
-        public CardLibraryPanelSystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
+        public CardLibraryPanelSystem(EntityManager em, World world, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
         {
+            _world = world;
             _graphicsDevice = gd;
             _spriteBatch = sb;
             _font = font;
             _prevMouse = Mouse.GetState();
             _pixel = new Texture2D(_graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
+            EventManager.Subscribe<ShowTransition>(_ => OnLoadScene());
         }
 
-        protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+		private void OnLoadScene()
+		{
+			if (_cardEntityIds.Count == 0) return;
+			Console.WriteLine("[CardLibraryPanelSystem] Clearing cached library card entities");
+			foreach (var entityId in _cardEntityIds.Values)
+			{
+				EntityManager.DestroyEntity(entityId);
+			}
+			_cardEntityIds.Clear();
+			_isInitialized = false;
+		}
+
+        protected override IEnumerable<Entity> GetRelevantEntities()
         {
             return EntityManager.GetEntitiesWithComponent<SceneState>();
         }
@@ -154,7 +174,7 @@ namespace Crusaders30XX.ECS.Systems
                 .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
                 .ToList();
             CardData.CardColor[] colorOrder2 = new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black };
-            var inDeckSet = new System.Collections.Generic.HashSet<string>(st.WorkingCardIds);
+            var inDeckSet = new HashSet<string>(st.WorkingCardIds);
             int idx = 0;
             foreach (var def in defs)
             {
@@ -168,7 +188,10 @@ namespace Crusaders30XX.ECS.Systems
                     int x = panelX + c * colW + (colW / 2);
                     int y = panelY + HeaderHeight + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.LeftScroll;
                     var tempCard = EnsureTempCard(def, color);
-                    EventManager.Publish(new CardRenderScaledEvent { Card = tempCard, Position = new Vector2(x, y), Scale = CardScale });
+                    if (tempCard != null)
+                    {
+                        EventManager.Publish(new CardRenderScaledEvent { Card = tempCard, Position = new Vector2(x, y), Scale = CardScale });
+                    }
                     idx++;
                 }
             }
@@ -185,29 +208,25 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private Entity EnsureTempCard(CardDefinition def, CardData.CardColor color)
-        {
-            string key = $"Lib_{def.id}_{color}";
-            var e = EntityManager.GetEntity(key);
-            if (e != null) return e;
-            // Use shared factory to ensure consistent card creation
-            var worldShim = new Crusaders30XX.ECS.Core.World();
-            // worldShim not used to manage systems; we only need entity structure
-            // Reuse this EntityManager by assigning created entity here
-            var created = Crusaders30XX.ECS.Factories.EntityFactory.CreateCardFromDefinition(worldShim, def.id, color);
-            if (created == null) return null;
-            // Migrate created components into this EntityManager under a new entity named key
-            var final = EntityManager.CreateEntity(key);
-            var cd = created.GetComponent<CardData>();
-            var tr = created.GetComponent<Transform>();
-            var sp = created.GetComponent<Sprite>();
-            var ui = created.GetComponent<UIElement>();
-            EntityManager.AddComponent(final, cd);
-            EntityManager.AddComponent(final, tr);
-            EntityManager.AddComponent(final, sp);
-            EntityManager.AddComponent(final, ui);
-            return final;
-        }
+		private Entity EnsureTempCard(CardDefinition def, CardData.CardColor color)
+		{
+            if (TransitionStateSingleton.IsActive) return null;
+			string key = $"{def.id}|{color}";
+			if (_cardEntityIds.TryGetValue(key, out var existingId))
+			{
+				var existing = EntityManager.GetEntity(existingId);
+				if (existing != null) return existing;
+				// Stale id, remove and recreate
+				_cardEntityIds.Remove(key);
+			}
+
+			var created = EntityFactory.CreateCardFromDefinition(_world, def.id, color);
+			if (created != null)
+			{
+				_cardEntityIds[key] = created.Id;
+			}
+			return created;
+		}
 
         private CardVisualSettings GetCvs()
         {

@@ -55,6 +55,7 @@ namespace Crusaders30XX.ECS.Systems
                 .Where(x => x.UI != null && x.UI.IsInteractable)
                 .ToList();
 
+
             // If a modal is open, restrict interactions to modal UI only
             var modalEntity = EntityManager.GetEntitiesWithComponent<CardListModal>().FirstOrDefault();
             bool isModalOpen = false;
@@ -66,7 +67,7 @@ namespace Crusaders30XX.ECS.Systems
             if (isModalOpen)
             {
                 uiEntities = uiEntities
-                    .Where(x => x.E.GetComponent<CardListModalClose>() != null)
+                    .Where(x => x.E.GetComponent<CardListModalClose>() != null || x.IsCard)
                     .ToList();
             }
 
@@ -151,37 +152,34 @@ namespace Crusaders30XX.ECS.Systems
 
         private bool IsUnderMouse(dynamic x, Point mousePosition)
         {
-            if (!x.IsCard)
-            {
-                // Fallback to AABB for non-card UI
-                return x.UI.Bounds.Contains(mousePosition);
-            }
+			if (!x.IsCard)
+			{
+				// Fallback to AABB for non-card UI
+				return x.UI.Bounds.Contains(mousePosition);
+			}
 
-            // Rotated-rect hit test for cards
-            var transform = x.T as Transform;
-            if (transform == null) return x.UI.Bounds.Contains(mousePosition);
+			// Rotated-rect hit test for cards using UI bounds (already scaled/positioned)
+			var transform = x.T as Transform;
+			var ui = x.UI as UIElement;
+			if (ui == null) return false;
 
-            // Use the same visual center as rendering does
-            // Compute card center using shared CardVisualSettings
-            var settingsEntity = this.EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-            var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
-            int cw = cvs?.CardWidth ?? 250;
-            int ch = cvs?.CardHeight ?? 350;
-            int offsetY = (ch / 2) + (int)Math.Round((cvs?.UIScale ?? 1f) * 25);
-            Vector2 center = new Vector2(transform.Position.X, transform.Position.Y - offsetY + ch / 2f);
-            float rotation = transform.Rotation;
-            float cos = (float)System.Math.Cos(rotation);
-            float sin = (float)System.Math.Sin(rotation);
+			var r = ui.Bounds;
+			if (r.Width < 2 || r.Height < 2) return false;
 
-            Vector2 m = new Vector2(mousePosition.X, mousePosition.Y);
-            Vector2 d = m - center;
-            // rotate mouse into card local space (inverse rotation)
-            float localX = d.X * cos + d.Y * sin;
-            float localY = -d.X * sin + d.Y * cos;
+			Vector2 center = new Vector2(r.X + r.Width / 2f, r.Y + r.Height / 2f);
+			float rotation = transform?.Rotation ?? 0f;
+			float cos = (float)System.Math.Cos(rotation);
+			float sin = (float)System.Math.Sin(rotation);
 
-            float halfW = cw / 2f;
-            float halfH = ch / 2f;
-            return (localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH);
+			Vector2 m = new Vector2(mousePosition.X, mousePosition.Y);
+			Vector2 d = m - center;
+			// rotate mouse into card local space (inverse rotation)
+			float localX = d.X * cos + d.Y * sin;
+			float localY = -d.X * sin + d.Y * cos;
+
+			float halfW = r.Width / 2f;
+			float halfH = r.Height / 2f;
+			return (localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH);
         }
         
         private void HandleUIClick(Entity entity)
