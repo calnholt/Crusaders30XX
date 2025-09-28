@@ -15,6 +15,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<AddCardToLoadoutRequested>(OnAddRequested);
 			EventManager.Subscribe<RemoveCardFromLoadoutRequested>(OnRemoveRequested);
 			EventManager.Subscribe<UpdateTemperanceLoadoutRequested>(OnUpdateTemperanceRequested);
+			EventManager.Subscribe<UpdateEquipmentLoadoutRequested>(OnUpdateEquipmentRequested);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -71,6 +72,24 @@ namespace Crusaders30XX.ECS.Systems
 			var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
 			if (st == null) return;
 			st.WorkingTemperanceId = evt.TemperanceId;
+		}
+
+		private void OnUpdateEquipmentRequested(UpdateEquipmentLoadoutRequested evt)
+		{
+			if (evt == null || string.IsNullOrEmpty(evt.EquipmentId)) return;
+			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+			if (scene == null || scene.Current != SceneId.Customization) return;
+			var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
+			if (st == null) return;
+			switch (evt.Slot)
+			{
+				case CustomizationTabType.Weapon: st.WorkingWeaponId = evt.EquipmentId; break;
+				case CustomizationTabType.Head: st.WorkingHeadId = evt.EquipmentId; break;
+				case CustomizationTabType.Chest: st.WorkingChestId = evt.EquipmentId; break;
+				case CustomizationTabType.Arms: st.WorkingArmsId = evt.EquipmentId; break;
+				case CustomizationTabType.Legs: st.WorkingLegsId = evt.EquipmentId; break;
+				default: break;
+			}
 		}
 	}
 }

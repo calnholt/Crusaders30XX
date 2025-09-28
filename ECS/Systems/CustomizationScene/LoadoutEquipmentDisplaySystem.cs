@@ -1,7 +1,7 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Temperance;
+using Crusaders30XX.ECS.Data.Equipment;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,12 +10,12 @@ using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
-    public class LoadoutTemperanceDisplaySystem : Core.System
+    public class LoadoutEquipmentDisplaySystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private readonly LoadoutDeckPanelSystem _deckPanel;
-        private readonly CustomizeTemperanceDisplaySystem _customizeTemperanceDisplaySystem;
+        private readonly CustomizeEquipmentDisplaySystem _customizeEquipmentDisplaySystem;
         private int _entityId = 0;
 
         [DebugEditable(DisplayName = "Row Height", Step = 2, Min = 24, Max = 240)]
@@ -26,18 +26,13 @@ namespace Crusaders30XX.ECS.Systems
         public int SidePadding { get; set; } = 10;
         [DebugEditable(DisplayName = "Top Offset From Header", Step = 1, Min = 0, Max = 200)]
         public int TopOffsetFromHeader { get; set; } = 0;
-        [DebugEditable(DisplayName = "Name Scale", Step = 0.01f, Min = 0.1f, Max = 1.0f)]
-        public float NameScale { get; set; } = 0.22f;
-        [DebugEditable(DisplayName = "Text Scale", Step = 0.01f, Min = 0.1f, Max = 1.0f)]
-        public float BodyTextScale { get; set; } = 0.18f;
 
-        public LoadoutTemperanceDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, LoadoutDeckPanelSystem deckPanel, CustomizeTemperanceDisplaySystem customizeTemperanceDisplaySystem) : base(em)
+        public LoadoutEquipmentDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, LoadoutDeckPanelSystem deckPanel, CustomizeEquipmentDisplaySystem customizeEquipmentDisplaySystem) : base(em)
         {
             _graphicsDevice = gd;
             _spriteBatch = sb;
             _deckPanel = deckPanel;
-            _customizeTemperanceDisplaySystem = customizeTemperanceDisplaySystem;
-            // Clear cached UI entity on scene transitions or tab switches
+            _customizeEquipmentDisplaySystem = customizeEquipmentDisplaySystem;
             EventManager.Subscribe<ShowTransition>(_ => ClearEntity());
             EventManager.Subscribe<SetCustomizationTab>(_ => ClearEntity());
         }
@@ -57,11 +52,12 @@ namespace Crusaders30XX.ECS.Systems
             var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-            if (st == null || st.SelectedTab != CustomizationTabType.Temperance) return;
+            if (st == null) return;
+            if (!IsEquipmentTab(st.SelectedTab)) return;
 
-            var equippedId = st.WorkingTemperanceId;
+            string equippedId = GetEquippedIdForTab(st, st.SelectedTab);
             if (string.IsNullOrEmpty(equippedId)) return;
-            if (!TemperanceAbilityDefinitionCache.TryGet(equippedId, out var def) || def == null) return;
+            if (!EquipmentDefinitionCache.TryGet(equippedId, out var def) || def == null) return;
 
             int vw = _graphicsDevice.Viewport.Width;
             int rightW = _deckPanel?.PanelWidth ?? 620;
@@ -71,14 +67,14 @@ namespace Crusaders30XX.ECS.Systems
             int h = RowHeight;
             var rect = new Rectangle(x, y, w, h);
             EnsureEntity(rect);
-            EventManager.Publish(new TemperanceAbilityRenderEvent { AbilityId = def.id, Bounds = rect, IsEquipped = true, NameScale = _customizeTemperanceDisplaySystem.NameScale, TextScale = _customizeTemperanceDisplaySystem.TextScale });
+            EventManager.Publish(new EquipmentRenderEvent { EquipmentId = def.id, Bounds = rect, IsEquipped = true, NameScale = _customizeEquipmentDisplaySystem.NameScale, TextScale = _customizeEquipmentDisplaySystem.TextScale });
         }
 
         private Entity EnsureEntity(Rectangle bounds)
         {
             if (_entityId == 0 || EntityManager.GetEntity(_entityId) == null)
             {
-                var e = EntityManager.CreateEntity("CustomizationTemperance_Equipped");
+                var e = EntityManager.CreateEntity("CustomizationEquipment_Equipped");
                 EntityManager.AddComponent(e, new UIElement { Bounds = bounds, IsInteractable = false });
                 EntityManager.AddComponent(e, new Transform { Position = new Vector2(bounds.X, bounds.Y), ZOrder = 60000 });
                 _entityId = e.Id;
@@ -96,6 +92,24 @@ namespace Crusaders30XX.ECS.Systems
             {
                 EntityManager.DestroyEntity(_entityId);
                 _entityId = 0;
+            }
+        }
+
+        private bool IsEquipmentTab(CustomizationTabType tab)
+        {
+            return tab == CustomizationTabType.Weapon || tab == CustomizationTabType.Head || tab == CustomizationTabType.Chest || tab == CustomizationTabType.Arms || tab == CustomizationTabType.Legs;
+        }
+
+        private string GetEquippedIdForTab(CustomizationState st, CustomizationTabType tab)
+        {
+            switch (tab)
+            {
+                case CustomizationTabType.Weapon: return st.WorkingWeaponId;
+                case CustomizationTabType.Head: return st.WorkingHeadId;
+                case CustomizationTabType.Chest: return st.WorkingChestId;
+                case CustomizationTabType.Arms: return st.WorkingArmsId;
+                case CustomizationTabType.Legs: return st.WorkingLegsId;
+                default: return string.Empty;
             }
         }
     }

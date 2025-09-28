@@ -10,6 +10,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -152,6 +153,18 @@ namespace Crusaders30XX.ECS.Systems
             st.OriginalCardIds = new List<string>(st.WorkingCardIds);
             // Initialize working temperance from loadout if present, else from player's current equip
             st.WorkingTemperanceId = def.temperanceId ?? st.WorkingTemperanceId;
+            st.WorkingWeaponId = def.weaponId ?? st.WorkingWeaponId;
+            st.WorkingChestId = def.chestId ?? st.WorkingChestId;
+            st.WorkingLegsId = def.legsId ?? st.WorkingLegsId;
+            st.WorkingArmsId = def.armsId ?? st.WorkingArmsId;
+            st.WorkingHeadId = def.headId ?? st.WorkingHeadId;
+            st.OriginalTemperanceId = st.WorkingTemperanceId;
+            st.OriginalWeaponId = st.WorkingWeaponId;
+            st.OriginalChestId = st.WorkingChestId;
+            st.OriginalLegsId = st.WorkingLegsId;
+            st.OriginalArmsId = st.WorkingArmsId;
+            st.OriginalHeadId = st.WorkingHeadId;
+            EntityManager.AddComponent(stateEntity, st);
             if (string.IsNullOrEmpty(st.WorkingTemperanceId))
             {
                 var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
