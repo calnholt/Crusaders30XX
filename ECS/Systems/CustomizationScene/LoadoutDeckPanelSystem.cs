@@ -77,7 +77,7 @@ namespace Crusaders30XX.ECS.Systems
             var scene = entity.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-            if (st == null || st.SelectedTab != CustomizationTabType.Deck) return;
+            if (st == null) return;
             var mouse = Mouse.GetState();
             bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
             int vw = _graphicsDevice.Viewport.Width;
@@ -96,40 +96,7 @@ namespace Crusaders30XX.ECS.Systems
                 st.RightScroll = Math.Max(0, st.RightScroll - delta / 2);
             }
 
-            // Build sorted view of working cards for consistent draw/click order
-            var sortedEntriesForClick = GetSortedWorkingEntries(st);
-
-            // Clamp scroll to content height (so clicks align with visible content)
-            int totalItemsForClamp = sortedEntriesForClick.Count;
-            int rowsForClamp = Math.Max(0, (totalItemsForClamp + col - 1) / col);
-            int cardScaledHForClamp = (int)(cardH * CardScale);
-            int gapsTotalForClamp = rowsForClamp > 0 ? (rowsForClamp - 1) * RowGap : 0;
-            int contentHeightForClamp = HeaderHeight + TopMargin + rowsForClamp * cardScaledHForClamp + gapsTotalForClamp;
-            int maxScrollForClamp = Math.Max(0, contentHeightForClamp - panelH);
-            if (st.RightScroll > maxScrollForClamp) st.RightScroll = maxScrollForClamp;
-
-            // Layout for click detection only (drawing handled in Draw)
-            int idx = 0;
-            foreach (var view in sortedEntriesForClick)
-            {
-                string id = view.id;
-                var color = view.color;
-                if (!CardDefinitionCache.TryGet(id, out var def) || def == null) { idx++; continue; }
-                if (def.isWeapon) { idx++; continue; }
-
-                int r = idx / col;
-                int c = idx % col;
-                int x = panelX + c * colW + (colW / 2);
-                int y = panelY + HeaderHeight + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.RightScroll;
-
-                var rect = new Rectangle(x - (int)(cardW * CardScale / 2), y - (int)(cardH * CardScale / 2), (int)(cardW * CardScale), (int)(cardH * CardScale));
-                if (click && rect.Contains(mouse.Position))
-                {
-                    EventManager.Publish(new RemoveCardFromLoadoutRequested { CardKey = view.key, Index = null });
-                    break;
-                }
-                idx++;
-            }
+            // Content and clicks moved to LoadoutCardDisplaySystem
             _prevMouse = Mouse.GetState();
         }
 
@@ -138,7 +105,7 @@ namespace Crusaders30XX.ECS.Systems
             var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-            if (st == null || st.SelectedTab != CustomizationTabType.Deck) return;
+            if (st == null) return;
             int vw = _graphicsDevice.Viewport.Width;
             int cardW = GetCvs().CardWidth;
             int cardH = GetCvs().CardHeight;
@@ -147,41 +114,14 @@ namespace Crusaders30XX.ECS.Systems
             int colW = (int)(cardW * CardScale) + 20;
             int col = Math.Max(1, Columns);
 
-            var sortedEntries = GetSortedWorkingEntries(st);
-
-            // Clamp scroll to content height
-            int totalItems = sortedEntries.Count;
-            int rows = Math.Max(0, (totalItems + col - 1) / col);
-            int cardScaledH = (int)(cardH * CardScale);
-            int gapsTotal = rows > 0 ? (rows - 1) * RowGap : 0;
-            int contentHeight = HeaderHeight + TopMargin + rows * cardScaledH + gapsTotal;
-            int maxScroll = Math.Max(0, contentHeight - _graphicsDevice.Viewport.Height);
-            if (st.RightScroll > maxScroll) st.RightScroll = maxScroll;
+            // Content height and drawing are handled by LoadoutCardDisplaySystem
 
             // Background
             int panelH = _graphicsDevice.Viewport.Height;
             var bgRect = new Rectangle(panelX, panelY, PanelWidth, panelH);
             _spriteBatch.Draw(_pixel, bgRect, new Color(0, 0, 0, 160));
 
-            int idx = 0;
-            foreach (var view in sortedEntries)
-            {
-                string id = view.id;
-                var color = view.color;
-                if (!CardDefinitionCache.TryGet(id, out var def) || def == null) { idx++; continue; }
-                if (def.isWeapon) { idx++; continue; }
-                var card = EnsureTempCard(def, color);
-
-                int r = idx / col;
-                int c = idx % col;
-                int x = panelX + c * colW + (colW / 2);
-                int y = panelY + HeaderHeight + TopMargin + r * ((int)(cardH * CardScale) + RowGap) + (int)(cardH * CardScale / 2) - st.RightScroll;
-                if (card != null)
-                {
-                    EventManager.Publish(new CardRenderScaledEvent { Card = card, Position = new Vector2(x, y), Scale = CardScale });
-                }
-                idx++;
-            }
+            // Only draw panel background and header; cards are drawn elsewhere
 
             // Header drawn last so it overlays scrolled content
             var headerRect = new Rectangle(panelX, panelY, PanelWidth, HeaderHeight);
@@ -197,25 +137,6 @@ namespace Crusaders30XX.ECS.Systems
                 _spriteBatch.DrawString(_font, header, pos + new Vector2(1, 1), Color.Black, 0f, Vector2.Zero, HeaderTextScale, SpriteEffects.None, 0f);
                 _spriteBatch.DrawString(_font, header, pos, Color.White, 0f, Vector2.Zero, HeaderTextScale, SpriteEffects.None, 0f);
             }
-        }
-
-        private Entity EnsureTempCard(CardDefinition def, CardData.CardColor color)
-        {
-            if (TransitionStateSingleton.IsActive) return null;
-            string key = $"{def.id}|{color}";
-            if (_cardEntityIds.TryGetValue(key, out var existingId))
-            {
-                var existing = EntityManager.GetEntity(existingId);
-                if (existing != null) return existing;
-                _cardEntityIds.Remove(key);
-            }
-
-            var created = EntityFactory.CreateCardFromDefinition(_world, def.id, color);
-            if (created != null)
-            {
-                _cardEntityIds[key] = created.Id;
-            }
-            return created;
         }
 
         private CardVisualSettings GetCvs()

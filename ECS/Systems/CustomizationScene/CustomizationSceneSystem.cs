@@ -150,6 +150,15 @@ namespace Crusaders30XX.ECS.Systems
             }
             st.WorkingCardIds = new List<string>(def.cardIds ?? new List<string>());
             st.OriginalCardIds = new List<string>(st.WorkingCardIds);
+            // Initialize working temperance from loadout if present, else from player's current equip
+            st.WorkingTemperanceId = def.temperanceId ?? st.WorkingTemperanceId;
+            if (string.IsNullOrEmpty(st.WorkingTemperanceId))
+            {
+                var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                var eq = player?.GetComponent<EquippedTemperanceAbility>();
+                if (eq != null && !string.IsNullOrEmpty(eq.AbilityId)) st.WorkingTemperanceId = eq.AbilityId;
+            }
+            st.OriginalTemperanceId = st.WorkingTemperanceId;
             EntityManager.AddComponent(stateEntity, st);
         }
 
@@ -221,6 +230,12 @@ namespace Crusaders30XX.ECS.Systems
                 def = new LoadoutDefinition { id = "loadout_1", name = "Loadout 1" };
             }
             def.cardIds = new List<string>(st.WorkingCardIds);
+            def.temperanceId = st.WorkingTemperanceId;
+            def.weaponId = st.WorkingWeaponId;
+            def.chestId = st.WorkingChestId;
+            def.legsId = st.WorkingLegsId;
+            def.armsId = st.WorkingArmsId;
+            def.headId = st.WorkingHeadId;
 
             string folder = ResolveLoadoutsFolder();
             if (string.IsNullOrEmpty(folder)) return;

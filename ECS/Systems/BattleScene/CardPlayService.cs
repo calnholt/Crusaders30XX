@@ -42,7 +42,9 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ModifyCourageEvent { Delta = +values[0] });
                     // brief delay so cards in hand are updated
                     // TODO: cards can still be played because animation prolongs
+                    TransitionStateSingleton.IsActive = true;
                     TimerScheduler.Schedule(.01f, () => {
+                        TransitionStateSingleton.IsActive = false;
                         EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
                     });
                     break;

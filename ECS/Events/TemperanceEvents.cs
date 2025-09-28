@@ -24,6 +24,16 @@ namespace Crusaders30XX.ECS.Events
         public Entity Owner { get; set; }
         public string AbilityId { get; set; }
     }
+
+    // Rendering event for customization-temperance entries
+    public class TemperanceAbilityRenderEvent
+    {
+        public string AbilityId { get; set; }
+        public Microsoft.Xna.Framework.Rectangle Bounds { get; set; }
+        public bool IsEquipped { get; set; }
+        public float NameScale { get; set; }
+        public float TextScale { get; set; }
+    }
 }
 
 

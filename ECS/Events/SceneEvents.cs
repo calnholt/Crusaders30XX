@@ -6,6 +6,11 @@ namespace Crusaders30XX.ECS.Events
 	public class LoadSceneEvent { 
 		public SceneId Scene;
 	}
+
+	public class SetCustomizationTab
+	{
+		public CustomizationTabType Tab;
+	}
 }
 
 

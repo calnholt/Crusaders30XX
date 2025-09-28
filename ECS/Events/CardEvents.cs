@@ -323,4 +323,12 @@ namespace Crusaders30XX.ECS.Events
         public int? Index { get; set; }
     }
 
+    /// <summary>
+    /// Request to update the working temperance ability in customization loadout.
+    /// </summary>
+    public class UpdateTemperanceLoadoutRequested
+    {
+        public string TemperanceId { get; set; }
+    }
+
 } 

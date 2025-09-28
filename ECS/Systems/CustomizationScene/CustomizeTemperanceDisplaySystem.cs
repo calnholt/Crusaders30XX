@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -51,7 +52,8 @@ namespace Crusaders30XX.ECS.Systems
             _deckPanel = deckPanel;
             _pixel = new Texture2D(gd, 1, 1);
             _pixel.SetData(new[] { Color.White });
-            ECS.Core.EventManager.Subscribe<ECS.Events.ShowTransition>(_ => OnShowTransition());
+            EventManager.Subscribe<ShowTransition>(_ => OnShowTransition());
+            EventManager.Subscribe<TemperanceAbilityRenderEvent>(OnTemperanceRender);
         }
 
         private void OnShowTransition()
@@ -117,33 +119,7 @@ namespace Crusaders30XX.ECS.Systems
             TemperanceAbilityDefinition def = null;
             if (!string.IsNullOrEmpty(equippedId)) TemperanceAbilityDefinitionCache.TryGet(equippedId, out def);
 
-            // Left side: available list
-            var all = TemperanceAbilityDefinitionCache.GetAll();
-            var available = all.Values.Where(d => d.id != equippedId).ToList();
-            var leftRects = ComputeLeftLayout(available.Select(d => d.id).ToList());
-            for (int i = 0; i < leftRects.Count; i++)
-            {
-                var r = leftRects[i].Bounds;
-                var d = available[i];
-                var rounded = GetRounded(r.Width, r.Height, CornerRadius);
-                _spriteBatch.Draw(rounded, r, Color.White);
-                string title = (d.name ?? d.id) + " - " + d.threshold.ToString();
-                var tsize = _font.MeasureString(title) * NameScale;
-                var tpos = new Vector2(r.X + 10, r.Y + 8);
-                _spriteBatch.DrawString(_font, title, tpos + new Vector2(1,1), Color.Black, 0f, Vector2.Zero, NameScale, SpriteEffects.None, 0f);
-                _spriteBatch.DrawString(_font, title, tpos, Color.Black, 0f, Vector2.Zero, NameScale, SpriteEffects.None, 0f);
-                // body text wrapped
-                string body = d.text ?? string.Empty;
-                int contentW = System.Math.Max(10, r.Width - 20);
-                var lines = WrapText(body, TextScale, contentW);
-                float y = tpos.Y + (tsize.Y) + 6f;
-                foreach (var line in lines)
-                {
-                    _spriteBatch.DrawString(_font, line, new Vector2(r.X + 10, y), Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
-                    y += _font.LineSpacing * TextScale;
-                    if (y > r.Bottom - 8) break;
-                }
-            }
+            // Left side now published by AvailableTemperanceDisplaySystem via events
 
             // Right side: equipped card block in loadout panel
             if (def != null)
@@ -155,23 +131,38 @@ namespace Crusaders30XX.ECS.Systems
                 int w = rightW - LeftMargin * 2;
                 int h = System.Math.Min(260, _graphicsDevice.Viewport.Height - y - 20);
                 var rect = new Rectangle(x, y, w, h);
-                var rounded = GetRounded(rect.Width, rect.Height, CornerRadius);
-                _spriteBatch.Draw(rounded, rect, Color.White);
-                string title = (def.name ?? def.id) + " - " + def.threshold.ToString();
-                var tsize = _font.MeasureString(title) * NameScale;
-                var tpos = new Vector2(rect.X + 12, rect.Y + 10);
-                _spriteBatch.DrawString(_font, title, tpos + new Vector2(1,1), Color.Black, 0f, Vector2.Zero, NameScale, SpriteEffects.None, 0f);
-                _spriteBatch.DrawString(_font, title, tpos, Color.Black, 0f, Vector2.Zero, NameScale, SpriteEffects.None, 0f);
-                string body = def.text ?? string.Empty;
-                int contentW = System.Math.Max(10, rect.Width - 24);
-                var lines = WrapText(body, TextScale, contentW);
-                float y2 = tpos.Y + (tsize.Y) + 8f;
-                foreach (var line in lines)
-                {
-                    _spriteBatch.DrawString(_font, line, new Vector2(rect.X + 12, y2), Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
-                    y2 += _font.LineSpacing * TextScale;
-                    if (y2 > rect.Bottom - 12) break;
-                }
+                // Publish render event; handler will draw during active SpriteBatch (mimics CardDisplaySystem)
+                EventManager.Publish(new TemperanceAbilityRenderEvent { AbilityId = def.id, Bounds = rect, IsEquipped = true, NameScale = NameScale, TextScale = TextScale });
+            }
+        }
+
+        private void OnTemperanceRender(TemperanceAbilityRenderEvent e)
+        {
+            // Only render during our Draw pass to ensure SpriteBatch.Begin is active
+            var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+            if (scene == null || scene.Current != SceneId.Customization) return;
+            var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
+            if (st == null || st.SelectedTab != CustomizationTabType.Temperance) return;
+            if (_font == null) return;
+            if (!TemperanceAbilityDefinitionCache.TryGet(e.AbilityId, out var def) || def == null) return;
+            var r = e.Bounds;
+            var rounded = GetRounded(r.Width, r.Height, CornerRadius);
+            var bg = Color.White;
+            var fg = Color.Black;
+            _spriteBatch.Draw(rounded, r, bg);
+            string title = (def.name ?? def.id) + " - " + def.threshold.ToString();
+            var tsize = _font.MeasureString(title) * e.NameScale;
+            var tpos = new Vector2(r.X + 10, r.Y + 8);
+            _spriteBatch.DrawString(_font, title, tpos + new Vector2(1,1), Color.Black, 0f, Vector2.Zero, e.NameScale, SpriteEffects.None, 0f);
+            _spriteBatch.DrawString(_font, title, tpos, fg, 0f, Vector2.Zero, e.NameScale, SpriteEffects.None, 0f);
+            string body = def.text ?? string.Empty;
+            int contentW = System.Math.Max(10, r.Width - 20);
+            float y2 = tpos.Y + (tsize.Y) + 6f;
+            foreach (var line in WrapText(body, e.TextScale, contentW))
+            {
+                _spriteBatch.DrawString(_font, line, new Vector2(r.X + 10, y2), fg, 0f, Vector2.Zero, e.TextScale, SpriteEffects.None, 0f);
+                y2 += _font.LineSpacing * e.TextScale;
+                if (y2 > r.Bottom - 8) break;
             }
         }
 

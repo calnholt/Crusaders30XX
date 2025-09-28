@@ -2,9 +2,6 @@
   "id": "loadout_1",
   "name": "Deck",
   "cardIds": [
-    "anoint_the_sick|Red",
-    "burn|White",
-    "burn|Red",
     "burn|Black",
     "courageous|White",
     "courageous|Red",
@@ -31,7 +28,10 @@
     "vindicate|Red",
     "vindicate|Black",
     "divine_protection|White",
-    "heavens_glory|Black"
+    "heavens_glory|Black",
+    "divine_protection|Red",
+    "divine_protection|Black",
+    "heavens_glory|White"
   ],
   "weaponId": "sword",
   "temperanceId": "radiance",

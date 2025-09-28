@@ -14,6 +14,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			EventManager.Subscribe<AddCardToLoadoutRequested>(OnAddRequested);
 			EventManager.Subscribe<RemoveCardFromLoadoutRequested>(OnRemoveRequested);
+			EventManager.Subscribe<UpdateTemperanceLoadoutRequested>(OnUpdateTemperanceRequested);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -60,6 +61,16 @@ namespace Crusaders30XX.ECS.Systems
 			// Fallback: remove first match
 			int idx = st.WorkingCardIds.IndexOf(evt.CardKey);
 			if (idx >= 0) st.WorkingCardIds.RemoveAt(idx);
+		}
+
+		private void OnUpdateTemperanceRequested(UpdateTemperanceLoadoutRequested evt)
+		{
+			if (evt == null || string.IsNullOrEmpty(evt.TemperanceId)) return;
+			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+			if (scene == null || scene.Current != SceneId.Customization) return;
+			var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
+			if (st == null) return;
+			st.WorkingTemperanceId = evt.TemperanceId;
 		}
 	}
 }

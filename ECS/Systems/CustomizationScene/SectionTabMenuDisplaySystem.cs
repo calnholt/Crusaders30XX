@@ -78,7 +78,7 @@ namespace Crusaders30XX.ECS.Systems
                 var ui = e?.GetComponent<UIElement>();
                 if (ui != null && ui.IsClicked)
                 {
-                    st.SelectedTab = item.Type;
+                    EventManager.Publish(new SetCustomizationTab { Tab = item.Type });
                 }
             }
         }
