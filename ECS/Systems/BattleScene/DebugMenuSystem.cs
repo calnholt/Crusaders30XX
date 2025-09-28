@@ -142,17 +142,17 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
-            // Invalidate debug menu caches when scene or system set changes
-            TryInvalidateCachesOnSceneOrSystemsChange();
-            var menuEntity = GetRelevantEntities().FirstOrDefault();
-            if (menuEntity == null) return;
+			// Early-out if there is no menu or it's closed
+			var menuEntity = GetRelevantEntities().FirstOrDefault();
+			if (menuEntity == null) return;
+			var menu = menuEntity.GetComponent<DebugMenu>();
+			if (menu == null || !menu.IsOpen) return;
+			var transform = menuEntity.GetComponent<Transform>();
+			var ui = menuEntity.GetComponent<UIElement>();
+			if (transform == null || ui == null) return;
 
-            var menu = menuEntity.GetComponent<DebugMenu>();
-            var transform = menuEntity.GetComponent<Transform>();
-            var ui = menuEntity.GetComponent<UIElement>();
-
-            if (menu == null || transform == null || ui == null) return;
-            if (!menu.IsOpen) return;
+			// Invalidate debug menu caches when scene or system set changes
+			TryInvalidateCachesOnSceneOrSystemsChange();
 
             var mouse = Mouse.GetState();
             var now = DateTime.UtcNow;

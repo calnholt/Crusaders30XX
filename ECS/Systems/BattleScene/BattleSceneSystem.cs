@@ -39,7 +39,6 @@ namespace Crusaders30XX.ECS.Systems
 		private PlayerAnimationSystem _playerAnimationSystem;
 		private CathedralLightingSystem _cathedralLightingSystem;
 		private DesertBackgroundEffectSystem _desertBackgroundEffectSystem;
-		private ProfilerSystem _profilerSystem;
 		private CourageDisplaySystem _courageDisplaySystem;
 		private ActionPointDisplaySystem _actionPointDisplaySystem;
 		private TemperanceDisplaySystem _temperanceDisplaySystem;
@@ -152,7 +151,6 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
 			FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
 			FrameProfiler.Measure("CardListModalSystem.Draw", _cardListModalSystem.Draw);
-			FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
 			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
 			FrameProfiler.Measure("DiscardSpecificCardHighlightSystem.Draw", _discardSpecificCardHighlightSystem.Draw);
@@ -285,7 +283,6 @@ namespace Crusaders30XX.ECS.Systems
 			_hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_appliedPassivesDisplaySystem = new AppliedPassivesDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_cardVisualSettingsDebugSystem = new CardVisualSettingsDebugSystem(_world.EntityManager);
-			_profilerSystem = new ProfilerSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_hpManagementSystem = new HpManagementSystem(_world.EntityManager);
 			_eventQueueSystem = new EventQueueSystem(_world.EntityManager);
 			_battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
@@ -350,7 +347,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_courageManagerSystem);
 			_world.AddSystem(_temperanceManagerSystem);
 			_world.AddSystem(_actionPointManagementSystem);
-			_world.AddSystem(_profilerSystem);
 			_world.AddSystem(_battleBackgroundSystem);
 			_world.AddSystem(_hpDisplaySystem);
 			_world.AddSystem(_appliedPassivesDisplaySystem);

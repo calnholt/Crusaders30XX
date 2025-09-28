@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -63,10 +64,10 @@ namespace Crusaders30XX.ECS.Systems
             var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
             _backgroundSystem.Draw();
-            _libraryPanelSystem.Draw();
-            _deckPanelSystem.Draw();
-            _customizationSceneSystem.Draw();
-            _deckInfoDisplaySystem.Draw();
+            FrameProfiler.Measure("CardLibraryPanelSystem.Draw", _libraryPanelSystem.Draw);
+            FrameProfiler.Measure("LoadoutDeckPanelSystem.Draw", _deckPanelSystem.Draw);
+            FrameProfiler.Measure("CustomizationSceneSystem.Draw", _customizationSceneSystem.Draw);
+            FrameProfiler.Measure("DeckInfoDisplaySystem.Draw", _deckInfoDisplaySystem.Draw);
         }
     }
 }

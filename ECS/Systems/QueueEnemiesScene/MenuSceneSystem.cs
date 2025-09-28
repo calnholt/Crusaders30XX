@@ -21,9 +21,14 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly ContentManager _content;
 		private readonly SpriteFont _font;
 		private Texture2D _pixel;
-		private Texture2D _rounded;
+		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedCache = new System.Collections.Generic.Dictionary<(int, int, int), Texture2D>();
 		private System.Collections.Generic.Dictionary<string, Texture2D> _enemyTextureCache = new System.Collections.Generic.Dictionary<string, Texture2D>();
 		private MouseState _prevMouse;
+		private readonly System.Collections.Generic.Dictionary<string, int> _enemyButtonIds = new System.Collections.Generic.Dictionary<string, int>();
+		private int _confirmButtonId = 0;
+		private int _customizeButtonId = 0;
+		private int _howToButtonId = 0;
+		private readonly System.Collections.Generic.List<int> _selectionItemIds = new System.Collections.Generic.List<int>();
 
 		private HowToPlayOverlaySystem _howToPlayOverlaySystem;
 
@@ -76,6 +81,25 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			_howToPlayOverlaySystem = new HowToPlayOverlaySystem(EntityManager, _graphicsDevice, _spriteBatch, _font);
+			EventManager.Subscribe<ShowTransition>(_ => OnShowTransition());
+		}
+
+		private void OnShowTransition()
+		{
+			// Destroy UI entities and clear caches when transitioning away
+			foreach (var id in _enemyButtonIds.Values)
+			{
+				EntityManager.DestroyEntity(id);
+			}
+			_enemyButtonIds.Clear();
+			if (_confirmButtonId != 0) { EntityManager.DestroyEntity(_confirmButtonId); _confirmButtonId = 0; }
+			if (_customizeButtonId != 0) { EntityManager.DestroyEntity(_customizeButtonId); _customizeButtonId = 0; }
+			if (_howToButtonId != 0) { EntityManager.DestroyEntity(_howToButtonId); _howToButtonId = 0; }
+			foreach (var id in _selectionItemIds)
+			{
+				EntityManager.DestroyEntity(id);
+			}
+			_selectionItemIds.Clear();
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -88,7 +112,6 @@ namespace Crusaders30XX.ECS.Systems
 			var scene = entity.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Menu) return;
 			var mouse = Mouse.GetState();
-			bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
 			// Block clicks during scene transition
 			if (TransitionStateSingleton.IsActive)
 			{
@@ -102,13 +125,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				// Pump overlay input (mouse wheel scroll)
 				_howToPlayOverlaySystem?.UpdateFromMenu();
-				// Only close on overlay-managed edge, not here
-				if (false && click)
-				{
-					howOverlay.IsOpen = false;
-					_prevMouse = mouse;
-					return;
-				}
+				// Overlay manages its own close; skip menu interactions while open
 				// While open, do not process other menu interactions
 				_prevMouse = mouse;
 				return;
@@ -133,7 +150,7 @@ namespace Crusaders30XX.ECS.Systems
 			int totalW = col * cellW + (col - 1) * GridPadding;
 			int startX = System.Math.Max(0, (vw - totalW) / 2);
 
-			// Enemy buttons
+			// Enemy buttons via UI entities
 			var all = EnemyDefinitionCache.GetAll();
 			int i = 0;
 			foreach (var kv in all)
@@ -143,22 +160,27 @@ namespace Crusaders30XX.ECS.Systems
 				int x = startX + c * (cellW + GridPadding);
 				int y = gridTop + r * (cellH + GridPadding);
 				var rect = new Rectangle(x, y, cellW, cellH);
-				if (click && rect.Contains(mouse.Position))
+				var enemyButton = EnsureEnemyButton(kv.Key, rect);
+				var ui = enemyButton?.GetComponent<UIElement>();
+				if (ui != null && ui.IsClicked)
 				{
 					qe.Events.Add(new QueuedEvent { EventType = QueuedEventType.Enemy, EventId = kv.Key });
 				}
 				i++;
 			}
 
-			// Selection list items (click to remove)
+			// Selection list items (UI elements; click to remove)
 			int sx = GridPadding;
 			int sy = GridPadding;
 			int itemW = 180;
 			int itemH = TopListHeight - GridPadding * 2;
+			EnsureSelectionItemCapacity(qe.Events.Count);
 			for (int idx = 0; idx < qe.Events.Count; idx++)
 			{
 				var rct = new Rectangle(sx, sy, itemW, itemH);
-				if (click && rct.Contains(mouse.Position))
+				var eSel = EnsureSelectionItem(idx, rct);
+				var uiSel = eSel?.GetComponent<UIElement>();
+				if (uiSel != null && uiSel.IsClicked)
 				{
 					qe.Events.RemoveAt(idx);
 					break;
@@ -166,27 +188,33 @@ namespace Crusaders30XX.ECS.Systems
 				sx += itemW + GridPadding;
 			}
 
-			// Confirm button
+			// Confirm button via UI element
 			var confirmRect = new Rectangle((vw - ConfirmWidth) / 2, vh - GridPadding - ConfirmHeight, ConfirmWidth, ConfirmHeight);
-			if (click && confirmRect.Contains(mouse.Position) && qe.Events.Count > 0)
+			var eConfirm = EnsureConfirmButton(confirmRect);
+			var uiConfirm = eConfirm?.GetComponent<UIElement>();
+			if (uiConfirm != null && uiConfirm.IsClicked && qe.Events.Count > 0)
 			{
 				EventManager.Publish(new ShowTransition{ Scene = SceneId.Battle });
 			}
 
-			// Customize button (right of Confirm) -> go to Customization scene
+			// Customize button -> go to Customization scene
 			var customizeRect = new Rectangle(confirmRect.Right + GridPadding, confirmRect.Y, ConfirmWidth, ConfirmHeight);
-			if (click && customizeRect.Contains(mouse.Position))
+			var eCustomize = EnsureCustomizeButton(customizeRect);
+			var uiCustomize = eCustomize?.GetComponent<UIElement>();
+			if (uiCustomize != null && uiCustomize.IsClicked)
 			{
 				EventManager.Publish(new ShowTransition { Scene = SceneId.Customization });
 			}
 
-			// How To Play button click (left of Confirm)
+			// How To Play button via UI element
 			if (ShowHowToButton != 0)
 			{
 				int howW = ConfirmWidth;
 				int howH = ConfirmHeight;
 				var howRect = new Rectangle(confirmRect.X - GridPadding - howW, confirmRect.Y, howW, howH);
-				if (click && howRect.Contains(mouse.Position))
+				var eHow = EnsureHowToButton(howRect);
+				var uiHow = eHow?.GetComponent<UIElement>();
+				if (uiHow != null && uiHow.IsClicked)
 				{
 					var h = EntityManager.GetEntitiesWithComponent<HowToPlayOverlay>().FirstOrDefault();
 					if (h == null)
@@ -214,8 +242,8 @@ namespace Crusaders30XX.ECS.Systems
 			int vw = _graphicsDevice.Viewport.Width;
 			int vh = _graphicsDevice.Viewport.Height;
 
-			// Cache rounded background for buttons
-			EnsureRounded(ButtonWidth, ButtonHeight, CornerRadius);
+			// Ensure texture cache warmed for button size
+			var roundedGrid = GetRounded(ButtonWidth, ButtonHeight, CornerRadius);
 
 			int gridTop = TopListHeight + GridPadding + MenuYOffset;
 			int col = System.Math.Max(1, GridColumns);
@@ -243,14 +271,7 @@ namespace Crusaders30XX.ECS.Systems
 				int y = gridTop + r * (cellH + GridPadding);
 				var rect = new Rectangle(x, y, cellW, cellH);
 				// Button background
-				if (_rounded != null)
-				{
-					_spriteBatch.Draw(_rounded, rect, Color.White);
-				}
-				else
-				{
-					_spriteBatch.Draw(_pixel, rect, Color.White);
-				}
+				_spriteBatch.Draw(roundedGrid, rect, Color.White);
 				// Enemy image (PNG)
 				var def = kv.Value;
 				var tex = TryGetEnemyTexture(def);
@@ -279,12 +300,11 @@ namespace Crusaders30XX.ECS.Systems
 				int sy = GridPadding;
 				int itemW = 180;
 				int itemH = TopListHeight - GridPadding * 2;
-				EnsureRounded(itemW, itemH, CornerRadius);
+				var roundedItem = GetRounded(itemW, itemH, CornerRadius);
 				for (int idx = 0; idx < qe.Events.Count; idx++)
 				{
 					var rct = new Rectangle(sx, sy, itemW, itemH);
-					if (_rounded != null) _spriteBatch.Draw(_rounded, rct, Color.White);
-					else _spriteBatch.Draw(_pixel, rct, Color.White);
+					_spriteBatch.Draw(roundedItem, rct, Color.White);
 					string id = qe.Events[idx].EventId;
 					EnemyDefinition def;
 					EnemyDefinitionCache.TryGet(id, out def);
@@ -302,9 +322,8 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Confirm button
 			var confirmRect = new Rectangle((vw - ConfirmWidth) / 2, vh - GridPadding - ConfirmHeight, ConfirmWidth, ConfirmHeight);
-			EnsureRounded(ConfirmWidth, ConfirmHeight, CornerRadius);
-			if (_rounded != null) _spriteBatch.Draw(_rounded, confirmRect, Color.Black);
-			else _spriteBatch.Draw(_pixel, confirmRect, Color.Black);
+			var roundedConfirm = GetRounded(ConfirmWidth, ConfirmHeight, CornerRadius);
+			_spriteBatch.Draw(roundedConfirm, confirmRect, Color.Black);
 			var ctext = "Confirm";
 			var csize = _font.MeasureString(ctext) * 0.225f;
 			var cpos = new Vector2(confirmRect.X + (ConfirmWidth - csize.X) / 2f, confirmRect.Y + (ConfirmHeight - csize.Y) / 2f);
@@ -317,8 +336,8 @@ namespace Crusaders30XX.ECS.Systems
 				int howW = ConfirmWidth;
 				int howH = ConfirmHeight;
 				var howRect = new Rectangle(confirmRect.X - GridPadding - howW, confirmRect.Y, howW, howH);
-				if (_rounded != null) _spriteBatch.Draw(_rounded, howRect, Color.Black);
-				else _spriteBatch.Draw(_pixel, howRect, Color.Black);
+				var roundedHow = GetRounded(howW, howH, CornerRadius);
+				_spriteBatch.Draw(roundedHow, howRect, Color.Black);
 				var htext = "How To Play";
 				var hsize = _font.MeasureString(htext) * 0.2f;
 				var hpos = new Vector2(howRect.X + (howW - hsize.X) / 2f, howRect.Y + (howH - hsize.Y) / 2f);
@@ -331,9 +350,8 @@ namespace Crusaders30XX.ECS.Systems
 				int custW = ConfirmWidth;
 				int custH = ConfirmHeight;
 				var customizeRect = new Rectangle(confirmRect.Right + GridPadding, confirmRect.Y, custW, custH);
-				EnsureRounded(custW, custH, CornerRadius);
-				if (_rounded != null) _spriteBatch.Draw(_rounded, customizeRect, Color.Black);
-				else _spriteBatch.Draw(_pixel, customizeRect, Color.Black);
+				var roundedCust = GetRounded(custW, custH, CornerRadius);
+				_spriteBatch.Draw(roundedCust, customizeRect, Color.Black);
 				var t = "Customize";
 				var ts = _font.MeasureString(t) * 0.2f;
 				var tp = new Vector2(customizeRect.X + (custW - ts.X) / 2f, customizeRect.Y + (custH - ts.Y) / 2f);
@@ -342,13 +360,101 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void EnsureRounded(int w, int h, int radius)
+		private Texture2D GetRounded(int w, int h, int radius)
 		{
-			if (_rounded == null || _rounded.Width != w || _rounded.Height != h)
+			var key = (w: w, h: h, r: System.Math.Max(0, System.Math.Min(radius, System.Math.Min(w, h) / 2)));
+			if (_roundedCache.TryGetValue(key, out var tex) && tex != null) return tex;
+			tex = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, key.r);
+			_roundedCache[key] = tex;
+			return tex;
+		}
+
+		private Entity EnsureEnemyButton(string enemyId, Rectangle bounds)
+		{
+			if (!_enemyButtonIds.TryGetValue(enemyId, out var id) || EntityManager.GetEntity(id) == null)
 			{
-				_rounded?.Dispose();
-				_rounded = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, System.Math.Max(0, System.Math.Min(radius, System.Math.Min(w, h) / 2)));
+				var e = EntityManager.CreateEntity($"MenuEnemy_{enemyId}");
+				EntityManager.AddComponent(e, new UIElement { Bounds = bounds, IsInteractable = true });
+				EntityManager.AddComponent(e, new Transform { Position = new Vector2(bounds.X, bounds.Y), ZOrder = 100 });
+				_enemyButtonIds[enemyId] = e.Id;
+				return e;
 			}
+			var existing = EntityManager.GetEntity(id);
+			var ui = existing.GetComponent<UIElement>();
+			if (ui != null) ui.Bounds = bounds;
+			return existing;
+		}
+
+		private Entity EnsureConfirmButton(Rectangle bounds)
+		{
+			if (_confirmButtonId == 0 || EntityManager.GetEntity(_confirmButtonId) == null)
+			{
+				var e = EntityManager.CreateEntity("Menu_Confirm");
+				EntityManager.AddComponent(e, new UIElement { Bounds = bounds, IsInteractable = true });
+				EntityManager.AddComponent(e, new Transform { Position = new Vector2(bounds.X, bounds.Y), ZOrder = 110 });
+				_confirmButtonId = e.Id;
+				return e;
+			}
+			var ex = EntityManager.GetEntity(_confirmButtonId);
+			var ui = ex.GetComponent<UIElement>();
+			if (ui != null) ui.Bounds = bounds;
+			return ex;
+		}
+
+		private Entity EnsureCustomizeButton(Rectangle bounds)
+		{
+			if (_customizeButtonId == 0 || EntityManager.GetEntity(_customizeButtonId) == null)
+			{
+				var e = EntityManager.CreateEntity("Menu_Customize");
+				EntityManager.AddComponent(e, new UIElement { Bounds = bounds, IsInteractable = true });
+				EntityManager.AddComponent(e, new Transform { Position = new Vector2(bounds.X, bounds.Y), ZOrder = 110 });
+				_customizeButtonId = e.Id;
+				return e;
+			}
+			var ex = EntityManager.GetEntity(_customizeButtonId);
+			var ui = ex.GetComponent<UIElement>();
+			if (ui != null) ui.Bounds = bounds;
+			return ex;
+		}
+
+		private Entity EnsureHowToButton(Rectangle bounds)
+		{
+			if (_howToButtonId == 0 || EntityManager.GetEntity(_howToButtonId) == null)
+			{
+				var e = EntityManager.CreateEntity("Menu_HowTo");
+				EntityManager.AddComponent(e, new UIElement { Bounds = bounds, IsInteractable = true });
+				EntityManager.AddComponent(e, new Transform { Position = new Vector2(bounds.X, bounds.Y), ZOrder = 110 });
+				_howToButtonId = e.Id;
+				return e;
+			}
+			var ex = EntityManager.GetEntity(_howToButtonId);
+			var ui = ex.GetComponent<UIElement>();
+			if (ui != null) ui.Bounds = bounds;
+			return ex;
+		}
+
+		private void EnsureSelectionItemCapacity(int count)
+		{
+			if (_selectionItemIds.Count == count) return;
+			foreach (var id in _selectionItemIds) EntityManager.DestroyEntity(id);
+			_selectionItemIds.Clear();
+			for (int i = 0; i < count; i++)
+			{
+				var e = EntityManager.CreateEntity($"Menu_Selected_{i}");
+				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0,0,1,1), IsInteractable = true });
+				EntityManager.AddComponent(e, new Transform { Position = Vector2.Zero, ZOrder = 115 });
+				_selectionItemIds.Add(e.Id);
+			}
+		}
+
+		private Entity EnsureSelectionItem(int index, Rectangle bounds)
+		{
+			if (index < 0 || index >= _selectionItemIds.Count) return null;
+			var e = EntityManager.GetEntity(_selectionItemIds[index]);
+			if (e == null) return null;
+			var ui = e.GetComponent<UIElement>();
+			if (ui != null) ui.Bounds = bounds;
+			return e;
 		}
 
 		private Texture2D TryGetEnemyTexture(EnemyDefinition def)
