@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Data.Equipment;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -330,12 +331,12 @@ namespace Crusaders30XX.ECS.Systems
 				int size = Math.Max(6, CheckmarkSize);
 				float boxX = bgRect.Right - size + CheckmarkOffsetX;
 				float boxY = bgRect.Top + CheckmarkOffsetY;
-				var p1 = new Microsoft.Xna.Framework.Vector2(boxX + size * 0.15f, boxY + size * 0.55f);
-				var p2 = new Microsoft.Xna.Framework.Vector2(boxX + size * 0.40f, boxY + size * 0.82f);
-				var p3 = new Microsoft.Xna.Framework.Vector2(boxX + size * 0.90f, boxY + size * 0.20f);
+				var p1 = new Vector2(boxX + size * 0.15f, boxY + size * 0.55f);
+				var p2 = new Vector2(boxX + size * 0.40f, boxY + size * 0.82f);
+				var p3 = new Vector2(boxX + size * 0.90f, boxY + size * 0.20f);
 				float thickness = Math.Max(2f, size * 0.14f);
-				DrawCheckLine(p1, p2, thickness, Microsoft.Xna.Framework.Color.Black);
-				DrawCheckLine(p2, p3, thickness, Microsoft.Xna.Framework.Color.Black);
+				DrawCheckLine(p1, p2, thickness, Color.Black);
+				DrawCheckLine(p2, p3, thickness, 	Color.Black);
 			}
 			catch { }
 		}
@@ -375,10 +376,10 @@ namespace Crusaders30XX.ECS.Systems
 			if (!_iconCache.TryGetValue("_px1", out var px) || px == null)
 			{
 				px = new Texture2D(_graphicsDevice, 1, 1);
-				px.SetData(new[] { Microsoft.Xna.Framework.Color.White });
+				px.SetData(new[] { Color.White });
 				_iconCache["_px1"] = px;
 			}
-			Microsoft.Xna.Framework.Vector2 edge = end - start;
+			Vector2 edge = end - start;
 			float len = edge.Length();
 			if (len <= 0.0001f) return;
 			float ang = (float)System.Math.Atan2(edge.Y, edge.X);
@@ -508,7 +509,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			try
 			{
-				if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null)
+				if (EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null)
 				{
 					string name = string.IsNullOrWhiteSpace(def.name) ? item.EquipmentId : def.name;
 					var parts = new List<string>();

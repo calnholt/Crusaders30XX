@@ -187,22 +187,22 @@ namespace Crusaders30XX.ECS.Systems
             var undoRect = new Rectangle(cancelRect.Right + ButtonSpacing, y, ButtonWidth, ButtonHeight);
             var exitRect = new Rectangle(undoRect.Right + ButtonSpacing, y, ButtonWidth, ButtonHeight);
 
-            EnsureButtonEntity("Customization_SaveButton", saveRect, "Save current deck");
-            EnsureButtonEntity("Customization_CancelButton", cancelRect, "Reload saved deck");
-            EnsureButtonEntity("Customization_UndoButton", undoRect, "Undo to original");
-            EnsureButtonEntity("Customization_ExitButton", exitRect, "Exit to menu");
+            EnsureButtonEntity("Customization_SaveButton", saveRect);
+            EnsureButtonEntity("Customization_CancelButton", cancelRect);
+            EnsureButtonEntity("Customization_UndoButton", undoRect);
+            EnsureButtonEntity("Customization_ExitButton", exitRect);
 
             return (saveRect, cancelRect, undoRect, exitRect);
         }
 
-        private void EnsureButtonEntity(string key, Rectangle rect, string tooltip)
+        private void EnsureButtonEntity(string key, Rectangle rect)
         {
             var e = EntityManager.GetEntity(key);
             if (e == null)
             {
                 e = EntityManager.CreateEntity(key);
                 EntityManager.AddComponent(e, new Transform { Position = Vector2.Zero, ZOrder = 5000 });
-                EntityManager.AddComponent(e, new UIElement { Bounds = rect, IsInteractable = true, Tooltip = tooltip, TooltipPosition = TooltipPosition.Above });
+                EntityManager.AddComponent(e, new UIElement { Bounds = rect, IsInteractable = true });
             }
             else
             {

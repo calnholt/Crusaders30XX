@@ -23,6 +23,8 @@ namespace Crusaders30XX.ECS.Systems
         private LoadoutEditSystem _loadoutEditSystem;
         private DeckInfoDisplaySystem _deckInfoDisplaySystem;
         private CustomizationBackgroundSystem _backgroundSystem;
+        private SectionTabMenuDisplaySystem _sectionTabMenuDisplaySystem;
+        private CustomizeTemperanceDisplaySystem _customizeTemperanceDisplaySystem;
 
         public CustomizationRootSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice gd, SpriteBatch sb, ContentManager content, SpriteFont font) : base(em)
         {
@@ -40,6 +42,8 @@ namespace Crusaders30XX.ECS.Systems
             _loadoutEditSystem = new LoadoutEditSystem(EntityManager);
             _deckInfoDisplaySystem = new DeckInfoDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _font);
             _backgroundSystem = new CustomizationBackgroundSystem(EntityManager, _graphicsDevice, _spriteBatch, _content);
+            _sectionTabMenuDisplaySystem = new SectionTabMenuDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _font, _libraryPanelSystem, _deckPanelSystem);
+            _customizeTemperanceDisplaySystem = new CustomizeTemperanceDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _font, _libraryPanelSystem, _deckPanelSystem);
 
             world.AddSystem(_customizationSceneSystem);
             world.AddSystem(_libraryPanelSystem);
@@ -47,6 +51,8 @@ namespace Crusaders30XX.ECS.Systems
             world.AddSystem(_loadoutEditSystem);
             world.AddSystem(_deckInfoDisplaySystem);
             world.AddSystem(_backgroundSystem);
+            world.AddSystem(_sectionTabMenuDisplaySystem);
+            world.AddSystem(_customizeTemperanceDisplaySystem);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -64,6 +70,8 @@ namespace Crusaders30XX.ECS.Systems
             var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
             _backgroundSystem.Draw();
+            FrameProfiler.Measure("SectionTabMenuDisplaySystem.Draw", _sectionTabMenuDisplaySystem.Draw);
+            FrameProfiler.Measure("CustomizeTemperanceDisplaySystem.Draw", _customizeTemperanceDisplaySystem.Draw);
             FrameProfiler.Measure("CardLibraryPanelSystem.Draw", _libraryPanelSystem.Draw);
             FrameProfiler.Measure("LoadoutDeckPanelSystem.Draw", _deckPanelSystem.Draw);
             FrameProfiler.Measure("CustomizationSceneSystem.Draw", _customizationSceneSystem.Draw);

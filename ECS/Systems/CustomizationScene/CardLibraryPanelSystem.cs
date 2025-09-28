@@ -79,7 +79,7 @@ namespace Crusaders30XX.ECS.Systems
             var scene = entity.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-            if (st == null) return;
+            if (st == null || st.SelectedTab != CustomizationTabType.Deck) return;
             var mouse = Mouse.GetState();
             bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
             int vw = _graphicsDevice.Viewport.Width;
@@ -156,7 +156,7 @@ namespace Crusaders30XX.ECS.Systems
             var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-            if (st == null) return;
+            if (st == null || st.SelectedTab != CustomizationTabType.Deck) return;
             int cardW = GetCvs().CardWidth;
             int cardH = GetCvs().CardHeight;
             int panelX = 0;

@@ -391,13 +391,15 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				var e = EntityManager.CreateEntity("Menu_Confirm");
 				EntityManager.AddComponent(e, new UIElement { Bounds = bounds, IsInteractable = true });
-				EntityManager.AddComponent(e, new Transform { Position = new Vector2(bounds.X, bounds.Y), ZOrder = 110 });
+				EntityManager.AddComponent(e, new Transform { Position = new Vector2(bounds.X, bounds.Y), ZOrder = 70000 });
 				_confirmButtonId = e.Id;
 				return e;
 			}
 			var ex = EntityManager.GetEntity(_confirmButtonId);
 			var ui = ex.GetComponent<UIElement>();
 			if (ui != null) ui.Bounds = bounds;
+			var t = ex.GetComponent<Transform>();
+			if (t != null) t.ZOrder = 70000;
 			return ex;
 		}
 
@@ -407,13 +409,15 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				var e = EntityManager.CreateEntity("Menu_Customize");
 				EntityManager.AddComponent(e, new UIElement { Bounds = bounds, IsInteractable = true });
-				EntityManager.AddComponent(e, new Transform { Position = new Vector2(bounds.X, bounds.Y), ZOrder = 110 });
+				EntityManager.AddComponent(e, new Transform { Position = new Vector2(bounds.X, bounds.Y), ZOrder = 70000 });
 				_customizeButtonId = e.Id;
 				return e;
 			}
 			var ex = EntityManager.GetEntity(_customizeButtonId);
 			var ui = ex.GetComponent<UIElement>();
 			if (ui != null) ui.Bounds = bounds;
+			var t = ex.GetComponent<Transform>();
+			if (t != null) t.ZOrder = 70000;
 			return ex;
 		}
 
@@ -423,13 +427,15 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				var e = EntityManager.CreateEntity("Menu_HowTo");
 				EntityManager.AddComponent(e, new UIElement { Bounds = bounds, IsInteractable = true });
-				EntityManager.AddComponent(e, new Transform { Position = new Vector2(bounds.X, bounds.Y), ZOrder = 110 });
+				EntityManager.AddComponent(e, new Transform { Position = new Vector2(bounds.X, bounds.Y), ZOrder = 70000 });
 				_howToButtonId = e.Id;
 				return e;
 			}
 			var ex = EntityManager.GetEntity(_howToButtonId);
 			var ui = ex.GetComponent<UIElement>();
 			if (ui != null) ui.Bounds = bounds;
+			var t = ex.GetComponent<Transform>();
+			if (t != null) t.ZOrder = 70000;
 			return ex;
 		}
 

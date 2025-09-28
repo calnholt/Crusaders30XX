@@ -62,11 +62,34 @@ namespace Crusaders30XX.ECS.Components
 	/// </summary>
 	public class CustomizationState : IComponent
 	{
-		public Crusaders30XX.ECS.Core.Entity Owner { get; set; }
-		public System.Collections.Generic.List<string> WorkingCardIds { get; set; } = new System.Collections.Generic.List<string>();
-		public System.Collections.Generic.List<string> OriginalCardIds { get; set; } = new System.Collections.Generic.List<string>();
+		public Entity Owner { get; set; }
+		public List<string> WorkingCardIds { get; set; } = new List<string>();
+		public List<string> OriginalCardIds { get; set; } = new List<string>();
 		public int LeftScroll { get; set; } = 0;
 		public int RightScroll { get; set; } = 0;
+		public CustomizationTabType SelectedTab { get; set; } = CustomizationTabType.Deck;
+		public string WorkingTemperanceId { get; set; } = string.Empty;
+		public string OriginalTemperanceId { get; set; } = string.Empty;
+		public string WorkingWeaponId { get; set; } = string.Empty;
+		public string OriginalWeaponId { get; set; } = string.Empty;
+		public string WorkingHeadId { get; set; } = string.Empty;
+		public string OriginalHeadId { get; set; } = string.Empty;
+		public string WorkingChestId { get; set; } = string.Empty;
+		public string OriginalChestId { get; set; } = string.Empty;
+		public string WorkingArmsId { get; set; } = string.Empty;
+		public string OriginalArmsId { get; set; } = string.Empty;
+		public string WorkingLegsId { get; set; } = string.Empty;
+		public string OriginalLegsId { get; set; } = string.Empty;
+	}
+	public enum CustomizationTabType
+	{
+		Deck,
+		Weapon,
+		Head,
+		Chest,
+		Arms,
+		Legs,
+		Temperance,
 	}
 }
 
