@@ -57,6 +57,11 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 				catch { }
+				// Skip intimidated cards: they cannot be used to block
+				if (card.GetComponent<Intimidated>() != null)
+				{
+					break;
+				}
                 // Assign this card as block (always assign from hand); color from card
                 int baseBlock = 0;
                 try

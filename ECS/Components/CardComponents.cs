@@ -271,6 +271,14 @@ namespace Crusaders30XX.ECS.Components
     }
     
     /// <summary>
+    /// Marks a card as intimidated. Intimidated cards cannot be used to block during the block phase.
+    /// </summary>
+    public class Intimidated : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+    
+    /// <summary>
     /// Marker for the courage hover area used to show a tooltip.
     /// </summary>
     public class CourageTooltipAnchor : IComponent

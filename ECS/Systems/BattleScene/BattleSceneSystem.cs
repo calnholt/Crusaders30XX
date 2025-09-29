@@ -85,9 +85,11 @@ namespace Crusaders30XX.ECS.Systems
 		private EquipmentUsedManagementSystem _equipmentUsedManagementSystem;
 		private HighlightSettingsSystem _equipmentHighlightSettingsDebugSystem;
 		private EquipmentBlockInteractionSystem _equipmentBlockInteractionSystem;
-		private AppliedPassivesManagementSystem _appliedPassivesManagementSystem;
-		private BattleStateInfoManagementSystem _battleStateInfoManagementSystem;
-		private DiscardSpecificCardHighlightSystem _discardSpecificCardHighlightSystem;
+	private AppliedPassivesManagementSystem _appliedPassivesManagementSystem;
+	private BattleStateInfoManagementSystem _battleStateInfoManagementSystem;
+	private DiscardSpecificCardHighlightSystem _discardSpecificCardHighlightSystem;
+	private IntimidateManagementSystem _intimidateManagementSystem;
+	private IntimidateDisplaySystem _intimidateDisplaySystem;
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(em)
 		{
@@ -151,10 +153,11 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
 			FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
 			FrameProfiler.Measure("CardListModalSystem.Draw", _cardListModalSystem.Draw);
-			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
-			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
-			FrameProfiler.Measure("DiscardSpecificCardHighlightSystem.Draw", _discardSpecificCardHighlightSystem.Draw);
-			if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
+		FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
+		FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
+		FrameProfiler.Measure("DiscardSpecificCardHighlightSystem.Draw", _discardSpecificCardHighlightSystem.Draw);
+		FrameProfiler.Measure("IntimidateDisplaySystem.Draw", _intimidateDisplaySystem.Draw);
+		if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
 		}
 
 		private void CreateBattleSceneEntities() {
@@ -319,10 +322,12 @@ namespace Crusaders30XX.ECS.Systems
 			_equipmentUsedManagementSystem = new EquipmentUsedManagementSystem(_world.EntityManager);
 			_equipmentHighlightSettingsDebugSystem = new HighlightSettingsSystem(_world.EntityManager);
 			_equipmentBlockInteractionSystem = new EquipmentBlockInteractionSystem(_world.EntityManager);
-			_appliedPassivesManagementSystem = new AppliedPassivesManagementSystem(_world.EntityManager);
-			_battleStateInfoManagementSystem = new BattleStateInfoManagementSystem(_world.EntityManager);
-			_discardSpecificCardHighlightSystem = new DiscardSpecificCardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
+		_appliedPassivesManagementSystem = new AppliedPassivesManagementSystem(_world.EntityManager);
+		_battleStateInfoManagementSystem = new BattleStateInfoManagementSystem(_world.EntityManager);
+		_discardSpecificCardHighlightSystem = new DiscardSpecificCardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+		_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
+		_intimidateManagementSystem = new IntimidateManagementSystem(_world.EntityManager);
+		_intimidateDisplaySystem = new IntimidateDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 
 			// Register
 			_world.AddSystem(_deckManagementSystem);
@@ -381,13 +386,15 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_equipmentUsedManagementSystem);
 			_world.AddSystem(_equipmentHighlightSettingsDebugSystem);
 			_world.AddSystem(_equipmentBlockInteractionSystem);
-			_world.AddSystem(_appliedPassivesManagementSystem);
-			_world.AddSystem(_battleStateInfoManagementSystem);
-			_world.AddSystem(_payCostOverlaySystem);
-			_world.AddSystem(_cardHighlightSystem);
-			_world.AddSystem(_cantPlayCardMessageSystem);
-			_world.AddSystem(_gameOverOverlayDisplaySystem);
-			_world.AddSystem(_discardSpecificCardHighlightSystem);
+		_world.AddSystem(_appliedPassivesManagementSystem);
+		_world.AddSystem(_battleStateInfoManagementSystem);
+		_world.AddSystem(_payCostOverlaySystem);
+		_world.AddSystem(_cardHighlightSystem);
+		_world.AddSystem(_cantPlayCardMessageSystem);
+		_world.AddSystem(_gameOverOverlayDisplaySystem);
+		_world.AddSystem(_discardSpecificCardHighlightSystem);
+		_world.AddSystem(_intimidateManagementSystem);
+		_world.AddSystem(_intimidateDisplaySystem);
 		}
 
 	}

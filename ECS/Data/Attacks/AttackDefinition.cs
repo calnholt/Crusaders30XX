@@ -11,6 +11,7 @@ namespace Crusaders30XX.ECS.Data.Attacks
 		public int ambushPercentage { get; set; } = 0;
 		public bool isGeneric { get; set; } = false;
 		public ConditionNode conditionsBlocked { get; set; }
+		public EffectDefinition[] effectsOnAttack { get; set; } = System.Array.Empty<EffectDefinition>();
 		public EffectDefinition[] effectsOnHit { get; set; } = System.Array.Empty<EffectDefinition>();
 		public EffectDefinition[] effectsOnNotBlocked { get; set; } = System.Array.Empty<EffectDefinition>();
 	}

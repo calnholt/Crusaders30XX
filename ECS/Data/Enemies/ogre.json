@@ -1,0 +1,25 @@
+{
+  "name": "Ogre",
+  "id": "ogre",
+  "hp": 80,
+  "attacks": [
+    {
+      "id": "tree_stomp",
+      "name": "Tree Stomp",
+      "target": "Player",
+      "positionType": "Ender",
+      "effectsOnAttack": [
+        {
+          "type": "Intimidate",
+          "amount": 1
+        }
+      ],
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 8
+        }
+      ]
+    }
+  ]
+}
