@@ -16,8 +16,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly LoadoutDeckPanelSystem _deckPanel;
 		private readonly CustomizeEquipmentDisplaySystem _customizeEquipmentDisplaySystem;
-        private readonly World _world;
-        private int _entityId = 0;
+		private readonly World _world;
+		private int _entityId = 0;
 
 		public int RowHeight { get; set; } = 120;
 		public int LeftPadding { get; set; } = 10;
@@ -57,12 +57,12 @@ namespace Crusaders30XX.ECS.Systems
 			if (!CardDefinitionCache.TryGet(equippedId, out var def) || def == null) return;
 
 			int vw = _graphicsDevice.Viewport.Width;
-			int rightW = _deckPanel?.PanelWidth ?? 620;
-			int x = vw - rightW + LeftPadding;
-			int y = _deckPanel.HeaderHeight + _deckPanel.TopMargin + TopOffsetFromHeader;
-			int w = rightW - (SidePadding * 2);
-			int h = RowHeight;
-			var rect = new Rectangle(x, y, w, h);
+			int cardW = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardWidth;
+			int cardH = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardHeight;
+			int panelX = vw - _deckPanel.PanelWidth;
+			int panelY = 0;
+			int x = panelX + (_deckPanel.PanelWidth / 2);
+			int y = panelY + _deckPanel.HeaderHeight + _deckPanel.TopMargin + (int)(cardH * _deckPanel.CardScale / 2) - st.RightScroll;
 			var created = EnsureEntity(def);
 			EventManager.Publish(new CardRenderScaledEvent { Card = created, Position = new Vector2(x, y), Scale = _deckPanel.CardScale });
 		}
@@ -70,7 +70,7 @@ namespace Crusaders30XX.ECS.Systems
 		private Entity EnsureEntity(CardDefinition def)
 		{
 			string name = def.name ?? def.id;
-			string keyName = $"Card_{name}_White";
+			string keyName = $"Card_{name}_Yellow";
 			var existing = EntityManager.GetEntity(keyName);
 			if (existing != null) return existing;
 			var created = EntityFactory.CreateCardFromDefinition(_world, def.id, CardData.CardColor.Yellow, true);

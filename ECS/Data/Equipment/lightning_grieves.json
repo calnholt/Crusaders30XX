@@ -11,7 +11,7 @@
       "type": "Activate",
       "effect": "GainActionPoint",
       "effectCount": 1,
-      "destroyOnActivate": true,
+      "requiresUseOnActivate": true,
       "text": "Gain 1 action point.",
       "isFreeAction": true
     }

@@ -18,92 +18,105 @@ namespace Crusaders30XX.ECS.Systems
 
             System.Console.WriteLine($"[CardPlayService] Resolving card id={cardId} name={cardName}");
             CardDefinitionCache.TryGet(cardId, out CardDefinition def);
+            var target = def.target == "Player" ? player : enemy;
             var values = def.valuesParse;
-
+            var i = 0;
             switch (cardId)
             {
                 case "anoint_the_sick":
                 {
-                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = player, Delta = +values[0], DamageType = ModifyTypeEnum.Heal });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = +values[i++], DamageType = ModifyTypeEnum.Heal });
                     break;
                 }
                 case "burn":
                 {
-                    EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Burn, Delta = +values[0] });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Burn, Delta = +values[i++] });
                     if (courage >= values[1]) 
                     {
-                        EventManager.Publish(new ModifyActionPointsEvent { Delta = values[2] });
-                        EventManager.Publish(new ModifyCourageEvent { Delta = -values[3] });
+                        EventManager.Publish(new ModifyActionPointsEvent { Delta = values[i++] });
+                        EventManager.Publish(new ModifyCourageEvent { Delta = -values[i++] });
                     }
                     break;
                 }
                 case "courageous":
                 {
-                    EventManager.Publish(new ModifyCourageEvent { Delta = +values[0] });
+                    EventManager.Publish(new ModifyCourageEvent { Delta = +values[i++] });
                     // brief delay so cards in hand are updated
                     // TODO: cards can still be played because animation prolongs
                     TransitionStateSingleton.IsActive = true;
-                    TimerScheduler.Schedule(.01f, () => {
+                    EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
+                    TimerScheduler.Schedule(1f, () => {
                         TransitionStateSingleton.IsActive = false;
-                        EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
                     });
                     break;
                 }
                 case "divine_protection":
                 {
-                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = +values[0] });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Aegis, Delta = +values[i++] });
                     break;
                 }
                 case "dowse_with_holy_water":
                 {
-                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.DowseWithHolyWater, Delta = 1 });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.DowseWithHolyWater, Delta = 1 });
+                    break;
+                }
+                case "heavens_glory":
+                {
+                    EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Inferno, Delta = values[i++] });
                     break;
                 }
                 case "inspiration":
                 {
-                    EventManager.Publish(new RequestDrawCardsEvent { Count = values[0] });
-                    EventManager.Publish(new ModifyTemperanceEvent { Delta = values[1] });
-                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = player, Delta = -values[2], DamageType = ModifyTypeEnum.Effect });
+                    EventManager.Publish(new RequestDrawCardsEvent { Count = values[i++] });
+                    EventManager.Publish(new ModifyTemperanceEvent { Delta = values[i++] });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Effect });
                     break;
                 }
                 case "seize":
                 {
                     battleStateInfo.PhaseTracking.TryGetValue(TrackingTypeEnum.CourageLost, out var courageLost);
-                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = enemy, Delta = -(courageLost > 0 ? values[1] : values[0]), DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -(courageLost > 0 ? values[1] : values[0]), DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
                 case "stab":
                 {
-                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
-                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = enemy, Delta = -values[1], DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[i++] });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
                 case "strike":
                 {
-                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = enemy, Delta = -values[0], DamageType = ModifyTypeEnum.Attack });
-                    if (Random.Shared.Next(0, 100) <= values[1])
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
+                    if (Random.Shared.Next(0, 100) <= values[i++])
                     {
-                        EventManager.Publish(new ModifyActionPointsEvent { Delta = values[2] });
+                        Console.WriteLine($"[CardPlayService] Strike gained {values[i]} courage");
+                        EventManager.Publish(new ModifyActionPointsEvent { Delta = values[i++] });
                     }
                     break;
                 }
                 case "stun":
                 {
-                    EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Stun, Delta = 1 });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Stun, Delta = 1 });
                     break;
                 }
                 case "vindicate":
                 {
-                    int damage = values[0] + (courage * values[1]);
-                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = enemy, Delta = -damage, DamageType = ModifyTypeEnum.Attack });
+                    int damage = values[i++] + (courage * values[i++]);
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -damage, DamageType = ModifyTypeEnum.Attack });
                     EventManager.Publish(new SetCourageEvent { Amount = 0 });
                     break;
                 }
                 // weapons
+                case "hammer":
+                {
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[i++] });
+                    break;
+                }
                 case "sword":
                 {
-                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[0] });
-                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = enemy, Delta = -values[1], DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[i++] });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
                 default:

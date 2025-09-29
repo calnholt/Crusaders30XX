@@ -6,7 +6,6 @@
   "valuesParse": [3],
   "text": "Gain {1} courage. End your turn.",
   "isFreeAction": true,
-  "animation": "Buff",
   "block": 2
 }
 

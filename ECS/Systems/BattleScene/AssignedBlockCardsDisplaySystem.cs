@@ -230,8 +230,14 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					// Clear tooltip and hover when not assigned
 					ui.IsHovered = false;
-					CardDefinitionCache.TryGet(ui.Owner.GetComponent<CardData>().CardId, out var def);
-					ui.Tooltip = def.tooltip;
+					string tip = string.Empty;
+					var cdReset = ui.Owner?.GetComponent<CardData>();
+					if (cdReset != null && CardDefinitionCache.TryGet(cdReset.CardId, out var defReset) && defReset != null)
+					{
+						tip = defReset.tooltip ?? string.Empty;
+					}
+					// Equipment entities do not have CardData; leave tooltip empty by default
+					ui.Tooltip = tip;
 					ui.TooltipOffsetPx = 30;	
 				}
 			}

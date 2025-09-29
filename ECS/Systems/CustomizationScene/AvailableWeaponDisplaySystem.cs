@@ -123,7 +123,7 @@ namespace Crusaders30XX.ECS.Systems
 		private Entity EnsureTempCard(CardDefinition def)
 		{
 			string name = def.name ?? def.id;
-			string keyName = $"Card_{name}_White";
+			string keyName = $"Card_{name}_Yellow";
 			var existing = EntityManager.GetEntity(keyName);
 			if (existing != null) return existing;
 			var created = EntityFactory.CreateCardFromDefinition(_world, def.id, CardData.CardColor.Yellow, true);
