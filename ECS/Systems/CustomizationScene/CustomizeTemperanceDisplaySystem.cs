@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Events;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -72,38 +73,38 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
-            var scene = entity.GetComponent<SceneState>();
-            if (scene == null || scene.Current != SceneId.Customization) return;
-            var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-            if (st == null || st.SelectedTab != CustomizationTabType.Temperance) return;
+            // var scene = entity.GetComponent<SceneState>();
+            // if (scene == null || scene.Current != SceneId.Customization) return;
+            // var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
+            // if (st == null || st.SelectedTab != CustomizationTabType.Temperance) return;
 
-            // Build available list excluding currently equipped
-            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-            var equipped = player?.GetComponent<EquippedTemperanceAbility>();
-            string equippedId = equipped?.AbilityId ?? string.Empty;
-            var all = TemperanceAbilityDefinitionCache.GetAll();
+            // // Build available list excluding currently equipped
+            // var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            // var equipped = player?.GetComponent<EquippedTemperanceAbility>();
+            // string equippedId = equipped?.AbilityId ?? string.Empty;
+            // var all = TemperanceAbilityDefinitionCache.GetAll();
 
-            var layout = ComputeLeftLayout(all.Keys.Where(id => id != equippedId).ToList());
-            foreach (var item in layout)
-            {
-                var e = EnsureAbilityButton(item.Id, item.Bounds);
-                var ui = e?.GetComponent<UIElement>();
-                if (ui != null && ui.IsClicked)
-                {
-                    if (player != null)
-                    {
-                        if (equipped == null)
-                        {
-                            equipped = new EquippedTemperanceAbility { AbilityId = item.Id };
-                            EntityManager.AddComponent(player, equipped);
-                        }
-                        else
-                        {
-                            equipped.AbilityId = item.Id;
-                        }
-                    }
-                }
-            }
+            // var layout = ComputeLeftLayout(all.Keys.Where(id => id != equippedId).ToList());
+            // foreach (var item in layout)
+            // {
+            //     var e = EnsureAbilityButton(item.Id, item.Bounds);
+            //     var ui = e?.GetComponent<UIElement>();
+            //     if (ui != null && ui.IsClicked)
+            //     {
+            //         if (player != null)
+            //         {
+            //             if (equipped == null)
+            //             {
+            //                 equipped = new EquippedTemperanceAbility { AbilityId = item.Id };
+            //                 EntityManager.AddComponent(player, equipped);
+            //             }
+            //             else
+            //             {
+            //                 equipped.AbilityId = item.Id;
+            //             }
+            //         }
+            //     }
+            // }
         }
 
         public void Draw()

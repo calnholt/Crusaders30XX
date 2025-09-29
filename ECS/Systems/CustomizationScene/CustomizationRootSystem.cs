@@ -95,16 +95,14 @@ namespace Crusaders30XX.ECS.Systems
             if (scene == null || scene.Current != SceneId.Customization) return;
             _backgroundSystem.Draw();
             FrameProfiler.Measure("SectionTabMenuDisplaySystem.Draw", _sectionTabMenuDisplaySystem.Draw);
-            FrameProfiler.Measure("CustomizeTemperanceDisplaySystem.Draw", _customizeTemperanceDisplaySystem.Draw);
             FrameProfiler.Measure("CardLibraryPanelSystem.Draw", _libraryPanelSystem.Draw);
             FrameProfiler.Measure("LoadoutDeckPanelSystem.Draw", _deckPanelSystem.Draw);
             FrameProfiler.Measure("AvailableCardDisplaySystem.Draw", _availableCardDisplaySystem.Draw);
             FrameProfiler.Measure("LoadoutCardDisplaySystem.Draw", _loadoutCardDisplaySystem.Draw);
             FrameProfiler.Measure("AvailableTemperanceDisplaySystem.Draw", _availableTemperanceDisplaySystem.Draw);
             FrameProfiler.Measure("LoadoutTemperanceDisplaySystem.Draw", _loadoutTemperanceDisplaySystem.Draw);
-            FrameProfiler.Measure("CustomizeEquipmentDisplaySystem.Draw", _customizeEquipmentDisplaySystem.Draw);
-            FrameProfiler.Measure("LoadoutEquipmentDisplaySystem.Draw", _loadoutEquipmentDisplaySystem.Draw);
             FrameProfiler.Measure("AvailableEquipmentDisplaySystem.Draw", _availableEquipmentDisplaySystem.Draw);
+            FrameProfiler.Measure("LoadoutEquipmentDisplaySystem.Draw", _loadoutEquipmentDisplaySystem.Draw);
             FrameProfiler.Measure("CustomizationSceneSystem.Draw", _customizationSceneSystem.Draw);
             FrameProfiler.Measure("DeckInfoDisplaySystem.Draw", _deckInfoDisplaySystem.Draw);
         }

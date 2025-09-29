@@ -283,18 +283,6 @@ namespace Crusaders30XX.ECS.Systems
             DrawCardTextRotatedSingleScaled(cardCenter, rotation, new Vector2(apLocalX, apLocalY), apText, textColor, APTextScale * visualScale, visualScale);
         }
         
-        /// <summary>
-        /// Legacy method for backward compatibility
-        /// </summary>
-        public void DrawCard(Entity entity)
-        {
-            var transform = entity.GetComponent<Transform>();
-            if (transform != null)
-            {
-                DrawCard(entity, transform.Position);
-            }
-        }
-        
         private Color GetCardColor(CardData.CardColor color)
         {
             return color switch

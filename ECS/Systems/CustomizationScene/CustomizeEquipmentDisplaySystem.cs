@@ -59,30 +59,6 @@ namespace Crusaders30XX.ECS.Systems
             // No stateful UI elements; left/right lists are driven by Available/Loadout systems
         }
 
-        public void Draw()
-        {
-            var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-            if (scene == null || scene.Current != SceneId.Customization) return;
-            var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-            if (st == null || !IsEquipmentTab(st.SelectedTab) || _font == null) return;
-
-            string equippedId = GetEquippedIdForTab(st, st.SelectedTab);
-            EquipmentDefinition def = null;
-            if (!string.IsNullOrEmpty(equippedId)) EquipmentDefinitionCache.TryGet(equippedId, out def);
-
-            if (def != null)
-            {
-                int vw = _graphicsDevice.Viewport.Width;
-                int rightW = _deckPanel?.PanelWidth ?? 620;
-                int x = vw - rightW + LeftMargin;
-                int y = TopMargin + 40;
-                int w = rightW - LeftMargin * 2;
-                int h = System.Math.Min(260, _graphicsDevice.Viewport.Height - y - 20);
-                var rect = new Rectangle(x, y, w, h);
-                EventManager.Publish(new EquipmentRenderEvent { EquipmentId = def.id, Bounds = rect, IsEquipped = true, NameScale = NameScale, TextScale = TextScale });
-            }
-        }
-
         private void OnEquipmentRender(EquipmentRenderEvent e)
         {
             var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
@@ -144,9 +120,9 @@ namespace Crusaders30XX.ECS.Systems
             return parts.ToString();
         }
 
-        private System.Collections.Generic.List<string> WrapText(string text, float scale, int maxWidth)
+        private List<string> WrapText(string text, float scale, int maxWidth)
         {
-            var lines = new System.Collections.Generic.List<string>();
+            var lines = new List<string>();
             if (string.IsNullOrWhiteSpace(text) || _font == null)
             {
                 lines.Add(string.Empty);
