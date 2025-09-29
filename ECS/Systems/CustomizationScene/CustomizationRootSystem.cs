@@ -33,6 +33,8 @@ namespace Crusaders30XX.ECS.Systems
         private CustomizeEquipmentDisplaySystem _customizeEquipmentDisplaySystem;
         private LoadoutEquipmentDisplaySystem _loadoutEquipmentDisplaySystem;
         private AvailableEquipmentDisplaySystem _availableEquipmentDisplaySystem;
+        private AvailableWeaponDisplaySystem _availableWeaponDisplaySystem;
+        private LoadoutWeaponDisplaySystem _loadoutWeaponDisplaySystem;
 
         public CustomizationRootSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice gd, SpriteBatch sb, ContentManager content, SpriteFont font) : base(em)
         {
@@ -59,6 +61,8 @@ namespace Crusaders30XX.ECS.Systems
             _customizeEquipmentDisplaySystem = new CustomizeEquipmentDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _font, _libraryPanelSystem, _deckPanelSystem);
             _loadoutEquipmentDisplaySystem = new LoadoutEquipmentDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _deckPanelSystem, _customizeEquipmentDisplaySystem);
             _availableEquipmentDisplaySystem = new AvailableEquipmentDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _libraryPanelSystem, _customizeEquipmentDisplaySystem);
+            _availableWeaponDisplaySystem = new AvailableWeaponDisplaySystem(EntityManager, _world, _graphicsDevice, _spriteBatch, _libraryPanelSystem, _customizeEquipmentDisplaySystem);
+            _loadoutWeaponDisplaySystem = new LoadoutWeaponDisplaySystem(EntityManager, _world, _graphicsDevice, _spriteBatch, _deckPanelSystem, _customizeEquipmentDisplaySystem);
             _customizationStateManagementSystem = new CustomizationStateManagementSystem(EntityManager);
 
             world.AddSystem(_customizationSceneSystem);
@@ -76,6 +80,8 @@ namespace Crusaders30XX.ECS.Systems
             world.AddSystem(_customizeEquipmentDisplaySystem);
             world.AddSystem(_loadoutEquipmentDisplaySystem);
             world.AddSystem(_availableEquipmentDisplaySystem);
+            world.AddSystem(_availableWeaponDisplaySystem);
+            world.AddSystem(_loadoutWeaponDisplaySystem);
             world.AddSystem(_customizationStateManagementSystem);
         }
 
@@ -103,6 +109,8 @@ namespace Crusaders30XX.ECS.Systems
             FrameProfiler.Measure("LoadoutTemperanceDisplaySystem.Draw", _loadoutTemperanceDisplaySystem.Draw);
             FrameProfiler.Measure("AvailableEquipmentDisplaySystem.Draw", _availableEquipmentDisplaySystem.Draw);
             FrameProfiler.Measure("LoadoutEquipmentDisplaySystem.Draw", _loadoutEquipmentDisplaySystem.Draw);
+            FrameProfiler.Measure("AvailableWeaponDisplaySystem.Draw", _availableWeaponDisplaySystem.Draw);
+            FrameProfiler.Measure("LoadoutWeaponDisplaySystem.Draw", _loadoutWeaponDisplaySystem.Draw);
             FrameProfiler.Measure("CustomizationSceneSystem.Draw", _customizationSceneSystem.Draw);
             FrameProfiler.Measure("DeckInfoDisplaySystem.Draw", _deckInfoDisplaySystem.Draw);
         }

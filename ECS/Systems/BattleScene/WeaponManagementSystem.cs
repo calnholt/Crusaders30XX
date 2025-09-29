@@ -100,16 +100,16 @@ namespace Crusaders30XX.ECS.Systems
 			return weapon;
 		}
 
-        private Entity CreateWeaponEntity(CardDefinition def)
+			private Entity CreateWeaponEntity(CardDefinition def)
 		{
 			string name = def.name ?? def.id ?? "Weapon";
 			// Create minimal card like EntityFactory.CreateCard
 			var e = EntityManager.CreateEntity($"Card_{name}");
-            var cd = new CardData
-            {
-                CardId = def.id,
-                Color = CardData.CardColor.Yellow
-            };
+			var cd = new CardData
+			{
+					CardId = def.id,
+					Color = CardData.CardColor.Yellow
+			};
 			var t = new Transform { Position = Vector2.Zero, Scale = Vector2.One };
 			var s = new Sprite { TexturePath = string.Empty, IsVisible = true };
 			var ui = new UIElement { Bounds = new Rectangle(0, 0, 250, 350), IsInteractable = true };
@@ -120,22 +120,6 @@ namespace Crusaders30XX.ECS.Systems
 			return e;
 		}
 
-		private static CardData.CardRarity ParseRarity(string rarity)
-		{
-			if (string.IsNullOrEmpty(rarity)) return CardData.CardRarity.Common;
-			switch (rarity.Trim().ToLowerInvariant())
-			{
-				case "uncommon": return CardData.CardRarity.Uncommon;
-				case "rare": return CardData.CardRarity.Rare;
-				case "legendary": return CardData.CardRarity.Legendary;
-				case "common":
-				default: return CardData.CardRarity.Common;
-			}
-		}
-
-        // Weapon color now irrelevant; derived from loadout for non-weapon cards.
-
-        // Cost parsing no longer needed here; costs are read directly from CardDefinition
 	}
 }
 
