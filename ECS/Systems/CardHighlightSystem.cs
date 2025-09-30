@@ -54,6 +54,10 @@ namespace Crusaders30XX.ECS.Systems
                 var fakeGameTime = new GameTime(TimeSpan.FromSeconds(_lastTotalSeconds), TimeSpan.Zero);
                 Rectangle targetRect;
                 float rot = 0f;
+                if (evt.Entity.GetComponent<Intimidated>() != null)
+                {
+                    return;
+                }
                 if (evt.Entity.GetComponent<CardData>() != null && t != null)
                 {
                     targetRect = ComputeCardBounds(evt.Entity, t.Position);
@@ -93,44 +97,6 @@ namespace Crusaders30XX.ECS.Systems
             else if (ReferenceEquals(entity, _currentHovered) && (uiElement == null || !uiElement.IsHovered))
             {
                 _currentHovered = null;
-            }
-        }
-
-        public void DrawBeforeCard(Entity cardEntity, GameTime gameTime)
-        {
-            var t = cardEntity.GetComponent<Transform>();
-            var ui = cardEntity.GetComponent<UIElement>();
-            if (t == null || ui == null || !ui.IsHovered) return;
-            var rect = ComputeCardBounds(cardEntity, t.Position);
-            DrawHighlight(rect, t.Rotation, gameTime);
-        }
-        
-        /// <summary>
-        /// Draws highlights for all hovered cards
-        /// </summary>
-        public void Draw(GameTime gameTime)
-        {
-            // Find all cards in hand that are hovered
-            var deckEntities = EntityManager.GetEntitiesWithComponent<Deck>();
-            var deckEntity = deckEntities.FirstOrDefault();
-            
-            if (deckEntity != null)
-            {
-                var deck = deckEntity.GetComponent<Deck>();
-                if (deck != null)
-                {
-                    foreach (var cardEntity in deck.Hand)
-                    {
-                        var uiElement = cardEntity.GetComponent<UIElement>();
-                        var transform = cardEntity.GetComponent<Transform>();
-                        
-                        if (uiElement != null && transform != null && uiElement.IsHovered)
-                        {
-                            var rect = ComputeCardBounds(cardEntity, transform.Position);
-                            DrawHighlight(rect, transform.Rotation, gameTime);
-                        }
-                    }
-                }
             }
         }
 

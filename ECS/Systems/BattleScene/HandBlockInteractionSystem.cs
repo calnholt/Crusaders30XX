@@ -60,6 +60,7 @@ namespace Crusaders30XX.ECS.Systems
 				// Skip intimidated cards: they cannot be used to block
 				if (card.GetComponent<Intimidated>() != null)
 				{
+					EventManager.Publish(new CantPlayCardMessage { Message = "Can't block with intimidated cards!" });
 					break;
 				}
                 // Assign this card as block (always assign from hand); color from card
