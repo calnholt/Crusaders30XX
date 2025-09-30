@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -89,6 +90,9 @@ namespace Crusaders30XX.ECS.Systems
 			// Create a single pixel texture for backgrounds/overlays
 			_pixel = new Texture2D(_graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+
+			// Draw intimidate overlay/text right after each card is drawn so higher-Z cards can occlude it
+			EventManager.Subscribe<CardRenderEvent>(evt => FrameProfiler.Measure("IntimidateDisplaySystem.OnCardRenderEvent", () => OnCardRenderEvent(evt)));
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -120,7 +124,6 @@ namespace Crusaders30XX.ECS.Systems
 		var intimidatedCards = GetRelevantEntities().ToList();
 		if (intimidatedCards.Count == 0) return;
 
-		// Cleanup stale animation states for cards that are no longer intimidated
 		{
 			var alive = new System.Collections.Generic.HashSet<int>(intimidatedCards.Select(e => e.Id));
 			foreach (var key in _animByEntityId.Keys.ToList())
@@ -128,13 +131,30 @@ namespace Crusaders30XX.ECS.Systems
 				if (!alive.Contains(key)) _animByEntityId.Remove(key);
 			}
 		}
+	}
 
-		foreach (var card in intimidatedCards)
+	private Rectangle ComputeCardBounds(Vector2 position)
+	{
+		_settings ??= EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
+		int cw = _settings?.CardWidth ?? 250;
+		int ch = _settings?.CardHeight ?? 350;
+		int offsetYExtra = _settings?.CardOffsetYExtra ?? (int)Math.Round((_settings?.UIScale ?? 1f) * 25);
+		return new Rectangle(
+			(int)position.X - cw / 2,
+			(int)position.Y - (ch / 2 + offsetYExtra),
+			cw,
+			ch
+		);
+	}
+
+		private void OnCardRenderEvent(CardRenderEvent evt)
 		{
-			var ui = card.GetComponent<UIElement>();
+			// Only draw overlay for intimidated cards
+			var card = evt.Card;
+			if (card == null || card.GetComponent<Intimidated>() == null) return;
 			var transform = card.GetComponent<Transform>();
-			
-			if (ui == null || transform == null) continue;
+			var ui = card.GetComponent<UIElement>();
+			if (transform == null || ui == null) return;
 
 			// Compute bounds exactly like CardHighlightSystem for consistent alignment
 			var bounds = ComputeCardBounds(transform.Position);
@@ -158,8 +178,7 @@ namespace Crusaders30XX.ECS.Systems
 				_roundedRectCache[overlayKey] = roundedRect;
 			}
 
-			// Draw semi-transparent dark overlay with rounded corners
-			// Use the card's rotation to match the card orientation
+			// Draw semi-transparent dark overlay with rounded corners on top of this card
 			var overlayColor = new Color(0, 0, 0, OverlayAlpha);
 			_spriteBatch.Draw(
 				roundedRect,
@@ -211,21 +230,6 @@ namespace Crusaders30XX.ECS.Systems
 				0f
 			);
 		}
-	}
-
-	private Rectangle ComputeCardBounds(Vector2 position)
-	{
-		_settings ??= EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-		int cw = _settings?.CardWidth ?? 250;
-		int ch = _settings?.CardHeight ?? 350;
-		int offsetYExtra = _settings?.CardOffsetYExtra ?? (int)Math.Round((_settings?.UIScale ?? 1f) * 25);
-		return new Rectangle(
-			(int)position.X - cw / 2,
-			(int)position.Y - (ch / 2 + offsetYExtra),
-			cw,
-			ch
-		);
-	}
 
 		private static float EaseOutBack(float t, float s)
 		{
