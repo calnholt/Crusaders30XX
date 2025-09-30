@@ -45,9 +45,13 @@ namespace Crusaders30XX.ECS.Systems
             if (string.IsNullOrEmpty(id)) return;
             if (!CardDefinitionCache.TryGet(id, out var def)) return;
 
+            if (data.Owner.HasComponent<Frozen>())
+            {
+                EventManager.Publish(new CantPlayCardMessage { Message = "Can't play frozen cards!" });
+            }
+
             // Weapons can only be played during Action phase (already gated) and cannot be used to pay costs of other cards
             bool isWeapon = def.isWeapon;
-
 
             // Gate by Action Points unless the card is a free action
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();

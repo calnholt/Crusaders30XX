@@ -277,6 +277,14 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
     }
+
+    /// <summary>
+    /// Marks a card as frozen. Frozen cards lose frozen when used to block. Frozen cards cannot be played during action phase
+    /// </summary>
+    public class Frozen : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
     
     /// <summary>
     /// Marker for the courage hover area used to show a tooltip.

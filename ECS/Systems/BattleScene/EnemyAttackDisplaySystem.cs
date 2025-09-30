@@ -636,6 +636,9 @@ namespace Crusaders30XX.ECS.Systems
 					case "Slow":
 						parts.Add($"Gain {e.amount} slow stacks");
 						break;
+					case "Penance":
+						parts.Add($"Gain {e.amount} penance");
+						break;
 					default:
 						parts.Add(e.type);
 						break;

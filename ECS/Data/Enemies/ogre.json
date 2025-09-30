@@ -8,6 +8,33 @@
       "name": "Tree Stomp",
       "target": "Player",
       "positionType": "Ender",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "OnHit"
+          }
+        ]
+      },
+      "effectsOnAttack": [
+        {
+          "type": "Intimidate",
+          "amount": 2
+        }
+      ],
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "id": "pummel_into_submission",
+      "name": "Pummel Into Submission",
+      "target": "Player",
+      "positionType": "Ender",
       "effectsOnAttack": [
         {
           "type": "Intimidate",
@@ -17,7 +44,13 @@
       "effectsOnHit": [
         {
           "type": "Damage",
-          "amount": 8
+          "amount": 10
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "Penance",
+          "amount": 1
         }
       ]
     }
