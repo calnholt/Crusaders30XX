@@ -222,18 +222,23 @@ namespace Crusaders30XX.ECS.Systems
 			TimerScheduler.Schedule(0.5f, () => {
 				if (e.Current == SubPhase.StartBattle)
 				{
-					ShowBubble("You don't scare us! :P", BubbleDuration);
+					ShowBubble(GuardianAngelMessageService.GetMessage(GuardianMessageType.StartOfBattle), BubbleDuration);
 				}
 				else if (e.Current == SubPhase.Action)
 				{
-					ShowBubble("We're not going to let you get away with that! ^^;", BubbleDuration);
+					ShowBubble(GuardianAngelMessageService.GetMessage(GuardianMessageType.ActionPhase), BubbleDuration);
 				}
 			});
 		}
 
+		private bool SkipMessage()
+		{
+			return Random.Shared.Next(0, 100) > 0;
+		}
+
 		private void OnTriggerTemperance(TriggerTemperance e)
 		{
-			ShowBubble("Don't call it a comeback! ^_^", BubbleDuration);
+			ShowBubble(GuardianAngelMessageService.GetMessage(GuardianMessageType.Temperance), BubbleDuration);
 		}
 
 		private void OnLoadSceneEvent(LoadSceneEvent @event)
