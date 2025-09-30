@@ -185,6 +185,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void ResetEntitiesAfterBattle() {
 			var player = EntityManager.GetEntity("Player");
+			var hp = player.GetComponent<HP>();
 			player.GetComponent<HP>().Current = 30;
 			player.GetComponent<HP>().Max = 30;
 			EventManager.Publish(new SetTemperanceEvent{ Amount = 0 });
@@ -224,10 +225,6 @@ namespace Crusaders30XX.ECS.Systems
 			if (playerPassives == null)
 			{
 				_world.AddComponent(player, new AppliedPassives());
-			}
-			else
-			{
-				playerPassives.Passives.Clear();
 			}
 			EntityManager.DestroyEntity("Enemy");
 			Console.WriteLine($"queued.Events.Count: {queued.Events.Count}, queued.CurrentIndex: {queued.CurrentIndex}");

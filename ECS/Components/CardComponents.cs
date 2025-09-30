@@ -648,6 +648,7 @@ namespace Crusaders30XX.ECS.Components
         Armor,
         Wounded,
         Webbing,
-        Inferno
+        Inferno,
+        Penance
     }
 }

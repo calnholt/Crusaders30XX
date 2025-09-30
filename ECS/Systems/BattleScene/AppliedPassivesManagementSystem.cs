@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
             EventManager.Subscribe<RemovePassive>(OnRemovePassive);
             EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);
+            EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
 
         }
 
@@ -59,6 +60,19 @@ namespace Crusaders30XX.ECS.Systems
             else if (evt.Current == SubPhase.PreBlock)
             {
                 ApplyStartOfPreBlockPassives(enemy);
+            }
+        }
+
+        private void OnLoadScene(LoadSceneEvent @event)
+        {
+            if (@event.Scene != SceneId.Battle) return;
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            var ap = player.GetComponent<AppliedPassives>();
+            if (ap == null) return;
+            foreach (var passive in ap.Passives)
+            {
+                if (passive.Key == AppliedPassiveType.Penance) continue;
+                EventManager.Publish(new RemovePassive { Owner = player, Type = passive.Key });
             }
         }
 
