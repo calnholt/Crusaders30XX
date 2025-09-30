@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		private Texture2D _pixel;
 		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
 		private CardVisualSettings _settings;
+		private readonly System.Collections.Generic.Dictionary<int, AnimState> _animByEntityId = new();
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
 		public float TextScale { get; set; } = 0.3f;
@@ -47,9 +48,36 @@ namespace Crusaders30XX.ECS.Systems
 		public float ShadowOffsetX { get; set; } = 5f;
 
 		[DebugEditable(DisplayName = "Shadow Offset Y", Step = 0.5f, Min = -10f, Max = 10f)]
-		public float ShadowOffsetY { get; set; } = 5f;
+		public float ShadowOffsetY { get; set; } = 0f;
+
+		// Animation settings
+		[DebugEditable(DisplayName = "Slam Duration (s)", Step = 0.01f, Min = 0.01f, Max = 1.0f)]
+		public float SlamDurationSeconds { get; set; } = 1.0f;
+		[DebugEditable(DisplayName = "Slam Start Scale", Step = 0.05f, Min = 0.05f, Max = 2.0f)]
+		public float SlamStartScale { get; set; } = 0.25f;
+		[DebugEditable(DisplayName = "Slam Overshoot Scale", Step = 0.05f, Min = 1.0f, Max = 2.5f)]
+		public float SlamOvershootScale { get; set; } = 1.25f;
+		[DebugEditable(DisplayName = "Base Scale After Slam", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
+		public float SlamEndBaseScale { get; set; } = 1.0f;
+		[DebugEditable(DisplayName = "Slam Start Alpha", Step = 0.05f, Min = 0.0f, Max = 1.0f)]
+		public float SlamStartAlpha { get; set; } = 0.0f;
+		[DebugEditable(DisplayName = "Slam End Alpha", Step = 0.05f, Min = 0.0f, Max = 1.0f)]
+		public float SlamEndAlpha { get; set; } = 1.0f;
+		[DebugEditable(DisplayName = "Idle Pulse Scale Amp", Step = 0.005f, Min = 0.0f, Max = 0.5f)]
+		public float IdlePulseScaleAmplitude { get; set; } = 0.02f;
+		[DebugEditable(DisplayName = "Idle Pulse Alpha Amp", Step = 0.01f, Min = 0.0f, Max = 1.0f)]
+		public float IdlePulseAlphaAmplitude { get; set; } = 0.10f;
+		[DebugEditable(DisplayName = "Idle Pulse Speed (Hz)", Step = 0.05f, Min = 0.05f, Max = 3.0f)]
+		public float IdlePulseSpeedHz { get; set; } = 0.15f;
 
 		public string IntimidateText { get; set; } = "INTIMIDATED!";
+
+		private class AnimState
+		{
+			public float Elapsed;
+			public float CurrentScale = 1f;
+			public float CurrentAlpha = 1f;
+		}
 
 		public IntimidateDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font) 
 			: base(entityManager)
@@ -70,13 +98,36 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			// No per-entity update logic needed; drawing is handled separately
+			if (entity == null) return;
+			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+			if (!_animByEntityId.TryGetValue(entity.Id, out var anim))
+			{
+				anim = new AnimState();
+				_animByEntityId[entity.Id] = anim;
+			}
+			anim.Elapsed += dt;
+			float idleT = anim.Elapsed - SlamDurationSeconds;
+			float w = MathHelper.TwoPi * MathHelper.Clamp(IdlePulseSpeedHz, 0.01f, 10f);
+			float osc = (float)System.Math.Sin(idleT * w);
+			anim.CurrentScale = SlamEndBaseScale * (1f + IdlePulseScaleAmplitude * osc);
+			float pulse = (1f + osc) * 0.5f; // 0..1
+			float alphaPulse = MathHelper.Lerp(1f - IdlePulseAlphaAmplitude * 0.5f, 1f + IdlePulseAlphaAmplitude * 0.5f, pulse);
+			anim.CurrentAlpha = MathHelper.Clamp(SlamEndAlpha * alphaPulse, 0f, 1f);
 		}
 
 	public void Draw()
 	{
 		var intimidatedCards = GetRelevantEntities().ToList();
 		if (intimidatedCards.Count == 0) return;
+
+		// Cleanup stale animation states for cards that are no longer intimidated
+		{
+			var alive = new System.Collections.Generic.HashSet<int>(intimidatedCards.Select(e => e.Id));
+			foreach (var key in _animByEntityId.Keys.ToList())
+			{
+				if (!alive.Contains(key)) _animByEntityId.Remove(key);
+			}
+		}
 
 		foreach (var card in intimidatedCards)
 		{
@@ -128,8 +179,13 @@ namespace Crusaders30XX.ECS.Systems
 			// Text position (centered on card)
 			var textOrigin = textSizeUnscaled / 2f;
 
+			// Resolve animated scale and alpha
+			_animByEntityId.TryGetValue(card.Id, out var anim);
+			float scaleNow = TextScale * (anim?.CurrentScale > 0f ? anim.CurrentScale : 1f);
+			float alphaNow = MathHelper.Clamp(anim?.CurrentAlpha ?? 1f, 0f, 1f);
+
 			// Draw shadow/bold layer first
-			var shadowColor = new Color(ShadowRed, ShadowGreen, ShadowBlue);
+			var shadowColor = new Color(ShadowRed, ShadowGreen, ShadowBlue) * alphaNow;
 			_spriteBatch.DrawString(
 				_font,
 				IntimidateText,
@@ -137,7 +193,7 @@ namespace Crusaders30XX.ECS.Systems
 				shadowColor,
 				rotation,
 				textOrigin,
-				TextScale,
+				scaleNow,
 				SpriteEffects.None,
 				0f
 			);
@@ -147,10 +203,10 @@ namespace Crusaders30XX.ECS.Systems
 				_font,
 				IntimidateText,
 				center,
-				Color.DarkRed,
+				Color.DarkRed * alphaNow,
 				rotation,
 				textOrigin,
-				TextScale,
+				scaleNow,
 				SpriteEffects.None,
 				0f
 			);
@@ -170,5 +226,18 @@ namespace Crusaders30XX.ECS.Systems
 			ch
 		);
 	}
+
+		private static float EaseOutBack(float t, float s)
+		{
+			// Robert Penner's easeOutBack
+			float inv = (t - 1f);
+			return (inv * inv * ((s + 1f) * inv + s) + 1f);
+		}
+
+		private static float EaseOutCubic(float t)
+		{
+			float inv = 1f - t;
+			return 1f - inv * inv * inv;
+		}
 	}
 }
