@@ -14,7 +14,24 @@ namespace Crusaders30XX.ECS.Systems
 
 		public IEnumerable<string> SelectForTurn(Entity enemy, EnemyArsenal arsenal, int turnNumber)
 		{
-			return ["ice_blast"];
+			int random = Random.Shared.Next(0, 100);
+			if (random <= 20)
+			{
+				return ["slam_trunk", "fake_out"];
+			}
+			if (random <= 40)
+			{
+				return ["slam_trunk", "thud"];
+			}
+			if (random <= 60)
+			{
+				return ["tree_stomp"];
+			}
+			if (random <= 80)
+			{
+				return ["pummel_into_submission"];
+			}
+			return ["slam_trunk", "have_no_mercy"];
 		}
 	}
 }

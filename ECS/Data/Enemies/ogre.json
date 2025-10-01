@@ -8,15 +8,6 @@
       "name": "Tree Stomp",
       "target": "Player",
       "positionType": "Ender",
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
-      },
       "effectsOnAttack": [
         {
           "type": "Intimidate",
@@ -26,7 +17,7 @@
       "effectsOnHit": [
         {
           "type": "Damage",
-          "amount": 8
+          "amount": 9
         }
       ]
     },
@@ -35,6 +26,15 @@
       "name": "Pummel Into Submission",
       "target": "Player",
       "positionType": "Ender",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "OnHit"
+          }
+        ]
+      },
       "effectsOnAttack": [
         {
           "type": "Intimidate",
@@ -55,19 +55,56 @@
       ]
     },
     {
-      "id": "ice_blast",
-      "name": "Ice Blast",
+      "id": "slam_trunk",
+      "name": "Slam Trunk",
+      "target": "Player",
+      "positionType": "Starter",
+      "ambushPercentage": 10,
+      "effectsOnAttack": [
+        {
+          "type": "Intimidate",
+          "amount": 1
+        }
+      ],
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "fake_out",
+      "name": "Fake Out",
+      "target": "Player",
+      "positionType": "Ender",
+      "effectsOnAttack": [
+        {
+          "type": "Intimidate",
+          "amount": 2
+        }
+      ],
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "id": "thud",
+      "name": "Thud",
       "target": "Player",
       "positionType": "Ender",
       "effectsOnHit": [
         {
           "type": "Damage",
-          "amount": 10
+          "amount": 5
         }
       ],
       "effectsOnNotBlocked": [
         {
-          "type": "Frozen",
+          "type": "Wounded",
           "amount": 1
         }
       ]
