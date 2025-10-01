@@ -29,7 +29,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var typeName = effect.EffectType ?? string.Empty;
             if (!Enum.TryParse<AppliedPassiveType>(typeName, true, out var passiveType)) return;
-            OnApplyPassive(new ApplyPassiveEvent { Delta = effect.Amount, Target = effect.Target, Type = passiveType });
+			EventManager.Publish(new ApplyPassiveEvent { Delta = effect.Amount, Target = effect.Target, Type = passiveType });
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

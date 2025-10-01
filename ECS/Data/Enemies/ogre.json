@@ -53,6 +53,24 @@
           "amount": 1
         }
       ]
+    },
+    {
+      "id": "ice_blast",
+      "name": "Ice Blast",
+      "target": "Player",
+      "positionType": "Ender",
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 10
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "Frozen",
+          "amount": 1
+        }
+      ]
     }
   ]
 }

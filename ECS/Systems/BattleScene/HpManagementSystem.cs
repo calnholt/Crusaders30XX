@@ -15,6 +15,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			EventManager.Subscribe<ModifyHpRequestEvent>(OnModifyHpRequest);
 			EventManager.Subscribe<SetHpEvent>(OnSetHp);
+			EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -73,6 +74,32 @@ namespace Crusaders30XX.ECS.Systems
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			if (player != null && player.HasComponent<HP>()) return player;
 			return EntityManager.GetEntitiesWithComponent<HP>().FirstOrDefault();
+		}
+
+		private void OnApplyPassive(ApplyPassiveEvent e)
+		{
+			Console.WriteLine($"[HpManagementSystem] Applying passive {e.Type} to {e.Target.Id} with delta {e.Delta}");
+			switch (e.Type)
+			{
+				case AppliedPassiveType.Penance:
+					var hp = e.Target.GetComponent<HP>();
+					var atFullHp = hp.Current == hp.Max;
+					if (e.Delta > 0)
+					{
+						hp.Max -= e.Delta;
+						if (atFullHp)
+						{
+							hp.Current -= e.Delta;
+						}
+					}
+					else
+					{
+						hp.Max = Math.Min(30, hp.Max + e.Delta);
+					}
+					break;
+				default:
+					return;
+			}
 		}
 
 		// Debug action: Lose X HP

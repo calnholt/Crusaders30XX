@@ -230,18 +230,5 @@ namespace Crusaders30XX.ECS.Systems
 				0f
 			);
 		}
-
-		private static float EaseOutBack(float t, float s)
-		{
-			// Robert Penner's easeOutBack
-			float inv = (t - 1f);
-			return (inv * inv * ((s + 1f) * inv + s) + 1f);
-		}
-
-		private static float EaseOutCubic(float t)
-		{
-			float inv = 1f - t;
-			return 1f - inv * inv * inv;
-		}
 	}
 }

@@ -48,6 +48,7 @@ namespace Crusaders30XX.ECS.Systems
             if (data.Owner.HasComponent<Frozen>())
             {
                 EventManager.Publish(new CantPlayCardMessage { Message = "Can't play frozen cards!" });
+                return;
             }
 
             // Weapons can only be played during Action phase (already gated) and cannot be used to pay costs of other cards
