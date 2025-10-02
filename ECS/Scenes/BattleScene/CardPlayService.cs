@@ -75,7 +75,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     EventManager.Publish(new RequestDrawCardsEvent { Count = values[i++] });
                     EventManager.Publish(new ModifyTemperanceEvent { Delta = values[i++] });
-                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Effect });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Penance, Delta = values[i++] });
                     break;
                 }
                 case "seize":

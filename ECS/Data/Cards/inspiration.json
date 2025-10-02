@@ -4,7 +4,7 @@
   "target": "Player",
   "rarity": "Common",
   "valuesParse": [2, 1, 1],
-  "text": "Draw {1} cards, gain {2} temperance, and lose {3}HP.",
+  "text": "Draw {1} cards, gain {2} temperance, and gain {3} penance.",
   "isFreeAction": true,
   "animation": "Buff",
   "block": 2

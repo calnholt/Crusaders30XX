@@ -102,6 +102,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Stun, Delta = 1 });
         }
+        [DebugAction("Apply Wounded (Player)")]
+        public void Debug_ApplyWounded_Player()
+        {
+            EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Wounded, Delta = 1 });
+        }
     }
 }
 
