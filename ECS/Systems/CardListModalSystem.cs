@@ -70,6 +70,30 @@ namespace Crusaders30XX.ECS.Systems
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+        
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+            // Ensure modal cards are top-most and use zero rotation for accurate hover detection
+            var modalEntity = GetRelevantEntities().FirstOrDefault();
+            if (modalEntity == null) return;
+            var modal = modalEntity.GetComponent<CardListModal>();
+            if (modal == null || !modal.IsOpen || modal.Cards == null) return;
+            foreach (var card in modal.Cards)
+            {
+                var t = card.GetComponent<Transform>();
+                if (t != null)
+                {
+                    t.ZOrder = 15000;
+                    t.Rotation = 0f;
+                }
+                var ui = card.GetComponent<UIElement>();
+                if (ui != null)
+                {
+                    ui.IsInteractable = true;
+                }
+            }
+        }
 
         public void Draw()
         {
@@ -240,7 +264,30 @@ namespace Crusaders30XX.ECS.Systems
             var modal = EntityManager.GetEntitiesWithComponent<CardListModal>().FirstOrDefault();
             if (modal == null) return;
             var cmp = modal.GetComponent<CardListModal>();
-            if (cmp != null) cmp.IsOpen = false;
+            if (cmp != null)
+            {
+                cmp.IsOpen = false;
+                // Clear UI hover/click/bounds for any cards that were displayed in the modal grid
+                var cards = cmp.Cards ?? new List<Entity>();
+                foreach (var card in cards)
+                {
+                    var ui = card.GetComponent<UIElement>();
+                    if (ui != null)
+                    {
+                        ui.IsHovered = false;
+                        ui.IsClicked = false;
+                        ui.Bounds = new Rectangle(0, 0, 0, 0);
+                    }
+                }
+            }
+            // Destroy any lingering close button entities
+            var closeButtons = EntityManager.GetEntitiesWithComponent<CardListModalClose>().ToList();
+            foreach (var btn in closeButtons)
+            {
+                EntityManager.DestroyEntity(btn.Id);
+            }
+            // Reset wheel so a future open starts fresh
+            _lastWheel = null;
         }
     }
 }
