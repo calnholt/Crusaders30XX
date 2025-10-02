@@ -9,7 +9,7 @@ namespace Crusaders30XX.ECS.Systems
 {
     internal static class BlockValueService
     {
-        public static void Apply(Entity card, int delta)
+        public static void ApplyDelta(Entity card, int delta)
         {
           var modifiedBlock = card.GetComponent<ModifiedBlock>();
           if (modifiedBlock == null)
@@ -23,17 +23,37 @@ namespace Crusaders30XX.ECS.Systems
           }
         }
 
+        public static void SetDelta(Entity card, int delta)
+        {
+          var modifiedBlock = card.GetComponent<ModifiedBlock>();
+          if (modifiedBlock == null)
+          {
+              modifiedBlock = new ModifiedBlock { Owner = card, Delta = delta };
+              card.AddComponent(modifiedBlock);
+          }
+          else
+          {
+              modifiedBlock.Delta = delta;
+          }
+        }
+
         public static int GetBlockValue(Entity card)
         {
           var modifiedBlock = card.GetComponent<ModifiedBlock>();
-          var cd = card.GetComponent<CardData>();
-          CardDefinitionCache.TryGet(cd.CardId, out var def);
-          var block = def.block + (cd.Color == CardData.CardColor.Black ? 1 : 0);
+          var baseBlock = GetBaseBlockValue(card);
           if (modifiedBlock == null)
           {
-              return block;
+              return baseBlock;
           }
-          return modifiedBlock.Delta + block;
+          return modifiedBlock.Delta + baseBlock;
+        }
+
+        public static int GetBaseBlockValue(Entity card)
+        {
+            var cd = card.GetComponent<CardData>();
+            CardDefinitionCache.TryGet(cd.CardId, out var def);
+            var block = def.block + (cd.Color == CardData.CardColor.Black ? 1 : 0);
+            return block;
         }
     }
 }

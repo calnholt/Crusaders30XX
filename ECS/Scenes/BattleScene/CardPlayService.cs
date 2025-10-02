@@ -31,7 +31,7 @@ namespace Crusaders30XX.ECS.Systems
                 case "bulwark":
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
-                    BlockValueService.Apply(card, values[i++]);
+                    BlockValueService.ApplyDelta(card, values[i++]);
                     break;
                 }
                 case "burn":
@@ -94,11 +94,12 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
                     var chance = values[i++];
-                    Console.WriteLine($"[CardPlayService] Strike chance: {chance}");
-                    if (Random.Shared.Next(0, 100) <= chance)
+                    var random = Random.Shared.Next(0, 100);
+                    Console.WriteLine($"[CardPlayService] Strike random: {random}");
+                    if (random <= chance)
                     {
                         Console.WriteLine($"[CardPlayService] Strike gained {values[i]} courage");
-                        EventManager.Publish(new ModifyActionPointsEvent { Delta = values[i++] });
+                        EventManager.Publish(new ModifyCourageEvent { Delta = values[i++] });
                     }
                     break;
                 }
