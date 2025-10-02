@@ -71,7 +71,7 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Inferno, Delta = values[i++] });
                     break;
                 }
-                case "inspiration":
+                case "sacrifice":
                 {
                     EventManager.Publish(new RequestDrawCardsEvent { Count = values[i++] });
                     EventManager.Publish(new ModifyTemperanceEvent { Delta = values[i++] });
