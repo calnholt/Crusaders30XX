@@ -109,7 +109,16 @@ namespace Crusaders30XX.ECS.Systems
                 bool isPlayer = e.GetComponent<Player>() != null;
                 var ap = e.GetComponent<AppliedPassives>();
                 var t = e.GetComponent<Transform>();
-                if (ap == null || ap.Passives == null || ap.Passives.Count == 0 || t == null) continue;
+                if (ap == null || ap.Passives == null || t == null)
+                {
+                    CleanupTooltipUiForOwner(e.Id, new System.Collections.Generic.HashSet<AppliedPassiveType>());
+                    continue;
+                }
+                if (ap.Passives.Count == 0)
+                {
+                    CleanupTooltipUiForOwner(e.Id, new System.Collections.Generic.HashSet<AppliedPassiveType>());
+                    continue;
+                }
 
                 // Anchor baseline at bottom of HP bar if available; else just below entity
                 int baseX = (int)System.Math.Round(t.Position.X);
@@ -134,7 +143,11 @@ namespace Crusaders30XX.ECS.Systems
 
                 // Render each passive as "<stacks> <Name>" chip, left-to-right centered under entity
                 var items = ap.Passives.Select(kv => new { Type = kv.Key, Count = kv.Value, Label = $"{kv.Value} {StringUtils.ToSentenceCase(kv.Key.ToString())}" }).ToList();
-                if (items.Count == 0) continue;
+                if (items.Count == 0)
+                {
+                    CleanupTooltipUiForOwner(e.Id, new System.Collections.Generic.HashSet<AppliedPassiveType>());
+                    continue;
+                }
 
                 var sizes = items.Select(it => _font.MeasureString(it.Label) * TextScale).ToList();
                 var chipWidths = sizes.Select(s => (int)System.Math.Ceiling(s.X) + PadX * 2).ToList();
@@ -171,6 +184,9 @@ namespace Crusaders30XX.ECS.Systems
                     UpdateTooltipUi(key, chipRect, PassiveTooltipTextService.GetText(items[i].Type, isPlayer, items[i].Count));
                     x += w + Spacing;
                 }
+                // Remove any tooltip UI for passives no longer present
+                var presentTypes = new System.Collections.Generic.HashSet<AppliedPassiveType>(items.Select(it => it.Type));
+                CleanupTooltipUiForOwner(e.Id, presentTypes);
             }
         }
 
@@ -213,6 +229,21 @@ namespace Crusaders30XX.ECS.Systems
                     ui.Tooltip = text ?? string.Empty;
                     ui.TooltipPosition = TooltipPosition.Below;
                     ui.IsInteractable = true;
+                }
+            }
+        }
+        private void CleanupTooltipUiForOwner(int ownerId, System.Collections.Generic.HashSet<AppliedPassiveType> presentTypes)
+        {
+            var keysForOwner = _tooltipUiByKey.Keys.Where(k => k.ownerId == ownerId).ToList();
+            foreach (var key in keysForOwner)
+            {
+                if (!presentTypes.Contains(key.type))
+                {
+                    if (_tooltipUiByKey.TryGetValue(key, out var uiEntity) && uiEntity != null)
+                    {
+                        EntityManager.DestroyEntity(uiEntity.Id);
+                    }
+                    _tooltipUiByKey.Remove(key);
                 }
             }
         }
