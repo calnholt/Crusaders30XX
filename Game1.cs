@@ -36,6 +36,8 @@ public class Game1 : Game
     // ECS System
     private World _world;
 
+    public static bool WindowIsActive { get; private set; } = true;
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -130,6 +132,7 @@ public class Game1 : Game
     
     protected override void Update(GameTime gameTime)
     {
+        WindowIsActive = IsActive;
         var kb = Keyboard.GetState();
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || kb.IsKeyDown(Keys.Escape))
             Exit();

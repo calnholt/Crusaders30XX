@@ -37,6 +37,14 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (!IsActive) return;
 
+            // If the game window is not active, ignore inputs and keep previous states in sync
+            if (!Crusaders30XX.Game1.WindowIsActive)
+            {
+                _previousMouseState = Mouse.GetState();
+                _previousKeyboardState = Keyboard.GetState();
+                return;
+            }
+
             var mouseState = Mouse.GetState();
             var mousePosition = mouseState.Position;
             var keyboardState = Keyboard.GetState();
