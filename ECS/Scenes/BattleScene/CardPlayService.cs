@@ -9,7 +9,7 @@ namespace Crusaders30XX.ECS.Systems
 {
     internal static class CardPlayService
     {
-        public static void Resolve(EntityManager entityManager, string cardId, string cardName)
+        public static void Resolve(EntityManager entityManager, string cardId, string cardName, Entity card)
         {
             var enemy = entityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
             var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
@@ -26,6 +26,12 @@ namespace Crusaders30XX.ECS.Systems
                 case "anoint_the_sick":
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = +values[i++], DamageType = ModifyTypeEnum.Heal });
+                    break;
+                }
+                case "bulwark":
+                {
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
+                    BlockValueService.Apply(card, values[i++]);
                     break;
                 }
                 case "burn":
@@ -87,7 +93,9 @@ namespace Crusaders30XX.ECS.Systems
                 case "strike":
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
-                    if (Random.Shared.Next(0, 100) <= values[i++])
+                    var chance = values[i++];
+                    Console.WriteLine($"[CardPlayService] Strike chance: {chance}");
+                    if (Random.Shared.Next(0, 100) <= chance)
                     {
                         Console.WriteLine($"[CardPlayService] Strike gained {values[i]} courage");
                         EventManager.Publish(new ModifyActionPointsEvent { Delta = values[i++] });

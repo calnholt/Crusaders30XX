@@ -241,7 +241,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Delegate per-card effects to service
-            CardPlayService.Resolve(EntityManager, def.id, def.name ?? def.id);
+            CardPlayService.Resolve(EntityManager, def.id, def.name ?? def.id, evt.Card);
 
             // Move the played card to discard unless it's a weapon (weapons leave hand but do not go to discard)
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();

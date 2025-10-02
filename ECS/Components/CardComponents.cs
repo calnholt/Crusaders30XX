@@ -285,6 +285,15 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
     }
+
+    /// <summary>
+    /// Marks a card as having its block value modified.
+    /// </summary>
+    public class ModifiedBlock : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int Delta { get; set; } = 0;
+    }
     
     /// <summary>
     /// Marker for the courage hover area used to show a tooltip.

@@ -223,9 +223,6 @@ namespace Crusaders30XX.ECS.Factories
 				}
 				if (!CardDefinitionCache.TryGet(cardId, out var def) || def == null) continue;
 				if (def.isWeapon) continue; // weapons are not in the deck
-				var name = def.name ?? def.id ?? cardId;
-				int blockValue = def.block + (color == CardData.CardColor.Black ? 1 : 0);
-                string description = def.text; // already resolved in CardDefinitionCache
                 var entity = CreateCardFromDefinition(world, cardId, color);
 				var cd = entity.GetComponent<CardData>();
 				if (cd != null)

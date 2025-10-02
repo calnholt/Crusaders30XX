@@ -231,7 +231,7 @@ namespace Crusaders30XX.ECS.Systems
             // Draw block value and shield icon at bottom-left, but hide for weapons
             bool isWeapon = hasDef && def.isWeapon;
             int blockValueToShow = 0;
-            if (hasDef) { blockValueToShow = def.block + (cardData.Color == CardData.CardColor.Black ? 1 : 0); }
+            if (hasDef) { blockValueToShow = BlockValueService.GetBlockValue(entity); }
             if (!isWeapon && blockValueToShow > 0)
             {
                 string blockText = blockValueToShow.ToString();
