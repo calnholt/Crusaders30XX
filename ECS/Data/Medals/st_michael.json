@@ -2,7 +2,7 @@
   "id": "st_michael",
   "name": "Medal of Saint Michael the Archangel",
   "target": "Player",
-  "text": "At the start of battle, gain 3 courage.",
+  "text": "At the start of battle, gain 2 courage.",
   "trigger": "StartOfBattle"
 }
 

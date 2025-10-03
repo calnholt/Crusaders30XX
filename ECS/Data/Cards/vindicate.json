@@ -4,8 +4,8 @@
   "target": "Enemy",
   "cost": [ "Red", "Any" ],
   "rarity": "Common",
-  "valuesParse": [20, 3],
-  "text": "Deal {1} damage plus X damage, where X is {2} times your courage. Lose all courage.",
+  "valuesParse": [20, 5, 35],
+  "text": "Deal {1} damage. If you have {2} or more courage, this deals {3} damage instead. Lose all courage.",
   "animation": "Attack",
   "block": 3
 }

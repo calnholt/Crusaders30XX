@@ -136,7 +136,11 @@
       "effectsOnNotBlocked": [
         {
           "type": "Burn",
-          "amount": 2
+          "amount": 1
+        },
+        {
+          "type": "Penance",
+          "amount": 1
         }
       ]
     },

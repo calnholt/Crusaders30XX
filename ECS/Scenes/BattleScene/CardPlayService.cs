@@ -71,6 +71,13 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Inferno, Delta = values[i++] });
                     break;
                 }
+                case "narrow_gate":
+                {
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = +values[i++] });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Penance, Delta = +values[i++] });
+                    break;
+                }
                 case "sacrifice":
                 {
                     EventManager.Publish(new RequestDrawCardsEvent { Count = values[i++] });
@@ -108,9 +115,15 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Stun, Delta = 1 });
                     break;
                 }
+                case "tempest":
+                {
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ModifyTemperanceEvent { Delta = values[i++] });
+                    break;
+                }
                 case "vindicate":
                 {
-                    int damage = values[i++] + (courage * values[i++]);
+                    var damage = courage >= values[1] ? values[2] : values[0];
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -damage, DamageType = ModifyTypeEnum.Attack });
                     EventManager.Publish(new SetCourageEvent { Amount = 0 });
                     break;

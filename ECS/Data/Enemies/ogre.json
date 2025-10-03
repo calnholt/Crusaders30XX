@@ -96,6 +96,15 @@
       "name": "Thud",
       "target": "Player",
       "positionType": "Ender",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "OnHit"
+          }
+        ]
+      },
       "effectsOnHit": [
         {
           "type": "Damage",

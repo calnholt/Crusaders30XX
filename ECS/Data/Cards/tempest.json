@@ -1,0 +1,11 @@
+{
+    "id": "tempest",
+    "name": "Tempest",
+    "target": "Enemy",
+    "rarity": "Common",
+    "cost": ["White"],
+    "valuesParse": [18, 1],
+    "text": "Deal {1} damage and gain {2} temperance.",
+    "animation": "Attack",
+    "block": 3
+  }

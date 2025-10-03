@@ -65,6 +65,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnLoadScene(LoadSceneEvent @event)
         {
+            // this is bad, make a direct event call to clean
             if (@event.Scene != SceneId.Battle) return;
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             var ap = player.GetComponent<AppliedPassives>();
