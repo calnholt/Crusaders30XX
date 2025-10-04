@@ -84,6 +84,30 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -(courageLost > 0 ? values[1] : values[0]), DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
+                // case "shroud_of_turin":
+                // {
+                //     // Duplicate the selected card and put the duplicate into discard. Then destroy the Shroud card entity.
+                //     var pending = card.GetComponent<ShroudPendingSelection>();
+                //     var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                //     if (pending != null && pending.Selected != null && deckEntity != null)
+                //     {
+                //         // Clone by creating a new entity with the same CardData and base components
+                //         var copy = entityManager.CreateEntity($"CopyOf_{pending.Selected.Name}");
+                //         var srcCd = pending.Selected.GetComponent<CardData>();
+                //         var srcSprite = pending.Selected.GetComponent<Sprite>();
+                //         if (srcCd != null)
+                //         {
+                //             entityManager.AddComponent(copy, new CardData { CardId = srcCd.CardId, Color = srcCd.Color });
+                //         }
+                //         entityManager.AddComponent(copy, new Transform { Position = Microsoft.Xna.Framework.Vector2.Zero, Scale = Microsoft.Xna.Framework.Vector2.One });
+                //         entityManager.AddComponent(copy, new Sprite { TexturePath = srcSprite?.TexturePath ?? string.Empty, IsVisible = true });
+                //         entityManager.AddComponent(copy, new UIElement { Bounds = new Microsoft.Xna.Framework.Rectangle(0,0,250,350), IsInteractable = false });
+                //         EventManager.Publish(new CardMoveRequested { Card = copy, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "ShroudCopy" });
+                //         // Cleanup selection marker
+                //         entityManager.RemoveComponent<ShroudPendingSelection>(card);
+                //     }
+                //     break;
+                // }
                 case "stab":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = -values[i++] });

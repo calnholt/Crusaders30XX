@@ -93,10 +93,8 @@ namespace Crusaders30XX.ECS.Systems
 					.ToList();
 				foreach (var c in selected)
 				{
-					deck.Hand.Remove(c);
-					deck.DiscardPile.Add(c);
 					EntityManager.RemoveComponent<MarkedForSpecificDiscard>(c);
-					EventManager.Publish(new CardMoved { Card = c, Deck = deckEntity, From = CardZoneType.Hand, To = CardZoneType.DiscardPile, ContextId = contextId });
+					EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, ContextId = contextId });
 				}
 				// Clear any leftover marks for this context
 				foreach (var c in deck.Hand)

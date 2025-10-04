@@ -14,6 +14,19 @@ namespace Crusaders30XX.ECS.Systems
             CardDefinitionCache.TryGet(cardId, out CardDefinition def);
             switch (cardId)
             {
+                case "shroud_of_turin":
+                {
+                    var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                    var deck = deckEntity?.GetComponent<Deck>();
+                    if (deck == null) return false;
+                    var handCount = deck.Hand.Count;
+                    if (handCount < 2)  
+                    {
+                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires at least one other card in hand!" });
+                        return false;
+                    } 
+                    return true;
+                }
                 case "stab":
                 {
                     var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
