@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Data.Cards;
 using System;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Factories;
+using System.Reflection;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -95,10 +96,18 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "shroud_of_turin":
                 {
-                    var cardDataCopy = paymentCards.FirstOrDefault().GetComponent<CardData>();
+                    var paymentCard = paymentCards.FirstOrDefault();
+                    var cardDataCopy = paymentCard.GetComponent<CardData>();
                     CardDefinitionCache.TryGet(cardDataCopy.CardId, out CardDefinition cardToCopyDef);
                     var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                     var copy = EntityFactory.CreateCardFromDefinition(entityManager, cardToCopyDef.id, cardDataCopy.Color, false);
+                    // TODO: need to have better cloning mechanism
+                    if (paymentCard.HasComponent<ModifiedBlock>())
+                    {
+                        var modifiedBlock = paymentCard.GetComponent<ModifiedBlock>(); 
+                        Console.WriteLine($"[CardPlayService] Shroud of Turin copying modified block: {modifiedBlock.Delta}");
+                        BlockValueService.ApplyDelta(copy, modifiedBlock.Delta);
+                    }
                     EventManager.Publish(new CardMoveRequested { Card = copy, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "ShroudCopy" });
                     break;
                 }

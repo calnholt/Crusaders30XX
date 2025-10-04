@@ -234,7 +234,7 @@ namespace Crusaders30XX.ECS.Systems
             if (deck.DrawPile.Contains(card)) return CardZoneType.DrawPile;
             if (deck.DiscardPile.Contains(card)) return CardZoneType.DiscardPile;
             if (deck.ExhaustPile.Contains(card)) return CardZoneType.ExhaustPile;
-            return CardZoneType.AssignedBlock;
+            return CardZoneType.ExhaustPile;
         }
     }
 }
