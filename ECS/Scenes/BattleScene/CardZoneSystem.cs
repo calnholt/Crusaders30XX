@@ -15,6 +15,7 @@ namespace Crusaders30XX.ECS.Systems
         public CardZoneSystem(EntityManager entityManager) : base(entityManager)
         {
             EventManager.Subscribe<CardMoveRequested>(OnCardMoveRequested);
+            EventManager.Subscribe<CardMoved>(OnCardMoved);
             System.Console.WriteLine("[CardZoneSystem] Subscribed to CardMoveRequested");
         }
 
@@ -24,6 +25,14 @@ namespace Crusaders30XX.ECS.Systems
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+
+        private void OnCardMoved(CardMoved evt)
+        {
+            if (evt.From == CardZoneType.AssignedBlock && evt.To == CardZoneType.DiscardPile)
+            {
+                CardBlockService.Resolve(evt.Card, EntityManager);
+            }
+        }
 
         private void OnCardMoveRequested(CardMoveRequested evt)
         {

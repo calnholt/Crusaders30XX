@@ -31,7 +31,7 @@ namespace Crusaders30XX.ECS.Systems
                 case "bulwark":
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
-                    BlockValueService.Apply(card, values[i++]);
+                    BlockValueService.ApplyDelta(card, values[i++]);
                     break;
                 }
                 case "burn":
@@ -71,11 +71,18 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Inferno, Delta = values[i++] });
                     break;
                 }
-                case "inspiration":
+                case "narrow_gate":
+                {
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = +values[i++] });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Penance, Delta = +values[i++] });
+                    break;
+                }
+                case "sacrifice":
                 {
                     EventManager.Publish(new RequestDrawCardsEvent { Count = values[i++] });
                     EventManager.Publish(new ModifyTemperanceEvent { Delta = values[i++] });
-                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Effect });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Penance, Delta = values[i++] });
                     break;
                 }
                 case "seize":
@@ -118,11 +125,12 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
                     var chance = values[i++];
-                    Console.WriteLine($"[CardPlayService] Strike chance: {chance}");
-                    if (Random.Shared.Next(0, 100) <= chance)
+                    var random = Random.Shared.Next(0, 100);
+                    Console.WriteLine($"[CardPlayService] Strike random: {random}");
+                    if (random <= chance)
                     {
                         Console.WriteLine($"[CardPlayService] Strike gained {values[i]} courage");
-                        EventManager.Publish(new ModifyActionPointsEvent { Delta = values[i++] });
+                        EventManager.Publish(new ModifyCourageEvent { Delta = values[i++] });
                     }
                     break;
                 }
@@ -131,9 +139,15 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Stun, Delta = 1 });
                     break;
                 }
+                case "tempest":
+                {
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
+                    EventManager.Publish(new ModifyTemperanceEvent { Delta = values[i++] });
+                    break;
+                }
                 case "vindicate":
                 {
-                    int damage = values[i++] + (courage * values[i++]);
+                    var damage = courage >= values[1] ? values[2] : values[0];
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -damage, DamageType = ModifyTypeEnum.Attack });
                     EventManager.Publish(new SetCourageEvent { Amount = 0 });
                     break;

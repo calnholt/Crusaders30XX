@@ -78,7 +78,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnApplyPassive(ApplyPassiveEvent e)
 		{
-			Console.WriteLine($"[HpManagementSystem] Applying passive {e.Type} to {e.Target.Id} with delta {e.Delta}");
 			switch (e.Type)
 			{
 				case AppliedPassiveType.Penance:
