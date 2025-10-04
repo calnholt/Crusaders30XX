@@ -19,11 +19,17 @@ namespace Crusaders30XX.ECS.Systems
                     var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                     var deck = deckEntity?.GetComponent<Deck>();
                     if (deck == null) return false;
-                    if (deck.Hand.FindAll(c => !def.isWeapon).Count == 1)  
+                    var cardsInHand = deck.Hand.FindAll(c => {
+                        var cd = c.GetComponent<CardData>();
+                        if (cd == null) return false;
+                        CardDefinitionCache.TryGet(cd.CardId, out CardDefinition cdDef);
+                        return !cdDef.isWeapon && cd.CardId != cardId;
+                    });
+                    if (cardsInHand.Count == 0)
                     {
-                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires at least two cards in hand!" });
+                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires at least one card in hand!" });
                         return false;
-                    } 
+                    }
                     return true;  
                 }
                 case "stab":

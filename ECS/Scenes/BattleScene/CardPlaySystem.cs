@@ -80,19 +80,17 @@ namespace Crusaders30XX.ECS.Systems
             {
                 var deckEntityForCost = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 var deck = deckEntityForCost?.GetComponent<Deck>();
+                var cardId = evt.Card.GetComponent<CardData>().CardId;
                 // gonna cloodge this in for now
-                // player selects one card from hand; if only one option exists, auto-select it
-                if (def.specialAction == "SelectOneCardFromHand" && deck.Hand.FindAll(c => !def.isWeapon).Count > 2)
+                if (def.specialAction == "SelectOneCardFromHand")
                 {
-                    var count = deck.Hand.FindAll(c => !def.isWeapon).Count;
                     EventManager.Publish(new OpenPayCostOverlayEvent { CardToPlay = evt.Card, RequiredCosts = ["Any"], Type = PayCostOverlayType.SelectOneCard });
                     return;
                 }
                 var requiredCosts = (def.cost ?? System.Array.Empty<string>()).ToList();
-                if (requiredCosts.Count > 0)
+                if (requiredCosts.Count > 0 && deck != null)
                 {
                     // Build hand color multiset excluding the card being played
-                    if (deck == null) return;
                     var handOthers = deck.Hand.Where(c => c != evt.Card).ToList();
                     // Exclude weapons from being considered as payment candidates
                     List<Entity> handNonWeapons = new List<Entity>();
