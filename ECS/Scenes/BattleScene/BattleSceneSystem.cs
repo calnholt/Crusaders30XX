@@ -172,12 +172,12 @@ namespace Crusaders30XX.ECS.Systems
 			EntityFactory.CreateGameState(_world);
 			EntityFactory.CreatePlayer(_world);
 			var deckEntity = EntityFactory.CreateDeck(_world);
-			var demoHand = EntityFactory.CreateDemoHand(_world);
+			var deckCards = EntityFactory.CreateDeckFromLoadout(EntityManager);
 			var deck = deckEntity.GetComponent<Deck>();
 			if (deck != null)
 			{
-				deck.Cards.AddRange(demoHand);
-				deck.DrawPile.AddRange(demoHand);
+				deck.Cards.AddRange(deckCards);
+				deck.DrawPile.AddRange(deckCards);
 			}
 			AddBattleSystems();
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
@@ -199,10 +199,29 @@ namespace Crusaders30XX.ECS.Systems
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
 			queued.CurrentIndex = -1;
 			queued.Events.Clear();
+			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault().GetComponent<Deck>();
+			deck.Cards.ForEach(c => EntityManager.DestroyEntity(c.Id));
+			deck.DrawPile.ForEach(c => EntityManager.DestroyEntity(c.Id));
+			deck.Hand.ForEach(c => EntityManager.DestroyEntity(c.Id));
+			deck.DiscardPile.ForEach(c => EntityManager.DestroyEntity(c.Id));
+			deck.ExhaustPile.ForEach(c => EntityManager.DestroyEntity(c.Id));
+			deck.Cards.Clear();
+			deck.DrawPile.Clear();
+			deck.Hand.Clear();
+			deck.DiscardPile.Clear();
+			deck.ExhaustPile.Clear();
+			EventManager.Publish(new RemoveAllPassives { Owner = player });
 		}
 
 		public void StartBattle() 
 		{
+			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault().GetComponent<Deck>();
+			if (deck.Cards.Count == 0)
+			{
+				var deckCards = EntityFactory.CreateDeckFromLoadout(EntityManager);
+				deck.Cards.AddRange(deckCards);
+				deck.DrawPile.AddRange(deckCards);
+			}
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
 			if (queued.CurrentIndex == 0) 

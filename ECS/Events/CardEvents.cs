@@ -174,6 +174,7 @@ namespace Crusaders30XX.ECS.Events
         public Entity Card { get; set; }
         // When true, downstream systems should not prompt for resource/cost payment.
         public bool CostsPaid { get; set; } = false;
+        public List<Entity> PaymentCards { get; set; } = new();
     }
 
     /// <summary>
@@ -192,6 +193,13 @@ namespace Crusaders30XX.ECS.Events
     {
         public Entity CardToPlay { get; set; }
         public System.Collections.Generic.List<string> RequiredCosts { get; set; } = new(); // values: "Red","White","Black","Any"
+        public PayCostOverlayType Type { get; set; } = PayCostOverlayType.ColorDiscard;
+    }
+
+    public enum PayCostOverlayType
+    {
+        ColorDiscard,
+        SelectOneCard,
     }
 
     /// <summary>

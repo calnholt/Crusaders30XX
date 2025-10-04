@@ -155,7 +155,7 @@ namespace Crusaders30XX.ECS.Systems
             string keyName = $"Card_{name}_{color}";
             var existing = EntityManager.GetEntity(keyName);
             if (existing != null) return existing;
-            var created = EntityFactory.CreateCardFromDefinition(_world, def.id, color);
+            var created = EntityFactory.CreateCardFromDefinition(EntityManager, def.id, color);
             if (created != null)
             {
                 _createdCardIds[keyName] = created.Id;

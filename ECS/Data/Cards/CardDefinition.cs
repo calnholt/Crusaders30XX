@@ -16,6 +16,8 @@ namespace Crusaders30XX.ECS.Data.Cards
         public int block { get; set; } = 0;
         public int[] valuesParse { get; set; } = [];
         public string tooltip { get; set; }
+        public string specialAction { get; set; }
+        public bool exhaustsOnPlay { get; set; } = false;
     }
 }
 

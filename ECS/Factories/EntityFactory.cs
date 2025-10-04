@@ -200,11 +200,7 @@ namespace Crusaders30XX.ECS.Factories
             return entity;
         }
         
-        /// <summary>
-        /// Creates a set of demo cards from JSON definitions in ECS/Data/Cards
-        /// Description format: "X damage. If courage is >= threshold, this deals bonus damage instead."
-        /// </summary>
-        public static List<Entity> CreateDemoHand(World world)
+        public static List<Entity> CreateDeckFromLoadout(EntityManager entityManager)
         {
 			var result = new List<Entity>();
 			var loadout = LoadoutDefinitionCache.TryGet("loadout_1", out var lo) ? lo : null;
@@ -223,7 +219,7 @@ namespace Crusaders30XX.ECS.Factories
 				}
 				if (!CardDefinitionCache.TryGet(cardId, out var def) || def == null) continue;
 				if (def.isWeapon) continue; // weapons are not in the deck
-                var entity = CreateCardFromDefinition(world, cardId, color);
+                var entity = CreateCardFromDefinition(entityManager, cardId, color);
 				var cd = entity.GetComponent<CardData>();
 				if (cd != null)
 				{
@@ -275,12 +271,12 @@ namespace Crusaders30XX.ECS.Factories
         }
 
         // Helper: create card entity from CardDefinition id and color
-        public static Entity CreateCardFromDefinition(World world, string cardId, CardData.CardColor color, bool allowWeapons = false)
+        public static Entity CreateCardFromDefinition(EntityManager entityManager, string cardId, CardData.CardColor color, bool allowWeapons = false)
         {
             if (!CardDefinitionCache.TryGet(cardId, out var def) || def == null) return null;
             if (def.isWeapon && !allowWeapons) return null; // only non-weapons for deck/library
             string name = def.name ?? def.id ?? cardId;
-            var entity = world.CreateEntity($"Card_{name}_{color}");
+            var entity = entityManager.CreateEntity($"Card_{name}_{color}");
 
             var cardData = new CardData
             {
@@ -292,10 +288,10 @@ namespace Crusaders30XX.ECS.Factories
             var sprite = new Sprite { TexturePath = string.Empty, IsVisible = true };
             var uiElement = new UIElement { Bounds = new Rectangle(0, 0, 250, 350), IsInteractable = true, TooltipPosition = TooltipPosition.Above, TooltipOffsetPx = 30 };
 
-            world.AddComponent(entity, cardData);
-            world.AddComponent(entity, transform);
-            world.AddComponent(entity, sprite);
-            world.AddComponent(entity, uiElement);
+            entityManager.AddComponent(entity, cardData);
+            entityManager.AddComponent(entity, transform);
+            entityManager.AddComponent(entity, sprite);
+            entityManager.AddComponent(entity, uiElement);
 
             // Set tooltip from definition (precomputed in CardDefinitionCache)
             if (!string.IsNullOrEmpty(def.tooltip))

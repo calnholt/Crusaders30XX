@@ -129,6 +129,7 @@ namespace Crusaders30XX.ECS.Systems
             state.RequiredCosts = (evt.RequiredCosts ?? new List<string>()).ToList();
             state.SelectedCards.Clear();
             state.OpenElapsedSeconds = 0f;
+            state.Type = evt.Type;
 
             // Stage the card: remove it from hand and record original index
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
@@ -297,7 +298,10 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     foreach (var c in state.SelectedCards)
                     {
-                        EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PayCost" });
+                        if (state.Type == PayCostOverlayType.ColorDiscard)
+                        {
+                            EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PayCost" });
+                        }
                     }
                     EventManager.Publish(new PayCostSatisfied { CardToPlay = state.CardToPlay, PaymentCards = new List<Entity>(state.SelectedCards) });
                     Close();
@@ -359,7 +363,20 @@ namespace Crusaders30XX.ECS.Systems
             string cardName = ResolveCardName(cd);
             var defTextCosts = GetDefinitionCosts(state.CardToPlay);
             string costText = BuildCostPhrase(defTextCosts);
-            string line = $"Discard {costText} to pay for {cardName}";
+            string line = "";
+            switch(state.Type)
+            {
+                case PayCostOverlayType.ColorDiscard:
+                {
+                    line = $"Discard {costText} to pay for {cardName}";
+                    break;
+                }
+                case PayCostOverlayType.SelectOneCard:
+                {
+                    line = $"Select one card from your hand for {cardName}";
+                    break;
+                }
+            }
             var size = _font.MeasureString(line);
             if (!state.IsReturning)
             {

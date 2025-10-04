@@ -4,12 +4,14 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Cards;
 using System;
+using System.Collections.Generic;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
     internal static class CardPlayService
     {
-        public static void Resolve(EntityManager entityManager, string cardId, string cardName, Entity card)
+        public static void Resolve(EntityManager entityManager, string cardId, string cardName, Entity card, List<Entity> paymentCards)
         {
             var enemy = entityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
             var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
@@ -91,30 +93,15 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -(courageLost > 0 ? values[1] : values[0]), DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
-                // case "shroud_of_turin":
-                // {
-                //     // Duplicate the selected card and put the duplicate into discard. Then destroy the Shroud card entity.
-                //     var pending = card.GetComponent<ShroudPendingSelection>();
-                //     var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-                //     if (pending != null && pending.Selected != null && deckEntity != null)
-                //     {
-                //         // Clone by creating a new entity with the same CardData and base components
-                //         var copy = entityManager.CreateEntity($"CopyOf_{pending.Selected.Name}");
-                //         var srcCd = pending.Selected.GetComponent<CardData>();
-                //         var srcSprite = pending.Selected.GetComponent<Sprite>();
-                //         if (srcCd != null)
-                //         {
-                //             entityManager.AddComponent(copy, new CardData { CardId = srcCd.CardId, Color = srcCd.Color });
-                //         }
-                //         entityManager.AddComponent(copy, new Transform { Position = Microsoft.Xna.Framework.Vector2.Zero, Scale = Microsoft.Xna.Framework.Vector2.One });
-                //         entityManager.AddComponent(copy, new Sprite { TexturePath = srcSprite?.TexturePath ?? string.Empty, IsVisible = true });
-                //         entityManager.AddComponent(copy, new UIElement { Bounds = new Microsoft.Xna.Framework.Rectangle(0,0,250,350), IsInteractable = false });
-                //         EventManager.Publish(new CardMoveRequested { Card = copy, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "ShroudCopy" });
-                //         // Cleanup selection marker
-                //         entityManager.RemoveComponent<ShroudPendingSelection>(card);
-                //     }
-                //     break;
-                // }
+                case "shroud_of_turin":
+                {
+                    var cardDataCopy = paymentCards.FirstOrDefault().GetComponent<CardData>();
+                    CardDefinitionCache.TryGet(cardDataCopy.CardId, out CardDefinition cardToCopyDef);
+                    var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                    var copy = EntityFactory.CreateCardFromDefinition(entityManager, cardToCopyDef.id, cardDataCopy.Color, false);
+                    EventManager.Publish(new CardMoveRequested { Card = copy, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "ShroudCopy" });
+                    break;
+                }
                 case "stab":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = -values[i++] });

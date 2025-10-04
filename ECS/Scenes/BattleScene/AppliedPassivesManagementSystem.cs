@@ -22,7 +22,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<RemovePassive>(OnRemovePassive);
             EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);
             EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
-
+            EventManager.Subscribe<RemoveAllPassives>(OnRemoveAllPassives);
         }
 
         private void OnApplyEffect(ApplyEffect effect)
@@ -193,6 +193,14 @@ namespace Crusaders30XX.ECS.Systems
             {
                 ap.Passives.Remove(e.Type);
             }
+        }
+
+        private void OnRemoveAllPassives(RemoveAllPassives e)
+        {
+            if (e == null || e.Owner == null) return;
+            var ap = e.Owner.GetComponent<AppliedPassives>();
+            if (ap == null || ap.Passives == null) return;
+            ap.Passives.Clear();
         }
 
         private void RemoveTurnPassives(Entity owner)

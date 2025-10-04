@@ -19,13 +19,12 @@ namespace Crusaders30XX.ECS.Systems
                     var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                     var deck = deckEntity?.GetComponent<Deck>();
                     if (deck == null) return false;
-                    var handCount = deck.Hand.Count;
-                    if (handCount < 2)  
+                    if (deck.Hand.FindAll(c => !def.isWeapon).Count == 1)  
                     {
-                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires at least one other card in hand!" });
+                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires at least two cards in hand!" });
                         return false;
                     } 
-                    return true;
+                    return true;  
                 }
                 case "stab":
                 {

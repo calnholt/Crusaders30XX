@@ -457,6 +457,7 @@ namespace Crusaders30XX.ECS.Components
         public bool IsReturning { get; set; } = false;
         public float ReturnElapsedSeconds { get; set; } = 0f;
         public float StagedStartRotation { get; set; } = 0f;
+        public PayCostOverlayType Type { get; set; } = PayCostOverlayType.ColorDiscard;
     }
 
     /// <summary>

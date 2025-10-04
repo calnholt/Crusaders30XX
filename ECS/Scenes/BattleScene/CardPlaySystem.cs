@@ -78,12 +78,20 @@ namespace Crusaders30XX.ECS.Systems
             // If costs are not yet paid, determine if payment is needed and either auto-resolve or open overlay
             if (!evt.CostsPaid)
             {
+                var deckEntityForCost = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                var deck = deckEntityForCost?.GetComponent<Deck>();
+                // gonna cloodge this in for now
+                // player selects one card from hand; if only one option exists, auto-select it
+                if (def.specialAction == "SelectOneCardFromHand" && deck.Hand.FindAll(c => !def.isWeapon).Count > 2)
+                {
+                    var count = deck.Hand.FindAll(c => !def.isWeapon).Count;
+                    EventManager.Publish(new OpenPayCostOverlayEvent { CardToPlay = evt.Card, RequiredCosts = ["Any"], Type = PayCostOverlayType.SelectOneCard });
+                    return;
+                }
                 var requiredCosts = (def.cost ?? System.Array.Empty<string>()).ToList();
                 if (requiredCosts.Count > 0)
                 {
                     // Build hand color multiset excluding the card being played
-                    var deckEntityForCost = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-                    var deck = deckEntityForCost?.GetComponent<Deck>();
                     if (deck == null) return;
                     var handOthers = deck.Hand.Where(c => c != evt.Card).ToList();
                     // Exclude weapons from being considered as payment candidates
@@ -221,7 +229,7 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         // Open overlay to let player choose among options
                         System.Console.WriteLine("[CardPlaySystem] Opening pay-cost overlay");
-                        EventManager.Publish(new OpenPayCostOverlayEvent { CardToPlay = evt.Card, RequiredCosts = requiredCosts });
+                        EventManager.Publish(new OpenPayCostOverlayEvent { CardToPlay = evt.Card, RequiredCosts = requiredCosts, Type = PayCostOverlayType.ColorDiscard });
                         return;
                     }
                 }
@@ -241,7 +249,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Delegate per-card effects to service
-            CardPlayService.Resolve(EntityManager, def.id, def.name ?? def.id, evt.Card);
+            CardPlayService.Resolve(EntityManager, def.id, def.name ?? def.id, evt.Card, evt.PaymentCards);
 
             // Move the played card to discard unless it's a weapon (weapons leave hand but do not go to discard)
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
@@ -257,7 +265,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 else
                 {
-                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PlayCard" });
+                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = def.exhaustsOnPlay ? CardZoneType.ExhaustPile : CardZoneType.DiscardPile, Reason = "PlayCard" });
                     System.Console.WriteLine("[CardPlaySystem] Requested move to DiscardPile");
                 }
             }
@@ -274,7 +282,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (evt?.CardToPlay == null) return;
             // Once costs are paid, proceed to resolve effect by re-publishing play with CostsPaid
-            EventManager.Publish(new PlayCardRequested { Card = evt.CardToPlay, CostsPaid = true });
+            EventManager.Publish(new PlayCardRequested { Card = evt.CardToPlay, CostsPaid = true, PaymentCards = evt.PaymentCards });
         }
 
         
