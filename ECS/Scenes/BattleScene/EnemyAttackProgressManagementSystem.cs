@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Attacks;
 using Microsoft.Xna.Framework;
 using System;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -13,6 +14,7 @@ namespace Crusaders30XX.ECS.Systems
 	/// Tracks per-context EnemyAttackProgress from block assignment events and planned attacks,
 	/// and precomputes IsBlocked, ActualDamage, and PreventedDamage for UI/logic.
 	/// </summary>
+	[DebugTab("EnemyAttackProgress")]
 	public class EnemyAttackProgressManagementSystem : Core.System
 	{
 		public EnemyAttackProgressManagementSystem(EntityManager entityManager) : base(entityManager)
@@ -62,6 +64,15 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			Console.WriteLine($"[EnemyAttackProgressManagementSystem] Progress p={p.ContextId} playedCards={p.PlayedCards} playedRed={p.PlayedRed} playedWhite={p.PlayedWhite} playedBlack={p.PlayedBlack} assignedBlockTotal={p.AssignedBlockTotal} additionalConditionalDamageTotal={p.AdditionalConditionalDamageTotal} isConditionMet={p.IsConditionMet} actualDamage={p.ActualDamage} preventedDamage={p.AegisTotal} damageBeforePrevention={p.DamageBeforePrevention} baseDamage={p.BaseDamage}");
 		}
+
+		[DebugAction("Print Progress")]
+		public void Debug_PrintProgress()
+		{
+			var e = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+			var progress = FindProgressByContext(e.GetComponent<AttackIntent>().Planned.First().ContextId);
+			PrintProgress(progress);
+		}
+
 
 		private void OnBlockAssignmentAdded(BlockAssignmentAdded e)
 		{

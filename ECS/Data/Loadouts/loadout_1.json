@@ -17,10 +17,8 @@
     "seize|Black",
     "stab|White",
     "stab|Red",
-    "stab|Black",
     "strike|White",
     "strike|Red",
-    "strike|Black",
     "shroud_of_turin|White",
     "stun|Red",
     "stun|Black",
@@ -31,7 +29,9 @@
     "heavens_glory|Black",
     "divine_protection|Red",
     "divine_protection|Black",
-    "heavens_glory|White"
+    "heavens_glory|White",
+    "impale|Red",
+    "impale|Black"
   ],
   "weaponId": "hammer",
   "temperanceId": "radiance",

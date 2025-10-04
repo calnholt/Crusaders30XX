@@ -74,6 +74,12 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Inferno, Delta = values[i++] });
                     break;
                 }
+                case "impale":
+                {
+                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[i++] });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
+                    break;
+                }
                 case "narrow_gate":
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
@@ -108,7 +114,7 @@ namespace Crusaders30XX.ECS.Systems
                         Console.WriteLine($"[CardPlayService] Shroud of Turin copying modified block: {modifiedBlock.Delta}");
                         BlockValueService.ApplyDelta(copy, modifiedBlock.Delta);
                     }
-                    EventManager.Publish(new CardMoveRequested { Card = copy, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "ShroudCopy" });
+                    EventManager.Publish(new CardMoveRequested { Card = copy, Deck = deckEntity, Destination = CardZoneType.Hand, Reason = "ShroudCopy" });
                     break;
                 }
                 case "stab":
@@ -152,7 +158,7 @@ namespace Crusaders30XX.ECS.Systems
                 case "hammer":
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
-                    EventManager.Publish(new ModifyCourageEvent { Delta = -values[i++] });
+                    EventManager.Publish(new ModifyCourageEvent { Delta = +values[i++] });
                     break;
                 }
                 case "sword":

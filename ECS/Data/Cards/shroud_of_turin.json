@@ -6,7 +6,7 @@
   "valuesParse": [],
   "specialAction": "SelectOneCardFromHand",
   "exhaustsOnPlay": true,
-  "text": "Choose a card from your hand - this card becomes an exact copy of the chosen card for the rest of the quest.",
+  "text": "Choose a card from your hand - this card becomes an exact copy of the chosen card for the rest of the quest and returns to your hand.",
   "isFreeAction": true,
   "animation": "Buff",
   "block": 3

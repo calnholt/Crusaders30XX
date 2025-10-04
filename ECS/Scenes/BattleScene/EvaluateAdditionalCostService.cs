@@ -14,6 +14,18 @@ namespace Crusaders30XX.ECS.Systems
             CardDefinitionCache.TryGet(cardId, out CardDefinition def);
             switch (cardId)
             {
+                case "impale":
+                {
+                    var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                    var courageCmp = player?.GetComponent<Courage>();
+                    int courage = courageCmp?.Amount ?? 0;
+                    if (courage < def.valuesParse[0])
+                    {
+                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {def.valuesParse[0]} courage!" });
+                        return false;
+                    }
+                    return true;
+                }
                 case "shroud_of_turin":
                 {
                     var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();

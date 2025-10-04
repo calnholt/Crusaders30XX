@@ -109,7 +109,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Cost Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
 		public float CostScale { get => EnsureSettings().CostScale; set => EnsureSettings().CostScale = Math.Max(0.05f, value); }
 
-		[DebugEditable(DisplayName = "Description Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
+		[DebugEditable(DisplayName = "Description Scale", Step = 0.01f, Min = 0.1f, Max = 3f)]
 		public float DescriptionScale { get => EnsureSettings().DescriptionScale; set => EnsureSettings().DescriptionScale = Math.Max(0.05f, value); }
 
 		[DebugEditable(DisplayName = "Block Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]

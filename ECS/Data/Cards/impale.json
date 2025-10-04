@@ -1,0 +1,12 @@
+{
+  "id": "impale",
+  "name": "Impale",
+  "target": "Enemy",
+  "rarity": "Common",
+  "valuesParse": [2, 15],
+  "text": "As an additional cost, lose {1} courage.\n\nDeal {2} damage.",
+  "isFreeAction": true,
+  "animation": "Attack",
+  "block": 3
+}
+

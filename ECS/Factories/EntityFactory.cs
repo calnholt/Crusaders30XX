@@ -191,7 +191,7 @@ namespace Crusaders30XX.ECS.Factories
                 TextMarginY = (int)System.Math.Round(16 * sU),
                 NameScale = 0.175f * sU,
                 CostScale = 0.6f * sU,
-                DescriptionScale = 0.125f * sU,
+                DescriptionScale = 0.115f * sU,
                 BlockScale = 0.5f * sU,
                 BlockNumberScale = 0.225f * sU,
                 BlockNumberMarginX = (int)System.Math.Round(14 * sU),

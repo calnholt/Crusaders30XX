@@ -81,21 +81,22 @@ namespace Crusaders30XX.ECS.Systems
         {
             var ap = owner.GetComponent<AppliedPassives>();
             if (ap == null || ap.Passives == null || ap.Passives.Count == 0) return;
-            if (ap.Passives.TryGetValue(AppliedPassiveType.Inferno, out int infernoStacks) && infernoStacks > 0)
+            var hasInferno = ap.Passives.TryGetValue(AppliedPassiveType.Inferno, out int infernoStacks);
+            if (hasInferno && infernoStacks > 0)
             {
                 EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Inferno", () =>
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Target = owner, Type = AppliedPassiveType.Burn, Delta = infernoStacks });
                     EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Inferno });
-                }, .15f);
+                }, .5f);
             }
-            if (ap.Passives.TryGetValue(AppliedPassiveType.Burn, out int burnStacks) && burnStacks > 0)
+            if ((ap.Passives.TryGetValue(AppliedPassiveType.Burn, out int burnStacks) || hasInferno) && (burnStacks > 0 || infernoStacks > 0))
             {
                 EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Burn", () =>
                 {
-                    EventManager.Publish(new ModifyHpRequestEvent { Source = owner, Target = owner, Delta = -burnStacks, DamageType = ModifyTypeEnum.Effect });
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = owner, Target = owner, Delta = -(burnStacks + infernoStacks), DamageType = ModifyTypeEnum.Effect });
                     EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Burn });
-                }, .15f);
+                }, .5f);
             }
             if (ap.Passives.TryGetValue(AppliedPassiveType.Webbing, out int webbingStacks) && webbingStacks > 0)
             {
@@ -103,7 +104,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Target = owner, Type = AppliedPassiveType.Slow, Delta = webbingStacks });
                     EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Webbing });
-                }, .15f);
+                }, .5f);
             }
         }
 
