@@ -27,7 +27,8 @@ namespace Crusaders30XX.ECS.Systems
 			var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var passives = player?.GetComponent<AppliedPassives>()?.Passives;
 			if (passives == null) return 0;
-			return passives.TryGetValue(AppliedPassiveType.Aegis, out var aegis) ? aegis : 0;
+			var value = passives.TryGetValue(AppliedPassiveType.Aegis, out var aegis) ? aegis : 0;
+			return Math.Max(value, 0);
 		}
 
 		public static int GetAssignedBlockForContext(EntityManager entityManager, string contextId)

@@ -639,6 +639,12 @@ namespace Crusaders30XX.ECS.Systems
 					case "Penance":
 						parts.Add($"Gain {e.amount} penance");
 						break;
+					case "Armor":
+						parts.Add($"Gain {e.amount} armor");
+						break;
+					case "Wounded":
+						parts.Add($"Gain {e.amount} wounded");
+						break;
 					default:
 						parts.Add(e.type);
 						break;

@@ -180,6 +180,7 @@ namespace Crusaders30XX.ECS.Systems
 				case "succubus": return new SuccubusIntentService();
 				case "spider": return new SpiderIntentService();
 				case "ogre": return new OgreIntentService();
+				case "skeleton": return new SkeletonIntentService();
 				default: return null;
 			}
 		}

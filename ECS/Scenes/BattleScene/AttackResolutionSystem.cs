@@ -43,7 +43,7 @@ namespace Crusaders30XX.ECS.Systems
 			bool blocked = ConditionService.Evaluate(def.conditionsBlocked, pa.ContextId, EntityManager, enemy, null);
 			pa.WasBlocked = blocked;
 
-			var target = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var source = enemy;
 			// Always apply on-hit; if NOT blocked, also apply on-not-blocked
 			void ApplyEffects(EffectDefinition[] list)
@@ -59,7 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 						Percentage = eff.percentage,
 						Stacks = eff.stacks,
 						Source = source,
-						Target = target
+						Target = string.IsNullOrEmpty(eff.target) || eff.target == "Player" ? player : enemy
 					});
 				}
 			}

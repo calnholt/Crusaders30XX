@@ -1,0 +1,105 @@
+{
+  "name": "Skeleton",
+  "id": "skeleton",
+  "hp": 75,
+  "passives": [
+    {
+      "type": "Armor",
+      "amount": 1,
+      "target": "Enemy"
+    }
+  ],
+  "attacks": [
+    {
+      "id": "bone_strike",
+      "name": "Bone Strike",
+      "target": "Player",
+      "positionType": "Linker",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "OnHit"
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 2
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "Penance",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "sweep",
+      "name": "Sweep",
+      "target": "Player",
+      "positionType": "Linker",
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "id": "slash",
+      "name": "Slash",
+      "target": "Player",
+      "positionType": "Linker",
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "id": "calcify",
+      "name": "Calcify",
+      "target": "Player",
+      "positionType": "Linker",
+      "conditionsBlocked": {
+        "kind": "All",
+        "children": [
+          {
+            "kind": "Leaf",
+            "leafType": "OnHit"
+          }
+        ]
+      },
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 3
+        }
+      ],
+      "effectsOnNotBlocked": [
+        {
+          "type": "Armor",
+          "target": "Enemy",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "skull_crusher",
+      "name": "Skull Crusher",
+      "target": "Player",
+      "positionType": "Linker",
+      "effectsOnHit": [
+        {
+          "type": "Damage",
+          "amount": 9
+        }
+      ]
+    }
+  ]
+}

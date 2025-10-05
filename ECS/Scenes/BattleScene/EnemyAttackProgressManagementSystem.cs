@@ -62,7 +62,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void PrintProgress(EnemyAttackProgress p)
 		{
-			Console.WriteLine($"[EnemyAttackProgressManagementSystem] Progress p={p.ContextId} playedCards={p.PlayedCards} playedRed={p.PlayedRed} playedWhite={p.PlayedWhite} playedBlack={p.PlayedBlack} assignedBlockTotal={p.AssignedBlockTotal} additionalConditionalDamageTotal={p.AdditionalConditionalDamageTotal} isConditionMet={p.IsConditionMet} actualDamage={p.ActualDamage} preventedDamage={p.AegisTotal} damageBeforePrevention={p.DamageBeforePrevention} baseDamage={p.BaseDamage}");
+			Console.WriteLine($"[EnemyAttackProgressManagementSystem] Progress p={p.ContextId} playedCards={p.PlayedCards} playedRed={p.PlayedRed} playedWhite={p.PlayedWhite} playedBlack={p.PlayedBlack} assignedBlockTotal={p.AssignedBlockTotal} additionalConditionalDamageTotal={p.AdditionalConditionalDamageTotal} isConditionMet={p.IsConditionMet} actualDamage={p.ActualDamage} preventedDamage={p.AegisTotal} damageBeforePrevention={p.DamageBeforePrevention} baseDamage={p.BaseDamage} aegisTotal={p.AegisTotal}");
 		}
 
 		[DebugAction("Print Progress")]
