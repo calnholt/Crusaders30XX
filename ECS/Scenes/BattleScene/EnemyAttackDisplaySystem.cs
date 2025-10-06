@@ -335,7 +335,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				lines.Add(($"On not blocked: {notBlockedSummary}", TextScale, Color.OrangeRed));
 			}
-			AppendLeafConditionsWithStatus(def.conditionsBlocked, pa.ContextId, enemy, lines);
+			AppendLeafConditionsWithStatus(def.blockingCondition, lines);
 
 			// Measure and draw a simple panel in the center
 			int pad = System.Math.Max(0, PanelPadding);
@@ -549,37 +549,17 @@ namespace Crusaders30XX.ECS.Systems
 			return null;
 		}
 
-		private void AppendLeafConditionsWithStatus(ConditionNode node, string contextId, Entity attacker, List<(string text, float scale, Color color)> lines)
+		private void AppendLeafConditionsWithStatus(Condition node, List<(string text, float scale, Color color)> lines)
 		{
 			if (node == null) return;
-			if (node.kind == "Leaf")
+			bool satisfied = ConditionService.Evaluate(node, EntityManager);
+			Color statusColor = satisfied ? Color.LimeGreen : Color.IndianRed;
+			switch (node.type)
 			{
-				if (!string.IsNullOrEmpty(node.leafType))
+				case "OnHit":
 				{
-					bool satisfied = ConditionService.Evaluate(node, contextId, EntityManager, attacker, null);
-					Color statusColor = satisfied ? Color.LimeGreen : Color.IndianRed;
-					if (node.leafType == "PlayColorAtLeastN" || node.leafType == "PlayAtLeastN")
-					{
-						var color = node.@params != null && node.@params.TryGetValue("color", out var c) ? c : null;
-						var n = node.@params != null && node.@params.TryGetValue("n", out var nStr) ? nStr : "?";
-						lines.Add(($"Condition: Block with {n} {color ?? "card"}", TextScale, statusColor));
-					}
-					else if (node.leafType == "OnHit")
-					{
-						lines.Add(("Condition: Fully block the attack", TextScale, statusColor));
-					}
-					else
-					{
-						lines.Add(($"Condition: {node.leafType}", TextScale, statusColor));
-					}
-				}
-				return;
-			}
-			if (node.children != null)
-			{
-				foreach (var c in node.children)
-				{
-					AppendLeafConditionsWithStatus(c, contextId, attacker, lines);
+					lines.Add(("Condition: Fully block the attack", TextScale, statusColor));
+					break;
 				}
 			}
 		}

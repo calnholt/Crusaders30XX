@@ -10,18 +10,15 @@ namespace Crusaders30XX.ECS.Data.Attacks
 		public string positionType { get; set; } = "Linker"; // "Starter" | "Linker" | "Ender"
 		public int ambushPercentage { get; set; } = 0;
 		public bool isGeneric { get; set; } = false;
-		public ConditionNode conditionsBlocked { get; set; }
+		public Condition blockingCondition { get; set; }
 		public EffectDefinition[] effectsOnAttack { get; set; } = System.Array.Empty<EffectDefinition>();
 		public EffectDefinition[] effectsOnHit { get; set; } = System.Array.Empty<EffectDefinition>();
 		public EffectDefinition[] effectsOnNotBlocked { get; set; } = System.Array.Empty<EffectDefinition>();
 	}
 
-	public class ConditionNode
+	public class Condition
 	{
-		public string kind { get; set; } // "All" | "Any" | "Not" | "Leaf"
-		public ConditionNode[] children { get; set; } = System.Array.Empty<ConditionNode>();
-		public string leafType { get; set; } // e.g., "PlayColorAtLeastN"
-		public Dictionary<string, string> @params { get; set; }
+		public string type { get; set; } // e.g., "OnHit"
 	}
 
 	public class EffectDefinition

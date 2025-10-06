@@ -26,14 +26,8 @@
       "name": "Pummel Into Submission",
       "target": "Player",
       "positionType": "Ender",
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
+      "blockingCondition": {
+        "type": "OnHit"
       },
       "effectsOnAttack": [
         {
@@ -96,14 +90,8 @@
       "name": "Thud",
       "target": "Player",
       "positionType": "Ender",
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
+      "blockingCondition": {
+        "type": "OnHit"
       },
       "effectsOnHit": [
         {

@@ -8,14 +8,8 @@
       "name": "Razor Maw",
       "target": "Player",
       "positionType": "Ender",
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
+      "blockingCondition": {
+        "type": "OnHit"
       },
       "effectsOnHit": [
         {
@@ -35,14 +29,8 @@
       "name": "Punishing Swipe",
       "target": "Player",
       "positionType": "Linker",
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
+      "blockingCondition": {
+        "type": "OnHit"
       },
       "effectsOnHit": [
         {
@@ -62,14 +50,8 @@
       "name": "Scorching Claw",
       "target": "Player",
       "positionType": "Ender",
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
+      "blockingCondition": {
+        "type": "OnHit"
       },
       "effectsOnHit": [
         {
@@ -90,14 +72,8 @@
       "target": "Player",
       "positionType": "Linker",
       "ambushPercentage": 15,
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
+      "blockingCondition": {
+        "type": "OnHit"
       },
       "effectsOnHit": [
         {
@@ -118,14 +94,8 @@
       "target": "Player",
       "positionType": "Ender",
       "ambushPercentage": 10,
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
+      "blockingCondition": {
+        "type": "OnHit"
       },
       "effectsOnHit": [
         {

@@ -40,7 +40,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Load definition via shared cache
 			if (!AttackDefinitionCache.TryGet(pa.AttackId, out var def)) return;
 
-			bool blocked = ConditionService.Evaluate(def.conditionsBlocked, pa.ContextId, EntityManager, enemy, null);
+			bool blocked = ConditionService.Evaluate(def.blockingCondition, EntityManager);
 			pa.WasBlocked = blocked;
 
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();

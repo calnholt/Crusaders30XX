@@ -15,14 +15,8 @@
       "name": "Bone Strike",
       "target": "Player",
       "positionType": "Linker",
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
+      "blockingCondition": {
+        "type": "OnHit"
       },
       "effectsOnHit": [
         {
@@ -66,14 +60,8 @@
       "name": "Calcify",
       "target": "Player",
       "positionType": "Linker",
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
+      "blockingCondition": {
+        "type": "OnHit"
       },
       "effectsOnHit": [
         {

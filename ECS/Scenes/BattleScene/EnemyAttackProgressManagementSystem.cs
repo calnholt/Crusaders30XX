@@ -197,7 +197,7 @@ namespace Crusaders30XX.ECS.Systems
 			p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
-			bool isConditionMet = ConditionService.Evaluate(def.conditionsBlocked, p.ContextId, EntityManager, p.Enemy, null);
+			bool isConditionMet = ConditionService.Evaluate(def.blockingCondition, EntityManager);
 			p.BaseDamage = (def.effectsOnHit ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);

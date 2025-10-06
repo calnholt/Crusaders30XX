@@ -1,0 +1,134 @@
+{
+    "name": "Ninja",
+    "id": "ninja",
+    "hp": 80,
+    "attacks": [
+      {
+        "id": "slice",
+        "name": "Slice",
+        "target": "Player",
+        "positionType": "Linker",
+        "effectsOnHit": [
+          {
+            "type": "Damage",
+            "amount": 2
+          }
+        ]
+      },
+      {
+        "id": "dice",
+        "name": "Dice",
+        "target": "Player",
+        "positionType": "Linker",
+        "effectsOnHit": [
+          {
+            "type": "Damage",
+            "amount": 2
+          }
+        ]
+      },
+      {
+        "id": "dusk flick",
+        "name": "Dust Flick",
+        "target": "Player",
+        "positionType": "Linker",
+        "blockingCondition": {
+          "kind": "All",
+          "children": [
+            {
+              "kind": "Leaf",
+              "leafType": "OnHit"
+            }
+          ]
+        },
+        "effectsOnHit": [
+          {
+            "type": "Damage",
+            "amount": 3
+          }
+        ],
+        "effectsOnNotBlocked": [
+          {
+            "type": "Wounded",
+            "amount": 1
+          }
+        ]
+      },
+      {
+        "id": "cloaked_reaver",
+        "name": "Cloaked Reaver",
+        "target": "Player",
+        "positionType": "Linker",
+        "blockingCondition": {
+          "kind": "All",
+          "children": [
+            {
+              "kind": "Leaf",
+              "leafType": "OnHit"
+            }
+          ]
+        },
+        "effectsOnHit": [
+          {
+            "type": "Damage",
+            "amount": 3
+          }
+        ],
+        "effectsOnNotBlocked": [
+          {
+            "type": "Penance",
+            "amount": 1
+          }
+        ]
+      },
+      {
+        "id": "nightveil_guillotine",
+        "name": "Nightveil Guillotine",
+        "target": "Player",
+        "positionType": "Ender",
+        "text": "If Crusader was hit by both Slice and Dice this turn, this attack gains +4 attack and 'If this attack hits, the Crusader gains 2 penance.",
+        "blockingCondition": {
+          "kind": "All",
+          "children": [
+            {
+              "kind": "Leaf",
+              "leafType": "OnHit"
+            }
+          ]
+        },
+        "effectsOnHit": [
+          {
+            "type": "Damage",
+            "amount": 4
+          }
+        ],
+        "conditionals": {
+            "effectsOnHit": [
+                {
+                    "type": "Damage",
+                    "amount": 4
+                }
+            ],
+            "effectsOnNotBlocked": [
+                {
+                  "type": "Penance",
+                  "amount": 2
+                }
+            ]
+        }
+      },
+      {
+        "id": "gouging_jab",
+        "name": "Gouging Jab",
+        "target": "Player",
+        "positionType": "Starter",
+        "ambushPercentage": 75,
+        "effectsOnHit": [
+          {
+            "type": "Damage",
+            "amount": 3
+          }
+        ]
+      }
+    ]
+  }

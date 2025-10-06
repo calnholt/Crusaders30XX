@@ -17,14 +17,8 @@
       "target": "Player",
       "positionType": "Ender",
       "ambushPercentage": 75,
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
+      "blockingCondition": {
+        "type": "OnHit"
       },
       "effectsOnHit": [
         {
@@ -58,14 +52,8 @@
       "target": "Player",
       "positionType": "Ender",
       "ambushPercentage": 75,
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
+      "blockingCondition": {
+        "type": "OnHit"
       },
       "effectsOnHit": [
         {
@@ -86,14 +74,8 @@
       "target": "Player",
       "positionType": "Starter",
       "ambushPercentage": 50,
-      "conditionsBlocked": {
-        "kind": "All",
-        "children": [
-          {
-            "kind": "Leaf",
-            "leafType": "OnHit"
-          }
-        ]
+      "blockingCondition": {
+        "type": "OnHit"
       },
       "effectsOnHit": [
         {
