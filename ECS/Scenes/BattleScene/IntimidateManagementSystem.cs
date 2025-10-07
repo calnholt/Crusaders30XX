@@ -55,7 +55,9 @@ namespace Crusaders30XX.ECS.Systems
 			if (currentAttack == null) return;
 
 			// Load attack definition
-			if (!AttackDefinitionCache.TryGet(currentAttack.AttackId, out var def)) return;
+			var attackIntent = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault().GetComponent<AttackIntent>();
+			if (attackIntent == null) return;
+			var def = attackIntent.Planned[0].AttackDefinition;
 
 			// Check for intimidate effects
 			if (def.effectsOnAttack == null || def.effectsOnAttack.Length == 0) return;
