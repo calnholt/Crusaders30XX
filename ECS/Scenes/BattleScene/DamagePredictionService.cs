@@ -13,9 +13,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (definition == null) return 0;
 
-			return (definition.effectsOnHit ?? System.Array.Empty<EffectDefinition>())
-				.Where(e => e.type == "Damage")
-				.Sum(e => e.amount) + 
+			return definition.damage + 
         
         (definition.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")

@@ -8,15 +8,10 @@
       "name": "Razor Maw",
       "target": "Player",
       "positionType": "Ender",
+      "damage": 7,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 7
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "Burn",
@@ -29,15 +24,10 @@
       "name": "Punishing Swipe",
       "target": "Player",
       "positionType": "Linker",
+      "damage": 2,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 2
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "Damage",
@@ -50,15 +40,10 @@
       "name": "Scorching Claw",
       "target": "Player",
       "positionType": "Ender",
+      "damage": 3,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 3
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "Burn",
@@ -72,15 +57,10 @@
       "target": "Player",
       "positionType": "Linker",
       "ambushPercentage": 15,
+      "damage": 5,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 5
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "Burn",
@@ -94,15 +74,10 @@
       "target": "Player",
       "positionType": "Ender",
       "ambushPercentage": 10,
+      "damage": 10,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 10
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "Burn",
@@ -120,12 +95,7 @@
       "target": "Player",
       "positionType": "Starter",
       "ambushPercentage": 75,
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 3
-        }
-      ]
+      "damage": 3
     }
   ]
 }

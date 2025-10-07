@@ -18,12 +18,7 @@
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 2
-        }
-      ],
+      "damage": 2,
       "effectsOnNotBlocked": [
         {
           "type": "Penance",
@@ -36,39 +31,24 @@
       "name": "Sweep",
       "target": "Player",
       "positionType": "Linker",
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 3
-        }
-      ]
+      "damage": 3
     },
     {
       "id": "slash",
       "name": "Slash",
       "target": "Player",
       "positionType": "Linker",
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 5
-        }
-      ]
+      "damage": 5
     },
     {
       "id": "calcify",
       "name": "Calcify",
       "target": "Player",
       "positionType": "Linker",
+      "damage": 3,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 3
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "Armor",
@@ -82,12 +62,7 @@
       "name": "Skull Crusher",
       "target": "Player",
       "positionType": "Linker",
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 9
-        }
-      ]
+      "damage": 9
     }
   ]
 }

@@ -8,15 +8,10 @@
       "name": "Velvet Fangs",
       "target": "Player",
       "positionType": "Linker",
+      "damage": 5,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 5
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "LoseCourage",
@@ -34,15 +29,10 @@
       "target": "Player",
       "positionType": "Starter",
       "ambushPercentage": 25,
+      "damage": 3,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 3
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "LoseCourage",
@@ -59,15 +49,10 @@
       "name": "Enthralling Gaze",
       "target": "Player",
       "positionType": "Ender",
+      "damage": 5,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 5
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "Damage",
@@ -81,15 +66,10 @@
       "target": "Player",
       "positionType": "Ender",
       "ambushPercentage": 10,
+      "damage": 10,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 10
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "LoseCourage",
@@ -103,12 +83,7 @@
       "target": "Player",
       "positionType": "Starter",
       "ambushPercentage": 100,
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 3
-        }
-      ]
+      "damage": 3
     }
   ]
 }

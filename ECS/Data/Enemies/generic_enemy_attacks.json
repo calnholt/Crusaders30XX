@@ -6,15 +6,10 @@
       "target": "Player",
       "positionType": "Ender",
       "isGeneric": true,
+      "damage": 7,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 7
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "DiscardSpecificCard",

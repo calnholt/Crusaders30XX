@@ -37,8 +37,9 @@ namespace Crusaders30XX.ECS.Systems
 			var pa = intent.Planned.FirstOrDefault(x => x.ContextId == e.ContextId);
 			if (pa == null) return;
 
-			// Load definition via shared cache
-			if (!AttackDefinitionCache.TryGet(pa.AttackId, out var def)) return;
+			var attackIntent = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault().GetComponent<AttackIntent>();
+			if (attackIntent == null) return;
+			var def = attackIntent.Planned[0].AttackDefinition;
 
 			bool blocked = ConditionService.Evaluate(def.blockingCondition, EntityManager);
 			pa.WasBlocked = blocked;
@@ -63,8 +64,16 @@ namespace Crusaders30XX.ECS.Systems
 					});
 				}
 			}
-
-			ApplyEffects(def.effectsOnHit);
+			if (def.damage > 0)
+			{
+					EventManager.Publish(new ApplyEffect
+					{
+						EffectType = "Damage",
+						Amount = def.damage,
+						Source = enemy,
+						Target = player
+					});
+			}
 			if (!blocked)
 			{
 				ApplyEffects(def.effectsOnNotBlocked);

@@ -17,15 +17,10 @@
       "target": "Player",
       "positionType": "Ender",
       "ambushPercentage": 75,
+      "damage": 4,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 4
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "Slow",
@@ -39,12 +34,7 @@
       "target": "Player",
       "positionType": "Starter",
       "ambushPercentage": 100,
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 3
-        }
-      ]
+      "damage": 3
     },
     {
       "id": "mandible_breaker",
@@ -52,15 +42,10 @@
       "target": "Player",
       "positionType": "Ender",
       "ambushPercentage": 75,
+      "damage": 8,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 8
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "Slow",
@@ -74,15 +59,10 @@
       "target": "Player",
       "positionType": "Starter",
       "ambushPercentage": 50,
+      "damage": 1,
       "blockingCondition": {
         "type": "OnHit"
       },
-      "effectsOnHit": [
-        {
-          "type": "Damage",
-          "amount": 1
-        }
-      ],
       "effectsOnNotBlocked": [
         {
           "type": "Damage",

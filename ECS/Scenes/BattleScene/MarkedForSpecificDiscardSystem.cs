@@ -49,8 +49,8 @@ namespace Crusaders30XX.ECS.Systems
 
         private AttackDefinition LoadAttackDefinition(string id)
         {
-            AttackDefinitionCache.TryGet(id, out var def);
-            return def;
+            var attackIntent = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault().GetComponent<AttackIntent>();
+			return attackIntent.Planned[0].AttackDefinition;
         }
 
 		private void TryPreselectSpecificDiscards(string contextId)

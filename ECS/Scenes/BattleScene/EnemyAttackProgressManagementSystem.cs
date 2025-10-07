@@ -178,8 +178,9 @@ namespace Crusaders30XX.ECS.Systems
 		private void Recompute(EnemyAttackProgress p)
 		{
 			if (p == null || string.IsNullOrEmpty(p.AttackId)) return;
-			if (!AttackDefinitionCache.TryGet(p.AttackId, out var def) || def == null) return;
-
+			var attackIntent = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault().GetComponent<AttackIntent>();
+			if (attackIntent == null) return;
+			var def = attackIntent.Planned[0].AttackDefinition;
 
 			int full = DamagePredictionService.ComputeFullDamage(def);
 			int aegis = DamagePredictionService.GetAegisAmount(EntityManager);
@@ -198,9 +199,7 @@ namespace Crusaders30XX.ECS.Systems
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
 			bool isConditionMet = ConditionService.Evaluate(def.blockingCondition, EntityManager);
-			p.BaseDamage = (def.effectsOnHit ?? System.Array.Empty<EffectDefinition>())
-				.Where(e => e.type == "Damage")
-				.Sum(e => e.amount);
+			p.BaseDamage = def.damage;
 			int preventedDamageFromBlockCondition = isConditionMet ? (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount) : 0;

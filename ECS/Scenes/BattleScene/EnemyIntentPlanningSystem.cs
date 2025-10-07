@@ -125,38 +125,12 @@ namespace Crusaders30XX.ECS.Systems
 					ResolveStep = System.Math.Max(1, index + 1),
 					ContextId = ctx,
 					WasBlocked = false,
-					IsAmbush = ambushChance > 0 && Random.Shared.Next(0, 100) < ambushChance
+					IsAmbush = ambushChance > 0 && Random.Shared.Next(0, 100) < ambushChance,
+					AttackDefinition = attackDef
 				});
 				EventManager.Publish(new IntentPlanned
 				{
 					AttackId = id,
-					ContextId = ctx,
-					Step = System.Math.Max(1, index + 1),
-					TelegraphText = def.name
-				});
-				index++;
-			}
-		}
-
-		private void PlanRoundRobin(EnemyArsenal arsenal, dynamic currentIntent, dynamic nextIntent)
-		{
-			currentIntent.Planned.Clear();
-			nextIntent.Planned.Clear();
-			int index = 0;
-			foreach (var chosenId in arsenal.AttackIds.Take(2))
-			{
-				if (!_attackDefs.TryGetValue(chosenId, out var def)) continue;
-				string ctx = Guid.NewGuid().ToString("N");
-				currentIntent.Planned.Add(new PlannedAttack
-				{
-					AttackId = chosenId,
-					ResolveStep = System.Math.Max(1, index + 1),
-					ContextId = ctx,
-					WasBlocked = false
-				});
-				EventManager.Publish(new IntentPlanned
-				{
-					AttackId = chosenId,
 					ContextId = ctx,
 					Step = System.Math.Max(1, index + 1),
 					TelegraphText = def.name

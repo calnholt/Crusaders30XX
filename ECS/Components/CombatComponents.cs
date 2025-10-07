@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Attacks;
 
 namespace Crusaders30XX.ECS.Components
 {
@@ -37,6 +38,7 @@ namespace Crusaders30XX.ECS.Components
 		public string ContextId;
 		public bool WasBlocked;
 		public bool IsAmbush;
+		public AttackDefinition AttackDefinition;
 	}
 
 	// Stun is now tracked per PlannedAttack via IsStunned flag
