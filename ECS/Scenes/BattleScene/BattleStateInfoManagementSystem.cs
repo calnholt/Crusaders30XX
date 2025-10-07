@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -15,6 +16,7 @@ namespace Crusaders30XX.ECS.Systems
     /// - Clear BattleTracking when a new battle starts
     /// - Clear RunTracking when loading Battle scene
     /// </summary>
+    [DebugTab("Battle State Info")]
     public class BattleStateInfoManagementSystem : Core.System
     {
         public BattleStateInfoManagementSystem(EntityManager entityManager) : base(entityManager)
@@ -25,11 +27,12 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<TrackingEvent>(OnTrackingEvent);
             EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourage);
             EventManager.Subscribe<SetCourageEvent>(OnSetCourageEvent);
+            EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
         {
-            return System.Array.Empty<Entity>();
+            return Array.Empty<Entity>();
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
@@ -64,18 +67,18 @@ namespace Crusaders30XX.ECS.Systems
           AddToAllDictionaries(e);
         }
 
-        private void AddToDict(Dictionary<TrackingTypeEnum, int> dict, TrackingEvent e)
+        private void AddToDict(Dictionary<string, int> dict, TrackingEvent e)
         {
           if (dict == null) return;
-          dict.TryGetValue(e.Type, out int current);
+          dict.TryGetValue(e.Type.ToString(), out int current);
           int next = current + e.Delta;
           if (next == 0)
           {
-              if (dict.ContainsKey(e.Type)) dict.Remove(e.Type);
+              if (dict.ContainsKey(e.Type.ToString())) dict.Remove(e.Type.ToString());
           }
           else
           {
-              dict[e.Type] = next;
+              dict[e.Type.ToString()] = next;
           }
         }
 
@@ -86,21 +89,36 @@ namespace Crusaders30XX.ECS.Systems
           AddToDict(st.BattleTracking, e);
           AddToDict(st.TurnTracking, e);
           AddToDict(st.PhaseTracking, e);
-          Console.WriteLine($"[BattleStateInfoManagementSystem] AddToAllDictionaries - {e.Type} {e.Delta}");
         }
 
         private void OnModifyCourage(ModifyCourageEvent e)
         {
-          var st = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault().GetComponent<BattleStateInfo>();
-          OnTrackingEvent(new TrackingEvent { Type = e.Delta > 0 ? TrackingTypeEnum.CourageGained : TrackingTypeEnum.CourageLost, Delta = Math.Abs(e.Delta) });
+          OnTrackingEvent(new TrackingEvent { Type = e.Delta > 0 ? TrackingTypeEnum.CourageGained.ToString() : TrackingTypeEnum.CourageLost.ToString(), Delta = Math.Abs(e.Delta) });
         }
         private void OnSetCourageEvent(SetCourageEvent e)
         {
           var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-          var st = player.GetComponent<BattleStateInfo>();
           var courage = player.GetComponent<Courage>();
           var delta = courage.Amount - e.Amount;
-          OnTrackingEvent(new TrackingEvent { Type = delta > 0 ? TrackingTypeEnum.CourageGained : TrackingTypeEnum.CourageLost, Delta = Math.Abs(delta) });
+          OnTrackingEvent(new TrackingEvent { Type = delta > 0 ? TrackingTypeEnum.CourageGained.ToString() : TrackingTypeEnum.CourageLost.ToString(), Delta = Math.Abs(delta) });
+        }
+        private void OnApplyEffect(ApplyEffect e)
+        {
+          if (!string.IsNullOrEmpty(e.attackId))
+          {
+            OnTrackingEvent(new TrackingEvent { Type = TrackingTypeEnum.NumberOfAttacksHitPlayer.ToString(), Delta = 1 });
+            OnTrackingEvent(new TrackingEvent { Type = e.attackId, Delta = 1 });
+          }
+        }
+
+        [DebugAction("Print Tracking")]
+        private void debug_PrintTracking()
+        {
+          var st = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault().GetComponent<BattleStateInfo>();
+          Console.WriteLine($"[BattleStateInfoManagementSystem] RunTracking: {string.Join(", ", st.RunTracking.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
+          Console.WriteLine($"[BattleStateInfoManagementSystem] BattleTracking: {string.Join(", ", st.BattleTracking.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
+          Console.WriteLine($"[BattleStateInfoManagementSystem] TurnTracking: {string.Join(", ", st.TurnTracking.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
+          Console.WriteLine($"[BattleStateInfoManagementSystem] PhaseTracking: {string.Join(", ", st.PhaseTracking.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
         }
     }
 }

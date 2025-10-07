@@ -64,6 +64,7 @@ namespace Crusaders30XX.ECS.Systems
 					});
 				}
 			}
+			Console.WriteLine($"[AttackResolutionSystem] ResolveAttack {pa.AttackId} {def.damage}");
 			if (def.damage > 0)
 			{
 					EventManager.Publish(new ApplyEffect
@@ -71,7 +72,9 @@ namespace Crusaders30XX.ECS.Systems
 						EffectType = "Damage",
 						Amount = def.damage,
 						Source = enemy,
-						Target = player
+						Target = player,
+						attackId = pa.AttackId,
+						Percentage = 100
 					});
 			}
 			if (!blocked)

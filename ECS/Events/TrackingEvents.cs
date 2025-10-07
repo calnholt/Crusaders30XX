@@ -8,7 +8,7 @@ namespace Crusaders30XX.ECS.Events
     /// </summary>
     public class TrackingEvent
     {
-        public TrackingTypeEnum Type { get; set; }
+        public string Type { get; set; }
         public int Delta { get; set; } = 1;
     }
 }

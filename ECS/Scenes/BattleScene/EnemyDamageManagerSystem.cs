@@ -42,7 +42,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnImpactNow(EnemyAttackImpactNow e)
         {
-            System.Console.WriteLine($"[EnemyDamageManagerSystem] EnemyAttackImpactNow context={e.ContextId} pending={_pendingDamage}");
+            Console.WriteLine($"[EnemyDamageManagerSystem] EnemyAttackImpactNow context={e.ContextId} pending={_pendingDamage}");
             int incoming = _pendingDamage;
             _pendingDamage = 0;
             if (incoming <= 0) return;
@@ -58,7 +58,7 @@ namespace Crusaders30XX.ECS.Systems
                 var prog = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>()
                     .FirstOrDefault(e2 => e2.GetComponent<EnemyAttackProgress>()?.ContextId == ctx)?.GetComponent<EnemyAttackProgress>();
                 int assigned = prog?.AssignedBlockTotal ?? 0;
-                int useAssigned = System.Math.Min(assigned, incoming);
+                int useAssigned = Math.Min(assigned, incoming);
                 incoming -= useAssigned;
             }
 
@@ -68,7 +68,7 @@ namespace Crusaders30XX.ECS.Systems
                 var passives = player?.GetComponent<AppliedPassives>()?.Passives;
                 if (passives == null) return;
                 int prevent = passives.TryGetValue(AppliedPassiveType.Aegis, out var aegis) ? aegis : 0;
-                int use = System.Math.Min(prevent, incoming);
+                int use = Math.Min(prevent, incoming);
                 if (use > 0)
                 {
                     EventManager.Publish(new UpdatePassive { Owner = player, Type = AppliedPassiveType.Aegis, Delta = -use });

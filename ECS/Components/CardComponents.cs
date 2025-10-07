@@ -187,17 +187,18 @@ namespace Crusaders30XX.ECS.Components
 	{
 		public Entity Owner { get; set; }
 		public HashSet<string> EquipmentTriggeredThisBattle { get; set; } = new();
-        public Dictionary<TrackingTypeEnum, int> RunTracking { get; set; } = new();
-        public Dictionary<TrackingTypeEnum, int> BattleTracking { get; set; } = new();
-        public Dictionary<TrackingTypeEnum, int> TurnTracking { get; set; } = new();
-        public Dictionary<TrackingTypeEnum, int> PhaseTracking { get; set; } = new();
+        public Dictionary<string, int> RunTracking { get; set; } = new();
+        public Dictionary<string, int> BattleTracking { get; set; } = new();
+        public Dictionary<string, int> TurnTracking { get; set; } = new();
+        public Dictionary<string, int> PhaseTracking { get; set; } = new();
 
 	}
 
     public enum TrackingTypeEnum
     {
         CourageGained,
-        CourageLost
+        CourageLost,
+        NumberOfAttacksHitPlayer,
     }
     
     /// <summary>

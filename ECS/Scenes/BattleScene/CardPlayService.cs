@@ -96,7 +96,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "seize":
                 {
-                    battleStateInfo.PhaseTracking.TryGetValue(TrackingTypeEnum.CourageLost, out var courageLost);
+                    battleStateInfo.PhaseTracking.TryGetValue(TrackingTypeEnum.CourageLost.ToString(), out var courageLost);
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -(courageLost > 0 ? values[1] : values[0]), DamageType = ModifyTypeEnum.Attack });
                     break;
                 }

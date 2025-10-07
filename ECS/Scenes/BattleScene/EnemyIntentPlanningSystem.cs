@@ -102,6 +102,7 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						AddPlanned(nextIds, next, enemyId);
 					}
+					EnemyAttackEffectService.Apply(EntityManager, intent.Planned.FirstOrDefault().AttackDefinition);
 				}
 				_lastPlannedTurnNumber = turnNumber;
 				_isFirstLoad = false;
@@ -122,7 +123,7 @@ namespace Crusaders30XX.ECS.Systems
 				target.Planned.Add(new PlannedAttack
 				{
 					AttackId = id,
-					ResolveStep = System.Math.Max(1, index + 1),
+					ResolveStep = Math.Max(1, index + 1),
 					ContextId = ctx,
 					WasBlocked = false,
 					IsAmbush = ambushChance > 0 && Random.Shared.Next(0, 100) < ambushChance,
@@ -132,7 +133,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					AttackId = id,
 					ContextId = ctx,
-					Step = System.Math.Max(1, index + 1),
+					Step = Math.Max(1, index + 1),
 					TelegraphText = def.name
 				});
 				index++;

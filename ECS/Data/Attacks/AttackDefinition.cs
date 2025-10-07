@@ -11,6 +11,8 @@ namespace Crusaders30XX.ECS.Data.Attacks
 		public string positionType { get; set; } = "Linker"; // "Starter" | "Linker" | "Ender"
 		public int ambushPercentage { get; set; } = 0;
 		public bool isGeneric { get; set; } = false;
+		public string text { get; set; } = "";
+		public bool isTextConditionFulfilled { get; set; } = false;
 		public Condition blockingCondition { get; set; }
 		public Condition conditionals { get; set; }
 		public EffectDefinition[] effectsOnAttack { get; set; } = System.Array.Empty<EffectDefinition>();

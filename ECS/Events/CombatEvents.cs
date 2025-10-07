@@ -30,6 +30,7 @@ namespace Crusaders30XX.ECS.Events
 		public Entity Source;
 		public Entity Target;
 		public int Percentage;
+		public string attackId;
 	}
 
 	public class AttackResolved
