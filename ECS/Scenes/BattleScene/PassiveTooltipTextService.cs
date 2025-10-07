@@ -31,6 +31,10 @@ namespace Crusaders30XX.ECS.Systems
           return $"At the start of your turn, gain {stacks} burn {(stacks == 1 ? "" : "s")} this battle.";
         case AppliedPassiveType.Penance:
           return $"Lose {stacks} max HP for the rest of the quest.";
+        case AppliedPassiveType.Aggression:
+          return $"The next attack this turn gains {stacks} damage.";
+        case AppliedPassiveType.Stealth:
+          return "You cannot see the number of attacks this monster plans.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

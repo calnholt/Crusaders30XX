@@ -7,6 +7,8 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Utils;
+using System.Collections.Generic;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -142,7 +144,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
 
                 // Render each passive as "<stacks> <Name>" chip, left-to-right centered under entity
-                var items = ap.Passives.Select(kv => new { Type = kv.Key, Count = kv.Value, Label = $"{kv.Value} {StringUtils.ToSentenceCase(kv.Key.ToString())}" }).ToList();
+                var items = ap.Passives.Select(kv => new { Type = kv.Key, Count = kv.Value, Label = $"{(ShowStacks(kv.Key) ? $"{kv.Value} " : "")}{StringUtils.ToSentenceCase(kv.Key.ToString())}" }).ToList();
                 if (items.Count == 0)
                 {
                     CleanupTooltipUiForOwner(e.Id, new System.Collections.Generic.HashSet<AppliedPassiveType>());
@@ -188,6 +190,11 @@ namespace Crusaders30XX.ECS.Systems
                 var presentTypes = new System.Collections.Generic.HashSet<AppliedPassiveType>(items.Select(it => it.Type));
                 CleanupTooltipUiForOwner(e.Id, presentTypes);
             }
+        }
+
+        private Boolean ShowStacks(AppliedPassiveType type)
+        {
+            return !(new List<AppliedPassiveType> {AppliedPassiveType.Stealth }).Contains(type);
         }
 
         private void OnPassiveTriggered(PassiveTriggered e)

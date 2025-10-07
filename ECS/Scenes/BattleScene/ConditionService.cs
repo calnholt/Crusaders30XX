@@ -11,7 +11,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		public static bool Evaluate(Condition node, EntityManager entityManager)
 		{
-			if (node == null) return false;
+			if (node == null) return OnHit(entityManager);
 			return EvaluateType(node.type, entityManager);
 		}
 

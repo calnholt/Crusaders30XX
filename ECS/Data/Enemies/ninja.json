@@ -2,23 +2,30 @@
   "name": "Ninja",
   "id": "ninja",
   "hp": 80,
+  "passives": [
+    {
+      "type": "Stealth",
+      "amount": 1,
+      "target": "Enemy"
+    }
+  ],
   "attacks": [
     {
       "id": "slice",
       "name": "Slice",
       "target": "Player",
       "positionType": "Linker",
-      "damage": 2
+      "damage": 1
     },
     {
       "id": "dice",
       "name": "Dice",
       "target": "Player",
       "positionType": "Linker",
-      "damage": 2
+      "damage": 1
     },
     {
-      "id": "dusk flick",
+      "id": "dusk_flick",
       "name": "Dust Flick",
       "target": "Player",
       "positionType": "Linker",
@@ -48,6 +55,46 @@
           "amount": 1
         }
       ]
+    },
+    {
+      "id": "silencing_stab",
+      "name": "Silencing Stab",
+      "target": "Player",
+      "positionType": "Linker",
+      "damage": 3,
+      "blockingCondition": {
+        "type": "OnHit"
+      },
+      "effectsOnNotBlocked": [
+        {
+          "type": "Frozen",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "sharpen_blade",
+      "name": "Sharpen Blade",
+      "target": "Player",
+      "positionType": "Linker",
+      "damage": 2,
+      "blockingCondition": {
+        "type": "OnHit"
+      },
+      "effectsOnNotBlocked": [
+        {
+          "type": "Aggression",
+          "amount": 3,
+          "target": "Enemy"
+        }
+      ]
+    },
+    {
+        "id": "shadow_step",
+        "name": "Shadow Step",
+        "target": "Player",
+        "positionType": "Linker",
+        "damage": 4
     },
     {
       "id": "nightveil_guillotine",

@@ -41,6 +41,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
+			// TODO: cache so we dont need to keep fetching
+			EntityManager.GetEntity("Enemy").GetComponent<AppliedPassives>().Passives.TryGetValue(AppliedPassiveType.Stealth, out var stealthStacks);
+			if (stealthStacks > 0) 
+			{
+				return;
+			}
 			foreach (var e in GetRelevantEntities())
 			{
 				var t = e.GetComponent<Transform>();

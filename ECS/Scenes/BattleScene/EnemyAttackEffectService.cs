@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Attacks;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -10,12 +11,26 @@ namespace Crusaders30XX.ECS.Systems
         public static void Apply(EntityManager entityManager, AttackDefinition attackDefinition)
         {
           var attackId = attackDefinition.id;
+          System.Console.WriteLine($"[EnemyAttackEffectService]: {attackId}");
           var battleStateInfo = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault().GetComponent<BattleStateInfo>();
+          var enemyEntity = entityManager.GetEntity("Enemy");
+          var enemyPassives = enemyEntity.GetComponent<AppliedPassives>();
+
+          if (enemyPassives.Passives.TryGetValue(AppliedPassiveType.Aggression, out int aggressionStacks) && aggressionStacks > 0)
+          {
+            attackDefinition.damage += aggressionStacks;
+            // TODO: should be handled better by the system
+            EventManager.Publish(new PassiveTriggered { Owner = enemyEntity, Type = AppliedPassiveType.Aggression });
+            TimerScheduler.Schedule(0.3f, () => {
+              EventManager.Publish(new RemovePassive { Owner = enemyEntity, Type = AppliedPassiveType.Aggression });
+            });
+          }
           switch (attackId)
           {
             case "nightveil_guillotine":
               battleStateInfo.TurnTracking.TryGetValue("slice", out int sliceCount);
               battleStateInfo.TurnTracking.TryGetValue("dice", out int diceCount);
+              System.Console.WriteLine($"[EnemyAttackEffectService]: slice: {sliceCount} // dice: {diceCount}");
               if (sliceCount > 0 && diceCount > 0)
               {
                 attackDefinition.damage += 4;

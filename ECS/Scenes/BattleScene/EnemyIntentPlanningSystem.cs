@@ -102,10 +102,14 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						AddPlanned(nextIds, next, enemyId);
 					}
-					EnemyAttackEffectService.Apply(EntityManager, intent.Planned.FirstOrDefault().AttackDefinition);
 				}
 				_lastPlannedTurnNumber = turnNumber;
 				_isFirstLoad = false;
+			}
+			else if (evt.Current == SubPhase.PreBlock)
+			{
+				var intent = EntityManager.GetEntity("Enemy").GetComponent<AttackIntent>();
+				EnemyAttackEffectService.Apply(EntityManager, intent.Planned.FirstOrDefault().AttackDefinition);
 			}
 		}
 
@@ -127,7 +131,7 @@ namespace Crusaders30XX.ECS.Systems
 					ContextId = ctx,
 					WasBlocked = false,
 					IsAmbush = ambushChance > 0 && Random.Shared.Next(0, 100) < ambushChance,
-					AttackDefinition = attackDef
+					AttackDefinition = attackDef.DeepCopy()
 				});
 				EventManager.Publish(new IntentPlanned
 				{
@@ -156,6 +160,7 @@ namespace Crusaders30XX.ECS.Systems
 				case "spider": return new SpiderIntentService();
 				case "ogre": return new OgreIntentService();
 				case "skeleton": return new SkeletonIntentService();
+				case "ninja": return new NinjaIntentService();
 				default: return null;
 			}
 		}
