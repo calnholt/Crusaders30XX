@@ -100,6 +100,11 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -(courageLost > 0 ? values[1] : values[0]), DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
+                case "shield_of_faith":
+                {
+                    EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Aegis, Delta = +values[i++] });
+                    break;
+                }
                 case "shroud_of_turin":
                 {
                     var paymentCard = paymentCards.FirstOrDefault();

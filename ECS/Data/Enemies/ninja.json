@@ -102,24 +102,7 @@
       "target": "Player",
       "positionType": "Ender",
       "damage": 4,
-      "text": "If Crusader was hit by both Slice and Dice this turn, this attack gains +4 attack and 'If this attack hits, the Crusader gains 2 penance.",
-      "blockingCondition": {
-        "type": "OnHit"
-      },
-      "conditionals": {
-        "effectsOnHit": [
-          {
-            "type": "Damage",
-            "amount": 4
-          }
-        ],
-        "effectsOnNotBlocked": [
-          {
-            "type": "Penance",
-            "amount": 2
-          }
-        ]
-      }
+      "text": "If both Slice and Dice hit this turn, this attack gains +4 attack and \"gain 2 penance on hit.\""
     }
   ]
 }

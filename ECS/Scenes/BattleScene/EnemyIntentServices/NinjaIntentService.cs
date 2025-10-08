@@ -15,10 +15,14 @@ namespace Crusaders30XX.ECS.Systems
 
 		public IEnumerable<string> SelectForTurn(Entity enemy, EnemyArsenal arsenal, int turnNumber)
 		{
-            return ["slice", "dice", "nightveil_guillotine"];
             var hasSliceAndDice = false;
             var attacks = new List<string> {"slice"};
 			int random = Random.Shared.Next(0, 100);
+            if (random >= 90)
+            {
+                return ["slice", "dice", "sharpen_blade", "nightveil_guillotine"];
+            }
+			random = Random.Shared.Next(0, 100);
 			if (random >= 50)
 			{
 				attacks.Add("dice");

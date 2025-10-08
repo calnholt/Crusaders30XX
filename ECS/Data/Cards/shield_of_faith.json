@@ -1,0 +1,12 @@
+{
+  "id": "shield_of_faith",
+  "name": "Shield of Faith",
+  "target": "Player",
+  "rarity": "Common",
+  "cost": ["Any"],
+  "valuesParse": [9],
+  "text": "Gain {1} aegis.",
+  "animation": "Buff",
+  "block": 3
+}
+

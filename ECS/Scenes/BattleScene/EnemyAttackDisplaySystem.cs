@@ -8,6 +8,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
 using System.Collections.Generic;
 using System;
+using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -35,7 +36,7 @@ namespace Crusaders30XX.ECS.Systems
 		private float _craterElapsedSeconds = 0f;
 
 		// Prevent repeated confirm presses for the same attack context
-		private readonly System.Collections.Generic.HashSet<string> _confirmedForContext = new System.Collections.Generic.HashSet<string>();
+		private readonly HashSet<string> _confirmedForContext = [];
 
 		private struct DebrisParticle
 		{
@@ -46,8 +47,8 @@ namespace Crusaders30XX.ECS.Systems
 			public float Size;
 			public Color Color;
 		}
-		private readonly System.Collections.Generic.List<DebrisParticle> _debris = new System.Collections.Generic.List<DebrisParticle>();
-		private static readonly System.Random _rand = new System.Random();
+		private readonly List<DebrisParticle> _debris = new();
+		private static readonly Random _rand = new();
 
 		// Absorb tween (panel -> enemy)
 		[DebugEditable(DisplayName = "Absorb Duration (s)", Step = 0.02f, Min = 0.05f, Max = 3f)]
@@ -77,6 +78,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.3f, Max = 2.5f)]
 		public float TextScale { get; set; } = 0.1375f;
+
+		[DebugEditable(DisplayName = "Panel Max Width % of Screen", Step = 0.05f, Min = 0.1f, Max = 1f)]
+		public float PanelMaxWidthPercent { get; set; } = 0.25f;
 
 		[DebugEditable(DisplayName = "Line Spacing Extra", Step = 1, Min = 0, Max = 20)]
 		public int LineSpacingExtra { get; set; } = 8;
@@ -333,24 +337,40 @@ namespace Crusaders30XX.ECS.Systems
 			lines.Add(($"Damage: {damageDisplay}{(!isConditionMet && additionalConditionalDamage > 0 ? $" + {additionalConditionalDamage}" : "")} (preventing {progress.TotalPreventedDamage})", TextScale, Color.White));
 			if (!string.IsNullOrEmpty(notBlockedSummary))
 			{
-				lines.Add(($"On not blocked: {notBlockedSummary}", TextScale, Color.OrangeRed));
+				lines.Add(($"On hit: {notBlockedSummary}", TextScale, Color.OrangeRed));
 			}
 			AppendLeafConditionsWithStatus(def.blockingCondition, lines);
+			if (!string.IsNullOrEmpty(def.text))
+			{
+				lines.Add(($"{def.text}", TextScale, def.isTextConditionFulfilled ? Color.White : Color.DarkRed));
+			}
 
 			// Measure and draw a simple panel in the center
 			int pad = System.Math.Max(0, PanelPadding);
+			int vx = _graphicsDevice.Viewport.Width;
+			int vy = _graphicsDevice.Viewport.Height;
+			float percent = System.Math.Clamp(PanelMaxWidthPercent, 0.1f, 1f);
+			int maxPanelWidthPx = (int)System.Math.Round(vx * percent);
+			int contentWidthLimitPx = System.Math.Max(50, maxPanelWidthPx - pad * 2);
+			var wrappedLines = new System.Collections.Generic.List<(string text, float scale, Color color)>();
+			foreach (var (text, lineScale, color) in lines)
+			{
+				var parts = TextUtils.WrapText(_font, text, lineScale, contentWidthLimitPx);
+				foreach (var p in parts)
+				{
+					wrappedLines.Add((p, lineScale, color));
+				}
+			}
 			float maxW = 0f;
 			float totalH = 0f;
-			foreach (var (text, lineScale, _) in lines)
+			foreach (var (text, lineScale, _) in wrappedLines)
 			{
 				var sz = _font.MeasureString(text);
 				maxW = System.Math.Max(maxW, sz.X * lineScale);
 				totalH += sz.Y * lineScale + LineSpacingExtra;
 			}
-			int w = (int)System.Math.Ceiling(maxW) + pad * 2;
+			int w = (int)System.Math.Ceiling(System.Math.Min(maxW + pad * 2, maxPanelWidthPx));
 			int h = (int)System.Math.Ceiling(totalH) + pad * 2;
-			int vx = _graphicsDevice.Viewport.Width;
-			int vy = _graphicsDevice.Viewport.Height;
 
 			var center = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY);
 			Vector2 approachPos = center;
@@ -448,7 +468,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Content
 			float y = rect.Y + pad * panelScale * contentScale;
-			foreach (var (text, baseScale, color) in lines)
+			foreach (var (text, baseScale, color) in wrappedLines)
 			{
 				float s = baseScale * panelScale * contentScale;
 				_spriteBatch.DrawString(_font, text, new Vector2(rect.X + pad * panelScale * contentScale, y), color, 0f, Vector2.Zero, s, SpriteEffects.None, 0f);
