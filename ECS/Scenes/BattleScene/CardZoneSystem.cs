@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 
@@ -17,6 +18,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Subscribe<CardMoveRequested>(OnCardMoveRequested);
             EventManager.Subscribe<CardMoved>(OnCardMoved);
+            EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
             System.Console.WriteLine("[CardZoneSystem] Subscribed to CardMoveRequested");
         }
 
@@ -32,6 +34,25 @@ namespace Crusaders30XX.ECS.Systems
             if (evt.From == CardZoneType.AssignedBlock && evt.To == CardZoneType.DiscardPile)
             {
                 CardBlockService.Resolve(evt.Card, EntityManager);
+            }
+        }
+
+        private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
+        {
+            if (evt.Current != SubPhase.PlayerEnd) return;
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck == null) return;
+            foreach (var card in deck.Hand)
+            {
+                CardDefinitionCache.TryGet(card.GetComponent<CardData>()?.CardId ?? string.Empty, out var def);
+                if (def?.exhaustsOnEndTurn ?? false)
+                {
+                    EventQueueBridge.EnqueueTriggerAction("CardZoneSystem.OnChangeBattlePhase.EndTurnExhaust", () =>
+                    {
+                        EventManager.Publish(new CardMoveRequested { Card = card, Deck = deckEntity, Destination = CardZoneType.ExhaustPile, Reason = "EndTurnExhaust" });
+                    }, .05f);
+                }
             }
         }
 

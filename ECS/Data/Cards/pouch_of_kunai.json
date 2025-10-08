@@ -1,0 +1,11 @@
+{
+  "id": "pouch_of_kunai",
+  "name": "Pouch of Kunai",
+  "target": "Player",
+  "rarity": "Common",
+  "cost": ["White"],
+  "valuesParse": [2, 4],
+  "text": "Put {1} to {2} Kunai cards in your hand.",
+  "animation": "Buff",
+  "block": 3
+}

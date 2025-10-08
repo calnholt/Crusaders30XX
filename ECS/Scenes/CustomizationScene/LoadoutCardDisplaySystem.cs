@@ -156,6 +156,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 if (!CardDefinitionCache.TryGet(id, out var def) || def == null) continue;
                 if (def.isWeapon) continue;
+                if (!def.canAddToLoadout) continue;
                 string name = (def.name ?? def.id) ?? string.Empty;
                 result.Add((entry, id, color, name));
             }

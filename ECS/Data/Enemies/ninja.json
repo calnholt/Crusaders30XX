@@ -90,11 +90,11 @@
       ]
     },
     {
-        "id": "shadow_step",
-        "name": "Shadow Step",
-        "target": "Player",
-        "positionType": "Linker",
-        "damage": 4
+      "id": "shadow_step",
+      "name": "Shadow Step",
+      "target": "Player",
+      "positionType": "Linker",
+      "damage": 4
     },
     {
       "id": "nightveil_guillotine",

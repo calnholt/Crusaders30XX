@@ -80,11 +80,33 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
+                case "kunai":
+                {
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
+                    var chance = values[i++];
+                    var random = Random.Shared.Next(0, 100);
+                    if (random <= chance)
+                    {
+                        EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Wounded, Delta = 1 });
+                    }
+                    break;
+                }
                 case "narrow_gate":
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
                     EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = +values[i++] });
                     EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Penance, Delta = +values[i++] });
+                    break;
+                }
+                case "pouch_of_kunai":
+                {
+                    var count = Random.Shared.Next(values[0], values[1] + 1);
+                    for (int j = 0; j < count; j++)
+                    {
+                        var kunai = EntityFactory.CreateCardFromDefinition(entityManager, "kunai", CardData.CardColor.White, false);
+                        var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                        EventManager.Publish(new CardMoveRequested { Card = kunai, Deck = deckEntity, Destination = CardZoneType.Hand, Reason = "PouchOfKunai" });
+                    }
                     break;
                 }
                 case "sacrifice":

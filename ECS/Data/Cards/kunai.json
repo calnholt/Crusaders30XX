@@ -1,0 +1,13 @@
+{
+  "id": "kunai",
+  "name": "Kunai",
+  "target": "Enemy",
+  "rarity": "Common",
+  "valuesParse": [4, 25],
+  "text": "Deal {1} damage. {2}% chance to wound the enemy. Exhaust on play or at the end of your turn",
+  "isFreeAction": true,
+  "animation": "Attack",
+  "exhaustsOnPlay": true,
+  "exhaustsOnEndTurn": true,
+  "canAddToLoadout": false
+}

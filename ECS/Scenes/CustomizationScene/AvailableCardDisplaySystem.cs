@@ -59,6 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 
             var defs = CardDefinitionCache.GetAll().Values
                 .Where(d => !d.isWeapon)
+                .Where(d => d.canAddToLoadout)
                 .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
                 .ToList();
             CardData.CardColor[] colorOrder = new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black };
@@ -123,6 +124,7 @@ namespace Crusaders30XX.ECS.Systems
 
             var defs = CardDefinitionCache.GetAll().Values
                 .Where(d => !d.isWeapon)
+                .Where(d => d.canAddToLoadout)
                 .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
                 .ToList();
             CardData.CardColor[] colorOrder = new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black };
