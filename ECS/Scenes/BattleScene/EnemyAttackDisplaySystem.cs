@@ -620,37 +620,43 @@ namespace Crusaders30XX.ECS.Systems
 						idx++;
 					}
 				}
-				// Token layout with wrapping matching the visible line, accounting for the "On hit: " prefix on the first line
+				// Token layout with wrapping matching the visible line, using cumulative measured strings to match kerning/prefix exactly
 				string prefix = "On hit: ";
-				float sepW = _font.MeasureString(", ").X * s;
-				float prefixW = _font.MeasureString(prefix).X * s;
 				float lineH = _font.LineSpacing * s;
-				float xCursor = baseX + prefixW;
 				float yCursor = baseY;
-				float maxX = baseX + contentWidthLimitPx;
+				float maxLineWidth = contentWidthLimitPx;
+				bool isFirstLine = true;
+				int lineStartIndex = 0;
 
 				for (int i = 0; i < notBlockedTokens.Count; i++)
 				{
-					var tok = notBlockedTokens[i];
-					float wTok = _font.MeasureString(tok.label).X * s;
-					float addW = (i == 0 ? wTok : (sepW + wTok));
-					if (xCursor + addW > maxX)
+					// Determine if this token fits on the current line
+					string linePrefix = isFirstLine ? prefix : string.Empty;
+					string existing = string.Join(", ", notBlockedTokens.Skip(lineStartIndex).Take(System.Math.Max(0, i - lineStartIndex)).Select(t => t.label));
+					string candidate = linePrefix + (string.IsNullOrEmpty(existing) ? string.Empty : existing + (i > lineStartIndex ? ", " : string.Empty)) + notBlockedTokens[i].label;
+					float candidateW = _font.MeasureString(candidate).X * s;
+					if (candidateW > maxLineWidth + 0.5f) // wrap to next line
 					{
-						// Wrap to next line; no prefix on subsequent lines
+						// Advance to next line
 						yCursor += lineH + lineSpacingScaled;
-						xCursor = baseX;
-						addW = wTok; // first token in new line, no separator leading
+						isFirstLine = false;
+						lineStartIndex = i;
+						linePrefix = string.Empty;
 					}
-					// Rect starts after any separator width
-					float xRect = xCursor + (i == 0 ? 0f : sepW);
+
+					// Compute x position as width of content up to this token (excluding the token itself)
+					string head = linePrefix + string.Join(", ", notBlockedTokens.Skip(lineStartIndex).Take(System.Math.Max(0, i - lineStartIndex)).Select(t => t.label));
+					float headW = string.IsNullOrEmpty(head) ? 0f : _font.MeasureString(head + (i > lineStartIndex ? ", " : string.Empty)).X * s;
+					float tokenW = _font.MeasureString(notBlockedTokens[i].label).X * s;
+					float xRectF = baseX + headW;
 					var tokenRect = new Rectangle(
-						(int)System.Math.Floor(xRect),
+						(int)System.Math.Floor(xRectF),
 						(int)System.Math.Floor(yCursor),
-						(int)System.Math.Ceiling(wTok),
+						(int)System.Math.Ceiling(tokenW),
 						(int)System.Math.Ceiling(lineH)
 					);
 
-					// Determine tooltip for passives only
+					var tok = notBlockedTokens[i];
 					string effectTarget = string.IsNullOrWhiteSpace(tok.eff.target) ? (def.target ?? "Player") : tok.eff.target;
 					bool targetIsPlayer = string.Equals(effectTarget, "Player", System.StringComparison.OrdinalIgnoreCase);
 					if (TryGetPassiveTooltip(tok.eff, targetIsPlayer, out var tip) && !string.IsNullOrWhiteSpace(tip))
@@ -660,8 +666,6 @@ namespace Crusaders30XX.ECS.Systems
 						UpdateEffectTooltipUi(key, tokenRect, tip, ConfirmButtonZ, offsetBelow);
 						presentKeys.Add(key);
 					}
-
-					xCursor += addW;
 				}
 			}
 			foreach (var (text, baseScale, color) in wrappedLines)
