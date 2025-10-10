@@ -14,7 +14,7 @@ using Microsoft.Xna.Framework.Input;
 namespace Crusaders30XX.ECS.Systems
 {
 	[DebugTab("Queue Enemies Menu")]
-	public class MenuSceneSystem : Core.System
+	public class InternalQueueEventsSceneSystem : Core.System
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
@@ -71,7 +71,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Show HowTo Button", Step = 1, Min = 0, Max = 1)]
 		public int ShowHowToButton { get; set; } = 1;
 
-		public MenuSceneSystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content, SpriteFont font) : base(em)
+		public InternalQueueEventsSceneSystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content, SpriteFont font) : base(em)
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;

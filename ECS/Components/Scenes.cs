@@ -5,6 +5,7 @@ namespace Crusaders30XX.ECS.Components
 {
 	public enum SceneId
 	{
+		TitleMenu,
 		Internal_QueueEventsMenu,
 		Customization,
 		Battle,

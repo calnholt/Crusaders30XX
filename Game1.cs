@@ -27,7 +27,8 @@ public class Game1 : Game
 
     private KeyboardState _prevKeyboard;
 
-    private MenuSceneSystem _menuSceneSystem;
+    private InternalQueueEventsSceneSystem _menuSceneSystem;
+    private TitleMenuDisplaySystem _titleMenuDisplaySystem;
     private BattleSceneSystem _battleSceneSystem;
     private CustomizationRootSystem _customizationRootSystem;
     private TooltipDisplaySystem _tooltipDisplaySystem;
@@ -97,11 +98,12 @@ public class Game1 : Game
         if (sceneEntity == null)
         {
             sceneEntity = _world.CreateEntity("SceneState");
-            _world.AddComponent(sceneEntity, new SceneState { Current = SceneId.Internal_QueueEventsMenu });
+            _world.AddComponent(sceneEntity, new SceneState { Current = SceneId.TitleMenu });
         }
         EntityFactory.CreateCardVisualSettings(_world);
         // Add parent scene systems only
-        _menuSceneSystem = new MenuSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
+        _titleMenuDisplaySystem = new TitleMenuDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _menuSceneSystem = new InternalQueueEventsSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
         _customizationRootSystem = new CustomizationRootSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _world.SystemManager);
@@ -112,6 +114,7 @@ public class Game1 : Game
         _inputSystem = new InputSystem(_world.EntityManager);
         _tooltipDisplaySystem = new TooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _world.AddSystem(_titleMenuDisplaySystem);
         _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
         _world.AddSystem(_customizationRootSystem);
@@ -165,6 +168,11 @@ public class Game1 : Game
         var scene = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
         switch(scene.Current)
         {
+            case SceneId.TitleMenu:
+            {
+                FrameProfiler.Measure("TitleMenuDisplaySystem.Draw", _titleMenuDisplaySystem.Draw);
+                break;
+            }
             case SceneId.Internal_QueueEventsMenu:
             {
                 FrameProfiler.Measure("MenuSceneSystem.Draw", _menuSceneSystem.Draw);
