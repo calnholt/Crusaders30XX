@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font;
 		private readonly Texture2D _pixel;
+		private readonly System.Collections.Generic.Dictionary<string, Entity> _effectTooltipUiByKey = new();
 
 		// Animation state
 		private string _lastContextId = null;
@@ -193,6 +194,130 @@ namespace Crusaders30XX.ECS.Systems
 			});
 		}
 
+		private struct EffectToken
+		{
+			public EffectDefinition eff;
+			public string label;
+			public int index;
+		}
+
+		private System.Collections.Generic.List<EffectToken> BuildEffectTokens(EffectDefinition[] effects, string contextId)
+		{
+			var list = new System.Collections.Generic.List<EffectToken>();
+			if (effects == null || effects.Length == 0) return list;
+			for (int i = 0; i < effects.Length; i++)
+			{
+				var e = effects[i];
+				string label = GenerateEffectLabel(e, contextId);
+				if (!string.IsNullOrWhiteSpace(label))
+				{
+					list.Add(new EffectToken { eff = e, label = label, index = i });
+				}
+			}
+			return list;
+		}
+
+		private string GenerateEffectLabel(EffectDefinition e, string contextId)
+		{
+			var enemyName = EntityManager.GetEntity("Enemy").GetComponent<Enemy>().Name;
+			switch (e.type)
+			{
+				case "Damage":
+					if (e.percentage != 100) return $"{e.percentage}% chance for +{e.amount} damage";
+					return $"+{e.amount} damage";
+				case "Burn":
+					return $"Gain {e.amount} burn stacks";
+				case "LoseCourage":
+					return $"Lose {e.amount} courage";
+				case "DiscardSpecificCard":
+					{
+						var markedCards = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>()
+							.Where(x => x.GetComponent<MarkedForSpecificDiscard>().ContextId == contextId)
+							.Select(x =>
+							{
+								var cd = x.GetComponent<CardData>();
+								if (cd == null) return "Card";
+								try
+								{
+									if (Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
+									{
+										return def.name ?? def.id ?? "Card";
+									}
+								}
+								catch { }
+								return cd.CardId ?? "Card";
+							})
+							.ToList();
+						return $"Discard: {string.Join(", ", markedCards)}";
+					}
+				case "Slow":
+					return $"Gain {e.amount} slow stacks";
+				case "Penance":
+					return $"Gain {e.amount} penance";
+				case "Armor":
+					return $"{enemyName} gains {e.amount} armor";
+				case "Wounded":
+					return $"Gain {e.amount} wounded";
+				default:
+					return $"Gain {e.amount} {e.type?.ToLowerInvariant()}";
+			}
+		}
+
+		private bool TryGetPassiveTooltip(EffectDefinition effect, bool targetIsPlayer, out string tooltip)
+		{
+			tooltip = string.Empty;
+			if (string.IsNullOrWhiteSpace(effect?.type)) return false;
+			if (!System.Enum.TryParse<AppliedPassiveType>(effect.type, true, out var passiveType)) return false;
+			int stacks = effect.amount > 0 ? effect.amount : (effect.stacks > 0 ? effect.stacks : 1);
+			try
+			{
+				tooltip = PassiveTooltipTextService.GetText(passiveType, targetIsPlayer, stacks) ?? string.Empty;
+				return !string.IsNullOrWhiteSpace(tooltip);
+			}
+			catch { return false; }
+		}
+
+		private void UpdateEffectTooltipUi(string key, Rectangle rect, string text, int z, int tooltipOffsetBelow)
+		{
+			if (!_effectTooltipUiByKey.TryGetValue(key, out var uiEntity) || uiEntity == null)
+			{
+				uiEntity = EntityManager.CreateEntity($"UI_AttackEffect_{key}");
+				EntityManager.AddComponent(uiEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = z });
+				EntityManager.AddComponent(uiEntity, new UIElement { Bounds = rect, IsInteractable = true, Tooltip = text ?? string.Empty, TooltipPosition = TooltipPosition.Below, TooltipOffsetPx = System.Math.Max(0, tooltipOffsetBelow) });
+				_effectTooltipUiByKey[key] = uiEntity;
+			}
+			else
+			{
+				var tr = uiEntity.GetComponent<Transform>();
+				if (tr != null) { tr.Position = new Vector2(rect.X, rect.Y); tr.ZOrder = z; }
+				var ui = uiEntity.GetComponent<UIElement>();
+				if (ui != null)
+				{
+					ui.Bounds = rect;
+					ui.Tooltip = text ?? string.Empty;
+					ui.TooltipPosition = TooltipPosition.Below;
+					ui.TooltipOffsetPx = System.Math.Max(0, tooltipOffsetBelow);
+					ui.IsInteractable = true;
+				}
+			}
+		}
+
+		private void CleanupEffectTooltips(System.Collections.Generic.HashSet<string> presentKeys)
+		{
+			var keys = _effectTooltipUiByKey.Keys.ToList();
+			foreach (var k in keys)
+			{
+				if (!presentKeys.Contains(k))
+				{
+					if (_effectTooltipUiByKey.TryGetValue(k, out var e) && e != null)
+					{
+						EntityManager.DestroyEntity(e.Id);
+					}
+					_effectTooltipUiByKey.Remove(k);
+				}
+			}
+		}
+
 		private void OnConfirmPressed()
 		{
 			// Determine current context id first
@@ -323,6 +448,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Summarize effects that also happen when NOT blocked (in addition to on-hit)
 			string notBlockedSummary = SummarizeEffects(def.effectsOnNotBlocked, pa.ContextId);
+			var notBlockedTokens = BuildEffectTokens(def.effectsOnNotBlocked, pa.ContextId);
 
 			// Compose lines: Name, Damage (final + prevented breakdown), and Leaf conditions (with live status)
 			var lines = new System.Collections.Generic.List<(string text, float scale, Color color)>();
@@ -468,6 +594,76 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Content
 			float y = rect.Y + pad * panelScale * contentScale;
+
+			// Build per-effect hover UI for the "On hit" summary, positioned below the banner
+			var presentKeys = new System.Collections.Generic.HashSet<string>();
+			if (!string.IsNullOrWhiteSpace(notBlockedSummary) && notBlockedTokens.Count > 0)
+			{
+				// Compute where the On-hit wrapped text will start (yStartOnHit)
+				float baseX = rect.X + pad * panelScale * contentScale;
+				float baseY = y;
+				float lineSpacingScaled = LineSpacingExtra * panelScale * contentScale;
+				float s = TextScale * panelScale * contentScale;
+				// Advance through prior lines (name, damage, etc.) to reach the start of On-hit
+				{
+					int idx = 0;
+					foreach (var (origText, lineScale, _) in lines)
+					{
+						bool isOnHit = (!string.IsNullOrWhiteSpace(notBlockedSummary) && idx == 2); // def.name (0), damage (1), on-hit (2)
+						if (isOnHit) break;
+						var parts = TextUtils.WrapText(_font, origText, lineScale, contentWidthLimitPx);
+						foreach (var p in parts)
+						{
+							var psz = _font.MeasureString(p);
+							baseY += psz.Y * lineScale * panelScale * contentScale + lineSpacingScaled;
+						}
+						idx++;
+					}
+				}
+				// Token layout with wrapping matching the visible line, accounting for the "On hit: " prefix on the first line
+				string prefix = "On hit: ";
+				float sepW = _font.MeasureString(", ").X * s;
+				float prefixW = _font.MeasureString(prefix).X * s;
+				float lineH = _font.LineSpacing * s;
+				float xCursor = baseX + prefixW;
+				float yCursor = baseY;
+				float maxX = baseX + contentWidthLimitPx;
+
+				for (int i = 0; i < notBlockedTokens.Count; i++)
+				{
+					var tok = notBlockedTokens[i];
+					float wTok = _font.MeasureString(tok.label).X * s;
+					float addW = (i == 0 ? wTok : (sepW + wTok));
+					if (xCursor + addW > maxX)
+					{
+						// Wrap to next line; no prefix on subsequent lines
+						yCursor += lineH + lineSpacingScaled;
+						xCursor = baseX;
+						addW = wTok; // first token in new line, no separator leading
+					}
+					// Rect starts after any separator width
+					float xRect = xCursor + (i == 0 ? 0f : sepW);
+					var tokenRect = new Rectangle(
+						(int)System.Math.Floor(xRect),
+						(int)System.Math.Floor(yCursor),
+						(int)System.Math.Ceiling(wTok),
+						(int)System.Math.Ceiling(lineH)
+					);
+
+					// Determine tooltip for passives only
+					string effectTarget = string.IsNullOrWhiteSpace(tok.eff.target) ? (def.target ?? "Player") : tok.eff.target;
+					bool targetIsPlayer = string.Equals(effectTarget, "Player", System.StringComparison.OrdinalIgnoreCase);
+					if (TryGetPassiveTooltip(tok.eff, targetIsPlayer, out var tip) && !string.IsNullOrWhiteSpace(tip))
+					{
+						string key = pa.ContextId + ":OnNotBlocked:" + tok.index.ToString();
+						int offsetBelow = (rect.Bottom - tokenRect.Bottom) + 8;
+						UpdateEffectTooltipUi(key, tokenRect, tip, ConfirmButtonZ, offsetBelow);
+						presentKeys.Add(key);
+					}
+
+					xCursor += addW;
+				}
+			}
 			foreach (var (text, baseScale, color) in wrappedLines)
 			{
 				float s = baseScale * panelScale * contentScale;
@@ -534,6 +730,9 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 
+			// Cleanup any stale per-effect tooltip UIs not present this frame
+			CleanupEffectTooltips(presentKeys);
+
 			// Update banner anchor transform at center-bottom of rect
 			var anchorEntity = EntityManager.GetEntitiesWithComponent<Crusaders30XX.ECS.Components.EnemyAttackBannerAnchor>().FirstOrDefault();
 			if (anchorEntity == null)
@@ -590,8 +789,10 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (effects == null || effects.Length == 0) return string.Empty;
 			var parts = new System.Collections.Generic.List<string>();
+			var name = EntityManager.GetEntity("Enemy").GetComponent<Enemy>().Name;
 			foreach (var e in effects)
 			{
+				var target = string.IsNullOrEmpty(e.target) || e.target == "Player" ? "your" : "the enemy's";
 				switch (e.type)
 				{
 					case "Damage":
@@ -605,48 +806,36 @@ namespace Crusaders30XX.ECS.Systems
 						}
 					
 						break;
-					case "Burn":
-						parts.Add($"Gain {e.amount} burn stacks");
-						break;
 					case "LoseCourage":
 						parts.Add($"Lose {e.amount} courage");
 						break;
 					case "DiscardSpecificCard":
-						{
-                            var markedCards = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>()
-                                .Where(e => e.GetComponent<MarkedForSpecificDiscard>().ContextId == contextId)
-                                .Select(e =>
-                                {
-                                    var cd = e.GetComponent<CardData>();
-                                    if (cd == null) return "Card";
-                                    try
-                                    {
-                                        if (Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
-                                        {
-                                            return def.name ?? def.id ?? "Card";
-                                        }
-                                    }
-                                    catch { }
-                                    return cd.CardId ?? "Card";
-                                })
-                                .ToList();
-							parts.Add($"Discard: {string.Join(", ", markedCards)}");
-							break;
-						}
-					case "Slow":
-						parts.Add($"Gain {e.amount} slow stacks");
+					{
+						var markedCards = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>()
+								.Where(e => e.GetComponent<MarkedForSpecificDiscard>().ContextId == contextId)
+								.Select(e =>
+								{
+										var cd = e.GetComponent<CardData>();
+										if (cd == null) return "Card";
+										try
+										{
+												if (Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
+												{
+														return def.name ?? def.id ?? "Card";
+												}
+										}
+										catch { }
+										return cd.CardId ?? "Card";
+								})
+								.ToList();
+						parts.Add($"Discard: {string.Join(", ", markedCards)}");
 						break;
-					case "Penance":
-						parts.Add($"Gain {e.amount} penance");
-						break;
+					}
 					case "Armor":
-						parts.Add($"Gain {e.amount} armor");
-						break;
-					case "Wounded":
-						parts.Add($"Gain {e.amount} wounded");
+						parts.Add($"{name} gains {e.amount} armor");
 						break;
 					default:
-						parts.Add(e.type);
+						parts.Add($"Gain {e.amount} {e.type.ToLowerInvariant()}");
 						break;
 				}
 			}
