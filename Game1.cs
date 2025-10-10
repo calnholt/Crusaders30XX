@@ -97,7 +97,7 @@ public class Game1 : Game
         if (sceneEntity == null)
         {
             sceneEntity = _world.CreateEntity("SceneState");
-            _world.AddComponent(sceneEntity, new SceneState { Current = SceneId.Menu });
+            _world.AddComponent(sceneEntity, new SceneState { Current = SceneId.Internal_QueueEventsMenu });
         }
         EntityFactory.CreateCardVisualSettings(_world);
         // Add parent scene systems only
@@ -165,7 +165,7 @@ public class Game1 : Game
         var scene = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
         switch(scene.Current)
         {
-            case SceneId.Menu:
+            case SceneId.Internal_QueueEventsMenu:
             {
                 FrameProfiler.Measure("MenuSceneSystem.Draw", _menuSceneSystem.Draw);
                 break;

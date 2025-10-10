@@ -110,7 +110,7 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			var scene = entity.GetComponent<SceneState>();
-			if (scene == null || scene.Current != SceneId.Menu) return;
+			if (scene == null || scene.Current != SceneId.Internal_QueueEventsMenu) return;
 			var mouse = Mouse.GetState();
 			// Block clicks during scene transition
 			if (TransitionStateSingleton.IsActive)
@@ -237,7 +237,7 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			var state = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-			if (state == null || state.Current != SceneId.Menu) return;
+			if (state == null || state.Current != SceneId.Internal_QueueEventsMenu) return;
 			if (_font == null) return;
 			int vw = _graphicsDevice.Viewport.Width;
 			int vh = _graphicsDevice.Viewport.Height;

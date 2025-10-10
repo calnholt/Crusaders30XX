@@ -5,7 +5,7 @@ namespace Crusaders30XX.ECS.Components
 {
 	public enum SceneId
 	{
-		Menu,
+		Internal_QueueEventsMenu,
 		Customization,
 		Battle,
 		None
@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Components
 	public class SceneState : IComponent
 	{
 		public Entity Owner { get; set; }
-		public SceneId Current { get; set; } = SceneId.Menu;
+		public SceneId Current { get; set; } = SceneId.Internal_QueueEventsMenu;
 	}
 
 	/// <summary>

@@ -167,7 +167,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (sceneEntity == null)
 			{
 				sceneEntity = EntityManager.CreateEntity("SceneState");
-				EntityManager.AddComponent(sceneEntity, new SceneState { Current = SceneId.Menu });
+				EntityManager.AddComponent(sceneEntity, new SceneState { Current = SceneId.Internal_QueueEventsMenu });
 			}
 			EntityFactory.CreateGameState(_world);
 			EntityFactory.CreatePlayer(_world);
@@ -233,7 +233,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
 				ResetEntitiesAfterBattle();
-				scene.Current = SceneId.Menu;
+				scene.Current = SceneId.Internal_QueueEventsMenu;
 				return;
 			};
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
