@@ -78,7 +78,7 @@ namespace Crusaders30XX.ECS.Systems
 			bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
 			if (fadeComplete && click && !TransitionStateSingleton.IsActive)
 			{
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Internal_QueueEventsMenu });
+				EventManager.Publish(new ShowTransition { Scene = SceneId.WorldMap });
 			}
 
 			_prevMouse = mouse;

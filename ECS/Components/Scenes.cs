@@ -7,6 +7,7 @@ namespace Crusaders30XX.ECS.Components
 	{
 		TitleMenu,
 		Internal_QueueEventsMenu,
+		WorldMap,
 		Customization,
 		Battle,
 		None

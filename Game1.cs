@@ -33,6 +33,7 @@ public class Game1 : Game
     private CustomizationRootSystem _customizationRootSystem;
     private TooltipDisplaySystem _tooltipDisplaySystem;
     private ProfilerSystem _profilerSystem;
+    private LocationSelectDisplaySystem _worldMapSystem;
     
     // ECS System
     private World _world;
@@ -114,6 +115,7 @@ public class Game1 : Game
         _inputSystem = new InputSystem(_world.EntityManager);
         _tooltipDisplaySystem = new TooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _world.AddSystem(_titleMenuDisplaySystem);
         _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
@@ -127,6 +129,7 @@ public class Game1 : Game
         _world.AddSystem(_inputSystem);
         _world.AddSystem(_tooltipDisplaySystem);
         _world.AddSystem(_profilerSystem);
+        _world.AddSystem(_worldMapSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 
@@ -186,6 +189,17 @@ public class Game1 : Game
             case SceneId.Battle:
             {
                 FrameProfiler.Measure("BattleSceneSystem.Draw", _battleSceneSystem.Draw);
+                break;
+            }
+            case SceneId.WorldMap:
+            {
+                // Draw location tiles with crisp pixel sampling
+                _spriteBatch.End();
+                _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, _spriteRasterizer);
+                FrameProfiler.Measure("LocationSelectDisplaySystem.Draw", _worldMapSystem.Draw);
+                _spriteBatch.End();
+                // Resume default sampling for overlays and other UI
+                _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
                 break;
             }
         }

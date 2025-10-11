@@ -1,0 +1,21 @@
+{
+  "id": "desert",
+  "name": "Desert",
+  "quests": [
+    [
+      "skeleton"
+    ],
+    [
+      "skeleton", "skeleton"
+    ],
+    [
+      "skeleton", "demon", "skeleton"
+    ],
+    [
+      "skeleton", "demon", "skeleton", "demon"
+    ],
+    [
+      "succubus", "demon", "skeleton", "demon", "succubus"
+    ]
+  ]
+}
