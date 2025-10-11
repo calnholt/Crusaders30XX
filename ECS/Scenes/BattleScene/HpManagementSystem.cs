@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Diagnostics.Tracing;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -36,6 +37,10 @@ namespace Crusaders30XX.ECS.Systems
 			int passiveDelta = AppliedPassivesService.GetPassiveDelta(e);
 			int newDelta = e.Delta + passiveDelta;
 			int nv = hp.Current + newDelta;
+			if (e.DamageType == ModifyTypeEnum.Attack && newDelta > 0)
+			{
+				return;
+			}
 			EventManager.Publish(new ModifyHpEvent { Source = e.Source, Target = target, Delta = newDelta, DamageType = e.DamageType });
 			hp.Current = System.Math.Max(0, System.Math.Min(hp.Max, nv));
 			// If this is the player and we crossed to zero, publish PlayerDied once

@@ -85,9 +85,10 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
                     var chance = values[i++];
                     var random = Random.Shared.Next(0, 100);
+                    Console.WriteLine($"[CardPlayService] Kunai random: {random}");
                     if (random <= chance)
                     {
-                        EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Wounded, Delta = 1 });
+                        EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Wounded, Delta = +1 });
                     }
                     break;
                 }

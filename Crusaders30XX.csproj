@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <RollForward>Major</RollForward>
     <PublishReadyToRun>false</PublishReadyToRun>
@@ -40,4 +40,14 @@
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.*" />
     <PackageReference Include="MonoGame.Extended" Version="4.0.4" />
   </ItemGroup>
+<Target Name="CopyMonoGameContentToPublish" AfterTargets="Publish">
+  <ItemGroup>
+    <_ContentFiles Include="$(ProjectDir)Content\bin\DesktopGL\Content\**\*.*" />
+  </ItemGroup>
+
+  <Copy
+    SourceFiles="@(_ContentFiles)"
+    DestinationFolder="$(PublishDir)Content\%(RecursiveDir)"
+    SkipUnchangedFiles="true" />
+</Target>
 </Project>

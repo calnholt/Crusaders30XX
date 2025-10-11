@@ -460,7 +460,7 @@ namespace Crusaders30XX.ECS.Systems
 			int baseDamage = progress.BaseDamage;
 			int additionalConditionalDamage = progress.AdditionalConditionalDamageTotal;
 			int damageDisplay = Math.Max(0, baseDamage - prevented - progress.AssignedBlockTotal);
-			lines.Add(($"Damage: {damageDisplay}{(!isConditionMet && additionalConditionalDamage > 0 ? $" + {additionalConditionalDamage}" : "")} (preventing {progress.TotalPreventedDamage})", TextScale, Color.White));
+			lines.Add(($"Damage: {damageDisplay}{(!isConditionMet && additionalConditionalDamage > 0 ? $" + {additionalConditionalDamage}" : "")} (preventing {Math.Min(baseDamage, progress.TotalPreventedDamage)})", TextScale, Color.White));
 			if (!string.IsNullOrEmpty(notBlockedSummary))
 			{
 				lines.Add(($"On hit: {notBlockedSummary}", TextScale, Color.OrangeRed));
