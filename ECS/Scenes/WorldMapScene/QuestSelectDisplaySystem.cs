@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -102,6 +103,10 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureArrowEntity<QuestArrowRight>("QuestArrowRight", rightRect, HasMoreRight(qs));
 
 			HandleArrowClicks(qs);
+
+			// Start area over the panel: click to start the selected quest
+			EnsureStartArea(panel);
+			HandleStartClick(qs);
 
 			// Back button anchored bottom-left of screen
 			int w = _graphics.Viewport.Width;
@@ -293,6 +298,72 @@ namespace Crusaders30XX.ECS.Systems
 			float scale = BackButtonLabelScale;
 			var pos = new Vector2(r.X + r.Width / 2f - (size.X * scale) / 2f, r.Y + r.Height / 2f - (size.Y * scale) / 2f);
 			_sb.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+		}
+
+		private void EnsureStartArea(Rectangle rect)
+		{
+			var ent = EntityManager.GetEntitiesWithComponent<QuestStartArea>().FirstOrDefault();
+			if (ent == null)
+			{
+				ent = EntityManager.CreateEntity("QuestStartArea");
+				EntityManager.AddComponent(ent, new QuestStartArea());
+				EntityManager.AddComponent(ent, new UIElement { Bounds = rect, IsInteractable = true });
+			}
+			else
+			{
+				var ui = ent.GetComponent<UIElement>();
+				if (ui == null) EntityManager.AddComponent(ent, new UIElement { Bounds = rect, IsInteractable = true });
+				else { ui.Bounds = rect; ui.IsInteractable = true; }
+			}
+		}
+
+		private void HandleStartClick(QuestSelectState qs)
+		{
+			var ent = EntityManager.GetEntitiesWithComponent<QuestStartArea>().FirstOrDefault();
+			var ui = ent?.GetComponent<UIElement>();
+			if (ui == null || !ui.IsClicked) return;
+
+			// Build queued events from selected quest
+			var all = LocationDefinitionCache.GetAll();
+			if (!all.TryGetValue(qs.LocationId, out var loc) || loc?.quests == null || loc.quests.Count == 0) return;
+			int unlockedMax = System.Math.Max(0, Crusaders30XX.ECS.Data.Save.SaveCache.GetValueOrDefault(qs.LocationId, 0));
+			int clampedIndex = System.Math.Max(0, System.Math.Min(qs.SelectedQuestIndex, System.Math.Min(unlockedMax, loc.quests.Count - 1)));
+			var questDefs = loc.quests[clampedIndex];
+
+			var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
+			if (qeEntity == null)
+			{
+				qeEntity = EntityManager.CreateEntity("QueuedEvents");
+				EntityManager.AddComponent(qeEntity, new QueuedEvents());
+			}
+			var qe = qeEntity.GetComponent<QueuedEvents>();
+			qe.Events.Clear();
+			foreach (var q in questDefs)
+			{
+				var type = ParseQueuedEventType(q?.type);
+				if (!string.IsNullOrEmpty(q?.id))
+				{
+					qe.Events.Add(new QueuedEvent { EventId = q.id, EventType = type });
+				}
+			}
+			if (qe.Events.Count > 0)
+			{
+				qs.IsOpen = false;
+				EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
+			}
+		}
+
+		private static QueuedEventType ParseQueuedEventType(string type)
+		{
+			if (string.IsNullOrEmpty(type)) return QueuedEventType.Enemy;
+			switch (type.ToLowerInvariant())
+			{
+				case "enemy": return QueuedEventType.Enemy;
+				case "event": return QueuedEventType.Event;
+				case "shop": return QueuedEventType.Shop;
+				case "church": return QueuedEventType.Church;
+				default: return QueuedEventType.Enemy;
+			}
 		}
 
 		private Texture2D GetArrowTexture(bool right, int size)

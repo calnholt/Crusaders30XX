@@ -128,6 +128,14 @@ namespace Crusaders30XX.ECS.Components
 	{
 		public Entity Owner { get; set; }
 	}
+
+	/// <summary>
+	/// Marker for quest selection start area (click to begin quest).
+	/// </summary>
+	public class QuestStartArea : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
 }
 
 
