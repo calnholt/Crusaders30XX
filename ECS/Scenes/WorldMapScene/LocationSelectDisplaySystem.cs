@@ -37,10 +37,13 @@ namespace Crusaders30XX.ECS.Systems
 		public int RectPadding { get; set; } = 8;
 
 		[DebugEditable(DisplayName = "Rows", Step = 1, Min = 1, Max = 12)]
-		public int Rows { get; set; } = 2;
+		public int Rows { get; set; } = 3;
 
 		[DebugEditable(DisplayName = "Columns", Step = 1, Min = 1, Max = 12)]
-		public int Columns { get; set; } = 3;
+		public int Columns { get; set; } = 5;
+
+		[DebugEditable(DisplayName = "Total Slots", Step = 1, Min = 1, Max = 100)]
+		public int TotalSlots { get; set; } = 15;
 
 		[DebugEditable(DisplayName = "Y Offset", Step = 4, Min = -2000, Max = 2000)]
 		public int YOffset { get; set; } = 0;
@@ -59,6 +62,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Circle Offset Y", Step = 1, Min = -200, Max = 200)]
 		public int CircleOffsetY { get; set; } = 0;
+
+		[DebugEditable(DisplayName = "Locked Circle Scale (radius)", Step = 0.01f, Min = 0.05f, Max = 0.5f)]
+		public float LockedCircleScale { get; set; } = 0.35f;
+
+		[DebugEditable(DisplayName = "Locked '?' Scale", Step = 0.05f, Min = 0.2f, Max = 2f)]
+		public float LockedQuestionScale { get; set; } = .8f;
 
 		public LocationSelectDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
 			: base(entityManager)
@@ -119,34 +128,33 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var all = LocationDefinitionCache.GetAll();
 			var list = all?.Values?.OrderBy(d => d?.name ?? d?.id).ToList() ?? new List<LocationDefinition>();
-			int count = list.Count;
-			if (count == 0) return;
+			int displayCount = System.Math.Max(1, TotalSlots);
 
 			int tile = System.Math.Max(32, TileSize);
 			int pad = System.Math.Max(0, TilePadding);
 			int cell = tile + pad;
 			int cols = System.Math.Max(1, Columns > 0 ? Columns : viewportW / cell);
-			int rows = System.Math.Max(1, Rows > 0 ? Rows : (int)System.Math.Ceiling(count / (float)cols));
+			int rows = System.Math.Max(1, Rows > 0 ? Rows : (int)System.Math.Ceiling(displayCount / (float)cols));
 
 			int gridW = cols * cell - pad;
 			int gridH = rows * cell - pad;
 			int startX = (viewportW - gridW) / 2;
 			int startY = (viewportH - gridH) / 2 + YOffset;
 
-			for (int i = 0; i < count; i++)
+			for (int i = 0; i < displayCount; i++)
 			{
-				var def = list[i];
-				if (def == null || string.IsNullOrEmpty(def.id)) continue;
+				LocationDefinition def = (i < list.Count) ? list[i] : null;
 				int r = i / cols;
 				int c = i % cols;
 				var rect = new Rectangle(startX + c * cell, startY + r * cell, tile, tile);
 
-				if (!_locationEntitiesById.TryGetValue(def.id, out var e) || e == null)
+				string key = def?.id ?? $"locked_{i}";
+				if (!_locationEntitiesById.TryGetValue(key, out var e) || e == null)
 				{
-					e = EntityManager.CreateEntity($"Location_{def.id}");
+					e = EntityManager.CreateEntity($"Location_{key}");
 					EntityManager.AddComponent(e, new Transform { Position = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f), ZOrder = 0 });
 					EntityManager.AddComponent(e, new UIElement { Bounds = rect, IsInteractable = true, Tooltip = null});
-					_locationEntitiesById[def.id] = e;
+					_locationEntitiesById[key] = e;
 				}
 				else
 				{
@@ -164,31 +172,34 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 
-			// Handle clicks to open quest select overlay
+			// Handle clicks to open quest select overlay (only for unlocked slots)
 			foreach (var kv in _locationEntitiesById)
 			{
-				var id = kv.Key;
+				var key = kv.Key;
 				var ent = kv.Value;
 				var ui = ent?.GetComponent<UIElement>();
 				if (ui == null) continue;
 				if (ui.IsClicked)
 				{
-					var def = list.FirstOrDefault(d => d.id == id);
+					if (key.StartsWith("locked_")) break;
+					var def = list.FirstOrDefault(d => d.id == key);
 					if (def == null) break;
-					int completed = SaveCache.GetValueOrDefault(id, 0);
+					bool unlocked = def.id == "desert"; // assume only desert unlocked
+					if (!unlocked) break;
+					int completed = SaveCache.GetValueOrDefault(key, 0);
 					int maxIndex = System.Math.Max(0, (def.quests?.Count ?? 1) - 1);
 					int startIndex = System.Math.Max(0, System.Math.Min(completed, maxIndex));
 					var qsEntity = EntityManager.GetEntitiesWithComponent<QuestSelectState>().FirstOrDefault();
 					if (qsEntity == null)
 					{
 						qsEntity = EntityManager.CreateEntity("QuestSelectState");
-						EntityManager.AddComponent(qsEntity, new QuestSelectState { IsOpen = true, LocationId = id, SelectedQuestIndex = startIndex });
+						EntityManager.AddComponent(qsEntity, new QuestSelectState { IsOpen = true, LocationId = key, SelectedQuestIndex = startIndex });
 					}
 					else
 					{
 						var s = qsEntity.GetComponent<QuestSelectState>();
 						s.IsOpen = true;
-						s.LocationId = id;
+						s.LocationId = key;
 						s.SelectedQuestIndex = startIndex;
 					}
 					break;
@@ -207,26 +218,28 @@ namespace Crusaders30XX.ECS.Systems
 
 			var all = LocationDefinitionCache.GetAll();
 			var list = all?.Values?.OrderBy(d => d?.name ?? d?.id).ToList() ?? new List<LocationDefinition>();
-			if (list.Count == 0) return;
+			int displayCount = System.Math.Max(1, TotalSlots);
 
-			foreach (var def in list)
+			for (int i = 0; i < displayCount; i++)
 			{
-				if (def == null || string.IsNullOrEmpty(def.id)) continue;
-				if (!_locationEntitiesById.TryGetValue(def.id, out var e) || e == null) continue;
+				LocationDefinition def = (i < list.Count) ? list[i] : null;
+				string key = def?.id ?? $"locked_{i}";
+				if (!_locationEntitiesById.TryGetValue(key, out var e) || e == null) continue;
 				var ui = e.GetComponent<UIElement>();
 				if (ui == null) continue;
 
-				// Container background (rounded rect) and border
+				// Container background (rounded rect)
 				var dst = ui.Bounds;
 				DrawContainer(dst);
 
 				// Compute inner padded rect for content within the container
 				var inner = new Rectangle(dst.X + RectPadding, dst.Y + RectPadding, System.Math.Max(1, dst.Width - 2 * RectPadding), System.Math.Max(1, dst.Height - 2 * RectPadding));
 
-				// Tile image
-				Texture2D tex = LoadTextureSafe(def.id);
-				if (tex != null)
+				bool unlocked = def != null && def.id == "desert"; // assume only desert unlocked
+				if (def != null && unlocked)
 				{
+					// Tile image
+					Texture2D tex = LoadTextureSafe(def.id);
 					// Scale proportionally to fit within the tile, preserving aspect ratio
 					float scaleFit = System.Math.Min(inner.Width / (float)tex.Width, inner.Height / (float)tex.Height);
 					float scale = System.Math.Max(0.01f, scaleFit * System.Math.Max(0.1f, ImageScale));
@@ -236,20 +249,28 @@ namespace Crusaders30XX.ECS.Systems
 					int drawY = inner.Y + (inner.Height - drawH) / 2;
 					var drawRect = new Rectangle(drawX, drawY, drawW, drawH);
 					_spriteBatch.Draw(tex, drawRect, Color.White);
+					// Label (inside the container)
+					string label = def.name ?? def.id;
+					var size = _font.MeasureString(label) * LabelScale;
+					var pos = new Vector2(inner.X + inner.Width / 2f - size.X / 2f, inner.Bottom - size.Y - 4);
+					_spriteBatch.DrawString(_font, label, pos, Color.White, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
+					// Progress badge in top-right
+					DrawProgressBadge(def, dst);
 				}
 				else
 				{
-					// No texture available; keep the rounded container only
+					// Locked or empty slot: draw a white circle with a black question mark
+					int minSide = System.Math.Min(inner.Width, inner.Height);
+					int radius = System.Math.Max(4, (int)System.Math.Round(minSide * System.Math.Max(0.05f, System.Math.Min(0.5f, LockedCircleScale))));
+					var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, radius);
+					var circleDst = new Rectangle(inner.X + inner.Width / 2 - radius, inner.Y + inner.Height / 2 - radius, radius * 2, radius * 2);
+					_spriteBatch.Draw(circle, circleDst, Color.White);
+					string qm = "?";
+					var qSize = _font.MeasureString(qm);
+					float qScale = System.Math.Min((radius * 1.6f) / System.Math.Max(1f, qSize.X), 1.0f) * System.Math.Max(0.2f, System.Math.Min(2f, LockedQuestionScale));
+					var qPos = new Vector2(circleDst.Center.X - (qSize.X * qScale) / 2f, circleDst.Center.Y - (qSize.Y * qScale) / 2f + 1);
+					_spriteBatch.DrawString(_font, qm, qPos, Color.Black, 0f, Vector2.Zero, qScale, SpriteEffects.None, 0f);
 				}
-
-				// Label (inside the container)
-				string label = def.name ?? def.id;
-				var size = _font.MeasureString(label) * LabelScale;
-				var pos = new Vector2(inner.X + inner.Width / 2f - size.X / 2f, inner.Bottom - size.Y - 4);
-				_spriteBatch.DrawString(_font, label, pos, Color.White, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
-
-				// Progress badge in top-right
-				DrawProgressBadge(def, dst);
 			}
 		}
 

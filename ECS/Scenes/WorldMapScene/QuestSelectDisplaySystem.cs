@@ -20,6 +20,25 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _font;
 		private Texture2D _pixel;
 		private readonly Dictionary<(bool right, int size), Texture2D> _arrowCache = new();
+		private Texture2D _roundedCache;
+
+		[DebugEditable(DisplayName = "Back Btn Width", Step = 10, Min = 60, Max = 600)]
+		public int BackButtonWidth { get; set; } = 180;
+
+		[DebugEditable(DisplayName = "Back Btn Height", Step = 5, Min = 24, Max = 200)]
+		public int BackButtonHeight { get; set; } = 56;
+
+		[DebugEditable(DisplayName = "Back Btn Corner", Step = 1, Min = 0, Max = 60)]
+		public int BackButtonCornerRadius { get; set; } = 12;
+
+		[DebugEditable(DisplayName = "Back Btn Offset X", Step = 2, Min = -200, Max = 400)]
+		public int BackButtonOffsetX { get; set; } = 16;
+
+		[DebugEditable(DisplayName = "Back Btn Offset Bottom", Step = 2, Min = 0, Max = 400)]
+		public int BackButtonOffsetBottom { get; set; } = 16;
+
+		[DebugEditable(DisplayName = "Back Btn Label Scale", Step = 0.05f, Min = 0.2f, Max = 2f)]
+		public float BackButtonLabelScale { get; set; } = 0.5f;
 
 		[DebugEditable(DisplayName = "Panel Width", Step = 16, Min = 100, Max = 1920)]
 		public int PanelWidth { get; set; } = 900;
@@ -83,6 +102,15 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureArrowEntity<QuestArrowRight>("QuestArrowRight", rightRect, HasMoreRight(qs));
 
 			HandleArrowClicks(qs);
+
+			// Back button anchored bottom-left of screen
+			int w = _graphics.Viewport.Width;
+			int h = _graphics.Viewport.Height;
+			int btnW = BackButtonWidth;
+			int btnH = BackButtonHeight;
+			var backRect = new Rectangle(BackButtonOffsetX, h - btnH - BackButtonOffsetBottom, btnW, btnH);
+			EnsureBackButton(backRect);
+			HandleBackButtonClick(qs);
 		}
 
 		public void Draw()
@@ -104,7 +132,9 @@ namespace Crusaders30XX.ECS.Systems
 			// Enemy icons row
 			var all = LocationDefinitionCache.GetAll();
 			if (!all.TryGetValue(qs.LocationId, out var loc) || loc?.quests == null || loc.quests.Count == 0) return;
-			var quests = loc.quests[System.Math.Max(0, System.Math.Min(qs.SelectedQuestIndex, loc.quests.Count - 1))];
+			int unlockedMax = System.Math.Max(0, EntityManager == null ? 0 : Crusaders30XX.ECS.Data.Save.SaveCache.GetValueOrDefault(qs.LocationId, 0));
+			int clampedIndex = System.Math.Max(0, System.Math.Min(qs.SelectedQuestIndex, System.Math.Min(unlockedMax, loc.quests.Count - 1)));
+			var quests = loc.quests[clampedIndex];
 			var textures = new List<(Texture2D tex, string id)>();
 			foreach (var quest in quests)
 			{
@@ -131,6 +161,9 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Arrows
 			DrawArrowGlyphs(panel, qs);
+
+			// Back button draw
+			DrawBackButton();
 		}
 
 		private Rectangle GetPanelRect()
@@ -182,7 +215,9 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var all = LocationDefinitionCache.GetAll();
 			if (!all.TryGetValue(qs.LocationId, out var loc) || loc?.quests == null) return false;
-			return qs.SelectedQuestIndex < loc.quests.Count - 1;
+			int unlockedMax = System.Math.Max(0, Crusaders30XX.ECS.Data.Save.SaveCache.GetValueOrDefault(qs.LocationId, 0));
+			int maxIndex = System.Math.Min(unlockedMax, loc.quests.Count - 1);
+			return qs.SelectedQuestIndex < maxIndex;
 		}
 
 		private Texture2D TryLoadEnemyTexture(string id)
@@ -211,6 +246,53 @@ namespace Crusaders30XX.ECS.Systems
 				var tex = GetArrowTexture(true, System.Math.Min(r.Width, r.Height));
 				_sb.Draw(tex, new Rectangle(r.X, r.Y, r.Width, r.Height), Color.White);
 			}
+		}
+
+		private void EnsureBackButton(Rectangle rect)
+		{
+			var ent = EntityManager.GetEntitiesWithComponent<QuestBackButton>().FirstOrDefault();
+			if (ent == null)
+			{
+				ent = EntityManager.CreateEntity("QuestBackButton");
+				EntityManager.AddComponent(ent, new QuestBackButton());
+				EntityManager.AddComponent(ent, new UIElement { Bounds = rect, IsInteractable = true });
+			}
+			else
+			{
+				var ui = ent.GetComponent<UIElement>();
+				if (ui == null) EntityManager.AddComponent(ent, new UIElement { Bounds = rect, IsInteractable = true });
+				else { ui.Bounds = rect; ui.IsInteractable = true; }
+			}
+		}
+
+		private void HandleBackButtonClick(QuestSelectState qs)
+		{
+			var ent = EntityManager.GetEntitiesWithComponent<QuestBackButton>().FirstOrDefault();
+			var ui = ent?.GetComponent<UIElement>();
+			if (ui != null && ui.IsClicked)
+			{
+				qs.IsOpen = false;
+			}
+		}
+
+		private void DrawBackButton()
+		{
+			var ent = EntityManager.GetEntitiesWithComponent<QuestBackButton>().FirstOrDefault();
+			var ui = ent?.GetComponent<UIElement>();
+			if (ui == null) return;
+			var r = ui.Bounds;
+			var tex = _roundedCache;
+			if (tex == null || tex.Width != r.Width || tex.Height != r.Height)
+			{
+				tex = RoundedRectTextureFactory.CreateRoundedRect(_graphics, r.Width, r.Height, BackButtonCornerRadius);
+				_roundedCache = tex;
+			}
+			_sb.Draw(tex, r, new Color(0, 0, 0));
+			string text = "Back";
+			var size = _font.MeasureString(text);
+			float scale = BackButtonLabelScale;
+			var pos = new Vector2(r.X + r.Width / 2f - (size.X * scale) / 2f, r.Y + r.Height / 2f - (size.Y * scale) / 2f);
+			_sb.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 		}
 
 		private Texture2D GetArrowTexture(bool right, int size)

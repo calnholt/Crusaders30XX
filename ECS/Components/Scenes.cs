@@ -120,6 +120,14 @@ namespace Crusaders30XX.ECS.Components
 	{
 		public Entity Owner { get; set; }
 	}
+
+	/// <summary>
+	/// Marker for quest selection back button UI.
+	/// </summary>
+	public class QuestBackButton : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
 }
 
 
