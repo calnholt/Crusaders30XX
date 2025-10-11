@@ -60,7 +60,7 @@ namespace Crusaders30XX.ECS.Systems
 		public float TitleScale { get; set; } = 0.5f;
 
 		[DebugEditable(DisplayName = "Enemy Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
-		public float EnemyScale { get; set; } = 0.15f;
+		public float EnemyScale { get; set; } = 0.6f;
 
 		[DebugEditable(DisplayName = "Enemy Spacing", Step = 4, Min = 0, Max = 400)]
 		public int EnemySpacing { get; set; } = 16;
@@ -150,8 +150,13 @@ namespace Crusaders30XX.ECS.Systems
 			if (count == 0) return;
 			int maxH = System.Math.Max(1, panel.Height - (int)(titleSize.Y + PanelPadding * 3));
 			int y = (int)(titlePos.Y + titleSize.Y + PanelPadding);
-			// Compute scaled widths and total width including spacing
-			var scaledSizes = textures.Select(t => new Point((int)System.Math.Round(t.tex.Width * EnemyScale), (int)System.Math.Round(t.tex.Height * EnemyScale))).ToList();
+			// Target uniform height for all enemy images
+			int targetH = System.Math.Max(1, (int)System.Math.Round(maxH * MathHelper.Clamp(EnemyScale, 0.05f, 1f)));
+			// Compute width preserving aspect ratio for each texture at target height
+			var scaledSizes = textures.Select(t => new Point(
+				(int)System.Math.Round(t.tex.Width * (targetH / (float)System.Math.Max(1, t.tex.Height))),
+				targetH
+			)).ToList();
 			int totalW = scaledSizes.Sum(s => s.X) + (count - 1) * EnemySpacing;
 			int startX = panel.X + panel.Width / 2 - totalW / 2;
 			for (int i = 0; i < count; i++)

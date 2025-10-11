@@ -60,11 +60,11 @@
         "type": "Enemy"
       },
       {
-        "id": "skeleton",
+        "id": "spider",
         "type": "Enemy"
       },
       {
-        "id": "demon",
+        "id": "ogre",
         "type": "Enemy"
       },
       {
