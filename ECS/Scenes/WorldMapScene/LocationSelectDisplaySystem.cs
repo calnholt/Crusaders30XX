@@ -27,14 +27,14 @@ namespace Crusaders30XX.ECS.Systems
 		private int _lastViewportW = -1;
 		private int _lastViewportH = -1;
 
-		[DebugEditable(DisplayName = "Tile Size", Step = 8, Min = 64, Max = 1024)]
-		public int TileSize { get; set; } = 256;
+		[DebugEditable(DisplayName = "Tile Size (% of min screen dim)", Step = 0.005f, Min = 0.05f, Max = 0.9f)]
+		public float TileSize { get; set; } = 0.25f;
 
-		[DebugEditable(DisplayName = "Tile Padding", Step = 2, Min = 0, Max = 200)]
-		public int TilePadding { get; set; } = 24;
+		[DebugEditable(DisplayName = "Tile Padding (fraction of tile)", Step = 0.01f, Min = 0f, Max = 0.5f)]
+		public float TilePadding { get; set; } = 0.09f;
 
-		[DebugEditable(DisplayName = "Rect Padding", Step = 2, Min = 0, Max = 200)]
-		public int RectPadding { get; set; } = 8;
+		[DebugEditable(DisplayName = "Rect Padding (fraction of tile)", Step = 0.01f, Min = 0f, Max = 0.5f)]
+		public float RectPadding { get; set; } = 0.03f;
 
 		[DebugEditable(DisplayName = "Rows", Step = 1, Min = 1, Max = 12)]
 		public int Rows { get; set; } = 3;
@@ -45,8 +45,8 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Total Slots", Step = 1, Min = 1, Max = 100)]
 		public int TotalSlots { get; set; } = 15;
 
-		[DebugEditable(DisplayName = "Y Offset", Step = 4, Min = -2000, Max = 2000)]
-		public int YOffset { get; set; } = 0;
+		[DebugEditable(DisplayName = "Y Offset (% of screen height)", Step = 0.01f, Min = -1f, Max = 1f)]
+		public float YOffset { get; set; } = 0f;
 
 		[DebugEditable(DisplayName = "Label Scale", Step = 0.05f, Min = 0.25f, Max = 2f)]
 		public float LabelScale { get; set; } = 0.25f;
@@ -54,14 +54,14 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Image Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
 		public float ImageScale { get; set; } = 1.0f;
 
-		[DebugEditable(DisplayName = "Circle Radius", Step = 1, Min = 4, Max = 256)]
-		public int CircleRadius { get; set; } = 40;
+		[DebugEditable(DisplayName = "Circle Radius (fraction of tile)", Step = 0.01f, Min = 0.05f, Max = 0.5f)]
+		public float CircleRadius { get; set; } = 0.16f;
 
-		[DebugEditable(DisplayName = "Circle Offset X", Step = 1, Min = -200, Max = 200)]
-		public int CircleOffsetX { get; set; } = 0;
+		[DebugEditable(DisplayName = "Circle Offset X (fraction of tile)", Step = 0.01f, Min = -1f, Max = 1f)]
+		public float CircleOffsetX { get; set; } = 0f;
 
-		[DebugEditable(DisplayName = "Circle Offset Y", Step = 1, Min = -200, Max = 200)]
-		public int CircleOffsetY { get; set; } = 0;
+		[DebugEditable(DisplayName = "Circle Offset Y (fraction of tile)", Step = 0.01f, Min = -1f, Max = 1f)]
+		public float CircleOffsetY { get; set; } = 0f;
 
 		[DebugEditable(DisplayName = "Locked Circle Scale (radius)", Step = 0.01f, Min = 0.05f, Max = 0.5f)]
 		public float LockedCircleScale { get; set; } = 0.35f;
@@ -130,8 +130,9 @@ namespace Crusaders30XX.ECS.Systems
 			var list = all?.Values?.OrderBy(d => d?.name ?? d?.id).ToList() ?? new List<LocationDefinition>();
 			int displayCount = System.Math.Max(1, TotalSlots);
 
-			int tile = System.Math.Max(32, TileSize);
-			int pad = System.Math.Max(0, TilePadding);
+			int minDim = System.Math.Min(viewportW, viewportH);
+			int tile = System.Math.Max(32, (int)System.Math.Round(minDim * MathHelper.Clamp(TileSize, 0.05f, 0.9f)));
+			int pad = System.Math.Max(0, (int)System.Math.Round(tile * MathHelper.Clamp(TilePadding, 0f, 0.5f)));
 			int cell = tile + pad;
 			int cols = System.Math.Max(1, Columns > 0 ? Columns : viewportW / cell);
 			int rows = System.Math.Max(1, Rows > 0 ? Rows : (int)System.Math.Ceiling(displayCount / (float)cols));
@@ -139,7 +140,7 @@ namespace Crusaders30XX.ECS.Systems
 			int gridW = cols * cell - pad;
 			int gridH = rows * cell - pad;
 			int startX = (viewportW - gridW) / 2;
-			int startY = (viewportH - gridH) / 2 + YOffset;
+			int startY = (viewportH - gridH) / 2 + (int)System.Math.Round(viewportH * MathHelper.Clamp(YOffset, -1f, 1f));
 
 			for (int i = 0; i < displayCount; i++)
 			{
@@ -232,8 +233,9 @@ namespace Crusaders30XX.ECS.Systems
 				var dst = ui.Bounds;
 				DrawContainer(dst);
 
-				// Compute inner padded rect for content within the container
-				var inner = new Rectangle(dst.X + RectPadding, dst.Y + RectPadding, System.Math.Max(1, dst.Width - 2 * RectPadding), System.Math.Max(1, dst.Height - 2 * RectPadding));
+			// Compute inner padded rect for content within the container
+			int rectPad = System.Math.Max(0, (int)System.Math.Round(dst.Width * MathHelper.Clamp(RectPadding, 0f, 0.5f)));
+			var inner = new Rectangle(dst.X + rectPad, dst.Y + rectPad, System.Math.Max(1, dst.Width - 2 * rectPad), System.Math.Max(1, dst.Height - 2 * rectPad));
 
 				bool unlocked = def != null && def.id == "desert"; // assume only desert unlocked
 				if (def != null && unlocked)
@@ -242,7 +244,7 @@ namespace Crusaders30XX.ECS.Systems
 					Texture2D tex = LoadTextureSafe(def.id);
 					// Scale proportionally to fit within the tile, preserving aspect ratio
 					float scaleFit = System.Math.Min(inner.Width / (float)tex.Width, inner.Height / (float)tex.Height);
-					float scale = System.Math.Max(0.01f, scaleFit * System.Math.Max(0.1f, ImageScale));
+					float scale = ImageScale;
 					int drawW = System.Math.Max(1, (int)System.Math.Round(tex.Width * scale));
 					int drawH = System.Math.Max(1, (int)System.Math.Round(tex.Height * scale));
 					int drawX = inner.X + (inner.Width - drawW) / 2;
@@ -288,11 +290,14 @@ namespace Crusaders30XX.ECS.Systems
 			int total = def?.quests?.Count ?? 0;
 			float pct = (total > 0) ? MathHelper.Clamp((completed / (float)total) * 100f, 0f, 100f) : 0f;
 
-			int radius = System.Math.Max(4, CircleRadius);
+			int baseLen = System.Math.Min(container.Width, container.Height);
+			int radius = System.Math.Max(4, (int)System.Math.Round(baseLen * MathHelper.Clamp(CircleRadius, 0.05f, 0.5f)));
 			var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, radius);
 			// Center the circle on the top-right corner of the rounded rectangle, with optional offsets
-			int cx = container.Right + CircleOffsetX;
-			int cy = container.Top + CircleOffsetY;
+			int offsetX = (int)System.Math.Round(baseLen * MathHelper.Clamp(CircleOffsetX, -1f, 1f));
+			int offsetY = (int)System.Math.Round(baseLen * MathHelper.Clamp(CircleOffsetY, -1f, 1f));
+			int cx = container.Right + offsetX;
+			int cy = container.Top + offsetY;
 			var dst = new Rectangle(cx - radius, cy - radius, radius * 2, radius * 2);
 			_spriteBatch.Draw(circle, dst, new Color(110, 0, 0));
 

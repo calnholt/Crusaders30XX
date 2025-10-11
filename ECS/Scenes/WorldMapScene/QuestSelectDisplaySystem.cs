@@ -38,7 +38,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int BackButtonOffsetBottom { get; set; } = 16;
 
 		[DebugEditable(DisplayName = "Back Btn Label Scale", Step = 0.05f, Min = 0.2f, Max = 2f)]
-		public float BackButtonLabelScale { get; set; } = 0.5f;
+		public float BackButtonLabelScale { get; set; } = 0.2f;
 
 		[DebugEditable(DisplayName = "Panel Width", Step = 16, Min = 100, Max = 1920)]
 		public int PanelWidth { get; set; } = 900;
