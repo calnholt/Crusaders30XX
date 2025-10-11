@@ -107,7 +107,9 @@ namespace Crusaders30XX.ECS.Systems
         public void Draw()
         {
             // Only show in Action phase
-            var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
+            var phaseEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+            if (phaseEntity == null) return;
+            var phase = phaseEntity.GetComponent<PhaseState>();
             if (phase.Sub != SubPhase.Action) return;
 
             var vp = _graphicsDevice.Viewport;

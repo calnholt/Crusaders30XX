@@ -80,6 +80,8 @@ namespace Crusaders30XX.ECS.Systems
 						if (!_suppressLoadScene)
 						{
 							Console.WriteLine($"[TransitionDisplaySystem] Loading scene: {_nextScene}");
+							EventManager.Publish(new DeleteCachesEvent { });
+							DeleteEntities(_nextScene);
 							EventManager.Publish(new LoadSceneEvent { Scene = _nextScene });
 						}
 						else
@@ -172,6 +174,23 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureTransitionFlag(true);
 		}
 
+		private void DeleteEntities(SceneId nextScene)
+		{
+			var sceneEntity = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
+			var scene = sceneEntity.GetComponent<SceneState>();
+			var previous = scene.Current;
+			scene.Current = nextScene;
+			// Destroy previous scene's entities except those marked DontDestroyOnLoad
+			var toDestroy = EntityManager.GetAllEntities()
+				.Where(e => e.HasComponent<OwnedByScene>() && !e.HasComponent<DontDestroyOnLoad>() && e.GetComponent<OwnedByScene>().Scene == previous)
+				.ToList();
+			foreach (var e in toDestroy)
+			{
+				Console.WriteLine($"[SceneLifecycleSystem] Destroying entity {e.Id} ({e.Name})");
+				EntityManager.DestroyEntity(e.Id);
+			}
+		}
+
 		private void EnsureTransitionFlag(bool active)
 		{
 			TransitionStateSingleton.IsActive = active;
@@ -187,7 +206,23 @@ namespace Crusaders30XX.ECS.Systems
 		private void Debug_PreviewWipeRestart()
 		{
 			_suppressLoadScene = true;
-			BeginWipeIn(new ShowTransition { Scene = SceneId.Battle });
+			// is this the last enemy?
+			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
+			var queued = queuedEntity.GetComponent<QueuedEvents>();
+			if (queued.CurrentIndex == queued.Events.Count - 1)
+			{
+				BeginWipeIn(new ShowTransition { Scene = SceneId.WorldMap });
+			}	
+			else
+			{
+				BeginWipeIn(new ShowTransition { Scene = SceneId.Battle });
+			}
+		}
+		[DebugAction("Back to World Map")]
+		private void Debug_BackToWorldMap()
+		{
+			_suppressLoadScene = true;
+			BeginWipeIn(new ShowTransition { Scene = SceneId.WorldMap });
 		}
 	}
 }

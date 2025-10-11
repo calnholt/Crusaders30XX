@@ -23,7 +23,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
 		private readonly SpriteFont _font;
-		private bool _isFirstLoad = true;
 
 		// Battle systems (logic and draw). Only present while in Battle
 	
@@ -107,7 +106,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<StartBattleRequested>(_ => StartBattle());
 			EventManager.Subscribe<LoadSceneEvent>(_ => {
 				if (_.Scene != SceneId.Battle) return;
-				if (_isFirstLoad) CreateBattleSceneEntities();
+				if (EntityManager.GetEntity("Player") == null) CreateBattleSceneEntities();
 				StartBattle();
 			});
 		}
@@ -126,6 +125,10 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Battle) return;
+			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+			if (player == null) return;
+			var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+			if (enemy == null) return;
 			// Draw in the same order as previously in Game1
 			FrameProfiler.Measure("BattleBackgroundSystem.Draw", _battleBackgroundSystem.Draw);
 			FrameProfiler.Measure("CathedralLightingSystem.Draw", _cathedralLightingSystem.Draw);
@@ -185,7 +188,6 @@ namespace Crusaders30XX.ECS.Systems
 			AddBattleSystems();
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
 			EventManager.Publish(new DeckShuffleEvent { });
-				_isFirstLoad = false;
 		}
 
 		private void ResetEntitiesAfterBattle() {
@@ -236,9 +238,8 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				// Increment save progress via service
 				QuestCompleteService.SaveIfCompletedHighest(EntityManager);
-				var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
 				ResetEntitiesAfterBattle();
-				scene.Current = SceneId.WorldMap;
+				EventManager.Publish(new LoadSceneEvent { Scene = SceneId.WorldMap });
 				return;
 			};
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
@@ -258,7 +259,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new ResetDeckEvent { });
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
 			phaseState.TurnNumber = 0;
-			EntityManager.GetEntity("SceneState").GetComponent<SceneState>().Current = SceneId.Battle;
+			// EventManager.Publish(new LoadSceneEvent { Scene = SceneId.Battle });
 			EventQueueBridge.EnqueueTriggerAction("BattleSceneSystem.StartBattle", () => {
 				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
 				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(

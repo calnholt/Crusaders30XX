@@ -47,7 +47,9 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			// Only render during Action phase
-			var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
+			var phaseEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+			if (phaseEntity == null) return;
+			var phase = phaseEntity.GetComponent<PhaseState>();
 			if (phase.Main != MainPhase.PlayerTurn) return;
 			var player = GetRelevantEntities().FirstOrDefault();
 			if (player == null) return;

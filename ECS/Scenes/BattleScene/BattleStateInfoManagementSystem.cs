@@ -39,7 +39,9 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
         {
-            var st = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault().GetComponent<BattleStateInfo>();
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            if (player == null) return;
+            var st = player.GetComponent<BattleStateInfo>();
             // Clear per-subphase tracking whenever sub phase changes
             st.PhaseTracking?.Clear();
 
@@ -58,7 +60,9 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnLoadScene(LoadSceneEvent e)
         {
-            var st = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault().GetComponent<BattleStateInfo>();
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            if (player == null) return;
+            var st = player.GetComponent<BattleStateInfo>();
             st.RunTracking?.Clear();
         }
 

@@ -147,6 +147,7 @@ namespace Crusaders30XX.ECS.Systems
 		private int GetCurrentTurnNumber()
 		{
 			var infoEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+			if (infoEntity == null) return 0;
 			var info = infoEntity.GetComponent<PhaseState>();
 			return info.TurnNumber;
 		}

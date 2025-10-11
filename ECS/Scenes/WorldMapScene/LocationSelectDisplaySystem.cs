@@ -80,11 +80,17 @@ namespace Crusaders30XX.ECS.Systems
 			_font = font;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
 		{
 			return EntityManager.GetEntitiesWithComponent<SceneState>();
+		}
+
+		private void OnDeleteCaches(DeleteCachesEvent evt)
+		{
+			_locationEntitiesById.Clear();
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)

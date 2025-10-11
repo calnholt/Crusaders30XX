@@ -340,8 +340,10 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				qeEntity = EntityManager.CreateEntity("QueuedEvents");
 				EntityManager.AddComponent(qeEntity, new QueuedEvents());
+				EntityManager.AddComponent(qeEntity, new DontDestroyOnLoad());
 			}
 			var qe = qeEntity.GetComponent<QueuedEvents>();
+      qe.CurrentIndex = -1;
 			qe.Events.Clear();
 			foreach (var q in questDefs)
 			{

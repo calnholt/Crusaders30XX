@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.ECS.Components;
 
 namespace Crusaders30XX.ECS.Core
 {
@@ -25,6 +26,14 @@ namespace Crusaders30XX.ECS.Core
             };
             
             _entities[entity.Id] = entity;
+            // Auto-tag entity with the current scene for lifecycle cleanup
+            try
+            {
+                var sceneEntity = GetEntitiesWithComponent<SceneState>().FirstOrDefault();
+                var currentScene = sceneEntity?.GetComponent<SceneState>()?.Current ?? SceneId.None;
+                AddComponent(entity, new OwnedByScene { Scene = currentScene });
+            }
+            catch { /* best-effort; ignore during early bootstrap */ }
             return entity;
         }
         

@@ -28,12 +28,14 @@ namespace Crusaders30XX.ECS.Systems
 		private PhaseState GetOrCreate()
 		{
 			var e = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+			if (e == null) return null;
 			return e.GetComponent<PhaseState>();
 		}
 
 		private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
 		{
 			var ps = GetOrCreate();
+			if (ps == null) return;
       if (evt.Current == SubPhase.EnemyStart) {
         ps.TurnNumber++;
       }

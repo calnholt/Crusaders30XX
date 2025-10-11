@@ -70,14 +70,6 @@ public class Game1 : Game
                 _graphics.ApplyChanges();
             }
         };
-        // TODO: do elsewhere
-        EventManager.Subscribe<LoadSceneEvent>(_ => {
-            var scene = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
-            if (_.Scene == scene.Current) {
-                return;
-            }
-            scene.Current = _.Scene;
-        });
     }
 
     protected override void Initialize()
@@ -136,6 +128,13 @@ public class Game1 : Game
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 
+        // Mark persistent entities
+        _world.AddComponent(sceneEntity, new DontDestroyOnLoad());
+        var cvsEntity = _world.EntityManager.GetEntity("CardVisualSettings");
+        if (cvsEntity != null)
+        {
+            _world.AddComponent(cvsEntity, new DontDestroyOnLoad());
+        }
         // TODO: use this.Content to load your game content here
     }
     
@@ -227,6 +226,7 @@ public class Game1 : Game
             _world.AddComponent(menuEntity, new DebugMenu { IsOpen = true });
             _world.AddComponent(menuEntity, new Transform { Position = new Vector2(1800, 200), ZOrder = 5000 });
             _world.AddComponent(menuEntity, new UIElement { Bounds = new Rectangle(1750, 150, 150, 300), IsInteractable = true });
+            _world.AddComponent(menuEntity, new DontDestroyOnLoad());
         }
         else
         {
@@ -248,6 +248,7 @@ public class Game1 : Game
         {
             overlayEntity = _world.CreateEntity("EntityListOverlay");
             _world.AddComponent(overlayEntity, new EntityListOverlay { IsOpen = true });
+            _world.AddComponent(overlayEntity, new DontDestroyOnLoad());
         }
         else
         {

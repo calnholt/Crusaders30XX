@@ -42,7 +42,9 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			// TODO: cache so we dont need to keep fetching
-			EntityManager.GetEntity("Enemy").GetComponent<AppliedPassives>().Passives.TryGetValue(AppliedPassiveType.Stealth, out var stealthStacks);
+			var enemyEntity = EntityManager.GetEntity("Enemy");
+			if (enemyEntity == null) return;
+			enemyEntity.GetComponent<AppliedPassives>().Passives.TryGetValue(AppliedPassiveType.Stealth, out var stealthStacks);
 			if (stealthStacks > 0) 
 			{
 				return;

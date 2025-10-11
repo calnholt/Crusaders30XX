@@ -80,6 +80,7 @@ namespace Crusaders30XX.ECS.Systems
         private void ApplyStartOfTurnPassives(Entity owner)
         {
             var ap = owner.GetComponent<AppliedPassives>();
+            if (ap == null) return;
             if (ap == null || ap.Passives == null || ap.Passives.Count == 0) return;
             var hasInferno = ap.Passives.TryGetValue(AppliedPassiveType.Inferno, out int infernoStacks);
             if (hasInferno && infernoStacks > 0)

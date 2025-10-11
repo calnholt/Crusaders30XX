@@ -25,8 +25,10 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			base.Update(gameTime);
 			// Only during Block phase
-			var phaseState = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
-			if (phaseState.Sub != SubPhase.Block) return;
+			var phaseState = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+			if (phaseState == null) return;
+			var phase = phaseState.GetComponent<PhaseState>();
+			if (phase.Sub != SubPhase.Block) return;
 			// Need a current intent context
 			var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
 			var pa = enemy?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();

@@ -20,6 +20,23 @@ namespace Crusaders30XX.ECS.Components
 	}
 
 	/// <summary>
+	/// Marks which scene owns an entity for automatic cleanup on scene transitions.
+	/// </summary>
+	public class OwnedByScene : IComponent
+	{
+		public Entity Owner { get; set; }
+		public SceneId Scene { get; set; } = SceneId.None;
+	}
+
+	/// <summary>
+	/// Marker component for entities that should persist across scene transitions.
+	/// </summary>
+	public class DontDestroyOnLoad : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
+
+	/// <summary>
 	/// Holds a queue of enemy ids selected from the menu to spawn when battle starts.
 	/// </summary>
 	public class QueuedEvents : IComponent

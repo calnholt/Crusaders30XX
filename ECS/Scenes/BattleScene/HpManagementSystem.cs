@@ -48,7 +48,17 @@ namespace Crusaders30XX.ECS.Systems
 				EventQueue.Clear();
 				TimerScheduler.Schedule(1f, () => {
 					Console.WriteLine("[HpManagementSystem] Enemy died, execute transition");
-					EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
+					// is this the last enemy?
+					var queuedEntity = EntityManager.GetEntity("QueuedEvents");
+					var queued = queuedEntity.GetComponent<QueuedEvents>();
+					if (queued.CurrentIndex == queued.Events.Count - 1)
+					{
+						EventManager.Publish(new ShowTransition { Scene = SceneId.WorldMap });
+					}
+					else
+					{
+						EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
+					}
 				});
 			}
 		}

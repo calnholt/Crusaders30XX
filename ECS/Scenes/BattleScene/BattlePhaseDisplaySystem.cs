@@ -103,7 +103,9 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			if (_font == null) return;
-			var state = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
+			var stateEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+			if (stateEntity == null) return;
+			var state = stateEntity.GetComponent<PhaseState>();
 			int vw = _graphicsDevice.Viewport.Width;
 			int xRight = vw + LabelOffsetX;
 			string label = "";
