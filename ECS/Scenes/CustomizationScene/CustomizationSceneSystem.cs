@@ -86,7 +86,7 @@ namespace Crusaders30XX.ECS.Systems
                 else if (undoRect.Contains(mouse.Position)) UndoWorking();
                 else if (exitRect.Contains(mouse.Position))
                 {
-                    EventManager.Publish(new ShowTransition { Scene = SceneId.Internal_QueueEventsMenu });
+                    EventManager.Publish(new ShowTransition { Scene = SceneId.WorldMap });
                     TimerScheduler.Schedule(.8f, () => {
                         // Clear customization state before exiting
                         var stc = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault();

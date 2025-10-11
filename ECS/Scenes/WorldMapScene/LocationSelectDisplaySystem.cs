@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -22,6 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Dictionary<string, Texture2D> _textureCache = new();
 		private readonly Dictionary<string, Entity> _locationEntitiesById = new();
 		private Texture2D _pixel;
+		private Texture2D _customizeRoundedCache;
 
 		// Cached viewport to detect size changes and recompute layout
 		private int _lastViewportW = -1;
@@ -52,7 +54,7 @@ namespace Crusaders30XX.ECS.Systems
 		public float LabelScale { get; set; } = 0.25f;
 
 		[DebugEditable(DisplayName = "Image Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
-		public float ImageScale { get; set; } = 1.0f;
+		public float ImageScale { get; set; } = 2.0f;
 
 		[DebugEditable(DisplayName = "Circle Radius (fraction of tile)", Step = 0.01f, Min = 0.05f, Max = 0.5f)]
 		public float CircleRadius { get; set; } = 0.16f;
@@ -109,6 +111,8 @@ namespace Crusaders30XX.ECS.Systems
 					var ui = kv.Value?.GetComponent<UIElement>();
 					if (ui != null) ui.IsInteractable = false;
 				}
+				// Keep customize button active while overlay is open
+				EnsureCustomizeButton(w, h);
 				return;
 			}
 			if (w != _lastViewportW || h != _lastViewportH)
@@ -173,6 +177,9 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 
+			// Customize button bottom-right
+			EnsureCustomizeButton(viewportW, viewportH);
+
 			// Handle clicks to open quest select overlay (only for unlocked slots)
 			foreach (var kv in _locationEntitiesById)
 			{
@@ -205,6 +212,15 @@ namespace Crusaders30XX.ECS.Systems
 					}
 					break;
 				}
+			}
+
+			// Customize click -> load Customization scene
+			var custEnt = EntityManager.GetEntitiesWithComponent<LocationCustomizeButton>().FirstOrDefault();
+			var custUI = custEnt?.GetComponent<UIElement>();
+			if (custUI != null && custUI.IsClicked)
+			{
+				// Switch scene
+				EventManager.Publish(new ShowTransition { Scene = SceneId.Customization });
 			}
 		}
 
@@ -274,6 +290,9 @@ namespace Crusaders30XX.ECS.Systems
 					_spriteBatch.DrawString(_font, qm, qPos, Color.Black, 0f, Vector2.Zero, qScale, SpriteEffects.None, 0f);
 				}
 			}
+
+			// Draw Customize button
+			DrawCustomizeButton();
 		}
 
 		private void DrawContainer(Rectangle dst)
@@ -305,6 +324,47 @@ namespace Crusaders30XX.ECS.Systems
 			var size = _font.MeasureString(text);
 			float scale = System.Math.Min((radius * 1.6f) / System.Math.Max(1f, size.X), 0.8f);
 			var pos = new Vector2(cx - (size.X * scale) / 2f, cy - (size.Y * scale) / 2f + 1);
+			_spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+		}
+
+		private void EnsureCustomizeButton(int viewportW, int viewportH)
+		{
+			int btnW = 200;
+			int btnH = 56;
+			int margin = 16;
+			var rect = new Rectangle(viewportW - btnW - margin, viewportH - btnH - margin, btnW, btnH);
+			var ent = EntityManager.GetEntitiesWithComponent<LocationCustomizeButton>().FirstOrDefault();
+			if (ent == null)
+			{
+				ent = EntityManager.CreateEntity("LocationCustomizeButton");
+				EntityManager.AddComponent(ent, new LocationCustomizeButton());
+				EntityManager.AddComponent(ent, new UIElement { Bounds = rect, IsInteractable = true });
+			}
+			else
+			{
+				var ui = ent.GetComponent<UIElement>();
+				if (ui == null) EntityManager.AddComponent(ent, new UIElement { Bounds = rect, IsInteractable = true });
+				else { ui.Bounds = rect; ui.IsInteractable = true; }
+			}
+		}
+
+		private void DrawCustomizeButton()
+		{
+			var ent = EntityManager.GetEntitiesWithComponent<LocationCustomizeButton>().FirstOrDefault();
+			var ui = ent?.GetComponent<UIElement>();
+			if (ui == null) return;
+			var r = ui.Bounds;
+			var tex = _customizeRoundedCache;
+			if (tex == null || tex.Width != r.Width || tex.Height != r.Height)
+			{
+				tex = ECS.Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, r.Width, r.Height, 12);
+				_customizeRoundedCache = tex;
+			}
+			_spriteBatch.Draw(tex, r, new Color(0, 0, 0));
+			string text = "Customize";
+			var size = _font.MeasureString(text);
+			float scale = 0.2f;
+			var pos = new Vector2(r.X + r.Width / 2f - (size.X * scale) / 2f, r.Y + r.Height / 2f - (size.Y * scale) / 2f);
 			_spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 		}
 

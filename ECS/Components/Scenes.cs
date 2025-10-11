@@ -130,6 +130,14 @@ namespace Crusaders30XX.ECS.Components
 	}
 
 	/// <summary>
+	/// Marker for location select "Customize" button UI.
+	/// </summary>
+	public class LocationCustomizeButton : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
+
+	/// <summary>
 	/// Marker for quest selection start area (click to begin quest).
 	/// </summary>
 	public class QuestStartArea : IComponent
