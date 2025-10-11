@@ -58,10 +58,10 @@ namespace Crusaders30XX.ECS.Systems
 		public float CircleRadius { get; set; } = 0.16f;
 
 		[DebugEditable(DisplayName = "Circle Offset X (fraction of tile)", Step = 0.01f, Min = -1f, Max = 1f)]
-		public float CircleOffsetX { get; set; } = 0f;
+		public float CircleOffsetX { get; set; } = -0.1f;
 
 		[DebugEditable(DisplayName = "Circle Offset Y (fraction of tile)", Step = 0.01f, Min = -1f, Max = 1f)]
-		public float CircleOffsetY { get; set; } = 0f;
+		public float CircleOffsetY { get; set; } = 0.1f;
 
 		[DebugEditable(DisplayName = "Locked Circle Scale (radius)", Step = 0.01f, Min = 0.05f, Max = 0.5f)]
 		public float LockedCircleScale { get; set; } = 0.35f;
