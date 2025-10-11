@@ -93,6 +93,33 @@ namespace Crusaders30XX.ECS.Components
 		Legs,
 		Temperance,
 	}
+
+	/// <summary>
+	/// Quest selection overlay state for WorldMap scene.
+	/// </summary>
+	public class QuestSelectState : IComponent
+	{
+		public Entity Owner { get; set; }
+		public bool IsOpen { get; set; } = false;
+		public string LocationId { get; set; } = string.Empty;
+		public int SelectedQuestIndex { get; set; } = 0;
+	}
+
+	/// <summary>
+	/// Marker for quest selection left arrow UI.
+	/// </summary>
+	public class QuestArrowLeft : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
+
+	/// <summary>
+	/// Marker for quest selection right arrow UI.
+	/// </summary>
+	public class QuestArrowRight : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
 }
 
 

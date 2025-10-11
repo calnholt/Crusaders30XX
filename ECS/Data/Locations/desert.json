@@ -3,19 +3,74 @@
   "name": "Desert",
   "quests": [
     [
-      "skeleton"
+      {
+        "id": "skeleton",
+        "type": "Enemy"
+      }
     ],
     [
-      "skeleton", "skeleton"
+      {
+        "id": "skeleton",
+        "type": "Enemy"
+      },
+      {
+        "id": "skeleton",
+        "type": "Enemy"
+      }
     ],
     [
-      "skeleton", "demon", "skeleton"
+      {
+        "id": "skeleton",
+        "type": "Enemy"
+      },
+      {
+        "id": "demon",
+        "type": "Enemy"
+      },
+      {
+        "id": "skeleton",
+        "type": "Enemy"
+      }
     ],
     [
-      "skeleton", "demon", "skeleton", "demon"
+      {
+        "id": "skeleton",
+        "type": "Enemy"
+      },
+      {
+        "id": "demon",
+        "type": "Enemy"
+      },
+      {
+        "id": "skeleton",
+        "type": "Enemy"
+      },
+      {
+        "id": "demon",
+        "type": "Enemy"
+      }
     ],
     [
-      "succubus", "demon", "skeleton", "demon", "succubus"
+      {
+        "id": "succubus",
+        "type": "Enemy"
+      },
+      {
+        "id": "demon",
+        "type": "Enemy"
+      },
+      {
+        "id": "skeleton",
+        "type": "Enemy"
+      },
+      {
+        "id": "demon",
+        "type": "Enemy"
+      },
+      {
+        "id": "succubus",
+        "type": "Enemy"
+      }
     ]
   ]
 }

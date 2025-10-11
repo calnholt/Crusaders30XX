@@ -34,6 +34,7 @@ public class Game1 : Game
     private TooltipDisplaySystem _tooltipDisplaySystem;
     private ProfilerSystem _profilerSystem;
     private LocationSelectDisplaySystem _worldMapSystem;
+    private QuestSelectDisplaySystem _questSelectSystem;
     
     // ECS System
     private World _world;
@@ -116,6 +117,7 @@ public class Game1 : Game
         _tooltipDisplaySystem = new TooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
+        _questSelectSystem = new QuestSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _world.AddSystem(_titleMenuDisplaySystem);
         _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
@@ -130,6 +132,7 @@ public class Game1 : Game
         _world.AddSystem(_tooltipDisplaySystem);
         _world.AddSystem(_profilerSystem);
         _world.AddSystem(_worldMapSystem);
+        _world.AddSystem(_questSelectSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 
@@ -140,7 +143,7 @@ public class Game1 : Game
     {
         WindowIsActive = IsActive;
         var kb = Keyboard.GetState();
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || kb.IsKeyDown(Keys.Escape))
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || (kb.IsKeyDown(Keys.Escape) && kb.IsKeyDown(Keys.LeftShift)))
             Exit();
 
         // Global debug menu toggle so it's available in the main menu too
@@ -197,6 +200,7 @@ public class Game1 : Game
                 _spriteBatch.End();
                 _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, _spriteRasterizer);
                 FrameProfiler.Measure("LocationSelectDisplaySystem.Draw", _worldMapSystem.Draw);
+                FrameProfiler.Measure("QuestSelectDisplaySystem.Draw", _questSelectSystem.Draw);
                 _spriteBatch.End();
                 // Resume default sampling for overlays and other UI
                 _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);

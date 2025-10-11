@@ -89,6 +89,19 @@ namespace Crusaders30XX.ECS.Systems
 
 			int w = _graphicsDevice.Viewport.Width;
 			int h = _graphicsDevice.Viewport.Height;
+
+			// If quest overlay is open, disable interactions and skip layout
+			var qsEntity0 = EntityManager.GetEntitiesWithComponent<QuestSelectState>().FirstOrDefault();
+			var qs0 = qsEntity0?.GetComponent<QuestSelectState>();
+			if (qs0 != null && qs0.IsOpen)
+			{
+				foreach (var kv in _locationEntitiesById)
+				{
+					var ui = kv.Value?.GetComponent<UIElement>();
+					if (ui != null) ui.IsInteractable = false;
+				}
+				return;
+			}
 			if (w != _lastViewportW || h != _lastViewportH)
 			{
 				_lastViewportW = w;
@@ -150,12 +163,47 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 			}
+
+			// Handle clicks to open quest select overlay
+			foreach (var kv in _locationEntitiesById)
+			{
+				var id = kv.Key;
+				var ent = kv.Value;
+				var ui = ent?.GetComponent<UIElement>();
+				if (ui == null) continue;
+				if (ui.IsClicked)
+				{
+					var def = list.FirstOrDefault(d => d.id == id);
+					if (def == null) break;
+					int completed = SaveCache.GetValueOrDefault(id, 0);
+					int maxIndex = System.Math.Max(0, (def.quests?.Count ?? 1) - 1);
+					int startIndex = System.Math.Max(0, System.Math.Min(completed, maxIndex));
+					var qsEntity = EntityManager.GetEntitiesWithComponent<QuestSelectState>().FirstOrDefault();
+					if (qsEntity == null)
+					{
+						qsEntity = EntityManager.CreateEntity("QuestSelectState");
+						EntityManager.AddComponent(qsEntity, new QuestSelectState { IsOpen = true, LocationId = id, SelectedQuestIndex = startIndex });
+					}
+					else
+					{
+						var s = qsEntity.GetComponent<QuestSelectState>();
+						s.IsOpen = true;
+						s.LocationId = id;
+						s.SelectedQuestIndex = startIndex;
+					}
+					break;
+				}
+			}
 		}
 
 		public void Draw()
 		{
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.WorldMap) return;
+
+			// Skip drawing when quest overlay is open
+			var qsOpen = EntityManager.GetEntitiesWithComponent<QuestSelectState>().FirstOrDefault()?.GetComponent<QuestSelectState>()?.IsOpen ?? false;
+			if (qsOpen) return;
 
 			var all = LocationDefinitionCache.GetAll();
 			var list = all?.Values?.OrderBy(d => d?.name ?? d?.id).ToList() ?? new List<LocationDefinition>();
@@ -232,18 +280,6 @@ namespace Crusaders30XX.ECS.Systems
 			float scale = System.Math.Min((radius * 1.6f) / System.Math.Max(1f, size.X), 0.8f);
 			var pos = new Vector2(cx - (size.X * scale) / 2f, cy - (size.Y * scale) / 2f + 1);
 			_spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-		}
-
-		private void DrawBorder(Rectangle rect, int thickness, Color color)
-		{
-			// Top
-			_spriteBatch.Draw(_pixel, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
-			// Bottom
-			_spriteBatch.Draw(_pixel, new Rectangle(rect.X, rect.Bottom - thickness, rect.Width, thickness), color);
-			// Left
-			_spriteBatch.Draw(_pixel, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
-			// Right
-			_spriteBatch.Draw(_pixel, new Rectangle(rect.Right - thickness, rect.Y, thickness, rect.Height), color);
 		}
 
 		private Texture2D LoadTextureSafe(string assetName)
