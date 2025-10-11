@@ -7,6 +7,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Services;
 using System;
 
 namespace Crusaders30XX.ECS.Systems
@@ -228,12 +231,14 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
 			}
-			// all battles are done, go to menu
+			// all battles are done, quest completed; update save and go to menu
 			if (queued.Events.Count == queued.CurrentIndex + 1)
 			{
+				// Increment save progress via service
+				QuestCompleteService.SaveIfCompletedHighest(EntityManager);
 				var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
 				ResetEntitiesAfterBattle();
-				scene.Current = SceneId.Internal_QueueEventsMenu;
+				scene.Current = SceneId.WorldMap;
 				return;
 			};
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });

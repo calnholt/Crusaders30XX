@@ -33,6 +33,22 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 			return map;
 		}
+
+		public static void Save(string fileAbsPath, Dictionary<string, int> data)
+		{
+			if (string.IsNullOrEmpty(fileAbsPath) || data == null) return;
+			try
+			{
+				var dir = Path.GetDirectoryName(fileAbsPath);
+				if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
+				var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+				File.WriteAllText(fileAbsPath, json);
+			}
+			catch (System.Exception ex)
+			{
+				System.Console.WriteLine($"[SaveRepository] Failed to write {fileAbsPath}: {ex.Message}");
+			}
+		}
 	}
 }
 

@@ -78,7 +78,7 @@ namespace Crusaders30XX.ECS.Systems
 				var scene = sceneEntity?.GetComponent<SceneState>();
 				if (scene != null)
 				{
-					scene.Current = SceneId.Internal_QueueEventsMenu;
+					scene.Current = SceneId.WorldMap;
 				}
 				_sceneSwitched = true;
 				_active = false; // stop drawing after switch

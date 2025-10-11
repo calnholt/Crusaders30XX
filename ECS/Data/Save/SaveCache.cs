@@ -30,6 +30,38 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 		}
 
+		public static void SetValue(string key, int value)
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				_save[key] = value;
+				Persist();
+			}
+		}
+
+		public static void Increment(string key, int delta = 1)
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				var current = 0;
+				_save.TryGetValue(key, out current);
+				_save[key] = current + delta;
+				Persist();
+			}
+		}
+
+		private static void Persist()
+		{
+			try
+			{
+				var path = ResolveFilePath();
+				SaveRepository.Save(path, _save);
+			}
+			catch { }
+		}
+
 		private static void EnsureLoaded()
 		{
 			if (_save != null) return;
