@@ -35,6 +35,7 @@ public class Game1 : Game
     private ProfilerSystem _profilerSystem;
     private LocationSelectDisplaySystem _worldMapSystem;
     private QuestSelectDisplaySystem _questSelectSystem;
+    private WorldMapCursorSystem _worldMapCursorSystem;
     
     // ECS System
     private World _world;
@@ -110,6 +111,7 @@ public class Game1 : Game
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _questSelectSystem = new QuestSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
+        _worldMapCursorSystem = new WorldMapCursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _world.AddSystem(_titleMenuDisplaySystem);
         _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
@@ -125,6 +127,7 @@ public class Game1 : Game
         _world.AddSystem(_profilerSystem);
         _world.AddSystem(_worldMapSystem);
         _world.AddSystem(_questSelectSystem);
+        _world.AddSystem(_worldMapCursorSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 
@@ -203,6 +206,7 @@ public class Game1 : Game
                 _spriteBatch.End();
                 // Resume default sampling for overlays and other UI
                 _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
+                FrameProfiler.Measure("WorldMapCursorSystem.Draw", _worldMapCursorSystem.Draw);
                 break;
             }
         }
