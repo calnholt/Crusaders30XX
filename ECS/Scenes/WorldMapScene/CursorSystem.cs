@@ -10,8 +10,8 @@ using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
-	[DebugTab("WorldMap Cursor")]
-	public class WorldMapCursorSystem : Core.System
+	[DebugTab("Cursor System")]
+	public class CursorSystem : Core.System
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
@@ -47,7 +47,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "UI Slowdown Multiplier", Step = 0.05f, Min = 0.05f, Max = 1f)]
 		public float SlowdownMultiplier { get; set; } = 0.7f;
 
-		public WorldMapCursorSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+		public CursorSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
@@ -91,36 +91,44 @@ namespace Crusaders30XX.ECS.Systems
 
 			var gp = GamePad.GetState(PlayerIndex.One);
 			Vector2 stick = gp.ThumbSticks.Left; // X: right+, Y: up+
+			bool ignoringTransitions = TransitionStateSingleton.IsActive;
 
 			// Determine top-most UI under cursor center and flag hover
 			var point = new Point((int)System.Math.Round(_cursorPosition.X), (int)System.Math.Round(_cursorPosition.Y));
-			var topCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()
-				.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-				.Where(x => x.UI != null && x.UI.IsInteractable && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && x.UI.Bounds.Contains(point))
-				.OrderByDescending(x => x.T?.ZOrder ?? 0)
-				.FirstOrDefault();
-			if (topCandidate != null)
+			var topCandidate = (object)null;
+			if (!ignoringTransitions)
 			{
-				topCandidate.UI.IsHovered = true;
-				_lastHoveredEntity = topCandidate.E;
+				var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
+					.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
+					.Where(x => x.UI != null && x.UI.IsInteractable && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && x.UI.Bounds.Contains(point))
+					.OrderByDescending(x => x.T?.ZOrder ?? 0)
+					.FirstOrDefault();
+				if (tc != null)
+				{
+					tc.UI.IsHovered = true;
+					_lastHoveredEntity = tc.E;
+				}
+				topCandidate = tc;
 			}
 
 			// A button edge-triggered click on the same top-most UI
 			bool aPressed = gp.Buttons.A == ButtonState.Pressed;
 			bool aPrevPressed = _prevGamePadState.Buttons.A == ButtonState.Pressed;
 			bool aEdge = aPressed && !aPrevPressed;
-			if (aEdge && topCandidate != null)
+			if (aEdge && !ignoringTransitions && topCandidate != null)
 			{
-				topCandidate.UI.IsClicked = true;
-				_lastClickedEntity = topCandidate.E;
+				var tc = (dynamic)topCandidate;
+				tc.UI.IsClicked = true;
+				_lastClickedEntity = tc.E;
 			}
 
 			// Publish cursor state event for other systems
 			int rForCoverage = System.Math.Max(1, CursorRadius);
 			float coverageForTop = 0f;
-			if (topCandidate != null)
+			if (!ignoringTransitions && topCandidate != null)
 			{
-				coverageForTop = EstimateCircleRectCoverage(topCandidate.UI.Bounds, _cursorPosition, rForCoverage);
+				var tc = (dynamic)topCandidate;
+				coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, rForCoverage);
 			}
 			EventManager.Publish(new CursorStateEvent
 			{
@@ -128,7 +136,7 @@ namespace Crusaders30XX.ECS.Systems
 				IsAPressed = aPressed,
 				IsAPressedEdge = aEdge,
 				Coverage = coverageForTop,
-				TopEntity = topCandidate?.E
+				TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E)
 			});
 
 			_prevGamePadState = gp;
@@ -148,13 +156,16 @@ namespace Crusaders30XX.ECS.Systems
 			// Slow down when overlapping UI elements beyond threshold
 			int r = System.Math.Max(1, CursorRadius);
 			float maxCoverage = 0f;
-			foreach (var e2 in EntityManager.GetEntitiesWithComponent<UIElement>())
+			if (!ignoringTransitions)
 			{
-				var ui2 = e2.GetComponent<UIElement>();
-				if (ui2 == null) continue;
-				var bounds2 = ui2.Bounds;
-				if (bounds2.Width < 2 || bounds2.Height < 2) continue;
-				maxCoverage = System.Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r));
+				foreach (var e2 in EntityManager.GetEntitiesWithComponent<UIElement>())
+				{
+					var ui2 = e2.GetComponent<UIElement>();
+					if (ui2 == null || !ui2.IsInteractable) continue;
+					var bounds2 = ui2.Bounds;
+					if (bounds2.Width < 2 || bounds2.Height < 2) continue;
+					maxCoverage = System.Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r));
+				}
 			}
 			if (maxCoverage >= MathHelper.Clamp(SlowdownCoverageThreshold, 0f, 1f))
 			{
@@ -180,16 +191,19 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
+			// Only draw the cursor if a controller is connected
+			var gp = GamePad.GetState(PlayerIndex.One);
+			if (!gp.IsConnected) return;
 			int r = System.Math.Max(1, CursorRadius);
 			_circleTexture = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, r);
 			var dst = new Rectangle((int)System.Math.Round(_cursorPosition.X) - r, (int)System.Math.Round(_cursorPosition.Y) - r, r * 2, r * 2);
 
-			// Compute redness based on overlap with any UIElement bounds
+			// Compute redness based on overlap with interactable UIElement bounds
 			float maxCoverage = 0f;
 			foreach (var e in EntityManager.GetEntitiesWithComponent<UIElement>())
 			{
 				var ui = e.GetComponent<UIElement>();
-				if (ui == null) continue;
+				if (ui == null || !ui.IsInteractable) continue;
 				var bounds = ui.Bounds;
 				if (bounds.Width < 2 || bounds.Height < 2) continue;
 				maxCoverage = System.Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds, _cursorPosition, r));

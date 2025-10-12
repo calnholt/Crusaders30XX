@@ -28,6 +28,7 @@ namespace Crusaders30XX.ECS.Systems
 		// Cached viewport to detect size changes and recompute layout
 		private int _lastViewportW = -1;
 		private int _lastViewportH = -1;
+		private bool _showUI;
 
 		[DebugEditable(DisplayName = "Tile Size (% of min screen dim)", Step = 0.005f, Min = 0.05f, Max = 0.9f)]
 		public float TileSize { get; set; } = 0.25f;
@@ -81,6 +82,7 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
+			EventManager.Subscribe<LoadSceneEvent>(OnLoadSceneEvent);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -91,6 +93,14 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnDeleteCaches(DeleteCachesEvent evt)
 		{
 			_locationEntitiesById.Clear();
+		}
+
+		private void OnLoadSceneEvent(LoadSceneEvent evt)
+		{
+			if (evt.Scene == SceneId.WorldMap)
+			{
+				_showUI = true;
+			}
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
@@ -115,11 +125,18 @@ namespace Crusaders30XX.ECS.Systems
 				foreach (var kv in _locationEntitiesById)
 				{
 					var ui = kv.Value?.GetComponent<UIElement>();
-					if (ui != null) ui.IsInteractable = false;
+					
+					if (ui != null)
+					{
+						ui.IsInteractable = false;
+					}
 				}
-				// Keep customize button active while overlay is open
-				EnsureCustomizeButton(w, h);
+				EntityManager.GetEntity("LocationCustomizeButton").GetComponent<UIElement>().IsInteractable = false;
 				return;
+			}
+			else 
+			{
+				_showUI = true;
 			}
 			if (w != _lastViewportW || h != _lastViewportH)
 			{
@@ -216,6 +233,7 @@ namespace Crusaders30XX.ECS.Systems
 						s.LocationId = key;
 						s.SelectedQuestIndex = startIndex;
 					}
+					_showUI = false;
 					break;
 				}
 			}
@@ -232,6 +250,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
+			if (!_showUI) return;
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.WorldMap) return;
 

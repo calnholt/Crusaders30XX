@@ -142,13 +142,21 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
-			// Early-out if there is no menu or it's closed
+			// Early-out if there is no menu; while ensuring UIElement interactivity reflects open state
 			var menuEntity = GetRelevantEntities().FirstOrDefault();
 			if (menuEntity == null) return;
 			var menu = menuEntity.GetComponent<DebugMenu>();
-			if (menu == null || !menu.IsOpen) return;
 			var transform = menuEntity.GetComponent<Transform>();
 			var ui = menuEntity.GetComponent<UIElement>();
+			if (ui != null) ui.IsInteractable = menu != null && menu.IsOpen;
+			if (menu == null || !menu.IsOpen)
+			{
+				// Also ensure dropdown UI (if present) is not interactable when menu is closed
+				var ddEntityClosed = EntityManager.GetEntitiesWithComponent<UIDropdown>().FirstOrDefault(e => e.GetComponent<UIDropdown>().Owner == e);
+				var ddUi = ddEntityClosed?.GetComponent<UIElement>();
+				if (ddUi != null) ddUi.IsInteractable = false;
+				return;
+			}
 			if (transform == null || ui == null) return;
 
 			// Invalidate debug menu caches when scene or system set changes

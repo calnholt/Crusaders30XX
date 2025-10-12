@@ -44,10 +44,12 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
-            var overlayEntity = GetRelevantEntities().FirstOrDefault();
-            if (overlayEntity == null) return;
-            var overlay = overlayEntity.GetComponent<EntityListOverlay>();
-            if (overlay == null || !overlay.IsOpen) return;
+			var overlayEntity = GetRelevantEntities().FirstOrDefault();
+			if (overlayEntity == null) return;
+			var overlay = overlayEntity.GetComponent<EntityListOverlay>();
+			var ui = overlayEntity.GetComponent<UIElement>();
+			if (ui != null) ui.IsInteractable = overlay != null && overlay.IsOpen;
+			if (overlay == null || !overlay.IsOpen) return;
 
             var mouse = Mouse.GetState();
             bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;

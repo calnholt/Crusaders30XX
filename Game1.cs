@@ -35,7 +35,8 @@ public class Game1 : Game
     private ProfilerSystem _profilerSystem;
     private LocationSelectDisplaySystem _worldMapSystem;
     private QuestSelectDisplaySystem _questSelectSystem;
-    private WorldMapCursorSystem _worldMapCursorSystem;
+    private CursorSystem _cursorSystem;
+    private UIElementBorderDebugSystem _uiElementBorderDebugSystem;
     
     // ECS System
     private World _world;
@@ -111,7 +112,8 @@ public class Game1 : Game
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _questSelectSystem = new QuestSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
-        _worldMapCursorSystem = new WorldMapCursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _uiElementBorderDebugSystem = new UIElementBorderDebugSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _world.AddSystem(_titleMenuDisplaySystem);
         _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
@@ -127,7 +129,8 @@ public class Game1 : Game
         _world.AddSystem(_profilerSystem);
         _world.AddSystem(_worldMapSystem);
         _world.AddSystem(_questSelectSystem);
-        _world.AddSystem(_worldMapCursorSystem);
+        _world.AddSystem(_cursorSystem);
+        _world.AddSystem(_uiElementBorderDebugSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 
@@ -152,6 +155,12 @@ public class Game1 : Game
         if (kb.IsKeyDown(Keys.D) && !_prevKeyboard.IsKeyDown(Keys.D))
         {
             ToggleDebugMenu();
+            var debugMenu = _world.EntityManager.GetEntitiesWithComponent<DebugMenu>().FirstOrDefault();
+            if (debugMenu != null)
+            {
+                debugMenu.GetComponent<UIElement>().IsInteractable = !debugMenu.GetComponent<UIElement>().IsInteractable;
+                Console.WriteLine($"Debug menu interactable: {debugMenu.GetComponent<UIElement>().IsInteractable}");
+            }
         }
 
         // Entity list overlay toggle: Shift + W
@@ -210,12 +219,13 @@ public class Game1 : Game
                 break;
             }
         }
-        FrameProfiler.Measure("WorldMapCursorSystem.Draw", _worldMapCursorSystem.Draw);
+        FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipDisplaySystem.Draw);
         FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
         FrameProfiler.Measure("DebugMenuSystem.Draw", _debugMenuSystem.Draw);
         FrameProfiler.Measure("EntityListOverlaySystem.Draw", _entityListOverlaySystem.Draw);
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
+        FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         _spriteBatch.End();
 
         base.Draw(gameTime);

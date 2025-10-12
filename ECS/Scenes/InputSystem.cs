@@ -16,13 +16,8 @@ namespace Crusaders30XX.ECS.Systems
     {
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
-        // Latest controller cursor event (published by cursor system this frame)
-        private bool _hasCursorEvent;
-        private Vector2 _cursorEventPosition;
-        private bool _cursorEventIsAPressed;
-        private bool _cursorEventIsAPressedEdge;
-        private Entity _cursorEventTopEntity;
-        
+        private CursorStateEvent _cursorEvent;
+
         public InputSystem(EntityManager entityManager) : base(entityManager)
         {
             _previousMouseState = Mouse.GetState();
@@ -55,8 +50,8 @@ namespace Crusaders30XX.ECS.Systems
             var mouseState = Mouse.GetState();
             var mousePosition = mouseState.Position;
             // Coalesce pointer position: prefer controller cursor position if present
-            bool hasCursor = _hasCursorEvent;
-            var pointerVec = hasCursor ? _cursorEventPosition : new Vector2(mousePosition.X, mousePosition.Y);
+            bool hasCursor = _cursorEvent != null;
+            var pointerVec = hasCursor ? _cursorEvent.Position : new Vector2(mousePosition.X, mousePosition.Y);
             var pointerPoint = new Point((int)System.Math.Round(pointerVec.X), (int)System.Math.Round(pointerVec.Y));
             var keyboardState = Keyboard.GetState();
 
@@ -148,11 +143,11 @@ namespace Crusaders30XX.ECS.Systems
 
                 // Handle click on the top-most only
                 bool mouseEdge = mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released;
-                bool controllerEdge = _hasCursorEvent && _cursorEventIsAPressedEdge;
+                bool controllerEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge;
                 if (controllerEdge)
                 {
                     // Prefer top entity from controller event if available, otherwise use top under coalesced pointer
-                    var target = _cursorEventTopEntity ?? top?.E;
+                    var target = _cursorEvent.TopEntity ?? top?.E;
                     var ui = target?.GetComponent<UIElement>();
                     if (ui != null)
                     {
@@ -181,7 +176,7 @@ namespace Crusaders30XX.ECS.Systems
             _previousMouseState = mouseState;
             _previousKeyboardState = keyboardState;
             // Clear cursor event after consumption to avoid reuse next frame
-            _hasCursorEvent = false;
+            _cursorEvent = null;
         }
 
         private bool IsUnderMouse(dynamic x, Point mousePosition)
@@ -328,11 +323,7 @@ namespace Crusaders30XX.ECS.Systems
         }
         private void OnCursorEvent(CursorStateEvent e)
         {
-            _hasCursorEvent = true;
-            _cursorEventPosition = e.Position;
-            _cursorEventIsAPressed = e.IsAPressed;
-            _cursorEventIsAPressedEdge = e.IsAPressedEdge;
-            _cursorEventTopEntity = e.TopEntity;
+            _cursorEvent = e;
         }
     }
 } 

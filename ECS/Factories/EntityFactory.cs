@@ -284,9 +284,9 @@ namespace Crusaders30XX.ECS.Factories
                 Color = color
             };
 
-            var transform = new Transform { Position = Vector2.Zero, Scale = Vector2.One };
+            var transform = new Transform { Position = new Vector2(-1000, -1000), Scale = Vector2.One };
             var sprite = new Sprite { TexturePath = string.Empty, IsVisible = true };
-            var uiElement = new UIElement { Bounds = new Rectangle(0, 0, 250, 350), IsInteractable = true, TooltipPosition = TooltipPosition.Above, TooltipOffsetPx = 30 };
+            var uiElement = new UIElement { Bounds = new Rectangle(-1000, -1000, 250, 350), IsInteractable = true, TooltipPosition = TooltipPosition.Above, TooltipOffsetPx = 30 };
 
             entityManager.AddComponent(entity, cardData);
             entityManager.AddComponent(entity, transform);

@@ -123,7 +123,14 @@ namespace Crusaders30XX.ECS.Systems
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.WorldMap) return;
 			var qs = EntityManager.GetEntitiesWithComponent<QuestSelectState>().FirstOrDefault()?.GetComponent<QuestSelectState>();
-			if (qs == null || !qs.IsOpen || string.IsNullOrEmpty(qs.LocationId)) return;
+			if (qs == null || !qs.IsOpen || string.IsNullOrEmpty(qs.LocationId)) 
+      {
+        EntityManager.DestroyEntity("QuestArrowLeft");
+        EntityManager.DestroyEntity("QuestArrowRight");
+        EntityManager.DestroyEntity("QuestStartArea");
+        EntityManager.DestroyEntity("QuestBackButton");
+        return;
+      }
 
 			var panel = GetPanelRect();
 			DrawPanel(panel);

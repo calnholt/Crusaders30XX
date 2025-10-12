@@ -34,13 +34,8 @@ namespace Crusaders30XX.ECS.Systems
 			var pa = enemy?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();
 			if (pa == null || string.IsNullOrEmpty(pa.ContextId)) return;
 
-			var mouse = Mouse.GetState();
-			bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
-			if (!click) { _prevMouse = mouse; return; }
-
 			// Hit-test hand cards
 			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
-			if (deck == null) { _prevMouse = mouse; return; }
 			// Iterate topmost first (reverse Z)
 			var handOrdered = deck.Hand.OrderByDescending(e => e.GetComponent<Transform>()?.ZOrder ?? 0).ToList();
 			foreach (var card in handOrdered)
@@ -48,12 +43,12 @@ namespace Crusaders30XX.ECS.Systems
 				var ui = card.GetComponent<UIElement>();
 				var data = card.GetComponent<CardData>();
 				if (ui == null || data == null) continue;
-				if (!ui.Bounds.Contains(mouse.Position)) continue;
+				if (!ui.IsClicked) continue;
                 // Skip weapons: they cannot be assigned as block
 				try
 				{
-                    string id = data.CardId ?? string.Empty;
-                    if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
+					string id = data.CardId ?? string.Empty;
+					if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
 					{
 						if (def.isWeapon) { break; }
 					}
@@ -93,7 +88,6 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				break; // Only one card per click
 			}
-			_prevMouse = mouse;
 		}
 
 		private MouseState _prevMouse;
