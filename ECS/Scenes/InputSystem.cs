@@ -16,11 +16,18 @@ namespace Crusaders30XX.ECS.Systems
     {
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
+        // Latest controller cursor event (published by cursor system this frame)
+        private bool _hasCursorEvent;
+        private Vector2 _cursorEventPosition;
+        private bool _cursorEventIsAPressed;
+        private bool _cursorEventIsAPressedEdge;
+        private Entity _cursorEventTopEntity;
         
         public InputSystem(EntityManager entityManager) : base(entityManager)
         {
             _previousMouseState = Mouse.GetState();
             _previousKeyboardState = Keyboard.GetState();
+            EventManager.Subscribe<CursorStateEvent>(OnCursorEvent);
         }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -47,6 +54,10 @@ namespace Crusaders30XX.ECS.Systems
 
             var mouseState = Mouse.GetState();
             var mousePosition = mouseState.Position;
+            // Coalesce pointer position: prefer controller cursor position if present
+            bool hasCursor = _hasCursorEvent;
+            var pointerVec = hasCursor ? _cursorEventPosition : new Vector2(mousePosition.X, mousePosition.Y);
+            var pointerPoint = new Point((int)System.Math.Round(pointerVec.X), (int)System.Math.Round(pointerVec.Y));
             var keyboardState = Keyboard.GetState();
 
             // Debug menu toggle is handled globally in Game1 to be scene-independent
@@ -125,7 +136,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     // Reject degenerate bounds
                     if (x.UI.Bounds.Width < 2 || x.UI.Bounds.Height < 2) return false;
-                    return IsUnderMouse(x, mousePosition);
+                    return IsUnderMouse(x, pointerPoint);
                 })
                 .OrderByDescending(x => x.T?.ZOrder ?? 0)
                 .ToList();
@@ -136,7 +147,20 @@ namespace Crusaders30XX.ECS.Systems
                 top.UI.IsHovered = true;
 
                 // Handle click on the top-most only
-                if (mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released)
+                bool mouseEdge = mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released;
+                bool controllerEdge = _hasCursorEvent && _cursorEventIsAPressedEdge;
+                if (controllerEdge)
+                {
+                    // Prefer top entity from controller event if available, otherwise use top under coalesced pointer
+                    var target = _cursorEventTopEntity ?? top?.E;
+                    var ui = target?.GetComponent<UIElement>();
+                    if (ui != null)
+                    {
+                        ui.IsClicked = true;
+                        HandleUIClick(target);
+                    }
+                }
+                else if (mouseEdge)
                 {
                     top.UI.IsClicked = true;
                     HandleUIClick(top.E);
@@ -156,6 +180,8 @@ namespace Crusaders30XX.ECS.Systems
 
             _previousMouseState = mouseState;
             _previousKeyboardState = keyboardState;
+            // Clear cursor event after consumption to avoid reuse next frame
+            _hasCursorEvent = false;
         }
 
         private bool IsUnderMouse(dynamic x, Point mousePosition)
@@ -299,6 +325,14 @@ namespace Crusaders30XX.ECS.Systems
                 var p = e.GetComponent<ProfilerOverlay>();
                 p.IsOpen = !p.IsOpen;
             }
+        }
+        private void OnCursorEvent(CursorStateEvent e)
+        {
+            _hasCursorEvent = true;
+            _cursorEventPosition = e.Position;
+            _cursorEventIsAPressed = e.IsAPressed;
+            _cursorEventIsAPressedEdge = e.IsAPressedEdge;
+            _cursorEventTopEntity = e.TopEntity;
         }
     }
 } 

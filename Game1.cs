@@ -206,10 +206,11 @@ public class Game1 : Game
                 _spriteBatch.End();
                 // Resume default sampling for overlays and other UI
                 _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
-                FrameProfiler.Measure("WorldMapCursorSystem.Draw", _worldMapCursorSystem.Draw);
+                
                 break;
             }
         }
+        FrameProfiler.Measure("WorldMapCursorSystem.Draw", _worldMapCursorSystem.Draw);
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipDisplaySystem.Draw);
         FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
         FrameProfiler.Measure("DebugMenuSystem.Draw", _debugMenuSystem.Draw);
