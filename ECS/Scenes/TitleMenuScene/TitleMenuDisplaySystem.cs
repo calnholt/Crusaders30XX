@@ -67,21 +67,50 @@ namespace Crusaders30XX.ECS.Systems
 				// Reset timer when not active so fade restarts upon returning
 				_t = 0f;
 				_prevMouse = Mouse.GetState();
+				// Disable title menu click area if it exists
+				var existing = EntityManager.GetEntity("TitleMenu_ClickArea");
+				var uiExisting = existing?.GetComponent<UIElement>();
+				if (uiExisting != null) uiExisting.IsInteractable = false;
 				return;
 			}
 
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			_t += dt;
 
-			var mouse = Mouse.GetState();
-			bool fadeComplete = _t >= FadeInDurationSeconds;
-			bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
-			if (fadeComplete && click && !TransitionStateSingleton.IsActive)
+			// Ensure a full-screen interactable UI element exists for click handling (immediate, no fade gating)
+			int w = _graphicsDevice.Viewport.Width;
+			int h = _graphicsDevice.Viewport.Height;
+			var clickArea = EntityManager.GetEntity("TitleMenu_ClickArea");
+			if (clickArea == null)
+			{
+				clickArea = EntityManager.CreateEntity("TitleMenu_ClickArea");
+				EntityManager.AddComponent(clickArea, new Transform { Position = new Vector2(0, 0), ZOrder = 10000 });
+				EntityManager.AddComponent(clickArea, new UIElement { Bounds = new Rectangle(0, 0, w, h), IsInteractable = true });
+			}
+			else
+			{
+				var t = clickArea.GetComponent<Transform>();
+				if (t != null) { t.Position = new Vector2(0, 0); t.ZOrder = 10000; }
+				var ui = clickArea.GetComponent<UIElement>();
+				if (ui == null)
+				{
+					EntityManager.AddComponent(clickArea, new UIElement { Bounds = new Rectangle(0, 0, w, h), IsInteractable = true });
+				}
+				else
+				{
+					ui.Bounds = new Rectangle(0, 0, w, h);
+					ui.IsInteractable = true;
+				}
+			}
+
+			// Use UIElement click flag instead of raw mouse. Trigger transition immediately when clicked.
+			var uiClick = clickArea.GetComponent<UIElement>();
+			if (uiClick != null && uiClick.IsClicked && !TransitionStateSingleton.IsActive)
 			{
 				EventManager.Publish(new ShowTransition { Scene = SceneId.WorldMap });
 			}
 
-			_prevMouse = mouse;
+			_prevMouse = Mouse.GetState();
 		}
 
 		public void Draw()

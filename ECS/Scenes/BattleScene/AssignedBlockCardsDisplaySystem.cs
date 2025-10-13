@@ -89,16 +89,21 @@ namespace Crusaders30XX.ECS.Systems
 				base.Update(gameTime);
 				return;
 			}
-			// Edge-detect click once per frame for all cards
-			var mouseNow = Microsoft.Xna.Framework.Input.Mouse.GetState();
-			_clickEdgeThisFrame = mouseNow.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
-			_mouseNow = mouseNow;
+			// Ensure all assigned block cards have UIElement so clicks can be detected
+			var ensureList = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>();
+			foreach (var e in ensureList)
+			{
+				if (e.GetComponent<UIElement>() == null)
+				{
+					EntityManager.AddComponent(e, new UIElement { IsInteractable = true });
+				}
+			}
 
 			base.Update(gameTime);
+			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 			// Process any returns after the main iteration to avoid collection-modified errors
 			if (_pendingReturn.Count > 0)
 			{
-				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 				for (int i = 0; i < _pendingReturn.Count; i++)
 				{
 					var card = _pendingReturn[i];
@@ -119,7 +124,7 @@ namespace Crusaders30XX.ECS.Systems
 						{
 							Card = card,
 							Deck = deckEntity,
-							Destination = Crusaders30XX.ECS.Components.CardZoneType.Hand,
+							Destination = CardZoneType.Hand,
 							Reason = "ReturnAfterAssignment"
 						});
 					}
@@ -127,45 +132,21 @@ namespace Crusaders30XX.ECS.Systems
 				_pendingReturn.Clear();
 			}
 			// Handle click against all assigned cards (topmost first)
-			if (_clickEdgeThisFrame)
+			var abcEntities = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>();
+			var clickedCard = abcEntities.FirstOrDefault(e => e.GetComponent<UIElement>()?.IsClicked == true);
+			if (clickedCard != null)
 			{
-				var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
-				var pa = enemy?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();
-				if (pa != null)
+				var abc = clickedCard.GetComponent<AssignedBlockCard>();
+				abc.Phase = AssignedBlockCard.PhaseState.Returning;
+				abc.Elapsed = 0f;
+				var cardData = clickedCard.GetComponent<CardData>();
+				EventManager.Publish(new BlockAssignmentRemoved
 				{
-					var list = GetRelevantEntities()
-						.Where(e => e.GetComponent<AssignedBlockCard>()?.ContextId == pa.ContextId)
-						.OrderByDescending(e => e.GetComponent<AssignedBlockCard>().AssignedAtTicks)
-						.ToList();
-					for (int i = 0; i < list.Count; i++)
-					{
-						var card = list[i];
-						var abc = card.GetComponent<AssignedBlockCard>();
-						if (abc == null) continue;
-						// Prevent unassign clicks until the card has reached its target slot (Idle or Impact)
-						if (!(abc.Phase == AssignedBlockCard.PhaseState.Idle || abc.Phase == AssignedBlockCard.PhaseState.Impact)) continue;
-						int cw = (int)(CardDrawWidth * abc.CurrentScale);
-						int ch = (int)(CardDrawHeight * abc.CurrentScale);
-						var hit = new Rectangle((int)(abc.CurrentPos.X - cw / 2f), (int)(abc.CurrentPos.Y - ch / 2f), cw, ch);
-						if (hit.Contains(_mouseNow.Position))
-						{
-							abc.Phase = AssignedBlockCard.PhaseState.Returning;
-							abc.Elapsed = 0f;
-							var cardData = card.GetComponent<CardData>();
-							EventManager.Publish(new BlockAssignmentRemoved
-							{
-								ContextId = pa.ContextId,
-								Card = card,
-								DeltaBlock = -abc.BlockAmount,
-								Color = abc.ColorKey
-							});
-							break;
-						}
-					}
-				}
+					Card = clickedCard,
+					DeltaBlock = -abc.BlockAmount,
+					Color = abc.ColorKey
+				});
 			}
-
-			_prevMouse = mouseNow;
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
@@ -175,62 +156,63 @@ namespace Crusaders30XX.ECS.Systems
 			if (abc == null) return;
 			// Click to return to hand when idle on the banner
 			var ui = entity.GetComponent<UIElement>();
-			var mouse = Mouse.GetState();
-			bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
+			if (ui == null)
+			{
+				ui = new UIElement { IsInteractable = true };
+				EntityManager.AddComponent(entity, ui);
+			}
+			bool click = ui.IsClicked;
 			if (click && (abc.Phase == AssignedBlockCard.PhaseState.Idle || abc.Phase == AssignedBlockCard.PhaseState.Impact))
 			{
-				// Build a rect around CurrentPos to hit-test since we draw manually
-				int cw = (int)(CardDrawWidth * abc.CurrentScale);
-				int ch = (int)(CardDrawHeight * abc.CurrentScale);
-				var hit = new Rectangle((int)(abc.CurrentPos.X - cw / 2f), (int)(abc.CurrentPos.Y - ch / 2f), cw, ch);
-				if (hit.Contains(mouse.Position))
+				abc.Phase = AssignedBlockCard.PhaseState.Returning;
+				abc.Elapsed = 0f;
+				// Publish unassign so counters and damage update even if the top-level click handler didn't catch this card
+				var enemy2 = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+				var pa2 = enemy2?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();
+				var cd = entity.GetComponent<CardData>();
+				if (pa2 != null)
 				{
-					abc.Phase = AssignedBlockCard.PhaseState.Returning;
-					abc.Elapsed = 0f;
-					// Publish unassign so counters and damage update even if the top-level click handler didn't catch this card
-					var enemy2 = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
-					var pa2 = enemy2?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();
-					var cd = entity.GetComponent<CardData>();
-					if (pa2 != null)
+					EventManager.Publish(new BlockAssignmentRemoved
 					{
-						EventManager.Publish(new BlockAssignmentRemoved
-						{
-							ContextId = pa2.ContextId,
-							Card = entity,
-							DeltaBlock = -abc.BlockAmount,
-							Color = cd?.Color.ToString()
-						});
-					}
+						ContextId = pa2.ContextId,
+						Card = entity,
+						DeltaBlock = -abc.BlockAmount,
+						Color = cd?.Color.ToString()
+					});
 				}
 			}
 
-			// Update tooltip hover ONLY when card is assigned on the banner (not in hand)
+			// Ensure bounds reflect where the card is currently drawn and control interactivity
 			{
 				var enemyTip = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
 				var paTip = enemyTip?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();
 				bool isForCurrentContext = paTip != null && abc.ContextId == paTip.ContextId;
 				bool showDuringPhase = abc.Phase == AssignedBlockCard.PhaseState.Idle || abc.Phase == AssignedBlockCard.PhaseState.Impact || abc.Phase == AssignedBlockCard.PhaseState.Launch || abc.Phase == AssignedBlockCard.PhaseState.Pullback;
 				bool shouldShowTooltip = isForCurrentContext && showDuringPhase;
-				if (ui == null)
+				int cw = (int)(CardDrawWidth * abc.CurrentScale);
+				int ch = (int)(CardDrawHeight * abc.CurrentScale);
+				var rectNow = new Rectangle((int)(abc.CurrentPos.X - cw / 2f), (int)(abc.CurrentPos.Y - ch / 2f), cw, ch);
+
+				// Always keep bounds in sync for cards in the current context; disable otherwise
+				if (isForCurrentContext)
 				{
-					ui = new UIElement { IsInteractable = true };
-					EntityManager.AddComponent(entity, ui);
+					ui.Bounds = rectNow;
+					ui.IsInteractable = (abc.Phase == AssignedBlockCard.PhaseState.Idle || abc.Phase == AssignedBlockCard.PhaseState.Impact) && !TransitionStateSingleton.IsActive;
 				}
+				else
+				{
+					ui.IsInteractable = false;
+				}
+
+				// Tooltip content management
 				if (shouldShowTooltip)
 				{
-					int cw = (int)(CardDrawWidth * abc.CurrentScale);
-					int ch = (int)(CardDrawHeight * abc.CurrentScale);
-					var hoverRect = new Rectangle((int)(abc.CurrentPos.X - cw / 2f), (int)(abc.CurrentPos.Y - ch / 2f), cw, ch);
-					ui.Bounds = hoverRect;
-					ui.IsHovered = hoverRect.Contains(mouse.Position);
-					// Tooltip now comes from AssignedBlockCard
 					ui.Tooltip = abc.Tooltip ?? string.Empty;
 					ui.TooltipOffsetPx = 10;
 					ui.TooltipPosition = TooltipPosition.Above;
 				}
 				else
 				{
-					// Clear tooltip and hover when not assigned
 					ui.IsHovered = false;
 					string tip = string.Empty;
 					var cdReset = ui.Owner?.GetComponent<CardData>();
@@ -238,9 +220,8 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						tip = defReset.tooltip ?? string.Empty;
 					}
-					// Equipment entities do not have CardData; leave tooltip empty by default
 					ui.Tooltip = tip;
-					ui.TooltipOffsetPx = 30;	
+					ui.TooltipOffsetPx = 30;
 				}
 			}
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -341,7 +322,6 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			t.Position = abc.CurrentPos;
 			t.Scale = new Vector2(abc.CurrentScale, abc.CurrentScale);
-			_prevMouse = mouse;
 		}
 
 		public void Draw()
@@ -411,12 +391,6 @@ namespace Crusaders30XX.ECS.Systems
 			string assetName = key; // expects head.png, chest.png, arms.png, legs.png
 			try { return _content.Load<Texture2D>(assetName); } catch { return null; }
 		}
-
-		private MouseState _prevMouse;
-		private MouseState _mouseNow;
-		private bool _clickEdgeThisFrame;
-
-
 	}
 }
 
