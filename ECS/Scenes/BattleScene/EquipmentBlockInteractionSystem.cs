@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -27,6 +28,28 @@ namespace Crusaders30XX.ECS.Systems
 		public override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
+			// Ensure all AssignedBlockCard entities have a UIElement so clicks can be detected elsewhere
+			var assigned = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>();
+			foreach (var e in assigned)
+			{
+				var uiAbc = e.GetComponent<UIElement>();
+				if (uiAbc == null)
+				{
+					uiAbc = new UIElement { IsInteractable = true };
+					EntityManager.AddComponent(e, uiAbc);
+				}
+				// Best-effort bounds sync for assigned cards (precise sync happens in AssignedBlockCardsDisplaySystem)
+				var abc = e.GetComponent<AssignedBlockCard>();
+				if (abc != null)
+				{
+					const int defaultCardDrawWidth = 80;
+					const int defaultCardDrawHeight = 110;
+					int cw = (int)(defaultCardDrawWidth * abc.CurrentScale);
+					int ch = (int)(defaultCardDrawHeight * abc.CurrentScale);
+					var rectNow = new Microsoft.Xna.Framework.Rectangle((int)(abc.CurrentPos.X - cw / 2f), (int)(abc.CurrentPos.Y - ch / 2f), System.Math.Max(1, cw), System.Math.Max(1, ch));
+					uiAbc.Bounds = rectNow;
+				}
+			}
 			// Only in Block or Action phase
 			var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
 			if (phase == null) return;
@@ -36,9 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Need current context during Block phase
 			var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
 			var ctx = enemy?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault()?.ContextId;
-			var mouse = Mouse.GetState();
-			bool click = mouse.LeftButton == ButtonState.Pressed && _prev.LeftButton == ButtonState.Released;
-			if (!click) { _prev = mouse; return; }
+			// Clicks now come from UIElement.IsClicked on equipment UI elements
 
 			// Iterate equipment visible in panel (Default zone), topmost first (Z desc just in case)
 			var equipEntities = EntityManager.GetEntitiesWithComponent<EquippedEquipment>()
@@ -50,11 +71,11 @@ namespace Crusaders30XX.ECS.Systems
 				var ui = eqEntity.GetComponent<UIElement>();
 				var comp = eqEntity.GetComponent<EquippedEquipment>();
 				if (ui == null || comp == null) continue;
-				if (!ui.Bounds.Contains(mouse.Position)) continue;
+				if (!ui.IsInteractable || !ui.IsClicked) continue;
 				// Prevent use if destroyed
 				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 				var usedState = player?.GetComponent<EquipmentUsedState>();
-				if (usedState != null && usedState.DestroyedEquipmentIds.Contains(comp.EquipmentId)) { _prev = mouse; return; }
+				if (usedState != null && usedState.DestroyedEquipmentIds.Contains(comp.EquipmentId)) { return; }
 				// Prevent block use if out of uses during Block phase
 				if (isBlockPhase)
 				{
@@ -65,12 +86,12 @@ namespace Crusaders30XX.ECS.Systems
 						if (usedState != null && usedState.UsesByEquipmentId.TryGetValue(comp.EquipmentId, out var u)) used = u;
 					}
 					catch { }
-					if (total > 0 && used >= total) { _prev = mouse; return; }
+					if (total > 0 && used >= total) { return; }
 				}
 
 				if (isBlockPhase)
 				{
-					if (string.IsNullOrEmpty(ctx)) { _prev = mouse; return; }
+					if (string.IsNullOrEmpty(ctx)) { return; }
 					// Existing assign as block behavior
 					// Lookup block value and color from definition
 					int blockVal = 0;
@@ -84,7 +105,7 @@ namespace Crusaders30XX.ECS.Systems
 						}
 					}
 					catch { }
-					if (blockVal <= 0) { _prev = mouse; return; }
+					if (blockVal <= 0) { return; }
 					EventManager.Publish(new BlockAssignmentAdded { ContextId = ctx, Card = eqEntity, DeltaBlock = blockVal, Color = color });
 					var zone = eqEntity.GetComponent<EquipmentZone>();
 					if (zone == null)
@@ -129,7 +150,7 @@ namespace Crusaders30XX.ECS.Systems
 							if (act != null)
 							{
 								// prevent re-activation in the same turn
-								if (usedState != null && usedState.ActivatedThisTurn.Contains(comp.EquipmentId)) { _prev = mouse; return; }
+							if (usedState != null && usedState.ActivatedThisTurn.Contains(comp.EquipmentId)) { return; }
 								if (!act.isFreeAction) { EventManager.Publish(new ModifyActionPointsEvent { Delta = -1 }); }
 								EquipmentAbilityService.ActivateByEquipmentId(EntityManager, comp.EquipmentId);
 								EventManager.Publish(new EquipmentActivated { EquipmentId = comp.EquipmentId });
@@ -141,7 +162,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 
-			_prev = mouse;
+			// No raw mouse state tracking needed anymore
 		}
 		private static string NormalizeColorKey(string c)
 		{

@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Events;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -122,6 +123,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				var tc = (dynamic)topCandidate;
 				tc.UI.IsClicked = true;
+				Console.WriteLine($"[CursorSystem] Clicked: {tc.E.Id}");
 				_lastClickedEntity = tc.E;
 			}
 
