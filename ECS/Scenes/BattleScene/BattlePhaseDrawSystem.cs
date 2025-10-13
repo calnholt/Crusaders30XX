@@ -46,7 +46,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (deck == null) return;
 			// Do not count weapon cards toward the hand size limit
 			int weaponCount = 0;
-            foreach (var e in deck.Hand)
+			foreach (var e in deck.Hand)
 			{
 				var cd = e.GetComponent<CardData>();
 				if (cd == null) continue;
@@ -62,6 +62,7 @@ namespace Crusaders30XX.ECS.Systems
 			int toDraw = System.Math.Min(spaceLeft, intellect);
 			if (toDraw > 0)
 			{
+				System.Console.WriteLine($"[DrawHandSystem] DrawUpToIntellect toDraw={toDraw}");
 				EventManager.Publish(new RequestDrawCardsEvent { Count = toDraw });
 			}
 			if (deck.DrawPile.Count == 0)

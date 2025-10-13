@@ -65,6 +65,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnEndTurnPressed()
         {
+            var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
+            if (ui != null)
+            {
+                ui.IsInteractable = false;
+            }
             EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
                 "Rule.ChangePhase.PlayerEnd",
                 new ChangeBattlePhaseEvent { Current = SubPhase.PlayerEnd }

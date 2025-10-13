@@ -216,6 +216,10 @@ namespace Crusaders30XX.ECS.Systems
 			deck.DiscardPile.Clear();
 			deck.ExhaustPile.Clear();
 			EventManager.Publish(new RemoveAllPassives { Owner = player });
+			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
+			phaseState.TurnNumber = 0;
+			phaseState.Main = MainPhase.StartBattle;
+			phaseState.Sub = SubPhase.StartBattle;
 		}
 
 		public void StartBattle() 

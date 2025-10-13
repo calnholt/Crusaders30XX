@@ -47,6 +47,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "UI Slowdown Multiplier", Step = 0.05f, Min = 0.05f, Max = 1f)]
 		public float SlowdownMultiplier { get; set; } = 0.7f;
 
+		[DebugEditable(DisplayName = "Cursor Opacity", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float CursorOpacity { get; set; } = .45f;
+
 		public CursorSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
 		{
@@ -210,7 +213,9 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			maxCoverage = MathHelper.Clamp(maxCoverage, 0f, 1f);
 			var tint = Color.Lerp(Color.White, Color.Red, maxCoverage);
-			_spriteBatch.Draw(_circleTexture, dst, tint);
+			float a = MathHelper.Clamp(CursorOpacity, 0f, 1f);
+			var tintWithAlpha = Color.FromNonPremultiplied(tint.R, tint.G, tint.B, (byte)System.Math.Round(a * 255f));
+			_spriteBatch.Draw(_circleTexture, dst, tintWithAlpha);
 		}
 
 		private static float EstimateCircleRectCoverage(Rectangle rect, Vector2 center, int radius)
