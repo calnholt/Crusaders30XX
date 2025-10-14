@@ -93,7 +93,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var key = (w: w, h: h, r: System.Math.Max(0, System.Math.Min(r, System.Math.Min(w, h) / 2)));
             if (_roundedCache.TryGetValue((key.w, key.h, key.r), out var tex) && tex != null) return tex;
-            tex = ECS.Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, key.r);
+            tex = Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, key.r);
             _roundedCache[(key.w, key.h, key.r)] = tex;
             return tex;
         }

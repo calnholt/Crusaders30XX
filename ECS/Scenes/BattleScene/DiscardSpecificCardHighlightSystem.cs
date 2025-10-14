@@ -160,7 +160,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var key = (w, h, r);
             if (_roundedRectCache.TryGetValue(key, out var tex)) return tex;
-            var created = Crusaders30XX.ECS.Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, r);
+            var created = Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, r);
             _roundedRectCache[key] = created;
             return created;
         }

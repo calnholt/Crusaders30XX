@@ -90,13 +90,13 @@ namespace Crusaders30XX.ECS.Systems
             int panelY = 0;
             int panelH = _graphicsDevice.Viewport.Height;
             int colW = (int)(cardW * CardScale) + 20;
-            int col = System.Math.Max(1, Columns);
+            int col = Math.Max(1, Columns);
 
             // Mouse wheel scroll when cursor is in left panel
             if (new Rectangle(panelX, panelY, PanelWidth, panelH).Contains(mouse.Position))
             {
                 int delta = mouse.ScrollWheelValue - _prevMouse.ScrollWheelValue;
-                st.LeftScroll = System.Math.Max(0, st.LeftScroll - delta / 2);
+                st.LeftScroll = Math.Max(0, st.LeftScroll - delta / 2);
             }
 
             // Content layout and clicks moved to AvailableCardDisplaySystem
@@ -115,7 +115,7 @@ namespace Crusaders30XX.ECS.Systems
             int panelY = 0;
             int panelH = _graphicsDevice.Viewport.Height;
             int colW = (int)(cardW * CardScale) + 20;
-            int col = System.Math.Max(1, Columns);
+            int col = Math.Max(1, Columns);
 
             // Background
             var bgRect = new Rectangle(panelX, panelY, PanelWidth, panelH);

@@ -66,7 +66,7 @@ namespace Crusaders30XX.ECS.Systems
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
         {
             // Not entity-driven; draw is purely presentational
-            return System.Array.Empty<Entity>();
+            return Array.Empty<Entity>();
         }
 
         public override void Update(GameTime gameTime)

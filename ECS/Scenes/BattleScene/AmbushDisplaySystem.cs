@@ -124,7 +124,7 @@ namespace Crusaders30XX.ECS.Systems
 					st.IsActive = true;
 					st.IntroActive = true;
 					st.ContextId = pa.ContextId;
-					st.TimerDurationSeconds = System.Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
+					st.TimerDurationSeconds = Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
 					st.TimerRemainingSeconds = st.TimerDurationSeconds;
 				}
 				else
@@ -142,7 +142,7 @@ namespace Crusaders30XX.ECS.Systems
 				st.IsActive = true;
 				st.IntroActive = true;
 				st.ContextId = pa.ContextId;
-				st.TimerDurationSeconds = System.Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
+				st.TimerDurationSeconds = Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
 				st.TimerRemainingSeconds = st.TimerDurationSeconds;
 			}
 
@@ -151,9 +151,9 @@ namespace Crusaders30XX.ECS.Systems
 			if (st.IsActive && phase == SubPhase.Block)
 			{
 				_introElapsed += dt;
-				float dropDurChk = System.Math.Max(0.0001f, IntroDropDurationSeconds);
-				float holdDurChk = System.Math.Max(0f, IntroHoldDurationSeconds);
-				float shrinkDurChk = System.Math.Max(0.0001f, IntroShrinkDurationSeconds);
+				float dropDurChk = Math.Max(0.0001f, IntroDropDurationSeconds);
+				float holdDurChk = Math.Max(0f, IntroHoldDurationSeconds);
+				float shrinkDurChk = Math.Max(0.0001f, IntroShrinkDurationSeconds);
 				float totalChk = dropDurChk + holdDurChk + shrinkDurChk;
 				if (st.IntroActive && _introElapsed >= totalChk)
 				{
@@ -161,7 +161,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				if (!st.IntroActive)
 				{
-					st.TimerRemainingSeconds = System.Math.Max(0f, st.TimerRemainingSeconds - dt);
+					st.TimerRemainingSeconds = Math.Max(0f, st.TimerRemainingSeconds - dt);
 					if (st.TimerRemainingSeconds <= 0f && !st.FiredAutoConfirm)
 					{
 						st.FiredAutoConfirm = true;
@@ -190,15 +190,15 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				// Big red "Ambush!" with drop-in + shake + overshoot scale
 				string text = "Ambush!";
-				float dropDur = System.Math.Max(0.0001f, IntroDropDurationSeconds);
-				float holdDur = System.Math.Max(0f, IntroHoldDurationSeconds);
-				float shrinkDur = System.Math.Max(0.0001f, IntroShrinkDurationSeconds);
+				float dropDur = Math.Max(0.0001f, IntroDropDurationSeconds);
+				float holdDur = Math.Max(0f, IntroHoldDurationSeconds);
+				float shrinkDur = Math.Max(0.0001f, IntroShrinkDurationSeconds);
 				float total = dropDur + holdDur + shrinkDur;
 				float t = MathHelper.Clamp(_introElapsed / total, 0f, 1f);
 				float tSecs = _introElapsed;
 				float scale;
-				float easeDrop = 1f - (float)System.Math.Pow(1f - MathHelper.Clamp(tSecs / dropDur, 0f, 1f), 3);
-				float appearScale = TextScaleBase + TextScaleOvershoot * (1f - (float)System.Math.Cos(easeDrop * System.MathF.PI));
+				float easeDrop = 1f - (float)Math.Pow(1f - MathHelper.Clamp(tSecs / dropDur, 0f, 1f), 3);
+				float appearScale = TextScaleBase + TextScaleOvershoot * (1f - (float)Math.Cos(easeDrop * MathF.PI));
 				if (tSecs <= dropDur)
 				{
 					scale = appearScale;
@@ -210,7 +210,7 @@ namespace Crusaders30XX.ECS.Systems
 				else
 				{
 					float stp = MathHelper.Clamp((tSecs - dropDur - holdDur) / shrinkDur, 0f, 1f);
-					float shrinkEase = 1f - (float)System.Math.Pow(1f - stp, 2);
+					float shrinkEase = 1f - (float)Math.Pow(1f - stp, 2);
 					scale = MathHelper.Lerp(appearScale, 0f, shrinkEase);
 				}
 				// Drop from top
@@ -237,15 +237,15 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Timer meter (trapezoid/parallelogram-like), shown at top center
-			int meterWidth = System.Math.Max(10, MeterWidth);
-			int meterHeight = System.Math.Max(4, MeterHeight);
-			int skew = System.Math.Max(0, MeterSkew); // pixels of top-edge inward skew
+			int meterWidth = Math.Max(10, MeterWidth);
+			int meterHeight = Math.Max(4, MeterHeight);
+			int skew = Math.Max(0, MeterSkew); // pixels of top-edge inward skew
 			var rect = new Rectangle(vx / 2 - meterWidth / 2, (int)(vy * (MeterYPercent / 100f)), meterWidth, meterHeight);
 			float ratio = st.TimerDurationSeconds <= 0.0001f ? 0f : MathHelper.Clamp(st.TimerRemainingSeconds / st.TimerDurationSeconds, 0f, 1f);
 
-			DrawTrapezoid(rect, skew, new Color(10, 10, 10, System.Math.Clamp(MeterBgAlpha, 0, 255))); // background
+			DrawTrapezoid(rect, skew, new Color(10, 10, 10, Math.Clamp(MeterBgAlpha, 0, 255))); // background
 			var fillRect = rect;
-			DrawTrapezoidFill(fillRect, skew, ratio, new Color(180, 30, 30, System.Math.Clamp(MeterFillAlpha, 0, 255)));
+			DrawTrapezoidFill(fillRect, skew, ratio, new Color(180, 30, 30, Math.Clamp(MeterFillAlpha, 0, 255)));
 			DrawTrapezoidBorder(rect, skew, Color.Black, 2);
 		}
 
@@ -291,10 +291,10 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			for (int y = 0; y < bounds.Height; y++)
 			{
-				float t = 1f - (y / (float)System.Math.Max(1, bounds.Height - 1));
-				int offset = (int)System.Math.Round(skew * t);
+				float t = 1f - (y / (float)Math.Max(1, bounds.Height - 1));
+				int offset = (int)Math.Round(skew * t);
 				int x = bounds.X + offset;
-				int w = System.Math.Max(0, bounds.Width - offset * 2);
+				int w = Math.Max(0, bounds.Width - offset * 2);
 				_spriteBatch.Draw(_pixel, new Rectangle(x, bounds.Y + y, w, 1), color);
 			}
 		}
@@ -303,11 +303,11 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			for (int y = 0; y < bounds.Height; y++)
 			{
-				float t = 1f - (y / (float)System.Math.Max(1, bounds.Height - 1));
-				int offset = (int)System.Math.Round(skew * t);
+				float t = 1f - (y / (float)Math.Max(1, bounds.Height - 1));
+				int offset = (int)Math.Round(skew * t);
 				int x = bounds.X + offset;
-				int w = System.Math.Max(0, bounds.Width - offset * 2);
-				int fw = (int)System.Math.Round(w * ratio);
+				int w = Math.Max(0, bounds.Width - offset * 2);
+				int fw = (int)Math.Round(w * ratio);
 				if (fw > 0)
 				{
 					// Right-justify fill so it depletes right-to-left
@@ -319,13 +319,13 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void DrawTrapezoidBorder(Rectangle bounds, int skew, Color color, int thickness)
 		{
-			thickness = System.Math.Max(1, thickness);
+			thickness = Math.Max(1, thickness);
 			for (int y = 0; y < bounds.Height; y++)
 			{
-				float t = 1f - (y / (float)System.Math.Max(1, bounds.Height - 1));
-				int offset = (int)System.Math.Round(skew * t);
+				float t = 1f - (y / (float)Math.Max(1, bounds.Height - 1));
+				int offset = (int)Math.Round(skew * t);
 				int x = bounds.X + offset;
-				int w = System.Math.Max(0, bounds.Width - offset * 2);
+				int w = Math.Max(0, bounds.Width - offset * 2);
 				int yy = bounds.Y + y;
 				if (y < thickness || y >= bounds.Height - thickness)
 				{
@@ -337,7 +337,7 @@ namespace Crusaders30XX.ECS.Systems
 					// Left vertical edge
 					_spriteBatch.Draw(_pixel, new Rectangle(x, yy, thickness, 1), color);
 					// Right vertical edge
-					_spriteBatch.Draw(_pixel, new Rectangle(x + System.Math.Max(0, w - thickness), yy, thickness, 1), color);
+					_spriteBatch.Draw(_pixel, new Rectangle(x + Math.Max(0, w - thickness), yy, thickness, 1), color);
 				}
 			}
 		}

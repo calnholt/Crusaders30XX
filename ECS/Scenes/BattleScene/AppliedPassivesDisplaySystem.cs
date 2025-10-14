@@ -123,7 +123,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
 
                 // Anchor baseline at bottom of HP bar if available; else just below entity
-                int baseX = (int)System.Math.Round(t.Position.X);
+                int baseX = (int)Math.Round(t.Position.X);
                 int baseY;
                 var hpAnchor = e.GetComponent<HPBarAnchor>();
                 if (hpAnchor != null)
@@ -138,9 +138,9 @@ namespace Crusaders30XX.ECS.Systems
                     if (pInfo != null)
                     {
                         float baseScale = (pInfo.BaseScale > 0f) ? pInfo.BaseScale : 1f;
-                        visualHalfHeight = System.Math.Max(visualHalfHeight, (pInfo.TextureHeight * baseScale) * 0.5f);
+                        visualHalfHeight = Math.Max(visualHalfHeight, (pInfo.TextureHeight * baseScale) * 0.5f);
                     }
-                    baseY = (int)System.Math.Round(t.Position.Y + visualHalfHeight + 20 + OffsetY);
+                    baseY = (int)Math.Round(t.Position.Y + visualHalfHeight + 20 + OffsetY);
                 }
 
                 // Render each passive as "<stacks> <Name>" chip, left-to-right centered under entity
@@ -152,29 +152,29 @@ namespace Crusaders30XX.ECS.Systems
                 }
 
                 var sizes = items.Select(it => _font.MeasureString(it.Label) * TextScale).ToList();
-                var chipWidths = sizes.Select(s => (int)System.Math.Ceiling(s.X) + PadX * 2).ToList();
-                int totalWidth = chipWidths.Sum() + System.Math.Max(0, (items.Count - 1) * Spacing);
+                var chipWidths = sizes.Select(s => (int)Math.Ceiling(s.X) + PadX * 2).ToList();
+                int totalWidth = chipWidths.Sum() + Math.Max(0, (items.Count - 1) * Spacing);
                 int x = baseX - totalWidth / 2;
 
 				for (int i = 0; i < items.Count; i++)
                 {
                     int w = chipWidths[i];
-                    int h = (int)System.Math.Ceiling(sizes[i].Y) + PadY * 2;
-					int r = System.Math.Min(CornerRadius, System.Math.Min(w, h) / 2);
+                    int h = (int)Math.Ceiling(sizes[i].Y) + PadY * 2;
+					int r = Math.Min(CornerRadius, Math.Min(w, h) / 2);
 					var chipTexture = GetRounded(w, h, r);
                     // Ripple overlay (independent of chip background)
                     var key = (e.Id, items[i].Type);
                     if (_ripples.TryGetValue(key, out var rp))
                     {
-                        float progress = MathHelper.Clamp(rp.Elapsed / System.Math.Max(0.0001f, rp.Duration), 0f, 1f);
+                        float progress = MathHelper.Clamp(rp.Elapsed / Math.Max(0.0001f, rp.Duration), 0f, 1f);
                         float scale = MathHelper.Lerp(1f, RippleMaxScale, progress);
                         float alpha = MathHelper.Lerp(1f, RippleMinAlpha, progress);
-                        int scaledW = (int)System.Math.Round(w * scale);
-                        int scaledH = (int)System.Math.Round(h * scale);
+                        int scaledW = (int)Math.Round(w * scale);
+                        int scaledH = (int)Math.Round(h * scale);
                         int cx = x + w / 2;
                         int cy = baseY + h / 2;
                         var rippleRect = new Rectangle(cx - scaledW / 2, cy - scaledH / 2, scaledW, scaledH);
-                        var rippleColor = Color.FromNonPremultiplied(BgR, BgG, BgB, (byte)System.Math.Round(MathHelper.Clamp(alpha, 0f, 1f) * 255f));
+                        var rippleColor = Color.FromNonPremultiplied(BgR, BgG, BgB, (byte)Math.Round(MathHelper.Clamp(alpha, 0f, 1f) * 255f));
 						_spriteBatch.Draw(chipTexture, rippleRect, rippleColor);
                     }
                     // Base chip
@@ -200,7 +200,7 @@ namespace Crusaders30XX.ECS.Systems
         private void OnPassiveTriggered(PassiveTriggered e)
         {
             if (e?.Owner == null) return;
-            _ripples[(e.Owner.Id, e.Type)] = new Ripple { Elapsed = 0f, Duration = System.Math.Max(0.05f, RippleSeconds) };
+            _ripples[(e.Owner.Id, e.Type)] = new Ripple { Elapsed = 0f, Duration = Math.Max(0.05f, RippleSeconds) };
         }
 
 		private Texture2D GetRounded(int w, int h, int r)

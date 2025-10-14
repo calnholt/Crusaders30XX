@@ -19,12 +19,12 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<CardMoveRequested>(OnCardMoveRequested);
             EventManager.Subscribe<CardMoved>(OnCardMoved);
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
-            System.Console.WriteLine("[CardZoneSystem] Subscribed to CardMoveRequested");
+            Console.WriteLine("[CardZoneSystem] Subscribed to CardMoveRequested");
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
         {
-            return System.Array.Empty<Entity>();
+            return Array.Empty<Entity>();
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
@@ -58,7 +58,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardMoveRequested(CardMoveRequested evt)
         {
-            System.Console.WriteLine($"[CardZoneSystem] CardMoveRequested card={evt.Card?.Id} to={evt.Destination} reason={evt.Reason}");
+            Console.WriteLine($"[CardZoneSystem] CardMoveRequested card={evt.Card?.Id} to={evt.Destination} reason={evt.Reason}");
             if (evt == null || evt.Card == null) return;
 
             var deckEntity = evt.Deck ?? EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
@@ -124,7 +124,7 @@ namespace Crusaders30XX.ECS.Systems
                             TargetScale = 0.35f,
                             Phase = AssignedBlockCard.PhaseState.Pullback,
                             Elapsed = 0f,
-                            AssignedAtTicks = System.DateTime.UtcNow.Ticks,
+                            AssignedAtTicks = DateTime.UtcNow.Ticks,
                             IsEquipment = false,
                             ColorKey = NormalizeColorKey(cd?.Color.ToString() ?? "White"),
                             Tooltip = ResolveCardName(cd),
@@ -205,7 +205,7 @@ namespace Crusaders30XX.ECS.Systems
                 To = evt.Destination,
                 ContextId = evt.ContextId
             });
-            System.Console.WriteLine($"[CardZoneSystem] CardMoved from={from} to={evt.Destination}");
+            Console.WriteLine($"[CardZoneSystem] CardMoved from={from} to={evt.Destination}");
         }
 
         private static string NormalizeColorKey(string c)
@@ -224,16 +224,16 @@ namespace Crusaders30XX.ECS.Systems
         {
             switch (color)
             {
-                case CardData.CardColor.Red: return Microsoft.Xna.Framework.Color.DarkRed;
-                case CardData.CardColor.Black: return Microsoft.Xna.Framework.Color.Black;
+                case CardData.CardColor.Red: return Color.DarkRed;
+                case CardData.CardColor.Black: return Color.Black;
                 case CardData.CardColor.White:
-                default: return Microsoft.Xna.Framework.Color.White;
+                default: return Color.White;
             }
         }
 
         private static Microsoft.Xna.Framework.Color ResolveFgForBg(Microsoft.Xna.Framework.Color bg)
         {
-            return (bg == Microsoft.Xna.Framework.Color.White) ? Microsoft.Xna.Framework.Color.Black : Microsoft.Xna.Framework.Color.White;
+            return (bg == Color.White) ? Color.Black : Color.White;
         }
 
         private static string ResolveCardName(CardData cd)
@@ -241,7 +241,7 @@ namespace Crusaders30XX.ECS.Systems
             if (cd == null) return string.Empty;
             try
             {
-                if (Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
+                if (CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
                 {
                     return def.name ?? def.id ?? cd.CardId ?? string.Empty;
                 }

@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
             _content = content;
 
             EventManager.Subscribe<ChangeBattleLocationEvent>(OnChangeLocation);
-            System.Console.WriteLine("[BattleBackgroundSystem] Subscribed to ChangeBattleLocationEvent");
+            Console.WriteLine("[BattleBackgroundSystem] Subscribed to ChangeBattleLocationEvent");
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

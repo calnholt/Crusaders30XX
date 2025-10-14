@@ -109,24 +109,24 @@ namespace Crusaders30XX.ECS.Systems
 			if (!_baselineCaptured) return;
 
 			int vh = _graphicsDevice.Viewport.Height;
-			float baseH = System.Math.Max(1, AutoScaleThresholdHeight);
+			float baseH = Math.Max(1, AutoScaleThresholdHeight);
 			float raw = vh >= baseH ? 1f : (vh / baseH);
-			float scaled = System.MathF.Pow(System.MathF.Max(MinCardScale, System.MathF.Min(1f, raw)), System.MathF.Max(0.1f, CardScalePower));
-			if (System.MathF.Abs(scaled - _lastAppliedScale) < 0.001f) return; // no change
+			float scaled = MathF.Pow(MathF.Max(MinCardScale, MathF.Min(1f, raw)), MathF.Max(0.1f, CardScalePower));
+			if (MathF.Abs(scaled - _lastAppliedScale) < 0.001f) return; // no change
 			_lastAppliedScale = scaled;
 
 			// Scale integer dimensions and margins
-			s.CardWidth = System.Math.Max(10, (int)System.MathF.Round(_baseCardWidth * scaled));
-			s.CardHeight = System.Math.Max(10, (int)System.MathF.Round(_baseCardHeight * scaled));
-			s.CardOffsetYExtra = (int)System.MathF.Round(_baseCardOffsetYExtra * scaled);
-			s.CardGap = (int)System.MathF.Round(_baseCardGap * scaled);
-			s.CardBorderThickness = System.Math.Max(0, (int)System.MathF.Round(_baseCardBorderThickness * scaled));
-			s.CardCornerRadius = System.Math.Max(0, (int)System.MathF.Round(_baseCardCornerRadius * scaled));
-			s.HighlightBorderThickness = System.Math.Max(0, (int)System.MathF.Round(_baseHighlightBorderThickness * scaled));
-			s.TextMarginX = System.Math.Max(0, (int)System.MathF.Round(_baseTextMarginX * scaled));
-			s.TextMarginY = System.Math.Max(0, (int)System.MathF.Round(_baseTextMarginY * scaled));
-			s.BlockNumberMarginX = System.Math.Max(0, (int)System.MathF.Round(_baseBlockNumberMarginX * scaled));
-			s.BlockNumberMarginY = System.Math.Max(0, (int)System.MathF.Round(_baseBlockNumberMarginY * scaled));
+			s.CardWidth = Math.Max(10, (int)MathF.Round(_baseCardWidth * scaled));
+			s.CardHeight = Math.Max(10, (int)MathF.Round(_baseCardHeight * scaled));
+			s.CardOffsetYExtra = (int)MathF.Round(_baseCardOffsetYExtra * scaled);
+			s.CardGap = (int)MathF.Round(_baseCardGap * scaled);
+			s.CardBorderThickness = Math.Max(0, (int)MathF.Round(_baseCardBorderThickness * scaled));
+			s.CardCornerRadius = Math.Max(0, (int)MathF.Round(_baseCardCornerRadius * scaled));
+			s.HighlightBorderThickness = Math.Max(0, (int)MathF.Round(_baseHighlightBorderThickness * scaled));
+			s.TextMarginX = Math.Max(0, (int)MathF.Round(_baseTextMarginX * scaled));
+			s.TextMarginY = Math.Max(0, (int)MathF.Round(_baseTextMarginY * scaled));
+			s.BlockNumberMarginX = Math.Max(0, (int)MathF.Round(_baseBlockNumberMarginX * scaled));
+			s.BlockNumberMarginY = Math.Max(0, (int)MathF.Round(_baseBlockNumberMarginY * scaled));
 
 			// Scale float text scales and UI scale coherently
 			s.UIScale = _baseUIScale * scaled;
@@ -176,9 +176,9 @@ namespace Crusaders30XX.ECS.Systems
 
 						// Scale bottom margin for small screens using the same scaling power
 						int vh = _graphicsDevice.Viewport.Height;
-						float baseH = System.Math.Max(1, AutoScaleThresholdHeight);
+						float baseH = Math.Max(1, AutoScaleThresholdHeight);
 						float rawScale = vh >= baseH ? 1f : (vh / baseH);
-						float marginScale = System.MathF.Pow(System.MathF.Max(MinCardScale, System.MathF.Min(1f, rawScale)), System.MathF.Max(0.1f, CardScalePower));
+						float marginScale = MathF.Pow(MathF.Max(MinCardScale, MathF.Min(1f, rawScale)), MathF.Max(0.1f, CardScalePower));
 						float bottomMarginScaled = HandBottomMargin * marginScale;
 					// Hand root offset (allows parallax for the entire hand)
 					var handRoot = EntityManager.GetEntity(HandRootName);

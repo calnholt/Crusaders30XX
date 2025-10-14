@@ -23,7 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
 		{
-			return System.Array.Empty<Entity>();
+			return Array.Empty<Entity>();
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }

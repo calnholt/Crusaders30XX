@@ -18,7 +18,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<SetCourageEvent>(OnSetCourageEvent);
 			EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
 			EventManager.Subscribe<CardMoved>(OnCardMoved);
-			System.Console.WriteLine("[CourageManagerSystem] Subscribed to ModifyCourageEvent, CardMoved");
+            Console.WriteLine("[CourageManagerSystem] Subscribed to ModifyCourageEvent, CardMoved");
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -31,7 +31,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnModifyCourage(ModifyCourageEvent evt)
 		{
-			System.Console.WriteLine($"[CourageManagerSystem] OnModifyCourage delta={evt.Delta}");
+            Console.WriteLine($"[CourageManagerSystem] OnModifyCourage delta={evt.Delta}");
 			var player = EntityManager.GetEntitiesWithComponent<Player>()
 				.FirstOrDefault(e => e.HasComponent<Courage>());
 			if (player == null) return;
@@ -44,7 +44,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnSetCourageEvent(SetCourageEvent evt)
 		{
-			System.Console.WriteLine($"[CourageManagerSystem] OnSetCourageEvent amount={evt.Amount}");
+            Console.WriteLine($"[CourageManagerSystem] OnSetCourageEvent amount={evt.Amount}");
 			var player = EntityManager.GetEntitiesWithComponent<Player>()
 				.FirstOrDefault(e => e.HasComponent<Courage>());
 			if (player == null) return;
@@ -67,7 +67,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnCardMoved(CardMoved evt)
 		{
-			System.Console.WriteLine($"[CourageManagerSystem] OnCardMoved from={evt.From} to={evt.To}");
+            Console.WriteLine($"[CourageManagerSystem] OnCardMoved from={evt.From} to={evt.To}");
 			// When assigned blocks land in discard, grant Courage for red cards
 			if (evt.To == CardZoneType.DiscardPile && evt.From == CardZoneType.AssignedBlock) {
 				var data = evt.Card.GetComponent<CardData>();

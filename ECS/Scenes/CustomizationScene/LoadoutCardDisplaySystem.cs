@@ -97,7 +97,7 @@ namespace Crusaders30XX.ECS.Systems
             int panelX = vw - _deckPanel.PanelWidth;
             int panelY = 0;
             int colW = (int)(cardW * _deckPanel.CardScale) + 20;
-            int col = System.Math.Max(1, _deckPanel.Columns);
+            int col = Math.Max(1, _deckPanel.Columns);
 
             var sorted = GetSortedWorkingEntries(st);
             int idx = 0;
@@ -111,7 +111,7 @@ namespace Crusaders30XX.ECS.Systems
                 int y = panelY + _deckPanel.HeaderHeight + _deckPanel.TopMargin + r * ((int)(cardH * _deckPanel.CardScale) + _deckPanel.RowGap) + (int)(cardH * _deckPanel.CardScale / 2) - st.RightScroll;
                 if (card != null)
                 {
-                    ECS.Core.EventManager.Publish(new CardRenderScaledEvent { Card = card, Position = new Vector2(x, y), Scale = _deckPanel.CardScale });
+                    EventManager.Publish(new CardRenderScaledEvent { Card = card, Position = new Vector2(x, y), Scale = _deckPanel.CardScale });
                 }
                 idx++;
             }
@@ -123,7 +123,7 @@ namespace Crusaders30XX.ECS.Systems
             string keyName = $"Card_{name}_{color}";
             var existing = EntityManager.GetEntity(keyName);
             if (existing != null) return existing;
-            var created = Crusaders30XX.ECS.Factories.EntityFactory.CreateCardFromDefinition(EntityManager, def.id, color);
+            var created = Factories.EntityFactory.CreateCardFromDefinition(EntityManager, def.id, color);
             if (created != null)
             {
                 _createdCardIds[keyName] = created.Id;

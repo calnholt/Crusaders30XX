@@ -18,7 +18,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<CardMoved>(OnCardMoved);
             EventManager.Subscribe<ModifyTemperanceEvent>(OnModifyTemperance);
             EventManager.Subscribe<SetTemperanceEvent>(OnSetTemperanceEvent);
-            System.Console.WriteLine("[TemperanceManagerSystem] Subscribed to CardMoved, ModifyTemperanceEvent");
+            Console.WriteLine("[TemperanceManagerSystem] Subscribed to CardMoved, ModifyTemperanceEvent");
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -30,7 +30,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardMoved(CardMoved evt)
         {
-            System.Console.WriteLine($"[TemperanceManagerSystem] OnCardMoved from={evt.From} to={evt.To}");
+            Console.WriteLine($"[TemperanceManagerSystem] OnCardMoved from={evt.From} to={evt.To}");
             // When assigned blocks land in discard, grant Temperance for white cards
             if (evt.To == CardZoneType.DiscardPile && evt.From == CardZoneType.AssignedBlock) {
               var data = evt.Card.GetComponent<CardData>();
@@ -52,7 +52,7 @@ namespace Crusaders30XX.ECS.Systems
             if (t == null) { t = new Temperance(); EntityManager.AddComponent(player, t); }
             int before = t.Amount;
             t.Amount = Math.Max(0, t.Amount + evt.Delta);
-            System.Console.WriteLine($"[TemperanceManagerSystem] Temperance changed {before} -> {t.Amount}");
+            Console.WriteLine($"[TemperanceManagerSystem] Temperance changed {before} -> {t.Amount}");
             TryTriggerTemperanceAbility(player, t);
         }
         private void OnSetTemperanceEvent(SetTemperanceEvent evt)
@@ -68,7 +68,7 @@ namespace Crusaders30XX.ECS.Systems
             var equipped = player.GetComponent<EquippedTemperanceAbility>();
             if (equipped == null || string.IsNullOrEmpty(equipped.AbilityId)) return;
 
-            if (!Crusaders30XX.ECS.Data.Temperance.TemperanceAbilityDefinitionCache.TryGet(equipped.AbilityId, out var def)) return;
+            if (!Data.Temperance.TemperanceAbilityDefinitionCache.TryGet(equipped.AbilityId, out var def)) return;
             if (def.threshold <= 0) return;
             while (t.Amount >= def.threshold)
             {

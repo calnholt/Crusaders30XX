@@ -180,22 +180,22 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new CardVisualSettings
             {
                 UIScale = sU,
-                CardWidth = (int)System.Math.Round(250 * sU),
-                CardHeight = (int)System.Math.Round(350 * sU),
-                CardOffsetYExtra = (int)System.Math.Round(25 * sU),
-                CardGap = (int)System.Math.Round(-20 * sU),
-                CardBorderThickness = (int)System.Math.Max(1, System.Math.Round(3 * sU)),
-                CardCornerRadius = (int)System.Math.Max(2, System.Math.Round(18 * sU)),
-                HighlightBorderThickness = (int)System.Math.Max(1, System.Math.Round(5 * sU)),
-                TextMarginX = (int)System.Math.Round(16 * sU),
-                TextMarginY = (int)System.Math.Round(16 * sU),
+                CardWidth = (int)Math.Round(250 * sU),
+                CardHeight = (int)Math.Round(350 * sU),
+                CardOffsetYExtra = (int)Math.Round(25 * sU),
+                CardGap = (int)Math.Round(-20 * sU),
+                CardBorderThickness = (int)Math.Max(1, Math.Round(3 * sU)),
+                CardCornerRadius = (int)Math.Max(2, Math.Round(18 * sU)),
+                HighlightBorderThickness = (int)Math.Max(1, Math.Round(5 * sU)),
+                TextMarginX = (int)Math.Round(16 * sU),
+                TextMarginY = (int)Math.Round(16 * sU),
                 NameScale = 0.175f * sU,
                 CostScale = 0.6f * sU,
                 DescriptionScale = 0.115f * sU,
                 BlockScale = 0.5f * sU,
                 BlockNumberScale = 0.225f * sU,
-                BlockNumberMarginX = (int)System.Math.Round(14 * sU),
-                BlockNumberMarginY = (int)System.Math.Round(12 * sU)
+                BlockNumberMarginX = (int)Math.Round(14 * sU),
+                BlockNumberMarginY = (int)Math.Round(12 * sU)
             });
             return entity;
         }
@@ -307,7 +307,7 @@ namespace Crusaders30XX.ECS.Factories
             var all = EnemyDefinitionCache.GetAll();
             if (!all.TryGetValue(enemyId, out var def))
             {
-                System.Console.WriteLine($"[EntityFactory] Enemy id '{enemyId}' not found. Falling back to basic demon.");
+                Console.WriteLine($"[EntityFactory] Enemy id '{enemyId}' not found. Falling back to basic demon.");
                 def = new EnemyDefinition { id = enemyId, name = enemyId, hp = 60, attackIds = new List<string>() };
             }
 

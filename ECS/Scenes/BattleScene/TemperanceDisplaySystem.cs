@@ -87,7 +87,7 @@ namespace Crusaders30XX.ECS.Systems
 			var equipped = player.GetComponent<EquippedTemperanceAbility>();
 			if (equipped != null && !string.IsNullOrEmpty(equipped.AbilityId))
 			{
-				if (Crusaders30XX.ECS.Data.Temperance.TemperanceAbilityDefinitionCache.TryGet(equipped.AbilityId, out def) && def != null)
+				if (Data.Temperance.TemperanceAbilityDefinitionCache.TryGet(equipped.AbilityId, out def) && def != null)
 				{
 					threshold = Math.Max(1, def.threshold);
 				}
@@ -122,8 +122,8 @@ namespace Crusaders30XX.ECS.Systems
 			// Layout horizontally centered on center.X
 			int stepX = wChunk + ChunkGap; // step equals visible width plus configured gap; when gap=0, chunks butt together
 			int totalW = threshold * wChunk + Math.Max(0, ChunkSlant) + Math.Max(0, (threshold - 1) * ChunkGap);
-			int startX = (int)System.Math.Round(center.X - totalW / 2f);
-			int y = (int)System.Math.Round(center.Y - texH / 2f);
+			int startX = (int)Math.Round(center.X - totalW / 2f);
+			int y = (int)Math.Round(center.Y - texH / 2f);
 			for (int i = 0; i < threshold; i++)
 			{
 				int x = startX + i * stepX;
@@ -154,7 +154,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				// left edge shifts right as y decreases (top slants right)
 				float t = (height <= 1) ? 0f : (1f - (y / (float)(height - 1)));
-				int left = (int)System.Math.Round(slant * t);
+				int left = (int)Math.Round(slant * t);
 				int right = left + (width - 1 - slant);
 				for (int x = 0; x < width; x++)
 				{
@@ -178,8 +178,8 @@ namespace Crusaders30XX.ECS.Systems
 				for (int yy = 1; yy < height - 1; yy++)
 				{
 					float t = (height <= 1) ? 0f : (1f - (yy / (float)(height - 1)));
-					int xDiag = (int)System.Math.Round(slant * t) + 1;
-					int idx = yy * width + System.Math.Max(1, System.Math.Min(width - 2, xDiag));
+					int xDiag = (int)Math.Round(slant * t) + 1;
+					int idx = yy * width + Math.Max(1, Math.Min(width - 2, xDiag));
 					data[idx] = Color.White;
 				}
 			}

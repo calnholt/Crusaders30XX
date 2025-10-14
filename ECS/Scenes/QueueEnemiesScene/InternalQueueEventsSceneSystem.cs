@@ -144,11 +144,11 @@ namespace Crusaders30XX.ECS.Systems
 			int vh = _graphicsDevice.Viewport.Height;
 			int gridTop = TopListHeight + GridPadding + MenuYOffset;
 			int usableH = vh - gridTop - GridPadding - ConfirmHeight - GridPadding;
-			int col = System.Math.Max(1, GridColumns);
+			int col = Math.Max(1, GridColumns);
 			int cellW = ButtonWidth;
 			int cellH = ButtonHeight;
 			int totalW = col * cellW + (col - 1) * GridPadding;
-			int startX = System.Math.Max(0, (vw - totalW) / 2);
+			int startX = Math.Max(0, (vw - totalW) / 2);
 
 			// Enemy buttons via UI entities
 			var all = EnemyDefinitionCache.GetAll();
@@ -246,17 +246,17 @@ namespace Crusaders30XX.ECS.Systems
 			var roundedGrid = GetRounded(ButtonWidth, ButtonHeight, CornerRadius);
 
 			int gridTop = TopListHeight + GridPadding + MenuYOffset;
-			int col = System.Math.Max(1, GridColumns);
+			int col = Math.Max(1, GridColumns);
 			int cellW = ButtonWidth;
 			int cellH = ButtonHeight;
 			int totalW = col * cellW + (col - 1) * GridPadding;
-			int startX = System.Math.Max(0, (vw - totalW) / 2);
+			int startX = Math.Max(0, (vw - totalW) / 2);
 
 			// Instructional text (drawn here to ensure SpriteBatch is active)
 			string help = "Click on enemies to add to queue to battle, the press Confirm to start";
 			var helpSize = _font.MeasureString(help) * 0.2f;
 			float helpX = (vw - helpSize.X) / 2f;
-			float helpY = System.Math.Max(GridPadding, gridTop - GridPadding - helpSize.Y - 4f);
+			float helpY = Math.Max(GridPadding, gridTop - GridPadding - helpSize.Y - 4f);
 			_spriteBatch.DrawString(_font, help, new Vector2(helpX + 1, helpY + 1), Color.Black, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
 			_spriteBatch.DrawString(_font, help, new Vector2(helpX, helpY), Color.White, 0f, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
 
@@ -277,7 +277,7 @@ namespace Crusaders30XX.ECS.Systems
 				var tex = TryGetEnemyTexture(def);
 				if (tex != null)
 				{
-					float scale = GridImageScale * System.Math.Min(rect.Width / (float)tex.Width, rect.Height / (float)tex.Height);
+					float scale = GridImageScale * Math.Min(rect.Width / (float)tex.Width, rect.Height / (float)tex.Height);
 					var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
 					var center = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
 					_spriteBatch.Draw(tex, center, null, Color.White, 0f, origin, scale, SpriteEffects.None, 0f);
@@ -311,7 +311,7 @@ namespace Crusaders30XX.ECS.Systems
 					var tex = def != null ? TryGetEnemyTexture(def) : null;
 					if (tex != null)
 					{
-						float scale = TopListImageScale * System.Math.Min(rct.Width / (float)tex.Width, rct.Height / (float)tex.Height);
+						float scale = TopListImageScale * Math.Min(rct.Width / (float)tex.Width, rct.Height / (float)tex.Height);
 						var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
 						var center = new Vector2(rct.X + rct.Width / 2f, rct.Y + rct.Height / 2f);
 						_spriteBatch.Draw(tex, center, null, Color.White, 0f, origin, scale, SpriteEffects.None, 0f);
@@ -362,7 +362,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private Texture2D GetRounded(int w, int h, int radius)
 		{
-			var key = (w: w, h: h, r: System.Math.Max(0, System.Math.Min(radius, System.Math.Min(w, h) / 2)));
+			var key = (w: w, h: h, r: Math.Max(0, Math.Min(radius, Math.Min(w, h) / 2)));
 			if (_roundedCache.TryGetValue(key, out var tex) && tex != null) return tex;
 			tex = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, key.r);
 			_roundedCache[key] = tex;

@@ -22,7 +22,7 @@ namespace Crusaders30XX.ECS.Systems
 			switch (ability.effect)
 			{
 				case "DrawCards":
-					EventManager.Publish(new RequestDrawCardsEvent { Count = System.Math.Max(1, ability.effectCount) });
+					EventManager.Publish(new RequestDrawCardsEvent { Count = Math.Max(1, ability.effectCount) });
 					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
 					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;
@@ -32,12 +32,12 @@ namespace Crusaders30XX.ECS.Systems
 					EventQueue.EnqueueRule(new QueuedWaitPlayerImpactEvent());
 					break;
 				case "GainActionPoint":
-					EventManager.Publish(new ModifyActionPointsEvent { Delta = System.Math.Max(1, ability.effectCount) });
+					EventManager.Publish(new ModifyActionPointsEvent { Delta = Math.Max(1, ability.effectCount) });
 					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
 					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;
 				case "GainCourage":
-					EventManager.Publish(new ModifyCourageEvent { Delta = System.Math.Max(1, ability.effectCount) });
+					EventManager.Publish(new ModifyCourageEvent { Delta = Math.Max(1, ability.effectCount) });
 					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
 					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;

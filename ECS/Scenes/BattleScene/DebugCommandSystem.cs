@@ -75,12 +75,12 @@ namespace Crusaders30XX.ECS.Systems
         [DebugActionInt("Player: Deal Damage", Step = 1, Min = 1, Max = 999, Default = 5)]
         public void Debug_PlayerDealDamage(int amount)
         {
-            EventManager.Publish(new ModifyHpRequestEvent { Source = EntityManager.GetEntity("Player"), Target = EntityManager.GetEntity("Enemy"), Delta = -System.Math.Abs(amount) });
+            EventManager.Publish(new ModifyHpRequestEvent { Source = EntityManager.GetEntity("Player"), Target = EntityManager.GetEntity("Enemy"), Delta = -Math.Abs(amount) });
         }
         [DebugActionInt("Gain AP", Step = 1, Min = 1, Max = 999, Default = 5)]
         public void Debug_GainAp(int amount)
         {
-            EventManager.Publish(new ModifyActionPointsEvent { Delta = System.Math.Abs(amount) });
+            EventManager.Publish(new ModifyActionPointsEvent { Delta = Math.Abs(amount) });
         }
         [DebugActionInt("Apply Burn (enemy)", Step = 1, Min = 1, Max = 999, Default = 3)]
         public void Debug_ApplyBurn(int amount)

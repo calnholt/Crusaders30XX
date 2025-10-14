@@ -214,7 +214,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (radius < 1) radius = 1;
 			if (_circleByRadius.TryGetValue(radius, out var tex)) return tex;
-			tex = Crusaders30XX.ECS.Rendering.PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, radius);
+			tex = Rendering.PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, radius);
 			_circleByRadius[radius] = tex;
 			return tex;
 		}

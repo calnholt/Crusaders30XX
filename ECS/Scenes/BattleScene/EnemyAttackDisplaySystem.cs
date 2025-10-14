@@ -175,7 +175,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				if (evt.Command == "ConfirmEnemyAttack")
 				{
-					System.Console.WriteLine("[EnemyAttackDisplaySystem] DebugCommand ConfirmEnemyAttack received");
+                    Console.WriteLine("[EnemyAttackDisplaySystem] DebugCommand ConfirmEnemyAttack received");
 					OnConfirmPressed();
 				}
 			});
@@ -239,7 +239,7 @@ namespace Crusaders30XX.ECS.Systems
 								if (cd == null) return "Card";
 								try
 								{
-									if (Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
+									if (Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
 									{
 										return def.name ?? def.id ?? "Card";
 									}
@@ -267,7 +267,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			tooltip = string.Empty;
 			if (string.IsNullOrWhiteSpace(effect?.type)) return false;
-			if (!System.Enum.TryParse<AppliedPassiveType>(effect.type, true, out var passiveType)) return false;
+			if (!Enum.TryParse<AppliedPassiveType>(effect.type, true, out var passiveType)) return false;
 			int stacks = effect.amount > 0 ? effect.amount : (effect.stacks > 0 ? effect.stacks : 1);
 			try
 			{
@@ -283,7 +283,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				uiEntity = EntityManager.CreateEntity($"UI_AttackEffect_{key}");
 				EntityManager.AddComponent(uiEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = z });
-				EntityManager.AddComponent(uiEntity, new UIElement { Bounds = rect, IsInteractable = true, Tooltip = text ?? string.Empty, TooltipPosition = TooltipPosition.Below, TooltipOffsetPx = System.Math.Max(0, tooltipOffsetBelow) });
+				EntityManager.AddComponent(uiEntity, new UIElement { Bounds = rect, IsInteractable = true, Tooltip = text ?? string.Empty, TooltipPosition = TooltipPosition.Below, TooltipOffsetPx = Math.Max(0, tooltipOffsetBelow) });
 				_effectTooltipUiByKey[key] = uiEntity;
 			}
 			else
@@ -296,7 +296,7 @@ namespace Crusaders30XX.ECS.Systems
 					ui.Bounds = rect;
 					ui.Tooltip = text ?? string.Empty;
 					ui.TooltipPosition = TooltipPosition.Below;
-					ui.TooltipOffsetPx = System.Math.Max(0, tooltipOffsetBelow);
+					ui.TooltipOffsetPx = Math.Max(0, tooltipOffsetBelow);
 					ui.IsInteractable = true;
 				}
 			}
@@ -442,7 +442,7 @@ namespace Crusaders30XX.ECS.Systems
 			var def = LoadAttackDefinition(pa.AttackId);
 			if (def == null) return;
 
-			int extraNotBlockedDamage = (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
+			int extraNotBlockedDamage = (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
 
@@ -472,12 +472,12 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Measure and draw a simple panel in the center
-			int pad = System.Math.Max(0, PanelPadding);
+			int pad = Math.Max(0, PanelPadding);
 			int vx = _graphicsDevice.Viewport.Width;
 			int vy = _graphicsDevice.Viewport.Height;
-			float percent = System.Math.Clamp(PanelMaxWidthPercent, 0.1f, 1f);
-			int maxPanelWidthPx = (int)System.Math.Round(vx * percent);
-			int contentWidthLimitPx = System.Math.Max(50, maxPanelWidthPx - pad * 2);
+			float percent = Math.Clamp(PanelMaxWidthPercent, 0.1f, 1f);
+			int maxPanelWidthPx = (int)Math.Round(vx * percent);
+			int contentWidthLimitPx = Math.Max(50, maxPanelWidthPx - pad * 2);
 			var wrappedLines = new System.Collections.Generic.List<(string text, float scale, Color color)>();
 			foreach (var (text, lineScale, color) in lines)
 			{
@@ -492,11 +492,11 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var (text, lineScale, _) in wrappedLines)
 			{
 				var sz = _font.MeasureString(text);
-				maxW = System.Math.Max(maxW, sz.X * lineScale);
+				maxW = Math.Max(maxW, sz.X * lineScale);
 				totalH += sz.Y * lineScale + LineSpacingExtra;
 			}
-			int w = (int)System.Math.Ceiling(System.Math.Min(maxW + pad * 2, maxPanelWidthPx));
-			int h = (int)System.Math.Ceiling(totalH) + pad * 2;
+			int w = (int)Math.Ceiling(Math.Min(maxW + pad * 2, maxPanelWidthPx));
+			int h = (int)Math.Ceiling(totalH) + pad * 2;
 
 			var center = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY);
 			Vector2 approachPos = center;
@@ -506,14 +506,14 @@ namespace Crusaders30XX.ECS.Systems
 			if (phaseNow == SubPhase.EnemyAttack)
 			{
 				var enemyT = enemy?.GetComponent<Transform>();
-				var dur = System.Math.Max(0.05f, AbsorbDurationSeconds);
+				var dur = Math.Max(0.05f, AbsorbDurationSeconds);
 				float tTween = MathHelper.Clamp(_absorbElapsedSeconds / dur, 0f, 1f);
-				float ease = 1f - (float)System.Math.Pow(1f - tTween, 3);
+				float ease = 1f - (float)Math.Pow(1f - tTween, 3);
 				var targetPos = enemyT.Position + new Vector2(0, AbsorbTargetYOffset);
 				approachPos = Vector2.Lerp(center, targetPos, ease);
 				panelScale = MathHelper.Lerp(1f, 0f, ease);
 			}
-			int bgAlpha = System.Math.Clamp(BackgroundAlpha, 0, 255);
+			int bgAlpha = Math.Clamp(BackgroundAlpha, 0, 255);
 
 			// Impact phase visuals: squash/stretch + shake/flash/shockwave/crater
 			Vector2 shake = Vector2.Zero;
@@ -522,58 +522,58 @@ namespace Crusaders30XX.ECS.Systems
 			float contentScale = 1f;
 			if (_impactActive)
 			{
-				float t = System.Math.Clamp(_squashElapsedSeconds / System.Math.Max(0.0001f, SquashDurationSeconds), 0f, 1f);
+				float t = Math.Clamp(_squashElapsedSeconds / Math.Max(0.0001f, SquashDurationSeconds), 0f, 1f);
 				// easeOutBack-like return towards 1 with overshoot feel
-				float back = 1f + (OvershootIntensity) * (float)System.Math.Pow(1f - t, 3);
+				float back = 1f + (OvershootIntensity) * (float)Math.Pow(1f - t, 3);
 				squashX = MathHelper.Lerp(SquashXFactor, 1f, t) * back;
 				squashY = MathHelper.Lerp(SquashYFactor, 1f, t) / back;
 				// Scale content with the squash so text remains inside the panel
-				contentScale = System.Math.Min(squashX, squashY);
+				contentScale = Math.Min(squashX, squashY);
 				if (_shakeElapsedSeconds < ShakeDurationSeconds && ShakeAmplitudePx > 0)
 				{
-					float shakeT = 1f - System.Math.Clamp(_shakeElapsedSeconds / System.Math.Max(0.0001f, ShakeDurationSeconds), 0f, 1f);
+					float shakeT = 1f - Math.Clamp(_shakeElapsedSeconds / Math.Max(0.0001f, ShakeDurationSeconds), 0f, 1f);
 					int sx = _rand.Next(-ShakeAmplitudePx, ShakeAmplitudePx + 1);
 					int sy = _rand.Next(-ShakeAmplitudePx, ShakeAmplitudePx + 1);
 					shake = new Vector2(sx, sy) * shakeT;
 				}
 			}
 
-			int drawW = (int)System.Math.Round(w * panelScale * squashX);
-			int drawH = (int)System.Math.Round(h * panelScale * squashY);
+			int drawW = (int)Math.Round(w * panelScale * squashX);
+			int drawH = (int)Math.Round(h * panelScale * squashY);
 			var rect = new Rectangle((int)(approachPos.X - drawW / 2f + shake.X), (int)(approachPos.Y - drawH / 2f + shake.Y), drawW, drawH);
 			_spriteBatch.Draw(_pixel, rect, new Color(20, 20, 20, bgAlpha));
-			DrawRect(rect, Color.White, System.Math.Max(1, BorderThickness));
+			DrawRect(rect, Color.White, Math.Max(1, BorderThickness));
 
 			// Impact flash overlay
 			if (_impactActive && _flashElapsedSeconds < FlashDurationSeconds && FlashMaxAlpha > 0)
 			{
-				float ft = 1f - System.Math.Clamp(_flashElapsedSeconds / System.Math.Max(0.0001f, FlashDurationSeconds), 0f, 1f);
+				float ft = 1f - Math.Clamp(_flashElapsedSeconds / Math.Max(0.0001f, FlashDurationSeconds), 0f, 1f);
 				int fa = (int)(FlashMaxAlpha * ft);
-				_spriteBatch.Draw(_pixel, rect, new Color(255, 255, 255, System.Math.Clamp(fa, 0, 255)));
+				_spriteBatch.Draw(_pixel, rect, new Color(255, 255, 255, Math.Clamp(fa, 0, 255)));
 			}
 
 			// Crater (darkened expanding rect)
 			if (_impactActive && _craterElapsedSeconds < CraterDurationSeconds && CraterMaxAlpha > 0)
 			{
-				float ct = System.Math.Clamp(_craterElapsedSeconds / System.Math.Max(0.0001f, CraterDurationSeconds), 0f, 1f);
-				int cexp = (int)System.Math.Round(CraterMaxExpandPx * ct);
-				int ca = (int)System.Math.Round(CraterMaxAlpha * (1f - ct));
+				float ct = Math.Clamp(_craterElapsedSeconds / Math.Max(0.0001f, CraterDurationSeconds), 0f, 1f);
+				int cexp = (int)Math.Round(CraterMaxExpandPx * ct);
+				int ca = (int)Math.Round(CraterMaxAlpha * (1f - ct));
 				var craterRect = new Rectangle(rect.X - cexp, rect.Y - cexp, rect.Width + cexp * 2, rect.Height + cexp * 2);
-				_spriteBatch.Draw(_pixel, craterRect, new Color(10, 10, 10, System.Math.Clamp(ca, 0, 255)));
+				_spriteBatch.Draw(_pixel, craterRect, new Color(10, 10, 10, Math.Clamp(ca, 0, 255)));
 			}
 
 			// Shockwave ring (draw after crater so it remains visible while fading)
 			if (_impactActive && _shockwaveElapsedSeconds < (ShockwaveDurationSeconds + ShockwaveFadeOutSeconds) && ShockwaveThicknessPx > 0 && ShockwaveMaxExpandPx > 0)
 			{
-				float expandT = System.Math.Clamp(_shockwaveElapsedSeconds / System.Math.Max(0.0001f, ShockwaveDurationSeconds), 0f, 1f);
-				int expand = (int)System.Math.Round(ShockwaveMaxExpandPx * expandT);
+				float expandT = Math.Clamp(_shockwaveElapsedSeconds / Math.Max(0.0001f, ShockwaveDurationSeconds), 0f, 1f);
+				int expand = (int)Math.Round(ShockwaveMaxExpandPx * expandT);
 				float totalDuration = ShockwaveDurationSeconds + ShockwaveFadeOutSeconds;
-				float totalT = System.Math.Clamp(_shockwaveElapsedSeconds / System.Math.Max(0.0001f, totalDuration), 0f, 1f);
-				int alpha = (int)System.Math.Round(ShockwaveStartAlpha * (1f - totalT));
-				alpha = System.Math.Clamp(alpha, 0, 255);
+				float totalT = Math.Clamp(_shockwaveElapsedSeconds / Math.Max(0.0001f, totalDuration), 0f, 1f);
+				int alpha = (int)Math.Round(ShockwaveStartAlpha * (1f - totalT));
+				alpha = Math.Clamp(alpha, 0, 255);
 				float aNorm = alpha / 255f;
-				var premulColor = new Color((int)System.Math.Round(255f * aNorm), (int)System.Math.Round(255f * aNorm), (int)System.Math.Round(255f * aNorm), alpha);
-				DrawRing(new Rectangle(rect.X - expand, rect.Y - expand, rect.Width + expand * 2, rect.Height + expand * 2), premulColor, System.Math.Max(1, ShockwaveThicknessPx));
+				var premulColor = new Color((int)Math.Round(255f * aNorm), (int)Math.Round(255f * aNorm), (int)Math.Round(255f * aNorm), alpha);
+				DrawRing(new Rectangle(rect.X - expand, rect.Y - expand, rect.Width + expand * 2, rect.Height + expand * 2), premulColor, Math.Max(1, ShockwaveThicknessPx));
 			}
 
 			// Debris
@@ -585,7 +585,7 @@ namespace Crusaders30XX.ECS.Systems
 					var d = _debris[i];
 					if (d.Age <= d.Lifetime)
 					{
-						int ds = (int)System.Math.Max(1, d.Size);
+						int ds = (int)Math.Max(1, d.Size);
 						var p = new Rectangle((int)(debrisBase.X + d.Position.X + shake.X), (int)(debrisBase.Y + d.Position.Y + shake.Y), ds, ds);
 						_spriteBatch.Draw(_pixel, p, d.Color);
 					}
@@ -632,7 +632,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					// Determine if this token fits on the current line
 					string linePrefix = isFirstLine ? prefix : string.Empty;
-					string existing = string.Join(", ", notBlockedTokens.Skip(lineStartIndex).Take(System.Math.Max(0, i - lineStartIndex)).Select(t => t.label));
+					string existing = string.Join(", ", notBlockedTokens.Skip(lineStartIndex).Take(Math.Max(0, i - lineStartIndex)).Select(t => t.label));
 					string candidate = linePrefix + (string.IsNullOrEmpty(existing) ? string.Empty : existing + (i > lineStartIndex ? ", " : string.Empty)) + notBlockedTokens[i].label;
 					float candidateW = _font.MeasureString(candidate).X * s;
 					if (candidateW > maxLineWidth + 0.5f) // wrap to next line
@@ -645,20 +645,20 @@ namespace Crusaders30XX.ECS.Systems
 					}
 
 					// Compute x position as width of content up to this token (excluding the token itself)
-					string head = linePrefix + string.Join(", ", notBlockedTokens.Skip(lineStartIndex).Take(System.Math.Max(0, i - lineStartIndex)).Select(t => t.label));
+					string head = linePrefix + string.Join(", ", notBlockedTokens.Skip(lineStartIndex).Take(Math.Max(0, i - lineStartIndex)).Select(t => t.label));
 					float headW = string.IsNullOrEmpty(head) ? 0f : _font.MeasureString(head + (i > lineStartIndex ? ", " : string.Empty)).X * s;
 					float tokenW = _font.MeasureString(notBlockedTokens[i].label).X * s;
 					float xRectF = baseX + headW;
 					var tokenRect = new Rectangle(
-						(int)System.Math.Floor(xRectF),
-						(int)System.Math.Floor(yCursor),
-						(int)System.Math.Ceiling(tokenW),
-						(int)System.Math.Ceiling(lineH)
+						(int)Math.Floor(xRectF),
+						(int)Math.Floor(yCursor),
+						(int)Math.Ceiling(tokenW),
+						(int)Math.Ceiling(lineH)
 					);
 
 					var tok = notBlockedTokens[i];
 					string effectTarget = string.IsNullOrWhiteSpace(tok.eff.target) ? (def.target ?? "Player") : tok.eff.target;
-					bool targetIsPlayer = string.Equals(effectTarget, "Player", System.StringComparison.OrdinalIgnoreCase);
+					bool targetIsPlayer = string.Equals(effectTarget, "Player", StringComparison.OrdinalIgnoreCase);
 					if (TryGetPassiveTooltip(tok.eff, targetIsPlayer, out var tip) && !string.IsNullOrWhiteSpace(tip))
 					{
 						string key = pa.ContextId + ":OnNotBlocked:" + tok.index.ToString();
@@ -823,7 +823,7 @@ namespace Crusaders30XX.ECS.Systems
 										if (cd == null) return "Card";
 										try
 										{
-												if (Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
+												if (Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
 												{
 														return def.name ?? def.id ?? "Card";
 												}
@@ -859,7 +859,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Outer rectangle
 			DrawRect(rect, color, thickness);
 			// Inner rectangle carve-out by overdrawing with background alpha (simulate ring)
-			var inner = new Rectangle(rect.X + thickness, rect.Y + thickness, System.Math.Max(0, rect.Width - thickness * 2), System.Math.Max(0, rect.Height - thickness * 2));
+			var inner = new Rectangle(rect.X + thickness, rect.Y + thickness, Math.Max(0, rect.Width - thickness * 2), Math.Max(0, rect.Height - thickness * 2));
 			if (inner.Width > 0 && inner.Height > 0)
 			{
 				_spriteBatch.Draw(_pixel, inner, new Color(0, 0, 0, 0));
@@ -872,9 +872,9 @@ namespace Crusaders30XX.ECS.Systems
 			var rand = _rand;
 			for (int i = 0; i < DebrisCount; i++)
 			{
-				float ang = (float)(rand.NextDouble() * System.Math.PI * 2);
+				float ang = (float)(rand.NextDouble() * Math.PI * 2);
 				float spd = rand.Next(DebrisSpeedMin, DebrisSpeedMax + 1);
-				var vel = new Vector2((float)System.Math.Cos(ang), (float)System.Math.Sin(ang)) * spd;
+				var vel = new Vector2((float)Math.Cos(ang), (float)Math.Sin(ang)) * spd;
 				_debris.Add(new DebrisParticle
 				{
 					Position = Vector2.Zero, // will be positioned at draw time around the rect center
@@ -894,9 +894,9 @@ namespace Crusaders30XX.ECS.Systems
 				var d = _debris[i];
 				d.Age += dt;
 				d.Position += d.Velocity * dt;
-				float lifeT = System.Math.Clamp(d.Age / System.Math.Max(0.0001f, d.Lifetime), 0f, 1f);
+				float lifeT = Math.Clamp(d.Age / Math.Max(0.0001f, d.Lifetime), 0f, 1f);
 				int a = (int)(200 * (1f - lifeT));
-				d.Color = new Color(d.Color.R, d.Color.G, d.Color.B, System.Math.Clamp(a, 0, 255));
+				d.Color = new Color(d.Color.R, d.Color.G, d.Color.B, Math.Clamp(a, 0, 255));
 				_debris[i] = d;
 			}
 		}

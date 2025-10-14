@@ -77,7 +77,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (saveRect.Contains(mouse.Position))
                 {
                     var stc = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-                    if (stc != null && stc.WorkingCardIds != null && stc.WorkingCardIds.Count == Crusaders30XX.ECS.Data.Loadouts.DeckRules.RequiredDeckSize)
+                    if (stc != null && stc.WorkingCardIds != null && stc.WorkingCardIds.Count == DeckRules.RequiredDeckSize)
                     {
                         SaveWorkingToDisk();
                     }
@@ -114,10 +114,10 @@ namespace Crusaders30XX.ECS.Systems
             try
             {
                 var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-                canSave = st != null && st.WorkingCardIds != null && st.WorkingCardIds.Count == Crusaders30XX.ECS.Data.Loadouts.DeckRules.RequiredDeckSize;
+                canSave = st != null && st.WorkingCardIds != null && st.WorkingCardIds.Count == DeckRules.RequiredDeckSize;
             }
             catch {}
-            DrawButton(saveRect, canSave ? "SAVE" : $"SAVE ({(EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>()?.WorkingCardIds?.Count ?? 0)}/{Crusaders30XX.ECS.Data.Loadouts.DeckRules.RequiredDeckSize})");
+            DrawButton(saveRect, canSave ? "SAVE" : $"SAVE ({(EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>()?.WorkingCardIds?.Count ?? 0)}/{DeckRules.RequiredDeckSize})");
             DrawButton(cancelRect, "CANCEL");
             DrawButton(undoRect, "UNDO");
             DrawButton(exitRect, "EXIT");
@@ -265,7 +265,7 @@ namespace Crusaders30XX.ECS.Systems
             // mirror LoadoutDefinitionCache.ResolveFolderPath logic
             try
             {
-                var dir = new DirectoryInfo(System.AppContext.BaseDirectory);
+                var dir = new DirectoryInfo(AppContext.BaseDirectory);
                 for (int i = 0; i < 6 && dir != null; i++)
                 {
                     var candidate = Path.Combine(dir.FullName, "Crusaders30XX.csproj");

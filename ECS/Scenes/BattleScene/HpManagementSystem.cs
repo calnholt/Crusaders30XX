@@ -42,7 +42,7 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 			EventManager.Publish(new ModifyHpEvent { Source = e.Source, Target = target, Delta = newDelta, DamageType = e.DamageType });
-			hp.Current = System.Math.Max(0, System.Math.Min(hp.Max, nv));
+			hp.Current = Math.Max(0, Math.Min(hp.Max, nv));
 			// If this is the player and we crossed to zero, publish PlayerDied once
 			if (before > 0 && hp.Current == 0 && target.HasComponent<Player>())
 			{
@@ -75,7 +75,7 @@ namespace Crusaders30XX.ECS.Systems
 			var hp = target.GetComponent<HP>();
 			if (hp == null) return;
 			int before = hp.Current;
-			hp.Current = System.Math.Max(0, System.Math.Min(hp.Max, e.Value));
+			hp.Current = Math.Max(0, Math.Min(hp.Max, e.Value));
 			if (before > 0 && hp.Current == 0 && target.HasComponent<Player>())
 			{
 				EventManager.Publish(new PlayerDied { Player = target });
@@ -120,14 +120,14 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugActionInt("Lose HP", Step = 1, Min = 1, Max = 999, Default = 10)]
 		public void Debug_LoseHp(int amount)
 		{
-			EventManager.Publish(new ModifyHpRequestEvent { Source = EntityManager.GetEntity("Player"), Target = EntityManager.GetEntity("Player"), Delta = -System.Math.Abs(amount) });
+			EventManager.Publish(new ModifyHpRequestEvent { Source = EntityManager.GetEntity("Player"), Target = EntityManager.GetEntity("Player"), Delta = -Math.Abs(amount) });
 		}
 
 		// Debug action: Heal X HP
 		[DebugActionInt("Heal HP", Step = 1, Min = 1, Max = 999, Default = 10)]
 		public void Debug_HealHp(int amount)
 		{
-			EventManager.Publish(new ModifyHpRequestEvent { Source = EntityManager.GetEntity("Player"), Target = EntityManager.GetEntity("Player"), Delta = System.Math.Abs(amount) });
+			EventManager.Publish(new ModifyHpRequestEvent { Source = EntityManager.GetEntity("Player"), Target = EntityManager.GetEntity("Player"), Delta = Math.Abs(amount) });
 		}
 	}
 }

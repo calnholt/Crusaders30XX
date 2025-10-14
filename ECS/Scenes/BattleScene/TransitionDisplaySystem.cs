@@ -52,7 +52,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
 		{
-			return System.Array.Empty<Entity>();
+			return Array.Empty<Entity>();
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
@@ -109,20 +109,20 @@ namespace Crusaders30XX.ECS.Systems
 			int vh = _graphicsDevice.Viewport.Height;
 			float angle = MathHelper.ToRadians(AngleDegrees);
 			// progress 0..1 for wipe-in, 1..0 for wipe-out
-			float p = MathHelper.Clamp(_t / System.Math.Max(0.0001f, WipeDurationSeconds), 0f, 1f);
+			float p = MathHelper.Clamp(_t / Math.Max(0.0001f, WipeDurationSeconds), 0f, 1f);
 			if (_phase == Phase.WipeOut) p = 1f - p;
 			if (_phase == Phase.Hold) p = 1f;
 
 			// Build a covering parallelogram whose width expands with p
 			// Ensure full coverage for any angle by computing total length considering diagonal span
 			int stripes = 128;
-			int stripeThickness = (int)System.Math.Ceiling(vh / (float)stripes) + 2;
-			byte a = (byte)System.Math.Clamp(Alpha, 0, 255);
+			int stripeThickness = (int)Math.Ceiling(vh / (float)stripes) + 2;
+			byte a = (byte)Math.Clamp(Alpha, 0, 255);
 			var color = Color.DarkRed;
-			float tan = (float)System.Math.Tan(angle);
+			float tan = (float)Math.Tan(angle);
 			float dxSpan = tan * vh; // total horizontal offset from top to bottom
-			float dxMin = System.Math.Min(0f, dxSpan);
-			float dxMax = System.Math.Max(0f, dxSpan);
+			float dxMin = Math.Min(0f, dxSpan);
+			float dxMax = Math.Max(0f, dxSpan);
 			float margin = 1000f; // extra overdraw on both sides
 			float startBase = dxMin - margin;
 			float totalLen = vw + (dxMax - dxMin) + 2f * margin;
@@ -133,7 +133,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				float y0 = i * stripeThickness;
 				float dx = tan * y0;
-				var rect = new Rectangle((int)(startBase + startShift + dx), (int)y0, (int)System.Math.Ceiling(fillLen), stripeThickness);
+				var rect = new Rectangle((int)(startBase + startShift + dx), (int)y0, (int)Math.Ceiling(fillLen), stripeThickness);
 				_spriteBatch.Draw(_pixel, rect, color);
 			}
 
@@ -155,9 +155,9 @@ namespace Crusaders30XX.ECS.Systems
 				float scale = TextScale;
 				if (_phase == Phase.Hold && HoldSeconds > 0f && PulseAmplitude > 0f)
 				{
-					float n = MathHelper.Clamp(_t / System.Math.Max(0.0001f, HoldSeconds), 0f, 1f);
+					float n = MathHelper.Clamp(_t / Math.Max(0.0001f, HoldSeconds), 0f, 1f);
 					// Single quick pulse over the hold window
-					scale *= 1f + PulseAmplitude * (float)System.Math.Sin(System.Math.PI * n);
+					scale *= 1f + PulseAmplitude * (float)Math.Sin(Math.PI * n);
 				}
 				var size = _font.MeasureString(text) * scale;
 				var pos = new Vector2((vw - size.X) * 0.5f, (vh - size.Y) * 0.5f);

@@ -339,4 +339,19 @@ namespace Crusaders30XX.ECS.Events
         public string TemperanceId { get; set; }
     }
 
+    public class UnassignCardAsBlockRequested
+    {
+        public Entity CardEntity;
+    }
+
+    public class AssignEquipmentAsBlockRequested
+    {
+        public Entity EquipmentEntity;
+    }
+
+    public class ActivateEquipmentRequested
+    {
+        public Entity EquipmentEntity;
+    }
+
 } 

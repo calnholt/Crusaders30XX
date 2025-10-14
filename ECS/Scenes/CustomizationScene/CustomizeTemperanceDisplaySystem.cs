@@ -130,7 +130,7 @@ namespace Crusaders30XX.ECS.Systems
                 int x = vw - rightW + LeftMargin;
                 int y = TopMargin + 40;
                 int w = rightW - LeftMargin * 2;
-                int h = System.Math.Min(260, _graphicsDevice.Viewport.Height - y - 20);
+                int h = Math.Min(260, _graphicsDevice.Viewport.Height - y - 20);
                 var rect = new Rectangle(x, y, w, h);
                 // Publish render event; handler will draw during active SpriteBatch (mimics CardDisplaySystem)
                 EventManager.Publish(new TemperanceAbilityRenderEvent { AbilityId = def.id, Bounds = rect, IsEquipped = true, NameScale = NameScale, TextScale = TextScale });
@@ -157,7 +157,7 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.DrawString(_font, title, tpos + new Vector2(1,1), Color.Black, 0f, Vector2.Zero, e.NameScale, SpriteEffects.None, 0f);
             _spriteBatch.DrawString(_font, title, tpos, fg, 0f, Vector2.Zero, e.NameScale, SpriteEffects.None, 0f);
             string body = def.text ?? string.Empty;
-            int contentW = System.Math.Max(10, r.Width - 20);
+            int contentW = Math.Max(10, r.Width - 20);
             float y2 = tpos.Y + (tsize.Y) + 6f;
             foreach (var line in WrapText(body, e.TextScale, contentW))
             {
@@ -202,9 +202,9 @@ namespace Crusaders30XX.ECS.Systems
 
         private Texture2D GetRounded(int w, int h, int r)
         {
-            var key = (w: w, h: h, r: System.Math.Max(0, System.Math.Min(r, System.Math.Min(w, h) / 2)));
+            var key = (w: w, h: h, r: Math.Max(0, Math.Min(r, Math.Min(w, h) / 2)));
             if (_roundedCache.TryGetValue((key.w, key.h, key.r), out var tex) && tex != null) return tex;
-            tex = ECS.Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, key.r);
+            tex = Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, key.r);
             _roundedCache[(key.w, key.h, key.r)] = tex;
             return tex;
         }

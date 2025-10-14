@@ -85,7 +85,7 @@ namespace Crusaders30XX.ECS.Data.Attacks
 		{
 			try
 			{
-				var dir = new DirectoryInfo(System.AppContext.BaseDirectory);
+				var dir = new DirectoryInfo(AppContext.BaseDirectory);
 				for (int i = 0; i < 6 && dir != null; i++)
 				{
 					var candidate = Path.Combine(dir.FullName, filename);

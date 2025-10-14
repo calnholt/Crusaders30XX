@@ -18,12 +18,12 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
             EventManager.Subscribe<EnemyAttackImpactNow>(OnImpactNow);
-            System.Console.WriteLine("[EnemyDamageManagerSystem] Subscribed to ApplyEffect, EnemyAttackImpactNow");
+            Console.WriteLine("[EnemyDamageManagerSystem] Subscribed to ApplyEffect, EnemyAttackImpactNow");
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
         {
-            return System.Array.Empty<Entity>();
+            return Array.Empty<Entity>();
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime) { }

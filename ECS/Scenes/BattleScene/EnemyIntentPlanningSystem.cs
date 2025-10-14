@@ -57,7 +57,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					return;
 				}
-				System.Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
+                Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
 				EnsureAttackDefsLoaded();
 				foreach (var enemy in GetRelevantEntities())
 				{
@@ -88,7 +88,7 @@ namespace Crusaders30XX.ECS.Systems
 					// Use per-enemy intent service to select attack IDs; centralized planning handles clears, context IDs, and telegraphs
 					IEnemyIntentService service = CreateServiceForEnemy(enemyId);
 					if (service == null) continue;
-					System.Console.WriteLine($"[EnemyIntentPlanningSystem] Planning {enemyId} attacks, turn {turnNumber}");
+                    Console.WriteLine($"[EnemyIntentPlanningSystem] Planning {enemyId} attacks, turn {turnNumber}");
 					// Always clear the next-turn preview before populating
 					next.Planned.Clear();
 					// If current (this turn) is empty, fill it using the prior turn's selection

@@ -18,7 +18,7 @@ namespace Crusaders30XX.ECS.Systems
         public CardPlaySystem(EntityManager entityManager) : base(entityManager)
         {
             EventManager.Subscribe<PlayCardRequested>(OnPlayCardRequested);
-            System.Console.WriteLine("[CardPlaySystem] Subscribed to PlayCardRequested");
+            Console.WriteLine("[CardPlaySystem] Subscribed to PlayCardRequested");
             EventManager.Subscribe<PayCostSatisfied>(OnPayCostSatisfied);
         }
 
@@ -35,7 +35,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // Only in Action phase
             var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
-            if (phase.Sub != SubPhase.Action) { System.Console.WriteLine($"[CardPlaySystem] Ignored play, phase={phase}"); return; }
+            if (phase.Sub != SubPhase.Action) { Console.WriteLine($"[CardPlaySystem] Ignored play, phase={phase}"); return; }
 
             var data = evt.Card.GetComponent<CardData>();
             if (data == null) return;
@@ -71,7 +71,7 @@ namespace Crusaders30XX.ECS.Systems
             // Evaluate any additional costs/requirements tied to the card id
             if (!EvaluateAdditionalCostService.CanPay(EntityManager, def.id))
             {
-                System.Console.WriteLine($"[CardPlaySystem] Additional cost check failed for id={def.id}; aborting play");
+                Console.WriteLine($"[CardPlaySystem] Additional cost check failed for id={def.id}; aborting play");
                 return;
             }
 
@@ -87,7 +87,7 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new OpenPayCostOverlayEvent { CardToPlay = evt.Card, RequiredCosts = ["Any"], Type = PayCostOverlayType.SelectOneCard });
                     return;
                 }
-                var requiredCosts = (def.cost ?? System.Array.Empty<string>()).ToList();
+                var requiredCosts = (def.cost ?? Array.Empty<string>()).ToList();
                 if (requiredCosts.Count > 0 && deck != null)
                 {
                     // Build hand color multiset excluding the card being played
@@ -166,7 +166,7 @@ namespace Crusaders30XX.ECS.Systems
 
                     if (!canSatisfy)
                     {
-                        System.Console.WriteLine("[CardPlaySystem] Cannot satisfy cost requirements; aborting play");
+                        Console.WriteLine("[CardPlaySystem] Cannot satisfy cost requirements; aborting play");
                         EventManager.Publish(new CantPlayCardMessage { Message = "Can't pay card's cost!" });
                         return;
                     }
@@ -207,7 +207,7 @@ namespace Crusaders30XX.ECS.Systems
                     if (autoPicks.Count == 1 && handNonWeapons.Count == 1)
                     {
                         // Single deterministic discard -> auto pay and continue
-                        System.Console.WriteLine("[CardPlaySystem] Auto-paying cost with only available card");
+                        Console.WriteLine("[CardPlaySystem] Auto-paying cost with only available card");
                         EventManager.Publish(new CardMoveRequested { Card = autoPicks[0], Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
                         // Re-dispatch play with CostsPaid=true
                         EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
@@ -226,7 +226,7 @@ namespace Crusaders30XX.ECS.Systems
                     else
                     {
                         // Open overlay to let player choose among options
-                        System.Console.WriteLine("[CardPlaySystem] Opening pay-cost overlay");
+                        Console.WriteLine("[CardPlaySystem] Opening pay-cost overlay");
                         EventManager.Publish(new OpenPayCostOverlayEvent { CardToPlay = evt.Card, RequiredCosts = requiredCosts, Type = PayCostOverlayType.ColorDiscard });
                         return;
                     }
@@ -234,14 +234,14 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // If this card has an attack animation, enqueue a player attack animation sequence that will play serially
-            if (string.Equals(def.animation, "Attack", System.StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(def.animation, "Attack", StringComparison.OrdinalIgnoreCase))
             {
                 EventQueue.EnqueueRule(new QueuedStartPlayerAttackAnimation());
                 EventQueue.EnqueueRule(new QueuedWaitPlayerImpactEvent());
             }
-            else if (string.Equals(def.animation, "Buff", System.StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(def.animation, "Buff", StringComparison.OrdinalIgnoreCase))
             {
-                System.Console.WriteLine($"[CardPlaySystem] Buff");
+                Console.WriteLine($"[CardPlaySystem] Buff");
                 EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
                 EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
             }
@@ -259,12 +259,12 @@ namespace Crusaders30XX.ECS.Systems
                     // CardZoneSystem will remove from lists when destination not specified; emulate by not re-adding
                     var deck = deckEntity.GetComponent<Deck>();
                     deck?.Hand.Remove(evt.Card);
-                    System.Console.WriteLine("[CardPlaySystem] Weapon used; removed from hand without discarding");
+                    Console.WriteLine("[CardPlaySystem] Weapon used; removed from hand without discarding");
                 }
                 else
                 {
                     EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = def.exhaustsOnPlay ? CardZoneType.ExhaustPile : CardZoneType.DiscardPile, Reason = "PlayCard" });
-                    System.Console.WriteLine("[CardPlaySystem] Requested move to DiscardPile");
+                    Console.WriteLine("[CardPlaySystem] Requested move to DiscardPile");
                 }
             }
 
@@ -272,7 +272,7 @@ namespace Crusaders30XX.ECS.Systems
             if (!isFree)
             {
                 EventManager.Publish(new ModifyActionPointsEvent { Delta = -1 });
-                System.Console.WriteLine("[CardPlaySystem] Consumed 1 AP");
+                Console.WriteLine("[CardPlaySystem] Consumed 1 AP");
             }
         }
 

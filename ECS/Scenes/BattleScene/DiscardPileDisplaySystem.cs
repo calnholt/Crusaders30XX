@@ -45,7 +45,7 @@ namespace Crusaders30XX.ECS.Systems
             _pixel = new Texture2D(graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
             EventManager.Subscribe<CardMoved>(OnCardMoved);
-            System.Console.WriteLine("[DiscardPileDisplaySystem] Subscribed to CardMoved");
+            Console.WriteLine("[DiscardPileDisplaySystem] Subscribed to CardMoved");
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -57,7 +57,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (_pulseTimeRemaining > 0.0)
             {
-                _pulseTimeRemaining = System.Math.Max(0.0, _pulseTimeRemaining - gameTime.ElapsedGameTime.TotalSeconds);
+                _pulseTimeRemaining = Math.Max(0.0, _pulseTimeRemaining - gameTime.ElapsedGameTime.TotalSeconds);
             }
             base.Update(gameTime);
         }
@@ -99,8 +99,8 @@ namespace Crusaders30XX.ECS.Systems
             int rectH = PanelHeight;
 			var center = new Vector2(tRoot.Position.X, tRoot.Position.Y);
 			var rect = new Rectangle(
-				(int)System.Math.Round(center.X - rectW / 2f),
-				(int)System.Math.Round(center.Y - rectH / 2f),
+				(int)Math.Round(center.X - rectW / 2f),
+				(int)Math.Round(center.Y - rectH / 2f),
 				rectW,
 				rectH);
 
@@ -109,14 +109,14 @@ namespace Crusaders30XX.ECS.Systems
             if (_pulseTimeRemaining > 0.0)
             {
                 float t = (float)(1.0 - (_pulseTimeRemaining / PulseDuration)); // 0->1
-                float wave = (float)System.Math.Sin(t * System.Math.PI); // 0..1..0
+                float wave = (float)Math.Sin(t * Math.PI); // 0..1..0
                 scale = 1f + PulseAmplitude * wave;
             }
 
             // Scale about the rect center
             var center2 = new Vector2(rect.Center.X, rect.Center.Y);
-            int scaledW = (int)System.Math.Round(rectW * scale);
-            int scaledH = (int)System.Math.Round(rectH * scale);
+            int scaledW = (int)Math.Round(rectW * scale);
+            int scaledH = (int)Math.Round(rectH * scale);
             var scaledRect = new Rectangle((int)(center2.X - scaledW / 2f), (int)(center2.Y - scaledH / 2f), scaledW, scaledH);
 
             // Panel

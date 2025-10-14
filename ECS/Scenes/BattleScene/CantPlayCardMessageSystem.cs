@@ -118,7 +118,7 @@ namespace Crusaders30XX.ECS.Systems
 				sMul = 1f;
 			}
 			// Snap near 1 to avoid tiny jitter
-			if (System.Math.Abs(sMul - 1f) < LockSnapThreshold) sMul = 1f;
+			if (Math.Abs(sMul - 1f) < LockSnapThreshold) sMul = 1f;
 			fullScale *= sMul;
 
 			// Keep text white; only alpha animates

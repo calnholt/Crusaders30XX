@@ -268,7 +268,7 @@ namespace Crusaders30XX.ECS.Systems
             try
             {
                 string id = cd.CardId ?? string.Empty;
-                if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
+                if (!string.IsNullOrEmpty(id) && Data.Cards.CardDefinitionCache.TryGet(id, out var def))
                 {
                     if (def.isWeapon) return;
                 }
@@ -470,7 +470,7 @@ namespace Crusaders30XX.ECS.Systems
             try
             {
                 string id = cd.CardId ?? string.Empty;
-                if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
+                if (!string.IsNullOrEmpty(id) && Data.Cards.CardDefinitionCache.TryGet(id, out var def))
                 {
                     if (def.isWeapon) return false;
                 }
@@ -516,7 +516,7 @@ namespace Crusaders30XX.ECS.Systems
             // Lookup JSON definition to read cost array
             string id = data.CardId ?? string.Empty;
             if (string.IsNullOrEmpty(id)) return new List<string>();
-            if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def)) return new List<string>();
+            if (!Data.Cards.CardDefinitionCache.TryGet(id, out var def)) return new List<string>();
             return (def.cost ?? Array.Empty<string>()).ToList();
         }
 
@@ -526,7 +526,7 @@ namespace Crusaders30XX.ECS.Systems
             try
             {
                 string id = cd.CardId ?? string.Empty;
-                if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def) && def != null)
+                if (!string.IsNullOrEmpty(id) && Data.Cards.CardDefinitionCache.TryGet(id, out var def) && def != null)
                 {
                     return def.name ?? def.id ?? id;
                 }

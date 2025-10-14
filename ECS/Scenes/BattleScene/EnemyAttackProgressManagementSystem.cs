@@ -76,7 +76,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnBlockAssignmentAdded(BlockAssignmentAdded e)
 		{
-			System.Console.WriteLine($"[EnemyAttackProgressManagementSystem] BlockAssignmentAdded ctx={e.ContextId} color={e.Color} delta={e.DeltaBlock}");
+            Console.WriteLine($"[EnemyAttackProgressManagementSystem] BlockAssignmentAdded ctx={e.ContextId} color={e.Color} delta={e.DeltaBlock}");
 			if (e == null || string.IsNullOrWhiteSpace(e.Color)) return;
 			string color = NormalizeColorKey(e.Color);
 			if (string.IsNullOrEmpty(e.ContextId)) return;
@@ -101,7 +101,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnBlockAssignmentRemoved(BlockAssignmentRemoved e)
 		{
-			System.Console.WriteLine($"[EnemyAttackProgressManagementSystem] BlockAssignmentRemoved ctx={e.ContextId} color={e.Color} delta={e.DeltaBlock}");
+            Console.WriteLine($"[EnemyAttackProgressManagementSystem] BlockAssignmentRemoved ctx={e.ContextId} color={e.Color} delta={e.DeltaBlock}");
 			if (e == null || string.IsNullOrEmpty(e.ContextId)) return;
 
 			// Find the owning enemy and attack for this context
@@ -195,12 +195,12 @@ namespace Crusaders30XX.ECS.Systems
 					assignedFromCardsAndEquipment += abc.BlockAmount;
 				}
 			}
-			p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
+			p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
 			bool isConditionMet = ConditionService.Evaluate(def.blockingCondition, EntityManager);
 			p.BaseDamage = def.damage;
-			int preventedDamageFromBlockCondition = isConditionMet ? (def.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
+			int preventedDamageFromBlockCondition = isConditionMet ? (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount) : 0;
 			int reduced = aegis + p.AssignedBlockTotal;

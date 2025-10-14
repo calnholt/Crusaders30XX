@@ -597,8 +597,8 @@ namespace Crusaders30XX.ECS.Systems
 					DrawFilledRect(applyRect, new Color(60,60,60)); DrawRect(applyRect, Color.White, 1); DrawStringScaled(">", new Vector2(applyRect.X + 6, applyRect.Y + 2), Color.White, TextScale);
 					if (clickForContent)
 					{
-						if (minusRect.Contains(mouse.Position)) { ai.current = (int)System.Math.Max(ai.meta.Min, System.Math.Min(ai.meta.Max, ai.current - (int)System.Math.Round(ai.meta.Step))); actionIntMethods[i] = ai; }
-						else if (plusRect.Contains(mouse.Position)) { ai.current = (int)System.Math.Max(ai.meta.Min, System.Math.Min(ai.meta.Max, ai.current + (int)System.Math.Round(ai.meta.Step))); actionIntMethods[i] = ai; }
+						if (minusRect.Contains(mouse.Position)) { ai.current = (int)Math.Max(ai.meta.Min, Math.Min(ai.meta.Max, ai.current - (int)Math.Round(ai.meta.Step))); actionIntMethods[i] = ai; }
+						else if (plusRect.Contains(mouse.Position)) { ai.current = (int)Math.Max(ai.meta.Min, Math.Min(ai.meta.Max, ai.current + (int)Math.Round(ai.meta.Step))); actionIntMethods[i] = ai; }
 						else if (applyRect.Contains(mouse.Position))
 						{
 							try { ai.method.Invoke(active.sys, new object[] { ai.current }); }
@@ -606,7 +606,7 @@ namespace Crusaders30XX.ECS.Systems
 							{
 								var tie = ex as System.Reflection.TargetInvocationException;
 								var root = tie?.InnerException ?? ex;
-								System.Console.WriteLine($"[DebugMenu] Action-int '{ai.label}' failed:\n{root}");
+                                Console.WriteLine($"[DebugMenu] Action-int '{ai.label}' failed:\n{root}");
 							}
 						}
 					}
@@ -628,18 +628,18 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     int wheelDelta = mouse.ScrollWheelValue - _prevMouse.ScrollWheelValue;
                     float deltaPixels = -(wheelDelta / 120f) * ScrollPixelsPerNotch;
-                    float maxDD = System.Math.Max(0, listTotalHeight2 - listDisplayHeight2);
+                    float maxDD = Math.Max(0, listTotalHeight2 - listDisplayHeight2);
                     _dropdownScrollOffset = MathHelper.Clamp(_dropdownScrollOffset + deltaPixels, 0f, maxDD);
-                    firstRow = (int)System.Math.Floor(_dropdownScrollOffset / deferredRowH);
+                    firstRow = (int)Math.Floor(_dropdownScrollOffset / deferredRowH);
                     rowOffset = _dropdownScrollOffset - firstRow * deferredRowH;
                 }
-                int rowsToDraw = System.Math.Min(deferredItemCount - firstRow, (int)System.Math.Ceiling(deferredListRect.Height / (float)deferredRowH) + 1);
+                int rowsToDraw = Math.Min(deferredItemCount - firstRow, (int)Math.Ceiling(deferredListRect.Height / (float)deferredRowH) + 1);
                 for (int i = 0; i < rowsToDraw; i++)
                 {
                     int rowIndex = firstRow + i;
                     if (rowIndex < 0 || rowIndex >= deferredItemCount) continue;
                     var (actualIndex, label) = visibleOptions[rowIndex];
-                    int itemY = deferredListRect.Y + (int)System.Math.Round(i * deferredRowH - rowOffset);
+                    int itemY = deferredListRect.Y + (int)Math.Round(i * deferredRowH - rowOffset);
                     var itemRect = new Rectangle(deferredListRect.X, itemY, deferredListRect.Width, deferredRowH);
                     bool hover = itemRect.Contains(mouse.Position);
                     if (hover) DrawFilledRect(itemRect, new Color(60, 60, 60));

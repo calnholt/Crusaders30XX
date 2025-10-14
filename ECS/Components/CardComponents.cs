@@ -241,10 +241,10 @@ namespace Crusaders30XX.ECS.Components
         public bool UpdateBaseFromCurrentEachFrame { get; set; } = true;
 
         // Internally tracked last applied offset so we can reconstruct the external base
-        public Microsoft.Xna.Framework.Vector2 LastAppliedOffset { get; set; } = Microsoft.Xna.Framework.Vector2.Zero;
+        public Microsoft.Xna.Framework.Vector2 LastAppliedOffset { get; set; } = Vector2.Zero;
 
         // Last position written by the parallax system; used to detect external layout overrides
-        public Microsoft.Xna.Framework.Vector2 LastAppliedPosition { get; set; } = Microsoft.Xna.Framework.Vector2.Zero;
+        public Microsoft.Xna.Framework.Vector2 LastAppliedPosition { get; set; } = Vector2.Zero;
 
         public static ParallaxLayer GetUIParallaxLayer()
         {
@@ -280,6 +280,20 @@ namespace Crusaders30XX.ECS.Components
         public string Tooltip { get; set; } = "";
         public TooltipPosition TooltipPosition { get; set; } = TooltipPosition.Above;
         public int TooltipOffsetPx { get; set; } = 6; // gap from element to tooltip
+        public UIElementEventType EventType;
+    }
+
+    public enum UIElementEventType
+    {
+        UnassignCardAsBlock,
+        AssignCardAsBlock,
+        UnassignEquipmentAsBlock,
+        AssignEquipmentAsBlock,
+        ActivateEquipment,
+        EndTurn,
+        ConfirmBlocks,
+        PlayCardRequested,
+        SelectedCardForCost,
     }
 
     /// <summary>
@@ -492,7 +506,7 @@ namespace Crusaders30XX.ECS.Components
         public float OpenElapsedSeconds { get; set; } = 0f;
         public int OriginalHandIndex { get; set; } = -1;
         // Tween state for staged card movement
-        public Microsoft.Xna.Framework.Vector2 StagedStartPos { get; set; } = Microsoft.Xna.Framework.Vector2.Zero;
+        public Microsoft.Xna.Framework.Vector2 StagedStartPos { get; set; } = Vector2.Zero;
         public float StagedMoveElapsedSeconds { get; set; } = 0f;
         public bool IsReturning { get; set; } = false;
         public float ReturnElapsedSeconds { get; set; } = 0f;
@@ -664,7 +678,7 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         public EquipmentZoneType Zone { get; set; } = EquipmentZoneType.Default;
-        public Microsoft.Xna.Framework.Vector2 LastPanelCenter { get; set; } = Microsoft.Xna.Framework.Vector2.Zero;
+        public Microsoft.Xna.Framework.Vector2 LastPanelCenter { get; set; } = Vector2.Zero;
     }
 
     public enum EquipmentZoneType

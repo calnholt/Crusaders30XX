@@ -19,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
             var battleStateInfo = player.GetComponent<BattleStateInfo>();
             int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
 
-            System.Console.WriteLine($"[CardPlayService] Resolving card id={cardId} name={cardName}");
+            Console.WriteLine($"[CardPlayService] Resolving card id={cardId} name={cardName}");
             CardDefinitionCache.TryGet(cardId, out CardDefinition def);
             var target = def.target == "Player" ? player : enemy;
             var values = def.valuesParse;
@@ -196,7 +196,7 @@ namespace Crusaders30XX.ECS.Systems
                     break;
                 }
                 default:
-                    System.Console.WriteLine($"[CardPlayService] No effect for id={cardId}");
+                    Console.WriteLine($"[CardPlayService] No effect for id={cardId}");
                     break;
             }
         }

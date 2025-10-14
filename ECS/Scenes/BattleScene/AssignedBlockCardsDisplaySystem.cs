@@ -70,6 +70,21 @@ namespace Crusaders30XX.ECS.Systems
 			_content = content;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			EventManager.Subscribe<UnassignCardAsBlockRequested>(OnUnassignCardAsBlockRequested);
+		}
+
+		private void OnUnassignCardAsBlockRequested(UnassignCardAsBlockRequested evt)
+		{
+			var abc = evt.CardEntity.GetComponent<AssignedBlockCard>();
+			abc.Phase = AssignedBlockCard.PhaseState.Returning;
+			abc.Elapsed = 0f;
+			var cardData = evt.CardEntity.GetComponent<CardData>();
+			EventManager.Publish(new BlockAssignmentRemoved
+			{
+				Card = evt.CardEntity,
+				DeltaBlock = -abc.BlockAmount,
+				Color = abc.ColorKey
+			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -131,22 +146,6 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				_pendingReturn.Clear();
 			}
-			// Handle click against all assigned cards (topmost first)
-			var abcEntities = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>();
-			var clickedCard = abcEntities.FirstOrDefault(e => e.GetComponent<UIElement>()?.IsClicked == true);
-			if (clickedCard != null)
-			{
-				var abc = clickedCard.GetComponent<AssignedBlockCard>();
-				abc.Phase = AssignedBlockCard.PhaseState.Returning;
-				abc.Elapsed = 0f;
-				var cardData = clickedCard.GetComponent<CardData>();
-				EventManager.Publish(new BlockAssignmentRemoved
-				{
-					Card = clickedCard,
-					DeltaBlock = -abc.BlockAmount,
-					Color = abc.ColorKey
-				});
-			}
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
@@ -160,26 +159,6 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				ui = new UIElement { IsInteractable = true };
 				EntityManager.AddComponent(entity, ui);
-			}
-			bool click = ui.IsClicked;
-			if (click && (abc.Phase == AssignedBlockCard.PhaseState.Idle || abc.Phase == AssignedBlockCard.PhaseState.Impact))
-			{
-				abc.Phase = AssignedBlockCard.PhaseState.Returning;
-				abc.Elapsed = 0f;
-				// Publish unassign so counters and damage update even if the top-level click handler didn't catch this card
-				var enemy2 = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
-				var pa2 = enemy2?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();
-				var cd = entity.GetComponent<CardData>();
-				if (pa2 != null)
-				{
-					EventManager.Publish(new BlockAssignmentRemoved
-					{
-						ContextId = pa2.ContextId,
-						Card = entity,
-						DeltaBlock = -abc.BlockAmount,
-						Color = cd?.Color.ToString()
-					});
-				}
 			}
 
 			// Ensure bounds reflect where the card is currently drawn and control interactivity
@@ -380,7 +359,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var key = (width, height, radius);
 			if (_roundedRectCache.TryGetValue(key, out var tex)) return tex;
-			var texture = Crusaders30XX.ECS.Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, width, height, radius);
+			var texture = Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, width, height, radius);
 			_roundedRectCache[key] = texture;
 			return texture;
 		}

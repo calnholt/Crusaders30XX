@@ -393,7 +393,7 @@ namespace Crusaders30XX.ECS.Systems
                 var data = card.GetComponent<CardData>();
                 string id = data?.CardId ?? string.Empty;
                 if (string.IsNullOrEmpty(id)) return false;
-                if (!Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def) || def == null) return false;
+                if (!CardDefinitionCache.TryGet(id, out var def) || def == null) return false;
                 return def.isFreeAction;
             }
             catch { return false; }

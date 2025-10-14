@@ -129,7 +129,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // Resolve loadout name
             string header = "Loadout";
-            var defOk = Crusaders30XX.ECS.Data.Loadouts.LoadoutDefinitionCache.TryGet("loadout_1", out var loadoutDef) && loadoutDef != null;
+            var defOk = Data.Loadouts.LoadoutDefinitionCache.TryGet("loadout_1", out var loadoutDef) && loadoutDef != null;
             if (defOk && !string.IsNullOrEmpty(loadoutDef.name)) header = loadoutDef.name;
             if (_font != null)
             {

@@ -382,7 +382,7 @@ namespace Crusaders30XX.ECS.Systems
 			var tex = _customizeRoundedCache;
 			if (tex == null || tex.Width != r.Width || tex.Height != r.Height)
 			{
-				tex = ECS.Rendering.RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, r.Width, r.Height, 12);
+				tex = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, r.Width, r.Height, 12);
 				_customizeRoundedCache = tex;
 			}
 			_spriteBatch.Draw(tex, r, new Color(0, 0, 0));

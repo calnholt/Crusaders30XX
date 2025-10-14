@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Systems
         public static void Apply(EntityManager entityManager, AttackDefinition attackDefinition)
         {
           var attackId = attackDefinition.id;
-          System.Console.WriteLine($"[EnemyAttackEffectService]: {attackId}");
+            Console.WriteLine($"[EnemyAttackEffectService]: {attackId}");
           var battleStateInfo = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault().GetComponent<BattleStateInfo>();
           var enemyEntity = entityManager.GetEntity("Enemy");
           var enemyPassives = enemyEntity.GetComponent<AppliedPassives>();
@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
             case "nightveil_guillotine":
               battleStateInfo.TurnTracking.TryGetValue("slice", out int sliceCount);
               battleStateInfo.TurnTracking.TryGetValue("dice", out int diceCount);
-              System.Console.WriteLine($"[EnemyAttackEffectService]: slice: {sliceCount} // dice: {diceCount}");
+                    Console.WriteLine($"[EnemyAttackEffectService]: slice: {sliceCount} // dice: {diceCount}");
               if (sliceCount > 0 && diceCount > 0)
               {
                 attackDefinition.damage += 4;

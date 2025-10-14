@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			return definition.damage + 
         
-        (definition.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
+        (definition.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
 		}
@@ -48,7 +48,7 @@ namespace Crusaders30XX.ECS.Systems
 			int full = ComputeFullDamage(definition);
 			int aegis = GetAegisAmount(entityManager);
 			int assigned = GetAssignedBlockForContext(entityManager, contextId);
-			int preventedBlockCondition = isBlocked ? (definition.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
+			int preventedBlockCondition = isBlocked ? (definition.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount) : 0;
 			int reduced = aegis + assigned;
@@ -60,7 +60,7 @@ namespace Crusaders30XX.ECS.Systems
     {
       int aegis = GetAegisAmount(entityManager);
       int assigned = GetAssignedBlockForContext(entityManager, contextId);
-      int preventedBlockCondition = isBlocked ? (definition.effectsOnNotBlocked ?? System.Array.Empty<EffectDefinition>())
+      int preventedBlockCondition = isBlocked ? (definition.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount) : 0;
       return aegis + assigned + preventedBlockCondition;

@@ -76,7 +76,7 @@ namespace Crusaders30XX.ECS.Systems
 				_attackAnimTimer = System.Math.Max(0f, _attackAnimTimer - (float)gameTime.ElapsedGameTime.TotalSeconds);
 				if (_attackAnimTimer == 0f && !string.IsNullOrEmpty(_pendingContextId))
 				{
-					Crusaders30XX.ECS.Core.EventManager.Publish(new EnemyAttackImpactNow { ContextId = _pendingContextId });
+                    EventManager.Publish(new EnemyAttackImpactNow { ContextId = _pendingContextId });
 					_pendingContextId = null;
 				}
 			}

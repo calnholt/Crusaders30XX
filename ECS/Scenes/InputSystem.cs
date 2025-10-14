@@ -40,7 +40,7 @@ namespace Crusaders30XX.ECS.Systems
             if (!IsActive) return;
 
             // If the game window is not active, ignore inputs and keep previous states in sync
-            if (!Crusaders30XX.Game1.WindowIsActive)
+            if (!Game1.WindowIsActive)
             {
                 _previousMouseState = Mouse.GetState();
                 _previousKeyboardState = Keyboard.GetState();
@@ -52,7 +52,7 @@ namespace Crusaders30XX.ECS.Systems
             // Coalesce pointer position: prefer controller cursor position if present
             bool hasCursor = _cursorEvent != null;
             var pointerVec = hasCursor ? _cursorEvent.Position : new Vector2(mousePosition.X, mousePosition.Y);
-            var pointerPoint = new Point((int)System.Math.Round(pointerVec.X), (int)System.Math.Round(pointerVec.Y));
+            var pointerPoint = new Point((int)Math.Round(pointerVec.X), (int)Math.Round(pointerVec.Y));
             var keyboardState = Keyboard.GetState();
 
             // Debug menu toggle is handled globally in Game1 to be scene-independent
@@ -197,8 +197,8 @@ namespace Crusaders30XX.ECS.Systems
 
 			Vector2 center = new Vector2(r.X + r.Width / 2f, r.Y + r.Height / 2f);
 			float rotation = transform?.Rotation ?? 0f;
-			float cos = (float)System.Math.Cos(rotation);
-			float sin = (float)System.Math.Sin(rotation);
+			float cos = (float)Math.Cos(rotation);
+			float sin = (float)Math.Sin(rotation);
 
 			Vector2 m = new Vector2(mousePosition.X, mousePosition.Y);
 			Vector2 d = m - center;

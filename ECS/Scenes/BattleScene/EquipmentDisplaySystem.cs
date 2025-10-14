@@ -86,7 +86,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 			_content = content;
 			_font = font;
-			Crusaders30XX.ECS.Core.EventManager.Subscribe<Crusaders30XX.ECS.Events.EquipmentAbilityTriggered>(OnEquipmentAbilityTriggered);
+            EventManager.Subscribe<Crusaders30XX.ECS.Events.EquipmentAbilityTriggered>(OnEquipmentAbilityTriggered);
 		}
 
 		private void OnEquipmentAbilityTriggered(Crusaders30XX.ECS.Events.EquipmentAbilityTriggered evt)
@@ -99,7 +99,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (_pulseTimeRemaining <= 0.0) return 1f;
 			float t = (float)(1.0 - (_pulseTimeRemaining / PulseDurationSeconds));
-			float wave = (float)System.Math.Sin(t * System.Math.PI);
+			float wave = (float)Math.Sin(t * Math.PI);
 			return 1f + PulseAmplitude * wave;
 		}
 
@@ -121,7 +121,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Update pulse timer
 			if (_pulseTimeRemaining > 0.0)
 			{
-				_pulseTimeRemaining = System.Math.Max(0.0, _lastDt > 0 ? _pulseTimeRemaining - _lastDt : _pulseTimeRemaining);
+				_pulseTimeRemaining = Math.Max(0.0, _lastDt > 0 ? _pulseTimeRemaining - _lastDt : _pulseTimeRemaining);
 			}
 			var player = GetRelevantEntities().FirstOrDefault();
 			if (player == null) return;
@@ -185,8 +185,8 @@ namespace Crusaders30XX.ECS.Systems
 					float pulseScale = GetCurrentPulseScale();
 					if (pulseScale != 1f)
 					{
-						int scaledW = (int)System.Math.Round(bgRect.Width * pulseScale);
-						int scaledH = (int)System.Math.Round(bgRect.Height * pulseScale);
+						int scaledW = (int)Math.Round(bgRect.Width * pulseScale);
+						int scaledH = (int)Math.Round(bgRect.Height * pulseScale);
 						var center = new Vector2(bgRect.X + bgRect.Width / 2f, bgRect.Y + bgRect.Height / 2f);
 						var scaled = new Rectangle((int)(center.X - scaledW / 2f), (int)(center.Y - scaledH / 2f), scaledW, scaledH);
 						DrawRoundedBackground(scaled, disabledNow ? DisabledFill(fillColor) : fillColor);
@@ -209,12 +209,12 @@ namespace Crusaders30XX.ECS.Systems
 							if (aspect >= 1f)
 							{
 								targetW = IconSize;
-								targetH = (int)System.Math.Round(IconSize / aspect);
+								targetH = (int)Math.Round(IconSize / aspect);
 							}
 							else
 							{
 								targetH = IconSize;
-								targetW = (int)System.Math.Round(IconSize * aspect);
+								targetW = (int)Math.Round(IconSize * aspect);
 							}
 						}
 						int innerX = bgRect.X + IconPaddingX;
@@ -254,7 +254,7 @@ namespace Crusaders30XX.ECS.Systems
 			int total = 0; int used = 0;
 			try
 			{
-				if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null) total = System.Math.Max(0, def.blockUses);
+				if (EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null) total = Math.Max(0, def.blockUses);
 				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 				var state = player?.GetComponent<EquipmentUsedState>();
 				if (state != null && !string.IsNullOrEmpty(item.EquipmentId) && state.UsesByEquipmentId.TryGetValue(item.EquipmentId, out var v)) used = v;
@@ -308,7 +308,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			try
 			{
-				if (!Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) || def == null || def.abilities == null)
+				if (!EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) || def == null || def.abilities == null)
 				{
 					return;
 				}
@@ -347,9 +347,9 @@ namespace Crusaders30XX.ECS.Systems
 			try
 			{
 				int total = 0;
-				if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null)
+				if (EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null)
 				{
-					total = System.Math.Max(0, def.blockUses);
+					total = Math.Max(0, def.blockUses);
 				}
 				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 				int used = 0;
@@ -358,12 +358,12 @@ namespace Crusaders30XX.ECS.Systems
 					var state = player.GetComponent<EquipmentUsedState>();
 					if (state != null && !string.IsNullOrEmpty(item.EquipmentId) && state.UsesByEquipmentId.TryGetValue(item.EquipmentId, out var val)) used = val;
 				}
-				int remaining = System.Math.Max(0, total - used);
+				int remaining = Math.Max(0, total - used);
 				string text = $"{remaining}/{total}";
 				float scale = UsageTextScale;
 				var size = _font.MeasureString(text) * scale;
-				int x = bgRect.Right - (int)System.Math.Round(size.X) + UsageOffsetX;
-				int y = bgRect.Bottom - (int)System.Math.Round(size.Y) + UsageOffsetY;
+				int x = bgRect.Right - (int)Math.Round(size.X) + UsageOffsetX;
+				int y = bgRect.Bottom - (int)Math.Round(size.Y) + UsageOffsetY;
 				// Match block text visibility: black on white fill, white otherwise
 				var textColor = (fillColor == Color.White) ? Color.Black : Color.White;
 				_spriteBatch.DrawString(_font, text, new Vector2(x, y), textColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
@@ -382,7 +382,7 @@ namespace Crusaders30XX.ECS.Systems
 			Vector2 edge = end - start;
 			float len = edge.Length();
 			if (len <= 0.0001f) return;
-			float ang = (float)System.Math.Atan2(edge.Y, edge.X);
+			float ang = (float)Math.Atan2(edge.Y, edge.X);
 			_spriteBatch.Draw(px, position: start, sourceRectangle: null, color: color, rotation: ang, origin: new Microsoft.Xna.Framework.Vector2(0f, 0.5f), scale: new Microsoft.Xna.Framework.Vector2(len, thickness), effects: SpriteEffects.None, layerDepth: 0f);
 		}
 
@@ -404,7 +404,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (!_iconCache.TryGetValue("_px1", out var px) || px == null)
 			{
 				px = new Texture2D(_graphicsDevice, 1, 1);
-				px.SetData(new[] { Microsoft.Xna.Framework.Color.White });
+				px.SetData(new[] { Color.White });
 				_iconCache["_px1"] = px;
 			}
 			var start1 = new Vector2(rect.Left + 6, rect.Top + 6);
@@ -449,11 +449,11 @@ namespace Crusaders30XX.ECS.Systems
 			int block = 0;
 			try
 			{
-				if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def))
+				if (EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def))
 				{
 					if (def != null)
 					{
-						block = System.Math.Max(0, def.block);
+						block = Math.Max(0, def.block);
 					}
 				}
 			}
@@ -552,7 +552,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			try
 			{
-				if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null && def.abilities != null)
+				if (EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null && def.abilities != null)
 				{
 					return def.abilities.Any(a => a.type == "Activate");
 				}
@@ -565,7 +565,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			try
 			{
-				if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null)
+				if (EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null)
 				{
 					string c = def.color?.Trim()?.ToLowerInvariant();
 					switch (c)
@@ -601,7 +601,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			catch
 			{
-				System.Console.WriteLine($"[EquipmentDisplaySystem] Missing icon for type '{type}' (expected content asset '{assetName}')");
+                Console.WriteLine($"[EquipmentDisplaySystem] Missing icon for type '{type}' (expected content asset '{assetName}')");
 				_iconCache[key] = null;
 				return null;
 			}

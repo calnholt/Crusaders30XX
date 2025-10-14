@@ -91,14 +91,14 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Ignore input if game window inactive
-			if (!Crusaders30XX.Game1.WindowIsActive) return;
+			if (!Game1.WindowIsActive) return;
 
 			var gp = GamePad.GetState(PlayerIndex.One);
 			Vector2 stick = gp.ThumbSticks.Left; // X: right+, Y: up+
 			bool ignoringTransitions = TransitionStateSingleton.IsActive;
 
 			// Determine top-most UI under cursor center and flag hover
-			var point = new Point((int)System.Math.Round(_cursorPosition.X), (int)System.Math.Round(_cursorPosition.Y));
+			var point = new Point((int)Math.Round(_cursorPosition.X), (int)Math.Round(_cursorPosition.Y));
 			var topCandidate = (object)null;
 			if (!ignoringTransitions)
 			{
@@ -128,7 +128,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Publish cursor state event for other systems
-			int rForCoverage = System.Math.Max(1, CursorRadius);
+			int rForCoverage = Math.Max(1, CursorRadius);
 			float coverageForTop = 0f;
 			if (!ignoringTransitions && topCandidate != null)
 			{
@@ -156,10 +156,10 @@ namespace Crusaders30XX.ECS.Systems
 			// Normalize and scale by exponent curve
 			Vector2 dir = (mag > 0f) ? (stick / mag) : Vector2.Zero;
 			float normalized = MathHelper.Clamp((mag - Deadzone) / (1f - Deadzone), 0f, 1f);
-			float speedMultiplier = MathHelper.Clamp((float)System.Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
+			float speedMultiplier = MathHelper.Clamp((float)Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
 
 			// Slow down when overlapping UI elements beyond threshold
-			int r = System.Math.Max(1, CursorRadius);
+			int r = Math.Max(1, CursorRadius);
 			float maxCoverage = 0f;
 			if (!ignoringTransitions)
 			{
@@ -169,7 +169,7 @@ namespace Crusaders30XX.ECS.Systems
 					if (ui2 == null || !ui2.IsInteractable) continue;
 					var bounds2 = ui2.Bounds;
 					if (bounds2.Width < 2 || bounds2.Height < 2) continue;
-					maxCoverage = System.Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r));
+					maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r));
 				}
 			}
 			if (maxCoverage >= MathHelper.Clamp(SlowdownCoverageThreshold, 0f, 1f))
@@ -199,9 +199,9 @@ namespace Crusaders30XX.ECS.Systems
 			// Only draw the cursor if a controller is connected
 			var gp = GamePad.GetState(PlayerIndex.One);
 			if (!gp.IsConnected) return;
-			int r = System.Math.Max(1, CursorRadius);
+			int r = Math.Max(1, CursorRadius);
 			_circleTexture = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, r);
-			var dst = new Rectangle((int)System.Math.Round(_cursorPosition.X) - r, (int)System.Math.Round(_cursorPosition.Y) - r, r * 2, r * 2);
+			var dst = new Rectangle((int)Math.Round(_cursorPosition.X) - r, (int)Math.Round(_cursorPosition.Y) - r, r * 2, r * 2);
 
 			// Compute redness based on overlap with interactable UIElement bounds
 			float maxCoverage = 0f;
@@ -211,12 +211,12 @@ namespace Crusaders30XX.ECS.Systems
 				if (ui == null || !ui.IsInteractable) continue;
 				var bounds = ui.Bounds;
 				if (bounds.Width < 2 || bounds.Height < 2) continue;
-				maxCoverage = System.Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds, _cursorPosition, r));
+				maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds, _cursorPosition, r));
 			}
 			maxCoverage = MathHelper.Clamp(maxCoverage, 0f, 1f);
 			var tint = Color.Lerp(Color.White, Color.Red, maxCoverage);
 			float a = MathHelper.Clamp(CursorOpacity, 0f, 1f);
-			var tintWithAlpha = Color.FromNonPremultiplied(tint.R, tint.G, tint.B, (byte)System.Math.Round(a * 255f));
+			var tintWithAlpha = Color.FromNonPremultiplied(tint.R, tint.G, tint.B, (byte)Math.Round(a * 255f));
 			_spriteBatch.Draw(_circleTexture, dst, tintWithAlpha);
 		}
 
@@ -242,7 +242,7 @@ namespace Crusaders30XX.ECS.Systems
 					if (dx * dx + dy * dy <= r2)
 					{
 						totalCount++;
-						if (rect.Contains((int)System.Math.Round(sx), (int)System.Math.Round(sy))) insideCount++;
+						if (rect.Contains((int)Math.Round(sx), (int)Math.Round(sy))) insideCount++;
 					}
 				}
 			}

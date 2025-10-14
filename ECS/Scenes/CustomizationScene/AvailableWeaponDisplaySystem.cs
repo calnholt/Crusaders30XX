@@ -64,7 +64,7 @@ namespace Crusaders30XX.ECS.Systems
 			int cardW = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardWidth;
 			int cardH = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardHeight;
 			int colW = (int)(cardW * _libraryPanel.CardScale) + 20;
-			int col = System.Math.Max(1, _libraryPanel.Columns);
+			int col = Math.Max(1, _libraryPanel.Columns);
 			var mouse = Mouse.GetState();
 			bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
 			for (int i = 0; i < defs.Count; i++)
@@ -104,7 +104,7 @@ namespace Crusaders30XX.ECS.Systems
 			int cardW = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardWidth;
 			int cardH = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardHeight;
 			int colW = (int)(cardW * _libraryPanel.CardScale) + 20;
-			int col = System.Math.Max(1, _libraryPanel.Columns);
+			int col = Math.Max(1, _libraryPanel.Columns);
 			for (int i = 0; i < defs.Count; i++)
 			{
 				var d = defs[i];

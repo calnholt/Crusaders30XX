@@ -112,7 +112,7 @@ namespace Crusaders30XX.ECS.Systems
 			anim.Elapsed += dt;
 			float idleT = anim.Elapsed - SlamDurationSeconds;
 			float w = MathHelper.TwoPi * MathHelper.Clamp(IdlePulseSpeedHz, 0.01f, 10f);
-			float osc = (float)System.Math.Sin(idleT * w);
+			float osc = (float)Math.Sin(idleT * w);
 			anim.CurrentScale = SlamEndBaseScale * (1f + IdlePulseScaleAmplitude * osc);
 			float pulse = (1f + osc) * 0.5f; // 0..1
 			float alphaPulse = MathHelper.Lerp(1f - IdlePulseAlphaAmplitude * 0.5f, 1f + IdlePulseAlphaAmplitude * 0.5f, pulse);

@@ -144,7 +144,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Enemy icons row
 			var all = LocationDefinitionCache.GetAll();
 			if (!all.TryGetValue(qs.LocationId, out var loc) || loc?.quests == null || loc.quests.Count == 0) return;
-			int unlockedMax = System.Math.Max(0, EntityManager == null ? 0 : Crusaders30XX.ECS.Data.Save.SaveCache.GetValueOrDefault(qs.LocationId, 0));
+			int unlockedMax = System.Math.Max(0, EntityManager == null ? 0 : Data.Save.SaveCache.GetValueOrDefault(qs.LocationId, 0));
 			int clampedIndex = System.Math.Max(0, System.Math.Min(qs.SelectedQuestIndex, System.Math.Min(unlockedMax, loc.quests.Count - 1)));
 			var quests = loc.quests[clampedIndex];
 			var textures = new List<(Texture2D tex, string id)>();
@@ -232,7 +232,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var all = LocationDefinitionCache.GetAll();
 			if (!all.TryGetValue(qs.LocationId, out var loc) || loc?.quests == null) return false;
-			int unlockedMax = System.Math.Max(0, Crusaders30XX.ECS.Data.Save.SaveCache.GetValueOrDefault(qs.LocationId, 0));
+			int unlockedMax = System.Math.Max(0, Data.Save.SaveCache.GetValueOrDefault(qs.LocationId, 0));
 			int maxIndex = System.Math.Min(unlockedMax, loc.quests.Count - 1);
 			return qs.SelectedQuestIndex < maxIndex;
 		}
@@ -338,7 +338,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Build queued events from selected quest
 			var all = LocationDefinitionCache.GetAll();
 			if (!all.TryGetValue(qs.LocationId, out var loc) || loc?.quests == null || loc.quests.Count == 0) return;
-			int unlockedMax = System.Math.Max(0, Crusaders30XX.ECS.Data.Save.SaveCache.GetValueOrDefault(qs.LocationId, 0));
+			int unlockedMax = System.Math.Max(0, Data.Save.SaveCache.GetValueOrDefault(qs.LocationId, 0));
 			int clampedIndex = System.Math.Max(0, System.Math.Min(qs.SelectedQuestIndex, System.Math.Min(unlockedMax, loc.quests.Count - 1)));
 			var questDefs = loc.quests[clampedIndex];
 

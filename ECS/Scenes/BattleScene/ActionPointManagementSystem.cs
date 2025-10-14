@@ -23,7 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
 		{
-			return System.Array.Empty<Entity>();
+			return Array.Empty<Entity>();
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
@@ -40,7 +40,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnModifyAp(ModifyActionPointsEvent evt)
 		{
-			System.Console.WriteLine($"[ActionPointManagementSystem] OnModifyAp delta={evt.Delta}");
+            Console.WriteLine($"[ActionPointManagementSystem] OnModifyAp delta={evt.Delta}");
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			if (player == null) return;
 			var ap = player.GetComponent<ActionPoints>();

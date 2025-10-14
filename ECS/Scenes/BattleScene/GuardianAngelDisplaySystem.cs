@@ -150,7 +150,7 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
         {
-            return System.Array.Empty<Entity>();
+            return Array.Empty<Entity>();
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
@@ -299,7 +299,7 @@ namespace Crusaders30XX.ECS.Systems
 			string[] words = text.Replace("\r", "").Split(' ');
 			string line = string.Empty;
 			System.Text.StringBuilder sb = new System.Text.StringBuilder();
-			float scaledMax = maxWidthPx / System.Math.Max(0.0001f, scale);
+			float scaledMax = maxWidthPx / Math.Max(0.0001f, scale);
 			for (int i = 0; i < words.Length; i++)
 			{
 				string w = words[i];
@@ -324,7 +324,7 @@ namespace Crusaders30XX.ECS.Systems
 						{
 							int len = 1;
 							while (start + len <= charCount && font.MeasureString(w.Substring(start, len)).X <= scaledMax) len++;
-							len = System.Math.Max(1, len - 1);
+							len = Math.Max(1, len - 1);
 							sb.AppendLine(w.Substring(start, len));
 							start += len;
 						}
@@ -356,10 +356,10 @@ namespace Crusaders30XX.ECS.Systems
 			// Blend between an ellipse and a figure eight (Lissajous-like):
             // ellipse: (cos t, sin t)
             // figure-eight: (sin t, sin 2t)
-            float xEllipse = System.MathF.Cos(ang);
-            float yEllipse = System.MathF.Sin(ang);
-            float xEight = System.MathF.Sin(ang);
-            float yEight = System.MathF.Sin(2f * ang);
+            float xEllipse = MathF.Cos(ang);
+            float yEllipse = MathF.Sin(ang);
+            float xEight = MathF.Sin(ang);
+            float yEight = MathF.Sin(2f * ang);
             float x = xEllipse * (1f - FigureEightMix) + xEight * FigureEightMix;
             float y = yEllipse * (1f - FigureEightMix) + yEight * FigureEightMix;
 
@@ -367,7 +367,7 @@ namespace Crusaders30XX.ECS.Systems
             Vector2 motion = new Vector2(x * RadiusX, y * RadiusY);
 
 			// Add a gentle vertical bob on top for smoothness
-            float bob = System.MathF.Sin(_t * VerticalBobSpeed) * VerticalBob;
+            float bob = MathF.Sin(_t * VerticalBobSpeed) * VerticalBob;
             motion.Y += bob;
 
 			Vector2 pos = baseRight + motion;
@@ -394,8 +394,8 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				string wrapped = WrapText(_font, _bubbleText, BubbleMaxWidth, BubbleTextScale);
 				var size = _font.MeasureString(wrapped) * BubbleTextScale;
-				int bw = (int)System.Math.Ceiling(size.X) + BubblePadX * 2;
-				int bh = (int)System.Math.Ceiling(size.Y) + BubblePadY * 2;
+				int bw = (int)Math.Ceiling(size.X) + BubblePadX * 2;
+				int bh = (int)Math.Ceiling(size.Y) + BubblePadY * 2;
 				if (bw <= 0) bw = 1; if (bh <= 0) bh = 1;
 				if (_bubbleTexture == null || bw != _bubbleTexW || bh != _bubbleTexH)
 				{

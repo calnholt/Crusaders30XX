@@ -48,7 +48,7 @@ namespace Crusaders30XX.ECS.Systems
 				try
 				{
 					string id = data.CardId ?? string.Empty;
-					if (!string.IsNullOrEmpty(id) && Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def))
+					if (!string.IsNullOrEmpty(id) && Data.Cards.CardDefinitionCache.TryGet(id, out var def))
 					{
 						if (def.isWeapon) { break; }
 					}

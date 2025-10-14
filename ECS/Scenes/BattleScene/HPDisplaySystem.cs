@@ -129,7 +129,7 @@ namespace Crusaders30XX.ECS.Systems
 				_animByEntityId[entity.Id] = state;
 			}
 			// Start a new tween if target changed
-			if (System.Math.Abs(state.End - targetPct) > 0.0001f)
+			if (Math.Abs(state.End - targetPct) > 0.0001f)
 			{
 				state.Start = state.Displayed;
 				state.End = targetPct;
@@ -147,21 +147,21 @@ namespace Crusaders30XX.ECS.Systems
 
 		private static float MoveTowards(float current, float target, float maxDelta)
 		{
-			if (System.Math.Abs(target - current) <= maxDelta) return target;
-			return current + System.Math.Sign(target - current) * maxDelta;
+			if (Math.Abs(target - current) <= maxDelta) return target;
+			return current + Math.Sign(target - current) * maxDelta;
 		}
 
 		private static float EaseInOutPow(float t, float power)
 		{
 			t = MathHelper.Clamp(t, 0f, 1f);
-			float p = System.Math.Max(1f, power);
+			float p = Math.Max(1f, power);
 			if (t < 0.5f)
 			{
-				return 0.5f * (float)System.Math.Pow(t * 2f, p);
+				return 0.5f * (float)Math.Pow(t * 2f, p);
 			}
 			else
 			{
-				return 1f - 0.5f * (float)System.Math.Pow((1f - t) * 2f, p);
+				return 1f - 0.5f * (float)Math.Pow((1f - t) * 2f, p);
 			}
 		}
 
@@ -185,7 +185,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (pInfo != null)
 				{
 					float baseScale = (pInfo.BaseScale > 0f) ? pInfo.BaseScale : 1f;
-					visualHalfHeight = System.Math.Max(visualHalfHeight, (pInfo.TextureHeight * baseScale) * 0.5f);
+					visualHalfHeight = Math.Max(visualHalfHeight, (pInfo.TextureHeight * baseScale) * 0.5f);
 				}
 				// Center X aligns to entity; OffsetX shifts from center, OffsetY moves downward/upward
 				var center = new Vector2(parentTransform.Position.X + OffsetX, parentTransform.Position.Y + visualHalfHeight + OffsetY);
@@ -232,7 +232,7 @@ namespace Crusaders30XX.ECS.Systems
 			float alphaFactor = 1f;
 			if (FlashEnabled && targetPctForDraw <= MathHelper.Clamp(FlashThresholdPercent, 0f, 1f))
 			{
-				float phase = (float)System.Math.Sin(MathHelper.TwoPi * Math.Max(0.01f, FlashFrequencyHz) * _accumSeconds);
+				float phase = (float)Math.Sin(MathHelper.TwoPi * Math.Max(0.01f, FlashFrequencyHz) * _accumSeconds);
 				float norm = 0.5f * (phase + 1f); // 0..1
 				float intensity = MathHelper.Lerp(MathHelper.Clamp(FlashMinIntensity, 0f, 1f), MathHelper.Clamp(FlashMaxIntensity, 0f, 1f), norm);
 				alphaFactor = MathHelper.Lerp(MathHelper.Clamp(FlashAlphaMin, 0f, 1f), MathHelper.Clamp(FlashAlphaMax, 0f, 1f), intensity);
@@ -284,22 +284,22 @@ namespace Crusaders30XX.ECS.Systems
 				if (totalIncoming > 0)
 				{
 					float dmgPct = MathHelper.Clamp(totalIncoming / (float)hp.Max, 0f, 1f);
-					int dmgPixels = (int)System.Math.Round(width * dmgPct);
-					int overlayW = System.Math.Max(0, System.Math.Min(fillW, dmgPixels));
+					int dmgPixels = (int)Math.Round(width * dmgPct);
+					int overlayW = Math.Max(0, Math.Min(fillW, dmgPixels));
 					if (overlayW > 0)
 					{
-						int overlayX = x + System.Math.Max(0, fillW - overlayW);
+						int overlayX = x + Math.Max(0, fillW - overlayW);
 						var overlayRect = new Rectangle(overlayX, y, overlayW, height);
-						float phase = (float)System.Math.Sin(MathHelper.TwoPi * System.Math.Max(0.01f, IncomingDamageFlashHz) * _accumSeconds);
+						float phase = (float)Math.Sin(MathHelper.TwoPi * Math.Max(0.01f, IncomingDamageFlashHz) * _accumSeconds);
 						float norm = 0.5f * (phase + 1f);
 						float a = MathHelper.Lerp(MathHelper.Clamp(IncomingDamageAlphaMin, 0f, 1f), MathHelper.Clamp(IncomingDamageAlphaMax, 0f, 1f), norm);
-						var dmgColor = Color.FromNonPremultiplied(255, 255, 255, (int)System.Math.Round(a * 255f));
-						int srcW2 = System.Math.Max(1, overlayW);
+						var dmgColor = Color.FromNonPremultiplied(255, 255, 255, (int)Math.Round(a * 255f));
+						int srcW2 = Math.Max(1, overlayW);
 						bool atRightCap = (fillW >= width);
 						if (atRightCap)
 						{
 							// Align source to the right edge so the overlay inherits the bar's rounded cap
-							int srcX = System.Math.Max(0, width - srcW2);
+							int srcX = Math.Max(0, width - srcW2);
 							var src2 = new Rectangle(srcX, 0, srcW2, height);
 							_spriteBatch.Draw(_roundedFill, overlayRect, src2, dmgColor);
 						}
@@ -328,7 +328,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var tex = new Texture2D(gd, width, height, false, SurfaceFormat.Color);
 			var data = new Color[width * height];
-			int r = System.Math.Max(0, radius);
+			int r = Math.Max(0, radius);
 			int r2 = r * r;
 			int w = width;
 			int h = height;
@@ -336,9 +336,9 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				float v = h > 1 ? (y / (float)(h - 1)) : 0.5f; // 0..1
 				float t = 2f * (v - 0.5f);
-				float parabola = System.Math.Max(0f, 1f - (t * t)); // 1 at center, 0 at edges
+				float parabola = Math.Max(0f, 1f - (t * t)); // 1 at center, 0 at edges
 				float maxAlpha = 0.35f; // intensity
-				byte a = (byte)System.Math.Round(MathHelper.Clamp(parabola * maxAlpha, 0f, 1f) * 255f);
+				byte a = (byte)Math.Round(MathHelper.Clamp(parabola * maxAlpha, 0f, 1f) * 255f);
 				for (int x = 0; x < w; x++)
 				{
 					bool inside = true;
