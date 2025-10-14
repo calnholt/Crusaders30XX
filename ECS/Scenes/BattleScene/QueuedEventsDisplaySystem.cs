@@ -246,8 +246,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				e = EntityManager.CreateEntity(RootEntityName);
 				EntityManager.AddComponent(e, new Transform { Position = new Vector2(_graphicsDevice.Viewport.Width / 2f, OffsetY), ZOrder = 5000 });
-				// Optional: allow parallax on this UI group by attaching ParallaxLayer yourself
-				EntityManager.AddComponent(e, new ParallaxLayer { MultiplierX = 0.03f, MultiplierY = 0.03f, MaxOffset = 48f, SmoothTime = 0.08f, CaptureBaseOnFirstUpdate = false });
+				EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
 			}
 		}
 

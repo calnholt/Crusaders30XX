@@ -20,6 +20,9 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font;
         private readonly Texture2D _pixel;
+		private const string RootEntityName = "UI_DiscardPileRoot";
+		private int _lastViewportW = -1;
+		private int _lastViewportH = -1;
         private double _pulseTimeRemaining = 0.0;
         private const double PulseDuration = 0.15; // seconds
         private const float PulseAmplitude = 0.12f; // 12% size bump at peak
@@ -59,7 +62,27 @@ namespace Crusaders30XX.ECS.Systems
             base.Update(gameTime);
         }
 
-        protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+		protected override void UpdateEntity(Entity entity, GameTime gameTime)
+		{
+			EnsureRootEntity();
+			int w = _graphicsDevice.Viewport.Width;
+			int h = _graphicsDevice.Viewport.Height;
+			if (w != _lastViewportW || h != _lastViewportH)
+			{
+				_lastViewportW = w;
+				_lastViewportH = h;
+				var root = EntityManager.GetEntity(RootEntityName);
+				var t = root?.GetComponent<Transform>();
+				if (t != null)
+				{
+					int rectW = PanelWidth;
+					int rectH = PanelHeight;
+					int m = PanelMargin;
+					var center = new Vector2(rectW / 2f + m, h - rectH / 2f - m);
+					t.Position = center;
+				}
+			}
+		}
 
         public void Draw()
         {
@@ -68,13 +91,18 @@ namespace Crusaders30XX.ECS.Systems
             var deck = deckEntity.GetComponent<Deck>();
             if (deck == null) return;
 
-            int w = _graphicsDevice.Viewport.Width;
-            int h = _graphicsDevice.Viewport.Height;
+			var root = EntityManager.GetEntity(RootEntityName);
+			var tRoot = root?.GetComponent<Transform>();
+			if (tRoot == null) return;
 
-            int rectW = PanelWidth;
+			int rectW = PanelWidth;
             int rectH = PanelHeight;
-            int m = PanelMargin;
-            var rect = new Rectangle(m, h - rectH - m, rectW, rectH);
+			var center = new Vector2(tRoot.Position.X, tRoot.Position.Y);
+			var rect = new Rectangle(
+				(int)System.Math.Round(center.X - rectW / 2f),
+				(int)System.Math.Round(center.Y - rectH / 2f),
+				rectW,
+				rectH);
 
             // Pulse scale factor
             float scale = 1f;
@@ -86,10 +114,10 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Scale about the rect center
-            var center = new Vector2(rect.Center.X, rect.Center.Y);
+            var center2 = new Vector2(rect.Center.X, rect.Center.Y);
             int scaledW = (int)System.Math.Round(rectW * scale);
             int scaledH = (int)System.Math.Round(rectH * scale);
-            var scaledRect = new Rectangle((int)(center.X - scaledW / 2f), (int)(center.Y - scaledH / 2f), scaledW, scaledH);
+            var scaledRect = new Rectangle((int)(center2.X - scaledW / 2f), (int)(center2.Y - scaledH / 2f), scaledW, scaledH);
 
             // Panel
             _spriteBatch.Draw(_pixel, scaledRect, new Color(20, 20, 20) * 0.75f);
@@ -106,19 +134,38 @@ namespace Crusaders30XX.ECS.Systems
                 _spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
             }
 
-            // Ensure a clickable UI entity exists and stays in sync for hit-testing
-            var clickable = EntityManager.GetEntitiesWithComponent<DiscardPileClickable>().FirstOrDefault();
-            if (clickable == null)
+            // Use root entity UIElement for hit-testing and tooltips; mark with component for InputSystem routing
+            var rootUi = root.GetComponent<UIElement>();
+			if (rootUi == null)
+			{
+                EntityManager.AddComponent(root, new UIElement { Bounds = scaledRect, IsInteractable = true, Tooltip = "View Discard Pile" });
+                EntityManager.AddComponent(root, new DiscardPileClickable());
+			}
+			else
+			{
+				rootUi.Bounds = scaledRect;
+				rootUi.IsInteractable = true;
+				rootUi.Tooltip = "View Discard Pile";
+                if (root.GetComponent<DiscardPileClickable>() == null)
+                {
+                    EntityManager.AddComponent(root, new DiscardPileClickable());
+                }
+			}
+        }
+
+        private void EnsureRootEntity()
+        {
+            var e = EntityManager.GetEntity(RootEntityName);
+            if (e == null)
             {
-                clickable = EntityManager.CreateEntity("UIPanel_DiscardPileClickable");
-                EntityManager.AddComponent(clickable, new DiscardPileClickable());
-                EntityManager.AddComponent(clickable, new Transform { Position = new Vector2(scaledRect.X, scaledRect.Y), ZOrder = 10000 });
-                EntityManager.AddComponent(clickable, new UIElement { Bounds = scaledRect, IsInteractable = true, Tooltip = "View Discard Pile" });
-            }
-            else
-            {
-                var ui = clickable.GetComponent<UIElement>();
-                if (ui != null) ui.Bounds = scaledRect;
+                e = EntityManager.CreateEntity(RootEntityName);
+                int h = _graphicsDevice.Viewport.Height;
+                int rectW = PanelWidth;
+                int rectH = PanelHeight;
+                int m = PanelMargin;
+                var center = new Vector2(rectW / 2f + m, h - rectH / 2f - m);
+                EntityManager.AddComponent(e, new Transform { Position = center, ZOrder = 10000 });
+                EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
             }
         }
 

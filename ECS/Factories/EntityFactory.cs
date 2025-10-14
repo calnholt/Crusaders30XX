@@ -293,7 +293,7 @@ namespace Crusaders30XX.ECS.Factories
             entityManager.AddComponent(entity, transform);
             entityManager.AddComponent(entity, sprite);
             entityManager.AddComponent(entity, uiElement);
-            entityManager.AddComponent(entity, parallaxLayer);
+            // entityManager.AddComponent(entity, parallaxLayer);
             // Set tooltip from definition (precomputed in CardDefinitionCache)
             if (!string.IsNullOrEmpty(def.tooltip))
             {

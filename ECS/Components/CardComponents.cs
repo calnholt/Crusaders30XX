@@ -245,7 +245,13 @@ namespace Crusaders30XX.ECS.Components
 
         // Last position written by the parallax system; used to detect external layout overrides
         public Microsoft.Xna.Framework.Vector2 LastAppliedPosition { get; set; } = Microsoft.Xna.Framework.Vector2.Zero;
+
+        public static ParallaxLayer GetUIParallaxLayer()
+        {
+            return new ParallaxLayer { MultiplierX = 0.03f, MultiplierY = 0.03f, MaxOffset = 48f, SmoothTime = 0.08f, CaptureBaseOnFirstUpdate = false };
+        }
     }
+    
     
     /// <summary>
     /// Component for rendering sprites

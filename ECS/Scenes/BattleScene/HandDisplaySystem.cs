@@ -64,7 +64,9 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Tween Speed", Step = 0.5f, Min = 0.1f, Max = 60f)]
         public float HandTweenSpeed { get; set; } = 12f;
         
-        public HandDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice) 
+		private const string HandRootName = "UI_HandRoot";
+
+		public HandDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice) 
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
@@ -148,7 +150,7 @@ namespace Crusaders30XX.ECS.Systems
         
         private void UpdateCardPosition(Entity entity, GameTime gameTime)
         {
-            var transform = entity.GetComponent<Transform>();
+			var transform = entity.GetComponent<Transform>();
             var cardData = entity.GetComponent<CardData>();
             
             if (transform == null || cardData == null) return;
@@ -178,7 +180,20 @@ namespace Crusaders30XX.ECS.Systems
 						float rawScale = vh >= baseH ? 1f : (vh / baseH);
 						float marginScale = System.MathF.Pow(System.MathF.Max(MinCardScale, System.MathF.Min(1f, rawScale)), System.MathF.Max(0.1f, CardScalePower));
 						float bottomMarginScaled = HandBottomMargin * marginScale;
-						var pivot = new Vector2(screenWidth / 2f, screenHeight - bottomMarginScaled);
+					// Hand root offset (allows parallax for the entire hand)
+					var handRoot = EntityManager.GetEntity(HandRootName);
+					if (handRoot == null)
+					{
+						handRoot = EntityManager.CreateEntity(HandRootName);
+						EntityManager.AddComponent(handRoot, new Transform { Position = new Vector2(screenWidth / 2f, screenHeight - bottomMarginScaled), ZOrder = 100 });
+						EntityManager.AddComponent(handRoot, ParallaxLayer.GetUIParallaxLayer());
+					}
+					var rootT = handRoot.GetComponent<Transform>();
+					if (rootT != null)
+					{
+						rootT.Position = new Vector2(screenWidth / 2f, screenHeight - bottomMarginScaled);
+					}
+					var pivot = rootT != null ? rootT.Position : new Vector2(screenWidth / 2f, screenHeight - bottomMarginScaled);
 
                         // normalized index t in [-1, 1]
                         float mid = (count - 1) * 0.5f;

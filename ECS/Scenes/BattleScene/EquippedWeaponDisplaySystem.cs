@@ -21,6 +21,9 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly ContentManager _content;
         private Texture2D _weaponTex;
+		private const string RootEntityName = "UI_EquippedWeaponRoot";
+		private int _lastViewportW = -1;
+		private int _lastViewportH = -1;
 
         // Layout/debug controls
         [DebugEditable(DisplayName = "Circle Radius", Step = 1, Min = 8, Max = 400)]
@@ -81,7 +84,27 @@ namespace Crusaders30XX.ECS.Systems
             return EntityManager.GetEntitiesWithComponent<Player>();
         }
 
-        protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+		protected override void UpdateEntity(Entity entity, GameTime gameTime)
+		{
+			EnsureRootEntity();
+			// Re-anchor weapon center relative to Discard root each frame; ParallaxLayer will offset after
+			var discardRoot = EntityManager.GetEntity("UI_DiscardPileRoot");
+			var discardUI = discardRoot?.GetComponent<UIElement>();
+			var tRoot = EntityManager.GetEntity(RootEntityName)?.GetComponent<Transform>();
+			if (tRoot != null)
+			{
+				if (discardUI != null && discardUI.Bounds.Width > 0 && discardUI.Bounds.Height > 0)
+				{
+					int r = System.Math.Max(4, CircleRadius);
+					var dr = discardUI.Bounds;
+					tRoot.Position = new Vector2(dr.Center.X, dr.Y - AboveDiscardOffsetY - r);
+				}
+				else
+				{
+					// Fallback: keep whatever current position is
+				}
+			}
+		}
 
         public void Draw()
         {
@@ -99,15 +122,20 @@ namespace Crusaders30XX.ECS.Systems
 
             int r = System.Math.Max(4, CircleRadius);
             var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, r);
-            Vector2 center;
+			EnsureRootEntity();
+			var root = EntityManager.GetEntity(RootEntityName);
+			var tRoot = root?.GetComponent<Transform>();
+            Vector2 center = new Vector2(100, _graphicsDevice.Viewport.Height - 200);
             if (discardRect.HasValue)
             {
                 var dr = discardRect.Value;
                 center = new Vector2(dr.Center.X, dr.Y - AboveDiscardOffsetY - r);
-            }
+			}
+			// Do not overwrite root position here; ParallaxLayer has already adjusted after Update
             else
             {
-                center = new Vector2(100, _graphicsDevice.Viewport.Height - 200);
+                // fall back to current root pos if available
+                if (tRoot != null) center = tRoot.Position;
             }
 
             // Draw gold filled circle
@@ -131,28 +159,21 @@ namespace Crusaders30XX.ECS.Systems
                 _spriteBatch.Draw(_weaponTex, center, null, Color.White, 0f, origin, scale, SpriteEffects.None, 0f);
             }
 
-            // Update hoverable UI element for tooltip (entity pre-created as UI_WeaponTooltip)
-            var hover = EntityManager.GetEntity("UI_WeaponTooltip");
-            if (hover != null)
-            {
-                var ui = hover.GetComponent<UIElement>();
-                var ht = hover.GetComponent<Transform>();
-                // Use a slightly larger square for easier hover if IconScale > 1
-                int hoverR = (int)System.Math.Ceiling(r * System.Math.Max(1f, IconScale));
-                var hitRect = new Rectangle((int)(center.X - hoverR), (int)(center.Y - hoverR), hoverR * 2, hoverR * 2);
-                if (ui != null)
-                {
-                    ui.Bounds = hitRect;
-                    ui.TooltipPosition = TooltipPosition.Right;
-                    ui.Tooltip = BuildWeaponTooltip();
-                    ui.IsInteractable = true;
-                }
-                if (ht != null)
-                {
-                    ht.Position = new Vector2(hitRect.X, hitRect.Y);
-                    ht.ZOrder = 10001;
-                }
-            }
+			// Use root entity UIElement for hover/tooltip
+			int hoverR = (int)System.Math.Ceiling(r * System.Math.Max(1f, IconScale));
+			var hitRect = new Rectangle((int)(center.X - hoverR), (int)(center.Y - hoverR), hoverR * 2, hoverR * 2);
+			var rootUi = root.GetComponent<UIElement>();
+			if (rootUi == null)
+			{
+				EntityManager.AddComponent(root, new UIElement { Bounds = hitRect, IsInteractable = true, Tooltip = BuildWeaponTooltip(), TooltipPosition = TooltipPosition.Right });
+			}
+			else
+			{
+				rootUi.Bounds = hitRect;
+				rootUi.IsInteractable = true;
+				rootUi.TooltipPosition = TooltipPosition.Right;
+				rootUi.Tooltip = BuildWeaponTooltip();
+			}
         }
 
         private string BuildWeaponTooltip()
@@ -166,6 +187,17 @@ namespace Crusaders30XX.ECS.Systems
             string cost = (def.cost != null && def.cost.Length > 0) ? $"Cost: {string.Join(", ", def.cost)}" : string.Empty;
             return $"{name} {(cost != string.Empty ? $"\n{cost}" : string.Empty)}\n\n{desc}";
         }
+
+	private void EnsureRootEntity()
+	{
+		var e = EntityManager.GetEntity(RootEntityName);
+		if (e == null)
+		{
+			e = EntityManager.CreateEntity(RootEntityName);
+			EntityManager.AddComponent(e, new Transform { Position = new Vector2(100, _graphicsDevice.Viewport.Height - 200), ZOrder = 10000 });
+			EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
+		}
+	}
     }
 }
 
