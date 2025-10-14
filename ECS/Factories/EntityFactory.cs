@@ -287,12 +287,13 @@ namespace Crusaders30XX.ECS.Factories
             var transform = new Transform { Position = new Vector2(-1000, -1000), Scale = Vector2.One };
             var sprite = new Sprite { TexturePath = string.Empty, IsVisible = true };
             var uiElement = new UIElement { Bounds = new Rectangle(-1000, -1000, 250, 350), IsInteractable = true, TooltipPosition = TooltipPosition.Above, TooltipOffsetPx = 30 };
+            var parallaxLayer = new ParallaxLayer { MultiplierX = 0.03f, MultiplierY = 0.03f, MaxOffset = 48f, SmoothTime = 0.08f, CaptureBaseOnFirstUpdate = false };
 
             entityManager.AddComponent(entity, cardData);
             entityManager.AddComponent(entity, transform);
             entityManager.AddComponent(entity, sprite);
             entityManager.AddComponent(entity, uiElement);
-
+            entityManager.AddComponent(entity, parallaxLayer);
             // Set tooltip from definition (precomputed in CardDefinitionCache)
             if (!string.IsNullOrEmpty(def.tooltip))
             {

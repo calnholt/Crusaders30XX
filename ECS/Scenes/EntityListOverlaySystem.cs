@@ -102,17 +102,28 @@ namespace Crusaders30XX.ECS.Systems
 
             // Entities sorted by Id
             var all = EntityManager.GetAllEntities().OrderBy(e => e.Id).ToList();
-            int startIndex = (int)(overlay.ScrollOffset / overlay.RowHeight);
-            int maxRows = Math.Max(0, (visibleBottom - cursorY) / overlay.RowHeight) + 1;
+            int blockH = overlay.RowHeight * 2; // two lines per entity (id/name + components)
+            int startIndex = (int)(overlay.ScrollOffset / blockH);
+            int maxRows = Math.Max(0, (visibleBottom - cursorY) / blockH) + 1;
             for (int i = 0; i < maxRows; i++)
             {
                 int idx = startIndex + i;
                 if (idx < 0 || idx >= all.Count) break;
-                int rowY = cursorY + i * overlay.RowHeight - (int)(overlay.ScrollOffset % overlay.RowHeight);
-                if (rowY + overlay.RowHeight < visibleTop || rowY > visibleBottom) continue;
+                int rowY = cursorY + i * blockH - (int)(overlay.ScrollOffset % blockH);
+                if (rowY + blockH < visibleTop || rowY > visibleBottom) continue;
                 var e = all[idx];
-                string line = $"{e.Id,3}   {e.Name}";
-                _spriteBatch.DrawString(_font, line, new Vector2(x + overlay.Padding, rowY), Color.White, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
+
+                // First line: ID and Name
+                string line1 = $"{e.Id,3}   {e.Name}";
+                _spriteBatch.DrawString(_font, line1, new Vector2(x + overlay.Padding, rowY), Color.White, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
+
+                // Second line: component list
+                var componentNames = e.GetComponentTypes()
+                    .OrderBy(t => t.Name)
+                    .Select(t => t.Name);
+                string line2 = "- " + string.Join(", ", componentNames);
+                int line2Y = rowY + overlay.RowHeight;
+                _spriteBatch.DrawString(_font, line2, new Vector2(x + overlay.Padding + 20, line2Y), Color.LightGray, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
             }
 
             _prevMouse = mouse;

@@ -24,6 +24,9 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Dictionary<int, Texture2D> _circleByRadius = new Dictionary<int, Texture2D>();
 		private readonly Dictionary<string, Texture2D> _enemyTextureCache = new Dictionary<string, Texture2D>();
 		private readonly Dictionary<string, Texture2D> _enemySmoothTextureCache = new Dictionary<string, Texture2D>();
+		private const string RootEntityName = "QueuedEventsUIRoot";
+		private int _lastViewportW = -1;
+		private int _lastViewportH = -1;
 
 		// Layout
 		[DebugEditable(DisplayName = "Offset Y", Step = 1, Min = 0, Max = 400)]
@@ -80,7 +83,23 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			// No per-frame state to update; purely draws from QueuedEvents
+			// Ensure a root transform entity exists for positioning this UI row
+			EnsureRootEntity();
+			// Re-center the root on viewport changes
+			int w = _graphicsDevice.Viewport.Width;
+			int h = _graphicsDevice.Viewport.Height;
+			if (w != _lastViewportW || h != _lastViewportH)
+			{
+				_lastViewportW = w;
+				_lastViewportH = h;
+				var root = EntityManager.GetEntity(RootEntityName);
+				var t = root?.GetComponent<Transform>();
+				if (t != null)
+				{
+					// Keep anchored to screen top-center by default; systems like ParallaxLayer may further offset
+					t.Position = new Vector2(w / 2f, OffsetY);
+				}
+			}
 		}
 
 		public void Draw()
@@ -90,13 +109,17 @@ namespace Crusaders30XX.ECS.Systems
 			var qe = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<QueuedEvents>();
 			if (qe == null || qe.Events == null || qe.Events.Count == 0) return;
 
-			int w = _graphicsDevice.Viewport.Width;
-			int y = OffsetY;
+			EnsureRootEntity();
+			var root = EntityManager.GetEntity(RootEntityName);
+			var tRoot = root?.GetComponent<Transform>();
+			if (tRoot == null) return;
+			float rootX = tRoot.Position.X;
+			int y = (int)System.Math.Round(tRoot.Position.Y);
 			int count = qe.Events.Count;
 			int spacing = System.Math.Max(8, NodeSpacing);
 			// Compute centers
 			int totalWidth = spacing * (count - 1);
-			float startX = w / 2f - totalWidth / 2f;
+			float startX = rootX - totalWidth / 2f;
 
 			// Precompute radii per index
 			int current = System.Math.Max(0, System.Math.Min(qe.CurrentIndex, count - 1));
@@ -115,7 +138,7 @@ namespace Crusaders30XX.ECS.Systems
 				float leftEdge = firstCenter - radii[0];
 				float rightEdge = lastCenter + radii[count - 1];
 				float span = rightEdge - leftEdge;
-				float desiredLeft = w / 2f - span / 2f;
+				float desiredLeft = rootX - span / 2f;
 				float delta = desiredLeft - leftEdge;
 				startX += delta;
 			}
@@ -213,6 +236,18 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_enemyTextureCache[key] = null;
 				return null;
+			}
+		}
+
+		private void EnsureRootEntity()
+		{
+			var e = EntityManager.GetEntity(RootEntityName);
+			if (e == null)
+			{
+				e = EntityManager.CreateEntity(RootEntityName);
+				EntityManager.AddComponent(e, new Transform { Position = new Vector2(_graphicsDevice.Viewport.Width / 2f, OffsetY), ZOrder = 5000 });
+				// Optional: allow parallax on this UI group by attaching ParallaxLayer yourself
+				EntityManager.AddComponent(e, new ParallaxLayer { MultiplierX = 0.03f, MultiplierY = 0.03f, MaxOffset = 48f, SmoothTime = 0.08f, CaptureBaseOnFirstUpdate = false });
 			}
 		}
 

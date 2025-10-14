@@ -35,6 +35,7 @@ public class Game1 : Game
     private ProfilerSystem _profilerSystem;
     private LocationSelectDisplaySystem _worldMapSystem;
     private QuestSelectDisplaySystem _questSelectSystem;
+    private ParallaxLayerSystem _parallaxLayerSystem;
     private CursorSystem _cursorSystem;
     private UIElementBorderDebugSystem _uiElementBorderDebugSystem;
     
@@ -113,6 +114,7 @@ public class Game1 : Game
         _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _questSelectSystem = new QuestSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _parallaxLayerSystem = new ParallaxLayerSystem(_world.EntityManager, GraphicsDevice);
         _uiElementBorderDebugSystem = new UIElementBorderDebugSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _world.AddSystem(_titleMenuDisplaySystem);
         _world.AddSystem(_menuSceneSystem);
@@ -130,6 +132,7 @@ public class Game1 : Game
         _world.AddSystem(_worldMapSystem);
         _world.AddSystem(_questSelectSystem);
         _world.AddSystem(_cursorSystem);
+        _world.AddSystem(_parallaxLayerSystem);
         _world.AddSystem(_uiElementBorderDebugSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));

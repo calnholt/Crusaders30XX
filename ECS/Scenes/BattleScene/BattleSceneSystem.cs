@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
 		private readonly SpriteFont _font;
+		private bool _firstLoad = true;
 
 		// Battle systems (logic and draw). Only present while in Battle
 	
@@ -185,7 +186,11 @@ namespace Crusaders30XX.ECS.Systems
 				deck.Cards.AddRange(deckCards);
 				deck.DrawPile.AddRange(deckCards);
 			}
-			AddBattleSystems();
+			if (_firstLoad)
+			{
+				AddBattleSystems();
+				_firstLoad = false;
+			}
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
 			EventManager.Publish(new DeckShuffleEvent { });
 		}

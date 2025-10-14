@@ -209,9 +209,42 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
         
         public Vector2 Position { get; set; } = Vector2.Zero;
+        public Vector2 BasePosition { get; set; } = Vector2.Zero;
         public float Rotation { get; set; } = 0f;
         public Vector2 Scale { get; set; } = Vector2.One;
         public int ZOrder { get; set; } = 0;
+    }
+    
+    /// <summary>
+    /// Parallax configuration for UI/scene entities that should subtly move opposite the cursor.
+    /// Movement is computed from the cursor's absolute offset from the screen center.
+    /// </summary>
+    public class ParallaxLayer : IComponent
+    {
+        public Entity Owner { get; set; }
+        
+        // Per-axis multipliers applied to the absolute-from-center cursor delta
+        public float MultiplierX { get; set; } = 0.03f;
+        public float MultiplierY { get; set; } = 0.03f;
+        
+        // Maximum magnitude (in pixels) the parallax offset is allowed to reach
+        public float MaxOffset { get; set; } = 48f;
+        
+        // Time constant (seconds) for exponential smoothing toward the target position
+        public float SmoothTime { get; set; } = 0.08f;
+        
+        // When true, the first update will capture the entity's current Transform.Position as BasePosition
+        public bool CaptureBaseOnFirstUpdate { get; set; } = true;
+
+        // If true, treat the entity's externally-driven position as the base each frame
+        // (e.g., hand layout positions). This avoids fighting other layout systems.
+        public bool UpdateBaseFromCurrentEachFrame { get; set; } = true;
+
+        // Internally tracked last applied offset so we can reconstruct the external base
+        public Microsoft.Xna.Framework.Vector2 LastAppliedOffset { get; set; } = Microsoft.Xna.Framework.Vector2.Zero;
+
+        // Last position written by the parallax system; used to detect external layout overrides
+        public Microsoft.Xna.Framework.Vector2 LastAppliedPosition { get; set; } = Microsoft.Xna.Framework.Vector2.Zero;
     }
     
     /// <summary>
