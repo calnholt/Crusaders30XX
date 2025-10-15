@@ -60,22 +60,27 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, equippedTemperanceAbility);
             // Equip default weapon (not in deck)
             world.AddComponent(entity, new EquippedWeapon { WeaponId = loadout.weaponId });
-            world.AddComponent(
-                world.CreateEntity("Equip_Head"), 
-                new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.headId, EquipmentType = "Head" }
-            );
-            world.AddComponent(
-                world.CreateEntity("Equip_Legs"), 
-                new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.legsId, EquipmentType = "Legs" }
-            );
-            world.AddComponent(
-                world.CreateEntity("Equip_Arms"), 
-                new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.armsId, EquipmentType = "Arms" }
-            );
-            world.AddComponent(
-                world.CreateEntity("Equip_Chest"), 
-                new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.chestId, EquipmentType = "Chest" }
-            );
+            var equipHeadEntity = world.CreateEntity("Equip_Head");
+            world.AddComponent(equipHeadEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
+            world.AddComponent(equipHeadEntity, new UIElement { IsInteractable = true });
+            world.AddComponent(equipHeadEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.headId, EquipmentType = "Head" });
+            world.AddComponent(equipHeadEntity, ParallaxLayer.GetUIParallaxLayer());
+            var equipLegsEntity = world.CreateEntity("Equip_Legs");
+            world.AddComponent(equipLegsEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
+            world.AddComponent(equipLegsEntity, new UIElement { IsInteractable = true });
+            world.AddComponent(equipLegsEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.legsId, EquipmentType = "Legs" });
+            world.AddComponent(equipLegsEntity, ParallaxLayer.GetUIParallaxLayer());
+            var equipArmsEntity = world.CreateEntity("Equip_Arms");
+            world.AddComponent(equipArmsEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
+            world.AddComponent(equipArmsEntity, new UIElement { IsInteractable = true });
+            world.AddComponent(equipArmsEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.armsId, EquipmentType = "Arms" });
+            world.AddComponent(equipArmsEntity, ParallaxLayer.GetUIParallaxLayer());
+            var equipChestEntity = world.CreateEntity("Equip_Chest");
+            world.AddComponent(equipChestEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
+            world.AddComponent(equipChestEntity, new UIElement { IsInteractable = true });
+            world.AddComponent(equipChestEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.chestId, EquipmentType = "Chest" });
+            world.AddComponent(equipChestEntity, ParallaxLayer.GetUIParallaxLayer());
+            // Parallax handled by UI root in EquipmentDisplaySystem
             // Attach Courage resource component by default (optional mechanics can read presence)
             world.AddComponent(entity, new Courage { Amount = 0 });
             // Attach Temperance resource component by default
@@ -89,10 +94,11 @@ namespace Crusaders30XX.ECS.Factories
             // Equip default medals (can equip multiple later). For now, just st_luke.
             foreach (var medalId in loadout.medalIds)
             {
-                world.AddComponent(
-                    world.CreateEntity($"Medal_{medalId}"),
-                    new EquippedMedal { EquippedOwner = entity, MedalId = medalId }
-                );
+                var medalEntity = world.CreateEntity($"Medal_{medalId}");
+                world.AddComponent(medalEntity, new EquippedMedal { EquippedOwner = entity, MedalId = medalId });
+                world.AddComponent(medalEntity, ParallaxLayer.GetUIParallaxLayer());
+                world.AddComponent(medalEntity, new UIElement { IsInteractable = true });
+                world.AddComponent(medalEntity, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
             }
             // Attach starting Intellect and MaxHandSize stats
             world.AddComponent(entity, new Intellect { Value = 4 });
@@ -287,13 +293,12 @@ namespace Crusaders30XX.ECS.Factories
             var transform = new Transform { Position = new Vector2(-1000, -1000), Scale = Vector2.One };
             var sprite = new Sprite { TexturePath = string.Empty, IsVisible = true };
             var uiElement = new UIElement { Bounds = new Rectangle(-1000, -1000, 250, 350), IsInteractable = true, TooltipPosition = TooltipPosition.Above, TooltipOffsetPx = 30 };
-            var parallaxLayer = new ParallaxLayer { MultiplierX = 0.03f, MultiplierY = 0.03f, MaxOffset = 48f, SmoothTime = 0.08f, CaptureBaseOnFirstUpdate = false };
 
             entityManager.AddComponent(entity, cardData);
             entityManager.AddComponent(entity, transform);
             entityManager.AddComponent(entity, sprite);
             entityManager.AddComponent(entity, uiElement);
-            // entityManager.AddComponent(entity, parallaxLayer);
+            entityManager.AddComponent(entity, ParallaxLayer.GetUIParallaxLayer());
             // Set tooltip from definition (precomputed in CardDefinitionCache)
             if (!string.IsNullOrEmpty(def.tooltip))
             {

@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Data.Equipment;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -32,6 +33,7 @@ namespace Crusaders30XX.ECS.Systems
 		private const double PulseDurationSeconds = 0.18; // similar to draw pile
 		private const float PulseAmplitude = 0.12f; // 12% size bump
 		private double _lastDt = 0.0;
+		// Root anchor removed; each equipment item will own its own transform base
 
 		// Layout constants (pixels)
 		[DebugEditable(DisplayName = "Left Margin", Step = 2, Min = 0, Max = 2000)]
@@ -108,7 +110,10 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<Player>();
 		}
 
-		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+		protected override void UpdateEntity(Entity entity, GameTime gameTime)
+		{
+			// No-op: layout will be applied during Draw by setting BasePosition per item
+		}
 
 		public override void Update(GameTime gameTime)
 		{
@@ -139,6 +144,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Group and order types
 			string[] order = new[] { "Head", "Chest", "Arms", "Legs" };
+			int baseX = LeftMargin;
 			int y = TopMargin;
 			int rowHeight = (IconSize + BgPadding * 2) + RowGap;
 			foreach (var type in order)
@@ -149,13 +155,22 @@ namespace Crusaders30XX.ECS.Systems
 				// Draw items in a row if any are visible
 				if (items.Count > 0)
 				{
-					int x = LeftMargin;
+					int x = baseX;
 					foreach (var item in items)
 					{
 					// Resolve equipment definition for visuals and tooltip
 					int bgW = IconSize + BgPadding * 2;
 					int bgH = IconSize + BgPadding * 2;
-					var bgRect = new Rectangle(x, y, bgW, bgH);
+					// Write layout to BasePosition; ParallaxLayerSystem will produce Position
+					var tEquip = item.Owner.GetComponent<Transform>();
+					if (tEquip != null)
+					{
+						tEquip.BasePosition = new Vector2(x, y);
+						tEquip.ZOrder = 10001;
+					}
+					// Build bg rect from current Position (after parallax)
+					var curPos = tEquip != null ? tEquip.Position : new Vector2(x, y);
+					var bgRect = new Rectangle((int)System.Math.Round(curPos.X), (int)System.Math.Round(curPos.Y), bgW, bgH);
 					// Persist panel center for return animations
 					var zoneState = item.Owner.GetComponent<EquipmentZone>();
 					if (zoneState == null)
@@ -171,7 +186,6 @@ namespace Crusaders30XX.ECS.Systems
 					UpdateTooltip(item, bgRect);
 					UpdateClickable(item, bgRect);
 					// Publish highlight event on hover unless disabled; during Player Action phase only if item has Activate ability
-					var tEquip = item.Owner.GetComponent<Transform>();
 					var uiEquip = item.Owner.GetComponent<UIElement>();
 					bool allowHighlight = true;
 					var phaseNow = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
@@ -179,7 +193,7 @@ namespace Crusaders30XX.ECS.Systems
 					if (isPlayerAction && !HasActivateAbility(item)) allowHighlight = false;
 					if (!disabledNow && allowHighlight)
 					{
-						EventManager.Publish(new Crusaders30XX.ECS.Events.HighlightRenderEvent { Entity = item.Owner, Transform = tEquip, UI = uiEquip });
+						EventManager.Publish(new HighlightRenderEvent { Entity = item.Owner, Transform = tEquip, UI = uiEquip });
 					}
 					// Now draw background and contents, with optional pulse
 					float pulseScale = GetCurrentPulseScale();
@@ -272,16 +286,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void UpdateClickable(EquippedEquipment item, Rectangle rect)
 		{
 			var ui = item.Owner.GetComponent<UIElement>();
-			if (ui == null)
-			{
-				ui = new UIElement { IsInteractable = true };
-				EntityManager.AddComponent(item.Owner, ui);
-			}
 			ui.Bounds = rect;
-			ui.IsInteractable = true;
-			// Update hover state so EquipmentHighlightSystem can render glow like CardHighlightSystem
-			var mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
-			ui.IsHovered = rect.Contains(mouse.Position);
 			// Disable interaction when out of uses during enemy turn
 			if (IsDisabledForBlock(item))
 			{
@@ -290,18 +295,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			ui.Tooltip = BuildTooltipText(item);
 			ui.TooltipPosition = TooltipPosition.Right;
-			// Place a transform so z-order sits above background UI if needed
-			var t = item.Owner.GetComponent<Transform>();
-			if (t == null)
-			{
-				t = new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 };
-				EntityManager.AddComponent(item.Owner, t);
-			}
-			else
-			{
-				t.Position = new Vector2(rect.X, rect.Y);
-				t.ZOrder = 10001;
-			}
+					// Transform.Position already reflects parallax; ZOrder handled above
 		}
 
 		private void DrawOncePerBattleCheck(EquippedEquipment item, Rectangle bgRect)
@@ -484,24 +478,15 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void UpdateTooltip(EquippedEquipment item, Rectangle rect)
 		{
-			if (!_tooltipByEquipEntityId.TryGetValue(item.Owner.Id, out var uiEntity) || uiEntity == null)
+			var uiEntity = item.Owner;
+			var tr = uiEntity.GetComponent<Transform>();
+			// Do not overwrite Transform.Position here; it's owned by Parallax/motion
+			var ui = uiEntity.GetComponent<UIElement>();
+			if (ui != null)
 			{
-				uiEntity = EntityManager.CreateEntity($"UI_EquipTooltip_{item.Owner.Id}");
-				EntityManager.AddComponent(uiEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 });
-				EntityManager.AddComponent(uiEntity, new UIElement { Bounds = rect, IsInteractable = true, Tooltip = BuildTooltipText(item), TooltipPosition = TooltipPosition.Right });
-				_tooltipByEquipEntityId[item.Owner.Id] = uiEntity;
-			}
-			else
-			{
-				var tr = uiEntity.GetComponent<Transform>();
-				if (tr != null) tr.Position = new Vector2(rect.X, rect.Y);
-				var ui = uiEntity.GetComponent<UIElement>();
-				if (ui != null)
-				{
-					ui.Bounds = rect;
-					ui.Tooltip = BuildTooltipText(item);
-					ui.TooltipPosition = TooltipPosition.Right;
-				}
+				ui.Bounds = rect;
+				ui.Tooltip = BuildTooltipText(item);
+				ui.TooltipPosition = TooltipPosition.Right;
 			}
 		}
 
@@ -606,6 +591,8 @@ namespace Crusaders30XX.ECS.Systems
 				return null;
 			}
 		}
+
+
 	}
 }
 

@@ -73,7 +73,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Keep UI bounds aligned with the parallax-adjusted transform
 			var ui = entity.GetComponent<UIElement>();
-			if (ui != null && (offsetDelta.X != 0 || offsetDelta.Y != 0))
+			if (ui != null && layer.AffectsUIBounds && (offsetDelta.X != 0 || offsetDelta.Y != 0))
 			{
 				ui.Bounds = new Microsoft.Xna.Framework.Rectangle(
 					ui.Bounds.X + (int)System.Math.Round(offsetDelta.X),

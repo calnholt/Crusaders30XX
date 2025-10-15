@@ -117,6 +117,7 @@ namespace Crusaders30XX.ECS.Systems
 			EntityManager.AddComponent(e, t);
 			EntityManager.AddComponent(e, s);
 			EntityManager.AddComponent(e, ui);
+			EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
 			return e;
 		}
 

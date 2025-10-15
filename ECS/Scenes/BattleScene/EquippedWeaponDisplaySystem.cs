@@ -97,11 +97,11 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					int r = System.Math.Max(4, CircleRadius);
 					var dr = discardUI.Bounds;
-					tRoot.Position = new Vector2(dr.Center.X, dr.Y - AboveDiscardOffsetY - r);
+					tRoot.BasePosition = new Vector2(dr.Center.X, dr.Y - AboveDiscardOffsetY - r);
 				}
 				else
 				{
-					// Fallback: keep whatever current position is
+					// Fallback: keep current base position
 				}
 			}
 		}

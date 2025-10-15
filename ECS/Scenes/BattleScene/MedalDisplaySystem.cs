@@ -125,7 +125,23 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				int bgW = IconSize + BgPadding * 2;
 				int bgH = IconSize + BgPadding * 2;
-				var rect = new Rectangle(x, y, bgW, bgH);
+				// Ensure transform and parallax; write layout to BasePosition only
+				var t = m.Owner.GetComponent<Transform>();
+				if (t == null)
+				{
+					t = new Transform { BasePosition = new Vector2(x, y), Position = new Vector2(x, y), ZOrder = 10001 };
+					EntityManager.AddComponent(m.Owner, t);
+					if (m.Owner.GetComponent<ParallaxLayer>() == null)
+					{
+						EntityManager.AddComponent(m.Owner, ParallaxLayer.GetUIParallaxLayer());
+					}
+				}
+				else
+				{
+					t.BasePosition = new Vector2(x, y);
+				}
+				var cur = t.Position;
+				var rect = new Rectangle((int)System.Math.Round(cur.X), (int)System.Math.Round(cur.Y), bgW, bgH);
 				// Backgrounds removed: draw medals without black rounded panels
 				UpdateTooltipForMedal(m, rect);
 				// Jiggle/pulse the medal icon only
@@ -189,17 +205,6 @@ namespace Crusaders30XX.ECS.Systems
 			var mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
 			ui.IsHovered = rect.Contains(mouse.Position);
 			ui.Tooltip = BuildMedalTooltip(medal);
-			var t = medal.Owner.GetComponent<Transform>();
-			if (t == null)
-			{
-				t = new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 };
-				EntityManager.AddComponent(medal.Owner, t);
-			}
-			else
-			{
-				t.Position = new Vector2(rect.X, rect.Y);
-				t.ZOrder = 10001;
-			}
 		}
 
 		private string BuildMedalTooltip(EquippedMedal medal)

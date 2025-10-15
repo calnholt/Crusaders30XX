@@ -246,9 +246,22 @@ namespace Crusaders30XX.ECS.Components
         // Last position written by the parallax system; used to detect external layout overrides
         public Microsoft.Xna.Framework.Vector2 LastAppliedPosition { get; set; } = Vector2.Zero;
 
+        // When true, ParallaxLayerSystem will nudge UIElement.Bounds alongside Transform.Position.
+        // Disable for UI where bounds are derived from Transform.Position elsewhere each frame.
+        public bool AffectsUIBounds { get; set; } = true;
+
         public static ParallaxLayer GetUIParallaxLayer()
         {
-            return new ParallaxLayer { MultiplierX = 0.03f, MultiplierY = 0.03f, MaxOffset = 48f, SmoothTime = 0.08f, CaptureBaseOnFirstUpdate = false };
+            return new ParallaxLayer
+            {
+                MultiplierX = 0.03f,
+                MultiplierY = 0.03f,
+                MaxOffset = 48f,
+                SmoothTime = 0.08f,
+                CaptureBaseOnFirstUpdate = false,
+                UpdateBaseFromCurrentEachFrame = false,
+                AffectsUIBounds = false
+            };
         }
     }
     

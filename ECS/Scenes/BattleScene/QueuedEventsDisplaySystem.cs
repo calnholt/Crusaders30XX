@@ -96,8 +96,8 @@ namespace Crusaders30XX.ECS.Systems
 				var t = root?.GetComponent<Transform>();
 				if (t != null)
 				{
-					// Keep anchored to screen top-center by default; systems like ParallaxLayer may further offset
-					t.Position = new Vector2(w / 2f, OffsetY);
+					// Keep anchored to screen top-center; ParallaxLayer will offset current Position
+					t.BasePosition = new Vector2(w / 2f, OffsetY);
 				}
 			}
 		}

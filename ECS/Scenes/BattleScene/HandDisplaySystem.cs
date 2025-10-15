@@ -64,7 +64,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Tween Speed", Step = 0.5f, Min = 0.1f, Max = 60f)]
         public float HandTweenSpeed { get; set; } = 12f;
         
-		private const string HandRootName = "UI_HandRoot";
+		// Root entity removed; each card owns its transform base and parallax
 
 		public HandDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice) 
             : base(entityManager)
@@ -180,20 +180,8 @@ namespace Crusaders30XX.ECS.Systems
 						float rawScale = vh >= baseH ? 1f : (vh / baseH);
 						float marginScale = MathF.Pow(MathF.Max(MinCardScale, MathF.Min(1f, rawScale)), MathF.Max(0.1f, CardScalePower));
 						float bottomMarginScaled = HandBottomMargin * marginScale;
-					// Hand root offset (allows parallax for the entire hand)
-					var handRoot = EntityManager.GetEntity(HandRootName);
-					if (handRoot == null)
-					{
-						handRoot = EntityManager.CreateEntity(HandRootName);
-						EntityManager.AddComponent(handRoot, new Transform { Position = new Vector2(screenWidth / 2f, screenHeight - bottomMarginScaled), ZOrder = 100 });
-						EntityManager.AddComponent(handRoot, ParallaxLayer.GetUIParallaxLayer());
-					}
-					var rootT = handRoot.GetComponent<Transform>();
-					if (rootT != null)
-					{
-						rootT.Position = new Vector2(screenWidth / 2f, screenHeight - bottomMarginScaled);
-					}
-					var pivot = rootT != null ? rootT.Position : new Vector2(screenWidth / 2f, screenHeight - bottomMarginScaled);
+					// Pivot anchored to screen bottom-center; ParallaxLayer on each card will offset current Position
+					var pivot = new Vector2(screenWidth / 2f, screenHeight - bottomMarginScaled);
 
                         // normalized index t in [-1, 1]
                         float mid = (count - 1) * 0.5f;
@@ -234,25 +222,27 @@ namespace Crusaders30XX.ECS.Systems
                         }
                         float y = pivot.Y + HandFanCurveOffset + yArc;
 
-                        // If this card just appeared (default position), spawn it offscreen to the right (due east)
-                        if (transform.Position == Vector2.Zero)
-                        {
-                            float spawnX = _graphicsDevice.Viewport.Width + ((cvs?.CardWidth ?? 250) * 1.5f);
-                            float spawnY = pivot.Y + HandFanCurveOffset;
-                            transform.Position = new Vector2(spawnX, spawnY);
-                        }
+						// If this card just appeared, spawn its base offscreen to the right so it flies in
+						if (transform.Position == Vector2.Zero && transform.BasePosition == Vector2.Zero)
+						{
+							float spawnX = _graphicsDevice.Viewport.Width + ((cvs?.CardWidth ?? 250) * 1.5f);
+							float spawnY = pivot.Y + HandFanCurveOffset;
+							var spawn = new Vector2(spawnX, spawnY);
+							transform.BasePosition = spawn;
+							transform.Position = spawn;
+						}
 
                         // Hover lift
                         var ui = entity.GetComponent<UIElement>();
                         bool hovered = ui?.IsHovered == true;
                         if (hovered) { y -= HandHoverLift; }
 
-                        // Apply transform with smooth tween toward target (frame-rate independent)
-                        var current = transform.Position;
-                        var target = new Vector2(x, y);
-                        float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-                        float alpha = 1f - (float)Math.Exp(-HandTweenSpeed * dt);
-                        transform.Position = Vector2.Lerp(current, target, MathHelper.Clamp(alpha, 0f, 1f));
+						// Smooth tween the BasePosition toward the layout target; ParallaxLayer will set current Position
+						var baseCurrent = transform.BasePosition;
+						var baseTarget = new Vector2(x, y);
+						float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+						float alpha = 1f - (float)Math.Exp(-HandTweenSpeed * dt);
+						transform.BasePosition = Vector2.Lerp(baseCurrent, baseTarget, MathHelper.Clamp(alpha, 0f, 1f));
                         transform.Rotation = angleRad; // reserved for future visual rotation support
                         transform.Scale = new Vector2(HandHoverScale, HandHoverScale);
 
@@ -289,12 +279,12 @@ namespace Crusaders30XX.ECS.Systems
                             int aabbW = (int)(w * absCos + h * absSin);
                             int aabbH = (int)(h * absCos + w * absSin);
 
-                            ui.Bounds = new Rectangle(
-                                (int)transform.Position.X - aabbW / 2,
-                                (int)transform.Position.Y - aabbH / 2,
-                                aabbW,
-                                aabbH
-                            );
+						ui.Bounds = new Rectangle(
+							(int)transform.Position.X - aabbW / 2,
+							(int)transform.Position.Y - aabbH / 2,
+							aabbW,
+							aabbH
+						);
                         }
                     }
                 }
