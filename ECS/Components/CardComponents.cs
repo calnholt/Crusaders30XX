@@ -254,8 +254,8 @@ namespace Crusaders30XX.ECS.Components
         {
             return new ParallaxLayer
             {
-                MultiplierX = 0.03f,
-                MultiplierY = 0.03f,
+                MultiplierX = 0.025f,
+                MultiplierY = 0.025f,
                 MaxOffset = 48f,
                 SmoothTime = 0.08f,
                 CaptureBaseOnFirstUpdate = false,

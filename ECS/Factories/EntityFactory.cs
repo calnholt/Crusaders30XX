@@ -58,6 +58,7 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, sprite);
             world.AddComponent(entity, portraitInfo);
             world.AddComponent(entity, equippedTemperanceAbility);
+            world.AddComponent(entity, new ParallaxLayer { MultiplierX = 0.01f, MultiplierY = 0.01f, MaxOffset = 48f, SmoothTime = 0.08f, CaptureBaseOnFirstUpdate = false, UpdateBaseFromCurrentEachFrame = false, AffectsUIBounds = false });
             // Equip default weapon (not in deck)
             world.AddComponent(entity, new EquippedWeapon { WeaponId = loadout.weaponId });
             var equipHeadEntity = world.CreateEntity("Equip_Head");

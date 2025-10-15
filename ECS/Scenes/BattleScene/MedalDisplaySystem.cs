@@ -161,8 +161,8 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				var medalTex = GetMedalTexture(m.MedalId);
 				var drawnRect = DrawMedalIcon(rect, medalTex, scale, rotation);
-				// Use the actual drawn sprite width so SpacingX is the visual gap between medals
-				x = drawnRect.Right + SpacingX;
+				// Advance by intended layout width to preserve consistent margins across medals
+				x += bgW + SpacingX;
 			}
 		}
 
@@ -202,8 +202,6 @@ namespace Crusaders30XX.ECS.Systems
 			ui.Bounds = rect;
 			ui.IsInteractable = true;
 			ui.TooltipPosition = TooltipPosition.Below; // show tooltip below and centered when possible
-			var mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
-			ui.IsHovered = rect.Contains(mouse.Position);
 			ui.Tooltip = BuildMedalTooltip(medal);
 		}
 

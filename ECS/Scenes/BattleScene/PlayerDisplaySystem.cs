@@ -91,8 +91,8 @@ namespace Crusaders30XX.ECS.Systems
                 // Draw offset now maintained by PlayerAnimationSystem via PlayerAnimationState
                 var anim = _anchorEntity.GetComponent<PlayerAnimationState>();
                 _attackDrawOffset = anim?.DrawOffset ?? Vector2.Zero;
-                // Keep the Transform reflecting the base position and scale only
-                _anchorTransform.Position = basePosition;
+                // Keep the Transform reflecting the base position and scale only (parallax owns Position)
+                _anchorTransform.BasePosition = basePosition;
                 _anchorTransform.Scale = new Vector2(scale, scale);
                 var pinfo = _anchorEntity.GetComponent<PortraitInfo>();
                 if (pinfo != null) { pinfo.CurrentScale = scale; pinfo.BaseScale = desiredHeight / (_crusaderTexture?.Height ?? 1); }
