@@ -118,24 +118,17 @@ namespace Crusaders30XX.ECS.Systems
             if (phase.Sub != SubPhase.Action) return;
 
             var vp = _graphicsDevice.Viewport;
-            var btnRect = GetButtonRect(vp);
+			var btnRect = GetButtonRect(vp);
 
-            // Draw button
-            _spriteBatch.Draw(_pixel, btnRect, new Color(40, 120, 40, 220));
-            DrawRect(btnRect, Color.White, 2);
-            string label = "End Turn";
-            var size = _font.MeasureString(label) * ButtonTextScale;
-            var posText = new Vector2(btnRect.Center.X - size.X / 2f, btnRect.Center.Y - size.Y / 2f);
-            _spriteBatch.DrawString(_font, label, posText, Color.White, 0f, Vector2.Zero, ButtonTextScale, SpriteEffects.None, 0f);
-
-            // Ensure a clickable UI entity exists and stays in sync
+			// Ensure a clickable UI entity exists and keep its base anchored; ParallaxLayer will offset Position
             var endBtn = EntityManager.GetEntitiesWithComponent<UIButton>().FirstOrDefault(e => e.GetComponent<UIButton>().Command == "EndTurn");
             if (endBtn == null)
             {
                 endBtn = EntityManager.CreateEntity("UIButton_EndTurn");
                 EntityManager.AddComponent(endBtn, new UIButton { Label = "End Turn", Command = "EndTurn" });
-                EntityManager.AddComponent(endBtn, new Transform { Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
-                EntityManager.AddComponent(endBtn, new UIElement { Bounds = btnRect, IsInteractable = true });
+				EntityManager.AddComponent(endBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
+				EntityManager.AddComponent(endBtn, new UIElement { Bounds = btnRect, IsInteractable = true });
+				EntityManager.AddComponent(endBtn, ParallaxLayer.GetUIParallaxLayer());
             }
             else
             {
@@ -143,15 +136,34 @@ namespace Crusaders30XX.ECS.Systems
                 var tr = endBtn.GetComponent<Transform>();
                 if (ui != null)
                 {
-                    ui.Bounds = btnRect;
+					ui.Bounds = btnRect; // will be overwritten below after computing drawRect from Transform.Position
                     ui.IsInteractable = true; // keep clickable in case other systems disabled
                 }
                 if (tr != null)
                 {
                     tr.ZOrder = ButtonZ;
-                    tr.Position = new Vector2(btnRect.X, btnRect.Y);
+					tr.BasePosition = new Vector2(btnRect.X, btnRect.Y);
                 }
             }
+
+			// Draw using the entity's current Transform.Position (which includes parallax offset)
+			var t = endBtn?.GetComponent<Transform>();
+			Vector2 drawPos = (t != null) ? t.Position : new Vector2(btnRect.X, btnRect.Y);
+			var drawRect = new Rectangle((int)drawPos.X, (int)drawPos.Y, btnRect.Width, btnRect.Height);
+
+			_spriteBatch.Draw(_pixel, drawRect, new Color(40, 120, 40, 220));
+			DrawRect(drawRect, Color.White, 2);
+			string label = "End Turn";
+			var size = _font.MeasureString(label) * ButtonTextScale;
+			var posText = new Vector2(drawRect.Center.X - size.X / 2f, drawRect.Center.Y - size.Y / 2f);
+			_spriteBatch.DrawString(_font, label, posText, Color.White, 0f, Vector2.Zero, ButtonTextScale, SpriteEffects.None, 0f);
+
+			// Keep UI bounds aligned with drawn rect
+			var endBtnUi = endBtn?.GetComponent<UIElement>();
+			if (endBtnUi != null)
+			{
+				endBtnUi.Bounds = drawRect;
+			}
         }
     }
 }

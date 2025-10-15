@@ -282,14 +282,15 @@ namespace Crusaders30XX.ECS.Systems
 			if (!_effectTooltipUiByKey.TryGetValue(key, out var uiEntity) || uiEntity == null)
 			{
 				uiEntity = EntityManager.CreateEntity($"UI_AttackEffect_{key}");
-				EntityManager.AddComponent(uiEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = z });
+				EntityManager.AddComponent(uiEntity, new Transform { BasePosition = new Vector2(rect.X, rect.Y), Position = new Vector2(rect.X, rect.Y), ZOrder = z });
 				EntityManager.AddComponent(uiEntity, new UIElement { Bounds = rect, IsInteractable = true, Tooltip = text ?? string.Empty, TooltipPosition = TooltipPosition.Below, TooltipOffsetPx = Math.Max(0, tooltipOffsetBelow) });
+				EntityManager.AddComponent(uiEntity, ParallaxLayer.GetUIParallaxLayer());
 				_effectTooltipUiByKey[key] = uiEntity;
 			}
 			else
 			{
 				var tr = uiEntity.GetComponent<Transform>();
-				if (tr != null) { tr.Position = new Vector2(rect.X, rect.Y); tr.ZOrder = z; }
+				if (tr != null) { tr.BasePosition = new Vector2(rect.X, rect.Y); tr.Position = new Vector2(rect.X, rect.Y); tr.ZOrder = z; }
 				var ui = uiEntity.GetComponent<UIElement>();
 				if (ui != null)
 				{
@@ -498,7 +499,23 @@ namespace Crusaders30XX.ECS.Systems
 			int w = (int)Math.Ceiling(Math.Min(maxW + pad * 2, maxPanelWidthPx));
 			int h = (int)Math.Ceiling(totalH) + pad * 2;
 
-			var center = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY);
+			// Derive panel center from viewport center plus the current parallax offset of the banner anchor
+			var anchorEntity = EntityManager.GetEntitiesWithComponent<Crusaders30XX.ECS.Components.EnemyAttackBannerAnchor>().FirstOrDefault();
+			if (anchorEntity == null)
+			{
+				anchorEntity = EntityManager.CreateEntity("EnemyAttackBannerAnchor");
+				EntityManager.AddComponent(anchorEntity, new Crusaders30XX.ECS.Components.EnemyAttackBannerAnchor());
+				EntityManager.AddComponent(anchorEntity, new Transform());
+				EntityManager.AddComponent(anchorEntity, ParallaxLayer.GetUIParallaxLayer());
+			}
+			var anchorTransform = anchorEntity.GetComponent<Transform>();
+			Vector2 parallaxOffset = Vector2.Zero;
+			if (anchorTransform != null)
+			{
+				parallaxOffset = anchorTransform.Position - anchorTransform.BasePosition;
+			}
+			var centerBase = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY);
+			var center = centerBase + parallaxOffset;
 			Vector2 approachPos = center;
 			float panelScale = 1f;
 			// During processing, tween panel toward enemy center and scale down to 0
@@ -711,15 +728,16 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					primaryBtn = EntityManager.CreateEntity("UIButton_ConfirmEnemyAttack");
 					EntityManager.AddComponent(primaryBtn, new UIButton { Label = "Confirm", Command = "ConfirmEnemyAttack" });
-					EntityManager.AddComponent(primaryBtn, new Transform { Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ConfirmButtonZ });
+					EntityManager.AddComponent(primaryBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ConfirmButtonZ });
 					EntityManager.AddComponent(primaryBtn, new UIElement { Bounds = btnRect, IsInteractable = true });
+					EntityManager.AddComponent(primaryBtn, ParallaxLayer.GetUIParallaxLayer());
 				}
 				else
 				{
 					var ui = primaryBtn.GetComponent<UIElement>();
 					var tr = primaryBtn.GetComponent<Transform>();
 					if (ui != null) { ui.Bounds = btnRect; ui.IsInteractable = true; }
-					if (tr != null) { tr.ZOrder = ConfirmButtonZ; tr.Position = new Vector2(btnRect.X, btnRect.Y); }
+					if (tr != null) { tr.ZOrder = ConfirmButtonZ; tr.BasePosition = new Vector2(btnRect.X, btnRect.Y); tr.Position = new Vector2(btnRect.X, btnRect.Y); }
 				}
 			}
 			else
@@ -737,18 +755,10 @@ namespace Crusaders30XX.ECS.Systems
 			// Cleanup any stale per-effect tooltip UIs not present this frame
 			CleanupEffectTooltips(presentKeys);
 
-			// Update banner anchor transform at center-bottom of rect
-			var anchorEntity = EntityManager.GetEntitiesWithComponent<Crusaders30XX.ECS.Components.EnemyAttackBannerAnchor>().FirstOrDefault();
-			if (anchorEntity == null)
-			{
-				anchorEntity = EntityManager.CreateEntity("EnemyAttackBannerAnchor");
-				EntityManager.AddComponent(anchorEntity, new Crusaders30XX.ECS.Components.EnemyAttackBannerAnchor());
-				EntityManager.AddComponent(anchorEntity, new Transform());
-			}
-			var anchorTransform = anchorEntity.GetComponent<Transform>();
+			// Update banner anchor transform at center-bottom of the base (non-parallax) rect
 			if (anchorTransform != null)
 			{
-				anchorTransform.Position = new Vector2(rect.X + rect.Width / 2f, rect.Bottom);
+				anchorTransform.BasePosition = new Vector2(centerBase.X, centerBase.Y + drawH / 2f);
 				anchorTransform.Scale = Vector2.One;
 				anchorTransform.Rotation = 0f;
 			}

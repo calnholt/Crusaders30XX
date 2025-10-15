@@ -127,19 +127,7 @@ namespace Crusaders30XX.ECS.Systems
 				int bgH = IconSize + BgPadding * 2;
 				// Ensure transform and parallax; write layout to BasePosition only
 				var t = m.Owner.GetComponent<Transform>();
-				if (t == null)
-				{
-					t = new Transform { BasePosition = new Vector2(x, y), Position = new Vector2(x, y), ZOrder = 10001 };
-					EntityManager.AddComponent(m.Owner, t);
-					if (m.Owner.GetComponent<ParallaxLayer>() == null)
-					{
-						EntityManager.AddComponent(m.Owner, ParallaxLayer.GetUIParallaxLayer());
-					}
-				}
-				else
-				{
-					t.BasePosition = new Vector2(x, y);
-				}
+				t.BasePosition = new Vector2(x, y);
 				var cur = t.Position;
 				var rect = new Rectangle((int)System.Math.Round(cur.X), (int)System.Math.Round(cur.Y), bgW, bgH);
 				// Backgrounds removed: draw medals without black rounded panels
