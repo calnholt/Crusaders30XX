@@ -118,9 +118,23 @@ namespace Crusaders30XX.ECS.Systems
 				label = $"{MainPhaseToString(state.Main)} - {SubPhaseToString(state.Sub)} ({state.TurnNumber})";
 			}
 			var size = _font.MeasureString(label) * LabelScale;
-			var pos = new Vector2(xRight - size.X, LabelOffsetY);
-			_spriteBatch.DrawString(_font, label, pos + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
-			_spriteBatch.DrawString(_font, label, pos, Color.White, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
+			var basePos = new Vector2(xRight - size.X, LabelOffsetY);
+			// Ensure a label entity with Transform + Parallax; write BasePosition only
+			var labelEntity = EntityManager.GetEntity("UI_PhaseLabelTopRight");
+			if (labelEntity == null)
+			{
+				labelEntity = EntityManager.CreateEntity("UI_PhaseLabelTopRight");
+				EntityManager.AddComponent(labelEntity, new Transform { BasePosition = basePos, Position = basePos });
+				EntityManager.AddComponent(labelEntity, ParallaxLayer.GetUIParallaxLayer());
+			}
+			var labelT = labelEntity.GetComponent<Transform>();
+			if (labelT != null)
+			{
+				labelT.BasePosition = basePos;
+				var drawPos = labelT.Position;
+				_spriteBatch.DrawString(_font, label, drawPos + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
+				_spriteBatch.DrawString(_font, label, drawPos, Color.White, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
+			}
 
 			if (_transitionActive)
 			{
@@ -150,10 +164,24 @@ namespace Crusaders30XX.ECS.Systems
 					x = MathHelper.Lerp(targetX, vw + 80f, u);
 				}
 
-				// simple shadow then text
-				var pText = new Vector2(x, y);
-				_spriteBatch.DrawString(_font, _transitionText, pText + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
-				_spriteBatch.DrawString(_font, _transitionText, pText, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
+				// Ensure a transition entity; write BasePosition and draw at Transform.Position (parallax applied)
+				var transEntity = EntityManager.GetEntity("UI_PhaseTransitionBanner");
+				if (transEntity == null)
+				{
+					transEntity = EntityManager.CreateEntity("UI_PhaseTransitionBanner");
+					var start = new Vector2(x, y);
+					EntityManager.AddComponent(transEntity, new Transform { BasePosition = start, Position = start });
+					EntityManager.AddComponent(transEntity, ParallaxLayer.GetUIParallaxLayer());
+				}
+				var transT = transEntity.GetComponent<Transform>();
+				if (transT != null)
+				{
+					transT.BasePosition = new Vector2(x, y);
+					var pDraw = transT.Position;
+					// simple shadow then text
+					_spriteBatch.DrawString(_font, _transitionText, pDraw + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
+					_spriteBatch.DrawString(_font, _transitionText, pDraw, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
+				}
 			}
 		}
 
