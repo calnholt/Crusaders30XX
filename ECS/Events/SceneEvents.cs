@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Events
 		public SceneId Scene;
 	}
 
-	public class DeleteCachesEvent { }
+	public class DeleteCachesEvent { public SceneId Scene; }
 
 	public class SetCustomizationTab
 	{

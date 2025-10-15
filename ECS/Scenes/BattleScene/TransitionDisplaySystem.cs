@@ -48,11 +48,17 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			EventManager.Subscribe<ShowTransition>(BeginWipeIn);
+			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCachesEvent);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
 		{
 			return Array.Empty<Entity>();
+		}
+
+		private void OnDeleteCachesEvent(DeleteCachesEvent evt)
+		{
+			DeleteEntities(evt.Scene);
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
@@ -80,7 +86,7 @@ namespace Crusaders30XX.ECS.Systems
 						if (!_suppressLoadScene)
 						{
 							Console.WriteLine($"[TransitionDisplaySystem] Loading scene: {_nextScene}");
-							EventManager.Publish(new DeleteCachesEvent { });
+							EventManager.Publish(new DeleteCachesEvent { Scene = _nextScene });
 							DeleteEntities(_nextScene);
 							EventManager.Publish(new LoadSceneEvent { Scene = _nextScene });
 						}

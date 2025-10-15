@@ -195,38 +195,6 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new DeckShuffleEvent { });
 		}
 
-		private void ResetEntitiesAfterBattle() {
-			var player = EntityManager.GetEntity("Player");
-			var hp = player.GetComponent<HP>();
-			player.GetComponent<HP>().Current = 30;
-			player.GetComponent<HP>().Max = 30;
-			EventManager.Publish(new SetTemperanceEvent{ Amount = 0 });
-			var equipmentUsedState = player.GetComponent<EquipmentUsedState>();
-			equipmentUsedState.ActivatedThisTurn.Clear();
-			equipmentUsedState.DestroyedEquipmentIds.Clear();
-			equipmentUsedState.UsesByEquipmentId.Clear();
-			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
-			var queued = queuedEntity.GetComponent<QueuedEvents>();
-			queued.CurrentIndex = -1;
-			queued.Events.Clear();
-			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault().GetComponent<Deck>();
-			deck.Cards.ForEach(c => EntityManager.DestroyEntity(c.Id));
-			deck.DrawPile.ForEach(c => EntityManager.DestroyEntity(c.Id));
-			deck.Hand.ForEach(c => EntityManager.DestroyEntity(c.Id));
-			deck.DiscardPile.ForEach(c => EntityManager.DestroyEntity(c.Id));
-			deck.ExhaustPile.ForEach(c => EntityManager.DestroyEntity(c.Id));
-			deck.Cards.Clear();
-			deck.DrawPile.Clear();
-			deck.Hand.Clear();
-			deck.DiscardPile.Clear();
-			deck.ExhaustPile.Clear();
-			EventManager.Publish(new RemoveAllPassives { Owner = player });
-			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
-			phaseState.TurnNumber = 0;
-			phaseState.Main = MainPhase.StartBattle;
-			phaseState.Sub = SubPhase.StartBattle;
-		}
-
 		public void StartBattle() 
 		{
 			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault().GetComponent<Deck>();
@@ -247,7 +215,6 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				// Increment save progress via service
 				QuestCompleteService.SaveIfCompletedHighest(EntityManager);
-				ResetEntitiesAfterBattle();
 				EventManager.Publish(new LoadSceneEvent { Scene = SceneId.WorldMap });
 				return;
 			};
