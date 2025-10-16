@@ -30,8 +30,6 @@ namespace Crusaders30XX.ECS.Systems
 
         [DebugEditable(DisplayName = "Center Offset Y (% of height)", Step = 0.01f, Min = -1.0f, Max = 1.0f)]
         public float CenterOffsetYPct { get; set; } = -0.11f; // negative = up, positive = down
-        private Entity _anchorEntity;
-        private Transform _anchorTransform;
 
         public PlayerDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Texture2D crusaderTexture)
             : base(entityManager)
@@ -39,27 +37,6 @@ namespace Crusaders30XX.ECS.Systems
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             _crusaderTexture = crusaderTexture;
-
-            // Use the actual player entity as the portrait anchor
-            _anchorEntity = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-            if (_anchorEntity == null)
-            {
-                return;
-            }
-            _anchorTransform = _anchorEntity.GetComponent<Transform>();
-            if (_anchorTransform == null)
-            {
-                _anchorTransform = new Transform();
-                EntityManager.AddComponent(_anchorEntity, _anchorTransform);
-            }
-            var info = _anchorEntity.GetComponent<PortraitInfo>();
-            if (info == null)
-            {
-                info = new PortraitInfo();
-                EntityManager.AddComponent(_anchorEntity, info);
-            }
-            info.TextureWidth = _crusaderTexture?.Width ?? 0;
-            info.TextureHeight = _crusaderTexture?.Height ?? 0;
 
         }
 
@@ -72,9 +49,10 @@ namespace Crusaders30XX.ECS.Systems
         public override void Update(GameTime gameTime)
         {
             _elapsedSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            var transform = player?.GetComponent<Transform>();
 
-            // Update shared anchor transform so other systems (e.g., wisps) can follow
-            if (_crusaderTexture != null && _anchorTransform != null)
+            if (_crusaderTexture != null && player != null)
             {
                 int viewportW = _graphicsDevice.Viewport.Width;
                 int viewportH = _graphicsDevice.Viewport.Height;
@@ -88,16 +66,18 @@ namespace Crusaders30XX.ECS.Systems
                     viewportW * (0.5f + CenterOffsetXPct),
                     viewportH * (0.5f + CenterOffsetYPct)
                 );
-                // Draw offset now maintained by PlayerAnimationSystem via PlayerAnimationState
-                var anim = _anchorEntity.GetComponent<PlayerAnimationState>();
+                var anim = player.GetComponent<PlayerAnimationState>();
                 _attackDrawOffset = anim?.DrawOffset ?? Vector2.Zero;
                 // Keep the Transform reflecting the base position and scale only (parallax owns Position)
-                _anchorTransform.BasePosition = basePosition;
-                _anchorTransform.Scale = new Vector2(scale, scale);
-                var pinfo = _anchorEntity.GetComponent<PortraitInfo>();
+                transform.BasePosition = basePosition;
+                transform.Scale = new Vector2(scale, scale);
+                var pinfo = player.GetComponent<PortraitInfo>();
                 if (pinfo != null) { pinfo.CurrentScale = scale; pinfo.BaseScale = desiredHeight / (_crusaderTexture?.Height ?? 1); }
-                _anchorTransform.Rotation = 0f;
-                _anchorTransform.ZOrder = 0;
+                transform.Rotation = 0f;
+                transform.ZOrder = 0;
+                var info = player.GetComponent<PortraitInfo>();
+                info.TextureWidth = _crusaderTexture?.Width ?? 0;
+                info.TextureHeight = _crusaderTexture?.Height ?? 0;
             }
             base.Update(gameTime);
         }
@@ -106,15 +86,17 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            var transform = player?.GetComponent<Transform>();
             if (_crusaderTexture == null) return;
-            if (_anchorTransform == null) return;
+            if (transform == null) return;
 
             float texW = _crusaderTexture.Width;
             float texH = _crusaderTexture.Height;
             var origin = new Vector2(texW / 2f, texH / 2f); // center pivot
-            var position = _anchorTransform.Position + _attackDrawOffset;
-            var scaleVec = _anchorTransform.Scale; // base scale
-            var animState = _anchorEntity.GetComponent<PlayerAnimationState>();
+            var position = transform.Position + _attackDrawOffset;
+            var scaleVec = transform.Scale; // base scale
+            var animState = player.GetComponent<PlayerAnimationState>();
             if (animState != null)
             {
                 scaleVec.X *= animState.ScaleMultiplier.X;
@@ -133,7 +115,6 @@ namespace Crusaders30XX.ECS.Systems
                 layerDepth: 0f
             );
 
-            // (Wisps drawn by PlayerWispParticleSystem)
         }
         
     }
