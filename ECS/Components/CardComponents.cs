@@ -263,6 +263,20 @@ namespace Crusaders30XX.ECS.Components
                 AffectsUIBounds = false
             };
         }
+
+        public static ParallaxLayer GetCharacterParallaxLayer()
+        {
+            return new ParallaxLayer 
+            { 
+                MultiplierX = 0.01f, 
+                MultiplierY = 0.01f, 
+                MaxOffset = 48f, 
+                SmoothTime = 0.08f, 
+                CaptureBaseOnFirstUpdate = false, 
+                UpdateBaseFromCurrentEachFrame = false, 
+                AffectsUIBounds = false 
+            };
+        }
     }
     
     

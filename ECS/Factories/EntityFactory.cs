@@ -58,7 +58,7 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, sprite);
             world.AddComponent(entity, portraitInfo);
             world.AddComponent(entity, equippedTemperanceAbility);
-            world.AddComponent(entity, new ParallaxLayer { MultiplierX = 0.01f, MultiplierY = 0.01f, MaxOffset = 48f, SmoothTime = 0.08f, CaptureBaseOnFirstUpdate = false, UpdateBaseFromCurrentEachFrame = false, AffectsUIBounds = false });
+            world.AddComponent(entity, ParallaxLayer.GetCharacterParallaxLayer());
             // Equip default weapon (not in deck)
             world.AddComponent(entity, new EquippedWeapon { WeaponId = loadout.weaponId });
             var equipHeadEntity = world.CreateEntity("Equip_Head");
@@ -327,6 +327,7 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = new List<string>(def.attackIds) });
             world.AddComponent(enemyEntity, new AttackIntent());
             world.AddComponent(enemyEntity, new AppliedPassives());
+            world.AddComponent(enemyEntity, ParallaxLayer.GetCharacterParallaxLayer());
 
             var playerEntity = world.EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 

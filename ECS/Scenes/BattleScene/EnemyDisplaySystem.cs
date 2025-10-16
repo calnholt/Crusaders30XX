@@ -106,7 +106,7 @@ namespace Crusaders30XX.ECS.Systems
 					viewportW * (0.5f + CenterOffsetXPct),
 					viewportH * (0.5f + CenterOffsetYPct)
 				);
-				var pos = basePos;
+				var posForAnim = basePos;
 				// Simple smash animation: move toward player then back
 				if (_attackAnimTimer > 0f)
 				{
@@ -116,10 +116,10 @@ namespace Crusaders30XX.ECS.Systems
 					// move toward player position plus attack offset, then back
 					Vector2 outPos = _attackTargetPos + _attackOffset;
 					Vector2 mid = Vector2.Lerp(basePos, outPos, 1f - (float)System.Math.Pow(1f - outPhase, 3));
-					pos = Vector2.Lerp(mid, basePos, backPhase);
+					posForAnim = Vector2.Lerp(mid, basePos, backPhase);
 				}
-				// Keep the entity's transform in sync so other systems (e.g., HP bars) can reference it
-				t.Position = pos;
+				// Keep the entity's transform in sync so parallax and UI can reference it
+				t.BasePosition = posForAnim;
 				// Share scale and texture dims for accurate HP positioning if needed
 				var info = e.GetComponent<PortraitInfo>();
 				if (info == null)
@@ -130,7 +130,9 @@ namespace Crusaders30XX.ECS.Systems
 				info.TextureHeight = tex.Height;
 				info.CurrentScale = scale;
 				info.BaseScale = desiredHeight / tex.Height;
-				_spriteBatch.Draw(tex, position: pos, sourceRectangle: null, color: Color.White, rotation: 0f, origin: origin, scale: scale, effects: SpriteEffects.None, layerDepth: 0f);
+				// Draw at Transform.Position so ParallaxLayerSystem can offset the portrait
+				var drawPos = t.Position;
+				_spriteBatch.Draw(tex, position: drawPos, sourceRectangle: null, color: Color.White, rotation: 0f, origin: origin, scale: scale, effects: SpriteEffects.None, layerDepth: 0f);
 			}
 		}
 
