@@ -25,8 +25,6 @@ namespace Crusaders30XX.ECS.Systems
         private double _pulseStartSeconds = 0.0; // When current hovered started pulsing
         private Entity _currentHovered;
         // Equipment highlight tracking (separate pulse timer)
-        private double _pulseStartSecondsEquipment = 0.0;
-        private Entity _currentEquipmentHovered;
         
         // Highlight settings now come from EquipmentHighlightSettings via HighlightSettingsSystem
         

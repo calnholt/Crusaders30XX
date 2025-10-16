@@ -31,7 +31,7 @@ namespace Crusaders30XX.ECS.Systems
 		public float BaseSpeed { get; set; } = 1450f;
 
 		[DebugEditable(DisplayName = "Analog Deadzone", Step = 0.01f, Min = 0f, Max = 0.5f)]
-		public float Deadzone { get; set; } = 0.25f;
+		public float Deadzone { get; set; } = 0f;
 
 		[DebugEditable(DisplayName = "Speed Exponent", Step = 0.05f, Min = 0.25f, Max = 3f)]
 		public float SpeedExponent { get; set; } = 1.0f;
@@ -50,6 +50,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Cursor Opacity", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float CursorOpacity { get; set; } = .45f;
+
+		[DebugEditable(DisplayName = "Hitbox Radius (px)", Step = 1f, Min = 0f, Max = 256f)]
+		public int HitboxRadius { get; set; } = 34;
 
 		public CursorSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
@@ -97,14 +100,22 @@ namespace Crusaders30XX.ECS.Systems
 			Vector2 stick = gp.ThumbSticks.Left; // X: right+, Y: up+
 			bool ignoringTransitions = TransitionStateSingleton.IsActive;
 
-			// Determine top-most UI under cursor center and flag hover
+			// Clear hover state on all UI elements to ensure exclusivity
+			foreach (var e2 in EntityManager.GetEntitiesWithComponent<UIElement>())
+			{
+				var ui2 = e2.GetComponent<UIElement>();
+				if (ui2 != null) ui2.IsHovered = false;
+			}
+
+			// Determine top-most UI intersecting the cursor hitbox and flag hover
 			var point = new Point((int)Math.Round(_cursorPosition.X), (int)Math.Round(_cursorPosition.Y));
 			var topCandidate = (object)null;
 			if (!ignoringTransitions)
 			{
+				int rHitbox = Math.Max(0, HitboxRadius);
 				var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
 					.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-					.Where(x => x.UI != null && x.UI.IsInteractable && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && x.UI.Bounds.Contains(point))
+					.Where(x => x.UI != null && x.UI.IsInteractable && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox) > 0f)
 					.OrderByDescending(x => x.T?.ZOrder ?? 0)
 					.FirstOrDefault();
 				if (tc != null)
@@ -128,7 +139,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Publish cursor state event for other systems
-			int rForCoverage = Math.Max(1, CursorRadius);
+			int rForCoverage = Math.Max(0, HitboxRadius);
 			float coverageForTop = 0f;
 			if (!ignoringTransitions && topCandidate != null)
 			{
@@ -218,6 +229,16 @@ namespace Crusaders30XX.ECS.Systems
 			float a = MathHelper.Clamp(CursorOpacity, 0f, 1f);
 			var tintWithAlpha = Color.FromNonPremultiplied(tint.R, tint.G, tint.B, (byte)Math.Round(a * 255f));
 			_spriteBatch.Draw(_circleTexture, dst, tintWithAlpha);
+
+			// Draw the inner hitbox circle
+			int rHitboxDraw = Math.Max(0, HitboxRadius);
+			if (rHitboxDraw > 0)
+			{
+				var hitboxTexture = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, rHitboxDraw);
+				var dstHitbox = new Rectangle((int)Math.Round(_cursorPosition.X) - rHitboxDraw, (int)Math.Round(_cursorPosition.Y) - rHitboxDraw, rHitboxDraw * 2, rHitboxDraw * 2);
+				var hitboxColor = Color.FromNonPremultiplied(Color.Gold.R, Color.Gold.G, Color.Gold.B, (byte)Math.Round(a * 255f));
+				_spriteBatch.Draw(hitboxTexture, dstHitbox, hitboxColor);
+			}
 		}
 
 		private static float EstimateCircleRectCoverage(Rectangle rect, Vector2 center, int radius)
