@@ -88,17 +88,12 @@ namespace Crusaders30XX.ECS.Systems
 			// Re-center the root on viewport changes
 			int w = _graphicsDevice.Viewport.Width;
 			int h = _graphicsDevice.Viewport.Height;
-			if (w != _lastViewportW || h != _lastViewportH)
+			var root = EntityManager.GetEntity(RootEntityName);
+			var t = root?.GetComponent<Transform>();
+			if (t != null)
 			{
-				_lastViewportW = w;
-				_lastViewportH = h;
-				var root = EntityManager.GetEntity(RootEntityName);
-				var t = root?.GetComponent<Transform>();
-				if (t != null)
-				{
-					// Keep anchored to screen top-center; ParallaxLayer will offset current Position
-					t.BasePosition = new Vector2(w / 2f, OffsetY);
-				}
+				// Keep anchored to screen top-center; ParallaxLayer will offset current Position
+				t.BasePosition = new Vector2(w / 2f, OffsetY);
 			}
 		}
 

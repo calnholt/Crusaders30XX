@@ -22,8 +22,6 @@ namespace Crusaders30XX.ECS.Systems
         private readonly ContentManager _content;
         private Texture2D _weaponTex;
 		private const string RootEntityName = "UI_EquippedWeaponRoot";
-		private int _lastViewportW = -1;
-		private int _lastViewportH = -1;
 
         // Layout/debug controls
         [DebugEditable(DisplayName = "Circle Radius", Step = 1, Min = 8, Max = 400)]
@@ -98,10 +96,6 @@ namespace Crusaders30XX.ECS.Systems
 					int r = System.Math.Max(4, CircleRadius);
 					var dr = discardUI.Bounds;
 					tRoot.BasePosition = new Vector2(dr.Center.X, dr.Y - AboveDiscardOffsetY - r);
-				}
-				else
-				{
-					// Fallback: keep current base position
 				}
 			}
 		}

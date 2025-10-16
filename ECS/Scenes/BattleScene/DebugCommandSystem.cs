@@ -107,6 +107,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Wounded, Delta = 1 });
         }
+        [DebugAction("Game Over")]
+        public void Debug_GameOver()
+        {
+            EventManager.Publish(new PlayerDied { Player = EntityManager.GetEntity("Player") });
+        }
     }
 }
 

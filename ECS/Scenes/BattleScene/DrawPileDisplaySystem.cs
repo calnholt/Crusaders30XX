@@ -20,8 +20,6 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteFont _font;
         private readonly Texture2D _pixel;
 		private const string RootEntityName = "UI_DrawPileRoot";
-		private int _lastViewportW = -1;
-		private int _lastViewportH = -1;
         private double _pulseTimeRemaining = 0.0;
         private const double PulseDuration = 0.15; // seconds
         private const float PulseAmplitude = 0.12f; // 12% size bump at peak
@@ -67,21 +65,16 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureRootEntity();
 			int w = _graphicsDevice.Viewport.Width;
 			int h = _graphicsDevice.Viewport.Height;
-			if (w != _lastViewportW || h != _lastViewportH)
-			{
-				_lastViewportW = w;
-				_lastViewportH = h;
-				var root = EntityManager.GetEntity(RootEntityName);
-				var t = root?.GetComponent<Transform>();
-				if (t != null)
-				{
-					int rectW = PanelWidth;
-					int rectH = PanelHeight;
-					int m = PanelMargin;
-					var center = new Vector2(w - rectW / 2f - m, h - rectH / 2f - m);
-					t.BasePosition = center;
-				}
-			}
+            var root = EntityManager.GetEntity(RootEntityName);
+            var t = root?.GetComponent<Transform>();
+            if (t != null)
+            {
+                int rectW = PanelWidth;
+                int rectH = PanelHeight;
+                int m = PanelMargin;
+                var center = new Vector2(w - rectW / 2f - m, h - rectH / 2f - m);
+                t.BasePosition = center;
+            }
 		}
 
         public void Draw()
