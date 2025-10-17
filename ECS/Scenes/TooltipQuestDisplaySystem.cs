@@ -22,6 +22,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _font;
 		private readonly Dictionary<int, FadeState> _fadeByEntityId = new();
 		private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedCache = new();
+		private readonly Dictionary<(int w, int h, bool right, int border), Texture2D> _triangleCache = new();
 		private readonly Dictionary<string, int> _indexByLocationId = new();
 		private GamePadState _prevGamePadState;
 		private Texture2D _pixel;
@@ -36,22 +37,34 @@ namespace Crusaders30XX.ECS.Systems
 		public float FadeSeconds { get; set; } = 0.12f;
 
 		[DebugEditable(DisplayName = "Max Alpha", Step = 5, Min = 0, Max = 255)]
-		public int MaxAlpha { get; set; } = 230;
+		public int MaxAlpha { get; set; } = 140;
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.5f, Max = 2.0f)]
 		public float TextScale { get; set; } = 0.2f;
 
 		[DebugEditable(DisplayName = "Header Height", Step = 2, Min = 12, Max = 200)]
-		public int HeaderHeight { get; set; } = 36;
+		public int HeaderHeight { get; set; } = 64;
 
-		[DebugEditable(DisplayName = "Header R", Step = 1, Min = 0, Max = 255)]
-		public int HeaderR { get; set; } = 30;
+		[DebugEditable(DisplayName = "Header Left R", Step = 1, Min = 0, Max = 255)]
+		public int HeaderLeftR { get; set; } = 20;
 
-		[DebugEditable(DisplayName = "Header G", Step = 1, Min = 0, Max = 255)]
-		public int HeaderG { get; set; } = 0;
+		[DebugEditable(DisplayName = "Header Left G", Step = 1, Min = 0, Max = 255)]
+		public int HeaderLeftG { get; set; } = 0;
 
-		[DebugEditable(DisplayName = "Header B", Step = 1, Min = 0, Max = 255)]
-		public int HeaderB { get; set; } = 0;
+		[DebugEditable(DisplayName = "Header Left B", Step = 1, Min = 0, Max = 255)]
+		public int HeaderLeftB { get; set; } = 0;
+
+		[DebugEditable(DisplayName = "Header Right R", Step = 1, Min = 0, Max = 255)]
+		public int HeaderRightR { get; set; } = 60;
+
+		[DebugEditable(DisplayName = "Header Right G", Step = 1, Min = 0, Max = 255)]
+		public int HeaderRightG { get; set; } = 0;
+
+		[DebugEditable(DisplayName = "Header Right B", Step = 1, Min = 0, Max = 255)]
+		public int HeaderRightB { get; set; } = 0;
+
+		[DebugEditable(DisplayName = "Header Stripe Height", Step = 1, Min = 0, Max = 16)]
+		public int HeaderStripeHeight { get; set; } = 3;
 
 		[DebugEditable(DisplayName = "Box Width", Step = 10, Min = 100, Max = 1920)]
 		public int BoxWidth { get; set; } = 520;
@@ -67,6 +80,15 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Enemy Spacing", Step = 2, Min = 0, Max = 200)]
 		public int EnemySpacing { get; set; } = 12;
+
+		[DebugEditable(DisplayName = "Quest Title Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
+		public float QuestTitleScale { get; set; } = 0.22f;
+
+		[DebugEditable(DisplayName = "Bottom Bar Height", Step = 2, Min = 16, Max = 200)]
+		public int BottomBarHeight { get; set; } = 40;
+
+		[DebugEditable(DisplayName = "Header Image Padding", Step = 1, Min = 0, Max = 40)]
+		public int HeaderImagePadding { get; set; } = 6;
 
 		private class FadeState { public float Alpha01; public bool TargetVisible; public Rectangle Rect; public string LocationId; }
 
@@ -151,7 +173,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 
 				DrawTooltipBox(fs.Rect, fs.Alpha01);
-				DrawHeader(fs.Rect, fs.Alpha01);
+				DrawHeader(fs.LocationId, fs.Rect, fs.Alpha01);
 				DrawQuestContent(fs.LocationId, fs.Rect, fs.Alpha01);
 			}
 		}
@@ -247,18 +269,56 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Draw(tex, rect, back);
 		}
 
-		private void DrawHeader(Rectangle rect, float alpha01)
+		private void DrawHeader(string locationId, Rectangle rect, float alpha01)
 		{
 			int hh = System.Math.Max(12, HeaderHeight);
+			int stripe = System.Math.Max(0, System.Math.Min(HeaderStripeHeight, hh));
 			var headerRect = new Rectangle(rect.X, rect.Y, rect.Width, System.Math.Min(rect.Height, hh));
 			int a = (int)System.Math.Round(System.Math.Max(0, System.Math.Min(255, MaxAlpha)) * alpha01);
-			var color = new Color(HeaderR, HeaderG, HeaderB, System.Math.Clamp(a, 0, 255));
-			_spriteBatch.Draw(_pixel, headerRect, color);
-			string title = "Quests";
-			var size = _font.MeasureString(title) * TextScale;
-			var pos = new Vector2(headerRect.X + Padding, headerRect.Y + System.Math.Max(0, (headerRect.Height - (int)System.Math.Ceiling(size.Y)) / 2));
-			var textColor = Color.White * alpha01;
-			_spriteBatch.DrawString(_font, title, pos, textColor, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+			// Darken the left background color a bit more for contrast
+			var leftColor = new Color(System.Math.Max(0, HeaderLeftR - 10), System.Math.Max(0, HeaderLeftG), System.Math.Max(0, HeaderLeftB), System.Math.Clamp(a, 0, 255));
+			var rightColor = new Color(HeaderRightR, HeaderRightG, HeaderRightB, System.Math.Clamp(a, 0, 255));
+
+			// Top white stripe
+			if (stripe > 0)
+			{
+				var stripeRect = new Rectangle(headerRect.X, headerRect.Y, headerRect.Width, stripe);
+				_spriteBatch.Draw(_pixel, stripeRect, Color.White);
+			}
+
+			// Split header: left square (image), right area (location name)
+			int pad = System.Math.Max(0, Padding);
+			int leftBoxSize = headerRect.Height - stripe; // square inside header below stripe
+			var leftRect = new Rectangle(headerRect.X, headerRect.Y + stripe, System.Math.Min(leftBoxSize, headerRect.Width / 2), leftBoxSize);
+			var rightRect = new Rectangle(leftRect.Right, headerRect.Y + stripe, System.Math.Max(0, headerRect.Width - leftRect.Width), leftBoxSize);
+			_spriteBatch.Draw(_pixel, leftRect, leftColor);
+			_spriteBatch.Draw(_pixel, rightRect, rightColor);
+
+			// Draw location image centered in left box
+			var loc = GetLocationDefinition(locationId);
+			if (loc != null)
+			{
+				var tex = TryLoadEnemyTexture(loc.id); // reuse loader; location textures share Content id
+				if (tex != null && leftRect.Width > 0 && leftRect.Height > 0)
+				{
+					int imgPad = System.Math.Max(0, HeaderImagePadding);
+					var imgRect = new Rectangle(leftRect.X + imgPad, leftRect.Y + imgPad, System.Math.Max(1, leftRect.Width - 2 * imgPad), System.Math.Max(1, leftRect.Height - 2 * imgPad));
+					float scale = System.Math.Min(imgRect.Width / (float)tex.Width, imgRect.Height / (float)tex.Height);
+					int drawW = System.Math.Max(1, (int)System.Math.Round(tex.Width * scale));
+					int drawH = System.Math.Max(1, (int)System.Math.Round(tex.Height * scale));
+					var dst = new Rectangle(imgRect.X + (imgRect.Width - drawW) / 2, imgRect.Y + (imgRect.Height - drawH) / 2, drawW, drawH);
+					_spriteBatch.Draw(tex, dst, Color.White * alpha01);
+				}
+			}
+
+			// Draw location name in right area
+			if (loc != null)
+			{
+				string name = loc.name ?? loc.id ?? "";
+				var size = _font.MeasureString(name) * TextScale;
+				var pos = new Vector2(rightRect.X + pad, rightRect.Y + System.Math.Max(0, (rightRect.Height - (int)System.Math.Ceiling(size.Y)) / 2));
+				_spriteBatch.DrawString(_font, name, pos, Color.White * alpha01, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+			}
 		}
 
 		private void DrawQuestContent(string locationId, Rectangle rect, float alpha01)
@@ -272,13 +332,22 @@ namespace Crusaders30XX.ECS.Systems
 			idx = System.Math.Max(0, System.Math.Min(idx, unlockedMax));
 			var questDefs = loc.quests[idx];
 
-			// inner area below header
+			// inner area below header (leave room for bottom bar)
 			int pad = System.Math.Max(0, Padding);
 			int topY = rect.Y + System.Math.Min(rect.Height, System.Math.Max(12, HeaderHeight)) + pad;
-			int innerH = System.Math.Max(1, rect.Bottom - topY - pad);
+			int innerH = System.Math.Max(1, rect.Bottom - topY - pad - System.Math.Max(16, BottomBarHeight));
 			var inner = new Rectangle(rect.X + pad, topY, System.Math.Max(1, rect.Width - 2 * pad), innerH);
 
-			// load textures
+			// Quest title: "Quest #"
+			string questTitle = "Quest " + (idx + 1);
+			var qSize = _font.MeasureString(questTitle) * QuestTitleScale;
+			var qPos = new Vector2(inner.X + (inner.Width - qSize.X) / 2f, inner.Y);
+			_spriteBatch.DrawString(_font, questTitle, qPos, Color.White * alpha01, 0f, Vector2.Zero, QuestTitleScale, SpriteEffects.None, 0f);
+			int enemiesTop = (int)System.Math.Round(qPos.Y + qSize.Y + pad);
+			int enemiesHeight = System.Math.Max(1, inner.Bottom - enemiesTop);
+			var enemiesRect = new Rectangle(inner.X, enemiesTop, inner.Width, enemiesHeight);
+
+			// load enemy textures
 			var textures = new List<Texture2D>();
 			foreach (var q in questDefs)
 			{
@@ -287,21 +356,79 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			if (textures.Count == 0) return;
 
-			int maxH = inner.Height;
+			int maxH = enemiesRect.Height;
 			int targetH = System.Math.Max(1, (int)System.Math.Round(maxH * MathHelper.Clamp(EnemyScale, 0.05f, 1f)));
 			var sizes = textures.Select(t => new Point(
 				(int)System.Math.Round(t.Width * (targetH / (float)System.Math.Max(1, t.Height))),
 				targetH
 			)).ToList();
 			int totalW = sizes.Sum(s => s.X) + (textures.Count - 1) * System.Math.Max(0, EnemySpacing);
-			int startX = inner.X + (inner.Width - totalW) / 2;
+			int startX = enemiesRect.X + (enemiesRect.Width - totalW) / 2;
 			for (int i = 0; i < textures.Count; i++)
 			{
 				int drawX = startX;
 				for (int j = 0; j < i; j++) drawX += sizes[j].X + System.Math.Max(0, EnemySpacing);
-				int drawY = inner.Y + (inner.Height - sizes[i].Y) / 2;
+				int drawY = enemiesRect.Y + (enemiesRect.Height - sizes[i].Y) / 2;
 				_spriteBatch.Draw(textures[i], new Rectangle(drawX, drawY, sizes[i].X, sizes[i].Y), Color.White * alpha01);
 			}
+
+			// Bottom action bar (opaque black)
+			var bottomRect = new Rectangle(rect.X, rect.Bottom - System.Math.Max(16, BottomBarHeight), rect.Width, System.Math.Max(16, BottomBarHeight));
+			_spriteBatch.Draw(_pixel, bottomRect, Color.Black); // no transparency per spec
+
+			// Left: LB / RB rounded pills with chevrons (hidden at ends)
+			int pillPad = pad;
+			int pillH = System.Math.Max(18, bottomRect.Height - 2 * pillPad);
+			float glyphScale = TextScale;
+			string lbText = "LB";
+			string rbText = "RB";
+			string chevLeft = "<";
+			string chevRight = ">";
+			var lbSize = _font.MeasureString(lbText) * glyphScale;
+			var rbSize = _font.MeasureString(rbText) * glyphScale;
+			var chevLSize = _font.MeasureString(chevLeft) * glyphScale;
+			var chevRSize = _font.MeasureString(chevRight) * glyphScale;
+			int innerPadX = System.Math.Max(4, pillH / 6);
+			int pillLW = (int)System.Math.Ceiling(chevLSize.X + innerPadX + lbSize.X + innerPadX);
+			int pillRW = (int)System.Math.Ceiling(rbSize.X + innerPadX + chevRSize.X + innerPadX);
+			int xCursor = bottomRect.X + pillPad;
+			bool canPrev = idx > 0;
+			bool canNext = idx < unlockedMax;
+			if (canPrev)
+			{
+				var pillL = new Rectangle(xCursor, bottomRect.Y + (bottomRect.Height - pillH) / 2, pillLW, pillH);
+				DrawPill(pillL, Color.White, System.Math.Min(pillH / 2, 12));
+				var textY = pillL.Y + (pillL.Height - (int)System.Math.Ceiling(lbSize.Y)) / 2f;
+				var chevPos = new Vector2(pillL.X + innerPadX, textY);
+				var lbPos = new Vector2(pillL.Right - innerPadX - lbSize.X, textY);
+				_spriteBatch.DrawString(_font, chevLeft, chevPos, Color.Black, 0f, Vector2.Zero, glyphScale, SpriteEffects.None, 0f);
+				_spriteBatch.DrawString(_font, lbText, lbPos, Color.Black, 0f, Vector2.Zero, glyphScale, SpriteEffects.None, 0f);
+				xCursor = pillL.Right + pillPad;
+			}
+			if (canNext)
+			{
+				var pillR = new Rectangle(xCursor, bottomRect.Y + (bottomRect.Height - pillH) / 2, pillRW, pillH);
+				DrawPill(pillR, Color.White, System.Math.Min(pillH / 2, 12));
+				var textY = pillR.Y + (pillR.Height - (int)System.Math.Ceiling(rbSize.Y)) / 2f;
+				var rbPos = new Vector2(pillR.X + innerPadX, textY);
+				var chevPosR = new Vector2(pillR.Right - innerPadX - chevRSize.X, textY);
+				_spriteBatch.DrawString(_font, rbText, rbPos, Color.Black, 0f, Vector2.Zero, glyphScale, SpriteEffects.None, 0f);
+				_spriteBatch.DrawString(_font, chevRight, chevPosR, Color.Black, 0f, Vector2.Zero, glyphScale, SpriteEffects.None, 0f);
+			}
+
+			// Right: "A - Select" aligned to bottom-right
+			string leftText = "A";
+			string rightText = " - Select";
+			float scale = TextScale;
+			var leftSize = _font.MeasureString(leftText) * scale;
+			var rightSize = _font.MeasureString(rightText) * scale;
+			int textPad = pad;
+			var rightEndX = bottomRect.Right - textPad;
+			var rightPos = new Vector2(rightEndX - rightSize.X, bottomRect.Y + (bottomRect.Height - (int)System.Math.Ceiling(rightSize.Y)) / 2f);
+			var leftPos = new Vector2((int)System.Math.Round(rightPos.X - leftSize.X), bottomRect.Y + (bottomRect.Height - (int)System.Math.Ceiling(leftSize.Y)) / 2f);
+			var green = new Color(0, 200, 0) * alpha01;
+			_spriteBatch.DrawString(_font, leftText, leftPos, green, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, rightText, rightPos, Color.White * alpha01, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 		}
 
 		private Texture2D TryLoadEnemyTexture(string id)
@@ -311,6 +438,83 @@ namespace Crusaders30XX.ECS.Systems
 			try { return _content.Load<Texture2D>(title); } catch { }
 			try { return _content.Load<Texture2D>(id); } catch { }
 			return null;
+		}
+
+		private void DrawPill(Rectangle rect, Color color, int radius)
+		{
+			int r = System.Math.Max(2, System.Math.Min(radius, System.Math.Min(rect.Width, rect.Height) / 2));
+			if (!_roundedCache.TryGetValue((rect.Width, rect.Height, r), out var tex) || tex == null)
+			{
+				tex = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, rect.Width, rect.Height, r);
+				_roundedCache[(rect.Width, rect.Height, r)] = tex;
+			}
+			_spriteBatch.Draw(tex, rect, color);
+		}
+
+		private void DrawArrow(Rectangle rect, bool right)
+		{
+			int w = System.Math.Max(4, rect.Width);
+			int h = System.Math.Max(4, rect.Height);
+			int border = 2;
+			if (!_triangleCache.TryGetValue((w, h, right, border), out var tex) || tex == null)
+			{
+				tex = new Texture2D(_graphicsDevice, w, h);
+				var data = new Color[w * h];
+				// Triangle vertices
+				Point v0, v1, v2; // counter-clockwise
+				if (right)
+				{
+					v0 = new Point(0, 0);
+					v1 = new Point(0, h - 1);
+					v2 = new Point(w - 1, h / 2);
+				}
+				else
+				{
+					v0 = new Point(w - 1, 0);
+					v1 = new Point(w - 1, h - 1);
+					v2 = new Point(0, h / 2);
+				}
+				// Edge function helpers
+				int Area(Point a, Point b, Point c) => (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
+				float DistToEdge(Point a, Point b, int x, int y)
+				{
+					// distance from p to line ab (approx, using Manhattan for speed)
+					int A = b.Y - a.Y;
+					int B = a.X - b.X;
+					int C = b.X * a.Y - a.X * b.Y;
+					return System.Math.Abs(A * x + B * y + C) / (float)System.Math.Max(1, (int)System.Math.Sqrt(A * A + B * B));
+				}
+				int area = System.Math.Abs(Area(v0, v1, v2));
+				var fill = new Color(245, 245, 245);
+				var outline = new Color(0, 0, 0);
+				for (int py = 0; py < h; py++)
+				{
+					for (int px = 0; px < w; px++)
+					{
+						int w0 = Area(v1, v2, new Point(px, py));
+						int w1 = Area(v2, v0, new Point(px, py));
+						int w2 = Area(v0, v1, new Point(px, py));
+						bool inside = (w0 >= 0 && w1 >= 0 && w2 >= 0) || (w0 <= 0 && w1 <= 0 && w2 <= 0);
+						if (!inside) { data[py * w + px] = Color.Transparent; continue; }
+						float d0 = DistToEdge(v1, v2, px, py);
+						float d1 = DistToEdge(v2, v0, px, py);
+						float d2 = DistToEdge(v0, v1, px, py);
+						float d = System.Math.Min(d0, System.Math.Min(d1, d2));
+						data[py * w + px] = (d <= border) ? outline : fill;
+					}
+				}
+				tex.SetData(data);
+				_triangleCache[(w, h, right, border)] = tex;
+			}
+			_spriteBatch.Draw(tex, rect, Color.White);
+		}
+
+		private LocationDefinition GetLocationDefinition(string id)
+		{
+			if (string.IsNullOrEmpty(id)) return null;
+			var all = LocationDefinitionCache.GetAll();
+			all.TryGetValue(id, out var loc);
+			return loc;
 		}
 
 		private static string ExtractLocationId(string entityName)
