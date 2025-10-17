@@ -98,7 +98,7 @@ namespace Crusaders30XX.ECS.Factories
                 var medalEntity = world.CreateEntity($"Medal_{medalId}");
                 world.AddComponent(medalEntity, new EquippedMedal { EquippedOwner = entity, MedalId = medalId });
                 world.AddComponent(medalEntity, ParallaxLayer.GetUIParallaxLayer());
-                world.AddComponent(medalEntity, new UIElement { IsInteractable = true });
+                world.AddComponent(medalEntity, new UIElement { IsInteractable = false });
                 world.AddComponent(medalEntity, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
             }
             // Attach starting Intellect and MaxHandSize stats
@@ -112,7 +112,7 @@ namespace Crusaders30XX.ECS.Factories
             var courageTooltip = world.CreateEntity("UI_CourageTooltip");
             world.AddComponent(courageTooltip, new CourageTooltipAnchor());
             world.AddComponent(courageTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-            world.AddComponent(courageTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Courage" });
+            world.AddComponent(courageTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = "Courage" });
 
             // Pre-create Temperance tooltip hover entity (bounds updated by TemperanceDisplaySystem)
             var temperanceTooltip = world.CreateEntity("UI_TemperanceTooltip");
@@ -125,17 +125,17 @@ namespace Crusaders30XX.ECS.Factories
                 string tx = tempDef.text ?? string.Empty;
                 temperanceTooltipText = nm + "\n\n" + tx;
             }
-            world.AddComponent(temperanceTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = temperanceTooltipText });
+            world.AddComponent(temperanceTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = temperanceTooltipText });
 
             // Pre-create Action Points tooltip hover entity (bounds updated by ActionPointDisplaySystem)
             var apTooltip = world.CreateEntity("UI_APTooltip");
             world.AddComponent(apTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-            world.AddComponent(apTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Action Points" });
+            world.AddComponent(apTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = "Action Points" });
 
             // Pre-create Weapon tooltip hover entity (bounds updated by EquippedWeaponDisplaySystem)
             var weaponTooltip = world.CreateEntity("UI_WeaponTooltip");
             world.AddComponent(weaponTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-            world.AddComponent(weaponTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Weapon" });
+            world.AddComponent(weaponTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = "Weapon" });
 
             return entity;
         }

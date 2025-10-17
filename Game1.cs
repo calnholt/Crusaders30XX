@@ -36,6 +36,7 @@ public class Game1 : Game
     private LocationSelectDisplaySystem _worldMapSystem;
     private QuestSelectDisplaySystem _questSelectSystem;
     private ParallaxLayerSystem _parallaxLayerSystem;
+    private UIElementHighlightSystem _uiElementHighlightSystem;
     private CursorSystem _cursorSystem;
     private UIElementBorderDebugSystem _uiElementBorderDebugSystem;
     
@@ -116,6 +117,7 @@ public class Game1 : Game
         _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _parallaxLayerSystem = new ParallaxLayerSystem(_world.EntityManager, GraphicsDevice);
         _uiElementBorderDebugSystem = new UIElementBorderDebugSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _world.AddSystem(_titleMenuDisplaySystem);
         _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
@@ -134,6 +136,7 @@ public class Game1 : Game
         _world.AddSystem(_cursorSystem);
         _world.AddSystem(_parallaxLayerSystem);
         _world.AddSystem(_uiElementBorderDebugSystem);
+        _world.AddSystem(_uiElementHighlightSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 
@@ -227,6 +230,7 @@ public class Game1 : Game
         FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
         FrameProfiler.Measure("DebugMenuSystem.Draw", _debugMenuSystem.Draw);
         FrameProfiler.Measure("EntityListOverlaySystem.Draw", _entityListOverlaySystem.Draw);
+        FrameProfiler.Measure("UIElementHighlightSystem.Draw", _uiElementHighlightSystem.Draw);
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         _spriteBatch.End();

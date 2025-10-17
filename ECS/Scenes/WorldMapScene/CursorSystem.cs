@@ -115,7 +115,7 @@ namespace Crusaders30XX.ECS.Systems
 				int rHitbox = Math.Max(0, HitboxRadius);
 				var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
 					.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-					.Where(x => x.UI != null && x.UI.IsInteractable && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox) > 0f)
+					.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox) > 0f)
 					.OrderByDescending(x => x.T?.ZOrder ?? 0)
 					.FirstOrDefault();
 				if (tc != null)

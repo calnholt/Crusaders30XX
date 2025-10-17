@@ -303,7 +303,7 @@ namespace Crusaders30XX.ECS.Components
         public Rectangle Bounds { get; set; }
         public bool IsHovered { get; set; } = false;
         public bool IsClicked { get; set; } = false;
-        public bool IsInteractable { get; set; } = true;
+        public bool IsInteractable { get; set; } = false;
         public string Tooltip { get; set; } = "";
         public TooltipPosition TooltipPosition { get; set; } = TooltipPosition.Above;
         public int TooltipOffsetPx { get; set; } = 6; // gap from element to tooltip

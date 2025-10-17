@@ -5,7 +5,6 @@ using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Rendering;
-using Crusaders30XX.ECS.Events;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,7 +14,7 @@ namespace Crusaders30XX.ECS.Systems
     /// System for highlighting cards when hovered over
     /// </summary>
     [DebugTab("Card Highlight")]
-    public class CardHighlightSystem : Core.System
+    public class UIElementHighlightSystem : Core.System
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
@@ -28,7 +27,7 @@ namespace Crusaders30XX.ECS.Systems
         
         // Highlight settings now come from EquipmentHighlightSettings via HighlightSettingsSystem
         
-        public CardHighlightSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch) 
+        public UIElementHighlightSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch) 
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
@@ -37,36 +36,6 @@ namespace Crusaders30XX.ECS.Systems
             // Create a single pixel texture that we can reuse
             _pixelTexture = new Texture2D(_graphicsDevice, 1, 1);
             _pixelTexture.SetData(new[] { Color.White });
-
-            EventManager.Subscribe<HighlightRenderEvent>(evt =>
-            {
-                // Unified highlight render for cards and equipment
-                var t = evt.Transform ?? evt.Entity.GetComponent<Transform>();
-                var ui = evt.UI ?? evt.Entity.GetComponent<UIElement>();
-                if (ui == null || !ui.IsHovered) return;
-                if (!ReferenceEquals(evt.Entity, _currentHovered))
-                {
-                    _currentHovered = evt.Entity;
-                    _pulseStartSeconds = _lastTotalSeconds;
-                }
-                var fakeGameTime = new GameTime(TimeSpan.FromSeconds(_lastTotalSeconds), TimeSpan.Zero);
-                Rectangle targetRect;
-                float rot = 0f;
-                if (evt.Entity.GetComponent<Intimidated>() != null)
-                {
-                    return;
-                }
-                if (evt.Entity.GetComponent<CardData>() != null && t != null)
-                {
-                    targetRect = ComputeCardBounds(evt.Entity, t.Position);
-                    rot = t.Rotation;
-                }
-                else
-                {
-                    targetRect = ui.Bounds;
-                }
-                DrawHighlight(targetRect, rot, fakeGameTime);
-            });
         }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -78,6 +47,54 @@ namespace Crusaders30XX.ECS.Systems
         {
             _lastTotalSeconds = gameTime.TotalGameTime.TotalSeconds;
             base.Update(gameTime);
+        }
+
+        public void Draw()
+        {
+            // Draw highlight around the currently hovered UI element (card or equipment)
+            var hoveredEntities = EntityManager
+                .GetEntitiesWithComponent<UIElement>()
+                .Where(e =>
+                {
+                    var ui = e.GetComponent<UIElement>();
+                    return ui != null && ui.IsHovered && ui.IsInteractable;
+                })
+                .ToList();
+
+            if (hoveredEntities.Count == 0)
+            {
+                return;
+            }
+
+            // InputSystem typically ensures only one hovered at a time; draw all just in case
+            foreach (var e in hoveredEntities)
+            {
+                if (e.GetComponent<Intimidated>() != null) continue;
+
+                if (!ReferenceEquals(e, _currentHovered))
+                {
+                    _currentHovered = e;
+                    _pulseStartSeconds = _lastTotalSeconds;
+                }
+
+                var fakeGameTime = new GameTime(TimeSpan.FromSeconds(_lastTotalSeconds), TimeSpan.Zero);
+                var t = e.GetComponent<Transform>();
+                var ui = e.GetComponent<UIElement>();
+                Rectangle targetRect;
+                float rot = 0f;
+
+                if (e.GetComponent<CardData>() != null && t != null && e.GetComponent<AssignedBlockCard>() == null)
+                {
+                    targetRect = ComputeCardBounds(e, t.Position);
+                }
+                else
+                {
+                    targetRect = ui.Bounds;
+                }
+                rot = t.Rotation;
+
+                DrawHighlight(targetRect, rot, fakeGameTime);
+            }
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)

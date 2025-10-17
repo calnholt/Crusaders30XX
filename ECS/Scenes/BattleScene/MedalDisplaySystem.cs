@@ -188,7 +188,7 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(medal.Owner, ui);
 			}
 			ui.Bounds = rect;
-			ui.IsInteractable = true;
+			ui.IsInteractable = false;
 			ui.TooltipPosition = TooltipPosition.Below; // show tooltip below and centered when possible
 			ui.Tooltip = BuildMedalTooltip(medal);
 		}

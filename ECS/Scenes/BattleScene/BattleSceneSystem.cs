@@ -30,7 +30,6 @@ namespace Crusaders30XX.ECS.Systems
 		private DeckManagementSystem _deckManagementSystem;
 
 		private HandDisplaySystem _handDisplaySystem;
-		private CardHighlightSystem _cardHighlightSystem;
 		private BattleBackgroundSystem _battleBackgroundSystem;
 		private DebugCommandSystem _debugCommandSystem;
 		private DrawPileDisplaySystem _drawPileDisplaySystem;
@@ -262,7 +261,6 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			// Construct
 			_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
-			_cardHighlightSystem = new CardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
@@ -392,7 +390,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_appliedPassivesManagementSystem);
 			_world.AddSystem(_battleStateInfoManagementSystem);
 			_world.AddSystem(_payCostOverlaySystem);
-			_world.AddSystem(_cardHighlightSystem);
 			_world.AddSystem(_cantPlayCardMessageSystem);
 			_world.AddSystem(_gameOverOverlayDisplaySystem);
 			_world.AddSystem(_discardSpecificCardHighlightSystem);

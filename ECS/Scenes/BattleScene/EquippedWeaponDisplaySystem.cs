@@ -159,12 +159,11 @@ namespace Crusaders30XX.ECS.Systems
 			var rootUi = root.GetComponent<UIElement>();
 			if (rootUi == null)
 			{
-				EntityManager.AddComponent(root, new UIElement { Bounds = hitRect, IsInteractable = true, Tooltip = BuildWeaponTooltip(), TooltipPosition = TooltipPosition.Right });
+				EntityManager.AddComponent(root, new UIElement { Bounds = hitRect, Tooltip = BuildWeaponTooltip(), TooltipPosition = TooltipPosition.Right });
 			}
 			else
 			{
 				rootUi.Bounds = hitRect;
-				rootUi.IsInteractable = true;
 				rootUi.TooltipPosition = TooltipPosition.Right;
 				rootUi.Tooltip = BuildWeaponTooltip();
 			}

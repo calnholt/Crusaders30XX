@@ -187,14 +187,8 @@ namespace Crusaders30XX.ECS.Systems
 					UpdateClickable(item, bgRect);
 					// Publish highlight event on hover unless disabled; during Player Action phase only if item has Activate ability
 					var uiEquip = item.Owner.GetComponent<UIElement>();
-					bool allowHighlight = true;
 					var phaseNow = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
 					bool isPlayerAction = phaseNow != null && phaseNow.Main == MainPhase.PlayerTurn && phaseNow.Sub == SubPhase.Action;
-					if (isPlayerAction && !HasActivateAbility(item)) allowHighlight = false;
-					if (!disabledNow && allowHighlight)
-					{
-						EventManager.Publish(new HighlightRenderEvent { Entity = item.Owner, Transform = tEquip, UI = uiEquip });
-					}
 					// Now draw background and contents, with optional pulse
 					float pulseScale = GetCurrentPulseScale();
 					if (pulseScale != 1f)
