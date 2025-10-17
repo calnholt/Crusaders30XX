@@ -305,9 +305,18 @@ namespace Crusaders30XX.ECS.Components
         public bool IsClicked { get; set; } = false;
         public bool IsInteractable { get; set; } = false;
         public string Tooltip { get; set; } = "";
+        public TooltipType TooltipType { get; set; } = TooltipType.Text;
         public TooltipPosition TooltipPosition { get; set; } = TooltipPosition.Above;
         public int TooltipOffsetPx { get; set; } = 6; // gap from element to tooltip
         public UIElementEventType EventType;
+    }
+
+    public enum TooltipType
+    {
+        None,
+        Quests,
+        Card,
+        Text,
     }
 
     public enum UIElementEventType

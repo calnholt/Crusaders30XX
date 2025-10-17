@@ -31,14 +31,15 @@ public class Game1 : Game
     private TitleMenuDisplaySystem _titleMenuDisplaySystem;
     private BattleSceneSystem _battleSceneSystem;
     private CustomizationRootSystem _customizationRootSystem;
-    private TooltipDisplaySystem _tooltipDisplaySystem;
+    private TooltipTextDisplaySystem _tooltipTextDisplaySystem;
     private ProfilerSystem _profilerSystem;
     private LocationSelectDisplaySystem _worldMapSystem;
-    private QuestSelectDisplaySystem _questSelectSystem;
+    private TooltipQuestDisplaySystem _tooltipQuestDisplaySystem;
     private ParallaxLayerSystem _parallaxLayerSystem;
     private UIElementHighlightSystem _uiElementHighlightSystem;
     private CursorSystem _cursorSystem;
     private UIElementBorderDebugSystem _uiElementBorderDebugSystem;
+    private UIElementEventDelegateSystem _uiElementEventDelegateSystem;
     
     // ECS System
     private World _world;
@@ -110,14 +111,15 @@ public class Game1 : Game
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, Content);
         _renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, GraphicsDevice);
         _inputSystem = new InputSystem(_world.EntityManager);
-        _tooltipDisplaySystem = new TooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _tooltipTextDisplaySystem = new TooltipTextDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
-        _questSelectSystem = new QuestSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
+        _tooltipQuestDisplaySystem = new TooltipQuestDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _parallaxLayerSystem = new ParallaxLayerSystem(_world.EntityManager, GraphicsDevice);
         _uiElementBorderDebugSystem = new UIElementBorderDebugSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _uiElementEventDelegateSystem = new UIElementEventDelegateSystem(_world.EntityManager);
         _world.AddSystem(_titleMenuDisplaySystem);
         _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
@@ -129,14 +131,15 @@ public class Game1 : Game
         _world.AddSystem(_cardDisplaySystem);
         _world.AddSystem(_renderingSystem);
         _world.AddSystem(_inputSystem);
-        _world.AddSystem(_tooltipDisplaySystem);
+        _world.AddSystem(_tooltipTextDisplaySystem);
         _world.AddSystem(_profilerSystem);
         _world.AddSystem(_worldMapSystem);
-        _world.AddSystem(_questSelectSystem);
+        _world.AddSystem(_tooltipQuestDisplaySystem);
         _world.AddSystem(_cursorSystem);
         _world.AddSystem(_parallaxLayerSystem);
         _world.AddSystem(_uiElementBorderDebugSystem);
         _world.AddSystem(_uiElementHighlightSystem);
+        _world.AddSystem(_uiElementEventDelegateSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 
@@ -217,7 +220,7 @@ public class Game1 : Game
                 _spriteBatch.End();
                 _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, _spriteRasterizer);
                 FrameProfiler.Measure("LocationSelectDisplaySystem.Draw", _worldMapSystem.Draw);
-                FrameProfiler.Measure("QuestSelectDisplaySystem.Draw", _questSelectSystem.Draw);
+                FrameProfiler.Measure("TooltipQuestDisplaySystem.Draw", _tooltipQuestDisplaySystem.Draw);
                 _spriteBatch.End();
                 // Resume default sampling for overlays and other UI
                 _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
@@ -226,7 +229,7 @@ public class Game1 : Game
             }
         }
         FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
-        FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipDisplaySystem.Draw);
+        FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipTextDisplaySystem.Draw);
         FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
         FrameProfiler.Measure("DebugMenuSystem.Draw", _debugMenuSystem.Draw);
         FrameProfiler.Measure("EntityListOverlaySystem.Draw", _entityListOverlaySystem.Draw);

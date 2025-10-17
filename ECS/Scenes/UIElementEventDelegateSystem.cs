@@ -25,11 +25,8 @@ namespace Crusaders30XX.ECS.Systems
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			var clickedUIComponent = GetRelevantEntities().Select(x => x.GetComponent<UIElement>()).Where(x => x.IsClicked && x.IsHovered).FirstOrDefault();
+            if (clickedUIComponent == null) return;
             var _entity = clickedUIComponent.Owner;
-            if (clickedUIComponent == null)
-            {
-                return;
-            }
             switch(clickedUIComponent.EventType)
             {
                 case UIElementEventType.UnassignCardAsBlock:

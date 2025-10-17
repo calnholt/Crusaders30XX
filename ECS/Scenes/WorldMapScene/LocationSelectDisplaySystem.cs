@@ -181,7 +181,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					e = EntityManager.CreateEntity($"Location_{key}");
 					EntityManager.AddComponent(e, new Transform { Position = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f), ZOrder = 0 });
-					EntityManager.AddComponent(e, new UIElement { Bounds = rect, IsInteractable = true, Tooltip = null});
+					EntityManager.AddComponent(e, new UIElement { Bounds = rect, IsInteractable = true, TooltipType = TooltipType.Quests });
 					_locationEntitiesById[key] = e;
 				}
 				else
@@ -203,7 +203,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Customize button bottom-right
 			EnsureCustomizeButton(viewportW, viewportH);
 
-			// Handle clicks to open quest select overlay (only for unlocked slots)
+			// Handle clicks to start selected quest (only for unlocked slots)
 			foreach (var kv in _locationEntitiesById)
 			{
 				var key = kv.Key;
@@ -217,23 +217,39 @@ namespace Crusaders30XX.ECS.Systems
 					if (def == null) break;
 					bool unlocked = def.id == "desert"; // assume only desert unlocked
 					if (!unlocked) break;
+
 					int completed = SaveCache.GetValueOrDefault(key, 0);
-					int maxIndex = System.Math.Max(0, (def.quests?.Count ?? 1) - 1);
-					int startIndex = System.Math.Max(0, System.Math.Min(completed, maxIndex));
+					int clampedIdx = System.Math.Max(0, System.Math.Min(completed, (def.quests?.Count ?? 1) - 1));
 					var qsEntity = EntityManager.GetEntitiesWithComponent<QuestSelectState>().FirstOrDefault();
-					if (qsEntity == null)
+					var qs = qsEntity?.GetComponent<QuestSelectState>();
+					int chosenIndex = (qs != null && qs.LocationId == key)
+						? System.Math.Max(0, System.Math.Min(qs.SelectedQuestIndex, (def.quests?.Count ?? 1) - 1))
+						: clampedIdx;
+
+					// Build queued events from selected quest and transition to Battle
+					var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
+					if (qeEntity == null)
 					{
-						qsEntity = EntityManager.CreateEntity("QuestSelectState");
-						EntityManager.AddComponent(qsEntity, new QuestSelectState { IsOpen = true, LocationId = key, SelectedQuestIndex = startIndex });
+						qeEntity = EntityManager.CreateEntity("QueuedEvents");
+						EntityManager.AddComponent(qeEntity, new QueuedEvents());
+						EntityManager.AddComponent(qeEntity, new DontDestroyOnLoad());
 					}
-					else
+					var qe = qeEntity.GetComponent<QueuedEvents>();
+					qe.CurrentIndex = -1;
+					qe.Events.Clear();
+					var questDefs = def.quests[chosenIndex];
+					foreach (var q in questDefs)
 					{
-						var s = qsEntity.GetComponent<QuestSelectState>();
-						s.IsOpen = true;
-						s.LocationId = key;
-						s.SelectedQuestIndex = startIndex;
+						var type = ParseQueuedEventType(q?.type);
+						if (!string.IsNullOrEmpty(q?.id))
+						{
+							qe.Events.Add(new QueuedEvent { EventId = q.id, EventType = type });
+						}
 					}
-					_showUI = false;
+					if (qe.Events.Count > 0)
+					{
+						EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
+					}
 					break;
 				}
 			}
@@ -407,6 +423,19 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_textureCache[assetName] = null;
 				return null;
+			}
+		}
+
+		private static QueuedEventType ParseQueuedEventType(string type)
+		{
+			if (string.IsNullOrEmpty(type)) return QueuedEventType.Enemy;
+			switch (type.ToLowerInvariant())
+			{
+				case "enemy": return QueuedEventType.Enemy;
+				case "event": return QueuedEventType.Event;
+				case "shop": return QueuedEventType.Shop;
+				case "church": return QueuedEventType.Church;
+				default: return QueuedEventType.Enemy;
 			}
 		}
 	}

@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Systems
 	/// Draws simple black-background, white-text tooltips for hovered UI elements that have a Tooltip component.
 	/// </summary>
 	[DebugTab("Tooltips")]
-	public class TooltipDisplaySystem : Core.System
+	public class TooltipTextDisplaySystem : Core.System
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
@@ -50,7 +50,7 @@ namespace Crusaders30XX.ECS.Systems
 		private class FadeState { public float Alpha01; public bool TargetVisible; public Rectangle Rect; public string Text; }
 		private readonly Dictionary<int, FadeState> _fadeByEntityId = new();
 
-		public TooltipDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+		public TooltipTextDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
@@ -74,7 +74,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Determine top-most hovered UI with tooltip
 			var hoverables = GetRelevantEntities()
 				.Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>() })
-				.Where(x => x.UI?.Tooltip != null && x.UI.IsHovered && !string.IsNullOrWhiteSpace(x.UI.Tooltip))
+				.Where(x => x.UI?.TooltipType == TooltipType.Text && x.UI.IsHovered && !string.IsNullOrWhiteSpace(x.UI.Tooltip))
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.ToList();
 			var top = hoverables.FirstOrDefault();
