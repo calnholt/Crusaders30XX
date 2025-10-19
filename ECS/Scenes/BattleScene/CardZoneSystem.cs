@@ -188,16 +188,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case CardZoneType.ExhaustPile:
                 {
-                    deck.ExhaustPile.Add(evt.Card);
-                    // Not interactable in exhaust pile
-                    var uiE = evt.Card.GetComponent<UIElement>();
-                    if (uiE != null)
-                    {
-                        uiE.IsInteractable = false;
-                        uiE.IsHovered = false;
-                        uiE.IsClicked = false;
-                        uiE.EventType = UIElementEventType.None;
-                    }
+                    EntityManager.DestroyEntity(evt.Card.Id);
                     break;
                 }
             }
