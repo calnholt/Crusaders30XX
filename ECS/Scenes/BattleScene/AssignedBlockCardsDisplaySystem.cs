@@ -84,7 +84,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new BlockAssignmentRemoved
 			{
 				Card = evt.CardEntity,
-				DeltaBlock = -BlockValueService.GetBlockValue(evt.CardEntity),
+				DeltaBlock = -abc.BlockAmount,
 				Color = abc.ColorKey,
 				ContextId = abc.ContextId
 			});

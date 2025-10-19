@@ -289,6 +289,8 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			ui.Tooltip = BuildTooltipText(item);
 			ui.TooltipPosition = TooltipPosition.Right;
+			// Panel (default zone) items should use direct click handling, not delegate routing
+			ui.EventType = UIElementEventType.None;
 					// Transform.Position already reflects parallax; ZOrder handled above
 		}
 
@@ -525,19 +527,6 @@ namespace Crusaders30XX.ECS.Systems
 		private Texture2D SafeLoadTexture(string asset)
 		{
 			try { return _content.Load<Texture2D>(asset); } catch { return null; }
-		}
-
-		private bool HasActivateAbility(EquippedEquipment item)
-		{
-			try
-			{
-				if (EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null && def.abilities != null)
-				{
-					return def.abilities.Any(a => a.type == "Activate");
-				}
-			}
-			catch { }
-			return false;
 		}
 
 		private Color ResolveFillColor(EquippedEquipment item)

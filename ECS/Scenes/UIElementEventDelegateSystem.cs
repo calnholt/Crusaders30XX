@@ -26,11 +26,6 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new UnassignCardAsBlockRequested { CardEntity = entity });
                     break;
                 }
-                case UIElementEventType.AssignEquipmentAsBlock:
-                {
-                    EventManager.Publish(new AssignEquipmentAsBlockRequested { EquipmentEntity = entity });
-                    break;
-                }
                 case UIElementEventType.ActivateEquipment:
                 {
                     EventManager.Publish(new ActivateEquipmentRequested { EquipmentEntity = entity });

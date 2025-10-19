@@ -48,6 +48,9 @@ namespace Crusaders30XX.ECS.Systems
 					int ch = (int)(defaultCardDrawHeight * abc.CurrentScale);
 					var rectNow = new Microsoft.Xna.Framework.Rectangle((int)(abc.CurrentPos.X - cw / 2f), (int)(abc.CurrentPos.Y - ch / 2f), System.Math.Max(1, cw), System.Math.Max(1, ch));
 					uiAbc.Bounds = rectNow;
+					// Ensure clicks on assigned equipment route to unassign handler via delegate path
+					uiAbc.EventType = UIElementEventType.UnassignCardAsBlock;
+					uiAbc.IsInteractable = true;
 				}
 			}
 			// Only in Block or Action phase
@@ -136,6 +139,17 @@ namespace Crusaders30XX.ECS.Systems
 						var uiCenter = uiElem != null ? new Vector2(uiElem.Bounds.X + uiElem.Bounds.Width * 0.5f, uiElem.Bounds.Y + uiElem.Bounds.Height * 0.5f) : (t?.Position ?? Vector2.Zero);
 						var returnPos = (equipZone != null && equipZone.LastPanelCenter != Vector2.Zero) ? equipZone.LastPanelCenter : uiCenter;
 						abc.ContextId = ctx; abc.BlockAmount = blockVal; abc.AssignedAtTicks = System.DateTime.UtcNow.Ticks; abc.Phase = AssignedBlockCard.PhaseState.Pullback; abc.Elapsed = 0f; abc.IsEquipment = true; abc.ColorKey = NormalizeColorKey(color); abc.Tooltip = BuildEquipmentTooltip(comp); abc.DisplayBgColor = ResolveEquipmentBgColor(color); abc.DisplayFgColor = ResolveFgForBg(abc.DisplayBgColor); abc.ReturnTargetPos = returnPos; abc.EquipmentType = comp.EquipmentType;
+					}
+					// Mark the assigned equipment to unassign via delegate when clicked on its assigned tile
+					{
+						var uiAssigned = eqEntity.GetComponent<UIElement>();
+						if (uiAssigned == null)
+						{
+							uiAssigned = new UIElement { IsInteractable = true };
+							EntityManager.AddComponent(eqEntity, uiAssigned);
+						}
+						uiAssigned.EventType = UIElementEventType.UnassignCardAsBlock;
+						uiAssigned.IsInteractable = true;
 					}
 					break;
 				}
