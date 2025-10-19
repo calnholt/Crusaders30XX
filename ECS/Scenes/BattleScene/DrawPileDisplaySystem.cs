@@ -139,10 +139,6 @@ namespace Crusaders30XX.ECS.Systems
 				rootUi.Bounds = scaledRect;
 				rootUi.IsInteractable = true;
 				rootUi.Tooltip = "View Draw Pile";
-                if (root.GetComponent<DrawPileClickable>() == null)
-                {
-                    EntityManager.AddComponent(root, new DrawPileClickable());
-                }
 			}
         }
 

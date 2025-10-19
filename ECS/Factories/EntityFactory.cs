@@ -278,12 +278,12 @@ namespace Crusaders30XX.ECS.Factories
         }
 
         // Helper: create card entity from CardDefinition id and color
-        public static Entity CreateCardFromDefinition(EntityManager entityManager, string cardId, CardData.CardColor color, bool allowWeapons = false)
+        public static Entity CreateCardFromDefinition(EntityManager entityManager, string cardId, CardData.CardColor color, bool allowWeapons = false, int index = 0)
         {
             if (!CardDefinitionCache.TryGet(cardId, out var def) || def == null) return null;
             if (def.isWeapon && !allowWeapons) return null; // only non-weapons for deck/library
             string name = def.name ?? def.id ?? cardId;
-            var entity = entityManager.CreateEntity($"Card_{name}_{color}");
+            var entity = entityManager.CreateEntity($"Card_{name}_{color}_{index}");
 
             var cardData = new CardData
             {

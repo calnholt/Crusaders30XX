@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
@@ -25,10 +26,6 @@ namespace Crusaders30XX.ECS.Systems
 		private Texture2D _pixel;
 		private Texture2D _customizeRoundedCache;
 
-		// Cached viewport to detect size changes and recompute layout
-		private int _lastViewportW = -1;
-		private int _lastViewportH = -1;
-		private bool _showUI;
 
 		[DebugEditable(DisplayName = "Tile Size (% of min screen dim)", Step = 0.005f, Min = 0.05f, Max = 0.9f)]
 		public float TileSize { get; set; } = 0.25f;
@@ -72,6 +69,22 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Locked '?' Scale", Step = 0.05f, Min = 0.2f, Max = 2f)]
 		public float LockedQuestionScale { get; set; } = .8f;
 
+		// Customize button debug settings
+		[DebugEditable(DisplayName = "Customize Btn Width", Step = 2, Min = 40, Max = 800)]
+		public int CustomizeButtonWidth { get; set; } = 200;
+
+		[DebugEditable(DisplayName = "Customize Btn Height", Step = 2, Min = 24, Max = 300)]
+		public int CustomizeButtonHeight { get; set; } = 56;
+
+		[DebugEditable(DisplayName = "Customize Btn Margin", Step = 1, Min = 0, Max = 120)]
+		public int CustomizeButtonMargin { get; set; } = 16;
+
+		[DebugEditable(DisplayName = "Customize Btn Radius", Step = 1, Min = 0, Max = 64)]
+		public int CustomizeButtonCornerRadius { get; set; } = 12;
+
+		[DebugEditable(DisplayName = "Customize Label Scale", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
+		public float CustomizeLabelScale { get; set; } = 0.2f;
+
 		public LocationSelectDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
 			: base(entityManager)
 		{
@@ -82,7 +95,6 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
-			EventManager.Subscribe<LoadSceneEvent>(OnLoadSceneEvent);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -95,61 +107,52 @@ namespace Crusaders30XX.ECS.Systems
 			_locationEntitiesById.Clear();
 		}
 
-		private void OnLoadSceneEvent(LoadSceneEvent evt)
-		{
-			if (evt.Scene == SceneId.WorldMap)
-			{
-				_showUI = true;
-			}
-		}
-
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			var scene = entity.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.WorldMap)
 			{
-				// Reset viewport cache when leaving scene to ensure layout recomputes on re-entry
-				_lastViewportW = -1;
-				_lastViewportH = -1;
 				return;
 			}
 
-			int w = _graphicsDevice.Viewport.Width;
-			int h = _graphicsDevice.Viewport.Height;
+			LayoutAndSyncLocationEntities(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height);
 
-			// If quest overlay is open, disable interactions and skip layout
-			var qsEntity0 = EntityManager.GetEntitiesWithComponent<QuestSelectState>().FirstOrDefault();
-			var qs0 = qsEntity0?.GetComponent<QuestSelectState>();
-			if (qs0 != null && qs0.IsOpen)
+			// After layout, update BasePosition for each location entity from its UI bounds center
+			var i = 0;
+			foreach (var kv in _locationEntitiesById)
 			{
-				foreach (var kv in _locationEntitiesById)
+				var locEnt = kv.Value;
+				if (locEnt == null) continue;
+				var t = locEnt.GetComponent<Transform>();
+				var ui = locEnt.GetComponent<UIElement>();
+				if (t != null && ui != null)
 				{
-					var ui = kv.Value?.GetComponent<UIElement>();
-					
-					if (ui != null)
-					{
-						ui.IsInteractable = false;
-					}
+					var rect = GetRect(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, TotalSlots, i);
+					var position = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
+					t.BasePosition = position;
+					i++;
 				}
-				EntityManager.GetEntity("LocationCustomizeButton").GetComponent<UIElement>().IsInteractable = false;
-				return;
-			}
-			else 
-			{
-				_showUI = true;
-			}
-			if (w != _lastViewportW || h != _lastViewportH)
-			{
-				_lastViewportW = w;
-				_lastViewportH = h;
-				LayoutAndSyncLocationEntities(w, h);
-			}
-			else
-			{
-				// Bounds might still need to be updated if debug-edited sizes changed
-				LayoutAndSyncLocationEntities(w, h);
 			}
 		}
+
+			private Rectangle GetRect(int viewportW, int viewportH, int displayCount, int index)
+			{
+				int minDim = System.Math.Min(viewportW, viewportH);
+				int tile = System.Math.Max(32, (int)System.Math.Round(minDim * MathHelper.Clamp(TileSize, 0.05f, 0.9f)));
+				int pad = System.Math.Max(0, (int)System.Math.Round(tile * MathHelper.Clamp(TilePadding, 0f, 0.5f)));
+				int cell = tile + pad;
+				int cols = System.Math.Max(1, Columns > 0 ? Columns : viewportW / cell);
+				int rows = System.Math.Max(1, Rows > 0 ? Rows : (int)System.Math.Ceiling(displayCount / (float)cols));
+
+				int gridW = cols * cell - pad;
+				int gridH = rows * cell - pad;
+				int startX = (viewportW - gridW) / 2;
+				int startY = (viewportH - gridH) / 2 + (int)System.Math.Round(viewportH * MathHelper.Clamp(YOffset, -1f, 1f));
+				int r = index / cols;
+				int c = index % cols;
+				var rect = new Rectangle(startX + c * cell, startY + r * cell, tile, tile);
+				return rect;
+			}
 
 		private void LayoutAndSyncLocationEntities(int viewportW, int viewportH)
 		{
@@ -157,46 +160,22 @@ namespace Crusaders30XX.ECS.Systems
 			var list = all?.Values?.OrderBy(d => d?.name ?? d?.id).ToList() ?? new List<LocationDefinition>();
 			int displayCount = System.Math.Max(1, TotalSlots);
 
-			int minDim = System.Math.Min(viewportW, viewportH);
-			int tile = System.Math.Max(32, (int)System.Math.Round(minDim * MathHelper.Clamp(TileSize, 0.05f, 0.9f)));
-			int pad = System.Math.Max(0, (int)System.Math.Round(tile * MathHelper.Clamp(TilePadding, 0f, 0.5f)));
-			int cell = tile + pad;
-			int cols = System.Math.Max(1, Columns > 0 ? Columns : viewportW / cell);
-			int rows = System.Math.Max(1, Rows > 0 ? Rows : (int)System.Math.Ceiling(displayCount / (float)cols));
-
-			int gridW = cols * cell - pad;
-			int gridH = rows * cell - pad;
-			int startX = (viewportW - gridW) / 2;
-			int startY = (viewportH - gridH) / 2 + (int)System.Math.Round(viewportH * MathHelper.Clamp(YOffset, -1f, 1f));
-
 			for (int i = 0; i < displayCount; i++)
 			{
 				LocationDefinition def = (i < list.Count) ? list[i] : null;
-				int r = i / cols;
-				int c = i % cols;
-				var rect = new Rectangle(startX + c * cell, startY + r * cell, tile, tile);
+				var rect = GetRect(viewportW, viewportH, displayCount, i);
 
 				string key = def?.id ?? $"locked_{i}";
+				var position = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
 				if (!_locationEntitiesById.TryGetValue(key, out var e) || e == null)
 				{
 					e = EntityManager.CreateEntity($"Location_{key}");
-					EntityManager.AddComponent(e, new Transform { Position = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f), ZOrder = 0 });
+					EntityManager.AddComponent(e, new Transform { Position = position, BasePosition = position, ZOrder = 0 });
 					EntityManager.AddComponent(e, new UIElement { Bounds = rect, IsInteractable = true, TooltipType = TooltipType.Quests });
+					var layer = ParallaxLayer.GetUIParallaxLayer();
+					layer.AffectsUIBounds = true;
+					EntityManager.AddComponent(e, layer);
 					_locationEntitiesById[key] = e;
-				}
-				else
-				{
-					var t = e.GetComponent<Transform>();
-					if (t != null)
-					{
-						t.Position = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
-					}
-					var ui = e.GetComponent<UIElement>();
-					if (ui != null)
-					{
-						ui.Bounds = rect;
-						ui.IsInteractable = true;
-					}
 				}
 			}
 
@@ -266,7 +245,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
-			if (!_showUI) return;
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.WorldMap) return;
 
@@ -278,21 +256,32 @@ namespace Crusaders30XX.ECS.Systems
 			var list = all?.Values?.OrderBy(d => d?.name ?? d?.id).ToList() ?? new List<LocationDefinition>();
 			int displayCount = System.Math.Max(1, TotalSlots);
 
-			for (int i = 0; i < displayCount; i++)
+			for (int i = 0; i < 1; i++)
 			{
 				LocationDefinition def = (i < list.Count) ? list[i] : null;
 				string key = def?.id ?? $"locked_{i}";
 				if (!_locationEntitiesById.TryGetValue(key, out var e) || e == null) continue;
 				var ui = e.GetComponent<UIElement>();
 				if (ui == null) continue;
+				var tEnt = e.GetComponent<Transform>();
+				if (tEnt == null) continue;
+
+				int tileW = ui.Bounds.Width;
+				int tileH = ui.Bounds.Height;
+				var dst = new Rectangle(
+					(int)System.Math.Round(tEnt.Position.X - tileW / 2f),
+					(int)System.Math.Round(tEnt.Position.Y - tileH / 2f),
+					tileW,
+					tileH);
+				// Keep UI bounds aligned with parallax-adjusted transform for hit-testing/tooltips
+				// ui.Bounds = dst;
 
 				// Container background (rounded rect)
-				var dst = ui.Bounds;
 				DrawContainer(dst);
 
-			// Compute inner padded rect for content within the container
-			int rectPad = System.Math.Max(0, (int)System.Math.Round(dst.Width * MathHelper.Clamp(RectPadding, 0f, 0.5f)));
-			var inner = new Rectangle(dst.X + rectPad, dst.Y + rectPad, System.Math.Max(1, dst.Width - 2 * rectPad), System.Math.Max(1, dst.Height - 2 * rectPad));
+				// Compute inner padded rect for content within the container
+				int rectPad = System.Math.Max(0, (int)System.Math.Round(dst.Width * MathHelper.Clamp(RectPadding, 0f, 0.5f)));
+				var inner = new Rectangle(dst.X + rectPad, dst.Y + rectPad, System.Math.Max(1, dst.Width - 2 * rectPad), System.Math.Max(1, dst.Height - 2 * rectPad));
 
 				bool unlocked = def != null && def.id == "desert"; // assume only desert unlocked
 				if (def != null && unlocked)
@@ -308,6 +297,7 @@ namespace Crusaders30XX.ECS.Systems
 					int drawY = inner.Y + (inner.Height - drawH) / 2;
 					var drawRect = new Rectangle(drawX, drawY, drawW, drawH);
 					_spriteBatch.Draw(tex, drawRect, Color.White);
+					ui.IsInteractable = true;
 					// Label (inside the container)
 					string label = def.name ?? def.id;
 					var size = _font.MeasureString(label) * LabelScale;
@@ -318,17 +308,18 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				else
 				{
-					// Locked or empty slot: draw a white circle with a black question mark
-					int minSide = System.Math.Min(inner.Width, inner.Height);
-					int radius = System.Math.Max(4, (int)System.Math.Round(minSide * System.Math.Max(0.05f, System.Math.Min(0.5f, LockedCircleScale))));
-					var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, radius);
-					var circleDst = new Rectangle(inner.X + inner.Width / 2 - radius, inner.Y + inner.Height / 2 - radius, radius * 2, radius * 2);
-					_spriteBatch.Draw(circle, circleDst, Color.White);
-					string qm = "?";
-					var qSize = _font.MeasureString(qm);
-					float qScale = System.Math.Min((radius * 1.6f) / System.Math.Max(1f, qSize.X), 1.0f) * System.Math.Max(0.2f, System.Math.Min(2f, LockedQuestionScale));
-					var qPos = new Vector2(circleDst.Center.X - (qSize.X * qScale) / 2f, circleDst.Center.Y - (qSize.Y * qScale) / 2f + 1);
-					_spriteBatch.DrawString(_font, qm, qPos, Color.Black, 0f, Vector2.Zero, qScale, SpriteEffects.None, 0f);
+					// Locked or empty slot: draw placeholder if desired; disable interaction
+					ui.IsInteractable = false;
+					// int minSide = System.Math.Min(inner.Width, inner.Height);
+					// int radius = System.Math.Max(4, (int)System.Math.Round(minSide * System.Math.Max(0.05f, System.Math.Min(0.5f, LockedCircleScale))));
+					// var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, radius);
+					// var circleDst = new Rectangle(inner.X + inner.Width / 2 - radius, inner.Y + inner.Height / 2 - radius, radius * 2, radius * 2);
+					// _spriteBatch.Draw(circle, circleDst, Color.White);
+					// string qm = "?";
+					// var qSize = _font.MeasureString(qm);
+					// float qScale = System.Math.Min((radius * 1.6f) / System.Math.Max(1f, qSize.X), 1.0f) * System.Math.Max(0.2f, System.Math.Min(2f, LockedQuestionScale));
+					// var qPos = new Vector2(circleDst.Center.X - (qSize.X * qScale) / 2f, circleDst.Center.Y - (qSize.Y * qScale) / 2f + 1);
+					// _spriteBatch.DrawString(_font, qm, qPos, Color.Black, 0f, Vector2.Zero, qScale, SpriteEffects.None, 0f);
 				}
 			}
 
@@ -370,9 +361,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void EnsureCustomizeButton(int viewportW, int viewportH)
 		{
-			int btnW = 200;
-			int btnH = 56;
-			int margin = 16;
+			int btnW = System.Math.Max(40, CustomizeButtonWidth);
+			int btnH = System.Math.Max(24, CustomizeButtonHeight);
+			int margin = System.Math.Max(0, CustomizeButtonMargin);
 			var rect = new Rectangle(viewportW - btnW - margin, viewportH - btnH - margin, btnW, btnH);
 			var ent = EntityManager.GetEntitiesWithComponent<LocationCustomizeButton>().FirstOrDefault();
 			if (ent == null)
@@ -398,13 +389,14 @@ namespace Crusaders30XX.ECS.Systems
 			var tex = _customizeRoundedCache;
 			if (tex == null || tex.Width != r.Width || tex.Height != r.Height)
 			{
-				tex = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, r.Width, r.Height, 12);
+				int radius = System.Math.Max(0, CustomizeButtonCornerRadius);
+				tex = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, r.Width, r.Height, radius);
 				_customizeRoundedCache = tex;
 			}
 			_spriteBatch.Draw(tex, r, new Color(0, 0, 0));
 			string text = "Customize";
 			var size = _font.MeasureString(text);
-			float scale = 0.2f;
+			float scale = CustomizeLabelScale;
 			var pos = new Vector2(r.X + r.Width / 2f - (size.X * scale) / 2f, r.Y + r.Height / 2f - (size.Y * scale) / 2f);
 			_spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 		}

@@ -91,7 +91,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     targetRect = ui.Bounds;
                 }
-                rot = t.Rotation;
+                rot = t?.Rotation ?? 0f;
 
                 DrawHighlight(targetRect, rot, fakeGameTime);
             }

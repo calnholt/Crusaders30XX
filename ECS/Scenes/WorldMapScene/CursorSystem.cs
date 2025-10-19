@@ -133,7 +133,14 @@ namespace Crusaders30XX.ECS.Systems
 			if (aEdge && !ignoringTransitions && topCandidate != null)
 			{
 				var tc = (dynamic)topCandidate;
-				tc.UI.IsClicked = true;
+				if (tc.UI.EventType != UIElementEventType.None) 
+				{
+					UIElementEventDelegateService.HandleEvent(tc.UI.EventType, tc.E);
+				}
+				else 
+				{
+					tc.UI.IsClicked = true;
+				}
 				Console.WriteLine($"[CursorSystem] Clicked: {tc.E.Id}");
 				_lastClickedEntity = tc.E;
 			}

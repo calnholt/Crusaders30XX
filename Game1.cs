@@ -22,7 +22,6 @@ public class Game1 : Game
     private EntityListOverlaySystem _entityListOverlaySystem;
     private TransitionDisplaySystem _transitionDisplaySystem;
     private CardDisplaySystem _cardDisplaySystem;
-    private RenderingSystem _renderingSystem;
     private InputSystem _inputSystem;
 
     private KeyboardState _prevKeyboard;
@@ -39,7 +38,6 @@ public class Game1 : Game
     private UIElementHighlightSystem _uiElementHighlightSystem;
     private CursorSystem _cursorSystem;
     private UIElementBorderDebugSystem _uiElementBorderDebugSystem;
-    private UIElementEventDelegateSystem _uiElementEventDelegateSystem;
     
     // ECS System
     private World _world;
@@ -109,7 +107,6 @@ public class Game1 : Game
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, Content);
-        _renderingSystem = new RenderingSystem(_world.EntityManager, _spriteBatch, GraphicsDevice);
         _inputSystem = new InputSystem(_world.EntityManager);
         _tooltipTextDisplaySystem = new TooltipTextDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
@@ -119,7 +116,6 @@ public class Game1 : Game
         _parallaxLayerSystem = new ParallaxLayerSystem(_world.EntityManager, GraphicsDevice);
         _uiElementBorderDebugSystem = new UIElementBorderDebugSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
-        _uiElementEventDelegateSystem = new UIElementEventDelegateSystem(_world.EntityManager);
         _world.AddSystem(_titleMenuDisplaySystem);
         _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
@@ -129,7 +125,6 @@ public class Game1 : Game
         _world.AddSystem(_entityListOverlaySystem);
         _world.AddSystem(_transitionDisplaySystem);
         _world.AddSystem(_cardDisplaySystem);
-        _world.AddSystem(_renderingSystem);
         _world.AddSystem(_inputSystem);
         _world.AddSystem(_tooltipTextDisplaySystem);
         _world.AddSystem(_profilerSystem);
@@ -139,7 +134,6 @@ public class Game1 : Game
         _world.AddSystem(_parallaxLayerSystem);
         _world.AddSystem(_uiElementBorderDebugSystem);
         _world.AddSystem(_uiElementHighlightSystem);
-        _world.AddSystem(_uiElementEventDelegateSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 

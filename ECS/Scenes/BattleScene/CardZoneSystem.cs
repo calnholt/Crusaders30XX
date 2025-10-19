@@ -94,6 +94,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiH.IsInteractable = true;
                         uiH.IsHovered = false;
                         uiH.IsClicked = false;
+                        uiH.EventType = UIElementEventType.None;
                     }
                     var t = evt.Card.GetComponent<Transform>();
                     if (t != null && t.Position == Vector2.Zero)
@@ -142,6 +143,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiA.IsInteractable = false;
                         uiA.IsHovered = false;
                         uiA.IsClicked = false;
+                        uiA.EventType = UIElementEventType.UnassignCardAsBlock;
                     }
                     break;
                 }
@@ -155,6 +157,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiD.IsInteractable = false;
                         uiD.IsHovered = false;
                         uiD.IsClicked = false;
+                        uiD.EventType = UIElementEventType.None;
                     }
                     // Push discarded cards behind UI
                     var t = evt.Card.GetComponent<Transform>();
@@ -171,6 +174,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiDP.IsInteractable = false;
                         uiDP.IsHovered = false;
                         uiDP.IsClicked = false;
+                        uiDP.EventType = UIElementEventType.None;
                     }
                     // Reset transform so highlight hit-test uses proper defaults when re-drawn
                     var tdp = evt.Card.GetComponent<Transform>();
@@ -192,6 +196,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiE.IsInteractable = false;
                         uiE.IsHovered = false;
                         uiE.IsClicked = false;
+                        uiE.EventType = UIElementEventType.None;
                     }
                     break;
                 }

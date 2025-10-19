@@ -308,7 +308,7 @@ namespace Crusaders30XX.ECS.Components
         public TooltipType TooltipType { get; set; } = TooltipType.Text;
         public TooltipPosition TooltipPosition { get; set; } = TooltipPosition.Above;
         public int TooltipOffsetPx { get; set; } = 6; // gap from element to tooltip
-        public UIElementEventType EventType;
+        public UIElementEventType EventType { get; set; } = UIElementEventType.None;
     }
 
     public enum TooltipType
@@ -321,6 +321,7 @@ namespace Crusaders30XX.ECS.Components
 
     public enum UIElementEventType
     {
+        None,
         UnassignCardAsBlock,
         AssignCardAsBlock,
         UnassignEquipmentAsBlock,

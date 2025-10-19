@@ -101,7 +101,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnBlockAssignmentRemoved(BlockAssignmentRemoved e)
 		{
-            Console.WriteLine($"[EnemyAttackProgressManagementSystem] BlockAssignmentRemoved ctx={e.ContextId} color={e.Color} delta={e.DeltaBlock}");
+			Console.WriteLine($"[EnemyAttackProgressManagementSystem] BlockAssignmentRemoved ctx={e.ContextId} color={e.Color} delta={e.DeltaBlock}");
 			if (e == null || string.IsNullOrEmpty(e.ContextId)) return;
 
 			// Find the owning enemy and attack for this context
@@ -158,6 +158,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private EnemyAttackProgress FindProgressByContext(string contextId)
 		{
+			var list = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>().ToList();
 			foreach (var e in EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
 			{
 				var p = e.GetComponent<EnemyAttackProgress>();

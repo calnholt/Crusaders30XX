@@ -6,46 +6,42 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Equipment;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
-	public class UIElementEventDelegateSystem : Core.System
+	internal static class UIElementEventDelegateService
 	{
-        public UIElementEventDelegateSystem(EntityManager entityManager)
-			: base(entityManager)
-		{
-		}
-
-        protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
-		{
-
-			return EntityManager.GetEntitiesWithComponent<UIElement>();
-		}
-
-        protected override void UpdateEntity(Entity entity, GameTime gameTime)
-		{
-			var clickedUIComponent = GetRelevantEntities().Select(x => x.GetComponent<UIElement>()).Where(x => x.IsClicked && x.IsHovered).FirstOrDefault();
-            if (clickedUIComponent == null) return;
-            var _entity = clickedUIComponent.Owner;
-            switch(clickedUIComponent.EventType)
+        public static void HandleEvent(UIElementEventType type, Entity entity)
+        {
+            switch(type)
             {
+                case UIElementEventType.ConfirmBlocks:
+                {
+                    EventManager.Publish(new DebugCommandEvent { Command = "ConfirmEnemyAttack" });
+                    break;
+                }
                 case UIElementEventType.UnassignCardAsBlock:
                 {
-                    EventManager.Publish(new UnassignCardAsBlockRequested { CardEntity = _entity });
+                    EventManager.Publish(new UnassignCardAsBlockRequested { CardEntity = entity });
                     break;
                 }
                 case UIElementEventType.AssignEquipmentAsBlock:
                 {
-                    EventManager.Publish(new AssignEquipmentAsBlockRequested { EquipmentEntity = _entity });
+                    EventManager.Publish(new AssignEquipmentAsBlockRequested { EquipmentEntity = entity });
                     break;
                 }
                 case UIElementEventType.ActivateEquipment:
                 {
-                    EventManager.Publish(new ActivateEquipmentRequested { EquipmentEntity = _entity });
+                    EventManager.Publish(new ActivateEquipmentRequested { EquipmentEntity = entity });
+                    break;
+                }
+                default:
+                {
+                    Console.WriteLine($"UIElementEventDelegateSystem: clicked unknown event type {type} on entity {entity.Id}");
                     break;
                 }
             }
         }
-
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
@@ -73,14 +74,17 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Keep UI bounds aligned with the parallax-adjusted transform
 			var ui = entity.GetComponent<UIElement>();
-			if (ui != null && layer.AffectsUIBounds && (offsetDelta.X != 0 || offsetDelta.Y != 0))
+			if (ui != null && layer.AffectsUIBounds)
 			{
-				ui.Bounds = new Microsoft.Xna.Framework.Rectangle(
-					ui.Bounds.X + (int)System.Math.Round(offsetDelta.X),
-					ui.Bounds.Y + (int)System.Math.Round(offsetDelta.Y),
-					ui.Bounds.Width,
-					ui.Bounds.Height
-				);
+				int tileW = ui.Bounds.Width;
+				int tileH = ui.Bounds.Height;
+				var dst = new Rectangle(
+					(int)System.Math.Round(t.Position.X - tileW / 2f),
+					(int)System.Math.Round(t.Position.Y - tileH / 2f),
+					tileW,
+					tileH);
+				// Keep UI bounds aligned with parallax-adjusted transform for hit-testing/tooltips
+				ui.Bounds = dst;
 			}
 		}
 

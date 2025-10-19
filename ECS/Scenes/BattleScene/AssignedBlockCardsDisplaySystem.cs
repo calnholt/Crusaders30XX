@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.ECS.Data.Cards;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -75,6 +76,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnUnassignCardAsBlockRequested(UnassignCardAsBlockRequested evt)
 		{
+			Console.WriteLine($"[AssignedBlockCardsDisplaySystem] OnUnassignCardAsBlockRequested: {evt.CardEntity.Id}");
 			var abc = evt.CardEntity.GetComponent<AssignedBlockCard>();
 			abc.Phase = AssignedBlockCard.PhaseState.Returning;
 			abc.Elapsed = 0f;
@@ -82,8 +84,9 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new BlockAssignmentRemoved
 			{
 				Card = evt.CardEntity,
-				DeltaBlock = -abc.BlockAmount,
-				Color = abc.ColorKey
+				DeltaBlock = -BlockValueService.GetBlockValue(evt.CardEntity),
+				Color = abc.ColorKey,
+				ContextId = abc.ContextId
 			});
 		}
 

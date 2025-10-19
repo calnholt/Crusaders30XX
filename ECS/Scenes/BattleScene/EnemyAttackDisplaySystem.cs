@@ -328,7 +328,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (string.IsNullOrEmpty(ctx)) return;
 			// Lock confirm for this context immediately to avoid double presses
 			_confirmedForContext.Add(ctx);
-			var confirmBtn = EntityManager.GetEntitiesWithComponent<UIButton>().FirstOrDefault(e => e.GetComponent<UIButton>().Command == "ConfirmEnemyAttack");
+			var confirmBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
 			if (confirmBtn != null)
 			{
 				var ui = confirmBtn.GetComponent<UIElement>();
@@ -715,21 +715,12 @@ namespace Crusaders30XX.ECS.Systems
 				}
 
 				// Ensure a single clickable UI entity exists and stays in sync
-				var confirmBtns = EntityManager.GetEntitiesWithComponent<UIButton>()
-					.Where(e => e.GetComponent<UIButton>().Command == "ConfirmEnemyAttack")
-					.ToList();
-				Entity primaryBtn = confirmBtns.FirstOrDefault();
-				// Destroy any extras to avoid ghost clickables
-				for (int i = 1; i < confirmBtns.Count; i++)
-				{
-					EntityManager.DestroyEntity(confirmBtns[i].Id);
-				}
+				Entity primaryBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
 				if (primaryBtn == null)
 				{
 					primaryBtn = EntityManager.CreateEntity("UIButton_ConfirmEnemyAttack");
-					EntityManager.AddComponent(primaryBtn, new UIButton { Label = "Confirm", Command = "ConfirmEnemyAttack" });
 					EntityManager.AddComponent(primaryBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ConfirmButtonZ });
-					EntityManager.AddComponent(primaryBtn, new UIElement { Bounds = btnRect, IsInteractable = true });
+					EntityManager.AddComponent(primaryBtn, new UIElement { Bounds = btnRect, IsInteractable = true, EventType = UIElementEventType.ConfirmBlocks });
 					EntityManager.AddComponent(primaryBtn, ParallaxLayer.GetUIParallaxLayer());
 				}
 				else
@@ -743,12 +734,10 @@ namespace Crusaders30XX.ECS.Systems
 			else
 			{
 				// Hide and destroy confirm buttons when not visible
-				var confirmBtns = EntityManager.GetEntitiesWithComponent<UIButton>()
-					.Where(e => e.GetComponent<UIButton>().Command == "ConfirmEnemyAttack")
-					.ToList();
-				foreach (var b in confirmBtns)
+				var primaryBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
+				if (primaryBtn != null)
 				{
-					EntityManager.DestroyEntity(b.Id);
+					EntityManager.DestroyEntity(primaryBtn.Id);
 				}
 			}
 

@@ -73,7 +73,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int BoxHeight { get; set; } = 260;
 
 		[DebugEditable(DisplayName = "Gap", Step = 1, Min = 0, Max = 120)]
-		public int Gap { get; set; } = 10;
+		public int Gap { get; set; } = 30;
 
 		[DebugEditable(DisplayName = "Enemy Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
 		public float EnemyScale { get; set; } = 0.8f;
@@ -85,10 +85,35 @@ namespace Crusaders30XX.ECS.Systems
 		public float QuestTitleScale { get; set; } = 0.22f;
 
 		[DebugEditable(DisplayName = "Bottom Bar Height", Step = 2, Min = 16, Max = 200)]
-		public int BottomBarHeight { get; set; } = 40;
+		public int BottomBarHeight { get; set; } = 50;
+
+		// Bottom bar button (LB/RB) controls
+		[DebugEditable(DisplayName = "Pill Side Padding", Step = 1, Min = 0, Max = 120)]
+		public int PillSidePadding { get; set; } = 5;
+
+		[DebugEditable(DisplayName = "Pill Min Height", Step = 1, Min = 12, Max = 200)]
+		public int PillMinHeight { get; set; } = 27;
+
+		[DebugEditable(DisplayName = "Pill InnerPad Min", Step = 1, Min = 0, Max = 40)]
+		public int PillInnerPadMin { get; set; } = 5;
+
+		[DebugEditable(DisplayName = "Pill InnerPad Factor (of height)", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float PillInnerPadFactor { get; set; } = 0.307f; // ~ 1/6 of height
+
+		[DebugEditable(DisplayName = "Pill Corner Radius Max", Step = 1, Min = 0, Max = 64)]
+		public int PillCornerRadiusMax { get; set; } = 0;
+
+		[DebugEditable(DisplayName = "Bottom Label Scale", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
+		public float BottomLabelScale { get; set; } = 0.2f;
+
+		[DebugEditable(DisplayName = "Bottom Right Text Margin", Step = 1, Min = 0, Max = 120)]
+		public int BottomRightMargin { get; set; } = 10;
+
+		[DebugEditable(DisplayName = "Bottom Right Text Scale", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
+		public float BottomRightTextScale { get; set; } = 0.2f;
 
 		[DebugEditable(DisplayName = "Header Image Padding", Step = 1, Min = 0, Max = 40)]
-		public int HeaderImagePadding { get; set; } = 6;
+		public int HeaderImagePadding { get; set; } = 4;
 
 		private class FadeState { public float Alpha01; public bool TargetVisible; public Rectangle Rect; public string LocationId; }
 
@@ -377,9 +402,9 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Draw(_pixel, bottomRect, Color.Black); // no transparency per spec
 
 			// Left: LB / RB rounded pills with chevrons (hidden at ends)
-			int pillPad = pad;
-			int pillH = System.Math.Max(18, bottomRect.Height - 2 * pillPad);
-			float glyphScale = TextScale;
+			int pillPad = System.Math.Max(0, PillSidePadding);
+			int pillH = System.Math.Max(System.Math.Max(12, PillMinHeight), bottomRect.Height - 2 * pillPad);
+			float glyphScale = BottomLabelScale;
 			string lbText = "LB";
 			string rbText = "RB";
 			string chevLeft = "<";
@@ -388,7 +413,7 @@ namespace Crusaders30XX.ECS.Systems
 			var rbSize = _font.MeasureString(rbText) * glyphScale;
 			var chevLSize = _font.MeasureString(chevLeft) * glyphScale;
 			var chevRSize = _font.MeasureString(chevRight) * glyphScale;
-			int innerPadX = System.Math.Max(4, pillH / 6);
+			int innerPadX = System.Math.Max(System.Math.Max(0, PillInnerPadMin), (int)System.Math.Round(pillH * MathHelper.Clamp(PillInnerPadFactor, 0f, 1f)));
 			int pillLW = (int)System.Math.Ceiling(chevLSize.X + innerPadX + lbSize.X + innerPadX);
 			int pillRW = (int)System.Math.Ceiling(rbSize.X + innerPadX + chevRSize.X + innerPadX);
 			int xCursor = bottomRect.X + pillPad;
@@ -397,7 +422,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (canPrev)
 			{
 				var pillL = new Rectangle(xCursor, bottomRect.Y + (bottomRect.Height - pillH) / 2, pillLW, pillH);
-				DrawPill(pillL, Color.White, System.Math.Min(pillH / 2, 12));
+				DrawPill(pillL, Color.White, System.Math.Min(pillH / 2, System.Math.Max(2, PillCornerRadiusMax)));
 				var textY = pillL.Y + (pillL.Height - (int)System.Math.Ceiling(lbSize.Y)) / 2f;
 				var chevPos = new Vector2(pillL.X + innerPadX, textY);
 				var lbPos = new Vector2(pillL.Right - innerPadX - lbSize.X, textY);
@@ -408,7 +433,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (canNext)
 			{
 				var pillR = new Rectangle(xCursor, bottomRect.Y + (bottomRect.Height - pillH) / 2, pillRW, pillH);
-				DrawPill(pillR, Color.White, System.Math.Min(pillH / 2, 12));
+				DrawPill(pillR, Color.White, System.Math.Min(pillH / 2, System.Math.Max(2, PillCornerRadiusMax)));
 				var textY = pillR.Y + (pillR.Height - (int)System.Math.Ceiling(rbSize.Y)) / 2f;
 				var rbPos = new Vector2(pillR.X + innerPadX, textY);
 				var chevPosR = new Vector2(pillR.Right - innerPadX - chevRSize.X, textY);
@@ -419,10 +444,10 @@ namespace Crusaders30XX.ECS.Systems
 			// Right: "A - Select" aligned to bottom-right
 			string leftText = "A";
 			string rightText = " - Select";
-			float scale = TextScale;
+			float scale = BottomRightTextScale;
 			var leftSize = _font.MeasureString(leftText) * scale;
 			var rightSize = _font.MeasureString(rightText) * scale;
-			int textPad = pad;
+			int textPad = System.Math.Max(0, BottomRightMargin);
 			var rightEndX = bottomRect.Right - textPad;
 			var rightPos = new Vector2(rightEndX - rightSize.X, bottomRect.Y + (bottomRect.Height - (int)System.Math.Ceiling(rightSize.Y)) / 2f);
 			var leftPos = new Vector2((int)System.Math.Round(rightPos.X - leftSize.X), bottomRect.Y + (bottomRect.Height - (int)System.Math.Ceiling(leftSize.Y)) / 2f);
@@ -449,64 +474,6 @@ namespace Crusaders30XX.ECS.Systems
 				_roundedCache[(rect.Width, rect.Height, r)] = tex;
 			}
 			_spriteBatch.Draw(tex, rect, color);
-		}
-
-		private void DrawArrow(Rectangle rect, bool right)
-		{
-			int w = System.Math.Max(4, rect.Width);
-			int h = System.Math.Max(4, rect.Height);
-			int border = 2;
-			if (!_triangleCache.TryGetValue((w, h, right, border), out var tex) || tex == null)
-			{
-				tex = new Texture2D(_graphicsDevice, w, h);
-				var data = new Color[w * h];
-				// Triangle vertices
-				Point v0, v1, v2; // counter-clockwise
-				if (right)
-				{
-					v0 = new Point(0, 0);
-					v1 = new Point(0, h - 1);
-					v2 = new Point(w - 1, h / 2);
-				}
-				else
-				{
-					v0 = new Point(w - 1, 0);
-					v1 = new Point(w - 1, h - 1);
-					v2 = new Point(0, h / 2);
-				}
-				// Edge function helpers
-				int Area(Point a, Point b, Point c) => (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
-				float DistToEdge(Point a, Point b, int x, int y)
-				{
-					// distance from p to line ab (approx, using Manhattan for speed)
-					int A = b.Y - a.Y;
-					int B = a.X - b.X;
-					int C = b.X * a.Y - a.X * b.Y;
-					return System.Math.Abs(A * x + B * y + C) / (float)System.Math.Max(1, (int)System.Math.Sqrt(A * A + B * B));
-				}
-				int area = System.Math.Abs(Area(v0, v1, v2));
-				var fill = new Color(245, 245, 245);
-				var outline = new Color(0, 0, 0);
-				for (int py = 0; py < h; py++)
-				{
-					for (int px = 0; px < w; px++)
-					{
-						int w0 = Area(v1, v2, new Point(px, py));
-						int w1 = Area(v2, v0, new Point(px, py));
-						int w2 = Area(v0, v1, new Point(px, py));
-						bool inside = (w0 >= 0 && w1 >= 0 && w2 >= 0) || (w0 <= 0 && w1 <= 0 && w2 <= 0);
-						if (!inside) { data[py * w + px] = Color.Transparent; continue; }
-						float d0 = DistToEdge(v1, v2, px, py);
-						float d1 = DistToEdge(v2, v0, px, py);
-						float d2 = DistToEdge(v0, v1, px, py);
-						float d = System.Math.Min(d0, System.Math.Min(d1, d2));
-						data[py * w + px] = (d <= border) ? outline : fill;
-					}
-				}
-				tex.SetData(data);
-				_triangleCache[(w, h, right, border)] = tex;
-			}
-			_spriteBatch.Draw(tex, rect, Color.White);
 		}
 
 		private LocationDefinition GetLocationDefinition(string id)

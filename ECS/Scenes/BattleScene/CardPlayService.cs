@@ -104,7 +104,7 @@ namespace Crusaders30XX.ECS.Systems
                     var count = Random.Shared.Next(values[0], values[1] + 1);
                     for (int j = 0; j < count; j++)
                     {
-                        var kunai = EntityFactory.CreateCardFromDefinition(entityManager, "kunai", CardData.CardColor.White, false);
+                        var kunai = EntityFactory.CreateCardFromDefinition(entityManager, $"kunai", CardData.CardColor.White, false, j + 1);
                         var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                         EventManager.Publish(new CardMoveRequested { Card = kunai, Deck = deckEntity, Destination = CardZoneType.Hand, Reason = "PouchOfKunai" });
                     }
