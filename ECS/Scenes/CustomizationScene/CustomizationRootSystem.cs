@@ -35,6 +35,7 @@ namespace Crusaders30XX.ECS.Systems
         private AvailableEquipmentDisplaySystem _availableEquipmentDisplaySystem;
         private AvailableWeaponDisplaySystem _availableWeaponDisplaySystem;
         private LoadoutWeaponDisplaySystem _loadoutWeaponDisplaySystem;
+        private UIElementHighlightSystem _uiElementHighlightSystem;
 
         public CustomizationRootSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice gd, SpriteBatch sb, ContentManager content, SpriteFont font) : base(em)
         {
@@ -64,6 +65,7 @@ namespace Crusaders30XX.ECS.Systems
             _availableWeaponDisplaySystem = new AvailableWeaponDisplaySystem(EntityManager, _world, _graphicsDevice, _spriteBatch, _libraryPanelSystem, _customizeEquipmentDisplaySystem);
             _loadoutWeaponDisplaySystem = new LoadoutWeaponDisplaySystem(EntityManager, _world, _graphicsDevice, _spriteBatch, _deckPanelSystem, _customizeEquipmentDisplaySystem);
             _customizationStateManagementSystem = new CustomizationStateManagementSystem(EntityManager);
+            _uiElementHighlightSystem = new UIElementHighlightSystem(EntityManager, _graphicsDevice, _spriteBatch);
 
             world.AddSystem(_customizationSceneSystem);
             world.AddSystem(_libraryPanelSystem);
@@ -100,6 +102,7 @@ namespace Crusaders30XX.ECS.Systems
             var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
             _backgroundSystem.Draw();
+            FrameProfiler.Measure("UIElementHighlightSystem.Draw", _uiElementHighlightSystem.Draw);
             FrameProfiler.Measure("SectionTabMenuDisplaySystem.Draw", _sectionTabMenuDisplaySystem.Draw);
             FrameProfiler.Measure("CardLibraryPanelSystem.Draw", _libraryPanelSystem.Draw);
             FrameProfiler.Measure("LoadoutDeckPanelSystem.Draw", _deckPanelSystem.Draw);

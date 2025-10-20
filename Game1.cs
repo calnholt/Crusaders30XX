@@ -133,7 +133,6 @@ public class Game1 : Game
         _world.AddSystem(_cursorSystem);
         _world.AddSystem(_parallaxLayerSystem);
         _world.AddSystem(_uiElementBorderDebugSystem);
-        _world.AddSystem(_uiElementHighlightSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 
@@ -213,6 +212,7 @@ public class Game1 : Game
                 // Draw location tiles with crisp pixel sampling
                 _spriteBatch.End();
                 _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, _spriteRasterizer);
+                FrameProfiler.Measure("UIElementHighlightSystem.Draw", _uiElementHighlightSystem.Draw);
                 FrameProfiler.Measure("LocationSelectDisplaySystem.Draw", _worldMapSystem.Draw);
                 FrameProfiler.Measure("TooltipQuestDisplaySystem.Draw", _tooltipQuestDisplaySystem.Draw);
                 _spriteBatch.End();
@@ -227,7 +227,6 @@ public class Game1 : Game
         FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
         FrameProfiler.Measure("DebugMenuSystem.Draw", _debugMenuSystem.Draw);
         FrameProfiler.Measure("EntityListOverlaySystem.Draw", _entityListOverlaySystem.Draw);
-        FrameProfiler.Measure("UIElementHighlightSystem.Draw", _uiElementHighlightSystem.Draw);
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         _spriteBatch.End();

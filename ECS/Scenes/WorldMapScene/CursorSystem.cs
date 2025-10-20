@@ -24,6 +24,8 @@ namespace Crusaders30XX.ECS.Systems
 		private MouseState _prevMouseState;
 		private Entity _lastClickedEntity;
 		private Entity _lastHoveredEntity;
+		private Entity _prevHoverEntityForRumble;
+		private float _rumbleTimeRemaining;
 
 		[DebugEditable(DisplayName = "Cursor Radius (px)", Step = 1f, Min = 2f, Max = 256f)]
 		public int CursorRadius { get; set; } = 40;
@@ -47,13 +49,22 @@ namespace Crusaders30XX.ECS.Systems
 		public float SlowdownCoverageThreshold { get; set; } = 0.2f;
 
 		[DebugEditable(DisplayName = "UI Slowdown Multiplier", Step = 0.05f, Min = 0.05f, Max = 1f)]
-		public float SlowdownMultiplier { get; set; } = 0.7f;
+		public float SlowdownMultiplier { get; set; } = 0.4f;
 
 		[DebugEditable(DisplayName = "Cursor Opacity", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float CursorOpacity { get; set; } = .45f;
 
 		[DebugEditable(DisplayName = "Hitbox Radius (px)", Step = 1f, Min = 0f, Max = 256f)]
 		public int HitboxRadius { get; set; } = 34;
+
+		[DebugEditable(DisplayName = "Rumble Duration (s)", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float RumbleDurationSeconds { get; set; } = 0.04f;
+
+		[DebugEditable(DisplayName = "Rumble Low Intensity", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float RumbleLow { get; set; } = 0.3f;
+
+		[DebugEditable(DisplayName = "Rumble High Intensity", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float RumbleHigh { get; set; } = 0.2f;
 
 		public CursorSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
@@ -117,6 +128,22 @@ namespace Crusaders30XX.ECS.Systems
 			float coverageForTop = 0f;
 			if (useGamepad)
 			{
+				// Manage rumble decay each frame while gamepad is connected
+				float dtRumble = (float)gameTime.ElapsedGameTime.TotalSeconds;
+				if (_rumbleTimeRemaining > 0f)
+				{
+					_rumbleTimeRemaining -= dtRumble;
+					if (_rumbleTimeRemaining > 0f)
+					{
+						GamePad.SetVibration(PlayerIndex.One, MathHelper.Clamp(RumbleLow, 0f, 1f), MathHelper.Clamp(RumbleHigh, 0f, 1f));
+					}
+					else
+					{
+						_rumbleTimeRemaining = 0f;
+						GamePad.SetVibration(PlayerIndex.One, 0f, 0f);
+					}
+				}
+
 				if (!ignoringTransitions)
 				{
 					int rHitbox = Math.Max(0, HitboxRadius);
@@ -125,13 +152,25 @@ namespace Crusaders30XX.ECS.Systems
 						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox) > 0f)
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
+					Entity hoveredEntityForRumble = null;
 					if (tc != null)
 					{
 						tc.UI.IsHovered = true;
-						_lastHoveredEntity = tc.E;
+						hoveredEntityForRumble = tc.E;
+						_lastHoveredEntity = hoveredEntityForRumble;
+						// Trigger a short rumble when a new entity becomes hovered
+						if (_prevHoverEntityForRumble != hoveredEntityForRumble)
+						{
+							_rumbleTimeRemaining = Math.Max(0f, RumbleDurationSeconds);
+							if (_rumbleTimeRemaining > 0f)
+							{
+								GamePad.SetVibration(PlayerIndex.One, MathHelper.Clamp(RumbleLow, 0f, 1f), MathHelper.Clamp(RumbleHigh, 0f, 1f));
+							}
+						}
 						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius));
 					}
 					topCandidate = tc;
+					_prevHoverEntityForRumble = hoveredEntityForRumble;
 				}
 
 				// A button edge-triggered click on the same top-most UI
@@ -193,11 +232,11 @@ namespace Crusaders30XX.ECS.Systems
 						maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r));
 					}
 				}
-				if (maxCoverage >= MathHelper.Clamp(SlowdownCoverageThreshold, 0f, 1f))
+				float rt = gp.Triggers.Right;
+				if (rt <= 0.1f && maxCoverage >= MathHelper.Clamp(SlowdownCoverageThreshold, 0f, 1f))
 				{
 					speedMultiplier *= MathHelper.Clamp(SlowdownMultiplier, 0.05f, 1f);
 				}
-				float rt = gp.Triggers.Right;
 				if (rt > 0.1f)
 				{
 					speedMultiplier *= LtSpeedMultiplier;
@@ -219,6 +258,12 @@ namespace Crusaders30XX.ECS.Systems
 				_cursorPosition = new Vector2(ms.X, ms.Y);
 				_cursorPosition.X = MathHelper.Clamp(_cursorPosition.X, 0f, w);
 				_cursorPosition.Y = MathHelper.Clamp(_cursorPosition.Y, 0f, h);
+				// Ensure rumble is disabled when switching to mouse
+				if (_rumbleTimeRemaining > 0f)
+				{
+					_rumbleTimeRemaining = 0f;
+					GamePad.SetVibration(PlayerIndex.One, 0f, 0f);
+				}
 
 				if (!ignoringTransitions)
 				{
