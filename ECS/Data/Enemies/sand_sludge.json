@@ -1,0 +1,14 @@
+{
+    "name": "Sandsludge",
+    "id": "sandsludge",
+    "hp": 70,
+    "attacks": [
+        {
+            "id": "belly_flop",
+            "name": "Bellyflop",
+            "target": "Player",
+            "positionType": "Ender",
+            "damage": 8
+        }
+    ]
+}
