@@ -61,7 +61,17 @@ namespace Crusaders30XX.ECS.Systems
             return System.Array.Empty<Entity>();
         }
 
-        protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+        protected override void UpdateEntity(Entity entity, GameTime gameTime) 
+        { 
+            var phaseEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+            if (phaseEntity == null) return;
+            var phase = phaseEntity.GetComponent<PhaseState>();
+            var ui = entity.GetComponent<UIElement>();
+            if (ui != null)
+            {
+                ui.IsInteractable = phase.Sub == SubPhase.Action && phase.Main == MainPhase.PlayerTurn;
+            }
+        }
 
         private void OnEndTurnPressed()
         {

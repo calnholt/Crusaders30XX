@@ -4,7 +4,7 @@
   "target": "Enemy",
   "rarity": "Common",
   "valuesParse": [6, 1, 2],
-  "text": "Deal {1} damage. Whenever you play this card, this card gains +{2} block for the duration of the quest. When this card is used to block, its block value is returned to {3}.",
+  "text": "Deal {1} damage. Whenever you play this card, this card gains +{2} block for the duration of the quest. When this card is used to block, its block value is returned to its base value.",
   "block": 2,
   "isFreeAction": true,
   "animation": "Attack"

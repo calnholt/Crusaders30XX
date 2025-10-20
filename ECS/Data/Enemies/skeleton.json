@@ -1,11 +1,11 @@
 {
   "name": "Skeleton",
   "id": "skeleton",
-  "hp": 75,
+  "hp": 65,
   "passives": [
     {
       "type": "Armor",
-      "amount": 1,
+      "amount": 5,
       "target": "Enemy"
     }
   ],

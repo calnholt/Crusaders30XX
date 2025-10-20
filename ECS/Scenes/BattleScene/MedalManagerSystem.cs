@@ -112,7 +112,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (hp == null) return 0;
 			int missing = Math.Max(0, hp.Max - hp.Current);
 			if (missing <= 0) return 0;
-			int healAmount = (int)Math.Floor(missing * 0.7f);
+			int healAmount = (int)Math.Floor(missing * 1f);
 			return Math.Max(0, healAmount);
 		}
 

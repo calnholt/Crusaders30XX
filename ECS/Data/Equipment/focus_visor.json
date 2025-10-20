@@ -2,7 +2,7 @@
   "id": "focus_visor",
   "name": "Focus Visor",
   "slot": "Head",
-  "block": 2,
+  "block": 1,
   "blockUses": 2,
   "color": "Red",
   "abilities": [

@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		private int _lastViewportW = -1;
 		private int _lastViewportH = -1;
 		private GamePadState _prevGamePadState;
+		private MouseState _prevMouseState;
 		private Entity _lastClickedEntity;
 		private Entity _lastHoveredEntity;
 
@@ -97,7 +98,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (!Game1.WindowIsActive) return;
 
 			var gp = GamePad.GetState(PlayerIndex.One);
-			Vector2 stick = gp.ThumbSticks.Left; // X: right+, Y: up+
+			bool useGamepad = gp.IsConnected;
+			Vector2 stick = useGamepad ? gp.ThumbSticks.Left : Vector2.Zero; // X: right+, Y: up+
 			bool ignoringTransitions = TransitionStateSingleton.IsActive;
 
 			// Clear hover state on all UI elements to ensure exclusivity
@@ -107,108 +109,164 @@ namespace Crusaders30XX.ECS.Systems
 				if (ui2 != null) ui2.IsHovered = false;
 			}
 
-			// Determine top-most UI intersecting the cursor hitbox and flag hover
+			// Determine top-most UI intersecting the cursor and flag hover
 			var point = new Point((int)Math.Round(_cursorPosition.X), (int)Math.Round(_cursorPosition.Y));
 			var topCandidate = (object)null;
-			if (!ignoringTransitions)
-			{
-				int rHitbox = Math.Max(0, HitboxRadius);
-				var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
-					.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-					.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox) > 0f)
-					.OrderByDescending(x => x.T?.ZOrder ?? 0)
-					.FirstOrDefault();
-				if (tc != null)
-				{
-					tc.UI.IsHovered = true;
-					_lastHoveredEntity = tc.E;
-				}
-				topCandidate = tc;
-			}
-
-			// A button edge-triggered click on the same top-most UI
-			bool aPressed = gp.Buttons.A == ButtonState.Pressed;
-			bool aPrevPressed = _prevGamePadState.Buttons.A == ButtonState.Pressed;
-			bool aEdge = aPressed && !aPrevPressed;
-			if (aEdge && !ignoringTransitions && topCandidate != null)
-			{
-				var tc = (dynamic)topCandidate;
-				if (tc.UI.EventType != UIElementEventType.None) 
-				{
-					UIElementEventDelegateService.HandleEvent(tc.UI.EventType, tc.E);
-				}
-				else 
-				{
-					tc.UI.IsClicked = true;
-				}
-				Console.WriteLine($"[CursorSystem] Clicked: {tc.E.Id}");
-				_lastClickedEntity = tc.E;
-			}
-
-			// Publish cursor state event for other systems
-			int rForCoverage = Math.Max(0, HitboxRadius);
+			bool isPressed = false;
+			bool isPressedEdge = false;
 			float coverageForTop = 0f;
-			if (!ignoringTransitions && topCandidate != null)
+			if (useGamepad)
 			{
-				var tc = (dynamic)topCandidate;
-				coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, rForCoverage);
-			}
-			EventManager.Publish(new CursorStateEvent
-			{
-				Position = _cursorPosition,
-				IsAPressed = aPressed,
-				IsAPressedEdge = aEdge,
-				Coverage = coverageForTop,
-				TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E)
-			});
-
-			_prevGamePadState = gp;
-
-			// Apply circular deadzone
-			float mag = stick.Length();
-			if (mag < Deadzone)
-			{
-				return;
-			}
-
-			// Normalize and scale by exponent curve
-			Vector2 dir = (mag > 0f) ? (stick / mag) : Vector2.Zero;
-			float normalized = MathHelper.Clamp((mag - Deadzone) / (1f - Deadzone), 0f, 1f);
-			float speedMultiplier = MathHelper.Clamp((float)Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
-
-			// Slow down when overlapping UI elements beyond threshold
-			int r = Math.Max(1, CursorRadius);
-			float maxCoverage = 0f;
-			if (!ignoringTransitions)
-			{
-				foreach (var e2 in EntityManager.GetEntitiesWithComponent<UIElement>())
+				if (!ignoringTransitions)
 				{
-					var ui2 = e2.GetComponent<UIElement>();
-					if (ui2 == null || !ui2.IsInteractable) continue;
-					var bounds2 = ui2.Bounds;
-					if (bounds2.Width < 2 || bounds2.Height < 2) continue;
-					maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r));
+					int rHitbox = Math.Max(0, HitboxRadius);
+					var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
+						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
+						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox) > 0f)
+						.OrderByDescending(x => x.T?.ZOrder ?? 0)
+						.FirstOrDefault();
+					if (tc != null)
+					{
+						tc.UI.IsHovered = true;
+						_lastHoveredEntity = tc.E;
+						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius));
+					}
+					topCandidate = tc;
 				}
-			}
-			if (maxCoverage >= MathHelper.Clamp(SlowdownCoverageThreshold, 0f, 1f))
-			{
-				speedMultiplier *= MathHelper.Clamp(SlowdownMultiplier, 0.05f, 1f);
-			}
-      float rt = gp.Triggers.Right;
-			if (rt > 0.1f)
-			{
-				speedMultiplier *= LtSpeedMultiplier;
-			}
-			// Optional right-trigger speed boost (pressure-insensitive)
-			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-			// In screen space, up on stick is negative Y
-			Vector2 velocity = new Vector2(dir.X, -dir.Y) * BaseSpeed * speedMultiplier;
-			_cursorPosition += velocity * dt;
+				// A button edge-triggered click on the same top-most UI
+				bool aPressed = gp.Buttons.A == ButtonState.Pressed;
+				bool aPrevPressed = _prevGamePadState.Buttons.A == ButtonState.Pressed;
+				bool aEdge = aPressed && !aPrevPressed;
+				isPressed = aPressed;
+				isPressedEdge = aEdge;
+				if (aEdge && !ignoringTransitions && topCandidate != null)
+				{
+					var tc = (dynamic)topCandidate;
+					if (tc.UI.EventType != UIElementEventType.None) 
+					{
+						UIElementEventDelegateService.HandleEvent(tc.UI.EventType, tc.E);
+					}
+					else 
+					{
+						tc.UI.IsClicked = true;
+					}
+					Console.WriteLine($"[CursorSystem] Clicked: {tc.E.Id}");
+					_lastClickedEntity = tc.E;
+				}
 
-			// Clamp cursor center to remain within the screen (allowing the circle to go offscreen)
-			_cursorPosition.X = MathHelper.Clamp(_cursorPosition.X, 0f, w);
-			_cursorPosition.Y = MathHelper.Clamp(_cursorPosition.Y, 0f, h);
+				// Publish cursor state event for other systems
+				EventManager.Publish(new CursorStateEvent
+				{
+					Position = _cursorPosition,
+					IsAPressed = isPressed,
+					IsAPressedEdge = isPressedEdge,
+					Coverage = coverageForTop,
+					TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E)
+				});
+
+				_prevGamePadState = gp;
+
+				// Apply circular deadzone for movement
+				float mag = stick.Length();
+				if (mag < Deadzone)
+				{
+					return;
+				}
+
+				// Normalize and scale by exponent curve
+				Vector2 dir = (mag > 0f) ? (stick / mag) : Vector2.Zero;
+				float normalized = MathHelper.Clamp((mag - Deadzone) / (1f - Deadzone), 0f, 1f);
+				float speedMultiplier = MathHelper.Clamp((float)Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
+
+				// Slow down when overlapping UI elements beyond threshold
+				int r = Math.Max(1, CursorRadius);
+				float maxCoverage = 0f;
+				if (!ignoringTransitions)
+				{
+					foreach (var e2 in EntityManager.GetEntitiesWithComponent<UIElement>())
+					{
+						var ui2 = e2.GetComponent<UIElement>();
+						if (ui2 == null || !ui2.IsInteractable) continue;
+						var bounds2 = ui2.Bounds;
+						if (bounds2.Width < 2 || bounds2.Height < 2) continue;
+						maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r));
+					}
+				}
+				if (maxCoverage >= MathHelper.Clamp(SlowdownCoverageThreshold, 0f, 1f))
+				{
+					speedMultiplier *= MathHelper.Clamp(SlowdownMultiplier, 0.05f, 1f);
+				}
+				float rt = gp.Triggers.Right;
+				if (rt > 0.1f)
+				{
+					speedMultiplier *= LtSpeedMultiplier;
+				}
+				float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+				// In screen space, up on stick is negative Y
+				Vector2 velocity = new Vector2(dir.X, -dir.Y) * BaseSpeed * speedMultiplier;
+				_cursorPosition += velocity * dt;
+
+				// Clamp cursor center to remain within the screen (allowing the circle to go offscreen)
+				_cursorPosition.X = MathHelper.Clamp(_cursorPosition.X, 0f, w);
+				_cursorPosition.Y = MathHelper.Clamp(_cursorPosition.Y, 0f, h);
+			}
+			else
+			{
+				// Mouse-driven path: set position directly and handle hover/click; no drawing occurs in Draw()
+				var ms = Mouse.GetState();
+				_cursorPosition = new Vector2(ms.X, ms.Y);
+				_cursorPosition.X = MathHelper.Clamp(_cursorPosition.X, 0f, w);
+				_cursorPosition.Y = MathHelper.Clamp(_cursorPosition.Y, 0f, h);
+
+				if (!ignoringTransitions)
+				{
+					var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
+						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
+						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && x.UI.Bounds.Contains(point))
+						.OrderByDescending(x => x.T?.ZOrder ?? 0)
+						.FirstOrDefault();
+					if (tc != null)
+					{
+						tc.UI.IsHovered = true;
+						_lastHoveredEntity = tc.E;
+						coverageForTop = 1f; // Point inside bounds; treat as full coverage for UI logic
+					}
+					topCandidate = tc;
+				}
+
+				bool lPressed = ms.LeftButton == ButtonState.Pressed;
+				bool lPrevPressed = _prevMouseState.LeftButton == ButtonState.Pressed;
+				bool lEdge = lPressed && !lPrevPressed;
+				isPressed = lPressed;
+				isPressedEdge = lEdge;
+				if (lEdge && !ignoringTransitions && topCandidate != null)
+				{
+					var tc = (dynamic)topCandidate;
+					if (tc.UI.EventType != UIElementEventType.None)
+					{
+						UIElementEventDelegateService.HandleEvent(tc.UI.EventType, tc.E);
+					}
+					else
+					{
+						tc.UI.IsClicked = true;
+					}
+					Console.WriteLine($"[CursorSystem] Clicked: {tc.E.Id}");
+					_lastClickedEntity = tc.E;
+				}
+
+				EventManager.Publish(new CursorStateEvent
+				{
+					Position = _cursorPosition,
+					IsAPressed = isPressed,
+					IsAPressedEdge = isPressedEdge,
+					Coverage = coverageForTop,
+					TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E)
+				});
+
+				_prevMouseState = ms;
+			}
 
 		}
 

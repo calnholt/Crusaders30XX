@@ -260,6 +260,7 @@ namespace Crusaders30XX.ECS.Systems
                     var deck = deckEntity.GetComponent<Deck>();
                     deck?.Hand.Remove(evt.Card);
                     Console.WriteLine("[CardPlaySystem] Weapon used; removed from hand without discarding");
+                    EntityManager.DestroyEntity(evt.Card.Id);
                 }
                 else
                 {

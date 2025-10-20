@@ -40,6 +40,8 @@ namespace Crusaders30XX.ECS.Systems
 		}
 		private readonly List<DustParticle> _dust = new List<DustParticle>();
 
+		private const string GuardianEntityName = "GuardianAngel";
+
 		// Speech bubble state
 		private bool _bubbleActive;
 		private float _bubbleElapsed;
@@ -160,10 +162,15 @@ namespace Crusaders30XX.ECS.Systems
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			_t += dt;
 
-			// Compute current guardian position for spawning dust in Update
+			// Ensure guardian entity exists with Transform + Parallax
+			EnsureGuardianEntity();
+
+			// Compute current guardian base position relative to player for spawning dust and for Transform.BasePosition
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var pt = player?.GetComponent<Transform>();
-			if (pt != null)
+			var guardian = EntityManager.GetEntity(GuardianEntityName);
+			var gt = guardian?.GetComponent<Transform>();
+			if (pt != null && gt != null)
 			{
 				var oldPos = _pos;
 				Vector2 baseRight = pt.Position + new Vector2(OffsetX, OffsetY);
@@ -179,6 +186,8 @@ namespace Crusaders30XX.ECS.Systems
 				motion.Y += bob;
 				_pos = baseRight + motion;
 				_prevPos = oldPos;
+				// Update entity transform base position; ParallaxLayerSystem will produce Position
+				gt.BasePosition = _pos;
 			}
 
 			// Spawn dust based on accumulator
@@ -345,33 +354,11 @@ namespace Crusaders30XX.ECS.Systems
                 if (_angelTexture == null) return;
             }
 
-            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-            var pt = player?.GetComponent<Transform>();
-            if (pt == null) return;
-
-            Vector2 baseRight = pt.Position + new Vector2(OffsetX, OffsetY);
-
-            float ang = _t * AngularSpeed;
-
-			// Blend between an ellipse and a figure eight (Lissajous-like):
-            // ellipse: (cos t, sin t)
-            // figure-eight: (sin t, sin 2t)
-            float xEllipse = MathF.Cos(ang);
-            float yEllipse = MathF.Sin(ang);
-            float xEight = MathF.Sin(ang);
-            float yEight = MathF.Sin(2f * ang);
-            float x = xEllipse * (1f - FigureEightMix) + xEight * FigureEightMix;
-            float y = yEllipse * (1f - FigureEightMix) + yEight * FigureEightMix;
-
-            // Apply radii
-            Vector2 motion = new Vector2(x * RadiusX, y * RadiusY);
-
-			// Add a gentle vertical bob on top for smoothness
-            float bob = MathF.Sin(_t * VerticalBobSpeed) * VerticalBob;
-            motion.Y += bob;
-
-			Vector2 pos = baseRight + motion;
-			_pos = pos;
+			// Use the guardian entity's parallax-adjusted position for drawing
+			var guardian = EntityManager.GetEntity(GuardianEntityName);
+			var gt = guardian?.GetComponent<Transform>();
+			if (gt == null) return;
+			Vector2 pos = gt.Position;
 
 			var origin = new Vector2(_angelTexture.Width / 2f, _angelTexture.Height / 2f);
 			// No rotation
@@ -426,6 +413,19 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Draw angel
 			_spriteBatch.Draw(_angelTexture, pos, null, color, rotation, origin, Scale, SpriteEffects.None, 0f);
+		}
+
+		private void EnsureGuardianEntity()
+		{
+			var e = EntityManager.GetEntity(GuardianEntityName);
+			if (e == null)
+			{
+				e = EntityManager.CreateEntity(GuardianEntityName);
+				// Seed initial transform; will be updated each frame
+				EntityManager.AddComponent(e, new Transform { Position = Vector2.Zero, BasePosition = Vector2.Zero, ZOrder = 0 });
+				// Character-like subtle parallax
+				EntityManager.AddComponent(e, ParallaxLayer.GetCharacterParallaxLayer());
+			}
         }
     }
 }
