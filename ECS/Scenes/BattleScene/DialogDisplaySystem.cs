@@ -8,6 +8,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Data.Dialog;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Utils;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -104,6 +105,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (state.Index >= (state.Lines?.Count ?? 0))
                 {
                     state.IsActive = false;
+                    EventManager.Publish(new DialogEnded());
                 }
             }
         }

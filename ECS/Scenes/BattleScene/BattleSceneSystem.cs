@@ -107,12 +107,16 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 			_content = content;
 			_font = font;
-			EventManager.Subscribe<StartBattleRequested>(_ => StartBattle());
+			EventManager.Subscribe<StartBattleRequested>(_ => InitBattle());
 			EventManager.Subscribe<LoadSceneEvent>(_ => {
 				if (_.Scene != SceneId.Battle) return;
-				if (EntityManager.GetEntity("Player") == null) CreateBattleSceneEntities();
-				StartBattle();
+				if (EntityManager.GetEntity("Player") == null) 
+				{
+					CreateBattleSceneEntities();
+				};
+				InitBattle();
 			});
+			EventManager.Subscribe<DialogEnded>(_ => EnqueueBattleRules(1f));
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -197,7 +201,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new DeckShuffleEvent { });
 		}
 
-		public void StartBattle() 
+		public void InitBattle() 
 		{
 			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault().GetComponent<Deck>();
 			if (deck.Cards.Count == 0)
@@ -251,7 +255,16 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new ResetDeckEvent { });
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
 			phaseState.TurnNumber = 0;
-			// EventManager.Publish(new LoadSceneEvent { Scene = SceneId.Battle });
+			EventManager.Publish(new LoadSceneEvent { Scene = SceneId.Battle });
+			if (!_dialogDisplaySystem.IsOverlayActive)
+			{
+				EnqueueBattleRules(1f);
+			}
+		}
+
+		public void EnqueueBattleRules(float delay = 2f) 
+		{
+			Console.WriteLine("[BattleSceneSystem] EnqueueBattleRules");
 			EventQueueBridge.EnqueueTriggerAction("BattleSceneSystem.StartBattle", () => {
 				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
 				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
@@ -266,8 +279,11 @@ namespace Crusaders30XX.ECS.Systems
 					"Rule.ChangePhase.Block",
 					new ChangeBattlePhaseEvent { Current = SubPhase.Block }
 				));
-			}, 2f);
+			}, delay);
 		}
+
+
+
 		
 		[DebugAction("Next Battle")]
 		public void Debug_NextBattle() 
