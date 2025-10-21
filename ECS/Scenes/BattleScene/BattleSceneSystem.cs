@@ -130,7 +130,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("BattleBackgroundSystem.Draw", _battleBackgroundSystem.Draw);
 			FrameProfiler.Measure("CathedralLightingSystem.Draw", _cathedralLightingSystem.Draw);
 			FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", _desertBackgroundEffectSystem.Draw);
-			if (_dialogDisplaySystem.IsActive)
+			if (_dialogDisplaySystem.IsOverlayActive)
 			{
 				FrameProfiler.Measure("DialogDisplaySystem.Draw", _dialogDisplaySystem.Draw);
 				return;

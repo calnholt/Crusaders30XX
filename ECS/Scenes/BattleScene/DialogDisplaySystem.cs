@@ -51,7 +51,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Z Order", Step = 10, Min = 0, Max = 100000)]
         public int ZOrder { get; set; } = 50000;
 
-        public bool IsActive
+        public bool IsOverlayActive
         {
             get
             {
@@ -84,11 +84,18 @@ namespace Crusaders30XX.ECS.Systems
             var state = overlayEntity?.GetComponent<DialogOverlayState>();
             if (ui == null || state == null) return;
 
-            // Refresh full-screen bounds so InputSystem click routing works
-            ui.Bounds = new Rectangle(0, 0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height);
-            ui.IsInteractable = true;
+            // Only interactable while active so it doesn't capture hover/clicks
+            ui.IsInteractable = state.IsActive;
+            ui.Bounds = state.IsActive
+                ? new Rectangle(0, 0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height)
+                : new Rectangle(0, 0, 0, 0);
 
-            if (!state.IsActive) return;
+            if (!state.IsActive)
+            {
+                ui.IsClicked = false;
+                ui.IsHovered = false;
+                return;
+            }
 
             if (ui.IsClicked)
             {
