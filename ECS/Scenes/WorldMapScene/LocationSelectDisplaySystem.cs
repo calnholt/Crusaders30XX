@@ -213,9 +213,12 @@ namespace Crusaders30XX.ECS.Systems
 						EntityManager.AddComponent(qeEntity, new QueuedEvents());
 						EntityManager.AddComponent(qeEntity, new DontDestroyOnLoad());
 					}
-					var qe = qeEntity.GetComponent<QueuedEvents>();
+                    var qe = qeEntity.GetComponent<QueuedEvents>();
 					qe.CurrentIndex = -1;
 					qe.Events.Clear();
+                    // Record quest context for dialog lookup
+                    qe.LocationId = def.id;
+                    qe.QuestIndex = chosenIndex;
 					var questDefs = def.quests[chosenIndex];
 					foreach (var q in questDefs)
 					{

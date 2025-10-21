@@ -1,4 +1,5 @@
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Dialog;
 using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Components
@@ -45,6 +46,9 @@ namespace Crusaders30XX.ECS.Components
 		public List<QueuedEvent> Events { get; set; } = new List<QueuedEvent>();
 		public int CurrentIndex = -1;
 		public bool IsFirst = false;
+		// Quest context for dialog lookup
+		public string LocationId { get; set; } = string.Empty;
+		public int QuestIndex { get; set; } = 0;
 	}
 
 	public class QueuedEvent 
@@ -160,6 +164,17 @@ namespace Crusaders30XX.ECS.Components
 	public class QuestStartArea : IComponent
 	{
 		public Entity Owner { get; set; }
+	}
+
+	/// <summary>
+	/// Overlay state for battle dialog sequences.
+	/// </summary>
+	public class DialogOverlayState : IComponent
+	{
+		public Entity Owner { get; set; }
+		public bool IsActive { get; set; } = false;
+		public List<DialogLine> Lines { get; set; } = new List<DialogLine>();
+		public int Index { get; set; } = 0;
 	}
 }
 

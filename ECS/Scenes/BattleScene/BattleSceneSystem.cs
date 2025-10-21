@@ -10,6 +10,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Data.Dialog;
 using System;
 
 namespace Crusaders30XX.ECS.Systems
@@ -94,7 +95,8 @@ namespace Crusaders30XX.ECS.Systems
 		private IntimidateDisplaySystem _intimidateDisplaySystem;
 		private FrozenCardManagementSystem _frozenCardManagementSystem;
 		private FrozenCardDisplaySystem _frozenCardDisplaySystem;
-			private UIElementHighlightSystem _uiElementHighlightSystem;
+		private UIElementHighlightSystem _uiElementHighlightSystem;
+		private DialogDisplaySystem _dialogDisplaySystem;
 
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(em)
@@ -125,16 +127,14 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
-			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-			if (scene == null || scene.Current != SceneId.Battle) return;
-			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-			if (player == null) return;
-			var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
-			if (enemy == null) return;
-			// Draw in the same order as previously in Game1
 			FrameProfiler.Measure("BattleBackgroundSystem.Draw", _battleBackgroundSystem.Draw);
 			FrameProfiler.Measure("CathedralLightingSystem.Draw", _cathedralLightingSystem.Draw);
 			FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", _desertBackgroundEffectSystem.Draw);
+			if (_dialogDisplaySystem.IsActive)
+			{
+				FrameProfiler.Measure("DialogDisplaySystem.Draw", _dialogDisplaySystem.Draw);
+				return;
+			}
 			FrameProfiler.Measure("PlayerDisplaySystem.Draw", _playerDisplaySystem.Draw);
 			FrameProfiler.Measure("GuardianAngelDisplaySystem.Draw", _guardianAngelDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);
@@ -221,6 +221,20 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			};
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
+			// Open dialog for this quest if available (locationId_questIndex+1.json)
+			try
+			{
+				string dialogId = string.Empty;
+				if (queued != null && !string.IsNullOrEmpty(queued.LocationId))
+				{
+					dialogId = $"{queued.LocationId}_{System.Math.Max(0, queued.QuestIndex) + 1}";
+				}
+				if (!string.IsNullOrEmpty(dialogId) && DialogDefinitionCache.TryGet(dialogId, out var dialogDef))
+				{
+					_dialogDisplaySystem?.Open(dialogDef);
+				}
+			}
+			catch { }
 			// TODO: should handle through events rather than directly but im lazy right now
 			var player = EntityManager.GetEntity("Player");
 			var battleStateInfo = player.GetComponent<BattleStateInfo>();
@@ -333,6 +347,7 @@ namespace Crusaders30XX.ECS.Systems
 			var frostTexture = _content.Load<Texture2D>("frost");
 			_frozenCardDisplaySystem = new FrozenCardDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, frostTexture);
 			_uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
 			// Register
 			_world.AddSystem(_deckManagementSystem);
 			_world.AddSystem(_handDisplaySystem);
@@ -400,6 +415,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_intimidateDisplaySystem);
 			_world.AddSystem(_frozenCardManagementSystem);
 			_world.AddSystem(_frozenCardDisplaySystem);
+			_world.AddSystem(_dialogDisplaySystem);
 		}
 
 	}
