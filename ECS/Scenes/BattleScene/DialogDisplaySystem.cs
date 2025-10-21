@@ -52,6 +52,15 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Z Order", Step = 10, Min = 0, Max = 100000)]
         public int ZOrder { get; set; } = 50000;
 
+        [DebugEditable(DisplayName = "Chars / Second", Step = 1f, Min = 1f, Max = 120f)]
+        public float CharsPerSecond { get; set; } = 80f;
+
+        private int _cachedLineIndex = -1;
+        private string _cachedFilteredMessage = string.Empty;
+        private float _revealProgressSec = 0f;
+        private int _revealedChars = 0;
+        private bool _lineComplete = false;
+
         public bool IsOverlayActive
         {
             get
@@ -98,14 +107,46 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
+            // Ensure typewriter state matches the current line
+            if (_cachedLineIndex != state.Index)
+            {
+                ResetTypewriterForCurrentLine(state);
+            }
+
+            // Advance reveal based on elapsed time
+            if (!_lineComplete && CharsPerSecond > 0f)
+            {
+                _revealProgressSec += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                int add = (int)System.Math.Floor(_revealProgressSec * CharsPerSecond);
+                if (add > 0)
+                {
+                    _revealProgressSec -= add / CharsPerSecond;
+                    _revealedChars = System.Math.Min(_revealedChars + add, _cachedFilteredMessage.Length);
+                    _lineComplete = _revealedChars >= _cachedFilteredMessage.Length;
+                }
+            }
+
+            // Click behavior (first completes, next advances)
             if (ui.IsClicked)
             {
                 ui.IsClicked = false;
-                state.Index++;
-                if (state.Index >= (state.Lines?.Count ?? 0))
+                if (!_lineComplete)
                 {
-                    state.IsActive = false;
-                    EventManager.Publish(new DialogEnded());
+                    _revealedChars = _cachedFilteredMessage.Length;
+                    _lineComplete = true;
+                }
+                else
+                {
+                    state.Index++;
+                    if (state.Index >= (state.Lines?.Count ?? 0))
+                    {
+                        state.IsActive = false;
+                        EventManager.Publish(new DialogEnded());
+                    }
+                    else
+                    {
+                        ResetTypewriterForCurrentLine(state);
+                    }
                 }
             }
         }
@@ -119,6 +160,7 @@ namespace Crusaders30XX.ECS.Systems
             st.Lines = def.lines;
             st.Index = 0;
             st.IsActive = true;
+            ResetTypewriterForCurrentLine(st);
         }
 
         public void Draw()
@@ -127,6 +169,10 @@ namespace Crusaders30XX.ECS.Systems
             var e = EntityManager.GetEntity("DialogOverlay");
             var st = e?.GetComponent<DialogOverlayState>();
             if (st == null || !st.IsActive) return;
+            if (_cachedLineIndex != st.Index)
+            {
+                ResetTypewriterForCurrentLine(st);
+            }
 
             int vw = _graphicsDevice.Viewport.Width;
             int vh = _graphicsDevice.Viewport.Height;
@@ -169,7 +215,9 @@ namespace Crusaders30XX.ECS.Systems
             int textW = panelRect.Width - portraitW - PanelPadding * 2;
             int textH = panelRect.Height - PanelPadding * 2;
 
-            var lines = TextUtils.WrapText(_font, message ?? string.Empty, BodyScale, textW);
+            int visLen = System.Math.Min(_revealedChars, _cachedFilteredMessage?.Length ?? 0);
+            if (visLen < 0) visLen = 0;
+            var lines = BuildStableWrappedVisible(_cachedFilteredMessage ?? string.Empty, visLen, textW);
             float y = textY + (NameplateHeight + PanelPadding * 0.5f);
             foreach (var l in lines)
             {
@@ -227,6 +275,64 @@ namespace Crusaders30XX.ECS.Systems
                 var t = e.GetComponent<Transform>();
                 if (t != null) t.ZOrder = ZOrder;
             }
+        }
+
+        private void ResetTypewriterForCurrentLine(DialogOverlayState st)
+        {
+            _cachedLineIndex = st.Index;
+            var raw = (st.Index >= 0 && st.Index < (st.Lines?.Count ?? 0)) ? st.Lines[st.Index].message : string.Empty;
+            _cachedFilteredMessage = TextUtils.FilterUnsupportedGlyphs(_font, raw ?? string.Empty);
+            _revealProgressSec = 0f;
+            _revealedChars = 0;
+            _lineComplete = _cachedFilteredMessage.Length == 0;
+        }
+
+        private List<string> BuildStableWrappedVisible(string fullText, int visibleCharCount, int maxWidth)
+        {
+            var result = new List<string>();
+            if (_font == null || maxWidth <= 0)
+            {
+                result.Add(string.Empty);
+                return result;
+            }
+
+            string full = fullText ?? string.Empty;
+            // Convert the visible character count to exclude newline characters,
+            // since WrapText returns lines without embedded newlines.
+            int budget = 0;
+            int counted = 0;
+            for (int i = 0; i < full.Length && counted < visibleCharCount; i++)
+            {
+                char ch = full[i];
+                counted++;
+                if (ch != '\n' && ch != '\r') budget++;
+            }
+
+            if (budget <= 0)
+            {
+                result.Add(string.Empty);
+                return result;
+            }
+
+            var wrapped = TextUtils.WrapText(_font, full, BodyScale, maxWidth);
+            int remaining = budget;
+            foreach (var ln in wrapped)
+            {
+                if (remaining <= 0) break;
+                if (ln.Length <= remaining)
+                {
+                    result.Add(ln);
+                    remaining -= ln.Length;
+                }
+                else
+                {
+                    result.Add(ln.Substring(0, remaining));
+                    remaining = 0;
+                    break;
+                }
+            }
+            if (result.Count == 0) result.Add(string.Empty);
+            return result;
         }
     }
 }
