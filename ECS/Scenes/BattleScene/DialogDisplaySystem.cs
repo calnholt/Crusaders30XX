@@ -11,6 +11,7 @@ using Crusaders30XX.ECS.Utils;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Scenes.BattleScene;
 using Crusaders30XX.ECS.Utils.RichText;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -407,6 +408,7 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(e, ui);
                 EntityManager.AddComponent(e, new DialogOverlayState());
                 EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
+                Console.WriteLine("[DialogOverlaySystem] DialogOverlay created");
             }
             else
             {

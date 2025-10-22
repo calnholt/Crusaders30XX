@@ -107,16 +107,37 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 			_content = content;
 			_font = font;
-			EventManager.Subscribe<StartBattleRequested>(_ => InitBattle());
+			EventManager.Subscribe<StartBattleRequested>(_ => 
+			{
+				Console.WriteLine("[BattleSceneSystem] StartBattleRequested");
+				InitBattle();
+			});
 			EventManager.Subscribe<LoadSceneEvent>(_ => {
+				Console.WriteLine("[BattleSceneSystem] LoadSceneEvent");
 				if (_.Scene != SceneId.Battle) return;
 				if (EntityManager.GetEntity("Player") == null) 
 				{
-					CreateBattleSceneEntities();
+					Console.WriteLine("[BattleSceneSystem] LoadSceneEvent 2");
+					AddBattleSystems();
+					if (!_dialogDisplaySystem.IsOverlayActive)
+					{
+						Console.WriteLine("[BattleSceneSystem] LoadSceneEvent 3");
+						CreateBattleSceneEntities();
+						InitBattle();
+						EnqueueBattleRules(false);
+					}
 				};
-				InitBattle();
 			});
-			EventManager.Subscribe<DialogEnded>(_ => EnqueueBattleRules(1f));
+			EventManager.Subscribe<DialogEnded>(_ => 
+			{
+				Console.WriteLine("[BattleSceneSystem] DialogEnded");
+				if (EntityManager.GetEntity("Player") == null) 
+				{
+					CreateBattleSceneEntities();
+				}
+				InitBattle();
+				EnqueueBattleRules(true);
+			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -192,11 +213,6 @@ namespace Crusaders30XX.ECS.Systems
 				deck.Cards.AddRange(deckCards);
 				deck.DrawPile.AddRange(deckCards);
 			}
-			if (_firstLoad)
-			{
-				AddBattleSystems();
-				_firstLoad = false;
-			}
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
 			EventManager.Publish(new DeckShuffleEvent { });
 		}
@@ -255,18 +271,38 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new ResetDeckEvent { });
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
 			phaseState.TurnNumber = 0;
-			EventManager.Publish(new LoadSceneEvent { Scene = SceneId.Battle });
-			if (!_dialogDisplaySystem.IsOverlayActive)
-			{
-				EnqueueBattleRules(1f);
-			}
 		}
 
-		public void EnqueueBattleRules(float delay = 2f) 
+		public void EnqueueBattleRules(bool isFollowingDialog) 
 		{
 			Console.WriteLine("[BattleSceneSystem] EnqueueBattleRules");
+			if (isFollowingDialog)
+			{
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.EnemyStart",
+					new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle }
+				));				
+				EventQueueBridge.EnqueueTriggerAction("BattleSceneSystem.StartBattle", () => {
+					EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+						"Rule.ChangePhase.EnemyStart",
+						new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart }
+					));
+					EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+						"Rule.ChangePhase.PreBlock",
+						new ChangeBattlePhaseEvent { Current = SubPhase.PreBlock }
+					));
+					EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+						"Rule.ChangePhase.Block",
+						new ChangeBattlePhaseEvent { Current = SubPhase.Block }
+					));
+				}, 2f);
+				return;
+			}
 			EventQueueBridge.EnqueueTriggerAction("BattleSceneSystem.StartBattle", () => {
-				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle });
+				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+					"Rule.ChangePhase.EnemyStart",
+					new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle }
+				));
 				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
 					"Rule.ChangePhase.EnemyStart",
 					new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart }
@@ -279,11 +315,8 @@ namespace Crusaders30XX.ECS.Systems
 					"Rule.ChangePhase.Block",
 					new ChangeBattlePhaseEvent { Current = SubPhase.Block }
 				));
-			}, delay);
+			}, 2f);
 		}
-
-
-
 		
 		[DebugAction("Next Battle")]
 		public void Debug_NextBattle() 
@@ -292,7 +325,10 @@ namespace Crusaders30XX.ECS.Systems
 		}
 		private void AddBattleSystems()
 		{
+			if (!_firstLoad) return;
+			_firstLoad = false;
 			// Construct
+			_dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
 			_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
 			_battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);
@@ -363,7 +399,6 @@ namespace Crusaders30XX.ECS.Systems
 			var frostTexture = _content.Load<Texture2D>("frost");
 			_frozenCardDisplaySystem = new FrozenCardDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, frostTexture);
 			_uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
 			// Register
 			_world.AddSystem(_deckManagementSystem);
 			_world.AddSystem(_handDisplaySystem);
