@@ -345,6 +345,7 @@ namespace Crusaders30XX.ECS.Systems
                     bool IsViable(Entity e)
                     {
                         if (!isPayOpen) return true;
+                        if (e == payState.CardToPlay) return false;
                         if (payState.SelectedCards.Contains(e)) return false;
                         var cd = e.GetComponent<CardData>();
                         if (cd == null) return false;

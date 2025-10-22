@@ -719,6 +719,7 @@ namespace Crusaders30XX.ECS.Components
     {
         DrawPile,
         Hand,
+        HandStaged,
         DiscardPile,
         ExhaustPile,
         AssignedBlock

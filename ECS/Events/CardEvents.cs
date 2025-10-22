@@ -151,6 +151,7 @@ namespace Crusaders30XX.ECS.Events
         public CardZoneType Destination { get; set; }
         public string ContextId { get; set; }
         public string Reason { get; set; }
+        public int? InsertIndex { get; set; }
     }
 
     /// <summary>

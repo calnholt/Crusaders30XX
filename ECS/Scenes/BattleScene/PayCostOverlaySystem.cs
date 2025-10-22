@@ -83,9 +83,27 @@ namespace Crusaders30XX.ECS.Systems
             if (state.IsReturning)
             {
                 state.ReturnElapsedSeconds += dt;
-                if (state.ReturnElapsedSeconds >= StagedMoveDurationSec)
+                if (state.ReturnElapsedSeconds >= StagedReturnDurationSec)
                 {
-                    // End of return tween; fully close overlay and clear staged flags
+                    // End of return tween; reinsert card into hand at original index
+                    if (state.CardToPlay != null)
+                    {
+                        var t = state.CardToPlay.GetComponent<Transform>();
+                        if (t != null)
+                        {
+                            t.Position = state.StagedStartPos;
+                            t.Rotation = 0f;
+                            t.ZOrder = 0;
+                        }
+                        EventManager.Publish(new CardMoveRequested
+                        {
+                            Card = state.CardToPlay,
+                            Destination = CardZoneType.Hand,
+                            InsertIndex = state.OriginalHandIndex,
+                            Reason = "PayCostCancelReturn"
+                        });
+                    }
+                    // Fully close overlay and clear staged flags
                     state.IsReturning = false;
                     state.IsOpen = false;
                     state.CardToPlay = null;
@@ -131,16 +149,13 @@ namespace Crusaders30XX.ECS.Systems
             state.OpenElapsedSeconds = 0f;
             state.Type = evt.Type;
 
-            // Stage the card: remove it from hand and record original index
+            // Stage the card: record original index and move to HandStaged zone
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             var deck = deckEntity?.GetComponent<Deck>();
             if (deck != null)
             {
                 state.OriginalHandIndex = deck.Hand.IndexOf(state.CardToPlay);
-                if (state.OriginalHandIndex >= 0)
-                {
-                    deck.Hand.RemoveAt(state.OriginalHandIndex);
-                }
+                EventManager.Publish(new CardMoveRequested { Card = state.CardToPlay, Deck = deckEntity, Destination = CardZoneType.HandStaged, Reason = "PayCostStage" });
             }
             // Disable staged card interactions and set its z-order high
             var stagedUI = state.CardToPlay.GetComponent<UIElement>();
@@ -173,26 +188,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 // If the play was canceled (overlay is closing without PayCostSatisfied), restore staged card to hand
                 bool restoring = state.CardToPlay != null && state.RequiredCosts.Count > 0; // if not satisfied
-                if (restoring)
-                {
-                    var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-                    var deck = deckEntity?.GetComponent<Deck>();
-                    if (deck != null && state.CardToPlay != null)
-                    {
-                        int insertIndex = state.OriginalHandIndex;
-                        if (insertIndex < 0 || insertIndex > deck.Hand.Count) insertIndex = deck.Hand.Count;
-                        deck.Hand.Insert(insertIndex, state.CardToPlay);
-                        // Reset transform so the hand system repositions it
-                        var t = state.CardToPlay.GetComponent<Transform>();
-                        if (t != null)
-                        {
-                            // Return to the original on-screen position so HandDisplaySystem tweens back smoothly
-                            t.Position = state.StagedStartPos;
-                            t.Rotation = 0f;
-                            t.ZOrder = 0;
-                        }
-                    }
-                }
+                // Defer reinsertion until the return tween completes
                 // Restore interactability for all hand cards
                 RestoreHandInteractables();
 

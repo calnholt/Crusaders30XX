@@ -77,15 +77,25 @@ namespace Crusaders30XX.ECS.Systems
             {
                 case CardZoneType.Hand:
                 {
-                    // When returning to hand, remove assignment component and ensure we don't duplicate in hand
+                    // When returning to hand, remove assignment component and insert at index if provided
                     var abc = evt.Card.GetComponent<AssignedBlockCard>();
                     if (abc != null)
                     {
                         EntityManager.RemoveComponent<AssignedBlockCard>(evt.Card);
                     }
-                    if (!deck.Hand.Contains(evt.Card))
+                    if (evt.InsertIndex.HasValue)
                     {
-                        deck.Hand.Add(evt.Card);
+                        int idx = evt.InsertIndex.Value;
+                        if (idx < 0) idx = 0;
+                        if (idx > deck.Hand.Count) idx = deck.Hand.Count;
+                        deck.Hand.Insert(idx, evt.Card);
+                    }
+                    else
+                    {
+                        if (!deck.Hand.Contains(evt.Card))
+                        {
+                            deck.Hand.Add(evt.Card);
+                        }
                     }
                     // Make card interactable in hand
                     var uiH = evt.Card.GetComponent<UIElement>();
@@ -102,6 +112,19 @@ namespace Crusaders30XX.ECS.Systems
                         t.Position = Vector2.Zero;
                         t.Rotation = 0f;
                         t.Scale = Vector2.One;
+                    }
+                    break;
+                }
+                case CardZoneType.HandStaged:
+                {
+                    // Card is staged outside of any deck list; keep it non-interactable
+                    var uiS = evt.Card.GetComponent<UIElement>();
+                    if (uiS != null)
+                    {
+                        uiS.IsInteractable = false;
+                        uiS.IsHovered = false;
+                        uiS.IsClicked = false;
+                        uiS.EventType = UIElementEventType.None;
                     }
                     break;
                 }
