@@ -1,7 +1,7 @@
 [
     {
       "actor": "Angel",
-      "message": "We've been in this desert so long I have sand stuck in my halo!"
+      "message": "We've been in this desert so long I have sand stuck in my [jitter amp=2 freq=10]halo[/jitter]!"
     },
     {
       "actor": "Crusader",

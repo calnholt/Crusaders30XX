@@ -9,6 +9,8 @@ using Crusaders30XX.ECS.Data.Dialog;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Utils;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Scenes.BattleScene;
+using Crusaders30XX.ECS.Utils.RichText;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -60,6 +62,77 @@ namespace Crusaders30XX.ECS.Systems
         private float _revealProgressSec = 0f;
         private int _revealedChars = 0;
         private bool _lineComplete = false;
+
+        // Rich text/effects
+        [DebugEditable(DisplayName = "Enable Effects")] public bool EnableEffects { get; set; } = true;
+        [DebugEditable(DisplayName = "Jitter Amp", Step = 0.5f, Min = 0f, Max = 20f)] public float JitterAmp { get; set; } = 2f;
+        [DebugEditable(DisplayName = "Jitter Freq", Step = 0.5f, Min = 0f, Max = 30f)] public float JitterFreq { get; set; } = 12f;
+        [DebugEditable(DisplayName = "Shake Amp", Step = 0.5f, Min = 0f, Max = 30f)] public float ShakeAmp { get; set; } = 4f;
+        [DebugEditable(DisplayName = "Shake Freq", Step = 0.5f, Min = 0f, Max = 30f)] public float ShakeFreq { get; set; } = 6f;
+        [DebugEditable(DisplayName = "Nod Amp", Step = 0.5f, Min = 0f, Max = 30f)] public float NodAmp { get; set; } = 3f;
+        [DebugEditable(DisplayName = "Nod Freq", Step = 0.5f, Min = 0f, Max = 30f)] public float NodFreq { get; set; } = 2.5f;
+        [DebugEditable(DisplayName = "Ripple Amp", Step = 0.5f, Min = 0f, Max = 30f)] public float RippleAmp { get; set; } = 3f;
+        [DebugEditable(DisplayName = "Ripple Wavelength", Step = 1f, Min = 10f, Max = 200f)] public float RippleWavelength { get; set; } = 40f;
+        [DebugEditable(DisplayName = "Ripple Speed", Step = 0.1f, Min = 0f, Max = 10f)] public float RippleSpeed { get; set; } = 1.2f;
+        [DebugEditable(DisplayName = "Big Scale", Step = 0.05f, Min = 0.5f, Max = 4f)] public float BigScale { get; set; } = 1.5f;
+        [DebugEditable(DisplayName = "Small Scale", Step = 0.05f, Min = 0.1f, Max = 1f)] public float SmallScale { get; set; } = 0.75f;
+        [DebugEditable(DisplayName = "Pop Duration", Step = 0.05f, Min = 0.05f, Max = 1.5f)] public float PopDuration { get; set; } = 0.25f;
+        [DebugEditable(DisplayName = "Pop Scale", Step = 0.05f, Min = 1f, Max = 3f)] public float PopScale { get; set; } = 1.35f;
+        [DebugEditable(DisplayName = "Bloom Radius", Step = 1f, Min = 0f, Max = 20f)] public float BloomRadius { get; set; } = 2f;
+        [DebugEditable(DisplayName = "Bloom Intensity", Step = 0.05f, Min = 0f, Max = 1f)] public float BloomIntensity { get; set; } = 0.35f;
+        [DebugEditable(DisplayName = "Bloom Passes", Step = 1f, Min = 0f, Max = 8f)] public int BloomPasses { get; set; } = 0;
+        [DebugEditable(DisplayName = "Fast Speed x", Step = 0.1f, Min = 0.1f, Max = 5f)] public float FastSpeedFactor { get; set; } = 2f;
+        [DebugEditable(DisplayName = "Slow Speed x", Step = 0.1f, Min = 0.1f, Max = 5f)] public float SlowSpeedFactor { get; set; } = 0.5f;
+
+        private FlattenedRichText _flat;
+        private LaidOutText _layout;
+        private List<float> _glyphRevealTimes = new List<float>();
+        private float _effectsTimeSec = 0f;
+
+        private DialogTextEffectSettings BuildSettings()
+        {
+            return new DialogTextEffectSettings
+            {
+                EnableEffects = EnableEffects,
+                JitterAmplitudePx = JitterAmp,
+                JitterFrequencyHz = JitterFreq,
+                ShakeAmplitudePx = ShakeAmp,
+                ShakeFrequencyHz = ShakeFreq,
+                NodAmplitudePx = NodAmp,
+                NodFrequencyHz = NodFreq,
+                RippleAmplitudePx = RippleAmp,
+                RippleWavelengthPx = RippleWavelength,
+                RippleSpeedHz = RippleSpeed,
+                BigScale = BigScale,
+                SmallScale = SmallScale,
+                PopDurationSec = PopDuration,
+                PopScaleOnReveal = PopScale,
+                BloomRadiusPx = BloomRadius,
+                BloomIntensity01 = BloomIntensity,
+                BloomPasses = BloomPasses,
+                FastSpeedFactor = FastSpeedFactor,
+                SlowSpeedFactor = SlowSpeedFactor,
+            };
+        }
+
+        private static bool HasVisualEffect(List<EffectInstance> effects)
+        {
+            if (effects == null) return false;
+            for (int k = 0; k < effects.Count; k++)
+            {
+                var t = effects[k].Type;
+                if (t == TextEffectType.Jitter || t == TextEffectType.Shake || t == TextEffectType.Nod || t == TextEffectType.Ripple || t == TextEffectType.Big || t == TextEffectType.Small || t == TextEffectType.Explode || t == TextEffectType.Bloom)
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool HasBloom(List<EffectInstance> effects)
+        {
+            if (effects == null) return false;
+            for (int k = 0; k < effects.Count; k++) if (effects[k].Type == TextEffectType.Bloom) return true;
+            return false;
+        }
 
         public bool IsOverlayActive
         {
@@ -113,17 +186,40 @@ namespace Crusaders30XX.ECS.Systems
                 ResetTypewriterForCurrentLine(state);
             }
 
-            // Advance reveal based on elapsed time
+            // Advance global effects time every frame while active
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            _effectsTimeSec += dt;
+
+            // Advance reveal with per-glyph speed multipliers
             if (!_lineComplete && CharsPerSecond > 0f)
             {
-                _revealProgressSec += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                int add = (int)System.Math.Floor(_revealProgressSec * CharsPerSecond);
-                if (add > 0)
+                _revealProgressSec += dt;
+                while (_revealProgressSec > 0f && _flat != null && _layout != null && _revealedChars < _layout.GlyphLayouts.Count)
                 {
-                    _revealProgressSec -= add / CharsPerSecond;
-                    _revealedChars = System.Math.Min(_revealedChars + add, _cachedFilteredMessage.Length);
-                    _lineComplete = _revealedChars >= _cachedFilteredMessage.Length;
+                    float speed = 1f;
+                    if (_flat != null && _revealedChars < _flat.Glyphs.Count)
+                    {
+                        speed = System.Math.Max(0.01f, _flat.Glyphs[_revealedChars].SpeedFactor);
+                    }
+                    float perCharTime = 1f / (CharsPerSecond * speed);
+                    if (_revealProgressSec >= perCharTime)
+                    {
+                        _revealProgressSec -= perCharTime;
+                        _revealedChars++;
+                        _glyphRevealTimes.Add(0f);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
+                _lineComplete = _flat != null && _layout != null && _revealedChars >= _layout.GlyphLayouts.Count;
+            }
+
+            // advance reveal-relative timers for popped glyphs
+            for (int i = 0; i < _glyphRevealTimes.Count; i++)
+            {
+                _glyphRevealTimes[i] += (float)gameTime.ElapsedGameTime.TotalSeconds;
             }
 
             // Click behavior (first completes, next advances)
@@ -215,14 +311,56 @@ namespace Crusaders30XX.ECS.Systems
             int textW = panelRect.Width - portraitW - PanelPadding * 2;
             int textH = panelRect.Height - PanelPadding * 2;
 
-            int visLen = System.Math.Min(_revealedChars, _cachedFilteredMessage?.Length ?? 0);
-            if (visLen < 0) visLen = 0;
-            var lines = BuildStableWrappedVisible(_cachedFilteredMessage ?? string.Empty, visLen, textW);
-            float y = textY + (NameplateHeight + PanelPadding * 0.5f);
-            foreach (var l in lines)
+            // Rich text draw
+            float baseY = textY + (NameplateHeight + PanelPadding * 0.5f);
+            if (_layout == null)
             {
-                _spriteBatch.DrawString(_font, l, new Vector2(textX, y), Color.White, 0f, Vector2.Zero, BodyScale, SpriteEffects.None, 0f);
-                y += _font.MeasureString(l).Y * BodyScale;
+                _layout = RichTextLayout.Layout(_font, _cachedFilteredMessage ?? string.Empty, BodyScale, textW, textX, (int)baseY, 0);
+            }
+            int toDraw = System.Math.Min(_revealedChars, _layout.GlyphLayouts.Count);
+            var settings = BuildSettings();
+            int i = 0;
+            while (i < toDraw)
+            {
+                var gl = _layout.GlyphLayouts[i];
+                var g = _flat.Glyphs[i];
+                bool hasVisual = HasVisualEffect(g.Effects);
+                if (!hasVisual)
+                {
+                    // Batch draw contiguous run without visual effects and on same line (same Y)
+                    float lineY = gl.BasePosition.Y;
+                    int j = i;
+                    var buff = new System.Text.StringBuilder();
+                    while (j < toDraw)
+                    {
+                        var glj = _layout.GlyphLayouts[j];
+                        var gj = _flat.Glyphs[j];
+                        if (System.Math.Abs(glj.BasePosition.Y - lineY) > 0.1f) break;
+                        if (HasVisualEffect(gj.Effects)) break;
+                        buff.Append(glj.Character);
+                        j++;
+                    }
+                    if (buff.Length > 0)
+                    {
+                        _spriteBatch.DrawString(_font, buff.ToString(), gl.BasePosition, Color.White, 0f, Vector2.Zero, BodyScale, SpriteEffects.None, 0f);
+                        i = j;
+                        continue;
+                    }
+                }
+
+                // Per-glyph draw with effects
+                float since = i < _glyphRevealTimes.Count ? _glyphRevealTimes[i] : 999f;
+                var xf = TextEffectApplier.ComposeTransforms(g.Effects, settings, _effectsTimeSec, i, since);
+                if (EnableEffects && BloomPasses > 0 && HasBloom(g.Effects))
+                {
+                    for (int p = 0; p < BloomPasses; p++)
+                    {
+                        var offset = new Vector2((p - BloomPasses / 2f) * BloomRadius * 0.15f);
+                        _spriteBatch.DrawString(_font, gl.Character.ToString(), gl.BasePosition + xf.Offset + offset, Color.White * BloomIntensity, 0f, Vector2.Zero, BodyScale * xf.Scale, SpriteEffects.None, 0f);
+                    }
+                }
+                _spriteBatch.DrawString(_font, gl.Character.ToString(), gl.BasePosition + xf.Offset, Color.White * xf.Alpha, 0f, Vector2.Zero, BodyScale * xf.Scale, SpriteEffects.None, 0f);
+                i++;
             }
 
             // Draw portrait image if available
@@ -281,10 +419,17 @@ namespace Crusaders30XX.ECS.Systems
         {
             _cachedLineIndex = st.Index;
             var raw = (st.Index >= 0 && st.Index < (st.Lines?.Count ?? 0)) ? st.Lines[st.Index].message : string.Empty;
-            _cachedFilteredMessage = TextUtils.FilterUnsupportedGlyphs(_font, raw ?? string.Empty);
+            // Parse and flatten rich text
+            var doc = RichTextParser.Parse(raw ?? string.Empty);
+            var settings = BuildSettings();
+            _flat = RichTextFlattener.FlattenAndFilter(doc, _font, settings);
+            _cachedFilteredMessage = _flat.FilteredPlain;
+            _layout = null;
             _revealProgressSec = 0f;
             _revealedChars = 0;
-            _lineComplete = _cachedFilteredMessage.Length == 0;
+            _glyphRevealTimes.Clear();
+            _lineComplete = string.IsNullOrEmpty(_cachedFilteredMessage);
+            _effectsTimeSec = 0f;
         }
 
         private List<string> BuildStableWrappedVisible(string fullText, int visibleCharCount, int maxWidth)
