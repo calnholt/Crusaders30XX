@@ -122,8 +122,8 @@ namespace Crusaders30XX.ECS.Systems
 					Console.WriteLine("[BattleSceneSystem] LoadSceneEvent 3 (CreateBattleSceneEntities)");
 					CreateBattleSceneEntities();
 					// If a dialog is pending for this quest, wait for DialogEnded before starting battle
-					bool hasPendingDialog = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.HasComponent<PendingQuestDialog>() ?? false;
-					if (!hasPendingDialog)
+					bool willShowDialog = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<PendingQuestDialog>()?.WillShowDialog ?? false;
+					if (!willShowDialog)
 					{
 						InitBattle();
 						EnqueueBattleRules(false);

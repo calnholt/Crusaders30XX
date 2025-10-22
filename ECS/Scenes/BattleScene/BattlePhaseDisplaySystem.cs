@@ -4,6 +4,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -58,6 +59,12 @@ namespace Crusaders30XX.ECS.Systems
 			_font = font;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			// If dialog ran before battle start, re-arm the initial phase banner
+			EventManager.Subscribe<DialogEnded>(_ => {
+				_playedInitial = false;
+				_transitionActive = false;
+				_transitionT = 0f;
+			});
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
