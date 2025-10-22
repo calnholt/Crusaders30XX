@@ -38,6 +38,7 @@ public class Game1 : Game
     private UIElementHighlightSystem _uiElementHighlightSystem;
     private CursorSystem _cursorSystem;
     private UIElementBorderDebugSystem _uiElementBorderDebugSystem;
+    private DialogDisplaySystem _dialogDisplaySystem;
     
     // ECS System
     private World _world;
@@ -107,6 +108,7 @@ public class Game1 : Game
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, Content);
+        _dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _inputSystem = new InputSystem(_world.EntityManager);
         _tooltipTextDisplaySystem = new TooltipTextDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
@@ -125,6 +127,7 @@ public class Game1 : Game
         _world.AddSystem(_entityListOverlaySystem);
         _world.AddSystem(_transitionDisplaySystem);
         _world.AddSystem(_cardDisplaySystem);
+        _world.AddSystem(_dialogDisplaySystem);
         _world.AddSystem(_inputSystem);
         _world.AddSystem(_tooltipTextDisplaySystem);
         _world.AddSystem(_profilerSystem);
@@ -227,6 +230,7 @@ public class Game1 : Game
         FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
         FrameProfiler.Measure("DebugMenuSystem.Draw", _debugMenuSystem.Draw);
         FrameProfiler.Measure("EntityListOverlaySystem.Draw", _entityListOverlaySystem.Draw);
+        FrameProfiler.Measure("DialogDisplaySystem.Draw", _dialogDisplaySystem.Draw);
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         _spriteBatch.End();

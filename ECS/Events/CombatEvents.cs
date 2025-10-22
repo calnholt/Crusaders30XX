@@ -84,6 +84,11 @@ namespace Crusaders30XX.ECS.Events
 		public SceneId Scene;
 	}
 
+	public class TransitionCompleteEvent
+	{
+		public SceneId Scene;
+	}
+
 	public class DialogEnded
 	{
 		

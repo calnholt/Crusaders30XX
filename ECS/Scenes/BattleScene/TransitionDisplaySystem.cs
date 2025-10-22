@@ -102,6 +102,7 @@ namespace Crusaders30XX.ECS.Systems
 					if (_t >= WipeDurationSeconds)
 					{
 						_phase = Phase.Idle; _t = 0f;
+						EventManager.Publish(new TransitionCompleteEvent { Scene = _nextScene });
 						EnsureTransitionFlag(false);
 					}
 					break;

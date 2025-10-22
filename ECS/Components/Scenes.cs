@@ -176,6 +176,13 @@ namespace Crusaders30XX.ECS.Components
 		public List<DialogLine> Lines { get; set; } = new List<DialogLine>();
 		public int Index { get; set; } = 0;
 	}
+
+	public class PendingQuestDialog : IComponent
+	{
+		public Entity Owner { get; set; }
+		public string DialogId { get; set; } = string.Empty;
+		public bool WillShowDialog { get; set; } = false;
+	}
 }
 
 

@@ -9,6 +9,12 @@ namespace Crusaders30XX.ECS.Events
 
 	public class DeleteCachesEvent { public SceneId Scene; }
 
+	public class QuestSelected
+	{
+		public string LocationId;
+		public int QuestIndex;
+	}
+
 	public class SetCustomizationTab
 	{
 		public CustomizationTabType Tab;

@@ -153,6 +153,11 @@ namespace Crusaders30XX.ECS.Systems
             _font = font;
             _pixel = new Texture2D(gd, 1, 1);
             _pixel.SetData(new[] { Color.White });
+
+            // Prepare/launch dialog via events
+            EventManager.Subscribe<QuestSelected>(OnQuestSelected);
+            EventManager.Subscribe<TransitionCompleteEvent>(OnTransitionComplete);
+            EventManager.Subscribe<DialogEnded>(_ => ClearPendingDialog());
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -408,6 +413,7 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(e, ui);
                 EntityManager.AddComponent(e, new DialogOverlayState());
                 EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
+                EntityManager.AddComponent(e, new DontDestroyOnLoad());
                 Console.WriteLine("[DialogOverlaySystem] DialogOverlay created");
             }
             else
@@ -432,6 +438,60 @@ namespace Crusaders30XX.ECS.Systems
             _glyphRevealTimes.Clear();
             _lineComplete = string.IsNullOrEmpty(_cachedFilteredMessage);
             _effectsTimeSec = 0f;
+        }
+
+        private void OnQuestSelected(QuestSelected evt)
+        {
+            if (evt == null) return;
+            string id = ($"{evt.LocationId}_{System.Math.Max(0, evt.QuestIndex) + 1}").Trim();
+            // If a dialog exists for this quest, mark it pending on QueuedEvents
+            var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
+            if (qeEntity == null) return;
+            if (DialogDefinitionCache.TryGet(id, out var _))
+            {
+                var existing = qeEntity.GetComponent<PendingQuestDialog>();
+                if (existing == null)
+                {
+                    EntityManager.AddComponent(qeEntity, new PendingQuestDialog { DialogId = id, WillShowDialog = true });
+                }
+                else
+                {
+                    existing.DialogId = id;
+                    existing.WillShowDialog = true;
+                }
+            }
+            else
+            {
+                // Remove pending if no dialog for this quest
+                var existing = qeEntity.GetComponent<PendingQuestDialog>();
+                if (existing != null) { existing.DialogId = string.Empty; existing.WillShowDialog = false; }
+            }
+        }
+
+        private void OnTransitionComplete(TransitionCompleteEvent evt)
+        {
+            if (evt == null || evt.Scene != SceneId.Battle) return;
+            // Only start dialog after the transition completes into Battle
+            var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
+            var pending = qeEntity?.GetComponent<PendingQuestDialog>();
+            if (pending == null) return;
+            if (string.IsNullOrWhiteSpace(pending.DialogId)) { EntityManager.RemoveComponent<PendingQuestDialog>(qeEntity); return; }
+            if (DialogDefinitionCache.TryGet(pending.DialogId, out var def) && def != null)
+            {
+                Open(def);
+            }
+            else
+            {
+                EntityManager.RemoveComponent<PendingQuestDialog>(qeEntity);
+            }
+        }
+
+        private void ClearPendingDialog()
+        {
+            var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
+            if (qeEntity == null) return;
+            var pending = qeEntity.GetComponent<PendingQuestDialog>();
+            if (pending != null) pending.WillShowDialog = false;
         }
 
         private List<string> BuildStableWrappedVisible(string fullText, int visibleCharCount, int maxWidth)

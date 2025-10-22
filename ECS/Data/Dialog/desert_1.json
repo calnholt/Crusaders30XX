@@ -1,6 +1,10 @@
 [
     {
       "actor": "Angel",
+      "message": "[jitter]jitter[/jitter] [shake]shake[/shake] [small]small[/small] [big]big[/big] [nod]nod[/nod] [explode]explode[/explode] [bloom]bloom[/bloom] [ripple]ripple[/ripple] [speed factor=0.1]speed slow[/speed] [speed factor=3]speed fast[/speed]"
+    },
+    {
+      "actor": "Angel",
       "message": "We've been in this desert so long I have sand stuck in my [jitter amp=2 freq=10]halo[/jitter]!"
     },
     {
