@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -53,6 +54,7 @@ namespace Crusaders30XX.ECS.Systems
                     OnEndTurnPressed();
                 }
             });
+            EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -61,15 +63,12 @@ namespace Crusaders30XX.ECS.Systems
             return System.Array.Empty<Entity>();
         }
 
-        protected override void UpdateEntity(Entity entity, GameTime gameTime) 
+        public void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
         { 
-            var phaseEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
-            if (phaseEntity == null) return;
-            var phase = phaseEntity.GetComponent<PhaseState>();
-            var ui = entity.GetComponent<UIElement>();
+            var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
             if (ui != null)
             {
-                ui.IsInteractable = phase.Sub == SubPhase.Action && phase.Main == MainPhase.PlayerTurn;
+                ui.IsInteractable = evt.Current == SubPhase.Action ;
             }
         }
 
@@ -121,12 +120,9 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
-            // Only show in Action phase
-            var phaseEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
-            if (phaseEntity == null) return;
-            var phase = phaseEntity.GetComponent<PhaseState>();
-            if (phase.Sub != SubPhase.Action && phase.Main != MainPhase.PlayerTurn) return;
-
+            var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
+            if (ui != null && ui.IsInteractable == false) return;
+            
             var vp = _graphicsDevice.Viewport;
 			var btnRect = GetButtonRect(vp);
 
@@ -142,7 +138,6 @@ namespace Crusaders30XX.ECS.Systems
             }
             else
             {
-                var ui = endBtn.GetComponent<UIElement>();
                 var tr = endBtn.GetComponent<Transform>();
                 if (ui != null)
                 {
@@ -174,6 +169,11 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				endBtnUi.Bounds = drawRect;
 			}
+        }
+
+        protected override void UpdateEntity(Entity entity, GameTime gameTime)
+        {
+            throw new NotImplementedException();
         }
     }
 }

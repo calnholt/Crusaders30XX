@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Events;
 using System;
+using Microsoft.Xna.Framework.Content;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -16,7 +17,9 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
+		private readonly ContentManager _content;
 		private Texture2D _circleTexture;
+		private Texture2D _cursorCross;
 		private Vector2 _cursorPosition;
 		private int _lastViewportW = -1;
 		private int _lastViewportH = -1;
@@ -26,6 +29,20 @@ namespace Crusaders30XX.ECS.Systems
 		private Entity _lastHoveredEntity;
 		private Entity _prevHoverEntityForRumble;
 		private float _rumbleTimeRemaining;
+
+		// Cursor cross debug + animation
+		[DebugEditable(DisplayName = "Cross Scale Multiplier", Step = 0.05f, Min = 0.25f, Max = 3f)]
+		public float CrossScale { get; set; } = 1.0f;
+
+		[DebugEditable(DisplayName = "Cross Anim Speed", Step = 1f, Min = 1f, Max = 60f)]
+		public float CrossAnimSpeed { get; set; } = 16f;
+
+		private const float HoverScale = 0.9f;
+		private const float EnterPulseExtra = 0.06f;
+		private const float EnterPulseDuration = 0.06f;
+		private float _crossScaleCurrent = 1f;
+		private float _crossPulseTimer = 0f;
+		private Entity _prevHoverInteractable;
 
 		[DebugEditable(DisplayName = "Cursor Radius (px)", Step = 1f, Min = 2f, Max = 256f)]
 		public int CursorRadius { get; set; } = 40;
@@ -66,11 +83,14 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Rumble High Intensity", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float RumbleHigh { get; set; } = 0.2f;
 
-		public CursorSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+		public CursorSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
+			_content = content;
+			// Load cross texture once
+			_cursorCross = _content.Load<Texture2D>("cursor_cross");
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -169,6 +189,20 @@ namespace Crusaders30XX.ECS.Systems
 						}
 						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius));
 					}
+					// Cross animation: shrink slightly on entering a new interactable hover, ease back otherwise
+					Entity currentInteractable = (tc != null && tc.UI != null && tc.UI.IsInteractable) ? tc.E : null;
+					if (_prevHoverInteractable != currentInteractable)
+					{
+						_crossPulseTimer = EnterPulseDuration;
+						_prevHoverInteractable = currentInteractable;
+					}
+					float targetScale = 1f;
+					if (currentInteractable != null)
+					{
+						targetScale = (_crossPulseTimer > 0f) ? (HoverScale - EnterPulseExtra) : HoverScale;
+					}
+					_crossScaleCurrent += (targetScale - _crossScaleCurrent) * MathHelper.Clamp(dtRumble * CrossAnimSpeed, 0f, 1f);
+					_crossPulseTimer = Math.Max(0f, _crossPulseTimer - dtRumble);
 					topCandidate = tc;
 					_prevHoverEntityForRumble = hoveredEntityForRumble;
 				}
@@ -313,6 +347,15 @@ namespace Crusaders30XX.ECS.Systems
 				_prevMouseState = ms;
 			}
 
+			// Ease cross scale back to 1 when not using gamepad or during transitions
+			if (!useGamepad || ignoringTransitions)
+			{
+				float dtGeneral = (float)gameTime.ElapsedGameTime.TotalSeconds;
+				_crossScaleCurrent += (1f - _crossScaleCurrent) * MathHelper.Clamp(dtGeneral * CrossAnimSpeed, 0f, 1f);
+				_crossPulseTimer = Math.Max(0f, _crossPulseTimer - dtGeneral);
+				_prevHoverInteractable = null;
+			}
+
 		}
 
 		public void Draw()
@@ -324,30 +367,28 @@ namespace Crusaders30XX.ECS.Systems
 			_circleTexture = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, r);
 			var dst = new Rectangle((int)Math.Round(_cursorPosition.X) - r, (int)Math.Round(_cursorPosition.Y) - r, r * 2, r * 2);
 
-			// Compute redness based on overlap with interactable UIElement bounds
-			float maxCoverage = 0f;
-			foreach (var e in EntityManager.GetEntitiesWithComponent<UIElement>())
-			{
-				var ui = e.GetComponent<UIElement>();
-				if (ui == null || !ui.IsInteractable) continue;
-				var bounds = ui.Bounds;
-				if (bounds.Width < 2 || bounds.Height < 2) continue;
-				maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds, _cursorPosition, r));
-			}
-			maxCoverage = MathHelper.Clamp(maxCoverage, 0f, 1f);
-			var tint = Color.Lerp(Color.White, Color.Red, maxCoverage);
 			float a = MathHelper.Clamp(CursorOpacity, 0f, 1f);
-			var tintWithAlpha = Color.FromNonPremultiplied(tint.R, tint.G, tint.B, (byte)Math.Round(a * 255f));
-			_spriteBatch.Draw(_circleTexture, dst, tintWithAlpha);
+			var whiteWithAlpha = Color.FromNonPremultiplied(255, 255, 255, (byte)Math.Round(a * 255f));
+			_spriteBatch.Draw(_circleTexture, dst, whiteWithAlpha);
 
 			// Draw the inner hitbox circle
-			int rHitboxDraw = Math.Max(0, HitboxRadius);
-			if (rHitboxDraw > 0)
+			// int rHitboxDraw = Math.Max(0, HitboxRadius);
+			// if (rHitboxDraw > 0)
+			// {
+			// 	var hitboxTexture = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, rHitboxDraw);
+			// 	var dstHitbox = new Rectangle((int)Math.Round(_cursorPosition.X) - rHitboxDraw, (int)Math.Round(_cursorPosition.Y) - rHitboxDraw, rHitboxDraw * 2, rHitboxDraw * 2);
+			// 	var hitboxColor = Color.FromNonPremultiplied(Color.Gold.R, Color.Gold.G, Color.Gold.B, (byte)Math.Round(a * 255f));
+			// 	_spriteBatch.Draw(hitboxTexture, dstHitbox, hitboxColor);
+			// }
+
+			// Draw the cross overlay, centered and scaled within the cursor
+			if (_cursorCross != null)
 			{
-				var hitboxTexture = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, rHitboxDraw);
-				var dstHitbox = new Rectangle((int)Math.Round(_cursorPosition.X) - rHitboxDraw, (int)Math.Round(_cursorPosition.Y) - rHitboxDraw, rHitboxDraw * 2, rHitboxDraw * 2);
-				var hitboxColor = Color.FromNonPremultiplied(Color.Gold.R, Color.Gold.G, Color.Gold.B, (byte)Math.Round(a * 255f));
-				_spriteBatch.Draw(hitboxTexture, dstHitbox, hitboxColor);
+				var origin = new Vector2(_cursorCross.Width / 2f, _cursorCross.Height / 2f);
+				float maxDim = Math.Max(_cursorCross.Width, _cursorCross.Height);
+				float baseFit = (r * 2f) / maxDim * 0.75f; // keep within outer circle
+				float scale = baseFit * MathHelper.Clamp(CrossScale, 0.25f, 3f) * _crossScaleCurrent;
+				_spriteBatch.Draw(_cursorCross, _cursorPosition, null, whiteWithAlpha, 0f, origin, scale, SpriteEffects.None, 0f);
 			}
 		}
 

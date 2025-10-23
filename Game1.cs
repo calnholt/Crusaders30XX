@@ -116,7 +116,7 @@ public class Game1 : Game
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _tooltipQuestDisplaySystem = new TooltipQuestDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
-        _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _parallaxLayerSystem = new ParallaxLayerSystem(_world.EntityManager, GraphicsDevice);
         _uiElementBorderDebugSystem = new UIElementBorderDebugSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
