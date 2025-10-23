@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Systems
 	public class PlayerAnimationSystem : Core.System
 	{
 		private readonly Vector2 _attackOffset = new Vector2(80f, -20f);
+		private readonly float _attackNudgePixels = 36f;
 
 		public PlayerAnimationSystem(EntityManager entityManager) : base(entityManager)
 		{
@@ -73,7 +74,18 @@ namespace Crusaders30XX.ECS.Systems
 				float outPhase = System.Math.Min(0.5f, ta) * 2f;
 				float backPhase = System.Math.Max(0f, ta - 0.5f) * 2f;
 				var basePos = t.Position;
-				Vector2 outPos = anim.AttackTargetPos + _attackOffset;
+				Vector2 desired = anim.AttackTargetPos + _attackOffset;
+				Vector2 dir = desired - basePos;
+				Vector2 fallbackDir = Vector2.Normalize(_attackOffset);
+				if (dir.LengthSquared() > 0.0001f)
+				{
+					dir = Vector2.Normalize(dir);
+				}
+				else
+				{
+					dir = fallbackDir;
+				}
+				Vector2 outPos = basePos + dir * _attackNudgePixels;
 				Vector2 mid = Vector2.Lerp(basePos, outPos, 1f - (float)System.Math.Pow(1f - outPhase, 3));
 				var animPos = Vector2.Lerp(mid, basePos, backPhase);
 				anim.DrawOffset = animPos - basePos;
