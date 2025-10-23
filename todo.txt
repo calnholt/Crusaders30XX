@@ -3,9 +3,10 @@
 - combat music
 - sound effects
 - improved cursor feedback
-- position battle entities spawn away from top left corner
+- position battle entities spawn away from top left corner (parallax layer issue, not sure why)
 - equipment tooltip overhaul
 - more animations / fix existing
 - parallax background
 - quest rewards
 - set music correctly for each scene
+- play card animation

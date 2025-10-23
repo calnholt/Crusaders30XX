@@ -6,6 +6,7 @@ using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Diagnostics.Tracing;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -58,6 +59,8 @@ namespace Crusaders30XX.ECS.Systems
 					var queued = queuedEntity.GetComponent<QueuedEvents>();
 					if (queued.CurrentIndex == queued.Events.Count - 1)
 					{
+						Console.WriteLine($"[HpManagementSystem] Attempting to save quest completion");
+						QuestCompleteService.SaveIfCompletedHighest(EntityManager);
 						EventManager.Publish(new ShowTransition { Scene = SceneId.WorldMap });
 					}
 					else

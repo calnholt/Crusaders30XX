@@ -228,17 +228,6 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
-			if (queued.CurrentIndex == 0) 
-			{
-			}
-			// all battles are done, quest completed; update save and go to menu
-			if (queued.Events.Count == queued.CurrentIndex + 1)
-			{
-				// Increment save progress via service
-				QuestCompleteService.SaveIfCompletedHighest(EntityManager);
-				EventManager.Publish(new LoadSceneEvent { Scene = SceneId.WorldMap });
-				return;
-			};
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
 			// Dialog is now handled globally; do not open here
 			// TODO: should handle through events rather than directly but im lazy right now

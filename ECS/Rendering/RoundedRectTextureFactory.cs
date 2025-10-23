@@ -85,7 +85,8 @@ namespace Crusaders30XX.ECS.Rendering
                         alpha = 1f;
                     }
 
-                    data[y * w + x] = (alpha <= 0f) ? Color.Transparent : new Color(1f, 1f, 1f, alpha);
+                    // Use premultiplied alpha to avoid edge fringing and ensure smooth AA blending
+                    data[y * w + x] = (alpha <= 0f) ? Color.Transparent : new Color(alpha, alpha, alpha, alpha);
                 }
             }
 
