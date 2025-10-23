@@ -207,25 +207,33 @@ namespace Crusaders30XX.ECS.Systems
 					_prevHoverEntityForRumble = hoveredEntityForRumble;
 				}
 
-				// A button edge-triggered click on the same top-most UI
+				// A button edge-triggered click: use the same coverage criterion as hover
 				bool aPressed = gp.Buttons.A == ButtonState.Pressed;
 				bool aPrevPressed = _prevGamePadState.Buttons.A == ButtonState.Pressed;
 				bool aEdge = aPressed && !aPrevPressed;
 				isPressed = aPressed;
 				isPressedEdge = aEdge;
-				if (aEdge && !ignoringTransitions && topCandidate != null)
+				if (aEdge && !ignoringTransitions)
 				{
-					var tc = (dynamic)topCandidate;
-					if (tc.UI.EventType != UIElementEventType.None) 
+					int rHitboxClick = Math.Max(0, HitboxRadius);
+					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()
+						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
+						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick) > 0f)
+						.OrderByDescending(x => x.T?.ZOrder ?? 0)
+						.FirstOrDefault();
+					if (clickCandidate != null)
 					{
-						UIElementEventDelegateService.HandleEvent(tc.UI.EventType, tc.E);
+						if (clickCandidate.UI.EventType != UIElementEventType.None)
+						{
+							UIElementEventDelegateService.HandleEvent(clickCandidate.UI.EventType, clickCandidate.E);
+						}
+						else
+						{
+							clickCandidate.UI.IsClicked = true;
+						}
+						Console.WriteLine($"[CursorSystem] Clicked: {clickCandidate.E.Id}");
+						_lastClickedEntity = clickCandidate.E;
 					}
-					else 
-					{
-						tc.UI.IsClicked = true;
-					}
-					Console.WriteLine($"[CursorSystem] Clicked: {tc.E.Id}");
-					_lastClickedEntity = tc.E;
 				}
 
 				// Publish cursor state event for other systems

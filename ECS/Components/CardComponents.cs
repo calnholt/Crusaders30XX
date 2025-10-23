@@ -309,6 +309,13 @@ namespace Crusaders30XX.ECS.Components
         public TooltipPosition TooltipPosition { get; set; } = TooltipPosition.Above;
         public int TooltipOffsetPx { get; set; } = 6; // gap from element to tooltip
         public UIElementEventType EventType { get; set; } = UIElementEventType.None;
+        public UILayerType LayerType { get; set; } = UILayerType.Default;
+    }
+
+    public enum UILayerType
+    {
+        Default,
+        Overlay,
     }
 
     public enum TooltipType
@@ -326,6 +333,7 @@ namespace Crusaders30XX.ECS.Components
         AssignCardAsBlock,
         UnassignEquipmentAsBlock,
         AssignEquipmentAsBlock,
+        CardListModalClose,
         ActivateEquipment,
         EndTurn,
         ConfirmBlocks,

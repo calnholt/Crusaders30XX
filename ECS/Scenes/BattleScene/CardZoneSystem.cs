@@ -181,6 +181,7 @@ namespace Crusaders30XX.ECS.Systems
                         };
                         EntityManager.AddComponent(evt.Card, abc);
                     }
+                    // Do not assign HotKey here; it will be added when animation reaches Idle
                     // Ensure the card is not still in hand to prevent later clicks from finding it
                     deck.Hand.Remove(evt.Card);
                     // Make assigned block cards non-interactable as cards (interactions happen via assigned UI)

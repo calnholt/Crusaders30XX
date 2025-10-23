@@ -134,7 +134,8 @@ namespace Crusaders30XX.ECS.Systems
             {
                 closeBtn = EntityManager.CreateEntity("CardListModal_Close");
                 EntityManager.AddComponent(closeBtn, new Transform { Position = new Vector2(closeRect.X, closeRect.Y), ZOrder = 20000 });
-                EntityManager.AddComponent(closeBtn, new UIElement { Bounds = closeRect, IsInteractable = true, Tooltip = "Close" });
+                EntityManager.AddComponent(closeBtn, new UIElement { Bounds = closeRect, IsInteractable = true, Tooltip = "Close", LayerType = UILayerType.Overlay, EventType = UIElementEventType.CardListModalClose });
+                EntityManager.AddComponent(closeBtn, new HotKey { Button = FaceButton.B });
                 EntityManager.AddComponent(closeBtn, new CardListModalClose());
             }
             else

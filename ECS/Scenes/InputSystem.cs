@@ -268,12 +268,6 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new OpenCardListModalEvent { Title = "Discard Pile", Cards = deck.DiscardPile.ToList() });
                 }
             }
-
-            var cardListModalClose = entity.GetComponent<CardListModalClose>();
-            if (cardListModalClose != null)
-            {
-                EventManager.Publish(new CloseCardListModalEvent());
-            }
         }
         
         private void HandleCardClick(Entity entity)

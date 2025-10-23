@@ -29,11 +29,11 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -1000, Max = 1000)]
 		public int AnchorOffsetY { get; set; } = -210;
 		[DebugEditable(DisplayName = "Slot Spacing X", Step = 2, Min = 10, Max = 200)]
-		public int SlotSpacingX { get; set; } = 56;
+		public int SlotSpacingX { get; set; } = 70;
 		[DebugEditable(DisplayName = "Card Draw W", Step = 2, Min = 20, Max = 300)]
-		public int CardDrawWidth { get; set; } = 80;
+		public int CardDrawWidth { get; set; } = 100;
 		[DebugEditable(DisplayName = "Card Draw H", Step = 2, Min = 20, Max = 400)]
-		public int CardDrawHeight { get; set; } = 110;
+		public int CardDrawHeight { get; set; } = 130;
 		[DebugEditable(DisplayName = "Target Scale", Step = 0.02f, Min = 0.1f, Max = 1.0f)]
 		public float TargetScale { get; set; } = 0.43f;
 		[DebugEditable(DisplayName = "Pullback Seconds", Step = 0.01f, Min = 0f, Max = 1f)]
@@ -72,12 +72,22 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			EventManager.Subscribe<UnassignCardAsBlockRequested>(OnUnassignCardAsBlockRequested);
+			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
+			EventManager.Subscribe<BlockAssignmentRemoved>(OnBlockAssignmentRemoved);
+			EventManager.Subscribe<CardMoved>(OnCardMoved);
 		}
 
 		private void OnUnassignCardAsBlockRequested(UnassignCardAsBlockRequested evt)
 		{
 			Console.WriteLine($"[AssignedBlockCardsDisplaySystem] OnUnassignCardAsBlockRequested: {evt.CardEntity.Id}");
 			var abc = evt.CardEntity.GetComponent<AssignedBlockCard>();
+			// Immediately move B HotKey to the previous assigned (if available)
+			var hk = evt.CardEntity.GetComponent<HotKey>();
+			if (hk != null && hk.Button == FaceButton.B)
+			{
+				EntityManager.RemoveComponent<HotKey>(evt.CardEntity);
+				AssignHotKeyToPrevious(evt.CardEntity, abc?.ContextId, abc?.AssignedAtTicks ?? long.MaxValue);
+			}
 			abc.Phase = AssignedBlockCard.PhaseState.Returning;
 			abc.Elapsed = 0f;
 			var cardData = evt.CardEntity.GetComponent<CardData>();
@@ -148,6 +158,16 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 				_pendingReturn.Clear();
+			}
+
+			// Self-heal: ensure B hotkey is on the newest assigned card for the current context
+			{
+				var enemyTip = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+				var paTip = enemyTip?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();
+				if (paTip != null && !string.IsNullOrEmpty(paTip.ContextId))
+				{
+					MaintainLatestHotKeyForContext(paTip.ContextId);
+				}
 			}
 		}
 
@@ -271,7 +291,7 @@ namespace Crusaders30XX.ECS.Systems
 					float p = ImpactSeconds <= 0f ? 1f : MathHelper.Clamp(abc.Elapsed / ImpactSeconds, 0f, 1f);
 					abc.CurrentPos = abc.TargetPos + new Vector2(0, (1f - p) * 6f);
 					abc.CurrentScale = TargetScale * (1f + 0.08f * (1f - p));
-					if (p >= 1f) { abc.Phase = AssignedBlockCard.PhaseState.Idle; abc.Elapsed = 0f; }
+					if (p >= 1f) { abc.Phase = AssignedBlockCard.PhaseState.Idle; abc.Elapsed = 0f; MaintainLatestHotKeyForContext(pa.ContextId); }
 					break;
 				}
 				case AssignedBlockCard.PhaseState.Idle:
@@ -304,6 +324,127 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			t.Position = abc.CurrentPos;
 			t.Scale = new Vector2(abc.CurrentScale, abc.CurrentScale);
+		}
+
+		private void OnBlockAssignmentAdded(BlockAssignmentAdded evt)
+		{
+			if (evt == null || string.IsNullOrEmpty(evt.ContextId)) return;
+			// Immediately remove the previous HotKey (if exists) for this context
+			RemovePreviousForContext(evt.ContextId, evt.Card);
+		}
+
+		private void OnBlockAssignmentRemoved(BlockAssignmentRemoved evt)
+		{
+			if (evt == null || string.IsNullOrEmpty(evt.ContextId)) return;
+			MaintainLatestHotKeyForContext(evt.ContextId);
+		}
+
+		private void OnCardMoved(CardMoved evt)
+		{
+			if (evt == null) return;
+			if (evt.From == CardZoneType.AssignedBlock)
+			{
+				var hk = evt.Card?.GetComponent<HotKey>();
+				if (hk != null && hk.Button == FaceButton.B)
+				{
+					// Remove B and reassign immediately to previous (if available)
+					EntityManager.RemoveComponent<HotKey>(evt.Card);
+					AssignHotKeyToPrevious(evt.Card, evt.ContextId, evt.Card.GetComponent<AssignedBlockCard>()?.AssignedAtTicks ?? long.MaxValue);
+				}
+				if (!string.IsNullOrEmpty(evt.ContextId))
+				{
+					MaintainLatestHotKeyForContext(evt.ContextId);
+				}
+			}
+		}
+
+		private void AssignHotKeyToPrevious(Entity removed, string contextId, long removedAssignedAt)
+		{
+			if (string.IsNullOrEmpty(contextId)) return;
+			var prev = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>()
+				.Where(e => {
+					if (e == removed) return false;
+					var a = e.GetComponent<AssignedBlockCard>();
+					return a != null && a.ContextId == contextId && a.Phase == AssignedBlockCard.PhaseState.Idle && a.AssignedAtTicks <= removedAssignedAt;
+				})
+				.OrderByDescending(e => e.GetComponent<AssignedBlockCard>().AssignedAtTicks)
+				.FirstOrDefault();
+			if (prev == null) return;
+			var hk = prev.GetComponent<HotKey>();
+			if (hk == null) EntityManager.AddComponent(prev, new HotKey { Button = FaceButton.B });
+			else hk.Button = FaceButton.B;
+		}
+
+		private void MaintainLatestHotKeyForContext(string contextId)
+		{
+			if (string.IsNullOrEmpty(contextId)) return;
+
+			// Clean up: remove B hotkeys from entities that are no longer assigned block items
+			foreach (var e in EntityManager.GetEntitiesWithComponent<HotKey>())
+			{
+				var hk = e.GetComponent<HotKey>();
+				if (hk == null || hk.Button != FaceButton.B) continue;
+				var abc = e.GetComponent<AssignedBlockCard>();
+				if (abc == null || abc.ContextId != contextId || abc.Phase != AssignedBlockCard.PhaseState.Idle)
+				{
+					var ui = e.GetComponent<UIElement>();
+					if (ui != null && ui.EventType == UIElementEventType.UnassignCardAsBlock)
+					{
+						EntityManager.RemoveComponent<HotKey>(e);
+					}
+				}
+			}
+
+			// Apply B only to the newest Idle assignment for this context
+			var candidates = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>()
+				.Where(ent => {
+					var a = ent.GetComponent<AssignedBlockCard>();
+					return a != null && a.ContextId == contextId && a.Phase == AssignedBlockCard.PhaseState.Idle;
+				})
+				.OrderBy(ent => ent.GetComponent<AssignedBlockCard>().AssignedAtTicks)
+				.ToList();
+			var newest = candidates.LastOrDefault();
+			foreach (var ent in candidates)
+			{
+				var hk = ent.GetComponent<HotKey>();
+				if (ent == newest)
+				{
+					if (hk == null)
+					{
+						EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.B });
+					}
+					else
+					{
+						hk.Button = FaceButton.B;
+					}
+				}
+				else
+				{
+					if (hk != null && hk.Button == FaceButton.B)
+					{
+						EntityManager.RemoveComponent<HotKey>(ent);
+					}
+				}
+			}
+		}
+
+		private void RemovePreviousForContext(string contextId, Entity exclude)
+		{
+			// Find the previous (most recent) idle assignment other than the new one and remove its HotKey
+			var prev = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>()
+				.Where(e => {
+					if (e == exclude) return false;
+					var a = e.GetComponent<AssignedBlockCard>();
+					return a != null && a.ContextId == contextId && a.Phase == AssignedBlockCard.PhaseState.Idle;
+				})
+				.OrderByDescending(e => e.GetComponent<AssignedBlockCard>().AssignedAtTicks)
+				.FirstOrDefault();
+			if (prev == null) return;
+			var hkPrev = prev.GetComponent<HotKey>();
+			if (hkPrev != null && hkPrev.Button == FaceButton.B)
+			{
+				EntityManager.RemoveComponent<HotKey>(prev);
+			}
 		}
 
 		public void Draw()
