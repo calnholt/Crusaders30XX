@@ -11,6 +11,7 @@ namespace Crusaders30XX.ECS.Components
 		WorldMap,
 		Customization,
 		Battle,
+		Location,
 		None
 	}
 

@@ -29,6 +29,7 @@ public class Game1 : Game
     private InternalQueueEventsSceneSystem _menuSceneSystem;
     private TitleMenuDisplaySystem _titleMenuDisplaySystem;
     private BattleSceneSystem _battleSceneSystem;
+    private LocationSceneSystem _locationSceneSystem;
     private CustomizationRootSystem _customizationRootSystem;
     private TooltipTextDisplaySystem _tooltipTextDisplaySystem;
     private ProfilerSystem _profilerSystem;
@@ -103,6 +104,7 @@ public class Game1 : Game
         _titleMenuDisplaySystem = new TitleMenuDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _menuSceneSystem = new InternalQueueEventsSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
+        _locationSceneSystem = new LocationSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
         _customizationRootSystem = new CustomizationRootSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _world.SystemManager);
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
@@ -121,6 +123,7 @@ public class Game1 : Game
         _world.AddSystem(_titleMenuDisplaySystem);
         _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
+        _world.AddSystem(_locationSceneSystem);
         _world.AddSystem(_customizationRootSystem);
         _world.AddSystem(new TimerSchedulerSystem(_world.EntityManager));
         _world.AddSystem(_debugMenuSystem);
@@ -208,6 +211,11 @@ public class Game1 : Game
             case SceneId.Battle:
             {
                 FrameProfiler.Measure("BattleSceneSystem.Draw", _battleSceneSystem.Draw);
+                break;
+            }
+            case SceneId.Location:
+            {
+                FrameProfiler.Measure("LocationSceneSystem.Draw", _locationSceneSystem.Draw);
                 break;
             }
             case SceneId.WorldMap:

@@ -125,7 +125,7 @@ namespace Crusaders30XX.ECS.Systems
             var phaseEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
             if (phaseEntity == null) return;
             var phase = phaseEntity.GetComponent<PhaseState>();
-            if (phase.Sub != SubPhase.Action) return;
+            if (phase.Sub != SubPhase.Action && phase.Main != MainPhase.PlayerTurn) return;
 
             var vp = _graphicsDevice.Viewport;
 			var btnRect = GetButtonRect(vp);
