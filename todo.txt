@@ -6,7 +6,6 @@
 - position battle entities spawn away from top left corner
 - equipment tooltip overhaul
 - more animations / fix existing
-- display enemy name / tooltip info
 - parallax background
 - quest rewards
 - set music correctly for each scene

@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -13,6 +14,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private Texture2D _pixel;
+        private readonly System.Collections.Generic.Dictionary<(int radius, int thickness), Texture2D> _ringCache = new();
 
 		[DebugEditable(DisplayName = "Pip Radius", Step = 1, Min = 2, Max = 64)]
 		public int PipRadius { get; set; } = 9;
@@ -22,6 +24,8 @@ namespace Crusaders30XX.ECS.Systems
 		public int OffsetY { get; set; } = -210;
 		[DebugEditable(DisplayName = "Row Gap", Step = 1, Min = 0, Max = 64)]
 		public int RowGap { get; set; } = 16;
+		[DebugEditable(DisplayName = "Pip Thickness", Step = 1, Min = 1, Max = 64)]
+		public int PipThickness { get; set; } = 4;
 
 		public EnemyIntentPipsSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
@@ -30,6 +34,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+            EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -122,7 +127,7 @@ namespace Crusaders30XX.ECS.Systems
 						bool isNext = pa.ResolveStep == minStep;
 						bool isCrossed = crossedCurrent[i];
 						var pipColor = isCrossed ? Color.DarkGray : (isNext ? Color.Yellow : Color.LightGray);
-						DrawCircle(new Vector2(x, y), PipRadius, pipColor, 2);
+						DrawCircle(new Vector2(x, y), PipRadius, pipColor, PipThickness);
 						if (isCrossed)
 						{
 							// Draw red X over the pip
@@ -178,7 +183,7 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						int x2 = nStartX + i * (nDiameter + PipGap) + nRadius;
 						bool isCrossed = crossedNext[i];
-						DrawCircle(new Vector2(x2, y2), nRadius, new Color(200, 200, 200, 180), 2);
+						DrawCircle(new Vector2(x2, y2), nRadius, new Color(200, 200, 200, 180), PipThickness);
 						if (isCrossed)
 						{
 							// Draw red X over the next-turn pip
@@ -194,18 +199,67 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
+		private Texture2D GetRingTexture(int radius, int thickness)
+		{
+			if (radius < 1) radius = 1;
+			if (thickness < 1) thickness = 1;
+			var key = (radius, thickness);
+			if (_ringCache.TryGetValue(key, out var existing) && existing != null && !existing.IsDisposed) return existing;
+
+			int d = radius * 2;
+			var tex = new Texture2D(_graphicsDevice, d, d);
+			var data = new Color[d * d];
+
+			// Anti-aliased ring via difference of two AA discs (outer - inner)
+			float outerRadius = radius - 0.5f;
+			float innerRadius = System.Math.Max(0f, radius - thickness) + 0.5f;
+			float smooth = 1.0f; // pixel-wide smoothing band
+
+			for (int y = 0; y < d; y++)
+			{
+				float dy = y - radius + 0.5f;
+				for (int x = 0; x < d; x++)
+				{
+					float dx = x - radius + 0.5f;
+					float dist = System.MathF.Sqrt(dx * dx + dy * dy);
+
+					float outerAlpha;
+					if (dist <= outerRadius - smooth) outerAlpha = 1f;
+					else if (dist >= outerRadius + smooth) outerAlpha = 0f;
+					else outerAlpha = 0.5f + 0.5f * (outerRadius - dist) / smooth;
+
+					float innerAlpha;
+					if (dist <= innerRadius - smooth) innerAlpha = 1f;
+					else if (dist >= innerRadius + smooth) innerAlpha = 0f;
+					else innerAlpha = 0.5f + 0.5f * (innerRadius - dist) / smooth;
+
+					float ringAlpha = outerAlpha - innerAlpha;
+					if (ringAlpha < 0f) ringAlpha = 0f;
+					if (ringAlpha > 1f) ringAlpha = 1f;
+
+					byte A = (byte)MathHelper.Clamp((int)System.Math.Round(ringAlpha * 255f), 0, 255);
+					data[y * d + x] = Color.FromNonPremultiplied(255, 255, 255, A);
+				}
+			}
+
+			tex.SetData(data);
+			_ringCache[key] = tex;
+			return tex;
+		}
+
+		private void OnDeleteCaches(DeleteCachesEvent evt)
+		{
+			foreach (var kv in _ringCache)
+			{
+				try { kv.Value?.Dispose(); } catch { }
+			}
+			_ringCache.Clear();
+		}
+
 		private void DrawCircle(Vector2 center, int radius, Color color, int thickness)
 		{
-			// Midpoint circle rasterization approximation using rectangles (fast + simple)
-			int steps = System.Math.Max(12, radius * 6);
-			for (int i = 0; i < steps; i++)
-			{
-				float a0 = MathHelper.TwoPi * (i / (float)steps);
-				float a1 = MathHelper.TwoPi * ((i + 1) / (float)steps);
-				var p0 = new Vector2(center.X + radius * System.MathF.Cos(a0), center.Y + radius * System.MathF.Sin(a0));
-				var p1 = new Vector2(center.X + radius * System.MathF.Cos(a1), center.Y + radius * System.MathF.Sin(a1));
-				DrawLine(p0, p1, color, thickness);
-			}
+			var tex = GetRingTexture(radius, thickness);
+			_spriteBatch.Draw(tex, center, sourceRectangle: null, color: color, rotation: 0f, origin: new Vector2(radius, radius), scale: 1f, effects: SpriteEffects.None, layerDepth: 0f);
 		}
 
 		private void DrawLine(Vector2 a, Vector2 b, Color color, int thickness)
