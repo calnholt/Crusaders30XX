@@ -529,6 +529,23 @@ namespace Crusaders30XX.ECS.Components
         public string Command { get; set; } = ""; // e.g., "DrawCard"
     }
 
+    public enum FaceButton
+    {
+        B,
+        X,
+        Y
+    }
+
+    /// <summary>
+    /// Declares a controller hotkey binding for a UI element. The system will draw
+    /// a face-button hint next to the element and trigger its action when pressed.
+    /// </summary>
+    public class HotKey : IComponent
+    {
+        public Entity Owner { get; set; }
+        public FaceButton Button { get; set; } = FaceButton.Y;
+    }
+
     /// <summary>
     /// State for a simple "How To Play" overlay.
     /// </summary>

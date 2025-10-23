@@ -38,6 +38,7 @@ public class Game1 : Game
     private ParallaxLayerSystem _parallaxLayerSystem;
     private UIElementHighlightSystem _uiElementHighlightSystem;
     private CursorSystem _cursorSystem;
+    private HotKeySystem _hotKeySystem;
     private UIElementBorderDebugSystem _uiElementBorderDebugSystem;
     private DialogDisplaySystem _dialogDisplaySystem;
     
@@ -117,6 +118,7 @@ public class Game1 : Game
         _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _tooltipQuestDisplaySystem = new TooltipQuestDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _hotKeySystem = new HotKeySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _parallaxLayerSystem = new ParallaxLayerSystem(_world.EntityManager, GraphicsDevice);
         _uiElementBorderDebugSystem = new UIElementBorderDebugSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
@@ -137,6 +139,7 @@ public class Game1 : Game
         _world.AddSystem(_worldMapSystem);
         _world.AddSystem(_tooltipQuestDisplaySystem);
         _world.AddSystem(_cursorSystem);
+        _world.AddSystem(_hotKeySystem);
         _world.AddSystem(_parallaxLayerSystem);
         _world.AddSystem(_uiElementBorderDebugSystem);
         // Global music manager
@@ -233,6 +236,7 @@ public class Game1 : Game
                 break;
             }
         }
+        FrameProfiler.Measure("HotKeySystem.Draw", _hotKeySystem.Draw);
         FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipTextDisplaySystem.Draw);
         FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);

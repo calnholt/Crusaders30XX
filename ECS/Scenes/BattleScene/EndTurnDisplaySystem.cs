@@ -55,6 +55,10 @@ namespace Crusaders30XX.ECS.Systems
                 }
             });
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
+            EventManager.Subscribe<OpenPayCostOverlayEvent>(_ => HideEndTurnButton());
+            EventManager.Subscribe<ClosePayCostOverlayEvent>(_ => ShowEndTurnButton());
+            EventManager.Subscribe<PayCostCancelRequested>(_ => ShowEndTurnButton());
+            EventManager.Subscribe<PayCostSatisfied>(_ => ShowEndTurnButton());
 
             			// Ensure a clickable UI entity exists and keep its base anchored; ParallaxLayer will offset Position
         }
@@ -71,6 +75,23 @@ namespace Crusaders30XX.ECS.Systems
             if (ui != null)
             {
                 ui.IsInteractable = evt.Current == SubPhase.Action;
+            }
+        }
+
+        public void HideEndTurnButton()
+        {
+            var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
+            if (ui != null)
+            {
+                ui.IsInteractable = false;
+            }
+        }
+        public void ShowEndTurnButton()
+        {
+            var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
+            if (ui != null)
+            {
+                ui.IsInteractable = true;
             }
         }
 
@@ -133,6 +154,7 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(endBtn, new UIButton { Label = "End Turn", Command = "EndTurn" });
 				EntityManager.AddComponent(endBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
 				EntityManager.AddComponent(endBtn, new UIElement { Bounds = btnRect, IsInteractable = false });
+				EntityManager.AddComponent(endBtn, new HotKey { Button = FaceButton.Y });
 				EntityManager.AddComponent(endBtn, ParallaxLayer.GetUIParallaxLayer());
             }
             else

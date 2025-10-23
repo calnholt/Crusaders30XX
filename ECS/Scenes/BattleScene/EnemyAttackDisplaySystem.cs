@@ -721,6 +721,7 @@ namespace Crusaders30XX.ECS.Systems
 					primaryBtn = EntityManager.CreateEntity("UIButton_ConfirmEnemyAttack");
 					EntityManager.AddComponent(primaryBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ConfirmButtonZ });
 					EntityManager.AddComponent(primaryBtn, new UIElement { Bounds = btnRect, IsInteractable = true, EventType = UIElementEventType.ConfirmBlocks });
+					EntityManager.AddComponent(primaryBtn, new HotKey { Button = FaceButton.Y });
 					EntityManager.AddComponent(primaryBtn, ParallaxLayer.GetUIParallaxLayer());
 				}
 				else
