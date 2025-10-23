@@ -1,11 +1,7 @@
 [
     {
       "actor": "Angel",
-      "message": "[jitter]jitter[/jitter] [shake]shake[/shake] [small]small[/small] [big]big[/big] [nod]nod[/nod] [explode]explode[/explode] [bloom]bloom[/bloom] [ripple]ripple[/ripple] [speed factor=0.1]speed slow[/speed] [speed factor=3]speed fast[/speed]"
-    },
-    {
-      "actor": "Angel",
-      "message": "We've been in this desert so long I have sand stuck in my [jitter amp=2 freq=10]halo[/jitter]!"
+      "message": "We've been in this desert so long I have sand stuck in my halo!"
     },
     {
       "actor": "Crusader",
@@ -13,7 +9,7 @@
     },
     {
       "actor": "Angel",
-      "message": "What? No way. The heat must be getting to me... or maybe it's all this sand stuck in my— COUGH- throat."
+      "message": "What? No way. The heat must be getting to me... or maybe it's all this sand stuck in my [slow factor=0.01]-[/slow] [jitter]COUGH[/jitter] [slow factor=0.01]-[/slow] throat."
     },
     {
       "actor": "Crusader",
@@ -25,15 +21,15 @@
     },
     {
       "actor": "Crusader",
-      "message": "Orders from the Holy See. Too many demonic reports out here—smells like a new Hellrift."
+      "message": "Orders from the Holy See. Too many demonic reports out here—reeks of a new Hellrift."
     },
     {
       "actor": "Angel",
-      "message": "You mean that *adorable* thing over there?"
+      "message": "You mean that [nod]adorable[/nod] thing over there?"
     },
     {
       "actor": "Crusader",
-      "message": "No. That's what crawled *out* of one."
+      "message": "No. That's what crawled out of one."
     },
     {
       "actor": "Angel",
@@ -45,7 +41,7 @@
     },
     {
       "actor": "Angel",
-      "message": "Death to the cute demon! …Hold on, let me just— COUGH— okay, ready!"
+      "message": "Death to the cute demon! …Hold on, let me just [slow factor=0.01]-[/slow] [jitter]COUGH[/jitter] [slow factor=0.01]-[/slow] okay, ready!"
     }
   ]
   

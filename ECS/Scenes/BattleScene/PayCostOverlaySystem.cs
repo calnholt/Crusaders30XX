@@ -20,6 +20,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font;
         private readonly Texture2D _pixel;
+        private CardVisualSettings _cardSettings;
 
         [DebugEditable(DisplayName = "Fade In (s)", Step = 0.05f, Min = 0.01f, Max = 1.0f)]
         public float FadeInDurationSec { get; set; } = 0.25f;
@@ -50,6 +51,25 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Card Offset Y", Step = 1f, Min = -2000f, Max = 2000f)]
         public float CardOffsetY { get; set; } = 0f;
 
+        // Selected-cards row settings
+        [DebugEditable(DisplayName = "Selected Scale", Step = 0.05f, Min = 0.3f, Max = 1.5f)]
+        public float SelectedCardScale { get; set; } = 0.5f;
+
+        [DebugEditable(DisplayName = "Selected Move (s)", Step = 0.05f, Min = 0.01f, Max = 1.0f)]
+        public float SelectedMoveDurationSec { get; set; } = 0.25f;
+
+        [DebugEditable(DisplayName = "Selected Return (s)", Step = 0.05f, Min = 0.01f, Max = 1.0f)]
+        public float SelectedReturnDurationSec { get; set; } = 0.12f;
+
+        [DebugEditable(DisplayName = "Selected Spacing", Step = 2f, Min = 40f, Max = 400f)]
+        public float SelectedSpacingPx { get; set; } = 140f;
+
+        [DebugEditable(DisplayName = "Selected Offset X", Step = 2f, Min = -1000f, Max = 2000f)]
+        public float SelectedOffsetX { get; set; } = 180f;
+
+        [DebugEditable(DisplayName = "Selected Offset Y", Step = 2f, Min = -1000f, Max = 1000f)]
+        public float SelectedOffsetY { get; set; } = 0f;
+
         public PayCostOverlaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
             : base(entityManager)
         {
@@ -62,7 +82,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<OpenPayCostOverlayEvent>(OnOpen);
             EventManager.Subscribe<ClosePayCostOverlayEvent>(_ => Close());
             EventManager.Subscribe<PayCostCandidateClicked>(OnCandidateClicked);
-            EventManager.Subscribe<PayCostCancelRequested>(_ => Close());
+            EventManager.Subscribe<PayCostCancelRequested>(OnCancel);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -83,30 +103,78 @@ namespace Crusaders30XX.ECS.Systems
             if (state.IsReturning)
             {
                 state.ReturnElapsedSeconds += dt;
-                if (state.ReturnElapsedSeconds >= StagedReturnDurationSec)
+                // Reinsert staged card once its return tween completes
+                if (state.ReturnElapsedSeconds >= StagedReturnDurationSec && state.CardToPlay != null)
                 {
-                    // End of return tween; reinsert card into hand at original index
-                    if (state.CardToPlay != null)
+                    var t = state.CardToPlay.GetComponent<Transform>();
+                    if (t != null)
                     {
-                        var t = state.CardToPlay.GetComponent<Transform>();
-                        if (t != null)
-                        {
-                            t.Position = state.StagedStartPos;
-                            t.Rotation = 0f;
-                            t.ZOrder = 0;
-                        }
-                        EventManager.Publish(new CardMoveRequested
-                        {
-                            Card = state.CardToPlay,
-                            Destination = CardZoneType.Hand,
-                            InsertIndex = state.OriginalHandIndex,
-                            Reason = "PayCostCancelReturn"
-                        });
+                        t.Position = state.StagedStartPos;
+                        t.Rotation = 0f;
+                        t.ZOrder = 0;
                     }
-                    // Fully close overlay and clear staged flags
+                    EventManager.Publish(new CardMoveRequested
+                    {
+                        Card = state.CardToPlay,
+                        Destination = CardZoneType.Hand,
+                        InsertIndex = state.OriginalHandIndex,
+                        Reason = "PayCostCancelReturn"
+                    });
+                    state.CardToPlay = null;
+                }
+            }
+
+            // Step tweens for selected-for-payment cards
+            if (state.IsOpen || state.IsReturning)
+            {
+                // Make a copy in case list changes during iteration
+                var selectedSnapshot = state.SelectedCards.ToList();
+                foreach (var c in selectedSnapshot)
+                {
+                    var sel = c.GetComponent<SelectedForPayment>();
+                    if (sel == null) continue;
+                    if (!sel.IsReturning)
+                    {
+                        sel.MoveElapsed += dt;
+                    }
+                    else
+                    {
+                        sel.ReturnElapsed += dt;
+                        if (sel.ReturnElapsed >= Math.Max(0.001f, sel.ReturnDuration))
+                        {
+                            // Move back to hand at original index
+                            EventManager.Publish(new CardMoveRequested
+                            {
+                                Card = c,
+                                Destination = CardZoneType.Hand,
+                                InsertIndex = sel.OriginalHandIndex,
+                                Reason = "PayCostUnselectReturn"
+                            });
+                            // Remove from selected list
+                            state.SelectedCards.Remove(c);
+                        }
+                    }
+
+                    // Update UI bounds to current tweened rect so input hit-test matches visuals
+                    GetCurrentSelectedPosScale(sel, out var posNow, out var scaleNow);
+                    var uiNow = c.GetComponent<UIElement>();
+                    if (uiNow != null)
+                    {
+                        uiNow.Bounds = GetCardVisualRectScaled(posNow, scaleNow);
+                    }
+                }
+            }
+
+            // If we're returning, close overlay only when staged and all selected are done
+            if (state.IsReturning)
+            {
+                bool stagedDone = state.CardToPlay == null || state.ReturnElapsedSeconds >= StagedReturnDurationSec;
+                bool anyReturning = state.SelectedCards.Any(c => c.GetComponent<SelectedForPayment>()?.IsReturning == true);
+                if (stagedDone && !anyReturning)
+                {
+                    // Fully close overlay and clear flags
                     state.IsReturning = false;
                     state.IsOpen = false;
-                    state.CardToPlay = null;
                     state.RequiredCosts.Clear();
                     state.SelectedCards.Clear();
                     state.OpenElapsedSeconds = 0f;
@@ -146,6 +214,7 @@ namespace Crusaders30XX.ECS.Systems
             state.CardToPlay = evt.CardToPlay;
             state.RequiredCosts = (evt.RequiredCosts ?? new List<string>()).ToList();
             state.SelectedCards.Clear();
+            state.ConsumedCostByCardId.Clear();
             state.OpenElapsedSeconds = 0f;
             state.Type = evt.Type;
 
@@ -199,6 +268,24 @@ namespace Crusaders30XX.ECS.Systems
                     state.ReturnElapsedSeconds = 0f;
                     // Keep overlay open briefly to animate the card back
                     state.IsOpen = true;
+                    // Also return all selected cards
+                    foreach (var c in state.SelectedCards.ToList())
+                    {
+                        var sel = c.GetComponent<SelectedForPayment>();
+                        if (sel != null)
+                        {
+                            // Capture current position/scale as start of return
+                            GetCurrentSelectedPosScale(sel, out var curPos, out var curScale);
+                            sel.StartPos = curPos;
+                            sel.StartScale = curScale;
+                            sel.IsReturning = true;
+                            sel.ReturnElapsed = 0f;
+                            sel.ReturnDuration = SelectedReturnDurationSec;
+                            // Avoid interacting while returning
+                            var ui = c.GetComponent<UIElement>();
+                            if (ui != null) ui.IsInteractable = false;
+                        }
+                    }
                 }
                 else
                 {
@@ -213,6 +300,37 @@ namespace Crusaders30XX.ECS.Systems
                     state.StagedMoveElapsedSeconds = 0f;
                     state.OriginalHandIndex = -1;
                 }
+            }
+        }
+
+        private void OnCancel(PayCostCancelRequested _)
+        {
+            var e = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+            if (e == null) return;
+            var state = e.GetComponent<PayCostOverlayState>();
+            if (state == null) return;
+
+            // Restore overall hand interactability
+            RestoreHandInteractables();
+
+            // Begin return tween for staged card (if present)
+            state.IsReturning = true;
+            state.ReturnElapsedSeconds = 0f;
+            state.IsOpen = true;
+
+            // Mark all selected as returning from their current tweened position/scale
+            foreach (var c in state.SelectedCards)
+            {
+                var sel = c.GetComponent<SelectedForPayment>();
+                if (sel == null) continue;
+                GetCurrentSelectedPosScale(sel, out var curPos, out var curScale);
+                sel.StartPos = curPos;
+                sel.StartScale = curScale;
+                sel.IsReturning = true;
+                sel.ReturnElapsed = 0f;
+                sel.ReturnDuration = SelectedReturnDurationSec;
+                var ui = c.GetComponent<UIElement>();
+                if (ui != null) ui.IsInteractable = false;
             }
         }
 
@@ -250,11 +368,10 @@ namespace Crusaders30XX.ECS.Systems
             var state = stateEntity.GetComponent<PayCostOverlayState>();
             if (state == null || !state.IsOpen || evt?.Card == null) return;
 
-            // Only allow selecting from current hand and not the card being played
+            // Only allow selecting from current hand or toggling from selected list; never the card being played
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             var deck = deckEntity?.GetComponent<Deck>();
             if (deck == null) return;
-            if (!deck.Hand.Contains(evt.Card)) return;
             if (evt.Card == state.CardToPlay) return;
 
             var cd = evt.Card.GetComponent<CardData>();
@@ -271,41 +388,96 @@ namespace Crusaders30XX.ECS.Systems
             }
             catch { }
 
-            // Avoid selecting the same card twice
-            if (state.SelectedCards.Contains(evt.Card)) return;
+            var alreadySelected = evt.Card.GetComponent<SelectedForPayment>() != null || state.SelectedCards.Contains(evt.Card);
 
-            // Check if this card can satisfy one of the remaining costs
+            if (alreadySelected)
+            {
+                // Unselect: return requirement and animate back
+                if (state.ConsumedCostByCardId.TryGetValue(evt.Card.Id, out var consumed))
+                {
+                    state.RequiredCosts.Add(consumed);
+                    state.ConsumedCostByCardId.Remove(evt.Card.Id);
+                }
+                var sel = evt.Card.GetComponent<SelectedForPayment>();
+                if (sel != null)
+                {
+                    GetCurrentSelectedPosScale(sel, out var curPos, out var curScale);
+                    sel.StartPos = curPos;
+                    sel.StartScale = curScale;
+                    sel.IsReturning = true;
+                    sel.ReturnElapsed = 0f;
+                    sel.ReturnDuration = SelectedReturnDurationSec;
+                    // Set non-interactable during return
+                    var ui = evt.Card.GetComponent<UIElement>();
+                    if (ui != null) { ui.IsInteractable = false; ui.IsHovered = false; ui.IsClicked = false; }
+                }
+                RetargetSelectedLayout(state);
+                UpdateInteractablesForRemainingCosts(state);
+                return;
+            }
+
+            // Selecting from hand
+            if (!deck.Hand.Contains(evt.Card)) return;
+
             if (TryConsumeCostForCard(state.RequiredCosts, cd.Color, out int idx))
             {
-                // Consume that cost slot and record selection
+                // Remember consumed requirement and remove from remaining
+                var consumed = state.RequiredCosts[idx];
                 state.RequiredCosts.RemoveAt(idx);
-                state.SelectedCards.Add(evt.Card);
-                // Disable this card's interactions immediately
-                var uiSel = evt.Card.GetComponent<UIElement>();
-                if (uiSel != null)
+                state.ConsumedCostByCardId[evt.Card.Id] = consumed;
+
+                // Record original index before zone move
+                int originalIndex = deck.Hand.IndexOf(evt.Card);
+
+                // Move card into selected zone (makes it interactable)
+                EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.CostSelected, Reason = "PayCostSelect" });
+
+                // Initialize tween state
+                var t = evt.Card.GetComponent<Transform>();
+                var sel = evt.Card.GetComponent<SelectedForPayment>() ?? new SelectedForPayment();
+                sel.OriginalHandIndex = originalIndex;
+                sel.OriginalHandPos = t?.Position ?? Vector2.Zero;
+                sel.StartPos = t?.Position ?? Vector2.Zero;
+                sel.StartScale = 1f;
+                sel.MoveElapsed = 0f;
+                sel.MoveDuration = SelectedMoveDurationSec;
+                sel.IsReturning = false;
+                sel.ReturnElapsed = 0f;
+                sel.ReturnDuration = SelectedReturnDurationSec;
+                if (evt.Card.GetComponent<SelectedForPayment>() == null)
                 {
-                    uiSel.IsInteractable = false;
-                    uiSel.IsHovered = false;
-                    uiSel.IsClicked = false;
+                    EntityManager.AddComponent(evt.Card, sel);
                 }
 
-                // If all requirements satisfied, discard selected and complete
+                state.SelectedCards.Add(evt.Card);
+
+                // Recompute targets and interactivity for remaining hand
+                RetargetSelectedLayout(state);
+                UpdateInteractablesForRemainingCosts(state);
+
+                // If all requirements are satisfied, resolve immediately
                 if (state.RequiredCosts.Count == 0)
                 {
-                    foreach (var c in state.SelectedCards)
+                    if (state.Type == PayCostOverlayType.ColorDiscard)
                     {
-                        if (state.Type == PayCostOverlayType.ColorDiscard)
+                        foreach (var c in state.SelectedCards.ToList())
                         {
                             EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PayCost" });
                         }
                     }
+                    else if (state.Type == PayCostOverlayType.SelectOneCard)
+                    {
+                        // Restore the selected card back to hand (no discard)
+                        foreach (var c in state.SelectedCards.ToList())
+                        {
+                            var sfp = c.GetComponent<SelectedForPayment>();
+                            int idxIns = sfp?.OriginalHandIndex ?? -1;
+                            EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.Hand, Reason = "PayCostSelectOneReturn", InsertIndex = idxIns });
+                        }
+                    }
+
                     EventManager.Publish(new PayCostSatisfied { CardToPlay = state.CardToPlay, PaymentCards = new List<Entity>(state.SelectedCards) });
                     Close();
-                }
-                else
-                {
-                    // Update which remaining hand cards are viable based on new remaining requirements
-                    UpdateInteractablesForRemainingCosts(state);
                 }
             }
         }
@@ -416,6 +588,9 @@ namespace Crusaders30XX.ECS.Systems
                 EventManager.Publish(new CardRenderScaledRotatedEvent { Card = state.CardToPlay, Position = pos, Scale = StagedCardScale });
             }
 
+            // Draw selected-for-payment row to the right of staged card
+            DrawSelectedRow(state, centerPos);
+
             if (!state.IsReturning)
             {
                 // Cancel button (top-right)
@@ -439,6 +614,147 @@ namespace Crusaders30XX.ECS.Systems
                     ui.Bounds = btnRect;
                 }
             }
+        }
+
+        private void DrawSelectedRow(PayCostOverlayState state, Vector2 stagedCenter)
+        {
+            if (state == null) return;
+            var anchor = new Vector2(stagedCenter.X + SelectedOffsetX, stagedCenter.Y + SelectedOffsetY);
+            for (int i = 0; i < state.SelectedCards.Count; i++)
+            {
+                var c = state.SelectedCards[i];
+                var sel = c.GetComponent<SelectedForPayment>();
+                if (sel == null) continue;
+
+                // Compute desired target for current index
+                var target = new Vector2(anchor.X + i * SelectedSpacingPx, anchor.Y);
+                // If the target changed, retarget this card smoothly
+                if (!ApproximatelyEqual(sel.TargetPos, target))
+                {
+                    // Capture current interpolated state as new start
+                    GetCurrentSelectedPosScale(sel, out var curPos, out var curScale);
+                    sel.StartPos = curPos;
+                    sel.StartScale = curScale;
+                    sel.MoveElapsed = 0f;
+                    sel.MoveDuration = SelectedMoveDurationSec;
+                    sel.TargetPos = target;
+                    sel.TargetScale = SelectedCardScale;
+                }
+
+                Vector2 drawPos;
+                float drawScale;
+                if (!sel.IsReturning)
+                {
+                    float tm = MathHelper.Clamp(sel.MoveElapsed / Math.Max(0.001f, sel.MoveDuration), 0f, 1f);
+                    float ease = 1f - (1f - tm) * (1f - tm);
+                    drawPos = sel.StartPos + (sel.TargetPos - sel.StartPos) * ease;
+                    drawScale = MathHelper.Lerp(sel.StartScale, sel.TargetScale, ease);
+                }
+                else
+                {
+                    float tm = MathHelper.Clamp(sel.ReturnElapsed / Math.Max(0.001f, sel.ReturnDuration), 0f, 1f);
+                    float easeIn = tm * tm;
+                    drawPos = sel.StartPos + (sel.OriginalHandPos - sel.StartPos) * easeIn;
+                    drawScale = MathHelper.Lerp(sel.StartScale, 1f, easeIn);
+                }
+
+                EventManager.Publish(new CardRenderScaledRotatedEvent { Card = c, Position = drawPos, Scale = drawScale });
+
+                // Keep bounds synced during draw as well (harmless if already set in Update)
+                var ui = c.GetComponent<UIElement>();
+                if (ui != null)
+                {
+                    ui.Bounds = GetCardVisualRectScaled(drawPos, drawScale);
+                }
+            }
+        }
+
+        private void RetargetSelectedLayout(PayCostOverlayState state)
+        {
+            if (state == null) return;
+            int w = _graphicsDevice.Viewport.Width;
+            int h = _graphicsDevice.Viewport.Height;
+            // Mirror the staged center used in DrawForeground
+            // Use font height to keep consistent anchor even before DrawForeground
+            string line = "";
+            var cd = state.CardToPlay?.GetComponent<CardData>();
+            string cardName = ResolveCardName(cd);
+            var defTextCosts = GetDefinitionCosts(state.CardToPlay);
+            string costText = BuildCostPhrase(defTextCosts);
+            switch(state.Type)
+            {
+                case PayCostOverlayType.ColorDiscard: line = $"Discard {costText} to pay for {cardName}"; break;
+                case PayCostOverlayType.SelectOneCard: line = $"Select one card from your hand for {cardName}"; break;
+            }
+            var size = _font.MeasureString(line);
+            var stagedCenter = new Vector2(w / 2f + CardOffsetX, h / 2f - (size.Y * TextScale) + CardOffsetY);
+            var anchor = new Vector2(stagedCenter.X + SelectedOffsetX, stagedCenter.Y + SelectedOffsetY);
+            for (int i = 0; i < state.SelectedCards.Count; i++)
+            {
+                var c = state.SelectedCards[i];
+                var sel = c.GetComponent<SelectedForPayment>();
+                if (sel == null) continue;
+                // Compute current interpolated state and retarget
+                GetCurrentSelectedPosScale(sel, out var curPos, out var curScale);
+                sel.StartPos = curPos;
+                sel.StartScale = curScale;
+                sel.MoveElapsed = 0f;
+                sel.MoveDuration = SelectedMoveDurationSec;
+                sel.TargetPos = new Vector2(anchor.X + i * SelectedSpacingPx, anchor.Y);
+                sel.TargetScale = SelectedCardScale;
+            }
+        }
+
+        private static void GetCurrentSelectedPosScale(SelectedForPayment sel, out Vector2 pos, out float scale)
+        {
+            if (sel == null)
+            {
+                pos = Vector2.Zero; scale = 1f; return;
+            }
+            if (!sel.IsReturning)
+            {
+                float tm = MathHelper.Clamp(sel.MoveElapsed / Math.Max(0.001f, sel.MoveDuration), 0f, 1f);
+                float ease = 1f - (1f - tm) * (1f - tm);
+                pos = sel.StartPos + (sel.TargetPos - sel.StartPos) * ease;
+                scale = MathHelper.Lerp(sel.StartScale, sel.TargetScale, ease);
+            }
+            else
+            {
+                float tm = MathHelper.Clamp(sel.ReturnElapsed / Math.Max(0.001f, sel.ReturnDuration), 0f, 1f);
+                float easeIn = tm * tm;
+                pos = sel.StartPos + (sel.OriginalHandPos - sel.StartPos) * easeIn;
+                scale = MathHelper.Lerp(sel.StartScale, 1f, easeIn);
+            }
+        }
+
+        private static bool ApproximatelyEqual(Vector2 a, Vector2 b)
+        {
+            return Math.Abs(a.X - b.X) < 0.001f && Math.Abs(a.Y - b.Y) < 0.001f;
+        }
+
+        private Rectangle GetCardVisualRectScaled(Vector2 position, float scale)
+        {
+            // Mirror CardDisplaySystem.GetCardVisualRectScaled
+            if (_cardSettings == null)
+            {
+                _cardSettings = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
+            }
+            if (_cardSettings == null)
+            {
+                // Fallback reasonable 2:3 card ratio
+                int w = (int)Math.Round(200 * scale);
+                int h = (int)Math.Round(300 * scale);
+                return new Rectangle((int)position.X - w / 2, (int)position.Y - h / 2, w, h);
+            }
+            int rw = (int)Math.Round(_cardSettings.CardWidth * scale);
+            int rh = (int)Math.Round(_cardSettings.CardHeight * scale);
+            int offsetY = (int)Math.Round((_cardSettings.CardOffsetYExtra) * scale);
+            return new Rectangle(
+                (int)position.X - rw / 2,
+                (int)position.Y - (rh / 2 + offsetY),
+                rw,
+                rh
+            );
         }
 
         private void RestoreHandInteractables()

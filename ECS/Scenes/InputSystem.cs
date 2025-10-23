@@ -95,11 +95,12 @@ namespace Crusaders30XX.ECS.Systems
             }
             if (isPayOpen)
             {
-                // While pay-cost overlay is open, only allow cancel button and HAND cards as candidates
+                // While pay-cost overlay is open, allow cancel button, HAND cards, and selected-for-payment cards
                 var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 var deck = deckEntity?.GetComponent<Deck>();
                 uiEntities = uiEntities
-                    .Where(x => x.E.GetComponent<PayCostCancelButton>() != null || (x.IsCard && deck != null && deck.Hand.Contains(x.E)))
+                    .Where(x => x.E.GetComponent<PayCostCancelButton>() != null
+                             || (x.IsCard && ((deck != null && deck.Hand.Contains(x.E)) || x.E.GetComponent<SelectedForPayment>() != null)))
                     .ToList();
             }
 

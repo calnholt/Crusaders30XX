@@ -85,7 +85,15 @@ namespace Crusaders30XX.ECS.Systems
 
                 if (e.GetComponent<CardData>() != null && t != null && e.GetComponent<AssignedBlockCard>() == null)
                 {
-                    targetRect = ComputeCardBounds(e, t.Position);
+                    // Prefer live UI bounds if available (e.g., tweened/selected cards) else fallback to computed hand bounds
+                    if (ui != null && ui.Bounds.Width > 1 && ui.Bounds.Height > 1)
+                    {
+                        targetRect = ui.Bounds;
+                    }
+                    else
+                    {
+                        targetRect = ComputeCardBounds(e, t.Position);
+                    }
                 }
                 else
                 {

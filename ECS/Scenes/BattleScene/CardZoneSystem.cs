@@ -83,6 +83,11 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         EntityManager.RemoveComponent<AssignedBlockCard>(evt.Card);
                     }
+                    var sfp = evt.Card.GetComponent<SelectedForPayment>();
+                    if (sfp != null)
+                    {
+                        EntityManager.RemoveComponent<SelectedForPayment>(evt.Card);
+                    }
                     if (evt.InsertIndex.HasValue)
                     {
                         int idx = evt.InsertIndex.Value;
@@ -125,6 +130,25 @@ namespace Crusaders30XX.ECS.Systems
                         uiS.IsHovered = false;
                         uiS.IsClicked = false;
                         uiS.EventType = UIElementEventType.None;
+                    }
+                    break;
+                }
+                case CardZoneType.CostSelected:
+                {
+                    // Temporarily selected to pay a cost: keep interactable so it can be unselected
+                    var ui = evt.Card.GetComponent<UIElement>();
+                    if (ui != null)
+                    {
+                        ui.IsInteractable = true;
+                        ui.IsHovered = false;
+                        ui.IsClicked = false;
+                        ui.EventType = UIElementEventType.None;
+                    }
+                    var t = evt.Card.GetComponent<Transform>();
+                    if (t != null) t.ZOrder = 29500;
+                    if (evt.Card.GetComponent<SelectedForPayment>() == null)
+                    {
+                        EntityManager.AddComponent(evt.Card, new SelectedForPayment());
                     }
                     break;
                 }
@@ -181,6 +205,11 @@ namespace Crusaders30XX.ECS.Systems
                         uiD.IsHovered = false;
                         uiD.IsClicked = false;
                         uiD.EventType = UIElementEventType.None;
+                    }
+                    var sfpD = evt.Card.GetComponent<SelectedForPayment>();
+                    if (sfpD != null)
+                    {
+                        EntityManager.RemoveComponent<SelectedForPayment>(evt.Card);
                     }
                     // Push discarded cards behind UI
                     var t = evt.Card.GetComponent<Transform>();

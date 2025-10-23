@@ -562,6 +562,7 @@ namespace Crusaders30XX.ECS.Components
         public Entity CardToPlay { get; set; }
         public List<string> RequiredCosts { get; set; } = new(); // "Red","White","Black","Any"
         public List<Entity> SelectedCards { get; set; } = new();
+        public System.Collections.Generic.Dictionary<int, string> ConsumedCostByCardId { get; set; } = new();
         public float OpenElapsedSeconds { get; set; } = 0f;
         public int OriginalHandIndex { get; set; } = -1;
         // Tween state for staged card movement
@@ -720,6 +721,7 @@ namespace Crusaders30XX.ECS.Components
         DrawPile,
         Hand,
         HandStaged,
+        CostSelected,
         DiscardPile,
         ExhaustPile,
         AssignedBlock
@@ -761,6 +763,25 @@ namespace Crusaders30XX.ECS.Components
         public float EndScale { get; set; } = 0.3f;
         public string ContextId { get; set; }
         public bool Completed { get; set; }
+    }
+
+    /// <summary>
+    /// Marks a card that has been selected to pay costs; holds tween state and original hand index.
+    /// </summary>
+    public class SelectedForPayment : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int OriginalHandIndex { get; set; } = -1;
+        public Microsoft.Xna.Framework.Vector2 OriginalHandPos { get; set; } = Vector2.Zero;
+        public Microsoft.Xna.Framework.Vector2 StartPos { get; set; } = Vector2.Zero;
+        public float StartScale { get; set; } = 1f;
+        public Microsoft.Xna.Framework.Vector2 TargetPos { get; set; } = Vector2.Zero;
+        public float TargetScale { get; set; } = 0.5f;
+        public float MoveElapsed { get; set; } = 0f;
+        public float MoveDuration { get; set; } = 0.25f;
+        public bool IsReturning { get; set; } = false;
+        public float ReturnElapsed { get; set; } = 0f;
+        public float ReturnDuration { get; set; } = 0.12f;
     }
 
     public class AppliedPassives : IComponent
