@@ -150,6 +150,9 @@ namespace Crusaders30XX.ECS.Systems
 						}
 						uiAssigned.EventType = UIElementEventType.UnassignCardAsBlock;
 						uiAssigned.IsInteractable = true;
+						// Ensure no lingering hotkey when initially assigning equipment (will be given to newest idle later)
+						var hk = eqEntity.GetComponent<HotKey>();
+						if (hk != null) { EntityManager.RemoveComponent<HotKey>(eqEntity); }
 					}
 					break;
 				}

@@ -142,8 +142,11 @@ namespace Crusaders30XX.ECS.Systems
                     catch { }
                     EntityManager.RemoveComponent<CardToDiscardFlight>(entity);
                     EntityManager.RemoveComponent<AssignedBlockCard>(entity);
+                    // Remove lingering hotkey from equipment returning to panel
+                    var hk = entity.GetComponent<HotKey>();
+                    if (hk != null) { EntityManager.RemoveComponent<HotKey>(entity); }
                     var uiE = entity.GetComponent<UIElement>();
-                    if (uiE != null) { uiE.IsHovered = false; uiE.IsInteractable = true; uiE.Tooltip = string.Empty; }
+                    if (uiE != null) { uiE.IsHovered = false; uiE.IsInteractable = true; uiE.Tooltip = string.Empty; uiE.EventType = UIElementEventType.None; }
                 }
                 else
                 {

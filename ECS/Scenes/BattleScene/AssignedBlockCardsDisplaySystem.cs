@@ -336,6 +336,12 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnBlockAssignmentRemoved(BlockAssignmentRemoved evt)
 		{
 			if (evt == null || string.IsNullOrEmpty(evt.ContextId)) return;
+			// If removal pertains to equipment, ensure its hotkey is removed immediately
+			if (evt.Card != null && evt.Card.GetComponent<EquippedEquipment>() != null)
+			{
+				var hk = evt.Card.GetComponent<HotKey>();
+				if (hk != null) { EntityManager.RemoveComponent<HotKey>(evt.Card); }
+			}
 			MaintainLatestHotKeyForContext(evt.ContextId);
 		}
 

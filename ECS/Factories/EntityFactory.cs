@@ -322,6 +322,7 @@ namespace Crusaders30XX.ECS.Factories
             var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
             world.AddComponent(enemyEntity, enemy);
             world.AddComponent(enemyEntity, enemyTransform);
+            world.AddComponent(enemyEntity, new UIElement { Tooltip = def.name, IsInteractable = false , TooltipPosition = TooltipPosition.Above });
             world.AddComponent(enemyEntity, new HP { Max = enemy.MaxHealth, Current = enemy.CurrentHealth });
             world.AddComponent(enemyEntity, new PortraitInfo { TextureWidth = 0, TextureHeight = 0, CurrentScale = 1f });
             world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = new List<string>(def.attackIds) });

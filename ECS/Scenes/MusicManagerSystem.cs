@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Systems
         private Song _pendingSong;
         private bool _pendingLoop;
         [DebugEditable(DisplayName = "Mute")]
-        public bool Mute { get; set; } = true;
+        public bool Mute { get; set; } = false;
 
         public MusicManagerSystem(EntityManager entityManager, ContentManager content) : base(entityManager)
         {
@@ -156,7 +156,7 @@ namespace Crusaders30XX.ECS.Systems
             string assetName = track switch
             {
                 MusicTrack.Menu => "Music/clash_of_shadows", // .ogg in Content
-                MusicTrack.Battle => "Music/clash_of_shadows",
+                MusicTrack.Battle => "Music/desert_theme_battle",
                 _ => null
             };
             if (string.IsNullOrEmpty(assetName)) return null;

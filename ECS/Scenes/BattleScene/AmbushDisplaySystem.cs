@@ -24,6 +24,8 @@ namespace Crusaders30XX.ECS.Systems
 		private string _lastContextId = null;
 		private float _introElapsed = 0f;
 		private readonly System.Random _rand = new System.Random();
+		private Entity _textAnchorEntity;
+		private Entity _timerAnchorEntity;
 
 		// Debug-editable tuning
 		[DebugEditable(DisplayName = "Intro Drop Duration (s)", Step = 0.05f, Min = 0.05f, Max = 3f)]
@@ -94,6 +96,7 @@ namespace Crusaders30XX.ECS.Systems
 					_lastContextId = null;
 				}
 			});
+			EnsureAnchors();
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -126,6 +129,8 @@ namespace Crusaders30XX.ECS.Systems
 					st.ContextId = pa.ContextId;
 					st.TimerDurationSeconds = Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
 					st.TimerRemainingSeconds = st.TimerDurationSeconds;
+					ResetAnchorParallax();
+					UpdateAnchorTransforms();
 				}
 				else
 				{
@@ -144,6 +149,8 @@ namespace Crusaders30XX.ECS.Systems
 				st.ContextId = pa.ContextId;
 				st.TimerDurationSeconds = Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
 				st.TimerRemainingSeconds = st.TimerDurationSeconds;
+				ResetAnchorParallax();
+				UpdateAnchorTransforms();
 			}
 
 			// Maintain state while in Block
@@ -168,6 +175,7 @@ namespace Crusaders30XX.ECS.Systems
 						EventManager.Publish(new DebugCommandEvent { Command = "ConfirmEnemyAttack" });
 					}
 				}
+				UpdateAnchorTransforms();
 			}
 			else if (phase != SubPhase.Block)
 			{
@@ -229,7 +237,8 @@ namespace Crusaders30XX.ECS.Systems
 				int sx = _rand.Next(-shakeAmp, shakeAmp + 1);
 				int sy = _rand.Next(-shakeAmp, shakeAmp + 1);
 				var size = _font.MeasureString(text) * scale;
-				var pos = new Vector2(vx / 2f - size.X / 2f + sx, yPos - size.Y / 2f + sy);
+				var textCenter = _textAnchorEntity?.GetComponent<Transform>()?.Position ?? new Vector2(vx / 2f, yPos);
+				var pos = new Vector2(textCenter.X - size.X / 2f + sx, textCenter.Y - size.Y / 2f + sy);
 				// Shadow
 				_spriteBatch.DrawString(_font, text, pos + new Vector2(2, 2), new Color(0, 0, 0, 200), 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 				// Text
@@ -240,7 +249,8 @@ namespace Crusaders30XX.ECS.Systems
 			int meterWidth = Math.Max(10, MeterWidth);
 			int meterHeight = Math.Max(4, MeterHeight);
 			int skew = Math.Max(0, MeterSkew); // pixels of top-edge inward skew
-			var rect = new Rectangle(vx / 2 - meterWidth / 2, (int)(vy * (MeterYPercent / 100f)), meterWidth, meterHeight);
+			var timerCenter = _timerAnchorEntity?.GetComponent<Transform>()?.Position ?? new Vector2(vx / 2f, (int)(vy * (MeterYPercent / 100f)));
+			var rect = new Rectangle((int)(timerCenter.X - meterWidth / 2f), (int)(timerCenter.Y - meterHeight / 2f), meterWidth, meterHeight);
 			float ratio = st.TimerDurationSeconds <= 0.0001f ? 0f : MathHelper.Clamp(st.TimerRemainingSeconds / st.TimerDurationSeconds, 0f, 1f);
 
 			DrawTrapezoid(rect, skew, new Color(10, 10, 10, Math.Clamp(MeterBgAlpha, 0, 255))); // background
@@ -285,6 +295,73 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(e, new AmbushState { IsActive = false, IntroActive = false, TimerDurationSeconds = 20f, TimerRemainingSeconds = 0f });
 			}
 			return e.GetComponent<AmbushState>();
+		}
+
+		private void EnsureAnchors()
+		{
+			if (_textAnchorEntity == null)
+			{
+				_textAnchorEntity = EntityManager.CreateEntity("AmbushTextAnchor");
+				EntityManager.AddComponent(_textAnchorEntity, new AmbushTextAnchor());
+				EntityManager.AddComponent(_textAnchorEntity, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
+				EntityManager.AddComponent(_textAnchorEntity, ParallaxLayer.GetUIParallaxLayer());
+			}
+			if (_timerAnchorEntity == null)
+			{
+				_timerAnchorEntity = EntityManager.CreateEntity("AmbushTimerAnchor");
+				EntityManager.AddComponent(_timerAnchorEntity, new AmbushTimerAnchor());
+				EntityManager.AddComponent(_timerAnchorEntity, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
+				EntityManager.AddComponent(_timerAnchorEntity, ParallaxLayer.GetUIParallaxLayer());
+			}
+		}
+
+		private void ResetAnchorParallax()
+		{
+			if (_textAnchorEntity != null)
+			{
+				var pl = _textAnchorEntity.GetComponent<ParallaxLayer>();
+				if (pl != null)
+				{
+					pl.LastAppliedOffset = Vector2.Zero;
+					pl.LastAppliedPosition = Vector2.Zero;
+					pl.CaptureBaseOnFirstUpdate = true;
+				}
+			}
+			if (_timerAnchorEntity != null)
+			{
+				var pl = _timerAnchorEntity.GetComponent<ParallaxLayer>();
+				if (pl != null)
+				{
+					pl.LastAppliedOffset = Vector2.Zero;
+					pl.LastAppliedPosition = Vector2.Zero;
+					pl.CaptureBaseOnFirstUpdate = true;
+				}
+			}
+		}
+
+		private void UpdateAnchorTransforms()
+		{
+			int vx = _graphicsDevice.Viewport.Width;
+			int vy = _graphicsDevice.Viewport.Height;
+			float dropDur = Math.Max(0.0001f, IntroDropDurationSeconds);
+			float holdDur = Math.Max(0f, IntroHoldDurationSeconds);
+			float shrinkDur = Math.Max(0.0001f, IntroShrinkDurationSeconds);
+			float total = dropDur + holdDur + shrinkDur;
+			float tSecs = _introElapsed;
+			float yStart = vy * (TextStartYPercent / 100f);
+			float yEnd = vy * (TextEndYPercent / 100f);
+			float easeDrop = 1f - (float)Math.Pow(1f - MathHelper.Clamp(tSecs / dropDur, 0f, 1f), 3);
+			float yPos = (tSecs <= dropDur) ? MathHelper.Lerp(yStart, yEnd, easeDrop) : yEnd;
+			var textT = _textAnchorEntity?.GetComponent<Transform>();
+			if (textT != null)
+			{
+				textT.BasePosition = new Vector2(vx / 2f, yPos);
+			}
+			var timerT = _timerAnchorEntity?.GetComponent<Transform>();
+			if (timerT != null)
+			{
+				timerT.BasePosition = new Vector2(vx / 2f, (int)(vy * (MeterYPercent / 100f)));
+			}
 		}
 
 		private void DrawTrapezoid(Rectangle bounds, int skew, Color color)

@@ -230,7 +230,6 @@ namespace Crusaders30XX.ECS.Systems
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
 			if (queued.CurrentIndex == 0) 
 			{
-				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
 			}
 			// all battles are done, quest completed; update save and go to menu
 			if (queued.Events.Count == queued.CurrentIndex + 1)
@@ -315,6 +314,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (!_firstLoad) return;
 			_firstLoad = false;
 			// Construct
+				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
+
 			_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
 			_battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);

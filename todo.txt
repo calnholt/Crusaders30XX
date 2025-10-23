@@ -9,4 +9,4 @@
 - display enemy name / tooltip info
 - parallax background
 - quest rewards
-- 
+- set music correctly for each scene

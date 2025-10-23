@@ -308,3 +308,8 @@
 /processorParam:TextureFormat=Color
 /build:desert.png
 
+
+#begin Music/desert_theme_battle.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/desert_theme_battle.ogg

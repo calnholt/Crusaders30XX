@@ -184,6 +184,22 @@ namespace Crusaders30XX.ECS.Components
 		public string DialogId { get; set; } = string.Empty;
 		public bool WillShowDialog { get; set; } = false;
 	}
+
+	/// <summary>
+	/// Anchor entity for the Ambush intro text; position is center of the text.
+	/// </summary>
+	public class AmbushTextAnchor : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
+
+	/// <summary>
+	/// Anchor entity for the Ambush timer bar; position is the center of the bar.
+	/// </summary>
+	public class AmbushTimerAnchor : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
 }
 
 

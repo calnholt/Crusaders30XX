@@ -144,6 +144,16 @@ namespace Crusaders30XX.ECS.Systems
 				info.BaseScale = desiredHeight / tex.Height;
 				// Draw at Transform.Position plus the attack nudge offset (immediate, not smoothed by parallax)
 				var drawPos = t.Position + (posForAnim - basePos);
+				// Update UI bounds so hover/tooltip works over the enemy portrait
+				var ui = e.GetComponent<UIElement>();
+				if (ui != null)
+				{
+					int wPx = (int)System.Math.Round(tex.Width * scale);
+					int hPx = (int)System.Math.Round(tex.Height * scale);
+					int x0 = (int)System.Math.Round(drawPos.X - wPx / 2f);
+					int y0 = (int)System.Math.Round(drawPos.Y - hPx / 2f);
+					ui.Bounds = new Rectangle(x0, y0, wPx, hPx);
+				}
 				_spriteBatch.Draw(tex, position: drawPos, sourceRectangle: null, color: Color.White, rotation: 0f, origin: origin, scale: scale, effects: SpriteEffects.None, layerDepth: 0f);
 			}
 		}
