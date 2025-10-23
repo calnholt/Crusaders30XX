@@ -25,6 +25,9 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Hint X Gap (px)", Step = 1f, Min = -64f, Max = 128f)]
         public int HintGapX { get; set; } = 8;
 
+        [DebugEditable(DisplayName = "Hint Y Gap (px)", Step = 1f, Min = -64f, Max = 128f)]
+        public int HintGapY { get; set; } = 8;
+
         [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.05f, Max = 2.5f)]
         public float TextScale { get; set; } = 0.15f;
 
@@ -101,8 +104,8 @@ namespace Crusaders30XX.ECS.Systems
             {
                 var r = x.UI.Bounds;
                 if (r.Width < 2 || r.Height < 2) continue;
-                int cx = r.Right + System.Math.Max(-64, HintGapX) + (int)System.Math.Round(HintRadius * 1.1f);
-                int cy = r.Center.Y;
+                int cx = r.Center.X;
+                int cy = r.Bottom + System.Math.Max(-64, HintGapY) + (int)System.Math.Round(HintRadius * 1.1f);
                 var pos = new Vector2(cx - HintRadius, cy - HintRadius);
                 var color = GetFaceButtonColor(x.HK.Button);
 
