@@ -112,6 +112,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new PlayerDied { Player = EntityManager.GetEntity("Player") });
         }
+        [DebugAction("Location POC")]
+        public void Debug_LocationPOC()
+        {
+            EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+        }
     }
 }
 

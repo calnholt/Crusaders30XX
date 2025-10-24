@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
     private readonly ContentManager _content;
     private readonly SpriteFont _font;
     private bool _firstLoad = true;
+		private LocationMapDisplaySystem _locationMapDisplaySystem;
 
     public LocationSceneSystem(EntityManager entityManager, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(entityManager)
     {
@@ -26,6 +29,10 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 			_content = content;
       _font = font;
+      EventManager.Subscribe<LoadSceneEvent>(_ => {
+        if (_.Scene != SceneId.Location) return;
+        AddLocationSystems();
+      });
     }
 
     protected override IEnumerable<Entity> GetRelevantEntities()
@@ -35,12 +42,15 @@ namespace Crusaders30XX.ECS.Systems
 
     public void Draw()
     {
-
+			AddLocationSystems();
+			_locationMapDisplaySystem?.Draw();
     }
     private void AddLocationSystems()
 		{
 			if (!_firstLoad) return;
 			_firstLoad = false;
+			_locationMapDisplaySystem = new LocationMapDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_world.AddSystem(_locationMapDisplaySystem);
     }
 
     protected override void UpdateEntity(Entity entity, GameTime gameTime)

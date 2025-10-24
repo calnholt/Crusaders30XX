@@ -41,6 +41,7 @@ public class Game1 : Game
     private HotKeySystem _hotKeySystem;
     private UIElementBorderDebugSystem _uiElementBorderDebugSystem;
     private DialogDisplaySystem _dialogDisplaySystem;
+    private DebugCommandSystem _debugCommandSystem;
     
     // ECS System
     private World _world;
@@ -122,6 +123,7 @@ public class Game1 : Game
         _parallaxLayerSystem = new ParallaxLayerSystem(_world.EntityManager, GraphicsDevice);
         _uiElementBorderDebugSystem = new UIElementBorderDebugSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
         _world.AddSystem(_titleMenuDisplaySystem);
         _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
@@ -142,6 +144,7 @@ public class Game1 : Game
         _world.AddSystem(_hotKeySystem);
         _world.AddSystem(_parallaxLayerSystem);
         _world.AddSystem(_uiElementBorderDebugSystem);
+        _world.AddSystem(_debugCommandSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
 

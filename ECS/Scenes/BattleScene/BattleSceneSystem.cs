@@ -32,7 +32,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		private HandDisplaySystem _handDisplaySystem;
 		private BattleBackgroundSystem _battleBackgroundSystem;
-		private DebugCommandSystem _debugCommandSystem;
 		private DrawPileDisplaySystem _drawPileDisplaySystem;
 		private DiscardPileDisplaySystem _discardPileDisplaySystem;
 		private CardListModalSystem _cardListModalSystem;
@@ -309,7 +308,6 @@ namespace Crusaders30XX.ECS.Systems
 			_battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
-			_debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
 			_drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_discardPileDisplaySystem = new DiscardPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_cardListModalSystem = new CardListModalSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
@@ -381,7 +379,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_cardZoneSystem);
 			_world.AddSystem(_handBlockInteractionSystem);
 			_world.AddSystem(_eventQueueSystem);
-			_world.AddSystem(_debugCommandSystem);
 			_world.AddSystem(_drawPileDisplaySystem);
 			_world.AddSystem(_discardPileDisplaySystem);
 			_world.AddSystem(_cardListModalSystem);
