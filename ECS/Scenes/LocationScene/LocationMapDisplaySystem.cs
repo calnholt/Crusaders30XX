@@ -68,14 +68,26 @@ namespace Crusaders30XX.ECS.Systems
 				ClampCamera(ref _cameraCenter, w, h);
 			}
 
-			if (!Game1.WindowIsActive) return;
+			if (!Game1.WindowIsActive)
+			{
+				PublishCameraState(w, h);
+				return;
+			}
 
 			var gp = GamePad.GetState(PlayerIndex.One);
-			if (!gp.IsConnected) return;
+			if (!gp.IsConnected)
+			{
+				PublishCameraState(w, h);
+				return;
+			}
 
 			Vector2 stick = gp.ThumbSticks.Right; // X: right+, Y: up+
 			float mag = stick.Length();
-			if (mag < Deadzone) return;
+			if (mag < Deadzone)
+			{
+				PublishCameraState(w, h);
+				return;
+			}
 
 			Vector2 dir = (mag > 0f) ? (stick / mag) : Vector2.Zero;
 			float normalized = MathHelper.Clamp((mag - Deadzone) / (1f - Deadzone), 0f, 1f);
@@ -86,6 +98,31 @@ namespace Crusaders30XX.ECS.Systems
 			Vector2 velocity = new Vector2(dir.X, -dir.Y) * BasePanSpeed * speedMultiplier;
 			_cameraCenter += velocity * dt;
 			ClampCamera(ref _cameraCenter, w, h);
+			PublishCameraState(w, h);
+		}
+
+		private void PublishCameraState(int viewportW, int viewportH)
+		{
+			var camEntity = EntityManager.GetEntity("LocationCamera");
+			if (camEntity == null)
+			{
+				camEntity = EntityManager.CreateEntity("LocationCamera");
+			}
+			var state = camEntity.GetComponent<LocationCameraState>();
+			if (state == null)
+			{
+				state = new LocationCameraState();
+				EntityManager.AddComponent(camEntity, state);
+			}
+			float w = viewportW;
+			float h = viewportH;
+			var origin = new Vector2(_cameraCenter.X - w / 2f, _cameraCenter.Y - h / 2f);
+			origin.X = Math.Max(0f, origin.X);
+			origin.Y = Math.Max(0f, origin.Y);
+			state.Center = _cameraCenter;
+			state.Origin = origin;
+			state.ViewportW = viewportW;
+			state.ViewportH = viewportH;
 		}
 
 		private static void ClampCamera(ref Vector2 center, int viewportW, int viewportH)
