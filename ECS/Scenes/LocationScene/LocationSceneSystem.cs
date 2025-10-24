@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
     private bool _firstLoad = true;
 		private LocationMapDisplaySystem _locationMapDisplaySystem;
 		private PointOfInterestDisplaySystem _pointOfInterestDisplaySystem;
+		private FogDisplaySystem _fogDisplaySystem;
 
     public LocationSceneSystem(EntityManager entityManager, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(entityManager)
     {
@@ -44,6 +45,7 @@ namespace Crusaders30XX.ECS.Systems
     public void Draw()
     {
 			FrameProfiler.Measure("LocationMapDisplaySystem.Draw", _locationMapDisplaySystem.Draw);
+			FrameProfiler.Measure("FogDisplaySystem.Draw", _fogDisplaySystem.Draw);
 			FrameProfiler.Measure("PointOfInterestDisplaySystem.Draw", _pointOfInterestDisplaySystem.Draw);
     }
     private void AddLocationSystems()
@@ -52,6 +54,8 @@ namespace Crusaders30XX.ECS.Systems
 			_firstLoad = false;
 			_locationMapDisplaySystem = new LocationMapDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_locationMapDisplaySystem);
+			_fogDisplaySystem = new FogDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_world.AddSystem(_fogDisplaySystem);
 			_pointOfInterestDisplaySystem = new PointOfInterestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_pointOfInterestDisplaySystem);
     }

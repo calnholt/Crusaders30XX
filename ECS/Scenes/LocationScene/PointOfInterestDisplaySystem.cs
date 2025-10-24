@@ -80,6 +80,8 @@ namespace Crusaders30XX.ECS.Systems
 				// UI bounds size only; Parallax will center bounds at Transform.Position when AffectsUIBounds is true
 				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, 100, 100), IsInteractable = false });
 				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
+				// Attach POI component for fog-of-war and interactions
+				EntityManager.AddComponent(e, new PointOfInterest { WorldPosition = pos, RevealRadius = 300 });
 			}
 		}
 
