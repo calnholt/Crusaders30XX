@@ -250,6 +250,19 @@ namespace Crusaders30XX.ECS.Components
         // Disable for UI where bounds are derived from Transform.Position elsewhere each frame.
         public bool AffectsUIBounds { get; set; } = true;
 
+        public static ParallaxLayer GetLocationParallaxLayer()
+        {
+            return new ParallaxLayer
+            {
+                MultiplierX = 0.01f,
+                MultiplierY = 0.01f,
+                MaxOffset = 12f,
+                SmoothTime = 0.01f,
+                CaptureBaseOnFirstUpdate = false,
+                UpdateBaseFromCurrentEachFrame = false,
+                AffectsUIBounds = true
+            };
+        }
         public static ParallaxLayer GetUIParallaxLayer()
         {
             return new ParallaxLayer

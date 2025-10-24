@@ -15,6 +15,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly Texture2D _pixel;
 		private bool _spawned;
+		private readonly System.Collections.Generic.List<Entity> _pois = new System.Collections.Generic.List<Entity>();
+		private readonly System.Collections.Generic.Dictionary<int, Vector2> _worldByEntityId = new System.Collections.Generic.Dictionary<int, Vector2>();
 
 		// Hardcoded POIs in world-space coordinates
 		private static readonly Vector2[] PoiPositions = new Vector2[]
@@ -50,23 +52,18 @@ namespace Crusaders30XX.ECS.Systems
 				_spawned = true;
 			}
 
-			// Update UI bounds based on current camera origin
+			// Provide base positions (screen-space) for parallax to offset from
 			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
 			if (cam == null) return;
 			var origin = cam.Origin;
-
-			foreach (var e in EntityManager.GetEntitiesWithComponents(typeof(Transform), typeof(UIElement)))
+			foreach (var e in _pois)
 			{
 				var t = e.GetComponent<Transform>();
-				var ui = e.GetComponent<UIElement>();
-				if (t == null || ui == null) continue;
-				// Only adjust for POIs owned by Location scene
-				var owner = e.GetComponent<OwnedByScene>();
-				if (owner == null || owner.Scene != SceneId.Location) continue;
-
-				var screenPos = t.Position - origin;
-				var rect = new Rectangle((int)System.Math.Round(screenPos.X - 50), (int)System.Math.Round(screenPos.Y - 50), 100, 100);
-				ui.Bounds = rect;
+				if (t == null) continue;
+				if (!_worldByEntityId.TryGetValue(e.Id, out var world)) continue;
+				var screenPos = world - origin;
+				// Hand off screen base position to the Parallax system; it will set t.Position
+				t.BasePosition = screenPos;
 			}
 		}
 
@@ -76,9 +73,13 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var pos in PoiPositions)
 			{
 				var e = EntityManager.CreateEntity($"POI_{i++}");
+				_worldByEntityId[e.Id] = pos;
+				_pois.Add(e);
+				// Initialize transform: Position will be driven by Parallax from BasePosition
 				EntityManager.AddComponent(e, new Transform { Position = pos, ZOrder = 10 });
+				// UI bounds size only; Parallax will center bounds at Transform.Position when AffectsUIBounds is true
 				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, 100, 100), IsInteractable = false });
-				EntityManager.AddComponent(e, new OwnedByScene { Scene = SceneId.Location });
+				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
 			}
 		}
 
@@ -91,18 +92,16 @@ namespace Crusaders30XX.ECS.Systems
 			int h = cam.ViewportH;
 
 			// Draw only POIs that intersect screen
-			foreach (var e in EntityManager.GetEntitiesWithComponents(typeof(Transform), typeof(UIElement)))
-			{
-				var t = e.GetComponent<Transform>();
-				var ui = e.GetComponent<UIElement>();
-				var owner = e.GetComponent<OwnedByScene>();
-				if (t == null || ui == null || owner == null || owner.Scene != SceneId.Location) continue;
+            foreach (var e in _pois)
+            {
+                var t = e.GetComponent<Transform>();
+                var ui = e.GetComponent<UIElement>();
+                if (t == null || ui == null) continue;
 
-				var screenPos = t.Position - origin;
-				var rect = new Rectangle((int)System.Math.Round(screenPos.X - 50), (int)System.Math.Round(screenPos.Y - 50), 100, 100);
-				if (rect.Right < 0 || rect.Bottom < 0 || rect.Left > w || rect.Top > h) continue;
-				_spriteBatch.Draw(_pixel, rect, Color.Red);
-			}
+                var rect = new Rectangle((int)System.Math.Round(t.Position.X - 50), (int)System.Math.Round(t.Position.Y - 50), 100, 100);
+                if (rect.Right < 0 || rect.Bottom < 0 || rect.Left > w || rect.Top > h) continue;
+                _spriteBatch.Draw(_pixel, rect, Color.Red);
+            }
 		}
 	}
 }
