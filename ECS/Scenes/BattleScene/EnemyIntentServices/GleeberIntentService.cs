@@ -8,13 +8,13 @@ using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
-	public class SandSludgeIntentService : IEnemyIntentService
+	public class GleeberIntentService : IEnemyIntentService
 	{
 		private static readonly System.Random _random = new System.Random();
 
 		public IEnumerable<string> SelectForTurn(Entity enemy, EnemyArsenal arsenal, int turnNumber)
 		{
-			return ["belly_flop"];
+			return ["pounce"];
 		}
 	}
 }

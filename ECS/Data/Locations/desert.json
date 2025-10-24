@@ -4,6 +4,12 @@
   "quests": [
     [
       {
+        "id": "gleeber",
+        "type": "Enemy"
+      }
+    ],
+    [
+      {
         "id": "skeleton",
         "type": "Enemy"
       }

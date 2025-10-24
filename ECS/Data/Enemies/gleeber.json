@@ -1,11 +1,11 @@
 {
-    "name": "Sandsludge",
-    "id": "sandsludge",
-    "hp": 70,
+    "name": "Gleeber",
+    "id": "gleeber",
+    "hp": 50,
     "attacks": [
         {
-            "id": "belly_flop",
-            "name": "Bellyflop",
+            "id": "pounce",
+            "name": "Pounce",
             "target": "Player",
             "positionType": "Ender",
             "damage": 8

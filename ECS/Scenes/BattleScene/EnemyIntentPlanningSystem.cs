@@ -162,7 +162,7 @@ namespace Crusaders30XX.ECS.Systems
 				case "ogre": return new OgreIntentService();
 				case "skeleton": return new SkeletonIntentService();
 				case "ninja": return new NinjaIntentService();
-				case "sand_sludge": return new SandSludgeIntentService();
+				case "gleeber": return new GleeberIntentService();
 				default: return null;
 			}
 		}
