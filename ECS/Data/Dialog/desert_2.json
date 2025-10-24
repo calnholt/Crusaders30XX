@@ -1,0 +1,43 @@
+[
+    {
+      "actor": "Angel",
+      "message": "You ever notice how quiet it is out here? No birds, no wind—just silence heavy enough to choke on."
+    },
+    {
+      "actor": "Crusader",
+      "message": "A cursed silence. The land remembers every drop of blood spilled over gold and water. Greed made the sand itself hungry."
+    },
+    {
+      "actor": "Angel",
+      "message": "Greed? That's what birthed this Hellrift?"
+    },
+    {
+      "actor": "Crusader",
+      "message": "Aye. Men built shrines of wealth in a place that had none. When they finally turned on each other, Hell heard the prayers meant for treasure."
+    },
+    {
+      "actor": "Angel",
+      "message": "So the desert didn't just die—it was [jitter]consumed[/jitter]."
+    },
+    {
+      "actor": "Crusader",
+      "message": "And it's still feeding. The Rift's heart lies beneath the dunes somewhere. We'll know we're close when the sand starts to glimmer."
+    },
+    {
+      "actor": "Angel",
+      "message": "Glimmer? Like gold?"
+    },
+    {
+      "actor": "Crusader",
+      "message": "Exactly. That's Hell's joke—temptation lighting your path to damnation."
+    },
+    {
+      "actor": "Skeleton",
+      "message": "[shake][slow factor=0.1]CLINK... GOLD... MINE...[/slow][/shake]"
+    },
+    {
+      "actor": "Angel",
+      "message": "Spoke too soon. Looks like the desert still has claimants."
+    }
+  ]
+  
