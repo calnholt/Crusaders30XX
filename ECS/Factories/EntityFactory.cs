@@ -91,7 +91,7 @@ namespace Crusaders30XX.ECS.Factories
             // Attach Action Points component by default
             world.AddComponent(entity, new ActionPoints { Current = 0 });
             // Attach HP component
-            world.AddComponent(entity, new HP { Max = 30, Current = 30 });
+            world.AddComponent(entity, new HP { Max = 25, Current = 25 });
             // Equip default medals (can equip multiple later). For now, just st_luke.
             foreach (var medalId in loadout.medalIds)
             {

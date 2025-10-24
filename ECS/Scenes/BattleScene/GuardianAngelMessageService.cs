@@ -108,6 +108,13 @@ namespace Crusaders30XX.ECS.Systems
                     "Another soul saved!"
                 ];
             }
+            case GuardianMessageType.GleeberIdle:
+            {
+                return [
+                    "Demons aren't allowed to be this cute!",
+                    "We're going to squeeze you to death!",
+                ];
+            }
             case GuardianMessageType.DemonIdle:
             {
                 return [
@@ -175,5 +182,6 @@ public enum GuardianMessageType
     OgreIdle,
     SuccubusIdle,
     SpiderIdle,
+    GleeberIdle,
     Temperance,
 }

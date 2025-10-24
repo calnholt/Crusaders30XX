@@ -16,17 +16,17 @@ namespace Crusaders30XX.ECS.Systems
 		public IEnumerable<string> SelectForTurn(Entity enemy, EnemyArsenal arsenal, int turnNumber)
 		{
 			int random = Random.Shared.Next(0, 100);
-      var linkers = new List<string> { "bone_strike", "sweep", "slash", "calcify" };
+      var linkers = new List<string> { "bone_strike", "sweep", "calcify" };
       if (random <= 50)
       {
         return ArrayUtils.TakeRandomWithReplacement(linkers, 3);
       }
       random = Random.Shared.Next(0, 100);
       var linker = ArrayUtils.TakeRandomWithReplacement(linkers, 1);
-      if (random >= 90)
-      {
-        return ArrayUtils.Shuffled(linker.Append("have_no_mercy"));
-      }
+      // if (random >= 90)
+      // {
+      //   return ArrayUtils.Shuffled(linker.Append("have_no_mercy"));
+      // }
 			return ArrayUtils.Shuffled(linker.Append("skull_crusher"));
 		}
 	}

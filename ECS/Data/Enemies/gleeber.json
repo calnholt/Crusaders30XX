@@ -1,7 +1,7 @@
 {
     "name": "Gleeber",
     "id": "gleeber",
-    "hp": 50,
+    "hp": 60,
     "attacks": [
         {
             "id": "pounce",

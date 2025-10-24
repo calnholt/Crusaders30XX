@@ -2,7 +2,7 @@
   "id": "st_luke",
   "name": "Medal of Saint Luke the Evangelist",
   "target": "Player",
-  "text": "At the start of battle, heal 100% of the health you've lost.",
+  "text": "At the start of battle, fully heal.",
   "trigger": "StartOfBattle"
 }
 
