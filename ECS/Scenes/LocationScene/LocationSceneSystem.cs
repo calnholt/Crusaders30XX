@@ -43,7 +43,7 @@ namespace Crusaders30XX.ECS.Systems
     public void Draw()
     {
 			AddLocationSystems();
-			_locationMapDisplaySystem?.Draw();
+			FrameProfiler.Measure("LocationMapDisplaySystem.Draw", _locationMapDisplaySystem.Draw);
     }
     private void AddLocationSystems()
 		{
