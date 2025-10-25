@@ -208,6 +208,7 @@ namespace Crusaders30XX.ECS.Systems
         private void RemoveTurnPassives(Entity owner)
         {
             EventManager.Publish(new RemovePassive { Owner = owner, Type = AppliedPassiveType.DowseWithHolyWater });
+            EventManager.Publish(new RemovePassive { Owner = owner, Type = AppliedPassiveType.Aggression });
         }
     }
 }

@@ -3,8 +3,8 @@
   "name": "Dowse with Holy Water",
   "target": "Player",
   "rarity": "Common",
-  "valuesParse": [10],
-  "text": "Your next attack this turn deals +{1} damage.",
+  "valuesParse": [5, 4, 10],
+  "text": "Gain {1} aggression. If you have {2} or more courage, gain {3} aggression instead.",
   "isFreeAction": true,
   "animation": "Buff",  
   "block": 2

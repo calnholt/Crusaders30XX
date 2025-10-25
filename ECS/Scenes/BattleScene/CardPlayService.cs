@@ -66,7 +66,8 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case "dowse_with_holy_water":
                 {
-                    EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.DowseWithHolyWater, Delta = 1 });
+                    var delta = courage >= values[1] ? values[2] : values[0];
+                    EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Aggression, Delta = delta });
                     break;
                 }
                 case "heavens_glory":

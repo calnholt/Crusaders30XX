@@ -45,8 +45,8 @@ namespace Crusaders30XX.ECS.Systems
     public void Draw()
     {
 			FrameProfiler.Measure("LocationMapDisplaySystem.Draw", _locationMapDisplaySystem.Draw);
-			FrameProfiler.Measure("FogDisplaySystem.Draw", _fogDisplaySystem.Draw);
 			FrameProfiler.Measure("PointOfInterestDisplaySystem.Draw", _pointOfInterestDisplaySystem.Draw);
+			FrameProfiler.Measure("FogDisplaySystem.Draw", _fogDisplaySystem.Draw);
     }
     private void AddLocationSystems()
 		{

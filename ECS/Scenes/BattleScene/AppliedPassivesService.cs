@@ -16,13 +16,12 @@ namespace Crusaders30XX.ECS.Systems
         var targetPassives = e.Target.GetComponent<AppliedPassives>().Passives;
         // var phaseState = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
         Console.WriteLine($"[AppliedPassivesService] GetPassiveDelta - passives: {sourcePassives.Count}");
-        if (sourcePassives.ContainsKey(AppliedPassiveType.DowseWithHolyWater) && e.DamageType == ModifyTypeEnum.Attack)
+        if (sourcePassives.ContainsKey(AppliedPassiveType.Aggression) && e.DamageType == ModifyTypeEnum.Attack)
         {
-          Console.WriteLine($"[AppliedPassivesService] applying DowseWithHolyWater");
-          sourcePassives.TryGetValue(AppliedPassiveType.DowseWithHolyWater, out var amount);
-          CardDefinitionCache.TryGet("dowse_with_holy_water", out var def);
-          delta += def.valuesParse[0] * amount;
-          EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.DowseWithHolyWater });
+          Console.WriteLine($"[AppliedPassivesService] applying Aggression");
+          sourcePassives.TryGetValue(AppliedPassiveType.Aggression, out var amount);
+          delta += amount;
+          EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.Aggression });
         }
         if (targetPassives.ContainsKey(AppliedPassiveType.Armor) && e.DamageType == ModifyTypeEnum.Attack)
         {
