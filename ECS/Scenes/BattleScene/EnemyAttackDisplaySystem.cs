@@ -507,6 +507,8 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(anchorEntity, new Crusaders30XX.ECS.Components.EnemyAttackBannerAnchor());
 				EntityManager.AddComponent(anchorEntity, new Transform());
 				EntityManager.AddComponent(anchorEntity, ParallaxLayer.GetUIParallaxLayer());
+				// Provide UI bounds for other systems to align against the live banner rect
+				EntityManager.AddComponent(anchorEntity, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = false });
 			}
 			var anchorTransform = anchorEntity.GetComponent<Transform>();
 			Vector2 parallaxOffset = Vector2.Zero;
@@ -560,6 +562,21 @@ namespace Crusaders30XX.ECS.Systems
 			var rect = new Rectangle((int)(approachPos.X - drawW / 2f + shake.X), (int)(approachPos.Y - drawH / 2f + shake.Y), drawW, drawH);
 			_spriteBatch.Draw(_pixel, rect, new Color(20, 20, 20, bgAlpha));
 			DrawRect(rect, Color.White, Math.Max(1, BorderThickness));
+
+			// Keep the anchor's UI bounds synced to the drawn banner rectangle for accurate positioning elsewhere
+			{
+				var anchorUi = anchorEntity.GetComponent<UIElement>();
+				if (anchorUi == null)
+				{
+					anchorUi = new UIElement { Bounds = rect, IsInteractable = false };
+					EntityManager.AddComponent(anchorEntity, anchorUi);
+				}
+				else
+				{
+					anchorUi.Bounds = rect;
+					anchorUi.IsInteractable = false;
+				}
+			}
 
 			// Impact flash overlay
 			if (_impactActive && _flashElapsedSeconds < FlashDurationSeconds && FlashMaxAlpha > 0)
@@ -749,6 +766,11 @@ namespace Crusaders30XX.ECS.Systems
 			if (anchorTransform != null)
 			{
 				anchorTransform.BasePosition = new Vector2(centerBase.X, centerBase.Y + drawH / 2f);
+				// Keep current parallax offset; Position will be derived by Parallax system if applicable
+				if (anchorTransform.Position == Vector2.Zero)
+				{
+					anchorTransform.Position = anchorTransform.BasePosition;
+				}
 				anchorTransform.Scale = Vector2.One;
 				anchorTransform.Rotation = 0f;
 			}

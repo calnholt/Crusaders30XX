@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Anchor Offset X", Step = 2, Min = -1000, Max = 1000)]
 		public int AnchorOffsetX { get; set; } = 0;
 		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -1000, Max = 1000)]
-		public int AnchorOffsetY { get; set; } = -210;
+		public int AnchorOffsetY { get; set; } = -44;
 		[DebugEditable(DisplayName = "Slot Spacing X", Step = 2, Min = 10, Max = 200)]
 		public int SlotSpacingX { get; set; } = 70;
 		[DebugEditable(DisplayName = "Card Draw W", Step = 2, Min = 20, Max = 300)]
@@ -248,15 +248,28 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Compute slot target from banner anchor if available, else viewport center
-			var anchorT = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault()?.GetComponent<Transform>();
-			Vector2 basePoint;
-			if (anchorT != null)
+			var anchorEntity = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault();
+			if (anchorEntity == null)
 			{
-				basePoint = anchorT.Position;
+				anchorEntity = EntityManager.CreateEntity("EnemyAttackBannerAnchor");
+				EntityManager.AddComponent(anchorEntity, new EnemyAttackBannerAnchor());
+				EntityManager.AddComponent(anchorEntity, new Transform());
+				EntityManager.AddComponent(anchorEntity, ParallaxLayer.GetUIParallaxLayer());
+				EntityManager.AddComponent(anchorEntity, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = false });
+			}
+			var anchorT = anchorEntity.GetComponent<Transform>();
+			var anchorUi = anchorEntity.GetComponent<UIElement>();
+			Vector2 basePoint;
+			bool uiBoundsValid = anchorUi != null && anchorUi.Bounds.Width >= 16 && anchorUi.Bounds.Height >= 16;
+			if (uiBoundsValid)
+			{
+				// Align above the banner panel: use its top-center as the anchor baseline
+				basePoint = new Vector2(anchorUi.Bounds.Center.X, anchorUi.Bounds.Top);
 			}
 			else
 			{
-				basePoint = new Vector2(_graphicsDevice.Viewport.Width * 0.5f, _graphicsDevice.Viewport.Height * 0.5f);
+				// Fallback to the anchor transform (parallax-adjusted) or viewport center
+				basePoint = anchorT?.Position ?? new Vector2(_graphicsDevice.Viewport.Width * 0.5f, _graphicsDevice.Viewport.Height * 0.5f);
 			}
 			var center = new Vector2(basePoint.X + AnchorOffsetX, basePoint.Y + AnchorOffsetY);
 			float offsetIndex = indexInContext - (countInContext - 1) * 0.5f;
