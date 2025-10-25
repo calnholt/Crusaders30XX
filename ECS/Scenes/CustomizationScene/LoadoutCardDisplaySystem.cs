@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly LoadoutDeckPanelSystem _deckPanel;
         private readonly Dictionary<string, int> _createdCardIds = new();
         private MouseState _prevMouse;
+        private CursorStateEvent _cursorEvent;
         public LoadoutCardDisplaySystem(EntityManager em, World world, GraphicsDevice gd, SpriteBatch sb, LoadoutDeckPanelSystem deckPanel) : base(em)
         {
             _graphicsDevice = gd;
@@ -28,6 +29,7 @@ namespace Crusaders30XX.ECS.Systems
             _prevMouse = Mouse.GetState();
             EventManager.Subscribe<ShowTransition>(_ => ClearCards());
             EventManager.Subscribe<SetCustomizationTab>(_ => ClearCards());
+            EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -45,6 +47,8 @@ namespace Crusaders30XX.ECS.Systems
 
             var mouse = Mouse.GetState();
             bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
+            bool gpEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge;
+            Point gpPoint = gpEdge ? new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y)) : Point.Zero;
 
             int vw = _graphicsDevice.Viewport.Width;
             int cardW = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardWidth;
@@ -73,7 +77,7 @@ namespace Crusaders30XX.ECS.Systems
                 int x = panelX + c * colW + (colW / 2);
                 int y = panelY + _deckPanel.HeaderHeight + _deckPanel.TopMargin + r * ((int)(cardH * _deckPanel.CardScale) + _deckPanel.RowGap) + (int)(cardH * _deckPanel.CardScale / 2) - st.RightScroll;
                 var rect = new Rectangle(x - (int)(cardW * _deckPanel.CardScale / 2), y - (int)(cardH * _deckPanel.CardScale / 2), (int)(cardW * _deckPanel.CardScale), (int)(cardH * _deckPanel.CardScale));
-                if (click && rect.Contains(mouse.Position))
+                if ((click && rect.Contains(mouse.Position)) || (gpEdge && rect.Contains(gpPoint)))
                 {
                     EventManager.Publish(new RemoveCardFromLoadoutRequested { CardKey = view.key, Index = null });
                     break;
@@ -120,7 +124,7 @@ namespace Crusaders30XX.ECS.Systems
         private Entity EnsureTempCard(CardDefinition def, CardData.CardColor color)
         {
             string name = def.name ?? def.id;
-            string keyName = $"Card_{name}_{color}";
+            string keyName = $"Card_{name}_{color}_0";
             var existing = EntityManager.GetEntity(keyName);
             if (existing != null) return existing;
             var created = Factories.EntityFactory.CreateCardFromDefinition(EntityManager, def.id, color);

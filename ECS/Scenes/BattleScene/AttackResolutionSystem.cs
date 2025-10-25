@@ -46,24 +46,6 @@ namespace Crusaders30XX.ECS.Systems
 
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var source = enemy;
-			// Always apply on-hit; if NOT blocked, also apply on-not-blocked
-			void ApplyEffects(EffectDefinition[] list)
-			{
-				if (list == null) return;
-				foreach (var eff in list)
-				{
-					EventManager.Publish(new ApplyEffect
-					{
-						EffectType = eff.type,
-						Amount = eff.amount,
-						Status = eff.status,
-						Percentage = eff.percentage,
-						Stacks = eff.stacks,
-						Source = source,
-						Target = string.IsNullOrEmpty(eff.target) || eff.target == "Player" ? player : enemy
-					});
-				}
-			}
 			Console.WriteLine($"[AttackResolutionSystem] ResolveAttack {pa.AttackId} {def.damage} isBlocked: {blocked}");
 			if (def.damage > 0)
 			{
@@ -77,13 +59,21 @@ namespace Crusaders30XX.ECS.Systems
 						Percentage = 100
 					});
 			}
-			if (!blocked)
-			{
-				ApplyEffects(def.effectsOnNotBlocked);
-				HandleDiscardSpecificCards(def, pa.ContextId);
-			}
 
-			EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blocked });
+			// Defer not-blocked effects (and final resolution signal) until the attack impact occurs
+			System.Action<EnemyAttackImpactNow> impactHandler = null;
+			impactHandler = (impact) =>
+			{
+				if (impact == null || impact.ContextId != pa.ContextId) return;
+				EventManager.Unsubscribe(impactHandler);
+				if (!blocked)
+				{
+					ApplyEffects(def.effectsOnNotBlocked, source, player);
+					HandleDiscardSpecificCards(def, pa.ContextId);
+				}
+				EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blocked });
+			};
+			EventManager.Subscribe(impactHandler);
 		}
 
 		private void HandleDiscardSpecificCards(AttackDefinition def, string contextId)
@@ -119,6 +109,24 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 			catch { }
+		}
+
+		private void ApplyEffects(EffectDefinition[] list, Entity source, Entity player)
+		{
+			if (list == null) return;
+			foreach (var eff in list)
+			{
+				EventManager.Publish(new ApplyEffect
+				{
+					EffectType = eff.type,
+					Amount = eff.amount,
+					Status = eff.status,
+					Percentage = eff.percentage,
+					Stacks = eff.stacks,
+					Source = source,
+					Target = string.IsNullOrEmpty(eff.target) || eff.target == "Player" ? player : source
+				});
+			}
 		}
 
 	}

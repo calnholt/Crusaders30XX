@@ -59,46 +59,66 @@ namespace Crusaders30XX.ECS.Systems
             if (scene == null || scene.Current != SceneId.Customization) return;
             EnsureStateLoaded();
 
-            var mouse = Mouse.GetState();
-            bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
-			// Block clicks during scene transition
-			if (TransitionStateSingleton.IsActive)
+            // Block interactions during scene transition
+            if (TransitionStateSingleton.IsActive)
             {
-                _prevMouse = mouse;
                 return;
             }
             int vw = _graphicsDevice.Viewport.Width;
             int vh = _graphicsDevice.Viewport.Height;
 
-            var (saveRect, cancelRect, undoRect, exitRect) = EnsureAndLayoutButtons(vw, vh);
+            // Ensure entities exist and keep their transforms positioned by layout each frame
+            EnsureAndLayoutButtons(vw, vh);
 
-            if (click)
+            // Compute Save enable state
+            var stc = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
+            bool canSave = false;
+            try
             {
-                if (saveRect.Contains(mouse.Position))
-                {
-                    var stc = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-                    if (stc != null && stc.WorkingCardIds != null && stc.WorkingCardIds.Count == DeckRules.RequiredDeckSize)
-                    {
-                        SaveWorkingToDisk();
-                    }
-                }
-                else if (cancelRect.Contains(mouse.Position)) RevertWorking();
-                else if (undoRect.Contains(mouse.Position)) UndoWorking();
-                else if (exitRect.Contains(mouse.Position))
-                {
-                    EventManager.Publish(new ShowTransition { Scene = SceneId.WorldMap });
-                    TimerScheduler.Schedule(.8f, () => {
-                        // Clear customization state before exiting
-                        var stc = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault();
-                        if (stc != null)
-                        {
-                            EntityManager.DestroyEntity(stc.Id);
-                        }
-                    });
-                }
+                canSave = stc != null && stc.WorkingCardIds != null && stc.WorkingCardIds.Count == DeckRules.RequiredDeckSize;
             }
+            catch {}
 
-            _prevMouse = mouse;
+            var saveE = EntityManager.GetEntity("Customization_SaveButton");
+            var cancelE = EntityManager.GetEntity("Customization_CancelButton");
+            var undoE = EntityManager.GetEntity("Customization_UndoButton");
+            var exitE = EntityManager.GetEntity("Customization_ExitButton");
+
+            var saveUi = saveE?.GetComponent<UIElement>();
+            var cancelUi = cancelE?.GetComponent<UIElement>();
+            var undoUi = undoE?.GetComponent<UIElement>();
+            var exitUi = exitE?.GetComponent<UIElement>();
+
+            if (saveUi != null) saveUi.IsInteractable = canSave;
+            if (cancelUi != null) cancelUi.IsInteractable = true;
+            if (undoUi != null) undoUi.IsInteractable = true;
+            if (exitUi != null) exitUi.IsInteractable = true;
+
+            // Handle clicks delegated from InputSystem/HotKey via UIElement.IsClicked
+            if (saveUi != null && saveUi.IsClicked && canSave)
+            {
+                SaveWorkingToDisk();
+            }
+            if (cancelUi != null && cancelUi.IsClicked)
+            {
+                RevertWorking();
+            }
+            if (undoUi != null && undoUi.IsClicked)
+            {
+                UndoWorking();
+            }
+            if (exitUi != null && exitUi.IsClicked)
+            {
+                EventManager.Publish(new ShowTransition { Scene = SceneId.WorldMap });
+                TimerScheduler.Schedule(.8f, () => {
+                    // Clear customization state before exiting
+                    var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault();
+                    if (st != null)
+                    {
+                        EntityManager.DestroyEntity(st.Id);
+                    }
+                });
+            }
         }
 
         public void Draw()
@@ -108,19 +128,42 @@ namespace Crusaders30XX.ECS.Systems
             int vw = _graphicsDevice.Viewport.Width;
             int vh = _graphicsDevice.Viewport.Height;
 
-            // Buttons
-            var (saveRect, cancelRect, undoRect, exitRect) = EnsureAndLayoutButtons(vw, vh);
-            bool canSave = false;
-            try
-            {
-                var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-                canSave = st != null && st.WorkingCardIds != null && st.WorkingCardIds.Count == DeckRules.RequiredDeckSize;
-            }
-            catch {}
-            DrawButton(saveRect, canSave ? "SAVE" : $"SAVE ({(EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>()?.WorkingCardIds?.Count ?? 0)}/{DeckRules.RequiredDeckSize})");
+            // Ensure entities and layout first
+            EnsureAndLayoutButtons(vw, vh);
+
+            var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
+            bool canSave = st != null && st.WorkingCardIds != null && st.WorkingCardIds.Count == DeckRules.RequiredDeckSize;
+            int count = st?.WorkingCardIds?.Count ?? 0;
+
+            var saveE = EntityManager.GetEntity("Customization_SaveButton");
+            var cancelE = EntityManager.GetEntity("Customization_CancelButton");
+            var undoE = EntityManager.GetEntity("Customization_UndoButton");
+            var exitE = EntityManager.GetEntity("Customization_ExitButton");
+
+            var saveTr = saveE?.GetComponent<Transform>();
+            var cancelTr = cancelE?.GetComponent<Transform>();
+            var undoTr = undoE?.GetComponent<Transform>();
+            var exitTr = exitE?.GetComponent<Transform>();
+
+            var saveRect = new Rectangle((int)(saveTr?.Position.X ?? 0), (int)(saveTr?.Position.Y ?? 0), ButtonWidth, ButtonHeight);
+            var cancelRect = new Rectangle((int)(cancelTr?.Position.X ?? 0), (int)(cancelTr?.Position.Y ?? 0), ButtonWidth, ButtonHeight);
+            var undoRect = new Rectangle((int)(undoTr?.Position.X ?? 0), (int)(undoTr?.Position.Y ?? 0), ButtonWidth, ButtonHeight);
+            var exitRect = new Rectangle((int)(exitTr?.Position.X ?? 0), (int)(exitTr?.Position.Y ?? 0), ButtonWidth, ButtonHeight);
+
+            DrawButton(saveRect, canSave ? "SAVE" : $"SAVE ({count}/{DeckRules.RequiredDeckSize})");
             DrawButton(cancelRect, "CANCEL");
             DrawButton(undoRect, "UNDO");
             DrawButton(exitRect, "EXIT");
+
+            // Keep UI bounds aligned with drawn rects
+            var saveUi = saveE?.GetComponent<UIElement>();
+            if (saveUi != null) saveUi.Bounds = saveRect;
+            var cancelUi = cancelE?.GetComponent<UIElement>();
+            if (cancelUi != null) cancelUi.Bounds = cancelRect;
+            var undoUi = undoE?.GetComponent<UIElement>();
+            if (undoUi != null) undoUi.Bounds = undoRect;
+            var exitUi = exitE?.GetComponent<UIElement>();
+            if (exitUi != null) exitUi.Bounds = exitRect;
         }
 
         private void DrawButton(Rectangle rect, string label)
@@ -223,11 +266,17 @@ namespace Crusaders30XX.ECS.Systems
             if (e == null)
             {
                 e = EntityManager.CreateEntity(key);
-                EntityManager.AddComponent(e, new Transform { Position = Vector2.Zero, ZOrder = 5000 });
+                EntityManager.AddComponent(e, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 5000 });
                 EntityManager.AddComponent(e, new UIElement { Bounds = rect, IsInteractable = true });
             }
             else
             {
+                var tr = e.GetComponent<Transform>();
+                if (tr != null)
+                {
+                    tr.Position = new Vector2(rect.X, rect.Y);
+                    tr.ZOrder = 5000;
+                }
                 var ui = e.GetComponent<UIElement>();
                 if (ui != null) ui.Bounds = rect;
             }

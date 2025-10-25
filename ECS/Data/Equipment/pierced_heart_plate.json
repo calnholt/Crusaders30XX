@@ -2,19 +2,19 @@
   "id": "pierced_heart_plate",
   "name": "Pierced Heart Plate",
   "slot": "Chest",
-  "block": 1,
-  "blockUses": 2,
+  "block": 2,
+  "blockUses": 1,
   "color": "Black",
   "abilities": [
     {
       "id": "pierced_heart_plate",
       "type": "Activate",
       "effect": "GainCourage",
-      "effectCount": 1,
+      "effectCount": 2,
       "destroyOnActivate": false,
       "target": "Player",
       "requiresUseOnActivate": true,
-      "text": "Gain 1 courage.",
+      "text": "Gain 2 courage.",
       "isFreeAction": true
     }
   ]

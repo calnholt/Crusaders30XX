@@ -20,6 +20,7 @@ namespace Crusaders30XX.ECS.Systems
         private MouseState _prevMouse;
         private readonly World _world;
         private readonly Dictionary<string, int> _createdCardIds = new();
+        private CursorStateEvent _cursorEvent;
 
         public AvailableCardDisplaySystem(EntityManager em, World world, GraphicsDevice gd, SpriteBatch sb, CardLibraryPanelSystem libraryPanel) : base(em)
         {
@@ -30,6 +31,7 @@ namespace Crusaders30XX.ECS.Systems
             _prevMouse = Mouse.GetState();
             EventManager.Subscribe<ShowTransition>(_ => ClearCards());
             EventManager.Subscribe<SetCustomizationTab>(_ => ClearCards());
+            EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -82,8 +84,10 @@ namespace Crusaders30XX.ECS.Systems
             int maxScroll = Math.Max(0, contentHeight - panelH);
             if (st.LeftScroll > maxScroll) st.LeftScroll = maxScroll;
 
-            // Handle clicks to add
+            // Handle clicks to add (mouse or controller A edge)
             bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
+            bool gpEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge;
+            Point gpPoint = gpEdge ? new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y)) : Point.Zero;
 
             int idx = 0;
             foreach (var def in defs)
@@ -97,7 +101,7 @@ namespace Crusaders30XX.ECS.Systems
                     int x = panelX + c * colW + (colW / 2);
                     int y = panelY + _libraryPanel.HeaderHeight + _libraryPanel.TopMargin + r * ((int)(cardH * _libraryPanel.CardScale) + _libraryPanel.RowGap) + (int)(cardH * _libraryPanel.CardScale / 2) - st.LeftScroll;
                     var rect = new Rectangle(x - (int)(cardW * _libraryPanel.CardScale / 2), y - (int)(cardH * _libraryPanel.CardScale / 2), (int)(cardW * _libraryPanel.CardScale), (int)(cardH * _libraryPanel.CardScale));
-                    if (click && rect.Contains(mouse.Position))
+                    if ((click && rect.Contains(mouse.Position)) || (gpEdge && rect.Contains(gpPoint)))
                     {
                         EventManager.Publish(new AddCardToLoadoutRequested { CardKey = entry });
                     }
@@ -154,7 +158,7 @@ namespace Crusaders30XX.ECS.Systems
         private Entity EnsureTempCard(CardDefinition def, CardData.CardColor color)
         {
             string name = def.name ?? def.id;
-            string keyName = $"Card_{name}_{color}";
+            string keyName = $"Card_{name}_{color}_0";
             var existing = EntityManager.GetEntity(keyName);
             if (existing != null) return existing;
             var created = EntityFactory.CreateCardFromDefinition(EntityManager, def.id, color);

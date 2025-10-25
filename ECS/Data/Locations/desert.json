@@ -77,6 +77,32 @@
         "id": "succubus",
         "type": "Enemy"
       }
+    ],
+    [
+      {
+        "id": "ogre",
+        "type": "Enemy"
+      },
+      {
+        "id": "spider",
+        "type": "Enemy"
+      },
+      {
+        "id": "demon",
+        "type": "Enemy"
+      },
+      {
+        "id": "skeleton",
+        "type": "Enemy"
+      },
+      {
+        "id": "succubus",
+        "type": "Enemy"
+      },
+      {
+        "id": "ninja",
+        "type": "Enemy"
+      }
     ]
   ]
 }

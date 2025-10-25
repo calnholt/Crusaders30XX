@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -51,6 +52,15 @@ namespace Crusaders30XX.ECS.Systems
         private const float TitleScale = 0.175f;
         private const float CardScale = 1.0f;
 
+        [DebugEditable(DisplayName = "Gamepad Scroll Speed (px/s)", Step = 50, Min = 100, Max = 6000)]
+        public float GamepadScrollSpeed { get; set; } = 1400f;
+        [DebugEditable(DisplayName = "Right Stick Deadzone", Step = 0.01f, Min = 0f, Max = 0.5f)]
+        public float RightStickDeadzone { get; set; } = 0.15f;
+        [DebugEditable(DisplayName = "Speed Exponent", Step = 0.1f, Min = 0.1f, Max = 5f)]
+        public float SpeedExponent { get; set; } = 1.2f;
+        [DebugEditable(DisplayName = "Max Multiplier", Step = 0.1f, Min = 1f, Max = 10f)]
+        public float MaxMultiplier { get; set; } = 3f;
+
         public CardListModalSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
             : base(entityManager)
         {
@@ -79,6 +89,46 @@ namespace Crusaders30XX.ECS.Systems
             if (modalEntity == null) return;
             var modal = modalEntity.GetComponent<CardListModal>();
             if (modal == null || !modal.IsOpen || modal.Cards == null) return;
+            // Gamepad right-stick scrolling
+            if (Game1.WindowIsActive && !TransitionStateSingleton.IsActive)
+            {
+                var gp = GamePad.GetState(PlayerIndex.One);
+                if (gp.IsConnected)
+                {
+                    var stick = gp.ThumbSticks.Right; // X: right+, Y: up+
+                    float mag = stick.Length();
+                    if (mag >= RightStickDeadzone)
+                    {
+                        int w = _graphicsDevice.Viewport.Width;
+                        int h = _graphicsDevice.Viewport.Height;
+                        var rect = new Rectangle(ModalMargin, ModalMargin, w - ModalMargin * 2, h - ModalMargin * 2);
+
+                        int cursorY = rect.Y + Padding;
+                        cursorY += (int)(_font.LineSpacing * TitleScale) + Padding;
+
+                        var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
+                        var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+                        int topNudge = Math.Max(0, cvs?.CardOffsetYExtra ?? 0);
+
+                        int maxCols = Math.Max(1, (rect.Width - Padding * 2 + GridGap) / (GridCellW + GridGap));
+                        int rows = (((modal.Cards?.Count) ?? 0) + maxCols - 1) / maxCols;
+                        int contentHeight = Math.Max(0, rows * (GridCellH + GridGap) - GridGap + topNudge);
+                        int visibleHeight = rect.Bottom - cursorY - Padding;
+                        int maxScroll = Math.Max(0, contentHeight - visibleHeight);
+
+                        Vector2 dir = (mag > 0f) ? (stick / mag) : Vector2.Zero;
+                        float normalized = MathHelper.Clamp((mag - RightStickDeadzone) / (1f - RightStickDeadzone), 0f, 1f);
+                        float speedMultiplier = MathHelper.Clamp((float)System.Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
+                        float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                        float delta = -(dir.Y) * GamepadScrollSpeed * speedMultiplier * dt;
+                        if (System.Math.Abs(delta) > 0.01f)
+                        {
+                            float next = MathHelper.Clamp(modal.ScrollOffset + delta, 0, maxScroll);
+                            modal.ScrollOffset = (int)System.Math.Round(next);
+                        }
+                    }
+                }
+            }
             foreach (var card in modal.Cards)
             {
                 var t = card.GetComponent<Transform>();

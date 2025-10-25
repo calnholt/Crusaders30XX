@@ -23,6 +23,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (i >= 0) matches.Add((i, "Aegis - Prevent the next 1 damage from any source."));
 			i = lowerText.IndexOf("burn");
 			if (i >= 0) matches.Add((i, "Burn - At the start of the turn, take 1 damage."));
+			i = lowerText.IndexOf("aggression");
+			if (i >= 0) matches.Add((i, "Aggression - Your next attack this turn gains +1 damage."));
 
 			if (matches.Count == 0) return string.Empty;
 			matches.Sort((a, b) => a.Index.CompareTo(b.Index));

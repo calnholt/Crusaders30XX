@@ -70,7 +70,7 @@ namespace Crusaders30XX.ECS.Systems
 		private Entity EnsureEntity(CardDefinition def)
 		{
 			string name = def.name ?? def.id;
-			string keyName = $"Card_{name}_Yellow";
+			string keyName = $"Card_{name}_Yellow_0";
 			var existing = EntityManager.GetEntity(keyName);
 			if (existing != null) return existing;
 			var created = EntityFactory.CreateCardFromDefinition(EntityManager, def.id, CardData.CardColor.Yellow, true);

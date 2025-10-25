@@ -2,7 +2,7 @@
   "id": "sword",
   "name": "Sword",
   "target": "Enemy",
-  "valuesParse": [2, 3],
+  "valuesParse": [2, 8],
   "rarity": "Common",
   "text": "As an additional cost, lose {1} courage. Deal {2} damage.",
   "isFreeAction": true,
