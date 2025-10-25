@@ -50,6 +50,12 @@ namespace Crusaders30XX.ECS.Systems
         {
             // Poll controller once per frame
             if (!Game1.WindowIsActive || TransitionStateSingleton.IsActive) return;
+            var caps = GamePad.GetCapabilities(PlayerIndex.One);
+            if (!caps.IsConnected)
+            {
+                _prevGamePadState = default;
+                return;
+            }
             var gp = GamePad.GetState(PlayerIndex.One);
             bool edgeY = gp.Buttons.Y == ButtonState.Pressed && _prevGamePadState.Buttons.Y == ButtonState.Released;
             bool edgeB = gp.Buttons.B == ButtonState.Pressed && _prevGamePadState.Buttons.B == ButtonState.Released;
@@ -98,6 +104,8 @@ namespace Crusaders30XX.ECS.Systems
         public void Draw()
         {
             // Draw hints for interactable HotKey UI elements
+            var caps = GamePad.GetCapabilities(PlayerIndex.One);
+            if (!caps.IsConnected) return;
             bool overlayPresent = EntityManager.GetEntitiesWithComponent<UIElement>()
                 .Any(e => {
                     var ui = e.GetComponent<UIElement>();
@@ -112,6 +120,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // Ensure radius texture matches current setting
             _circleTexSmall = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, System.Math.Max(2, HintRadius));
+            bool isPS = IsPlayStation(caps);
 
             foreach (var x in items)
             {
@@ -120,14 +129,55 @@ namespace Crusaders30XX.ECS.Systems
                 int cx = r.Center.X;
                 int cy = r.Bottom + System.Math.Max(-64, HintGapY) + (int)System.Math.Round(HintRadius * 1.1f);
                 var pos = new Vector2(cx - HintRadius, cy - HintRadius);
-                var color = GetFaceButtonColor(x.HK.Button);
-
-                _spriteBatch.Draw(_circleTexSmall, pos, color);
-                string letter = GetFaceButtonLetter(x.HK.Button);
-                var size = _font.MeasureString(letter) * TextScale;
-                var textPos = new Vector2(cx - size.X / 2f, cy - size.Y / 2f - 2f);
-                _spriteBatch.DrawString(_font, letter, textPos, Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+                if (!isPS)
+                {
+                    var color = GetFaceButtonColor(x.HK.Button);
+                    _spriteBatch.Draw(_circleTexSmall, pos, color);
+                    string letter = GetFaceButtonLetter(x.HK.Button);
+                    var size = _font.MeasureString(letter) * TextScale;
+                    var textPos = new Vector2(cx - size.X / 2f, cy - size.Y / 2f - 2f);
+                    _spriteBatch.DrawString(_font, letter, textPos, Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+                }
+                else
+                {
+                    // PlayStation style: neutral dark badge + colored shape
+                    _spriteBatch.Draw(_circleTexSmall, pos, new Color(36, 36, 36));
+                    DrawPlayStationIcon(x.HK.Button, cx, cy);
+                }
             }
+        }
+
+        private static bool IsPlayStation(GamePadCapabilities caps)
+        {
+            string name = ((caps.DisplayName ?? string.Empty) + " " + (caps.Identifier ?? string.Empty)).ToLowerInvariant();
+            return name.Contains("dualshock") || name.Contains("dualsense") || name.Contains("playstation")
+                || name.Contains("sony") || name.Contains("wireless controller") || name.Contains("ps4") || name.Contains("ps5");
+        }
+
+        private void DrawPlayStationIcon(FaceButton b, int cx, int cy)
+        {
+            int size = (int)System.Math.Round(HintRadius * 1.5f);
+            Texture2D tex;
+            Color tint;
+            switch (b)
+            {
+                case FaceButton.Y:
+                    tex = PrimitiveTextureFactory.GetEquilateralTriangle(_graphicsDevice, size);
+                    tint = new Color(50, 200, 90); // triangle = green
+                    break;
+                case FaceButton.B:
+                    tex = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, System.Math.Max(2, size / 2));
+                    tint = new Color(220, 60, 60); // circle = red
+                    break;
+                case FaceButton.X:
+                    tex = PrimitiveTextureFactory.GetRoundedSquare(_graphicsDevice, size, System.Math.Max(2, size / 6));
+                    tint = new Color(200, 80, 200); // square = magenta
+                    break;
+                default:
+                    return;
+            }
+            var drawPos = new Vector2(cx - tex.Width / 2f, cy - tex.Height / 2f);
+            _spriteBatch.Draw(tex, drawPos, tint);
         }
 
         private static string GetFaceButtonLetter(FaceButton b)

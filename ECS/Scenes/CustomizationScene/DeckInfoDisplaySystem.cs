@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Data.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -20,9 +21,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Panel Padding Y", Step = 1, Min = 0, Max = 200)]
 		public int PadY { get; set; } = 10;
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.01f, Min = 0.1f, Max = 2.0f)]
-		public float TextScale { get; set; } = 0.35f;
+		public float TextScale { get; set; } = 0.16f;
 		[DebugEditable(DisplayName = "Background Alpha", Step = 5, Min = 0, Max = 255)]
-		public int BgAlpha { get; set; } = 140;
+		public int BgAlpha { get; set; } = 225;
 
 		public DeckInfoDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
 		{
@@ -68,10 +69,34 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Compose lines
-            string sizeLine = $"Deck Size: {total}/{Data.Loadouts.DeckRules.RequiredDeckSize}";
+			string sizeLine = $"Deck Size: {total}/{Data.Loadouts.DeckRules.RequiredDeckSize}";
 			string whiteLine = $"# of White: {white}";
 			string redLine = $"# of Red: {red}";
 			string blackLine = $"# of Black: {black}";
+
+			// Build over-limit warnings (3+ copies of same name ignoring color)
+			var idToName = CardDefinitionCache.GetAll()
+				.ToDictionary(kv => (kv.Key ?? string.Empty).ToLowerInvariant(),
+							  kv => ((kv.Value?.name ?? kv.Value?.id) ?? string.Empty).Trim());
+			var nameCounts = new System.Collections.Generic.Dictionary<string, int>(System.StringComparer.OrdinalIgnoreCase);
+			foreach (var entry in st.WorkingCardIds)
+			{
+				var baseId = ((entry?.Split('|')[0]) ?? string.Empty).ToLowerInvariant();
+				var displayName = idToName.TryGetValue(baseId, out var n) ? n : baseId;
+				nameCounts[displayName] = (nameCounts.TryGetValue(displayName, out var c) ? c : 0) + 1;
+			}
+			var overLimit = nameCounts.Where(kv => kv.Value > 2)
+				.OrderBy(kv => kv.Key, System.StringComparer.OrdinalIgnoreCase)
+				.ToList();
+			string warnHeader = overLimit.Count > 0 ? "You can't have three copies of the same card:" : string.Empty;
+			var warnLines = new System.Collections.Generic.List<string>();
+			if (overLimit.Count > 0)
+			{
+				foreach (var kv in overLimit)
+				{
+					warnLines.Add($"- {kv.Key} x{kv.Value}");
+				}
+			}
 
 			// Measure to center panel
 			var s1 = _font.MeasureString(sizeLine) * TextScale;
@@ -81,6 +106,25 @@ namespace Crusaders30XX.ECS.Systems
 			int lineGap = 6;
 			int contentW = (int)System.Math.Ceiling(System.Math.Max(System.Math.Max(s1.X, s2.X), System.Math.Max(s3.X, s4.X)));
 			int contentH = (int)System.Math.Ceiling(s1.Y + s2.Y + s3.Y + s4.Y + lineGap * 3);
+
+			// Measure warnings if present
+			float warnHeaderW = 0f, warnHeaderH = 0f;
+			float warnBlockW = 0f, warnBlockH = 0f;
+			if (overLimit.Count > 0)
+			{
+				var wh = _font.MeasureString(warnHeader) * TextScale;
+				warnHeaderW = wh.X; warnHeaderH = wh.Y;
+				foreach (var wl in warnLines)
+				{
+					var s = _font.MeasureString(wl) * TextScale;
+					warnBlockW = System.Math.Max(warnBlockW, s.X);
+					warnBlockH += s.Y;
+				}
+				// Include gaps: one gap before header, gaps between header->first line and between lines
+				int warnGaps = 1 /*before header*/ + 1 /*after header*/ + System.Math.Max(0, warnLines.Count - 1);
+				contentW = (int)System.Math.Ceiling(System.Math.Max(contentW, System.Math.Max(warnHeaderW, warnBlockW)));
+				contentH += (int)System.Math.Ceiling(warnHeaderH + warnBlockH + warnGaps * lineGap);
+			}
 			int panelW = contentW + PadX * 2;
 			int panelH = contentH + PadY * 2;
 			int panelX = vw / 2 - panelW / 2;
@@ -91,7 +135,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Lines
 			float y = panelY + PadY;
-            var sizeColor = (total == Data.Loadouts.DeckRules.RequiredDeckSize) ? Color.White : Color.Red;
+			var sizeColor = (total == Data.Loadouts.DeckRules.RequiredDeckSize) ? Color.White : Color.Red;
 			_spriteBatch.DrawString(_font, sizeLine, new Vector2(panelX + PadX, y), sizeColor, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
 			y += s1.Y + lineGap;
 			_spriteBatch.DrawString(_font, whiteLine, new Vector2(panelX + PadX, y), Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
@@ -99,6 +143,20 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.DrawString(_font, redLine, new Vector2(panelX + PadX, y), Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
 			y += s3.Y + lineGap;
 			_spriteBatch.DrawString(_font, blackLine, new Vector2(panelX + PadX, y), Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+			y += s4.Y;
+
+			// Draw warnings if present
+			if (overLimit.Count > 0)
+			{
+				y += lineGap; // gap before header
+				_spriteBatch.DrawString(_font, warnHeader, new Vector2(panelX + PadX, y), Color.Red, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+				y += (_font.MeasureString(warnHeader).Y * TextScale) + lineGap;
+				foreach (var wl in warnLines)
+				{
+					_spriteBatch.DrawString(_font, wl, new Vector2(panelX + PadX, y), Color.Red, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+					y += (_font.MeasureString(wl).Y * TextScale) + lineGap;
+				}
+			}
 		}
 
 		private CardData.CardColor ParseColorFromKey(string key)
