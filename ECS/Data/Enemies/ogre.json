@@ -10,6 +10,7 @@
       "damage": 9,
       "positionType": "Ender",
       "text": "Intimidates 2 cards from your hand (can't block with intimidated cards for the rest of the turn).",
+      "isTextConditionFulfilled": true,
       "effectsOnAttack": [
         {
           "type": "Intimidate",
@@ -24,6 +25,7 @@
       "positionType": "Ender",
       "damage": 10,
       "text": "Intimidates 1 card from your hand (can't block with intimidated cards for the rest of the turn).",
+      "isTextConditionFulfilled": true,
       "blockingCondition": {
         "type": "OnHit"
       },
@@ -48,6 +50,7 @@
       "ambushPercentage": 10,
       "damage": 4,
       "text": "Intimidates 1 card from your hand (can't block with intimidated cards for the rest of the turn).",
+      "isTextConditionFulfilled": true,
       "effectsOnAttack": [
         {
           "type": "Intimidate",
@@ -62,6 +65,7 @@
       "positionType": "Ender",
       "damage": 3,
       "text": "Intimidates 2 cards from your hand (can't block with intimidated cards for the rest of the turn).",
+      "isTextConditionFulfilled": true,
       "effectsOnAttack": [
         {
           "type": "Intimidate",

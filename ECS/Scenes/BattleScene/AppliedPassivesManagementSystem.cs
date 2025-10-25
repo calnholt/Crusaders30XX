@@ -73,6 +73,7 @@ namespace Crusaders30XX.ECS.Systems
             foreach (var passive in ap.Passives)
             {
                 if (passive.Key == AppliedPassiveType.Penance) continue;
+                if (passive.Key == AppliedPassiveType.Webbing) continue;
                 EventManager.Publish(new RemovePassive { Owner = player, Type = passive.Key });
             }
         }
@@ -163,6 +164,7 @@ namespace Crusaders30XX.ECS.Systems
 
             ap.Passives.TryGetValue(e.Type, out int current);
             int next = current + e.Delta;
+            Console.WriteLine($"[AppliedPassivesManagementSystem] OnApplyPassive - {e.Type} - {current} -> {next}");
             if (next <= 0)
             {
                 // remove from dictionary if zero or less

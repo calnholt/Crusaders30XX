@@ -304,14 +304,12 @@ namespace Crusaders30XX.ECS.Systems
 				_textAnchorEntity = EntityManager.CreateEntity("AmbushTextAnchor");
 				EntityManager.AddComponent(_textAnchorEntity, new AmbushTextAnchor());
 				EntityManager.AddComponent(_textAnchorEntity, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-				EntityManager.AddComponent(_textAnchorEntity, ParallaxLayer.GetUIParallaxLayer());
 			}
 			if (_timerAnchorEntity == null)
 			{
 				_timerAnchorEntity = EntityManager.CreateEntity("AmbushTimerAnchor");
 				EntityManager.AddComponent(_timerAnchorEntity, new AmbushTimerAnchor());
 				EntityManager.AddComponent(_timerAnchorEntity, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-				EntityManager.AddComponent(_timerAnchorEntity, ParallaxLayer.GetUIParallaxLayer());
 			}
 		}
 
@@ -355,12 +353,12 @@ namespace Crusaders30XX.ECS.Systems
 			var textT = _textAnchorEntity?.GetComponent<Transform>();
 			if (textT != null)
 			{
-				textT.BasePosition = new Vector2(vx / 2f, yPos);
+				textT.Position = new Vector2(vx / 2f, yPos);
 			}
 			var timerT = _timerAnchorEntity?.GetComponent<Transform>();
 			if (timerT != null)
 			{
-				timerT.BasePosition = new Vector2(vx / 2f, (int)(vy * (MeterYPercent / 100f)));
+				timerT.Position = new Vector2(vx / 2f, (int)(vy * (MeterYPercent / 100f)));
 			}
 		}
 
