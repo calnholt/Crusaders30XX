@@ -59,6 +59,23 @@ namespace Crusaders30XX.ECS.Systems
             int colW = (int)(cardW * _deckPanel.CardScale) + 20;
             int col = Math.Max(1, _deckPanel.Columns);
 
+            // Gamepad right-stick scroll when hovering over the right panel
+            var gp = GamePad.GetState(PlayerIndex.One);
+            if (gp.IsConnected && _cursorEvent != null)
+            {
+                int panelH = _graphicsDevice.Viewport.Height;
+                var panelRect = new Rectangle(panelX, panelY, _deckPanel.PanelWidth, panelH);
+                var p = new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y));
+                float y = gp.ThumbSticks.Right.Y; // up positive
+                const float Deadzone = 0.2f;
+                const float Speed = 2200f; // px/s
+                if (panelRect.Contains(p) && MathF.Abs(y) > Deadzone)
+                {
+                    float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    st.RightScroll = Math.Max(0, st.RightScroll - (int)Math.Round(y * Speed * dt));
+                }
+            }
+
             var sorted = GetSortedWorkingEntries(st);
 
             int totalItems = sorted.Count;

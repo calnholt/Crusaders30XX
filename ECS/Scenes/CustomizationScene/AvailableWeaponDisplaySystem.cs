@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly World _world;
 		private readonly Dictionary<string, int> _createdCardIds = new();
 		private MouseState _prevMouse;
+		private CursorStateEvent _cursorEvent;
 
 		public int RowHeight { get; set; } = 120;
 		public int ItemSpacing { get; set; } = 10;
@@ -38,6 +39,7 @@ namespace Crusaders30XX.ECS.Systems
 			_prevMouse = Mouse.GetState();
 			EventManager.Subscribe<ShowTransition>(_ => ClearCards());
 			EventManager.Subscribe<SetCustomizationTab>(_ => ClearCards());
+			EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -67,6 +69,8 @@ namespace Crusaders30XX.ECS.Systems
 			int col = Math.Max(1, _libraryPanel.Columns);
 			var mouse = Mouse.GetState();
 			bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
+			bool gpEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge;
+			Point gpPoint = gpEdge ? new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y)) : Point.Zero;
 			for (int i = 0; i < defs.Count; i++)
 			{
 				var d = defs[i];
@@ -75,7 +79,7 @@ namespace Crusaders30XX.ECS.Systems
 				int x = 0 + c * colW + (colW / 2);
 				int y = 0 + _libraryPanel.HeaderHeight + _libraryPanel.TopMargin + r * ((int)(cardH * _libraryPanel.CardScale) + _libraryPanel.RowGap) + (int)(cardH * _libraryPanel.CardScale / 2) - st.LeftScroll;
 				var rect = new Rectangle(x - (int)(cardW * _libraryPanel.CardScale / 2), y - (int)(cardH * _libraryPanel.CardScale / 2), (int)(cardW * _libraryPanel.CardScale), (int)(cardH * _libraryPanel.CardScale));
-				if (click && rect.Contains(mouse.Position))
+				if ((click && rect.Contains(mouse.Position)) || (gpEdge && rect.Contains(gpPoint)))
 				{
 					EventManager.Publish(new UpdateEquipmentLoadoutRequested { Slot = CustomizationTabType.Weapon, EquipmentId = d.id });
 				}

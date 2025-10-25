@@ -59,6 +59,22 @@ namespace Crusaders30XX.ECS.Systems
             int colW = (int)(cardW * _libraryPanel.CardScale) + 20;
             int col = Math.Max(1, _libraryPanel.Columns);
 
+            // Gamepad right-stick scroll when hovering over the left panel
+            var gp = GamePad.GetState(PlayerIndex.One);
+            if (gp.IsConnected && _cursorEvent != null)
+            {
+                var panelRect = new Rectangle(panelX, panelY, _libraryPanel.PanelWidth, panelH);
+                var p = new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y));
+                float y = gp.ThumbSticks.Right.Y; // up positive
+                const float Deadzone = 0.2f;
+                const float Speed = 2200f; // px/s
+                if (panelRect.Contains(p) && MathF.Abs(y) > Deadzone)
+                {
+                    float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    st.LeftScroll = Math.Max(0, st.LeftScroll - (int)Math.Round(y * Speed * dt));
+                }
+            }
+
             var defs = CardDefinitionCache.GetAll().Values
                 .Where(d => !d.isWeapon)
                 .Where(d => d.canAddToLoadout)

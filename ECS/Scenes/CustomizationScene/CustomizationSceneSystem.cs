@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Data.Cards;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -75,7 +76,8 @@ namespace Crusaders30XX.ECS.Systems
             bool canSave = false;
             try
             {
-                canSave = stc != null && stc.WorkingCardIds != null && stc.WorkingCardIds.Count == DeckRules.RequiredDeckSize;
+                bool withinLimit = IsWithinNameCopyLimit(stc, out _, out _);
+                canSave = stc != null && stc.WorkingCardIds != null && stc.WorkingCardIds.Count == DeckRules.RequiredDeckSize && withinLimit;
             }
             catch {}
 
@@ -132,7 +134,8 @@ namespace Crusaders30XX.ECS.Systems
             EnsureAndLayoutButtons(vw, vh);
 
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-            bool canSave = st != null && st.WorkingCardIds != null && st.WorkingCardIds.Count == DeckRules.RequiredDeckSize;
+            bool withinLimit = IsWithinNameCopyLimit(st, out _, out _);
+            bool canSave = st != null && st.WorkingCardIds != null && st.WorkingCardIds.Count == DeckRules.RequiredDeckSize && withinLimit;
             int count = st?.WorkingCardIds?.Count ?? 0;
 
             var saveE = EntityManager.GetEntity("Customization_SaveButton");
@@ -286,6 +289,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null) return;
+            if (!IsWithinNameCopyLimit(st, out var overName, out var overCount))
+            {
+                System.Console.WriteLine($"[Customization] Cannot save: more than 2 copies of '{overName}' ({overCount}).");
+                return;
+            }
             // Load existing def and overwrite cardIds
             if (!LoadoutDefinitionCache.TryGet("loadout_1", out var def) || def == null)
             {
@@ -307,6 +315,30 @@ namespace Crusaders30XX.ECS.Systems
             File.WriteAllText(path, json);
             LoadoutDefinitionCache.Reload();
             st.OriginalCardIds = new List<string>(st.WorkingCardIds);
+        }
+
+        private static bool IsWithinNameCopyLimit(Crusaders30XX.ECS.Components.CustomizationState st, out string overName, out int count)
+        {
+            overName = null; count = 0;
+            if (st?.WorkingCardIds == null) return true;
+
+            var idToName = CardDefinitionCache.GetAll()
+                .ToDictionary(kv => (kv.Key ?? string.Empty).ToLowerInvariant(),
+                              kv => ((kv.Value?.name ?? kv.Value?.id) ?? string.Empty).Trim());
+
+            var nameCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (var key in st.WorkingCardIds)
+            {
+                var baseId = ((key?.Split('|')[0]) ?? string.Empty).ToLowerInvariant();
+                var displayName = idToName.TryGetValue(baseId, out var n) ? n : baseId;
+                var newCount = (nameCounts.TryGetValue(displayName, out var c) ? c : 0) + 1;
+                nameCounts[displayName] = newCount;
+                if (newCount > 2)
+                {
+                    overName = displayName; count = newCount; return false;
+                }
+            }
+            return true;
         }
 
         private string ResolveLoadoutsFolder()
