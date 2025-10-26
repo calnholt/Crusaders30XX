@@ -21,6 +21,11 @@ float  EaseSpeed    = 1.0;    // cycles per second (2π rad / sec scaled inside)
 float  GlobalAlphaMin = 0.5;  // minimum alpha when fully eased in
 float  GlobalAlphaMax = 0.75;  // maximum alpha when fully eased out
 
+// Horizontal distortion (mask warping) so fog shifts left/right like a sine wave
+float  DistortAmplitudePx = 8.0;   // horizontal shift in pixels
+float  DistortSpatialFreq = 0.005; // cycles per pixel along Y (e.g., 0.005 -> 1 cycle per 200px)
+float  DistortSpeed      = 0.2;    // cycles per second
+
 texture Texture : register(t0);
 sampler2D TextureSampler : register(s0) = sampler_state
 {
@@ -49,6 +54,12 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
     // Avoid undefined smoothstep when FeatherPx == 0
     float feather = max(FeatherPx, 1e-3);
 
+    // Apply horizontal sine-wave distortion to the mask space (not the scene)
+    float tau = 6.28318530718;
+    float wave = sin(iTime * DistortSpeed * tau + screenPx.y * DistortSpatialFreq * tau);
+    float2 maskPx = screenPx;
+    maskPx.x += DistortAmplitudePx * wave;
+
     float alpha = 1.0;
 
     if (NumMasks > 0)
@@ -59,8 +70,19 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
         {
             if (i < NumMasks)
             {
-                float d = distance(screenPx, MaskCenters[i]);
-                float ai = smoothstep(MaskRadii[i], MaskRadii[i] + feather, d); // 0 inside, 1 outside
+                float r = MaskRadii[i];
+                float2 c = MaskCenters[i];
+                float d0 = distance(screenPx, c); // undistorted distance for inside test
+                float ai;
+                if (d0 <= r)
+                {
+                    ai = 0.0; // hole interior stays fully revealed and static
+                }
+                else
+                {
+                    float dw = distance(maskPx, c); // distorted distance for outside feather
+                    ai = smoothstep(r, r + feather, dw); // 0 near edge, 1 farther outside
+                }
                 alpha = min(alpha, ai);
             }
         }
@@ -68,8 +90,17 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
     else
     {
         // Fallback to single mask
-        float d = distance(screenPx, MaskCenterPx);
-        alpha = smoothstep(MaskRadiusPx, MaskRadiusPx + feather, d);
+        float r = MaskRadiusPx;
+        float d0 = distance(screenPx, MaskCenterPx);
+        if (d0 <= r)
+        {
+            alpha = 0.0;
+        }
+        else
+        {
+            float dw = distance(maskPx, MaskCenterPx);
+            alpha = smoothstep(r, r + feather, dw);
+        }
     }
 
     // Apply global easing to entire mask alpha (0..1 between GlobalAlphaMin..Max)
