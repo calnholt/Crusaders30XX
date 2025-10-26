@@ -19,10 +19,10 @@ namespace Crusaders30XX.ECS.Systems
 		private float _timeSeconds;
 
 		[DebugEditable(DisplayName = "Mask Radius (px)", Step = 5f, Min = 10f, Max = 1000f)]
-		public float RadiusPx { get; set; } = 160f;
+		public float RadiusPx { get; set; } = 300f;
 
 		[DebugEditable(DisplayName = "Feather (px)", Step = 1f, Min = 0f, Max = 64f)]
-		public float FeatherPx { get; set; } = 6f;
+		public float FeatherPx { get; set; } = 26f;
 
 		public FogDisplaySystem(EntityManager em, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(em)
@@ -67,6 +67,9 @@ namespace Crusaders30XX.ECS.Systems
 			_overlay.RadiusPx = RadiusPx;
 			_overlay.FeatherPx = FeatherPx;
 			_overlay.TimeSeconds = _timeSeconds;
+			// Anchor distortion to world Y
+			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
+			_overlay.CameraOriginYPx = cam?.Origin.Y ?? 0f;
 
 			// Save current SpriteBatch device states and temporarily end the batch
 			var savedBlend = _graphicsDevice.BlendState;
@@ -81,6 +84,51 @@ namespace Crusaders30XX.ECS.Systems
 			_overlay.End(_spriteBatch);
 
 			// Restore the previous SpriteBatch with saved states for subsequent draws
+			_spriteBatch.Begin(
+				SpriteSortMode.Immediate,
+				savedBlend,
+				savedSampler,
+				savedDepth,
+				savedRasterizer
+			);
+		}
+
+		public void DrawComposite(Texture2D sceneTexture)
+		{
+			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+			if (scene == null || scene.Current != SceneId.Location) return;
+
+			EnsureOverlayLoaded();
+			if (_overlay == null || !_overlay.IsAvailable) return;
+			if (sceneTexture == null) return;
+
+			var centers = EntityManager
+				.GetEntitiesWithComponent<PointOfInterest>()
+				.Select(e => e.GetComponent<Transform>())
+				.Where(t => t != null)
+				.Select(t => t.Position)
+				.ToList();
+
+			if (centers.Count == 0) return;
+
+			_overlay.CentersPx = centers;
+			_overlay.RadiusPx = RadiusPx;
+			_overlay.FeatherPx = FeatherPx;
+			_overlay.TimeSeconds = _timeSeconds;
+
+			// Save and end current SpriteBatch
+			var savedBlend = _graphicsDevice.BlendState;
+			var savedSampler = _graphicsDevice.SamplerStates[0];
+			var savedDepth = _graphicsDevice.DepthStencilState;
+			var savedRasterizer = _graphicsDevice.RasterizerState;
+			_spriteBatch.End();
+
+			// Composite the captured scene texture via the mask effect
+			_overlay.Begin(_spriteBatch);
+			_overlay.Draw(_spriteBatch, sceneTexture);
+			_overlay.End(_spriteBatch);
+
+			// Restore previous SpriteBatch
 			_spriteBatch.Begin(
 				SpriteSortMode.Immediate,
 				savedBlend,

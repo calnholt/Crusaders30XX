@@ -26,6 +26,9 @@ float  DistortAmplitudePx = 8.0;   // horizontal shift in pixels
 float  DistortSpatialFreq = 0.005; // cycles per pixel along Y (e.g., 0.005 -> 1 cycle per 200px)
 float  DistortSpeed      = 0.2;    // cycles per second
 
+// Camera world-space vertical origin (in pixels). Used to anchor distortion to world Y
+float  CameraOriginYPx   = 0.0;
+
 texture Texture : register(t0);
 sampler2D TextureSampler : register(s0) = sampler_state
 {
@@ -54,17 +57,19 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
     // Avoid undefined smoothstep when FeatherPx == 0
     float feather = max(FeatherPx, 1e-3);
 
-    // Apply horizontal sine-wave distortion to the mask space (not the scene)
+    // Apply horizontal sine-wave distortion used for warping OUTSIDE the holes
     float tau = 6.28318530718;
-    float wave = sin(iTime * DistortSpeed * tau + screenPx.y * DistortSpatialFreq * tau);
+    // Anchor the wave to world Y by offsetting with camera origin
+    float wave = sin(iTime * DistortSpeed * tau + (screenPx.y + CameraOriginYPx) * DistortSpatialFreq * tau);
     float2 maskPx = screenPx;
     maskPx.x += DistortAmplitudePx * wave;
 
-    float alpha = 1.0;
+    // Compute outside factor (0 inside any hole, 1 far outside, feathered near edge)
+    float outside = 1.0;
 
     if (NumMasks > 0)
     {
-        // Combine multiple masks: 0 inside any circle, 1 outside all
+        // Combine multiple masks: min over all masks
         [unroll]
         for (int i = 0; i < MAX_MASKS; i++)
         {
@@ -76,14 +81,14 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
                 float ai;
                 if (d0 <= r)
                 {
-                    ai = 0.0; // hole interior stays fully revealed and static
+                    ai = 0.0; // inside stays undistorted/undarkened
                 }
                 else
                 {
                     float dw = distance(maskPx, c); // distorted distance for outside feather
                     ai = smoothstep(r, r + feather, dw); // 0 near edge, 1 farther outside
                 }
-                alpha = min(alpha, ai);
+                outside = min(outside, ai);
             }
         }
     }
@@ -94,20 +99,33 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
         float d0 = distance(screenPx, MaskCenterPx);
         if (d0 <= r)
         {
-            alpha = 0.0;
+            outside = 0.0;
         }
         else
         {
             float dw = distance(maskPx, MaskCenterPx);
-            alpha = smoothstep(r, r + feather, dw);
+            outside = smoothstep(r, r + feather, dw);
         }
     }
 
-    // Apply global easing to entire mask alpha (0..1 between GlobalAlphaMin..Max)
-    float phase = iTime * EaseSpeed * 6.28318530718; // 2π * t * speed
-    float ease = 0.5 + 0.5 * sin(phase);             // 0..1
+    // Sample the scene texture undistorted and distorted
+    float2 uvUndist = input.TexCoord;                  // 0..1 across the screen
+    float2 uvDist   = maskPx / ViewportSize;           // warped sampling coordinates
+    float4 colUndist = tex2D(TextureSampler, uvUndist);
+    float4 colDist   = tex2D(TextureSampler, uvDist);
+
+    // Blend between undistorted (inside) and distorted (outside)
+    float4 sceneCol = lerp(colUndist, colDist, outside);
+
+    // Global easing-driven darkening applied only outside the holes
+    float phase   = iTime * EaseSpeed * 6.28318530718; // 2π * t * speed
+    float ease    = 0.5 + 0.5 * sin(phase);            // 0..1
     float globalA = lerp(GlobalAlphaMin, GlobalAlphaMax, ease);
-    return float4(0.0, 0.0, 0.0, alpha * globalA) * input.Color;
+    float darkAmt = outside * globalA;
+    sceneCol.rgb = lerp(sceneCol.rgb, float3(0.0, 0.0, 0.0), darkAmt);
+
+    // Output fully opaque scene color (SpriteBatch blending is fine with alpha=1)
+    return float4(sceneCol.rgb, 1.0) * input.Color;
 }
 
 technique SpriteDrawing

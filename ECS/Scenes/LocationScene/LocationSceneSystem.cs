@@ -22,6 +22,9 @@ namespace Crusaders30XX.ECS.Systems
 		private LocationMapDisplaySystem _locationMapDisplaySystem;
 		private PointOfInterestDisplaySystem _pointOfInterestDisplaySystem;
 		private FogDisplaySystem _fogDisplaySystem;
+		private RenderTarget2D _sceneRT;
+		private int _rtW;
+		private int _rtH;
 
     public LocationSceneSystem(EntityManager entityManager, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(entityManager)
     {
@@ -42,12 +45,61 @@ namespace Crusaders30XX.ECS.Systems
       yield break;
     }
 
-    public void Draw()
-    {
+		public void Draw()
+		{
+			// Ensure render target matches current viewport
+			var vp = _graphicsDevice.Viewport;
+			if (_sceneRT == null || _rtW != vp.Width || _rtH != vp.Height)
+			{
+				_rtW = vp.Width;
+				_rtH = vp.Height;
+				_sceneRT?.Dispose();
+				_sceneRT = new RenderTarget2D(
+					_graphicsDevice,
+					_rtW,
+					_rtH,
+					false,
+					SurfaceFormat.Color,
+					DepthFormat.None,
+					0,
+					RenderTargetUsage.DiscardContents
+				);
+			}
+
+			// Save current SpriteBatch state from Game1 and end it
+			var savedBlend = _graphicsDevice.BlendState;
+			var savedSampler = _graphicsDevice.SamplerStates[0];
+			var savedDepth = _graphicsDevice.DepthStencilState;
+			var savedRasterizer = _graphicsDevice.RasterizerState;
+			_spriteBatch.End();
+
+			// Capture the location map + POIs into the render target
+			_graphicsDevice.SetRenderTarget(_sceneRT);
+			_graphicsDevice.Clear(Color.Transparent);
+			_spriteBatch.Begin(
+				SpriteSortMode.Immediate,
+				BlendState.AlphaBlend,
+				SamplerState.AnisotropicClamp,
+				DepthStencilState.None,
+				RasterizerState.CullNone
+			);
 			FrameProfiler.Measure("LocationMapDisplaySystem.Draw", _locationMapDisplaySystem.Draw);
 			FrameProfiler.Measure("PointOfInterestDisplaySystem.Draw", _pointOfInterestDisplaySystem.Draw);
-			FrameProfiler.Measure("FogDisplaySystem.Draw", _fogDisplaySystem.Draw);
-    }
+			_spriteBatch.End();
+			_graphicsDevice.SetRenderTarget(null);
+
+			// Re-begin SpriteBatch with the original states so FogDisplaySystem can temporarily end it
+			_spriteBatch.Begin(
+				SpriteSortMode.Immediate,
+				savedBlend,
+				savedSampler,
+				savedDepth,
+				savedRasterizer
+			);
+
+			// Composite: warp + darken outside holes while keeping inside undistorted
+			FrameProfiler.Measure("FogDisplaySystem.Composite", () => _fogDisplaySystem.DrawComposite(_sceneRT));
+		}
     private void AddLocationSystems()
 		{
 			if (!_firstLoad) return;

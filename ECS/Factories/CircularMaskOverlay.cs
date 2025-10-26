@@ -23,7 +23,8 @@ public class CircularMaskOverlay
     public float TimeSeconds { get; set; } = 0f;
     public float DistortAmplitudePx { get; set; } = 8f;
     public float DistortSpatialFreq { get; set; } = 0.005f;
-    public float DistortSpeed { get; set; } = 0.2f;
+    public float DistortSpeed { get; set; } = 0.5f;
+    public float CameraOriginYPx { get; set; } = 0f;
 
     public CircularMaskOverlay(GraphicsDevice device, Effect effect)
     {
@@ -50,6 +51,7 @@ public class CircularMaskOverlay
         var pDAmp = _effect.Parameters["DistortAmplitudePx"]; if (pDAmp != null) pDAmp.SetValue(DistortAmplitudePx);
         var pDFreq = _effect.Parameters["DistortSpatialFreq"]; if (pDFreq != null) pDFreq.SetValue(DistortSpatialFreq);
         var pDSpeed = _effect.Parameters["DistortSpeed"]; if (pDSpeed != null) pDSpeed.SetValue(DistortSpeed);
+        var pCamY = _effect.Parameters["CameraOriginYPx"]; if (pCamY != null) pCamY.SetValue(CameraOriginYPx);
 
         // Prefer multi-mask path when CentersPx is set; fall back to single center otherwise
         int num = CentersPx?.Count ?? 0;
@@ -82,6 +84,15 @@ public class CircularMaskOverlay
         if (_effect == null) return;
         Rectangle bounds = spriteBatch.GraphicsDevice.Viewport.Bounds;
         spriteBatch.Draw(_whitePixel, bounds, Color.White);
+    }
+
+    // Draws a provided scene texture full-screen, which the shader will warp/darken outside holes
+    public void Draw(SpriteBatch spriteBatch, Texture2D sceneTexture)
+    {
+        if (_effect == null) return;
+        if (sceneTexture == null) return;
+        Rectangle bounds = spriteBatch.GraphicsDevice.Viewport.Bounds;
+        spriteBatch.Draw(sceneTexture, bounds, Color.White);
     }
 
     public void End(SpriteBatch spriteBatch)
