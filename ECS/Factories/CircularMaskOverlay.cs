@@ -10,6 +10,7 @@ public class CircularMaskOverlay
 {
     private readonly Effect _effect;
     private readonly Texture2D _whitePixel;
+    private readonly Texture2D _noiseTex;
 
     public bool IsAvailable => _effect != null;
 
@@ -26,11 +27,29 @@ public class CircularMaskOverlay
     public float DistortSpeed { get; set; } = 0.5f;
     public float CameraOriginYPx { get; set; } = 0f;
 
+    // Domain-warp parameters
+    public float NoiseScale { get; set; } = 0.004f;
+    public float WarpAmountPx { get; set; } = 12f;
+    public float WarpSpeed { get; set; } = 0.7f;
+
     public CircularMaskOverlay(GraphicsDevice device, Effect effect)
     {
         _effect = effect;
         _whitePixel = new Texture2D(device, 1, 1, false, SurfaceFormat.Color);
         _whitePixel.SetData(new[] { Color.White });
+        // Small tileable noise texture for domain warp (RGBA random)
+        var rng = new Random(1337);
+        int n = 256;
+        var noiseData = new Color[n * n];
+        for (int i = 0; i < n * n; i++)
+        {
+            byte r = (byte)rng.Next(256);
+            byte g = (byte)rng.Next(256);
+            byte b = (byte)rng.Next(256);
+            noiseData[i] = new Color(r, g, b, (byte)255);
+        }
+        _noiseTex = new Texture2D(device, n, n, false, SurfaceFormat.Color);
+        _noiseTex.SetData(noiseData);
     }
 
     public void Begin(SpriteBatch spriteBatch)
@@ -52,6 +71,11 @@ public class CircularMaskOverlay
         var pDFreq = _effect.Parameters["DistortSpatialFreq"]; if (pDFreq != null) pDFreq.SetValue(DistortSpatialFreq);
         var pDSpeed = _effect.Parameters["DistortSpeed"]; if (pDSpeed != null) pDSpeed.SetValue(DistortSpeed);
         var pCamY = _effect.Parameters["CameraOriginYPx"]; if (pCamY != null) pCamY.SetValue(CameraOriginYPx);
+
+        // Domain-warp parameters
+        var pNoiseScale = _effect.Parameters["NoiseScale"]; if (pNoiseScale != null) pNoiseScale.SetValue(NoiseScale);
+        var pWarpAmt = _effect.Parameters["WarpAmountPx"]; if (pWarpAmt != null) pWarpAmt.SetValue(WarpAmountPx);
+        var pWarpSpeed = _effect.Parameters["WarpSpeed"]; if (pWarpSpeed != null) pWarpSpeed.SetValue(WarpSpeed);
 
         // Prefer multi-mask path when CentersPx is set; fall back to single center otherwise
         int num = CentersPx?.Count ?? 0;
@@ -77,6 +101,9 @@ public class CircularMaskOverlay
             RasterizerState.CullNone,
             _effect
         );
+
+        // Bind noise texture to sampler1
+        var pNoiseTex = _effect.Parameters["NoiseTex"]; if (pNoiseTex != null) pNoiseTex.SetValue(_noiseTex);
     }
 
     public void Draw(SpriteBatch spriteBatch)
