@@ -54,7 +54,7 @@ namespace Crusaders30XX.ECS.Systems
 			_firstLoad = false;
 			_locationMapDisplaySystem = new LocationMapDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_locationMapDisplaySystem);
-			_fogDisplaySystem = new FogDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_fogDisplaySystem = new FogDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_fogDisplaySystem);
 			_pointOfInterestDisplaySystem = new PointOfInterestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_pointOfInterestDisplaySystem);

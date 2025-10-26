@@ -1,0 +1,80 @@
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Crusaders30XX.ECS.Rendering;
+
+public class CircularMaskOverlay
+{
+    private readonly Effect _effect;
+    private readonly Texture2D _whitePixel;
+
+    public bool IsAvailable => _effect != null;
+
+    public float RadiusPx { get; set; } = 160f;
+    public float FeatherPx { get; set; } = 6f;
+    public Vector2 CenterPx { get; set; } = Vector2.Zero; // legacy single-center
+    public IReadOnlyList<Vector2> CentersPx { get; set; } = Array.Empty<Vector2>();
+
+    public CircularMaskOverlay(GraphicsDevice device, Effect effect)
+    {
+        _effect = effect;
+        _whitePixel = new Texture2D(device, 1, 1, false, SurfaceFormat.Color);
+        _whitePixel.SetData(new[] { Color.White });
+    }
+
+    public void Begin(SpriteBatch spriteBatch)
+    {
+        if (_effect == null) return;
+        _effect.CurrentTechnique = _effect.Techniques["SpriteDrawing"];
+
+        Viewport vp = spriteBatch.GraphicsDevice.Viewport;
+        Matrix projection = Matrix.CreateOrthographicOffCenter(0, vp.Width, vp.Height, 0, 0, 1);
+
+        var pMatrix = _effect.Parameters["MatrixTransform"]; if (pMatrix != null) pMatrix.SetValue(projection);
+        var pViewport = _effect.Parameters["ViewportSize"]; if (pViewport != null) pViewport.SetValue(new Vector2(vp.Width, vp.Height));
+        var pFeather = _effect.Parameters["FeatherPx"]; if (pFeather != null) pFeather.SetValue(FeatherPx);
+
+        // Prefer multi-mask path when CentersPx is set; fall back to single center otherwise
+        int num = CentersPx?.Count ?? 0;
+        var pNum = _effect.Parameters["NumMasks"]; if (pNum != null) pNum.SetValue(num);
+        if (num > 0)
+        {
+            var pCenters = _effect.Parameters["MaskCenters"]; if (pCenters != null) pCenters.SetValue(CentersPx.ToArray());
+            // Use a common radius for all masks unless the shader later supports per-POI radii
+            var radii = Enumerable.Repeat(RadiusPx, num).ToArray();
+            var pRadii = _effect.Parameters["MaskRadii"]; if (pRadii != null) pRadii.SetValue(radii);
+        }
+        else
+        {
+            var pCenter = _effect.Parameters["MaskCenterPx"]; if (pCenter != null) pCenter.SetValue(CenterPx);
+            var pRadius = _effect.Parameters["MaskRadiusPx"]; if (pRadius != null) pRadius.SetValue(RadiusPx);
+        }
+
+        spriteBatch.Begin(
+            SpriteSortMode.Deferred,
+            BlendState.AlphaBlend,
+            SamplerState.LinearClamp,
+            DepthStencilState.None,
+            RasterizerState.CullNone,
+            _effect
+        );
+    }
+
+    public void Draw(SpriteBatch spriteBatch)
+    {
+        if (_effect == null) return;
+        Rectangle bounds = spriteBatch.GraphicsDevice.Viewport.Bounds;
+        spriteBatch.Draw(_whitePixel, bounds, Color.White);
+    }
+
+    public void End(SpriteBatch spriteBatch)
+    {
+        if (_effect == null) return;
+        spriteBatch.End();
+    }
+}
+
+

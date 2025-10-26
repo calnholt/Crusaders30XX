@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Content;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -13,30 +14,21 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteBatch _offscreenBatch;
-		private RenderTarget2D _mask;
-		private readonly BlendState _alphaErase;
+		private readonly ContentManager _content;
+		private CircularMaskOverlay _overlay;
 
-		public FogDisplaySystem(EntityManager em, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+		[DebugEditable(DisplayName = "Mask Radius (px)", Step = 5f, Min = 10f, Max = 1000f)]
+		public float RadiusPx { get; set; } = 160f;
+
+		[DebugEditable(DisplayName = "Feather (px)", Step = 1f, Min = 0f, Max = 64f)]
+		public float FeatherPx { get; set; } = 6f;
+
+		public FogDisplaySystem(EntityManager em, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(em)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_offscreenBatch = new SpriteBatch(graphicsDevice);
-			// Multiplicative alpha cutout: start from alpha=1 and scale by (1 - srcA)
-			_alphaErase = new BlendState
-			{
-				ColorWriteChannels = ColorWriteChannels.Alpha,
-				ColorSourceBlend = Blend.Zero,
-				ColorDestinationBlend = Blend.One,
-				AlphaSourceBlend = Blend.Zero,
-				AlphaDestinationBlend = Blend.InverseSourceAlpha,
-				ColorBlendFunction = BlendFunction.Add,
-				AlphaBlendFunction = BlendFunction.Add
-			};
-
-
-
+			_content = content;
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -46,67 +38,61 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			// No-op; fog mask is generated during Draw to avoid SpriteBatch.Begin/End issues in Update.
-		}
-
-		private void EnsureMask()
-		{
-			int w = _graphicsDevice.Viewport.Width;
-			int h = _graphicsDevice.Viewport.Height;
-			if (_mask == null || _mask.Width != w || _mask.Height != h || _mask.IsDisposed)
-			{
-				_mask?.Dispose();
-				_mask = new RenderTarget2D(_graphicsDevice, w, h, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
-			}
 		}
 
 		public void Draw()
 		{
-			var sceneEntity = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
-			if (sceneEntity == null) return;
-			var scene = sceneEntity.GetComponent<SceneState>();
+			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Location) return;
 
-			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
-			if (cam == null) return;
-			EnsureMask();
+			EnsureOverlayLoaded();
+			if (_overlay == null || !_overlay.IsAvailable) return;
 
-			// Build mask off-screen without touching the on-screen SpriteBatch
-			_graphicsDevice.SetRenderTarget(_mask);
-			_graphicsDevice.Clear(new Color(0, 0, 0, 255)); // opaque black alpha=1
-			_offscreenBatch.Begin(SpriteSortMode.Immediate, _alphaErase);
-			// var origin = cam.Origin;
-			// foreach (var poiEntity in EntityManager.GetEntitiesWithComponent<PointOfInterest>())
-			// {
-			// 	var poi = poiEntity.GetComponent<PointOfInterest>();
-			// 	if (poi == null) continue;
-			// 	var center = poi.WorldPosition - origin;
-				// var tex = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, System.Math.Max(1, poi.RevealRadius));
-			// 	var dest = new Rectangle(
-			// 		(int)System.Math.Round(center.X - poi.RevealRadius),
-			// 		(int)System.Math.Round(center.Y - poi.RevealRadius),
-			// 		poi.RevealRadius * 2,
-			// 		poi.RevealRadius * 2);
-			// 	// Write alpha=1 into the area we want to subtract from the mask (holes)
-			// 	_offscreenBatch.Draw(tex, dest, Color.White);
-			// }
-			// _offscreenBatch.End();
-			// _graphicsDevice.SetRenderTarget(null);
-			// // Restore default blend for main on-screen batch so subsequent draws render normally
-			// _graphicsDevice.BlendState = BlendState.AlphaBlend;
-			// _graphicsDevice.DepthStencilState = DepthStencilState.None;
+			var centers = EntityManager
+				.GetEntitiesWithComponent<PointOfInterest>()
+				.Select(e => e.GetComponent<Transform>())
+				.Where(t => t != null)
+				.Select(t => t.Position)
+				.ToList();
 
-			// // Draw the mask as black fog using alpha channel (on-screen batch already begun by Game1)
-			// _spriteBatch.Draw(_mask, new Rectangle(0, 0, _mask.Width, _mask.Height), Color.Black);
+			if (centers.Count == 0) return;
 
-			_offscreenBatch.Draw(PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, System.Math.Max(1, 300)), new Rectangle(200, 200, 200, 200), Color.White);
-_offscreenBatch.End();
+			_overlay.CentersPx = centers;
+			_overlay.RadiusPx = RadiusPx;
+			_overlay.FeatherPx = FeatherPx;
 
-_graphicsDevice.SetRenderTarget(null);
+			// Save current SpriteBatch device states and temporarily end the batch
+			var savedBlend = _graphicsDevice.BlendState;
+			var savedSampler = _graphicsDevice.SamplerStates[0];
+			var savedDepth = _graphicsDevice.DepthStencilState;
+			var savedRasterizer = _graphicsDevice.RasterizerState;
+			_spriteBatch.End();
 
-// Draw fog
-_spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
-_spriteBatch.Draw(_mask, Vector2.Zero, Color.Black);
+			// Draw overlay with its own begin/end using the effect
+			_overlay.Begin(_spriteBatch);
+			_overlay.Draw(_spriteBatch);
+			_overlay.End(_spriteBatch);
+
+			// Restore the previous SpriteBatch with saved states for subsequent draws
+			_spriteBatch.Begin(
+				SpriteSortMode.Immediate,
+				savedBlend,
+				savedSampler,
+				savedDepth,
+				savedRasterizer
+			);
+		}
+
+		private void EnsureOverlayLoaded()
+		{
+			if (_overlay != null) return;
+			Effect fx = null;
+			try
+			{
+				fx = _content.Load<Effect>("Shaders/CircularMask");
+			}
+			catch { }
+			_overlay = new CircularMaskOverlay(_graphicsDevice, fx);
 		}
 	}
 }
