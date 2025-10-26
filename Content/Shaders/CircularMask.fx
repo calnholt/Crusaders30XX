@@ -15,6 +15,11 @@ float  MaskRadii[MAX_MASKS];
 int    NumMasks = 0;          // if > 0, uses arrays above
 
 float  FeatherPx    = 4.0;    // edge softness in pixels
+// Global easing for entire mask alpha
+float  iTime        = 0.0;    // seconds
+float  EaseSpeed    = 1.0;    // cycles per second (2π rad / sec scaled inside)
+float  GlobalAlphaMin = 0.5;  // minimum alpha when fully eased in
+float  GlobalAlphaMax = 0.75;  // maximum alpha when fully eased out
 
 texture Texture : register(t0);
 sampler2D TextureSampler : register(s0) = sampler_state
@@ -67,7 +72,11 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
         alpha = smoothstep(MaskRadiusPx, MaskRadiusPx + feather, d);
     }
 
-    return float4(0.0, 0.0, 0.0, alpha) * input.Color;
+    // Apply global easing to entire mask alpha (0..1 between GlobalAlphaMin..Max)
+    float phase = iTime * EaseSpeed * 6.28318530718; // 2π * t * speed
+    float ease = 0.5 + 0.5 * sin(phase);             // 0..1
+    float globalA = lerp(GlobalAlphaMin, GlobalAlphaMax, ease);
+    return float4(0.0, 0.0, 0.0, alpha * globalA) * input.Color;
 }
 
 technique SpriteDrawing

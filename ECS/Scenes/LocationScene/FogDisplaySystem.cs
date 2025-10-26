@@ -16,6 +16,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
 		private CircularMaskOverlay _overlay;
+		private float _timeSeconds;
 
 		[DebugEditable(DisplayName = "Mask Radius (px)", Step = 5f, Min = 10f, Max = 1000f)]
 		public float RadiusPx { get; set; } = 160f;
@@ -39,6 +40,11 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 		}
+		public override void Update(GameTime gameTime)
+		{
+			base.Update(gameTime);
+			_timeSeconds += MathHelper.Max(0f, (float)gameTime.ElapsedGameTime.TotalSeconds);
+		}
 
 		public void Draw()
 		{
@@ -60,6 +66,7 @@ namespace Crusaders30XX.ECS.Systems
 			_overlay.CentersPx = centers;
 			_overlay.RadiusPx = RadiusPx;
 			_overlay.FeatherPx = FeatherPx;
+			_overlay.TimeSeconds = _timeSeconds;
 
 			// Save current SpriteBatch device states and temporarily end the batch
 			var savedBlend = _graphicsDevice.BlendState;

@@ -13,10 +13,14 @@ public class CircularMaskOverlay
 
     public bool IsAvailable => _effect != null;
 
-    public float RadiusPx { get; set; } = 160f;
+    public float RadiusPx { get; set; } = 300f;
     public float FeatherPx { get; set; } = 6f;
     public Vector2 CenterPx { get; set; } = Vector2.Zero; // legacy single-center
     public IReadOnlyList<Vector2> CentersPx { get; set; } = Array.Empty<Vector2>();
+    public float GlobalAlphaMin { get; set; } = 0.6f;
+    public float GlobalAlphaMax { get; set; } = 0.75f;
+    public float EaseSpeed { get; set; } = 0.5f; // cycles per second
+    public float TimeSeconds { get; set; } = 0f;
 
     public CircularMaskOverlay(GraphicsDevice device, Effect effect)
     {
@@ -36,6 +40,10 @@ public class CircularMaskOverlay
         var pMatrix = _effect.Parameters["MatrixTransform"]; if (pMatrix != null) pMatrix.SetValue(projection);
         var pViewport = _effect.Parameters["ViewportSize"]; if (pViewport != null) pViewport.SetValue(new Vector2(vp.Width, vp.Height));
         var pFeather = _effect.Parameters["FeatherPx"]; if (pFeather != null) pFeather.SetValue(FeatherPx);
+        var pTime = _effect.Parameters["iTime"]; if (pTime != null) pTime.SetValue(TimeSeconds);
+        var pEaseSpeed = _effect.Parameters["EaseSpeed"]; if (pEaseSpeed != null) pEaseSpeed.SetValue(EaseSpeed);
+        var pGMin = _effect.Parameters["GlobalAlphaMin"]; if (pGMin != null) pGMin.SetValue(GlobalAlphaMin);
+        var pGMax = _effect.Parameters["GlobalAlphaMax"]; if (pGMax != null) pGMax.SetValue(GlobalAlphaMax);
 
         // Prefer multi-mask path when CentersPx is set; fall back to single center otherwise
         int num = CentersPx?.Count ?? 0;
