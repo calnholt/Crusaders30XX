@@ -22,16 +22,16 @@ namespace Crusaders30XX.ECS.Systems
 		public float RadiusPx { get; set; } = 300f;
 
 		[DebugEditable(DisplayName = "Feather (px)", Step = 1f, Min = 0f, Max = 64f)]
-		public float FeatherPx { get; set; } = 26f;
+		public float FeatherPx { get; set; } = 23f;
 
 		[DebugEditable(DisplayName = "Warp Amount (px)", Step = 1f, Min = 0f, Max = 64f)]
 		public float WarpAmountPx { get; set; } = 24f;
 
 		[DebugEditable(DisplayName = "Warp Speed", Step = 0.05f, Min = 0f, Max = 3f)]
-		public float WarpSpeed { get; set; } = 1.0f;
+		public float WarpSpeed { get; set; } = 0.1f;
 
 		[DebugEditable(DisplayName = "Noise Scale", Step = 0.0005f, Min = 0.0005f, Max = 0.02f)]
-		public float NoiseScale { get; set; } = 0.0035f;
+		public float NoiseScale { get; set; } = 0.02f;
 
 		public FogDisplaySystem(EntityManager em, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(em)

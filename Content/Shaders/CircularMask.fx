@@ -222,12 +222,19 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
     // Blend between undistorted (inside) and distorted (outside)
     float4 sceneCol = lerp(colUndist, colDist, outside);
 
-    // Global easing-driven darkening applied only outside the holes
+    // Global easing-driven intensity applied only outside the holes
     float phase   = iTime * EaseSpeed * 6.28318530718; // 2π * t * speed
     float ease    = 0.5 + 0.5 * sin(phase);            // 0..1
     float globalA = lerp(GlobalAlphaMin, GlobalAlphaMax, ease);
-    float darkAmt = outside * globalA;
-    sceneCol.rgb = lerp(sceneCol.rgb, float3(0.0, 0.0, 0.0), darkAmt);
+    float effect  = outside * globalA;
+
+    // Desaturate + darken (lifeless look)
+    float gray = dot(sceneCol.rgb, float3(0.3, 0.59, 0.11));
+    float3 lifeless = lerp(float3(gray, gray, gray), sceneCol.rgb, 0.3);
+    lifeless *= 0.7;
+
+    // Apply outside-only with feathering and easing
+    sceneCol.rgb = lerp(sceneCol.rgb, lifeless, effect);
 
     // Output fully opaque scene color (SpriteBatch blending is fine with alpha=1)
     return float4(sceneCol.rgb, 1.0) * input.Color;
