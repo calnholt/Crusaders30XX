@@ -22,6 +22,8 @@ public class CircularMaskOverlay
     public float GlobalAlphaMax { get; set; } = 0.75f;
     public float EaseSpeed { get; set; } = 0.5f; // cycles per second
     public float DeathContrast { get; set; } = 1.3f;
+    public float LifelessDesaturateMix { get; set; } = 0.3f;
+    public float LifelessDarkenMul { get; set; } = 0.7f;
     public float TimeSeconds { get; set; } = 0f;
     public float DistortAmplitudePx { get; set; } = 8f;
     public float DistortSpatialFreq { get; set; } = 0.005f;
@@ -69,6 +71,8 @@ public class CircularMaskOverlay
         var pGMin = _effect.Parameters["GlobalAlphaMin"]; if (pGMin != null) pGMin.SetValue(GlobalAlphaMin);
         var pGMax = _effect.Parameters["GlobalAlphaMax"]; if (pGMax != null) pGMax.SetValue(GlobalAlphaMax);
         var pDeathContrast = _effect.Parameters["DeathContrast"]; if (pDeathContrast != null) pDeathContrast.SetValue(DeathContrast);
+        var pDesatMix = _effect.Parameters["LifelessDesaturateMix"]; if (pDesatMix != null) pDesatMix.SetValue(LifelessDesaturateMix);
+        var pDarkMul = _effect.Parameters["LifelessDarkenMul"]; if (pDarkMul != null) pDarkMul.SetValue(LifelessDarkenMul);
         var pDAmp = _effect.Parameters["DistortAmplitudePx"]; if (pDAmp != null) pDAmp.SetValue(DistortAmplitudePx);
         var pDFreq = _effect.Parameters["DistortSpatialFreq"]; if (pDFreq != null) pDFreq.SetValue(DistortSpatialFreq);
         var pDSpeed = _effect.Parameters["DistortSpeed"]; if (pDSpeed != null) pDSpeed.SetValue(DistortSpeed);

@@ -37,13 +37,19 @@ namespace Crusaders30XX.ECS.Systems
 		public float EaseSpeed { get; set; } = 0.2f;
 
 		[DebugEditable(DisplayName = "Global Alpha Min", Step = 0.01f, Min = 0f, Max = 1f)]
-		public float GlobalAlphaMin { get; set; } = 0.75f;
+		public float GlobalAlphaMin { get; set; } = 0.8f;
 
 		[DebugEditable(DisplayName = "Global Alpha Max", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float GlobalAlphaMax { get; set; } = 1f;
 
 		[DebugEditable(DisplayName = "Death Contrast", Step = 0.05f, Min = 0.5f, Max = 3f)]
 		public float DeathContrast { get; set; } = 0.5f;
+
+		[DebugEditable(DisplayName = "Lifeless Desaturate Mix", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float LifelessDesaturateMix { get; set; } = 0.1f;
+
+		[DebugEditable(DisplayName = "Lifeless Darken Mul", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float LifelessDarkenMul { get; set; } = 1f;
 
 		public FogDisplaySystem(EntityManager em, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(em)
@@ -94,6 +100,8 @@ namespace Crusaders30XX.ECS.Systems
 			_overlay.GlobalAlphaMin = GlobalAlphaMin;
 			_overlay.GlobalAlphaMax = GlobalAlphaMax;
 			_overlay.DeathContrast = DeathContrast;
+			_overlay.LifelessDesaturateMix = LifelessDesaturateMix;
+			_overlay.LifelessDarkenMul = LifelessDarkenMul;
 			_overlay.TimeSeconds = _timeSeconds;
 			// Anchor distortion to world Y
 			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
@@ -149,6 +157,8 @@ namespace Crusaders30XX.ECS.Systems
 			_overlay.GlobalAlphaMin = GlobalAlphaMin;
 			_overlay.GlobalAlphaMax = GlobalAlphaMax;
 			_overlay.DeathContrast = DeathContrast;
+			_overlay.LifelessDesaturateMix = LifelessDesaturateMix;
+			_overlay.LifelessDarkenMul = LifelessDarkenMul;
 			_overlay.TimeSeconds = _timeSeconds;
 
 			// Save and end current SpriteBatch
