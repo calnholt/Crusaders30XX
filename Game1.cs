@@ -2,13 +2,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Systems;
+// duplicate removed
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Events;
 using System;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using System.Linq;
+using Crusaders30XX.ECS.Systems;
 
 namespace Crusaders30XX;
 
@@ -46,6 +47,12 @@ public class Game1 : Game
     // ECS System
     private World _world;
 
+    // Shockwave integration
+    private ShockwaveDisplaySystem _shockwaveSystem;
+    private RenderTarget2D _sceneRt;
+    private RenderTarget2D _ppA;
+    private RenderTarget2D _ppB;
+
     public static bool WindowIsActive { get; private set; } = true;
 
     public Game1()
@@ -75,6 +82,11 @@ public class Game1 : Game
             _graphics.PreferredBackBufferHeight = newHeight;
             // Adjust UIScale via CardVisualSettingsDebugSystem if desired
                 _graphics.ApplyChanges();
+                // Reallocate RTs to new backbuffer size
+                _sceneRt?.Dispose();
+                _ppA?.Dispose();
+                _ppB?.Dispose();
+                AllocateRenderTargets();
             }
         };
     }
@@ -147,6 +159,8 @@ public class Game1 : Game
         _world.AddSystem(_debugCommandSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
+        _shockwaveSystem = new ShockwaveDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _world.AddSystem(_shockwaveSystem);
 
         // Mark persistent entities
         _world.AddComponent(sceneEntity, new DontDestroyOnLoad());
@@ -155,6 +169,8 @@ public class Game1 : Game
         {
             _world.AddComponent(cvsEntity, new DontDestroyOnLoad());
         }
+        // Allocate render targets
+        AllocateRenderTargets();
         // TODO: use this.Content to load your game content here
     }
     
@@ -164,6 +180,24 @@ public class Game1 : Game
         var kb = Keyboard.GetState();
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || (kb.IsKeyDown(Keys.Escape) && kb.IsKeyDown(Keys.LeftShift)))
             Exit();
+        // Debug: press H to trigger a demo shockwave at screen center
+        if (kb.IsKeyDown(Keys.H) && !_prevKeyboard.IsKeyDown(Keys.H))
+        {
+            var vp = GraphicsDevice.Viewport;
+            var center = new Vector2(vp.Width * 0.5f, vp.Height * 0.5f);
+            var e = new ShockwaveEvent
+            {
+                CenterPx = center,
+                DurationSec = 0.6f,
+                MaxRadiusPx = Math.Min(vp.Width, vp.Height) * 0.6f,
+                RippleWidthPx = 18f,
+                Strength = 1.0f,
+                ChromaticAberrationAmp = 0.05f,
+                ChromaticAberrationFreq = 3.14159f,
+                ShadingIntensity = 0.6f
+            };
+            (_shockwaveSystem)?.Emit(e);
+        }
 
         // Global debug menu toggle so it's available in the main menu too
         if (kb.IsKeyDown(Keys.D) && !_prevKeyboard.IsKeyDown(Keys.D))
@@ -194,6 +228,29 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
+        if (_shockwaveSystem != null && _shockwaveSystem.HasActiveWaves)
+        {
+            EnsureRenderTargetsMatchBackbuffer();
+            // Render scene into _sceneRt
+            GraphicsDevice.SetRenderTarget(_sceneRt);
+            GraphicsDevice.Clear(Color.CornflowerBlue);
+            DrawScene();
+            GraphicsDevice.SetRenderTarget(null);
+
+            // Composite shockwaves and present
+            _shockwaveSystem.Composite(_sceneRt, _ppA, _ppB);
+        }
+        else
+        {
+            // Direct draw
+            DrawScene();
+        }
+
+        base.Draw(gameTime);
+    }
+
+    private void DrawScene()
+    {
         _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
         // Delegate drawing to active parent systems
         var scene = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
@@ -249,8 +306,26 @@ public class Game1 : Game
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         _spriteBatch.End();
+    }
 
-        base.Draw(gameTime);
+    private void AllocateRenderTargets()
+    {
+        var vp = GraphicsDevice.PresentationParameters;
+        _sceneRt = new RenderTarget2D(GraphicsDevice, vp.BackBufferWidth, vp.BackBufferHeight, false, SurfaceFormat.Color, DepthFormat.None);
+        _ppA = new RenderTarget2D(GraphicsDevice, vp.BackBufferWidth, vp.BackBufferHeight, false, SurfaceFormat.Color, DepthFormat.None);
+        _ppB = new RenderTarget2D(GraphicsDevice, vp.BackBufferWidth, vp.BackBufferHeight, false, SurfaceFormat.Color, DepthFormat.None);
+    }
+
+    private void EnsureRenderTargetsMatchBackbuffer()
+    {
+        var vp = GraphicsDevice.PresentationParameters;
+        if (_sceneRt == null || _sceneRt.Width != vp.BackBufferWidth || _sceneRt.Height != vp.BackBufferHeight)
+        {
+            _sceneRt?.Dispose();
+            _ppA?.Dispose();
+            _ppB?.Dispose();
+            AllocateRenderTargets();
+        }
     }
 
     private void ToggleDebugMenu()

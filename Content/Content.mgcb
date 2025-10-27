@@ -19,6 +19,12 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/CircularMask.fx
 
+#begin Shaders/Shockwave.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Shockwave.fx
+
 #begin NewRocker.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
