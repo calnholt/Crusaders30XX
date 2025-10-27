@@ -20,6 +20,7 @@ float  iTime        = 0.0;    // seconds
 float  EaseSpeed    = 1.0;    // cycles per second (2π rad / sec scaled inside)
 float  GlobalAlphaMin = 0.5;  // minimum alpha when fully eased in
 float  GlobalAlphaMax = 0.75;  // maximum alpha when fully eased out
+float  DeathContrast  = 1.3;   // contrast multiplier for lifeless outside region
 
 // Legacy simple horizontal distortion controls (kept for compatibility; not used by the new warp)
 float  DistortAmplitudePx = 8.0;   // horizontal shift in pixels
@@ -232,6 +233,7 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
     float gray = dot(sceneCol.rgb, float3(0.3, 0.59, 0.11));
     float3 lifeless = lerp(float3(gray, gray, gray), sceneCol.rgb, 0.3);
     lifeless *= 0.7;
+    lifeless = saturate((lifeless - 0.5) * DeathContrast + 0.5);
 
     // Apply outside-only with feathering and easing
     sceneCol.rgb = lerp(sceneCol.rgb, lifeless, effect);

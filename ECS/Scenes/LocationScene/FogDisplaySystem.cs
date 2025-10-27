@@ -33,6 +33,18 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Noise Scale", Step = 0.0005f, Min = 0.0005f, Max = 0.02f)]
 		public float NoiseScale { get; set; } = 0.02f;
 
+		[DebugEditable(DisplayName = "Ease Speed", Step = 0.05f, Min = 0f, Max = 3f)]
+		public float EaseSpeed { get; set; } = 0.2f;
+
+		[DebugEditable(DisplayName = "Global Alpha Min", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float GlobalAlphaMin { get; set; } = 0.75f;
+
+		[DebugEditable(DisplayName = "Global Alpha Max", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float GlobalAlphaMax { get; set; } = 1f;
+
+		[DebugEditable(DisplayName = "Death Contrast", Step = 0.05f, Min = 0.5f, Max = 3f)]
+		public float DeathContrast { get; set; } = 0.5f;
+
 		public FogDisplaySystem(EntityManager em, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(em)
 		{
@@ -78,6 +90,10 @@ namespace Crusaders30XX.ECS.Systems
 			_overlay.WarpAmountPx = WarpAmountPx;
 			_overlay.WarpSpeed = WarpSpeed;
 			_overlay.NoiseScale = NoiseScale;
+			_overlay.EaseSpeed = EaseSpeed;
+			_overlay.GlobalAlphaMin = GlobalAlphaMin;
+			_overlay.GlobalAlphaMax = GlobalAlphaMax;
+			_overlay.DeathContrast = DeathContrast;
 			_overlay.TimeSeconds = _timeSeconds;
 			// Anchor distortion to world Y
 			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
@@ -129,6 +145,10 @@ namespace Crusaders30XX.ECS.Systems
 			_overlay.WarpAmountPx = WarpAmountPx;
 			_overlay.WarpSpeed = WarpSpeed;
 			_overlay.NoiseScale = NoiseScale;
+			_overlay.EaseSpeed = EaseSpeed;
+			_overlay.GlobalAlphaMin = GlobalAlphaMin;
+			_overlay.GlobalAlphaMax = GlobalAlphaMax;
+			_overlay.DeathContrast = DeathContrast;
 			_overlay.TimeSeconds = _timeSeconds;
 
 			// Save and end current SpriteBatch
