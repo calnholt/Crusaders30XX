@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using System.Numerics;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -81,15 +82,25 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureOverlayLoaded();
 			if (_overlay == null || !_overlay.IsAvailable) return;
 
-			var centers = EntityManager
+			            var uiEntities = GetRelevantEntities()
+                .Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), IsCard = e.GetComponent<CardData>() != null })
+                .Where(x => x.UI != null && x.UI.IsInteractable)
+                .ToList();
+
+			var data = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
-				.Select(p => new { Position = p, RevealRadius = e.GetComponent<PointOfInterest>().RevealRadius })
+				.Select(p => {
+					var poi = p.GetComponent<PointOfInterest>();
+					var t = p.GetComponent<Transform>();
+					var center = new Microsoft.Xna.Framework.Vector2(t.Position.X / 2, t.Position.Y / 2);
+					return new { Center = center, RevealRadius = poi.IsRevealed ? poi.RevealRadius : poi.UnrevealedRadius };
+				})
 				.ToList();
 
-			if (centers.Count == 0) return;
+			if (data.Count == 0) return;
 
-			_overlay.CentersPx = centers;
-			_overlay.RadiusPx = centers.Select(c => c.RevealRadius).ToList();
+			_overlay.CentersPx = data.Select(d => d.Center).ToList();
+			_overlay.RadiusPx = (System.Collections.Generic.IReadOnlyList<float>)data.Select(d => d.RevealRadius).ToList();
 			_overlay.FeatherPx = FeatherPx;
 			_overlay.WarpAmountPx = WarpAmountPx;
 			_overlay.WarpSpeed = WarpSpeed;
@@ -136,17 +147,20 @@ namespace Crusaders30XX.ECS.Systems
 			if (_overlay == null || !_overlay.IsAvailable) return;
 			if (sceneTexture == null) return;
 
-			var centers = EntityManager
+			var data = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
-				.Select(e => e.GetComponent<Transform>())
-				.Where(t => t != null)
-				.Select(t => t.Position)
+				.Select(p => {
+					var poi = p.GetComponent<PointOfInterest>();
+					var t = p.GetComponent<Transform>();
+					var center = new Microsoft.Xna.Framework.Vector2(t.Position.X / 2, t.Position.Y / 2);
+					return new { Center = center, RevealRadius = poi.IsRevealed ? poi.RevealRadius : poi.UnrevealedRadius };
+				})
 				.ToList();
 
-			if (centers.Count == 0) return;
+			if (data.Count == 0) return;
 
-			_overlay.CentersPx = centers;
-			_overlay.RadiusPx = RadiusPx;
+			_overlay.CentersPx = data.Select(d => d.Center).ToList();
+			_overlay.RadiusPx = (System.Collections.Generic.IReadOnlyList<float>)data.Select(d => d.RevealRadius).ToList();
 			_overlay.FeatherPx = FeatherPx;
 			_overlay.WarpAmountPx = WarpAmountPx;
 			_overlay.WarpSpeed = WarpSpeed;

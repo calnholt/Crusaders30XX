@@ -1,32 +1,37 @@
 {
-  "desert": [
+  "locations": [
     {
-      "id": "desert_1",
-      "completed": false
-    },
-    {
-      "id": "desert_2",
-      "completed": false
-    },
-    {
-      "id": "desert_3",
-      "completed": false
-    },
-    {
-      "id": "desert_4",
-      "completed": false
-    },
-    {
-      "id": "desert_5",
-      "completed": false
-    },
-    {
-      "id": "desert_6",
-      "completed": false
-    },
-    {
-      "id": "desert_7",
-      "completed": false
+      "id": "desert",
+      "events": [
+        {
+          "id": "desert_1",
+          "completed": false
+        },
+        {
+          "id": "desert_2",
+          "completed": false
+        },
+        {
+          "id": "desert_3",
+          "completed": false
+        },
+        {
+          "id": "desert_4",
+          "completed": false
+        },
+        {
+          "id": "desert_5",
+          "completed": false
+        },
+        {
+          "id": "desert_6",
+          "completed": false
+        },
+        {
+          "id": "desert_7",
+          "completed": false
+        }
+      ]
     }
   ]
 }

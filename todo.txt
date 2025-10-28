@@ -3,10 +3,26 @@
 - combat music
 - sound effects
 - improved cursor feedback
-- position battle entities spawn away from top left corner (parallax layer issue, not sure why)
+- position battle entities spawn away from top left corner (parallax layer issue, not sure why) - TRICKY
 - equipment tooltip overhaul
 - more animations / fix existing
 - parallax background
 - quest rewards
 - set music correctly for each scene
 - play card animation
+
+
+
+Prompts - 
+
+Update @SaveRepository for new @save_file.json structure. When a quest event is completed, we need to flip save_file boolean by location + quest id
+
+In @PointOfInterestDisplaySystem.cs we only want to show POIs that are either IsRevealed OR are within the radius of other revealed POIs. When revealing a POI from the radius of a reaveld POI, we do NOT want to display a radius. So we only should the radius for IsRevealed. Calculate using the RevealRadius field.
+
+Update @LocationDefinition.cs with name and type field. Then we want to implement @QuestTooltipDisplaySystem.cs when hovering over a quest POI. We can refactor the quest tooltip to remove toggling through quests with LB and RB. We only want to show the quest details from the hovered POI (from its events field). We will also display the name of the POI in the tooltip. Clicking a POI should initaite the quest. Completed POI's determined from the save file are green, otherwise red.
+
+Update @CircularMaskOverlay.cs to implement a per POI call, as @FogDisplaySystem sets a list of different values from the POI data.
+
+When @DialogDisplaySystem is active, render a button on the top right using transform, UIElement, and HotKEy with type of Start button. When pressing start or clicking button, end the current dialog.
+
+When the last battle in a quest is successfully completed, we need to display a new @QuestRewardModalDisplaySystem INSTEAD of immediately transitioning to another scene. Right now this will just be a black box with the text "Quest Complete!". Add a button UIElement, Transform, HotKey compoenents with button type Y with text "Proceed". When clicked, then execute logic to go back to WorldMapScene like we currently do. While this menu is open, we want to hide all of the same systems we prevent from drawing when a dialog is active.
