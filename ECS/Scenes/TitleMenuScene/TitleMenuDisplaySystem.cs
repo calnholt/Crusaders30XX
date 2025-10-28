@@ -107,7 +107,7 @@ namespace Crusaders30XX.ECS.Systems
 			var uiClick = clickArea.GetComponent<UIElement>();
 			if (uiClick != null && uiClick.IsClicked && !TransitionStateSingleton.IsActive)
 			{
-				EventManager.Publish(new ShowTransition { Scene = SceneId.WorldMap });
+				EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
 			}
 
 			_prevMouse = Mouse.GetState();

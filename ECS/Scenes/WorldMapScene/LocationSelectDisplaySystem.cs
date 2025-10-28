@@ -198,11 +198,11 @@ namespace Crusaders30XX.ECS.Systems
 					if (!unlocked) break;
 
 					int completed = SaveCache.GetValueOrDefault(key, 0);
-					int clampedIdx = System.Math.Max(0, System.Math.Min(completed, (def.quests?.Count ?? 1) - 1));
+					int clampedIdx = System.Math.Max(0, System.Math.Min(completed, (def.pointsOfInterest?.Count ?? 1) - 1));
 					var qsEntity = EntityManager.GetEntitiesWithComponent<QuestSelectState>().FirstOrDefault();
 					var qs = qsEntity?.GetComponent<QuestSelectState>();
 					int chosenIndex = (qs != null && qs.LocationId == key)
-						? System.Math.Max(0, System.Math.Min(qs.SelectedQuestIndex, (def.quests?.Count ?? 1) - 1))
+						? System.Math.Max(0, System.Math.Min(qs.SelectedQuestIndex, (def.pointsOfInterest?.Count ?? 1) - 1))
 						: clampedIdx;
 
 					// Build queued events from selected quest and transition to Battle
@@ -219,8 +219,8 @@ namespace Crusaders30XX.ECS.Systems
                     // Record quest context for dialog lookup
                     qe.LocationId = def.id;
                     qe.QuestIndex = chosenIndex;
-					var questDefs = def.quests[chosenIndex];
-					foreach (var q in questDefs)
+					var questDefs = def.pointsOfInterest[chosenIndex];
+					foreach (var q in questDefs.events)
 					{
 						var type = ParseQueuedEventType(q?.type);
 						if (!string.IsNullOrEmpty(q?.id))
@@ -343,7 +343,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void DrawProgressBadge(LocationDefinition def, Rectangle container)
 		{
 			int completed = SaveCache.GetValueOrDefault(def.id, 0);
-			int total = def?.quests?.Count ?? 0;
+			int total = def?.pointsOfInterest?.Count ?? 0;
 			float pct = (total > 0) ? MathHelper.Clamp((completed / (float)total) * 100f, 0f, 100f) : 0f;
 
 			int baseLen = System.Math.Min(container.Width, container.Height);

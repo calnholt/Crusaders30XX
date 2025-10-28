@@ -83,15 +83,13 @@ namespace Crusaders30XX.ECS.Systems
 
 			var centers = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
-				.Select(e => e.GetComponent<Transform>())
-				.Where(t => t != null)
-				.Select(t => t.Position)
+				.Select(p => new { Position = p, RevealRadius = e.GetComponent<PointOfInterest>().RevealRadius })
 				.ToList();
 
 			if (centers.Count == 0) return;
 
 			_overlay.CentersPx = centers;
-			_overlay.RadiusPx = RadiusPx;
+			_overlay.RadiusPx = centers.Select(c => c.RevealRadius).ToList();
 			_overlay.FeatherPx = FeatherPx;
 			_overlay.WarpAmountPx = WarpAmountPx;
 			_overlay.WarpSpeed = WarpSpeed;

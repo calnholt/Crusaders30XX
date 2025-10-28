@@ -29,16 +29,15 @@ namespace Crusaders30XX.ECS.Services
 				}
 
 				if (string.IsNullOrEmpty(locationId)) return;
-				var all = LocationDefinitionCache.GetAll();
-				if (all == null) return;
-				if (!all.TryGetValue(locationId, out var loc) || loc?.quests == null) return;
-				int totalQuests = System.Math.Max(0, loc.quests.Count);
+				LocationDefinitionCache.TryGet(locationId, out var def);
+				if (def == null) return;
+				int totalPointsOfInterest = System.Math.Max(0, def.pointsOfInterest.Count);
 				int completed = SaveCache.GetValueOrDefault(locationId, 0);
 				int chosenIndex = questIndex ?? completed; // default to current highest if unknown
-				int clampedIndex = System.Math.Max(0, System.Math.Min(chosenIndex, totalQuests > 0 ? totalQuests - 1 : 0));
-				if (clampedIndex == completed && completed < totalQuests)
+				int clampedIndex = System.Math.Max(0, System.Math.Min(chosenIndex, totalPointsOfInterest > 0 ? totalPointsOfInterest - 1 : 0));
+				if (clampedIndex == completed && completed < totalPointsOfInterest)
 				{
-					Console.WriteLine($"[QuestCompleteService] Completed quest {locationId} -> {completed + 1}/{totalQuests}");
+					Console.WriteLine($"[QuestCompleteService] Completed point of interest {locationId} -> {completed + 1}/{totalPointsOfInterest}");
 					SaveCache.SetValue(locationId, completed + 1);
 				}
 			}

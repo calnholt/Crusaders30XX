@@ -219,13 +219,13 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			var all = LocationDefinitionCache.GetAll();
-			if (!all.TryGetValue(locationId, out var loc) || loc?.quests == null || loc.quests.Count == 0)
+			if (!all.TryGetValue(locationId, out var loc) || loc?.pointsOfInterest == null || loc.pointsOfInterest.Count == 0)
 			{
 				_prevGamePadState = gp;
 				return;
 			}
 			int unlockedMax = System.Math.Max(0, SaveCache.GetValueOrDefault(locationId, 0));
-			int maxIndex = System.Math.Min(unlockedMax, loc.quests.Count - 1);
+			int maxIndex = System.Math.Min(unlockedMax, loc.pointsOfInterest.Count - 1);
 			if (!_indexByLocationId.TryGetValue(locationId, out var idx)) idx = 0;
 			if (leftEdge) idx = System.Math.Max(0, idx - 1);
 			if (rightEdge) idx = System.Math.Min(maxIndex, idx + 1);
@@ -237,13 +237,13 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (_indexByLocationId.ContainsKey(locationId)) return;
 			var all = LocationDefinitionCache.GetAll();
-			if (!all.TryGetValue(locationId, out var loc) || loc?.quests == null || loc.quests.Count == 0)
+			if (!all.TryGetValue(locationId, out var loc) || loc?.pointsOfInterest == null || loc.pointsOfInterest.Count == 0)
 			{
 				_indexByLocationId[locationId] = 0;
 				return;
 			}
 			int completed = SaveCache.GetValueOrDefault(locationId, 0);
-			int maxIndex = System.Math.Max(0, (loc.quests?.Count ?? 1) - 1);
+			int maxIndex = System.Math.Max(0, (loc.pointsOfInterest?.Count ?? 1) - 1);
 			int startIndex = System.Math.Max(0, System.Math.Min(completed, maxIndex));
 			_indexByLocationId[locationId] = startIndex;
 		}
@@ -350,12 +350,12 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (string.IsNullOrEmpty(locationId)) return;
 			var all = LocationDefinitionCache.GetAll();
-			if (!all.TryGetValue(locationId, out var loc) || loc?.quests == null || loc.quests.Count == 0) return;
+			if (!all.TryGetValue(locationId, out var loc) || loc?.pointsOfInterest == null || loc.pointsOfInterest.Count == 0) return;
 			int completed = SaveCache.GetValueOrDefault(locationId, 0);
-			int unlockedMax = System.Math.Max(0, System.Math.Min(completed, loc.quests.Count - 1));
+			int unlockedMax = System.Math.Max(0, System.Math.Min(completed, loc.pointsOfInterest.Count - 1));
 			int idx = _indexByLocationId.GetValueOrDefault(locationId, unlockedMax);
 			idx = System.Math.Max(0, System.Math.Min(idx, unlockedMax));
-			var questDefs = loc.quests[idx];
+			var questDefs = loc.pointsOfInterest[idx].events;
 
 			// inner area below header (leave room for bottom bar)
 			int pad = System.Math.Max(0, Padding);

@@ -74,28 +74,43 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
+			// Gather combined input (keyboard + gamepad)
+			Vector2 velocity = Vector2.Zero;
+
+			// Keyboard (WASD) — screen-space: up is negative Y
+			var ks = Keyboard.GetState();
+			int xAxis = (ks.IsKeyDown(Keys.D) ? 1 : 0) - (ks.IsKeyDown(Keys.A) ? 1 : 0);
+			int yAxis = (ks.IsKeyDown(Keys.S) ? 1 : 0) - (ks.IsKeyDown(Keys.W) ? 1 : 0);
+			if (xAxis != 0 || yAxis != 0)
+			{
+				var kbDir = new Vector2(xAxis, yAxis);
+				if (kbDir.LengthSquared() > 1f) kbDir.Normalize();
+				velocity += kbDir * BasePanSpeed;
+			}
+
+			// Gamepad right stick (keep existing feel)
 			var gp = GamePad.GetState(PlayerIndex.One);
-			if (!gp.IsConnected)
+			if (gp.IsConnected)
+			{
+				Vector2 stick = gp.ThumbSticks.Right; // X: right+, Y: up+
+				float mag = stick.Length();
+				if (mag >= Deadzone)
+				{
+					Vector2 dir = stick / mag;
+					float normalized = MathHelper.Clamp((mag - Deadzone) / (1f - Deadzone), 0f, 1f);
+					float speedMultiplier = MathHelper.Clamp((float)Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
+					// In screen space, up is negative Y
+					velocity += new Vector2(dir.X, -dir.Y) * BasePanSpeed * speedMultiplier;
+				}
+			}
+
+			if (velocity == Vector2.Zero)
 			{
 				PublishCameraState(w, h);
 				return;
 			}
 
-			Vector2 stick = gp.ThumbSticks.Right; // X: right+, Y: up+
-			float mag = stick.Length();
-			if (mag < Deadzone)
-			{
-				PublishCameraState(w, h);
-				return;
-			}
-
-			Vector2 dir = (mag > 0f) ? (stick / mag) : Vector2.Zero;
-			float normalized = MathHelper.Clamp((mag - Deadzone) / (1f - Deadzone), 0f, 1f);
-			float speedMultiplier = MathHelper.Clamp((float)Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-			// In screen space, up is negative Y
-			Vector2 velocity = new Vector2(dir.X, -dir.Y) * BasePanSpeed * speedMultiplier;
 			_cameraCenter += velocity * dt;
 			ClampCamera(ref _cameraCenter, w, h);
 			PublishCameraState(w, h);

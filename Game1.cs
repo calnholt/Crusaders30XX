@@ -180,27 +180,8 @@ public class Game1 : Game
         var kb = Keyboard.GetState();
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || (kb.IsKeyDown(Keys.Escape) && kb.IsKeyDown(Keys.LeftShift)))
             Exit();
-        // Debug: press H to trigger a demo shockwave at screen center
-        if (kb.IsKeyDown(Keys.H) && !_prevKeyboard.IsKeyDown(Keys.H))
-        {
-            var vp = GraphicsDevice.Viewport;
-            var center = new Vector2(vp.Width * 0.5f, vp.Height * 0.5f);
-            var e = new ShockwaveEvent
-            {
-                CenterPx = center,
-                DurationSec = 0.6f,
-                MaxRadiusPx = Math.Min(vp.Width, vp.Height) * 0.6f,
-                RippleWidthPx = 18f,
-                Strength = 1.0f,
-                ChromaticAberrationAmp = 0.05f,
-                ChromaticAberrationFreq = 3.14159f,
-                ShadingIntensity = 0.6f
-            };
-            (_shockwaveSystem)?.Emit(e);
-        }
-
         // Global debug menu toggle so it's available in the main menu too
-        if (kb.IsKeyDown(Keys.D) && !_prevKeyboard.IsKeyDown(Keys.D))
+        if (kb.IsKeyDown(Keys.D) && !_prevKeyboard.IsKeyDown(Keys.D) && kb.IsKeyDown(Keys.LeftShift))
         {
             ToggleDebugMenu();
             var debugMenu = _world.EntityManager.GetEntitiesWithComponent<DebugMenu>().FirstOrDefault();

@@ -14,7 +14,7 @@ public class CircularMaskOverlay
 
     public bool IsAvailable => _effect != null;
 
-    public float RadiusPx { get; set; } = 300f;
+    public IReadOnlyList<float> RadiusPx { get; set; } = [];
     public float FeatherPx { get; set; } = 6f;
     public Vector2 CenterPx { get; set; } = Vector2.Zero; // legacy single-center
     public IReadOnlyList<Vector2> CentersPx { get; set; } = Array.Empty<Vector2>();

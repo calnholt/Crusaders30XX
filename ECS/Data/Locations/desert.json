@@ -1,108 +1,158 @@
 {
-  "id": "desert",
-  "name": "Desert",
-  "quests": [
-    [
-      {
-        "id": "gleeber",
-        "type": "Enemy"
-      }
-    ],
-    [
-      {
-        "id": "skeleton",
-        "type": "Enemy"
-      }
-    ],
-    [
-      {
-        "id": "skeleton",
-        "type": "Enemy"
-      },
-      {
-        "id": "skeleton",
-        "type": "Enemy"
-      }
-    ],
-    [
-      {
-        "id": "skeleton",
-        "type": "Enemy"
-      },
-      {
-        "id": "demon",
-        "type": "Enemy"
-      },
-      {
-        "id": "skeleton",
-        "type": "Enemy"
-      }
-    ],
-    [
-      {
-        "id": "skeleton",
-        "type": "Enemy"
-      },
-      {
-        "id": "demon",
-        "type": "Enemy"
-      },
-      {
-        "id": "skeleton",
-        "type": "Enemy"
-      },
-      {
-        "id": "demon",
-        "type": "Enemy"
-      }
-    ],
-    [
-      {
-        "id": "succubus",
-        "type": "Enemy"
-      },
-      {
-        "id": "demon",
-        "type": "Enemy"
-      },
-      {
-        "id": "spider",
-        "type": "Enemy"
-      },
-      {
-        "id": "ogre",
-        "type": "Enemy"
-      },
-      {
-        "id": "succubus",
-        "type": "Enemy"
-      }
-    ],
-    [
-      {
-        "id": "ogre",
-        "type": "Enemy"
-      },
-      {
-        "id": "spider",
-        "type": "Enemy"
-      },
-      {
-        "id": "demon",
-        "type": "Enemy"
-      },
-      {
-        "id": "skeleton",
-        "type": "Enemy"
-      },
-      {
-        "id": "succubus",
-        "type": "Enemy"
-      },
-      {
-        "id": "ninja",
-        "type": "Enemy"
-      }
-    ]
+  "Id": "desert",
+  "Name": "Desert",
+  "PointsOfInterest": [
+    {
+      "Id": "desert_1",
+      "WorldPosition": [400, 400],
+      "RevealRadius": 800,
+      "UnrevealedRadius": 50,
+      "IsRevealed": true,
+      "Events":
+      [
+        {
+          "id": "gleeber",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
+      "Id": "desert_2",
+      "WorldPosition": [400, 900],
+      "RevealRadius": 500,
+      "UnrevealedRadius": 50,
+      "Events":
+      [
+        {
+          "id": "skeleton",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
+      "Id": "desert_3",
+      "WorldPosition": [2000, 2000],
+      "RevealRadius": 500,
+      "UnrevealedRadius": 50,
+      "Events":
+      [
+        {
+          "id": "skeleton",
+          "type": "Enemy"
+        },
+        {
+          "id": "skeleton",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
+      "Id": "desert_4",
+      "WorldPosition": [2000, 2000],
+      "RevealRadius": 500,
+      "UnrevealedRadius": 50,
+      "Events":
+      [
+        {
+          "id": "skeleton",
+          "type": "Enemy"
+        },
+        {
+          "id": "demon",
+          "type": "Enemy"
+        },
+        {
+          "id": "skeleton",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
+      "Id": "desert_5",
+      "WorldPosition": [2000, 2000],
+      "RevealRadius": 500,
+      "UnrevealedRadius": 50,
+      "Events":
+      [
+        {
+          "id": "skeleton",
+          "type": "Enemy"
+        },
+        {
+          "id": "demon",
+          "type": "Enemy"
+        },
+        {
+          "id": "skeleton",
+          "type": "Enemy"
+        },
+        {
+          "id": "demon",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
+      "Id": "desert_6",
+      "WorldPosition": [2000, 2000],
+      "RevealRadius": 500,
+      "UnrevealedRadius": 50,
+      "Events":
+      [
+        {
+          "id": "succubus",
+          "type": "Enemy"
+        },
+        {
+          "id": "demon",
+          "type": "Enemy"
+        },
+        {
+          "id": "spider",
+          "type": "Enemy"
+        },
+        {
+          "id": "ogre",
+          "type": "Enemy"
+        },
+        {
+          "id": "succubus",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
+      "Id": "desert_7",
+      "WorldPosition": [2000, 2000],
+      "RevealRadius": 500,
+      "UnrevealedRadius": 50,
+      "Events":
+      [
+        {
+          "id": "ogre",
+          "type": "Enemy"
+        },
+        {
+          "id": "spider",
+          "type": "Enemy"
+        },
+        {
+          "id": "demon",
+          "type": "Enemy"
+        },
+        {
+          "id": "skeleton",
+          "type": "Enemy"
+        },
+        {
+          "id": "succubus",
+          "type": "Enemy"
+        },
+        {
+          "id": "ninja",
+          "type": "Enemy"
+        }
+      ]
+    }
   ]
 }

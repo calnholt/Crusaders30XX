@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
@@ -9,6 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Crusaders30XX.ECS.Systems;
 
+[DebugTab("Shockwave System")]
 public class ShockwaveDisplaySystem : Core.System
 {
     private readonly GraphicsDevice _gd;
@@ -35,6 +38,7 @@ public class ShockwaveDisplaySystem : Core.System
         _gd = gd;
         _sb = sb;
         _content = content;
+        EventManager.Subscribe<ShockwaveEvent>(OnShockwaveEvent);
     }
 
     protected override IEnumerable<Entity> GetRelevantEntities() => Enumerable.Empty<Entity>();
@@ -55,7 +59,7 @@ public class ShockwaveDisplaySystem : Core.System
         }
     }
 
-    public void Emit(ShockwaveEvent e)
+    private void OnShockwaveEvent(ShockwaveEvent e)
     {
         EnsureLoaded();
         if (_overlay == null) return;
@@ -137,6 +141,25 @@ public class ShockwaveDisplaySystem : Core.System
     protected override void UpdateEntity(Entity entity, GameTime gameTime)
     {
         throw new System.NotImplementedException();
+    }
+
+    [DebugAction("Trigger Shockwave")]
+    public void Debug_TriggerShockwave()
+    {
+        var vp = _gd.Viewport;
+        var center = new Vector2(vp.Width * 0.5f, vp.Height * 0.5f);
+        var e = new ShockwaveEvent
+        {
+            CenterPx = center,
+            DurationSec = 0.6f,
+            MaxRadiusPx = Math.Min(vp.Width, vp.Height) * 0.6f,
+            RippleWidthPx = 18f,
+            Strength = 1.0f,
+            ChromaticAberrationAmp = 0.05f,
+            ChromaticAberrationFreq = 3.14159f,
+            ShadingIntensity = 0.6f
+        };
+        EventManager.Publish(e);
     }
 }
 

@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Locations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -17,15 +18,6 @@ namespace Crusaders30XX.ECS.Systems
 		private bool _spawned;
 		private readonly System.Collections.Generic.List<Entity> _pois = new System.Collections.Generic.List<Entity>();
 		private readonly System.Collections.Generic.Dictionary<int, Vector2> _worldByEntityId = new System.Collections.Generic.Dictionary<int, Vector2>();
-
-		// Hardcoded POIs in world-space coordinates
-		private static readonly Vector2[] PoiPositions = new Vector2[]
-		{
-			new Vector2(800, 900),
-			new Vector2(2200, 1400),
-			new Vector2(5200, 2400),
-			new Vector2(3000, 600),
-		};
 
 		public PointOfInterestDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
@@ -70,18 +62,20 @@ namespace Crusaders30XX.ECS.Systems
 		private void SpawnPois()
 		{
 			int i = 0;
-			foreach (var pos in PoiPositions)
+			LocationDefinitionCache.TryGet("desert", out var def);
+			
+			foreach (var pos in def.pointsOfInterest)
 			{
 				var e = EntityManager.CreateEntity($"POI_{i++}");
-				_worldByEntityId[e.Id] = pos;
+				_worldByEntityId[e.Id] = pos.worldPosition;
 				_pois.Add(e);
 				// Initialize transform: Position will be driven by Parallax from BasePosition
-				EntityManager.AddComponent(e, new Transform { Position = pos, ZOrder = 10 });
+				EntityManager.AddComponent(e, new Transform { Position = pos.worldPosition, ZOrder = 10 });
 				// UI bounds size only; Parallax will center bounds at Transform.Position when AffectsUIBounds is true
-				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, 100, 100), IsInteractable = false });
+				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, 50, 50), IsInteractable = true });
 				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
 				// Attach POI component for fog-of-war and interactions
-				EntityManager.AddComponent(e, new PointOfInterest { WorldPosition = pos, RevealRadius = 300 });
+				EntityManager.AddComponent(e, new PointOfInterest { WorldPosition = pos.worldPosition, RevealRadius = pos.revealRadius, UnrevealedRadius = pos.unrevealedRadius });
 			}
 		}
 
@@ -94,16 +88,16 @@ namespace Crusaders30XX.ECS.Systems
 			int h = cam.ViewportH;
 
 			// Draw only POIs that intersect screen
-            foreach (var e in _pois)
-            {
-                var t = e.GetComponent<Transform>();
-                var ui = e.GetComponent<UIElement>();
-                if (t == null || ui == null) continue;
+			foreach (var e in _pois)
+			{
+					var t = e.GetComponent<Transform>();
+					var ui = e.GetComponent<UIElement>();
+					if (t == null || ui == null) continue;
 
-                var rect = new Rectangle((int)System.Math.Round(t.Position.X - 50), (int)System.Math.Round(t.Position.Y - 50), 100, 100);
-                if (rect.Right < 0 || rect.Bottom < 0 || rect.Left > w || rect.Top > h) continue;
-                _spriteBatch.Draw(_pixel, rect, Color.Red);
-            }
+					var rect = new Rectangle((int)System.Math.Round(t.Position.X - ui.Bounds.Width / 2), (int)System.Math.Round(t.Position.Y - ui.Bounds.Height / 2), ui.Bounds.Width, ui.Bounds.Height);
+					if (rect.Right < 0 || rect.Bottom < 0 || rect.Left > w || rect.Top > h) continue;
+					_spriteBatch.Draw(_pixel, rect, Color.Red);
+			}
 		}
 	}
 }

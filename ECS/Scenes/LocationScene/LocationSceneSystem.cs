@@ -74,6 +74,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.End();
 
 			// Capture the location map + POIs into the render target
+			var prevTargets = _graphicsDevice.GetRenderTargets();
 			_graphicsDevice.SetRenderTarget(_sceneRT);
 			_graphicsDevice.Clear(Color.Transparent);
 			_spriteBatch.Begin(
@@ -86,7 +87,11 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("LocationMapDisplaySystem.Draw", _locationMapDisplaySystem.Draw);
 			FrameProfiler.Measure("PointOfInterestDisplaySystem.Draw", _pointOfInterestDisplaySystem.Draw);
 			_spriteBatch.End();
-			_graphicsDevice.SetRenderTarget(null);
+			// Restore whatever was bound before (offscreen capture or backbuffer)
+			if (prevTargets != null && prevTargets.Length > 0)
+				_graphicsDevice.SetRenderTargets(prevTargets);
+			else
+				_graphicsDevice.SetRenderTarget(null);
 
 			// Re-begin SpriteBatch with the original states so FogDisplaySystem can temporarily end it
 			_spriteBatch.Begin(
