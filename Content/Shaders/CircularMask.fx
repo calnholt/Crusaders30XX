@@ -9,7 +9,7 @@ float2 MaskCenterPx;          // center in pixels
 float  MaskRadiusPx = 140.0;  // radius in pixels
 
 // Multi-mask parameters
-static const int MAX_MASKS = 128;
+static const int MAX_MASKS = 64;
 float2 MaskCenters[MAX_MASKS];
 float  MaskRadii[MAX_MASKS];
 int    NumMasks = 0;          // if > 0, uses arrays above

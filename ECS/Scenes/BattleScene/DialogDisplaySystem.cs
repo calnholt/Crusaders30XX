@@ -58,6 +58,19 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Chars / Second", Step = 1f, Min = 1f, Max = 120f)]
         public float CharsPerSecond { get; set; } = 80f;
 
+        // End/Skip button settings
+        [DebugEditable(DisplayName = "End Btn Width", Step = 1, Min = 40, Max = 400)]
+        public int EndButtonWidth { get; set; } = 120;
+
+        [DebugEditable(DisplayName = "End Btn Height", Step = 1, Min = 20, Max = 200)]
+        public int EndButtonHeight { get; set; } = 44;
+
+        [DebugEditable(DisplayName = "End Btn Margin", Step = 1, Min = 0, Max = 200)]
+        public int EndButtonMargin { get; set; } = 16;
+
+        [DebugEditable(DisplayName = "End Btn Text Scale", Step = 0.05f, Min = 0.05f, Max = 2f)]
+        public float EndButtonTextScale { get; set; } = 0.2f;
+
         private int _cachedLineIndex = -1;
         private string _cachedFilteredMessage = string.Empty;
         private float _revealProgressSec = 0f;
@@ -183,6 +196,10 @@ namespace Crusaders30XX.ECS.Systems
             {
                 ui.IsClicked = false;
                 ui.IsHovered = false;
+                // Ensure end button is not interactable
+                var endBtn = EntityManager.GetEntity("DialogEndButton");
+                var endUi = endBtn?.GetComponent<UIElement>();
+                if (endUi != null) endUi.IsInteractable = false;
                 return;
             }
 
@@ -226,6 +243,21 @@ namespace Crusaders30XX.ECS.Systems
             for (int i = 0; i < _glyphRevealTimes.Count; i++)
             {
                 _glyphRevealTimes[i] += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+
+            // Keep end button entity alive, positioned, and clickable
+            EnsureEndButtonEntity();
+            var endEntity = EntityManager.GetEntity("DialogEndButton");
+            var endUi2 = endEntity?.GetComponent<UIElement>();
+            if (endUi2 != null)
+            {
+                endUi2.IsInteractable = true;
+                if (endUi2.IsClicked)
+                {
+                    endUi2.IsClicked = false;
+                    state.IsActive = false;
+                    EventManager.Publish(new DialogEnded());
+                }
             }
 
             // Click behavior (first completes, next advances)
@@ -386,6 +418,30 @@ namespace Crusaders30XX.ECS.Systems
                     _spriteBatch.Draw(portrait, new Rectangle(drawX, drawY, drawW, drawH), Color.White);
                 }
             }
+
+            // Draw End button (top-right overlay)
+            var btnEnt = EnsureEndButtonEntity();
+            var t = btnEnt?.GetComponent<Transform>();
+            var uiEnd = btnEnt?.GetComponent<UIElement>();
+            if (t != null && uiEnd != null)
+            {
+                int w = EndButtonWidth;
+                int h = EndButtonHeight;
+                var drawRect = new Rectangle((int)t.Position.X, (int)t.Position.Y, w, h);
+                _spriteBatch.Draw(_pixel, drawRect, new Color(40, 40, 40, 220));
+                // Border
+                _spriteBatch.Draw(_pixel, new Rectangle(drawRect.X, drawRect.Y, drawRect.Width, 2), Color.White);
+                _spriteBatch.Draw(_pixel, new Rectangle(drawRect.X, drawRect.Bottom - 2, drawRect.Width, 2), Color.White);
+                _spriteBatch.Draw(_pixel, new Rectangle(drawRect.X, drawRect.Y, 2, drawRect.Height), Color.White);
+                _spriteBatch.Draw(_pixel, new Rectangle(drawRect.Right - 2, drawRect.Y, 2, drawRect.Height), Color.White);
+                // Label
+                string label = "End";
+                var size = _font.MeasureString(label) * EndButtonTextScale;
+                var posText = new Vector2(drawRect.Center.X - size.X / 2f, drawRect.Center.Y - size.Y / 2f);
+                _spriteBatch.DrawString(_font, label, posText, Color.White, 0f, Vector2.Zero, EndButtonTextScale, SpriteEffects.None, 0f);
+                // Sync bounds
+                uiEnd.Bounds = drawRect;
+            }
         }
 
         private Texture2D ResolvePortrait(string actor)
@@ -423,6 +479,43 @@ namespace Crusaders30XX.ECS.Systems
                 var t = e.GetComponent<Transform>();
                 if (t != null) t.ZOrder = ZOrder;
             }
+        }
+
+        private Entity EnsureEndButtonEntity()
+        {
+            var ent = EntityManager.GetEntity("DialogEndButton");
+            if (ent == null)
+            {
+                ent = EntityManager.CreateEntity("DialogEndButton");
+                int vw = _graphicsDevice.Viewport.Width;
+                int x = vw - System.Math.Max(0, EndButtonMargin) - System.Math.Max(40, EndButtonWidth);
+                int y = System.Math.Max(0, EndButtonMargin);
+                EntityManager.AddComponent(ent, new Transform { BasePosition = new Vector2(x, y), Position = new Vector2(x, y), ZOrder = ZOrder + 1 });
+                EntityManager.AddComponent(ent, new UIElement { Bounds = new Rectangle(x, y, System.Math.Max(40, EndButtonWidth), System.Math.Max(20, EndButtonHeight)), IsInteractable = true, LayerType = UILayerType.Overlay, Tooltip = "End dialog" });
+                EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Start });
+                EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
+            }
+            else
+            {
+                // Keep anchored to top-right
+                int vw = _graphicsDevice.Viewport.Width;
+                int x = vw - System.Math.Max(0, EndButtonMargin) - System.Math.Max(40, EndButtonWidth);
+                int y = System.Math.Max(0, EndButtonMargin);
+                var t = ent.GetComponent<Transform>();
+                if (t != null)
+                {
+                    t.ZOrder = ZOrder + 1;
+                    t.BasePosition = new Vector2(x, y);
+                    t.Position = new Vector2(x, y);
+                }
+                var ui = ent.GetComponent<UIElement>();
+                if (ui != null)
+                {
+                    ui.LayerType = UILayerType.Overlay;
+                    ui.IsInteractable = true;
+                }
+            }
+            return ent;
         }
 
         private void ResetTypewriterForCurrentLine(DialogOverlayState st)

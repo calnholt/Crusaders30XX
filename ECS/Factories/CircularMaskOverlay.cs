@@ -84,19 +84,34 @@ public class CircularMaskOverlay
         var pWarpSpeed = _effect.Parameters["WarpSpeed"]; if (pWarpSpeed != null) pWarpSpeed.SetValue(WarpSpeed);
 
         // Prefer multi-mask path when CentersPx is set; fall back to single center otherwise
-        int num = CentersPx?.Count ?? 0;
-        var pNum = _effect.Parameters["NumMasks"]; if (pNum != null) pNum.SetValue(num);
-        if (num > 0)
+        int countCenters = CentersPx?.Count ?? 0;
+        int countRadii = RadiusPx?.Count ?? 0;
+        int n = Math.Max(0, Math.Min(countCenters, 64)); // shader MAX_MASKS (must match fx)
+        var pNum = _effect.Parameters["NumMasks"]; if (pNum != null) pNum.SetValue(n);
+        if (n > 0)
         {
-            var pCenters = _effect.Parameters["MaskCenters"]; if (pCenters != null) pCenters.SetValue(CentersPx.ToArray());
-            // Use a common radius for all masks unless the shader later supports per-POI radii
-            var radii = Enumerable.Repeat(RadiusPx, num).ToArray();
+            var pCenters = _effect.Parameters["MaskCenters"]; if (pCenters != null) pCenters.SetValue(CentersPx.Take(n).ToArray());
+            float[] radii = new float[n];
+            if (countRadii >= n)
+            {
+                radii = RadiusPx.Take(n).ToArray();
+            }
+            else if (countRadii == 1)
+            {
+                for (int i = 0; i < n; i++) radii[i] = RadiusPx[0];
+            }
+            else
+            {
+                float defR = 140f; // shader default
+                for (int i = 0; i < n; i++) radii[i] = (i < countRadii) ? RadiusPx[i] : defR;
+            }
             var pRadii = _effect.Parameters["MaskRadii"]; if (pRadii != null) pRadii.SetValue(radii);
         }
         else
         {
             var pCenter = _effect.Parameters["MaskCenterPx"]; if (pCenter != null) pCenter.SetValue(CenterPx);
-            var pRadius = _effect.Parameters["MaskRadiusPx"]; if (pRadius != null) pRadius.SetValue(RadiusPx);
+            float r = (countRadii > 0) ? RadiusPx[0] : 140f;
+            var pRadius = _effect.Parameters["MaskRadiusPx"]; if (pRadius != null) pRadius.SetValue(r);
         }
 
         spriteBatch.Begin(

@@ -37,8 +37,13 @@ namespace Crusaders30XX.ECS.Services
 				int clampedIndex = System.Math.Max(0, System.Math.Min(chosenIndex, totalPointsOfInterest > 0 ? totalPointsOfInterest - 1 : 0));
 				if (clampedIndex == completed && completed < totalPointsOfInterest)
 				{
-					Console.WriteLine($"[QuestCompleteService] Completed point of interest {locationId} -> {completed + 1}/{totalPointsOfInterest}");
-					SaveCache.SetValue(locationId, completed + 1);
+					var poi = def.pointsOfInterest[clampedIndex];
+					var questIdStr = poi?.id;
+					if (!string.IsNullOrEmpty(questIdStr))
+					{
+						Console.WriteLine($"[QuestCompleteService] Completed point of interest {locationId}/{questIdStr}");
+						SaveCache.SetQuestCompleted(locationId, questIdStr, true);
+					}
 				}
 			}
 			catch { }

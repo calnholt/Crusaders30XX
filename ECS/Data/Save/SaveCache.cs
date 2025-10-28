@@ -1,24 +1,27 @@
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Crusaders30XX.ECS.Data.Save
 {
 	public static class SaveCache
 	{
-		private static Dictionary<string, int> _save;
+		private static SaveFile _save;
 		private static string _filePath;
 		private static readonly object _lock = new object();
 
-		public static Dictionary<string, int> GetAll()
+		public static SaveFile GetAll()
 		{
 			EnsureLoaded();
 			return _save;
 		}
 
-		public static int GetValueOrDefault(string key, int defaultValue = 0)
+		public static int GetValueOrDefault(string locationId, int defaultValue = 0)
 		{
 			EnsureLoaded();
-			return _save != null && _save.TryGetValue(key, out var v) ? v : defaultValue;
+			if (_save == null || string.IsNullOrEmpty(locationId)) return defaultValue;
+			var loc = _save.locations?.FirstOrDefault(l => l != null && l.id == locationId);
+			if (loc == null || loc.events == null) return defaultValue;
+			return loc.events.Count(e => e != null && e.completed);
 		}
 
 		public static void Reload()
@@ -30,24 +33,39 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 		}
 
-		public static void SetValue(string key, int value)
+		public static bool IsQuestCompleted(string locationId, string questId)
 		{
 			EnsureLoaded();
-			lock (_lock)
-			{
-				_save[key] = value;
-				Persist();
-			}
+			if (_save == null || string.IsNullOrEmpty(locationId) || string.IsNullOrEmpty(questId)) return false;
+			var loc = _save.locations?.FirstOrDefault(l => l != null && l.id == locationId);
+			var q = loc?.events?.FirstOrDefault(e => e != null && e.id == questId);
+			return q?.completed ?? false;
 		}
 
-		public static void Increment(string key, int delta = 1)
+		public static void SetQuestCompleted(string locationId, string questId, bool completed)
 		{
 			EnsureLoaded();
 			lock (_lock)
 			{
-				var current = 0;
-				_save.TryGetValue(key, out current);
-				_save[key] = current + delta;
+				if (_save == null) _save = new SaveFile();
+				if (_save.locations == null) _save.locations = new System.Collections.Generic.List<SaveLocation>();
+				var loc = _save.locations.FirstOrDefault(l => l != null && l.id == locationId);
+				if (loc == null)
+				{
+					loc = new SaveLocation { id = locationId, events = new System.Collections.Generic.List<SaveQuest>() };
+					_save.locations.Add(loc);
+				}
+				if (loc.events == null) loc.events = new System.Collections.Generic.List<SaveQuest>();
+				var quest = loc.events.FirstOrDefault(e => e != null && e.id == questId);
+				if (quest == null)
+				{
+					quest = new SaveQuest { id = questId, completed = completed };
+					loc.events.Add(quest);
+				}
+				else
+				{
+					quest.completed = completed;
+				}
 				Persist();
 			}
 		}

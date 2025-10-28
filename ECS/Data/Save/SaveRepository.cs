@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -7,34 +6,31 @@ namespace Crusaders30XX.ECS.Data.Save
 {
 	public static class SaveRepository
 	{
-		public static Dictionary<string, int> Load(string fileAbsPath)
+		public static SaveFile Load(string fileAbsPath)
 		{
-			var map = new Dictionary<string, int>();
-			if (string.IsNullOrEmpty(fileAbsPath) || !File.Exists(fileAbsPath)) return map;
+			var result = new SaveFile();
+			if (string.IsNullOrEmpty(fileAbsPath) || !File.Exists(fileAbsPath)) return result;
 			try
 			{
 				var json = File.ReadAllText(fileAbsPath);
-				var node = JsonNode.Parse(json) as JsonObject;
-				if (node == null) return map;
-				foreach (var kv in node)
+				var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+				var data = JsonSerializer.Deserialize<SaveFile>(json, opts) ?? new SaveFile();
+				// Ensure non-null collections
+				if (data.locations == null) data.locations = new System.Collections.Generic.List<SaveLocation>();
+				foreach (var loc in data.locations)
 				{
-					var key = kv.Key;
-					try
-					{
-						int value = kv.Value?.GetValue<int>() ?? 0;
-						map[key] = value;
-					}
-					catch { }
+					if (loc != null && loc.events == null) loc.events = new System.Collections.Generic.List<SaveQuest>();
 				}
+				result = data;
 			}
 			catch (System.Exception ex)
 			{
 				System.Console.WriteLine($"[SaveRepository] Failed to parse {fileAbsPath}: {ex.Message}");
 			}
-			return map;
+			return result;
 		}
 
-		public static void Save(string fileAbsPath, Dictionary<string, int> data)
+		public static void Save(string fileAbsPath, SaveFile data)
 		{
 			if (string.IsNullOrEmpty(fileAbsPath) || data == null) return;
 			try

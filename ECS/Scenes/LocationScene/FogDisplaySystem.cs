@@ -92,7 +92,7 @@ namespace Crusaders30XX.ECS.Systems
 				.Select(p => {
 					var poi = p.GetComponent<PointOfInterest>();
 					var t = p.GetComponent<Transform>();
-					var center = new Microsoft.Xna.Framework.Vector2(t.Position.X / 2, t.Position.Y / 2);
+					var center = new Microsoft.Xna.Framework.Vector2(t.Position.X, t.Position.Y);
 					return new { Center = center, RevealRadius = poi.IsRevealed ? poi.RevealRadius : poi.UnrevealedRadius };
 				})
 				.ToList();
@@ -100,7 +100,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (data.Count == 0) return;
 
 			_overlay.CentersPx = data.Select(d => d.Center).ToList();
-			_overlay.RadiusPx = (System.Collections.Generic.IReadOnlyList<float>)data.Select(d => d.RevealRadius).ToList();
+			_overlay.RadiusPx = data.Select(d => (float)d.RevealRadius).ToList();
 			_overlay.FeatherPx = FeatherPx;
 			_overlay.WarpAmountPx = WarpAmountPx;
 			_overlay.WarpSpeed = WarpSpeed;
@@ -152,7 +152,7 @@ namespace Crusaders30XX.ECS.Systems
 				.Select(p => {
 					var poi = p.GetComponent<PointOfInterest>();
 					var t = p.GetComponent<Transform>();
-					var center = new Microsoft.Xna.Framework.Vector2(t.Position.X / 2, t.Position.Y / 2);
+					var center = new Microsoft.Xna.Framework.Vector2(t.Position.X, t.Position.Y);
 					return new { Center = center, RevealRadius = poi.IsRevealed ? poi.RevealRadius : poi.UnrevealedRadius };
 				})
 				.ToList();
@@ -160,7 +160,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (data.Count == 0) return;
 
 			_overlay.CentersPx = data.Select(d => d.Center).ToList();
-			_overlay.RadiusPx = (System.Collections.Generic.IReadOnlyList<float>)data.Select(d => d.RevealRadius).ToList();
+			_overlay.RadiusPx = data.Select(d => (float)d.RevealRadius).ToList();
 			_overlay.FeatherPx = FeatherPx;
 			_overlay.WarpAmountPx = WarpAmountPx;
 			_overlay.WarpSpeed = WarpSpeed;

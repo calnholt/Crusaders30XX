@@ -60,13 +60,15 @@ namespace Crusaders30XX.ECS.Systems
             bool edgeY = gp.Buttons.Y == ButtonState.Pressed && _prevGamePadState.Buttons.Y == ButtonState.Released;
             bool edgeB = gp.Buttons.B == ButtonState.Pressed && _prevGamePadState.Buttons.B == ButtonState.Released;
             bool edgeX = gp.Buttons.X == ButtonState.Pressed && _prevGamePadState.Buttons.X == ButtonState.Released;
+            bool edgeStart = gp.Buttons.Start == ButtonState.Pressed && _prevGamePadState.Buttons.Start == ButtonState.Released;
 
-            if (edgeY || edgeB || edgeX)
+            if (edgeY || edgeB || edgeX || edgeStart)
             {
                 FaceButton? pressed = null;
                 if (edgeY) pressed = FaceButton.Y;
                 else if (edgeB) pressed = FaceButton.B;
                 else if (edgeX) pressed = FaceButton.X;
+                else if (edgeStart) pressed = FaceButton.Start;
 
                 // If any overlay UI is present, suppress default-layer hotkeys
                 bool overlayPresent = EntityManager.GetEntitiesWithComponent<UIElement>()
@@ -129,20 +131,33 @@ namespace Crusaders30XX.ECS.Systems
                 int cx = r.Center.X;
                 int cy = r.Bottom + System.Math.Max(-64, HintGapY) + (int)System.Math.Round(HintRadius * 1.1f);
                 var pos = new Vector2(cx - HintRadius, cy - HintRadius);
-                if (!isPS)
+                if (x.HK.Button == FaceButton.Start)
                 {
-                    var color = GetFaceButtonColor(x.HK.Button);
-                    _spriteBatch.Draw(_circleTexSmall, pos, color);
-                    string letter = GetFaceButtonLetter(x.HK.Button);
-                    var size = _font.MeasureString(letter) * TextScale;
-                    var textPos = new Vector2(cx - size.X / 2f, cy - size.Y / 2f - 2f);
-                    _spriteBatch.DrawString(_font, letter, textPos, Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+                    // Draw simple rectangular badge with "Start"
+                    string label = "Start";
+                    var size = _font.MeasureString(label) * TextScale;
+                    int pad = System.Math.Max(2, (int)System.Math.Round(HintRadius * 0.3f));
+                    var rect = new Rectangle((int)(cx - size.X / 2f) - pad, (int)(cy - size.Y / 2f) - pad, (int)System.Math.Ceiling(size.X) + pad * 2, (int)System.Math.Ceiling(size.Y) + pad * 2);
+                    _spriteBatch.Draw(PrimitiveTextureFactory.GetRoundedSquare(_graphicsDevice, System.Math.Max(2, rect.Height), System.Math.Max(2, rect.Height / 4)), new Vector2(rect.X, rect.Y), new Color(36, 36, 36));
+                    _spriteBatch.DrawString(_font, label, new Vector2(cx - size.X / 2f, cy - size.Y / 2f - 1f), Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
                 }
                 else
                 {
-                    // PlayStation style: neutral dark badge + colored shape
-                    _spriteBatch.Draw(_circleTexSmall, pos, new Color(36, 36, 36));
-                    DrawPlayStationIcon(x.HK.Button, cx, cy);
+                    if (!isPS)
+                    {
+                        var color = GetFaceButtonColor(x.HK.Button);
+                        _spriteBatch.Draw(_circleTexSmall, pos, color);
+                        string letter = GetFaceButtonLetter(x.HK.Button);
+                        var size = _font.MeasureString(letter) * TextScale;
+                        var textPos = new Vector2(cx - size.X / 2f, cy - size.Y / 2f - 2f);
+                        _spriteBatch.DrawString(_font, letter, textPos, Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+                    }
+                    else
+                    {
+                        // PlayStation style: neutral dark badge + colored shape
+                        _spriteBatch.Draw(_circleTexSmall, pos, new Color(36, 36, 36));
+                        DrawPlayStationIcon(x.HK.Button, cx, cy);
+                    }
                 }
             }
         }

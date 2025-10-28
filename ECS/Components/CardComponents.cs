@@ -554,7 +554,8 @@ namespace Crusaders30XX.ECS.Components
     {
         B,
         X,
-        Y
+        Y,
+        Start
     }
 
     /// <summary>
