@@ -4,6 +4,7 @@ using Crusaders30XX;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -20,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		private int _lastViewportW = -1;
 		private int _lastViewportH = -1;
 		private Vector2 _cameraCenter;
+		private bool _locked;
 
 		// Map configuration
 		public const int MapWidth = 6000;
@@ -46,6 +48,14 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			EventManager.Subscribe<LockLocationCameraEvent>(_ => { _locked = _.Locked; });
+			EventManager.Subscribe<FocusLocationCameraEvent>(_ => {
+				int w = _graphicsDevice.Viewport.Width;
+				int h = _graphicsDevice.Viewport.Height;
+				_cameraCenter = _.WorldPos;
+				ClampCamera(ref _cameraCenter, w, h);
+				PublishCameraState(w, h);
+			});
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -69,6 +79,12 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			if (!Game1.WindowIsActive)
+			{
+				PublishCameraState(w, h);
+				return;
+			}
+
+			if (_locked)
 			{
 				PublishCameraState(w, h);
 				return;

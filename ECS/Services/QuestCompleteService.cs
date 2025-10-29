@@ -2,6 +2,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Systems;
 using System;
 using System.Linq;
 
@@ -43,6 +44,9 @@ namespace Crusaders30XX.ECS.Services
 					{
 						Console.WriteLine($"[QuestCompleteService] Completed point of interest {locationId}/{questIdStr}");
 						SaveCache.SetQuestCompleted(locationId, questIdStr, true);
+						// Set flags for POI reveal cutscene when transitioning to Location scene
+						TransitionStateSingleton.HasPendingLocationPoiReveal = true;
+						TransitionStateSingleton.PendingPoiId = questIdStr;
 					}
 				}
 			}

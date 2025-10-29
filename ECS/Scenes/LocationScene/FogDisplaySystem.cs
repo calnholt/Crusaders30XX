@@ -82,7 +82,7 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureOverlayLoaded();
 			if (_overlay == null || !_overlay.IsAvailable) return;
 
-			// Build circles: unlockers (revealed or completed) use RevealRadius; adjacent-but-unrevealed use UnrevealedRadius
+			// Build circles: unlockers (revealed or completed) use DisplayRadius; adjacent-but-unrevealed use UnrevealedRadius
 			var list = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
 				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
@@ -95,8 +95,8 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var u in unlockers)
 			{
 				centers.Add(new Microsoft.Xna.Framework.Vector2(u.T.Position.X, u.T.Position.Y));
-				var drawRadius = u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius;
-				radii.Add((float)drawRadius);
+				var drawRadius = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
+				radii.Add(drawRadius);
 			}
 			foreach (var x in list)
 			{
@@ -105,7 +105,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					float dx = x.P.WorldPosition.X - u.P.WorldPosition.X;
 					float dy = x.P.WorldPosition.Y - u.P.WorldPosition.Y;
-					int r = u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius;
+					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
 					if ((dx * dx) + (dy * dy) <= (r * r))
 					{
 						centers.Add(new Microsoft.Xna.Framework.Vector2(x.T.Position.X, x.T.Position.Y));
@@ -177,8 +177,8 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var u in unlockers)
 			{
 				centers.Add(new Microsoft.Xna.Framework.Vector2(u.T.Position.X, u.T.Position.Y));
-				var drawRadius = u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius;
-				radii.Add((float)drawRadius);
+				var drawRadius = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
+				radii.Add(drawRadius);
 			}
 			foreach (var x in list)
 			{
@@ -187,7 +187,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					float dx = x.P.WorldPosition.X - u.P.WorldPosition.X;
 					float dy = x.P.WorldPosition.Y - u.P.WorldPosition.Y;
-					int r = u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius;
+					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
 					if ((dx * dx) + (dy * dy) <= (r * r))
 					{
 						centers.Add(new Microsoft.Xna.Framework.Vector2(x.T.Position.X, x.T.Position.Y));

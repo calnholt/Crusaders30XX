@@ -11,6 +11,11 @@ namespace Crusaders30XX.ECS.Events
 		public float Coverage { get; set; }
 		public Entity TopEntity { get; set; }
 	}
+
+	public class SetCursorEnabledEvent
+	{
+		public bool Enabled { get; set; }
+	}
 }
 
 

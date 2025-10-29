@@ -76,14 +76,28 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, 50, 50), IsInteractable = true, TooltipType = TooltipType.Quests });
 				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
 				// Attach POI component for fog-of-war and interactions
-				EntityManager.AddComponent(e, new PointOfInterest {
+				var poi = new PointOfInterest {
 					Id = pos.id,
 					WorldPosition = pos.worldPosition,
 					RevealRadius = pos.revealRadius,
 					UnrevealedRadius = pos.unrevealedRadius,
 					IsRevealed = pos.isRevealed,
 					IsCompleted = SaveCache.IsQuestCompleted(def.id, pos.id)
-				});
+				};
+				// Initialize display radius consistent with current state
+				if (poi.IsCompleted)
+				{
+					poi.DisplayRadius = poi.RevealRadius;
+				}
+				else if (poi.IsRevealed)
+				{
+					poi.DisplayRadius = poi.UnrevealedRadius;
+				}
+				else
+				{
+					poi.DisplayRadius = 0f;
+				}
+				EntityManager.AddComponent(e, poi);
 			}
 		}
 
@@ -109,7 +123,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					float dx = x.P.WorldPosition.X - u.P.WorldPosition.X;
 					float dy = x.P.WorldPosition.Y - u.P.WorldPosition.Y;
-					int r = u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius;
+					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
 					if ((dx * dx) + (dy * dy) <= (r * r))
 					{
 						visibleIds.Add(x.E.Id);

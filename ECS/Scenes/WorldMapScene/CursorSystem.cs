@@ -29,6 +29,7 @@ namespace Crusaders30XX.ECS.Systems
 		private Entity _lastHoveredEntity;
 		private Entity _prevHoverEntityForRumble;
 		private float _rumbleTimeRemaining;
+		private bool _isEnabled = true;
 
 		// Cursor cross debug + animation
 		[DebugEditable(DisplayName = "Cross Scale Multiplier", Step = 0.05f, Min = 0.25f, Max = 3f)]
@@ -91,6 +92,7 @@ namespace Crusaders30XX.ECS.Systems
 			_content = content;
 			// Load cross texture once
 			_cursorCross = _content.Load<Texture2D>("cursor_cross");
+			EventManager.Subscribe<SetCursorEnabledEvent>(_ => { _isEnabled = _.Enabled; });
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -100,6 +102,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
+			if (!_isEnabled) return;
 			// Reset last clicked flag from previous frame (one-shot click)
 			if (_lastClickedEntity != null)
 			{
@@ -368,6 +371,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
+			if (!_isEnabled) return;
 			// Only draw the cursor if a controller is connected
 			var gp = GamePad.GetState(PlayerIndex.One);
 			if (!gp.IsConnected) return;

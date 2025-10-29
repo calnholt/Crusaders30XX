@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 		private PointOfInterestDisplaySystem _pointOfInterestDisplaySystem;
 		private TooltipQuestDisplaySystem _tooltipQuestDisplaySystem;
 		private FogDisplaySystem _fogDisplaySystem;
+		private LocationPoiRevealCutsceneSystem _poiCutsceneSystem;
 		private RenderTarget2D _sceneRT;
 		private int _rtW;
 		private int _rtH;
@@ -44,6 +45,7 @@ namespace Crusaders30XX.ECS.Systems
 				_world.RemoveSystem(_pointOfInterestDisplaySystem);
 				_world.RemoveSystem(_tooltipQuestDisplaySystem);
 				_world.RemoveSystem(_fogDisplaySystem);
+				_world.RemoveSystem(_poiCutsceneSystem);
 				_firstLoad = true;
 				_rtW = 0;
 				_rtH = 0;
@@ -124,10 +126,12 @@ namespace Crusaders30XX.ECS.Systems
 			_firstLoad = false;
 			_locationMapDisplaySystem = new LocationMapDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_locationMapDisplaySystem);
-			_fogDisplaySystem = new FogDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
-			_world.AddSystem(_fogDisplaySystem);
 			_pointOfInterestDisplaySystem = new PointOfInterestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_pointOfInterestDisplaySystem);
+			_poiCutsceneSystem = new LocationPoiRevealCutsceneSystem(_world.EntityManager);
+			_world.AddSystem(_poiCutsceneSystem);
+			_fogDisplaySystem = new FogDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			_world.AddSystem(_fogDisplaySystem);
 			_tooltipQuestDisplaySystem = new TooltipQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
 			_world.AddSystem(_tooltipQuestDisplaySystem);
     }
