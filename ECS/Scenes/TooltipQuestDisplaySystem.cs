@@ -356,18 +356,18 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Bottom-right hint: "A - Select"
-			string leftText = "A";
-			string rightText = " - Select";
-			float scale = BottomRightTextScale;
-			var leftSize = _font.MeasureString(leftText) * scale;
-			var rightSize = _font.MeasureString(rightText) * scale;
-			int textPad = System.Math.Max(0, BottomRightMargin);
-			var rightEndX = inner.Right - textPad;
-			var rightPos = new Vector2(rightEndX - rightSize.X, inner.Bottom - rightSize.Y - textPad);
-			var leftPos = new Vector2((int)System.Math.Round(rightPos.X - leftSize.X), inner.Bottom - leftSize.Y - textPad);
-			var green = new Color(0, 200, 0) * alpha01;
-			_spriteBatch.DrawString(_font, leftText, leftPos, green, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-			_spriteBatch.DrawString(_font, rightText, rightPos, Color.White * alpha01, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+			// string leftText = "A";
+			// string rightText = " - Select";
+			// float scale = BottomRightTextScale;
+			// var leftSize = _font.MeasureString(leftText) * scale;
+			// var rightSize = _font.MeasureString(rightText) * scale;
+			// int textPad = System.Math.Max(0, BottomRightMargin);
+			// var rightEndX = inner.Right - textPad;
+			// var rightPos = new Vector2(rightEndX - rightSize.X, inner.Bottom - rightSize.Y - textPad);
+			// var leftPos = new Vector2((int)System.Math.Round(rightPos.X - leftSize.X), inner.Bottom - leftSize.Y - textPad);
+			// var green = new Color(0, 200, 0) * alpha01;
+			// _spriteBatch.DrawString(_font, leftText, leftPos, green, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+			// _spriteBatch.DrawString(_font, rightText, rightPos, Color.White * alpha01, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 		}
 
 		private Texture2D TryLoadEnemyTexture(string id)
