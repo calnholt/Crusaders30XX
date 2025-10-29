@@ -38,6 +38,14 @@ namespace Crusaders30XX.ECS.Systems
 			var t = entity.GetComponent<Transform>();
 			if (layer == null || t == null) return;
 
+			// Skip parallax on first update if BasePosition hasn't been initialized yet
+			// This allows external layout systems (like HandDisplaySystem) to set BasePosition first
+			if (t.BasePosition == Vector2.Zero && layer.LastAppliedPosition == Vector2.Zero)
+			{
+				layer.LastAppliedPosition = t.Position;
+				return;
+			}
+
 			int w = _graphics.Viewport.Width;
 			int h = _graphics.Viewport.Height;
 			var center = new Vector2(w / 2f, h / 2f);

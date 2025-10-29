@@ -223,7 +223,7 @@ namespace Crusaders30XX.ECS.Systems
                         float y = pivot.Y + HandFanCurveOffset + yArc;
 
 						// If this card just appeared, spawn its base offscreen to the right so it flies in
-						if (transform.Position == Vector2.Zero && transform.BasePosition == Vector2.Zero)
+						if (transform.BasePosition == Vector2.Zero)
 						{
 							float spawnX = _graphicsDevice.Viewport.Width + ((cvs?.CardWidth ?? 250) * 1.5f);
 							float spawnY = pivot.Y + HandFanCurveOffset;

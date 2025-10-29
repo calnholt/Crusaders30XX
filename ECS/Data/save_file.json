@@ -5,7 +5,7 @@
       "events": [
         {
           "id": "desert_1",
-          "completed": true
+          "completed": false
         },
         {
           "id": "desert_2",
