@@ -59,6 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (ui == null || state == null) return;
 
 			ui.IsInteractable = state.IsOpen;
+			ui.LayerType = state.IsOpen ? UILayerType.Overlay : UILayerType.Default;
 			ui.Bounds = state.IsOpen
 				? new Rectangle(0, 0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height)
 				: new Rectangle(0, 0, 0, 0);
@@ -72,7 +73,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					btnUi.IsClicked = false;
 					state.IsOpen = false;
-					EventManager.Publish(new ShowTransition { Scene = SceneId.WorldMap });
+					EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
 				}
 			}
 		}
@@ -91,6 +92,8 @@ namespace Crusaders30XX.ECS.Systems
 			var e = EntityManager.GetEntity("QuestRewardOverlay");
 			var st = e?.GetComponent<QuestRewardOverlayState>();
 			if (st == null || !st.IsOpen) return;
+			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+			if (scene == null || scene.Current != SceneId.Battle) return;
 
 			int vw = _graphicsDevice.Viewport.Width;
 			int vh = _graphicsDevice.Viewport.Height;
@@ -180,8 +183,7 @@ namespace Crusaders30XX.ECS.Systems
 				int bx = (vw - bw) / 2;
 				int by = (vh + PanelHeight) / 2 - System.Math.Max(12, (int)(PanelHeight * 0.12f)) - bh;
 				EntityManager.AddComponent(ent, new Transform { BasePosition = new Vector2(bx, by), Position = new Vector2(bx, by), ZOrder = ZOrder + 1 });
-				EntityManager.AddComponent(ent, new UIElement { Bounds = new Rectangle(bx, by, bw, bh), IsInteractable = false, LayerType = UILayerType.Overlay, Tooltip = "Proceed" });
-				EntityManager.AddComponent(ent, new UIButton { Label = "Proceed" });
+				EntityManager.AddComponent(ent, new UIElement { Bounds = new Rectangle(bx, by, bw, bh), IsInteractable = false, LayerType = UILayerType.Overlay });
 				EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Y });
 				EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
 			}

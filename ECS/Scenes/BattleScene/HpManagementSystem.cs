@@ -52,12 +52,16 @@ namespace Crusaders30XX.ECS.Systems
 			if (before > 0 && hp.Current == 0 && target.HasComponent<Enemy>())
 			{
 				EventQueue.Clear();
-				TimerScheduler.Schedule(1f, () => {
+					TimerScheduler.Schedule(1f, () => {
 					Console.WriteLine("[HpManagementSystem] Enemy died, execute transition");
 					// is this the last enemy?
 					var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 					var queued = queuedEntity.GetComponent<QueuedEvents>();
-					if (queued.CurrentIndex == queued.Events.Count - 1)
+						if (queued != null 
+							&& queued.Events != null 
+							&& queued.Events.Count > 0 
+							&& queued.CurrentIndex >= 0 
+							&& queued.CurrentIndex == queued.Events.Count - 1)
 					{
 						Console.WriteLine($"[HpManagementSystem] Attempting to save quest completion");
 						QuestCompleteService.SaveIfCompletedHighest(EntityManager);

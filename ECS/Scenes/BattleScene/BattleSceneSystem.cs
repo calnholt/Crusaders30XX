@@ -95,6 +95,7 @@ namespace Crusaders30XX.ECS.Systems
 		private FrozenCardManagementSystem _frozenCardManagementSystem;
 		private FrozenCardDisplaySystem _frozenCardDisplaySystem;
 		private UIElementHighlightSystem _uiElementHighlightSystem;
+		private QuestRewardModalDisplaySystem _questRewardModalDisplaySystem;
 
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(em)
@@ -193,6 +194,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
 			FrameProfiler.Measure("DiscardSpecificCardHighlightSystem.Draw", _discardSpecificCardHighlightSystem.Draw);
 			FrameProfiler.Measure("IntimidateDisplaySystem.Draw", _intimidateDisplaySystem.Draw);
+			FrameProfiler.Measure("QuestRewardModalDisplaySystem.Draw", _questRewardModalDisplaySystem.Draw);
 		if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
 		}
 
@@ -374,6 +376,7 @@ namespace Crusaders30XX.ECS.Systems
 			var frostTexture = _content.Load<Texture2D>("frost");
 			_frozenCardDisplaySystem = new FrozenCardDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, frostTexture);
 			_uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_questRewardModalDisplaySystem = new QuestRewardModalDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			// Register
 			_world.AddSystem(_deckManagementSystem);
 			_world.AddSystem(_handDisplaySystem);
@@ -440,6 +443,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_intimidateDisplaySystem);
 			_world.AddSystem(_frozenCardManagementSystem);
 			_world.AddSystem(_frozenCardDisplaySystem);
+			_world.AddSystem(_questRewardModalDisplaySystem);
 		}
 
 	}

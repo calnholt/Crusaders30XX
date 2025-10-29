@@ -9,7 +9,7 @@ using Crusaders30XX.ECS.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
+ 
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -23,8 +23,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Dictionary<int, FadeState> _fadeByEntityId = new();
 		private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedCache = new();
 		private readonly Dictionary<(int w, int h, bool right, int border), Texture2D> _triangleCache = new();
-		private readonly Dictionary<string, int> _indexByLocationId = new();
-		private GamePadState _prevGamePadState;
 		private Texture2D _pixel;
 
 		[DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 40)]
@@ -115,7 +113,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Header Image Padding", Step = 1, Min = 0, Max = 40)]
 		public int HeaderImagePadding { get; set; } = 4;
 
-		private class FadeState { public float Alpha01; public bool TargetVisible; public Rectangle Rect; public string LocationId; }
+		private class FadeState { public float Alpha01; public bool TargetVisible; public Rectangle Rect; public string LocationId; public string Title; public List<LocationEventDefinition> Events; }
 
 		public TooltipQuestDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
 			: base(entityManager)
@@ -137,9 +135,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
-			// Only on WorldMap scene
+			// Only on WorldMap or Location scenes
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-			if (scene == null || scene.Current != SceneId.WorldMap) return;
+			if (scene == null || (scene.Current != SceneId.WorldMap && scene.Current != SceneId.Location)) return;
 			if (_font == null) return;
 
 			var hovered = GetRelevantEntities()
@@ -154,32 +152,57 @@ namespace Crusaders30XX.ECS.Systems
 				_fadeByEntityId[key].TargetVisible = false;
 			}
 
-			string locationIdTop = null;
-			Rectangle tooltipRect = Rectangle.Empty;
 			if (hovered != null)
 			{
+				var id = hovered.E.Id;
+				var rect = ComputeTooltipRect(hovered.UI.Bounds, hovered.T);
+
+				string locationIdTop = null;
+				string title = null;
+				List<LocationEventDefinition> events = null;
+
+				// Case 1: WorldMap location tile
 				locationIdTop = ExtractLocationId(hovered.E?.Name);
 				if (!string.IsNullOrEmpty(locationIdTop) && !locationIdTop.StartsWith("locked_"))
 				{
-					var rect = ComputeTooltipRect(hovered.UI.Bounds, hovered.T);
-					tooltipRect = rect;
-					var id = hovered.E.Id;
+					var all = LocationDefinitionCache.GetAll();
+					if (all.TryGetValue(locationIdTop, out var loc) && loc?.pointsOfInterest != null && loc.pointsOfInterest.Count > 0)
+					{
+						int completed = SaveCache.GetValueOrDefault(locationIdTop, 0);
+						int idx = System.Math.Max(0, System.Math.Min(completed, loc.pointsOfInterest.Count - 1));
+						events = loc.pointsOfInterest[idx].events;
+						title = "Quest " + (idx + 1);
+					}
+				}
+				else
+				{
+					// Case 2: Location scene POI entity (show only if revealed/completed or revealed by proximity)
+					var poi = hovered.E.GetComponent<PointOfInterest>();
+					if (poi != null && IsPoiVisible(poi) && TryFindLocationByPoiId(poi.Id, out var locId, out var questIdx))
+					{
+						locationIdTop = locId;
+						var all = LocationDefinitionCache.GetAll();
+						if (all.TryGetValue(locId, out var loc) && questIdx >= 0 && questIdx < (loc.pointsOfInterest?.Count ?? 0))
+						{
+							events = loc.pointsOfInterest[questIdx].events;
+							title = string.IsNullOrWhiteSpace(loc.pointsOfInterest[questIdx].name) ? ("Quest " + (questIdx + 1)) : loc.pointsOfInterest[questIdx].name;
+						}
+					}
+				}
+
+				if (!string.IsNullOrEmpty(locationIdTop) && events != null && events.Count > 0)
+				{
 					if (!_fadeByEntityId.TryGetValue(id, out var fs))
 					{
-						fs = new FadeState { Alpha01 = 0f, TargetVisible = true, Rect = rect, LocationId = locationIdTop };
+						fs = new FadeState { Alpha01 = 0f, TargetVisible = true, Rect = rect, LocationId = locationIdTop, Title = title, Events = events };
 						_fadeByEntityId[id] = fs;
 					}
 					fs.TargetVisible = true;
 					fs.Rect = rect;
 					fs.LocationId = locationIdTop;
+					fs.Title = title;
+					fs.Events = events;
 					_fadeByEntityId[id] = fs;
-
-					// Initialize selection for this location if needed
-					EnsureSelectionInitialized(locationIdTop);
-					// Handle LB/RB edge to cycle
-					HandleBumperCycle(locationIdTop);
-					// Sync shared state (non-overlay usage)
-					SyncQuestSelectState(locationIdTop);
 				}
 			}
 
@@ -199,68 +222,10 @@ namespace Crusaders30XX.ECS.Systems
 
 				DrawTooltipBox(fs.Rect, fs.Alpha01);
 				DrawHeader(fs.LocationId, fs.Rect, fs.Alpha01);
-				DrawQuestContent(fs.LocationId, fs.Rect, fs.Alpha01);
+				DrawQuestContent(fs.Rect, fs.Alpha01, fs.Title, fs.Events);
 			}
 		}
 
-		private void HandleBumperCycle(string locationId)
-		{
-			var gp = GamePad.GetState(PlayerIndex.One);
-			bool left = gp.Buttons.LeftShoulder == ButtonState.Pressed;
-			bool leftPrev = _prevGamePadState.Buttons.LeftShoulder == ButtonState.Pressed;
-			bool right = gp.Buttons.RightShoulder == ButtonState.Pressed;
-			bool rightPrev = _prevGamePadState.Buttons.RightShoulder == ButtonState.Pressed;
-			bool leftEdge = left && !leftPrev;
-			bool rightEdge = right && !rightPrev;
-			if (!leftEdge && !rightEdge)
-			{
-				_prevGamePadState = gp;
-				return;
-			}
-
-			var all = LocationDefinitionCache.GetAll();
-			if (!all.TryGetValue(locationId, out var loc) || loc?.pointsOfInterest == null || loc.pointsOfInterest.Count == 0)
-			{
-				_prevGamePadState = gp;
-				return;
-			}
-			int unlockedMax = System.Math.Max(0, SaveCache.GetValueOrDefault(locationId, 0));
-			int maxIndex = System.Math.Min(unlockedMax, loc.pointsOfInterest.Count - 1);
-			if (!_indexByLocationId.TryGetValue(locationId, out var idx)) idx = 0;
-			if (leftEdge) idx = System.Math.Max(0, idx - 1);
-			if (rightEdge) idx = System.Math.Min(maxIndex, idx + 1);
-			_indexByLocationId[locationId] = idx;
-			_prevGamePadState = gp;
-		}
-
-		private void EnsureSelectionInitialized(string locationId)
-		{
-			if (_indexByLocationId.ContainsKey(locationId)) return;
-			var all = LocationDefinitionCache.GetAll();
-			if (!all.TryGetValue(locationId, out var loc) || loc?.pointsOfInterest == null || loc.pointsOfInterest.Count == 0)
-			{
-				_indexByLocationId[locationId] = 0;
-				return;
-			}
-			int completed = SaveCache.GetValueOrDefault(locationId, 0);
-			int maxIndex = System.Math.Max(0, (loc.pointsOfInterest?.Count ?? 1) - 1);
-			int startIndex = System.Math.Max(0, System.Math.Min(completed, maxIndex));
-			_indexByLocationId[locationId] = startIndex;
-		}
-
-		private void SyncQuestSelectState(string locationId)
-		{
-			var qsEntity = EntityManager.GetEntitiesWithComponent<QuestSelectState>().FirstOrDefault();
-			if (qsEntity == null)
-			{
-				qsEntity = EntityManager.CreateEntity("QuestSelectState");
-				EntityManager.AddComponent(qsEntity, new QuestSelectState());
-			}
-			var qs = qsEntity.GetComponent<QuestSelectState>();
-			qs.IsOpen = false;
-			qs.LocationId = locationId;
-			qs.SelectedQuestIndex = _indexByLocationId.GetValueOrDefault(locationId, 0);
-		}
 
 		private Rectangle ComputeTooltipRect(Rectangle anchor, Transform t)
 		{
@@ -346,25 +311,18 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void DrawQuestContent(string locationId, Rectangle rect, float alpha01)
+		private void DrawQuestContent(Rectangle rect, float alpha01, string title, List<LocationEventDefinition> questDefs)
 		{
-			if (string.IsNullOrEmpty(locationId)) return;
-			var all = LocationDefinitionCache.GetAll();
-			if (!all.TryGetValue(locationId, out var loc) || loc?.pointsOfInterest == null || loc.pointsOfInterest.Count == 0) return;
-			int completed = SaveCache.GetValueOrDefault(locationId, 0);
-			int unlockedMax = System.Math.Max(0, System.Math.Min(completed, loc.pointsOfInterest.Count - 1));
-			int idx = _indexByLocationId.GetValueOrDefault(locationId, unlockedMax);
-			idx = System.Math.Max(0, System.Math.Min(idx, unlockedMax));
-			var questDefs = loc.pointsOfInterest[idx].events;
+			if (questDefs == null || questDefs.Count == 0) return;
 
-			// inner area below header (leave room for bottom bar)
+			// inner area below header
 			int pad = System.Math.Max(0, Padding);
 			int topY = rect.Y + System.Math.Min(rect.Height, System.Math.Max(12, HeaderHeight)) + pad;
-			int innerH = System.Math.Max(1, rect.Bottom - topY - pad - System.Math.Max(16, BottomBarHeight));
+			int innerH = System.Math.Max(1, rect.Bottom - topY - pad);
 			var inner = new Rectangle(rect.X + pad, topY, System.Math.Max(1, rect.Width - 2 * pad), innerH);
 
-			// Quest title: "Quest #"
-			string questTitle = "Quest " + (idx + 1);
+			// Title
+			string questTitle = title ?? "Quest";
 			var qSize = _font.MeasureString(questTitle) * QuestTitleScale;
 			var qPos = new Vector2(inner.X + (inner.Width - qSize.X) / 2f, inner.Y);
 			_spriteBatch.DrawString(_font, questTitle, qPos, Color.White * alpha01, 0f, Vector2.Zero, QuestTitleScale, SpriteEffects.None, 0f);
@@ -397,60 +355,16 @@ namespace Crusaders30XX.ECS.Systems
 				_spriteBatch.Draw(textures[i], new Rectangle(drawX, drawY, sizes[i].X, sizes[i].Y), Color.White * alpha01);
 			}
 
-			// Bottom action bar (opaque black)
-			var bottomRect = new Rectangle(rect.X, rect.Bottom - System.Math.Max(16, BottomBarHeight), rect.Width, System.Math.Max(16, BottomBarHeight));
-			_spriteBatch.Draw(_pixel, bottomRect, Color.Black); // no transparency per spec
-
-			// Left: LB / RB rounded pills with chevrons (hidden at ends)
-			int pillPad = System.Math.Max(0, PillSidePadding);
-			int pillH = System.Math.Max(System.Math.Max(12, PillMinHeight), bottomRect.Height - 2 * pillPad);
-			float glyphScale = BottomLabelScale;
-			string lbText = "LB";
-			string rbText = "RB";
-			string chevLeft = "<";
-			string chevRight = ">";
-			var lbSize = _font.MeasureString(lbText) * glyphScale;
-			var rbSize = _font.MeasureString(rbText) * glyphScale;
-			var chevLSize = _font.MeasureString(chevLeft) * glyphScale;
-			var chevRSize = _font.MeasureString(chevRight) * glyphScale;
-			int innerPadX = System.Math.Max(System.Math.Max(0, PillInnerPadMin), (int)System.Math.Round(pillH * MathHelper.Clamp(PillInnerPadFactor, 0f, 1f)));
-			int pillLW = (int)System.Math.Ceiling(chevLSize.X + innerPadX + lbSize.X + innerPadX);
-			int pillRW = (int)System.Math.Ceiling(rbSize.X + innerPadX + chevRSize.X + innerPadX);
-			int xCursor = bottomRect.X + pillPad;
-			bool canPrev = idx > 0;
-			bool canNext = idx < unlockedMax;
-			if (canPrev)
-			{
-				var pillL = new Rectangle(xCursor, bottomRect.Y + (bottomRect.Height - pillH) / 2, pillLW, pillH);
-				DrawPill(pillL, Color.White, System.Math.Min(pillH / 2, System.Math.Max(2, PillCornerRadiusMax)));
-				var textY = pillL.Y + (pillL.Height - (int)System.Math.Ceiling(lbSize.Y)) / 2f;
-				var chevPos = new Vector2(pillL.X + innerPadX, textY);
-				var lbPos = new Vector2(pillL.Right - innerPadX - lbSize.X, textY);
-				_spriteBatch.DrawString(_font, chevLeft, chevPos, Color.Black, 0f, Vector2.Zero, glyphScale, SpriteEffects.None, 0f);
-				_spriteBatch.DrawString(_font, lbText, lbPos, Color.Black, 0f, Vector2.Zero, glyphScale, SpriteEffects.None, 0f);
-				xCursor = pillL.Right + pillPad;
-			}
-			if (canNext)
-			{
-				var pillR = new Rectangle(xCursor, bottomRect.Y + (bottomRect.Height - pillH) / 2, pillRW, pillH);
-				DrawPill(pillR, Color.White, System.Math.Min(pillH / 2, System.Math.Max(2, PillCornerRadiusMax)));
-				var textY = pillR.Y + (pillR.Height - (int)System.Math.Ceiling(rbSize.Y)) / 2f;
-				var rbPos = new Vector2(pillR.X + innerPadX, textY);
-				var chevPosR = new Vector2(pillR.Right - innerPadX - chevRSize.X, textY);
-				_spriteBatch.DrawString(_font, rbText, rbPos, Color.Black, 0f, Vector2.Zero, glyphScale, SpriteEffects.None, 0f);
-				_spriteBatch.DrawString(_font, chevRight, chevPosR, Color.Black, 0f, Vector2.Zero, glyphScale, SpriteEffects.None, 0f);
-			}
-
-			// Right: "A - Select" aligned to bottom-right
+			// Bottom-right hint: "A - Select"
 			string leftText = "A";
 			string rightText = " - Select";
 			float scale = BottomRightTextScale;
 			var leftSize = _font.MeasureString(leftText) * scale;
 			var rightSize = _font.MeasureString(rightText) * scale;
 			int textPad = System.Math.Max(0, BottomRightMargin);
-			var rightEndX = bottomRect.Right - textPad;
-			var rightPos = new Vector2(rightEndX - rightSize.X, bottomRect.Y + (bottomRect.Height - (int)System.Math.Ceiling(rightSize.Y)) / 2f);
-			var leftPos = new Vector2((int)System.Math.Round(rightPos.X - leftSize.X), bottomRect.Y + (bottomRect.Height - (int)System.Math.Ceiling(leftSize.Y)) / 2f);
+			var rightEndX = inner.Right - textPad;
+			var rightPos = new Vector2(rightEndX - rightSize.X, inner.Bottom - rightSize.Y - textPad);
+			var leftPos = new Vector2((int)System.Math.Round(rightPos.X - leftSize.X), inner.Bottom - leftSize.Y - textPad);
 			var green = new Color(0, 200, 0) * alpha01;
 			_spriteBatch.DrawString(_font, leftText, leftPos, green, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 			_spriteBatch.DrawString(_font, rightText, rightPos, Color.White * alpha01, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
@@ -490,6 +404,49 @@ namespace Crusaders30XX.ECS.Systems
 			const string prefix = "Location_";
 			if (!entityName.StartsWith(prefix)) return null;
 			return entityName.Substring(prefix.Length);
+		}
+
+		private bool IsPoiVisible(PointOfInterest poi)
+		{
+			if (poi == null) return false;
+			// Visible if self revealed or completed
+			if (poi.IsRevealed || poi.IsCompleted) return true;
+			// Or within reveal/unrevealed radius of any unlocker (revealed or completed)
+			var allPoi = EntityManager.GetEntitiesWithComponent<PointOfInterest>()
+				.Select(e => e.GetComponent<PointOfInterest>())
+				.Where(p => p != null && (p.IsRevealed || p.IsCompleted))
+				.ToList();
+			foreach (var u in allPoi)
+			{
+				float dx = poi.WorldPosition.X - u.WorldPosition.X;
+				float dy = poi.WorldPosition.Y - u.WorldPosition.Y;
+				int r = u.IsCompleted ? u.RevealRadius : u.UnrevealedRadius;
+				if ((dx * dx) + (dy * dy) <= (r * r)) return true;
+			}
+			return false;
+		}
+
+		private bool TryFindLocationByPoiId(string poiId, out string locationId, out int questIndex)
+		{
+			locationId = null;
+			questIndex = -1;
+			if (string.IsNullOrEmpty(poiId)) return false;
+			var all = LocationDefinitionCache.GetAll();
+			foreach (var kv in all)
+			{
+				var loc = kv.Value;
+				if (loc?.pointsOfInterest == null) continue;
+				for (int i = 0; i < loc.pointsOfInterest.Count; i++)
+				{
+					if (string.Equals(loc.pointsOfInterest[i].id, poiId, System.StringComparison.OrdinalIgnoreCase))
+					{
+						locationId = kv.Key;
+						questIndex = i;
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 	}
 }

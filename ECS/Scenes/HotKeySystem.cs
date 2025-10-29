@@ -74,7 +74,11 @@ namespace Crusaders30XX.ECS.Systems
                 bool overlayPresent = EntityManager.GetEntitiesWithComponent<UIElement>()
                     .Any(e => {
                         var ui = e.GetComponent<UIElement>();
-                        return ui != null && ui.LayerType == UILayerType.Overlay;
+                        return ui != null 
+                            && ui.LayerType == UILayerType.Overlay 
+                            && ui.IsInteractable 
+                            && ui.Bounds.Width > 0 
+                            && ui.Bounds.Height > 0;
                     });
 
                 // Choose top-most eligible entity with this hotkey by ZOrder
@@ -111,7 +115,11 @@ namespace Crusaders30XX.ECS.Systems
             bool overlayPresent = EntityManager.GetEntitiesWithComponent<UIElement>()
                 .Any(e => {
                     var ui = e.GetComponent<UIElement>();
-                    return ui != null && ui.LayerType == UILayerType.Overlay;
+                    return ui != null 
+                        && ui.LayerType == UILayerType.Overlay 
+                        && ui.IsInteractable 
+                        && ui.Bounds.Width > 0 
+                        && ui.Bounds.Height > 0;
                 });
 
             var items = EntityManager.GetEntitiesWithComponent<HotKey>()

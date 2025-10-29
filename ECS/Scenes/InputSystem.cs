@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Data.Save;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -232,6 +234,17 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
+            // Location scene: clicking a Point Of Interest should initiate the quest
+            var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+            if (scene != null && scene.Current == SceneId.Location)
+            {
+                var poi = entity.GetComponent<PointOfInterest>();
+                if (poi != null)
+                {
+                    TryStartQuestFromPoi(poi);
+                }
+            }
+
             var button = entity.GetComponent<UIButton>();
             if (button != null)
             {
@@ -291,6 +304,82 @@ namespace Crusaders30XX.ECS.Systems
                     return;
                 }
                 EventManager.Publish(new PlayCardRequested { Card = entity });
+            }
+        }
+
+        private void TryStartQuestFromPoi(PointOfInterest poi)
+        {
+            if (poi == null || string.IsNullOrEmpty(poi.Id)) return;
+
+            // Find location and quest index containing this POI
+            string locationId = null;
+            int questIndex = -1;
+            var all = LocationDefinitionCache.GetAll();
+            foreach (var kv in all)
+            {
+                var loc = kv.Value;
+                if (loc?.pointsOfInterest == null) continue;
+                for (int i = 0; i < loc.pointsOfInterest.Count; i++)
+                {
+                    if (string.Equals(loc.pointsOfInterest[i].id, poi.Id, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        locationId = kv.Key;
+                        questIndex = i;
+                        break;
+                    }
+                }
+                if (questIndex >= 0) break;
+            }
+            if (string.IsNullOrEmpty(locationId) || questIndex < 0) return;
+
+            // Build queued events from this quest
+            var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
+            if (qeEntity == null)
+            {
+                qeEntity = EntityManager.CreateEntity("QueuedEvents");
+                EntityManager.AddComponent(qeEntity, new QueuedEvents());
+                EntityManager.AddComponent(qeEntity, new DontDestroyOnLoad());
+            }
+            var qe = qeEntity.GetComponent<QueuedEvents>();
+            qe.CurrentIndex = -1;
+            qe.Events.Clear();
+            qe.LocationId = locationId;
+            qe.QuestIndex = questIndex;
+
+            if (LocationDefinitionCache.TryGet(locationId, out var def) && def != null)
+            {
+                if (questIndex >= 0 && questIndex < (def.pointsOfInterest?.Count ?? 0))
+                {
+                    var questDefs = def.pointsOfInterest[questIndex];
+                    foreach (var q in questDefs.events)
+                    {
+                        var type = ParseQueuedEventType(q?.type);
+                        if (!string.IsNullOrEmpty(q?.id))
+                        {
+                            qe.Events.Add(new QueuedEvent { EventId = q.id, EventType = type });
+                        }
+                    }
+                }
+            }
+
+            if (qe.Events.Count > 0)
+            {
+                // Announce selection and transition to Battle
+                EventManager.Publish(new QuestSelected { LocationId = locationId, QuestIndex = questIndex });
+                EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
+            }
+        }
+
+        private static QueuedEventType ParseQueuedEventType(string type)
+        {
+            if (string.IsNullOrEmpty(type)) return QueuedEventType.Enemy;
+            switch (type.ToLowerInvariant())
+            {
+                case "enemy": return QueuedEventType.Enemy;
+                case "event": return QueuedEventType.Event;
+                case "shop": return QueuedEventType.Shop;
+                case "church": return QueuedEventType.Church;
+                default: return QueuedEventType.Enemy;
             }
         }
         

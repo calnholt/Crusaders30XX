@@ -162,7 +162,6 @@ namespace Crusaders30XX.ECS.Systems
 			if (scene == null || scene.Current != SceneId.Location) return;
 
 			EnsureOverlayLoaded();
-			if (_overlay == null || !_overlay.IsAvailable) return;
 			if (sceneTexture == null) return;
 
 			// Build circles: unlockers (revealed or completed) use RevealRadius; adjacent-but-unrevealed use UnrevealedRadius
@@ -198,21 +197,26 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 
-			if (centers.Count == 0) return;
-
-			_overlay.CentersPx = centers;
-			_overlay.RadiusPx = radii;
-			_overlay.FeatherPx = FeatherPx;
-			_overlay.WarpAmountPx = WarpAmountPx;
-			_overlay.WarpSpeed = WarpSpeed;
-			_overlay.NoiseScale = NoiseScale;
-			_overlay.EaseSpeed = EaseSpeed;
-			_overlay.GlobalAlphaMin = GlobalAlphaMin;
-			_overlay.GlobalAlphaMax = GlobalAlphaMax;
-			_overlay.DeathContrast = DeathContrast;
-			_overlay.LifelessDesaturateMix = LifelessDesaturateMix;
-			_overlay.LifelessDarkenMul = LifelessDarkenMul;
-			_overlay.TimeSeconds = _timeSeconds;
+			// Configure overlay params (will be used if masking is available)
+			if (_overlay != null)
+			{
+				// Anchor distortion to world Y (match Draw path)
+				var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
+				_overlay.CameraOriginYPx = cam?.Origin.Y ?? 0f;
+				_overlay.CentersPx = centers;
+				_overlay.RadiusPx = radii;
+				_overlay.FeatherPx = FeatherPx;
+				_overlay.WarpAmountPx = WarpAmountPx;
+				_overlay.WarpSpeed = WarpSpeed;
+				_overlay.NoiseScale = NoiseScale;
+				_overlay.EaseSpeed = EaseSpeed;
+				_overlay.GlobalAlphaMin = GlobalAlphaMin;
+				_overlay.GlobalAlphaMax = GlobalAlphaMax;
+				_overlay.DeathContrast = DeathContrast;
+				_overlay.LifelessDesaturateMix = LifelessDesaturateMix;
+				_overlay.LifelessDarkenMul = LifelessDarkenMul;
+				_overlay.TimeSeconds = _timeSeconds;
+			}
 
 			// Save and end current SpriteBatch
 			var savedBlend = _graphicsDevice.BlendState;
@@ -221,10 +225,28 @@ namespace Crusaders30XX.ECS.Systems
 			var savedRasterizer = _graphicsDevice.RasterizerState;
 			_spriteBatch.End();
 
-			// Composite the captured scene texture via the mask effect
-			_overlay.Begin(_spriteBatch);
-			_overlay.Draw(_spriteBatch, sceneTexture);
-			_overlay.End(_spriteBatch);
+			// Decide whether we can apply masking
+			bool canMask = (_overlay != null && _overlay.IsAvailable && centers.Count > 0);
+			if (canMask)
+			{
+				// Composite the captured scene texture via the mask effect
+				_overlay.Begin(_spriteBatch);
+				_overlay.Draw(_spriteBatch, sceneTexture);
+				_overlay.End(_spriteBatch);
+			}
+			else
+			{
+				// Fallback: present the captured scene without fog so we never show a black screen
+				_spriteBatch.Begin(
+					SpriteSortMode.Immediate,
+					savedBlend,
+					savedSampler,
+					savedDepth,
+					savedRasterizer
+				);
+				_spriteBatch.Draw(sceneTexture, _graphicsDevice.Viewport.Bounds, Color.White);
+				_spriteBatch.End();
+			}
 
 			// Restore previous SpriteBatch
 			_spriteBatch.Begin(

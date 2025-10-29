@@ -179,7 +179,7 @@ namespace Crusaders30XX.ECS.Systems
 						hoveredEntityForRumble = tc.E;
 						_lastHoveredEntity = hoveredEntityForRumble;
 						// Trigger a short rumble when a new entity becomes hovered
-						if (_prevHoverEntityForRumble != hoveredEntityForRumble)
+						if (_prevHoverEntityForRumble != hoveredEntityForRumble && tc.UI.IsInteractable)
 						{
 							_rumbleTimeRemaining = Math.Max(0f, RumbleDurationSeconds);
 							if (_rumbleTimeRemaining > 0f)

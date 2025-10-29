@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
     private bool _firstLoad = true;
 		private LocationMapDisplaySystem _locationMapDisplaySystem;
 		private PointOfInterestDisplaySystem _pointOfInterestDisplaySystem;
+		private TooltipQuestDisplaySystem _tooltipQuestDisplaySystem;
 		private FogDisplaySystem _fogDisplaySystem;
 		private RenderTarget2D _sceneRT;
 		private int _rtW;
@@ -38,6 +39,17 @@ namespace Crusaders30XX.ECS.Systems
         if (_.Scene != SceneId.Location) return;
         AddLocationSystems();
       });
+			EventManager.Subscribe<DeleteCachesEvent>(_ => {
+				_world.RemoveSystem(_locationMapDisplaySystem);
+				_world.RemoveSystem(_pointOfInterestDisplaySystem);
+				_world.RemoveSystem(_tooltipQuestDisplaySystem);
+				_world.RemoveSystem(_fogDisplaySystem);
+				_firstLoad = true;
+				_rtW = 0;
+				_rtH = 0;
+				_sceneRT?.Dispose();
+				_sceneRT = null;
+			});
     }
 
     protected override IEnumerable<Entity> GetRelevantEntities()
@@ -104,6 +116,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Composite: warp + darken outside holes while keeping inside undistorted
 			FrameProfiler.Measure("FogDisplaySystem.Composite", () => _fogDisplaySystem.DrawComposite(_sceneRT));
+			FrameProfiler.Measure("TooltipQuestDisplaySystem.Draw", _tooltipQuestDisplaySystem.Draw);
 		}
     private void AddLocationSystems()
 		{
@@ -115,6 +128,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_fogDisplaySystem);
 			_pointOfInterestDisplaySystem = new PointOfInterestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_pointOfInterestDisplaySystem);
+			_tooltipQuestDisplaySystem = new TooltipQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
+			_world.AddSystem(_tooltipQuestDisplaySystem);
     }
 
     protected override void UpdateEntity(Entity entity, GameTime gameTime)

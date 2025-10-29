@@ -50,6 +50,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 						isRevealed = poi.IsRevealed,
 						revealRadius = poi.RevealRadius,
 						unrevealedRadius = poi.UnrevealedRadius,
+						type = poi.Type,
 						events = new List<LocationEventDefinition>()
 					};
 					if (poi.WorldPosition != null && poi.WorldPosition.Length >= 2)
@@ -88,6 +89,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 			public int UnrevealedRadius { get; set; }
 			public bool IsRevealed { get; set; }
 			public string Name { get; set; }
+			public string Type { get; set; }
 			public List<EventFileDto> Events { get; set; }
 		}
 
