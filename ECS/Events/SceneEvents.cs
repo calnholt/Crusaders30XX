@@ -19,6 +19,10 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public CustomizationTabType Tab;
 	}
+
+	public class ShowQuestRewardOverlay
+	{
+	}
 }
 
 

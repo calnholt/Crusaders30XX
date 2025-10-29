@@ -46,6 +46,8 @@ namespace Crusaders30XX.ECS.Data.Locations
 					var mappedPoi = new PointOfInterestDefinition
 					{
 						id = poi.Id,
+						name = poi.Name,
+						isRevealed = poi.IsRevealed,
 						revealRadius = poi.RevealRadius,
 						unrevealedRadius = poi.UnrevealedRadius,
 						events = new List<LocationEventDefinition>()
@@ -84,6 +86,8 @@ namespace Crusaders30XX.ECS.Data.Locations
 			public float[] WorldPosition { get; set; }
 			public int RevealRadius { get; set; }
 			public int UnrevealedRadius { get; set; }
+			public bool IsRevealed { get; set; }
+			public string Name { get; set; }
 			public List<EventFileDto> Events { get; set; }
 		}
 

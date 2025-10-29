@@ -178,6 +178,16 @@ namespace Crusaders30XX.ECS.Components
 		public int Index { get; set; } = 0;
 	}
 
+		/// <summary>
+		/// Overlay state for the simple quest reward modal shown after the last battle in a quest.
+		/// </summary>
+		public class QuestRewardOverlayState : IComponent
+		{
+			public Entity Owner { get; set; }
+			public bool IsOpen { get; set; } = false;
+			public string Message { get; set; } = "Quest Complete!";
+		}
+
 	public class PendingQuestDialog : IComponent
 	{
 		public Entity Owner { get; set; }

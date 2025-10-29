@@ -82,25 +82,43 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureOverlayLoaded();
 			if (_overlay == null || !_overlay.IsAvailable) return;
 
-			            var uiEntities = GetRelevantEntities()
-                .Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), IsCard = e.GetComponent<CardData>() != null })
-                .Where(x => x.UI != null && x.UI.IsInteractable)
-                .ToList();
-
-			var data = EntityManager
+			// Build circles: unlockers (revealed or completed) use RevealRadius; adjacent-but-unrevealed use UnrevealedRadius
+			var list = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
-				.Select(p => {
-					var poi = p.GetComponent<PointOfInterest>();
-					var t = p.GetComponent<Transform>();
-					var center = new Microsoft.Xna.Framework.Vector2(t.Position.X, t.Position.Y);
-					return new { Center = center, RevealRadius = poi.IsRevealed ? poi.RevealRadius : poi.UnrevealedRadius };
-				})
+				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
+				.Where(x => x.P != null && x.T != null)
 				.ToList();
+			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted).ToList();
+			var unlockerIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
+			var centers = new System.Collections.Generic.List<Microsoft.Xna.Framework.Vector2>();
+			var radii = new System.Collections.Generic.List<float>();
+			foreach (var u in unlockers)
+			{
+				centers.Add(new Microsoft.Xna.Framework.Vector2(u.T.Position.X, u.T.Position.Y));
+				var drawRadius = u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius;
+				radii.Add((float)drawRadius);
+			}
+			foreach (var x in list)
+			{
+				if (unlockerIds.Contains(x.E.Id)) continue;
+				foreach (var u in unlockers)
+				{
+					float dx = x.P.WorldPosition.X - u.P.WorldPosition.X;
+					float dy = x.P.WorldPosition.Y - u.P.WorldPosition.Y;
+					int r = u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius;
+					if ((dx * dx) + (dy * dy) <= (r * r))
+					{
+						centers.Add(new Microsoft.Xna.Framework.Vector2(x.T.Position.X, x.T.Position.Y));
+						radii.Add((float)x.P.UnrevealedRadius);
+						break;
+					}
+				}
+			}
 
-			if (data.Count == 0) return;
+			if (centers.Count == 0) return;
 
-			_overlay.CentersPx = data.Select(d => d.Center).ToList();
-			_overlay.RadiusPx = data.Select(d => (float)d.RevealRadius).ToList();
+			_overlay.CentersPx = centers;
+			_overlay.RadiusPx = radii;
 			_overlay.FeatherPx = FeatherPx;
 			_overlay.WarpAmountPx = WarpAmountPx;
 			_overlay.WarpSpeed = WarpSpeed;
@@ -147,20 +165,43 @@ namespace Crusaders30XX.ECS.Systems
 			if (_overlay == null || !_overlay.IsAvailable) return;
 			if (sceneTexture == null) return;
 
-			var data = EntityManager
+			// Build circles: unlockers (revealed or completed) use RevealRadius; adjacent-but-unrevealed use UnrevealedRadius
+			var list = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
-				.Select(p => {
-					var poi = p.GetComponent<PointOfInterest>();
-					var t = p.GetComponent<Transform>();
-					var center = new Microsoft.Xna.Framework.Vector2(t.Position.X, t.Position.Y);
-					return new { Center = center, RevealRadius = poi.IsRevealed ? poi.RevealRadius : poi.UnrevealedRadius };
-				})
+				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
+				.Where(x => x.P != null && x.T != null)
 				.ToList();
+			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted).ToList();
+			var unlockerIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
+			var centers = new System.Collections.Generic.List<Microsoft.Xna.Framework.Vector2>();
+			var radii = new System.Collections.Generic.List<float>();
+			foreach (var u in unlockers)
+			{
+				centers.Add(new Microsoft.Xna.Framework.Vector2(u.T.Position.X, u.T.Position.Y));
+				var drawRadius = u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius;
+				radii.Add((float)drawRadius);
+			}
+			foreach (var x in list)
+			{
+				if (unlockerIds.Contains(x.E.Id)) continue;
+				foreach (var u in unlockers)
+				{
+					float dx = x.P.WorldPosition.X - u.P.WorldPosition.X;
+					float dy = x.P.WorldPosition.Y - u.P.WorldPosition.Y;
+					int r = u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius;
+					if ((dx * dx) + (dy * dy) <= (r * r))
+					{
+						centers.Add(new Microsoft.Xna.Framework.Vector2(x.T.Position.X, x.T.Position.Y));
+						radii.Add((float)x.P.UnrevealedRadius);
+						break;
+					}
+				}
+			}
 
-			if (data.Count == 0) return;
+			if (centers.Count == 0) return;
 
-			_overlay.CentersPx = data.Select(d => d.Center).ToList();
-			_overlay.RadiusPx = data.Select(d => (float)d.RevealRadius).ToList();
+			_overlay.CentersPx = centers;
+			_overlay.RadiusPx = radii;
 			_overlay.FeatherPx = FeatherPx;
 			_overlay.WarpAmountPx = WarpAmountPx;
 			_overlay.WarpSpeed = WarpSpeed;

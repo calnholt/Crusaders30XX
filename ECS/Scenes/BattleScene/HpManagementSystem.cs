@@ -61,7 +61,7 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						Console.WriteLine($"[HpManagementSystem] Attempting to save quest completion");
 						QuestCompleteService.SaveIfCompletedHighest(EntityManager);
-						EventManager.Publish(new ShowTransition { Scene = SceneId.WorldMap });
+						EventManager.Publish(new ShowQuestRewardOverlay());
 					}
 					else
 					{

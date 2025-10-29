@@ -4,6 +4,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Data.Save;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -75,7 +76,14 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, 50, 50), IsInteractable = true });
 				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
 				// Attach POI component for fog-of-war and interactions
-				EntityManager.AddComponent(e, new PointOfInterest { WorldPosition = pos.worldPosition, RevealRadius = pos.revealRadius, UnrevealedRadius = pos.unrevealedRadius });
+				EntityManager.AddComponent(e, new PointOfInterest {
+					Id = pos.id,
+					WorldPosition = pos.worldPosition,
+					RevealRadius = pos.revealRadius,
+					UnrevealedRadius = pos.unrevealedRadius,
+					IsRevealed = pos.isRevealed,
+					IsCompleted = SaveCache.IsQuestCompleted(def.id, pos.id)
+				});
 			}
 		}
 
@@ -87,16 +95,36 @@ namespace Crusaders30XX.ECS.Systems
 			int w = cam.ViewportW;
 			int h = cam.ViewportH;
 
-			// Draw only POIs that intersect screen
-			foreach (var e in _pois)
+			// Build sets: unlockers (revealed or completed) and visible (unlockers or within any unlocker's reveal radius)
+			var list = _pois
+				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>(), UI = e.GetComponent<UIElement>() })
+				.Where(x => x.P != null && x.T != null && x.UI != null)
+				.ToList();
+			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted).ToList();
+			var visibleIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
+			foreach (var x in list)
 			{
-					var t = e.GetComponent<Transform>();
-					var ui = e.GetComponent<UIElement>();
-					if (t == null || ui == null) continue;
+				if (visibleIds.Contains(x.E.Id)) continue;
+				foreach (var u in unlockers)
+				{
+					float dx = x.P.WorldPosition.X - u.P.WorldPosition.X;
+					float dy = x.P.WorldPosition.Y - u.P.WorldPosition.Y;
+					int r = u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius;
+					if ((dx * dx) + (dy * dy) <= (r * r))
+					{
+						visibleIds.Add(x.E.Id);
+						break;
+					}
+				}
+			}
 
-					var rect = new Rectangle((int)System.Math.Round(t.Position.X - ui.Bounds.Width / 2), (int)System.Math.Round(t.Position.Y - ui.Bounds.Height / 2), ui.Bounds.Width, ui.Bounds.Height);
-					if (rect.Right < 0 || rect.Bottom < 0 || rect.Left > w || rect.Top > h) continue;
-					_spriteBatch.Draw(_pixel, rect, Color.Red);
+			// Draw only POIs that are visible and intersect screen
+			foreach (var x in list)
+			{
+				if (!visibleIds.Contains(x.E.Id)) continue;
+				var rect = new Rectangle((int)System.Math.Round(x.T.Position.X - x.UI.Bounds.Width / 2), (int)System.Math.Round(x.T.Position.Y - x.UI.Bounds.Height / 2), x.UI.Bounds.Width, x.UI.Bounds.Height);
+				if (rect.Right < 0 || rect.Bottom < 0 || rect.Left > w || rect.Top > h) continue;
+				_spriteBatch.Draw(_pixel, rect, Color.Red);
 			}
 		}
 	}

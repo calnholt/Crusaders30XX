@@ -6,6 +6,7 @@ namespace Crusaders30XX.ECS.Components
 	public class PointOfInterest : IComponent
 	{
 		public Entity Owner { get; set; }
+		public string Id { get; set; } = string.Empty;
 		public Vector2 WorldPosition { get; set; } = Vector2.Zero;
 		public int RevealRadius { get; set; } = 300;
 		public bool IsCompleted { get; set; } = false;
