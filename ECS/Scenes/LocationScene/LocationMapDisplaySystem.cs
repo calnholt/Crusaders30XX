@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Crusaders30XX;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -22,6 +25,7 @@ namespace Crusaders30XX.ECS.Systems
 		private int _lastViewportH = -1;
 		private Vector2 _cameraCenter;
 		private bool _locked;
+		private bool _hasPannedOnLoad = false;
 
 		// Map configuration
 		public const int MapWidth = 6000;
@@ -56,6 +60,15 @@ namespace Crusaders30XX.ECS.Systems
 				ClampCamera(ref _cameraCenter, w, h);
 				PublishCameraState(w, h);
 			});
+			EventManager.Subscribe<LoadSceneEvent>(_ => {
+				if (_.Scene != SceneId.Location)
+				{
+					_hasPannedOnLoad = false;
+					return;
+				}
+				// Reset flag when location scene loads
+				_hasPannedOnLoad = false;
+			});
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -76,6 +89,13 @@ namespace Crusaders30XX.ECS.Systems
 				_lastViewportH = h;
 				_cameraCenter = new Vector2(MapWidth / 2f, MapHeight / 2f);
 				ClampCamera(ref _cameraCenter, w, h);
+			}
+
+			// Auto-pan camera on scene load (only if not coming from quest completion)
+			if (!_hasPannedOnLoad && !TransitionStateSingleton.HasPendingLocationPoiReveal)
+			{
+				TryAutoPanCamera();
+				_hasPannedOnLoad = true;
 			}
 
 			if (!Game1.WindowIsActive)
@@ -154,6 +174,57 @@ namespace Crusaders30XX.ECS.Systems
 			state.Origin = origin;
 			state.ViewportW = viewportW;
 			state.ViewportH = viewportH;
+		}
+
+		private void TryAutoPanCamera()
+		{
+			// Get location ID - try QueuedEvents first, fall back to "desert"
+			string locationId = null;
+			var queuedEventsEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
+			if (queuedEventsEntity != null)
+			{
+				var queuedEvents = queuedEventsEntity.GetComponent<QueuedEvents>();
+				if (!string.IsNullOrEmpty(queuedEvents?.LocationId))
+				{
+					locationId = queuedEvents.LocationId;
+				}
+			}
+			if (string.IsNullOrEmpty(locationId))
+			{
+				locationId = "desert"; // Fall back to hardcoded "desert" matching PointOfInterestDisplaySystem
+			}
+
+			// Load location definition
+			if (!LocationDefinitionCache.TryGet(locationId, out var def) || def == null || def.pointsOfInterest == null)
+			{
+				return;
+			}
+
+			// Find target POI: furthest down completed quest, or first revealed POI
+			PointOfInterestDefinition targetPoi = null;
+
+			// First, try to find the furthest down completed quest (highest index)
+			for (int i = def.pointsOfInterest.Count - 1; i >= 0; i--)
+			{
+				var poi = def.pointsOfInterest[i];
+				if (SaveCache.IsQuestCompleted(locationId, poi.id))
+				{
+					targetPoi = poi;
+					break;
+				}
+			}
+
+			// If no completed quests, find first revealed POI
+			if (targetPoi == null)
+			{
+				targetPoi = def.pointsOfInterest.FirstOrDefault(poi => poi.isRevealed);
+			}
+
+			// Pan camera to target POI if found
+			if (targetPoi != null)
+			{
+				EventManager.Publish(new FocusLocationCameraEvent { WorldPos = targetPoi.worldPosition });
+			}
 		}
 
 		private static void ClampCamera(ref Vector2 center, int viewportW, int viewportH)
