@@ -24,6 +24,7 @@ namespace Crusaders30XX.ECS.Systems
 		private TooltipQuestDisplaySystem _tooltipQuestDisplaySystem;
 		private FogDisplaySystem _fogDisplaySystem;
 		private LocationPoiRevealCutsceneSystem _poiCutsceneSystem;
+		private POIRadiusDebugDisplaySystem _poiRadiusDebugDisplaySystem;
 		private RenderTarget2D _sceneRT;
 		private int _rtW;
 		private int _rtH;
@@ -46,6 +47,7 @@ namespace Crusaders30XX.ECS.Systems
 				_world.RemoveSystem(_tooltipQuestDisplaySystem);
 				_world.RemoveSystem(_fogDisplaySystem);
 				_world.RemoveSystem(_poiCutsceneSystem);
+				_world.RemoveSystem(_poiRadiusDebugDisplaySystem);
 				_firstLoad = true;
 				_rtW = 0;
 				_rtH = 0;
@@ -118,6 +120,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Composite: warp + darken outside holes while keeping inside undistorted
 			FrameProfiler.Measure("FogDisplaySystem.Composite", () => _fogDisplaySystem.DrawComposite(_sceneRT));
+			FrameProfiler.Measure("POIRadiusDebugDisplaySystem.Draw", _poiRadiusDebugDisplaySystem.Draw);
 			FrameProfiler.Measure("TooltipQuestDisplaySystem.Draw", _tooltipQuestDisplaySystem.Draw);
 		}
     private void AddLocationSystems()
@@ -132,6 +135,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_poiCutsceneSystem);
 			_fogDisplaySystem = new FogDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_fogDisplaySystem);
+			_poiRadiusDebugDisplaySystem = new POIRadiusDebugDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_world.AddSystem(_poiRadiusDebugDisplaySystem);
 			_tooltipQuestDisplaySystem = new TooltipQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
 			_world.AddSystem(_tooltipQuestDisplaySystem);
     }
