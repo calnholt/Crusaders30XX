@@ -35,7 +35,6 @@ public class Game1 : Game
     private TooltipTextDisplaySystem _tooltipTextDisplaySystem;
     private ProfilerSystem _profilerSystem;
     private LocationSelectDisplaySystem _worldMapSystem;
-    private TooltipQuestDisplaySystem _tooltipQuestDisplaySystem;
     private ParallaxLayerSystem _parallaxLayerSystem;
     private UIElementHighlightSystem _uiElementHighlightSystem;
     private CursorSystem _cursorSystem;
@@ -130,7 +129,6 @@ public class Game1 : Game
         _tooltipTextDisplaySystem = new TooltipTextDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
-        _tooltipQuestDisplaySystem = new TooltipQuestDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _hotKeySystem = new HotKeySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _hotKeyProgressRingSystem = new HotKeyProgressRingSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _world.SystemManager);
@@ -153,7 +151,6 @@ public class Game1 : Game
         _world.AddSystem(_tooltipTextDisplaySystem);
         _world.AddSystem(_profilerSystem);
         _world.AddSystem(_worldMapSystem);
-        _world.AddSystem(_tooltipQuestDisplaySystem);
         _world.AddSystem(_cursorSystem);
         _world.AddSystem(_hotKeySystem);
         _world.AddSystem(_hotKeyProgressRingSystem);
@@ -273,7 +270,6 @@ public class Game1 : Game
                 _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, _spriteRasterizer);
                 FrameProfiler.Measure("UIElementHighlightSystem.Draw", _uiElementHighlightSystem.Draw);
                 FrameProfiler.Measure("LocationSelectDisplaySystem.Draw", _worldMapSystem.Draw);
-                FrameProfiler.Measure("TooltipQuestDisplaySystem.Draw", _tooltipQuestDisplaySystem.Draw);
                 _spriteBatch.End();
                 // Resume default sampling for overlays and other UI
                 _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);

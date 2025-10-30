@@ -71,7 +71,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int BoxHeight { get; set; } = 260;
 
 		[DebugEditable(DisplayName = "Gap", Step = 1, Min = 0, Max = 120)]
-		public int Gap { get; set; } = 30;
+		public int Gap { get; set; } = 60;
 
 		[DebugEditable(DisplayName = "Enemy Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
 		public float EnemyScale { get; set; } = 0.8f;
@@ -210,7 +210,8 @@ namespace Crusaders30XX.ECS.Systems
 					_tooltipEntity = EntityManager.CreateEntity(TooltipEntityName);
 					EntityManager.AddComponent(_tooltipEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 });
 					EntityManager.AddComponent(_tooltipEntity, new QuestTooltip { LocationId = locationIdTop, Title = title, Events = events, Alpha01 = 0f, TargetVisible = true });
-					EntityManager.AddComponent(_tooltipEntity, new UIElement { Bounds = rect, IsInteractable = false });
+					EntityManager.AddComponent(_tooltipEntity, new UIElement { Bounds = rect, IsInteractable = true });
+					EntityManager.AddComponent(_tooltipEntity, new HotKey { Button = FaceButton.X, RequiresHold = true, ParentEntity = hovered.E });
 				}
 				else
 				{

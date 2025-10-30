@@ -73,7 +73,7 @@ namespace Crusaders30XX.ECS.Systems
 				// Initialize transform: Position will be driven by Parallax from BasePosition
 				EntityManager.AddComponent(e, new Transform { Position = pos.worldPosition, ZOrder = 10 });
 				// UI bounds size only; Parallax will center bounds at Transform.Position when AffectsUIBounds is true
-				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, 50, 50), IsInteractable = true, TooltipType = TooltipType.Quests });
+				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, 50, 50), IsInteractable = true, TooltipType = TooltipType.Quests, EventType = UIElementEventType.QuestSelect, IsPreventDefaultClick = true });
 				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
 				// Attach POI component for fog-of-war and interactions
 				var poi = new PointOfInterest {

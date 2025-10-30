@@ -216,7 +216,7 @@ namespace Crusaders30XX.ECS.Systems
 				bool aEdge = aPressed && !aPrevPressed;
 				isPressed = aPressed;
 				isPressedEdge = aEdge;
-				if (aEdge && !ignoringTransitions)
+				if (aEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick)
 				{
 					int rHitboxClick = Math.Max(0, HitboxRadius);
 					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()
@@ -224,7 +224,7 @@ namespace Crusaders30XX.ECS.Systems
 						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick) > 0f)
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
-					if (clickCandidate != null)
+					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick)
 					{
 						if (clickCandidate.UI.EventType != UIElementEventType.None)
 						{
@@ -331,7 +331,7 @@ namespace Crusaders30XX.ECS.Systems
 				bool lEdge = lPressed && !lPrevPressed;
 				isPressed = lPressed;
 				isPressedEdge = lEdge;
-				if (lEdge && !ignoringTransitions && topCandidate != null)
+				if (lEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick)
 				{
 					var tc = (dynamic)topCandidate;
 					if (tc.UI.EventType != UIElementEventType.None)

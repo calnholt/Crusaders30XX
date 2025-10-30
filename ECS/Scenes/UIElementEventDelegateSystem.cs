@@ -36,6 +36,11 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new CloseCardListModalEvent { });
                     break;
                 }
+                case UIElementEventType.QuestSelect:
+                {
+                    EventManager.Publish(new QuestSelectRequested { Entity = entity });
+                    break;
+                }
                 default:
                 {
                     Console.WriteLine($"UIElementEventDelegateSystem: clicked unknown event type {type} on entity {entity.Id}");

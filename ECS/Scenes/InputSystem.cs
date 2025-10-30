@@ -25,6 +25,7 @@ namespace Crusaders30XX.ECS.Systems
             _previousMouseState = Mouse.GetState();
             _previousKeyboardState = Keyboard.GetState();
             EventManager.Subscribe<CursorStateEvent>(OnCursorEvent);
+            EventManager.Subscribe<QuestSelectRequested>(OnQuestSelectRequested);
         }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -234,16 +235,16 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            // Location scene: clicking a Point Of Interest should initiate the quest
-            var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-            if (scene != null && scene.Current == SceneId.Location)
-            {
-                var poi = entity.GetComponent<PointOfInterest>();
-                if (poi != null)
-                {
-                    TryStartQuestFromPoi(poi);
-                }
-            }
+            // // Location scene: clicking a Point Of Interest should initiate the quest
+            // var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+            // if (scene != null && scene.Current == SceneId.Location)
+            // {
+            //     var poi = entity.GetComponent<PointOfInterest>();
+            //     if (poi != null)
+            //     {
+            //         TryStartQuestFromPoi(poi);
+            //     }
+            // }
 
             var button = entity.GetComponent<UIButton>();
             if (button != null)
@@ -307,6 +308,14 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
+        private void OnQuestSelectRequested(QuestSelectRequested e)
+        {
+            var poi = e.Entity.GetComponent<PointOfInterest>();
+            if (poi != null)
+            {
+                TryStartQuestFromPoi(poi);
+            }
+        }
         private void TryStartQuestFromPoi(PointOfInterest poi)
         {
             if (poi == null || string.IsNullOrEmpty(poi.Id)) return;

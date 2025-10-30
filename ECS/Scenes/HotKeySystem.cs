@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
@@ -51,6 +52,16 @@ namespace Crusaders30XX.ECS.Systems
         {
             var btn = entity.GetComponent<UIButton>();
             var ui = entity.GetComponent<UIElement>();
+            var hotKey = entity.GetComponent<HotKey>();
+
+            if (hotKey != null && hotKey.ParentEntity != null)
+            {
+                Console.WriteLine($"Processing hotkey click for parent entity: {hotKey.ParentEntity.Id}");
+                ProcessHotKeyClick(hotKey.ParentEntity);
+                return;
+            }
+
+            Console.WriteLine($"Processing hotkey click for entity: {entity.Id} {entity.Name} btn={btn?.Command} ui={ui?.EventType} uiClicked={ui?.IsClicked}");
             
             if (btn != null && !string.IsNullOrEmpty(btn.Command))
             {

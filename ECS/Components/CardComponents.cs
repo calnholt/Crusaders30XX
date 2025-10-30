@@ -324,6 +324,7 @@ namespace Crusaders30XX.ECS.Components
         public int TooltipOffsetPx { get; set; } = 6; // gap from element to tooltip
         public UIElementEventType EventType { get; set; } = UIElementEventType.None;
         public UILayerType LayerType { get; set; } = UILayerType.Default;
+        public bool IsPreventDefaultClick { get; set; } = false;
     }
 
     public enum UILayerType
@@ -583,6 +584,7 @@ namespace Crusaders30XX.ECS.Components
         public FaceButton Button { get; set; } = FaceButton.Y;
         public bool RequiresHold { get; set; } = false;
         public float HoldDurationSeconds { get; set; } = 1.0f;
+        public Entity ParentEntity { get; set; }
     }
 
     /// <summary>

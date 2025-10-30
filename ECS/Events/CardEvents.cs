@@ -362,5 +362,9 @@ namespace Crusaders30XX.ECS.Events
     {
         public Entity EquipmentEntity;
     }
+    public class QuestSelectRequested 
+    { 
+        public Entity Entity;
+    }
 
 } 
