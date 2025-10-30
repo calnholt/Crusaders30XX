@@ -141,13 +141,32 @@ namespace Crusaders30XX.ECS.Systems
                 var pos = new Vector2(cx - HintRadius, cy - HintRadius);
                 if (x.HK.Button == FaceButton.Start)
                 {
-                    // Draw simple rectangular badge with "Start"
-                    string label = "Start";
-                    var size = _font.MeasureString(label) * TextScale;
-                    int pad = System.Math.Max(2, (int)System.Math.Round(HintRadius * 0.3f));
-                    var rect = new Rectangle((int)(cx - size.X / 2f) - pad, (int)(cy - size.Y / 2f) - pad, (int)System.Math.Ceiling(size.X) + pad * 2, (int)System.Math.Ceiling(size.Y) + pad * 2);
-                    _spriteBatch.Draw(PrimitiveTextureFactory.GetRoundedSquare(_graphicsDevice, System.Math.Max(2, rect.Height), System.Math.Max(2, rect.Height / 4)), new Vector2(rect.X, rect.Y), new Color(36, 36, 36));
-                    _spriteBatch.DrawString(_font, label, new Vector2(cx - size.X / 2f, cy - size.Y / 2f - 1f), Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+                    if (isPS)
+                    {
+                        // PlayStation: rectangular oval
+                        int ovalWidth = (int)System.Math.Round(HintRadius * 2.5f);
+                        int ovalHeight = (int)System.Math.Round(HintRadius * 1.2f);
+                        int cornerRadius = System.Math.Max(2, ovalHeight / 2);
+                        var ovalTex = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, ovalWidth, ovalHeight, cornerRadius);
+                        _spriteBatch.Draw(ovalTex, new Vector2(cx - ovalWidth / 2f, cy - ovalHeight / 2f), new Color(36, 36, 36));
+                    }
+                    else
+                    {
+                        // Xbox: three-line menu icon (hamburger menu)
+                        int iconSize = (int)System.Math.Round(HintRadius * 1.5f);
+                        int lineWidth = (int)System.Math.Round(iconSize * 0.7f);
+                        int lineHeight = System.Math.Max(2, (int)System.Math.Round(iconSize * 0.15f));
+                        int lineSpacing = (int)System.Math.Round(iconSize * 0.25f);
+                        int startY = cy - iconSize / 2;
+                        
+                        // Draw three horizontal lines using rounded squares with minimal corner radius
+                        var lineTex = PrimitiveTextureFactory.GetRoundedSquare(_graphicsDevice, lineHeight, System.Math.Max(1, lineHeight / 4));
+                        float scaleX = lineWidth / (float)lineTex.Width;
+                        
+                        _spriteBatch.Draw(lineTex, new Vector2(cx - lineWidth / 2f, startY), null, Color.White, 0f, Vector2.Zero, new Vector2(scaleX, 1f), SpriteEffects.None, 0f);
+                        _spriteBatch.Draw(lineTex, new Vector2(cx - lineWidth / 2f, startY + lineSpacing), null, Color.White, 0f, Vector2.Zero, new Vector2(scaleX, 1f), SpriteEffects.None, 0f);
+                        _spriteBatch.Draw(lineTex, new Vector2(cx - lineWidth / 2f, startY + lineSpacing * 2), null, Color.White, 0f, Vector2.Zero, new Vector2(scaleX, 1f), SpriteEffects.None, 0f);
+                    }
                 }
                 else
                 {
