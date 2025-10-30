@@ -1,5 +1,6 @@
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Data.Locations;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
@@ -446,6 +447,20 @@ namespace Crusaders30XX.ECS.Components
     }
     
     /// <summary>
+    /// Component for quest tooltip data and fade state.
+    /// </summary>
+    public class QuestTooltip : IComponent
+    {
+        public Entity Owner { get; set; }
+        
+        public string LocationId { get; set; }
+        public string Title { get; set; }
+        public List<LocationEventDefinition> Events { get; set; }
+        public float Alpha01 { get; set; } = 0f;
+        public bool TargetVisible { get; set; } = false;
+    }
+    
+    /// <summary>
     /// Component for animation
     /// </summary>
     public class Animation : IComponent
@@ -566,6 +581,8 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         public FaceButton Button { get; set; } = FaceButton.Y;
+        public bool RequiresHold { get; set; } = false;
+        public float HoldDurationSeconds { get; set; } = 1.0f;
     }
 
     /// <summary>

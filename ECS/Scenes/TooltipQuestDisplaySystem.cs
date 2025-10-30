@@ -20,10 +20,10 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
 		private readonly SpriteFont _font;
-		private readonly Dictionary<int, FadeState> _fadeByEntityId = new();
 		private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedCache = new();
 		private readonly Dictionary<(int w, int h, bool right, int border), Texture2D> _triangleCache = new();
 		private Texture2D _pixel;
+		private Entity _tooltipEntity;
 
 		[DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 40)]
 		public int Padding { get; set; } = 10;
@@ -113,7 +113,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Header Image Padding", Step = 1, Min = 0, Max = 40)]
 		public int HeaderImagePadding { get; set; } = 4;
 
-		private class FadeState { public float Alpha01; public bool TargetVisible; public Rectangle Rect; public string LocationId; public string Title; public List<LocationEventDefinition> Events; }
+		private const string TooltipEntityName = "UI_QuestTooltip";
 
 		public TooltipQuestDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
 			: base(entityManager)
@@ -128,38 +128,45 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
-			return EntityManager.GetEntitiesWithComponent<UIElement>();
+			// Return empty since we handle logic in Update() once per frame
+			return Enumerable.Empty<Entity>();
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
-		public void Draw()
+		public override void Update(GameTime gameTime)
 		{
+			if (!IsActive) return;
+
 			// Only on WorldMap or Location scenes
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-			if (scene == null || (scene.Current != SceneId.WorldMap && scene.Current != SceneId.Location)) return;
-			if (_font == null) return;
+			if (scene == null || (scene.Current != SceneId.WorldMap && scene.Current != SceneId.Location)) 
+			{
+				// Clean up tooltip if scene changes
+				if (_tooltipEntity != null)
+				{
+					EntityManager.DestroyEntity(_tooltipEntity.Id);
+					_tooltipEntity = null;
+				}
+				return;
+			}
 
-			var hovered = GetRelevantEntities()
+			var hovered = EntityManager.GetEntitiesWithComponent<UIElement>()
 				.Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>() })
 				.Where(x => x.UI != null && x.UI.TooltipType == TooltipType.Quests && x.UI.IsHovered)
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.FirstOrDefault();
 
-			// Default all fades to invisible
-			foreach (var key in _fadeByEntityId.Keys.ToList())
-			{
-				_fadeByEntityId[key].TargetVisible = false;
-			}
+			// Determine if tooltip should be visible
+			bool shouldShowTooltip = false;
+			string locationIdTop = null;
+			string title = null;
+			List<LocationEventDefinition> events = null;
+			Rectangle? tooltipRect = null;
 
 			if (hovered != null)
 			{
-				var id = hovered.E.Id;
-				var rect = ComputeTooltipRect(hovered.UI.Bounds, hovered.T);
-
-				string locationIdTop = null;
-				string title = null;
-				List<LocationEventDefinition> events = null;
+				tooltipRect = ComputeTooltipRect(hovered.UI.Bounds, hovered.T);
 
 				// Case 1: WorldMap location tile
 				locationIdTop = ExtractLocationId(hovered.E?.Name);
@@ -172,6 +179,7 @@ namespace Crusaders30XX.ECS.Systems
 						int idx = System.Math.Max(0, System.Math.Min(completed, loc.pointsOfInterest.Count - 1));
 						events = loc.pointsOfInterest[idx].events;
 						title = "Quest " + (idx + 1);
+						shouldShowTooltip = true;
 					}
 				}
 				else
@@ -186,44 +194,97 @@ namespace Crusaders30XX.ECS.Systems
 						{
 							events = loc.pointsOfInterest[questIdx].events;
 							title = string.IsNullOrWhiteSpace(loc.pointsOfInterest[questIdx].name) ? ("Quest " + (questIdx + 1)) : loc.pointsOfInterest[questIdx].name;
+							shouldShowTooltip = true;
 						}
 					}
 				}
-
-				if (!string.IsNullOrEmpty(locationIdTop) && events != null && events.Count > 0)
-				{
-					if (!_fadeByEntityId.TryGetValue(id, out var fs))
-					{
-						fs = new FadeState { Alpha01 = 0f, TargetVisible = true, Rect = rect, LocationId = locationIdTop, Title = title, Events = events };
-						_fadeByEntityId[id] = fs;
-					}
-					fs.TargetVisible = true;
-					fs.Rect = rect;
-					fs.LocationId = locationIdTop;
-					fs.Title = title;
-					fs.Events = events;
-					_fadeByEntityId[id] = fs;
-				}
 			}
 
-			// Draw visible tooltips with fade
-			foreach (var kv in _fadeByEntityId.ToList())
+			// Update or create tooltip entity
+			if (shouldShowTooltip && !string.IsNullOrEmpty(locationIdTop) && events != null && events.Count > 0 && tooltipRect.HasValue)
 			{
-				var id = kv.Key;
-				var fs = kv.Value;
-				float step = (FadeSeconds <= 0f) ? 1f : (1f / (FadeSeconds * 60f));
-				fs.Alpha01 = MathHelper.Clamp(fs.Alpha01 + (fs.TargetVisible ? step : -step), 0f, 1f);
-				_fadeByEntityId[id] = fs;
-				if (fs.Alpha01 <= 0f && !fs.TargetVisible)
+				var rect = tooltipRect.Value;
+				
+				if (_tooltipEntity == null)
 				{
-					_fadeByEntityId.Remove(id);
-					continue;
+					_tooltipEntity = EntityManager.CreateEntity(TooltipEntityName);
+					EntityManager.AddComponent(_tooltipEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 });
+					EntityManager.AddComponent(_tooltipEntity, new QuestTooltip { LocationId = locationIdTop, Title = title, Events = events, Alpha01 = 0f, TargetVisible = true });
+					EntityManager.AddComponent(_tooltipEntity, new UIElement { Bounds = rect, IsInteractable = false });
 				}
-
-				DrawTooltipBox(fs.Rect, fs.Alpha01);
-				DrawHeader(fs.LocationId, fs.Rect, fs.Alpha01);
-				DrawQuestContent(fs.Rect, fs.Alpha01, fs.Title, fs.Events);
+				else
+				{
+					var transform = _tooltipEntity.GetComponent<Transform>();
+					if (transform != null)
+					{
+						transform.Position = new Vector2(rect.X, rect.Y);
+						transform.ZOrder = 10001;
+					}
+					var questTooltip = _tooltipEntity.GetComponent<QuestTooltip>();
+					if (questTooltip != null)
+					{
+						questTooltip.LocationId = locationIdTop;
+						questTooltip.Title = title;
+						questTooltip.Events = events;
+						questTooltip.TargetVisible = true;
+					}
+					var ui = _tooltipEntity.GetComponent<UIElement>();
+					if (ui != null)
+					{
+						ui.Bounds = rect;
+					}
+				}
 			}
+
+			// Update fade state and cleanup if needed
+			if (_tooltipEntity != null)
+			{
+				var questTooltip = _tooltipEntity.GetComponent<QuestTooltip>();
+				if (questTooltip != null)
+				{
+					if (!shouldShowTooltip)
+					{
+						questTooltip.TargetVisible = false;
+					}
+					
+					float step = (FadeSeconds <= 0f) ? 1f : (1f / (FadeSeconds * 60f));
+					questTooltip.Alpha01 = MathHelper.Clamp(questTooltip.Alpha01 + (questTooltip.TargetVisible ? step : -step), 0f, 1f);
+					
+					if (questTooltip.Alpha01 <= 0f && !questTooltip.TargetVisible)
+					{
+						EntityManager.DestroyEntity(_tooltipEntity.Id);
+						_tooltipEntity = null;
+					}
+				}
+			}
+		}
+
+		public void Draw()
+		{
+			// Only on WorldMap or Location scenes
+			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+			if (scene == null || (scene.Current != SceneId.WorldMap && scene.Current != SceneId.Location)) return;
+			if (_font == null) return;
+
+			// Find tooltip entity
+			if (_tooltipEntity == null)
+			{
+				_tooltipEntity = EntityManager.GetEntity(TooltipEntityName);
+			}
+
+			if (_tooltipEntity == null) return;
+
+			var questTooltip = _tooltipEntity.GetComponent<QuestTooltip>();
+			var transform = _tooltipEntity.GetComponent<Transform>();
+			var ui = _tooltipEntity.GetComponent<UIElement>();
+
+			if (questTooltip == null || transform == null || ui == null) return;
+			if (questTooltip.Alpha01 <= 0f) return;
+
+			var rect = ui.Bounds;
+			DrawTooltipBox(rect, questTooltip.Alpha01);
+			DrawHeader(questTooltip.LocationId, rect, questTooltip.Alpha01);
+			DrawQuestContent(rect, questTooltip.Alpha01, questTooltip.Title, questTooltip.Events);
 		}
 
 

@@ -38,6 +38,32 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch = sb;
             _font = font;
             _circleTexSmall = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, HintRadius);
+            
+            EventManager.Subscribe<HotKeyHoldCompletedEvent>(OnHotKeyHoldCompleted);
+        }
+
+        private void OnHotKeyHoldCompleted(HotKeyHoldCompletedEvent evt)
+        {
+            ProcessHotKeyClick(evt.Entity);
+        }
+
+        private void ProcessHotKeyClick(Entity entity)
+        {
+            var btn = entity.GetComponent<UIButton>();
+            var ui = entity.GetComponent<UIElement>();
+            
+            if (btn != null && !string.IsNullOrEmpty(btn.Command))
+            {
+                EventManager.Publish(new DebugCommandEvent { Command = btn.Command });
+            }
+            else if (ui != null && ui.EventType != UIElementEventType.None)
+            {
+                UIElementEventDelegateService.HandleEvent(ui.EventType, entity);
+            }
+            else if (ui != null)
+            {
+                ui.IsClicked = true;
+            }
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -89,18 +115,13 @@ namespace Crusaders30XX.ECS.Systems
                     .FirstOrDefault();
                 if (target != null)
                 {
-                    if (target.Btn != null && !string.IsNullOrEmpty(target.Btn.Command))
+                    // Skip activation if RequiresHold - let HotKeyProgressRingSystem handle it
+                    if (target.HK.RequiresHold)
                     {
-                        EventManager.Publish(new DebugCommandEvent { Command = target.Btn.Command });
+                        return;
                     }
-                    else if (target.UI.EventType != UIElementEventType.None)
-                    {
-                        UIElementEventDelegateService.HandleEvent(target.UI.EventType, target.E);
-                    }
-                    else
-                    {
-                        target.UI.IsClicked = true;
-                    }
+
+                    ProcessHotKeyClick(target.E);
                 }
             }
 

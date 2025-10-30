@@ -340,6 +340,14 @@ namespace Crusaders30XX.ECS.Events
         public string TemperanceId { get; set; }
     }
 
+    /// <summary>
+    /// Event published when a hotkey hold-to-activate completes
+    /// </summary>
+    public class HotKeyHoldCompletedEvent
+    {
+        public Entity Entity { get; set; }
+    }
+
     public class UnassignCardAsBlockRequested
     {
         public Entity CardEntity;

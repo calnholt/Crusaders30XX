@@ -435,7 +435,7 @@ namespace Crusaders30XX.ECS.Systems
                 _spriteBatch.Draw(_pixel, new Rectangle(drawRect.X, drawRect.Y, 2, drawRect.Height), Color.White);
                 _spriteBatch.Draw(_pixel, new Rectangle(drawRect.Right - 2, drawRect.Y, 2, drawRect.Height), Color.White);
                 // Label
-                string label = "End";
+                string label = "Skip";
                 var size = _font.MeasureString(label) * EndButtonTextScale;
                 var posText = new Vector2(drawRect.Center.X - size.X / 2f, drawRect.Center.Y - size.Y / 2f);
                 _spriteBatch.DrawString(_font, label, posText, Color.White, 0f, Vector2.Zero, EndButtonTextScale, SpriteEffects.None, 0f);
@@ -491,8 +491,8 @@ namespace Crusaders30XX.ECS.Systems
                 int x = vw - System.Math.Max(0, EndButtonMargin) - System.Math.Max(40, EndButtonWidth);
                 int y = System.Math.Max(0, EndButtonMargin);
                 EntityManager.AddComponent(ent, new Transform { BasePosition = new Vector2(x, y), Position = new Vector2(x, y), ZOrder = ZOrder + 1 });
-                EntityManager.AddComponent(ent, new UIElement { Bounds = new Rectangle(x, y, System.Math.Max(40, EndButtonWidth), System.Math.Max(20, EndButtonHeight)), IsInteractable = true, LayerType = UILayerType.Overlay, Tooltip = "End dialog" });
-                EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Start });
+                EntityManager.AddComponent(ent, new UIElement { Bounds = new Rectangle(x, y, System.Math.Max(40, EndButtonWidth), System.Math.Max(20, EndButtonHeight)), IsInteractable = true, LayerType = UILayerType.Overlay });
+                EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Start, RequiresHold = true });
                 EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
             }
             else
