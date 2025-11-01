@@ -133,7 +133,6 @@
       "WorldPosition": [3000, 2000],
       "RevealRadius": 500,
       "UnrevealedRadius": 100,
-      "IsRevealed": true,
       "Type": "Hellrift",
       "Events":
       [

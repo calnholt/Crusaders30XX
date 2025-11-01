@@ -115,6 +115,34 @@ namespace Crusaders30XX.ECS.Systems
 					_hoverScales[e.Id] = currentScale;
 				}
 			}
+
+			// Calculate proximity revelation for Hellrift POIs
+			var poiComponents = _pois.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>() })
+				.Where(x => x.P != null)
+				.ToList();
+			
+			// Get unlockers: revealed or completed POIs (excluding Hellrifts)
+			var unlockers = poiComponents
+				.Where(x => x.P.Type != "Hellrift" && (x.P.IsRevealed || x.P.IsCompleted))
+				.ToList();
+			
+			// For each Hellrift, check if it's within reveal radius of any unlocker
+			foreach (var hellrift in poiComponents.Where(x => x.P.Type == "Hellrift"))
+			{
+				bool isRevealedByProximity = false;
+				foreach (var u in unlockers)
+				{
+					float dx = hellrift.P.WorldPosition.X - u.P.WorldPosition.X;
+					float dy = hellrift.P.WorldPosition.Y - u.P.WorldPosition.Y;
+					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
+					if ((dx * dx) + (dy * dy) <= (r * r))
+					{
+						isRevealedByProximity = true;
+						break;
+					}
+				}
+				hellrift.P.IsRevealedByProximity = isRevealedByProximity;
+			}
 		}
 
 		private void SpawnPois()

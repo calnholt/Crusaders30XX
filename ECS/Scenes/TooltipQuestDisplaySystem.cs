@@ -188,13 +188,21 @@ namespace Crusaders30XX.ECS.Systems
 					var poi = hovered.E.GetComponent<PointOfInterest>();
 					if (poi != null && IsPoiVisible(poi) && TryFindLocationByPoiId(poi.Id, out var locId, out var questIdx))
 					{
-						locationIdTop = locId;
-						var all = LocationDefinitionCache.GetAll();
-						if (all.TryGetValue(locId, out var loc) && questIdx >= 0 && questIdx < (loc.pointsOfInterest?.Count ?? 0))
+						// For Hellrifts, only show tooltip if revealed by proximity
+						if (poi.Type == "Hellrift" && !poi.IsRevealedByProximity)
 						{
-							events = loc.pointsOfInterest[questIdx].events;
-							title = string.IsNullOrWhiteSpace(loc.pointsOfInterest[questIdx].name) ? ("Quest " + (questIdx + 1)) : loc.pointsOfInterest[questIdx].name;
-							shouldShowTooltip = true;
+							shouldShowTooltip = false;
+						}
+						else
+						{
+							locationIdTop = locId;
+							var all = LocationDefinitionCache.GetAll();
+							if (all.TryGetValue(locId, out var loc) && questIdx >= 0 && questIdx < (loc.pointsOfInterest?.Count ?? 0))
+							{
+								events = loc.pointsOfInterest[questIdx].events;
+								title = string.IsNullOrWhiteSpace(loc.pointsOfInterest[questIdx].name) ? ("Quest " + (questIdx + 1)) : loc.pointsOfInterest[questIdx].name;
+								shouldShowTooltip = true;
+							}
 						}
 					}
 				}
