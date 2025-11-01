@@ -25,6 +25,7 @@ namespace Crusaders30XX.ECS.Systems
 		private FogDisplaySystem _fogDisplaySystem;
 		private LocationPoiRevealCutsceneSystem _poiCutsceneSystem;
 		private POIRadiusDebugDisplaySystem _poiRadiusDebugDisplaySystem;
+		private HellRiftIndicatorDisplaySystem _hellRiftIndicatorDisplaySystem;
 		private RenderTarget2D _sceneRT;
 		private int _rtW;
 		private int _rtH;
@@ -48,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 				_world.RemoveSystem(_fogDisplaySystem);
 				_world.RemoveSystem(_poiCutsceneSystem);
 				_world.RemoveSystem(_poiRadiusDebugDisplaySystem);
+				_world.RemoveSystem(_hellRiftIndicatorDisplaySystem);
 				_firstLoad = true;
 				_rtW = 0;
 				_rtH = 0;
@@ -120,6 +122,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Composite: warp + darken outside holes while keeping inside undistorted
 			FrameProfiler.Measure("FogDisplaySystem.Composite", () => _fogDisplaySystem.DrawComposite(_sceneRT));
+			FrameProfiler.Measure("HellRiftIndicatorDisplaySystem.Draw", _hellRiftIndicatorDisplaySystem.Draw);
 			FrameProfiler.Measure("POIRadiusDebugDisplaySystem.Draw", _poiRadiusDebugDisplaySystem.Draw);
 			FrameProfiler.Measure("TooltipQuestDisplaySystem.Draw", _tooltipQuestDisplaySystem.Draw);
 		}
@@ -139,6 +142,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_poiRadiusDebugDisplaySystem);
 			_tooltipQuestDisplaySystem = new TooltipQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
 			_world.AddSystem(_tooltipQuestDisplaySystem);
+			_hellRiftIndicatorDisplaySystem = new HellRiftIndicatorDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			_world.AddSystem(_hellRiftIndicatorDisplaySystem);
     }
 
     protected override void UpdateEntity(Entity entity, GameTime gameTime)
