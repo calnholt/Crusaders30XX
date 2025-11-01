@@ -85,6 +85,14 @@ namespace Crusaders30XX.ECS.Systems
             var cancelE = EntityManager.GetEntity("Customization_CancelButton");
             var undoE = EntityManager.GetEntity("Customization_UndoButton");
             var exitE = EntityManager.GetEntity("Customization_ExitButton");
+            if (exitE != null)
+            {
+                var hotKey = saveE.GetComponent<HotKey>();
+                if (hotKey == null)
+                {
+                    EntityManager.AddComponent(exitE, new HotKey { Button = FaceButton.B, RequiresHold = true, Position = HotKeyPosition.Top });
+                }
+            }
 
             var saveUi = saveE?.GetComponent<UIElement>();
             var cancelUi = cancelE?.GetComponent<UIElement>();
@@ -111,7 +119,7 @@ namespace Crusaders30XX.ECS.Systems
             }
             if (exitUi != null && exitUi.IsClicked)
             {
-                EventManager.Publish(new ShowTransition { Scene = SceneId.WorldMap });
+                EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
                 TimerScheduler.Schedule(.8f, () => {
                     // Clear customization state before exiting
                     var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault();

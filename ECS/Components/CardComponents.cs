@@ -574,6 +574,14 @@ namespace Crusaders30XX.ECS.Components
         Start
     }
 
+    public enum HotKeyPosition
+    {
+        Top,
+        Right,
+        Left,
+        Below
+    }
+
     /// <summary>
     /// Declares a controller hotkey binding for a UI element. The system will draw
     /// a face-button hint next to the element and trigger its action when pressed.
@@ -585,6 +593,7 @@ namespace Crusaders30XX.ECS.Components
         public bool RequiresHold { get; set; } = false;
         public float HoldDurationSeconds { get; set; } = 1.0f;
         public Entity ParentEntity { get; set; }
+        public HotKeyPosition Position { get; set; } = HotKeyPosition.Below;
     }
 
     /// <summary>

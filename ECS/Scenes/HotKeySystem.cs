@@ -139,6 +139,35 @@ namespace Crusaders30XX.ECS.Systems
             _prevGamePadState = gp;
         }
 
+        public (int cx, int cy) CalculateHintPosition(Microsoft.Xna.Framework.Rectangle bounds, HotKeyPosition position, int hintRadius, int hintGapX, int hintGapY)
+        {
+            int cx, cy;
+            switch (position)
+            {
+                case HotKeyPosition.Below:
+                    cx = bounds.Center.X;
+                    cy = bounds.Bottom + System.Math.Max(-64, hintGapY) + (int)System.Math.Round(hintRadius * 1.1f);
+                    break;
+                case HotKeyPosition.Top:
+                    cx = bounds.Center.X;
+                    cy = bounds.Top - System.Math.Max(-64, hintGapY) - (int)System.Math.Round(hintRadius * 1.1f);
+                    break;
+                case HotKeyPosition.Right:
+                    cx = bounds.Right + System.Math.Max(-64, hintGapX) + (int)System.Math.Round(hintRadius * 1.1f);
+                    cy = bounds.Center.Y;
+                    break;
+                case HotKeyPosition.Left:
+                    cx = bounds.Left - System.Math.Max(-64, hintGapX) - (int)System.Math.Round(hintRadius * 1.1f);
+                    cy = bounds.Center.Y;
+                    break;
+                default:
+                    cx = bounds.Center.X;
+                    cy = bounds.Bottom + System.Math.Max(-64, hintGapY) + (int)System.Math.Round(hintRadius * 1.1f);
+                    break;
+            }
+            return (cx, cy);
+        }
+
         public void Draw()
         {
             // Draw hints for interactable HotKey UI elements
@@ -168,8 +197,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 var r = x.UI.Bounds;
                 if (r.Width < 2 || r.Height < 2) continue;
-                int cx = r.Center.X;
-                int cy = r.Bottom + System.Math.Max(-64, HintGapY) + (int)System.Math.Round(HintRadius * 1.1f);
+                var (cx, cy) = CalculateHintPosition(r, x.HK.Position, HintRadius, HintGapX, HintGapY);
                 var pos = new Vector2(cx - HintRadius, cy - HintRadius);
                 if (x.HK.Button == FaceButton.Start)
                 {

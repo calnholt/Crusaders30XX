@@ -26,6 +26,7 @@ namespace Crusaders30XX.ECS.Systems
 		private LocationPoiRevealCutsceneSystem _poiCutsceneSystem;
 		private POIRadiusDebugDisplaySystem _poiRadiusDebugDisplaySystem;
 		private HellRiftIndicatorDisplaySystem _hellRiftIndicatorDisplaySystem;
+		private CustomizeButtonDisplaySystem _customizeButtonDisplaySystem;
 		private RenderTarget2D _sceneRT;
 		private int _rtW;
 		private int _rtH;
@@ -50,6 +51,7 @@ namespace Crusaders30XX.ECS.Systems
 				_world.RemoveSystem(_poiCutsceneSystem);
 				_world.RemoveSystem(_poiRadiusDebugDisplaySystem);
 				_world.RemoveSystem(_hellRiftIndicatorDisplaySystem);
+				_world.RemoveSystem(_customizeButtonDisplaySystem);
 				_firstLoad = true;
 				_rtW = 0;
 				_rtH = 0;
@@ -125,6 +127,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("HellRiftIndicatorDisplaySystem.Draw", _hellRiftIndicatorDisplaySystem.Draw);
 			FrameProfiler.Measure("POIRadiusDebugDisplaySystem.Draw", _poiRadiusDebugDisplaySystem.Draw);
 			FrameProfiler.Measure("TooltipQuestDisplaySystem.Draw", _tooltipQuestDisplaySystem.Draw);
+			FrameProfiler.Measure("CustomizeButtonDisplaySystem.Draw", _customizeButtonDisplaySystem.Draw);
 		}
     private void AddLocationSystems()
 		{
@@ -144,6 +147,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_tooltipQuestDisplaySystem);
 			_hellRiftIndicatorDisplaySystem = new HellRiftIndicatorDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_hellRiftIndicatorDisplaySystem);
+			_customizeButtonDisplaySystem = new CustomizeButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
+			_world.AddSystem(_customizeButtonDisplaySystem);
     }
 
     protected override void UpdateEntity(Entity entity, GameTime gameTime)

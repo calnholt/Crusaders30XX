@@ -243,9 +243,7 @@ namespace Crusaders30XX.ECS.Systems
 
                 // Calculate button hint position (same logic as HotKeySystem)
                 int hintRadius = hotKeySystem.HintRadius;
-                int hintGapY = hotKeySystem.HintGapY;
-                int cx = r.Center.X;
-                int cy = r.Bottom + System.Math.Max(-64, hintGapY) + (int)System.Math.Round(hintRadius * 1.1f);
+                var (cx, cy) = hotKeySystem.CalculateHintPosition(r, hotKey.Position, hintRadius, hotKeySystem.HintGapX, hotKeySystem.HintGapY);
 
                 // Calculate progress
                 float progress = System.Math.Min(1f, kvp.Value / hotKey.HoldDurationSeconds);

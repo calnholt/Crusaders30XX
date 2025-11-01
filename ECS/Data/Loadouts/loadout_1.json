@@ -7,7 +7,6 @@
     "dowse_with_holy_water|Red",
     "dowse_with_holy_water|Black",
     "narrow_gate|White",
-    "tempest|Red",
     "sacrifice|Black",
     "seize|Red",
     "seize|Black",
@@ -17,7 +16,6 @@
     "strike|Red",
     "stun|Red",
     "stun|Black",
-    "vindicate|Red",
     "vindicate|Black",
     "divine_protection|Black",
     "impale|Red",
@@ -31,7 +29,9 @@
     "anoint_the_sick|White",
     "shield_of_faith|Black",
     "divine_protection|White",
-    "anoint_the_sick|Black"
+    "anoint_the_sick|Black",
+    "increase_faith|White",
+    "increase_faith|Red"
   ],
   "weaponId": "hammer",
   "temperanceId": "radiance",
