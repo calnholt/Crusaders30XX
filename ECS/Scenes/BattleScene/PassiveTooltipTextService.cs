@@ -35,6 +35,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"The next attack this turn gains {stacks} damage.";
         case AppliedPassiveType.Stealth:
           return "You cannot see the number of attacks this monster plans.";
+        case AppliedPassiveType.Power:
+          return $"Your attacks deal +{stacks} damage this battle.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

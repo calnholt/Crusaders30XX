@@ -1,5 +1,6 @@
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Dialog;
+using Crusaders30XX.ECS.Data.Locations;
 using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Components
@@ -56,7 +57,7 @@ namespace Crusaders30XX.ECS.Components
 	{
 		public string EventId;
 		public QueuedEventType EventType = QueuedEventType.Enemy;
-
+		public List<EnemyModification> Modifications { get; set; } = new List<EnemyModification>();
 	}
 
 	public enum QueuedEventType

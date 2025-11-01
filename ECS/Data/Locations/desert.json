@@ -42,7 +42,17 @@
       [
         {
           "id": "skeleton",
-          "type": "Enemy"
+          "type": "Enemy",
+          "modifications": [
+            {
+              "type": "HP",
+              "delta": 20
+            },
+            {
+              "type": "Armor",
+              "delta": 1
+            }
+          ]
         },
         {
           "id": "skeleton",

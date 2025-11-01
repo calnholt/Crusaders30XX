@@ -65,7 +65,15 @@ namespace Crusaders30XX.ECS.Data.Locations
 					{
 						foreach (var e in poi.Events)
 						{
-							mappedPoi.events.Add(new LocationEventDefinition { id = e.Id, type = e.Type });
+							var eventDef = new LocationEventDefinition { id = e.Id, type = e.Type };
+							if (e.Modifications != null)
+							{
+								foreach (var mod in e.Modifications)
+								{
+									eventDef.modifications.Add(new EnemyModification { Type = mod.Type, Delta = mod.Delta });
+								}
+							}
+							mappedPoi.events.Add(eventDef);
 						}
 					}
 					result.pointsOfInterest.Add(mappedPoi);
@@ -97,6 +105,13 @@ namespace Crusaders30XX.ECS.Data.Locations
 		{
 			public string Id { get; set; }
 			public string Type { get; set; }
+			public List<ModificationFileDto> Modifications { get; set; }
+		}
+
+		private class ModificationFileDto
+		{
+			public string Type { get; set; }
+			public int Delta { get; set; }
 		}
 	}
 }

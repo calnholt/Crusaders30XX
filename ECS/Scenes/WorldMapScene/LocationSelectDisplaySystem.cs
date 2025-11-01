@@ -225,7 +225,12 @@ namespace Crusaders30XX.ECS.Systems
 						var type = ParseQueuedEventType(q?.type);
 						if (!string.IsNullOrEmpty(q?.id))
 						{
-							qe.Events.Add(new QueuedEvent { EventId = q.id, EventType = type });
+							var queuedEvent = new QueuedEvent { EventId = q.id, EventType = type };
+							if (q.modifications != null)
+							{
+								queuedEvent.Modifications = new List<EnemyModification>(q.modifications);
+							}
+							qe.Events.Add(queuedEvent);
 						}
 					}
 					if (qe.Events.Count > 0)

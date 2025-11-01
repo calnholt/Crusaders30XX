@@ -12,6 +12,7 @@ using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Cards;
 using System;
 using Crusaders30XX.ECS.Systems;
+using Crusaders30XX.ECS.Data.Locations;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -308,7 +309,7 @@ namespace Crusaders30XX.ECS.Factories
             return entity;
         }
 
-        public static Entity CreateEnemyFromId(World world, string enemyId)
+        public static Entity CreateEnemyFromId(World world, string enemyId, List<EnemyModification> modifications = null)
         {
             var all = EnemyDefinitionCache.GetAll();
             if (!all.TryGetValue(enemyId, out var def))
@@ -338,6 +339,37 @@ namespace Crusaders30XX.ECS.Factories
                 Console.WriteLine($"[EntityFactory] loading passives {passiveType} {passive.amount}");
                 EventManager.Publish(new ApplyPassiveEvent { Target = passive.target == "Player" ? playerEntity : enemyEntity, Delta = passive.amount, Type = passiveType});
             }
+
+            // Apply quest modifications if any
+            if (modifications != null && modifications.Count > 0)
+            {
+                foreach (var mod in modifications)
+                {
+                    if (string.IsNullOrEmpty(mod.Type)) continue;
+
+                    if (mod.Type.Equals("HP", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Apply HP modification
+                        enemy.MaxHealth += mod.Delta;
+                        enemy.CurrentHealth += mod.Delta;
+                        var hpComponent = enemyEntity.GetComponent<HP>();
+                        if (hpComponent != null)
+                        {
+                            hpComponent.Max += mod.Delta;
+                            hpComponent.Current += mod.Delta;
+                        }
+                        Console.WriteLine($"[EntityFactory] Applied HP modification: +{mod.Delta} (new HP: {enemy.MaxHealth})");
+                    }
+                    else if (mod.Type.Equals("Armor", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Apply Armor modification via passive
+                        Enum.TryParse<AppliedPassiveType>("Armor", true, out var armorType);
+                        EventManager.Publish(new ApplyPassiveEvent { Target = enemyEntity, Delta = mod.Delta, Type = armorType });
+                        Console.WriteLine($"[EntityFactory] Applied Armor modification: +{mod.Delta}");
+                    }
+                }
+            }
+
             return enemyEntity;
         }
     }

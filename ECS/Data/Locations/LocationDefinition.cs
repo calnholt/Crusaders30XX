@@ -26,6 +26,13 @@ namespace Crusaders30XX.ECS.Data.Locations
 	{
 		public string id { get; set; }
 		public string type { get; set; }
+		public List<EnemyModification> modifications { get; set; } = new List<EnemyModification>();
+	}
+
+	public class EnemyModification
+	{
+		public string Type { get; set; }
+		public int Delta { get; set; }
 	}
 }
 

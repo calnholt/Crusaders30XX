@@ -81,6 +81,11 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
+                case "increase_faith":
+                {
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Power, Delta = values[i++] });
+                    break;
+                }
                 case "kunai":
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[i++], DamageType = ModifyTypeEnum.Attack });
