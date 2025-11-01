@@ -65,7 +65,7 @@ namespace Crusaders30XX.ECS.Systems
 				System.Console.WriteLine($"[DrawHandSystem] DrawUpToIntellect toDraw={toDraw}");
 				EventManager.Publish(new RequestDrawCardsEvent { Count = toDraw });
 			}
-			if (deck.DrawPile.Count == 0)
+			if (deck.DrawPile.Count == 0 && deck.Hand.Count == 0)
 			{
 				EventManager.Publish(new PlayerDied { Player = EntityManager.GetEntity("Player") });
 			}

@@ -1,8 +1,6 @@
 using System;
-using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
@@ -33,6 +31,12 @@ namespace Crusaders30XX.ECS.Systems
         {
           Console.WriteLine($"[AppliedPassivesService] applying Wounded");
           targetPassives.TryGetValue(AppliedPassiveType.Wounded, out var amount);
+          delta += amount;
+        }
+        if (sourcePassives.ContainsKey(AppliedPassiveType.Power))
+        {
+          Console.WriteLine($"[AppliedPassivesService] applying Power");
+          sourcePassives.TryGetValue(AppliedPassiveType.Power, out var amount);
           delta += amount;
         }
         Console.WriteLine($"[AppliedPassivesService] GetPassiveDelta - delta: {delta}");

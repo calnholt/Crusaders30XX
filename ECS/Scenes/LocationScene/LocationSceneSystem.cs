@@ -129,7 +129,7 @@ namespace Crusaders30XX.ECS.Systems
 			_firstLoad = false;
 			_locationMapDisplaySystem = new LocationMapDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_locationMapDisplaySystem);
-			_pointOfInterestDisplaySystem = new PointOfInterestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_pointOfInterestDisplaySystem = new PointOfInterestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
 			_world.AddSystem(_pointOfInterestDisplaySystem);
 			_poiCutsceneSystem = new LocationPoiRevealCutsceneSystem(_world.EntityManager);
 			_world.AddSystem(_poiCutsceneSystem);

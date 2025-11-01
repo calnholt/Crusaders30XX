@@ -83,12 +83,13 @@ namespace Crusaders30XX.ECS.Systems
 			if (_overlay == null || !_overlay.IsAvailable) return;
 
 			// Build circles: unlockers (revealed or completed) use DisplayRadius; adjacent-but-unrevealed use UnrevealedRadius
+			// Hellrift POIs are always visible and act as unlockers
 			var list = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
 				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
 				.Where(x => x.P != null && x.T != null)
 				.ToList();
-			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted).ToList();
+			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == "Hellrift").ToList();
 			var unlockerIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
 			var centers = new System.Collections.Generic.List<Microsoft.Xna.Framework.Vector2>();
 			var radii = new System.Collections.Generic.List<float>();
@@ -165,12 +166,13 @@ namespace Crusaders30XX.ECS.Systems
 			if (sceneTexture == null) return;
 
 			// Build circles: unlockers (revealed or completed) use RevealRadius; adjacent-but-unrevealed use UnrevealedRadius
+			// Hellrift POIs are always visible and act as unlockers
 			var list = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
 				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
 				.Where(x => x.P != null && x.T != null)
 				.ToList();
-			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted).ToList();
+			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == "Hellrift").ToList();
 			var unlockerIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
 			var centers = new System.Collections.Generic.List<Microsoft.Xna.Framework.Vector2>();
 			var radii = new System.Collections.Generic.List<float>();

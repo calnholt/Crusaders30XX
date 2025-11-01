@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Components
 		public bool IsRevealed { get; set; } = false;
 		public int UnrevealedRadius { get; set; } = 50;
 		public float DisplayRadius { get; set; } = 0f;
+		public string Type { get; set; } = "Quest";
 	}
 }
 

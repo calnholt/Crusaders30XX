@@ -5,7 +5,9 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Rendering;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Crusaders30XX.ECS.Systems
@@ -16,17 +18,56 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly Texture2D _pixel;
+		private readonly Texture2D _questIconTexture;
+		private readonly Texture2D _hellriftIconTexture;
+		private readonly SpriteFont _font;
 		private bool _spawned;
 		private readonly System.Collections.Generic.List<Entity> _pois = new System.Collections.Generic.List<Entity>();
 		private readonly System.Collections.Generic.Dictionary<int, Vector2> _worldByEntityId = new System.Collections.Generic.Dictionary<int, Vector2>();
+		private readonly System.Collections.Generic.Dictionary<int, float> _hoverScales = new System.Collections.Generic.Dictionary<int, float>();
 
-		public PointOfInterestDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+		[DebugEditable(DisplayName = "Icon Size", Step = 1f, Min = 10f, Max = 200f)]
+		public float IconSize { get; set; } = 140f;
+
+		[DebugEditable(DisplayName = "Circle Size", Step = 1f, Min = 4f, Max = 32f)]
+		public float CircleSize { get; set; } = 16f;
+
+		[DebugEditable(DisplayName = "Circle Offset X", Step = 0.05f, Min = -2f, Max = 2f)]
+		public float CircleOffsetX { get; set; } = 1f;
+
+		[DebugEditable(DisplayName = "Circle Offset Y", Step = 0.05f, Min = -2f, Max = 2f)]
+		public float CircleOffsetY { get; set; } = -1f;
+
+		[DebugEditable(DisplayName = "Hover Scale", Step = 0.05f, Min = 1f, Max = 2f)]
+		public float HoverScale { get; set; } = 1.1f;
+
+		[DebugEditable(DisplayName = "Animation Speed", Step = 1f, Min = 1f, Max = 30f)]
+		public float AnimationSpeed { get; set; } = 20f;
+
+		public PointOfInterestDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
+			_font = font;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			try
+			{
+				_questIconTexture = content.Load<Texture2D>("Quest_poi");
+			}
+			catch
+			{
+				_questIconTexture = null;
+			}
+			try
+			{
+				_hellriftIconTexture = content.Load<Texture2D>("Hellrift_poi");
+			}
+			catch
+			{
+				_hellriftIconTexture = null;
+			}
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -49,6 +90,7 @@ namespace Crusaders30XX.ECS.Systems
 			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
 			if (cam == null) return;
 			var origin = cam.Origin;
+			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			foreach (var e in _pois)
 			{
 				var t = e.GetComponent<Transform>();
@@ -57,6 +99,21 @@ namespace Crusaders30XX.ECS.Systems
 				var screenPos = world - origin;
 				// Hand off screen base position to the Parallax system; it will set t.Position
 				t.BasePosition = screenPos;
+
+				// Update hover scale animation
+				var ui = e.GetComponent<UIElement>();
+				if (ui != null)
+				{
+					float targetScale = ui.IsHovered ? HoverScale : 1f;
+					if (!_hoverScales.TryGetValue(e.Id, out float currentScale))
+					{
+						currentScale = 1f;
+						_hoverScales[e.Id] = currentScale;
+					}
+					float lerpSpeed = AnimationSpeed * dt;
+					currentScale = MathHelper.Lerp(currentScale, targetScale, MathHelper.Clamp(lerpSpeed, 0f, 1f));
+					_hoverScales[e.Id] = currentScale;
+				}
 			}
 		}
 
@@ -72,8 +129,33 @@ namespace Crusaders30XX.ECS.Systems
 				_pois.Add(e);
 				// Initialize transform: Position will be driven by Parallax from BasePosition
 				EntityManager.AddComponent(e, new Transform { Position = pos.worldPosition, ZOrder = 10 });
+				
+				// Determine POI type and appropriate texture
+				string poiType = pos.type ?? "Quest";
+				// Ensure case-insensitive matching
+				if (poiType.Equals("Hellrift", System.StringComparison.OrdinalIgnoreCase))
+				{
+					poiType = "Hellrift";
+				}
+				else
+				{
+					poiType = "Quest";
+				}
+				Texture2D iconTexture = (poiType == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture : _questIconTexture;
+				
+				// Calculate UI bounds based on actual icon dimensions
+				int boundsWidth = (int)IconSize;
+				int boundsHeight = (int)IconSize;
+				if (iconTexture != null && iconTexture.Width > 0 && iconTexture.Height > 0)
+				{
+					float aspectRatio = iconTexture.Height / (float)iconTexture.Width;
+					boundsHeight = (int)(IconSize * aspectRatio);
+				}
+				
 				// UI bounds size only; Parallax will center bounds at Transform.Position when AffectsUIBounds is true
-				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, 50, 50), IsInteractable = true, TooltipType = TooltipType.Quests, EventType = UIElementEventType.QuestSelect, IsPreventDefaultClick = true });
+				// Hellrift POIs are not interactable
+				bool isInteractable = poiType != "Hellrift";
+				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, boundsWidth, boundsHeight), IsInteractable = isInteractable, TooltipType = TooltipType.Quests, EventType = UIElementEventType.QuestSelect, IsPreventDefaultClick = true });
 				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
 				// Attach POI component for fog-of-war and interactions
 				var poi = new PointOfInterest {
@@ -82,10 +164,17 @@ namespace Crusaders30XX.ECS.Systems
 					RevealRadius = pos.revealRadius,
 					UnrevealedRadius = pos.unrevealedRadius,
 					IsRevealed = pos.isRevealed,
-					IsCompleted = SaveCache.IsQuestCompleted(def.id, pos.id)
+					IsCompleted = SaveCache.IsQuestCompleted(def.id, pos.id),
+					Type = poiType
 				};
 				// Initialize display radius consistent with current state
-				if (poi.IsCompleted)
+				if (poiType == "Hellrift")
+				{
+					// Hellrift POIs always show with UnrevealedRadius
+					poi.DisplayRadius = poi.UnrevealedRadius;
+					poi.IsRevealed = true; // Always visible
+				}
+				else if (poi.IsCompleted)
 				{
 					poi.DisplayRadius = poi.RevealRadius;
 				}
@@ -110,15 +199,22 @@ namespace Crusaders30XX.ECS.Systems
 			int h = cam.ViewportH;
 
 			// Build sets: unlockers (revealed or completed) and visible (unlockers or within any unlocker's reveal radius)
+			// Hellrift POIs are always visible
 			var list = _pois
 				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>(), UI = e.GetComponent<UIElement>() })
 				.Where(x => x.P != null && x.T != null && x.UI != null)
 				.ToList();
-			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted).ToList();
+			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == "Hellrift").ToList();
 			var visibleIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
 			foreach (var x in list)
 			{
 				if (visibleIds.Contains(x.E.Id)) continue;
+				// Hellrift POIs are always visible, skip distance check (should already be in visibleIds, but double-check)
+				if (x.P.Type == "Hellrift")
+				{
+					visibleIds.Add(x.E.Id);
+					continue;
+				}
 				foreach (var u in unlockers)
 				{
 					float dx = x.P.WorldPosition.X - u.P.WorldPosition.X;
@@ -136,10 +232,65 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var x in list)
 			{
 				if (!visibleIds.Contains(x.E.Id)) continue;
-				var rect = new Rectangle((int)System.Math.Round(x.T.Position.X - x.UI.Bounds.Width / 2), (int)System.Math.Round(x.T.Position.Y - x.UI.Bounds.Height / 2), x.UI.Bounds.Width, x.UI.Bounds.Height);
-				if (rect.Right < 0 || rect.Bottom < 0 || rect.Left > w || rect.Top > h) continue;
-				_spriteBatch.Draw(_pixel, rect, x.P.IsCompleted ? Color.Green : Color.Red);
+				
+				// Get current hover scale
+				float scale = _hoverScales.TryGetValue(x.E.Id, out float s) ? s : 1f;
+				
+				// Determine which texture to use based on POI type
+				Texture2D iconTexture = (x.P.Type == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture : _questIconTexture;
+				
+				// Calculate icon dimensions preserving aspect ratio
+				float iconWidth = IconSize * scale;
+				float iconHeight = iconWidth;
+				if (iconTexture != null && iconTexture.Width > 0 && iconTexture.Height > 0)
+				{
+					float aspectRatio = iconTexture.Height / (float)iconTexture.Width;
+					iconHeight = iconWidth * aspectRatio;
+				}
+				
+				// Calculate icon bounds
+				float halfWidth = iconWidth / 2f;
+				float halfHeight = iconHeight / 2f;
+				var iconPos = new Vector2(x.T.Position.X, x.T.Position.Y);
+				var iconRect = new Rectangle((int)System.Math.Round(iconPos.X - halfWidth), (int)System.Math.Round(iconPos.Y - halfHeight), (int)System.Math.Round(iconWidth), (int)System.Math.Round(iconHeight));
+				
+				// Skip if off-screen
+				if (iconRect.Right < 0 || iconRect.Bottom < 0 || iconRect.Left > w || iconRect.Top > h) continue;
+				
+				// Draw icon texture
+				if (iconTexture != null)
+				{
+					_spriteBatch.Draw(iconTexture, iconRect, Color.White);
+				}
+				else
+				{
+					// Fallback to pixel if texture failed to load
+					_spriteBatch.Draw(_pixel, iconRect, x.P.IsCompleted ? Color.Green : Color.Red);
+				}
+				
+				// Draw red circle for incomplete quests (not for Hellrift POIs)
+				if (!x.P.IsCompleted && x.P.Type == "Quest")
+				{
+					DrawCircle(iconPos, halfWidth, halfHeight, CircleSize * scale);
+				}
 			}
+		}
+
+		private void DrawCircle(Vector2 iconCenter, float iconHalfWidth, float iconHalfHeight, float circleSize)
+		{
+			// Position circle relative to icon center
+			float offsetX = iconHalfWidth * CircleOffsetX;
+			float offsetY = iconHalfHeight * CircleOffsetY;
+			Vector2 circlePos = iconCenter + new Vector2(offsetX, offsetY);
+			
+			// Get anti-aliased circle texture
+			int radius = (int)System.Math.Round(circleSize / 2f);
+			if (radius < 1) radius = 1;
+			var circleTexture = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, radius);
+			
+			// Draw circle centered at position
+			Vector2 origin = new Vector2(radius, radius);
+			_spriteBatch.Draw(circleTexture, circlePos, null, Color.Red, 0f, origin, 1f, SpriteEffects.None, 0f);
 		}
 	}
 }
