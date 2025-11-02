@@ -3,7 +3,7 @@
   "name": "Strike",
   "target": "Enemy",
   "rarity": "Common",
-  "valuesParse": [10, 50, 2],
+  "valuesParse": [8, 50, 2],
   "text": "Deal {1} damage. {2}% chance to gain {3} courage.",
   "animation": "Attack",
   "block": 3

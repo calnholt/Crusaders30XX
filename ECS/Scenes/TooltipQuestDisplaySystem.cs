@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -23,6 +24,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedCache = new();
 		private readonly Dictionary<(int w, int h, bool right, int border), Texture2D> _triangleCache = new();
 		private Texture2D _pixel;
+		private Texture2D _chaliceTexture;
 		private Entity _tooltipEntity;
 
 		[DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 40)]
@@ -74,7 +76,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int Gap { get; set; } = 60;
 
 		[DebugEditable(DisplayName = "Enemy Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
-		public float EnemyScale { get; set; } = 0.8f;
+		public float EnemyScale { get; set; } = 1.05f;
 
 		[DebugEditable(DisplayName = "Enemy Spacing", Step = 2, Min = 0, Max = 200)]
 		public int EnemySpacing { get; set; } = 12;
@@ -113,6 +115,30 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Header Image Padding", Step = 1, Min = 0, Max = 40)]
 		public int HeaderImagePadding { get; set; } = 4;
 
+		[DebugEditable(DisplayName = "Tribulation Icon Scale", Step = 0.01f, Min = 0.1f, Max = 2f)]
+		public float TribulationIconScale { get; set; } = 0.2f;
+
+		[DebugEditable(DisplayName = "Tribulation Icon Spacing", Step = 1, Min = 0, Max = 120)]
+		public int TribulationIconSpacing { get; set; } = 8;
+
+		[DebugEditable(DisplayName = "Tribulation Vertical Spacing", Step = 1, Min = 0, Max = 120)]
+		public int TribulationVerticalSpacing { get; set; } = 40;
+
+		[DebugEditable(DisplayName = "Tribulation Text Scale", Step = 0.01f, Min = 0.1f, Max = 2f)]
+		public float TribulationTextScale { get; set; } = 0.15f;
+
+		[DebugEditable(DisplayName = "Tribulation Line Spacing", Step = 1, Min = 0, Max = 40)]
+		public int TribulationLineSpacing { get; set; } = 4;
+
+		[DebugEditable(DisplayName = "Tribulation Division Line Width (%)", Step = 1, Min = 0, Max = 100)]
+		public int TribulationDivisionLineWidthPercent { get; set; } = 60;
+
+		[DebugEditable(DisplayName = "Tribulation Division Line Height", Step = 1, Min = 1, Max = 10)]
+		public int TribulationDivisionLineHeight { get; set; } = 2;
+
+		[DebugEditable(DisplayName = "Tribulation Division Line Padding", Step = 1, Min = 0, Max = 60)]
+		public int TribulationDivisionLinePadding { get; set; } = 30;
+
 		private const string TooltipEntityName = "UI_QuestTooltip";
 
 		public TooltipQuestDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
@@ -124,6 +150,7 @@ namespace Crusaders30XX.ECS.Systems
 			_font = font;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			try { _chaliceTexture = _content.Load<Texture2D>("chalice"); } catch { _chaliceTexture = null; }
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -162,12 +189,11 @@ namespace Crusaders30XX.ECS.Systems
 			string locationIdTop = null;
 			string title = null;
 			List<LocationEventDefinition> events = null;
+			List<TribulationDefinition> tribulations = null;
 			Rectangle? tooltipRect = null;
 
 			if (hovered != null)
 			{
-				tooltipRect = ComputeTooltipRect(hovered.UI.Bounds, hovered.T);
-
 				// Case 1: WorldMap location tile
 				locationIdTop = ExtractLocationId(hovered.E?.Name);
 				if (!string.IsNullOrEmpty(locationIdTop) && !locationIdTop.StartsWith("locked_"))
@@ -178,6 +204,7 @@ namespace Crusaders30XX.ECS.Systems
 						int completed = SaveCache.GetValueOrDefault(locationIdTop, 0);
 						int idx = System.Math.Max(0, System.Math.Min(completed, loc.pointsOfInterest.Count - 1));
 						events = loc.pointsOfInterest[idx].events;
+						tribulations = loc.pointsOfInterest[idx].tribulations;
 						title = "Quest " + (idx + 1);
 						shouldShowTooltip = true;
 					}
@@ -200,11 +227,18 @@ namespace Crusaders30XX.ECS.Systems
 							if (all.TryGetValue(locId, out var loc) && questIdx >= 0 && questIdx < (loc.pointsOfInterest?.Count ?? 0))
 							{
 								events = loc.pointsOfInterest[questIdx].events;
+								tribulations = loc.pointsOfInterest[questIdx].tribulations;
 								title = string.IsNullOrWhiteSpace(loc.pointsOfInterest[questIdx].name) ? ("Quest " + (questIdx + 1)) : loc.pointsOfInterest[questIdx].name;
 								shouldShowTooltip = true;
 							}
 						}
 					}
+				}
+				
+				// Calculate tooltip rect after we have the content
+				if (shouldShowTooltip && !string.IsNullOrEmpty(locationIdTop) && events != null && events.Count > 0)
+				{
+					tooltipRect = ComputeTooltipRect(hovered.UI.Bounds, hovered.T, title, events, tribulations);
 				}
 			}
 
@@ -217,7 +251,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					_tooltipEntity = EntityManager.CreateEntity(TooltipEntityName);
 					EntityManager.AddComponent(_tooltipEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 });
-					EntityManager.AddComponent(_tooltipEntity, new QuestTooltip { LocationId = locationIdTop, Title = title, Events = events, Alpha01 = 0f, TargetVisible = true });
+					EntityManager.AddComponent(_tooltipEntity, new QuestTooltip { LocationId = locationIdTop, Title = title, Events = events, Tribulations = tribulations, Alpha01 = 0f, TargetVisible = true });
 					EntityManager.AddComponent(_tooltipEntity, new UIElement { Bounds = rect, IsInteractable = true });
 					EntityManager.AddComponent(_tooltipEntity, new HotKey { Button = FaceButton.X, RequiresHold = true, ParentEntity = hovered.E });
 				}
@@ -235,6 +269,7 @@ namespace Crusaders30XX.ECS.Systems
 						questTooltip.LocationId = locationIdTop;
 						questTooltip.Title = title;
 						questTooltip.Events = events;
+						questTooltip.Tribulations = tribulations;
 						questTooltip.TargetVisible = true;
 					}
 					var ui = _tooltipEntity.GetComponent<UIElement>();
@@ -293,14 +328,14 @@ namespace Crusaders30XX.ECS.Systems
 			var rect = ui.Bounds;
 			DrawTooltipBox(rect, questTooltip.Alpha01);
 			DrawHeader(questTooltip.LocationId, rect, questTooltip.Alpha01);
-			DrawQuestContent(rect, questTooltip.Alpha01, questTooltip.Title, questTooltip.Events);
+			DrawQuestContent(rect, questTooltip.Alpha01, questTooltip.Title, questTooltip.Events, questTooltip.Tribulations);
 		}
 
 
-		private Rectangle ComputeTooltipRect(Rectangle anchor, Transform t)
+		private Rectangle ComputeTooltipRect(Rectangle anchor, Transform t, string title, List<LocationEventDefinition> events, List<TribulationDefinition> tribulations)
 		{
 			int w = System.Math.Max(100, BoxWidth);
-			int h = System.Math.Max(60, BoxHeight);
+			int h = CalculateTooltipHeight(w, title, events, tribulations);
 			int gap = System.Math.Max(0, Gap);
 			int viewportW = _graphicsDevice.Viewport.Width;
 			int viewportH = _graphicsDevice.Viewport.Height;
@@ -314,6 +349,98 @@ namespace Crusaders30XX.ECS.Systems
 			rect.X = System.Math.Max(0, System.Math.Min(rect.X, viewportW - rect.Width));
 			rect.Y = System.Math.Max(0, System.Math.Min(rect.Y, viewportH - rect.Height));
 			return rect;
+		}
+
+		private int CalculateTooltipHeight(int width, string title, List<LocationEventDefinition> events, List<TribulationDefinition> tribulations)
+		{
+			int pad = System.Math.Max(0, Padding);
+			int headerHeight = System.Math.Max(12, HeaderHeight);
+			
+			// Header
+			int totalHeight = headerHeight;
+			
+			// Padding after header
+			totalHeight += pad;
+			
+			// Title
+			if (!string.IsNullOrEmpty(title))
+			{
+				var qSize = _font.MeasureString(title ?? "Quest") * QuestTitleScale;
+				totalHeight += (int)System.Math.Ceiling(qSize.Y);
+			}
+			
+			// Padding after title
+			totalHeight += pad;
+			
+			// Enemy images height
+			if (events != null && events.Count > 0)
+			{
+				// Calculate enemy images height - match the logic from DrawQuestContent
+				var textures = new List<Texture2D>();
+				foreach (var q in events)
+				{
+					var tex = TryLoadEnemyTexture(q.id);
+					if (tex != null) textures.Add(tex);
+				}
+				
+				if (textures.Count > 0)
+				{
+					// Match the actual calculation: use a fixed height based on EnemyScale
+					// The actual drawing uses: targetH = Round(maxH * EnemyScale)
+					int estimatedEnemyHeight = System.Math.Max(1, (int)System.Math.Round(80 * EnemyScale));
+					totalHeight += estimatedEnemyHeight;
+				}
+			}
+			
+			// Tribulation section
+			if (tribulations != null && tribulations.Count > 0 && _chaliceTexture != null)
+			{
+				int vertSpacing = System.Math.Max(0, TribulationVerticalSpacing);
+				float iconScale = MathHelper.Clamp(TribulationIconScale, 0.1f, 2f);
+				float textScale = MathHelper.Clamp(TribulationTextScale, 0.1f, 2f);
+				int lineSpacing = System.Math.Max(0, TribulationLineSpacing);
+				int divisionLineHeight = System.Math.Max(1, TribulationDivisionLineHeight);
+				
+				int iconHeight = (int)System.Math.Round(_chaliceTexture.Height * iconScale);
+				int maxTextWidth = width - 2 * pad; // Full width for text
+				
+				int maxTextHeight = 0;
+				for (int i = 0; i < tribulations.Count; i++)
+				{
+					var trib = tribulations[i];
+					if (!string.IsNullOrEmpty(trib.text))
+					{
+						var wrappedLines = TextUtils.WrapText(_font, trib.text, textScale, maxTextWidth);
+						maxTextHeight += wrappedLines.Count * (int)System.Math.Ceiling(_font.MeasureString("A").Y * textScale);
+						if (i < tribulations.Count - 1)
+						{
+							maxTextHeight += lineSpacing;
+						}
+					}
+				}
+				
+				// Vertical spacing before division line
+				totalHeight += vertSpacing;
+				
+				// Division line height (icon is centered on it, so we only need the line height)
+				totalHeight += divisionLineHeight;
+				
+				// Spacing after division line
+				int spacingAfterDivisionLine = System.Math.Max(0, TribulationVerticalSpacing / 2);
+				totalHeight += spacingAfterDivisionLine;
+				
+				// Padding before text
+				totalHeight += pad;
+				
+				// Text height
+				totalHeight += maxTextHeight;
+			}
+			
+			// Padding at bottom
+			totalHeight += pad;
+			
+			// Ensure minimum height
+			return System.Math.Max(60, totalHeight);
 		}
 
 		private void DrawTooltipBox(Rectangle rect, float alpha01)
@@ -381,7 +508,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void DrawQuestContent(Rectangle rect, float alpha01, string title, List<LocationEventDefinition> questDefs)
+		private void DrawQuestContent(Rectangle rect, float alpha01, string title, List<LocationEventDefinition> questDefs, List<TribulationDefinition> tribulations)
 		{
 			if (questDefs == null || questDefs.Count == 0) return;
 
@@ -397,7 +524,40 @@ namespace Crusaders30XX.ECS.Systems
 			var qPos = new Vector2(inner.X + (inner.Width - qSize.X) / 2f, inner.Y);
 			_spriteBatch.DrawString(_font, questTitle, qPos, Color.White * alpha01, 0f, Vector2.Zero, QuestTitleScale, SpriteEffects.None, 0f);
 			int enemiesTop = (int)System.Math.Round(qPos.Y + qSize.Y + pad);
-			int enemiesHeight = System.Math.Max(1, inner.Bottom - enemiesTop);
+			
+			// Calculate space needed for tribulations if present
+			int tribulationSpace = 0;
+			if (tribulations != null && tribulations.Count > 0 && _chaliceTexture != null)
+			{
+				int vertSpacing = System.Math.Max(0, TribulationVerticalSpacing);
+				float iconScale = MathHelper.Clamp(TribulationIconScale, 0.1f, 2f);
+				float textScale = MathHelper.Clamp(TribulationTextScale, 0.1f, 2f);
+				int lineSpacing = System.Math.Max(0, TribulationLineSpacing);
+				int divisionLineHeight = System.Math.Max(1, TribulationDivisionLineHeight);
+				
+				int iconHeight = (int)System.Math.Round(_chaliceTexture.Height * iconScale);
+				int maxTextWidth = inner.Width; // Text spans full width now
+				
+				int maxTextHeight = 0;
+				for (int i = 0; i < tribulations.Count; i++)
+				{
+					var trib = tribulations[i];
+					if (!string.IsNullOrEmpty(trib.text))
+					{
+						var wrappedLines = TextUtils.WrapText(_font, trib.text, textScale, maxTextWidth);
+						maxTextHeight += wrappedLines.Count * (int)System.Math.Ceiling(_font.MeasureString("A").Y * textScale);
+						if (i < tribulations.Count - 1)
+						{
+							maxTextHeight += lineSpacing;
+						}
+					}
+				}
+				// Space calculation: vertical spacing + division line + small spacing after line + padding + text height
+				int spacingAfterDivisionLine = System.Math.Max(0, TribulationVerticalSpacing / 2);
+				tribulationSpace = vertSpacing + divisionLineHeight + spacingAfterDivisionLine + pad + maxTextHeight;
+			}
+			
+			int enemiesHeight = System.Math.Max(1, inner.Bottom - enemiesTop - tribulationSpace);
 			var enemiesRect = new Rectangle(inner.X, enemiesTop, inner.Width, enemiesHeight);
 
 			// load enemy textures
@@ -410,7 +570,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (textures.Count == 0) return;
 
 			int maxH = enemiesRect.Height;
-			int targetH = System.Math.Max(1, (int)System.Math.Round(maxH * MathHelper.Clamp(EnemyScale, 0.05f, 1f)));
+			int targetH = System.Math.Max(1, (int)System.Math.Round(maxH * EnemyScale));
 			var sizes = textures.Select(t => new Point(
 				(int)System.Math.Round(t.Width * (targetH / (float)System.Math.Max(1, t.Height))),
 				targetH
@@ -423,6 +583,104 @@ namespace Crusaders30XX.ECS.Systems
 				for (int j = 0; j < i; j++) drawX += sizes[j].X + System.Math.Max(0, EnemySpacing);
 				int drawY = enemiesRect.Y + (enemiesRect.Height - sizes[i].Y) / 2;
 				_spriteBatch.Draw(textures[i], new Rectangle(drawX, drawY, sizes[i].X, sizes[i].Y), Color.White * alpha01);
+			}
+
+			// Draw tribulations below enemies (within inner bounds)
+			if (tribulations != null && tribulations.Count > 0 && _chaliceTexture != null)
+			{
+				int vertSpacing = System.Math.Max(0, TribulationVerticalSpacing);
+				int iconSpacing = System.Math.Max(0, TribulationIconSpacing);
+				int lineSpacing = System.Math.Max(0, TribulationLineSpacing);
+				float iconScale = MathHelper.Clamp(TribulationIconScale, 0.1f, 2f);
+				float textScale = MathHelper.Clamp(TribulationTextScale, 0.1f, 2f);
+				int divisionLineHeight = System.Math.Max(1, TribulationDivisionLineHeight);
+				int divisionLineWidthPercent = System.Math.Clamp(TribulationDivisionLineWidthPercent, 0, 100);
+				int divisionLinePadding = System.Math.Max(0, TribulationDivisionLinePadding);
+
+				// Calculate icon size
+				int iconWidth = (int)System.Math.Round(_chaliceTexture.Width * iconScale);
+				int iconHeight = (int)System.Math.Round(_chaliceTexture.Height * iconScale);
+				
+				// Calculate position below enemies
+				int enemiesBottom = enemiesRect.Y + enemiesRect.Height;
+				int divisionLineY = enemiesBottom + vertSpacing;
+				
+				// Ensure tribulation display doesn't exceed inner bottom
+				if (divisionLineY >= inner.Bottom) return;
+
+				// Calculate division line layout: two lines with chalice in the middle
+				int centerX = inner.X + inner.Width / 2;
+				int iconLeft = centerX - iconWidth / 2;
+				int iconRight = centerX + iconWidth / 2;
+				
+				// Left line: from inner.X to iconLeft - padding
+				int leftLineRight = System.Math.Max(inner.X, iconLeft - divisionLinePadding);
+				int leftLineWidth = System.Math.Max(0, leftLineRight - inner.X);
+				
+				// Right line: from iconRight + padding to inner.Right
+				int rightLineLeft = System.Math.Min(inner.Right, iconRight + divisionLinePadding);
+				int rightLineWidth = System.Math.Max(0, inner.Right - rightLineLeft);
+				
+				// Draw left division line
+				if (leftLineWidth > 0)
+				{
+					var leftLineRect = new Rectangle(inner.X, divisionLineY, leftLineWidth, divisionLineHeight);
+					_spriteBatch.Draw(_pixel, leftLineRect, Color.White * alpha01);
+				}
+				
+				// Draw chalice icon centered
+				int iconY = divisionLineY + (divisionLineHeight - iconHeight) / 2;
+				_spriteBatch.Draw(_chaliceTexture, new Rectangle(iconLeft, iconY, iconWidth, iconHeight), Color.White * alpha01);
+				
+				// Draw right division line
+				if (rightLineWidth > 0)
+				{
+					var rightLineRect = new Rectangle(rightLineLeft, divisionLineY, rightLineWidth, divisionLineHeight);
+					_spriteBatch.Draw(_pixel, rightLineRect, Color.White * alpha01);
+				}
+
+				// Calculate position for tribulation text (below division line)
+				int tribulationTextTop = divisionLineY + divisionLineHeight + System.Math.Max(0, TribulationVerticalSpacing / 2) + pad;
+				int maxTextWidth = inner.Width; // Text spans full width below
+
+				// Draw tribulation text(s) below with wrapping
+				int textX = inner.X;
+				int currentY = tribulationTextTop;
+				float lineHeight = _font.MeasureString("A").Y * textScale;
+				
+				for (int i = 0; i < tribulations.Count; i++)
+				{
+					var trib = tribulations[i];
+					if (!string.IsNullOrEmpty(trib.text))
+					{
+						// Wrap text to fit available width
+						var wrappedLines = TextUtils.WrapText(_font, trib.text, textScale, maxTextWidth);
+						
+						foreach (var line in wrappedLines)
+						{
+							if (string.IsNullOrEmpty(line))
+							{
+								currentY += (int)System.Math.Ceiling(lineHeight);
+								continue;
+							}
+							
+							// Ensure text doesn't exceed inner bounds
+							if (currentY + lineHeight > inner.Bottom)
+							{
+								return; // Stop drawing if we've run out of space
+							}
+							
+							_spriteBatch.DrawString(_font, line, new Vector2(textX, currentY), Color.White * alpha01, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+							currentY += (int)System.Math.Ceiling(lineHeight);
+						}
+						
+						// Add spacing between tribulations
+						if (i < tribulations.Count - 1)
+						{
+							currentY += lineSpacing;
+						}
+					}
+				}
 			}
 
 			// Bottom-right hint: "A - Select"

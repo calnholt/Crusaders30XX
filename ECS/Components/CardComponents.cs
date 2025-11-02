@@ -458,6 +458,7 @@ namespace Crusaders30XX.ECS.Components
         public string LocationId { get; set; }
         public string Title { get; set; }
         public List<LocationEventDefinition> Events { get; set; }
+        public List<TribulationDefinition> Tribulations { get; set; }
         public float Alpha01 { get; set; } = 0f;
         public bool TargetVisible { get; set; } = false;
     }
