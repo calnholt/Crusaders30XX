@@ -20,6 +20,13 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public string name { get; set; } = string.Empty;
 		public string type { get; set; } = "Quest";
 		public List<LocationEventDefinition> events { get; set; } = new List<LocationEventDefinition>();
+		public List<TribulationDefinition> tribulations { get; set; } = new List<TribulationDefinition>();
+	}
+
+	public class TribulationDefinition
+	{
+		public string text { get; set; }
+		public string trigger { get; set; }
 	}
 
 	public class LocationEventDefinition

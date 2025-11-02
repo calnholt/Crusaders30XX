@@ -11,7 +11,7 @@ namespace Crusaders30XX.ECS.Services
 	public static class QuestCompleteService
 	{
 		/// <summary>
-		/// If the player completed the highest unlocked quest for the current location, increment progress in save.
+		/// If the player completed a quest for the current location and it's not already saved, save it and trigger the POI reveal cutscene.
 		/// </summary>
 		public static void SaveIfCompletedHighest(Crusaders30XX.ECS.Core.EntityManager entityManager)
 		{
@@ -33,14 +33,15 @@ namespace Crusaders30XX.ECS.Services
 				LocationDefinitionCache.TryGet(locationId, out var def);
 				if (def == null) return;
 				int totalPointsOfInterest = System.Math.Max(0, def.pointsOfInterest.Count);
-				int completed = SaveCache.GetValueOrDefault(locationId, 0);
-				int chosenIndex = questIndex ?? completed; // default to current highest if unknown
+				int chosenIndex = questIndex ?? SaveCache.GetValueOrDefault(locationId, 0); // default to current highest if unknown
 				int clampedIndex = System.Math.Max(0, System.Math.Min(chosenIndex, totalPointsOfInterest > 0 ? totalPointsOfInterest - 1 : 0));
-				if (clampedIndex == completed && completed < totalPointsOfInterest)
+				
+				// Check if the quest at clampedIndex exists and is not already completed
+				if (clampedIndex >= 0 && clampedIndex < totalPointsOfInterest)
 				{
 					var poi = def.pointsOfInterest[clampedIndex];
 					var questIdStr = poi?.id;
-					if (!string.IsNullOrEmpty(questIdStr))
+					if (!string.IsNullOrEmpty(questIdStr) && !SaveCache.IsQuestCompleted(locationId, questIdStr))
 					{
 						Console.WriteLine($"[QuestCompleteService] Completed point of interest {locationId}/{questIdStr}");
 						SaveCache.SetQuestCompleted(locationId, questIdStr, true);

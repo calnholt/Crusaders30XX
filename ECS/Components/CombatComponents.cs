@@ -140,6 +140,19 @@ namespace Crusaders30XX.ECS.Components
 		public float TimerRemainingSeconds { get; set; } = 0f;
 		public bool FiredAutoConfirm { get; set; } = false;
 	}
+
+	/// <summary>
+	/// Tribulation component attached to player for quest-based modifiers.
+	/// Stores quest ID and tribulation data from quest definition.
+	/// </summary>
+	public class Tribulation : IComponent
+	{
+		public Entity Owner { get; set; }
+		public Entity PlayerOwner { get; set; } // player entity that owns this tribulation
+		public string QuestId { get; set; }
+		public string Text { get; set; }
+		public string Trigger { get; set; }
+	}
 }
 
 

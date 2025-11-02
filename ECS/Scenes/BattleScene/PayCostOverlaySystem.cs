@@ -479,6 +479,7 @@ namespace Crusaders30XX.ECS.Systems
                     }
 
                     EventManager.Publish(new PayCostSatisfied { CardToPlay = state.CardToPlay, PaymentCards = new List<Entity>(state.SelectedCards) });
+                    EntityManager.DestroyEntity("PayCostOverlay_Cancel");
                     Close();
                 }
             }

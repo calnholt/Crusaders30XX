@@ -34,6 +34,35 @@ namespace Crusaders30XX.ECS.Systems
 		{
 		}
 
+		private void CheckForPlayerDeath()
+		{
+			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+			var deck = deckEntity?.GetComponent<Deck>();
+			if (deck == null) return;
+			// Count non-weapon cards in hand
+			int nonWeaponHandCount = 0;
+			foreach (var e in deck.Hand)
+			{
+				var cd = e.GetComponent<CardData>();
+				if (cd == null) continue;
+				string id = cd.CardId ?? string.Empty;
+				if (string.IsNullOrEmpty(id)) continue;
+				if (CardDefinitionCache.TryGet(id, out var def))
+				{
+					if (!def.isWeapon) nonWeaponHandCount++;
+				}
+				else
+				{
+					// If we can't find the definition, count it as non-weapon (fallback)
+					nonWeaponHandCount++;
+				}
+			}
+			if (deck.DrawPile.Count == 0 && nonWeaponHandCount == 0)
+			{
+				EventManager.Publish(new PlayerDied { Player = EntityManager.GetEntity("Player") });
+			}
+		}
+
 		private void DrawUpToIntellect()
 		{
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
@@ -65,10 +94,7 @@ namespace Crusaders30XX.ECS.Systems
 				System.Console.WriteLine($"[DrawHandSystem] DrawUpToIntellect toDraw={toDraw}");
 				EventManager.Publish(new RequestDrawCardsEvent { Count = toDraw });
 			}
-			if (deck.DrawPile.Count == 0 && deck.Hand.Count == 0)
-			{
-				EventManager.Publish(new PlayerDied { Player = EntityManager.GetEntity("Player") });
-			}
+			CheckForPlayerDeath();
 		}
 	}
 }

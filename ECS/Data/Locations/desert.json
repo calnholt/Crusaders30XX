@@ -38,6 +38,12 @@
       "RevealRadius": 500,
       "UnrevealedRadius": 400,
       "Type": "Quest",
+      "Tribulations": [
+        {
+          "text": "At the start of each battle, gain burn 1.",
+          "trigger": "StartOfBattle"
+        }
+      ],
       "Events":
       [
         {

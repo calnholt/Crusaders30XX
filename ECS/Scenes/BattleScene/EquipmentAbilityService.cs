@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;
 				case "purging_bracers":
-					EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Aggression, Delta = ability.effectCount });
+					EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = ability.effectCount });
 					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
 					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;

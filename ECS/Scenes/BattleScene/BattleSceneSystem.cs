@@ -96,6 +96,8 @@ namespace Crusaders30XX.ECS.Systems
 		private FrozenCardDisplaySystem _frozenCardDisplaySystem;
 		private UIElementHighlightSystem _uiElementHighlightSystem;
 		private QuestRewardModalDisplaySystem _questRewardModalDisplaySystem;
+		private TribulationManagerSystem _tribulationManagerSystem;
+		private QuestTribulationDisplaySystem _questTribulationDisplaySystem;
 
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(em)
@@ -174,6 +176,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("PlayerTemperanceActivationDisplaySystem.Draw", _playerTemperanceActivationDisplaySystem.Draw);
 			FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", _battlePhaseDisplaySystem.Draw);
 			FrameProfiler.Measure("CourageDisplaySystem.Draw", _courageDisplaySystem.Draw);
+			FrameProfiler.Measure("QuestTribulationDisplaySystem.Draw", _questTribulationDisplaySystem.Draw);
 			FrameProfiler.Measure("TemperanceDisplaySystem.Draw", _temperanceDisplaySystem.Draw);
 			FrameProfiler.Measure("ActionPointDisplaySystem.Draw", _actionPointDisplaySystem.Draw);
 			FrameProfiler.Measure("HPDisplaySystem.Draw", _hpDisplaySystem.Draw);
@@ -214,6 +217,13 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				deck.Cards.AddRange(deckCards);
 				deck.DrawPile.AddRange(deckCards);
+			}
+			// Create tribulations for the current quest
+			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
+			var queued = queuedEntity.GetComponent<QueuedEvents>();
+			if (!string.IsNullOrEmpty(queued.LocationId))
+			{
+				TribulationQuestService.CreateTribulationsForQuest(EntityManager, queued.LocationId, queued.QuestIndex);
 			}
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
 			EventManager.Publish(new DeckShuffleEvent { });
@@ -361,9 +371,11 @@ namespace Crusaders30XX.ECS.Systems
 			_weaponManagementSystem = new WeaponManagementSystem(_world.EntityManager);
 			_equipmentManagerSystem = new EquipmentManagerSystem(_world.EntityManager);
 			_medalManagerSystem = new MedalManagerSystem(_world.EntityManager);
+			_tribulationManagerSystem = new TribulationManagerSystem(_world.EntityManager);
 			_equipmentDisplaySystem = new EquipmentDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
 			_equippedWeaponDisplaySystem = new EquippedWeaponDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_medalDisplaySystem = new MedalDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
+			_questTribulationDisplaySystem = new QuestTribulationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_equipmentUsedManagementSystem = new EquipmentUsedManagementSystem(_world.EntityManager);
 			_equipmentHighlightSettingsDebugSystem = new HighlightSettingsSystem(_world.EntityManager);
 			_equipmentBlockInteractionSystem = new EquipmentBlockInteractionSystem(_world.EntityManager);
@@ -428,9 +440,11 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_weaponManagementSystem);
 			_world.AddSystem(_equipmentManagerSystem);
 			_world.AddSystem(_medalManagerSystem);
+			_world.AddSystem(_tribulationManagerSystem);
 			_world.AddSystem(_equipmentDisplaySystem);
 			_world.AddSystem(_equippedWeaponDisplaySystem);
 			_world.AddSystem(_medalDisplaySystem);
+			_world.AddSystem(_questTribulationDisplaySystem);
 			_world.AddSystem(_equipmentUsedManagementSystem);
 			_world.AddSystem(_equipmentHighlightSettingsDebugSystem);
 			_world.AddSystem(_equipmentBlockInteractionSystem);

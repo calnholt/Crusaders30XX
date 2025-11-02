@@ -22,7 +22,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly System.Collections.Generic.Dictionary<(int ownerId, AppliedPassiveType type), Entity> _tooltipUiByKey = new();
 
         [DebugEditable(DisplayName = "Offset Y", Step = 1, Min = -500, Max = 500)]
-        public int OffsetY { get; set; } = 4;
+        public int OffsetY { get; set; } = 15;
 
         [DebugEditable(DisplayName = "Padding X", Step = 1, Min = 0, Max = 100)]
         public int PadX { get; set; } = 12;

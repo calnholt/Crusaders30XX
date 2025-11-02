@@ -78,8 +78,8 @@ namespace Crusaders30XX.ECS.Systems
 				var scene = sceneEntity?.GetComponent<SceneState>();
 				if (scene != null)
 				{
-					EventManager.Publish(new DeleteCachesEvent { Scene = SceneId.WorldMap });
-					EventManager.Publish(new LoadSceneEvent { Scene = SceneId.WorldMap });
+					EventManager.Publish(new DeleteCachesEvent { Scene = SceneId.Location });
+					EventManager.Publish(new LoadSceneEvent { Scene = SceneId.Location });
 				}
 				_sceneSwitched = true;
 				_active = false; // stop drawing after switch

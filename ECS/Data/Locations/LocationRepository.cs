@@ -76,6 +76,18 @@ namespace Crusaders30XX.ECS.Data.Locations
 							mappedPoi.events.Add(eventDef);
 						}
 					}
+					if (poi.Tribulations != null)
+					{
+						mappedPoi.tribulations = new List<TribulationDefinition>();
+						foreach (var trib in poi.Tribulations)
+						{
+							mappedPoi.tribulations.Add(new TribulationDefinition
+							{
+								text = trib.Text,
+								trigger = trib.Trigger
+							});
+						}
+					}
 					result.pointsOfInterest.Add(mappedPoi);
 				}
 			}
@@ -99,6 +111,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 			public string Name { get; set; }
 			public string Type { get; set; }
 			public List<EventFileDto> Events { get; set; }
+			public List<TribulationFileDto> Tribulations { get; set; }
 		}
 
 		private class EventFileDto
@@ -112,6 +125,12 @@ namespace Crusaders30XX.ECS.Data.Locations
 		{
 			public string Type { get; set; }
 			public int Delta { get; set; }
+		}
+
+		private class TribulationFileDto
+		{
+			public string Text { get; set; }
+			public string Trigger { get; set; }
 		}
 	}
 }

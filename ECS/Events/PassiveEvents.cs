@@ -49,6 +49,15 @@ namespace Crusaders30XX.ECS.Events
         public AppliedPassiveType Type { get; set; }
         public int Delta { get; set; }
     }
+
+    /// <summary>
+    /// Emitted when a tribulation effect is triggered (similar to MedalTriggered).
+    /// Used by display system to play pulse animation.
+    /// </summary>
+    public class TribulationTriggered
+    {
+        public string QuestId { get; set; }
+    }
 }
 
 
