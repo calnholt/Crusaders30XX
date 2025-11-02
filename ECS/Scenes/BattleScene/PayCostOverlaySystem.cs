@@ -199,7 +199,8 @@ namespace Crusaders30XX.ECS.Systems
             {
                 cancel = EntityManager.CreateEntity("PayCostOverlay_Cancel");
                 EntityManager.AddComponent(cancel, new Transform { Position = Vector2.Zero, ZOrder = 20000 });
-                EntityManager.AddComponent(cancel, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Cancel" });
+                EntityManager.AddComponent(cancel, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Cancel", LayerType = UILayerType.Overlay, EventType = UIElementEventType.PayCostCancel });
+                EntityManager.AddComponent(cancel, new HotKey { Button = FaceButton.B, Position = HotKeyPosition.Below });
                 EntityManager.AddComponent(cancel, new PayCostCancelButton());
             }
         }
@@ -332,6 +333,7 @@ namespace Crusaders30XX.ECS.Systems
                 var ui = c.GetComponent<UIElement>();
                 if (ui != null) ui.IsInteractable = false;
             }
+            EntityManager.DestroyEntity("PayCostOverlay_Cancel");
         }
 
         private static bool TryConsumeCostForCard(List<string> remainingCosts, CardData.CardColor candidateColor, out int consumedIndex)

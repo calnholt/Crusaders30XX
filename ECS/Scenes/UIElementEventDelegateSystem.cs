@@ -41,6 +41,11 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new QuestSelectRequested { Entity = entity });
                     break;
                 }
+                case UIElementEventType.PayCostCancel:
+                {
+                    EventManager.Publish(new PayCostCancelRequested());
+                    break;
+                }
                 default:
                 {
                     Console.WriteLine($"UIElementEventDelegateSystem: clicked unknown event type {type} on entity {entity.Id}");

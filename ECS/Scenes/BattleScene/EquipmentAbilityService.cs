@@ -19,24 +19,24 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EventManager.Publish(new EquipmentUseResolved { EquipmentId = equipmentId, Delta = 1 });
 			}
-			switch (ability.effect)
+			switch (ability.id)
 			{
-				case "DrawCards":
+				case "focus_visor":
 					EventManager.Publish(new RequestDrawCardsEvent { Count = Math.Max(1, ability.effectCount) });
 					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
 					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;
-				case "DealDamage":
-					EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = enemy, Delta = (ability.effectCount * -1), DamageType = ModifyTypeEnum.Attack });
-					EventQueue.EnqueueRule(new QueuedStartPlayerAttackAnimation());
-					EventQueue.EnqueueRule(new QueuedWaitPlayerImpactEvent());
+				case "purging_bracers":
+					EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Aggression, Delta = ability.effectCount });
+					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
+					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;
-				case "GainActionPoint":
+				case "lightning_grieves":
 					EventManager.Publish(new ModifyActionPointsEvent { Delta = Math.Max(1, ability.effectCount) });
 					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
 					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;
-				case "GainCourage":
+				case "pierced_heart_plate":
 					EventManager.Publish(new ModifyCourageEvent { Delta = Math.Max(1, ability.effectCount) });
 					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
 					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));

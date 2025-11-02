@@ -253,12 +253,6 @@ namespace Crusaders30XX.ECS.Systems
                 EventManager.Publish(new DebugCommandEvent { Command = button.Command });
             }
 
-            var payCancel = entity.GetComponent<PayCostCancelButton>();
-            if (payCancel != null)
-            {
-                EventManager.Publish(new PayCostCancelRequested());
-            }
-
             var drawPileClickable = entity.GetComponent<DrawPileClickable>();
             if (drawPileClickable != null)
             {

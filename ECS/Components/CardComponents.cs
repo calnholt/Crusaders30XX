@@ -376,6 +376,7 @@ namespace Crusaders30XX.ECS.Components
         RemoveCardCustomization,
         ViewDiscard,
         ViewDeck,
+        PayCostCancel,
     }
 
     /// <summary>

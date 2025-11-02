@@ -3,7 +3,7 @@
   "name": "Purging Bracers",
   "slot": "Arms",
   "block": 1,
-  "blockUses": 3,
+  "blockUses": 1,
   "color": "White",
   "abilities": [
     {

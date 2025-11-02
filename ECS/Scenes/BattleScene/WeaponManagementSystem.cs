@@ -83,7 +83,18 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var equipped = player?.GetComponent<EquippedWeapon>();
-			return equipped?.SpawnedEntity;
+			if (equipped?.SpawnedEntity == null) return null;
+			
+			// Validate the entity still exists (it may have been destroyed)
+			var existingEntity = EntityManager.GetEntity(equipped.SpawnedEntity.Id);
+			if (existingEntity != null && existingEntity.IsActive)
+			{
+				return equipped.SpawnedEntity;
+			}
+			
+			// Entity was destroyed, clear the reference
+			equipped.SpawnedEntity = null;
+			return null;
 		}
 
 		private Entity FindOrCreateEquippedWeapon(Deck deck)
@@ -92,7 +103,20 @@ namespace Crusaders30XX.ECS.Systems
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var equipped = player?.GetComponent<EquippedWeapon>();
 			if (equipped == null || string.IsNullOrWhiteSpace(equipped.WeaponId)) return null;
-			if (equipped.SpawnedEntity != null) return equipped.SpawnedEntity;
+			
+			// If a spawned entity exists, validate it still exists in EntityManager
+			// (it may have been destroyed when the weapon was played)
+			if (equipped.SpawnedEntity != null)
+			{
+				var existingEntity = EntityManager.GetEntity(equipped.SpawnedEntity.Id);
+				if (existingEntity != null && existingEntity.IsActive)
+				{
+					return equipped.SpawnedEntity;
+				}
+				// Entity was destroyed, clear the reference so we can create a new one
+				equipped.SpawnedEntity = null;
+			}
+			
 			// Create a new card entity from definition id
 			if (!CardDefinitionCache.TryGet(equipped.WeaponId, out var def)) return null;
 			var weapon = CreateWeaponEntity(def);
@@ -100,7 +124,7 @@ namespace Crusaders30XX.ECS.Systems
 			return weapon;
 		}
 
-			private Entity CreateWeaponEntity(CardDefinition def)
+		private Entity CreateWeaponEntity(CardDefinition def)
 		{
 			string name = def.name ?? def.id ?? "Weapon";
 			// Create minimal card like EntityFactory.CreateCard
