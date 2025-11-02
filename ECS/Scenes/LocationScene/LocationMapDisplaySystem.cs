@@ -9,6 +9,7 @@ using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -20,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly Texture2D _pixel;
+		private readonly Texture2D _backgroundTexture;
 
 		private int _lastViewportW = -1;
 		private int _lastViewportH = -1;
@@ -28,9 +30,14 @@ namespace Crusaders30XX.ECS.Systems
 		private bool _hasPannedOnLoad = false;
 
 		// Map configuration
-		public const int MapWidth = 6000;
-		public const int MapHeight = 3000;
-		public const int TileSize = 300;
+		private const int BaseMapWidth = 6000;
+		private const int BaseMapHeight = 3000;
+
+		[DebugEditable(DisplayName = "Map Scale", Step = 0.1f, Min = 0.1f, Max = 5f)]
+		public float MapScale { get; set; } = 1.0f;
+
+		public float MapWidth => BaseMapWidth * MapScale;
+		public float MapHeight => BaseMapHeight * MapScale;
 
 		// Camera feel
 		[DebugEditable(DisplayName = "Pan Speed (px/s)", Step = 10f, Min = 50f, Max = 5000f)]
@@ -45,13 +52,14 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Max Multiplier", Step = 0.1f, Min = 1f, Max = 10f)]
 		public float MaxMultiplier { get; set; } = 3f;
 
-		public LocationMapDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+		public LocationMapDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			_backgroundTexture = content.Load<Texture2D>("desert_background_location");
 			EventManager.Subscribe<LockLocationCameraEvent>(_ => { _locked = _.Locked; });
 			EventManager.Subscribe<FocusLocationCameraEvent>(_ => {
 				int w = _graphicsDevice.Viewport.Width;
@@ -227,7 +235,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private static void ClampCamera(ref Vector2 center, int viewportW, int viewportH)
+		private void ClampCamera(ref Vector2 center, int viewportW, int viewportH)
 		{
 			float halfW = viewportW / 2f;
 			float halfH = viewportH / 2f;
@@ -255,31 +263,41 @@ namespace Crusaders30XX.ECS.Systems
 			origin.X = Math.Max(0f, origin.X);
 			origin.Y = Math.Max(0f, origin.Y);
 
-			float right = Math.Min(MapWidth, origin.X + w);
-			float bottom = Math.Min(MapHeight, origin.Y + h);
+			float scaledMapWidth = MapWidth;
+			float scaledMapHeight = MapHeight;
 
-			int startTileX = (int)Math.Floor(origin.X / TileSize);
-			int startTileY = (int)Math.Floor(origin.Y / TileSize);
-			int endTileX = (int)Math.Floor((right - 1) / TileSize);
-			int endTileY = (int)Math.Floor((bottom - 1) / TileSize);
+			// Calculate the visible portion of the map
+			float visibleLeft = Math.Max(0f, origin.X);
+			float visibleTop = Math.Max(0f, origin.Y);
+			float visibleRight = Math.Min(scaledMapWidth, origin.X + w);
+			float visibleBottom = Math.Min(scaledMapHeight, origin.Y + h);
+			float visibleWidth = visibleRight - visibleLeft;
+			float visibleHeight = visibleBottom - visibleTop;
 
-			for (int ty = startTileY; ty <= endTileY; ty++)
+			if (visibleWidth > 0 && visibleHeight > 0)
 			{
-				for (int tx = startTileX; tx <= endTileX; tx++)
-				{
-					int worldX = tx * TileSize;
-					int worldY = ty * TileSize;
-					int width = Math.Min(TileSize, MapWidth - worldX);
-					int height = Math.Min(TileSize, MapHeight - worldY);
-					if (width <= 0 || height <= 0) continue;
+				// Calculate source rectangle (proportional to texture size)
+				float sourceLeft = visibleLeft / scaledMapWidth;
+				float sourceTop = visibleTop / scaledMapHeight;
+				float sourceWidth = visibleWidth / scaledMapWidth;
+				float sourceHeight = visibleHeight / scaledMapHeight;
 
-					int screenX = (int)Math.Round(worldX - origin.X);
-					int screenY = (int)Math.Round(worldY - origin.Y);
-					var dest = new Rectangle(screenX, screenY, width, height);
-					bool red = ((tx + ty) % 2 == 0);
-					var color = red ? Color.LightGreen : Color.LightGray;
-					_spriteBatch.Draw(_pixel, dest, color);
-				}
+				var sourceRect = new Rectangle(
+					(int)(sourceLeft * _backgroundTexture.Width),
+					(int)(sourceTop * _backgroundTexture.Height),
+					(int)(sourceWidth * _backgroundTexture.Width),
+					(int)(sourceHeight * _backgroundTexture.Height)
+				);
+
+				// Draw the visible portion of the background texture
+				var destRect = new Rectangle(
+					(int)(visibleLeft - origin.X),
+					(int)(visibleTop - origin.Y),
+					(int)visibleWidth,
+					(int)visibleHeight
+				);
+
+				_spriteBatch.Draw(_backgroundTexture, destRect, sourceRect, Color.White);
 			}
 		}
 	}

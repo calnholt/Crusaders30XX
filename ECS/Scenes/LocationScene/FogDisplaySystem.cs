@@ -23,19 +23,19 @@ namespace Crusaders30XX.ECS.Systems
 		public float RadiusPx { get; set; } = 300f;
 
 		[DebugEditable(DisplayName = "Feather (px)", Step = 1f, Min = 0f, Max = 64f)]
-		public float FeatherPx { get; set; } = 23f;
+		public float FeatherPx { get; set; } = 64f;
 
 		[DebugEditable(DisplayName = "Warp Amount (px)", Step = 1f, Min = 0f, Max = 64f)]
 		public float WarpAmountPx { get; set; } = 24f;
 
 		[DebugEditable(DisplayName = "Warp Speed", Step = 0.05f, Min = 0f, Max = 3f)]
-		public float WarpSpeed { get; set; } = 0.1f;
+		public float WarpSpeed { get; set; } = 0.5f;
 
-		[DebugEditable(DisplayName = "Noise Scale", Step = 0.0005f, Min = 0.0005f, Max = 0.02f)]
-		public float NoiseScale { get; set; } = 0.02f;
+		[DebugEditable(DisplayName = "Noise Scale", Step = 0.0005f, Min = 0.0005f, Max = 0.5f)]
+		public float NoiseScale { get; set; } = 0.2f;
 
 		[DebugEditable(DisplayName = "Ease Speed", Step = 0.05f, Min = 0f, Max = 3f)]
-		public float EaseSpeed { get; set; } = 0.2f;
+		public float EaseSpeed { get; set; } = 0.45f;
 
 		[DebugEditable(DisplayName = "Global Alpha Min", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float GlobalAlphaMin { get; set; } = 0.8f;
@@ -44,10 +44,10 @@ namespace Crusaders30XX.ECS.Systems
 		public float GlobalAlphaMax { get; set; } = 1f;
 
 		[DebugEditable(DisplayName = "Death Contrast", Step = 0.05f, Min = 0.5f, Max = 3f)]
-		public float DeathContrast { get; set; } = 0.5f;
+		public float DeathContrast { get; set; } = 3f;
 
 		[DebugEditable(DisplayName = "Lifeless Desaturate Mix", Step = 0.05f, Min = 0f, Max = 1f)]
-		public float LifelessDesaturateMix { get; set; } = 0.1f;
+		public float LifelessDesaturateMix { get; set; } = 0f;
 
 		[DebugEditable(DisplayName = "Lifeless Darken Mul", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float LifelessDarkenMul { get; set; } = 1f;
