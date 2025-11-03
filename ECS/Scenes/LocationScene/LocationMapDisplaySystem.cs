@@ -28,6 +28,10 @@ namespace Crusaders30XX.ECS.Systems
 		private Vector2 _cameraCenter;
 		private bool _locked;
 		private bool _hasPannedOnLoad = false;
+		private int _prevScrollWheelValue;
+		private MouseState _prevMouseState;
+		private bool _isDragging;
+		private Vector2 _dragStartPosition;
 
 		// Map configuration
 		private const int BaseMapWidth = 6000;
@@ -70,6 +74,8 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			_backgroundTexture = content.Load<Texture2D>("desert_background_location");
+			_prevScrollWheelValue = Mouse.GetState().ScrollWheelValue;
+			_prevMouseState = Mouse.GetState();
 			EventManager.Subscribe<LockLocationCameraEvent>(_ => { _locked = _.Locked; });
 			EventManager.Subscribe<FocusLocationCameraEvent>(_ => {
 				int w = _graphicsDevice.Viewport.Width;
@@ -82,10 +88,12 @@ namespace Crusaders30XX.ECS.Systems
 				if (_.Scene != SceneId.Location)
 				{
 					_hasPannedOnLoad = false;
+					_isDragging = false;
 					return;
 				}
 				// Reset flag when location scene loads
 				_hasPannedOnLoad = false;
+				_isDragging = false;
 			});
 		}
 
@@ -118,12 +126,16 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (!Game1.WindowIsActive)
 			{
+				_prevScrollWheelValue = Mouse.GetState().ScrollWheelValue;
+				_isDragging = false;
 				PublishCameraState(w, h);
 				return;
 			}
 
 			if (_locked)
 			{
+				_prevScrollWheelValue = Mouse.GetState().ScrollWheelValue;
+				_isDragging = false;
 				PublishCameraState(w, h);
 				return;
 			}
@@ -160,12 +172,13 @@ namespace Crusaders30XX.ECS.Systems
 
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-			// Handle zoom controls (LB zoom out, RB zoom in)
+			// Handle zoom controls (LB zoom out, RB zoom in, mouse wheel)
+			float oldScale = MapScale;
+			bool zoomChanged = false;
+			
+			// Gamepad zoom
 			if (gp.IsConnected)
 			{
-				float oldScale = MapScale;
-				bool zoomChanged = false;
-				
 				if (gp.IsButtonDown(Buttons.LeftShoulder))
 				{
 					MapScale = MathHelper.Clamp(MapScale - ZoomSpeed * dt, MinZoom, MaxZoom);
@@ -176,18 +189,57 @@ namespace Crusaders30XX.ECS.Systems
 					MapScale = MathHelper.Clamp(MapScale + ZoomSpeed * dt, MinZoom, MaxZoom);
 					zoomChanged = true;
 				}
+			}
+			
+			// Mouse wheel zoom
+			var mouse = Mouse.GetState();
+			int scrollDelta = mouse.ScrollWheelValue - _prevScrollWheelValue;
+			if (scrollDelta != 0)
+			{
+				// Scroll wheel typically uses 120 units per notch
+				// Scale the zoom change based on scroll delta
+				float zoomDelta = (scrollDelta / 120f) * ZoomSpeed * dt * 10f; // Multiply by 10 for more responsive scroll zoom
+				MapScale = MathHelper.Clamp(MapScale + zoomDelta, MinZoom, MaxZoom);
+				zoomChanged = true;
+			}
+			_prevScrollWheelValue = mouse.ScrollWheelValue;
+
+			// Right mouse button drag-to-pan
+			bool rmbPressed = mouse.RightButton == ButtonState.Pressed;
+			bool rmbPrevPressed = _prevMouseState.RightButton == ButtonState.Pressed;
+			bool rmbEdge = rmbPressed && !rmbPrevPressed;
+
+			if (rmbEdge)
+			{
+				// Start drag
+				_isDragging = true;
+				_dragStartPosition = new Vector2(mouse.X, mouse.Y);
+			}
+			else if (_isDragging && rmbPressed)
+			{
+				// Continue dragging
+				Vector2 currentMousePos = new Vector2(mouse.X, mouse.Y);
+				Vector2 delta = currentMousePos - _dragStartPosition;
+				// Move camera opposite to drag direction (natural map dragging feel)
+				_cameraCenter -= delta;
+				_dragStartPosition = currentMousePos;
+			}
+			else if (!rmbPressed && _isDragging)
+			{
+				// Stop dragging
+				_isDragging = false;
+			}
+			
+			// Preserve viewport center world position across zoom changes
+			if (zoomChanged && oldScale != MapScale)
+			{
+				// Convert camera center to map-relative ratio (0-1)
+				float ratioX = _cameraCenter.X / (BaseMapWidth * oldScale);
+				float ratioY = _cameraCenter.Y / (BaseMapHeight * oldScale);
 				
-				// Preserve viewport center world position across zoom changes
-				if (zoomChanged && oldScale != MapScale)
-				{
-					// Convert camera center to map-relative ratio (0-1)
-					float ratioX = _cameraCenter.X / (BaseMapWidth * oldScale);
-					float ratioY = _cameraCenter.Y / (BaseMapHeight * oldScale);
-					
-					// Restore camera center using new map size
-					_cameraCenter.X = ratioX * (BaseMapWidth * MapScale);
-					_cameraCenter.Y = ratioY * (BaseMapHeight * MapScale);
-				}
+				// Restore camera center using new map size
+				_cameraCenter.X = ratioX * (BaseMapWidth * MapScale);
+				_cameraCenter.Y = ratioY * (BaseMapHeight * MapScale);
 			}
 
 			if (velocity != Vector2.Zero)
@@ -198,6 +250,9 @@ namespace Crusaders30XX.ECS.Systems
 			// Always clamp camera and publish state (zoom may have changed even without velocity)
 			ClampCamera(ref _cameraCenter, w, h);
 			PublishCameraState(w, h);
+
+			// Update previous mouse state for next frame
+			_prevMouseState = mouse;
 		}
 
 		private void PublishCameraState(int viewportW, int viewportH)
