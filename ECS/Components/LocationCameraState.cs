@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Components
 		public Vector2 Origin { get; set; } = Vector2.Zero;   // world-space top-left of viewport
 		public int ViewportW { get; set; } = 0;
 		public int ViewportH { get; set; } = 0;
+		public float MapScale { get; set; } = 1.0f;           // map zoom scale
 	}
 }
 

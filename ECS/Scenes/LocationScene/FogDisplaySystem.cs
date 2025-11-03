@@ -93,24 +93,28 @@ namespace Crusaders30XX.ECS.Systems
 			var unlockerIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
 			var centers = new System.Collections.Generic.List<Microsoft.Xna.Framework.Vector2>();
 			var radii = new System.Collections.Generic.List<float>();
+			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
+			float mapScale = cam?.MapScale ?? 1.0f;
 			foreach (var u in unlockers)
 			{
 				centers.Add(new Microsoft.Xna.Framework.Vector2(u.T.Position.X, u.T.Position.Y));
 				var drawRadius = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
-				radii.Add(drawRadius);
+				radii.Add(drawRadius * mapScale);
 			}
 			foreach (var x in list)
 			{
 				if (unlockerIds.Contains(x.E.Id)) continue;
 				foreach (var u in unlockers)
 				{
-					float dx = x.P.WorldPosition.X - u.P.WorldPosition.X;
-					float dy = x.P.WorldPosition.Y - u.P.WorldPosition.Y;
+					// Scale world positions by map scale for distance checks
+					float dx = (x.P.WorldPosition.X - u.P.WorldPosition.X) * mapScale;
+					float dy = (x.P.WorldPosition.Y - u.P.WorldPosition.Y) * mapScale;
 					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
+					r *= mapScale; // Scale radius for distance check
 					if ((dx * dx) + (dy * dy) <= (r * r))
 					{
 						centers.Add(new Microsoft.Xna.Framework.Vector2(x.T.Position.X, x.T.Position.Y));
-						radii.Add((float)x.P.UnrevealedRadius);
+						radii.Add((float)x.P.UnrevealedRadius * mapScale);
 						break;
 					}
 				}
@@ -132,7 +136,6 @@ namespace Crusaders30XX.ECS.Systems
 			_overlay.LifelessDarkenMul = LifelessDarkenMul;
 			_overlay.TimeSeconds = _timeSeconds;
 			// Anchor distortion to world Y
-			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
 			_overlay.CameraOriginYPx = cam?.Origin.Y ?? 0f;
 
 			// Save current SpriteBatch device states and temporarily end the batch
@@ -176,24 +179,28 @@ namespace Crusaders30XX.ECS.Systems
 			var unlockerIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
 			var centers = new System.Collections.Generic.List<Microsoft.Xna.Framework.Vector2>();
 			var radii = new System.Collections.Generic.List<float>();
+			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
+			float mapScale = cam?.MapScale ?? 1.0f;
 			foreach (var u in unlockers)
 			{
 				centers.Add(new Microsoft.Xna.Framework.Vector2(u.T.Position.X, u.T.Position.Y));
 				var drawRadius = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
-				radii.Add(drawRadius);
+				radii.Add(drawRadius * mapScale);
 			}
 			foreach (var x in list)
 			{
 				if (unlockerIds.Contains(x.E.Id)) continue;
 				foreach (var u in unlockers)
 				{
-					float dx = x.P.WorldPosition.X - u.P.WorldPosition.X;
-					float dy = x.P.WorldPosition.Y - u.P.WorldPosition.Y;
+					// Scale world positions by map scale for distance checks
+					float dx = (x.P.WorldPosition.X - u.P.WorldPosition.X) * mapScale;
+					float dy = (x.P.WorldPosition.Y - u.P.WorldPosition.Y) * mapScale;
 					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
+					r *= mapScale; // Scale radius for distance check
 					if ((dx * dx) + (dy * dy) <= (r * r))
 					{
 						centers.Add(new Microsoft.Xna.Framework.Vector2(x.T.Position.X, x.T.Position.Y));
-						radii.Add((float)x.P.UnrevealedRadius);
+						radii.Add((float)x.P.UnrevealedRadius * mapScale);
 						break;
 					}
 				}
@@ -203,7 +210,6 @@ namespace Crusaders30XX.ECS.Systems
 			if (_overlay != null)
 			{
 				// Anchor distortion to world Y (match Draw path)
-				var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
 				_overlay.CameraOriginYPx = cam?.Origin.Y ?? 0f;
 				_overlay.CentersPx = centers;
 				_overlay.RadiusPx = radii;

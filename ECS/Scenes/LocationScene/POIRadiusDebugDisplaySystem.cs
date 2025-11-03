@@ -58,6 +58,9 @@ namespace Crusaders30XX.ECS.Systems
 			int thickness = RingThickness < 1 ? 1 : RingThickness;
 			if (!ShowRevealRadius && !ShowUnrevealedRadius) return;
 
+			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
+			float mapScale = cam?.MapScale ?? 1.0f;
+
 			var list = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
 				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
@@ -72,19 +75,21 @@ namespace Crusaders30XX.ECS.Systems
 				int rReveal = x.P.RevealRadius;
 				if (ShowRevealRadius && rReveal > 0)
 				{
+					float scaledRadius = rReveal * mapScale;
 					// simple viewport cull
-					if (!(cx + rReveal < 0 || cy + rReveal < 0 || cx - rReveal > screenW || cy - rReveal > screenH))
+					if (!(cx + scaledRadius < 0 || cy + scaledRadius < 0 || cx - scaledRadius > screenW || cy - scaledRadius > screenH))
 					{
-						DrawRing(new Vector2(cx, cy), rReveal, Color.Red, thickness);
+						DrawRing(new Vector2(cx, cy), (int)scaledRadius, Color.Red, thickness);
 					}
 				}
 
 				int rUnrevealed = x.P.UnrevealedRadius;
 				if (ShowUnrevealedRadius && rUnrevealed > 0)
 				{
-					if (!(cx + rUnrevealed < 0 || cy + rUnrevealed < 0 || cx - rUnrevealed > screenW || cy - rUnrevealed > screenH))
+					float scaledRadius = rUnrevealed * mapScale;
+					if (!(cx + scaledRadius < 0 || cy + scaledRadius < 0 || cx - scaledRadius > screenW || cy - scaledRadius > screenH))
 					{
-						DrawRing(new Vector2(cx, cy), rUnrevealed, Color.Blue, thickness);
+						DrawRing(new Vector2(cx, cy), (int)scaledRadius, Color.Blue, thickness);
 					}
 				}
 			}

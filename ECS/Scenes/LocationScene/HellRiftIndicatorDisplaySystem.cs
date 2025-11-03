@@ -89,6 +89,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			var origin = cam.Origin;
 			var cameraCenter = cam.Center;
+			float mapScale = cam.MapScale;
 			int w = cam.ViewportW;
 			int h = cam.ViewportH;
 
@@ -97,8 +98,9 @@ namespace Crusaders30XX.ECS.Systems
 				var poi = hellriftEntity.GetComponent<PointOfInterest>();
 				if (poi == null) continue;
 
-				// Convert world position to screen space
-				var screenPos = poi.WorldPosition - origin;
+				// Scale world position by map scale to match scaled world space
+				var scaledWorldPos = poi.WorldPosition * mapScale;
+				var screenPos = scaledWorldPos - origin;
 
 				// Check if in view - skip if visible
 				if (screenPos.X >= 0 && screenPos.X <= w && screenPos.Y >= 0 && screenPos.Y <= h)
@@ -106,12 +108,12 @@ namespace Crusaders30XX.ECS.Systems
 					continue;
 				}
 
-				// Calculate direction from camera center to hellrift
-				var direction = poi.WorldPosition - cameraCenter;
+				// Calculate direction from camera center to hellrift (in scaled world space)
+				var direction = scaledWorldPos - cameraCenter;
 				if (direction.LengthSquared() < 0.0001f) continue; // Avoid division by zero
 
 				// Convert hellrift position to screen space for edge calculation
-				var hellriftScreenPos = poi.WorldPosition - origin;
+				var hellriftScreenPos = scaledWorldPos - origin;
 				var screenCenter = new Vector2(w / 2f, h / 2f);
 				var screenDirection = hellriftScreenPos - screenCenter;
 				if (screenDirection.LengthSquared() < 0.0001f) continue;

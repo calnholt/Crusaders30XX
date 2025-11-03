@@ -90,13 +90,16 @@ namespace Crusaders30XX.ECS.Systems
 			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
 			if (cam == null) return;
 			var origin = cam.Origin;
+			float mapScale = cam.MapScale;
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			foreach (var e in _pois)
 			{
 				var t = e.GetComponent<Transform>();
 				if (t == null) continue;
 				if (!_worldByEntityId.TryGetValue(e.Id, out var world)) continue;
-				var screenPos = world - origin;
+				// Scale world position by map scale to match scaled world space
+				var scaledWorld = world * mapScale;
+				var screenPos = scaledWorld - origin;
 				// Hand off screen base position to the Parallax system; it will set t.Position
 				t.BasePosition = screenPos;
 
@@ -132,9 +135,12 @@ namespace Crusaders30XX.ECS.Systems
 				bool isRevealedByProximity = false;
 				foreach (var u in unlockers)
 				{
-					float dx = hellrift.P.WorldPosition.X - u.P.WorldPosition.X;
-					float dy = hellrift.P.WorldPosition.Y - u.P.WorldPosition.Y;
+					// Scale world positions by map scale for distance checks
+					float dx = (hellrift.P.WorldPosition.X - u.P.WorldPosition.X) * mapScale;
+					float dy = (hellrift.P.WorldPosition.Y - u.P.WorldPosition.Y) * mapScale;
 					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
+					// Scale radius by map scale for visibility checks
+					r *= mapScale;
 					if ((dx * dx) + (dy * dy) <= (r * r))
 					{
 						isRevealedByProximity = true;
@@ -234,6 +240,7 @@ namespace Crusaders30XX.ECS.Systems
 				.ToList();
 			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == "Hellrift").ToList();
 			var visibleIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
+			float mapScale = cam.MapScale;
 			foreach (var x in list)
 			{
 				if (visibleIds.Contains(x.E.Id)) continue;
@@ -245,9 +252,12 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				foreach (var u in unlockers)
 				{
-					float dx = x.P.WorldPosition.X - u.P.WorldPosition.X;
-					float dy = x.P.WorldPosition.Y - u.P.WorldPosition.Y;
+					// Scale world positions by map scale for distance checks
+					float dx = (x.P.WorldPosition.X - u.P.WorldPosition.X) * mapScale;
+					float dy = (x.P.WorldPosition.Y - u.P.WorldPosition.Y) * mapScale;
 					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
+					// Scale radius by map scale for visibility checks
+					r *= mapScale;
 					if ((dx * dx) + (dy * dy) <= (r * r))
 					{
 						visibleIds.Add(x.E.Id);
@@ -267,8 +277,8 @@ namespace Crusaders30XX.ECS.Systems
 				// Determine which texture to use based on POI type
 				Texture2D iconTexture = (x.P.Type == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture : _questIconTexture;
 				
-				// Calculate icon dimensions preserving aspect ratio
-				float iconWidth = IconSize * scale;
+				// Calculate icon dimensions preserving aspect ratio, scaled by map zoom
+				float iconWidth = IconSize * mapScale * scale;
 				float iconHeight = iconWidth;
 				if (iconTexture != null && iconTexture.Width > 0 && iconTexture.Height > 0)
 				{
@@ -299,7 +309,7 @@ namespace Crusaders30XX.ECS.Systems
 				// Draw red circle for incomplete quests (not for Hellrift POIs)
 				if (!x.P.IsCompleted && x.P.Type == "Quest")
 				{
-					DrawCircle(iconPos, halfWidth, halfHeight, CircleSize * scale);
+					DrawCircle(iconPos, halfWidth, halfHeight, CircleSize * mapScale * scale);
 				}
 			}
 		}

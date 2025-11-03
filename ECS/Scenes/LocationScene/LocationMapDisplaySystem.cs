@@ -34,7 +34,7 @@ namespace Crusaders30XX.ECS.Systems
 		private const int BaseMapHeight = 3000;
 
 		[DebugEditable(DisplayName = "Map Scale", Step = 0.1f, Min = 0.1f, Max = 5f)]
-		public float MapScale { get; set; } = 1.0f;
+		public float MapScale { get; set; } = 0.75f;
 
 		public float MapWidth => BaseMapWidth * MapScale;
 		public float MapHeight => BaseMapHeight * MapScale;
@@ -51,6 +51,16 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Max Multiplier", Step = 0.1f, Min = 1f, Max = 10f)]
 		public float MaxMultiplier { get; set; } = 3f;
+
+		// Zoom configuration
+		[DebugEditable(DisplayName = "Zoom Speed", Step = 0.1f, Min = 0.1f, Max = 5f)]
+		public float ZoomSpeed { get; set; } = 0.4f;
+
+		[DebugEditable(DisplayName = "Min Zoom", Step = 0.1f, Min = 0.1f, Max = 1f)]
+		public float MinZoom { get; set; } = 0.5f;
+
+		[DebugEditable(DisplayName = "Max Zoom", Step = 0.1f, Min = 1f, Max = 5f)]
+		public float MaxZoom { get; set; } = 1.0f;
 
 		public LocationMapDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
@@ -148,14 +158,27 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 
-			if (velocity == Vector2.Zero)
+			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+			// Handle zoom controls (LB zoom out, RB zoom in)
+			if (gp.IsConnected)
 			{
-				PublishCameraState(w, h);
-				return;
+				if (gp.IsButtonDown(Buttons.LeftShoulder))
+				{
+					MapScale = MathHelper.Clamp(MapScale - ZoomSpeed * dt, MinZoom, MaxZoom);
+				}
+				if (gp.IsButtonDown(Buttons.RightShoulder))
+				{
+					MapScale = MathHelper.Clamp(MapScale + ZoomSpeed * dt, MinZoom, MaxZoom);
+				}
 			}
 
-			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-			_cameraCenter += velocity * dt;
+			if (velocity != Vector2.Zero)
+			{
+				_cameraCenter += velocity * dt;
+			}
+
+			// Always clamp camera and publish state (zoom may have changed even without velocity)
 			ClampCamera(ref _cameraCenter, w, h);
 			PublishCameraState(w, h);
 		}
@@ -182,6 +205,7 @@ namespace Crusaders30XX.ECS.Systems
 			state.Origin = origin;
 			state.ViewportW = viewportW;
 			state.ViewportH = viewportH;
+			state.MapScale = MapScale;
 		}
 
 		private void TryAutoPanCamera()
