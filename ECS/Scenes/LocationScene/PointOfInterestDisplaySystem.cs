@@ -116,6 +116,30 @@ namespace Crusaders30XX.ECS.Systems
 					float lerpSpeed = AnimationSpeed * dt;
 					currentScale = MathHelper.Lerp(currentScale, targetScale, MathHelper.Clamp(lerpSpeed, 0f, 1f));
 					_hoverScales[e.Id] = currentScale;
+					
+					// Update UI bounds size based on zoom and hover scale
+					var poi = e.GetComponent<PointOfInterest>();
+					if (poi != null)
+					{
+						Texture2D iconTexture = (poi.Type == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture : _questIconTexture;
+						
+						// Calculate bounds size scaled by map zoom and hover scale
+						float boundsWidth = IconSize * mapScale * currentScale;
+						float boundsHeight = boundsWidth;
+						if (iconTexture != null && iconTexture.Width > 0 && iconTexture.Height > 0)
+						{
+							float aspectRatio = iconTexture.Height / (float)iconTexture.Width;
+							boundsHeight = boundsWidth * aspectRatio;
+						}
+						
+						// Update bounds size and center around transform position
+						// (ParallaxLayerSystem may update position, but this ensures alignment)
+						ui.Bounds = new Rectangle(
+							(int)System.Math.Round(t.Position.X - boundsWidth / 2f),
+							(int)System.Math.Round(t.Position.Y - boundsHeight / 2f),
+							(int)System.Math.Round(boundsWidth),
+							(int)System.Math.Round(boundsHeight));
+					}
 				}
 			}
 
