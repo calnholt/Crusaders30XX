@@ -18,6 +18,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly SystemManager _systemManager;
         private GamePadState _prevGamePadState;
+        private KeyboardState _prevKeyboardState;
         private Dictionary<Entity, float> _holdProgress = new Dictionary<Entity, float>();
         private Dictionary<Entity, FaceButton> _heldButtons = new Dictionary<Entity, FaceButton>();
         private Texture2D _pixel;
@@ -48,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
             _systemManager = systemManager;
             _pixel = new Texture2D(_graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
+            _prevKeyboardState = Keyboard.GetState();
             
             EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
         }
@@ -68,30 +70,10 @@ namespace Crusaders30XX.ECS.Systems
             if (!Game1.WindowIsActive || TransitionStateSingleton.IsActive) return;
             
             var caps = GamePad.GetCapabilities(PlayerIndex.One);
-            if (!caps.IsConnected)
-            {
-                _prevGamePadState = default;
-                _holdProgress.Clear();
-                _heldButtons.Clear();
-                return;
-            }
-
-            var gp = GamePad.GetState(PlayerIndex.One);
+            var kb = Keyboard.GetState();
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-            // Check for button press edges to start hold tracking
-            bool edgeY = gp.Buttons.Y == ButtonState.Pressed && _prevGamePadState.Buttons.Y == ButtonState.Released;
-            bool edgeB = gp.Buttons.B == ButtonState.Pressed && _prevGamePadState.Buttons.B == ButtonState.Released;
-            bool edgeX = gp.Buttons.X == ButtonState.Pressed && _prevGamePadState.Buttons.X == ButtonState.Released;
-            bool edgeStart = gp.Buttons.Start == ButtonState.Pressed && _prevGamePadState.Buttons.Start == ButtonState.Released;
-
-            // Check for button release edges to cancel hold tracking
-            bool releaseY = gp.Buttons.Y == ButtonState.Released && _prevGamePadState.Buttons.Y == ButtonState.Pressed;
-            bool releaseB = gp.Buttons.B == ButtonState.Released && _prevGamePadState.Buttons.B == ButtonState.Pressed;
-            bool releaseX = gp.Buttons.X == ButtonState.Released && _prevGamePadState.Buttons.X == ButtonState.Pressed;
-            bool releaseStart = gp.Buttons.Start == ButtonState.Released && _prevGamePadState.Buttons.Start == ButtonState.Pressed;
-
-            // Check if any overlay UI is present
+            
+            // Check if any overlay UI is present (shared between both branches)
             bool overlayPresent = EntityManager.GetEntitiesWithComponent<UIElement>()
                 .Any(e => {
                     var ui = e.GetComponent<UIElement>();
@@ -101,118 +83,222 @@ namespace Crusaders30XX.ECS.Systems
                         && ui.Bounds.Width > 0 
                         && ui.Bounds.Height > 0;
                 });
-
-            // Handle button press edges - start tracking hold
-            if (edgeY || edgeB || edgeX || edgeStart)
-            {
-                FaceButton? pressed = null;
-                if (edgeY) pressed = FaceButton.Y;
-                else if (edgeB) pressed = FaceButton.B;
-                else if (edgeX) pressed = FaceButton.X;
-                else if (edgeStart) pressed = FaceButton.Start;
-
-                // Find top-most eligible entity with this hotkey that requires hold
-                var target = EntityManager.GetEntitiesWithComponent<HotKey>()
-                    .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), Btn = e.GetComponent<UIButton>() })
-                    .Where(x => x.HK != null && x.UI != null && x.UI.IsInteractable && x.HK.Button == pressed && x.HK.RequiresHold && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
-                    .OrderByDescending(x => x.T?.ZOrder ?? 0)
-                    .FirstOrDefault();
-
-                if (target != null)
-                {
-                    _holdProgress[target.E] = 0f;
-                    _heldButtons[target.E] = pressed.Value;
-                }
-            }
-
-            // Handle button releases - cancel tracking if button released
-            if (releaseY || releaseB || releaseX || releaseStart)
-            {
-                FaceButton? released = null;
-                if (releaseY) released = FaceButton.Y;
-                else if (releaseB) released = FaceButton.B;
-                else if (releaseX) released = FaceButton.X;
-                else if (releaseStart) released = FaceButton.Start;
-
-                // Remove entities that were tracking this button
-                var toRemove = _heldButtons.Where(kv => kv.Value == released.Value).Select(kv => kv.Key).ToList();
-                foreach (var ent in toRemove)
-                {
-                    _holdProgress.Remove(ent);
-                    _heldButtons.Remove(ent);
-                }
-            }
-
-            // Update hold progress for entities being held
+            
+            // List to collect entities that complete hold (shared between both branches)
             var entitiesToComplete = new List<Entity>();
-            foreach (var kvp in _holdProgress.ToList())
+            
+            if (!caps.IsConnected)
             {
-                var ent = kvp.Key;
-                var hotKey = ent.GetComponent<HotKey>();
-                var ui = ent.GetComponent<UIElement>();
+                _prevGamePadState = default;
                 
-                if (hotKey == null || ui == null || !ui.IsInteractable)
+                // Handle keyboard input when gamepad is not connected
+                bool edgeSpace = kb.IsKeyDown(Keys.Space) && !_prevKeyboardState.IsKeyDown(Keys.Space);
+                bool releaseSpace = !kb.IsKeyDown(Keys.Space) && _prevKeyboardState.IsKeyDown(Keys.Space);
+                
+                // Handle spacebar press edge - start tracking hold for FaceButton.X
+                if (edgeSpace)
                 {
-                    _holdProgress.Remove(ent);
-                    _heldButtons.Remove(ent);
-                    continue;
-                }
-
-                // Check if the button is still pressed
-                bool stillPressed = false;
-                if (_heldButtons.TryGetValue(ent, out FaceButton btn))
-                {
-                    switch (btn)
-                    {
-                        case FaceButton.Y:
-                            stillPressed = gp.Buttons.Y == ButtonState.Pressed;
-                            break;
-                        case FaceButton.B:
-                            stillPressed = gp.Buttons.B == ButtonState.Pressed;
-                            break;
-                        case FaceButton.X:
-                            stillPressed = gp.Buttons.X == ButtonState.Pressed;
-                            break;
-                        case FaceButton.Start:
-                            stillPressed = gp.Buttons.Start == ButtonState.Pressed;
-                            break;
-                    }
-                }
-
-                if (stillPressed)
-                {
-                    // Increment hold time
-                    _holdProgress[ent] += deltaTime;
+                    FaceButton pressed = FaceButton.X;
                     
-                    // Check if hold completed
-                    if (_holdProgress[ent] >= hotKey.HoldDurationSeconds)
+                    // Find top-most eligible entity with this hotkey that requires hold
+                    var target = EntityManager.GetEntitiesWithComponent<HotKey>()
+                        .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), Btn = e.GetComponent<UIButton>() })
+                        .Where(x => x.HK != null && x.UI != null && x.UI.IsInteractable && x.HK.Button == pressed && x.HK.RequiresHold && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
+                        .OrderByDescending(x => x.T?.ZOrder ?? 0)
+                        .FirstOrDefault();
+                    
+                    if (target != null)
                     {
-                        entitiesToComplete.Add(ent);
+                        _holdProgress[target.E] = 0f;
+                        _heldButtons[target.E] = pressed;
                     }
                 }
-                else
+                
+                // Handle spacebar release edge - cancel tracking
+                if (releaseSpace)
                 {
-                    // Button released before completion, remove tracking
-                    _holdProgress.Remove(ent);
-                    _heldButtons.Remove(ent);
+                    FaceButton released = FaceButton.X;
+                    var toRemove = _heldButtons.Where(kvp => kvp.Value == released).Select(kvp => kvp.Key).ToList();
+                    foreach (var ent in toRemove)
+                    {
+                        _holdProgress.Remove(ent);
+                        _heldButtons.Remove(ent);
+                    }
                 }
+                
+                // Update hold progress for entities being held
+                foreach (var kvp in _holdProgress.ToList())
+                {
+                    var ent = kvp.Key;
+                    var hotKey = ent.GetComponent<HotKey>();
+                    var ui = ent.GetComponent<UIElement>();
+                    
+                    if (hotKey == null || ui == null || !ui.IsInteractable)
+                    {
+                        _holdProgress.Remove(ent);
+                        _heldButtons.Remove(ent);
+                        continue;
+                    }
+                    
+                    // Check if spacebar is still pressed (for FaceButton.X)
+                    bool stillPressed = false;
+                    if (_heldButtons.TryGetValue(ent, out FaceButton btn))
+                    {
+                        if (btn == FaceButton.X)
+                        {
+                            stillPressed = kb.IsKeyDown(Keys.Space);
+                        }
+                    }
+                    
+                    if (stillPressed)
+                    {
+                        // Increment hold time
+                        _holdProgress[ent] += deltaTime;
+                        
+                        // Check if hold completed
+                        if (_holdProgress[ent] >= hotKey.HoldDurationSeconds)
+                        {
+                            entitiesToComplete.Add(ent);
+                        }
+                    }
+                    else
+                    {
+                        // Button released before completion, remove tracking
+                        _holdProgress.Remove(ent);
+                        _heldButtons.Remove(ent);
+                    }
+                }
+                
+                _prevKeyboardState = kb;
             }
+            else
+            {
+                var gp = GamePad.GetState(PlayerIndex.One);
 
-            // Complete hold actions - publish event instead of directly triggering
+                // Check for button press edges to start hold tracking
+                bool edgeY = gp.Buttons.Y == ButtonState.Pressed && _prevGamePadState.Buttons.Y == ButtonState.Released;
+                bool edgeB = gp.Buttons.B == ButtonState.Pressed && _prevGamePadState.Buttons.B == ButtonState.Released;
+                bool edgeX = gp.Buttons.X == ButtonState.Pressed && _prevGamePadState.Buttons.X == ButtonState.Released;
+                bool edgeStart = gp.Buttons.Start == ButtonState.Pressed && _prevGamePadState.Buttons.Start == ButtonState.Released;
+
+                // Check for button release edges to cancel hold tracking
+                bool releaseY = gp.Buttons.Y == ButtonState.Released && _prevGamePadState.Buttons.Y == ButtonState.Pressed;
+                bool releaseB = gp.Buttons.B == ButtonState.Released && _prevGamePadState.Buttons.B == ButtonState.Pressed;
+                bool releaseX = gp.Buttons.X == ButtonState.Released && _prevGamePadState.Buttons.X == ButtonState.Pressed;
+                bool releaseStart = gp.Buttons.Start == ButtonState.Released && _prevGamePadState.Buttons.Start == ButtonState.Pressed;
+
+                // Handle button press edges - start tracking hold
+                if (edgeY || edgeB || edgeX || edgeStart)
+                {
+                    FaceButton? pressed = null;
+                    if (edgeY) pressed = FaceButton.Y;
+                    else if (edgeB) pressed = FaceButton.B;
+                    else if (edgeX) pressed = FaceButton.X;
+                    else if (edgeStart) pressed = FaceButton.Start;
+
+                    // Find top-most eligible entity with this hotkey that requires hold
+                    var target = EntityManager.GetEntitiesWithComponent<HotKey>()
+                        .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), Btn = e.GetComponent<UIButton>() })
+                        .Where(x => x.HK != null && x.UI != null && x.UI.IsInteractable && x.HK.Button == pressed && x.HK.RequiresHold && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
+                        .OrderByDescending(x => x.T?.ZOrder ?? 0)
+                        .FirstOrDefault();
+
+                    if (target != null)
+                    {
+                        _holdProgress[target.E] = 0f;
+                        _heldButtons[target.E] = pressed.Value;
+                    }
+                }
+
+                // Handle button releases - cancel tracking if button released
+                if (releaseY || releaseB || releaseX || releaseStart)
+                {
+                    FaceButton? released = null;
+                    if (releaseY) released = FaceButton.Y;
+                    else if (releaseB) released = FaceButton.B;
+                    else if (releaseX) released = FaceButton.X;
+                    else if (releaseStart) released = FaceButton.Start;
+
+                    // Remove entities that were tracking this button
+                    var toRemove = _heldButtons.Where(kv => kv.Value == released.Value).Select(kv => kv.Key).ToList();
+                    foreach (var ent in toRemove)
+                    {
+                        _holdProgress.Remove(ent);
+                        _heldButtons.Remove(ent);
+                    }
+                }
+
+                // Update hold progress for entities being held
+                foreach (var kvp in _holdProgress.ToList())
+                {
+                    var ent = kvp.Key;
+                    var hotKey = ent.GetComponent<HotKey>();
+                    var ui = ent.GetComponent<UIElement>();
+                    
+                    if (hotKey == null || ui == null || !ui.IsInteractable)
+                    {
+                        _holdProgress.Remove(ent);
+                        _heldButtons.Remove(ent);
+                        continue;
+                    }
+
+                    // Check if the button is still pressed
+                    bool stillPressed = false;
+                    if (_heldButtons.TryGetValue(ent, out FaceButton btn))
+                    {
+                        switch (btn)
+                        {
+                            case FaceButton.Y:
+                                stillPressed = gp.Buttons.Y == ButtonState.Pressed;
+                                break;
+                            case FaceButton.B:
+                                stillPressed = gp.Buttons.B == ButtonState.Pressed;
+                                break;
+                            case FaceButton.X:
+                                stillPressed = gp.Buttons.X == ButtonState.Pressed;
+                                break;
+                            case FaceButton.Start:
+                                stillPressed = gp.Buttons.Start == ButtonState.Pressed;
+                                break;
+                        }
+                    }
+
+                    if (stillPressed)
+                    {
+                        // Increment hold time
+                        _holdProgress[ent] += deltaTime;
+                        
+                        // Check if hold completed
+                        if (_holdProgress[ent] >= hotKey.HoldDurationSeconds)
+                        {
+                            entitiesToComplete.Add(ent);
+                        }
+                    }
+                    else
+                    {
+                        // Button released before completion, remove tracking
+                        _holdProgress.Remove(ent);
+                        _heldButtons.Remove(ent);
+                    }
+                }
+
+                _prevGamePadState = gp;
+                _prevKeyboardState = kb;
+            }
+            
+            // Complete hold actions - publish event instead of directly triggering (shared between both branches)
             foreach (var ent in entitiesToComplete)
             {
                 EventManager.Publish(new HotKeyHoldCompletedEvent { Entity = ent });
                 _holdProgress.Remove(ent);
                 _heldButtons.Remove(ent);
             }
-
-            _prevGamePadState = gp;
         }
 
         public void Draw()
         {
             var caps = GamePad.GetCapabilities(PlayerIndex.One);
-            if (!caps.IsConnected) return;
+            bool gamepadConnected = caps.IsConnected;
 
             var hotKeySystem = _systemManager.GetSystem<HotKeySystem>();
             if (hotKeySystem == null) return;
@@ -237,6 +323,9 @@ namespace Crusaders30XX.ECS.Systems
 
                 if (hotKey == null || ui == null || !ui.IsInteractable) continue;
                 if (overlayPresent && ui.LayerType != UILayerType.Overlay) continue;
+                
+                // When gamepad is not connected, only draw progress for FaceButton.X (spacebar)
+                if (!gamepadConnected && hotKey.Button != FaceButton.X) continue;
 
                 var r = ui.Bounds;
                 if (r.Width < 2 || r.Height < 2) continue;

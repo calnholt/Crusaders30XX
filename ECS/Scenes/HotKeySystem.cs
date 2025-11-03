@@ -18,6 +18,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font;
         private GamePadState _prevGamePadState;
+        private KeyboardState _prevKeyboardState;
         private Texture2D _circleTexSmall;
 
         [DebugEditable(DisplayName = "Hint Radius (px)", Step = 1f, Min = 4f, Max = 64f)]
@@ -39,6 +40,7 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch = sb;
             _font = font;
             _circleTexSmall = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, HintRadius);
+            _prevKeyboardState = Keyboard.GetState();
             
             EventManager.Subscribe<HotKeyHoldCompletedEvent>(OnHotKeyHoldCompleted);
         }
@@ -88,11 +90,53 @@ namespace Crusaders30XX.ECS.Systems
             // Poll controller once per frame
             if (!Game1.WindowIsActive || TransitionStateSingleton.IsActive) return;
             var caps = GamePad.GetCapabilities(PlayerIndex.One);
+            var kb = Keyboard.GetState();
+            
             if (!caps.IsConnected)
             {
                 _prevGamePadState = default;
+                // Handle keyboard input when gamepad is not connected
+                bool edgeSpace = kb.IsKeyDown(Keys.Space) && !_prevKeyboardState.IsKeyDown(Keys.Space);
+                
+                if (edgeSpace)
+                {
+                    // Treat spacebar as FaceButton.X
+                    FaceButton pressed = FaceButton.X;
+
+                    // If any overlay UI is present, suppress default-layer hotkeys
+                    bool overlayPresent = EntityManager.GetEntitiesWithComponent<UIElement>()
+                        .Any(e => {
+                            var ui = e.GetComponent<UIElement>();
+                            return ui != null 
+                                && ui.LayerType == UILayerType.Overlay 
+                                && ui.IsInteractable 
+                                && ui.Bounds.Width > 0 
+                                && ui.Bounds.Height > 0;
+                        });
+
+                    // Choose top-most eligible entity with this hotkey by ZOrder
+                    var target = EntityManager.GetEntitiesWithComponent<HotKey>()
+                        .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), Btn = e.GetComponent<UIButton>() })
+                        .Where(x => x.HK != null && x.UI != null && x.UI.IsInteractable && x.HK.Button == pressed && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
+                        .OrderByDescending(x => x.T?.ZOrder ?? 0)
+                        .FirstOrDefault();
+                    if (target != null)
+                    {
+                        // Skip activation if RequiresHold - let HotKeyProgressRingSystem handle it
+                        if (target.HK.RequiresHold)
+                        {
+                            _prevKeyboardState = kb;
+                            return;
+                        }
+
+                        ProcessHotKeyClick(target.E);
+                    }
+                }
+                
+                _prevKeyboardState = kb;
                 return;
             }
+            
             var gp = GamePad.GetState(PlayerIndex.One);
             bool edgeY = gp.Buttons.Y == ButtonState.Pressed && _prevGamePadState.Buttons.Y == ButtonState.Released;
             bool edgeB = gp.Buttons.B == ButtonState.Pressed && _prevGamePadState.Buttons.B == ButtonState.Released;
@@ -129,6 +173,8 @@ namespace Crusaders30XX.ECS.Systems
                     // Skip activation if RequiresHold - let HotKeyProgressRingSystem handle it
                     if (target.HK.RequiresHold)
                     {
+                        _prevGamePadState = gp;
+                        _prevKeyboardState = kb;
                         return;
                     }
 
@@ -137,6 +183,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             _prevGamePadState = gp;
+            _prevKeyboardState = kb;
         }
 
         public (int cx, int cy) CalculateHintPosition(Microsoft.Xna.Framework.Rectangle bounds, HotKeyPosition position, int hintRadius, int hintGapX, int hintGapY)
@@ -172,7 +219,8 @@ namespace Crusaders30XX.ECS.Systems
         {
             // Draw hints for interactable HotKey UI elements
             var caps = GamePad.GetCapabilities(PlayerIndex.One);
-            if (!caps.IsConnected) return;
+            bool gamepadConnected = caps.IsConnected;
+            
             bool overlayPresent = EntityManager.GetEntitiesWithComponent<UIElement>()
                 .Any(e => {
                     var ui = e.GetComponent<UIElement>();
@@ -199,6 +247,17 @@ namespace Crusaders30XX.ECS.Systems
                 if (r.Width < 2 || r.Height < 2) continue;
                 var (cx, cy) = CalculateHintPosition(r, x.HK.Position, HintRadius, HintGapX, HintGapY);
                 var pos = new Vector2(cx - HintRadius, cy - HintRadius);
+                
+                // When gamepad is not connected, show keyboard visuals for FaceButton.X
+                if (!gamepadConnected && x.HK.Button == FaceButton.X)
+                {
+                    DrawKeyboardKey(cx, cy);
+                    continue;
+                }
+                
+                // Skip drawing if gamepad is not connected and this is not an X button
+                if (!gamepadConnected) continue;
+                
                 if (x.HK.Button == FaceButton.Start)
                 {
                     if (isPS)
@@ -302,6 +361,26 @@ namespace Crusaders30XX.ECS.Systems
                 case FaceButton.Y: return new Color(220, 200, 60);
                 default: return Color.White;
             }
+        }
+
+        private void DrawKeyboardKey(int cx, int cy)
+        {
+            // Create a wide rounded rectangle for the spacebar key
+            int keyHeight = (int)System.Math.Round(HintRadius * 1.2f);
+            int keyWidth = (int)System.Math.Round(keyHeight * 3.5f); // Spacebar is typically 3-4x wider than tall
+            int cornerRadius = System.Math.Max(2, keyHeight / 4);
+            
+            var keyTex = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, keyWidth, keyHeight, cornerRadius);
+            
+            // Draw the key background (light gray, keyboard-like)
+            var keyPos = new Vector2(cx - keyWidth / 2f, cy - keyHeight / 2f);
+            _spriteBatch.Draw(keyTex, keyPos, new Color(200, 200, 200)); // Light gray key
+            
+            // Draw "SPACE" text centered inside
+            string text = "SPACE";
+            var textSize = _font.MeasureString(text) * TextScale;
+            var textPos = new Vector2(cx - textSize.X / 2f, cy - textSize.Y / 2f - 2f);
+            _spriteBatch.DrawString(_font, text, textPos, Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
         }
     }
 }

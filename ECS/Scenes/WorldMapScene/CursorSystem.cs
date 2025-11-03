@@ -144,7 +144,6 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Determine top-most UI intersecting the cursor and flag hover
-			var point = new Point((int)Math.Round(_cursorPosition.X), (int)Math.Round(_cursorPosition.Y));
 			var topCandidate = (object)null;
 			bool isPressed = false;
 			bool isPressedEdge = false;
@@ -298,7 +297,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			else
 			{
-				// Mouse-driven path: set position directly and handle hover/click; no drawing occurs in Draw()
+				// Mouse-driven path: set position directly and handle hover/click
 				var ms = Mouse.GetState();
 				_cursorPosition = new Vector2(ms.X, ms.Y);
 				_cursorPosition.X = MathHelper.Clamp(_cursorPosition.X, 0f, w);
@@ -310,19 +309,35 @@ namespace Crusaders30XX.ECS.Systems
 					GamePad.SetVibration(PlayerIndex.One, 0f, 0f);
 				}
 
+				float dtMouse = (float)gameTime.ElapsedGameTime.TotalSeconds;
 				if (!ignoringTransitions)
 				{
+					int rHitbox = Math.Max(0, HitboxRadius);
 					var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
 						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && x.UI.Bounds.Contains(point))
+						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox) > 0f)
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
 					if (tc != null)
 					{
 						tc.UI.IsHovered = true;
 						_lastHoveredEntity = tc.E;
-						coverageForTop = 1f; // Point inside bounds; treat as full coverage for UI logic
+						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius));
 					}
+					// Cross animation: shrink slightly on entering a new interactable hover, ease back otherwise
+					Entity currentInteractable = (tc != null && tc.UI != null && tc.UI.IsInteractable) ? tc.E : null;
+					if (_prevHoverInteractable != currentInteractable)
+					{
+						_crossPulseTimer = EnterPulseDuration;
+						_prevHoverInteractable = currentInteractable;
+					}
+					float targetScale = 1f;
+					if (currentInteractable != null)
+					{
+						targetScale = (_crossPulseTimer > 0f) ? (HoverScale - EnterPulseExtra) : HoverScale;
+					}
+					_crossScaleCurrent += (targetScale - _crossScaleCurrent) * MathHelper.Clamp(dtMouse * CrossAnimSpeed, 0f, 1f);
+					_crossPulseTimer = Math.Max(0f, _crossPulseTimer - dtMouse);
 					topCandidate = tc;
 				}
 
@@ -333,17 +348,25 @@ namespace Crusaders30XX.ECS.Systems
 				isPressedEdge = lEdge;
 				if (lEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick)
 				{
-					var tc = (dynamic)topCandidate;
-					if (tc.UI.EventType != UIElementEventType.None)
+					int rHitboxClick = Math.Max(0, HitboxRadius);
+					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()
+						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
+						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick) > 0f)
+						.OrderByDescending(x => x.T?.ZOrder ?? 0)
+						.FirstOrDefault();
+					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick)
 					{
-						UIElementEventDelegateService.HandleEvent(tc.UI.EventType, tc.E);
+						if (clickCandidate.UI.EventType != UIElementEventType.None)
+						{
+							UIElementEventDelegateService.HandleEvent(clickCandidate.UI.EventType, clickCandidate.E);
+						}
+						else
+						{
+							clickCandidate.UI.IsClicked = true;
+						}
+						Console.WriteLine($"[CursorSystem] Clicked: {clickCandidate.E.Id}");
+						_lastClickedEntity = clickCandidate.E;
 					}
-					else
-					{
-						tc.UI.IsClicked = true;
-					}
-					Console.WriteLine($"[CursorSystem] Clicked: {tc.E.Id}");
-					_lastClickedEntity = tc.E;
 				}
 
 				EventManager.Publish(new CursorStateEvent
@@ -358,8 +381,8 @@ namespace Crusaders30XX.ECS.Systems
 				_prevMouseState = ms;
 			}
 
-			// Ease cross scale back to 1 when not using gamepad or during transitions
-			if (!useGamepad || ignoringTransitions)
+			// Ease cross scale back to 1 during transitions (when not hovering)
+			if (ignoringTransitions)
 			{
 				float dtGeneral = (float)gameTime.ElapsedGameTime.TotalSeconds;
 				_crossScaleCurrent += (1f - _crossScaleCurrent) * MathHelper.Clamp(dtGeneral * CrossAnimSpeed, 0f, 1f);
@@ -372,9 +395,6 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			if (!_isEnabled) return;
-			// Only draw the cursor if a controller is connected
-			var gp = GamePad.GetState(PlayerIndex.One);
-			if (!gp.IsConnected) return;
 			int r = Math.Max(1, CursorRadius);
 			_circleTexture = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, r);
 			var dst = new Rectangle((int)Math.Round(_cursorPosition.X) - r, (int)Math.Round(_cursorPosition.Y) - r, r * 2, r * 2);

@@ -59,7 +59,6 @@ public class Game1 : Game
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
-        IsMouseVisible = true;
         Window.AllowUserResizing = true;
         
         // Set window size dynamically, clamped to 1920x1080
@@ -177,8 +176,11 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         WindowIsActive = IsActive;
+        // Hide system mouse cursor when no gamepad is connected (custom cursor will be drawn)
+        var gp = GamePad.GetState(PlayerIndex.One);
+        IsMouseVisible = gp.IsConnected;
         var kb = Keyboard.GetState();
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed) EventManager.Publish(new ShowTransition{ Scene = SceneId.Location });
+        if (gp.Buttons.Back == ButtonState.Pressed) EventManager.Publish(new ShowTransition{ Scene = SceneId.Location });
         if ((kb.IsKeyDown(Keys.Escape) && kb.IsKeyDown(Keys.LeftShift)))
             Exit();
         // Global debug menu toggle so it's available in the main menu too
