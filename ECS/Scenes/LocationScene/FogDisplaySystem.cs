@@ -127,7 +127,7 @@ namespace Crusaders30XX.ECS.Systems
 			_overlay.FeatherPx = FeatherPx;
 			_overlay.WarpAmountPx = WarpAmountPx;
 			_overlay.WarpSpeed = WarpSpeed;
-			_overlay.NoiseScale = NoiseScale;
+			_overlay.NoiseScale = NoiseScale / mapScale; // Scale noise to maintain world-space frequency when zooming
 			_overlay.EaseSpeed = EaseSpeed;
 			_overlay.GlobalAlphaMin = GlobalAlphaMin;
 			_overlay.GlobalAlphaMax = GlobalAlphaMax;
@@ -218,7 +218,7 @@ namespace Crusaders30XX.ECS.Systems
 				_overlay.FeatherPx = FeatherPx;
 				_overlay.WarpAmountPx = WarpAmountPx;
 				_overlay.WarpSpeed = WarpSpeed;
-				_overlay.NoiseScale = NoiseScale;
+				_overlay.NoiseScale = NoiseScale / mapScale; // Scale noise to maintain world-space frequency when zooming
 				_overlay.EaseSpeed = EaseSpeed;
 				_overlay.GlobalAlphaMin = GlobalAlphaMin;
 				_overlay.GlobalAlphaMax = GlobalAlphaMax;
