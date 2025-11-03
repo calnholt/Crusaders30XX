@@ -163,13 +163,30 @@ namespace Crusaders30XX.ECS.Systems
 			// Handle zoom controls (LB zoom out, RB zoom in)
 			if (gp.IsConnected)
 			{
+				float oldScale = MapScale;
+				bool zoomChanged = false;
+				
 				if (gp.IsButtonDown(Buttons.LeftShoulder))
 				{
 					MapScale = MathHelper.Clamp(MapScale - ZoomSpeed * dt, MinZoom, MaxZoom);
+					zoomChanged = true;
 				}
 				if (gp.IsButtonDown(Buttons.RightShoulder))
 				{
 					MapScale = MathHelper.Clamp(MapScale + ZoomSpeed * dt, MinZoom, MaxZoom);
+					zoomChanged = true;
+				}
+				
+				// Preserve viewport center world position across zoom changes
+				if (zoomChanged && oldScale != MapScale)
+				{
+					// Convert camera center to map-relative ratio (0-1)
+					float ratioX = _cameraCenter.X / (BaseMapWidth * oldScale);
+					float ratioY = _cameraCenter.Y / (BaseMapHeight * oldScale);
+					
+					// Restore camera center using new map size
+					_cameraCenter.X = ratioX * (BaseMapWidth * MapScale);
+					_cameraCenter.Y = ratioY * (BaseMapHeight * MapScale);
 				}
 			}
 
