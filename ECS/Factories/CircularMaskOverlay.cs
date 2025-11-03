@@ -28,6 +28,7 @@ public class CircularMaskOverlay
     public float DistortAmplitudePx { get; set; } = 8f;
     public float DistortSpatialFreq { get; set; } = 0.005f;
     public float DistortSpeed { get; set; } = 0.5f;
+    public float CameraOriginXPx { get; set; } = 0f;
     public float CameraOriginYPx { get; set; } = 0f;
 
     // Domain-warp parameters
@@ -76,6 +77,7 @@ public class CircularMaskOverlay
         var pDAmp = _effect.Parameters["DistortAmplitudePx"]; if (pDAmp != null) pDAmp.SetValue(DistortAmplitudePx);
         var pDFreq = _effect.Parameters["DistortSpatialFreq"]; if (pDFreq != null) pDFreq.SetValue(DistortSpatialFreq);
         var pDSpeed = _effect.Parameters["DistortSpeed"]; if (pDSpeed != null) pDSpeed.SetValue(DistortSpeed);
+        var pCamX = _effect.Parameters["CameraOriginXPx"]; if (pCamX != null) pCamX.SetValue(CameraOriginXPx);
         var pCamY = _effect.Parameters["CameraOriginYPx"]; if (pCamY != null) pCamY.SetValue(CameraOriginYPx);
 
         // Domain-warp parameters

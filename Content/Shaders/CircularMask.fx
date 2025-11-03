@@ -34,7 +34,8 @@ float  NoiseScale   = 0.004;  // pixels -> noise space scale
 float  WarpAmountPx = 12.0;   // max pixel displacement from warp
 float  WarpSpeed    = 0.7;    // time multiplier for noise animation
 
-// Camera world-space vertical origin (in pixels). Used to anchor distortion to world Y
+// Camera world-space origin (in pixels). Used to anchor distortion to world space
+float  CameraOriginXPx   = 0.0;
 float  CameraOriginYPx   = 0.0;
 
 texture Texture : register(t0);
@@ -158,7 +159,7 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
     float2 maskPx = screenPx;
     if (WarpAmountPx > 1e-4)
     {
-        float2 p = screenPx * NoiseScale;
+        float2 p = (screenPx + float2(CameraOriginXPx, CameraOriginYPx)) * NoiseScale;
         float2 q, r, g;
         float f = pattern(p, iTime * WarpSpeed, input.TexCoord, q, r, g);
         // Center flows around 0 and avoid normalization to keep spatial variation

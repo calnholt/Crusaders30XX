@@ -26,25 +26,25 @@ namespace Crusaders30XX.ECS.Systems
 		public float FeatherPx { get; set; } = 64f;
 
 		[DebugEditable(DisplayName = "Warp Amount (px)", Step = 1f, Min = 0f, Max = 64f)]
-		public float WarpAmountPx { get; set; } = 24f;
+		public float WarpAmountPx { get; set; } = 64f;
 
-		[DebugEditable(DisplayName = "Warp Speed", Step = 0.05f, Min = 0f, Max = 3f)]
-		public float WarpSpeed { get; set; } = 0.5f;
+		[DebugEditable(DisplayName = "Warp Speed", Step = 0.01f, Min = 0f, Max = 3f)]
+		public float WarpSpeed { get; set; } = 0.01f;
 
 		[DebugEditable(DisplayName = "Noise Scale", Step = 0.0005f, Min = 0.0005f, Max = 0.5f)]
-		public float NoiseScale { get; set; } = 0.2f;
+		public float NoiseScale { get; set; } = 0.02f;
 
 		[DebugEditable(DisplayName = "Ease Speed", Step = 0.05f, Min = 0f, Max = 3f)]
-		public float EaseSpeed { get; set; } = 0.45f;
+		public float EaseSpeed { get; set; } = 0.2f;
 
 		[DebugEditable(DisplayName = "Global Alpha Min", Step = 0.01f, Min = 0f, Max = 1f)]
-		public float GlobalAlphaMin { get; set; } = 0.8f;
+		public float GlobalAlphaMin { get; set; } = 0.6f;
 
 		[DebugEditable(DisplayName = "Global Alpha Max", Step = 0.01f, Min = 0f, Max = 1f)]
-		public float GlobalAlphaMax { get; set; } = 1f;
+		public float GlobalAlphaMax { get; set; } = 0.65f;
 
 		[DebugEditable(DisplayName = "Death Contrast", Step = 0.05f, Min = 0.5f, Max = 3f)]
-		public float DeathContrast { get; set; } = 3f;
+		public float DeathContrast { get; set; } = 1.5f;
 
 		[DebugEditable(DisplayName = "Lifeless Desaturate Mix", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float LifelessDesaturateMix { get; set; } = 0f;
@@ -135,7 +135,8 @@ namespace Crusaders30XX.ECS.Systems
 			_overlay.LifelessDesaturateMix = LifelessDesaturateMix;
 			_overlay.LifelessDarkenMul = LifelessDarkenMul;
 			_overlay.TimeSeconds = _timeSeconds;
-			// Anchor distortion to world Y
+			// Anchor distortion to world space
+			_overlay.CameraOriginXPx = cam?.Origin.X ?? 0f;
 			_overlay.CameraOriginYPx = cam?.Origin.Y ?? 0f;
 
 			// Save current SpriteBatch device states and temporarily end the batch
@@ -209,7 +210,8 @@ namespace Crusaders30XX.ECS.Systems
 			// Configure overlay params (will be used if masking is available)
 			if (_overlay != null)
 			{
-				// Anchor distortion to world Y (match Draw path)
+				// Anchor distortion to world space (match Draw path)
+				_overlay.CameraOriginXPx = cam?.Origin.X ?? 0f;
 				_overlay.CameraOriginYPx = cam?.Origin.Y ?? 0f;
 				_overlay.CentersPx = centers;
 				_overlay.RadiusPx = radii;
