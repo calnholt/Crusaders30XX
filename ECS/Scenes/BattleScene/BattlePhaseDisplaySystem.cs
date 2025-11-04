@@ -47,6 +47,7 @@ namespace Crusaders30XX.ECS.Systems
 		private SubPhase _lastPhase = SubPhase.StartBattle;
 		private int _lastTurn = 0;
 		private bool _transitionActive;
+		private bool _transitionJustStarted;
 		private float _transitionT; // seconds in current transition
 		private string _transitionText = string.Empty;
 		private bool _playedInitial;
@@ -80,6 +81,7 @@ namespace Crusaders30XX.ECS.Systems
 				_playedInitial = true;
 				_lastPhase = phase.Sub;
 				_transitionActive = true;
+				_transitionJustStarted = true;
 				_transitionT = 0f;
 				_lastTurn = phase.TurnNumber;
 				_transitionText = SubPhaseToString(_lastPhase);
@@ -89,6 +91,7 @@ namespace Crusaders30XX.ECS.Systems
 				_lastPhase = phase.Sub;
 				_lastTurn = phase.TurnNumber;
 				_transitionActive = true;
+				_transitionJustStarted = true;
 				_transitionT = 0f;
 				_transitionText = SubPhaseToString(_lastPhase);
 			}
@@ -96,6 +99,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_lastPhase = phase.Sub;
 				_transitionActive = true;
+				_transitionJustStarted = true;
 				_transitionT = 0f;
 				_transitionText = SubPhaseToString(_lastPhase);
 			}
@@ -103,7 +107,35 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_transitionT += (float)gameTime.ElapsedGameTime.TotalSeconds;
 				float total = TransitionInSeconds + TransitionHoldSeconds + TransitionOutSeconds;
-				if (_transitionT >= total) _transitionActive = false;
+				if (_transitionT >= total)
+				{
+					_transitionActive = false;
+				}
+			}
+			else
+			{
+				// Continue updating time during exit animation even after transition is marked inactive
+				var transEntity = EntityManager.GetEntity("UI_PhaseTransitionBanner");
+				if (transEntity != null)
+				{
+					var transT = transEntity.GetComponent<Transform>();
+					if (transT != null)
+					{
+						float holdEnd = TransitionInSeconds + TransitionHoldSeconds;
+						// Continue exit animation if we're past the hold phase
+						if (_transitionT > holdEnd)
+						{
+							_transitionT += (float)gameTime.ElapsedGameTime.TotalSeconds;
+							// Stop updating once fully off-screen
+							float exitProgress = _transitionT - holdEnd;
+							float totalExit = TransitionOutSeconds;
+							if (exitProgress >= totalExit)
+							{
+								_transitionT = holdEnd + totalExit; // Clamp to max
+							}
+						}
+					}
+				}
 			}
 		}
 
@@ -143,7 +175,21 @@ namespace Crusaders30XX.ECS.Systems
 				_spriteBatch.DrawString(_font, label, drawPos, Color.White, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
 			}
 
-			if (_transitionActive)
+			// Draw transition banner if active or still exiting
+			var transEntity = EntityManager.GetEntity("UI_PhaseTransitionBanner");
+			if (transEntity == null && _transitionActive)
+			{
+				// Create entity when transition starts
+				transEntity = EntityManager.CreateEntity("UI_PhaseTransitionBanner");
+				float centerX = vw * 0.5f;
+				var tSize = _font.MeasureString(_transitionText) * TransitionScale;
+				float spawnX = -tSize.X - 80f;
+				var start = new Vector2(spawnX, TransitionOffsetY);
+				EntityManager.AddComponent(transEntity, new Transform { BasePosition = start, Position = start });
+				EntityManager.AddComponent(transEntity, ParallaxLayer.GetUIParallaxLayer());
+			}
+			
+			if (transEntity != null && _transitionActive)
 			{
 				float t = _transitionT;
 				float inEnd = TransitionInSeconds;
@@ -171,23 +217,61 @@ namespace Crusaders30XX.ECS.Systems
 					x = MathHelper.Lerp(targetX, vw + 80f, u);
 				}
 
-				// Ensure a transition entity; write BasePosition and draw at Transform.Position (parallax applied)
-				var transEntity = EntityManager.GetEntity("UI_PhaseTransitionBanner");
-				if (transEntity == null)
-				{
-					transEntity = EntityManager.CreateEntity("UI_PhaseTransitionBanner");
-					var start = new Vector2(x, y);
-					EntityManager.AddComponent(transEntity, new Transform { BasePosition = start, Position = start });
-					EntityManager.AddComponent(transEntity, ParallaxLayer.GetUIParallaxLayer());
-				}
 				var transT = transEntity.GetComponent<Transform>();
 				if (transT != null)
 				{
+					// If this banner just appeared or transition just started, spawn its base offscreen to the left so it flies in
+					if (transT.BasePosition == Vector2.Zero || _transitionJustStarted)
+					{
+						float spawnX = -tSize.X - 80f;
+						var spawn = new Vector2(spawnX, y);
+						transT.BasePosition = spawn;
+						transT.Position = spawn;
+					}
+					else
+					{
+						// Update BasePosition with the calculated animation position
+						transT.BasePosition = new Vector2(x, y);
+					}
+					var pDraw = transT.Position;
+					// Draw if banner is still visible on screen (check if any part is visible)
+					if (pDraw.X + tSize.X >= 0 && pDraw.X <= vw + tSize.X)
+					{
+						// simple shadow then text
+						_spriteBatch.DrawString(_font, _transitionText, pDraw + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
+						_spriteBatch.DrawString(_font, _transitionText, pDraw, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
+					}
+				}
+				// Reset the flag after handling the transition start
+				_transitionJustStarted = false;
+			}
+			else if (transEntity != null && !_transitionActive)
+			{
+				// Continue exit animation even after transition is marked inactive
+				var transT = transEntity.GetComponent<Transform>();
+				if (transT != null)
+				{
+					float centerX = vw * 0.5f;
+					var tSize = _font.MeasureString(_transitionText) * TransitionScale;
+					float targetX = centerX - tSize.X / 2f;
+					float y = TransitionOffsetY;
+					
+					// Continue exit animation from where we left off
+					float holdEnd = TransitionInSeconds + TransitionHoldSeconds;
+					float exitProgress = MathHelper.Clamp(_transitionT - holdEnd, 0f, TransitionOutSeconds);
+					float u = MathHelper.Clamp(exitProgress / Math.Max(0.001f, TransitionOutSeconds), 0f, 1f);
+					u = EaseInCubic(u);
+					float x = MathHelper.Lerp(targetX, vw + 80f, u);
+					
 					transT.BasePosition = new Vector2(x, y);
 					var pDraw = transT.Position;
-					// simple shadow then text
-					_spriteBatch.DrawString(_font, _transitionText, pDraw + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
-					_spriteBatch.DrawString(_font, _transitionText, pDraw, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
+					// Draw if banner is still visible on screen (check if any part is visible)
+					if (pDraw.X + tSize.X >= 0 && pDraw.X <= vw + tSize.X)
+					{
+						// simple shadow then text
+						_spriteBatch.DrawString(_font, _transitionText, pDraw + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
+						_spriteBatch.DrawString(_font, _transitionText, pDraw, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
+					}
 				}
 			}
 		}
