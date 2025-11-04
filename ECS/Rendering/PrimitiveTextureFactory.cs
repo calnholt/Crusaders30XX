@@ -15,6 +15,8 @@ namespace Crusaders30XX.ECS.Rendering
 		private static readonly Dictionary<(int deviceId, int size, int radius), Texture2D> _roundedSquareCache = new();
 		// Cache equilateral triangles by device and size
 		private static readonly Dictionary<(int deviceId, int size), Texture2D> _triangleCache = new();
+		// Cache trapezoids by device and all parameters
+		private static readonly Dictionary<(int deviceId, float width, float height, float leftOffset, float topAngle, float rightAngle, float bottomAngle, float leftAngle), Texture2D> _trapezoidCache = new();
 
 		public static Texture2D GetAntiAliasedCircle(GraphicsDevice device, int radius)
 		{
@@ -115,6 +117,127 @@ namespace Crusaders30XX.ECS.Rendering
 
 			tex.SetData(data);
 			_triangleCache[key] = tex;
+			return tex;
+		}
+
+		public static Texture2D GetAntialiasedTrapezoid(
+			GraphicsDevice device,
+			float width,
+			float height,
+			float leftSideOffset,
+			float topEdgeAngleDegrees,
+			float rightEdgeAngleDegrees,
+			float bottomEdgeAngleDegrees,
+			float leftEdgeAngleDegrees)
+		{
+			if (width < 1) width = 1;
+			if (height < 1) height = 1;
+			int deviceId = device?.GetHashCode() ?? 0;
+			
+			// Use rounded values for cache key to avoid floating point precision issues
+			var key = (
+				deviceId,
+				(float)System.Math.Round(width, 2),
+				(float)System.Math.Round(height, 2),
+				(float)System.Math.Round(leftSideOffset, 2),
+				(float)System.Math.Round(topEdgeAngleDegrees, 2),
+				(float)System.Math.Round(rightEdgeAngleDegrees, 2),
+				(float)System.Math.Round(bottomEdgeAngleDegrees, 2),
+				(float)System.Math.Round(leftEdgeAngleDegrees, 2)
+			);
+			
+			if (_trapezoidCache.TryGetValue(key, out var existing) && existing != null)
+			{
+				return existing;
+			}
+
+			// Render at higher resolution for antialiasing, then scale down
+			const int superSampleFactor = 2; // Render at 2x resolution
+			int texWidth = (int)System.Math.Ceiling(width * superSampleFactor);
+			int texHeight = (int)System.Math.Ceiling(height * superSampleFactor);
+			if (texWidth < 1) texWidth = 1;
+			if (texHeight < 1) texHeight = 1;
+
+			var tex = new Texture2D(device, texWidth, texHeight);
+			var data = new Color[texWidth * texHeight];
+
+			// Convert angles to radians
+			float topAngleRad = MathHelper.ToRadians(topEdgeAngleDegrees);
+			float rightAngleRad = MathHelper.ToRadians(rightEdgeAngleDegrees);
+			float bottomAngleRad = MathHelper.ToRadians(bottomEdgeAngleDegrees);
+			float leftAngleRad = MathHelper.ToRadians(leftEdgeAngleDegrees);
+
+			// Scale parameters for supersampling
+			float scaledLeftXBase = System.Math.Max(0f, leftSideOffset * superSampleFactor);
+			float scaledBottomYBase = (texHeight - 1f);
+			float scaledWidth = texWidth;
+			float scaledHeight = texHeight;
+
+			// Calculate edge positions at each Y level
+			float leftXAtTop = scaledLeftXBase;
+			float leftXAtBottom = scaledLeftXBase + (float)System.Math.Tan(leftAngleRad) * scaledHeight;
+			float rightXAtTop = scaledWidth - 1f;
+			float rightXAtBottom = scaledWidth - 1f + (float)System.Math.Tan(rightAngleRad) * scaledHeight;
+
+			// Antialiasing threshold - distance in pixels for smooth edge
+			const float aaThreshold = 1.0f;
+
+			// For each pixel, check if inside trapezoid with antialiasing
+			for (int y = 0; y < texHeight; y++)
+			{
+				float py = y + 0.5f; // Center of pixel
+				
+				// Interpolate left and right edges based on Y position
+				float t = (texHeight <= 1) ? 0f : (y / (float)(texHeight - 1)); // 0 at top, 1 at bottom
+				float leftXAtY = MathHelper.Lerp(leftXAtTop, leftXAtBottom, t);
+				float rightXAtY = MathHelper.Lerp(rightXAtTop, rightXAtBottom, t);
+
+				for (int x = 0; x < texWidth; x++)
+				{
+					int idx = y * texWidth + x;
+					float px = x + 0.5f; // Center of pixel
+					
+					// Calculate distances to edges for antialiasing
+					float distToLeft = px - leftXAtY;
+					float distToRight = rightXAtY - px;
+					
+					// Top edge equation: y = tan(topAngleRad) * (x - leftXAtTop)
+					float topEdgeYAtX = (float)System.Math.Tan(topAngleRad) * (px - leftXAtTop);
+					float distToTop = py - topEdgeYAtX;
+					
+					// Bottom edge equation: y = bottomYBase + tan(bottomAngleRad) * (x - leftXAtBottom)
+					float bottomEdgeYAtX = scaledBottomYBase + (float)System.Math.Tan(bottomAngleRad) * (px - leftXAtBottom);
+					float distToBottom = bottomEdgeYAtX - py;
+
+					// Check if pixel is inside trapezoid
+					bool insideX = distToLeft >= 0 && distToRight >= 0;
+					bool insideY = distToTop >= 0 && distToBottom >= 0;
+					bool inside = insideX && insideY;
+
+					if (!inside)
+					{
+						data[idx] = Color.Transparent;
+						continue;
+					}
+
+					// Calculate alpha for antialiasing based on distance to nearest edge
+					float minDist = System.Math.Min(System.Math.Min(distToLeft, distToRight), System.Math.Min(distToTop, distToBottom));
+					float alpha = 1.0f;
+					
+					if (minDist < aaThreshold)
+					{
+						// Smooth transition at edges
+						alpha = MathHelper.Clamp(minDist / aaThreshold, 0f, 1f);
+					}
+
+					// Set pixel with alpha for antialiasing
+					byte alphaByte = (byte)MathHelper.Clamp((int)System.Math.Round(alpha * 255f), 0, 255);
+					data[idx] = Color.FromNonPremultiplied(0, 0, 0, alphaByte); // Black with alpha
+				}
+			}
+
+			tex.SetData(data);
+			_trapezoidCache[key] = tex;
 			return tex;
 		}
 	}
