@@ -37,6 +37,8 @@ namespace Crusaders30XX.ECS.Systems
           return "You cannot see the number of attacks this monster plans.";
         case AppliedPassiveType.Power:
           return $"Your attacks deal +{stacks} damage this battle.";
+        case AppliedPassiveType.Poison:
+          return $"Every 60 seconds, lose 1 HP.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

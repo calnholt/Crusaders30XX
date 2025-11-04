@@ -3,10 +3,10 @@
   "name": "Increase Faith",
   "target": "Player",
   "rarity": "Common",
-  "valuesParse": [1],
+  "valuesParse": [2],
   "text": "Gain {1} power.",
   "isFreeAction": true,
   "animation": "Buff",
-  "block": 3
+  "block": 2
 }
 
