@@ -5,6 +5,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -21,6 +22,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font;
 		private Texture2D _pixel;
+		private Texture2D _trapezoidTexture;
 
 		// Small corner label
 		[DebugEditable(DisplayName = "Label Offset X", Step = 2, Min = -2000, Max = 2000)]
@@ -40,9 +42,31 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Trans Y Offset", Step = 2, Min = -2000, Max = 2000)]
 		public int TransitionOffsetY { get; set; } = 140;
 		[DebugEditable(DisplayName = "Trans Scale", Step = 0.05f, Min = 0.2f, Max = 4f)]
-		public float TransitionScale { get; set; } = 0.3125f;
+		public float TransitionScale { get; set; } = 0.263f;
 		[DebugEditable(DisplayName = "Shadow Offset", Step = 1, Min = 0, Max = 20)]
-		public int ShadowOffset { get; set; } = 2;
+		public int ShadowOffset { get; set; } = 0;
+
+		// Trapezoid background
+		[DebugEditable(DisplayName = "Trapezoid Width Padding", Step = 2f, Min = -200f, Max = 200f)]
+		public float TrapezoidWidthPadding { get; set; } = 52f;
+		[DebugEditable(DisplayName = "Trapezoid Height Padding", Step = 2f, Min = -200f, Max = 200f)]
+		public float TrapezoidHeightPadding { get; set; } = 6f;
+		[DebugEditable(DisplayName = "Trapezoid Left Side Offset", Step = 1f, Min = -100f, Max = 100f)]
+		public float TrapezoidLeftSideOffset { get; set; } = 0f;
+		[DebugEditable(DisplayName = "Trapezoid Top Edge Angle", Step = 1f, Min = -45f, Max = 45f)]
+		public float TrapezoidTopEdgeAngle { get; set; } = 3f;
+		[DebugEditable(DisplayName = "Trapezoid Right Edge Angle", Step = 1f, Min = -45f, Max = 45f)]
+		public float TrapezoidRightEdgeAngle { get; set; } = -14f;
+		[DebugEditable(DisplayName = "Trapezoid Bottom Edge Angle", Step = 1f, Min = -45f, Max = 45f)]
+		public float TrapezoidBottomEdgeAngle { get; set; } = -2f;
+		[DebugEditable(DisplayName = "Trapezoid Left Edge Angle", Step = 1f, Min = -45f, Max = 45f)]
+		public float TrapezoidLeftEdgeAngle { get; set; } = 21f;
+		[DebugEditable(DisplayName = "Trapezoid Offset X", Step = 1f, Min = -200f, Max = 200f)]
+		public float TrapezoidOffsetX { get; set; } = 0f;
+		[DebugEditable(DisplayName = "Trapezoid Offset Y", Step = 1f, Min = -200f, Max = 200f)]
+		public float TrapezoidOffsetY { get; set; } = 0f;
+		[DebugEditable(DisplayName = "Trapezoid Alpha", Step = 0.05f, Min = 0f, Max = 1f)]
+		public float TrapezoidAlpha { get; set; } = 1f;
 
 		private SubPhase _lastPhase = SubPhase.StartBattle;
 		private int _lastTurn = 0;
@@ -237,6 +261,25 @@ namespace Crusaders30XX.ECS.Systems
 					// Draw if banner is still visible on screen (check if any part is visible)
 					if (pDraw.X + tSize.X >= 0 && pDraw.X <= vw + tSize.X)
 					{
+						// Draw trapezoid background
+						float trapezoidWidth = tSize.X + TrapezoidWidthPadding;
+						float trapezoidHeight = tSize.Y + TrapezoidHeightPadding;
+						_trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoid(
+							_graphicsDevice,
+							trapezoidWidth,
+							trapezoidHeight,
+							TrapezoidLeftSideOffset,
+							TrapezoidTopEdgeAngle,
+							TrapezoidRightEdgeAngle,
+							TrapezoidBottomEdgeAngle,
+							TrapezoidLeftEdgeAngle
+						);
+						if (_trapezoidTexture != null)
+						{
+							Vector2 trapezoidPos = pDraw + new Vector2(TrapezoidOffsetX - TrapezoidWidthPadding / 2f, TrapezoidOffsetY);
+							Vector2 scale = new Vector2(trapezoidWidth / _trapezoidTexture.Width, trapezoidHeight / _trapezoidTexture.Height);
+							_spriteBatch.Draw(_trapezoidTexture, trapezoidPos, null, Color.Black * TrapezoidAlpha, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+						}
 						// simple shadow then text
 						_spriteBatch.DrawString(_font, _transitionText, pDraw + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
 						_spriteBatch.DrawString(_font, _transitionText, pDraw, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
@@ -268,6 +311,25 @@ namespace Crusaders30XX.ECS.Systems
 					// Draw if banner is still visible on screen (check if any part is visible)
 					if (pDraw.X + tSize.X >= 0 && pDraw.X <= vw + tSize.X)
 					{
+						// Draw trapezoid background
+						float trapezoidWidth = tSize.X + TrapezoidWidthPadding;
+						float trapezoidHeight = tSize.Y + TrapezoidHeightPadding;
+						_trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoid(
+							_graphicsDevice,
+							trapezoidWidth,
+							trapezoidHeight,
+							TrapezoidLeftSideOffset,
+							TrapezoidTopEdgeAngle,
+							TrapezoidRightEdgeAngle,
+							TrapezoidBottomEdgeAngle,
+							TrapezoidLeftEdgeAngle
+						);
+						if (_trapezoidTexture != null)
+						{
+							Vector2 trapezoidPos = pDraw + new Vector2(TrapezoidOffsetX - TrapezoidWidthPadding / 2f, TrapezoidOffsetY);
+							Vector2 scale = new Vector2(trapezoidWidth / _trapezoidTexture.Width, trapezoidHeight / _trapezoidTexture.Height);
+							_spriteBatch.Draw(_trapezoidTexture, trapezoidPos, null, Color.Black * TrapezoidAlpha, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+						}
 						// simple shadow then text
 						_spriteBatch.DrawString(_font, _transitionText, pDraw + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
 						_spriteBatch.DrawString(_font, _transitionText, pDraw, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
@@ -308,6 +370,21 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			t = MathHelper.Clamp(t, 0f, 1f);
 			return t * t * t;
+		}
+
+		[DebugAction("Replay Transition Animation")]
+		public void Debug_ReplayTransitionAnimation()
+		{
+			_transitionActive = true;
+			_transitionJustStarted = true;
+			_transitionT = 0f;
+			// Get current phase to set the text
+			var stateEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+			if (stateEntity != null)
+			{
+				var phase = stateEntity.GetComponent<PhaseState>();
+				_transitionText = SubPhaseToString(phase.Sub);
+			}
 		}
 	}
 }
