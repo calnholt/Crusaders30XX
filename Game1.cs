@@ -160,6 +160,7 @@ public class Game1 : Game
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
         _shockwaveSystem = new ShockwaveDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _world.AddSystem(_shockwaveSystem);
+        _world.AddSystem(new CursorEmptySelectDisplaySystem(_world.EntityManager, GraphicsDevice));
 
         // Mark persistent entities
         _world.AddComponent(sceneEntity, new DontDestroyOnLoad());
