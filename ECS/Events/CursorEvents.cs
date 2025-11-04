@@ -16,6 +16,11 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public bool Enabled { get; set; }
 	}
+
+	public class HotKeySelectEvent
+	{
+		public Entity Entity { get; set; }
+	}
 }
 
 

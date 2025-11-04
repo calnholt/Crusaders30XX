@@ -19,6 +19,7 @@ public class UISelectDisplaySystem : Core.System
     {
         _graphicsDevice = gd;
         EventManager.Subscribe<CursorStateEvent>(OnCursorStateEvent);
+        EventManager.Subscribe<HotKeySelectEvent>(OnHotKeySelectEvent);
     }
 
     protected override IEnumerable<Entity> GetRelevantEntities() => Enumerable.Empty<Entity>();
@@ -36,6 +37,36 @@ public class UISelectDisplaySystem : Core.System
         if (e.TopEntity == null) return;
         
         var uiElement = e.TopEntity.GetComponent<UIElement>();
+        if (uiElement == null) return;
+        
+        // Only trigger for interactable UI elements
+        if (!uiElement.IsInteractable) return;
+        
+        // Check if bounds are valid (non-degenerate)
+        var bounds = uiElement.Bounds;
+        if (bounds.Width < 2 || bounds.Height < 2) return;
+        
+        // Create rectangular shockwave using UI element bounds
+        var shockwave = new RectangularShockwaveEvent
+        {
+            BoundsCenterPx = new Vector2(bounds.X + bounds.Width / 2f, bounds.Y + bounds.Height / 2f),
+            BoundsSizePx = new Vector2(bounds.Width, bounds.Height),
+            DurationSec = DurationSec,
+            MaxRadiusPx = MaxRadiusPx,
+            RippleWidthPx = RippleWidthPx,
+            Strength = Strength,
+            ChromaticAberrationAmp = ChromaticAberrationAmp,
+            ChromaticAberrationFreq = ChromaticAberrationFreq,
+            ShadingIntensity = ShadingIntensity
+        };
+        EventManager.Publish(shockwave);
+    }
+
+    private void OnHotKeySelectEvent(HotKeySelectEvent e)
+    {
+        if (e.Entity == null) return;
+        
+        var uiElement = e.Entity.GetComponent<UIElement>();
         if (uiElement == null) return;
         
         // Only trigger for interactable UI elements

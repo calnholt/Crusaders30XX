@@ -72,10 +72,20 @@ namespace Crusaders30XX.ECS.Systems
             else if (ui != null && ui.EventType != UIElementEventType.None)
             {
                 UIElementEventDelegateService.HandleEvent(ui.EventType, entity);
+                // Publish HotKeySelectEvent for UI element actions triggered via hotkey
+                if (ui.IsInteractable)
+                {
+                    EventManager.Publish(new HotKeySelectEvent { Entity = entity });
+                }
             }
             else if (ui != null)
             {
                 ui.IsClicked = true;
+                // Publish HotKeySelectEvent for UI element actions triggered via hotkey
+                if (ui.IsInteractable)
+                {
+                    EventManager.Publish(new HotKeySelectEvent { Entity = entity });
+                }
             }
         }
 
