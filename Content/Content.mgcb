@@ -25,6 +25,12 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/Shockwave.fx
 
+#begin Shaders/RectangularShockwave.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/RectangularShockwave.fx
+
 #begin NewRocker.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor

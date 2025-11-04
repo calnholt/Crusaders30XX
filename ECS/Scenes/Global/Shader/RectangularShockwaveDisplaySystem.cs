@@ -11,20 +11,20 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Crusaders30XX.ECS.Systems;
 
-[DebugTab("Shockwave System")]
-public class ShockwaveDisplaySystem : Core.System
+[DebugTab("Rectangular Shockwave System")]
+public class RectangularShockwaveDisplaySystem : Core.System
 {
     private readonly GraphicsDevice _gd;
     private readonly SpriteBatch _sb;
     private readonly ContentManager _content;
 
     private Effect _effect;
-    private ShockwaveOverlay _overlay;
+    private RectangularShockwaveOverlay _overlay;
     private float _timeSeconds;
 
     private struct ActiveWave
     {
-        public ShockwaveEvent Evt;
+        public RectangularShockwaveEvent Evt;
         public float StartTime;
     }
 
@@ -32,13 +32,13 @@ public class ShockwaveDisplaySystem : Core.System
 
     public bool HasActiveWaves => _waves.Count > 0;
 
-    public ShockwaveDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content)
+    public RectangularShockwaveDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content)
         : base(em)
     {
         _gd = gd;
         _sb = sb;
         _content = content;
-        EventManager.Subscribe<ShockwaveEvent>(OnShockwaveEvent);
+        EventManager.Subscribe<RectangularShockwaveEvent>(OnRectangularShockwaveEvent);
     }
 
     protected override IEnumerable<Entity> GetRelevantEntities() => Enumerable.Empty<Entity>();
@@ -59,10 +59,11 @@ public class ShockwaveDisplaySystem : Core.System
         }
     }
 
-    private void OnShockwaveEvent(ShockwaveEvent e)
+    private void OnRectangularShockwaveEvent(RectangularShockwaveEvent e)
     {
         EnsureLoaded();
         if (_overlay == null) return;
+        Console.WriteLine($"[RectangularShockwaveDisplaySystem] Adding rectangular shockwave event: {e.BoundsCenterPx}, {e.BoundsSizePx}, {e.DurationSec}, {e.MaxRadiusPx}, {e.RippleWidthPx}, {e.Strength}, {e.ChromaticAberrationAmp}, {e.ChromaticAberrationFreq}, {e.ShadingIntensity}");
         _waves.Add(new ActiveWave { Evt = e, StartTime = _timeSeconds });
     }
 
@@ -70,12 +71,12 @@ public class ShockwaveDisplaySystem : Core.System
     {
         if (_effect == null)
         {
-            try { _effect = _content.Load<Effect>("Shaders/Shockwave"); }
+            try { _effect = _content.Load<Effect>("Shaders/RectangularShockwave"); }
             catch { _effect = null; }
         }
         if (_effect != null && _overlay == null)
         {
-            _overlay = new ShockwaveOverlay(_effect);
+            _overlay = new RectangularShockwaveOverlay(_effect);
         }
     }
 
@@ -116,7 +117,8 @@ public class ShockwaveDisplaySystem : Core.System
 
             float tNorm = MathHelper.Clamp((now - w.StartTime) / MathHelper.Max(1e-4f, w.Evt.DurationSec), 0f, 1f);
 
-            _overlay.CenterPx = w.Evt.CenterPx;
+            _overlay.BoundsCenterPx = w.Evt.BoundsCenterPx;
+            _overlay.BoundsSizePx = w.Evt.BoundsSizePx;
             _overlay.TimeNorm = tNorm;
             _overlay.MaxRadiusPx = w.Evt.MaxRadiusPx;
             _overlay.RippleWidthPx = w.Evt.RippleWidthPx;
@@ -143,14 +145,16 @@ public class ShockwaveDisplaySystem : Core.System
         throw new System.NotImplementedException();
     }
 
-    [DebugAction("Trigger Shockwave")]
-    public void Debug_TriggerShockwave()
+    [DebugAction("Trigger Rectangular Shockwave")]
+    public void Debug_TriggerRectangularShockwave()
     {
         var vp = _gd.Viewport;
         var center = new Vector2(vp.Width * 0.5f, vp.Height * 0.5f);
-        var e = new ShockwaveEvent
+        var size = new Vector2(200f, 150f);
+        var e = new RectangularShockwaveEvent
         {
-            CenterPx = center,
+            BoundsCenterPx = center,
+            BoundsSizePx = size,
             DurationSec = 0.6f,
             MaxRadiusPx = Math.Min(vp.Width, vp.Height) * 0.6f,
             RippleWidthPx = 18f,
@@ -162,5 +166,4 @@ public class ShockwaveDisplaySystem : Core.System
         EventManager.Publish(e);
     }
 }
-
 

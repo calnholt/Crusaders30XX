@@ -49,6 +49,7 @@ public class Game1 : Game
 
     // Shockwave integration
     private ShockwaveDisplaySystem _shockwaveSystem;
+    private RectangularShockwaveDisplaySystem _rectangularShockwaveSystem;
     private RenderTarget2D _sceneRt;
     private RenderTarget2D _ppA;
     private RenderTarget2D _ppB;
@@ -160,7 +161,10 @@ public class Game1 : Game
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
         _shockwaveSystem = new ShockwaveDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _world.AddSystem(_shockwaveSystem);
+        _rectangularShockwaveSystem = new RectangularShockwaveDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _world.AddSystem(_rectangularShockwaveSystem);
         _world.AddSystem(new CursorEmptySelectDisplaySystem(_world.EntityManager, GraphicsDevice));
+        _world.AddSystem(new UISelectDisplaySystem(_world.EntityManager, GraphicsDevice));
 
         // Mark persistent entities
         _world.AddComponent(sceneEntity, new DontDestroyOnLoad());
@@ -213,7 +217,10 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        if (_shockwaveSystem != null && _shockwaveSystem.HasActiveWaves)
+        bool hasCircularWaves = _shockwaveSystem != null && _shockwaveSystem.HasActiveWaves;
+        bool hasRectangularWaves = _rectangularShockwaveSystem != null && _rectangularShockwaveSystem.HasActiveWaves;
+
+        if (hasCircularWaves || hasRectangularWaves)
         {
             EnsureRenderTargetsMatchBackbuffer();
             // Render scene into _sceneRt
@@ -223,7 +230,20 @@ public class Game1 : Game
             GraphicsDevice.SetRenderTarget(null);
 
             // Composite shockwaves and present
-            _shockwaveSystem.Composite(_sceneRt, _ppA, _ppB);
+            Texture2D src = _sceneRt;
+            
+            // Apply circular shockwaves first if any
+            if (hasCircularWaves)
+            {
+                _shockwaveSystem.Composite(src, _ppA, _ppB, hasRectangularWaves ? _ppA : null);
+                src = _ppA;
+            }
+            
+            // Apply rectangular shockwaves on top if any
+            if (hasRectangularWaves)
+            {
+                _rectangularShockwaveSystem.Composite(src, _ppA, _ppB, null);
+            }
         }
         else
         {
