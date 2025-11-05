@@ -7,5 +7,6 @@
   "valuesParse": [2, 4],
   "text": "Put {1} to {2} Kunai cards in your hand.",
   "animation": "Buff",
+  "cardTooltip": "kunai",
   "block": 3
 }
