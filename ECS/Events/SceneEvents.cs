@@ -22,6 +22,7 @@ namespace Crusaders30XX.ECS.Events
 
 	public class ShowQuestRewardOverlay
 	{
+		public string Message;
 	}
 }
 

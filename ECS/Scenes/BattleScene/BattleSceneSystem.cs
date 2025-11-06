@@ -162,7 +162,12 @@ namespace Crusaders30XX.ECS.Systems
 			// If there will be dialog to show for the quest, skip drawing battle UI (overlay is drawn globally)
 			bool willShowDialog = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<PendingQuestDialog>()?.WillShowDialog ?? false;
 			bool rewardOpen = EntityManager.GetEntitiesWithComponent<QuestRewardOverlayState>().FirstOrDefault()?.GetComponent<QuestRewardOverlayState>()?.IsOpen ?? false;
-			if (willShowDialog || rewardOpen) return;
+			if (willShowDialog) return;
+			if (rewardOpen)
+			{
+				FrameProfiler.Measure("QuestRewardModalDisplaySystem.Draw", _questRewardModalDisplaySystem.Draw);
+				return;
+			}
 			FrameProfiler.Measure("PlayerDisplaySystem.Draw", _playerDisplaySystem.Draw);
 			FrameProfiler.Measure("GuardianAngelDisplaySystem.Draw", _guardianAngelDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);

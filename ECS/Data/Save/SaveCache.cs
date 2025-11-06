@@ -24,6 +24,25 @@ namespace Crusaders30XX.ECS.Data.Save
 			return loc.events.Count(e => e != null && e.completed);
 		}
 
+		public static int GetGold()
+		{
+			EnsureLoaded();
+			return _save?.gold ?? 0;
+		}
+
+		public static void AddGold(int amount)
+		{
+			EnsureLoaded();
+			if (amount <= 0) return;
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				long newValue = (_save.gold) + (long)amount;
+				_save.gold = newValue < 0 ? 0 : (int)System.Math.Min(int.MaxValue, newValue);
+				Persist();
+			}
+		}
+
 		public static void Reload()
 		{
 			lock (_lock)

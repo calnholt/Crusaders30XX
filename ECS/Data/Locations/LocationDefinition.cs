@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public int unrevealedRadius { get; set; } = 50;
 		public string name { get; set; } = string.Empty;
 		public string type { get; set; } = "Quest";
+		public int rewardGold { get; set; } = 0;
 		public List<LocationEventDefinition> events { get; set; } = new List<LocationEventDefinition>();
 		public List<TribulationDefinition> tribulations { get; set; } = new List<TribulationDefinition>();
 	}

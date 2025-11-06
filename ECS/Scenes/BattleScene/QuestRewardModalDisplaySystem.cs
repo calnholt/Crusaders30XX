@@ -42,7 +42,7 @@ namespace Crusaders30XX.ECS.Systems
 			_font = font;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
-			EventManager.Subscribe<ShowQuestRewardOverlay>(_ => Open());
+			EventManager.Subscribe<ShowQuestRewardOverlay>(_ => Open(_.Message));
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -78,11 +78,12 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		public void Open()
+		public void Open(string message = null)
 		{
 			EnsureOverlayEntity();
 			var e = EntityManager.GetEntity("QuestRewardOverlay");
 			var st = e.GetComponent<QuestRewardOverlayState>();
+			if (!string.IsNullOrEmpty(message)) st.Message = message;
 			st.IsOpen = true;
 		}
 

@@ -10,12 +10,20 @@ namespace Crusaders30XX.ECS.Services
 {
 	public static class QuestCompleteService
 	{
+		public struct QuestCompletionResult
+		{
+			public bool IsNewlyCompleted;
+			public string LocationId;
+			public string QuestId;
+			public int RewardGold;
+		}
 		/// <summary>
 		/// If the player completed a quest for the current location and it's not already saved, save it and trigger the POI reveal cutscene.
 		/// </summary>
-		public static void SaveIfCompletedHighest(Crusaders30XX.ECS.Core.EntityManager entityManager)
+		public static QuestCompletionResult SaveIfCompletedHighest(Crusaders30XX.ECS.Core.EntityManager entityManager)
 		{
-			if (entityManager == null) return;
+			var result = new QuestCompletionResult { IsNewlyCompleted = false, LocationId = string.Empty, QuestId = string.Empty, RewardGold = 0 };
+			if (entityManager == null) return result;
 			try
 			{
 				// Prefer the queued quest context (persists across scenes) and fall back to QuestSelectState
@@ -29,9 +37,9 @@ namespace Crusaders30XX.ECS.Services
 					questIndex = qs?.SelectedQuestIndex;
 				}
 
-				if (string.IsNullOrEmpty(locationId)) return;
+				if (string.IsNullOrEmpty(locationId)) return result;
 				LocationDefinitionCache.TryGet(locationId, out var def);
-				if (def == null) return;
+				if (def == null) return result;
 				int totalPointsOfInterest = System.Math.Max(0, def.pointsOfInterest.Count);
 				int chosenIndex = questIndex ?? SaveCache.GetValueOrDefault(locationId, 0); // default to current highest if unknown
 				int clampedIndex = System.Math.Max(0, System.Math.Min(chosenIndex, totalPointsOfInterest > 0 ? totalPointsOfInterest - 1 : 0));
@@ -41,6 +49,8 @@ namespace Crusaders30XX.ECS.Services
 				{
 					var poi = def.pointsOfInterest[clampedIndex];
 					var questIdStr = poi?.id;
+					result.LocationId = locationId ?? string.Empty;
+					result.QuestId = questIdStr ?? string.Empty;
 					if (!string.IsNullOrEmpty(questIdStr) && !SaveCache.IsQuestCompleted(locationId, questIdStr))
 					{
 						Console.WriteLine($"[QuestCompleteService] Completed point of interest {locationId}/{questIdStr}");
@@ -48,10 +58,19 @@ namespace Crusaders30XX.ECS.Services
 						// Set flags for POI reveal cutscene when transitioning to Location scene
 						TransitionStateSingleton.HasPendingLocationPoiReveal = true;
 						TransitionStateSingleton.PendingPoiId = questIdStr;
+						// Award reward if present
+						int reward = poi?.rewardGold ?? 0;
+						if (reward > 0)
+						{
+							SaveCache.AddGold(reward);
+							result.RewardGold = reward;
+						}
+						result.IsNewlyCompleted = true;
 					}
 				}
 			}
 			catch { }
+			return result;
 		}
 	}
 }

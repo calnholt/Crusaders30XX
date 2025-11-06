@@ -64,8 +64,11 @@ namespace Crusaders30XX.ECS.Systems
 							&& queued.CurrentIndex == queued.Events.Count - 1)
 					{
 						Console.WriteLine($"[HpManagementSystem] Attempting to save quest completion");
-						QuestCompleteService.SaveIfCompletedHighest(EntityManager);
-						EventManager.Publish(new ShowQuestRewardOverlay());
+						var completion = QuestCompleteService.SaveIfCompletedHighest(EntityManager);
+						string msg = completion.IsNewlyCompleted
+							? $"Quest Complete!\nGold +{completion.RewardGold}"
+							: "Quest Complete! (already completed — no reward)";
+						EventManager.Publish(new ShowQuestRewardOverlay { Message = msg });
 					}
 					else
 					{

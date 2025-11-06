@@ -4,6 +4,7 @@ namespace Crusaders30XX.ECS.Data.Save
 {
 	public class SaveFile
 	{
+        public int gold { get; set; } = 0;
 		public List<SaveLocation> locations { get; set; } = new List<SaveLocation>();
 	}
 

@@ -19,22 +19,25 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly System.Collections.Generic.List<Entity> _incompleteHellrifts = new System.Collections.Generic.List<Entity>();
 
 		[DebugEditable(DisplayName = "Icon Size", Step = 1f, Min = 10f, Max = 200f)]
-		public float IconSize { get; set; } = 70f; // 50% of normal ~140px
+		public float IconSize { get; set; } = 50f; // 50% of normal ~140px
 
 		[DebugEditable(DisplayName = "Icon Scale", Step = 0.05f, Min = 0.1f, Max = 1f)]
-		public float IconScale { get; set; } = 0.5f; // 50%
+		public float IconScale { get; set; } = 0.4f; // 50%
 
 		[DebugEditable(DisplayName = "Edge Margin", Step = 1f, Min = 0f, Max = 100f)]
-		public float EdgeMargin { get; set; } = 45f;
+		public float EdgeMargin { get; set; } = 73f;
 
 		[DebugEditable(DisplayName = "Chevron Size", Step = 1f, Min = 5f, Max = 50f)]
 		public float ChevronSize { get; set; } = 20f;
 
 		[DebugEditable(DisplayName = "Chevron Thickness", Step = 1f, Min = 1f, Max = 10f)]
-		public float ChevronThickness { get; set; } = 2f;
+		public float ChevronThickness { get; set; } = 5f;
 
 		[DebugEditable(DisplayName = "Chevron Padding", Step = 1f, Min = 0f, Max = 50f)]
-		public float ChevronPadding { get; set; } = 22f;
+		public float ChevronPadding { get; set; } = 24f;
+
+		[DebugEditable(DisplayName = "Distance Scale Mult", Step = 0.05f, Min = 0f, Max = 5f)]
+		public float DistanceScaleMult { get; set; } = 5f;
 
 		public HellRiftIndicatorDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
@@ -122,11 +125,20 @@ namespace Crusaders30XX.ECS.Systems
 				// Determine which edge to place indicator on and calculate position
 				var edgePos = CalculateEdgePosition(screenDirection, screenCenter, w, h);
 
-				// Draw hellrift icon at edge position
-				DrawIcon(edgePos);
+				// Compute distance-based scale for the icon (farther = smaller)
+				float dist = direction.Length();
+				float maxRelevant = System.MathF.Max((float)w, (float)h) * 2f; // ~two viewports away
+				float t = System.Math.Clamp(dist / maxRelevant, 0f, 1f);
+				float distanceScale = (1f - 0.5f) * (1f - t) + 0.5f; // lerp 1.0 -> 0.5
+				distanceScale *= DistanceScaleMult;
 
-				// Draw chevron arrow pointing toward hellrift (use world direction for angle)
-				DrawChevron(edgePos, direction, w, h);
+				float actualIconRadius = (IconSize * IconScale * distanceScale) / 2f;
+
+				// Draw hellrift icon at edge position with distance-based scale
+				DrawIcon(edgePos, distanceScale);
+
+				// Draw chevron arrow pointing toward hellrift (keep size constant, offset by scaled icon radius)
+				DrawChevron(edgePos, direction, w, h, actualIconRadius);
 			}
 		}
 
@@ -201,12 +213,12 @@ namespace Crusaders30XX.ECS.Systems
 			return new Vector2(edgeX, edgeY);
 		}
 
-		private void DrawIcon(Vector2 position)
+		private void DrawIcon(Vector2 position, float distanceScale)
 		{
 			if (_hellriftIconTexture == null) return;
 
 			// Apply IconScale to IconSize
-			float iconWidth = IconSize * IconScale;
+			float iconWidth = IconSize * IconScale * distanceScale;
 			float iconHeight = iconWidth;
 			if (_hellriftIconTexture.Width > 0 && _hellriftIconTexture.Height > 0)
 			{
@@ -224,7 +236,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Draw(_hellriftIconTexture, iconRect, Color.White);
 		}
 
-		private void DrawChevron(Vector2 iconPosition, Vector2 directionToHellrift, int viewportW, int viewportH)
+		private void DrawChevron(Vector2 iconPosition, Vector2 directionToHellrift, int viewportW, int viewportH, float iconRadius)
 		{
 			// Normalize direction
 			var dirNormalized = directionToHellrift;
@@ -234,7 +246,6 @@ namespace Crusaders30XX.ECS.Systems
 			float angle = System.MathF.Atan2(dirNormalized.Y, dirNormalized.X);
 
 			// Calculate chevron tip position - further out from icon in direction of hellrift
-			float iconRadius = (IconSize * IconScale) / 2f;
 			// Position tip further out in the direction of the hellrift, with padding
 			var chevronOffset = dirNormalized * (iconRadius + ChevronPadding);
 			var chevronTip = iconPosition + chevronOffset;

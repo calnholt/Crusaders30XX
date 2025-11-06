@@ -51,6 +51,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 						revealRadius = poi.RevealRadius,
 						unrevealedRadius = poi.UnrevealedRadius,
 						type = poi.Type,
+						rewardGold = 0,
 						events = new List<LocationEventDefinition>()
 					};
 					if (poi.WorldPosition != null && poi.WorldPosition.Length >= 2)
@@ -88,6 +89,11 @@ namespace Crusaders30XX.ECS.Data.Locations
 							});
 						}
 					}
+					// Reward mapping
+					if (poi.Reward != null)
+					{
+						mappedPoi.rewardGold = poi.Reward.Gold;
+					}
 					result.pointsOfInterest.Add(mappedPoi);
 				}
 			}
@@ -112,6 +118,11 @@ namespace Crusaders30XX.ECS.Data.Locations
 			public string Type { get; set; }
 			public List<EventFileDto> Events { get; set; }
 			public List<TribulationFileDto> Tribulations { get; set; }
+			public RewardFileDto Reward { get; set; }
+		}
+		private class RewardFileDto
+		{
+			public int Gold { get; set; }
 		}
 
 		private class EventFileDto
