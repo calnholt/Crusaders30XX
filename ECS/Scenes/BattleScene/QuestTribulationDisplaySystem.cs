@@ -22,9 +22,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
 		private Texture2D _chaliceTexture;
-		private Entity _chaliceEntity;
-		private readonly Dictionary<int, float> _bounceByEntityId = new Dictionary<int, float>();
-		private double _lastDt = 0.0;
+        private Entity _chaliceEntity;
 
 		// Layout/debug controls
 		[DebugEditable(DisplayName = "Chalice Spacing", Step = 2, Min = 0, Max = 200)]
@@ -62,15 +60,21 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<TribulationTriggered>(OnTribulationTriggered);
 		}
 
-		private void OnTribulationTriggered(TribulationTriggered evt)
-		{
-			if (evt == null) return;
-			// Start pulse animation for the chalice entity
-			if (_chaliceEntity != null)
-			{
-				_bounceByEntityId[_chaliceEntity.Id] = 0f; // start bounce timer
-			}
-		}
+        private void OnTribulationTriggered(TribulationTriggered evt)
+        {
+            if (evt == null) return;
+            if (_chaliceEntity != null)
+            {
+                var cfg = new JigglePulseConfig
+                {
+                    PulseDurationSeconds = PulseDurationSeconds,
+                    PulseScaleAmplitude = PulseScaleAmplitude,
+                    JiggleDegrees = JiggleDegrees,
+                    PulseFrequencyHz = PulseFrequencyHz
+                };
+                EventManager.Publish(new JigglePulseEvent { Target = _chaliceEntity, Config = cfg });
+            }
+        }
 
 		private void TryLoadAssets()
 		{
@@ -84,23 +88,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
-		public override void Update(GameTime gameTime)
-		{
-			_lastDt = gameTime.ElapsedGameTime.TotalSeconds;
-			// Decay active bounces over time (same pattern as MedalDisplaySystem)
-			if (_bounceByEntityId.Count > 0)
-			{
-				var keys = _bounceByEntityId.Keys.ToList();
-				for (int i = 0; i < keys.Count; i++)
-				{
-					int id = keys[i];
-					float t = _bounceByEntityId[id];
-					t += (float)_lastDt;
-					if (t >= PulseDurationSeconds) _bounceByEntityId.Remove(id); else _bounceByEntityId[id] = t;
-				}
-			}
-			base.Update(gameTime);
-		}
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+        }
 
 		public void Draw()
 		{
@@ -170,33 +161,20 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(_chaliceEntity, ParallaxLayer.GetUIParallaxLayer());
 			}
 
-			// Calculate pulse animation (same formula as MedalDisplaySystem)
-			float scale = 1f;
-			float rotation = 0f;
-			if (_bounceByEntityId.TryGetValue(_chaliceEntity.Id, out var tPulse))
-			{
-				float dur = Math.Max(0.1f, PulseDurationSeconds);
-				float norm = MathHelper.Clamp(tPulse / dur, 0f, 1f);
-				float env = (1f - norm);
-				env *= env; // quadratic decay
-				float phase = MathHelper.TwoPi * PulseFrequencyHz * tPulse;
-				float s = (float)Math.Sin(phase);
-				scale = 1f + PulseScaleAmplitude * env * s;
-				float jiggleRad = MathHelper.ToRadians(JiggleDegrees);
-				rotation = jiggleRad * env * (float)Math.Sin(phase * 1.2f);
-			}
-
 			// Draw chalice icon
 			if (_chaliceTexture != null)
 			{
-				float finalScale = ChaliceScale * scale;
+                var t = _chaliceEntity.GetComponent<Transform>();
+                float rot = t?.Rotation ?? 0f;
+                float scalePulse = t?.Scale.X ?? 1f;
+                float finalScale = ChaliceScale * scalePulse;
 				var origin = new Vector2(_chaliceTexture.Width / 2f, _chaliceTexture.Height / 2f);
 				_spriteBatch.Draw(
 					_chaliceTexture,
 					chalicePosition,
 					null,
 					Color.White,
-					rotation,
+                    rot,
 					origin,
 					finalScale,
 					SpriteEffects.None,

@@ -189,6 +189,7 @@ namespace Crusaders30XX.ECS.Systems
 			e = EntityManager.CreateEntity(RootEntityName);
 			EntityManager.AddComponent(e, new Transform { Position = new Vector2(100, _graphicsDevice.Viewport.Height - 200), ZOrder = 10000 });
 			EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
+            EntityManager.AddComponent(e, new Hint { Text = "Represents your equipped weapon." });
 		}
 	}
     }

@@ -306,6 +306,12 @@ namespace Crusaders30XX.ECS.Factories
             {
                 uiElement.Tooltip = def.tooltip;
             }
+            // Attach CardTooltip when data specifies a tooltip card, and mark UI tooltip type
+            if (!string.IsNullOrWhiteSpace(def.cardTooltip))
+            {
+                entityManager.AddComponent(entity, new CardTooltip { CardId = def.cardTooltip });
+                uiElement.TooltipType = TooltipType.Card;
+            }
             return entity;
         }
 

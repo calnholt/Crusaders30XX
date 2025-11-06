@@ -33,6 +33,8 @@ public class Game1 : Game
     private LocationSceneSystem _locationSceneSystem;
     private CustomizationRootSystem _customizationRootSystem;
     private TooltipTextDisplaySystem _tooltipTextDisplaySystem;
+    private HintTooltipDisplaySystem _hintTooltipDisplaySystem;
+    private CardTooltipDisplaySystem _cardTooltipDisplaySystem;
     private ProfilerSystem _profilerSystem;
     private LocationSelectDisplaySystem _worldMapSystem;
     private ParallaxLayerSystem _parallaxLayerSystem;
@@ -127,6 +129,8 @@ public class Game1 : Game
         _dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _inputSystem = new InputSystem(_world.EntityManager);
         _tooltipTextDisplaySystem = new TooltipTextDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _hintTooltipDisplaySystem = new HintTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
+        _cardTooltipDisplaySystem = new CardTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
         _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
         _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
@@ -149,6 +153,8 @@ public class Game1 : Game
         _world.AddSystem(_dialogDisplaySystem);
         _world.AddSystem(_inputSystem);
         _world.AddSystem(_tooltipTextDisplaySystem);
+        _world.AddSystem(_hintTooltipDisplaySystem);
+        _world.AddSystem(_cardTooltipDisplaySystem);
         _world.AddSystem(_profilerSystem);
         _world.AddSystem(_worldMapSystem);
         _world.AddSystem(_cursorSystem);
@@ -165,6 +171,7 @@ public class Game1 : Game
         _world.AddSystem(_rectangularShockwaveSystem);
         _world.AddSystem(new CursorEmptySelectDisplaySystem(_world.EntityManager, GraphicsDevice));
         _world.AddSystem(new UISelectDisplaySystem(_world.EntityManager, GraphicsDevice));
+        _world.AddSystem(new JigglePulseDisplaySystem(_world.EntityManager));
 
         // Mark persistent entities
         _world.AddComponent(sceneEntity, new DontDestroyOnLoad());
@@ -304,6 +311,8 @@ public class Game1 : Game
         FrameProfiler.Measure("HotKeyProgressRingSystem.Draw", _hotKeyProgressRingSystem.Draw);
         FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipTextDisplaySystem.Draw);
+        FrameProfiler.Measure("HintTooltipDisplaySystem.Draw", _hintTooltipDisplaySystem.Draw);
+        FrameProfiler.Measure("CardTooltipDisplaySystem.Draw", _cardTooltipDisplaySystem.Draw);
         FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
         FrameProfiler.Measure("DebugMenuSystem.Draw", _debugMenuSystem.Draw);
         FrameProfiler.Measure("EntityListOverlaySystem.Draw", _entityListOverlaySystem.Draw);

@@ -20,10 +20,8 @@ namespace Crusaders30XX.ECS.Systems
 		private SpriteFont _font;
 		private Texture2D _fallbackMedalTex;
 		private readonly Dictionary<string, Texture2D> _medalTexById = new Dictionary<string, Texture2D>();
-		private Texture2D _roundedCache;
-		private int _roundedW, _roundedH, _roundedR;
-		private readonly Dictionary<int, float> _bounceByEntityId = new Dictionary<int, float>();
-		private double _lastDt = 0.0;
+        private Texture2D _roundedCache;
+        private int _roundedW, _roundedH, _roundedR;
 
 		// Layout/debug controls
 		[DebugEditable(DisplayName = "Left Margin", Step = 2, Min = 0, Max = 2000)]
@@ -62,11 +60,18 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<MedalTriggered>(OnMedalTriggered);
 		}
 
-		private void OnMedalTriggered(MedalTriggered evt)
-		{
-			if (evt?.MedalEntity == null) return;
-			_bounceByEntityId[evt.MedalEntity.Id] = 0f; // start bounce timer
-		}
+        private void OnMedalTriggered(MedalTriggered evt)
+        {
+            if (evt?.MedalEntity == null) return;
+            var cfg = new JigglePulseConfig
+            {
+                PulseDurationSeconds = PulseDurationSeconds,
+                PulseScaleAmplitude = PulseScaleAmplitude,
+                JiggleDegrees = JiggleDegrees,
+                PulseFrequencyHz = PulseFrequencyHz
+            };
+            EventManager.Publish(new JigglePulseEvent { Target = evt.MedalEntity, Config = cfg });
+        }
 
 		private void TryLoadAssets()
 		{
@@ -91,23 +96,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
-		public override void Update(GameTime gameTime)
-		{
-			_lastDt = gameTime.ElapsedGameTime.TotalSeconds;
-			// Decay active bounces over time
-			if (_bounceByEntityId.Count > 0)
-			{
-				var keys = _bounceByEntityId.Keys.ToList();
-				for (int i = 0; i < keys.Count; i++)
-				{
-					int id = keys[i];
-					float t = _bounceByEntityId[id];
-					t += (float)_lastDt;
-					if (t >= 0.5f) _bounceByEntityId.Remove(id); else _bounceByEntityId[id] = t;
-				}
-			}
-			base.Update(gameTime);
-		}
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+        }
 
 		public void Draw()
 		{
@@ -132,23 +124,10 @@ namespace Crusaders30XX.ECS.Systems
 				var rect = new Rectangle((int)System.Math.Round(cur.X), (int)System.Math.Round(cur.Y), bgW, bgH);
 				// Backgrounds removed: draw medals without black rounded panels
 				UpdateTooltipForMedal(m, rect);
-				// Jiggle/pulse the medal icon only
-				float scale = 1f;
-				float rotation = 0f;
-				if (_bounceByEntityId.TryGetValue(m.Owner.Id, out var tPulse))
-				{
-					float dur = System.Math.Max(0.1f, PulseDurationSeconds);
-					float norm = MathHelper.Clamp(tPulse / dur, 0f, 1f);
-					float env = (1f - norm);
-					env *= env; // quadratic decay
-					float phase = MathHelper.TwoPi * PulseFrequencyHz * tPulse;
-					float s = (float)System.Math.Sin(phase);
-					scale = 1f + PulseScaleAmplitude * env * s;
-					float jiggleRad = MathHelper.ToRadians(JiggleDegrees);
-					rotation = jiggleRad * env * (float)System.Math.Sin(phase * 1.2f);
-				}
 				var medalTex = GetMedalTexture(m.MedalId);
-				var drawnRect = DrawMedalIcon(rect, medalTex, scale, rotation);
+                float rot = t?.Rotation ?? 0f;
+                float scalePulse = t?.Scale.X ?? 1f;
+                var drawnRect = DrawMedalIcon(rect, medalTex, scalePulse, rot);
 				// Advance by intended layout width to preserve consistent margins across medals
 				x += bgW + SpacingX;
 			}

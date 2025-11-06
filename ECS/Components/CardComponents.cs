@@ -327,6 +327,16 @@ namespace Crusaders30XX.ECS.Components
         public bool IsPreventDefaultClick { get; set; } = false;
     }
 
+    /// <summary>
+    /// Optional hint text for a hovered UI entity. Displayed via HintTooltipDisplaySystem
+    /// when the player requests help (e.g., Left Stick click on gamepad).
+    /// </summary>
+    public class Hint : IComponent
+    {
+        public Entity Owner { get; set; }
+        public string Text { get; set; } = "";
+    }
+
     public enum UILayerType
     {
         Default,
@@ -395,6 +405,15 @@ namespace Crusaders30XX.ECS.Components
         Below,
         Right,
         Left
+    }
+
+    /// <summary>
+    /// When attached to a hovered UI element, renders the specified card as a tooltip.
+    /// </summary>
+    public class CardTooltip : IComponent
+    {
+        public Entity Owner { get; set; }
+        public string CardId { get; set; } = "";
     }
 
     /// <summary>
