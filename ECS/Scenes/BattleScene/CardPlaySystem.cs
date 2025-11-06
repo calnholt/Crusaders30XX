@@ -29,6 +29,138 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
+        /// <summary>
+        /// Counts distinct ways to satisfy cost requirements (order-independent multisets).
+        /// Returns the count of distinct solutions, stopping early if count > 1 for optimization.
+        /// </summary>
+        private int CountDistinctSolutions(List<string> requiredCosts, List<Entity> handCards)
+        {
+            // Safety check: exclude Yellow cards
+            var validCards = handCards.Where(e => 
+            {
+                var cd = e.GetComponent<CardData>();
+                return cd != null && cd.Color != CardData.CardColor.Yellow;
+            }).ToList();
+
+            if (requiredCosts.Count == 0)
+                return validCards.Count == 0 ? 1 : 0; // Empty requirement means no cards needed
+
+            int count = 0;
+            HashSet<string> seenSolutions = new HashSet<string>();
+
+            // Recursive helper to count solutions
+            void CountSolutionsRecursive(List<string> remainingCosts, List<Entity> availableCards, HashSet<Entity> usedCards, List<Entity> currentSolution)
+            {
+                // Early exit optimization: if we already found more than 1 solution, stop
+                if (count > 1) return;
+
+                if (remainingCosts.Count == 0)
+                {
+                    // Found a valid solution - create a canonical representation (sorted by entity ID)
+                    var solutionKey = string.Join(",", currentSolution.OrderBy(e => e.Id).Select(e => e.Id.ToString()));
+                    if (!seenSolutions.Contains(solutionKey))
+                    {
+                        seenSolutions.Add(solutionKey);
+                        count++;
+                    }
+                    return;
+                }
+
+                string nextCost = remainingCosts[0];
+                var remainingCostsAfter = remainingCosts.Skip(1).ToList();
+
+                // Find all cards that can satisfy this cost requirement
+                var candidates = availableCards.Where(card => 
+                {
+                    if (usedCards.Contains(card)) return false;
+                    var cd = card.GetComponent<CardData>();
+                    if (cd == null || cd.Color == CardData.CardColor.Yellow) return false;
+
+                    if (nextCost == "Any") return true;
+                    if (nextCost == "Red" && cd.Color == CardData.CardColor.Red) return true;
+                    if (nextCost == "White" && cd.Color == CardData.CardColor.White) return true;
+                    if (nextCost == "Black" && cd.Color == CardData.CardColor.Black) return true;
+                    return false;
+                }).ToList();
+
+                // Try each candidate for this requirement
+                foreach (var candidate in candidates)
+                {
+                    var newUsedCards = new HashSet<Entity>(usedCards) { candidate };
+                    var newSolution = new List<Entity>(currentSolution) { candidate };
+                    CountSolutionsRecursive(remainingCostsAfter, availableCards, newUsedCards, newSolution);
+                    
+                    // Early exit optimization
+                    if (count > 1) return;
+                }
+            }
+
+            CountSolutionsRecursive(requiredCosts, validCards, new HashSet<Entity>(), new List<Entity>());
+            return count;
+        }
+
+        /// <summary>
+        /// Finds the first valid solution for satisfying cost requirements.
+        /// Assumes count == 1, so returns the single solution.
+        /// </summary>
+        private List<Entity> FindFirstSolution(List<string> requiredCosts, List<Entity> handCards)
+        {
+            // Safety check: exclude Yellow cards
+            var validCards = handCards.Where(e => 
+            {
+                var cd = e.GetComponent<CardData>();
+                return cd != null && cd.Color != CardData.CardColor.Yellow;
+            }).ToList();
+
+            if (requiredCosts.Count == 0)
+                return new List<Entity>();
+
+            List<Entity> solution = null;
+
+            // Recursive helper to find first solution
+            bool FindSolutionRecursive(List<string> remainingCosts, List<Entity> availableCards, HashSet<Entity> usedCards, List<Entity> currentSolution)
+            {
+                if (remainingCosts.Count == 0)
+                {
+                    solution = new List<Entity>(currentSolution);
+                    return true; // Found solution
+                }
+
+                string nextCost = remainingCosts[0];
+                var remainingCostsAfter = remainingCosts.Skip(1).ToList();
+
+                // Find all cards that can satisfy this cost requirement
+                var candidates = availableCards.Where(card => 
+                {
+                    if (usedCards.Contains(card)) return false;
+                    var cd = card.GetComponent<CardData>();
+                    if (cd == null || cd.Color == CardData.CardColor.Yellow) return false;
+
+                    if (nextCost == "Any") return true;
+                    if (nextCost == "Red" && cd.Color == CardData.CardColor.Red) return true;
+                    if (nextCost == "White" && cd.Color == CardData.CardColor.White) return true;
+                    if (nextCost == "Black" && cd.Color == CardData.CardColor.Black) return true;
+                    return false;
+                }).ToList();
+
+                // Try each candidate for this requirement
+                foreach (var candidate in candidates)
+                {
+                    var newUsedCards = new HashSet<Entity>(usedCards) { candidate };
+                    var newSolution = new List<Entity>(currentSolution) { candidate };
+                    if (FindSolutionRecursive(remainingCostsAfter, availableCards, newUsedCards, newSolution))
+                    {
+                        return true; // Found solution
+                    }
+                }
+
+                return false; // No solution found
+            }
+
+            FindSolutionRecursive(requiredCosts, validCards, new HashSet<Entity>(), new List<Entity>());
+            return solution ?? new List<Entity>();
+        }
+
         private void OnPlayCardRequested(PlayCardRequested evt)
         {
             if (evt?.Card == null) return;
@@ -124,6 +256,9 @@ namespace Crusaders30XX.ECS.Systems
                         }
                     }
 
+                    // Exclude Yellow cards - they cannot be discarded/used to pay costs
+                    handNonWeapons = handNonWeapons.Where(e => e.GetComponent<CardData>()?.Color != CardData.CardColor.Yellow).ToList();
+
                     // Helper to attempt greedy satisfaction of remaining requirements
                     bool CanSatisfy(List<string> req, List<Entity> candidates, out List<Entity> picks)
                     {
@@ -162,7 +297,7 @@ namespace Crusaders30XX.ECS.Systems
                         return remaining.Count == 0;
                     }
 
-                    bool canSatisfy = CanSatisfy(requiredCosts, handNonWeapons, out var autoPicks);
+                    bool canSatisfy = CanSatisfy(requiredCosts, handNonWeapons, out _);
 
                     if (!canSatisfy)
                     {
@@ -171,62 +306,31 @@ namespace Crusaders30XX.ECS.Systems
                         return;
                     }
 
-                    // Deterministic auto-pick when each specific color has exactly the needed count, and Any is exact
-                    int needRed = requiredCosts.Count(c => c == "Red");
-                    int needWhite = requiredCosts.Count(c => c == "White");
-                    int needBlack = requiredCosts.Count(c => c == "Black");
-                    int needAny = requiredCosts.Count(c => c == "Any");
-                    var redCards = handNonWeapons.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.Red).ToList();
-                    var whiteCards = handNonWeapons.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.White).ToList();
-                    var blackCards = handNonWeapons.Where(e => e.GetComponent<CardData>()?.Color == CardData.CardColor.Black).ToList();
-                    var deterministic = new List<Entity>();
-                    bool specificExact = (needRed == redCards.Count || needRed == 0)
-                                        && (needWhite == whiteCards.Count || needWhite == 0)
-                                        && (needBlack == blackCards.Count || needBlack == 0);
-                    if (specificExact)
+                    // Count distinct ways to satisfy the cost (order-independent)
+                    int solutionCount = CountDistinctSolutions(requiredCosts, handNonWeapons);
+
+                    if (solutionCount == 0)
                     {
-                        if (needRed == redCards.Count) deterministic.AddRange(redCards);
-                        if (needWhite == whiteCards.Count) deterministic.AddRange(whiteCards);
-                        if (needBlack == blackCards.Count) deterministic.AddRange(blackCards);
-                        var remaining = handNonWeapons.Except(deterministic).ToList();
-                        if (needAny == 0 || remaining.Count == needAny)
-                        {
-                            if (needAny > 0) deterministic.AddRange(remaining);
-                            if (deterministic.Count == requiredCosts.Count)
-                            {
-                                // Auto-discard deterministic set and continue
-                                foreach (var p in deterministic)
-                                {
-                                    EventManager.Publish(new CardMoveRequested { Card = p, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
-                                }
-                                EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
-                                return;
-                            }
-                        }
-                    }
-                    if (autoPicks.Count == 1 && handNonWeapons.Count == 1)
-                    {
-                        // Single deterministic discard -> auto pay and continue
-                        Console.WriteLine("[CardPlaySystem] Auto-paying cost with only available card");
-                        EventManager.Publish(new CardMoveRequested { Card = autoPicks[0], Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
-                        // Re-dispatch play with CostsPaid=true
-                        EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
+                        Console.WriteLine("[CardPlaySystem] Cannot satisfy cost requirements; aborting play");
+                        EventManager.Publish(new CantPlayCardMessage { Message = "Can't pay card's cost!" });
                         return;
                     }
-                    else if (requiredCosts.All(c => c == "Any") && autoPicks.Count == requiredCosts.Count && handNonWeapons.Count == autoPicks.Count)
+                    else if (solutionCount == 1)
                     {
-                        // Exact number of cards equal to Any requirement -> auto pay all
-                        foreach (var p in autoPicks)
+                        // Exactly one way to satisfy cost - auto-pay
+                        var solution = FindFirstSolution(requiredCosts, handNonWeapons);
+                        Console.WriteLine($"[CardPlaySystem] Auto-paying cost with {solution.Count} card(s)");
+                        foreach (var card in solution)
                         {
-                            EventManager.Publish(new CardMoveRequested { Card = p, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
+                            EventManager.Publish(new CardMoveRequested { Card = card, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
                         }
                         EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
                         return;
                     }
                     else
                     {
-                        // Open overlay to let player choose among options
-                        Console.WriteLine("[CardPlaySystem] Opening pay-cost overlay");
+                        // Multiple ways to satisfy cost - show overlay for player choice
+                        Console.WriteLine($"[CardPlaySystem] {solutionCount} distinct ways to satisfy cost; opening pay-cost overlay");
                         EventManager.Publish(new OpenPayCostOverlayEvent { CardToPlay = evt.Card, RequiredCosts = requiredCosts, Type = PayCostOverlayType.ColorDiscard });
                         return;
                     }
