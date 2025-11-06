@@ -52,6 +52,7 @@ public class Game1 : Game
     // Shockwave integration
     private ShockwaveDisplaySystem _shockwaveSystem;
     private RectangularShockwaveDisplaySystem _rectangularShockwaveSystem;
+    private PoisonDamageDisplaySystem _poisonSystem;
     private RenderTarget2D _sceneRt;
     private RenderTarget2D _ppA;
     private RenderTarget2D _ppB;
@@ -169,6 +170,8 @@ public class Game1 : Game
         _world.AddSystem(_shockwaveSystem);
         _rectangularShockwaveSystem = new RectangularShockwaveDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _world.AddSystem(_rectangularShockwaveSystem);
+        _poisonSystem = new PoisonDamageDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _world.AddSystem(_poisonSystem);
         _world.AddSystem(new CursorEmptySelectDisplaySystem(_world.EntityManager, GraphicsDevice));
         _world.AddSystem(new UISelectDisplaySystem(_world.EntityManager, GraphicsDevice));
         _world.AddSystem(new JigglePulseDisplaySystem(_world.EntityManager));
@@ -224,10 +227,11 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
+        bool hasPoison = _poisonSystem != null && _poisonSystem.HasActivePoison;
         bool hasCircularWaves = _shockwaveSystem != null && _shockwaveSystem.HasActiveWaves;
         bool hasRectangularWaves = _rectangularShockwaveSystem != null && _rectangularShockwaveSystem.HasActiveWaves;
 
-        if (hasCircularWaves || hasRectangularWaves)
+        if (hasPoison || hasCircularWaves || hasRectangularWaves)
         {
             EnsureRenderTargetsMatchBackbuffer();
             // Render scene into _sceneRt
@@ -236,10 +240,20 @@ public class Game1 : Game
             DrawScene();
             GraphicsDevice.SetRenderTarget(null);
 
-            // Composite shockwaves and present
+            // Composite effects in order: Poison → Circular Shockwaves → Rectangular Shockwaves
             Texture2D src = _sceneRt;
             
-            // Apply circular shockwaves first if any
+            // Apply poison first if active
+            if (hasPoison)
+            {
+                // If poison is the only effect, render directly to backbuffer (null)
+                // Otherwise render to _ppB for further processing
+                RenderTarget2D poisonTarget = (hasCircularWaves || hasRectangularWaves) ? _ppB : null;
+                _poisonSystem.Composite(src, _ppA, poisonTarget);
+                if (poisonTarget != null) src = poisonTarget;
+            }
+            
+            // Apply circular shockwaves second if any
             if (hasCircularWaves)
             {
                 _shockwaveSystem.Composite(src, _ppA, _ppB, hasRectangularWaves ? _ppA : null);

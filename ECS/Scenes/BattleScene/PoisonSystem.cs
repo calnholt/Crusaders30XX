@@ -99,6 +99,7 @@ namespace Crusaders30XX.ECS.Systems
 					DamageType = ModifyTypeEnum.Effect
 				});
 				EventManager.Publish(new PassiveTriggered { Owner = player, Type = AppliedPassiveType.Poison });
+				EventManager.Publish(new PoisonDamageEvent { DurationSec = .5f });
 				_timerRemaining = SecondsPerTick;
 			}
 		}
