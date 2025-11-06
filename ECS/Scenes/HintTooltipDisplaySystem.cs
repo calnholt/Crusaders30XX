@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -93,13 +94,13 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Angel Offset Y", Step = 1, Min = -1000, Max = 1000)]
         public int AngelOffsetY { get; set; } = -54;
 
-        public HintTooltipDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
+        public HintTooltipDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             _content = content;
-            _font = font;
+            _font = FontSingleton.ContentFont;
             _pixel = new Texture2D(graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
         }
@@ -289,11 +290,11 @@ namespace Crusaders30XX.ECS.Systems
             if (_font == null) return;
 
             // Ensure angel texture (fail-soft if not present)
-            if (_angel == null)
-            {
-                try { _angel = _content.Load<Texture2D>("guardian_angel"); }
-                catch { _angel = null; }
-            }
+            // if (_angel == null)
+            // {
+            //     try { _angel = _content.Load<Texture2D>("guardian_angel"); }
+            //     catch { _angel = null; }
+            // }
 
             // Ensure tooltip entity
             EnsureTooltipEntity();
@@ -311,12 +312,12 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.DrawString(_font, _wrappedText, textPos, color, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
 
             // Guardian angel image anchored to outside bottom-left
-            if (_angel != null)
-            {
-                Vector2 pos = new Vector2(rect.Left - AngelOffsetX, rect.Bottom + AngelOffsetY);
-                var origin = new Vector2(0f, _angel.Height); // bottom-left origin
-                _spriteBatch.Draw(_angel, pos, null, Color.White * _alpha01, 0f, origin, AngelScale, SpriteEffects.None, 0f);
-            }
+            // if (_angel != null)
+            // {
+            //     Vector2 pos = new Vector2(rect.Left - AngelOffsetX, rect.Bottom + AngelOffsetY);
+            //     var origin = new Vector2(0f, _angel.Height); // bottom-left origin
+            //     _spriteBatch.Draw(_angel, pos, null, Color.White * _alpha01, 0f, origin, AngelScale, SpriteEffects.None, 0f);
+            // }
         }
     }
 }

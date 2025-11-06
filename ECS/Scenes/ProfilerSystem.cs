@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -75,12 +76,12 @@ namespace Crusaders30XX.ECS.Systems
         [Crusaders30XX.Diagnostics.DebugEditable(DisplayName = "Table Text Scale", Step = 0.05f, Min = 0.5f, Max = 3f)]
         public float TableTextScale { get => _tableTextScale; set => _tableTextScale = MathHelper.Clamp(value, 0.1f, 3f); }
 
-        public ProfilerSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+        public ProfilerSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
-            _font = font;
+            _font = FontSingleton.ContentFont;
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()

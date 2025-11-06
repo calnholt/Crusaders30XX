@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework.Input;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -61,12 +62,12 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Max Multiplier", Step = 0.1f, Min = 1f, Max = 10f)]
         public float MaxMultiplier { get; set; } = 3f;
 
-        public CardListModalSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+        public CardListModalSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
-            _font = font;
+            _font = FontSingleton.TitleFont;
             _pixel = new Texture2D(graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
 

@@ -12,6 +12,7 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Scenes.BattleScene;
 using Crusaders30XX.ECS.Utils.RichText;
 using System;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -158,12 +159,12 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        public DialogDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content, SpriteFont font) : base(em)
+        public DialogDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content) : base(em)
         {
             _graphicsDevice = gd;
             _spriteBatch = sb;
             _content = content;
-            _font = font;
+            _font = FontSingleton.ContentFont;
             _pixel = new Texture2D(gd, 1, 1);
             _pixel.SetData(new[] { Color.White });
 

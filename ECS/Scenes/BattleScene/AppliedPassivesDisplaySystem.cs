@@ -9,6 +9,7 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Utils;
 using System.Collections.Generic;
 using System;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -17,7 +18,7 @@ namespace Crusaders30XX.ECS.Systems
     {
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedCache = new();
         private readonly System.Collections.Generic.Dictionary<(int ownerId, AppliedPassiveType type), Entity> _tooltipUiByKey = new();
 
@@ -66,12 +67,11 @@ namespace Crusaders30XX.ECS.Systems
         // Track a transient ripple per owner+passive key
         private readonly System.Collections.Generic.Dictionary<(int ownerId, AppliedPassiveType type), Ripple> _ripples = new();
 
-        public AppliedPassivesDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+        public AppliedPassivesDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
-            _font = font;
             EventManager.Subscribe<PassiveTriggered>(OnPassiveTriggered);
         }
 

@@ -5,6 +5,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -19,7 +20,7 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
-        private readonly SpriteFont _font;
+        private readonly SpriteFont _font = FontSingleton.ContentFont;
 
 		private class Floater
         {
@@ -83,12 +84,11 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Spawn From HPBar Center")] 
         public bool SpawnFromHpBarCenter { get; set; } = false;
 
-        public DamageModificationDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+        public DamageModificationDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
-            _font = font;
             EventManager.Subscribe<ModifyHpEvent>(OnModifyHp);
         }
 

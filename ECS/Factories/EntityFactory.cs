@@ -13,6 +13,7 @@ using Crusaders30XX.ECS.Data.Cards;
 using System;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -301,6 +302,7 @@ namespace Crusaders30XX.ECS.Factories
             entityManager.AddComponent(entity, sprite);
             entityManager.AddComponent(entity, uiElement);
             entityManager.AddComponent(entity, ParallaxLayer.GetUIParallaxLayer());
+            entityManager.AddComponent(entity, new Hint { Text = CardHintService.GetCardHint(def, color) });
             // Set tooltip from definition (precomputed in CardDefinitionCache)
             if (!string.IsNullOrEmpty(def.tooltip))
             {

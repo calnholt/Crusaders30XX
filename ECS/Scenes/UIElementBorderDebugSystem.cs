@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -30,12 +31,12 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Name Text Scale", Step = 0.01f, Min = 0.05f, Max = 2f)]
 		public float NameTextScale { get; set; } = 0.12f;
 
-		public UIElementBorderDebugSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+		public UIElementBorderDebugSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_font = font;
+			_font = FontSingleton.ContentFont;
 			_pixel = new Texture2D(_graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 		}

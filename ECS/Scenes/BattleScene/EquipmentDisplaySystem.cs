@@ -10,6 +10,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Data.Equipment;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -24,7 +25,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
-		private SpriteFont _font;
+		private SpriteFont _font = FontSingleton.ContentFont;
 		private readonly Dictionary<string, Texture2D> _iconCache = new();
 		private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
 		private readonly Dictionary<int, Entity> _tooltipByEquipEntityId = new();
@@ -81,13 +82,12 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Usage Offset Y", Step = 1, Min = -200, Max = 200)]
 		public int UsageOffsetY { get; set; } = -6;
 
-		public EquipmentDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
+		public EquipmentDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_content = content;
-			_font = font;
             EventManager.Subscribe<Crusaders30XX.ECS.Events.EquipmentAbilityTriggered>(OnEquipmentAbilityTriggered);
 		}
 

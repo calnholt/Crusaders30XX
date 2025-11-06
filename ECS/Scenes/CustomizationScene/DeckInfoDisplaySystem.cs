@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Data.Cards;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -13,7 +14,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private readonly Texture2D _pixel;
 
 		[DebugEditable(DisplayName = "Panel Padding X", Step = 1, Min = 0, Max = 200)]
@@ -25,11 +26,10 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Background Alpha", Step = 5, Min = 0, Max = 255)]
 		public int BgAlpha { get; set; } = 225;
 
-		public DeckInfoDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
+		public DeckInfoDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
-			_font = font;
 			_pixel = new Texture2D(_graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 		}

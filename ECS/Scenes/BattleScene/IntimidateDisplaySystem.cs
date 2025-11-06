@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -17,7 +18,7 @@ namespace Crusaders30XX.ECS.Systems
 	public class IntimidateDisplaySystem : Core.System
 	{
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private readonly GraphicsDevice _graphicsDevice;
 		private Texture2D _pixel;
 		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
@@ -80,12 +81,11 @@ namespace Crusaders30XX.ECS.Systems
 			public float CurrentAlpha = 1f;
 		}
 
-		public IntimidateDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font) 
+		public IntimidateDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch) 
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_font = font;
 			
 			// Create a single pixel texture for backgrounds/overlays
 			_pixel = new Texture2D(_graphicsDevice, 1, 1);

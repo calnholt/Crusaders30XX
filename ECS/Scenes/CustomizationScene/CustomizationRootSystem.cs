@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -15,7 +16,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private readonly ContentManager _content;
-        private readonly SpriteFont _font;
+        private readonly SpriteFont _font = FontSingleton.ContentFont;
 
         private CustomizationSceneSystem _customizationSceneSystem;
         private CardLibraryPanelSystem _libraryPanelSystem;
@@ -37,21 +38,20 @@ namespace Crusaders30XX.ECS.Systems
         private LoadoutWeaponDisplaySystem _loadoutWeaponDisplaySystem;
         private UIElementHighlightSystem _uiElementHighlightSystem;
 
-        public CustomizationRootSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice gd, SpriteBatch sb, ContentManager content, SpriteFont font) : base(em)
+        public CustomizationRootSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice gd, SpriteBatch sb, ContentManager content) : base(em)
         {
             _systemManager = sm;
             _world = world;
             _graphicsDevice = gd;
             _spriteBatch = sb;
             _content = content;
-            _font = font;
 
             // Construct sub-systems (drawn via Draw())
-            _customizationSceneSystem = new CustomizationSceneSystem(EntityManager, _graphicsDevice, _spriteBatch, _font);
-            _libraryPanelSystem = new CardLibraryPanelSystem(EntityManager, _world, _graphicsDevice, _spriteBatch, _font);
-            _deckPanelSystem = new LoadoutDeckPanelSystem(EntityManager, _world, _graphicsDevice, _spriteBatch, _font);
+            _customizationSceneSystem = new CustomizationSceneSystem(EntityManager, _graphicsDevice, _spriteBatch);
+            _libraryPanelSystem = new CardLibraryPanelSystem(EntityManager, _world, _graphicsDevice, _spriteBatch);
+            _deckPanelSystem = new LoadoutDeckPanelSystem(EntityManager, _world, _graphicsDevice, _spriteBatch);
             _loadoutEditSystem = new LoadoutEditSystem(EntityManager);
-            _deckInfoDisplaySystem = new DeckInfoDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _font);
+            _deckInfoDisplaySystem = new DeckInfoDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch);
             _backgroundSystem = new CustomizationBackgroundSystem(EntityManager, _graphicsDevice, _spriteBatch, _content);
             _sectionTabMenuDisplaySystem = new SectionTabMenuDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _font, _libraryPanelSystem, _deckPanelSystem);
             _customizeTemperanceDisplaySystem = new CustomizeTemperanceDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _font, _libraryPanelSystem, _deckPanelSystem);

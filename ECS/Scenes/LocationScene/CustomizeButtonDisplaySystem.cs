@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -14,7 +15,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private Texture2D _roundedRectCache;
 		private Texture2D _pixel;
 
@@ -36,11 +37,10 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 64)]
 		public int CornerRadius { get; set; } = 12;
 
-		public CustomizeButtonDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font) : base(entityManager)
+		public CustomizeButtonDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch) : base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_font = font;
 			_pixel = new Texture2D(_graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 		}

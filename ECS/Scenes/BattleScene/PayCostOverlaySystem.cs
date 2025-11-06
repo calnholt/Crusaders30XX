@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -18,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
-        private readonly SpriteFont _font;
+        private readonly SpriteFont _font = FontSingleton.TitleFont;
         private readonly Texture2D _pixel;
         private CardVisualSettings _cardSettings;
 
@@ -70,12 +71,11 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Selected Offset Y", Step = 2f, Min = -1000f, Max = 1000f)]
         public float SelectedOffsetY { get; set; } = 0f;
 
-        public PayCostOverlaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+        public PayCostOverlaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
-            _font = font;
             _pixel = new Texture2D(graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
 

@@ -3,6 +3,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -13,7 +14,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private readonly Texture2D _pixel;
 
 		[DebugEditable(DisplayName = "Z Order", Step = 10, Min = 0, Max = 100000)]
@@ -35,11 +36,10 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Button Text Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
 		public float ButtonTextScale { get; set; } = 0.35f;
 
-		public QuestRewardModalDisplaySystem(EntityManager entityManager, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(entityManager)
+		public QuestRewardModalDisplaySystem(EntityManager entityManager, GraphicsDevice gd, SpriteBatch sb) : base(entityManager)
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
-			_font = font;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			EventManager.Subscribe<ShowQuestRewardOverlay>(_ => Open(_.Message));

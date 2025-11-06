@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -18,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
-        private readonly SpriteFont _font;
+        private readonly SpriteFont _font = FontSingleton.ContentFont;
         private readonly Texture2D _pixel;
 
         // Visuals similar to EnemyAttackDisplaySystem confirm button
@@ -37,11 +38,10 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.2f, Max = 2.5f)]
         public float ButtonTextScale { get; set; } = 0.2f;
 
-        public EndTurnDisplaySystem(EntityManager entityManager, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(entityManager)
+        public EndTurnDisplaySystem(EntityManager entityManager, GraphicsDevice gd, SpriteBatch sb) : base(entityManager)
         {
             _graphicsDevice = gd;
             _spriteBatch = sb;
-            _font = font;
             _pixel = new Texture2D(gd, 1, 1);
             _pixel.SetData(new[] { Color.White });
 

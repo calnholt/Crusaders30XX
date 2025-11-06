@@ -12,6 +12,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -20,7 +21,7 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
-        private readonly SpriteFont _font;
+        private readonly SpriteFont _font = FontSingleton.ContentFont;
         private MouseState _prevMouse;
 
         [DebugEditable(DisplayName = "Bottom Button Width", Step = 4, Min = 40, Max = 600)]
@@ -41,11 +42,10 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Button Text Scale", Step = 0.01f, Min = 0.1f, Max = 1.0f)]
         public float ButtonTextScale { get; set; } = 0.12f;
 
-        public CustomizationSceneSystem(EntityManager entityManager, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(entityManager)
+        public CustomizationSceneSystem(EntityManager entityManager, GraphicsDevice gd, SpriteBatch sb) : base(entityManager)
         {
             _graphicsDevice = gd;
             _spriteBatch = sb;
-            _font = font;
             _prevMouse = Mouse.GetState();
         }
 

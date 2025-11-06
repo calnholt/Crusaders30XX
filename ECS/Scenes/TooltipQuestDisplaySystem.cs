@@ -10,7 +10,9 @@ using Crusaders30XX.ECS.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
- 
+using Crusaders30XX.ECS.Singletons;
+
+
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -20,7 +22,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _titleFont = FontSingleton.TitleFont;
+		private readonly SpriteFont _contentFont = FontSingleton.ContentFont;
 		private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedCache = new();
 		private readonly Dictionary<(int w, int h, bool right, int border), Texture2D> _triangleCache = new();
 		private Texture2D _pixel;
@@ -168,13 +171,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		private const string TooltipEntityName = "UI_QuestTooltip";
 
-		public TooltipQuestDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
+		public TooltipQuestDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_content = content;
-			_font = font;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			try { _chaliceTexture = _content.Load<Texture2D>("chalice"); } catch { _chaliceTexture = null; }
@@ -344,7 +346,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Only on WorldMap or Location scenes
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || (scene.Current != SceneId.WorldMap && scene.Current != SceneId.Location)) return;
-			if (_font == null) return;
+			if (_titleFont == null) return;
 
 			// Find tooltip entity
 			if (_tooltipEntity == null)
@@ -401,7 +403,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Title
 			if (!string.IsNullOrEmpty(title))
 			{
-				var qSize = _font.MeasureString(title ?? "Quest") * QuestTitleScale;
+				var qSize = _titleFont.MeasureString(title ?? "Quest") * QuestTitleScale;
 				totalHeight += (int)System.Math.Ceiling(qSize.Y);
 			}
 			
@@ -446,8 +448,8 @@ namespace Crusaders30XX.ECS.Systems
 					var trib = tribulations[i];
 					if (!string.IsNullOrEmpty(trib.text))
 					{
-						var wrappedLines = TextUtils.WrapText(_font, trib.text, textScale, maxTextWidth);
-						maxTextHeight += wrappedLines.Count * (int)System.Math.Ceiling(_font.MeasureString("A").Y * textScale);
+						var wrappedLines = TextUtils.WrapText(_contentFont, trib.text, textScale, maxTextWidth);
+						maxTextHeight += wrappedLines.Count * (int)System.Math.Ceiling(_contentFont.MeasureString("A").Y * textScale);
 						if (i < tribulations.Count - 1)
 						{
 							maxTextHeight += lineSpacing;
@@ -479,8 +481,8 @@ namespace Crusaders30XX.ECS.Systems
 				int divisionLineHeight = System.Math.Max(1, RewardsDivisionLineHeight);
 				float coinScale = MathHelper.Clamp(RewardCoinScale, 0.1f, 2f);
 				float textScale = MathHelper.Clamp(RewardsTextScale, 0.1f, 2f);
-				int coinHeight = _goldTexture != null ? (int)System.Math.Round(_goldTexture.Height * coinScale) : (int)System.Math.Ceiling(_font.MeasureString("A").Y * textScale);
-				int textHeight = (int)System.Math.Ceiling(_font.MeasureString("A").Y * textScale);
+				int coinHeight = _goldTexture != null ? (int)System.Math.Round(_goldTexture.Height * coinScale) : (int)System.Math.Ceiling(_contentFont.MeasureString("A").Y * textScale);
+				int textHeight = (int)System.Math.Ceiling(_contentFont.MeasureString("A").Y * textScale);
 				int rowHeight = System.Math.Max(coinHeight, textHeight);
 
 				// vertical spacing + line + half-spacing + padding + row height
@@ -557,9 +559,9 @@ namespace Crusaders30XX.ECS.Systems
 			if (loc != null)
 			{
 				string name = loc.name ?? loc.id ?? "";
-				var size = _font.MeasureString(name) * TextScale;
+				var size = _titleFont.MeasureString(name) * TextScale;
 				var pos = new Vector2(rightRect.X + pad, rightRect.Y + System.Math.Max(0, (rightRect.Height - (int)System.Math.Ceiling(size.Y)) / 2));
-				_spriteBatch.DrawString(_font, name, pos, Color.White * alpha01, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+				_spriteBatch.DrawString(_titleFont, name, pos, Color.White * alpha01, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
 			}
 		}
 
@@ -575,9 +577,9 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Title
 			string questTitle = title ?? "Quest";
-			var qSize = _font.MeasureString(questTitle) * QuestTitleScale;
+			var qSize = _titleFont.MeasureString(questTitle) * QuestTitleScale;
 			var qPos = new Vector2(inner.X + (inner.Width - qSize.X) / 2f, inner.Y);
-			_spriteBatch.DrawString(_font, questTitle, qPos, Color.White * alpha01, 0f, Vector2.Zero, QuestTitleScale, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_titleFont, questTitle, qPos, Color.White * alpha01, 0f, Vector2.Zero, QuestTitleScale, SpriteEffects.None, 0f);
 			int enemiesTop = (int)System.Math.Round(qPos.Y + qSize.Y + pad);
 			
 			// Calculate space needed for tribulations if present
@@ -599,8 +601,8 @@ namespace Crusaders30XX.ECS.Systems
 					var trib = tribulations[i];
 					if (!string.IsNullOrEmpty(trib.text))
 					{
-						var wrappedLines = TextUtils.WrapText(_font, trib.text, textScale, maxTextWidth);
-						maxTextHeight += wrappedLines.Count * (int)System.Math.Ceiling(_font.MeasureString("A").Y * textScale);
+						var wrappedLines = TextUtils.WrapText(_contentFont, trib.text, textScale, maxTextWidth);
+						maxTextHeight += wrappedLines.Count * (int)System.Math.Ceiling(_contentFont.MeasureString("A").Y * textScale);
 						if (i < tribulations.Count - 1)
 						{
 							maxTextHeight += lineSpacing;
@@ -620,8 +622,8 @@ namespace Crusaders30XX.ECS.Systems
 				int rewardsLineHeight = System.Math.Max(1, RewardsDivisionLineHeight);
 				float coinScaleEst = MathHelper.Clamp(RewardCoinScale, 0.1f, 2f);
 				float rewardsTextScale = MathHelper.Clamp(RewardsTextScale, 0.1f, 2f);
-				int coinHeightEst = _goldTexture != null ? (int)System.Math.Round(_goldTexture.Height * coinScaleEst) : (int)System.Math.Ceiling(_font.MeasureString("A").Y * rewardsTextScale);
-				int textHeightEst = (int)System.Math.Ceiling(_font.MeasureString("A").Y * rewardsTextScale);
+				int coinHeightEst = _goldTexture != null ? (int)System.Math.Round(_goldTexture.Height * coinScaleEst) : (int)System.Math.Ceiling(_contentFont.MeasureString("A").Y * rewardsTextScale);
+				int textHeightEst = (int)System.Math.Ceiling(_contentFont.MeasureString("A").Y * rewardsTextScale);
 				int rowHeightEst = System.Math.Max(coinHeightEst, textHeightEst);
 				rewardsSpace = rewardsVert + rewardsLineHeight + System.Math.Max(0, RewardsVerticalSpacing / 2) + pad + rowHeightEst;
 			}
@@ -715,7 +717,7 @@ namespace Crusaders30XX.ECS.Systems
 				// Draw tribulation text(s) below with wrapping
 				int textX = inner.X;
 				int currentY = tribulationTextTop;
-				float lineHeight = _font.MeasureString("A").Y * textScale;
+				float lineHeight = _contentFont.MeasureString("A").Y * textScale;
 				
 				for (int i = 0; i < tribulations.Count; i++)
 				{
@@ -723,7 +725,7 @@ namespace Crusaders30XX.ECS.Systems
 					if (!string.IsNullOrEmpty(trib.text))
 					{
 						// Wrap text to fit available width
-						var wrappedLines = TextUtils.WrapText(_font, trib.text, textScale, maxTextWidth);
+						var wrappedLines = TextUtils.WrapText(_contentFont, trib.text, textScale, maxTextWidth);
 						
 						foreach (var line in wrappedLines)
 						{
@@ -739,7 +741,7 @@ namespace Crusaders30XX.ECS.Systems
 								return; // Stop drawing if we've run out of space
 							}
 							
-							_spriteBatch.DrawString(_font, line, new Vector2(textX, currentY), Color.White * alpha01, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+							_spriteBatch.DrawString(_contentFont, line, new Vector2(textX, currentY), Color.White * alpha01, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
 							currentY += (int)System.Math.Ceiling(lineHeight);
 						}
 						
@@ -804,7 +806,7 @@ namespace Crusaders30XX.ECS.Systems
 					if (rowTop < inner.Bottom)
 					{
 						string amountText = rewardGold.ToString();
-						var amountSize = _font.MeasureString(amountText) * textScale;
+						var amountSize = _contentFont.MeasureString(amountText) * textScale;
 						int coinW = _goldTexture != null ? (int)System.Math.Round(_goldTexture.Width * coinScale) : 0;
 						int coinH = _goldTexture != null ? (int)System.Math.Round(_goldTexture.Height * coinScale) : 0;
 						int rowH = System.Math.Max((int)System.Math.Ceiling(amountSize.Y), coinH);
@@ -812,7 +814,7 @@ namespace Crusaders30XX.ECS.Systems
 						int rewardsStartX = inner.X + (inner.Width - rewardsTotalW) / 2;
 						int textX = rewardsStartX;
 						int textY = rowTop + (rowH - (int)System.Math.Ceiling(amountSize.Y)) / 2;
-						_spriteBatch.DrawString(_font, amountText, new Vector2(textX, textY), Color.White * alpha01, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+							_spriteBatch.DrawString(_contentFont, amountText, new Vector2(textX, textY), Color.White * alpha01, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
 
 						if (_goldTexture != null && coinW > 0 && coinH > 0)
 						{

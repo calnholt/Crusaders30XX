@@ -4,6 +4,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -17,7 +18,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.ContentFont;
 
 		[DebugEditable(DisplayName = "Duration (s)", Step = 0.1f, Min = 0.2f, Max = 10f)]
 		public float DurationSec { get; set; } = 1.0f;
@@ -54,12 +55,11 @@ namespace Crusaders30XX.ECS.Systems
 		private float _elapsed = 0f;
 		private bool _isActive = false;
 
-		public CantPlayCardMessageSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+		public CantPlayCardMessageSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_font = font;
 			EventManager.Subscribe<CantPlayCardMessage>(OnCantPlay);
 		}
 

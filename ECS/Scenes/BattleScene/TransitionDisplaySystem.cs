@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -15,7 +16,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly Texture2D _pixel;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.TitleFont;
 
 		// Animation state
 		private enum Phase { Idle, WipeIn, Hold, WipeOut }
@@ -39,12 +40,11 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Pulse Amplitude", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float PulseAmplitude { get; set; } = 0.05f;
 
-		public TransitionDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+		public TransitionDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_font = font;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			EventManager.Subscribe<ShowTransition>(BeginWipeIn);

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -18,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private readonly Dictionary<(int radius, uint edgeKey), Texture2D> _circleTextures = new();
 		private readonly Dictionary<(int outer, int thickness), Texture2D> _ringTextures = new();
 
@@ -44,12 +45,11 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Text Offset Y", Step = 1, Min = -500, Max = 500)]
 		public int TextOffsetY { get; set; } = 0;
 
-		public CourageDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+		public CourageDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_font = font;
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()

@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.ECS.Data.Cards;
 using System;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -19,7 +20,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private readonly Texture2D _pixel;
 		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
 		private readonly List<Entity> _pendingReturn = new();
@@ -63,11 +64,10 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Equip Icon Offset Y", Step = 1, Min = -200, Max = 200)]
 		public int EquipIconOffsetY { get; set; } = 10;
 
-		public AssignedBlockCardsDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font, ContentManager content) : base(em)
+		public AssignedBlockCardsDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content) : base(em)
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
-			_font = font;
 			_content = content;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });

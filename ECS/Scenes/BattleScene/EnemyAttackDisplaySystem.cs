@@ -9,6 +9,7 @@ using Crusaders30XX.ECS.Events;
 using System.Collections.Generic;
 using System;
 using Crusaders30XX.ECS.Utils;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -21,7 +22,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private readonly Texture2D _pixel;
 		private readonly System.Collections.Generic.Dictionary<string, Entity> _effectTooltipUiByKey = new();
 
@@ -164,11 +165,10 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Debris Lifetime (s)", Step = 0.05f, Min = 0f, Max = 2f)]
 		public float DebrisLifetimeSeconds { get; set; } = 0.8f;
 
-		public EnemyAttackDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
+		public EnemyAttackDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
-			_font = font;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			EventManager.Subscribe<DebugCommandEvent>(evt =>

@@ -17,7 +17,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
-		private SpriteFont _font;
 		private Texture2D _fallbackMedalTex;
 		private readonly Dictionary<string, Texture2D> _medalTexById = new Dictionary<string, Texture2D>();
         private Texture2D _roundedCache;
@@ -49,13 +48,12 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Pulse Frequency (Hz)", Step = 0.1f, Min = 0.5f, Max = 8f)]
 		public float PulseFrequencyHz { get; set; } = 1.7f;
 
-		public MedalDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
+		public MedalDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_content = content;
-			_font = font;
 			TryLoadAssets();
 			EventManager.Subscribe<MedalTriggered>(OnMedalTriggered);
 		}

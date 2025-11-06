@@ -12,6 +12,7 @@ using System.Text;
 using System.Reflection;
 using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Utils;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -23,7 +24,7 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
-        private readonly SpriteFont _font;
+        private readonly SpriteFont _font = FontSingleton.ContentFont;
         private readonly SystemManager _systemManager;
         private Texture2D _pixel;
         private MouseState _prevMouse;
@@ -119,12 +120,11 @@ namespace Crusaders30XX.ECS.Systems
         private HoldState _hold;
         private DateTime _copiedStatusUntil = DateTime.MinValue;
 
-        public DebugMenuSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font, SystemManager systemManager)
+        public DebugMenuSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SystemManager systemManager)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
-            _font = font;
             _systemManager = systemManager;
             _pixel = new Texture2D(graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });

@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Diagnostics;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -17,16 +18,14 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
-        private readonly SpriteFont _font;
         private Texture2D _pixel;
         private MouseState _prevMouse;
 
-        public EntityListOverlaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+        public EntityListOverlaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
-            _font = font;
             _pixel = new Texture2D(_graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
             _prevMouse = Mouse.GetState();
@@ -72,29 +71,26 @@ namespace Crusaders30XX.ECS.Systems
             int cursorY = y + overlay.Padding;
             // Title
             string title = "Entities";
-            if (_font != null)
+            _spriteBatch.DrawString(FontSingleton.ContentFont, title, new Vector2(x + overlay.Padding, cursorY), Color.White, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
+            // Copy button at top-right
+            int btnW = 120;
+            int btnH = overlay.RowHeight;
+            var copyRect = new Rectangle(x + w - overlay.Padding - btnW, y + overlay.Padding, btnW, btnH);
+            bool hoverCopy = copyRect.Contains(mouse.Position);
+            var copyBg = hoverCopy ? new Color(120, 120, 120) : new Color(70, 70, 70);
+            Fill(copyRect, copyBg);
+            Stroke(copyRect, Color.White, 1);
+            _spriteBatch.DrawString(FontSingleton.ContentFont, "Copy", new Vector2(copyRect.X + 10, copyRect.Y + 3), Color.White, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
+            if (click && hoverCopy)
             {
-                _spriteBatch.DrawString(_font, title, new Vector2(x + overlay.Padding, cursorY), Color.White, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
-                // Copy button at top-right
-                int btnW = 120;
-                int btnH = overlay.RowHeight;
-                var copyRect = new Rectangle(x + w - overlay.Padding - btnW, y + overlay.Padding, btnW, btnH);
-                bool hoverCopy = copyRect.Contains(mouse.Position);
-                var copyBg = hoverCopy ? new Color(120, 120, 120) : new Color(70, 70, 70);
-                Fill(copyRect, copyBg);
-                Stroke(copyRect, Color.White, 1);
-                _spriteBatch.DrawString(_font, "Copy", new Vector2(copyRect.X + 10, copyRect.Y + 3), Color.White, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
-                if (click && hoverCopy)
-                {
-                    string export = BuildEntityListExport();
-                    TryCopyToClipboard(export);
-                }
-                cursorY += (int)Math.Round(_font.LineSpacing * overlay.TextScale) + overlay.Padding;
+                string export = BuildEntityListExport();
+                TryCopyToClipboard(export);
             }
+            cursorY += (int)Math.Round(FontSingleton.ContentFont.LineSpacing * overlay.TextScale) + overlay.Padding;
 
             // Header row
             string hdr = "ID   Name";
-            _spriteBatch.DrawString(_font, hdr, new Vector2(x + overlay.Padding, cursorY), Color.LightGreen, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
+            _spriteBatch.DrawString(FontSingleton.ContentFont, hdr, new Vector2(x + overlay.Padding, cursorY), Color.LightGreen, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
             cursorY += overlay.RowHeight;
 
             int visibleTop = y + overlay.Padding;
@@ -115,7 +111,7 @@ namespace Crusaders30XX.ECS.Systems
 
                 // First line: ID and Name
                 string line1 = $"{e.Id,3}   {e.Name}";
-                _spriteBatch.DrawString(_font, line1, new Vector2(x + overlay.Padding, rowY), Color.White, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
+                _spriteBatch.DrawString(FontSingleton.ContentFont, line1, new Vector2(x + overlay.Padding, rowY), Color.White, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
 
                 // Second line: component list
                 var componentNames = e.GetComponentTypes()
@@ -123,7 +119,7 @@ namespace Crusaders30XX.ECS.Systems
                     .Select(t => t.Name);
                 string line2 = "- " + string.Join(", ", componentNames);
                 int line2Y = rowY + overlay.RowHeight;
-                _spriteBatch.DrawString(_font, line2, new Vector2(x + overlay.Padding + 20, line2Y), Color.LightGray, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
+                _spriteBatch.DrawString(FontSingleton.ContentFont, line2, new Vector2(x + overlay.Padding + 20, line2Y), Color.LightGray, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
             }
 
             _prevMouse = mouse;

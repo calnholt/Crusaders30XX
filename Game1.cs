@@ -10,6 +10,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using System.Linq;
 using Crusaders30XX.ECS.Systems;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX;
 
@@ -17,7 +18,6 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
-    private SpriteFont _font;
     private RasterizerState _spriteRasterizer;
     private DebugMenuSystem _debugMenuSystem;
     private EntityListOverlaySystem _entityListOverlaySystem;
@@ -36,7 +36,7 @@ public class Game1 : Game
     private HintTooltipDisplaySystem _hintTooltipDisplaySystem;
     private CardTooltipDisplaySystem _cardTooltipDisplaySystem;
     private ProfilerSystem _profilerSystem;
-    private LocationSelectDisplaySystem _worldMapSystem;
+    // private LocationSelectDisplaySystem _worldMapSystem;
     private ParallaxLayerSystem _parallaxLayerSystem;
     private UIElementHighlightSystem _uiElementHighlightSystem;
     private CursorSystem _cursorSystem;
@@ -106,8 +106,8 @@ public class Game1 : Game
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _spriteRasterizer = new RasterizerState { ScissorTestEnable = true, CullMode = CullMode.None };
 
-        // Load the NewRocker SpriteFont
-        _font = Content.Load<SpriteFont>("NewRocker");
+        // Initialize FontSingleton with both fonts
+        FontSingleton.Initialize(Content);
 
         // Seed a SceneState entity
         var sceneEntity = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
@@ -118,27 +118,27 @@ public class Game1 : Game
         }
         EntityFactory.CreateCardVisualSettings(_world);
         // Add parent scene systems only
-        _titleMenuDisplaySystem = new TitleMenuDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
-        _menuSceneSystem = new InternalQueueEventsSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
-        _battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
-        _locationSceneSystem = new LocationSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
-        _customizationRootSystem = new CustomizationRootSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content, _font);
-        _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, _world.SystemManager);
-        _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
-        _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
-        _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font, Content);
-        _dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
+        _titleMenuDisplaySystem = new TitleMenuDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _menuSceneSystem = new InternalQueueEventsSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
+        _locationSceneSystem = new LocationSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
+        _customizationRootSystem = new CustomizationRootSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
+        _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _world.SystemManager);
+        _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _inputSystem = new InputSystem(_world.EntityManager);
-        _tooltipTextDisplaySystem = new TooltipTextDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
-        _hintTooltipDisplaySystem = new HintTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
+        _tooltipTextDisplaySystem = new TooltipTextDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _hintTooltipDisplaySystem = new HintTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _cardTooltipDisplaySystem = new CardTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
-        _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
-        _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content, _font);
+        _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        // _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
-        _hotKeySystem = new HotKeySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _hotKeySystem = new HotKeySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _hotKeyProgressRingSystem = new HotKeyProgressRingSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _world.SystemManager);
         _parallaxLayerSystem = new ParallaxLayerSystem(_world.EntityManager, GraphicsDevice);
-        _uiElementBorderDebugSystem = new UIElementBorderDebugSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _font);
+        _uiElementBorderDebugSystem = new UIElementBorderDebugSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
         _world.AddSystem(_titleMenuDisplaySystem);
@@ -157,7 +157,7 @@ public class Game1 : Game
         _world.AddSystem(_hintTooltipDisplaySystem);
         _world.AddSystem(_cardTooltipDisplaySystem);
         _world.AddSystem(_profilerSystem);
-        _world.AddSystem(_worldMapSystem);
+        // _world.AddSystem(_worldMapSystem);
         _world.AddSystem(_cursorSystem);
         _world.AddSystem(_hotKeySystem);
         _world.AddSystem(_hotKeyProgressRingSystem);
@@ -313,7 +313,7 @@ public class Game1 : Game
                 _spriteBatch.End();
                 _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, _spriteRasterizer);
                 FrameProfiler.Measure("UIElementHighlightSystem.Draw", _uiElementHighlightSystem.Draw);
-                FrameProfiler.Measure("LocationSelectDisplaySystem.Draw", _worldMapSystem.Draw);
+                // FrameProfiler.Measure("LocationSelectDisplaySystem.Draw", _worldMapSystem.Draw);
                 _spriteBatch.End();
                 // Resume default sampling for overlays and other UI
                 _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);

@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -71,12 +72,12 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Show HowTo Button", Step = 1, Min = 0, Max = 1)]
 		public int ShowHowToButton { get; set; } = 1;
 
-		public InternalQueueEventsSceneSystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content, SpriteFont font) : base(em)
+		public InternalQueueEventsSceneSystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content) : base(em)
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
 			_content = content;
-			_font = font;
+			_font = FontSingleton.TitleFont;
 			_prevMouse = Mouse.GetState();
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });

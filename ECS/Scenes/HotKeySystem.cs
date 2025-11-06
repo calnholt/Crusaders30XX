@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -33,12 +34,12 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.05f, Max = 2.5f)]
         public float TextScale { get; set; } = 0.15f;
 
-        public HotKeySystem(EntityManager entityManager, GraphicsDevice gd, SpriteBatch sb, SpriteFont font)
+        public HotKeySystem(EntityManager entityManager, GraphicsDevice gd, SpriteBatch sb)
             : base(entityManager)
         {
             _graphicsDevice = gd;
             _spriteBatch = sb;
-            _font = font;
+            _font = FontSingleton.ContentFont;
             _circleTexSmall = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, HintRadius);
             _prevKeyboardState = Keyboard.GetState();
             

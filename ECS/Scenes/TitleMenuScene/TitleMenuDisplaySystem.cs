@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -14,7 +15,6 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font;
 		private Texture2D _pixel;
 		private float _t;
 		private MouseState _prevMouse;
@@ -43,12 +43,11 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Background Alpha", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float BackgroundAlpha { get; set; } = 1f;
 
-		public TitleMenuDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+		public TitleMenuDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_font = font;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			_prevMouse = Mouse.GetState();
@@ -126,7 +125,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Compute scale from viewport width
 			string text = TitleText ?? string.Empty;
-			var baseSize = _font.MeasureString(text);
+			var baseSize = FontSingleton.TitleFont.MeasureString(text);
 			float targetWidth = MathHelper.Clamp(TargetWidthPercent, 0.1f, 1f) * w;
 			float scale = baseSize.X > 0.001f ? targetWidth / baseSize.X : 1f;
 			scale = MathHelper.Clamp(scale, System.Math.Max(0.01f, MinTextScale), System.Math.Max(MinTextScale, MaxTextScale));
@@ -139,7 +138,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Center text
 			var size = baseSize * scale;
 			var pos = new Vector2(w / 2f - size.X / 2f + TextOffsetX, h / 2f - size.Y / 2f + TextOffsetY);
-			_spriteBatch.DrawString(_font, text, pos, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(FontSingleton.TitleFont, text, pos, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 		}
 	}
 }

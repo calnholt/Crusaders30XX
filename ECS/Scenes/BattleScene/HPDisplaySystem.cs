@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -26,7 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 		private int _cachedRoundedWidth;
 		private int _cachedRoundedHeight;
 		private int _cachedCornerRadius;
-		private SpriteFont _font;
+		private SpriteFont _font = FontSingleton.ContentFont;
 		private class FillAnimState { public float Start; public float End; public float Displayed; public float Elapsed; public float Duration; }
 		private readonly Dictionary<int, FillAnimState> _animByEntityId = new Dictionary<int, FillAnimState>();
 		private float _accumSeconds;
@@ -103,12 +104,11 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Highlight Offset Y", Step = 1, Min = -200, Max = 200)]
 		public int HighlightOffsetY { get; set; } = 0;
 
-		public HPDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+		public HPDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_font = font;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 		}

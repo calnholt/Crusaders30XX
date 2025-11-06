@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -50,12 +51,12 @@ namespace Crusaders30XX.ECS.Systems
 		private class FadeState { public float Alpha01; public bool TargetVisible; public Rectangle Rect; public string Text; }
 		private readonly Dictionary<int, FadeState> _fadeByEntityId = new();
 
-		public TooltipTextDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+		public TooltipTextDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_font = font;
+			_font = FontSingleton.ContentFont;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 		}

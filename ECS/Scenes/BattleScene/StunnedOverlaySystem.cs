@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -11,14 +12,13 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly SpriteBatch _spriteBatch;
 		private readonly GraphicsDevice _graphicsDevice;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private float _timer;
 
-		public StunnedOverlaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
+		public StunnedOverlaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
-			_font = font;
 			EventManager.Subscribe<ShowStunnedOverlay>(e => { _timer = 1.0f; });
 		}
 

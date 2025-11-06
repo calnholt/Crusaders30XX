@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -20,7 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private readonly System.Collections.Generic.Dictionary<string, Texture2D> _chunkFilledCache = new();
 		private readonly System.Collections.Generic.Dictionary<string, Texture2D> _chunkEmptyCache = new();
 
@@ -46,12 +47,11 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -2000, Max = 2000)]
 		public int AnchorOffsetY { get; set; } = 188; // align with Courage default
 
-		public TemperanceDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font)
+		public TemperanceDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_font = font;
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()

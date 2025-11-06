@@ -17,7 +17,6 @@ namespace Crusaders30XX.ECS.Systems
     private readonly GraphicsDevice _graphicsDevice;
     private readonly SpriteBatch _spriteBatch;
     private readonly ContentManager _content;
-    private readonly SpriteFont _font;
     private bool _firstLoad = true;
 	private LocationMapDisplaySystem _locationMapDisplaySystem;
 	private PointOfInterestDisplaySystem _pointOfInterestDisplaySystem;
@@ -34,14 +33,13 @@ namespace Crusaders30XX.ECS.Systems
 		private int _rtW;
 		private int _rtH;
 
-    public LocationSceneSystem(EntityManager entityManager, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font) : base(entityManager)
+    public LocationSceneSystem(EntityManager entityManager, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content) : base(entityManager)
     {
       _systemManager = sm;
 			_world = world;
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_content = content;
-      _font = font;
       EventManager.Subscribe<LoadSceneEvent>(_ => {
         if (_.Scene != SceneId.Location) return;
         AddLocationSystems();
@@ -144,7 +142,7 @@ namespace Crusaders30XX.ECS.Systems
 			_firstLoad = false;
 			_locationMapDisplaySystem = new LocationMapDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_locationMapDisplaySystem);
-			_pointOfInterestDisplaySystem = new PointOfInterestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
+			_pointOfInterestDisplaySystem = new PointOfInterestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_pointOfInterestDisplaySystem);
 			_poiCutsceneSystem = new LocationPoiRevealCutsceneSystem(_world.EntityManager);
 			_world.AddSystem(_poiCutsceneSystem);
@@ -152,17 +150,17 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_fogDisplaySystem);
 			_poiRadiusDebugDisplaySystem = new POIRadiusDebugDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_poiRadiusDebugDisplaySystem);
-			_tooltipQuestDisplaySystem = new TooltipQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
+			_tooltipQuestDisplaySystem = new TooltipQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_tooltipQuestDisplaySystem);
 			_hellRiftIndicatorDisplaySystem = new HellRiftIndicatorDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_hellRiftIndicatorDisplaySystem);
-			_customizeButtonDisplaySystem = new CustomizeButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
+			_customizeButtonDisplaySystem = new CustomizeButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_customizeButtonDisplaySystem);
 			_miniMapDisplaySystem = new MiniMapDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_miniMapDisplaySystem);
-			_locationNameDisplaySystem = new LocationNameDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
+			_locationNameDisplaySystem = new LocationNameDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_locationNameDisplaySystem);
-			_currencyDisplaySystem = new CurrencyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
+			_currencyDisplaySystem = new CurrencyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_currencyDisplaySystem);
     }
 

@@ -37,13 +37,29 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/Poison.fx
 
-#begin NewRocker.spritefont
+#begin Fonts/NewRocker.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Color
 /processorParam:Smoothing=Normal
-/build:NewRocker.spritefont
+/build:Fonts/NewRocker.spritefont
+
+#begin Fonts/GermaniaOne.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/processorParam:Smoothing=Normal
+/build:Fonts/GermaniaOne.spritefont   
+
+#begin Fonts/Grenze.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/processorParam:Smoothing=Normal
+/build:Fonts/Grenze.spritefont   
 
 #begin cursor_cross.png
 /importer:TextureImporter

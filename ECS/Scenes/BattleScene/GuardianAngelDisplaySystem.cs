@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -20,7 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly ContentManager _content;
         private Texture2D _angelTexture;
         private Texture2D _pixel;
-        private SpriteFont _font;
+        private SpriteFont _font = FontSingleton.ContentFont;
 
         private float _t;
 		private float _rot; // smoothed rotation follower (radians)
@@ -143,7 +144,6 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
             // Load shared UI font
-            _font = _content.Load<SpriteFont>("NewRocker");
             // Listen for phase changes to show speech bubbles
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
             EventManager.Subscribe<TriggerTemperance>(OnTriggerTemperance);

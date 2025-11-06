@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -18,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font;
+		private readonly SpriteFont _font = FontSingleton.TitleFont;
 		private readonly Texture2D _pixel;
 
 		private string _lastContextId = null;
@@ -74,11 +75,10 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Default Timer (s)", Step = 1, Min = 1, Max = 60)]
 		public int DefaultTimerSeconds { get; set; } = 15;
 
-		public AmbushDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, SpriteFont font) : base(em)
+		public AmbushDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
-			_font = font;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 

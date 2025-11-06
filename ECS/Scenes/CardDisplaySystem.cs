@@ -10,6 +10,7 @@ using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Data.Cards;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -24,7 +25,8 @@ namespace Crusaders30XX.ECS.Systems
         private readonly ContentManager _content;
         private readonly Dictionary<string, Texture2D> _textureCache = new();
         private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
-        private SpriteFont _font;
+        private SpriteFont _nameFont = FontSingleton.TitleFont;
+        private SpriteFont _contentFont = FontSingleton.ContentFont;
         private Texture2D _pixelTexture; // Reuse texture for card backgrounds
         private CardVisualSettings _settings;
 
@@ -60,12 +62,11 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "AP Offset X", Step = 1, Min = -200, Max = 200)]
         public int APOffsetX { get; set; } = 0;
         
-        public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, SpriteFont font, ContentManager content) 
+        public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content) 
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
-            _font = font;
             _content = content;
             
             // Create a single pixel texture that we can reuse
@@ -219,14 +220,14 @@ namespace Crusaders30XX.ECS.Systems
             // Name text (wrapped within card width), rotated with card
             var textColor = isWeaponDetected ? Color.Black : GetCardTextColor(cardData.Color);
             string displayName = hasDef ? (def.name ?? def.id ?? cardData.CardId) : (cardData.CardId ?? string.Empty);
-            DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, _settings.TextMarginY * visualScale), displayName, textColor, _settings.NameScale * visualScale, visualScale);
+            DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, _settings.TextMarginY * visualScale), displayName, textColor, _settings.NameScale * visualScale, visualScale, _nameFont);
             
             // Draw cost pips (colored circles with yellow outline) under the name
             var defCosts = hasDef ? (def.cost ?? Array.Empty<string>()) : Array.Empty<string>();
             DrawCostPipsScaled(cardCenter, rotation, (int)(_settings.TextMarginX * visualScale), (int)Math.Round((_settings.TextMarginY + 34 * _settings.UIScale) * visualScale), cardData.Color, defCosts, visualScale);
 
             string displayText = hasDef ? (def.text ?? string.Empty) : string.Empty;
-            DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, (_settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)) * visualScale), displayText, textColor, _settings.DescriptionScale * visualScale, visualScale);
+            DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, (_settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)) * visualScale), displayText, textColor, _settings.DescriptionScale * visualScale, visualScale, _contentFont);
             
             // Draw block value and shield icon at bottom-left, but hide for weapons
             bool isWeapon = hasDef && def.isWeapon;
@@ -235,7 +236,7 @@ namespace Crusaders30XX.ECS.Systems
             if (!isWeapon && blockValueToShow > 0)
             {
                 string blockText = blockValueToShow.ToString();
-                var textSize = _font.MeasureString(blockText) * (_settings.BlockNumberScale * visualScale);
+                var textSize = _nameFont.MeasureString(blockText) * (_settings.BlockNumberScale * visualScale);
                 float marginX = _settings.BlockNumberMarginX * visualScale;
                 float marginY = _settings.BlockNumberMarginY * visualScale;
                 float baselineY = _settings.CardHeight * visualScale - marginY;
@@ -277,7 +278,7 @@ namespace Crusaders30XX.ECS.Systems
             // Draw AP cost text at bottom-center: 0AP if free action else 1AP
             bool isFree = GetIsFreeAction(entity);
             string apText = isFree ? "Free" : "1AP";
-            var apSize = _font.MeasureString(apText) * (APTextScale * visualScale);
+            var apSize = _nameFont.MeasureString(apText) * (APTextScale * visualScale);
             float apLocalX = (_settings.CardWidth * visualScale - apSize.X) / 2f + APOffsetX * visualScale;
             float apLocalY = _settings.CardHeight * visualScale - (APBottomMarginY * visualScale) - apSize.Y;
             DrawCardTextRotatedSingleScaled(cardCenter, rotation, new Vector2(apLocalX, apLocalY), apText, textColor, APTextScale * visualScale, visualScale);
@@ -518,12 +519,12 @@ namespace Crusaders30XX.ECS.Systems
         }
         
         // New: draw wrapped text in card-local space rotated with the card
-        private void DrawCardTextWrappedRotatedScaled(Vector2 cardCenterPosition, float rotation, Vector2 localOffsetFromTopLeft, string text, Color color, float scale, float overallScale)
+        private void DrawCardTextWrappedRotatedScaled(Vector2 cardCenterPosition, float rotation, Vector2 localOffsetFromTopLeft, string text, Color color, float scale, float overallScale, SpriteFont font)
         {
             try
             {
                 float maxLineWidth = _settings.CardWidth * overallScale - (_settings.TextMarginX * overallScale * 2);
-                float lineHeight = _font.LineSpacing * scale;
+                float lineHeight = font.LineSpacing * scale;
 
                 // Convert card-local from top-left to local centered coordinates
                 float startLocalX = -_settings.CardWidth * overallScale / 2f + localOffsetFromTopLeft.X;
@@ -540,7 +541,7 @@ namespace Crusaders30XX.ECS.Systems
                     var rotated = new Vector2(local.X * cos - local.Y * sin, local.X * sin + local.Y * cos);
                     var world = cardCenterPosition + rotated;
 
-                    _spriteBatch.DrawString(_font, line, world, color, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                    _spriteBatch.DrawString(font, line, world, color, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
                     currentY += lineHeight;
                 }
             }
@@ -561,7 +562,7 @@ namespace Crusaders30XX.ECS.Systems
                 float sin = (float)Math.Sin(rotation);
                 var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
                 var world = cardCenterPosition + rotated;
-                _spriteBatch.DrawString(_font, text, world, color, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                _spriteBatch.DrawString(_nameFont, text, world, color, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
             }
             catch (Exception ex)
             {
@@ -582,7 +583,7 @@ namespace Crusaders30XX.ECS.Systems
             foreach (var word in words)
             {
                 string testLine = string.IsNullOrEmpty(currentLine) ? word : currentLine + " " + word;
-                float lineWidth = _font.MeasureString(testLine).X * scale;
+                float lineWidth = _nameFont.MeasureString(testLine).X * scale;
 
                 if (lineWidth <= maxLineWidth)
                 {
@@ -603,7 +604,7 @@ namespace Crusaders30XX.ECS.Systems
                         foreach (char c in longWord)
                         {
                             string attempt = partial + c;
-                            if (_font.MeasureString(attempt).X * scale <= maxLineWidth)
+                            if (_nameFont.MeasureString(attempt).X * scale <= maxLineWidth)
                             {
                                 partial = attempt;
                             }
