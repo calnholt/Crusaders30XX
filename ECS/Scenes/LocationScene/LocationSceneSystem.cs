@@ -29,6 +29,7 @@ namespace Crusaders30XX.ECS.Systems
 	private CustomizeButtonDisplaySystem _customizeButtonDisplaySystem;
 	private MiniMapDisplaySystem _miniMapDisplaySystem;
 	private LocationNameDisplaySystem _locationNameDisplaySystem;
+	private CurrencyDisplaySystem _currencyDisplaySystem;
 		private RenderTarget2D _sceneRT;
 		private int _rtW;
 		private int _rtH;
@@ -56,6 +57,7 @@ namespace Crusaders30XX.ECS.Systems
 				_world.RemoveSystem(_customizeButtonDisplaySystem);
 				_world.RemoveSystem(_miniMapDisplaySystem);
 				_world.RemoveSystem(_locationNameDisplaySystem);
+				_world.RemoveSystem(_currencyDisplaySystem);
 				_firstLoad = true;
 				_rtW = 0;
 				_rtH = 0;
@@ -133,6 +135,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("POIRadiusDebugDisplaySystem.Draw", _poiRadiusDebugDisplaySystem.Draw);
 			FrameProfiler.Measure("TooltipQuestDisplaySystem.Draw", _tooltipQuestDisplaySystem.Draw);
 			FrameProfiler.Measure("CustomizeButtonDisplaySystem.Draw", _customizeButtonDisplaySystem.Draw);
+			FrameProfiler.Measure("CurrencyDisplaySystem.Draw", _currencyDisplaySystem.Draw);
 			FrameProfiler.Measure("LocationNameDisplaySystem.Draw", _locationNameDisplaySystem.Draw);
 		}
     private void AddLocationSystems()
@@ -159,6 +162,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_miniMapDisplaySystem);
 			_locationNameDisplaySystem = new LocationNameDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_world.AddSystem(_locationNameDisplaySystem);
+			_currencyDisplaySystem = new CurrencyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _font);
+			_world.AddSystem(_currencyDisplaySystem);
     }
 
     protected override void UpdateEntity(Entity entity, GameTime gameTime)

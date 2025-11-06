@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Reflection;
 using Microsoft.Xna.Framework.Input;
+using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -981,21 +982,25 @@ namespace Crusaders30XX.ECS.Systems
         private void DrawStringScaled(string text, Vector2 position, Color color, float scale)
         {
             if (_font == null || string.IsNullOrEmpty(text)) return;
-            _spriteBatch.DrawString(_font, text, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            string safe = TextUtils.FilterUnsupportedGlyphs(_font, text);
+            if (string.IsNullOrEmpty(safe)) return;
+            _spriteBatch.DrawString(_font, safe, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
 
         private void DrawStringClippedScaled(string text, Vector2 position, Color color, int maxWidth, float scale)
         {
             if (_font == null || string.IsNullOrEmpty(text)) return;
-            float width = _font.MeasureString(text).X * scale;
+            string safeText = TextUtils.FilterUnsupportedGlyphs(_font, text);
+            if (string.IsNullOrEmpty(safeText)) return;
+            float width = _font.MeasureString(safeText).X * scale;
             if (width <= maxWidth)
             {
-                _spriteBatch.DrawString(_font, text, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                _spriteBatch.DrawString(_font, safeText, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
                 return;
             }
             const string ellipsis = "...";
             float ellipsisWidth = _font.MeasureString(ellipsis).X * scale;
-            string s = text;
+            string s = safeText;
             while (s.Length > 0 && _font.MeasureString(s).X * scale + ellipsisWidth > maxWidth)
             {
                 s = s.Substring(0, s.Length - 1);

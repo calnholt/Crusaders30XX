@@ -104,28 +104,31 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_playedInitial = true;
 				_lastPhase = phase.Sub;
-				_transitionActive = true;
-				_transitionJustStarted = true;
-				_transitionT = 0f;
 				_lastTurn = phase.TurnNumber;
 				_transitionText = SubPhaseToString(_lastPhase);
+				bool show = !string.IsNullOrWhiteSpace(_transitionText);
+				_transitionActive = show;
+				_transitionJustStarted = show;
+				if (show) _transitionT = 0f;
 			}
 			else if (_lastTurn != phase.TurnNumber)
 			{
 				_lastPhase = phase.Sub;
 				_lastTurn = phase.TurnNumber;
-				_transitionActive = true;
-				_transitionJustStarted = true;
-				_transitionT = 0f;
 				_transitionText = SubPhaseToString(_lastPhase);
+				bool show2 = !string.IsNullOrWhiteSpace(_transitionText);
+				_transitionActive = show2;
+				_transitionJustStarted = show2;
+				if (show2) _transitionT = 0f;
 			}
 			else if (_lastPhase != phase.Sub)
 			{
 				_lastPhase = phase.Sub;
-				_transitionActive = true;
-				_transitionJustStarted = true;
-				_transitionT = 0f;
 				_transitionText = SubPhaseToString(_lastPhase);
+				bool show3 = !string.IsNullOrWhiteSpace(_transitionText);
+				_transitionActive = show3;
+				_transitionJustStarted = show3;
+				if (show3) _transitionT = 0f;
 			}
 			if (_transitionActive)
 			{
@@ -259,31 +262,34 @@ namespace Crusaders30XX.ECS.Systems
 					}
 					var pDraw = transT.Position;
 					// Draw if banner is still visible on screen (check if any part is visible)
-					if (pDraw.X + tSize.X >= 0 && pDraw.X <= vw + tSize.X)
-					{
-						// Draw trapezoid background
-						float trapezoidWidth = tSize.X + TrapezoidWidthPadding;
-						float trapezoidHeight = tSize.Y + TrapezoidHeightPadding;
-						_trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoid(
-							_graphicsDevice,
-							trapezoidWidth,
-							trapezoidHeight,
-							TrapezoidLeftSideOffset,
-							TrapezoidTopEdgeAngle,
-							TrapezoidRightEdgeAngle,
-							TrapezoidBottomEdgeAngle,
-							TrapezoidLeftEdgeAngle
-						);
-						if (_trapezoidTexture != null)
+						if (pDraw.X + tSize.X >= 0 && pDraw.X <= vw + tSize.X)
 						{
-							Vector2 trapezoidPos = pDraw + new Vector2(TrapezoidOffsetX - TrapezoidWidthPadding / 2f, TrapezoidOffsetY);
-							Vector2 scale = new Vector2(trapezoidWidth / _trapezoidTexture.Width, trapezoidHeight / _trapezoidTexture.Height);
-							_spriteBatch.Draw(_trapezoidTexture, trapezoidPos, null, Color.Black * TrapezoidAlpha, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+							if (!string.IsNullOrWhiteSpace(_transitionText))
+							{
+								// Draw trapezoid background
+								float trapezoidWidth = tSize.X + TrapezoidWidthPadding;
+								float trapezoidHeight = tSize.Y + TrapezoidHeightPadding;
+								_trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoid(
+									_graphicsDevice,
+									trapezoidWidth,
+									trapezoidHeight,
+									TrapezoidLeftSideOffset,
+									TrapezoidTopEdgeAngle,
+									TrapezoidRightEdgeAngle,
+									TrapezoidBottomEdgeAngle,
+									TrapezoidLeftEdgeAngle
+								);
+								if (_trapezoidTexture != null)
+								{
+									Vector2 trapezoidPos = pDraw + new Vector2(TrapezoidOffsetX - TrapezoidWidthPadding / 2f, TrapezoidOffsetY);
+									Vector2 scale = new Vector2(trapezoidWidth / _trapezoidTexture.Width, trapezoidHeight / _trapezoidTexture.Height);
+									_spriteBatch.Draw(_trapezoidTexture, trapezoidPos, null, Color.Black * TrapezoidAlpha, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+								}
+								// simple shadow then text
+								_spriteBatch.DrawString(_font, _transitionText, pDraw + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
+								_spriteBatch.DrawString(_font, _transitionText, pDraw, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
+							}
 						}
-						// simple shadow then text
-						_spriteBatch.DrawString(_font, _transitionText, pDraw + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
-						_spriteBatch.DrawString(_font, _transitionText, pDraw, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
-					}
 				}
 				// Reset the flag after handling the transition start
 				_transitionJustStarted = false;
@@ -311,28 +317,31 @@ namespace Crusaders30XX.ECS.Systems
 					// Draw if banner is still visible on screen (check if any part is visible)
 					if (pDraw.X + tSize.X >= 0 && pDraw.X <= vw + tSize.X)
 					{
-						// Draw trapezoid background
-						float trapezoidWidth = tSize.X + TrapezoidWidthPadding;
-						float trapezoidHeight = tSize.Y + TrapezoidHeightPadding;
-						_trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoid(
-							_graphicsDevice,
-							trapezoidWidth,
-							trapezoidHeight,
-							TrapezoidLeftSideOffset,
-							TrapezoidTopEdgeAngle,
-							TrapezoidRightEdgeAngle,
-							TrapezoidBottomEdgeAngle,
-							TrapezoidLeftEdgeAngle
-						);
-						if (_trapezoidTexture != null)
+						if (!string.IsNullOrWhiteSpace(_transitionText))
 						{
-							Vector2 trapezoidPos = pDraw + new Vector2(TrapezoidOffsetX - TrapezoidWidthPadding / 2f, TrapezoidOffsetY);
-							Vector2 scale = new Vector2(trapezoidWidth / _trapezoidTexture.Width, trapezoidHeight / _trapezoidTexture.Height);
-							_spriteBatch.Draw(_trapezoidTexture, trapezoidPos, null, Color.Black * TrapezoidAlpha, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+							// Draw trapezoid background
+							float trapezoidWidth = tSize.X + TrapezoidWidthPadding;
+							float trapezoidHeight = tSize.Y + TrapezoidHeightPadding;
+							_trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoid(
+								_graphicsDevice,
+								trapezoidWidth,
+								trapezoidHeight,
+								TrapezoidLeftSideOffset,
+								TrapezoidTopEdgeAngle,
+								TrapezoidRightEdgeAngle,
+								TrapezoidBottomEdgeAngle,
+								TrapezoidLeftEdgeAngle
+							);
+							if (_trapezoidTexture != null)
+							{
+								Vector2 trapezoidPos = pDraw + new Vector2(TrapezoidOffsetX - TrapezoidWidthPadding / 2f, TrapezoidOffsetY);
+								Vector2 scale = new Vector2(trapezoidWidth / _trapezoidTexture.Width, trapezoidHeight / _trapezoidTexture.Height);
+								_spriteBatch.Draw(_trapezoidTexture, trapezoidPos, null, Color.Black * TrapezoidAlpha, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+							}
+							// simple shadow then text
+							_spriteBatch.DrawString(_font, _transitionText, pDraw + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
+							_spriteBatch.DrawString(_font, _transitionText, pDraw, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
 						}
-						// simple shadow then text
-						_spriteBatch.DrawString(_font, _transitionText, pDraw + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
-						_spriteBatch.DrawString(_font, _transitionText, pDraw, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
 					}
 				}
 			}
@@ -375,15 +384,21 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugAction("Replay Transition Animation")]
 		public void Debug_ReplayTransitionAnimation()
 		{
-			_transitionActive = true;
-			_transitionJustStarted = true;
-			_transitionT = 0f;
-			// Get current phase to set the text
+			// Get current phase to set the text and gate animation by text presence
 			var stateEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
 			if (stateEntity != null)
 			{
 				var phase = stateEntity.GetComponent<PhaseState>();
 				_transitionText = SubPhaseToString(phase.Sub);
+				bool show = !string.IsNullOrWhiteSpace(_transitionText);
+				_transitionActive = show;
+				_transitionJustStarted = show;
+				if (show) _transitionT = 0f;
+			}
+			else
+			{
+				_transitionActive = false;
+				_transitionJustStarted = false;
 			}
 		}
 	}
