@@ -25,6 +25,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Dictionary<(int w, int h, bool right, int border), Texture2D> _triangleCache = new();
 		private Texture2D _pixel;
 		private Texture2D _chaliceTexture;
+		private Texture2D _treasureChestTexture;
+		private Texture2D _goldTexture;
 		private Entity _tooltipEntity;
 
 		[DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 40)]
@@ -139,6 +141,31 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Tribulation Division Line Padding", Step = 1, Min = 0, Max = 60)]
 		public int TribulationDivisionLinePadding { get; set; } = 30;
 
+		// Rewards section controls
+		[DebugEditable(DisplayName = "Rewards Vertical Spacing", Step = 1, Min = 0, Max = 120)]
+		public int RewardsVerticalSpacing { get; set; } = 40;
+
+		[DebugEditable(DisplayName = "Rewards Text Scale", Step = 0.01f, Min = 0.1f, Max = 2f)]
+		public float RewardsTextScale { get; set; } = 0.18f;
+
+		[DebugEditable(DisplayName = "Reward Number-Icon Gap", Step = 1, Min = 0, Max = 120)]
+		public int RewardNumberIconGap { get; set; } = 8;
+
+		[DebugEditable(DisplayName = "Rewards Division Line Width (%)", Step = 1, Min = 0, Max = 100)]
+		public int RewardsDivisionLineWidthPercent { get; set; } = 60;
+
+		[DebugEditable(DisplayName = "Rewards Division Line Height", Step = 1, Min = 1, Max = 10)]
+		public int RewardsDivisionLineHeight { get; set; } = 2;
+
+		[DebugEditable(DisplayName = "Rewards Division Line Padding", Step = 1, Min = 0, Max = 60)]
+		public int RewardsDivisionLinePadding { get; set; } = 30;
+
+		[DebugEditable(DisplayName = "Rewards Chest Icon Scale", Step = 0.01f, Min = 0.1f, Max = 2f)]
+		public float RewardsChestIconScale { get; set; } = 0.2f;
+
+		[DebugEditable(DisplayName = "Reward Coin Scale", Step = 0.01f, Min = 0.1f, Max = 2f)]
+		public float RewardCoinScale { get; set; } = 0.2f;
+
 		private const string TooltipEntityName = "UI_QuestTooltip";
 
 		public TooltipQuestDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content, SpriteFont font)
@@ -151,6 +178,8 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			try { _chaliceTexture = _content.Load<Texture2D>("chalice"); } catch { _chaliceTexture = null; }
+			try { _treasureChestTexture = _content.Load<Texture2D>("treasure_chest"); } catch { _treasureChestTexture = null; }
+			try { _goldTexture = _content.Load<Texture2D>("gold"); } catch { _goldTexture = null; }
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -190,6 +219,8 @@ namespace Crusaders30XX.ECS.Systems
 			string title = null;
 			List<LocationEventDefinition> events = null;
 			List<TribulationDefinition> tribulations = null;
+			int rewardGold = 0;
+			bool isCompleted = false;
 			Rectangle? tooltipRect = null;
 
 			if (hovered != null)
@@ -229,6 +260,9 @@ namespace Crusaders30XX.ECS.Systems
 								events = loc.pointsOfInterest[questIdx].events;
 								tribulations = loc.pointsOfInterest[questIdx].tribulations;
 								title = string.IsNullOrWhiteSpace(loc.pointsOfInterest[questIdx].name) ? ("Quest " + (questIdx + 1)) : loc.pointsOfInterest[questIdx].name;
+								rewardGold = System.Math.Max(0, loc.pointsOfInterest[questIdx].rewardGold);
+								var questId = loc.pointsOfInterest[questIdx].id;
+								isCompleted = (!string.IsNullOrEmpty(questId) && SaveCache.IsQuestCompleted(locId, questId)) || (poi?.IsCompleted ?? false);
 								shouldShowTooltip = true;
 							}
 						}
@@ -238,7 +272,7 @@ namespace Crusaders30XX.ECS.Systems
 				// Calculate tooltip rect after we have the content
 				if (shouldShowTooltip && !string.IsNullOrEmpty(locationIdTop) && events != null && events.Count > 0)
 				{
-					tooltipRect = ComputeTooltipRect(hovered.UI.Bounds, hovered.T, title, events, tribulations);
+					tooltipRect = ComputeTooltipRect(hovered.UI.Bounds, hovered.T, title, events, tribulations, rewardGold, isCompleted);
 				}
 			}
 
@@ -251,7 +285,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					_tooltipEntity = EntityManager.CreateEntity(TooltipEntityName);
 					EntityManager.AddComponent(_tooltipEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 });
-					EntityManager.AddComponent(_tooltipEntity, new QuestTooltip { LocationId = locationIdTop, Title = title, Events = events, Tribulations = tribulations, Alpha01 = 0f, TargetVisible = true });
+					EntityManager.AddComponent(_tooltipEntity, new QuestTooltip { LocationId = locationIdTop, Title = title, Events = events, Tribulations = tribulations, RewardGold = rewardGold, IsCompleted = isCompleted, Alpha01 = 0f, TargetVisible = true });
 					EntityManager.AddComponent(_tooltipEntity, new UIElement { Bounds = rect, IsInteractable = true });
 					EntityManager.AddComponent(_tooltipEntity, new HotKey { Button = FaceButton.X, RequiresHold = true, ParentEntity = hovered.E });
 				}
@@ -270,6 +304,8 @@ namespace Crusaders30XX.ECS.Systems
 						questTooltip.Title = title;
 						questTooltip.Events = events;
 						questTooltip.Tribulations = tribulations;
+						questTooltip.RewardGold = rewardGold;
+						questTooltip.IsCompleted = isCompleted;
 						questTooltip.TargetVisible = true;
 					}
 					var ui = _tooltipEntity.GetComponent<UIElement>();
@@ -328,14 +364,14 @@ namespace Crusaders30XX.ECS.Systems
 			var rect = ui.Bounds;
 			DrawTooltipBox(rect, questTooltip.Alpha01);
 			DrawHeader(questTooltip.LocationId, rect, questTooltip.Alpha01);
-			DrawQuestContent(rect, questTooltip.Alpha01, questTooltip.Title, questTooltip.Events, questTooltip.Tribulations);
+			DrawQuestContent(rect, questTooltip.Alpha01, questTooltip.Title, questTooltip.Events, questTooltip.Tribulations, questTooltip.RewardGold, questTooltip.IsCompleted);
 		}
 
 
-		private Rectangle ComputeTooltipRect(Rectangle anchor, Transform t, string title, List<LocationEventDefinition> events, List<TribulationDefinition> tribulations)
+		private Rectangle ComputeTooltipRect(Rectangle anchor, Transform t, string title, List<LocationEventDefinition> events, List<TribulationDefinition> tribulations, int rewardGold, bool isCompleted)
 		{
 			int w = System.Math.Max(100, BoxWidth);
-			int h = CalculateTooltipHeight(w, title, events, tribulations);
+			int h = CalculateTooltipHeight(w, title, events, tribulations, rewardGold, isCompleted);
 			int gap = System.Math.Max(0, Gap);
 			int viewportW = _graphicsDevice.Viewport.Width;
 			int viewportH = _graphicsDevice.Viewport.Height;
@@ -351,7 +387,7 @@ namespace Crusaders30XX.ECS.Systems
 			return rect;
 		}
 
-		private int CalculateTooltipHeight(int width, string title, List<LocationEventDefinition> events, List<TribulationDefinition> tribulations)
+		private int CalculateTooltipHeight(int width, string title, List<LocationEventDefinition> events, List<TribulationDefinition> tribulations, int rewardGold, bool isCompleted)
 		{
 			int pad = System.Math.Max(0, Padding);
 			int headerHeight = System.Math.Max(12, HeaderHeight);
@@ -436,6 +472,25 @@ namespace Crusaders30XX.ECS.Systems
 				totalHeight += maxTextHeight;
 			}
 			
+			// Rewards section (only if reward exists and not completed)
+			if (rewardGold > 0 && !isCompleted)
+			{
+				int rewardsVert = System.Math.Max(0, RewardsVerticalSpacing);
+				int divisionLineHeight = System.Math.Max(1, RewardsDivisionLineHeight);
+				float coinScale = MathHelper.Clamp(RewardCoinScale, 0.1f, 2f);
+				float textScale = MathHelper.Clamp(RewardsTextScale, 0.1f, 2f);
+				int coinHeight = _goldTexture != null ? (int)System.Math.Round(_goldTexture.Height * coinScale) : (int)System.Math.Ceiling(_font.MeasureString("A").Y * textScale);
+				int textHeight = (int)System.Math.Ceiling(_font.MeasureString("A").Y * textScale);
+				int rowHeight = System.Math.Max(coinHeight, textHeight);
+
+				// vertical spacing + line + half-spacing + padding + row height
+				totalHeight += rewardsVert;
+				totalHeight += divisionLineHeight;
+				totalHeight += System.Math.Max(0, RewardsVerticalSpacing / 2);
+				totalHeight += pad;
+				totalHeight += rowHeight;
+			}
+
 			// Padding at bottom
 			totalHeight += pad;
 			
@@ -508,7 +563,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void DrawQuestContent(Rectangle rect, float alpha01, string title, List<LocationEventDefinition> questDefs, List<TribulationDefinition> tribulations)
+		private void DrawQuestContent(Rectangle rect, float alpha01, string title, List<LocationEventDefinition> questDefs, List<TribulationDefinition> tribulations, int rewardGold, bool isCompleted)
 		{
 			if (questDefs == null || questDefs.Count == 0) return;
 
@@ -556,8 +611,22 @@ namespace Crusaders30XX.ECS.Systems
 				int spacingAfterDivisionLine = System.Math.Max(0, TribulationVerticalSpacing / 2);
 				tribulationSpace = vertSpacing + divisionLineHeight + spacingAfterDivisionLine + pad + maxTextHeight;
 			}
+
+			// Calculate space needed for rewards if present (so enemies area stays consistent)
+			int rewardsSpace = 0;
+			if (rewardGold > 0 && !isCompleted)
+			{
+				int rewardsVert = System.Math.Max(0, RewardsVerticalSpacing);
+				int rewardsLineHeight = System.Math.Max(1, RewardsDivisionLineHeight);
+				float coinScaleEst = MathHelper.Clamp(RewardCoinScale, 0.1f, 2f);
+				float rewardsTextScale = MathHelper.Clamp(RewardsTextScale, 0.1f, 2f);
+				int coinHeightEst = _goldTexture != null ? (int)System.Math.Round(_goldTexture.Height * coinScaleEst) : (int)System.Math.Ceiling(_font.MeasureString("A").Y * rewardsTextScale);
+				int textHeightEst = (int)System.Math.Ceiling(_font.MeasureString("A").Y * rewardsTextScale);
+				int rowHeightEst = System.Math.Max(coinHeightEst, textHeightEst);
+				rewardsSpace = rewardsVert + rewardsLineHeight + System.Math.Max(0, RewardsVerticalSpacing / 2) + pad + rowHeightEst;
+			}
 			
-			int enemiesHeight = System.Math.Max(1, inner.Bottom - enemiesTop - tribulationSpace);
+			int enemiesHeight = System.Math.Max(1, inner.Bottom - enemiesTop - tribulationSpace - rewardsSpace);
 			var enemiesRect = new Rectangle(inner.X, enemiesTop, inner.Width, enemiesHeight);
 
 			// load enemy textures
@@ -678,6 +747,78 @@ namespace Crusaders30XX.ECS.Systems
 						if (i < tribulations.Count - 1)
 						{
 							currentY += lineSpacing;
+						}
+					}
+				}
+			}
+
+			// Draw rewards divider and centered amount + coin (Location only logic handled by rewardGold/isCompleted)
+			if (rewardGold > 0 && !isCompleted)
+			{
+				int rewardsVert = System.Math.Max(0, RewardsVerticalSpacing);
+				int divisionLineHeight = System.Math.Max(1, RewardsDivisionLineHeight);
+				int divisionLinePadding = System.Math.Max(0, RewardsDivisionLinePadding);
+				float chestScale = MathHelper.Clamp(RewardsChestIconScale, 0.1f, 2f);
+				float coinScale = MathHelper.Clamp(RewardCoinScale, 0.1f, 2f);
+				float textScale = MathHelper.Clamp(RewardsTextScale, 0.1f, 2f);
+
+				// Top of the rewards section based on reserved rewardsSpace
+				int rewardSectionTop = inner.Bottom - rewardsSpace;
+				int rewardDivisionLineY = rewardSectionTop + rewardsVert;
+				if (rewardDivisionLineY < inner.Bottom)
+				{
+					// Chest icon size
+					int chestW = _treasureChestTexture != null ? (int)System.Math.Round(_treasureChestTexture.Width * chestScale) : 0;
+					int chestH = _treasureChestTexture != null ? (int)System.Math.Round(_treasureChestTexture.Height * chestScale) : 0;
+					int centerX = inner.X + inner.Width / 2;
+					int iconLeft = centerX - chestW / 2;
+					int iconRight = centerX + chestW / 2;
+
+					// Left line
+					int leftLineRight = System.Math.Max(inner.X, iconLeft - divisionLinePadding);
+					int leftLineWidth = System.Math.Max(0, leftLineRight - inner.X);
+					if (leftLineWidth > 0)
+					{
+						var leftLineRect = new Rectangle(inner.X, rewardDivisionLineY, leftLineWidth, divisionLineHeight);
+						_spriteBatch.Draw(_pixel, leftLineRect, Color.White * alpha01);
+					}
+
+					// Chest icon
+					if (_treasureChestTexture != null && chestW > 0 && chestH > 0)
+					{
+						int iconY = rewardDivisionLineY + (divisionLineHeight - chestH) / 2;
+						_spriteBatch.Draw(_treasureChestTexture, new Rectangle(iconLeft, iconY, chestW, chestH), Color.White * alpha01);
+					}
+
+					// Right line
+					int rightLineLeft = System.Math.Min(inner.Right, iconRight + divisionLinePadding);
+					int rightLineWidth = System.Math.Max(0, inner.Right - rightLineLeft);
+					if (rightLineWidth > 0)
+					{
+						var rightLineRect = new Rectangle(rightLineLeft, rewardDivisionLineY, rightLineWidth, divisionLineHeight);
+						_spriteBatch.Draw(_pixel, rightLineRect, Color.White * alpha01);
+					}
+
+					// Row: amount + coin
+					int rowTop = rewardDivisionLineY + divisionLineHeight + System.Math.Max(0, RewardsVerticalSpacing / 2) + pad;
+					if (rowTop < inner.Bottom)
+					{
+						string amountText = rewardGold.ToString();
+						var amountSize = _font.MeasureString(amountText) * textScale;
+						int coinW = _goldTexture != null ? (int)System.Math.Round(_goldTexture.Width * coinScale) : 0;
+						int coinH = _goldTexture != null ? (int)System.Math.Round(_goldTexture.Height * coinScale) : 0;
+						int rowH = System.Math.Max((int)System.Math.Ceiling(amountSize.Y), coinH);
+						int rewardsTotalW = (int)System.Math.Ceiling(amountSize.X) + (coinW > 0 ? (RewardNumberIconGap + coinW) : 0);
+						int rewardsStartX = inner.X + (inner.Width - rewardsTotalW) / 2;
+						int textX = rewardsStartX;
+						int textY = rowTop + (rowH - (int)System.Math.Ceiling(amountSize.Y)) / 2;
+						_spriteBatch.DrawString(_font, amountText, new Vector2(textX, textY), Color.White * alpha01, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+
+						if (_goldTexture != null && coinW > 0 && coinH > 0)
+						{
+							int coinX = textX + (int)System.Math.Ceiling(amountSize.X) + RewardNumberIconGap;
+							int coinY = rowTop + (rowH - coinH) / 2;
+							_spriteBatch.Draw(_goldTexture, new Rectangle(coinX, coinY, coinW, coinH), Color.White * alpha01);
 						}
 					}
 				}

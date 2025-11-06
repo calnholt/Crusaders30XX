@@ -49,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 		private TemperanceManagerSystem _temperanceManagerSystem;
 		private HPDisplaySystem _hpDisplaySystem;
 		private AppliedPassivesDisplaySystem _appliedPassivesDisplaySystem;
+		private PoisonSystem _poisonSystem;
 		private CardVisualSettingsDebugSystem _cardVisualSettingsDebugSystem;
 		private HpManagementSystem _hpManagementSystem;
 		private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
@@ -186,6 +187,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("ActionPointDisplaySystem.Draw", _actionPointDisplaySystem.Draw);
 			FrameProfiler.Measure("HPDisplaySystem.Draw", _hpDisplaySystem.Draw);
 			FrameProfiler.Measure("AppliedPassivesDisplaySystem.Draw", _appliedPassivesDisplaySystem.Draw);
+			FrameProfiler.Measure("PoisonSystem.Draw", _poisonSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawBackdrop", _payCostOverlaySystem.DrawBackdrop);
 			FrameProfiler.Measure("UIElementHighlightSystem.Draw", _uiElementHighlightSystem.Draw);
 			FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", _enemyAttackDisplaySystem.Draw);
@@ -345,6 +347,7 @@ namespace Crusaders30XX.ECS.Systems
 			_temperanceManagerSystem = new TemperanceManagerSystem(_world.EntityManager);
 			_hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
 			_appliedPassivesDisplaySystem = new AppliedPassivesDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _font);
+			_poisonSystem = new PoisonSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_cardVisualSettingsDebugSystem = new CardVisualSettingsDebugSystem(_world.EntityManager);
 			_hpManagementSystem = new HpManagementSystem(_world.EntityManager);
 			_eventQueueSystem = new EventQueueSystem(_world.EntityManager);
@@ -425,6 +428,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_battlePhaseDisplaySystem);
 			_world.AddSystem(_enemyDisplaySystem);
 			_world.AddSystem(_enemyIntentPipsSystem);
+			_world.AddSystem(_poisonSystem);
 			_world.AddSystem(_enemyIntentPlanningSystem);
 			_world.AddSystem(_enemyAttackProgressManagementSystem);
 			_world.AddSystem(_markedForSpecificDiscardSystem);

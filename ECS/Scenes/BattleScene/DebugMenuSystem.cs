@@ -152,10 +152,22 @@ namespace Crusaders30XX.ECS.Systems
 			if (ui != null) ui.IsInteractable = menu != null && menu.IsOpen;
 			if (menu == null || !menu.IsOpen)
 			{
-				// Also ensure dropdown UI (if present) is not interactable when menu is closed
+				// Ensure the debug panel itself is non-hit-testable when closed
+				if (ui != null)
+				{
+					ui.IsInteractable = false;
+					ui.Bounds = Rectangle.Empty;
+				}
+				// Also ensure dropdown UI (if present) is fully collapsed and non-hit-testable
 				var ddEntityClosed = EntityManager.GetEntitiesWithComponent<UIDropdown>().FirstOrDefault(e => e.GetComponent<UIDropdown>().Owner == e);
-				var ddUi = ddEntityClosed?.GetComponent<UIElement>();
-				if (ddUi != null) ddUi.IsInteractable = false;
+				var ddClosed = ddEntityClosed?.GetComponent<UIDropdown>();
+				var ddUiClosed = ddEntityClosed?.GetComponent<UIElement>();
+				if (ddClosed != null) ddClosed.IsOpen = false;
+				if (ddUiClosed != null)
+				{
+					ddUiClosed.IsInteractable = false;
+					ddUiClosed.Bounds = Rectangle.Empty;
+				}
 				return;
 			}
 			if (transform == null || ui == null) return;
@@ -318,7 +330,8 @@ namespace Crusaders30XX.ECS.Systems
             if (ddEntity == null)
             {
                 ddEntity = EntityManager.CreateEntity("DebugMenu_TabDropdown");
-                var dd = new UIDropdown { Items = systems.Select(s => s.name).ToList(), SelectedIndex = Math.Clamp(menu.ActiveTabIndex, 0, systems.Count - 1), RowHeight = DropdownRowHeight, TextScale = TextScale };
+				var dd = new UIDropdown { Items = systems.Select(s => s.name).ToList(), SelectedIndex = Math.Clamp(menu.ActiveTabIndex, 0, systems.Count - 1), RowHeight = DropdownRowHeight, TextScale = TextScale };
+				dd.Owner = ddEntity;
                 var ddBounds = new Rectangle(panelX + Padding, cursorY, PanelWidth - Padding * 2, DropdownRowHeight);
                 EntityManager.AddComponent(ddEntity, dd);
                 EntityManager.AddComponent(ddEntity, new UIElement { Bounds = ddBounds, IsInteractable = true });
@@ -334,7 +347,8 @@ namespace Crusaders30XX.ECS.Systems
                 dd.SelectedIndex = Math.Clamp(menu.ActiveTabIndex, 0, systems.Count - 1);
                 dd.RowHeight = DropdownRowHeight;
                 dd.TextScale = TextScale;
-                uiDD.Bounds = new Rectangle(panelX + Padding, cursorY, PanelWidth - Padding * 2, DropdownRowHeight);
+				uiDD.Bounds = new Rectangle(panelX + Padding, cursorY, PanelWidth - Padding * 2, DropdownRowHeight);
+				uiDD.IsInteractable = true;
                 if (tDD != null)
                 {
                     // Boost ZOrder while open to ensure options render above everything and capture hover

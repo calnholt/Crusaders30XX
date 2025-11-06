@@ -16,15 +16,9 @@
 
 Prompts - 
 
-In LocationScene, add a CurrencyDisplaySystem that will render the player's current gold. We will use a customizable trapezoid from @PrimitiveTextureFactory.cs (adding all necessary debug fields) as the backgorund, and then display the gold total with @gold.png to the right. Add debug fields for margin, padding, text scale, gold coin size, etc. Any questions?
-
 Modify @TooltipQuestDisplaySystem.cs to show the rewards of a quest. This section will be below the tribulations section, using another divider, this time with the treasure_chest.png instead of the chalice.png. Let's center the rewards in the section, with {number} and {symbol}, with currently gold be the only type. Create appropriate debug attribute fields. If the quest is completed, do not show the rewards section. Any questions?
 
 I want to create a new PoisonSystem. I want it to subscribe to AppliedPassive Event and listen explicitly for when the player is poisoned. When condition is met, find the entity "UI_PassiveTooltip_{key.ownerId}_{key.type}" from @AppliedPassiveDisplaySystem.cs to position a very small meter below it. The background of the meter is black, the meter fill is red. When the player is poisoned, every 60 seconds the player loses 1HP (send ModifyHpRequestEvent) and then the 60 second timer resets. The red meter fill corresponds to how much time is left from the meter. Create an entity and transform for this meter and position using the transform and the UI_PassiveTooltip_ as the anchor. Create appropriate debug attribute fields to adjust appearance. Any questions?
-
-I want to update @BattlePhaseDisplaySystem.cs for the animation with text and trapezoid, right now the trapezoid shape is showing for EVERY phase change. I only want it to show for the phases we show the text for - Start of Battle, Block Phase, Action Phase. Any questions?
-
-I want to update @HellriftIndicatorDisplaySystem.cs so that we scale the indicator icon - not the V arrow - relative to the distance to the Hellrift, the further away the smaller. Create a debug field scale mult for this.
 
 I want to create a HintTooltipDisplaySystem at @Game1.cs level. When using a gamepad and hovering = true over UIElement and pressing the Left Stick Button and the entity has new Hint component attached to it, display a tooltip like message to the player relative to where the entity is positioned based on its transform. Hint component will have a text field that we will display. I want the hint tooltip to be a white bubble with black text, and I want to position @guardian_angel.png on the outside bottom right of it, to make it look like the guardian angel is talking. The purpose of this system is to give the player an easy way to get information about GUI options as if Guardian Angel is talking. This helps her feel more like character and gives basic tutorial things more personality. The text should wrap within the white bubble. Add debug attribute fields to control display. This tooltip should be an entity positioned using a Transform. Does not need a UIElement. Any questions?
 
