@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -17,7 +19,7 @@ namespace Crusaders30XX.ECS.Singletons
 			lock (_lock)
 			{
 				_titleFont = content.Load<SpriteFont>("Fonts/NewRocker");
-				_contentFont = content.Load<SpriteFont>("Fonts/Grenze");
+				_contentFont = content.Load<SpriteFont>("Fonts/NewRocker");
 			}
 		}
 	}

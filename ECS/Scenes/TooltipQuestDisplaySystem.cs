@@ -360,14 +360,14 @@ namespace Crusaders30XX.ECS.Systems
 			var transform = _tooltipEntity.GetComponent<Transform>();
 			var ui = _tooltipEntity.GetComponent<UIElement>();
 
-			if (questTooltip == null || transform == null || ui == null) return;
-			if (questTooltip.Alpha01 <= 0f) return;
+		if (questTooltip == null || transform == null || ui == null) return;
+		if (questTooltip.Alpha01 <= 0f) return;
 
-			var rect = ui.Bounds;
-			DrawTooltipBox(rect, questTooltip.Alpha01);
-			DrawHeader(questTooltip.LocationId, rect, questTooltip.Alpha01);
-			DrawQuestContent(rect, questTooltip.Alpha01, questTooltip.Title, questTooltip.Events, questTooltip.Tribulations, questTooltip.RewardGold, questTooltip.IsCompleted);
-		}
+		var rect = ui.Bounds;
+		DrawTooltipBox(rect, questTooltip.Alpha01);
+		DrawHeader(questTooltip.LocationId, questTooltip.Title, rect, questTooltip.Alpha01);
+		DrawQuestContent(rect, questTooltip.Alpha01, questTooltip.Title, questTooltip.Events, questTooltip.Tribulations, questTooltip.RewardGold, questTooltip.IsCompleted);
+	}
 
 
 		private Rectangle ComputeTooltipRect(Rectangle anchor, Transform t, string title, List<LocationEventDefinition> events, List<TribulationDefinition> tribulations, int rewardGold, bool isCompleted)
@@ -394,21 +394,11 @@ namespace Crusaders30XX.ECS.Systems
 			int pad = System.Math.Max(0, Padding);
 			int headerHeight = System.Math.Max(12, HeaderHeight);
 			
-			// Header
-			int totalHeight = headerHeight;
-			
-			// Padding after header
-			totalHeight += pad;
-			
-			// Title
-			if (!string.IsNullOrEmpty(title))
-			{
-				var qSize = _titleFont.MeasureString(title ?? "Quest") * QuestTitleScale;
-				totalHeight += (int)System.Math.Ceiling(qSize.Y);
-			}
-			
-			// Padding after title
-			totalHeight += pad;
+		// Header
+		int totalHeight = headerHeight;
+		
+		// Padding after header (title is now in header)
+		totalHeight += pad;
 			
 			// Enemy images height
 			if (events != null && events.Count > 0)
@@ -513,74 +503,69 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Draw(tex, rect, back);
 		}
 
-		private void DrawHeader(string locationId, Rectangle rect, float alpha01)
+	private void DrawHeader(string locationId, string title, Rectangle rect, float alpha01)
+	{
+		int hh = System.Math.Max(12, HeaderHeight);
+		int stripe = System.Math.Max(0, System.Math.Min(HeaderStripeHeight, hh));
+		var headerRect = new Rectangle(rect.X, rect.Y, rect.Width, System.Math.Min(rect.Height, hh));
+		int a = (int)System.Math.Round(System.Math.Max(0, System.Math.Min(255, MaxAlpha)) * alpha01);
+		// Darken the left background color a bit more for contrast
+		var leftColor = new Color(System.Math.Max(0, HeaderLeftR - 10), System.Math.Max(0, HeaderLeftG), System.Math.Max(0, HeaderLeftB), System.Math.Clamp(a, 0, 255));
+		var rightColor = new Color(HeaderRightR, HeaderRightG, HeaderRightB, System.Math.Clamp(a, 0, 255));
+
+		// Top white stripe
+		if (stripe > 0)
 		{
-			int hh = System.Math.Max(12, HeaderHeight);
-			int stripe = System.Math.Max(0, System.Math.Min(HeaderStripeHeight, hh));
-			var headerRect = new Rectangle(rect.X, rect.Y, rect.Width, System.Math.Min(rect.Height, hh));
-			int a = (int)System.Math.Round(System.Math.Max(0, System.Math.Min(255, MaxAlpha)) * alpha01);
-			// Darken the left background color a bit more for contrast
-			var leftColor = new Color(System.Math.Max(0, HeaderLeftR - 10), System.Math.Max(0, HeaderLeftG), System.Math.Max(0, HeaderLeftB), System.Math.Clamp(a, 0, 255));
-			var rightColor = new Color(HeaderRightR, HeaderRightG, HeaderRightB, System.Math.Clamp(a, 0, 255));
+			var stripeRect = new Rectangle(headerRect.X, headerRect.Y, headerRect.Width, stripe);
+			_spriteBatch.Draw(_pixel, stripeRect, Color.White);
+		}
 
-			// Top white stripe
-			if (stripe > 0)
+		// Split header: left square (image), right area (quest title)
+		int pad = System.Math.Max(0, Padding);
+		int leftBoxSize = headerRect.Height - stripe; // square inside header below stripe
+		var leftRect = new Rectangle(headerRect.X, headerRect.Y + stripe, System.Math.Min(leftBoxSize, headerRect.Width / 2), leftBoxSize);
+		var rightRect = new Rectangle(leftRect.Right, headerRect.Y + stripe, System.Math.Max(0, headerRect.Width - leftRect.Width), leftBoxSize);
+		_spriteBatch.Draw(_pixel, leftRect, leftColor);
+		_spriteBatch.Draw(_pixel, rightRect, rightColor);
+
+		// Draw location image centered in left box
+		var loc = GetLocationDefinition(locationId);
+		if (loc != null)
+		{
+			var tex = TryLoadEnemyTexture(loc.id); // reuse loader; location textures share Content id
+			if (tex != null && leftRect.Width > 0 && leftRect.Height > 0)
 			{
-				var stripeRect = new Rectangle(headerRect.X, headerRect.Y, headerRect.Width, stripe);
-				_spriteBatch.Draw(_pixel, stripeRect, Color.White);
-			}
-
-			// Split header: left square (image), right area (location name)
-			int pad = System.Math.Max(0, Padding);
-			int leftBoxSize = headerRect.Height - stripe; // square inside header below stripe
-			var leftRect = new Rectangle(headerRect.X, headerRect.Y + stripe, System.Math.Min(leftBoxSize, headerRect.Width / 2), leftBoxSize);
-			var rightRect = new Rectangle(leftRect.Right, headerRect.Y + stripe, System.Math.Max(0, headerRect.Width - leftRect.Width), leftBoxSize);
-			_spriteBatch.Draw(_pixel, leftRect, leftColor);
-			_spriteBatch.Draw(_pixel, rightRect, rightColor);
-
-			// Draw location image centered in left box
-			var loc = GetLocationDefinition(locationId);
-			if (loc != null)
-			{
-				var tex = TryLoadEnemyTexture(loc.id); // reuse loader; location textures share Content id
-				if (tex != null && leftRect.Width > 0 && leftRect.Height > 0)
-				{
-					int imgPad = System.Math.Max(0, HeaderImagePadding);
-					var imgRect = new Rectangle(leftRect.X + imgPad, leftRect.Y + imgPad, System.Math.Max(1, leftRect.Width - 2 * imgPad), System.Math.Max(1, leftRect.Height - 2 * imgPad));
-					float scale = System.Math.Min(imgRect.Width / (float)tex.Width, imgRect.Height / (float)tex.Height);
-					int drawW = System.Math.Max(1, (int)System.Math.Round(tex.Width * scale));
-					int drawH = System.Math.Max(1, (int)System.Math.Round(tex.Height * scale));
-					var dst = new Rectangle(imgRect.X + (imgRect.Width - drawW) / 2, imgRect.Y + (imgRect.Height - drawH) / 2, drawW, drawH);
-					_spriteBatch.Draw(tex, dst, Color.White * alpha01);
-				}
-			}
-
-			// Draw location name in right area
-			if (loc != null)
-			{
-				string name = loc.name ?? loc.id ?? "";
-				var size = _titleFont.MeasureString(name) * TextScale;
-				var pos = new Vector2(rightRect.X + pad, rightRect.Y + System.Math.Max(0, (rightRect.Height - (int)System.Math.Ceiling(size.Y)) / 2));
-				_spriteBatch.DrawString(_titleFont, name, pos, Color.White * alpha01, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+				int imgPad = System.Math.Max(0, HeaderImagePadding);
+				var imgRect = new Rectangle(leftRect.X + imgPad, leftRect.Y + imgPad, System.Math.Max(1, leftRect.Width - 2 * imgPad), System.Math.Max(1, leftRect.Height - 2 * imgPad));
+				float scale = System.Math.Min(imgRect.Width / (float)tex.Width, imgRect.Height / (float)tex.Height);
+				int drawW = System.Math.Max(1, (int)System.Math.Round(tex.Width * scale));
+				int drawH = System.Math.Max(1, (int)System.Math.Round(tex.Height * scale));
+				var dst = new Rectangle(imgRect.X + (imgRect.Width - drawW) / 2, imgRect.Y + (imgRect.Height - drawH) / 2, drawW, drawH);
+				_spriteBatch.Draw(tex, dst, Color.White * alpha01);
 			}
 		}
+
+		// Draw quest title in right area
+		if (!string.IsNullOrEmpty(title))
+		{
+			var size = _titleFont.MeasureString(title) * TextScale;
+			var pos = new Vector2(rightRect.X + pad, rightRect.Y + System.Math.Max(0, (rightRect.Height - (int)System.Math.Ceiling(size.Y)) / 2));
+			_spriteBatch.DrawString(_titleFont, title, pos, Color.White * alpha01, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+		}
+	}
 
 		private void DrawQuestContent(Rectangle rect, float alpha01, string title, List<LocationEventDefinition> questDefs, List<TribulationDefinition> tribulations, int rewardGold, bool isCompleted)
 		{
 			if (questDefs == null || questDefs.Count == 0) return;
 
-			// inner area below header
-			int pad = System.Math.Max(0, Padding);
-			int topY = rect.Y + System.Math.Min(rect.Height, System.Math.Max(12, HeaderHeight)) + pad;
-			int innerH = System.Math.Max(1, rect.Bottom - topY - pad);
-			var inner = new Rectangle(rect.X + pad, topY, System.Math.Max(1, rect.Width - 2 * pad), innerH);
+		// inner area below header
+		int pad = System.Math.Max(0, Padding);
+		int topY = rect.Y + System.Math.Min(rect.Height, System.Math.Max(12, HeaderHeight)) + pad;
+		int innerH = System.Math.Max(1, rect.Bottom - topY - pad);
+		var inner = new Rectangle(rect.X + pad, topY, System.Math.Max(1, rect.Width - 2 * pad), innerH);
 
-			// Title
-			string questTitle = title ?? "Quest";
-			var qSize = _titleFont.MeasureString(questTitle) * QuestTitleScale;
-			var qPos = new Vector2(inner.X + (inner.Width - qSize.X) / 2f, inner.Y);
-			_spriteBatch.DrawString(_titleFont, questTitle, qPos, Color.White * alpha01, 0f, Vector2.Zero, QuestTitleScale, SpriteEffects.None, 0f);
-			int enemiesTop = (int)System.Math.Round(qPos.Y + qSize.Y + pad);
+		// Start enemies directly after header padding
+		int enemiesTop = inner.Y;
 			
 			// Calculate space needed for tribulations if present
 			int tribulationSpace = 0;

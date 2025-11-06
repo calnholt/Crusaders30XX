@@ -51,7 +51,7 @@ namespace Crusaders30XX.ECS.Systems
         public int MaxWidth { get; set; } = 360;
 
         [DebugEditable(DisplayName = "Text Scale", Step = 0.01f, Min = 0.05f, Max = 2f)]
-        public float TextScale { get; set; } = 0.16f;
+        public float TextScale { get; set; } = 0.12f;
 
         [DebugEditable(DisplayName = "Screen Pad", Step = 1, Min = 0, Max = 200)]
         public int ScreenPad { get; set; } = 8;
