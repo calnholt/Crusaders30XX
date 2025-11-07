@@ -15,6 +15,10 @@
 
 Prompts - 
 
+Update @TooltipQuestDisplaySystem.cs to show the POI icon on the top left instead of the location sprite.
+
+
+
 Generate shield shader and helper; create shield display system that keys off existence of having shield passive.
 
 When cards are assigned as block, instead of showing the card name as tooltip, change it to be TooltipType = Card with the card's id as the id, and show tooltip below. Any quetions?
@@ -22,3 +26,191 @@ When cards are assigned as block, instead of showing the card name as tooltip, c
 I want to create a generic enemy attack named Glass Cannon. It's text will read "If this is blocked with exactly one card, this attack deals no damage and the blocking card is exhausted." I will need to implement the actual logic for this, and the most difficult area will be in @EnemyAttackProgressManagementSystem.cs, which keeps a running struct of data for a given enemy attack. That system right now only applies rules logic and no special enemy attack logic. So let's say Glass Cannon has a damage value of 8. If the player doesnt block, they take 8 damage. If the player blocks with one card, the EnemyAttackProgressManagementSystem should update so that actual is 0. If the player blocks with 2 cards, it should do the normal blocking calculation. Does that make sense? It might be a good idea to create a Service for handling this that can be keyed off with attack id. The second part of this is that if one card is used to block, when the player confirms blocks and the assigned block cards usually move from AssignedBlock zone to Discard zone, the one card needs to go to Exhaust zone instead. It's important to note that blocking with equipment against Glass Cannon DOES NOT COUNT as a card for this condition, therefore it would reduce the damage of the enemy attack as per usual. Any questions on either part of this?
 
 I want to create a QuitCurrentQuestDisplaySystem. The goal of this system is that when you press the back button on a controller or the ESC key on keyboard, a black transparent overlay appears with white text centered in the screen that reads "Abandon quest?" Position the text with an entity and transform. Attach a HotKey component to it with the key = back (or if keyboard, ESC). Pressing back when the overlay is active makes it fade out and go away. The parent for the hotkey component should be an offscreen UIElement that when executed performs a TransitionEvent to Location Scene using UIElementEventDelegateService - create a new type AbandonQuest. Make sure the parent UIElement is off screen. Create debug attributes for customizing text scale, overlay transparency, etc. Fields for fading lengths. When the overlay is not visible i do not want to see the hotkey button displayed. Any questions?
+
+
+Shield shader:
+
+/// Shield Visual Shader
+// Calvin Holt 2025
+// https://www.shadertoy.com/
+
+#define PI 3.14159265359
+
+// Shield Size & Shape
+const float SHIELD_RADIUS = 0.4;
+const float SHIELD_THICKNESS = 0.05;
+const float INNER_FADE = 0.02;
+
+// Outer Ring Distortion
+const float RING_DISTORT_AMOUNT = 0.03;
+const float RING_DISTORT_FREQ = 8.0;
+const float RING_DISTORT_SPEED = 1.5;
+const float RING_NOISE_SCALE = 20.0;
+
+// Electric Shock Effects
+const float SHOCK_COUNT = 12.0;
+const float SHOCK_SPEED = 3.0;
+const float SHOCK_INTENSITY = 2.5;
+const float SHOCK_WIDTH = 0.015;
+const float SHOCK_JAGGEDNESS = 15.0;
+const float SHOCK_FREQUENCY = 2.0;
+
+// Hexagon Pattern
+const float HEX_SCALE = 8.0;
+const float HEX_OUTER_SIZE = 0.06;
+const float HEX_INNER_SIZE = 0.04;
+const float HEX_CORE_SIZE = 0.02;
+
+// Animation Speeds
+const float SCAN_SPEED = 2.0;
+const float PULSE_SPEED = 3.0;
+const float WAVE_SPEED = 5.0;
+const float BUBBLE_SPEED = 1.5;
+
+// Animation Intensities
+const float SCAN_FREQUENCY = 3.0;
+const float SCAN_POWER = 3.0;
+const float WAVE_FREQUENCY = 20.0;
+const float WAVE_POWER = 3.0;
+const float PULSE_INTENSITY = 0.3;
+const float SCAN_BLEND = 0.5;
+const float SCAN_MODULATION = 0.5;
+
+// Bubble Distortion
+const float BUBBLE_STRENGTH = 0.15;
+const float BUBBLE_FREQUENCY = 8.0;
+const float BUBBLE_DETAIL = 3.0;
+const float BUBBLE_FADE_START = 0.3;
+const float BUBBLE_FADE_END = 0.38;
+
+// Refraction
+const float REFRACTION_STRENGTH = 0.04;
+const float DISTORTION_FALLOFF = 0.05;
+
+// Colors
+const vec3 SHIELD_COLOR = vec3(0.2, 0.8, 1.0);
+const vec3 HEX_COLOR = vec3(0.3, 1.0, 1.0);
+const vec3 BUBBLE_TINT = vec3(0.4, 0.9, 1.0);
+const vec3 SHOCK_COLOR = vec3(0.6, 1.0, 1.0);
+
+// Brightness & Blending
+const float BG_DIMMING = 0.5;
+const float SHIELD_OPACITY = 0.7;
+
+const float EDGE_BRIGHTNESS = 2.0;
+const float HEX_BRIGHTNESS = 0.8;
+const float WAVE_BRIGHTNESS = 0.3;
+const float FRESNEL_BRIGHTNESS = 1.5;
+const float FRESNEL_POWER = 2.0;
+const float BUBBLE_HIGHLIGHT = 0.4;
+
+// --- Helper Functions ---
+float hash(float n) { return fract(sin(n) * 43758.5453123); }
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash(i.x + i.y * 57.0);
+    float b = hash(i.x + 1.0 + i.y * 57.0);
+    float c = hash(i.x + (i.y + 1.0) * 57.0);
+    float d = hash(i.x + 1.0 + (i.y + 1.0) * 57.0);
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
+    vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+    vec2 screenUV = fragCoord / iResolution.xy;
+
+    float angle = atan(uv.y, uv.x);
+    float dist = length(uv);
+    float time = iTime;
+
+    // Distortion
+    float angleNoise = noise(vec2(angle * RING_DISTORT_FREQ, time * RING_DISTORT_SPEED));
+    float radiusDistort = angleNoise * RING_DISTORT_AMOUNT;
+    radiusDistort += noise(vec2(angle * RING_NOISE_SCALE, dist * RING_NOISE_SCALE + time * 0.5)) * RING_DISTORT_AMOUNT * 0.3;
+    float distortedRadius = SHIELD_RADIUS + radiusDistort;
+
+    float distortionMask = smoothstep(distortedRadius + DISTORTION_FALLOFF, distortedRadius - DISTORTION_FALLOFF, dist);
+
+    // --- Electric Shocks ---
+    float shockEffect = 0.0;
+    for (float i = 0.0; i < SHOCK_COUNT; i++) {
+        float shockAngle = (i / SHOCK_COUNT) * 6.28318;
+        float shockTime = time * SHOCK_SPEED + i * 0.5;
+        float shockActive = step(0.7, sin(shockTime * SHOCK_FREQUENCY));
+        float angleDiff = angle - shockAngle;
+        angleDiff = atan(sin(angleDiff), cos(angleDiff));
+
+        float boltNoise = noise(vec2(dist * SHOCK_JAGGEDNESS, shockTime * 2.0 + 1.0));
+        float boltWidth = SHOCK_WIDTH * (1.0 + boltNoise * 0.5);
+        float shock = exp(-abs(angleDiff) / boltWidth) * shockActive;
+        shock *= smoothstep(distortedRadius + SHIELD_THICKNESS, distortedRadius - SHIELD_THICKNESS * 0.5, dist);
+        shock *= smoothstep(distortedRadius - SHIELD_THICKNESS * 2.0, distortedRadius, dist);
+        shockEffect += shock;
+    }
+
+    // --- Bubble Distortion ---
+    float bubbleMask = smoothstep(BUBBLE_FADE_END, BUBBLE_FADE_START, dist);
+    float bubbleWobble1 = sin(angle * BUBBLE_FREQUENCY + time * BUBBLE_SPEED) * 0.5 + 0.5;
+    float bubbleWobble2 = sin(angle * BUBBLE_DETAIL - time * BUBBLE_SPEED * 0.7) * 0.5 + 0.5;
+    float bubblePattern = bubbleWobble1 * 0.6 + bubbleWobble2 * 0.4;
+
+    vec2 distortedUV = uv;
+    vec2 normalDir = normalize(uv + 0.001);
+    float distortAmount = bubblePattern * BUBBLE_STRENGTH * bubbleMask;
+    distortedUV += normalDir * distortAmount * sin(time * 2.0 + dist * 10.0);
+
+    // Background refraction
+    vec2 refractionOffset = normalDir * distortAmount * REFRACTION_STRENGTH * distortionMask;
+    vec2 bgUV = screenUV + refractionOffset;
+    vec3 background = texture(iChannel0, bgUV).rgb;
+    float shieldArea = smoothstep(distortedRadius + 0.05, distortedRadius - 0.05, dist);
+    background *= mix(1.0, BG_DIMMING, shieldArea);
+
+    // --- Hexagon Pattern ---
+    vec2 hexUV = distortedUV * HEX_SCALE;
+    vec2 r = vec2(1.0, 1.732);
+    vec2 h = r * 0.5;
+    vec2 a = mod(hexUV, r) - h;
+    vec2 b = mod(hexUV - h, r) - h;
+    vec2 gv = (length(a) < length(b)) ? a : b;
+    float hexDist = length(gv);
+    float hexLines = smoothstep(HEX_OUTER_SIZE, HEX_INNER_SIZE, hexDist) -
+                     smoothstep(HEX_INNER_SIZE, HEX_CORE_SIZE, hexDist);
+
+    // Animated scan lines & pulses
+    float scanLine = sin(hexUV.y * SCAN_FREQUENCY + time * SCAN_SPEED) * 0.5 + 0.5;
+    scanLine = pow(scanLine, SCAN_POWER);
+    float pulse = sin(time * PULSE_SPEED) * 0.5 + 0.5;
+    float energyWave = sin(dist * WAVE_FREQUENCY - time * WAVE_SPEED) * 0.5 + 0.5;
+    energyWave = pow(energyWave, WAVE_POWER);
+
+    // Shield edges
+    float shield = smoothstep(distortedRadius + SHIELD_THICKNESS, distortedRadius, dist) *
+                   smoothstep(distortedRadius, distortedRadius - SHIELD_THICKNESS, dist);
+    float innerShield = smoothstep(distortedRadius + INNER_FADE, distortedRadius - INNER_FADE, dist);
+
+    // Combine effects
+    float hexEffect = hexLines * innerShield * (SCAN_BLEND + scanLine * SCAN_MODULATION);
+    float edgeGlow = shield * (1.0 + pulse * PULSE_INTENSITY);
+    float bubbleHighlight = pow(bubblePattern, 2.0) * bubbleMask * BUBBLE_HIGHLIGHT;
+
+    float fresnel = pow(1.0 - dist / SHIELD_RADIUS, FRESNEL_POWER);
+
+    vec3 shieldCol = vec3(0.0);
+    shieldCol += SHIELD_COLOR * edgeGlow * EDGE_BRIGHTNESS;
+    shieldCol += HEX_COLOR * hexEffect * HEX_BRIGHTNESS;
+    shieldCol += SHIELD_COLOR * energyWave * innerShield * WAVE_BRIGHTNESS;
+    shieldCol += BUBBLE_TINT * bubbleHighlight;
+    shieldCol += SHOCK_COLOR * shockEffect * SHOCK_INTENSITY;
+    shieldCol += SHIELD_COLOR * fresnel * shield * FRESNEL_BRIGHTNESS;
+
+    float shieldAlpha = (edgeGlow + hexEffect + bubbleHighlight + shockEffect) * SHIELD_OPACITY;
+    shieldAlpha = clamp(shieldAlpha, 0.0, 1.0);
+
+    vec3 col = mix(background, shieldCol, shieldAlpha);
+    fragColor = vec4(col, 1.0);
+}
