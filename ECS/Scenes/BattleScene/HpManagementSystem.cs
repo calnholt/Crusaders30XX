@@ -42,6 +42,12 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				return;
 			}
+			var targetPassives = e.Target.GetComponent<AppliedPassives>().Passives;
+			if (targetPassives.ContainsKey(AppliedPassiveType.Shield))
+			{
+				EventManager.Publish(new RemovePassive { Owner = e.Target, Type = AppliedPassiveType.Shield });
+				return;
+			}
 			EventManager.Publish(new ModifyHpEvent { Source = e.Source, Target = target, Delta = newDelta, DamageType = e.DamageType });
 			hp.Current = Math.Max(0, Math.Min(hp.Max, nv));
 			// If this is the player and we crossed to zero, publish PlayerDied once

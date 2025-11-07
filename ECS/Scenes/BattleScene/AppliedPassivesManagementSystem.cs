@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Crusaders30XX.Diagnostics;
 using System;
+using Crusaders30XX.ECS.Data.Enemies;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -45,12 +46,17 @@ namespace Crusaders30XX.ECS.Systems
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
             if (evt == null) return;
+            if (evt.Current == SubPhase.StartBattle)
+            {
+                EnemyShieldsMaintenance(enemy);
+            }
             if (evt.Current == SubPhase.PlayerEnd)
             {
                 RemoveTurnPassives(player);
             }
             else if (evt.Current == SubPhase.EnemyStart)
             {
+                EnemyShieldsMaintenance(enemy);
                 ApplyStartOfTurnPassives(enemy);
             }
             else if (evt.Current == SubPhase.PlayerStart)
@@ -78,6 +84,21 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
+        private void EnemyShieldsMaintenance(Entity enemyEntity)
+        {
+            var enemy = enemyEntity.GetComponent<Enemy>();
+            EnemyDefinitionCache.TryGet(enemy.Id, out var def);
+            var shield = def.passives.Find(p => p.type == "Shield");
+            if (shield != null)
+            {
+                var appliedPassives = enemyEntity.GetComponent<AppliedPassives>();
+                appliedPassives.Passives.TryGetValue(AppliedPassiveType.Shield, out var shieldAmount);
+                if (shieldAmount <= 0)
+                {
+                    EventManager.Publish(new ApplyPassiveEvent { Target = enemyEntity, Type = AppliedPassiveType.Shield, Delta = 1 });
+                }
+            }
+        }
         private void ApplyStartOfTurnPassives(Entity owner)
         {
             var ap = owner.GetComponent<AppliedPassives>();

@@ -32,13 +32,12 @@ namespace Crusaders30XX.ECS.Systems
             case "nightveil_guillotine":
               battleStateInfo.TurnTracking.TryGetValue("slice", out int sliceCount);
               battleStateInfo.TurnTracking.TryGetValue("dice", out int diceCount);
-                    Console.WriteLine($"[EnemyAttackEffectService]: slice: {sliceCount} // dice: {diceCount}");
+              Console.WriteLine($"[EnemyAttackEffectService]: slice: {sliceCount} // dice: {diceCount}");
               if (sliceCount > 0 && diceCount > 0)
               {
                 attackDefinition.damage += 4;
                 attackDefinition.effectsOnNotBlocked = [ new EffectDefinition { type = "Penance", amount = 2 } ];
                 attackDefinition.blockingCondition = new Condition { type = "OnHit" };
-                // TODO: show text
                 attackDefinition.isTextConditionFulfilled = true;
               }
               break;

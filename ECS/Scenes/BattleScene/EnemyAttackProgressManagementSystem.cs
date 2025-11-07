@@ -205,8 +205,7 @@ namespace Crusaders30XX.ECS.Systems
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount) : 0;
 			int reduced = aegis + p.AssignedBlockTotal;
-			int actual = full - reduced - preventedDamageFromBlockCondition;
-			if (actual < 0) actual = 0;
+			int actual = Math.Max(full - reduced - preventedDamageFromBlockCondition, 0);
 
 			p.IsConditionMet = isConditionMet;
 			p.ActualDamage = actual;

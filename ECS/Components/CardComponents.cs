@@ -896,5 +896,6 @@ namespace Crusaders30XX.ECS.Components
         Aggression,
         Stealth,
         Poison,
+        Shield,
     }
 }

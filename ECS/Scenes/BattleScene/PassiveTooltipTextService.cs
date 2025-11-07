@@ -39,6 +39,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"Your attacks deal +{stacks} damage this battle.";
         case AppliedPassiveType.Poison:
           return $"Every 60 seconds, lose 1 HP.";
+        case AppliedPassiveType.Shield:
+          return $"Prevent all damage from the first source each turn.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }
