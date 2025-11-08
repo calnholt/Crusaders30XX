@@ -477,12 +477,13 @@ namespace Crusaders30XX.ECS.Components
         
         public string LocationId { get; set; }
         public string Title { get; set; }
-        public List<LocationEventDefinition> Events { get; set; }
-        public List<TribulationDefinition> Tribulations { get; set; }
-			public int RewardGold { get; set; } = 0;
-			public bool IsCompleted { get; set; } = false;
-        public float Alpha01 { get; set; } = 0f;
-        public bool TargetVisible { get; set; } = false;
+	public List<LocationEventDefinition> Events { get; set; }
+	public List<TribulationDefinition> Tribulations { get; set; }
+		public int RewardGold { get; set; } = 0;
+		public bool IsCompleted { get; set; } = false;
+	public string PoiType { get; set; } = "Quest";
+	public float Alpha01 { get; set; } = 0f;
+	public bool TargetVisible { get; set; } = false;
     }
     
     /// <summary>

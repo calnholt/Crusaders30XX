@@ -26,11 +26,13 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _contentFont = FontSingleton.ContentFont;
 		private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedCache = new();
 		private readonly Dictionary<(int w, int h, bool right, int border), Texture2D> _triangleCache = new();
-		private Texture2D _pixel;
-		private Texture2D _chaliceTexture;
-		private Texture2D _treasureChestTexture;
-		private Texture2D _goldTexture;
-		private Entity _tooltipEntity;
+	private Texture2D _pixel;
+	private Texture2D _chaliceTexture;
+	private Texture2D _treasureChestTexture;
+	private Texture2D _goldTexture;
+	private Texture2D _questIconTexture;
+	private Texture2D _hellriftIconTexture;
+	private Entity _tooltipEntity;
 
 		[DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 40)]
 		public int Padding { get; set; } = 10;
@@ -177,11 +179,13 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_content = content;
-			_pixel = new Texture2D(graphicsDevice, 1, 1);
-			_pixel.SetData(new[] { Color.White });
-			try { _chaliceTexture = _content.Load<Texture2D>("chalice"); } catch { _chaliceTexture = null; }
-			try { _treasureChestTexture = _content.Load<Texture2D>("treasure_chest"); } catch { _treasureChestTexture = null; }
-			try { _goldTexture = _content.Load<Texture2D>("gold"); } catch { _goldTexture = null; }
+		_pixel = new Texture2D(graphicsDevice, 1, 1);
+		_pixel.SetData(new[] { Color.White });
+		try { _chaliceTexture = _content.Load<Texture2D>("chalice"); } catch { _chaliceTexture = null; }
+		try { _treasureChestTexture = _content.Load<Texture2D>("treasure_chest"); } catch { _treasureChestTexture = null; }
+		try { _goldTexture = _content.Load<Texture2D>("gold"); } catch { _goldTexture = null; }
+		try { _questIconTexture = _content.Load<Texture2D>("Quest_poi"); } catch { _questIconTexture = null; }
+		try { _hellriftIconTexture = _content.Load<Texture2D>("Hellrift_poi"); } catch { _hellriftIconTexture = null; }
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -215,60 +219,66 @@ namespace Crusaders30XX.ECS.Systems
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.FirstOrDefault();
 
-			// Determine if tooltip should be visible
-			bool shouldShowTooltip = false;
-			string locationIdTop = null;
-			string title = null;
-			List<LocationEventDefinition> events = null;
-			List<TribulationDefinition> tribulations = null;
-			int rewardGold = 0;
-			bool isCompleted = false;
-			Rectangle? tooltipRect = null;
+		// Determine if tooltip should be visible
+		bool shouldShowTooltip = false;
+		string locationIdTop = null;
+		string title = null;
+		List<LocationEventDefinition> events = null;
+		List<TribulationDefinition> tribulations = null;
+		int rewardGold = 0;
+		bool isCompleted = false;
+		string poiType = "Quest";
+		Rectangle? tooltipRect = null;
 
 			if (hovered != null)
 			{
-				// Case 1: WorldMap location tile
-				locationIdTop = ExtractLocationId(hovered.E?.Name);
-				if (!string.IsNullOrEmpty(locationIdTop) && !locationIdTop.StartsWith("locked_"))
+			// Case 1: WorldMap location tile
+			locationIdTop = ExtractLocationId(hovered.E?.Name);
+			if (!string.IsNullOrEmpty(locationIdTop) && !locationIdTop.StartsWith("locked_"))
+			{
+				var all = LocationDefinitionCache.GetAll();
+				if (all.TryGetValue(locationIdTop, out var loc) && loc?.pointsOfInterest != null && loc.pointsOfInterest.Count > 0)
 				{
-					var all = LocationDefinitionCache.GetAll();
-					if (all.TryGetValue(locationIdTop, out var loc) && loc?.pointsOfInterest != null && loc.pointsOfInterest.Count > 0)
-					{
-						int completed = SaveCache.GetValueOrDefault(locationIdTop, 0);
-						int idx = System.Math.Max(0, System.Math.Min(completed, loc.pointsOfInterest.Count - 1));
-						events = loc.pointsOfInterest[idx].events;
-						tribulations = loc.pointsOfInterest[idx].tribulations;
-						title = "Quest " + (idx + 1);
-						shouldShowTooltip = true;
-					}
+					int completed = SaveCache.GetValueOrDefault(locationIdTop, 0);
+					int idx = System.Math.Max(0, System.Math.Min(completed, loc.pointsOfInterest.Count - 1));
+					events = loc.pointsOfInterest[idx].events;
+					tribulations = loc.pointsOfInterest[idx].tribulations;
+					title = "Quest " + (idx + 1);
+					// Determine POI type from location definition
+					string poiTypeFromDef = loc.pointsOfInterest[idx].type ?? "Quest";
+					poiType = poiTypeFromDef.Equals("Hellrift", System.StringComparison.OrdinalIgnoreCase) ? "Hellrift" : "Quest";
+					shouldShowTooltip = true;
 				}
+			}
 				else
 				{
-					// Case 2: Location scene POI entity (show only if revealed/completed or revealed by proximity)
-					var poi = hovered.E.GetComponent<PointOfInterest>();
-					if (poi != null && IsPoiVisible(poi) && TryFindLocationByPoiId(poi.Id, out var locId, out var questIdx))
+				// Case 2: Location scene POI entity (show only if revealed/completed or revealed by proximity)
+				var poi = hovered.E.GetComponent<PointOfInterest>();
+				if (poi != null && IsPoiVisible(poi) && TryFindLocationByPoiId(poi.Id, out var locId, out var questIdx))
+				{
+					// For Hellrifts, only show tooltip if revealed by proximity
+					if (poi.Type == "Hellrift" && !poi.IsRevealedByProximity)
 					{
-						// For Hellrifts, only show tooltip if revealed by proximity
-						if (poi.Type == "Hellrift" && !poi.IsRevealedByProximity)
+						shouldShowTooltip = false;
+					}
+					else
+					{
+						locationIdTop = locId;
+						var all = LocationDefinitionCache.GetAll();
+						if (all.TryGetValue(locId, out var loc) && questIdx >= 0 && questIdx < (loc.pointsOfInterest?.Count ?? 0))
 						{
-							shouldShowTooltip = false;
-						}
-						else
-						{
-							locationIdTop = locId;
-							var all = LocationDefinitionCache.GetAll();
-							if (all.TryGetValue(locId, out var loc) && questIdx >= 0 && questIdx < (loc.pointsOfInterest?.Count ?? 0))
-							{
-								events = loc.pointsOfInterest[questIdx].events;
-								tribulations = loc.pointsOfInterest[questIdx].tribulations;
-								title = string.IsNullOrWhiteSpace(loc.pointsOfInterest[questIdx].name) ? ("Quest " + (questIdx + 1)) : loc.pointsOfInterest[questIdx].name;
-								rewardGold = System.Math.Max(0, loc.pointsOfInterest[questIdx].rewardGold);
-								var questId = loc.pointsOfInterest[questIdx].id;
-								isCompleted = (!string.IsNullOrEmpty(questId) && SaveCache.IsQuestCompleted(locId, questId)) || (poi?.IsCompleted ?? false);
-								shouldShowTooltip = true;
-							}
+							events = loc.pointsOfInterest[questIdx].events;
+							tribulations = loc.pointsOfInterest[questIdx].tribulations;
+							title = string.IsNullOrWhiteSpace(loc.pointsOfInterest[questIdx].name) ? ("Quest " + (questIdx + 1)) : loc.pointsOfInterest[questIdx].name;
+							rewardGold = System.Math.Max(0, loc.pointsOfInterest[questIdx].rewardGold);
+							var questId = loc.pointsOfInterest[questIdx].id;
+							isCompleted = (!string.IsNullOrEmpty(questId) && SaveCache.IsQuestCompleted(locId, questId)) || (poi?.IsCompleted ?? false);
+							// Get POI type from POI component
+							poiType = poi.Type ?? "Quest";
+							shouldShowTooltip = true;
 						}
 					}
+				}
 				}
 				
 				// Calculate tooltip rect after we have the content
@@ -287,7 +297,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					_tooltipEntity = EntityManager.CreateEntity(TooltipEntityName);
 					EntityManager.AddComponent(_tooltipEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 });
-					EntityManager.AddComponent(_tooltipEntity, new QuestTooltip { LocationId = locationIdTop, Title = title, Events = events, Tribulations = tribulations, RewardGold = rewardGold, IsCompleted = isCompleted, Alpha01 = 0f, TargetVisible = true });
+					EntityManager.AddComponent(_tooltipEntity, new QuestTooltip { LocationId = locationIdTop, Title = title, Events = events, Tribulations = tribulations, RewardGold = rewardGold, IsCompleted = isCompleted, PoiType = poiType, Alpha01 = 0f, TargetVisible = true });
 					EntityManager.AddComponent(_tooltipEntity, new UIElement { Bounds = rect, IsInteractable = true });
 					EntityManager.AddComponent(_tooltipEntity, new HotKey { Button = FaceButton.X, RequiresHold = true, ParentEntity = hovered.E });
 				}
@@ -299,17 +309,18 @@ namespace Crusaders30XX.ECS.Systems
 						transform.Position = new Vector2(rect.X, rect.Y);
 						transform.ZOrder = 10001;
 					}
-					var questTooltip = _tooltipEntity.GetComponent<QuestTooltip>();
-					if (questTooltip != null)
-					{
-						questTooltip.LocationId = locationIdTop;
-						questTooltip.Title = title;
-						questTooltip.Events = events;
-						questTooltip.Tribulations = tribulations;
-						questTooltip.RewardGold = rewardGold;
-						questTooltip.IsCompleted = isCompleted;
-						questTooltip.TargetVisible = true;
-					}
+				var questTooltip = _tooltipEntity.GetComponent<QuestTooltip>();
+				if (questTooltip != null)
+				{
+					questTooltip.LocationId = locationIdTop;
+					questTooltip.Title = title;
+					questTooltip.Events = events;
+					questTooltip.Tribulations = tribulations;
+					questTooltip.RewardGold = rewardGold;
+					questTooltip.IsCompleted = isCompleted;
+					questTooltip.PoiType = poiType;
+					questTooltip.TargetVisible = true;
+				}
 					var ui = _tooltipEntity.GetComponent<UIElement>();
 					if (ui != null)
 					{
@@ -363,10 +374,10 @@ namespace Crusaders30XX.ECS.Systems
 		if (questTooltip == null || transform == null || ui == null) return;
 		if (questTooltip.Alpha01 <= 0f) return;
 
-		var rect = ui.Bounds;
-		DrawTooltipBox(rect, questTooltip.Alpha01);
-		DrawHeader(questTooltip.LocationId, questTooltip.Title, rect, questTooltip.Alpha01);
-		DrawQuestContent(rect, questTooltip.Alpha01, questTooltip.Title, questTooltip.Events, questTooltip.Tribulations, questTooltip.RewardGold, questTooltip.IsCompleted);
+	var rect = ui.Bounds;
+	DrawTooltipBox(rect, questTooltip.Alpha01);
+	DrawHeader(questTooltip.LocationId, questTooltip.Title, questTooltip.PoiType, rect, questTooltip.Alpha01);
+	DrawQuestContent(rect, questTooltip.Alpha01, questTooltip.Title, questTooltip.Events, questTooltip.Tribulations, questTooltip.RewardGold, questTooltip.IsCompleted);
 	}
 
 
@@ -503,7 +514,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Draw(tex, rect, back);
 		}
 
-	private void DrawHeader(string locationId, string title, Rectangle rect, float alpha01)
+	private void DrawHeader(string locationId, string title, string poiType, Rectangle rect, float alpha01)
 	{
 		int hh = System.Math.Max(12, HeaderHeight);
 		int stripe = System.Math.Max(0, System.Math.Min(HeaderStripeHeight, hh));
@@ -528,21 +539,26 @@ namespace Crusaders30XX.ECS.Systems
 		_spriteBatch.Draw(_pixel, leftRect, leftColor);
 		_spriteBatch.Draw(_pixel, rightRect, rightColor);
 
-		// Draw location image centered in left box
-		var loc = GetLocationDefinition(locationId);
-		if (loc != null)
+		// Draw POI icon centered in left box
+		Texture2D iconTexture = null;
+		if (poiType != null && poiType.Equals("Hellrift", System.StringComparison.OrdinalIgnoreCase) && _hellriftIconTexture != null)
 		{
-			var tex = TryLoadEnemyTexture(loc.id); // reuse loader; location textures share Content id
-			if (tex != null && leftRect.Width > 0 && leftRect.Height > 0)
-			{
-				int imgPad = System.Math.Max(0, HeaderImagePadding);
-				var imgRect = new Rectangle(leftRect.X + imgPad, leftRect.Y + imgPad, System.Math.Max(1, leftRect.Width - 2 * imgPad), System.Math.Max(1, leftRect.Height - 2 * imgPad));
-				float scale = System.Math.Min(imgRect.Width / (float)tex.Width, imgRect.Height / (float)tex.Height);
-				int drawW = System.Math.Max(1, (int)System.Math.Round(tex.Width * scale));
-				int drawH = System.Math.Max(1, (int)System.Math.Round(tex.Height * scale));
-				var dst = new Rectangle(imgRect.X + (imgRect.Width - drawW) / 2, imgRect.Y + (imgRect.Height - drawH) / 2, drawW, drawH);
-				_spriteBatch.Draw(tex, dst, Color.White * alpha01);
-			}
+			iconTexture = _hellriftIconTexture;
+		}
+		else if (_questIconTexture != null)
+		{
+			iconTexture = _questIconTexture;
+		}
+		
+		if (iconTexture != null && leftRect.Width > 0 && leftRect.Height > 0)
+		{
+			int imgPad = System.Math.Max(0, HeaderImagePadding);
+			var imgRect = new Rectangle(leftRect.X + imgPad, leftRect.Y + imgPad, System.Math.Max(1, leftRect.Width - 2 * imgPad), System.Math.Max(1, leftRect.Height - 2 * imgPad));
+			float scale = System.Math.Min(imgRect.Width / (float)iconTexture.Width, imgRect.Height / (float)iconTexture.Height);
+			int drawW = System.Math.Max(1, (int)System.Math.Round(iconTexture.Width * scale));
+			int drawH = System.Math.Max(1, (int)System.Math.Round(iconTexture.Height * scale));
+			var dst = new Rectangle(imgRect.X + (imgRect.Width - drawW) / 2, imgRect.Y + (imgRect.Height - drawH) / 2, drawW, drawH);
+			_spriteBatch.Draw(iconTexture, dst, Color.White * alpha01);
 		}
 
 		// Draw quest title in right area
