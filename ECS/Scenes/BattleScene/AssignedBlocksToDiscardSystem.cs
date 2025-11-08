@@ -151,13 +151,20 @@ namespace Crusaders30XX.ECS.Systems
                 else
                 {
                     var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                    // If the card exhausts on block, route to Exhaust instead of Discard and remove the marker
+                    var exhaustOnBlock = entity.GetComponent<ExhaustOnBlock>();
+                    var destination = (exhaustOnBlock != null) ? CardZoneType.ExhaustPile : CardZoneType.DiscardPile;
+                    if (exhaustOnBlock != null)
+                    {
+                        EntityManager.RemoveComponent<ExhaustOnBlock>(entity);
+                    }
                     EventManager.Publish(new CardMoveRequested
                     {
                         Card = entity,
                         Deck = deckEntity,
-                        Destination = CardZoneType.DiscardPile,
+                        Destination = destination,
                         ContextId = flight.ContextId,
-                        Reason = "AssignedBlockToDiscard"
+                        Reason = destination == CardZoneType.ExhaustPile ? "AssignedBlockToExhaust" : "AssignedBlockToDiscard"
                     });
                     // Remove animation component
                     EntityManager.RemoveComponent<CardToDiscardFlight>(entity);

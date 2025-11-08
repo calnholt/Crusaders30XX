@@ -23,6 +23,12 @@
       "target": "Player",
       "isGeneric": true,
       "damage": 8,
+      "specialEffects": [
+        {
+          "type": "GlassCannon",
+          "amount": 1
+        }
+      ],
       "text": "If this is blocked with exactly one card, this attack deals no damage and the blocking card is exhausted."
     }
   ]

@@ -22,7 +22,8 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font = FontSingleton.ContentFont;
+		private readonly SpriteFont _titleFont = FontSingleton.TitleFont;
+		private readonly SpriteFont _contentFont = FontSingleton.ContentFont;
 		private readonly Texture2D _pixel;
 		private readonly System.Collections.Generic.Dictionary<string, Entity> _effectTooltipUiByKey = new();
 
@@ -430,7 +431,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();
-			if (intent == null || intent.Planned.Count == 0 || _font == null) return;
+			if (intent == null || intent.Planned.Count == 0 || _contentFont == null) return;
 			// Only render during enemy phases (Block / EnemyAttack)
 			var phaseNowForDraw = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>().Sub;
 			if (phaseNowForDraw != SubPhase.Block && phaseNowForDraw != SubPhase.EnemyAttack) return;
@@ -469,7 +470,9 @@ namespace Crusaders30XX.ECS.Systems
 			AppendLeafConditionsWithStatus(def.blockingCondition, lines);
 			if (!string.IsNullOrEmpty(def.text))
 			{
-				lines.Add(($"{def.text}", TextScale, def.isTextConditionFulfilled ? Color.White : Color.DarkRed));
+				var color = def.isTextConditionFulfilled ? Color.White : Color.DarkRed;
+				color = def.specialEffects.Length > 0 ? Color.White : color;
+				lines.Add(($"{def.text}", TextScale, color));
 			}
 
 			// Measure and draw a simple panel in the center
@@ -482,7 +485,7 @@ namespace Crusaders30XX.ECS.Systems
 			var wrappedLines = new System.Collections.Generic.List<(string text, float scale, Color color)>();
 			foreach (var (text, lineScale, color) in lines)
 			{
-				var parts = TextUtils.WrapText(_font, text, lineScale, contentWidthLimitPx);
+				var parts = TextUtils.WrapText(_contentFont, text, lineScale, contentWidthLimitPx);
 				foreach (var p in parts)
 				{
 					wrappedLines.Add((p, lineScale, color));
@@ -492,7 +495,7 @@ namespace Crusaders30XX.ECS.Systems
 			float totalH = 0f;
 			foreach (var (text, lineScale, _) in wrappedLines)
 			{
-				var sz = _font.MeasureString(text);
+				var sz = _contentFont.MeasureString(text);
 				maxW = Math.Max(maxW, sz.X * lineScale);
 				totalH += sz.Y * lineScale + LineSpacingExtra;
 			}
@@ -645,10 +648,10 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						bool isOnHit = (!string.IsNullOrWhiteSpace(notBlockedSummary) && idx == 2); // def.name (0), damage (1), on-hit (2)
 						if (isOnHit) break;
-						var parts = TextUtils.WrapText(_font, origText, lineScale, contentWidthLimitPx);
+						var parts = TextUtils.WrapText(_contentFont, origText, lineScale, contentWidthLimitPx);
 						foreach (var p in parts)
 						{
-							var psz = _font.MeasureString(p);
+							var psz = _contentFont.MeasureString(p);
 							baseY += psz.Y * lineScale * panelScale * contentScale + lineSpacingScaled;
 						}
 						idx++;
@@ -656,7 +659,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				// Token layout with wrapping matching the visible line, using cumulative measured strings to match kerning/prefix exactly
 				string prefix = "On hit: ";
-				float lineH = _font.LineSpacing * s;
+				float lineH = _contentFont.LineSpacing * s;
 				float yCursor = baseY;
 				float maxLineWidth = contentWidthLimitPx;
 				bool isFirstLine = true;
@@ -668,7 +671,7 @@ namespace Crusaders30XX.ECS.Systems
 					string linePrefix = isFirstLine ? prefix : string.Empty;
 					string existing = string.Join(", ", notBlockedTokens.Skip(lineStartIndex).Take(Math.Max(0, i - lineStartIndex)).Select(t => t.label));
 					string candidate = linePrefix + (string.IsNullOrEmpty(existing) ? string.Empty : existing + (i > lineStartIndex ? ", " : string.Empty)) + notBlockedTokens[i].label;
-					float candidateW = _font.MeasureString(candidate).X * s;
+					float candidateW = _contentFont.MeasureString(candidate).X * s;
 					if (candidateW > maxLineWidth + 0.5f) // wrap to next line
 					{
 						// Advance to next line
@@ -680,8 +683,8 @@ namespace Crusaders30XX.ECS.Systems
 
 					// Compute x position as width of content up to this token (excluding the token itself)
 					string head = linePrefix + string.Join(", ", notBlockedTokens.Skip(lineStartIndex).Take(Math.Max(0, i - lineStartIndex)).Select(t => t.label));
-					float headW = string.IsNullOrEmpty(head) ? 0f : _font.MeasureString(head + (i > lineStartIndex ? ", " : string.Empty)).X * s;
-					float tokenW = _font.MeasureString(notBlockedTokens[i].label).X * s;
+					float headW = string.IsNullOrEmpty(head) ? 0f : _contentFont.MeasureString(head + (i > lineStartIndex ? ", " : string.Empty)).X * s;
+					float tokenW = _contentFont.MeasureString(notBlockedTokens[i].label).X * s;
 					float xRectF = baseX + headW;
 					var tokenRect = new Rectangle(
 						(int)Math.Floor(xRectF),
@@ -705,8 +708,8 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var (text, baseScale, color) in wrappedLines)
 			{
 				float s = baseScale * panelScale * contentScale;
-				_spriteBatch.DrawString(_font, text, new Vector2(rect.X + pad * panelScale * contentScale, y), color, 0f, Vector2.Zero, s, SpriteEffects.None, 0f);
-				var sz = _font.MeasureString(text);
+				_spriteBatch.DrawString(_contentFont, text, new Vector2(rect.X + pad * panelScale * contentScale, y), color, 0f, Vector2.Zero, s, SpriteEffects.None, 0f);
+				var sz = _contentFont.MeasureString(text);
 				y += sz.Y * s + LineSpacingExtra * panelScale * contentScale;
 			}
 
@@ -723,12 +726,12 @@ namespace Crusaders30XX.ECS.Systems
 				);
 				_spriteBatch.Draw(_pixel, btnRect, new Color(40, 120, 40, 220));
 				DrawRect(btnRect, Color.White, 2);
-				if (_font != null)
+				if (_contentFont != null)
 				{
 					string label = "Confirm";
-					var size = _font.MeasureString(label) * ConfirmButtonTextScale;
+					var size = _contentFont.MeasureString(label) * ConfirmButtonTextScale;
 					var posText = new Vector2(btnRect.Center.X - size.X / 2f, btnRect.Center.Y - size.Y / 2f);
-					_spriteBatch.DrawString(_font, label, posText, Color.White, 0f, Vector2.Zero, ConfirmButtonTextScale, SpriteEffects.None, 0f);
+					_spriteBatch.DrawString(_contentFont, label, posText, Color.White, 0f, Vector2.Zero, ConfirmButtonTextScale, SpriteEffects.None, 0f);
 				}
 
 				// Ensure a single clickable UI entity exists and stays in sync

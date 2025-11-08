@@ -31,7 +31,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardMoved(CardMoved evt)
         {
-            if (evt.From == CardZoneType.AssignedBlock && evt.To == CardZoneType.DiscardPile)
+            if (evt.From == CardZoneType.AssignedBlock && (evt.To == CardZoneType.DiscardPile || evt.To == CardZoneType.ExhaustPile))
             {
                 CardBlockService.Resolve(evt.Card, EntityManager);
             }

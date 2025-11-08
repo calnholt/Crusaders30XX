@@ -153,6 +153,12 @@ namespace Crusaders30XX.ECS.Components
 		public string Text { get; set; }
 		public string Trigger { get; set; }
 	}
+
+
+	public class ExhaustOnBlock : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
 }
 
 

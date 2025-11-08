@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Data.Attacks;
 using Microsoft.Xna.Framework;
 using System;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -97,7 +98,7 @@ namespace Crusaders30XX.ECS.Systems
 				case "White": p.PlayedWhite = SafeInc(p.PlayedWhite); break;
 				case "Black": p.PlayedBlack = SafeInc(p.PlayedBlack); break;
 			}
-			if (e.DeltaBlock > 0) p.AssignedBlockTotal = SafeInc(p.AssignedBlockTotal, e.DeltaBlock);
+			// if (e.DeltaBlock > 0) p.AssignedBlockTotal = SafeInc(p.AssignedBlockTotal, e.DeltaBlock);
 			Recompute(p);
 			PrintProgress(p);
 		}
@@ -113,7 +114,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Maintain running totals
 			long nextAssigned = (long)progress.AssignedBlockTotal + e.DeltaBlock;
-			progress.AssignedBlockTotal = nextAssigned < 0 ? 0 : (int)nextAssigned;
+			// progress.AssignedBlockTotal = nextAssigned < 0 ? 0 : (int)nextAssigned;
 
 			// Adjust color play counters and played cards like previous system
 			if (!string.IsNullOrWhiteSpace(e.Color) && e.DeltaBlock < 0)
@@ -189,13 +190,17 @@ namespace Crusaders30XX.ECS.Systems
 			int full = DamagePredictionService.ComputeFullDamage(def);
 			int aegis = DamagePredictionService.GetAegisAmount(EntityManager);
 			p.AegisTotal = aegis;
+
+			bool specialEffectExecuted = EnemySpecialAttackService.ExecuteSpecialEffect(def, EntityManager);
+			if (specialEffectExecuted) return;
+
 			// Compute assigned block directly from AssignedBlockCard components for this context
-			int assignedFromCardsAndEquipment = 0;
 			var assignedBlockCards = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>().ToList();
 			Console.WriteLine($"[EnemyAttackProgressManagementSystem] assignedBlockCards={assignedBlockCards.Count}");
+			p.AssignedBlockTotal = 0;
 			foreach (var e in assignedBlockCards)
 			{
-				assignedFromCardsAndEquipment += e.GetComponent<AssignedBlockCard>().BlockAmount;
+				p.AssignedBlockTotal += e.GetComponent<AssignedBlockCard>().BlockAmount;
 			}
 			p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
@@ -211,7 +216,7 @@ namespace Crusaders30XX.ECS.Systems
 			p.IsConditionMet = isConditionMet;
 			p.ActualDamage = actual;
 			p.PreventedDamageFromBlockCondition = preventedDamageFromBlockCondition;
-			p.TotalPreventedDamage = aegis + preventedDamageFromBlockCondition + assignedFromCardsAndEquipment;
+			p.TotalPreventedDamage = aegis + preventedDamageFromBlockCondition + p.AssignedBlockTotal;
 		}
 
 		private static string NormalizeColorKey(string color)

@@ -18,6 +18,7 @@ namespace Crusaders30XX.ECS.Data.Attacks
 		public Condition conditionals { get; set; }
 		public EffectDefinition[] effectsOnAttack { get; set; } = System.Array.Empty<EffectDefinition>();
 		public EffectDefinition[] effectsOnNotBlocked { get; set; } = System.Array.Empty<EffectDefinition>();
+		public EffectDefinition[] specialEffects { get; set; } = System.Array.Empty<EffectDefinition>();
 
 		public AttackDefinition DeepCopy()
 		{
@@ -43,6 +44,10 @@ namespace Crusaders30XX.ECS.Data.Attacks
 					.ToArray(),
 
 				effectsOnNotBlocked = this.effectsOnNotBlocked
+					.Select(e => e.DeepCopy())
+					.ToArray(),
+
+				specialEffects = this.specialEffects
 					.Select(e => e.DeepCopy())
 					.ToArray()
 			};
