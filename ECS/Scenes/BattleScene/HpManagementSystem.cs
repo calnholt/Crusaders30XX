@@ -73,7 +73,7 @@ namespace Crusaders30XX.ECS.Systems
 						var completion = QuestCompleteService.SaveIfCompletedHighest(EntityManager);
 						string msg = completion.IsNewlyCompleted
 							? $"Quest Complete!\nGold +{completion.RewardGold}"
-							: "Quest Complete! (already completed — no reward)";
+							: "Quest Complete! (already completed - no reward)";
 						EventManager.Publish(new ShowQuestRewardOverlay { Message = msg });
 					}
 					else
