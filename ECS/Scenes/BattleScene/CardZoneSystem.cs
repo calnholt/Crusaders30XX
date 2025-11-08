@@ -111,6 +111,28 @@ namespace Crusaders30XX.ECS.Systems
                         uiH.IsClicked = false;
                         uiH.EventType = UIElementEventType.None;
                     }
+                    // Fallback restore of tooltip config if a backup still exists (e.g., if BlockAssignmentRemoved didn't run)
+                    {
+                        var backup = evt.Card.GetComponent<TooltipOverrideBackup>();
+                        var ui = evt.Card.GetComponent<UIElement>();
+                        if (backup != null && ui != null)
+                        {
+                            ui.TooltipType = backup.OriginalType;
+                            ui.TooltipPosition = backup.OriginalPosition;
+                            ui.TooltipOffsetPx = backup.OriginalOffsetPx;
+                            var ct = evt.Card.GetComponent<CardTooltip>();
+                            if (backup.HadCardTooltip)
+                            {
+                                if (ct == null) { EntityManager.AddComponent(evt.Card, new CardTooltip { CardId = backup.OriginalCardTooltipId ?? string.Empty }); }
+                                else { ct.CardId = backup.OriginalCardTooltipId ?? string.Empty; }
+                            }
+                            else
+                            {
+                                if (ct != null) { EntityManager.RemoveComponent<CardTooltip>(evt.Card); }
+                            }
+                            EntityManager.RemoveComponent<TooltipOverrideBackup>(evt.Card);
+                        }
+                    }
                     var t = evt.Card.GetComponent<Transform>();
                     if (t != null && t.Position == Vector2.Zero)
                     {

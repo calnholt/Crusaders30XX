@@ -186,7 +186,7 @@ namespace Crusaders30XX.ECS.Components
 		{
 			public Entity Owner { get; set; }
 			public bool IsOpen { get; set; } = false;
-			public string Message { get; set; } = "Quest Complete!";
+			public string Message { get; set; } = "Quest Complete";
 		}
 
 	public class PendingQuestDialog : IComponent

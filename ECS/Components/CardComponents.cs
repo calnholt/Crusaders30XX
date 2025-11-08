@@ -418,6 +418,19 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Backups original tooltip configuration so temporary overrides can be restored later.
+    /// </summary>
+    public class TooltipOverrideBackup : IComponent
+    {
+        public Entity Owner { get; set; }
+        public TooltipType OriginalType { get; set; } = TooltipType.Text;
+        public TooltipPosition OriginalPosition { get; set; } = TooltipPosition.Above;
+        public int OriginalOffsetPx { get; set; } = 30;
+        public bool HadCardTooltip { get; set; } = false;
+        public string OriginalCardTooltipId { get; set; } = "";
+    }
+
+    /// <summary>
     /// Marks a card in hand that has been preselected to be discarded by an enemy effect
     /// for a specific attack context.
     /// </summary>

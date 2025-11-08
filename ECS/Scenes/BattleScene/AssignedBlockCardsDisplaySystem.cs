@@ -207,23 +207,71 @@ namespace Crusaders30XX.ECS.Systems
 				}
 
 				// Tooltip content management
+				// For non-equipment cards, ensure card tooltip override while assigned for the current context
+				bool isCardAssignment = !abc.IsEquipment;
+				if (isCardAssignment && isForCurrentContext && showDuringPhase)
+				{
+					// Capture original tooltip config once
+					var backup = entity.GetComponent<TooltipOverrideBackup>();
+					if (backup == null)
+					{
+						var ctExisting = entity.GetComponent<CardTooltip>();
+						backup = new TooltipOverrideBackup
+						{
+							OriginalType = ui?.TooltipType ?? TooltipType.Text,
+							OriginalPosition = ui?.TooltipPosition ?? TooltipPosition.Above,
+							OriginalOffsetPx = ui?.TooltipOffsetPx ?? 30,
+							HadCardTooltip = (ctExisting != null),
+							OriginalCardTooltipId = ctExisting?.CardId ?? string.Empty
+						};
+						EntityManager.AddComponent(entity, backup);
+					}
+					// Apply override: show full card tooltip below
+					var cd = entity.GetComponent<CardData>();
+					if (ui != null)
+					{
+						ui.TooltipType = TooltipType.Card;
+						ui.TooltipPosition = TooltipPosition.Below;
+						ui.TooltipOffsetPx = 10;
+					}
+					var ct = entity.GetComponent<CardTooltip>();
+					if (ct == null)
+					{
+						EntityManager.AddComponent(entity, new CardTooltip { CardId = cd?.CardId ?? string.Empty });
+					}
+					else
+					{
+						ct.CardId = cd?.CardId ?? string.Empty;
+					}
+				}
+
 				if (shouldShowTooltip)
 				{
-					ui.Tooltip = abc.Tooltip ?? string.Empty;
-					ui.TooltipOffsetPx = 10;
-					ui.TooltipPosition = TooltipPosition.Above;
+					// Equipment still uses text tooltip above
+					if (abc.IsEquipment)
+					{
+						ui.Tooltip = abc.Tooltip ?? string.Empty;
+						ui.TooltipOffsetPx = 10;
+						ui.TooltipPosition = TooltipPosition.Above;
+					}
+					// Cards: no text tooltip; card tooltip override already applied above
 				}
 				else
 				{
 					ui.IsHovered = false;
-					string tip = string.Empty;
-					var cdReset = ui.Owner?.GetComponent<CardData>();
-					if (cdReset != null && CardDefinitionCache.TryGet(cdReset.CardId, out var defReset) && defReset != null)
+					// For equipment, maintain/reset the text tooltip when not showing
+					if (abc.IsEquipment)
 					{
-						tip = defReset.tooltip ?? string.Empty;
+						string tip = string.Empty;
+						var cdReset = ui.Owner?.GetComponent<CardData>();
+						if (cdReset != null && CardDefinitionCache.TryGet(cdReset.CardId, out var defReset) && defReset != null)
+						{
+							tip = defReset.tooltip ?? string.Empty;
+						}
+						ui.Tooltip = tip;
+						ui.TooltipOffsetPx = 30;
 					}
-					ui.Tooltip = tip;
-					ui.TooltipOffsetPx = 30;
+					// Cards: do not write text tooltip while assigned
 				}
 			}
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -354,6 +402,29 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				var hk = evt.Card.GetComponent<HotKey>();
 				if (hk != null) { EntityManager.RemoveComponent<HotKey>(evt.Card); }
+			}
+			// Restore tooltip settings for cards (ignore equipment)
+			if (evt.Card != null && evt.Card.GetComponent<EquippedEquipment>() == null)
+			{
+				var backup = evt.Card.GetComponent<TooltipOverrideBackup>();
+				var ui = evt.Card.GetComponent<UIElement>();
+				if (backup != null && ui != null)
+				{
+					ui.TooltipType = backup.OriginalType;
+					ui.TooltipPosition = backup.OriginalPosition;
+					ui.TooltipOffsetPx = backup.OriginalOffsetPx;
+					var ct = evt.Card.GetComponent<CardTooltip>();
+					if (backup.HadCardTooltip)
+					{
+						if (ct == null) { EntityManager.AddComponent(evt.Card, new CardTooltip { CardId = backup.OriginalCardTooltipId ?? string.Empty }); }
+						else { ct.CardId = backup.OriginalCardTooltipId ?? string.Empty; }
+					}
+					else
+					{
+						if (ct != null) { EntityManager.RemoveComponent<CardTooltip>(evt.Card); }
+					}
+					EntityManager.RemoveComponent<TooltipOverrideBackup>(evt.Card);
+				}
 			}
 			MaintainLatestHotKeyForContext(evt.ContextId);
 		}

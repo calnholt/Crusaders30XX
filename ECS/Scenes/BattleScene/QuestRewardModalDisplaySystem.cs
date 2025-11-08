@@ -114,7 +114,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Draw(_pixel, new Rectangle(panelRect.Right - 2, panelRect.Y, 2, panelRect.Height), Color.White);
 
 			// Title text
-			string title = st.Message ?? "Quest Complete!";
+			string title = st.Message ?? "Quest Complete";
 			var titleSize = _font.MeasureString(title) * TextScale;
 			var titlePos = new Vector2(panelRect.Center.X - titleSize.X / 2f, panelRect.Y + System.Math.Max(8, (int)(panelRect.Height * 0.18f)) - titleSize.Y / 2f);
 			_spriteBatch.DrawString(_font, title, titlePos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
