@@ -85,6 +85,13 @@ public class ShockwaveDisplaySystem : Core.System
         if (_overlay == null || sceneSrc == null)
         {
             // Fallback: blit original scene
+            if (finalTarget != null && ReferenceEquals(sceneSrc, finalTarget))
+            {
+                _gd.SetRenderTarget(null);
+                return;
+            }
+
+            _gd.SetRenderTarget(finalTarget);
             _sb.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
             _sb.Draw(sceneSrc, _gd.Viewport.Bounds, Color.White);
             _sb.End();
@@ -94,6 +101,13 @@ public class ShockwaveDisplaySystem : Core.System
         // Nothing to do
         if (_waves.Count == 0)
         {
+            if (finalTarget != null && ReferenceEquals(sceneSrc, finalTarget))
+            {
+                _gd.SetRenderTarget(null);
+                return;
+            }
+
+            _gd.SetRenderTarget(finalTarget);
             _sb.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
             _sb.Draw(sceneSrc, _gd.Viewport.Bounds, Color.White);
             _sb.End();
@@ -102,14 +116,34 @@ public class ShockwaveDisplaySystem : Core.System
 
         // Start with the original scene in src
         Texture2D src = sceneSrc;
-        RenderTarget2D dst;
-        bool useA = true;
 
         float now = _timeSeconds;
         foreach (var w in _waves)
         {
-            dst = useA ? ppA : ppB;
-            useA = !useA;
+            RenderTarget2D dst = null;
+
+            if (ppA != null && !ReferenceEquals(src, ppA))
+            {
+                dst = ppA;
+            }
+            else if (ppB != null && !ReferenceEquals(src, ppB))
+            {
+                dst = ppB;
+            }
+            else if (ppA != null)
+            {
+                dst = ppA;
+            }
+            else if (ppB != null)
+            {
+                dst = ppB;
+            }
+
+            if (dst == null || ReferenceEquals(dst, src))
+            {
+                // Unable to secure a distinct render target; stop compositing further waves.
+                break;
+            }
 
             _gd.SetRenderTarget(dst);
             _gd.Clear(Color.Black);
@@ -130,6 +164,13 @@ public class ShockwaveDisplaySystem : Core.System
             _overlay.End(_sb);
 
             src = dst;
+        }
+
+        if (finalTarget != null && ReferenceEquals(finalTarget, src))
+        {
+            // Already in the requested render target; ensure subsequent draws do not sample from a bound RT
+            _gd.SetRenderTarget(null);
+            return;
         }
 
         _gd.SetRenderTarget(finalTarget);
