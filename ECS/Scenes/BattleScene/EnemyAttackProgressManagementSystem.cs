@@ -20,9 +20,12 @@ namespace Crusaders30XX.ECS.Systems
 		public EnemyAttackProgressManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
-			EventManager.Subscribe<BlockAssignmentRemoved>(OnBlockAssignmentRemoved);
+			// TODO: update to look at CardMoved event instead of BlockAssignmentRemoved / Added
+			EventManager.Subscribe<BlockAssignmentRemoved>(_ => TimerScheduler.Schedule(0.2f, () => OnBlockAssignmentRemoved(_)));
 			EventManager.Subscribe<ApplyPassiveEvent>(_ => RecomputeAll());
 			EventManager.Subscribe<RemovePassive>(_ => RecomputeAll());
+			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ => { if (_.Current == SubPhase.PreBlock) RecomputeAll(); });
+
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -44,7 +47,7 @@ namespace Crusaders30XX.ECS.Systems
 				var progress = FindOrCreateProgress(pa.ContextId, enemy, pa.AttackId);
 				// Keep AttackId in sync in case it changes
 				progress.AttackId = pa.AttackId;
-				Recompute(progress);
+				// Recompute(progress);
 			}
 
 			// Remove any progress entities whose contextId is no longer present
@@ -62,7 +65,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void PrintProgress(EnemyAttackProgress p)
 		{
-			Console.WriteLine($"[EnemyAttackProgressManagementSystem] Progress p={p.ContextId} playedCards={p.PlayedCards} playedRed={p.PlayedRed} playedWhite={p.PlayedWhite} playedBlack={p.PlayedBlack} assignedBlockTotal={p.AssignedBlockTotal} additionalConditionalDamageTotal={p.AdditionalConditionalDamageTotal} isConditionMet={p.IsConditionMet} actualDamage={p.ActualDamage} preventedDamage={p.AegisTotal} damageBeforePrevention={p.DamageBeforePrevention} baseDamage={p.BaseDamage} aegisTotal={p.AegisTotal}");
+			Console.WriteLine($"[EnemyAttackProgressManagementSystem] Progress p={p.ContextId} playedCards={p.PlayedCards} playedRed={p.PlayedRed} playedWhite={p.PlayedWhite} playedBlack={p.PlayedBlack} assignedBlockTotal={p.AssignedBlockTotal} additionalConditionalDamageTotal={p.AdditionalConditionalDamageTotal} isConditionMet={p.IsConditionMet} actualDamage={p.ActualDamage} preventedDamage={p.AegisTotal} damageBeforePrevention={p.DamageBeforePrevention} baseDamage={p.BaseDamage} aegisTotal={p.AegisTotal} totalPreventedDamage={p.TotalPreventedDamage}");
 		}
 
 		[DebugAction("Print Progress")]
@@ -76,7 +79,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnBlockAssignmentAdded(BlockAssignmentAdded e)
 		{
-            Console.WriteLine($"[EnemyAttackProgressManagementSystem] BlockAssignmentAdded ctx={e.ContextId} color={e.Color} delta={e.DeltaBlock}");
+			Console.WriteLine($"[EnemyAttackProgressManagementSystem] BlockAssignmentAdded ctx={e.ContextId} color={e.Color} delta={e.DeltaBlock}");
 			if (e == null || string.IsNullOrWhiteSpace(e.Color)) return;
 			string color = NormalizeColorKey(e.Color);
 			if (string.IsNullOrEmpty(e.ContextId)) return;
@@ -188,13 +191,11 @@ namespace Crusaders30XX.ECS.Systems
 			p.AegisTotal = aegis;
 			// Compute assigned block directly from AssignedBlockCard components for this context
 			int assignedFromCardsAndEquipment = 0;
-			foreach (var e in EntityManager.GetEntitiesWithComponent<AssignedBlockCard>())
+			var assignedBlockCards = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>().ToList();
+			Console.WriteLine($"[EnemyAttackProgressManagementSystem] assignedBlockCards={assignedBlockCards.Count}");
+			foreach (var e in assignedBlockCards)
 			{
-				var abc = e.GetComponent<AssignedBlockCard>();
-				if (abc != null && abc.ContextId == p.ContextId)
-				{
-					assignedFromCardsAndEquipment += abc.BlockAmount;
-				}
+				assignedFromCardsAndEquipment += e.GetComponent<AssignedBlockCard>().BlockAmount;
 			}
 			p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")

@@ -109,7 +109,7 @@ namespace Crusaders30XX.ECS.Systems
 					}
 					catch { }
 					if (blockVal <= 0) { return; }
-					EventManager.Publish(new BlockAssignmentAdded { ContextId = ctx, Card = eqEntity, DeltaBlock = blockVal, Color = color });
+					
 					var zone = eqEntity.GetComponent<EquipmentZone>();
 					if (zone == null)
 					{
@@ -140,6 +140,7 @@ namespace Crusaders30XX.ECS.Systems
 						var returnPos = (equipZone != null && equipZone.LastPanelCenter != Vector2.Zero) ? equipZone.LastPanelCenter : uiCenter;
 						abc.ContextId = ctx; abc.BlockAmount = blockVal; abc.AssignedAtTicks = System.DateTime.UtcNow.Ticks; abc.Phase = AssignedBlockCard.PhaseState.Pullback; abc.Elapsed = 0f; abc.IsEquipment = true; abc.ColorKey = NormalizeColorKey(color); abc.Tooltip = BuildEquipmentTooltip(comp); abc.DisplayBgColor = ResolveEquipmentBgColor(color); abc.DisplayFgColor = ResolveFgForBg(abc.DisplayBgColor); abc.ReturnTargetPos = returnPos; abc.EquipmentType = comp.EquipmentType;
 					}
+					EventManager.Publish(new BlockAssignmentAdded { ContextId = ctx, Card = eqEntity, DeltaBlock = blockVal, Color = color });
 					// Mark the assigned equipment to unassign via delegate when clicked on its assigned tile
 					{
 						var uiAssigned = eqEntity.GetComponent<UIElement>();
