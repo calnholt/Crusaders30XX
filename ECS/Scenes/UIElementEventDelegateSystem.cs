@@ -46,6 +46,11 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new PayCostCancelRequested());
                     break;
                 }
+                case UIElementEventType.AbandonQuest:
+                {
+                    EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+                    break;
+                }
                 default:
                 {
                     Console.WriteLine($"UIElementEventDelegateSystem: clicked unknown event type {type} on entity {entity.Id}");

@@ -195,7 +195,6 @@ public class Game1 : Game
         var gp = GamePad.GetState(PlayerIndex.One);
         IsMouseVisible = gp.IsConnected;
         var kb = Keyboard.GetState();
-        if (gp.Buttons.Back == ButtonState.Pressed) EventManager.Publish(new ShowTransition{ Scene = SceneId.Location });
         if ((kb.IsKeyDown(Keys.Escape) && kb.IsKeyDown(Keys.LeftShift)))
             Exit();
         // Global debug menu toggle so it's available in the main menu too

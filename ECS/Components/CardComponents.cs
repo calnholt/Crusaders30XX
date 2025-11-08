@@ -386,6 +386,7 @@ namespace Crusaders30XX.ECS.Components
         RemoveCardCustomization,
         ViewDiscard,
         ViewDeck,
+			AbandonQuest,
         PayCostCancel,
     }
 
@@ -594,6 +595,7 @@ namespace Crusaders30XX.ECS.Components
         B,
         X,
         Y,
+        Back,         
         Start
     }
 

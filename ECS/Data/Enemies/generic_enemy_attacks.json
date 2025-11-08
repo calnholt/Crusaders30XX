@@ -16,6 +16,14 @@
           "amount": 1
         }
       ]
+    },
+    {
+      "id": "glass_cannon",
+      "name": "Glass Cannon",
+      "target": "Player",
+      "isGeneric": true,
+      "damage": 8,
+      "text": "If this is blocked with exactly one card, this attack deals no damage and the blocking card is exhausted."
     }
   ]
 }
