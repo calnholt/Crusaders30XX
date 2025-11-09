@@ -5,6 +5,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -16,6 +17,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly Dictionary<(int radius, int thickness), Texture2D> _ringCache = new();
+		private Vector2 _cursorPos;
 
 		[DebugEditable(DisplayName = "Enabled", Step = 1)]
 		public bool Enabled { get; set; } = false;
@@ -36,6 +38,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 
 			EventManager.Subscribe<DeleteCachesEvent>(_ => OnDeleteCaches());
+			EventManager.Subscribe<CursorStateEvent>(OnCursor);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -56,9 +59,27 @@ namespace Crusaders30XX.ECS.Systems
 			int screenW = vp.Width;
 			int screenH = vp.Height;
 			int thickness = RingThickness < 1 ? 1 : RingThickness;
+
+			// Draw cursor coordinates in unscaled map space (0..BaseMapWidth x 0..BaseMapHeight)
+			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
+			if (cam != null)
+			{
+				float scale = (cam.MapScale <= 0f) ? 0.0001f : cam.MapScale;
+				Vector2 unscaled = (cam.Origin + _cursorPos) / scale;
+				string text = $"{(int)Math.Round(unscaled.X)}, {(int)Math.Round(unscaled.Y)}";
+				var font = FontSingleton.ContentFont;
+				if (font != null)
+				{
+					var size = font.MeasureString(text);
+					Vector2 basePos = _cursorPos + new Vector2(0f, 18f);
+					Vector2 drawPos = basePos - new Vector2(size.X / 2f, 0f);
+					_spriteBatch.DrawString(font, text, drawPos + new Vector2(1f, 1f), Color.Black);
+					_spriteBatch.DrawString(font, text, drawPos, Color.White);
+				}
+			}
+
 			if (!ShowRevealRadius && !ShowUnrevealedRadius) return;
 
-			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
 			float mapScale = cam?.MapScale ?? 1.0f;
 
 			var list = EntityManager
@@ -156,6 +177,11 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var tex = GetRingTexture(radius, thickness);
 			_spriteBatch.Draw(tex, center, sourceRectangle: null, color: color, rotation: 0f, origin: new Vector2(radius, radius), scale: 1f, effects: SpriteEffects.None, layerDepth: 0f);
+		}
+
+		private void OnCursor(CursorStateEvent evt)
+		{
+			_cursorPos = evt.Position;
 		}
 	}
 }

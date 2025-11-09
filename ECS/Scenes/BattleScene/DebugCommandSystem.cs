@@ -117,6 +117,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
         }
+        [DebugAction("Apply Penance")]
+        public void Debug_ApplyPenance()
+        {
+            EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = 1 });
+        }
     }
 }
 

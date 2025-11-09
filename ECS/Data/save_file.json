@@ -1,5 +1,5 @@
 {
-  "gold": 4,
+  "gold": 6,
   "locations": [
     {
       "id": "desert",
@@ -18,7 +18,7 @@
         },
         {
           "id": "desert_4",
-          "completed": true
+          "completed": false
         },
         {
           "id": "desert_5",
@@ -30,6 +30,14 @@
         },
         {
           "id": "desert_7",
+          "completed": false
+        },
+        {
+          "id": "desert_8",
+          "completed": false
+        },
+        {
+          "id": "desert_8",
           "completed": false
         }
       ]

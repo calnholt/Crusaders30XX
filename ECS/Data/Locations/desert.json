@@ -170,8 +170,8 @@
     },
     {
       "Id": "desert_7",
-      "WorldPosition": [3000, 2000],
-      "RevealRadius": 500,
+      "WorldPosition": [4775, 700],
+      "RevealRadius": 1000,
       "UnrevealedRadius": 100,
       "Type": "Hellrift",
       "Reward": {
@@ -201,6 +201,40 @@
         },
         {
           "id": "ninja",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
+      "Id": "desert_8",
+      "WorldPosition": [720, 2550],
+      "RevealRadius": 1000,
+      "UnrevealedRadius": 100,
+      "Type": "Hellrift",
+      "Reward": {
+        "Gold": 10
+      },
+      "Events":
+      [
+        {
+          "id": "ogre",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
+      "Id": "desert_9",
+      "WorldPosition": [5327, 2623],
+      "RevealRadius": 1000,
+      "UnrevealedRadius": 100,
+      "Type": "Hellrift",
+      "Reward": {
+        "Gold": 10
+      },
+      "Events":
+      [
+        {
+          "id": "ogre",
           "type": "Enemy"
         }
       ]

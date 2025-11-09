@@ -303,6 +303,7 @@ namespace Crusaders30XX.ECS.Factories
             entityManager.AddComponent(entity, uiElement);
             entityManager.AddComponent(entity, ParallaxLayer.GetUIParallaxLayer());
             entityManager.AddComponent(entity, new Hint { Text = CardHintService.GetCardHint(def, color) });
+            entityManager.AddComponent(entity, new DontDestroyOnReload());
             // Set tooltip from definition (precomputed in CardDefinitionCache)
             if (!string.IsNullOrEmpty(def.tooltip))
             {

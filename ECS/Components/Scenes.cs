@@ -37,6 +37,11 @@ namespace Crusaders30XX.ECS.Components
 	public class DontDestroyOnLoad : IComponent
 	{
 		public Entity Owner { get; set; }
+		public SceneId Scene { get; set; } = SceneId.None;
+	}
+	public class DontDestroyOnReload : IComponent
+	{
+		public Entity Owner { get; set; }
 	}
 
 	/// <summary>

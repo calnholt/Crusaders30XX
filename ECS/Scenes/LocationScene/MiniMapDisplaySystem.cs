@@ -128,35 +128,83 @@ namespace Crusaders30XX.ECS.Systems
 			// Right border
 			_spriteBatch.Draw(_pixel, new Rectangle((int)(minimapX + minimapWidth - borderWidth), (int)minimapY, borderWidth, (int)minimapHeight), borderColor);
 
-			// Draw POIs
-			foreach (var poi in def.pointsOfInterest)
+			// Draw POIs (filtered visibility)
+			var poiEntities = EntityManager.GetEntitiesWithComponent<PointOfInterest>()?.ToList();
+			if (poiEntities != null && poiEntities.Count > 0)
 			{
-				// Convert world position to minimap coordinates
-				float minimapPoiX = actualMinimapX + (poi.worldPosition.X * cam.MapScale * scale);
-				float minimapPoiY = actualMinimapY + (poi.worldPosition.Y * cam.MapScale * scale);
+				// Use live POI components when available
+				var pois = poiEntities
+					.Select(e => e.GetComponent<PointOfInterest>())
+					.Where(p => p != null)
+					.ToList();
 
-				// Check if POI is within minimap bounds
-				if (minimapPoiX < minimapX || minimapPoiX > minimapX + minimapWidth ||
-					minimapPoiY < minimapY || minimapPoiY > minimapY + minimapHeight)
+				var unlockers = pois.Where(p => p.IsRevealed || p.IsCompleted).ToList();
+
+				foreach (var p in pois)
 				{
-					continue;
+					bool isHellrift = p.Type != null && p.Type.Equals("Hellrift", System.StringComparison.OrdinalIgnoreCase);
+					bool isCompleted = p.IsCompleted;
+					// Visible if: always Hellrift, or completed, or revealed, or proximity-visible
+					bool isVisible = isHellrift || isCompleted || p.IsRevealed || IsVisibleByProximity(p, unlockers, cam.MapScale);
+					if (!isVisible) continue;
+
+					float minimapPoiX = actualMinimapX + (p.WorldPosition.X * cam.MapScale * scale);
+					float minimapPoiY = actualMinimapY + (p.WorldPosition.Y * cam.MapScale * scale);
+
+					if (minimapPoiX < minimapX || minimapPoiX > minimapX + minimapWidth ||
+						minimapPoiY < minimapY || minimapPoiY > minimapY + minimapHeight)
+					{
+						continue;
+					}
+
+					float dotSize = (isHellrift && !isCompleted) ? HellriftDotSize : DotSize;
+					Color dotColor = isCompleted ? Color.White : Color.Red;
+
+					var dotRect = new Rectangle(
+						(int)(minimapPoiX - dotSize / 2f),
+						(int)(minimapPoiY - dotSize / 2f),
+						(int)dotSize,
+						(int)dotSize
+					);
+					_spriteBatch.Draw(_pixel, dotRect, dotColor);
 				}
+			}
+			else
+			{
+				// Fallback to definitions when live POIs are not present
+				var defUnlockers = def.pointsOfInterest
+					.Where(p => p != null && (p.isRevealed || SaveCache.IsQuestCompleted(locationId, p.id)))
+					.ToList();
 
-				// Determine color and size
-				bool isCompleted = SaveCache.IsQuestCompleted(locationId, poi.id);
-				bool isHellrift = poi.type != null && poi.type.Equals("Hellrift", System.StringComparison.OrdinalIgnoreCase);
-				float dotSize = (isHellrift && !isCompleted) ? HellriftDotSize : DotSize;
+				foreach (var poi in def.pointsOfInterest)
+				{
+					if (poi == null) continue;
 
-				Color dotColor = isCompleted ? Color.White : Color.Red;
+					bool isCompleted = SaveCache.IsQuestCompleted(locationId, poi.id);
+					bool isHellrift = poi.type != null && poi.type.Equals("Hellrift", System.StringComparison.OrdinalIgnoreCase);
+					bool isVisible = isHellrift || isCompleted || poi.isRevealed || IsVisibleByProximityDef(poi, defUnlockers, locationId, cam.MapScale);
+					if (!isVisible) continue;
 
-				// Draw POI dot
-				var dotRect = new Rectangle(
-					(int)(minimapPoiX - dotSize / 2f),
-					(int)(minimapPoiY - dotSize / 2f),
-					(int)dotSize,
-					(int)dotSize
-				);
-				_spriteBatch.Draw(_pixel, dotRect, dotColor);
+					float minimapPoiX = actualMinimapX + (poi.worldPosition.X * cam.MapScale * scale);
+					float minimapPoiY = actualMinimapY + (poi.worldPosition.Y * cam.MapScale * scale);
+
+					if (minimapPoiX < minimapX || minimapPoiX > minimapX + minimapWidth ||
+						minimapPoiY < minimapY || minimapPoiY > minimapY + minimapHeight)
+					{
+						continue;
+					}
+
+					float dotSize = (isHellrift && !isCompleted) ? HellriftDotSize : DotSize;
+					Color dotColor = isCompleted ? Color.White : Color.Red;
+
+					var dotRect = new Rectangle(
+						(int)(minimapPoiX - dotSize / 2f),
+						(int)(minimapPoiY - dotSize / 2f),
+						(int)dotSize,
+						(int)dotSize
+					);
+					_spriteBatch.Draw(_pixel, dotRect, dotColor);
+				}
 			}
 
 			// Draw camera viewport rectangle
@@ -194,6 +242,34 @@ namespace Crusaders30XX.ECS.Systems
 				// Right border
 				_spriteBatch.Draw(_pixel, new Rectangle((int)(minimapCamMaxX - outlineWidth), (int)minimapCamMinY, outlineWidth, camRectHeight), borderColor);
 			}
+		}
+
+		private static bool IsVisibleByProximity(PointOfInterest poi, List<PointOfInterest> unlockers, float mapScale)
+		{
+			if (unlockers == null || unlockers.Count == 0) return false;
+			foreach (var u in unlockers)
+			{
+				float dx = (poi.WorldPosition.X - u.WorldPosition.X) * mapScale;
+				float dy = (poi.WorldPosition.Y - u.WorldPosition.Y) * mapScale;
+				float r = (u.DisplayRadius > 0f) ? u.DisplayRadius : (u.IsCompleted ? u.RevealRadius : u.UnrevealedRadius);
+				r *= mapScale;
+				if ((dx * dx) + (dy * dy) <= (r * r)) return true;
+			}
+			return false;
+		}
+
+		private static bool IsVisibleByProximityDef(PointOfInterestDefinition poi, List<PointOfInterestDefinition> unlockers, string locationId, float mapScale)
+		{
+			if (unlockers == null || unlockers.Count == 0) return false;
+			foreach (var u in unlockers)
+			{
+				float dx = (poi.worldPosition.X - u.worldPosition.X) * mapScale;
+				float dy = (poi.worldPosition.Y - u.worldPosition.Y) * mapScale;
+				bool uCompleted = SaveCache.IsQuestCompleted(locationId, u.id);
+				float r = (uCompleted ? u.revealRadius : u.unrevealedRadius) * mapScale;
+				if ((dx * dx) + (dy * dy) <= (r * r)) return true;
+			}
+			return false;
 		}
 	}
 }
