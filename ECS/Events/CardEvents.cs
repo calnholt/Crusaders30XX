@@ -367,4 +367,9 @@ namespace Crusaders30XX.ECS.Events
         public Entity Entity;
     }
 
+    public class MillCardEvent
+    {
+
+    }
+
 } 

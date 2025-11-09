@@ -17,8 +17,9 @@ namespace Crusaders30XX.ECS.Services
         {
           case "GlassCannon":
           {
-            var glassCannonAmount = effect.amount;
-            if (p.PlayedCards == glassCannonAmount)
+            var assignedBlockCards = entityManager.GetEntitiesWithComponent<AssignedBlockCard>().Where(e => !e.GetComponent<AssignedBlockCard>().IsEquipment).ToList();
+            assignedBlockCards.ForEach(e => entityManager.RemoveComponent<ExhaustOnBlock>(e));
+            if (assignedBlockCards.Count == effect.amount)
             {
               Console.WriteLine($"[EnemySpecialAttackService] Glass Cannon special effect executed");
               p.ActualDamage = 0;
@@ -27,7 +28,7 @@ namespace Crusaders30XX.ECS.Services
               p.IsConditionMet = true;
               p.BaseDamage = def.damage;
               p.AssignedBlockTotal = def.damage;
-              var assignedBlockCards = entityManager.GetEntitiesWithComponent<AssignedBlockCard>().ToList();
+              
               foreach (var e in assignedBlockCards)
               {
                 entityManager.AddComponent(e, new ExhaustOnBlock { Owner = e });
