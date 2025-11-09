@@ -90,6 +90,7 @@ namespace Crusaders30XX.ECS.Systems
 		private AppliedPassivesManagementSystem _appliedPassivesManagementSystem;
 		private BattleStateInfoManagementSystem _battleStateInfoManagementSystem;
 		private DiscardSpecificCardHighlightSystem _discardSpecificCardHighlightSystem;
+		private MillCardSystem _millCardSystem;
 		private IntimidateManagementSystem _intimidateManagementSystem;
 		private IntimidateDisplaySystem _intimidateDisplaySystem;
 		private FrozenCardManagementSystem _frozenCardManagementSystem;
@@ -198,6 +199,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("MedalDisplaySystem.Draw", _medalDisplaySystem.Draw);
 			FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
 			FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
+			FrameProfiler.Measure("MillCardSystem.Draw", _millCardSystem.Draw);
 			FrameProfiler.Measure("CardListModalSystem.Draw", _cardListModalSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
 			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
@@ -331,6 +333,7 @@ namespace Crusaders30XX.ECS.Systems
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
 			_drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_discardPileDisplaySystem = new DiscardPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_millCardSystem = new MillCardSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_cardListModalSystem = new CardListModalSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			var crusaderTexture = _content.Load<Texture2D>("Crusader");
 			_playerDisplaySystem = new PlayerDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, crusaderTexture);
@@ -407,6 +410,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_eventQueueSystem);
 			_world.AddSystem(_drawPileDisplaySystem);
 			_world.AddSystem(_discardPileDisplaySystem);
+			_world.AddSystem(_millCardSystem);
 			_world.AddSystem(_cardListModalSystem);
 			_world.AddSystem(_playerDisplaySystem);
 			_world.AddSystem(_guardianAngelDisplaySystem);

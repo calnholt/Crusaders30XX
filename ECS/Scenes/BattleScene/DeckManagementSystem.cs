@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<RedrawHandEvent>(OnRedrawHandEvent);
             EventManager.Subscribe<DeckShuffleEvent>(OnDeckShuffleEvent);
             EventManager.Subscribe<ResetDeckEvent>(OnResetDeckEvent);
+            EventManager.Subscribe<RemoveTopCardFromDrawPileRequested>(OnRemoveTopCardFromDrawPileRequested);
         }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -281,6 +282,37 @@ namespace Crusaders30XX.ECS.Systems
             Console.WriteLine($"[DeckManagementSystem] OnResetDeck before hand={deck.Hand.Count} draw={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
             ResetDeckExcludingWeapon(deck);
             Console.WriteLine($"[DeckManagementSystem] OnResetDeck after hand={deck.Hand.Count} draw={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
+        }
+
+        /// <summary>
+        /// Handles coordinated removal of the top draw card for mill animations.
+        /// Does not insert the card into another zone; responder will handle placement later.
+        /// </summary>
+        private void OnRemoveTopCardFromDrawPileRequested(RemoveTopCardFromDrawPileRequested evt)
+        {
+            var deckEntity = evt.Deck ?? EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            if (deckEntity == null) return;
+            var deck = deckEntity.GetComponent<Deck>();
+            if (deck == null || deck.DrawPile.Count == 0) return;
+
+            var card = deck.DrawPile[0];
+            deck.DrawPile.RemoveAt(0);
+            // Ensure UI of this card is non-interactive while in limbo
+            var ui = card.GetComponent<UIElement>();
+            if (ui != null)
+            {
+                ui.IsInteractable = false;
+                ui.IsHovered = false;
+                ui.IsClicked = false;
+                ui.EventType = UIElementEventType.None;
+            }
+            // Publish response for animation kickoff
+            EventManager.Publish(new TopCardRemovedForMillEvent
+            {
+                Deck = deckEntity,
+                Card = card
+            });
+            Console.WriteLine("[DeckManagementSystem] Removed top card for mill animation and published TopCardRemovedForMillEvent");
         }
     }
 } 

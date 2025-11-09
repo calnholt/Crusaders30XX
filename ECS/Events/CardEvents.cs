@@ -367,9 +367,32 @@ namespace Crusaders30XX.ECS.Events
         public Entity Entity;
     }
 
+    /// <summary>
+    /// Request to mill the top card of the player's draw pile with a flyout animation.
+    /// If Deck is null, the first entity with a Deck will be used.
+    /// </summary>
     public class MillCardEvent
     {
+        public Entity Deck { get; set; }
+    }
 
+    /// <summary>
+    /// Coordination event: request that the deck manager remove the top card of DrawPile
+    /// but do not place it in another zone yet (animation will run first).
+    /// </summary>
+    public class RemoveTopCardFromDrawPileRequested
+    {
+        public Entity Deck { get; set; }
+    }
+
+    /// <summary>
+    /// Response event: published after the top card has been removed from DrawPile.
+    /// Carries the removed card entity for animation systems.
+    /// </summary>
+    public class TopCardRemovedForMillEvent
+    {
+        public Entity Deck { get; set; }
+        public Entity Card { get; set; }
     }
 
 } 
