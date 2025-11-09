@@ -61,6 +61,7 @@ namespace Crusaders30XX.ECS.Systems
 		private DamageModificationDisplaySystem _damageModificationDisplaySystem;
 		private CardPlayedAnimationSystem _cardPlayedAnimationSystem;
 		private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
+		private ExhaustOnBlockDisplaySystem _exhaustOnBlockDisplaySystem;
 		private EnemyIntentPlanningSystem _enemyIntentPlanningSystem;
 		private EnemyAttackProgressManagementSystem _enemyAttackProgressManagementSystem;
 		private MarkedForSpecificDiscardSystem _markedForSpecificDiscardSystem;
@@ -178,6 +179,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("DamageModificationDisplaySystem.Draw", _damageModificationDisplaySystem.Draw);
 			FrameProfiler.Measure("StunnedOverlaySystem.Draw", _stunnedOverlaySystem.Draw);
 			FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", _assignedBlockCardsDisplaySystem.Draw);
+			FrameProfiler.Measure("ExhaustOnBlockDisplaySystem.Draw", _exhaustOnBlockDisplaySystem.Draw);
 			FrameProfiler.Measure("PlayerWispParticleSystem.Draw", _playerWispParticleSystem.Draw);
 			FrameProfiler.Measure("PlayerTemperanceActivationDisplaySystem.Draw", _playerTemperanceActivationDisplaySystem.Draw);
 			FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", _battlePhaseDisplaySystem.Draw);
@@ -365,6 +367,7 @@ namespace Crusaders30XX.ECS.Systems
 			_cardPlayedAnimationSystem = new CardPlayedAnimationSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_endTurnDisplaySystem = new EndTurnDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			_exhaustOnBlockDisplaySystem = new ExhaustOnBlockDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_payCostOverlaySystem = new PayCostOverlaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_cantPlayCardMessageSystem = new CantPlayCardMessageSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_gameOverOverlayDisplaySystem = new GameOverOverlayDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -446,6 +449,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_cardPlayedAnimationSystem);
 			_world.AddSystem(_endTurnDisplaySystem);
 			_world.AddSystem(_assignedBlockCardsDisplaySystem);
+			_world.AddSystem(_exhaustOnBlockDisplaySystem);
 			_world.AddSystem(_assignedBlocksToDiscardSystem);
 			_world.AddSystem(_enemyDamageManagerSystem);
 			_world.AddSystem(_cardPlaySystem);

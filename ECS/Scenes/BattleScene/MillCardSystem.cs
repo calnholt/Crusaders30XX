@@ -35,11 +35,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Durations
 		[DebugEditable(DisplayName = "Stage1 Duration (s)", Step = 0.01f, Min = 0.01f, Max = 5f)]
-		public float Stage1DurationSec { get; set; } = 0.15f;
+		public static float Stage1DurationSec { get; set; } = 0.15f;
 		[DebugEditable(DisplayName = "Stage2 Duration (s)", Step = 0.01f, Min = 0.01f, Max = 5f)]
-		public float Stage2DurationSec { get; set; } = 0.15f;
+		public static float Stage2DurationSec { get; set; } = 0.15f;
 		[DebugEditable(DisplayName = "Center Hold Duration (s)", Step = 0.01f, Min = 0f, Max = 5f)]
-		public float StageHoldDurationSec { get; set; } = 0.5f;
+		public static float StageHoldDurationSec { get; set; } = 0.5f;
 
 		// Arc heights
 		[DebugEditable(DisplayName = "Arc Height A→C", Step = 1, Min = -1000, Max = 1000)]
@@ -281,6 +281,11 @@ namespace Crusaders30XX.ECS.Systems
 			float wave = (float)Math.Sin(Math.PI * t);
 			return p + n * arcHeight * wave;
 		}
+
+    public static float TotalDuration()
+    {
+      return Stage1DurationSec + Stage2DurationSec + StageHoldDurationSec;
+    }
 	}
 }
 
