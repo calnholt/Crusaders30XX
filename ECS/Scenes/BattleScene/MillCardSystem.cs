@@ -31,6 +31,7 @@ namespace Crusaders30XX.ECS.Systems
 		}
 
 		private readonly List<MillAnim> _anims = new List<MillAnim>();
+		private readonly Queue<Entity> _queuedCards = new Queue<Entity>();
 
 		// Durations
 		[DebugEditable(DisplayName = "Stage1 Duration (s)", Step = 0.01f, Min = 0.01f, Max = 5f)]
@@ -83,7 +84,11 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-			if (_anims.Count == 0) return;
+			if (_anims.Count == 0)
+			{
+				StartNextIfAllowed();
+				return;
+			}
 
 			for (int i = _anims.Count - 1; i >= 0; i--)
 			{
@@ -106,6 +111,8 @@ namespace Crusaders30XX.ECS.Systems
 						{
 							a.InHold = false;
 							a.InStage2 = true;
+							// As soon as the current anim enters Stage 2, allow the next queued to start
+							StartNextIfAllowed();
 						}
 					}
 				}
@@ -125,6 +132,9 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 			}
+
+			// In case no animation is currently in Stage1/Hold, try to start next
+			StartNextIfAllowed();
 		}
 
 		public void Draw()
@@ -197,15 +207,38 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnTopCardRemovedForMill(TopCardRemovedForMillEvent evt)
 		{
 			if (evt?.Card == null) return;
+			// If no animation is in Stage1/Hold, start immediately; otherwise enqueue
+			bool hasStage1OrHold = _anims.Any(x => !x.InStage2);
+			if (!hasStage1OrHold)
+			{
+				StartAnim(evt.Card);
+			}
+			else
+			{
+				_queuedCards.Enqueue(evt.Card);
+			}
+		}
+
+		private void StartAnim(Entity card)
+		{
 			_anims.Add(new MillAnim
 			{
-				Card = evt.Card,
+				Card = card,
 				Stage1Elapsed = 0f,
 				StageHoldElapsed = 0f,
 				Stage2Elapsed = 0f,
 				InHold = false,
 				InStage2 = false
 			});
+		}
+
+		private void StartNextIfAllowed()
+		{
+			if (_queuedCards.Count == 0) return;
+			// Only start a new one if there is no current Stage1/Hold animation
+			if (_anims.Any(x => !x.InStage2)) return;
+			var next = _queuedCards.Dequeue();
+			StartAnim(next);
 		}
 
 		private Vector2 ResolveDrawPileAnchor()
