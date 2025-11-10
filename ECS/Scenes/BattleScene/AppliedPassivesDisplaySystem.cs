@@ -73,11 +73,33 @@ namespace Crusaders30XX.ECS.Systems
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             EventManager.Subscribe<PassiveTriggered>(OnPassiveTriggered);
+            EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCachesEvent);
+            EventManager.Subscribe<LoadSceneEvent>(OnLoadSceneEvent);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
         {
             return EntityManager.GetEntitiesWithComponent<AppliedPassives>();
+        }
+
+        private void OnDeleteCachesEvent(DeleteCachesEvent evt)
+        {
+            _tooltipUiByKey.Values.ToList().ForEach(ui => EntityManager.DestroyEntity(ui.Id));
+            _roundedCache.Clear();
+            _tooltipUiByKey.Clear();
+            _ripples.Clear();
+        }
+
+        private void OnLoadSceneEvent(LoadSceneEvent evt)
+        {
+            var player = evt.Scene == SceneId.Battle ? EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault() : null;
+            if (player == null) return;
+            var appliedPassives = player.GetComponent<AppliedPassives>();
+            if (appliedPassives == null) return;
+            foreach (var kv in appliedPassives.Passives)
+            {
+                _ripples[(player.Id, kv.Key)] = new Ripple { Elapsed = 0f, Duration = Math.Max(0.05f, RippleSeconds) };
+            }
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)

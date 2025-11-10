@@ -23,7 +23,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
-		private bool _firstLoad = true;
+		private bool _loadedSystems = false;
+		private bool _loadedEntities = false;
 
 		// Battle systems (logic and draw). Only present while in Battle
 	
@@ -117,32 +118,42 @@ namespace Crusaders30XX.ECS.Systems
 			});
 			EventManager.Subscribe<LoadSceneEvent>(_ => {
 				Console.WriteLine("[BattleSceneSystem] LoadSceneEvent");
-				if (_.Scene != SceneId.Battle) return;
-				if (EntityManager.GetEntity("Player") == null) 
+				if (_.Scene != SceneId.Battle) 
 				{
-					Console.WriteLine("[BattleSceneSystem] LoadSceneEvent 2");
+					return;
+				}
+				if (!_loadedSystems)
+				{
 					AddBattleSystems();
-					// Always create base battle entities (background, player, deck) so the scene renders during dialog
-					Console.WriteLine("[BattleSceneSystem] LoadSceneEvent 3 (CreateBattleSceneEntities)");
+				}
+				if (!_loadedEntities)
+				{
 					CreateBattleSceneEntities();
-					// If a dialog is pending for this quest, wait for DialogEnded before starting battle
-					bool willShowDialog = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<PendingQuestDialog>()?.WillShowDialog ?? false;
-					if (!willShowDialog)
-					{
-						InitBattle();
-						EnqueueBattleRules(false);
-					}
-				};
+				}
+				// If a dialog is pending for this quest, wait for DialogEnded before starting battle
+				bool willShowDialog = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<PendingQuestDialog>()?.WillShowDialog ?? false;
+				if (!willShowDialog)
+				{
+					InitBattle();
+					EnqueueBattleRules(false);
+				}
 			});
 			EventManager.Subscribe<DialogEnded>(_ => 
 			{
 				Console.WriteLine("[BattleSceneSystem] DialogEnded");
-				if (EntityManager.GetEntity("Player") == null) 
+				if (!_loadedEntities) 
 				{
 					CreateBattleSceneEntities();
 				}
 				InitBattle();
 				EnqueueBattleRules(true);
+			});
+			EventManager.Subscribe<DeleteCachesEvent>(_ => {
+				if (_.Scene == SceneId.Battle) return;
+				Console.WriteLine("[BattleSceneSystem] DeleteCachesEvent");
+				_loadedEntities = false;
+				// EventQueue.Clear();
+				// RemoveBattleSystems();
 			});
 		}
 
@@ -237,11 +248,12 @@ namespace Crusaders30XX.ECS.Systems
 				TribulationQuestService.CreateTribulationsForQuest(EntityManager, queued.LocationId, queued.QuestIndex);
 			}
 			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
-			EventManager.Publish(new DeckShuffleEvent { });
+			_loadedEntities = true;
 		}
 
 		public void InitBattle() 
 		{
+			EventManager.Publish(new ResetDeckEvent { });
 			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault().GetComponent<Deck>();
 			if (deck.Cards.Count == 0)
 			{
@@ -274,9 +286,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void EnqueueBattleRules(bool isFollowingDialog) 
 		{
-			Console.WriteLine("[BattleSceneSystem] EnqueueBattleRules");
+			Console.WriteLine($"[BattleSceneSystem] EnqueueBattleRules - Rules: {EventQueue.RulesCount}, Triggers: {EventQueue.TriggersCount}");
 			if (isFollowingDialog)
 			{
+				Console.WriteLine("[BattleSceneSystem] EnqueueBattleRules - Following Dialog");
 				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
 					"Rule.ChangePhase.EnemyStart",
 					new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle }
@@ -297,7 +310,8 @@ namespace Crusaders30XX.ECS.Systems
 				}, 2f);
 				return;
 			}
-			EventQueueBridge.EnqueueTriggerAction("BattleSceneSystem.StartBattle", () => {
+			Console.WriteLine("[BattleSceneSystem] EnqueueBattleRules - Not Following Dialog");
+			EventQueueBridge.EnqueueTriggerAction("BattleSceneSystem.EnqueueBattleRules", () => {
 				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
 					"Rule.ChangePhase.EnemyStart",
 					new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle }
@@ -324,11 +338,10 @@ namespace Crusaders30XX.ECS.Systems
 		}
 		private void AddBattleSystems()
 		{
-			if (!_firstLoad) return;
-			_firstLoad = false;
-			// Construct
-				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
-
+			if (_loadedSystems) return;
+			_loadedSystems = true;
+			Console.WriteLine("[BattleSceneSystem] AddBattleSystems");
+			EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
 			_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
 			_battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);

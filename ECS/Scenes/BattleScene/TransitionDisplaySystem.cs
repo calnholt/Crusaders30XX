@@ -58,7 +58,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnDeleteCachesEvent(DeleteCachesEvent evt)
 		{
-			DeleteEntities(evt.Scene);
+			// DeleteEntities(evt.Scene);
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
@@ -186,10 +186,19 @@ namespace Crusaders30XX.ECS.Systems
 			var sceneEntity = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
 			var scene = sceneEntity.GetComponent<SceneState>();
 			var previous = scene.Current;
+			Console.WriteLine($"[TransitionDisplaySystem] Deleting entities for scene {previous} to {nextScene}");
 			scene.Current = nextScene;
 			// Destroy previous scene's entities except those marked DontDestroyOnLoad
+			var isReload = previous == nextScene;
+			Console.WriteLine($"[TransitionDisplaySystem] isReload: {isReload}");
 			var toDestroy = EntityManager.GetAllEntities()
-				.Where(e => e.HasComponent<OwnedByScene>() && !e.HasComponent<DontDestroyOnLoad>() && e.GetComponent<OwnedByScene>().Scene == previous)
+				.Where(e =>
+					e.HasComponent<OwnedByScene>() &&
+					e.GetComponent<OwnedByScene>().Scene == previous &&
+					!isReload &&
+					!e.HasComponent<DontDestroyOnLoad>()                   // never destroy if DontDestroyOnLoad is present
+					// (!isReload || !e.HasComponent<DontDestroyOnReload>())     // during reload, also keep DontDestroyOnReload
+				)
 				.ToList();
 			foreach (var e in toDestroy)
 			{

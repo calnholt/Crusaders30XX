@@ -109,7 +109,8 @@ namespace Crusaders30XX.ECS.Factories
 
             var st = new BattleStateInfo { Owner = entity };
             world.AddComponent(entity, st);
-            
+
+            world.AddComponent(entity, new AppliedPassives());
             // Pre-create Courage tooltip hover entity (bounds updated by CourageDisplaySystem)
             var courageTooltip = world.CreateEntity("UI_CourageTooltip");
             world.AddComponent(courageTooltip, new CourageTooltipAnchor());

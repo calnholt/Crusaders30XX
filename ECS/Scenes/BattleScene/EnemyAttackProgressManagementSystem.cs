@@ -185,6 +185,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (p == null || string.IsNullOrEmpty(p.AttackId)) return;
 			var attackIntent = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault().GetComponent<AttackIntent>();
 			if (attackIntent == null) return;
+			if (attackIntent.Planned == null || attackIntent.Planned.Count == 0) return;
 			var def = attackIntent.Planned[0].AttackDefinition;
 
 			int full = DamagePredictionService.ComputeFullDamage(def);

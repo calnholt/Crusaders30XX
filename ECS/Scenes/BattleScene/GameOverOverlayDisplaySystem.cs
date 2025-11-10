@@ -50,6 +50,14 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			EventManager.Subscribe<PlayerDied>(OnPlayerDied);
+			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCachesEvent);
+		}
+
+		private void OnDeleteCachesEvent(DeleteCachesEvent evt)
+		{
+			_active = false;
+			_elapsed = 0f;
+			_sceneSwitched = false;
 		}
 
 		private void OnPlayerDied(PlayerDied evt)
@@ -74,13 +82,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (!_sceneSwitched && _elapsed >= total)
 			{
 				// Switch back to menu
-				var sceneEntity = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
-				var scene = sceneEntity?.GetComponent<SceneState>();
-				if (scene != null)
-				{
-					EventManager.Publish(new DeleteCachesEvent { Scene = SceneId.Location });
-					EventManager.Publish(new LoadSceneEvent { Scene = SceneId.Location });
-				}
+				EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
 				_sceneSwitched = true;
 				_active = false; // stop drawing after switch
 			}
