@@ -42,5 +42,30 @@
         }
       ]
     }
+  ],
+  "collection": [
+    "courageous",
+    "dowse_with_holy_water",
+    "narrow_gate",
+    "sacrifice",
+    "seize",
+    "stab",
+    "strike",
+    "stun",
+    "vindicate",
+    "divine_protection",
+    "impale",
+    "burn",
+    "shield_of_faith",
+    "tempest",
+    "anoint_the_sick",
+    "increase_faith",
+    "ravage"
+  ],
+  "items": [
+    {
+      "id": "holy_seal",
+      "amount": 1
+    }
   ]
 }

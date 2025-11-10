@@ -30,6 +30,18 @@
         }
       ],
       "text": "If this is blocked with exactly one card, this attack deals no damage and the blocking card is exhausted."
+    },
+    {
+      "id": "indominable",
+      "name": "Indominable",
+      "target": "Player",
+      "damage": 5,
+      "specialEffects": [
+        {
+          "type": "MustBeBlocked",
+          "amount": 2
+        }
+      ]
     }
   ]
 }

@@ -15,6 +15,10 @@
 
 Prompts - 
 
+Create system / handler for updating desert.json + save_file.json on item purchase
+
+Create MustBeBlockedSystem that when the enemy attack is "MustBeBlocked", toggle @EnemyAttackDisplaySystem.cs Confirm button where threshold is reached.
+
 Generate shield shader and helper; create shield display system that keys off existence of having shield passive.
 
 
