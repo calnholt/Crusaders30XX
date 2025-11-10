@@ -61,7 +61,7 @@ namespace Crusaders30XX.ECS.Systems
             EnsureStateLoaded();
 
             // Block interactions during scene transition
-            if (TransitionStateSingleton.IsActive)
+            if (StateSingleton.IsActive)
             {
                 return;
             }

@@ -141,7 +141,7 @@ namespace Crusaders30XX.ECS.Systems
                 .ToList();
             var top = underMouse.FirstOrDefault();
 
-            if (top != null)
+            if (top != null && !StateSingleton.PreventClicking)
             {
                 top.UI.IsHovered = true;
 

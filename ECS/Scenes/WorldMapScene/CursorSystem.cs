@@ -134,7 +134,7 @@ namespace Crusaders30XX.ECS.Systems
 			var gp = GamePad.GetState(PlayerIndex.One);
 			bool useGamepad = gp.IsConnected;
 			Vector2 stick = useGamepad ? gp.ThumbSticks.Left : Vector2.Zero; // X: right+, Y: up+
-			bool ignoringTransitions = TransitionStateSingleton.IsActive;
+			bool ignoringTransitions = StateSingleton.IsActive;
 
 			// Clear hover state on all UI elements to ensure exclusivity
 			foreach (var e2 in EntityManager.GetEntitiesWithComponent<UIElement>())
@@ -215,7 +215,7 @@ namespace Crusaders30XX.ECS.Systems
 				bool aEdge = aPressed && !aPrevPressed;
 				isPressed = aPressed;
 				isPressedEdge = aEdge;
-				if (aEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick)
+				if (aEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick && !StateSingleton.PreventClicking)
 				{
 					int rHitboxClick = Math.Max(0, HitboxRadius);
 					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()
@@ -346,7 +346,7 @@ namespace Crusaders30XX.ECS.Systems
 				bool lEdge = lPressed && !lPrevPressed;
 				isPressed = lPressed;
 				isPressedEdge = lEdge;
-				if (lEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick)
+				if (lEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick && !StateSingleton.PreventClicking)
 				{
 					int rHitboxClick = Math.Max(0, HitboxRadius);
 					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()

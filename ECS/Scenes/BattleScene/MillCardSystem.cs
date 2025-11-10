@@ -73,6 +73,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 			EventManager.Subscribe<MillCardEvent>(OnMillRequested);
 			EventManager.Subscribe<TopCardRemovedForMillEvent>(OnTopCardRemovedForMill);
+			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -81,9 +82,17 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<SceneState>();
 		}
 
+		private void OnDeleteCaches(DeleteCachesEvent evt)
+		{
+			_anims.Clear();
+			_queuedCards.Clear();
+			StateSingleton.PreventClicking = false;
+		}
+
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+			StateSingleton.PreventClicking = _queuedCards.Count > 0;
 			if (_anims.Count == 0)
 			{
 				StartNextIfAllowed();

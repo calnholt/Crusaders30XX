@@ -104,7 +104,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Use UIElement click flag instead of raw mouse. Trigger transition immediately when clicked.
 			var uiClick = clickArea.GetComponent<UIElement>();
-			if (uiClick != null && uiClick.IsClicked && !TransitionStateSingleton.IsActive)
+			if (uiClick != null && uiClick.IsClicked && !StateSingleton.IsActive)
 			{
 				EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
 			}

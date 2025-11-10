@@ -109,14 +109,14 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void TryBeginCutsceneFromTransitionState()
 		{
-			if (!TransitionStateSingleton.HasPendingLocationPoiReveal || string.IsNullOrEmpty(TransitionStateSingleton.PendingPoiId)) return;
+			if (!StateSingleton.HasPendingLocationPoiReveal || string.IsNullOrEmpty(StateSingleton.PendingPoiId)) return;
 			Console.WriteLine($"[LocationPoiRevealCutsceneSystem] LoadSceneEvent -> TryBeginCutsceneFromTransitionState -> active");
 			_active = true;
-			_targetPoiId = TransitionStateSingleton.PendingPoiId;
+			_targetPoiId = StateSingleton.PendingPoiId;
 			_poiEntity = null;
 			_animTime = 0f;
 			// Lock interactions and camera immediately
-			TransitionStateSingleton.IsActive = true;
+			StateSingleton.IsActive = true;
 			EventManager.Publish(new SetCursorEnabledEvent { Enabled = false });
 			EventManager.Publish(new LockLocationCameraEvent { Locked = true });
 		}
@@ -129,16 +129,16 @@ namespace Crusaders30XX.ECS.Systems
 			_animTime = 0f;
 			EventManager.Publish(new SetCursorEnabledEvent { Enabled = true });
 			EventManager.Publish(new LockLocationCameraEvent { Locked = false });
-			TransitionStateSingleton.HasPendingLocationPoiReveal = false;
-			TransitionStateSingleton.PendingPoiId = null;
-			TransitionStateSingleton.IsActive = false;
+			StateSingleton.HasPendingLocationPoiReveal = false;
+			StateSingleton.PendingPoiId = null;
+			StateSingleton.IsActive = false;
 		}
 
 		[DebugAction("Cutscene")]
 		public void debug_cutscene()
 		{
-			TransitionStateSingleton.HasPendingLocationPoiReveal = true;
-			TransitionStateSingleton.PendingPoiId = "desert_1";
+			StateSingleton.HasPendingLocationPoiReveal = true;
+			StateSingleton.PendingPoiId = "desert_1";
 			TryBeginCutsceneFromTransitionState();
 		}
 	}

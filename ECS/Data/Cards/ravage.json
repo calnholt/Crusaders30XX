@@ -1,0 +1,11 @@
+{
+  "id": "ravage",
+  "name": "Ravage",
+  "target": "Enemy",
+  "rarity": "Common",
+  "cost": ["Any"],
+  "valuesParse": [6, 25],
+  "text": "As an additional cost, mill {1} cards. Deal {2} damage.",
+  "animation": "Attack",
+  "block": 3
+}

@@ -39,7 +39,7 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
-            if (TransitionStateSingleton.IsActive) return;
+            if (StateSingleton.IsActive) return;
             var scene = entity.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
@@ -106,7 +106,7 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
-            if (TransitionStateSingleton.IsActive) return;
+            if (StateSingleton.IsActive) return;
             var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();

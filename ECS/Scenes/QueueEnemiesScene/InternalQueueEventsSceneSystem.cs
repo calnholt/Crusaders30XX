@@ -114,7 +114,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (scene == null || scene.Current != SceneId.Internal_QueueEventsMenu) return;
 			var mouse = Mouse.GetState();
 			// Block clicks during scene transition
-			if (TransitionStateSingleton.IsActive)
+			if (StateSingleton.IsActive)
 			{
 				_prevMouse = mouse;
 				return;

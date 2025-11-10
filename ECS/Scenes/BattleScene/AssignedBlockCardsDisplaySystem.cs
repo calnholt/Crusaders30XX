@@ -199,7 +199,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (isForCurrentContext)
 				{
 					ui.Bounds = rectNow;
-					ui.IsInteractable = (abc.Phase == AssignedBlockCard.PhaseState.Idle || abc.Phase == AssignedBlockCard.PhaseState.Impact) && !TransitionStateSingleton.IsActive;
+					ui.IsInteractable = (abc.Phase == AssignedBlockCard.PhaseState.Idle || abc.Phase == AssignedBlockCard.PhaseState.Impact) && !StateSingleton.IsActive;
 				}
 				else
 				{

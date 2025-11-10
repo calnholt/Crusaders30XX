@@ -67,7 +67,7 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
-            if (!Game1.WindowIsActive || TransitionStateSingleton.IsActive) return;
+            if (!Game1.WindowIsActive || StateSingleton.IsActive || StateSingleton.PreventClicking) return;
             
             var caps = GamePad.GetCapabilities(PlayerIndex.One);
             var kb = Keyboard.GetState();

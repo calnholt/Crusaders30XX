@@ -118,7 +118,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Auto-pan camera on scene load (only if not coming from quest completion)
-			if (!_hasPannedOnLoad && !TransitionStateSingleton.HasPendingLocationPoiReveal)
+			if (!_hasPannedOnLoad && !StateSingleton.HasPendingLocationPoiReveal)
 			{
 				TryAutoPanCamera();
 				_hasPannedOnLoad = true;

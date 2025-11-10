@@ -56,8 +56,8 @@ namespace Crusaders30XX.ECS.Services
 						Console.WriteLine($"[QuestCompleteService] Completed point of interest {locationId}/{questIdStr}");
 						SaveCache.SetQuestCompleted(locationId, questIdStr, true);
 						// Set flags for POI reveal cutscene when transitioning to Location scene
-						TransitionStateSingleton.HasPendingLocationPoiReveal = true;
-						TransitionStateSingleton.PendingPoiId = questIdStr;
+						StateSingleton.HasPendingLocationPoiReveal = true;
+						StateSingleton.PendingPoiId = questIdStr;
 						// Award reward if present
 						int reward = poi?.rewardGold ?? 0;
 						if (reward > 0)

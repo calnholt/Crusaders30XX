@@ -91,7 +91,7 @@ namespace Crusaders30XX.ECS.Systems
             var modal = modalEntity.GetComponent<CardListModal>();
             if (modal == null || !modal.IsOpen || modal.Cards == null) return;
             // Gamepad right-stick scrolling
-            if (Game1.WindowIsActive && !TransitionStateSingleton.IsActive)
+            if (Game1.WindowIsActive && !StateSingleton.IsActive)
             {
                 var gp = GamePad.GetState(PlayerIndex.One);
                 if (gp.IsConnected)

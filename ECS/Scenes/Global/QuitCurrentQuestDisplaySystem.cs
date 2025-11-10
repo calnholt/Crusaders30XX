@@ -85,7 +85,7 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			// Only active when window is active and not during transitions
-			if (!Game1.WindowIsActive || TransitionStateSingleton.IsActive) return;
+			if (!Game1.WindowIsActive || StateSingleton.IsActive) return;
 
 			// Restrict to Battle scene for now
 			var scene = entity.GetComponent<SceneState>();

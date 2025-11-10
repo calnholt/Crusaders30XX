@@ -56,7 +56,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (scene == null || scene.Current != SceneId.Location) return;
 
 			// Block interactions during scene transition
-			if (TransitionStateSingleton.IsActive)
+			if (StateSingleton.IsActive)
 			{
 				return;
 			}

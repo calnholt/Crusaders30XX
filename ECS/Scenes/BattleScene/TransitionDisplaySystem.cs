@@ -209,7 +209,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void EnsureTransitionFlag(bool active)
 		{
-			TransitionStateSingleton.IsActive = active;
+			StateSingleton.IsActive = active;
 		}
 
 		[DebugAction("Preview Wipe (visual only)")]

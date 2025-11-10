@@ -26,6 +26,13 @@ namespace Crusaders30XX.ECS.Systems
                     }
                     return true;
                 }
+                case "ravage":
+                {
+                    var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                    var deck = deckEntity?.GetComponent<Deck>();
+                    if (deck == null) return false;
+                    return deck.DrawPile.Count >= def.valuesParse[0];
+                }
                 case "shroud_of_turin":
                 {
                     var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();

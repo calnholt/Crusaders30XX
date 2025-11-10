@@ -52,10 +52,10 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ModifyCourageEvent { Delta = +values[i++] });
                     // brief delay so cards in hand are updated
                     // TODO: cards can still be played because animation prolongs
-                    TransitionStateSingleton.IsActive = true;
+                    StateSingleton.IsActive = true;
                     EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
                     TimerScheduler.Schedule(1f, () => {
-                        TransitionStateSingleton.IsActive = false;
+                        StateSingleton.IsActive = false;
                     });
                     break;
                 }
@@ -114,6 +114,15 @@ namespace Crusaders30XX.ECS.Systems
                         var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                         EventManager.Publish(new CardMoveRequested { Card = kunai, Deck = deckEntity, Destination = CardZoneType.Hand, Reason = "PouchOfKunai" });
                     }
+                    break;
+                }
+                case "ravage":
+                {
+                    for (int j = 0; j < values[0]; j++)
+                    {
+                        EventManager.Publish(new MillCardEvent { });
+                    }
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[1], DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
                 case "sacrifice":
