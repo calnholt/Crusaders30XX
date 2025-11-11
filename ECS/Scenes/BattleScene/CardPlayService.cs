@@ -197,6 +197,21 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new SetCourageEvent { Amount = 0 });
                     break;
                 }
+                case "whirlwind":
+                {
+                    var time = 0.5f;
+                    StateSingleton.PreventClicking = true;
+                    TimerScheduler.Schedule(time * values[1], () => {
+                        StateSingleton.PreventClicking = false;
+                    });
+                    for (int j = 0; j < values[1]; j++)
+                    {
+                        TimerScheduler.Schedule(time + (j * time), () => {
+                            EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -values[0], DamageType = ModifyTypeEnum.Attack });
+                        });
+                    }
+                    break;
+                }
                 // weapons
                 case "hammer":
                 {

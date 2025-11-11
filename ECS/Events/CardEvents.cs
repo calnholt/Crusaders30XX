@@ -167,6 +167,27 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Request an animated move of a played card from Hand to Discard. Zone mutation is deferred until finalize.
+    /// </summary>
+    public class PlayCardToDiscardAnimationRequested
+    {
+        public Entity Card { get; set; }
+        public Entity Deck { get; set; }
+        public string ContextId { get; set; }
+    }
+
+    /// <summary>
+    /// Request to finalize a deferred CardMove by mutating zones and publishing CardMoved.
+    /// </summary>
+    public class CardMoveFinalizeRequested
+    {
+        public Entity Card { get; set; }
+        public Entity Deck { get; set; }
+        public CardZoneType Destination { get; set; }
+        public string ContextId { get; set; }
+    }
+
+    /// <summary>
     /// Request to play a card during the Action phase.
     /// The handling system should validate phase/zone and resolve effects.
     /// </summary>

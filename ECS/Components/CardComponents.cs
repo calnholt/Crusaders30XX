@@ -855,6 +855,15 @@ namespace Crusaders30XX.ECS.Components
         AssignedBlock
     }
 
+    /// <summary>
+    /// Marker for a card currently animating from Hand to Discard due to being played.
+    /// Hand layout/draw systems should ignore cards with this component until finalize.
+    /// </summary>
+    public class AnimatingHandToDiscard : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
     public class CardToDiscardFlight : IComponent
     {
         public Entity Owner { get; set; }

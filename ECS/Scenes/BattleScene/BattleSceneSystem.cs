@@ -61,6 +61,7 @@ namespace Crusaders30XX.ECS.Systems
 		private QueuedEventsDisplaySystem _queuedEventsDisplaySystem;
 		private DamageModificationDisplaySystem _damageModificationDisplaySystem;
 		private CardPlayedAnimationSystem _cardPlayedAnimationSystem;
+		private CardMoveDisplaySystem _cardMoveDisplaySystem;
 		private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
 		private ExhaustOnBlockDisplaySystem _exhaustOnBlockDisplaySystem;
 		private EnemyIntentPlanningSystem _enemyIntentPlanningSystem;
@@ -207,6 +208,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", _enemyAttackDisplaySystem.Draw);
 			FrameProfiler.Measure("EndTurnDisplaySystem.Draw", _endTurnDisplaySystem.Draw);
 			FrameProfiler.Measure("HandDisplaySystem.DrawHand", _handDisplaySystem.DrawHand);
+			FrameProfiler.Measure("CardMoveDisplaySystem.DrawAlpha", _cardMoveDisplaySystem.DrawAlpha);
 			FrameProfiler.Measure("CardPlayedAnimationSystem.Draw", _cardPlayedAnimationSystem.Draw);
 			FrameProfiler.Measure("EquipmentDisplaySystem.Draw", _equipmentDisplaySystem.Draw);
 			FrameProfiler.Measure("EquippedWeaponDisplaySystem.Draw", _equippedWeaponDisplaySystem.Draw);
@@ -361,6 +363,7 @@ namespace Crusaders30XX.ECS.Systems
 			_courageDisplaySystem = new CourageDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_actionPointDisplaySystem = new ActionPointDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_cardMoveDisplaySystem = new CardMoveDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_courageManagerSystem = new CourageManagerSystem(_world.EntityManager);
 			_actionPointManagementSystem = new ActionPointManagementSystem(_world.EntityManager);
 			_temperanceManagerSystem = new TemperanceManagerSystem(_world.EntityManager);
@@ -462,6 +465,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_queuedEventsDisplaySystem);
 			_world.AddSystem(_damageModificationDisplaySystem);
 			_world.AddSystem(_cardPlayedAnimationSystem);
+			_world.AddSystem(_cardMoveDisplaySystem);
 			_world.AddSystem(_endTurnDisplaySystem);
 			_world.AddSystem(_assignedBlockCardsDisplaySystem);
 			_world.AddSystem(_exhaustOnBlockDisplaySystem);
@@ -494,6 +498,11 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_questRewardModalDisplaySystem);
 			_world.AddSystem(_quitCurrentQuestDisplaySystem);
 			_world.AddSystem(_mustBeBlockedSystem);
+		}
+
+		public void DrawAdditive()
+		{
+			_cardMoveDisplaySystem?.DrawAdditive();
 		}
 
 	}

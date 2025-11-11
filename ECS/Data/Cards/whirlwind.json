@@ -1,0 +1,11 @@
+{
+    "id": "whirlwind",
+    "name": "Whirlwind",
+    "target": "Enemy",
+    "rarity": "Common",
+    "cost": ["Black"],
+    "valuesParse": [5, 3],
+    "text": "Deal {1} damage {2} times.",
+    "animation": "Attack",
+    "block": 3
+  }

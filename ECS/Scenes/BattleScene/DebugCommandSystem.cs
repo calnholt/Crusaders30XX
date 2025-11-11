@@ -92,6 +92,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = amount });
         }
+        [DebugActionInt("Apply aegis (player)", Step = 1, Min = 1, Max = 999, Default = 3)]
+        public void Debug_ApplyAegisPlayer(int amount)
+        {
+            EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Aegis, Delta = amount });
+        }
         [DebugAction("Activate Temperance")]
         public void Debug_ActivateTemperance()
         {

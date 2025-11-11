@@ -15,9 +15,13 @@
 
 Prompts - 
 
-Create system / handler for updating desert.json + save_file.json on item purchase
+Shop system - background, leave button, name display; overlay with items for purchase - name, image, price; tooltip details (if necessary); on purchase small animation - trapezoid and acquired text enter from opposite sides with image in the middle; update jsons;
 
-Create MustBeBlockedSystem that when the enemy attack is "MustBeBlocked", toggle @EnemyAttackDisplaySystem.cs Confirm button where threshold is reached.
+Update @HpManagementSystem.cs to factor in and apply aegis consumption like @EnemyDamageManagerSystem.cs, should be moved out of EnemyDamageManagerSystem and into HpManagementSystem anyways
+
+Convert desert background to shader
+
+Create system / handler for updating desert.json + save_file.json on item purchase
 
 Generate shield shader and helper; create shield display system that keys off existence of having shield passive.
 

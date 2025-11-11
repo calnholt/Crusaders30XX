@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Components
 		Customization,
 		Battle,
 		Location,
+		Shop,
 		None
 	}
 

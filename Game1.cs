@@ -299,6 +299,13 @@ public class Game1 : Game
             case SceneId.Battle:
             {
                 FrameProfiler.Measure("BattleSceneSystem.Draw", _battleSceneSystem.Draw);
+                // Additive trail pass for card move trails
+                _spriteBatch.End();
+                _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
+                _battleSceneSystem.DrawAdditive();
+                _spriteBatch.End();
+                // Resume normal alpha-blend UI drawing state
+                _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
                 break;
             }
             case SceneId.Location:

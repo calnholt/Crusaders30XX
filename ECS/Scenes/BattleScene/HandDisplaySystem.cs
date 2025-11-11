@@ -162,7 +162,7 @@ namespace Crusaders30XX.ECS.Systems
             if (deckEntity != null)
             {
                 var deck = deckEntity.GetComponent<Deck>();
-                if (deck != null && deck.Hand.Contains(entity))
+                if (deck != null && deck.Hand.Contains(entity) && entity.GetComponent<AnimatingHandToDiscard>() == null)
                 {
                     // Get the index of this card in the hand
                     var cardIndex = deck.Hand.IndexOf(entity);
@@ -329,8 +329,10 @@ namespace Crusaders30XX.ECS.Systems
                 var deck = deckEntity.GetComponent<Deck>();
                 if (deck != null)
                 {
-                    // Only draw cards that are actually in the hand
-                    var cardsInHand = deck.Hand.OrderBy(e => 
+                    // Only draw cards that are actually in the hand and not currently animating to discard
+                    var cardsInHand = deck.Hand
+                        .Where(e => e.GetComponent<AnimatingHandToDiscard>() == null)
+                        .OrderBy(e => 
                     {
                         var transform = e.GetComponent<Transform>();
                         return transform?.ZOrder ?? 0;

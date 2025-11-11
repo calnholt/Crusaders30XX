@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<CardMoveRequested>(OnCardMoveRequested);
             EventManager.Subscribe<CardMoved>(OnCardMoved);
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
+            EventManager.Subscribe<CardMoveFinalizeRequested>(OnCardMoveFinalizeRequested);
             Console.WriteLine("[CardZoneSystem] Subscribed to CardMoveRequested");
         }
 
@@ -66,6 +67,29 @@ namespace Crusaders30XX.ECS.Systems
             if (deck == null) return;
 
             var from = GetZoneOf(deck, evt.Card);
+
+            // Intercept Hand -> Discard on PlayCard to run animation first; finalize will mutate zones and publish CardMoved
+            if (evt.Destination == CardZoneType.DiscardPile && from == CardZoneType.Hand && evt.Reason == "PlayCard")
+            {
+                if (evt.Card.GetComponent<AnimatingHandToDiscard>() == null)
+                {
+                    EntityManager.AddComponent(evt.Card, new AnimatingHandToDiscard());
+                    var uiAnim = evt.Card.GetComponent<UIElement>();
+                    if (uiAnim != null)
+                    {
+                        uiAnim.IsInteractable = false;
+                        uiAnim.IsHovered = false;
+                        uiAnim.IsClicked = false;
+                    }
+                    EventManager.Publish(new PlayCardToDiscardAnimationRequested
+                    {
+                        Card = evt.Card,
+                        Deck = deckEntity,
+                        ContextId = evt.ContextId
+                    });
+                }
+                return;
+            }
 
             // Remove from all known deck lists first to avoid duplicates
             deck.DrawPile.Remove(evt.Card);
@@ -277,6 +301,73 @@ namespace Crusaders30XX.ECS.Systems
                 ContextId = evt.ContextId
             });
             Console.WriteLine($"[CardZoneSystem] CardMoved from={from} to={evt.Destination}");
+        }
+
+        private void OnCardMoveFinalizeRequested(CardMoveFinalizeRequested evt)
+        {
+            if (evt == null || evt.Card == null) return;
+            var deckEntity = evt.Deck ?? EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck == null) return;
+
+            var from = GetZoneOf(deck, evt.Card);
+            // Normalize lists to avoid duplicates
+            deck.DrawPile.Remove(evt.Card);
+            deck.Hand.Remove(evt.Card);
+            deck.DiscardPile.Remove(evt.Card);
+            deck.ExhaustPile.Remove(evt.Card);
+
+            switch (evt.Destination)
+            {
+                case CardZoneType.DiscardPile:
+                {
+                    deck.DiscardPile.Add(evt.Card);
+                    var uiD = evt.Card.GetComponent<UIElement>();
+                    if (uiD != null)
+                    {
+                        uiD.IsInteractable = false;
+                        uiD.IsHovered = false;
+                        uiD.IsClicked = false;
+                        uiD.EventType = UIElementEventType.None;
+                    }
+                    var sfpD = evt.Card.GetComponent<SelectedForPayment>();
+                    if (sfpD != null)
+                    {
+                        EntityManager.RemoveComponent<SelectedForPayment>(evt.Card);
+                    }
+                    var t = evt.Card.GetComponent<Transform>();
+                    if (t != null) t.ZOrder = -10000;
+                    break;
+                }
+                case CardZoneType.ExhaustPile:
+                {
+                    EntityManager.DestroyEntity(evt.Card.Id);
+                    break;
+                }
+                default:
+                {
+                    // If finalize was called for an unsupported destination, no-op back to hand
+                    if (!deck.Hand.Contains(evt.Card))
+                    {
+                        deck.Hand.Add(evt.Card);
+                    }
+                    break;
+                }
+            }
+
+            // Clear animation marker if present
+            var anim = evt.Card.GetComponent<AnimatingHandToDiscard>();
+            if (anim != null) { EntityManager.RemoveComponent<AnimatingHandToDiscard>(evt.Card); }
+
+            EventManager.Publish(new CardMoved
+            {
+                Card = evt.Card,
+                Deck = deckEntity,
+                From = from,
+                To = evt.Destination,
+                ContextId = evt.ContextId
+            });
+            Console.WriteLine($"[CardZoneSystem] Finalized CardMoved from={from} to={evt.Destination}");
         }
 
         private static string NormalizeColorKey(string c)
