@@ -11,6 +11,8 @@ namespace Crusaders30XX.ECS.Events
 
 	// New: Proceed-to-next-phase intent; a coordinator will transition using PhaseState2
 	public class ProceedToNextPhase { }
+
+	public class ShowConfirmButtonEvent { }
 }
 
 

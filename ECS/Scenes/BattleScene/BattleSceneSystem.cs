@@ -102,6 +102,7 @@ namespace Crusaders30XX.ECS.Systems
 		private TribulationManagerSystem _tribulationManagerSystem;
 		private QuestTribulationDisplaySystem _questTribulationDisplaySystem;
 		private QuitCurrentQuestDisplaySystem _quitCurrentQuestDisplaySystem;
+		private MustBeBlockedSystem _mustBeBlockedSystem;
 
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content) : base(em)
@@ -418,6 +419,7 @@ namespace Crusaders30XX.ECS.Systems
 			_uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_questRewardModalDisplaySystem = new QuestRewardModalDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_quitCurrentQuestDisplaySystem = new QuitCurrentQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_mustBeBlockedSystem = new MustBeBlockedSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			// Register
 			_world.AddSystem(_deckManagementSystem);
 			_world.AddSystem(_handDisplaySystem);
@@ -491,6 +493,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_frozenCardDisplaySystem);
 			_world.AddSystem(_questRewardModalDisplaySystem);
 			_world.AddSystem(_quitCurrentQuestDisplaySystem);
+			_world.AddSystem(_mustBeBlockedSystem);
 		}
 
 	}

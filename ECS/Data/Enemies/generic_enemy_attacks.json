@@ -36,6 +36,7 @@
       "name": "Indominable",
       "target": "Player",
       "damage": 5,
+      "text": "This attack must be blocked with at least two cards/equipment if possible.",
       "specialEffects": [
         {
           "type": "MustBeBlocked",

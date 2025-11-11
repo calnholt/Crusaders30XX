@@ -195,6 +195,15 @@ namespace Crusaders30XX.ECS.Systems
 			});
 		}
 
+		private void CreateConfirmButton()
+		{
+			var primaryBtn = EntityManager.CreateEntity("UIButton_ConfirmEnemyAttack");
+			EntityManager.AddComponent(primaryBtn, new Transform{});
+			EntityManager.AddComponent(primaryBtn, new UIElement { IsInteractable = true, EventType = UIElementEventType.ConfirmBlocks });
+			EntityManager.AddComponent(primaryBtn, new HotKey { Button = FaceButton.Y });
+			EntityManager.AddComponent(primaryBtn, ParallaxLayer.GetUIParallaxLayer());
+		}
+
 		private struct EffectToken
 		{
 			public EffectDefinition eff;
@@ -371,6 +380,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime)
 		{
+			if (EntityManager.GetEntity("UIButton_ConfirmEnemyAttack") == null) {
+				CreateConfirmButton();
+			}
 			var phaseNow = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>().Sub;
 			if (phaseNow == SubPhase.Block) { 
 				_absorbElapsedSeconds = 0f;
@@ -714,8 +726,9 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Confirm button below panel (only show in Block phase)
-			
-			bool showConfirm = phaseNow == SubPhase.Block && !_confirmedForContext.Contains(pa.ContextId);
+			Entity primaryBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
+			var isInteractable = primaryBtn?.GetComponent<UIElement>()?.IsInteractable ?? false;
+			bool showConfirm = phaseNow == SubPhase.Block && !_confirmedForContext.Contains(pa.ContextId) && isInteractable;
 			if (showConfirm)
 			{
 				var btnRect = new Rectangle(
@@ -734,33 +747,13 @@ namespace Crusaders30XX.ECS.Systems
 					_spriteBatch.DrawString(_contentFont, label, posText, Color.White, 0f, Vector2.Zero, ConfirmButtonTextScale, SpriteEffects.None, 0f);
 				}
 
-				// Ensure a single clickable UI entity exists and stays in sync
-				Entity primaryBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
-				if (primaryBtn == null)
-				{
-					primaryBtn = EntityManager.CreateEntity("UIButton_ConfirmEnemyAttack");
-					EntityManager.AddComponent(primaryBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ConfirmButtonZ });
-					EntityManager.AddComponent(primaryBtn, new UIElement { Bounds = btnRect, IsInteractable = true, EventType = UIElementEventType.ConfirmBlocks });
-					EntityManager.AddComponent(primaryBtn, new HotKey { Button = FaceButton.Y });
-					EntityManager.AddComponent(primaryBtn, ParallaxLayer.GetUIParallaxLayer());
-				}
-				else
-				{
-					var ui = primaryBtn.GetComponent<UIElement>();
-					var tr = primaryBtn.GetComponent<Transform>();
-					if (ui != null) { ui.Bounds = btnRect; ui.IsInteractable = true; }
-					if (tr != null) { tr.ZOrder = ConfirmButtonZ; tr.BasePosition = new Vector2(btnRect.X, btnRect.Y); tr.Position = new Vector2(btnRect.X, btnRect.Y); }
-				}
+				var ui = primaryBtn.GetComponent<UIElement>();
+				var tr = primaryBtn.GetComponent<Transform>();
+				if (ui != null) { ui.Bounds = btnRect; }
+				if (tr != null) { tr.ZOrder = ConfirmButtonZ; tr.BasePosition = new Vector2(btnRect.X, btnRect.Y); tr.Position = new Vector2(btnRect.X, btnRect.Y); }
+				
 			}
-			else
-			{
-				// Hide and destroy confirm buttons when not visible
-				var primaryBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
-				if (primaryBtn != null)
-				{
-					EntityManager.DestroyEntity(primaryBtn.Id);
-				}
-			}
+
 
 			// Cleanup any stale per-effect tooltip UIs not present this frame
 			CleanupEffectTooltips(presentKeys);
