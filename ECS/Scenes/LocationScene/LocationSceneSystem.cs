@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 	private LocationMapDisplaySystem _locationMapDisplaySystem;
 	private PointOfInterestDisplaySystem _pointOfInterestDisplaySystem;
 	private TooltipQuestDisplaySystem _tooltipQuestDisplaySystem;
+	private ShopPOITooltipDisplaySystem _shopPoiTooltipDisplaySystem;
 	private FogDisplaySystem _fogDisplaySystem;
 	private LocationPoiRevealCutsceneSystem _poiCutsceneSystem;
 	private POIRadiusDebugDisplaySystem _poiRadiusDebugDisplaySystem;
@@ -48,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 				_world.RemoveSystem(_locationMapDisplaySystem);
 				_world.RemoveSystem(_pointOfInterestDisplaySystem);
 				_world.RemoveSystem(_tooltipQuestDisplaySystem);
+				_world.RemoveSystem(_shopPoiTooltipDisplaySystem);
 				_world.RemoveSystem(_fogDisplaySystem);
 				_world.RemoveSystem(_poiCutsceneSystem);
 				_world.RemoveSystem(_poiRadiusDebugDisplaySystem);
@@ -131,6 +133,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("MiniMapDisplaySystem.Draw", _miniMapDisplaySystem.Draw);
 			FrameProfiler.Measure("HellRiftIndicatorDisplaySystem.Draw", _hellRiftIndicatorDisplaySystem.Draw);
 			FrameProfiler.Measure("POIRadiusDebugDisplaySystem.Draw", _poiRadiusDebugDisplaySystem.Draw);
+			FrameProfiler.Measure("ShopPOITooltipDisplaySystem.Draw", _shopPoiTooltipDisplaySystem.Draw);
 			FrameProfiler.Measure("TooltipQuestDisplaySystem.Draw", _tooltipQuestDisplaySystem.Draw);
 			FrameProfiler.Measure("CustomizeButtonDisplaySystem.Draw", _customizeButtonDisplaySystem.Draw);
 			FrameProfiler.Measure("CurrencyDisplaySystem.Draw", _currencyDisplaySystem.Draw);
@@ -152,6 +155,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_poiRadiusDebugDisplaySystem);
 			_tooltipQuestDisplaySystem = new TooltipQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_tooltipQuestDisplaySystem);
+			_shopPoiTooltipDisplaySystem = new ShopPOITooltipDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_world.AddSystem(_shopPoiTooltipDisplaySystem);
 			_hellRiftIndicatorDisplaySystem = new HellRiftIndicatorDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_hellRiftIndicatorDisplaySystem);
 			_customizeButtonDisplaySystem = new CustomizeButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);

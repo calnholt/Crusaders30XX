@@ -243,6 +243,7 @@
       "Id": "shop_1",
       "WorldPosition": [1100, 100],
       "Type": "Shop",
+      "Name": "The Sand Trader",
       "ForSale": [
         {
           "Id": "shroud_of_turin",

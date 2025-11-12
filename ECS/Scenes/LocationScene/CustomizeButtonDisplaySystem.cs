@@ -53,7 +53,7 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			var scene = entity.GetComponent<SceneState>();
-			if (scene == null || scene.Current != SceneId.Location) return;
+			if (scene == null || (scene.Current != SceneId.Location && scene.Current != SceneId.Shop)) return;
 
 			// Block interactions during scene transition
 			if (StateSingleton.IsActive)
@@ -72,14 +72,21 @@ namespace Crusaders30XX.ECS.Systems
 			var buttonUI = buttonEnt?.GetComponent<UIElement>();
 			if (buttonUI != null && buttonUI.IsClicked)
 			{
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Customization });
+				if (scene.Current == SceneId.Shop)
+				{
+					EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+				}
+				else
+				{
+					EventManager.Publish(new ShowTransition { Scene = SceneId.Customization });
+				}
 			}
 		}
 
 		public void Draw()
 		{
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-			if (scene == null || scene.Current != SceneId.Location) return;
+			if (scene == null || (scene.Current != SceneId.Location && scene.Current != SceneId.Shop)) return;
 
 			int vw = _graphicsDevice.Viewport.Width;
 			int vh = _graphicsDevice.Viewport.Height;
@@ -112,7 +119,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Draw text
-			string text = "Customize";
+			string text = (scene.Current == SceneId.Shop) ? "Leave" : "Customize";
 			var size = _font.MeasureString(text) * TextScale;
 			var textRect = new Rectangle(rect.X + ButtonPadding, rect.Y + ButtonPadding, rect.Width - ButtonPadding * 2, rect.Height - ButtonPadding * 2);
 			var pos = new Vector2(textRect.X + (textRect.Width - size.X) / 2f, textRect.Y + (textRect.Height - size.Y) / 2f);

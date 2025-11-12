@@ -61,15 +61,17 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Trail Lifetime (s)", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
         public float TrailLifetime { get; set; } = 0.35f;
         [DebugEditable(DisplayName = "Trail Core Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
-        public float TrailCoreAlpha { get; set; } = 0.35f;
+		public float TrailCoreAlpha { get; set; } = 0.50f;
         [DebugEditable(DisplayName = "Trail Glow Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
-        public float TrailGlowAlpha { get; set; } = 0.12f;
+		public float TrailGlowAlpha { get; set; } = 0.20f;
         [DebugEditable(DisplayName = "Trail Core Scale", Step = 0.01f, Min = 0.05f, Max = 2.0f)]
         public float TrailCoreScale { get; set; } = 0.30f;
         [DebugEditable(DisplayName = "Trail Glow Scale", Step = 0.01f, Min = 0.1f, Max = 3.0f)]
         public float TrailGlowScale { get; set; } = 0.9f;
         [DebugEditable(DisplayName = "Trail Radius (px)", Step = 1, Min = 2, Max = 128)]
         public int TrailRadiusPx { get; set; } = 32;
+		[DebugEditable(DisplayName = "Show Additive Test Dot")]
+		public bool ShowAdditiveTestDot { get; set; } = false;
         [DebugEditable(DisplayName = "Trail Color R", Step = 1, Min = 0, Max = 255)]
         public int TrailR { get; set; } = 255;
         [DebugEditable(DisplayName = "Trail Color G", Step = 1, Min = 0, Max = 255)]
@@ -191,6 +193,14 @@ namespace Crusaders30XX.ECS.Systems
                     );
                 }
             }
+			// Optional on-screen test dot to validate additive pass
+			if (ShowAdditiveTestDot)
+			{
+				var vp = _graphicsDevice.Viewport;
+				var dot = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, 8);
+				var dotOrigin = new Vector2(8, 8);
+				_spriteBatch.Draw(dot, new Vector2(vp.Width * 0.5f, vp.Height * 0.5f), null, Color.White * 1f, 0f, dotOrigin, 1f, SpriteEffects.None, 0f);
+			}
         }
 
         private void OnAnimRequested(PlayCardToDiscardAnimationRequested evt)

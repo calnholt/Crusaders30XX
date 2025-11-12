@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Texture2D _pixel;
 		private readonly Texture2D _questIconTexture;
 		private readonly Texture2D _hellriftIconTexture;
+		private readonly Texture2D _shopIconTexture;
 		private bool _spawned;
 		private readonly System.Collections.Generic.List<Entity> _pois = new System.Collections.Generic.List<Entity>();
 		private readonly System.Collections.Generic.Dictionary<int, Vector2> _worldByEntityId = new System.Collections.Generic.Dictionary<int, Vector2>();
@@ -67,6 +68,14 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_hellriftIconTexture = null;
 			}
+			try
+			{
+				_shopIconTexture = content.Load<Texture2D>("Shop_poi");
+			}
+			catch
+			{
+				_shopIconTexture = null;
+			}
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -96,6 +105,7 @@ namespace Crusaders30XX.ECS.Systems
 				var t = e.GetComponent<Transform>();
 				if (t == null) continue;
 				if (!_worldByEntityId.TryGetValue(e.Id, out var world)) continue;
+				var poiComp = e.GetComponent<PointOfInterest>();
 				// Scale world position by map scale to match scaled world space
 				var scaledWorld = world * mapScale;
 				var screenPos = scaledWorld - origin;
@@ -120,7 +130,10 @@ namespace Crusaders30XX.ECS.Systems
 					var poi = e.GetComponent<PointOfInterest>();
 					if (poi != null)
 					{
-						Texture2D iconTexture = (poi.Type == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture : _questIconTexture;
+						Texture2D iconTexture =
+							(poi.Type == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture :
+							(poi.Type == "Shop" && _shopIconTexture != null) ? _shopIconTexture :
+							_questIconTexture;
 						
 						// Calculate bounds size scaled by map zoom and hover scale
 						float boundsWidth = IconSize * mapScale * currentScale;
@@ -139,6 +152,30 @@ namespace Crusaders30XX.ECS.Systems
 							(int)System.Math.Round(boundsWidth),
 							(int)System.Math.Round(boundsHeight));
 					}
+				}
+
+				// Handle Shop POI click → go to Shop scene with title
+				var clickUI = e.GetComponent<UIElement>();
+				if (poiComp != null && clickUI != null && clickUI.IsClicked && poiComp.Type == "Shop")
+				{
+					string shopTitle = "Shop";
+					// Try to find POI name by id in loaded definitions
+					var all = LocationDefinitionCache.GetAll();
+					foreach (var kv in all)
+					{
+						var def = kv.Value;
+						if (def?.pointsOfInterest == null) continue;
+						foreach (var p in def.pointsOfInterest)
+						{
+							if (!string.IsNullOrEmpty(p?.id) && p.id == poiComp.Id)
+							{
+								if (!string.IsNullOrWhiteSpace(p.name)) shopTitle = p.name;
+								break;
+							}
+						}
+					}
+					EventManager.Publish(new ECS.Events.SetShopTitle { Title = shopTitle });
+					EventManager.Publish(new ECS.Events.ShowTransition { Scene = SceneId.Shop });
 				}
 			}
 
@@ -194,11 +231,18 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					poiType = "Hellrift";
 				}
+				else if (poiType.Equals("Shop", System.StringComparison.OrdinalIgnoreCase))
+				{
+					poiType = "Shop";
+				}
 				else
 				{
 					poiType = "Quest";
 				}
-				Texture2D iconTexture = (poiType == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture : _questIconTexture;
+				Texture2D iconTexture =
+					(poiType == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture :
+					(poiType == "Shop" && _shopIconTexture != null) ? _shopIconTexture :
+					_questIconTexture;
 				
 				// Calculate UI bounds based on actual icon dimensions
 				int boundsWidth = (int)IconSize;
@@ -212,7 +256,9 @@ namespace Crusaders30XX.ECS.Systems
 				// UI bounds size only; Parallax will center bounds at Transform.Position when AffectsUIBounds is true
 				// Hellrift POIs are not interactable
 				bool isInteractable = poiType != "Hellrift";
-				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, boundsWidth, boundsHeight), IsInteractable = isInteractable, TooltipType = TooltipType.Quests, EventType = UIElementEventType.QuestSelect, IsPreventDefaultClick = true });
+				var tooltipType = (poiType == "Shop") ? TooltipType.None : TooltipType.Quests;
+				var eventType = (poiType == "Shop") ? UIElementEventType.None : UIElementEventType.QuestSelect;
+				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, boundsWidth, boundsHeight), IsInteractable = isInteractable, TooltipType = tooltipType, EventType = eventType, IsPreventDefaultClick = true });
 				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
 				// Attach POI component for fog-of-war and interactions
 				var poi = new PointOfInterest {
@@ -298,7 +344,10 @@ namespace Crusaders30XX.ECS.Systems
 				float scale = _hoverScales.TryGetValue(x.E.Id, out float s) ? s : 1f;
 				
 				// Determine which texture to use based on POI type
-				Texture2D iconTexture = (x.P.Type == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture : _questIconTexture;
+				Texture2D iconTexture =
+					(x.P.Type == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture :
+					(x.P.Type == "Shop" && _shopIconTexture != null) ? _shopIconTexture :
+					_questIconTexture;
 				
 				// Calculate icon dimensions preserving aspect ratio, scaled by map zoom
 				float iconWidth = IconSize * mapScale * scale;

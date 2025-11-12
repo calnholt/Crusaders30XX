@@ -31,6 +31,7 @@ public class Game1 : Game
     private TitleMenuDisplaySystem _titleMenuDisplaySystem;
     private BattleSceneSystem _battleSceneSystem;
     private LocationSceneSystem _locationSceneSystem;
+    private ShopSceneSystem _shopSceneSystem;
     private CustomizationRootSystem _customizationRootSystem;
     private TooltipTextDisplaySystem _tooltipTextDisplaySystem;
     private HintTooltipDisplaySystem _hintTooltipDisplaySystem;
@@ -56,6 +57,17 @@ public class Game1 : Game
     private RenderTarget2D _sceneRt;
     private RenderTarget2D _ppA;
     private RenderTarget2D _ppB;
+
+	// Alpha-weighted additive blending so source alpha modulates brightness
+	private static readonly BlendState AdditiveAlphaOne = new BlendState
+	{
+		ColorSourceBlend = Blend.SourceAlpha,
+		ColorDestinationBlend = Blend.One,
+		ColorBlendFunction = BlendFunction.Add,
+		AlphaSourceBlend = Blend.One,
+		AlphaDestinationBlend = Blend.One,
+		AlphaBlendFunction = BlendFunction.Add
+	};
 
     public static bool WindowIsActive { get; private set; } = true;
 
@@ -122,6 +134,7 @@ public class Game1 : Game
         _menuSceneSystem = new InternalQueueEventsSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _locationSceneSystem = new LocationSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
+        _shopSceneSystem = new ShopSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _customizationRootSystem = new CustomizationRootSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _world.SystemManager);
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
@@ -145,6 +158,7 @@ public class Game1 : Game
         _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
         _world.AddSystem(_locationSceneSystem);
+        _world.AddSystem(_shopSceneSystem);
         _world.AddSystem(_customizationRootSystem);
         _world.AddSystem(new TimerSchedulerSystem(_world.EntityManager));
         _world.AddSystem(_debugMenuSystem);
@@ -301,7 +315,7 @@ public class Game1 : Game
                 FrameProfiler.Measure("BattleSceneSystem.Draw", _battleSceneSystem.Draw);
                 // Additive trail pass for card move trails
                 _spriteBatch.End();
-                _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
+				_spriteBatch.Begin(SpriteSortMode.Immediate, AdditiveAlphaOne, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
                 _battleSceneSystem.DrawAdditive();
                 _spriteBatch.End();
                 // Resume normal alpha-blend UI drawing state
@@ -311,6 +325,11 @@ public class Game1 : Game
             case SceneId.Location:
             {
                 FrameProfiler.Measure("LocationSceneSystem.Draw", _locationSceneSystem.Draw);
+                break;
+            }
+            case SceneId.Shop:
+            {
+                FrameProfiler.Measure("ShopSceneSystem.Draw", _shopSceneSystem.Draw);
                 break;
             }
             case SceneId.WorldMap:
