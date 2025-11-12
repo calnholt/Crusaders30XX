@@ -42,11 +42,29 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				return;
 			}
-			var targetPassives = e.Target.GetComponent<AppliedPassives>().Passives;
-			if (targetPassives.ContainsKey(AppliedPassiveType.Shield))
+			var targetPassives = target.GetComponent<AppliedPassives>()?.Passives;
+			if (targetPassives != null && targetPassives.ContainsKey(AppliedPassiveType.Shield))
 			{
-				EventManager.Publish(new RemovePassive { Owner = e.Target, Type = AppliedPassiveType.Shield });
+				EventManager.Publish(new RemovePassive { Owner = target, Type = AppliedPassiveType.Shield });
 				return;
+			}
+			// Consume aegis for incoming damage (after shield check)
+			if (e.Delta < 0 && targetPassives != null)
+			{
+				if (targetPassives.TryGetValue(AppliedPassiveType.Aegis, out var aegisAmount) && aegisAmount > 0)
+				{
+					int damageAmount = Math.Abs(e.Delta);
+					int useAegis = Math.Min(aegisAmount, damageAmount);
+					if (useAegis > 0)
+					{
+						EventManager.Publish(new UpdatePassive { Owner = target, Type = AppliedPassiveType.Aegis, Delta = -useAegis });
+						e.Delta += useAegis; // Reduce damage (e.Delta is negative, so adding positive reduces it)
+						// Recalculate newDelta after aegis consumption
+						passiveDelta = AppliedPassivesService.GetPassiveDelta(e);
+						newDelta = e.Delta + passiveDelta;
+						nv = hp.Current + newDelta;
+					}
+				}
 			}
 			EventManager.Publish(new ModifyHpEvent { Source = e.Source, Target = target, Delta = newDelta, DamageType = e.DamageType });
 			hp.Current = Math.Max(0, Math.Min(hp.Max, nv));

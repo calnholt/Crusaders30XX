@@ -9,7 +9,7 @@ using System;
 namespace Crusaders30XX.ECS.Systems
 {
     /// <summary>
-    /// Applies incoming damage to the player: subtracts from aegis first, then from HP.
+    /// Applies incoming damage to the player: consumes assigned block, then publishes ModifyHpRequestEvent.
     /// Listens to ApplyEffect(Damage) events.
     /// </summary>
     public class EnemyDamageManagerSystem : Core.System
@@ -62,21 +62,6 @@ namespace Crusaders30XX.ECS.Systems
                 incoming -= useAssigned;
             }
 
-            // 2) Then consume aegis
-            if (incoming > 0)
-            {
-                var passives = player?.GetComponent<AppliedPassives>()?.Passives;
-                if (passives == null) return;
-                int prevent = passives.TryGetValue(AppliedPassiveType.Aegis, out var aegis) ? aegis : 0;
-                int use = Math.Min(prevent, incoming);
-                if (use > 0)
-                {
-                    EventManager.Publish(new UpdatePassive { Owner = player, Type = AppliedPassiveType.Aegis, Delta = -use });
-                    incoming -= use;
-                }
-            }
-
-            // 3) Remaining goes to HP
             if (incoming > 0)
             {
                 EventManager.Publish(new ModifyHpRequestEvent { Source = enemy, Target = player, Delta = -incoming });
