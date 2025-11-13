@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework.Content;
+using System.Linq;
+using Crusaders30XX.ECS.Data.Locations;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -66,22 +68,8 @@ namespace Crusaders30XX.ECS.Systems
                     battlefield.Location = evt.Location.Value;
                 }
 
-                // Load the background texture from the Battlefield location unless an explicit path is given.
-                string path = null;
-                if (!string.IsNullOrWhiteSpace(evt.TexturePath))
-                {
-                    path = evt.TexturePath;
-                }
-                else
-                {
-                    path = battlefield.Location switch
-                    {
-                        BattleLocation.Desert => "desert-background",
-                        BattleLocation.Forest => "forest-background",
-                        BattleLocation.Cathedral => "cathedral-background",
-                        _ => null
-                    };
-                }
+				// Load the background texture, preferring explicit override then POI background, else default per location.
+				string path = ResolveBackgroundPath(evt, battlefield);
                 if (!string.IsNullOrWhiteSpace(path))
                 {
                     _background = _content.Load<Texture2D>(path);
@@ -92,6 +80,49 @@ namespace Crusaders30XX.ECS.Systems
                 Console.WriteLine($"Failed to load background: {ex.Message}");
             }
         }
+
+		private static string RemoveExtension(string p)
+		{
+			if (string.IsNullOrWhiteSpace(p)) return p;
+			try { return System.IO.Path.GetFileNameWithoutExtension(p); }
+			catch { return p; }
+		}
+
+		private string ResolveBackgroundPath(ChangeBattleLocationEvent evt, Battlefield battlefield)
+		{
+			// 1) Manual override
+			if (!string.IsNullOrWhiteSpace(evt.TexturePath))
+			{
+				return RemoveExtension(evt.TexturePath);
+			}
+
+			// 2) Selected quest's POI background (via QueuedEvents context)
+			try
+			{
+				var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
+				var qe = qeEntity?.GetComponent<QueuedEvents>();
+				if (!string.IsNullOrEmpty(qe?.LocationId) &&
+					LocationDefinitionCache.TryGet(qe.LocationId, out var def) &&
+					qe.QuestIndex >= 0 && qe.QuestIndex < def.pointsOfInterest.Count)
+				{
+					var bg = def.pointsOfInterest[qe.QuestIndex].background;
+					if (!string.IsNullOrWhiteSpace(bg))
+					{
+						return RemoveExtension(bg);
+					}
+				}
+			}
+			catch { /* ignore and fall back */ }
+
+			// 3) Fallback per battlefield location
+			return battlefield.Location switch
+			{
+				BattleLocation.Desert => "desert-background",
+				BattleLocation.Forest => "forest-background",
+				BattleLocation.Cathedral => "cathedral-background",
+				_ => null
+			};
+		}
 
         public void Draw()
         {
