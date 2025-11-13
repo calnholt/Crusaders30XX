@@ -71,6 +71,16 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Price Offset Y", Step = 2, Min = -200, Max = 300)]
 		public int PriceOffsetY { get; set; } = 140;
 
+		// Color fan for card previews
+		[DebugEditable(DisplayName = "Color Fan Enabled", Step = 1)]
+		public bool ColorFanEnabled { get; set; } = true;
+		[DebugEditable(DisplayName = "Color Fan Angle (deg)", Step = 1f, Min = 0f, Max = 30f)]
+		public float ColorFanAngleStepDeg { get; set; } = 8f;
+		[DebugEditable(DisplayName = "Color Fan Spacing X", Step = 2, Min = 0, Max = 200)]
+		public int ColorFanSpacingX { get; set; } = 28;
+		[DebugEditable(DisplayName = "Color Fan Offset Y", Step = 2, Min = -100, Max = 100)]
+		public int ColorFanSpacingY { get; set; } = 0;
+
 		// Trapezoid background (single shape with per-edge A/B and mix)
 		[DebugEditable(DisplayName = "Left Side Offset", Step = 1f, Min = 0f, Max = 100f)]
 		public float LeftSideOffset { get; set; } = 14f;
@@ -234,15 +244,44 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					case ForSaleItemType.Card:
 					{
-						var card = EnsureCardPreview(x.FS.Id);
-						if (card != null)
+						if (ColorFanEnabled)
 						{
-							EventManager.Publish(new CardRenderScaledEvent
+							float angle = MathHelper.ToRadians(ColorFanAngleStepDeg);
+							var drawSpecs = new (CardData.CardColor color, int dx, float rot)[]
 							{
-								Card = card,
-								Position = contentCenter,
-								Scale = ContentScale
-							});
+								// Back to front: black, red, white (white on top)
+								(CardData.CardColor.Black, -ColorFanSpacingX, -angle),
+								(CardData.CardColor.Red, 0, 0f),
+								(CardData.CardColor.White, ColorFanSpacingX, angle)
+							};
+							foreach (var spec in drawSpecs)
+							{
+								var card = EnsureCardPreview(x.FS.Id, spec.color);
+								if (card == null) continue;
+								var t = card.GetComponent<Transform>();
+								if (t != null) t.Rotation = spec.rot;
+								EventManager.Publish(new CardRenderScaledRotatedEvent
+								{
+									Card = card,
+									Position = contentCenter + new Vector2(spec.dx, ColorFanSpacingY),
+									Scale = ContentScale
+								});
+							}
+						}
+						else
+						{
+							var card = EnsureCardPreview(x.FS.Id, CardData.CardColor.White);
+							if (card != null)
+							{
+								var t = card.GetComponent<Transform>();
+								if (t != null) t.Rotation = 0f;
+								EventManager.Publish(new CardRenderScaledRotatedEvent
+								{
+									Card = card,
+									Position = contentCenter,
+									Scale = ContentScale
+								});
+							}
 						}
 						break;
 					}
@@ -294,10 +333,16 @@ namespace Crusaders30XX.ECS.Systems
 
 		private Entity EnsureCardPreview(string cardId)
 		{
+			return EnsureCardPreview(cardId, CardData.CardColor.White);
+		}
+
+		private Entity EnsureCardPreview(string cardId, CardData.CardColor color)
+		{
 			if (string.IsNullOrWhiteSpace(cardId)) return null;
-			if (_cardPreviewCache.TryGetValue(cardId, out var existing) && existing != null) return existing;
-			var created = EntityFactory.CreateCardFromDefinition(EntityManager, cardId, CardData.CardColor.White, allowWeapons: true);
-			if (created != null) _cardPreviewCache[cardId] = created;
+			string key = $"{cardId}|{color}";
+			if (_cardPreviewCache.TryGetValue(key, out var existing) && existing != null) return existing;
+			var created = EntityFactory.CreateCardFromDefinition(EntityManager, cardId, color, allowWeapons: true);
+			if (created != null) _cardPreviewCache[key] = created;
 			return created;
 		}
 
