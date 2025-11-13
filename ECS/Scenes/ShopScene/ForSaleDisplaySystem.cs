@@ -233,6 +233,12 @@ namespace Crusaders30XX.ECS.Systems
 				Vector2 offset = Vector2.Zero;
 				if (x.T != null)
 				{
+					// Initialize transform to its layout center so it doesn't slide in from (0,0)
+					if (x.T.BasePosition == Vector2.Zero)
+					{
+						x.T.BasePosition = baseCenter;
+						x.T.Position = baseCenter;
+					}
 					// Update BasePosition for ParallaxLayerSystem
 					x.T.BasePosition = baseCenter;
 					// Only apply offset when Transform.Position looks initialized (avoid first-frame jump)
