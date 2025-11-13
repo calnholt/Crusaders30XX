@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
 using System;
 using Microsoft.Xna.Framework.Input;
+using Crusaders30XX.ECS.Data.Save;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -60,7 +61,9 @@ namespace Crusaders30XX.ECS.Systems
 
             var equippedId = st.WorkingTemperanceId ?? string.Empty;
 
+            var collection = SaveCache.GetCollectionSet();
             var all = TemperanceAbilityDefinitionCache.GetAll().Values
+                .Where(d => collection.Contains(d.id))
                 .Where(d => d.id != equippedId)
                 .OrderBy(d => (d.name ?? d.id) ?? string.Empty)
                 .ToList();
@@ -104,7 +107,9 @@ namespace Crusaders30XX.ECS.Systems
 
             string equippedId = st.WorkingTemperanceId ?? string.Empty;
 
+            var collection = SaveCache.GetCollectionSet();
             var all = TemperanceAbilityDefinitionCache.GetAll().Values
+                .Where(d => collection.Contains(d.id))
                 .Where(d => d.id != equippedId)
                 .OrderBy(d => (d.name ?? d.id) ?? string.Empty)
                 .ToList();

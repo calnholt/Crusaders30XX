@@ -1,0 +1,38 @@
+[
+  {
+    "actor": "Angel",
+    "message": "Oh thank the Saints! An oasis! We can finally rest and—"
+  },
+  {
+    "actor": "Crusader",
+    "message": "No."
+  },
+  {
+    "actor": "Angel",
+    "message": "What do you mean [jitter]no[/jitter]? It's right there! Water, shade, probably some nice cool—"
+  },
+  {
+    "actor": "Crusader",
+    "message": "We rest when the mission's done. Not before."
+  },
+  {
+    "actor": "Angel",
+    "message": "But I can barely feel my wings! And you've been marching in full armor for [slow factor=0.5]hours[/slow]!"
+  },
+  {
+    "actor": "Crusader",
+    "message": "I've marched for days in worse. The Hellrift won't close itself because we're [slow factor=0.3]tired[/slow]."
+  },
+  {
+    "actor": "Angel",
+    "message": "You know what? You're the most stubborn person I've ever met!"
+  },
+  {
+    "actor": "Crusader",
+    "message": "Good. Stubbornness keeps you alive when everything else fails. *continues walking* Now stop whining and keep up."
+  },
+  {
+    "actor": "Angel",
+    "message": "*sighs* This is going to be a [jitter]long[/jitter] partnership..."
+  }
+]

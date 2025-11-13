@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework.Input;
+using Crusaders30XX.ECS.Data.Save;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -60,8 +61,10 @@ namespace Crusaders30XX.ECS.Systems
             string equippedId = GetEquippedIdForTab(st, st.SelectedTab) ?? string.Empty;
             string slot = GetSlotName(st.SelectedTab);
 
+            var collection = SaveCache.GetCollectionSet();
             var all = EquipmentDefinitionCache.GetAll().Values
                 .Where(d => string.Equals((d.slot ?? string.Empty).Trim(), slot, System.StringComparison.OrdinalIgnoreCase))
+                .Where(d => collection.Contains(d.id))
                 .Where(d => (d.id ?? string.Empty) != equippedId)
                 .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
                 .ToList();
@@ -106,8 +109,10 @@ namespace Crusaders30XX.ECS.Systems
             string equippedId = GetEquippedIdForTab(st, st.SelectedTab) ?? string.Empty;
             string slot = GetSlotName(st.SelectedTab);
 
+            var collection = SaveCache.GetCollectionSet();
             var all = EquipmentDefinitionCache.GetAll().Values
                 .Where(d => string.Equals((d.slot ?? string.Empty).Trim(), slot, System.StringComparison.OrdinalIgnoreCase))
+                .Where(d => collection.Contains(d.id))
                 .Where(d => (d.id ?? string.Empty) != equippedId)
                 .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
                 .ToList();

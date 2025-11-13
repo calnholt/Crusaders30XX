@@ -95,6 +95,13 @@ namespace Crusaders30XX.ECS.Systems
 				_phase = AnimationPhase.Idle;
 				_animationTime = 0f;
 			});
+			EventManager.Subscribe<DeleteCachesEvent>(_ =>
+			{
+				Console.WriteLine("[LocationNameDisplaySystem] DeleteCachesEvent");
+				_locationName = "";
+				_phase = AnimationPhase.Idle;
+				_animationTime = 0f;
+			});
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()

@@ -1,0 +1,54 @@
+[
+  {
+    "actor": "Angel",
+    "message": "Wait... are those graves? There must be hundreds of them."
+  },
+  {
+    "actor": "Crusader",
+    "message": "Thousands. The Battle of Ashenfell Ridge. Fought here two centuries ago."
+  },
+  {
+    "actor": "Angel",
+    "message": "Two centuries? But the markers look almost... fresh."
+  },
+  {
+    "actor": "Crusader",
+    "message": "The desert preserves what it should let rot. Wood doesn't decay. Iron doesn't rust. Even the bones stay [slow factor=0.5]whole[/slow]."
+  },
+  {
+    "actor": "Angel",
+    "message": "That's... unsettling. What were they fighting for?"
+  },
+  {
+    "actor": "Crusader",
+    "message": "Everything. Nothing. Two kingdoms claimed the same oasis. By the time the battle ended, both armies had bled the water source dry."
+  },
+  {
+    "actor": "Angel",
+    "message": "They killed the very thing they were fighting over?"
+  },
+  {
+    "actor": "Crusader",
+    "message": "Pride does that. Turns men into weapons that destroy their own purpose. The survivors buried their dead and left. Never came back."
+  },
+  {
+    "actor": "Angel",
+    "message": "Do you think they... [slow factor=0.3]regretted[/slow] it?"
+  },
+  {
+    "actor": "Crusader",
+    "message": "I think they realized too late that some victories cost more than defeat ever could."
+  },
+  {
+    "actor": "Angel",
+    "message": "Should we... say something? For them?"
+  },
+  {
+    "actor": "Crusader",
+    "message": "*stops, removes helmet* Eternal rest grant unto them, O Lord. May they find in death the peace they never knew in life. *replaces helmet* Their souls still need our prayers, Replacement. But right now, the living need our swords."
+  },
+  {
+    "actor": "Angel",
+    "message": "...right behind you."
+  }
+]

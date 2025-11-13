@@ -88,13 +88,21 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_content = content;
-            EventManager.Subscribe<Crusaders30XX.ECS.Events.EquipmentAbilityTriggered>(OnEquipmentAbilityTriggered);
+			EventManager.Subscribe<EquipmentAbilityTriggered>(OnEquipmentAbilityTriggered);
+			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCachesEvent);
 		}
 
-		private void OnEquipmentAbilityTriggered(Crusaders30XX.ECS.Events.EquipmentAbilityTriggered evt)
+		private void OnEquipmentAbilityTriggered(EquipmentAbilityTriggered evt)
 		{
 			// Trigger a brief pulse when any equipment ability triggers
 			_pulseTimeRemaining = PulseDurationSeconds;
+		}
+
+		private void OnDeleteCachesEvent(DeleteCachesEvent evt)
+		{
+			_tooltipByEquipEntityId.Clear();
+			_iconCache.Clear();
+			_roundedRectCache.Clear();
 		}
 
 		private float GetCurrentPulseScale()

@@ -1,5 +1,5 @@
 {
-  "gold": 8,
+  "gold": 0,
   "locations": [
     {
       "id": "desert",
@@ -44,6 +44,8 @@
     }
   ],
   "collection": [
+    "radiance",
+    "anoint_the_sick",
     "courageous",
     "dowse_with_holy_water",
     "narrow_gate",
@@ -52,15 +54,15 @@
     "stab",
     "strike",
     "stun",
-    "vindicate",
     "divine_protection",
-    "impale",
     "burn",
     "shield_of_faith",
     "tempest",
-    "anoint_the_sick",
     "increase_faith",
-    "ravage"
+    "ravage",
+    "weapon_sword",
+    "weapon_hammer",
+    "st_luke"
   ],
   "items": [
     {

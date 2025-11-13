@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Data.Save
 {
@@ -13,6 +14,16 @@ namespace Crusaders30XX.ECS.Data.Save
 		{
 			EnsureLoaded();
 			return _save;
+		}
+
+		public static HashSet<string> GetCollectionSet()
+		{
+			EnsureLoaded();
+			if (_save == null || _save.collection == null || _save.collection.Count == 0)
+			{
+				return new HashSet<string>();
+			}
+			return new HashSet<string>(_save.collection);
 		}
 
 		public static int GetValueOrDefault(string locationId, int defaultValue = 0)

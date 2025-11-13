@@ -12,6 +12,7 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -122,6 +123,7 @@ namespace Crusaders30XX.ECS.Systems
 				_currentShopTitle = string.IsNullOrWhiteSpace(_.Title) ? "Shop" : _.Title;
 				_needsRebuild = true;
 			});
+			EventManager.Subscribe<HotKeyHoldCompletedEvent>(OnHotKeyHoldCompleted);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -132,6 +134,33 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			// draw-only system; we rebuild lazily in Draw
+		}
+
+		private void OnHotKeyHoldCompleted(HotKeyHoldCompletedEvent evt)
+		{
+			try
+			{
+				var e = evt?.Entity;
+				if (e == null) return;
+				var fs = e.GetComponent<ForSaleItem>();
+				var ui = e.GetComponent<UIElement>();
+				if (fs == null || ui == null) return;
+				if (fs.IsPurchased) return;
+				if (!ui.IsInteractable) return;
+				if (!PurchaseItemService.CanAfford(fs.Price)) return;
+
+				var result = PurchaseItemService.TryPurchase(EntityManager, e);
+				if (result.Success)
+				{
+					fs.IsPurchased = true;
+					ui.IsInteractable = false;
+					// Remove hotkey if present
+					var hk = e.GetComponent<HotKey>();
+					if (hk != null) EntityManager.RemoveComponent<HotKey>(e);
+					_needsRebuild = true;
+				}
+			}
+			catch { }
 		}
 
 		private void EnsureInventoryEntities()
@@ -252,7 +281,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					// Bounds centered on the (possibly parallax-shifted) drawRect
 					x.UI.Bounds = drawRect;
-					x.UI.IsInteractable = true;
+					x.UI.IsInteractable = !x.FS.IsPurchased;
 				}
 
 				// Name text (top-left inside padding)
@@ -322,17 +351,48 @@ namespace Crusaders30XX.ECS.Systems
 				}
 
 				// Price line
-				string priceText = $"{x.FS.Price}";
-				Vector2 priceSize = _font?.MeasureString(priceText) * PriceTextScale ?? Vector2.Zero;
-				int priceY = innerRect.Y + PriceOffsetY;
-				int priceX = innerRect.X + PaddingX;
-				_spriteBatch.DrawString(_font, priceText, new Vector2(priceX, priceY), Color.White, 0f, Vector2.Zero, PriceTextScale, SpriteEffects.None, 0f);
-				if (_goldIcon != null)
+				if (x.FS.IsPurchased)
 				{
-					int iconW = (int)Math.Round(_goldIcon.Width * PriceIconScale);
-					int iconH = (int)Math.Round(_goldIcon.Height * PriceIconScale);
-					var goldRect = new Rectangle((int)Math.Round(priceX + priceSize.X + 6), priceY, iconW, iconH);
-					_spriteBatch.Draw(_goldIcon, goldRect, Color.White);
+					int priceY = innerRect.Y + PriceOffsetY;
+					int priceX = innerRect.X + PaddingX;
+					_spriteBatch.DrawString(_font, "Sold!", new Vector2(priceX, priceY), Color.White, 0f, Vector2.Zero, PriceTextScale, SpriteEffects.None, 0f);
+				}
+				else
+				{
+					string priceText = $"{x.FS.Price}";
+					Vector2 priceSize = _font?.MeasureString(priceText) * PriceTextScale ?? Vector2.Zero;
+					int priceY = innerRect.Y + PriceOffsetY;
+					int priceX = innerRect.X + PaddingX;
+					_spriteBatch.DrawString(_font, priceText, new Vector2(priceX, priceY), Color.White, 0f, Vector2.Zero, PriceTextScale, SpriteEffects.None, 0f);
+					if (_goldIcon != null)
+					{
+						int iconW = (int)Math.Round(_goldIcon.Width * PriceIconScale);
+						int iconH = (int)Math.Round(_goldIcon.Height * PriceIconScale);
+						var goldRect = new Rectangle((int)Math.Round(priceX + priceSize.X + 6), priceY, iconW, iconH);
+						_spriteBatch.Draw(_goldIcon, goldRect, Color.White);
+					}
+				}
+
+				// Hover HotKey (FaceButton.X) when affordable and not purchased
+				if (x.UI != null && x.UI.IsHovered && !x.FS.IsPurchased && PurchaseItemService.CanAfford(x.FS.Price))
+				{
+					var hk = x.E.GetComponent<HotKey>();
+					if (hk == null)
+					{
+						EntityManager.AddComponent(x.E, new HotKey { Button = FaceButton.X, RequiresHold = true, Position = HotKeyPosition.Below });
+					}
+					else
+					{
+						hk.Button = FaceButton.X;
+						hk.RequiresHold = true;
+						hk.Position = HotKeyPosition.Below;
+					}
+				}
+				else
+				{
+					// Remove HotKey when not eligible (not hovered / not affordable / purchased)
+					var hk = x.E.GetComponent<HotKey>();
+					if (hk != null) EntityManager.RemoveComponent<HotKey>(x.E);
 				}
 			}
 		}

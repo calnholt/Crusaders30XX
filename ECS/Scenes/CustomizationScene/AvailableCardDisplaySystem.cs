@@ -9,6 +9,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Factories;
 using System;
+using Crusaders30XX.ECS.Data.Save;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -75,9 +76,11 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
+            var collection = SaveCache.GetCollectionSet();
             var defs = CardDefinitionCache.GetAll().Values
                 .Where(d => !d.isWeapon)
                 .Where(d => d.canAddToLoadout)
+                .Where(d => collection.Contains(d.id))
                 .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
                 .ToList();
             CardData.CardColor[] colorOrder = new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black };
@@ -142,9 +145,11 @@ namespace Crusaders30XX.ECS.Systems
             int colW = (int)(cardW * _libraryPanel.CardScale) + 20;
             int col = Math.Max(1, _libraryPanel.Columns);
 
+            var collection = SaveCache.GetCollectionSet();
             var defs = CardDefinitionCache.GetAll().Values
                 .Where(d => !d.isWeapon)
                 .Where(d => d.canAddToLoadout)
+                .Where(d => collection.Contains(d.id))
                 .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
                 .ToList();
             CardData.CardColor[] colorOrder = new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black };

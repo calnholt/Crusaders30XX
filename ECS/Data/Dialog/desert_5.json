@@ -1,0 +1,38 @@
+[
+  {
+    "actor": "Crusader",
+    "message": "What did you just say?"
+  },
+  {
+    "actor": "Angel",
+    "message": "Huh? I didn't say anything."
+  },
+  {
+    "actor": "Crusader",
+    "message": "You absolutely did. Something about my armor."
+  },
+  {
+    "actor": "Angel",
+    "message": "I was literally just breathing! I didn't—"
+  },
+  {
+    "actor": "Crusader",
+    "message": "I [jitter]heard[/jitter] you, Replacement. This helmet doesn't muffle [slow factor=0.5]everything[/slow]."
+  },
+  {
+    "actor": "Angel",
+    "message": "Okay but what if it does? What if that's [nod]exactly[/nod] what it does?"
+  },
+  {
+    "actor": "Crusader",
+    "message": "......"
+  },
+  {
+    "actor": "Angel",
+    "message": "Just saying, you've been wearing it in desert heat for like three hours—"
+  },
+  {
+    "actor": "Crusader",
+    "message": "My hearing is [shake]fine[/shake]. March."
+  }
+]

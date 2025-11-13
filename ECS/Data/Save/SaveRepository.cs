@@ -21,6 +21,8 @@ namespace Crusaders30XX.ECS.Data.Save
 				{
 					if (loc != null && loc.events == null) loc.events = new System.Collections.Generic.List<SaveQuest>();
 				}
+				if (data.collection == null) data.collection = new System.Collections.Generic.List<string>();
+				if (data.items == null) data.items = new System.Collections.Generic.List<SaveItem>();
 				result = data;
 			}
 			catch (System.Exception ex)

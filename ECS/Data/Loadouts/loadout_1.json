@@ -7,7 +7,6 @@
     "dowse_with_holy_water|Red",
     "dowse_with_holy_water|Black",
     "narrow_gate|White",
-    "sacrifice|Black",
     "seize|Red",
     "seize|Black",
     "stab|White",
@@ -16,7 +15,7 @@
     "strike|Red",
     "stun|Red",
     "stun|Black",
-    "vindicate|Black",
+    "ravage|White",
     "divine_protection|Black",
     "impale|Red",
     "burn|Red",
@@ -31,14 +30,15 @@
     "increase_faith|White",
     "increase_faith|Red",
     "whirlwind|Red",
-    "ravage|Black"
+    "ravage|Black",
+    "narrow_gate|Black"
   ],
   "weaponId": "hammer",
   "temperanceId": "radiance",
-  "chestId": "pierced_heart_plate",
-  "legsId": "lightning_grieves",
-  "armsId": "purging_bracers",
-  "headId": "focus_visor",
+  "chestId": "",
+  "legsId": "",
+  "armsId": "",
+  "headId": "",
   "medalIds": [
     "st_michael",
     "st_luke"

@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
 using System;
+using Crusaders30XX.ECS.Data.Save;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -57,8 +58,10 @@ namespace Crusaders30XX.ECS.Systems
 
 			string equippedId = st.WorkingWeaponId ?? string.Empty;
 
+			var collection = SaveCache.GetCollectionSet();
 			var defs = CardDefinitionCache.GetAll().Values
 				.Where(d => d.isWeapon)
+				.Where(d => collection.Contains(d.id))
 				.Where(d => (d.id ?? string.Empty) != equippedId)
 				.OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
 				.ToList();
@@ -97,8 +100,10 @@ namespace Crusaders30XX.ECS.Systems
 
 			string equippedId = st.WorkingWeaponId ?? string.Empty;
 
+			var collection = SaveCache.GetCollectionSet();
 			var defs = CardDefinitionCache.GetAll().Values
 				.Where(d => d.isWeapon)
+				.Where(d => collection.Contains(d.id))
 				.Where(d => (d.id ?? string.Empty) != equippedId)
 				.OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
 				.ToList();
