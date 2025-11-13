@@ -426,7 +426,18 @@ namespace Crusaders30XX.ECS.Factories
 				var e = entityManager.CreateEntity($"ShopItem_{id}_{idx}");
 				entityManager.AddComponent(e, new Transform { Position = new Vector2(-1000, -1000), ZOrder = 10002 });
 				entityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
-				entityManager.AddComponent(e, new UIElement { Bounds = new Microsoft.Xna.Framework.Rectangle(-1000, -1000, 1, 1), IsInteractable = true });
+                var uiElement = new UIElement { Bounds = new Rectangle(-1000, -1000, 1, 1), IsInteractable = true };
+                if (itemType == ForSaleItemType.Card)
+                {
+                    uiElement.TooltipType = TooltipType.Card;
+                    entityManager.AddComponent(e, new CardTooltip { CardId = id });
+                }
+                else if (itemType == ForSaleItemType.Medal)
+                {
+                    uiElement.Tooltip = $"{displayName} - {fs.price} gold";
+                }
+                else if (itemType == ForSaleItemType.Equipment)
+				entityManager.AddComponent(e, uiElement);
 				entityManager.AddComponent(e, new OwnedByScene { Scene = SceneId.Shop });
 				entityManager.AddComponent(e, new ForSaleItem
 				{

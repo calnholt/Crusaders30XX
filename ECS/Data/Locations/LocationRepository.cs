@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Numerics;
+using Crusaders30XX.ECS.Components;
+using System;
 
 namespace Crusaders30XX.ECS.Data.Locations
 {
@@ -50,7 +52,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 						isRevealed = poi.IsRevealed,
 						revealRadius = poi.RevealRadius,
 						unrevealedRadius = poi.UnrevealedRadius,
-						type = poi.Type,
+						type = Enum.Parse<PointOfInterestType>(poi.Type),
 						rewardGold = 0,
 						events = new List<LocationEventDefinition>()
 					};

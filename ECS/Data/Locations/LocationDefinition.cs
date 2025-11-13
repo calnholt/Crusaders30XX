@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Numerics;
+using Crusaders30XX.ECS.Components;
 
 namespace Crusaders30XX.ECS.Data.Locations
 {
@@ -18,7 +19,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public bool isRevealed { get; set; } = false;
 		public int unrevealedRadius { get; set; } = 50;
 		public string name { get; set; } = string.Empty;
-		public string type { get; set; } = "Quest";
+		public PointOfInterestType type { get; set; } = PointOfInterestType.Quest;
 		public int rewardGold { get; set; } = 0;
 		public List<LocationEventDefinition> events { get; set; } = new List<LocationEventDefinition>();
 		public List<TribulationDefinition> tribulations { get; set; } = new List<TribulationDefinition>();

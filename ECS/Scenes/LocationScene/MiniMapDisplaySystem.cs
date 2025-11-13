@@ -142,7 +142,7 @@ namespace Crusaders30XX.ECS.Systems
 
 				foreach (var p in pois)
 				{
-					bool isHellrift = p.Type != null && p.Type.Equals("Hellrift", System.StringComparison.OrdinalIgnoreCase);
+					bool isHellrift = p.Type != null && p.Type == PointOfInterestType.Hellrift;
 					bool isCompleted = p.IsCompleted;
 					// Visible if: always Hellrift, or completed, or revealed, or proximity-visible
 					bool isVisible = isHellrift || isCompleted || p.IsRevealed || IsVisibleByProximity(p, unlockers, cam.MapScale);
@@ -181,7 +181,7 @@ namespace Crusaders30XX.ECS.Systems
 					if (poi == null) continue;
 
 					bool isCompleted = SaveCache.IsQuestCompleted(locationId, poi.id);
-					bool isHellrift = poi.type != null && poi.type.Equals("Hellrift", System.StringComparison.OrdinalIgnoreCase);
+					bool isHellrift = poi.type == PointOfInterestType.Hellrift;
 					bool isVisible = isHellrift || isCompleted || poi.isRevealed || IsVisibleByProximityDef(poi, defUnlockers, locationId, cam.MapScale);
 					if (!isVisible) continue;
 

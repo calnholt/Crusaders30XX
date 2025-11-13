@@ -153,7 +153,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (def?.pointsOfInterest == null) continue;
 				foreach (var poi in def.pointsOfInterest)
 				{
-					if (!string.Equals(poi?.type, "Shop", StringComparison.OrdinalIgnoreCase)) continue;
+					if (poi?.type != PointOfInterestType.Shop) continue;
 					if (poi?.forSale == null || poi.forSale.Count == 0) continue;
 					if (fallback == null) fallback = poi;
 					if (!string.IsNullOrWhiteSpace(_currentShopTitle) && string.Equals(poi.name ?? string.Empty, _currentShopTitle, StringComparison.OrdinalIgnoreCase))
@@ -222,7 +222,6 @@ namespace Crusaders30XX.ECS.Systems
 				if (x.UI != null)
 				{
 					x.UI.Bounds = tileRect;
-					x.UI.Tooltip = $"{x.FS.DisplayName} - {x.FS.Price} gold";
 					x.UI.IsInteractable = true;
 				}
 				if (x.T != null)

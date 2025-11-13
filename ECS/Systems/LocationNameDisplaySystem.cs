@@ -95,11 +95,6 @@ namespace Crusaders30XX.ECS.Systems
 				_phase = AnimationPhase.Idle;
 				_animationTime = 0f;
 			});
-
-			EventManager.Subscribe<DeleteCachesEvent>(_ =>
-			{
-				// Cleanup is handled by PrimitiveTextureFactory cache
-			});
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -249,5 +244,6 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
+
 
 

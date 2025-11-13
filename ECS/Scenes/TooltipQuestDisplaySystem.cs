@@ -227,7 +227,7 @@ namespace Crusaders30XX.ECS.Systems
 		List<TribulationDefinition> tribulations = null;
 		int rewardGold = 0;
 		bool isCompleted = false;
-		string poiType = "Quest";
+		PointOfInterestType poiType = PointOfInterestType.Quest;
 		Rectangle? tooltipRect = null;
 
 			if (hovered != null)
@@ -245,8 +245,8 @@ namespace Crusaders30XX.ECS.Systems
 					tribulations = loc.pointsOfInterest[idx].tribulations;
 					title = "Quest " + (idx + 1);
 					// Determine POI type from location definition
-					string poiTypeFromDef = loc.pointsOfInterest[idx].type ?? "Quest";
-					poiType = poiTypeFromDef.Equals("Hellrift", System.StringComparison.OrdinalIgnoreCase) ? "Hellrift" : "Quest";
+					PointOfInterestType poiTypeFromDef = loc.pointsOfInterest[idx].type;
+					poiType = poiTypeFromDef;
 					shouldShowTooltip = true;
 				}
 			}
@@ -257,7 +257,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (poi != null && IsPoiVisible(poi) && TryFindLocationByPoiId(poi.Id, out var locId, out var questIdx))
 				{
 					// For Hellrifts, only show tooltip if revealed by proximity
-					if (poi.Type == "Hellrift" && !poi.IsRevealedByProximity)
+					if (poi.Type == PointOfInterestType.Hellrift && !poi.IsRevealedByProximity)
 					{
 						shouldShowTooltip = false;
 					}
@@ -274,7 +274,7 @@ namespace Crusaders30XX.ECS.Systems
 							var questId = loc.pointsOfInterest[questIdx].id;
 							isCompleted = (!string.IsNullOrEmpty(questId) && SaveCache.IsQuestCompleted(locId, questId)) || (poi?.IsCompleted ?? false);
 							// Get POI type from POI component
-							poiType = poi.Type ?? "Quest";
+							poiType = poi.Type;
 							shouldShowTooltip = true;
 						}
 					}
@@ -297,7 +297,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					_tooltipEntity = EntityManager.CreateEntity(TooltipEntityName);
 					EntityManager.AddComponent(_tooltipEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 });
-					EntityManager.AddComponent(_tooltipEntity, new QuestTooltip { LocationId = locationIdTop, Title = title, Events = events, Tribulations = tribulations, RewardGold = rewardGold, IsCompleted = isCompleted, PoiType = poiType, Alpha01 = 0f, TargetVisible = true });
+					EntityManager.AddComponent(_tooltipEntity, new QuestTooltip { LocationId = locationIdTop, Title = title, Events = events, Tribulations = tribulations, RewardGold = rewardGold, IsCompleted = isCompleted, PoiType = poiType.ToString(), Alpha01 = 0f, TargetVisible = true });
 					EntityManager.AddComponent(_tooltipEntity, new UIElement { Bounds = rect, IsInteractable = true });
 					EntityManager.AddComponent(_tooltipEntity, new HotKey { Button = FaceButton.X, RequiresHold = true, ParentEntity = hovered.E });
 				}
@@ -318,7 +318,7 @@ namespace Crusaders30XX.ECS.Systems
 					questTooltip.Tribulations = tribulations;
 					questTooltip.RewardGold = rewardGold;
 					questTooltip.IsCompleted = isCompleted;
-					questTooltip.PoiType = poiType;
+					questTooltip.PoiType = poiType.ToString();
 					questTooltip.TargetVisible = true;
 				}
 					var ui = _tooltipEntity.GetComponent<UIElement>();
@@ -376,7 +376,7 @@ namespace Crusaders30XX.ECS.Systems
 
 	var rect = ui.Bounds;
 	DrawTooltipBox(rect, questTooltip.Alpha01);
-	DrawHeader(questTooltip.LocationId, questTooltip.Title, questTooltip.PoiType, rect, questTooltip.Alpha01);
+	DrawHeader(questTooltip.LocationId, questTooltip.Title, System.Enum.Parse<PointOfInterestType>(questTooltip.PoiType), rect, questTooltip.Alpha01);
 	DrawQuestContent(rect, questTooltip.Alpha01, questTooltip.Title, questTooltip.Events, questTooltip.Tribulations, questTooltip.RewardGold, questTooltip.IsCompleted);
 	}
 
@@ -514,7 +514,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Draw(tex, rect, back);
 		}
 
-	private void DrawHeader(string locationId, string title, string poiType, Rectangle rect, float alpha01)
+	private void DrawHeader(string locationId, string title, PointOfInterestType poiType, Rectangle rect, float alpha01)
 	{
 		int hh = System.Math.Max(12, HeaderHeight);
 		int stripe = System.Math.Max(0, System.Math.Min(HeaderStripeHeight, hh));
@@ -541,7 +541,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Draw POI icon centered in left box
 		Texture2D iconTexture = null;
-		if (poiType != null && poiType.Equals("Hellrift", System.StringComparison.OrdinalIgnoreCase) && _hellriftIconTexture != null)
+		if (poiType == PointOfInterestType.Hellrift && _hellriftIconTexture != null)
 		{
 			iconTexture = _hellriftIconTexture;
 		}

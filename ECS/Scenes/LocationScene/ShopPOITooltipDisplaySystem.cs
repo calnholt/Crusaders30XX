@@ -68,7 +68,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Find top-most hovered Shop POI
 			var hovered = EntityManager.GetEntitiesWithComponent<UIElement>()
 				.Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), P = e.GetComponent<PointOfInterest>() })
-				.Where(x => x.UI != null && x.UI.IsHovered && x.P != null && x.P.Type == "Shop")
+				.Where(x => x.UI != null && x.UI.IsHovered && x.P != null && x.P.Type == PointOfInterestType.Shop)
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.FirstOrDefault();
 

@@ -89,7 +89,7 @@ namespace Crusaders30XX.ECS.Systems
 				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
 				.Where(x => x.P != null && x.T != null)
 				.ToList();
-			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == "Hellrift").ToList();
+			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == PointOfInterestType.Hellrift).ToList();
 			var unlockerIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
 			var centers = new System.Collections.Generic.List<Microsoft.Xna.Framework.Vector2>();
 			var radii = new System.Collections.Generic.List<float>();
@@ -176,7 +176,7 @@ namespace Crusaders30XX.ECS.Systems
 				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
 				.Where(x => x.P != null && x.T != null)
 				.ToList();
-			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == "Hellrift").ToList();
+			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == PointOfInterestType.Hellrift).ToList();
 			var unlockerIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
 			var centers = new System.Collections.Generic.List<Microsoft.Xna.Framework.Vector2>();
 			var radii = new System.Collections.Generic.List<float>();

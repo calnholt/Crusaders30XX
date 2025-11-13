@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
@@ -131,8 +132,8 @@ namespace Crusaders30XX.ECS.Systems
 					if (poi != null)
 					{
 						Texture2D iconTexture =
-							(poi.Type == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture :
-							(poi.Type == "Shop" && _shopIconTexture != null) ? _shopIconTexture :
+							(poi.Type == PointOfInterestType.Hellrift && _hellriftIconTexture != null) ? _hellriftIconTexture :
+							(poi.Type == PointOfInterestType.Shop && _shopIconTexture != null) ? _shopIconTexture :
 							_questIconTexture;
 						
 						// Calculate bounds size scaled by map zoom and hover scale
@@ -156,7 +157,7 @@ namespace Crusaders30XX.ECS.Systems
 
 				// Handle Shop POI click → go to Shop scene with title
 				var clickUI = e.GetComponent<UIElement>();
-				if (poiComp != null && clickUI != null && clickUI.IsClicked && poiComp.Type == "Shop")
+				if (poiComp != null && clickUI != null && clickUI.IsClicked && poiComp.Type == PointOfInterestType.Shop)
 				{
 					string shopTitle = "Shop";
 					// Try to find POI name by id in loaded definitions
@@ -174,8 +175,8 @@ namespace Crusaders30XX.ECS.Systems
 							}
 						}
 					}
-					EventManager.Publish(new ECS.Events.SetShopTitle { Title = shopTitle });
-					EventManager.Publish(new ECS.Events.ShowTransition { Scene = SceneId.Shop });
+					EventManager.Publish(new SetShopTitle { Title = shopTitle });
+					EventManager.Publish(new ShowTransition { Scene = SceneId.Shop });
 				}
 			}
 
@@ -186,11 +187,11 @@ namespace Crusaders30XX.ECS.Systems
 			
 			// Get unlockers: revealed or completed POIs (excluding Hellrifts)
 			var unlockers = poiComponents
-				.Where(x => x.P.Type != "Hellrift" && (x.P.IsRevealed || x.P.IsCompleted))
+				.Where(x => x.P.Type != PointOfInterestType.Hellrift && (x.P.IsRevealed || x.P.IsCompleted))
 				.ToList();
 			
 			// For each Hellrift, check if it's within reveal radius of any unlocker
-			foreach (var hellrift in poiComponents.Where(x => x.P.Type == "Hellrift"))
+			foreach (var hellrift in poiComponents.Where(x => x.P.Type == PointOfInterestType.Hellrift))
 			{
 				bool isRevealedByProximity = false;
 				foreach (var u in unlockers)
@@ -225,23 +226,10 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(e, new Transform { Position = pos.worldPosition, ZOrder = 10 });
 				
 				// Determine POI type and appropriate texture
-				string poiType = pos.type ?? "Quest";
-				// Ensure case-insensitive matching
-				if (poiType.Equals("Hellrift", System.StringComparison.OrdinalIgnoreCase))
-				{
-					poiType = "Hellrift";
-				}
-				else if (poiType.Equals("Shop", System.StringComparison.OrdinalIgnoreCase))
-				{
-					poiType = "Shop";
-				}
-				else
-				{
-					poiType = "Quest";
-				}
+				PointOfInterestType poiType = pos.type;
 				Texture2D iconTexture =
-					(poiType == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture :
-					(poiType == "Shop" && _shopIconTexture != null) ? _shopIconTexture :
+					(poiType == PointOfInterestType.Hellrift && _hellriftIconTexture != null) ? _hellriftIconTexture :
+					(poiType == PointOfInterestType.Shop && _shopIconTexture != null) ? _shopIconTexture :
 					_questIconTexture;
 				
 				// Calculate UI bounds based on actual icon dimensions
@@ -255,9 +243,9 @@ namespace Crusaders30XX.ECS.Systems
 				
 				// UI bounds size only; Parallax will center bounds at Transform.Position when AffectsUIBounds is true
 				// Hellrift POIs are not interactable
-				bool isInteractable = poiType != "Hellrift";
-				var tooltipType = (poiType == "Shop") ? TooltipType.None : TooltipType.Quests;
-				var eventType = (poiType == "Shop") ? UIElementEventType.None : UIElementEventType.QuestSelect;
+				bool isInteractable = poiType != PointOfInterestType.Hellrift;
+				var tooltipType = (poiType == PointOfInterestType.Shop) ? TooltipType.None : TooltipType.Quests;
+				var eventType = (poiType == PointOfInterestType.Shop) ? UIElementEventType.None : UIElementEventType.QuestSelect;
 				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, boundsWidth, boundsHeight), IsInteractable = isInteractable, TooltipType = tooltipType, EventType = eventType, IsPreventDefaultClick = true });
 				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
 				// Attach POI component for fog-of-war and interactions
@@ -271,7 +259,7 @@ namespace Crusaders30XX.ECS.Systems
 					Type = poiType
 				};
 				// Initialize display radius consistent with current state
-				if (poiType == "Hellrift")
+				if (poiType == PointOfInterestType.Hellrift)
 				{
 					// Hellrift POIs always show with UnrevealedRadius
 					poi.DisplayRadius = poi.UnrevealedRadius;
@@ -307,14 +295,14 @@ namespace Crusaders30XX.ECS.Systems
 				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>(), UI = e.GetComponent<UIElement>() })
 				.Where(x => x.P != null && x.T != null && x.UI != null)
 				.ToList();
-			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == "Hellrift").ToList();
+			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == PointOfInterestType.Hellrift).ToList();
 			var visibleIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
 			float mapScale = cam.MapScale;
 			foreach (var x in list)
 			{
 				if (visibleIds.Contains(x.E.Id)) continue;
 				// Hellrift POIs are always visible, skip distance check (should already be in visibleIds, but double-check)
-				if (x.P.Type == "Hellrift")
+				if (x.P.Type == PointOfInterestType.Hellrift)
 				{
 					visibleIds.Add(x.E.Id);
 					continue;
@@ -345,8 +333,8 @@ namespace Crusaders30XX.ECS.Systems
 				
 				// Determine which texture to use based on POI type
 				Texture2D iconTexture =
-					(x.P.Type == "Hellrift" && _hellriftIconTexture != null) ? _hellriftIconTexture :
-					(x.P.Type == "Shop" && _shopIconTexture != null) ? _shopIconTexture :
+					(x.P.Type == PointOfInterestType.Hellrift && _hellriftIconTexture != null) ? _hellriftIconTexture :
+					(x.P.Type == PointOfInterestType.Shop && _shopIconTexture != null) ? _shopIconTexture :
 					_questIconTexture;
 				
 				// Calculate icon dimensions preserving aspect ratio, scaled by map zoom
@@ -379,7 +367,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				
 				// Draw red circle for incomplete quests (not for Hellrift POIs)
-				if (!x.P.IsCompleted && x.P.Type == "Quest")
+				if (!x.P.IsCompleted && x.P.Type == PointOfInterestType.Quest)
 				{
 					DrawCircle(iconPos, halfWidth, halfHeight, CircleSize * mapScale * scale);
 				}
