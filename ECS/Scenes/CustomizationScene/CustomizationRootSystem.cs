@@ -31,6 +31,9 @@ namespace Crusaders30XX.ECS.Systems
         private LoadoutCardDisplaySystem _loadoutCardDisplaySystem;
         private AvailableTemperanceDisplaySystem _availableTemperanceDisplaySystem;
         private LoadoutTemperanceDisplaySystem _loadoutTemperanceDisplaySystem;
+        private CustomizeMedalDisplaySystem _customizeMedalDisplaySystem;
+        private AvailableMedalDisplaySystem _availableMedalDisplaySystem;
+        private LoadoutMedalDisplaySystem _loadoutMedalDisplaySystem;
         private CustomizationStateManagementSystem _customizationStateManagementSystem;
         private CustomizeEquipmentDisplaySystem _customizeEquipmentDisplaySystem;
         private LoadoutEquipmentDisplaySystem _loadoutEquipmentDisplaySystem;
@@ -60,6 +63,9 @@ namespace Crusaders30XX.ECS.Systems
             _loadoutCardDisplaySystem = new LoadoutCardDisplaySystem(EntityManager, _world, _graphicsDevice, _spriteBatch, _deckPanelSystem);
             _availableTemperanceDisplaySystem = new AvailableTemperanceDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _libraryPanelSystem, _customizeTemperanceDisplaySystem);
             _loadoutTemperanceDisplaySystem = new LoadoutTemperanceDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _deckPanelSystem, _customizeTemperanceDisplaySystem);
+            _customizeMedalDisplaySystem = new CustomizeMedalDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _font, _libraryPanelSystem, _deckPanelSystem);
+            _availableMedalDisplaySystem = new AvailableMedalDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _libraryPanelSystem, _customizeMedalDisplaySystem);
+            _loadoutMedalDisplaySystem = new LoadoutMedalDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _deckPanelSystem, _customizeMedalDisplaySystem);
             _customizeEquipmentDisplaySystem = new CustomizeEquipmentDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _font, _libraryPanelSystem, _deckPanelSystem);
             _loadoutEquipmentDisplaySystem = new LoadoutEquipmentDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _deckPanelSystem, _customizeEquipmentDisplaySystem);
             _availableEquipmentDisplaySystem = new AvailableEquipmentDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _libraryPanelSystem, _customizeEquipmentDisplaySystem);
@@ -76,10 +82,13 @@ namespace Crusaders30XX.ECS.Systems
             world.AddSystem(_backgroundSystem);
             world.AddSystem(_sectionTabMenuDisplaySystem);
             world.AddSystem(_customizeTemperanceDisplaySystem);
+            world.AddSystem(_customizeMedalDisplaySystem);
             world.AddSystem(_availableCardDisplaySystem);
             world.AddSystem(_loadoutCardDisplaySystem);
             world.AddSystem(_availableTemperanceDisplaySystem);
             world.AddSystem(_loadoutTemperanceDisplaySystem);
+            world.AddSystem(_availableMedalDisplaySystem);
+            world.AddSystem(_loadoutMedalDisplaySystem);
             world.AddSystem(_customizeEquipmentDisplaySystem);
             world.AddSystem(_loadoutEquipmentDisplaySystem);
             world.AddSystem(_availableEquipmentDisplaySystem);
@@ -118,6 +127,8 @@ namespace Crusaders30XX.ECS.Systems
             FrameProfiler.Measure("LoadoutCardDisplaySystem.Draw", _loadoutCardDisplaySystem.Draw);
             FrameProfiler.Measure("AvailableTemperanceDisplaySystem.Draw", _availableTemperanceDisplaySystem.Draw);
             FrameProfiler.Measure("LoadoutTemperanceDisplaySystem.Draw", _loadoutTemperanceDisplaySystem.Draw);
+            FrameProfiler.Measure("AvailableMedalDisplaySystem.Draw", _availableMedalDisplaySystem.Draw);
+            FrameProfiler.Measure("LoadoutMedalDisplaySystem.Draw", _loadoutMedalDisplaySystem.Draw);
             FrameProfiler.Measure("AvailableEquipmentDisplaySystem.Draw", _availableEquipmentDisplaySystem.Draw);
             FrameProfiler.Measure("LoadoutEquipmentDisplaySystem.Draw", _loadoutEquipmentDisplaySystem.Draw);
             FrameProfiler.Measure("AvailableWeaponDisplaySystem.Draw", _availableWeaponDisplaySystem.Draw);

@@ -21,19 +21,22 @@ namespace Crusaders30XX.ECS.Systems
         private readonly Dictionary<CustomizationTabType, int> _tabIds = new Dictionary<CustomizationTabType, int>();
 
         [DebugEditable(DisplayName = "Top Margin", Step = 2, Min = 0, Max = 200)]
-        public int TopMargin { get; set; } = 8;
+        public int TopMargin { get; set; } = 18;
 
         [DebugEditable(DisplayName = "Button Height", Step = 2, Min = 18, Max = 140)]
-        public int ButtonHeight { get; set; } = 26;
+        public int ButtonHeight { get; set; } = 64;
 
         [DebugEditable(DisplayName = "Horizontal Spacing", Step = 2, Min = 0, Max = 80)]
-        public int Spacing { get; set; } = 12;
+        public int Spacing { get; set; } = 16;
 
         [DebugEditable(DisplayName = "Button Padding X", Step = 2, Min = 0, Max = 80)]
-        public int PadX { get; set; } = 4;
+        public int PadX { get; set; } = 26;
 
         [DebugEditable(DisplayName = "Text Scale", Step = 0.025f, Min = 0.1f, Max = 1.0f)]
         public float TextScale { get; set; } = 0.15f;
+
+        [DebugEditable(DisplayName = "Row Spacing", Step = 1, Min = 0, Max = 100)]
+        public int RowSpacing { get; set; } = 7;
 
         [DebugEditable(DisplayName = "ZOrder", Step = 100, Min = 0, Max = 100000)]
         public int ZOrder { get; set; } = 60000;
@@ -125,28 +128,51 @@ namespace Crusaders30XX.ECS.Systems
                 .Cast<CustomizationTabType>()
                 .ToList();
 
-            // Measure total width with spacing
-            int[] widths = new int[types.Count];
-            int total = 0;
-            for (int i = 0; i < types.Count; i++)
+            // Split into two rows (roughly equal halves)
+            int half = (types.Count + 1) / 2;
+            var row1 = types.Take(half).ToList();
+            var row2 = types.Skip(half).ToList();
+
+            // Measure widths for each row
+            (int totalW, int[] widths) MeasureRow(System.Collections.Generic.List<CustomizationTabType> row)
             {
-                string label = GetLabel(types[i]);
-                int w = (int)System.Math.Ceiling((_font?.MeasureString(label).X ?? 0f) * TextScale) + PadX * 2;
-                int h = ButtonHeight;
-                widths[i] = w;
-                total += w;
-                if (i > 0) total += Spacing;
+                int[] w = new int[row.Count];
+                int total = 0;
+                for (int i = 0; i < row.Count; i++)
+                {
+                    string label = GetLabel(row[i]);
+                    int wi = (int)System.Math.Ceiling((_font?.MeasureString(label).X ?? 0f) * TextScale) + PadX * 2;
+                    w[i] = wi;
+                    total += wi;
+                    if (i > 0) total += Spacing;
+                }
+                return (total, w);
             }
 
-            int startX = strip.left + System.Math.Max(0, (strip.width - total) / 2);
-            int y = strip.y;
+            var (total1, widths1) = MeasureRow(row1);
+            var (total2, widths2) = MeasureRow(row2);
+
+            int y1 = strip.y;
+            int y2 = strip.y + ButtonHeight + RowSpacing;
+            int startX1 = strip.left + System.Math.Max(0, (strip.width - total1) / 2);
+            int startX2 = strip.left + System.Math.Max(0, (strip.width - total2) / 2);
+
             var list = new List<(CustomizationTabType, Rectangle, string)>();
-            for (int i = 0; i < types.Count; i++)
+            int x = startX1;
+            for (int i = 0; i < row1.Count; i++)
             {
-                string label = GetLabel(types[i]);
-                var bounds = new Rectangle(startX, y, widths[i], ButtonHeight);
-                list.Add((types[i], bounds, label));
-                startX += widths[i] + Spacing;
+                string label = GetLabel(row1[i]);
+                var bounds = new Rectangle(x, y1, widths1[i], ButtonHeight);
+                list.Add((row1[i], bounds, label));
+                x += widths1[i] + Spacing;
+            }
+            x = startX2;
+            for (int i = 0; i < row2.Count; i++)
+            {
+                string label = GetLabel(row2[i]);
+                var bounds = new Rectangle(x, y2, widths2[i], ButtonHeight);
+                list.Add((row2[i], bounds, label));
+                x += widths2[i] + Spacing;
             }
             return list;
         }
@@ -162,6 +188,7 @@ namespace Crusaders30XX.ECS.Systems
                 case CustomizationTabType.Arms: return "Arms";
                 case CustomizationTabType.Legs: return "Legs";
                 case CustomizationTabType.Temperance: return "Temperance";
+                case CustomizationTabType.Medals: return "Medals";
                 default: return t.ToString();
             }
         }

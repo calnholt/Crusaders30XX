@@ -38,6 +38,11 @@ namespace Crusaders30XX.ECS.Events
         public int Value { get; set; }
     }
 
+    public class FullyHealEvent
+    {
+        public Entity Target { get; set; }
+    }
+
     /// <summary>
     /// Emitted when the player entity's HP reaches 0 for the first time.
     /// </summary>

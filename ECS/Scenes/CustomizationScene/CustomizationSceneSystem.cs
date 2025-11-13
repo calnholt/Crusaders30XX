@@ -220,12 +220,14 @@ namespace Crusaders30XX.ECS.Systems
             st.WorkingLegsId = def.legsId ?? st.WorkingLegsId;
             st.WorkingArmsId = def.armsId ?? st.WorkingArmsId;
             st.WorkingHeadId = def.headId ?? st.WorkingHeadId;
+            st.WorkingMedalIds = new List<string>(def.medalIds ?? new List<string>());
             st.OriginalTemperanceId = st.WorkingTemperanceId;
             st.OriginalWeaponId = st.WorkingWeaponId;
             st.OriginalChestId = st.WorkingChestId;
             st.OriginalLegsId = st.WorkingLegsId;
             st.OriginalArmsId = st.WorkingArmsId;
             st.OriginalHeadId = st.WorkingHeadId;
+            st.OriginalMedalIds = new List<string>(st.WorkingMedalIds);
             EntityManager.AddComponent(stateEntity, st);
             if (string.IsNullOrEmpty(st.WorkingTemperanceId))
             {
@@ -250,6 +252,9 @@ namespace Crusaders30XX.ECS.Systems
             var saved = new List<string>(def.cardIds ?? new List<string>());
             st.WorkingCardIds = saved;
             st.OriginalCardIds = new List<string>(saved);
+            var savedMedals = new List<string>(def.medalIds ?? new List<string>());
+            st.WorkingMedalIds = savedMedals;
+            st.OriginalMedalIds = new List<string>(savedMedals);
         }
 
         private void UndoWorking()
@@ -257,6 +262,7 @@ namespace Crusaders30XX.ECS.Systems
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null) return;
             st.WorkingCardIds = new List<string>(st.OriginalCardIds ?? new List<string>());
+            st.WorkingMedalIds = new List<string>(st.OriginalMedalIds ?? new List<string>());
         }
 
         private (Rectangle saveRect, Rectangle cancelRect, Rectangle undoRect, Rectangle exitRect) EnsureAndLayoutButtons(int vw, int vh)
@@ -322,6 +328,7 @@ namespace Crusaders30XX.ECS.Systems
             def.legsId = st.WorkingLegsId;
             def.armsId = st.WorkingArmsId;
             def.headId = st.WorkingHeadId;
+            def.medalIds = new List<string>(st.WorkingMedalIds ?? new List<string>());
 
             string folder = ResolveLoadoutsFolder();
             if (string.IsNullOrEmpty(folder)) return;
@@ -331,6 +338,7 @@ namespace Crusaders30XX.ECS.Systems
             File.WriteAllText(path, json);
             LoadoutDefinitionCache.Reload();
             st.OriginalCardIds = new List<string>(st.WorkingCardIds);
+            st.OriginalMedalIds = new List<string>(st.WorkingMedalIds ?? new List<string>());
         }
 
         private static bool IsWithinNameCopyLimit(Crusaders30XX.ECS.Components.CustomizationState st, out string overName, out int count)

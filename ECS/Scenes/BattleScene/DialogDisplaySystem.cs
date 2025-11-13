@@ -574,6 +574,7 @@ namespace Crusaders30XX.ECS.Systems
             if (string.IsNullOrWhiteSpace(pending.DialogId)) { EntityManager.RemoveComponent<PendingQuestDialog>(qeEntity); return; }
             if (DialogDefinitionCache.TryGet(pending.DialogId, out var def) && def != null)
             {
+				if (!pending.WillShowDialog) return;
                 Open(def);
             }
             else

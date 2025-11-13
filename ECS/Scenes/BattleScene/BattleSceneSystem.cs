@@ -12,6 +12,7 @@ using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Services;
  
 using System;
+using Crusaders30XX.ECS.Data.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -285,6 +286,15 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new ResetDeckEvent { });
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
 			phaseState.TurnNumber = 0;
+			EventManager.Publish(new FullyHealEvent { Target = player });
+			foreach (var e in EntityManager.GetEntitiesWithComponent<CardTooltip>()) {
+				var cardData = e.GetComponent<CardData>();
+				CardDefinitionCache.TryGet(cardData.CardId, out var def);
+				if (def.cardTooltip == null)
+				{
+					e.RemoveComponent<CardTooltip>();
+				}
+			}
 		}
 
 		public void EnqueueBattleRules(bool isFollowingDialog) 

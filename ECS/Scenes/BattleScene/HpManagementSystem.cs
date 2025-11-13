@@ -18,6 +18,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<ModifyHpRequestEvent>(OnModifyHpRequest);
 			EventManager.Subscribe<SetHpEvent>(OnSetHp);
 			EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
+			EventManager.Subscribe<FullyHealEvent>(OnFullyHeal);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -73,7 +74,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EventManager.Publish(new PlayerDied { Player = target });
 			}
-			if (before > 0 && hp.Current == 0 && target.HasComponent<Enemy>())
+			else if (before > 0 && hp.Current == 0 && target.HasComponent<Enemy>())
 			{
 				EventQueue.Clear();
 					TimerScheduler.Schedule(1f, () => {
@@ -114,6 +115,15 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EventManager.Publish(new PlayerDied { Player = target });
 			}
+		}
+
+		private void OnFullyHeal(FullyHealEvent e)
+		{
+			var target = ResolveTarget(e.Target);
+			if (target == null || !target.HasComponent<Player>()) return;
+			var hp = target.GetComponent<HP>();
+			if (hp == null) return;
+			hp.Current = hp.Max; // fully heal
 		}
 
 		private Entity ResolveTarget(Entity explicitTarget)
@@ -167,6 +177,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new ModifyHpRequestEvent { Source = EntityManager.GetEntity("Player"), Target = EntityManager.GetEntity("Player"), Delta = Math.Abs(amount) });
 		}
 	}
+
 }
 
 

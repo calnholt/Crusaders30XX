@@ -111,6 +111,8 @@ namespace Crusaders30XX.ECS.Components
 		public string OriginalArmsId { get; set; } = string.Empty;
 		public string WorkingLegsId { get; set; } = string.Empty;
 		public string OriginalLegsId { get; set; } = string.Empty;
+		public List<string> WorkingMedalIds { get; set; } = new List<string>();
+		public List<string> OriginalMedalIds { get; set; } = new List<string>();
 	}
 	public enum CustomizationTabType
 	{
@@ -121,6 +123,7 @@ namespace Crusaders30XX.ECS.Components
 		Arms,
 		Legs,
 		Temperance,
+		Medals,
 	}
 
 	/// <summary>

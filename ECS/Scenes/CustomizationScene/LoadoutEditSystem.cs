@@ -16,6 +16,8 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<RemoveCardFromLoadoutRequested>(OnRemoveRequested);
 			EventManager.Subscribe<UpdateTemperanceLoadoutRequested>(OnUpdateTemperanceRequested);
 			EventManager.Subscribe<UpdateEquipmentLoadoutRequested>(OnUpdateEquipmentRequested);
+			EventManager.Subscribe<AddMedalToLoadoutRequested>(OnAddMedalRequested);
+			EventManager.Subscribe<RemoveMedalFromLoadoutRequested>(OnRemoveMedalRequested);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -90,6 +92,42 @@ namespace Crusaders30XX.ECS.Systems
 				case CustomizationTabType.Legs: st.WorkingLegsId = evt.EquipmentId; break;
 				default: break;
 			}
+		}
+
+		private void OnAddMedalRequested(AddMedalToLoadoutRequested evt)
+		{
+			if (evt == null || string.IsNullOrEmpty(evt.MedalId)) return;
+			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+			if (scene == null || scene.Current != SceneId.Customization) return;
+			var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
+			if (st == null) return;
+			if (st.WorkingMedalIds == null) st.WorkingMedalIds = new System.Collections.Generic.List<string>();
+			// Enforce max 3 medals and prevent duplicates
+			if (st.WorkingMedalIds.Count >= 3) return;
+			if (st.WorkingMedalIds.Contains(evt.MedalId)) return;
+			st.WorkingMedalIds.Add(evt.MedalId);
+		}
+
+		private void OnRemoveMedalRequested(RemoveMedalFromLoadoutRequested evt)
+		{
+			if (evt == null || string.IsNullOrEmpty(evt.MedalId)) return;
+			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+			if (scene == null || scene.Current != SceneId.Customization) return;
+			var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
+			if (st == null || st.WorkingMedalIds == null) return;
+
+			if (evt.Index.HasValue)
+			{
+				int i = evt.Index.Value;
+				if (i >= 0 && i < st.WorkingMedalIds.Count && st.WorkingMedalIds[i] == evt.MedalId)
+				{
+					st.WorkingMedalIds.RemoveAt(i);
+					return;
+				}
+			}
+			// Fallback: remove first match
+			int idx = st.WorkingMedalIds.IndexOf(evt.MedalId);
+			if (idx >= 0) st.WorkingMedalIds.RemoveAt(idx);
 		}
 	}
 }

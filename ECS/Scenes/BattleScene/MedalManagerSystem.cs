@@ -77,7 +77,7 @@ namespace Crusaders30XX.ECS.Systems
 			switch (medal.id)
 			{
 				case "st_luke":
-					return GetStLukeHealAmount(player) > 0;
+					return true;
 				case "st_michael":
 					return true;
 				default:
@@ -91,11 +91,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				case "st_luke":
 					{
-						int healAmount = GetStLukeHealAmount(player);
-						if (healAmount > 0)
-						{
-							EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = player, Delta = healAmount, DamageType = ModifyTypeEnum.Heal });
-						}
+						EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = 1 });
 						break;
 					}
 				case "st_michael":
@@ -105,17 +101,6 @@ namespace Crusaders30XX.ECS.Systems
 					break;
 			}
 		}
-
-		private int GetStLukeHealAmount(Entity player)
-		{
-			var hp = player.GetComponent<HP>();
-			if (hp == null) return 0;
-			int missing = Math.Max(0, hp.Max - hp.Current);
-			if (missing <= 0) return 0;
-			int healAmount = (int)Math.Floor(missing * 1f);
-			return Math.Max(0, healAmount);
-		}
-
 
 	}
 }

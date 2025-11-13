@@ -28,9 +28,9 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Top Margin", Step = 2, Min = 0, Max = 200)]
         public int TopMargin { get; set; } = 60;
         [DebugEditable(DisplayName = "Text Scale", Step = 0.025f, Min = 0.1f, Max = 1.0f)]
-        public float TextScale { get; set; } = 0.18f;
+        public float TextScale { get; set; } = 0.13f;
         [DebugEditable(DisplayName = "Name Scale", Step = 0.025f, Min = 0.1f, Max = 1.0f)]
-        public float NameScale { get; set; } = 0.22f;
+        public float NameScale { get; set; } = 0.17f;
         [DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 64)]
         public int CornerRadius { get; set; } = 10;
         [DebugEditable(DisplayName = "ZOrder", Step = 100, Min = 0, Max = 100000)]

@@ -309,22 +309,43 @@ namespace Crusaders30XX.ECS.Systems
 						transform.Position = new Vector2(rect.X, rect.Y);
 						transform.ZOrder = 10001;
 					}
-				var questTooltip = _tooltipEntity.GetComponent<QuestTooltip>();
-				if (questTooltip != null)
-				{
-					questTooltip.LocationId = locationIdTop;
-					questTooltip.Title = title;
-					questTooltip.Events = events;
-					questTooltip.Tribulations = tribulations;
-					questTooltip.RewardGold = rewardGold;
-					questTooltip.IsCompleted = isCompleted;
-					questTooltip.PoiType = poiType.ToString();
-					questTooltip.TargetVisible = true;
-				}
+
+					var questTooltip = _tooltipEntity.GetComponent<QuestTooltip>();
+					if (questTooltip != null)
+					{
+						questTooltip.LocationId = locationIdTop;
+						questTooltip.Title = title;
+						questTooltip.Events = events;
+						questTooltip.Tribulations = tribulations;
+						questTooltip.RewardGold = rewardGold;
+						questTooltip.IsCompleted = isCompleted;
+						questTooltip.PoiType = poiType.ToString();
+						questTooltip.TargetVisible = true;
+					}
+
 					var ui = _tooltipEntity.GetComponent<UIElement>();
 					if (ui != null)
 					{
 						ui.Bounds = rect;
+					}
+
+					// Ensure the tooltip hotkey always targets the currently hovered POI
+					var hotKey = _tooltipEntity.GetComponent<HotKey>();
+					if (hotKey == null)
+					{
+						hotKey = new HotKey
+						{
+							Button = FaceButton.X,
+							RequiresHold = true,
+							ParentEntity = hovered.E
+						};
+						EntityManager.AddComponent(_tooltipEntity, hotKey);
+					}
+					else
+					{
+						hotKey.Button = FaceButton.X;
+						hotKey.RequiresHold = true;
+						hotKey.ParentEntity = hovered.E;
 					}
 				}
 			}
