@@ -40,7 +40,7 @@ namespace Crusaders30XX.ECS.Systems
                 case "burn":
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Burn, Delta = +values[i++] });
-                    if (courage >= values[1]) 
+                    if (courage >= values[i++]) 
                     {
                         EventManager.Publish(new ModifyActionPointsEvent { Delta = values[i++] });
                         EventManager.Publish(new ModifyCourageEvent { Delta = -values[i++] });
@@ -68,6 +68,15 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     var delta = courage >= values[1] ? values[2] : values[0];
                     EventManager.Publish(new ApplyPassiveEvent { Target = target, Type = AppliedPassiveType.Aggression, Delta = delta });
+                    break;
+                }
+                case "fury":
+                {
+                    player.GetComponent<AppliedPassives>().Passives.TryGetValue(AppliedPassiveType.Aggression, out var amount);
+                    if (amount > 0)
+                    {
+                        EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = amount });
+                    }
                     break;
                 }
                 case "heavens_glory":

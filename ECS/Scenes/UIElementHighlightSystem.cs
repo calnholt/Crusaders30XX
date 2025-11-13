@@ -57,7 +57,7 @@ namespace Crusaders30XX.ECS.Systems
                 .Where(e =>
                 {
                     var ui = e.GetComponent<UIElement>();
-                    return ui != null && ui.IsHovered && ui.IsInteractable;
+                    return ui != null && ui.IsHovered && ui.IsInteractable && !ui.IsHidden;
                 })
                 .ToList();
 

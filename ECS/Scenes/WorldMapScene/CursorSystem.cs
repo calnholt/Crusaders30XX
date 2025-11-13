@@ -181,7 +181,7 @@ namespace Crusaders30XX.ECS.Systems
 						hoveredEntityForRumble = tc.E;
 						_lastHoveredEntity = hoveredEntityForRumble;
 						// Trigger a short rumble when a new entity becomes hovered
-						if (_prevHoverEntityForRumble != hoveredEntityForRumble && tc.UI.IsInteractable)
+						if (_prevHoverEntityForRumble != hoveredEntityForRumble && tc.UI.IsInteractable && !tc.UI.IsHidden)
 						{
 							_rumbleTimeRemaining = Math.Max(0f, RumbleDurationSeconds);
 							if (_rumbleTimeRemaining > 0f)
@@ -192,7 +192,7 @@ namespace Crusaders30XX.ECS.Systems
 						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius));
 					}
 					// Cross animation: shrink slightly on entering a new interactable hover, ease back otherwise
-					Entity currentInteractable = (tc != null && tc.UI != null && tc.UI.IsInteractable) ? tc.E : null;
+					Entity currentInteractable = (tc != null && tc.UI != null && tc.UI.IsInteractable && !tc.UI.IsHidden) ? tc.E : null;
 					if (_prevHoverInteractable != currentInteractable)
 					{
 						_crossPulseTimer = EnterPulseDuration;
@@ -223,7 +223,7 @@ namespace Crusaders30XX.ECS.Systems
 						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick) > 0f)
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
-					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick)
+					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
 					{
 						if (clickCandidate.UI.EventType != UIElementEventType.None)
 						{
@@ -270,7 +270,7 @@ namespace Crusaders30XX.ECS.Systems
 					foreach (var e2 in EntityManager.GetEntitiesWithComponent<UIElement>())
 					{
 						var ui2 = e2.GetComponent<UIElement>();
-						if (ui2 == null || !ui2.IsInteractable) continue;
+						if (ui2 == null || !ui2.IsInteractable || ui2.IsHidden) continue;
 						var bounds2 = ui2.Bounds;
 						if (bounds2.Width < 2 || bounds2.Height < 2) continue;
 						maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r));
@@ -325,7 +325,7 @@ namespace Crusaders30XX.ECS.Systems
 						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius));
 					}
 					// Cross animation: shrink slightly on entering a new interactable hover, ease back otherwise
-					Entity currentInteractable = (tc != null && tc.UI != null && tc.UI.IsInteractable) ? tc.E : null;
+					Entity currentInteractable = (tc != null && tc.UI != null && tc.UI.IsInteractable && !tc.UI.IsHidden) ? tc.E : null;
 					if (_prevHoverInteractable != currentInteractable)
 					{
 						_crossPulseTimer = EnterPulseDuration;
@@ -354,7 +354,7 @@ namespace Crusaders30XX.ECS.Systems
 						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick) > 0f)
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
-					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick)
+					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
 					{
 						if (clickCandidate.UI.EventType != UIElementEventType.None)
 						{

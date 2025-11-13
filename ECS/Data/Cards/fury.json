@@ -1,0 +1,10 @@
+{
+  "id": "fury",
+  "name": "Fury",
+  "target": "Player",
+  "rarity": "Common",
+  "text": "Double your aggression.",
+  "animation": "Buff",
+  "isFreeAction": true,
+  "block": 2
+}

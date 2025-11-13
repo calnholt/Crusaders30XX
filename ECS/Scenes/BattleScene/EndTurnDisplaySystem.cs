@@ -74,6 +74,7 @@ namespace Crusaders30XX.ECS.Systems
             var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
             if (ui != null)
             {
+                ui.IsHidden = evt.Current != SubPhase.Action;
                 ui.IsInteractable = evt.Current == SubPhase.Action;
             }
         }
@@ -83,6 +84,7 @@ namespace Crusaders30XX.ECS.Systems
             var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
             if (ui != null)
             {
+                ui.IsHidden = true;
                 ui.IsInteractable = false;
             }
         }
@@ -91,6 +93,7 @@ namespace Crusaders30XX.ECS.Systems
             var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
             if (ui != null)
             {
+                ui.IsHidden = false;
                 ui.IsInteractable = true;
             }
         }
@@ -100,6 +103,7 @@ namespace Crusaders30XX.ECS.Systems
             var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
             if (ui != null)
             {
+                ui.IsHidden = true;
                 ui.IsInteractable = false;
             }
             EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
@@ -153,7 +157,7 @@ namespace Crusaders30XX.ECS.Systems
                 endBtn = EntityManager.CreateEntity("UIButton_EndTurn");
                 EntityManager.AddComponent(endBtn, new UIButton { Label = "End Turn", Command = "EndTurn" });
 				EntityManager.AddComponent(endBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
-				EntityManager.AddComponent(endBtn, new UIElement { Bounds = btnRect, IsInteractable = false });
+				EntityManager.AddComponent(endBtn, new UIElement { Bounds = btnRect, IsInteractable = true, IsHidden = true });
 				EntityManager.AddComponent(endBtn, new HotKey { Button = FaceButton.Y });
 				EntityManager.AddComponent(endBtn, ParallaxLayer.GetUIParallaxLayer());
             }
@@ -171,7 +175,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
             ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
-            if (ui == null || ui.IsInteractable == false) return;
+            if (ui == null || ui.IsHidden == true) return;
             
 			// Draw using the entity's current Transform.Position (which includes parallax offset)
 			var t = endBtn?.GetComponent<Transform>();

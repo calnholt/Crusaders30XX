@@ -68,27 +68,42 @@ namespace Crusaders30XX.ECS.Systems
 
             var from = GetZoneOf(deck, evt.Card);
 
-            // Intercept Hand -> Discard on PlayCard to run animation first; finalize will mutate zones and publish CardMoved
-            if (evt.Destination == CardZoneType.DiscardPile && from == CardZoneType.Hand && evt.Reason == "PlayCard")
+            // Intercept Hand/HandStaged/CostSelected -> Discard on PlayCard/PayCost to run animation first; finalize will mutate zones and publish CardMoved
+            if (evt.Destination == CardZoneType.DiscardPile)
             {
-                if (evt.Card.GetComponent<AnimatingHandToDiscard>() == null)
+                bool isFromHand = deck.Hand.Contains(evt.Card);
+                bool isFromCostSelected = evt.Card.GetComponent<SelectedForPayment>() != null;
+                bool isFromHandStaged = false;
                 {
-                    EntityManager.AddComponent(evt.Card, new AnimatingHandToDiscard());
-                    var uiAnim = evt.Card.GetComponent<UIElement>();
-                    if (uiAnim != null)
+                    var payEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+                    var payState = payEntity?.GetComponent<PayCostOverlayState>();
+                    if (payState != null && (payState.IsOpen || payState.IsReturning) && payState.CardToPlay == evt.Card)
                     {
-                        uiAnim.IsInteractable = false;
-                        uiAnim.IsHovered = false;
-                        uiAnim.IsClicked = false;
+                        isFromHandStaged = true;
                     }
-                    EventManager.Publish(new PlayCardToDiscardAnimationRequested
-                    {
-                        Card = evt.Card,
-                        Deck = deckEntity,
-                        ContextId = evt.ContextId
-                    });
                 }
-                return;
+
+                if (isFromHand || isFromCostSelected || isFromHandStaged)
+                {
+                    if (evt.Card.GetComponent<AnimatingHandToDiscard>() == null)
+                    {
+                        EntityManager.AddComponent(evt.Card, new AnimatingHandToDiscard());
+                        var uiAnim = evt.Card.GetComponent<UIElement>();
+                        if (uiAnim != null)
+                        {
+                            uiAnim.IsInteractable = false;
+                            uiAnim.IsHovered = false;
+                            uiAnim.IsClicked = false;
+                        }
+                        EventManager.Publish(new PlayCardToDiscardAnimationRequested
+                        {
+                            Card = evt.Card,
+                            Deck = deckEntity,
+                            ContextId = evt.ContextId
+                        });
+                    }
+                    return;
+                }
             }
 
             // Remove from all known deck lists first to avoid duplicates

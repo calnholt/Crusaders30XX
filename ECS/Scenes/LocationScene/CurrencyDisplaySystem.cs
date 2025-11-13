@@ -88,6 +88,15 @@ namespace Crusaders30XX.ECS.Systems
 			// Subscribe to gold change events
 			_onGoldChangedHandler = OnGoldChanged;
 			EventManager.Subscribe(_onGoldChangedHandler);
+			EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
+		}
+
+		private void OnLoadScene(LoadSceneEvent evt)
+		{
+			if (evt.Scene == SceneId.Location)
+			{
+				_currentGold = SaveCache.GetGold();
+			}
 		}
 
 		private void OnGoldChanged(GoldChanged evt)

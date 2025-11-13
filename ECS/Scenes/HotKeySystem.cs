@@ -128,7 +128,7 @@ namespace Crusaders30XX.ECS.Systems
                     // Choose top-most eligible entity with this hotkey by ZOrder
                     var target = EntityManager.GetEntitiesWithComponent<HotKey>()
                         .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), Btn = e.GetComponent<UIButton>() })
-                        .Where(x => x.HK != null && x.UI != null && x.UI.IsInteractable && x.HK.Button == pressed && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
+                        .Where(x => x.HK != null && x.UI != null && x.UI.IsInteractable && !x.UI.IsHidden && x.HK.Button == pressed && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
                         .OrderByDescending(x => x.T?.ZOrder ?? 0)
                         .FirstOrDefault();
                     if (target != null)
@@ -176,7 +176,7 @@ namespace Crusaders30XX.ECS.Systems
                 // Choose top-most eligible entity with this hotkey by ZOrder
                 var target = EntityManager.GetEntitiesWithComponent<HotKey>()
                     .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), Btn = e.GetComponent<UIButton>() })
-                    .Where(x => x.HK != null && x.UI != null && x.UI.IsInteractable && x.HK.Button == pressed && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
+                    .Where(x => x.HK != null && x.UI != null && x.UI.IsInteractable && !x.UI.IsHidden && x.HK.Button == pressed && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
                     .OrderByDescending(x => x.T?.ZOrder ?? 0)
                     .FirstOrDefault();
                 if (target != null)
@@ -228,6 +228,7 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
+            if (StateSingleton.PreventClicking) return;
             // Draw hints for interactable HotKey UI elements
             var caps = GamePad.GetCapabilities(PlayerIndex.One);
             bool gamepadConnected = caps.IsConnected;
@@ -244,7 +245,7 @@ namespace Crusaders30XX.ECS.Systems
 
             var items = EntityManager.GetEntitiesWithComponent<HotKey>()
                 .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>() })
-                .Where(x => x.HK != null && x.UI != null && x.UI.IsInteractable && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
+                .Where(x => x.HK != null && x.UI != null && x.UI.IsInteractable && !x.UI.IsHidden && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
                 .OrderByDescending(x => x.T?.ZOrder ?? 0)
                 .ToList();
 

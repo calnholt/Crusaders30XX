@@ -325,6 +325,7 @@ namespace Crusaders30XX.ECS.Components
         public UIElementEventType EventType { get; set; } = UIElementEventType.None;
         public UILayerType LayerType { get; set; } = UILayerType.Default;
         public bool IsPreventDefaultClick { get; set; } = false;
+        public bool IsHidden { get; set; } = false;
     }
 
     /// <summary>

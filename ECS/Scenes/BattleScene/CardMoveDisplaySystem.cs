@@ -207,13 +207,19 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (evt == null || evt.Card == null) return;
             var t = evt.Card.GetComponent<Transform>();
-            if (t == null) return;
+            var ui = evt.Card.GetComponent<UIElement>();
+            if (t == null && ui == null) return;
+            var startPos = t?.Position ?? Vector2.Zero;
+            if (ui != null && ui.Bounds.Width > 0 && ui.Bounds.Height > 0)
+            {
+                startPos = new Vector2(ui.Bounds.Center.X, ui.Bounds.Center.Y);
+            }
             var anim = new MoveAnim
             {
                 Card = evt.Card,
                 Deck = evt.Deck,
                 ContextId = evt.ContextId,
-                Start = t.Position,
+                Start = startPos,
                 End = ResolveDiscardAnchor(),
                 Duration = DurationSeconds,
                 Elapsed = 0f,

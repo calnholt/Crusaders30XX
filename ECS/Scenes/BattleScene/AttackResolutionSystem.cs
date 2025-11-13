@@ -96,7 +96,7 @@ namespace Crusaders30XX.ECS.Systems
 				foreach (var c in selected)
 				{
 					EntityManager.RemoveComponent<MarkedForSpecificDiscard>(c);
-					EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, ContextId = contextId });
+					EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, ContextId = contextId, Reason = "DiscardSpecificCard" });
 				}
 				// Clear any leftover marks for this context
 				foreach (var c in deck.Hand)
