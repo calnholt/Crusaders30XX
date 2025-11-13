@@ -94,6 +94,22 @@ namespace Crusaders30XX.ECS.Data.Locations
 					{
 						mappedPoi.rewardGold = poi.Reward.Gold;
 					}
+					// ForSale mapping
+					if (poi.ForSale != null && poi.ForSale.Count > 0)
+					{
+						mappedPoi.forSale = new List<ForSaleItemDefinition>();
+						foreach (var fs in poi.ForSale)
+						{
+							if (fs == null) continue;
+							mappedPoi.forSale.Add(new ForSaleItemDefinition
+							{
+								id = fs.Id,
+								type = fs.Type,
+								price = fs.Price,
+								isPurchased = fs.IsPurchased
+							});
+						}
+					}
 					result.pointsOfInterest.Add(mappedPoi);
 				}
 			}
@@ -119,6 +135,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 			public List<EventFileDto> Events { get; set; }
 			public List<TribulationFileDto> Tribulations { get; set; }
 			public RewardFileDto Reward { get; set; }
+			public List<ForSaleItemFileDto> ForSale { get; set; }
 		}
 		private class RewardFileDto
 		{
@@ -142,6 +159,14 @@ namespace Crusaders30XX.ECS.Data.Locations
 		{
 			public string Text { get; set; }
 			public string Trigger { get; set; }
+		}
+
+		private class ForSaleItemFileDto
+		{
+			public string Id { get; set; }
+			public string Type { get; set; }
+			public int Price { get; set; }
+			public bool IsPurchased { get; set; }
 		}
 	}
 }

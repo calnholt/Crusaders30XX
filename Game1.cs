@@ -46,6 +46,7 @@ public class Game1 : Game
     private UIElementBorderDebugSystem _uiElementBorderDebugSystem;
     private DialogDisplaySystem _dialogDisplaySystem;
     private DebugCommandSystem _debugCommandSystem;
+    private LocationNameDisplaySystem _locationNameDisplaySystem;
     
     // ECS System
     private World _world;
@@ -145,6 +146,7 @@ public class Game1 : Game
         _tooltipTextDisplaySystem = new TooltipTextDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _hintTooltipDisplaySystem = new HintTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _cardTooltipDisplaySystem = new CardTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _locationNameDisplaySystem = new LocationNameDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         // _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
@@ -171,6 +173,7 @@ public class Game1 : Game
         _world.AddSystem(_hintTooltipDisplaySystem);
         _world.AddSystem(_cardTooltipDisplaySystem);
         _world.AddSystem(_profilerSystem);
+        _world.AddSystem(_locationNameDisplaySystem);
         // _world.AddSystem(_worldMapSystem);
         _world.AddSystem(_cursorSystem);
         _world.AddSystem(_hotKeySystem);
@@ -348,6 +351,7 @@ public class Game1 : Game
         }
         FrameProfiler.Measure("HotKeySystem.Draw", _hotKeySystem.Draw);
         FrameProfiler.Measure("HotKeyProgressRingSystem.Draw", _hotKeyProgressRingSystem.Draw);
+        FrameProfiler.Measure("LocationNameDisplaySystem.Draw", _locationNameDisplaySystem.Draw);
         FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipTextDisplaySystem.Draw);
         FrameProfiler.Measure("HintTooltipDisplaySystem.Draw", _hintTooltipDisplaySystem.Draw);

@@ -4,7 +4,6 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
@@ -19,7 +18,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font = FontSingleton.TitleFont;
-		private Texture2D _pixel;
 		private string _locationName = "";
 		
 		private enum AnimationPhase { Idle, EntryWaiting, TrapezoidSliding, TextSliding, Complete }
@@ -76,27 +74,25 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_pixel = new Texture2D(graphicsDevice, 1, 1);
-			_pixel.SetData(new[] { Color.White });
 
-			EventManager.Subscribe<LoadSceneEvent>(_ =>
+			// Event-driven control
+			EventManager.Subscribe<UpdateLocationNameEvent>(_ =>
 			{
-				if (_.Scene != SceneId.Location)
+				_locationName = _?.Title ?? "";
+				if (string.IsNullOrEmpty(_locationName))
 				{
 					_phase = AnimationPhase.Idle;
 					_animationTime = 0f;
 					return;
 				}
-				// Trigger animation when location scene loads
-				LoadLocationName();
-				if (EntryDelaySeconds > 0f)
-				{
-					_phase = AnimationPhase.EntryWaiting;
-				}
-				else
-				{
-					_phase = AnimationPhase.TrapezoidSliding;
-				}
+				_phase = EntryDelaySeconds > 0f ? AnimationPhase.EntryWaiting : AnimationPhase.TrapezoidSliding;
+				_animationTime = 0f;
+			});
+
+			EventManager.Subscribe<HideLocationNameEvent>(_ =>
+			{
+				_locationName = "";
+				_phase = AnimationPhase.Idle;
 				_animationTime = 0f;
 			});
 
@@ -106,71 +102,20 @@ namespace Crusaders30XX.ECS.Systems
 			});
 		}
 
-		private void LoadLocationName()
-		{
-			// Get location ID - try QueuedEvents first, fall back to "desert"
-			string locationId = null;
-			var queuedEventsEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
-			if (queuedEventsEntity != null)
-			{
-				var queuedEvents = queuedEventsEntity.GetComponent<QueuedEvents>();
-				if (!string.IsNullOrEmpty(queuedEvents?.LocationId))
-				{
-					locationId = queuedEvents.LocationId;
-				}
-			}
-			if (string.IsNullOrEmpty(locationId))
-			{
-				locationId = "desert";
-			}
-
-			// Load location definition
-			if (LocationDefinitionCache.TryGet(locationId, out var def) && def != null)
-			{
-				_locationName = def.name ?? "";
-			}
-			else
-			{
-				_locationName = "";
-			}
-		}
-
 		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
+			// We just need to tick once per frame; SceneState is guaranteed to exist
 			return EntityManager.GetEntitiesWithComponent<SceneState>();
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			var scene = entity.GetComponent<SceneState>();
-			if (scene == null || scene.Current != SceneId.Location) return;
-
-			// Ensure location name is loaded
-			if (string.IsNullOrEmpty(_locationName))
-			{
-				LoadLocationName();
-			}
-
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			_viewportWidth = _graphicsDevice.Viewport.Width;
 			_targetTrapezoidX = 0f;
 			_targetTextX = TextPaddingX;
 
 			float offScreenX = _viewportWidth + TrapezoidWidth;
-
-			// If we're in Idle but should be animating, start animation
-			if (_phase == AnimationPhase.Idle && !string.IsNullOrEmpty(_locationName))
-			{
-				if (EntryDelaySeconds > 0f)
-				{
-					_phase = AnimationPhase.EntryWaiting;
-				}
-				else
-				{
-					_phase = AnimationPhase.TrapezoidSliding;
-				}
-				_animationTime = 0f;
-			}
 
 			_animationTime += dt;
 
@@ -261,22 +206,15 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugAction("Retrigger Animation")]
 		public void Debug_RetriggerAnimation()
 		{
-			LoadLocationName();
-			if (EntryDelaySeconds > 0f)
+			if (!string.IsNullOrEmpty(_locationName))
 			{
-				_phase = AnimationPhase.EntryWaiting;
+				_phase = EntryDelaySeconds > 0f ? AnimationPhase.EntryWaiting : AnimationPhase.TrapezoidSliding;
+				_animationTime = 0f;
 			}
-			else
-			{
-				_phase = AnimationPhase.TrapezoidSliding;
-			}
-			_animationTime = 0f;
 		}
 
 		public void Draw()
 		{
-			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-			if (scene == null || scene.Current != SceneId.Location) return;
 			if (string.IsNullOrEmpty(_locationName)) return;
 
 			var trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoid(
@@ -311,4 +249,5 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
+
 

@@ -382,5 +382,65 @@ namespace Crusaders30XX.ECS.Factories
 
             return enemyEntity;
         }
+
+		/// <summary>
+		/// Create UI entities for each for-sale item in a shop.
+		/// </summary>
+		public static List<Entity> CreateForSale(EntityManager entityManager, IEnumerable<ForSaleItemDefinition> defs, string shopName)
+		{
+			var result = new List<Entity>();
+			if (defs == null) return result;
+			int idx = 0;
+			foreach (var fs in defs)
+			{
+				if (fs == null || string.IsNullOrWhiteSpace(fs.id)) { idx++; continue; }
+				string id = fs.id;
+				string type = fs.type ?? "Card";
+				ForSaleItemType itemType = ForSaleItemType.Card;
+				switch (type.Trim().ToLowerInvariant())
+				{
+					case "medal": itemType = ForSaleItemType.Medal; break;
+					case "equipment": itemType = ForSaleItemType.Equipment; break;
+					case "card":
+					default: itemType = ForSaleItemType.Card; break;
+				}
+
+				string displayName = id;
+				try
+				{
+					if (itemType == ForSaleItemType.Card && CardDefinitionCache.TryGet(id, out var cdef) && cdef != null)
+					{
+						displayName = string.IsNullOrWhiteSpace(cdef.name) ? id : cdef.name;
+					}
+					else if (itemType == ForSaleItemType.Medal && MedalDefinitionCache.TryGet(id, out var mdef) && mdef != null)
+					{
+						displayName = string.IsNullOrWhiteSpace(mdef.name) ? id : mdef.name;
+					}
+					else if (itemType == ForSaleItemType.Equipment && EquipmentDefinitionCache.TryGet(id, out var edef) && edef != null)
+					{
+						displayName = string.IsNullOrWhiteSpace(edef.name) ? id : edef.name;
+					}
+				}
+				catch { }
+
+				var e = entityManager.CreateEntity($"ShopItem_{id}_{idx}");
+				entityManager.AddComponent(e, new Transform { Position = new Vector2(-1000, -1000), ZOrder = 10002 });
+				entityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
+				entityManager.AddComponent(e, new UIElement { Bounds = new Microsoft.Xna.Framework.Rectangle(-1000, -1000, 1, 1), IsInteractable = true });
+				entityManager.AddComponent(e, new OwnedByScene { Scene = SceneId.Shop });
+				entityManager.AddComponent(e, new ForSaleItem
+				{
+					Id = id,
+					ItemType = itemType,
+					Price = fs.price,
+					IsPurchased = fs.isPurchased,
+					DisplayName = displayName,
+					SourceShopName = shopName ?? string.Empty
+				});
+				result.Add(e);
+				idx++;
+			}
+			return result;
+		}
     }
 } 

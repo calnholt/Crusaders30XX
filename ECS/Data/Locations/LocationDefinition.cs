@@ -22,6 +22,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public int rewardGold { get; set; } = 0;
 		public List<LocationEventDefinition> events { get; set; } = new List<LocationEventDefinition>();
 		public List<TribulationDefinition> tribulations { get; set; } = new List<TribulationDefinition>();
+		public List<ForSaleItemDefinition> forSale { get; set; } = new List<ForSaleItemDefinition>();
 	}
 
 	public class TribulationDefinition
@@ -41,6 +42,14 @@ namespace Crusaders30XX.ECS.Data.Locations
 	{
 		public string Type { get; set; }
 		public int Delta { get; set; }
+	}
+
+	public class ForSaleItemDefinition
+	{
+		public string id { get; set; }
+		public string type { get; set; } // Card | Medal | Equipment
+		public int price { get; set; }
+		public bool isPurchased { get; set; }
 	}
 }
 

@@ -241,7 +241,7 @@
     },
     {
       "Id": "shop_1",
-      "WorldPosition": [1100, 100],
+      "WorldPosition": [1100, 300],
       "Type": "Shop",
       "Name": "The Sand Trader",
       "ForSale": [
@@ -253,6 +253,7 @@
         },
         {
           "Id": "impale",
+          "Type": "Card",
           "Price": 3,
           "IsPurchased":false
         },
@@ -266,12 +267,6 @@
           "Id": "lightning_grieves",
           "Type": "Equipment",
           "Price": 5,
-          "IsPurchased": false
-        },
-        {
-          "Id": "holy_seal",
-          "Type": "Item",
-          "Price": 8,
           "IsPurchased": false
         }
       ]

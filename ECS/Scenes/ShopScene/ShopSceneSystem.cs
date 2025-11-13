@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -20,8 +21,8 @@ namespace Crusaders30XX.ECS.Systems
 		private bool _firstLoad = true;
 
 		private ShopBackgroundDisplaySystem _shopBackgroundDisplaySystem;
-		private ShopTitleDisplaySystem _shopTitleDisplaySystem;
 		private CustomizeButtonDisplaySystem _customizeButtonDisplaySystem;
+		private ForSaleDisplaySystem _forSaleDisplaySystem;
 
 		public ShopSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice gd, SpriteBatch sb, ContentManager content) : base(em)
 		{
@@ -33,12 +34,13 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<LoadSceneEvent>(_ =>
 			{
 				if (_.Scene != SceneId.Shop) return;
+				EventManager.Publish(new UpdateLocationNameEvent { Title = "Shop" });
 				AddShopSystems();
 			});
 			EventManager.Subscribe<DeleteCachesEvent>(_ =>
 			{
 				_world.RemoveSystem(_shopBackgroundDisplaySystem);
-				_world.RemoveSystem(_shopTitleDisplaySystem);
+				_world.RemoveSystem(_forSaleDisplaySystem);
 				_world.RemoveSystem(_customizeButtonDisplaySystem);
 				_firstLoad = true;
 			});
@@ -52,7 +54,7 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			FrameProfiler.Measure("ShopBackgroundDisplaySystem.Draw", _shopBackgroundDisplaySystem.Draw);
-			FrameProfiler.Measure("ShopTitleDisplaySystem.Draw", _shopTitleDisplaySystem.Draw);
+			FrameProfiler.Measure("ForSaleDisplaySystem.Draw", _forSaleDisplaySystem.Draw);
 			FrameProfiler.Measure("CustomizeButtonDisplaySystem.Draw", _customizeButtonDisplaySystem.Draw);
 		}
 
@@ -62,8 +64,8 @@ namespace Crusaders30XX.ECS.Systems
 			_firstLoad = false;
 			_shopBackgroundDisplaySystem = new ShopBackgroundDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_shopBackgroundDisplaySystem);
-			_shopTitleDisplaySystem = new ShopTitleDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_world.AddSystem(_shopTitleDisplaySystem);
+			_forSaleDisplaySystem = new ForSaleDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			_world.AddSystem(_forSaleDisplaySystem);
 			_customizeButtonDisplaySystem = new CustomizeButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_customizeButtonDisplaySystem);
 		}

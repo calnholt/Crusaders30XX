@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -42,6 +43,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 			_content = content;
       EventManager.Subscribe<LoadSceneEvent>(_ => {
+				EventManager.Publish(new UpdateLocationNameEvent { Title = LocationDefinitionCache.TryGet("desert", out var def) ? def.name : string.Empty });
         if (_.Scene != SceneId.Location) return;
         AddLocationSystems();
       });
