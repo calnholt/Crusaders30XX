@@ -449,7 +449,12 @@ namespace Crusaders30XX.ECS.Factories
                 }
                 else if (itemType == ForSaleItemType.Medal)
                 {
-                    uiElement.Tooltip = $"{displayName} - {fs.price} gold";
+                    MedalDefinitionCache.TryGet(id, out var mdef);
+                    uiElement.Tooltip = $"{mdef.text}";
+                }
+                else if (itemType == ForSaleItemType.Equipment)
+                {
+                    uiElement.Tooltip = EquipmentService.GetTooltipText(id, EquipmentTooltipType.Shop);
                 }
 				// Always attach UIElement for hover/click regardless of item type
 				entityManager.AddComponent(e, uiElement);

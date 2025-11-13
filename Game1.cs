@@ -24,6 +24,7 @@ public class Game1 : Game
     private TransitionDisplaySystem _transitionDisplaySystem;
     private CardDisplaySystem _cardDisplaySystem;
     private InputSystem _inputSystem;
+	private CurrencyDisplaySystem _currencyDisplaySystem;
 
     private KeyboardState _prevKeyboard;
 
@@ -147,6 +148,7 @@ public class Game1 : Game
         _hintTooltipDisplaySystem = new HintTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _cardTooltipDisplaySystem = new CardTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _locationNameDisplaySystem = new LocationNameDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+		_currencyDisplaySystem = new CurrencyDisplaySystem(GraphicsDevice, _spriteBatch, Content);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         // _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
@@ -328,11 +330,13 @@ public class Game1 : Game
             case SceneId.Location:
             {
                 FrameProfiler.Measure("LocationSceneSystem.Draw", _locationSceneSystem.Draw);
+				FrameProfiler.Measure("CurrencyDisplaySystem.Draw", _currencyDisplaySystem.Draw);
                 break;
             }
             case SceneId.Shop:
             {
                 FrameProfiler.Measure("ShopSceneSystem.Draw", _shopSceneSystem.Draw);
+				FrameProfiler.Measure("CurrencyDisplaySystem.Draw", _currencyDisplaySystem.Draw);
                 break;
             }
             case SceneId.WorldMap:
@@ -364,6 +368,12 @@ public class Game1 : Game
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         _spriteBatch.End();
     }
+
+	protected override void UnloadContent()
+	{
+		try { _currencyDisplaySystem?.Dispose(); } catch { }
+		base.UnloadContent();
+	}
 
     private void AllocateRenderTargets()
     {

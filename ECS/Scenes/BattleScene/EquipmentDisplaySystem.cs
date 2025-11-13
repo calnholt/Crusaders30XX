@@ -11,6 +11,7 @@ using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Data.Equipment;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -496,40 +497,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private string BuildTooltipText(EquippedEquipment item)
 		{
-			try
-			{
-				if (EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null)
-				{
-					string name = string.IsNullOrWhiteSpace(def.name) ? item.EquipmentId : def.name;
-					var parts = new List<string>();
-					if (def.abilities != null)
-					{
-						foreach (var a in def.abilities)
-						{
-							string text = string.Empty;
-							if (!string.IsNullOrWhiteSpace(a.text)) {
-								if (a.type == "Activate") {
-									text += $"Activate ({(a.isFreeAction ? "free action" : "1AP")}): ";
-								}
-							}
-							text += a.text;
-							if (a.requiresUseOnActivate)
-							{
-								text += " Lose one use.";
-							}
-							if (a.destroyOnActivate)
-							{
-								text += " Destroy this.";
-							}
-							parts.Add(text);
-						}
-					}
-					string abilities = string.Join("\n", parts);
-					return string.IsNullOrEmpty(abilities) ? name : (name + "\n\n" + abilities);
-				}
-			}
-			catch { }
-			return item.EquipmentId ?? string.Empty;
+			return EquipmentService.GetTooltipText(item.EquipmentId, EquipmentTooltipType.Battle);
 		}
 
 		private Texture2D SafeLoadTexture(string asset)

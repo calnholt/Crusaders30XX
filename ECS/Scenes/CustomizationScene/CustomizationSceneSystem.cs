@@ -85,9 +85,17 @@ namespace Crusaders30XX.ECS.Systems
             var cancelE = EntityManager.GetEntity("Customization_CancelButton");
             var undoE = EntityManager.GetEntity("Customization_UndoButton");
             var exitE = EntityManager.GetEntity("Customization_ExitButton");
-            if (exitE != null)
+            if (saveE != null)
             {
                 var hotKey = saveE.GetComponent<HotKey>();
+                if (hotKey == null)
+                {
+                    EntityManager.AddComponent(saveE, new HotKey { Button = FaceButton.Y, RequiresHold = true, Position = HotKeyPosition.Top });
+                }
+            }
+            if (exitE != null)
+            {
+                var hotKey = exitE.GetComponent<HotKey>();
                 if (hotKey == null)
                 {
                     EntityManager.AddComponent(exitE, new HotKey { Button = FaceButton.B, RequiresHold = true, Position = HotKeyPosition.Top });

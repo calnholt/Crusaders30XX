@@ -1,8 +1,8 @@
-using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
@@ -12,13 +12,15 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Crusaders30XX.ECS.Systems
 {
 	[DebugTab("Currency Display")]
-	public class CurrencyDisplaySystem : Core.System
+	public class CurrencyDisplaySystem
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
 		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private Texture2D _goldTexture;
+		private int _currentGold;
+		private readonly System.Action<GoldChanged> _onGoldChangedHandler;
 
 		// Layout controls
 		[DebugEditable(DisplayName = "Margin X", Step = 1f, Min = 0f, Max = 200f)]
@@ -64,8 +66,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Left Edge Angle (deg)", Step = 1f, Min = -45f, Max = 45f)]
 		public float LeftEdgeAngleDegrees { get; set; } = 8f;
 
-		public CurrencyDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
-			: base(entityManager)
+		public CurrencyDisplaySystem(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
@@ -80,28 +81,33 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_goldTexture = null;
 			}
+
+			// Seed current gold
+			try { _currentGold = SaveCache.GetGold(); } catch { _currentGold = 0; }
+
+			// Subscribe to gold change events
+			_onGoldChangedHandler = OnGoldChanged;
+			EventManager.Subscribe(_onGoldChangedHandler);
 		}
 
-		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+		private void OnGoldChanged(GoldChanged evt)
 		{
-			return EntityManager.GetEntitiesWithComponent<SceneState>();
+			_currentGold = evt?.NewGold ?? _currentGold;
 		}
 
-		protected override void UpdateEntity(Entity entity, GameTime gameTime)
+		public void Dispose()
 		{
-			// No per-frame state; draw-only system
+			try { EventManager.Unsubscribe(_onGoldChangedHandler); } catch { }
 		}
 
 		public void Draw()
 		{
-			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-			if (scene == null || scene.Current != SceneId.Location) return;
 			if (_font == null) return;
 
 			int viewportW = _graphicsDevice.Viewport.Width;
 			int viewportH = _graphicsDevice.Viewport.Height;
 
-			int gold = SaveCache.GetGold();
+			int gold = _currentGold;
 			string text = gold.ToString();
 			Vector2 baseTextSize = _font.MeasureString(text);
 			Vector2 textSize = baseTextSize * TextScale;

@@ -29,7 +29,6 @@ namespace Crusaders30XX.ECS.Systems
 	private HellRiftIndicatorDisplaySystem _hellRiftIndicatorDisplaySystem;
 	private CustomizeButtonDisplaySystem _customizeButtonDisplaySystem;
 	private MiniMapDisplaySystem _miniMapDisplaySystem;
-	private CurrencyDisplaySystem _currencyDisplaySystem;
 		private RenderTarget2D _sceneRT;
 		private int _rtW;
 		private int _rtH;
@@ -65,7 +64,6 @@ namespace Crusaders30XX.ECS.Systems
 				_world.RemoveSystem(_hellRiftIndicatorDisplaySystem);
 				_world.RemoveSystem(_customizeButtonDisplaySystem);
 				_world.RemoveSystem(_miniMapDisplaySystem);
-				_world.RemoveSystem(_currencyDisplaySystem);
 				_firstLoad = true;
 				_rtW = 0;
 				_rtH = 0;
@@ -144,7 +142,6 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("ShopPOITooltipDisplaySystem.Draw", _shopPoiTooltipDisplaySystem.Draw);
 			FrameProfiler.Measure("TooltipQuestDisplaySystem.Draw", _tooltipQuestDisplaySystem.Draw);
 			FrameProfiler.Measure("CustomizeButtonDisplaySystem.Draw", _customizeButtonDisplaySystem.Draw);
-			FrameProfiler.Measure("CurrencyDisplaySystem.Draw", _currencyDisplaySystem.Draw);
 		}
     private void AddLocationSystems()
 		{
@@ -170,8 +167,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_customizeButtonDisplaySystem);
 			_miniMapDisplaySystem = new MiniMapDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_miniMapDisplaySystem);
-			_currencyDisplaySystem = new CurrencyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
-			_world.AddSystem(_currencyDisplaySystem);
     }
 
     protected override void UpdateEntity(Entity entity, GameTime gameTime)

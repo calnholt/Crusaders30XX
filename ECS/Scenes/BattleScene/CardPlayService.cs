@@ -158,6 +158,7 @@ namespace Crusaders30XX.ECS.Systems
                         BlockValueService.ApplyDelta(copy, modifiedBlock.Delta);
                     }
                     EventManager.Publish(new CardMoveRequested { Card = copy, Deck = deckEntity, Destination = CardZoneType.Hand, Reason = "ShroudCopy" });
+                    EventManager.Publish(new ModifyTemperanceEvent { Delta = 1 });
                     break;
                 }
                 case "stab":

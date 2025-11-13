@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Services
 {
@@ -47,6 +48,10 @@ namespace Crusaders30XX.ECS.Services
 			result.Spent = price;
 			result.ShopName = fs.SourceShopName ?? string.Empty;
 
+			// Snapshot old gold for event payload
+			int oldGold = 0;
+			try { oldGold = SaveCache.GetGold(); } catch { oldGold = 0; }
+
 			// Identify location id containing this shop/item for targeted JSON update
 			string locationId = TryResolveLocationIdForShop(fs.Id, result.ShopName);
 			result.LocationId = locationId ?? string.Empty;
@@ -58,6 +63,19 @@ namespace Crusaders30XX.ECS.Services
 				return result;
 			}
 			result.NewGold = newGold;
+
+			// Publish GoldChanged event so UI can update immediately
+			try
+			{
+				EventManager.Publish(new GoldChanged
+				{
+					OldGold = oldGold,
+					NewGold = newGold,
+					Delta = newGold - oldGold,
+					Reason = "Purchase"
+				});
+			}
+			catch { }
 
 			// Update location file to mark purchased (best-effort; non-fatal if it fails)
 			TryMarkPurchasedInLocationJson(locationId, result.ShopName, fs.Id);

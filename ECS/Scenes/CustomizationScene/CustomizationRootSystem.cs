@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -85,6 +86,13 @@ namespace Crusaders30XX.ECS.Systems
             world.AddSystem(_availableWeaponDisplaySystem);
             world.AddSystem(_loadoutWeaponDisplaySystem);
             world.AddSystem(_customizationStateManagementSystem);
+
+            EventManager.Subscribe<LoadSceneEvent>(_ => {
+                if (_.Scene == SceneId.Customization)
+                {
+                    EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Customize });
+                }
+            });
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

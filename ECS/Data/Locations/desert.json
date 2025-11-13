@@ -32,6 +32,7 @@
       "RevealRadius": 500,
       "UnrevealedRadius": 300,
       "Type": "Quest",
+      "Name": "Greed",
       "Reward": {
         "Gold": 1
       },
@@ -51,6 +52,7 @@
       "RevealRadius": 500,
       "UnrevealedRadius": 400,
       "Type": "Quest",
+      "Name": "Ashenfell Ridge",
       "Reward": {
         "Gold": 2
       },
@@ -91,6 +93,7 @@
       "RevealRadius": 500,
       "UnrevealedRadius": 200,
       "Type": "Quest",
+      "Name": "Oasis",
       "Tribulations": [
         {
           "text": "At the start of each battle, gain poison (every 60 seconds, lose 1 HP).",
@@ -125,6 +128,7 @@
       "RevealRadius": 500,
       "UnrevealedRadius": 50,
       "Type": "Quest",
+      "Name": "Crumbling City",
       "Reward": {
         "Gold": 3
       },
