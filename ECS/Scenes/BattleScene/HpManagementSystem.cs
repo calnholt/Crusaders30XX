@@ -131,19 +131,22 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				case AppliedPassiveType.Penance:
 					var hp = e.Target.GetComponent<HP>();
+					if (hp == null) return;
 					var atFullHp = hp.Current == hp.Max;
 					if (e.Delta > 0)
 					{
-						hp.Max -= e.Delta;
+						hp.Max = Math.Max(1, hp.Max - e.Delta);
 						if (atFullHp)
 						{
 							hp.Current -= e.Delta;
 						}
 					}
-					else
+					else if (e.Delta < 0)
 					{
-						hp.Max = Math.Min(30, hp.Max + e.Delta);
+						int amount = -e.Delta;
+						hp.Max = Math.Min(25, hp.Max + amount);
 					}
+					hp.Current = Math.Max(0, Math.Min(hp.Current, hp.Max));
 					break;
 				default:
 					return;
