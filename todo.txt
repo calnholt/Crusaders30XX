@@ -15,7 +15,7 @@
 
 Prompts - 
 
-Shop system - background, leave button, name display; overlay with items for purchase - name, image, price; tooltip details (if necessary); on purchase small animation - trapezoid and acquired text enter from opposite sides with image in the middle; update jsons;
+Shop system - tooltip details (if necessary); on purchase small animation - trapezoid and acquired text enter from opposite sides with image in the middle; update jsons;
 
 Update @HpManagementSystem.cs to factor in and apply aegis consumption like @EnemyDamageManagerSystem.cs, should be moved out of EnemyDamageManagerSystem and into HpManagementSystem anyways
 

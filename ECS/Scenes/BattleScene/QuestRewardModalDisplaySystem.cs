@@ -52,8 +52,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			EnsureOverlayEntity();
 			var overlayEntity = EntityManager.GetEntity("QuestRewardOverlay");
+			if (overlayEntity == null) return;
 			var ui = overlayEntity?.GetComponent<UIElement>();
 			var state = overlayEntity?.GetComponent<QuestRewardOverlayState>();
 			if (ui == null || state == null) return;

@@ -199,12 +199,41 @@ namespace Crusaders30XX.ECS.Systems
 				int py = PanelMarginTop + row * (TileHeight + VerticalGap);
 				var tileRect = new Rectangle(px, py, TileWidth, TileHeight);
 
+				// Compute base center and apply parallax offset (from Transform.Position - BasePosition)
+				var baseCenter = new Vector2(tileRect.X + tileRect.Width / 2f, tileRect.Y + tileRect.Height / 2f);
+				Vector2 offset = Vector2.Zero;
+				if (x.T != null)
+				{
+					// Update BasePosition for ParallaxLayerSystem
+					x.T.BasePosition = baseCenter;
+					// Only apply offset when Transform.Position looks initialized (avoid first-frame jump)
+					var pos = x.T.Position;
+					if (pos != Vector2.Zero)
+					{
+						var cand = pos - x.T.BasePosition;
+						// Guard against absurd offsets from uninitialized transforms
+						if (System.Math.Abs(cand.X) <= 512 && System.Math.Abs(cand.Y) <= 512)
+						{
+							offset = cand;
+						}
+					}
+					// Maintain draw ordering above background
+					x.T.ZOrder = 10002;
+				}
+
+				// Apply parallax offset to the tile for visuals and UI bounds
+				var drawRect = new Rectangle(
+					(int)System.Math.Round(tileRect.X + offset.X),
+					(int)System.Math.Round(tileRect.Y + offset.Y),
+					tileRect.Width,
+					tileRect.Height);
+
 				// background trapezoid
 				var innerRect = new Rectangle(
-					tileRect.X + PaddingX,
-					tileRect.Y + PaddingY,
-					Math.Max(1, tileRect.Width - 2 * PaddingX),
-					Math.Max(1, tileRect.Height - 2 * PaddingY));
+					drawRect.X + PaddingX,
+					drawRect.Y + PaddingY,
+					System.Math.Max(1, drawRect.Width - 2 * PaddingX),
+					System.Math.Max(1, drawRect.Height - 2 * PaddingY));
 
 				var angles = GetAnglesForIndex(i);
 				var trap = PrimitiveTextureFactory.GetAntialiasedTrapezoid(
@@ -221,13 +250,9 @@ namespace Crusaders30XX.ECS.Systems
 				// update UI bounds and transform center
 				if (x.UI != null)
 				{
-					x.UI.Bounds = tileRect;
+					// Bounds centered on the (possibly parallax-shifted) drawRect
+					x.UI.Bounds = drawRect;
 					x.UI.IsInteractable = true;
-				}
-				if (x.T != null)
-				{
-					x.T.Position = new Vector2(tileRect.X + tileRect.Width / 2f, tileRect.Y + tileRect.Height / 2f);
-					x.T.ZOrder = 10002;
 				}
 
 				// Name text (top-left inside padding)
@@ -339,9 +364,31 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (string.IsNullOrWhiteSpace(cardId)) return null;
 			string key = $"{cardId}|{color}";
-			if (_cardPreviewCache.TryGetValue(key, out var existing) && existing != null) return existing;
+			if (_cardPreviewCache.TryGetValue(key, out var existing) && existing != null)
+			{
+				// Ensure preview cards are not interactive in the shop grid
+				var uiExisting = existing.GetComponent<UIElement>();
+				if (uiExisting != null)
+				{
+					uiExisting.IsInteractable = false;
+					uiExisting.TooltipType = TooltipType.None;
+					uiExisting.Tooltip = string.Empty;
+				}
+				return existing;
+			}
 			var created = EntityFactory.CreateCardFromDefinition(EntityManager, cardId, color, allowWeapons: true);
-			if (created != null) _cardPreviewCache[key] = created;
+			if (created != null)
+			{
+				_cardPreviewCache[key] = created;
+				// Ensure preview cards are not interactive in the shop grid
+				var ui = created.GetComponent<UIElement>();
+				if (ui != null)
+				{
+					ui.IsInteractable = false;
+					ui.TooltipType = TooltipType.None;
+					ui.Tooltip = string.Empty;
+				}
+			}
 			return created;
 		}
 

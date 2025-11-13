@@ -425,7 +425,10 @@ namespace Crusaders30XX.ECS.Factories
 
 				var e = entityManager.CreateEntity($"ShopItem_{id}_{idx}");
 				entityManager.AddComponent(e, new Transform { Position = new Vector2(-1000, -1000), ZOrder = 10002 });
-				entityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
+				// Configure parallax for UI tiles and ensure it updates UI bounds with its offset
+				var pl = ParallaxLayer.GetUIParallaxLayer();
+				pl.AffectsUIBounds = true;
+				entityManager.AddComponent(e, pl);
                 var uiElement = new UIElement { Bounds = new Rectangle(-1000, -1000, 1, 1), IsInteractable = true };
                 if (itemType == ForSaleItemType.Card)
                 {
@@ -436,7 +439,7 @@ namespace Crusaders30XX.ECS.Factories
                 {
                     uiElement.Tooltip = $"{displayName} - {fs.price} gold";
                 }
-                else if (itemType == ForSaleItemType.Equipment)
+				// Always attach UIElement for hover/click regardless of item type
 				entityManager.AddComponent(e, uiElement);
 				entityManager.AddComponent(e, new OwnedByScene { Scene = SceneId.Shop });
 				entityManager.AddComponent(e, new ForSaleItem

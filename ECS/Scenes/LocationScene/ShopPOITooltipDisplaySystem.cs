@@ -118,7 +118,7 @@ namespace Crusaders30XX.ECS.Systems
 			bool placeRight = canPlaceRight || (!canPlaceLeft && preferRight);
 			if (!canPlaceRight && canPlaceLeft) placeRight = false;
 
-			int rx = placeRight ? (r.Right + Gap) : (r.Left - Gap - width);
+			int rx = placeRight ? (r.Right + Gap + 30) : (r.Left - Gap - width - 30);
 			int ry = r.Y + (r.Height - height) / 2;
 
 			// Screen clamp
@@ -130,7 +130,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_tooltipEntity = EntityManager.CreateEntity(TooltipEntityName);
 				EntityManager.AddComponent(_tooltipEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 });
-				EntityManager.AddComponent(_tooltipEntity, new UIElement { Bounds = rect, IsInteractable = true });
+				EntityManager.AddComponent(_tooltipEntity, new UIElement { Bounds = rect, IsInteractable = true, TooltipOffsetPx = 30 });
 				// Add a hold-to-enter hotkey attached to the hovered POI
 				EntityManager.AddComponent(_tooltipEntity, new HotKey { Button = FaceButton.X, RequiresHold = true, ParentEntity = hovered.E, Position = HotKeyPosition.Below });
 			}
