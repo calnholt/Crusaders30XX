@@ -16,6 +16,7 @@
         "Gold": 1
       },
       "Name": "First Encounter",
+      "Difficulty": 1,
       "Events": [
         {
           "id": "gleeber",
@@ -33,6 +34,7 @@
       "UnrevealedRadius": 300,
       "Type": "Quest",
       "Name": "Greed",
+      "Difficulty": 1,
       "Reward": {
         "Gold": 1
       },
@@ -53,6 +55,7 @@
       "UnrevealedRadius": 400,
       "Type": "Quest",
       "Name": "Ashenfell Ridge",
+      "Difficulty": 3,
       "Reward": {
         "Gold": 2
       },
@@ -94,6 +97,7 @@
       "UnrevealedRadius": 200,
       "Type": "Quest",
       "Name": "Oasis",
+      "Difficulty": 2,
       "Tribulations": [
         {
           "text": "At the start of each battle, gain poison (every 60 seconds, lose 1 HP).",
@@ -129,6 +133,7 @@
       "UnrevealedRadius": 50,
       "Type": "Quest",
       "Name": "Crumbling City",
+      "Difficulty": 3,
       "Reward": {
         "Gold": 3
       },
@@ -161,6 +166,7 @@
       "RevealRadius": 500,
       "UnrevealedRadius": 50,
       "Type": "Quest",
+      "Difficulty": 3,
       "Reward": {
         "Gold": 3
       },
@@ -196,6 +202,7 @@
       "RevealRadius": 1000,
       "UnrevealedRadius": 100,
       "Type": "Hellrift",
+      "Difficulty": 5,
       "Reward": {
         "Gold": 10
       },
@@ -235,6 +242,7 @@
       "RevealRadius": 1000,
       "UnrevealedRadius": 100,
       "Type": "Hellrift",
+      "Difficulty": 5,
       "Reward": {
         "Gold": 10
       },
@@ -254,6 +262,7 @@
       "RevealRadius": 1000,
       "UnrevealedRadius": 100,
       "Type": "Hellrift",
+      "Difficulty": 5,
       "Reward": {
         "Gold": 10
       },

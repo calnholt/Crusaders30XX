@@ -8,6 +8,7 @@ namespace Crusaders30XX.ECS.Components
 		public Entity Owner { get; set; }
 		public string Id { get; set; } = string.Empty;
 		public Vector2 WorldPosition { get; set; } = Vector2.Zero;
+		public int Difficulty { get; set; } = 0;
 		public int RevealRadius { get; set; } = 300;
 		public bool IsCompleted { get; set; } = false;
 		public bool IsRevealed { get; set; } = false;

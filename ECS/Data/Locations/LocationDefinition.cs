@@ -16,6 +16,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public string id { get; set; }
 		public Vector2 worldPosition { get; set; } = new Vector2(0f, 0f);
 		public int revealRadius { get; set; } = 300;
+		public int difficulty { get; set; } = 0;
 		public bool isRevealed { get; set; } = false;
 		public string background { get; set; } = string.Empty;
 		public int unrevealedRadius { get; set; } = 50;

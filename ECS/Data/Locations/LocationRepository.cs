@@ -52,6 +52,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 						isRevealed = poi.IsRevealed,
 						revealRadius = poi.RevealRadius,
 						unrevealedRadius = poi.UnrevealedRadius,
+						difficulty = poi.Difficulty,
 						type = Enum.Parse<PointOfInterestType>(poi.Type),
 						background = poi.Background ?? string.Empty,
 						rewardGold = 0,
@@ -132,6 +133,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 			public float[] WorldPosition { get; set; }
 			public int RevealRadius { get; set; }
 			public int UnrevealedRadius { get; set; }
+			public int Difficulty { get; set; }
 			public bool IsRevealed { get; set; }
 			public string Name { get; set; }
 			public string Type { get; set; }

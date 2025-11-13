@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Texture2D _questIconTexture;
 		private readonly Texture2D _hellriftIconTexture;
 		private readonly Texture2D _shopIconTexture;
+		private readonly Texture2D _skullTexture;
 		private bool _spawned;
 		private readonly System.Collections.Generic.List<Entity> _pois = new System.Collections.Generic.List<Entity>();
 		private readonly System.Collections.Generic.Dictionary<int, Vector2> _worldByEntityId = new System.Collections.Generic.Dictionary<int, Vector2>();
@@ -45,6 +46,16 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Animation Speed", Step = 1f, Min = 1f, Max = 30f)]
 		public float AnimationSpeed { get; set; } = 20f;
+
+		[DebugEditable(DisplayName = "Skull Size", Step = 1f, Min = 4f, Max = 128f)]
+		public float SkullSize { get; set; } = 39f;
+
+		[DebugEditable(DisplayName = "Skull Gap", Step = 1f, Min = 0f, Max = 64f)]
+		public float SkullGap { get; set; } = 11f;
+
+		// Vertical offset for skull row relative to the bottom of the POI icon (in icon heights)
+		[DebugEditable(DisplayName = "Skull Offset Y", Step = 0.05f, Min = -2f, Max = 2f)]
+		public float SkullOffsetY { get; set; } = 0.1f;
 
 		public PointOfInterestDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
@@ -76,6 +87,14 @@ namespace Crusaders30XX.ECS.Systems
 			catch
 			{
 				_shopIconTexture = null;
+			}
+			try
+			{
+				_skullTexture = content.Load<Texture2D>("skull");
+			}
+			catch
+			{
+				_skullTexture = null;
 			}
 		}
 
@@ -252,6 +271,7 @@ namespace Crusaders30XX.ECS.Systems
 				var poi = new PointOfInterest {
 					Id = pos.id,
 					WorldPosition = pos.worldPosition,
+					Difficulty = pos.difficulty,
 					RevealRadius = pos.revealRadius,
 					UnrevealedRadius = pos.unrevealedRadius,
 					IsRevealed = pos.isRevealed,
@@ -370,6 +390,43 @@ namespace Crusaders30XX.ECS.Systems
 				if (!x.P.IsCompleted && x.P.Type == PointOfInterestType.Quest)
 				{
 					DrawCircle(iconPos, halfWidth, halfHeight, CircleSize * mapScale * scale);
+				}
+
+				// Draw difficulty skulls below the icon for any POI with Difficulty > 0
+				if (_skullTexture != null && x.P.Difficulty > 0)
+				{
+					int difficulty = System.Math.Max(0, x.P.Difficulty);
+					// Clamp to a reasonable max to avoid extreme layouts
+					difficulty = System.Math.Min(difficulty, 10);
+
+					// Size and gap scaled by zoom and hover
+					float skullWidth = SkullSize * mapScale * scale;
+					float skullHeight = skullWidth;
+					if (_skullTexture.Width > 0 && _skullTexture.Height > 0)
+					{
+						float skullAspect = _skullTexture.Height / (float)_skullTexture.Width;
+						skullHeight = skullWidth * skullAspect;
+					}
+
+					float skullGap = SkullGap * mapScale * scale;
+					float totalWidth = difficulty * skullWidth + (difficulty - 1) * skullGap;
+
+					// Row is centered horizontally on the icon and positioned below it
+					float startX = iconPos.X - totalWidth / 2f;
+					float offsetY = SkullOffsetY * iconHeight * mapScale * scale;
+					float rowY = iconRect.Bottom + offsetY;
+
+					for (int i = 0; i < difficulty; i++)
+					{
+						float xPos = startX + i * (skullWidth + skullGap);
+						var skullRect = new Rectangle(
+							(int)System.Math.Round(xPos),
+							(int)System.Math.Round(rowY),
+							(int)System.Math.Round(skullWidth),
+							(int)System.Math.Round(skullHeight));
+
+						_spriteBatch.Draw(_skullTexture, skullRect, Color.White);
+					}
 				}
 			}
 		}
