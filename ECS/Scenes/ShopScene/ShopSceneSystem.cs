@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
 		private bool _firstLoad = true;
+		private string _shopTitle = "Shop";
 
 		private ShopBackgroundDisplaySystem _shopBackgroundDisplaySystem;
 		private CustomizeButtonDisplaySystem _customizeButtonDisplaySystem;
@@ -31,11 +32,16 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
 			_content = content;
+			EventManager.Subscribe<SetShopTitle>(_ =>
+			{
+				_shopTitle = string.IsNullOrWhiteSpace(_.Title) ? "Shop" : _.Title;
+			});
 			EventManager.Subscribe<LoadSceneEvent>(_ =>
 			{
 				if (_.Scene != SceneId.Shop) return;
-				EventManager.Publish(new UpdateLocationNameEvent { Title = "Shop" });
 				AddShopSystems();
+				EventManager.Publish(new UpdateLocationNameEvent { Title = _shopTitle });
+				EventManager.Publish(new SetShopTitle { Title = _shopTitle });
 			});
 			EventManager.Subscribe<DeleteCachesEvent>(_ =>
 			{
