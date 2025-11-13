@@ -344,7 +344,6 @@ namespace Crusaders30XX.ECS.Systems
 			if (_loadedSystems) return;
 			_loadedSystems = true;
 			Console.WriteLine("[BattleSceneSystem] AddBattleSystems");
-			EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
 			_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
 			_battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);

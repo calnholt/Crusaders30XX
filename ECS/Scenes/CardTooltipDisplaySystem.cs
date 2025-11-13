@@ -17,9 +17,6 @@ namespace Crusaders30XX.ECS.Systems
 		private CardVisualSettings _settings;
 		private readonly Dictionary<string, Entity> _tooltipCardCache = new();
 
-		[DebugEditable(DisplayName = "Tooltip Scale", Step = 0.05f, Min = 0.25f, Max = 2.0f)]
-		public float TooltipScale { get; set; } = 0.6f;
-
 		[DebugEditable(DisplayName = "Gap Override (px)", Step = 1, Min = 0, Max = 200)]
 		public int GapOverride { get; set; } = 0;
 
@@ -59,8 +56,8 @@ namespace Crusaders30XX.ECS.Systems
 				if (_settings == null) return;
 			}
 
-			int w = (int)System.Math.Round(_settings.CardWidth * TooltipScale);
-			int h = (int)System.Math.Round(_settings.CardHeight * TooltipScale);
+			int w = (int)System.Math.Round(_settings.CardWidth * top.CT.TooltipScale);
+			int h = (int)System.Math.Round(_settings.CardHeight * top.CT.TooltipScale);
 			int gap = GapOverride > 0 ? GapOverride : System.Math.Max(0, top.UI.TooltipOffsetPx);
 
 			int rx = top.UI.Bounds.X;
@@ -92,7 +89,7 @@ namespace Crusaders30XX.ECS.Systems
 			ry = System.Math.Max(pad, System.Math.Min(ry, vp.Height - h - pad));
 
 			// Convert tooltip rect top-left to the card center expected by CardDisplaySystem (account for CardOffsetYExtra)
-			int offsetY = (int)System.Math.Round(_settings.CardOffsetYExtra * TooltipScale);
+			int offsetY = (int)System.Math.Round(_settings.CardOffsetYExtra * top.CT.TooltipScale);
 			var center = new Vector2(rx + w / 2f, ry + (h / 2f + offsetY));
 
 			// Get or create the visualization card entity for this tooltip
@@ -111,7 +108,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (cardEntity == null) return;
 
 			// Render via CardDisplaySystem using scaled event
-			EventManager.Publish(new CardRenderScaledEvent { Card = cardEntity, Position = center, Scale = TooltipScale });
+			EventManager.Publish(new CardRenderScaledEvent { Card = cardEntity, Position = center, Scale = top.CT.TooltipScale });
 		}
 	}
 }

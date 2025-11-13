@@ -63,26 +63,38 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, ParallaxLayer.GetCharacterParallaxLayer());
             // Equip default weapon (not in deck)
             world.AddComponent(entity, new EquippedWeapon { WeaponId = loadout.weaponId });
-            var equipHeadEntity = world.CreateEntity("Equip_Head");
-            world.AddComponent(equipHeadEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
-            world.AddComponent(equipHeadEntity, new UIElement { IsInteractable = true });
-            world.AddComponent(equipHeadEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.headId, EquipmentType = "Head" });
-            world.AddComponent(equipHeadEntity, ParallaxLayer.GetUIParallaxLayer());
-            var equipLegsEntity = world.CreateEntity("Equip_Legs");
-            world.AddComponent(equipLegsEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
-            world.AddComponent(equipLegsEntity, new UIElement { IsInteractable = true });
-            world.AddComponent(equipLegsEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.legsId, EquipmentType = "Legs" });
-            world.AddComponent(equipLegsEntity, ParallaxLayer.GetUIParallaxLayer());
-            var equipArmsEntity = world.CreateEntity("Equip_Arms");
-            world.AddComponent(equipArmsEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
-            world.AddComponent(equipArmsEntity, new UIElement { IsInteractable = true });
-            world.AddComponent(equipArmsEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.armsId, EquipmentType = "Arms" });
-            world.AddComponent(equipArmsEntity, ParallaxLayer.GetUIParallaxLayer());
-            var equipChestEntity = world.CreateEntity("Equip_Chest");
-            world.AddComponent(equipChestEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
-            world.AddComponent(equipChestEntity, new UIElement { IsInteractable = true });
-            world.AddComponent(equipChestEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.chestId, EquipmentType = "Chest" });
-            world.AddComponent(equipChestEntity, ParallaxLayer.GetUIParallaxLayer());
+            if (!string.IsNullOrWhiteSpace(loadout.headId))
+            {
+                var equipHeadEntity = world.CreateEntity("Equip_Head");
+                world.AddComponent(equipHeadEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
+                world.AddComponent(equipHeadEntity, new UIElement { IsInteractable = true });
+                world.AddComponent(equipHeadEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.headId, EquipmentType = "Head" });
+                world.AddComponent(equipHeadEntity, ParallaxLayer.GetUIParallaxLayer());
+            }
+            if (!string.IsNullOrWhiteSpace(loadout.legsId))
+            {
+                var equipLegsEntity = world.CreateEntity("Equip_Legs");
+                world.AddComponent(equipLegsEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
+                world.AddComponent(equipLegsEntity, new UIElement { IsInteractable = true });
+                world.AddComponent(equipLegsEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.legsId, EquipmentType = "Legs" });
+                world.AddComponent(equipLegsEntity, ParallaxLayer.GetUIParallaxLayer());
+            }
+            if (!string.IsNullOrWhiteSpace(loadout.armsId))
+            {
+                var equipArmsEntity = world.CreateEntity("Equip_Arms");
+                world.AddComponent(equipArmsEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
+                world.AddComponent(equipArmsEntity, new UIElement { IsInteractable = true });
+                world.AddComponent(equipArmsEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.armsId, EquipmentType = "Arms" });
+                world.AddComponent(equipArmsEntity, ParallaxLayer.GetUIParallaxLayer());
+            }
+            if (!string.IsNullOrWhiteSpace(loadout.chestId))
+            {
+                var equipChestEntity = world.CreateEntity("Equip_Chest");
+                world.AddComponent(equipChestEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
+                world.AddComponent(equipChestEntity, new UIElement { IsInteractable = true });
+                world.AddComponent(equipChestEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.chestId, EquipmentType = "Chest" });
+                world.AddComponent(equipChestEntity, ParallaxLayer.GetUIParallaxLayer());
+            }
             // Parallax handled by UI root in EquipmentDisplaySystem
             // Attach Courage resource component by default (optional mechanics can read presence)
             world.AddComponent(entity, new Courage { Amount = 0 });
@@ -433,7 +445,7 @@ namespace Crusaders30XX.ECS.Factories
                 if (itemType == ForSaleItemType.Card)
                 {
                     uiElement.TooltipType = TooltipType.Card;
-                    entityManager.AddComponent(e, new CardTooltip { CardId = id });
+                    entityManager.AddComponent(e, new CardTooltip { CardId = id, TooltipScale = 0.8f });
                 }
                 else if (itemType == ForSaleItemType.Medal)
                 {

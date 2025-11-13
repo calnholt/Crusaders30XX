@@ -44,7 +44,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Horizontal Gap", Step = 2, Min = 0, Max = 200)]
 		public int HorizontalGap { get; set; } = 18;
 		[DebugEditable(DisplayName = "Vertical Gap", Step = 2, Min = 0, Max = 200)]
-		public int VerticalGap { get; set; } = 18;
+		public int VerticalGap { get; set; } = 80;
 		[DebugEditable(DisplayName = "Panel Margin X", Step = 2, Min = 0, Max = 400)]
 		public int PanelMarginX { get; set; } = 60;
 		[DebugEditable(DisplayName = "Panel Margin Top", Step = 2, Min = 0, Max = 800)]

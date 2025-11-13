@@ -42,9 +42,17 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 			_content = content;
       EventManager.Subscribe<LoadSceneEvent>(_ => {
-				EventManager.Publish(new UpdateLocationNameEvent { Title = LocationDefinitionCache.TryGet("desert", out var def) ? def.name : string.Empty });
-        if (_.Scene != SceneId.Location) return;
-        AddLocationSystems();
+				if (_.Scene == SceneId.Location)
+				{
+					EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
+					EventManager.Publish(new UpdateLocationNameEvent { Title = LocationDefinitionCache.TryGet("desert", out var def) ? def.name : string.Empty });
+					AddLocationSystems();
+				}
+				else
+				{
+					// Ensure the location name banner is hidden when switching to non-location scenes
+					EventManager.Publish(new HideLocationNameEvent());
+				}
       });
 			EventManager.Subscribe<DeleteCachesEvent>(_ => {
 				_world.RemoveSystem(_locationMapDisplaySystem);

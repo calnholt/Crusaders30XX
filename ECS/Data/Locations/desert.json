@@ -79,7 +79,8 @@
           "id": "skeleton",
           "type": "Enemy"
         }
-      ]
+      ],
+      "Background": "desert-background-graves.png"
     },
     {
       "Id": "desert_4",
@@ -112,7 +113,8 @@
           "id": "skeleton",
           "type": "Enemy"
         }
-      ]
+      ],
+      "Background": "desert-background-oasis.png"
     },
     {
       "Id": "desert_5",
@@ -143,7 +145,8 @@
           "id": "demon",
           "type": "Enemy"
         }
-      ]
+      ],
+      "Background": "desert-background-crumbling-city.png"
     },
     {
       "Id": "desert_6",
@@ -270,7 +273,7 @@
           "Id": "shroud_of_turin",
           "Type": "Card",
           "Price": 3,
-          "IsPurchased": true
+          "IsPurchased": false
         },
         {
           "Id": "impale",
@@ -282,13 +285,13 @@
           "Id": "st_luke",
           "Type": "Medal",
           "Price": 5,
-          "IsPurchased": true
+          "IsPurchased": false
         },
         {
           "Id": "lightning_grieves",
           "Type": "Equipment",
           "Price": 5,
-          "IsPurchased": true
+          "IsPurchased": false
         }
       ]
     }
