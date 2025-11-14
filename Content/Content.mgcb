@@ -8,6 +8,7 @@
 /profile:Reach
 /compress:False
 
+
 #-------------------------------- References --------------------------------#
 
 
@@ -51,7 +52,7 @@
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Color
 /processorParam:Smoothing=Normal
-/build:Fonts/GermaniaOne.spritefont   
+/build:Fonts/GermaniaOne.spritefont
 
 #begin Fonts/Grenze.spritefont
 /importer:FontDescriptionImporter
@@ -59,7 +60,7 @@
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Color
 /processorParam:Smoothing=Normal
-/build:Fonts/Grenze.spritefont   
+/build:Fonts/Grenze.spritefont
 
 #begin cursor_cross.png
 /importer:TextureImporter

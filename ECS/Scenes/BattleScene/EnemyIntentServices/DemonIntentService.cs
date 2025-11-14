@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Data.Attacks;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -19,75 +20,30 @@ namespace Crusaders30XX.ECS.Systems
 
 		public IEnumerable<string> SelectForTurn(Entity enemy, EnemyArsenal arsenal, int turnNumber)
 		{
-			var availableIds = arsenal.AttackIds.ToList();
-			if (availableIds.Count == 0) return Enumerable.Empty<string>();
 
-			// Load attack definitions to inspect position types
-			var defs = AttackDefinitionCache.GetAll();
-			bool HasDef(string id) => defs.TryGetValue(id, out var _);
-			string GetPos(string id)
+			if (Random.Shared.Next(0, 100) <= 25)
 			{
-				return defs.TryGetValue(id, out var def) && !string.IsNullOrEmpty(def.positionType)
-					? def.positionType
-					: "Linker";
+				return ["infernal_execution"];
 			}
-
-			// Identify categories
-			var startersOrLinkers = availableIds.Where(id => HasDef(id) && (GetPos(id) == "Starter" || GetPos(id) == "Linker")).ToList();
-			var enders = availableIds.Where(id => HasDef(id) && GetPos(id) == "Ender" && id != "infernal_execution").ToList();
-			bool hasInfernal = availableIds.Contains("infernal_execution");
-			bool hasGouging = availableIds.Contains("gouging_jab");
-
-			// Decide: either one attack (infernal_execution) or two (starter/linker + ender)
-			bool chooseOne = _random.Next(2) == 0 && hasInfernal; // 50% chance when available
-			if (chooseOne)
+			var combinations = new List<List<string>>
 			{
-				return ["infernal_execution"]; // single big finisher
-			}
+				new List<string> { "razor_maw" },
+				new List<string> { "razor_maw", "punishing_swipe" },
+				new List<string> { "razor_maw", "scorching_claw" },
+				new List<string> { "razor_maw", "rending_claw" },
+				new List<string> { "punishing_swipe", "punishing_swipe" },
+				new List<string> { "scorching_claw", "scorching_claw" },
+				new List<string> { "rending_claw", "scorching_claw" },
+				new List<string> { "gouge", "gouge", "punishing_swipe" },
+				new List<string> { "gouge", "punishing_swipe", "punishing_swipe" },
+				new List<string> { "punishing_swipe", "punishing_swipe", "punishing_swipe" },
+				new List<string> { "gouge", "gouge", "gouge" },
+				new List<string> { "gouge", "razor_maw" },
+				new List<string> { "gouge", "rending_claw" },
 
-			// Build two-attack combo
-			string ChooseRandom(IReadOnlyList<string> list) => list.Count == 0 ? null : list[_random.Next(list.Count)];
-			var first = ChooseRandom(startersOrLinkers);
-			if (first == null)
-			{
-				// Fallback to any non-infernal when no starters/linkers
-				var fallback = availableIds.Where(id => id != "infernal_execution").ToList();
-				first = ChooseRandom(fallback);
-			}
-			var second = ChooseRandom(enders);
-			if (second == null)
-			{
-				// Fallback to any ender or any available if none found
-				var anyEnder = availableIds.Where(id => GetPos(id) == "Ender" && id != "infernal_execution").ToList();
-				second = ChooseRandom(anyEnder);
-				if (second == null)
-				{
-					second = ChooseRandom(availableIds);
-				}
-			}
-
-			var result = new List<string>();
-			if (first != null) result.Add(first);
-			if (second != null && second != first) result.Add(second);
-
-			// 10% chance to add a third attack (gouging_jab) at a random index
-			if (hasGouging && _random.NextDouble() < 0.10)
-			{
-				if (!result.Contains("gouging_jab"))
-				{
-					int insertIndex = _random.Next(result.Count + 1);
-					result.Insert(insertIndex, "gouging_jab");
-				}
-			}
-
-			// As a final safety, if nothing could be selected, default to infernal or any available
-			if (result.Count == 0)
-			{
-				if (hasInfernal) return ["infernal_execution"];
-				return [availableIds[0]];
-			}
-
-			return result;
+			};			
+			int random = Random.Shared.Next(0, combinations.Count);
+			return ArrayUtils.Shuffled(combinations[random]);
 		}
 	}
 }

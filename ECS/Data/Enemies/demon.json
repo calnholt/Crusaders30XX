@@ -40,7 +40,7 @@
       "name": "Scorching Claw",
       "target": "Player",
       "positionType": "Ender",
-      "damage": 3,
+      "damage": 4,
       "blockingCondition": {
         "type": "OnHit"
       },
