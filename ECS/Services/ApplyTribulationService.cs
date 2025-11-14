@@ -25,13 +25,13 @@ namespace Crusaders30XX.ECS.Services
 			// Example: desert_3 applies burn 1 at start of battle
 			switch (questId)
 			{
-				case "desert_3":
-					Console.WriteLine($"[ApplyTribulationService] Applying burn 1 to player for quest {questId}");
-					EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Burn, Delta = 1 });
-					break;
-				case "desert_4":
-					EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Poison, Delta = 1 });
-					break;
+				// case "desert_3":
+				// 	Console.WriteLine($"[ApplyTribulationService] Applying burn 1 to player for quest {questId}");
+				// 	EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Burn, Delta = 1 });
+				// 	break;
+				// case "desert_4":
+				// 	EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Poison, Delta = 1 });
+				// 	break;
 				default:
 					// Unknown quest ID - no effect
 					break;

@@ -1,0 +1,37 @@
+{
+  "name": "Mummy",
+  "id": "mummy",
+  "hp": 60,
+  "attacks": [
+    {
+      "id": "entomb",
+      "name": "Entomb",
+      "target": "Player",
+      "positionType": "Ender",
+      "damage": 12,
+      "specialEffects": [
+        {
+          "type": "GlassCannon",
+          "amount": 2
+        }
+      ],
+      "text": "If this is blocked with exactly two cards, this attack deals no damage and the blocking cards are exhausted."
+    },
+    {
+      "id": "mummify",
+      "name": "Mummify",
+      "target": "Player",
+      "positionType": "Ender",
+      "damage": 8,
+      "blockingCondition": {
+        "type": "OnHit"
+      },
+      "effectsOnNotBlocked": [
+        {
+          "type": "Penance",
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

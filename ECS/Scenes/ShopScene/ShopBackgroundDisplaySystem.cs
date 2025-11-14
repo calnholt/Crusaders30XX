@@ -1,9 +1,13 @@
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -18,6 +22,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly ContentManager _content;
 		private Texture2D _background;
 
+		private string _currentShopTitle = "Shop";
+
 		[DebugEditable(DisplayName = "Offset Y", Step = 2, Min = -2000, Max = 2000)]
 		public int OffsetY { get; set; } = 0;
 
@@ -27,6 +33,22 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
 			_content = content;
+
+			EventManager.Subscribe<SetShopTitle>(OnSetShopTitle);
+			EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
+
+			TryLoad();
+		}
+
+		private void OnSetShopTitle(SetShopTitle evt)
+		{
+			_currentShopTitle = string.IsNullOrWhiteSpace(evt?.Title) ? "Shop" : evt.Title;
+			TryLoad();
+		}
+
+		private void OnLoadScene(LoadSceneEvent evt)
+		{
+			if (evt == null || evt.Scene != SceneId.Shop) return;
 			TryLoad();
 		}
 
@@ -34,13 +56,93 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			try
 			{
-				_background = _content.Load<Texture2D>("shop_background");
+				// Resolve background from location POI definitions, falling back to generic shop background.
+				string path = ResolveBackgroundPath();
+
+				// Try POI-specific background first
+				_background = SafeLoadTexture(path);
+
+				// Fallback to generic shop background if needed
+				if (_background == null)
+				{
+					_background = SafeLoadTexture("shop_background");
+				}
 			}
 			catch (Exception ex)
 			{
 				Console.WriteLine($"[ShopBackgroundDisplaySystem] Failed to load background: {ex.Message}");
 				_background = null;
 			}
+		}
+
+		private Texture2D SafeLoadTexture(string assetName)
+		{
+			if (string.IsNullOrWhiteSpace(assetName)) return null;
+			try
+			{
+				return _content.Load<Texture2D>(assetName);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"[ShopBackgroundDisplaySystem] Failed to load texture '{assetName}': {ex.Message}");
+				return null;
+			}
+		}
+
+		private static string RemoveExtension(string p)
+		{
+			if (string.IsNullOrWhiteSpace(p)) return p;
+			try { return System.IO.Path.GetFileNameWithoutExtension(p); }
+			catch { return p; }
+		}
+
+		private string ResolveBackgroundPath()
+		{
+			PointOfInterestDefinition chosen = null;
+			PointOfInterestDefinition fallback = null;
+
+			try
+			{
+				Dictionary<string, LocationDefinition> all = LocationDefinitionCache.GetAll();
+				if (all == null) return null;
+
+				foreach (var kv in all)
+				{
+					var def = kv.Value;
+					if (def?.pointsOfInterest == null) continue;
+
+					foreach (var poi in def.pointsOfInterest)
+					{
+						if (poi == null) continue;
+						if (poi.type != PointOfInterestType.Shop) continue;
+						if (string.IsNullOrWhiteSpace(poi.background)) continue;
+
+						if (fallback == null)
+						{
+							fallback = poi;
+						}
+
+						if (!string.IsNullOrWhiteSpace(_currentShopTitle) &&
+							string.Equals(poi.name ?? string.Empty, _currentShopTitle, StringComparison.OrdinalIgnoreCase))
+						{
+							chosen = poi;
+							break;
+						}
+					}
+
+					if (chosen != null) break;
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"[ShopBackgroundDisplaySystem] Failed to resolve background path: {ex.Message}");
+				return null;
+			}
+
+			var target = chosen ?? fallback;
+			if (target == null || string.IsNullOrWhiteSpace(target.background)) return null;
+
+			return RemoveExtension(target.background);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -77,3 +179,4 @@ namespace Crusaders30XX.ECS.Systems
 }
 
 
+	

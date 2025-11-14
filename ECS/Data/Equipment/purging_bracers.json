@@ -12,7 +12,8 @@
       "destroyOnActivate": false,
       "target": "Enemy",
       "requiresUseOnActivate": true,
-      "text": "Gain 5 aggression.",
+      "text": "Gain 8 aggression.",
+      "effectCount": 8,
       "isFreeAction": true
     }
   ]

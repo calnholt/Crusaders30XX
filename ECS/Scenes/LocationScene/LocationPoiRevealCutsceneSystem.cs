@@ -134,11 +134,11 @@ namespace Crusaders30XX.ECS.Systems
 			StateSingleton.IsActive = false;
 		}
 
-		[DebugAction("Cutscene")]
-		public void debug_cutscene()
+		[DebugActionInt("Cutscene", Step = 1, Min = 1, Max = 999, Default = 2)]
+		public void debug_cutscene(int id)
 		{
 			StateSingleton.HasPendingLocationPoiReveal = true;
-			StateSingleton.PendingPoiId = "desert_1";
+			StateSingleton.PendingPoiId = $"desert_{id}";
 			TryBeginCutsceneFromTransitionState();
 		}
 	}

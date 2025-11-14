@@ -35,12 +35,11 @@
   ],
   "weaponId": "hammer",
   "temperanceId": "radiance",
-  "chestId": "",
-  "legsId": "lightning_grieves",
+  "chestId": "pierced_heart_plate",
+  "legsId": "",
   "armsId": "",
   "headId": "",
   "medalIds": [
-    "st_luke",
     "st_michael"
   ]
 }

@@ -32,8 +32,8 @@
       "message": "Exactly. That's Hell's joke—temptation lighting your path to damnation."
     },
     {
-      "actor": "Skeleton",
-      "message": "[shake][slow factor=0.1]CLINK... GOLD... MINE...[/slow][/shake]"
+      "actor": "Sand Corpse",
+      "message": "[shake][slow factor=0.1]GOLD... MINE...[/slow][/shake]"
     },
     {
       "actor": "Angel",

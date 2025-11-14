@@ -1,0 +1,21 @@
+{
+  "name": "Sand Corpse",
+  "id": "sand_corpse",
+  "hp": 70,
+  "attacks": [
+      {
+          "id": "sand_blast",
+          "name": "Sand Blast",
+          "target": "Player",
+          "positionType": "Linker",
+          "damage": 5
+      },
+      {
+          "id": "sand_storm",
+          "name": "Sand Storm",
+          "target": "Player",
+          "positionType": "Linker",
+          "damage": 3
+      }
+  ]
+}

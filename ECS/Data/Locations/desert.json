@@ -8,7 +8,7 @@
         800,
         800
       ],
-      "RevealRadius": 800,
+      "RevealRadius": 500,
       "UnrevealedRadius": 300,
       "Type": "Quest",
       "IsRevealed": true,
@@ -27,11 +27,11 @@
     {
       "Id": "desert_2",
       "WorldPosition": [
-        1300,
-        1300
+        1130,
+        1060
       ],
       "RevealRadius": 500,
-      "UnrevealedRadius": 300,
+      "UnrevealedRadius": 200,
       "Type": "Quest",
       "Name": "Greed",
       "Difficulty": 1,
@@ -40,7 +40,7 @@
       },
       "Events": [
         {
-          "id": "skeleton",
+          "id": "sand_corpse",
           "type": "Enemy"
         }
       ]
@@ -48,38 +48,18 @@
     {
       "Id": "desert_3",
       "WorldPosition": [
-        1500,
-        500
+        820,
+        1350
       ],
       "RevealRadius": 500,
-      "UnrevealedRadius": 400,
+      "UnrevealedRadius": 200,
       "Type": "Quest",
       "Name": "Ashenfell Ridge",
-      "Difficulty": 3,
+      "Difficulty": 1,
       "Reward": {
-        "Gold": 2
+        "Gold": 1
       },
-      "Tribulations": [
-        {
-          "text": "At the start of each battle, gain burn 1.",
-          "trigger": "StartOfBattle"
-        }
-      ],
       "Events": [
-        {
-          "id": "skeleton",
-          "type": "Enemy",
-          "modifications": [
-            {
-              "type": "HP",
-              "delta": 20
-            },
-            {
-              "type": "Armor",
-              "delta": 1
-            }
-          ]
-        },
         {
           "id": "skeleton",
           "type": "Enemy"
@@ -91,33 +71,19 @@
       "Id": "desert_4",
       "WorldPosition": [
         1550,
-        850
+        1275
       ],
       "RevealRadius": 500,
       "UnrevealedRadius": 200,
       "Type": "Quest",
       "Name": "Oasis",
-      "Difficulty": 2,
-      "Tribulations": [
-        {
-          "text": "At the start of each battle, gain poison (every 60 seconds, lose 1 HP).",
-          "trigger": "StartOfBattle"
-        }
-      ],
+      "Difficulty": 1,
       "Reward": {
         "Gold": 2
       },
       "Events": [
         {
-          "id": "skeleton",
-          "type": "Enemy"
-        },
-        {
           "id": "demon",
-          "type": "Enemy"
-        },
-        {
-          "id": "skeleton",
           "type": "Enemy"
         }
       ],
@@ -126,33 +92,41 @@
     {
       "Id": "desert_5",
       "WorldPosition": [
-        2000,
-        2000
+        1365,
+        695
       ],
       "RevealRadius": 500,
       "UnrevealedRadius": 50,
       "Type": "Quest",
       "Name": "Crumbling City",
-      "Difficulty": 3,
+      "Difficulty": 2,
       "Reward": {
         "Gold": 3
       },
       "Events": [
         {
-          "id": "skeleton",
-          "type": "Enemy"
-        },
-        {
           "id": "demon",
-          "type": "Enemy"
+          "type": "Enemy",
+          "modifications": [
+            {
+              "type": "HP",
+              "delta": 10
+            }
+          ]
         },
         {
           "id": "skeleton",
-          "type": "Enemy"
-        },
-        {
-          "id": "demon",
-          "type": "Enemy"
+          "type": "Enemy",
+          "modifications": [
+            {
+              "type": "HP",
+              "delta": 5
+            },
+            {
+              "type": "Armor",
+              "delta": 1
+            }
+          ]
         }
       ],
       "Background": "desert-background-crumbling-city.png"
@@ -160,38 +134,34 @@
     {
       "Id": "desert_6",
       "WorldPosition": [
-        2000,
-        2000
+        1775,
+        730
       ],
-      "RevealRadius": 500,
+      "RevealRadius": 400,
       "UnrevealedRadius": 50,
       "Type": "Quest",
-      "Difficulty": 3,
+      "Name": "Crumbling City",
+      "Difficulty": 2,
       "Reward": {
         "Gold": 3
       },
       "Events": [
         {
-          "id": "succubus",
+          "id": "mummy",
           "type": "Enemy"
         },
         {
-          "id": "demon",
-          "type": "Enemy"
-        },
-        {
-          "id": "spider",
-          "type": "Enemy"
-        },
-        {
-          "id": "ogre",
-          "type": "Enemy"
-        },
-        {
-          "id": "succubus",
-          "type": "Enemy"
+          "id": "skeleton",
+          "type": "Enemy",
+          "modifications": [
+            {
+              "type": "Armor",
+              "delta": 2
+            }
+          ]
         }
-      ]
+      ],
+      "Background": "desert-background-crumbling-city.png"
     },
     {
       "Id": "desert_7",
@@ -276,12 +246,19 @@
     {
       "Id": "shop_1",
       "WorldPosition": [
-        1100,
-        300
+        1230,
+        1280
       ],
       "Type": "Shop",
       "Name": "The Sand Trader",
+      "Background": "desert-sand-trader",
       "ForSale": [
+        {
+          "Id": "impale",
+          "Type": "Card",
+          "Price": 2,
+          "IsPurchased": false
+        },
         {
           "Id": "shroud_of_turin",
           "Type": "Card",
@@ -289,21 +266,51 @@
           "IsPurchased": false
         },
         {
-          "Id": "impale",
+          "Id": "vindicate",
           "Type": "Card",
-          "Price": 3,
+          "Price": 4,
           "IsPurchased": false
         },
         {
           "Id": "st_luke",
           "Type": "Medal",
+          "Price": 4,
+          "IsPurchased": false
+        },
+        {
+          "Id": "pierced_heart_plate",
+          "Type": "Equipment",
+          "Price": 5,
+          "IsPurchased": true
+        }
+      ]
+    },
+    {
+      "Id": "shop_2",
+      "WorldPosition": [
+        1480,
+        380
+      ],
+      "Type": "Shop",
+      "Name": "Mountain Merchant",
+      "Background": "desert-mountain-merchant",
+      "ForSale": [
+        {
+          "Id": "pouch_of_kunai",
+          "Type": "Card",
+          "Price": 3,
+          "IsPurchased": false
+        },
+        {
+          "Id": "fury",
+          "Type": "Card",
           "Price": 5,
           "IsPurchased": false
         },
         {
-          "Id": "lightning_grieves",
+          "Id": "purging_bracers",
           "Type": "Equipment",
-          "Price": 5,
+          "Price": 6,
           "IsPurchased": false
         }
       ]

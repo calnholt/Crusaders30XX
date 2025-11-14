@@ -68,7 +68,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Find top-most hovered Shop POI
 			var hovered = EntityManager.GetEntitiesWithComponent<UIElement>()
 				.Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), P = e.GetComponent<PointOfInterest>() })
-				.Where(x => x.UI != null && x.UI.IsHovered && x.P != null && x.P.Type == PointOfInterestType.Shop)
+				.Where(x => x.UI != null && !x.UI.IsHidden && x.UI.IsHovered && x.P != null && x.P.Type == PointOfInterestType.Shop)
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.FirstOrDefault();
 
@@ -118,7 +118,7 @@ namespace Crusaders30XX.ECS.Systems
 			bool placeRight = canPlaceRight || (!canPlaceLeft && preferRight);
 			if (!canPlaceRight && canPlaceLeft) placeRight = false;
 
-			int rx = placeRight ? (r.Right + Gap + 30) : (r.Left - Gap - width - 30);
+			int rx = placeRight ? (r.Right + Gap + 35) : (r.Left - Gap - width - 35);
 			int ry = r.Y + (r.Height - height) / 2;
 
 			// Screen clamp

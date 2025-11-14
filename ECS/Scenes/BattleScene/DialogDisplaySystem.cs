@@ -455,6 +455,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (key == "crusader") return _content.Load<Texture2D>("Crusader");
                 if (key == "gleeber") return _content.Load<Texture2D>("Gleeber");
                 if (key == "skeleton") return _content.Load<Texture2D>("Skeleton");
+                if (key == "sand_corpse") return _content.Load<Texture2D>("Sand_Corpse");
             }
             catch { }
             return null;

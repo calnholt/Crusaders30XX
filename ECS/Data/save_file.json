@@ -1,5 +1,5 @@
 {
-  "gold": 10,
+  "gold": 2,
   "locations": [
     {
       "id": "desert",
@@ -18,11 +18,11 @@
         },
         {
           "id": "desert_4",
-          "completed": false
+          "completed": true
         },
         {
           "id": "desert_5",
-          "completed": false
+          "completed": true
         },
         {
           "id": "desert_6",
@@ -60,9 +60,10 @@
     "tempest",
     "increase_faith",
     "ravage",
-    "weapon_sword",
-    "weapon_hammer",
-    "st_luke"
+    "sword",
+    "hammer",
+    "st_michael",
+    "pierced_heart_plate"
   ],
   "items": [
     {

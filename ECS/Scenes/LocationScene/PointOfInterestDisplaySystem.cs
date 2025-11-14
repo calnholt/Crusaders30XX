@@ -346,7 +346,18 @@ namespace Crusaders30XX.ECS.Systems
 			// Draw only POIs that are visible and intersect screen
 			foreach (var x in list)
 			{
-				if (!visibleIds.Contains(x.E.Id)) continue;
+				bool isVisible = visibleIds.Contains(x.E.Id);
+
+				// Sync UI visibility/interactability with fog-of-war visibility
+				// - Hidden POIs: not drawn, not hoverable, not clickable, no rumble
+				// - Visible POIs: drawn; interactable only if non-Hellrift
+				if (x.UI != null)
+				{
+					x.UI.IsHidden = !isVisible;
+					x.UI.IsInteractable = isVisible && x.P.Type != PointOfInterestType.Hellrift;
+				}
+
+				if (!isVisible) continue;
 				
 				// Get current hover scale
 				float scale = _hoverScales.TryGetValue(x.E.Id, out float s) ? s : 1f;

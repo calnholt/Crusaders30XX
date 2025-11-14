@@ -230,6 +230,18 @@
 /processorParam:TextureFormat=Color
 /build:Spider.png
 
+#begin Sand_Corpse.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Sand_Corpse.png
+
 #begin Skeleton.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -326,7 +338,7 @@
 /processorParam:TextureFormat=Color
 /build:cathedral-background.png
 
-#begin shop_background.png
+#begin desert-sand-trader.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -336,7 +348,19 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:shop_background.png
+/build:desert-sand-trader.png
+
+#begin desert-mountain-merchant.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:desert-mountain-merchant.png
 
 #begin guardian_angel.png
 /importer:TextureImporter

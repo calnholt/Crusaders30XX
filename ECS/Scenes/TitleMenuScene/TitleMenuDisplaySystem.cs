@@ -20,7 +20,7 @@ namespace Crusaders30XX.ECS.Systems
 		private MouseState _prevMouse;
 
 		[DebugEditable(DisplayName = "Title Text", Step = 1)]
-		public string TitleText { get; set; } = "Crusader30XX";
+		public string TitleText { get; set; } = "Crusader 30XX";
 
 		[DebugEditable(DisplayName = "Target Width %", Step = 0.05f, Min = 0.1f, Max = 1f)]
 		public float TargetWidthPercent { get; set; } = 0.6f;
