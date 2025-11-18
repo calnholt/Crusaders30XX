@@ -38,35 +38,23 @@ namespace Crusaders30XX.ECS.Systems
 			// TODO: iterate through applied passives and apply their effects
 			int passiveDelta = AppliedPassivesService.GetPassiveDelta(e);
 			int newDelta = e.Delta + passiveDelta;
-			int nv = hp.Current + newDelta;
 			if (e.DamageType == ModifyTypeEnum.Attack && newDelta > 0)
 			{
 				return;
 			}
 			var targetPassives = target.GetComponent<AppliedPassives>()?.Passives;
-			if (targetPassives != null && targetPassives.ContainsKey(AppliedPassiveType.Shield))
+			if (targetPassives != null && newDelta < 0)
 			{
-				EventManager.Publish(new RemovePassive { Owner = target, Type = AppliedPassiveType.Shield });
-				return;
-			}
-			// Consume aegis for incoming damage (after shield check)
-			if (e.Delta < 0 && targetPassives != null)
-			{
-				if (targetPassives.TryGetValue(AppliedPassiveType.Aegis, out var aegisAmount) && aegisAmount > 0)
+				if (TryConsumeAegis(target, targetPassives, ref newDelta))
 				{
-					int damageAmount = Math.Abs(e.Delta);
-					int useAegis = Math.Min(aegisAmount, damageAmount);
-					if (useAegis > 0)
-					{
-						EventManager.Publish(new UpdatePassive { Owner = target, Type = AppliedPassiveType.Aegis, Delta = -useAegis });
-						e.Delta += useAegis; // Reduce damage (e.Delta is negative, so adding positive reduces it)
-						// Recalculate newDelta after aegis consumption
-						passiveDelta = AppliedPassivesService.GetPassiveDelta(e);
-						newDelta = e.Delta + passiveDelta;
-						nv = hp.Current + newDelta;
-					}
+					e.Delta = newDelta - passiveDelta;
 				}
 			}
+			if (TryConsumeShield(target, targetPassives, newDelta))
+			{
+				return;
+			}
+			int nv = hp.Current + newDelta;
 			EventManager.Publish(new ModifyHpEvent { Source = e.Source, Target = target, Delta = newDelta, DamageType = e.DamageType });
 			hp.Current = Math.Max(0, Math.Min(hp.Max, nv));
 			// If this is the player and we crossed to zero, publish PlayerDied once
@@ -175,6 +163,26 @@ namespace Crusaders30XX.ECS.Systems
 		public void Debug_HealHp(int amount)
 		{
 			EventManager.Publish(new ModifyHpRequestEvent { Source = EntityManager.GetEntity("Player"), Target = EntityManager.GetEntity("Player"), Delta = Math.Abs(amount) });
+		}
+
+		private bool TryConsumeShield(Entity target, System.Collections.Generic.Dictionary<AppliedPassiveType, int> passives, int newDelta)
+		{
+			if (newDelta >= 0 || passives == null) return false;
+			if (!passives.TryGetValue(AppliedPassiveType.Shield, out var shieldStacks) || shieldStacks <= 0) return false;
+			EventManager.Publish(new RemovePassive { Owner = target, Type = AppliedPassiveType.Shield });
+			return true;
+		}
+
+		private bool TryConsumeAegis(Entity target, System.Collections.Generic.Dictionary<AppliedPassiveType, int> passives, ref int newDelta)
+		{
+			if (newDelta >= 0 || passives == null) return false;
+			if (!passives.TryGetValue(AppliedPassiveType.Aegis, out var aegisAmount) || aegisAmount <= 0) return false;
+			int damageAmount = Math.Abs(newDelta);
+			int useAegis = Math.Min(aegisAmount, damageAmount);
+			if (useAegis <= 0) return false;
+			EventManager.Publish(new UpdatePassive { Owner = target, Type = AppliedPassiveType.Aegis, Delta = -useAegis });
+			newDelta += useAegis;
+			return true;
 		}
 	}
 

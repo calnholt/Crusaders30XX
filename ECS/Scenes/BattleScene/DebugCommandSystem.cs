@@ -97,6 +97,41 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Aegis, Delta = amount });
         }
+		[DebugAction("Test Burn vs Aegis")]
+		public void Debug_TestBurnVsAegis()
+		{
+			var player = EntityManager.GetEntity("Player");
+			if (player == null) return;
+			var hp = player.GetComponent<HP>();
+			if (hp == null) return;
+			var passivesComponent = player.GetComponent<AppliedPassives>();
+			if (passivesComponent == null)
+			{
+				EntityManager.AddComponent(player, new AppliedPassives());
+				passivesComponent = player.GetComponent<AppliedPassives>();
+			}
+			var passives = passivesComponent.Passives ??= new System.Collections.Generic.Dictionary<AppliedPassiveType, int>();
+			int beforeHp = hp.Current;
+			int beforeAegis = passives.TryGetValue(AppliedPassiveType.Aegis, out var aegisStacks) ? aegisStacks : 0;
+			if (beforeAegis <= 0)
+			{
+				EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = 1 });
+				beforeAegis = 1;
+			}
+			EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = player, Delta = -1, DamageType = ModifyTypeEnum.Effect });
+			int afterHp = hp.Current;
+			int afterAegis = passives.TryGetValue(AppliedPassiveType.Aegis, out var updatedAegis) ? updatedAegis : 0;
+			Console.WriteLine($"[DebugCommandSystem] Burn vs Aegis => HP {beforeHp}->{afterHp}, Aegis {beforeAegis}->{afterAegis}");
+			if (afterHp != beforeHp)
+			{
+				Console.WriteLine("[DebugCommandSystem] Burn vs Aegis WARNING: HP changed; restoring prior value.");
+				EventManager.Publish(new SetHpEvent { Target = player, Value = beforeHp });
+			}
+			if (afterAegis != beforeAegis)
+			{
+				EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = beforeAegis - afterAegis });
+			}
+		}
         [DebugAction("Activate Temperance")]
         public void Debug_ActivateTemperance()
         {

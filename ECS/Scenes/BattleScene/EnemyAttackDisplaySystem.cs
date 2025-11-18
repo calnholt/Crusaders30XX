@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System;
 using Crusaders30XX.ECS.Utils;
 using Crusaders30XX.ECS.Singletons;
+using Microsoft.Xna.Framework.Content;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -22,9 +23,14 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
+		private readonly ContentManager _content;
 		private readonly SpriteFont _titleFont = FontSingleton.TitleFont;
 		private readonly SpriteFont _contentFont = FontSingleton.ContentFont;
 		private readonly Texture2D _pixel;
+		private readonly Texture2D _enemyAttackCornerBlTexture;
+		private readonly Texture2D _enemyAttackCornerBrTexture;
+		private readonly Texture2D _enemyAttackTopTexture;
+		private readonly Texture2D _enemyAttackSkullTexture;
 		private readonly System.Collections.Generic.Dictionary<string, Entity> _effectTooltipUiByKey = new();
 
 		// Animation state
@@ -71,7 +77,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int PanelPadding { get; set; } = 20;
 
 		[DebugEditable(DisplayName = "Border Thickness", Step = 1, Min = 1, Max = 8)]
-		public int BorderThickness { get; set; } = 2;
+		public int BorderThickness { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Background Alpha", Step = 5, Min = 0, Max = 255)]
 		public int BackgroundAlpha { get; set; } = 200;
@@ -80,13 +86,40 @@ namespace Crusaders30XX.ECS.Systems
 		public float TitleScale { get; set; } = 0.25f;
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.3f, Max = 2.5f)]
-		public float TextScale { get; set; } = 0.1375f;
+		public float TextScale { get; set; } = 0.138f;
 
 		[DebugEditable(DisplayName = "Panel Max Width % of Screen", Step = 0.05f, Min = 0.1f, Max = 1f)]
 		public float PanelMaxWidthPercent { get; set; } = 0.25f;
 
 		[DebugEditable(DisplayName = "Line Spacing Extra", Step = 1, Min = 0, Max = 20)]
 		public int LineSpacingExtra { get; set; } = 8;
+
+		[DebugEditable(DisplayName = "Corner Ornament Scale", Step = 0.01f, Min = 0.1f, Max = 4f)]
+		public float CornerOrnamentScale { get; set; } = 0.24f;
+
+		[DebugEditable(DisplayName = "Corner Left Offset X", Step = 1, Min = -400, Max = 400)]
+		public int CornerLeftOffsetX { get; set; } = -5;
+
+		[DebugEditable(DisplayName = "Corner Left Offset Y", Step = 1, Min = -400, Max = 400)]
+		public int CornerLeftOffsetY { get; set; } = 5;
+
+		[DebugEditable(DisplayName = "Corner Right Offset X", Step = 1, Min = -400, Max = 400)]
+		public int CornerRightOffsetX { get; set; } = 5;
+
+		[DebugEditable(DisplayName = "Corner Right Offset Y", Step = 1, Min = -400, Max = 400)]
+		public int CornerRightOffsetY { get; set; } = 5;
+
+		[DebugEditable(DisplayName = "Top Ornament Scale", Step = 0.01f, Min = 0.1f, Max = 4f)]
+		public float TopOrnamentScale { get; set; } = 0.37f;
+
+		[DebugEditable(DisplayName = "Top Ornament Offset Y", Step = 1, Min = -400, Max = 400)]
+		public int TopOrnamentOffsetY { get; set; } = 22;
+
+		[DebugEditable(DisplayName = "Skull Scale", Step = 0.01f, Min = 0.1f, Max = 4f)]
+		public float SkullScale { get; set; } = 0.15f;
+
+		[DebugEditable(DisplayName = "Skull Vertical Offset", Step = 2, Min = -400, Max = 200)]
+		public int SkullVerticalOffset { get; set; } = 30;
 
 		// Impact animation tuning
 
@@ -166,12 +199,17 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Debris Lifetime (s)", Step = 0.05f, Min = 0f, Max = 2f)]
 		public float DebrisLifetimeSeconds { get; set; } = 0.8f;
 
-		public EnemyAttackDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)
+		public EnemyAttackDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content) : base(em)
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
+			_content = content;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			_enemyAttackCornerBlTexture = TryLoadDecorationTexture("enemy_attack_bl");
+			_enemyAttackCornerBrTexture = TryLoadDecorationTexture("enemy_attack_br");
+			_enemyAttackTopTexture = TryLoadDecorationTexture("enemy_attack_top");
+			_enemyAttackSkullTexture = TryLoadDecorationTexture("enemy_attack_skull");
 			EventManager.Subscribe<DebugCommandEvent>(evt =>
 			{
 				if (evt.Command == "ConfirmEnemyAttack")
@@ -193,6 +231,13 @@ namespace Crusaders30XX.ECS.Systems
 					_debris.Clear();
 				}
 			});
+		}
+
+		private Texture2D TryLoadDecorationTexture(string assetName)
+		{
+			if (_content == null || string.IsNullOrWhiteSpace(assetName)) return null;
+			try { return _content.Load<Texture2D>(assetName); }
+			catch { return null; }
 		}
 
 		private void CreateConfirmButton()
@@ -576,7 +621,8 @@ namespace Crusaders30XX.ECS.Systems
 			int drawH = (int)Math.Round(h * panelScale * squashY);
 			var rect = new Rectangle((int)(approachPos.X - drawW / 2f + shake.X), (int)(approachPos.Y - drawH / 2f + shake.Y), drawW, drawH);
 			_spriteBatch.Draw(_pixel, rect, new Color(20, 20, 20, bgAlpha));
-			DrawRect(rect, Color.White, Math.Max(1, BorderThickness));
+			DrawRect(rect, Color.White, Math.Max(0, BorderThickness));
+			DrawAttackDecorations(rect, panelScale, squashX, squashY);
 
 			// Keep the anchor's UI bounds synced to the drawn banner rectangle for accurate positioning elsewhere
 			{
@@ -862,6 +908,49 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 			return string.Join(", ", parts);
+		}
+
+		private void DrawAttackDecorations(Rectangle rect, float panelScale, float panelSquashX, float panelSquashY)
+		{
+			if (rect.Width <= 0 || rect.Height <= 0) return;
+
+			float scaleXFactor = Math.Max(0f, panelScale * panelSquashX);
+			float scaleYFactor = Math.Max(0f, panelScale * panelSquashY);
+
+			float cornerScale = Math.Max(0.01f, CornerOrnamentScale);
+			if (_enemyAttackCornerBlTexture != null)
+			{
+				var originBl = new Vector2(0f, _enemyAttackCornerBlTexture.Height);
+				var posBl = new Vector2(rect.Left + CornerLeftOffsetX, rect.Bottom + CornerLeftOffsetY);
+				var scaleBl = new Vector2(cornerScale * scaleXFactor, cornerScale * scaleYFactor);
+				_spriteBatch.Draw(_enemyAttackCornerBlTexture, posBl, null, Color.White, 0f, originBl, scaleBl, SpriteEffects.None, 0f);
+			}
+
+			if (_enemyAttackCornerBrTexture != null)
+			{
+				var originBr = new Vector2(_enemyAttackCornerBrTexture.Width, _enemyAttackCornerBrTexture.Height);
+				var posBr = new Vector2(rect.Right + CornerRightOffsetX, rect.Bottom + CornerRightOffsetY);
+				var scaleBr = new Vector2(cornerScale * scaleXFactor, cornerScale * scaleYFactor);
+				_spriteBatch.Draw(_enemyAttackCornerBrTexture, posBr, null, Color.White, 0f, originBr, scaleBr, SpriteEffects.None, 0f);
+			}
+
+			float topScale = Math.Max(0.01f, TopOrnamentScale);
+			if (_enemyAttackTopTexture != null)
+			{
+				var originTop = new Vector2(_enemyAttackTopTexture.Width / 2f, _enemyAttackTopTexture.Height);
+				var posTop = new Vector2(rect.Left + rect.Width / 2f, rect.Top + TopOrnamentOffsetY);
+				var topScaleVec = new Vector2(topScale * scaleXFactor, topScale * scaleYFactor);
+				_spriteBatch.Draw(_enemyAttackTopTexture, posTop, null, Color.White, 0f, originTop, topScaleVec, SpriteEffects.None, 0f);
+			}
+
+			float skullScale = Math.Max(0.01f, SkullScale);
+			if (_enemyAttackSkullTexture != null)
+			{
+				var originSkull = new Vector2(_enemyAttackSkullTexture.Width / 2f, _enemyAttackSkullTexture.Height);
+				var skullPos = new Vector2(rect.Left + rect.Width / 2f, rect.Top + SkullVerticalOffset);
+				var skullScaleVec = new Vector2(skullScale * scaleXFactor, skullScale * scaleYFactor);
+				_spriteBatch.Draw(_enemyAttackSkullTexture, skullPos, null, Color.White, 0f, originSkull, skullScaleVec, SpriteEffects.None, 0f);
+			}
 		}
 
 		private void DrawRect(Rectangle rect, Color color, int thickness)
