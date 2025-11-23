@@ -1,0 +1,23 @@
+{
+    "id": "helm_of_seeing",
+    "name": "Helm of Seeing",
+    "slot": "Arms",
+    "block": 2,
+    "blockUses": 1,
+    "color": "Red",
+    "abilities": [
+      {
+        "id": "helm_of_seeing",
+        "type": "Activate",
+        "destroyOnActivate": false,
+        "target": "Player",
+        "requiresUseOnActivate": true,
+        "text": "Draw 1 card.",
+        "effectCount": 1,
+        "isFreeAction": true
+      }
+    ]
+  }
+  
+  
+  

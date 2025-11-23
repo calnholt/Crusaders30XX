@@ -10,7 +10,7 @@
     "seize|Red",
     "seize|Black",
     "stab|White",
-    "stab|Red",
+    "stalwart|Red",
     "strike|White",
     "strike|Red",
     "stun|Red",
@@ -34,7 +34,7 @@
     "narrow_gate|Black"
   ],
   "weaponId": "hammer",
-  "temperanceId": "radiance",
+  "temperanceId": "angelic_aura",
   "chestId": "pierced_heart_plate",
   "legsId": "",
   "armsId": "",

@@ -23,6 +23,11 @@ namespace Crusaders30XX.ECS.Systems
               EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Stun, Delta = 1 });
               break;
             }
+            case "angelic_aura":
+            {
+              EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = 5 });
+              break;
+            }
             default:
               Console.WriteLine($"[TemperanceAbilityService] No activation logic for id={abilityId}");
               break;

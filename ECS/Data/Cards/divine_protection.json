@@ -3,10 +3,10 @@
   "name": "Divine Protection",
   "target": "Player",
   "rarity": "Common",
-  "valuesParse": [2],
+  "valuesParse": [4],
   "text": "Gain {1} aegis.",
   "isFreeAction": true,
   "animation": "Buff",
-  "block": 3
+  "block": 2
 }
 

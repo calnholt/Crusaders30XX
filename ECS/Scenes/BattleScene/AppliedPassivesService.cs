@@ -9,6 +9,10 @@ namespace Crusaders30XX.ECS.Systems
     {
       public static int GetPassiveDelta(ModifyHpRequestEvent e)
       {
+        if (e.DamageType == ModifyTypeEnum.Heal)
+        {
+          return 0;
+        }
         var delta = 0;
         var sourcePassives = e.Source.GetComponent<AppliedPassives>().Passives;
         var targetPassives = e.Target.GetComponent<AppliedPassives>().Passives;

@@ -18,6 +18,29 @@ Prompts -
 Convert desert background to shader
 Generate shield shader and helper; create shield display system that keys off existence of having shield passive.
 
+medals - 
+
+whenever you block with a black card, gain X aggresion
+start the battle with 1 power
+whenever you block with a black card, shuffle a random non-black card into your deck (too strong)
+
+
+
+equipment - 
+
+remove X burn
+heal X
+change the color of a card in your hand to black/white/red
+gain x power this turn
+draw a card
+prevent the next mill effect
+mill x cards - put each red/white/black into your hand
+remove a shield from the enemy
+
+cards - 
+
+gain X power this turn
+deal X damage Y times, where Y is your courage. Lose all courage.
 
 Shield shader:
 // Shield shader reconstructed from screenshots

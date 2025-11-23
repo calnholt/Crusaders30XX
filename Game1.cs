@@ -356,7 +356,6 @@ public class Game1 : Game
         FrameProfiler.Measure("HotKeySystem.Draw", _hotKeySystem.Draw);
         FrameProfiler.Measure("HotKeyProgressRingSystem.Draw", _hotKeyProgressRingSystem.Draw);
         FrameProfiler.Measure("LocationNameDisplaySystem.Draw", _locationNameDisplaySystem.Draw);
-        FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipTextDisplaySystem.Draw);
         FrameProfiler.Measure("HintTooltipDisplaySystem.Draw", _hintTooltipDisplaySystem.Draw);
         FrameProfiler.Measure("CardTooltipDisplaySystem.Draw", _cardTooltipDisplaySystem.Draw);
@@ -366,6 +365,7 @@ public class Game1 : Game
         FrameProfiler.Measure("DialogDisplaySystem.Draw", _dialogDisplaySystem.Draw);
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
+        FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
         _spriteBatch.End();
     }
 

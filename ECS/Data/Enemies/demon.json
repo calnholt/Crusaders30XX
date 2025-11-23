@@ -1,7 +1,7 @@
 {
   "name": "Demon",
   "id": "demon",
-  "hp": 80,
+  "hp": 100,
   "attacks": [
     {
       "id": "razor_maw",
@@ -15,23 +15,7 @@
       "effectsOnNotBlocked": [
         {
           "type": "Burn",
-          "amount": 1
-        }
-      ]
-    },
-    {
-      "id": "punishing_swipe",
-      "name": "Punishing Swipe",
-      "target": "Player",
-      "positionType": "Linker",
-      "damage": 2,
-      "blockingCondition": {
-        "type": "OnHit"
-      },
-      "effectsOnNotBlocked": [
-        {
-          "type": "Damage",
-          "amount": 5
+          "amount": 3
         }
       ]
     },
@@ -40,24 +24,7 @@
       "name": "Scorching Claw",
       "target": "Player",
       "positionType": "Ender",
-      "damage": 4,
-      "blockingCondition": {
-        "type": "OnHit"
-      },
-      "effectsOnNotBlocked": [
-        {
-          "type": "Burn",
-          "amount": 3
-        }
-      ]
-    },
-    {
-      "id": "rending_claw",
-      "name": "Rending Claw",
-      "target": "Player",
-      "positionType": "Linker",
-      "ambushPercentage": 15,
-      "damage": 5,
+      "damage": 8,
       "blockingCondition": {
         "type": "OnHit"
       },
@@ -73,8 +40,7 @@
       "name": "Infernal Execution",
       "target": "Player",
       "positionType": "Ender",
-      "ambushPercentage": 10,
-      "damage": 10,
+      "damage": 9,
       "blockingCondition": {
         "type": "OnHit"
       },
@@ -82,20 +48,8 @@
         {
           "type": "Burn",
           "amount": 1
-        },
-        {
-          "type": "Penance",
-          "amount": 1
         }
       ]
-    },
-    {
-      "id": "gouging_jab",
-      "name": "Gouging Jab",
-      "target": "Player",
-      "positionType": "Starter",
-      "ambushPercentage": 75,
-      "damage": 3
     }
   ]
 }

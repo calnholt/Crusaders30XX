@@ -276,12 +276,20 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Draw AP cost text at bottom-center: 0AP if free action else 1AP
-            bool isFree = GetIsFreeAction(entity);
-            string apText = isFree ? "Free" : "1AP";
-            var apSize = _nameFont.MeasureString(apText) * (APTextScale * visualScale);
+            string bottomText;
+            if (hasDef && def.isBlockCard)
+            {
+                bottomText = "Block";
+            }
+            else
+            {
+                bool isFree = GetIsFreeAction(entity) || hasDef && def.isBlockCard;
+                bottomText = isFree ? "Free" : "1AP";
+            }
+            var apSize = _nameFont.MeasureString(bottomText) * (APTextScale * visualScale);
             float apLocalX = (_settings.CardWidth * visualScale - apSize.X) / 2f + APOffsetX * visualScale;
             float apLocalY = _settings.CardHeight * visualScale - (APBottomMarginY * visualScale) - apSize.Y;
-            DrawCardTextRotatedSingleScaled(cardCenter, rotation, new Vector2(apLocalX, apLocalY), apText, textColor, APTextScale * visualScale, visualScale);
+            DrawCardTextRotatedSingleScaled(cardCenter, rotation, new Vector2(apLocalX, apLocalY), bottomText, textColor, APTextScale * visualScale, visualScale);
         }
         
         private Color GetCardColor(CardData.CardColor color)

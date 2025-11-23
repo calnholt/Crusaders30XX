@@ -164,6 +164,28 @@
       "Background": "desert-background-crumbling-city.png"
     },
     {
+      "Id": "desert_10",
+      "WorldPosition": [
+        1216,
+        1600
+      ],
+      "RevealRadius": 400,
+      "UnrevealedRadius": 50,
+      "Type": "Quest",
+      "Name": "Ogre Chaga",
+      "Difficulty": 2,
+      "Reward": {
+        "Gold": 3
+      },
+      "Events": [
+        {
+          "id": "ogre",
+          "type": "Enemy"
+        }
+      ],
+      "Background": "desert-background-crumbling-city.png"
+    },
+    {
       "Id": "desert_7",
       "WorldPosition": [
         4775,

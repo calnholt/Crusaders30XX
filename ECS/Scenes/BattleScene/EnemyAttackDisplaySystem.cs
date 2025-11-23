@@ -71,10 +71,10 @@ namespace Crusaders30XX.ECS.Systems
 		public int OffsetX { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Center Offset Y", Step = 2, Min = -400, Max = 400)]
-		public int OffsetY { get; set; } = -192;
+		public int OffsetY { get; set; } = -170;
 
 		[DebugEditable(DisplayName = "Panel Padding", Step = 1, Min = 4, Max = 40)]
-		public int PanelPadding { get; set; } = 20;
+		public int PanelPadding { get; set; } = 17;
 
 		[DebugEditable(DisplayName = "Border Thickness", Step = 1, Min = 1, Max = 8)]
 		public int BorderThickness { get; set; } = 0;
@@ -82,17 +82,17 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Background Alpha", Step = 5, Min = 0, Max = 255)]
 		public int BackgroundAlpha { get; set; } = 200;
 
-		[DebugEditable(DisplayName = "Title Scale", Step = 0.05f, Min = 0.3f, Max = 2.5f)]
-		public float TitleScale { get; set; } = 0.25f;
+		[DebugEditable(DisplayName = "Title Scale", Step = 0.05f, Min = 0.05f, Max = 2.5f)]
+		public float TitleScale { get; set; } = 0.2f;
 
-		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.3f, Max = 2.5f)]
+		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.01f, Max = 2.5f)]
 		public float TextScale { get; set; } = 0.138f;
 
 		[DebugEditable(DisplayName = "Panel Max Width % of Screen", Step = 0.05f, Min = 0.1f, Max = 1f)]
 		public float PanelMaxWidthPercent { get; set; } = 0.25f;
 
 		[DebugEditable(DisplayName = "Line Spacing Extra", Step = 1, Min = 0, Max = 20)]
-		public int LineSpacingExtra { get; set; } = 8;
+		public int LineSpacingExtra { get; set; } = 3;
 
 		[DebugEditable(DisplayName = "Corner Ornament Scale", Step = 0.01f, Min = 0.1f, Max = 4f)]
 		public float CornerOrnamentScale { get; set; } = 0.24f;
@@ -176,11 +176,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Confirm button tuning
 		[DebugEditable(DisplayName = "Confirm Button Offset Y", Step = 2, Min = -600, Max = 600)]
-		public int ConfirmButtonOffsetY { get; set; } = 60;
+		public int ConfirmButtonOffsetY { get; set; } = 8;
 		[DebugEditable(DisplayName = "Confirm Button Width", Step = 2, Min = 20, Max = 600)]
-		public int ConfirmButtonWidth { get; set; } = 160;
+		public int ConfirmButtonWidth { get; set; } = 154;
 		[DebugEditable(DisplayName = "Confirm Button Height", Step = 2, Min = 16, Max = 200)]
-		public int ConfirmButtonHeight { get; set; } = 44;
+		public int ConfirmButtonHeight { get; set; } = 42;
 		[DebugEditable(DisplayName = "Confirm Button Text Scale", Step = 0.05f, Min = 0.3f, Max = 3f)]
 		public float ConfirmButtonTextScale { get; set; } = 0.175f;
 		[DebugEditable(DisplayName = "Confirm Button Z", Step = 10, Min = -100000, Max = 100000)]

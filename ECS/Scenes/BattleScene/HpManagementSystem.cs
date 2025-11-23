@@ -38,6 +38,11 @@ namespace Crusaders30XX.ECS.Systems
 			// TODO: iterate through applied passives and apply their effects
 			int passiveDelta = AppliedPassivesService.GetPassiveDelta(e);
 			int newDelta = e.Delta + passiveDelta;
+			if (e.DamageType == ModifyTypeEnum.Heal && newDelta < 0)
+			{
+				// Prevent heals from turning into damage after passive adjustments
+				newDelta = 0;
+			}
 			if (e.DamageType == ModifyTypeEnum.Attack && newDelta > 0)
 			{
 				return;

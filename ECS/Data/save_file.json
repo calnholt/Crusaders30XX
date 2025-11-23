@@ -1,5 +1,5 @@
 {
-  "gold": 2,
+  "gold": 5,
   "locations": [
     {
       "id": "desert",
@@ -39,12 +39,17 @@
         {
           "id": "desert_8",
           "completed": false
+        },
+        {
+          "id": "desert_10",
+          "completed": true
         }
       ]
     }
   ],
   "collection": [
     "radiance",
+    "angelic_aura",
     "anoint_the_sick",
     "courageous",
     "dowse_with_holy_water",
@@ -63,7 +68,8 @@
     "sword",
     "hammer",
     "st_michael",
-    "pierced_heart_plate"
+    "pierced_heart_plate",
+    "stalwart"
   ],
   "items": [
     {

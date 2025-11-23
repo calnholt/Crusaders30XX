@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Systems
         public static bool CanPay(EntityManager entityManager, string cardId)
         {
             CardDefinitionCache.TryGet(cardId, out CardDefinition def);
+            var phase = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
             switch (cardId)
             {
                 case "impale":
@@ -30,8 +31,12 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                     var deck = deckEntity?.GetComponent<Deck>();
-                    if (deck == null) return false;
-                    return deck.DrawPile.Count >= def.valuesParse[0];
+                    var show = deck == null || deck.DrawPile.Count < def.valuesParse[0];
+                    if (show)
+                    {
+                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {def.valuesParse[0]} cards in deck!" });
+                    }
+                    return show;
                 }
                 case "shroud_of_turin":
                 {
@@ -61,6 +66,22 @@ namespace Crusaders30XX.ECS.Systems
                         return false;
                     }
                     return true;
+                }
+                case "stalwart":
+                {
+                    if (phase.Sub == SubPhase.Block)
+                    {
+                        var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                        int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
+                        if (courage < def.valuesParse[0])
+                        {
+                            EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {def.valuesParse[0]} courage!" });
+                            return false;
+                        }
+                        return true;
+                    }
+                    EventManager.Publish(new CantPlayCardMessage { Message = $"Can only pay during block phase!" });
+                    return false;
                 }
                 case "sword":
                 {

@@ -25,7 +25,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<BlockAssignmentRemoved>(_ => TimerScheduler.Schedule(0.2f, () => OnBlockAssignmentRemoved(_)));
 			EventManager.Subscribe<ApplyPassiveEvent>(_ => RecomputeAll());
 			EventManager.Subscribe<RemovePassive>(_ => RecomputeAll());
-			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ => { if (_.Current == SubPhase.Block) RecomputeAll(); });
+			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ => { if (_.Current == SubPhase.Block || _.Current == SubPhase.EnemyAttack) RecomputeAll(); });
 
 		}
 

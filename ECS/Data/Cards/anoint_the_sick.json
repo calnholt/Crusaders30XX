@@ -3,7 +3,7 @@
   "name": "Anoint the Sick",
   "target": "Player",
   "rarity": "Common",
-  "valuesParse": [3],
+  "valuesParse": [5],
   "text": "Heal {1} HP.",
   "isFreeAction": true,
   "animation": "Buff",

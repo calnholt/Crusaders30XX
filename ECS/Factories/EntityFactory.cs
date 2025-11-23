@@ -51,7 +51,7 @@ namespace Crusaders30XX.ECS.Factories
                 TextureWidth = 0,
             };
             var equippedTemperanceAbility = new EquippedTemperanceAbility {
-                AbilityId = "radiance",
+                AbilityId = loadout.temperanceId,
                 Owner = entity
             };
             

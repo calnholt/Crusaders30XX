@@ -519,7 +519,58 @@
 /processorParam:TextureFormat=Color
 /build:frost.png
 
-#begin desert.png
+#begin enemy_attack_br.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:enemy_attack_br.png
+
+#begin enemy_attack_bl.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:enemy_attack_bl.png
+
+#begin enemy_attack_skull.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:enemy_attack_skull.png
+
+#begin Music/desert_theme_battle.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/desert_theme_battle.ogg
+#begin enemy_attack_top.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:enemy_attack_top.png
+
+#begin Music/customize.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/customize.ogg#begin desert.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=0,0,0,0
@@ -529,13 +580,3 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:TextureFormat=Color
 /build:desert.png
-
-#begin Music/desert_theme_battle.ogg
-/importer:OggImporter
-/processor:SongProcessor
-/build:Music/desert_theme_battle.ogg
-
-#begin Music/customize.ogg
-/importer:OggImporter
-/processor:SongProcessor
-/build:Music/customize.ogg
