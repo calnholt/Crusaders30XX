@@ -23,8 +23,10 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
 			// TODO: update to look at CardMoved event instead of BlockAssignmentRemoved / Added
 			EventManager.Subscribe<BlockAssignmentRemoved>(_ => TimerScheduler.Schedule(0.2f, () => OnBlockAssignmentRemoved(_)));
-			EventManager.Subscribe<ApplyPassiveEvent>(_ => RecomputeAll());
-			EventManager.Subscribe<RemovePassive>(_ => RecomputeAll());
+			// Only recompute previews when Aegis (damage prevention) changes
+			EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
+			EventManager.Subscribe<RemovePassive>(OnRemovePassive);
+			EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ => { if (_.Current == SubPhase.Block || _.Current == SubPhase.EnemyAttack) RecomputeAll(); });
 
 		}
@@ -92,6 +94,10 @@ namespace Crusaders30XX.ECS.Systems
 			var attackId = enemy.GetComponent<AttackIntent>().Planned.First(pa => pa.ContextId == e.ContextId).AttackId;
 			var p = FindOrCreateProgress(e.ContextId, enemy, attackId);
 			p.PlayedCards = SafeInc(p.PlayedCards);
+			if (e.DeltaBlock > 0)
+			{
+				p.AssignedBlockTotal = SafeInc(p.AssignedBlockTotal, e.DeltaBlock);
+			}
 			switch (color)
 			{
 				case "Red": p.PlayedRed = SafeInc(p.PlayedRed); break;
@@ -114,7 +120,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Maintain running totals
 			long nextAssigned = (long)progress.AssignedBlockTotal + e.DeltaBlock;
-			// progress.AssignedBlockTotal = nextAssigned < 0 ? 0 : (int)nextAssigned;
+			progress.AssignedBlockTotal = nextAssigned < 0 ? 0 : (int)nextAssigned;
 
 			// Adjust color play counters and played cards like previous system
 			if (!string.IsNullOrWhiteSpace(e.Color) && e.DeltaBlock < 0)
@@ -183,26 +189,33 @@ namespace Crusaders30XX.ECS.Systems
 		private void Recompute(EnemyAttackProgress p)
 		{
 			if (p == null || string.IsNullOrEmpty(p.AttackId)) return;
-			var attackIntent = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault().GetComponent<AttackIntent>();
-			if (attackIntent == null) return;
-			if (attackIntent.Planned == null || attackIntent.Planned.Count == 0) return;
-			var def = attackIntent.Planned[0].AttackDefinition;
+			// Resolve owning enemy and planned attack for this context
+			var enemy = p.Enemy ?? EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+			if (enemy == null) return;
+			var attackIntent = enemy.GetComponent<AttackIntent>();
+			if (attackIntent == null || attackIntent.Planned == null || attackIntent.Planned.Count == 0) return;
+
+			PlannedAttack planned = null;
+			if (!string.IsNullOrEmpty(p.ContextId))
+			{
+				planned = attackIntent.Planned.FirstOrDefault(pa => pa.ContextId == p.ContextId);
+			}
+			if (planned == null && !string.IsNullOrEmpty(p.AttackId))
+			{
+				planned = attackIntent.Planned.FirstOrDefault(pa => pa.AttackId == p.AttackId);
+			}
+			planned ??= attackIntent.Planned[0];
+			var def = planned.AttackDefinition;
+			if (def == null) return;
 
 			int full = DamagePredictionService.ComputeFullDamage(def);
 			int aegis = DamagePredictionService.GetAegisAmount(EntityManager);
 			p.AegisTotal = aegis;
+			p.DamageBeforePrevention = full;
 
 			bool specialEffectExecuted = EnemySpecialAttackService.ExecuteSpecialEffect(def, EntityManager);
 			if (specialEffectExecuted) return;
 
-			// Compute assigned block directly from AssignedBlockCard components for this context
-			var assignedBlockCards = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>().ToList();
-			Console.WriteLine($"[EnemyAttackProgressManagementSystem] assignedBlockCards={assignedBlockCards.Count}");
-			p.AssignedBlockTotal = 0;
-			foreach (var e in assignedBlockCards)
-			{
-				p.AssignedBlockTotal += e.GetComponent<AssignedBlockCard>().BlockAmount;
-			}
 			p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount);
@@ -218,6 +231,52 @@ namespace Crusaders30XX.ECS.Systems
 			p.ActualDamage = actual;
 			p.PreventedDamageFromBlockCondition = preventedDamageFromBlockCondition;
 			p.TotalPreventedDamage = aegis + preventedDamageFromBlockCondition + p.AssignedBlockTotal;
+
+			// Optional: sanity check for desync between snapshot and live AssignedBlockCard state (debug only)
+			try
+			{
+				var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+				if (phase != null && phase.Sub == SubPhase.Block && !string.IsNullOrEmpty(p.ContextId))
+				{
+					int liveAssigned = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>()
+						.Select(e => e.GetComponent<AssignedBlockCard>())
+						.Where(abc => abc != null && abc.ContextId == p.ContextId)
+						.Sum(abc => abc.BlockAmount);
+					if (liveAssigned != p.AssignedBlockTotal)
+					{
+						Console.WriteLine($"[EnemyAttackProgressManagementSystem] WARNING: AssignedBlockTotal desync for ctx={p.ContextId}: snapshot={p.AssignedBlockTotal}, live={liveAssigned}");
+					}
+				}
+			}
+			catch { }
+		}
+
+		private void RecomputeAllForAegis()
+		{
+			// Recompute previews for all contexts when Aegis stacks change
+			foreach (var e in EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
+			{
+				var p = e.GetComponent<EnemyAttackProgress>();
+				if (p != null) Recompute(p);
+			}
+		}
+
+		private void OnApplyPassive(ApplyPassiveEvent e)
+		{
+			if (e == null || e.Type != AppliedPassiveType.Aegis) return;
+			RecomputeAllForAegis();
+		}
+
+		private void OnRemovePassive(RemovePassive e)
+		{
+			if (e == null || e.Type != AppliedPassiveType.Aegis) return;
+			RecomputeAllForAegis();
+		}
+
+		private void OnUpdatePassive(UpdatePassive e)
+		{
+			if (e == null || e.Type != AppliedPassiveType.Aegis) return;
+			RecomputeAllForAegis();
 		}
 
 		private static string NormalizeColorKey(string color)

@@ -51,7 +51,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					if (!string.IsNullOrEmpty(id))
 					{
-						if (def.isWeapon) { break; }
+						if (def.isWeapon || def.isToken) { break; }
 					}
 				}
 				catch { }

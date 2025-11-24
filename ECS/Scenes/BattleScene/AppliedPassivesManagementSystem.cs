@@ -115,6 +115,7 @@ namespace Crusaders30XX.ECS.Systems
             }
             if ((ap.Passives.TryGetValue(AppliedPassiveType.Burn, out int burnStacks) || hasInferno) && (burnStacks > 0 || infernoStacks > 0))
             {
+                Console.WriteLine($"[AppliedPassivesManagementSystem] ApplyStartOfTurnPassives.Burn - {burnStacks} + {infernoStacks}");
                 EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Burn", () =>
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = owner, Target = owner, Delta = -(burnStacks + infernoStacks), DamageType = ModifyTypeEnum.Effect });

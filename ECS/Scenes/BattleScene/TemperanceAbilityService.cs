@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -26,6 +27,16 @@ namespace Crusaders30XX.ECS.Systems
             case "angelic_aura":
             {
               EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = 5 });
+              break;
+            }
+            case "fling_fling":
+            {
+              for (int i = 0; i < 2; i++)
+              {
+                var kunai = EntityFactory.CreateCardFromDefinition(entityManager, $"kunai", CardData.CardColor.White, false, i + 1);
+                var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                EventManager.Publish(new CardMoveRequested { Card = kunai, Deck = deckEntity, Destination = CardZoneType.Hand, Reason = "FlingFling" });
+              }
               break;
             }
             default:

@@ -53,8 +53,8 @@ namespace Crusaders30XX.ECS.Systems
                     // brief delay so cards in hand are updated
                     // TODO: cards can still be played because animation prolongs
                     StateSingleton.IsActive = true;
-                    EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
-                    TimerScheduler.Schedule(1f, () => {
+                    TimerScheduler.Schedule(0.5f, () => {
+                        EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
                         StateSingleton.IsActive = false;
                     });
                     break;

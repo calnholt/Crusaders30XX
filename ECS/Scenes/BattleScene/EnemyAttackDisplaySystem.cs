@@ -501,10 +501,6 @@ namespace Crusaders30XX.ECS.Systems
 			var def = LoadAttackDefinition(pa.AttackId);
 			if (def == null) return;
 
-			int extraNotBlockedDamage = (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
-				.Where(e => e.type == "Damage")
-				.Sum(e => e.amount);
-
 			// Summarize effects that also happen when NOT blocked (in addition to on-hit)
 			string notBlockedSummary = SummarizeEffects(def.effectsOnNotBlocked, pa.ContextId);
 			var notBlockedTokens = BuildEffectTokens(def.effectsOnNotBlocked, pa.ContextId);
@@ -513,13 +509,37 @@ namespace Crusaders30XX.ECS.Systems
 			var lines = new System.Collections.Generic.List<(string text, float scale, Color color)>();
 			lines.Add((def.name, TitleScale, Color.White));
 			var progress = FindEnemyAttackProgress(pa.ContextId);
-			bool isConditionMet = progress.IsConditionMet;
-			int actual = progress.ActualDamage;
-			int prevented = progress.AegisTotal;
-			int baseDamage = progress.BaseDamage;
-			int additionalConditionalDamage = progress.AdditionalConditionalDamageTotal;
-			int damageDisplay = Math.Max(0, baseDamage - prevented - progress.AssignedBlockTotal);
-			lines.Add(($"Damage: {damageDisplay}{(!isConditionMet && additionalConditionalDamage > 0 ? $" + {additionalConditionalDamage}" : "")} (preventing {Math.Min(baseDamage, progress.TotalPreventedDamage)})", TextScale, Color.White));
+			if (progress != null)
+			{
+				bool isConditionMet = progress.IsConditionMet;
+				int actual = progress.ActualDamage;
+				int baseDamage = progress.BaseDamage;
+				int extraConditionalDamage = progress.AdditionalConditionalDamageTotal;
+				int blockPrevented = progress.AssignedBlockTotal;
+				// Compute how much Aegis will actually be consumed by this attack
+				int fullDamage = progress.DamageBeforePrevention;
+				int totalPreventedFromAllSources = Math.Max(0, fullDamage - actual);
+				int preventedByBlockAndCondition = Math.Max(0, blockPrevented + progress.PreventedDamageFromBlockCondition);
+				int aegisUsed = Math.Min(progress.AegisTotal, Math.Max(0, totalPreventedFromAllSources - preventedByBlockAndCondition));
+				int aegisPrevented = aegisUsed;
+				int conditionPrevented = progress.PreventedDamageFromBlockCondition;
+				int totalPrevented = progress.TotalPreventedDamage;
+				// Clamp totals for display
+				if (totalPrevented < 0) totalPrevented = 0;
+				int cappedPrevented = Math.Min(baseDamage + extraConditionalDamage, blockPrevented + aegisUsed + conditionPrevented);
+				string breakdown = $"({blockPrevented} block{(aegisPrevented > 0 ? $" + {aegisPrevented} aegis" : string.Empty)}"
+					+ (conditionPrevented > 0 ? $", condition {conditionPrevented}" : string.Empty)
+					+ ")";
+				string conditionalSuffix = (!isConditionMet && extraConditionalDamage > 0)
+					? $" + {extraConditionalDamage}"
+					: string.Empty;
+				lines.Add(($"Damage: {actual}{conditionalSuffix} {(blockPrevented > 0 || aegisPrevented > 0 ? breakdown : string.Empty)}", TextScale, Color.White));
+			}
+			else
+			{
+				// Fallback: simple base damage line if progress not ready yet
+				lines.Add(($"Damage: {def.damage}", TextScale, Color.White));
+			}
 			if (!string.IsNullOrEmpty(notBlockedSummary))
 			{
 				lines.Add(($"On hit: {notBlockedSummary}", TextScale, Color.OrangeRed));
@@ -539,18 +559,21 @@ namespace Crusaders30XX.ECS.Systems
 			float percent = Math.Clamp(PanelMaxWidthPercent, 0.1f, 1f);
 			int maxPanelWidthPx = (int)Math.Round(vx * percent);
 			int contentWidthLimitPx = Math.Max(50, maxPanelWidthPx - pad * 2);
-			var wrappedLines = new System.Collections.Generic.List<(string text, float scale, Color color)>();
-			foreach (var (text, lineScale, color) in lines)
+			// wrappedLines: centerTitle == true for attack name lines, false otherwise
+			var wrappedLines = new System.Collections.Generic.List<(string text, float scale, Color color, bool centerTitle)>();
+			for (int i = 0; i < lines.Count; i++)
 			{
+				var (text, lineScale, color) = lines[i];
+				bool centerTitle = (i == 0); // Center the attack name; other lines stay left-aligned
 				var parts = TextUtils.WrapText(_contentFont, text, lineScale, contentWidthLimitPx);
 				foreach (var p in parts)
 				{
-					wrappedLines.Add((p, lineScale, color));
+					wrappedLines.Add((p, lineScale, color, centerTitle));
 				}
 			}
 			float maxW = 0f;
 			float totalH = 0f;
-			foreach (var (text, lineScale, _) in wrappedLines)
+			foreach (var (text, lineScale, _, _) in wrappedLines)
 			{
 				var sz = _contentFont.MeasureString(text);
 				maxW = Math.Max(maxW, sz.X * lineScale);
@@ -566,7 +589,10 @@ namespace Crusaders30XX.ECS.Systems
 				anchorEntity = EntityManager.CreateEntity("EnemyAttackBannerAnchor");
 				EntityManager.AddComponent(anchorEntity, new Crusaders30XX.ECS.Components.EnemyAttackBannerAnchor());
 				EntityManager.AddComponent(anchorEntity, new Transform());
-				EntityManager.AddComponent(anchorEntity, ParallaxLayer.GetUIParallaxLayer());
+				var parallaxLayer = ParallaxLayer.GetUIParallaxLayer();
+				parallaxLayer.MultiplierX = 0.045f;
+				parallaxLayer.MultiplierY = 0.045f;
+				EntityManager.AddComponent(anchorEntity, parallaxLayer);
 				// Provide UI bounds for other systems to align against the live banner rect
 				EntityManager.AddComponent(anchorEntity, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = false });
 			}
@@ -763,11 +789,15 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 			}
-			foreach (var (text, baseScale, color) in wrappedLines)
+			foreach (var (text, baseScale, color, centerTitle) in wrappedLines)
 			{
 				float s = baseScale * panelScale * contentScale;
-				_spriteBatch.DrawString(_contentFont, text, new Vector2(rect.X + pad * panelScale * contentScale, y), color, 0f, Vector2.Zero, s, SpriteEffects.None, 0f);
 				var sz = _contentFont.MeasureString(text);
+				float textWidth = sz.X * s;
+				float x = centerTitle
+					? rect.X + (rect.Width - textWidth) / 2f
+					: rect.X + pad * panelScale * contentScale;
+				_spriteBatch.DrawString(_contentFont, text, new Vector2(x, y), color, 0f, Vector2.Zero, s, SpriteEffects.None, 0f);
 				y += sz.Y * s + LineSpacingExtra * panelScale * contentScale;
 			}
 

@@ -9,5 +9,6 @@
   "animation": "Attack",
   "exhaustsOnPlay": true,
   "exhaustsOnEndTurn": true,
-  "canAddToLoadout": false
+  "canAddToLoadout": false,
+  "isToken": true
 }

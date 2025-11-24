@@ -36,7 +36,7 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {def.valuesParse[0]} cards in deck!" });
                     }
-                    return show;
+                    return !show;
                 }
                 case "shroud_of_turin":
                 {

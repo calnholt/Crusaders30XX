@@ -1,0 +1,9 @@
+{
+    "id": "fling_fling",
+    "name": "Fling Fling",
+    "target": "Player",
+    "text": "Add 2 Kunai cards to your hand.",
+    "threshold": 3
+  }
+  
+  
