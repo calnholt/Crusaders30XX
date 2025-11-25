@@ -355,50 +355,77 @@ namespace Crusaders30XX.ECS.Systems
             float startAngleRad = MathHelper.ToRadians(startAngleDeg);
             float endAngleRad = startAngleRad + (progress * MathHelper.TwoPi);
 
-            // Draw arc using filled segments
-            int segments = System.Math.Max(32, (int)System.Math.Round(progress * 64));
+            // Draw arc using many small segments along the mid-radius to create a solid ring
+            // Increase segment density based on radius and progress for a smoother result
+            int baseSegments = (int)System.Math.Round(progress * radius * 4f);
+            int segments = System.Math.Max(64, baseSegments);
             float angleStep = (endAngleRad - startAngleRad) / segments;
 
-            float outerRadius = radius;
-            float innerRadius = System.Math.Max(1f, radius - thickness);
+            // Use a mid radius so the thickness extends both inward and outward
+            float midRadius = radius - (thickness * 0.5f);
 
             for (int i = 0; i < segments; i++)
             {
                 float angle1 = startAngleRad + angleStep * i;
-                float angle2 = startAngleRad + angleStep * (i + 1);
-
-                // Outer arc points
-                Vector2 outer1 = center + new Vector2(
-                    System.MathF.Cos(angle1) * outerRadius,
-                    System.MathF.Sin(angle1) * outerRadius
-                );
-                Vector2 outer2 = center + new Vector2(
-                    System.MathF.Cos(angle2) * outerRadius,
-                    System.MathF.Sin(angle2) * outerRadius
-                );
-
-                // Inner arc points
-                Vector2 inner1 = center + new Vector2(
-                    System.MathF.Cos(angle1) * innerRadius,
-                    System.MathF.Sin(angle1) * innerRadius
-                );
-                Vector2 inner2 = center + new Vector2(
-                    System.MathF.Cos(angle2) * innerRadius,
-                    System.MathF.Sin(angle2) * innerRadius
-                );
-
-                // Draw segment as filled quad - draw outer arc, inner arc, and connecting lines
-                // Use thicker lines to ensure no gaps
-                int segThickness = System.Math.Max(2, thickness / 2);
-                DrawLine(outer1, outer2, color, segThickness);
-                DrawLine(inner1, inner2, color, segThickness);
-                
-                // Fill the segment by drawing connecting lines
-                if (thickness > 1)
+                // Slightly overlap segments to avoid tiny gaps
+                float angle2 = startAngleRad + angleStep * (i + 1.05f);
+                if (angle2 > endAngleRad)
                 {
-                    DrawLine(outer1, inner1, color, 1);
-                    DrawLine(outer2, inner2, color, 1);
+                    angle2 = endAngleRad;
                 }
+
+                Vector2 mid1 = center + new Vector2(
+                    System.MathF.Cos(angle1) * midRadius,
+                    System.MathF.Sin(angle1) * midRadius
+                );
+                Vector2 mid2 = center + new Vector2(
+                    System.MathF.Cos(angle2) * midRadius,
+                    System.MathF.Sin(angle2) * midRadius
+                );
+
+                // Draw a single thick, anti-aliased stroke for this segment
+                DrawLineAA(mid1, mid2, color, thickness);
+            }
+        }
+
+        /// <summary>
+        /// Draws an anti-aliased line by layering several slightly offset strokes
+        /// with decreasing alpha to create a soft edge.
+        /// </summary>
+        private void DrawLineAA(Vector2 a, Vector2 b, Color color, int thickness)
+        {
+            // For very thin lines, fall back to the basic draw
+            if (thickness <= 1)
+            {
+                DrawLine(a, b, color, thickness);
+                return;
+            }
+
+            const int featherSteps = 2; // total strokes = 2 * featherSteps + 1
+
+            // Precompute direction/normal for offsets
+            float dx = b.X - a.X;
+            float dy = b.Y - a.Y;
+            float len = System.MathF.Sqrt(dx * dx + dy * dy);
+            if (len <= 0.0001f)
+            {
+                return;
+            }
+
+            Vector2 normal = new Vector2(-dy / len, dx / len);
+
+            for (int i = -featherSteps; i <= featherSteps; i++)
+            {
+                float offset = i * 0.5f;
+                float weight = 1f - (System.Math.Abs(i) / (float)(featherSteps + 1));
+                byte alpha = (byte)(color.A * weight);
+                Color c = new Color(color.R, color.G, color.B, alpha);
+
+                Vector2 offsetVec = normal * offset;
+                Vector2 aaStart = a + offsetVec;
+                Vector2 aaEnd = b + offsetVec;
+
+                DrawLine(aaStart, aaEnd, c, thickness);
             }
         }
 

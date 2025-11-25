@@ -160,7 +160,8 @@ namespace Crusaders30XX.ECS.Systems
 				PlayedBlack = 0,
 				IsConditionMet = false,
 				ActualDamage = 0,
-				AegisTotal = 0
+				// Seed Aegis snapshot from current passives when the progress row is created
+				AegisTotal = DamagePredictionService.GetAegisAmount(EntityManager)
 			};
 			EntityManager.AddComponent(entity, comp);
 			return comp;
@@ -209,7 +210,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (def == null) return;
 
 			int full = DamagePredictionService.ComputeFullDamage(def);
-			int aegis = DamagePredictionService.GetAegisAmount(EntityManager);
+			// Use the snapshot value maintained from passive events rather than re-reading passives here
+			int aegis = Math.Max(0, p.AegisTotal);
 			p.AegisTotal = aegis;
 			p.DamageBeforePrevention = full;
 
@@ -251,32 +253,45 @@ namespace Crusaders30XX.ECS.Systems
 			catch { }
 		}
 
-		private void RecomputeAllForAegis()
-		{
-			// Recompute previews for all contexts when Aegis stacks change
-			foreach (var e in EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
-			{
-				var p = e.GetComponent<EnemyAttackProgress>();
-				if (p != null) Recompute(p);
-			}
-		}
-
 		private void OnApplyPassive(ApplyPassiveEvent e)
 		{
 			if (e == null || e.Type != AppliedPassiveType.Aegis) return;
-			RecomputeAllForAegis();
+			if (e.Target == null || !e.Target.HasComponent<Player>()) return;
+			// Increment snapshot Aegis for all contexts and recompute from the snapshot,
+			// so we are not sensitive to the ordering of passive update systems.
+			foreach (var ent in EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
+			{
+				var p = ent.GetComponent<EnemyAttackProgress>();
+				if (p == null) continue;
+				p.AegisTotal = SafeInc(p.AegisTotal, e.Delta);
+				Recompute(p);
+			}
 		}
 
 		private void OnRemovePassive(RemovePassive e)
 		{
 			if (e == null || e.Type != AppliedPassiveType.Aegis) return;
-			RecomputeAllForAegis();
+			if (e.Owner == null || !e.Owner.HasComponent<Player>()) return;
+			foreach (var ent in EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
+			{
+				var p = ent.GetComponent<EnemyAttackProgress>();
+				if (p == null) continue;
+				p.AegisTotal = 0;
+				Recompute(p);
+			}
 		}
 
 		private void OnUpdatePassive(UpdatePassive e)
 		{
 			if (e == null || e.Type != AppliedPassiveType.Aegis) return;
-			RecomputeAllForAegis();
+			if (e.Owner == null || !e.Owner.HasComponent<Player>()) return;
+			foreach (var ent in EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>())
+			{
+				var p = ent.GetComponent<EnemyAttackProgress>();
+				if (p == null) continue;
+				p.AegisTotal = SafeInc(p.AegisTotal, e.Delta);
+				Recompute(p);
+			}
 		}
 
 		private static string NormalizeColorKey(string color)

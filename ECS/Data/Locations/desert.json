@@ -186,6 +186,40 @@
       "Background": "desert-background-crumbling-city.png"
     },
     {
+      "Id": "desert_11",
+      "WorldPosition": [
+        1920,
+        1400
+      ],
+      "RevealRadius": 400,
+      "UnrevealedRadius": 50,
+      "Type": "Quest",
+      "Name": "Death March",
+      "Difficulty": 3,
+      "Reward": {
+        "Gold": 3
+      },
+      "Events": [
+        {
+          "id": "mummy",
+          "type": "Enemy"
+        },
+        {
+          "id": "skeleton",
+          "type": "Enemy"
+        },
+        {
+          "id": "skeleton",
+          "type": "Enemy"
+        },
+        {
+          "id": "demon",
+          "type": "Enemy"
+        }
+      ],
+      "Background": "desert-background-crumbling-city.png"
+    },
+    {
       "Id": "desert_7",
       "WorldPosition": [
         4775,
