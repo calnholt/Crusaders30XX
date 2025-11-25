@@ -114,6 +114,7 @@ namespace Crusaders30XX.ECS.Systems
                 var transform = card.GetComponent<Transform>();
                 if (transform != null)
                 {
+                    transform.BasePosition = Vector2.Zero;
                     transform.Position = Vector2.Zero;
                     transform.Rotation = 0f;
                 }

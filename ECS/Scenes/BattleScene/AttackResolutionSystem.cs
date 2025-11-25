@@ -37,27 +37,47 @@ namespace Crusaders30XX.ECS.Systems
 			var pa = intent.Planned.FirstOrDefault(x => x.ContextId == e.ContextId);
 			if (pa == null) return;
 
-			var attackIntent = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault().GetComponent<AttackIntent>();
-			if (attackIntent == null) return;
-			var def = attackIntent.Planned[0].AttackDefinition;
+			var def = pa.AttackDefinition;
+			if (def == null) return;
 
-			bool blocked = ConditionService.Evaluate(def.blockingCondition, EntityManager);
+			var progress = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>()
+				.FirstOrDefault(ent => ent.GetComponent<EnemyAttackProgress>()?.ContextId == pa.ContextId)
+				?.GetComponent<EnemyAttackProgress>();
+
+			bool blocked = ConditionService.Evaluate(def.blockingCondition, EntityManager, progress);
+
+			// If a special effect like GlassCannon has already fully prevented this attack
+			// (preview shows 0 damage with the condition met), treat it as blocked and
+			// avoid publishing any base damage.
+			bool fullyPreventedBySpecial = false;
+			if (progress != null && def.specialEffects != null && def.specialEffects.Length > 0)
+			{
+				bool hasGlassCannon = def.specialEffects.Any(se =>
+					string.Equals(se.type, "GlassCannon", StringComparison.OrdinalIgnoreCase));
+				if (hasGlassCannon && progress.IsConditionMet && progress.ActualDamage <= 0)
+				{
+					fullyPreventedBySpecial = true;
+					blocked = true;
+				}
+			}
+
 			pa.WasBlocked = blocked;
 
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var source = enemy;
-			Console.WriteLine($"[AttackResolutionSystem] ResolveAttack {pa.AttackId} {def.damage} isBlocked: {blocked}");
-			if (def.damage > 0)
+			Console.WriteLine($"[AttackResolutionSystem] ResolveAttack {pa.AttackId} {def.damage} isBlocked: {blocked}, fullyPreventedBySpecial: {fullyPreventedBySpecial}");
+
+			if (def.damage > 0 && !fullyPreventedBySpecial)
 			{
-					EventManager.Publish(new ApplyEffect
-					{
-						EffectType = "Damage",
-						Amount = def.damage,
-						Source = enemy,
-						Target = player,
-						attackId = !blocked ? pa.AttackId : null,
-						Percentage = 100
-					});
+				EventManager.Publish(new ApplyEffect
+				{
+					EffectType = "Damage",
+					Amount = def.damage,
+					Source = enemy,
+					Target = player,
+					attackId = !blocked ? pa.AttackId : null,
+					Percentage = 100
+				});
 			}
 
 			// Defer not-blocked effects (and final resolution signal) until the attack impact occurs

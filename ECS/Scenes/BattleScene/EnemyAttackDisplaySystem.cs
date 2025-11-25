@@ -544,7 +544,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				lines.Add(($"On hit: {notBlockedSummary}", TextScale, Color.OrangeRed));
 			}
-			AppendLeafConditionsWithStatus(def.blockingCondition, lines);
+			AppendLeafConditionsWithStatus(def.blockingCondition, lines, pa.ContextId);
 			if (!string.IsNullOrEmpty(def.text))
 			{
 				var color = def.isTextConditionFulfilled ? Color.White : Color.DarkRed;
@@ -866,10 +866,10 @@ namespace Crusaders30XX.ECS.Systems
 			return null;
 		}
 
-		private void AppendLeafConditionsWithStatus(Condition node, List<(string text, float scale, Color color)> lines)
+		private void AppendLeafConditionsWithStatus(Condition node, List<(string text, float scale, Color color)> lines, string contextId)
 		{
 			if (node == null) return;
-			bool satisfied = ConditionService.Evaluate(node, EntityManager);
+			bool satisfied = ConditionService.Evaluate(node, EntityManager, FindEnemyAttackProgress(contextId));
 			Color statusColor = satisfied ? Color.LimeGreen : Color.IndianRed;
 			switch (node.type)
 			{

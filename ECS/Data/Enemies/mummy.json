@@ -1,7 +1,7 @@
 {
   "name": "Mummy",
   "id": "mummy",
-  "hp": 60,
+  "hp": 70,
   "attacks": [
     {
       "id": "entomb",

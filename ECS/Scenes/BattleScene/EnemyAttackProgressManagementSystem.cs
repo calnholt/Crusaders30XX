@@ -215,14 +215,14 @@ namespace Crusaders30XX.ECS.Systems
 			p.AegisTotal = aegis;
 			p.DamageBeforePrevention = full;
 
-			bool specialEffectExecuted = EnemySpecialAttackService.ExecuteSpecialEffect(def, EntityManager);
-			if (specialEffectExecuted) return;
+		bool specialEffectExecuted = EnemySpecialAttackService.ExecuteSpecialEffect(def, EntityManager);
+		if (specialEffectExecuted) return;
 
-			p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
-				.Where(e => e.type == "Damage")
-				.Sum(e => e.amount);
-			bool isConditionMet = ConditionService.Evaluate(def.blockingCondition, EntityManager);
-			p.BaseDamage = def.damage;
+		p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
+			.Where(e => e.type == "Damage")
+			.Sum(e => e.amount);
+		p.BaseDamage = def.damage;
+		bool isConditionMet = ConditionService.Evaluate(def.blockingCondition, EntityManager, p);
 			int preventedDamageFromBlockCondition = isConditionMet ? (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
 				.Where(e => e.type == "Damage")
 				.Sum(e => e.amount) : 0;
