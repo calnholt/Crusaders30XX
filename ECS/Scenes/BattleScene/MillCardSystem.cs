@@ -84,6 +84,23 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnDeleteCaches(DeleteCachesEvent evt)
 		{
+			// Return any milling cards to discard pile so they get shuffled back
+			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+			var deck = deckEntity?.GetComponent<Deck>();
+			if (deck != null)
+			{
+				foreach (var anim in _anims)
+				{
+					if (anim.Card != null && !deck.DiscardPile.Contains(anim.Card))
+						deck.DiscardPile.Add(anim.Card);
+				}
+				while (_queuedCards.Count > 0)
+				{
+					var card = _queuedCards.Dequeue();
+					if (card != null && !deck.DiscardPile.Contains(card))
+						deck.DiscardPile.Add(card);
+				}
+			}
 			_anims.Clear();
 			_queuedCards.Clear();
 			StateSingleton.PreventClicking = false;

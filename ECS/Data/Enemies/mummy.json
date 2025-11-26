@@ -8,7 +8,7 @@
       "name": "Entomb",
       "target": "Player",
       "positionType": "Ender",
-      "damage": 12,
+      "damage": 16,
       "specialEffects": [
         {
           "type": "GlassCannon",

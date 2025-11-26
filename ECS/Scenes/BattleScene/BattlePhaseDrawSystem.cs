@@ -57,10 +57,6 @@ namespace Crusaders30XX.ECS.Systems
 					nonWeaponHandCount++;
 				}
 			}
-			if (deck.DrawPile.Count == 0 && nonWeaponHandCount == 0)
-			{
-				EventManager.Publish(new PlayerDied { Player = EntityManager.GetEntity("Player") });
-			}
 		}
 
 		private void DrawUpToIntellect()
