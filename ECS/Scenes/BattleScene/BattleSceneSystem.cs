@@ -422,7 +422,6 @@ namespace Crusaders30XX.ECS.Systems
 			_appliedPassivesManagementSystem = new AppliedPassivesManagementSystem(_world.EntityManager);
 			_battleStateInfoManagementSystem = new BattleStateInfoManagementSystem(_world.EntityManager);
 			_discardSpecificCardHighlightSystem = new DiscardSpecificCardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
 			_intimidateManagementSystem = new IntimidateManagementSystem(_world.EntityManager);
 			_intimidateDisplaySystem = new IntimidateDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_frozenCardManagementSystem = new FrozenCardManagementSystem(_world.EntityManager);

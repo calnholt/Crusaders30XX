@@ -15,7 +15,15 @@
 
 Prompts - 
 
+defile and tarnish effects (enemy attacks that mutate blocked cards - exhaust on next block / use)
+
+display card delta block ( - / + )
+
+refactor purchased items - gone from json, derived from save_file collection
+
 enemy attack display min width
+
+cards being milled are NOT going back to deck at start of next battle
 
 Convert desert background to shader
 Generate shield shader and helper; create shield display system that keys off existence of having shield passive.
