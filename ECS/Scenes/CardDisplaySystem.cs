@@ -61,6 +61,16 @@ namespace Crusaders30XX.ECS.Systems
         public int APBottomMarginY { get; set; } = 14;
         [DebugEditable(DisplayName = "AP Offset X", Step = 1, Min = -200, Max = 200)]
         public int APOffsetX { get; set; } = 0;
+
+        // Debug-adjustable block delta text
+        [DebugEditable(DisplayName = "Block Delta Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
+        public float BlockDeltaScale { get; set; } = 0.09f;
+        [DebugEditable(DisplayName = "Block Delta Gap X", Step = 1, Min = -100, Max = 200)]
+        public int BlockDeltaGapX { get; set; } = 1;
+        [DebugEditable(DisplayName = "Block Delta Offset X", Step = 1, Min = -200, Max = 200)]
+        public int BlockDeltaOffsetX { get; set; } = 0;
+        [DebugEditable(DisplayName = "Block Delta Offset Y", Step = 1, Min = -200, Max = 200)]
+        public int BlockDeltaOffsetY { get; set; } = -4;
         
         public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content) 
             : base(entityManager)
@@ -232,7 +242,15 @@ namespace Crusaders30XX.ECS.Systems
             // Draw block value and shield icon at bottom-left, but hide for weapons
             bool isWeapon = hasDef && def.isWeapon;
             int blockValueToShow = 0;
-            if (hasDef) { blockValueToShow = BlockValueService.GetBlockValue(entity); }
+            int printedBlockValue = 0;
+            int blockDeltaValue = 0;
+            bool hasBlockDefinition = hasDef && def != null;
+            if (hasBlockDefinition)
+            {
+                printedBlockValue = def.block;
+                blockValueToShow = BlockValueService.GetBlockValue(entity);
+                blockDeltaValue = blockValueToShow - printedBlockValue;
+            }
             if (!isWeapon && blockValueToShow > 0)
             {
                 string blockText = blockValueToShow.ToString();
@@ -246,16 +264,30 @@ namespace Crusaders30XX.ECS.Systems
                 float numberLocalY = baselineY - textSize.Y;
                 DrawCardTextRotatedSingleScaled(cardCenter, rotation, new Vector2(numberLocalX, numberLocalY), blockText, textColor, _settings.BlockNumberScale * visualScale, visualScale);
 
-                // Then draw the shield icon to the right
+                // Draw the shield icon to the right of the main block number
+                float shieldRightX = numberLocalX + textSize.X;
                 var shield = GetOrLoadTexture("shield");
                 if (shield != null)
                 {
                     float iconHeight = Math.Max(8f, ShieldIconHeight * _settings.UIScale * visualScale);
                     float iconWidth = shield.Height > 0 ? iconHeight * (shield.Width / (float)shield.Height) : iconHeight;
                     float gap = Math.Max(0f, ShieldIconGap * _settings.UIScale * visualScale);
-                    float iconLocalX = numberLocalX + textSize.X + gap + ShieldIconOffsetX * visualScale;
+                    float iconBaseX = numberLocalX + textSize.X;
+                    float iconLocalX = iconBaseX + gap + ShieldIconOffsetX * visualScale;
                     float iconLocalY = baselineY - iconHeight + ShieldIconOffsetY * visualScale;
                     DrawTextureRotatedLocalScaled(cardCenter, rotation, new Vector2(iconLocalX, iconLocalY), shield, new Vector2(iconWidth, iconHeight), Color.White, visualScale);
+                    shieldRightX = iconLocalX + iconWidth;
+                }
+
+                // Finally draw the delta to the right of the shield (or block number if no shield)
+                if (hasBlockDefinition && blockDeltaValue != 0)
+                {
+                    string deltaText = blockDeltaValue > 0 ? $"+{blockDeltaValue}" : blockDeltaValue.ToString();
+                    float deltaScale = BlockDeltaScale * visualScale;
+                    var deltaTextSize = _nameFont.MeasureString(deltaText) * deltaScale;
+                    float deltaLocalX = shieldRightX + (BlockDeltaGapX * visualScale) + (BlockDeltaOffsetX * visualScale);
+                    float deltaLocalY = baselineY - deltaTextSize.Y + (BlockDeltaOffsetY * visualScale);
+                    DrawCardTextRotatedSingleScaled(cardCenter, rotation, new Vector2(deltaLocalX, deltaLocalY), deltaText, textColor, BlockDeltaScale * visualScale, visualScale);
                 }
             }
             else if (isWeapon)
