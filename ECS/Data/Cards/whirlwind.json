@@ -4,8 +4,10 @@
     "target": "Enemy",
     "rarity": "Common",
     "cost": ["Black"],
-    "valuesParse": [5, 4],
-    "text": "Deal {1} damage {2} times.",
+    "valuesParse": [4],
+    "text": "Attacks {1} times.",
     "animation": "Attack",
+    "type": "Attack",
+    "damage": 5,
     "block": 3
   }

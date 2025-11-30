@@ -551,6 +551,10 @@ namespace Crusaders30XX.ECS.Systems
 				color = def.specialEffects.Length > 0 ? Color.White : color;
 				lines.Add(($"{def.text}", TextScale, color));
 			}
+			else if (def.specialEffects.Any(se => se.type == "Corrode")	)
+			{
+				lines.Add(($"Each card used to block this attack reduces the block value by 1 for the rest of the quest.", TextScale, Color.White));
+			}
 
 			// Measure and draw a simple panel in the center
 			int pad = Math.Max(0, PanelPadding);

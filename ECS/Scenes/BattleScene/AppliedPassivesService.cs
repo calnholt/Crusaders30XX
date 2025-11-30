@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Systems
 {
     internal static class AppliedPassivesService
     {
-      public static int GetPassiveDelta(ModifyHpRequestEvent e)
+      public static int GetPassiveDelta(ModifyHpRequestEvent e, bool ReadOnly = false)
       {
         if (e.DamageType == ModifyTypeEnum.Heal)
         {
@@ -23,7 +23,10 @@ namespace Crusaders30XX.ECS.Systems
           Console.WriteLine($"[AppliedPassivesService] applying Aggression");
           sourcePassives.TryGetValue(AppliedPassiveType.Aggression, out var amount);
           delta += amount;
-          EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.Aggression });
+          if (!ReadOnly)
+          {
+            EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.Aggression });
+          }
         }
         if (targetPassives.ContainsKey(AppliedPassiveType.Armor) && e.DamageType == ModifyTypeEnum.Attack)
         {

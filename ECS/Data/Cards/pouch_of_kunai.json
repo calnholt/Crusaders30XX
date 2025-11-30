@@ -8,5 +8,6 @@
   "text": "Put {1} to {2} Kunai cards in your hand.",
   "animation": "Buff",
   "cardTooltip": "kunai",
+  "type": "Spell",
   "block": 3
 }

@@ -7,6 +7,7 @@
   "cost": [ "Red" ],
   "isFreeAction": true,
   "animation": "Attack",
+  "type": "Spell",
   "block": 2
 }
 

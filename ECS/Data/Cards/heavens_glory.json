@@ -7,5 +7,6 @@
   "text": "The enemy gains {1} inferno.",
   "isFreeAction": true,
   "animation": "Attack",
+  "type": "Spell",
   "block": 2
 }

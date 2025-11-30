@@ -6,6 +6,7 @@
   "valuesParse": [3],
   "text": "Gain {1} courage. End your turn.",
   "isFreeAction": true,
+  "type": "Spell",
   "block": 2
 }
 

@@ -4,8 +4,10 @@
     "target": "Enemy",
     "rarity": "Common",
     "cost": ["White", "Any", "Any"],
-    "valuesParse": [25, 6, 1],
-    "text": "Deal {1} damage, gain {2} aegis, and gain {3} penance.",
+    "valuesParse": [6, 1],
+    "text": "Gain {1} aegis, and gain {2} penance.",
     "animation": "Attack",
+    "type": "Attack",
+    "damage": 25,
     "block": 2
   }

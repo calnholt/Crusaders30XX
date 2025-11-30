@@ -71,6 +71,34 @@ namespace Crusaders30XX.ECS.Systems
         public int BlockDeltaOffsetX { get; set; } = 0;
         [DebugEditable(DisplayName = "Block Delta Offset Y", Step = 1, Min = -200, Max = 200)]
         public int BlockDeltaOffsetY { get; set; } = -4;
+
+        // Debug-adjustable damage trapezoid and text
+        [DebugEditable(DisplayName = "Damage Trap Width", Step = 1, Min = 10, Max = 400)]
+        public int DamageTrapWidth { get; set; } = 113;
+        [DebugEditable(DisplayName = "Damage Trap Height", Step = 1, Min = 8, Max = 200)]
+        public int DamageTrapHeight { get; set; } = 41;
+        [DebugEditable(DisplayName = "Damage Trap Left Margin X", Step = 1, Min = -200, Max = 200)]
+        public int DamageTrapLeftMarginX { get; set; } = 12;
+        [DebugEditable(DisplayName = "Damage Trap Bottom Margin Y", Step = 1, Min = 0, Max = 200)]
+        public int DamageTrapBottomMarginY { get; set; } = 65;
+        [DebugEditable(DisplayName = "Damage Trap Left Side Offset", Step = 1, Min = -200, Max = 200)]
+        public int DamageTrapLeftSideOffset { get; set; } = 0;
+        [DebugEditable(DisplayName = "Damage Trap Top Angle", Step = 1, Min = -89, Max = 89)]
+        public float DamageTrapTopAngleDeg { get; set; } = 0f;
+        [DebugEditable(DisplayName = "Damage Trap Right Angle", Step = 1, Min = -89, Max = 89)]
+        public float DamageTrapRightAngleDeg { get; set; } = -20f;
+        [DebugEditable(DisplayName = "Damage Trap Bottom Angle", Step = 1, Min = -89, Max = 89)]
+        public float DamageTrapBottomAngleDeg { get; set; } = -5f;
+        [DebugEditable(DisplayName = "Damage Trap Left Angle", Step = 1, Min = -89, Max = 89)]
+        public float DamageTrapLeftAngleDeg { get; set; } = 10f;
+        [DebugEditable(DisplayName = "Damage Text Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
+        public float DamageTextScale { get; set; } = 0.18f;
+        [DebugEditable(DisplayName = "Damage Text Offset X", Step = 1, Min = -200, Max = 200)]
+        public int DamageTextOffsetX { get; set; } = 0;
+        [DebugEditable(DisplayName = "Damage Text Offset Y", Step = 1, Min = -200, Max = 200)]
+        public int DamageTextOffsetY { get; set; } = 0;
+        [DebugEditable(DisplayName = "Damage Delta Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
+        public float DamageDeltaScale { get; set; } = 0.1f;
         
         public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content) 
             : base(entityManager)
@@ -239,6 +267,69 @@ namespace Crusaders30XX.ECS.Systems
             string displayText = hasDef ? (def.text ?? string.Empty) : string.Empty;
             DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, (_settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)) * visualScale), displayText, textColor, _settings.DescriptionScale * visualScale, visualScale, _contentFont);
             
+            // Draw damage value in trapezoid above block section for attack cards
+            int effectiveDamage = 0;
+            int damageDelta = 0;
+            if (hasDef && IsAttackCard(def))
+            {
+                try
+                {
+                    // Base damage includes printed damage plus any conditional damage from the card definition
+                    int baseDamage = def.damage;
+                    try
+                    {
+                        baseDamage = Math.Max(0, baseDamage + ConditionalDamageCardService.Resolve(EntityManager, entity));
+                    }
+                    catch
+                    {
+                        // If conditional resolution fails for any reason, fall back to printed damage
+                        baseDamage = Math.Max(0, def.damage);
+                    }
+
+                    int finalDamage = baseDamage;
+
+                    // Preview passive effects in a read-only way, mirroring HpManagementSystem semantics
+                    try
+                    {
+                        var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                        var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+
+                        if (player != null && enemy != null && baseDamage > 0)
+                        {
+                            var previewEvent = new ModifyHpRequestEvent
+                            {
+                                Source = player,
+                                Target = enemy,
+                                Delta = -baseDamage,
+                                DamageType = ModifyTypeEnum.Attack
+                            };
+
+                            int passiveDelta = AppliedPassivesService.GetPassiveDelta(previewEvent, ReadOnly: true);
+                            int newDelta = previewEvent.Delta + passiveDelta;
+                            finalDamage = Math.Max(0, -newDelta);
+                        }
+                    }
+                    catch
+                    {
+                        // If anything goes wrong during passive preview, just use base damage
+                        finalDamage = baseDamage;
+                    }
+
+                    effectiveDamage = Math.Max(0, finalDamage);
+                    damageDelta = effectiveDamage - def.damage;
+                }
+                catch
+                {
+                    effectiveDamage = Math.Max(0, def.damage);
+                    damageDelta = 0;
+                }
+
+                if (effectiveDamage > 0)
+                {
+                    DrawDamageTrapezoidAndValue(cardCenter, rotation, visualScale, cardData.Color, effectiveDamage, damageDelta);
+                }
+            }
+
             // Draw block value and shield icon at bottom-left, but hide for weapons
             bool isWeapon = hasDef && def.isWeapon;
             int blockValueToShow = 0;
@@ -359,6 +450,23 @@ namespace Crusaders30XX.ECS.Systems
                     return Color.White;
             }
         }
+
+        private bool IsAttackCard(CardDefinition def)
+        {
+            if (def == null) return false;
+            return string.Equals(def.type, "Attack", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private Color GetDamageTrapezoidColor(CardData.CardColor color)
+        {
+            return color switch
+            {
+                CardData.CardColor.Red => Color.Black,
+                CardData.CardColor.White => Color.DarkRed,
+                CardData.CardColor.Black => Color.DarkRed,
+                _ => Color.Black
+            };
+        }
         
         private void DrawCostPipsScaled(Vector2 cardCenter, float rotation, int localOffsetX, int localOffsetY, CardData.CardColor cardColor, string[] costs, float overallScale)
         {
@@ -424,6 +532,110 @@ namespace Crusaders30XX.ECS.Systems
             {
                 // No outline: draw just the filled circle centered
                 _spriteBatch.Draw(circleTex, worldCenter, null, fillColor, rotation, new Vector2(textureSize / 2f, textureSize / 2f), 1f, SpriteEffects.None, 0f);
+            }
+        }
+
+        private void DrawDamageTrapezoidAndValue(Vector2 cardCenter, float rotation, float overallScale, CardData.CardColor cardColor, int damageValue, int damageDelta)
+        {
+            if (damageValue <= 0) return;
+            if (_settings == null) _settings = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>();
+
+            float uiScale = _settings.UIScale;
+
+            float baseWidth = DamageTrapWidth * uiScale;
+            float baseHeight = DamageTrapHeight * uiScale;
+            float baseLeftMarginX = DamageTrapLeftMarginX * uiScale;
+            float baseBottomMarginY = DamageTrapBottomMarginY * uiScale;
+
+            float trapWidth = baseWidth * overallScale;
+            float trapHeight = baseHeight * overallScale;
+
+            float localX = baseLeftMarginX * overallScale;
+            float baselineY = _settings.CardHeight * overallScale - (baseBottomMarginY * overallScale);
+            float localY = baselineY - trapHeight;
+
+            var trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoidMask(
+                _graphicsDevice,
+                baseWidth,
+                baseHeight,
+                DamageTrapLeftSideOffset * uiScale,
+                DamageTrapTopAngleDeg,
+                DamageTrapRightAngleDeg,
+                DamageTrapBottomAngleDeg,
+                DamageTrapLeftAngleDeg
+            );
+
+            var trapezoidColor = GetDamageTrapezoidColor(cardColor);
+
+            if (trapezoidTexture != null)
+            {
+                DrawTextureRotatedLocalScaled(
+                    cardCenter,
+                    rotation,
+                    new Vector2(localX, localY),
+                    trapezoidTexture,
+                    new Vector2(trapWidth, trapHeight),
+                    trapezoidColor,
+                    overallScale
+                );
+            }
+
+            // If the trapezoid is red/dark red, force white text for contrast.
+            var textColor = (trapezoidColor == Color.DarkRed || trapezoidColor == Color.Red)
+                ? Color.White
+                : GetCardTextColor(cardColor);
+
+            // Main effective damage text
+            string damageText = damageValue.ToString();
+            float mainScale = DamageTextScale * overallScale;
+            var mainSize = _nameFont.MeasureString(damageText) * mainScale;
+
+            // Optional damage delta text inside the trapezoid (to the right of the main value)
+            string deltaText = null;
+            float deltaScale = DamageDeltaScale * overallScale;
+            Vector2 deltaSize = Vector2.Zero;
+            float gapX = 4f * overallScale;
+
+            if (damageDelta != 0)
+            {
+                deltaText = damageDelta > 0 ? $"+{damageDelta}" : damageDelta.ToString();
+                deltaSize = _nameFont.MeasureString(deltaText) * deltaScale;
+            }
+
+            float totalWidth = (damageDelta != 0)
+                ? mainSize.X + gapX + deltaSize.X
+                : mainSize.X;
+
+            float centerY = localY + (trapHeight - mainSize.Y) / 2f + DamageTextOffsetY * overallScale;
+            float startX = localX + (trapWidth - totalWidth) / 2f + DamageTextOffsetX * overallScale;
+
+            float mainLocalX = startX;
+            float mainLocalY = centerY;
+
+            DrawCardTextRotatedSingleScaled(
+                cardCenter,
+                rotation,
+                new Vector2(mainLocalX, mainLocalY),
+                damageText,
+                textColor,
+                mainScale,
+                overallScale
+            );
+
+            if (damageDelta != 0 && deltaText != null)
+            {
+                float deltaLocalX = mainLocalX + mainSize.X + gapX;
+                float deltaLocalY = centerY + (mainSize.Y - deltaSize.Y) / 2f;
+
+                DrawCardTextRotatedSingleScaled(
+                    cardCenter,
+                    rotation,
+                    new Vector2(deltaLocalX, deltaLocalY),
+                    deltaText,
+                    textColor,
+                    deltaScale,
+                    overallScale
+                );
             }
         }
 

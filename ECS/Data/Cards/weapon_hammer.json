@@ -2,10 +2,12 @@
   "id": "hammer",
   "name": "Hammer",
   "target": "Enemy",
-  "valuesParse": [10, 1],
+  "valuesParse": [1],
   "cost": [ "Black", "Any" ],
   "rarity": "Common",
-  "text": "Deal {1} damage and gain {2} courage.",
+  "text": "Gain {1} courage.",
   "isWeapon": true,
+  "type": "Attack",
+  "damage": 10,
   "animation": "Attack"
 }

@@ -7,6 +7,7 @@
   "valuesParse": [9],
   "text": "Gain {1} aegis.",
   "animation": "Buff",
+  "type": "Spell",
   "block": 3
 }
 

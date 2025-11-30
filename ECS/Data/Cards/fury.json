@@ -6,5 +6,6 @@
   "text": "Double your aggression.",
   "animation": "Buff",
   "isFreeAction": true,
+  "type": "Spell",
   "block": 2
 }

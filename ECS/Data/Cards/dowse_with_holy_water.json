@@ -7,6 +7,7 @@
   "text": "Gain {1} aggression. If you have {2} or more courage, gain {3} aggression instead.",
   "isFreeAction": true,
   "animation": "Buff",  
+  "type": "Spell",
   "block": 2
 }
 

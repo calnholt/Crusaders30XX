@@ -4,8 +4,10 @@
   "target": "Enemy",
   "rarity": "Common",
   "cost": ["Any"],
-  "valuesParse": [4, 25],
-  "text": "As an additional cost, mill {1} cards. Deal {2} damage.",
+  "valuesParse": [4],
+  "text": "As an additional cost, mill {1} cards.",
   "animation": "Attack",
+  "type": "Attack",
+  "damage": 25,
   "block": 3
 }

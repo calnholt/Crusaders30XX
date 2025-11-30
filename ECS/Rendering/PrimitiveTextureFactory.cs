@@ -15,8 +15,10 @@ namespace Crusaders30XX.ECS.Rendering
 		private static readonly Dictionary<(int deviceId, int size, int radius), Texture2D> _roundedSquareCache = new();
 		// Cache equilateral triangles by device and size
 		private static readonly Dictionary<(int deviceId, int size), Texture2D> _triangleCache = new();
-		// Cache trapezoids by device and all parameters
+		// Cache trapezoids by device and all parameters (black-filled by default)
 		private static readonly Dictionary<(int deviceId, float width, float height, float leftOffset, float topAngle, float rightAngle, float bottomAngle, float leftAngle), Texture2D> _trapezoidCache = new();
+		// Cache trapezoid masks (white-filled) separately for color-tinting use-cases
+		private static readonly Dictionary<(int deviceId, float width, float height, float leftOffset, float topAngle, float rightAngle, float bottomAngle, float leftAngle), Texture2D> _trapezoidMaskCache = new();
 
 		public static Texture2D GetAntiAliasedCircle(GraphicsDevice device, int radius)
 		{
@@ -130,10 +132,61 @@ namespace Crusaders30XX.ECS.Rendering
 			float bottomEdgeAngleDegrees,
 			float leftEdgeAngleDegrees)
 		{
+			// Backwards-compatible: black-filled trapezoid by default
+			return GetAntialiasedTrapezoidInternal(
+				device,
+				width,
+				height,
+				leftSideOffset,
+				topEdgeAngleDegrees,
+				rightEdgeAngleDegrees,
+				bottomEdgeAngleDegrees,
+				leftEdgeAngleDegrees,
+				useWhiteMask: false
+			);
+		}
+
+		/// <summary>
+		/// Returns a white-filled antialiased trapezoid suitable for color-tinting via SpriteBatch.
+		/// </summary>
+		public static Texture2D GetAntialiasedTrapezoidMask(
+			GraphicsDevice device,
+			float width,
+			float height,
+			float leftSideOffset,
+			float topEdgeAngleDegrees,
+			float rightEdgeAngleDegrees,
+			float bottomEdgeAngleDegrees,
+			float leftEdgeAngleDegrees)
+		{
+			return GetAntialiasedTrapezoidInternal(
+				device,
+				width,
+				height,
+				leftSideOffset,
+				topEdgeAngleDegrees,
+				rightEdgeAngleDegrees,
+				bottomEdgeAngleDegrees,
+				leftEdgeAngleDegrees,
+				useWhiteMask: true
+			);
+		}
+
+		private static Texture2D GetAntialiasedTrapezoidInternal(
+			GraphicsDevice device,
+			float width,
+			float height,
+			float leftSideOffset,
+			float topEdgeAngleDegrees,
+			float rightEdgeAngleDegrees,
+			float bottomEdgeAngleDegrees,
+			float leftEdgeAngleDegrees,
+			bool useWhiteMask)
+		{
 			if (width < 1) width = 1;
 			if (height < 1) height = 1;
 			int deviceId = device?.GetHashCode() ?? 0;
-			
+
 			// Use rounded values for cache key to avoid floating point precision issues
 			var key = (
 				deviceId,
@@ -145,10 +198,20 @@ namespace Crusaders30XX.ECS.Rendering
 				(float)System.Math.Round(bottomEdgeAngleDegrees, 2),
 				(float)System.Math.Round(leftEdgeAngleDegrees, 2)
 			);
-			
-			if (_trapezoidCache.TryGetValue(key, out var existing) && existing != null)
+
+			if (useWhiteMask)
 			{
-				return existing;
+				if (_trapezoidMaskCache.TryGetValue(key, out var maskExisting) && maskExisting != null)
+				{
+					return maskExisting;
+				}
+			}
+			else
+			{
+				if (_trapezoidCache.TryGetValue(key, out var existing) && existing != null)
+				{
+					return existing;
+				}
 			}
 
 			// Render at higher resolution for antialiasing, then scale down
@@ -230,14 +293,29 @@ namespace Crusaders30XX.ECS.Rendering
 						alpha = MathHelper.Clamp(minDist / aaThreshold, 0f, 1f);
 					}
 
-					// Set pixel with alpha for antialiasing
+					// Set pixel with alpha for antialiasing.
+					// Black base for legacy callers, white mask for color-tinting.
 					byte alphaByte = (byte)MathHelper.Clamp((int)System.Math.Round(alpha * 255f), 0, 255);
-					data[idx] = Color.FromNonPremultiplied(0, 0, 0, alphaByte); // Black with alpha
+					if (useWhiteMask)
+					{
+						data[idx] = Color.FromNonPremultiplied(255, 255, 255, alphaByte); // White with alpha
+					}
+					else
+					{
+						data[idx] = Color.FromNonPremultiplied(0, 0, 0, alphaByte); // Black with alpha
+					}
 				}
 			}
 
 			tex.SetData(data);
-			_trapezoidCache[key] = tex;
+			if (useWhiteMask)
+			{
+				_trapezoidMaskCache[key] = tex;
+			}
+			else
+			{
+				_trapezoidCache[key] = tex;
+			}
 			return tex;
 		}
 	}

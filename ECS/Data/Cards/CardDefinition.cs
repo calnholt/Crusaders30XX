@@ -23,6 +23,8 @@ namespace Crusaders30XX.ECS.Data.Cards
         public bool exhaustsOnPlay { get; set; } = false;
         public bool exhaustsOnEndTurn { get; set; } = false;
         public bool canAddToLoadout { get; set; } = true;
+        public string type { get; set; } = "Attack";
+        public int damage { get; set; } = 0;
     }
 }
 
