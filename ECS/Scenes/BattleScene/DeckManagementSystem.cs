@@ -227,7 +227,7 @@ namespace Crusaders30XX.ECS.Systems
 
         /// <summary>
         /// Moves all non-weapon cards from Hand and Discard back into the Draw pile and shuffles.
-        /// Weapon card (from EquippedWeapon) is excluded from movement.
+        /// Weapon card (from EquippedWeapon) is removed from hand/discard but NOT added to draw pile.
         /// </summary>
         private void ResetDeckExcludingWeapon(Deck deck)
         {
@@ -243,28 +243,49 @@ namespace Crusaders30XX.ECS.Systems
             }
             catch { }
 
-            // Collect non-weapon cards from hand and discard
+            // Collect all cards currently in play (Hand + Discard)
+            var allCards = new List<Entity>();
+            allCards.AddRange(deck.Hand);
+            allCards.AddRange(deck.DiscardPile);
+
             var toReturn = new List<Entity>();
-            foreach (var c in deck.Hand)
+
+            foreach (var c in allCards)
             {
+                // Reset UI/transform state for ALL cards so they are hidden and reset
+                var ui = c.GetComponent<UIElement>();
+                if (ui != null)
+                {
+                    ui.IsInteractable = false;
+                    ui.IsHovered = false;
+                    ui.IsClicked = false;
+                    ui.EventType = UIElementEventType.None;
+                    // Move bounds off-screen and shrink to avoid accidental hit-tests
+                    ui.Bounds = new Rectangle(-1000, -1000, 1, 1);
+                }
+
+                var t = c.GetComponent<Transform>();
+                if (t != null)
+                {
+                    t.BasePosition = Vector2.Zero;
+                    t.Position = Vector2.Zero;
+                    t.Rotation = 0f;
+                    t.Scale = Vector2.One;
+                }
+
+                // If it's the weapon, skip adding to toReturn (so it won't go into DrawPile)
                 if (weapon != null && ReferenceEquals(c, weapon)) continue;
-                toReturn.Add(c);
-            }
-            foreach (var c in deck.DiscardPile)
-            {
-                if (weapon != null && ReferenceEquals(c, weapon)) continue;
+
                 toReturn.Add(c);
             }
 
-            // Clear from original zones (preserve weapon in hand if present)
+            // Clear original zones entirely (removes weapon from hand/discard as well)
+            deck.Hand.Clear();
+            deck.DiscardPile.Clear();
+
+            // Add non-weapon cards to draw pile
             if (toReturn.Count > 0)
             {
-                // Remove each from both lists to be safe
-                foreach (var c in toReturn)
-                {
-                    deck.Hand.Remove(c);
-                    deck.DiscardPile.Remove(c);
-                }
                 deck.DrawPile.AddRange(toReturn);
             }
 

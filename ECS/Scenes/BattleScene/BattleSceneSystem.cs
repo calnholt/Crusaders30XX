@@ -285,6 +285,9 @@ namespace Crusaders30XX.ECS.Systems
 			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, nextEvent.EventId, nextEvent.Modifications);
 			EventManager.Publish(new ResetDeckEvent { });
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
+			// Reset phase state at the start of every battle so we don't inherit the previous battle's sub-phase.
+			phaseState.Main = MainPhase.StartBattle;
+			phaseState.Sub = SubPhase.StartBattle;
 			phaseState.TurnNumber = 0;
 			EventManager.Publish(new FullyHealEvent { Target = player });
 			foreach (var e in EntityManager.GetEntitiesWithComponent<CardTooltip>()) {

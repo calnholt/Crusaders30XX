@@ -59,6 +59,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ClosePayCostOverlayEvent>(_ => ShowEndTurnButton());
             EventManager.Subscribe<PayCostCancelRequested>(_ => ShowEndTurnButton());
             EventManager.Subscribe<PayCostSatisfied>(_ => ShowEndTurnButton());
+            EventManager.Subscribe<LoadSceneEvent>(_ => HideEndTurnButton());
 
             			// Ensure a clickable UI entity exists and keep its base anchored; ParallaxLayer will offset Position
         }

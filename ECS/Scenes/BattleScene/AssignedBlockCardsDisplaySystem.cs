@@ -470,7 +470,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (string.IsNullOrEmpty(contextId)) return;
 
 			// Clean up: remove B hotkeys from entities that are no longer assigned block items
-			foreach (var e in EntityManager.GetEntitiesWithComponent<HotKey>())
+			foreach (var e in EntityManager.GetEntitiesWithComponent<HotKey>().ToList())
 			{
 				var hk = e.GetComponent<HotKey>();
 				if (hk == null || hk.Button != FaceButton.B) continue;

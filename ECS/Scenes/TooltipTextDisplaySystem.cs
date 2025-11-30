@@ -75,7 +75,10 @@ namespace Crusaders30XX.ECS.Systems
 			// Determine top-most hovered UI with tooltip
 			var hoverables = GetRelevantEntities()
 				.Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>() })
-				.Where(x => x.UI?.TooltipType == TooltipType.Text && x.UI.IsHovered && !string.IsNullOrWhiteSpace(x.UI.Tooltip))
+				.Where(x => x.UI?.TooltipType == TooltipType.Text
+					&& x.UI.IsHovered
+					&& !x.UI.IsHidden
+					&& !string.IsNullOrWhiteSpace(x.UI.Tooltip))
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.ToList();
 			var top = hoverables.FirstOrDefault();
