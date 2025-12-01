@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Crusaders30XX.ECS.Data.Loadouts;
 
 namespace Crusaders30XX.ECS.Data.Save
 {
@@ -19,6 +20,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				if (data.completedQuests == null) data.completedQuests = new System.Collections.Generic.List<string>();
 				if (data.collection == null) data.collection = new System.Collections.Generic.List<string>();
 				if (data.items == null) data.items = new System.Collections.Generic.List<SaveItem>();
+				if (data.loadouts == null) data.loadouts = new System.Collections.Generic.List<LoadoutDefinition>();
 				result = data;
 			}
 			catch (System.Exception ex)

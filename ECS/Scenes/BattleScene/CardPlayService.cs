@@ -51,13 +51,7 @@ namespace Crusaders30XX.ECS.Systems
                 case "courageous":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = +values[i++] });
-                    // brief delay so cards in hand are updated
-                    // TODO: cards can still be played because animation prolongs
-                    StateSingleton.IsActive = true;
-                    TimerScheduler.Schedule(0.5f, () => {
-                        EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
-                        StateSingleton.IsActive = false;
-                    });
+                    EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
                     break;
                 }
                 case "divine_protection":

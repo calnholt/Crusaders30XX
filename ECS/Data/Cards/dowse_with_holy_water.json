@@ -3,7 +3,7 @@
   "name": "Dowse with Holy Water",
   "target": "Player",
   "rarity": "Common",
-  "text": "Gain {10} aggression. If you have {4} or more courage, gain {15} aggression instead.",
+  "text": "Gain {7} aggression. If you have {4} or more courage, gain {15} aggression instead.",
   "isFreeAction": true,
   "animation": "Buff",  
   "type": "Spell",

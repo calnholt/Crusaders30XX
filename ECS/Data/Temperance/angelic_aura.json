@@ -2,7 +2,7 @@
     "id": "angelic_aura",
     "name": "Angelic Aura",
     "target": "Player",
-    "text": "Gain 5 aegis.",
+    "text": "Gain 3 aegis.",
     "threshold": 3
   }
   

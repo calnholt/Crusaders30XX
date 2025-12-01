@@ -31,7 +31,12 @@
       "name": "Sweep",
       "target": "Player",
       "positionType": "Linker",
-      "damage": 4
+      "damage": 5,
+      "specialEffects": [
+        {
+          "type": "Corrode"
+        }
+      ]
     },
     {
       "id": "calcify",

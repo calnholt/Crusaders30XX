@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Data.Loadouts;
 
 namespace Crusaders30XX.ECS.Data.Save
 {
@@ -15,6 +16,39 @@ namespace Crusaders30XX.ECS.Data.Save
 		{
 			EnsureLoaded();
 			return _save;
+		}
+
+		public static LoadoutDefinition GetLoadout(string id)
+		{
+			EnsureLoaded();
+			if (_save == null || _save.loadouts == null) return null;
+			return _save.loadouts.FirstOrDefault(l => l.id == id);
+		}
+
+		public static List<LoadoutDefinition> GetAllLoadouts()
+		{
+			EnsureLoaded();
+			if (_save == null || _save.loadouts == null) return new List<LoadoutDefinition>();
+			return _save.loadouts;
+		}
+
+		public static void SaveLoadout(LoadoutDefinition def)
+		{
+			if (def == null || string.IsNullOrEmpty(def.id)) return;
+			lock (_lock)
+			{
+				EnsureLoaded();
+				if (_save == null) _save = new SaveFile();
+				if (_save.loadouts == null) _save.loadouts = new List<LoadoutDefinition>();
+				
+				var existing = _save.loadouts.FirstOrDefault(l => l.id == def.id);
+				if (existing != null)
+				{
+					_save.loadouts.Remove(existing);
+				}
+				_save.loadouts.Add(def);
+				Persist();
+			}
 		}
 
 		public static HashSet<string> GetCollectionSet()

@@ -1,11 +1,14 @@
 {
-  "gold": 6,
+  "gold": 11,
   "completedQuests": [
     "desert_1",
     "desert_2",
     "desert_5",
     "desert_6",
-    "desert_3"
+    "desert_3",
+    "desert_10",
+    "desert_4",
+    "desert_11"
   ],
   "collection": [
     "radiance",
@@ -33,12 +36,60 @@
     "fling_fling",
     "impale",
     "shroud_of_turin",
-    "purging_bracers"
+    "purging_bracers",
+    "pouch_of_kunai"
   ],
   "items": [
     {
       "id": "holy_seal",
       "amount": 1
+    }
+  ],
+  "loadouts": [
+    {
+      "id": "loadout_1",
+      "name": "Deck",
+      "cardIds": [
+        "courageous|White",
+        "courageous|Red",
+        "dowse_with_holy_water|Red",
+        "dowse_with_holy_water|Black",
+        "narrow_gate|White",
+        "seize|Red",
+        "seize|Black",
+        "stab|White",
+        "stalwart|Red",
+        "strike|White",
+        "strike|Red",
+        "stun|Red",
+        "stun|Black",
+        "ravage|White",
+        "divine_protection|Black",
+        "impale|Red",
+        "burn|Red",
+        "shield_of_faith|White",
+        "tempest|White",
+        "burn|White",
+        "sacrifice|Red",
+        "whirlwind|White",
+        "shield_of_faith|Black",
+        "divine_protection|White",
+        "anoint_the_sick|Black",
+        "increase_faith|White",
+        "increase_faith|Red",
+        "whirlwind|Red",
+        "ravage|Black",
+        "narrow_gate|Black"
+      ],
+      "weaponId": "hammer",
+      "temperanceId": "angelic_aura",
+      "chestId": "pierced_heart_plate",
+      "legsId": "",
+      "armsId": "purging_bracers",
+      "headId": "",
+      "medalIds": [
+        "st_michael"
+      ]
     }
   ]
 }

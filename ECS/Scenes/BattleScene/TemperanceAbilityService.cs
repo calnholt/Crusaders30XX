@@ -26,7 +26,7 @@ namespace Crusaders30XX.ECS.Systems
             }
             case "angelic_aura":
             {
-              EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = 5 });
+              EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = 3 });
               break;
             }
             case "fling_fling":

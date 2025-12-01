@@ -6,6 +6,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Data.Loadouts;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Cards;
 using Microsoft.Xna.Framework;
@@ -330,13 +331,7 @@ namespace Crusaders30XX.ECS.Systems
             def.headId = st.WorkingHeadId;
             def.medalIds = new List<string>(st.WorkingMedalIds ?? new List<string>());
 
-            string folder = ResolveLoadoutsFolder();
-            if (string.IsNullOrEmpty(folder)) return;
-            string path = Path.Combine(folder, "loadout_1.json");
-            var opts = new JsonSerializerOptions { WriteIndented = true };
-            var json = JsonSerializer.Serialize(def, opts);
-            File.WriteAllText(path, json);
-            LoadoutDefinitionCache.Reload();
+            SaveCache.SaveLoadout(def);
             st.OriginalCardIds = new List<string>(st.WorkingCardIds);
             st.OriginalMedalIds = new List<string>(st.WorkingMedalIds ?? new List<string>());
         }
@@ -363,26 +358,6 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
             return true;
-        }
-
-        private string ResolveLoadoutsFolder()
-        {
-            // mirror LoadoutDefinitionCache.ResolveFolderPath logic
-            try
-            {
-                var dir = new DirectoryInfo(AppContext.BaseDirectory);
-                for (int i = 0; i < 6 && dir != null; i++)
-                {
-                    var candidate = Path.Combine(dir.FullName, "Crusaders30XX.csproj");
-                    if (File.Exists(candidate))
-                    {
-                        return Path.Combine(dir.FullName, "ECS", "Data", "Loadouts");
-                    }
-                    dir = dir.Parent;
-                }
-            }
-            catch {}
-            return null;
         }
     }
 }

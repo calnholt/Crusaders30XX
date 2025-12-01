@@ -43,6 +43,8 @@ namespace Crusaders30XX.ECS.Systems
 			int nonWeaponHandCount = 0;
 			foreach (var e in deck.Hand)
 			{
+				if (e.HasComponent<AnimatingHandToDiscard>()) continue;
+
 				var cd = e.GetComponent<CardData>();
 				if (cd == null) continue;
 				string id = cd.CardId ?? string.Empty;
@@ -69,20 +71,26 @@ namespace Crusaders30XX.ECS.Systems
 			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 			var deck = deckEntity?.GetComponent<Deck>();
 			if (deck == null) return;
-			// Do not count weapon cards toward the hand size limit
-			int weaponCount = 0;
+			
+			int effectiveHandCount = 0;
 			foreach (var e in deck.Hand)
 			{
+				if (e.HasComponent<AnimatingHandToDiscard>()) continue;
+
 				var cd = e.GetComponent<CardData>();
 				if (cd == null) continue;
                 string id = cd.CardId ?? string.Empty;
                 if (string.IsNullOrEmpty(id)) continue;
                 if (CardDefinitionCache.TryGet(id, out var def))
 				{
-					if (def.isWeapon) weaponCount++;
+					if (!def.isWeapon) effectiveHandCount++;
+				}
+				else
+				{
+					effectiveHandCount++;
 				}
 			}
-			int effectiveHandCount = System.Math.Max(0, deck.Hand.Count - weaponCount);
+			
 			int spaceLeft = System.Math.Max(0, maxHandSize - effectiveHandCount);
 			int toDraw = System.Math.Min(spaceLeft, intellect);
 			if (toDraw > 0)

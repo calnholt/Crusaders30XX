@@ -223,10 +223,6 @@ namespace Crusaders30XX.ECS.Systems
 			// Update entity transforms and bounds so hotkey hints anchor to text
 			_textRect = new Rectangle((int)Math.Round(pos.X), (int)Math.Round(pos.Y), (int)Math.Ceiling(size.X), (int)Math.Ceiling(size.Y));
 
-			// Set hotkey to X for controller; avoid keyboard badge by switching to Start when no gamepad
-			var caps = GamePad.GetCapabilities(PlayerIndex.One);
-			bool gamepadConnected = caps.IsConnected;
-
 			if (_overlayTextEntity != null)
 			{
 				var t = _overlayTextEntity.GetComponent<Transform>();
@@ -241,7 +237,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				if (hk != null)
 				{
-					hk.Button = gamepadConnected ? FaceButton.X : FaceButton.Start;
+					hk.Button = FaceButton.X;
 				}
 			}
 

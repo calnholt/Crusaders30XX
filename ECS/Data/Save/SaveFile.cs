@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Data.Loadouts;
 
 namespace Crusaders30XX.ECS.Data.Save
 {
@@ -8,6 +9,7 @@ namespace Crusaders30XX.ECS.Data.Save
 		public List<string> completedQuests { get; set; } = new List<string>();
 		public List<string> collection { get; set; } = new List<string>();
 		public List<SaveItem> items { get; set; } = new List<SaveItem>();
+		public List<LoadoutDefinition> loadouts { get; set; } = new List<LoadoutDefinition>();
 	}
 
 	public class SaveItem
