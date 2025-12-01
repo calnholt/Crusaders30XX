@@ -568,6 +568,7 @@
 /importer:OggImporter
 /processor:SongProcessor
 /build:Music/desert_theme_battle.ogg
+
 #begin enemy_attack_top.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -582,7 +583,9 @@
 #begin Music/customize.ogg
 /importer:OggImporter
 /processor:SongProcessor
-/build:Music/customize.ogg#begin desert.png
+/build:Music/customize.ogg
+
+#begin desert.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=0,0,0,0
