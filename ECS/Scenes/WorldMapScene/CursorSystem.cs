@@ -245,7 +245,8 @@ namespace Crusaders30XX.ECS.Systems
 					IsAPressed = isPressed,
 					IsAPressedEdge = isPressedEdge,
 					Coverage = coverageForTop,
-					TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E)
+					TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E),
+					Source = InputMethod.Gamepad
 				});
 
 				_prevGamePadState = gp;
@@ -375,7 +376,8 @@ namespace Crusaders30XX.ECS.Systems
 					IsAPressed = isPressed,
 					IsAPressedEdge = isPressedEdge,
 					Coverage = coverageForTop,
-					TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E)
+					TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E),
+					Source = InputMethod.Mouse
 				});
 
 				_prevMouseState = ms;

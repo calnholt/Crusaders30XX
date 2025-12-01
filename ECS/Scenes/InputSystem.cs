@@ -147,7 +147,8 @@ namespace Crusaders30XX.ECS.Systems
 
                 // Handle click on the top-most only
                 bool mouseEdge = mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released;
-                bool controllerEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge;
+                // Ignore cursor events sourced from mouse to avoid double-clicking (since we handle mouseEdge locally)
+                bool controllerEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge && _cursorEvent.Source != InputMethod.Mouse;
                 if (controllerEdge)
                 {
                     // Prefer top entity from controller event if available, otherwise use top under coalesced pointer

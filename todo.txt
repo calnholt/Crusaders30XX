@@ -15,15 +15,27 @@
 
 Prompts - 
 
+card idea - spend aegis
+
+cards level up - playing them grants +X exp and finishing a quest gives them all +Y exp; need to figure out smart way of implementing upgraded version
+
+cancel button in pay cost overlay doest work with mouse; X is not positoined correctly
+
+card hand hitbox is wonky
+
 defile and tarnish effects (enemy attacks that mutate blocked cards - exhaust on next block / use)
 
-display card delta block ( - / + )
+on hit - exhaust top card of player's deck
+
+on hit - top card gains burn 1
+
+on hit - card becomes colorless
+
+cardtooltip not being correctly removed for blocked cards, can see from opening discard modal
 
 refactor purchased items - gone from json, derived from save_file collection
 
 enemy attack display min width
-
-cards being milled are NOT going back to deck at start of next battle
 
 Convert desert background to shader
 Generate shield shader and helper; create shield display system that keys off existence of having shield passive.
