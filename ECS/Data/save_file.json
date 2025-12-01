@@ -1,14 +1,10 @@
 {
-  "gold": 11,
+  "gold": 5,
   "completedQuests": [
     "desert_1",
     "desert_2",
-    "desert_5",
-    "desert_6",
     "desert_3",
-    "desert_10",
-    "desert_4",
-    "desert_11"
+    "desert_4"
   ],
   "collection": [
     "radiance",

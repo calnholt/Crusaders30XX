@@ -162,6 +162,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = 1 });
         }
+        [DebugActionInt("Apply Power", Step = 1, Min = 1, Max = 999, Default = 1)]
+        public void Debug_ApplyPower(int amount)
+        {
+            EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Power, Delta = amount });
+        }
     }
 }
 

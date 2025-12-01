@@ -36,7 +36,7 @@ namespace Crusaders30XX.ECS.Systems
           targetPassives.TryGetValue(AppliedPassiveType.Wounded, out var amount);
           delta += amount;
         }
-        if (sourcePassives.ContainsKey(AppliedPassiveType.Power))
+        if (sourcePassives.ContainsKey(AppliedPassiveType.Power) && e.DamageType == ModifyTypeEnum.Attack)
         {
           sourcePassives.TryGetValue(AppliedPassiveType.Power, out var amount);
           delta += amount;
