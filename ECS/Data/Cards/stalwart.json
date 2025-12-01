@@ -2,8 +2,7 @@
     "id": "stalwart",
     "name": "Stalwart",
     "rarity": "Common",
-    "valuesParse": [2],
-    "text": "As an additional cost when using this card to block, lose {1} courage.",
+    "text": "As an additional cost when using this card to block, lose {2} courage.",
     "isBlockCard": true,
     "type": "Block",
     "block": 7

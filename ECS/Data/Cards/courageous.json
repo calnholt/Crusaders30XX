@@ -3,8 +3,7 @@
   "name": "Courageous",
   "target": "Player",
   "rarity": "Common",
-  "valuesParse": [3],
-  "text": "Gain {1} courage. End your turn.",
+  "text": "Gain {3} courage. End your turn.",
   "isFreeAction": true,
   "type": "Spell",
   "block": 2

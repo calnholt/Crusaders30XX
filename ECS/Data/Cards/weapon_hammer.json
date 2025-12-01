@@ -2,7 +2,6 @@
   "id": "hammer",
   "name": "Hammer",
   "target": "Enemy",
-  "valuesParse": [1],
   "cost": [ "Black", "Any" ],
   "rarity": "Common",
   "text": "Gain {1} courage.",

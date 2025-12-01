@@ -3,7 +3,6 @@
   "name": "Stab",
   "target": "Enemy",
   "rarity": "Common",
-  "valuesParse": [1],
   "text": "As an additional cost, lose {1} courage.",
   "isFreeAction": true,
   "animation": "Attack",

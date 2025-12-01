@@ -3,7 +3,6 @@
   "name": "Shroud of Turin",
   "target": "Player",
   "rarity": "Common",
-  "valuesParse": [],
   "specialAction": "SelectOneCardFromHand",
   "exhaustsOnPlay": true,
   "text": "Choose a card from your hand - create an exact copy of the chosen card and put it into to your hand. Gain 1 temperance. Exhaust this on play.",

@@ -3,7 +3,6 @@
   "name": "Heaven's Glory",
   "target": "Enemy",
   "rarity": "Common",
-  "valuesParse": [1],
   "text": "The enemy gains {1} inferno.",
   "isFreeAction": true,
   "animation": "Attack",

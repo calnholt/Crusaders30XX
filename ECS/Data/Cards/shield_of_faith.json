@@ -4,8 +4,7 @@
   "target": "Player",
   "rarity": "Common",
   "cost": ["Any"],
-  "valuesParse": [9],
-  "text": "Gain {1} aegis.",
+  "text": "Gain {9} aegis.",
   "animation": "Buff",
   "type": "Spell",
   "block": 3

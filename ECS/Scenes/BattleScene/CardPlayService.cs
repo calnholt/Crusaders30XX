@@ -18,6 +18,7 @@ namespace Crusaders30XX.ECS.Systems
             var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             var battleStateInfo = player.GetComponent<BattleStateInfo>();
             int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
+            var passives = player.GetComponent<AppliedPassives>().Passives;
 
             Console.WriteLine($"[CardPlayService] Resolving card id={cardId} name={cardName}");
             CardDefinitionCache.TryGet(cardId, out CardDefinition def);
@@ -134,6 +135,13 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -def.damage, DamageType = ModifyTypeEnum.Attack });
                     break;
                 }
+                case "reconciled":
+                {
+                    passives.TryGetValue(AppliedPassiveType.Penance, out var penance);
+                    var extraDamage = penance == 0 ? values[0] : 0;
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -(def.damage + extraDamage), DamageType = ModifyTypeEnum.Attack });
+                    break;
+                }
                 case "sacrifice":
                 {
                     EventManager.Publish(new RequestDrawCardsEvent { Count = values[i++] });
@@ -211,10 +219,11 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     var time = 0.5f;
                     StateSingleton.PreventClicking = true;
-                    TimerScheduler.Schedule(time * values[1], () => {
+                    var numOfHits = values[0];
+                    TimerScheduler.Schedule(time * numOfHits, () => {
                         StateSingleton.PreventClicking = false;
                     });
-                    for (int j = 0; j < values[1]; j++)
+                    for (int j = 0; j < numOfHits; j++)
                     {
                         TimerScheduler.Schedule(time + (j * time), () => {
                             EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -def.damage, DamageType = ModifyTypeEnum.Attack });

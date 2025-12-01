@@ -1,0 +1,12 @@
+{
+    "id": "reconciled",
+    "name": "Reconciled",
+    "target": "Enemy",
+    "rarity": "Common",
+    "cost": [ "White", "Red" ],
+    "text": "If you have no penance, this attack gains +{8} damage.",
+    "animation": "Attack",
+    "type": "Attack",
+    "damage": 30,
+    "block": 2
+  }

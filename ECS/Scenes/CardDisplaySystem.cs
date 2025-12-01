@@ -459,13 +459,14 @@ namespace Crusaders30XX.ECS.Systems
 
         private Color GetDamageTrapezoidColor(CardData.CardColor color)
         {
-            return color switch
-            {
-                CardData.CardColor.Red => Color.Black,
-                CardData.CardColor.White => Color.DarkRed,
-                CardData.CardColor.Black => Color.DarkRed,
-                _ => Color.Black
-            };
+            return Color.Red;
+            // return color switch
+            // {
+            //     CardData.CardColor.Red => Color.Black,
+            //     CardData.CardColor.White => Color.DarkRed,
+            //     CardData.CardColor.Black => Color.DarkRed,
+            //     _ => Color.Black
+            // };
         }
         
         private void DrawCostPipsScaled(Vector2 cardCenter, float rotation, int localOffsetX, int localOffsetY, CardData.CardColor cardColor, string[] costs, float overallScale)

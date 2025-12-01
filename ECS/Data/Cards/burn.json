@@ -3,8 +3,7 @@
   "name": "Burn",
   "target": "Enemy",
   "rarity": "Common",
-  "valuesParse": [4, 3, 1, 1],
-  "text": "Apply {1} burn to the enemy. If you have {2} or more courage, gain {3} action point and lose {4} courage.",
+  "text": "Apply {4} burn to the enemy. If you have {3} or more courage, gain {1} action point and lose {1} courage.",
   "block": 2,
   "type": "Spell",
   "animation": "Attack"

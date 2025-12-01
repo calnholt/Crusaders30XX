@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using Crusaders30XX.ECS.Systems;
 
 namespace Crusaders30XX.ECS.Data.Cards
@@ -46,7 +47,7 @@ namespace Crusaders30XX.ECS.Data.Cards
             }
         }
 
-        // Replace placeholders in text using valuesParse so all systems see resolved text.
+        // Extract values from brackets in text and populate valuesParse, then replace brackets with values.
         private static void PostProcessDefinitions(Dictionary<string, CardDefinition> cache)
         {
             if (cache == null) return;
@@ -54,13 +55,29 @@ namespace Crusaders30XX.ECS.Data.Cards
             {
                 var def = kv.Value;
                 if (def == null) continue;
-                if (!string.IsNullOrEmpty(def?.text) && def.valuesParse != null && def.valuesParse.Length > 0)
+                if (!string.IsNullOrEmpty(def?.text))
                 {
-                    string resolved = def.text;
-                    for (int i = 0; i < def.valuesParse.Length; i++)
+                    // Extract numeric values from {n} patterns in text
+                    var valuesList = new List<int>();
+                    var pattern = @"\{(\d+)\}";
+                    var matches = Regex.Matches(def.text, pattern);
+                    
+                    foreach (Match match in matches)
                     {
-                        // Replace occurrences like {1}, {2}, ... with corresponding values
-                        resolved = resolved.Replace($"{{{i + 1}}}", def.valuesParse[i].ToString());
+                        if (int.TryParse(match.Groups[1].Value, out int value))
+                        {
+                            valuesList.Add(value);
+                        }
+                    }
+                    
+                    // Populate valuesParse with extracted values
+                    def.valuesParse = valuesList.ToArray();
+                    
+                    // Replace brackets with numeric values in text (e.g., {4} -> 4)
+                    string resolved = def.text;
+                    foreach (Match match in matches)
+                    {
+                        resolved = resolved.Replace(match.Value, match.Groups[1].Value);
                     }
                     def.text = resolved;
                 }
