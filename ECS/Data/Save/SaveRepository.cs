@@ -16,11 +16,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 				var data = JsonSerializer.Deserialize<SaveFile>(json, opts) ?? new SaveFile();
 				// Ensure non-null collections
-				if (data.locations == null) data.locations = new System.Collections.Generic.List<SaveLocation>();
-				foreach (var loc in data.locations)
-				{
-					if (loc != null && loc.events == null) loc.events = new System.Collections.Generic.List<SaveQuest>();
-				}
+				if (data.completedQuests == null) data.completedQuests = new System.Collections.Generic.List<string>();
 				if (data.collection == null) data.collection = new System.Collections.Generic.List<string>();
 				if (data.items == null) data.items = new System.Collections.Generic.List<SaveItem>();
 				result = data;
@@ -49,5 +45,3 @@ namespace Crusaders30XX.ECS.Data.Save
 		}
 	}
 }
-
-

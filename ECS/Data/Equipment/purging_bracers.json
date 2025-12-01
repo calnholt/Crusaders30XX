@@ -2,7 +2,7 @@
   "id": "purging_bracers",
   "name": "Purging Bracers",
   "slot": "Arms",
-  "block": 1,
+  "block": 3,
   "blockUses": 1,
   "color": "White",
   "abilities": [

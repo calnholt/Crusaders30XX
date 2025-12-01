@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Data.Locations;
 
 namespace Crusaders30XX.ECS.Data.Save
 {
@@ -30,9 +31,23 @@ namespace Crusaders30XX.ECS.Data.Save
 		{
 			EnsureLoaded();
 			if (_save == null || string.IsNullOrEmpty(locationId)) return defaultValue;
-			var loc = _save.locations?.FirstOrDefault(l => l != null && l.id == locationId);
-			if (loc == null || loc.events == null) return defaultValue;
-			return loc.events.Count(e => e != null && e.completed);
+			
+			if (!LocationDefinitionCache.TryGet(locationId, out var def) || def == null) return defaultValue;
+
+			if (_save.completedQuests == null) return 0;
+			
+			int count = 0;
+			if (def.pointsOfInterest != null)
+			{
+				foreach (var poi in def.pointsOfInterest)
+				{
+					if (poi != null && !string.IsNullOrEmpty(poi.id) && _save.completedQuests.Contains(poi.id))
+					{
+						count++;
+					}
+				}
+			}
+			return count;
 		}
 
 		public static int GetGold()
@@ -66,10 +81,8 @@ namespace Crusaders30XX.ECS.Data.Save
 		public static bool IsQuestCompleted(string locationId, string questId)
 		{
 			EnsureLoaded();
-			if (_save == null || string.IsNullOrEmpty(locationId) || string.IsNullOrEmpty(questId)) return false;
-			var loc = _save.locations?.FirstOrDefault(l => l != null && l.id == locationId);
-			var q = loc?.events?.FirstOrDefault(e => e != null && e.id == questId);
-			return q?.completed ?? false;
+			if (_save == null || string.IsNullOrEmpty(questId)) return false;
+			return _save.completedQuests != null && _save.completedQuests.Contains(questId);
 		}
 
 		public static void SetQuestCompleted(string locationId, string questId, bool completed)
@@ -78,23 +91,21 @@ namespace Crusaders30XX.ECS.Data.Save
 			lock (_lock)
 			{
 				if (_save == null) _save = new SaveFile();
-				if (_save.locations == null) _save.locations = new System.Collections.Generic.List<SaveLocation>();
-				var loc = _save.locations.FirstOrDefault(l => l != null && l.id == locationId);
-				if (loc == null)
+				if (_save.completedQuests == null) _save.completedQuests = new List<string>();
+
+				if (completed)
 				{
-					loc = new SaveLocation { id = locationId, events = new System.Collections.Generic.List<SaveQuest>() };
-					_save.locations.Add(loc);
-				}
-				if (loc.events == null) loc.events = new System.Collections.Generic.List<SaveQuest>();
-				var quest = loc.events.FirstOrDefault(e => e != null && e.id == questId);
-				if (quest == null)
-				{
-					quest = new SaveQuest { id = questId, completed = completed };
-					loc.events.Add(quest);
+					if (!_save.completedQuests.Contains(questId))
+					{
+						_save.completedQuests.Add(questId);
+					}
 				}
 				else
 				{
-					quest.completed = completed;
+					if (_save.completedQuests.Contains(questId))
+					{
+						_save.completedQuests.Remove(questId);
+					}
 				}
 				Persist();
 			}
@@ -148,5 +159,3 @@ namespace Crusaders30XX.ECS.Data.Save
 		}
 	}
 }
-
-

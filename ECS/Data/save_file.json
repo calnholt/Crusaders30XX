@@ -1,55 +1,11 @@
 {
-  "gold": 8,
-  "locations": [
-    {
-      "id": "desert",
-      "events": [
-        {
-          "id": "desert_1",
-          "completed": true
-        },
-        {
-          "id": "desert_2",
-          "completed": true
-        },
-        {
-          "id": "desert_3",
-          "completed": true
-        },
-        {
-          "id": "desert_4",
-          "completed": true
-        },
-        {
-          "id": "desert_5",
-          "completed": true
-        },
-        {
-          "id": "desert_6",
-          "completed": false
-        },
-        {
-          "id": "desert_7",
-          "completed": false
-        },
-        {
-          "id": "desert_8",
-          "completed": false
-        },
-        {
-          "id": "desert_8",
-          "completed": false
-        },
-        {
-          "id": "desert_10",
-          "completed": true
-        },
-        {
-          "id": "desert_11",
-          "completed": true
-        }
-      ]
-    }
+  "gold": 6,
+  "completedQuests": [
+    "desert_1",
+    "desert_2",
+    "desert_5",
+    "desert_6",
+    "desert_3"
   ],
   "collection": [
     "radiance",
@@ -74,7 +30,10 @@
     "st_michael",
     "pierced_heart_plate",
     "stalwart",
-    "fling_fling"
+    "fling_fling",
+    "impale",
+    "shroud_of_turin",
+    "purging_bracers"
   ],
   "items": [
     {

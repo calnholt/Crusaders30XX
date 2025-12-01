@@ -2,7 +2,7 @@
   "id": "pierced_heart_plate",
   "name": "Pierced Heart Plate",
   "slot": "Chest",
-  "block": 2,
+  "block": 4,
   "blockUses": 1,
   "color": "Black",
   "abilities": [
