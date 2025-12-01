@@ -14,6 +14,7 @@ using System;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Data.Save;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -402,6 +403,7 @@ namespace Crusaders30XX.ECS.Factories
 		{
 			var result = new List<Entity>();
 			if (defs == null) return result;
+			var collection = SaveCache.GetCollectionSet();
 			int idx = 0;
 			foreach (var fs in defs)
 			{
@@ -464,7 +466,7 @@ namespace Crusaders30XX.ECS.Factories
 					Id = id,
 					ItemType = itemType,
 					Price = fs.price,
-					IsPurchased = fs.isPurchased,
+					IsPurchased = collection.Contains(id),
 					DisplayName = displayName,
 					SourceShopName = shopName ?? string.Empty
 				});

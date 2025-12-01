@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
@@ -77,11 +76,7 @@ namespace Crusaders30XX.ECS.Services
 			}
 			catch { }
 
-			// Update location file to mark purchased (best-effort; non-fatal if it fails)
-			TryMarkPurchasedInLocationJson(locationId, result.ShopName, fs.Id);
-
 			// Refresh runtime caches so UI reflects new state
-			try { LocationDefinitionCache.Reload(); } catch { }
 			try { SaveCache.Reload(); } catch { }
 
 			result.Success = true;
@@ -137,77 +132,10 @@ namespace Crusaders30XX.ECS.Services
 			return null;
 		}
 
-		private static bool TryMarkPurchasedInLocationJson(string locationId, string shopName, string itemId)
-		{
-			try
-			{
-				string locationsFolder = ResolveLocationsFolder();
-				if (string.IsNullOrEmpty(locationsFolder) || !Directory.Exists(locationsFolder)) return false;
-
-				// Try targeted file first if we know the location id
-				if (!string.IsNullOrEmpty(locationId))
-				{
-					string file = Path.Combine(locationsFolder, locationId + ".json");
-					if (File.Exists(file) && TryUpdateLocationFile(file, shopName, itemId)) return true;
-				}
-
-				// Fallback: scan all location files
-				foreach (var file in Directory.GetFiles(locationsFolder, "*.json"))
-				{
-					if (TryUpdateLocationFile(file, shopName, itemId)) return true;
-				}
-			}
-			catch { }
-			return false;
-		}
-
-		private static bool TryUpdateLocationFile(string fileAbsPath, string shopName, string itemId)
-		{
-			try
-			{
-				var json = File.ReadAllText(fileAbsPath);
-				var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
-				var node = JsonNode.Parse(json);
-				if (node == null) return false;
-
-				var pois = node["PointsOfInterest"] as JsonArray;
-				if (pois == null) return false;
-
-				foreach (var poiNode in pois.OfType<JsonNode>())
-				{
-					string name = poiNode?["Name"]?.GetValue<string>();
-					if (!string.IsNullOrWhiteSpace(shopName) && !string.Equals(name ?? string.Empty, shopName, StringComparison.OrdinalIgnoreCase)) continue;
-
-					var fsArray = poiNode?["ForSale"] as JsonArray;
-					if (fsArray == null) continue;
-
-					foreach (var itemNode in fsArray.OfType<JsonNode>())
-					{
-						string id = itemNode?["Id"]?.GetValue<string>();
-						if (string.Equals(id ?? string.Empty, itemId ?? string.Empty, StringComparison.OrdinalIgnoreCase))
-						{
-							itemNode["IsPurchased"] = true;
-							var newJson = node.ToJsonString(opts);
-							File.WriteAllText(fileAbsPath, newJson);
-							return true;
-						}
-					}
-				}
-			}
-			catch { }
-			return false;
-		}
-
 		private static string ResolveSavePath()
 		{
 			string root = FindProjectRootContaining("Crusaders30XX.csproj");
 			return string.IsNullOrEmpty(root) ? string.Empty : Path.Combine(root, "ECS", "Data", "save_file.json");
-		}
-
-		private static string ResolveLocationsFolder()
-		{
-			string root = FindProjectRootContaining("Crusaders30XX.csproj");
-			return string.IsNullOrEmpty(root) ? string.Empty : Path.Combine(root, "ECS", "Data", "Locations");
 		}
 
 		private static string FindProjectRootContaining(string filename)
