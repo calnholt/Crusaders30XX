@@ -15,8 +15,6 @@
 
 Prompts - 
 
-full screen - just keep 1920x1080 and keep surrounding black
-
 abandon quest screen needs to prevent actions "behind"
 
 card idea - spend aegis
@@ -36,8 +34,6 @@ on hit - top card gains burn 1
 on hit - card becomes colorless
 
 cardtooltip not being correctly removed for blocked cards, can see from opening discard modal (only happens for mouse controls?)
-
-enemy attack display min width
 
 Convert desert background to shader
 Generate shield shader and helper; create shield display system that keys off existence of having shield passive.
