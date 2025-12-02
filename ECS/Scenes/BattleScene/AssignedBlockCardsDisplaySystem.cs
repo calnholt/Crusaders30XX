@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Anchor Offset X", Step = 2, Min = -1000, Max = 1000)]
 		public int AnchorOffsetX { get; set; } = 0;
 		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -1000, Max = 1000)]
-		public int AnchorOffsetY { get; set; } = -44;
+		public int AnchorOffsetY { get; set; } = -75;
 		[DebugEditable(DisplayName = "Slot Spacing X", Step = 2, Min = 10, Max = 200)]
 		public int SlotSpacingX { get; set; } = 70;
 		[DebugEditable(DisplayName = "Card Draw W", Step = 2, Min = 20, Max = 300)]

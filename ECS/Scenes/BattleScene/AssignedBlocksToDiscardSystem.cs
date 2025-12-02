@@ -194,7 +194,7 @@ namespace Crusaders30XX.ECS.Systems
             if (deckEntity == null) return;
 
             // Compute discard target rect center from DiscardPileDisplaySystem layout
-            int h = _graphics.Viewport.Height;
+            int h = Game1.VirtualHeight;
             int panelW = 60; // defaults in DiscardPileDisplaySystem
             int panelH = 80;
             int margin = 20;
