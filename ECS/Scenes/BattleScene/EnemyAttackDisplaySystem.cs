@@ -91,6 +91,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Panel Max Width % of Screen", Step = 0.05f, Min = 0.1f, Max = 1f)]
 		public float PanelMaxWidthPercent { get; set; } = 0.25f;
 
+		[DebugEditable(DisplayName = "Panel Min Width % of Screen", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float PanelMinWidthPercent { get; set; } = 0.17f;
+
 		[DebugEditable(DisplayName = "Line Spacing Extra", Step = 1, Min = 0, Max = 20)]
 		public int LineSpacingExtra { get; set; } = 3;
 
@@ -562,6 +565,9 @@ namespace Crusaders30XX.ECS.Systems
 			int vy = Game1.VirtualHeight;
 			float percent = Math.Clamp(PanelMaxWidthPercent, 0.1f, 1f);
 			int maxPanelWidthPx = (int)Math.Round(vx * percent);
+			float minPercent = Math.Clamp(PanelMinWidthPercent, 0f, 1f);
+			int minPanelWidthPx = (int)Math.Round(vx * minPercent);
+
 			int contentWidthLimitPx = Math.Max(50, maxPanelWidthPx - pad * 2);
 			// wrappedLines: centerTitle == true for attack name lines, false otherwise
 			var wrappedLines = new System.Collections.Generic.List<(string text, float scale, Color color, bool centerTitle)>();
@@ -584,6 +590,7 @@ namespace Crusaders30XX.ECS.Systems
 				totalH += sz.Y * lineScale + LineSpacingExtra;
 			}
 			int w = (int)Math.Ceiling(Math.Min(maxW + pad * 2, maxPanelWidthPx));
+			w = Math.Max(w, minPanelWidthPx);
 			int h = (int)Math.Ceiling(totalH) + pad * 2;
 
 			// Derive panel center from viewport center plus the current parallax offset of the banner anchor
