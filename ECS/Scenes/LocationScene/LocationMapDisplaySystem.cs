@@ -308,7 +308,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Find target POI: prioritize saved lastLocation
 			PointOfInterestDefinition targetPoi = null;
 
-			string lastLoc = SaveCache.GetLastLocation();
+			string lastLoc = SaveCache.GetAll().lastLocation;
 			if (!string.IsNullOrEmpty(lastLoc))
 			{
 				targetPoi = def.pointsOfInterest.FirstOrDefault(p => p.id == lastLoc);

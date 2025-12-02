@@ -145,10 +145,14 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 		}
 
-		public static string GetLastLocation()
+		private static void Persist()
 		{
-			EnsureLoaded();
-			return _save?.lastLocation ?? string.Empty;
+			try
+			{
+				var path = ResolveFilePath();
+				SaveRepository.Save(path, _save);
+			}
+			catch { }
 		}
 
 		public static void SetLastLocation(string locationId)
@@ -162,16 +166,6 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 		}
 
-		private static void Persist()
-		{
-			try
-			{
-				var path = ResolveFilePath();
-				SaveRepository.Save(path, _save);
-			}
-			catch { }
-		}
-
 		private static void EnsureLoaded()
 		{
 			if (_save != null) return;
@@ -180,19 +174,123 @@ namespace Crusaders30XX.ECS.Data.Save
 				if (_save == null)
 				{
 					var path = ResolveFilePath();
-					_save = SaveRepository.Load(path);
+					if (File.Exists(path))
+					{
+						_save = SaveRepository.Load(path);
+					}
+					else
+					{
+						// Create default save file for new users
+						_save = CreateDefaultSave();
+						Persist();
+					}
 				}
 			}
 		}
 
+		private static SaveFile CreateDefaultSave()
+		{
+			return new SaveFile
+			{
+				gold = 0,
+				completedQuests = new List<string>(),
+				collection = new List<string>
+				{
+					// Starter cards everyone has
+					"anoint_the_sick",
+					"burn",
+					"courageous",
+					"divine_protection", 
+					"dowse_with_holy_water",
+					"increase_faith",
+					"narrow_gate",
+					"sacrifice",
+					"seize",
+					"shield_of_faith",
+					"stab",
+					"strike", 
+					"stun",
+					"ravage",
+					"tempest",
+				},
+				items = new List<SaveItem>(),
+				lastLocation = "desert_1",
+				loadouts = new List<LoadoutDefinition>
+				{
+					new LoadoutDefinition
+					{
+						id = "loadout_1",
+						name = "Deck",
+						cardIds = new List<string>
+						{
+							"anoint_the_sick|Black",
+							"anoint_the_sick|White",
+							"burn|Red",
+							"burn|White",
+							"courageous|Black",
+							"courageous|White",
+							"divine_protection|Red",
+							"divine_protection|Black",
+							"dowse_with_holy_water|Red",
+							"dowse_with_holy_water|White",
+							"increase_faith|Red",
+							"increase_faith|White",
+							"narrow_gate|White",
+							"narrow_gate|Black",
+							"sacrifice|Black",
+							"sacrifice|White",
+							"seize|Red",
+							"seize|White",
+							"shield_of_faith|Black",
+							"shield_of_faith|White",
+							"stab|White", 
+							"stab|Red",
+							"strike|White", 
+							"strike|Red",
+							"stun|Red",
+							"stun|Black",
+							"ravage|Red",
+							"ravage|White",
+							"tempest|Black",
+							"tempest|White",
+						},
+						weaponId = "hammer",
+						temperanceId = "angelic_aura",
+						chestId = "",
+						legsId = "",
+						armsId = "",
+						headId = "",
+						medalIds = new List<string>
+						{
+							"st_michael",
+						}
+					}
+				}
+			};
+		}
+
 		private static string ResolveFilePath()
 		{
-			if (!string.IsNullOrEmpty(_filePath)) return _filePath;
-			var appData = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
-			var saveDir = Path.Combine(appData, "Crusaders30XX");
-			Directory.CreateDirectory(saveDir);
-			_filePath = Path.Combine(saveDir, "save_file.json");
+			if (!string.IsNullOrEmpty(_filePath) && File.Exists(_filePath)) return _filePath;
+			string root = FindProjectRootContaining("Crusaders30XX.csproj");
+			_filePath = string.IsNullOrEmpty(root) ? string.Empty : Path.Combine(root, "ECS", "Data", "save_file.json");
 			return _filePath;
+		}
+
+		private static string FindProjectRootContaining(string filename)
+		{
+			try
+			{
+				var dir = new DirectoryInfo(System.AppContext.BaseDirectory);
+				for (int i = 0; i < 6 && dir != null; i++)
+				{
+					var candidate = Path.Combine(dir.FullName, filename);
+					if (File.Exists(candidate)) return dir.FullName;
+					dir = dir.Parent;
+				}
+			}
+			catch { }
+			return null;
 		}
 	}
 }
