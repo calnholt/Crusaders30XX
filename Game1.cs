@@ -211,6 +211,12 @@ public class Game1 : Game
         var kb = Keyboard.GetState();
         if ((kb.IsKeyDown(Keys.Escape) && kb.IsKeyDown(Keys.LeftShift)))
             Exit();
+
+        if (kb.IsKeyDown(Keys.F11) && !_prevKeyboard.IsKeyDown(Keys.F11))
+        {
+            ToggleFullScreen();
+        }
+
         // Global debug menu toggle so it's available in the main menu too
         if (kb.IsKeyDown(Keys.D) && !_prevKeyboard.IsKeyDown(Keys.D) && kb.IsKeyDown(Keys.LeftShift))
         {
@@ -434,6 +440,29 @@ public class Game1 : Game
         int x = (screenSize.X - width) / 2;
         int y = (screenSize.Y - height) / 2;
         RenderDestination = new Rectangle(x, y, width, height);
+    }
+
+    private void ToggleFullScreen()
+    {
+        if (!_graphics.IsFullScreen)
+        {
+            // Borderless full screen: set to desktop resolution to cover taskbar and top bar
+            _graphics.HardwareModeSwitch = false;
+            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+            _graphics.IsFullScreen = true;
+        }
+        else
+        {
+            // Windowed mode: reset to virtual resolution
+            _graphics.IsFullScreen = false;
+            _graphics.PreferredBackBufferWidth = VirtualWidth;
+            _graphics.PreferredBackBufferHeight = VirtualHeight;
+        }
+        _graphics.ApplyChanges();
+        
+        // Recalculate rendering destination to stretch and letterbox the 1920x1080 content
+        CalculateRenderDestination();
     }
 
     private void ToggleDebugMenu()

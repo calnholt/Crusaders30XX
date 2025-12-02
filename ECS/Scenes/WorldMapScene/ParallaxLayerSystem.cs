@@ -46,8 +46,8 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
-			int w = _graphics.Viewport.Width;
-			int h = _graphics.Viewport.Height;
+			int w = Game1.VirtualWidth;
+			int h = Game1.VirtualHeight;
 			var center = new Vector2(w / 2f, h / 2f);
 
 			// Allow cooperating with external layouts: reconstruct base from current pos each frame
