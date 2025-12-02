@@ -54,8 +54,8 @@ namespace Crusaders30XX.ECS.Systems
 
             if (_crusaderTexture != null && player != null)
             {
-                int viewportW = _graphicsDevice.Viewport.Width;
-                int viewportH = _graphicsDevice.Viewport.Height;
+                int viewportW = Game1.VirtualWidth;
+                int viewportH = Game1.VirtualHeight;
 
                 float desiredHeight = ScreenHeightCoverage * viewportH;
                 float baseScale = desiredHeight / _crusaderTexture.Height;

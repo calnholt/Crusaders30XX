@@ -190,7 +190,7 @@ namespace Crusaders30XX.ECS.Systems
             // Only interactable while active so it doesn't capture hover/clicks
             ui.IsInteractable = state.IsActive;
             ui.Bounds = state.IsActive
-                ? new Rectangle(0, 0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height)
+                ? new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight)
                 : new Rectangle(0, 0, 0, 0);
 
             if (!state.IsActive)
@@ -309,8 +309,8 @@ namespace Crusaders30XX.ECS.Systems
                 ResetTypewriterForCurrentLine(st);
             }
 
-            int vw = _graphicsDevice.Viewport.Width;
-            int vh = _graphicsDevice.Viewport.Height;
+            int vw = Game1.VirtualWidth;
+            int vh = Game1.VirtualHeight;
             int panelH = (int)System.Math.Round(vh * MathHelper.Clamp(PanelHeightPercent, 0.05f, 0.9f));
             var panelRect = new Rectangle(0, vh - panelH, vw, panelH);
 
@@ -468,7 +468,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 e = EntityManager.CreateEntity("DialogOverlay");
                 var t = new Transform { Position = Vector2.Zero, ZOrder = ZOrder };
-                var ui = new UIElement { Bounds = new Rectangle(0, 0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height), IsInteractable = true };
+                var ui = new UIElement { Bounds = new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight), IsInteractable = true };
                 EntityManager.AddComponent(e, t);
                 EntityManager.AddComponent(e, ui);
                 EntityManager.AddComponent(e, new DialogOverlayState());
@@ -489,7 +489,7 @@ namespace Crusaders30XX.ECS.Systems
             if (ent == null)
             {
                 ent = EntityManager.CreateEntity("DialogEndButton");
-                int vw = _graphicsDevice.Viewport.Width;
+                int vw = Game1.VirtualWidth;
                 int x = vw - System.Math.Max(0, EndButtonMargin) - System.Math.Max(40, EndButtonWidth);
                 int y = System.Math.Max(0, EndButtonMargin);
                 EntityManager.AddComponent(ent, new Transform { BasePosition = new Vector2(x, y), Position = new Vector2(x, y), ZOrder = ZOrder + 1 });
@@ -500,7 +500,7 @@ namespace Crusaders30XX.ECS.Systems
             else
             {
                 // Keep anchored to top-right
-                int vw = _graphicsDevice.Viewport.Width;
+                int vw = Game1.VirtualWidth;
                 int x = vw - System.Math.Max(0, EndButtonMargin) - System.Math.Max(40, EndButtonWidth);
                 int y = System.Math.Max(0, EndButtonMargin);
                 var t = ent.GetComponent<Transform>();

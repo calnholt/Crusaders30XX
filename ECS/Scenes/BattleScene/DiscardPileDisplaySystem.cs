@@ -64,8 +64,8 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			EnsureRootEntity();
-			int w = _graphicsDevice.Viewport.Width;
-			int h = _graphicsDevice.Viewport.Height;
+			int w = Game1.VirtualWidth;
+			int h = Game1.VirtualHeight;
             var root = EntityManager.GetEntity(RootEntityName);
             var t = root?.GetComponent<Transform>();
             if (t != null)
@@ -153,7 +153,7 @@ namespace Crusaders30XX.ECS.Systems
             if (e == null)
             {
                 e = EntityManager.CreateEntity(RootEntityName);
-                int h = _graphicsDevice.Viewport.Height;
+                int h = Game1.VirtualHeight;
                 int rectW = PanelWidth;
                 int rectH = PanelHeight;
                 int m = PanelMargin;

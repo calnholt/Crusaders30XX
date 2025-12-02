@@ -131,10 +131,12 @@ namespace Crusaders30XX.ECS.Systems
             OnEndTurnPressed();
         }
 
-        private Rectangle GetButtonRect(Viewport vp)
+        private Rectangle GetButtonRect()
         {
-            int x = (int)(vp.Width * 0.5f - ButtonWidth * 0.5f);
-            int y = vp.Height - ButtonHeight - 40 - ButtonOffsetY; // above bottom UI band
+            int width = Game1.VirtualWidth;
+            int height = Game1.VirtualHeight;
+            int x = (int)(width * 0.5f - ButtonWidth * 0.5f);
+            int y = height - ButtonHeight - 40 - ButtonOffsetY; // above bottom UI band
             return new Rectangle(x, y, ButtonWidth, ButtonHeight);
         }
 
@@ -149,8 +151,7 @@ namespace Crusaders30XX.ECS.Systems
         public void Draw()
         {
 			// Ensure a clickable UI entity exists and keep its base anchored; ParallaxLayer will offset Position
-            var vp = _graphicsDevice.Viewport;
-			var btnRect = GetButtonRect(vp);
+            var btnRect = GetButtonRect();
             var endBtn = EntityManager.GetEntitiesWithComponent<UIButton>().FirstOrDefault(e => e.GetComponent<UIButton>().Command == "EndTurn");
             var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
             if (endBtn == null)

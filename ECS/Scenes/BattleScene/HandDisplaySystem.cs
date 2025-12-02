@@ -108,7 +108,7 @@ namespace Crusaders30XX.ECS.Systems
 			CaptureBaselineIfNeeded(s);
 			if (!_baselineCaptured) return;
 
-			int vh = _graphicsDevice.Viewport.Height;
+			int vh = Game1.VirtualHeight;
 			float baseH = Math.Max(1, AutoScaleThresholdHeight);
 			float raw = vh >= baseH ? 1f : (vh / baseH);
 			float scaled = MathF.Pow(MathF.Max(MinCardScale, MathF.Min(1f, raw)), MathF.Max(0.1f, CardScalePower));
@@ -171,11 +171,11 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         // Compute fan layout positions around bottom-center pivot
                         int count = deck.Hand.Count;
-                        float screenWidth = _graphicsDevice.Viewport.Width;
-                        float screenHeight = _graphicsDevice.Viewport.Height;
+                        float screenWidth = Game1.VirtualWidth;
+                        float screenHeight = Game1.VirtualHeight;
 
 						// Scale bottom margin for small screens using the same scaling power
-						int vh = _graphicsDevice.Viewport.Height;
+						int vh = Game1.VirtualHeight;
 						float baseH = Math.Max(1, AutoScaleThresholdHeight);
 						float rawScale = vh >= baseH ? 1f : (vh / baseH);
 						float marginScale = MathF.Pow(MathF.Max(MinCardScale, MathF.Min(1f, rawScale)), MathF.Max(0.1f, CardScalePower));
@@ -225,7 +225,7 @@ namespace Crusaders30XX.ECS.Systems
 						// If this card just appeared, spawn its base offscreen to the right so it flies in
 						if (transform.BasePosition == Vector2.Zero)
 						{
-							float spawnX = _graphicsDevice.Viewport.Width + ((cvs?.CardWidth ?? 250) * 1.5f);
+							float spawnX = Game1.VirtualWidth + ((cvs?.CardWidth ?? 250) * 1.5f);
 							float spawnY = pivot.Y + HandFanCurveOffset;
 							var spawn = new Vector2(spawnX, spawnY);
 							transform.BasePosition = spawn;

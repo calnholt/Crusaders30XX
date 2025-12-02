@@ -119,8 +119,8 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Initialize position centered on first entry to scene or when viewport changes
-			int w = _graphicsDevice.Viewport.Width;
-			int h = _graphicsDevice.Viewport.Height;
+			int w = Game1.VirtualWidth;
+			int h = Game1.VirtualHeight;
 			if (w != _lastViewportW || h != _lastViewportH)
 			{
 				_lastViewportW = w;
@@ -301,7 +301,20 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				// Mouse-driven path: set position directly and handle hover/click
 				var ms = Mouse.GetState();
-				_cursorPosition = new Vector2(ms.X, ms.Y);
+				
+				// Transform mouse coordinates from Screen Space to Virtual Space
+				var dest = Game1.RenderDestination;
+				float scaleX = (float)dest.Width / Game1.VirtualWidth;
+				float scaleY = (float)dest.Height / Game1.VirtualHeight;
+				
+				// Avoid division by zero
+				if (scaleX <= 0.001f) scaleX = 1f;
+				if (scaleY <= 0.001f) scaleY = 1f;
+
+				float virtX = (ms.X - dest.X) / scaleX;
+				float virtY = (ms.Y - dest.Y) / scaleY;
+
+				_cursorPosition = new Vector2(virtX, virtY);
 				_cursorPosition.X = MathHelper.Clamp(_cursorPosition.X, 0f, w);
 				_cursorPosition.Y = MathHelper.Clamp(_cursorPosition.Y, 0f, h);
 				// Ensure rumble is disabled when switching to mouse

@@ -72,44 +72,39 @@ public class Game1 : Game
 	};
 
     public static bool WindowIsActive { get; private set; } = true;
-
+    public static int VirtualWidth = 1920;
+    public static int VirtualHeight = 1080;
+    public static Rectangle RenderDestination { get; private set; }
+    
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         Window.AllowUserResizing = true;
         
-        // Set window size dynamically, clamped to 1920x1080
-        var displayMode = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
-        int targetWidth = Math.Min(1920, displayMode.Width);
-        int targetHeight = Math.Min(1080, displayMode.Height);
-        _graphics.PreferredBackBufferWidth = targetWidth;
-        _graphics.PreferredBackBufferHeight = targetHeight;
-        // UIScale now lives in CardVisualSettings; initial seeding happens in EntityFactory
+        // Initial setup - will be adjusted by CalculateRenderDestination
+        _graphics.PreferredBackBufferWidth = VirtualWidth;
+        _graphics.PreferredBackBufferHeight = VirtualHeight;
+        
         _graphics.ApplyChanges();
 
-        // Clamp user resize to the maximum of 1920x1080
         Window.ClientSizeChanged += (sender, args) =>
         {
-            int newWidth = Math.Min(1920, Window.ClientBounds.Width);
-            int newHeight = Math.Min(1080, Window.ClientBounds.Height);
-            if (newWidth != _graphics.PreferredBackBufferWidth || newHeight != _graphics.PreferredBackBufferHeight)
+            if (_graphics.PreferredBackBufferWidth != Window.ClientBounds.Width ||
+                _graphics.PreferredBackBufferHeight != Window.ClientBounds.Height)
             {
-            _graphics.PreferredBackBufferWidth = newWidth;
-            _graphics.PreferredBackBufferHeight = newHeight;
-            // Adjust UIScale via CardVisualSettingsDebugSystem if desired
+                _graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
+                _graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
                 _graphics.ApplyChanges();
-                // Reallocate RTs to new backbuffer size
-                _sceneRt?.Dispose();
-                _ppA?.Dispose();
-                _ppB?.Dispose();
-                AllocateRenderTargets();
+                
+                CalculateRenderDestination();
             }
         };
     }
 
     protected override void Initialize()
     {
+        CalculateRenderDestination();
         // Initialize ECS World
         _world = new World();
         base.Initialize();
@@ -243,52 +238,75 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        // Draw to virtual RT first
+        EnsureRenderTargetsMatchVirtual();
+        
+        GraphicsDevice.SetRenderTarget(_sceneRt);
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
+        DrawScene();
+
+        // Process effects
         bool hasPoison = _poisonSystem != null && _poisonSystem.HasActivePoison;
         bool hasCircularWaves = _shockwaveSystem != null && _shockwaveSystem.HasActiveWaves;
         bool hasRectangularWaves = _rectangularShockwaveSystem != null && _rectangularShockwaveSystem.HasActiveWaves;
+        
+        Texture2D finalTexture = _sceneRt;
 
         if (hasPoison || hasCircularWaves || hasRectangularWaves)
         {
-            EnsureRenderTargetsMatchBackbuffer();
-            // Render scene into _sceneRt
-            GraphicsDevice.SetRenderTarget(_sceneRt);
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-            DrawScene();
-            GraphicsDevice.SetRenderTarget(null);
-
             // Composite effects in order: Poison → Circular Shockwaves → Rectangular Shockwaves
-            Texture2D src = _sceneRt;
-            
             // Apply poison first if active
             if (hasPoison)
             {
                 // If poison is the only effect, render directly to backbuffer (null)
                 // Otherwise render to _ppB for further processing
-                RenderTarget2D poisonTarget = (hasCircularWaves || hasRectangularWaves) ? _ppB : null;
-                _poisonSystem.Composite(src, _ppA, poisonTarget);
-                if (poisonTarget != null) src = poisonTarget;
+                RenderTarget2D poisonTarget = (hasCircularWaves || hasRectangularWaves) ? _ppB : _ppA;
+                _poisonSystem.Composite(finalTexture, _ppA, poisonTarget); // _ppA used as temp? Composite params: src, temp, dst
+                // Actually poisonSystem.Composite signature usually takes (src, intermediate_rt, dst_rt). 
+                // If dst is null it draws to screen. But here we want to keep it in RTs.
+                // We'll trust the existing system flow but adapt it to RT-only chain.
+                // existing: _poisonSystem.Composite(src, _ppA, poisonTarget); 
+                // if poisonTarget is null it drew to backbuffer. Now we must draw to an RT.
+                
+                // Let's refine the chain logic slightly to be safe with fixed RTs
+                RenderTarget2D next = (hasCircularWaves || hasRectangularWaves) ? _ppB : _ppA;
+                _poisonSystem.Composite(finalTexture, _ppA, next);
+                finalTexture = next;
             }
             
             // Apply circular shockwaves second if any
             if (hasCircularWaves)
             {
-                _shockwaveSystem.Composite(src, _ppA, _ppB, hasRectangularWaves ? _ppA : null);
-                src = _ppA;
+                RenderTarget2D next = hasRectangularWaves ? (finalTexture == _ppA ? _ppB : _ppA) : (finalTexture == _ppA ? _ppB : _ppA);
+                // logic: if current is A, target B. if current is B, target A.
+                // existing: _shockwaveSystem.Composite(src, _ppA, _ppB, hasRectangularWaves ? _ppA : null);
+                // This seems to imply src -> _ppA (drawn) or something. 
+                // Let's simplify: always ping-pong.
+                
+                RenderTarget2D dest = (finalTexture == _ppA) ? _ppB : _ppA;
+                _shockwaveSystem.Composite(finalTexture, _ppA, _ppB, dest); 
+                // Wait, shockwave composite takes (src, ppA, ppB, dst). 
+                // If dst is null it draws to screen. We need it to draw to 'dest'.
+                finalTexture = dest;
             }
             
             // Apply rectangular shockwaves on top if any
             if (hasRectangularWaves)
             {
-                _rectangularShockwaveSystem.Composite(src, _ppA, _ppB, null);
+                RenderTarget2D dest = (finalTexture == _ppA) ? _ppB : _ppA;
+                _rectangularShockwaveSystem.Composite(finalTexture, _ppA, _ppB, dest);
+                finalTexture = dest;
             }
         }
-        else
-        {
-            // Direct draw
-            DrawScene();
-        }
+
+        // Final draw to backbuffer with letterboxing
+        GraphicsDevice.SetRenderTarget(null);
+        GraphicsDevice.Clear(Color.Black);
+        
+        _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp);
+        _spriteBatch.Draw(finalTexture, RenderDestination, Color.White);
+        _spriteBatch.End();
 
         base.Draw(gameTime);
     }
@@ -377,22 +395,45 @@ public class Game1 : Game
 
     private void AllocateRenderTargets()
     {
-        var vp = GraphicsDevice.PresentationParameters;
-        _sceneRt = new RenderTarget2D(GraphicsDevice, vp.BackBufferWidth, vp.BackBufferHeight, false, SurfaceFormat.Color, DepthFormat.None);
-        _ppA = new RenderTarget2D(GraphicsDevice, vp.BackBufferWidth, vp.BackBufferHeight, false, SurfaceFormat.Color, DepthFormat.None);
-        _ppB = new RenderTarget2D(GraphicsDevice, vp.BackBufferWidth, vp.BackBufferHeight, false, SurfaceFormat.Color, DepthFormat.None);
+        _sceneRt = new RenderTarget2D(GraphicsDevice, VirtualWidth, VirtualHeight, false, SurfaceFormat.Color, DepthFormat.None);
+        _ppA = new RenderTarget2D(GraphicsDevice, VirtualWidth, VirtualHeight, false, SurfaceFormat.Color, DepthFormat.None);
+        _ppB = new RenderTarget2D(GraphicsDevice, VirtualWidth, VirtualHeight, false, SurfaceFormat.Color, DepthFormat.None);
     }
 
-    private void EnsureRenderTargetsMatchBackbuffer()
+    private void EnsureRenderTargetsMatchVirtual()
     {
-        var vp = GraphicsDevice.PresentationParameters;
-        if (_sceneRt == null || _sceneRt.Width != vp.BackBufferWidth || _sceneRt.Height != vp.BackBufferHeight)
+        if (_sceneRt == null || _sceneRt.Width != VirtualWidth || _sceneRt.Height != VirtualHeight)
         {
             _sceneRt?.Dispose();
             _ppA?.Dispose();
             _ppB?.Dispose();
             AllocateRenderTargets();
         }
+    }
+    
+    private void CalculateRenderDestination()
+    {
+        Point screenSize = new Point(GraphicsDevice.PresentationParameters.BackBufferWidth, GraphicsDevice.PresentationParameters.BackBufferHeight);
+        float screenAspect = (float)screenSize.X / screenSize.Y;
+        float virtualAspect = (float)VirtualWidth / VirtualHeight;
+
+        int width, height;
+        if (screenAspect > virtualAspect)
+        {
+            // Screen is wider than virtual: pillarbox
+            height = screenSize.Y;
+            width = (int)(height * virtualAspect);
+        }
+        else
+        {
+            // Screen is taller than virtual (or equal): letterbox
+            width = screenSize.X;
+            height = (int)(width / virtualAspect);
+        }
+
+        int x = (screenSize.X - width) / 2;
+        int y = (screenSize.Y - height) / 2;
+        RenderDestination = new Rectangle(x, y, width, height);
     }
 
     private void ToggleDebugMenu()

@@ -558,8 +558,8 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Measure and draw a simple panel in the center
 			int pad = Math.Max(0, PanelPadding);
-			int vx = _graphicsDevice.Viewport.Width;
-			int vy = _graphicsDevice.Viewport.Height;
+			int vx = Game1.VirtualWidth;
+			int vy = Game1.VirtualHeight;
 			float percent = Math.Clamp(PanelMaxWidthPercent, 0.1f, 1f);
 			int maxPanelWidthPx = (int)Math.Round(vx * percent);
 			int contentWidthLimitPx = Math.Max(50, maxPanelWidthPx - pad * 2);

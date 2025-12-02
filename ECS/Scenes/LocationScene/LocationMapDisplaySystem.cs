@@ -78,8 +78,8 @@ namespace Crusaders30XX.ECS.Systems
 			_prevMouseState = Mouse.GetState();
 			EventManager.Subscribe<LockLocationCameraEvent>(_ => { _locked = _.Locked; });
 			EventManager.Subscribe<FocusLocationCameraEvent>(_ => {
-				int w = _graphicsDevice.Viewport.Width;
-				int h = _graphicsDevice.Viewport.Height;
+				int w = Game1.VirtualWidth;
+				int h = Game1.VirtualHeight;
 				// Coordinates are provided in unscaled world space; convert to scaled world space
 				_cameraCenter = _.WorldPos * MapScale;
 				ClampCamera(ref _cameraCenter, w, h);
@@ -108,8 +108,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var scene = entity.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Location) return;
-			int w = _graphicsDevice.Viewport.Width;
-			int h = _graphicsDevice.Viewport.Height;
+			int w = Game1.VirtualWidth;
+			int h = Game1.VirtualHeight;
 			if (_lastViewportW != w || _lastViewportH != h)
 			{
 				_lastViewportW = w;
@@ -355,8 +355,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
-			int w = _graphicsDevice.Viewport.Width;
-			int h = _graphicsDevice.Viewport.Height;
+			int w = Game1.VirtualWidth;
+			int h = Game1.VirtualHeight;
 			if (_lastViewportW < 0 || _lastViewportH < 0)
 			{
 				_lastViewportW = w;

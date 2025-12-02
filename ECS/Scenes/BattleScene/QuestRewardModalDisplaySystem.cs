@@ -61,7 +61,7 @@ namespace Crusaders30XX.ECS.Systems
 			ui.IsInteractable = state.IsOpen;
 			ui.LayerType = state.IsOpen ? UILayerType.Overlay : UILayerType.Default;
 			ui.Bounds = state.IsOpen
-				? new Rectangle(0, 0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height)
+				? new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight)
 				: new Rectangle(0, 0, 0, 0);
 
 			var btn = EnsureProceedButton();
@@ -96,8 +96,8 @@ namespace Crusaders30XX.ECS.Systems
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Battle) return;
 
-			int vw = _graphicsDevice.Viewport.Width;
-			int vh = _graphicsDevice.Viewport.Height;
+			int vw = Game1.VirtualWidth;
+			int vh = Game1.VirtualHeight;
 
 			int panelW = System.Math.Max(100, PanelWidth);
 			int panelH = System.Math.Max(80, PanelHeight);
@@ -157,7 +157,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				e = EntityManager.CreateEntity("QuestRewardOverlay");
 				var t = new Transform { Position = Vector2.Zero, ZOrder = ZOrder };
-				var ui = new UIElement { Bounds = new Rectangle(0, 0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height), IsInteractable = false, LayerType = UILayerType.Overlay };
+				var ui = new UIElement { Bounds = new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight), IsInteractable = false, LayerType = UILayerType.Overlay };
 				EntityManager.AddComponent(e, t);
 				EntityManager.AddComponent(e, ui);
 				EntityManager.AddComponent(e, new QuestRewardOverlayState());
@@ -177,8 +177,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (ent == null)
 			{
 				ent = EntityManager.CreateEntity("QuestRewardProceedButton");
-				int vw = _graphicsDevice.Viewport.Width;
-				int vh = _graphicsDevice.Viewport.Height;
+				int vw = Game1.VirtualWidth;
+				int vh = Game1.VirtualHeight;
 				int bw = System.Math.Max(60, ButtonWidth);
 				int bh = System.Math.Max(30, ButtonHeight);
 				int bx = (vw - bw) / 2;

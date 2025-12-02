@@ -86,8 +86,8 @@ namespace Crusaders30XX.ECS.Systems
 			// Ensure a root transform entity exists for positioning this UI row
 			EnsureRootEntity();
 			// Re-center the root on viewport changes
-			int w = _graphicsDevice.Viewport.Width;
-			int h = _graphicsDevice.Viewport.Height;
+			int w = Game1.VirtualWidth;
+			int h = Game1.VirtualHeight;
 			var root = EntityManager.GetEntity(RootEntityName);
 			var t = root?.GetComponent<Transform>();
 			if (t != null)
@@ -240,7 +240,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (e == null)
 			{
 				e = EntityManager.CreateEntity(RootEntityName);
-				EntityManager.AddComponent(e, new Transform { Position = new Vector2(_graphicsDevice.Viewport.Width / 2f, OffsetY), ZOrder = 5000 });
+				EntityManager.AddComponent(e, new Transform { Position = new Vector2(Game1.VirtualWidth / 2f, OffsetY), ZOrder = 5000 });
 				EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
 			}
 		}
