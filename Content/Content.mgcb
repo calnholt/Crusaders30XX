@@ -595,3 +595,167 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:TextureFormat=Color
 /build:desert.png
+
+#---------------------------------- Data JSON Files ---------------------------------#
+
+#begin Data/Cards/anoint_the_sick.json
+/copy:Data/Cards/anoint_the_sick.json
+
+#begin Data/Cards/bulwark.json
+/copy:Data/Cards/bulwark.json
+
+#begin Data/Cards/burn.json
+/copy:Data/Cards/burn.json
+
+#begin Data/Cards/courageous.json
+/copy:Data/Cards/courageous.json
+
+#begin Data/Cards/divine_protection.json
+/copy:Data/Cards/divine_protection.json
+
+#begin Data/Cards/dowse_with_holy_water.json
+/copy:Data/Cards/dowse_with_holy_water.json
+
+#begin Data/Cards/fury.json
+/copy:Data/Cards/fury.json
+
+#begin Data/Cards/heavens_glory.json
+/copy:Data/Cards/heavens_glory.json
+
+#begin Data/Cards/impale.json
+/copy:Data/Cards/impale.json
+
+#begin Data/Cards/increase_faith.json
+/copy:Data/Cards/increase_faith.json
+
+#begin Data/Cards/kunai.json
+/copy:Data/Cards/kunai.json
+
+#begin Data/Cards/narrow_gate.json
+/copy:Data/Cards/narrow_gate.json
+
+#begin Data/Cards/pouch_of_kunai.json
+/copy:Data/Cards/pouch_of_kunai.json
+
+#begin Data/Cards/ravage.json
+/copy:Data/Cards/ravage.json
+
+#begin Data/Cards/reconciled.json
+/copy:Data/Cards/reconciled.json
+
+#begin Data/Cards/sacrifice.json
+/copy:Data/Cards/sacrifice.json
+
+#begin Data/Cards/seize.json
+/copy:Data/Cards/seize.json
+
+#begin Data/Cards/shield_of_faith.json
+/copy:Data/Cards/shield_of_faith.json
+
+#begin Data/Cards/shroud_of_turin.json
+/copy:Data/Cards/shroud_of_turin.json
+
+#begin Data/Cards/stab.json
+/copy:Data/Cards/stab.json
+
+#begin Data/Cards/stalwart.json
+/copy:Data/Cards/stalwart.json
+
+#begin Data/Cards/strike.json
+/copy:Data/Cards/strike.json
+
+#begin Data/Cards/stun.json
+/copy:Data/Cards/stun.json
+
+#begin Data/Cards/tempest.json
+/copy:Data/Cards/tempest.json
+
+#begin Data/Cards/vindicate.json
+/copy:Data/Cards/vindicate.json
+
+#begin Data/Cards/weapon_hammer.json
+/copy:Data/Cards/weapon_hammer.json
+
+#begin Data/Cards/weapon_sword.json
+/copy:Data/Cards/weapon_sword.json
+
+#begin Data/Cards/whirlwind.json
+/copy:Data/Cards/whirlwind.json
+
+#begin Data/Dialog/desert_1.json
+/copy:Data/Dialog/desert_1.json
+
+#begin Data/Dialog/desert_2.json
+/copy:Data/Dialog/desert_2.json
+
+#begin Data/Dialog/desert_3.json
+/copy:Data/Dialog/desert_3.json
+
+#begin Data/Dialog/desert_4.json
+/copy:Data/Dialog/desert_4.json
+
+#begin Data/Dialog/desert_5.json
+/copy:Data/Dialog/desert_5.json
+
+#begin Data/Enemies/demon.json
+/copy:Data/Enemies/demon.json
+
+#begin Data/Enemies/generic_enemy_attacks.json
+/copy:Data/Enemies/generic_enemy_attacks.json
+
+#begin Data/Enemies/gleeber.json
+/copy:Data/Enemies/gleeber.json
+
+#begin Data/Enemies/mummy.json
+/copy:Data/Enemies/mummy.json
+
+#begin Data/Enemies/ninja.json
+/copy:Data/Enemies/ninja.json
+
+#begin Data/Enemies/ogre.json
+/copy:Data/Enemies/ogre.json
+
+#begin Data/Enemies/sand_corpse.json
+/copy:Data/Enemies/sand_corpse.json
+
+#begin Data/Enemies/skeleton.json
+/copy:Data/Enemies/skeleton.json
+
+#begin Data/Enemies/spider.json
+/copy:Data/Enemies/spider.json
+
+#begin Data/Enemies/succubus.json
+/copy:Data/Enemies/succubus.json
+
+#begin Data/Equipment/focus_visor.json
+/copy:Data/Equipment/focus_visor.json
+
+#begin Data/Equipment/helm_of_seeing.json
+/copy:Data/Equipment/helm_of_seeing.json
+
+#begin Data/Equipment/lightning_grieves.json
+/copy:Data/Equipment/lightning_grieves.json
+
+#begin Data/Equipment/pierced_heart_plate.json
+/copy:Data/Equipment/pierced_heart_plate.json
+
+#begin Data/Equipment/purging_bracers.json
+/copy:Data/Equipment/purging_bracers.json
+
+#begin Data/Locations/desert.json
+/copy:Data/Locations/desert.json
+
+#begin Data/Medals/st_luke.json
+/copy:Data/Medals/st_luke.json
+
+#begin Data/Medals/st_michael.json
+/copy:Data/Medals/st_michael.json
+
+#begin Data/Temperance/angelic_aura.json
+/copy:Data/Temperance/angelic_aura.json
+
+#begin Data/Temperance/fling_fling.json
+/copy:Data/Temperance/fling_fling.json
+
+#begin Data/Temperance/radiance.json
+/copy:Data/Temperance/radiance.json

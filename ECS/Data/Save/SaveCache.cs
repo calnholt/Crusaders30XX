@@ -187,26 +187,12 @@ namespace Crusaders30XX.ECS.Data.Save
 
 		private static string ResolveFilePath()
 		{
-			if (!string.IsNullOrEmpty(_filePath) && File.Exists(_filePath)) return _filePath;
-			string root = FindProjectRootContaining("Crusaders30XX.csproj");
-			_filePath = string.IsNullOrEmpty(root) ? string.Empty : Path.Combine(root, "ECS", "Data", "save_file.json");
+			if (!string.IsNullOrEmpty(_filePath)) return _filePath;
+			var appData = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
+			var saveDir = Path.Combine(appData, "Crusaders30XX");
+			Directory.CreateDirectory(saveDir);
+			_filePath = Path.Combine(saveDir, "save_file.json");
 			return _filePath;
-		}
-
-		private static string FindProjectRootContaining(string filename)
-		{
-			try
-			{
-				var dir = new DirectoryInfo(System.AppContext.BaseDirectory);
-				for (int i = 0; i < 6 && dir != null; i++)
-				{
-					var candidate = Path.Combine(dir.FullName, filename);
-					if (File.Exists(candidate)) return dir.FullName;
-					dir = dir.Parent;
-				}
-			}
-			catch { }
-			return null;
 		}
 	}
 }

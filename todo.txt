@@ -15,9 +15,9 @@
 
 Prompts - 
 
-camera not in correct place when loading location scene - change it
-
 full screen - just keep 1920x1080 and keep surrounding black
+
+abandon quest screen needs to prevent actions "behind"
 
 card idea - spend aegis
 

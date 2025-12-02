@@ -134,24 +134,10 @@ namespace Crusaders30XX.ECS.Services
 
 		private static string ResolveSavePath()
 		{
-			string root = FindProjectRootContaining("Crusaders30XX.csproj");
-			return string.IsNullOrEmpty(root) ? string.Empty : Path.Combine(root, "ECS", "Data", "save_file.json");
-		}
-
-		private static string FindProjectRootContaining(string filename)
-		{
-			try
-			{
-				var dir = new DirectoryInfo(System.AppContext.BaseDirectory);
-				for (int i = 0; i < 6 && dir != null; i++)
-				{
-					var candidate = Path.Combine(dir.FullName, filename);
-					if (File.Exists(candidate)) return dir.FullName;
-					dir = dir.Parent;
-				}
-			}
-			catch { }
-			return null;
+			var appData = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
+			var saveDir = Path.Combine(appData, "Crusaders30XX");
+			Directory.CreateDirectory(saveDir);
+			return Path.Combine(saveDir, "save_file.json");
 		}
 	}
 }

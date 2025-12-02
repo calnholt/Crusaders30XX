@@ -52,9 +52,7 @@ namespace Crusaders30XX.ECS.Data.Attacks
 		{
 			try
 			{
-				string root = FindProjectRootContaining("Crusaders30XX.csproj");
-				if (string.IsNullOrEmpty(root)) return;
-				string path = Path.Combine(root, "ECS", "Data", "Attacks", "generic_enemy_attacks.json");
+				string path = Path.Combine(AppContext.BaseDirectory, "Content", "Data", "Enemies", "generic_enemy_attacks.json");
 				if (!File.Exists(path)) return;
 				var json = File.ReadAllText(path);
 				var node = JsonNode.Parse(json);
@@ -76,25 +74,8 @@ namespace Crusaders30XX.ECS.Data.Attacks
 		private static string ResolveFolderPath()
 		{
 			if (!string.IsNullOrEmpty(_folderPath) && Directory.Exists(_folderPath)) return _folderPath;
-			string root = FindProjectRootContaining("Crusaders30XX.csproj");
-			_folderPath = string.IsNullOrEmpty(root) ? string.Empty : Path.Combine(root, "ECS", "Data", "Enemies");
+			_folderPath = Path.Combine(AppContext.BaseDirectory, "Content", "Data", "Enemies");
 			return _folderPath;
-		}
-
-		private static string FindProjectRootContaining(string filename)
-		{
-			try
-			{
-				var dir = new DirectoryInfo(AppContext.BaseDirectory);
-				for (int i = 0; i < 6 && dir != null; i++)
-				{
-					var candidate = Path.Combine(dir.FullName, filename);
-					if (File.Exists(candidate)) return dir.FullName;
-					dir = dir.Parent;
-				}
-			}
-			catch { }
-			return null;
 		}
 	}
 }
