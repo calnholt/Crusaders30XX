@@ -145,6 +145,23 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 		}
 
+		public static string GetLastLocation()
+		{
+			EnsureLoaded();
+			return _save?.lastLocation ?? string.Empty;
+		}
+
+		public static void SetLastLocation(string locationId)
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				_save.lastLocation = locationId ?? string.Empty;
+				Persist();
+			}
+		}
+
 		private static void Persist()
 		{
 			try

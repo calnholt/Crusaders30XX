@@ -374,6 +374,7 @@ namespace Crusaders30XX.ECS.Systems
             if (qe.Events.Count > 0)
             {
                 // Announce selection and transition to Battle
+                SaveCache.SetLastLocation(poi.Id);
                 EventManager.Publish(new QuestSelected { LocationId = locationId, QuestIndex = questIndex });
                 EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
             }

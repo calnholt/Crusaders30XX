@@ -80,7 +80,8 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<FocusLocationCameraEvent>(_ => {
 				int w = _graphicsDevice.Viewport.Width;
 				int h = _graphicsDevice.Viewport.Height;
-				_cameraCenter = _.WorldPos;
+				// Coordinates are provided in unscaled world space; convert to scaled world space
+				_cameraCenter = _.WorldPos * MapScale;
 				ClampCamera(ref _cameraCenter, w, h);
 				PublishCameraState(w, h);
 			});
@@ -304,17 +305,26 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
-			// Find target POI: furthest down completed quest, or first revealed POI
+			// Find target POI: prioritize saved lastLocation
 			PointOfInterestDefinition targetPoi = null;
 
-			// First, try to find the furthest down completed quest (highest index)
-			for (int i = def.pointsOfInterest.Count - 1; i >= 0; i--)
+			string lastLoc = SaveCache.GetLastLocation();
+			if (!string.IsNullOrEmpty(lastLoc))
 			{
-				var poi = def.pointsOfInterest[i];
-				if (SaveCache.IsQuestCompleted(locationId, poi.id))
+				targetPoi = def.pointsOfInterest.FirstOrDefault(p => p.id == lastLoc);
+			}
+
+			if (targetPoi == null)
+			{
+				// Fallback: try to find the furthest down completed quest (highest index)
+				for (int i = def.pointsOfInterest.Count - 1; i >= 0; i--)
 				{
-					targetPoi = poi;
-					break;
+					var poi = def.pointsOfInterest[i];
+					if (SaveCache.IsQuestCompleted(locationId, poi.id))
+					{
+						targetPoi = poi;
+						break;
+					}
 				}
 			}
 

@@ -171,7 +171,7 @@ namespace Crusaders30XX.ECS.Systems
 					int rHitbox = Math.Max(0, HitboxRadius);
 					var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
 						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && !x.UI.IsHidden && x.UI.IsInteractable && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox) > 0f)
+						.Where(x => x.UI != null && !x.UI.IsHidden && (x.UI.IsInteractable || !string.IsNullOrWhiteSpace(x.UI.Tooltip)) && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox, x.T?.Rotation ?? 0f) > 0f)
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
 					Entity hoveredEntityForRumble = null;
@@ -189,7 +189,7 @@ namespace Crusaders30XX.ECS.Systems
 								GamePad.SetVibration(PlayerIndex.One, MathHelper.Clamp(RumbleLow, 0f, 1f), MathHelper.Clamp(RumbleHigh, 0f, 1f));
 							}
 						}
-						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius));
+						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius), tc.T?.Rotation ?? 0f);
 					}
 					// Cross animation: shrink slightly on entering a new interactable hover, ease back otherwise
 					Entity currentInteractable = (tc != null && tc.UI != null && tc.UI.IsInteractable && !tc.UI.IsHidden) ? tc.E : null;
@@ -220,7 +220,7 @@ namespace Crusaders30XX.ECS.Systems
 					int rHitboxClick = Math.Max(0, HitboxRadius);
 					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()
 						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && !x.UI.IsHidden && x.UI.IsInteractable && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick) > 0f)
+						.Where(x => x.UI != null && !x.UI.IsHidden && x.UI.IsInteractable && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick, x.T?.Rotation ?? 0f) > 0f)
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
 					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
@@ -271,10 +271,11 @@ namespace Crusaders30XX.ECS.Systems
 					foreach (var e2 in EntityManager.GetEntitiesWithComponent<UIElement>())
 					{
 						var ui2 = e2.GetComponent<UIElement>();
+						var t2 = e2.GetComponent<Transform>();
 						if (ui2 == null || !ui2.IsInteractable || ui2.IsHidden) continue;
 						var bounds2 = ui2.Bounds;
 						if (bounds2.Width < 2 || bounds2.Height < 2) continue;
-						maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r));
+						maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r, t2?.Rotation ?? 0f));
 					}
 				}
 				float rt = gp.Triggers.Right;
@@ -316,14 +317,14 @@ namespace Crusaders30XX.ECS.Systems
 					int rHitbox = Math.Max(0, HitboxRadius);
 					var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
 						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox) > 0f)
+						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox, x.T?.Rotation ?? 0f) > 0f)
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
 					if (tc != null)
 					{
 						tc.UI.IsHovered = true;
 						_lastHoveredEntity = tc.E;
-						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius));
+						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius), tc.T?.Rotation ?? 0f);
 					}
 					// Cross animation: shrink slightly on entering a new interactable hover, ease back otherwise
 					Entity currentInteractable = (tc != null && tc.UI != null && tc.UI.IsInteractable && !tc.UI.IsHidden) ? tc.E : null;
@@ -352,7 +353,7 @@ namespace Crusaders30XX.ECS.Systems
 					int rHitboxClick = Math.Max(0, HitboxRadius);
 					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()
 						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick) > 0f)
+						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick, x.T?.Rotation ?? 0f) > 0f)
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
 					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
@@ -426,7 +427,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private static float EstimateCircleRectCoverage(Rectangle rect, Vector2 center, int radius)
+		private static float EstimateCircleRectCoverage(Rectangle rect, Vector2 center, int radius, float rotation = 0f)
 		{
 			// Sample-based approximation: fraction of circle area inside the rectangle
 			int samplesPerAxis = 8;
@@ -436,6 +437,18 @@ namespace Crusaders30XX.ECS.Systems
 			float top = center.Y - radius;
 			float step = (radius * 2f) / samplesPerAxis;
 			float r2 = radius * radius;
+
+			// Precompute rotation data if significant
+			bool hasRotation = Math.Abs(rotation) > 0.001f;
+			float cos = 0f, sin = 0f;
+			Vector2 rectCenter = Vector2.Zero;
+			if (hasRotation)
+			{
+				cos = (float)Math.Cos(-rotation); // rotate point by negative angle to bring it to AABB space
+				sin = (float)Math.Sin(-rotation);
+				rectCenter = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
+			}
+
 			for (int iy = 0; iy < samplesPerAxis; iy++)
 			{
 				for (int ix = 0; ix < samplesPerAxis; ix++)
@@ -448,7 +461,21 @@ namespace Crusaders30XX.ECS.Systems
 					if (dx * dx + dy * dy <= r2)
 					{
 						totalCount++;
-						if (rect.Contains((int)Math.Round(sx), (int)Math.Round(sy))) insideCount++;
+						int checkX = (int)Math.Round(sx);
+						int checkY = (int)Math.Round(sy);
+						
+						if (hasRotation)
+						{
+							// Rotate point around rect center
+							float lx = sx - rectCenter.X;
+							float ly = sy - rectCenter.Y;
+							float rx = lx * cos - ly * sin;
+							float ry = lx * sin + ly * cos;
+							checkX = (int)Math.Round(rectCenter.X + rx);
+							checkY = (int)Math.Round(rectCenter.Y + ry);
+						}
+
+						if (rect.Contains(checkX, checkY)) insideCount++;
 					}
 				}
 			}
@@ -457,5 +484,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
-

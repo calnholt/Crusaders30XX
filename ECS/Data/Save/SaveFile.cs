@@ -9,6 +9,7 @@ namespace Crusaders30XX.ECS.Data.Save
 		public List<string> completedQuests { get; set; } = new List<string>();
 		public List<string> collection { get; set; } = new List<string>();
 		public List<SaveItem> items { get; set; } = new List<SaveItem>();
+		public string lastLocation { get; set; } = string.Empty;
 		public List<LoadoutDefinition> loadouts { get; set; } = new List<LoadoutDefinition>();
 	}
 

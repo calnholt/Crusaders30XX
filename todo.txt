@@ -15,7 +15,9 @@
 
 Prompts - 
 
-tooltips not working for elements without action (temperance, courage, etc)
+camera not in correct place when loading location scene - change it
+
+full screen - just keep 1920x1080 and keep surrounding black
 
 card idea - spend aegis
 
@@ -33,9 +35,7 @@ on hit - top card gains burn 1
 
 on hit - card becomes colorless
 
-cardtooltip not being correctly removed for blocked cards, can see from opening discard modal
-
-refactor purchased items - gone from json, derived from save_file collection
+cardtooltip not being correctly removed for blocked cards, can see from opening discard modal (only happens for mouse controls?)
 
 enemy attack display min width
 
