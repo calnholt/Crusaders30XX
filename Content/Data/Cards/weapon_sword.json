@@ -2,11 +2,11 @@
   "id": "sword",
   "name": "Sword",
   "target": "Enemy",
+  "cost": [ "Black", "Any" ],
   "rarity": "Common",
-  "text": "As an additional cost, lose {2} courage.",
-  "isFreeAction": true,
+  "text": "Gain {1} courage.",
   "isWeapon": true,
-  "animation": "Attack",
   "type": "Attack",
-  "damage": 8
+  "damage": 14,
+  "animation": "Attack"
 }

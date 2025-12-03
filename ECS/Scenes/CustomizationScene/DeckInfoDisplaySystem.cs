@@ -51,8 +51,8 @@ namespace Crusaders30XX.ECS.Systems
 			var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
 			if (st == null) return;
 
-			int vw = _graphicsDevice.Viewport.Width;
-			int vh = _graphicsDevice.Viewport.Height;
+            int vw = Game1.VirtualWidth;
+            int vh = Game1.VirtualHeight;
 
 			// Tally counts
 			int total = 0, white = 0, red = 0, black = 0;

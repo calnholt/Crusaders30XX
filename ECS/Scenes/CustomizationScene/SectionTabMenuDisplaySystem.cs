@@ -111,7 +111,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private (int left, int width, int y) ComputeCenterStrip()
         {
-            int vw = _graphicsDevice.Viewport.Width;
+            int vw = Game1.VirtualWidth;
             int left = _libraryPanel?.PanelWidth ?? 640;
             int right = _deckPanel?.PanelWidth ?? 620;
             int x0 = left;

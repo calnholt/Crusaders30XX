@@ -601,7 +601,7 @@ namespace Crusaders30XX.ECS.Systems
                 float btnAlpha = Math.Min(1f, alphaF + 0.2f);
                 _spriteBatch.Draw(_pixel, btnRect, new Color(70f / 255f, 70f / 255f, 70f / 255f, btnAlpha));
                 DrawBorder(btnRect, Color.White, 2);
-                var xSize = _font.MeasureString("X") * 0.6f;
+                var xSize = _font.MeasureString("X") * 0.15f;
                 _spriteBatch.DrawString(_font, "X", new Vector2(btnRect.Center.X - xSize.X / 2f, btnRect.Center.Y - xSize.Y / 2f), Color.White, 0f, Vector2.Zero, 0.15f, SpriteEffects.None, 0f);
 
                 // Sync clickable cancel bounds entity

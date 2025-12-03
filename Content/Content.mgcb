@@ -673,8 +673,8 @@
 #begin Data/Cards/vindicate.json
 /copy:Data/Cards/vindicate.json
 
-#begin Data/Cards/weapon_hammer.json
-/copy:Data/Cards/weapon_hammer.json
+#begin Data/Cards/weapon_dagger.json
+/copy:Data/Cards/weapon_dagger.json
 
 #begin Data/Cards/weapon_sword.json
 /copy:Data/Cards/weapon_sword.json

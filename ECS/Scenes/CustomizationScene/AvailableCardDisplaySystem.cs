@@ -18,7 +18,6 @@ namespace Crusaders30XX.ECS.Systems
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private readonly CardLibraryPanelSystem _libraryPanel;
-        private MouseState _prevMouse;
         private readonly World _world;
         private readonly Dictionary<string, int> _createdCardIds = new();
         private CursorStateEvent _cursorEvent;
@@ -29,7 +28,6 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch = sb;
             _world = world;
             _libraryPanel = libraryPanel;
-            _prevMouse = Mouse.GetState();
             EventManager.Subscribe<ShowTransition>(_ => ClearCards());
             EventManager.Subscribe<SetCustomizationTab>(_ => ClearCards());
             EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
@@ -42,14 +40,11 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
-          if (StateSingleton.IsActive) return;
+            if (StateSingleton.IsActive) return;
             var scene = entity.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null || st.SelectedTab != CustomizationTabType.Deck) return;
-
-            var mouse = Mouse.GetState();
-            var prevMouse = mouse; // consume elsewhere if needed
 
             int cardW = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardWidth;
             int cardH = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardHeight;
@@ -103,10 +98,9 @@ namespace Crusaders30XX.ECS.Systems
             int maxScroll = Math.Max(0, contentHeight - panelH);
             if (st.LeftScroll > maxScroll) st.LeftScroll = maxScroll;
 
-            // Handle clicks to add (mouse or controller A edge)
-            bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
-            bool gpEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge;
-            Point gpPoint = gpEdge ? new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y)) : Point.Zero;
+            // Handle clicks to add (unified via CursorStateEvent for both mouse and gamepad)
+            bool click = _cursorEvent != null && _cursorEvent.IsAPressedEdge;
+            var clickPoint = click ? new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y)) : Point.Zero;
 
             int idx = 0;
             foreach (var def in defs)
@@ -120,14 +114,13 @@ namespace Crusaders30XX.ECS.Systems
                     int x = panelX + c * colW + (colW / 2);
                     int y = panelY + _libraryPanel.HeaderHeight + _libraryPanel.TopMargin + r * ((int)(cardH * _libraryPanel.CardScale) + _libraryPanel.RowGap) + (int)(cardH * _libraryPanel.CardScale / 2) - st.LeftScroll;
                     var rect = new Rectangle(x - (int)(cardW * _libraryPanel.CardScale / 2), y - (int)(cardH * _libraryPanel.CardScale / 2), (int)(cardW * _libraryPanel.CardScale), (int)(cardH * _libraryPanel.CardScale));
-                    if ((click && rect.Contains(mouse.Position)) || (gpEdge && rect.Contains(gpPoint)))
+                    if (click && rect.Contains(clickPoint))
                     {
                         EventManager.Publish(new AddCardToLoadoutRequested { CardKey = entry });
                     }
                     idx++;
                 }
             }
-            _prevMouse = mouse;
         }
 
         public void Draw()

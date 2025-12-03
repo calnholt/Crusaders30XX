@@ -1,0 +1,12 @@
+{
+  "id": "dagger",
+  "name": "Dagger",
+  "target": "Enemy",
+  "rarity": "Common",
+  "text": "As an additional cost, lose {2} courage.",
+  "isFreeAction": true,
+  "isWeapon": true,
+  "animation": "Attack",
+  "type": "Attack",
+  "damage": 10
+}

@@ -56,7 +56,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (string.IsNullOrEmpty(equippedId)) return;
 			if (!CardDefinitionCache.TryGet(equippedId, out var def) || def == null) return;
 
-			int vw = _graphicsDevice.Viewport.Width;
+            int vw = Game1.VirtualWidth;
 			int cardW = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardWidth;
 			int cardH = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardHeight;
 			int panelX = vw - _deckPanel.PanelWidth;

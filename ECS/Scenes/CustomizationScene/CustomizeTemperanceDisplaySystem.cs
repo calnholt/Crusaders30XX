@@ -125,12 +125,12 @@ namespace Crusaders30XX.ECS.Systems
             // Right side: equipped card block in loadout panel
             if (def != null)
             {
-                int vw = _graphicsDevice.Viewport.Width;
+                int vw = Game1.VirtualWidth;
                 int rightW = _deckPanel?.PanelWidth ?? 620;
                 int x = vw - rightW + LeftMargin;
                 int y = TopMargin + 40;
                 int w = rightW - LeftMargin * 2;
-                int h = Math.Min(260, _graphicsDevice.Viewport.Height - y - 20);
+                int h = Math.Min(260, Game1.VirtualHeight - y - 20);
                 var rect = new Rectangle(x, y, w, h);
                 // Publish render event; handler will draw during active SpriteBatch (mimics CardDisplaySystem)
                 EventManager.Publish(new TemperanceAbilityRenderEvent { AbilityId = def.id, Bounds = rect, IsEquipped = true, NameScale = NameScale, TextScale = TextScale });

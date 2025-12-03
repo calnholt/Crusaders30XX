@@ -1,6 +1,8 @@
 {
-  "gold": 0,
-  "completedQuests": [],
+  "gold": 1,
+  "completedQuests": [
+    "desert_1"
+  ],
   "collection": [
     "anoint_the_sick",
     "burn",
@@ -16,7 +18,10 @@
     "strike",
     "stun",
     "ravage",
-    "tempest"
+    "tempest",
+    "sword",
+    "dagger",
+    "st_michael"
   ],
   "items": [],
   "lastLocation": "desert_1",
@@ -56,7 +61,7 @@
         "tempest|Black",
         "tempest|White"
       ],
-      "weaponId": "hammer",
+      "weaponId": "sword",
       "temperanceId": "angelic_aura",
       "chestId": "",
       "legsId": "",

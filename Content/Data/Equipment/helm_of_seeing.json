@@ -1,8 +1,8 @@
 {
     "id": "helm_of_seeing",
     "name": "Helm of Seeing",
-    "slot": "Arms",
-    "block": 2,
+    "slot": "Head",
+    "block": 4,
     "blockUses": 1,
     "color": "Red",
     "abilities": [

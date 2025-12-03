@@ -8,7 +8,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
 using System;
-using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Data.Save;
 
 namespace Crusaders30XX.ECS.Systems
@@ -21,7 +20,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly CardLibraryPanelSystem _libraryPanel;
         private readonly CustomizeTemperanceDisplaySystem _customizeTemperanceDisplaySystem;
         private readonly Dictionary<string, int> _entityIds = new();
-        private MouseState _prevMouse;
+        private CursorStateEvent _cursorEvent;
 
         [DebugEditable(DisplayName = "Row Height", Step = 2, Min = 24, Max = 240)]
         public int RowHeight { get; set; } = 120;
@@ -40,10 +39,10 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch = sb;
             _libraryPanel = libraryPanel;
             _customizeTemperanceDisplaySystem = customizeTemperanceDisplaySystem;
-            _prevMouse = Mouse.GetState();
             // Clear cached UI entities on scene transitions or tab switches
             EventManager.Subscribe<ShowTransition>(_ => ClearEntities());
             EventManager.Subscribe<SetCustomizationTab>(_ => ClearEntities());
+            EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -81,20 +80,22 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.DestroyEntity(eid);
                 _entityIds.Remove(sid);
             }
-            var mouse = Mouse.GetState();
-            bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
+            bool click = _cursorEvent != null && _cursorEvent.IsAPressedEdge;
+            var clickPoint = click ? new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y)) : Point.Zero;
             for (int i = 0; i < all.Count; i++)
             {
                 var d = all[i];
                 int y = yBase + i * (h + ItemSpacing) - st.LeftScroll;
                 var bounds = new Rectangle(x, y, w, h);
                 var e = EnsureEntity(d.id, bounds);
-                if (click && bounds.Contains(mouse.Position))
+                var ui = e?.GetComponent<UIElement>();
+                // Check both CursorStateEvent bounds and UIElement.IsClicked for robustness
+                bool clicked = (click && bounds.Contains(clickPoint)) || (ui != null && ui.IsClicked);
+                if (clicked)
                 {
                     EventManager.Publish(new UpdateTemperanceLoadoutRequested { TemperanceId = d.id });
                 }
             }
-            _prevMouse = mouse;
         }
 
         public void Draw()

@@ -53,7 +53,7 @@ namespace Crusaders30XX.ECS.Systems
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null || st.SelectedTab != CustomizationTabType.Medals) return;
 
-            int vw = _graphicsDevice.Viewport.Width;
+            int vw = Game1.VirtualWidth;
             int rightW = _deckPanel?.PanelWidth ?? 620;
             int x = vw - rightW + LeftPadding;
             int yBase = _deckPanel.HeaderHeight + _deckPanel.TopMargin + TopOffsetFromHeader;
@@ -80,7 +80,10 @@ namespace Crusaders30XX.ECS.Systems
                 int y = yBase + i * (h + ItemSpacing) - st.RightScroll;
                 var bounds = new Rectangle(x, y, w, h);
                 var e2 = EnsureEntity(i, id, bounds);
-                if (click && bounds.Contains(clickPoint))
+                var ui = e2?.GetComponent<UIElement>();
+                // Check both CursorStateEvent bounds and UIElement.IsClicked for robustness
+                bool clicked = (click && bounds.Contains(clickPoint)) || (ui != null && ui.IsClicked);
+                if (clicked)
                 {
                     EventManager.Publish(new RemoveMedalFromLoadoutRequested { MedalId = id, Index = i });
                 }
@@ -94,7 +97,7 @@ namespace Crusaders30XX.ECS.Systems
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null || st.SelectedTab != CustomizationTabType.Medals) return;
 
-            int vw = _graphicsDevice.Viewport.Width;
+            int vw = Game1.VirtualWidth;
             int rightW = _deckPanel?.PanelWidth ?? 620;
             int x = vw - rightW + LeftPadding;
             int yBase = _deckPanel.HeaderHeight + _deckPanel.TopMargin + TopOffsetFromHeader;

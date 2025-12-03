@@ -88,7 +88,10 @@ namespace Crusaders30XX.ECS.Systems
                 int y = yBase + i * (h + ItemSpacing) - st.LeftScroll;
                 var bounds = new Rectangle(x, y, w, h);
                 var e2 = EnsureEntity(d.id, bounds, interactable: canAdd);
-                if (canAdd && click && bounds.Contains(clickPoint))
+                var ui = e2?.GetComponent<UIElement>();
+                // Check both CursorStateEvent bounds and UIElement.IsClicked for robustness
+                bool clicked = (click && bounds.Contains(clickPoint)) || (ui != null && ui.IsClicked);
+                if (canAdd && clicked)
                 {
                     EventManager.Publish(new AddMedalToLoadoutRequested { MedalId = d.id });
                 }

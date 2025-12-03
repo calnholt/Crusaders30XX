@@ -66,8 +66,8 @@ namespace Crusaders30XX.ECS.Systems
             {
                 return;
             }
-            int vw = _graphicsDevice.Viewport.Width;
-            int vh = _graphicsDevice.Viewport.Height;
+            int vw = Game1.VirtualWidth;
+            int vh = Game1.VirtualHeight;
 
             // Ensure entities exist and keep their transforms positioned by layout each frame
             EnsureAndLayoutButtons(vw, vh);
@@ -144,8 +144,8 @@ namespace Crusaders30XX.ECS.Systems
         {
             var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
-            int vw = _graphicsDevice.Viewport.Width;
-            int vh = _graphicsDevice.Viewport.Height;
+            int vw = Game1.VirtualWidth;
+            int vh = Game1.VirtualHeight;
 
             // Ensure entities and layout first
             EnsureAndLayoutButtons(vw, vh);

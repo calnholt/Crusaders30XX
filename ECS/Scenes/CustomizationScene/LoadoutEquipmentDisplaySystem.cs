@@ -59,7 +59,7 @@ namespace Crusaders30XX.ECS.Systems
             if (string.IsNullOrEmpty(equippedId)) return;
             if (!EquipmentDefinitionCache.TryGet(equippedId, out var def) || def == null) return;
 
-            int vw = _graphicsDevice.Viewport.Width;
+            int vw = Game1.VirtualWidth;
             int rightW = _deckPanel?.PanelWidth ?? 620;
             int x = vw - rightW + LeftPadding;
             int y = _deckPanel.HeaderHeight + _deckPanel.TopMargin + TopOffsetFromHeader;

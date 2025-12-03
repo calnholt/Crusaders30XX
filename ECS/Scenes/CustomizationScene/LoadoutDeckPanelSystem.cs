@@ -80,17 +80,28 @@ namespace Crusaders30XX.ECS.Systems
             if (st == null) return;
             var mouse = Mouse.GetState();
             bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
-            int vw = _graphicsDevice.Viewport.Width;
+            int vw = Game1.VirtualWidth;
             int cardW = GetCvs().CardWidth;
             int cardH = GetCvs().CardHeight;
 
             int panelX = vw - PanelWidth;
             int panelY = 0;
-            int panelH = _graphicsDevice.Viewport.Height;
+            int panelH = Game1.VirtualHeight;
             int colW = (int)(cardW * CardScale) + 20;
             int col = Math.Max(1, Columns);
 
-            if (new Rectangle(panelX, panelY, PanelWidth, panelH).Contains(mouse.Position))
+            // Convert mouse position to virtual space for hit testing
+            var dest = Game1.RenderDestination;
+            float scaleX = (float)dest.Width / Game1.VirtualWidth;
+            float scaleY = (float)dest.Height / Game1.VirtualHeight;
+            if (scaleX <= 0.001f) scaleX = 1f;
+            if (scaleY <= 0.001f) scaleY = 1f;
+            var virtPoint = new Point(
+                (int)System.Math.Round((mouse.Position.X - dest.X) / scaleX),
+                (int)System.Math.Round((mouse.Position.Y - dest.Y) / scaleY)
+            );
+
+            if (new Rectangle(panelX, panelY, PanelWidth, panelH).Contains(virtPoint))
             {
                 int delta = mouse.ScrollWheelValue - _prevMouse.ScrollWheelValue;
                 st.RightScroll = Math.Max(0, st.RightScroll - delta / 2);
@@ -106,7 +117,7 @@ namespace Crusaders30XX.ECS.Systems
             if (scene == null || scene.Current != SceneId.Customization) return;
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null) return;
-            int vw = _graphicsDevice.Viewport.Width;
+            int vw = Game1.VirtualWidth;
             int cardW = GetCvs().CardWidth;
             int cardH = GetCvs().CardHeight;
             int panelX = vw - PanelWidth;
@@ -117,7 +128,7 @@ namespace Crusaders30XX.ECS.Systems
             // Content height and drawing are handled by LoadoutCardDisplaySystem
 
             // Background
-            int panelH = _graphicsDevice.Viewport.Height;
+            int panelH = Game1.VirtualHeight;
             var bgRect = new Rectangle(panelX, panelY, PanelWidth, panelH);
             _spriteBatch.Draw(_pixel, bgRect, new Color(0, 0, 0, 160));
 

@@ -38,8 +38,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (scene == null || scene.Current != SceneId.Customization) return;
 			if (_background == null) return;
 
-			int vw = _graphicsDevice.Viewport.Width;
-			int vh = _graphicsDevice.Viewport.Height;
+            int vw = Game1.VirtualWidth;
+            int vh = Game1.VirtualHeight;
 			var dest = new Rectangle(0, 0, vw, vh);
 			_spriteBatch.Draw(_background, dest, Color.White);
 		}

@@ -218,6 +218,13 @@ namespace Crusaders30XX.ECS.Systems
         
         private void HandleUIClick(Entity entity)
         {
+            // Handle UIElement event types (e.g. PayCostCancel, QuestSelect, etc.)
+            var uiElement = entity.GetComponent<UIElement>();
+            if (uiElement != null && uiElement.EventType != UIElementEventType.None)
+            {
+                UIElementEventDelegateService.HandleEvent(uiElement.EventType, entity);
+            }
+
             // Handle different types of UI clicks
             var cardData = entity.GetComponent<CardData>();
             if (cardData != null)

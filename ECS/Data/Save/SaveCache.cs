@@ -214,6 +214,9 @@ namespace Crusaders30XX.ECS.Data.Save
 					"stun",
 					"ravage",
 					"tempest",
+					"dagger",
+					"sword",
+					"st_michael"
 				},
 				items = new List<SaveItem>(),
 				lastLocation = "desert_1",
@@ -256,7 +259,7 @@ namespace Crusaders30XX.ECS.Data.Save
 							"tempest|Black",
 							"tempest|White",
 						},
-						weaponId = "hammer",
+						weaponId = "sword",
 						temperanceId = "angelic_aura",
 						chestId = "",
 						legsId = "",

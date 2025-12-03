@@ -18,15 +18,14 @@ namespace Crusaders30XX.ECS.Systems
         private readonly World _world;
         private readonly LoadoutDeckPanelSystem _deckPanel;
         private readonly Dictionary<string, int> _createdCardIds = new();
-        private MouseState _prevMouse;
         private CursorStateEvent _cursorEvent;
+
         public LoadoutCardDisplaySystem(EntityManager em, World world, GraphicsDevice gd, SpriteBatch sb, LoadoutDeckPanelSystem deckPanel) : base(em)
         {
             _graphicsDevice = gd;
             _spriteBatch = sb;
             _world = world;
             _deckPanel = deckPanel;
-            _prevMouse = Mouse.GetState();
             EventManager.Subscribe<ShowTransition>(_ => ClearCards());
             EventManager.Subscribe<SetCustomizationTab>(_ => ClearCards());
             EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
@@ -45,12 +44,7 @@ namespace Crusaders30XX.ECS.Systems
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null || st.SelectedTab != CustomizationTabType.Deck) return;
 
-            var mouse = Mouse.GetState();
-            bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
-            bool gpEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge;
-            Point gpPoint = gpEdge ? new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y)) : Point.Zero;
-
-            int vw = _graphicsDevice.Viewport.Width;
+            int vw = Game1.VirtualWidth;
             int cardW = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardWidth;
             int cardH = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardHeight;
 
@@ -63,7 +57,7 @@ namespace Crusaders30XX.ECS.Systems
             var gp = GamePad.GetState(PlayerIndex.One);
             if (gp.IsConnected && _cursorEvent != null)
             {
-                int panelH = _graphicsDevice.Viewport.Height;
+                int panelH = Game1.VirtualHeight;
                 var panelRect = new Rectangle(panelX, panelY, _deckPanel.PanelWidth, panelH);
                 var p = new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y));
                 float y = gp.ThumbSticks.Right.Y; // up positive
@@ -86,6 +80,10 @@ namespace Crusaders30XX.ECS.Systems
             int maxScroll = Math.Max(0, contentHeight - _graphicsDevice.Viewport.Height);
             if (st.RightScroll > maxScroll) st.RightScroll = maxScroll;
 
+            // Unified click detection via CursorStateEvent for both mouse and gamepad
+            bool click = _cursorEvent != null && _cursorEvent.IsAPressedEdge;
+            var clickPoint = click ? new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y)) : Point.Zero;
+
             int idx = 0;
             foreach (var view in sorted)
             {
@@ -94,14 +92,13 @@ namespace Crusaders30XX.ECS.Systems
                 int x = panelX + c * colW + (colW / 2);
                 int y = panelY + _deckPanel.HeaderHeight + _deckPanel.TopMargin + r * ((int)(cardH * _deckPanel.CardScale) + _deckPanel.RowGap) + (int)(cardH * _deckPanel.CardScale / 2) - st.RightScroll;
                 var rect = new Rectangle(x - (int)(cardW * _deckPanel.CardScale / 2), y - (int)(cardH * _deckPanel.CardScale / 2), (int)(cardW * _deckPanel.CardScale), (int)(cardH * _deckPanel.CardScale));
-                if ((click && rect.Contains(mouse.Position)) || (gpEdge && rect.Contains(gpPoint)))
+                if (click && rect.Contains(clickPoint))
                 {
                     EventManager.Publish(new RemoveCardFromLoadoutRequested { CardKey = view.key, Index = null });
                     break;
                 }
                 idx++;
             }
-            _prevMouse = mouse;
         }
 
         public void Draw()
@@ -112,7 +109,7 @@ namespace Crusaders30XX.ECS.Systems
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null || st.SelectedTab != CustomizationTabType.Deck) return;
 
-            int vw = _graphicsDevice.Viewport.Width;
+            int vw = Game1.VirtualWidth;
             int cardW = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardWidth;
             int cardH = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardHeight;
             int panelX = vw - _deckPanel.PanelWidth;
