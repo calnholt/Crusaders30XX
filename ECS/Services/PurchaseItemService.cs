@@ -88,19 +88,7 @@ namespace Crusaders30XX.ECS.Services
 			newGold = 0;
 			try
 			{
-				string savePath = ResolveSavePath();
-				if (string.IsNullOrEmpty(savePath)) return false;
-				var data = SaveRepository.Load(savePath) ?? new SaveFile();
-				if (data.gold < price) return false;
-				data.gold = System.Math.Max(0, data.gold - price);
-				if (data.collection == null) data.collection = new System.Collections.Generic.List<string>();
-				if (!string.IsNullOrWhiteSpace(itemId) && !data.collection.Contains(itemId))
-				{
-					data.collection.Add(itemId);
-				}
-				SaveRepository.Save(savePath, data);
-				newGold = data.gold;
-				return true;
+				return SaveCache.TrySpendGoldAndAddToCollection(itemId, price, out newGold);
 			}
 			catch
 			{
@@ -132,13 +120,6 @@ namespace Crusaders30XX.ECS.Services
 			return null;
 		}
 
-		private static string ResolveSavePath()
-		{
-			var appData = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
-			var saveDir = Path.Combine(appData, "Crusaders30XX");
-			Directory.CreateDirectory(saveDir);
-			return Path.Combine(saveDir, "save_file.json");
-		}
 	}
 }
 

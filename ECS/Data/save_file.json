@@ -1,7 +1,8 @@
 {
-  "gold": 1,
+  "gold": 20,
   "completedQuests": [
-    "desert_1"
+    "desert_1",
+    "desert_2"
   ],
   "collection": [
     "anoint_the_sick",
@@ -24,7 +25,7 @@
     "st_michael"
   ],
   "items": [],
-  "lastLocation": "desert_1",
+  "lastLocation": "shop_1",
   "loadouts": [
     {
       "id": "loadout_1",

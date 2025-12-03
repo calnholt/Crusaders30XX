@@ -150,6 +150,7 @@ namespace Crusaders30XX.ECS.Data.Save
 			try
 			{
 				var path = ResolveFilePath();
+				if (string.IsNullOrEmpty(path)) return;
 				SaveRepository.Save(path, _save);
 			}
 			catch { }
@@ -174,15 +175,27 @@ namespace Crusaders30XX.ECS.Data.Save
 				if (_save == null)
 				{
 					var path = ResolveFilePath();
-					if (File.Exists(path))
+					if (!string.IsNullOrEmpty(path) && File.Exists(path))
 					{
 						_save = SaveRepository.Load(path);
 					}
 					else
 					{
-						// Create default save file for new users
-						_save = CreateDefaultSave();
-						Persist();
+						// Optional migration: if no LocalApplicationData save exists yet,
+						// but a legacy project save file does, load that and persist it
+						// to the new location so existing progress is preserved.
+						string legacyPath = ResolveLegacyFilePath();
+						if (!string.IsNullOrEmpty(legacyPath) && File.Exists(legacyPath))
+						{
+							_save = SaveRepository.Load(legacyPath) ?? CreateDefaultSave();
+							Persist();
+						}
+						else
+						{
+							// Create default save file for new users
+							_save = CreateDefaultSave();
+							Persist();
+						}
 					}
 				}
 			}
@@ -276,10 +289,38 @@ namespace Crusaders30XX.ECS.Data.Save
 
 		private static string ResolveFilePath()
 		{
-			if (!string.IsNullOrEmpty(_filePath) && File.Exists(_filePath)) return _filePath;
-			string root = FindProjectRootContaining("Crusaders30XX.csproj");
-			_filePath = string.IsNullOrEmpty(root) ? string.Empty : Path.Combine(root, "ECS", "Data", "save_file.json");
-			return _filePath;
+			if (!string.IsNullOrEmpty(_filePath)) return _filePath;
+			try
+			{
+				var appData = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
+				if (string.IsNullOrEmpty(appData)) return string.Empty;
+				var saveDir = Path.Combine(appData, "Crusaders30XX");
+				if (!Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
+				_filePath = Path.Combine(saveDir, "save_file.json");
+				return _filePath;
+			}
+			catch
+			{
+				return string.Empty;
+			}
+		}
+
+		/// <summary>
+		/// Legacy project-relative save path used by older builds.
+		/// Kept for one-time migration into the LocalApplicationData location.
+		/// </summary>
+		private static string ResolveLegacyFilePath()
+		{
+			try
+			{
+				string root = FindProjectRootContaining("Crusaders30XX.csproj");
+				if (string.IsNullOrEmpty(root)) return string.Empty;
+				return Path.Combine(root, "ECS", "Data", "save_file.json");
+			}
+			catch
+			{
+				return string.Empty;
+			}
 		}
 
 		private static string FindProjectRootContaining(string filename)
@@ -296,6 +337,41 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 			catch { }
 			return null;
+		}
+
+		public static bool TrySpendGoldAndAddToCollection(string itemId, int price, out int newGold)
+		{
+			newGold = 0;
+			if (price < 0) price = 0;
+
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null)
+				{
+					return false;
+				}
+
+				if (_save.gold < price)
+				{
+					return false;
+				}
+
+				_save.gold = System.Math.Max(0, _save.gold - price);
+				if (_save.collection == null)
+				{
+					_save.collection = new System.Collections.Generic.List<string>();
+				}
+
+				if (!string.IsNullOrWhiteSpace(itemId) && !_save.collection.Contains(itemId))
+				{
+					_save.collection.Add(itemId);
+				}
+
+				Persist();
+				newGold = _save.gold;
+				return true;
+			}
 		}
 	}
 }
