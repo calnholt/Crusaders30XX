@@ -52,6 +52,7 @@ namespace Crusaders30XX.ECS.Systems
 		// Entities
 		private Entity _overlayTextEntity;
 		private Entity _confirmParentEntity;
+		private Entity _overlayBlockerEntity;
 
 		// Cached last drawn text rect
 		private Rectangle _textRect;
@@ -65,7 +66,7 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			_prevKeyboard = Keyboard.GetState();
-      EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
+			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -78,8 +79,9 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_overlayTextEntity = null;
 			_confirmParentEntity = null;
-      _state = OverlayState.Hidden;
-      _alpha01 = 0f;
+			_overlayBlockerEntity = null;
+			_state = OverlayState.Hidden;
+			_alpha01 = 0f;
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
@@ -184,6 +186,22 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(_overlayTextEntity, new UIElement { Bounds = Rectangle.Empty, IsInteractable = false, LayerType = UILayerType.Overlay, Tooltip = "" });
 				EntityManager.AddComponent(_overlayTextEntity, new HotKey { Button = FaceButton.X, ParentEntity = _confirmParentEntity, Position = HotKeyPosition.Below, RequiresHold = true });
 			}
+
+			// Fullscreen blocker that swallows clicks behind the overlay
+			if (_overlayBlockerEntity == null)
+			{
+				_overlayBlockerEntity = EntityManager.CreateEntity("QuitQuest_OverlayBlocker");
+				EntityManager.AddComponent(_overlayBlockerEntity, new Transform { Position = Vector2.Zero, ZOrder = OverlayZ - 1 });
+				EntityManager.AddComponent(_overlayBlockerEntity, new UIElement
+				{
+					Bounds = Rectangle.Empty,
+					IsInteractable = false,
+					LayerType = UILayerType.Overlay,
+					EventType = UIElementEventType.None,
+					IsPreventDefaultClick = true,
+					IsHidden = false,
+				});
+			}
 		}
 
 		private void SyncEntitiesActive(bool active)
@@ -191,6 +209,8 @@ namespace Crusaders30XX.ECS.Systems
 			// When inactive, hide hotkey hints by disabling interaction and zeroing bounds
 			var uiText = _overlayTextEntity?.GetComponent<UIElement>();
 			var uiParent = _confirmParentEntity?.GetComponent<UIElement>();
+			var uiBlocker = _overlayBlockerEntity?.GetComponent<UIElement>();
+			var tBlocker = _overlayBlockerEntity?.GetComponent<Transform>();
 			if (uiText != null)
 			{
 				uiText.IsInteractable = active;
@@ -200,6 +220,24 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				// Keep parent off-screen; interaction handled through child hotkey parenting
 				uiParent.IsInteractable = active;
+			}
+
+			// Block all clicks behind the quit overlay while it is active
+			if (uiBlocker != null && tBlocker != null)
+			{
+				tBlocker.ZOrder = OverlayZ - 1;
+				if (active)
+				{
+					uiBlocker.IsInteractable = true;
+					uiBlocker.IsHidden = false;
+					uiBlocker.Bounds = new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight);
+				}
+				else
+				{
+					uiBlocker.IsInteractable = false;
+					uiBlocker.Bounds = Rectangle.Empty;
+					uiBlocker.IsHidden = true;
+				}
 			}
 		}
 
@@ -251,6 +289,13 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					ui.IsInteractable = true;
 				}
+			}
+
+			// Keep blocker Z-order in sync with debug-edited OverlayZ
+			if (_overlayBlockerEntity != null)
+			{
+				var t = _overlayBlockerEntity.GetComponent<Transform>();
+				if (t != null) t.ZOrder = OverlayZ - 1;
 			}
 		}
 	}
