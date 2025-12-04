@@ -140,7 +140,7 @@
       "RevealRadius": 400,
       "UnrevealedRadius": 50,
       "Type": "Quest",
-      "Name": "Crumbling City",
+      "Name": "Undead Rebellion",
       "Difficulty": 2,
       "Reward": {
         "Gold": 3
@@ -222,8 +222,8 @@
     {
       "Id": "desert_12",
       "WorldPosition": [
-        1860,
-        960
+        1945,
+        482
       ],
       "RevealRadius": 400,
       "UnrevealedRadius": 50,
@@ -342,31 +342,31 @@
         {
           "Id": "impale",
           "Type": "Card",
-          "Price": 2,
+          "Price": 1,
           "IsPurchased": false
         },
         {
           "Id": "shroud_of_turin",
           "Type": "Card",
-          "Price": 3,
+          "Price": 2,
           "IsPurchased": false
         },
         {
           "Id": "vindicate",
           "Type": "Card",
-          "Price": 4,
+          "Price": 3,
           "IsPurchased": false
         },
         {
           "Id": "st_luke",
           "Type": "Medal",
-          "Price": 4,
+          "Price": 3,
           "IsPurchased": false
         },
         {
           "Id": "pierced_heart_plate",
           "Type": "Equipment",
-          "Price": 5,
+          "Price": 4,
           "IsPurchased": true
         }
       ]
@@ -384,19 +384,19 @@
         {
           "Id": "pouch_of_kunai",
           "Type": "Card",
-          "Price": 3,
+          "Price": 2,
           "IsPurchased": false
         },
         {
           "Id": "fury",
           "Type": "Card",
-          "Price": 5,
+          "Price": 4,
           "IsPurchased": false
         },
         {
           "Id": "purging_bracers",
           "Type": "Equipment",
-          "Price": 6,
+          "Price": 5,
           "IsPurchased": false
         }
       ]

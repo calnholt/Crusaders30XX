@@ -80,19 +80,22 @@ namespace Crusaders30XX.ECS.Systems
 				});
 			}
 
-			// Defer not-blocked effects (and final resolution signal) until the attack impact occurs
+			// Defer not-blocked effects (and final resolution signal) until the attack impact occurs.
+			// IMPORTANT: we intentionally reuse the original blocked result captured at resolution time
+			// so that changes to Aegis or other prevention between resolution and impact do not cause
+			// effectsOnNotBlocked (like bonus damage) to misfire.
+			bool blockedAtResolution = blocked;
 			System.Action<EnemyAttackImpactNow> impactHandler = null;
 			impactHandler = (impact) =>
 			{
 				if (impact == null || impact.ContextId != pa.ContextId) return;
 				EventManager.Unsubscribe(impactHandler);
-				var conditionMet = ConditionService.Evaluate(def.blockingCondition, EntityManager, progress);
-				if (!conditionMet)
+				if (!blockedAtResolution)
 				{
 					ApplyEffects(def.effectsOnNotBlocked, source, player);
 					HandleDiscardSpecificCards(def, pa.ContextId);
 				}
-				EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blocked });
+				EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blockedAtResolution });
 			};
 			EventManager.Subscribe(impactHandler);
 		}
