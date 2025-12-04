@@ -26,7 +26,7 @@ namespace Crusaders30XX.ECS.Systems
         case AppliedPassiveType.Wounded:
           return $"Takes {stacks} more damage from all sources this battle.";
         case AppliedPassiveType.Webbing:
-          return $"At the start of your turn, gain {stacks} slow this battle.";
+          return $"At the start of your turn, gain {stacks} slow. Lasts for the rest of the quest.";
         case AppliedPassiveType.Inferno:
           return $"At the start of your turn, gain {stacks} burn {(stacks == 1 ? "" : "s")} this battle.";
         case AppliedPassiveType.Penance:
@@ -41,6 +41,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"Every 60 seconds, lose 1 HP.";
         case AppliedPassiveType.Shield:
           return $"Prevent all damage from the first source each turn.";
+        case AppliedPassiveType.Fear:
+          return $"Attacks have a {stacks * 10}% chance to become ambush attacks this quest.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

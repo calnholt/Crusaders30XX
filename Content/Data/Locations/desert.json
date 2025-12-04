@@ -220,6 +220,36 @@
       "Background": "desert-background-crumbling-city.png"
     },
     {
+      "Id": "desert_12",
+      "WorldPosition": [
+        1860,
+        960
+      ],
+      "RevealRadius": 400,
+      "UnrevealedRadius": 50,
+      "Type": "Quest",
+      "Name": "Ambush",
+      "Difficulty": 2,
+      "Reward": {
+        "Gold": 3
+      },
+      "Events": [
+        {
+          "id": "spider",
+          "type": "Enemy"
+        },
+        {
+          "id": "ogre",
+          "type": "Enemy"
+        },
+        {
+          "id": "demon",
+          "type": "Enemy"
+        }
+      ],
+      "Background": "desert-background-crumbling-city.png"
+    },
+    {
       "Id": "desert_7",
       "WorldPosition": [
         4775,

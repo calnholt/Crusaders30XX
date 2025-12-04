@@ -924,5 +924,6 @@ namespace Crusaders30XX.ECS.Components
         Stealth,
         Poison,
         Shield,
+        Fear,
     }
 }

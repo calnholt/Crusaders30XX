@@ -536,7 +536,7 @@ namespace Crusaders30XX.ECS.Systems
 				string conditionalSuffix = (!isConditionMet && extraConditionalDamage > 0)
 					? $" + {extraConditionalDamage}"
 					: string.Empty;
-				lines.Add(($"Damage: {actual}{conditionalSuffix} {(blockPrevented > 0 || aegisPrevented > 0 ? breakdown : string.Empty)}", TextScale, Color.White));
+				lines.Add(($"Damage: {baseDamage}{conditionalSuffix} {(blockPrevented > 0 || aegisPrevented > 0 ? breakdown : string.Empty)}", TextScale, Color.White));
 			}
 			else
 			{
@@ -887,6 +887,16 @@ namespace Crusaders30XX.ECS.Systems
 				case "OnHit":
 				{
 					lines.Add(("Condition: Fully block the attack", TextScale, statusColor));
+					break;
+				}
+				case "OnBlockedBy1Card":
+				{
+					lines.Add(("Condition: Block the attack with at least one card", TextScale, statusColor));
+					break;
+				}
+				case "OnBlockedBy2Cards":
+				{
+					lines.Add(("Condition: Block the attack with at least two cards", TextScale, statusColor));
 					break;
 				}
 			}

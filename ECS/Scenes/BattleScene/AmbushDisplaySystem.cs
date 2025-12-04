@@ -73,7 +73,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int MeterFillAlpha { get; set; } = 240;
 
 		[DebugEditable(DisplayName = "Default Timer (s)", Step = 1, Min = 1, Max = 60)]
-		public int DefaultTimerSeconds { get; set; } = 15;
+		public int DefaultTimerSeconds { get; set; } = 25;
 
 		public AmbushDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)
 		{
@@ -172,6 +172,11 @@ namespace Crusaders30XX.ECS.Systems
 					if (st.TimerRemainingSeconds <= 0f && !st.FiredAutoConfirm)
 					{
 						st.FiredAutoConfirm = true;
+						// Notify listeners (e.g., MustBeBlockedSystem) that the ambush timer expired for this context
+						if (!string.IsNullOrEmpty(st.ContextId))
+						{
+							EventManager.Publish(new AmbushTimerExpired { ContextId = st.ContextId });
+						}
 						EventManager.Publish(new DebugCommandEvent { Command = "ConfirmEnemyAttack" });
 					}
 				}

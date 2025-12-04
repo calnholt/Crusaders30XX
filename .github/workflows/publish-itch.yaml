@@ -1,0 +1,77 @@
+name: Build and publish to itch.io
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    env:
+      ITCH_USER: "calnholt"
+      ITCH_GAME: "crusader-30xx"
+      CHANNEL: "windows"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ----------------------------
+      # READ + INCREMENT VERSION
+      # ----------------------------
+      - name: Read current version
+        id: version
+        run: |
+          VER=$(cat VERSION)
+          echo "current_version=$VER" >> $GITHUB_OUTPUT
+
+      - name: Increment patch version
+        id: bump
+        run: |
+          VER=${{ steps.version.outputs.current_version }}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VER"
+          PATCH=$((PATCH + 1))
+          NEW_VER="$MAJOR.$MINOR.$PATCH"
+          echo "$NEW_VER" > VERSION
+          echo "new_version=$NEW_VER" >> $GITHUB_OUTPUT
+
+      - name: Commit updated version
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add VERSION
+          git commit -m "Bump version to ${{ steps.bump.outputs.new_version }}"
+          git push
+
+      # ----------------------------
+      # BUILD GAME
+      # ----------------------------
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '7.0.x'
+
+      - name: Restore NuGet packages
+        run: dotnet restore
+
+      - name: Publish self-contained Windows build
+        run: dotnet publish -c Release -r win-x64 --self-contained true -o ./artifacts/windows
+
+      - name: Zip artifact
+        run: |
+          powershell -Command "Compress-Archive -Path './artifacts/windows/*' -DestinationPath './builds/windows-build.zip' -Force"
+
+      # ----------------------------
+      # BUTLER UPLOAD
+      # ----------------------------
+      - name: Setup butler
+        uses: remarkablegames/setup-butler@v2
+
+      - name: Upload to itch.io
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          butler push ./builds/windows-build.zip $ITCH_USER/$ITCH_GAME:$CHANNEL \
+            --userversion ${{ steps.bump.outputs.new_version }}

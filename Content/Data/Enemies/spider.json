@@ -1,8 +1,7 @@
 {
   "name": "Spider",
   "id": "spider",
-  "hp": 100,
-  "genericAttackAmbushPercentage": 100,
+  "hp": 80,
   "passives": [
     {
       "type": "Webbing",
@@ -15,26 +14,18 @@
       "id": "suffocating_silk",
       "name": "Suffocating Silk",
       "target": "Player",
-      "positionType": "Ender",
+      "positionType": "Linker",
       "ambushPercentage": 75,
-      "damage": 4,
+      "damage": 2,
       "blockingCondition": {
         "type": "OnHit"
       },
       "effectsOnNotBlocked": [
         {
           "type": "Slow",
-          "amount": 3
+          "amount": 4
         }
       ]
-    },
-    {
-      "id": "rafterfall_ambush",
-      "name": "Rafterfall Ambush",
-      "target": "Player",
-      "positionType": "Starter",
-      "ambushPercentage": 100,
-      "damage": 3
     },
     {
       "id": "mandible_breaker",
@@ -42,13 +33,45 @@
       "target": "Player",
       "positionType": "Ender",
       "ambushPercentage": 75,
-      "damage": 8,
+      "damage": 6,
       "blockingCondition": {
         "type": "OnHit"
       },
       "effectsOnNotBlocked": [
         {
-          "type": "Slow",
+          "type": "Fear",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "rafterfall_ambush",
+      "name": "Rafterfall Ambush",
+      "target": "Player",
+      "positionType": "Ender",
+      "ambushPercentage": 75,
+      "damage": 8,
+      "text": "This attack must be blocked with at least one card/equipment if possible.",
+      "specialEffects": [
+        {
+          "type": "MustBeBlocked",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "ten_limbs_of_death",
+      "name": "Ten Limbs of Death",
+      "target": "Player",
+      "positionType": "Ender",
+      "ambushPercentage": 75,
+      "damage": 8,
+      "blockingCondition": {
+        "type": "OnBlockedBy1Card"
+      },
+      "effectsOnNotBlocked": [
+        {
+          "type": "Fear",
           "amount": 1
         }
       ]
@@ -58,7 +81,7 @@
       "name": "Fang Feint",
       "target": "Player",
       "positionType": "Starter",
-      "ambushPercentage": 50,
+      "ambushPercentage": 75,
       "damage": 1,
       "blockingCondition": {
         "type": "OnHit"
@@ -66,7 +89,7 @@
       "effectsOnNotBlocked": [
         {
           "type": "Damage",
-          "amount": 5,
+          "amount": 4,
           "percentage": 50
         }
       ]

@@ -226,13 +226,13 @@ namespace Crusaders30XX.ECS.Systems
                     break;
                 }
                 // weapons
-                case "hammer":
+                case "sword":
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -def.damage, DamageType = ModifyTypeEnum.Attack });
                     EventManager.Publish(new ModifyCourageEvent { Delta = +values[i++] });
                     break;
                 }
-                case "sword":
+                case "dagger":
                 {
                     EventManager.Publish(new ModifyCourageEvent { Delta = -values[i++] });
                     EventManager.Publish(new ModifyHpRequestEvent { Source = player, Target = target, Delta = -def.damage, DamageType = ModifyTypeEnum.Attack });

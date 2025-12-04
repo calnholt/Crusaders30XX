@@ -123,7 +123,8 @@ namespace Crusaders30XX.ECS.Systems
 				EnemyDefinitionCache.TryGet(enemyId, out var enemyDef);
 				AttackDefinitionCache.TryGet(id, out var attackDef);
 				Console.WriteLine($"[EnemyIntentPlanningSystem] AddPlanned id:{id} enemyId:{enemyId} isGeneric:{attackDef.isGeneric} genericAmbushPercentage:{enemyDef.genericAttackAmbushPercentage} ambushPercentage:{def.ambushPercentage}");
-				int ambushChance = attackDef.isGeneric ? enemyDef.genericAttackAmbushPercentage : def.ambushPercentage;
+				var passives = EntityManager.GetEntity("Player").GetComponent<AppliedPassives>().Passives;
+				int ambushChance = def.ambushPercentage + (passives.ContainsKey(AppliedPassiveType.Fear) ? passives[AppliedPassiveType.Fear] * 10 : 0);
 				target.Planned.Add(new PlannedAttack
 				{
 					AttackId = id,

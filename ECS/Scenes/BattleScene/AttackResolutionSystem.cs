@@ -86,7 +86,8 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				if (impact == null || impact.ContextId != pa.ContextId) return;
 				EventManager.Unsubscribe(impactHandler);
-				if (!blocked)
+				var conditionMet = ConditionService.Evaluate(def.blockingCondition, EntityManager, progress);
+				if (!conditionMet)
 				{
 					ApplyEffects(def.effectsOnNotBlocked, source, player);
 					HandleDiscardSpecificCards(def, pa.ContextId);

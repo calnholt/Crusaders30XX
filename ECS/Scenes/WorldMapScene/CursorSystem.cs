@@ -225,14 +225,10 @@ namespace Crusaders30XX.ECS.Systems
 						.FirstOrDefault();
 					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
 					{
-						if (clickCandidate.UI.EventType != UIElementEventType.None)
-						{
-							UIElementEventDelegateService.HandleEvent(clickCandidate.UI.EventType, clickCandidate.E);
-						}
-						else
-						{
-							clickCandidate.UI.IsClicked = true;
-						}
+						// NOTE: Do not dispatch UIElement events directly here; InputSystem owns
+						// UIElementEventDelegateService.HandleEvent for both mouse and controller
+						// input to avoid double-firing events. We only mark the element clicked.
+						clickCandidate.UI.IsClicked = true;
 						Console.WriteLine($"[CursorSystem] Clicked: {clickCandidate.E.Id}");
 						_lastClickedEntity = clickCandidate.E;
 					}
@@ -371,14 +367,10 @@ namespace Crusaders30XX.ECS.Systems
 						.FirstOrDefault();
 					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
 					{
-						if (clickCandidate.UI.EventType != UIElementEventType.None)
-						{
-							UIElementEventDelegateService.HandleEvent(clickCandidate.UI.EventType, clickCandidate.E);
-						}
-						else
-						{
-							clickCandidate.UI.IsClicked = true;
-						}
+						// NOTE: Do not dispatch UIElement events directly here; InputSystem owns
+						// UIElementEventDelegateService.HandleEvent for both mouse and controller
+						// input to avoid double-firing events. We only mark the element clicked.
+						clickCandidate.UI.IsClicked = true;
 						Console.WriteLine($"[CursorSystem] Clicked: {clickCandidate.E.Id}");
 						_lastClickedEntity = clickCandidate.E;
 					}

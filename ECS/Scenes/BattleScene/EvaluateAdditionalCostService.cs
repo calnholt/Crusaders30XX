@@ -83,18 +83,6 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new CantPlayCardMessage { Message = $"Can only pay during block phase!" });
                     return false;
                 }
-                case "sword":
-                {
-                    var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-                    var courageCmp = player?.GetComponent<Courage>();
-                    int courage = courageCmp?.Amount ?? 0;
-                    if (courage < def.valuesParse[0])
-                    {
-                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {def.valuesParse[0]} courage!" });
-                        return false;
-                    }
-                    return true;
-                }
                 default:
                     return true;
             }
