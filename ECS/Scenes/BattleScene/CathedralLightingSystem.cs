@@ -146,8 +146,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (!_isActive || _beamTexture == null || _numberOfBeams <= 0) return;
 
-			int viewportW = _graphicsDevice.Viewport.Width;
-			int viewportH = _graphicsDevice.Viewport.Height;
+			int viewportW = Game1.VirtualWidth;
+			int viewportH = Game1.VirtualHeight;
 
 			// Diagonal from top-right to bottom-left
 			var start = new Vector2(viewportW, 0f);

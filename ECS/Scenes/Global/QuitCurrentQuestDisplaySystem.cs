@@ -245,8 +245,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (_state == OverlayState.Hidden) return;
 
-			int w = _graphicsDevice.Viewport.Width;
-			int h = _graphicsDevice.Viewport.Height;
+			int w = Game1.VirtualWidth;
+			int h = Game1.VirtualHeight;
 
 			// Fullscreen dim
 			int alpha = Math.Max(0, Math.Min(255, (int)Math.Round(OverlayMaxAlpha * _alpha01)));

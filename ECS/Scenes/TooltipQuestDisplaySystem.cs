@@ -407,8 +407,8 @@ namespace Crusaders30XX.ECS.Systems
 			int w = System.Math.Max(100, BoxWidth);
 			int h = CalculateTooltipHeight(w, title, events, tribulations, rewardGold, isCompleted);
 			int gap = System.Math.Max(0, Gap);
-			int viewportW = _graphicsDevice.Viewport.Width;
-			int viewportH = _graphicsDevice.Viewport.Height;
+			int viewportW = Game1.VirtualWidth;
+			int viewportH = Game1.VirtualHeight;
 
 			int centerX = (int)System.Math.Round(t?.Position.X ?? (anchor.X + anchor.Width / 2f));
 			bool preferRight = centerX < viewportW / 2;

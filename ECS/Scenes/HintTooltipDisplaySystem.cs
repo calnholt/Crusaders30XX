@@ -241,8 +241,8 @@ namespace Crusaders30XX.ECS.Systems
         private Rectangle ComputePlacement(Rectangle anchor, Point size)
         {
             int w = size.X, h = size.Y;
-            int screenW = _graphicsDevice.Viewport.Width;
-            int screenH = _graphicsDevice.Viewport.Height;
+            int screenW = Game1.VirtualWidth;
+            int screenH = Game1.VirtualHeight;
 
             // Candidate placements in order based on preferences and mode
             var candidates = new List<Vector2>();

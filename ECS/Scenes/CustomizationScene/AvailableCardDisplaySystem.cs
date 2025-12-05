@@ -51,7 +51,7 @@ namespace Crusaders30XX.ECS.Systems
 
             int panelX = 0;
             int panelY = 0;
-            int panelH = _graphicsDevice.Viewport.Height;
+            int panelH = Game1.VirtualHeight;
             int colW = (int)(cardW * _libraryPanel.CardScale) + 20;
             int col = Math.Max(1, _libraryPanel.Columns);
 

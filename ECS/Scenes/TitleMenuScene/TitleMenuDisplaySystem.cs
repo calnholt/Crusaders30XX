@@ -77,8 +77,8 @@ namespace Crusaders30XX.ECS.Systems
 			_t += dt;
 
 			// Ensure a full-screen interactable UI element exists for click handling (immediate, no fade gating)
-			int w = _graphicsDevice.Viewport.Width;
-			int h = _graphicsDevice.Viewport.Height;
+			int w = Game1.VirtualWidth;
+			int h = Game1.VirtualHeight;
 			var clickArea = EntityManager.GetEntity("TitleMenu_ClickArea");
 			if (clickArea == null)
 			{
@@ -117,8 +117,8 @@ namespace Crusaders30XX.ECS.Systems
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.TitleMenu) return;
 
-			int w = _graphicsDevice.Viewport.Width;
-			int h = _graphicsDevice.Viewport.Height;
+			int w = Game1.VirtualWidth;
+			int h = Game1.VirtualHeight;
 
 			// Fill black background
 			_spriteBatch.Draw(_pixel, new Rectangle(0, 0, w, h), new Color(0f, 0f, 0f, MathHelper.Clamp(BackgroundAlpha, 0f, 1f)));

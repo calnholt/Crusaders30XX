@@ -85,8 +85,8 @@ namespace Crusaders30XX.ECS.Systems
 			var st = GetRelevantEntities().FirstOrDefault()?.GetComponent<HowToPlayOverlay>();
 			if (st == null || !st.IsOpen || _font == null) return;
 
-			int vw = _graphicsDevice.Viewport.Width;
-			int vh = _graphicsDevice.Viewport.Height;
+			int vw = Game1.VirtualWidth;
+			int vh = Game1.VirtualHeight;
 			// Backdrop
 			var back = new Color(0, 0, 0, System.Math.Clamp(BackdropAlpha, 0, 255));
 			_spriteBatch.Draw(_pixel, new Rectangle(0, 0, vw, vh), back);

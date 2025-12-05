@@ -61,8 +61,8 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
-			int vw = _graphicsDevice.Viewport.Width;
-			int vh = _graphicsDevice.Viewport.Height;
+			int vw = Game1.VirtualWidth;
+			int vh = Game1.VirtualHeight;
 
 			// Ensure button entity exists and is positioned correctly
 			EnsureButtonEntity(vw, vh);
@@ -88,8 +88,8 @@ namespace Crusaders30XX.ECS.Systems
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || (scene.Current != SceneId.Location && scene.Current != SceneId.Shop)) return;
 
-			int vw = _graphicsDevice.Viewport.Width;
-			int vh = _graphicsDevice.Viewport.Height;
+			int vw = Game1.VirtualWidth;
+			int vh = Game1.VirtualHeight;
 
 			// Ensure button entity exists
 			EnsureButtonEntity(vw, vh);

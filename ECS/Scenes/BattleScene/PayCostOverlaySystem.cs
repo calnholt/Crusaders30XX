@@ -503,8 +503,8 @@ namespace Crusaders30XX.ECS.Systems
             var state = stateEntity.GetComponent<PayCostOverlayState>();
             if (state == null || !state.IsOpen || state.IsReturning) return;
 
-            int w = _graphicsDevice.Viewport.Width;
-            int h = _graphicsDevice.Viewport.Height;
+            int w = Game1.VirtualWidth;
+            int h = Game1.VirtualHeight;
 
             float t = MathHelper.Clamp(state.OpenElapsedSeconds / FadeInDurationSec, 0f, 1f);
             // EaseOutQuad
@@ -522,8 +522,8 @@ namespace Crusaders30XX.ECS.Systems
             var state = stateEntity.GetComponent<PayCostOverlayState>();
             if (state == null || !(state.IsOpen || state.IsReturning)) return;
 
-            int w = _graphicsDevice.Viewport.Width;
-            int h = _graphicsDevice.Viewport.Height;
+            int w = Game1.VirtualWidth;
+            int h = Game1.VirtualHeight;
 
             float t = MathHelper.Clamp(state.OpenElapsedSeconds / FadeInDurationSec, 0f, 1f);
             float eased = 1f - (1f - t) * (1f - t);
@@ -675,8 +675,8 @@ namespace Crusaders30XX.ECS.Systems
         private void RetargetSelectedLayout(PayCostOverlayState state)
         {
             if (state == null) return;
-            int w = _graphicsDevice.Viewport.Width;
-            int h = _graphicsDevice.Viewport.Height;
+            int w = Game1.VirtualWidth;
+            int h = Game1.VirtualHeight;
             // Mirror the staged center used in DrawForeground
             // Use font height to keep consistent anchor even before DrawForeground
             string line = "";

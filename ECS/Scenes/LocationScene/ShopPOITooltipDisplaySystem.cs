@@ -106,8 +106,8 @@ namespace Crusaders30XX.ECS.Systems
 			int width = (int)System.Math.Ceiling(size.X) + pad * 2 + System.Math.Max(0, LeftSideOffset);
 			int height = System.Math.Max(24, TrapezoidHeight);
 			var r = hovered.UI.Bounds;
-			int viewportW = _graphicsDevice.Viewport.Width;
-			int viewportH = _graphicsDevice.Viewport.Height;
+			int viewportW = Game1.VirtualWidth;
+			int viewportH = Game1.VirtualHeight;
 
 			// Prefer the side with more room; default preference by screen halves
 			int rightSpace = viewportW - (r.Right + Gap);

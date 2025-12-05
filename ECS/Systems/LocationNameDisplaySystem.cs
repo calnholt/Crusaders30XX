@@ -113,7 +113,7 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-			_viewportWidth = _graphicsDevice.Viewport.Width;
+			_viewportWidth = Game1.VirtualWidth;
 			_targetTrapezoidX = 0f;
 			_targetTextX = TextPaddingX;
 

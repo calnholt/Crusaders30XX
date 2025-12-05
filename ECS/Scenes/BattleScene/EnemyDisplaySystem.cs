@@ -93,8 +93,8 @@ namespace Crusaders30XX.ECS.Systems
 				if (enemy == null || t == null) continue;
 				Texture2D tex = GetTextureFor(enemy.Type);
 				if (tex == null) continue;
-				int viewportW = _graphicsDevice.Viewport.Width;
-				int viewportH = _graphicsDevice.Viewport.Height;
+				int viewportW = Game1.VirtualWidth;
+				int viewportH = Game1.VirtualHeight;
 				float desiredHeight = ScreenHeightCoverage * viewportH;
 				float scale = desiredHeight / tex.Height;
 				if (_pulseTimerSeconds > 0f)

@@ -88,7 +88,7 @@ namespace Crusaders30XX.ECS.Systems
 			var scene = entity.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Shop) return;
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-			_viewportWidth = _graphicsDevice.Viewport.Width;
+			_viewportWidth = Game1.VirtualWidth;
 			_targetTrapezoidX = 0f;
 			_targetTextX = TextPaddingX;
 			float offScreenX = _viewportWidth + TrapezoidWidth;

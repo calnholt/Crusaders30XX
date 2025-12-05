@@ -545,7 +545,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			if (!string.IsNullOrEmpty(notBlockedSummary))
 			{
-				lines.Add(($"On hit: {notBlockedSummary}", TextScale, Color.OrangeRed));
+				lines.Add(($"Effect: {notBlockedSummary}", TextScale, Color.OrangeRed));
 			}
 			AppendLeafConditionsWithStatus(def.blockingCondition, lines, pa.ContextId);
 			if (!string.IsNullOrEmpty(def.text))

@@ -183,7 +183,7 @@ namespace Crusaders30XX.ECS.Systems
             bool clickForContent = click;
 
             // Layout values
-            int viewportW = _graphicsDevice.Viewport.Width;
+            int viewportW = Game1.VirtualWidth;
 
             // Initialize saved panel position on first open
             if (!menu.IsPositionSet)
@@ -278,8 +278,8 @@ namespace Crusaders30XX.ECS.Systems
                     int newX = mouse.X - _dragOffset.X;
                     int newY = mouse.Y - _dragOffset.Y;
                     // Clamp so the title label remains fully on-screen
-                    int viewportWClamped = _graphicsDevice.Viewport.Width;
-                    int viewportHClamped = _graphicsDevice.Viewport.Height;
+                    int viewportWClamped = Game1.VirtualWidth;
+                    int viewportHClamped = Game1.VirtualHeight;
                     int titleW = (int)Math.Ceiling(titleSize.X);
                     int titleH = (int)Math.Ceiling(titleSize.Y);
                     // Keep the title label fully on-screen: clamp panel position so (panel + padding) within [0, viewport - titleSize]

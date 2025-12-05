@@ -217,7 +217,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (items.Count == 0) return;
 
 			int cols = Math.Max(1, MaxColumns);
-			int w = _graphicsDevice.Viewport.Width;
+			int w = Game1.VirtualWidth;
 
 			for (int i = 0; i < items.Count; i++)
 			{

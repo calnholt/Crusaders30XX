@@ -172,7 +172,7 @@ namespace Crusaders30XX.ECS.Systems
 			var stateEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
 			if (stateEntity == null) return;
 			var state = stateEntity.GetComponent<PhaseState>();
-			int vw = _graphicsDevice.Viewport.Width;
+			int vw = Game1.VirtualWidth;
 			int xRight = vw + LabelOffsetX;
 			string label = "";
 			if (state.Main == MainPhase.StartBattle)

@@ -15,6 +15,9 @@
 
 Prompts - 
 
+enemy attack display - update text for different types of conditinos (one card, tow cards, etc)
+"if this attack (deals damage, is not blocked by X cards) - [effect]"
+
 abandon quest screen needs to prevent actions "behind"
 
 card idea - spend aegis

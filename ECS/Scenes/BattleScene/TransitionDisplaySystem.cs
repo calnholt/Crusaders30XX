@@ -112,8 +112,8 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			if (_phase == Phase.Idle) return;
-			int vw = _graphicsDevice.Viewport.Width;
-			int vh = _graphicsDevice.Viewport.Height;
+			int vw = Game1.VirtualWidth;
+			int vh = Game1.VirtualHeight;
 			float angle = MathHelper.ToRadians(AngleDegrees);
 			// progress 0..1 for wipe-in, 1..0 for wipe-out
 			float p = MathHelper.Clamp(_t / Math.Max(0.0001f, WipeDurationSeconds), 0f, 1f);

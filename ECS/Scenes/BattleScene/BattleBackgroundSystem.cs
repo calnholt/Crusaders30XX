@@ -128,8 +128,8 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (_background == null) return;
 
-            int viewportW = _graphicsDevice.Viewport.Width;
-            int viewportH = _graphicsDevice.Viewport.Height;
+            int viewportW = Game1.VirtualWidth;
+            int viewportH = Game1.VirtualHeight;
 
             int texW = _background.Width;
             int texH = _background.Height;

@@ -100,8 +100,8 @@ namespace Crusaders30XX.ECS.Systems
                     float mag = stick.Length();
                     if (mag >= RightStickDeadzone)
                     {
-                        int w = _graphicsDevice.Viewport.Width;
-                        int h = _graphicsDevice.Viewport.Height;
+                        int w = Game1.VirtualWidth;
+                        int h = Game1.VirtualHeight;
                         var rect = new Rectangle(ModalMargin, ModalMargin, w - ModalMargin * 2, h - ModalMargin * 2);
 
                         int cursorY = rect.Y + Padding;
@@ -153,8 +153,8 @@ namespace Crusaders30XX.ECS.Systems
             var modal = modalEntity.GetComponent<CardListModal>();
             if (modal == null || !modal.IsOpen) return;
 
-            int w = _graphicsDevice.Viewport.Width;
-            int h = _graphicsDevice.Viewport.Height;
+            int w = Game1.VirtualWidth;
+            int h = Game1.VirtualHeight;
             var rect = new Rectangle(ModalMargin, ModalMargin, w - ModalMargin * 2, h - ModalMargin * 2);
 
             // Dim background overlay

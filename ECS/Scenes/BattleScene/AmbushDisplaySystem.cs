@@ -196,8 +196,8 @@ namespace Crusaders30XX.ECS.Systems
 			var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>()?.Sub ?? SubPhase.Action;
 			if (phase != SubPhase.Block) return;
 
-			int vx = _graphicsDevice.Viewport.Width;
-			int vy = _graphicsDevice.Viewport.Height;
+			int vx = Game1.VirtualWidth;
+			int vy = Game1.VirtualHeight;
 
 			if (st.IntroActive)
 			{
@@ -344,8 +344,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void UpdateAnchorTransforms()
 		{
-			int vx = _graphicsDevice.Viewport.Width;
-			int vy = _graphicsDevice.Viewport.Height;
+			int vx = Game1.VirtualWidth;
+			int vy = Game1.VirtualHeight;
 			float dropDur = Math.Max(0.0001f, IntroDropDurationSeconds);
 			float holdDur = Math.Max(0f, IntroHoldDurationSeconds);
 			float shrinkDur = Math.Max(0.0001f, IntroShrinkDurationSeconds);

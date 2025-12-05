@@ -229,7 +229,7 @@
       "UnrevealedRadius": 50,
       "Type": "Quest",
       "Name": "Ambush",
-      "Difficulty": 2,
+      "Difficulty": 3,
       "Reward": {
         "Gold": 3
       },
@@ -247,7 +247,7 @@
           "type": "Enemy"
         }
       ],
-      "Background": "desert-background-crumbling-city.png"
+      "Background": "desert-background-web-dune.png"
     },
     {
       "Id": "desert_7",

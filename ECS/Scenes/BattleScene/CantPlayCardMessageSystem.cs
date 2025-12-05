@@ -86,8 +86,8 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			if (!_isActive || string.IsNullOrEmpty(_activeMessage)) return;
-			int w = _graphicsDevice.Viewport.Width;
-			int h = _graphicsDevice.Viewport.Height;
+			int w = Game1.VirtualWidth;
+			int h = Game1.VirtualHeight;
 			// Compute alpha with fade-in/out (opacity)
 			float t = MathHelper.Clamp(_elapsed, 0f, DurationSec);
 			float alpha = 1f;

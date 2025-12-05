@@ -141,8 +141,8 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			var qe = qeEntity.GetComponent<QueuedEvents>();
 
-			int vw = _graphicsDevice.Viewport.Width;
-			int vh = _graphicsDevice.Viewport.Height;
+			int vw = Game1.VirtualWidth;
+			int vh = Game1.VirtualHeight;
 			int gridTop = TopListHeight + GridPadding + MenuYOffset;
 			int usableH = vh - gridTop - GridPadding - ConfirmHeight - GridPadding;
 			int col = Math.Max(1, GridColumns);
@@ -240,8 +240,8 @@ namespace Crusaders30XX.ECS.Systems
 			var state = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (state == null || state.Current != SceneId.Internal_QueueEventsMenu) return;
 			if (_font == null) return;
-			int vw = _graphicsDevice.Viewport.Width;
-			int vh = _graphicsDevice.Viewport.Height;
+			int vw = Game1.VirtualWidth;
+			int vh = Game1.VirtualHeight;
 
 			// Ensure texture cache warmed for button size
 			var roundedGrid = GetRounded(ButtonWidth, ButtonHeight, CornerRadius);

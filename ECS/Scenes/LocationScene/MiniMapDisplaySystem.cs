@@ -87,8 +87,8 @@ namespace Crusaders30XX.ECS.Systems
 			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
 			if (cam == null) return;
 
-			int viewportW = _graphicsDevice.Viewport.Width;
-			int viewportH = _graphicsDevice.Viewport.Height;
+			int viewportW = Game1.VirtualWidth;
+			int viewportH = Game1.VirtualHeight;
 
 			// Calculate minimap dimensions and position
 			float minimapWidth = viewportW * SizePercentage;

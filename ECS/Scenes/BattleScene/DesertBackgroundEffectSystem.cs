@@ -157,7 +157,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				SpawnClouds((float)gameTime.ElapsedGameTime.TotalSeconds);
 				float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-				int viewportW = _graphicsDevice.Viewport.Width;
+				int viewportW = Game1.VirtualWidth;
 				for (int i = _clouds.Count - 1; i >= 0; i--)
 				{
 					var c = _clouds[i];
@@ -213,7 +213,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (toSpawn <= 0) return;
 			_spawnAccumulator -= toSpawn;
 
-			int viewportH = _graphicsDevice.Viewport.Height;
+			int viewportH = Game1.VirtualHeight;
 			for (int i = 0; i < toSpawn && _clouds.Count < MaxClouds; i++)
 			{
 				float height = MathHelper.Clamp(MinThicknessPx + (float)_random.NextDouble() * (MaxThicknessPx - MinThicknessPx), MinThicknessPx, MaxThicknessPx);
@@ -239,8 +239,8 @@ namespace Crusaders30XX.ECS.Systems
 		private void SeedInitialClouds()
 		{
 			if (MaxClouds <= 0) return;
-			int viewportW = _graphicsDevice.Viewport.Width;
-			int viewportH = _graphicsDevice.Viewport.Height;
+			int viewportW = Game1.VirtualWidth;
+			int viewportH = Game1.VirtualHeight;
 			int desired = Math.Min(MaxClouds, (int)(MaxClouds * 0.6f));
 			for (int i = 0; i < desired && _clouds.Count < MaxClouds; i++)
 			{

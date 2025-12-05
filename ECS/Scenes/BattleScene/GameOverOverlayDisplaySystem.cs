@@ -91,8 +91,8 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			if (!_active || _font == null) return;
-			int w = _graphicsDevice.Viewport.Width;
-			int h = _graphicsDevice.Viewport.Height;
+			int w = Game1.VirtualWidth;
+			int h = Game1.VirtualHeight;
 
 			// Phase timings
 			float tOverlay = MathHelper.Clamp(_elapsed / System.Math.Max(0.0001f, OverlayFadeInSeconds), 0f, 1f);
