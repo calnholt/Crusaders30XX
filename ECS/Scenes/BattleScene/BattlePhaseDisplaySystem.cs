@@ -35,7 +35,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Phase In Duration (s)", Step = 0.05f, Min = 0.05f, Max = 5f)]
 		public float PhaseInDuration { get; set; } = 0.2f;
 		[DebugEditable(DisplayName = "Phase Hold Duration (s)", Step = 0.05f, Min = 0.05f, Max = 5f)]
-		public float PhaseHoldDuration { get; set; } = 0.35f;
+		public float PhaseHoldDuration { get; set; } = 0.45f;
 		[DebugEditable(DisplayName = "Phase Out Duration (s)", Step = 0.05f, Min = 0.05f, Max = 5f)]
 		public float PhaseOutDuration { get; set; } = 0.2f;
 
@@ -66,6 +66,8 @@ namespace Crusaders30XX.ECS.Systems
 		public float ConvergeOvershoot { get; set; } = 40f; // How far past center they go
 		[DebugEditable(DisplayName = "Lateral Spread", Step = 10f, Min = 0f, Max = 1000f)]
 		public float LateralSpread { get; set; } = 160f; // Spread perpendicular to motion
+		[DebugEditable(DisplayName = "Hold Move Dist", Step = 10f, Min = 0f, Max = 1000f)]
+		public float HoldMoveDistance { get; set; } = 100f; // Distance moved during hold phase
 
 		private enum AnimState
 		{
@@ -275,6 +277,11 @@ namespace Crusaders30XX.ECS.Systems
 			
 			// Calculate global progress
 			float travelPos = 0f; // 0=Start, 1=Converged, 2=End
+			
+			// Calculate how much 'travelPos' corresponds to the HoldMoveDistance
+			// Base distance covered in exit phase is (ConvergeOvershoot - (-SpawnDistance))
+			float exitPhaseLength = Math.Abs(ConvergeOvershoot - (-SpawnDistance));
+			float holdProgress = HoldMoveDistance / Math.Max(1f, exitPhaseLength);
 
 			if (_animState == AnimState.Entering)
 			{
@@ -283,12 +290,15 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			else if (_animState == AnimState.Holding)
 			{
-				travelPos = 1f;
+				float t = MathHelper.Clamp(_animTimer / PhaseHoldDuration, 0f, 1f);
+				// Slowly drift
+				travelPos = 1f + t * holdProgress;
 			}
 			else if (_animState == AnimState.Exiting)
 			{
 				float t = MathHelper.Clamp(_animTimer / PhaseOutDuration, 0f, 1f);
-				travelPos = 1f + EaseInCubic(t); 
+				// Resume from where hold left off
+				travelPos = (1f + holdProgress) + EaseInCubic(t) * (1f - holdProgress); 
 			}
 
 			// Direction vectors
