@@ -43,29 +43,60 @@ namespace Crusaders30XX.ECS.Systems
         private void OnImpactNow(EnemyAttackImpactNow e)
         {
             Console.WriteLine($"[EnemyDamageManagerSystem] EnemyAttackImpactNow context={e.ContextId} pending={_pendingDamage}");
-            int incoming = _pendingDamage;
+            int baseDamage = _pendingDamage;
             _pendingDamage = 0;
-            if (incoming <= 0) return;
+
+            // Resolve assigned block for this specific context
+            int assignedBlock = 0;
+            var prog = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>()
+                .FirstOrDefault(ent => ent.GetComponent<EnemyAttackProgress>()?.ContextId == e.ContextId)
+                ?.GetComponent<EnemyAttackProgress>();
+            
+            if (prog != null) assignedBlock = prog.AssignedBlockTotal;
+
+            bool willHit = baseDamage > assignedBlock;
+
+            // Phase 1: Pre-resolution (allows conditional effects to fire)
+            EventManager.Publish(new ResolvingEnemyDamageEvent 
+            { 
+                ContextId = e.ContextId, 
+                BaseDamage = baseDamage, 
+                AssignedBlock = assignedBlock, 
+                WillHit = willHit 
+            });
+
+            // Phase 2: Apply total damage
+            int extraDamage = _pendingDamage;
+            _pendingDamage = 0;
+            int totalDamage = baseDamage + extraDamage;
+            int finalDamage = totalDamage;
+            bool wasHit = false;
 
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-            if (player == null) return;
-
-            // 1) Consume assigned block for the current context from EnemyAttackProgress
-            var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
-            var ctx = enemy?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault()?.ContextId;
-            if (!string.IsNullOrEmpty(ctx) && incoming > 0)
+            if (player != null && totalDamage > 0)
             {
-                var prog = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>()
-                    .FirstOrDefault(e2 => e2.GetComponent<EnemyAttackProgress>()?.ContextId == ctx)?.GetComponent<EnemyAttackProgress>();
-                int assigned = prog?.AssignedBlockTotal ?? 0;
-                int useAssigned = Math.Min(assigned, incoming);
-                incoming -= useAssigned;
+                int useAssigned = Math.Min(assignedBlock, totalDamage);
+                finalDamage -= useAssigned;
+
+                if (finalDamage > 0)
+                {
+                    var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+                    EventManager.Publish(new ModifyHpRequestEvent 
+                    { 
+                        Source = enemy, 
+                        Target = player, 
+                        Delta = -finalDamage 
+                    });
+                    wasHit = true;
+                }
             }
 
-            if (incoming > 0)
+            EventManager.Publish(new EnemyDamageAppliedEvent
             {
-                EventManager.Publish(new ModifyHpRequestEvent { Source = enemy, Target = player, Delta = -incoming });
-            }
+                ContextId = e.ContextId,
+                FinalDamage = finalDamage,
+                WasHit = wasHit
+            });
         }
     }
 }

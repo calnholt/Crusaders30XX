@@ -79,6 +79,7 @@ namespace Crusaders30XX.ECS.Systems
 		private EndTurnDisplaySystem _endTurnDisplaySystem;
 		private DrawHandSystem _battlePhaseDrawSystem;
 		private PhaseCoordinatorSystem _phaseCoordinatorSystem;
+		private PhaseChangeEventSystem _phaseChangeEventSystem;
 		private PayCostOverlaySystem _payCostOverlaySystem;
 		private CantPlayCardMessageSystem _cantPlayCardMessageSystem;
 		private GameOverOverlayDisplaySystem _gameOverOverlayDisplaySystem;
@@ -105,6 +106,7 @@ namespace Crusaders30XX.ECS.Systems
 		private QuestTribulationDisplaySystem _questTribulationDisplaySystem;
 		private QuitCurrentQuestDisplaySystem _quitCurrentQuestDisplaySystem;
 		private MustBeBlockedSystem _mustBeBlockedSystem;
+		private RenderTarget2D _sceneRenderTarget;
 
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content) : base(em)
@@ -411,6 +413,7 @@ namespace Crusaders30XX.ECS.Systems
 			_cardPlaySystem = new CardPlaySystem(_world.EntityManager);
 			_battlePhaseDrawSystem = new DrawHandSystem(_world.EntityManager);
 			_phaseCoordinatorSystem = new PhaseCoordinatorSystem(_world.EntityManager);
+			_phaseChangeEventSystem = new PhaseChangeEventSystem(_world.EntityManager);
 			_weaponManagementSystem = new WeaponManagementSystem(_world.EntityManager);
 			_equipmentManagerSystem = new EquipmentManagerSystem(_world.EntityManager);
 			_medalManagerSystem = new MedalManagerSystem(_world.EntityManager);
@@ -485,6 +488,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_cardPlaySystem);
 			_world.AddSystem(_battlePhaseDrawSystem);
 			_world.AddSystem(_phaseCoordinatorSystem);
+			_world.AddSystem(_phaseChangeEventSystem);
 			_world.AddSystem(_weaponManagementSystem);
 			_world.AddSystem(_equipmentManagerSystem);
 			_world.AddSystem(_medalManagerSystem);

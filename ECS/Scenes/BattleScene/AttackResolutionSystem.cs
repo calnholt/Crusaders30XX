@@ -85,19 +85,36 @@ namespace Crusaders30XX.ECS.Systems
 			// so that changes to Aegis or other prevention between resolution and impact do not cause
 			// effectsOnNotBlocked (like bonus damage) to misfire.
 			bool blockedAtResolution = blocked;
-			System.Action<EnemyAttackImpactNow> impactHandler = null;
-			impactHandler = (impact) =>
-			{
-				if (impact == null || impact.ContextId != pa.ContextId) return;
-				EventManager.Unsubscribe(impactHandler);
-				if (!blockedAtResolution)
-				{
-					ApplyEffects(def.effectsOnNotBlocked, source, player);
-					HandleDiscardSpecificCards(def, pa.ContextId);
-				}
-				EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blockedAtResolution });
-			};
-			EventManager.Subscribe(impactHandler);
+
+            Action<ResolvingEnemyDamageEvent> onResolving = null;
+            Action<EnemyDamageAppliedEvent> onApplied = null;
+
+            onResolving = (evt) =>
+            {
+                if (evt.ContextId != pa.ContextId) return;
+
+                // Check if the attack lands:
+                // 1. Not blocked by special condition (blockedAtResolution)
+                // 2. Not blocked by gameplay mitigation (Block/Aegis) if it deals damage
+                bool gameplayBlocked = (def.damage > 0 && !evt.WillHit);
+
+                if (!blockedAtResolution && !gameplayBlocked)
+                {
+                    ApplyEffects(def.effectsOnNotBlocked, source, player);
+                    HandleDiscardSpecificCards(def, pa.ContextId);
+                }
+            };
+
+            onApplied = (evt) =>
+            {
+                if (evt.ContextId != pa.ContextId) return;
+                EventManager.Unsubscribe(onResolving);
+                EventManager.Unsubscribe(onApplied);
+                EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blockedAtResolution });
+            };
+
+            EventManager.Subscribe(onResolving);
+            EventManager.Subscribe(onApplied);
 		}
 
 		private void HandleDiscardSpecificCards(AttackDefinition def, string contextId)

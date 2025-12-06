@@ -46,6 +46,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Prevent repeated confirm presses for the same attack context
 		private readonly HashSet<string> _confirmedForContext = [];
+		private bool _showBanner = false;
 
 		private struct DebrisParticle
 		{
@@ -232,7 +233,26 @@ namespace Crusaders30XX.ECS.Systems
 					_absorbCompleteFired = false;
 					_lastContextId = null;
 					_debris.Clear();
+					_showBanner = false;
 				}
+				if (evt.Current == SubPhase.Block && evt.Previous != SubPhase.Block)
+				{
+					_showBanner = false;
+				}
+			});
+
+			EventManager.Subscribe<TriggerEnemyAttackDisplayEvent>(evt =>
+			{
+				_showBanner = true;
+				// Spawn centered and trigger immediate impact sequence
+				_impactActive = true;
+				_squashElapsedSeconds = 0f;
+				_flashElapsedSeconds = 0f;
+				_shockwaveElapsedSeconds = 0f;
+				_craterElapsedSeconds = 0f;
+				_shakeElapsedSeconds = 0f;
+				_debris.Clear();
+				SpawnDebris();
 			});
 		}
 
@@ -452,16 +472,6 @@ namespace Crusaders30XX.ECS.Systems
 				_lastContextId = currentContextId;
 				// New context: reset confirm lock for previous and ensure button can show again
 				_confirmedForContext.RemoveWhere(id => id != currentContextId);
-				// Spawn centered and trigger immediate impact sequence
-				_impactActive = true;
-				_squashElapsedSeconds = 0f;
-				_flashElapsedSeconds = 0f;
-				_shockwaveElapsedSeconds = 0f;
-				_craterElapsedSeconds = 0f;
-				_shakeElapsedSeconds = 0f;
-				_debris.Clear();
-				SpawnDebris();
-
 				// Specific discard preselection is handled by MarkedForSpecificDiscardSystem
 			}
 
@@ -495,6 +505,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Only render during enemy phases (Block / EnemyAttack)
 			var phaseNowForDraw = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>().Sub;
 			if (phaseNowForDraw != SubPhase.Block && phaseNowForDraw != SubPhase.EnemyAttack) return;
+			if (!_showBanner) return;
 			// Gate display during ambush intro
 			var ambushState = EntityManager.GetEntitiesWithComponent<AmbushState>().FirstOrDefault()?.GetComponent<AmbushState>();
 			if (ambushState != null && ambushState.IsActive && ambushState.IntroActive) return;
@@ -536,7 +547,7 @@ namespace Crusaders30XX.ECS.Systems
 				string conditionalSuffix = (!isConditionMet && extraConditionalDamage > 0)
 					? $" + {extraConditionalDamage}"
 					: string.Empty;
-				lines.Add(($"Damage: {baseDamage}{conditionalSuffix} {(blockPrevented > 0 || aegisPrevented > 0 ? breakdown : string.Empty)}", TextScale, Color.White));
+				lines.Add(($"Damage: {actual}{conditionalSuffix} {(blockPrevented > 0 || aegisPrevented > 0 ? breakdown : string.Empty)}", TextScale, Color.White));
 			}
 			else
 			{

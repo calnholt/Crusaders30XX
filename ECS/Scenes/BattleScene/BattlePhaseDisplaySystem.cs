@@ -84,6 +84,7 @@ namespace Crusaders30XX.ECS.Systems
 		private SubPhase _lastPhase = SubPhase.StartBattle;
 		private int _lastTurn = 0;
 		private bool _playedInitial;
+		private bool _shownBlockAnimationForTurn = false;
 
 		// Strip Definition
 		private struct Strip
@@ -137,12 +138,35 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (phaseChanged)
 			{
+				var prev = _lastPhase;
 				_lastPhase = phase.Sub;
-				_lastTurn = phase.TurnNumber;
+				
+				if (_lastTurn != phase.TurnNumber)
+				{
+					_lastTurn = phase.TurnNumber;
+					_shownBlockAnimationForTurn = false;
+				}
+
 				string newText = SubPhaseToString(_lastPhase);
 				if (!string.IsNullOrWhiteSpace(newText))
 				{
-					StartAnimation(newText);
+					// Suppress animation if we have already shown Block phase animation this turn
+					if (phase.Sub == SubPhase.Block)
+					{
+						if (_shownBlockAnimationForTurn)
+						{
+							// Already shown for this turn, suppress
+						}
+						else
+						{
+							_shownBlockAnimationForTurn = true;
+							StartAnimation(newText);
+						}
+					}
+					else
+					{
+						StartAnimation(newText);
+					}
 				}
 			}
 
@@ -168,6 +192,7 @@ namespace Crusaders30XX.ECS.Systems
 					case AnimState.Exiting:
 						if (_animTimer >= PhaseOutDuration)
 						{
+							EventManager.Publish(new BattlePhaseAnimationCompleteEvent());
 							StopAnimation();
 						}
 						break;

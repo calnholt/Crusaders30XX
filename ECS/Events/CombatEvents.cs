@@ -51,6 +51,21 @@ namespace Crusaders30XX.ECS.Events
 		public string ContextId;
 	}
 
+	public class ResolvingEnemyDamageEvent
+	{
+		public string ContextId;
+		public int BaseDamage;
+		public int AssignedBlock;
+		public bool WillHit;
+	}
+
+	public class EnemyDamageAppliedEvent
+	{
+		public string ContextId;
+		public int FinalDamage;
+		public bool WasHit;
+	}
+
 	// New: explicit signal to start the enemy's attack animation
 	public class StartEnemyAttackAnimation
 	{
@@ -94,7 +109,8 @@ namespace Crusaders30XX.ECS.Events
 		
 	}
 
-
+	public class TriggerEnemyAttackDisplayEvent
+	{
+		public string ContextId;
+	}
 }
-
-
