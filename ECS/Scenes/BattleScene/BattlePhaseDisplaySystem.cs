@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
 	/// Draws the current battle phase in the top-right corner and animates a
-	/// large phase transition banner when the phase changes.
+	/// cinematic phase transition with converging trapezoids when the phase changes.
 	/// </summary>
 	[DebugTab("Battle Phase Display")]
 	public class BattlePhaseDisplaySystem : Core.System
@@ -22,8 +22,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font = FontSingleton.TitleFont;
-		private Texture2D _pixel;
-		private Texture2D _trapezoidTexture;
 
 		// Small corner label
 		[DebugEditable(DisplayName = "Label Offset X", Step = 2, Min = -2000, Max = 2000)]
@@ -31,64 +29,83 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Label Offset Y", Step = 2, Min = -2000, Max = 2000)]
 		public int LabelOffsetY { get; set; } = 14;
 		[DebugEditable(DisplayName = "Label Scale", Step = 0.05f, Min = 0.2f, Max = 3f)]
-		public float LabelScale { get; set; } = 0.15f;
+		public float LabelScale { get; set; } = 0.2f;
 
-		// Transition banner
-		[DebugEditable(DisplayName = "Trans In (s)", Step = 0.05f, Min = 0.05f, Max = 5f)]
-		public float TransitionInSeconds { get; set; } = 0.5f;
-		[DebugEditable(DisplayName = "Trans Hold (s)", Step = 0.05f, Min = 0.05f, Max = 5f)]
-		public float TransitionHoldSeconds { get; set; } = 0.9f;
-		[DebugEditable(DisplayName = "Trans Out (s)", Step = 0.05f, Min = 0.05f, Max = 5f)]
-		public float TransitionOutSeconds { get; set; } = 0.5f;
-		[DebugEditable(DisplayName = "Trans Y Offset", Step = 2, Min = -2000, Max = 2000)]
-		public int TransitionOffsetY { get; set; } = 140;
-		[DebugEditable(DisplayName = "Trans Scale", Step = 0.05f, Min = 0.2f, Max = 4f)]
-		public float TransitionScale { get; set; } = 0.263f;
-		[DebugEditable(DisplayName = "Shadow Offset", Step = 1, Min = 0, Max = 20)]
-		public int ShadowOffset { get; set; } = 0;
+		// --- Animation Timing ---
+		[DebugEditable(DisplayName = "Phase In Duration (s)", Step = 0.05f, Min = 0.05f, Max = 5f)]
+		public float PhaseInDuration { get; set; } = 0.2f;
+		[DebugEditable(DisplayName = "Phase Hold Duration (s)", Step = 0.05f, Min = 0.05f, Max = 5f)]
+		public float PhaseHoldDuration { get; set; } = 0.35f;
+		[DebugEditable(DisplayName = "Phase Out Duration (s)", Step = 0.05f, Min = 0.05f, Max = 5f)]
+		public float PhaseOutDuration { get; set; } = 0.2f;
 
-		// Trapezoid background
-		[DebugEditable(DisplayName = "Trapezoid Width Padding", Step = 2f, Min = -200f, Max = 200f)]
-		public float TrapezoidWidthPadding { get; set; } = 52f;
-		[DebugEditable(DisplayName = "Trapezoid Height Padding", Step = 2f, Min = -200f, Max = 200f)]
-		public float TrapezoidHeightPadding { get; set; } = 6f;
-		[DebugEditable(DisplayName = "Trapezoid Left Side Offset", Step = 1f, Min = -100f, Max = 100f)]
-		public float TrapezoidLeftSideOffset { get; set; } = 0f;
-		[DebugEditable(DisplayName = "Trapezoid Top Edge Angle", Step = 1f, Min = -45f, Max = 45f)]
-		public float TrapezoidTopEdgeAngle { get; set; } = 3f;
-		[DebugEditable(DisplayName = "Trapezoid Right Edge Angle", Step = 1f, Min = -45f, Max = 45f)]
-		public float TrapezoidRightEdgeAngle { get; set; } = -14f;
-		[DebugEditable(DisplayName = "Trapezoid Bottom Edge Angle", Step = 1f, Min = -45f, Max = 45f)]
-		public float TrapezoidBottomEdgeAngle { get; set; } = -2f;
-		[DebugEditable(DisplayName = "Trapezoid Left Edge Angle", Step = 1f, Min = -45f, Max = 45f)]
-		public float TrapezoidLeftEdgeAngle { get; set; } = 21f;
-		[DebugEditable(DisplayName = "Trapezoid Offset X", Step = 1f, Min = -200f, Max = 200f)]
-		public float TrapezoidOffsetX { get; set; } = 0f;
-		[DebugEditable(DisplayName = "Trapezoid Offset Y", Step = 1f, Min = -200f, Max = 200f)]
-		public float TrapezoidOffsetY { get; set; } = 0f;
-		[DebugEditable(DisplayName = "Trapezoid Alpha", Step = 0.05f, Min = 0f, Max = 1f)]
-		public float TrapezoidAlpha { get; set; } = 1f;
+		// --- Text Animation ---
+		[DebugEditable(DisplayName = "Text Spawn Offset X", Step = 10f, Min = -2000f, Max = 2000f)]
+		public float TextSpawnOffsetX { get; set; } = 400f;
+		[DebugEditable(DisplayName = "Text Spawn Offset Y", Step = 10f, Min = -2000f, Max = 2000f)]
+		public float TextSpawnOffsetY { get; set; } = -200f;
+		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.2f, Max = 4f)]
+		public float TextScale { get; set; } = 0.6f;
+		[DebugEditable(DisplayName = "Text Fade In %", Step = 0.05f, Min = 0.1f, Max = 1f)]
+		public float TextFadeInPercent { get; set; } = 1f;
 
+		// --- Strip Configuration ---
+		[DebugEditable(DisplayName = "Base Strip Length", Step = 50f, Min = 100f, Max = 3000f)]
+		public float BaseStripLength { get; set; } = 300f;
+		[DebugEditable(DisplayName = "Base Strip Thickness", Step = 10f, Min = 10f, Max = 500f)]
+		public float BaseStripThickness { get; set; } = 20f;
+		[DebugEditable(DisplayName = "Strip Angle (Deg)", Step = 1f, Min = -180f, Max = 180f)]
+		public float StripAngleDeg { get; set; } = -45f; // / Shape
+		[DebugEditable(DisplayName = "Strip Slant Angle", Step = 1f, Min = 0f, Max = 89f)]
+		public float StripSlantAngle { get; set; } = 45f; 
+
+		// --- Strip Motion ---
+		[DebugEditable(DisplayName = "Spawn Distance", Step = 50f, Min = 0f, Max = 4000f)]
+		public float SpawnDistance { get; set; } = 2500f;
+		[DebugEditable(DisplayName = "Converge Overshoot", Step = 10f, Min = -500f, Max = 500f)]
+		public float ConvergeOvershoot { get; set; } = 40f; // How far past center they go
+		[DebugEditable(DisplayName = "Lateral Spread", Step = 10f, Min = 0f, Max = 1000f)]
+		public float LateralSpread { get; set; } = 160f; // Spread perpendicular to motion
+
+		private enum AnimState
+		{
+			None,
+			Entering,
+			Holding,
+			Exiting
+		}
+
+		private AnimState _animState = AnimState.None;
+		private float _animTimer = 0f;
+		private string _transitionText = string.Empty;
+		
 		private SubPhase _lastPhase = SubPhase.StartBattle;
 		private int _lastTurn = 0;
-		private bool _transitionActive;
-		private bool _transitionJustStarted;
-		private float _transitionT; // seconds in current transition
-		private string _transitionText = string.Empty;
 		private bool _playedInitial;
+
+		// Strip Definition
+		private struct Strip
+		{
+			public float Length;
+			public float Thickness;
+			public Color Color;
+			public float LateralOffset; // Perpendicular offset
+			public float LongitudinalOffset; // Offset along movement (delay)
+			public bool FromBottomLeft; // True = BL->Center, False = TR->Center
+			public Texture2D Texture;
+		}
+
+		private List<Strip> _strips = new List<Strip>();
 
 		public BattlePhaseDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 			: base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_pixel = new Texture2D(graphicsDevice, 1, 1);
-			_pixel.SetData(new[] { Color.White });
-			// If dialog ran before battle start, re-arm the initial phase banner
+			
 			EventManager.Subscribe<DialogEnded>(_ => {
 				_playedInitial = false;
-				_transitionActive = false;
-				_transitionT = 0f;
+				StopAnimation();
 			});
 		}
 
@@ -100,251 +117,265 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			var phase = entity.GetComponent<PhaseState>();
+
+			bool phaseChanged = false;
 			if (!_playedInitial)
 			{
 				_playedInitial = true;
-				_lastPhase = phase.Sub;
-				_lastTurn = phase.TurnNumber;
-				_transitionText = SubPhaseToString(_lastPhase);
-				bool show = !string.IsNullOrWhiteSpace(_transitionText);
-				_transitionActive = show;
-				_transitionJustStarted = show;
-				if (show) _transitionT = 0f;
+				phaseChanged = true;
 			}
 			else if (_lastTurn != phase.TurnNumber)
 			{
-				_lastPhase = phase.Sub;
-				_lastTurn = phase.TurnNumber;
-				_transitionText = SubPhaseToString(_lastPhase);
-				bool show2 = !string.IsNullOrWhiteSpace(_transitionText);
-				_transitionActive = show2;
-				_transitionJustStarted = show2;
-				if (show2) _transitionT = 0f;
+				phaseChanged = true;
 			}
 			else if (_lastPhase != phase.Sub)
 			{
+				phaseChanged = true;
+			}
+
+			if (phaseChanged)
+			{
 				_lastPhase = phase.Sub;
-				_transitionText = SubPhaseToString(_lastPhase);
-				bool show3 = !string.IsNullOrWhiteSpace(_transitionText);
-				_transitionActive = show3;
-				_transitionJustStarted = show3;
-				if (show3) _transitionT = 0f;
-			}
-			if (_transitionActive)
-			{
-				_transitionT += (float)gameTime.ElapsedGameTime.TotalSeconds;
-				float total = TransitionInSeconds + TransitionHoldSeconds + TransitionOutSeconds;
-				if (_transitionT >= total)
+				_lastTurn = phase.TurnNumber;
+				string newText = SubPhaseToString(_lastPhase);
+				if (!string.IsNullOrWhiteSpace(newText))
 				{
-					_transitionActive = false;
+					StartAnimation(newText);
 				}
 			}
-			else
+
+			if (_animState != AnimState.None)
 			{
-				// Continue updating time during exit animation even after transition is marked inactive
-				var transEntity = EntityManager.GetEntity("UI_PhaseTransitionBanner");
-				if (transEntity != null)
+				_animTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+				switch (_animState)
 				{
-					var transT = transEntity.GetComponent<Transform>();
-					if (transT != null)
-					{
-						float holdEnd = TransitionInSeconds + TransitionHoldSeconds;
-						// Continue exit animation if we're past the hold phase
-						if (_transitionT > holdEnd)
+					case AnimState.Entering:
+						if (_animTimer >= PhaseInDuration)
 						{
-							_transitionT += (float)gameTime.ElapsedGameTime.TotalSeconds;
-							// Stop updating once fully off-screen
-							float exitProgress = _transitionT - holdEnd;
-							float totalExit = TransitionOutSeconds;
-							if (exitProgress >= totalExit)
-							{
-								_transitionT = holdEnd + totalExit; // Clamp to max
-							}
+							_animTimer = 0f;
+							_animState = AnimState.Holding;
 						}
-					}
+						break;
+					case AnimState.Holding:
+						if (_animTimer >= PhaseHoldDuration)
+						{
+							_animTimer = 0f;
+							_animState = AnimState.Exiting;
+						}
+						break;
+					case AnimState.Exiting:
+						if (_animTimer >= PhaseOutDuration)
+						{
+							StopAnimation();
+						}
+						break;
 				}
+			}
+		}
+
+		private void StartAnimation(string text)
+		{
+			_transitionText = text;
+			_animState = AnimState.Entering;
+			_animTimer = 0f;
+			GenerateStrips();
+		}
+
+		private void StopAnimation()
+		{
+			_animState = AnimState.None;
+			_animTimer = 0f;
+		}
+
+		private void GenerateStrips()
+		{
+			_strips.Clear();
+			var rng = new Random(12345); // Fixed seed for consistent look, or use Time for random
+
+			// Generate a bunch of strips
+			// Mix of BottomLeft and TopRight
+			int count = 12; 
+			
+			for (int i = 0; i < count; i++)
+			{
+				bool fromBL = i % 2 == 0;
+				
+				// Varied size
+				float lenMult = 0.8f + (float)rng.NextDouble() * 0.6f; // 0.8x to 1.4x
+				float thickMult = 0.5f + (float)rng.NextDouble() * 1.0f; // 0.5x to 1.5x
+				
+				float w = BaseStripLength * lenMult;
+				float h = BaseStripThickness * thickMult;
+
+				// Varied color: Black and DarkRed only
+				Color c;
+				double r = rng.NextDouble();
+				if (r < 0.5) c = Color.Black;
+				else c = Color.DarkRed;
+
+				// Varied offsets
+				float latOff = ((float)rng.NextDouble() * 2f - 1f) * LateralSpread; // -Spread to +Spread
+				float longOff = ((float)rng.NextDouble() * 2f - 1f) * 200f; // Small lead/lag along track
+
+				// Create Texture
+				var tex = PrimitiveTextureFactory.GetAntialiasedTrapezoidMask(
+					_graphicsDevice,
+					w, h,
+					0f, 0f, -StripSlantAngle, 0f, StripSlantAngle
+				);
+
+				_strips.Add(new Strip
+				{
+					Length = w,
+					Thickness = h,
+					Color = c,
+					LateralOffset = latOff,
+					LongitudinalOffset = longOff,
+					FromBottomLeft = fromBL,
+					Texture = tex
+				});
 			}
 		}
 
 		public void Draw()
 		{
+			DrawCornerLabel();
+			DrawTransition();
+		}
+
+		private void DrawCornerLabel()
+		{
 			if (_font == null) return;
 			var stateEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
 			if (stateEntity == null) return;
 			var state = stateEntity.GetComponent<PhaseState>();
+			
 			int vw = Game1.VirtualWidth;
 			int xRight = vw + LabelOffsetX;
-			string label = "";
+			
+			string label;
 			if (state.Main == MainPhase.StartBattle)
-			{
 				label = $"{MainPhaseToString(state.Main)}";
-			}
 			else 
-			{
 				label = $"{MainPhaseToString(state.Main)} - {SubPhaseToString(state.Sub)} ({state.TurnNumber})";
-			}
+
 			var size = _font.MeasureString(label) * LabelScale;
 			var basePos = new Vector2(xRight - size.X, LabelOffsetY);
-			// Ensure a label entity with Transform + Parallax; write BasePosition only
-			var labelEntity = EntityManager.GetEntity("UI_PhaseLabelTopRight");
-			if (labelEntity == null)
-			{
-				labelEntity = EntityManager.CreateEntity("UI_PhaseLabelTopRight");
-				EntityManager.AddComponent(labelEntity, new Transform { BasePosition = basePos, Position = basePos });
-				EntityManager.AddComponent(labelEntity, ParallaxLayer.GetUIParallaxLayer());
-			}
-			var labelT = labelEntity.GetComponent<Transform>();
-			if (labelT != null)
-			{
-				labelT.BasePosition = basePos;
-				var drawPos = labelT.Position;
-				_spriteBatch.DrawString(_font, label, drawPos + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
-				_spriteBatch.DrawString(_font, label, drawPos, Color.White, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
-			}
-
-			// Draw transition banner if active or still exiting
-			var transEntity = EntityManager.GetEntity("UI_PhaseTransitionBanner");
-			if (transEntity == null && _transitionActive)
-			{
-				// Create entity when transition starts
-				transEntity = EntityManager.CreateEntity("UI_PhaseTransitionBanner");
-				float centerX = vw * 0.5f;
-				var tSize = _font.MeasureString(_transitionText) * TransitionScale;
-				float spawnX = -tSize.X - 80f;
-				var start = new Vector2(spawnX, TransitionOffsetY);
-				EntityManager.AddComponent(transEntity, new Transform { BasePosition = start, Position = start });
-				EntityManager.AddComponent(transEntity, ParallaxLayer.GetUIParallaxLayer());
-			}
 			
-			if (transEntity != null && _transitionActive)
-			{
-				float t = _transitionT;
-				float inEnd = TransitionInSeconds;
-				float holdEnd = TransitionInSeconds + TransitionHoldSeconds;
+			_spriteBatch.DrawString(_font, label, basePos + new Vector2(1, 1), Color.Black * 0.6f, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, label, basePos, Color.White, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
+		}
 
-				float centerX = vw * 0.5f;
-				var tSize = _font.MeasureString(_transitionText) * TransitionScale;
-				float targetX = centerX - tSize.X / 2f;
-				float y = TransitionOffsetY;
-				float x;
-				if (t <= inEnd)
+		private void DrawTransition()
+		{
+			if (_animState == AnimState.None) return;
+			if (_strips.Count == 0) GenerateStrips();
+
+			Vector2 centerScreen = new Vector2(Game1.VirtualWidth / 2f, Game1.VirtualHeight / 2f);
+			
+			// Calculate global progress
+			float travelPos = 0f; // 0=Start, 1=Converged, 2=End
+
+			if (_animState == AnimState.Entering)
+			{
+				float t = MathHelper.Clamp(_animTimer / PhaseInDuration, 0f, 1f);
+				travelPos = EaseOutCubic(t); 
+			}
+			else if (_animState == AnimState.Holding)
+			{
+				travelPos = 1f;
+			}
+			else if (_animState == AnimState.Exiting)
+			{
+				float t = MathHelper.Clamp(_animTimer / PhaseOutDuration, 0f, 1f);
+				travelPos = 1f + EaseInCubic(t); 
+			}
+
+			// Direction vectors
+			Vector2 dirBL = new Vector2(1, -1); 
+			dirBL.Normalize();
+			Vector2 dirTR = new Vector2(-1, 1);
+			dirTR.Normalize();
+			
+			float rotRad = MathHelper.ToRadians(StripAngleDeg);
+			Vector2 stripDir = new Vector2((float)Math.Cos(rotRad), (float)Math.Sin(rotRad));
+			Vector2 perpDir = new Vector2(-stripDir.Y, stripDir.X); // Perpendicular for lateral spread
+
+			foreach (var strip in _strips)
+			{
+				Vector2 moveDir = strip.FromBottomLeft ? dirBL : dirTR;
+				
+				// Distances
+				// Start: Far away. End: Center (plus overshoot).
+				float startDist = SpawnDistance + strip.LongitudinalOffset;
+				float endDist = ConvergeOvershoot + strip.LongitudinalOffset * 0.1f; // Compress offset at target
+				float throughDist = -SpawnDistance; // Go past
+
+				float currentDist = 0f;
+				float alpha = 1f;
+
+				if (travelPos <= 1f)
 				{
-					float p = MathHelper.Clamp(t / Math.Max(0.001f, TransitionInSeconds), 0f, 1f);
-					p = EaseOutCubic(p);
-					x = MathHelper.Lerp(-tSize.X - 80f, targetX, p);
-				}
-				else if (t <= holdEnd)
-				{
-					x = targetX;
+					currentDist = MathHelper.Lerp(startDist, endDist, travelPos);
 				}
 				else
 				{
-					float u = MathHelper.Clamp((t - holdEnd) / Math.Max(0.001f, TransitionOutSeconds), 0f, 1f);
-					u = EaseInCubic(u);
-					x = MathHelper.Lerp(targetX, vw + 80f, u);
+					currentDist = MathHelper.Lerp(endDist, throughDist, travelPos - 1f);
+					// Fade out slightly on exit?
+					alpha = 1f - (travelPos - 1f) * 0.5f;
 				}
 
-				var transT = transEntity.GetComponent<Transform>();
-				if (transT != null)
-				{
-					// If this banner just appeared or transition just started, spawn its base offscreen to the left so it flies in
-					if (transT.BasePosition == Vector2.Zero || _transitionJustStarted)
-					{
-						float spawnX = -tSize.X - 80f;
-						var spawn = new Vector2(spawnX, y);
-						transT.BasePosition = spawn;
-						transT.Position = spawn;
-					}
-					else
-					{
-						// Update BasePosition with the calculated animation position
-						transT.BasePosition = new Vector2(x, y);
-					}
-					var pDraw = transT.Position;
-					// Draw if banner is still visible on screen (check if any part is visible)
-						if (pDraw.X + tSize.X >= 0 && pDraw.X <= vw + tSize.X)
-						{
-							if (!string.IsNullOrWhiteSpace(_transitionText))
-							{
-								// Draw trapezoid background
-								float trapezoidWidth = tSize.X + TrapezoidWidthPadding;
-								float trapezoidHeight = tSize.Y + TrapezoidHeightPadding;
-								_trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoid(
-									_graphicsDevice,
-									trapezoidWidth,
-									trapezoidHeight,
-									TrapezoidLeftSideOffset,
-									TrapezoidTopEdgeAngle,
-									TrapezoidRightEdgeAngle,
-									TrapezoidBottomEdgeAngle,
-									TrapezoidLeftEdgeAngle
-								);
-								if (_trapezoidTexture != null)
-								{
-									Vector2 trapezoidPos = pDraw + new Vector2(TrapezoidOffsetX - TrapezoidWidthPadding / 2f, TrapezoidOffsetY);
-									Vector2 scale = new Vector2(trapezoidWidth / _trapezoidTexture.Width, trapezoidHeight / _trapezoidTexture.Height);
-									_spriteBatch.Draw(_trapezoidTexture, trapezoidPos, null, Color.Black * TrapezoidAlpha, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-								}
-								// simple shadow then text
-								_spriteBatch.DrawString(_font, _transitionText, pDraw + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
-								_spriteBatch.DrawString(_font, _transitionText, pDraw, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
-							}
-						}
-				}
-				// Reset the flag after handling the transition start
-				_transitionJustStarted = false;
+				Vector2 pos = centerScreen + perpDir * strip.LateralOffset - moveDir * currentDist;
+				
+				Vector2 origin = new Vector2(strip.Texture.Width / 2f, strip.Texture.Height / 2f);
+				
+				_spriteBatch.Draw(strip.Texture, pos, null, strip.Color * alpha, rotRad, origin, Vector2.One, SpriteEffects.None, 0f);
 			}
-			else if (transEntity != null && !_transitionActive)
+
+			DrawText(centerScreen);
+		}
+
+		private void DrawText(Vector2 center)
+		{
+			if (string.IsNullOrEmpty(_transitionText)) return;
+
+			float alpha = 1f;
+			Vector2 offset = Vector2.Zero;
+
+			if (_animState == AnimState.Entering)
 			{
-				// Continue exit animation even after transition is marked inactive
-				var transT = transEntity.GetComponent<Transform>();
-				if (transT != null)
-				{
-					float centerX = vw * 0.5f;
-					var tSize = _font.MeasureString(_transitionText) * TransitionScale;
-					float targetX = centerX - tSize.X / 2f;
-					float y = TransitionOffsetY;
-					
-					// Continue exit animation from where we left off
-					float holdEnd = TransitionInSeconds + TransitionHoldSeconds;
-					float exitProgress = MathHelper.Clamp(_transitionT - holdEnd, 0f, TransitionOutSeconds);
-					float u = MathHelper.Clamp(exitProgress / Math.Max(0.001f, TransitionOutSeconds), 0f, 1f);
-					u = EaseInCubic(u);
-					float x = MathHelper.Lerp(targetX, vw + 80f, u);
-					
-					transT.BasePosition = new Vector2(x, y);
-					var pDraw = transT.Position;
-					// Draw if banner is still visible on screen (check if any part is visible)
-					if (pDraw.X + tSize.X >= 0 && pDraw.X <= vw + tSize.X)
-					{
-						if (!string.IsNullOrWhiteSpace(_transitionText))
-						{
-							// Draw trapezoid background
-							float trapezoidWidth = tSize.X + TrapezoidWidthPadding;
-							float trapezoidHeight = tSize.Y + TrapezoidHeightPadding;
-							_trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoid(
-								_graphicsDevice,
-								trapezoidWidth,
-								trapezoidHeight,
-								TrapezoidLeftSideOffset,
-								TrapezoidTopEdgeAngle,
-								TrapezoidRightEdgeAngle,
-								TrapezoidBottomEdgeAngle,
-								TrapezoidLeftEdgeAngle
-							);
-							if (_trapezoidTexture != null)
-							{
-								Vector2 trapezoidPos = pDraw + new Vector2(TrapezoidOffsetX - TrapezoidWidthPadding / 2f, TrapezoidOffsetY);
-								Vector2 scale = new Vector2(trapezoidWidth / _trapezoidTexture.Width, trapezoidHeight / _trapezoidTexture.Height);
-								_spriteBatch.Draw(_trapezoidTexture, trapezoidPos, null, Color.Black * TrapezoidAlpha, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-							}
-							// simple shadow then text
-							_spriteBatch.DrawString(_font, _transitionText, pDraw + new Vector2(ShadowOffset, ShadowOffset), Color.Black * 0.6f, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
-							_spriteBatch.DrawString(_font, _transitionText, pDraw, Color.White, 0f, Vector2.Zero, TransitionScale, SpriteEffects.None, 0f);
-						}
-					}
-				}
+				float t = MathHelper.Clamp(_animTimer / PhaseInDuration, 0f, 1f);
+				
+				float fadeEnd = TextFadeInPercent;
+				if (t < fadeEnd)
+					alpha = t / fadeEnd;
+				else
+					alpha = 1f;
+
+				float moveProgress = EaseOutCubic(t);
+				offset = Vector2.Lerp(new Vector2(TextSpawnOffsetX, TextSpawnOffsetY), Vector2.Zero, moveProgress);
 			}
+			else if (_animState == AnimState.Holding)
+			{
+				alpha = 1f;
+				offset = Vector2.Zero;
+			}
+			else if (_animState == AnimState.Exiting)
+			{
+				float t = MathHelper.Clamp(_animTimer / PhaseOutDuration, 0f, 1f);
+				alpha = 1f - t;
+				offset = Vector2.Zero;
+			}
+
+			if (alpha <= 0.01f) return;
+
+			Vector2 textSize = _font.MeasureString(_transitionText);
+			Vector2 textOrigin = textSize / 2f;
+			Vector2 textPos = center + offset;
+			float scale = TextScale;
+
+			_spriteBatch.DrawString(_font, _transitionText, textPos + new Vector2(2, 2), Color.Black * alpha * 0.6f, 0f, textOrigin, scale, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_font, _transitionText, textPos, Color.White * alpha, 0f, textOrigin, scale, SpriteEffects.None, 0f);
 		}
 
 		private static string MainPhaseToString(MainPhase p)
@@ -384,24 +415,22 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugAction("Replay Transition Animation")]
 		public void Debug_ReplayTransitionAnimation()
 		{
-			// Get current phase to set the text and gate animation by text presence
 			var stateEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
 			if (stateEntity != null)
 			{
 				var phase = stateEntity.GetComponent<PhaseState>();
-				_transitionText = SubPhaseToString(phase.Sub);
-				bool show = !string.IsNullOrWhiteSpace(_transitionText);
-				_transitionActive = show;
-				_transitionJustStarted = show;
-				if (show) _transitionT = 0f;
+				string text = SubPhaseToString(phase.Sub);
+				if (!string.IsNullOrWhiteSpace(text))
+				{
+					StartAnimation(text);
+				}
 			}
-			else
-			{
-				_transitionActive = false;
-				_transitionJustStarted = false;
-			}
+		}
+
+		[DebugAction("Regenerate Strips")]
+		public void Debug_RegenerateStrips()
+		{
+			GenerateStrips();
 		}
 	}
 }
-
-
