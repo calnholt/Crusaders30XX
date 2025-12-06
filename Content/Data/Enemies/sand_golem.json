@@ -1,0 +1,23 @@
+{
+  "name": "Sand Golem",
+  "id": "sand_golem",
+  "hp": 70,
+  "attacks": [
+      {
+          "id": "harden",
+          "name": "Harden",
+          "target": "Player",
+          "positionType": "Ender",
+          "damage": 10,
+          "blockingCondition": {
+            "type": "OnBlockedBy2Cards"
+          },
+          "effectsOnNotBlocked": [
+            {
+              "type": "Armor",
+              "amount": 3
+            }
+          ]
+      }
+  ]
+}

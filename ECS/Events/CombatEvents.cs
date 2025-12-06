@@ -4,8 +4,6 @@ using MonoGame.Extended.Collections;
 
 namespace Crusaders30XX.ECS.Events
 {
-	public class StartEnemyTurn { }
-	public class EndEnemyTurn { }
 
 	public class IntentPlanned
 	{

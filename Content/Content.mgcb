@@ -739,3 +739,35 @@
 
 #begin Data/Temperance/radiance.json
 /copy:Data/Temperance/radiance.json
+
+#---------------------------------- Shaders ---------------------------------#
+
+#begin Shaders/Bloodshot.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Bloodshot.fx
+
+#begin Shaders/CircularMask.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/CircularMask.fx
+
+#begin Shaders/Shockwave.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Shockwave.fx
+
+#begin Shaders/RectangularShockwave.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/RectangularShockwave.fx
+
+#begin Shaders/Poison.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Poison.fx

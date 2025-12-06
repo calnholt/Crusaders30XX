@@ -11,6 +11,7 @@ using Crusaders30XX.ECS.Components;
 using System.Linq;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Scenes.BattleScene;
 
 namespace Crusaders30XX;
 
@@ -56,6 +57,7 @@ public class Game1 : Game
     private ShockwaveDisplaySystem _shockwaveSystem;
     private RectangularShockwaveDisplaySystem _rectangularShockwaveSystem;
     private PoisonDamageDisplaySystem _poisonSystem;
+    private BloodshotDisplaySystem _bloodshotSystem;
     private RenderTarget2D _sceneRt;
     private RenderTarget2D _ppA;
     private RenderTarget2D _ppB;
@@ -186,6 +188,8 @@ public class Game1 : Game
         _world.AddSystem(_rectangularShockwaveSystem);
         _poisonSystem = new PoisonDamageDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _world.AddSystem(_poisonSystem);
+        _bloodshotSystem = new BloodshotDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _world.AddSystem(_bloodshotSystem);
         _world.AddSystem(new CursorEmptySelectDisplaySystem(_world.EntityManager, GraphicsDevice));
         _world.AddSystem(new UISelectDisplaySystem(_world.EntityManager, GraphicsDevice));
         _world.AddSystem(new JigglePulseDisplaySystem(_world.EntityManager));
@@ -242,6 +246,8 @@ public class Game1 : Game
         base.Update(gameTime);
     }
 
+    public RasterizerState GetRasterizerState() => _spriteRasterizer;
+
     protected override void Draw(GameTime gameTime)
     {
         // Draw to virtual RT first
@@ -253,47 +259,38 @@ public class Game1 : Game
         DrawScene();
 
         // Process effects
+        bool hasBloodshot = _bloodshotSystem != null && _bloodshotSystem.IsActive();
         bool hasPoison = _poisonSystem != null && _poisonSystem.HasActivePoison;
         bool hasCircularWaves = _shockwaveSystem != null && _shockwaveSystem.HasActiveWaves;
         bool hasRectangularWaves = _rectangularShockwaveSystem != null && _rectangularShockwaveSystem.HasActiveWaves;
         
         Texture2D finalTexture = _sceneRt;
 
-        if (hasPoison || hasCircularWaves || hasRectangularWaves)
+        if (hasBloodshot || hasPoison || hasCircularWaves || hasRectangularWaves)
         {
-            // Composite effects in order: Poison → Circular Shockwaves → Rectangular Shockwaves
-            // Apply poison first if active
+            // Composite effects in order: Bloodshot → Poison → Circular Shockwaves → Rectangular Shockwaves
+            
+            // Apply bloodshot first if active
+            if (hasBloodshot)
+            {
+                RenderTarget2D next = (hasPoison || hasCircularWaves || hasRectangularWaves) ? _ppB : _ppA;
+                _bloodshotSystem.Composite(finalTexture, _ppA, next);
+                finalTexture = next;
+            }
+            
+            // Apply poison second if active
             if (hasPoison)
             {
-                // If poison is the only effect, render directly to backbuffer (null)
-                // Otherwise render to _ppB for further processing
-                RenderTarget2D poisonTarget = (hasCircularWaves || hasRectangularWaves) ? _ppB : _ppA;
-                _poisonSystem.Composite(finalTexture, _ppA, poisonTarget); // _ppA used as temp? Composite params: src, temp, dst
-                // Actually poisonSystem.Composite signature usually takes (src, intermediate_rt, dst_rt). 
-                // If dst is null it draws to screen. But here we want to keep it in RTs.
-                // We'll trust the existing system flow but adapt it to RT-only chain.
-                // existing: _poisonSystem.Composite(src, _ppA, poisonTarget); 
-                // if poisonTarget is null it drew to backbuffer. Now we must draw to an RT.
-                
-                // Let's refine the chain logic slightly to be safe with fixed RTs
-                RenderTarget2D next = (hasCircularWaves || hasRectangularWaves) ? _ppB : _ppA;
+                RenderTarget2D next = (hasCircularWaves || hasRectangularWaves) ? (finalTexture == _ppA ? _ppB : _ppA) : (finalTexture == _ppA ? _ppB : _ppA);
                 _poisonSystem.Composite(finalTexture, _ppA, next);
                 finalTexture = next;
             }
             
-            // Apply circular shockwaves second if any
+            // Apply circular shockwaves third if any
             if (hasCircularWaves)
             {
-                RenderTarget2D next = hasRectangularWaves ? (finalTexture == _ppA ? _ppB : _ppA) : (finalTexture == _ppA ? _ppB : _ppA);
-                // logic: if current is A, target B. if current is B, target A.
-                // existing: _shockwaveSystem.Composite(src, _ppA, _ppB, hasRectangularWaves ? _ppA : null);
-                // This seems to imply src -> _ppA (drawn) or something. 
-                // Let's simplify: always ping-pong.
-                
                 RenderTarget2D dest = (finalTexture == _ppA) ? _ppB : _ppA;
-                _shockwaveSystem.Composite(finalTexture, _ppA, _ppB, dest); 
-                // Wait, shockwave composite takes (src, ppA, ppB, dst). 
-                // If dst is null it draws to screen. We need it to draw to 'dest'.
+                _shockwaveSystem.Composite(finalTexture, _ppA, _ppB, dest);
                 finalTexture = dest;
             }
             
