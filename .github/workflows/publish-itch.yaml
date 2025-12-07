@@ -22,13 +22,15 @@ jobs:
       # READ + INCREMENT VERSION
       # ----------------------------
       - name: Read version
+        id: version
         shell: pwsh
         run: |
-          $ver = Get-Content VERSION -Raw
+          $ver = (Get-Content VERSION).Trim()
           "current_version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Increment patch version
         id: bump
+        shell: bash
         run: |
           VER=${{ steps.version.outputs.current_version }}
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VER"
@@ -72,6 +74,7 @@ jobs:
       - name: Upload to itch.io
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        shell: bash
         run: |
           butler push ./builds/windows-build.zip $ITCH_USER/$ITCH_GAME:$CHANNEL \
             --userversion ${{ steps.bump.outputs.new_version }}
