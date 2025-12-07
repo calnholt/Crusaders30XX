@@ -20,7 +20,7 @@ namespace Crusaders30XX.ECS.Systems
 			return ArrayUtils.Shuffled(new List<string> { enders[Random.Shared.Next(0, enders.Count)], linkers[Random.Shared.Next(0, linkers.Count)] });
 		}
 	}
-}
+} 
 
 
 
