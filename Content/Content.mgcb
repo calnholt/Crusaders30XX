@@ -576,6 +576,17 @@
 /processorParam:TextureFormat=Color
 /build:desert.png
 
+#begin active_icon.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:active_icon.png
+
 #---------------------------------- Data JSON Files ---------------------------------#
 
 #begin Data/Cards/anoint_the_sick.json

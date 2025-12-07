@@ -15,7 +15,7 @@
       "effectsOnNotBlocked": [
         {
           "type": "Burn",
-          "amount": 3
+          "amount": 2
         }
       ]
     },
@@ -31,7 +31,7 @@
       "effectsOnNotBlocked": [
         {
           "type": "Burn",
-          "amount": 2
+          "amount": 1
         }
       ]
     },
@@ -40,13 +40,11 @@
       "name": "Infernal Execution",
       "target": "Player",
       "positionType": "Ender",
-      "damage": 9,
-      "blockingCondition": {
-        "type": "OnHit"
-      },
-      "effectsOnNotBlocked": [
+      "damage": 10,
+      "text": "This attack must be blocked with at least one card/equipment if possible.",
+      "specialEffects": [
         {
-          "type": "Burn",
+          "type": "MustBeBlocked",
           "amount": 1
         }
       ]

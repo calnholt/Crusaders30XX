@@ -106,6 +106,7 @@ namespace Crusaders30XX.ECS.Systems
 		private QuestTribulationDisplaySystem _questTribulationDisplaySystem;
 		private QuitCurrentQuestDisplaySystem _quitCurrentQuestDisplaySystem;
 		private MustBeBlockedSystem _mustBeBlockedSystem;
+		private ActiveCharacterIndicatorDisplaySystem _activeCharacterIndicatorDisplaySystem;
 		private RenderTarget2D _sceneRenderTarget;
 
 
@@ -189,6 +190,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("PlayerDisplaySystem.Draw", _playerDisplaySystem.Draw);
 			FrameProfiler.Measure("GuardianAngelDisplaySystem.Draw", _guardianAngelDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);
+			FrameProfiler.Measure("ActiveCharacterIndicatorDisplaySystem.Draw", _activeCharacterIndicatorDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", _enemyIntentPipsSystem.Draw);
 			FrameProfiler.Measure("AmbushDisplaySystem.Draw", _ambushDisplaySystem.Draw);
 			FrameProfiler.Measure("QueuedEventsDisplaySystem.Draw", _queuedEventsDisplaySystem.Draw);
@@ -437,6 +439,7 @@ namespace Crusaders30XX.ECS.Systems
 			_questRewardModalDisplaySystem = new QuestRewardModalDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_quitCurrentQuestDisplaySystem = new QuitCurrentQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_mustBeBlockedSystem = new MustBeBlockedSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_activeCharacterIndicatorDisplaySystem = new ActiveCharacterIndicatorDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			// Register
 			_world.AddSystem(_deckManagementSystem);
 			_world.AddSystem(_handDisplaySystem);
@@ -513,6 +516,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_questRewardModalDisplaySystem);
 			_world.AddSystem(_quitCurrentQuestDisplaySystem);
 			_world.AddSystem(_mustBeBlockedSystem);
+			_world.AddSystem(_activeCharacterIndicatorDisplaySystem);
 		}
 
 		public void DrawAdditive()
