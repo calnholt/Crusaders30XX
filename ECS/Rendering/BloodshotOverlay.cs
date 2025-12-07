@@ -12,17 +12,17 @@ namespace Crusaders30XX.ECS.Rendering
         public float Time { get; set; }
 
         // Oval shape
-        public float OvalHorizontalScale { get; set; } = 0.5f;
+        public float OvalHorizontalScale { get; set; } = 0.4f;
         public float OvalVerticalScale { get; set; } = 0.9f;
 
         // Blur effect
-        public float BlurRadius { get; set; } = 0.003f;
+        public float BlurRadius { get; set; } = 0.001f;
         public float BlurStart { get; set; } = 0.4f;
         public float BlurEnd { get; set; } = 0.8f;
 
         // Vein generation
         public float VeinBaseFrequency { get; set; } = 10.0f;
-        public float VeinAnimationSpeed { get; set; } = 0.01f;
+        public float VeinAnimationSpeed { get; set; } = 0.001f;
         public float VeinRadialFrequency { get; set; } = 8.0f;
         public float VeinRadialScale { get; set; } = 10.0f;
         public float VeinTimeScale { get; set; } = 0.5f;
@@ -34,7 +34,7 @@ namespace Crusaders30XX.ECS.Rendering
         public float VeinSharpnessMult { get; set; } = 2.0f;
         public float VeinThresholdLow { get; set; } = 0.3f;
         public float VeinThresholdHigh { get; set; } = 0.7f;
-        public float VeinColorStrength { get; set; } = 0.5f;
+        public float VeinColorStrength { get; set; } = 0.4f;
 
         // Redness effect
         public float RednessIntensity { get; set; } = 0.2f;
@@ -49,6 +49,9 @@ namespace Crusaders30XX.ECS.Rendering
         public float ClarityStart { get; set; } = 0.8f;
         public float ClarityEnd { get; set; } = 0.2f;
         public float BlurDarkness { get; set; } = 0.7f;
+
+        // Fade intensity (0 = no effect, 1 = full effect)
+        public float FadeIntensity { get; set; } = 1.0f;
 
         public BloodshotOverlay(Effect effect)
         {
@@ -106,6 +109,9 @@ namespace Crusaders30XX.ECS.Rendering
             _effect.Parameters["ClarityStart"]?.SetValue(ClarityStart);
             _effect.Parameters["ClarityEnd"]?.SetValue(ClarityEnd);
             _effect.Parameters["BlurDarkness"]?.SetValue(BlurDarkness);
+
+            // Fade intensity
+            _effect.Parameters["FadeIntensity"]?.SetValue(FadeIntensity);
 
             spriteBatch.Begin(
                 SpriteSortMode.Deferred,

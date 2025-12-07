@@ -23,6 +23,11 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         private BloodshotOverlay _overlay;
         private float _timeSeconds;
         private bool _isActive;
+        private float _fadeIntensity;
+
+        // Fade timing
+        private float _fadeInDuration = 0.3f;
+        private float _fadeOutDuration = 0.5f;
 
         [DebugEditable(DisplayName = "Active")]
         public bool DebugIsActive
@@ -31,11 +36,32 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             set => _isActive = value;
         }
 
+        [DebugEditable(DisplayName = "Fade Intensity", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float FadeIntensity
+        {
+            get => _fadeIntensity;
+            set => _fadeIntensity = MathHelper.Clamp(value, 0f, 1f);
+        }
+
+        [DebugEditable(DisplayName = "Fade In Duration", Step = 0.05f, Min = 0.05f, Max = 2f)]
+        public float FadeInDuration
+        {
+            get => _fadeInDuration;
+            set => _fadeInDuration = MathHelper.Max(0.05f, value);
+        }
+
+        [DebugEditable(DisplayName = "Fade Out Duration", Step = 0.05f, Min = 0.05f, Max = 2f)]
+        public float FadeOutDuration
+        {
+            get => _fadeOutDuration;
+            set => _fadeOutDuration = MathHelper.Max(0.05f, value);
+        }
+
         // === Oval Shape ===
         [DebugEditable(DisplayName = "Oval Horizontal Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
         public float OvalHorizontalScale
         {
-            get => _overlay?.OvalHorizontalScale ?? 0.5f;
+            get => _overlay?.OvalHorizontalScale ?? 0.4f;
             set { if (_overlay != null) _overlay.OvalHorizontalScale = value; }
         }
 
@@ -50,7 +76,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         [DebugEditable(DisplayName = "Blur Radius", Step = 0.001f, Min = 0f, Max = 0.05f)]
         public float BlurRadius
         {
-            get => _overlay?.BlurRadius ?? 0.003f;
+            get => _overlay?.BlurRadius ?? 0.001f;
             set { if (_overlay != null) _overlay.BlurRadius = value; }
         }
 
@@ -76,10 +102,10 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             set { if (_overlay != null) _overlay.VeinBaseFrequency = value; }
         }
 
-        [DebugEditable(DisplayName = "Vein Animation Speed", Step = 0.005f, Min = 0f, Max = 0.5f)]
+        [DebugEditable(DisplayName = "Vein Animation Speed", Step = 0.0001f, Min = 0f, Max = 0.5f)]
         public float VeinAnimationSpeed
         {
-            get => _overlay?.VeinAnimationSpeed ?? 0.01f;
+            get => _overlay?.VeinAnimationSpeed ?? 0.001f;
             set { if (_overlay != null) _overlay.VeinAnimationSpeed = value; }
         }
 
@@ -150,7 +176,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         [DebugEditable(DisplayName = "Vein Color Strength", Step = 0.05f, Min = 0f, Max = 1f)]
         public float VeinColorStrength
         {
-            get => _overlay?.VeinColorStrength ?? 0.5f;
+            get => _overlay?.VeinColorStrength ?? 0.4f;
             set { if (_overlay != null) _overlay.VeinColorStrength = value; }
         }
 
@@ -275,15 +301,33 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-            _timeSeconds += MathHelper.Max(0f, (float)gameTime.ElapsedGameTime.TotalSeconds);
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            _timeSeconds += MathHelper.Max(0f, dt);
             if (_overlay == null) EnsureLoaded();
+
+            // Animate fade intensity
+            if (_isActive)
+            {
+                // Fade in
+                float fadeSpeed = 1f / _fadeInDuration;
+                _fadeIntensity = MathHelper.Min(1f, _fadeIntensity + fadeSpeed * dt);
+            }
+            else
+            {
+                // Fade out
+                float fadeSpeed = 1f / _fadeOutDuration;
+                _fadeIntensity = MathHelper.Max(0f, _fadeIntensity - fadeSpeed * dt);
+            }
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
+        /// <summary>
+        /// Returns true if the effect should be rendered (either active or still fading out).
+        /// </summary>
         public new bool IsActive()
         {
-            return _isActive;
+            return _fadeIntensity > 0.001f;
         }
 
         /// <summary>
@@ -294,7 +338,8 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         /// <param name="finalTarget">The final destination (null for backbuffer)</param>
         public void Composite(Texture2D sceneSrc, RenderTarget2D tempOutput, RenderTarget2D finalTarget = null)
         {
-            if (_overlay == null || sceneSrc == null || !_isActive)
+            // Skip rendering if fade is fully out
+            if (_overlay == null || sceneSrc == null || _fadeIntensity <= 0.001f)
             {
                 // Fallback: blit original scene directly to finalTarget
                 _gd.SetRenderTarget(finalTarget);
@@ -304,8 +349,9 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
                 return;
             }
 
-            // Update Time for shader animation
+            // Update shader parameters
             _overlay.Time = _timeSeconds;
+            _overlay.FadeIntensity = _fadeIntensity;
 
             // Render bloodshot effect to temp output
             _gd.SetRenderTarget(tempOutput);

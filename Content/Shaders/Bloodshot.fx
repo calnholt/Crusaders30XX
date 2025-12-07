@@ -44,6 +44,9 @@ float ClarityStart;         // Where blur starts
 float ClarityEnd;           // Where view is clear
 float BlurDarkness;         // How dark blurred areas are
 
+// Fade intensity (0 = no effect, 1 = full effect)
+float FadeIntensity;
+
 texture Texture : register(t0);
 sampler2D TextureSampler : register(s0) = sampler_state
 {
@@ -153,6 +156,12 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
     // Add slight blur/fuzziness at edges (oval-based)
     float clarity = smoothstep(ClarityStart, ClarityEnd, dist);
     color = lerp(color * BlurDarkness, color, clarity);
+    
+    // Get original scene color for fade blending
+    float3 originalColor = tex2D(TextureSampler, sceneUV).rgb;
+    
+    // Blend between original and effect based on fade intensity
+    color = lerp(originalColor, color, FadeIntensity);
     
     return float4(color, 1.0) * input.Color;
 }
