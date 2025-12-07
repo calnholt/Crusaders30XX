@@ -14,4 +14,4 @@ namespace Crusaders30XX.ECS.Systems
       return ["harden"];
 		}
 	}
-}
+} 
