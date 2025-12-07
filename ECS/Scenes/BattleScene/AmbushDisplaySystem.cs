@@ -186,7 +186,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				// Hide during non-block phases
 				st.IntroActive = false;
-			}
+			} 
 		}
 
 		public void Draw()
