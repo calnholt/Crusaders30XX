@@ -36,6 +36,14 @@
     <Content Remove="Content\obj\**" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\Data\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Music\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.*" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.*" />
     <PackageReference Include="MonoGame.Extended" Version="4.0.4" />
