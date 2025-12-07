@@ -31,6 +31,202 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             set => _isActive = value;
         }
 
+        // === Oval Shape ===
+        [DebugEditable(DisplayName = "Oval Horizontal Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
+        public float OvalHorizontalScale
+        {
+            get => _overlay?.OvalHorizontalScale ?? 0.5f;
+            set { if (_overlay != null) _overlay.OvalHorizontalScale = value; }
+        }
+
+        [DebugEditable(DisplayName = "Oval Vertical Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
+        public float OvalVerticalScale
+        {
+            get => _overlay?.OvalVerticalScale ?? 0.9f;
+            set { if (_overlay != null) _overlay.OvalVerticalScale = value; }
+        }
+
+        // === Blur Effect ===
+        [DebugEditable(DisplayName = "Blur Radius", Step = 0.001f, Min = 0f, Max = 0.05f)]
+        public float BlurRadius
+        {
+            get => _overlay?.BlurRadius ?? 0.003f;
+            set { if (_overlay != null) _overlay.BlurRadius = value; }
+        }
+
+        [DebugEditable(DisplayName = "Blur Start", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float BlurStart
+        {
+            get => _overlay?.BlurStart ?? 0.4f;
+            set { if (_overlay != null) _overlay.BlurStart = value; }
+        }
+
+        [DebugEditable(DisplayName = "Blur End", Step = 0.05f, Min = 0f, Max = 1.5f)]
+        public float BlurEnd
+        {
+            get => _overlay?.BlurEnd ?? 0.8f;
+            set { if (_overlay != null) _overlay.BlurEnd = value; }
+        }
+
+        // === Vein Generation ===
+        [DebugEditable(DisplayName = "Vein Base Frequency", Step = 1f, Min = 1f, Max = 50f)]
+        public float VeinBaseFrequency
+        {
+            get => _overlay?.VeinBaseFrequency ?? 10f;
+            set { if (_overlay != null) _overlay.VeinBaseFrequency = value; }
+        }
+
+        [DebugEditable(DisplayName = "Vein Animation Speed", Step = 0.005f, Min = 0f, Max = 0.5f)]
+        public float VeinAnimationSpeed
+        {
+            get => _overlay?.VeinAnimationSpeed ?? 0.01f;
+            set { if (_overlay != null) _overlay.VeinAnimationSpeed = value; }
+        }
+
+        [DebugEditable(DisplayName = "Vein Radial Frequency", Step = 1f, Min = 1f, Max = 30f)]
+        public float VeinRadialFrequency
+        {
+            get => _overlay?.VeinRadialFrequency ?? 8f;
+            set { if (_overlay != null) _overlay.VeinRadialFrequency = value; }
+        }
+
+        [DebugEditable(DisplayName = "Vein Radial Scale", Step = 1f, Min = 1f, Max = 50f)]
+        public float VeinRadialScale
+        {
+            get => _overlay?.VeinRadialScale ?? 10f;
+            set { if (_overlay != null) _overlay.VeinRadialScale = value; }
+        }
+
+        [DebugEditable(DisplayName = "Vein Time Scale", Step = 0.1f, Min = 0f, Max = 5f)]
+        public float VeinTimeScale
+        {
+            get => _overlay?.VeinTimeScale ?? 0.5f;
+            set { if (_overlay != null) _overlay.VeinTimeScale = value; }
+        }
+
+        // === Vein Appearance ===
+        [DebugEditable(DisplayName = "Vein Edge Start", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float VeinEdgeStart
+        {
+            get => _overlay?.VeinEdgeStart ?? 0.2f;
+            set { if (_overlay != null) _overlay.VeinEdgeStart = value; }
+        }
+
+        [DebugEditable(DisplayName = "Vein Edge End", Step = 0.05f, Min = 0f, Max = 1.5f)]
+        public float VeinEdgeEnd
+        {
+            get => _overlay?.VeinEdgeEnd ?? 0.9f;
+            set { if (_overlay != null) _overlay.VeinEdgeEnd = value; }
+        }
+
+        [DebugEditable(DisplayName = "Vein Sharpness Pow", Step = 0.1f, Min = 0.1f, Max = 5f)]
+        public float VeinSharpnessPow
+        {
+            get => _overlay?.VeinSharpnessPow ?? 1f;
+            set { if (_overlay != null) _overlay.VeinSharpnessPow = value; }
+        }
+
+        [DebugEditable(DisplayName = "Vein Sharpness Mult", Step = 0.1f, Min = 0.1f, Max = 10f)]
+        public float VeinSharpnessMult
+        {
+            get => _overlay?.VeinSharpnessMult ?? 2f;
+            set { if (_overlay != null) _overlay.VeinSharpnessMult = value; }
+        }
+
+        [DebugEditable(DisplayName = "Vein Threshold Low", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float VeinThresholdLow
+        {
+            get => _overlay?.VeinThresholdLow ?? 0.3f;
+            set { if (_overlay != null) _overlay.VeinThresholdLow = value; }
+        }
+
+        [DebugEditable(DisplayName = "Vein Threshold High", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float VeinThresholdHigh
+        {
+            get => _overlay?.VeinThresholdHigh ?? 0.7f;
+            set { if (_overlay != null) _overlay.VeinThresholdHigh = value; }
+        }
+
+        [DebugEditable(DisplayName = "Vein Color Strength", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float VeinColorStrength
+        {
+            get => _overlay?.VeinColorStrength ?? 0.5f;
+            set { if (_overlay != null) _overlay.VeinColorStrength = value; }
+        }
+
+        // === Redness Effect ===
+        [DebugEditable(DisplayName = "Redness Intensity", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float RednessIntensity
+        {
+            get => _overlay?.RednessIntensity ?? 0.2f;
+            set { if (_overlay != null) _overlay.RednessIntensity = value; }
+        }
+
+        [DebugEditable(DisplayName = "Red Tint R", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float RedTintR
+        {
+            get => _overlay?.RedTintR ?? 1f;
+            set { if (_overlay != null) _overlay.RedTintR = value; }
+        }
+
+        [DebugEditable(DisplayName = "Red Tint G", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float RedTintG
+        {
+            get => _overlay?.RedTintG ?? 0.7f;
+            set { if (_overlay != null) _overlay.RedTintG = value; }
+        }
+
+        [DebugEditable(DisplayName = "Red Tint B", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float RedTintB
+        {
+            get => _overlay?.RedTintB ?? 0.7f;
+            set { if (_overlay != null) _overlay.RedTintB = value; }
+        }
+
+        // === Blood Color ===
+        [DebugEditable(DisplayName = "Blood Color R", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float BloodColorR
+        {
+            get => _overlay?.BloodColor.X ?? 1f;
+            set { if (_overlay != null) _overlay.BloodColor = new Vector3(value, _overlay.BloodColor.Y, _overlay.BloodColor.Z); }
+        }
+
+        [DebugEditable(DisplayName = "Blood Color G", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float BloodColorG
+        {
+            get => _overlay?.BloodColor.Y ?? 0f;
+            set { if (_overlay != null) _overlay.BloodColor = new Vector3(_overlay.BloodColor.X, value, _overlay.BloodColor.Z); }
+        }
+
+        [DebugEditable(DisplayName = "Blood Color B", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float BloodColorB
+        {
+            get => _overlay?.BloodColor.Z ?? 0f;
+            set { if (_overlay != null) _overlay.BloodColor = new Vector3(_overlay.BloodColor.X, _overlay.BloodColor.Y, value); }
+        }
+
+        // === Clarity/Blur ===
+        [DebugEditable(DisplayName = "Clarity Start", Step = 0.05f, Min = 0f, Max = 1.5f)]
+        public float ClarityStart
+        {
+            get => _overlay?.ClarityStart ?? 0.8f;
+            set { if (_overlay != null) _overlay.ClarityStart = value; }
+        }
+
+        [DebugEditable(DisplayName = "Clarity End", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float ClarityEnd
+        {
+            get => _overlay?.ClarityEnd ?? 0.2f;
+            set { if (_overlay != null) _overlay.ClarityEnd = value; }
+        }
+
+        [DebugEditable(DisplayName = "Blur Darkness", Step = 0.05f, Min = 0f, Max = 1f)]
+        public float BlurDarkness
+        {
+            get => _overlay?.BlurDarkness ?? 0.7f;
+            set { if (_overlay != null) _overlay.BlurDarkness = value; }
+        }
+
         public BloodshotDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content) 
             : base(entityManager)
         {
@@ -131,6 +327,40 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         {
             _isActive = !_isActive;
             Console.WriteLine($"[BloodshotDisplaySystem] Bloodshot toggled: {_isActive}");
+        }
+
+        [DebugAction("Reset to Defaults")]
+        public void Debug_ResetDefaults()
+        {
+            if (_overlay == null) return;
+            
+            _overlay.OvalHorizontalScale = 0.5f;
+            _overlay.OvalVerticalScale = 0.9f;
+            _overlay.BlurRadius = 0.003f;
+            _overlay.BlurStart = 0.4f;
+            _overlay.BlurEnd = 0.8f;
+            _overlay.VeinBaseFrequency = 10f;
+            _overlay.VeinAnimationSpeed = 0.01f;
+            _overlay.VeinRadialFrequency = 8f;
+            _overlay.VeinRadialScale = 10f;
+            _overlay.VeinTimeScale = 0.5f;
+            _overlay.VeinEdgeStart = 0.2f;
+            _overlay.VeinEdgeEnd = 0.9f;
+            _overlay.VeinSharpnessPow = 1f;
+            _overlay.VeinSharpnessMult = 2f;
+            _overlay.VeinThresholdLow = 0.3f;
+            _overlay.VeinThresholdHigh = 0.7f;
+            _overlay.VeinColorStrength = 0.5f;
+            _overlay.RednessIntensity = 0.2f;
+            _overlay.RedTintR = 1f;
+            _overlay.RedTintG = 0.7f;
+            _overlay.RedTintB = 0.7f;
+            _overlay.BloodColor = new Vector3(1f, 0f, 0f);
+            _overlay.ClarityStart = 0.8f;
+            _overlay.ClarityEnd = 0.2f;
+            _overlay.BlurDarkness = 0.7f;
+            
+            Console.WriteLine("[BloodshotDisplaySystem] Reset all parameters to defaults");
         }
     }
 }
