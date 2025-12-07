@@ -21,11 +21,11 @@ jobs:
       # ----------------------------
       # READ + INCREMENT VERSION
       # ----------------------------
-      - name: Read current version
-        id: version
+      - name: Read version
+        shell: pwsh
         run: |
-          VER=$(cat VERSION)
-          echo "current_version=$VER" >> $GITHUB_OUTPUT
+          $ver = Get-Content VERSION -Raw
+          "current_version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Increment patch version
         id: bump
