@@ -66,6 +66,7 @@ jobs:
 
       - name: Zip artifact
         run: |
+          mkdir builds
           powershell -Command "Compress-Archive -Path './artifacts/windows/*' -DestinationPath './builds/windows-build.zip' -Force"
 
       # ----------------------------
