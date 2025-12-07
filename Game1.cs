@@ -11,7 +11,6 @@ using Crusaders30XX.ECS.Components;
 using System.Linq;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Singletons;
-using Crusaders30XX.ECS.Scenes.BattleScene;
 
 namespace Crusaders30XX;
 
@@ -57,7 +56,6 @@ public class Game1 : Game
     private ShockwaveDisplaySystem _shockwaveSystem;
     private RectangularShockwaveDisplaySystem _rectangularShockwaveSystem;
     private PoisonDamageDisplaySystem _poisonSystem;
-    private BloodshotDisplaySystem _bloodshotSystem;
     private RenderTarget2D _sceneRt;
     private RenderTarget2D _ppA;
     private RenderTarget2D _ppB;
@@ -188,8 +186,6 @@ public class Game1 : Game
         _world.AddSystem(_rectangularShockwaveSystem);
         _poisonSystem = new PoisonDamageDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _world.AddSystem(_poisonSystem);
-        _bloodshotSystem = new BloodshotDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
-        _world.AddSystem(_bloodshotSystem);
         _world.AddSystem(new CursorEmptySelectDisplaySystem(_world.EntityManager, GraphicsDevice));
         _world.AddSystem(new UISelectDisplaySystem(_world.EntityManager, GraphicsDevice));
         _world.AddSystem(new JigglePulseDisplaySystem(_world.EntityManager));
@@ -259,34 +255,25 @@ public class Game1 : Game
         DrawScene();
 
         // Process effects
-        bool hasBloodshot = _bloodshotSystem != null && _bloodshotSystem.IsActive();
         bool hasPoison = _poisonSystem != null && _poisonSystem.HasActivePoison;
         bool hasCircularWaves = _shockwaveSystem != null && _shockwaveSystem.HasActiveWaves;
         bool hasRectangularWaves = _rectangularShockwaveSystem != null && _rectangularShockwaveSystem.HasActiveWaves;
         
         Texture2D finalTexture = _sceneRt;
 
-        if (hasBloodshot || hasPoison || hasCircularWaves || hasRectangularWaves)
+        if (hasPoison || hasCircularWaves || hasRectangularWaves)
         {
-            // Composite effects in order: Bloodshot → Poison → Circular Shockwaves → Rectangular Shockwaves
+            // Composite effects in order: Poison → Circular Shockwaves → Rectangular Shockwaves
             
-            // Apply bloodshot first if active
-            if (hasBloodshot)
-            {
-                RenderTarget2D next = (hasPoison || hasCircularWaves || hasRectangularWaves) ? _ppB : _ppA;
-                _bloodshotSystem.Composite(finalTexture, _ppA, next);
-                finalTexture = next;
-            }
-            
-            // Apply poison second if active
+            // Apply poison first if active
             if (hasPoison)
             {
-                RenderTarget2D next = (hasCircularWaves || hasRectangularWaves) ? (finalTexture == _ppA ? _ppB : _ppA) : (finalTexture == _ppA ? _ppB : _ppA);
+                RenderTarget2D next = (hasCircularWaves || hasRectangularWaves) ? _ppB : _ppA;
                 _poisonSystem.Composite(finalTexture, _ppA, next);
                 finalTexture = next;
             }
             
-            // Apply circular shockwaves third if any
+            // Apply circular shockwaves second if any
             if (hasCircularWaves)
             {
                 RenderTarget2D dest = (finalTexture == _ppA) ? _ppB : _ppA;

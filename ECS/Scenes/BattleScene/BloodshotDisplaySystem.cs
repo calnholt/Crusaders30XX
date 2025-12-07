@@ -23,11 +23,11 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         private BloodshotOverlay _overlay;
         private float _timeSeconds;
         private bool _isActive;
-        private float _fadeIntensity;
+        private float _fadeIntensity = 1f;
 
         // Fade timing
-        private float _fadeInDuration = 0.3f;
-        private float _fadeOutDuration = 0.5f;
+        private float _fadeInDuration = 0.2f;
+        private float _fadeOutDuration = 0.2f;
 
         [DebugEditable(DisplayName = "Active")]
         public bool DebugIsActive
@@ -61,14 +61,14 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         [DebugEditable(DisplayName = "Oval Horizontal Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
         public float OvalHorizontalScale
         {
-            get => _overlay?.OvalHorizontalScale ?? 0.4f;
+            get => _overlay?.OvalHorizontalScale ?? 0.8f;
             set { if (_overlay != null) _overlay.OvalHorizontalScale = value; }
         }
 
         [DebugEditable(DisplayName = "Oval Vertical Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
         public float OvalVerticalScale
         {
-            get => _overlay?.OvalVerticalScale ?? 0.9f;
+            get => _overlay?.OvalVerticalScale ?? 1.25f;
             set { if (_overlay != null) _overlay.OvalVerticalScale = value; }
         }
 
@@ -76,7 +76,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         [DebugEditable(DisplayName = "Blur Radius", Step = 0.001f, Min = 0f, Max = 0.05f)]
         public float BlurRadius
         {
-            get => _overlay?.BlurRadius ?? 0.001f;
+            get => _overlay?.BlurRadius ?? 0.006f;
             set { if (_overlay != null) _overlay.BlurRadius = value; }
         }
 
@@ -105,7 +105,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         [DebugEditable(DisplayName = "Vein Animation Speed", Step = 0.0001f, Min = 0f, Max = 0.5f)]
         public float VeinAnimationSpeed
         {
-            get => _overlay?.VeinAnimationSpeed ?? 0.001f;
+            get => _overlay?.VeinAnimationSpeed ?? 0.002f;
             set { if (_overlay != null) _overlay.VeinAnimationSpeed = value; }
         }
 
@@ -184,7 +184,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         [DebugEditable(DisplayName = "Redness Intensity", Step = 0.05f, Min = 0f, Max = 1f)]
         public float RednessIntensity
         {
-            get => _overlay?.RednessIntensity ?? 0.2f;
+            get => _overlay?.RednessIntensity ?? 0.75f;
             set { if (_overlay != null) _overlay.RednessIntensity = value; }
         }
 
@@ -261,6 +261,13 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             _content = content;
 
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnPhaseChanged);
+            EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCachesEvent);
+        }
+
+        private void OnDeleteCachesEvent(DeleteCachesEvent evt)
+        {
+            _isActive = false;
+            _fadeIntensity = 0f;
         }
 
         private void OnPhaseChanged(ChangeBattlePhaseEvent evt)
@@ -290,6 +297,32 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             if (_effect != null && _overlay == null)
             {
                 _overlay = new BloodshotOverlay(_effect);
+                // Initialize with default values
+                _overlay.OvalHorizontalScale = 0.8f;
+                _overlay.OvalVerticalScale = 1.25f;
+                _overlay.BlurRadius = 0.006f;
+                _overlay.BlurStart = 0.4f;
+                _overlay.BlurEnd = 0.8f;
+                _overlay.VeinBaseFrequency = 10f;
+                _overlay.VeinAnimationSpeed = 0.002f;
+                _overlay.VeinRadialFrequency = 8f;
+                _overlay.VeinRadialScale = 10f;
+                _overlay.VeinTimeScale = 0.5f;
+                _overlay.VeinEdgeStart = 0.2f;
+                _overlay.VeinEdgeEnd = 0.9f;
+                _overlay.VeinSharpnessPow = 1f;
+                _overlay.VeinSharpnessMult = 2f;
+                _overlay.VeinThresholdLow = 0.3f;
+                _overlay.VeinThresholdHigh = 0.7f;
+                _overlay.VeinColorStrength = 0.4f;
+                _overlay.RednessIntensity = 0.75f;
+                _overlay.RedTintR = 1f;
+                _overlay.RedTintG = 0.7f;
+                _overlay.RedTintB = 0.7f;
+                _overlay.BloodColor = new Vector3(1f, 0f, 0f);
+                _overlay.ClarityStart = 0.8f;
+                _overlay.ClarityEnd = 0.2f;
+                _overlay.BlurDarkness = 0.7f;
             }
         }
 
@@ -380,13 +413,13 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         {
             if (_overlay == null) return;
             
-            _overlay.OvalHorizontalScale = 0.5f;
-            _overlay.OvalVerticalScale = 0.9f;
-            _overlay.BlurRadius = 0.003f;
+            _overlay.OvalHorizontalScale = 0.8f;
+            _overlay.OvalVerticalScale = 1.25f;
+            _overlay.BlurRadius = 0.006f;
             _overlay.BlurStart = 0.4f;
             _overlay.BlurEnd = 0.8f;
             _overlay.VeinBaseFrequency = 10f;
-            _overlay.VeinAnimationSpeed = 0.01f;
+            _overlay.VeinAnimationSpeed = 0.002f;
             _overlay.VeinRadialFrequency = 8f;
             _overlay.VeinRadialScale = 10f;
             _overlay.VeinTimeScale = 0.5f;
@@ -396,8 +429,8 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             _overlay.VeinSharpnessMult = 2f;
             _overlay.VeinThresholdLow = 0.3f;
             _overlay.VeinThresholdHigh = 0.7f;
-            _overlay.VeinColorStrength = 0.5f;
-            _overlay.RednessIntensity = 0.2f;
+            _overlay.VeinColorStrength = 0.4f;
+            _overlay.RednessIntensity = 0.75f;
             _overlay.RedTintR = 1f;
             _overlay.RedTintG = 0.7f;
             _overlay.RedTintB = 0.7f;

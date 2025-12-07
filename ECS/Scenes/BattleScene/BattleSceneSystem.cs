@@ -13,6 +13,7 @@ using Crusaders30XX.ECS.Services;
  
 using System;
 using Crusaders30XX.ECS.Data.Cards;
+using Crusaders30XX.ECS.Scenes.BattleScene;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -109,6 +110,12 @@ namespace Crusaders30XX.ECS.Systems
 		private ActiveCharacterIndicatorDisplaySystem _activeCharacterIndicatorDisplaySystem;
 		private RenderTarget2D _sceneRenderTarget;
 
+		// Bloodshot effect system and render targets for background compositing
+		private BloodshotDisplaySystem _bloodshotDisplaySystem;
+		private RenderTarget2D _bgRt;
+		private RenderTarget2D _bgTemp;
+		private RasterizerState _rasterizerState;
+
 
 		public BattleSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content) : base(em)
 		{
@@ -175,9 +182,46 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
+			// End the current SpriteBatch to draw backgrounds to a separate render target
+			_spriteBatch.End();
+			
+			// Save the current render target (Game1's _sceneRt)
+			var originalRenderTargets = _graphicsDevice.GetRenderTargets();
+			RenderTarget2D originalRt = originalRenderTargets.Length > 0 ? originalRenderTargets[0].RenderTarget as RenderTarget2D : null;
+			
+			// Draw backgrounds to _bgRt
+			_graphicsDevice.SetRenderTarget(_bgRt);
+			_graphicsDevice.Clear(Color.Transparent);
+			_spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _rasterizerState);
 			FrameProfiler.Measure("BattleBackgroundSystem.Draw", _battleBackgroundSystem.Draw);
 			FrameProfiler.Measure("CathedralLightingSystem.Draw", _cathedralLightingSystem.Draw);
 			FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", _desertBackgroundEffectSystem.Draw);
+			_spriteBatch.End();
+			
+			// Apply bloodshot effect to backgrounds if active
+			bool hasBloodshot = _bloodshotDisplaySystem != null && _bloodshotDisplaySystem.IsActive();
+			if (hasBloodshot)
+			{
+				// Composite bloodshot effect onto _bgTemp
+				_bloodshotDisplaySystem.Composite(_bgRt, _bgTemp, _bgTemp);
+				// Blit _bgTemp to the original render target
+				_graphicsDevice.SetRenderTarget(originalRt);
+				_spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
+				_spriteBatch.Draw(_bgTemp, _graphicsDevice.Viewport.Bounds, Color.White);
+				_spriteBatch.End();
+			}
+			else
+			{
+				// Blit _bgRt directly to the original render target
+				_graphicsDevice.SetRenderTarget(originalRt);
+				_spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
+				_spriteBatch.Draw(_bgRt, _graphicsDevice.Viewport.Bounds, Color.White);
+				_spriteBatch.End();
+			}
+			
+			// Resume SpriteBatch for remaining UI drawing
+			_spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _rasterizerState);
+			
 			// If there will be dialog to show for the quest, skip drawing battle UI (overlay is drawn globally)
 			bool willShowDialog = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<PendingQuestDialog>()?.WillShowDialog ?? false;
 			bool rewardOpen = EntityManager.GetEntitiesWithComponent<QuestRewardOverlayState>().FirstOrDefault()?.GetComponent<QuestRewardOverlayState>()?.IsOpen ?? false;
@@ -440,6 +484,13 @@ namespace Crusaders30XX.ECS.Systems
 			_quitCurrentQuestDisplaySystem = new QuitCurrentQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_mustBeBlockedSystem = new MustBeBlockedSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_activeCharacterIndicatorDisplaySystem = new ActiveCharacterIndicatorDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			
+			// Bloodshot effect system and render targets for background compositing
+			_bloodshotDisplaySystem = new BloodshotDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			_bgRt = new RenderTarget2D(_graphicsDevice, Game1.VirtualWidth, Game1.VirtualHeight, false, SurfaceFormat.Color, DepthFormat.None);
+			_bgTemp = new RenderTarget2D(_graphicsDevice, Game1.VirtualWidth, Game1.VirtualHeight, false, SurfaceFormat.Color, DepthFormat.None);
+			_rasterizerState = new RasterizerState { ScissorTestEnable = true, CullMode = CullMode.None };
+			
 			// Register
 			_world.AddSystem(_deckManagementSystem);
 			_world.AddSystem(_handDisplaySystem);
@@ -517,6 +568,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_quitCurrentQuestDisplaySystem);
 			_world.AddSystem(_mustBeBlockedSystem);
 			_world.AddSystem(_activeCharacterIndicatorDisplaySystem);
+			_world.AddSystem(_bloodshotDisplaySystem);
 		}
 
 		public void DrawAdditive()
