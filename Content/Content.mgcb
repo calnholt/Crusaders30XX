@@ -782,3 +782,15 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Shaders/Poison.fx
+
+#---------------------------------- Music ---------------------------------#
+
+#begin Music/desert_theme_battle.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/desert_theme_battle.ogg
+
+#begin Music/customize.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/customize.ogg

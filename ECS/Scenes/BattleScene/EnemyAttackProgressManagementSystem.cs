@@ -223,16 +223,12 @@ namespace Crusaders30XX.ECS.Systems
 			.Sum(e => e.amount);
 		p.BaseDamage = def.damage;
 		bool isConditionMet = ConditionService.Evaluate(def.blockingCondition, EntityManager, p);
-			int preventedDamageFromBlockCondition = isConditionMet ? (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
-				.Where(e => e.type == "Damage")
-				.Sum(e => e.amount) : 0;
 			int reduced = aegis + p.AssignedBlockTotal;
-			int actual = Math.Max(full - reduced - preventedDamageFromBlockCondition, 0);
+			int actual = Math.Max(full - reduced, 0);
 
 			p.IsConditionMet = isConditionMet;
 			p.ActualDamage = actual;
-			p.PreventedDamageFromBlockCondition = preventedDamageFromBlockCondition;
-			p.TotalPreventedDamage = aegis + preventedDamageFromBlockCondition + p.AssignedBlockTotal;
+			p.TotalPreventedDamage = aegis + p.AssignedBlockTotal;
 
 			// Optional: sanity check for desync between snapshot and live AssignedBlockCard state (debug only)
 			try
