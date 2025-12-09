@@ -544,10 +544,7 @@ namespace Crusaders30XX.ECS.Systems
 				string breakdown = $"({blockPrevented} block{(aegisPrevented > 0 ? $" + {aegisPrevented} aegis" : string.Empty)}"
 					+ (conditionPrevented > 0 ? $", condition {conditionPrevented}" : string.Empty)
 					+ ")";
-				string conditionalSuffix = (!isConditionMet && extraConditionalDamage > 0)
-					? $" + {extraConditionalDamage}"
-					: string.Empty;
-				lines.Add(($"Damage: {actual}{conditionalSuffix} {(blockPrevented > 0 || aegisPrevented > 0 ? breakdown : string.Empty)}", TextScale, Color.White));
+				lines.Add(($"Damage: {actual} {(blockPrevented > 0 || aegisPrevented > 0 ? breakdown : string.Empty)}", TextScale, Color.White));
 			}
 			else
 			{
