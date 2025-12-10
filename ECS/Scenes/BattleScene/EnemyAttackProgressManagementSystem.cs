@@ -217,7 +217,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		bool specialEffectExecuted = EnemySpecialAttackService.ExecuteSpecialEffect(def, EntityManager);
 		if (specialEffectExecuted) return;
-
+		p.PreventedDamageFromBlockCondition = 0;
 		p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
 			.Where(e => e.type == "Damage")
 			.Sum(e => e.amount);

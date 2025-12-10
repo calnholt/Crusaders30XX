@@ -72,16 +72,16 @@ namespace Crusaders30XX.ECS.Systems
 		public int OffsetX { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Center Offset Y", Step = 2, Min = -400, Max = 400)]
-		public int OffsetY { get; set; } = -170;
+		public int OffsetY { get; set; } = -300;
 
 		[DebugEditable(DisplayName = "Panel Padding", Step = 1, Min = 4, Max = 40)]
-		public int PanelPadding { get; set; } = 17;
+		public int PanelPadding { get; set; } = 30;
 
 		[DebugEditable(DisplayName = "Border Thickness", Step = 1, Min = 1, Max = 8)]
 		public int BorderThickness { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Background Alpha", Step = 5, Min = 0, Max = 255)]
-		public int BackgroundAlpha { get; set; } = 200;
+		public int BackgroundAlpha { get; set; } = 160;
 
 		[DebugEditable(DisplayName = "Title Scale", Step = 0.05f, Min = 0.05f, Max = 2.5f)]
 		public float TitleScale { get; set; } = 0.2f;
@@ -669,7 +669,8 @@ namespace Crusaders30XX.ECS.Systems
 
 			int drawW = (int)Math.Round(w * panelScale * squashX);
 			int drawH = (int)Math.Round(h * panelScale * squashY);
-			var rect = new Rectangle((int)(approachPos.X - drawW / 2f + shake.X), (int)(approachPos.Y - drawH / 2f + shake.Y), drawW, drawH);
+			// Anchor from top (X is still centered horizontally)
+			var rect = new Rectangle((int)(approachPos.X - drawW / 2f + shake.X), (int)(approachPos.Y + shake.Y), drawW, drawH);
 			_spriteBatch.Draw(_pixel, rect, new Color(20, 20, 20, bgAlpha));
 			DrawRect(rect, Color.White, Math.Max(0, BorderThickness));
 			DrawAttackDecorations(rect, panelScale, squashX, squashY);
@@ -748,21 +749,25 @@ namespace Crusaders30XX.ECS.Systems
 				float baseX = rect.X + pad * panelScale * contentScale;
 				float baseY = y;
 				float lineSpacingScaled = LineSpacingExtra * panelScale * contentScale;
+				float titleSpacingScaled = TitleSpacingExtra * panelScale * contentScale;
 				float s = TextScale * panelScale * contentScale;
 				// Advance through prior lines (name, damage, etc.) to reach the start of On-hit
 				{
-					int idx = 0;
+					bool isFirstTitleForTooltip = true;
 					foreach (var (origText, lineScale, _) in lines)
 					{
-						bool isOnHit = (!string.IsNullOrWhiteSpace(notBlockedSummary) && idx == 2); // def.name (0), damage (1), on-hit (2)
-						if (isOnHit) break;
+						// Stop when we reach the Effect line (on-hit summary)
+						bool isOnHitLine = origText.StartsWith("Effect: ");
+						if (isOnHitLine) break;
+						bool isTitleLine = (origText == def.name); // Title is the attack name
 						var parts = TextUtils.WrapText(_contentFont, origText, lineScale, contentWidthLimitPx);
 						foreach (var p in parts)
 						{
 							var psz = _contentFont.MeasureString(p);
-							baseY += psz.Y * lineScale * panelScale * contentScale + lineSpacingScaled;
+							float spacing = (isFirstTitleForTooltip && isTitleLine) ? titleSpacingScaled : lineSpacingScaled;
+							baseY += psz.Y * lineScale * panelScale * contentScale + spacing;
+							if (isTitleLine) isFirstTitleForTooltip = false;
 						}
-						idx++;
 					}
 				}
 				// Token layout with wrapping matching the visible line, using cumulative measured strings to match kerning/prefix exactly

@@ -60,8 +60,8 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Absorb Duration (s)", Step = 0.02f, Min = 0.05f, Max = 3f)]
 		public float AbsorbDurationSeconds { get; set; } = 0.4f;
 
-		[DebugEditable(DisplayName = "Total Meter Width", Step = 5, Min = 50, Max = 400)]
-		public int TotalMeterWidth { get; set; } = 275;
+		[DebugEditable(DisplayName = "Total Meter Width", Step = 5, Min = 50, Max = 600)]
+		public int TotalMeterWidth { get; set; } = 300;
 
 		[DebugEditable(DisplayName = "Min Segment Width", Step = 2, Min = 10, Max = 100)]
 		public int MinSegmentWidth { get; set; } = 40;
@@ -79,7 +79,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int DamageYOffset { get; set; } = -8;
 
 		[DebugEditable(DisplayName = "Offset Y from Banner Top", Step = 2, Min = -100, Max = 200)]
-		public int OffsetYFromBannerTop { get; set; } = -30;
+		public int OffsetYFromBannerTop { get; set; } = 90;
 
 		[DebugEditable(DisplayName = "Font Scale", Step = 0.02f, Min = 0.05f, Max = 1f)]
 		public float FontScale { get; set; } = 0.2f;
@@ -103,13 +103,13 @@ namespace Crusaders30XX.ECS.Systems
 		public int AegisColorB { get; set; } = 255;
 
 		[DebugEditable(DisplayName = "Block Color R", Step = 5, Min = 0, Max = 255)]
-		public int BlockColorR { get; set; } = 30;
+		public int BlockColorR { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Block Color G", Step = 5, Min = 0, Max = 255)]
-		public int BlockColorG { get; set; } = 30;
+		public int BlockColorG { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Block Color B", Step = 5, Min = 0, Max = 255)]
-		public int BlockColorB { get; set; } = 30;
+		public int BlockColorB { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Condition Color R", Step = 5, Min = 0, Max = 255)]
 		public int ConditionColorR { get; set; } = 50;
@@ -327,17 +327,28 @@ namespace Crusaders30XX.ECS.Systems
 				usedWidth += segW;
 			}
 
-			// Calculate total width and center position (using banner center)
-			float totalWidth = usedWidth + (segments.Count - 1) * scaledSegmentGap;
-			float startX = bannerBounds.Center.X - totalWidth / 2f;
-
-			// Scale the Y offset and position relative to banner
-			float scaledOffsetY = OffsetYFromBannerTop * panelScale;
-			float baseY = bannerBounds.Center.Y + scaledOffsetY;
-
-			// Scaled dimensions
+			// Scaled dimensions (calculate before centering since we need slant for total width)
 			float scaledHeight = SegmentHeight * panelScale;
 			float scaledSlant = ParallelogramSlant * panelScale;
+
+			// Calculate the effective slant of the rightmost segment for proper centering
+			// The parallelogram's visual width is (width + slant), so total visual width includes the last segment's slant
+			float lastSegmentSlant = 0f;
+			if (segments.Count > 0 && segmentWidths.Count > 0)
+			{
+				float lastSegWidth = segmentWidths[segmentWidths.Count - 1];
+				float lastSlantRatio = Math.Min(1f, lastSegWidth / Math.Max(1f, scaledMinSegmentWidth));
+				lastSegmentSlant = scaledSlant * lastSlantRatio;
+			}
+
+			// Calculate total visual width and center position (using banner center)
+			// Total visual width = segment widths + gaps + rightmost slant extension
+			float totalWidth = usedWidth + (segments.Count - 1) * scaledSegmentGap + lastSegmentSlant;
+			float startX = bannerBounds.Center.X - totalWidth / 2f;
+
+		// Scale the Y offset and position relative to banner
+		float scaledOffsetY = OffsetYFromBannerTop * panelScale;
+		float baseY = bannerBounds.Top + scaledOffsetY;
 			float scaledDamageYOffset = DamageYOffset * panelScale;
 			float scaledFontScale = FontScale * panelScale;
 
@@ -506,7 +517,7 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(uiEntity, new UIElement
 				{
 					Bounds = rect,
-					IsInteractable = true,
+					IsInteractable = false,
 					Tooltip = tooltipText,
 					TooltipPosition = TooltipPosition.Below,
 					TooltipOffsetPx = 8
@@ -530,7 +541,7 @@ namespace Crusaders30XX.ECS.Systems
 					ui.Tooltip = tooltipText;
 					ui.TooltipPosition = TooltipPosition.Below;
 					ui.TooltipOffsetPx = 8;
-					ui.IsInteractable = true;
+					ui.IsInteractable = false;
 				}
 			}
 		}
