@@ -98,6 +98,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Line Spacing Extra", Step = 1, Min = 0, Max = 20)]
 		public int LineSpacingExtra { get; set; } = 3;
 
+		[DebugEditable(DisplayName = "Title Spacing Extra", Step = 1, Min = 0, Max = 120)]
+		public int TitleSpacingExtra { get; set; } = 80;
+
 		[DebugEditable(DisplayName = "Corner Ornament Scale", Step = 0.01f, Min = 0.1f, Max = 4f)]
 		public float CornerOrnamentScale { get; set; } = 0.24f;
 
@@ -544,7 +547,6 @@ namespace Crusaders30XX.ECS.Systems
 				string breakdown = $"({blockPrevented} block{(aegisPrevented > 0 ? $" + {aegisPrevented} aegis" : string.Empty)}"
 					+ (conditionPrevented > 0 ? $", condition {conditionPrevented}" : string.Empty)
 					+ ")";
-				lines.Add(($"Damage: {actual} {(blockPrevented > 0 || aegisPrevented > 0 ? breakdown : string.Empty)}", TextScale, Color.White));
 			}
 			else
 			{
@@ -591,11 +593,14 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			float maxW = 0f;
 			float totalH = 0f;
-			foreach (var (text, lineScale, _, _) in wrappedLines)
+			bool isFirstTitleForHeight = true;
+			foreach (var (text, lineScale, _, centerTitle) in wrappedLines)
 			{
 				var sz = _contentFont.MeasureString(text);
 				maxW = Math.Max(maxW, sz.X * lineScale);
-				totalH += sz.Y * lineScale + LineSpacingExtra;
+				float spacing = (isFirstTitleForHeight && centerTitle) ? TitleSpacingExtra : LineSpacingExtra;
+				totalH += sz.Y * lineScale + spacing;
+				if (centerTitle) isFirstTitleForHeight = false;
 			}
 			int w = (int)Math.Ceiling(Math.Min(maxW + pad * 2, maxPanelWidthPx));
 			w = Math.Max(w, minPanelWidthPx);
@@ -808,6 +813,7 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 			}
+			bool isFirstTitleLine = true;
 			foreach (var (text, baseScale, color, centerTitle) in wrappedLines)
 			{
 				float s = baseScale * panelScale * contentScale;
@@ -817,7 +823,11 @@ namespace Crusaders30XX.ECS.Systems
 					? rect.X + (rect.Width - textWidth) / 2f
 					: rect.X + pad * panelScale * contentScale;
 				_spriteBatch.DrawString(_contentFont, text, new Vector2(x, y), color, 0f, Vector2.Zero, s, SpriteEffects.None, 0f);
-				y += sz.Y * s + LineSpacingExtra * panelScale * contentScale;
+				float extraSpacing = (isFirstTitleLine && centerTitle) 
+					? TitleSpacingExtra 
+					: LineSpacingExtra;
+				y += sz.Y * s + extraSpacing * panelScale * contentScale;
+				if (centerTitle) isFirstTitleLine = false;
 			}
 
 			// Confirm button below panel (only show in Block phase)

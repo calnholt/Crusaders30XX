@@ -176,6 +176,20 @@ namespace Crusaders30XX.ECS.Systems
 			TryInvalidateCachesOnSceneOrSystemsChange();
 
             var mouse = Mouse.GetState();
+            
+            // Transform mouse coordinates from screen space to virtual space
+            var dest = Game1.RenderDestination;
+            float scaleX = (float)dest.Width / Game1.VirtualWidth;
+            float scaleY = (float)dest.Height / Game1.VirtualHeight;
+            
+            // Avoid division by zero
+            if (scaleX <= 0.001f) scaleX = 1f;
+            if (scaleY <= 0.001f) scaleY = 1f;
+            
+            int virtMouseX = (int)Math.Round((mouse.X - dest.X) / scaleX);
+            int virtMouseY = (int)Math.Round((mouse.Y - dest.Y) / scaleY);
+            Point mousePosition = new Point(virtMouseX, virtMouseY);
+            
             var now = DateTime.UtcNow;
             double dt = (now - _lastDrawTime).TotalSeconds;
             _lastDrawTime = now;
@@ -262,10 +276,10 @@ namespace Crusaders30XX.ECS.Systems
                 var titleRect = new Rectangle(panelX + Padding, cursorY, (int)Math.Ceiling(titleSize.X), (int)Math.Ceiling(titleSize.Y));
                 DrawStringScaled("Debug Menu", new Vector2(panelX + Padding, cursorY), Color.White, TitleScale);
                 // Handle drag start when pressing on title label
-                if (mouseJustPressed && titleRect.Contains(mouse.Position))
+                if (mouseJustPressed && titleRect.Contains(mousePosition))
                 {
                     _dragging = true;
-                    _dragOffset = new Point(mouse.X - panelX, mouse.Y - panelY);
+                    _dragOffset = new Point(mousePosition.X - panelX, mousePosition.Y - panelY);
                 }
                 // Release drag on mouse up
                 if (!mouseDown)
@@ -275,8 +289,8 @@ namespace Crusaders30XX.ECS.Systems
                 // Apply dragging movement
                 if (_dragging)
                 {
-                    int newX = mouse.X - _dragOffset.X;
-                    int newY = mouse.Y - _dragOffset.Y;
+                    int newX = mousePosition.X - _dragOffset.X;
+                    int newY = mousePosition.Y - _dragOffset.Y;
                     // Clamp so the title label remains fully on-screen
                     int viewportWClamped = Game1.VirtualWidth;
                     int viewportHClamped = Game1.VirtualHeight;
@@ -303,7 +317,7 @@ namespace Crusaders30XX.ECS.Systems
                 int btnW = CopyButtonWidth;
                 int btnH = ButtonHeight;
                 var copyRect = new Rectangle(panelX + PanelWidth - Padding - btnW, cursorY, btnW, btnH);
-                bool hoverCopy = copyRect.Contains(mouse.Position);
+                bool hoverCopy = copyRect.Contains(mousePosition);
                 var copyBg = hoverCopy ? new Color(120, 120, 120) : new Color(70, 70, 70);
                 DrawFilledRect(copyRect, copyBg);
                 DrawRect(copyRect, Color.White, 1);
@@ -372,7 +386,7 @@ namespace Crusaders30XX.ECS.Systems
             var triRect = new Rectangle(triRight - triW, triCenterY - triH / 2, triW, triH);
             if (ddCurrent.IsOpen) DrawTriangleUp(triRect, Color.White); else DrawTriangleDown(triRect, Color.White);
 
-            if (click && ddUI.Bounds.Contains(mouse.Position))
+            if (click && ddUI.Bounds.Contains(mousePosition))
             {
                 ddCurrent.IsOpen = !ddCurrent.IsOpen;
             }
@@ -417,7 +431,7 @@ namespace Crusaders30XX.ECS.Systems
             }
             int yOffset = -(int)Math.Round(_scrollOffset);
             // If dropdown open and mouse is over its area, suppress clicks to content behind
-            if (drawListAfter && deferredListRect.Contains(mouse.Position))
+            if (drawListAfter && deferredListRect.Contains(mousePosition))
             {
                 clickForContent = false;
             }
@@ -454,7 +468,7 @@ namespace Crusaders30XX.ECS.Systems
                     DrawFilledRect(valRect, new Color(70, 70, 70));
                     DrawRect(valRect, Color.White, 1);
                     DrawStringScaled(vs, new Vector2(valRect.X + 5, valRect.Y + 2), Color.White, TextScale);
-                    if (clickForContent && valRect.Contains(mouse.Position)) setter(!(bool)val);
+                    if (clickForContent && valRect.Contains(mousePosition)) setter(!(bool)val);
                 }
                 else if (type == typeof(int) || type == typeof(float) || type == typeof(byte))
                 {
@@ -483,12 +497,12 @@ namespace Crusaders30XX.ECS.Systems
                     float step = attr.Step <= 0f ? 1f : attr.Step;
                     if (click)
                     {
-                        if (minusRect.Contains(mouse.Position))
+                        if (minusRect.Contains(mousePosition))
                         {
                             ApplyNumericDelta(type, setter, val, -step, attr);
                             _hold = new HoldState { Rect = minusRect, Getter = getter, Setter = setter, Type = type, Attr = attr, Step = step, Sign = -1f, HeldSeconds = 0, RepeatAccumulator = 0 };
                         }
-                        else if (plusRect.Contains(mouse.Position))
+                        else if (plusRect.Contains(mousePosition))
                         {
                             ApplyNumericDelta(type, setter, val, +step, attr);
                             _hold = new HoldState { Rect = plusRect, Getter = getter, Setter = setter, Type = type, Attr = attr, Step = step, Sign = +1f, HeldSeconds = 0, RepeatAccumulator = 0 };
@@ -498,7 +512,7 @@ namespace Crusaders30XX.ECS.Systems
                     if (mouse.LeftButton == ButtonState.Pressed && _hold != null)
                     {
                         // Refresh current rect positions to keep tracking in case layout shifts slightly
-                        if ((_hold.Rect == minusRect || _hold.Rect == plusRect) && _hold.Rect.Contains(mouse.Position))
+                        if ((_hold.Rect == minusRect || _hold.Rect == plusRect) && _hold.Rect.Contains(mousePosition))
                         {
                             _hold.HeldSeconds += dt;
                             _hold.RepeatAccumulator += dt;
@@ -514,7 +528,7 @@ namespace Crusaders30XX.ECS.Systems
                                 }
                             }
                         }
-                        else if (!_hold.Rect.Contains(mouse.Position))
+                        else if (!_hold.Rect.Contains(mousePosition))
                         {
                             _hold = null; // moved off the button
                         }
@@ -570,7 +584,7 @@ namespace Crusaders30XX.ECS.Systems
 						DrawStringScaled(label, new Vector2(textX, textY), Color.White, TextScale);
                     }
 					// Handle click
-					if (clickForContent && rect.Contains(mouse.Position))
+					if (clickForContent && rect.Contains(mousePosition))
 					{
 						try
 						{
@@ -612,9 +626,9 @@ namespace Crusaders30XX.ECS.Systems
 					DrawFilledRect(applyRect, new Color(60,60,60)); DrawRect(applyRect, Color.White, 1); DrawStringScaled(">", new Vector2(applyRect.X + 6, applyRect.Y + 2), Color.White, TextScale);
 					if (clickForContent)
 					{
-						if (minusRect.Contains(mouse.Position)) { ai.current = (int)Math.Max(ai.meta.Min, Math.Min(ai.meta.Max, ai.current - (int)Math.Round(ai.meta.Step))); actionIntMethods[i] = ai; }
-						else if (plusRect.Contains(mouse.Position)) { ai.current = (int)Math.Max(ai.meta.Min, Math.Min(ai.meta.Max, ai.current + (int)Math.Round(ai.meta.Step))); actionIntMethods[i] = ai; }
-						else if (applyRect.Contains(mouse.Position))
+						if (minusRect.Contains(mousePosition)) { ai.current = (int)Math.Max(ai.meta.Min, Math.Min(ai.meta.Max, ai.current - (int)Math.Round(ai.meta.Step))); actionIntMethods[i] = ai; }
+						else if (plusRect.Contains(mousePosition)) { ai.current = (int)Math.Max(ai.meta.Min, Math.Min(ai.meta.Max, ai.current + (int)Math.Round(ai.meta.Step))); actionIntMethods[i] = ai; }
+						else if (applyRect.Contains(mousePosition))
 						{
 							try { ai.method.Invoke(active.sys, new object[] { ai.current }); }
 							catch (System.Exception ex)
@@ -656,14 +670,14 @@ namespace Crusaders30XX.ECS.Systems
                     var (actualIndex, label) = visibleOptions[rowIndex];
                     int itemY = deferredListRect.Y + (int)Math.Round(i * deferredRowH - rowOffset);
                     var itemRect = new Rectangle(deferredListRect.X, itemY, deferredListRect.Width, deferredRowH);
-                    bool hover = itemRect.Contains(mouse.Position);
+                    bool hover = itemRect.Contains(mousePosition);
                     if (hover) DrawFilledRect(itemRect, new Color(60, 60, 60));
                     DrawStringScaled(label, new Vector2(itemRect.X + 8, itemRect.Y + 4), Color.White, TextScale);
                     DrawRect(itemRect, Color.White, 1);
                 }
-                if (click && deferredListRect.Contains(mouse.Position))
+                if (click && deferredListRect.Contains(mousePosition))
                 {
-                    int relY = mouse.Y - deferredListRect.Y + (int)_dropdownScrollOffset;
+                    int relY = mousePosition.Y - deferredListRect.Y + (int)_dropdownScrollOffset;
                     int sel = relY / deferredRowH;
                     if (sel >= 0 && sel < deferredItemCount)
                     {

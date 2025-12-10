@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,7 +15,9 @@ namespace Crusaders30XX.ECS.Systems
 	/// <summary>
 	/// Displays enemy attack damage breakdown as parallelogram segments.
 	/// Order: Damage (red, elevated) | Block (black) | Aegis (white) | Condition (green).
-	/// When block/aegis/condition decreases, a chunk animates toward damage and merges.
+	/// Block is prioritized over aegis when displaying prevention.
+	/// Segments animate smoothly when values change.
+	/// Scales with the enemy attack banner during absorb animation.
 	/// </summary>
 	[DebugTab("Enemy Damage Meter")]
 	public class EnemyDamageMeterDisplaySystem : Core.System
@@ -31,65 +34,55 @@ namespace Crusaders30XX.ECS.Systems
 		// Segment types for iteration - ordered: Damage, Block, Aegis, Condition
 		private enum SegmentType { Damage, Block, Aegis, Condition }
 
-		// Floating chunk for animation when values decrease
-		private struct FloatingChunk
-		{
-			public float StartX, StartY;      // Source position
-			public float TargetX, TargetY;    // Destination (alongside damage)
-			public float Progress;            // 0 to 1
-			public Color StartColor;          // Source segment color
-			public int Value;                 // Chunk value (typically 1)
-			public int Width;                 // Chunk width
-			public int Height;                // Chunk height
-		}
-		private readonly List<FloatingChunk> _floatingChunks = new();
+		// Animated values for smooth transitions
+		private float _animatedDamage;
+		private float _animatedBlock;
+		private float _animatedAegis;
+		private float _animatedCondition;
+		private float _animatedOverflow;
 
-		// Track previous values to detect decreases
-		private int _prevBlockVal;
-		private int _prevAegisVal;
-		private int _prevConditionVal;
-		private bool _initialized;
+		// Target values (what we're animating toward)
+		private int _targetDamage;
+		private int _targetBlock;
+		private int _targetAegis;
+		private int _targetCondition;
+		private int _targetOverflow;
 
-		// Cached segment positions for spawning chunks
-		private Rectangle _damageRect;
-		private Rectangle _blockRect;
-		private Rectangle _aegisRect;
-		private Rectangle _conditionRect;
+		// Absorb animation state (mirrors EnemyAttackDisplaySystem)
+		private float _absorbElapsedSeconds;
+		private SubPhase? _lastPhase;
 
 		#region Debug-Editable Fields
 
+		[DebugEditable(DisplayName = "Animation Speed", Step = 1f, Min = 1f, Max = 50f)]
+		public float AnimationSpeed { get; set; } = 15f;
+
+		[DebugEditable(DisplayName = "Absorb Duration (s)", Step = 0.02f, Min = 0.05f, Max = 3f)]
+		public float AbsorbDurationSeconds { get; set; } = 0.4f;
+
 		[DebugEditable(DisplayName = "Total Meter Width", Step = 5, Min = 50, Max = 400)]
-		public int TotalMeterWidth { get; set; } = 200;
+		public int TotalMeterWidth { get; set; } = 275;
 
 		[DebugEditable(DisplayName = "Min Segment Width", Step = 2, Min = 10, Max = 100)]
 		public int MinSegmentWidth { get; set; } = 40;
 
 		[DebugEditable(DisplayName = "Segment Height", Step = 2, Min = 10, Max = 100)]
-		public int SegmentHeight { get; set; } = 36;
+		public int SegmentHeight { get; set; } = 40;
 
 		[DebugEditable(DisplayName = "Segment Gap", Step = 1, Min = -20, Max = 20)]
 		public int SegmentGap { get; set; } = -8;
 
 		[DebugEditable(DisplayName = "Parallelogram Slant", Step = 2, Min = 0, Max = 40)]
-		public int ParallelogramSlant { get; set; } = 12;
+		public int ParallelogramSlant { get; set; } = 18;
 
 		[DebugEditable(DisplayName = "Damage Y Offset", Step = 2, Min = -50, Max = 50)]
-		public int DamageYOffset { get; set; } = -12;
+		public int DamageYOffset { get; set; } = -8;
 
 		[DebugEditable(DisplayName = "Offset Y from Banner Top", Step = 2, Min = -100, Max = 200)]
-		public int OffsetYFromBannerTop { get; set; } = 24;
+		public int OffsetYFromBannerTop { get; set; } = -30;
 
 		[DebugEditable(DisplayName = "Font Scale", Step = 0.02f, Min = 0.05f, Max = 1f)]
-		public float FontScale { get; set; } = 0.18f;
-
-		[DebugEditable(DisplayName = "Chunk Anim Duration (s)", Step = 0.05f, Min = 0.1f, Max = 2f)]
-		public float ChunkAnimDuration { get; set; } = 0.4f;
-
-		[DebugEditable(DisplayName = "Chunk Separation Offset", Step = 2, Min = 0, Max = 40)]
-		public int ChunkSeparationOffset { get; set; } = 8;
-
-		[DebugEditable(DisplayName = "Chunk Width", Step = 2, Min = 10, Max = 60)]
-		public int ChunkWidth { get; set; } = 30;
+		public float FontScale { get; set; } = 0.2f;
 
 		[DebugEditable(DisplayName = "Damage Color R", Step = 5, Min = 0, Max = 255)]
 		public int DamageColorR { get; set; } = 200;
@@ -143,6 +136,15 @@ namespace Crusaders30XX.ECS.Systems
 				VertexColorEnabled = true,
 				TextureEnabled = false
 			};
+
+			// Subscribe to phase changes to reset absorb timer
+			EventManager.Subscribe<ChangeBattlePhaseEvent>(evt =>
+			{
+				if (evt.Current == SubPhase.Block && evt.Previous != SubPhase.Block)
+				{
+					_absorbElapsedSeconds = 0f;
+				}
+			});
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -159,96 +161,75 @@ namespace Crusaders30XX.ECS.Systems
 
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-			// Get current values from progress
+			// Track phase transitions
+			var phaseEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+			var currentPhase = phaseEntity?.GetComponent<PhaseState>()?.Sub;
+
+			// Reset absorb timer when entering Block phase
+			if (currentPhase == SubPhase.Block && _lastPhase != SubPhase.Block)
+			{
+				_absorbElapsedSeconds = 0f;
+			}
+
+			// Update absorb timer during EnemyAttack phase
+			if (currentPhase.HasValue && currentPhase.Value == SubPhase.EnemyAttack)
+			{
+				_absorbElapsedSeconds += dt;
+			}
+
+			_lastPhase = currentPhase;
+
+			// Get current progress and calculate target values
 			var progress = GetCurrentProgress();
 			if (progress == null)
 			{
-				// Reset state when no progress
-				_initialized = false;
-				_prevBlockVal = 0;
-				_prevAegisVal = 0;
-				_prevConditionVal = 0;
-				_floatingChunks.Clear();
+				// Reset animated values when no progress
+				_animatedDamage = 0f;
+				_animatedBlock = 0f;
+				_animatedAegis = 0f;
+				_animatedCondition = 0f;
+				_animatedOverflow = 0f;
+				_targetDamage = 0;
+				_targetBlock = 0;
+				_targetAegis = 0;
+				_targetCondition = 0;
+				_targetOverflow = 0;
 				return;
 			}
 
-			int blockVal = Math.Max(0, progress.AssignedBlockTotal);
-			int aegisVal = Math.Max(0, progress.AegisTotal);
+			// Calculate target values (block prioritized over aegis)
+			int baseDamage = progress.DamageBeforePrevention;
+			int assignedBlock = Math.Max(0, progress.AssignedBlockTotal);
+			int totalAegis = Math.Max(0, progress.AegisTotal);
 			int conditionVal = Math.Max(0, progress.PreventedDamageFromBlockCondition);
 
-			// Only spawn chunks after initialization (so we don't spawn on first frame)
-			if (_initialized)
-			{
-				// Detect decreases and spawn chunks
-				SpawnChunksForDecrease(SegmentType.Block, _prevBlockVal, blockVal, new Color(BlockColorR, BlockColorG, BlockColorB));
-				SpawnChunksForDecrease(SegmentType.Aegis, _prevAegisVal, aegisVal, new Color(AegisColorR, AegisColorG, AegisColorB));
-				SpawnChunksForDecrease(SegmentType.Condition, _prevConditionVal, conditionVal, new Color(ConditionColorR, ConditionColorG, ConditionColorB));
-			}
+			int effectiveBlock = Math.Min(assignedBlock, baseDamage);
+			int overflowBlock = Math.Max(0, assignedBlock - baseDamage);
+			int damageAfterBlock = Math.Max(0, baseDamage - assignedBlock);
+			int effectiveAegis = Math.Min(totalAegis, damageAfterBlock);
+			int damageVal = Math.Max(0, progress.ActualDamage);
 
-			// Update previous values
-			_prevBlockVal = blockVal;
-			_prevAegisVal = aegisVal;
-			_prevConditionVal = conditionVal;
-			_initialized = true;
+			_targetDamage = damageVal;
+			_targetBlock = effectiveBlock;
+			_targetAegis = effectiveAegis;
+			_targetCondition = conditionVal;
+			_targetOverflow = overflowBlock;
 
-			// Update floating chunk animations
-			UpdateChunks(dt);
-		}
+			// Lerp animated values toward targets
+			float lerpFactor = 1f - (float)Math.Exp(-AnimationSpeed * dt);
+			_animatedDamage = MathHelper.Lerp(_animatedDamage, _targetDamage, lerpFactor);
+			_animatedBlock = MathHelper.Lerp(_animatedBlock, _targetBlock, lerpFactor);
+			_animatedAegis = MathHelper.Lerp(_animatedAegis, _targetAegis, lerpFactor);
+			_animatedCondition = MathHelper.Lerp(_animatedCondition, _targetCondition, lerpFactor);
+			_animatedOverflow = MathHelper.Lerp(_animatedOverflow, _targetOverflow, lerpFactor);
 
-		private void SpawnChunksForDecrease(SegmentType sourceType, int prevVal, int currentVal, Color sourceColor)
-		{
-			int delta = prevVal - currentVal;
-			if (delta <= 0) return;
-
-			// Get source rectangle based on type
-			Rectangle sourceRect = sourceType switch
-			{
-				SegmentType.Block => _blockRect,
-				SegmentType.Aegis => _aegisRect,
-				SegmentType.Condition => _conditionRect,
-				_ => Rectangle.Empty
-			};
-
-			if (sourceRect.Width < 1) return;
-
-			// Spawn chunks for the delta (one chunk per point of decrease, or combine into one)
-			float startX = sourceRect.Right - ChunkWidth - ChunkSeparationOffset;
-			float startY = sourceRect.Y + ChunkSeparationOffset;
-
-			// Target is to the right of damage segment
-			float targetX = _damageRect.Right + SegmentGap;
-			float targetY = _damageRect.Y;
-
-			_floatingChunks.Add(new FloatingChunk
-			{
-				StartX = startX,
-				StartY = startY,
-				TargetX = targetX,
-				TargetY = targetY,
-				Progress = 0f,
-				StartColor = sourceColor,
-				Value = delta,
-				Width = ChunkWidth,
-				Height = SegmentHeight
-			});
-		}
-
-		private void UpdateChunks(float dt)
-		{
-			for (int i = _floatingChunks.Count - 1; i >= 0; i--)
-			{
-				var chunk = _floatingChunks[i];
-				chunk.Progress += dt / Math.Max(0.01f, ChunkAnimDuration);
-
-				if (chunk.Progress >= 1f)
-				{
-					_floatingChunks.RemoveAt(i);
-				}
-				else
-				{
-					_floatingChunks[i] = chunk;
-				}
-			}
+			// Snap to target if very close (avoid floating point drift)
+			const float snapThreshold = 0.01f;
+			if (Math.Abs(_animatedDamage - _targetDamage) < snapThreshold) _animatedDamage = _targetDamage;
+			if (Math.Abs(_animatedBlock - _targetBlock) < snapThreshold) _animatedBlock = _targetBlock;
+			if (Math.Abs(_animatedAegis - _targetAegis) < snapThreshold) _animatedAegis = _targetAegis;
+			if (Math.Abs(_animatedCondition - _targetCondition) < snapThreshold) _animatedCondition = _targetCondition;
+			if (Math.Abs(_animatedOverflow - _targetOverflow) < snapThreshold) _animatedOverflow = _targetOverflow;
 		}
 
 		public void Draw()
@@ -267,7 +248,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			var bannerBounds = anchorUi.Bounds;
 
-			// Get current progress
+			// Get current progress (for display text showing target values)
 			var progress = GetCurrentProgress();
 			if (progress == null)
 			{
@@ -275,53 +256,90 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
-			// Get segment values - Order: Damage, Block, Aegis, Condition
-			int damageVal = Math.Max(0, progress.ActualDamage);
-			int blockVal = Math.Max(0, progress.AssignedBlockTotal);
-			int aegisVal = Math.Max(0, progress.AegisTotal);
-			int conditionVal = Math.Max(0, progress.PreventedDamageFromBlockCondition);
+			// Calculate panel scale (mirrors EnemyAttackDisplaySystem absorb animation)
+			float panelScale = 1f;
+			if (phase.Sub == SubPhase.EnemyAttack)
+			{
+				var dur = Math.Max(0.05f, AbsorbDurationSeconds);
+				float tTween = MathHelper.Clamp(_absorbElapsedSeconds / dur, 0f, 1f);
+				float ease = 1f - (float)Math.Pow(1f - tTween, 3); // easeOutCubic
+				panelScale = MathHelper.Lerp(1f, 0f, ease);
+			}
 
-			// Build segments list with non-zero values
-			var segments = new List<(SegmentType type, int value, Color color, string label)>();
+			// Don't render if fully scaled down
+			if (panelScale < 0.01f)
+			{
+				CleanupTooltips(new HashSet<string>());
+				return;
+			}
 
-			if (damageVal > 0)
-				segments.Add((SegmentType.Damage, damageVal, new Color(DamageColorR, DamageColorG, DamageColorB), "Damage"));
-			if (blockVal > 0)
-				segments.Add((SegmentType.Block, blockVal, new Color(BlockColorR, BlockColorG, BlockColorB), "Block"));
-			if (aegisVal > 0)
-				segments.Add((SegmentType.Aegis, aegisVal, new Color(AegisColorR, AegisColorG, AegisColorB), "Aegis"));
-			if (conditionVal > 0)
-				segments.Add((SegmentType.Condition, conditionVal, new Color(ConditionColorR, ConditionColorG, ConditionColorB), "Condition"));
+			// Build segments list using animated values for width calculation
+			// but target values for text display
+			// Only include segments that have meaningful animated values (threshold prevents sliver artifacts)
+			const float visibilityThreshold = 0.5f;
+			var segments = new List<(SegmentType type, float animatedValue, int displayValue, Color color, string label, int overflow)>();
+
+			if (_animatedDamage >= visibilityThreshold)
+				segments.Add((SegmentType.Damage, _animatedDamage, _targetDamage, new Color(DamageColorR, DamageColorG, DamageColorB), "Damage", 0));
+			if (_animatedBlock >= visibilityThreshold || (_targetOverflow > 0 && _animatedBlock >= 0.01f))
+				segments.Add((SegmentType.Block, Math.Max(visibilityThreshold, _animatedBlock), _targetBlock, new Color(BlockColorR, BlockColorG, BlockColorB), "Block", _targetOverflow));
+			if (_animatedAegis >= visibilityThreshold)
+				segments.Add((SegmentType.Aegis, _animatedAegis, _targetAegis, new Color(AegisColorR, AegisColorG, AegisColorB), "Aegis", 0));
+			if (_animatedCondition >= visibilityThreshold)
+				segments.Add((SegmentType.Condition, _animatedCondition, _targetCondition, new Color(ConditionColorR, ConditionColorG, ConditionColorB), "Condition", 0));
 
 			if (segments.Count == 0)
 			{
 				CleanupTooltips(new HashSet<string>());
-				_damageRect = _blockRect = _aegisRect = _conditionRect = Rectangle.Empty;
 				return;
 			}
 
-			// Calculate proportional widths
-			int totalValue = 0;
+			// Calculate proportional widths using animated values
+			float totalAnimatedValue = 0f;
 			foreach (var seg in segments)
-				totalValue += seg.value;
+				totalAnimatedValue += Math.Max(0.01f, seg.animatedValue);
 
-			var segmentWidths = new List<int>();
-			int availableWidth = TotalMeterWidth - (segments.Count - 1) * Math.Max(0, SegmentGap);
-			int usedWidth = 0;
+			var segmentWidths = new List<float>();
+			float baseMeterWidth = TotalMeterWidth;
+			float scaledMeterWidth = baseMeterWidth * panelScale;
+			float scaledMinSegmentWidth = MinSegmentWidth * panelScale;
+			float scaledSegmentGap = SegmentGap * panelScale;
+
+			float availableWidth = scaledMeterWidth - (segments.Count - 1) * Math.Max(0, scaledSegmentGap);
+			float usedWidth = 0f;
 			for (int i = 0; i < segments.Count; i++)
 			{
-				float proportion = (float)segments[i].value / Math.Max(1, totalValue);
-				int segW = Math.Max(MinSegmentWidth, (int)Math.Round(availableWidth * proportion));
+				float proportion = Math.Max(0.01f, segments[i].animatedValue) / Math.Max(0.01f, totalAnimatedValue);
+				// Use minimum width only if this segment has a non-zero target, otherwise let it shrink freely
+				bool hasTarget = segments[i].type switch
+				{
+					SegmentType.Damage => _targetDamage > 0,
+					SegmentType.Block => _targetBlock > 0 || _targetOverflow > 0,
+					SegmentType.Aegis => _targetAegis > 0,
+					SegmentType.Condition => _targetCondition > 0,
+					_ => false
+				};
+				float minW = hasTarget ? scaledMinSegmentWidth : 0f;
+				float segW = Math.Max(minW, availableWidth * proportion);
 				if (i == segments.Count - 1)
-					segW = Math.Max(MinSegmentWidth, availableWidth - usedWidth);
+					segW = Math.Max(minW, availableWidth - usedWidth);
 				segmentWidths.Add(segW);
 				usedWidth += segW;
 			}
 
-			// Calculate total width and center position
-			int totalWidth = usedWidth + (segments.Count - 1) * SegmentGap;
-			int startX = bannerBounds.Center.X - totalWidth / 2;
-			int baseY = bannerBounds.Top + OffsetYFromBannerTop;
+			// Calculate total width and center position (using banner center)
+			float totalWidth = usedWidth + (segments.Count - 1) * scaledSegmentGap;
+			float startX = bannerBounds.Center.X - totalWidth / 2f;
+
+			// Scale the Y offset and position relative to banner
+			float scaledOffsetY = OffsetYFromBannerTop * panelScale;
+			float baseY = bannerBounds.Center.Y + scaledOffsetY;
+
+			// Scaled dimensions
+			float scaledHeight = SegmentHeight * panelScale;
+			float scaledSlant = ParallelogramSlant * panelScale;
+			float scaledDamageYOffset = DamageYOffset * panelScale;
+			float scaledFontScale = FontScale * panelScale;
 
 			// End SpriteBatch to draw parallelograms with BasicEffect
 			_spriteBatch.End();
@@ -335,96 +353,93 @@ namespace Crusaders30XX.ECS.Systems
 				0, 1);
 
 			var presentKeys = new HashSet<string>();
-			int currentX = startX;
-
-			// Reset cached rectangles
-			_damageRect = _blockRect = _aegisRect = _conditionRect = Rectangle.Empty;
+			float currentX = startX;
 
 			// Draw each segment as parallelogram
 			for (int i = 0; i < segments.Count; i++)
 			{
-				var (type, value, color, label) = segments[i];
-				int segWidth = segmentWidths[i];
+				var (type, animatedValue, displayValue, color, label, overflow) = segments[i];
+				float segWidth = segmentWidths[i];
+
+				// Skip drawing segments with negligible width
+				if (segWidth < 1f) continue;
 
 				// Damage segment is elevated
-				int yOffset = (type == SegmentType.Damage) ? DamageYOffset : 0;
-				int drawY = baseY + yOffset;
+				float yOffset = (type == SegmentType.Damage) ? scaledDamageYOffset : 0;
+				float drawY = baseY + yOffset;
 
-				// Store rectangle for this segment (for chunk spawning)
-				var segRect = new Rectangle(currentX, drawY, segWidth, SegmentHeight);
-				switch (type)
-				{
-					case SegmentType.Damage: _damageRect = segRect; break;
-					case SegmentType.Block: _blockRect = segRect; break;
-					case SegmentType.Aegis: _aegisRect = segRect; break;
-					case SegmentType.Condition: _conditionRect = segRect; break;
-				}
+				// Scale slant proportionally to segment width to avoid sliver artifacts
+				// When width is at MinSegmentWidth, use full slant; when smaller, reduce slant proportionally
+				float slantRatio = Math.Min(1f, segWidth / Math.Max(1f, scaledMinSegmentWidth));
+				float effectiveSlant = scaledSlant * slantRatio;
 
 				// Draw the parallelogram
-				DrawParallelogram(currentX, drawY, segWidth, SegmentHeight, ParallelogramSlant, color);
+				DrawParallelogram(currentX, drawY, segWidth, scaledHeight, effectiveSlant, color);
 
-				currentX += segWidth + SegmentGap;
-			}
-
-			// Draw floating chunks
-			Color damageColor = new Color(DamageColorR, DamageColorG, DamageColorB);
-			foreach (var chunk in _floatingChunks)
-			{
-				float t = EaseOutCubic(chunk.Progress);
-
-				float x = MathHelper.Lerp(chunk.StartX, chunk.TargetX, t);
-				float y = MathHelper.Lerp(chunk.StartY, chunk.TargetY, t);
-
-				// Lerp color from source to damage red
-				Color chunkColor = Color.Lerp(chunk.StartColor, damageColor, t);
-
-				DrawParallelogram((int)x, (int)y, chunk.Width, chunk.Height, ParallelogramSlant, chunkColor);
+				currentX += segWidth + scaledSegmentGap;
 			}
 
 			// Restart SpriteBatch for text rendering
 			_spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
 
-			// Draw text on segments
+			// Draw text on segments (using display values for text)
 			currentX = startX;
 			for (int i = 0; i < segments.Count; i++)
 			{
-				var (type, value, color, label) = segments[i];
-				int segWidth = segmentWidths[i];
+				var (type, animatedValue, displayValue, color, label, overflow) = segments[i];
+				float segWidth = segmentWidths[i];
 
-				int yOffset = (type == SegmentType.Damage) ? DamageYOffset : 0;
-				int drawY = baseY + yOffset;
+				// Skip segments with negligible width
+				if (segWidth < 1f) continue;
+
+				float yOffset = (type == SegmentType.Damage) ? scaledDamageYOffset : 0;
+				float drawY = baseY + yOffset;
+
+				// Calculate effective slant (same as drawing)
+				float slantRatio = Math.Min(1f, segWidth / Math.Max(1f, scaledMinSegmentWidth));
+				float effectiveSlant = scaledSlant * slantRatio;
 
 				// Draw number centered (accounting for parallelogram slant)
-				if (_font != null && value > 0)
+				if (_font != null && (displayValue > 0 || overflow > 0) && scaledFontScale > 0.02f && segWidth > scaledMinSegmentWidth * 0.5f)
 				{
-					string numText = value.ToString();
-					var textSize = _font.MeasureString(numText) * FontScale;
+					// For block segment with overflow, show as "value (+overflow)"
+					string numText = (type == SegmentType.Block && overflow > 0)
+						? $"{displayValue} (+{overflow})"
+						: displayValue.ToString();
+
+					var textSize = _font.MeasureString(numText) * scaledFontScale;
 
 					// Text color: white for dark backgrounds, black for light
 					Color textColor = (type == SegmentType.Aegis) ? Color.Black : Color.White;
 
 					// Center text in parallelogram (shift right by half slant)
 					var textPos = new Vector2(
-						currentX + segWidth / 2f + ParallelogramSlant / 2f - textSize.X / 2f,
-						drawY + SegmentHeight / 2f - textSize.Y / 2f
+						currentX + segWidth / 2f + effectiveSlant / 2f - textSize.X / 2f,
+						drawY + scaledHeight / 2f - textSize.Y / 2f
 					);
-					_spriteBatch.DrawString(_font, numText, textPos, textColor, 0f, Vector2.Zero, FontScale, SpriteEffects.None, 0f);
+					_spriteBatch.DrawString(_font, numText, textPos, textColor, 0f, Vector2.Zero, scaledFontScale, SpriteEffects.None, 0f);
 				}
 
-				// Update tooltip
-				string key = $"DamageMeter_{type}";
-				presentKeys.Add(key);
-				var segmentRect = new Rectangle(currentX, drawY, segWidth + ParallelogramSlant, SegmentHeight);
-				UpdateSegmentTooltipUi(key, segmentRect, $"{label}: {value}");
+				// Update tooltip (only when scale is reasonable and segment is large enough)
+				if (panelScale > 0.5f && segWidth > scaledMinSegmentWidth * 0.5f)
+				{
+					string key = $"DamageMeter_{type}";
+					presentKeys.Add(key);
+					var segmentRect = new Rectangle((int)currentX, (int)drawY, (int)(segWidth + effectiveSlant), (int)scaledHeight);
+					string tooltipText = (type == SegmentType.Block && overflow > 0)
+						? $"{label}: {displayValue} (+{overflow} overflow)"
+						: $"{label}: {displayValue}";
+					UpdateSegmentTooltipUi(key, segmentRect, tooltipText);
+				}
 
-				currentX += segWidth + SegmentGap;
+				currentX += segWidth + scaledSegmentGap;
 			}
 
 			// Cleanup tooltips for segments no longer present
 			CleanupTooltips(presentKeys);
 		}
 
-		private void DrawParallelogram(int x, int y, int width, int height, int slant, Color color)
+		private void DrawParallelogram(float x, float y, float width, float height, float slant, Color color)
 		{
 			// Parallelogram vertices (slanted to the right):
 			// Top-left is shifted right by 'slant'
@@ -455,11 +470,6 @@ namespace Crusaders30XX.ECS.Systems
 					vertices, 0, 4,
 					indices, 0, 2);
 			}
-		}
-
-		private static float EaseOutCubic(float t)
-		{
-			return 1f - (float)Math.Pow(1f - t, 3);
 		}
 
 		private EnemyAttackProgress GetCurrentProgress()
