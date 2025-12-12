@@ -1,0 +1,34 @@
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
+
+namespace Crusaders30XX.ECS.Objects.Cards
+{
+    public class Sword : CardBase
+    {
+        public Sword()
+        {
+            CardId = "sword";
+            Name = "Sword";
+            Target = "Enemy";
+            Text = "Gain {1} courage.";
+            Animation = "Attack";
+            Type = "Attack";
+            Damage = 14;
+
+            OnPlay = (entityManager, card) =>
+            {
+                var player = entityManager.GetEntity("Player");
+                var enemy = entityManager.GetEntity("Enemy");
+                EventManager.Publish(new ModifyHpRequestEvent { 
+                    Source = player, 
+                    Target = enemy, 
+                    Delta = -Damage, 
+                    DamageType = ModifyTypeEnum.Attack 
+                });
+                EventManager.Publish(new ModifyCourageEvent { Delta = +ValuesParse[0] });
+            };
+        }
+    }
+}
+

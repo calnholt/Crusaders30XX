@@ -14,10 +14,10 @@ namespace Crusaders30XX.ECS.Systems
 	public class CardVisualSettingsDebugSystem : Core.System
 	{
 		// Local baselines (formerly in CardConfig)
-		private const int BASE_CARD_WIDTH = 250;
+		private const int BASE_CARD_WIDTH = 300;
 		private const int BASE_CARD_HEIGHT = 350;
 		private const int BASE_CARD_GAP = -20;
-		private const int BASE_CARD_BORDER_THICKNESS = 3;
+		private const int BASE_CARD_BORDER_THICKNESS = 0;
 		private const int BASE_CARD_CORNER_RADIUS = 18;
 		private const int BASE_HIGHLIGHT_BORDER_THICKNESS = 5;
 		private const int BASE_TEXT_MARGIN_X = 16;

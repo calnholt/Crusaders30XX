@@ -1,0 +1,43 @@
+using System.Collections.Generic;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
+
+{
+  "id": "burn",
+  "name": "Burn",
+  "target": "Enemy",
+  "rarity": "Common",
+  "text": "Apply {4} burn to the enemy. If you have {3} or more courage, gain {1} action point and lose {1} courage.",
+  "block": 2,
+  "type": "Spell",
+  "animation": "Attack"
+}
+
+namespace Crusaders30XX.ECS.Objects.Cards
+{
+    public class Burn : CardBase
+    {
+        public Burn()
+        {
+            CardId = "burn";
+            Name = "Burn";
+            Target = "Enemy";
+            Text = "Apply {4} burn to the enemy. If you have {3}+ courage, gain {1} action point and lose {1} courage.";
+            Block = 2;
+            Type = "Spell";
+            Animation = "Attack";
+
+            OnPlay = (entityManager, card) =>
+            {
+                var courage = entityManager.GetEntity("Player").GetComponent<Courage>().Amount;
+                EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Burn, Delta = ValuesParse[0] });
+                if (courage >= ValuesParse[1])
+                {
+                    EventManager.Publish(new ModifyActionPointsEvent { Delta = ValuesParse[2] });
+                    EventManager.Publish(new ModifyCourageEvent { Delta = -ValuesParse[3] });
+                }
+            };
+        }
+    }
+}

@@ -691,6 +691,18 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Singleton cache holding the most recent cost payment data.
+    /// Other systems can query this to see which cards were used to pay for the last played card.
+    /// </summary>
+    public class LastPaymentCache : IComponent
+    {
+        public Entity Owner { get; set; }
+        public Entity CardPlayed { get; set; }
+        public List<Entity> PaymentCards { get; set; } = new();
+        public bool HasData { get; set; } = false;
+    }
+
+    /// <summary>
     /// Singleton-like world component describing the current battlefield location.
     /// Other systems read this instead of subscribing to an event.
     /// </summary>
