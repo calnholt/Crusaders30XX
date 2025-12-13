@@ -487,5 +487,151 @@ namespace Crusaders30XX.ECS.Factories
 			}
 			return result;
 		}
+
+        /// <summary>
+        /// Clones a card entity, copying all gameplay-affecting components while creating fresh visual/animation state.
+        /// </summary>
+        public static Entity CloneEntity(EntityManager entityManager, Entity sourceEntity)
+        {
+            if (sourceEntity == null) return null;
+
+            // Get the card data to construct a proper name
+            var sourceCardData = sourceEntity.GetComponent<CardData>();
+            if (sourceCardData == null) return null; // Only supports card entities for now
+
+            string name = sourceCardData.Card?.Name ?? "Card";
+            var clonedEntity = entityManager.CreateEntity($"Card_{name}_{sourceCardData.Color}_Clone_{sourceEntity.Id}");
+
+            // Deep copy CardData
+            var clonedCardData = new CardData
+            {
+                Card = CardFactory.Create(sourceCardData.Card.CardId),
+                Color = sourceCardData.Color,
+                Owner = clonedEntity
+            };
+            entityManager.AddComponent(clonedEntity, clonedCardData);
+
+            // Deep copy ModifiedBlock (with all modifications)
+            var sourceModifiedBlock = sourceEntity.GetComponent<ModifiedBlock>();
+            if (sourceModifiedBlock != null)
+            {
+                var clonedModifiedBlock = new ModifiedBlock
+                {
+                    Owner = clonedEntity,
+                    Modifications = new List<Modification>(sourceModifiedBlock.Modifications)
+                };
+                entityManager.AddComponent(clonedEntity, clonedModifiedBlock);
+            }
+
+            // Deep copy ModifiedDamage (with all modifications)
+            var sourceModifiedDamage = sourceEntity.GetComponent<ModifiedDamage>();
+            if (sourceModifiedDamage != null)
+            {
+                var clonedModifiedDamage = new ModifiedDamage
+                {
+                    Owner = clonedEntity,
+                    Modifications = new List<Modification>(sourceModifiedDamage.Modifications)
+                };
+                entityManager.AddComponent(clonedEntity, clonedModifiedDamage);
+            }
+
+            // Copy Intimidated status
+            if (sourceEntity.HasComponent<Intimidated>())
+            {
+                entityManager.AddComponent(clonedEntity, new Intimidated { Owner = clonedEntity });
+            }
+
+            // Copy Frozen status
+            if (sourceEntity.HasComponent<Frozen>())
+            {
+                entityManager.AddComponent(clonedEntity, new Frozen { Owner = clonedEntity });
+            }
+
+            // Copy Hint
+            var sourceHint = sourceEntity.GetComponent<Hint>();
+            if (sourceHint != null)
+            {
+                entityManager.AddComponent(clonedEntity, new Hint 
+                { 
+                    Owner = clonedEntity,
+                    Text = sourceHint.Text 
+                });
+            }
+
+            // Copy CardTooltip
+            var sourceCardTooltip = sourceEntity.GetComponent<CardTooltip>();
+            if (sourceCardTooltip != null)
+            {
+                entityManager.AddComponent(clonedEntity, new CardTooltip
+                {
+                    Owner = clonedEntity,
+                    CardId = sourceCardTooltip.CardId,
+                    TooltipScale = sourceCardTooltip.TooltipScale
+                });
+            }
+
+            // Copy DontDestroyOnReload
+            if (sourceEntity.HasComponent<DontDestroyOnReload>())
+            {
+                entityManager.AddComponent(clonedEntity, new DontDestroyOnReload { Owner = clonedEntity });
+            }
+
+            // Create fresh Transform (off-screen position)
+            var sourceTransform = sourceEntity.GetComponent<Transform>();
+            entityManager.AddComponent(clonedEntity, new Transform
+            {
+                Owner = clonedEntity,
+                Position = new Vector2(-1000, -1000),
+                BasePosition = new Vector2(-1000, -1000),
+                Rotation = 0f,
+                Scale = sourceTransform?.Scale ?? Vector2.One,
+                ZOrder = 0
+            });
+
+            // Create fresh UIElement (no hover state, fresh bounds)
+            var sourceUIElement = sourceEntity.GetComponent<UIElement>();
+            var clonedUIElement = new UIElement
+            {
+                Owner = clonedEntity,
+                Bounds = new Rectangle(-1000, -1000, 250, 350),
+                IsHovered = false,
+                IsClicked = false,
+                IsInteractable = true,
+                Tooltip = sourceUIElement?.Tooltip ?? "",
+                TooltipType = sourceUIElement?.TooltipType ?? TooltipType.Text,
+                TooltipPosition = sourceUIElement?.TooltipPosition ?? TooltipPosition.Above,
+                TooltipOffsetPx = sourceUIElement?.TooltipOffsetPx ?? 30,
+                EventType = UIElementEventType.None,
+                LayerType = sourceUIElement?.LayerType ?? UILayerType.Default,
+                IsPreventDefaultClick = false,
+                IsHidden = false
+            };
+            entityManager.AddComponent(clonedEntity, clonedUIElement);
+
+            // Create fresh Sprite
+            var sourceSprite = sourceEntity.GetComponent<Sprite>();
+            entityManager.AddComponent(clonedEntity, new Sprite
+            {
+                Owner = clonedEntity,
+                TexturePath = sourceSprite?.TexturePath ?? string.Empty,
+                SourceRectangle = null,
+                Tint = Color.White,
+                IsVisible = true
+            });
+
+            // Create fresh ParallaxLayer (fresh animation state)
+            entityManager.AddComponent(clonedEntity, ParallaxLayer.GetUIParallaxLayer());
+
+            // Note: Explicitly excluding transient state components:
+            // - AnimatingHandToDiscard
+            // - CardToDiscardFlight
+            // - SelectedForPayment
+            // - MarkedForSpecificDiscard
+            // - MarkedForReturnToDeck
+            // - TooltipOverrideBackup
+            // - OwnedByScene (auto-added by EntityManager)
+
+            return clonedEntity;
+        }
     }
 } 

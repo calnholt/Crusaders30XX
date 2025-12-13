@@ -367,9 +367,22 @@ namespace Crusaders30XX.ECS.Systems
                     Console.WriteLine("[CardPlaySystem] Weapon used; removed from hand without discarding");
                     EntityManager.DestroyEntity(evt.Card.Id);
                 }
+                else if (evt.Card.GetComponent<MarkedForReturnToDeck>() != null)
+                {
+                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.DrawPile, Reason = "ReturnToDeck" });
+                    EventManager.Publish(new DeckShuffleEvent { Deck = deckEntity });
+                    Console.WriteLine("[CardPlaySystem] Card returned to deck");
+                    EntityManager.RemoveComponent<MarkedForReturnToDeck>(evt.Card);
+                }
+                else if (evt.Card.GetComponent<MarkedForExhaust>() != null)
+                {
+                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.ExhaustPile, Reason = "Exhaust" });
+                    Console.WriteLine("[CardPlaySystem] Card exhausted");
+                    EntityManager.RemoveComponent<MarkedForExhaust>(evt.Card);
+                }
                 else
                 {
-                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = card.ExhaustsOnPlay ? CardZoneType.ExhaustPile : CardZoneType.DiscardPile, Reason = "PlayCard" });
+                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PlayCard" });
                     Console.WriteLine("[CardPlaySystem] Requested move to DiscardPile");
                 }
             }

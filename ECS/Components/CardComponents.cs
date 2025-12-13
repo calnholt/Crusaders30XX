@@ -956,4 +956,13 @@ namespace Crusaders30XX.ECS.Components
         Shield,
         Fear,
     }
+
+    public class MarkedForReturnToDeck : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+    public class MarkedForExhaust : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
 }

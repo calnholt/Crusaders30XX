@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "shroud_of_turin";
             Name = "Shroud of Turin";
             Target = "Player";
-            Text = "Choose a card from your hand - create an exact copy of the chosen card and put it into to your hand. Gain 1 temperance.";
+            Text = "Choose a card from your hand - create an exact copy of the chosen card and put it into to your hand. Gain 1 temperance and exhaust this.";
             IsFreeAction = true;
             Animation = "Buff";
             Type = "Spell";
@@ -24,7 +24,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var paymentCards = entityManager.GetEntitiesWithComponent<LastPaymentCache>().FirstOrDefault()?.GetComponent<LastPaymentCache>().PaymentCards.ToList();
                 var paymentCard = paymentCards[0];
-                var copy = EntityFactory.CreateCardFromDefinition(entityManager, paymentCard.GetComponent<CardData>().Card.CardId, paymentCard.GetComponent<CardData>().Color, false);
+                var copy = EntityFactory.CloneEntity(entityManager, paymentCard);
+                entityManager.AddComponent(copy, new MarkedForExhaust { Owner = copy });
                 EventManager.Publish(new CardMoveRequested { Card = copy, Deck = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault(), Destination = CardZoneType.Hand, Reason = "ShroudCopy" });
                 EventManager.Publish(new ModifyTemperanceEvent { Delta = 1 });
             };

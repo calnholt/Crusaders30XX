@@ -60,7 +60,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public string Target { get; set; } = "";
         public int[] ValuesParse { get; set; } = [];
         public bool IsFreeAction { get; set; } = false;
-        public bool ExhaustsOnPlay { get; set; } = false;
         public bool ExhaustsOnEndTurn { get; set; } = false;
         public bool CanAddToLoadout { get; set; } = true;
         public bool IsToken { get; set; } = false;

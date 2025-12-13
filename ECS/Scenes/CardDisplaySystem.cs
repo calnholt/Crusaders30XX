@@ -278,7 +278,7 @@ namespace Crusaders30XX.ECS.Systems
                     int baseDamage = card.Damage;
                     try
                     {
-                        baseDamage = Math.Max(0, baseDamage + card.GetConditionalDamage(EntityManager, entity));
+                        baseDamage = Math.Max(0, baseDamage + card.GetConditionalDamage(EntityManager, entity) + AttackDamageValueService.GetTotalDelta(entity));
                     }
                     catch
                     {
@@ -305,7 +305,7 @@ namespace Crusaders30XX.ECS.Systems
                             };
 
                             int passiveDelta = AppliedPassivesService.GetPassiveDelta(previewEvent, ReadOnly: true);
-                            int newDelta = previewEvent.Delta + passiveDelta + AttackDamageValueService.GetTotalDelta(entity);
+                            int newDelta = previewEvent.Delta + passiveDelta;
                             finalDamage = Math.Max(0, -newDelta);
                         }
                     }
