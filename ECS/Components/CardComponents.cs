@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Locations;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Components
 {
@@ -13,7 +14,7 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         
-        public string CardId { get; set; } = ""; // id of CardDefinition
+        public CardBase Card { get; set; }
         
         // Instance-specific properties for the card entity
         public CardColor Color { get; set; } = CardColor.White;

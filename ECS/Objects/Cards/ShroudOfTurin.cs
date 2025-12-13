@@ -24,7 +24,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var paymentCards = entityManager.GetEntitiesWithComponent<LastPaymentCache>().FirstOrDefault()?.GetComponent<LastPaymentCache>().PaymentCards.ToList();
                 var paymentCard = paymentCards[0];
-                var copy = EntityFactory.CreateCardFromDefinition(entityManager, paymentCard.GetComponent<CardData>().CardId, paymentCard.GetComponent<CardData>().Color, false);
+                var copy = EntityFactory.CreateCardFromDefinition(entityManager, paymentCard.GetComponent<CardData>().Card.CardId, paymentCard.GetComponent<CardData>().Color, false);
                 EventManager.Publish(new CardMoveRequested { Card = copy, Deck = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault(), Destination = CardZoneType.Hand, Reason = "ShroudCopy" });
                 EventManager.Publish(new ModifyTemperanceEvent { Delta = 1 });
             };

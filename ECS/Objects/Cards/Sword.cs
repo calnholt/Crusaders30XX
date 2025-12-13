@@ -15,6 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Animation = "Attack";
             Type = "Attack";
             Damage = 14;
+            IsWeapon = true;
 
             OnPlay = (entityManager, card) =>
             {

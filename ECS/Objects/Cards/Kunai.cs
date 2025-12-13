@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             ExhaustsOnEndTurn = true;
             CanAddToLoadout = false;
             IsToken = true;
+            CardTooltip = "kunai";
 
             OnPlay = (entityManager, card) =>
             {

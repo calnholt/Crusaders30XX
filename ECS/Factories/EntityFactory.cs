@@ -303,7 +303,7 @@ namespace Crusaders30XX.ECS.Factories
 
             var cardData = new CardData
             {
-                CardId = cardId,
+                Card = CardFactory.Create(cardId),
                 Color = color
             };
 

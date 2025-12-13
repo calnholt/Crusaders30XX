@@ -22,6 +22,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public bool ExhaustsOnEndTurn { get; set; } = false;
         public bool CanAddToLoadout { get; set; } = true;
         public bool IsToken { get; set; } = false;
+        public bool IsBlockCard { get; set; } = false;
+        public bool IsWeapon { get; set; } = false;
+        public string Tooltip { get; set; } = "";
+        public string CardTooltip { get; set; } = "";
 
         #nullable enable annotations    
         public Action<EntityManager, Entity>? OnPlay { get; protected set; }
