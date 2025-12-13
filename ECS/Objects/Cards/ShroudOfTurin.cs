@@ -37,10 +37,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var cardsInHand = deck.Hand.FindAll(c => {
                     var cd = c.GetComponent<CardData>();
                     if (cd == null) return false;
-                    var cardObj = CardFactory.Create(cd.Card.CardId);
-                    return !cardObj.IsWeapon && cd.Card.CardId != cardObj.CardId;
+                    return !cd.Card.IsWeapon;
                 });
-                if (cardsInHand.Count == 0)
+                if (cardsInHand.Count < 2)
                 {
                     EventManager.Publish(new CantPlayCardMessage { Message = $"Requires at least one card in hand!" });
                     return false;

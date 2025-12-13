@@ -85,7 +85,10 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<PayCostCancelRequested>(OnCancel);
             
             // Clear payment cache on next card play or end of turn
-            EventManager.Subscribe<PlayCardRequested>(_ => ClearPaymentCache());
+            EventManager.Subscribe<PlayCardRequested>(evt => 
+            {
+                if (!evt.CostsPaid) ClearPaymentCache();
+            });
             EventManager.Subscribe<ChangeBattlePhaseEvent>(evt =>
             {
                 if (evt.Current == SubPhase.PlayerEnd)
