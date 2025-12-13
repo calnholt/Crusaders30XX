@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Name = "Stun";
             Target = "Enemy";
             Text = "Stun the enemy.";
+            Cost = ["Red"];
             IsFreeAction = true;
             Animation = "Attack";
             Type = "Spell";
