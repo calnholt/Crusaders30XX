@@ -1,18 +1,8 @@
-using System.Collections.Generic;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 
-{
-  "id": "burn",
-  "name": "Burn",
-  "target": "Enemy",
-  "rarity": "Common",
-  "text": "Apply {4} burn to the enemy. If you have {3} or more courage, gain {1} action point and lose {1} courage.",
-  "block": 2,
-  "type": "Spell",
-  "animation": "Attack"
-}
+
 
 namespace Crusaders30XX.ECS.Objects.Cards
 {

@@ -1,6 +1,5 @@
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Utils;
-using Crusaders30XX.ECS.Data.Cards;
 using System.Collections.Generic;
 using System;
 

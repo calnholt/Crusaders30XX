@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Name = "Vindicate";
             Target = "Enemy";
             Text = "If you have {5} or more courage, this attack gains +{20} damage and lose all courage.";
+            Cost = ["Red", "Any"];
             Animation = "Attack";
             Type = "Attack";
             Damage = 25;

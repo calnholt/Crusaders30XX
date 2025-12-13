@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Name = "Narrow Gate";
             Target = "Enemy";
             Text = "Gain {6} aegis, and gain {1} penance.";
+            Cost = ["White", "Any", "Any"];
             Animation = "Attack";
             Type = "Attack";
             Damage = 25;

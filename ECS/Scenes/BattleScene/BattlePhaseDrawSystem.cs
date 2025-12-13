@@ -1,8 +1,8 @@
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -18,8 +18,10 @@ namespace Crusaders30XX.ECS.Systems
 		public DrawHandSystem(EntityManager entityManager) : base(entityManager)
 		{
 			var s = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
-			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ => {
-				if (_.Current == SubPhase.EnemyStart) {
+			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ =>
+			{
+				if (_.Current == SubPhase.EnemyStart)
+				{
 					DrawUpToIntellect();
 				}
 			});
@@ -47,11 +49,12 @@ namespace Crusaders30XX.ECS.Systems
 
 				var cd = e.GetComponent<CardData>();
 				if (cd == null) continue;
-				string id = cd.CardId ?? string.Empty;
+				string id = cd.Card.CardId ?? string.Empty;
 				if (string.IsNullOrEmpty(id)) continue;
-				if (CardDefinitionCache.TryGet(id, out var def))
+				var card = CardFactory.Create(id);
+				if (card != null)
 				{
-					if (!def.isWeapon) nonWeaponHandCount++;
+					if (!card.IsWeapon) nonWeaponHandCount++;
 				}
 				else
 				{
@@ -71,7 +74,7 @@ namespace Crusaders30XX.ECS.Systems
 			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 			var deck = deckEntity?.GetComponent<Deck>();
 			if (deck == null) return;
-			
+
 			int effectiveHandCount = 0;
 			foreach (var e in deck.Hand)
 			{
@@ -79,18 +82,19 @@ namespace Crusaders30XX.ECS.Systems
 
 				var cd = e.GetComponent<CardData>();
 				if (cd == null) continue;
-                string id = cd.CardId ?? string.Empty;
-                if (string.IsNullOrEmpty(id)) continue;
-                if (CardDefinitionCache.TryGet(id, out var def))
+				string id = cd.Card.CardId ?? string.Empty;
+				if (string.IsNullOrEmpty(id)) continue;
+				var card = CardFactory.Create(id);
+				if (card != null)
 				{
-					if (!def.isWeapon) effectiveHandCount++;
+					if (!card.IsWeapon) effectiveHandCount++;
 				}
 				else
 				{
 					effectiveHandCount++;
 				}
 			}
-			
+
 			int spaceLeft = System.Math.Max(0, maxHandSize - effectiveHandCount);
 			int toDraw = System.Math.Min(spaceLeft, intellect);
 			if (toDraw > 0)

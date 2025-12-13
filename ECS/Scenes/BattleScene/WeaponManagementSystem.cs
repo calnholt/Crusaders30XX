@@ -3,8 +3,9 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
-using Crusaders30XX.ECS.Data.Cards;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -117,21 +118,20 @@ namespace Crusaders30XX.ECS.Systems
 				equipped.SpawnedEntity = null;
 			}
 			
-			// Create a new card entity from definition id
-			if (!CardDefinitionCache.TryGet(equipped.WeaponId, out var def)) return null;
-			var weapon = CreateWeaponEntity(def);
+			var card = CardFactory.Create(equipped.WeaponId);
+			if (card == null) return null;
+			var weapon = CreateWeaponEntity(card);
 			equipped.SpawnedEntity = weapon;
 			return weapon;
 		}
 
-		private Entity CreateWeaponEntity(CardDefinition def)
+		private Entity CreateWeaponEntity(CardBase card)
 		{
-			string name = def.name ?? def.id ?? "Weapon";
-			// Create minimal card like EntityFactory.CreateCard
+			string name = card.Name ?? card.CardId ?? "Weapon";
 			var e = EntityManager.CreateEntity($"Card_{name}");
 			var cd = new CardData
 			{
-					CardId = def.id,
+					Card = card,
 					Color = CardData.CardColor.Yellow
 			};
 			var t = new Transform { Position = Vector2.Zero, Scale = Vector2.One };

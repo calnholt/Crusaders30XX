@@ -2,8 +2,8 @@ using System;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -46,8 +46,8 @@ namespace Crusaders30XX.ECS.Systems
             if (deck == null) return;
             foreach (var card in deck.Hand)
             {
-                CardDefinitionCache.TryGet(card.GetComponent<CardData>()?.CardId ?? string.Empty, out var def);
-                if (def?.exhaustsOnEndTurn ?? false)
+                var cardObj = CardFactory.Create(card.GetComponent<CardData>().Card.CardId);
+                if (cardObj?.ExhaustsOnEndTurn ?? false)
                 {
                     EventQueueBridge.EnqueueTriggerAction("CardZoneSystem.OnChangeBattlePhase.EndTurnExhaust", () =>
                     {
@@ -418,13 +418,14 @@ namespace Crusaders30XX.ECS.Systems
             if (cd == null) return string.Empty;
             try
             {
-                if (CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
+                var cardObj = CardFactory.Create(cd.Card.CardId);
+                if (cardObj != null)
                 {
-                    return def.name ?? def.id ?? cd.CardId ?? string.Empty;
+                    return cardObj.Name ?? cardObj.CardId ?? string.Empty;
                 }
             }
             catch { }
-            return cd.CardId ?? string.Empty;
+            return cd.Card.CardId ?? string.Empty;
         }
 
         private static CardZoneType GetZoneOf(Deck deck, Entity card)

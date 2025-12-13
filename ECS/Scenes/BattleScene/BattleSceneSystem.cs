@@ -7,12 +7,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.Diagnostics;
-using Crusaders30XX.ECS.Data.Locations;
-using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Services;
  
 using System;
-using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Scenes.BattleScene;
 
 namespace Crusaders30XX.ECS.Systems
@@ -342,8 +339,8 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new FullyHealEvent { Target = player });
 			foreach (var e in EntityManager.GetEntitiesWithComponent<CardTooltip>()) {
 				var cardData = e.GetComponent<CardData>();
-				CardDefinitionCache.TryGet(cardData.CardId, out var def);
-				if (def.cardTooltip == null)
+				var card = CardFactory.Create(cardData.Card.CardId);
+				if (card != null && string.IsNullOrEmpty(card.CardTooltip))
 				{
 					e.RemoveComponent<CardTooltip>();
 				}

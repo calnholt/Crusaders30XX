@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Attacks;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -129,15 +127,14 @@ namespace Crusaders30XX.ECS.Systems
                         continue;
                     }
 
-                    string id = data.CardId ?? string.Empty;
-                    Crusaders30XX.ECS.Data.Cards.CardDefinitionCache.TryGet(id, out var def);
+                    string id = data.Card.CardId ?? string.Empty;
 
                     // Skip invalid or special types
-                    if (string.IsNullOrEmpty(id) || def == null)
+                    if (string.IsNullOrEmpty(id) || data.Card == null)
                     {
                         continue;
                     }
-                    if (def.isWeapon || def.isToken)
+                    if (data.Card.IsWeapon || data.Card.IsToken)
                     {
                         continue;
                     }
@@ -149,7 +146,7 @@ namespace Crusaders30XX.ECS.Systems
                     }
 
                     // If it's a block card with extra cost, ensure it can be paid
-                    if (def.isBlockCard && !EvaluateAdditionalCostService.CanPay(EntityManager, id))
+                    if (data.Card.IsBlockCard && !data.Card.CanPlay(EntityManager, card))
                     {
                         continue;
                     }

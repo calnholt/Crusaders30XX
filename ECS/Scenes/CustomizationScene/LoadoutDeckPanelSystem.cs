@@ -2,7 +2,6 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -165,44 +164,6 @@ namespace Crusaders30XX.ECS.Systems
                 case "white":
                 default: return CardData.CardColor.White;
             }
-        }
-
-        // Cost parsing no longer needed here; costs are rendered directly from CardDefinition
-
-        private List<(string key, string id, CardData.CardColor color, string name)> GetSortedWorkingEntries(CustomizationState st)
-        {
-            var result = new List<(string key, string id, CardData.CardColor color, string name)>();
-            foreach (var entry in st.WorkingCardIds)
-            {
-                string id = entry;
-                var color = CardData.CardColor.White;
-                int sep = entry.IndexOf('|');
-                if (sep >= 0)
-                {
-                    id = entry.Substring(0, sep);
-                    var colorKey = entry.Substring(sep + 1);
-                    color = ParseColor(colorKey);
-                }
-                if (!CardDefinitionCache.TryGet(id, out var def) || def == null) continue;
-                if (def.isWeapon) continue;
-                string name = (def.name ?? def.id) ?? string.Empty;
-                result.Add((entry, id, color, name));
-            }
-            int ColorOrder(CardData.CardColor c)
-            {
-                switch (c)
-                {
-                    case CardData.CardColor.White: return 0;
-                    case CardData.CardColor.Red: return 1;
-                    case CardData.CardColor.Black: return 2;
-                    default: return 3;
-                }
-            }
-            result = result
-                .OrderBy(t => t.name.ToLowerInvariant())
-                .ThenBy(t => ColorOrder(t.color))
-                .ToList();
-            return result;
         }
     }
 }

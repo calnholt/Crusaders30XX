@@ -1,4 +1,3 @@
-using Crusaders30XX.ECS.Data.Cards;
 using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems

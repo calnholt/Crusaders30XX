@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
-using Crusaders30XX.ECS.Data.Cards;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -251,10 +251,11 @@ namespace Crusaders30XX.ECS.Systems
                         bool isWeapon = false;
                         try
                         {
-                            string id = cardData.CardId ?? string.Empty;
-                            if (!string.IsNullOrEmpty(id) && CardDefinitionCache.TryGet(id, out var def))
+                            string id = cardData.Card.CardId ?? string.Empty;
+                            var cardObj = CardFactory.Create(id);
+                            if (!string.IsNullOrEmpty(id) && cardObj != null)
                             {
-                                isWeapon = def.isWeapon;
+                                isWeapon = cardObj.IsWeapon;
                             }
                         }
                         catch { }
@@ -354,10 +355,11 @@ namespace Crusaders30XX.ECS.Systems
 						// Never allow the weapon to be used to pay costs; hide it
 						try
 						{
-							string id = cd.CardId ?? string.Empty;
-							if (!string.IsNullOrEmpty(id) && CardDefinitionCache.TryGet(id, out var def))
+							string id = cd.Card.CardId ?? string.Empty;
+							var cardObj = CardFactory.Create(id);
+							if (!string.IsNullOrEmpty(id) && cardObj != null)
 							{
-								if (def.isWeapon) return false;
+								if (cardObj.IsWeapon) return false;
 							}
 						}
 						catch { }

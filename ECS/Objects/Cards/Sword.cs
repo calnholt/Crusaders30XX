@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Name = "Sword";
             Target = "Enemy";
             Text = "Gain {1} courage.";
+            Cost = ["Black", "Any"];
             Animation = "Attack";
             Type = "Attack";
             Damage = 14;

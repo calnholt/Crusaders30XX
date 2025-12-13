@@ -320,13 +320,13 @@ namespace Crusaders30XX.ECS.Systems
 								if (cd == null) return "Card";
 								try
 								{
-									if (Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
+									if (!string.IsNullOrEmpty(cd.Card.Name ?? cd.Card.CardId))
 									{
-										return def.name ?? def.id ?? "Card";
+										return cd.Card.Name ?? cd.Card.CardId ?? "Card";
 									}
 								}
 								catch { }
-								return cd.CardId ?? "Card";
+								return cd.Card.Name ?? cd.Card.CardId ?? "Card";
 							})
 							.ToList();
 						return $"Discard: {string.Join(", ", markedCards)}";
@@ -961,13 +961,13 @@ namespace Crusaders30XX.ECS.Systems
 										if (cd == null) return "Card";
 										try
 										{
-												if (Data.Cards.CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
+												if (!string.IsNullOrEmpty(cd.Card.Name ?? cd.Card.CardId))
 												{
-														return def.name ?? def.id ?? "Card";
+														return cd.Card.Name ?? cd.Card.CardId ?? "Card";
 												}
 										}
 										catch { }
-										return cd.CardId ?? "Card";
+										return cd.Card.Name ?? cd.Card.CardId ?? "Card";
 								})
 								.ToList();
 						parts.Add($"Discard: {string.Join(", ", markedCards)}");

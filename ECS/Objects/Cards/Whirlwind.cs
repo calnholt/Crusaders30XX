@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Name = "Whirlwind";
             Target = "Enemy";
             Text = "Attacks {4} times.";
+            Cost = ["Black"];
             Animation = "Attack";
             Type = "Attack";
             Damage = 5;

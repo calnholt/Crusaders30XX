@@ -4,7 +4,6 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Data.Equipment;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Medals;

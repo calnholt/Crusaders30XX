@@ -1,13 +1,14 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Cards;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework.Input;
 using System;
+using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -121,27 +122,28 @@ namespace Crusaders30XX.ECS.Systems
             int idx = 0;
             foreach (var view in sorted)
             {
-                if (!CardDefinitionCache.TryGet(view.id, out var def) || def == null || def.isWeapon) { idx++; continue; }
-                var card = EnsureTempCard(def, view.color);
+                var card = CardFactory.Create(view.id);
+                if (card == null || card.IsWeapon) { idx++; continue; }
+                var tempCard = EnsureTempCard(card, view.color);
                 int r = idx / col;
                 int c = idx % col;
                 int x = panelX + c * colW + (colW / 2);
                 int y = panelY + _deckPanel.HeaderHeight + _deckPanel.TopMargin + r * ((int)(cardH * _deckPanel.CardScale) + _deckPanel.RowGap) + (int)(cardH * _deckPanel.CardScale / 2) - st.RightScroll;
                 if (card != null)
                 {
-                    EventManager.Publish(new CardRenderScaledEvent { Card = card, Position = new Vector2(x, y), Scale = _deckPanel.CardScale });
+                    EventManager.Publish(new CardRenderScaledEvent { Card = tempCard, Position = new Vector2(x, y), Scale = _deckPanel.CardScale });
                 }
                 idx++;
             }
         }
 
-        private Entity EnsureTempCard(CardDefinition def, CardData.CardColor color)
+        private Entity EnsureTempCard(CardBase card, CardData.CardColor color)
         {
-            string name = def.name ?? def.id;
+            string name = card.Name ?? card.CardId;
             string keyName = $"Card_{name}_{color}_0";
             var existing = EntityManager.GetEntity(keyName);
             if (existing != null) return existing;
-            var created = Factories.EntityFactory.CreateCardFromDefinition(EntityManager, def.id, color);
+            var created = Factories.EntityFactory.CreateCardFromDefinition(EntityManager, card.CardId, color);
             if (created != null)
             {
                 _createdCardIds[keyName] = created.Id;
@@ -172,10 +174,12 @@ namespace Crusaders30XX.ECS.Systems
                     var colorKey = entry.Substring(sep + 1);
                     color = ParseColor(colorKey);
                 }
-                if (!CardDefinitionCache.TryGet(id, out var def) || def == null) continue;
-                if (def.isWeapon) continue;
-                if (!def.canAddToLoadout) continue;
-                string name = (def.name ?? def.id) ?? string.Empty;
+                var card = CardFactory.Create(id);
+                if (card == null || card.IsWeapon) continue;
+                if (!card.CanAddToLoadout) continue;
+                if (card.IsWeapon) continue;
+                if (!card.CanAddToLoadout) continue;
+                string name = card.Name ?? card.CardId;
                 result.Add((entry, id, color, name));
             }
             int ColorOrder(CardData.CardColor c)

@@ -1,10 +1,9 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Data.Cards;
 using System;
 using Crusaders30XX.ECS.Data.Attacks;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -12,22 +11,7 @@ namespace Crusaders30XX.ECS.Systems
     {
         public static void Resolve(Entity card, EntityManager entityManager)
         {
-            var enemy = entityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
-            var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-            var battleStateInfo = player.GetComponent<BattleStateInfo>();
-            var cardId = card.GetComponent<CardData>().CardId;
-            Console.WriteLine($"[CardBlockService] resolving {cardId}");
-            // card effects
-            switch (cardId)
-            {
-                case "bulwark":
-                {
-                    BlockValueService.SetDelta(card, 0);
-                    break;
-                }
-                default:
-                    break;
-            }
+            var cardObj = CardFactory.Create(card.GetComponent<CardData>().Card.CardId);
             var contextId = card.GetComponent<AssignedBlockCard>().ContextId;
             var planned = entityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault(e => e.GetComponent<AttackIntent>().Planned.Any(pa => pa.ContextId == contextId));
             if (planned == null) return;
@@ -36,7 +20,7 @@ namespace Crusaders30XX.ECS.Systems
             var specialEffects = attackDef.specialEffects;
             if (specialEffects.Any(se => se.type == "Corrode"))
             {
-                Console.WriteLine($"[CardBlockService] Corrode effect detected - {attackId} - {cardId}");
+                Console.WriteLine($"[CardBlockService] Corrode effect detected - {attackId} - {cardObj.CardId}");
                 BlockValueService.ApplyDelta(card, -1);
             }
         }

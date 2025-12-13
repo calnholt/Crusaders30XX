@@ -11,6 +11,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "shield_of_faith";
             Name = "Shield of Faith";
             Target = "Player";
+            Cost = ["Any"];
             Text = "Gain {9} aegis.";
             Animation = "Buff";
             Type = "Spell";

@@ -2,8 +2,8 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Data.Cards;
 using System;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -51,8 +51,9 @@ namespace Crusaders30XX.ECS.Systems
         public static int GetBaseBlockValue(Entity card)
         {
             var cd = card.GetComponent<CardData>();
-            CardDefinitionCache.TryGet(cd.CardId, out var def);
-            var block = def.block + (cd.Color == CardData.CardColor.Black ? 1 : 0);
+            var cardObj = CardFactory.Create(cd.Card.CardId);
+            if (cardObj == null) return 0;
+            var block = cardObj.Block + (cd.Color == CardData.CardColor.Black ? 1 : 0);
             return block;
         }
     }

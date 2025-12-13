@@ -9,7 +9,6 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Data.Loadouts;
-using Crusaders30XX.ECS.Data.Cards;
 using System;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Data.Locations;
@@ -240,8 +239,9 @@ namespace Crusaders30XX.ECS.Factories
 					var colorKey = entry.Substring(sep + 1);
 					color = ParseColor(colorKey);
 				}
-				if (!CardDefinitionCache.TryGet(cardId, out var def) || def == null) continue;
-				if (def.isWeapon) continue; // weapons are not in the deck
+                var card = CardFactory.Create(cardId);
+				if (card == null) continue;
+				if (card.IsWeapon) continue; // weapons are not in the deck
                 var entity = CreateCardFromDefinition(entityManager, cardId, color);
 				var cd = entity.GetComponent<CardData>();
 				if (cd != null)
@@ -296,9 +296,10 @@ namespace Crusaders30XX.ECS.Factories
         // Helper: create card entity from CardDefinition id and color
         public static Entity CreateCardFromDefinition(EntityManager entityManager, string cardId, CardData.CardColor color, bool allowWeapons = false, int index = 0)
         {
-            if (!CardDefinitionCache.TryGet(cardId, out var def) || def == null) return null;
-            if (def.isWeapon && !allowWeapons) return null; // only non-weapons for deck/library
-            string name = def.name ?? def.id ?? cardId;
+            var card = CardFactory.Create(cardId);
+            if (card == null) return null;
+            if (card.IsWeapon && !allowWeapons) return null; // only non-weapons for deck/library
+            string name = card.Name ?? cardId;
             var entity = entityManager.CreateEntity($"Card_{name}_{color}_{index}");
 
             var cardData = new CardData
@@ -316,17 +317,17 @@ namespace Crusaders30XX.ECS.Factories
             entityManager.AddComponent(entity, sprite);
             entityManager.AddComponent(entity, uiElement);
             entityManager.AddComponent(entity, ParallaxLayer.GetUIParallaxLayer());
-            entityManager.AddComponent(entity, new Hint { Text = CardHintService.GetCardHint(def, color) });
+            entityManager.AddComponent(entity, new Hint { Text = card.GetCardHint(color) });
             entityManager.AddComponent(entity, new DontDestroyOnReload());
             // Set tooltip from definition (precomputed in CardDefinitionCache)
-            if (!string.IsNullOrEmpty(def.tooltip))
+            if (!string.IsNullOrEmpty(card.Tooltip))
             {
-                uiElement.Tooltip = def.tooltip;
+                uiElement.Tooltip = card.Tooltip;
             }
             // Attach CardTooltip when data specifies a tooltip card, and mark UI tooltip type
-            if (!string.IsNullOrWhiteSpace(def.cardTooltip))
+            if (!string.IsNullOrWhiteSpace(card.CardTooltip))
             {
-                entityManager.AddComponent(entity, new CardTooltip { CardId = def.cardTooltip });
+                entityManager.AddComponent(entity, new CardTooltip { CardId = card.CardTooltip });
                 uiElement.TooltipType = TooltipType.Card;
             }
             return entity;
@@ -420,11 +421,12 @@ namespace Crusaders30XX.ECS.Factories
 				}
 
 				string displayName = id;
+                var card = CardFactory.Create(id);
 				try
 				{
-					if (itemType == ForSaleItemType.Card && CardDefinitionCache.TryGet(id, out var cdef) && cdef != null)
+					if (itemType == ForSaleItemType.Card && card != null)
 					{
-						displayName = string.IsNullOrWhiteSpace(cdef.name) ? id : cdef.name;
+						displayName = string.IsNullOrWhiteSpace(card.Name) ? id : card.Name;
 					}
 					else if (itemType == ForSaleItemType.Medal && MedalDefinitionCache.TryGet(id, out var mdef) && mdef != null)
 					{

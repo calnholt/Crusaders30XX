@@ -2,10 +2,10 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Data.Cards;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -173,9 +173,10 @@ namespace Crusaders30XX.ECS.Systems
             if (data == null) return;
 
             // Use CardId directly for lookup
-            string id = data.CardId ?? string.Empty;
+            string id = data.Card.CardId ?? string.Empty;
             if (string.IsNullOrEmpty(id)) return;
-            if (!CardDefinitionCache.TryGet(id, out var def)) return;
+            var card = CardFactory.Create(id);
+            if (card == null) return;
 
             if (data.Owner.HasComponent<Frozen>())
             {
@@ -184,12 +185,12 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Weapons can only be played during Action phase (already gated) and cannot be used to pay costs of other cards
-            bool isWeapon = def.isWeapon;
+            bool isWeapon = card.IsWeapon;
 
             // Gate by Action Points unless the card is a free action
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             var ap = player?.GetComponent<ActionPoints>();
-            bool isFree = def.isFreeAction;
+            bool isFree = card.IsFreeAction;
             if (!isFree)
             {
                 int currentAp = ap?.Current ?? 0;
@@ -201,9 +202,9 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Evaluate any additional costs/requirements tied to the card id
-            if (!EvaluateAdditionalCostService.CanPay(EntityManager, def.id))
+            if (card.CanPlay(EntityManager, evt.Card) == false)
             {
-                Console.WriteLine($"[CardPlaySystem] Additional cost check failed for id={def.id}; aborting play");
+                Console.WriteLine($"[CardPlaySystem] Additional cost check failed for id={card.CardId}; aborting play");
                 return;
             }
 
@@ -212,14 +213,14 @@ namespace Crusaders30XX.ECS.Systems
             {
                 var deckEntityForCost = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 var deck = deckEntityForCost?.GetComponent<Deck>();
-                var cardId = evt.Card.GetComponent<CardData>().CardId;
+                var cardId = evt.Card.GetComponent<CardData>().Card.CardId;
                 // gonna cloodge this in for now
-                if (def.specialAction == "SelectOneCardFromHand")
+                if (card.SpecialAction == "SelectOneCardFromHand")
                 {
                     EventManager.Publish(new OpenPayCostOverlayEvent { CardToPlay = evt.Card, RequiredCosts = ["Any"], Type = PayCostOverlayType.SelectOneCard });
                     return;
                 }
-                var requiredCosts = (def.cost ?? Array.Empty<string>()).ToList();
+                var requiredCosts = card.Cost.ToList();
                 if (requiredCosts.Count > 0 && deck != null)
                 {
                     // Build hand color multiset excluding the card being played
@@ -236,10 +237,11 @@ namespace Crusaders30XX.ECS.Systems
                         }
                         try
                         {
-                            string oid = cdOther.CardId ?? string.Empty;
-                            if (!string.IsNullOrEmpty(oid) && CardDefinitionCache.TryGet(oid, out var odef))
+                            string oid = cdOther.Card.CardId ?? string.Empty;
+                            var ocard = CardFactory.Create(oid);
+                            if (ocard != null)
                             {
-                                if (!odef.isWeapon)
+                                if (!ocard.IsWeapon)
                                 {
                                     handNonWeapons.Add(e);
                                 }
@@ -320,9 +322,9 @@ namespace Crusaders30XX.ECS.Systems
                         // Exactly one way to satisfy cost - auto-pay
                         var solution = FindFirstSolution(requiredCosts, handNonWeapons);
                         Console.WriteLine($"[CardPlaySystem] Auto-paying cost with {solution.Count} card(s)");
-                        foreach (var card in solution)
+                        foreach (var c in solution)
                         {
-                            EventManager.Publish(new CardMoveRequested { Card = card, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
+                            EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
                         }
                         EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
                         return;
@@ -338,20 +340,19 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // If this card has an attack animation, enqueue a player attack animation sequence that will play serially
-            if (string.Equals(def.animation, "Attack", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(card.Animation, "Attack", StringComparison.OrdinalIgnoreCase))
             {
                 EventQueue.EnqueueRule(new QueuedStartPlayerAttackAnimation());
                 EventQueue.EnqueueRule(new QueuedWaitPlayerImpactEvent());
             }
-            else if (string.Equals(def.animation, "Buff", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(card.Animation, "Buff", StringComparison.OrdinalIgnoreCase))
             {
                 Console.WriteLine($"[CardPlaySystem] Buff");
                 EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
                 EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
             }
 
-            // Delegate per-card effects to service
-            CardPlayService.Resolve(EntityManager, def.id, def.name ?? def.id, evt.Card, evt.PaymentCards);
+            card.OnPlay?.Invoke(EntityManager, evt.Card);
 
             // Move the played card to discard unless it's a weapon (weapons leave hand but do not go to discard)
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
@@ -368,7 +369,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 else
                 {
-                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = def.exhaustsOnPlay ? CardZoneType.ExhaustPile : CardZoneType.DiscardPile, Reason = "PlayCard" });
+                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = card.ExhaustsOnPlay ? CardZoneType.ExhaustPile : CardZoneType.DiscardPile, Reason = "PlayCard" });
                     Console.WriteLine("[CardPlaySystem] Requested move to DiscardPile");
                 }
             }

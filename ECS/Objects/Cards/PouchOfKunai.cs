@@ -15,6 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Name = "Pouch of Kunai";
             Target = "Player";
             Text = "Put {2} to {4} Kunai cards in your hand.";
+            Cost = ["White"];
             Animation = "Buff";
             Type = "Spell";
             Block = 3;

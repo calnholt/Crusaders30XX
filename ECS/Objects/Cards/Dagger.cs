@@ -30,6 +30,19 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     DamageType = ModifyTypeEnum.Attack 
                 });
             };
+
+            CanPlay = (entityManager, card) =>
+            {
+                var player = entityManager.GetEntity("Player");
+                var courageCmp = player?.GetComponent<Courage>();
+                int courage = courageCmp?.Amount ?? 0;
+                if (courage < ValuesParse[0])
+                {
+                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {ValuesParse[0]} courage!" });
+                    return false;
+                }
+                return true;
+            };
         }
     }
 }

@@ -1,7 +1,6 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
@@ -9,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -56,11 +56,11 @@ namespace Crusaders30XX.ECS.Systems
 			string equippedId = st.WorkingWeaponId ?? string.Empty;
 
 			var collection = SaveCache.GetCollectionSet();
-			var defs = CardDefinitionCache.GetAll().Values
-				.Where(d => d.isWeapon)
-				.Where(d => collection.Contains(d.id))
-				.Where(d => (d.id ?? string.Empty) != equippedId)
-				.OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
+			var defs = CardFactory.GetAllCards().Values
+				.Where(d => d.IsWeapon)
+				.Where(d => collection.Contains(d.CardId))
+				.Where(d => d.CardId != equippedId)
+				.OrderBy(d => d.Name.ToLowerInvariant())
 				.ToList();
 
 		int cardW = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardWidth;
@@ -82,7 +82,7 @@ namespace Crusaders30XX.ECS.Systems
 			var rect = new Rectangle(x - (int)(cardW * _libraryPanel.CardScale / 2), y - (int)(cardH * _libraryPanel.CardScale / 2), (int)(cardW * _libraryPanel.CardScale), (int)(cardH * _libraryPanel.CardScale));
 			if (click && rect.Contains(clickPoint))
 			{
-				EventManager.Publish(new UpdateEquipmentLoadoutRequested { Slot = CustomizationTabType.Weapon, EquipmentId = d.id });
+				EventManager.Publish(new UpdateEquipmentLoadoutRequested { Slot = CustomizationTabType.Weapon, EquipmentId = d.CardId });
 			}
 		}
 	}
@@ -98,11 +98,11 @@ namespace Crusaders30XX.ECS.Systems
 			string equippedId = st.WorkingWeaponId ?? string.Empty;
 
 			var collection = SaveCache.GetCollectionSet();
-			var defs = CardDefinitionCache.GetAll().Values
-				.Where(d => d.isWeapon)
-				.Where(d => collection.Contains(d.id))
-				.Where(d => (d.id ?? string.Empty) != equippedId)
-				.OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
+			var defs = CardFactory.GetAllCards().Values
+				.Where(d => d.IsWeapon)
+				.Where(d => collection.Contains(d.CardId))
+				.Where(d => (d.CardId ?? string.Empty) != equippedId)
+				.OrderBy(d => d.Name.ToLowerInvariant())
 				.ToList();
 
 
@@ -126,13 +126,13 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private Entity EnsureTempCard(CardDefinition def)
+		private Entity EnsureTempCard(CardBase card)
 		{
-			string name = def.name ?? def.id;
+			string name = card.Name ?? card.CardId;
 			string keyName = $"Card_{name}_Yellow_0";
 			var existing = EntityManager.GetEntity(keyName);
 			if (existing != null) return existing;
-			var created = EntityFactory.CreateCardFromDefinition(EntityManager, def.id, CardData.CardColor.Yellow, true);
+			var created = EntityFactory.CreateCardFromDefinition(EntityManager, card.CardId, CardData.CardColor.Yellow, true);
 			if (created != null)
 			{
 				_createdCardIds[keyName] = created.Id;

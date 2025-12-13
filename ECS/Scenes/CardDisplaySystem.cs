@@ -9,8 +9,8 @@ using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
-using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -212,8 +212,8 @@ namespace Crusaders30XX.ECS.Systems
             
             var cardColor = GetCardColor(cardData.Color);
             // Resolve definition from CardId
-            CardDefinition def = null;
-            bool hasDef = !string.IsNullOrWhiteSpace(cardData.CardId) && CardDefinitionCache.TryGet(cardData.CardId, out def) && def != null;
+            CardBase card = cardData.Card;
+            bool hasDef = card != null;
             
             // Draw card background (rotated if transform has rotation)
             float rotation = transform?.Rotation ?? 0f;
@@ -224,7 +224,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 if (hasDef)
                 {
-                    if (def.isWeapon)
+                    if (card.IsWeapon)
                     {
 						isWeaponDetected = true;
                         var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
@@ -257,33 +257,33 @@ namespace Crusaders30XX.ECS.Systems
             
             // Name text (wrapped within card width), rotated with card
             var textColor = isWeaponDetected ? Color.Black : GetCardTextColor(cardData.Color);
-            string displayName = hasDef ? (def.name ?? def.id ?? cardData.CardId) : (cardData.CardId ?? string.Empty);
+            string displayName = hasDef ? (card.Name ?? string.Empty) : string.Empty;
             DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, _settings.TextMarginY * visualScale), displayName, textColor, _settings.NameScale * visualScale, visualScale, _nameFont);
             
             // Draw cost pips (colored circles with yellow outline) under the name
-            var defCosts = hasDef ? (def.cost ?? Array.Empty<string>()) : Array.Empty<string>();
+            var defCosts = hasDef ? card.Cost.ToArray() : [];
             DrawCostPipsScaled(cardCenter, rotation, (int)(_settings.TextMarginX * visualScale), (int)Math.Round((_settings.TextMarginY + 34 * _settings.UIScale) * visualScale), cardData.Color, defCosts, visualScale);
 
-            string displayText = hasDef ? (def.text ?? string.Empty) : string.Empty;
+            string displayText = hasDef ? (card.Text ?? string.Empty) : string.Empty;
             DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, (_settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)) * visualScale), displayText, textColor, _settings.DescriptionScale * visualScale, visualScale, _contentFont);
             
             // Draw damage value in trapezoid above block section for attack cards
             int effectiveDamage = 0;
             int damageDelta = 0;
-            if (hasDef && IsAttackCard(def))
+            if (hasDef && IsAttackCard(card))
             {
                 try
                 {
                     // Base damage includes printed damage plus any conditional damage from the card definition
-                    int baseDamage = def.damage;
+                    int baseDamage = card.Damage;
                     try
                     {
-                        baseDamage = Math.Max(0, baseDamage + ConditionalDamageCardService.Resolve(EntityManager, entity));
+                        baseDamage = Math.Max(0, baseDamage + card.GetConditionalDamage(EntityManager, entity));
                     }
                     catch
                     {
                         // If conditional resolution fails for any reason, fall back to printed damage
-                        baseDamage = Math.Max(0, def.damage);
+                        baseDamage = Math.Max(0, card.Damage);
                     }
 
                     int finalDamage = baseDamage;
@@ -316,11 +316,11 @@ namespace Crusaders30XX.ECS.Systems
                     }
 
                     effectiveDamage = Math.Max(0, finalDamage);
-                    damageDelta = effectiveDamage - def.damage;
+                    damageDelta = effectiveDamage - card.Damage;
                 }
                 catch
                 {
-                    effectiveDamage = Math.Max(0, def.damage);
+                    effectiveDamage = Math.Max(0, card.Damage);
                     damageDelta = 0;
                 }
 
@@ -331,14 +331,14 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Draw block value and shield icon at bottom-left, but hide for weapons
-            bool isWeapon = hasDef && def.isWeapon;
+            bool isWeapon = hasDef && card.IsWeapon;
             int blockValueToShow = 0;
             int printedBlockValue = 0;
             int blockDeltaValue = 0;
-            bool hasBlockDefinition = hasDef && def != null;
+            bool hasBlockDefinition = hasDef && card != null;
             if (hasBlockDefinition)
             {
-                printedBlockValue = def.block;
+                printedBlockValue = card.Block;
                 blockValueToShow = BlockValueService.GetBlockValue(entity);
                 blockDeltaValue = blockValueToShow - printedBlockValue;
             }
@@ -400,13 +400,13 @@ namespace Crusaders30XX.ECS.Systems
 
             // Draw AP cost text at bottom-center: 0AP if free action else 1AP
             string bottomText;
-            if (hasDef && def.isBlockCard)
+            if (hasDef && card.IsBlockCard)
             {
                 bottomText = "Block";
             }
             else
             {
-                bool isFree = GetIsFreeAction(entity) || hasDef && def.isBlockCard;
+                bool isFree = GetIsFreeAction(entity) || hasDef && card.IsBlockCard;
                 bottomText = isFree ? "Free" : "1AP";
             }
             var apSize = _nameFont.MeasureString(bottomText) * (APTextScale * visualScale);
@@ -451,10 +451,10 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private bool IsAttackCard(CardDefinition def)
+        private bool IsAttackCard(CardBase card)
         {
-            if (def == null) return false;
-            return string.Equals(def.type, "Attack", StringComparison.OrdinalIgnoreCase);
+            if (card == null) return false;
+            return string.Equals(card.Type, "Attack", StringComparison.OrdinalIgnoreCase);
         }
 
         private Color GetDamageTrapezoidColor(CardData.CardColor color)
@@ -645,10 +645,9 @@ namespace Crusaders30XX.ECS.Systems
             try
             {
                 var data = card.GetComponent<CardData>();
-                string id = data?.CardId ?? string.Empty;
+                string id = data?.Card.CardId ?? string.Empty;
                 if (string.IsNullOrEmpty(id)) return false;
-                if (!CardDefinitionCache.TryGet(id, out var def) || def == null) return false;
-                return def.isFreeAction;
+                return data.Card.IsFreeAction;
             }
             catch { return false; }
         }

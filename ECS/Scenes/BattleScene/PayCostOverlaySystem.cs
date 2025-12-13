@@ -412,11 +412,8 @@ namespace Crusaders30XX.ECS.Systems
             // Hard guard: weapons cannot be used to pay costs under any circumstance
             try
             {
-                string id = cd.CardId ?? string.Empty;
-                if (!string.IsNullOrEmpty(id) && Data.Cards.CardDefinitionCache.TryGet(id, out var def))
-                {
-                    if (def.isWeapon) return;
-                }
+                string id = cd.Card.CardId ?? string.Empty;
+                if (cd.Card.IsWeapon) return;
             }
             catch { }
 
@@ -820,11 +817,7 @@ namespace Crusaders30XX.ECS.Systems
             // Disallow using weapons to pay costs
             try
             {
-                string id = cd.CardId ?? string.Empty;
-                if (!string.IsNullOrEmpty(id) && Data.Cards.CardDefinitionCache.TryGet(id, out var def))
-                {
-                    if (def.isWeapon) return false;
-                }
+                if (cd.Card.IsWeapon) return false;
             }
             catch { }
             // Card is viable if it can satisfy at least one remaining requirement
@@ -865,10 +858,9 @@ namespace Crusaders30XX.ECS.Systems
             if (data == null) return new List<string>();
 
             // Lookup JSON definition to read cost array
-            string id = data.CardId ?? string.Empty;
+            string id = data.Card.CardId ?? string.Empty;
             if (string.IsNullOrEmpty(id)) return new List<string>();
-            if (!Data.Cards.CardDefinitionCache.TryGet(id, out var def)) return new List<string>();
-            return (def.cost ?? Array.Empty<string>()).ToList();
+            return data.Card.Cost.ToList();
         }
 
         private static string ResolveCardName(CardData cd)
@@ -876,14 +868,11 @@ namespace Crusaders30XX.ECS.Systems
             if (cd == null) return "Card";
             try
             {
-                string id = cd.CardId ?? string.Empty;
-                if (!string.IsNullOrEmpty(id) && Data.Cards.CardDefinitionCache.TryGet(id, out var def) && def != null)
-                {
-                    return def.name ?? def.id ?? id;
-                }
+                string id = cd.Card.CardId ?? string.Empty;
+                return cd.Card.Name ?? cd.Card.CardId ?? "Card";
             }
             catch { }
-            return cd.CardId ?? "Card";
+            return cd.Card.Name ?? cd.Card.CardId ?? "Card";
         }
 
         private void DrawBorder(Rectangle rect, Color color, int thickness)

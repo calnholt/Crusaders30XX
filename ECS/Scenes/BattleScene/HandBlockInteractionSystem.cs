@@ -44,14 +44,13 @@ namespace Crusaders30XX.ECS.Systems
 				var data = card.GetComponent<CardData>();
 				if (ui == null || data == null) continue;
 				if (!ui.IsClicked) continue;
-				string id = data.CardId ?? string.Empty;
-				Data.Cards.CardDefinitionCache.TryGet(id, out var def);
+				string id = data.Card.CardId ?? string.Empty;
                 // Skip weapons: they cannot be assigned as block
 				try
 				{
 					if (!string.IsNullOrEmpty(id))
 					{
-						if (def.isWeapon || def.isToken) { break; }
+						if (data.Card.IsWeapon || data.Card.IsToken) { break; }
 					}
 				}
 				catch { }
@@ -61,7 +60,7 @@ namespace Crusaders30XX.ECS.Systems
 					EventManager.Publish(new CantPlayCardMessage { Message = "Can't block with intimidated cards!" });
 					break;
 				}
-				if (def.isBlockCard && !EvaluateAdditionalCostService.CanPay(EntityManager, id))
+				if (data.Card.IsBlockCard && !data.Card.CanPlay(EntityManager, card))
 				{
 					return;
 				}

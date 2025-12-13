@@ -3,19 +3,6 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Systems;
 
-{
-  "id": "bulwark",
-  "name": "Bulwark",
-  "target": "Enemy",
-  "rarity": "Common",
-  "text": "Whenever you play this card, this card gains +{1} block for the duration of the quest. When this card is used to block, its block value is returned to its base value.",
-  "block": 2,
-  "damage": 6,
-  "type": "Attack",
-  "isFreeAction": true,
-  "animation": "Attack"
-}
-
 namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Bulwark : CardBase

@@ -158,7 +158,8 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         EntityManager.RemoveComponent<ExhaustOnBlock>(entity);
                     }
-                    BlockCardResolveService.Resolve(entity);
+                    var cardData = entity.GetComponent<CardData>();
+                    cardData.Card.OnBlock?.Invoke(EntityManager, entity);
                     EventManager.Publish(new CardMoveRequested
                     {
                         Card = entity,

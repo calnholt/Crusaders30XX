@@ -1,3 +1,4 @@
+using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -23,12 +24,26 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
                 EventManager.Publish(new ModifyCourageEvent { Delta = -ValuesParse[0] });
-                EventManager.Publish(new ModifyHpRequestEvent { 
-                    Source = player, 
-                    Target = enemy, 
-                    Delta = -Damage, 
-                    DamageType = ModifyTypeEnum.Attack 
+                EventManager.Publish(new ModifyHpRequestEvent
+                {
+                    Source = player,
+                    Target = enemy,
+                    Delta = -Damage,
+                    DamageType = ModifyTypeEnum.Attack
                 });
+            };
+
+            CanPlay = (entityManager, card) =>
+            {
+                var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                var courageCmp = player?.GetComponent<Courage>();
+                int courage = courageCmp?.Amount ?? 0;
+                if (courage < ValuesParse[0])
+                {
+                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {ValuesParse[0]} courage!" });
+                    return false;
+                }
+                return true;
             };
         }
     }

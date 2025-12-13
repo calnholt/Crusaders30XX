@@ -2,7 +2,6 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Objects.Cards
@@ -19,6 +18,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Animation = "Buff";
             Type = "Spell";
             Block = 3;
+            SpecialAction = "SelectOneCardFromHand";
 
             OnPlay = (entityManager, card) =>
             {
@@ -27,6 +27,25 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var copy = EntityFactory.CreateCardFromDefinition(entityManager, paymentCard.GetComponent<CardData>().Card.CardId, paymentCard.GetComponent<CardData>().Color, false);
                 EventManager.Publish(new CardMoveRequested { Card = copy, Deck = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault(), Destination = CardZoneType.Hand, Reason = "ShroudCopy" });
                 EventManager.Publish(new ModifyTemperanceEvent { Delta = 1 });
+            };
+
+            CanPlay = (entityManager, card) =>
+            {
+                var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                var deck = deckEntity?.GetComponent<Deck>();
+                if (deck == null) return false;
+                var cardsInHand = deck.Hand.FindAll(c => {
+                    var cd = c.GetComponent<CardData>();
+                    if (cd == null) return false;
+                    var cardObj = CardFactory.Create(cd.Card.CardId);
+                    return !cardObj.IsWeapon && cd.Card.CardId != cardObj.CardId;
+                });
+                if (cardsInHand.Count == 0)
+                {
+                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires at least one card in hand!" });
+                    return false;
+                }
+                return true;  
             };
         }
     }

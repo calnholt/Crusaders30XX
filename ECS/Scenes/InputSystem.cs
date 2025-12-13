@@ -290,7 +290,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var cardData = entity.GetComponent<CardData>();
             var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
-            Console.WriteLine($"[InputSystem] Card clicked id={cardData?.CardId} phase={phase?.Sub.ToString() ?? "None"}");
+            Console.WriteLine($"[InputSystem] Card clicked id={cardData?.Card.CardId} phase={phase?.Sub.ToString() ?? "None"}");
             if (phase == null) return;
             if (phase.Sub == SubPhase.Action)
             {
