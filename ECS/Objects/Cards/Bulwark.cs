@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = -Damage, 
                     DamageType = ModifyTypeEnum.Attack 
                 });
-                BlockValueService.ApplyDelta(card, ValuesParse[0]);
+                BlockValueService.ApplyDelta(card, ValuesParse[0], "Bulwark");
             };
         }
     }

@@ -197,7 +197,7 @@ namespace Crusaders30XX.ECS.Systems
                         continue;
                     }
 
-                    int blockVal = BlockValueService.GetBlockValue(card);
+                    int blockVal = BlockValueService.GetTotalBlockValue(card);
                     string color = data.Color.ToString();
                     EventManager.Publish(new BlockAssignmentAdded
                     {

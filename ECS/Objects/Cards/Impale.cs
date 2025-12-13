@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 {
                     Source = entityManager.GetEntity("Player"),
                     Target = entityManager.GetEntity(Target),
-                    Delta = -Damage,
+                    Delta = -GetDerivedDamage(entityManager, card),
                     DamageType = ModifyTypeEnum.Attack
                 });
             };

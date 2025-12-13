@@ -305,7 +305,7 @@ namespace Crusaders30XX.ECS.Systems
                             };
 
                             int passiveDelta = AppliedPassivesService.GetPassiveDelta(previewEvent, ReadOnly: true);
-                            int newDelta = previewEvent.Delta + passiveDelta;
+                            int newDelta = previewEvent.Delta + passiveDelta + AttackDamageValueService.GetTotalDelta(entity);
                             finalDamage = Math.Max(0, -newDelta);
                         }
                     }
@@ -339,7 +339,7 @@ namespace Crusaders30XX.ECS.Systems
             if (hasBlockDefinition)
             {
                 printedBlockValue = card.Block;
-                blockValueToShow = BlockValueService.GetBlockValue(entity);
+                blockValueToShow = BlockValueService.GetTotalBlockValue(entity);
                 blockDeltaValue = blockValueToShow - printedBlockValue;
             }
             if (!isWeapon && blockValueToShow > 0)

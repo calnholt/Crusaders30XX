@@ -25,7 +25,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 EventManager.Publish(new ModifyHpRequestEvent { 
                     Source = player, 
                     Target = enemy, 
-                    Delta = -Damage, 
+                    Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
                 EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = +ValuesParse[0] });

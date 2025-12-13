@@ -465,7 +465,24 @@ namespace Crusaders30XX.ECS.Components
     public class ModifiedBlock : IComponent
     {
         public Entity Owner { get; set; }
-        public int Delta { get; set; } = 0;
+        public List<Modification> Modifications { get; set; } = new List<Modification>();
+
+    }
+
+    /// <summary>
+    /// Marks a card as having its damage value modified with reasons for each modification.
+    /// </summary>
+    public class ModifiedDamage : IComponent
+    {
+        public Entity Owner { get; set; }
+        public List<Modification> Modifications { get; set; } = new List<Modification>();
+        
+    }
+
+    public struct Modification
+    {
+        public int Delta { get; set; }
+        public string Reason { get; set; }
     }
     
     /// <summary>

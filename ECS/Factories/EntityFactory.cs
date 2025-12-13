@@ -319,6 +319,16 @@ namespace Crusaders30XX.ECS.Factories
             entityManager.AddComponent(entity, ParallaxLayer.GetUIParallaxLayer());
             entityManager.AddComponent(entity, new Hint { Text = card.GetCardHint(color) });
             entityManager.AddComponent(entity, new DontDestroyOnReload());
+            var modifiedBlock = new ModifiedBlock { Modifications = new List<Modification>() };
+            entityManager.AddComponent(entity, modifiedBlock);
+            if (color == CardData.CardColor.Black)
+            {
+                modifiedBlock.Modifications.Add(new Modification { Delta = 1, Reason = "Black card" });
+            }
+            if (card.Type == "Attack")
+            {
+                entityManager.AddComponent(entity, new ModifiedDamage { Modifications = new List<Modification>() });
+            }
             // Set tooltip from definition (precomputed in CardDefinitionCache)
             if (!string.IsNullOrEmpty(card.Tooltip))
             {

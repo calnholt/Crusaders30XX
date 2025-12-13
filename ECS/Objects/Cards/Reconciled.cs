@@ -23,11 +23,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
-                var extraDamage = GetConditionalDamage(entityManager, card);
                 EventManager.Publish(new ModifyHpRequestEvent { 
                     Source = player, 
                     Target = enemy, 
-                    Delta = -(Damage + extraDamage), 
+                    Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
             };

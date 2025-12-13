@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Systems;
 
 namespace Crusaders30XX.ECS.Objects.Cards
 {
@@ -47,6 +48,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     _text = resolved;
                 }
             }
+        }
+
+        public int GetDerivedDamage(EntityManager entityManager, Entity card)
+        {
+            return GetConditionalDamage(entityManager, card) + AttackDamageValueService.GetTotalDamageValue(card);
         }
         
         public string Animation { get; set; } = "";

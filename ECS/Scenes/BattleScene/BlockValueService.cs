@@ -9,52 +9,33 @@ namespace Crusaders30XX.ECS.Systems
 {
     internal static class BlockValueService
     {
-        public static void ApplyDelta(Entity card, int delta)
+        public static void ApplyDelta(Entity card, int delta, string reason)
+        {
+          var modifiedBlock = card.GetComponent<ModifiedBlock>();
+          modifiedBlock.Modifications.Add(new Modification { Delta = delta, Reason = reason });
+        }
+
+        public static void RemoveModification(Entity card, string reason)
+        {
+          var modifiedBlock = card.GetComponent<ModifiedBlock>();
+          modifiedBlock.Modifications.RemoveAll(m => m.Reason == reason);
+        }
+
+        public static int GetTotalBlockValue(Entity card)
         {
           var modifiedBlock = card.GetComponent<ModifiedBlock>();
           if (modifiedBlock == null)
           {
-              modifiedBlock = new ModifiedBlock { Owner = card, Delta = delta };
-              card.AddComponent(modifiedBlock);
+            return GetBaseBlockValue(card);
           }
-          else
-          {
-              modifiedBlock.Delta += delta;
-          }
-        }
-
-        public static void SetDelta(Entity card, int delta)
-        {
-          var modifiedBlock = card.GetComponent<ModifiedBlock>();
-          if (modifiedBlock == null)
-          {
-              modifiedBlock = new ModifiedBlock { Owner = card, Delta = delta };
-              card.AddComponent(modifiedBlock);
-          }
-          else
-          {
-              modifiedBlock.Delta = delta;
-          }
-        }
-
-        public static int GetBlockValue(Entity card)
-        {
-          var modifiedBlock = card.GetComponent<ModifiedBlock>();
           var baseBlock = GetBaseBlockValue(card);
-          if (modifiedBlock == null)
-          {
-              return baseBlock;
-          }
-          return modifiedBlock.Delta + baseBlock;
+          return modifiedBlock.Modifications.Sum(m => m.Delta) + baseBlock;
         }
 
         public static int GetBaseBlockValue(Entity card)
         {
             var cd = card.GetComponent<CardData>();
-            var cardObj = CardFactory.Create(cd.Card.CardId);
-            if (cardObj == null) return 0;
-            var block = cardObj.Block + (cd.Color == CardData.CardColor.Black ? 1 : 0);
-            return block;
+            return cd.Card.Block;
         }
     }
 }

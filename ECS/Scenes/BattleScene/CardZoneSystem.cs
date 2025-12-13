@@ -225,7 +225,7 @@ namespace Crusaders30XX.ECS.Systems
                         abc = new AssignedBlockCard
                         {
                             ContextId = evt.ContextId,
-                            BlockAmount = BlockValueService.GetBlockValue(evt.Card),
+                            BlockAmount = BlockValueService.GetTotalBlockValue(evt.Card),
                             StartPos = t?.Position ?? Vector2.Zero,
                             CurrentPos = t?.Position ?? Vector2.Zero,
                             TargetPos = t?.Position ?? Vector2.Zero,

@@ -65,7 +65,7 @@ namespace Crusaders30XX.ECS.Systems
 					return;
 				}
 				// Assign this card as block (always assign from hand); color from card
-				int blockVal = BlockValueService.GetBlockValue(card);
+				int blockVal = BlockValueService.GetTotalBlockValue(card);
 				string color = data.Color.ToString();
 				// Move card out of hand into AssignedBlock zone; unassign is handled by clicking assigned banner
 				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();

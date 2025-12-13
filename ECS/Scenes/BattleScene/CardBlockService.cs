@@ -21,7 +21,7 @@ namespace Crusaders30XX.ECS.Systems
             if (specialEffects.Any(se => se.type == "Corrode"))
             {
                 Console.WriteLine($"[CardBlockService] Corrode effect detected - {attackId} - {cardObj.CardId}");
-                BlockValueService.ApplyDelta(card, -1);
+                BlockValueService.ApplyDelta(card, -1, "Corrode");
             }
         }
     }

@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Systems;
 
 namespace Crusaders30XX.ECS.Objects.Cards
 {
@@ -21,7 +22,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
             OnPlay = (entityManager, card) =>
             {
-                var damage = GetConditionalDamage(entityManager, card) + Damage;
+                var damage = GetDerivedDamage(entityManager, card);
                 EventManager.Publish(new ModifyHpRequestEvent { 
                     Source = entityManager.GetEntity("Player"), 
                     Target = entityManager.GetEntity("Enemy"), 
