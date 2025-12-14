@@ -10,7 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         {
             Name = "Deus Vult";
             CardId = "deus_vult";
-            Text = "Deal X damage, where X is {4} times your courage. Lose all courage.";
+            Text = "Deal X damage, where X is {3} times your courage. Lose all courage.";
             Animation = "Attack";
             Type = "Attack";
             Damage = 0;
