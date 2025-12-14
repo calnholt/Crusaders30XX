@@ -15,12 +15,22 @@
 
 Prompts - 
 
+prevent card from being clicked when transition between assigned as block and returning to hand is happening
+
+ambush text needs to wait for phase transition animation to finish
+
+ambush meter needs parallax and timer text in the center
+
+needs better card highlighting when mouse is over it
+
 enemy attack display - update text for different types of conditinos (one card, tow cards, etc)
 "if this attack (deals damage, is not blocked by X cards) - [effect]"
 
 abandon quest screen stuck on mouse, esc doesnt leave it
 
 customize screen - cant scroll to the bottom in full screen
+
+cant play text needs black background shape
 
 card idea - spend aegis
 

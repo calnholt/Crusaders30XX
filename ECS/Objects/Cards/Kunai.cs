@@ -38,7 +38,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Wounded, Delta = +1 });
                 }
-                entityManager.AddComponent(card, new MarkedForReturnToDeck { Owner = card });
+                entityManager.AddComponent(card, new MarkedForExhaust { Owner = card });
             };
         }
     }
