@@ -78,7 +78,7 @@ namespace Crusaders30XX.ECS.Systems
             int cardScaledH = (int)(cardH * _deckPanel.CardScale);
             int gapsTotal = rows > 0 ? (rows - 1) * _deckPanel.RowGap : 0;
             int contentHeight = _deckPanel.HeaderHeight + _deckPanel.TopMargin + rows * cardScaledH + gapsTotal;
-            int maxScroll = Math.Max(0, contentHeight - _graphicsDevice.Viewport.Height);
+            int maxScroll = Math.Max(0, contentHeight - Game1.VirtualHeight);
             if (st.RightScroll > maxScroll) st.RightScroll = maxScroll;
 
             // Unified click detection via CursorStateEvent for both mouse and gamepad

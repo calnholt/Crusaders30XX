@@ -22,11 +22,13 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _font = FontSingleton.TitleFont;
 		private readonly Texture2D _pixel;
 
-		private string _lastContextId = null;
-		private float _introElapsed = 0f;
-		private readonly System.Random _rand = new System.Random();
-		private Entity _textAnchorEntity;
-		private Entity _timerAnchorEntity;
+	private string _lastContextId = null;
+	private float _introElapsed = 0f;
+	private readonly System.Random _rand = new System.Random();
+	private Entity _textAnchorEntity;
+	private Entity _timerAnchorEntity;
+	private bool _waitingForPhaseAnimation = false;
+	private string _pendingContextId = null;
 
 		// Debug-editable tuning
 		[DebugEditable(DisplayName = "Intro Drop Duration (s)", Step = 0.05f, Min = 0.05f, Max = 3f)]
@@ -82,21 +84,48 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 
-			EventManager.Subscribe<ChangeBattlePhaseEvent>(evt =>
+		EventManager.Subscribe<ChangeBattlePhaseEvent>(evt =>
+		{
+			// Reset intro when leaving block/attack phases
+			if (evt.Current != SubPhase.Block && evt.Current != SubPhase.EnemyAttack)
 			{
-				// Reset intro when leaving block/attack phases
-				if (evt.Current != SubPhase.Block && evt.Current != SubPhase.EnemyAttack)
+				var st = GetOrCreateAmbushState();
+				st.IsActive = false;
+				st.IntroActive = false;
+				st.TimerRemainingSeconds = 0f;
+				st.FiredAutoConfirm = false;
+				_introElapsed = 0f;
+				_lastContextId = null;
+				_waitingForPhaseAnimation = false;
+				_pendingContextId = null;
+			}
+		});
+
+		EventManager.Subscribe<BattlePhaseAnimationCompleteEvent>(evt =>
+		{
+			// When phase animation completes, activate the ambush intro if we were waiting
+			if (_waitingForPhaseAnimation && !string.IsNullOrEmpty(_pendingContextId))
+			{
+				var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>()?.Sub ?? SubPhase.Action;
+				if (phase == SubPhase.Block)
 				{
 					var st = GetOrCreateAmbushState();
-					st.IsActive = false;
-					st.IntroActive = false;
-					st.TimerRemainingSeconds = 0f;
-					st.FiredAutoConfirm = false;
+					_lastContextId = _pendingContextId;
+					st.IsActive = true;
+					st.IntroActive = true;
+					st.ContextId = _pendingContextId;
+					st.TimerDurationSeconds = Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
+					st.TimerRemainingSeconds = st.TimerDurationSeconds;
 					_introElapsed = 0f;
-					_lastContextId = null;
+					ResetAnchorParallax();
+					UpdateAnchorTransforms();
 				}
-			});
-			EnsureAnchors();
+				_waitingForPhaseAnimation = false;
+				_pendingContextId = null;
+			}
+		});
+
+		EnsureAnchors();
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -116,42 +145,42 @@ namespace Crusaders30XX.ECS.Systems
 			var pa = intent.Planned[0];
 			var st = GetOrCreateAmbushState();
 
-			// Detect context changes. Only commit activation during Block so ambush triggers at phase entry.
-			if (_lastContextId != pa.ContextId)
+		// Detect context changes. Only commit activation during Block so ambush triggers at phase entry.
+		if (_lastContextId != pa.ContextId)
+		{
+			_introElapsed = 0f;
+			st.FiredAutoConfirm = false;
+			if (pa.IsAmbush && phase == SubPhase.Block)
 			{
-				_introElapsed = 0f;
-				st.FiredAutoConfirm = false;
-				if (pa.IsAmbush && phase == SubPhase.Block)
-				{
-					_lastContextId = pa.ContextId;
-					st.IsActive = true;
-					st.IntroActive = true;
-					st.ContextId = pa.ContextId;
-					st.TimerDurationSeconds = Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
-					st.TimerRemainingSeconds = st.TimerDurationSeconds;
-					ResetAnchorParallax();
-					UpdateAnchorTransforms();
-				}
-				else
-				{
-					// Wait for Block to activate; keep ambush inactive for now
-					Deactivate();
-				}
-			}
-			// Fallback: if we are in Block and haven't activated for this context yet, activate now
-			else if (pa.IsAmbush && phase == SubPhase.Block && (!st.IsActive || st.ContextId != pa.ContextId))
-			{
-				_lastContextId = pa.ContextId;
-				_introElapsed = 0f;
-				st.FiredAutoConfirm = false;
-				st.IsActive = true;
-				st.IntroActive = true;
+				// Wait for phase animation to complete before showing ambush intro
+				_waitingForPhaseAnimation = true;
+				_pendingContextId = pa.ContextId;
+				// Prepare state but don't activate intro yet
 				st.ContextId = pa.ContextId;
 				st.TimerDurationSeconds = Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
 				st.TimerRemainingSeconds = st.TimerDurationSeconds;
-				ResetAnchorParallax();
-				UpdateAnchorTransforms();
 			}
+			else
+			{
+				// Wait for Block to activate; keep ambush inactive for now
+				Deactivate();
+			}
+		}
+		// Fallback: if we are in Block and haven't activated for this context yet, wait for animation
+		else if (pa.IsAmbush && phase == SubPhase.Block && (!st.IsActive || st.ContextId != pa.ContextId))
+		{
+			if (!_waitingForPhaseAnimation)
+			{
+				// Set up waiting state if not already waiting
+				_waitingForPhaseAnimation = true;
+				_pendingContextId = pa.ContextId;
+				_introElapsed = 0f;
+				st.FiredAutoConfirm = false;
+				st.ContextId = pa.ContextId;
+				st.TimerDurationSeconds = Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
+				st.TimerRemainingSeconds = st.TimerDurationSeconds;
+			}
+		}
 
 			// Maintain state while in Block
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -281,15 +310,17 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new DebugCommandEvent { Command = "ConfirmEnemyAttack" });
 		}
 
-		private void Deactivate()
-		{
-			var st = GetOrCreateAmbushState();
-			st.IsActive = false;
-			st.IntroActive = false;
-			st.TimerRemainingSeconds = 0f;
-			st.FiredAutoConfirm = false;
-			_introElapsed = 0f;
-		}
+	private void Deactivate()
+	{
+		var st = GetOrCreateAmbushState();
+		st.IsActive = false;
+		st.IntroActive = false;
+		st.TimerRemainingSeconds = 0f;
+		st.FiredAutoConfirm = false;
+		_introElapsed = 0f;
+		_waitingForPhaseAnimation = false;
+		_pendingContextId = null;
+	}
 
 		private AmbushState GetOrCreateAmbushState()
 		{

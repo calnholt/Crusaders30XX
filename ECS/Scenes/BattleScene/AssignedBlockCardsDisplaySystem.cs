@@ -318,7 +318,7 @@ namespace Crusaders30XX.ECS.Systems
 			else
 			{
 				// Fallback to the anchor transform (parallax-adjusted) or viewport center
-				basePoint = anchorT?.Position ?? new Vector2(_graphicsDevice.Viewport.Width * 0.5f, _graphicsDevice.Viewport.Height * 0.5f);
+				basePoint = anchorT?.Position ?? new Vector2(Game1.VirtualWidth * 0.5f, Game1.VirtualHeight * 0.5f);
 			}
 			var center = new Vector2(basePoint.X + AnchorOffsetX, basePoint.Y + AnchorOffsetY);
 			float offsetIndex = indexInContext - (countInContext - 1) * 0.5f;

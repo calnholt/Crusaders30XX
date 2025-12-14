@@ -258,7 +258,7 @@ namespace Crusaders30XX.ECS.Systems
             int panelHeight = measureY - panelY + Padding;
             // Constrain panel height to viewport with a bottom margin
             int bottomMargin = BottomMargin;
-            int maxPanelHeight = Math.Max(120, _graphicsDevice.Viewport.Height - bottomMargin - panelY);
+            int maxPanelHeight = Math.Max(120, Game1.VirtualHeight - bottomMargin - panelY);
             bool needScroll = panelHeight > maxPanelHeight;
             int displayHeight = needScroll ? maxPanelHeight : panelHeight;
             var panelRect = new Rectangle(panelX, panelY, PanelWidth, displayHeight);
@@ -402,7 +402,7 @@ namespace Crusaders30XX.ECS.Systems
             int deferredRowH = ddCurrent.RowHeight;
             // Open the dropdown list downward
             var deferredListRectFull = new Rectangle(ddUI.Bounds.X, ddUI.Bounds.Bottom, ddUI.Bounds.Width, deferredItemCount * deferredRowH);
-            int availableBelow = Math.Max(0, _graphicsDevice.Viewport.Height - ddUI.Bounds.Bottom - 8);
+            int availableBelow = Math.Max(0, Game1.VirtualHeight - ddUI.Bounds.Bottom - 8);
             int listTotalHeight = deferredItemCount * deferredRowH;
             int listDisplayHeight = Math.Min(listTotalHeight, availableBelow);
             var deferredListRect = new Rectangle(ddUI.Bounds.X, ddUI.Bounds.Bottom, ddUI.Bounds.Width, listDisplayHeight);

@@ -359,8 +359,8 @@ namespace Crusaders30XX.ECS.Systems
 			_basicEffect.World = Matrix.Identity;
 			_basicEffect.View = Matrix.Identity;
 			_basicEffect.Projection = Matrix.CreateOrthographicOffCenter(
-				0, _graphicsDevice.Viewport.Width,
-				_graphicsDevice.Viewport.Height, 0,
+				0, Game1.VirtualWidth,
+				Game1.VirtualHeight, 0,
 				0, 1);
 
 			var presentKeys = new HashSet<string>();

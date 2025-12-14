@@ -115,7 +115,7 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
-			LayoutAndSyncLocationEntities(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height);
+			LayoutAndSyncLocationEntities(Game1.VirtualWidth, Game1.VirtualHeight);
 
 			// After layout, update BasePosition for each location entity from its UI bounds center
 			var i = 0;
@@ -127,7 +127,7 @@ namespace Crusaders30XX.ECS.Systems
 				var ui = locEnt.GetComponent<UIElement>();
 				if (t != null && ui != null)
 				{
-					var rect = GetRect(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, TotalSlots, i);
+					var rect = GetRect(Game1.VirtualWidth, Game1.VirtualHeight, TotalSlots, i);
 					var position = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
 					t.BasePosition = position;
 					i++;

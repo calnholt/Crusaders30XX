@@ -77,7 +77,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			else
 			{
-				center = new Vector2(120, _graphicsDevice.Viewport.Height - 120);
+				center = new Vector2(120, Game1.VirtualHeight - 120);
 			}
 
 			// Draw black filled circle

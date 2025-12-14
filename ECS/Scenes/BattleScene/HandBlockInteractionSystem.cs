@@ -44,6 +44,8 @@ namespace Crusaders30XX.ECS.Systems
 				var data = card.GetComponent<CardData>();
 				if (ui == null || data == null) continue;
 				if (!ui.IsClicked) continue;
+				// Skip cards that are transitioning (being assigned or returning from assignment)
+				if (card.GetComponent<AssignedBlockCard>() != null) continue;
 				string id = data.Card.CardId ?? string.Empty;
                 // Skip weapons: they cannot be assigned as block
 				try

@@ -62,8 +62,8 @@ namespace Crusaders30XX.ECS.Systems
             // Panel
             int x = overlay.PanelX;
             int y = overlay.PanelY;
-            int w = Math.Min(overlay.PanelWidth, _graphicsDevice.Viewport.Width - x - 10);
-            int h = Math.Min(overlay.PanelHeight, _graphicsDevice.Viewport.Height - y - 10);
+            int w = Math.Min(overlay.PanelWidth, Game1.VirtualWidth - x - 10);
+            int h = Math.Min(overlay.PanelHeight, Game1.VirtualHeight - y - 10);
             var panelRect = new Rectangle(x, y, w, h);
             Fill(panelRect, new Color(10, 10, 10, 200));
             Stroke(panelRect, Color.White, 1);

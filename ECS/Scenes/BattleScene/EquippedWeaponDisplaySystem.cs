@@ -119,7 +119,7 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureRootEntity();
 			var root = EntityManager.GetEntity(RootEntityName);
 			var tRoot = root?.GetComponent<Transform>();
-            Vector2 center = new Vector2(100, _graphicsDevice.Viewport.Height - 200);
+            Vector2 center = new Vector2(100, Game1.VirtualHeight - 200);
             if (discardRect.HasValue)
             {
                 var dr = discardRect.Value;
@@ -187,7 +187,7 @@ namespace Crusaders30XX.ECS.Systems
 		if (e == null)
 		{
 			e = EntityManager.CreateEntity(RootEntityName);
-			EntityManager.AddComponent(e, new Transform { Position = new Vector2(100, _graphicsDevice.Viewport.Height - 200), ZOrder = 10000 });
+			EntityManager.AddComponent(e, new Transform { Position = new Vector2(100, Game1.VirtualHeight - 200), ZOrder = 10000 });
 			EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
             EntityManager.AddComponent(e, new Hint { Text = "Represents your equipped weapon." });
 		}
