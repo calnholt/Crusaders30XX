@@ -177,6 +177,16 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Request an animated move of a card from Hand to DrawPile. Zone mutation is deferred until finalize.
+    /// </summary>
+    public class PlayCardToDrawPileAnimationRequested
+    {
+        public Entity Card { get; set; }
+        public Entity Deck { get; set; }
+        public string ContextId { get; set; }
+    }
+
+    /// <summary>
     /// Request to finalize a deferred CardMove by mutating zones and publishing CardMoved.
     /// </summary>
     public class CardMoveFinalizeRequested

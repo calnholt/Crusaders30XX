@@ -27,6 +27,7 @@ namespace Crusaders30XX.ECS.Systems
             public Entity Card;
             public Entity Deck;
             public string ContextId;
+            public CardZoneType Destination;
             public Vector2 Start;
             public Vector2 End;
             public float Duration;
@@ -85,6 +86,7 @@ namespace Crusaders30XX.ECS.Systems
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             EventManager.Subscribe<PlayCardToDiscardAnimationRequested>(OnAnimRequested);
+            EventManager.Subscribe<PlayCardToDrawPileAnimationRequested>(OnDrawPileAnimRequested);
             EventManager.Subscribe<DeleteCachesEvent>(_ => _anims.Clear());
         }
 
@@ -117,7 +119,7 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         Card = a.Card,
                         Deck = a.Deck,
-                        Destination = CardZoneType.DiscardPile,
+                        Destination = a.Destination,
                         ContextId = a.ContextId
                     });
                     _anims.RemoveAt(i);
@@ -219,8 +221,37 @@ namespace Crusaders30XX.ECS.Systems
                 Card = evt.Card,
                 Deck = evt.Deck,
                 ContextId = evt.ContextId,
+                Destination = CardZoneType.DiscardPile,
                 Start = startPos,
                 End = ResolveDiscardAnchor(),
+                Duration = DurationSeconds,
+                Elapsed = 0f,
+                StartScale = StartScale,
+                EndScale = EndScale,
+                ArcHeight = ArcHeightPx
+            };
+            _anims.Add(anim);
+        }
+
+        private void OnDrawPileAnimRequested(PlayCardToDrawPileAnimationRequested evt)
+        {
+            if (evt == null || evt.Card == null) return;
+            var t = evt.Card.GetComponent<Transform>();
+            var ui = evt.Card.GetComponent<UIElement>();
+            if (t == null && ui == null) return;
+            var startPos = t?.Position ?? Vector2.Zero;
+            if (ui != null && ui.Bounds.Width > 0 && ui.Bounds.Height > 0)
+            {
+                startPos = new Vector2(ui.Bounds.Center.X, ui.Bounds.Center.Y);
+            }
+            var anim = new MoveAnim
+            {
+                Card = evt.Card,
+                Deck = evt.Deck,
+                ContextId = evt.ContextId,
+                Destination = CardZoneType.DrawPile,
+                Start = startPos,
+                End = ResolveDrawPileAnchor(),
                 Duration = DurationSeconds,
                 Elapsed = 0f,
                 StartScale = StartScale,
@@ -237,6 +268,15 @@ namespace Crusaders30XX.ECS.Systems
             if (tr != null) return tr.Position;
             var vp = _graphicsDevice.Viewport;
             return new Vector2(60, vp.Height - 60);
+        }
+
+        private Vector2 ResolveDrawPileAnchor()
+        {
+            var root = EntityManager.GetEntity("UI_DrawPileRoot");
+            var tr = root?.GetComponent<Transform>();
+            if (tr != null) return tr.Position;
+            var vp = _graphicsDevice.Viewport;
+            return new Vector2(vp.Width - 60, vp.Height - 60);
         }
 
         private static float EaseIn(float t, float pow)

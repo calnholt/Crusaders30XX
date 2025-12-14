@@ -106,6 +106,34 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
+            // Intercept Hand -> DrawPile to run animation first; finalize will mutate zones and publish CardMoved
+            if (evt.Destination == CardZoneType.DrawPile)
+            {
+                bool isFromHand = deck.Hand.Contains(evt.Card);
+
+                if (isFromHand)
+                {
+                    if (evt.Card.GetComponent<AnimatingHandToDrawPile>() == null)
+                    {
+                        EntityManager.AddComponent(evt.Card, new AnimatingHandToDrawPile());
+                        var uiAnim = evt.Card.GetComponent<UIElement>();
+                        if (uiAnim != null)
+                        {
+                            uiAnim.IsInteractable = false;
+                            uiAnim.IsHovered = false;
+                            uiAnim.IsClicked = false;
+                        }
+                        EventManager.Publish(new PlayCardToDrawPileAnimationRequested
+                        {
+                            Card = evt.Card,
+                            Deck = deckEntity,
+                            ContextId = evt.ContextId
+                        });
+                    }
+                    return;
+                }
+            }
+
             // Remove from all known deck lists first to avoid duplicates
             deck.DrawPile.Remove(evt.Card);
             deck.Hand.Remove(evt.Card);
@@ -359,6 +387,28 @@ namespace Crusaders30XX.ECS.Systems
                     EntityManager.DestroyEntity(evt.Card.Id);
                     break;
                 }
+                case CardZoneType.DrawPile:
+                {
+                    deck.DrawPile.Add(evt.Card);
+                    // Not interactable in draw pile
+                    var uiDP = evt.Card.GetComponent<UIElement>();
+                    if (uiDP != null)
+                    {
+                        uiDP.IsInteractable = false;
+                        uiDP.IsHovered = false;
+                        uiDP.IsClicked = false;
+                        uiDP.EventType = UIElementEventType.None;
+                    }
+                    // Reset transform so highlight hit-test uses proper defaults when re-drawn
+                    var tdp = evt.Card.GetComponent<Transform>();
+                    if (tdp != null)
+                    {
+                        tdp.Rotation = 0f;
+                        if (tdp.Position == Vector2.Zero) { tdp.Position = Vector2.Zero; }
+                        tdp.Scale = Vector2.One;
+                    }
+                    break;
+                }
                 default:
                 {
                     // If finalize was called for an unsupported destination, no-op back to hand
@@ -370,9 +420,11 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            // Clear animation marker if present
+            // Clear animation markers if present
             var anim = evt.Card.GetComponent<AnimatingHandToDiscard>();
             if (anim != null) { EntityManager.RemoveComponent<AnimatingHandToDiscard>(evt.Card); }
+            var animDrawPile = evt.Card.GetComponent<AnimatingHandToDrawPile>();
+            if (animDrawPile != null) { EntityManager.RemoveComponent<AnimatingHandToDrawPile>(evt.Card); }
 
             EventManager.Publish(new CardMoved
             {

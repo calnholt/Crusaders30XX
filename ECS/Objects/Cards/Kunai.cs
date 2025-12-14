@@ -17,7 +17,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Animation = "Attack";
             Type = "Attack";
             Damage = 4;
-            ExhaustsOnPlay = true;
             ExhaustsOnEndTurn = true;
             CanAddToLoadout = false;
             IsToken = true;
@@ -39,6 +38,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Wounded, Delta = +1 });
                 }
+                entityManager.AddComponent(card, new MarkedForReturnToDeck { Owner = card });
             };
         }
     }

@@ -624,6 +624,7 @@ namespace Crusaders30XX.ECS.Factories
 
             // Note: Explicitly excluding transient state components:
             // - AnimatingHandToDiscard
+            // - AnimatingHandToDrawPile
             // - CardToDiscardFlight
             // - SelectedForPayment
             // - MarkedForSpecificDiscard

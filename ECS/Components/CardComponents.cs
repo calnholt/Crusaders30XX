@@ -896,6 +896,15 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
     }
 
+    /// <summary>
+    /// Marker for a card currently animating from Hand to DrawPile.
+    /// Hand layout/draw systems should ignore cards with this component until finalize.
+    /// </summary>
+    public class AnimatingHandToDrawPile : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
     public class CardToDiscardFlight : IComponent
     {
         public Entity Owner { get; set; }
