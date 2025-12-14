@@ -22,11 +22,18 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
             OnPlay = (entityManager, card) =>
             {
-                var paymentCards = entityManager.GetEntitiesWithComponent<LastPaymentCache>().FirstOrDefault()?.GetComponent<LastPaymentCache>().PaymentCards.ToList();
-                var paymentCard = paymentCards[0];
-                var copy = EntityFactory.CloneEntity(entityManager, paymentCard);
-                entityManager.AddComponent(copy, new MarkedForExhaust { Owner = copy });
-                EventManager.Publish(new CardMoveRequested { Card = copy, Deck = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault(), Destination = CardZoneType.Hand, Reason = "ShroudCopy" });
+                // Get payment cards with proper null checking
+                var cacheEntity = entityManager.GetEntitiesWithComponent<LastPaymentCache>().FirstOrDefault();
+                var paymentCards = cacheEntity?.GetComponent<LastPaymentCache>()?.PaymentCards;
+                
+                if (paymentCards != null && paymentCards.Count > 0)
+                {
+                    var paymentCard = paymentCards[0];
+                    var copy = EntityFactory.CloneEntity(entityManager, paymentCard);
+                    entityManager.AddComponent(copy, new MarkedForExhaust { Owner = copy });
+                    EventManager.Publish(new CardMoveRequested { Card = copy, Deck = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault(), Destination = CardZoneType.Hand, Reason = "ShroudCopy" });
+                }
+                
                 EventManager.Publish(new ModifyTemperanceEvent { Delta = 1 });
             };
 

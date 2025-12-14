@@ -161,6 +161,20 @@ namespace Crusaders30XX.ECS.Systems
             return solution ?? new List<Entity>();
         }
 
+        /// <summary>
+        /// Ensures the LastPaymentCache entity exists and returns it.
+        /// </summary>
+        private LastPaymentCache EnsurePaymentCacheExists()
+        {
+            var e = EntityManager.GetEntitiesWithComponent<LastPaymentCache>().FirstOrDefault();
+            if (e == null)
+            {
+                e = EntityManager.CreateEntity("LastPaymentCache");
+                EntityManager.AddComponent(e, new LastPaymentCache());
+            }
+            return e.GetComponent<LastPaymentCache>();
+        }
+
         private void OnPlayCardRequested(PlayCardRequested evt)
         {
             if (evt?.Card == null) return;
@@ -326,6 +340,13 @@ namespace Crusaders30XX.ECS.Systems
                         {
                             EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
                         }
+                        
+                        // Populate payment cache so card effects can reference what was paid
+                        var cache = EnsurePaymentCacheExists();
+                        cache.CardPlayed = evt.Card;
+                        cache.PaymentCards = new List<Entity>(solution);
+                        cache.HasData = true;
+                        
                         EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
                         return;
                     }
