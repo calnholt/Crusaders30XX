@@ -34,7 +34,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Card Corner Radius", Step = 1, Min = 0, Max = 64)]
         public int CornerRadiusOverride { get; set; } = 0;
         [DebugEditable(DisplayName = "Card Border Thickness", Step = 1, Min = 0, Max = 32)]
-        public int BorderThicknessOverride { get; set; } = 0;
+        public int BorderThicknessOverride { get; set; } = 1;
 
         // Debug-adjustable shield icon layout
         [DebugEditable(DisplayName = "Shield Icon Height", Step = 1, Min = 8, Max = 128)]

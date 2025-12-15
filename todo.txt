@@ -17,8 +17,6 @@ Prompts -
 
 ambush meter needs parallax and timer text in the center
 
-needs better card highlighting when mouse is over it
-
 enemy attack display - update text for different types of conditinos (one card, tow cards, etc)
 "if this attack (deals damage, is not blocked by X cards) - [effect]"
 

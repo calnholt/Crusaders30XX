@@ -14,9 +14,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "seize";
             Name = "Seize";
             Target = "Enemy";
-            Damage = 8;
+            Damage = 6;
             Block = 3;
-            Text = "If you have lost courage during this action phase, this gains +{8} damage.";
+            Text = "If you have lost courage during this action phase, this gains +{10} damage.";
             Animation = "Attack";
             Type = "Attack";
 
