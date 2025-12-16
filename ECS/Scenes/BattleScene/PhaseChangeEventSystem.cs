@@ -28,11 +28,12 @@ namespace Crusaders30XX.ECS.Systems
                         _firstBlockProcessed = false;
                     }
 
-                    // For subsequent blocks in same turn, clear waiting flag so attack display triggers
-                    if (_firstBlockProcessed)
-                    {
-                        _waitingForAnimation = false;
-                    }
+                // For subsequent blocks in same turn, clear waiting flag and reset context so attack display triggers
+                if (_firstBlockProcessed)
+                {
+                    _waitingForAnimation = false;
+                    _lastSeenContextId = null; // Reset so new attack context is detected
+                }
                 }
             });
 
