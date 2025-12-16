@@ -157,7 +157,9 @@ namespace Crusaders30XX.ECS.Systems
 					CreateBattleSceneEntities();
 				}
 				InitBattle();
-				EventManager.Publish(new ShowStartOfBattleAnimationEvent());
+				TimerScheduler.Schedule(0.3f, () => {
+					EventManager.Publish(new ShowStartOfBattleAnimationEvent());
+				});
 				// EnqueueBattleRules(true);
 			});
 			EventManager.Subscribe<DeleteCachesEvent>(_ => {
@@ -172,7 +174,9 @@ namespace Crusaders30XX.ECS.Systems
 				bool willShowDialog = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<PendingQuestDialog>()?.WillShowDialog ?? false;
 				if (!willShowDialog)
 				{
-					EventManager.Publish(new ShowStartOfBattleAnimationEvent());
+					TimerScheduler.Schedule(0.3f, () => {
+						EventManager.Publish(new ShowStartOfBattleAnimationEvent());
+					});
 				}
 			});
 			EventManager.Subscribe<BattlePhaseAnimationCompleteEvent>(_ => {
