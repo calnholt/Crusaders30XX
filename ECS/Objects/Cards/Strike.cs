@@ -14,7 +14,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Enemy";
             Text = "{50}% chance to gain {2} courage.";
             Animation = "Attack";
-            Type = "Attack";
             Damage = 8;
             Block = 3;
 

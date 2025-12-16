@@ -427,4 +427,9 @@ namespace Crusaders30XX.ECS.Events
         public Entity Card { get; set; }
     }
 
+    public class EndTurnDisplayEvent
+    {
+        public bool ShowButton;
+    }
+
 } 

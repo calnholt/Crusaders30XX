@@ -12,9 +12,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "stalwart";
             Name = "Stalwart";
             Text = "As an additional cost when using this card to block, lose {2} courage.";
-            Type = "Block";
+            Type = CardType.Block;
             Block = 7;
-            IsBlockCard = true;
             
             OnBlock = (entityManager, card) =>
             {

@@ -17,7 +17,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "Put {2} to {4} Kunai cards in your hand.";
             Cost = ["White"];
             Animation = "Buff";
-            Type = "Spell";
+            Type = CardType.Prayer;
             Block = 3;
 
             OnPlay = (entityManager, card) =>

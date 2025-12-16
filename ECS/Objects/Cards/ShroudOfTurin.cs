@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "Choose a card from your hand - create an exact copy of the chosen card and put it into to your hand. Gain 1 temperance and exhaust this.";
             IsFreeAction = true;
             Animation = "Buff";
-            Type = "Spell";
+            Type = CardType.Prayer;
             Block = 3;
             SpecialAction = "SelectOneCardFromHand";
 

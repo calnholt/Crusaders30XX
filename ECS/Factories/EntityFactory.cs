@@ -14,6 +14,7 @@ using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -307,6 +308,7 @@ namespace Crusaders30XX.ECS.Factories
                 Card = CardFactory.Create(cardId),
                 Color = color
             };
+            // cardData.Card?.OnCreate(entityManager, entity);
 
             var transform = new Transform { Position = new Vector2(-1000, -1000), Scale = Vector2.One };
             var sprite = new Sprite { TexturePath = string.Empty, IsVisible = true };
@@ -325,7 +327,7 @@ namespace Crusaders30XX.ECS.Factories
             {
                 modifiedBlock.Modifications.Add(new Modification { Delta = 1, Reason = "Black card" });
             }
-            if (card.Type == "Attack")
+            if (card.Type == CardType.Attack)
             {
                 entityManager.AddComponent(entity, new ModifiedDamage { Modifications = new List<Modification>() });
             }

@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Player";
             Text = "Gain {3} courage. End your turn.";
             IsFreeAction = true;
-            Type = "Spell";
+            Type = CardType.Prayer;
             Block = 2;
 
             OnPlay = (entityManager, card) =>

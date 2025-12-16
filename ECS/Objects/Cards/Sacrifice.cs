@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "Draw {2} cards, gain {1} temperance, and gain {1} penance.";
             IsFreeAction = true;
             Animation = "Buff";
-            Type = "Spell";
+            Type = CardType.Prayer;
             Block = 2;
 
             OnPlay = (entityManager, card) =>

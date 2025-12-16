@@ -270,7 +270,7 @@ namespace Crusaders30XX.ECS.Systems
             // Draw damage value in trapezoid above block section for attack cards
             int effectiveDamage = 0;
             int damageDelta = 0;
-            if (hasDef && IsAttackCard(card))
+            if (hasDef && card.Type == CardType.Attack)
             {
                 try
                 {
@@ -400,13 +400,17 @@ namespace Crusaders30XX.ECS.Systems
 
             // Draw AP cost text at bottom-center: 0AP if free action else 1AP
             string bottomText;
-            if (hasDef && card.IsBlockCard)
+            if (hasDef && card.Type == CardType.Block)
             {
                 bottomText = "Block";
             }
+            else if (card.Type == CardType.Relic)
+            {
+                bottomText = "Relic";
+            }
             else
             {
-                bool isFree = GetIsFreeAction(entity) || hasDef && card.IsBlockCard;
+                bool isFree = GetIsFreeAction(entity) || hasDef && card.Type == CardType.Block;
                 bottomText = isFree ? "Free" : "1AP";
             }
             var apSize = _nameFont.MeasureString(bottomText) * (APTextScale * visualScale);
@@ -449,12 +453,6 @@ namespace Crusaders30XX.ECS.Systems
                 default:
                     return Color.White;
             }
-        }
-
-        private bool IsAttackCard(CardBase card)
-        {
-            if (card == null) return false;
-            return string.Equals(card.Type, "Attack", StringComparison.OrdinalIgnoreCase);
         }
 
         private Color GetDamageTrapezoidColor(CardData.CardColor color)

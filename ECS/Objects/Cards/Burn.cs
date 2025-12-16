@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Enemy";
             Text = "Apply {4} burn to the enemy. If you have {3}+ courage, gain {1} action point and lose {1} courage.";
             Block = 2;
-            Type = "Spell";
+            Type = CardType.Prayer;
             Animation = "Attack";
 
             OnPlay = (entityManager, card) =>

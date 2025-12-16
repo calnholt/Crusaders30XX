@@ -12,7 +12,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "deus_vult";
             Text = "Deal X damage, where X is {3} times your courage. Lose all courage.";
             Animation = "Attack";
-            Type = "Attack";
             Damage = 0;
             Block = 3;
 

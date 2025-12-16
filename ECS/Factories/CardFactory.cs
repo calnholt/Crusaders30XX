@@ -18,6 +18,7 @@ namespace Crusaders30XX.ECS.Factories
             return cardId switch
             {
                 "anoint_the_sick" => new AnointTheSick(),
+                "ark_of_the_covenant" => new ArkOfTheCovenant(),
                 "bulwark" => new Bulwark(),
                 "burn" => new Burn(),
                 "carve" => new Carve(),
@@ -61,6 +62,7 @@ namespace Crusaders30XX.ECS.Factories
             return new Dictionary<string, CardBase>
             {
                 { "anoint_the_sick", new AnointTheSick() },
+                { "ark_of_the_covenant", new ArkOfTheCovenant() },
                 { "bulwark", new Bulwark() },
                 { "burn", new Burn() },
                 { "carve", new Carve() },

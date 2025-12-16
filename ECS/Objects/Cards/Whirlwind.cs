@@ -12,10 +12,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "whirlwind";
             Name = "Whirlwind";
             Target = "Enemy";
-            Text = "Attacks {4} times.";
+            Text = "Attacks {3} times.";
             Cost = ["Black"];
             Animation = "Attack";
-            Type = "Attack";
             Damage = 5;
             Block = 3;
 
@@ -24,10 +23,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
                 var time = 0.5f;
-                StateSingleton.PreventClicking = true;
                 var numOfHits = ValuesParse[0];
+                EventManager.Publish(new EndTurnDisplayEvent { ShowButton = false });
                 TimerScheduler.Schedule(time * numOfHits, () => {
-                    StateSingleton.PreventClicking = false;
+                    EventManager.Publish(new EndTurnDisplayEvent { ShowButton = true });
                 });
                 for (int j = 0; j < numOfHits; j++)
                 {

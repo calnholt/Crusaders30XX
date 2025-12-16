@@ -8,6 +8,13 @@ using Crusaders30XX.ECS.Systems;
 
 namespace Crusaders30XX.ECS.Objects.Cards
 {
+    public enum CardType
+    {
+        Attack,
+        Prayer,
+        Block,
+        Relic
+    }
     public class CardBase
     {
         public string CardId { get; set; }
@@ -56,16 +63,23 @@ namespace Crusaders30XX.ECS.Objects.Cards
         }
         
         public string Animation { get; set; } = "";
-        public string Type { get; set; } = "";
+        public CardType Type { get; set; } = CardType.Attack;
         public string Target { get; set; } = "";
         public int[] ValuesParse { get; set; } = [];
         public bool IsFreeAction { get; set; } = false;
         public bool ExhaustsOnEndTurn { get; set; } = false;
         public bool CanAddToLoadout { get; set; } = true;
         public bool IsToken { get; set; } = false;
-        public bool IsBlockCard { get; set; } = false;
         public bool IsWeapon { get; set; } = false;
-        public string Tooltip { get; set; } = "";
+        private string _tooltip = "";
+        public string Tooltip 
+        {
+            get => _tooltip;
+            set
+            {
+                _text = KeywordTooltipTextService.GetTooltip(value);
+            }
+        }
         public string CardTooltip { get; set; } = "";
         public string SpecialAction { get; set; } = "";
         public string OriginalText { get; set; } = "";
@@ -74,6 +88,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
 #nullable enable annotations
         public Action<EntityManager, Entity>? OnPlay { get; protected set; }
         public Action<EntityManager, Entity>? OnBlock { get; protected set; }
+        public Action<EntityManager, Entity>? OnDraw {get; protected set; }
+        public Action<EntityManager, Entity>? OnCreate {get; protected set; }
+        public Action<EntityManager, Entity>? OnDiscardedForCost {get; protected set; }
         public Func<EntityManager, Entity, bool>? CanPlay { get; protected set; } = (a, b) => true;
         public Func<EntityManager, Entity, int>? GetConditionalDamage { get; protected set; } = (a, b) => 0;
 

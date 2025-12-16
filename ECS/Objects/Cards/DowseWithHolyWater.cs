@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "Gain {5} aggression. If you have {4}+ courage, gain {12} aggression instead.";
             IsFreeAction = true;
             Animation = "Buff";
-            Type = "Spell";
+            Type = CardType.Prayer;
             Block = 2;
 
             OnPlay = (entityManager, card) =>

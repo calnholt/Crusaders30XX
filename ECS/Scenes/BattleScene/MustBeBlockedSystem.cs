@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Attacks;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Objects.Cards;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -146,7 +147,7 @@ namespace Crusaders30XX.ECS.Systems
                     }
 
                     // If it's a block card with extra cost, ensure it can be paid
-                    if (data.Card.IsBlockCard && !data.Card.CanPlay(EntityManager, card))
+                    if (data.Card.Type == CardType.Block && !data.Card.CanPlay(EntityManager, card))
                     {
                         continue;
                     }

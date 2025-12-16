@@ -19,14 +19,7 @@ namespace Crusaders30XX.ECS.Components
         // Instance-specific properties for the card entity
         public CardColor Color { get; set; } = CardColor.White;
         
-        public enum CardType
-        {
-            Attack,
-            Skill,
-            Power,
-            Curse,
-            Status
-        }
+
         
         public enum CardRarity
         {
@@ -971,6 +964,10 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
     }
     public class MarkedForExhaust : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+    public class MarkedForEndOfTurnDiscard : IComponent
     {
         public Entity Owner { get; set; }
     }

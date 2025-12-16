@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "The enemy gains {1} inferno.";
             IsFreeAction = true;
             Animation = "Attack";
-            Type = "Spell";
+            Type = CardType.Prayer;
             Block = 2;
 
             OnPlay = (entityManager, card) =>

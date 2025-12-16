@@ -14,7 +14,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Cost = ["Any"];
             Text = "Gain {9} aegis.";
             Animation = "Buff";
-            Type = "Spell";
             Block = 3;
 
             OnPlay = (entityManager, card) =>

@@ -14,7 +14,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "Gain {3} temperance.";
             Animation = "Attack";
             Cost = ["White"];
-            Type = "Attack";
             Damage = 18;
             Block = 3;
 

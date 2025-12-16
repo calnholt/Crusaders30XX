@@ -15,7 +15,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "If you have no penance, this attack gains +{15} damage.";
             Cost = ["Red", "Red"];
             Animation = "Attack";
-            Type = "Attack";
             Damage = 25;
             Block = 2;
 

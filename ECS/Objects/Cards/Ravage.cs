@@ -15,7 +15,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "As an additional cost, mill {4} cards.";
             Cost = ["Any"];
             Animation = "Attack";
-            Type = "Attack";
             Damage = 25;
             Block = 3;
 

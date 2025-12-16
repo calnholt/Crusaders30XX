@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Cost = ["Red"];
             IsFreeAction = true;
             Animation = "Attack";
-            Type = "Spell";
+            Type = CardType.Prayer;
             Block = 2;
 
             OnPlay = (entityManager, card) =>

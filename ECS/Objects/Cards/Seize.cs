@@ -18,7 +18,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Block = 3;
             Text = "If you have lost courage during this action phase, this gains +{10} damage.";
             Animation = "Attack";
-            Type = "Attack";
 
             OnPlay = (entityManager, card) =>
             {

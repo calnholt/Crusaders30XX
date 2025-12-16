@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -62,7 +63,7 @@ namespace Crusaders30XX.ECS.Systems
 					EventManager.Publish(new CantPlayCardMessage { Message = "Can't block with intimidated cards!" });
 					break;
 				}
-				if (data.Card.IsBlockCard && !data.Card.CanPlay(EntityManager, card))
+				if (data.Card.Type == CardType.Block && !data.Card.CanPlay(EntityManager, card))
 				{
 					return;
 				}

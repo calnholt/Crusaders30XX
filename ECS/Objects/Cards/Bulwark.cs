@@ -15,7 +15,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "Whenever you play this card, this card gains +{1} block for the duration of the quest.";
             Block = 2;
             Damage = 6;
-            Type = "Attack";
             IsFreeAction = true;
             Animation = "Attack";
 

@@ -17,7 +17,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "Double your aggression.";
             IsFreeAction = true;
             Animation = "Buff";
-            Type = "Spell";
             Block = 2;
 
             OnPlay = (entityManager, card) =>

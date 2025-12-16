@@ -15,7 +15,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "{25}% chance to wound the enemy. Exhaust on play or at the end of your turn";
             IsFreeAction = true;
             Animation = "Attack";
-            Type = "Attack";
             Damage = 4;
             ExhaustsOnEndTurn = true;
             CanAddToLoadout = false;

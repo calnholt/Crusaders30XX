@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -195,6 +196,11 @@ namespace Crusaders30XX.ECS.Systems
             if (data.Owner.HasComponent<Frozen>())
             {
                 EventManager.Publish(new CantPlayCardMessage { Message = "Can't play frozen cards!" });
+                return;
+            }
+            if (data.Card.Type == CardType.Relic)
+            {
+                EventManager.Publish(new CantPlayCardMessage { Message = "Relics can only be discarded to pay for costs!" });
                 return;
             }
 
