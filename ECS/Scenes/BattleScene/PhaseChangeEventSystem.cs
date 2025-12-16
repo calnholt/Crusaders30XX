@@ -15,40 +15,42 @@ namespace Crusaders30XX.ECS.Systems
 
         public PhaseChangeEventSystem(EntityManager entityManager) : base(entityManager)
         {
+            // Simplified handler: only handle subsequent blocks in same turn
             EventManager.Subscribe<ChangeBattlePhaseEvent>(evt =>
             {
                 if (evt.Current == SubPhase.Block)
                 {
-                    // Check turn number to determine if this is the first block of the turn
                     var phaseState = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
-                    if (phaseState != null)
+                    if (phaseState != null && phaseState.TurnNumber != _lastTurn)
                     {
-                        if (phaseState.TurnNumber != _lastTurn)
-                        {
-                            _lastTurn = phaseState.TurnNumber;
-                            _firstBlockProcessed = false;
-                        }
+                        // New turn detected - reset state (CheckAndTriggerNextAttack will handle first block)
+                        _lastTurn = phaseState.TurnNumber;
+                        _firstBlockProcessed = false;
                     }
 
-                    if (!_firstBlockProcessed)
+                    // For subsequent blocks in same turn, clear waiting flag so attack display triggers
+                    if (_firstBlockProcessed)
                     {
-                        _firstBlockProcessed = true;
-                        _waitingForAnimation = true;
-                        _lastSeenContextId = null;
-                    }
-                    else
-                    {
-                        // Subsequent block in same turn; do not wait for animation
                         _waitingForAnimation = false;
-                        // Do not trigger immediately here; let UpdateEntity handle it to avoid race condition with EnemyAttackDisplaySystem hiding the banner
                     }
                 }
             });
 
             EventManager.Subscribe<BattlePhaseAnimationCompleteEvent>(evt =>
             {
+                // Mark first block as processed when Block phase animation completes
+                if (evt.SubPhase == SubPhase.Block)
+                {
+                    _firstBlockProcessed = true;
+                }
                 _waitingForAnimation = false;
                 CheckAndTriggerNextAttack();
+            });
+            EventManager.Subscribe<DeleteCachesEvent>(_ => {
+                _waitingForAnimation = false;
+                _lastSeenContextId = null;
+                _lastTurn = -1;
+                _firstBlockProcessed = false;
             });
         }
 
@@ -72,6 +74,24 @@ namespace Crusaders30XX.ECS.Systems
 
             var currentContextId = intent.Planned[0].ContextId;
 
+            var phaseState = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+            if (phaseState == null) return;
+
+            // Detect new turn
+            if (phaseState.TurnNumber != _lastTurn)
+            {
+                _lastTurn = phaseState.TurnNumber;
+                _firstBlockProcessed = false;
+            }
+
+            // If we're in Block phase and haven't processed first block yet, wait for animation
+            if (phaseState.Sub == SubPhase.Block && !_firstBlockProcessed)
+            {
+                _waitingForAnimation = true;
+                _lastSeenContextId = null;
+                return; // Don't trigger - wait for BattlePhaseAnimationCompleteEvent
+            }
+
             if (currentContextId != _lastSeenContextId)
             {
                 if (!_waitingForAnimation)
@@ -79,7 +99,6 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new TriggerEnemyAttackDisplayEvent { ContextId = currentContextId });
                     _lastSeenContextId = currentContextId;
                 }
-                // Else: Do nothing (wait for animation complete)
             }
         }
     }

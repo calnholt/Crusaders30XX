@@ -146,7 +146,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (!willShowDialog)
 				{
 					InitBattle();
-					EnqueueBattleRules(false);
+					// EnqueueBattleRules(false);
 				}
 			});
 			EventManager.Subscribe<DialogEnded>(_ => 
@@ -157,7 +157,8 @@ namespace Crusaders30XX.ECS.Systems
 					CreateBattleSceneEntities();
 				}
 				InitBattle();
-				EnqueueBattleRules(true);
+				EventManager.Publish(new ShowStartOfBattleAnimationEvent());
+				// EnqueueBattleRules(true);
 			});
 			EventManager.Subscribe<DeleteCachesEvent>(_ => {
 				if (_.Scene == SceneId.Battle) return;
@@ -165,6 +166,20 @@ namespace Crusaders30XX.ECS.Systems
 				_loadedEntities = false;
 				// EventQueue.Clear();
 				// RemoveBattleSystems();
+			});
+			EventManager.Subscribe<TransitionCompleteEvent>(_ => {
+				if (_.Scene != SceneId.Battle) return;
+				bool willShowDialog = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<PendingQuestDialog>()?.WillShowDialog ?? false;
+				if (!willShowDialog)
+				{
+					EventManager.Publish(new ShowStartOfBattleAnimationEvent());
+				}
+			});
+			EventManager.Subscribe<BattlePhaseAnimationCompleteEvent>(_ => {
+				if (_.SubPhase == SubPhase.StartBattle)
+				{
+					EnqueueBattleRules(true);
+				}
 			});
 		}
 
@@ -349,36 +364,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void EnqueueBattleRules(bool isFollowingDialog) 
 		{
-			Console.WriteLine($"[BattleSceneSystem] EnqueueBattleRules - Rules: {EventQueue.RulesCount}, Triggers: {EventQueue.TriggersCount}");
-			if (isFollowingDialog)
-			{
-				Console.WriteLine("[BattleSceneSystem] EnqueueBattleRules - Following Dialog");
-				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-					"Rule.ChangePhase.EnemyStart",
-					new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle }
-				));				
-				EventQueueBridge.EnqueueTriggerAction("BattleSceneSystem.StartBattle", () => {
-					EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-						"Rule.ChangePhase.EnemyStart",
-						new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart }
-					));
-					EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-						"Rule.ChangePhase.PreBlock",
-						new ChangeBattlePhaseEvent { Current = SubPhase.PreBlock }
-					));
-					EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-						"Rule.ChangePhase.Block",
-						new ChangeBattlePhaseEvent { Current = SubPhase.Block }
-					));
-				}, 2f);
-				return;
-			}
-			Console.WriteLine("[BattleSceneSystem] EnqueueBattleRules - Not Following Dialog");
-			EventQueueBridge.EnqueueTriggerAction("BattleSceneSystem.EnqueueBattleRules", () => {
-				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-					"Rule.ChangePhase.EnemyStart",
-					new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle }
-				));
+			EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+				"Rule.ChangePhase.EnemyStart",
+				new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle, Previous = SubPhase.StartBattle }
+			));				
+			EventQueueBridge.EnqueueTriggerAction("BattleSceneSystem.StartBattle", () => {
 				EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
 					"Rule.ChangePhase.EnemyStart",
 					new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart }
@@ -391,7 +381,7 @@ namespace Crusaders30XX.ECS.Systems
 					"Rule.ChangePhase.Block",
 					new ChangeBattlePhaseEvent { Current = SubPhase.Block }
 				));
-			}, 2f);
+			}, 0f);
 		}
 		
 		[DebugAction("Next Battle")]
