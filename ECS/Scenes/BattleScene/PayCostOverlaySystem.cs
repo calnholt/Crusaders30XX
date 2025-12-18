@@ -496,7 +496,10 @@ namespace Crusaders30XX.ECS.Systems
                         {
                             EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PayCost" });
                             var card = c.GetComponent<CardData>().Card;
-                            card?.OnDiscardedForCost(EntityManager, c);
+                            if (card != null && card.OnDiscardedForCost != null)
+                            {
+                                card.OnDiscardedForCost(EntityManager, c);
+                            }
                         }
                     }
                     else if (state.Type == PayCostOverlayType.SelectOneCard)

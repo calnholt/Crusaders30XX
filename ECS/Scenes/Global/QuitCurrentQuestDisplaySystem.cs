@@ -134,8 +134,8 @@ namespace Crusaders30XX.ECS.Systems
 						_alpha01 = 1f;
 						_state = OverlayState.Visible;
 					}
-					// Allow cancel during fade-in (Back only)
-					if (edgeBackHw)
+					// Allow cancel during fade-in (ESC or Back)
+					if (edgeEsc || edgeBackHw)
 					{
 						_state = OverlayState.FadingOut;
 					}
@@ -143,8 +143,8 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				case OverlayState.Visible:
 				{
-					// Cancel via hardware Back only
-					if (edgeBackHw)
+					// Cancel via ESC or hardware Back
+					if (edgeEsc || edgeBackHw)
 					{
 						_state = OverlayState.FadingOut;
 					}

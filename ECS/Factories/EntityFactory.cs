@@ -308,7 +308,19 @@ namespace Crusaders30XX.ECS.Factories
                 Card = CardFactory.Create(cardId),
                 Color = color
             };
-            // cardData.Card?.OnCreate(entityManager, entity);
+            
+            try
+            {
+                if (cardData.Card?.OnCreate != null)
+                {
+                    cardData.Card.OnCreate(entityManager, entity);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in OnCreate for card {cardId}: {ex}");
+                throw;
+            }
 
             var transform = new Transform { Position = new Vector2(-1000, -1000), Scale = Vector2.One };
             var sprite = new Sprite { TexturePath = string.Empty, IsVisible = true };

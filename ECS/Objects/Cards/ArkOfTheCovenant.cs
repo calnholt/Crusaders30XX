@@ -18,8 +18,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
             OnCreate = (entityManager, card) => 
             {
-                // TODO: implement this component functionality
-                card.AddComponent(new MarkedForEndOfTurnDiscard());
+                entityManager.AddComponent(card, new MarkedForEndOfTurnDiscard());
             };
 
             OnDiscardedForCost = (entityManager, card) =>
