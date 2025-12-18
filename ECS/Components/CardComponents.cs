@@ -664,6 +664,7 @@ namespace Crusaders30XX.ECS.Components
         public float HoldDurationSeconds { get; set; } = 1.0f;
         public Entity ParentEntity { get; set; }
         public HotKeyPosition Position { get; set; } = HotKeyPosition.Below;
+        public bool IsActive { get; set; } = true;
     }
 
     /// <summary>

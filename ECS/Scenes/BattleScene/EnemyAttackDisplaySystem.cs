@@ -835,10 +835,22 @@ namespace Crusaders30XX.ECS.Systems
 				if (centerTitle) isFirstTitleLine = false;
 			}
 
-			// Confirm button below panel (only show in Block phase)
-			Entity primaryBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
-			var isInteractable = primaryBtn?.GetComponent<UIElement>()?.IsInteractable ?? false;
-			bool showConfirm = phaseNow == SubPhase.Block && !_confirmedForContext.Contains(pa.ContextId) && isInteractable;
+		// Confirm button below panel (only show in Block phase)
+		Entity primaryBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
+		var isInteractable = primaryBtn?.GetComponent<UIElement>()?.IsInteractable ?? false;
+		bool isAnimating = IsAnyBlockAssignmentAnimating();
+		bool showConfirm = phaseNow == SubPhase.Block && !_confirmedForContext.Contains(pa.ContextId) && isInteractable && !isAnimating;
+			
+			// Manage hotkey IsActive flag based on animation state
+			if (primaryBtn != null)
+			{
+				var hotkey = primaryBtn.GetComponent<HotKey>();
+				if (hotkey != null)
+				{
+					hotkey.IsActive = !isAnimating && phaseNow == SubPhase.Block && !_confirmedForContext.Contains(pa.ContextId);
+				}
+			}
+			
 			if (showConfirm)
 			{
 				var btnRect = new Rectangle(
@@ -882,11 +894,25 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private AttackDefinition LoadAttackDefinition(string id)
+	private AttackDefinition LoadAttackDefinition(string id)
+	{
+		var attackIntent = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault().GetComponent<AttackIntent>();
+		return attackIntent.Planned[0].AttackDefinition;
+	}
+
+	private bool IsAnyBlockAssignmentAnimating()
+	{
+		var assignedCards = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>();
+		foreach (var entity in assignedCards)
 		{
-			var attackIntent = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault().GetComponent<AttackIntent>();
-			return attackIntent.Planned[0].AttackDefinition;
+			var abc = entity.GetComponent<AssignedBlockCard>();
+			if (abc != null && abc.Phase != AssignedBlockCard.PhaseState.Idle)
+			{
+				return true;
+			}
 		}
+		return false;
+	}
 
 
 
