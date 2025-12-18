@@ -377,6 +377,7 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = new List<string>(def.attackIds) });
             world.AddComponent(enemyEntity, new AttackIntent());
             world.AddComponent(enemyEntity, new AppliedPassives());
+            world.AddComponent(enemyEntity, new Threat { Amount = 0 });
             world.AddComponent(enemyEntity, ParallaxLayer.GetCharacterParallaxLayer());
 
             var playerEntity = world.EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
@@ -417,6 +418,12 @@ namespace Crusaders30XX.ECS.Factories
                     }
                 }
             }
+
+            // Pre-create Threat tooltip hover entity (bounds updated by ThreatDisplaySystem)
+            var threatTooltip = world.CreateEntity("UI_ThreatTooltip");
+            world.AddComponent(threatTooltip, new ThreatTooltipAnchor());
+            world.AddComponent(threatTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
+            world.AddComponent(threatTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = "Threat\n\nAt the start of the enemy's turn, it gains X aggression equal to its current threat level.\nWhenever you attack an enemy, it reduces their threat by one.\nEnemy's gain one threat at the end of their turn." });
 
             return enemyEntity;
         }

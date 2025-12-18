@@ -125,6 +125,16 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Optional resource component representing Threat for an entity (e.g., enemies)
+    /// </summary>
+    public class Threat : IComponent
+    {
+        public Entity Owner { get; set; }
+        
+        public int Amount { get; set; } = 0;
+    }
+
+    /// <summary>
     /// Player's currently equipped Temperance ability (by id). At most one should be equipped.
     /// </summary>
     public class EquippedTemperanceAbility : IComponent
@@ -490,6 +500,14 @@ namespace Crusaders30XX.ECS.Components
     /// Marker for the temperance hover area used to show a tooltip.
     /// </summary>
     public class TemperanceTooltipAnchor : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+    
+    /// <summary>
+    /// Marker for the threat hover area used to show a tooltip.
+    /// </summary>
+    public class ThreatTooltipAnchor : IComponent
     {
         public Entity Owner { get; set; }
     }

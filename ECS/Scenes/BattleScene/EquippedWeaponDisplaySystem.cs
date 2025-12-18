@@ -159,26 +159,14 @@ namespace Crusaders30XX.ECS.Systems
 			var rootUi = root.GetComponent<UIElement>();
 			if (rootUi == null)
 			{
-				EntityManager.AddComponent(root, new UIElement { Bounds = hitRect, Tooltip = BuildWeaponTooltip(), TooltipPosition = TooltipPosition.Right });
+				EntityManager.AddComponent(root, new UIElement { Bounds = hitRect, TooltipPosition = TooltipPosition.Right });
+                EntityManager.AddComponent(root, new CardTooltip { CardId = player.GetComponent<EquippedWeapon>().WeaponId });
 			}
 			else
 			{
 				rootUi.Bounds = hitRect;
 				rootUi.TooltipPosition = TooltipPosition.Right;
-				rootUi.Tooltip = BuildWeaponTooltip();
 			}
-        }
-
-        private string BuildWeaponTooltip()
-        {
-            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-            var ew = player?.GetComponent<EquippedWeapon>();
-            if (ew == null || string.IsNullOrWhiteSpace(ew.WeaponId)) return "Weapon";
-            var card = CardFactory.Create(ew.WeaponId);
-            string name = $"{card.Name} - {(card.IsFreeAction ? "free action" : "1AP")}";
-            string desc = card.Text ?? string.Empty;
-            string cost = (card.Cost != null && card.Cost.Count > 0) ? $"Cost: {string.Join(", ", card.Cost)}" : string.Empty;
-            return $"{name} {(cost != string.Empty ? $"\n{cost}" : string.Empty)}\n\n{desc}";
         }
 
 	private void EnsureRootEntity()

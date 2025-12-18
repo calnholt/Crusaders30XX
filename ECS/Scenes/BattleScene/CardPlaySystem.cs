@@ -345,6 +345,11 @@ namespace Crusaders30XX.ECS.Systems
                         foreach (var c in solution)
                         {
                             EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
+                            var cardData = c.GetComponent<CardData>();
+                            if (cardData != null && cardData.Card.OnDiscardedForCost != null)
+                            {
+                                cardData.Card.OnDiscardedForCost(EntityManager, c);
+                            }
                         }
                         
                         // Populate payment cache so card effects can reference what was paid

@@ -43,9 +43,11 @@ namespace Crusaders30XX.ECS.Systems
 		private CourageDisplaySystem _courageDisplaySystem;
 		private ActionPointDisplaySystem _actionPointDisplaySystem;
 		private TemperanceDisplaySystem _temperanceDisplaySystem;
+		private ThreatDisplaySystem _threatDisplaySystem;
 		private CourageManagerSystem _courageManagerSystem;
 		private ActionPointManagementSystem _actionPointManagementSystem;
 		private TemperanceManagerSystem _temperanceManagerSystem;
+		private ThreatManagementSystem _threatManagementSystem;
 		private HPDisplaySystem _hpDisplaySystem;
 		private AppliedPassivesDisplaySystem _appliedPassivesDisplaySystem;
 		private PoisonSystem _poisonSystem;
@@ -265,6 +267,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("CourageDisplaySystem.Draw", _courageDisplaySystem.Draw);
 			FrameProfiler.Measure("QuestTribulationDisplaySystem.Draw", _questTribulationDisplaySystem.Draw);
 			FrameProfiler.Measure("TemperanceDisplaySystem.Draw", _temperanceDisplaySystem.Draw);
+			FrameProfiler.Measure("ThreatDisplaySystem.Draw", _threatDisplaySystem.Draw);
 			FrameProfiler.Measure("ActionPointDisplaySystem.Draw", _actionPointDisplaySystem.Draw);
 			FrameProfiler.Measure("HPDisplaySystem.Draw", _hpDisplaySystem.Draw);
 			FrameProfiler.Measure("AppliedPassivesDisplaySystem.Draw", _appliedPassivesDisplaySystem.Draw);
@@ -417,10 +420,12 @@ namespace Crusaders30XX.ECS.Systems
 			_courageDisplaySystem = new CourageDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_actionPointDisplaySystem = new ActionPointDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_threatDisplaySystem = new ThreatDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_cardMoveDisplaySystem = new CardMoveDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_courageManagerSystem = new CourageManagerSystem(_world.EntityManager);
 			_actionPointManagementSystem = new ActionPointManagementSystem(_world.EntityManager);
 			_temperanceManagerSystem = new TemperanceManagerSystem(_world.EntityManager);
+			_threatManagementSystem = new ThreatManagementSystem(_world.EntityManager);
 			_hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_appliedPassivesDisplaySystem = new AppliedPassivesDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_poisonSystem = new PoisonSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -506,9 +511,11 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_playerTemperanceActivationDisplaySystem);
 			_world.AddSystem(_courageDisplaySystem);
 			_world.AddSystem(_temperanceDisplaySystem);
+			_world.AddSystem(_threatDisplaySystem);
 			_world.AddSystem(_actionPointDisplaySystem);
 			_world.AddSystem(_courageManagerSystem);
 			_world.AddSystem(_temperanceManagerSystem);
+			_world.AddSystem(_threatManagementSystem);
 			_world.AddSystem(_actionPointManagementSystem);
 			_world.AddSystem(_battleBackgroundSystem);
 			_world.AddSystem(_hpDisplaySystem);
