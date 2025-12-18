@@ -35,6 +35,7 @@ namespace Crusaders30XX.ECS.Systems
             if (evt.Current != SubPhase.PreBlock) return;
             var ui = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack").GetComponent<UIElement>();
             ui.IsInteractable = true;
+            ui.IsHidden = false;
             Console.WriteLine($"[MustBeBlockedSystem] OnShowConfirmButtonEvent: evt={evt}");
             blockCount = 0;
             mustBeBlocked = false;

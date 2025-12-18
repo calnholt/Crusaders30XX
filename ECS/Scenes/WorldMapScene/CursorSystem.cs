@@ -103,13 +103,8 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			if (!_isEnabled) return;
-			// Reset last clicked flag from previous frame (one-shot click)
-			if (_lastClickedEntity != null)
-			{
-				var uiPrev = _lastClickedEntity.GetComponent<UIElement>();
-				if (uiPrev != null) uiPrev.IsClicked = false;
-				_lastClickedEntity = null;
-			}
+			// Clear last clicked tracking from previous frame (InputSystem owns IsClicked state)
+			_lastClickedEntity = null;
 			// Clear last hovered from previous frame
 			if (_lastHoveredEntity != null)
 			{
@@ -225,10 +220,7 @@ namespace Crusaders30XX.ECS.Systems
 						.FirstOrDefault();
 					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
 					{
-						// NOTE: Do not dispatch UIElement events directly here; InputSystem owns
-						// UIElementEventDelegateService.HandleEvent for both mouse and controller
-						// input to avoid double-firing events. We only mark the element clicked.
-						clickCandidate.UI.IsClicked = true;
+						// NOTE: InputSystem owns IsClicked state management
 						Console.WriteLine($"[CursorSystem] Clicked: {clickCandidate.E.Id}");
 						_lastClickedEntity = clickCandidate.E;
 					}
@@ -367,10 +359,7 @@ namespace Crusaders30XX.ECS.Systems
 						.FirstOrDefault();
 					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
 					{
-						// NOTE: Do not dispatch UIElement events directly here; InputSystem owns
-						// UIElementEventDelegateService.HandleEvent for both mouse and controller
-						// input to avoid double-firing events. We only mark the element clicked.
-						clickCandidate.UI.IsClicked = true;
+						// NOTE: InputSystem owns IsClicked state management
 						Console.WriteLine($"[CursorSystem] Clicked: {clickCandidate.E.Id}");
 						_lastClickedEntity = clickCandidate.E;
 					}

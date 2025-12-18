@@ -122,10 +122,11 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            // Reset hover flags
+            // Reset hover and click flags
             foreach (var x in uiEntities)
             {
                 x.UI.IsHovered = false;
+                x.UI.IsClicked = false;
             }
 
             // Find top-most under mouse by ZOrder
@@ -145,29 +146,15 @@ namespace Crusaders30XX.ECS.Systems
             {
                 top.UI.IsHovered = true;
 
-                // Handle click on the top-most only
+                // Handle click on the top-most only (unified path for mouse and controller)
                 bool mouseEdge = mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released;
-                // Ignore cursor events sourced from mouse to avoid double-clicking (since we handle mouseEdge locally)
                 bool controllerEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge && _cursorEvent.Source != InputMethod.Mouse;
-                if (controllerEdge)
-                {
-                    // Prefer top entity from controller event if available, otherwise use top under coalesced pointer
-                    var target = _cursorEvent.TopEntity ?? top?.E;
-                    var ui = target?.GetComponent<UIElement>();
-                    if (ui != null)
-                    {
-                        ui.IsClicked = true;
-                        HandleUIClick(target);
-                    }
-                }
-                else if (mouseEdge)
+                bool isClickEdge = mouseEdge || controllerEdge;
+
+                if (isClickEdge)
                 {
                     top.UI.IsClicked = true;
                     HandleUIClick(top.E);
-                }
-                else
-                {
-                    top.UI.IsClicked = false;
                 }
             }
 
