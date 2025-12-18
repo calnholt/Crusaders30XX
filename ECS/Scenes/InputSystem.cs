@@ -129,18 +129,39 @@ namespace Crusaders30XX.ECS.Systems
                 x.UI.IsClicked = false;
             }
 
-            // Find top-most under mouse by ZOrder
-            // Use UI.Bounds for non-card UI, rotated-hit for cards; ignore very small bounds
-            var underMouse = uiEntities
-                .Where(x =>
+            // Determine the top entity under cursor
+            // For gamepad input, trust CursorSystem's TopEntity (uses circular hitbox)
+            // For mouse input, use precise point-based hit detection
+            dynamic top = null;
+            
+            if (_cursorEvent != null && _cursorEvent.TopEntity != null)
+            {
+                // Gamepad input: use the entity determined by CursorSystem's circular hitbox
+                var topEntity = _cursorEvent.TopEntity;
+                var topUI = topEntity.GetComponent<UIElement>();
+                var topT = topEntity.GetComponent<Transform>();
+                var topIsCard = topEntity.GetComponent<CardData>() != null;
+                
+                // Verify it's in our filtered uiEntities list
+                if (uiEntities.Any(x => x.E == topEntity))
                 {
-                    // Reject degenerate bounds
-                    if (x.UI.Bounds.Width < 2 || x.UI.Bounds.Height < 2) return false;
-                    return IsUnderMouse(x, pointerPoint);
-                })
-                .OrderByDescending(x => x.T?.ZOrder ?? 0)
-                .ToList();
-            var top = underMouse.FirstOrDefault();
+                    top = new { E = topEntity, UI = topUI, T = topT, IsCard = topIsCard };
+                }
+            }
+            else
+            {
+                // Mouse input: use precise point-based hit detection
+                var underMouse = uiEntities
+                    .Where(x =>
+                    {
+                        // Reject degenerate bounds
+                        if (x.UI.Bounds.Width < 2 || x.UI.Bounds.Height < 2) return false;
+                        return IsUnderMouse(x, pointerPoint);
+                    })
+                    .OrderByDescending(x => x.T?.ZOrder ?? 0)
+                    .ToList();
+                top = underMouse.FirstOrDefault();
+            }
 
             if (top != null && !StateSingleton.PreventClicking)
             {

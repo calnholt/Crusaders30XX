@@ -22,8 +22,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
 			// TODO: update to look at CardMoved event instead of BlockAssignmentRemoved / Added
-			EventManager.Subscribe<BlockAssignmentRemoved>(OnBlockAssignmentRemoved);
-			// Only recompute previews when Aegis (damage prevention) changes
+			EventManager.Subscribe<BlockAssignmentRemoved>(_ => TimerScheduler.Schedule(0.2f, () => OnBlockAssignmentRemoved(_)));			// Only recompute previews when Aegis (damage prevention) changes
 			EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
 			EventManager.Subscribe<RemovePassive>(OnRemovePassive);
 			EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);

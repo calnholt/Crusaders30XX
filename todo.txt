@@ -17,6 +17,12 @@ Prompts -
 
 ambush meter needs parallax and timer text in the center
 
+when hovering over cards, have enemy attack meter show what it would look like if you added the card a block
+
+decouple tooltip from UIElement; make it a separate component
+
+issues with controller clicking equipment and cards to assign as block - why is there a difference from mouse?
+
 enemy attack display - update text for different types of conditinos (one card, tow cards, etc)
 "if this attack (deals damage, is not blocked by X cards) - [effect]"
 
