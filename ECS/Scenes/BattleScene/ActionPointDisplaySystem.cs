@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -35,6 +36,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
+
+			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -42,7 +45,24 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<Player>();
 		}
 
-		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+		protected override void UpdateEntity(Entity entity, GameTime gameTime) 
+		{ 
+
+		}
+
+		private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
+		{
+			var apHover = EntityManager.GetEntity("UI_APTooltip");
+			var ui = apHover.GetComponent<UIElement>();
+			if (evt.Current == SubPhase.EnemyStart)
+			{
+				ui.IsHidden = true;
+			}
+			else 
+			{
+				ui.IsHidden = false;
+			}
+		}
 
 		public void Draw()
 		{
@@ -94,12 +114,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Update hoverable UI element for tooltip (entity pre-created in factory as UI_APTooltip)
-			var apHover = EntityManager.GetEntitiesWithComponent<UIElement>()
-				.FirstOrDefault(e =>
-				{
-					var ui = e.GetComponent<UIElement>();
-					return ui != null && (ui.Tooltip?.Contains("Action Points") ?? false);
-				});
+			var apHover = EntityManager.GetEntity("UI_APTooltip");
 			if (apHover != null)
 			{
 				var ui = apHover.GetComponent<UIElement>();

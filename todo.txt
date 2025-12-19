@@ -15,7 +15,9 @@
 
 Prompts - 
 
-infernal execution broken - confirm button now showing
+tooltip needs to destroy entities afterwards
+
+infernal execution broken - confirm button now showing; make new system for confirm button (and update how it looks - same look to End Turn)
 
 ambush meter needs parallax and timer text in the center
 
