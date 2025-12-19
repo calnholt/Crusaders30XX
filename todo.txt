@@ -15,9 +15,23 @@
 
 Prompts - 
 
+infernal execution broken - confirm button now showing
+
 ambush meter needs parallax and timer text in the center
 
-when hovering over cards, have enemy attack meter show what it would look like if you added the card a block
+cardtooltip not being correctly removed for blocked cards, can see from opening discard modal
+
+visual cue for cards that can't be played
+
+secondary font
+
+weapon tooltip not showing card
+
+action point tooltip showing when display is not showing
+
+when hovering over cards, have enemy attack meter show what it would look like if you added the card a block - requires second progress component
+
+remove context id from enemy attack progress
 
 decouple tooltip from UIElement; make it a separate component
 
@@ -39,8 +53,6 @@ on hit - exhaust top card of player's deck
 on hit - top card gains burn 1
 
 on hit - card becomes colorless
-
-cardtooltip not being correctly removed for blocked cards, can see from opening discard modal (only happens for mouse controls?)
 
 Convert desert background to shader
 Generate shield shader and helper; create shield display system that keys off existence of having shield passive.
