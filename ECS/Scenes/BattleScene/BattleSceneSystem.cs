@@ -27,9 +27,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Battle systems (logic and draw). Only present while in Battle
 	
-		private DeckManagementSystem _deckManagementSystem;
+	private DeckManagementSystem _deckManagementSystem;
 
-		private HandDisplaySystem _handDisplaySystem;
+	private HandDisplaySystem _handDisplaySystem;
+	private CardHoverDetectionSystem _cardHoverDetectionSystem;
 		private BattleBackgroundSystem _battleBackgroundSystem;
 		private DrawPileDisplaySystem _drawPileDisplaySystem;
 		private DiscardPileDisplaySystem _discardPileDisplaySystem;
@@ -402,9 +403,10 @@ namespace Crusaders30XX.ECS.Systems
 			if (_loadedSystems) return;
 			_loadedSystems = true;
 			Console.WriteLine("[BattleSceneSystem] AddBattleSystems");
-			_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
-			_battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
-			_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);
+		_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
+		_battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+		_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);
+		_cardHoverDetectionSystem = new CardHoverDetectionSystem(_world.EntityManager);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
 			_drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_discardPileDisplaySystem = new DiscardPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -492,10 +494,11 @@ namespace Crusaders30XX.ECS.Systems
 			_bgTemp = new RenderTarget2D(_graphicsDevice, Game1.VirtualWidth, Game1.VirtualHeight, false, SurfaceFormat.Color, DepthFormat.None);
 			_rasterizerState = new RasterizerState { ScissorTestEnable = true, CullMode = CullMode.None };
 			
-			// Register
-			_world.AddSystem(_deckManagementSystem);
-			_world.AddSystem(_handDisplaySystem);
-			_world.AddSystem(_cardZoneSystem);
+		// Register
+		_world.AddSystem(_deckManagementSystem);
+		_world.AddSystem(_handDisplaySystem);
+		_world.AddSystem(_cardHoverDetectionSystem);
+		_world.AddSystem(_cardZoneSystem);
 			_world.AddSystem(_handBlockInteractionSystem);
 			_world.AddSystem(_eventQueueSystem);
 			_world.AddSystem(_drawPileDisplaySystem);

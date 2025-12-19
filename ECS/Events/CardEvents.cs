@@ -432,4 +432,13 @@ namespace Crusaders30XX.ECS.Events
         public bool ShowButton;
     }
 
+    /// <summary>
+    /// Event published each frame indicating which card in hand is currently hovered.
+    /// Card is null if no card is hovered.
+    /// </summary>
+    public class CardInHandHoveredEvent
+    {
+        public Entity Card { get; set; }
+    }
+
 } 

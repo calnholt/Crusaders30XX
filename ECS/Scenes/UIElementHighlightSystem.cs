@@ -63,7 +63,7 @@ namespace Crusaders30XX.ECS.Systems
                         return false;
                     
                     // Filter out cards that are in hand
-                    if (e.GetComponent<CardData>() != null && deck.Hand.Contains(e))
+                    if (e.GetComponent<CardData>() != null && deck != null && deck.Hand.Contains(e))
                         return false;
                     
                     return true;
