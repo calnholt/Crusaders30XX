@@ -42,7 +42,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Find top-most hovered entity with CardTooltip
 			var hoverables = GetRelevantEntities()
 				.Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), CT = e.GetComponent<CardTooltip>(), CD = e.GetComponent<CardData>() })
-				.Where(x => x.UI != null && x.UI.IsHovered && x.CT != null && !string.IsNullOrWhiteSpace(x.CT.CardId))
+				.Where(x => x.UI != null && x.UI.IsHovered && x.UI.TooltipType == TooltipType.Card && x.CT != null && !string.IsNullOrWhiteSpace(x.CT.CardId))
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.ToList();
 			var top = hoverables.FirstOrDefault();

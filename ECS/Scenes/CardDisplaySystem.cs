@@ -48,7 +48,7 @@ namespace Crusaders30XX.ECS.Systems
 
         // Debug-adjustable cost pip visuals
         [DebugEditable(DisplayName = "Cost Pip Diameter", Step = 1, Min = 6, Max = 128)]
-        public int CostPipDiameter { get; set; } = 21;
+        public int CostPipDiameter { get; set; } = 12;
         [DebugEditable(DisplayName = "Cost Pip Gap", Step = 1, Min = 0, Max = 64)]
         public int CostPipGap { get; set; } = 6;
         [DebugEditable(DisplayName = "Cost Pip Outline Fraction", Step = 0.01f, Min = 0f, Max = 0.5f)]
@@ -70,17 +70,17 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Block Delta Offset X", Step = 1, Min = -200, Max = 200)]
         public int BlockDeltaOffsetX { get; set; } = 0;
         [DebugEditable(DisplayName = "Block Delta Offset Y", Step = 1, Min = -200, Max = 200)]
-        public int BlockDeltaOffsetY { get; set; } = -4;
+        public int BlockDeltaOffsetY { get; set; } = -5;
 
         // Debug-adjustable damage trapezoid and text
         [DebugEditable(DisplayName = "Damage Trap Width", Step = 1, Min = 10, Max = 400)]
-        public int DamageTrapWidth { get; set; } = 113;
+        public int DamageTrapWidth { get; set; } = 93;
         [DebugEditable(DisplayName = "Damage Trap Height", Step = 1, Min = 8, Max = 200)]
-        public int DamageTrapHeight { get; set; } = 41;
+        public int DamageTrapHeight { get; set; } = 36;
         [DebugEditable(DisplayName = "Damage Trap Left Margin X", Step = 1, Min = -200, Max = 200)]
-        public int DamageTrapLeftMarginX { get; set; } = 12;
+        public int DamageTrapLeftMarginX { get; set; } = 4;
         [DebugEditable(DisplayName = "Damage Trap Bottom Margin Y", Step = 1, Min = 0, Max = 200)]
-        public int DamageTrapBottomMarginY { get; set; } = 65;
+        public int DamageTrapBottomMarginY { get; set; } = 57;
         [DebugEditable(DisplayName = "Damage Trap Left Side Offset", Step = 1, Min = -200, Max = 200)]
         public int DamageTrapLeftSideOffset { get; set; } = 0;
         [DebugEditable(DisplayName = "Damage Trap Top Angle", Step = 1, Min = -89, Max = 89)]
@@ -94,7 +94,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Damage Text Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
         public float DamageTextScale { get; set; } = 0.18f;
         [DebugEditable(DisplayName = "Damage Text Offset X", Step = 1, Min = -200, Max = 200)]
-        public int DamageTextOffsetX { get; set; } = 0;
+        public int DamageTextOffsetX { get; set; } = -7;
         [DebugEditable(DisplayName = "Damage Text Offset Y", Step = 1, Min = -200, Max = 200)]
         public int DamageTextOffsetY { get; set; } = 0;
         [DebugEditable(DisplayName = "Damage Delta Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
@@ -233,16 +233,8 @@ namespace Crusaders30XX.ECS.Systems
                         var payStateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
                         var payState = payStateEntity?.GetComponent<PayCostOverlayState>();
                         bool overlayActive = payState != null && (payState.IsOpen || payState.IsReturning);
-						if (phase != null && phase.Sub != SubPhase.Action)
+						if (!overlayActive)
                         {
-                            bgColor = Color.DimGray;
-                            if (ui != null) ui.IsInteractable = false;
-                        }
-						else if (!overlayActive)
-                        {
-                            // Ensure weapon becomes interactable during Action only when no overlay is active
-							if (ui != null) ui.IsInteractable = true;
-							// Use weapon-specific visuals: light yellow background
 							bgColor = new Color(215, 186, 147);
                         }
                     }

@@ -136,7 +136,7 @@ namespace Crusaders30XX.ECS.Systems
 			};
 			var t = new Transform { Position = Vector2.Zero, Scale = Vector2.One };
 			var s = new Sprite { TexturePath = string.Empty, IsVisible = true };
-			var ui = new UIElement { Bounds = new Rectangle(0, 0, 250, 350), IsInteractable = true };
+			var ui = new UIElement { Bounds = new Rectangle(0, 0, 250, 350), IsInteractable = true, TooltipType = TooltipType.Card };
 			EntityManager.AddComponent(e, cd);
 			EntityManager.AddComponent(e, t);
 			EntityManager.AddComponent(e, s);

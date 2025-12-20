@@ -166,7 +166,7 @@ namespace Crusaders30XX.ECS.Systems
 					int rHitbox = Math.Max(0, HitboxRadius);
 					var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
 						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && !x.UI.IsHidden && (x.UI.IsInteractable || !string.IsNullOrWhiteSpace(x.UI.Tooltip)) && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox, x.T?.Rotation ?? 0f) > 0f)
+						.Where(x => x.UI != null && !x.UI.IsHidden && (x.UI.IsInteractable || !string.IsNullOrWhiteSpace(x.UI.Tooltip) || x.UI.TooltipType == TooltipType.Card) && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox, x.T?.Rotation ?? 0f) > 0f)
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
 					Entity hoveredEntityForRumble = null;

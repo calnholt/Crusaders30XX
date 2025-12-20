@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -47,8 +48,18 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch = spriteBatch;
             _content = content;
             TryLoadWeaponTexture();
+
+            EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
         }
 
+        private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
+        {
+            var rootUi = EntityManager.GetEntity(RootEntityName)?.GetComponent<UIElement>();
+            if (rootUi != null)
+            {
+                rootUi.IsHidden = evt.Current == SubPhase.Action;
+            }
+        }
         private void TryLoadWeaponTexture()
         {
             // Try to load weapon sprite from Content by id of equipped weapon; fallback to sword or shield
@@ -159,13 +170,14 @@ namespace Crusaders30XX.ECS.Systems
 			var rootUi = root.GetComponent<UIElement>();
 			if (rootUi == null)
 			{
-				EntityManager.AddComponent(root, new UIElement { Bounds = hitRect, TooltipPosition = TooltipPosition.Right });
+				EntityManager.AddComponent(root, new UIElement { Bounds = hitRect, TooltipPosition = TooltipPosition.Right, TooltipType = TooltipType.Card });
                 EntityManager.AddComponent(root, new CardTooltip { CardId = player.GetComponent<EquippedWeapon>().WeaponId });
 			}
 			else
 			{
 				rootUi.Bounds = hitRect;
 				rootUi.TooltipPosition = TooltipPosition.Right;
+				rootUi.TooltipType = TooltipType.Card;
 			}
         }
 

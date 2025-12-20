@@ -103,7 +103,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Text Margin Y", Step = 1, Min = 0, Max = 500)]
 		public int TextMarginY { get => EnsureSettings().TextMarginY; set => EnsureSettings().TextMarginY = Math.Max(0, value); }
 
-		[DebugEditable(DisplayName = "Name Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
+		[DebugEditable(DisplayName = "Name Scale", Step = 0.01f, Min = 0.1f, Max = 3f)]
 		public float NameScale { get => EnsureSettings().NameScale; set => EnsureSettings().NameScale = Math.Max(0.05f, value); }
 
 		[DebugEditable(DisplayName = "Cost Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
