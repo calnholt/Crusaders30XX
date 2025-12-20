@@ -48,7 +48,7 @@ namespace Crusaders30XX.ECS.Systems
 
         // Debug-adjustable cost pip visuals
         [DebugEditable(DisplayName = "Cost Pip Diameter", Step = 1, Min = 6, Max = 128)]
-        public int CostPipDiameter { get; set; } = 12;
+        public int CostPipDiameter { get; set; } = 21;
         [DebugEditable(DisplayName = "Cost Pip Gap", Step = 1, Min = 0, Max = 64)]
         public int CostPipGap { get; set; } = 6;
         [DebugEditable(DisplayName = "Cost Pip Outline Fraction", Step = 0.01f, Min = 0f, Max = 0.5f)]
@@ -108,7 +108,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Card Art Offset X", Step = 1, Min = -200, Max = 200)]
         public int CardArtOffsetX { get; set; } = 22;
         [DebugEditable(DisplayName = "Card Art Offset Y", Step = 1, Min = -200, Max = 200)]
-        public int CardArtOffsetY { get; set; } = 22;
+        public int CardArtOffsetY { get; set; } = 17;
 
         // Debug-adjustable art trapezoid background
         [DebugEditable(DisplayName = "Art Trap Width", Step = 1, Min = 10, Max = 400)]
