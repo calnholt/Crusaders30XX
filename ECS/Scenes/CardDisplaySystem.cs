@@ -99,6 +99,36 @@ namespace Crusaders30XX.ECS.Systems
         public int DamageTextOffsetY { get; set; } = 0;
         [DebugEditable(DisplayName = "Damage Delta Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
         public float DamageDeltaScale { get; set; } = 0.1f;
+
+        // Debug-adjustable card art settings
+        [DebugEditable(DisplayName = "Card Art Width", Step = 1, Min = 10, Max = 200)]
+        public int CardArtWidth { get; set; } = 60;
+        [DebugEditable(DisplayName = "Card Art Height", Step = 1, Min = 10, Max = 200)]
+        public int CardArtHeight { get; set; } = 60;
+        [DebugEditable(DisplayName = "Card Art Offset X", Step = 1, Min = -200, Max = 200)]
+        public int CardArtOffsetX { get; set; } = 22;
+        [DebugEditable(DisplayName = "Card Art Offset Y", Step = 1, Min = -200, Max = 200)]
+        public int CardArtOffsetY { get; set; } = 22;
+
+        // Debug-adjustable art trapezoid background
+        [DebugEditable(DisplayName = "Art Trap Width", Step = 1, Min = 10, Max = 400)]
+        public int ArtTrapWidth { get; set; } = 91;
+        [DebugEditable(DisplayName = "Art Trap Height", Step = 1, Min = 10, Max = 400)]
+        public int ArtTrapHeight { get; set; } = 87;
+        [DebugEditable(DisplayName = "Art Trap Offset X", Step = 1, Min = -200, Max = 200)]
+        public int ArtTrapOffsetX { get; set; } = 6;
+        [DebugEditable(DisplayName = "Art Trap Offset Y", Step = 1, Min = -200, Max = 200)]
+        public int ArtTrapOffsetY { get; set; } = 4;
+        [DebugEditable(DisplayName = "Art Trap Left Side Offset", Step = 1, Min = -200, Max = 200)]
+        public int ArtTrapLeftSideOffset { get; set; } = -4;
+        [DebugEditable(DisplayName = "Art Trap Top Angle", Step = 1, Min = -89, Max = 89)]
+        public float ArtTrapTopAngleDeg { get; set; } = -3f;
+        [DebugEditable(DisplayName = "Art Trap Right Angle", Step = 1, Min = -89, Max = 89)]
+        public float ArtTrapRightAngleDeg { get; set; } = -10f;
+        [DebugEditable(DisplayName = "Art Trap Bottom Angle", Step = 1, Min = -89, Max = 89)]
+        public float ArtTrapBottomAngleDeg { get; set; } = -6f;
+        [DebugEditable(DisplayName = "Art Trap Left Angle", Step = 1, Min = -89, Max = 89)]
+        public float ArtTrapLeftAngleDeg { get; set; } = 10f;
         
         public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content) 
             : base(entityManager)
@@ -409,6 +439,59 @@ namespace Crusaders30XX.ECS.Systems
             float apLocalX = (_settings.CardWidth * visualScale - apSize.X) / 2f + APOffsetX * visualScale;
             float apLocalY = _settings.CardHeight * visualScale - (APBottomMarginY * visualScale) - apSize.Y;
             DrawCardTextRotatedSingleScaled(cardCenter, rotation, new Vector2(apLocalX, apLocalY), bottomText, textColor, APTextScale * visualScale, visualScale);
+            string artAssetPath = $"CardArt/{card.CardId}";
+            var artTexture = GetOrLoadTexture(artAssetPath);
+            // Draw card art with trapezoid background at bottom-right
+            if (hasDef && !string.IsNullOrEmpty(card.CardId) && artTexture != null)
+            {
+                // Draw white trapezoid background for non-white cards
+                if (cardData.Color != CardData.CardColor.White)
+                {
+                    float trapWidth = ArtTrapWidth * _settings.UIScale * visualScale;
+                    float trapHeight = ArtTrapHeight * _settings.UIScale * visualScale;
+                    float trapLocalX = _settings.CardWidth * visualScale - trapWidth - (ArtTrapOffsetX * _settings.UIScale * visualScale);
+                    float trapLocalY = _settings.CardHeight * visualScale - trapHeight - (ArtTrapOffsetY * _settings.UIScale * visualScale);
+
+                    var trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoidMask(
+                        _graphicsDevice,
+                        ArtTrapWidth * _settings.UIScale,
+                        ArtTrapHeight * _settings.UIScale,
+                        ArtTrapLeftSideOffset * _settings.UIScale,
+                        ArtTrapTopAngleDeg,
+                        ArtTrapRightAngleDeg,
+                        ArtTrapBottomAngleDeg,
+                        ArtTrapLeftAngleDeg
+                    );
+
+                    if (trapezoidTexture != null)
+                    {
+                        DrawTextureRotatedLocalScaled(
+                            cardCenter,
+                            rotation,
+                            new Vector2(trapLocalX, trapLocalY),
+                            trapezoidTexture,
+                            new Vector2(trapWidth, trapHeight),
+                            Color.White,
+                            visualScale
+                        );
+                    }
+                }
+
+                float artWidth = CardArtWidth * _settings.UIScale * visualScale;
+                float artHeight = CardArtHeight * _settings.UIScale * visualScale;
+                float artLocalX = _settings.CardWidth * visualScale - artWidth - (CardArtOffsetX * _settings.UIScale * visualScale);
+                float artLocalY = _settings.CardHeight * visualScale - artHeight - (CardArtOffsetY * _settings.UIScale * visualScale);
+
+                DrawTextureRotatedLocalScaled(
+                    cardCenter,
+                    rotation,
+                    new Vector2(artLocalX, artLocalY),
+                    artTexture,
+                    new Vector2(artWidth, artHeight),
+                    Color.White,
+                    visualScale
+                );
+            }
         }
         
         private Color GetCardColor(CardData.CardColor color)
