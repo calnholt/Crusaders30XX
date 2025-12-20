@@ -8,9 +8,9 @@ using Crusaders30XX.ECS.Events;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
-using Crusaders30XX.ECS.Data.Cards;
 using System;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -237,11 +237,11 @@ namespace Crusaders30XX.ECS.Systems
 					var ct = entity.GetComponent<CardTooltip>();
 					if (ct == null)
 					{
-						EntityManager.AddComponent(entity, new CardTooltip { CardId = cd?.CardId ?? string.Empty });
+						EntityManager.AddComponent(entity, new CardTooltip { CardId = cd?.Card.CardId ?? string.Empty });
 					}
 					else
 					{
-						ct.CardId = cd?.CardId ?? string.Empty;
+						ct.CardId = cd?.Card.CardId ?? string.Empty;
 					}
 				}
 
@@ -264,9 +264,10 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						string tip = string.Empty;
 						var cdReset = ui.Owner?.GetComponent<CardData>();
-						if (cdReset != null && CardDefinitionCache.TryGet(cdReset.CardId, out var defReset) && defReset != null)
+						var card = CardFactory.Create(cdReset?.Card.CardId ?? string.Empty);
+						if (card != null)
 						{
-							tip = defReset.tooltip ?? string.Empty;
+							tip = card.Tooltip ?? string.Empty;
 						}
 						ui.Tooltip = tip;
 						ui.TooltipOffsetPx = 30;
@@ -317,7 +318,7 @@ namespace Crusaders30XX.ECS.Systems
 			else
 			{
 				// Fallback to the anchor transform (parallax-adjusted) or viewport center
-				basePoint = anchorT?.Position ?? new Vector2(_graphicsDevice.Viewport.Width * 0.5f, _graphicsDevice.Viewport.Height * 0.5f);
+				basePoint = anchorT?.Position ?? new Vector2(Game1.VirtualWidth * 0.5f, Game1.VirtualHeight * 0.5f);
 			}
 			var center = new Vector2(basePoint.X + AnchorOffsetX, basePoint.Y + AnchorOffsetY);
 			float offsetIndex = indexInContext - (countInContext - 1) * 0.5f;

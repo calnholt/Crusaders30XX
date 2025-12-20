@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Locations;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Components
 {
@@ -13,19 +14,12 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         
-        public string CardId { get; set; } = ""; // id of CardDefinition
+        public CardBase Card { get; set; }
         
         // Instance-specific properties for the card entity
         public CardColor Color { get; set; } = CardColor.White;
         
-        public enum CardType
-        {
-            Attack,
-            Skill,
-            Power,
-            Curse,
-            Status
-        }
+
         
         public enum CardRarity
         {
@@ -124,6 +118,16 @@ namespace Crusaders30XX.ECS.Components
     /// Optional resource component representing Temperance for an entity (e.g., the player)
     /// </summary>
     public class Temperance : IComponent
+    {
+        public Entity Owner { get; set; }
+        
+        public int Amount { get; set; } = 0;
+    }
+
+    /// <summary>
+    /// Optional resource component representing Threat for an entity (e.g., enemies)
+    /// </summary>
+    public class Threat : IComponent
     {
         public Entity Owner { get; set; }
         
@@ -464,7 +468,24 @@ namespace Crusaders30XX.ECS.Components
     public class ModifiedBlock : IComponent
     {
         public Entity Owner { get; set; }
-        public int Delta { get; set; } = 0;
+        public List<Modification> Modifications { get; set; } = new List<Modification>();
+
+    }
+
+    /// <summary>
+    /// Marks a card as having its damage value modified with reasons for each modification.
+    /// </summary>
+    public class ModifiedDamage : IComponent
+    {
+        public Entity Owner { get; set; }
+        public List<Modification> Modifications { get; set; } = new List<Modification>();
+        
+    }
+
+    public struct Modification
+    {
+        public int Delta { get; set; }
+        public string Reason { get; set; }
     }
     
     /// <summary>
@@ -479,6 +500,14 @@ namespace Crusaders30XX.ECS.Components
     /// Marker for the temperance hover area used to show a tooltip.
     /// </summary>
     public class TemperanceTooltipAnchor : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+    
+    /// <summary>
+    /// Marker for the threat hover area used to show a tooltip.
+    /// </summary>
+    public class ThreatTooltipAnchor : IComponent
     {
         public Entity Owner { get; set; }
     }
@@ -635,6 +664,7 @@ namespace Crusaders30XX.ECS.Components
         public float HoldDurationSeconds { get; set; } = 1.0f;
         public Entity ParentEntity { get; set; }
         public HotKeyPosition Position { get; set; } = HotKeyPosition.Below;
+        public bool IsActive { get; set; } = true;
     }
 
     /// <summary>
@@ -688,6 +718,18 @@ namespace Crusaders30XX.ECS.Components
     public class PayCostCancelButton : IComponent
     {
         public Entity Owner { get; set; }
+    }
+
+    /// <summary>
+    /// Singleton cache holding the most recent cost payment data.
+    /// Other systems can query this to see which cards were used to pay for the last played card.
+    /// </summary>
+    public class LastPaymentCache : IComponent
+    {
+        public Entity Owner { get; set; }
+        public Entity CardPlayed { get; set; }
+        public List<Entity> PaymentCards { get; set; } = new();
+        public bool HasData { get; set; } = false;
     }
 
     /// <summary>
@@ -866,6 +908,15 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
     }
 
+    /// <summary>
+    /// Marker for a card currently animating from Hand to DrawPile.
+    /// Hand layout/draw systems should ignore cards with this component until finalize.
+    /// </summary>
+    public class AnimatingHandToDrawPile : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
     public class CardToDiscardFlight : IComponent
     {
         public Entity Owner { get; set; }
@@ -925,5 +976,18 @@ namespace Crusaders30XX.ECS.Components
         Poison,
         Shield,
         Fear,
+    }
+
+    public class MarkedForReturnToDeck : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+    public class MarkedForExhaust : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+    public class MarkedForEndOfTurnDiscard : IComponent
+    {
+        public Entity Owner { get; set; }
     }
 }

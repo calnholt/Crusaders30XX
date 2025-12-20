@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
-using Crusaders30XX.ECS.Data.Cards;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -162,7 +162,7 @@ namespace Crusaders30XX.ECS.Systems
             if (deckEntity != null)
             {
                 var deck = deckEntity.GetComponent<Deck>();
-                if (deck != null && deck.Hand.Contains(entity) && entity.GetComponent<AnimatingHandToDiscard>() == null)
+                if (deck != null && deck.Hand.Contains(entity) && entity.GetComponent<AnimatingHandToDiscard>() == null && entity.GetComponent<AnimatingHandToDrawPile>() == null)
                 {
                     // Get the index of this card in the hand
                     var cardIndex = deck.Hand.IndexOf(entity);
@@ -251,10 +251,11 @@ namespace Crusaders30XX.ECS.Systems
                         bool isWeapon = false;
                         try
                         {
-                            string id = cardData.CardId ?? string.Empty;
-                            if (!string.IsNullOrEmpty(id) && CardDefinitionCache.TryGet(id, out var def))
+                            string id = cardData.Card.CardId ?? string.Empty;
+                            var cardObj = CardFactory.Create(id);
+                            if (!string.IsNullOrEmpty(id) && cardObj != null)
                             {
-                                isWeapon = def.isWeapon;
+                                isWeapon = cardObj.IsWeapon;
                             }
                         }
                         catch { }
@@ -329,9 +330,9 @@ namespace Crusaders30XX.ECS.Systems
                 var deck = deckEntity.GetComponent<Deck>();
                 if (deck != null)
                 {
-                    // Only draw cards that are actually in the hand and not currently animating to discard
+                    // Only draw cards that are actually in the hand and not currently animating to discard or draw pile
                     var cardsInHand = deck.Hand
-                        .Where(e => e.GetComponent<AnimatingHandToDiscard>() == null)
+                        .Where(e => e.GetComponent<AnimatingHandToDiscard>() == null && e.GetComponent<AnimatingHandToDrawPile>() == null)
                         .OrderBy(e => 
                     {
                         var transform = e.GetComponent<Transform>();
@@ -354,10 +355,11 @@ namespace Crusaders30XX.ECS.Systems
 						// Never allow the weapon to be used to pay costs; hide it
 						try
 						{
-							string id = cd.CardId ?? string.Empty;
-							if (!string.IsNullOrEmpty(id) && CardDefinitionCache.TryGet(id, out var def))
+							string id = cd.Card.CardId ?? string.Empty;
+							var cardObj = CardFactory.Create(id);
+							if (!string.IsNullOrEmpty(id) && cardObj != null)
 							{
-								if (def.isWeapon) return false;
+								if (cardObj.IsWeapon) return false;
 							}
 						}
 						catch { }

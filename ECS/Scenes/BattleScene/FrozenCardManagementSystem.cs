@@ -64,7 +64,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EntityManager.RemoveComponent<Frozen>(evt.Card);
 				var cardData = evt.Card.GetComponent<CardData>();
-				Console.WriteLine($"[FrozenCardManagementSystem] Removed Frozen from card {cardData?.CardId ?? "unknown"} when used to block");
+				Console.WriteLine($"[FrozenCardManagementSystem] Removed Frozen from card {cardData?.Card.CardId ?? "unknown"} when used to block");
 			}
 		}
 
@@ -113,7 +113,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EntityManager.AddComponent(card, new Frozen { Owner = card });
 				var cardData = card.GetComponent<CardData>();
-				Console.WriteLine($"[FrozenCardManagementSystem] Card {cardData?.CardId ?? "unknown"} has been frozen!");
+				Console.WriteLine($"[FrozenCardManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been frozen!");
 			}
 		}
 
@@ -126,7 +126,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EntityManager.RemoveComponent<Frozen>(card);
 				var cardData = card.GetComponent<CardData>();
-				Console.WriteLine($"[FrozenCardManagementSystem] Removed frozen from card {cardData?.CardId ?? "unknown"}");
+				Console.WriteLine($"[FrozenCardManagementSystem] Removed frozen from card {cardData?.Card.CardId ?? "unknown"}");
 			}
 		}
 	}

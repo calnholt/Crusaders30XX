@@ -6,7 +6,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Factories;
-using Crusaders30XX.ECS.Data.Cards;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -54,7 +54,8 @@ namespace Crusaders30XX.ECS.Systems
 
 			string equippedId = st.WorkingWeaponId;
 			if (string.IsNullOrEmpty(equippedId)) return;
-			if (!CardDefinitionCache.TryGet(equippedId, out var def) || def == null) return;
+			var card = CardFactory.Create(equippedId);
+			if (card == null) return;
 
             int vw = Game1.VirtualWidth;
 			int cardW = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>().CardWidth;
@@ -63,17 +64,17 @@ namespace Crusaders30XX.ECS.Systems
 			int panelY = 0;
 			int x = panelX + (_deckPanel.PanelWidth / 2);
 			int y = panelY + _deckPanel.HeaderHeight + _deckPanel.TopMargin + (int)(cardH * _deckPanel.CardScale / 2) - st.RightScroll;
-			var created = EnsureEntity(def);
+			var created = EnsureEntity(card);
 			EventManager.Publish(new CardRenderScaledEvent { Card = created, Position = new Vector2(x, y), Scale = _deckPanel.CardScale });
 		}
 
-		private Entity EnsureEntity(CardDefinition def)
+		private Entity EnsureEntity(CardBase card)
 		{
-			string name = def.name ?? def.id;
+			string name = card.Name ?? card.CardId;
 			string keyName = $"Card_{name}_Yellow_0";
 			var existing = EntityManager.GetEntity(keyName);
 			if (existing != null) return existing;
-			var created = EntityFactory.CreateCardFromDefinition(EntityManager, def.id, CardData.CardColor.Yellow, true);
+			var created = EntityFactory.CreateCardFromDefinition(EntityManager, card.CardId, CardData.CardColor.Yellow, true);
 			if (created != null)
 			{
 				_entityId = created.Id;

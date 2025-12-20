@@ -217,8 +217,8 @@ namespace Crusaders30XX.ECS.Systems
 			else
 			{
 				// Fallback: use viewport half-size to interpret percents
-				px = OffsetPercentX * (_graphicsDevice.Viewport.Width / 2f);
-				py = OffsetPercentY * (_graphicsDevice.Viewport.Height / 2f);
+				px = OffsetPercentX * (Game1.VirtualWidth / 2f);
+				py = OffsetPercentY * (Game1.VirtualHeight / 2f);
 			}
 			pos.X += px + OffsetX;
 			pos.Y += py + OffsetY;

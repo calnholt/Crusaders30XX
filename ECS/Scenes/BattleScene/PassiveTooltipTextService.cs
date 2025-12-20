@@ -1,6 +1,5 @@
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Utils;
-using Crusaders30XX.ECS.Data.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -12,9 +11,6 @@ namespace Crusaders30XX.ECS.Systems
       {
         case AppliedPassiveType.Burn:
           return $"At the start of {(isPlayer ? "your" : "the enemy's")} turn, {(isPlayer ? "you take" : "it takes")} {stacks} damage this battle.";
-        case AppliedPassiveType.DowseWithHolyWater:
-          CardDefinitionCache.TryGet("dowse_with_holy_water", out var def);
-          return $"Your next attack this turn deals +{def.valuesParse[0] * stacks} damage.";
         case AppliedPassiveType.Slow:
           return $"Ambush attacks are {stacks} second{(stacks == 1 ? "" : "s")} faster this battle.";
         case AppliedPassiveType.Aegis:

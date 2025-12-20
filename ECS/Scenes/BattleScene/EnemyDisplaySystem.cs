@@ -26,7 +26,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Center Offset X (% of width)", Step = 0.01f, Min = -1.0f, Max = 1.0f)]
 		public float CenterOffsetXPct { get; set; } = 0.3f; // positive = right, negative = left
 		[DebugEditable(DisplayName = "Center Offset Y (% of height)", Step = 0.01f, Min = -1.0f, Max = 1.0f)]
-		public float CenterOffsetYPct { get; set; } = -0.10f; // positive = down, negative = up
+		public float CenterOffsetYPct { get; set; } = -0.11f; // positive = down, negative = up
 		[DebugEditable(DisplayName = "Attack Animation Duration (s)", Step = .01f, Min = 0.01f, Max = 2f)]
 		public float _attackAnimDuration = 0.2f;
 		[DebugEditable(DisplayName = "Attack Nudge Distance (px)", Step = 1f, Min = 0f, Max = 200f)]

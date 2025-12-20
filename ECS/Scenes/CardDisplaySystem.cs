@@ -9,8 +9,8 @@ using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
-using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -34,7 +34,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Card Corner Radius", Step = 1, Min = 0, Max = 64)]
         public int CornerRadiusOverride { get; set; } = 0;
         [DebugEditable(DisplayName = "Card Border Thickness", Step = 1, Min = 0, Max = 32)]
-        public int BorderThicknessOverride { get; set; } = 0;
+        public int BorderThicknessOverride { get; set; } = 1;
 
         // Debug-adjustable shield icon layout
         [DebugEditable(DisplayName = "Shield Icon Height", Step = 1, Min = 8, Max = 128)]
@@ -70,17 +70,17 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Block Delta Offset X", Step = 1, Min = -200, Max = 200)]
         public int BlockDeltaOffsetX { get; set; } = 0;
         [DebugEditable(DisplayName = "Block Delta Offset Y", Step = 1, Min = -200, Max = 200)]
-        public int BlockDeltaOffsetY { get; set; } = -4;
+        public int BlockDeltaOffsetY { get; set; } = -5;
 
         // Debug-adjustable damage trapezoid and text
         [DebugEditable(DisplayName = "Damage Trap Width", Step = 1, Min = 10, Max = 400)]
-        public int DamageTrapWidth { get; set; } = 113;
+        public int DamageTrapWidth { get; set; } = 93;
         [DebugEditable(DisplayName = "Damage Trap Height", Step = 1, Min = 8, Max = 200)]
-        public int DamageTrapHeight { get; set; } = 41;
+        public int DamageTrapHeight { get; set; } = 36;
         [DebugEditable(DisplayName = "Damage Trap Left Margin X", Step = 1, Min = -200, Max = 200)]
-        public int DamageTrapLeftMarginX { get; set; } = 12;
+        public int DamageTrapLeftMarginX { get; set; } = 4;
         [DebugEditable(DisplayName = "Damage Trap Bottom Margin Y", Step = 1, Min = 0, Max = 200)]
-        public int DamageTrapBottomMarginY { get; set; } = 65;
+        public int DamageTrapBottomMarginY { get; set; } = 57;
         [DebugEditable(DisplayName = "Damage Trap Left Side Offset", Step = 1, Min = -200, Max = 200)]
         public int DamageTrapLeftSideOffset { get; set; } = 0;
         [DebugEditable(DisplayName = "Damage Trap Top Angle", Step = 1, Min = -89, Max = 89)]
@@ -94,11 +94,41 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Damage Text Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
         public float DamageTextScale { get; set; } = 0.18f;
         [DebugEditable(DisplayName = "Damage Text Offset X", Step = 1, Min = -200, Max = 200)]
-        public int DamageTextOffsetX { get; set; } = 0;
+        public int DamageTextOffsetX { get; set; } = -7;
         [DebugEditable(DisplayName = "Damage Text Offset Y", Step = 1, Min = -200, Max = 200)]
         public int DamageTextOffsetY { get; set; } = 0;
         [DebugEditable(DisplayName = "Damage Delta Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
         public float DamageDeltaScale { get; set; } = 0.1f;
+
+        // Debug-adjustable card art settings
+        [DebugEditable(DisplayName = "Card Art Width", Step = 1, Min = 10, Max = 200)]
+        public int CardArtWidth { get; set; } = 60;
+        [DebugEditable(DisplayName = "Card Art Height", Step = 1, Min = 10, Max = 200)]
+        public int CardArtHeight { get; set; } = 60;
+        [DebugEditable(DisplayName = "Card Art Offset X", Step = 1, Min = -200, Max = 200)]
+        public int CardArtOffsetX { get; set; } = 22;
+        [DebugEditable(DisplayName = "Card Art Offset Y", Step = 1, Min = -200, Max = 200)]
+        public int CardArtOffsetY { get; set; } = 17;
+
+        // Debug-adjustable art trapezoid background
+        [DebugEditable(DisplayName = "Art Trap Width", Step = 1, Min = 10, Max = 400)]
+        public int ArtTrapWidth { get; set; } = 91;
+        [DebugEditable(DisplayName = "Art Trap Height", Step = 1, Min = 10, Max = 400)]
+        public int ArtTrapHeight { get; set; } = 87;
+        [DebugEditable(DisplayName = "Art Trap Offset X", Step = 1, Min = -200, Max = 200)]
+        public int ArtTrapOffsetX { get; set; } = 6;
+        [DebugEditable(DisplayName = "Art Trap Offset Y", Step = 1, Min = -200, Max = 200)]
+        public int ArtTrapOffsetY { get; set; } = 4;
+        [DebugEditable(DisplayName = "Art Trap Left Side Offset", Step = 1, Min = -200, Max = 200)]
+        public int ArtTrapLeftSideOffset { get; set; } = -4;
+        [DebugEditable(DisplayName = "Art Trap Top Angle", Step = 1, Min = -89, Max = 89)]
+        public float ArtTrapTopAngleDeg { get; set; } = -3f;
+        [DebugEditable(DisplayName = "Art Trap Right Angle", Step = 1, Min = -89, Max = 89)]
+        public float ArtTrapRightAngleDeg { get; set; } = -10f;
+        [DebugEditable(DisplayName = "Art Trap Bottom Angle", Step = 1, Min = -89, Max = 89)]
+        public float ArtTrapBottomAngleDeg { get; set; } = -6f;
+        [DebugEditable(DisplayName = "Art Trap Left Angle", Step = 1, Min = -89, Max = 89)]
+        public float ArtTrapLeftAngleDeg { get; set; } = 10f;
         
         public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content) 
             : base(entityManager)
@@ -212,8 +242,8 @@ namespace Crusaders30XX.ECS.Systems
             
             var cardColor = GetCardColor(cardData.Color);
             // Resolve definition from CardId
-            CardDefinition def = null;
-            bool hasDef = !string.IsNullOrWhiteSpace(cardData.CardId) && CardDefinitionCache.TryGet(cardData.CardId, out def) && def != null;
+            CardBase card = cardData.Card;
+            bool hasDef = card != null;
             
             // Draw card background (rotated if transform has rotation)
             float rotation = transform?.Rotation ?? 0f;
@@ -224,7 +254,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 if (hasDef)
                 {
-                    if (def.isWeapon)
+                    if (card.IsWeapon)
                     {
 						isWeaponDetected = true;
                         var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
@@ -233,16 +263,8 @@ namespace Crusaders30XX.ECS.Systems
                         var payStateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
                         var payState = payStateEntity?.GetComponent<PayCostOverlayState>();
                         bool overlayActive = payState != null && (payState.IsOpen || payState.IsReturning);
-						if (phase != null && phase.Sub != SubPhase.Action)
+						if (!overlayActive)
                         {
-                            bgColor = Color.DimGray;
-                            if (ui != null) ui.IsInteractable = false;
-                        }
-						else if (!overlayActive)
-                        {
-                            // Ensure weapon becomes interactable during Action only when no overlay is active
-							if (ui != null) ui.IsInteractable = true;
-							// Use weapon-specific visuals: light yellow background
 							bgColor = new Color(215, 186, 147);
                         }
                     }
@@ -257,33 +279,33 @@ namespace Crusaders30XX.ECS.Systems
             
             // Name text (wrapped within card width), rotated with card
             var textColor = isWeaponDetected ? Color.Black : GetCardTextColor(cardData.Color);
-            string displayName = hasDef ? (def.name ?? def.id ?? cardData.CardId) : (cardData.CardId ?? string.Empty);
+            string displayName = hasDef ? (card.Name ?? string.Empty) : string.Empty;
             DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, _settings.TextMarginY * visualScale), displayName, textColor, _settings.NameScale * visualScale, visualScale, _nameFont);
             
             // Draw cost pips (colored circles with yellow outline) under the name
-            var defCosts = hasDef ? (def.cost ?? Array.Empty<string>()) : Array.Empty<string>();
+            var defCosts = hasDef ? card.Cost.ToArray() : [];
             DrawCostPipsScaled(cardCenter, rotation, (int)(_settings.TextMarginX * visualScale), (int)Math.Round((_settings.TextMarginY + 34 * _settings.UIScale) * visualScale), cardData.Color, defCosts, visualScale);
 
-            string displayText = hasDef ? (def.text ?? string.Empty) : string.Empty;
+            string displayText = hasDef ? (card.Text ?? string.Empty) : string.Empty;
             DrawCardTextWrappedRotatedScaled(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, (_settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)) * visualScale), displayText, textColor, _settings.DescriptionScale * visualScale, visualScale, _contentFont);
             
             // Draw damage value in trapezoid above block section for attack cards
             int effectiveDamage = 0;
             int damageDelta = 0;
-            if (hasDef && IsAttackCard(def))
+            if (hasDef && card.Type == CardType.Attack)
             {
                 try
                 {
                     // Base damage includes printed damage plus any conditional damage from the card definition
-                    int baseDamage = def.damage;
+                    int baseDamage = card.Damage;
                     try
                     {
-                        baseDamage = Math.Max(0, baseDamage + ConditionalDamageCardService.Resolve(EntityManager, entity));
+                        baseDamage = Math.Max(0, baseDamage + card.GetConditionalDamage(EntityManager, entity) + AttackDamageValueService.GetTotalDelta(entity));
                     }
                     catch
                     {
                         // If conditional resolution fails for any reason, fall back to printed damage
-                        baseDamage = Math.Max(0, def.damage);
+                        baseDamage = Math.Max(0, card.Damage);
                     }
 
                     int finalDamage = baseDamage;
@@ -316,11 +338,11 @@ namespace Crusaders30XX.ECS.Systems
                     }
 
                     effectiveDamage = Math.Max(0, finalDamage);
-                    damageDelta = effectiveDamage - def.damage;
+                    damageDelta = effectiveDamage - card.Damage;
                 }
                 catch
                 {
-                    effectiveDamage = Math.Max(0, def.damage);
+                    effectiveDamage = Math.Max(0, card.Damage);
                     damageDelta = 0;
                 }
 
@@ -331,15 +353,15 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Draw block value and shield icon at bottom-left, but hide for weapons
-            bool isWeapon = hasDef && def.isWeapon;
+            bool isWeapon = hasDef && card.IsWeapon;
             int blockValueToShow = 0;
             int printedBlockValue = 0;
             int blockDeltaValue = 0;
-            bool hasBlockDefinition = hasDef && def != null;
+            bool hasBlockDefinition = hasDef && card != null;
             if (hasBlockDefinition)
             {
-                printedBlockValue = def.block;
-                blockValueToShow = BlockValueService.GetBlockValue(entity);
+                printedBlockValue = card.Block;
+                blockValueToShow = BlockValueService.GetTotalBlockValue(entity);
                 blockDeltaValue = blockValueToShow - printedBlockValue;
             }
             if (!isWeapon && blockValueToShow > 0)
@@ -400,19 +422,96 @@ namespace Crusaders30XX.ECS.Systems
 
             // Draw AP cost text at bottom-center: 0AP if free action else 1AP
             string bottomText;
-            if (hasDef && def.isBlockCard)
+            if (hasDef && card.Type == CardType.Block)
             {
                 bottomText = "Block";
             }
+            else if (card.Type == CardType.Relic)
+            {
+                bottomText = "Relic";
+            }
             else
             {
-                bool isFree = GetIsFreeAction(entity) || hasDef && def.isBlockCard;
+                bool isFree = GetIsFreeAction(entity) || hasDef && card.Type == CardType.Block;
                 bottomText = isFree ? "Free" : "1AP";
             }
             var apSize = _nameFont.MeasureString(bottomText) * (APTextScale * visualScale);
             float apLocalX = (_settings.CardWidth * visualScale - apSize.X) / 2f + APOffsetX * visualScale;
             float apLocalY = _settings.CardHeight * visualScale - (APBottomMarginY * visualScale) - apSize.Y;
             DrawCardTextRotatedSingleScaled(cardCenter, rotation, new Vector2(apLocalX, apLocalY), bottomText, textColor, APTextScale * visualScale, visualScale);
+            string artAssetPath = $"CardArt/{card.CardId}";
+            var artTexture = GetOrLoadTexture(artAssetPath);
+            // Draw card art with trapezoid background at bottom-right
+            if (hasDef && !string.IsNullOrEmpty(card.CardId) && artTexture != null)
+            {
+                // Draw white trapezoid background for non-white cards
+                if (cardData.Color != CardData.CardColor.White)
+                {
+                    float trapWidth = ArtTrapWidth * _settings.UIScale * visualScale;
+                    float trapHeight = ArtTrapHeight * _settings.UIScale * visualScale;
+                    float trapLocalX = _settings.CardWidth * visualScale - trapWidth - (ArtTrapOffsetX * _settings.UIScale * visualScale);
+                    float trapLocalY = _settings.CardHeight * visualScale - trapHeight - (ArtTrapOffsetY * _settings.UIScale * visualScale);
+
+                    var trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoidMask(
+                        _graphicsDevice,
+                        ArtTrapWidth * _settings.UIScale,
+                        ArtTrapHeight * _settings.UIScale,
+                        ArtTrapLeftSideOffset * _settings.UIScale,
+                        ArtTrapTopAngleDeg,
+                        ArtTrapRightAngleDeg,
+                        ArtTrapBottomAngleDeg,
+                        ArtTrapLeftAngleDeg
+                    );
+
+                    if (trapezoidTexture != null)
+                    {
+                        DrawTextureRotatedLocalScaled(
+                            cardCenter,
+                            rotation,
+                            new Vector2(trapLocalX, trapLocalY),
+                            trapezoidTexture,
+                            new Vector2(trapWidth, trapHeight),
+                            Color.White,
+                            visualScale
+                        );
+                    }
+                }
+
+                // Calculate max bounds
+                float maxWidth = CardArtWidth * _settings.UIScale * visualScale;
+                float maxHeight = CardArtHeight * _settings.UIScale * visualScale;
+                
+                // Calculate aspect-ratio-preserving size that fits within max bounds
+                float textureAspect = artTexture.Width / (float)artTexture.Height;
+                float boundsAspect = maxWidth / maxHeight;
+                
+                float artWidth, artHeight;
+                if (textureAspect > boundsAspect)
+                {
+                    // Texture is wider relative to bounds - constrain by width
+                    artWidth = maxWidth;
+                    artHeight = maxWidth / textureAspect;
+                }
+                else
+                {
+                    // Texture is taller relative to bounds - constrain by height
+                    artHeight = maxHeight;
+                    artWidth = maxHeight * textureAspect;
+                }
+                
+                float artLocalX = _settings.CardWidth * visualScale - artWidth - (CardArtOffsetX * _settings.UIScale * visualScale);
+                float artLocalY = _settings.CardHeight * visualScale - artHeight - (CardArtOffsetY * _settings.UIScale * visualScale);
+
+                DrawTextureRotatedLocalScaled(
+                    cardCenter,
+                    rotation,
+                    new Vector2(artLocalX, artLocalY),
+                    artTexture,
+                    new Vector2(artWidth, artHeight),
+                    Color.White,
+                    visualScale
+                );
+            }
         }
         
         private Color GetCardColor(CardData.CardColor color)
@@ -449,12 +548,6 @@ namespace Crusaders30XX.ECS.Systems
                 default:
                     return Color.White;
             }
-        }
-
-        private bool IsAttackCard(CardDefinition def)
-        {
-            if (def == null) return false;
-            return string.Equals(def.type, "Attack", StringComparison.OrdinalIgnoreCase);
         }
 
         private Color GetDamageTrapezoidColor(CardData.CardColor color)
@@ -645,10 +738,9 @@ namespace Crusaders30XX.ECS.Systems
             try
             {
                 var data = card.GetComponent<CardData>();
-                string id = data?.CardId ?? string.Empty;
+                string id = data?.Card.CardId ?? string.Empty;
                 if (string.IsNullOrEmpty(id)) return false;
-                if (!CardDefinitionCache.TryGet(id, out var def) || def == null) return false;
-                return def.isFreeAction;
+                return data.Card.IsFreeAction;
             }
             catch { return false; }
         }
@@ -682,7 +774,7 @@ namespace Crusaders30XX.ECS.Systems
                 outer,
                 position: center,
                 sourceRectangle: null,
-                color: Color.Black,
+                color: color == Color.Black ? Color.White : Color.Black,
                 rotation: rotation,
                 origin: new Vector2(outer.Width / 2f, outer.Height / 2f),
                 scale: Vector2.One,

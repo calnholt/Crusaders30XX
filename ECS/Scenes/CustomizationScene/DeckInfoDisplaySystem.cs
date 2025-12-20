@@ -4,8 +4,8 @@ using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
-using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -75,9 +75,9 @@ namespace Crusaders30XX.ECS.Systems
 			string blackLine = $"# of Black: {black}";
 
 			// Build over-limit warnings (3+ copies of same name ignoring color)
-			var idToName = CardDefinitionCache.GetAll()
+			var idToName = CardFactory.GetAllCards()
 				.ToDictionary(kv => (kv.Key ?? string.Empty).ToLowerInvariant(),
-							  kv => ((kv.Value?.name ?? kv.Value?.id) ?? string.Empty).Trim());
+							  kv => ((kv.Value?.Name ?? kv.Value?.CardId) ?? string.Empty).Trim());
 			var nameCounts = new System.Collections.Generic.Dictionary<string, int>(System.StringComparer.OrdinalIgnoreCase);
 			foreach (var entry in st.WorkingCardIds)
 			{

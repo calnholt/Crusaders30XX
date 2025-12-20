@@ -122,52 +122,60 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            // Reset hover flags
+            // Reset hover and click flags
             foreach (var x in uiEntities)
             {
                 x.UI.IsHovered = false;
+                x.UI.IsClicked = false;
             }
 
-            // Find top-most under mouse by ZOrder
-            // Use UI.Bounds for non-card UI, rotated-hit for cards; ignore very small bounds
-            var underMouse = uiEntities
-                .Where(x =>
+            // Determine the top entity under cursor
+            // For gamepad input, trust CursorSystem's TopEntity (uses circular hitbox)
+            // For mouse input, use precise point-based hit detection
+            dynamic top = null;
+            
+            if (_cursorEvent != null && _cursorEvent.TopEntity != null)
+            {
+                // Gamepad input: use the entity determined by CursorSystem's circular hitbox
+                var topEntity = _cursorEvent.TopEntity;
+                var topUI = topEntity.GetComponent<UIElement>();
+                var topT = topEntity.GetComponent<Transform>();
+                var topIsCard = topEntity.GetComponent<CardData>() != null;
+                
+                // Verify it's in our filtered uiEntities list
+                if (uiEntities.Any(x => x.E == topEntity))
                 {
-                    // Reject degenerate bounds
-                    if (x.UI.Bounds.Width < 2 || x.UI.Bounds.Height < 2) return false;
-                    return IsUnderMouse(x, pointerPoint);
-                })
-                .OrderByDescending(x => x.T?.ZOrder ?? 0)
-                .ToList();
-            var top = underMouse.FirstOrDefault();
+                    top = new { E = topEntity, UI = topUI, T = topT, IsCard = topIsCard };
+                }
+            }
+            else
+            {
+                // Mouse input: use precise point-based hit detection
+                var underMouse = uiEntities
+                    .Where(x =>
+                    {
+                        // Reject degenerate bounds
+                        if (x.UI.Bounds.Width < 2 || x.UI.Bounds.Height < 2) return false;
+                        return IsUnderMouse(x, pointerPoint);
+                    })
+                    .OrderByDescending(x => x.T?.ZOrder ?? 0)
+                    .ToList();
+                top = underMouse.FirstOrDefault();
+            }
 
             if (top != null && !StateSingleton.PreventClicking)
             {
                 top.UI.IsHovered = true;
 
-                // Handle click on the top-most only
+                // Handle click on the top-most only (unified path for mouse and controller)
                 bool mouseEdge = mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released;
-                // Ignore cursor events sourced from mouse to avoid double-clicking (since we handle mouseEdge locally)
                 bool controllerEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge && _cursorEvent.Source != InputMethod.Mouse;
-                if (controllerEdge)
-                {
-                    // Prefer top entity from controller event if available, otherwise use top under coalesced pointer
-                    var target = _cursorEvent.TopEntity ?? top?.E;
-                    var ui = target?.GetComponent<UIElement>();
-                    if (ui != null)
-                    {
-                        ui.IsClicked = true;
-                        HandleUIClick(target);
-                    }
-                }
-                else if (mouseEdge)
+                bool isClickEdge = mouseEdge || controllerEdge;
+
+                if (isClickEdge)
                 {
                     top.UI.IsClicked = true;
                     HandleUIClick(top.E);
-                }
-                else
-                {
-                    top.UI.IsClicked = false;
                 }
             }
 
@@ -290,7 +298,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var cardData = entity.GetComponent<CardData>();
             var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
-            Console.WriteLine($"[InputSystem] Card clicked id={cardData?.CardId} phase={phase?.Sub.ToString() ?? "None"}");
+            Console.WriteLine($"[InputSystem] Card clicked id={cardData?.Card.CardId} phase={phase?.Sub.ToString() ?? "None"}");
             if (phase == null) return;
             if (phase.Sub == SubPhase.Action)
             {

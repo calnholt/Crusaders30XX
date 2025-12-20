@@ -1,7 +1,6 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Cards;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -10,6 +9,7 @@ using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Factories;
 using System;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -72,11 +72,11 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             var collection = SaveCache.GetCollectionSet();
-            var defs = CardDefinitionCache.GetAll().Values
-                .Where(d => !d.isWeapon)
-                .Where(d => d.canAddToLoadout)
-                .Where(d => collection.Contains(d.id))
-                .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
+            var defs = CardFactory.GetAllCards().Values
+                .Where(d => !d.IsWeapon)
+                .Where(d => d.CanAddToLoadout)
+                .Where(d => collection.Contains(d.CardId))
+                .OrderBy(d => ((d.Name ?? d.CardId) ?? string.Empty).ToLowerInvariant())
                 .ToList();
             CardData.CardColor[] colorOrder = new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black };
             var inDeckSet = new HashSet<string>(st.WorkingCardIds);
@@ -87,7 +87,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 foreach (var color in colorOrder)
                 {
-                    string key = (def.id ?? def.name).ToLowerInvariant() + "|" + color.ToString();
+                    string key = (def.CardId ?? def.Name).ToLowerInvariant() + "|" + color.ToString();
                     if (!inDeckSet.Contains(key)) totalItems++;
                 }
             }
@@ -107,7 +107,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 foreach (var color in colorOrder)
                 {
-                    string entry = (def.id ?? def.name).ToLowerInvariant() + "|" + color.ToString();
+                    string entry = (def.CardId ?? def.Name).ToLowerInvariant() + "|" + color.ToString();
                     if (inDeckSet.Contains(entry)) continue;
                     int r = idx / col;
                     int c = idx % col;
@@ -139,11 +139,11 @@ namespace Crusaders30XX.ECS.Systems
             int col = Math.Max(1, _libraryPanel.Columns);
 
             var collection = SaveCache.GetCollectionSet();
-            var defs = CardDefinitionCache.GetAll().Values
-                .Where(d => !d.isWeapon)
-                .Where(d => d.canAddToLoadout)
-                .Where(d => collection.Contains(d.id))
-                .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
+            var defs = CardFactory.GetAllCards().Values
+                .Where(d => !d.IsWeapon)
+                .Where(d => d.CanAddToLoadout)
+                .Where(d => collection.Contains(d.CardId))
+                .OrderBy(d => ((d.Name ?? d.CardId) ?? string.Empty).ToLowerInvariant())
                 .ToList();
             CardData.CardColor[] colorOrder = new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black };
             var inDeckSet = new HashSet<string>(st.WorkingCardIds);
@@ -152,7 +152,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 foreach (var color in colorOrder)
                 {
-                    string entry = (def.id ?? def.name).ToLowerInvariant() + "|" + color.ToString();
+                    string entry = (def.CardId ?? def.Name).ToLowerInvariant() + "|" + color.ToString();
                     if (inDeckSet.Contains(entry)) continue;
                     int r = idx / col;
                     int c = idx % col;
@@ -169,13 +169,13 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private Entity EnsureTempCard(CardDefinition def, CardData.CardColor color)
+        private Entity EnsureTempCard(CardBase card, CardData.CardColor color)
         {
-            string name = def.name ?? def.id;
+            string name = card.Name ?? card.CardId;
             string keyName = $"Card_{name}_{color}_0";
             var existing = EntityManager.GetEntity(keyName);
             if (existing != null) return existing;
-            var created = EntityFactory.CreateCardFromDefinition(EntityManager, def.id, color);
+            var created = EntityFactory.CreateCardFromDefinition(EntityManager, card.CardId, color);
             if (created != null)
             {
                 _createdCardIds[keyName] = created.Id;

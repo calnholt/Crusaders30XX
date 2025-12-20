@@ -83,7 +83,6 @@ namespace Crusaders30XX.ECS.Systems
 		
 		private SubPhase _lastPhase = SubPhase.StartBattle;
 		private int _lastTurn = 0;
-		private bool _playedInitial;
 		private bool _shownBlockAnimationForTurn = false;
 
 		// Strip Definition
@@ -105,10 +104,18 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			
-			EventManager.Subscribe<DialogEnded>(_ => {
-				_playedInitial = false;
-				StopAnimation();
+
+			EventManager.Subscribe<ShowStartOfBattleAnimationEvent>(_ => {
+				Console.WriteLine($"[BattlePhaseDisplaySystem] ShowStartOfBattleAnimationEvent");
+				StartAnimation(SubPhaseToString(SubPhase.StartBattle));
+			});
+			EventManager.Subscribe<DeleteCachesEvent>(_ => {
+				_animState = AnimState.None;
+				_animTimer = 0f;
+				_transitionText = string.Empty;
+				_lastPhase = SubPhase.StartBattle;
+				_lastTurn = 0;
+				_shownBlockAnimationForTurn = false;
 			});
 		}
 
@@ -122,12 +129,7 @@ namespace Crusaders30XX.ECS.Systems
 			var phase = entity.GetComponent<PhaseState>();
 
 			bool phaseChanged = false;
-			if (!_playedInitial)
-			{
-				_playedInitial = true;
-				phaseChanged = true;
-			}
-			else if (_lastTurn != phase.TurnNumber)
+			if (_lastTurn != phase.TurnNumber)
 			{
 				phaseChanged = true;
 			}
@@ -136,39 +138,43 @@ namespace Crusaders30XX.ECS.Systems
 				phaseChanged = true;
 			}
 
-			if (phaseChanged)
+		if (phaseChanged)
+		{
+			var prev = _lastPhase;
+			_lastPhase = phase.Sub;
+			
+			if (_lastTurn != phase.TurnNumber)
 			{
-				var prev = _lastPhase;
-				_lastPhase = phase.Sub;
-				
-				if (_lastTurn != phase.TurnNumber)
-				{
-					_lastTurn = phase.TurnNumber;
-					_shownBlockAnimationForTurn = false;
-				}
+				_lastTurn = phase.TurnNumber;
+				_shownBlockAnimationForTurn = false;
+			}
 
-				string newText = SubPhaseToString(_lastPhase);
-				if (!string.IsNullOrWhiteSpace(newText))
+			// Skip StartBattle - only triggered via ShowStartOfBattleAnimationEvent
+			if (phase.Sub == SubPhase.StartBattle)
+				return;
+
+			string newText = SubPhaseToString(_lastPhase);
+			if (!string.IsNullOrWhiteSpace(newText))
+			{
+				// Suppress animation if we have already shown Block phase animation this turn
+				if (phase.Sub == SubPhase.Block)
 				{
-					// Suppress animation if we have already shown Block phase animation this turn
-					if (phase.Sub == SubPhase.Block)
+					if (_shownBlockAnimationForTurn)
 					{
-						if (_shownBlockAnimationForTurn)
-						{
-							// Already shown for this turn, suppress
-						}
-						else
-						{
-							_shownBlockAnimationForTurn = true;
-							StartAnimation(newText);
-						}
+						// Already shown for this turn, suppress
 					}
 					else
 					{
+						_shownBlockAnimationForTurn = true;
 						StartAnimation(newText);
 					}
 				}
+				else
+				{
+					StartAnimation(newText);
+				}
 			}
+		}
 
 			if (_animState != AnimState.None)
 			{
@@ -192,7 +198,7 @@ namespace Crusaders30XX.ECS.Systems
 					case AnimState.Exiting:
 						if (_animTimer >= PhaseOutDuration)
 						{
-							EventManager.Publish(new BattlePhaseAnimationCompleteEvent());
+							EventManager.Publish(new BattlePhaseAnimationCompleteEvent{ SubPhase = _lastPhase });
 							StopAnimation();
 						}
 						break;

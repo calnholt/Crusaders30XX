@@ -8,12 +8,12 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Data.Cards;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -341,9 +341,9 @@ namespace Crusaders30XX.ECS.Systems
             overName = null; count = 0;
             if (st?.WorkingCardIds == null) return true;
 
-            var idToName = CardDefinitionCache.GetAll()
+            var idToName = CardFactory.GetAllCards()
                 .ToDictionary(kv => (kv.Key ?? string.Empty).ToLowerInvariant(),
-                              kv => ((kv.Value?.name ?? kv.Value?.id) ?? string.Empty).Trim());
+                              kv => ((kv.Value?.Name ?? kv.Value?.CardId) ?? string.Empty).Trim());
 
             var nameCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             foreach (var key in st.WorkingCardIds)

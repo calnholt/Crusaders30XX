@@ -36,6 +36,7 @@ namespace Crusaders30XX.ECS.Services
 							p.ActualDamage = 0;
 							p.IsConditionMet = true;
 							p.BaseDamage = def.damage;
+							p.AegisTotal = 0;
 
 							// Attribute the remaining prevented damage to the GlassCannon effect
 							// so the UI can show e.g. "X block, condition Y" without inflating

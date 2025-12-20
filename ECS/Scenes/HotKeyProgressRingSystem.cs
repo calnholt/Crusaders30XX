@@ -103,7 +103,7 @@ namespace Crusaders30XX.ECS.Systems
                     // Find top-most eligible entity with this hotkey that requires hold
                     var target = EntityManager.GetEntitiesWithComponent<HotKey>()
                         .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), Btn = e.GetComponent<UIButton>() })
-                        .Where(x => x.HK != null && x.UI != null && x.UI.IsInteractable && x.HK.Button == pressed && x.HK.RequiresHold && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
+                        .Where(x => x.HK != null && x.HK.IsActive && x.UI != null && x.UI.IsInteractable && x.HK.Button == pressed && x.HK.RequiresHold && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
                         .OrderByDescending(x => x.T?.ZOrder ?? 0)
                         .FirstOrDefault();
                     
@@ -199,7 +199,7 @@ namespace Crusaders30XX.ECS.Systems
                     // Find top-most eligible entity with this hotkey that requires hold
                     var target = EntityManager.GetEntitiesWithComponent<HotKey>()
                         .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), Btn = e.GetComponent<UIButton>() })
-                        .Where(x => x.HK != null && x.UI != null && x.UI.IsInteractable && x.HK.Button == pressed && x.HK.RequiresHold && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
+                        .Where(x => x.HK != null && x.HK.IsActive && x.UI != null && x.UI.IsInteractable && x.HK.Button == pressed && x.HK.RequiresHold && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
                         .OrderByDescending(x => x.T?.ZOrder ?? 0)
                         .FirstOrDefault();
 
@@ -321,7 +321,7 @@ namespace Crusaders30XX.ECS.Systems
                 var ui = ent.GetComponent<UIElement>();
                 var transform = ent.GetComponent<Transform>();
 
-                if (hotKey == null || ui == null || !ui.IsInteractable) continue;
+                if (hotKey == null || !hotKey.IsActive || ui == null || !ui.IsInteractable) continue;
                 if (overlayPresent && ui.LayerType != UILayerType.Overlay) continue;
                 
                 // When gamepad is not connected, only draw progress for FaceButton.X (spacebar)

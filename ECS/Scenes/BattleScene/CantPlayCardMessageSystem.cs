@@ -4,6 +4,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -50,6 +51,28 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Lock Snap Threshold", Step = 0.005f, Min = 0f, Max = 0.2f)]
 		public float LockSnapThreshold { get; set; } = 0.095f;
+
+		// Trapezoid background controls
+		[DebugEditable(DisplayName = "BG Padding Horizontal", Step = 1, Min = 0, Max = 200)]
+		public int BackgroundPaddingHorizontal { get; set; } = 90;
+
+		[DebugEditable(DisplayName = "BG Padding Vertical", Step = 1, Min = 0, Max = 200)]
+		public int BackgroundPaddingVertical { get; set; } = 40;
+
+		[DebugEditable(DisplayName = "BG Top Edge Angle", Step = 1, Min = -45, Max = 45)]
+		public float BackgroundTopEdgeAngle { get; set; } = 0f;
+
+		[DebugEditable(DisplayName = "BG Right Edge Angle", Step = 1, Min = -45, Max = 45)]
+		public float BackgroundRightEdgeAngle { get; set; } = -10f;
+
+		[DebugEditable(DisplayName = "BG Bottom Edge Angle", Step = 1, Min = -45, Max = 45)]
+		public float BackgroundBottomEdgeAngle { get; set; } = 0f;
+
+		[DebugEditable(DisplayName = "BG Left Edge Angle", Step = 1, Min = -45, Max = 45)]
+		public float BackgroundLeftEdgeAngle { get; set; } = 10f;
+
+		[DebugEditable(DisplayName = "BG Left Side Offset", Step = 1, Min = -100, Max = 100)]
+		public float BackgroundLeftSideOffset { get; set; } = 0f;
 
 		private string _activeMessage = string.Empty;
 		private float _elapsed = 0f;
@@ -117,18 +140,42 @@ namespace Crusaders30XX.ECS.Systems
 				// Mid section: lock scale exactly to 1 to avoid jitter
 				sMul = 1f;
 			}
-			// Snap near 1 to avoid tiny jitter
-			if (Math.Abs(sMul - 1f) < LockSnapThreshold) sMul = 1f;
-			fullScale *= sMul;
+		// Snap near 1 to avoid tiny jitter
+		if (Math.Abs(sMul - 1f) < LockSnapThreshold) sMul = 1f;
+		fullScale *= sMul;
 
-			// Keep text white; only alpha animates
-			var color = new Color(Color.White, alpha);
+		// Keep text white; only alpha animates
+		var textColor = new Color(Color.White, alpha);
 
-			// Center using the dynamic scale
-			var unscaled = _font.MeasureString(_activeMessage);
-			var size = unscaled * fullScale;
-			var pos = new Vector2((w - size.X) / 2f + OffsetX, (h - size.Y) / 2f + OffsetY);
-			_spriteBatch.DrawString(_font, _activeMessage, pos, color, 0f, Vector2.Zero, fullScale, SpriteEffects.None, 0f);
+		// Center using the dynamic scale
+		var unscaled = _font.MeasureString(_activeMessage);
+		var size = unscaled * fullScale;
+		var pos = new Vector2((w - size.X) / 2f + OffsetX, (h - size.Y) / 2f + OffsetY);
+
+		// Draw trapezoid background
+		float bgWidth = unscaled.X + (2 * BackgroundPaddingHorizontal);
+		float bgHeight = unscaled.Y + (2 * BackgroundPaddingVertical);
+		var trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoidMask(
+			_graphicsDevice,
+			bgWidth,
+			bgHeight,
+			BackgroundLeftSideOffset,
+			BackgroundTopEdgeAngle,
+			BackgroundRightEdgeAngle,
+			BackgroundBottomEdgeAngle,
+			BackgroundLeftEdgeAngle
+		);
+		var bgColor = new Color(Color.DarkRed, alpha);
+		var bgSize = new Vector2(bgWidth * fullScale, bgHeight * fullScale);
+		var bgPos = new Vector2(
+			(w - bgSize.X) / 2f + OffsetX,
+			(h - bgSize.Y) / 2f + OffsetY
+		);
+		var bgDestRect = new Rectangle((int)bgPos.X, (int)bgPos.Y, (int)bgSize.X, (int)bgSize.Y);
+		_spriteBatch.Draw(trapezoidTexture, bgDestRect, bgColor);
+
+		// Draw text on top of background
+		_spriteBatch.DrawString(_font, _activeMessage, pos, textColor, 0f, Vector2.Zero, fullScale, SpriteEffects.None, 0f);
 		}
 
 		private static float EaseOutBack(float x, float s)

@@ -52,12 +52,21 @@ namespace Crusaders30XX.ECS.Systems
         public void Draw()
         {
             // Draw highlight around the currently hovered UI element (card or equipment)
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
             var hoveredEntities = EntityManager
                 .GetEntitiesWithComponent<UIElement>()
                 .Where(e =>
                 {
                     var ui = e.GetComponent<UIElement>();
-                    return ui != null && ui.IsHovered && ui.IsInteractable && !ui.IsHidden;
+                    if (ui == null || !ui.IsHovered || !ui.IsInteractable || ui.IsHidden)
+                        return false;
+                    
+                    // Filter out cards that are in hand
+                    if (e.GetComponent<CardData>() != null && deck != null && deck.Hand.Contains(e))
+                        return false;
+                    
+                    return true;
                 })
                 .ToList();
 

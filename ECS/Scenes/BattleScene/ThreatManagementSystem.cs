@@ -1,0 +1,94 @@
+using System;
+using System.Linq;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Events;
+using Microsoft.Xna.Framework;
+
+namespace Crusaders30XX.ECS.Systems
+{
+    /// <summary>
+    /// Manages threat for enemies:
+    /// - Increases threat by +1 at end of enemy turn
+    /// - Reduces threat by 1 when enemy takes attack damage
+    /// - Applies Aggression passive equal to threat at start of enemy turn
+    /// </summary>
+    public class ThreatManagementSystem : Core.System
+    {
+        public ThreatManagementSystem(EntityManager entityManager) : base(entityManager)
+        {
+            EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
+            EventManager.Subscribe<ModifyHpRequestEvent>(OnModifyHpRequest);
+        }
+
+        protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+        {
+            // No per-frame updates; event-driven
+            return Array.Empty<Entity>();
+        }
+
+        protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+
+        private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
+        {
+            if (evt.Current == SubPhase.EnemyEnd)
+            {
+                // Increase threat by +1 at end of enemy turn
+                var enemies = EntityManager.GetEntitiesWithComponent<Enemy>()
+                    .Where(e => e.HasComponent<Threat>())
+                    .ToList();
+                
+                foreach (var enemy in enemies)
+                {
+                    var threat = enemy.GetComponent<Threat>();
+                    if (threat != null)
+                    {
+                        threat.Amount = Math.Max(0, Math.Min(3, threat.Amount + 1));
+                        Console.WriteLine($"[ThreatManagementSystem] Enemy threat increased to {threat.Amount} at end of turn");
+                    }
+                }
+            }
+            else if (evt.Current == SubPhase.EnemyStart)
+            {
+                // Apply Aggression passive equal to threat at start of enemy turn
+                var enemies = EntityManager.GetEntitiesWithComponent<Enemy>()
+                    .Where(e => e.HasComponent<Threat>())
+                    .ToList();
+                
+                foreach (var enemy in enemies)
+                {
+                    var threat = enemy.GetComponent<Threat>();
+                    if (threat != null && threat.Amount > 0)
+                    {
+                        EventManager.Publish(new ApplyPassiveEvent 
+                        { 
+                            Target = enemy, 
+                            Type = AppliedPassiveType.Aggression, 
+                            Delta = threat.Amount 
+                        });
+                        Console.WriteLine($"[ThreatManagementSystem] Applied {threat.Amount} Aggression to enemy at start of turn");
+                    }
+                }
+            }
+        }
+
+        private void OnModifyHpRequest(ModifyHpRequestEvent e)
+        {
+            // Reduce threat by 1 when enemy takes attack damage
+            if (e.DamageType == ModifyTypeEnum.Attack && e.Target != null && e.Target.HasComponent<Enemy>())
+            {
+                var threat = e.Target.GetComponent<Threat>();
+                if (threat != null)
+                {
+                    int before = threat.Amount;
+                    threat.Amount = Math.Max(0, threat.Amount - 1);
+                    if (before != threat.Amount)
+                    {
+                        Console.WriteLine($"[ThreatManagementSystem] Enemy threat reduced from {before} to {threat.Amount} due to attack damage");
+                    }
+                }
+            }
+        }
+    }
+}
+

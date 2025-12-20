@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -44,14 +45,15 @@ namespace Crusaders30XX.ECS.Systems
 				var data = card.GetComponent<CardData>();
 				if (ui == null || data == null) continue;
 				if (!ui.IsClicked) continue;
-				string id = data.CardId ?? string.Empty;
-				Data.Cards.CardDefinitionCache.TryGet(id, out var def);
+				// Skip cards that are transitioning (being assigned or returning from assignment)
+				if (card.GetComponent<AssignedBlockCard>() != null) continue;
+				string id = data.Card.CardId ?? string.Empty;
                 // Skip weapons: they cannot be assigned as block
 				try
 				{
 					if (!string.IsNullOrEmpty(id))
 					{
-						if (def.isWeapon || def.isToken) { break; }
+						if (data.Card.IsWeapon || data.Card.IsToken) { break; }
 					}
 				}
 				catch { }
@@ -61,12 +63,12 @@ namespace Crusaders30XX.ECS.Systems
 					EventManager.Publish(new CantPlayCardMessage { Message = "Can't block with intimidated cards!" });
 					break;
 				}
-				if (def.isBlockCard && !EvaluateAdditionalCostService.CanPay(EntityManager, id))
+				if (data.Card.Type == CardType.Block && !data.Card.CanPlay(EntityManager, card))
 				{
 					return;
 				}
 				// Assign this card as block (always assign from hand); color from card
-				int blockVal = BlockValueService.GetBlockValue(card);
+				int blockVal = BlockValueService.GetTotalBlockValue(card);
 				string color = data.Color.ToString();
 				// Move card out of hand into AssignedBlock zone; unassign is handled by clicking assigned banner
 				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();

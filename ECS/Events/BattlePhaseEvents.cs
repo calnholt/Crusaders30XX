@@ -14,5 +14,10 @@ namespace Crusaders30XX.ECS.Events
 
 	public class ShowConfirmButtonEvent { }
 
-	public class BattlePhaseAnimationCompleteEvent { }
+	public class BattlePhaseAnimationCompleteEvent 
+	{
+		public SubPhase SubPhase;
+	}
+
+	public class ShowStartOfBattleAnimationEvent { }
 }

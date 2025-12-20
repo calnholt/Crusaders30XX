@@ -83,6 +83,17 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ClosePayCostOverlayEvent>(_ => Close());
             EventManager.Subscribe<PayCostCandidateClicked>(OnCandidateClicked);
             EventManager.Subscribe<PayCostCancelRequested>(OnCancel);
+            
+            // Clear payment cache on next card play or end of turn
+            EventManager.Subscribe<PlayCardRequested>(evt => 
+            {
+                if (!evt.CostsPaid) ClearPaymentCache();
+            });
+            EventManager.Subscribe<ChangeBattlePhaseEvent>(evt =>
+            {
+                if (evt.Current == SubPhase.PlayerEnd)
+                    ClearPaymentCache();
+            });
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -202,6 +213,28 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(cancel, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Cancel", LayerType = UILayerType.Overlay, EventType = UIElementEventType.PayCostCancel });
                 EntityManager.AddComponent(cancel, new HotKey { Button = FaceButton.B, Position = HotKeyPosition.Below });
                 EntityManager.AddComponent(cancel, new PayCostCancelButton());
+            }
+        }
+
+        private LastPaymentCache EnsurePaymentCacheExists()
+        {
+            var e = EntityManager.GetEntitiesWithComponent<LastPaymentCache>().FirstOrDefault();
+            if (e == null)
+            {
+                e = EntityManager.CreateEntity("LastPaymentCache");
+                EntityManager.AddComponent(e, new LastPaymentCache());
+            }
+            return e.GetComponent<LastPaymentCache>();
+        }
+
+        private void ClearPaymentCache()
+        {
+            var cache = EntityManager.GetEntitiesWithComponent<LastPaymentCache>().FirstOrDefault()?.GetComponent<LastPaymentCache>();
+            if (cache != null)
+            {
+                cache.CardPlayed = null;
+                cache.PaymentCards.Clear();
+                cache.HasData = false;
             }
         }
 
@@ -382,11 +415,8 @@ namespace Crusaders30XX.ECS.Systems
             // Hard guard: weapons cannot be used to pay costs under any circumstance
             try
             {
-                string id = cd.CardId ?? string.Empty;
-                if (!string.IsNullOrEmpty(id) && Data.Cards.CardDefinitionCache.TryGet(id, out var def))
-                {
-                    if (def.isWeapon) return;
-                }
+                string id = cd.Card.CardId ?? string.Empty;
+                if (cd.Card.IsWeapon) return;
             }
             catch { }
 
@@ -465,6 +495,11 @@ namespace Crusaders30XX.ECS.Systems
                         foreach (var c in state.SelectedCards.ToList())
                         {
                             EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PayCost" });
+                            var card = c.GetComponent<CardData>().Card;
+                            if (card != null && card.OnDiscardedForCost != null)
+                            {
+                                card.OnDiscardedForCost(EntityManager, c);
+                            }
                         }
                     }
                     else if (state.Type == PayCostOverlayType.SelectOneCard)
@@ -477,6 +512,12 @@ namespace Crusaders30XX.ECS.Systems
                             EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.Hand, Reason = "PayCostSelectOneReturn", InsertIndex = idxIns });
                         }
                     }
+
+                    // Cache the payment data before publishing the event
+                    var cache = EnsurePaymentCacheExists();
+                    cache.CardPlayed = state.CardToPlay;
+                    cache.PaymentCards = new List<Entity>(state.SelectedCards);
+                    cache.HasData = true;
 
                     EventManager.Publish(new PayCostSatisfied { CardToPlay = state.CardToPlay, PaymentCards = new List<Entity>(state.SelectedCards) });
                     EntityManager.DestroyEntity("PayCostOverlay_Cancel");
@@ -784,11 +825,7 @@ namespace Crusaders30XX.ECS.Systems
             // Disallow using weapons to pay costs
             try
             {
-                string id = cd.CardId ?? string.Empty;
-                if (!string.IsNullOrEmpty(id) && Data.Cards.CardDefinitionCache.TryGet(id, out var def))
-                {
-                    if (def.isWeapon) return false;
-                }
+                if (cd.Card.IsWeapon) return false;
             }
             catch { }
             // Card is viable if it can satisfy at least one remaining requirement
@@ -829,10 +866,9 @@ namespace Crusaders30XX.ECS.Systems
             if (data == null) return new List<string>();
 
             // Lookup JSON definition to read cost array
-            string id = data.CardId ?? string.Empty;
+            string id = data.Card.CardId ?? string.Empty;
             if (string.IsNullOrEmpty(id)) return new List<string>();
-            if (!Data.Cards.CardDefinitionCache.TryGet(id, out var def)) return new List<string>();
-            return (def.cost ?? Array.Empty<string>()).ToList();
+            return data.Card.Cost.ToList();
         }
 
         private static string ResolveCardName(CardData cd)
@@ -840,14 +876,11 @@ namespace Crusaders30XX.ECS.Systems
             if (cd == null) return "Card";
             try
             {
-                string id = cd.CardId ?? string.Empty;
-                if (!string.IsNullOrEmpty(id) && Data.Cards.CardDefinitionCache.TryGet(id, out var def) && def != null)
-                {
-                    return def.name ?? def.id ?? id;
-                }
+                string id = cd.Card.CardId ?? string.Empty;
+                return cd.Card.Name ?? cd.Card.CardId ?? "Card";
             }
             catch { }
-            return cd.CardId ?? "Card";
+            return cd.Card.Name ?? cd.Card.CardId ?? "Card";
         }
 
         private void DrawBorder(Rectangle rect, Color color, int thickness)

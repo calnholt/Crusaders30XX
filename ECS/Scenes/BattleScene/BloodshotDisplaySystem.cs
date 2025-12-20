@@ -20,6 +20,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         private readonly ContentManager _content;
         
         private Effect _effect;
+        private bool _failed;
         private BloodshotOverlay _overlay;
         private float _timeSeconds;
         private bool _isActive;
@@ -292,6 +293,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
                 {
                     Console.WriteLine($"[BloodshotDisplaySystem] Failed to load shader: {e.Message}");
                     _effect = null;
+                    _failed = true;
                 }
             }
             if (_effect != null && _overlay == null)
@@ -333,6 +335,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
 
         public override void Update(GameTime gameTime)
         {
+            if (_failed) return;
             base.Update(gameTime);
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             _timeSeconds += MathHelper.Max(0f, dt);

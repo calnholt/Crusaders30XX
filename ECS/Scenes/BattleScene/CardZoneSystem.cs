@@ -2,8 +2,8 @@ using System;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Cards;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -46,8 +46,8 @@ namespace Crusaders30XX.ECS.Systems
             if (deck == null) return;
             foreach (var card in deck.Hand)
             {
-                CardDefinitionCache.TryGet(card.GetComponent<CardData>()?.CardId ?? string.Empty, out var def);
-                if (def?.exhaustsOnEndTurn ?? false)
+                var cardObj = CardFactory.Create(card.GetComponent<CardData>().Card.CardId);
+                if (cardObj?.ExhaustsOnEndTurn ?? false)
                 {
                     EventQueueBridge.EnqueueTriggerAction("CardZoneSystem.OnChangeBattlePhase.EndTurnExhaust", () =>
                     {
@@ -96,6 +96,34 @@ namespace Crusaders30XX.ECS.Systems
                             uiAnim.IsClicked = false;
                         }
                         EventManager.Publish(new PlayCardToDiscardAnimationRequested
+                        {
+                            Card = evt.Card,
+                            Deck = deckEntity,
+                            ContextId = evt.ContextId
+                        });
+                    }
+                    return;
+                }
+            }
+
+            // Intercept Hand -> DrawPile to run animation first; finalize will mutate zones and publish CardMoved
+            if (evt.Destination == CardZoneType.DrawPile)
+            {
+                bool isFromHand = deck.Hand.Contains(evt.Card);
+
+                if (isFromHand)
+                {
+                    if (evt.Card.GetComponent<AnimatingHandToDrawPile>() == null)
+                    {
+                        EntityManager.AddComponent(evt.Card, new AnimatingHandToDrawPile());
+                        var uiAnim = evt.Card.GetComponent<UIElement>();
+                        if (uiAnim != null)
+                        {
+                            uiAnim.IsInteractable = false;
+                            uiAnim.IsHovered = false;
+                            uiAnim.IsClicked = false;
+                        }
+                        EventManager.Publish(new PlayCardToDrawPileAnimationRequested
                         {
                             Card = evt.Card,
                             Deck = deckEntity,
@@ -225,7 +253,7 @@ namespace Crusaders30XX.ECS.Systems
                         abc = new AssignedBlockCard
                         {
                             ContextId = evt.ContextId,
-                            BlockAmount = BlockValueService.GetBlockValue(evt.Card),
+                            BlockAmount = BlockValueService.GetTotalBlockValue(evt.Card),
                             StartPos = t?.Position ?? Vector2.Zero,
                             CurrentPos = t?.Position ?? Vector2.Zero,
                             TargetPos = t?.Position ?? Vector2.Zero,
@@ -359,6 +387,28 @@ namespace Crusaders30XX.ECS.Systems
                     EntityManager.DestroyEntity(evt.Card.Id);
                     break;
                 }
+                case CardZoneType.DrawPile:
+                {
+                    deck.DrawPile.Add(evt.Card);
+                    // Not interactable in draw pile
+                    var uiDP = evt.Card.GetComponent<UIElement>();
+                    if (uiDP != null)
+                    {
+                        uiDP.IsInteractable = false;
+                        uiDP.IsHovered = false;
+                        uiDP.IsClicked = false;
+                        uiDP.EventType = UIElementEventType.None;
+                    }
+                    // Reset transform so highlight hit-test uses proper defaults when re-drawn
+                    var tdp = evt.Card.GetComponent<Transform>();
+                    if (tdp != null)
+                    {
+                        tdp.Rotation = 0f;
+                        if (tdp.Position == Vector2.Zero) { tdp.Position = Vector2.Zero; }
+                        tdp.Scale = Vector2.One;
+                    }
+                    break;
+                }
                 default:
                 {
                     // If finalize was called for an unsupported destination, no-op back to hand
@@ -370,9 +420,11 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            // Clear animation marker if present
+            // Clear animation markers if present
             var anim = evt.Card.GetComponent<AnimatingHandToDiscard>();
             if (anim != null) { EntityManager.RemoveComponent<AnimatingHandToDiscard>(evt.Card); }
+            var animDrawPile = evt.Card.GetComponent<AnimatingHandToDrawPile>();
+            if (animDrawPile != null) { EntityManager.RemoveComponent<AnimatingHandToDrawPile>(evt.Card); }
 
             EventManager.Publish(new CardMoved
             {
@@ -418,13 +470,14 @@ namespace Crusaders30XX.ECS.Systems
             if (cd == null) return string.Empty;
             try
             {
-                if (CardDefinitionCache.TryGet(cd.CardId ?? string.Empty, out var def) && def != null)
+                var cardObj = CardFactory.Create(cd.Card.CardId);
+                if (cardObj != null)
                 {
-                    return def.name ?? def.id ?? cd.CardId ?? string.Empty;
+                    return cardObj.Name ?? cardObj.CardId ?? string.Empty;
                 }
             }
             catch { }
-            return cd.CardId ?? string.Empty;
+            return cd.Card.CardId ?? string.Empty;
         }
 
         private static CardZoneType GetZoneOf(Deck deck, Entity card)

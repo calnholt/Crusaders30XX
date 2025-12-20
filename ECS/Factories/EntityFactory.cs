@@ -9,12 +9,12 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Data.Loadouts;
-using Crusaders30XX.ECS.Data.Cards;
 using System;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -207,12 +207,12 @@ namespace Crusaders30XX.ECS.Factories
                 CardHeight = (int)Math.Round(350 * sU),
                 CardOffsetYExtra = (int)Math.Round(25 * sU),
                 CardGap = (int)Math.Round(-20 * sU),
-                CardBorderThickness = (int)Math.Max(1, Math.Round(3 * sU)),
+                CardBorderThickness = (int)Math.Max(0, Math.Round(0 * sU)),
                 CardCornerRadius = (int)Math.Max(2, Math.Round(18 * sU)),
                 HighlightBorderThickness = (int)Math.Max(1, Math.Round(5 * sU)),
                 TextMarginX = (int)Math.Round(16 * sU),
                 TextMarginY = (int)Math.Round(16 * sU),
-                NameScale = 0.175f * sU,
+                NameScale = 0.155f * sU,
                 CostScale = 0.6f * sU,
                 DescriptionScale = 0.115f * sU,
                 BlockScale = 0.5f * sU,
@@ -240,8 +240,9 @@ namespace Crusaders30XX.ECS.Factories
 					var colorKey = entry.Substring(sep + 1);
 					color = ParseColor(colorKey);
 				}
-				if (!CardDefinitionCache.TryGet(cardId, out var def) || def == null) continue;
-				if (def.isWeapon) continue; // weapons are not in the deck
+                var card = CardFactory.Create(cardId);
+				if (card == null) continue;
+				if (card.IsWeapon) continue; // weapons are not in the deck
                 var entity = CreateCardFromDefinition(entityManager, cardId, color);
 				var cd = entity.GetComponent<CardData>();
 				if (cd != null)
@@ -296,16 +297,30 @@ namespace Crusaders30XX.ECS.Factories
         // Helper: create card entity from CardDefinition id and color
         public static Entity CreateCardFromDefinition(EntityManager entityManager, string cardId, CardData.CardColor color, bool allowWeapons = false, int index = 0)
         {
-            if (!CardDefinitionCache.TryGet(cardId, out var def) || def == null) return null;
-            if (def.isWeapon && !allowWeapons) return null; // only non-weapons for deck/library
-            string name = def.name ?? def.id ?? cardId;
+            var card = CardFactory.Create(cardId);
+            if (card == null) return null;
+            if (card.IsWeapon && !allowWeapons) return null; // only non-weapons for deck/library
+            string name = card.Name ?? cardId;
             var entity = entityManager.CreateEntity($"Card_{name}_{color}_{index}");
 
             var cardData = new CardData
             {
-                CardId = cardId,
+                Card = CardFactory.Create(cardId),
                 Color = color
             };
+            
+            try
+            {
+                if (cardData.Card?.OnCreate != null)
+                {
+                    cardData.Card.OnCreate(entityManager, entity);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in OnCreate for card {cardId}: {ex}");
+                throw;
+            }
 
             var transform = new Transform { Position = new Vector2(-1000, -1000), Scale = Vector2.One };
             var sprite = new Sprite { TexturePath = string.Empty, IsVisible = true };
@@ -316,17 +331,32 @@ namespace Crusaders30XX.ECS.Factories
             entityManager.AddComponent(entity, sprite);
             entityManager.AddComponent(entity, uiElement);
             entityManager.AddComponent(entity, ParallaxLayer.GetUIParallaxLayer());
-            entityManager.AddComponent(entity, new Hint { Text = CardHintService.GetCardHint(def, color) });
+            entityManager.AddComponent(entity, new Hint { Text = card.GetCardHint(color) });
             entityManager.AddComponent(entity, new DontDestroyOnReload());
-            // Set tooltip from definition (precomputed in CardDefinitionCache)
-            if (!string.IsNullOrEmpty(def.tooltip))
+            var modifiedBlock = new ModifiedBlock { Modifications = new List<Modification>() };
+            entityManager.AddComponent(entity, modifiedBlock);
+            if (color == CardData.CardColor.Black)
             {
-                uiElement.Tooltip = def.tooltip;
+                modifiedBlock.Modifications.Add(new Modification { Delta = 1, Reason = "Black card" });
+            }
+            if (card.Type == CardType.Attack)
+            {
+                entityManager.AddComponent(entity, new ModifiedDamage { Modifications = new List<Modification>() });
+            }
+            // Auto-generate tooltip from card text keywords
+            if (string.IsNullOrEmpty(card.Tooltip) && !string.IsNullOrEmpty(card.Text))
+            {
+                card.Tooltip = card.Text;  // Setter will process keywords via KeywordTooltipTextService
+            }
+            // Set tooltip from definition (precomputed in CardDefinitionCache)
+            if (!string.IsNullOrEmpty(card.Tooltip))
+            {
+                uiElement.Tooltip = card.Tooltip;
             }
             // Attach CardTooltip when data specifies a tooltip card, and mark UI tooltip type
-            if (!string.IsNullOrWhiteSpace(def.cardTooltip))
+            if (!string.IsNullOrWhiteSpace(card.CardTooltip))
             {
-                entityManager.AddComponent(entity, new CardTooltip { CardId = def.cardTooltip });
+                entityManager.AddComponent(entity, new CardTooltip { CardId = card.CardTooltip });
                 uiElement.TooltipType = TooltipType.Card;
             }
             return entity;
@@ -352,6 +382,7 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = new List<string>(def.attackIds) });
             world.AddComponent(enemyEntity, new AttackIntent());
             world.AddComponent(enemyEntity, new AppliedPassives());
+            world.AddComponent(enemyEntity, new Threat { Amount = 0 });
             world.AddComponent(enemyEntity, ParallaxLayer.GetCharacterParallaxLayer());
 
             var playerEntity = world.EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
@@ -393,6 +424,12 @@ namespace Crusaders30XX.ECS.Factories
                 }
             }
 
+            // Pre-create Threat tooltip hover entity (bounds updated by ThreatDisplaySystem)
+            var threatTooltip = world.CreateEntity("UI_ThreatTooltip");
+            world.AddComponent(threatTooltip, new ThreatTooltipAnchor());
+            world.AddComponent(threatTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
+            world.AddComponent(threatTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = "Threat\n\nAt the start of the enemy's turn, it gains X aggression equal to its current threat level.\nWhenever you attack an enemy, it reduces their threat by one.\nEnemy's gain one threat at the end of their turn." });
+
             return enemyEntity;
         }
 
@@ -420,11 +457,12 @@ namespace Crusaders30XX.ECS.Factories
 				}
 
 				string displayName = id;
+                var card = CardFactory.Create(id);
 				try
 				{
-					if (itemType == ForSaleItemType.Card && CardDefinitionCache.TryGet(id, out var cdef) && cdef != null)
+					if (itemType == ForSaleItemType.Card && card != null)
 					{
-						displayName = string.IsNullOrWhiteSpace(cdef.name) ? id : cdef.name;
+						displayName = string.IsNullOrWhiteSpace(card.Name) ? id : card.Name;
 					}
 					else if (itemType == ForSaleItemType.Medal && MedalDefinitionCache.TryGet(id, out var mdef) && mdef != null)
 					{
@@ -475,5 +513,152 @@ namespace Crusaders30XX.ECS.Factories
 			}
 			return result;
 		}
+
+        /// <summary>
+        /// Clones a card entity, copying all gameplay-affecting components while creating fresh visual/animation state.
+        /// </summary>
+        public static Entity CloneEntity(EntityManager entityManager, Entity sourceEntity)
+        {
+            if (sourceEntity == null) return null;
+
+            // Get the card data to construct a proper name
+            var sourceCardData = sourceEntity.GetComponent<CardData>();
+            if (sourceCardData == null) return null; // Only supports card entities for now
+
+            string name = sourceCardData.Card?.Name ?? "Card";
+            var clonedEntity = entityManager.CreateEntity($"Card_{name}_{sourceCardData.Color}_Clone_{sourceEntity.Id}");
+
+            // Deep copy CardData
+            var clonedCardData = new CardData
+            {
+                Card = CardFactory.Create(sourceCardData.Card.CardId),
+                Color = sourceCardData.Color,
+                Owner = clonedEntity
+            };
+            entityManager.AddComponent(clonedEntity, clonedCardData);
+
+            // Deep copy ModifiedBlock (with all modifications)
+            var sourceModifiedBlock = sourceEntity.GetComponent<ModifiedBlock>();
+            if (sourceModifiedBlock != null)
+            {
+                var clonedModifiedBlock = new ModifiedBlock
+                {
+                    Owner = clonedEntity,
+                    Modifications = new List<Modification>(sourceModifiedBlock.Modifications)
+                };
+                entityManager.AddComponent(clonedEntity, clonedModifiedBlock);
+            }
+
+            // Deep copy ModifiedDamage (with all modifications)
+            var sourceModifiedDamage = sourceEntity.GetComponent<ModifiedDamage>();
+            if (sourceModifiedDamage != null)
+            {
+                var clonedModifiedDamage = new ModifiedDamage
+                {
+                    Owner = clonedEntity,
+                    Modifications = new List<Modification>(sourceModifiedDamage.Modifications)
+                };
+                entityManager.AddComponent(clonedEntity, clonedModifiedDamage);
+            }
+
+            // Copy Intimidated status
+            if (sourceEntity.HasComponent<Intimidated>())
+            {
+                entityManager.AddComponent(clonedEntity, new Intimidated { Owner = clonedEntity });
+            }
+
+            // Copy Frozen status
+            if (sourceEntity.HasComponent<Frozen>())
+            {
+                entityManager.AddComponent(clonedEntity, new Frozen { Owner = clonedEntity });
+            }
+
+            // Copy Hint
+            var sourceHint = sourceEntity.GetComponent<Hint>();
+            if (sourceHint != null)
+            {
+                entityManager.AddComponent(clonedEntity, new Hint 
+                { 
+                    Owner = clonedEntity,
+                    Text = sourceHint.Text 
+                });
+            }
+
+            // Copy CardTooltip
+            var sourceCardTooltip = sourceEntity.GetComponent<CardTooltip>();
+            if (sourceCardTooltip != null)
+            {
+                entityManager.AddComponent(clonedEntity, new CardTooltip
+                {
+                    Owner = clonedEntity,
+                    CardId = sourceCardTooltip.CardId,
+                    TooltipScale = sourceCardTooltip.TooltipScale
+                });
+            }
+
+            // Copy DontDestroyOnReload
+            if (sourceEntity.HasComponent<DontDestroyOnReload>())
+            {
+                entityManager.AddComponent(clonedEntity, new DontDestroyOnReload { Owner = clonedEntity });
+            }
+
+            // Create fresh Transform (off-screen position)
+            var sourceTransform = sourceEntity.GetComponent<Transform>();
+            entityManager.AddComponent(clonedEntity, new Transform
+            {
+                Owner = clonedEntity,
+                Position = new Vector2(-1000, -1000),
+                BasePosition = new Vector2(-1000, -1000),
+                Rotation = 0f,
+                Scale = sourceTransform?.Scale ?? Vector2.One,
+                ZOrder = 0
+            });
+
+            // Create fresh UIElement (no hover state, fresh bounds)
+            var sourceUIElement = sourceEntity.GetComponent<UIElement>();
+            var clonedUIElement = new UIElement
+            {
+                Owner = clonedEntity,
+                Bounds = new Rectangle(-1000, -1000, 250, 350),
+                IsHovered = false,
+                IsClicked = false,
+                IsInteractable = true,
+                Tooltip = sourceUIElement?.Tooltip ?? "",
+                TooltipType = sourceUIElement?.TooltipType ?? TooltipType.Text,
+                TooltipPosition = sourceUIElement?.TooltipPosition ?? TooltipPosition.Above,
+                TooltipOffsetPx = sourceUIElement?.TooltipOffsetPx ?? 30,
+                EventType = UIElementEventType.None,
+                LayerType = sourceUIElement?.LayerType ?? UILayerType.Default,
+                IsPreventDefaultClick = false,
+                IsHidden = false
+            };
+            entityManager.AddComponent(clonedEntity, clonedUIElement);
+
+            // Create fresh Sprite
+            var sourceSprite = sourceEntity.GetComponent<Sprite>();
+            entityManager.AddComponent(clonedEntity, new Sprite
+            {
+                Owner = clonedEntity,
+                TexturePath = sourceSprite?.TexturePath ?? string.Empty,
+                SourceRectangle = null,
+                Tint = Color.White,
+                IsVisible = true
+            });
+
+            // Create fresh ParallaxLayer (fresh animation state)
+            entityManager.AddComponent(clonedEntity, ParallaxLayer.GetUIParallaxLayer());
+
+            // Note: Explicitly excluding transient state components:
+            // - AnimatingHandToDiscard
+            // - AnimatingHandToDrawPile
+            // - CardToDiscardFlight
+            // - SelectedForPayment
+            // - MarkedForSpecificDiscard
+            // - MarkedForReturnToDeck
+            // - TooltipOverrideBackup
+            // - OwnedByScene (auto-added by EntityManager)
+
+            return clonedEntity;
+        }
     }
 } 

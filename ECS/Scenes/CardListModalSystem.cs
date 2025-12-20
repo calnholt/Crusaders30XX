@@ -199,7 +199,7 @@ namespace Crusaders30XX.ECS.Systems
             var cards = (modal.Cards ?? new List<Entity>())
                 .Select(e => e.GetComponent<CardData>())
                 .Where(cd => cd != null)
-                .OrderBy(cd => cd.CardId)
+                .OrderBy(cd => cd.Card.CardId)
                 .ToList();
 
             // Grid within rect

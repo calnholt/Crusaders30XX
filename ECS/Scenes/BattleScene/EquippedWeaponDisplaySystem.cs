@@ -6,7 +6,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.Diagnostics;
-using Crusaders30XX.ECS.Data.Cards;
+using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -47,8 +48,18 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch = spriteBatch;
             _content = content;
             TryLoadWeaponTexture();
+
+            EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
         }
 
+        private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
+        {
+            var rootUi = EntityManager.GetEntity(RootEntityName)?.GetComponent<UIElement>();
+            if (rootUi != null)
+            {
+                rootUi.IsHidden = evt.Current == SubPhase.Action;
+            }
+        }
         private void TryLoadWeaponTexture()
         {
             // Try to load weapon sprite from Content by id of equipped weapon; fallback to sword or shield
@@ -119,7 +130,7 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureRootEntity();
 			var root = EntityManager.GetEntity(RootEntityName);
 			var tRoot = root?.GetComponent<Transform>();
-            Vector2 center = new Vector2(100, _graphicsDevice.Viewport.Height - 200);
+            Vector2 center = new Vector2(100, Game1.VirtualHeight - 200);
             if (discardRect.HasValue)
             {
                 var dr = discardRect.Value;
@@ -159,26 +170,15 @@ namespace Crusaders30XX.ECS.Systems
 			var rootUi = root.GetComponent<UIElement>();
 			if (rootUi == null)
 			{
-				EntityManager.AddComponent(root, new UIElement { Bounds = hitRect, Tooltip = BuildWeaponTooltip(), TooltipPosition = TooltipPosition.Right });
+				EntityManager.AddComponent(root, new UIElement { Bounds = hitRect, TooltipPosition = TooltipPosition.Right, TooltipType = TooltipType.Card });
+                EntityManager.AddComponent(root, new CardTooltip { CardId = player.GetComponent<EquippedWeapon>().WeaponId });
 			}
 			else
 			{
 				rootUi.Bounds = hitRect;
 				rootUi.TooltipPosition = TooltipPosition.Right;
-				rootUi.Tooltip = BuildWeaponTooltip();
+				rootUi.TooltipType = TooltipType.Card;
 			}
-        }
-
-        private string BuildWeaponTooltip()
-        {
-            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-            var ew = player?.GetComponent<EquippedWeapon>();
-            if (ew == null || string.IsNullOrWhiteSpace(ew.WeaponId)) return "Weapon";
-            CardDefinitionCache.TryGet(ew.WeaponId, out var def);
-            string name = $"{def.name} - {(def.isFreeAction ? "free action" : "1AP")}";
-            string desc = def.text ?? string.Empty;
-            string cost = (def.cost != null && def.cost.Length > 0) ? $"Cost: {string.Join(", ", def.cost)}" : string.Empty;
-            return $"{name} {(cost != string.Empty ? $"\n{cost}" : string.Empty)}\n\n{desc}";
         }
 
 	private void EnsureRootEntity()
@@ -187,7 +187,7 @@ namespace Crusaders30XX.ECS.Systems
 		if (e == null)
 		{
 			e = EntityManager.CreateEntity(RootEntityName);
-			EntityManager.AddComponent(e, new Transform { Position = new Vector2(100, _graphicsDevice.Viewport.Height - 200), ZOrder = 10000 });
+			EntityManager.AddComponent(e, new Transform { Position = new Vector2(100, Game1.VirtualHeight - 200), ZOrder = 10000 });
 			EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
             EntityManager.AddComponent(e, new Hint { Text = "Represents your equipped weapon." });
 		}

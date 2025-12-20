@@ -587,91 +587,328 @@
 /processorParam:TextureFormat=Color
 /build:active_icon.png
 
+#---------------------------------- Card Art ---------------------------------#
+
+#begin CardArt/anoint_the_sick.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/anoint_the_sick.png
+
+#begin CardArt/ark_of_the_covenant.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/ark_of_the_covenant.png
+
+#begin CardArt/bulwark.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/bulwark.png
+
+#begin CardArt/burn.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/burn.png
+
+#begin CardArt/carve.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/carve.png
+
+#begin CardArt/courageous.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/courageous.png
+
+#begin CardArt/deus_vult.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/deus_vult.png
+
+#begin CardArt/divine_protection.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/divine_protection.png
+
+#begin CardArt/dowse_with_holy_water.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/dowse_with_holy_water.png
+
+#begin CardArt/fury.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/fury.png
+
+#begin CardArt/heavens_glory.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/heavens_glory.png
+
+#begin CardArt/impale.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/impale.png
+
+#begin CardArt/increase_faith.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/increase_faith.png
+
+#begin CardArt/narrow_gate.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/narrow_gate.png
+
+#begin CardArt/pouch_of_kunai.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/pouch_of_kunai.png
+
+#begin CardArt/purge.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/purge.png
+
+#begin CardArt/ravage.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/ravage.png
+
+#begin CardArt/reconciled.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/reconciled.png
+
+#begin CardArt/sacrifice.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/sacrifice.png
+
+#begin CardArt/seize.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/seize.png
+
+#begin CardArt/shield_of_faith.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/shield_of_faith.png
+
+#begin CardArt/shroud_of_turin.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/shroud_of_turin.png
+
+#begin CardArt/stab.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/stab.png
+
+#begin CardArt/stalwart.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/stalwart.png
+
+#begin CardArt/strike.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/strike.png
+
+#begin CardArt/stun.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/stun.png
+
+#begin CardArt/tempest.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/tempest.png
+
+#begin CardArt/vindicate.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/vindicate.png
+
+#begin CardArt/whirlwind.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/whirlwind.png
+
 #---------------------------------- Data JSON Files ---------------------------------#
-
-#begin Data/Cards/anoint_the_sick.json
-/copy:Data/Cards/anoint_the_sick.json
-
-#begin Data/Cards/bulwark.json
-/copy:Data/Cards/bulwark.json
-
-#begin Data/Cards/burn.json
-/copy:Data/Cards/burn.json
-
-#begin Data/Cards/courageous.json
-/copy:Data/Cards/courageous.json
-
-#begin Data/Cards/divine_protection.json
-/copy:Data/Cards/divine_protection.json
-
-#begin Data/Cards/dowse_with_holy_water.json
-/copy:Data/Cards/dowse_with_holy_water.json
-
-#begin Data/Cards/fury.json
-/copy:Data/Cards/fury.json
-
-#begin Data/Cards/heavens_glory.json
-/copy:Data/Cards/heavens_glory.json
-
-#begin Data/Cards/impale.json
-/copy:Data/Cards/impale.json
-
-#begin Data/Cards/increase_faith.json
-/copy:Data/Cards/increase_faith.json
-
-#begin Data/Cards/kunai.json
-/copy:Data/Cards/kunai.json
-
-#begin Data/Cards/narrow_gate.json
-/copy:Data/Cards/narrow_gate.json
-
-#begin Data/Cards/pouch_of_kunai.json
-/copy:Data/Cards/pouch_of_kunai.json
-
-#begin Data/Cards/ravage.json
-/copy:Data/Cards/ravage.json
-
-#begin Data/Cards/reconciled.json
-/copy:Data/Cards/reconciled.json
-
-#begin Data/Cards/sacrifice.json
-/copy:Data/Cards/sacrifice.json
-
-#begin Data/Cards/seize.json
-/copy:Data/Cards/seize.json
-
-#begin Data/Cards/shield_of_faith.json
-/copy:Data/Cards/shield_of_faith.json
-
-#begin Data/Cards/shroud_of_turin.json
-/copy:Data/Cards/shroud_of_turin.json
-
-#begin Data/Cards/stab.json
-/copy:Data/Cards/stab.json
-
-#begin Data/Cards/stalwart.json
-/copy:Data/Cards/stalwart.json
-
-#begin Data/Cards/strike.json
-/copy:Data/Cards/strike.json
-
-#begin Data/Cards/stun.json
-/copy:Data/Cards/stun.json
-
-#begin Data/Cards/tempest.json
-/copy:Data/Cards/tempest.json
-
-#begin Data/Cards/vindicate.json
-/copy:Data/Cards/vindicate.json
-
-#begin Data/Cards/weapon_dagger.json
-/copy:Data/Cards/weapon_dagger.json
-
-#begin Data/Cards/weapon_sword.json
-/copy:Data/Cards/weapon_sword.json
-
-#begin Data/Cards/whirlwind.json
-/copy:Data/Cards/whirlwind.json
 
 #begin Data/Dialog/desert_1.json
 /copy:Data/Dialog/desert_1.json
@@ -782,3 +1019,15 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Shaders/Poison.fx
+
+#---------------------------------- Music ---------------------------------#
+
+#begin Music/desert_theme_battle.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/desert_theme_battle.ogg
+
+#begin Music/customize.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/customize.ogg

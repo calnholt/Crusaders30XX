@@ -158,7 +158,8 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         EntityManager.RemoveComponent<ExhaustOnBlock>(entity);
                     }
-                    BlockCardResolveService.Resolve(entity);
+                    var cardData = entity.GetComponent<CardData>();
+                    cardData.Card.OnBlock?.Invoke(EntityManager, entity);
                     EventManager.Publish(new CardMoveRequested
                     {
                         Card = entity,
@@ -177,6 +178,25 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         ui.Tooltip = string.Empty;
                         ui.IsHovered = false;
+                    }
+                    // Restore tooltip settings from backup (matching unassign behavior)
+                    var backup = entity.GetComponent<TooltipOverrideBackup>();
+                    if (backup != null && ui != null)
+                    {
+                        ui.TooltipType = backup.OriginalType;
+                        ui.TooltipPosition = backup.OriginalPosition;
+                        ui.TooltipOffsetPx = backup.OriginalOffsetPx;
+                        var ct = entity.GetComponent<CardTooltip>();
+                        if (backup.HadCardTooltip)
+                        {
+                            if (ct == null) { EntityManager.AddComponent(entity, new CardTooltip { CardId = backup.OriginalCardTooltipId ?? string.Empty }); }
+                            else { ct.CardId = backup.OriginalCardTooltipId ?? string.Empty; }
+                        }
+                        else
+                        {
+                            if (ct != null) { EntityManager.RemoveComponent<CardTooltip>(entity); }
+                        }
+                        EntityManager.RemoveComponent<TooltipOverrideBackup>(entity);
                     }
                 }
             }

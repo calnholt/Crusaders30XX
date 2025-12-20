@@ -22,8 +22,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
 			// TODO: update to look at CardMoved event instead of BlockAssignmentRemoved / Added
-			EventManager.Subscribe<BlockAssignmentRemoved>(_ => TimerScheduler.Schedule(0.2f, () => OnBlockAssignmentRemoved(_)));
-			// Only recompute previews when Aegis (damage prevention) changes
+			EventManager.Subscribe<BlockAssignmentRemoved>(_ => TimerScheduler.Schedule(0.2f, () => OnBlockAssignmentRemoved(_)));			// Only recompute previews when Aegis (damage prevention) changes
 			EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
 			EventManager.Subscribe<RemovePassive>(OnRemovePassive);
 			EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);
@@ -217,22 +216,18 @@ namespace Crusaders30XX.ECS.Systems
 
 		bool specialEffectExecuted = EnemySpecialAttackService.ExecuteSpecialEffect(def, EntityManager);
 		if (specialEffectExecuted) return;
-
+		p.PreventedDamageFromBlockCondition = 0;
 		p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
 			.Where(e => e.type == "Damage")
 			.Sum(e => e.amount);
 		p.BaseDamage = def.damage;
 		bool isConditionMet = ConditionService.Evaluate(def.blockingCondition, EntityManager, p);
-			int preventedDamageFromBlockCondition = isConditionMet ? (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
-				.Where(e => e.type == "Damage")
-				.Sum(e => e.amount) : 0;
 			int reduced = aegis + p.AssignedBlockTotal;
-			int actual = Math.Max(full - reduced - preventedDamageFromBlockCondition, 0);
+			int actual = Math.Max(full - reduced, 0);
 
 			p.IsConditionMet = isConditionMet;
 			p.ActualDamage = actual;
-			p.PreventedDamageFromBlockCondition = preventedDamageFromBlockCondition;
-			p.TotalPreventedDamage = aegis + preventedDamageFromBlockCondition + p.AssignedBlockTotal;
+			p.TotalPreventedDamage = aegis + p.AssignedBlockTotal;
 
 			// Optional: sanity check for desync between snapshot and live AssignedBlockCard state (debug only)
 			try

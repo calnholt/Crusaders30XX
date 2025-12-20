@@ -122,8 +122,8 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				var rect = new Rectangle(rx, ry, w, h);
 				// Screen clamp
-				rect.X = System.Math.Max(0, System.Math.Min(rect.X, _graphicsDevice.Viewport.Width - rect.Width));
-				rect.Y = System.Math.Max(0, System.Math.Min(rect.Y, _graphicsDevice.Viewport.Height - rect.Height));
+				rect.X = System.Math.Max(0, System.Math.Min(rect.X, Game1.VirtualWidth - rect.Width));
+				rect.Y = System.Math.Max(0, System.Math.Min(rect.Y, Game1.VirtualHeight - rect.Height));
 
 				var id = top.E.Id;
 				if (!_fadeByEntityId.TryGetValue(id, out var fs))
