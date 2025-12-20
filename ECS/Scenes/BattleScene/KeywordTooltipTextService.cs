@@ -13,19 +13,19 @@ namespace Crusaders30XX.ECS.Systems
 
 			int i;
 			i = lowerText.IndexOf("stun");
-			if (i >= 0) matches.Add((i, "Stun - Skip the next attack."));
+			if (i >= 0) matches.Add((i, "X Stun - Skip the next X attack(s)."));
 			i = lowerText.IndexOf("inferno");
-			if (i >= 0) matches.Add((i, "Inferno - At the start of the turn, gain 1 burn."));
+			if (i >= 0) matches.Add((i, "X Inferno- At the start of the turn, gain X burn."));
 			i = lowerText.IndexOf("slow");
-			if (i >= 0) matches.Add((i, "Slow - Ambush attacks are 1 second faster."));
+			if (i >= 0) matches.Add((i, "X Slow - Ambush attacks are X second faster."));
 			i = lowerText.IndexOf("aegis");
-			if (i >= 0) matches.Add((i, "Aegis - Prevent the next 1 damage from any source."));
+			if (i >= 0) matches.Add((i, " X Aegis - Prevent the next X damage from any source."));
 			i = lowerText.IndexOf("burn");
-			if (i >= 0) matches.Add((i, "Burn - At the start of the turn, take 1 damage."));
+			if (i >= 0) matches.Add((i, "X Burn - At the start of the turn, take X damage."));
 			i = lowerText.IndexOf("aggression");
-			if (i >= 0) matches.Add((i, "Aggression - Your next attack this turn gains +1 damage."));
+			if (i >= 0) matches.Add((i, "X Aggression - Your next attack this turn gains +X damage."));
 			i = lowerText.IndexOf("power");
-			if (i >= 0) matches.Add((i, "Power - Your attacks deal +1 damage."));
+			if (i >= 0) matches.Add((i, "X Power - Your attacks deal +X damage."));
 
 			if (matches.Count == 0) return string.Empty;
 			matches.Sort((a, b) => a.Index.CompareTo(b.Index));

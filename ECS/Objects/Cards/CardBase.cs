@@ -77,7 +77,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             get => _tooltip;
             set
             {
-                _text = KeywordTooltipTextService.GetTooltip(value);
+                _tooltip = KeywordTooltipTextService.GetTooltip(value);
             }
         }
         public string CardTooltip { get; set; } = "";

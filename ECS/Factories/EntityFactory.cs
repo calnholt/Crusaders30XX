@@ -343,6 +343,11 @@ namespace Crusaders30XX.ECS.Factories
             {
                 entityManager.AddComponent(entity, new ModifiedDamage { Modifications = new List<Modification>() });
             }
+            // Auto-generate tooltip from card text keywords
+            if (string.IsNullOrEmpty(card.Tooltip) && !string.IsNullOrEmpty(card.Text))
+            {
+                card.Tooltip = card.Text;  // Setter will process keywords via KeywordTooltipTextService
+            }
             // Set tooltip from definition (precomputed in CardDefinitionCache)
             if (!string.IsNullOrEmpty(card.Tooltip))
             {
