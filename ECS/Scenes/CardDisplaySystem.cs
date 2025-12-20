@@ -477,8 +477,28 @@ namespace Crusaders30XX.ECS.Systems
                     }
                 }
 
-                float artWidth = CardArtWidth * _settings.UIScale * visualScale;
-                float artHeight = CardArtHeight * _settings.UIScale * visualScale;
+                // Calculate max bounds
+                float maxWidth = CardArtWidth * _settings.UIScale * visualScale;
+                float maxHeight = CardArtHeight * _settings.UIScale * visualScale;
+                
+                // Calculate aspect-ratio-preserving size that fits within max bounds
+                float textureAspect = artTexture.Width / (float)artTexture.Height;
+                float boundsAspect = maxWidth / maxHeight;
+                
+                float artWidth, artHeight;
+                if (textureAspect > boundsAspect)
+                {
+                    // Texture is wider relative to bounds - constrain by width
+                    artWidth = maxWidth;
+                    artHeight = maxWidth / textureAspect;
+                }
+                else
+                {
+                    // Texture is taller relative to bounds - constrain by height
+                    artHeight = maxHeight;
+                    artWidth = maxHeight * textureAspect;
+                }
+                
                 float artLocalX = _settings.CardWidth * visualScale - artWidth - (CardArtOffsetX * _settings.UIScale * visualScale);
                 float artLocalY = _settings.CardHeight * visualScale - artHeight - (CardArtOffsetY * _settings.UIScale * visualScale);
 
@@ -754,7 +774,7 @@ namespace Crusaders30XX.ECS.Systems
                 outer,
                 position: center,
                 sourceRectangle: null,
-                color: Color.Black,
+                color: color == Color.Black ? Color.White : Color.Black,
                 rotation: rotation,
                 origin: new Vector2(outer.Width / 2f, outer.Height / 2f),
                 scale: Vector2.One,
