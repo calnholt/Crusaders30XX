@@ -43,7 +43,7 @@ namespace Crusaders30XX.ECS.Systems
       EventManager.Subscribe<LoadSceneEvent>(_ => {
 				if (_.Scene == SceneId.Location)
 				{
-					EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
+					EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Map });
 					EventManager.Publish(new UpdateLocationNameEvent { Title = LocationDefinitionCache.TryGet("desert", out var def) ? def.name : string.Empty });
 					AddLocationSystems();
 				}

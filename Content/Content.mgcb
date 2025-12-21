@@ -1031,3 +1031,13 @@
 /importer:OggImporter
 /processor:SongProcessor
 /build:Music/customize.ogg
+
+#begin Music/desert_map.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/desert_map.ogg
+
+#begin Music/quest_complete.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/quest_complete.ogg

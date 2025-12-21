@@ -87,6 +87,7 @@ namespace Crusaders30XX.ECS.Systems
 							? $"Quest Complete!\nGold +{completion.RewardGold}"
 							: "Quest Complete! (already completed - no reward)";
 						EventManager.Publish(new ShowQuestRewardOverlay { Message = msg });
+						EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.QuestComplete });
 					}
 					else
 					{

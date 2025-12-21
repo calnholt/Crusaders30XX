@@ -322,7 +322,9 @@ namespace Crusaders30XX.ECS.Events
         None = 0,
         Menu = 1,
         Battle = 2,
-        Customize = 3
+        Customize = 3,
+        Map = 4,
+        QuestComplete = 5
     }
 
     /// <summary>

@@ -137,6 +137,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					return;
 				}
+				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
 				if (!_loadedSystems)
 				{
 					AddBattleSystems();

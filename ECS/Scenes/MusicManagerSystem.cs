@@ -158,6 +158,8 @@ namespace Crusaders30XX.ECS.Systems
                 MusicTrack.Menu => "Music/clash_of_shadows", // .ogg in Content
                 MusicTrack.Battle => "Music/desert_theme_battle",
                 MusicTrack.Customize => "Music/customize",
+                MusicTrack.Map => "Music/desert_map",
+                MusicTrack.QuestComplete => "Music/quest_complete",
                 _ => null
             };
             if (string.IsNullOrEmpty(assetName)) return null;
