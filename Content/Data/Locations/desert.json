@@ -5,8 +5,8 @@
     {
       "Id": "desert_1",
       "WorldPosition": [
-        800,
-        800
+        450,
+        600
       ],
       "RevealRadius": 500,
       "UnrevealedRadius": 300,
@@ -27,8 +27,8 @@
     {
       "Id": "desert_2",
       "WorldPosition": [
-        1130,
-        1060
+        800,
+        800
       ],
       "RevealRadius": 500,
       "UnrevealedRadius": 200,
@@ -41,6 +41,27 @@
       "Events": [
         {
           "id": "sand_corpse",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
+      "Id": "desert_2.1",
+      "WorldPosition": [
+        1130,
+        1060
+      ],
+      "RevealRadius": 500,
+      "UnrevealedRadius": 200,
+      "Type": "Quest",
+      "Name": "Shaky Sands",
+      "Difficulty": 1,
+      "Reward": {
+        "Gold": 2
+      },
+      "Events": [
+        {
+          "id": "sand_golem",
           "type": "Enemy"
         }
       ]

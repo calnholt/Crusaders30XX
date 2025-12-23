@@ -128,18 +128,18 @@ namespace Crusaders30XX.ECS.Factories
             var courageTooltip = world.CreateEntity("UI_CourageTooltip");
             world.AddComponent(courageTooltip, new CourageTooltipAnchor());
             world.AddComponent(courageTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-            world.AddComponent(courageTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = "Courage" });
+            world.AddComponent(courageTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = "Courage\n\n(Blocking with red cards increases your courage by 1)" });
 
             // Pre-create Temperance tooltip hover entity (bounds updated by TemperanceDisplaySystem)
             var temperanceTooltip = world.CreateEntity("UI_TemperanceTooltip");
             world.AddComponent(temperanceTooltip, new TemperanceTooltipAnchor());
             world.AddComponent(temperanceTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-            string temperanceTooltipText = "Temperance";
+            string temperanceTooltipText = "Temperance Meter";
             if (TemperanceAbilityDefinitionCache.TryGet(equippedTemperanceAbility.AbilityId, out var tempDef) && tempDef != null)
             {
                 string nm = string.IsNullOrWhiteSpace(tempDef.name) ? equippedTemperanceAbility.AbilityId : tempDef.name;
                 string tx = tempDef.text ?? string.Empty;
-                temperanceTooltipText = nm + "\n\n" + tx;
+                temperanceTooltipText += "\n\n" + nm + "\n\n" + tx + "\n\n" + "(Blocking with white cards increases your temperance by 1)";
             }
             world.AddComponent(temperanceTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = temperanceTooltipText });
 

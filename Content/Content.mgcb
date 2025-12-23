@@ -233,6 +233,18 @@
 /processorParam:TextureFormat=Color
 /build:Sand_Corpse.png
 
+#begin Sand_Golem.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Sand_Golem.png
+
 #begin Skeleton.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -980,6 +992,9 @@
 
 #begin Data/Enemies/sand_corpse.json
 /copy:Data/Enemies/sand_corpse.json
+
+#begin Data/Enemies/sand_golem.json
+/copy:Data/Enemies/sand_golem.json
 
 #begin Data/Enemies/skeleton.json
 /copy:Data/Enemies/skeleton.json

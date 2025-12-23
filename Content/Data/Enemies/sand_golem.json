@@ -9,6 +9,7 @@
           "target": "Player",
           "positionType": "Ender",
           "damage": 7,
+          "text": "This attack must be blocked with exactly one card/equipment if possible.",
           "specialEffects": [
             {
               "type": "MustBeBlockedExactly",
@@ -22,6 +23,7 @@
           "target": "Player",
           "positionType": "Ender",
           "damage": 9,
+          "text": "This attack must be blocked with exactly two cards/equipment if possible.",
           "specialEffects": [
             {
               "type": "MustBeBlockedExactly",
