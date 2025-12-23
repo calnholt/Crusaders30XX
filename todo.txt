@@ -14,12 +14,19 @@
 
 SFX:
 
-- hovering over ui elements
 - clicking on ui elements
 - confirm // end turn
+- medal trigger
+- gain courage
+- gain temperance
+- trigger temperance
+- trigger threat
+- ambush
 
 
 Prompts - 
+
+card tooltip hover creates tooltips for those cards - prevent
 
 update starting deck
 

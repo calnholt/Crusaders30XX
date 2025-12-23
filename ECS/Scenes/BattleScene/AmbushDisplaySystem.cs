@@ -287,11 +287,21 @@ namespace Crusaders30XX.ECS.Systems
 			var rect = new Rectangle((int)(timerCenter.X - meterWidth / 2f), (int)(timerCenter.Y - meterHeight / 2f), meterWidth, meterHeight);
 			float ratio = st.TimerDurationSeconds <= 0.0001f ? 0f : MathHelper.Clamp(st.TimerRemainingSeconds / st.TimerDurationSeconds, 0f, 1f);
 
-			DrawTrapezoid(rect, skew, new Color(10, 10, 10, Math.Clamp(MeterBgAlpha, 0, 255))); // background
-			var fillRect = rect;
-			DrawTrapezoidFill(fillRect, skew, ratio, new Color(180, 30, 30, Math.Clamp(MeterFillAlpha, 0, 255)));
-			DrawTrapezoidBorder(rect, skew, Color.Black, 2);
-		}
+		DrawTrapezoid(rect, skew, new Color(10, 10, 10, Math.Clamp(MeterBgAlpha, 0, 255))); // background
+		var fillRect = rect;
+		DrawTrapezoidFill(fillRect, skew, ratio, new Color(180, 30, 30, Math.Clamp(MeterFillAlpha, 0, 255)));
+		DrawTrapezoidBorder(rect, skew, Color.Black, 2);
+
+		// Timer countdown text centered in meter
+		string timerText = st.TimerRemainingSeconds.ToString("F1");
+		float timerScale = 0.18f;
+		var timerSize = _font.MeasureString(timerText) * timerScale;
+		var timerPos = new Vector2(timerCenter.X - timerSize.X / 2f, timerCenter.Y - timerSize.Y / 2f);
+		// Shadow
+		_spriteBatch.DrawString(_font, timerText, timerPos + new Vector2(1, 1), new Color(0, 0, 0, 180), 0f, Vector2.Zero, timerScale, SpriteEffects.None, 0f);
+		// White text
+		_spriteBatch.DrawString(_font, timerText, timerPos, Color.White, 0f, Vector2.Zero, timerScale, SpriteEffects.None, 0f);
+	}
 
 		[DebugAction("Reset Ambush Intro")]
 		public void Debug_ResetAmbushIntro()
@@ -341,12 +351,13 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(_textAnchorEntity, new AmbushTextAnchor());
 				EntityManager.AddComponent(_textAnchorEntity, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
 			}
-			if (_timerAnchorEntity == null)
-			{
-				_timerAnchorEntity = EntityManager.CreateEntity("AmbushTimerAnchor");
-				EntityManager.AddComponent(_timerAnchorEntity, new AmbushTimerAnchor());
-				EntityManager.AddComponent(_timerAnchorEntity, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-			}
+		if (_timerAnchorEntity == null)
+		{
+			_timerAnchorEntity = EntityManager.CreateEntity("AmbushTimerAnchor");
+			EntityManager.AddComponent(_timerAnchorEntity, new AmbushTimerAnchor());
+			EntityManager.AddComponent(_timerAnchorEntity, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
+			EntityManager.AddComponent(_timerAnchorEntity, ParallaxLayer.GetUIParallaxLayer());
+		}
 		}
 
 		private void ResetAnchorParallax()
