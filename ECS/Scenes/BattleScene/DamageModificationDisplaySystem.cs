@@ -84,6 +84,9 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Spawn From HPBar Center")] 
         public bool SpawnFromHpBarCenter { get; set; } = false;
 
+        [DebugEditable(DisplayName = "Outline Offset", Step = 1, Min = 0, Max = 10)]
+        public int OutlineOffset { get; set; } = 6;
+
         public DamageModificationDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
         {
@@ -238,6 +241,20 @@ namespace Crusaders30XX.ECS.Systems
                 // Center text
                 var size = _font.MeasureString(text) * scale;
                 var drawPos = new Vector2(pos.X - size.X / 2f, pos.Y - size.Y / 2f);
+
+                // Draw black outline (all pixel combinations within OutlineOffset)
+                Color outlineColor = Color.Black * alpha;
+                for (int ox = -OutlineOffset; ox <= OutlineOffset; ox++)
+                {
+                    for (int oy = -OutlineOffset; oy <= OutlineOffset; oy++)
+                    {
+                        if (ox == 0 && oy == 0) continue; // skip center
+                        var outlinePos = new Vector2(drawPos.X + ox, drawPos.Y + oy);
+                        _spriteBatch.DrawString(_font, text, outlinePos, outlineColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                    }
+                }
+
+                // Draw main colored text on top
                 _spriteBatch.DrawString(_font, text, drawPos, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
             }
         }

@@ -256,6 +256,7 @@ namespace Crusaders30XX.ECS.Systems
 				_shakeElapsedSeconds = 0f;
 				_debris.Clear();
 				SpawnDebris();
+				EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.EnemyAttackIntro });
 			});
 		}
 

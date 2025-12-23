@@ -93,7 +93,7 @@ namespace Crusaders30XX.ECS.Systems
                 return; // Don't trigger - wait for BattlePhaseAnimationCompleteEvent
             }
 
-            if (currentContextId != _lastSeenContextId)
+            if (currentContextId != _lastSeenContextId && phaseState.Sub == SubPhase.Block)
             {
                 if (!_waitingForAnimation)
                 {

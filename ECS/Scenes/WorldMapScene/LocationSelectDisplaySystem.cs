@@ -236,7 +236,7 @@ namespace Crusaders30XX.ECS.Systems
 					if (qe.Events.Count > 0)
 					{
 						// Announce the quest that was chosen so global systems can prepare dialog
-						EventManager.Publish(new QuestSelected { LocationId = def.id, QuestIndex = chosenIndex });
+						EventManager.Publish(new QuestSelected { LocationId = def.id, QuestIndex = chosenIndex, QuestId = questDefs.id });
 						EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
 					}
 					break;

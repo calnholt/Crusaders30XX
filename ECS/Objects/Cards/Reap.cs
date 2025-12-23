@@ -34,11 +34,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     }
                 }
 
-                  EventManager.Publish(new ModifyHpRequestEvent { 
-                    Source = entityManager.GetEntity("Player"), 
-                    Target = entityManager.GetEntity("Enemy"), 
-                    Delta = Damage+ redCards * ValuesParse[0], 
-                    DamageType = ModifyTypeEnum.Attack 
+                EventManager.Publish(new ModifyHpRequestEvent { 
+                  Source = entityManager.GetEntity("Player"), 
+                  Target = entityManager.GetEntity("Enemy"), 
+                  Delta = -(Damage + (redCards > 0 ? redCards * ValuesParse[0] : 0)), 
+                  DamageType = ModifyTypeEnum.Attack 
                 });
             };
 

@@ -14,6 +14,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Animation = "Attack";
             Damage = 0;
             Block = 3;
+            IsFreeAction = true;
 
             OnPlay = (entityManager, card) =>
             {

@@ -372,6 +372,7 @@ namespace Crusaders30XX.ECS.Events
         Transition = 16,
         Prayer = 17,
         GainAegis = 18,
+        EnemyAttackIntro = 19,
     }
 
     /// <summary>

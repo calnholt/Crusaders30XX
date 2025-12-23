@@ -540,7 +540,7 @@ namespace Crusaders30XX.ECS.Systems
         private void OnQuestSelected(QuestSelected evt)
         {
             if (evt == null) return;
-            string id = ($"{evt.LocationId}_{System.Math.Max(0, evt.QuestIndex) + 1}").Trim();
+            string id = evt.QuestId;
             // If a dialog exists for this quest, mark it pending on QueuedEvents
             var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
             if (qeEntity == null) return;

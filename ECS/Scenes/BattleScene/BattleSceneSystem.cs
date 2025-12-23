@@ -261,7 +261,6 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", _enemyIntentPipsSystem.Draw);
 			FrameProfiler.Measure("AmbushDisplaySystem.Draw", _ambushDisplaySystem.Draw);
 			FrameProfiler.Measure("QueuedEventsDisplaySystem.Draw", _queuedEventsDisplaySystem.Draw);
-			FrameProfiler.Measure("DamageModificationDisplaySystem.Draw", _damageModificationDisplaySystem.Draw);
 			FrameProfiler.Measure("AttackAnimationDisplaySystem.Draw", _attackAnimationDisplaySystem.Draw);
 			FrameProfiler.Measure("StunnedOverlaySystem.Draw", _stunnedOverlaySystem.Draw);
 			FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", _assignedBlockCardsDisplaySystem.Draw);
@@ -295,6 +294,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
 			FrameProfiler.Measure("DiscardSpecificCardHighlightSystem.Draw", _discardSpecificCardHighlightSystem.Draw);
 			FrameProfiler.Measure("IntimidateDisplaySystem.Draw", _intimidateDisplaySystem.Draw);
+			FrameProfiler.Measure("DamageModificationDisplaySystem.Draw", _damageModificationDisplaySystem.Draw);
 			FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", _battlePhaseDisplaySystem.Draw);
 			FrameProfiler.Measure("QuestRewardModalDisplaySystem.Draw", _questRewardModalDisplaySystem.Draw);
 			FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);

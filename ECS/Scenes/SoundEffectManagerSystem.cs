@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Media;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -65,6 +66,9 @@ namespace Crusaders30XX.ECS.Systems
                 var soundEffect = ResolveSoundEffect(track);
                 if (soundEffect == null) return;
 
+                // Debug: log music volume before SFX
+                float musicVolBefore = MediaPlayer.Volume;
+
                 // Create and configure instance
                 var instance = soundEffect.CreateInstance();
                 instance.Volume = MathHelper.Clamp(evt.Volume, 0f, 1f);
@@ -73,6 +77,13 @@ namespace Crusaders30XX.ECS.Systems
                 
                 instance.Play();
                 _activeInstances.Add(instance);
+
+                // Debug: log music volume after SFX
+                float musicVolAfter = MediaPlayer.Volume;
+                if (Math.Abs(musicVolBefore - musicVolAfter) > 0.001f)
+                {
+                    System.Diagnostics.Debug.WriteLine($"WARNING: Music volume changed during SFX play: {musicVolBefore} -> {musicVolAfter}");
+                }
             }
             catch { }
         }
@@ -102,6 +113,7 @@ namespace Crusaders30XX.ECS.Systems
                 SfxTrack.Transition => "SFX/Transition",
                 SfxTrack.Prayer => "SFX/Prayer",
                 SfxTrack.GainAegis => "SFX/GainAegis",
+                SfxTrack.EnemyAttackIntro => "SFX/EnemyAttackIntro",
                 _ => null
             };
             

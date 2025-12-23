@@ -21,8 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		public EnemyAttackProgressManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
-			// TODO: update to look at CardMoved event instead of BlockAssignmentRemoved / Added
-			EventManager.Subscribe<BlockAssignmentRemoved>(_ => TimerScheduler.Schedule(0.2f, () => OnBlockAssignmentRemoved(_)));			// Only recompute previews when Aegis (damage prevention) changes
+			EventManager.Subscribe<BlockAssignmentRemoved>(OnBlockAssignmentRemoved);
 			EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
 			EventManager.Subscribe<RemovePassive>(OnRemovePassive);
 			EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);
@@ -63,6 +62,7 @@ namespace Crusaders30XX.ECS.Systems
 					EntityManager.DestroyEntity(e.Id);
 				}
 			}
+			RecomputeAll();
 		}
 
 		private void PrintProgress(EnemyAttackProgress p)

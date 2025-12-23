@@ -22,7 +22,7 @@
           "name": "Sand Slam",
           "target": "Player",
           "positionType": "Ender",
-          "damage": 9,
+          "damage": 10,
           "text": "This attack must be blocked with exactly two cards/equipment if possible.",
           "specialEffects": [
             {

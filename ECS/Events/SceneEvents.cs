@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public string LocationId;
 		public int QuestIndex;
+		public string QuestId;
 	}
 
 	public class SetCustomizationTab
