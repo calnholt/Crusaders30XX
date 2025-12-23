@@ -21,7 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		public EnemyAttackProgressManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
-			EventManager.Subscribe<BlockAssignmentRemoved>(OnBlockAssignmentRemoved);
+			EventManager.Subscribe<BlockAssignmentRemoved>(_ => TimerScheduler.Schedule(0.2f, () => OnBlockAssignmentRemoved(_)));
 			EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
 			EventManager.Subscribe<RemovePassive>(OnRemovePassive);
 			EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);

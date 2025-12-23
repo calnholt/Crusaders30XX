@@ -10,7 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         {
             Name = "Deus Vult";
             CardId = "deus_vult";
-            Text = "Deal X damage, where X is {3} times your courage. Lose all courage.";
+            Text = "Gain {1} courage. Deal X damage, where X is {2} times your courage";
             Animation = "Attack";
             Damage = 0;
             Block = 3;
@@ -21,7 +21,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
                 var damage = GetDerivedDamage(entityManager, card);
-                EventManager.Publish(new SetCourageEvent { Amount = 0 });
                 EventManager.Publish(new ModifyHpRequestEvent { 
                     Source = player, 
                     Target = enemy, 
@@ -34,7 +33,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var player = entityManager.GetEntity("Player");
                 var courage = player.GetComponent<Courage>().Amount;
-                return courage * ValuesParse[0];
+                return (courage + ValuesParse[0]) * ValuesParse[1];
             };
         }
     }
