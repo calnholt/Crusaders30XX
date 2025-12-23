@@ -180,6 +180,8 @@ public class Game1 : Game
         _world.AddSystem(_debugCommandSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
+        // Global sound effect manager
+        _world.AddSystem(new SoundEffectManagerSystem(_world.EntityManager, Content));
         _shockwaveSystem = new ShockwaveDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _world.AddSystem(_shockwaveSystem);
         _rectangularShockwaveSystem = new RectangularShockwaveDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);

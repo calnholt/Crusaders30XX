@@ -192,6 +192,10 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						_crossPulseTimer = EnterPulseDuration;
 						_prevHoverInteractable = currentInteractable;
+						if (currentInteractable != null)
+						{
+							EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Interface, Volume = 0.05f, });
+						}
 					}
 					float targetScale = 1f;
 					if (currentInteractable != null)
@@ -333,6 +337,10 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						_crossPulseTimer = EnterPulseDuration;
 						_prevHoverInteractable = currentInteractable;
+						if (currentInteractable != null)
+						{
+							EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Interface, Volume = 0.05f });
+						}
 					}
 					float targetScale = 1f;
 					if (currentInteractable != null)

@@ -151,6 +151,7 @@ namespace Crusaders30XX.ECS.Systems
 				var result = PurchaseItemService.TryPurchase(EntityManager, e);
 				if (result.Success)
 				{
+					EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.CoinBag, Volume = 0.5f });
 					fs.IsPurchased = true;
 					ui.IsInteractable = false;
 					// Remove hotkey if present

@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		public IEnumerable<string> SelectForTurn(Entity enemy, EnemyArsenal arsenal, int turnNumber)
 		{
-			var enders = new List<string> { "mandible_breaker", "rafterfall_ambush", "ten_limbs_of_death" };
+			var enders = new List<string> { "mandible_breaker", "rafterfall_ambush", "eight_limbs_of_death" };
 			var linkers = new List<string> { "suffocating_silk", "fang_feint" };
 			return ArrayUtils.Shuffled(new List<string> { enders[Random.Shared.Next(0, enders.Count)], linkers[Random.Shared.Next(0, linkers.Count)] });
 		}

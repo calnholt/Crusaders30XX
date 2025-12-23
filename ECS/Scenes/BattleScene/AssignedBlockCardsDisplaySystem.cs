@@ -98,6 +98,7 @@ namespace Crusaders30XX.ECS.Systems
 				Color = abc.ColorKey,
 				ContextId = abc.ContextId
 			});
+			EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Equip, Volume = 0.5f, Pitch = -0.5f});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

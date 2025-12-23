@@ -212,6 +212,7 @@ namespace Crusaders30XX.ECS.Systems
 			_animState = AnimState.Entering;
 			_animTimer = 0f;
 			GenerateStrips();
+			EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.PhaseChange, Volume = 0.5f });
 		}
 
 		private void StopAnimation()

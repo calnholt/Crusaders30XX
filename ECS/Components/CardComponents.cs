@@ -661,7 +661,7 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
         public FaceButton Button { get; set; } = FaceButton.Y;
         public bool RequiresHold { get; set; } = false;
-        public float HoldDurationSeconds { get; set; } = 1.0f;
+        public float HoldDurationSeconds { get; set; } = 0.75f;
         public Entity ParentEntity { get; set; }
         public HotKeyPosition Position { get; set; } = HotKeyPosition.Below;
         public bool IsActive { get; set; } = true;

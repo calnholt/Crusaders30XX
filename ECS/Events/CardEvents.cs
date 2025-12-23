@@ -322,7 +322,9 @@ namespace Crusaders30XX.ECS.Events
         None = 0,
         Menu = 1,
         Battle = 2,
-        Customize = 3
+        Customize = 3,
+        Map = 4,
+        QuestComplete = 5,
     }
 
     /// <summary>
@@ -344,6 +346,43 @@ namespace Crusaders30XX.ECS.Events
     {
         public bool Fade { get; set; } = true;
         public float FadeSeconds { get; set; } = 0.5f;
+    }
+
+    /// <summary>
+    /// Supported sound effect tracks for playback.
+    /// </summary>
+    public enum SfxTrack
+    {
+        None = 0,
+        SwordAttack = 1,
+        SwordImpact = 2,
+        SwordUnsheath = 3,
+        SwordWhoosh = 4,
+        Equip = 5,
+        BashShield = 6,
+        CardHover = 7,
+        ApplyCard = 8,
+        CoinBag = 9,
+        CashRegister = 10,
+        Firebuff = 11,
+        BagHandle = 12,
+        Interface = 13,
+        Confirm = 14,
+        PhaseChange = 15,
+        Transition = 16,
+        Prayer = 17,
+        GainAegis = 18,
+    }
+
+    /// <summary>
+    /// Request to play a sound effect.
+    /// </summary>
+    public class PlaySfxEvent
+    {
+        public SfxTrack Track { get; set; } = SfxTrack.None;
+        public float Volume { get; set; } = 1.0f; // 0..1
+        public float Pitch { get; set; } = 0.0f; // -1..1
+        public float Pan { get; set; } = 0.0f; // -1..1
     }
 
     /// <summary>

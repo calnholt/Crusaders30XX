@@ -56,6 +56,7 @@ namespace Crusaders30XX.ECS.Systems
 				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 				var pt = player?.GetComponent<Transform>();
 				_attackTargetPos = pt?.Position ?? Vector2.Zero;
+				EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.SwordImpact, Volume = 0.5f });
 			});
 		}
 

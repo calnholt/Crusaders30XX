@@ -167,6 +167,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Power, Delta = amount });
         }
+        [DebugAction("Play Sword Attack SFX")]
+        public void Debug_PlaySwordAttack()
+        {
+            EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.SwordAttack, Volume = 0.5f });
+        }
     }
 }
 

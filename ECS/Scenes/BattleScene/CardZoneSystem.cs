@@ -282,6 +282,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiA.IsClicked = false;
                         uiA.EventType = UIElementEventType.UnassignCardAsBlock;
                     }
+                    EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Equip, Volume = 0.5f });
                     break;
                 }
                 case CardZoneType.DiscardPile:

@@ -4,18 +4,28 @@
   "hp": 70,
   "attacks": [
       {
-          "id": "harden",
-          "name": "Harden",
+          "id": "sand_pound",
+          "name": "Sand Pound",
           "target": "Player",
           "positionType": "Ender",
-          "damage": 10,
-          "blockingCondition": {
-            "type": "OnBlockedBy2Cards"
-          },
-          "effectsOnNotBlocked": [
+          "damage": 7,
+          "specialEffects": [
             {
-              "type": "Armor",
-              "amount": 3
+              "type": "MustBeBlockedExactly",
+              "amount": 1
+            }
+          ]
+      },
+      {
+          "id": "sand_slam",
+          "name": "Sand Slam",
+          "target": "Player",
+          "positionType": "Ender",
+          "damage": 9,
+          "specialEffects": [
+            {
+              "type": "MustBeBlockedExactly",
+              "amount": 2
             }
           ]
       }

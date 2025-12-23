@@ -12,8 +12,16 @@
 - gain rewards animation
 
 
+SFX:
+
+- hovering over ui elements
+- clicking on ui elements
+- confirm // end turn
+
 
 Prompts - 
+
+update starting deck
 
 infernal execution broken - confirm button now showing; make new system for confirm button (and update how it looks - same look to End Turn)
 

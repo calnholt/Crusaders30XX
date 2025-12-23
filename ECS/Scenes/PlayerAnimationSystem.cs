@@ -30,6 +30,7 @@ namespace Crusaders30XX.ECS.Systems
 				anim.AttackAnimTimer = anim.AttackAnimDuration;
 				var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
 				anim.AttackTargetPos = enemy?.GetComponent<Transform>()?.Position ?? Vector2.Zero;
+				EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.SwordAttack, Volume = 0.5f });
 			});
 			EventManager.Subscribe<StartBuffAnimation>(evt =>
 			{
@@ -39,6 +40,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 					if (player == null) return;
+					EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Prayer, Volume = 0.5f });
 					EnsureHasAnimState(player);
 					EnsureScaleAnim(player, out var scaleAnim);
 					EnqueueBuffKeyframes(scaleAnim);

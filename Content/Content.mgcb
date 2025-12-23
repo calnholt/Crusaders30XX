@@ -908,6 +908,41 @@
 /processorParam:TextureFormat=Color
 /build:CardArt/whirlwind.png
 
+#begin enemy-attack-splash.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:enemy-attack-splash.png
+
+#begin player-attack-splash.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:player-attack-splash.png
+
+#begin gain-aegis.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:gain-aegis.png
+
+
+
 #---------------------------------- Data JSON Files ---------------------------------#
 
 #begin Data/Dialog/desert_1.json
@@ -1031,3 +1066,95 @@
 /importer:OggImporter
 /processor:SongProcessor
 /build:Music/customize.ogg
+
+#begin Music/desert_map.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/desert_map.ogg
+
+#begin Music/quest_complete.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/quest_complete.ogg
+
+#---------------------------------- SFX ---------------------------------#
+
+#begin SFX/Bag Handle 1-5.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Bag Handle 1-5.ogg
+
+#begin SFX/card_hand_hover.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/card_hand_hover.ogg
+
+#begin SFX/Cash Register 1-2.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Cash Register 1-2.ogg
+
+#begin SFX/Coin Bag 3-1.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Coin Bag 3-1.ogg
+
+#begin SFX/Firebuff 1.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Firebuff 1.ogg
+
+#begin SFX/SFX_Bash_Shield_01.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/SFX_Bash_Shield_01.ogg
+
+#begin SFX/SFX_Equip_01.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/SFX_Equip_01.ogg
+
+#begin SFX/SFX_Whoosh_Sword_01.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/SFX_Whoosh_Sword_01.ogg
+
+#begin SFX/Sword Attack 2.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Sword Attack 2.ogg
+
+#begin SFX/Sword Impact Hit 2.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Sword Impact Hit 2.ogg
+
+#begin SFX/Sword Unsheath 2.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Sword Unsheath 2.ogg
+
+#begin SFX/Confirm.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Confirm.ogg
+
+#begin SFX/Interface.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Interface.ogg
+
+#begin SFX/Prayer.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Prayer.ogg
+
+#begin SFX/Transition.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Transition.ogg
+
+#begin SFX/GainAegis.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/GainAegis.ogg
