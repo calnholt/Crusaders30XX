@@ -1141,25 +1141,25 @@
 
 #---------------------------------- Music ---------------------------------#
 
-#begin Music/desert_theme_battle.ogg
-/importer:OggImporter
+#begin Music/desert_theme_battle.wav
+/importer:WavImporter
 /processor:SongProcessor
-/build:Music/desert_theme_battle.ogg
+/build:Music/desert_theme_battle.wav
 
-#begin Music/customize.ogg
-/importer:OggImporter
+#begin Music/customize.wav
+/importer:WavImporter
 /processor:SongProcessor
-/build:Music/customize.ogg
+/build:Music/customize.wav
 
-#begin Music/desert_map.ogg
-/importer:OggImporter
+#begin Music/desert_map.wav
+/importer:WavImporter
 /processor:SongProcessor
-/build:Music/desert_map.ogg
+/build:Music/desert_map.wav
 
-#begin Music/quest_complete.ogg
-/importer:OggImporter
+#begin Music/quest_complete.wav
+/importer:WavImporter
 /processor:SongProcessor
-/build:Music/quest_complete.ogg
+/build:Music/quest_complete.wav
 
 #---------------------------------- SFX ---------------------------------#
 
