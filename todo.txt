@@ -26,6 +26,8 @@ SFX:
 
 Prompts - 
 
+enemy attack is occuring when battle is over
+
 card tooltip hover creates tooltips for those cards - prevent
 
 update starting deck
