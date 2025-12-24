@@ -41,7 +41,6 @@ namespace Crusaders30XX.ECS.Systems
 		private bool _impactActive = false;
 		private float _squashElapsedSeconds = 0f;
 		private float _flashElapsedSeconds = 0f;
-		private float _shockwaveElapsedSeconds = 0f;
 		private float _craterElapsedSeconds = 0f;
 
 		// Prevent repeated confirm presses for the same attack context
@@ -141,7 +140,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		// (Approach phase removed)
 
-		// Impact squash/flash/shockwave/crater
+		// Impact squash/flash/crater
 		[DebugEditable(DisplayName = "Squash Duration (s)", Step = 0.02f, Min = 0.05f, Max = 1f)]
 		public float SquashDurationSeconds { get; set; } = 0.2f;
 
@@ -156,21 +155,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Impact Flash Max Alpha", Step = 5, Min = 0, Max = 255)]
 		public int FlashMaxAlpha { get; set; } = 180;
-
-		[DebugEditable(DisplayName = "Shockwave Duration (s)", Step = 0.02f, Min = 0f, Max = 1.5f)]
-		public float ShockwaveDurationSeconds { get; set; } = 0.49f;
-
-		[DebugEditable(DisplayName = "Shockwave Max Expand (px)", Step = 2, Min = 0, Max = 400)]
-		public int ShockwaveMaxExpandPx { get; set; } = 132;
-
-		[DebugEditable(DisplayName = "Shockwave Thickness (px)", Step = 1, Min = 1, Max = 20)]
-		public int ShockwaveThicknessPx { get; set; } = 6;
-
-		[DebugEditable(DisplayName = "Shockwave Start Alpha", Step = 5, Min = 0, Max = 255)]
-		public int ShockwaveStartAlpha { get; set; } = 180;
-
-		[DebugEditable(DisplayName = "Shockwave FadeOut (s)", Step = 0.02f, Min = 0f, Max = 1.5f)]
-		public float ShockwaveFadeOutSeconds { get; set; } = 0.07f;
 
 		[DebugEditable(DisplayName = "Crater Duration (s)", Step = 0.02f, Min = 0f, Max = 1.5f)]
 		public float CraterDurationSeconds { get; set; } = 0.45f;
@@ -251,11 +235,29 @@ namespace Crusaders30XX.ECS.Systems
 				_impactActive = true;
 				_squashElapsedSeconds = 0f;
 				_flashElapsedSeconds = 0f;
-				_shockwaveElapsedSeconds = 0f;
 				_craterElapsedSeconds = 0f;
 				_shakeElapsedSeconds = 0f;
 				_debris.Clear();
 				SpawnDebris();
+				EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.EnemyAttackIntro });
+				// Publish rectangular shockwave event
+				int vx = Game1.VirtualWidth;
+				int vy = Game1.VirtualHeight;
+				float percent = Math.Clamp(PanelMaxWidthPercent, 0.1f, 1f);
+				int panelW = (int)Math.Round(vx * percent);
+				int panelH = (int)Math.Round(vy * 0.25f); // Rough estimate for panel height
+				EventManager.Publish(new RectangularShockwaveEvent
+				{
+					BoundsCenterPx = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY),
+					BoundsSizePx = new Vector2(panelW, panelH),
+					DurationSec = 0.5f,
+					MaxRadiusPx = 130f,
+					RippleWidthPx = 6f,
+					Strength = 0.02f,
+					ChromaticAberrationAmp = 0.003f,
+					ChromaticAberrationFreq = 2f,
+					ShadingIntensity = 0.15f
+				});
 			});
 		}
 
@@ -442,11 +444,28 @@ namespace Crusaders30XX.ECS.Systems
 			_impactActive = true;
 			_squashElapsedSeconds = 0f;
 			_flashElapsedSeconds = 0f;
-			_shockwaveElapsedSeconds = 0f;
 			_craterElapsedSeconds = 0f;
 			_shakeElapsedSeconds = 0f;
 			_debris.Clear();
 			SpawnDebris();
+			// Publish rectangular shockwave event
+			int vx = Game1.VirtualWidth;
+			int vy = Game1.VirtualHeight;
+			float percent = Math.Clamp(PanelMaxWidthPercent, 0.1f, 1f);
+			int panelW = (int)Math.Round(vx * percent);
+			int panelH = (int)Math.Round(vy * 0.25f);
+			EventManager.Publish(new RectangularShockwaveEvent
+			{
+				BoundsCenterPx = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY),
+				BoundsSizePx = new Vector2(panelW, panelH),
+				DurationSec = 0.5f,
+				MaxRadiusPx = 1300f,
+				RippleWidthPx = 60f,
+				Strength = 10.2f,
+				ChromaticAberrationAmp = 0.3f,
+				ChromaticAberrationFreq = 20f,
+				ShadingIntensity = 1.15f
+			});
 		}
 
 		protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime)
@@ -483,7 +502,6 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_squashElapsedSeconds += dt;
 				_flashElapsedSeconds += dt;
-				_shockwaveElapsedSeconds += dt;
 				_craterElapsedSeconds += dt;
 				_shakeElapsedSeconds += dt;
 				UpdateDebris(dt);
@@ -644,7 +662,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			int bgAlpha = Math.Clamp(BackgroundAlpha, 0, 255);
 
-			// Impact phase visuals: squash/stretch + shake/flash/shockwave/crater
+			// Impact phase visuals: squash/stretch + shake/flash/crater
 			Vector2 shake = Vector2.Zero;
 			float squashX = 1f;
 			float squashY = 1f;
@@ -706,20 +724,6 @@ namespace Crusaders30XX.ECS.Systems
 				int ca = (int)Math.Round(CraterMaxAlpha * (1f - ct));
 				var craterRect = new Rectangle(rect.X - cexp, rect.Y - cexp, rect.Width + cexp * 2, rect.Height + cexp * 2);
 				_spriteBatch.Draw(_pixel, craterRect, new Color(10, 10, 10, Math.Clamp(ca, 0, 255)));
-			}
-
-			// Shockwave ring (draw after crater so it remains visible while fading)
-			if (_impactActive && _shockwaveElapsedSeconds < (ShockwaveDurationSeconds + ShockwaveFadeOutSeconds) && ShockwaveThicknessPx > 0 && ShockwaveMaxExpandPx > 0)
-			{
-				float expandT = Math.Clamp(_shockwaveElapsedSeconds / Math.Max(0.0001f, ShockwaveDurationSeconds), 0f, 1f);
-				int expand = (int)Math.Round(ShockwaveMaxExpandPx * expandT);
-				float totalDuration = ShockwaveDurationSeconds + ShockwaveFadeOutSeconds;
-				float totalT = Math.Clamp(_shockwaveElapsedSeconds / Math.Max(0.0001f, totalDuration), 0f, 1f);
-				int alpha = (int)Math.Round(ShockwaveStartAlpha * (1f - totalT));
-				alpha = Math.Clamp(alpha, 0, 255);
-				float aNorm = alpha / 255f;
-				var premulColor = new Color((int)Math.Round(255f * aNorm), (int)Math.Round(255f * aNorm), (int)Math.Round(255f * aNorm), alpha);
-				DrawRing(new Rectangle(rect.X - expand, rect.Y - expand, rect.Width + expand * 2, rect.Height + expand * 2), premulColor, Math.Max(1, ShockwaveThicknessPx));
 			}
 
 			// Debris
@@ -1059,18 +1063,6 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Draw(_pixel, new Rectangle(rect.X, rect.Bottom - thickness, rect.Width, thickness), color);
 			_spriteBatch.Draw(_pixel, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
 			_spriteBatch.Draw(_pixel, new Rectangle(rect.Right - thickness, rect.Y, thickness, rect.Height), color);
-		}
-
-		private void DrawRing(Rectangle rect, Color color, int thickness)
-		{
-			// Outer rectangle
-			DrawRect(rect, color, thickness);
-			// Inner rectangle carve-out by overdrawing with background alpha (simulate ring)
-			var inner = new Rectangle(rect.X + thickness, rect.Y + thickness, Math.Max(0, rect.Width - thickness * 2), Math.Max(0, rect.Height - thickness * 2));
-			if (inner.Width > 0 && inner.Height > 0)
-			{
-				_spriteBatch.Draw(_pixel, inner, new Color(0, 0, 0, 0));
-			}
 		}
 
 		private void SpawnDebris()

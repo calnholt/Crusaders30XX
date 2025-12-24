@@ -63,6 +63,7 @@ namespace Crusaders30XX.ECS.Systems
 		private AmbushDisplaySystem _ambushDisplaySystem;
 		private QueuedEventsDisplaySystem _queuedEventsDisplaySystem;
 		private DamageModificationDisplaySystem _damageModificationDisplaySystem;
+		private SplashEffectAnimationDisplaySystem _attackAnimationDisplaySystem;
 		private CardPlayedAnimationSystem _cardPlayedAnimationSystem;
 		private CardMoveDisplaySystem _cardMoveDisplaySystem;
 		private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
@@ -110,6 +111,8 @@ namespace Crusaders30XX.ECS.Systems
 		private QuitCurrentQuestDisplaySystem _quitCurrentQuestDisplaySystem;
 		private MustBeBlockedSystem _mustBeBlockedSystem;
 		private ActiveCharacterIndicatorDisplaySystem _activeCharacterIndicatorDisplaySystem;
+		private TutorialManager _tutorialManager;
+		private TutorialDisplaySystem _tutorialDisplaySystem;
 		private RenderTarget2D _sceneRenderTarget;
 
 		// Bloodshot effect system and render targets for background compositing
@@ -260,7 +263,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", _enemyIntentPipsSystem.Draw);
 			FrameProfiler.Measure("AmbushDisplaySystem.Draw", _ambushDisplaySystem.Draw);
 			FrameProfiler.Measure("QueuedEventsDisplaySystem.Draw", _queuedEventsDisplaySystem.Draw);
-			FrameProfiler.Measure("DamageModificationDisplaySystem.Draw", _damageModificationDisplaySystem.Draw);
+			FrameProfiler.Measure("AttackAnimationDisplaySystem.Draw", _attackAnimationDisplaySystem.Draw);
 			FrameProfiler.Measure("StunnedOverlaySystem.Draw", _stunnedOverlaySystem.Draw);
 			FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", _assignedBlockCardsDisplaySystem.Draw);
 			FrameProfiler.Measure("ExhaustOnBlockDisplaySystem.Draw", _exhaustOnBlockDisplaySystem.Draw);
@@ -288,15 +291,17 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
 			FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
 			FrameProfiler.Measure("MillCardSystem.Draw", _millCardSystem.Draw);
-			FrameProfiler.Measure("CardListModalSystem.Draw", _cardListModalSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
 			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
 			FrameProfiler.Measure("DiscardSpecificCardHighlightSystem.Draw", _discardSpecificCardHighlightSystem.Draw);
 			FrameProfiler.Measure("IntimidateDisplaySystem.Draw", _intimidateDisplaySystem.Draw);
 			FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", _battlePhaseDisplaySystem.Draw);
+			FrameProfiler.Measure("CardListModalSystem.Draw", _cardListModalSystem.Draw);
+			FrameProfiler.Measure("DamageModificationDisplaySystem.Draw", _damageModificationDisplaySystem.Draw);
 			FrameProfiler.Measure("QuestRewardModalDisplaySystem.Draw", _questRewardModalDisplaySystem.Draw);
 			FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);
 		if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
+		if (_tutorialDisplaySystem != null) FrameProfiler.Measure("TutorialDisplaySystem.Draw", _tutorialDisplaySystem.Draw);
 		}
 
 		private void CreateBattleSceneEntities() {
@@ -444,6 +449,7 @@ namespace Crusaders30XX.ECS.Systems
 			_ambushDisplaySystem = new AmbushDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_queuedEventsDisplaySystem = new QueuedEventsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_damageModificationDisplaySystem = new DamageModificationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_attackAnimationDisplaySystem = new SplashEffectAnimationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_cardPlayedAnimationSystem = new CardPlayedAnimationSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_endTurnDisplaySystem = new EndTurnDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
@@ -541,6 +547,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_ambushDisplaySystem);
 			_world.AddSystem(_queuedEventsDisplaySystem);
 			_world.AddSystem(_damageModificationDisplaySystem);
+			_world.AddSystem(_attackAnimationDisplaySystem);
 			_world.AddSystem(_cardPlayedAnimationSystem);
 			_world.AddSystem(_cardMoveDisplaySystem);
 			_world.AddSystem(_endTurnDisplaySystem);
@@ -578,6 +585,12 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_mustBeBlockedSystem);
 			_world.AddSystem(_activeCharacterIndicatorDisplaySystem);
 			_world.AddSystem(_bloodshotDisplaySystem);
+
+			// Tutorial system
+			_tutorialManager = new TutorialManager(_world.EntityManager);
+			_tutorialDisplaySystem = new TutorialDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _tutorialManager);
+			_world.AddSystem(_tutorialManager);
+			_world.AddSystem(_tutorialDisplaySystem);
 		}
 
 		public void DrawAdditive()

@@ -71,6 +71,7 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			if (_font == null) return;
+			if (StateSingleton.IsTutorialActive) return;
 
 			// Determine top-most hovered UI with tooltip
 			var hoverables = GetRelevantEntities()

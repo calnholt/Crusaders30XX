@@ -1,0 +1,24 @@
+[
+  {
+    "key": "how_to_win",
+    "text": "Defeat the enemy to win the battle! Reduce their HP to zero to defeat them.",
+    "targetType": "component_any",
+    "targetId": "EnemyDisplay",
+    "bubbleOrientation": "bottom"
+  },
+  {
+    "key": "block_phase_overview",
+    "text": "The enemy is attacking! This shows information about the enemy's attack.",
+    "targetType": "ui_region",
+    "targetId": "enemy_attack_display",
+    "bubbleOrientation": "bottom"
+  },
+  {
+    "key": "card_block_value",
+    "text": "Each card has a block value on the bottom left. Select cards from your hand to assign them to block incoming damage.",
+    "targetType": "component_hand",
+    "targetId": "CardData",
+    "bubbleOrientation": "top"
+  }
+]
+

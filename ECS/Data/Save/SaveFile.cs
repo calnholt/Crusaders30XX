@@ -11,6 +11,7 @@ namespace Crusaders30XX.ECS.Data.Save
 		public List<SaveItem> items { get; set; } = new List<SaveItem>();
 		public string lastLocation { get; set; } = string.Empty;
 		public List<LoadoutDefinition> loadouts { get; set; } = new List<LoadoutDefinition>();
+		public List<string> seenTutorials { get; set; } = new List<string>();
 	}
 
 	public class SaveItem

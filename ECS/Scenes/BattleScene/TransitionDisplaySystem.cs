@@ -178,6 +178,7 @@ namespace Crusaders30XX.ECS.Systems
 			_nextScene = transition.Scene;
 			_phase = Phase.WipeIn;
 			_t = 0f;
+			EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Transition, Volume = 0.5f });
 			EnsureTransitionFlag(true);
 		}
 

@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -106,7 +107,18 @@ namespace Crusaders30XX.ECS.Systems
 			var uiClick = clickArea.GetComponent<UIElement>();
 			if (uiClick != null && uiClick.IsClicked && !StateSingleton.IsActive)
 			{
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+				if (!SaveCache.IsQuestCompleted(null, "desert_1"))
+				{
+					// Start first quest directly
+					var tempPoi = EntityManager.CreateEntity("TempQuestTrigger");
+					EntityManager.AddComponent(tempPoi, new PointOfInterest { Id = "desert_1" });
+					EventManager.Publish(new QuestSelectRequested { Entity = tempPoi });
+					EntityManager.DestroyEntity(tempPoi.Id);
+				}
+				else
+				{
+					EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+				}
 			}
 
 			_prevMouse = Mouse.GetState();

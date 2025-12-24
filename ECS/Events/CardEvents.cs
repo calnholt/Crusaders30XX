@@ -349,6 +349,44 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Supported sound effect tracks for playback.
+    /// </summary>
+    public enum SfxTrack
+    {
+        None = 0,
+        SwordAttack = 1,
+        SwordImpact = 2,
+        SwordUnsheath = 3,
+        SwordWhoosh = 4,
+        Equip = 5,
+        BashShield = 6,
+        CardHover = 7,
+        ApplyCard = 8,
+        CoinBag = 9,
+        CashRegister = 10,
+        Firebuff = 11,
+        BagHandle = 12,
+        Interface = 13,
+        Confirm = 14,
+        PhaseChange = 15,
+        Transition = 16,
+        Prayer = 17,
+        GainAegis = 18,
+        EnemyAttackIntro = 19,
+    }
+
+    /// <summary>
+    /// Request to play a sound effect.
+    /// </summary>
+    public class PlaySfxEvent
+    {
+        public SfxTrack Track { get; set; } = SfxTrack.None;
+        public float Volume { get; set; } = 1.0f; // 0..1
+        public float Pitch { get; set; } = 0.0f; // -1..1
+        public float Pan { get; set; } = 0.0f; // -1..1
+    }
+
+    /// <summary>
     /// Request to add a card (by key id|Color) to the current loadout in customization.
     /// </summary>
     public class AddCardToLoadoutRequested

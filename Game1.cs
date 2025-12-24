@@ -48,6 +48,7 @@ public class Game1 : Game
     private DialogDisplaySystem _dialogDisplaySystem;
     private DebugCommandSystem _debugCommandSystem;
     private LocationNameDisplaySystem _locationNameDisplaySystem;
+    private QuestStartSystem _questStartSystem;
     
     // ECS System
     private World _world;
@@ -178,8 +179,12 @@ public class Game1 : Game
         _world.AddSystem(_parallaxLayerSystem);
         _world.AddSystem(_uiElementBorderDebugSystem);
         _world.AddSystem(_debugCommandSystem);
+        _questStartSystem = new QuestStartSystem(_world.EntityManager);
+        _world.AddSystem(_questStartSystem);
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
+        // Global sound effect manager
+        _world.AddSystem(new SoundEffectManagerSystem(_world.EntityManager, Content));
         _shockwaveSystem = new ShockwaveDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _world.AddSystem(_shockwaveSystem);
         _rectangularShockwaveSystem = new RectangularShockwaveDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);

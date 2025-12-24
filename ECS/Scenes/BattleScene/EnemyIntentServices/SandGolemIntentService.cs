@@ -11,7 +11,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		public IEnumerable<string> SelectForTurn(Entity enemy, EnemyArsenal arsenal, int turnNumber)
 		{
-      return ["harden"];
+      return turnNumber % 2 == 0 ? ["sand_pound"] : ["sand_slam"];
 		}
 	}
 } 

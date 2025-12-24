@@ -1,0 +1,30 @@
+[
+  {
+    "key": "card_colors",
+    "text": "Cards come in three colors: red, white, and black. When you block with white cards, you gain temperance. When you block with red cards, you gain courage. Black cards have a higher block value than their red and white counterparts.",
+    "targetType": "component_hand",
+    "targetId": "CardData",
+    "bubbleOrientation": "top"
+  },
+  {
+    "key": "courage",
+    "text": "Courage builds up as you play cards and is used for a variety of effects.",
+    "targetType": "entity_name",
+    "targetId": "UI_CourageTooltip",
+    "bubbleOrientation": "right"
+  },
+  {
+    "key": "temperance",
+    "text": "Temperance is a customizable special ability that's triggered when it reaches its threshold.",
+    "targetType": "entity_name",
+    "targetId": "UI_TemperanceTooltip",
+    "bubbleOrientation": "right"
+  },
+  {
+    "key": "threat",
+    "text": "At the start of the enemy's turn, the enemy gains X aggression equal to its current threat level (aggression increases the damage of their next attack). Whenever you attack an enemy, it reduces their threat by one. Enemy's gain one threat at the end of their turn.",
+    "targetType": "entity_name",
+    "targetId": "UI_ThreatTooltip",
+    "bubbleOrientation": "left"
+  }
+]

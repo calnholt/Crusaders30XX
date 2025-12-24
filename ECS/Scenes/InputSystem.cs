@@ -6,8 +6,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Linq;
-using Crusaders30XX.ECS.Data.Locations;
-using Crusaders30XX.ECS.Data.Save;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -25,7 +23,6 @@ namespace Crusaders30XX.ECS.Systems
             _previousMouseState = Mouse.GetState();
             _previousKeyboardState = Keyboard.GetState();
             EventManager.Subscribe<CursorStateEvent>(OnCursorEvent);
-            EventManager.Subscribe<QuestSelectRequested>(OnQuestSelectRequested);
         }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -54,7 +51,26 @@ namespace Crusaders30XX.ECS.Systems
             var mousePosition = mouseState.Position;
             // Coalesce pointer position: prefer controller cursor position if present
             bool hasCursor = _cursorEvent != null;
-            var pointerVec = hasCursor ? _cursorEvent.Position : new Vector2(mousePosition.X, mousePosition.Y);
+            Vector2 pointerVec;
+            if (hasCursor)
+            {
+                pointerVec = _cursorEvent.Position;
+            }
+            else
+            {
+                // Transform mouse coordinates from screen space to virtual space
+                var dest = Game1.RenderDestination;
+                float scaleX = (float)dest.Width / Game1.VirtualWidth;
+                float scaleY = (float)dest.Height / Game1.VirtualHeight;
+                
+                // Avoid division by zero
+                if (scaleX <= 0.001f) scaleX = 1f;
+                if (scaleY <= 0.001f) scaleY = 1f;
+                
+                float virtX = (mousePosition.X - dest.X) / scaleX;
+                float virtY = (mousePosition.Y - dest.Y) / scaleY;
+                pointerVec = new Vector2(virtX, virtY);
+            }
             var pointerPoint = new Point((int)Math.Round(pointerVec.X), (int)Math.Round(pointerVec.Y));
             var keyboardState = Keyboard.GetState();
 
@@ -163,7 +179,7 @@ namespace Crusaders30XX.ECS.Systems
                 top = underMouse.FirstOrDefault();
             }
 
-            if (top != null && !StateSingleton.PreventClicking)
+            if (top != null && !StateSingleton.PreventClicking && !StateSingleton.IsTutorialActive)
             {
                 top.UI.IsHovered = true;
 
@@ -318,96 +334,6 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private void OnQuestSelectRequested(QuestSelectRequested e)
-        {
-            var poi = e.Entity.GetComponent<PointOfInterest>();
-            if (poi != null)
-            {
-                TryStartQuestFromPoi(poi);
-            }
-        }
-        private void TryStartQuestFromPoi(PointOfInterest poi)
-        {
-            if (poi == null || string.IsNullOrEmpty(poi.Id)) return;
-
-            // Find location and quest index containing this POI
-            string locationId = null;
-            int questIndex = -1;
-            var all = LocationDefinitionCache.GetAll();
-            foreach (var kv in all)
-            {
-                var loc = kv.Value;
-                if (loc?.pointsOfInterest == null) continue;
-                for (int i = 0; i < loc.pointsOfInterest.Count; i++)
-                {
-                    if (string.Equals(loc.pointsOfInterest[i].id, poi.Id, System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        locationId = kv.Key;
-                        questIndex = i;
-                        break;
-                    }
-                }
-                if (questIndex >= 0) break;
-            }
-            if (string.IsNullOrEmpty(locationId) || questIndex < 0) return;
-
-            // Build queued events from this quest
-            var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
-            if (qeEntity == null)
-            {
-                qeEntity = EntityManager.CreateEntity("QueuedEvents");
-                EntityManager.AddComponent(qeEntity, new QueuedEvents());
-                EntityManager.AddComponent(qeEntity, new DontDestroyOnLoad());
-            }
-            var qe = qeEntity.GetComponent<QueuedEvents>();
-            qe.CurrentIndex = -1;
-            qe.Events.Clear();
-            qe.LocationId = locationId;
-            qe.QuestIndex = questIndex;
-
-            if (LocationDefinitionCache.TryGet(locationId, out var def) && def != null)
-            {
-                if (questIndex >= 0 && questIndex < (def.pointsOfInterest?.Count ?? 0))
-                {
-                    var questDefs = def.pointsOfInterest[questIndex];
-                    foreach (var q in questDefs.events)
-                    {
-                        var type = ParseQueuedEventType(q?.type);
-                        if (!string.IsNullOrEmpty(q?.id))
-                        {
-                            var queuedEvent = new QueuedEvent { EventId = q.id, EventType = type };
-                            if (q.modifications != null)
-                            {
-                                queuedEvent.Modifications = new List<EnemyModification>(q.modifications);
-                            }
-                            qe.Events.Add(queuedEvent);
-                        }
-                    }
-                }
-            }
-
-            if (qe.Events.Count > 0)
-            {
-                // Announce selection and transition to Battle
-                SaveCache.SetLastLocation(poi.Id);
-                EventManager.Publish(new QuestSelected { LocationId = locationId, QuestIndex = questIndex });
-                EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
-            }
-        }
-
-        private static QueuedEventType ParseQueuedEventType(string type)
-        {
-            if (string.IsNullOrEmpty(type)) return QueuedEventType.Enemy;
-            switch (type.ToLowerInvariant())
-            {
-                case "enemy": return QueuedEventType.Enemy;
-                case "event": return QueuedEventType.Event;
-                case "shop": return QueuedEventType.Shop;
-                case "church": return QueuedEventType.Church;
-                default: return QueuedEventType.Enemy;
-            }
-        }
-        
         public void UpdateInput()
         {
             _previousMouseState = Mouse.GetState();

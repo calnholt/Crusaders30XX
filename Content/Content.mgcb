@@ -233,6 +233,18 @@
 /processorParam:TextureFormat=Color
 /build:Sand_Corpse.png
 
+#begin Sand_Golem.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Sand_Golem.png
+
 #begin Skeleton.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -316,6 +328,42 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:desert-background-crumbling-city.png
+
+#begin desert-background-hellrift.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:desert-background-hellrift.png
+
+#begin desert-background-dry-cactus.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:desert-background-dry-cactus.png
+
+#begin desert-background-dune-city.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:desert-background-dune-city.png
 
 #begin forest-background.png
 /importer:TextureImporter
@@ -776,6 +824,17 @@
 /processorParam:TextureFormat=Color
 /build:CardArt/ravage.png
 
+#begin CardArt/reap.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/reap.png
+
 #begin CardArt/reconciled.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -797,6 +856,17 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:TextureFormat=Color
 /build:CardArt/sacrifice.png
+
+#begin CardArt/serpent_crush.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/serpent_crush.png
 
 #begin CardArt/seize.png
 /importer:TextureImporter
@@ -908,6 +978,41 @@
 /processorParam:TextureFormat=Color
 /build:CardArt/whirlwind.png
 
+#begin enemy-attack-splash.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:enemy-attack-splash.png
+
+#begin player-attack-splash.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:player-attack-splash.png
+
+#begin gain-aegis.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:gain-aegis.png
+
+
+
 #---------------------------------- Data JSON Files ---------------------------------#
 
 #begin Data/Dialog/desert_1.json
@@ -945,6 +1050,9 @@
 
 #begin Data/Enemies/sand_corpse.json
 /copy:Data/Enemies/sand_corpse.json
+
+#begin Data/Enemies/sand_golem.json
+/copy:Data/Enemies/sand_golem.json
 
 #begin Data/Enemies/skeleton.json
 /copy:Data/Enemies/skeleton.json
@@ -987,6 +1095,17 @@
 
 #begin Data/Temperance/radiance.json
 /copy:Data/Temperance/radiance.json
+
+#---------------------------------- Tutorials ---------------------------------#
+
+#begin Data/Tutorials/action_phase_tutorials.json
+/copy:Data/Tutorials/action_phase_tutorials.json
+
+#begin Data/Tutorials/block_phase_tutorials.json
+/copy:Data/Tutorials/block_phase_tutorials.json
+
+#begin Data/Tutorials/second_block_tutorials.json
+/copy:Data/Tutorials/second_block_tutorials.json
 
 #---------------------------------- Shaders ---------------------------------#
 
@@ -1041,3 +1160,90 @@
 /importer:OggImporter
 /processor:SongProcessor
 /build:Music/quest_complete.ogg
+
+#---------------------------------- SFX ---------------------------------#
+
+#begin SFX/Bag Handle 1-5.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Bag Handle 1-5.ogg
+
+#begin SFX/card_hand_hover.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/card_hand_hover.ogg
+
+#begin SFX/Cash Register 1-2.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Cash Register 1-2.ogg
+
+#begin SFX/Coin Bag 3-1.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Coin Bag 3-1.ogg
+
+#begin SFX/Firebuff 1.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Firebuff 1.ogg
+
+#begin SFX/SFX_Bash_Shield_01.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/SFX_Bash_Shield_01.ogg
+
+#begin SFX/SFX_Equip_01.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/SFX_Equip_01.ogg
+
+#begin SFX/SFX_Whoosh_Sword_01.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/SFX_Whoosh_Sword_01.ogg
+
+#begin SFX/Sword Attack 2.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Sword Attack 2.ogg
+
+#begin SFX/Sword Impact Hit 2.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Sword Impact Hit 2.ogg
+
+#begin SFX/Sword Unsheath 2.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Sword Unsheath 2.ogg
+
+#begin SFX/Confirm.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Confirm.ogg
+
+#begin SFX/Interface.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Interface.ogg
+
+#begin SFX/Prayer.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Prayer.ogg
+
+#begin SFX/Transition.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/Transition.ogg
+
+#begin SFX/GainAegis.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/GainAegis.ogg
+
+#begin SFX/EnemyAttackIntro.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:SFX/EnemyAttackIntro.ogg

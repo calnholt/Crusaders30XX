@@ -27,6 +27,7 @@ namespace Crusaders30XX.ECS.Systems
         private float _startVolume = 0.2f;
         private Song _pendingSong;
         private bool _pendingLoop;
+        private float _expectedVolume = 0.2f;
         [DebugEditable(DisplayName = "Mute")]
         public bool Mute { get; set; } = false;
 
@@ -37,6 +38,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<StopMusic>(OnStopMusic);
             MediaPlayer.IsRepeating = true;
             MediaPlayer.Volume = _targetVolume;
+            _expectedVolume = _targetVolume;
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -50,6 +52,16 @@ namespace Crusaders30XX.ECS.Systems
         {
             base.Update(gameTime);
             if (Mute) return;
+            
+            // Guard against external volume modification (e.g. platform/driver quirks)
+            if (!_fading && MediaPlayer.State == MediaState.Playing)
+            {
+                if (Math.Abs(MediaPlayer.Volume - _expectedVolume) > 0.001f)
+                {
+                    MediaPlayer.Volume = _expectedVolume;
+                }
+            }
+            
             if (_fading)
             {
                 _fadeElapsed += (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -59,6 +71,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     // Fade out
                     MediaPlayer.Volume = MathHelper.Lerp(_startVolume, 0f, t);
+                    _expectedVolume = MediaPlayer.Volume;
                     if (t >= 1f)
                     {
                         // Swap to pending and start fade-in
@@ -75,10 +88,12 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     // Fade to target (supports volume-only fades when staying on same track)
                     MediaPlayer.Volume = MathHelper.Lerp(_startVolume, _targetVolume, t);
+                    _expectedVolume = MediaPlayer.Volume;
                     if (t >= 1f)
                     {
                         _fading = false;
                         MediaPlayer.Volume = _targetVolume;
+                        _expectedVolume = _targetVolume;
                         // If target volume is 0 (stop requested), stop playback now
                         if (_targetVolume <= 0f)
                         {
@@ -115,6 +130,7 @@ namespace Crusaders30XX.ECS.Systems
                         _fading = false;
                         _pendingSong = null;
                         MediaPlayer.Volume = _targetVolume;
+                        _expectedVolume = _targetVolume;
                     }
                     return;
                 }
@@ -142,6 +158,7 @@ namespace Crusaders30XX.ECS.Systems
                     MediaPlayer.Stop();
                     MediaPlayer.IsRepeating = loop;
                     MediaPlayer.Volume = _targetVolume;
+                    _expectedVolume = _targetVolume;
                     MediaPlayer.Play(song);
                     _current = track;
                 }

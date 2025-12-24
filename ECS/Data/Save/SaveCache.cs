@@ -218,8 +218,8 @@ namespace Crusaders30XX.ECS.Data.Save
 					"divine_protection", 
 					"dowse_with_holy_water",
 					"increase_faith",
-					"purge",
-					"sacrifice",
+					"reap",
+					"serpent_crush",
 					"seize",
 					"stab",
 					"strike", 
@@ -248,17 +248,17 @@ namespace Crusaders30XX.ECS.Data.Save
 							"courageous|Black",
 							"courageous|White",
 							"deus_vult|Black",
-							"deus_vult|White",
+							"deus_vult|Red",
 							"divine_protection|Red",
 							"divine_protection|Black",
 							"dowse_with_holy_water|Red",
 							"dowse_with_holy_water|White",
 							"increase_faith|Red",
 							"increase_faith|White",
-							"purge|White",
-							"purge|Black",
-							"sacrifice|Black",
-							"sacrifice|White",
+							"reap|White",
+							"reap|Red",
+							"serpent_crush|Black",
+							"serpent_crush|White",
 							"seize|Red",
 							"seize|White",
 							"stab|White", 
@@ -369,6 +369,30 @@ namespace Crusaders30XX.ECS.Data.Save
 				Persist();
 				newGold = _save.gold;
 				return true;
+			}
+		}
+
+		public static bool HasSeenTutorial(string key)
+		{
+			if (string.IsNullOrEmpty(key)) return false;
+			EnsureLoaded();
+			if (_save == null || _save.seenTutorials == null) return false;
+			return _save.seenTutorials.Contains(key);
+		}
+
+		public static void MarkTutorialSeen(string key)
+		{
+			if (string.IsNullOrEmpty(key)) return;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				if (_save.seenTutorials == null) _save.seenTutorials = new List<string>();
+				if (!_save.seenTutorials.Contains(key))
+				{
+					_save.seenTutorials.Add(key);
+					Persist();
+				}
 			}
 		}
 	}

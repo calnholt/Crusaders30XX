@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "anoint_the_sick";
             Name = "Anoint the Sick";
             Target = "Player";
-            Text = "Heal {5} HP.";
+            Text = "Heal {4} HP.";
             IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;

@@ -8,6 +8,7 @@ namespace Crusaders30XX.ECS.Systems
 		public static bool HasPendingLocationPoiReveal { get; set; } = false;
 		public static string PendingPoiId { get; set; } = null;
 		public static bool PreventClicking { get; set; } = false;
+		public static bool IsTutorialActive { get; set; } = false;
 	}
 }
 

@@ -165,6 +165,7 @@ namespace Crusaders30XX.ECS.Systems
 				case "ninja": return new NinjaIntentService();
 				case "gleeber": return new GleeberIntentService();
 				case "sand_corpse": return new SandCorpseIntentService();
+				case "sand_golem": return new SandGolemIntentService();
 				case "mummy": return new MummyIntentService();
 				default: return null;
 			}

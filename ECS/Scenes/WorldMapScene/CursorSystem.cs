@@ -192,6 +192,10 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						_crossPulseTimer = EnterPulseDuration;
 						_prevHoverInteractable = currentInteractable;
+						if (currentInteractable != null)
+						{
+							EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Interface, Volume = 0.05f, });
+						}
 					}
 					float targetScale = 1f;
 					if (currentInteractable != null)
@@ -210,7 +214,7 @@ namespace Crusaders30XX.ECS.Systems
 				bool aEdge = aPressed && !aPrevPressed;
 				isPressed = aPressed;
 				isPressedEdge = aEdge;
-				if (aEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick && !StateSingleton.PreventClicking)
+				if (aEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick && !StateSingleton.PreventClicking && !StateSingleton.IsTutorialActive)
 				{
 					int rHitboxClick = Math.Max(0, HitboxRadius);
 					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()
@@ -333,6 +337,10 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						_crossPulseTimer = EnterPulseDuration;
 						_prevHoverInteractable = currentInteractable;
+						if (currentInteractable != null)
+						{
+							EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Interface, Volume = 0.05f });
+						}
 					}
 					float targetScale = 1f;
 					if (currentInteractable != null)
@@ -349,7 +357,7 @@ namespace Crusaders30XX.ECS.Systems
 				bool lEdge = lPressed && !lPrevPressed;
 				isPressed = lPressed;
 				isPressedEdge = lEdge;
-				if (lEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick && !StateSingleton.PreventClicking)
+				if (lEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick && !StateSingleton.PreventClicking && !StateSingleton.IsTutorialActive)
 				{
 					int rHitboxClick = Math.Max(0, HitboxRadius);
 					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()

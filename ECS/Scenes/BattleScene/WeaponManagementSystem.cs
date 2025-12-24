@@ -128,7 +128,7 @@ namespace Crusaders30XX.ECS.Systems
 		private Entity CreateWeaponEntity(CardBase card)
 		{
 			string name = card.Name ?? card.CardId ?? "Weapon";
-			var e = EntityManager.CreateEntity($"Card_{name}");
+			var e = EntityManager.CreateEntity($"Weapon");
 			var cd = new CardData
 			{
 					Card = card,

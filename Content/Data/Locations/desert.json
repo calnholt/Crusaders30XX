@@ -4,9 +4,10 @@
   "PointsOfInterest": [
     {
       "Id": "desert_1",
+      "Background": "desert-background-dune-city.png",
       "WorldPosition": [
-        800,
-        800
+        450,
+        600
       ],
       "RevealRadius": 500,
       "UnrevealedRadius": 300,
@@ -27,8 +28,8 @@
     {
       "Id": "desert_2",
       "WorldPosition": [
-        1130,
-        1060
+        800,
+        800
       ],
       "RevealRadius": 500,
       "UnrevealedRadius": 200,
@@ -41,6 +42,28 @@
       "Events": [
         {
           "id": "sand_corpse",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
+      "Id": "desert_2a",
+      "WorldPosition": [
+        1130,
+        1060
+      ],
+      "RevealRadius": 500,
+      "UnrevealedRadius": 200,
+      "Type": "Quest",
+      "Name": "Shaky Sands",
+      "Difficulty": 1,
+      "Background": "desert-background-dry-cactus.png",
+      "Reward": {
+        "Gold": 2
+      },
+      "Events": [
+        {
+          "id": "sand_golem",
           "type": "Enemy"
         }
       ]
@@ -103,17 +126,8 @@
       "Reward": {
         "Gold": 3
       },
+      "Background": "desert-background-crumbling-city.png",
       "Events": [
-        {
-          "id": "demon",
-          "type": "Enemy",
-          "modifications": [
-            {
-              "type": "HP",
-              "delta": 10
-            }
-          ]
-        },
         {
           "id": "skeleton",
           "type": "Enemy",
@@ -127,9 +141,18 @@
               "delta": 1
             }
           ]
+        },
+        {
+          "id": "demon",
+          "type": "Enemy",
+          "modifications": [
+            {
+              "type": "HP",
+              "delta": 10
+            }
+          ]
         }
-      ],
-      "Background": "desert-background-crumbling-city.png"
+      ]
     },
     {
       "Id": "desert_6",
@@ -160,8 +183,7 @@
             }
           ]
         }
-      ],
-      "Background": "desert-background-crumbling-city.png"
+      ]
     },
     {
       "Id": "desert_10",
@@ -348,25 +370,25 @@
         {
           "Id": "shroud_of_turin",
           "Type": "Card",
-          "Price": 2,
+          "Price": 1,
           "IsPurchased": false
         },
         {
           "Id": "vindicate",
           "Type": "Card",
-          "Price": 3,
+          "Price": 1,
           "IsPurchased": false
         },
         {
           "Id": "st_luke",
           "Type": "Medal",
-          "Price": 3,
+          "Price": 2,
           "IsPurchased": false
         },
         {
           "Id": "pierced_heart_plate",
           "Type": "Equipment",
-          "Price": 4,
+          "Price": 2,
           "IsPurchased": true
         }
       ]

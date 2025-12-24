@@ -16,9 +16,15 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
         private int blockCount = 0;
-        private bool mustBeBlocked = false;
+        
+        private enum BlockRequirementType { None, AtLeast, Exactly }
+        private BlockRequirementType requirementType = BlockRequirementType.None;
         private int mustBeBlockedThreshold = 0;
         private AttackDefinition mustBeBlockedAttackDefinition;
+        
+        // Cache previous state to prevent flickering UI updates
+        private bool? previousFulfilledState = null;
+        private int previousPlayedCardsCount = -1;
 
         public MustBeBlockedSystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)
 		{
@@ -30,6 +36,128 @@ namespace Crusaders30XX.ECS.Systems
             Console.WriteLine($"[MustBeBlockedSystem] MustBeBlockedSystem initialized");
 		}
 
+        private bool IsAtLeastRequirementMet(int blockCount)
+        {
+            return blockCount >= mustBeBlockedThreshold;
+        }
+
+        private bool IsExactlyRequirementMet(int blockCount)
+        {
+            return blockCount == mustBeBlockedThreshold;
+        }
+
+        private bool IsRequirementFulfilled(int blockCount)
+        {
+            return requirementType switch
+            {
+                BlockRequirementType.AtLeast => IsAtLeastRequirementMet(blockCount),
+                BlockRequirementType.Exactly => IsExactlyRequirementMet(blockCount),
+                BlockRequirementType.None => false,
+                _ => false
+            };
+        }
+
+        private void InitializeBlockRequirement()
+        {
+            // Reset state
+            requirementType = BlockRequirementType.None;
+            mustBeBlockedThreshold = 0;
+            mustBeBlockedAttackDefinition = null;
+            previousFulfilledState = null;
+            previousPlayedCardsCount = -1;
+
+            var enemy = EntityManager.GetEntity("Enemy");
+            var intent = enemy?.GetComponent<AttackIntent>();
+            mustBeBlockedAttackDefinition = intent?.Planned?.FirstOrDefault()?.AttackDefinition;
+            var attackId = intent?.Planned?.FirstOrDefault()?.AttackId;
+            
+            if (!AttackDefinitionCache.TryGet(attackId, out var def)) return;
+            if (def.specialEffects.Length == 0) return;
+
+            // Check for MustBeBlockedExactly first, then MustBeBlocked
+            var exactlyDef = def.specialEffects.FirstOrDefault(sp => sp.type == "MustBeBlockedExactly");
+            var atLeastDef = def.specialEffects.FirstOrDefault(sp => sp.type == "MustBeBlocked");
+
+            var selectedDef = exactlyDef ?? atLeastDef;
+            if (selectedDef == null) return;
+
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            if (deckEntity == null) return;
+            var deck = deckEntity.GetComponent<Deck>();
+            if (deck == null) return;
+
+            int threshold = selectedDef.amount;
+            
+            // TODO: determine if equipment can be used to block
+            if (deck.Hand.Count < threshold)
+            {
+                Console.WriteLine($"[MustBeBlockedSystem] InitializeBlockRequirement: deck.Hand.Count < threshold");
+                return;
+            }
+
+            // Set the requirement type and threshold
+            if (exactlyDef != null)
+            {
+                requirementType = BlockRequirementType.Exactly;
+                Console.WriteLine($"[MustBeBlockedSystem] InitializeBlockRequirement: MustBeBlockedExactly={threshold}");
+            }
+            else
+            {
+                requirementType = BlockRequirementType.AtLeast;
+                Console.WriteLine($"[MustBeBlockedSystem] InitializeBlockRequirement: MustBeBlocked (at least)={threshold}");
+            }
+            
+            mustBeBlockedThreshold = threshold;
+            mustBeBlockedAttackDefinition.isTextConditionFulfilled = false;
+        }
+
+        private List<Entity> GetEligibleBlockCards(Deck deck)
+        {
+            var eligible = new List<Entity>();
+            
+            if (deck == null || deck.Hand == null || deck.Hand.Count == 0)
+            {
+                return eligible;
+            }
+
+            foreach (var card in deck.Hand)
+            {
+                var data = card.GetComponent<CardData>();
+                if (data == null)
+                {
+                    continue;
+                }
+
+                string id = data.Card.CardId ?? string.Empty;
+
+                // Skip invalid or special types
+                if (string.IsNullOrEmpty(id) || data.Card == null)
+                {
+                    continue;
+                }
+                if (data.Card.IsWeapon || data.Card.IsToken)
+                {
+                    continue;
+                }
+
+                // Skip intimidated cards
+                if (card.GetComponent<Intimidated>() != null)
+                {
+                    continue;
+                }
+
+                // If it's a block card with extra cost, ensure it can be paid
+                if (data.Card.Type == CardType.Block && !data.Card.CanPlay(EntityManager, card))
+                {
+                    continue;
+                }
+
+                eligible.Add(card);
+            }
+
+            return eligible;
+        }
+
         private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
         {
             if (evt.Current != SubPhase.PreBlock) return;
@@ -38,37 +166,15 @@ namespace Crusaders30XX.ECS.Systems
             ui.IsHidden = false;
             Console.WriteLine($"[MustBeBlockedSystem] OnShowConfirmButtonEvent: evt={evt}");
             blockCount = 0;
-            mustBeBlocked = false;
-            mustBeBlockedThreshold = 0;
-            var enemy = EntityManager.GetEntity("Enemy");
-            var intent = enemy?.GetComponent<AttackIntent>();
-            mustBeBlockedAttackDefinition = intent?.Planned?.FirstOrDefault()?.AttackDefinition;
-            var attackId = intent?.Planned?.FirstOrDefault()?.AttackId;
-            if (!AttackDefinitionCache.TryGet(attackId, out var def)) return;
-            if (def.specialEffects.Length == 0) return;
-            var mustBeBlockedDef = def.specialEffects.Where(sp => sp.type == "MustBeBlocked").FirstOrDefault();
-            if (mustBeBlockedDef == null) return;
-            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-            if (deckEntity == null) return;
-            var deck = deckEntity.GetComponent<Deck>();
-            if (deck == null) return;
-            // TODO: determine if equipment can be used to block
-            if (deck.Hand.Count < mustBeBlockedThreshold)
-            {
-                Console.WriteLine($"[MustBeBlockedSystem] OnChangeBattlePhaseEvent: deck.Hand.Count < mustBeBlockedThreshold");
-                mustBeBlocked = false;
-                mustBeBlockedThreshold = 0;
-                return;
-            }
-            mustBeBlocked = true;
-            mustBeBlockedThreshold = mustBeBlockedDef.amount;
-            mustBeBlockedAttackDefinition.isTextConditionFulfilled = false;
-            Console.WriteLine($"[MustBeBlockedSystem] OnShowConfirmButtonEvent: mustBeBlocked={mustBeBlocked}, mustBeBlockedThreshold={mustBeBlockedThreshold}");
+            
+            // Initialize the block requirement (checks for both MustBeBlocked and MustBeBlockedExactly)
+            InitializeBlockRequirement();
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime) 
         {
-            if (!mustBeBlocked) return;
+            if (requirementType == BlockRequirementType.None) return;
+            
             var confirmBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
             if (confirmBtn == null) return;
             var ui = confirmBtn.GetComponent<UIElement>();
@@ -77,17 +183,38 @@ namespace Crusaders30XX.ECS.Systems
             if (progress == null) return;
             var progressComponent = progress.GetComponent<EnemyAttackProgress>();
             if (progressComponent == null) return;
+            
             var blockCount = progressComponent.PlayedCards;
-            var isFullfilled = mustBeBlocked && blockCount >= mustBeBlockedThreshold;
+            
+            // Only process if the card count has actually changed (prevents redundant evaluations)
+            if (blockCount == previousPlayedCardsCount)
+            {
+                return;
+            }
+            
+            previousPlayedCardsCount = blockCount;
+            var isFullfilled = IsRequirementFulfilled(blockCount);
+            
+            // Only update UI if the fulfillment state has changed (prevents flickering)
+            if (previousFulfilledState.HasValue && previousFulfilledState.Value == isFullfilled)
+            {
+                return;
+            }
+            
+            previousFulfilledState = isFullfilled;
             ui.IsHidden = !isFullfilled;
             ui.IsInteractable = isFullfilled;
-            mustBeBlockedAttackDefinition.isTextConditionFulfilled = isFullfilled;
+            
+            if (mustBeBlockedAttackDefinition != null)
+            {
+                mustBeBlockedAttackDefinition.isTextConditionFulfilled = isFullfilled;
+            }
         }
         private void OnAmbushTimerExpired(AmbushTimerExpired evt)
         {
             try
             {
-                if (!mustBeBlocked || mustBeBlockedThreshold <= 0)
+                if (requirementType == BlockRequirementType.None || mustBeBlockedThreshold <= 0)
                 {
                     return;
                 }
@@ -114,48 +241,13 @@ namespace Crusaders30XX.ECS.Systems
 
                 var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 var deck = deckEntity?.GetComponent<Deck>();
-                if (deck == null || deck.Hand == null || deck.Hand.Count == 0)
+                if (deck == null)
                 {
                     return;
                 }
 
-                // Build eligible list mirroring HandBlockInteractionSystem rules
-                var eligible = new List<Entity>();
-                foreach (var card in deck.Hand)
-                {
-                    var data = card.GetComponent<CardData>();
-                    if (data == null)
-                    {
-                        continue;
-                    }
-
-                    string id = data.Card.CardId ?? string.Empty;
-
-                    // Skip invalid or special types
-                    if (string.IsNullOrEmpty(id) || data.Card == null)
-                    {
-                        continue;
-                    }
-                    if (data.Card.IsWeapon || data.Card.IsToken)
-                    {
-                        continue;
-                    }
-
-                    // Skip intimidated cards
-                    if (card.GetComponent<Intimidated>() != null)
-                    {
-                        continue;
-                    }
-
-                    // If it's a block card with extra cost, ensure it can be paid
-                    if (data.Card.Type == CardType.Block && !data.Card.CanPlay(EntityManager, card))
-                    {
-                        continue;
-                    }
-
-                    eligible.Add(card);
-                }
-
+                // Get eligible cards using extracted helper
+                var eligible = GetEligibleBlockCards(deck);
                 if (eligible.Count == 0)
                 {
                     Console.WriteLine("[MustBeBlockedSystem] OnAmbushTimerExpired: no eligible cards to auto-assign");

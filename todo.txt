@@ -12,8 +12,31 @@
 - gain rewards animation
 
 
+SFX:
 
-Prompts - 
+- clicking on ui elements
+- confirm // end turn
+- medal trigger
+- gain courage
+- gain temperance
+- trigger temperance
+- trigger threat
+- ambush
+
+
+- intent
+- threat
+- equipment
+
+fixes - 
+
+modal / pay cost close buttons
+
+enemy attack is occuring when battle is over
+
+card tooltip hover creates tooltips for those cards - prevent
+
+update starting deck
 
 infernal execution broken - confirm button now showing; make new system for confirm button (and update how it looks - same look to End Turn)
 
