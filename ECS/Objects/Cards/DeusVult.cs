@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "Gain {1} courage. Deal X damage, where X is {2} times your courage";
             Animation = "Attack";
             Damage = 0;
-            Block = 3;
+            Block = 2;
             IsFreeAction = true;
 
             OnPlay = (entityManager, card) =>

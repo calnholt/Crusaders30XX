@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				if (data.collection == null) data.collection = new System.Collections.Generic.List<string>();
 				if (data.items == null) data.items = new System.Collections.Generic.List<SaveItem>();
 				if (data.loadouts == null) data.loadouts = new System.Collections.Generic.List<LoadoutDefinition>();
+				if (data.seenTutorials == null) data.seenTutorials = new System.Collections.Generic.List<string>();
 				result = data;
 			}
 			catch (System.Exception ex)

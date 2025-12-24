@@ -1,0 +1,31 @@
+using Crusaders30XX.ECS.Data.Tutorials;
+
+namespace Crusaders30XX.ECS.Events
+{
+    /// <summary>
+    /// Published when a tutorial starts being displayed.
+    /// </summary>
+    public class TutorialStartedEvent
+    {
+        public TutorialDefinition Tutorial { get; set; }
+    }
+
+    /// <summary>
+    /// Published when a tutorial has been completed (user held continue).
+    /// </summary>
+    public class TutorialCompletedEvent
+    {
+        public TutorialDefinition Tutorial { get; set; }
+    }
+
+    /// <summary>
+    /// Published when all queued tutorials have been shown.
+    /// </summary>
+    public class AllTutorialsCompletedEvent { }
+
+    /// <summary>
+    /// Request to advance to the next tutorial in the queue.
+    /// </summary>
+    public class AdvanceTutorialEvent { }
+}
+

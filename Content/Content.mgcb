@@ -1085,6 +1085,17 @@
 #begin Data/Temperance/radiance.json
 /copy:Data/Temperance/radiance.json
 
+#---------------------------------- Tutorials ---------------------------------#
+
+#begin Data/Tutorials/action_phase_tutorials.json
+/copy:Data/Tutorials/action_phase_tutorials.json
+
+#begin Data/Tutorials/block_phase_tutorials.json
+/copy:Data/Tutorials/block_phase_tutorials.json
+
+#begin Data/Tutorials/second_block_tutorials.json
+/copy:Data/Tutorials/second_block_tutorials.json
+
 #---------------------------------- Shaders ---------------------------------#
 
 #begin Shaders/Bloodshot.fx

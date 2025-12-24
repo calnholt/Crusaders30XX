@@ -371,5 +371,29 @@ namespace Crusaders30XX.ECS.Data.Save
 				return true;
 			}
 		}
+
+		public static bool HasSeenTutorial(string key)
+		{
+			if (string.IsNullOrEmpty(key)) return false;
+			EnsureLoaded();
+			if (_save == null || _save.seenTutorials == null) return false;
+			return _save.seenTutorials.Contains(key);
+		}
+
+		public static void MarkTutorialSeen(string key)
+		{
+			if (string.IsNullOrEmpty(key)) return;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				if (_save.seenTutorials == null) _save.seenTutorials = new List<string>();
+				if (!_save.seenTutorials.Contains(key))
+				{
+					_save.seenTutorials.Add(key);
+					Persist();
+				}
+			}
+		}
 	}
 }

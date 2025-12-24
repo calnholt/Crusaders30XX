@@ -111,6 +111,8 @@ namespace Crusaders30XX.ECS.Systems
 		private QuitCurrentQuestDisplaySystem _quitCurrentQuestDisplaySystem;
 		private MustBeBlockedSystem _mustBeBlockedSystem;
 		private ActiveCharacterIndicatorDisplaySystem _activeCharacterIndicatorDisplaySystem;
+		private TutorialManager _tutorialManager;
+		private TutorialDisplaySystem _tutorialDisplaySystem;
 		private RenderTarget2D _sceneRenderTarget;
 
 		// Bloodshot effect system and render targets for background compositing
@@ -299,6 +301,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("QuestRewardModalDisplaySystem.Draw", _questRewardModalDisplaySystem.Draw);
 			FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);
 		if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
+		if (_tutorialDisplaySystem != null) FrameProfiler.Measure("TutorialDisplaySystem.Draw", _tutorialDisplaySystem.Draw);
 		}
 
 		private void CreateBattleSceneEntities() {
@@ -582,6 +585,12 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_mustBeBlockedSystem);
 			_world.AddSystem(_activeCharacterIndicatorDisplaySystem);
 			_world.AddSystem(_bloodshotDisplaySystem);
+
+			// Tutorial system
+			_tutorialManager = new TutorialManager(_world.EntityManager);
+			_tutorialDisplaySystem = new TutorialDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _tutorialManager);
+			_world.AddSystem(_tutorialManager);
+			_world.AddSystem(_tutorialDisplaySystem);
 		}
 
 		public void DrawAdditive()

@@ -1,0 +1,39 @@
+[
+  {
+    "key": "action_phase_overview",
+    "text": "This is the Action Phase. Play the remaining cards from your hand to deal damage and trigger powerful effects! At the end of the turn, you will draw four cards, or up to five (your max hand size).",
+    "targetType": "component_hand",
+    "targetId": "CardData",
+    "bubbleOrientation": "top"
+  },
+  {
+    "key": "action_points",
+    "text": "You have on action point (AP) per turn. Cards either cost 1 AP to play, or are free to play.",
+    "targetType": "entity_name",
+    "targetId": "UI_APTooltip",
+    "bubbleOrientation": "right"
+  },
+  {
+    "key": "card_damage",
+    "text": "Cards deal damage shown in red when played. Click a card to play it and strike the enemy!",
+    "targetType": "component_hand",
+    "targetId": "CardData",
+    "bubbleOrientation": "top"
+  },
+  {
+    "key": "weapon",
+    "text": "Your weapon is always available to play. It can be used once per action phase.",
+    "targetType": "entity_name",
+    "targetId": "Weapon",
+    "bubbleOrientation": "top"
+  },
+  {
+    "key": "cost",
+    "text": "Some cards have a Cost. To play them, you must discard other cards from your hand equal to the cost, represented by the white/red/black circles below the card name.",
+    "targetType": "card_with_cost",
+    "targetId": "CardData",
+    "bubbleOrientation": "top",
+    "condition": "has_cost_card"
+  }
+]
+

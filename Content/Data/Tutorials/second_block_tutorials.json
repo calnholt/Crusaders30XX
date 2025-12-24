@@ -1,0 +1,24 @@
+[
+  {
+    "key": "card_colors",
+    "text": "Cards come in three colors: Red, White, and Black. When you block with white cards, you gain Temperance. When you block with red cards, you gain Courage. Black cards have a higher block value.",
+    "targetType": "component_hand",
+    "targetId": "CardData",
+    "bubbleOrientation": "top"
+  },
+  {
+    "key": "courage",
+    "text": "Courage builds up as you play cards and is used for a variety of effects.",
+    "targetType": "entity_name",
+    "targetId": "UI_CourageTooltip",
+    "bubbleOrientation": "right"
+  },
+  {
+    "key": "temperance",
+    "text": "Temperance is your special ability. When the meter reaches its threshold, it's ability is triggered.",
+    "targetType": "entity_name",
+    "targetId": "UI_TemperanceTooltip",
+    "bubbleOrientation": "right"
+  }
+]
+
