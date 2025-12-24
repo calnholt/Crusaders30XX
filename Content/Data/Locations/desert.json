@@ -370,25 +370,25 @@
         {
           "Id": "shroud_of_turin",
           "Type": "Card",
-          "Price": 2,
+          "Price": 1,
           "IsPurchased": false
         },
         {
           "Id": "vindicate",
           "Type": "Card",
-          "Price": 3,
+          "Price": 1,
           "IsPurchased": false
         },
         {
           "Id": "st_luke",
           "Type": "Medal",
-          "Price": 3,
+          "Price": 2,
           "IsPurchased": false
         },
         {
           "Id": "pierced_heart_plate",
           "Type": "Equipment",
-          "Price": 4,
+          "Price": 2,
           "IsPurchased": true
         }
       ]

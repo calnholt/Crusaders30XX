@@ -24,7 +24,13 @@ SFX:
 - ambush
 
 
-Prompts - 
+- intent
+- threat
+- equipment
+
+fixes - 
+
+modal / pay cost close buttons
 
 enemy attack is occuring when battle is over
 

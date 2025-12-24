@@ -26,6 +26,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (i >= 0) matches.Add((i, "X Aggression - Your next attack this turn gains +X damage."));
 			i = lowerText.IndexOf("power");
 			if (i >= 0) matches.Add((i, "X Power - Your attacks deal +X damage."));
+			i = lowerText.IndexOf("penance");
+			if (i >= 0) matches.Add((i, "X Penance - Lose X max HP for the rest of the quest."));
 
 			if (matches.Count == 0) return string.Empty;
 			matches.Sort((a, b) => a.Index.CompareTo(b.Index));

@@ -129,6 +129,11 @@ namespace Crusaders30XX.ECS.Systems
             {
                 _targetBounds = _tutorialManager.ResolveTargetBounds();
                 UpdateBubblePosition();
+                StateSingleton.IsTutorialActive = true;
+            }
+            else 
+            {
+                StateSingleton.IsTutorialActive = false;
             }
         }
 
@@ -138,7 +143,7 @@ namespace Crusaders30XX.ECS.Systems
             _isActive = true;
 
             // Block input
-            StateSingleton.PreventClicking = true;
+            StateSingleton.IsTutorialActive = true;
 
             // Resolve target bounds
             _targetBounds = _tutorialManager.ResolveTargetBounds();

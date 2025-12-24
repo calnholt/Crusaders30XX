@@ -80,9 +80,10 @@ namespace Crusaders30XX.ECS.Systems
             {
                 QueueTutorialsForSecondBlockPhase();
             }
-            else if (currentPhase == SubPhase.Action && turnNumber == 2)
+
+            if (currentPhase == SubPhase.Action)
             {
-                QueueTutorialsForSecondActionPhase();
+                QueueConditionalTutorials();
             }
         }
 
@@ -99,7 +100,6 @@ namespace Crusaders30XX.ECS.Systems
             TryQueueTutorial("action_points");
             TryQueueTutorial("card_damage");
             TryQueueTutorial("weapon");
-            TryQueueTutorial("cost");
         }
 
         private void QueueTutorialsForSecondBlockPhase()
@@ -107,9 +107,10 @@ namespace Crusaders30XX.ECS.Systems
             TryQueueTutorial("card_colors");
             TryQueueTutorial("courage");
             TryQueueTutorial("temperance");
+            TryQueueTutorial("threat");
         }
 
-        private void QueueTutorialsForSecondActionPhase()
+        private void QueueConditionalTutorials()
         {
             TryQueueTutorial("cost");
         }

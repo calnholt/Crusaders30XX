@@ -168,33 +168,6 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.DrawString(_font, modal.Title ?? "Cards", new Vector2(rect.X + Padding, cursorY), Color.White, 0f, Vector2.Zero, TitleScale, SpriteEffects.None, 0f);
             cursorY += (int)(_font.LineSpacing * TitleScale) + Padding;
 
-            // Close button (top-right)
-            var closeRect = new Rectangle(rect.Right - Padding - CloseSize, rect.Y + Padding, CloseSize, CloseSize);
-            _spriteBatch.Draw(_pixel, closeRect, new Color(70, 70, 70));
-            DrawBorder(closeRect, Color.White, 2);
-            // Center the X label precisely in the button
-            string xLabel = "X";
-            float xScale = 0.15f;
-            var xMeasure = _font.MeasureString(xLabel) * xScale;
-            Vector2 xPos = new Vector2(closeRect.Center.X - xMeasure.X / 2f, closeRect.Center.Y - xMeasure.Y / 2f);
-            _spriteBatch.DrawString(_font, xLabel, xPos, Color.White, 0f, Vector2.Zero, xScale, SpriteEffects.None, 0f);
-
-            // Sync a clickable close entity
-            var closeBtn = EntityManager.GetEntitiesWithComponent<CardListModalClose>().FirstOrDefault();
-            if (closeBtn == null)
-            {
-                closeBtn = EntityManager.CreateEntity("CardListModal_Close");
-                EntityManager.AddComponent(closeBtn, new Transform { Position = new Vector2(closeRect.X, closeRect.Y), ZOrder = 20000 });
-                EntityManager.AddComponent(closeBtn, new UIElement { Bounds = closeRect, IsInteractable = true, Tooltip = "Close", LayerType = UILayerType.Overlay, EventType = UIElementEventType.CardListModalClose });
-                EntityManager.AddComponent(closeBtn, new HotKey { Button = FaceButton.B });
-                EntityManager.AddComponent(closeBtn, new CardListModalClose());
-            }
-            else
-            {
-                var ui = closeBtn.GetComponent<UIElement>();
-                if (ui != null) ui.Bounds = closeRect;
-            }
-
             // Fetch and sort provided cards
             var cards = (modal.Cards ?? new List<Entity>())
                 .Select(e => e.GetComponent<CardData>())
@@ -280,6 +253,33 @@ namespace Crusaders30XX.ECS.Systems
             // Restore scissor state
             _graphicsDevice.RasterizerState = prevState;
             _graphicsDevice.ScissorRectangle = prevScissor;
+
+            // Draw close button (top-right)
+            var closeRect = new Rectangle(rect.Right - Padding - CloseSize, rect.Y + Padding, CloseSize, CloseSize);
+            _spriteBatch.Draw(_pixel, closeRect, new Color(70, 70, 70));
+            DrawBorder(closeRect, Color.White, 2);
+            // Center the X label precisely in the button
+            string xLabel = "X";
+            float xScale = 0.15f;
+            var xMeasure = _font.MeasureString(xLabel) * xScale;
+            Vector2 xPos = new Vector2(closeRect.Center.X - xMeasure.X / 2f, closeRect.Center.Y - xMeasure.Y / 2f);
+            _spriteBatch.DrawString(_font, xLabel, xPos, Color.White, 0f, Vector2.Zero, xScale, SpriteEffects.None, 0f);
+
+            // Sync a clickable close entity
+            var closeBtn = EntityManager.GetEntitiesWithComponent<CardListModalClose>().FirstOrDefault();
+            if (closeBtn == null)
+            {
+                closeBtn = EntityManager.CreateEntity("CardListModal_Close");
+                EntityManager.AddComponent(closeBtn, new Transform { Position = new Vector2(closeRect.X, closeRect.Y), ZOrder = 20000 });
+                EntityManager.AddComponent(closeBtn, new UIElement { Bounds = closeRect, IsInteractable = true, Tooltip = "Close", LayerType = UILayerType.Overlay, EventType = UIElementEventType.CardListModalClose });
+                EntityManager.AddComponent(closeBtn, new HotKey { Button = FaceButton.B });
+                EntityManager.AddComponent(closeBtn, new CardListModalClose());
+            }
+            else
+            {
+                var ui = closeBtn.GetComponent<UIElement>();
+                if (ui != null) ui.Bounds = closeRect;
+            }
         }
 
         private void DrawBorder(Rectangle r, Color color, int thickness)

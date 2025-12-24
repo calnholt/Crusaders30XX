@@ -39,6 +39,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
+			if (StateSingleton.IsTutorialActive) return;
 			// Find top-most hovered entity with CardTooltip
 			var hoverables = GetRelevantEntities()
 				.Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), CT = e.GetComponent<CardTooltip>(), CD = e.GetComponent<CardData>() })

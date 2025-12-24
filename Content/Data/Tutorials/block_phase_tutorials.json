@@ -8,14 +8,14 @@
   },
   {
     "key": "block_phase_overview",
-    "text": "This is the Block Phase. The enemy is attacking! Assign cards from your hand to block incoming damage.",
+    "text": "The enemy is attacking! This shows information about the enemy's attack.",
     "targetType": "ui_region",
     "targetId": "enemy_attack_display",
     "bubbleOrientation": "bottom"
   },
   {
     "key": "card_block_value",
-    "text": "Each card has a Block value on the bottom left. Select cards from your hand to assign them to block the enemy's attack.",
+    "text": "Each card has a block value on the bottom left. Select cards from your hand to assign them to block incoming damage.",
     "targetType": "component_hand",
     "targetId": "CardData",
     "bubbleOrientation": "top"

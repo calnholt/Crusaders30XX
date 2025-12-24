@@ -20,11 +20,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
-                var damage = GetDerivedDamage(entityManager, card);
+                EventManager.Publish(new ModifyCourageEvent { Delta = ValuesParse[0] });
                 EventManager.Publish(new ModifyHpRequestEvent { 
                     Source = player, 
                     Target = enemy, 
-                    Delta = -damage, 
+                    Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
             };

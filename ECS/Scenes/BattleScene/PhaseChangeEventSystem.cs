@@ -67,10 +67,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private void CheckAndTriggerNextAttack()
         {
-            var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
-            if (enemy == null) return;
+            var attackIntentEntity = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+            if (attackIntentEntity == null) return;
 
-            var intent = enemy.GetComponent<AttackIntent>();
+            var intent = attackIntentEntity.GetComponent<AttackIntent>();
             if (intent == null || intent.Planned.Count == 0) return;
 
             var currentContextId = intent.Planned[0].ContextId;
@@ -92,8 +92,11 @@ namespace Crusaders30XX.ECS.Systems
                 _lastSeenContextId = null;
                 return; // Don't trigger - wait for BattlePhaseAnimationCompleteEvent
             }
-
-            if (currentContextId != _lastSeenContextId && phaseState.Sub == SubPhase.Block)
+            var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+            if (enemy == null) return;
+            var enemyCmp = enemy.GetComponent<Enemy>();
+            if (enemyCmp == null) return;
+            if (currentContextId != _lastSeenContextId && phaseState.Sub == SubPhase.Block && enemyCmp.CurrentHealth > 0)
             {
                 if (!_waitingForAnimation)
                 {

@@ -160,7 +160,7 @@ namespace Crusaders30XX.ECS.Systems
                 top = underMouse.FirstOrDefault();
             }
 
-            if (top != null && !StateSingleton.PreventClicking)
+            if (top != null && !StateSingleton.PreventClicking && !StateSingleton.IsTutorialActive)
             {
                 top.UI.IsHovered = true;
 
