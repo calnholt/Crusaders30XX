@@ -51,7 +51,26 @@ namespace Crusaders30XX.ECS.Systems
             var mousePosition = mouseState.Position;
             // Coalesce pointer position: prefer controller cursor position if present
             bool hasCursor = _cursorEvent != null;
-            var pointerVec = hasCursor ? _cursorEvent.Position : new Vector2(mousePosition.X, mousePosition.Y);
+            Vector2 pointerVec;
+            if (hasCursor)
+            {
+                pointerVec = _cursorEvent.Position;
+            }
+            else
+            {
+                // Transform mouse coordinates from screen space to virtual space
+                var dest = Game1.RenderDestination;
+                float scaleX = (float)dest.Width / Game1.VirtualWidth;
+                float scaleY = (float)dest.Height / Game1.VirtualHeight;
+                
+                // Avoid division by zero
+                if (scaleX <= 0.001f) scaleX = 1f;
+                if (scaleY <= 0.001f) scaleY = 1f;
+                
+                float virtX = (mousePosition.X - dest.X) / scaleX;
+                float virtY = (mousePosition.Y - dest.Y) / scaleY;
+                pointerVec = new Vector2(virtX, virtY);
+            }
             var pointerPoint = new Point((int)Math.Round(pointerVec.X), (int)Math.Round(pointerVec.Y));
             var keyboardState = Keyboard.GetState();
 

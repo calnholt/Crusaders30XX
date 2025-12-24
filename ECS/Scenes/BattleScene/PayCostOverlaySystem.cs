@@ -71,6 +71,13 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Selected Offset Y", Step = 2f, Min = -1000f, Max = 1000f)]
         public float SelectedOffsetY { get; set; } = 0f;
 
+        // Cancel button settings
+        [DebugEditable(DisplayName = "Cancel Btn Offset X", Step = 1f, Min = -500f, Max = 500f)]
+        public float CancelButtonOffsetX { get; set; } = 0f;
+
+        [DebugEditable(DisplayName = "Cancel Btn Offset Y", Step = 1f, Min = -500f, Max = 500f)]
+        public float CancelButtonOffsetY { get; set; } = 60f;
+
         public PayCostOverlaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
         {
@@ -192,6 +199,26 @@ namespace Crusaders30XX.ECS.Systems
                     state.StagedMoveElapsedSeconds = 0f;
                     state.ReturnElapsedSeconds = 0f;
                     state.OriginalHandIndex = -1;
+                }
+            }
+
+            // Update cancel button bounds during Update phase (before input processing)
+            if (state.IsOpen && !state.IsReturning)
+            {
+                int w = Game1.VirtualWidth;
+                var btnRect = new Rectangle(
+                    (int)(w - 28 - 24 + CancelButtonOffsetX), 
+                    (int)(24 + CancelButtonOffsetY), 
+                    28, 
+                    28);
+                var cancel = EntityManager.GetEntitiesWithComponent<PayCostCancelButton>().FirstOrDefault();
+                if (cancel != null)
+                {
+                    var ui = cancel.GetComponent<UIElement>();
+                    if (ui != null)
+                    {
+                        ui.Bounds = btnRect;
+                    }
                 }
             }
         }
@@ -637,26 +664,17 @@ namespace Crusaders30XX.ECS.Systems
 
             if (!state.IsReturning)
             {
-                // Cancel button (top-right)
-                var btnRect = new Rectangle(w - 28 - 24, 24, 28, 28);
+                // Cancel button (top-right) - bounds are set in UpdateEntity
+                var btnRect = new Rectangle(
+                    (int)(w - 28 - 24 + CancelButtonOffsetX), 
+                    (int)(24 + CancelButtonOffsetY), 
+                    28, 
+                    28);
                 float btnAlpha = Math.Min(1f, alphaF + 0.2f);
                 _spriteBatch.Draw(_pixel, btnRect, new Color(70f / 255f, 70f / 255f, 70f / 255f, btnAlpha));
                 DrawBorder(btnRect, Color.White, 2);
                 var xSize = _font.MeasureString("X") * 0.15f;
                 _spriteBatch.DrawString(_font, "X", new Vector2(btnRect.Center.X - xSize.X / 2f, btnRect.Center.Y - xSize.Y / 2f), Color.White, 0f, Vector2.Zero, 0.15f, SpriteEffects.None, 0f);
-
-                // Sync clickable cancel bounds entity
-                var cancel = EntityManager.GetEntitiesWithComponent<PayCostCancelButton>().FirstOrDefault();
-                if (cancel == null)
-                {
-                    EnsureStateEntityExists();
-                    cancel = EntityManager.GetEntitiesWithComponent<PayCostCancelButton>().FirstOrDefault();
-                }
-                var ui = cancel?.GetComponent<UIElement>();
-                if (ui != null)
-                {
-                    ui.Bounds = btnRect;
-                }
             }
         }
 
