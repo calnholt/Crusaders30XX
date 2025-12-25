@@ -240,7 +240,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 uiEntity = EntityManager.CreateEntity($"UI_PassiveTooltip_{key.ownerId}_{key.type}");
                 EntityManager.AddComponent(uiEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 });
-                EntityManager.AddComponent(uiEntity, new UIElement { Bounds = rect, IsInteractable = true, Tooltip = text ?? string.Empty, TooltipPosition = TooltipPosition.Below });
+                EntityManager.AddComponent(uiEntity, new UIElement { Bounds = rect, IsInteractable = false, Tooltip = text ?? string.Empty, TooltipPosition = TooltipPosition.Below });
                 _tooltipUiByKey[key] = uiEntity;
             }
             else

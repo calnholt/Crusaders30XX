@@ -20,6 +20,7 @@ namespace Crusaders30XX.ECS.Systems
         private enum BlockRequirementType { None, AtLeast, Exactly }
         private BlockRequirementType requirementType = BlockRequirementType.None;
         private int mustBeBlockedThreshold = 0;
+        private string mustBeBlockedContextId;
         private AttackDefinition mustBeBlockedAttackDefinition;
         
         // Cache previous state to prevent flickering UI updates
@@ -62,14 +63,17 @@ namespace Crusaders30XX.ECS.Systems
             // Reset state
             requirementType = BlockRequirementType.None;
             mustBeBlockedThreshold = 0;
+            mustBeBlockedContextId = null;
             mustBeBlockedAttackDefinition = null;
             previousFulfilledState = null;
             previousPlayedCardsCount = -1;
 
             var enemy = EntityManager.GetEntity("Enemy");
             var intent = enemy?.GetComponent<AttackIntent>();
-            mustBeBlockedAttackDefinition = intent?.Planned?.FirstOrDefault()?.AttackDefinition;
-            var attackId = intent?.Planned?.FirstOrDefault()?.AttackId;
+            var plannedAttack = intent?.Planned?.FirstOrDefault();
+            mustBeBlockedContextId = plannedAttack?.ContextId;
+            mustBeBlockedAttackDefinition = plannedAttack?.AttackDefinition;
+            var attackId = plannedAttack?.AttackId;
             
             if (!AttackDefinitionCache.TryGet(attackId, out var def)) return;
             if (def.specialEffects.Length == 0) return;
@@ -174,12 +178,14 @@ namespace Crusaders30XX.ECS.Systems
         protected override void UpdateEntity(Entity entity, GameTime gameTime) 
         {
             if (requirementType == BlockRequirementType.None) return;
+            if (string.IsNullOrEmpty(mustBeBlockedContextId)) return;
             
             var confirmBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
             if (confirmBtn == null) return;
             var ui = confirmBtn.GetComponent<UIElement>();
             if (ui == null) return;
-            var progress = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>().FirstOrDefault();
+            var progress = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>()
+                .FirstOrDefault(e => e.GetComponent<EnemyAttackProgress>()?.ContextId == mustBeBlockedContextId);
             if (progress == null) return;
             var progressComponent = progress.GetComponent<EnemyAttackProgress>();
             if (progressComponent == null) return;

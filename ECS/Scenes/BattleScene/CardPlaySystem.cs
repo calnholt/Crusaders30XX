@@ -385,6 +385,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             card.OnPlay?.Invoke(EntityManager, evt.Card);
+            EventManager.Publish(new TrackingEvent { Type = card.CardId, Delta = 1 });
 
             // Move the played card to discard unless it's a weapon (weapons leave hand but do not go to discard)
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
