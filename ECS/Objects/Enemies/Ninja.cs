@@ -1,0 +1,196 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Objects.EnemyAttacks;
+using Crusaders30XX.ECS.Systems;
+using Crusaders30XX.ECS.Utils;
+
+namespace Crusaders30XX.ECS.Objects.Enemies;
+
+public class Ninja : EnemyBase
+{
+  public Ninja()
+  {
+    Id = "ninja";
+    Name = "Ninja";
+    MaxHealth = 80;
+  }
+
+  public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
+  {
+    var hasSliceAndDice = false;
+    var attacks = new List<string> { "slice" };
+    int random = Random.Shared.Next(0, 100);
+    if (random >= 90)
+    {
+      return ["slice", "dice", "sharpen_blade", "nightveil_guillotine"];
+    }
+    random = Random.Shared.Next(0, 100);
+    if (random >= 50)
+    {
+      attacks.Add("dice");
+      hasSliceAndDice = true;
+    }
+    // give shadow_step higher weight - maybe improve array util function?
+    var linkers = new List<string> { "dusk_flick", "cloaked_reaver", "silencing_stab", "sharpen_blade", "shadow_step", "shadow_step", "shadow_step" };
+    var count = (Random.Shared.Next(0, 100) >= 50 ? 1 : 0) + 2;
+    attacks.AddRange(ArrayUtils.TakeRandomWithReplacement(linkers, count));
+    var shuffledAttacks = ArrayUtils.Shuffled(attacks);
+    random = Random.Shared.Next(0, 100);
+    if (random >= 80 && hasSliceAndDice)
+    {
+      return shuffledAttacks.Append("nightveil_guillotine");
+    }
+    else if (random >= 60)
+    {
+      return shuffledAttacks.Append("have_no_mercy");
+    }
+    else if (random >= 50)
+    {
+      shuffledAttacks.Append(ArrayUtils.TakeRandomWithReplacement(linkers, 1).FirstOrDefault());
+    }
+    return shuffledAttacks;
+  }
+}
+
+public class Slice : EnemyAttackBase
+{
+  public Slice()
+  {
+    Id = "slice";
+    Name = "Slice";
+    Damage = 1;
+  }
+}
+
+public class Dice : EnemyAttackBase
+{
+  public Dice()
+  {
+    Id = "dice";
+    Name = "Dice";
+    Damage = 1;
+  }
+}
+
+public class DuskFlick : EnemyAttackBase
+{
+  public DuskFlick()
+  {
+    Id = "dusk_flick";
+    Name = "Dusk Flick";
+    Damage = 3;
+    ConditionType = ConditionType.OnHit;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Wounded, 1, ConditionType);
+
+    OnAttackHit = (entityManager) =>
+    {
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Wounded, Delta = ValuesParse[0] });
+    };
+  }
+}
+
+public class CloakedReaver : EnemyAttackBase
+{
+  public CloakedReaver()
+  {
+    Id = "cloaked_reaver";
+    Name = "Cloaked Reaver";
+    Damage = 3;
+    ConditionType = ConditionType.OnHit;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, 2, ConditionType);
+
+    OnAttackHit = (entityManager) =>
+    {
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = ValuesParse[0] });
+    };
+  }
+}
+
+public class SilencingStab : EnemyAttackBase
+{
+  public SilencingStab()
+  {
+    Id = "silencing_stab";
+    Name = "Silencing Stab";
+    Damage = 3;
+    ConditionType = ConditionType.OnHit;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Frozen, 2, ConditionType);
+
+    OnAttackHit = (entityManager) =>
+    {
+      //TODO: implement freezing logic
+    };
+  }
+}
+public class SharpenBlade : EnemyAttackBase
+{
+  public SharpenBlade()
+  {
+    Id = "sharpen_blade";
+    Name = "Sharpen Blade";
+    Damage = 2;
+    ConditionType = ConditionType.OnHit;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Aggression, 3, ConditionType);
+
+    OnAttackHit = (entityManager) =>
+    {
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Aggression, Delta = ValuesParse[0] });
+    };
+  }
+}
+
+public class ShadowStep : EnemyAttackBase
+{
+  public ShadowStep()
+  {
+    Id = "shadow_step";
+    Name = "Shadow Step";
+    Damage = 4;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Corrode, 1);
+
+    OnBlockProcessed = (entityManager, card) =>
+    {
+      // TODO: should send an event
+      BlockValueService.ApplyDelta(card, -ValuesParse[0], "Corrode");
+    };
+  }
+}
+
+public class NightveilGuillotine : EnemyAttackBase
+{
+  public NightveilGuillotine()
+  {
+    Id = "nightveil_guillotine";
+    Name = "Nightveil Guillotine";
+    Damage = 4;
+    Text = "If both Slice and Dice hit this turn, this gains +[4] damage and you gain [2] penance on hit.";
+
+    OnAttackReveal = (entityManager) =>
+    {
+      var battleStateInfo = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault().GetComponent<BattleStateInfo>();
+      var enemyEntity = entityManager.GetEntity("Enemy");
+      var enemyPassives = enemyEntity.GetComponent<AppliedPassives>();
+      battleStateInfo.TurnTracking.TryGetValue("slice", out int sliceCount);
+      battleStateInfo.TurnTracking.TryGetValue("dice", out int diceCount);
+      Console.WriteLine($"[NightveilGuillotine]: slice: {sliceCount} // dice: {diceCount}");
+      if (sliceCount > 0 && diceCount > 0)
+      {
+        Damage += ValuesParse[0];
+        ConditionType = ConditionType.OnHit;
+      }
+    };
+
+    OnAttackHit = (entityManager) =>
+    {
+      if (ConditionType == ConditionType.OnHit)
+      {
+        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = ValuesParse[1] });
+      }
+    };
+
+  }
+}

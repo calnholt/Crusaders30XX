@@ -364,32 +364,27 @@
         {
           "Id": "impale",
           "Type": "Card",
-          "Price": 1,
-          "IsPurchased": false
+          "Price": 1
         },
         {
           "Id": "shroud_of_turin",
           "Type": "Card",
-          "Price": 1,
-          "IsPurchased": false
+          "Price": 1
         },
         {
           "Id": "vindicate",
           "Type": "Card",
-          "Price": 1,
-          "IsPurchased": false
+          "Price": 1
         },
         {
           "Id": "st_luke",
           "Type": "Medal",
-          "Price": 2,
-          "IsPurchased": false
+          "Price": 2
         },
         {
           "Id": "pierced_heart_plate",
           "Type": "Equipment",
-          "Price": 2,
-          "IsPurchased": true
+          "Price": 2
         }
       ]
     },
@@ -406,20 +401,64 @@
         {
           "Id": "pouch_of_kunai",
           "Type": "Card",
-          "Price": 2,
-          "IsPurchased": false
+          "Price": 1
         },
         {
           "Id": "fury",
           "Type": "Card",
-          "Price": 4,
-          "IsPurchased": false
+          "Price": 1
+        },
+        {
+          "Id": "ark_of_the_covenant",
+          "Type": "Card",
+          "Price": 1
+        },
+        {
+          "Id": "bulwark",
+          "Type": "Card",
+          "Price": 1
         },
         {
           "Id": "purging_bracers",
           "Type": "Equipment",
-          "Price": 5,
-          "IsPurchased": false
+          "Price": 3
+        }
+      ]
+    },
+    {
+      "Id": "shop_3",
+      "WorldPosition": [
+        1400,
+        1800
+      ],
+      "Type": "Shop",
+      "Name": "The Oasis Market",
+      "Background": "desert-oasis-market",
+      "ForSale": [
+        {
+          "Id": "heavens_glory",
+          "Type": "Card",
+          "Price": 1
+        },
+        {
+          "Id": "sacrifice",
+          "Type": "Card",
+          "Price": 1
+        },
+        {
+          "Id": "stalwart",
+          "Type": "Card",
+          "Price": 1
+        },
+        {
+          "Id": "whirlwind",
+          "Type": "Card",
+          "Price": 1
+        },
+        {
+          "Id": "helm_of_seeing",
+          "Type": "Equipment",
+          "Price": 3
         }
       ]
     }

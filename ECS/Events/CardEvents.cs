@@ -2,6 +2,7 @@ using Crusaders30XX.ECS.Core;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Crusaders30XX.ECS.Components;
+using static Crusaders30XX.ECS.Systems.MustBeBlockedSystem;
 
 namespace Crusaders30XX.ECS.Events
 {
@@ -479,6 +480,17 @@ namespace Crusaders30XX.ECS.Events
     public class CardInHandHoveredEvent
     {
         public Entity Card { get; set; }
+    }
+
+    public class IntimidateEvent
+    {
+        public int Amount { get; set; }
+    }
+
+    public class MustBeBlockedEvent
+    {
+        public int Threshold { get; set; }
+        public MustBeBlockedByType Type { get; set; }
     }
 
 } 

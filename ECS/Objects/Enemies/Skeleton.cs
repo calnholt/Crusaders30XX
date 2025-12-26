@@ -1,0 +1,99 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Objects.Enemies;
+using Crusaders30XX.ECS.Systems;
+using Crusaders30XX.ECS.Utils;
+
+namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
+
+public class Skeleton : EnemyBase
+{
+  public Skeleton()
+  {
+    Id = "skeleton";
+    Name = "Skeleton";
+    MaxHealth = 65;
+
+    OnCreate = (entityManager) =>
+    {
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Armor, Delta = 2 });
+    };
+  }
+
+  public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
+  {
+    int random = Random.Shared.Next(0, 100);
+    var linkers = new List<string> { "bone_strike", "sweep", "calcify" };
+    if (random <= 50)
+    {
+      return ArrayUtils.TakeRandomWithReplacement(linkers, 3);
+    }
+    var linker = ArrayUtils.TakeRandomWithReplacement(linkers, 1);
+    return ArrayUtils.Shuffled(linker.Append("skull_crusher"));
+  }
+}
+
+public class BoneStrike : EnemyAttackBase
+{
+  public BoneStrike()
+  {
+    Id = "bone_strike";
+    Name = "Bone Strike";
+    Damage = 1;
+    ConditionType = ConditionType.OnHit;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, 2, ConditionType.OnHit);
+
+    OnAttackHit = (entityManager) =>
+    {
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = ValuesParse[0] });
+    };
+  }
+}
+
+public class Sweep : EnemyAttackBase
+{
+  public Sweep()
+  {
+    Id = "sweep";
+    Name = "Sweep";
+    Damage = 5;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Corrode);
+    
+    OnBlockProcessed = (entityManager, card) =>
+    {
+      // TODO: should send an event
+      BlockValueService.ApplyDelta(card, -ValuesParse[0], "Corrode");
+    };
+  }
+}
+
+public class Calcify : EnemyAttackBase
+{
+  public Calcify()
+  {
+    Id = "calcify";
+    Name = "Calcify";
+    Damage = 2;
+    ConditionType = ConditionType.OnHit;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Armor, 1, ConditionType);
+
+    OnAttackHit = (entityManager) =>
+    {
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Armor, Delta = ValuesParse[0] });
+    };
+  }
+}
+
+public class SkullCrusher : EnemyAttackBase
+{
+  public SkullCrusher()
+  {
+    Id = "skull_crusher";
+    Name = "Skull Crusher";
+    Damage = 7;
+  }
+}

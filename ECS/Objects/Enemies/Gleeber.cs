@@ -1,0 +1,29 @@
+using System.Collections.Generic;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Objects.Enemies;
+
+namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
+
+public class Gleeber : EnemyBase
+{
+  public Gleeber()
+  {
+    Id = "gleeber";
+    Name = "Gleeber";
+    MaxHealth = 50;
+  }
+  public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
+  {
+    return ["pounce"];
+  }
+}
+public class Pounce : EnemyAttackBase
+{
+  public Pounce()
+  {
+    Id = "pounce";
+    Name = "Pounce";
+    Damage = 5;
+
+  }
+}
