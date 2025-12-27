@@ -19,10 +19,6 @@ public static class EnemyAttackTextHelper
             return "If not blocked by at least 1 card - ";
           case ConditionType.OnBlockedByAtLeast2Cards:
             return "If not blocked by at least 2 cards - ";
-          case ConditionType.OnBlockedByExactly1Card:
-            return "If not blocked by exactly 1 card - ";
-          case ConditionType.OnBlockedByExactly2Cards:
-            return "If not blocked by exactly 2 cards - ";
           default:
             return "";
         }

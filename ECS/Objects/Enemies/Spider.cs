@@ -22,7 +22,13 @@ public class Spider : EnemyBase
   {
     var enders = new List<string> { "mandible_breaker", "rafterfall_ambush", "eight_limbs_of_death" };
     var linkers = new List<string> { "suffocating_silk", "fang_feint" };
-    return ArrayUtils.Shuffled(new List<string> { enders[Random.Shared.Next(0, enders.Count)], linkers[Random.Shared.Next(0, linkers.Count)] });
+    var ender = enders[Random.Shared.Next(0, enders.Count)];
+    var linker = linkers[Random.Shared.Next(0, linkers.Count)];
+    if (linker == "fang_feint")
+    {
+      return new List<string> { linker, ender };
+    }
+    return new List<string> { ender, linker };
   }
 }
 
@@ -67,6 +73,7 @@ public class RafterfallAmbush : EnemyAttackBase
     Id = "rafterfall_ambush";
     Name = "Rafterfall Ambush";
     Damage = 8;
+    ConditionType = ConditionType.MustBeBlockedByAtLeast1Card;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 1);
 
     OnAttackReveal = (entityManager) =>
