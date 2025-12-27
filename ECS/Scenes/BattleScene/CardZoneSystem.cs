@@ -36,7 +36,7 @@ namespace Crusaders30XX.ECS.Systems
             if (evt.From == CardZoneType.AssignedBlock && (evt.To == CardZoneType.DiscardPile || evt.To == CardZoneType.ExhaustPile))
             {
                 var attackDef = GetComponentHelper.GetPlannedAttack(EntityManager);
-                if (attackDef != null)
+                if (attackDef != null && attackDef.OnBlockProcessed != null)
                 {
                     attackDef.OnBlockProcessed(EntityManager, evt.Card);
                 }

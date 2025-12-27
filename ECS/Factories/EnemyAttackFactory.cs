@@ -59,6 +59,8 @@ namespace Crusaders30XX.ECS.Factories
                 // Mummy attacks
                 "entomb" => new Entomb(),
                 "mummify" => new Mummify(),
+                // Generic attacks
+                "have_no_mercy" => new HaveNoMercy(),
                 _ => null
             };
         }
@@ -111,7 +113,9 @@ namespace Crusaders30XX.ECS.Factories
                 { "fang_feint", new FangFeint() },
                 // Mummy attacks
                 { "entomb", new Entomb() },
-                { "mummify", new Mummify() }
+                { "mummify", new Mummify() },
+                // Generic attacks
+                { "have_no_mercy", new HaveNoMercy() },
             };
         }
     }

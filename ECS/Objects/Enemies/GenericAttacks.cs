@@ -1,3 +1,5 @@
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 namespace Crusaders30XX.ECS.Objects.Enemies;
@@ -12,7 +14,7 @@ public class HaveNoMercy : EnemyAttackBase
 
     OnAttackReveal = (entityManager) =>
     {
-      // TODO: implement have no mercy logic via event
+      EventManager.Publish(new MarkedForSpecificDiscardEvent { Amount = 1 });
     };
   }
 }

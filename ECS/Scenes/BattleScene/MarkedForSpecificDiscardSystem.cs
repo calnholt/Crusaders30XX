@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -16,15 +17,7 @@ namespace Crusaders30XX.ECS.Systems
         public MarkedForSpecificDiscardSystem(EntityManager entityManager) : base(entityManager)
         {
             EventManager.Subscribe<MarkedForSpecificDiscardEvent>(OnMarkedForSpecificDiscard);
-            // When the phase leaves Block/EnemyAttack, clear marks
-            EventManager.Subscribe<ChangeBattlePhaseEvent>(evt =>
-            {
-                if (evt.Current != SubPhase.Block && evt.Current != SubPhase.EnemyAttack)
-                {
-                    ClearExistingSpecificDiscardMarks();
-                }
-            });
-            EventManager.Subscribe<OnEnemyAttackHitEvent>(OnOnEnemyAttackHitEvent);
+            EventManager.Subscribe<OnEnemyAttackHitEvent>(OnEnemyAttackHitEvent);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -45,8 +38,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var attackDef = GetComponentHelper.GetPlannedAttack(EntityManager);
             if (attackDef == null) return;
-            if (evt.Amount <= 0) { ClearExistingSpecificDiscardMarks(); return; }
-
+            if (evt.Amount <= 0) return;
             // Select random cards from hand (excluding weapon card)
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             var deck = deckEntity?.GetComponent<Deck>();
@@ -66,15 +58,7 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private void ClearExistingSpecificDiscardMarks()
-        {
-            foreach (var e in EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>())
-            {
-                EntityManager.RemoveComponent<MarkedForSpecificDiscard>(e);
-            }
-        }
-
-        private void OnOnEnemyAttackHitEvent(OnEnemyAttackHitEvent evt)
+        private void OnEnemyAttackHitEvent(OnEnemyAttackHitEvent evt)
         {
             var entities = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>();
             if (entities == null || entities.Count() == 0) return;
@@ -85,6 +69,10 @@ namespace Crusaders30XX.ECS.Systems
             {
                 EntityManager.RemoveComponent<MarkedForSpecificDiscard>(e);
                 EventManager.Publish(new CardMoveRequested { Card = e, Deck = deckEntity, Destination = CardZoneType.DiscardPile, ContextId = GetComponentHelper.GetContextId(EntityManager), Reason = "DiscardSpecificCard" });
+            }
+            foreach (var e in EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>())
+            {
+                EntityManager.RemoveComponent<MarkedForSpecificDiscard>(e);
             }
         }
     }

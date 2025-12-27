@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
 using Crusaders30XX.ECS.Systems;
@@ -17,14 +18,21 @@ public class Ninja : EnemyBase
     Id = "ninja";
     Name = "Ninja";
     MaxHealth = 80;
+
+    OnCreate = (entityManager) =>
+    {
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Stealth, Delta = 1 });
+    };
   }
 
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {
+    return ["have_no_mercy"];
     var hasSliceAndDice = false;
     var attacks = new List<string> { "slice" };
     int random = Random.Shared.Next(0, 100);
-    if (random >= 90)
+    var isQuestCompleted = SaveCache.IsQuestCompleted("desert", "desert_13");
+    if (random >= 90 || (!isQuestCompleted && turnNumber == 0))
     {
       return ["slice", "dice", "sharpen_blade", "nightveil_guillotine"];
     }
@@ -149,8 +157,8 @@ public class ShadowStep : EnemyAttackBase
   {
     Id = "shadow_step";
     Name = "Shadow Step";
-    Damage = 4;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Corrode, 1);
+    Damage = 3;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Corrode, 2);
 
     OnBlockProcessed = (entityManager, card) =>
     {
@@ -172,8 +180,6 @@ public class NightveilGuillotine : EnemyAttackBase
     OnAttackReveal = (entityManager) =>
     {
       var battleStateInfo = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault().GetComponent<BattleStateInfo>();
-      var enemyEntity = entityManager.GetEntity("Enemy");
-      var enemyPassives = enemyEntity.GetComponent<AppliedPassives>();
       battleStateInfo.TurnTracking.TryGetValue("slice", out int sliceCount);
       battleStateInfo.TurnTracking.TryGetValue("dice", out int diceCount);
       Console.WriteLine($"[NightveilGuillotine]: slice: {sliceCount} // dice: {diceCount}");

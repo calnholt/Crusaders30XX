@@ -95,7 +95,7 @@ namespace Crusaders30XX.ECS.Systems
             foreach (var card in deck.Hand)
             {
                 var mark = card.GetComponent<MarkedForSpecificDiscard>();
-                if (mark == null || mark.ContextId != ctx) continue;
+                if (mark == null) continue;
                 var t = card.GetComponent<Transform>();
                 var ui = card.GetComponent<UIElement>();
                 if (t == null || ui == null) continue;

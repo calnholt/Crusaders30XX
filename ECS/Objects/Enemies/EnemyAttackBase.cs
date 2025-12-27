@@ -57,6 +57,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     public Action<EntityManager, Entity>? OnBlockProcessed { get; protected set; }
     public Action<EntityManager>? OnBlockAssigned { get; protected set; }
     public Func<EntityManager, bool>? ProgressOverride { get; protected set; }
+    
   }
 
 

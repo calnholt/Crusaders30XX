@@ -85,25 +85,32 @@ namespace Crusaders30XX.ECS.Systems
 				// Check if the attack lands:
 				// 1. Not blocked by special condition (blockedAtResolution)
 				// 2. Not blocked by gameplay mitigation (Block/Aegis) if it deals damage
-				bool gameplayBlocked = (def.Damage > 0 && !evt.WillHit);
+			};
+
+			onApplied = (evt) =>
+			{
+				if (evt.ContextId != pa.ContextId) return;
+				
+				bool gameplayBlocked = (def.Damage > 0 && !evt.WasHit);
 
 				if (!blockedAtResolution && !gameplayBlocked)
 				{
 					if (def.OnAttackHit != null)
 					{
 						def.OnAttackHit(EntityManager);
-						EventManager.Publish(new OnEnemyAttackHitEvent {} );
 					}
 				}
-			};
-
-			onApplied = (evt) =>
-			{
-				if (evt.ContextId != pa.ContextId) return;
+				if (evt.WasHit)
+				{
+					EventManager.Publish(new OnEnemyAttackHitEvent {} );
+					EventManager.Publish(new TrackingEvent { Type = def.Id, Delta = 1 });
+				}
 				EventManager.Unsubscribe(onResolving);
 				EventManager.Unsubscribe(onApplied);
 				EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blockedAtResolution });
 			};
+
+			
 
 			EventManager.Subscribe(onResolving);
 			EventManager.Subscribe(onApplied);

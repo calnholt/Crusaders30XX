@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Systems
           delta += amount;
           if (!ReadOnly)
           {
+            Console.WriteLine($"[AppliedPassivesService] GetPassiveDelta.Aggression - {amount}");
             EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.Aggression });
           }
         }

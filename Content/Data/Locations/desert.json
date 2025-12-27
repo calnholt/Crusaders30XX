@@ -272,6 +272,27 @@
       "Background": "desert-background-web-dune.png"
     },
     {
+      "Id": "desert_13",
+      "WorldPosition": [
+        2082,
+        950
+      ],
+      "RevealRadius": 400,
+      "UnrevealedRadius": 100,
+      "Type": "Quest",
+      "Name": "From the Shadows",
+      "Difficulty": 3,
+      "Reward": {
+        "Gold": 3
+      },
+      "Events": [
+        {
+          "id": "ninja",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
       "Id": "desert_7",
       "WorldPosition": [
         4775,

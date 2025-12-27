@@ -140,23 +140,23 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private void ApplyStartOfPreBlockPassives(Entity owner)
+        private void ApplyStartOfPreBlockPassives(Entity enemy)
         {
-            var ap = owner.GetComponent<AppliedPassives>();
+            var ap = enemy.GetComponent<AppliedPassives>();
             if (ap == null || ap.Passives == null || ap.Passives.Count == 0) return;
 
             if (ap.Passives.TryGetValue(AppliedPassiveType.Stun, out int stunStacks) && stunStacks > 0)
             {
-                var intent = owner.GetComponent<AttackIntent>();
+                var intent = enemy.GetComponent<AttackIntent>();
                 if (intent == null || intent.Planned == null || intent.Planned.Count == 0) return;
                 var count = stunStacks > intent.Planned.Count ? intent.Planned.Count : stunStacks;
                 for (int i = 0; i < count; i++)
                 {
                     EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Stun", () =>
                     {
-                        EventManager.Publish(new ShowStunnedOverlay { ContextId = owner.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault()?.ContextId });
-                        EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Stun });
-                        EventManager.Publish(new UpdatePassive { Owner = owner, Type = AppliedPassiveType.Stun, Delta = -1 });
+                        EventManager.Publish(new ShowStunnedOverlay { ContextId = enemy.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault()?.ContextId });
+                        EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Stun });
+                        EventManager.Publish(new UpdatePassive { Owner = enemy, Type = AppliedPassiveType.Stun, Delta = -1 });
                         var ctx = intent.Planned[0].ContextId;
                         intent.Planned.RemoveAt(0);
                         if (intent.Planned.Count == 0)
@@ -184,10 +184,11 @@ namespace Crusaders30XX.ECS.Systems
                 var attackDef = GetComponentHelper.GetPlannedAttack(EntityManager);
                 if (attackDef == null) return;
                 attackDef.Damage += aggressionStacks;
-                EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Aggression });
+                Console.WriteLine($"[AppliedPassivesManagementSystem] ApplyStartOfPreBlockPassives.Aggression - {attackDef.Damage}");
+                EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Aggression });
                 TimerScheduler.Schedule(0.3f, () =>
                 {
-                    EventManager.Publish(new RemovePassive { Owner = owner, Type = AppliedPassiveType.Aggression });
+                    EventManager.Publish(new RemovePassive { Owner = enemy, Type = AppliedPassiveType.Aggression });
                 });
             }
         }
@@ -220,6 +221,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnRemovePassive(RemovePassive e)
         {
+            Console.WriteLine($"[AppliedPassivesManagementSystem] OnRemovePassive - {e.Type} - {e.Owner.Name}");
             if (e == null || e.Owner == null) return;
             var ap = e.Owner.GetComponent<AppliedPassives>();
             if (ap == null || ap.Passives == null) return;
