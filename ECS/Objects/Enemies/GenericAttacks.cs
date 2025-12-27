@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
@@ -10,11 +13,17 @@ public class HaveNoMercy : EnemyAttackBase
   {
     Id = "have_no_mercy";
     Name = "Have No Mercy";
-    Damage = 7;
+    Damage = 6;
+    ConditionType = ConditionType.OnHit;
 
     OnAttackReveal = (entityManager) =>
     {
       EventManager.Publish(new MarkedForSpecificDiscardEvent { Amount = 1 });
+        var markedCard = entityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>().FirstOrDefault().GetComponent<CardData>().Card.Name;
+        if (markedCard != null)
+        {
+          Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, 0, ConditionType, 100, $"Discard {markedCard} from your hand.");
+        }
     };
   }
 }

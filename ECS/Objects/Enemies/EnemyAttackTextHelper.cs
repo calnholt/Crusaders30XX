@@ -2,10 +2,10 @@ using Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public static class EnemyAttackTextHelper
   {
-    public static string GetText(EnemyAttackTextType type, int amount = 0, ConditionType conditionType = ConditionType.None, int percentage = 100)
+    public static string GetText(EnemyAttackTextType type, int amount = 0, ConditionType conditionType = ConditionType.None, int percentage = 100, string customText = "")
     {
       var conditionText = GetConditionText(conditionType);
-      var enemyAttackText = GetEnemyAttackText(type, amount);
+      var enemyAttackText = GetEnemyAttackText(type, amount, customText);
       var percentageText = percentage == 100 ? "" : $" ([{percentage}]% chance)";
       return $"{conditionText}{enemyAttackText}{percentageText}";
     }
@@ -24,7 +24,7 @@ public static class EnemyAttackTextHelper
         }
     }
 
-    public static string GetEnemyAttackText(EnemyAttackTextType type, int amount = 0)
+    public static string GetEnemyAttackText(EnemyAttackTextType type, int amount = 0, string customText = "")
     {
       switch (type)
       {
@@ -53,7 +53,9 @@ public static class EnemyAttackTextHelper
         case EnemyAttackTextType.Wounded:
           return $"Gain [{amount}] wounded.";
         case EnemyAttackTextType.Frozen:
-          return $"Freeze [{amount}] random cards from your hand or discard pile.";
+          return $"Freeze [{amount}] random cards from your hand/draw pile.";
+        case EnemyAttackTextType.Custom:
+          return customText;
         default:
           return string.Empty;
       }
@@ -78,5 +80,6 @@ public static class EnemyAttackTextHelper
     Burn,
     Armor,
     Corrode,
-    Frozen
+    Frozen,
+    Custom
   }

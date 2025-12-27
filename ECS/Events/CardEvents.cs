@@ -498,4 +498,9 @@ namespace Crusaders30XX.ECS.Events
         public int Amount { get; set; }
     }
 
+    public class FreezeCardsEvent
+    {
+        public int Amount { get; set; }
+    }
+
 } 

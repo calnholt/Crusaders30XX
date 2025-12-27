@@ -19,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		public FrozenCardManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
-			EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
+			EventManager.Subscribe<FreezeCardsEvent>(OnFreezeCards);
 			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
       EventManager.Subscribe<CardMoved>(OnCardMoved);
 		}
@@ -39,19 +39,9 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void OnApplyEffect(ApplyEffect evt)
+		private void OnFreezeCards(FreezeCardsEvent evt)
 		{
-			// Only handle Frozen effects
-			if ((evt.EffectType ?? string.Empty) != "Frozen") return;
-			
-			// Only apply if the target is the player
-			if (evt.Target == null || !evt.Target.HasComponent<Player>()) return;
-			
-			int amount = Math.Max(0, evt.Amount);
-			if (amount <= 0) return;
-
-			Console.WriteLine($"[FrozenCardManagementSystem] Applying Frozen effect, amount={amount}");
-			ApplyFrozenEffect(amount);
+			ApplyFrozenEffect(evt.Amount);
 		}
 
 		private void OnBlockAssignmentAdded(BlockAssignmentAdded evt)
@@ -85,10 +75,10 @@ namespace Crusaders30XX.ECS.Systems
 				availableCards.AddRange(deck.DrawPile.Where(c => c.GetComponent<Frozen>() == null));
 			}
 			
-			if (deck.DiscardPile != null)
-			{
-				availableCards.AddRange(deck.DiscardPile.Where(c => c.GetComponent<Frozen>() == null));
-			}
+			// if (deck.DiscardPile != null)
+			// {
+			// 	availableCards.AddRange(deck.DiscardPile.Where(c => c.GetComponent<Frozen>() == null));
+			// }
 			
 			if (deck.Hand != null)
 			{

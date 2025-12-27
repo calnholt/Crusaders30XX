@@ -81,13 +81,13 @@ namespace Crusaders30XX.ECS.Systems
                 if (finalDamage > 0)
                 {
                     var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
+                    wasHit = finalDamage - prog.AegisTotal > 0;
                     EventManager.Publish(new ModifyHpRequestEvent 
                     { 
                         Source = enemy, 
                         Target = player, 
                         Delta = -finalDamage 
                     });
-                    wasHit = true;
                 }
             }
 

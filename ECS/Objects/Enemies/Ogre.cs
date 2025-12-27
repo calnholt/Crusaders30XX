@@ -19,23 +19,23 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
     {
       int random = Random.Shared.Next(0, 100);
-			if (random <= 20)
-			{
-				return ["slam_trunk", "fake_out"];
-			}
-			if (random <= 40)
-			{
-				return ["slam_trunk", "thud"];
-			}
-			if (random <= 60)
-			{
-				return ["tree_stomp"];
-			}
-			if (random <= 80)
-			{
-				return ["pummel_into_submission"];
-			}
-			return ["slam_trunk", "have_no_mercy"];
+      if (random <= 20)
+      {
+        return ["slam_trunk", "fake_out"];
+      }
+      if (random <= 40)
+      {
+        return ["slam_trunk", "thud"];
+      }
+      if (random <= 60)
+      {
+        return ["tree_stomp"];
+      }
+      if (random <= 80)
+      {
+        return ["pummel_into_submission"];
+      }
+      return ["slam_trunk", "have_no_mercy"];
     }
   }
   public class PummelIntoSubmission : EnemyAttackBase
@@ -45,10 +45,15 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
       Id = "pummel_into_submission";
       Name = "Pummel Into Submission";
       Damage = 10;
-      Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Intimidate, 1);
+      ConditionType = ConditionType.OnHit;
+      Text = $"{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Intimidate, 1)}\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, 1, ConditionType)}";
       OnAttackReveal = (entityManager) =>
       {
         EventManager.Publish(new IntimidateEvent { Amount = ValuesParse[0] });
+      };
+      OnAttackHit = (entityManager) =>
+      {
+        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = ValuesParse[1] });
       };
     }
   }
@@ -91,10 +96,10 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
       Damage = 3;
       Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Intimidate, 2);
       OnAttackReveal = (entityManager) =>
-    {
-      EventManager.Publish(new IntimidateEvent { Amount = ValuesParse[0] });
-    };
-  }
+      {
+        EventManager.Publish(new IntimidateEvent { Amount = ValuesParse[0] });
+      };
+    }
   }
   public class Thud : EnemyAttackBase
   {
@@ -102,8 +107,9 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     {
       Id = "thud";
       Name = "Thud";
-      Damage = 5;
+      Damage = 3;
       Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Wounded, 1);
+      ConditionType = ConditionType.OnHit;
       OnAttackHit = (entityManager) =>
       {
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Wounded, Delta = ValuesParse[0] });

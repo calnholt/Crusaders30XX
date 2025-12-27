@@ -27,7 +27,6 @@ public class Ninja : EnemyBase
 
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {
-    return ["have_no_mercy"];
     var hasSliceAndDice = false;
     var attacks = new List<string> { "slice" };
     int random = Random.Shared.Next(0, 100);
@@ -126,11 +125,11 @@ public class SilencingStab : EnemyAttackBase
     Name = "Silencing Stab";
     Damage = 3;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Frozen, 2, ConditionType);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Frozen, 3, ConditionType);
 
     OnAttackHit = (entityManager) =>
     {
-      //TODO: implement freezing logic
+      EventManager.Publish(new FreezeCardsEvent { Amount = ValuesParse[0] });
     };
   }
 }

@@ -278,7 +278,7 @@
         950
       ],
       "RevealRadius": 400,
-      "UnrevealedRadius": 100,
+      "UnrevealedRadius": 150,
       "Type": "Quest",
       "Name": "From the Shadows",
       "Difficulty": 3,
