@@ -24,7 +24,6 @@ namespace Crusaders30XX.ECS.Systems
         private SpriteFont _font = FontSingleton.ContentFont;
 
         private float _t;
-		private float _rot; // smoothed rotation follower (radians)
 		private Vector2 _pos;
 		private Vector2 _prevPos;
 		private float _spawnAccumulator;

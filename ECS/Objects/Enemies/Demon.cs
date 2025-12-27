@@ -38,7 +38,8 @@ public class RazorMaw : EnemyAttackBase
     Id = "razor_maw";
     Name = "Razor Maw";
     Damage = 7;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Burn, 2);
+    ConditionType = ConditionType.OnHit;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Burn, 2, ConditionType);
 
     OnAttackHit = (entityManager) =>
     {
@@ -54,7 +55,8 @@ public class ScorchingClaw : EnemyAttackBase
     Id = "scorching_claw";
     Name = "Scorching Claw";
     Damage = 8;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Burn, 1);
+    ConditionType = ConditionType.OnHit;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Burn, 1, ConditionType);
 
     OnAttackHit = (entityManager) =>
     {
@@ -70,6 +72,7 @@ public class InfernalExecution : EnemyAttackBase
     Id = "infernal_execution";
     Name = "Infernal Execution";
     Damage = 10;
+    ConditionType = ConditionType.OnBlockedByAtLeast1Card;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 1);
 
     OnAttackReveal = (entityManager) =>

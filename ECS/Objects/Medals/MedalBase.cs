@@ -52,12 +52,12 @@ namespace Crusaders30XX.ECS.Objects.Medals
         /// <summary>
         /// Optional: Called when medal is first acquired (before Initialize)
         /// </summary>
-        public Action<EntityManager, Entity>? OnAcquire { get; protected set; }
+        public Action<EntityManager, Entity> OnAcquire { get; protected set; }
         
         /// <summary>
         /// Optional: Called when medal is removed (after Cleanup)
         /// </summary>
-        public Action<EntityManager, Entity>? OnRemove { get; protected set; }
+        public Action<EntityManager, Entity> OnRemove { get; protected set; }
     }
 }
 

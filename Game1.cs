@@ -28,7 +28,6 @@ public class Game1 : Game
 
     private KeyboardState _prevKeyboard;
 
-    private InternalQueueEventsSceneSystem _menuSceneSystem;
     private TitleMenuDisplaySystem _titleMenuDisplaySystem;
     private BattleSceneSystem _battleSceneSystem;
     private LocationSceneSystem _locationSceneSystem;
@@ -129,7 +128,6 @@ public class Game1 : Game
         EntityFactory.CreateCardVisualSettings(_world);
         // Add parent scene systems only
         _titleMenuDisplaySystem = new TitleMenuDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
-        _menuSceneSystem = new InternalQueueEventsSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _locationSceneSystem = new LocationSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _shopSceneSystem = new ShopSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
@@ -155,7 +153,6 @@ public class Game1 : Game
         _uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
         _world.AddSystem(_titleMenuDisplaySystem);
-        _world.AddSystem(_menuSceneSystem);
         _world.AddSystem(_battleSceneSystem);
         _world.AddSystem(_locationSceneSystem);
         _world.AddSystem(_shopSceneSystem);
@@ -316,11 +313,6 @@ public class Game1 : Game
             case SceneId.TitleMenu:
             {
                 FrameProfiler.Measure("TitleMenuDisplaySystem.Draw", _titleMenuDisplaySystem.Draw);
-                break;
-            }
-            case SceneId.Internal_QueueEventsMenu:
-            {
-                FrameProfiler.Measure("MenuSceneSystem.Draw", _menuSceneSystem.Draw);
                 break;
             }
             case SceneId.Customization:

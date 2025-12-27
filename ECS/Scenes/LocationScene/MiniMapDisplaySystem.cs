@@ -142,7 +142,7 @@ namespace Crusaders30XX.ECS.Systems
 
 				foreach (var p in pois)
 				{
-					bool isHellrift = p.Type != null && p.Type == PointOfInterestType.Hellrift;
+					bool isHellrift = p.Type == PointOfInterestType.Hellrift;
 					bool isCompleted = p.IsCompleted;
 					// Visible if: always Hellrift, or completed, or revealed, or proximity-visible
 					bool isVisible = isHellrift || isCompleted || p.IsRevealed || IsVisibleByProximity(p, unlockers, cam.MapScale);

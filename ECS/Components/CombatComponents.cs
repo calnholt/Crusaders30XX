@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Attacks;
+using Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 namespace Crusaders30XX.ECS.Components
 {
@@ -38,7 +38,7 @@ namespace Crusaders30XX.ECS.Components
 		public string ContextId;
 		public bool WasBlocked;
 		public bool IsAmbush;
-		public AttackDefinition AttackDefinition;
+		public EnemyAttackBase AttackDefinition;
 	}
 
 	// Stun is now tracked per PlannedAttack via IsStunned flag
@@ -70,7 +70,8 @@ namespace Crusaders30XX.ECS.Components
 		public int AegisTotal { get; set; }
 		public int DamageBeforePrevention { get; set; }
 		public int BaseDamage { get; set; }
-        public int TotalPreventedDamage { get; internal set; }
+		public int TotalPreventedDamage { get; internal set; }
+		public bool FullyPreventedBySpecial { get; set; }
     }
 
 	/// <summary>

@@ -113,7 +113,6 @@ namespace Crusaders30XX.ECS.Systems
 		private ActiveCharacterIndicatorDisplaySystem _activeCharacterIndicatorDisplaySystem;
 		private TutorialManager _tutorialManager;
 		private TutorialDisplaySystem _tutorialDisplaySystem;
-		private RenderTarget2D _sceneRenderTarget;
 
 		// Bloodshot effect system and render targets for background compositing
 		private BloodshotDisplaySystem _bloodshotDisplaySystem;

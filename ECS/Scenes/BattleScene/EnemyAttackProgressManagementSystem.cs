@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Data.Attacks;
 using Microsoft.Xna.Framework;
 using System;
 using Crusaders30XX.Diagnostics;
@@ -62,7 +61,7 @@ namespace Crusaders30XX.ECS.Systems
 					EntityManager.DestroyEntity(e.Id);
 				}
 			}
-			RecomputeAll();
+			// RecomputeAll();
 		}
 
 		private void PrintProgress(EnemyAttackProgress p)
@@ -214,20 +213,19 @@ namespace Crusaders30XX.ECS.Systems
 			p.AegisTotal = aegis;
 			p.DamageBeforePrevention = full;
 
-		bool specialEffectExecuted = EnemySpecialAttackService.ExecuteSpecialEffect(def, EntityManager);
-		if (specialEffectExecuted) return;
-		p.PreventedDamageFromBlockCondition = 0;
-		p.AdditionalConditionalDamageTotal = (def.effectsOnNotBlocked ?? Array.Empty<EffectDefinition>())
-			.Where(e => e.type == "Damage")
-			.Sum(e => e.amount);
-		p.BaseDamage = def.damage;
-		bool isConditionMet = ConditionService.Evaluate(def.blockingCondition, EntityManager, p);
+			bool specialEffectExecuted = def.ProgressOverride != null ? def.ProgressOverride(EntityManager) : false;
+			if (specialEffectExecuted) return;
+			p.PreventedDamageFromBlockCondition = 0;
+			p.AdditionalConditionalDamageTotal = 0;
+			p.BaseDamage = def.Damage;
+			bool isConditionMet = ConditionService.Evaluate(def.ConditionType, EntityManager, p);
 			int reduced = aegis + p.AssignedBlockTotal;
 			int actual = Math.Max(full - reduced, 0);
 
 			p.IsConditionMet = isConditionMet;
 			p.ActualDamage = actual;
 			p.TotalPreventedDamage = aegis + p.AssignedBlockTotal;
+			p.FullyPreventedBySpecial = false;
 
 			// Optional: sanity check for desync between snapshot and live AssignedBlockCard state (debug only)
 			try

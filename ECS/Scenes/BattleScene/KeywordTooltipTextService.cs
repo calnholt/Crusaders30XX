@@ -28,6 +28,10 @@ namespace Crusaders30XX.ECS.Systems
 			if (i >= 0) matches.Add((i, "X Power - Your attacks deal +X damage."));
 			i = lowerText.IndexOf("penance");
 			if (i >= 0) matches.Add((i, "X Penance - Lose X max HP for the rest of the quest."));
+			i = lowerText.IndexOf("fear");
+			if (i >= 0) matches.Add((i, "X Fear - Attacks have a (X*10)% chance to become ambush attacks this quest."));
+			i = lowerText.IndexOf("wounded");
+			if (i >= 0) matches.Add((i, "X Wounded - Take X more damage from all sources this battle."));
 
 			if (matches.Count == 0) return string.Empty;
 			matches.Sort((a, b) => a.Index.CompareTo(b.Index));

@@ -23,7 +23,6 @@ namespace Crusaders30XX.ECS.Systems
         private Texture2D _pixel;
         private Texture2D _rounded;
         private int _cachedW, _cachedH, _cachedR;
-        private Texture2D _angel;
 
         // Runtime state
         private GamePadState _prevGamePadState;

@@ -19,8 +19,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly ContentManager _content;
 		private Texture2D _fallbackMedalTex;
 		private readonly Dictionary<string, Texture2D> _medalTexById = new Dictionary<string, Texture2D>();
-        private Texture2D _roundedCache;
-        private int _roundedW, _roundedH, _roundedR;
 
 		// Layout/debug controls
 		[DebugEditable(DisplayName = "Left Margin", Step = 2, Min = 0, Max = 2000)]

@@ -55,13 +55,14 @@ public class Entomb : EnemyAttackBase
         p.AegisTotal = 0;
         p.PreventedDamageFromBlockCondition = Math.Max(0, fullDamage - blockFromCards);
         p.TotalPreventedDamage = fullDamage;
-
+        p.FullyPreventedBySpecial = true;
         foreach (var e in assignedBlockCards)
         {
           entityManager.AddComponent(e, new ExhaustOnBlock { Owner = e });
         }
         return true;
       }
+      p.IsConditionMet = false;
       return false;
     };
   }

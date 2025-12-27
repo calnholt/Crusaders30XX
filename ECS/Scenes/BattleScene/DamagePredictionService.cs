@@ -1,19 +1,19 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Attacks;
 using System.Runtime.CompilerServices;
 using System;
+using Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 namespace Crusaders30XX.ECS.Systems
 {
 	public static class DamagePredictionService
 	{
-		public static int ComputeFullDamage(AttackDefinition definition)
+		public static int ComputeFullDamage(EnemyAttackBase definition)
 		{
 			if (definition == null) return 0;
 
-			return definition.damage;
+			return definition.Damage;
 		}
 
 		public static int GetAegisAmount(EntityManager entityManager)
@@ -39,7 +39,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			return 0;
 		}
-		public static int ComputeActualDamage(AttackDefinition definition, EntityManager entityManager, string contextId, bool isBlocked)
+		public static int ComputeActualDamage(EnemyAttackBase definition, EntityManager entityManager, string contextId, bool isBlocked)
 		{
 			int full = ComputeFullDamage(definition);
 			int aegis = GetAegisAmount(entityManager);
@@ -49,7 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 			return actual < 0 ? 0 : actual;
 		}
 
-    public static int ComputePreventedDamage(AttackDefinition definition, EntityManager entityManager, string contextId, bool isBlocked)
+    public static int ComputePreventedDamage(EnemyAttackBase definition, EntityManager entityManager, string contextId, bool isBlocked)
     {
       int aegis = GetAegisAmount(entityManager);
       int assigned = GetAssignedBlockForContext(entityManager, contextId);

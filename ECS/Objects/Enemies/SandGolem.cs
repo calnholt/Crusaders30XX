@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -28,6 +29,7 @@ public class SandPound : EnemyAttackBase
     Id = "sand_pound";
     Name = "Sand Pound";
     Damage = 7;
+    ConditionType = ConditionType.OnBlockedByExactly1Card;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedExactly, 1);
 
     OnAttackReveal = (entityManager) =>
@@ -44,6 +46,7 @@ public class SandSlam : EnemyAttackBase
     Id = "sand_slam";
     Name = "Sand Slam";
     Damage = 10;
+    ConditionType = ConditionType.OnBlockedByExactly2Cards;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedExactly, 2);
 
     OnAttackReveal = (entityManager) =>

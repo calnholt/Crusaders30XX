@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Data.Locations;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Objects.Cards;
+using Crusaders30XX.ECS.Objects.Enemies;
 
 namespace Crusaders30XX.ECS.Components
 {
@@ -80,20 +81,15 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         
-        public EnemyType Type { get; set; } = EnemyType.Demon;
         public string Id { get; set; } = "demon";
 
         public string Name { get; set; } = "";
         public int MaxHealth { get; set; } = 40;
         public int CurrentHealth { get; set; } = 40;
         public int Block { get; set; } = 0;
+        public EnemyBase EnemyBase { get; set; }
     }
 
-    public enum EnemyType
-    {
-        Demon
-    }
-    
     /// <summary>
     /// Optional resource component representing Courage for an entity (e.g., the player)
     /// </summary>

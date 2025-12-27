@@ -1,0 +1,119 @@
+using System.Collections.Generic;
+using Crusaders30XX.ECS.Objects.Enemies;
+using Crusaders30XX.ECS.Objects.EnemyAttacks;
+
+namespace Crusaders30XX.ECS.Factories
+{
+    /// <summary>
+    /// Factory for creating EnemyAttackBase instances from attack IDs
+    /// </summary>
+    public static class EnemyAttackFactory
+    {
+        /// <summary>
+        /// Creates an EnemyAttackBase instance from an attack ID string
+        /// </summary>
+        /// <param name="attackId">The attack ID (e.g., "bone_strike")</param>
+        /// <returns>The corresponding EnemyAttackBase instance, or null if not found</returns>
+        public static EnemyAttackBase Create(string attackId)
+        {
+            return attackId switch
+            {
+                // Ogre attacks
+                "pummel_into_submission" => new PummelIntoSubmission(),
+                "tree_stomp" => new TreeStomp(),
+                "slam_trunk" => new SlamTrunk(),
+                "fake_out" => new FakeOut(),
+                "thud" => new Thud(),
+                // Skeleton attacks
+                "bone_strike" => new BoneStrike(),
+                "sweep" => new Sweep(),
+                "calcify" => new Calcify(),
+                "skull_crusher" => new SkullCrusher(),
+                // Ninja attacks
+                "slice" => new Slice(),
+                "dice" => new Dice(),
+                "dusk_flick" => new DuskFlick(),
+                "cloaked_reaver" => new CloakedReaver(),
+                "silencing_stab" => new SilencingStab(),
+                "sharpen_blade" => new SharpenBlade(),
+                "shadow_step" => new ShadowStep(),
+                "nightveil_guillotine" => new NightveilGuillotine(),
+                // Demon attacks
+                "razor_maw" => new RazorMaw(),
+                "scorching_claw" => new ScorchingClaw(),
+                "infernal_execution" => new InfernalExecution(),
+                // Gleeber attacks
+                "pounce" => new Pounce(),
+                // SandCorpse attacks
+                "sand_blast" => new SandBlast(),
+                "sand_storm" => new SandStorm(),
+                // SandGolem attacks
+                "sand_pound" => new SandPound(),
+                "sand_slam" => new SandSlam(),
+                // Spider attacks
+                "suffocating_silk" => new SuffocatingSilk(),
+                "mandible_breaker" => new MandibleBreaker(),
+                "rafterfall_ambush" => new RafterfallAmbush(),
+                "eight_limbs_of_death" => new EightLimbsOfDeath(),
+                "fang_feint" => new FangFeint(),
+                // Mummy attacks
+                "entomb" => new Entomb(),
+                "mummify" => new Mummify(),
+                _ => null
+            };
+        }
+
+        /// <summary>
+        /// Returns a dictionary of all available enemy attacks, keyed by attack ID
+        /// </summary>
+        /// <returns>A dictionary mapping attack IDs to EnemyAttackBase instances</returns>
+        public static Dictionary<string, EnemyAttackBase> GetAllAttacks()
+        {
+            return new Dictionary<string, EnemyAttackBase>
+            {
+                // Ogre attacks
+                { "pummel_into_submission", new PummelIntoSubmission() },
+                { "tree_stomp", new TreeStomp() },
+                { "slam_trunk", new SlamTrunk() },
+                { "fake_out", new FakeOut() },
+                { "thud", new Thud() },
+                // Skeleton attacks
+                { "bone_strike", new BoneStrike() },
+                { "sweep", new Sweep() },
+                { "calcify", new Calcify() },
+                { "skull_crusher", new SkullCrusher() },
+                // Ninja attacks
+                { "slice", new Slice() },
+                { "dice", new Dice() },
+                { "dusk_flick", new DuskFlick() },
+                { "cloaked_reaver", new CloakedReaver() },
+                { "silencing_stab", new SilencingStab() },
+                { "sharpen_blade", new SharpenBlade() },
+                { "shadow_step", new ShadowStep() },
+                { "nightveil_guillotine", new NightveilGuillotine() },
+                // Demon attacks
+                { "razor_maw", new RazorMaw() },
+                { "scorching_claw", new ScorchingClaw() },
+                { "infernal_execution", new InfernalExecution() },
+                // Gleeber attacks
+                { "pounce", new Pounce() },
+                // SandCorpse attacks
+                { "sand_blast", new SandBlast() },
+                { "sand_storm", new SandStorm() },
+                // SandGolem attacks
+                { "sand_pound", new SandPound() },
+                { "sand_slam", new SandSlam() },
+                // Spider attacks
+                { "suffocating_silk", new SuffocatingSilk() },
+                { "mandible_breaker", new MandibleBreaker() },
+                { "rafterfall_ambush", new RafterfallAmbush() },
+                { "eight_limbs_of_death", new EightLimbsOfDeath() },
+                { "fang_feint", new FangFeint() },
+                // Mummy attacks
+                { "entomb", new Entomb() },
+                { "mummify", new Mummify() }
+            };
+        }
+    }
+}
+

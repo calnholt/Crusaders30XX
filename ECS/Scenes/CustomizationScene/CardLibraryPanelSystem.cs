@@ -22,7 +22,6 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteFont _font = FontSingleton.TitleFont;
         private readonly Texture2D _pixel;
         private MouseState _prevMouse;
-        private bool _isInitialized = false;
 		private readonly Dictionary<string, int> _cardEntityIds = new Dictionary<string, int>();
 
         [DebugEditable(DisplayName = "Left Panel Width", Step = 4, Min = 100, Max = 2000)]
@@ -65,7 +64,6 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.DestroyEntity(entityId);
 			}
 			_cardEntityIds.Clear();
-			_isInitialized = false;
 		}
 
         protected override IEnumerable<Entity> GetRelevantEntities()

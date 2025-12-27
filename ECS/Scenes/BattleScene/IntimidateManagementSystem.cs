@@ -3,7 +3,6 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Data.Attacks;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -19,6 +18,7 @@ namespace Crusaders30XX.ECS.Systems
 		public IntimidateManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnPhaseChanged);
+			EventManager.Subscribe<IntimidateEvent>(OnIntimidate);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -31,43 +31,19 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnPhaseChanged(ChangeBattlePhaseEvent evt)
 		{
 			// When entering the Block phase, apply intimidate effects
-			if (evt.Current == SubPhase.Block)
-			{
-				ApplyIntimidateEffects();
-			}
-			// At the end of the enemy turn, remove all intimidate effects
-			else if (evt.Current == SubPhase.EnemyEnd)
+			if (evt.Current == SubPhase.EnemyEnd)
 			{
 				RemoveAllIntimidateEffects();
 			}
 		}
 
-		private void ApplyIntimidateEffects()
+		private void OnIntimidate(IntimidateEvent evt)
 		{
-			// Get the current attack
-			var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
-			if (enemy == null) return;
+			ApplyIntimidateEffects(evt.Amount);
+		}
 
-			var intent = enemy.GetComponent<AttackIntent>();
-			if (intent == null || intent.Planned == null || intent.Planned.Count == 0) return;
-
-			var currentAttack = intent.Planned.FirstOrDefault();
-			if (currentAttack == null) return;
-
-			// Load attack definition
-			var attackIntent = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault().GetComponent<AttackIntent>();
-			if (attackIntent == null) return;
-			var def = attackIntent.Planned[0].AttackDefinition;
-
-			// Check for intimidate effects
-			if (def.effectsOnAttack == null || def.effectsOnAttack.Length == 0) return;
-
-			var intimidateEffects = def.effectsOnAttack
-				.Where(e => e.type == "Intimidate")
-				.ToList();
-
-			if (intimidateEffects.Count == 0) return;
-
+		private void ApplyIntimidateEffects(int amount)
+		{
 			// Get player's hand
 			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 			if (deckEntity == null) return;
@@ -76,16 +52,13 @@ namespace Crusaders30XX.ECS.Systems
 			if (deck == null || deck.Hand == null || deck.Hand.Count == 0) return;
 
 			// For each intimidate effect, randomly pick cards
-			foreach (var effect in intimidateEffects)
-			{
-				int amount = effect.amount;
 				
 				// Get cards that are not already intimidated
 				var availableCards = deck.Hand
 					.Where(c => c.GetComponent<Intimidated>() == null)
 					.ToList();
 
-				if (availableCards.Count == 0) continue;
+				if (availableCards.Count == 0) return;
 
 				// Randomly select cards to intimidate
 				var random = new Random();
@@ -100,7 +73,6 @@ namespace Crusaders30XX.ECS.Systems
 					EntityManager.AddComponent(card, new Intimidated { Owner = card });
 					Console.WriteLine($"[IntimidateManagementSystem] Card {card.GetComponent<CardData>().Card.CardId} has been intimidated!");
 				}
-			}
 		}
 
 		private void RemoveAllIntimidateEffects()

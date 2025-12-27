@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Objects.Enemies;
@@ -14,6 +15,7 @@ public class Gleeber : EnemyBase
   }
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {
+    Console.WriteLine("[Gleeber] GetAttackIds: turnNumber=" + turnNumber);
     return ["pounce"];
   }
 }

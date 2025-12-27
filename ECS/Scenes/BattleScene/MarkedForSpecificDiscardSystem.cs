@@ -1,8 +1,8 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Attacks;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -12,19 +12,19 @@ namespace Crusaders30XX.ECS.Systems
     /// </summary>
     public class MarkedForSpecificDiscardSystem : Core.System
     {
-		private string _lastContextId = null;
-		private readonly System.Random _random = new System.Random();
+        private readonly System.Random _random = new System.Random();
         public MarkedForSpecificDiscardSystem(EntityManager entityManager) : base(entityManager)
         {
+            EventManager.Subscribe<MarkedForSpecificDiscardEvent>(OnMarkedForSpecificDiscard);
             // When the phase leaves Block/EnemyAttack, clear marks
             EventManager.Subscribe<ChangeBattlePhaseEvent>(evt =>
             {
                 if (evt.Current != SubPhase.Block && evt.Current != SubPhase.EnemyAttack)
                 {
                     ClearExistingSpecificDiscardMarks();
-					_lastContextId = null;
                 }
             });
+            EventManager.Subscribe<OnEnemyAttackHitEvent>(OnOnEnemyAttackHitEvent);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -34,86 +34,58 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override void UpdateEntity(Entity entity, Microsoft.Xna.Framework.GameTime gameTime)
         {
-            var intent = entity.GetComponent<AttackIntent>();
-			if (intent == null || intent.Planned.Count == 0) { ClearExistingSpecificDiscardMarks(); _lastContextId = null; return; }
-
-            var ctx = intent.Planned[0].ContextId;
-			if (_lastContextId != ctx)
-			{
-				// New attack context: clear previous marks once and remember this context
-				ClearExistingSpecificDiscardMarks();
-				_lastContextId = ctx;
-			}
-            TryPreselectSpecificDiscards(ctx);
         }
 
-        private AttackDefinition LoadAttackDefinition(string id)
+        private void OnMarkedForSpecificDiscard(MarkedForSpecificDiscardEvent evt)
         {
-            var attackIntent = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault().GetComponent<AttackIntent>();
-			return attackIntent.Planned[0].AttackDefinition;
+            TryPreselectSpecificDiscards(evt);
         }
 
-		private void TryPreselectSpecificDiscards(string contextId)
+        private void TryPreselectSpecificDiscards(MarkedForSpecificDiscardEvent evt)
         {
-            try
+            var attackDef = GetComponentHelper.GetPlannedAttack(EntityManager);
+            if (attackDef == null) return;
+            if (evt.Amount <= 0) { ClearExistingSpecificDiscardMarks(); return; }
+
+            // Select random cards from hand (excluding weapon card)
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck == null) return;
+            // Identify weapon to exclude
+            Entity weapon = null;
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            weapon = player?.GetComponent<EquippedWeapon>()?.SpawnedEntity;
+            var candidates = deck.Hand.Where(c => !ReferenceEquals(c, weapon)).ToList();
+            int pick = System.Math.Min(evt.Amount, candidates.Count);
+            if (pick <= 0) return;
+            // Shuffle candidates and take the first N
+            var selected = candidates.OrderBy(_ => _random.Next()).Take(pick).ToList();
+            foreach (var card in selected)
             {
-                var enemy = GetRelevantEntities().FirstOrDefault();
-                var intent = enemy?.GetComponent<AttackIntent>();
-                var pa = intent?.Planned?.FirstOrDefault(x => x.ContextId == contextId);
-                if (pa == null) return;
-                var def = LoadAttackDefinition(pa.AttackId);
-                if (def == null || def.effectsOnNotBlocked == null) return;
-                int amount = def.effectsOnNotBlocked.Where(e => e.type == "DiscardSpecificCard").Sum(e => e.amount);
-                if (amount <= 0) { ClearExistingSpecificDiscardMarks(); return; }
-				// If already selected for this context, persist selections (do not reseed on block assignments)
-				bool alreadySelected = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>()
-					.Any(e => e.GetComponent<MarkedForSpecificDiscard>()?.ContextId == contextId);
-				if (alreadySelected) return;
-
-				// Select random cards from hand (excluding weapon card)
-                var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-                var deck = deckEntity?.GetComponent<Deck>();
-                if (deck == null) return;
-                // Identify weapon to exclude
-                Entity weapon = null;
-                try
-                {
-                    var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-                    weapon = player?.GetComponent<EquippedWeapon>()?.SpawnedEntity;
-                }
-                catch { }
-				var candidates = deck.Hand.Where(c => !ReferenceEquals(c, weapon)).ToList();
-				int pick = System.Math.Min(amount, candidates.Count);
-				if (pick <= 0) return;
-				// Shuffle candidates and take the first N
-				var selected = candidates.OrderBy(_ => _random.Next()).Take(pick).ToList();
-				foreach (var card in selected)
-				{
-					var mark = card.GetComponent<MarkedForSpecificDiscard>();
-					if (mark == null)
-					{
-						mark = new MarkedForSpecificDiscard { ContextId = contextId };
-						EntityManager.AddComponent(card, mark);
-					}
-					else
-					{
-						mark.ContextId = contextId;
-					}
-				}
+                EntityManager.AddComponent(card, new MarkedForSpecificDiscard { Owner = card });
             }
-            catch { }
         }
 
         private void ClearExistingSpecificDiscardMarks()
         {
-            try
+            foreach (var e in EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>())
             {
-                foreach (var e in EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>())
-                {
-                    EntityManager.RemoveComponent<MarkedForSpecificDiscard>(e);
-                }
+                EntityManager.RemoveComponent<MarkedForSpecificDiscard>(e);
             }
-            catch { }
+        }
+
+        private void OnOnEnemyAttackHitEvent(OnEnemyAttackHitEvent evt)
+        {
+            var entities = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>();
+            if (entities == null || entities.Count() == 0) return;
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck == null) return;
+            foreach (var e in entities)
+            {
+                EntityManager.RemoveComponent<MarkedForSpecificDiscard>(e);
+                EventManager.Publish(new CardMoveRequested { Card = e, Deck = deckEntity, Destination = CardZoneType.DiscardPile, ContextId = GetComponentHelper.GetContextId(EntityManager), Reason = "DiscardSpecificCard" });
+            }
         }
     }
 }

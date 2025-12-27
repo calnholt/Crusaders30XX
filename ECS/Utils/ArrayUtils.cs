@@ -10,7 +10,7 @@ namespace Crusaders30XX.ECS.Utils
 		/// Returns a new IEnumerable<T> with the elements of the input sequence in random order.
 		/// The input is not modified.
 		/// </summary>
-		public static IEnumerable<T> Shuffled<T>(IEnumerable<T> source, Random? rng = null)
+		public static IEnumerable<T> Shuffled<T>(IEnumerable<T> source, Random rng = null)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			rng ??= new Random();
@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Utils
 		/// Returns a sequence of count elements randomly sampled from source, with replacement.
 		/// If source is empty, returns an empty sequence regardless of count.
 		/// </summary>
-		public static IEnumerable<T> TakeRandomWithReplacement<T>(IList<T> source, int count, Random? rng = null)
+		public static IEnumerable<T> TakeRandomWithReplacement<T>(IList<T> source, int count, Random rng = null)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (count <= 0 || source.Count == 0) yield break;

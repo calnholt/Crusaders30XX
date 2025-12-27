@@ -493,4 +493,9 @@ namespace Crusaders30XX.ECS.Events
         public MustBeBlockedByType Type { get; set; }
     }
 
+    public class MarkedForSpecificDiscardEvent
+    {
+        public int Amount { get; set; }
+    }
+
 } 

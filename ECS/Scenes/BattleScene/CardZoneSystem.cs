@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -34,7 +35,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (evt.From == CardZoneType.AssignedBlock && (evt.To == CardZoneType.DiscardPile || evt.To == CardZoneType.ExhaustPile))
             {
-                CardBlockService.Resolve(evt.Card, EntityManager);
+                var attackDef = GetComponentHelper.GetPlannedAttack(EntityManager);
+                if (attackDef != null)
+                {
+                    attackDef.OnBlockProcessed(EntityManager, evt.Card);
+                }
             }
         }
 

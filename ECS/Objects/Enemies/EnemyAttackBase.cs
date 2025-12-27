@@ -47,6 +47,8 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
             }
         }
     }
+    public int AmbushPercentage { get; set; } = 0;
+    public bool IsTextConditionFulfilled { get; set; } = true;
 
     #nullable enable annotations
     public Action<EntityManager>? OnAttackReveal { get; protected set; }
@@ -61,8 +63,10 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
   public enum ConditionType
   {
     OnHit,
-    OnBlockedBy1Card,
-    OnBlockedBy2Cards,
+    OnBlockedByAtLeast1Card,
+    OnBlockedByAtLeast2Cards,
+    OnBlockedByExactly1Card,
+    OnBlockedByExactly2Cards,
     None,
   }
 }

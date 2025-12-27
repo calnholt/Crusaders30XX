@@ -4,10 +4,9 @@ using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Data.Attacks;
 using Microsoft.Xna.Framework;
 using System.IO;
-using Crusaders30XX.ECS.Data.Enemies;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -17,8 +16,6 @@ namespace Crusaders30XX.ECS.Systems
 	/// </summary>
 	public class EnemyIntentPlanningSystem : Core.System
 	{
-		private Dictionary<string, AttackDefinition> _attackDefs;
-		private bool _isFirstLoad = true;
 		private int _lastPlannedTurnNumber = -1;
 
 		public EnemyIntentPlanningSystem(EntityManager em) : base(em)
@@ -34,19 +31,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
-		private void EnsureAttackDefsLoaded()
-		{
-			if (_attackDefs != null) return;
-			_attackDefs = AttackDefinitionCache.GetAll();
-		}
-
 		private void OnStartEnemyTurn(ChangeBattlePhaseEvent evt)
 		{
 			// Reset planning guard when a new battle starts so turn 0 can plan again
 			if (evt.Current == SubPhase.StartBattle)
 			{
 				_lastPlannedTurnNumber = -1;
-				_isFirstLoad = true;
 				return;
 			}
 			if (evt.Current == SubPhase.EnemyStart)
@@ -57,14 +47,13 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					return;
 				}
-                Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
-				EnsureAttackDefsLoaded();
+				Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
 				foreach (var enemy in GetRelevantEntities())
 				{
+					var enemyCmp = enemy.GetComponent<Enemy>();
 					var arsenal = enemy.GetComponent<EnemyArsenal>();
 					if (arsenal == null || arsenal.AttackIds.Count == 0) continue;
-					var enemyCmp = enemy.GetComponent<Enemy>();
-					string enemyId = enemyCmp?.Id ?? "demon";
+					string enemyId = enemyCmp?.EnemyBase?.Id ?? "demon";
 					var intent = enemy.GetComponent<AttackIntent>();
 					if (intent == null)
 					{
@@ -85,31 +74,32 @@ namespace Crusaders30XX.ECS.Systems
 						next.Planned = new List<PlannedAttack>();
 					}
 
-					// Use per-enemy intent service to select attack IDs; centralized planning handles clears, context IDs, and telegraphs
-					IEnemyIntentService service = CreateServiceForEnemy(enemyId);
-					if (service == null) continue;
-                    Console.WriteLine($"[EnemyIntentPlanningSystem] Planning {enemyId} attacks, turn {turnNumber}");
-					// Always clear the next-turn preview before populating
 					next.Planned.Clear();
 					// If current (this turn) is empty, fill it using the prior turn's selection
 					if (intent.Planned.Count == 0)
 					{
-						var currentIds = service.SelectForTurn(enemy, arsenal, Math.Max(0, turnNumber - 1));
+						Console.WriteLine("[EnemyIntentPlanningSystem] Planning current turn");
+						var currentIds = enemyCmp?.EnemyBase?.GetAttackIds(EntityManager, Math.Max(0, turnNumber - 1)) ?? [];
+						Console.WriteLine("[EnemyIntentPlanningSystem] Current turn IDs: " + string.Join(", ", currentIds));
 						AddPlanned(currentIds, intent, enemyId);
 					}
 					// Plan next-turn preview using this turn's selection
-					var nextIds = service.SelectForTurn(enemy, arsenal, Math.Max(0, turnNumber));
+					var nextIds = enemyCmp?.EnemyBase?.GetAttackIds(EntityManager, Math.Max(0, turnNumber)) ?? [];
 					{
 						AddPlanned(nextIds, next, enemyId);
 					}
 				}
 				_lastPlannedTurnNumber = turnNumber;
-				_isFirstLoad = false;
 			}
 			else if (evt.Current == SubPhase.PreBlock)
 			{
 				var intent = EntityManager.GetEntity("Enemy").GetComponent<AttackIntent>();
-				EnemyAttackEffectService.Apply(EntityManager, intent.Planned.FirstOrDefault().AttackDefinition);
+				var planned = intent.Planned.FirstOrDefault();
+				if (planned == null) return;
+				if (planned.AttackDefinition.OnAttackReveal != null)
+				{
+					planned.AttackDefinition.OnAttackReveal(EntityManager);
+				}
 			}
 		}
 
@@ -118,13 +108,10 @@ namespace Crusaders30XX.ECS.Systems
 			int index = (target.Planned is List<PlannedAttack> l) ? l.Count : 0;
 			foreach (var id in attackIds)
 			{
-				if (!_attackDefs.TryGetValue(id, out var def)) continue;
+				var attackDef = EnemyAttackFactory.Create(id);
 				string ctx = Guid.NewGuid().ToString("N");
-				EnemyDefinitionCache.TryGet(enemyId, out var enemyDef);
-				AttackDefinitionCache.TryGet(id, out var attackDef);
-				Console.WriteLine($"[EnemyIntentPlanningSystem] AddPlanned id:{id} enemyId:{enemyId} isGeneric:{attackDef.isGeneric} genericAmbushPercentage:{enemyDef.genericAttackAmbushPercentage} ambushPercentage:{def.ambushPercentage}");
 				var passives = EntityManager.GetEntity("Player").GetComponent<AppliedPassives>().Passives;
-				int ambushChance = def.ambushPercentage + (passives.ContainsKey(AppliedPassiveType.Fear) ? passives[AppliedPassiveType.Fear] * 10 : 0);
+				int ambushChance = attackDef.AmbushPercentage + (passives.ContainsKey(AppliedPassiveType.Fear) ? passives[AppliedPassiveType.Fear] * 10 : 0);
 				target.Planned.Add(new PlannedAttack
 				{
 					AttackId = id,
@@ -132,14 +119,14 @@ namespace Crusaders30XX.ECS.Systems
 					ContextId = ctx,
 					WasBlocked = false,
 					IsAmbush = ambushChance > 0 && Random.Shared.Next(0, 100) < ambushChance,
-					AttackDefinition = attackDef.DeepCopy()
+					AttackDefinition = attackDef
 				});
 				EventManager.Publish(new IntentPlanned
 				{
 					AttackId = id,
 					ContextId = ctx,
 					Step = Math.Max(1, index + 1),
-					TelegraphText = def.name
+					TelegraphText = attackDef.Name
 				});
 				index++;
 			}
@@ -151,24 +138,6 @@ namespace Crusaders30XX.ECS.Systems
 			if (infoEntity == null) return 0;
 			var info = infoEntity.GetComponent<PhaseState>();
 			return info.TurnNumber;
-		}
-
-		private IEnemyIntentService CreateServiceForEnemy(string enemyId)
-		{
-			switch (enemyId)
-			{
-				case "demon": return new DemonIntentService();
-				case "succubus": return new SuccubusIntentService();
-				case "spider": return new SpiderIntentService();
-				case "ogre": return new OgreIntentService();
-				case "skeleton": return new SkeletonIntentService();
-				case "ninja": return new NinjaIntentService();
-				case "gleeber": return new GleeberIntentService();
-				case "sand_corpse": return new SandCorpseIntentService();
-				case "sand_golem": return new SandGolemIntentService();
-				case "mummy": return new MummyIntentService();
-				default: return null;
-			}
 		}
 
 	}

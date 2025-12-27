@@ -3,7 +3,6 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Data.Attacks;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -17,7 +16,7 @@ namespace Crusaders30XX.ECS.Systems
 		public AttackResolutionSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<ResolveAttack>(OnResolveAttack);
-            Console.WriteLine("[AttackResolutionSystem] Subscribed to ResolveAttack");
+			Console.WriteLine("[AttackResolutionSystem] Subscribed to ResolveAttack");
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -44,35 +43,25 @@ namespace Crusaders30XX.ECS.Systems
 				.FirstOrDefault(ent => ent.GetComponent<EnemyAttackProgress>()?.ContextId == pa.ContextId)
 				?.GetComponent<EnemyAttackProgress>();
 
-			bool blocked = ConditionService.Evaluate(def.blockingCondition, EntityManager, progress);
+			bool blocked = ConditionService.Evaluate(def.ConditionType, EntityManager, progress);
 
 			// If a special effect like GlassCannon has already fully prevented this attack
 			// (preview shows 0 damage with the condition met), treat it as blocked and
 			// avoid publishing any base damage.
-			bool fullyPreventedBySpecial = false;
-			if (progress != null && def.specialEffects != null && def.specialEffects.Length > 0)
-			{
-				bool hasGlassCannon = def.specialEffects.Any(se =>
-					string.Equals(se.type, "GlassCannon", StringComparison.OrdinalIgnoreCase));
-				if (hasGlassCannon && progress.IsConditionMet && progress.ActualDamage <= 0)
-				{
-					fullyPreventedBySpecial = true;
-					blocked = true;
-				}
-			}
+			bool fullyPreventedBySpecial = progress != null && progress.FullyPreventedBySpecial;
 
 			pa.WasBlocked = blocked;
 
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var source = enemy;
-			Console.WriteLine($"[AttackResolutionSystem] ResolveAttack {pa.AttackId} {def.damage} isBlocked: {blocked}, fullyPreventedBySpecial: {fullyPreventedBySpecial}");
+			Console.WriteLine($"[AttackResolutionSystem] ResolveAttack {pa.AttackId} {def.Damage} isBlocked: {blocked}, fullyPreventedBySpecial: {fullyPreventedBySpecial}");
 
-			if (def.damage > 0 && !fullyPreventedBySpecial)
+			if (def.Damage > 0 && !fullyPreventedBySpecial)
 			{
 				EventManager.Publish(new ApplyEffect
 				{
 					EffectType = "Damage",
-					Amount = def.damage,
+					Amount = def.Damage,
 					Source = enemy,
 					Target = player,
 					attackId = !blocked ? pa.AttackId : null,
@@ -86,88 +75,38 @@ namespace Crusaders30XX.ECS.Systems
 			// effectsOnNotBlocked (like bonus damage) to misfire.
 			bool blockedAtResolution = blocked;
 
-            Action<ResolvingEnemyDamageEvent> onResolving = null;
-            Action<EnemyDamageAppliedEvent> onApplied = null;
+			Action<ResolvingEnemyDamageEvent> onResolving = null;
+			Action<EnemyDamageAppliedEvent> onApplied = null;
 
-            onResolving = (evt) =>
-            {
-                if (evt.ContextId != pa.ContextId) return;
-
-                // Check if the attack lands:
-                // 1. Not blocked by special condition (blockedAtResolution)
-                // 2. Not blocked by gameplay mitigation (Block/Aegis) if it deals damage
-                bool gameplayBlocked = (def.damage > 0 && !evt.WillHit);
-
-                if (!blockedAtResolution && !gameplayBlocked)
-                {
-                    ApplyEffects(def.effectsOnNotBlocked, source, player);
-                    HandleDiscardSpecificCards(def, pa.ContextId);
-                }
-            };
-
-            onApplied = (evt) =>
-            {
-                if (evt.ContextId != pa.ContextId) return;
-                EventManager.Unsubscribe(onResolving);
-                EventManager.Unsubscribe(onApplied);
-                EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blockedAtResolution });
-            };
-
-            EventManager.Subscribe(onResolving);
-            EventManager.Subscribe(onApplied);
-		}
-
-		private void HandleDiscardSpecificCards(AttackDefinition def, string contextId)
-		{
-			try
+			onResolving = (evt) =>
 			{
-				if (def == null || def.effectsOnNotBlocked == null) return;
-				int amount = def.effectsOnNotBlocked.Where(e => e.type == "DiscardSpecificCard").Sum(e => e.amount);
-				if (amount <= 0) return;
-				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-				var deck = deckEntity?.GetComponent<Deck>();
-				if (deck == null) return;
-				var selected = deck.Hand
-					.Where(c => {
-						var m = c.GetComponent<MarkedForSpecificDiscard>();
-						return m != null && m.ContextId == contextId;
-					})
-					.Take(amount)
-					.ToList();
-				foreach (var c in selected)
+				if (evt.ContextId != pa.ContextId) return;
+
+				// Check if the attack lands:
+				// 1. Not blocked by special condition (blockedAtResolution)
+				// 2. Not blocked by gameplay mitigation (Block/Aegis) if it deals damage
+				bool gameplayBlocked = (def.Damage > 0 && !evt.WillHit);
+
+				if (!blockedAtResolution && !gameplayBlocked)
 				{
-					EntityManager.RemoveComponent<MarkedForSpecificDiscard>(c);
-					EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, ContextId = contextId, Reason = "DiscardSpecificCard" });
-				}
-				// Clear any leftover marks for this context
-				foreach (var c in deck.Hand)
-				{
-					var m = c.GetComponent<MarkedForSpecificDiscard>();
-					if (m != null && m.ContextId == contextId)
+					if (def.OnAttackHit != null)
 					{
-						EntityManager.RemoveComponent<MarkedForSpecificDiscard>(c);
+						def.OnAttackHit(EntityManager);
+						EventManager.Publish(new OnEnemyAttackHitEvent {} );
 					}
 				}
-			}
-			catch { }
-		}
+			};
 
-		private void ApplyEffects(EffectDefinition[] list, Entity source, Entity player)
-		{
-			if (list == null) return;
-			foreach (var eff in list)
+			onApplied = (evt) =>
 			{
-				EventManager.Publish(new ApplyEffect
-				{
-					EffectType = eff.type,
-					Amount = eff.amount,
-					Status = eff.status,
-					Percentage = eff.percentage,
-					Stacks = eff.stacks,
-					Source = source,
-					Target = string.IsNullOrEmpty(eff.target) || eff.target == "Player" ? player : source
-				});
-			}
+				if (evt.ContextId != pa.ContextId) return;
+				EventManager.Unsubscribe(onResolving);
+				EventManager.Unsubscribe(onApplied);
+				EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blockedAtResolution });
+			};
+
+			EventManager.Subscribe(onResolving);
+			EventManager.Subscribe(onApplied);
 		}
 
 	}

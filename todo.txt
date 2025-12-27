@@ -101,3 +101,8 @@ cards -
 
 gain X power this turn
 deal X damage Y times, where Y is your courage. Lose all courage.
+
+RL - 
+
+- self-building queue of enemies
+- 

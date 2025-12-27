@@ -111,4 +111,8 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public string ContextId;
 	}
+
+	public class OnEnemyAttackHitEvent
+	{
+	}
 }

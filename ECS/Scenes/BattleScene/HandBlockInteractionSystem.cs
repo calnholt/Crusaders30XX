@@ -96,8 +96,6 @@ namespace Crusaders30XX.ECS.Systems
 				break; // Only one card per click
 			}
 		}
-
-		private MouseState _prevMouse;
 	}
 }
 

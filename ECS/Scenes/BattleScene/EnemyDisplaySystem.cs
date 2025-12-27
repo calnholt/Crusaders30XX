@@ -92,7 +92,7 @@ namespace Crusaders30XX.ECS.Systems
 				var enemy = e.GetComponent<Enemy>();
 				var t = e.GetComponent<Transform>();
 				if (enemy == null || t == null) continue;
-				Texture2D tex = GetTextureFor(enemy.Type);
+				Texture2D tex = GetTextureFor();
 				if (tex == null) continue;
 				int viewportW = Game1.VirtualWidth;
 				int viewportH = Game1.VirtualHeight;
@@ -159,7 +159,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private Texture2D GetTextureFor(EnemyType type)
+		private Texture2D GetTextureFor()
 		{
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity.GetComponent<QueuedEvents>();

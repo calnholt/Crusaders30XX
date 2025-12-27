@@ -15,10 +15,14 @@ public static class EnemyAttackTextHelper
         {
           case ConditionType.OnHit:
             return "On hit - ";
-          case ConditionType.OnBlockedBy1Card:
-            return "If not blocked by 1 card - ";
-          case ConditionType.OnBlockedBy2Cards:
-            return "If not blocked by 2 cards - ";
+          case ConditionType.OnBlockedByAtLeast1Card:
+            return "If not blocked by at least 1 card - ";
+          case ConditionType.OnBlockedByAtLeast2Cards:
+            return "If not blocked by at least 2 cards - ";
+          case ConditionType.OnBlockedByExactly1Card:
+            return "If not blocked by exactly 1 card - ";
+          case ConditionType.OnBlockedByExactly2Cards:
+            return "If not blocked by exactly 2 cards - ";
           default:
             return "";
         }
@@ -37,9 +41,9 @@ public static class EnemyAttackTextHelper
         case EnemyAttackTextType.Burn:
           return $"Gain [{amount}] burn.";
         case EnemyAttackTextType.Penance:
-          return $"Lose [{amount}] max HP for the rest of the quest.";
+          return $"Gain [{amount}] penance.";
         case EnemyAttackTextType.Armor:
-          return $"Gain [{amount}] armor.";
+          return $"The enemy gains [{amount}] armor.";
         case EnemyAttackTextType.Corrode:
           return $"Each card used to block this attack reduces the block value by [{amount}] for the rest of the quest.";
         case EnemyAttackTextType.Slow:

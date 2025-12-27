@@ -23,8 +23,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
-		private MouseState _prev;
-
 		public override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);

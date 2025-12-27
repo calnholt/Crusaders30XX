@@ -3,7 +3,6 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Enemies;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -25,8 +24,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Dictionary<string, Texture2D> _enemyTextureCache = new Dictionary<string, Texture2D>();
 		private readonly Dictionary<string, Texture2D> _enemySmoothTextureCache = new Dictionary<string, Texture2D>();
 		private const string RootEntityName = "QueuedEventsUIRoot";
-		private int _lastViewportW = -1;
-		private int _lastViewportH = -1;
 
 		// Layout
 		[DebugEditable(DisplayName = "Offset Y", Step = 1, Min = 0, Max = 400)]

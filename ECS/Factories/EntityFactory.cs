@@ -1,7 +1,6 @@
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Data.Enemies;
 using Crusaders30XX.ECS.Data.Temperance;
 using Crusaders30XX.ECS.Data.Equipment;
 using Crusaders30XX.ECS.Data.Medals;
@@ -364,22 +363,17 @@ namespace Crusaders30XX.ECS.Factories
 
         public static Entity CreateEnemyFromId(World world, string enemyId, List<EnemyModification> modifications = null)
         {
-            var all = EnemyDefinitionCache.GetAll();
-            if (!all.TryGetValue(enemyId, out var def))
-            {
-                Console.WriteLine($"[EntityFactory] Enemy id '{enemyId}' not found. Falling back to basic demon.");
-                def = new EnemyDefinition { id = enemyId, name = enemyId, hp = 60, attackIds = new List<string>() };
-            }
+            var def = EnemyFactory.Create(enemyId);
 
             var enemyEntity = world.CreateEntity($"Enemy");
-            var enemy = new Enemy { Id = def.id, Name = def.name ?? def.id, Type = EnemyType.Demon, MaxHealth = def.hp, CurrentHealth = def.hp };
+            var enemy = new Enemy { Id = def.Id, Name = def.Id, MaxHealth = def.MaxHealth, CurrentHealth = def.MaxHealth, EnemyBase = def };
             var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
             world.AddComponent(enemyEntity, enemy);
             world.AddComponent(enemyEntity, enemyTransform);
-            world.AddComponent(enemyEntity, new UIElement { Tooltip = def.name, IsInteractable = false , TooltipPosition = TooltipPosition.Above });
+            world.AddComponent(enemyEntity, new UIElement { Tooltip = def.Name ?? def.Id, IsInteractable = false , TooltipPosition = TooltipPosition.Above });
             world.AddComponent(enemyEntity, new HP { Max = enemy.MaxHealth, Current = enemy.CurrentHealth });
             world.AddComponent(enemyEntity, new PortraitInfo { TextureWidth = 0, TextureHeight = 0, CurrentScale = 1f });
-            world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = new List<string>(def.attackIds) });
+            world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = [.. def.GetAttackIds(world.EntityManager, 0)] });
             world.AddComponent(enemyEntity, new AttackIntent());
             world.AddComponent(enemyEntity, new AppliedPassives());
             world.AddComponent(enemyEntity, new Threat { Amount = 0 });
@@ -387,11 +381,9 @@ namespace Crusaders30XX.ECS.Factories
 
             var playerEntity = world.EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 
-            foreach (var passive in def.passives)
+            if (def.OnCreate != null)
             {
-                Enum.TryParse<AppliedPassiveType>(passive.type, true, out var passiveType);
-                Console.WriteLine($"[EntityFactory] loading passives {passiveType} {passive.amount}");
-                EventManager.Publish(new ApplyPassiveEvent { Target = passive.target == "Player" ? playerEntity : enemyEntity, Delta = passive.amount, Type = passiveType});
+                def.OnCreate(world.EntityManager);
             }
 
             // Apply quest modifications if any

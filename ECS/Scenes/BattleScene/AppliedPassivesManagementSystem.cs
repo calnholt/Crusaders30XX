@@ -5,7 +5,8 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Crusaders30XX.Diagnostics;
 using System;
-using Crusaders30XX.ECS.Data.Enemies;
+using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -30,7 +31,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var typeName = effect.EffectType ?? string.Empty;
             if (!Enum.TryParse<AppliedPassiveType>(typeName, true, out var passiveType)) return;
-			EventManager.Publish(new ApplyPassiveEvent { Delta = effect.Amount, Target = effect.Target, Type = passiveType });
+            EventManager.Publish(new ApplyPassiveEvent { Delta = effect.Amount, Target = effect.Target, Type = passiveType });
             switch (passiveType)
             {
                 case AppliedPassiveType.Aegis:
@@ -94,9 +95,9 @@ namespace Crusaders30XX.ECS.Systems
         private void EnemyShieldsMaintenance(Entity enemyEntity)
         {
             var enemy = enemyEntity.GetComponent<Enemy>();
-            EnemyDefinitionCache.TryGet(enemy.Id, out var def);
-            var shield = def.passives.Find(p => p.type == "Shield");
-            if (shield != null)
+            var def = EnemyFactory.Create(enemy.Id);
+            var shield = def.Passives.Find(p => p == AppliedPassiveType.Shield);
+            if (shield == AppliedPassiveType.Shield)
             {
                 var appliedPassives = enemyEntity.GetComponent<AppliedPassives>();
                 appliedPassives.Passives.TryGetValue(AppliedPassiveType.Shield, out var shieldAmount);
@@ -176,6 +177,18 @@ namespace Crusaders30XX.ECS.Systems
                         }
                     }, .4f);
                 }
+            }
+
+            if (ap.Passives.TryGetValue(AppliedPassiveType.Aggression, out int aggressionStacks) && aggressionStacks > 0)
+            {
+                var attackDef = GetComponentHelper.GetPlannedAttack(EntityManager);
+                if (attackDef == null) return;
+                attackDef.Damage += aggressionStacks;
+                EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Aggression });
+                TimerScheduler.Schedule(0.3f, () =>
+                {
+                    EventManager.Publish(new RemovePassive { Owner = owner, Type = AppliedPassiveType.Aggression });
+                });
             }
         }
 

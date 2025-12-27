@@ -83,7 +83,7 @@ public class EightLimbsOfDeath : EnemyAttackBase
     Id = "eight_limbs_of_death";
     Name = "Eight Limbs of Death";
     Damage = 8;
-    ConditionType = ConditionType.OnBlockedBy1Card;
+    ConditionType = ConditionType.OnBlockedByAtLeast1Card;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Fear, 1, ConditionType);
 
     OnAttackHit = (entityManager) =>
