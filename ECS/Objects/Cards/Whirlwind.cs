@@ -12,10 +12,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "whirlwind";
             Name = "Whirlwind";
             Target = "Enemy";
-            Text = "Attacks {3} times.";
+            Text = "Attacks {2} times.";
             Cost = ["Black"];
             Animation = "Attack";
-            Damage = 5;
+            Damage = 8;
             Block = 3;
 
             OnPlay = (entityManager, card) =>

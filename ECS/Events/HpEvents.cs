@@ -50,6 +50,11 @@ namespace Crusaders30XX.ECS.Events
     {
         public Entity Player { get; set; }
     }
+    public class HealEvent
+    {
+        public Entity Target { get; set; }
+        public int Delta { get; set; }
+    }
 }
 
 

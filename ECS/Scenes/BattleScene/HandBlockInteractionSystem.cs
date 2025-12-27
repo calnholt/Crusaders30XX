@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Objects.Cards;
+using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -66,6 +68,58 @@ namespace Crusaders30XX.ECS.Systems
 				if (data.Card.Type == CardType.Block && !data.Card.CanPlay(EntityManager, card))
 				{
 					return;
+				}
+				var enemyAttack = GetComponentHelper.GetPlannedAttack(EntityManager);
+				if (enemyAttack != null && enemyAttack.BlockingRestrictionType != BlockingRestrictionType.None)
+				{
+					var message = EnemyAttackTextHelper.GetBlockingRestrictionText(enemyAttack.BlockingRestrictionType);
+					if (message.EndsWith(".")) message = message.Substring(0, message.Length - 1) + "!";
+					var canPlay = true;
+					switch (enemyAttack.BlockingRestrictionType)
+					{
+						case BlockingRestrictionType.OnlyRed:
+							if (data.Color != CardData.CardColor.Red) 
+							{ 
+								canPlay = false;
+							}
+							break;
+						case BlockingRestrictionType.OnlyBlack:
+							if (data.Color != CardData.CardColor.Black) 
+							{ 
+								canPlay = false;
+							}
+							break;
+						case BlockingRestrictionType.OnlyWhite:
+							if (data.Color != CardData.CardColor.White) 
+							{ 
+								canPlay = false;
+							}
+							break;
+						case BlockingRestrictionType.NotRed:
+							if (data.Color == CardData.CardColor.Red) 
+							{ 
+								canPlay = false;
+							}
+							break;
+						case BlockingRestrictionType.NotBlack:
+							if (data.Color == CardData.CardColor.Black) 
+							{ 
+								canPlay = false;
+							}
+							break;
+						case BlockingRestrictionType.NotWhite:
+							if (data.Color == CardData.CardColor.White) 
+							{ 
+								canPlay = false;
+							}
+							break;
+					}
+					if (!canPlay)
+					{
+						EventManager.Publish(new CantPlayCardMessage { Message = message });
+						break;
+					}
+						
 				}
 				// Assign this card as block (always assign from hand); color from card
 				int blockVal = BlockValueService.GetTotalBlockValue(card);

@@ -59,6 +59,12 @@ namespace Crusaders30XX.ECS.Factories
                 // Mummy attacks
                 "entomb" => new Entomb(),
                 "mummify" => new Mummify(),
+                // Succubus attacks
+                "velvet_fangs" => new VelvetFangs(),
+                "soul_siphon" => new SoulSiphon(),
+                "enthralling_gaze" => new EnthrallingGaze(),
+                "crushing_adoration" => new CrushingAdoration(),
+                "teasing_nip" => new TeasingNip(),
                 // Generic attacks
                 "have_no_mercy" => new HaveNoMercy(),
                 _ => null
@@ -114,6 +120,12 @@ namespace Crusaders30XX.ECS.Factories
                 // Mummy attacks
                 { "entomb", new Entomb() },
                 { "mummify", new Mummify() },
+                // Succubus attacks
+                { "velvet_fangs", new VelvetFangs() },
+                { "soul_siphon", new SoulSiphon() },
+                { "enthralling_gaze", new EnthrallingGaze() },
+                { "crushing_adoration", new CrushingAdoration() },
+                { "teasing_nip", new TeasingNip() },
                 // Generic attacks
                 { "have_no_mercy", new HaveNoMercy() },
             };

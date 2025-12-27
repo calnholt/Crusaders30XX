@@ -66,6 +66,10 @@ namespace Crusaders30XX.ECS.Systems
                 EnemyShieldsMaintenance(enemy);
                 ApplyStartOfTurnPassives(enemy);
             }
+            else if (evt.Current == SubPhase.EnemyEnd)
+            {
+                RemoveTurnPassives(enemy);
+            }
             else if (evt.Current == SubPhase.PlayerStart)
             {
                 ApplyStartOfTurnPassives(player);

@@ -39,6 +39,28 @@ namespace Crusaders30XX.ECS.Utils
 				yield return source[idx];
 			}
 		}
+
+		/// <summary>
+		/// Returns a sequence of up to 'count' elements randomly sampled from source, without replacement.
+		/// If count is greater than the source count, all elements are returned in random order.
+		/// </summary>
+		public static IEnumerable<T> TakeRandomWithoutReplacement<T>(IList<T> source, int count, Random rng = null)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (count <= 0 || source.Count == 0) yield break;
+			rng ??= new Random();
+
+			// Copy list to avoid modifying original
+			var items = source.ToList();
+			int returnCount = Math.Min(count, items.Count);
+
+			for (int i = 0; i < returnCount; i++)
+			{
+				int idx = rng.Next(items.Count);
+				yield return items[idx];
+				items.RemoveAt(idx);
+			}
+		}
 	}
 }
 

@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Objects.Cards;
+using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 namespace Crusaders30XX.ECS.Systems
 {

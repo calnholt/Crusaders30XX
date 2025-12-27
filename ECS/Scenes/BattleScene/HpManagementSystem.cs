@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<SetHpEvent>(OnSetHp);
 			EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
 			EventManager.Subscribe<FullyHealEvent>(OnFullyHeal);
+			EventManager.Subscribe<HealEvent>(OnHeal);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -109,6 +110,15 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EventManager.Publish(new PlayerDied { Player = target });
 			}
+		}
+
+		private void OnHeal(HealEvent e)
+		{
+			var target = ResolveTarget(e.Target);
+			if (target == null) return;
+			var hp = target.GetComponent<HP>();
+			if (hp == null) return;
+			hp.Current = Math.Max(0, Math.Min(hp.Max, hp.Current + e.Delta));
 		}
 
 		private void OnFullyHeal(FullyHealEvent e)

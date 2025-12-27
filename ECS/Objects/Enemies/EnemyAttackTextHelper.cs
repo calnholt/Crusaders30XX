@@ -60,6 +60,27 @@ public static class EnemyAttackTextHelper
           return string.Empty;
       }
     }
+
+    public static string GetBlockingRestrictionText(BlockingRestrictionType blockingRestrictionType)
+    {
+      switch (blockingRestrictionType)
+      {
+        case BlockingRestrictionType.OnlyRed:
+          return "Only red cards can block this attack.";
+        case BlockingRestrictionType.OnlyBlack:
+          return "Only black cards can block this attack.";
+        case BlockingRestrictionType.OnlyWhite:
+          return "Only white cards can block this attack.";
+        case BlockingRestrictionType.NotRed:
+          return "Only non-red cards can block this attack.";
+        case BlockingRestrictionType.NotBlack:
+          return "Only non-black cards can block this attack.";
+        case BlockingRestrictionType.NotWhite:
+          return "Only non-white cards can block this attack.";
+        default:
+          return "";
+      }
+    }
   }
 
 

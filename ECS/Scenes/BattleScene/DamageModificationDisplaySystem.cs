@@ -93,6 +93,7 @@ namespace Crusaders30XX.ECS.Systems
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             EventManager.Subscribe<ModifyHpEvent>(OnModifyHp);
+            EventManager.Subscribe<HealEvent>(e => OnModifyHp(new ModifyHpEvent { Target = e.Target, Delta = e.Delta, DamageType = ModifyTypeEnum.Heal }));
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

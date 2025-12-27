@@ -293,6 +293,27 @@
       ]
     },
     {
+      "Id": "desert_14",
+      "WorldPosition": [
+        915,
+        1820
+      ],
+      "RevealRadius": 400,
+      "UnrevealedRadius": 150,
+      "Type": "Quest",
+      "Name": "Fangs of the Beast",
+      "Difficulty": 3,
+      "Reward": {
+        "Gold": 3
+      },
+      "Events": [
+        {
+          "id": "succubus",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
       "Id": "desert_7",
       "WorldPosition": [
         4775,

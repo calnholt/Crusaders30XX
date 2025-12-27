@@ -22,5 +22,12 @@ namespace Crusaders30XX.ECS.Services
             if (intent == null) return null;
             return intent.GetComponent<AttackIntent>().Planned.FirstOrDefault()?.ContextId;
         }
+
+        public static BattleStateInfo GetBattleStateInfo(EntityManager entityManager)
+        {
+            var battleStateInfo = entityManager.GetEntitiesWithComponent<BattleStateInfo>().FirstOrDefault();
+            if (battleStateInfo == null) return null;
+            return battleStateInfo.GetComponent<BattleStateInfo>();
+        }
     }
 }

@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     public string Name { get; set; }
     public int Damage { get; set; }
     public ConditionType ConditionType { get; set; } = ConditionType.None;
+    public BlockingRestrictionType BlockingRestrictionType { get; set; } = BlockingRestrictionType.None;
     public int[] ValuesParse { get; set; } = [];
     private string _text = "";
     public string Text
@@ -71,5 +72,16 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     MustBeBlockedByExactly1Card,
     MustBeBlockedByExactly2Cards,
     None,
+  }
+
+  public enum BlockingRestrictionType
+  {
+    None,
+    OnlyRed,
+    OnlyBlack,
+    OnlyWhite,
+    NotRed,
+    NotBlack,
+    NotWhite,
   }
 }
