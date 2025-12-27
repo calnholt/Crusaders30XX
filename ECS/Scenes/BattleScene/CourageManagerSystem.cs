@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		public CourageManagerSystem(EntityManager entityManager) : base(entityManager)
 		{
-			EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourage);
+			EventManager.Subscribe<ModifyCourageRequestEvent>(OnModifyCourage);
 			EventManager.Subscribe<SetCourageEvent>(OnSetCourageEvent);
 			EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
 			EventManager.Subscribe<CardMoved>(OnCardMoved);
@@ -29,7 +29,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
-		private void OnModifyCourage(ModifyCourageEvent evt)
+		private void OnModifyCourage(ModifyCourageRequestEvent evt)
 		{
             Console.WriteLine($"[CourageManagerSystem] OnModifyCourage delta={evt.Delta}");
 			var player = EntityManager.GetEntitiesWithComponent<Player>()
@@ -38,8 +38,10 @@ namespace Crusaders30XX.ECS.Systems
 			var courage = player.GetComponent<Courage>();
 			if (courage == null) return;
 			int old = courage.Amount;
-			courage.Amount = Math.Max(0, old + evt.Delta);
-			var st = player.GetComponent<BattleStateInfo>();
+			int amount = Math.Max(0, old + evt.Delta);
+			int newAmount = amount;
+			courage.Amount = newAmount;
+			EventManager.Publish(new ModifyCourageEvent { Delta = newAmount - old, Reason = evt.Reason });
 		}
 
 		private void OnSetCourageEvent(SetCourageEvent evt)
@@ -62,7 +64,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (evt.Target == null || !evt.Target.HasComponent<Player>()) return;
 			int amt = Math.Max(0, evt.Amount);
 			if (amt <= 0) amt = 1; // default to 1 if unspecified or invalid
-			EventManager.Publish(new ModifyCourageEvent { Delta = -amt });
+			EventManager.Publish(new ModifyCourageRequestEvent { Delta = -amt });
 		}
 
 		private void OnCardMoved(CardMoved evt)

@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Core
         private readonly Dictionary<int, Entity> _entities = new();
         private readonly Dictionary<Type, List<Entity>> _componentToEntities = new();
         private int _nextEntityId = 1;
-        
+
         /// <summary>
         /// Creates a new entity and returns it
         /// </summary>
@@ -24,7 +24,7 @@ namespace Crusaders30XX.ECS.Core
             {
                 Name = name
             };
-            
+
             _entities[entity.Id] = entity;
             // Auto-tag entity with the current scene for lifecycle cleanup
             try
@@ -36,7 +36,7 @@ namespace Crusaders30XX.ECS.Core
             catch { /* best-effort; ignore during early bootstrap */ }
             return entity;
         }
-        
+
         /// <summary>
         /// Destroys an entity and removes all its components
         /// </summary>
@@ -44,8 +44,37 @@ namespace Crusaders30XX.ECS.Core
         {
             if (!_entities.TryGetValue(entityId, out var entity))
                 return;
-                
-            // Remove entity from all component mappings
+
+            // Dispose the entity if it implements IDisposable
+            if (entity is IDisposable disposable)
+            {
+                try
+                {
+                    disposable.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[EntityManager] Dispose failed for entity '{entityId}': {ex}");
+                }
+            }
+
+            // Dispose any disposable components (if they exist separately from the entity)
+            foreach (var component in entity.GetAllComponents())
+            {
+                if (component is IDisposable compDisposable)
+                {
+                    try
+                    {
+                        compDisposable.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[EntityManager] Dispose failed for component '{component.GetType().Name}': {ex}");
+                    }
+                }
+            }
+
+            // Remove entity from component lookup tables
             foreach (var componentType in entity.GetComponentTypes())
             {
                 if (_componentToEntities.TryGetValue(componentType, out var entities))
@@ -53,9 +82,10 @@ namespace Crusaders30XX.ECS.Core
                     entities.Remove(entity);
                 }
             }
-            
+
             _entities.Remove(entityId);
         }
+
 
         public void DestroyEntity(string identifier)
         {
@@ -69,7 +99,7 @@ namespace Crusaders30XX.ECS.Core
             if (entity == null) return;
             DestroyEntity(entity.Id);
         }
-        
+
         /// <summary>
         /// Adds a component to an entity
         /// </summary>
@@ -77,19 +107,19 @@ namespace Crusaders30XX.ECS.Core
         {
             component.Owner = entity;
             entity.AddComponent(component);
-            
+
             var componentType = typeof(T);
             if (!_componentToEntities.ContainsKey(componentType))
             {
                 _componentToEntities[componentType] = new List<Entity>();
             }
-            
+
             if (!_componentToEntities[componentType].Contains(entity))
             {
                 _componentToEntities[componentType].Add(entity);
             }
         }
-        
+
         /// <summary>
         /// Removes a component from an entity
         /// </summary>
@@ -97,24 +127,24 @@ namespace Crusaders30XX.ECS.Core
         {
             var componentType = typeof(T);
             entity.RemoveComponent<T>();
-            
+
             if (_componentToEntities.TryGetValue(componentType, out var entities))
             {
                 entities.Remove(entity);
             }
         }
-        
+
         /// <summary>
         /// Gets all entities that have a specific component
         /// </summary>
         public IEnumerable<Entity> GetEntitiesWithComponent<T>() where T : class, IComponent
         {
             var componentType = typeof(T);
-            return _componentToEntities.TryGetValue(componentType, out var entities) 
-                ? entities.Where(e => e.IsActive) 
+            return _componentToEntities.TryGetValue(componentType, out var entities)
+                ? entities.Where(e => e.IsActive)
                 : Enumerable.Empty<Entity>();
         }
-        
+
         /// <summary>
         /// Gets all entities that have all of the specified components
         /// </summary>
@@ -122,27 +152,27 @@ namespace Crusaders30XX.ECS.Core
         {
             if (componentTypes.Length == 0)
                 return Enumerable.Empty<Entity>();
-                
+
             // Start with entities that have the first component
             var result = GetEntitiesWithComponentType(componentTypes[0]);
-            
+
             // Intersect with entities that have the remaining components
             for (int i = 1; i < componentTypes.Length; i++)
             {
                 var entitiesWithComponent = GetEntitiesWithComponentType(componentTypes[i]);
                 result = result.Intersect(entitiesWithComponent);
             }
-            
+
             return result.Where(e => e.IsActive);
         }
-        
+
         private IEnumerable<Entity> GetEntitiesWithComponentType(Type componentType)
         {
-            return _componentToEntities.TryGetValue(componentType, out var entities) 
-                ? entities 
+            return _componentToEntities.TryGetValue(componentType, out var entities)
+                ? entities
                 : Enumerable.Empty<Entity>();
         }
-        
+
         /// <summary>
         /// Gets all active entities
         /// </summary>
@@ -150,7 +180,7 @@ namespace Crusaders30XX.ECS.Core
         {
             return _entities.Values.Where(e => e.IsActive);
         }
-        
+
         /// <summary>
         /// Gets an entity by its ID
         /// </summary>
@@ -158,7 +188,7 @@ namespace Crusaders30XX.ECS.Core
         {
             return _entities.TryGetValue(entityId, out var entity) ? entity : null;
         }
-        
+
         /// <summary>
         /// Gets the first active entity by its Name (exact match).
         /// Returns null if not found.
@@ -168,7 +198,7 @@ namespace Crusaders30XX.ECS.Core
             if (string.IsNullOrEmpty(name)) return null;
             return _entities.Values.FirstOrDefault(e => e.IsActive && string.Equals(e.Name, name, StringComparison.Ordinal));
         }
-        
+
         /// <summary>
         /// Clears all entities and components
         /// </summary>
@@ -179,4 +209,4 @@ namespace Crusaders30XX.ECS.Core
             _nextEntityId = 1;
         }
     }
-} 
+}

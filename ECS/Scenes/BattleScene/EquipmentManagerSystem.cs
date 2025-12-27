@@ -18,7 +18,7 @@ namespace Crusaders30XX.ECS.Systems
 		public EquipmentManagerSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnPhaseChanged);
-			EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourage);
+			EventManager.Subscribe<ModifyCourageRequestEvent>(OnModifyCourage);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -39,7 +39,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void OnModifyCourage(ModifyCourageEvent e)
+		private void OnModifyCourage(ModifyCourageRequestEvent e)
 		{
 			if (e.Delta <= 0) return;
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();

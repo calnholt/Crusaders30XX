@@ -99,7 +99,7 @@ namespace Crusaders30XX.ECS.Objects.Medals
             });
             
             // Grant courage
-            EventManager.Publish(new ModifyCourageEvent { Delta = 1 });
+            EventManager.Publish(new ModifyCourageRequestEvent { Delta = 1 });
         }
 
         public override void Cleanup()

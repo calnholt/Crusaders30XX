@@ -21,7 +21,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
             OnPlay = (entityManager, card) =>
             {
-                EventManager.Publish(new ModifyCourageEvent { Delta = -ValuesParse[0] });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -ValuesParse[0] });
                 EventManager.Publish(new ModifyHpRequestEvent
                 {
                     Source = entityManager.GetEntity("Player"),

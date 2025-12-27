@@ -31,7 +31,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var random = Random.Shared.Next(0, 100);
                 if (random <= chance)
                 {
-                    EventManager.Publish(new ModifyCourageEvent { Delta = ValuesParse[1] });
+                    EventManager.Publish(new ModifyCourageRequestEvent { Delta = ValuesParse[1] });
                 }
             };
         }

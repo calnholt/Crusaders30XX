@@ -95,7 +95,7 @@ namespace Crusaders30XX.ECS.Systems
 						break;
 					}
 				case "st_michael":
-					EventManager.Publish(new ModifyCourageEvent { Delta = 1 });
+					EventManager.Publish(new ModifyCourageRequestEvent { Delta = 1 });
 					break;
 				default:
 					break;

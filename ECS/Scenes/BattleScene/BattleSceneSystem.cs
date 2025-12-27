@@ -358,7 +358,7 @@ namespace Crusaders30XX.ECS.Systems
 			EntityManager.DestroyEntity("Enemy");
 			Console.WriteLine($"queued.Events.Count: {queued.Events.Count}, queued.CurrentIndex: {queued.CurrentIndex}");
 			var nextEvent = queued.Events[++queued.CurrentIndex];
-			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, nextEvent.EventId, nextEvent.Modifications);
+			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, nextEvent.EventId, EntityManager, nextEvent.Modifications);
 			EventManager.Publish(new ResetDeckEvent { });
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
 			// Reset phase state at the start of every battle so we don't inherit the previous battle's sub-phase.

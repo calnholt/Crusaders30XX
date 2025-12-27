@@ -106,7 +106,7 @@ namespace Crusaders30XX.ECS.Systems
 							{ 
 								canPlay = false;
 							}
-							break;
+							break; 
 						case BlockingRestrictionType.NotWhite:
 							if (data.Color == CardData.CardColor.White) 
 							{ 

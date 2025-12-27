@@ -45,13 +45,13 @@ namespace Crusaders30XX.ECS.Systems
         [DebugAction("+ Courage")]
         public void Debug_IncreaseCourage()
         {
-            EventManager.Publish(new ModifyCourageEvent { Delta = 1 });
+            EventManager.Publish(new ModifyCourageRequestEvent { Delta = 1 });
         }
 
         [DebugAction("- Courage")]
         public void Debug_DecreaseCourage()
         {
-            EventManager.Publish(new ModifyCourageEvent { Delta = -1 });
+            EventManager.Publish(new ModifyCourageRequestEvent { Delta = -1 });
         }
 
         [DebugAction("Set Battlefield: Desert")]

@@ -25,7 +25,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
-                EventManager.Publish(new ModifyCourageEvent { Delta = -ValuesParse[0] });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -ValuesParse[0] });
                 EventManager.Publish(new ModifyActionPointsEvent { Delta = ValuesParse[1] });
                 EventManager.Publish(new ModifyHpRequestEvent { 
                     Source = player, 

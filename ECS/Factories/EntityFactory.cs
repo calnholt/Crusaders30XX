@@ -361,9 +361,10 @@ namespace Crusaders30XX.ECS.Factories
             return entity;
         }
 
-        public static Entity CreateEnemyFromId(World world, string enemyId, List<EnemyModification> modifications = null)
+        public static Entity CreateEnemyFromId(World world, string enemyId, EntityManager entityManager, List<EnemyModification> modifications = null)
         {
             var def = EnemyFactory.Create(enemyId);
+            def.EntityManager = entityManager;
 
             var enemyEntity = world.CreateEntity($"Enemy");
             var enemy = new Enemy { Id = def.Id, Name = def.Id, MaxHealth = def.MaxHealth, CurrentHealth = def.MaxHealth, EnemyBase = def };

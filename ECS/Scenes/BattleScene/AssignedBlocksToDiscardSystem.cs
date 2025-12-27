@@ -131,7 +131,7 @@ namespace Crusaders30XX.ECS.Systems
                             string c = (def.color ?? string.Empty).Trim().ToLowerInvariant();
                             if (c == "red" || c == "r")
                             {
-                                EventManager.Publish(new ModifyCourageEvent { Delta = 1 });
+                                EventManager.Publish(new ModifyCourageRequestEvent { Delta = 1 });
                             }
                             else if (c == "white" || c == "w")
                             {

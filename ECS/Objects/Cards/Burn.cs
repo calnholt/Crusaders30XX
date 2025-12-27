@@ -25,7 +25,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 if (courage >= ValuesParse[1])
                 {
                     EventManager.Publish(new ModifyActionPointsEvent { Delta = ValuesParse[2] });
-                    EventManager.Publish(new ModifyCourageEvent { Delta = -ValuesParse[3] });
+                    EventManager.Publish(new ModifyCourageRequestEvent { Delta = -ValuesParse[3] });
                 }
             };
         }

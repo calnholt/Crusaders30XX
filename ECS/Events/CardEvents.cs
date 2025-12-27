@@ -71,9 +71,15 @@ namespace Crusaders30XX.ECS.Events
     /// <summary>
     /// Increases or decreases the player's Courage by Delta
     /// </summary>
+    public class ModifyCourageRequestEvent
+    {
+        public int Delta { get; set; } = 0;
+        public string Reason { get; set; } = "";
+    }
     public class ModifyCourageEvent
     {
         public int Delta { get; set; } = 0;
+        public string Reason { get; set; } = "";
     }
     /// <summary>
     /// Sets the player's Courage

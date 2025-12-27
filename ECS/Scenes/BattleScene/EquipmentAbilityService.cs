@@ -37,7 +37,7 @@ namespace Crusaders30XX.ECS.Systems
 					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;
 				case "pierced_heart_plate":
-					EventManager.Publish(new ModifyCourageEvent { Delta = Math.Max(1, ability.effectCount) });
+					EventManager.Publish(new ModifyCourageRequestEvent { Delta = Math.Max(1, ability.effectCount) });
 					EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
 					EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
 					break;

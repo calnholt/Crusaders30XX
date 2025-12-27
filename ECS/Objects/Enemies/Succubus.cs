@@ -15,9 +15,18 @@ public class Succubus : EnemyBase
 {
   public Succubus()
   {
+    EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourageEvent);
     Id = "succubus";
     Name = "Succubus";
     MaxHealth = 85;
+  }
+
+  private void OnModifyCourageEvent(ModifyCourageEvent evt)
+  {
+    if (evt.Reason == "Succubus" && EntityManager != null)
+    {
+      EventManager.Publish(new HealEvent { Target = EntityManager.GetEntity("Enemy"), Delta = -evt.Delta });
+    }
   }
 
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
@@ -40,10 +49,15 @@ public class Succubus : EnemyBase
     if (courage == null) return;
     var courageAmount = courage.GetComponent<Courage>().Amount;
     int courageLost = System.Math.Min(System.Math.Abs(amount), courageAmount);
-    EventManager.Publish(new ModifyCourageEvent { Delta = -amount });
+    EventManager.Publish(new ModifyCourageRequestEvent { Delta = -amount, Reason = "Succubus" });
     EventManager.Publish(new TrackingEvent { Type = "courage_lost", Delta = courageLost });
   }
 
+    public override void Dispose()
+    {
+        Console.WriteLine($"[Succubus] Unsubscribed from ModifyCourageEvent");
+        EventManager.Unsubscribe<ModifyCourageEvent>(OnModifyCourageEvent);
+    }
 }
 
 public class SoulSiphon : EnemyAttackBase

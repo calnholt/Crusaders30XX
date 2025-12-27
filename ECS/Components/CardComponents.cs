@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Objects.Enemies;
+using System;
 
 namespace Crusaders30XX.ECS.Components
 {
@@ -77,8 +78,16 @@ namespace Crusaders30XX.ECS.Components
     /// <summary>
     /// Component for enemies
     /// </summary>
-    public class Enemy : IComponent
+    public class Enemy : IComponent, IDisposable
     {
+        public void Dispose()
+        {
+            if (EnemyBase != null)
+            {
+                EnemyBase.Dispose();
+            }
+        }
+
         public Entity Owner { get; set; }
         
         public string Id { get; set; } = "demon";

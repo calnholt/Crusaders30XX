@@ -25,7 +25,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<StartBattleRequested>(_ => ClearBattleTracking());
             EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
             EventManager.Subscribe<TrackingEvent>(OnTrackingEvent);
-            EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourage);
+            EventManager.Subscribe<ModifyCourageRequestEvent>(OnModifyCourage);
             EventManager.Subscribe<SetCourageEvent>(OnSetCourageEvent);
             EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
         }
@@ -95,7 +95,7 @@ namespace Crusaders30XX.ECS.Systems
           AddToDict(st.PhaseTracking, e);
         }
 
-        private void OnModifyCourage(ModifyCourageEvent e)
+        private void OnModifyCourage(ModifyCourageRequestEvent e)
         {
           OnTrackingEvent(new TrackingEvent { Type = e.Delta > 0 ? TrackingTypeEnum.CourageGained.ToString() : TrackingTypeEnum.CourageLost.ToString(), Delta = Math.Abs(e.Delta) });
         }

@@ -99,7 +99,7 @@ namespace Crusaders30XX.ECS.Systems
         private void EnemyShieldsMaintenance(Entity enemyEntity)
         {
             var enemy = enemyEntity.GetComponent<Enemy>();
-            var def = EnemyFactory.Create(enemy.Id);
+            var def = enemy.EnemyBase;
             var shield = def.Passives.Find(p => p == AppliedPassiveType.Shield);
             if (shield == AppliedPassiveType.Shield)
             {
