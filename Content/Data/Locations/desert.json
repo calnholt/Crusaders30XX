@@ -452,6 +452,11 @@
           "Price": 1
         },
         {
+          "Id": "narrow_gate",
+          "Type": "Card",
+          "Price": 1
+        },
+        {
           "Id": "st_luke",
           "Type": "Medal",
           "Price": 2
@@ -494,6 +499,16 @@
           "Price": 1
         },
         {
+          "Id": "ravage",
+          "Type": "Card",
+          "Price": 1
+        },
+        {
+          "Id": "shield_of_faith",
+          "Type": "Card",
+          "Price": 1
+        },
+        {
           "Id": "purging_bracers",
           "Type": "Equipment",
           "Price": 3
@@ -527,6 +542,16 @@
         },
         {
           "Id": "whirlwind",
+          "Type": "Card",
+          "Price": 1
+        },
+        {
+          "Id": "reconciled",
+          "Type": "Card",
+          "Price": 1
+        },
+        {
+          "Id": "purge",
           "Type": "Card",
           "Price": 1
         },

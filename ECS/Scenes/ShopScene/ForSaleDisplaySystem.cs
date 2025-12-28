@@ -35,15 +35,15 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Layout
 		[DebugEditable(DisplayName = "Max Columns", Step = 1, Min = 1, Max = 8)]
-		public int MaxColumns { get; set; } = 3;
+		public int MaxColumns { get; set; } = 4;
 		[DebugEditable(DisplayName = "Tile Width", Step = 5, Min = 80, Max = 800)]
-		public int TileWidth { get; set; } = 435;
+		public int TileWidth { get; set; } = 425;
 		[DebugEditable(DisplayName = "Tile Height", Step = 5, Min = 80, Max = 800)]
 		public int TileHeight { get; set; } = 275;
 		[DebugEditable(DisplayName = "Horizontal Gap", Step = 2, Min = 0, Max = 200)]
-		public int HorizontalGap { get; set; } = 18;
+		public int HorizontalGap { get; set; } = 32;
 		[DebugEditable(DisplayName = "Vertical Gap", Step = 2, Min = 0, Max = 200)]
-		public int VerticalGap { get; set; } = 80;
+		public int VerticalGap { get; set; } = 24;
 		[DebugEditable(DisplayName = "Panel Margin X", Step = 2, Min = 0, Max = 400)]
 		public int PanelMarginX { get; set; } = 60;
 		[DebugEditable(DisplayName = "Panel Margin Top", Step = 2, Min = 0, Max = 800)]
@@ -309,8 +309,8 @@ namespace Crusaders30XX.ECS.Systems
 							var drawSpecs = new (CardData.CardColor color, int dx, float rot)[]
 							{
 								// Back to front: black, red, white (white on top)
-								(CardData.CardColor.Black, -ColorFanSpacingX, -angle),
-								(CardData.CardColor.Red, 0, 0f),
+								(CardData.CardColor.Red, -ColorFanSpacingX, -angle),
+								(CardData.CardColor.Black, 0, 0f),
 								(CardData.CardColor.White, ColorFanSpacingX, angle)
 							};
 							foreach (var spec in drawSpecs)

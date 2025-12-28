@@ -36,7 +36,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (i >= 0) matches.Add((i, "X Armor - Take X less damage from attacks this battle."));
 			i = lowerText.IndexOf("bleed");
 			if (i >= 0) matches.Add((i, "X Bleed - While you have bleed, lose 1 HP at the start of your turn then remove one bleed. Lasts for the rest of the quest."));
-
+			i = lowerText.IndexOf("mill");
+			if (i >= 0) matches.Add((i, "Mill X - Discard the top X cards of your deck."));
 			if (matches.Count == 0) return string.Empty;
 			matches.Sort((a, b) => a.Index.CompareTo(b.Index));
 			var parts = new string[matches.Count];

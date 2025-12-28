@@ -41,6 +41,7 @@ public class SuffocatingSilk : EnemyAttackBase
     Damage = 2;
     ConditionType = ConditionType.OnHit;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Slow, 4, ConditionType);
+    AmbushPercentage = 75;
 
     OnAttackHit = (entityManager) =>
     {
@@ -57,8 +58,8 @@ public class MandibleBreaker : EnemyAttackBase
     Name = "Mandible Breaker";
     Damage = 6;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Fear, 1, ConditionType);
-
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Fear, 2, ConditionType);
+    AmbushPercentage = 75;
     OnAttackHit = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Fear, Delta = ValuesParse[0] });
@@ -75,7 +76,7 @@ public class RafterfallAmbush : EnemyAttackBase
     Damage = 8;
     ConditionType = ConditionType.MustBeBlockedByAtLeast1Card;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 1);
-
+    AmbushPercentage = 75;
     OnAttackReveal = (entityManager) =>
     {
       EventManager.Publish(new MustBeBlockedEvent { Threshold = ValuesParse[0], Type = MustBeBlockedByType.AtLeast });
@@ -91,8 +92,8 @@ public class EightLimbsOfDeath : EnemyAttackBase
     Name = "Eight Limbs of Death";
     Damage = 8;
     ConditionType = ConditionType.OnBlockedByAtLeast1Card;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Fear, 1, ConditionType);
-
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Fear, 2, ConditionType);
+    AmbushPercentage = 75;
     OnAttackHit = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Fear, Delta = ValuesParse[0] });
@@ -109,7 +110,7 @@ public class FangFeint : EnemyAttackBase
     Damage = 1;
     ConditionType = ConditionType.OnHit;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Aggression, 4, ConditionType, 50);
-    
+    AmbushPercentage = 75;
     OnAttackHit = (entityManager) =>
     {
       if (Random.Shared.Next(0, 100) < ValuesParse[1])
