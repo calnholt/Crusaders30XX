@@ -12,16 +12,17 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "heavens_glory";
             Name = "Heaven's Glory";
             Target = "Enemy";
-            Text = "The enemy gains {1} inferno.";
+            Text = "The enemy gains {1} inferno and {1} burn.";
             IsFreeAction = true;
             Animation = "Attack";
             Type = CardType.Prayer;
-            Block = 2;
+            Block = 3;
 
             OnPlay = (entityManager, card) =>
             {
                 var enemy = entityManager.GetEntity(Target);
                 EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Inferno, Delta = ValuesParse[0] });
+                EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Burn, Delta = ValuesParse[1] });
             };
         }
     }

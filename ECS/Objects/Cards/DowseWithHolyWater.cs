@@ -9,7 +9,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public DowseWithHolyWater()
         {
             CardId = "dowse_with_holy_water";
-            Name = "Dowse with Holy Water";
+            Name = "Douse with Holy Water";
             Target = "Player";
             Text = "Gain {5} aggression. If you have {4}+ courage, gain {12} aggression instead.";
             IsFreeAction = true;

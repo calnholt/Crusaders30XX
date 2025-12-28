@@ -61,7 +61,7 @@ public class Sweep : EnemyAttackBase
     Id = "sweep";
     Name = "Sweep";
     Damage = 5;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Corrode);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Corrode, 1);
     
     OnBlockProcessed = (entityManager, card) =>
     {

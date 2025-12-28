@@ -47,7 +47,7 @@ public static class EnemyAttackTextHelper
         case EnemyAttackTextType.Fear:
           return $"Gain [{amount}] fear.";
         case EnemyAttackTextType.Aggression:
-          return $"Gain [{amount}] aggression.";
+          return $"The enemy gains [{amount}] aggression.";
         case EnemyAttackTextType.GlassCannon:
           return $"If this is blocked with exactly [{amount}] cards, this attack deals no damage and the blocking cards are exhausted.";
         case EnemyAttackTextType.Wounded:

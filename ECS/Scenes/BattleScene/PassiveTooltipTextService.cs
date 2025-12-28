@@ -39,6 +39,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"Prevent all damage from the first source each turn.";
         case AppliedPassiveType.Fear:
           return $"Attacks have a {stacks * 10}% chance to become ambush attacks this quest.";
+        case AppliedPassiveType.Siphon:
+          return $"For each point of courage this enemy removes from you, it heals {stacks * 3} HP.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

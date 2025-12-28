@@ -13,11 +13,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "serpent_crush";
             Name = "Serpent Crush";
             Target = "Enemy";
-            Cost = ["Any"];
             Text = "As an additional cost, lose {4} courage. Gain {1} action point.";
             IsFreeAction = true;
             Animation = "Attack";
-            Damage = 25;
+            Damage = 15;
             Type = CardType.Attack;
             Block = 3;
 

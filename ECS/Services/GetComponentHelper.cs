@@ -29,5 +29,13 @@ namespace Crusaders30XX.ECS.Services
             if (battleStateInfo == null) return null;
             return battleStateInfo.GetComponent<BattleStateInfo>();
         }
+
+        public static AppliedPassives GetAppliedPassives(EntityManager entityManager, string targetId)
+        {
+            var target = entityManager.GetEntity(targetId);
+            var appliedPassives = target.GetComponent<AppliedPassives>();
+            if (appliedPassives == null) return null;
+            return appliedPassives;
+        }
     }
 }

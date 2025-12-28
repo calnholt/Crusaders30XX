@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Name = "Carve";
             Target = "Enemy";
             Text = "This gains +{5} damage for the rest of the quest. {50}% chance this is shuffled back into the deck.";
-            Block = 2;
+            Block = 3;
             Damage = 7;
             Animation = "Attack";
 

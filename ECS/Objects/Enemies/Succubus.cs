@@ -18,14 +18,24 @@ public class Succubus : EnemyBase
     EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourageEvent);
     Id = "succubus";
     Name = "Succubus";
-    MaxHealth = 85;
+    MaxHealth = 105;
+    CurrentHealth = MaxHealth - 10;
+
+    OnCreate = (entityManager) =>
+    {
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Siphon, Delta = 1 });
+    };
   }
 
   private void OnModifyCourageEvent(ModifyCourageEvent evt)
   {
     if (evt.Reason == "Succubus" && EntityManager != null)
     {
-      EventManager.Publish(new HealEvent { Target = EntityManager.GetEntity("Enemy"), Delta = -evt.Delta });
+      var enemy = EntityManager.GetEntity("Enemy");
+      var passive = GetComponentHelper.GetAppliedPassives(EntityManager, "Enemy");
+      passive.Passives.TryGetValue(AppliedPassiveType.Siphon, out int count);
+      EventManager.Publish(new HealEvent { Target = enemy, Delta = -(evt.Delta * count) });
+      EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Siphon });
     }
   }
 
@@ -39,8 +49,31 @@ public class Succubus : EnemyBase
     {
       enders.Add("velvet_fangs");
     }
-    var attacks = ArrayUtils.TakeRandomWithReplacement(linkers, 2).Concat(ArrayUtils.TakeRandomWithReplacement(enders, 1));
-    return ArrayUtils.Shuffled(attacks);
+
+    // Select two random from linkers (with replacement)
+    var pickedLinkers = ArrayUtils.TakeRandomWithReplacement(linkers, 2).ToList();
+    // Select one random from enders
+    var pickedEnder = ArrayUtils.TakeRandomWithReplacement(enders, 1);
+
+    // Ensure "crushing_adoration" is not the last key
+    // Prepare final list: pickedLinkers + pickedEnder
+    var attacks = pickedLinkers.Concat(pickedEnder).ToList();
+
+    // Shuffle, but ensure "crushing_adoration" is never last
+    var shuffled = ArrayUtils.Shuffled(attacks).ToList();
+    if (shuffled.Count > 1 && shuffled[^1] == "crushing_adoration")
+    {
+      // Try to swap with a previous entry
+      int swapIndex = shuffled.FindIndex(x => x != "crushing_adoration");
+      if (swapIndex != -1)
+      {
+        // Swap the last and swapIndex
+        var temp = shuffled[swapIndex];
+        shuffled[swapIndex] = shuffled[^1];
+        shuffled[^1] = temp;
+      }
+    }
+    return shuffled;
   }
 
   public static void HandleLoseCourage(EntityManager entityManager, int amount)
@@ -66,7 +99,7 @@ public class SoulSiphon : EnemyAttackBase
   {
     Id = "soul_siphon";
     Name = "Soul Siphon";
-    Damage = 5;
+    Damage = 4;
     ConditionType = ConditionType.OnHit;
     BlockingRestrictionType = BlockingRestrictionType.NotRed;
     Text = $"{EnemyAttackTextHelper.GetBlockingRestrictionText(BlockingRestrictionType)}\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, 0, ConditionType, 100, "Lose [2] courage.")}";
@@ -132,7 +165,7 @@ public class CrushingAdoration : EnemyAttackBase
 
 public class VelvetFangs : EnemyAttackBase
 {
-  public int Multiplier { get; set; } = 4;
+  public int Multiplier { get; set; } = 2;
   public VelvetFangs()
   {
     Id = "velvet_fangs";
