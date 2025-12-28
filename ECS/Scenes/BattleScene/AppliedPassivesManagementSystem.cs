@@ -92,6 +92,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (passive.Key == AppliedPassiveType.Penance) continue;
                 if (passive.Key == AppliedPassiveType.Webbing) continue;
                 if (passive.Key == AppliedPassiveType.Fear) continue;
+                if (passive.Key == AppliedPassiveType.Bleed) continue;
                 EventManager.Publish(new RemovePassive { Owner = player, Type = passive.Key });
             }
         }

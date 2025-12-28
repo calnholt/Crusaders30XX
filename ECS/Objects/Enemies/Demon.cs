@@ -73,11 +73,12 @@ public class InfernalExecution : EnemyAttackBase
     Name = "Infernal Execution";
     Damage = 10;
     ConditionType = ConditionType.MustBeBlockedByAtLeast1Card;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 1);
+    Text = $"{EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 1)}\n\nGain [1] burn.";
 
     OnAttackReveal = (entityManager) =>
     {
       EventManager.Publish(new MustBeBlockedEvent { Threshold = ValuesParse[0], Type = MustBeBlockedByType.AtLeast });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = ValuesParse[1] });
     };
   }
 }

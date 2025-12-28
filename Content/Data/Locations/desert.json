@@ -322,14 +322,26 @@
       "RevealRadius": 400,
       "UnrevealedRadius": 150,
       "Type": "Quest",
-      "Name": "Desert Cactus",
-      "Difficulty": 3,
+      "Name": "Thorny Situation",
+      "Difficulty": 4,
       "Reward": {
         "Gold": 3
       },
       "Events": [
         {
           "id": "cactus",
+          "type": "Enemy"
+        },
+        {
+          "id": "succubus",
+          "type": "Enemy"
+        },
+        {
+          "id": "mummy",
+          "type": "Enemy"
+        },
+        {
+          "id": "ninja",
           "type": "Enemy"
         }
       ]

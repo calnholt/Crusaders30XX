@@ -20,7 +20,6 @@ public class Cactus : EnemyBase
 
     EventManager.Subscribe<ModifyHpEvent>(OnModifyHpEvent);
 
-
     OnCreate = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Thorns, Delta = Thorns });
@@ -52,7 +51,7 @@ public class NeedleRain : EnemyAttackBase
   {
     Id = "needle_rain";
     Name = "Needle Rain";
-    Damage = 8;
+    Damage = 9;
     ConditionType = ConditionType.None;
     Text = "Gain [2] bleed for each black card that blocks this.";
 
@@ -72,7 +71,7 @@ public class BarbedVolley : EnemyAttackBase
   {
     Id = "barbed_volley";
     Name = "Barbed Volley";
-    Damage = 8;
+    Damage = 9;
     ConditionType = ConditionType.None;
     Text = "Gain [2] bleed for each white card that blocks this.";
 
@@ -93,7 +92,7 @@ public class PricklyBurst : EnemyAttackBase
   {
     Id = "prickly_burst";
     Name = "Prickly Burst";
-    Damage = 8;
+    Damage = 9;
     ConditionType = ConditionType.None;
     Text = "Gain [2] bleed for each red card that blocks this.";
 
