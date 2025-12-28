@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Objects.Enemies;
 using System;
 using Crusaders30XX.ECS.Objects.Medals;
+using Crusaders30XX.ECS.Objects.Equipment;
 
 namespace Crusaders30XX.ECS.Components
 {
@@ -183,13 +184,24 @@ namespace Crusaders30XX.ECS.Components
 	/// <summary>
 	/// A single equipped item. Multiple instances may exist, each referencing the owning player.
 	/// </summary>
-	public class EquippedEquipment : IComponent
+	public class EquippedEquipment : IComponent, IDisposable
 	{
+		public void Dispose()
+		{
+			Equipment?.Dispose();
+		}
 		public Entity Owner { get; set; }
 		public Entity EquippedOwner { get; set; } // player entity that owns this equipment
-		public string EquipmentId { get; set; } = ""; // id of equipment definition
-		public string EquipmentType { get; set; } = ""; // Head | Chest | Arms | Legs | etc
+		public EquipmentBase Equipment { get; set; }
 	}
+
+    public enum EquipmentSlot
+    {
+        Head,
+        Chest,
+        Arms,
+        Legs
+    }
 
 	/// <summary>
 	/// Per-battle state: counters and once-per-battle flags for triggers.

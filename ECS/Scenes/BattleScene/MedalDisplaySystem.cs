@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
-using Crusaders30XX.ECS.Data.Medals;
 using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Systems
@@ -170,14 +169,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private string BuildMedalTooltip(EquippedMedal medal)
 		{
-			if (string.IsNullOrWhiteSpace(medal.Medal.Id)) return string.Empty;
-			if (MedalDefinitionCache.TryGet(medal.Medal.Id, out var def) && def != null)
-			{
-				string name = string.IsNullOrWhiteSpace(def.name) ? medal.Medal.Id : def.name;
-				string txt = def.text ?? string.Empty;
-				return string.IsNullOrWhiteSpace(txt) ? name : (name + "\n\n" + txt);
-			}
-			return medal.Medal.Id;
+			return $"{medal.Medal.Name}\n\n{medal.Medal.Text}";
 		}
 
 

@@ -1,7 +1,6 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Medals;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,6 +8,7 @@ using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Data.Save;
 using System;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -59,10 +59,10 @@ namespace Crusaders30XX.ECS.Systems
 
             var collection = SaveCache.GetCollectionSet();
             var equipped = st.WorkingMedalIds ?? new List<string>();
-            var all = MedalDefinitionCache.GetAll().Values
-                .Where(d => collection.Contains(d.id))
-                .Where(d => !equipped.Contains(d.id))
-                .OrderBy(d => (d.name ?? d.id) ?? string.Empty)
+            var all = MedalFactory.GetAllMedals().Values
+                .Where(d => collection.Contains(d.Id))
+                .Where(d => !equipped.Contains(d.Id))
+                .OrderBy(d => (d.Name ?? d.Id) ?? string.Empty)
                 .ToList();
 
             int x = 0 + LeftPadding;
@@ -70,7 +70,7 @@ namespace Crusaders30XX.ECS.Systems
             int w = _libraryPanel.PanelWidth - (SidePadding * 2);
             int h = RowHeight;
 
-            var visibleIds = new HashSet<string>(all.Select(d => d.id));
+            var visibleIds = new HashSet<string>(all.Select(d => d.Id));
             var stale = _entityIds.Keys.Where(k => !visibleIds.Contains(k)).ToList();
             foreach (var sid in stale)
             {
@@ -87,13 +87,13 @@ namespace Crusaders30XX.ECS.Systems
                 var d = all[i];
                 int y = yBase + i * (h + ItemSpacing) - st.LeftScroll;
                 var bounds = new Rectangle(x, y, w, h);
-                var e2 = EnsureEntity(d.id, bounds, interactable: canAdd);
+                var e2 = EnsureEntity(d.Id, bounds, interactable: canAdd);
                 var ui = e2?.GetComponent<UIElement>();
                 // Check both CursorStateEvent bounds and UIElement.IsClicked for robustness
                 bool clicked = (click && bounds.Contains(clickPoint)) || (ui != null && ui.IsClicked);
                 if (canAdd && clicked)
                 {
-                    EventManager.Publish(new AddMedalToLoadoutRequested { MedalId = d.id });
+                    EventManager.Publish(new AddMedalToLoadoutRequested { MedalId = d.Id });
                 }
             }
         }
@@ -108,10 +108,10 @@ namespace Crusaders30XX.ECS.Systems
 
             var collection = SaveCache.GetCollectionSet();
             var equipped = st.WorkingMedalIds ?? new List<string>();
-            var all = MedalDefinitionCache.GetAll().Values
-                .Where(d => collection.Contains(d.id))
-                .Where(d => !equipped.Contains(d.id))
-                .OrderBy(d => (d.name ?? d.id) ?? string.Empty)
+                var all = MedalFactory.GetAllMedals().Values
+                .Where(d => collection.Contains(d.Id))
+                .Where(d => !equipped.Contains(d.Id))
+                .OrderBy(d => (d.Name ?? d.Id) ?? string.Empty)
                 .ToList();
 
             int x = 0 + LeftPadding;
@@ -123,7 +123,7 @@ namespace Crusaders30XX.ECS.Systems
                 var d = all[i];
                 int y = yBase + i * (h + ItemSpacing) - st.LeftScroll;
                 var bounds = new Rectangle(x, y, w, h);
-                EventManager.Publish(new MedalRenderEvent { MedalId = d.id, Bounds = bounds, IsEquipped = false, NameScale = _customizeMedalDisplay.NameScale, TextScale = _customizeMedalDisplay.TextScale });
+                EventManager.Publish(new MedalRenderEvent { MedalId = d.Id, Bounds = bounds, IsEquipped = false, NameScale = _customizeMedalDisplay.NameScale, TextScale = _customizeMedalDisplay.TextScale });
             }
         }
 

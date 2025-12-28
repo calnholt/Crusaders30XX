@@ -4,7 +4,6 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Medals;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 

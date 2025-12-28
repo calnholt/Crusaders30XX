@@ -3,7 +3,6 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Temperance;
 using Crusaders30XX.ECS.Data.Equipment;
-using Crusaders30XX.ECS.Data.Medals;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -459,9 +458,9 @@ namespace Crusaders30XX.ECS.Factories
 					{
 						displayName = string.IsNullOrWhiteSpace(card.Name) ? id : card.Name;
 					}
-					else if (itemType == ForSaleItemType.Medal && MedalDefinitionCache.TryGet(id, out var mdef) && mdef != null)
+					else if (itemType == ForSaleItemType.Medal && MedalFactory.GetAllMedals().TryGetValue(id, out var medal) && medal != null)
 					{
-						displayName = string.IsNullOrWhiteSpace(mdef.name) ? id : mdef.name;
+						displayName = string.IsNullOrWhiteSpace(medal.Name) ? id : medal.Name;
 					}
 					else if (itemType == ForSaleItemType.Equipment && EquipmentDefinitionCache.TryGet(id, out var edef) && edef != null)
 					{
@@ -484,8 +483,8 @@ namespace Crusaders30XX.ECS.Factories
                 }
                 else if (itemType == ForSaleItemType.Medal)
                 {
-                    MedalDefinitionCache.TryGet(id, out var mdef);
-                    uiElement.Tooltip = $"{mdef.text}";
+                    var medal = MedalFactory.Create(id);
+                    uiElement.Tooltip = $"{medal.Text}";
                 }
                 else if (itemType == ForSaleItemType.Equipment)
                 {

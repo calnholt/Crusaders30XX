@@ -1,12 +1,12 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Medals;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -58,7 +58,7 @@ namespace Crusaders30XX.ECS.Systems
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null || st.SelectedTab != CustomizationTabType.Medals) return;
             if (_font == null) return;
-            if (!MedalDefinitionCache.TryGet(e.MedalId, out var def) || def == null) return;
+            if (!MedalFactory.GetAllMedals().TryGetValue(e.MedalId, out var medal) || medal == null) return;
 
             var r = e.Bounds;
             var rounded = GetRounded(r.Width, r.Height, CornerRadius);
@@ -66,13 +66,13 @@ namespace Crusaders30XX.ECS.Systems
             var fg = Color.Black;
             _spriteBatch.Draw(rounded, r, bg);
 
-            string title = (def.name ?? def.id);
+            string title = (medal.Name ?? medal.Id);
             var tsize = _font.MeasureString(title) * e.NameScale;
             var tpos = new Vector2(r.X + 10, r.Y + 8);
             _spriteBatch.DrawString(_font, title, tpos + new Vector2(1,1), Color.Black, 0f, Vector2.Zero, e.NameScale, SpriteEffects.None, 0f);
             _spriteBatch.DrawString(_font, title, tpos, fg, 0f, Vector2.Zero, e.NameScale, SpriteEffects.None, 0f);
 
-            string body = def.text ?? string.Empty;
+            string body = medal.Text ?? string.Empty;
             int contentW = System.Math.Max(10, r.Width - 20);
             float y2 = tpos.Y + (tsize.Y) + 6f;
             foreach (var line in WrapText(body, e.TextScale, contentW))

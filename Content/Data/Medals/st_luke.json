@@ -1,8 +1,0 @@
-{
-  "id": "st_luke",
-  "name": "Medal of Saint Luke the Evangelist",
-  "target": "Player",
-  "text": "At the start of battle, gain 1 aegis.",
-  "trigger": "StartOfBattle"
-}
-

@@ -6,7 +6,6 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Equipment;
 using Crusaders30XX.ECS.Data.Locations;
-using Crusaders30XX.ECS.Data.Medals;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Rendering;
@@ -473,7 +472,7 @@ namespace Crusaders30XX.ECS.Systems
 		private string ResolveMedalTextureName(string medalId)
 		{
 			// Try id first, then fallback to generic "medal"
-			if (MedalDefinitionCache.TryGet(medalId, out var _))
+			if (MedalFactory.GetAllMedals().TryGetValue(medalId, out var _))
 			{
 				if (SafeLoadTexture(medalId) != null) return medalId;
 			}
