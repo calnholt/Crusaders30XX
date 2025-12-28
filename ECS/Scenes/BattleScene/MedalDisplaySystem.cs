@@ -120,7 +120,7 @@ namespace Crusaders30XX.ECS.Systems
 				var rect = new Rectangle((int)System.Math.Round(cur.X), (int)System.Math.Round(cur.Y), bgW, bgH);
 				// Backgrounds removed: draw medals without black rounded panels
 				UpdateTooltipForMedal(m, rect);
-				var medalTex = GetMedalTexture(m.MedalId);
+				var medalTex = GetMedalTexture(m.Medal.Id);
                 float rot = t?.Rotation ?? 0f;
                 float scalePulse = t?.Scale.X ?? 1f;
                 var drawnRect = DrawMedalIcon(rect, medalTex, scalePulse, rot);
@@ -170,14 +170,14 @@ namespace Crusaders30XX.ECS.Systems
 
 		private string BuildMedalTooltip(EquippedMedal medal)
 		{
-			if (string.IsNullOrWhiteSpace(medal.MedalId)) return string.Empty;
-			if (MedalDefinitionCache.TryGet(medal.MedalId, out var def) && def != null)
+			if (string.IsNullOrWhiteSpace(medal.Medal.Id)) return string.Empty;
+			if (MedalDefinitionCache.TryGet(medal.Medal.Id, out var def) && def != null)
 			{
-				string name = string.IsNullOrWhiteSpace(def.name) ? medal.MedalId : def.name;
+				string name = string.IsNullOrWhiteSpace(def.name) ? medal.Medal.Id : def.name;
 				string txt = def.text ?? string.Empty;
 				return string.IsNullOrWhiteSpace(txt) ? name : (name + "\n\n" + txt);
 			}
-			return medal.MedalId;
+			return medal.Medal.Id;
 		}
 
 

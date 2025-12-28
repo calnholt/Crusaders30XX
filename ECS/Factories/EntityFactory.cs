@@ -110,7 +110,9 @@ namespace Crusaders30XX.ECS.Factories
             foreach (var medalId in loadout.medalIds)
             {
                 var medalEntity = world.CreateEntity($"Medal_{medalId}");
-                world.AddComponent(medalEntity, new EquippedMedal { EquippedOwner = entity, MedalId = medalId });
+                var medal = MedalFactory.Create(medalId);
+                medal.Initialize(world.EntityManager, medalEntity);
+                world.AddComponent(medalEntity, new EquippedMedal { EquippedOwner = entity, Medal = medal });
                 world.AddComponent(medalEntity, ParallaxLayer.GetUIParallaxLayer());
                 world.AddComponent(medalEntity, new UIElement { IsInteractable = false });
                 world.AddComponent(medalEntity, new Transform { Position = Vector2.Zero, ZOrder = 10001 });

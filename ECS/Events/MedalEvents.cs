@@ -1,3 +1,4 @@
+using Crusaders30XX.ECS.Core;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Events
@@ -30,6 +31,11 @@ namespace Crusaders30XX.ECS.Events
         public bool IsEquipped { get; set; }
         public float NameScale { get; set; }
         public float TextScale { get; set; }
+    }
+
+    public class MedalActivateEvent
+    {
+        public Entity MedalEntity { get; set; }
     }
 }
 

@@ -21,7 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		public float ActivationDelaySeconds { get; set; } = 0.3f;
 		public MedalManagerSystem(EntityManager entityManager) : base(entityManager)
 		{
-			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnPhaseChanged);
+			EventManager.Subscribe<MedalActivateEvent>(OnMedalActivate);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -31,75 +31,14 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
-		private void OnPhaseChanged(ChangeBattlePhaseEvent e)
+		private void OnMedalActivate(MedalActivateEvent e)
 		{
-			if (e.Current != SubPhase.StartBattle) return;
-			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-			if (player == null) return;
-			foreach (var medal in EnumerateEquippedMedals(player))
-			{
-				if (string.Equals(medal.trigger, "StartOfBattle", StringComparison.OrdinalIgnoreCase))
-				{
-					ActivateMedal(player, medal);
-				}
-			}
-		}
-
-		private IEnumerable<MedalDefinition> EnumerateEquippedMedals(Entity player)
-		{
-			var medalEntities = EntityManager.GetEntitiesWithComponent<EquippedMedal>()
-				.Where(e => e.GetComponent<EquippedMedal>().EquippedOwner == player);
-			foreach (var e in medalEntities)
-			{
-				var comp = e.GetComponent<EquippedMedal>();
-				if (comp == null || string.IsNullOrWhiteSpace(comp.MedalId)) continue;
-				if (!MedalDefinitionCache.TryGet(comp.MedalId, out var def) || def == null) continue;
-				yield return def;
-			}
-		}
-
-		private void ActivateMedal(Entity player, MedalDefinition medal)
-		{
-			var medalEntity = EntityManager.GetEntitiesWithComponent<EquippedMedal>()
-				.FirstOrDefault(e => e.GetComponent<EquippedMedal>()?.EquippedOwner == player && e.GetComponent<EquippedMedal>()?.MedalId == medal.id);
-
-			if (!CanTriggerMedal(player, medal)) return;
-
 			EventQueueBridge.EnqueueTriggerAction(() =>
 			{
-				EventManager.Publish(new MedalTriggered { MedalEntity = medalEntity, MedalId = medal.id });
-				ApplyMedalEffect(player, medal);
+				var medal = e.MedalEntity.GetComponent<EquippedMedal>().Medal;
+				EventManager.Publish(new MedalTriggered { MedalEntity = e.MedalEntity, MedalId = medal.Id });
+				medal.Activate();
 			}, ActivationDelaySeconds);
-		}
-
-		private bool CanTriggerMedal(Entity player, MedalDefinition medal)
-		{
-			switch (medal.id)
-			{
-				case "st_luke":
-					return true;
-				case "st_michael":
-					return true;
-				default:
-					return false;
-			}
-		}
-
-		private void ApplyMedalEffect(Entity player, MedalDefinition medal)
-		{
-			switch (medal.id)
-			{
-				case "st_luke":
-					{
-						EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = 1 });
-						break;
-					}
-				case "st_michael":
-					EventManager.Publish(new ModifyCourageRequestEvent { Delta = 1 });
-					break;
-				default:
-					break;
-			}
 		}
 
 	}

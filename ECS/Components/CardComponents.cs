@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Objects.Enemies;
 using System;
+using Crusaders30XX.ECS.Objects.Medals;
 
 namespace Crusaders30XX.ECS.Components
 {
@@ -861,11 +862,16 @@ namespace Crusaders30XX.ECS.Components
     /// <summary>
     /// A single equipped medal. Multiple instances may exist, each referencing the owning player.
     /// </summary>
-    public class EquippedMedal : IComponent
+    public class EquippedMedal : IComponent, IDisposable
     {
         public Entity Owner { get; set; }
         public Entity EquippedOwner { get; set; } // player entity that owns this medal
-        public string MedalId { get; set; } = ""; // id of medal definition
+        public MedalBase Medal { get; set; }
+
+        public void Dispose()
+        {
+            Medal?.Dispose();
+        }
     }
 
     /// <summary>
