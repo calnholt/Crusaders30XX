@@ -28,6 +28,7 @@ namespace Crusaders30XX.ECS.Factories
                 "skeleton" => new Skeleton(),
                 "spider" => new Spider(),
                 "succubus" => new Succubus(),
+                "cactus" => new Cactus(),
                 _ => null
             };
         }
@@ -49,7 +50,8 @@ namespace Crusaders30XX.ECS.Factories
                 { "sand_golem", new SandGolem() },
                 { "skeleton", new Skeleton() },
                 { "spider", new Spider() },
-                { "succubus", new Succubus() }
+                { "succubus", new Succubus() },
+                { "cactus", new Cactus() }
             };
         }
     }

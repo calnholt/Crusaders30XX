@@ -41,6 +41,10 @@ namespace Crusaders30XX.ECS.Systems
           return $"Attacks have a {stacks * 10}% chance to become ambush attacks this quest.";
         case AppliedPassiveType.Siphon:
           return $"For each point of courage this enemy removes from you, it heals {stacks * 3} HP.";
+        case AppliedPassiveType.Thorns:
+          return $"You gain {stacks} bleed whenever you attack this enemy.";
+        case AppliedPassiveType.Bleed:
+          return $"While you have bleed, lose 1 HP at the start of your turn then remove one bleed. Lasts for the rest of the quest.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

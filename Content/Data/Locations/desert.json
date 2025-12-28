@@ -314,6 +314,27 @@
       ]
     },
     {
+      "Id": "desert_15",
+      "WorldPosition": [
+        2270,
+        1275
+      ],
+      "RevealRadius": 400,
+      "UnrevealedRadius": 150,
+      "Type": "Quest",
+      "Name": "Desert Cactus",
+      "Difficulty": 3,
+      "Reward": {
+        "Gold": 3
+      },
+      "Events": [
+        {
+          "id": "cactus",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
       "Id": "desert_7",
       "WorldPosition": [
         4775,

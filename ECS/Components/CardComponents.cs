@@ -982,6 +982,8 @@ namespace Crusaders30XX.ECS.Components
         Shield,
         Fear,
         Siphon,
+        Thorns,
+        Bleed,
     }
 
     public class MarkedForReturnToDeck : IComponent

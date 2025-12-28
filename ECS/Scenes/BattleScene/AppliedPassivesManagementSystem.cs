@@ -142,6 +142,15 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Webbing });
                 }, .5f);
             }
+            if (ap.Passives.TryGetValue(AppliedPassiveType.Bleed, out int bleedStacks) && bleedStacks > 0)
+            {
+                EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Bleed", () =>
+                {
+                    EventManager.Publish(new ModifyHpRequestEvent { Source = owner, Target = owner, Delta = -1, DamageType = ModifyTypeEnum.Effect });
+                    EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Bleed });
+                    EventManager.Publish(new UpdatePassive { Owner = owner, Type = AppliedPassiveType.Bleed, Delta = -1 });
+                }, .5f);
+            }
         }
 
         private void ApplyStartOfPreBlockPassives(Entity enemy)

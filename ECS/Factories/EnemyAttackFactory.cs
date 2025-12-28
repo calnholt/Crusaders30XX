@@ -65,6 +65,10 @@ namespace Crusaders30XX.ECS.Factories
                 "enthralling_gaze" => new EnthrallingGaze(),
                 "crushing_adoration" => new CrushingAdoration(),
                 "teasing_nip" => new TeasingNip(),
+                // Cactus attacks
+                "needle_rain" => new NeedleRain(),
+                "barbed_volley" => new BarbedVolley(),
+                "prickly_burst" => new PricklyBurst(),
                 // Generic attacks
                 "have_no_mercy" => new HaveNoMercy(),
                 _ => null
@@ -126,6 +130,10 @@ namespace Crusaders30XX.ECS.Factories
                 { "enthralling_gaze", new EnthrallingGaze() },
                 { "crushing_adoration", new CrushingAdoration() },
                 { "teasing_nip", new TeasingNip() },
+                // Cactus attacks
+                { "needle_rain", new NeedleRain() },
+                { "barbed_volley", new BarbedVolley() },
+                { "prickly_burst", new PricklyBurst() },
                 // Generic attacks
                 { "have_no_mercy", new HaveNoMercy() },
             };
