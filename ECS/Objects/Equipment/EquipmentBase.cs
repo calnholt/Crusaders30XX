@@ -1,6 +1,7 @@
 using System;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Objects.Equipment
 {
@@ -17,17 +18,27 @@ namespace Crusaders30XX.ECS.Objects.Equipment
     public EquipmentSlot Slot { get; set; }
     public Entity EquipmentEntity { get; set; }
 
-    public virtual void Initialize(EntityManager entityManager, Entity equipmentEntity) { }
+    public virtual void Initialize(EntityManager entityManager, Entity equipmentEntity) {
+      EntityManager = entityManager;
+      EquipmentEntity = equipmentEntity;
+      RemainingUses = Uses;
+    }
 
     public abstract void Activate();
 
-    protected void EmitActivateEvent(){
+    public void EmitActivateEvent(){
       EventManager.Publish(new EquipmentActivateEvent { EquipmentEntity = EquipmentEntity });
     }
 
     public virtual void Dispose()
     {
       Console.WriteLine($"[EquipmentBase] Dispose: {Id}");
+    }
+
+    public bool HasUses { get => RemainingUses > 0; }
+
+    public void DecrementRemainingUses(){
+      RemainingUses--;
     }
 
     public Func<bool> CanActivate { get; protected set; } = () => true;

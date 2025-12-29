@@ -1,12 +1,12 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Equipment;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -57,8 +57,8 @@ namespace Crusaders30XX.ECS.Systems
 
             string equippedId = GetEquippedIdForTab(st, st.SelectedTab);
             if (string.IsNullOrEmpty(equippedId)) return;
-            if (!EquipmentDefinitionCache.TryGet(equippedId, out var def) || def == null) return;
-
+            var equipment = EquipmentFactory.Create(equippedId);
+            if (equipment == null) return;
             int vw = Game1.VirtualWidth;
             int rightW = _deckPanel?.PanelWidth ?? 620;
             int x = vw - rightW + LeftPadding;
@@ -67,7 +67,7 @@ namespace Crusaders30XX.ECS.Systems
             int h = RowHeight;
             var rect = new Rectangle(x, y, w, h);
             EnsureEntity(rect);
-            EventManager.Publish(new EquipmentRenderEvent { EquipmentId = def.id, Bounds = rect, IsEquipped = true, NameScale = _customizeEquipmentDisplaySystem.NameScale, TextScale = _customizeEquipmentDisplaySystem.TextScale });
+            EventManager.Publish(new EquipmentRenderEvent { EquipmentId = equipment.Id, Bounds = rect, IsEquipped = true, NameScale = _customizeEquipmentDisplaySystem.NameScale, TextScale = _customizeEquipmentDisplaySystem.TextScale });
         }
 
         private Entity EnsureEntity(Rectangle bounds)

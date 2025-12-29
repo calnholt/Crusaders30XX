@@ -860,18 +860,6 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
-    /// Tracks how many times each equipment id has been used to block this battle.
-    /// Attach to the player entity.
-    /// </summary>
-    public class EquipmentUsedState : IComponent
-    {
-        public Entity Owner { get; set; }
-        public Dictionary<string, int> UsesByEquipmentId { get; set; } = new Dictionary<string, int>();
-        public System.Collections.Generic.HashSet<string> DestroyedEquipmentIds { get; set; } = new System.Collections.Generic.HashSet<string>();
-        public System.Collections.Generic.HashSet<string> ActivatedThisTurn { get; set; } = new System.Collections.Generic.HashSet<string>();
-    }
-
-    /// <summary>
     /// A single equipped medal. Multiple instances may exist, each referencing the owning player.
     /// </summary>
     public class EquippedMedal : IComponent, IDisposable

@@ -2,7 +2,6 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Temperance;
-using Crusaders30XX.ECS.Data.Equipment;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,33 +64,41 @@ namespace Crusaders30XX.ECS.Factories
             if (!string.IsNullOrWhiteSpace(loadout.headId))
             {
                 var equipHeadEntity = world.CreateEntity("Equip_Head");
+                var equipment = EquipmentFactory.Create(loadout.headId);
+                equipment.Initialize(world.EntityManager, equipHeadEntity);
                 world.AddComponent(equipHeadEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
                 world.AddComponent(equipHeadEntity, new UIElement { IsInteractable = true });
-                world.AddComponent(equipHeadEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.headId, EquipmentType = "Head" });
+                world.AddComponent(equipHeadEntity, new EquippedEquipment { EquippedOwner = entity, Equipment = equipment });
                 world.AddComponent(equipHeadEntity, ParallaxLayer.GetUIParallaxLayer());
             }
             if (!string.IsNullOrWhiteSpace(loadout.legsId))
             {
                 var equipLegsEntity = world.CreateEntity("Equip_Legs");
+                var equipment = EquipmentFactory.Create(loadout.legsId);
+                equipment.Initialize(world.EntityManager, equipLegsEntity);
                 world.AddComponent(equipLegsEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
                 world.AddComponent(equipLegsEntity, new UIElement { IsInteractable = true });
-                world.AddComponent(equipLegsEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.legsId, EquipmentType = "Legs" });
+                world.AddComponent(equipLegsEntity, new EquippedEquipment { EquippedOwner = entity, Equipment = equipment });
                 world.AddComponent(equipLegsEntity, ParallaxLayer.GetUIParallaxLayer());
             }
             if (!string.IsNullOrWhiteSpace(loadout.armsId))
             {
                 var equipArmsEntity = world.CreateEntity("Equip_Arms");
+                var equipment = EquipmentFactory.Create(loadout.armsId);
+                equipment.Initialize(world.EntityManager, equipArmsEntity);
                 world.AddComponent(equipArmsEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
                 world.AddComponent(equipArmsEntity, new UIElement { IsInteractable = true });
-                world.AddComponent(equipArmsEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.armsId, EquipmentType = "Arms" });
+                world.AddComponent(equipArmsEntity, new EquippedEquipment { EquippedOwner = entity, Equipment = equipment });
                 world.AddComponent(equipArmsEntity, ParallaxLayer.GetUIParallaxLayer());
             }
             if (!string.IsNullOrWhiteSpace(loadout.chestId))
             {
                 var equipChestEntity = world.CreateEntity("Equip_Chest");
+                var equipment = EquipmentFactory.Create(loadout.chestId);
+                equipment.Initialize(world.EntityManager, equipChestEntity);
                 world.AddComponent(equipChestEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
                 world.AddComponent(equipChestEntity, new UIElement { IsInteractable = true });
-                world.AddComponent(equipChestEntity, new EquippedEquipment { EquippedOwner = entity, EquipmentId = loadout.chestId, EquipmentType = "Chest" });
+                world.AddComponent(equipChestEntity, new EquippedEquipment { EquippedOwner = entity, Equipment = equipment });
                 world.AddComponent(equipChestEntity, ParallaxLayer.GetUIParallaxLayer());
             }
             // Parallax handled by UI root in EquipmentDisplaySystem
@@ -99,8 +106,6 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, new Courage { Amount = 0 });
             // Attach Temperance resource component by default
             world.AddComponent(entity, new Temperance { Amount = 0 });
-            // Attach EquipmentUsedState tracker
-            world.AddComponent(entity, new EquipmentUsedState());
             // Attach Action Points component by default
             world.AddComponent(entity, new ActionPoints { Current = 0 });
             // Attach HP component
@@ -462,9 +467,10 @@ namespace Crusaders30XX.ECS.Factories
 					{
 						displayName = string.IsNullOrWhiteSpace(medal.Name) ? id : medal.Name;
 					}
-					else if (itemType == ForSaleItemType.Equipment && EquipmentDefinitionCache.TryGet(id, out var edef) && edef != null)
+					else if (itemType == ForSaleItemType.Equipment)
 					{
-						displayName = string.IsNullOrWhiteSpace(edef.name) ? id : edef.name;
+						var equipment = EquipmentFactory.Create(id);
+						displayName = string.IsNullOrWhiteSpace(equipment.Name) ? id : equipment.Name;
 					}
 				}
 				catch { }
@@ -488,7 +494,8 @@ namespace Crusaders30XX.ECS.Factories
                 }
                 else if (itemType == ForSaleItemType.Equipment)
                 {
-                    uiElement.Tooltip = EquipmentService.GetTooltipText(id, EquipmentTooltipType.Shop);
+                    var equipment = EquipmentFactory.Create(id);
+                    uiElement.Tooltip = EquipmentService.GetTooltipText(equipment, EquipmentTooltipType.Shop);
                 }
 				// Always attach UIElement for hover/click regardless of item type
 				entityManager.AddComponent(e, uiElement);

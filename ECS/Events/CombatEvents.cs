@@ -115,4 +115,9 @@ namespace Crusaders30XX.ECS.Events
 	public class OnEnemyAttackHitEvent
 	{
 	}
+
+	public class EquipmentActivateEvent
+	{
+		public Entity EquipmentEntity;
+	}
 }

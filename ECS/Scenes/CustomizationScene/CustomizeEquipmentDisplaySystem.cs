@@ -1,12 +1,13 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Equipment;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Objects.Equipment;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -66,12 +67,13 @@ namespace Crusaders30XX.ECS.Systems
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null || !IsEquipmentTab(st.SelectedTab)) return;
             if (_font == null) return;
-            if (!EquipmentDefinitionCache.TryGet(e.EquipmentId, out var def) || def == null) return;
+            var equipment = EquipmentFactory.Create(e.EquipmentId);
+            if (equipment == null) return;
 
             var r = e.Bounds;
             var rounded = GetRounded(r.Width, r.Height, CornerRadius);
             _spriteBatch.Draw(rounded, r, Color.White);
-            string title = (def.name ?? def.id);
+            string title = equipment.Name;
             var tsize = _font.MeasureString(title) * e.NameScale;
             var tpos = new Vector2(r.X + 10, r.Y + 8);
             _spriteBatch.DrawString(_font, title, tpos + new Vector2(1,1), Color.Black, 0f, Vector2.Zero, e.NameScale, SpriteEffects.None, 0f);
@@ -80,7 +82,7 @@ namespace Crusaders30XX.ECS.Systems
             // Body: list ability texts, line-wrapped
             int contentW = System.Math.Max(10, r.Width - 20);
             float y2 = tpos.Y + (tsize.Y) + 6f;
-            var bodyLines = BuildAbilityTextLines(def);
+            var bodyLines = BuildAbilityTextLines(equipment);
             foreach (var line in WrapText(bodyLines, e.TextScale, contentW))
             {
                 _spriteBatch.DrawString(_font, line, new Vector2(r.X + 10, y2), Color.Black, 0f, Vector2.Zero, e.TextScale, SpriteEffects.None, 0f);
@@ -98,25 +100,11 @@ namespace Crusaders30XX.ECS.Systems
             return tex;
         }
 
-        private string BuildAbilityTextLines(EquipmentDefinition def)
+        private string BuildAbilityTextLines(EquipmentBase equipment)
         {
-            if (def?.abilities == null || def.abilities.Count == 0) return string.Empty;
+            if (equipment?.Text == null) return string.Empty;
             var parts = new System.Text.StringBuilder();
-            for (int i = 0; i < def.abilities.Count; i++)
-            {
-                var a = def.abilities[i];
-                if (a == null) continue;
-                string line = a.text ?? string.Empty;
-                if (a.type == "Activate")
-                {
-                    string cost = a.isFreeAction ? "free action" : "1AP";
-                    line = $"Activate ({cost}): " + line;
-                    if (a.requiresUseOnActivate) line += " Lose one use.";
-                    if (a.destroyOnActivate) line += " Destroy this.";
-                }
-                parts.Append(line);
-                if (i < def.abilities.Count - 1) parts.Append("\n\n");
-            }
+            parts.Append(equipment.Text);
             return parts.ToString();
         }
 

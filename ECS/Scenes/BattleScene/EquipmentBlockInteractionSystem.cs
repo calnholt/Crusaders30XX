@@ -75,19 +75,10 @@ namespace Crusaders30XX.ECS.Systems
 				if (!ui.IsInteractable || !ui.IsClicked) continue;
 				// Prevent use if destroyed
 				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-				var usedState = player?.GetComponent<EquipmentUsedState>();
-				if (usedState != null && usedState.DestroyedEquipmentIds.Contains(comp.EquipmentId)) { return; }
 				// Prevent block use if out of uses during Block phase
 				if (isBlockPhase)
 				{
-					int total = 0; int used = 0;
-					try
-					{
-						if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(comp.EquipmentId, out var defChk) && defChk != null) total = System.Math.Max(0, defChk.blockUses);
-						if (usedState != null && usedState.UsesByEquipmentId.TryGetValue(comp.EquipmentId, out var u)) used = u;
-					}
-					catch { }
-					if (total > 0 && used >= total) { return; }
+					if (!comp.Equipment.HasUses) { return; }
 				}
 
 				if (isBlockPhase)
@@ -99,10 +90,10 @@ namespace Crusaders30XX.ECS.Systems
 					string color = "White";
 					try
 					{
-						if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(comp.EquipmentId, out var def) && def != null)
+						if (comp.Equipment.Block > 0)
 						{
-							blockVal = System.Math.Max(0, def.block);
-							color = (def.color ?? "White");
+							blockVal = System.Math.Max(0, comp.Equipment.Block);
+							color = comp.Equipment.Color.ToString();
 						}
 					}
 					catch { }
@@ -127,7 +118,7 @@ namespace Crusaders30XX.ECS.Systems
 						var uiElem = eqEntity.GetComponent<UIElement>();
 						var uiCenter = uiElem != null ? new Vector2(uiElem.Bounds.X + uiElem.Bounds.Width * 0.5f, uiElem.Bounds.Y + uiElem.Bounds.Height * 0.5f) : (t?.Position ?? Vector2.Zero);
 						var returnPos = (equipZone != null && equipZone.LastPanelCenter != Vector2.Zero) ? equipZone.LastPanelCenter : uiCenter;
-						abc = new AssignedBlockCard { ContextId = ctx, BlockAmount = blockVal, AssignedAtTicks = System.DateTime.UtcNow.Ticks, StartPos = t?.Position ?? Vector2.Zero, CurrentPos = t?.Position ?? Vector2.Zero, TargetPos = t?.Position ?? Vector2.Zero, StartScale = t?.Scale.X ?? 1f, TargetScale = 0.35f, Phase = AssignedBlockCard.PhaseState.Pullback, Elapsed = 0f, IsEquipment = true, ColorKey = NormalizeColorKey(color), Tooltip = BuildEquipmentTooltip(comp), DisplayBgColor = ResolveEquipmentBgColor(color), DisplayFgColor = ResolveFgForBg(ResolveEquipmentBgColor(color)), ReturnTargetPos = returnPos, EquipmentType = comp.EquipmentType };
+						abc = new AssignedBlockCard { ContextId = ctx, BlockAmount = blockVal, AssignedAtTicks = System.DateTime.UtcNow.Ticks, StartPos = t?.Position ?? Vector2.Zero, CurrentPos = t?.Position ?? Vector2.Zero, TargetPos = t?.Position ?? Vector2.Zero, StartScale = t?.Scale.X ?? 1f, TargetScale = 0.35f, Phase = AssignedBlockCard.PhaseState.Pullback, Elapsed = 0f, IsEquipment = true, ColorKey = NormalizeColorKey(color), Tooltip = BuildEquipmentTooltip(comp), DisplayBgColor = ResolveEquipmentBgColor(color), DisplayFgColor = ResolveFgForBg(ResolveEquipmentBgColor(color)), ReturnTargetPos = returnPos, EquipmentType = comp.Equipment.Slot.ToString() };
 						EntityManager.AddComponent(eqEntity, abc);
 					}
 					else
@@ -136,7 +127,7 @@ namespace Crusaders30XX.ECS.Systems
 						var uiElem = eqEntity.GetComponent<UIElement>();
 						var uiCenter = uiElem != null ? new Vector2(uiElem.Bounds.X + uiElem.Bounds.Width * 0.5f, uiElem.Bounds.Y + uiElem.Bounds.Height * 0.5f) : (t?.Position ?? Vector2.Zero);
 						var returnPos = (equipZone != null && equipZone.LastPanelCenter != Vector2.Zero) ? equipZone.LastPanelCenter : uiCenter;
-						abc.ContextId = ctx; abc.BlockAmount = blockVal; abc.AssignedAtTicks = System.DateTime.UtcNow.Ticks; abc.Phase = AssignedBlockCard.PhaseState.Pullback; abc.Elapsed = 0f; abc.IsEquipment = true; abc.ColorKey = NormalizeColorKey(color); abc.Tooltip = BuildEquipmentTooltip(comp); abc.DisplayBgColor = ResolveEquipmentBgColor(color); abc.DisplayFgColor = ResolveFgForBg(abc.DisplayBgColor); abc.ReturnTargetPos = returnPos; abc.EquipmentType = comp.EquipmentType;
+						abc.ContextId = ctx; abc.BlockAmount = blockVal; abc.AssignedAtTicks = System.DateTime.UtcNow.Ticks; abc.Phase = AssignedBlockCard.PhaseState.Pullback; abc.Elapsed = 0f; abc.IsEquipment = true; abc.ColorKey = NormalizeColorKey(color); abc.Tooltip = BuildEquipmentTooltip(comp); abc.DisplayBgColor = ResolveEquipmentBgColor(color); abc.DisplayFgColor = ResolveFgForBg(abc.DisplayBgColor); abc.ReturnTargetPos = returnPos; abc.EquipmentType = comp.Equipment.Slot.ToString();
 					}
 					EventManager.Publish(new BlockAssignmentAdded { ContextId = ctx, Card = eqEntity, DeltaBlock = blockVal, Color = color });
 					EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Equip, Volume = 0.5f });
@@ -159,22 +150,7 @@ namespace Crusaders30XX.ECS.Systems
 
 				if (isActionPhase)
 				{
-					try
-					{
-						if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(comp.EquipmentId, out var def) && def != null && def.abilities != null)
-						{
-							var act = def.abilities.FirstOrDefault(a => a.type == "Activate");
-							if (act != null)
-							{
-								// prevent re-activation in the same turn
-							if (usedState != null && usedState.ActivatedThisTurn.Contains(comp.EquipmentId)) { return; }
-								if (!act.isFreeAction) { EventManager.Publish(new ModifyActionPointsEvent { Delta = -1 }); }
-								EquipmentAbilityService.ActivateByEquipmentId(EntityManager, comp.EquipmentId);
-								EventManager.Publish(new EquipmentActivated { EquipmentId = comp.EquipmentId });
-							}
-						}
-					}
-					catch { }
+					comp.Equipment.EmitActivateEvent();
 					break;
 				}
 			}
@@ -213,14 +189,14 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			try
 			{
-				if (Crusaders30XX.ECS.Data.Equipment.EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null)
+				if (item.Equipment != null)
 				{
-					string name = string.IsNullOrWhiteSpace(def.name) ? item.EquipmentId : def.name;
+					string name = string.IsNullOrWhiteSpace(item.Equipment.Name) ? item.Equipment.Id : item.Equipment.Name;
 					return name;
 				}
 			}
 			catch { }
-			return item.EquipmentId ?? string.Empty;
+			return item.Equipment.Id ?? string.Empty;
 		}
 	}
 }

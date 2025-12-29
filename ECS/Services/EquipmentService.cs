@@ -1,43 +1,22 @@
 using System.Collections.Generic;
-using Crusaders30XX.ECS.Data.Equipment;
+using Crusaders30XX.ECS.Objects.Equipment;
 
 namespace Crusaders30XX.ECS.Services
 {
 	public static class EquipmentService
 	{
-		public static string GetTooltipText(string equipmentId, EquipmentTooltipType type = EquipmentTooltipType.Battle)
+		public static string GetTooltipText(EquipmentBase equipment, EquipmentTooltipType type = EquipmentTooltipType.Battle)
 		{
-			if (EquipmentDefinitionCache.TryGet(equipmentId, out var def) && def != null)
+			if (equipment != null)
 				{
 					var parts = new List<string>();
-					if (def.abilities != null)
-					{
-						foreach (var a in def.abilities)
-						{
-							string text = string.Empty;
-							if (!string.IsNullOrWhiteSpace(a.text)) {
-								if (a.type == "Activate") {
-									text += $"Activate ({(a.isFreeAction ? "free action" : "1AP")}): ";
-								}
-							}
-							text += a.text;
-							if (a.requiresUseOnActivate)
-							{
-								text += " Lose one use.";
-							}
-							if (a.destroyOnActivate)
-							{
-								text += " Destroy this.";
-							}
-							parts.Add(text);
-						}
-					}
+					parts.Add(equipment.Text);
 					string abilities = string.Join("\n", parts);
-          string blockAndUses = def.block > 0 ? $"Block: {def.block} (uses: {def.blockUses})" : string.Empty;
+          string blockAndUses = equipment.Block > 0 ? $"Block: {equipment.Block} (uses: {equipment.Uses})" : string.Empty;
           if (type == EquipmentTooltipType.Shop) {
             return abilities + "\n\n" + blockAndUses;
           }
-					return type == EquipmentTooltipType.Battle ? (def.name + "\n\n" + abilities) : abilities;
+					return type == EquipmentTooltipType.Battle ? (equipment.Name + "\n\n" + abilities) : abilities;
 				}
 			return string.Empty;
 		}

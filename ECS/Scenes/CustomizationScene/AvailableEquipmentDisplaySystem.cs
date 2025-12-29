@@ -1,7 +1,6 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Equipment;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,6 +8,7 @@ using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Data.Save;
 using System;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -62,18 +62,18 @@ namespace Crusaders30XX.ECS.Systems
             string slot = GetSlotName(st.SelectedTab);
 
             var collection = SaveCache.GetCollectionSet();
-            var all = EquipmentDefinitionCache.GetAll().Values
-                .Where(d => string.Equals((d.slot ?? string.Empty).Trim(), slot, System.StringComparison.OrdinalIgnoreCase))
-                .Where(d => collection.Contains(d.id))
-                .Where(d => (d.id ?? string.Empty) != equippedId)
-                .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
+            var all = EquipmentFactory.GetAllEquipment().Values
+                .Where(d => string.Equals(d.Slot.ToString(), slot, System.StringComparison.OrdinalIgnoreCase))
+                .Where(d => collection.Contains(d.Id))
+                .Where(d => d.Id != equippedId)
+                .OrderBy(d => d.Name.ToLowerInvariant())
                 .ToList();
 
             int x = 0 + LeftPadding;
             int yBase = _libraryPanel.HeaderHeight + _libraryPanel.TopMargin + TopOffsetFromHeader;
             int w = _libraryPanel.PanelWidth - (SidePadding * 2);
             int h = RowHeight;
-            var visibleIds = new HashSet<string>(all.Select(d => d.id));
+            var visibleIds = new HashSet<string>(all.Select(d => d.Id));
             var stale = _entityIds.Keys.Where(k => !visibleIds.Contains(k)).ToList();
             foreach (var sid in stale)
             {
@@ -88,13 +88,13 @@ namespace Crusaders30XX.ECS.Systems
                 var d = all[i];
                 int y = yBase + i * (h + ItemSpacing) - st.LeftScroll;
                 var bounds = new Rectangle(x, y, w, h);
-                var ebtn = EnsureEntity(d.id, bounds);
+                var ebtn = EnsureEntity(d.Id, bounds);
                 var ui = ebtn?.GetComponent<UIElement>();
                 // Check both CursorStateEvent bounds and UIElement.IsClicked for robustness
                 bool clicked = (click && bounds.Contains(clickPoint)) || (ui != null && ui.IsClicked);
                 if (clicked)
                 {
-                    EventManager.Publish(new UpdateEquipmentLoadoutRequested { Slot = st.SelectedTab, EquipmentId = d.id });
+                    EventManager.Publish(new UpdateEquipmentLoadoutRequested { Slot = st.SelectedTab, EquipmentId = d.Id });
                 }
             }
         }
@@ -112,11 +112,11 @@ namespace Crusaders30XX.ECS.Systems
             string slot = GetSlotName(st.SelectedTab);
 
             var collection = SaveCache.GetCollectionSet();
-            var all = EquipmentDefinitionCache.GetAll().Values
-                .Where(d => string.Equals((d.slot ?? string.Empty).Trim(), slot, System.StringComparison.OrdinalIgnoreCase))
-                .Where(d => collection.Contains(d.id))
-                .Where(d => (d.id ?? string.Empty) != equippedId)
-                .OrderBy(d => ((d.name ?? d.id) ?? string.Empty).ToLowerInvariant())
+            var all = EquipmentFactory.GetAllEquipment().Values
+                .Where(d => string.Equals(d.Slot.ToString(), slot, System.StringComparison.OrdinalIgnoreCase))
+                .Where(d => collection.Contains(d.Id))
+                .Where(d => d.Id != equippedId)
+                .OrderBy(d => d.Name.ToLowerInvariant())
                 .ToList();
 
             int x = 0 + LeftPadding;
@@ -128,7 +128,7 @@ namespace Crusaders30XX.ECS.Systems
                 var d = all[i];
                 int y = yBase + i * (h + ItemSpacing) - st.LeftScroll;
                 var bounds = new Rectangle(x, y, w, h);
-                EventManager.Publish(new EquipmentRenderEvent { EquipmentId = d.id, Bounds = bounds, IsEquipped = false, NameScale = _customizeEquipmentDisplaySystem.NameScale, TextScale = _customizeEquipmentDisplaySystem.TextScale });
+                EventManager.Publish(new EquipmentRenderEvent { EquipmentId = d.Id, Bounds = bounds, IsEquipped = false, NameScale = _customizeEquipmentDisplaySystem.NameScale, TextScale = _customizeEquipmentDisplaySystem.TextScale });
             }
         }
 

@@ -93,7 +93,6 @@ namespace Crusaders30XX.ECS.Systems
 		private MedalDisplaySystem _medalDisplaySystem;
 		private EquippedWeaponDisplaySystem _equippedWeaponDisplaySystem;
 		private EquipmentDisplaySystem _equipmentDisplaySystem;
-		private EquipmentUsedManagementSystem _equipmentUsedManagementSystem;
 		private HighlightSettingsSystem _equipmentHighlightSettingsDebugSystem;
 		private EquipmentBlockInteractionSystem _equipmentBlockInteractionSystem;
 		private AppliedPassivesManagementSystem _appliedPassivesManagementSystem;
@@ -477,7 +476,6 @@ namespace Crusaders30XX.ECS.Systems
 			_equippedWeaponDisplaySystem = new EquippedWeaponDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_medalDisplaySystem = new MedalDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_questTribulationDisplaySystem = new QuestTribulationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
-			_equipmentUsedManagementSystem = new EquipmentUsedManagementSystem(_world.EntityManager);
 			_equipmentHighlightSettingsDebugSystem = new HighlightSettingsSystem(_world.EntityManager);
 			_equipmentBlockInteractionSystem = new EquipmentBlockInteractionSystem(_world.EntityManager);
 			_appliedPassivesManagementSystem = new AppliedPassivesManagementSystem(_world.EntityManager);
@@ -566,7 +564,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_equippedWeaponDisplaySystem);
 			_world.AddSystem(_medalDisplaySystem);
 			_world.AddSystem(_questTribulationDisplaySystem);
-			_world.AddSystem(_equipmentUsedManagementSystem);
 			_world.AddSystem(_equipmentHighlightSettingsDebugSystem);
 			_world.AddSystem(_equipmentBlockInteractionSystem);
 			_world.AddSystem(_appliedPassivesManagementSystem);

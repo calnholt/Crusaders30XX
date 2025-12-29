@@ -4,7 +4,6 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Equipment;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
@@ -481,19 +480,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private string ResolveEquipmentSlotIcon(string equipmentId)
 		{
-			if (!EquipmentDefinitionCache.TryGet(equipmentId, out var def) || def == null || string.IsNullOrWhiteSpace(def.slot))
-			{
-				return "arms";
-			}
-			string key = def.slot.Trim().ToLowerInvariant();
-			switch (key)
-			{
-				case "head": return "head";
-				case "chest": return "chest";
-				case "arms": return "arms";
-				case "legs": return "legs";
-				default: return "arms";
-			}
+			return EquipmentFactory.Create(equipmentId).Slot.ToString();
 		}
 
 		private Texture2D SafeLoadTexture(string assetName)

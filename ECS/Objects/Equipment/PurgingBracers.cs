@@ -1,13 +1,14 @@
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Systems;
 
 namespace Crusaders30XX.ECS.Objects.Equipment
 {
   public class PurgingBracers : EquipmentBase
   {
-    private int Cost = 1;
-    private int Aggression = 8;
+    private readonly int Cost = 1;
+    private readonly int Aggression = 8;
     public PurgingBracers()
     {
       Id = "purging_bracers";
@@ -23,6 +24,9 @@ namespace Crusaders30XX.ECS.Objects.Equipment
     public override void Activate()
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Aggression, Delta = 8 });
+      EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
+      EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
+      RemainingUses--;
     }
   }
 }

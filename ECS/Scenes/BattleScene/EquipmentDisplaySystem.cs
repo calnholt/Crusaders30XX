@@ -8,7 +8,6 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
-using Crusaders30XX.ECS.Data.Equipment;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Services;
@@ -20,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 	/// grouped by type in vertical order: Head, Chest, Arms, Legs. Multiple items of the same
 	/// type are drawn in a row for that type.
 	/// </summary>
-	[DebugTab("Equipment Display")] 
+	[DebugTab("Equipment Display")]
 	public class EquipmentDisplaySystem : Core.System
 	{
 		private readonly GraphicsDevice _graphicsDevice;
@@ -31,7 +30,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
 		private readonly Dictionary<int, Entity> _tooltipByEquipEntityId = new();
 
-		private double _pulseTimeRemaining = 0.0;
+		private readonly Dictionary<int, double> _pulseTimeByEntityId = new();
 		private const double PulseDurationSeconds = 0.18; // similar to draw pile
 		private const float PulseAmplitude = 0.12f; // 12% size bump
 		private double _lastDt = 0.0;
@@ -95,8 +94,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnEquipmentAbilityTriggered(EquipmentAbilityTriggered evt)
 		{
-			// Trigger a brief pulse when any equipment ability triggers
-			_pulseTimeRemaining = PulseDurationSeconds;
+			// Trigger a brief pulse for the specific equipment that triggered
+			if (evt.Equipment != null)
+			{
+				_pulseTimeByEntityId[evt.Equipment.Id] = PulseDurationSeconds;
+			}
 		}
 
 		private void OnDeleteCachesEvent(DeleteCachesEvent evt)
@@ -104,12 +106,16 @@ namespace Crusaders30XX.ECS.Systems
 			_tooltipByEquipEntityId.Clear();
 			_iconCache.Clear();
 			_roundedRectCache.Clear();
+			_pulseTimeByEntityId.Clear();
 		}
 
-		private float GetCurrentPulseScale()
+		private float GetCurrentPulseScale(int entityId)
 		{
-			if (_pulseTimeRemaining <= 0.0) return 1f;
-			float t = (float)(1.0 - (_pulseTimeRemaining / PulseDurationSeconds));
+			if (!_pulseTimeByEntityId.TryGetValue(entityId, out var pulseTimeRemaining) || pulseTimeRemaining <= 0.0)
+			{
+				return 1f;
+			}
+			float t = (float)(1.0 - (pulseTimeRemaining / PulseDurationSeconds));
 			float wave = (float)Math.Sin(t * Math.PI);
 			return 1f + PulseAmplitude * wave;
 		}
@@ -132,10 +138,18 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
-			// Update pulse timer
-			if (_pulseTimeRemaining > 0.0)
+			// Update pulse timers for all entities
+			if (_lastDt > 0)
 			{
-				_pulseTimeRemaining = Math.Max(0.0, _lastDt > 0 ? _pulseTimeRemaining - _lastDt : _pulseTimeRemaining);
+				var keys = _pulseTimeByEntityId.Keys.ToList();
+				foreach (var entityId in keys)
+				{
+					var remaining = _pulseTimeByEntityId[entityId];
+					if (remaining > 0.0)
+					{
+						_pulseTimeByEntityId[entityId] = Math.Max(0.0, remaining - _lastDt);
+					}
+				}
 			}
 			var player = GetRelevantEntities().FirstOrDefault();
 			if (player == null) return;
@@ -152,110 +166,101 @@ namespace Crusaders30XX.ECS.Systems
 			if (equipment.Count == 0) return;
 
 			// Group and order types
-			string[] order = new[] { "Head", "Chest", "Arms", "Legs" };
+			EquipmentSlot[] order = [EquipmentSlot.Head, EquipmentSlot.Chest, EquipmentSlot.Arms, EquipmentSlot.Legs];
 			int baseX = LeftMargin;
 			int y = TopMargin;
 			int rowHeight = (IconSize + BgPadding * 2) + RowGap;
 			foreach (var type in order)
 			{
-				bool hasAnyOfType = allEquipmentForPlayer.Any(eq => string.Equals(eq.EquipmentType, type, StringComparison.OrdinalIgnoreCase));
-				if (!hasAnyOfType) { continue; }
-				var items = equipment.Where(eq => string.Equals(eq.EquipmentType, type, StringComparison.OrdinalIgnoreCase)).ToList();
+				var items = equipment.Where(eq => eq.Equipment.Slot == type).ToList();
 				// Draw items in a row if any are visible
 				if (items.Count > 0)
 				{
 					int x = baseX;
 					foreach (var item in items)
 					{
-					// Resolve equipment definition for visuals and tooltip
-					int bgW = IconSize + BgPadding * 2;
-					int bgH = IconSize + BgPadding * 2;
-					// Write layout to BasePosition; ParallaxLayerSystem will produce Position
-					var tEquip = item.Owner.GetComponent<Transform>();
-					if (tEquip != null)
-					{
-						tEquip.BasePosition = new Vector2(x, y);
-						tEquip.ZOrder = 10001;
-					}
-					// Build bg rect from current Position (after parallax)
-					var curPos = tEquip != null ? tEquip.Position : new Vector2(x, y);
-					var bgRect = new Rectangle((int)System.Math.Round(curPos.X), (int)System.Math.Round(curPos.Y), bgW, bgH);
-					// Persist panel center for return animations
-					var zoneState = item.Owner.GetComponent<EquipmentZone>();
-					if (zoneState == null)
-					{
-						zoneState = new EquipmentZone();
-						EntityManager.AddComponent(item.Owner, zoneState);
-					}
-					zoneState.LastPanelCenter = new Vector2(bgRect.X + bgRect.Width * 0.5f, bgRect.Y + bgRect.Height * 0.5f);
-					var fillColor = ResolveFillColor(item);
-					bool disabledNow = IsDisabledForBlock(item);
-					bool destroyedNow = IsDestroyed(item);
-					// Update tooltip and hover state before publishing highlight so hover is accurate
-					UpdateTooltip(item, bgRect);
-					UpdateClickable(item, bgRect);
-					// Publish highlight event on hover unless disabled; during Player Action phase only if item has Activate ability
-					var uiEquip = item.Owner.GetComponent<UIElement>();
-					var phaseNow = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
-					bool isPlayerAction = phaseNow != null && phaseNow.Main == MainPhase.PlayerTurn && phaseNow.Sub == SubPhase.Action;
-					// Now draw background and contents, with optional pulse
-					float pulseScale = GetCurrentPulseScale();
-					if (pulseScale != 1f)
-					{
-						int scaledW = (int)Math.Round(bgRect.Width * pulseScale);
-						int scaledH = (int)Math.Round(bgRect.Height * pulseScale);
-						var center = new Vector2(bgRect.X + bgRect.Width / 2f, bgRect.Y + bgRect.Height / 2f);
-						var scaled = new Rectangle((int)(center.X - scaledW / 2f), (int)(center.Y - scaledH / 2f), scaledW, scaledH);
-						DrawRoundedBackground(scaled, disabledNow ? DisabledFill(fillColor) : fillColor);
-						bgRect = scaled;
-					}
-					else
-					{
-						DrawRoundedBackground(bgRect, disabledNow ? DisabledFill(fillColor) : fillColor);
-					}
-
-					// Draw icon within padding, preserving aspect ratio
-					var tex = GetOrLoadIcon(type);
-					if (tex != null)
-					{
-						int targetH = IconSize;
-						int targetW = IconSize;
-						if (tex.Width > 0 && tex.Height > 0)
+						// Resolve equipment definition for visuals and tooltip
+						int bgW = IconSize + BgPadding * 2;
+						int bgH = IconSize + BgPadding * 2;
+						// Write layout to BasePosition; ParallaxLayerSystem will produce Position
+						var tEquip = item.Owner.GetComponent<Transform>();
+						if (tEquip != null)
 						{
-							float aspect = tex.Width / (float)tex.Height;
-							if (aspect >= 1f)
-							{
-								targetW = IconSize;
-								targetH = (int)Math.Round(IconSize / aspect);
-							}
-							else
-							{
-								targetH = IconSize;
-								targetW = (int)Math.Round(IconSize * aspect);
-							}
+							tEquip.BasePosition = new Vector2(x, y);
+							tEquip.ZOrder = 10001;
 						}
-						int innerX = bgRect.X + IconPaddingX;
-						int innerY = bgRect.Y + IconPaddingY;
-						// Center the icon within the padded area if one dimension is smaller due to aspect fit
-						int padBoxW = IconSize;
-						int padBoxH = IconSize;
-						int drawX = innerX + (padBoxW - targetW) / 2;
-						int drawY = innerY + (padBoxH - targetH) / 2;
-						var iconRect = new Rectangle(drawX, drawY, targetW, targetH);
-						_spriteBatch.Draw(tex, iconRect, disabledNow ? Color.Gray : Color.White);
-					}
+						// Build bg rect from current Position (after parallax)
+						var curPos = tEquip != null ? tEquip.Position : new Vector2(x, y);
+						var bgRect = new Rectangle((int)System.Math.Round(curPos.X), (int)System.Math.Round(curPos.Y), bgW, bgH);
+						// Persist panel center for return animations
+						var zoneState = item.Owner.GetComponent<EquipmentZone>();
+						if (zoneState == null)
+						{
+							zoneState = new EquipmentZone();
+							EntityManager.AddComponent(item.Owner, zoneState);
+						}
+						zoneState.LastPanelCenter = new Vector2(bgRect.X + bgRect.Width * 0.5f, bgRect.Y + bgRect.Height * 0.5f);
+						var fillColor = ResolveFillColor(item);
+						bool disabledNow = IsDisabledForBlock(item);
+						// Update tooltip and hover state before publishing highlight so hover is accurate
+						UpdateTooltip(item, bgRect);
+						UpdateClickable(item, bgRect);
+						// Publish highlight event on hover unless disabled; during Player Action phase only if item has Activate ability
+						var uiEquip = item.Owner.GetComponent<UIElement>();
+						var phaseNow = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+						bool isPlayerAction = phaseNow != null && phaseNow.Main == MainPhase.PlayerTurn && phaseNow.Sub == SubPhase.Action;
+						// Now draw background and contents, with optional pulse
+						float pulseScale = GetCurrentPulseScale(item.Owner.Id);
+						if (pulseScale != 1f)
+						{
+							int scaledW = (int)Math.Round(bgRect.Width * pulseScale);
+							int scaledH = (int)Math.Round(bgRect.Height * pulseScale);
+							var center = new Vector2(bgRect.X + bgRect.Width / 2f, bgRect.Y + bgRect.Height / 2f);
+							var scaled = new Rectangle((int)(center.X - scaledW / 2f), (int)(center.Y - scaledH / 2f), scaledW, scaledH);
+							DrawRoundedBackground(scaled, disabledNow ? DisabledFill(fillColor) : fillColor);
+							bgRect = scaled;
+						}
+						else
+						{
+							DrawRoundedBackground(bgRect, disabledNow ? DisabledFill(fillColor) : fillColor);
+						}
 
-					// Draw block value and shield icon at bottom-left
-					DrawBlockAndShield(item, bgRect, fillColor);
-					// Draw once-per-battle checkmark if any ability has oncePerBattle=true
-					DrawOncePerBattleCheck(item, bgRect);
-					// Draw usage {remaining}/{total}
-					DrawUsageCounter(item, bgRect, fillColor);
-					// Overlay yellow X if destroyed
-					if (destroyedNow)
-					{
-						DrawDestroyedX(bgRect);
-					}
+						// Draw icon within padding, preserving aspect ratio
+						var tex = GetOrLoadIcon(item.Equipment.Slot.ToString());
+						if (tex != null)
+						{
+							int targetH = IconSize;
+							int targetW = IconSize;
+							if (tex.Width > 0 && tex.Height > 0)
+							{
+								float aspect = tex.Width / (float)tex.Height;
+								if (aspect >= 1f)
+								{
+									targetW = IconSize;
+									targetH = (int)Math.Round(IconSize / aspect);
+								}
+								else
+								{
+									targetH = IconSize;
+									targetW = (int)Math.Round(IconSize * aspect);
+								}
+							}
+							int innerX = bgRect.X + IconPaddingX;
+							int innerY = bgRect.Y + IconPaddingY;
+							// Center the icon within the padded area if one dimension is smaller due to aspect fit
+							int padBoxW = IconSize;
+							int padBoxH = IconSize;
+							int drawX = innerX + (padBoxW - targetW) / 2;
+							int drawY = innerY + (padBoxH - targetH) / 2;
+							var iconRect = new Rectangle(drawX, drawY, targetW, targetH);
+							_spriteBatch.Draw(tex, iconRect, disabledNow ? Color.Gray : Color.White);
+						}
+
+						// Draw block value and shield icon at bottom-left
+						DrawBlockAndShield(item, bgRect, fillColor);
+						// Draw usage {remaining}/{total}
+						DrawUsageCounter(item, bgRect, fillColor);
+						// Overlay yellow X if destroyed
 						x += bgW + ColGap;
 					}
 				}
@@ -265,19 +270,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private bool IsDisabledForBlock(EquippedEquipment item)
 		{
-			// Disabled if out of uses during enemy turn
-			var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
-			bool isEnemyTurnBlock = phase != null && phase.Main == MainPhase.EnemyTurn && phase.Sub == SubPhase.Block;
-			int total = 0; int used = 0;
-			try
-			{
-				if (EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null) total = Math.Max(0, def.blockUses);
-				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-				var state = player?.GetComponent<EquipmentUsedState>();
-				if (state != null && !string.IsNullOrEmpty(item.EquipmentId) && state.UsesByEquipmentId.TryGetValue(item.EquipmentId, out var v)) used = v;
-			}
-			catch { }
-			return isEnemyTurnBlock && total > 0 && used >= total;
+			return item.Equipment.RemainingUses <= 0;
 		}
 
 		private Color DisabledFill(Color baseFill)
@@ -294,50 +287,13 @@ namespace Crusaders30XX.ECS.Systems
 			if (IsDisabledForBlock(item))
 			{
 				ui.IsInteractable = false;
-				ui.IsHovered = false;
+				// ui.IsHovered = false;
 			}
 			ui.Tooltip = BuildTooltipText(item);
 			ui.TooltipPosition = TooltipPosition.Right;
 			// Panel (default zone) items should use direct click handling, not delegate routing
 			ui.EventType = UIElementEventType.None;
-					// Transform.Position already reflects parallax; ZOrder handled above
-		}
-
-		private void DrawOncePerBattleCheck(EquippedEquipment item, Rectangle bgRect)
-		{
-			try
-			{
-				if (!EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) || def == null || def.abilities == null)
-				{
-					return;
-				}
-				// Only show if a once-per-battle ability for THIS equipment has already triggered this battle
-				var owner = item.EquippedOwner ?? EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-				var st = owner?.GetComponent<BattleStateInfo>();
-				bool shouldShow = false;
-				if (st != null && st.EquipmentTriggeredThisBattle != null)
-				{
-					foreach (var a in def.abilities)
-					{
-						if (a.oncePerBattle && !string.IsNullOrWhiteSpace(a.id) && st.EquipmentTriggeredThisBattle.Contains(a.id))
-						{
-							shouldShow = true;
-							break;
-						}
-					}
-				}
-				if (!shouldShow) return;
-				int size = Math.Max(6, CheckmarkSize);
-				float boxX = bgRect.Right - size + CheckmarkOffsetX;
-				float boxY = bgRect.Top + CheckmarkOffsetY;
-				var p1 = new Vector2(boxX + size * 0.15f, boxY + size * 0.55f);
-				var p2 = new Vector2(boxX + size * 0.40f, boxY + size * 0.82f);
-				var p3 = new Vector2(boxX + size * 0.90f, boxY + size * 0.20f);
-				float thickness = Math.Max(2f, size * 0.14f);
-				DrawCheckLine(p1, p2, thickness, Color.Black);
-				DrawCheckLine(p2, p3, thickness, 	Color.Black);
-			}
-			catch { }
+			// Transform.Position already reflects parallax; ZOrder handled above
 		}
 
 		private void DrawUsageCounter(EquippedEquipment item, Rectangle bgRect, Color fillColor)
@@ -345,19 +301,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (_font == null) return;
 			try
 			{
-				int total = 0;
-				if (EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null)
-				{
-					total = Math.Max(0, def.blockUses);
-				}
-				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-				int used = 0;
-				if (player != null)
-				{
-					var state = player.GetComponent<EquipmentUsedState>();
-					if (state != null && !string.IsNullOrEmpty(item.EquipmentId) && state.UsesByEquipmentId.TryGetValue(item.EquipmentId, out var val)) used = val;
-				}
-				int remaining = Math.Max(0, total - used);
+				int total = item.Equipment.Uses;
+				int remaining = Math.Max(0, item.Equipment.RemainingUses);
 				string text = $"{remaining}/{total}";
 				float scale = UsageTextScale;
 				var size = _font.MeasureString(text) * scale;
@@ -368,51 +313,6 @@ namespace Crusaders30XX.ECS.Systems
 				_spriteBatch.DrawString(_font, text, new Vector2(x, y), textColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 			}
 			catch { }
-		}
-
-		private void DrawCheckLine(Microsoft.Xna.Framework.Vector2 start, Microsoft.Xna.Framework.Vector2 end, float thickness, Microsoft.Xna.Framework.Color color)
-		{
-			if (!_iconCache.TryGetValue("_px1", out var px) || px == null)
-			{
-				px = new Texture2D(_graphicsDevice, 1, 1);
-				px.SetData(new[] { Color.White });
-				_iconCache["_px1"] = px;
-			}
-			Vector2 edge = end - start;
-			float len = edge.Length();
-			if (len <= 0.0001f) return;
-			float ang = (float)Math.Atan2(edge.Y, edge.X);
-			_spriteBatch.Draw(px, position: start, sourceRectangle: null, color: color, rotation: ang, origin: new Microsoft.Xna.Framework.Vector2(0f, 0.5f), scale: new Microsoft.Xna.Framework.Vector2(len, thickness), effects: SpriteEffects.None, layerDepth: 0f);
-		}
-
-		private bool IsDestroyed(EquippedEquipment item)
-		{
-			try
-			{
-				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-				var state = player?.GetComponent<EquipmentUsedState>();
-				if (state == null || string.IsNullOrEmpty(item.EquipmentId)) return false;
-				return state.DestroyedEquipmentIds.Contains(item.EquipmentId);
-			}
-			catch { return false; }
-		}
-
-		private void DrawDestroyedX(Rectangle rect)
-		{
-			// Reuse 1x1 pixel from icon cache
-			if (!_iconCache.TryGetValue("_px1", out var px) || px == null)
-			{
-				px = new Texture2D(_graphicsDevice, 1, 1);
-				px.SetData(new[] { Color.White });
-				_iconCache["_px1"] = px;
-			}
-			var start1 = new Vector2(rect.Left + 6, rect.Top + 6);
-			var end1 = new Vector2(rect.Right - 6, rect.Bottom - 6);
-			var start2 = new Vector2(rect.Right - 6, rect.Top + 6);
-			var end2 = new Vector2(rect.Left + 6, rect.Bottom - 6);
-			var color = new Color(255, 215, 0); // golden yellow
-			DrawCheckLine(start1, end1, 6f, color);
-			DrawCheckLine(start2, end2, 6f, color);
 		}
 
 		private void DrawRoundedBackground(Rectangle rect, Color fill)
@@ -448,13 +348,7 @@ namespace Crusaders30XX.ECS.Systems
 			int block = 0;
 			try
 			{
-				if (EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def))
-				{
-					if (def != null)
-					{
-						block = Math.Max(0, def.block);
-					}
-				}
+				block = Math.Max(0, item.Equipment.Block);
 			}
 			catch { }
 			if (block <= 0) return;
@@ -497,7 +391,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private string BuildTooltipText(EquippedEquipment item)
 		{
-			return EquipmentService.GetTooltipText(item.EquipmentId, EquipmentTooltipType.Battle);
+			return EquipmentService.GetTooltipText(item.Equipment, EquipmentTooltipType.Battle);
 		}
 
 		private Texture2D SafeLoadTexture(string asset)
@@ -507,22 +401,13 @@ namespace Crusaders30XX.ECS.Systems
 
 		private Color ResolveFillColor(EquippedEquipment item)
 		{
-			try
+			switch (item.Equipment.Color)
 			{
-				if (EquipmentDefinitionCache.TryGet(item.EquipmentId, out var def) && def != null)
-				{
-					string c = def.color?.Trim()?.ToLowerInvariant();
-					switch (c)
-					{
-						case "red": return Color.DarkRed;
-						case "white": return Color.White;
-						case "black": return Color.Black;
-						default: return Color.Gray;
-					}
-				}
+				case CardData.CardColor.Red: return Color.DarkRed;
+				case CardData.CardColor.White: return Color.White;
+				case CardData.CardColor.Black: return Color.Black;
+				default: return Color.Gray;
 			}
-			catch { }
-			return Color.Gray;
 		}
 
 		private Color GetTextColorForFill(Color fill)
@@ -545,7 +430,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			catch
 			{
-                Console.WriteLine($"[EquipmentDisplaySystem] Missing icon for type '{type}' (expected content asset '{assetName}')");
+				Console.WriteLine($"[EquipmentDisplaySystem] Missing icon for type '{type}' (expected content asset '{assetName}')");
 				_iconCache[key] = null;
 				return null;
 			}

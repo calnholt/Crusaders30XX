@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
-using Crusaders30XX.ECS.Data.Equipment;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -118,22 +118,22 @@ namespace Crusaders30XX.ECS.Systems
                     zone.Zone = EquipmentZoneType.Default;
                     // Update usage count for this equipment id
                     var eqComp = entity.GetComponent<EquippedEquipment>();
-                    if (eqComp != null && !string.IsNullOrEmpty(eqComp.EquipmentId))
+                    if (eqComp != null && !string.IsNullOrEmpty(eqComp.Equipment.Id))
                     {
-                        EventManager.Publish(new EquipmentUseResolved { EquipmentId = eqComp.EquipmentId, Delta = 1 });
+                        eqComp.Equipment.DecrementRemainingUses();
+                        Console.WriteLine($"[AssignedBlocksToDiscardSystem] Equipment {eqComp.Equipment.Id} remaining uses: {eqComp.Equipment.RemainingUses}");
                     }
                     // Mirror card resolution rewards: red equipment grants Courage, white grants Temperance
                     try
                     {
                         var eq = entity.GetComponent<EquippedEquipment>();
-                        if (eq != null && EquipmentDefinitionCache.TryGet(eq.EquipmentId, out var def) && def != null)
+                        if (eq != null)
                         {
-                            string c = (def.color ?? string.Empty).Trim().ToLowerInvariant();
-                            if (c == "red" || c == "r")
+                            if (eq.Equipment.Color == CardData.CardColor.Red)
                             {
                                 EventManager.Publish(new ModifyCourageRequestEvent { Delta = 1 });
                             }
-                            else if (c == "white" || c == "w")
+                            else if (eq.Equipment.Color == CardData.CardColor.White)
                             {
                                 EventManager.Publish(new ModifyTemperanceEvent { Delta = 1 });
                             }
