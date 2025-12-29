@@ -11,8 +11,9 @@ namespace Crusaders30XX.ECS.Objects.Equipment
     public string Text { get; set; }
     public EntityManager EntityManager { get; set; }
     public int Block { get; set; }
-    public int BlockUses { get; set; }
-    public string Color { get; set; }
+    public int Uses { get; set; }
+    public int RemainingUses { get; set; }
+    public CardData.CardColor Color { get; set; }
     public EquipmentSlot Slot { get; set; }
     public Entity EquipmentEntity { get; set; }
 
