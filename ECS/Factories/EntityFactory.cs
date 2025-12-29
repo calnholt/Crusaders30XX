@@ -451,6 +451,7 @@ namespace Crusaders30XX.ECS.Factories
 				{
 					case "medal": itemType = ForSaleItemType.Medal; break;
 					case "equipment": itemType = ForSaleItemType.Equipment; break;
+					case "weapon": itemType = ForSaleItemType.Weapon; break;
 					case "card":
 					default: itemType = ForSaleItemType.Card; break;
 				}
@@ -459,7 +460,7 @@ namespace Crusaders30XX.ECS.Factories
                 var card = CardFactory.Create(id);
 				try
 				{
-					if (itemType == ForSaleItemType.Card && card != null)
+					if ((itemType == ForSaleItemType.Card || itemType == ForSaleItemType.Weapon) && card != null)
 					{
 						displayName = string.IsNullOrWhiteSpace(card.Name) ? id : card.Name;
 					}
@@ -482,7 +483,7 @@ namespace Crusaders30XX.ECS.Factories
 				pl.AffectsUIBounds = true;
 				entityManager.AddComponent(e, pl);
                 var uiElement = new UIElement { Bounds = new Rectangle(-1000, -1000, 1, 1), IsInteractable = true };
-                if (itemType == ForSaleItemType.Card)
+                if (itemType == ForSaleItemType.Card || itemType == ForSaleItemType.Weapon)
                 {
                     uiElement.TooltipType = TooltipType.Card;
                     entityManager.AddComponent(e, new CardTooltip { CardId = id, TooltipScale = 0.8f });

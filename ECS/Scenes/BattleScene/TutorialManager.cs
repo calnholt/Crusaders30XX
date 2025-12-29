@@ -83,7 +83,12 @@ namespace Crusaders30XX.ECS.Systems
 
             if (currentPhase == SubPhase.Action)
             {
-                QueueConditionalTutorials();
+                TryQueueTutorial("cost");
+            }
+            if (currentPhase == SubPhase.Block)
+            {
+                TryQueueTutorial("medal");
+                TryQueueTutorial("equipment");
             }
         }
 
@@ -108,11 +113,6 @@ namespace Crusaders30XX.ECS.Systems
             TryQueueTutorial("courage");
             TryQueueTutorial("temperance");
             TryQueueTutorial("threat");
-        }
-
-        private void QueueConditionalTutorials()
-        {
-            TryQueueTutorial("cost");
         }
 
         private void TryQueueTutorial(string key)
@@ -146,6 +146,10 @@ namespace Crusaders30XX.ECS.Systems
             {
                 case "has_cost_card":
                     return HasCostCardInHand();
+                case "has_equipment":
+                    return HasEquipment();
+                case "has_medal":
+                    return HasMedal();
                 default:
                     return true;
             }
@@ -169,6 +173,18 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             return false;
+        }
+
+        private bool HasEquipment()
+        {
+            var equipmentEntity = EntityManager.GetEntitiesWithComponent<EquippedEquipment>().FirstOrDefault();
+            return equipmentEntity != null;
+        }
+
+        private bool HasMedal()
+        {
+            var medalEntity = EntityManager.GetEntitiesWithComponent<EquippedMedal>().FirstOrDefault();
+            return medalEntity != null;
         }
 
         private void StartNextTutorial()
@@ -260,18 +276,18 @@ namespace Crusaders30XX.ECS.Systems
             {
                 case "entity_name":
                     return GetEntityBounds(targetId);
-
                 case "component_hand":
                     return GetFirstHandCardBounds();
-
                 case "component_any":
                     return GetFirstComponentBounds(targetId);
-
                 case "ui_region":
                     return GetUIRegionBounds(targetId);
                 case "card_with_cost":
                     return GetCardWithCostBounds();
-
+                case "equipment":
+                    return GetEquipmentBounds();
+                case "medal":
+                    return GetMedalBounds();
                 default:
                     return Rectangle.Empty;
             }
@@ -349,6 +365,42 @@ namespace Crusaders30XX.ECS.Systems
             return Rectangle.Empty;
         }
 
+        private Rectangle GetEquipmentBounds()
+        {
+            var equipmentEntity = EntityManager.GetEntitiesWithComponent<EquippedEquipment>().FirstOrDefault();
+            if (equipmentEntity == null)
+            {
+                Console.WriteLine($"[TutorialManager] Equipment entity not found");
+                return Rectangle.Empty;
+            }
+
+            var ui = equipmentEntity.GetComponent<UIElement>();
+            if (ui != null && ui.Bounds.Width > 0 && ui.Bounds.Height > 0)
+            {
+                return new Rectangle(ui.Bounds.X, ui.Bounds.Y, ui.Bounds.Width, ui.Bounds.Height);
+            }
+
+            Console.WriteLine($"[TutorialManager] Equipment bounds not found");
+            return Rectangle.Empty;
+        }
+
+        private Rectangle GetMedalBounds()
+        {
+            var medalEntity = EntityManager.GetEntitiesWithComponent<EquippedMedal>().FirstOrDefault();
+            if (medalEntity == null)
+            {
+                Console.WriteLine($"[TutorialManager] Medal entity not found");
+                return Rectangle.Empty;
+            }
+            var ui = medalEntity.GetComponent<UIElement>();
+            if (ui != null && ui.Bounds.Width > 0 && ui.Bounds.Height > 0)
+            {
+                return new Rectangle(ui.Bounds.X, ui.Bounds.Y, ui.Bounds.Width, ui.Bounds.Height);
+            }
+
+            Console.WriteLine($"[TutorialManager] Medal bounds not found");
+            return Rectangle.Empty;
+        }
         private Rectangle GetUIRegionBounds(string regionId)
         {
             // Predefined UI regions
@@ -380,7 +432,14 @@ namespace Crusaders30XX.ECS.Systems
                 if (cardData == null) continue;
 
                 if (cardData.Card.Cost != null && cardData.Card.Cost.Count > 0)
-                    return new Rectangle(card.GetComponent<UIElement>().Bounds.X, card.GetComponent<UIElement>().Bounds.Y, card.GetComponent<UIElement>().Bounds.Width, card.GetComponent<UIElement>().Bounds.Height);
+                {
+                    var ui = card.GetComponent<UIElement>();
+                    if (ui != null && ui.Bounds.Width > 0 && ui.Bounds.Height > 0)
+                    {
+                        return new Rectangle(ui.Bounds.X, ui.Bounds.Y, ui.Bounds.Width, ui.Bounds.Height);
+                    }
+
+                }
             }
             return Rectangle.Empty;
         }

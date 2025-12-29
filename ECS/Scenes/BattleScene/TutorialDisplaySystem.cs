@@ -350,7 +350,7 @@ namespace Crusaders30XX.ECS.Systems
             DrawBubble();
 
             // Draw guardian angel
-            DrawGuardianAngel();
+            // DrawGuardianAngel();
 
             // Draw continue hint
             DrawContinueHint();

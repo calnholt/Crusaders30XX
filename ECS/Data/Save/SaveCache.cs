@@ -3,6 +3,9 @@ using System.Linq;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Loadouts;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Objects.Equipment;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Data.Save
 {
@@ -225,9 +228,7 @@ namespace Crusaders30XX.ECS.Data.Save
 					"strike", 
 					"stun",
 					"tempest",
-					"dagger",
 					"sword",
-					"st_michael"
 				},
 				items = new List<SaveItem>(),
 				lastLocation = "desert_1",
@@ -270,7 +271,7 @@ namespace Crusaders30XX.ECS.Data.Save
 							"tempest|Black",
 							"tempest|White",
 						},
-						weaponId = "dagger",
+						weaponId = "sword",
 						temperanceId = "angelic_aura",
 						chestId = "",
 						legsId = "",
@@ -278,7 +279,7 @@ namespace Crusaders30XX.ECS.Data.Save
 						headId = "",
 						medalIds = new List<string>
 						{
-							"st_michael",
+
 						}
 					}
 				}
@@ -337,7 +338,7 @@ namespace Crusaders30XX.ECS.Data.Save
 			return null;
 		}
 
-		public static bool TrySpendGoldAndAddToCollection(string itemId, int price, out int newGold)
+		public static bool TrySpendGoldAndAddToCollection(string itemId, int price, ForSaleItemType itemType, out int newGold)
 		{
 			newGold = 0;
 			if (price < 0) price = 0;
@@ -364,6 +365,41 @@ namespace Crusaders30XX.ECS.Data.Save
 				if (!string.IsNullOrWhiteSpace(itemId) && !_save.collection.Contains(itemId))
 				{
 					_save.collection.Add(itemId);
+					if (itemType == ForSaleItemType.Medal && _save.loadouts[0].medalIds.Count < 3)
+					{
+						_save.loadouts[0].medalIds.Add(itemId);
+					}
+					if (itemType == ForSaleItemType.Equipment)
+					{
+						EquipmentBase equipment = EquipmentFactory.Create(itemId);
+						switch (equipment.Slot)
+						{
+							case EquipmentSlot.Chest:
+								if (string.IsNullOrEmpty(_save.loadouts[0].chestId))
+								{
+									_save.loadouts[0].chestId = itemId;
+								}
+								break;
+							case EquipmentSlot.Legs:
+								if (string.IsNullOrEmpty(_save.loadouts[0].legsId))
+								{
+									_save.loadouts[0].legsId = itemId;
+								}
+								break;
+							case EquipmentSlot.Arms:
+								if (string.IsNullOrEmpty(_save.loadouts[0].armsId))
+								{
+									_save.loadouts[0].armsId = itemId;
+								}
+								break;
+							case EquipmentSlot.Head:
+								if (string.IsNullOrEmpty(_save.loadouts[0].headId))
+								{
+									_save.loadouts[0].headId = itemId;
+								}
+								break;
+						}
+					}
 				}
 
 				Persist();

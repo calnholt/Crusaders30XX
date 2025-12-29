@@ -457,8 +457,13 @@
           "Price": 1
         },
         {
-          "Id": "st_luke",
+          "Id": "st_michael",
           "Type": "Medal",
+          "Price": 2
+        },
+        {
+          "Id": "dagger",
+          "Type": "Weapon",
           "Price": 2
         },
         {
@@ -507,6 +512,11 @@
           "Id": "shield_of_faith",
           "Type": "Card",
           "Price": 1
+        },
+        {
+          "Id": "st_luke",
+          "Type": "Medal",
+          "Price": 2
         },
         {
           "Id": "purging_bracers",

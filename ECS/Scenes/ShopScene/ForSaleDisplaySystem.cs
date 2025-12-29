@@ -342,6 +342,22 @@ namespace Crusaders30XX.ECS.Systems
 						}
 						break;
 					}
+					case ForSaleItemType.Weapon:
+					{
+						var card = EnsureCardPreview(x.FS.Id, CardData.CardColor.White);
+							if (card != null)
+							{
+								var t = card.GetComponent<Transform>();
+								if (t != null) t.Rotation = 0f;
+								EventManager.Publish(new CardRenderScaledRotatedEvent
+								{
+									Card = card,
+									Position = contentCenter,
+									Scale = ContentScale
+								});
+							}
+						break;
+					}
 					case ForSaleItemType.Medal:
 					{
 						DrawIconScaled(ResolveMedalTextureName(x.FS.Id), contentCenter, IconSize);
@@ -417,11 +433,6 @@ namespace Crusaders30XX.ECS.Systems
 				Lerp(BottomAngleA, BottomAngleB, AngleMix),
 				Lerp(LeftAngleA, LeftAngleB, AngleMix)
 			);
-		}
-
-		private Entity EnsureCardPreview(string cardId)
-		{
-			return EnsureCardPreview(cardId, CardData.CardColor.White);
 		}
 
 		private Entity EnsureCardPreview(string cardId, CardData.CardColor color)

@@ -6,7 +6,8 @@ namespace Crusaders30XX.ECS.Components
 	{
 		Card,
 		Medal,
-		Equipment
+		Equipment,
+		Weapon
 	}
 
 	public class ForSaleItem : IComponent

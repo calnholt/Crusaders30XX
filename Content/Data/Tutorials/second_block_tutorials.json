@@ -26,5 +26,21 @@
     "targetType": "entity_name",
     "targetId": "UI_ThreatTooltip",
     "bubbleOrientation": "left"
+  },
+  {
+    "key": "equipment",
+    "text": "Equipment can either be used to block damage from enemy attacks, or activated during the action phase for powerful effects. Just be careful - most equipment has a limited number of uses!",
+    "targetType": "equipment",
+    "targetId": "Equipment",
+    "condition": "has_equipment",
+    "bubbleOrientation": "right"
+  },
+  {
+    "key": "medal",
+    "text": "Medals provide passive benefits. You can equip up to three medals at a time. Choose wisely!",
+    "targetType": "medal",
+    "targetId": "Medal",
+    "condition": "has_medal",
+    "bubbleOrientation": "bottom"
   }
 ]

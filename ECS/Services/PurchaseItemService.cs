@@ -56,7 +56,7 @@ namespace Crusaders30XX.ECS.Services
 			result.LocationId = locationId ?? string.Empty;
 
 			// Update save: subtract gold and add to collection
-			if (!TrySpendGoldAndAddToCollection(fs.Id, price, out int newGold))
+			if (!TrySpendGoldAndAddToCollection(fs.Id, price, fs.ItemType, out int newGold))
 			{
 				result.Error = "SaveUpdateFailed";
 				return result;
@@ -83,12 +83,12 @@ namespace Crusaders30XX.ECS.Services
 			return result;
 		}
 
-		private static bool TrySpendGoldAndAddToCollection(string itemId, int price, out int newGold)
+		private static bool TrySpendGoldAndAddToCollection(string itemId, int price, ForSaleItemType itemType, out int newGold)
 		{
 			newGold = 0;
 			try
 			{
-				return SaveCache.TrySpendGoldAndAddToCollection(itemId, price, out newGold);
+				return SaveCache.TrySpendGoldAndAddToCollection(itemId, price, itemType, out newGold);
 			}
 			catch
 			{

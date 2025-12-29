@@ -191,7 +191,9 @@ namespace Crusaders30XX.ECS.Systems
 						}
 						// Build bg rect from current Position (after parallax)
 						var curPos = tEquip != null ? tEquip.Position : new Vector2(x, y);
+						var uiEquip = item.Owner.GetComponent<UIElement>();
 						var bgRect = new Rectangle((int)System.Math.Round(curPos.X), (int)System.Math.Round(curPos.Y), bgW, bgH);
+						uiEquip.Bounds = new Rectangle(bgRect.X, bgRect.Y, bgRect.Width, bgRect.Height);
 						// Persist panel center for return animations
 						var zoneState = item.Owner.GetComponent<EquipmentZone>();
 						if (zoneState == null)
@@ -206,7 +208,6 @@ namespace Crusaders30XX.ECS.Systems
 						UpdateTooltip(item, bgRect);
 						UpdateClickable(item, bgRect);
 						// Publish highlight event on hover unless disabled; during Player Action phase only if item has Activate ability
-						var uiEquip = item.Owner.GetComponent<UIElement>();
 						var phaseNow = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
 						bool isPlayerAction = phaseNow != null && phaseNow.Main == MainPhase.PlayerTurn && phaseNow.Sub == SubPhase.Action;
 						// Now draw background and contents, with optional pulse
