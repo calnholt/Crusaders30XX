@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -20,6 +21,18 @@ namespace Crusaders30XX.ECS.Systems
 			var s = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ =>
 			{
+				// TODO: mindfog system? - kinda shoehorned in here
+				if (_.Current == SubPhase.PlayerEnd)
+				{
+					var passives = GetComponentHelper.GetAppliedPassives(EntityManager, "Player");
+					if (passives != null)
+					{
+						if (passives.Passives.TryGetValue(AppliedPassiveType.MindFog, out int mindFogAmount) && mindFogAmount > 0)
+						{
+							EventManager.Publish(new DiscardAllCardsEvent());
+						}
+					}
+				}
 				if (_.Current == SubPhase.EnemyStart)
 				{
 					DrawUpToIntellect();

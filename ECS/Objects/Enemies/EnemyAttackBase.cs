@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     public string Id { get; set; }
     public string Name { get; set; }
     public int Damage { get; set; }
+    public int AdditionalDamage { get; set; } = 0;
     public ConditionType ConditionType { get; set; } = ConditionType.None;
     public BlockingRestrictionType BlockingRestrictionType { get; set; } = BlockingRestrictionType.None;
     public int[] ValuesParse { get; set; } = [];

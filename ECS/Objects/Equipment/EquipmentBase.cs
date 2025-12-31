@@ -30,6 +30,11 @@ namespace Crusaders30XX.ECS.Objects.Equipment
       EventManager.Publish(new EquipmentActivateEvent { EquipmentEntity = EquipmentEntity });
     }
 
+    public virtual void CantActivateMessage()
+    {
+      EventManager.Publish(new CantPlayCardMessage { Message = "Not enough uses!" });
+    }
+
     public virtual void Dispose()
     {
       Console.WriteLine($"[EquipmentBase] Dispose: {Id}");

@@ -19,6 +19,13 @@
     "targetType": "component_hand",
     "targetId": "CardData",
     "bubbleOrientation": "top"
+  },
+  {
+    "key": "tribulation",
+    "text": "Some quests have tribulation effects. These effects are triggered at the start of the battle and can be beneficial or detrimental. Hover over this icon to see the effect(s).",
+    "targetType": "entity_name",
+    "targetId": "TribulationChalice",
+    "condition": "has_tribulation",
+    "bubbleOrientation": "right"
   }
 ]
-

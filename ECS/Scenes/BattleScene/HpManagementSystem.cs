@@ -38,6 +38,7 @@ namespace Crusaders30XX.ECS.Systems
 			int before = hp.Current;
 			// TODO: iterate through applied passives and apply their effects
 			int passiveDelta = AppliedPassivesService.GetPassiveDelta(e);
+			Console.WriteLine($"[HpManagementSystem] OnModifyHpRequest passiveDelta={passiveDelta}");
 			int newDelta = e.Delta + passiveDelta;
 			if (e.DamageType == ModifyTypeEnum.Heal && newDelta < 0)
 			{

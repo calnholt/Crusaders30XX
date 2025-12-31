@@ -149,6 +149,13 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Event to request discarding all cards in the hand
+    /// </summary>
+    public class DiscardAllCardsEvent
+    {
+    }
+
+    /// <summary>
     /// Event to request moving a card into a destination zone. A single authoritative system should handle this.
     /// </summary>
     public class CardMoveRequested

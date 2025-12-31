@@ -195,7 +195,6 @@ namespace Crusaders30XX.ECS.Systems
 						}
 					}
 					EventManager.Publish(new SetShopTitle { Title = shopTitle });
-					SaveCache.SetLastLocation(poiComp.Id);
 					EventManager.Publish(new ShowTransition { Scene = SceneId.Shop });
 				}
 			}

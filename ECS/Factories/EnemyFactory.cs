@@ -29,6 +29,8 @@ namespace Crusaders30XX.ECS.Factories
                 "spider" => new Spider(),
                 "succubus" => new Succubus(),
                 "cactus" => new Cactus(),
+                "dust_wuurm" => new DustWuurm(),
+                "sorcerer" => new Sorcerer(),
                 _ => null
             };
         }
@@ -51,7 +53,9 @@ namespace Crusaders30XX.ECS.Factories
                 { "skeleton", new Skeleton() },
                 { "spider", new Spider() },
                 { "succubus", new Succubus() },
-                { "cactus", new Cactus() }
+                { "cactus", new Cactus() },
+                { "dust_wuurm", new DustWuurm() },
+                { "sorcerer", new Sorcerer() }
             };
         }
     }

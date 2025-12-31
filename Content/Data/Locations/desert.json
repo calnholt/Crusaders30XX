@@ -298,7 +298,7 @@
         915,
         1820
       ],
-      "RevealRadius": 400,
+      "RevealRadius": 800,
       "UnrevealedRadius": 150,
       "Type": "Quest",
       "Name": "Fangs of the Beast",
@@ -316,16 +316,40 @@
     {
       "Id": "desert_15",
       "WorldPosition": [
-        2270,
-        1275
+        200,
+        1750
       ],
-      "RevealRadius": 400,
+      "RevealRadius": 300,
       "UnrevealedRadius": 150,
       "Type": "Quest",
-      "Name": "Thorny Situation",
-      "Difficulty": 4,
+      "Name": "From the Depths",
+      "Difficulty": 2,
       "Reward": {
-        "Gold": 3
+        "Gold": 2
+      },
+      "Events": [
+        {
+          "id": "sorcerer",
+          "type": "Enemy"
+        },
+        {
+          "id": "dust_wuurm",
+          "type": "Enemy"
+        }
+      ]
+    },
+    {
+      "Id": "desert_7",
+      "WorldPosition": [
+        4775,
+        700
+      ],
+      "RevealRadius": 1000,
+      "UnrevealedRadius": 150,
+      "Type": "Hellrift",
+      "Difficulty": 5,
+      "Reward": {
+        "Gold": 10
       },
       "Events": [
         {
@@ -344,16 +368,23 @@
           "id": "ninja",
           "type": "Enemy"
         }
+      ],
+      "Tribulations": [
+        {
+          "text": "You are poisoned.",
+          "trigger": "StartOfBattle"
+        }
       ]
     },
     {
-      "Id": "desert_7",
+      "Id": "desert_8",
+      "Name": "A Thorny Situation",
       "WorldPosition": [
-        4775,
-        700
+        720,
+        2550
       ],
       "RevealRadius": 1000,
-      "UnrevealedRadius": 100,
+      "UnrevealedRadius": 150,
       "Type": "Hellrift",
       "Difficulty": 5,
       "Reward": {
@@ -361,19 +392,8 @@
       },
       "Events": [
         {
-          "id": "ogre",
-          "type": "Enemy"
-        },
-        {
-          "id": "spider",
-          "type": "Enemy"
-        },
-        {
-          "id": "demon",
-          "type": "Enemy"
-        },
-        {
-          "id": "skeleton",
+          "id": "cactus",
+
           "type": "Enemy"
         },
         {
@@ -381,28 +401,18 @@
           "type": "Enemy"
         },
         {
+          "id": "mummy",
+          "type": "Enemy"
+        },
+        {
           "id": "ninja",
           "type": "Enemy"
         }
-      ]
-    },
-    {
-      "Id": "desert_8",
-      "WorldPosition": [
-        720,
-        2550
       ],
-      "RevealRadius": 1000,
-      "UnrevealedRadius": 100,
-      "Type": "Hellrift",
-      "Difficulty": 5,
-      "Reward": {
-        "Gold": 10
-      },
-      "Events": [
+      "Tribulations": [
         {
-          "id": "ogre",
-          "type": "Enemy"
+          "text": "You are poisoned.",
+          "trigger": "StartOfBattle"
         }
       ]
     },
@@ -413,7 +423,7 @@
         2623
       ],
       "RevealRadius": 1000,
-      "UnrevealedRadius": 100,
+      "UnrevealedRadius": 150,
       "Type": "Hellrift",
       "Difficulty": 5,
       "Reward": {

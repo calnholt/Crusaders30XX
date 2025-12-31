@@ -47,6 +47,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private float _timerRemaining;
 		private bool _wasPoisonedLastFrame;
+		private bool _paused = false;
 
 		public PoisonSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch) : base(entityManager)
 		{
@@ -56,8 +57,20 @@ namespace Crusaders30XX.ECS.Systems
 
 			EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);
 			EventManager.Subscribe<PassiveTriggered>(_ => { /* no-op; kept for potential future feedback hooks */ });
+			EventManager.Subscribe<TutorialStartedEvent>(OnTutorialStarted);
+			EventManager.Subscribe<TutorialCompletedEvent>(OnTutorialCompleted);
+
 		}
 
+	private void OnTutorialStarted(TutorialStartedEvent e)
+	{
+			_paused = true;
+	}
+
+	private void OnTutorialCompleted(TutorialCompletedEvent e)
+	{
+		_paused = false;
+	}
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
 		{
 			// Run once per frame by anchoring to scene state
@@ -66,6 +79,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
+			if (_paused) return;
 			var player = EntityManager.GetEntity("Player");
 			if (player == null) return;
 			bool isPoisoned = IsPoisoned(player);

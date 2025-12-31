@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Enemy";
             Text = "{50}% chance to gain {2} courage.";
             Animation = "Attack";
-            Damage = 8;
+            Damage = 12;
             Block = 3;
 
             OnPlay = (entityManager, card) =>

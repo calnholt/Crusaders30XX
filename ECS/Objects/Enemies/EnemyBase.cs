@@ -13,7 +13,6 @@ public abstract class EnemyBase : IDisposable
   public string Name { get; set; }
   public int MaxHealth { get; set; }
   public int CurrentHealth { get; set; }
-  public List<AppliedPassiveType> Passives { get; set; } = new List<AppliedPassiveType>();
   public Action<EntityManager> OnCreate { get; protected set; }
   public EntityManager EntityManager { get; set; }
 

@@ -22,6 +22,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<DeckShuffleEvent>(OnDeckShuffleEvent);
             EventManager.Subscribe<ResetDeckEvent>(OnResetDeckEvent);
             EventManager.Subscribe<RemoveTopCardFromDrawPileRequested>(OnRemoveTopCardFromDrawPileRequested);
+            EventManager.Subscribe<DiscardAllCardsEvent>(OnDiscardAllCards);
         }
         
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -335,6 +336,16 @@ namespace Crusaders30XX.ECS.Systems
                 Card = card
             });
             Console.WriteLine("[DeckManagementSystem] Removed top card for mill animation and published TopCardRemovedForMillEvent");
+        }
+
+        private void OnDiscardAllCards(DiscardAllCardsEvent evt)
+        {
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            if (deckEntity == null) return;
+            var deck = deckEntity.GetComponent<Deck>();
+            if (deck == null) return;
+            deck.DiscardPile.AddRange(deck.Hand);
+            deck.Hand.Clear();
         }
     }
 } 

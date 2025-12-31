@@ -100,16 +100,10 @@ namespace Crusaders30XX.ECS.Systems
         private void EnemyShieldsMaintenance(Entity enemyEntity)
         {
             var enemy = enemyEntity.GetComponent<Enemy>();
-            var def = enemy.EnemyBase;
-            var shield = def.Passives.Find(p => p == AppliedPassiveType.Shield);
-            if (shield == AppliedPassiveType.Shield)
+            var ap = enemyEntity.GetComponent<AppliedPassives>();
+            if (ap.Passives.TryGetValue(AppliedPassiveType.Shield, out int shieldAmount) && shieldAmount > 0)
             {
-                var appliedPassives = enemyEntity.GetComponent<AppliedPassives>();
-                appliedPassives.Passives.TryGetValue(AppliedPassiveType.Shield, out var shieldAmount);
-                if (shieldAmount <= 0)
-                {
-                    EventManager.Publish(new ApplyPassiveEvent { Target = enemyEntity, Type = AppliedPassiveType.Shield, Delta = 1 });
-                }
+                EventManager.Publish(new ApplyPassiveEvent { Target = enemyEntity, Type = AppliedPassiveType.Shield, Delta = 1 });
             }
         }
         private void ApplyStartOfTurnPassives(Entity owner)
@@ -198,12 +192,22 @@ namespace Crusaders30XX.ECS.Systems
                 var attackDef = GetComponentHelper.GetPlannedAttack(EntityManager);
                 if (attackDef == null) return;
                 attackDef.Damage += aggressionStacks;
+                attackDef.AdditionalDamage += aggressionStacks;
                 Console.WriteLine($"[AppliedPassivesManagementSystem] ApplyStartOfPreBlockPassives.Aggression - {attackDef.Damage}");
                 EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Aggression });
                 TimerScheduler.Schedule(0.3f, () =>
                 {
                     EventManager.Publish(new RemovePassive { Owner = enemy, Type = AppliedPassiveType.Aggression });
                 });
+            }
+            if (ap.Passives.TryGetValue(AppliedPassiveType.Power, out int powerStacks) && powerStacks > 0)
+            {
+                var attackDef = GetComponentHelper.GetPlannedAttack(EntityManager);
+                if (attackDef == null) return;
+                attackDef.Damage += powerStacks;
+                attackDef.AdditionalDamage += powerStacks;
+                Console.WriteLine($"[AppliedPassivesManagementSystem] ApplyStartOfPreBlockPassives.Power - {attackDef.Damage}");
+                EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Power });
             }
         }
 

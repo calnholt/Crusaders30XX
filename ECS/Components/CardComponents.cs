@@ -14,6 +14,8 @@ namespace Crusaders30XX.ECS.Components
     /// <summary>
     /// Component that holds the basic data for a card
     /// </summary>
+    /// 
+    /// 
     public class CardData : IComponent
     {
         public Entity Owner { get; set; }
@@ -177,7 +179,8 @@ namespace Crusaders30XX.ECS.Components
     public class MaxHandSize : IComponent
     {
         public Entity Owner { get; set; }
-        public int Value { get; set; } = 5;
+        public int Value { get; set; } = MAX_HAND_SIZE;
+        public static readonly int MAX_HAND_SIZE = 5;
     }
 
 
@@ -990,6 +993,10 @@ namespace Crusaders30XX.ECS.Components
         Siphon,
         Thorns,
         Bleed,
+        Rage,
+        Intellect,
+        Intimidated,
+        MindFog,
     }
 
     public class MarkedForReturnToDeck : IComponent

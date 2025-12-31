@@ -14,6 +14,7 @@ namespace Crusaders30XX.ECS.Systems
           return 0;
         }
         var delta = 0;
+        var isEnemy = e.Source.HasComponent<Enemy>();
         var sourcePassives = e.Source.GetComponent<AppliedPassives>().Passives;
         var targetPassives = e.Target.GetComponent<AppliedPassives>().Passives;
         // var phaseState = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
@@ -37,8 +38,9 @@ namespace Crusaders30XX.ECS.Systems
           targetPassives.TryGetValue(AppliedPassiveType.Wounded, out var amount);
           delta += amount;
         }
-        if (sourcePassives.ContainsKey(AppliedPassiveType.Power) && e.DamageType == ModifyTypeEnum.Attack)
+        if (sourcePassives.ContainsKey(AppliedPassiveType.Power) && e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
         {
+          Console.WriteLine($"[AppliedPassivesService] GetPassiveDelta.Power - {sourcePassives[AppliedPassiveType.Power]}");
           sourcePassives.TryGetValue(AppliedPassiveType.Power, out var amount);
           delta += amount;
         }

@@ -69,6 +69,10 @@ namespace Crusaders30XX.ECS.Factories
                 "needle_rain" => new NeedleRain(),
                 "barbed_volley" => new BarbedVolley(),
                 "prickly_burst" => new PricklyBurst(),
+                // DustWuurm attacks
+                "dust_storm" => new DustStorm(),
+                // Sorcerer attacks
+                "strange_force" => new StrangeForce(),
                 // Generic attacks
                 "have_no_mercy" => new HaveNoMercy(),
                 _ => null
@@ -134,6 +138,10 @@ namespace Crusaders30XX.ECS.Factories
                 { "needle_rain", new NeedleRain() },
                 { "barbed_volley", new BarbedVolley() },
                 { "prickly_burst", new PricklyBurst() },
+                // DustWuurm attacks
+                { "dust_storm", new DustStorm() },
+                // Sorcerer attacks
+                { "strange_force", new StrangeForce() },
                 // Generic attacks
                 { "have_no_mercy", new HaveNoMercy() },
             };

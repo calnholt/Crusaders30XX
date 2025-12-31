@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
         case AppliedPassiveType.Stealth:
           return "You cannot see the number of attacks this monster plans.";
         case AppliedPassiveType.Power:
-          return $"Your attacks deal +{stacks} damage this battle.";
+          return $"{(isPlayer ? "Your" : "The enemy's")} attacks deal +{stacks} damage this battle.";
         case AppliedPassiveType.Poison:
           return $"Every 60 seconds, lose 1 HP.";
         case AppliedPassiveType.Shield:
@@ -45,6 +45,14 @@ namespace Crusaders30XX.ECS.Systems
           return $"You gain {stacks} bleed whenever you attack this enemy.";
         case AppliedPassiveType.Bleed:
           return $"While you have bleed, lose 1 HP at the start of your turn then remove one bleed. Lasts for the rest of the quest.";
+        case AppliedPassiveType.Rage:
+          return $"{(isPlayer ? "You" : "The enemy")} gain{(isPlayer ? "" : "s")} {stacks} power at the start of the {(isPlayer ? "block phase" : "action phase")}.";
+        case AppliedPassiveType.Intellect:
+          return $"Your max hand size and the number of cards you draw at the start of the block phase is increased by {stacks} for the rest of the quest.";
+        case AppliedPassiveType.Intimidated:
+          return $"At the start of the block phase, {stacks} {(stacks == 1 ? "card" : "cards")} from your hand {(stacks == 1 ? "is" : "are")} intimidated.";
+        case AppliedPassiveType.MindFog:
+          return $"At the end of your action phase, discard all cards in your hand.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

@@ -7,17 +7,18 @@ namespace Crusaders30XX.ECS.Objects.Equipment
 {
   public class PiercedHeartPlate : EquipmentBase
   {
-    private readonly int Cost = 1;
-    private readonly int Courage = 2;
+    private readonly int Cost = 2;
+    private readonly int Courage = 3;
     public PiercedHeartPlate()
     {
       Id = "pierced_heart_plate";
       Name = "Pierced Heart Plate";
       Slot = EquipmentSlot.Chest;
-      Block = 4;
-      Uses = 1;
+      Block = 2;
+      Uses = 2;
       Color = CardData.CardColor.Black;
-      Text = $"Gain {Courage} courage. Lose {Cost} use. Free action.";
+      Text = $"Gain {Courage} courage. Costs {Cost} uses. Free action.";
+      CanActivate = () => RemainingUses == Uses;
     }
 
     public override void Activate()
@@ -25,7 +26,10 @@ namespace Crusaders30XX.ECS.Objects.Equipment
       EventManager.Publish(new ModifyCourageRequestEvent { Delta = Courage });
       EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
       EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
-      RemainingUses--;
+      for (int i = 0; i < Cost; i++)
+      {
+        RemainingUses--;
+      }
     }
   }
 }

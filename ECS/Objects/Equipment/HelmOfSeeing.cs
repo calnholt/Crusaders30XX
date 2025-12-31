@@ -1,3 +1,4 @@
+using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -9,6 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
   {
     private readonly int Cost = 1;
     private readonly int Cards = 1;
+    private readonly int Courage = 2;
     public HelmOfSeeing()
     {
       Id = "helm_of_seeing";
@@ -17,7 +19,10 @@ namespace Crusaders30XX.ECS.Objects.Equipment
       Block = 4;
       Uses = 1;
       Color = CardData.CardColor.Red;
-      Text = $"Draw {Cards} card. Lose {Cost} use. Free action.";
+      Text = $"Draw {Cards} card. Lose {Cost} use and {Courage} courage. Free action.";
+      CanActivate = () => {
+        return RemainingUses == Uses && EntityManager.GetEntitiesWithComponent<Courage>().FirstOrDefault()?.GetComponent<Courage>().Amount >= Courage;
+      };
     }
 
     public override void Activate()
@@ -25,7 +30,26 @@ namespace Crusaders30XX.ECS.Objects.Equipment
       EventManager.Publish(new RequestDrawCardsEvent { Count = Cards });
       EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
       EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
-      RemainingUses--;
+      EventManager.Publish(new ModifyCourageRequestEvent { Delta = -Courage });
+      for (int i = 0; i < Cost; i++)
+      {
+        RemainingUses--;
+      }
+    }
+
+    public override void CantActivateMessage()
+    {
+      if (RemainingUses != Uses)
+      {
+        EventManager.Publish(new CantPlayCardMessage { Message = "Not enough uses!" });
+        return;
+      }
+      var courage = EntityManager.GetEntitiesWithComponent<Courage>().FirstOrDefault()?.GetComponent<Courage>().Amount;
+      if (courage < Courage)
+      {
+        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {Courage} courage!" });
+        return;
+      }
     }
   }
 }

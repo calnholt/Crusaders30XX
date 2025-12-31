@@ -82,11 +82,12 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
                     wasHit = finalDamage - prog.AegisTotal > 0;
+                    Console.WriteLine($"[EnemyDamageManagerSystem] ModifyHpRequestEvent finalDamage={finalDamage} aegisTotal={prog.AegisTotal} wasHit={wasHit}");
                     EventManager.Publish(new ModifyHpRequestEvent 
                     { 
                         Source = enemy, 
                         Target = player, 
-                        Delta = -finalDamage 
+                        Delta = -finalDamage
                     });
                 }
             }

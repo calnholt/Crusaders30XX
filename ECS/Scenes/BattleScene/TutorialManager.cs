@@ -89,6 +89,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 TryQueueTutorial("medal");
                 TryQueueTutorial("equipment");
+                TryQueueTutorial("tribulation");
             }
         }
 
@@ -150,6 +151,8 @@ namespace Crusaders30XX.ECS.Systems
                     return HasEquipment();
                 case "has_medal":
                     return HasMedal();
+                case "has_tribulation":
+                    return HasTribulation();
                 default:
                     return true;
             }
@@ -185,6 +188,12 @@ namespace Crusaders30XX.ECS.Systems
         {
             var medalEntity = EntityManager.GetEntitiesWithComponent<EquippedMedal>().FirstOrDefault();
             return medalEntity != null;
+        }
+
+        private bool HasTribulation()
+        {
+            var tribulationEntity = EntityManager.GetEntitiesWithComponent<Tribulation>().FirstOrDefault();
+            return tribulationEntity != null;
         }
 
         private void StartNextTutorial()
@@ -288,6 +297,8 @@ namespace Crusaders30XX.ECS.Systems
                     return GetEquipmentBounds();
                 case "medal":
                     return GetMedalBounds();
+                case "tribulation":
+                    return GetTribulationBounds();
                 default:
                     return Rectangle.Empty;
             }
@@ -399,6 +410,21 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             Console.WriteLine($"[TutorialManager] Medal bounds not found");
+            return Rectangle.Empty;
+        }
+        private Rectangle GetTribulationBounds()
+        {
+            var tribulationEntity = EntityManager.GetEntitiesWithComponent<Tribulation>().FirstOrDefault();
+            if (tribulationEntity == null)
+            {
+                return Rectangle.Empty;
+            }
+            var ui = tribulationEntity.GetComponent<UIElement>();
+            if (ui != null && ui.Bounds.Width > 0 && ui.Bounds.Height > 0)
+            {
+                return new Rectangle(ui.Bounds.X, ui.Bounds.Y, ui.Bounds.Width, ui.Bounds.Height);
+            }
+            Console.WriteLine($"[TutorialManager] Tribulation bounds not found");
             return Rectangle.Empty;
         }
         private Rectangle GetUIRegionBounds(string regionId)

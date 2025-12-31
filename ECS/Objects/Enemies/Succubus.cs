@@ -102,7 +102,7 @@ public class SoulSiphon : EnemyAttackBase
     Damage = 4;
     ConditionType = ConditionType.OnHit;
     BlockingRestrictionType = BlockingRestrictionType.NotRed;
-    Text = $"{EnemyAttackTextHelper.GetBlockingRestrictionText(BlockingRestrictionType)}\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, 0, ConditionType, 100, "Lose [2] courage.")}";
+    Text = $"{EnemyAttackTextHelper.GetBlockingRestrictionText(BlockingRestrictionType)}\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, 0, ConditionType, 100, "Lose [1] courage.")}";
 
     OnAttackHit = (entityManager) =>
     {
@@ -152,7 +152,7 @@ public class CrushingAdoration : EnemyAttackBase
   {
     Id = "crushing_adoration";
     Name = "Crushing Adoration";
-    Damage = 3;
+    Damage = 2;
     ConditionType = ConditionType.OnHit;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Aggression, 2, ConditionType);
 

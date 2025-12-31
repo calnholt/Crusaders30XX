@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -34,6 +35,15 @@ namespace Crusaders30XX.ECS.Systems
 			if (evt.Current == SubPhase.EnemyEnd)
 			{
 				RemoveAllIntimidateEffects();
+			}
+			if (evt.Current == SubPhase.PreBlock)
+			{
+				var passives = GetComponentHelper.GetAppliedPassives(EntityManager, "Player");
+				if (passives == null) return;
+				if (passives.Passives.TryGetValue(AppliedPassiveType.Intimidated, out int intimidationAmount) && intimidationAmount > 0)
+				{
+					ApplyIntimidateEffects(intimidationAmount);
+				}
 			}
 		}
 

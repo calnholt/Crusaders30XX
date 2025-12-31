@@ -27,7 +27,11 @@ namespace Crusaders30XX.ECS.Systems
 			if (e.EquipmentEntity == null) return;
 			var equipment = e.EquipmentEntity.GetComponent<EquippedEquipment>();
 			if (equipment == null) return;
-			if (!equipment.Equipment.HasUses || !equipment.Equipment.CanActivate()) return;
+			if (!equipment.Equipment.CanActivate())
+			{
+				equipment.Equipment.CantActivateMessage();
+				return;
+			}
 			equipment.Equipment.Activate();
 			EventManager.Publish(new EquipmentAbilityTriggered { Equipment = e.EquipmentEntity, EquipmentId = equipment.Equipment.Id });
 		}
