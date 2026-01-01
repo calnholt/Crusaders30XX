@@ -60,13 +60,17 @@ namespace Crusaders30XX.ECS.Systems
                     var threat = enemy.GetComponent<Threat>();
                     if (threat != null && threat.Amount > 0)
                     {
-                        EventManager.Publish(new ApplyPassiveEvent 
-                        { 
-                            Target = enemy, 
-                            Type = AppliedPassiveType.Aggression, 
-                            Delta = threat.Amount 
-                        });
-                        Console.WriteLine($"[ThreatManagementSystem] Applied {threat.Amount} Aggression to enemy at start of turn");
+                        EventQueueBridge.EnqueueTriggerAction("ThreatManagementSystem.ApplyAggression", () =>
+                        {
+                            EventManager.Publish(new ApplyPassiveEvent 
+                            { 
+                                Target = enemy, 
+                                Type = AppliedPassiveType.Aggression, 
+                                Delta = threat.Amount 
+                            });
+                            EventManager.Publish(new JigglePulseEvent { Target = EntityManager.GetEntity("UI_ThreatTooltip") });
+                            Console.WriteLine($"[ThreatManagementSystem] Applied {threat.Amount} Aggression to enemy at start of turn");
+                        }, .5f);
                     }
                 }
             }
@@ -75,7 +79,7 @@ namespace Crusaders30XX.ECS.Systems
         private void OnModifyHpRequest(ModifyHpRequestEvent e)
         {
             // Reduce threat by 1 when enemy takes attack damage
-            if (e.DamageType == ModifyTypeEnum.Attack && e.Target != null && e.Target.HasComponent<Enemy>())
+            if (e.DamageType == ModifyTypeEnum.Attack && e.Target != null && e.Target.HasComponent<Enemy>() && e.Delta < 0)
             {
                 var threat = e.Target.GetComponent<Threat>();
                 if (threat != null)

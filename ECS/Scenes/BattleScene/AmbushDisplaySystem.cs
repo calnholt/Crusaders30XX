@@ -75,7 +75,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int MeterFillAlpha { get; set; } = 240;
 
 		[DebugEditable(DisplayName = "Default Timer (s)", Step = 1, Min = 1, Max = 60)]
-		public int DefaultTimerSeconds { get; set; } = 25;
+		public int DefaultTimerSeconds { get; set; } = 30;
 
 		public AmbushDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)
 		{

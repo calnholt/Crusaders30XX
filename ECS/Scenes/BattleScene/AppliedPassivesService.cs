@@ -40,9 +40,13 @@ namespace Crusaders30XX.ECS.Systems
         }
         if (sourcePassives.ContainsKey(AppliedPassiveType.Power) && e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
         {
-          Console.WriteLine($"[AppliedPassivesService] GetPassiveDelta.Power - {sourcePassives[AppliedPassiveType.Power]}");
           sourcePassives.TryGetValue(AppliedPassiveType.Power, out var amount);
           delta += amount;
+        }
+        if (sourcePassives.ContainsKey(AppliedPassiveType.Penance) && e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
+        {
+          sourcePassives.TryGetValue(AppliedPassiveType.Penance, out var amount);
+          delta -= amount;
         }
         return -delta;
       }

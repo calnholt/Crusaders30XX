@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
       Id = "purging_bracers";
       Name = "Purging Bracers";
       Slot = EquipmentSlot.Arms;
-      Block = 3;
+      Block = 2;
       Uses = 1;
 
       Color = CardData.CardColor.White;

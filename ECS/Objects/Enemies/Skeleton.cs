@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.Enemies;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Utils;
 
@@ -18,7 +19,7 @@ public class Skeleton : EnemyBase
     Name = "Skeleton";
     MaxHealth = 65;
 
-    OnCreate = (entityManager) =>
+    OnStartOfBattle = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Armor, Delta = 2 });
     };
@@ -28,12 +29,18 @@ public class Skeleton : EnemyBase
   {
     int random = Random.Shared.Next(0, 100);
     var linkers = new List<string> { "bone_strike", "sweep", "calcify" };
-    if (random <= 50)
+    if (random <= 60)
     {
-      return ArrayUtils.TakeRandomWithReplacement(linkers, 3);
+      var selected = ArrayUtils.TakeRandomWithReplacement(linkers, 3);
+      var sweepCount = selected.Count(x => x == "sweep");
+      while (sweepCount > 2)
+      {
+        selected = ArrayUtils.TakeRandomWithReplacement(linkers, 3);
+        sweepCount = selected.Count(x => x == "sweep");
+      }
+      return selected;
     }
-    var linker = ArrayUtils.TakeRandomWithReplacement(linkers, 1);
-    return ArrayUtils.Shuffled(linker.Append("skull_crusher"));
+    return ["skull_crusher"];
   }
 }
 
@@ -43,9 +50,9 @@ public class BoneStrike : EnemyAttackBase
   {
     Id = "bone_strike";
     Name = "Bone Strike";
-    Damage = 1;
+    Damage = 2;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, 2, ConditionType.OnHit);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, 1, ConditionType.OnHit);
 
     OnAttackHit = (entityManager) =>
     {
@@ -60,13 +67,24 @@ public class Sweep : EnemyAttackBase
   {
     Id = "sweep";
     Name = "Sweep";
-    Damage = 5;
+    Damage = 4;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Corrode, 1);
+
+    OnAttackReveal = (entityManager) =>
+    {
+      if (IsQuestOneBattle)
+      {
+        Text = string.Empty;
+      }
+    };
     
     OnBlockProcessed = (entityManager, card) =>
     {
-      // TODO: should send an event
-      BlockValueService.ApplyDelta(card, -ValuesParse[0], "Corrode");
+      if (!IsQuestOneBattle)
+      {
+        // TODO: should send an event
+        BlockValueService.ApplyDelta(card, -ValuesParse[0], "Corrode");
+      }
     };
   }
 }
@@ -94,6 +112,6 @@ public class SkullCrusher : EnemyAttackBase
   {
     Id = "skull_crusher";
     Name = "Skull Crusher";
-    Damage = 7;
+    Damage = 9;
   }
 }

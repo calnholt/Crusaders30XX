@@ -13,25 +13,24 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "serpent_crush";
             Name = "Serpent Crush";
             Target = "Enemy";
-            Text = "As an additional cost, lose {4} courage. Gain {1} action point.";
+            Text = "As an additional cost, lose {4} courage. Gain {1} action point and draw {1} card.";
             IsFreeAction = true;
             Animation = "Attack";
-            Damage = 15;
+            Damage = 7;
             Type = CardType.Attack;
             Block = 3;
 
             OnPlay = (entityManager, card) =>
             {
-                var player = entityManager.GetEntity("Player");
-                var enemy = entityManager.GetEntity("Enemy");
-                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -ValuesParse[0] });
-                EventManager.Publish(new ModifyActionPointsEvent { Delta = ValuesParse[1] });
                 EventManager.Publish(new ModifyHpRequestEvent { 
-                    Source = player, 
-                    Target = enemy, 
+                    Source = entityManager.GetEntity("Player"), 
+                    Target = entityManager.GetEntity("Enemy"), 
                     Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -ValuesParse[0] });
+                EventManager.Publish(new ModifyActionPointsEvent { Delta = ValuesParse[1] });
+                EventManager.Publish(new RequestDrawCardsEvent { Count = ValuesParse[2] });
             };
 
             CanPlay = (entityManager, card) =>

@@ -21,7 +21,7 @@ public class Succubus : EnemyBase
     MaxHealth = 105;
     CurrentHealth = MaxHealth - 10;
 
-    OnCreate = (entityManager) =>
+    OnStartOfBattle = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Siphon, Delta = 1 });
     };
@@ -118,13 +118,13 @@ public class EnthrallingGaze : EnemyAttackBase
     Id = "enthralling_gaze";
     Name = "Enthralling Gaze";
     Damage = 3;
-    ConditionType = ConditionType.MustBeBlockedByAtLeast1Card;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 1);
+    // ConditionType = ConditionType.MustBeBlockedByAtLeast1Card;
+    // Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 1);
 
-    OnAttackReveal = (entityManager) =>
-    {
-      EventManager.Publish(new MustBeBlockedEvent { Threshold = ValuesParse[0], Type = MustBeBlockedByType.AtLeast });
-    };
+    // OnAttackReveal = (entityManager) =>
+    // {
+    //   EventManager.Publish(new MustBeBlockedEvent { Threshold = ValuesParse[0], Type = MustBeBlockedByType.AtLeast });
+    // };
   }
 }
 
@@ -165,7 +165,7 @@ public class CrushingAdoration : EnemyAttackBase
 
 public class VelvetFangs : EnemyAttackBase
 {
-  public int Multiplier { get; set; } = 2;
+  public int Multiplier { get; set; } = 3;
   public VelvetFangs()
   {
     Id = "velvet_fangs";

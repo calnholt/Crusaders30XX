@@ -20,8 +20,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
             OnPlay = (entityManager, card) =>
             {
-                var player = entityManager.GetEntity("Player");
-                var enemy = entityManager.GetEntity("Enemy");
                 var time = 0.5f;
                 var numOfHits = ValuesParse[0];
                 EventManager.Publish(new EndTurnDisplayEvent { ShowButton = false });
@@ -32,8 +30,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 {
                     TimerScheduler.Schedule(time + (j * time), () => {
                         EventManager.Publish(new ModifyHpRequestEvent { 
-                            Source = player, 
-                            Target = enemy, 
+                            Source = entityManager.GetEntity("Player"), 
+                            Target = entityManager.GetEntity("Enemy"), 
                             Delta = -GetDerivedDamage(entityManager, card), 
                             DamageType = ModifyTypeEnum.Attack 
                         });

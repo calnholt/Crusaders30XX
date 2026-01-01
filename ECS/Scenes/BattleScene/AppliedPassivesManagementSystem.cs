@@ -55,7 +55,13 @@ namespace Crusaders30XX.ECS.Systems
             if (evt == null) return;
             if (evt.Current == SubPhase.StartBattle)
             {
+                var enemyBase = enemy.GetComponent<Enemy>();
+                if (enemyBase != null && enemyBase.EnemyBase != null && enemyBase.EnemyBase.OnStartOfBattle != null)
+                {
+                    enemyBase.EnemyBase.OnStartOfBattle(EntityManager);
+                }
                 EnemyShieldsMaintenance(enemy);
+                ConvertPenanceToScar(player);
             }
             if (evt.Current == SubPhase.PlayerEnd)
             {
@@ -104,6 +110,20 @@ namespace Crusaders30XX.ECS.Systems
             if (ap.Passives.TryGetValue(AppliedPassiveType.Shield, out int shieldAmount) && shieldAmount > 0)
             {
                 EventManager.Publish(new ApplyPassiveEvent { Target = enemyEntity, Type = AppliedPassiveType.Shield, Delta = 1 });
+            }
+        }
+
+        private void ConvertPenanceToScar(Entity player)
+        {
+            var ap = player.GetComponent<AppliedPassives>();
+            if (ap == null) return;
+            if (ap.Passives.TryGetValue(AppliedPassiveType.Penance, out int penanceStacks) && penanceStacks > 0)
+            {
+                EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Inferno", () =>
+                {
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Scar, Delta = penanceStacks });
+                    EventManager.Publish(new RemovePassive { Owner = player, Type = AppliedPassiveType.Penance });
+                }, .5f);
             }
         }
         private void ApplyStartOfTurnPassives(Entity owner)

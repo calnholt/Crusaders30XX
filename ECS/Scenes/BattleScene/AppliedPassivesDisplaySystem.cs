@@ -257,7 +257,7 @@ namespace Crusaders30XX.ECS.Systems
                     ui.Bounds = rect;
                     ui.Tooltip = text ?? string.Empty;
                     ui.TooltipPosition = TooltipPosition.Below;
-                    ui.IsInteractable = true;
+                    ui.IsInteractable = false;
                 }
             }
         }

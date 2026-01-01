@@ -25,8 +25,10 @@ namespace Crusaders30XX.ECS.Systems
           return $"At the start of your turn, gain {stacks} slow. Lasts for the rest of the quest.";
         case AppliedPassiveType.Inferno:
           return $"At the start of your turn, gain {stacks} burn {(stacks == 1 ? "" : "s")} this battle.";
-        case AppliedPassiveType.Penance:
+        case AppliedPassiveType.Scar:
           return $"Lose {stacks} max HP for the rest of the quest.";
+        case AppliedPassiveType.Penance:
+          return $"Your attacks deal {stacks} less damage this battle. At the start of the next battle, these are converted to scars.";
         case AppliedPassiveType.Aggression:
           return $"The next attack this turn gains {stacks} damage.";
         case AppliedPassiveType.Stealth:
@@ -46,13 +48,15 @@ namespace Crusaders30XX.ECS.Systems
         case AppliedPassiveType.Bleed:
           return $"While you have bleed, lose 1 HP at the start of your turn then remove one bleed. Lasts for the rest of the quest.";
         case AppliedPassiveType.Rage:
-          return $"{(isPlayer ? "You" : "The enemy")} gain{(isPlayer ? "" : "s")} {stacks} power at the start of the {(isPlayer ? "block phase" : "action phase")}.";
+          return $"{(isPlayer ? "You" : "The enemy")} gain{(isPlayer ? "" : "s")} {stacks} power at the start of the {(isPlayer ? "action phase" : "block phase")}.";
         case AppliedPassiveType.Intellect:
           return $"Your max hand size and the number of cards you draw at the start of the block phase is increased by {stacks} for the rest of the quest.";
         case AppliedPassiveType.Intimidated:
           return $"At the start of the block phase, {stacks} {(stacks == 1 ? "card" : "cards")} from your hand {(stacks == 1 ? "is" : "are")} intimidated.";
         case AppliedPassiveType.MindFog:
           return $"At the end of your action phase, discard all cards in your hand.";
+        case AppliedPassiveType.Channel:
+          return $"Increases the potency of attacks.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

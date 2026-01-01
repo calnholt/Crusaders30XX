@@ -73,7 +73,7 @@ public class InfernalExecution : EnemyAttackBase
     Name = "Infernal Execution";
     Damage = 6;
     ConditionType = ConditionType.MustBeBlockedByAtLeast1Card;
-    Text = $"{EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 2)}\n\nGain [1] burn.";
+    Text = $"On attack - Gain [1] burn.\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 2)}";
 
     OnAttackReveal = (entityManager) =>
     {

@@ -388,10 +388,10 @@ namespace Crusaders30XX.ECS.Factories
 
             var playerEntity = world.EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 
-            if (def.OnCreate != null)
-            {
-                def.OnCreate(world.EntityManager);
-            }
+            // if (def.OnStartOfBattle != null)
+            // {
+            //     def.OnStartOfBattle(world.EntityManager);
+            // }
 
             // Apply quest modifications if any
             if (modifications != null && modifications.Count > 0)

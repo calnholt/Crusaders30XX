@@ -10,13 +10,13 @@ namespace Crusaders30XX.ECS.Objects.Equipment
   {
     private readonly int Cost = 1;
     private readonly int Cards = 1;
-    private readonly int Courage = 2;
+    private readonly int Courage = 4;
     public HelmOfSeeing()
     {
       Id = "helm_of_seeing";
       Name = "Helm of Seeing";
       Slot = EquipmentSlot.Head;
-      Block = 4;
+      Block = 2;
       Uses = 1;
       Color = CardData.CardColor.Red;
       Text = $"Draw {Cards} card. Lose {Cost} use and {Courage} courage. Free action.";

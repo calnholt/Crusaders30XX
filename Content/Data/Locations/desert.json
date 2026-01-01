@@ -329,11 +329,11 @@
       },
       "Events": [
         {
-          "id": "sorcerer",
+          "id": "dust_wuurm",
           "type": "Enemy"
         },
         {
-          "id": "dust_wuurm",
+          "id": "sorcerer",
           "type": "Enemy"
         }
       ]
@@ -451,11 +451,7 @@
           "Type": "Card",
           "Price": 1
         },
-        {
-          "Id": "shroud_of_turin",
-          "Type": "Card",
-          "Price": 1
-        },
+
         {
           "Id": "vindicate",
           "Type": "Card",
@@ -463,6 +459,11 @@
         },
         {
           "Id": "narrow_gate",
+          "Type": "Card",
+          "Price": 1
+        },
+        {
+          "Id": "divine_protection",
           "Type": "Card",
           "Price": 1
         },

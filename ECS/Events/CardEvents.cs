@@ -459,7 +459,6 @@ namespace Crusaders30XX.ECS.Events
     /// </summary>
     public class MillCardEvent
     {
-        public Entity Deck { get; set; }
     }
 
     /// <summary>
@@ -468,7 +467,6 @@ namespace Crusaders30XX.ECS.Events
     /// </summary>
     public class RemoveTopCardFromDrawPileRequested
     {
-        public Entity Deck { get; set; }
     }
 
     /// <summary>

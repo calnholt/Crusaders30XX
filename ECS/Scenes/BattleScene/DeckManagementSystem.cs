@@ -313,7 +313,7 @@ namespace Crusaders30XX.ECS.Systems
         /// </summary>
         private void OnRemoveTopCardFromDrawPileRequested(RemoveTopCardFromDrawPileRequested evt)
         {
-            var deckEntity = evt.Deck ?? EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             if (deckEntity == null) return;
             var deck = deckEntity.GetComponent<Deck>();
             if (deck == null || deck.DrawPile.Count == 0) return;

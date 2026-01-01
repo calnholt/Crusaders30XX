@@ -109,6 +109,7 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var id in attackIds)
 			{
 				var attackDef = EnemyAttackFactory.Create(id);
+				attackDef.Initialize(EntityManager);
 				string ctx = Guid.NewGuid().ToString("N");
 				var passives = EntityManager.GetEntity("Player").GetComponent<AppliedPassives>().Passives;
 				int ambushChance = attackDef.AmbushPercentage + (passives.ContainsKey(AppliedPassiveType.Fear) ? passives[AppliedPassiveType.Fear] * 10 : 0);

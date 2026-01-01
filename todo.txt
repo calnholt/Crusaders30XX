@@ -23,12 +23,18 @@ SFX:
 - trigger threat
 - ambush
 
+features -
 
-- intent
-- threat
-- equipment
+card mastery system
+achievement board system
+
+
 
 fixes - 
+
+enemy death animation
+
+victory animation
 
 modal / pay cost close buttons
 

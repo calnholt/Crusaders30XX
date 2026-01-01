@@ -20,7 +20,7 @@ public class Cactus : EnemyBase
 
     EventManager.Subscribe<ModifyHpEvent>(OnModifyHpEvent);
 
-    OnCreate = (entityManager) =>
+    OnStartOfBattle = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Thorns, Delta = Thorns });
     };

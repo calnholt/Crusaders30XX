@@ -262,7 +262,7 @@ namespace Crusaders30XX.ECS.Systems
 				
 				// UI bounds size only; Parallax will center bounds at Transform.Position when AffectsUIBounds is true
 				// Hellrift POIs are not interactable
-				bool isInteractable = poiType != PointOfInterestType.Hellrift;
+				bool isInteractable = pos.isRevealed || poiType == PointOfInterestType.Shop || poiType == PointOfInterestType.Quest;
 				var tooltipType = (poiType == PointOfInterestType.Shop) ? TooltipType.None : TooltipType.Quests;
 				var eventType = (poiType == PointOfInterestType.Shop) ? UIElementEventType.None : UIElementEventType.QuestSelect;
 				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, boundsWidth, boundsHeight), IsInteractable = isInteractable, TooltipType = tooltipType, EventType = eventType, IsPreventDefaultClick = true });
@@ -354,7 +354,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (x.UI != null)
 				{
 					x.UI.IsHidden = !isVisible;
-					x.UI.IsInteractable = isVisible && x.P.Type != PointOfInterestType.Hellrift;
+					x.UI.IsInteractable = (isVisible && (x.P.Type == PointOfInterestType.Shop || x.P.Type == PointOfInterestType.Quest)) || x.P.IsRevealedByProximity;
 				}
 
 				if (!isVisible) continue;

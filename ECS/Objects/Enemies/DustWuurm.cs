@@ -16,7 +16,7 @@ public class DustWuurm : EnemyBase
     MaxHealth = 110;
     EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
 
-    OnCreate = (entityManager) =>
+    OnStartOfBattle = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Rage, Delta = 1 });
     };

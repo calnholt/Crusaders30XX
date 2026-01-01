@@ -37,5 +37,12 @@ namespace Crusaders30XX.ECS.Services
             if (appliedPassives == null) return null;
             return appliedPassives;
         }
+
+        public static bool IsQuestOneBattle(EntityManager entityManager)
+        {
+            var queuedEvents = entityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
+            if (queuedEvents == null) return false;
+            return queuedEvents.GetComponent<QueuedEvents>().Events.Count == 1;
+        }
     }
 }

@@ -49,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
             weapon = player?.GetComponent<EquippedWeapon>()?.SpawnedEntity;
             var candidates = deck.Hand.Where(c => !ReferenceEquals(c, weapon)).ToList();
             int pick = System.Math.Min(evt.Amount, candidates.Count);
+            Console.WriteLine($"[MarkedForSpecificDiscardSystem] Picking {pick} cards from {candidates.Count} candidates");
             if (pick <= 0) return;
             // Shuffle candidates and take the first N
             var selected = candidates.OrderBy(_ => _random.Next()).Take(pick).ToList();

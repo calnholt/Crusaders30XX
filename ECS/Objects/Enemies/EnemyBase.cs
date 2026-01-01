@@ -13,7 +13,7 @@ public abstract class EnemyBase : IDisposable
   public string Name { get; set; }
   public int MaxHealth { get; set; }
   public int CurrentHealth { get; set; }
-  public Action<EntityManager> OnCreate { get; protected set; }
+  public Action<EntityManager> OnStartOfBattle { get; protected set; }
   public EntityManager EntityManager { get; set; }
 
   public virtual void Dispose()

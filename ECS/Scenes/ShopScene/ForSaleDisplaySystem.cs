@@ -37,11 +37,11 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Tile Width", Step = 5, Min = 80, Max = 800)]
 		public int TileWidth { get; set; } = 425;
 		[DebugEditable(DisplayName = "Tile Height", Step = 5, Min = 80, Max = 800)]
-		public int TileHeight { get; set; } = 275;
+		public int TileHeight { get; set; } = 280;
 		[DebugEditable(DisplayName = "Horizontal Gap", Step = 2, Min = 0, Max = 200)]
 		public int HorizontalGap { get; set; } = 32;
 		[DebugEditable(DisplayName = "Vertical Gap", Step = 2, Min = 0, Max = 200)]
-		public int VerticalGap { get; set; } = 24;
+		public int VerticalGap { get; set; } = 72;
 		[DebugEditable(DisplayName = "Panel Margin X", Step = 2, Min = 0, Max = 400)]
 		public int PanelMarginX { get; set; } = 60;
 		[DebugEditable(DisplayName = "Panel Margin Top", Step = 2, Min = 0, Max = 800)]

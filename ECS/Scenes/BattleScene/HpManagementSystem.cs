@@ -144,7 +144,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			switch (e.Type)
 			{
-				case AppliedPassiveType.Penance:
+				case AppliedPassiveType.Scar:
 					var hp = e.Target.GetComponent<HP>();
 					if (hp == null) return;
 					var atFullHp = hp.Current == hp.Max;

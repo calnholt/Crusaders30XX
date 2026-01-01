@@ -19,11 +19,11 @@ public class HaveNoMercy : EnemyAttackBase
     OnAttackReveal = (entityManager) =>
     {
       EventManager.Publish(new MarkedForSpecificDiscardEvent { Amount = 1 });
-        var markedCard = entityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>().FirstOrDefault().GetComponent<CardData>().Card.Name;
-        if (markedCard != null)
-        {
-          Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, 0, ConditionType, 100, $"Discard {markedCard} from your hand.");
-        }
+      var markedCard = entityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>().FirstOrDefault().GetComponent<CardData>().Card.Name;
+      if (markedCard != null)
+      {
+        Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, 0, ConditionType, 100, $"Discard {markedCard} from your hand.");
+      }
     };
   }
 }

@@ -227,7 +227,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnMillRequested(MillCardEvent evt)
 		{
 			// Ask deck manager to remove the top card; animation starts when response arrives
-			EventManager.Publish(new RemoveTopCardFromDrawPileRequested { Deck = evt.Deck });
+			EventManager.Publish(new RemoveTopCardFromDrawPileRequested { });
 		}
 
 		private void OnTopCardRemovedForMill(TopCardRemovedForMillEvent evt)

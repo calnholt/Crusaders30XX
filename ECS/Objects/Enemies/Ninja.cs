@@ -19,7 +19,7 @@ public class Ninja : EnemyBase
     Name = "Ninja";
     MaxHealth = 80;
 
-    OnCreate = (entityManager) =>
+    OnStartOfBattle = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Stealth, Delta = 1 });
     };
@@ -159,10 +159,21 @@ public class ShadowStep : EnemyAttackBase
     Damage = 3;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Corrode, 2);
 
+    OnAttackReveal = (entityManager) =>
+    {
+      if (IsQuestOneBattle)
+      {
+        Text = string.Empty;
+      }
+    };
+
     OnBlockProcessed = (entityManager, card) =>
     {
-      // TODO: should send an event
-      BlockValueService.ApplyDelta(card, -ValuesParse[0], "Corrode");
+      if (!IsQuestOneBattle)
+      {
+        // TODO: should send an event to the player to block the attack
+        BlockValueService.ApplyDelta(card, -ValuesParse[0], "Corrode");
+      }
     };
   }
 }

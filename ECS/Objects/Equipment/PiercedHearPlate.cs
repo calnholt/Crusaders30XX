@@ -8,13 +8,13 @@ namespace Crusaders30XX.ECS.Objects.Equipment
   public class PiercedHeartPlate : EquipmentBase
   {
     private readonly int Cost = 2;
-    private readonly int Courage = 3;
+    private readonly int Courage = 2;
     public PiercedHeartPlate()
     {
       Id = "pierced_heart_plate";
       Name = "Pierced Heart Plate";
       Slot = EquipmentSlot.Chest;
-      Block = 2;
+      Block = 1;
       Uses = 2;
       Color = CardData.CardColor.Black;
       Text = $"Gain {Courage} courage. Costs {Cost} uses. Free action.";
