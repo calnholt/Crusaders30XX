@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
+using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Objects.Enemies
@@ -14,6 +17,11 @@ namespace Crusaders30XX.ECS.Objects.Enemies
       Id = "ice_demon";
       Name = "Ice Demon";
       MaxHealth = 100;
+
+      OnStartOfBattle = (entityManager) =>
+      {
+        EventManager.Publish(new FreezeCardsEvent { Amount = 3, Type = FreezeType.TopXCards });
+      };
     }
 
     public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
@@ -57,4 +65,33 @@ public class FrozenClaw : EnemyAttackBase
       EventManager.Publish(new FreezeCardsEvent { Amount = 1, Type = FreezeType.TopXCards });
     };
   }
+}
+
+// might not want here but made it so can be used elsewhere
+
+public class FrostEater : EnemyAttackBase
+{
+  public FrostEater()
+  {
+    Id = "frost_eater";
+    Name = "Frost Eater";
+    Damage = 10;
+    Text = "Frozen cards have -1 block value when blocking this attack.";
+
+    ProgressOverride = (entityManager) =>
+    {
+      Console.WriteLine("Frost Eater: ProgressOverride");
+      var p = entityManager.GetEntitiesWithComponent<EnemyAttackProgress>().FirstOrDefault().GetComponent<EnemyAttackProgress>();
+      var assignedFrozenBlockCards = entityManager.GetEntitiesWithComponent<AssignedBlockCard>()
+              .Where(e => !e.GetComponent<AssignedBlockCard>().IsEquipment && e.GetComponent<Frozen>() != null)
+              .ToList();
+      if (assignedFrozenBlockCards.Count > 0)
+      {
+        p.AssignedBlockTotal -= 1;
+        return false;
+      }
+      return false;
+    };
+  }
+
 }

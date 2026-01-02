@@ -76,6 +76,7 @@ namespace Crusaders30XX.ECS.Factories
                 // IceDemon attacks
                 "icy_blade" => new IcyBlade(),
                 "frozen_claw" => new FrozenClaw(),
+                "frost_eater" => new FrostEater(),
                 // Generic attacks
                 "have_no_mercy" => new HaveNoMercy(),
                 _ => null
@@ -148,6 +149,7 @@ namespace Crusaders30XX.ECS.Factories
                 // IceDemon attacks
                 { "icy_blade", new IcyBlade() },
                 { "frozen_claw", new FrozenClaw() },
+                { "frost_eater", new FrostEater() },
                 // Generic attacks
                 { "have_no_mercy", new HaveNoMercy() },
             };
