@@ -73,6 +73,9 @@ namespace Crusaders30XX.ECS.Factories
                 "dust_storm" => new DustStorm(),
                 // Sorcerer attacks
                 "strange_force" => new StrangeForce(),
+                // IceDemon attacks
+                "icy_blade" => new IcyBlade(),
+                "frozen_claw" => new FrozenClaw(),
                 // Generic attacks
                 "have_no_mercy" => new HaveNoMercy(),
                 _ => null
@@ -142,6 +145,9 @@ namespace Crusaders30XX.ECS.Factories
                 { "dust_storm", new DustStorm() },
                 // Sorcerer attacks
                 { "strange_force", new StrangeForce() },
+                // IceDemon attacks
+                { "icy_blade", new IcyBlade() },
+                { "frozen_claw", new FrozenClaw() },
                 // Generic attacks
                 { "have_no_mercy", new HaveNoMercy() },
             };

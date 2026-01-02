@@ -998,7 +998,9 @@ namespace Crusaders30XX.ECS.Components
         Intimidated,
         MindFog,
         Scar,
-        Channel
+        Channel,
+        Frostbite,
+        Frozen
     }
 
     public class MarkedForReturnToDeck : IComponent

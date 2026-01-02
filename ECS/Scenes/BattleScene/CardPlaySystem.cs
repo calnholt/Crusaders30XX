@@ -195,11 +195,7 @@ namespace Crusaders30XX.ECS.Systems
             var card = CardFactory.Create(id);
             if (card == null) return;
 
-            if (data.Owner.HasComponent<Frozen>())
-            {
-                EventManager.Publish(new CantPlayCardMessage { Message = "Can't play frozen cards!" });
-                return;
-            }
+
             if (data.Card.Type == CardType.Relic)
             {
                 EventManager.Publish(new CantPlayCardMessage { Message = "Relics can only be discarded to pay for costs!" });
@@ -414,6 +410,11 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.ExhaustPile, Reason = "Exhaust" });
                     Console.WriteLine("[CardPlaySystem] Card exhausted");
                     EntityManager.RemoveComponent<MarkedForExhaust>(evt.Card);
+                }
+                else if (evt.Card.GetComponent<Frozen>() != null)
+                {
+                    EventManager.Publish(new ApplyPassiveEvent { Target = evt.Card, Type = AppliedPassiveType.Frostbite, Delta = 1 });
+                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = Random.Shared.Next(0, 100) < 50 ? CardZoneType.ExhaustPile : CardZoneType.DiscardPile, Reason = "PlayCard" });
                 }
                 else
                 {

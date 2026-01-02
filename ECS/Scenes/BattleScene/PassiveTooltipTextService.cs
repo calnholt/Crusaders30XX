@@ -57,6 +57,10 @@ namespace Crusaders30XX.ECS.Systems
           return $"At the end of your action phase, discard all cards in your hand.";
         case AppliedPassiveType.Channel:
           return $"Increases the potency of attacks.";
+        case AppliedPassiveType.Frostbite:
+          return $"When you have 3 stacks of frostbite, take 5 damage and lose 3 frostbite.";
+        case AppliedPassiveType.Frozen:
+          return $"When you play a frozen card, gain 1 frostbite and there's a 50% chance it's exhausted. Remove frozen by blocking with it.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

@@ -482,10 +482,10 @@ namespace Crusaders30XX.ECS.Systems
 			_battleStateInfoManagementSystem = new BattleStateInfoManagementSystem(_world.EntityManager);
 			_discardSpecificCardHighlightSystem = new DiscardSpecificCardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_intimidateManagementSystem = new IntimidateManagementSystem(_world.EntityManager);
-			_intimidateDisplaySystem = new IntimidateDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_frozenCardManagementSystem = new FrozenCardManagementSystem(_world.EntityManager);
 			var frostTexture = _content.Load<Texture2D>("frost");
 			_frozenCardDisplaySystem = new FrozenCardDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, frostTexture);
+			_intimidateDisplaySystem = new IntimidateDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_questRewardModalDisplaySystem = new QuestRewardModalDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_quitCurrentQuestDisplaySystem = new QuitCurrentQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);

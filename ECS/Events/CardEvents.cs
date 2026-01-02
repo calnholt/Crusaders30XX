@@ -512,6 +512,15 @@ namespace Crusaders30XX.ECS.Events
     public class FreezeCardsEvent
     {
         public int Amount { get; set; }
+        public FreezeType Type { get; set; }
+    }
+
+    public enum FreezeType
+    {
+        HandAndDrawPile,
+        TopXCards,
+        DrawPile,
+        Hand,
     }
 
 } 

@@ -339,6 +339,32 @@
       ]
     },
     {
+      "Id": "desert_16",
+      "WorldPosition": [
+        2270,
+        1500
+      ],
+      "RevealRadius": 600,
+      "UnrevealedRadius": 150,
+      "Type": "Quest",
+      "Name": "Desert Tundra",
+      "Difficulty": 2,
+      "Reward": {
+        "Gold": 2
+      },
+      "Events": [
+        {
+          "id": "ice_demon",
+          "type": "Enemy"
+        },
+        {
+          "id": "ice_demon",
+          "type": "Enemy"
+        }
+      ],
+      "Background": "desert-background-tundra.png"
+    },
+    {
       "Id": "desert_7",
       "WorldPosition": [
         4775,
@@ -387,6 +413,7 @@
       "UnrevealedRadius": 150,
       "Type": "Hellrift",
       "Difficulty": 5,
+      "Background": "desert-background-cactus.png",
       "Reward": {
         "Gold": 10
       },

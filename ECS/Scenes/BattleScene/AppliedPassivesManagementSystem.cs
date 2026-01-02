@@ -255,6 +255,19 @@ namespace Crusaders30XX.ECS.Systems
             {
                 ap.Passives[e.Type] = next;
             }
+
+            switch (e.Type)
+            {
+                case AppliedPassiveType.Frostbite:
+                    if (next >= 3)
+                    {
+                        EventManager.Publish(new ModifyHpRequestEvent { Source = e.Target, Target = e.Target, Delta = -5, DamageType = ModifyTypeEnum.Effect });
+                        EventManager.Publish(new UpdatePassive { Owner = e.Target, Type = AppliedPassiveType.Frostbite, Delta = -3 });
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void OnRemovePassive(RemovePassive e)

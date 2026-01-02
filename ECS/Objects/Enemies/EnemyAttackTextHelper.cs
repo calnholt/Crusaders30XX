@@ -54,6 +54,8 @@ public static class EnemyAttackTextHelper
           return $"Gain [{amount}] wounded.";
         case EnemyAttackTextType.Frozen:
           return $"Freeze [{amount}] random cards from your hand/draw pile.";
+        case EnemyAttackTextType.Frostbite:
+          return $"Gain [{amount}] frostbite.";
         case EnemyAttackTextType.Custom:
           return customText;
         default:
@@ -102,5 +104,6 @@ public static class EnemyAttackTextHelper
     Armor,
     Corrode,
     Frozen,
+    Frostbite,
     Custom
   }

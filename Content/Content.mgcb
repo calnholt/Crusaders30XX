@@ -281,6 +281,18 @@
 /processorParam:TextureFormat=Color
 /build:Sand_Golem.png
 
+#begin Ice_Demon.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Ice_Demon.png
+
 #begin Skeleton.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -400,6 +412,30 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:desert-background-dune-city.png
+
+#begin desert-background-cactus.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:desert-background-cactus.png
+
+#begin desert-background-tundra.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:desert-background-tundra.png
 
 #begin forest-background.png
 /importer:TextureImporter

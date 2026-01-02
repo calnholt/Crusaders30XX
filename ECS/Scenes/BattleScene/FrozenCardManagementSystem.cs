@@ -20,7 +20,6 @@ namespace Crusaders30XX.ECS.Systems
 		public FrozenCardManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<FreezeCardsEvent>(OnFreezeCards);
-			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
       EventManager.Subscribe<CardMoved>(OnCardMoved);
 		}
 
@@ -41,24 +40,36 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnFreezeCards(FreezeCardsEvent evt)
 		{
-			ApplyFrozenEffect(evt.Amount);
-		}
-
-		private void OnBlockAssignmentAdded(BlockAssignmentAdded evt)
-		{
-			// When a frozen card is used to block, remove the frozen component
-			if (evt.Card == null) return;
-			
-			var frozen = evt.Card.GetComponent<Frozen>();
-			if (frozen != null)
+			switch (evt.Type)
 			{
-				EntityManager.RemoveComponent<Frozen>(evt.Card);
-				var cardData = evt.Card.GetComponent<CardData>();
-				Console.WriteLine($"[FrozenCardManagementSystem] Removed Frozen from card {cardData?.Card.CardId ?? "unknown"} when used to block");
+				case FreezeType.HandAndDrawPile:
+					ApplyFrozenEffectHandAndDrawPile(evt.Amount);
+					break;
+				case FreezeType.TopXCards:
+					ApplyFrozenEffectTopXCards(evt.Amount);
+					break;
 			}
 		}
 
-		private void ApplyFrozenEffect(int amount)
+		private void ApplyFrozenEffectTopXCards(int amount)
+		{
+			// Get player's deck
+			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+			if (deckEntity == null) return;
+			var deck = deckEntity.GetComponent<Deck>();
+			if (deck == null) return;
+			var drawPile = deck.DrawPile;
+			if (drawPile == null) return;
+			var cardsToFreeze = drawPile.Take(amount).ToList();
+			foreach (var card in cardsToFreeze)
+			{
+				EntityManager.AddComponent(card, new Frozen { Owner = card });
+				var cardData = card.GetComponent<CardData>();
+				Console.WriteLine($"[FrozenCardManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been frozen!");
+			}
+		}
+
+		private void ApplyFrozenEffectHandAndDrawPile(int amount)
 		{
 			// Get player's deck
 			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
@@ -119,6 +130,7 @@ namespace Crusaders30XX.ECS.Systems
 				Console.WriteLine($"[FrozenCardManagementSystem] Removed frozen from card {cardData?.Card.CardId ?? "unknown"}");
 			}
 		}
+
 	}
 }
 
