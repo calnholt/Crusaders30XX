@@ -9,19 +9,35 @@ namespace Crusaders30XX.ECS.Core
     /// </summary>
     public static class EventManager
     {
-        private static readonly Dictionary<Type, List<Delegate>> _eventHandlers = new();
+        /// <summary>
+        /// Wrapper class to store handler delegate with its priority
+        /// </summary>
+        private class PrioritizedHandler
+        {
+            public Delegate Handler { get; set; }
+            public int Priority { get; set; }
+        }
+
+        private static readonly Dictionary<Type, List<PrioritizedHandler>> _eventHandlers = new();
         
         /// <summary>
-        /// Subscribe to an event type
+        /// Subscribe to an event type with optional priority.
+        /// Higher priority handlers execute first. Default priority is 0.
         /// </summary>
-        public static void Subscribe<T>(Action<T> handler) where T : class
+        /// <param name="handler">The handler to subscribe</param>
+        /// <param name="priority">Execution priority (higher = earlier). Default: 0</param>
+        public static void Subscribe<T>(Action<T> handler, int priority = 0) where T : class
         {
             var eventType = typeof(T);
             if (!_eventHandlers.ContainsKey(eventType))
             {
-                _eventHandlers[eventType] = new List<Delegate>();
+                _eventHandlers[eventType] = new List<PrioritizedHandler>();
             }
-            _eventHandlers[eventType].Add(handler);
+            _eventHandlers[eventType].Add(new PrioritizedHandler 
+            { 
+                Handler = handler, 
+                Priority = priority 
+            });
         }
         
         /// <summary>
@@ -32,23 +48,28 @@ namespace Crusaders30XX.ECS.Core
             var eventType = typeof(T);
             if (_eventHandlers.ContainsKey(eventType))
             {
-                _eventHandlers[eventType].Remove(handler);
+                _eventHandlers[eventType].RemoveAll(ph => ph.Handler.Equals(handler));
             }
         }
         
         /// <summary>
-        /// Publish an event to all subscribers
+        /// Publish an event to all subscribers in priority order (highest first)
         /// </summary>
         public static void Publish<T>(T eventData) where T : class
         {
             var eventType = typeof(T);
             if (_eventHandlers.ContainsKey(eventType))
             {
-                foreach (var handler in _eventHandlers[eventType].ToList())
+                // Sort by priority descending (highest priority first)
+                var sortedHandlers = _eventHandlers[eventType]
+                    .OrderByDescending(ph => ph.Priority)
+                    .ToList();
+
+                foreach (var prioritizedHandler in sortedHandlers)
                 {
                     try
                     {
-                        ((Action<T>)handler)(eventData);
+                        ((Action<T>)prioritizedHandler.Handler)(eventData);
                     }
                     catch (Exception ex)
                     {

@@ -6,6 +6,8 @@ namespace Crusaders30XX.ECS.Systems
 {
   internal static class PassiveTooltipTextService
   {
+    public static readonly int FrostbiteThreshold = 3;
+    public static readonly int FrostbiteDamage = 3;
     public static string GetText(AppliedPassiveType type, bool isPlayer, int stacks)
     {
       switch (type)
@@ -59,9 +61,13 @@ namespace Crusaders30XX.ECS.Systems
         case AppliedPassiveType.Channel:
           return $"Increases the potency of attacks.";
         case AppliedPassiveType.Frostbite:
-          return $"When you have 3 stacks of frostbite, take 5 damage and lose 3 frostbite.";
+          return $"When you have {FrostbiteThreshold} stacks of frostbite, take {FrostbiteDamage} damage and lose {FrostbiteThreshold} frostbite.";
         case AppliedPassiveType.Frozen:
           return $"When you play a frozen card, gain 1 frostbite and there's a 50% chance it's exhausted. Remove frozen by blocking with it.";
+        case AppliedPassiveType.SubZero:
+          return $"At the start of the enemy turn, freeze one card from your hand.";
+        case AppliedPassiveType.Windchill:
+          return $"Whenever you block with a frozen card, gain 1 penance.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

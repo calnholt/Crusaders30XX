@@ -45,9 +45,25 @@ namespace Crusaders30XX.ECS.Systems
 				case FreezeType.HandAndDrawPile:
 					ApplyFrozenEffectHandAndDrawPile(evt.Amount);
 					break;
+				case FreezeType.Hand:
+					ApplyFrozenEffectHand(evt.Amount);
+					break;
 				case FreezeType.TopXCards:
 					ApplyFrozenEffectTopXCards(evt.Amount);
 					break;
+			}
+		}
+
+		private void ApplyFrozenEffectHand(int amount)
+		{
+			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+			if (deckEntity == null) return;
+			var deck = deckEntity.GetComponent<Deck>();
+			if (deck == null) return;
+			var cardsToFreeze = deck.Hand.Where(c => c.GetComponent<Frozen>() == null).OrderBy(x => new Random().Next()).Take(amount).ToList();
+			foreach (var card in cardsToFreeze)
+			{
+				EntityManager.AddComponent(card, new Frozen { Owner = card });
 			}
 		}
 
@@ -60,12 +76,10 @@ namespace Crusaders30XX.ECS.Systems
 			if (deck == null) return;
 			var drawPile = deck.DrawPile;
 			if (drawPile == null) return;
-			var cardsToFreeze = drawPile.Take(amount).ToList();
+			var cardsToFreeze = drawPile.Where(c => c.GetComponent<Frozen>() == null).OrderBy(x => new Random().Next()).Take(amount).ToList();
 			foreach (var card in cardsToFreeze)
 			{
 				EntityManager.AddComponent(card, new Frozen { Owner = card });
-				var cardData = card.GetComponent<CardData>();
-				Console.WriteLine($"[FrozenCardManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been frozen!");
 			}
 		}
 

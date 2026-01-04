@@ -16,6 +16,7 @@ namespace Crusaders30XX.ECS.Systems
     /// </summary>
     public class AppliedPassivesManagementSystem : Core.System
     {
+        public static readonly float Duration = 0.5f;
         public AppliedPassivesManagementSystem(EntityManager entityManager) : base(entityManager)
         {
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
@@ -125,7 +126,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Scar, Delta = penanceStacks });
                     EventManager.Publish(new RemovePassive { Owner = player, Type = AppliedPassiveType.Penance });
-                }, .5f);
+                }, Duration);
             }
         }
         private void ApplyStartOfTurnPassives(Entity owner)
@@ -140,7 +141,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Target = owner, Type = AppliedPassiveType.Burn, Delta = infernoStacks });
                     EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Inferno });
-                }, .5f);
+                }, Duration);
             }
             if ((ap.Passives.TryGetValue(AppliedPassiveType.Burn, out int burnStacks) || hasInferno) && (burnStacks > 0 || infernoStacks > 0))
             {
@@ -149,7 +150,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = owner, Target = owner, Delta = -(burnStacks + infernoStacks), DamageType = ModifyTypeEnum.Effect });
                     EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Burn });
-                }, .5f);
+                }, Duration);
             }
             if (ap.Passives.TryGetValue(AppliedPassiveType.Webbing, out int webbingStacks) && webbingStacks > 0)
             {
@@ -157,7 +158,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Target = owner, Type = AppliedPassiveType.Slow, Delta = webbingStacks });
                     EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Webbing });
-                }, .5f);
+                }, Duration);
             }
             if (ap.Passives.TryGetValue(AppliedPassiveType.Bleed, out int bleedStacks) && bleedStacks > 0)
             {
@@ -166,7 +167,7 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ModifyHpRequestEvent { Source = owner, Target = owner, Delta = -1, DamageType = ModifyTypeEnum.Effect });
                     EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Bleed });
                     EventManager.Publish(new UpdatePassive { Owner = owner, Type = AppliedPassiveType.Bleed, Delta = -1 });
-                }, .5f);
+                }, Duration);
             }
         }
 
@@ -205,7 +206,7 @@ namespace Crusaders30XX.ECS.Systems
                                 new ChangeBattlePhaseEvent { Current = SubPhase.Action }
                             ));
                         }
-                    }, .4f);
+                    }, Duration);
                 }
             }
 
@@ -217,7 +218,7 @@ namespace Crusaders30XX.ECS.Systems
                 attackDef.AdditionalDamage += aggressionStacks;
                 Console.WriteLine($"[AppliedPassivesManagementSystem] ApplyStartOfPreBlockPassives.Aggression - {attackDef.Damage}");
                 EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Aggression });
-                TimerScheduler.Schedule(0.3f, () =>
+                TimerScheduler.Schedule(Duration, () =>
                 {
                     EventManager.Publish(new RemovePassive { Owner = enemy, Type = AppliedPassiveType.Aggression });
                 });
@@ -261,10 +262,10 @@ namespace Crusaders30XX.ECS.Systems
             switch (e.Type)
             {
                 case AppliedPassiveType.Frostbite:
-                    if (next >= 3)
+                    if (next >= PassiveTooltipTextService.FrostbiteThreshold)
                     {
                         EventManager.Publish(new ModifyHpRequestEvent { Source = e.Target, Target = e.Target, Delta = -5, DamageType = ModifyTypeEnum.Effect });
-                        EventManager.Publish(new UpdatePassive { Owner = e.Target, Type = AppliedPassiveType.Frostbite, Delta = -3 });
+                        EventManager.Publish(new UpdatePassive { Owner = e.Target, Type = AppliedPassiveType.Frostbite, Delta = -PassiveTooltipTextService.FrostbiteDamage });
                     }
                     break;
                 default:

@@ -1011,7 +1011,9 @@ namespace Crusaders30XX.ECS.Components
         Scar,
         Channel,
         Frostbite,
-        Frozen
+        Frozen,
+        Windchill,
+        SubZero,
     }
 
     public class MarkedForReturnToDeck : IComponent

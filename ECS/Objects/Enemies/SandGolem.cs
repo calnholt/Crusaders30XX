@@ -18,7 +18,7 @@ public class SandGolem : EnemyBase
   }
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {
-    return turnNumber % 2 == 0 ? ["sand_pound"] : ["sand_slam"];
+    return turnNumber % 2 == 1 ? ["sand_pound"] : ["sand_slam"];
   }
 }
 

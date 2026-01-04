@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Objects.Enemies;
@@ -23,15 +24,15 @@ public class Sorcerer : EnemyBase
       {
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Intimidated, Delta = 1 });
 
-      }, 0.5f);
+      }, AppliedPassivesManagementSystem.Duration);
       EventQueueBridge.EnqueueTriggerAction("Sorcerer.OnCreate", () =>
       {
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.MindFog, Delta = 1 });
-      }, 0.5f);
+      }, AppliedPassivesManagementSystem.Duration);
       EventQueueBridge.EnqueueTriggerAction("Sorcerer.OnCreate", () =>
       {
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Channel, Delta = 1 });
-      }, 0.5f);
+      }, AppliedPassivesManagementSystem.Duration);
     };
   }
 

@@ -34,7 +34,7 @@ public class IcyBlade : EnemyAttackBase
     Id = "icy_blade";
     Name = "Icy Blade";
     Damage = 10;
-    ConditionType = ConditionType.OnBlockedByAtLeast1Card;
+    ConditionType = ConditionType.OnBlockedByAtLeast2Cards;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Frostbite, Frostbite, ConditionType);
 
     OnAttackHit = (entityManager) =>
