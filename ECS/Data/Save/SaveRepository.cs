@@ -22,6 +22,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				if (data.items == null) data.items = new System.Collections.Generic.List<SaveItem>();
 				if (data.loadouts == null) data.loadouts = new System.Collections.Generic.List<LoadoutDefinition>();
 				if (data.seenTutorials == null) data.seenTutorials = new System.Collections.Generic.List<string>();
+				if (data.cardMastery == null) data.cardMastery = new System.Collections.Generic.Dictionary<string, CardMastery>();
 				result = data;
 			}
 			catch (System.Exception ex)

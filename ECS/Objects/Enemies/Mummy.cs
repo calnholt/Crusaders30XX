@@ -56,6 +56,9 @@ public class Entomb : EnemyAttackBase
         p.PreventedDamageFromBlockCondition = Math.Max(0, fullDamage - blockFromCards);
         p.TotalPreventedDamage = fullDamage;
         p.FullyPreventedBySpecial = true;
+        Console.WriteLine($"[Entomb] Base damage: {p.BaseDamage}");
+        Console.WriteLine($"[Entomb] Prevented damage: {p.PreventedDamageFromBlockCondition}");
+        Console.WriteLine($"[Entomb] Total prevented damage: {p.TotalPreventedDamage}");
         foreach (var e in assignedBlockCards)
         {
           entityManager.AddComponent(e, new ExhaustOnBlock { Owner = e });

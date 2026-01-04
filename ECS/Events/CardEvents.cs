@@ -523,4 +523,13 @@ namespace Crusaders30XX.ECS.Events
         Hand,
     }
 
+    /// <summary>
+    /// Event published when a card reaches mastery (50 points).
+    /// </summary>
+    public class CardMasteredEvent
+    {
+        public string CardId { get; set; }
+        public int Level { get; set; }
+    }
+
 } 

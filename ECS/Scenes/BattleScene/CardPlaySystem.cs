@@ -9,6 +9,7 @@ using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
+using Crusaders30XX.ECS.Data.Save;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -348,6 +349,11 @@ namespace Crusaders30XX.ECS.Systems
                             {
                                 cardData.Card.OnDiscardedForCost(EntityManager, c);
                             }
+                            // Award mastery points for Relic cards discarded for cost
+                            if (cardData != null && cardData.Card.Type == CardType.Relic)
+                            {
+                                SaveCache.AddMasteryPoints(cardData.Card.CardId, 1);
+                            }
                         }
                         
                         // Populate payment cache so card effects can reference what was paid
@@ -385,6 +391,12 @@ namespace Crusaders30XX.ECS.Systems
             card.OnPlay?.Invoke(EntityManager, evt.Card);
             EventManager.Publish(new TrackingEvent { Type = card.CardId, Delta = 1 });
 
+            // Award mastery points for Attack and Prayer cards on play
+            if (card.Type == CardType.Attack || card.Type == CardType.Prayer)
+            {
+                SaveCache.AddMasteryPoints(card.CardId, 1);
+            }
+
             // Move the played card to discard unless it's a weapon (weapons leave hand but do not go to discard)
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             if (deckEntity != null)
@@ -413,8 +425,10 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 else if (evt.Card.GetComponent<Frozen>() != null)
                 {
-                    EventManager.Publish(new ApplyPassiveEvent { Target = evt.Card, Type = AppliedPassiveType.Frostbite, Delta = 1 });
-                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = Random.Shared.Next(0, 100) < 50 ? CardZoneType.ExhaustPile : CardZoneType.DiscardPile, Reason = "PlayCard" });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Frostbite, Delta = 1 });
+                    var destination = Random.Shared.Next(0, 100) < 50 ? CardZoneType.ExhaustPile : CardZoneType.DiscardPile;
+                    Console.WriteLine($"[CardPlaySystem] Card frozen; moving to {destination}");
+                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = destination, Reason = "PlayCard" });
                 }
                 else
                 {

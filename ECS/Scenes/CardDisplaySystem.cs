@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Objects.Cards;
+using Crusaders30XX.ECS.Data.Save;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -129,6 +130,18 @@ namespace Crusaders30XX.ECS.Systems
         public float ArtTrapBottomAngleDeg { get; set; } = -6f;
         [DebugEditable(DisplayName = "Art Trap Left Angle", Step = 1, Min = -89, Max = 89)]
         public float ArtTrapLeftAngleDeg { get; set; } = 10f;
+
+        // Debug-adjustable mastery meter settings
+        [DebugEditable(DisplayName = "Mastery Meter Offset X", Step = 1, Min = -200, Max = 200)]
+        public int MasteryMeterOffsetX { get; set; } = 0;
+        [DebugEditable(DisplayName = "Mastery Meter Offset Y", Step = 1, Min = -200, Max = 200)]
+        public int MasteryMeterOffsetY { get; set; } = -4;
+        [DebugEditable(DisplayName = "Mastery Meter Width", Step = 1, Min = 10, Max = 200)]
+        public int MasteryMeterWidth { get; set; } = 60;
+        [DebugEditable(DisplayName = "Mastery Meter Height", Step = 1, Min = 2, Max = 50)]
+        public int MasteryMeterHeight { get; set; } = 6;
+        [DebugEditable(DisplayName = "Mastery Meter Outline", Step = 1, Min = 0, Max = 10)]
+        public int MasteryMeterOutlineThickness { get; set; } = 1;
         
         public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content) 
             : base(entityManager)
@@ -512,6 +525,84 @@ namespace Crusaders30XX.ECS.Systems
                     visualScale
                 );
             }
+
+            // Draw mastery meter at the bottom of the card
+            if (hasDef && !string.IsNullOrEmpty(card.CardId))
+            {
+                DrawMasteryMeter(cardCenter, rotation, visualScale, cardData.Color, card.CardId, isWeapon);
+            }
+        }
+
+        private void DrawMasteryMeter(Vector2 cardCenter, float rotation, float visualScale, CardData.CardColor cardColor, string cardId, bool isWeapon)
+        {
+            var mastery = SaveCache.GetMasteryData(cardId);
+            int points = mastery?.points ?? 0;
+            int level = mastery?.level ?? 0;
+
+            // Calculate fill percentage (0 to 1)
+            float fillPercent = Math.Clamp(points / 50f, 0f, 1f);
+
+            // Meter dimensions
+            float meterWidth = MasteryMeterWidth * _settings.UIScale * visualScale;
+            float meterHeight = MasteryMeterHeight * _settings.UIScale * visualScale;
+            float outlineThickness = MasteryMeterOutlineThickness * visualScale;
+
+            // Position: centered at bottom of card
+            float localX = (_settings.CardWidth * visualScale - meterWidth) / 2f + MasteryMeterOffsetX * visualScale;
+            float localY = _settings.CardHeight * visualScale - meterHeight - (MasteryMeterOutlineThickness * visualScale) + MasteryMeterOffsetY * visualScale;
+
+            // Determine colors based on card color and weapon status
+            Color outlineColor;
+            Color fillColor;
+            Color backgroundColor;
+
+            if (isWeapon || cardColor == CardData.CardColor.White)
+            {
+                // White cards and weapons: black outline, black fill
+                outlineColor = Color.Black;
+                fillColor = Color.Black;
+                backgroundColor = cardColor == CardData.CardColor.White ? Color.White : new Color(215, 186, 147); // weapon tan color
+            }
+            else
+            {
+                // Red/Black cards: white outline, white fill, card color background
+                outlineColor = Color.White;
+                fillColor = Color.White;
+                backgroundColor = GetCardColor(cardColor);
+            }
+
+            // Draw outline (full meter rectangle)
+            DrawRectangleRotatedLocalScaled(cardCenter, rotation, new Vector2(localX, localY), meterWidth, meterHeight, outlineColor, visualScale);
+
+            // Draw background (inside outline)
+            float innerX = localX + outlineThickness;
+            float innerY = localY + outlineThickness;
+            float innerWidth = meterWidth - outlineThickness * 2;
+            float innerHeight = meterHeight - outlineThickness * 2;
+            if (innerWidth > 0 && innerHeight > 0)
+            {
+                DrawRectangleRotatedLocalScaled(cardCenter, rotation, new Vector2(innerX, innerY), innerWidth, innerHeight, backgroundColor, visualScale);
+            }
+
+            // Draw fill (progress)
+            float fillWidth = innerWidth * fillPercent;
+            if (fillWidth > 0 && innerHeight > 0)
+            {
+                DrawRectangleRotatedLocalScaled(cardCenter, rotation, new Vector2(innerX, innerY), fillWidth, innerHeight, fillColor, visualScale);
+            }
+        }
+
+        private void DrawRectangleRotatedLocalScaled(Vector2 cardCenter, float rotation, Vector2 localOffsetFromTopLeft, float width, float height, Color color, float visualScale)
+        {
+            // Convert local position to world position with rotation
+            float localX = -_settings.CardWidth * visualScale / 2f + localOffsetFromTopLeft.X;
+            float localY = -_settings.CardHeight * visualScale / 2f + localOffsetFromTopLeft.Y;
+            float cos = (float)Math.Cos(rotation);
+            float sin = (float)Math.Sin(rotation);
+            var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
+            var world = cardCenter + rotated;
+
+            _spriteBatch.Draw(_pixelTexture, world, null, color, rotation, Vector2.Zero, new Vector2(width, height), SpriteEffects.None, 0f);
         }
         
         private Color GetCardColor(CardData.CardColor color)

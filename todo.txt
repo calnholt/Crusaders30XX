@@ -34,6 +34,8 @@ fixes -
 
 enemy death animation
 
+freeze card animation
+
 victory animation
 
 modal / pay cost close buttons

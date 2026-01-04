@@ -58,7 +58,7 @@ public class MandibleBreaker : EnemyAttackBase
     Name = "Mandible Breaker";
     Damage = 6;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Fear, 2, ConditionType);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Fear, 3, ConditionType);
     AmbushPercentage = 75;
     OnAttackHit = (entityManager) =>
     {
@@ -86,17 +86,17 @@ public class RafterfallAmbush : EnemyAttackBase
 
 public class EightLimbsOfDeath : EnemyAttackBase
 {
+  public int Fear = 1;
   public EightLimbsOfDeath()
   {
     Id = "eight_limbs_of_death";
     Name = "Eight Limbs of Death";
-    Damage = 8;
-    ConditionType = ConditionType.OnBlockedByAtLeast1Card;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Fear, 2, ConditionType);
+    Damage = 10;
+    Text = $"On attack - Gain {Fear} fear.";
     AmbushPercentage = 75;
-    OnAttackHit = (entityManager) =>
+    OnAttackReveal = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Fear, Delta = ValuesParse[0] });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Fear, Delta = Fear });
     };
   }
 }

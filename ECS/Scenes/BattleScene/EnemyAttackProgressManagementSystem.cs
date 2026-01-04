@@ -24,9 +24,10 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
 			EventManager.Subscribe<RemovePassive>(OnRemovePassive);
 			EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);
-			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ => { if (_.Current == SubPhase.Block || _.Current == SubPhase.EnemyAttack) RecomputeAll(); });
+		EventManager.Subscribe<ChangeBattlePhaseEvent>(_ => { if (_.Current == SubPhase.Block || _.Current == SubPhase.EnemyAttack) RecomputeAll(); });
+		EventManager.Subscribe<LoadSceneEvent>(OnLoadSceneEvent);
 
-		}
+	}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
@@ -61,13 +62,28 @@ namespace Crusaders30XX.ECS.Systems
 					EntityManager.DestroyEntity(e.Id);
 				}
 			}
-			// RecomputeAll();
-		}
+		// RecomputeAll();
+	}
 
-		private void PrintProgress(EnemyAttackProgress p)
+	private void OnLoadSceneEvent(LoadSceneEvent e)
+	{
+		// Clean up all EnemyAttackProgress entities when loading/reloading battle scene
+		// This ensures fresh state for each enemy in a quest
+		if (e.Scene == SceneId.Battle)
 		{
-			Console.WriteLine($"[EnemyAttackProgressManagementSystem] Progress p={p.ContextId} playedCards={p.PlayedCards} playedRed={p.PlayedRed} playedWhite={p.PlayedWhite} playedBlack={p.PlayedBlack} assignedBlockTotal={p.AssignedBlockTotal} additionalConditionalDamageTotal={p.AdditionalConditionalDamageTotal} isConditionMet={p.IsConditionMet} actualDamage={p.ActualDamage} preventedDamage={p.AegisTotal} damageBeforePrevention={p.DamageBeforePrevention} baseDamage={p.BaseDamage} aegisTotal={p.AegisTotal} totalPreventedDamage={p.TotalPreventedDamage}");
+			Console.WriteLine("[EnemyAttackProgressManagementSystem] Cleaning up all EnemyAttackProgress entities for new battle");
+			var allProgress = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>().ToList();
+			foreach (var entity in allProgress)
+			{
+				EntityManager.DestroyEntity(entity.Id);
+			}
 		}
+	}
+
+	private void PrintProgress(EnemyAttackProgress p)
+	{
+		Console.WriteLine($"[EnemyAttackProgressManagementSystem] Progress p={p.ContextId} playedCards={p.PlayedCards} playedRed={p.PlayedRed} playedWhite={p.PlayedWhite} playedBlack={p.PlayedBlack} assignedBlockTotal={p.AssignedBlockTotal} additionalConditionalDamageTotal={p.AdditionalConditionalDamageTotal} isConditionMet={p.IsConditionMet} actualDamage={p.ActualDamage} preventedDamage={p.AegisTotal} damageBeforePrevention={p.DamageBeforePrevention} baseDamage={p.BaseDamage} aegisTotal={p.AegisTotal} totalPreventedDamage={p.TotalPreventedDamage}");
+	}
 
 		[DebugAction("Print Progress")]
 		public void Debug_PrintProgress()

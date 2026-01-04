@@ -170,6 +170,16 @@
       },
       "Events": [
         {
+          "id": "skeleton",
+          "type": "Enemy",
+          "modifications": [
+            {
+              "type": "HP",
+              "delta": 10
+            }
+          ]
+        },
+        {
           "id": "mummy",
           "type": "Enemy"
         },

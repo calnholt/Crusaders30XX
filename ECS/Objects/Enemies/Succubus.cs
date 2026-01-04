@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public class Succubus : EnemyBase
 {
+  public static readonly int SiphonMultiplier = 5;
   public Succubus()
   {
     EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourageEvent);
@@ -34,7 +35,7 @@ public class Succubus : EnemyBase
       var enemy = EntityManager.GetEntity("Enemy");
       var passive = GetComponentHelper.GetAppliedPassives(EntityManager, "Enemy");
       passive.Passives.TryGetValue(AppliedPassiveType.Siphon, out int count);
-      EventManager.Publish(new HealEvent { Target = enemy, Delta = -(evt.Delta * count) });
+      EventManager.Publish(new HealEvent { Target = enemy, Delta = -(evt.Delta * SiphonMultiplier) });
       EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Siphon });
     }
   }

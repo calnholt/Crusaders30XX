@@ -79,7 +79,7 @@ namespace Crusaders30XX.ECS.Systems
 				.Where(x => x.UI?.TooltipType == TooltipType.Text
 					&& x.UI.IsHovered
 					&& !x.UI.IsHidden
-					&& !string.IsNullOrWhiteSpace(x.UI.Tooltip))
+					&& (!string.IsNullOrWhiteSpace(x.UI.Tooltip) || x.E.GetComponent<Frozen>() != null || x.E.GetComponent<Intimidated>() != null))
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.ToList();
 			var top = hoverables.FirstOrDefault();
@@ -93,6 +93,16 @@ namespace Crusaders30XX.ECS.Systems
 			if (top != null)
 			{
 				string text = top.UI.Tooltip;
+				var hasFrozen = top.E.GetComponent<Frozen>() != null;
+				if (hasFrozen)
+				{
+					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is frozen - when played, gain 1 frostbite and there's a 50% chance it's exhausted. Remove frozen by blocking with it. Lasts for the rest of the quest.";
+				}
+				var hasIntimidated = top.E.GetComponent<Intimidated>() != null;
+				if (hasIntimidated)
+				{
+					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is intimidated - cannot be used to block during the block phase.";
+				}
 				int pad = System.Math.Max(0, Padding);
 				var size = _font.MeasureString(text) * TextScale;
 				int w = (int)System.Math.Ceiling(size.X) + pad * 2;

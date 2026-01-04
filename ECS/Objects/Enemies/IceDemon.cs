@@ -17,11 +17,6 @@ namespace Crusaders30XX.ECS.Objects.Enemies
       Id = "ice_demon";
       Name = "Ice Demon";
       MaxHealth = 100;
-
-      OnStartOfBattle = (entityManager) =>
-      {
-        EventManager.Publish(new FreezeCardsEvent { Amount = 3, Type = FreezeType.TopXCards });
-      };
     }
 
     public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
@@ -62,6 +57,10 @@ public class FrozenClaw : EnemyAttackBase
     OnAttackReveal = (entityManager) =>
     {
       EventManager.Publish(new IntimidateEvent { Amount = 1 });
+    };
+
+    OnAttackHit = (entityManager) =>
+    {
       EventManager.Publish(new FreezeCardsEvent { Amount = 1, Type = FreezeType.TopXCards });
     };
   }

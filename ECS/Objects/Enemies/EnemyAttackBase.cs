@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
+using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Services;
 
@@ -54,6 +55,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     public int AmbushPercentage { get; set; } = 0;
     public bool IsTextConditionFulfilled { get; set; } = true;
     public bool IsQuestOneBattle { get; set; } = false;
+    public int Channel { get; set; } = 0;
     public static EntityManager EntityManager { get; set; }
 
     #nullable enable annotations
@@ -62,12 +64,16 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     public Action<EntityManager>? OnBlocksConfirmed { get; protected set; }
     public Action<EntityManager, Entity>? OnBlockProcessed { get; protected set; }
     public Action<EntityManager>? OnBlockAssigned { get; protected set; }
+    public Action<EntityManager>? OnChannelApplied { get; protected set; }
     public Func<EntityManager, bool>? ProgressOverride { get; protected set; }
 
     public void Initialize(EntityManager entityManager)    
     {
       EntityManager = entityManager;
-      IsQuestOneBattle = GetComponentHelper.IsQuestOneBattle(EntityManager);
+      IsQuestOneBattle = GetComponentHelper.IsLastBattleOfQuest(EntityManager);
+      GetComponentHelper.GetAppliedPassives(EntityManager, "Enemy").Passives.TryGetValue(AppliedPassiveType.Channel, out int count);
+      Channel = count;
+      OnChannelApplied?.Invoke(entityManager);
     }
   }
 

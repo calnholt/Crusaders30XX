@@ -73,8 +73,9 @@ namespace Crusaders30XX.ECS.Systems
 
             var from = GetZoneOf(deck, evt.Card);
 
-            // Intercept Hand/HandStaged/CostSelected -> Discard on PlayCard/PayCost to run animation first; finalize will mutate zones and publish CardMoved
-            if (evt.Destination == CardZoneType.DiscardPile)
+            // Intercept Hand/HandStaged/CostSelected -> Discard/Exhaust on PlayCard/PayCost to run animati
+            // on first; finalize will mutate zones and publish CardMoved
+            if (evt.Destination == CardZoneType.DiscardPile || evt.Destination == CardZoneType.ExhaustPile)
             {
                 bool isFromHand = deck.Hand.Contains(evt.Card);
                 bool isFromCostSelected = evt.Card.GetComponent<SelectedForPayment>() != null;
@@ -90,9 +91,10 @@ namespace Crusaders30XX.ECS.Systems
 
                 if (isFromHand || isFromCostSelected || isFromHandStaged)
                 {
-                    if (evt.Card.GetComponent<AnimatingHandToDiscard>() == null)
+                    if (evt.Card.GetComponent<AnimatingHandToZone>() == null && evt.Card.GetComponent<AnimatingHandToDiscard>() == null)
                     {
-                        EntityManager.AddComponent(evt.Card, new AnimatingHandToDiscard());
+                        // Store the destination in the component so the animation system knows where to finalize
+                        EntityManager.AddComponent(evt.Card, new AnimatingHandToZone { Destination = evt.Destination });
                         var uiAnim = evt.Card.GetComponent<UIElement>();
                         if (uiAnim != null)
                         {
@@ -429,6 +431,8 @@ namespace Crusaders30XX.ECS.Systems
             // Clear animation markers if present
             var anim = evt.Card.GetComponent<AnimatingHandToDiscard>();
             if (anim != null) { EntityManager.RemoveComponent<AnimatingHandToDiscard>(evt.Card); }
+            var animZone = evt.Card.GetComponent<AnimatingHandToZone>();
+            if (animZone != null) { EntityManager.RemoveComponent<AnimatingHandToZone>(evt.Card); }
             var animDrawPile = evt.Card.GetComponent<AnimatingHandToDrawPile>();
             if (animDrawPile != null) { EntityManager.RemoveComponent<AnimatingHandToDrawPile>(evt.Card); }
 

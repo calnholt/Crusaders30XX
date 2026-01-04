@@ -20,14 +20,16 @@ public class Demon : EnemyBase
 
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {
-    var combinations = new List<List<string>>
+    var random = Random.Shared.Next(0, 100);
+    if (random >= 60)
     {
-      new List<string> { "razor_maw" },
-      new List<string> { "scorching_claw" },
-      new List<string> { "infernal_execution" },
-    };
-    int random = Random.Shared.Next(0, combinations.Count);
-    return ArrayUtils.Shuffled(combinations[random]);
+      return ["razor_maw"];
+    }
+    else if (random >= 20)
+    {
+      return ["scorching_claw"];
+    }
+    return ["infernal_execution"];
   }
 }
 
@@ -39,7 +41,7 @@ public class RazorMaw : EnemyAttackBase
     Name = "Razor Maw";
     Damage = 7;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Burn, 2, ConditionType);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Burn, 1, ConditionType);
 
     OnAttackHit = (entityManager) =>
     {
@@ -50,35 +52,50 @@ public class RazorMaw : EnemyAttackBase
 
 public class ScorchingClaw : EnemyAttackBase
 {
+  private int Burn = 3;
   public ScorchingClaw()
   {
     Id = "scorching_claw";
     Name = "Scorching Claw";
-    Damage = 8;
-    ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Burn, 1, ConditionType);
+    Damage = 10;
+    ConditionType = ConditionType.OnBlockedByAtLeast2Cards;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Burn, Burn, ConditionType);
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = ValuesParse[0] });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = Burn });
     };
   }
 }
 
 public class InfernalExecution : EnemyAttackBase
 {
+  private int Burn = 1;
+  private int Threshold = 2;
   public InfernalExecution()
   {
     Id = "infernal_execution";
     Name = "Infernal Execution";
-    Damage = 6;
+    Damage = 8;
     ConditionType = ConditionType.MustBeBlockedByAtLeast1Card;
-    Text = $"On attack - Gain [1] burn.\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 2)}";
+
+    OnChannelApplied = (entityManager) =>
+    {
+      Burn += Channel;
+      Text = $"On attack - Gain {Burn}* burn.\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 2)}";
+      if (Channel > 0)
+      {
+        Text += $"\n\n* Increased by channel.";
+      }
+      else{
+        Text = Text.Replace("*", "");
+      }
+    };
 
     OnAttackReveal = (entityManager) =>
     {
-      EventManager.Publish(new MustBeBlockedEvent { Threshold = ValuesParse[0], Type = MustBeBlockedByType.AtLeast });
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = ValuesParse[1] });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = Burn });
+      EventManager.Publish(new MustBeBlockedEvent { Threshold = Threshold, Type = MustBeBlockedByType.AtLeast });
     };
   }
 }

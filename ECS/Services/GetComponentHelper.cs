@@ -38,11 +38,12 @@ namespace Crusaders30XX.ECS.Services
             return appliedPassives;
         }
 
-        public static bool IsQuestOneBattle(EntityManager entityManager)
+        public static bool IsLastBattleOfQuest(EntityManager entityManager)
         {
             var queuedEvents = entityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
             if (queuedEvents == null) return false;
-            return queuedEvents.GetComponent<QueuedEvents>().Events.Count == 1;
+            var qe = queuedEvents.GetComponent<QueuedEvents>();
+            return qe.Events.Count == 1 || qe.CurrentIndex == qe.Events.Count - 1;
         }
     }
 }

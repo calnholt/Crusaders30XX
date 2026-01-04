@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "bulwark";
             Name = "Bulwark";
             Target = "Enemy";
-            Text = "Whenever you play this card, this card gains +{1} block for the duration of the quest.";
+            Text = "This card gains +{1} block for the duration of the quest.";
             Block = 3;
             Damage = 6;
             IsFreeAction = true;

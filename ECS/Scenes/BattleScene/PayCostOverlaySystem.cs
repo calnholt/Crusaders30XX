@@ -8,6 +8,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -526,6 +528,11 @@ namespace Crusaders30XX.ECS.Systems
                             if (card != null && card.OnDiscardedForCost != null)
                             {
                                 card.OnDiscardedForCost(EntityManager, c);
+                            }
+                            // Award mastery points for Relic cards discarded for cost
+                            if (card != null && card.Type == CardType.Relic)
+                            {
+                                SaveCache.AddMasteryPoints(card.CardId, 1);
                             }
                         }
                     }

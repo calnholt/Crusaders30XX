@@ -216,12 +216,17 @@ namespace Crusaders30XX.ECS.Systems
             {
                 startPos = new Vector2(ui.Bounds.Center.X, ui.Bounds.Center.Y);
             }
+            
+            // Read destination from component (supports both Discard and Exhaust)
+            var animZone = evt.Card.GetComponent<AnimatingHandToZone>();
+            var destination = animZone?.Destination ?? CardZoneType.DiscardPile;
+            
             var anim = new MoveAnim
             {
                 Card = evt.Card,
                 Deck = evt.Deck,
                 ContextId = evt.ContextId,
-                Destination = CardZoneType.DiscardPile,
+                Destination = destination,
                 Start = startPos,
                 End = ResolveDiscardAnchor(),
                 Duration = DurationSeconds,

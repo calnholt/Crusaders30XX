@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Systems
     /// </summary>
     public class DeckManagementSystem : Core.System
     {
-        public DeckManagementSystem(EntityManager entityManager) : base(entityManager) 
+        public DeckManagementSystem(EntityManager entityManager) : base(entityManager)
         {
             // Subscribe to deck management events
             EventManager.Subscribe<DeckShuffleDrawEvent>(OnDeckShuffleDrawEvent);
@@ -24,12 +24,12 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<RemoveTopCardFromDrawPileRequested>(OnRemoveTopCardFromDrawPileRequested);
             EventManager.Subscribe<DiscardAllCardsEvent>(OnDiscardAllCards);
         }
-        
+
         protected override IEnumerable<Entity> GetRelevantEntities()
         {
             return EntityManager.GetEntitiesWithComponent<Deck>();
         }
-        
+
         private void OnRequestDrawCards(RequestDrawCardsEvent evt)
         {
             // Find the first deck and draw count cards
@@ -77,7 +77,7 @@ namespace Crusaders30XX.ECS.Systems
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
         }
-        
+
         /// <summary>
         /// Shuffles the draw pile
         /// </summary>
@@ -85,7 +85,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var random = new System.Random();
             var cards = deck.DrawPile.ToList();
-            
+
             for (int i = cards.Count - 1; i > 0; i--)
             {
                 int j = random.Next(i + 1);
@@ -93,11 +93,11 @@ namespace Crusaders30XX.ECS.Systems
                 cards[i] = cards[j];
                 cards[j] = temp;
             }
-            
+
             deck.DrawPile.Clear();
             deck.DrawPile.AddRange(cards);
         }
-        
+
         /// <summary>
         /// Draws a card from the draw pile to the hand
         /// </summary>
@@ -130,10 +130,10 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 return true;
             }
-            
+
             return false;
         }
-        
+
         /// <summary>
         /// Discards a card from hand to discard pile
         /// </summary>
@@ -145,14 +145,14 @@ namespace Crusaders30XX.ECS.Systems
                 deck.DiscardPile.Add(card);
             }
         }
-        
+
         /// <summary>
         /// Draws multiple cards from the deck to the hand
         /// </summary>
         public int DrawCards(Deck deck, int count)
         {
             int drawnCount = 0;
-            
+
             for (int i = 0; i < count; i++)
             {
                 if (DrawCard(deck))
@@ -172,7 +172,7 @@ namespace Crusaders30XX.ECS.Systems
             });
             return drawnCount;
         }
-        
+
         /// <summary>
         /// Event handler for deck shuffle event
         /// </summary>
@@ -197,7 +197,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 Console.WriteLine($"[DeckManagementSystem] OnDeckShuffleDraw drawCount={evt.DrawCount} hand(before)={deck.Hand.Count}");
                 var drawnCards = ShuffleAndDraw(deck, evt.DrawCount);
-                
+
                 // Publish event for cards drawn
                 EventManager.Publish(new CardsDrawnEvent
                 {
@@ -207,7 +207,7 @@ namespace Crusaders30XX.ECS.Systems
                 Console.WriteLine($"[DeckManagementSystem] OnDeckShuffleDraw drawn={drawnCards} hand(after)={deck.Hand.Count}");
             }
         }
-        
+
         /// <summary>
         /// Shuffles the deck and draws the specified number of cards
         /// </summary>
@@ -218,10 +218,10 @@ namespace Crusaders30XX.ECS.Systems
             deck.DrawPile.AddRange(deck.DiscardPile);
             deck.Hand.Clear();
             deck.DiscardPile.Clear();
-            
+
             // Shuffle the draw pile
             ShuffleDrawPile(deck);
-            
+
             // Draw the specified number of cards
             return DrawCards(deck, drawCount);
         }
@@ -294,6 +294,29 @@ namespace Crusaders30XX.ECS.Systems
             ShuffleDrawPile(deck);
         }
 
+        private void ResetCard(Entity card)
+        {
+            var ui = card.GetComponent<UIElement>();
+            if (ui != null)
+            {
+                ui.IsInteractable = false;
+                ui.IsHovered = false;
+                ui.IsClicked = false;
+                ui.EventType = UIElementEventType.None;
+                // Move bounds off-screen and shrink to avoid accidental hit-tests
+                ui.Bounds = new Rectangle(-1000, -1000, 1, 1);
+            }
+
+            var t = card.GetComponent<Transform>();
+            if (t != null)
+            {
+                t.BasePosition = Vector2.Zero;
+                t.Position = Vector2.Zero;
+                t.Rotation = 0f;
+                t.Scale = Vector2.One;
+            }
+        }
+
         /// <summary>
         /// Event handler for ResetDeckEvent
         /// </summary>
@@ -344,8 +367,12 @@ namespace Crusaders30XX.ECS.Systems
             if (deckEntity == null) return;
             var deck = deckEntity.GetComponent<Deck>();
             if (deck == null) return;
+            foreach (var c in deck.Hand)
+            {
+                ResetCard(c);
+            }
             deck.DiscardPile.AddRange(deck.Hand);
             deck.Hand.Clear();
         }
     }
-} 
+}

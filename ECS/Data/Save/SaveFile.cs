@@ -12,11 +12,19 @@ namespace Crusaders30XX.ECS.Data.Save
 		public string lastLocation { get; set; } = string.Empty;
 		public List<LoadoutDefinition> loadouts { get; set; } = new List<LoadoutDefinition>();
 		public List<string> seenTutorials { get; set; } = new List<string>();
+		public Dictionary<string, CardMastery> cardMastery { get; set; } = new Dictionary<string, CardMastery>();
 	}
 
 	public class SaveItem
 	{
 		public string id { get; set; }
 		public int amount { get; set; }
+	}
+
+	public class CardMastery
+	{
+		public string cardId { get; set; }
+		public int level { get; set; }
+		public int points { get; set; }
 	}
 }

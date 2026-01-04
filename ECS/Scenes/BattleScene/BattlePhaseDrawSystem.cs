@@ -59,6 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var e in deck.Hand)
 			{
 				if (e.HasComponent<AnimatingHandToDiscard>()) continue;
+				if (e.HasComponent<AnimatingHandToZone>()) continue;
 				if (e.HasComponent<AnimatingHandToDrawPile>()) continue;
 
 				var cd = e.GetComponent<CardData>();
@@ -93,6 +94,7 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var e in deck.Hand)
 			{
 				if (e.HasComponent<AnimatingHandToDiscard>()) continue;
+				if (e.HasComponent<AnimatingHandToZone>()) continue;
 				if (e.HasComponent<AnimatingHandToDrawPile>()) continue;
 
 				var cd = e.GetComponent<CardData>();

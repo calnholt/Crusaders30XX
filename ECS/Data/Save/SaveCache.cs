@@ -431,5 +431,55 @@ namespace Crusaders30XX.ECS.Data.Save
 				}
 			}
 		}
+
+		private const int PointsToMaster = 50;
+
+		public static CardMastery GetMasteryData(string cardId)
+		{
+			if (string.IsNullOrEmpty(cardId)) return null;
+			EnsureLoaded();
+			if (_save == null || _save.cardMastery == null) return null;
+			_save.cardMastery.TryGetValue(cardId, out var mastery);
+			return mastery;
+		}
+
+		public static void AddMasteryPoints(string cardId, int points)
+		{
+			if (string.IsNullOrEmpty(cardId) || points <= 0) return;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				if (_save.cardMastery == null) _save.cardMastery = new Dictionary<string, CardMastery>();
+
+				if (!_save.cardMastery.TryGetValue(cardId, out var mastery))
+				{
+					mastery = new CardMastery { cardId = cardId, level = 0, points = 0 };
+					_save.cardMastery[cardId] = mastery;
+				}
+
+				int oldLevel = mastery.level;
+				mastery.points += points;
+
+				// Check for level up
+				while (mastery.points >= PointsToMaster)
+				{
+					mastery.points -= PointsToMaster;
+					mastery.level++;
+				}
+
+				Persist();
+
+				// Publish event if leveled up
+				if (mastery.level > oldLevel)
+				{
+					Crusaders30XX.ECS.Core.EventManager.Publish(new Crusaders30XX.ECS.Events.CardMasteredEvent
+					{
+						CardId = cardId,
+						Level = mastery.level
+					});
+				}
+			}
+		}
 	}
 }

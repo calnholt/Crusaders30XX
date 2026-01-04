@@ -29,7 +29,7 @@ public class Skeleton : EnemyBase
   {
     int random = Random.Shared.Next(0, 100);
     var linkers = new List<string> { "bone_strike", "sweep", "calcify" };
-    if (random <= 60)
+    if (random <= 65)
     {
       var selected = ArrayUtils.TakeRandomWithReplacement(linkers, 3);
       var sweepCount = selected.Count(x => x == "sweep");
@@ -37,6 +37,13 @@ public class Skeleton : EnemyBase
       {
         selected = ArrayUtils.TakeRandomWithReplacement(linkers, 3);
         sweepCount = selected.Count(x => x == "sweep");
+      }
+      int haveNoMercy = Random.Shared.Next(0, 100);
+      if (haveNoMercy <= 5)
+      {
+        var selected2 = ArrayUtils.TakeRandomWithReplacement(linkers, 2);
+        selected2 = selected2.Append("have_no_mercy");
+        selected = ArrayUtils.Shuffled(selected2);
       }
       return selected;
     }

@@ -923,6 +923,17 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marker for a card currently animating from Hand to a destination zone (Discard or Exhaust).
+    /// Stores the intended destination so the animation system knows where to finalize the card.
+    /// Hand layout/draw systems should ignore cards with this component until finalize.
+    /// </summary>
+    public class AnimatingHandToZone : IComponent
+    {
+        public Entity Owner { get; set; }
+        public CardZoneType Destination { get; set; }
+    }
+
+    /// <summary>
     /// Marker for a card currently animating from Hand to DrawPile.
     /// Hand layout/draw systems should ignore cards with this component until finalize.
     /// </summary>

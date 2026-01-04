@@ -1,4 +1,5 @@
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Objects.EnemyAttacks;
 using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Systems
@@ -42,7 +43,7 @@ namespace Crusaders30XX.ECS.Systems
         case AppliedPassiveType.Fear:
           return $"Attacks have a {stacks * 10}% chance to become ambush attacks this quest.";
         case AppliedPassiveType.Siphon:
-          return $"For each point of courage this enemy removes from you, it heals {stacks * 3} HP.";
+          return $"For each point of courage this enemy removes from you, it heals {stacks * Succubus.SiphonMultiplier} HP.";
         case AppliedPassiveType.Thorns:
           return $"You gain {stacks} bleed whenever you attack this enemy.";
         case AppliedPassiveType.Bleed:

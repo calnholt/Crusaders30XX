@@ -7,6 +7,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
 using System;
+using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -160,6 +162,11 @@ namespace Crusaders30XX.ECS.Systems
                     }
                     var cardData = entity.GetComponent<CardData>();
                     cardData.Card.OnBlock?.Invoke(EntityManager, entity);
+                    // Award mastery points for Block cards when used to block
+                    if (cardData != null && cardData.Card.Type == CardType.Block)
+                    {
+                        SaveCache.AddMasteryPoints(cardData.Card.CardId, 1);
+                    }
                     EventManager.Publish(new CardMoveRequested
                     {
                         Card = entity,
