@@ -7,6 +7,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -46,6 +47,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Text Color B", Step = 1, Min = 0, Max = 255)]
 		public int TextColorB { get; set; } = 255;
+
+		[DebugEditable(DisplayName = "Max Width", Step = 10, Min = 50, Max = 1000)]
+		public int MaxWidth { get; set; } = 400;
 
 
 		private class FadeState { public float Alpha01; public bool TargetVisible; public Rectangle Rect; public string Text; }
@@ -103,6 +107,11 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is intimidated - cannot be used to block during the block phase.";
 				}
+
+				// Wrap text based on MaxWidth
+				var wrappedLines = TextUtils.WrapText(_font, text, TextScale, MaxWidth);
+				text = string.Join("\n", wrappedLines);
+
 				int pad = System.Math.Max(0, Padding);
 				var size = _font.MeasureString(text) * TextScale;
 				int w = (int)System.Math.Ceiling(size.X) + pad * 2;
