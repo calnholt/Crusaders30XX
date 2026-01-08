@@ -18,6 +18,9 @@ namespace Crusaders30XX.ECS.Services
 		public static List<string> GenerateRandomEnemyEncounter(int count = 3)
 		{
 			var allEnemies = EnemyFactory.GetAllEnemies().Keys.ToList();
+			allEnemies.Remove("gleeber");
+			allEnemies.Remove("sand_corpse");
+			allEnemies.Remove("sand_golem");
 			var selected = new List<string>();
 			
 			for (int i = 0; i < count && allEnemies.Count > 0; i++)
