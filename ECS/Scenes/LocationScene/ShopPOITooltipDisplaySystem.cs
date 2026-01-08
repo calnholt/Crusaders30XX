@@ -65,10 +65,10 @@ namespace Crusaders30XX.ECS.Systems
 			var scene = entity.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Location) return;
 
-			// Find top-most hovered Shop POI
+			// Find top-most hovered Shop or Dungeon POI
 			var hovered = EntityManager.GetEntitiesWithComponent<UIElement>()
 				.Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), P = e.GetComponent<PointOfInterest>() })
-				.Where(x => x.UI != null && !x.UI.IsHidden && x.UI.IsHovered && x.P != null && x.P.Type == PointOfInterestType.Shop)
+				.Where(x => x.UI != null && !x.UI.IsHidden && x.UI.IsHovered && x.P != null && (x.P.Type == PointOfInterestType.Shop || x.P.Type == PointOfInterestType.Dungeon))
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.FirstOrDefault();
 
@@ -83,7 +83,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Determine title
-			string title = "Shop";
+			string title = hovered.P.Type == PointOfInterestType.Dungeon ? "Dungeon" : "Shop";
 			if (!string.IsNullOrEmpty(hovered.P?.Id))
 			{
 				var all = LocationDefinitionCache.GetAll();

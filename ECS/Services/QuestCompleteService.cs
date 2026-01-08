@@ -51,6 +51,24 @@ namespace Crusaders30XX.ECS.Services
 					var questIdStr = poi?.id;
 					result.LocationId = locationId ?? string.Empty;
 					result.QuestId = questIdStr ?? string.Empty;
+					
+					// Check if this is a Dungeon POI (replayable, don't mark as completed)
+					if (poi?.type == PointOfInterestType.Dungeon)
+					{
+						Console.WriteLine($"[QuestCompleteService] Completed dungeon {locationId}/{questIdStr}");
+						// Award gold reward for dungeon completion
+						int reward = poi?.rewardGold ?? 0;
+						if (reward > 0)
+						{
+							SaveCache.AddGold(reward);
+							result.RewardGold = reward;
+						}
+						// Do NOT mark as completed (dungeons are replayable)
+						// Do NOT trigger POI reveal cutscene
+						result.IsNewlyCompleted = false;
+						return result;
+					}
+					
 					if (!string.IsNullOrEmpty(questIdStr) && !SaveCache.IsQuestCompleted(locationId, questIdStr))
 					{
 						Console.WriteLine($"[QuestCompleteService] Completed point of interest {locationId}/{questIdStr}");

@@ -654,6 +654,24 @@
           "Price": 3
         }
       ]
+    },
+    {
+      "Id": "desert_dungeon_1",
+      "WorldPosition": [
+        2288,
+        676
+      ],
+      "RevealRadius": 500,
+      "UnrevealedRadius": 200,
+      "Type": "Dungeon",
+      "IsRevealed": true,
+      "Name": "Forgotten Catacombs",
+      "Difficulty": 2,
+      "Background": "dungeon-background.png",
+      "Reward": {
+        "Gold": 1
+      },
+      "Events": []
     }
   ]
 }

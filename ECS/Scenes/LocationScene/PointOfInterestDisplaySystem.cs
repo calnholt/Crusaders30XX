@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Texture2D _questIconTexture;
 		private readonly Texture2D _hellriftIconTexture;
 		private readonly Texture2D _shopIconTexture;
+		private readonly Texture2D _dungeonIconTexture;
 		private readonly Texture2D _skullTexture;
 		private bool _spawned;
 		private readonly System.Collections.Generic.List<Entity> _pois = new System.Collections.Generic.List<Entity>();
@@ -90,6 +91,14 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			try
 			{
+				_dungeonIconTexture = content.Load<Texture2D>("Dungeon_poi");
+			}
+			catch
+			{
+				_dungeonIconTexture = null;
+			}
+			try
+			{
 				_skullTexture = content.Load<Texture2D>("skull");
 			}
 			catch
@@ -153,6 +162,7 @@ namespace Crusaders30XX.ECS.Systems
 						Texture2D iconTexture =
 							(poi.Type == PointOfInterestType.Hellrift && _hellriftIconTexture != null) ? _hellriftIconTexture :
 							(poi.Type == PointOfInterestType.Shop && _shopIconTexture != null) ? _shopIconTexture :
+							(poi.Type == PointOfInterestType.Dungeon && _dungeonIconTexture != null) ? _dungeonIconTexture :
 							_questIconTexture;
 						
 						// Calculate bounds size scaled by map zoom and hover scale
@@ -249,6 +259,7 @@ namespace Crusaders30XX.ECS.Systems
 				Texture2D iconTexture =
 					(poiType == PointOfInterestType.Hellrift && _hellriftIconTexture != null) ? _hellriftIconTexture :
 					(poiType == PointOfInterestType.Shop && _shopIconTexture != null) ? _shopIconTexture :
+					(poiType == PointOfInterestType.Dungeon && _dungeonIconTexture != null) ? _dungeonIconTexture :
 					_questIconTexture;
 				
 				// Calculate UI bounds based on actual icon dimensions
@@ -262,7 +273,7 @@ namespace Crusaders30XX.ECS.Systems
 				
 				// UI bounds size only; Parallax will center bounds at Transform.Position when AffectsUIBounds is true
 				// Hellrift POIs are not interactable
-				bool isInteractable = pos.isRevealed || poiType == PointOfInterestType.Shop || poiType == PointOfInterestType.Quest;
+				bool isInteractable = pos.isRevealed || poiType == PointOfInterestType.Shop || poiType == PointOfInterestType.Quest || poiType == PointOfInterestType.Dungeon;
 				var tooltipType = (poiType == PointOfInterestType.Shop) ? TooltipType.None : TooltipType.Quests;
 				var eventType = (poiType == PointOfInterestType.Shop) ? UIElementEventType.None : UIElementEventType.QuestSelect;
 				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, boundsWidth, boundsHeight), IsInteractable = isInteractable, TooltipType = tooltipType, EventType = eventType, IsPreventDefaultClick = true });
@@ -354,7 +365,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (x.UI != null)
 				{
 					x.UI.IsHidden = !isVisible;
-					x.UI.IsInteractable = (isVisible && (x.P.Type == PointOfInterestType.Shop || x.P.Type == PointOfInterestType.Quest)) || x.P.IsRevealedByProximity;
+					x.UI.IsInteractable = (isVisible && (x.P.Type == PointOfInterestType.Shop || x.P.Type == PointOfInterestType.Quest || x.P.Type == PointOfInterestType.Dungeon)) || x.P.IsRevealedByProximity;
 				}
 
 				if (!isVisible) continue;
@@ -366,6 +377,7 @@ namespace Crusaders30XX.ECS.Systems
 				Texture2D iconTexture =
 					(x.P.Type == PointOfInterestType.Hellrift && _hellriftIconTexture != null) ? _hellriftIconTexture :
 					(x.P.Type == PointOfInterestType.Shop && _shopIconTexture != null) ? _shopIconTexture :
+					(x.P.Type == PointOfInterestType.Dungeon && _dungeonIconTexture != null) ? _dungeonIconTexture :
 					_questIconTexture;
 				
 				// Calculate icon dimensions preserving aspect ratio, scaled by map zoom

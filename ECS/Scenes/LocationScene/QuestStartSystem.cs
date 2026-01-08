@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -42,6 +43,13 @@ namespace Crusaders30XX.ECS.Systems
         private void TryStartQuestFromPoi(PointOfInterest poi)
         {
             if (poi == null || string.IsNullOrEmpty(poi.Id)) return;
+
+            // Check if this is a Dungeon POI
+            if (poi.Type == PointOfInterestType.Dungeon)
+            {
+                StartDungeonEncounter(poi);
+                return;
+            }
 
             // Find location and quest index containing this POI
             string locationId = null;
@@ -106,6 +114,68 @@ namespace Crusaders30XX.ECS.Systems
                 EventManager.Publish(new QuestSelected { LocationId = locationId, QuestIndex = questIndex, QuestId = poi.Id });
                 EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
             }
+        }
+
+        private void StartDungeonEncounter(PointOfInterest poi)
+        {
+            // Generate 3 random enemies
+            var enemyIds = DungeonEncounterGeneratorService.GenerateRandomEnemyEncounter(3);
+            
+            // Find location and quest index containing this POI
+            string locationId = null;
+            int questIndex = -1;
+            var all = LocationDefinitionCache.GetAll();
+            foreach (var kv in all)
+            {
+                var loc = kv.Value;
+                if (loc?.pointsOfInterest == null) continue;
+                for (int i = 0; i < loc.pointsOfInterest.Count; i++)
+                {
+                    if (string.Equals(loc.pointsOfInterest[i].id, poi.Id, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        locationId = kv.Key;
+                        questIndex = i;
+                        break;
+                    }
+                }
+                if (questIndex >= 0) break;
+            }
+            if (string.IsNullOrEmpty(locationId) || questIndex < 0) return;
+            
+            // Find or create QueuedEvents entity
+            var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
+            if (qeEntity == null)
+            {
+                qeEntity = EntityManager.CreateEntity("QueuedEvents");
+                EntityManager.AddComponent(qeEntity, new QueuedEvents());
+                EntityManager.AddComponent(qeEntity, new DontDestroyOnLoad());
+            }
+            
+            var qe = qeEntity.GetComponent<QueuedEvents>();
+            qe.CurrentIndex = -1;
+            qe.Events.Clear();
+            qe.LocationId = locationId;
+            qe.QuestIndex = questIndex;
+            
+            // Add enemy events
+            foreach (var enemyId in enemyIds)
+            {
+                qe.Events.Add(new QueuedEvent 
+                { 
+                    EventId = enemyId, 
+                    EventType = QueuedEventType.Enemy 
+                });
+            }
+            
+            // Start battle
+            SaveCache.SetLastLocation(poi.Id);
+            EventManager.Publish(new QuestSelected 
+            { 
+                LocationId = locationId, 
+                QuestIndex = questIndex, 
+                QuestId = poi.Id 
+            });
+            EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
         }
 
         private static QueuedEventType ParseQueuedEventType(string type)
