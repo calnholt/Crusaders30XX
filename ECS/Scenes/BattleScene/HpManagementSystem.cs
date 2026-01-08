@@ -86,9 +86,11 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						Console.WriteLine($"[HpManagementSystem] Attempting to save quest completion");
 						var completion = QuestCompleteService.SaveIfCompletedHighest(EntityManager);
-						string msg = completion.IsNewlyCompleted
-							? $"Quest Complete!\nGold +{completion.RewardGold}"
-							: "Quest Complete! (already completed - no reward)";
+						string msg = "Quest Complete!";
+						if (completion.IsNewlyCompleted || completion.IsDungeon)
+						{
+							msg += $"\nGold +{completion.RewardGold}";
+						}
 						EventManager.Publish(new ShowQuestRewardOverlay { Message = msg });
 						EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.QuestComplete });
 					}
