@@ -39,5 +39,6 @@ namespace Crusaders30XX.ECS.Objects.Medals
             EventManager.Unsubscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
             Console.WriteLine($"[StLuke] Unsubscribed from ChangeBattlePhaseEvent");
         }
+
     }
 }

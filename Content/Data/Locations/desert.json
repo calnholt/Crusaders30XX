@@ -375,6 +375,36 @@
       "Background": "desert-background-tundra.png"
     },
     {
+      "Id": "desert_17",
+      "WorldPosition": [
+        1210,
+        2320
+      ],
+      "RevealRadius": 600,
+      "UnrevealedRadius": 150,
+      "Type": "Quest",
+      "Name": "From a Distance",
+      "Difficulty": 2,
+      "Reward": {
+        "Gold": 2
+      },
+      "Events": [
+        {
+          "id": "cinderbolt_demon",
+          "type": "Enemy"
+        },
+        {
+          "id": "fire_skeleton",
+          "type": "Enemy"
+        },
+        {
+          "id": "cinderbolt_demon",
+          "type": "Enemy"
+        }
+      ],
+      "Background": "desert-background-city.png"
+    },
+    {
       "Id": "desert_7",
       "WorldPosition": [
         4775,
@@ -612,6 +642,11 @@
           "Id": "purge",
           "Type": "Card",
           "Price": 1
+        },
+        {
+          "Id": "st_nicholas",
+          "Type": "Medal",
+          "Price": 2
         },
         {
           "Id": "helm_of_seeing",

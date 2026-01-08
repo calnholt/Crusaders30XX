@@ -17,7 +17,7 @@ namespace Crusaders30XX.ECS.Systems
         public MarkedForSpecificDiscardSystem(EntityManager entityManager) : base(entityManager)
         {
             EventManager.Subscribe<MarkedForSpecificDiscardEvent>(OnMarkedForSpecificDiscard);
-            EventManager.Subscribe<OnEnemyAttackHitEvent>(OnEnemyAttackHitEvent);
+            EventManager.Subscribe<AttackResolved>(OnAttackResolved);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -59,8 +59,12 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private void OnEnemyAttackHitEvent(OnEnemyAttackHitEvent evt)
+        private void OnAttackResolved(AttackResolved evt)
         {
+            if (evt.WasConditionMet)
+            {
+                return;
+            }
             var entities = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>();
             if (entities == null || entities.Count() == 0) return;
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
@@ -69,11 +73,11 @@ namespace Crusaders30XX.ECS.Systems
             foreach (var e in entities)
             {
                 EntityManager.RemoveComponent<MarkedForSpecificDiscard>(e);
+                if (evt.WasConditionMet)
+                {
+                    continue;
+                }
                 EventManager.Publish(new CardMoveRequested { Card = e, Deck = deckEntity, Destination = CardZoneType.DiscardPile, ContextId = GetComponentHelper.GetContextId(EntityManager), Reason = "DiscardSpecificCard" });
-            }
-            foreach (var e in EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>())
-            {
-                EntityManager.RemoveComponent<MarkedForSpecificDiscard>(e);
             }
         }
     }

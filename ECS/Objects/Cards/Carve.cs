@@ -9,14 +9,16 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Carve : CardBase
     {
+        private int DamageBonus = 5;
+        private int Chance = 50;
         public Carve()
         {
             CardId = "carve";
             Name = "Carve";
             Target = "Enemy";
-            Text = "This gains +{5} damage for the rest of the quest. {50}% chance this is shuffled back into the deck.";
+            Text = $"This gains +{DamageBonus} damage for the rest of the quest. {Chance}% chance this is shuffled back into the deck.";
             Block = 3;
-            Damage = 7;
+            Damage = 10;
             Animation = "Attack";
 
             OnPlay = (entityManager, card) =>
@@ -27,9 +29,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
-                AttackDamageValueService.ApplyDelta(card, +ValuesParse[0], "Carve");
+                AttackDamageValueService.ApplyDelta(card, +DamageBonus, "Carve");
                 var random = Random.Shared.Next(0, 100);
-                if (random <= ValuesParse[1])
+                if (random <= Chance)
                 {
                     entityManager.AddComponent(card, new MarkedForReturnToDeck { Owner = card });
                 }   

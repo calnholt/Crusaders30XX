@@ -20,7 +20,6 @@ namespace Crusaders30XX.ECS.Objects.Medals
             EntityManager = entityManager;
             MedalEntity = medalEntity;
         }
-
         public override void Activate()
         {
             EventManager.Publish(new ModifyCourageRequestEvent { Delta = 1, Reason = Id });
@@ -39,5 +38,6 @@ namespace Crusaders30XX.ECS.Objects.Medals
             EventManager.Unsubscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
             Console.WriteLine($"[StMichael] Unsubscribed from ChangeBattlePhaseEvent");
         }
+
     }
 }

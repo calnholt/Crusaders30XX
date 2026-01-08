@@ -45,5 +45,12 @@ namespace Crusaders30XX.ECS.Services
             var qe = queuedEvents.GetComponent<QueuedEvents>();
             return qe.Events.Count == 1 || qe.CurrentIndex == qe.Events.Count - 1;
         }
+
+        public static Courage GetCourage(EntityManager entityManager)
+        {
+            var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            if (player == null) return null;
+            return player.GetComponent<Courage>();
+        }
     }
 }

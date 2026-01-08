@@ -80,6 +80,9 @@ namespace Crusaders30XX.ECS.Factories
                 // GlacialGuardian attacks
                 "glacial_strike" => new GlacialStrike(),
                 "glacial_blast" => new GlacialBlast(),
+                // CinderboltDemon attacks
+                "cinderbolt" => new Cinderbolt(),
+                "insidious_bolt" => new InsidiousBolt(),
                 // Generic attacks
                 "have_no_mercy" => new HaveNoMercy(),
                 _ => null
@@ -156,6 +159,9 @@ namespace Crusaders30XX.ECS.Factories
                 // GlacialGuardian attacks
                 { "glacial_strike", new GlacialStrike() },
                 { "glacial_blast", new GlacialBlast() },
+                // CinderboltDemon attacks
+                { "cinderbolt", new Cinderbolt() },
+                { "insidious_bolt", new InsidiousBolt() },
                 // Generic attacks
                 { "have_no_mercy", new HaveNoMercy() },
             };

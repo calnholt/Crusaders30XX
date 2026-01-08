@@ -399,6 +399,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // Move the played card to discard unless it's a weapon (weapons leave hand but do not go to discard)
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var destination = CardZoneType.DiscardPile;
             if (deckEntity != null)
             {
                 if (isWeapon)
@@ -410,31 +411,30 @@ namespace Crusaders30XX.ECS.Systems
                     Console.WriteLine("[CardPlaySystem] Weapon used; removed from hand without discarding");
                     EntityManager.DestroyEntity(evt.Card.Id);
                 }
-                else if (evt.Card.GetComponent<MarkedForReturnToDeck>() != null)
+                if (evt.Card.GetComponent<MarkedForReturnToDeck>() != null)
                 {
-                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.DrawPile, Reason = "ReturnToDeck" });
+                    destination = CardZoneType.DrawPile;
                     EventManager.Publish(new DeckShuffleEvent { Deck = deckEntity });
                     Console.WriteLine("[CardPlaySystem] Card returned to deck");
                     EntityManager.RemoveComponent<MarkedForReturnToDeck>(evt.Card);
                 }
-                else if (evt.Card.GetComponent<MarkedForExhaust>() != null)
+                if (evt.Card.GetComponent<MarkedForExhaust>() != null)
                 {
-                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.ExhaustPile, Reason = "Exhaust" });
+                    destination = CardZoneType.ExhaustPile;
                     Console.WriteLine("[CardPlaySystem] Card exhausted");
                     EntityManager.RemoveComponent<MarkedForExhaust>(evt.Card);
                 }
-                else if (evt.Card.GetComponent<Frozen>() != null)
+                if (evt.Card.GetComponent<Frozen>() != null)
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Frostbite, Delta = 1 });
-                    var destination = Random.Shared.Next(0, 100) < 50 ? CardZoneType.ExhaustPile : CardZoneType.DiscardPile;
+                    destination = Random.Shared.Next(0, 100) < 50 ? CardZoneType.ExhaustPile : destination;
                     Console.WriteLine($"[CardPlaySystem] Card frozen; moving to {destination}");
-                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = destination, Reason = "PlayCard" });
                 }
                 else
                 {
-                    EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PlayCard" });
                     Console.WriteLine("[CardPlaySystem] Requested move to DiscardPile");
                 }
+                EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = destination, Reason = "PlayCard" });
             }
 
             // Consume 1 AP if not a free action

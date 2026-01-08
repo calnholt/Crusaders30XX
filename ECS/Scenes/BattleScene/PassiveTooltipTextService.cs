@@ -68,6 +68,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"At the start of the enemy turn, freeze one card from your hand.";
         case AppliedPassiveType.Windchill:
           return $"Whenever you block with a frozen card, gain 1 penance.";
+        case AppliedPassiveType.Enflamed:
+          return $"If you have 4+ courage at the end of the action phase, gain 1 burn.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

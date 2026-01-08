@@ -100,6 +100,18 @@
 /processorParam:TextureFormat=Color
 /build:chalice.png
 
+#begin Dungeon_poi.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Dungeon_poi.png
+
 #begin Quest_poi.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -245,6 +257,18 @@
 /processorParam:TextureFormat=Color
 /build:Succubus.png
 
+#begin Cinderbolt_Demon.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Cinderbolt_Demon.png
+
 #begin Spider.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -256,6 +280,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Spider.png
+
+#begin Fire_Skeleton.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Fire_Skeleton.png
 
 #begin Sand_Corpse.png
 /importer:TextureImporter
@@ -388,6 +424,30 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:desert-background-crumbling-city.png
+
+#begin dungeon-background.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:dungeon-background.png
+
+#begin desert-background-city.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:desert-background-city.png
 
 #begin desert-background-hellrift.png
 /importer:TextureImporter
@@ -640,6 +700,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:st_michael.png
+
+#begin st_nicholas.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:st_nicholas.png
 
 #begin customization.png
 /importer:TextureImporter

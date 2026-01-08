@@ -38,6 +38,12 @@ namespace Crusaders30XX.ECS.Events
         public int Value { get; set; }
     }
 
+    public class IncreaseMaxHpEvent
+    {
+        public Entity Target { get; set; }
+        public int Delta { get; set; }
+    }
+
     public class FullyHealEvent
     {
         public Entity Target { get; set; }

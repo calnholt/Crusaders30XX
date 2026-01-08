@@ -107,7 +107,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				EventManager.Unsubscribe(onResolving);
 				EventManager.Unsubscribe(onApplied);
-				EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasBlocked = blockedAtResolution });
+				EventManager.Publish(new AttackResolved { ContextId = pa.ContextId, WasConditionMet = blockedAtResolution });
 			};
 
 			

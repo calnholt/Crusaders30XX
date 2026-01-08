@@ -54,7 +54,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     }
     public int AmbushPercentage { get; set; } = 0;
     public bool IsTextConditionFulfilled { get; set; } = true;
-    public bool IsQuestOneBattle { get; set; } = false;
+    public bool IsOneBattleOrLastBattle { get; set; } = false;
     public int Channel { get; set; } = 0;
     public static EntityManager EntityManager { get; set; }
 
@@ -70,7 +70,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     public void Initialize(EntityManager entityManager)    
     {
       EntityManager = entityManager;
-      IsQuestOneBattle = GetComponentHelper.IsLastBattleOfQuest(EntityManager);
+      IsOneBattleOrLastBattle = GetComponentHelper.IsLastBattleOfQuest(EntityManager);
       GetComponentHelper.GetAppliedPassives(EntityManager, "Enemy").Passives.TryGetValue(AppliedPassiveType.Channel, out int count);
       Channel = count;
       OnChannelApplied?.Invoke(entityManager);

@@ -6,12 +6,15 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class DowseWithHolyWater : CardBase
     {
+        private int Aggression = 5;
+        private int CourageThreshold = 5;
+        private int AggressionBonus = 15;
         public DowseWithHolyWater()
         {
             CardId = "dowse_with_holy_water";
             Name = "Douse with Holy Water";
             Target = "Player";
-            Text = "Gain {5} aggression. If you have {4}+ courage, gain {12} aggression instead.";
+            Text = $"Gain {Aggression} aggression. If you have {CourageThreshold}+ courage, gain {AggressionBonus} aggression instead.";
             IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;
@@ -21,7 +24,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var player = entityManager.GetEntity("Player");
                 var courage = player.GetComponent<Courage>().Amount;
-                var delta = courage >= ValuesParse[1] ? ValuesParse[2] : ValuesParse[0];
+                var delta = courage >= CourageThreshold ? AggressionBonus : Aggression;
                 EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = delta });
             };
         }

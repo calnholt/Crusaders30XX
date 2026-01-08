@@ -20,6 +20,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
 			EventManager.Subscribe<FullyHealEvent>(OnFullyHeal);
 			EventManager.Subscribe<HealEvent>(OnHeal);
+			EventManager.Subscribe<IncreaseMaxHpEvent>(OnIncreaseMaxHp);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -200,6 +201,16 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new UpdatePassive { Owner = target, Type = AppliedPassiveType.Aegis, Delta = -useAegis });
 			newDelta += useAegis;
 			return true;
+		}
+
+		private void OnIncreaseMaxHp(IncreaseMaxHpEvent e)
+		{
+			var target = ResolveTarget(e.Target);
+			if (target == null) return;
+			var hp = target.GetComponent<HP>();
+			if (hp == null) return;
+			hp.Max = Math.Max(1, hp.Max + e.Delta);
+			hp.Current = hp.Max;
 		}
 	}
 

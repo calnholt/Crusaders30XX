@@ -161,7 +161,7 @@ public class ShadowStep : EnemyAttackBase
 
     OnAttackReveal = (entityManager) =>
     {
-      if (IsQuestOneBattle)
+      if (IsOneBattleOrLastBattle)
       {
         Text = string.Empty;
       }
@@ -169,7 +169,7 @@ public class ShadowStep : EnemyAttackBase
 
     OnBlockProcessed = (entityManager, card) =>
     {
-      if (!IsQuestOneBattle)
+      if (!IsOneBattleOrLastBattle)
       {
         // TODO: should send an event to the player to block the attack
         BlockValueService.ApplyDelta(card, -ValuesParse[0], "Corrode");

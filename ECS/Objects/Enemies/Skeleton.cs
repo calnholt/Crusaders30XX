@@ -79,7 +79,7 @@ public class Sweep : EnemyAttackBase
 
     OnAttackReveal = (entityManager) =>
     {
-      if (IsQuestOneBattle)
+      if (IsOneBattleOrLastBattle)
       {
         Text = string.Empty;
       }
@@ -87,7 +87,7 @@ public class Sweep : EnemyAttackBase
     
     OnBlockProcessed = (entityManager, card) =>
     {
-      if (!IsQuestOneBattle)
+      if (!IsOneBattleOrLastBattle)
       {
         // TODO: should send an event
         BlockValueService.ApplyDelta(card, -ValuesParse[0], "Corrode");

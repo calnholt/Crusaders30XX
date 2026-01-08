@@ -25,9 +25,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Top Margin", Step = 2, Min = 0, Max = 2000)]
 		public int TopMargin { get; set; } = 10;
 		[DebugEditable(DisplayName = "Icon Size", Step = 1, Min = 8, Max = 512)]
-		public int IconSize { get; set; } = 105;
+		public int IconSize { get; set; } = 100;
 		[DebugEditable(DisplayName = "Spacing X", Step = 1, Min = 0, Max = 256)]
-		public int SpacingX { get; set; } = 0;
+		public int SpacingX { get; set; } = 12;
 		[DebugEditable(DisplayName = "Background Corner Radius", Step = 1, Min = 0, Max = 64)]
 		public int BgCornerRadius { get; set; } = 16;
 		[DebugEditable(DisplayName = "Background Padding", Step = 1, Min = 0, Max = 64)]

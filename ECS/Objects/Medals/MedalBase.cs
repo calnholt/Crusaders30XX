@@ -13,13 +13,15 @@ namespace Crusaders30XX.ECS.Objects.Medals
         public EntityManager EntityManager { get; set; }
         public Entity MedalEntity { get; set; }
         
-        public virtual void Initialize(EntityManager entityManager, Entity medalEntity){}
+        public abstract void Initialize(EntityManager entityManager, Entity medalEntity);
 
         protected void EmitActivateEvent(){
             EventManager.Publish(new MedalActivateEvent { MedalEntity = MedalEntity });
         }
 
-        public abstract void Activate();
+        public virtual void Activate(){
+            Console.WriteLine($"[MedalBase] Activate: {Id}");
+        }
 
         public virtual void Dispose()
         {

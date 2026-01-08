@@ -34,7 +34,7 @@ namespace Crusaders30XX.ECS.Events
 	public class AttackResolved
 	{
 		public string ContextId;
-		public bool WasBlocked;
+		public bool WasConditionMet;
 	}
 
 	// Fired when the absorb tween completes and the enemy is about to attack
