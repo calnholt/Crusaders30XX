@@ -156,6 +156,10 @@ namespace Crusaders30XX.ECS.Systems
             qe.Events.Clear();
             qe.LocationId = locationId;
             qe.QuestIndex = questIndex;
+
+            // Generate and attach randomized dungeon loadout
+            var dungeonLoadout = DungeonLoadoutGeneratorService.GenerateRandomLoadout();
+            EntityManager.AddComponent(qeEntity, new DungeonLoadout { Loadout = dungeonLoadout });
             
             // Add enemy events
             foreach (var enemyId in enemyIds)

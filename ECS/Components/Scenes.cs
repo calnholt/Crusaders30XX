@@ -59,6 +59,15 @@ namespace Crusaders30XX.ECS.Components
 		public int QuestIndex { get; set; } = 0;
 	}
 
+    /// <summary>
+    /// Stores a randomized loadout for a dungeon quest.
+    /// </summary>
+    public class DungeonLoadout : IComponent
+    {
+        public Entity Owner { get; set; }
+        public Crusaders30XX.ECS.Data.Loadouts.LoadoutDefinition Loadout { get; set; }
+    }
+
 	public class QueuedEvent 
 	{
 		public string EventId;

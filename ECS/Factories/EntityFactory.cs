@@ -35,7 +35,19 @@ namespace Crusaders30XX.ECS.Factories
                 Position = new Vector2(100, 300),
                 Scale = Vector2.One
             };
-            var loadout = LoadoutDefinitionCache.TryGet("loadout_1", out var def) ? def : null;
+            
+            // Try to find a DungeonLoadout first, otherwise fall back to loadout_1
+            LoadoutDefinition loadout = null;
+            var qeEntity = world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
+            if (qeEntity != null && qeEntity.HasComponent<DungeonLoadout>())
+            {
+                loadout = qeEntity.GetComponent<DungeonLoadout>().Loadout;
+            }
+            else
+            {
+                loadout = LoadoutDefinitionCache.TryGet("loadout_1", out var def) ? def : null;
+            }
+
             var sprite = new Sprite
             {
                 TexturePath = "player",
@@ -231,7 +243,19 @@ namespace Crusaders30XX.ECS.Factories
         public static List<Entity> CreateDeckFromLoadout(EntityManager entityManager)
         {
 			var result = new List<Entity>();
-			var loadout = LoadoutDefinitionCache.TryGet("loadout_1", out var lo) ? lo : null;
+            
+            // Try to find a DungeonLoadout first, otherwise fall back to loadout_1
+            LoadoutDefinition loadout = null;
+            var qeEntity = entityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
+            if (qeEntity != null && qeEntity.HasComponent<DungeonLoadout>())
+            {
+                loadout = qeEntity.GetComponent<DungeonLoadout>().Loadout;
+            }
+            else
+            {
+                loadout = LoadoutDefinitionCache.TryGet("loadout_1", out var lo) ? lo : null;
+            }
+
 			if (loadout == null || loadout.cardIds == null || loadout.cardIds.Count == 0) return result;
 			foreach (var entry in loadout.cardIds)
 			{
