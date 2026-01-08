@@ -12,7 +12,10 @@ namespace Crusaders30XX.ECS.Objects.Medals
         public string Text { get; set; } = "";
         public EntityManager EntityManager { get; set; }
         public Entity MedalEntity { get; set; }
-        
+
+        public int CurrentCount { get; set; } = 0;
+        public int MaxCount { get; set; } = 0;
+        public bool Activated { get; set; } = false;
         public abstract void Initialize(EntityManager entityManager, Entity medalEntity);
 
         protected void EmitActivateEvent(){

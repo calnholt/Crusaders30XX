@@ -20,6 +20,7 @@ namespace Crusaders30XX.ECS.Factories
                 "st_luke" => new StLuke(),
                 "st_michael" => new StMichael(),
                 "st_nicholas" => new StNicholas(),
+                "st_peter" => new StPeter(),
                 _ => null
             };
         }
@@ -35,6 +36,7 @@ namespace Crusaders30XX.ECS.Factories
                 { "st_luke", new StLuke() },
                 { "st_michael", new StMichael() },
                 { "st_nicholas", new StNicholas() },
+                { "st_peter", new StPeter() },
             };
         }
     }

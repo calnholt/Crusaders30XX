@@ -7,6 +7,8 @@ using Microsoft.Xna.Framework.Content;
 using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Rendering;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -16,6 +18,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
+		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private Texture2D _fallbackMedalTex;
 		private readonly Dictionary<string, Texture2D> _medalTexById = new Dictionary<string, Texture2D>();
 
@@ -34,6 +37,32 @@ namespace Crusaders30XX.ECS.Systems
 		public int BgPadding { get; set; } = 0;
 		[DebugEditable(DisplayName = "Background Opacity", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float BgOpacity { get; set; } = 0f;
+
+		// Counter debug controls
+		[DebugEditable(DisplayName = "Counter Text Scale", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
+		public float CounterTextScale { get; set; } = 0.15f;
+		[DebugEditable(DisplayName = "Counter X Offset", Step = 1f, Min = -100f, Max = 100f)]
+		public float CounterXOffset { get; set; } = 0f;
+		[DebugEditable(DisplayName = "Counter Y Offset", Step = 1f, Min = -100f, Max = 100f)]
+		public float CounterYOffset { get; set; } = 69f;
+		[DebugEditable(DisplayName = "Counter Trap Width", Step = 1f, Min = 10f, Max = 200f)]
+		public float CounterTrapezoidWidth { get; set; } = 39f;
+		[DebugEditable(DisplayName = "Counter Trap Height", Step = 1f, Min = 10f, Max = 100f)]
+		public float CounterTrapezoidHeight { get; set; } = 21f;
+		[DebugEditable(DisplayName = "Counter Trap Left Offset", Step = 1f, Min = -50f, Max = 50f)]
+		public float CounterTrapezoidLeftOffset { get; set; } = -1f;
+		[DebugEditable(DisplayName = "Counter Trap Top Angle", Step = 1f, Min = -45f, Max = 45f)]
+		public float CounterTrapezoidTopAngle { get; set; } = 2f;
+		[DebugEditable(DisplayName = "Counter Trap Right Angle", Step = 1f, Min = -45f, Max = 45f)]
+		public float CounterTrapezoidRightAngle { get; set; } = -29f;
+		[DebugEditable(DisplayName = "Counter Trap Bottom Angle", Step = 1f, Min = -45f, Max = 45f)]
+		public float CounterTrapezoidBottomAngle { get; set; } = -11f;
+		[DebugEditable(DisplayName = "Counter Trap Left Angle", Step = 1f, Min = -45f, Max = 45f)]
+		public float CounterTrapezoidLeftAngle { get; set; } = 12f;
+		[DebugEditable(DisplayName = "Counter Trap X Offset", Step = 1f, Min = -100f, Max = 100f)]
+		public float CounterTrapXOffset { get; set; } = -15f;
+		[DebugEditable(DisplayName = "Counter Trap Y Offset", Step = 1f, Min = -100f, Max = 100f)]
+		public float CounterTrapYOffset { get; set; } = -7f;
 
 		// Pulse/jiggle animation tuning
 		[DebugEditable(DisplayName = "Pulse Duration (s)", Step = 0.05f, Min = 0.1f, Max = 2f)]
@@ -123,9 +152,43 @@ namespace Crusaders30XX.ECS.Systems
                 float rot = t?.Rotation ?? 0f;
                 float scalePulse = t?.Scale.X ?? 1f;
                 var drawnRect = DrawMedalIcon(rect, medalTex, scalePulse, rot);
+
+				if (m.Medal.MaxCount > 0)
+				{
+					DrawMedalCounter(m, rect);
+				}
+
 				// Advance by intended layout width to preserve consistent margins across medals
 				x += bgW + SpacingX;
 			}
+		}
+
+		private void DrawMedalCounter(EquippedMedal m, Rectangle bgRect)
+		{
+			string counterText = $"{m.Medal.CurrentCount}/{m.Medal.MaxCount}";
+			Vector2 textSize = _font.MeasureString(counterText) * CounterTextScale;
+
+			float centerX = bgRect.X + bgRect.Width / 2f + CounterXOffset;
+			float centerY = bgRect.Y + bgRect.Height / 2f + CounterYOffset;
+
+			// Draw black trapezoid background
+			Texture2D trapTex = PrimitiveTextureFactory.GetAntialiasedTrapezoid(
+				_graphicsDevice,
+				CounterTrapezoidWidth,
+				CounterTrapezoidHeight,
+				CounterTrapezoidLeftOffset,
+				CounterTrapezoidTopAngle,
+				CounterTrapezoidRightAngle,
+				CounterTrapezoidBottomAngle,
+				CounterTrapezoidLeftAngle
+			);
+
+			Vector2 trapOrigin = new Vector2(CounterTrapezoidWidth / 2f, CounterTrapezoidHeight / 2f);
+			_spriteBatch.Draw(trapTex, new Vector2(centerX + CounterTrapXOffset, centerY + CounterTrapYOffset), null, Color.White, 0f, trapOrigin, 1f, SpriteEffects.None, 0f);
+
+			// Draw white text centered on trapezoid position (before trap offset)
+			Vector2 textPos = new Vector2(centerX - textSize.X / 2f, centerY - textSize.Y / 2f);
+			_spriteBatch.DrawString(_font, counterText, textPos, Color.White, 0f, Vector2.Zero, CounterTextScale, SpriteEffects.None, 0f);
 		}
 
 		private Rectangle DrawMedalIcon(Rectangle bgRect, Texture2D tex, float scale, float rotationRad)
