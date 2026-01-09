@@ -87,7 +87,8 @@ namespace Crusaders30XX.ECS.Services
             string armsId = armsPool.Count > 0 ? armsPool[random.Next(armsPool.Count)] : "";
 
             // 4. Medals (All 3)
-            var medalIds = MedalFactory.GetAllMedals().Keys.ToList();
+            var allMedalIds = MedalFactory.GetAllMedals().Keys.ToList();
+            var medalIds = allMedalIds.OrderBy(_ => random.Next()).Take(3).ToList();
 
             // 5. Temperance Ability
             var temperancePool = TemperanceAbilityDefinitionCache.GetAll().Keys.ToList();

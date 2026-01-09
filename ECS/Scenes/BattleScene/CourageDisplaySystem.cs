@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
@@ -50,6 +51,17 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
+			EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourage);
+		}
+
+		private void OnModifyCourage(ModifyCourageEvent evt)
+		{
+			var hover = EntityManager.GetEntitiesWithComponent<CourageTooltipAnchor>().FirstOrDefault();
+			if (hover != null)
+			{
+				Console.WriteLine($"[CourageDisplaySystem] OnModifyCourage delta={evt.Delta}");
+				EventManager.Publish(new JigglePulseEvent { Target = hover, Config = JigglePulseConfig.Default });
+			}
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -96,6 +108,20 @@ namespace Crusaders30XX.ECS.Systems
 				center = new Vector2(anchorTransform.Position.X, anchorTransform.Position.Y + AnchorOffsetY);
 			}
 
+			// Get pulse transform state from the anchor entity
+			var hover = EntityManager.GetEntitiesWithComponent<CourageTooltipAnchor>().FirstOrDefault();
+			float rotation = 0f;
+			Vector2 scale = Vector2.One;
+			if (hover != null)
+			{
+				var ht = hover.GetComponent<Transform>();
+				if (ht != null)
+				{
+					rotation = ht.Rotation;
+					scale = ht.Scale;
+				}
+			}
+
 			// Fetch cached filled circle textures of the required radii
 			var outerTex = GetOrCreateCircleTexture(radius, Color.White);
 			if (outerTex == null) return;
@@ -109,9 +135,9 @@ namespace Crusaders30XX.ECS.Systems
 					position: center,
 					sourceRectangle: null,
 					color: Color.White,
-					rotation: 0f,
+					rotation: rotation,
 					origin: new Vector2(radius, radius),
-					scale: Vector2.One,
+					scale: scale,
 					effects: SpriteEffects.None,
 					layerDepth: 0f
 				);
@@ -127,9 +153,9 @@ namespace Crusaders30XX.ECS.Systems
 					position: center,
 					sourceRectangle: null,
 					color: Color.Red,
-					rotation: 0f,
+					rotation: rotation,
 					origin: new Vector2(innerRadius, innerRadius),
-					scale: Vector2.One,
+					scale: scale,
 					effects: SpriteEffects.None,
 					layerDepth: 0f
 				);
@@ -137,19 +163,21 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Draw centered text (courage amount) in white
 			string text = Math.Max(0, courage.Amount).ToString();
-			float textScale = Math.Min(1.0f, innerRadius / Math.Max(1f, TextScaleDivisor)); // heuristic scale with size
-			var textSize = _font.MeasureString(text) * textScale;
-			var textPos = new Vector2(center.X - textSize.X / 2f + TextOffsetX, center.Y - textSize.Y / 2f + TextOffsetY);
-			_spriteBatch.DrawString(_font, text, textPos, Color.White, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+			float baseTextScale = Math.Min(1.0f, innerRadius / Math.Max(1f, TextScaleDivisor)); // heuristic scale with size
+			Vector2 textOrigin = _font.MeasureString(text) / 2f;
+			Vector2 textPos = new Vector2(center.X + TextOffsetX, center.Y + TextOffsetY);
+			_spriteBatch.DrawString(_font, text, textPos, Color.White, rotation, textOrigin, baseTextScale * scale, SpriteEffects.None, 0f);
 
 			// Update hoverable UI element bounds over the courage circle for tooltip (entity pre-created in factory)
-			var hover = EntityManager.GetEntitiesWithComponent<CourageTooltipAnchor>().FirstOrDefault();
-			int diameter = radius * 2;
-			var hitRect = new Rectangle((int)(center.X - radius), (int)(center.Y - radius), diameter, diameter);
-			var ui = hover.GetComponent<UIElement>();
-			if (ui != null) ui.Bounds = hitRect;
-			var ht = hover.GetComponent<Transform>();
-			if (ht != null) ht.Position = new Vector2(hitRect.X, hitRect.Y);
+			if (hover != null)
+			{
+				int diameter = radius * 2;
+				var hitRect = new Rectangle((int)(center.X - radius), (int)(center.Y - radius), diameter, diameter);
+				var ui = hover.GetComponent<UIElement>();
+				if (ui != null) ui.Bounds = hitRect;
+				var ht = hover.GetComponent<Transform>();
+				if (ht != null) ht.Position = new Vector2(hitRect.X, hitRect.Y);
+			}
 		}
 
 		private Texture2D GetOrCreateCircleTexture(int radius, Color edgeColor)
