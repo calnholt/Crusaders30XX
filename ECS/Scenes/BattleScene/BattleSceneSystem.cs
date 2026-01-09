@@ -100,9 +100,11 @@ namespace Crusaders30XX.ECS.Systems
 		private DiscardSpecificCardHighlightSystem _discardSpecificCardHighlightSystem;
 		private MillCardSystem _millCardSystem;
 		private IntimidateManagementSystem _intimidateManagementSystem;
+		private ShackleManagementSystem _shackleManagementSystem;
 		private IntimidateDisplaySystem _intimidateDisplaySystem;
 		private FrozenCardManagementSystem _frozenCardManagementSystem;
 		private FrozenCardDisplaySystem _frozenCardDisplaySystem;
+		private ShackleDisplaySystem _shackleDisplaySystem;
 		private UIElementHighlightSystem _uiElementHighlightSystem;
 		private QuestRewardModalDisplaySystem _questRewardModalDisplaySystem;
 		private TribulationManagerSystem _tribulationManagerSystem;
@@ -482,9 +484,12 @@ namespace Crusaders30XX.ECS.Systems
 			_battleStateInfoManagementSystem = new BattleStateInfoManagementSystem(_world.EntityManager);
 			_discardSpecificCardHighlightSystem = new DiscardSpecificCardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_intimidateManagementSystem = new IntimidateManagementSystem(_world.EntityManager);
+			_shackleManagementSystem = new ShackleManagementSystem(_world.EntityManager);
 			_frozenCardManagementSystem = new FrozenCardManagementSystem(_world.EntityManager);
 			var frostTexture = _content.Load<Texture2D>("frost");
 			_frozenCardDisplaySystem = new FrozenCardDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, frostTexture);
+			var shackleTexture = _content.Load<Texture2D>("shackles");
+			_shackleDisplaySystem = new ShackleDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, shackleTexture);
 			_intimidateDisplaySystem = new IntimidateDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_questRewardModalDisplaySystem = new QuestRewardModalDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -573,9 +578,11 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_gameOverOverlayDisplaySystem);
 			_world.AddSystem(_discardSpecificCardHighlightSystem);
 			_world.AddSystem(_intimidateManagementSystem);
+			_world.AddSystem(_shackleManagementSystem);
 			_world.AddSystem(_intimidateDisplaySystem);
 			_world.AddSystem(_frozenCardManagementSystem);
 			_world.AddSystem(_frozenCardDisplaySystem);
+			_world.AddSystem(_shackleDisplaySystem);
 			_world.AddSystem(_questRewardModalDisplaySystem);
 			_world.AddSystem(_quitCurrentQuestDisplaySystem);
 			_world.AddSystem(_mustBeBlockedSystem);

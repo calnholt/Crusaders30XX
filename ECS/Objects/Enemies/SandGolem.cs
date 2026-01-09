@@ -28,7 +28,7 @@ public class SandPound : EnemyAttackBase
   {
     Id = "sand_pound";
     Name = "Sand Pound";
-    Damage = 7;
+    Damage = 6;
     ConditionType = ConditionType.MustBeBlockedByExactly1Card;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedExactly, 1);
 
@@ -45,7 +45,7 @@ public class SandSlam : EnemyAttackBase
   {
     Id = "sand_slam";
     Name = "Sand Slam";
-    Damage = 10;
+    Damage = 9;
     ConditionType = ConditionType.MustBeBlockedByExactly2Cards;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedExactly, 2);
 

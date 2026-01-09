@@ -173,6 +173,18 @@
 /processorParam:TextureFormat=Color
 /build:Crusader.png
 
+#begin Berserker.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Berserker.png
+
 #begin Demon.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -760,6 +772,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:frost.png
+
+#begin shackles.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:shackles.png
 
 #begin enemy_attack_br.png
 /importer:TextureImporter

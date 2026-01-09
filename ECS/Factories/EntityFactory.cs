@@ -397,6 +397,9 @@ namespace Crusaders30XX.ECS.Factories
             def.EntityManager = entityManager;
 
             var enemyEntity = world.CreateEntity($"Enemy");
+            var numEquippedEquipment = world.EntityManager.GetEntitiesWithComponent<EquippedEquipment>().Count();
+            int equipmentHpModifier = numEquippedEquipment * 3;
+            def.MaxHealth += equipmentHpModifier;
             var enemy = new Enemy { Id = def.Id, Name = def.Id, MaxHealth = def.MaxHealth, CurrentHealth = def.CurrentHealth != 0 ? def.CurrentHealth : def.MaxHealth, EnemyBase = def };
             var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
             world.AddComponent(enemyEntity, enemy);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.Enemies;
 
 namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
@@ -26,6 +27,11 @@ public class Pounce : EnemyAttackBase
     Id = "pounce";
     Name = "Pounce";
     Damage = 5;
+
+    OnAttackReveal = (entityManager) =>
+    {
+      EventManager.Publish(new ShackleEvent { Amount = 2 });
+    };
 
   }
 }

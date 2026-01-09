@@ -83,6 +83,8 @@ namespace Crusaders30XX.ECS.Factories
                 // CinderboltDemon attacks
                 "cinderbolt" => new Cinderbolt(),
                 "insidious_bolt" => new InsidiousBolt(),
+                // Berserker attacks
+                "rage" => new Rage(),
                 // Generic attacks
                 "have_no_mercy" => new HaveNoMercy(),
                 _ => null
@@ -162,6 +164,8 @@ namespace Crusaders30XX.ECS.Factories
                 // CinderboltDemon attacks
                 { "cinderbolt", new Cinderbolt() },
                 { "insidious_bolt", new InsidiousBolt() },
+                // Berserker attacks
+                { "rage", new Rage() },
                 // Generic attacks
                 { "have_no_mercy", new HaveNoMercy() },
             };

@@ -503,6 +503,14 @@ namespace Crusaders30XX.ECS.Components
         
     }
 
+    /// <summary>
+    /// Marks a card as shackled. Shackled cards are assigned and unassigned as block together.
+    /// </summary>
+    public class Shackle : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
     public struct Modification
     {
         public int Delta { get; set; }

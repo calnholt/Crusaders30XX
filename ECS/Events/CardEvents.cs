@@ -498,6 +498,11 @@ namespace Crusaders30XX.ECS.Events
         public int Amount { get; set; }
     }
 
+    public class ShackleEvent
+    {
+        public int Amount { get; set; }
+    }
+
     public class MustBeBlockedEvent
     {
         public int Threshold { get; set; }

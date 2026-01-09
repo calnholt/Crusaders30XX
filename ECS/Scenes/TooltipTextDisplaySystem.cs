@@ -83,7 +83,7 @@ namespace Crusaders30XX.ECS.Systems
 				.Where(x => x.UI?.TooltipType == TooltipType.Text
 					&& x.UI.IsHovered
 					&& !x.UI.IsHidden
-					&& (!string.IsNullOrWhiteSpace(x.UI.Tooltip) || x.E.GetComponent<Frozen>() != null || x.E.GetComponent<Intimidated>() != null))
+					&& (!string.IsNullOrWhiteSpace(x.UI.Tooltip) || x.E.GetComponent<Frozen>() != null || x.E.GetComponent<Intimidated>() != null || x.E.GetComponent<Shackle>() != null))
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.ToList();
 			var top = hoverables.FirstOrDefault();
@@ -106,6 +106,11 @@ namespace Crusaders30XX.ECS.Systems
 				if (hasIntimidated)
 				{
 					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is intimidated - cannot be used to block during the block phase.";
+				}
+				var hasShackled = top.E.GetComponent<Shackle>() != null;
+				if (hasShackled)
+				{
+					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is shackled - shackled cards block together.";
 				}
 
 				// Wrap text based on MaxWidth

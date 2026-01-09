@@ -405,6 +405,28 @@
       "Background": "desert-background-city.png"
     },
     {
+      "Id": "desert_18",
+      "WorldPosition": [
+        1065,
+        395
+      ],
+      "RevealRadius": 600,
+      "UnrevealedRadius": 150,
+      "Type": "Quest",
+      "Name": "Rage of the Berserker",
+      "Difficulty": 2,
+      "Reward": {
+        "Gold": 2
+      },
+      "Events": [
+        {
+          "id": "berserker",
+          "type": "Enemy"
+        }
+      ],
+      "Background": "desert-background-city.png"
+    },
+    {
       "Id": "desert_7",
       "WorldPosition": [
         4775,
