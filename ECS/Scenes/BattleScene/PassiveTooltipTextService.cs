@@ -69,7 +69,7 @@ namespace Crusaders30XX.ECS.Systems
         case AppliedPassiveType.Windchill:
           return $"Whenever you block with a frozen card, gain 1 penance.";
         case AppliedPassiveType.Enflamed:
-          return $"If you have 4+ courage at the end of the action phase, gain 1 burn.";
+          return $"If you have 4+ courage at the end of the action phase, take {stacks} damage. Lasts for the rest of the quest.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

@@ -41,7 +41,7 @@ namespace Crusaders30XX.ECS.Systems
 			i = lowerText.IndexOf("mill");
 			if (i >= 0) matches.Add((i, "Mill X - Discard the top X cards of your deck."));
 			i = lowerText.IndexOf("frostbite");
-			if (i >= 0) matches.Add((i, "X Frostbite - When you have 3 stacks of frostbite, take 5 damage and lose 3 frostbite."));
+			if (i >= 0) matches.Add((i, $"X Frostbite - When you have 3 stacks of frostbite, take {PassiveTooltipTextService.FrostbiteDamage} damage and lose 3 frostbite."));
 			i = lowerText.IndexOf("frozen");
 			if (i >= 0) matches.Add((i, "Frozen - When you play a frozen card, gain 1 frostbite and there's a 50% chance it's exhausted. Remove frozen by blocking with it."));
 			if (matches.Count == 0) return string.Empty;

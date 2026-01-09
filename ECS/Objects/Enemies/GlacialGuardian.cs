@@ -17,11 +17,11 @@ public class GlacialGuardian : EnemyBase
     Id = "glacial_guardian";
     Name = "Glacial Guardian";
     MaxHealth = 110;
-    EventManager.Subscribe<CardMoved>(OnCardMoved, priority: 10);
-    EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
 
     OnStartOfBattle = (entityManager) =>
     {
+      EventManager.Subscribe<CardMoved>(OnCardMoved, priority: 10);
+      EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
       EventQueueBridge.EnqueueTriggerAction("GlacialGuardian.OnCreate", () =>
       {
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Windchill, Delta = 1 });

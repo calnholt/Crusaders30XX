@@ -11,12 +11,12 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 {
     public class FireSkeleton : EnemyBase
     {
-        private int Armor = 3;
+        private int Armor = 4;
         public FireSkeleton()
         {
             Id = "fire_skeleton";
             Name = "Fire Skeleton";
-            MaxHealth = 75;
+            MaxHealth = 70;
 
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
 
@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
               }, AppliedPassivesManagementSystem.Duration);
               EventQueueBridge.EnqueueTriggerAction("FireSkeleton.OnStartOfBattle", () =>
               {
-                EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Enflamed, Delta = 1 });
+                EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Enflamed, Delta = 2 });
               }, AppliedPassivesManagementSystem.Duration);
             };
         }
@@ -38,8 +38,10 @@ namespace Crusaders30XX.ECS.Objects.Enemies
           if (evt.Current != SubPhase.PlayerEnd) return;
           var courage = GetComponentHelper.GetCourage(EntityManager);
           if (courage == null || courage.Amount < 4) return;
+          var passives = GetComponentHelper.GetAppliedPassives(EntityManager, "Player");
+          passives.Passives.TryGetValue(AppliedPassiveType.Enflamed, out int enflamedStacks);
           EventManager.Publish(new PassiveTriggered { Owner = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Enflamed });
-          EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = 1 });
+          EventManager.Publish(new ModifyHpRequestEvent { Target = EntityManager.GetEntity("Player"), Delta = -enflamedStacks, DamageType = ModifyTypeEnum.Effect });
         }
 
         public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)

@@ -61,6 +61,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnAttackResolved(AttackResolved evt)
         {
+            Console.WriteLine($"[MarkedForSpecificDiscardSystem] OnAttackResolved - WasConditionMet: {evt.WasConditionMet}");
             if (evt.WasConditionMet)
             {
                 return;

@@ -59,6 +59,7 @@ namespace Crusaders30XX.ECS.Systems
                 var enemyBase = enemy.GetComponent<Enemy>();
                 if (enemyBase != null && enemyBase.EnemyBase != null && enemyBase.EnemyBase.OnStartOfBattle != null)
                 {
+                    Console.WriteLine($"[AppliedPassivesManagementSystem] OnChangeBattlePhase - OnStartOfBattle - {enemyBase.EnemyBase.Id}");
                     enemyBase.EnemyBase.OnStartOfBattle(EntityManager);
                 }
                 EnemyShieldsMaintenance(enemy);
@@ -102,6 +103,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (passive.Key == AppliedPassiveType.Bleed) continue;
                 if (passive.Key == AppliedPassiveType.Scar) continue;
                 if (passive.Key == AppliedPassiveType.Frostbite) continue;
+                if (passive.Key == AppliedPassiveType.Enflamed) continue;
                 EventManager.Publish(new RemovePassive { Owner = player, Type = passive.Key });
             }
         }

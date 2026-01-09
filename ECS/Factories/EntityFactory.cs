@@ -393,13 +393,19 @@ namespace Crusaders30XX.ECS.Factories
 
         public static Entity CreateEnemyFromId(World world, string enemyId, EntityManager entityManager, List<EnemyModification> modifications = null)
         {
+            var existingEnemy = entityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+            if (existingEnemy != null)
+            {
+                entityManager.DestroyEntity(existingEnemy.Id);
+            }
             var def = EnemyFactory.Create(enemyId);
             def.EntityManager = entityManager;
 
             var enemyEntity = world.CreateEntity($"Enemy");
-            var numEquippedEquipment = world.EntityManager.GetEntitiesWithComponent<EquippedEquipment>().Count();
-            int equipmentHpModifier = numEquippedEquipment * 3;
-            def.MaxHealth += equipmentHpModifier;
+            // TODO: Add equipment HP modifier
+            // var numEquippedEquipment = world.EntityManager.GetEntitiesWithComponent<EquippedEquipment>().Count();
+            // int equipmentHpModifier = numEquippedEquipment * 3;
+            // def.MaxHealth += equipmentHpModifier;
             var enemy = new Enemy { Id = def.Id, Name = def.Id, MaxHealth = def.MaxHealth, CurrentHealth = def.CurrentHealth != 0 ? def.CurrentHealth : def.MaxHealth, EnemyBase = def };
             var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
             world.AddComponent(enemyEntity, enemy);
@@ -588,12 +594,6 @@ namespace Crusaders30XX.ECS.Factories
                     Modifications = new List<Modification>(sourceModifiedDamage.Modifications)
                 };
                 entityManager.AddComponent(clonedEntity, clonedModifiedDamage);
-            }
-
-            // Copy Intimidated status
-            if (sourceEntity.HasComponent<Intimidated>())
-            {
-                entityManager.AddComponent(clonedEntity, new Intimidated { Owner = clonedEntity });
             }
 
             // Copy Frozen status

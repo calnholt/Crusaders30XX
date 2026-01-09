@@ -14,11 +14,10 @@ public class DustWuurm : EnemyBase
     Id = "dust_wuurm";
     Name = "Dust Wuurm";
     MaxHealth = 110;
-    EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
 
     OnStartOfBattle = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Rage, Delta = 1 });
+      EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
     };
   }
 

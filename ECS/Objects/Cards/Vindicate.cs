@@ -7,12 +7,14 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Vindicate : CardBase
     {
+        private int CourageThreshold = 5;
+        private int DamageBonus = 20;
         public Vindicate()
         {
             CardId = "vindicate";
             Name = "Vindicate";
             Target = "Enemy";
-            Text = "If you have {5} or more courage, this attack gains +{20} damage and lose all courage.";
+            Text = $"If you have {CourageThreshold} or more courage, this attack gains +{DamageBonus} damage and lose all courage.";
             Cost = ["Red", "Any"];
             Animation = "Attack";
             Damage = 25;
@@ -36,7 +38,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                 var courage = player.GetComponent<Courage>().Amount;
-                return courage >= ValuesParse[0] ? ValuesParse[1] : 0;
+                return courage >= CourageThreshold ? DamageBonus : 0;
             };
         }
     }

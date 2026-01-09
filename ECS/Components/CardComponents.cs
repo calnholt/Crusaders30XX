@@ -86,10 +86,7 @@ namespace Crusaders30XX.ECS.Components
     {
         public void Dispose()
         {
-            if (EnemyBase != null)
-            {
-                EnemyBase.Dispose();
-            }
+            EnemyBase?.Dispose();
         }
 
         public Entity Owner { get; set; }

@@ -66,8 +66,6 @@ namespace Crusaders30XX.ECS.Factories
                 "crushing_adoration" => new CrushingAdoration(),
                 "teasing_nip" => new TeasingNip(),
                 // Cactus attacks
-                "needle_rain" => new NeedleRain(),
-                "barbed_volley" => new BarbedVolley(),
                 "prickly_burst" => new PricklyBurst(),
                 // DustWuurm attacks
                 "dust_storm" => new DustStorm(),
@@ -147,8 +145,6 @@ namespace Crusaders30XX.ECS.Factories
                 { "crushing_adoration", new CrushingAdoration() },
                 { "teasing_nip", new TeasingNip() },
                 // Cactus attacks
-                { "needle_rain", new NeedleRain() },
-                { "barbed_volley", new BarbedVolley() },
                 { "prickly_burst", new PricklyBurst() },
                 // DustWuurm attacks
                 { "dust_storm", new DustStorm() },

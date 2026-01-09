@@ -384,7 +384,7 @@
       "UnrevealedRadius": 150,
       "Type": "Quest",
       "Name": "From a Distance",
-      "Difficulty": 2,
+      "Difficulty": 3,
       "Reward": {
         "Gold": 2
       },
@@ -407,24 +407,32 @@
     {
       "Id": "desert_18",
       "WorldPosition": [
-        1065,
-        395
+        1610,
+        2570
       ],
       "RevealRadius": 600,
       "UnrevealedRadius": 150,
       "Type": "Quest",
       "Name": "Rage of the Berserker",
-      "Difficulty": 2,
+      "Difficulty": 3,
       "Reward": {
         "Gold": 2
       },
       "Events": [
         {
+          "id": "fire_skeleton",
+          "type": "Enemy"
+        },
+        {
+          "id": "spider",
+          "type": "Enemy"
+        },
+        {
           "id": "berserker",
           "type": "Enemy"
         }
       ],
-      "Background": "desert-background-city.png"
+      "Background": "desert-background-prison.png"
     },
     {
       "Id": "desert_7",
@@ -686,7 +694,6 @@
       "RevealRadius": 500,
       "UnrevealedRadius": 200,
       "Type": "Dungeon",
-      "IsRevealed": true,
       "Name": "Forgotten Catacombs",
       "Difficulty": 2,
       "Background": "dungeon-background.png",

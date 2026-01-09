@@ -60,7 +60,11 @@ namespace Crusaders30XX.ECS.Systems
 			if (deckEntity == null) return;
 			var deck = deckEntity.GetComponent<Deck>();
 			if (deck == null) return;
-			var cardsToFreeze = deck.Hand.Where(c => c.GetComponent<Frozen>() == null).OrderBy(x => new Random().Next()).Take(amount).ToList();
+			var cardsToFreeze = deck.Hand
+				.Where(c => c.GetComponent<Frozen>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false)
+				.OrderBy(x => new Random().Next())
+				.Take(amount)
+				.ToList();
 			foreach (var card in cardsToFreeze)
 			{
 				EntityManager.AddComponent(card, new Frozen { Owner = card });
@@ -76,7 +80,11 @@ namespace Crusaders30XX.ECS.Systems
 			if (deck == null) return;
 			var drawPile = deck.DrawPile;
 			if (drawPile == null) return;
-			var cardsToFreeze = drawPile.Where(c => c.GetComponent<Frozen>() == null).OrderBy(x => new Random().Next()).Take(amount).ToList();
+			var cardsToFreeze = drawPile
+				.Where(c => c.GetComponent<Frozen>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false)
+				.OrderBy(x => new Random().Next())
+				.Take(amount)
+				.ToList();
 			foreach (var card in cardsToFreeze)
 			{
 				EntityManager.AddComponent(card, new Frozen { Owner = card });
@@ -97,7 +105,7 @@ namespace Crusaders30XX.ECS.Systems
 			
 			if (deck.DrawPile != null)
 			{
-				availableCards.AddRange(deck.DrawPile.Where(c => c.GetComponent<Frozen>() == null));
+				availableCards.AddRange(deck.DrawPile.Where(c => c.GetComponent<Frozen>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false));
 			}
 			
 			// if (deck.DiscardPile != null)
@@ -107,7 +115,7 @@ namespace Crusaders30XX.ECS.Systems
 			
 			if (deck.Hand != null)
 			{
-				availableCards.AddRange(deck.Hand.Where(c => c.GetComponent<Frozen>() == null));
+				availableCards.AddRange(deck.Hand.Where(c => c.GetComponent<Frozen>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false));
 			}
 
 			if (availableCards.Count == 0)

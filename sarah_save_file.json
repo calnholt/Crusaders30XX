@@ -1,0 +1,158 @@
+{
+  "gold": 8,
+  "completedQuests": [
+    "desert_1",
+    "desert_2",
+    "desert_2a"
+  ],
+  "collection": [
+    "anoint_the_sick",
+    "burn",
+    "carve",
+    "courageous",
+    "deus_vult",
+    "dowse_with_holy_water",
+    "increase_faith",
+    "reap",
+    "serpent_crush",
+    "seize",
+    "stab",
+    "strike",
+    "stun",
+    "tempest",
+    "sword",
+    "razor_storm"
+  ],
+  "items": [],
+  "lastLocation": "desert_2a",
+  "loadouts": [
+    {
+      "id": "loadout_1",
+      "name": "Deck",
+      "cardIds": [
+        "anoint_the_sick|Black",
+        "anoint_the_sick|White",
+        "burn|Red",
+        "burn|White",
+        "carve|Red",
+        "carve|White",
+        "courageous|Black",
+        "courageous|White",
+        "deus_vult|Black",
+        "deus_vult|Red",
+        "razor_storm|Red",
+        "razor_storm|Black",
+        "dowse_with_holy_water|Red",
+        "dowse_with_holy_water|White",
+        "increase_faith|Red",
+        "increase_faith|White",
+        "reap|White",
+        "reap|Red",
+        "serpent_crush|Black",
+        "serpent_crush|White",
+        "seize|Red",
+        "seize|White",
+        "stab|White",
+        "stab|Red",
+        "strike|White",
+        "strike|Red",
+        "stun|Red",
+        "stun|Black",
+        "tempest|Black",
+        "tempest|White"
+      ],
+      "weaponId": "sword",
+      "temperanceId": "angelic_aura",
+      "chestId": "",
+      "legsId": "",
+      "armsId": "",
+      "headId": "",
+      "medalIds": []
+    }
+  ],
+  "seenTutorials": [
+
+  ],
+  "cardMastery": {
+    "strike": {
+      "cardId": "strike",
+      "level": 0,
+      "points": 0
+    },
+    "dowse_with_holy_water": {
+      "cardId": "dowse_with_holy_water",
+      "level": 0,
+      "points": 0
+    },
+    "carve": {
+      "cardId": "carve",
+      "level": 0,
+      "points": 0
+    },
+    "reap": {
+      "cardId": "reap",
+      "level": 0,
+      "points": 0
+    },
+    "tempest": {
+      "cardId": "tempest",
+      "level": 0,
+      "points": 0
+    },
+    "sword": {
+      "cardId": "sword",
+      "level": 0,
+      "points": 0
+    },
+    "stab": {
+      "cardId": "stab",
+      "level": 0,
+      "points": 0
+    },
+    "razor_storm": {
+      "cardId": "razor_storm",
+      "level": 0,
+      "points": 0
+    },
+    "stun": {
+      "cardId": "stun",
+      "level": 0,
+      "points": 0
+    },
+    "burn": {
+      "cardId": "burn",
+      "level": 0,
+      "points": 0
+    },
+    "seize": {
+      "cardId": "seize",
+      "level": 0,
+      "points": 0
+    },
+    "anoint_the_sick": {
+      "cardId": "anoint_the_sick",
+      "level": 0,
+      "points": 0
+    },
+    "courageous": {
+      "cardId": "courageous",
+      "level": 0,
+      "points": 0
+    },
+    "increase_faith": {
+      "cardId": "increase_faith",
+      "level": 0,
+      "points": 0
+    },
+    "serpent_crush": {
+      "cardId": "serpent_crush",
+      "level": 0,
+      "points": 0
+    },
+    "deus_vult": {
+      "cardId": "deus_vult",
+      "level": 0,
+      "points": 0
+    }
+  }
+}

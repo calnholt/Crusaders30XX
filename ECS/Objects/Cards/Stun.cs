@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "stun";
             Name = "Stun";
             Target = "Enemy";
-            Text = $"As an additional cost, lose {CourageCost} courage.";
+            Text = $"As an additional cost, lose {CourageCost} courage. Stun the enemy.";
             Cost = ["Red"];
             Animation = "Attack";
             Type = CardType.Prayer;
