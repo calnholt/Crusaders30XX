@@ -38,6 +38,16 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
+			EventManager.Subscribe<ModifyActionPointsEvent>(OnModifyActionPoints);
+		}
+
+		private void OnModifyActionPoints(ModifyActionPointsEvent evt)
+		{
+			var apHover = EntityManager.GetEntity("UI_APTooltip");
+			if (apHover != null)
+			{
+				EventManager.Publish(new JigglePulseEvent { Target = apHover, Config = JigglePulseConfig.Default });
+			}
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -87,6 +97,20 @@ namespace Crusaders30XX.ECS.Systems
 				var uiDP = discardClickable.GetComponent<UIElement>();
 				if (uiDP != null && uiDP.Bounds.Width > 0 && uiDP.Bounds.Height > 0) discardRect = uiDP.Bounds;
 			}
+			// Update hoverable UI element for tooltip (entity pre-created in factory as UI_APTooltip)
+			var apHover = EntityManager.GetEntity("UI_APTooltip");
+			float rotation = 0f;
+			Vector2 scale = Vector2.One;
+			if (apHover != null)
+			{
+				var ht = apHover.GetComponent<Transform>();
+				if (ht != null)
+				{
+					rotation = ht.Rotation;
+					scale = ht.Scale;
+				}
+			}
+
 			int r = System.Math.Max(4, CircleRadius);
 			var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, r);
 			Vector2 center;
@@ -101,20 +125,27 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Draw black filled circle
-			_spriteBatch.Draw(circle, new Vector2(center.X - r, center.Y - r), Color.Black);
+			_spriteBatch.Draw(
+				circle, 
+				position: center, 
+				sourceRectangle: null, 
+				color: Color.Black, 
+				rotation: rotation, 
+				origin: new Vector2(r, r), 
+				scale: scale, 
+				effects: SpriteEffects.None, 
+				layerDepth: 0f
+			);
 
 			// Draw text {number}AP centered
 			if (_font != null)
 			{
 				string label = $"{count}AP";
 				float ts = System.Math.Max(0.1f, TextScale);
-				var size = _font.MeasureString(label) * ts;
-				var pos = new Vector2(center.X - size.X / 2f, center.Y - size.Y / 2f);
-				_spriteBatch.DrawString(_font, label, pos, Color.White, 0f, Vector2.Zero, ts, SpriteEffects.None, 0f);
+				Vector2 origin = _font.MeasureString(label) / 2f;
+				_spriteBatch.DrawString(_font, label, center, Color.White, rotation, origin, ts * scale, SpriteEffects.None, 0f);
 			}
 
-			// Update hoverable UI element for tooltip (entity pre-created in factory as UI_APTooltip)
-			var apHover = EntityManager.GetEntity("UI_APTooltip");
 			if (apHover != null)
 			{
 				var ui = apHover.GetComponent<UIElement>();

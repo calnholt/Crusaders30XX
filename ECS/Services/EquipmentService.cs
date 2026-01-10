@@ -16,7 +16,11 @@ namespace Crusaders30XX.ECS.Services
           if (type == EquipmentTooltipType.Shop) {
             return abilities + "\n\n" + blockAndUses;
           }
-					return type == EquipmentTooltipType.Battle ? (equipment.Name + "\n\n" + abilities) : abilities;
+					var hasText = !string.IsNullOrWhiteSpace(equipment.Text);
+					if (hasText) {
+						return type == EquipmentTooltipType.Battle ? (equipment.Name + "\n\n" + abilities) : abilities;
+					}
+					return equipment.Name;
 				}
 			return string.Empty;
 		}

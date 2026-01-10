@@ -18,10 +18,10 @@ namespace Crusaders30XX.ECS.Objects.Enemies
             Name = "Fire Skeleton";
             MaxHealth = 70;
 
-            EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
 
             OnStartOfBattle = (entityManager) =>
             {
+              EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
               EventQueueBridge.EnqueueTriggerAction("FireSkeleton.OnStartOfBattle", () =>
               {
                 EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Armor, Delta = Armor });

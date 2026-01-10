@@ -79,7 +79,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (player == null) return;
 				var c = player.GetComponent<Courage>();
 				if (c == null) { c = new Courage(); EntityManager.AddComponent(player, c); }
-				c.Amount = Math.Max(0, c.Amount + 1);
+				EventManager.Publish(new ModifyCourageRequestEvent { Delta = 1 });
 			}
 		}
 	}

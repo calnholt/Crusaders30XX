@@ -19,17 +19,17 @@ namespace Crusaders30XX.ECS.Objects.Equipment
       Color = CardData.CardColor.Black;
       Text = $"Gain {Courage} courage. Costs {Cost} uses. Free action.";
       CanActivate = () => RemainingUses == Uses;
-    }
 
-    public override void Activate()
-    {
-      EventManager.Publish(new ModifyCourageRequestEvent { Delta = Courage });
-      EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
-      EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
-      for (int i = 0; i < Cost; i++)
+      OnActivate = (entityManager, entity) =>
       {
-        RemainingUses--;
-      }
+        EventManager.Publish(new ModifyCourageRequestEvent { Delta = Courage });
+        EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
+        EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
+        for (int i = 0; i < Cost; i++)
+        {
+          RemainingUses--;
+        }
+      };
     }
   }
 }

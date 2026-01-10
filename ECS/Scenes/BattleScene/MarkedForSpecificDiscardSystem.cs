@@ -61,11 +61,6 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnAttackResolved(AttackResolved evt)
         {
-            Console.WriteLine($"[MarkedForSpecificDiscardSystem] OnAttackResolved - WasConditionMet: {evt.WasConditionMet}");
-            if (evt.WasConditionMet)
-            {
-                return;
-            }
             var entities = EntityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>();
             if (entities == null || entities.Count() == 0) return;
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();

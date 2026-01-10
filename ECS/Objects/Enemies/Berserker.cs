@@ -10,6 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
   public class Berserker : EnemyBase
   {
     private int WoundedAmount = 5;
+    private int ShackledAmount = 4;
     public Berserker()
     {
       Id = "berserker";
@@ -20,6 +21,9 @@ namespace Crusaders30XX.ECS.Objects.Enemies
       {
         EventQueueBridge.EnqueueTriggerAction("Berserker.OnStartOfBattle", () => {  
           EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Wounded, Delta = WoundedAmount });
+        }, AppliedPassivesManagementSystem.Duration);
+        EventQueueBridge.EnqueueTriggerAction("Berserker.OnStartOfBattle", () => {  
+          EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Shackled, Delta = ShackledAmount });
         }, AppliedPassivesManagementSystem.Duration);
       };
     }
@@ -38,11 +42,5 @@ public class Rage : EnemyAttackBase
     Name = "Rage";
     Damage = 11;
     Text = "On attack - Shackle 2 cards.";
-
-    OnAttackReveal = (entityManager) =>
-    {
-      EventManager.Publish(new ShackleEvent { Amount = 2 });
-    };
-    
   }
 }

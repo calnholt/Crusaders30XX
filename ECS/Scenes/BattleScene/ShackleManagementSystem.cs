@@ -18,13 +18,14 @@ namespace Crusaders30XX.ECS.Systems
 	public class ShackleManagementSystem : Core.System
 	{
 		private bool _isProcessing = false;
-
+		private bool _blockedWithShackledCard = false;
 		public ShackleManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
-			EventManager.Subscribe<ShackleEvent>(OnShackle);
 			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
 			EventManager.Subscribe<UnassignCardAsBlockRequested>(OnUnassignCardAsBlockRequested);
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnPhaseChanged);
+			EventManager.Subscribe<CardMoved>(OnCardMoved);
+			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -34,8 +35,14 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
 
-		private void OnShackle(ShackleEvent evt)
+		private void ApplyShackleEffect()
 		{
+			var passives = GetComponentHelper.GetAppliedPassives(EntityManager, "Player");
+			if (passives == null) return;
+			if (!passives.Passives.TryGetValue(AppliedPassiveType.Shackled, out int shackledAmount) || shackledAmount <= 0)
+			{
+				return;
+			}
 			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 			if (deckEntity == null) return;
 
@@ -52,7 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 			var random = new Random();
 			var cardsToShackle = availableCards
 				.OrderBy(x => random.Next())
-				.Take(evt.Amount)
+				.Take(2)
 				.ToList();
 
 			foreach (var card in cardsToShackle)
@@ -152,12 +159,34 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnPhaseChanged(ChangeBattlePhaseEvent evt)
 		{
-			if (evt.Current == SubPhase.EnemyEnd)
+			if (evt.Current == SubPhase.PreBlock)
+			{
+				ApplyShackleEffect();
+			}
+			else if (evt.Current == SubPhase.EnemyEnd)
 			{
 				RemoveAllShackles();
+				_blockedWithShackledCard = false;
 			}
 		}
 
+		private void OnCardMoved(CardMoved evt)
+		{
+			if ((evt.To == CardZoneType.DiscardPile || evt.To == CardZoneType.ExhaustPile) && evt.From == CardZoneType.AssignedBlock)
+			{
+				if (evt.Card.GetComponent<Shackle>() != null && !_blockedWithShackledCard)
+				{
+					EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Shackled, Delta = -1 });
+					_blockedWithShackledCard = true;
+				}
+			}
+		}
+
+		private void OnDeleteCaches(DeleteCachesEvent evt)
+		{
+			_blockedWithShackledCard = false;
+			_isProcessing = false;
+		}
 		private void RemoveAllShackles()
 		{
 			var shackledEntities = EntityManager.GetEntitiesWithComponent<Shackle>().ToList();

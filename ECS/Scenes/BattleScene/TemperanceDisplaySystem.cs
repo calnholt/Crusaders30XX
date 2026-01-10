@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
 using Crusaders30XX.ECS.Core;
+
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
@@ -52,6 +54,27 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
+			EventManager.Subscribe<ModifyTemperanceEvent>(OnModifyTemperance);
+			EventManager.Subscribe<SetTemperanceEvent>(OnSetTemperance);
+		}
+
+		private void OnModifyTemperance(ModifyTemperanceEvent evt)
+		{
+			TriggerPulse();
+		}
+
+		private void OnSetTemperance(SetTemperanceEvent evt)
+		{
+			TriggerPulse();
+		}
+
+		private void TriggerPulse()
+		{
+			var hover = EntityManager.GetEntitiesWithComponent<TemperanceTooltipAnchor>().FirstOrDefault();
+			if (hover != null)
+			{
+				EventManager.Publish(new JigglePulseEvent { Target = hover, Config = JigglePulseConfig.Default });
+			}
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -73,6 +96,20 @@ namespace Crusaders30XX.ECS.Systems
 			var t = anchor.GetComponent<Transform>();
 			var info = anchor.GetComponent<PortraitInfo>();
 			if (t == null || info == null) return;
+
+			// Get pulse transform state from the anchor entity
+			var hover = EntityManager.GetEntitiesWithComponent<TemperanceTooltipAnchor>().FirstOrDefault();
+			float rotation = 0f;
+			Vector2 scale = Vector2.One;
+			if (hover != null)
+			{
+				var ht = hover.GetComponent<Transform>();
+				if (ht != null)
+				{
+					rotation = ht.Rotation;
+					scale = ht.Scale;
+				}
+			}
 
 			int outline = Math.Max(1, OutlineThickness);
 			int wChunk = Math.Max(4, ChunkWidth);
@@ -123,25 +160,40 @@ namespace Crusaders30XX.ECS.Systems
 			int stepX = wChunk + ChunkGap; // step equals visible width plus configured gap; when gap=0, chunks butt together
 			int totalW = threshold * wChunk + Math.Max(0, ChunkSlant) + Math.Max(0, (threshold - 1) * ChunkGap);
 			int startX = (int)Math.Round(center.X - totalW / 2f);
-			int y = (int)Math.Round(center.Y - texH / 2f);
+			int startY = (int)Math.Round(center.Y - texH / 2f);
+
+			Vector2 origin = new Vector2(texW / 2f, texH / 2f);
+
 			for (int i = 0; i < threshold; i++)
 			{
 				int x = startX + i * stepX;
+				// Base center position of this chunk
+				Vector2 chunkCenter = new Vector2(x + texW / 2f, startY + texH / 2f);
+
+				// Offset from meter center
+				Vector2 relPos = chunkCenter - center;
+
+				// Rotate and scale the offset
+				Vector2 transformedRelPos = Vector2.Transform(relPos * scale, Matrix.CreateRotationZ(rotation));
+				Vector2 drawPos = center + transformedRelPos;
+
 				var tex = (i < filled) ? texFilled : (i == 0 ? texEmptyFirst : texEmpty);
-				_spriteBatch.Draw(tex, new Vector2(x, y), Color.White);
+				_spriteBatch.Draw(tex, drawPos, null, Color.White, rotation, origin, scale, SpriteEffects.None, 0f);
 			}
 
 			// Update hoverable UI element bounds over the temperance meter for tooltip (entity pre-created in factory)
-			var hover = EntityManager.GetEntitiesWithComponent<TemperanceTooltipAnchor>().FirstOrDefault();
-			var hitRect = new Rectangle(startX, y, totalW, texH);
-			var ui = hover.GetComponent<UIElement>();
-			if (ui != null)
+			if (hover != null)
 			{
-				ui.Bounds = hitRect;
-				// Tooltip content is initialized in the factory; bounds only are updated here
+				var hitRect = new Rectangle(startX, startY, totalW, texH);
+				var ui = hover.GetComponent<UIElement>();
+				if (ui != null)
+				{
+					ui.Bounds = hitRect;
+					// Tooltip content is initialized in the factory; bounds only are updated here
+				}
+				var ht = hover.GetComponent<Transform>();
+				if (ht != null) ht.Position = new Vector2(hitRect.X, hitRect.Y);
 			}
-			var ht = hover.GetComponent<Transform>();
-			if (ht != null) ht.Position = new Vector2(hitRect.X, hitRect.Y);
 		}
 
 		private Texture2D GetOrCreateParallelogramTexture(string key, int width, int height, int slant, Color fill, Color outline, bool drawWhiteSlantOnEmpty)

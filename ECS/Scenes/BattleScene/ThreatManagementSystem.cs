@@ -44,6 +44,7 @@ namespace Crusaders30XX.ECS.Systems
                     if (threat != null)
                     {
                         threat.Amount = Math.Max(0, Math.Min(3, threat.Amount + 1));
+                        EventManager.Publish(new ModifyThreatEvent { Target = enemy, Delta = 1 });
                         Console.WriteLine($"[ThreatManagementSystem] Enemy threat increased to {threat.Amount} at end of turn");
                     }
                 }
@@ -88,6 +89,7 @@ namespace Crusaders30XX.ECS.Systems
                     threat.Amount = Math.Max(0, threat.Amount - 1);
                     if (before != threat.Amount)
                     {
+                        EventManager.Publish(new ModifyThreatEvent { Target = e.Target, Delta = -1 });
                         Console.WriteLine($"[ThreatManagementSystem] Enemy threat reduced from {before} to {threat.Amount} due to attack damage");
                     }
                 }

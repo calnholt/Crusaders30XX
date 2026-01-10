@@ -70,6 +70,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"Whenever you block with a frozen card, gain 1 penance.";
         case AppliedPassiveType.Enflamed:
           return $"If you have 4+ courage at the end of the action phase, take {stacks} damage. Lasts for the rest of the quest.";
+        case AppliedPassiveType.Shackled:
+          return $"At the start of the block phase, shackle 2 cards from your hand. Remove 1 shackled stacks by blocking with them.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

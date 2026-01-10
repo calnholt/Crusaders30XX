@@ -23,18 +23,17 @@ namespace Crusaders30XX.ECS.Objects.Equipment
       CanActivate = () => {
         return RemainingUses == Uses && EntityManager.GetEntitiesWithComponent<Courage>().FirstOrDefault()?.GetComponent<Courage>().Amount >= Courage;
       };
-    }
-
-    public override void Activate()
-    {
-      EventManager.Publish(new RequestDrawCardsEvent { Count = Cards });
-      EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
-      EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
-      EventManager.Publish(new ModifyCourageRequestEvent { Delta = -Courage });
-      for (int i = 0; i < Cost; i++)
+      OnActivate = (entityManager, entity) =>
       {
-        RemainingUses--;
-      }
+        EventManager.Publish(new RequestDrawCardsEvent { Count = Cards });
+        EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
+        EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
+        EventManager.Publish(new ModifyCourageRequestEvent { Delta = -Courage });
+        for (int i = 0; i < Cost; i++)
+        {
+          RemainingUses--;
+        }
+      };
     }
 
     public override void CantActivateMessage()

@@ -16,7 +16,6 @@ public class Succubus : EnemyBase
   public static readonly int SiphonMultiplier = 5;
   public Succubus()
   {
-    EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourageEvent);
     Id = "succubus";
     Name = "Succubus";
     MaxHealth = 105;
@@ -24,6 +23,7 @@ public class Succubus : EnemyBase
 
     OnStartOfBattle = (entityManager) =>
     {
+      EventManager.Subscribe<ModifyCourageEvent>(OnModifyCourageEvent);
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Siphon, Delta = 1 });
     };
   }

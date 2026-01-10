@@ -15,6 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "Gain {9} aegis.";
             Animation = "Buff";
             Block = 3;
+            IsFreeAction = true;
 
             OnPlay = (entityManager, card) =>
             {

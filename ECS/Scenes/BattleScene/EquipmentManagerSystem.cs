@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
 				equipment.Equipment.CantActivateMessage();
 				return;
 			}
-			equipment.Equipment.Activate();
+			equipment.Equipment.OnActivate(EntityManager, e.EquipmentEntity);
 			EventManager.Publish(new EquipmentAbilityTriggered { Equipment = e.EquipmentEntity, EquipmentId = equipment.Equipment.Id });
 		}
 

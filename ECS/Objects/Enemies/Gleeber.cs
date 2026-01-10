@@ -27,11 +27,5 @@ public class Pounce : EnemyAttackBase
     Id = "pounce";
     Name = "Pounce";
     Damage = 5;
-
-    OnAttackReveal = (entityManager) =>
-    {
-      EventManager.Publish(new ShackleEvent { Amount = 2 });
-    };
-
   }
 }

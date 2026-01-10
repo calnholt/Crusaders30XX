@@ -89,10 +89,20 @@ namespace Crusaders30XX.ECS.Systems
             var t = evt.Target.GetComponent<Transform>();
             if (t == null) return;
 
+            Vector2 baseScale = t.Scale;
+            float baseRotation = t.Rotation;
+
+            // If a pulse is already active, preserve its original base values to prevent drift
+            if (_pulsesByEntityId.TryGetValue(evt.Target.Id, out var existing))
+            {
+                baseScale = existing.BaseScale;
+                baseRotation = existing.BaseRotation;
+            }
+
             var ap = new ActivePulse
             {
-                BaseScale = t.Scale,
-                BaseRotation = t.Rotation,
+                BaseScale = baseScale,
+                BaseRotation = baseRotation,
                 Config = evt.Config ?? JigglePulseConfig.Default,
                 Elapsed = 0f
             };

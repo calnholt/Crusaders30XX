@@ -21,7 +21,10 @@ public class Skeleton : EnemyBase
 
     OnStartOfBattle = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Armor, Delta = 2 });
+      EventQueueBridge.EnqueueTriggerAction("Skeleton.OnStartOfBattle", () =>
+      {
+        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Armor, Delta = 2 });
+      }, AppliedPassivesManagementSystem.Duration);
     };
   }
 

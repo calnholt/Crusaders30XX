@@ -24,7 +24,6 @@ namespace Crusaders30XX.ECS.Objects.Equipment
       RemainingUses = Uses;
     }
 
-    public abstract void Activate();
 
     public void EmitActivateEvent(){
       EventManager.Publish(new EquipmentActivateEvent { EquipmentEntity = EquipmentEntity });
@@ -46,6 +45,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
       RemainingUses--;
     }
 
+    public Action<EntityManager, Entity> OnActivate { get; protected set; } = (entityManager, entity) => { };
     public Func<bool> CanActivate { get; protected set; } = () => true;
 
   }

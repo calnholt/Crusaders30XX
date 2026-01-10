@@ -44,13 +44,13 @@ namespace Crusaders30XX.ECS.Systems
         public float FadeInDurationSeconds { get; set; } = 0.05f;
 
         [DebugEditable(DisplayName = "Hold Duration (s)", Step = 0.01f, Min = 0.0f, Max = 2.0f)]
-        public float HoldDurationSeconds { get; set; } = 0.27f;
+        public float HoldDurationSeconds { get; set; } = 0.35f;
 
         [DebugEditable(DisplayName = "Fade Out Duration (s)", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
         public float FadeOutDurationSeconds { get; set; } = 0.15f;
 
-        [DebugEditable(DisplayName = "Image Scale", Step = 0.1f, Min = 0.1f, Max = 5.0f)]
-        public float ImageScale { get; set; } = 0.7f;
+        [DebugEditable(DisplayName = "Image Scale (% of Viewport)", Step = 0.01f, Min = 0.01f, Max = 1.0f)]
+        public float ImageScale { get; set; } = 0.16f;
 
         [DebugEditable(DisplayName = "Offset % X (-1..1)", Step = 0.01f, Min = -1f, Max = 1f)]
         public float OffsetPercentX { get; set; } = 0f;
@@ -80,7 +80,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void LoadTextures()
         {
-            string[] textureKeys = { "enemy-attack-splash", "player-attack-splash", "gain-aegis" };
+            string[] textureKeys = { "enemy-attack-splash", "player-attack-splash", "gain-aegis", "gain-burn", "gain-armor", "gain-aggression", "gain-power" };
             foreach (var key in textureKeys)
             {
                 try
@@ -177,14 +177,22 @@ namespace Crusaders30XX.ECS.Systems
         private void OnApplyPassive(ApplyPassiveEvent e)
         {
             // Only show for aegis gains (positive delta)
-            if (e.Type != AppliedPassiveType.Aegis || e.Delta <= 0)
+            if (e.Delta <= 0)
                 return;
 
             var target = e.Target;
             if (target == null) return;
-
-            if (!_textures.TryGetValue("gain-aegis", out var gainAegisTexture) || gainAegisTexture == null) return;
-
+            string textureKey = e.Type switch
+            {
+                AppliedPassiveType.Aegis => "gain-aegis",
+                AppliedPassiveType.Burn => "gain-burn",
+                AppliedPassiveType.Armor => "gain-armor",
+                AppliedPassiveType.Aggression => "gain-aggression",
+                AppliedPassiveType.Power => "gain-power",
+                _ => null
+            };
+            if (textureKey == null) return;
+            if (!_textures.TryGetValue(textureKey, out var textureToUse) || textureToUse == null) return;
             if (_animations.Count >= MaxConcurrent)
             {
                 // Drop oldest
@@ -197,7 +205,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 TargetEntityId = target.Id,
                 Target = target,
-                Texture = gainAegisTexture,
+                Texture = textureToUse,
                 AgeSeconds = 0f,
                 FadeInDurationSeconds = FadeInDurationSeconds,
                 HoldDurationSeconds = HoldDurationSeconds,
@@ -265,6 +273,11 @@ namespace Crusaders30XX.ECS.Systems
                 // Draw texture centered at position
                 var origin = new Vector2(anim.Texture.Width / 2f, anim.Texture.Height / 2f);
                 var color = Color.White * alpha;
+
+                // Scale in accordance with viewport width rather than texture size
+                // ImageScale now represents fraction of VirtualWidth the image should occupy
+                float finalScale = (ImageScale * Game1.VirtualWidth) / anim.Texture.Width;
+
                 _spriteBatch.Draw(
                     anim.Texture,
                     pos,
@@ -272,7 +285,7 @@ namespace Crusaders30XX.ECS.Systems
                     color,
                     0f,
                     origin,
-                    ImageScale,
+                    finalScale,
                     SpriteEffects.None,
                     0f
                 );
@@ -347,6 +360,21 @@ namespace Crusaders30XX.ECS.Systems
                 TargetEntityId = 0,
                 Target = EntityManager.GetEntity("Enemy"),
                 Texture = _textures["player-attack-splash"],
+                AgeSeconds = 0f,
+                FadeInDurationSeconds = FadeInDurationSeconds,
+                HoldDurationSeconds = HoldDurationSeconds,
+                FadeOutDurationSeconds = FadeOutDurationSeconds,
+                TotalDurationSeconds = FadeInDurationSeconds + HoldDurationSeconds + FadeOutDurationSeconds
+            });
+        }
+        [DebugAction("Test Burn Animation")]
+        public void Debug_TestBurnAnimation()
+        {
+            _animations.Add(new AnimationInstance
+            {
+                TargetEntityId = 0,
+                Target = EntityManager.GetEntity("Enemy"),
+                Texture = _textures["gain-burn"],
                 AgeSeconds = 0f,
                 FadeInDurationSeconds = FadeInDurationSeconds,
                 HoldDurationSeconds = HoldDurationSeconds,

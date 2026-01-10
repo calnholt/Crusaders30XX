@@ -81,11 +81,12 @@ namespace Crusaders30XX.ECS.Services
             var headPool = allEquip.Values.Where(e => e.Slot == Components.EquipmentSlot.Head).Select(e => e.Id).ToList();
             var chestPool = allEquip.Values.Where(e => e.Slot == Components.EquipmentSlot.Chest).Select(e => e.Id).ToList();
             var armsPool = allEquip.Values.Where(e => e.Slot == Components.EquipmentSlot.Arms).Select(e => e.Id).ToList();
+            var legsPool = allEquip.Values.Where(e => e.Slot == Components.EquipmentSlot.Legs).Select(e => e.Id).ToList();
 
             string headId = headPool.Count > 0 ? headPool[random.Next(headPool.Count)] : "";
             string chestId = chestPool.Count > 0 ? chestPool[random.Next(chestPool.Count)] : "";
             string armsId = armsPool.Count > 0 ? armsPool[random.Next(armsPool.Count)] : "";
-
+            string legsId = legsPool.Count > 0 ? legsPool[random.Next(legsPool.Count)] : "";
             // 4. Medals (All 3)
             var allMedalIds = MedalFactory.GetAllMedals().Keys.ToList();
             var medalIds = allMedalIds.OrderBy(_ => random.Next()).Take(3).ToList();
@@ -103,7 +104,7 @@ namespace Crusaders30XX.ECS.Services
                 headId = headId,
                 chestId = chestId,
                 armsId = armsId,
-                legsId = "", // Skip legs as none defined
+                legsId = legsId,
                 medalIds = medalIds,
                 temperanceId = temperanceId
             };

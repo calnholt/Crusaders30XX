@@ -17,9 +17,13 @@ namespace Crusaders30XX.ECS.Factories
         {
             return equipmentId switch
             {
+                "helm_of_seeing" => new HelmOfSeeing(),
+                "knightly_chest" => new KnightlyChest(),
+                "knightly_grieves" => new KnightlyGrieves(),
+                "knightly_gauntlets" => new KnightlyGauntlets(),
+                "knightly_helm" => new KnightlyHelm(),
                 "pierced_heart_plate" => new PiercedHeartPlate(),
                 "purging_bracers" => new PurgingBracers(),
-                "helm_of_seeing" => new HelmOfSeeing(),
                 _ => null
             };
         }
@@ -32,9 +36,13 @@ namespace Crusaders30XX.ECS.Factories
         {
             return new Dictionary<string, EquipmentBase>
             {
+                { "helm_of_seeing", new HelmOfSeeing() },
+                { "knightly_chest", new KnightlyChest() },
+                { "knightly_grieves", new KnightlyGrieves() },
+                { "knightly_gauntlets", new KnightlyGauntlets() },
+                { "knightly_helm", new KnightlyHelm() },
                 { "pierced_heart_plate", new PiercedHeartPlate() },
                 { "purging_bracers", new PurgingBracers() },
-                { "helm_of_seeing", new HelmOfSeeing() }
             };
         }
     }

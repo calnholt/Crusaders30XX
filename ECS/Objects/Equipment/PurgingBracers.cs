@@ -19,14 +19,17 @@ namespace Crusaders30XX.ECS.Objects.Equipment
 
       Color = CardData.CardColor.White;
       Text = $"Gain {Aggression} aggression. Lose {Cost} use. Free action.";
-    }
-
-    public override void Activate()
-    {
-      EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Aggression, Delta = 8 });
-      EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
-      EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
-      RemainingUses--;
+      
+      OnActivate = (entityManager, entity) =>
+      {
+        EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Aggression, Delta = Aggression });
+        EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
+        EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
+        for (int i = 0; i < Cost; i++)
+        {
+          RemainingUses--;
+        }
+      };
     }
   }
 }

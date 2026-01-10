@@ -39,7 +39,7 @@ namespace Crusaders30XX.ECS.Systems
               if (player == null) return;
               var t = player.GetComponent<Temperance>();
               if (t == null) { t = new Temperance(); EntityManager.AddComponent(player, t); }
-              t.Amount = Math.Max(0, t.Amount + 1);
+              EventManager.Publish(new ModifyTemperanceEvent { Delta = 1 });
               TryTriggerTemperanceAbility(player, t);
             }
         }
