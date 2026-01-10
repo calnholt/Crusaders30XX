@@ -69,6 +69,23 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					return;
 				}
+
+				// If shackled, check all other shackled cards in hand
+				if (card.GetComponent<Shackle>() != null)
+				{
+					var allShackled = deck.Hand.Where(c => c.GetComponent<Shackle>() != null).ToList();
+					foreach (var sCard in allShackled)
+					{
+						var sData = sCard.GetComponent<CardData>();
+						if (sData != null && sData.Card.Type == CardType.Block && !sData.Card.CanPlay(EntityManager, sCard))
+						{
+							// If any shackled card cannot be played, prevent assignment
+							EventManager.Publish(new CantPlayCardMessage { Message = "All shackled cards must be playable!" });
+							return;
+						}
+					}
+				}
+
 				var enemyAttack = GetComponentHelper.GetPlannedAttack(EntityManager);
 				if (enemyAttack != null && enemyAttack.BlockingRestrictionType != BlockingRestrictionType.None)
 				{

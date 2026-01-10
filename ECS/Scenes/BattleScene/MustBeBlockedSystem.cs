@@ -128,6 +128,17 @@ namespace Crusaders30XX.ECS.Systems
                     continue;
                 }
 
+                // If shackled, ensure ALL shackled partners are also playable
+                if (card.GetComponent<Shackle>() != null)
+                {
+                    var allShackled = deck.Hand.Where(c => c.GetComponent<Shackle>() != null).ToList();
+                    bool allCanPlay = allShackled.All(s => {
+                        var sData = s.GetComponent<CardData>();
+                        return sData == null || sData.Card.Type != CardType.Block || sData.Card.CanPlay(EntityManager, s);
+                    });
+                    if (!allCanPlay) continue;
+                }
+
                 eligible.Add(card);
             }
 
