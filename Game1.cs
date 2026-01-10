@@ -11,6 +11,7 @@ using Crusaders30XX.ECS.Components;
 using System.Linq;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Data.Achievements;
 
 namespace Crusaders30XX;
 
@@ -33,6 +34,7 @@ public class Game1 : Game
     private LocationSceneSystem _locationSceneSystem;
     private ShopSceneSystem _shopSceneSystem;
     private CustomizationRootSystem _customizationRootSystem;
+    private AchievementSceneSystem _achievementSceneSystem;
     private TooltipTextDisplaySystem _tooltipTextDisplaySystem;
     private HintTooltipDisplaySystem _hintTooltipDisplaySystem;
     private CardTooltipDisplaySystem _cardTooltipDisplaySystem;
@@ -118,6 +120,9 @@ public class Game1 : Game
         // Initialize FontSingleton with both fonts
         FontSingleton.Initialize(Content);
 
+        // Initialize Achievement system
+        AchievementManager.Initialize();
+
         // Seed a SceneState entity
         var sceneEntity = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
         if (sceneEntity == null)
@@ -132,6 +137,7 @@ public class Game1 : Game
         _locationSceneSystem = new LocationSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _shopSceneSystem = new ShopSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _customizationRootSystem = new CustomizationRootSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
+        _achievementSceneSystem = new AchievementSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _world.SystemManager);
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
@@ -157,6 +163,7 @@ public class Game1 : Game
         _world.AddSystem(_locationSceneSystem);
         _world.AddSystem(_shopSceneSystem);
         _world.AddSystem(_customizationRootSystem);
+        _world.AddSystem(_achievementSceneSystem);
         _world.AddSystem(new TimerSchedulerSystem(_world.EntityManager));
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_entityListOverlaySystem);
@@ -342,6 +349,11 @@ public class Game1 : Game
             {
                 FrameProfiler.Measure("ShopSceneSystem.Draw", _shopSceneSystem.Draw);
 				FrameProfiler.Measure("CurrencyDisplaySystem.Draw", _currencyDisplaySystem.Draw);
+                break;
+            }
+            case SceneId.Achievement:
+            {
+                FrameProfiler.Measure("AchievementSceneSystem.Draw", _achievementSceneSystem.Draw);
                 break;
             }
             case SceneId.WorldMap:

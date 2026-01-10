@@ -28,6 +28,7 @@ namespace Crusaders30XX.ECS.Systems
 	private POIRadiusDebugDisplaySystem _poiRadiusDebugDisplaySystem;
 	private HellRiftIndicatorDisplaySystem _hellRiftIndicatorDisplaySystem;
 	private CustomizeButtonDisplaySystem _customizeButtonDisplaySystem;
+	private AchievementButtonDisplaySystem _achievementButtonDisplaySystem;
 	private MiniMapDisplaySystem _miniMapDisplaySystem;
 		private RenderTarget2D _sceneRT;
 		private int _rtW;
@@ -63,6 +64,7 @@ namespace Crusaders30XX.ECS.Systems
 				_world.RemoveSystem(_poiRadiusDebugDisplaySystem);
 				_world.RemoveSystem(_hellRiftIndicatorDisplaySystem);
 				_world.RemoveSystem(_customizeButtonDisplaySystem);
+				_world.RemoveSystem(_achievementButtonDisplaySystem);
 				_world.RemoveSystem(_miniMapDisplaySystem);
 				_firstLoad = true;
 				_rtW = 0;
@@ -142,6 +144,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("ShopPOITooltipDisplaySystem.Draw", _shopPoiTooltipDisplaySystem.Draw);
 			FrameProfiler.Measure("TooltipQuestDisplaySystem.Draw", _tooltipQuestDisplaySystem.Draw);
 			FrameProfiler.Measure("CustomizeButtonDisplaySystem.Draw", _customizeButtonDisplaySystem.Draw);
+			FrameProfiler.Measure("AchievementButtonDisplaySystem.Draw", _achievementButtonDisplaySystem.Draw);
 		}
     private void AddLocationSystems()
 		{
@@ -165,6 +168,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_hellRiftIndicatorDisplaySystem);
 			_customizeButtonDisplaySystem = new CustomizeButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_customizeButtonDisplaySystem);
+			_achievementButtonDisplaySystem = new AchievementButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_world.AddSystem(_achievementButtonDisplaySystem);
 			_miniMapDisplaySystem = new MiniMapDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_miniMapDisplaySystem);
     }

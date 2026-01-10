@@ -14,6 +14,7 @@ namespace Crusaders30XX.ECS.Components
 		Battle,
 		Location,
 		Shop,
+		Achievement,
 		None
 	}
 

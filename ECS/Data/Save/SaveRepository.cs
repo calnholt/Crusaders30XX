@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Crusaders30XX.ECS.Data.Achievements;
 using Crusaders30XX.ECS.Data.Loadouts;
 
 namespace Crusaders30XX.ECS.Data.Save
@@ -23,6 +24,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				if (data.loadouts == null) data.loadouts = new System.Collections.Generic.List<LoadoutDefinition>();
 				if (data.seenTutorials == null) data.seenTutorials = new System.Collections.Generic.List<string>();
 				if (data.cardMastery == null) data.cardMastery = new System.Collections.Generic.Dictionary<string, CardMastery>();
+				if (data.achievements == null) data.achievements = new System.Collections.Generic.Dictionary<string, AchievementProgress>();
 				result = data;
 			}
 			catch (System.Exception ex)

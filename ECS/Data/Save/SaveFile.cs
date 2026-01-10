@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Data.Achievements;
 using Crusaders30XX.ECS.Data.Loadouts;
 
 namespace Crusaders30XX.ECS.Data.Save
@@ -13,6 +14,7 @@ namespace Crusaders30XX.ECS.Data.Save
 		public List<LoadoutDefinition> loadouts { get; set; } = new List<LoadoutDefinition>();
 		public List<string> seenTutorials { get; set; } = new List<string>();
 		public Dictionary<string, CardMastery> cardMastery { get; set; } = new Dictionary<string, CardMastery>();
+		public Dictionary<string, AchievementProgress> achievements { get; set; } = new Dictionary<string, AchievementProgress>();
 	}
 
 	public class SaveItem

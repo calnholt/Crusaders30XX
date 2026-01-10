@@ -481,5 +481,17 @@ namespace Crusaders30XX.ECS.Data.Save
 				}
 			}
 		}
+
+		/// <summary>
+		/// Persist achievement data to disk.
+		/// Called by AchievementManager when progress is updated.
+		/// </summary>
+		public static void PersistAchievements()
+		{
+			lock (_lock)
+			{
+				Persist();
+			}
+		}
 	}
 }
