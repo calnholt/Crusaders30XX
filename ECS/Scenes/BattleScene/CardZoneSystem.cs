@@ -113,6 +113,13 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
+            var cardBase = evt.Card.GetComponent<CardData>().Card;
+            if (cardBase.IsWeapon)
+            {
+                // Weapons are not moved to any zone; they are kept in hand until re-added by phase rules
+                return;
+            }
+
             // Intercept Hand -> DrawPile to run animation first; finalize will mutate zones and publish CardMoved
             if (evt.Destination == CardZoneType.DrawPile)
             {

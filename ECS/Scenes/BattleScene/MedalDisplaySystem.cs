@@ -42,7 +42,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Counter Text Scale", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
 		public float CounterTextScale { get; set; } = 0.15f;
 		[DebugEditable(DisplayName = "Counter X Offset", Step = 1f, Min = -100f, Max = 100f)]
-		public float CounterXOffset { get; set; } = 0f;
+		public float CounterXOffset { get; set; } = -3f;
 		[DebugEditable(DisplayName = "Counter Y Offset", Step = 1f, Min = -100f, Max = 100f)]
 		public float CounterYOffset { get; set; } = 69f;
 		[DebugEditable(DisplayName = "Counter Trap Width", Step = 1f, Min = 10f, Max = 200f)]

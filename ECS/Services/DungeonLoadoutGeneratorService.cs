@@ -25,14 +25,28 @@ namespace Crusaders30XX.ECS.Services
             int targetRelicCount = random.Next(3); // 0, 1, or 2
             int currentRelics = 0;
 
+            // 1.1 Weighted selection for block cards (0-4, weighted towards less)
+            // Weights: 0: 5, 1: 4, 2: 3, 3: 2, 4: 1 (Total: 15)
+            int blockRoll = random.Next(15);
+            int targetBlockCount = blockRoll switch
+            {
+                < 5 => 0,
+                < 9 => 1,
+                < 12 => 2,
+                < 14 => 3,
+                _ => 4
+            };
+            int currentBlockCards = 0;
+
             // Prepare all possible unique (ID, Color) pairs
-            var allPairs = new List<(string Id, string Color, bool IsRelic)>();
+            var allPairs = new List<(string Id, string Color, bool IsRelic, bool IsBlock)>();
             foreach (var card in allCards.Values.Where(c => c.CanAddToLoadout && !c.IsToken && !c.IsWeapon))
             {
                 bool isRelic = card.Type == CardType.Relic;
-                allPairs.Add((card.CardId, "Red", isRelic));
-                allPairs.Add((card.CardId, "White", isRelic));
-                allPairs.Add((card.CardId, "Black", isRelic));
+                bool isBlock = card.Type == CardType.Block;
+                allPairs.Add((card.CardId, "Red", isRelic, isBlock));
+                allPairs.Add((card.CardId, "White", isRelic, isBlock));
+                allPairs.Add((card.CardId, "Black", isRelic, isBlock));
             }
 
             // Shuffle the pool
@@ -45,6 +59,9 @@ namespace Crusaders30XX.ECS.Services
 
                 // Check Relic limit
                 if (pair.IsRelic && currentRelics >= targetRelicCount) continue;
+
+                // Check Block limit
+                if (pair.IsBlock && currentBlockCards >= targetBlockCount) continue;
 
                 // Check ID usage limit (max 2 per deck)
                 cardIdUsage.TryGetValue(pair.Id, out int usage);
@@ -60,6 +77,7 @@ namespace Crusaders30XX.ECS.Services
                 cardIdUsage[pair.Id] = usage + 1;
                 
                 if (pair.IsRelic) currentRelics++;
+                if (pair.IsBlock) currentBlockCards++;
                 if (pair.Color == "Red") redLeft--;
                 else if (pair.Color == "White") whiteLeft--;
                 else if (pair.Color == "Black") blackLeft--;

@@ -10,7 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         {
             CardId = "hold_the_line";
             Name = "Hold the Line";
-            Text = $"Draw {Draw} card${(Draw > 1 ? $"s" : "")}.";
+            Text = $"Draw {Draw} card{(Draw > 1 ? "s" : "")}.";
             Block = 2;
             Animation = "Block";
             Type = CardType.Block;

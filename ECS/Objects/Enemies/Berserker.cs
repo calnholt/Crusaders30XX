@@ -41,6 +41,5 @@ public class Rage : EnemyAttackBase
     Id = "rage";
     Name = "Rage";
     Damage = 11;
-    Text = "On attack - Shackle 2 cards.";
   }
 }

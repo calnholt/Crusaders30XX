@@ -98,13 +98,7 @@ namespace Crusaders30XX.ECS.Systems
             if (ap == null) return;
             foreach (var passive in ap.Passives)
             {
-                if (passive.Key == AppliedPassiveType.Penance) continue;
-                if (passive.Key == AppliedPassiveType.Webbing) continue;
-                if (passive.Key == AppliedPassiveType.Fear) continue;
-                if (passive.Key == AppliedPassiveType.Bleed) continue;
-                if (passive.Key == AppliedPassiveType.Scar) continue;
-                if (passive.Key == AppliedPassiveType.Frostbite) continue;
-                if (passive.Key == AppliedPassiveType.Enflamed) continue;
+                if (GetQuestPassives().Contains(passive.Key)) continue;
                 EventManager.Publish(new RemovePassive { Owner = player, Type = passive.Key });
             }
         }

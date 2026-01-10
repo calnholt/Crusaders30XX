@@ -28,8 +28,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (i >= 0) matches.Add((i, "X Power - Your attacks deal +X damage."));
 			i = lowerText.IndexOf("penance");
 			if (i >= 0) matches.Add((i, "X Penance - Your attacks deal -X less damage. At the start of the next battle, these are converted to scars."));
-			i = lowerText.IndexOf("scar");
-			if (i >= 0) matches.Add((i, "X Scar - Lose X max HP for the rest of the quest."));
+			var showScar = lowerText.IndexOf("scar ") >= 0 || lowerText.IndexOf("scars") >= 0 || lowerText.IndexOf("scars ") >= 0 || lowerText.IndexOf("scar.") >= 0;
+			if (showScar) matches.Add((i, "X Scar - Lose X max HP for the rest of the quest."));
 			i = lowerText.IndexOf("fear");
 			if (i >= 0) matches.Add((i, "X Fear - Attacks have a (X*10)% chance to become ambush attacks this quest."));
 			i = lowerText.IndexOf("wounded");
