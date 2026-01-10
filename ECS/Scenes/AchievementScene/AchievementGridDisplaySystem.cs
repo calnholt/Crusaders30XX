@@ -159,6 +159,16 @@ namespace Crusaders30XX.ECS.Systems
                         TooltipType = TooltipType.None
                     });
                     var parallax = ParallaxLayer.GetUIParallaxLayer();
+                    if (achievement != null && achievement.State == AchievementState.Visible)
+                    {
+                        parallax.MultiplierX = 0.02f; 
+                        parallax.MultiplierY = 0.02f; 
+                    }
+                    if (achievement != null && (achievement.State == AchievementState.CompleteSeen || achievement.State == AchievementState.CompleteUnseen))
+                    {
+                        parallax.MultiplierX = 0.015f; 
+                        parallax.MultiplierY = 0.015f; 
+                    }
                     EntityManager.AddComponent(ent, parallax);
                     EntityManager.AddComponent(ent, new AchievementGridItem
                     {
@@ -356,11 +366,17 @@ namespace Crusaders30XX.ECS.Systems
                 // Lerp scale
                 gridItem.CurrentScale = MathHelper.Lerp(gridItem.CurrentScale, gridItem.TargetScale, dt * ScaleLerpSpeed);
 
-                // Update bounds based on scale
+                // Update BasePosition in case grid settings changed
                 var baseRect = GetCellRect(gridItem.Row, gridItem.Column);
+                transform.BasePosition = new Vector2(baseRect.X + baseRect.Width / 2f, baseRect.Y + baseRect.Height / 2f);
+
+                // Update bounds based on scale and current parallax-adjusted position
                 int scaledSize = (int)(CellSize * gridItem.CurrentScale);
-                int offset = (scaledSize - CellSize) / 2;
-                ui.Bounds = new Rectangle(baseRect.X - offset, baseRect.Y - offset, scaledSize, scaledSize);
+                ui.Bounds = new Rectangle(
+                    (int)Math.Round(transform.Position.X - scaledSize / 2f),
+                    (int)Math.Round(transform.Position.Y - scaledSize / 2f),
+                    scaledSize,
+                    scaledSize);
             }
 
             // Publish hover event
