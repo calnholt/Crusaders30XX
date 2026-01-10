@@ -7,6 +7,7 @@ using Crusaders30XX.Diagnostics;
 using System;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Services;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -311,6 +312,51 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new RemovePassive { Owner = owner, Type = AppliedPassiveType.DowseWithHolyWater });
             EventManager.Publish(new RemovePassive { Owner = owner, Type = AppliedPassiveType.Aggression });
+        }
+
+        public static HashSet<AppliedPassiveType> GetTurnPassives()
+        {
+            return new HashSet<AppliedPassiveType>
+            {
+                AppliedPassiveType.DowseWithHolyWater,
+                AppliedPassiveType.Aggression
+            };
+        }
+
+        public static HashSet<AppliedPassiveType> GetBattlePassives()
+        {
+            return new HashSet<AppliedPassiveType>
+            {
+                AppliedPassiveType.Stun,
+                AppliedPassiveType.Burn,
+                AppliedPassiveType.Power,
+                AppliedPassiveType.Armor,
+                AppliedPassiveType.Wounded,
+                AppliedPassiveType.Inferno,
+                AppliedPassiveType.Stealth,
+                AppliedPassiveType.Poison,
+                AppliedPassiveType.Siphon,
+                AppliedPassiveType.Thorns,
+                AppliedPassiveType.Rage,
+                AppliedPassiveType.Intimidated,
+                AppliedPassiveType.MindFog,
+                AppliedPassiveType.Channel,
+                AppliedPassiveType.Windchill,
+                AppliedPassiveType.SubZero,
+            };
+        }
+        public static HashSet<AppliedPassiveType> GetQuestPassives()
+        {
+            return new HashSet<AppliedPassiveType>
+            {
+                AppliedPassiveType.Shackled,
+                AppliedPassiveType.Webbing,
+                AppliedPassiveType.Penance,
+                AppliedPassiveType.Fear,
+                AppliedPassiveType.Bleed,
+                AppliedPassiveType.Frostbite,
+                AppliedPassiveType.Enflamed
+            };
         }
     }
 }

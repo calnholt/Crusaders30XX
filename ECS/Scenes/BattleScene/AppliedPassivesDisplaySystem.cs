@@ -44,7 +44,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Background B", Step = 1, Min = 0, Max = 255)]
         public int BgB { get; set; } = 0;
         [DebugEditable(DisplayName = "Background A", Step = 1, Min = 0, Max = 255)]
-        public int BgA { get; set; } = 150;
+        public int BgA { get; set; } = 255;
 
         [DebugEditable(DisplayName = "Text Scale", Step = 0.01f, Min = 0.05f, Max = 2f)]
         public float TextScale { get; set; } = 0.12f;
@@ -67,12 +67,20 @@ namespace Crusaders30XX.ECS.Systems
         // Track a transient ripple per owner+passive key
         private readonly System.Collections.Generic.Dictionary<(int ownerId, AppliedPassiveType type), Ripple> _ripples = new();
 
+        private readonly HashSet<AppliedPassiveType> _turnPassives;
+        private readonly HashSet<AppliedPassiveType> _battlePassives;
+        private readonly HashSet<AppliedPassiveType> _questPassives;
+
         public AppliedPassivesDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
+            _turnPassives = AppliedPassivesManagementSystem.GetTurnPassives();
+            _battlePassives = AppliedPassivesManagementSystem.GetBattlePassives();
+            _questPassives = AppliedPassivesManagementSystem.GetQuestPassives();
             EventManager.Subscribe<PassiveTriggered>(OnPassiveTriggered);
+            EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
             EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCachesEvent);
             EventManager.Subscribe<LoadSceneEvent>(OnLoadSceneEvent);
         }
@@ -201,10 +209,29 @@ namespace Crusaders30XX.ECS.Systems
                     }
                     // Base chip
                     var chipRect = new Rectangle(x, baseY, w, h);
-                    var chipBg = Color.FromNonPremultiplied(BgR, BgG, BgB, (byte)BgA);
+
+                    Color chipBg;
+                    Color textColor;
+
+                    if (_battlePassives.Contains(items[i].Type))
+                    {
+                        chipBg = Color.FromNonPremultiplied(139, 0, 0, (byte)BgA);
+                        textColor = Color.White;
+                    }
+                    else if (_questPassives.Contains(items[i].Type))
+                    {
+                        chipBg = Color.FromNonPremultiplied(255, 255, 255, (byte)BgA);
+                        textColor = Color.Black;
+                    }
+                    else
+                    {
+                        chipBg = Color.FromNonPremultiplied(BgR, BgG, BgB, (byte)BgA);
+                        textColor = Color.White;
+                    }
+
 					_spriteBatch.Draw(chipTexture, chipRect, chipBg);
                     var textPos = new Vector2(x + (w - sizes[i].X) / 2f, baseY + (h - sizes[i].Y) / 2f);
-                    _spriteBatch.DrawString(_font, items[i].Label, textPos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+                    _spriteBatch.DrawString(_font, items[i].Label, textPos, textColor, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
                     UpdateTooltipUi(key, chipRect, PassiveTooltipTextService.GetText(items[i].Type, isPlayer, items[i].Count));
                     x += w + Spacing;
                 }
@@ -223,6 +250,20 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (e?.Owner == null) return;
             _ripples[(e.Owner.Id, e.Type)] = new Ripple { Elapsed = 0f, Duration = Math.Max(0.05f, RippleSeconds) };
+        }
+
+        private void OnApplyPassive(ApplyPassiveEvent e)
+        {
+            if (e?.Target == null) return;
+            var ap = e.Target.GetComponent<AppliedPassives>();
+            // If the passive is not currently present, trigger the ripple animation when it's added
+            if (ap == null || !ap.Passives.ContainsKey(e.Type))
+            {
+                if (e.Delta > 0)
+                {
+                    _ripples[(e.Target.Id, e.Type)] = new Ripple { Elapsed = 0f, Duration = Math.Max(0.05f, RippleSeconds) };
+                }
+            }
         }
 
 		private Texture2D GetRounded(int w, int h, int r)
