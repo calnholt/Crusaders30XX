@@ -19,7 +19,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font = FontSingleton.ContentFont;
-		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedCache = new();
         private readonly System.Collections.Generic.Dictionary<(int ownerId, AppliedPassiveType type), Entity> _tooltipUiByKey = new();
 
         [DebugEditable(DisplayName = "Offset Y", Step = 1, Min = -500, Max = 500)]
@@ -34,8 +33,20 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Spacing", Step = 1, Min = 0, Max = 100)]
         public int Spacing { get; set; } = 6;
 
-        [DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 32)]
-        public int CornerRadius { get; set; } = 16;
+        [DebugEditable(DisplayName = "Trap Left Angle", Step = 1f, Min = -45f, Max = 45f)]
+        public float TrapLeftAngle { get; set; } = 11f;
+
+        [DebugEditable(DisplayName = "Trap Right Angle", Step = 1f, Min = -45f, Max = 45f)]
+        public float TrapRightAngle { get; set; } = -23f;
+
+        [DebugEditable(DisplayName = "Trap Top Angle", Step = 1f, Min = -45f, Max = 45f)]
+        public float TrapTopAngle { get; set; } = 2f;
+
+        [DebugEditable(DisplayName = "Trap Bottom Angle", Step = 1f, Min = -45f, Max = 45f)]
+        public float TrapBottomAngle { get; set; } = -2f;
+
+        [DebugEditable(DisplayName = "Trap Left Offset", Step = 1f, Min = 0f, Max = 50f)]
+        public float TrapLeftOffset { get; set; } = 0f;
 
         [DebugEditable(DisplayName = "Background R", Step = 1, Min = 0, Max = 255)]
         public int BgR { get; set; } = 0;
@@ -47,7 +58,13 @@ namespace Crusaders30XX.ECS.Systems
         public int BgA { get; set; } = 255;
 
         [DebugEditable(DisplayName = "Text Scale", Step = 0.01f, Min = 0.05f, Max = 2f)]
-        public float TextScale { get; set; } = 0.12f;
+        public float TextScale { get; set; } = 0.13f;
+
+        [DebugEditable(DisplayName = "Text Offset X", Step = 1, Min = -100, Max = 100)]
+        public int TextOffsetX { get; set; } = -4;
+
+        [DebugEditable(DisplayName = "Text Offset Y", Step = 1, Min = -100, Max = 100)]
+        public int TextOffsetY { get; set; } = 1;
 
         [DebugEditable(DisplayName = "Ripple Seconds", Step = 0.05f, Min = 0.05f, Max = 2f)]
         public float RippleSeconds { get; set; } = 0.35f;
@@ -93,7 +110,6 @@ namespace Crusaders30XX.ECS.Systems
         private void OnDeleteCachesEvent(DeleteCachesEvent evt)
         {
             _tooltipUiByKey.Values.ToList().ForEach(ui => EntityManager.DestroyEntity(ui.Id));
-            _roundedCache.Clear();
             _tooltipUiByKey.Clear();
             _ripples.Clear();
         }
@@ -190,8 +206,17 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     int w = chipWidths[i];
                     int h = (int)Math.Ceiling(sizes[i].Y) + PadY * 2;
-					int r = Math.Min(CornerRadius, Math.Min(w, h) / 2);
-					var chipTexture = GetRounded(w, h, r);
+                    
+                    var chipTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoidMask(
+                        _graphicsDevice, 
+                        w, 
+                        h, 
+                        TrapLeftOffset, 
+                        TrapTopAngle, 
+                        TrapRightAngle, 
+                        TrapBottomAngle, 
+                        TrapLeftAngle);
+
                     // Ripple overlay (independent of chip background)
                     var key = (e.Id, items[i].Type);
                     if (_ripples.TryGetValue(key, out var rp))
@@ -230,8 +255,8 @@ namespace Crusaders30XX.ECS.Systems
                     }
 
 					_spriteBatch.Draw(chipTexture, chipRect, chipBg);
-                    var textPos = new Vector2(x + (w - sizes[i].X) / 2f, baseY + (h - sizes[i].Y) / 2f);
-                    _spriteBatch.DrawString(_font, items[i].Label, textPos, textColor, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+                    var textPos = new Vector2(x + (w - sizes[i].X) / 2f + TextOffsetX, baseY + (h - sizes[i].Y) / 2f + TextOffsetY);
+                    _spriteBatch.DrawString(_font, StringUtils.ToTitleCase(items[i].Label), textPos, textColor, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
                     UpdateTooltipUi(key, chipRect, PassiveTooltipTextService.GetText(items[i].Type, isPlayer, items[i].Count));
                     x += w + Spacing;
                 }
@@ -265,15 +290,6 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
         }
-
-		private Texture2D GetRounded(int w, int h, int r)
-		{
-			var key = (w, h, r);
-			if (_roundedCache.TryGetValue(key, out var tex)) return tex;
-			var created = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, w, h, r);
-			_roundedCache[key] = created;
-			return created;
-		}
 
         private void UpdateTooltipUi((int ownerId, AppliedPassiveType type) key, Rectangle rect, string text)
         {

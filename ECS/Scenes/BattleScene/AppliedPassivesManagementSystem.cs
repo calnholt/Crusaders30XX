@@ -343,6 +343,7 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Channel,
                 AppliedPassiveType.Windchill,
                 AppliedPassiveType.SubZero,
+                AppliedPassiveType.Aegis,
             };
         }
         public static HashSet<AppliedPassiveType> GetQuestPassives()
@@ -355,7 +356,8 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Fear,
                 AppliedPassiveType.Bleed,
                 AppliedPassiveType.Frostbite,
-                AppliedPassiveType.Enflamed
+                AppliedPassiveType.Enflamed,
+                AppliedPassiveType.Scar
             };
         }
     }
