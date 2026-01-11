@@ -82,6 +82,7 @@ namespace Crusaders30XX.ECS.Systems
                 IsInteractable = true,
                 TooltipType = TooltipType.None
             });
+            EntityManager.AddComponent(_buttonEntity, new HotKey { Button = FaceButton.B, Position = HotKeyPosition.Below, RequiresHold = true });
             EntityManager.AddComponent(_buttonEntity, new AchievementBackButton());
             EntityManager.AddComponent(_buttonEntity, new OwnedByScene { Scene = SceneId.Achievement });
         }
@@ -116,6 +117,7 @@ namespace Crusaders30XX.ECS.Systems
             if (ui != null && ui.IsClicked)
             {
                 EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+                ui.IsClicked = false;
             }
         }
 

@@ -447,8 +447,7 @@ namespace Crusaders30XX.ECS.Systems
             // Draw hover highlight
             if (ui.IsHovered && achievement != null && achievement.State != AchievementState.Hidden)
             {
-                var highlightColor = new Color(255, 255, 255, 60);
-                _spriteBatch.Draw(tex, drawRect, highlightColor);
+                _spriteBatch.Draw(tex, drawRect, cellColor);
             }
         }
 

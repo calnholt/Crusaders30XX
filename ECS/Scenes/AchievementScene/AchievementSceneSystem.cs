@@ -81,19 +81,24 @@ namespace Crusaders30XX.ECS.Systems
             if (!_firstLoad) return;
             _firstLoad = false;
 
-            _gridDisplaySystem = new AchievementGridDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+            if (_gridDisplaySystem == null)
+                _gridDisplaySystem = new AchievementGridDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
             _world.AddSystem(_gridDisplaySystem);
 
-            _descriptionDisplaySystem = new AchievementDescriptionDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+            if (_descriptionDisplaySystem == null)
+                _descriptionDisplaySystem = new AchievementDescriptionDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
             _world.AddSystem(_descriptionDisplaySystem);
 
-            _meterDisplaySystem = new AchievementMeterDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+            if (_meterDisplaySystem == null)
+                _meterDisplaySystem = new AchievementMeterDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
             _world.AddSystem(_meterDisplaySystem);
 
-            _titleDisplaySystem = new AchievementTitleDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+            if (_titleDisplaySystem == null)
+                _titleDisplaySystem = new AchievementTitleDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
             _world.AddSystem(_titleDisplaySystem);
 
-            _backButtonDisplaySystem = new AchievementBackButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+            if (_backButtonDisplaySystem == null)
+                _backButtonDisplaySystem = new AchievementBackButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
             _world.AddSystem(_backButtonDisplaySystem);
         }
     }

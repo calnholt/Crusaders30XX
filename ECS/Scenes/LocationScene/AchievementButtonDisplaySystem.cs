@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
-	/// Displays the Achievement button in the Location scene (bottom-left corner).
+	/// Displays the Achievement button in the Location scene (top-right corner, left of Customize button).
 	/// </summary>
 	[DebugTab("Achievement Button")]
 	public class AchievementButtonDisplaySystem : Core.System
@@ -127,8 +127,8 @@ namespace Crusaders30XX.ECS.Systems
 			int btnW = System.Math.Max(40, ButtonWidth);
 			int btnH = System.Math.Max(24, ButtonHeight);
 			int margin = System.Math.Max(0, ButtonMargin);
-			// Position in bottom-left corner
-			var rect = new Rectangle(margin, viewportH - btnH - margin, btnW, btnH);
+			// Position to the left of the Customize button (top-right)
+			var rect = new Rectangle(viewportW - btnW * 2 - margin * 2, margin, btnW, btnH);
 			var position = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
 
 			var ent = EntityManager.GetEntity("Location_AchievementButton");
@@ -137,7 +137,7 @@ namespace Crusaders30XX.ECS.Systems
 				ent = EntityManager.CreateEntity("Location_AchievementButton");
 				EntityManager.AddComponent(ent, new Transform { Position = position, BasePosition = position, ZOrder = 10000 });
 				EntityManager.AddComponent(ent, new UIElement { Bounds = rect, IsInteractable = true });
-				EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Back, Position = HotKeyPosition.Below, RequiresHold = true });
+				EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.B, Position = HotKeyPosition.Below, RequiresHold = true });
 				var layer = ParallaxLayer.GetUIParallaxLayer();
 				layer.AffectsUIBounds = true;
 				EntityManager.AddComponent(ent, layer);
@@ -170,7 +170,11 @@ namespace Crusaders30XX.ECS.Systems
 				var hotKey = ent.GetComponent<HotKey>();
 				if (hotKey == null)
 				{
-					EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Back, Position = HotKeyPosition.Below });
+					EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.B, Position = HotKeyPosition.Below });
+				}
+				else
+				{
+					hotKey.Button = FaceButton.B;
 				}
 			}
 		}

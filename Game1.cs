@@ -58,6 +58,7 @@ public class Game1 : Game
     private ShockwaveDisplaySystem _shockwaveSystem;
     private RectangularShockwaveDisplaySystem _rectangularShockwaveSystem;
     private PoisonDamageDisplaySystem _poisonSystem;
+    private AlertDisplaySystem _alertDisplaySystem;
     private RenderTarget2D _sceneRt;
     private RenderTarget2D _ppA;
     private RenderTarget2D _ppB;
@@ -198,6 +199,8 @@ public class Game1 : Game
         _world.AddSystem(new CursorEmptySelectDisplaySystem(_world.EntityManager, GraphicsDevice));
         _world.AddSystem(new UISelectDisplaySystem(_world.EntityManager, GraphicsDevice));
         _world.AddSystem(new JigglePulseDisplaySystem(_world.EntityManager));
+        _alertDisplaySystem = new AlertDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _world.AddSystem(_alertDisplaySystem);
 
         // Mark persistent entities
         _world.AddComponent(sceneEntity, new DontDestroyOnLoad());
@@ -376,6 +379,7 @@ public class Game1 : Game
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipTextDisplaySystem.Draw);
         FrameProfiler.Measure("HintTooltipDisplaySystem.Draw", _hintTooltipDisplaySystem.Draw);
         FrameProfiler.Measure("CardTooltipDisplaySystem.Draw", _cardTooltipDisplaySystem.Draw);
+        FrameProfiler.Measure("AlertDisplaySystem.Draw", _alertDisplaySystem.Draw);
         FrameProfiler.Measure("ProfilerSystem.Draw", _profilerSystem.Draw);
         FrameProfiler.Measure("DebugMenuSystem.Draw", _debugMenuSystem.Draw);
         FrameProfiler.Measure("EntityListOverlaySystem.Draw", _entityListOverlaySystem.Draw);

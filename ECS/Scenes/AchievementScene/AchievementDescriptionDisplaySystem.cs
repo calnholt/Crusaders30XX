@@ -63,6 +63,18 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Slide Offset", Step = 10, Min = 20, Max = 200)]
         public int SlideOffset { get; set; } = 50;
 
+        [DebugEditable(DisplayName = "Title Margin", Step = 1, Min = 0, Max = 100)]
+        public int TitleMargin { get; set; } = 16;
+
+        [DebugEditable(DisplayName = "Description Margin", Step = 1, Min = 0, Max = 100)]
+        public int DescriptionMargin { get; set; } = 24;
+
+        [DebugEditable(DisplayName = "Progress Margin", Step = 1, Min = 0, Max = 100)]
+        public int ProgressMargin { get; set; } = 8;
+
+        [DebugEditable(DisplayName = "Status Margin", Step = 1, Min = 0, Max = 100)]
+        public int StatusMargin { get; set; } = 30;
+
         public AchievementDescriptionDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)
         {
             _graphicsDevice = gd;
@@ -194,7 +206,7 @@ namespace Crusaders30XX.ECS.Systems
                     SpriteEffects.None,
                     0f
                 );
-                contentY += (int)titleSize.Y + 16;
+                contentY += (int)titleSize.Y + TitleMargin;
             }
 
             // Draw description
@@ -213,7 +225,7 @@ namespace Crusaders30XX.ECS.Systems
                     SpriteEffects.None,
                     0f
                 );
-                contentY += (int)descSize.Y + 24;
+                contentY += (int)descSize.Y + DescriptionMargin;
             }
 
             // Draw progress if applicable
@@ -238,7 +250,7 @@ namespace Crusaders30XX.ECS.Systems
                     _spriteBatch.Draw(barFill, new Rectangle(contentX, contentY, fillWidth, barHeight), fillColor * alpha);
                 }
 
-                contentY += barHeight + 8;
+                contentY += barHeight + ProgressMargin;
 
                 // Draw progress text
                 _spriteBatch.DrawString(
@@ -252,7 +264,7 @@ namespace Crusaders30XX.ECS.Systems
                     SpriteEffects.None,
                     0f
                 );
-                contentY += 30;
+                contentY += StatusMargin;
             }
 
             // Draw completion status
@@ -262,7 +274,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     AchievementState.CompleteSeen => "Completed!",
                     AchievementState.CompleteUnseen => "Completed!",
-                    AchievementState.Visible => "In Progress",
+                    AchievementState.Visible => "",
                     _ => "Hidden"
                 };
                 var statusColor = achievement.IsCompleted ? Color.Gold : dimColor;
@@ -279,18 +291,24 @@ namespace Crusaders30XX.ECS.Systems
                     SpriteEffects.None,
                     0f
                 );
-                contentY += 30;
 
-                // Draw points value
+                // Draw points value (anchored to bottom-right)
                 string pointsText = $"+{achievement.Points} Achievement Points";
+                float pointsScale = ProgressScale * 0.9f;
+                var pointsSize = _contentFont.MeasureString(pointsText) * pointsScale;
+                Vector2 pointsPos = new Vector2(
+                    panelX + PanelWidth - Padding - pointsSize.X,
+                    panelY + PanelHeight - Padding - pointsSize.Y
+                );
+
                 _spriteBatch.DrawString(
                     _contentFont,
                     pointsText,
-                    new Vector2(contentX, contentY),
+                    pointsPos,
                     new Color(255, 215, 0) * alpha, // Gold
                     0f,
                     Vector2.Zero,
-                    ProgressScale * 0.9f,
+                    pointsScale,
                     SpriteEffects.None,
                     0f
                 );
