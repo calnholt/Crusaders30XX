@@ -69,5 +69,10 @@ namespace Crusaders30XX.ECS.Events
         /// Grid column of the clicked achievement.
         /// </summary>
         public int Column { get; set; } = 0;
+
+        /// <summary>
+        /// Whether this should play a smaller, weaker explosion animation.
+        /// </summary>
+        public bool IsSmall { get; set; } = false;
     }
 }

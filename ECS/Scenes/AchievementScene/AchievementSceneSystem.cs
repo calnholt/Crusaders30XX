@@ -29,6 +29,7 @@ namespace Crusaders30XX.ECS.Systems
         private AchievementTitleDisplaySystem _titleDisplaySystem;
         private AchievementBackButtonDisplaySystem _backButtonDisplaySystem;
         private AchievementExplosionSystem _explosionSystem;
+        private AchievementConfettiDisplaySystem _confettiSystem;
 
         public AchievementSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice gd, SpriteBatch sb, ContentManager content)
             : base(em)
@@ -53,6 +54,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (_titleDisplaySystem != null) _world.RemoveSystem(_titleDisplaySystem);
                 if (_backButtonDisplaySystem != null) _world.RemoveSystem(_backButtonDisplaySystem);
                 if (_explosionSystem != null) _world.RemoveSystem(_explosionSystem);
+                if (_confettiSystem != null) _world.RemoveSystem(_confettiSystem);
                 _firstLoad = true;
             });
         }
@@ -76,6 +78,8 @@ namespace Crusaders30XX.ECS.Systems
                 FrameProfiler.Measure("AchievementTitleDisplaySystem.Draw", _titleDisplaySystem.Draw);
             if (_backButtonDisplaySystem != null)
                 FrameProfiler.Measure("AchievementBackButtonDisplaySystem.Draw", _backButtonDisplaySystem.Draw);
+            if (_confettiSystem != null)
+                FrameProfiler.Measure("AchievementConfettiDisplaySystem.Draw", _confettiSystem.Draw);
         }
 
         private void AddAchievementSystems()
@@ -107,6 +111,10 @@ namespace Crusaders30XX.ECS.Systems
             if (_explosionSystem == null)
                 _explosionSystem = new AchievementExplosionSystem(_world.EntityManager, _gridDisplaySystem);
             _world.AddSystem(_explosionSystem);
+
+            if (_confettiSystem == null)
+                _confettiSystem = new AchievementConfettiDisplaySystem(_world.EntityManager, _gridDisplaySystem, _graphicsDevice, _spriteBatch);
+            _world.AddSystem(_confettiSystem);
         }
     }
 }

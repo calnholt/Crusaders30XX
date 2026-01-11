@@ -30,6 +30,7 @@ namespace Crusaders30XX.ECS.Systems
         private int _sourceRow = 0;
         private int _sourceCol = 0;
         private string _sourceAchievementId = string.Empty;
+        private bool _isSmall = false;
 
         // List of achievement IDs that were revealed
         private List<string> _revealedIds = new();
@@ -76,6 +77,9 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Magnitude Noise (%)", Step = 0.05f, Min = 0f, Max = 0.5f)]
         public float MagnitudeNoisePercent { get; set; } = 0f;
 
+        [DebugEditable(DisplayName = "Small Explosion Multiplier", Step = 0.05f, Min = 0.1f, Max = 1f)]
+        public float SmallExplosionMultiplier { get; set; } = 0.1f;
+
         public AchievementExplosionSystem(EntityManager em, AchievementGridDisplaySystem gridDisplaySystem) : base(em)
         {
             _gridDisplaySystem = gridDisplaySystem;
@@ -91,6 +95,7 @@ namespace Crusaders30XX.ECS.Systems
             // Reset state when entering the scene
             _phase = AnimationPhase.Idle;
             _animationTime = 0f;
+            _isSmall = false;
             _revealedIds.Clear();
             StateSingleton.PreventClicking = false;
         }
@@ -99,11 +104,12 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (_phase != AnimationPhase.Idle) return;
 
-            Console.WriteLine($"[AchievementExplosionSystem] Reveal clicked: {evt.AchievementId} at ({evt.Row}, {evt.Column})");
+            Console.WriteLine($"[AchievementExplosionSystem] Reveal clicked: {evt.AchievementId} at ({evt.Row}, {evt.Column}), IsSmall: {evt.IsSmall}");
 
             _sourceAchievementId = evt.AchievementId;
             _sourceRow = evt.Row;
             _sourceCol = evt.Column;
+            _isSmall = evt.IsSmall;
 
             // Start explosion animation
             _phase = AnimationPhase.Explosion;
@@ -196,6 +202,7 @@ namespace Crusaders30XX.ECS.Systems
             _sourceRow = row;
             _sourceCol = col;
             _sourceAchievementId = string.Empty; // No achievement ID in debug mode
+            _isSmall = false; // Reset small flag for debug explosions
 
             // Start explosion animation
             _phase = AnimationPhase.Explosion;
@@ -252,7 +259,10 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     // Pulse animation for the source cell
                     float pulseProgress = Math.Min(1f, _animationTime / SourcePulseDuration);
-                    gridItem.CurrentScale = 1f + (SourcePulseScale - 1f) * (float)Math.Sin(pulseProgress * Math.PI);
+                    float pulseScale = SourcePulseScale;
+                    if (_isSmall) pulseScale = 1f + (SourcePulseScale - 1f) * SmallExplosionMultiplier;
+
+                    gridItem.CurrentScale = 1f + (pulseScale - 1f) * (float)Math.Sin(pulseProgress * Math.PI);
                 }
             }
 
@@ -295,6 +305,8 @@ namespace Crusaders30XX.ECS.Systems
                     float distanceFactor = 1f / (float)Math.Pow(distance / 50f + 1f, ExplosionFalloff);
                     float offset = ExplosionMaxOffset * distanceFactor * effectStrength * magnitudeNoise;
 
+                    if (_isSmall) offset *= SmallExplosionMultiplier;
+
                     gridItem.ExplosionOffset = noisyDirection * offset;
                 }
                 else
@@ -303,8 +315,8 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            // Reveal adjacent achievements at explosion midpoint (skip in debug mode)
-            if (!_isDebugMode && _animationTime >= ExplosionDuration * 0.5f && _revealedIds.Count == 0)
+            // Reveal adjacent achievements at explosion midpoint (skip in debug mode or if small)
+            if (!_isDebugMode && !_isSmall && _animationTime >= ExplosionDuration * 0.5f && _revealedIds.Count == 0)
             {
                 _revealedIds = AchievementManager.RevealAdjacentAchievements(_sourceAchievementId);
 
@@ -366,8 +378,8 @@ namespace Crusaders30XX.ECS.Systems
                     }
                 }
 
-                // Move to reveal phase if there are reveals (skip in debug mode)
-                if (!_isDebugMode && _revealedIds.Count > 0)
+                // Move to reveal phase if there are reveals (skip in debug mode or if small)
+                if (!_isDebugMode && !_isSmall && _revealedIds.Count > 0)
                 {
                     _phase = AnimationPhase.Reveal;
                     _animationTime = 0f;
@@ -433,6 +445,7 @@ namespace Crusaders30XX.ECS.Systems
             _animationTime = 0f;
             _revealedIds.Clear();
             _sourceAchievementId = string.Empty;
+            _isSmall = false;
 
             // Re-enable UI interactions
             StateSingleton.PreventClicking = false;

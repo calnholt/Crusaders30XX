@@ -227,19 +227,35 @@ namespace Crusaders30XX.ECS.Systems
                     : null;
 
                 // Update interactability based on state
-                bool isInteractable = canInteract && achievement != null && achievement.State != AchievementState.Hidden;
+                // All grid cells are interactable to allow for small explosion feedback
+                bool isInteractable = canInteract;
                 ui.IsInteractable = isInteractable;
 
-                // Handle click on completed-unseen cells
-                if (ui.IsClicked && canInteract && achievement != null && achievement.State == AchievementState.CompleteUnseen)
+                // Handle click on cells
+                if (ui.IsClicked && canInteract)
                 {
-                    // Publish event to trigger explosion animation
-                    EventManager.Publish(new AchievementRevealClickedEvent
+                    if (achievement != null && achievement.State == AchievementState.CompleteUnseen)
                     {
-                        AchievementId = achievement.Id,
-                        Row = gridItem.Row,
-                        Column = gridItem.Column
-                    });
+                        // Publish event to trigger explosion animation
+                        EventManager.Publish(new AchievementRevealClickedEvent
+                        {
+                            AchievementId = achievement.Id,
+                            Row = gridItem.Row,
+                            Column = gridItem.Column,
+                            IsSmall = false
+                        });
+                    }
+                    else
+                    {
+                        // Publish small explosion for all other cells (Hidden, Visible, CompleteSeen, or Empty)
+                        EventManager.Publish(new AchievementRevealClickedEvent
+                        {
+                            AchievementId = achievement?.Id ?? string.Empty,
+                            Row = gridItem.Row,
+                            Column = gridItem.Column,
+                            IsSmall = true
+                        });
+                    }
                 }
 
                 // Handle hover
