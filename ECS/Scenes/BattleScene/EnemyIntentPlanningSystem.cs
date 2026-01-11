@@ -33,7 +33,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnStartEnemyTurn(ChangeBattlePhaseEvent evt)
 		{
-			// Reset planning guard when a new battle starts so turn 0 can plan again
+			Console.WriteLine($"[EnemyIntentPlanningSystem] OnStartEnemyTurn called with Current={evt.Current}");
+			// Reset planning guard when a new battle starts so turn 1 can plan again
 			if (evt.Current == SubPhase.StartBattle)
 			{
 				_lastPlannedTurnNumber = -1;
@@ -41,10 +42,25 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			if (evt.Current == SubPhase.EnemyStart)
 			{
-				int turnNumber = GetCurrentTurnNumber();
+				// Get the phase state to check previous phase before PhaseCoordinatorSystem updates it
+				var phaseStateEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+				var phaseState = phaseStateEntity?.GetComponent<PhaseState>();
+				var previousPhase = phaseState?.Sub ?? SubPhase.StartBattle;
+				
+				// Read current turn number (before PhaseCoordinatorSystem increments it)
+				int currentTurnNumber = GetCurrentTurnNumber();
+				
+				// If coming from a player phase, PhaseCoordinatorSystem will increment the turn
+				// So we need to plan for the incremented turn number
+				bool isNewTurn = previousPhase == SubPhase.PlayerEnd || previousPhase == SubPhase.Action || previousPhase == SubPhase.PlayerStart;
+				int turnNumber = isNewTurn ? currentTurnNumber + 1 : currentTurnNumber;
+				
+				Console.WriteLine($"[EnemyIntentPlanningSystem] EnemyStart event received, currentTurn={currentTurnNumber}, planningTurn={turnNumber}, _lastPlannedTurnNumber={_lastPlannedTurnNumber}, previousPhase={previousPhase}, isNewTurn={isNewTurn}");
+				
 				// Guard: prevent multiple plans for the same EnemyStart turn
 				if (_lastPlannedTurnNumber == turnNumber)
 				{
+					Console.WriteLine($"[EnemyIntentPlanningSystem] Skipping - already planned for turn {turnNumber}");
 					return;
 				}
 				Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
@@ -67,6 +83,13 @@ namespace Crusaders30XX.ECS.Systems
 						EntityManager.AddComponent(enemy, next);
 					}
 
+					// If this is a new turn (different from last planned), clear old attacks
+					if (_lastPlannedTurnNumber != -1 && turnNumber != _lastPlannedTurnNumber)
+					{
+						Console.WriteLine($"[EnemyIntentPlanningSystem] New turn detected ({_lastPlannedTurnNumber} -> {turnNumber}), clearing old attacks");
+						intent.Planned.Clear();
+					}
+
 					// Promote next -> current if current is empty
 					if (intent.Planned.Count == 0 && next.Planned.Count > 0)
 					{
@@ -75,16 +98,16 @@ namespace Crusaders30XX.ECS.Systems
 					}
 
 					next.Planned.Clear();
-					// If current (this turn) is empty, fill it using the prior turn's selection
+					// If current (this turn) is empty, fill it using the current turn's selection
 					if (intent.Planned.Count == 0)
 					{
 						Console.WriteLine("[EnemyIntentPlanningSystem] Planning current turn");
-						var currentIds = enemyCmp?.EnemyBase?.GetAttackIds(EntityManager, Math.Max(0, turnNumber - 1)) ?? [];
+						var currentIds = enemyCmp?.EnemyBase?.GetAttackIds(EntityManager, turnNumber) ?? [];
 						Console.WriteLine("[EnemyIntentPlanningSystem] Current turn IDs: " + string.Join(", ", currentIds));
 						AddPlanned(currentIds, intent, enemyId);
 					}
-					// Plan next-turn preview using this turn's selection
-					var nextIds = enemyCmp?.EnemyBase?.GetAttackIds(EntityManager, Math.Max(0, turnNumber)) ?? [];
+					// Plan next-turn preview using next turn's selection
+					var nextIds = enemyCmp?.EnemyBase?.GetAttackIds(EntityManager, turnNumber + 1) ?? [];
 					{
 						AddPlanned(nextIds, next, enemyId);
 					}
@@ -136,7 +159,7 @@ namespace Crusaders30XX.ECS.Systems
 		private int GetCurrentTurnNumber()
 		{
 			var infoEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
-			if (infoEntity == null) return 0;
+			if (infoEntity == null) return 1;
 			var info = infoEntity.GetComponent<PhaseState>();
 			return info.TurnNumber;
 		}

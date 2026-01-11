@@ -37,7 +37,15 @@ namespace Crusaders30XX.ECS.Systems
 		var ps = GetOrCreate();
 		if (ps == null) return;
 		if (evt.Current == SubPhase.EnemyStart) {
-			ps.TurnNumber++;
+			// Don't increment on first EnemyStart (coming from StartBattle) since TurnNumber already starts at 1
+			// Check the current phase state before updating it
+			int oldTurn = ps.TurnNumber;
+			if (ps.Sub != SubPhase.StartBattle) {
+				ps.TurnNumber++;
+				Console.WriteLine($"[PhaseCoordinatorSystem] Incremented turn number: {oldTurn} -> {ps.TurnNumber} (previous sub: {ps.Sub})");
+			} else {
+				Console.WriteLine($"[PhaseCoordinatorSystem] Not incrementing turn (coming from StartBattle, turn={ps.TurnNumber})");
+			}
 		}
 		if (evt.Current == SubPhase.EnemyStart || evt.Current == SubPhase.PreBlock || evt.Current == SubPhase.Block || evt.Current == SubPhase.EnemyAttack || evt.Current == SubPhase.EnemyEnd) {
 			ps.Main = MainPhase.EnemyTurn;

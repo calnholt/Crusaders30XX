@@ -31,7 +31,7 @@ public class Ninja : EnemyBase
     var attacks = new List<string> { "slice" };
     int random = Random.Shared.Next(0, 100);
     var isQuestCompleted = SaveCache.IsQuestCompleted("desert", "desert_13");
-    if (random >= 90 || (!isQuestCompleted && turnNumber == 0))
+    if (random >= 90 || (!isQuestCompleted && turnNumber == 1))
     {
       return ["slice", "dice", "sharpen_blade", "nightveil_guillotine"];
     }

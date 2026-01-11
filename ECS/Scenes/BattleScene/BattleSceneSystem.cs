@@ -365,7 +365,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Reset phase state at the start of every battle so we don't inherit the previous battle's sub-phase.
 			phaseState.Main = MainPhase.StartBattle;
 			phaseState.Sub = SubPhase.StartBattle;
-			phaseState.TurnNumber = 0;
+			phaseState.TurnNumber = 1;
 			EventManager.Publish(new FullyHealEvent { Target = player });
 			foreach (var e in EntityManager.GetEntitiesWithComponent<CardTooltip>()) {
 				var cardData = e.GetComponent<CardData>();

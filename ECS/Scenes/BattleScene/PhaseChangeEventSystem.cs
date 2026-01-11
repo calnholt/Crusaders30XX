@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using System.Collections.Generic;
+using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -68,15 +69,24 @@ namespace Crusaders30XX.ECS.Systems
         private void CheckAndTriggerNextAttack()
         {
             var attackIntentEntity = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
-            if (attackIntentEntity == null) return;
+            if (attackIntentEntity == null)
+            {
+                return;
+            }
 
             var intent = attackIntentEntity.GetComponent<AttackIntent>();
-            if (intent == null || intent.Planned.Count == 0) return;
+            if (intent == null || intent.Planned.Count == 0)
+            {
+                return;
+            }
 
             var currentContextId = intent.Planned[0].ContextId;
 
             var phaseState = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
-            if (phaseState == null) return;
+            if (phaseState == null)
+            {
+                return;
+            }
 
             // Detect new turn
             if (phaseState.TurnNumber != _lastTurn)
@@ -93,15 +103,24 @@ namespace Crusaders30XX.ECS.Systems
                 return; // Don't trigger - wait for BattlePhaseAnimationCompleteEvent
             }
             var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
-            if (enemy == null) return;
+            if (enemy == null)
+            {
+                return;
+            }
             var enemyCmp = enemy.GetComponent<Enemy>();
-            if (enemyCmp == null) return;
+            if (enemyCmp == null)
+            {
+                return;
+            }
             if (currentContextId != _lastSeenContextId && phaseState.Sub == SubPhase.Block && enemyCmp.CurrentHealth > 0)
             {
                 if (!_waitingForAnimation)
                 {
                     EventManager.Publish(new TriggerEnemyAttackDisplayEvent { ContextId = currentContextId });
                     _lastSeenContextId = currentContextId;
+                }
+                else
+                {
                 }
             }
         }

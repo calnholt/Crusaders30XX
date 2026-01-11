@@ -30,7 +30,7 @@ namespace Crusaders30XX.ECS.Systems
         public int ButtonHeight { get; set; } = 64;
 
         [DebugEditable(DisplayName = "Button Offset Y", Step = 5, Min = -2000, Max = 2000)]
-        public int ButtonOffsetY { get; set; } = 440;
+        public int ButtonOffsetY { get; set; } = 550;
 
         [DebugEditable(DisplayName = "Button Z", Step = 100, Min = 0, Max = 20000)]
         public int ButtonZ { get; set; } = 4000;

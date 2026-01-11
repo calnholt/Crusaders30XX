@@ -797,17 +797,17 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
         public MainPhase Main { get; set; } = MainPhase.StartBattle;
         public SubPhase Sub { get; set; } = SubPhase.StartBattle;
-        public int TurnNumber { get; set; } = 0; // enemy turn counter
+        public int TurnNumber { get; set; } = 1; // enemy turn counter
     }
 
     /// <summary>
     /// Tracks battle metadata such as the current enemy turn number.
-    /// TurnNumber starts at 0 and increments when transitioning to Block for a new enemy turn.
+    /// TurnNumber starts at 1 and increments when transitioning to Block for a new enemy turn.
     /// </summary>
     public class BattleInfo : IComponent
     {
         public Entity Owner { get; set; }
-        public int TurnNumber { get; set; } = 0;
+        public int TurnNumber { get; set; } = 1;
     }
 
     /// <summary>

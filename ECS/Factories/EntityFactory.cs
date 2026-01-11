@@ -195,7 +195,7 @@ namespace Crusaders30XX.ECS.Factories
             var entity = world.CreateEntity("GameState");
             
 			var phaseState = world.CreateEntity("PhaseState");
-			var ps = new PhaseState { Main = MainPhase.StartBattle, Sub = SubPhase.StartBattle, TurnNumber = 0 };
+			var ps = new PhaseState { Main = MainPhase.StartBattle, Sub = SubPhase.StartBattle, TurnNumber = 1 };
 			world.AddComponent(phaseState, ps);
 
 
@@ -205,11 +205,11 @@ namespace Crusaders30XX.ECS.Factories
 
             // Ensure BattleInfo singleton exists
             var biEntity = world.EntityManager.GetEntitiesWithComponent<BattleInfo>().FirstOrDefault();
-            if (biEntity == null)
-            {
-                biEntity = world.CreateEntity("BattleInfo");
-                world.AddComponent(biEntity, new BattleInfo { TurnNumber = 0 });
-            }
+			if (biEntity == null)
+			{
+				biEntity = world.CreateEntity("BattleInfo");
+				world.AddComponent(biEntity, new BattleInfo { TurnNumber = 1 });
+			}
             return entity;
         }
 
