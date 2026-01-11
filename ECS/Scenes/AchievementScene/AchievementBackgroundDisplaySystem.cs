@@ -24,17 +24,17 @@ namespace Crusaders30XX.ECS.Systems
 
         // Noise parameters
         [DebugEditable(DisplayName = "Noise Scale", Step = 0.5f, Min = 0.5f, Max = 20f)]
-        public float NoiseScale { get; set; } = 20.0f;
+        public float NoiseScale { get; set; } = 3.0f;
 
         [DebugEditable(DisplayName = "Time Speed", Step = 0.05f, Min = 0f, Max = 2f)]
-        public float TimeSpeed { get; set; } = 0.6f;
+        public float TimeSpeed { get; set; } = 0.05f;
 
         // Turbulence parameters
         [DebugEditable(DisplayName = "Turb Initial Inc", Step = 0.05f, Min = 0f, Max = 2f)]
-        public float TurbInitialInc { get; set; } = 0.75f;
+        public float TurbInitialInc { get; set; } = 1.1f;
 
         [DebugEditable(DisplayName = "Turb Initial Div", Step = 0.05f, Min = 0.5f, Max = 5f)]
-        public float TurbInitialDiv { get; set; } = 1.75f;
+        public float TurbInitialDiv { get; set; } = 1.4f;
 
         [DebugEditable(DisplayName = "Turb Octave Multiplier", Step = 0.1f, Min = 1f, Max = 5f)]
         public float TurbOctaveMultiplier { get; set; } = 2.83f;
@@ -44,7 +44,7 @@ namespace Crusaders30XX.ECS.Systems
 
         // UV manipulation
         [DebugEditable(DisplayName = "UV Distort Factor", Step = 0.05f, Min = 0f, Max = 1f)]
-        public float UVDistortFactor { get; set; } = 1.0f;
+        public float UVDistortFactor { get; set; } = 0.0f;
 
         [DebugEditable(DisplayName = "Rotation Speed", Step = 0.05f, Min = 0f, Max = 2f)]
         public float RotationSpeed { get; set; } = 0.05f;
@@ -54,7 +54,7 @@ namespace Crusaders30XX.ECS.Systems
 
         // Color parameters
         [DebugEditable(DisplayName = "Brightness", Step = 0.1f, Min = 0f, Max = 5f)]
-        public float ColorBrightness { get; set; } = 0.7f;
+        public float ColorBrightness { get; set; } = 0.8f;
 
         [DebugEditable(DisplayName = "Tint R", Step = 0.05f, Min = 0f, Max = 2f)]
         public float TintR { get; set; } = 2.0f;
