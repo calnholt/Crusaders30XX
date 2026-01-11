@@ -177,14 +177,11 @@ namespace Crusaders30XX.ECS.Systems
             else
             {
                 var tr = endBtn.GetComponent<Transform>();
-                if (ui != null)
-                {
-					ui.Bounds = btnRect; // will be overwritten below after computing drawRect from Transform.Position
-                }
                 if (tr != null)
                 {
                     tr.ZOrder = ButtonZ;
 					tr.BasePosition = new Vector2(btnRect.X, btnRect.Y);
+					tr.Position = new Vector2(btnRect.X, btnRect.Y);
                 }
             }
             ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();

@@ -58,7 +58,7 @@ namespace Crusaders30XX.ECS.Systems
         // Colors
         private readonly Color _backgroundColor = new Color(30, 30, 30);
         private readonly Color _fillColor = new Color(180, 50, 50); // Brick red
-        private readonly Color _textColor = Color.White;
+        private readonly Color _textColor = Color.Black;
 
         public AchievementMeterDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)
         {
@@ -215,7 +215,7 @@ namespace Crusaders30XX.ECS.Systems
             var totalSize = _font.MeasureString(totalText) * (LabelScale * 0.85f);
             float totalX = BarX + (BarWidth - totalSize.X) / 2f;
             float totalY = BarY + BarHeight + 6;
-            _spriteBatch.DrawString(_font, totalText, new Vector2(totalX, totalY), new Color(180, 180, 180), 0f, Vector2.Zero, LabelScale * 0.85f, SpriteEffects.None, 0f);
+            _spriteBatch.DrawString(_font, totalText, new Vector2(totalX, totalY), _textColor, 0f, Vector2.Zero, LabelScale * 0.85f, SpriteEffects.None, 0f);
         }
     }
 }

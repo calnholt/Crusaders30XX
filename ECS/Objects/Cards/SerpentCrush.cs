@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "As an additional cost, lose {4} courage. Gain {1} action point and draw {1} card.";
             IsFreeAction = true;
             Animation = "Attack";
-            Damage = 7;
+            Damage = 12;
             Type = CardType.Attack;
             Block = 3;
 
