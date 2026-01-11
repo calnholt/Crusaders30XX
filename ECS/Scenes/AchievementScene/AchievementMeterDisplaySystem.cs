@@ -100,9 +100,13 @@ namespace Crusaders30XX.ECS.Systems
         private float CalculateProgress()
         {
             int totalPoints = 0;
-            foreach (var achievement in AchievementManager.GetCompleted())
+            // Only count points from achievements that have been clicked/seen
+            foreach (var achievement in AchievementManager.GetAll())
             {
-                totalPoints += achievement.Points;
+                if (achievement.State == AchievementState.CompleteSeen)
+                {
+                    totalPoints += achievement.Points;
+                }
             }
 
             // Progress within current level (0 to 1)
@@ -113,9 +117,13 @@ namespace Crusaders30XX.ECS.Systems
         private int GetTotalPoints()
         {
             int total = 0;
-            foreach (var achievement in AchievementManager.GetCompleted())
+            // Only count points from achievements that have been clicked/seen
+            foreach (var achievement in AchievementManager.GetAll())
             {
-                total += achievement.Points;
+                if (achievement.State == AchievementState.CompleteSeen)
+                {
+                    total += achievement.Points;
+                }
             }
             return total;
         }

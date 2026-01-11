@@ -59,16 +59,16 @@ namespace Crusaders30XX.ECS.Systems
         public float ExclamationPulseSpeed { get; set; } = 3f;
 
         [DebugEditable(DisplayName = "Exclamation Glow Intensity", Step = 0.1f, Min = 0f, Max = 1f)]
-        public float ExclamationGlowIntensity { get; set; } = 0.5f;
+        public float ExclamationGlowIntensity { get; set; } = 0.0f;
 
-        [DebugEditable(DisplayName = "Exclamation Scale", Step = 0.1f, Min = 0.5f, Max = 3f)]
-        public float ExclamationScale { get; set; } = 1.2f;
+        [DebugEditable(DisplayName = "Exclamation Scale", Step = 0.01f, Min = 0.01f, Max = 3f)]
+        public float ExclamationScale { get; set; } = 0.28f;
 
         // Colors
         private readonly Color _completedColor = Color.White;
         private readonly Color _visibleColor = new Color(139, 0, 0); // Dark Red
         private readonly Color _hiddenColor = Color.Black;
-        private readonly Color _exclamationColor = Color.Gold;
+        private readonly Color _exclamationColor = Color.DarkRed;
         private readonly Color _exclamationGlowColor = new Color(255, 215, 0, 128); // Semi-transparent gold
 
         public AchievementGridDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)

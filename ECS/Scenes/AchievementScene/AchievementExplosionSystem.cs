@@ -34,6 +34,10 @@ namespace Crusaders30XX.ECS.Systems
         // List of achievement IDs that were revealed
         private List<string> _revealedIds = new();
 
+        // Random noise for explosion effect
+        private Random _explosionRandom;
+        private Dictionary<(int row, int col), (float angleNoise, float magnitudeNoise)> _cellNoise = new();
+
         // Debug mode - click any cell to test explosion visuals without game logic
         private bool _isDebugMode = false;
 
@@ -48,8 +52,8 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Explosion Duration", Step = 0.05f, Min = 0.1f, Max = 1f)]
         public float ExplosionDuration { get; set; } = 0.45f;
 
-        [DebugEditable(DisplayName = "Explosion Max Offset", Step = 5f, Min = 10f, Max = 100f)]
-        public float ExplosionMaxOffset { get; set; } = 100f;
+        [DebugEditable(DisplayName = "Explosion Max Offset", Step = 5f, Min = 10f, Max = 1000f)]
+        public float ExplosionMaxOffset { get; set; } = 90f;
 
         [DebugEditable(DisplayName = "Explosion Falloff", Step = 0.1f, Min = 0.5f, Max = 5f)]
         public float ExplosionFalloff { get; set; } = 0.5f;
@@ -65,6 +69,12 @@ namespace Crusaders30XX.ECS.Systems
 
         [DebugEditable(DisplayName = "Source Pulse Scale", Step = 0.1f, Min = 1f, Max = 2f)]
         public float SourcePulseScale { get; set; } = 2f;
+
+        [DebugEditable(DisplayName = "Direction Noise (Degrees)", Step = 5f, Min = 0f, Max = 90f)]
+        public float DirectionNoiseDegrees { get; set; } = 0f;
+
+        [DebugEditable(DisplayName = "Magnitude Noise (%)", Step = 0.05f, Min = 0f, Max = 0.5f)]
+        public float MagnitudeNoisePercent { get; set; } = 0f;
 
         public AchievementExplosionSystem(EntityManager em, AchievementGridDisplaySystem gridDisplaySystem) : base(em)
         {
@@ -101,6 +111,9 @@ namespace Crusaders30XX.ECS.Systems
 
             // Block UI interactions
             StateSingleton.PreventClicking = true;
+
+            // Generate random noise for this explosion
+            GenerateExplosionNoise();
 
             // Mark all grid items as participating in explosion
             foreach (var ent in _gridDisplaySystem.GetAllGridEntities())
@@ -191,6 +204,9 @@ namespace Crusaders30XX.ECS.Systems
             // Block UI interactions
             StateSingleton.PreventClicking = true;
 
+            // Generate random noise for this explosion
+            GenerateExplosionNoise();
+
             // Mark all grid items as participating in explosion
             foreach (var ent in _gridDisplaySystem.GetAllGridEntities())
             {
@@ -263,11 +279,23 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     direction.Normalize();
 
+                    // Apply noise to direction and magnitude
+                    float angleNoise = 0f;
+                    float magnitudeNoise = 1f;
+                    if (_cellNoise.TryGetValue((gridItem.Row, gridItem.Column), out var noise))
+                    {
+                        angleNoise = noise.angleNoise;
+                        magnitudeNoise = noise.magnitudeNoise;
+                    }
+
+                    // Rotate direction by noise angle
+                    Vector2 noisyDirection = RotateVector(direction, angleNoise);
+
                     // Falloff: closer cells move more
                     float distanceFactor = 1f / (float)Math.Pow(distance / 50f + 1f, ExplosionFalloff);
-                    float offset = ExplosionMaxOffset * distanceFactor * effectStrength;
+                    float offset = ExplosionMaxOffset * distanceFactor * effectStrength * magnitudeNoise;
 
-                    gridItem.ExplosionOffset = direction * offset;
+                    gridItem.ExplosionOffset = noisyDirection * offset;
                 }
                 else
                 {
@@ -419,6 +447,33 @@ namespace Crusaders30XX.ECS.Systems
         {
             var rect = _gridDisplaySystem.GetCellRect(row, col);
             return new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
+        }
+
+        private void GenerateExplosionNoise()
+        {
+            _explosionRandom = new Random();
+            _cellNoise.Clear();
+
+            foreach (var ent in _gridDisplaySystem.GetAllGridEntities())
+            {
+                var gridItem = ent.GetComponent<AchievementGridItem>();
+                if (gridItem == null) continue;
+
+                // Generate random angle noise (in radians)
+                float angleNoise = ((float)_explosionRandom.NextDouble() * 2f - 1f) * DirectionNoiseDegrees * MathHelper.Pi / 180f;
+
+                // Generate random magnitude noise (as a multiplier)
+                float magnitudeNoise = 1f + ((float)_explosionRandom.NextDouble() * 2f - 1f) * MagnitudeNoisePercent;
+
+                _cellNoise[(gridItem.Row, gridItem.Column)] = (angleNoise, magnitudeNoise);
+            }
+        }
+
+        private Vector2 RotateVector(Vector2 v, float radians)
+        {
+            float cos = (float)Math.Cos(radians);
+            float sin = (float)Math.Sin(radians);
+            return new Vector2(v.X * cos - v.Y * sin, v.X * sin + v.Y * cos);
         }
 
         // Easing functions

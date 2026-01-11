@@ -20,7 +20,7 @@ namespace Crusaders30XX.ECS.Objects.Achievements
             Description = "Play 50 cards";
             Row = 2;
             Column = 0;
-            StartsVisible = true; // Starter achievement
+            StartsVisible = false; // Starter achievement
             TargetValue = RequiredPlays;
             Points = 15;
         }

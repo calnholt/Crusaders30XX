@@ -20,7 +20,7 @@ namespace Crusaders30XX.ECS.Objects.Achievements
             Description = "Defeat 10 enemies";
             Row = 0;
             Column = 0;
-            StartsVisible = true; // This is a starter achievement
+            StartsVisible = false; // This is a starter achievement
             TargetValue = RequiredKills;
             Points = 10;
         }
