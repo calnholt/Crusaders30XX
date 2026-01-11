@@ -1,4 +1,5 @@
 using Crusaders30XX.ECS.Core;
+using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Components
 {
@@ -48,6 +49,26 @@ namespace Crusaders30XX.ECS.Components
         /// Whether this item is currently animating a reveal.
         /// </summary>
         public bool IsAnimatingReveal { get; set; } = false;
+
+        /// <summary>
+        /// Current offset from base position during explosion animation.
+        /// </summary>
+        public Vector2 ExplosionOffset { get; set; } = Vector2.Zero;
+
+        /// <summary>
+        /// Whether this item is participating in an explosion animation.
+        /// </summary>
+        public bool IsAnimatingExplosion { get; set; } = false;
+
+        /// <summary>
+        /// Progress (0-1) for reveal pulse animation on newly revealed cells.
+        /// </summary>
+        public float RevealPulseProgress { get; set; } = 0f;
+
+        /// <summary>
+        /// Whether this cell was just revealed and should show pulse animation.
+        /// </summary>
+        public bool IsNewlyRevealed { get; set; } = false;
     }
 
     /// <summary>

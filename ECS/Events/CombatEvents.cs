@@ -120,4 +120,9 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public Entity EquipmentEntity;
 	}
+
+	public class EnemyKilledEvent
+	{
+		public Entity Enemy;
+	}
 }

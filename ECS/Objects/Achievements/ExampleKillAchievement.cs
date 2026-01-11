@@ -27,26 +27,17 @@ namespace Crusaders30XX.ECS.Objects.Achievements
 
         public override void RegisterListeners()
         {
-            // Listen for HP modifications to detect enemy deaths
-            EventManager.Subscribe<ModifyHpEvent>(OnModifyHp);
+            EventManager.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
         }
 
         public override void UnregisterListeners()
         {
-            EventManager.Unsubscribe<ModifyHpEvent>(OnModifyHp);
+            EventManager.Unsubscribe<EnemyKilledEvent>(OnEnemyKilled);
         }
 
-        private void OnModifyHp(ModifyHpEvent evt)
+        private void OnEnemyKilled(EnemyKilledEvent evt)
         {
             // Only care about damage to enemies
-            if (evt.Target == null || !evt.Target.HasComponent<Enemy>()) return;
-            if (evt.Delta >= 0) return; // Not damage
-
-            // Check if enemy died
-            var hp = evt.Target.GetComponent<HP>();
-            if (hp == null || hp.Current > 0) return;
-
-            // Enemy died! Increment progress
             IncrementProgress();
         }
 
@@ -81,29 +72,20 @@ namespace Crusaders30XX.ECS.Objects.Achievements
 
         public override void RegisterListeners()
         {
-            EventManager.Subscribe<ModifyHpEvent>(OnModifyHp);
+            EventManager.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
         }
 
         public override void UnregisterListeners()
         {
-            EventManager.Unsubscribe<ModifyHpEvent>(OnModifyHp);
+            EventManager.Unsubscribe<EnemyKilledEvent>(OnEnemyKilled);
         }
 
-        private void OnModifyHp(ModifyHpEvent evt)
+        private void OnEnemyKilled(EnemyKilledEvent evt)
         {
             // Only care about damage to enemies
-            if (evt.Target == null || !evt.Target.HasComponent<Enemy>()) return;
-            if (evt.Delta >= 0) return; // Not damage
-
-            // Check if it's a skeleton
-            var enemy = evt.Target.GetComponent<Enemy>();
-            if (enemy == null || enemy.Id != "skeleton") return;
-
-            // Check if enemy died
-            var hp = evt.Target.GetComponent<HP>();
-            if (hp == null || hp.Current > 0) return;
-
-            // Skeleton died! Increment progress
+            if (evt.Enemy == null || !evt.Enemy.HasComponent<Enemy>()) return;
+            var enemyBase = evt.Enemy.GetComponent<Enemy>().EnemyBase;
+            if (enemyBase == null || enemyBase.Id != "skeleton") return;
             IncrementProgress();
         }
 

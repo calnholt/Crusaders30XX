@@ -142,6 +142,8 @@ namespace Crusaders30XX.ECS.Data.Achievements
         /// <summary>
         /// Called by AchievementBase when an achievement is completed.
         /// Saves progress and publishes completion event.
+        /// NOTE: Does NOT auto-reveal adjacent achievements. Call RevealAdjacentAchievements manually
+        /// after the user clicks to reveal (handled by AchievementExplosionSystem).
         /// </summary>
         public static void NotifyCompleted(AchievementBase achievement)
         {
@@ -151,9 +153,6 @@ namespace Crusaders30XX.ECS.Data.Achievements
 
             // Save progress
             SaveProgress();
-
-            // Reveal adjacent achievements (grid discovery)
-            RevealAdjacentAchievements(achievement);
 
             // Publish completion event for UI
             EventManager.Publish(new AchievementCompletedEvent
@@ -165,10 +164,17 @@ namespace Crusaders30XX.ECS.Data.Achievements
         }
 
         /// <summary>
-        /// Reveal achievements adjacent to the completed one (up, down, left, right).
+        /// Reveal achievements adjacent to the specified one (up, down, left, right).
+        /// Called by AchievementExplosionSystem after user clicks a completed achievement.
         /// </summary>
-        private static void RevealAdjacentAchievements(AchievementBase completed)
+        /// <param name="achievementId">The ID of the completed achievement to reveal around.</param>
+        /// <returns>List of achievement IDs that were revealed.</returns>
+        public static List<string> RevealAdjacentAchievements(string achievementId)
         {
+            var revealed = new List<string>();
+            var completed = GetAchievement(achievementId);
+            if (completed == null) return revealed;
+
             int row = completed.Row;
             int col = completed.Column;
 
@@ -186,9 +192,12 @@ namespace Crusaders30XX.ECS.Data.Achievements
                 if (isAdjacent)
                 {
                     achievement.Reveal();
+                    revealed.Add(achievement.Id);
                     Console.WriteLine($"[AchievementManager] Revealed adjacent: {achievement.Id}");
                 }
             }
+
+            return revealed;
         }
 
         #endregion

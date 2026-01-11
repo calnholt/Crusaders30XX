@@ -48,4 +48,26 @@ namespace Crusaders30XX.ECS.Events
     /// Published when all completion and reveal animations are done.
     /// </summary>
     public class AchievementAnimationsComplete { }
+
+    /// <summary>
+    /// Published when a completed-unseen achievement grid cell is clicked.
+    /// Triggers the explosion and reveal animation sequence.
+    /// </summary>
+    public class AchievementRevealClickedEvent
+    {
+        /// <summary>
+        /// The achievement ID that was clicked.
+        /// </summary>
+        public string AchievementId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Grid row of the clicked achievement.
+        /// </summary>
+        public int Row { get; set; } = 0;
+
+        /// <summary>
+        /// Grid column of the clicked achievement.
+        /// </summary>
+        public int Column { get; set; } = 0;
+    }
 }

@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Achievements;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
@@ -20,10 +21,12 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private Texture2D _roundedRectCache;
+		private Texture2D _badgeCircleCache;
 		private Texture2D _pixel;
+		private float _pulseTimer;
 
 		[DebugEditable(DisplayName = "Button Width", Step = 2, Min = 40, Max = 800)]
-		public int ButtonWidth { get; set; } = 200;
+		public int ButtonWidth { get; set; } = 250;
 
 		[DebugEditable(DisplayName = "Button Height", Step = 2, Min = 24, Max = 300)]
 		public int ButtonHeight { get; set; } = 56;
@@ -39,6 +42,24 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 64)]
 		public int CornerRadius { get; set; } = 12;
+
+		[DebugEditable(DisplayName = "Badge Size", Step = 2, Min = 8, Max = 128)]
+		public int BadgeSize { get; set; } = 40;
+
+		[DebugEditable(DisplayName = "Badge Excl Scale", Step = 0.1f, Min = 0.1f, Max = 10.0f)]
+		public float BadgeExclamationScale { get; set; } = 1.1f;
+
+		[DebugEditable(DisplayName = "Badge Pulse Speed", Step = 0.1f, Min = 0.0f, Max = 10.0f)]
+		public float BadgePulseSpeed { get; set; } = 2.0f;
+
+		[DebugEditable(DisplayName = "Badge Pulse Intensity", Step = 0.01f, Min = 0.0f, Max = 1.0f)]
+		public float BadgePulseIntensity { get; set; } = 0.1f;
+
+		[DebugEditable(DisplayName = "Badge Offset X", Step = 1, Min = -50, Max = 50)]
+		public int BadgeOffsetX { get; set; } = 2;
+
+		[DebugEditable(DisplayName = "Badge Offset Y", Step = 1, Min = -50, Max = 50)]
+		public int BadgeOffsetY { get; set; } = -50;
 
 		public AchievementButtonDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch) : base(entityManager)
 		{
@@ -57,6 +78,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var scene = entity.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Location) return;
+
+			_pulseTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
 			// Block interactions during scene transition
 			if (StateSingleton.IsActive)
@@ -120,6 +143,35 @@ namespace Crusaders30XX.ECS.Systems
 			var textRect = new Rectangle(rect.X + ButtonPadding, rect.Y + ButtonPadding, rect.Width - ButtonPadding * 2, rect.Height - ButtonPadding * 2);
 			var pos = new Vector2(textRect.X + (textRect.Width - size.X) / 2f, textRect.Y + (textRect.Height - size.Y) / 2f);
 			_spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+
+			// Draw notification badge if there are unseen achievements
+			if (AchievementManager.GetUnseenCount() > 0)
+			{
+				int badgeSize = System.Math.Max(8, BadgeSize);
+				int radius = badgeSize / 2;
+				if (_badgeCircleCache == null || _badgeCircleCache.Width != badgeSize)
+				{
+					_badgeCircleCache = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, badgeSize, badgeSize, radius);
+				}
+
+				// Pulse animation
+				float pulse = (float)System.Math.Sin(_pulseTimer * BadgePulseSpeed) * BadgePulseIntensity + 1.0f;
+
+				// Position at bottom-right of the button
+				Vector2 badgeCenter = new Vector2(rect.Right + BadgeOffsetX, rect.Bottom + BadgeOffsetY);
+				Vector2 origin = new Vector2(radius);
+
+				// Draw dark red circle
+				_spriteBatch.Draw(_badgeCircleCache, badgeCenter, null, Color.DarkRed, 0f, origin, pulse, SpriteEffects.None, 0f);
+
+				// Draw white '!'
+				string exclamation = "!";
+				float exclamationScale = TextScale * BadgeExclamationScale;
+				Vector2 exclSize = _font.MeasureString(exclamation);
+				Vector2 exclOrigin = exclSize / 2f;
+
+				_spriteBatch.DrawString(_font, exclamation, badgeCenter, Color.White, 0f, exclOrigin, exclamationScale * pulse, SpriteEffects.None, 0f);
+			}
 		}
 
 		private void EnsureButtonEntity(int viewportW, int viewportH)

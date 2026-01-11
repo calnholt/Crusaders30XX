@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Achievements;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -14,6 +15,7 @@ namespace Crusaders30XX.ECS.Systems
 {
     /// <summary>
     /// Displays the achievement grid (15x10) with fog-of-war discovery.
+    /// Click on completed-unseen cells to reveal adjacent achievements.
     /// </summary>
     [DebugTab("Achievement Grid")]
     public class AchievementGridDisplaySystem : Core.System
@@ -24,13 +26,8 @@ namespace Crusaders30XX.ECS.Systems
         private readonly Dictionary<string, Entity> _gridEntities = new();
         private bool _gridCreated = false;
 
-        // Animation state
-        private enum AnimationPhase { Idle, PlayingCompletions, PlayingReveals, Complete }
-        private AnimationPhase _phase = AnimationPhase.Idle;
-        private float _animationTime = 0f;
-        private int _animationIndex = 0;
-        private List<AchievementBase> _completionQueue = new();
-        private List<AchievementBase> _revealQueue = new();
+        // Time accumulator for pulsing animations
+        private float _time = 0f;
 
         // Grid configuration
         public const int GRID_COLUMNS = 15;
@@ -57,19 +54,22 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Scale Lerp Speed", Step = 0.5f, Min = 1f, Max = 30f)]
         public float ScaleLerpSpeed { get; set; } = 12f;
 
-        [DebugEditable(DisplayName = "Completion Anim Duration", Step = 0.1f, Min = 0.1f, Max = 2f)]
-        public float CompletionAnimDuration { get; set; } = 0.5f;
+        // Exclamation mark configuration
+        [DebugEditable(DisplayName = "Exclamation Pulse Speed", Step = 0.5f, Min = 1f, Max = 10f)]
+        public float ExclamationPulseSpeed { get; set; } = 3f;
 
-        [DebugEditable(DisplayName = "Reveal Anim Duration", Step = 0.1f, Min = 0.1f, Max = 2f)]
-        public float RevealAnimDuration { get; set; } = 0.3f;
+        [DebugEditable(DisplayName = "Exclamation Glow Intensity", Step = 0.1f, Min = 0f, Max = 1f)]
+        public float ExclamationGlowIntensity { get; set; } = 0.5f;
 
-        [DebugEditable(DisplayName = "Animation Delay", Step = 0.05f, Min = 0f, Max = 1f)]
-        public float AnimationDelay { get; set; } = 0.15f;
+        [DebugEditable(DisplayName = "Exclamation Scale", Step = 0.1f, Min = 0.5f, Max = 3f)]
+        public float ExclamationScale { get; set; } = 1.2f;
 
         // Colors
         private readonly Color _completedColor = Color.White;
         private readonly Color _visibleColor = new Color(139, 0, 0); // Dark Red
         private readonly Color _hiddenColor = Color.Black;
+        private readonly Color _exclamationColor = Color.Gold;
+        private readonly Color _exclamationGlowColor = new Color(255, 215, 0, 128); // Semi-transparent gold
 
         public AchievementGridDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)
         {
@@ -83,21 +83,8 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (evt.Scene != SceneId.Achievement) return;
 
-            // Reset animation state
-            _phase = AnimationPhase.Idle;
-            _animationTime = 0f;
-            _animationIndex = 0;
-            _completionQueue.Clear();
-            _revealQueue.Clear();
             _gridCreated = false;
-
-            // Queue up unseen completions for animation
-            var unseen = AchievementManager.GetCompleteUnseen().ToList();
-            if (unseen.Count > 0)
-            {
-                _completionQueue = unseen;
-                _phase = AnimationPhase.PlayingCompletions;
-            }
+            _time = 0f;
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -111,6 +98,7 @@ namespace Crusaders30XX.ECS.Systems
             if (scene == null || scene.Current != SceneId.Achievement) return;
 
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            _time += dt;
 
             // Create grid entities if needed
             if (!_gridCreated)
@@ -119,11 +107,8 @@ namespace Crusaders30XX.ECS.Systems
                 _gridCreated = true;
             }
 
-            // Update animations
-            UpdateAnimations(dt);
-
-            // Update hover states and scaling
-            UpdateHoverStates(dt);
+            // Update hover states, scaling, and handle clicks
+            UpdateHoverStatesAndClicks(dt);
         }
 
         private void CreateGridEntities()
@@ -161,13 +146,13 @@ namespace Crusaders30XX.ECS.Systems
                     var parallax = ParallaxLayer.GetUIParallaxLayer();
                     if (achievement != null && achievement.State == AchievementState.Visible)
                     {
-                        parallax.MultiplierX = 0.02f; 
-                        parallax.MultiplierY = 0.02f; 
+                        parallax.MultiplierX = 0.02f;
+                        parallax.MultiplierY = 0.02f;
                     }
                     if (achievement != null && (achievement.State == AchievementState.CompleteSeen || achievement.State == AchievementState.CompleteUnseen))
                     {
-                        parallax.MultiplierX = 0.015f; 
-                        parallax.MultiplierY = 0.015f; 
+                        parallax.MultiplierX = 0.015f;
+                        parallax.MultiplierY = 0.015f;
                     }
                     EntityManager.AddComponent(ent, parallax);
                     EntityManager.AddComponent(ent, new AchievementGridItem
@@ -177,7 +162,11 @@ namespace Crusaders30XX.ECS.Systems
                         Column = col,
                         CurrentScale = 1f,
                         TargetScale = 1f,
-                        Alpha = 1f
+                        Alpha = 1f,
+                        ExplosionOffset = Vector2.Zero,
+                        IsAnimatingExplosion = false,
+                        RevealPulseProgress = 0f,
+                        IsNewlyRevealed = false
                     });
                     EntityManager.AddComponent(ent, new OwnedByScene { Scene = SceneId.Achievement });
 
@@ -186,147 +175,18 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private Rectangle GetCellRect(int row, int col)
+        public Rectangle GetCellRect(int row, int col)
         {
             int x = GridOffsetX + col * (CellSize + CellGap);
             int y = GridOffsetY + row * (CellSize + CellGap);
             return new Rectangle(x, y, CellSize, CellSize);
         }
 
-        private void UpdateAnimations(float dt)
+        private void UpdateHoverStatesAndClicks(float dt)
         {
-            switch (_phase)
-            {
-                case AnimationPhase.PlayingCompletions:
-                    UpdateCompletionAnimations(dt);
-                    break;
-                case AnimationPhase.PlayingReveals:
-                    UpdateRevealAnimations(dt);
-                    break;
-            }
-        }
+            // Don't process interactions if clicking is prevented (animation in progress)
+            bool canInteract = !StateSingleton.PreventClicking;
 
-        private void UpdateCompletionAnimations(float dt)
-        {
-            if (_animationIndex >= _completionQueue.Count)
-            {
-                // Done with completions, check for reveals
-                CollectRevealQueue();
-                if (_revealQueue.Count > 0)
-                {
-                    _phase = AnimationPhase.PlayingReveals;
-                    _animationIndex = 0;
-                    _animationTime = 0f;
-                }
-                else
-                {
-                    _phase = AnimationPhase.Complete;
-                }
-                return;
-            }
-
-            _animationTime += dt;
-
-            // Current achievement being animated
-            var achievement = _completionQueue[_animationIndex];
-            var gridItem = FindGridItem(achievement.Row, achievement.Column);
-
-            if (gridItem != null)
-            {
-                // Pulse animation: scale up then back down
-                float progress = _animationTime / CompletionAnimDuration;
-                if (progress < 0.5f)
-                {
-                    // Scale up
-                    gridItem.CurrentScale = 1f + (HoverScale - 1f) * 2f * progress;
-                }
-                else
-                {
-                    // Scale down
-                    gridItem.CurrentScale = HoverScale - (HoverScale - 1f) * 2f * (progress - 0.5f);
-                }
-                gridItem.IsAnimatingCompletion = true;
-            }
-
-            // Move to next after duration + delay
-            if (_animationTime >= CompletionAnimDuration + AnimationDelay)
-            {
-                if (gridItem != null)
-                {
-                    gridItem.CurrentScale = 1f;
-                    gridItem.IsAnimatingCompletion = false;
-                }
-
-                // Mark as seen
-                achievement.MarkAsSeen();
-
-                _animationIndex++;
-                _animationTime = 0f;
-            }
-        }
-
-        private void CollectRevealQueue()
-        {
-            _revealQueue.Clear();
-            // Find achievements that were just revealed (adjacent to completed ones)
-            // They should be in Visible state but we check for any that need reveal animation
-            foreach (var achievement in AchievementManager.GetAll())
-            {
-                if (achievement.State == AchievementState.Visible)
-                {
-                    var gridItem = FindGridItem(achievement.Row, achievement.Column);
-                    if (gridItem != null && gridItem.Alpha < 1f)
-                    {
-                        _revealQueue.Add(achievement);
-                    }
-                }
-            }
-        }
-
-        private void UpdateRevealAnimations(float dt)
-        {
-            if (_animationIndex >= _revealQueue.Count)
-            {
-                _phase = AnimationPhase.Complete;
-                return;
-            }
-
-            _animationTime += dt;
-
-            var achievement = _revealQueue[_animationIndex];
-            var gridItem = FindGridItem(achievement.Row, achievement.Column);
-
-            if (gridItem != null)
-            {
-                float progress = Math.Min(1f, _animationTime / RevealAnimDuration);
-                gridItem.Alpha = progress;
-                gridItem.IsAnimatingReveal = progress < 1f;
-            }
-
-            if (_animationTime >= RevealAnimDuration + AnimationDelay)
-            {
-                if (gridItem != null)
-                {
-                    gridItem.Alpha = 1f;
-                    gridItem.IsAnimatingReveal = false;
-                }
-                _animationIndex++;
-                _animationTime = 0f;
-            }
-        }
-
-        private AchievementGridItem FindGridItem(int row, int col)
-        {
-            string key = $"grid_{row}_{col}";
-            if (_gridEntities.TryGetValue(key, out var ent) && ent != null)
-            {
-                return ent.GetComponent<AchievementGridItem>();
-            }
-            return null;
-        }
-
-        private void UpdateHoverStates(float dt)
-        {
             string hoveredId = string.Empty;
 
             foreach (var kv in _gridEntities)
@@ -340,8 +200,26 @@ namespace Crusaders30XX.ECS.Systems
 
                 if (ui == null || gridItem == null || transform == null) continue;
 
-                // Skip if animating
-                if (gridItem.IsAnimatingCompletion || gridItem.IsAnimatingReveal) continue;
+                // Update BasePosition in case grid settings changed
+                var baseRect = GetCellRect(gridItem.Row, gridItem.Column);
+                transform.BasePosition = new Vector2(baseRect.X + baseRect.Width / 2f, baseRect.Y + baseRect.Height / 2f);
+
+                // ALWAYS apply explosion offset to position (this is set by the explosion system)
+                transform.Position = transform.BasePosition + gridItem.ExplosionOffset;
+
+                // Update bounds based on scale and current position (with explosion offset)
+                int scaledSize = (int)(CellSize * gridItem.CurrentScale);
+                ui.Bounds = new Rectangle(
+                    (int)Math.Round(transform.Position.X - scaledSize / 2f),
+                    (int)Math.Round(transform.Position.Y - scaledSize / 2f),
+                    scaledSize,
+                    scaledSize);
+
+                // Skip hover/click handling if animating (but position/bounds are still updated above)
+                if (gridItem.IsAnimatingExplosion || gridItem.IsAnimatingReveal || gridItem.IsAnimatingCompletion)
+                {
+                    continue;
+                }
 
                 // Get achievement state
                 var achievement = !string.IsNullOrEmpty(gridItem.AchievementId)
@@ -349,8 +227,20 @@ namespace Crusaders30XX.ECS.Systems
                     : null;
 
                 // Update interactability based on state
-                bool isInteractable = achievement != null && achievement.State != AchievementState.Hidden;
+                bool isInteractable = canInteract && achievement != null && achievement.State != AchievementState.Hidden;
                 ui.IsInteractable = isInteractable;
+
+                // Handle click on completed-unseen cells
+                if (ui.IsClicked && canInteract && achievement != null && achievement.State == AchievementState.CompleteUnseen)
+                {
+                    // Publish event to trigger explosion animation
+                    EventManager.Publish(new AchievementRevealClickedEvent
+                    {
+                        AchievementId = achievement.Id,
+                        Row = gridItem.Row,
+                        Column = gridItem.Column
+                    });
+                }
 
                 // Handle hover
                 if (ui.IsHovered && isInteractable)
@@ -363,24 +253,30 @@ namespace Crusaders30XX.ECS.Systems
                     gridItem.TargetScale = 1f;
                 }
 
-                // Lerp scale
+                // Lerp scale (only when not animating)
                 gridItem.CurrentScale = MathHelper.Lerp(gridItem.CurrentScale, gridItem.TargetScale, dt * ScaleLerpSpeed);
-
-                // Update BasePosition in case grid settings changed
-                var baseRect = GetCellRect(gridItem.Row, gridItem.Column);
-                transform.BasePosition = new Vector2(baseRect.X + baseRect.Width / 2f, baseRect.Y + baseRect.Height / 2f);
-
-                // Update bounds based on scale and current parallax-adjusted position
-                int scaledSize = (int)(CellSize * gridItem.CurrentScale);
-                ui.Bounds = new Rectangle(
-                    (int)Math.Round(transform.Position.X - scaledSize / 2f),
-                    (int)Math.Round(transform.Position.Y - scaledSize / 2f),
-                    scaledSize,
-                    scaledSize);
             }
 
             // Publish hover event
             EventManager.Publish(new AchievementGridItemHovered { AchievementId = hoveredId });
+        }
+
+        /// <summary>
+        /// Get a grid entity by row and column.
+        /// </summary>
+        public Entity GetGridEntity(int row, int col)
+        {
+            string key = $"grid_{row}_{col}";
+            _gridEntities.TryGetValue(key, out var ent);
+            return ent;
+        }
+
+        /// <summary>
+        /// Get all grid entities.
+        /// </summary>
+        public IEnumerable<Entity> GetAllGridEntities()
+        {
+            return _gridEntities.Values.Where(e => e != null);
         }
 
         public void Draw()
@@ -436,19 +332,74 @@ namespace Crusaders30XX.ECS.Systems
             // Apply alpha for reveal animation
             cellColor = cellColor * gridItem.Alpha;
 
-            // Get scaled texture
-            int size = (int)(CellSize * gridItem.CurrentScale);
-            var tex = GetOrCreateRoundedRect(size, size, (int)(CornerRadius * gridItem.CurrentScale));
+            // Apply reveal pulse effect (scale boost when newly revealed)
+            float pulseScale = 1f;
+            if (gridItem.IsNewlyRevealed && gridItem.RevealPulseProgress > 0f && gridItem.RevealPulseProgress < 1f)
+            {
+                // Pulse animation: scale up then back down
+                float pulseT = gridItem.RevealPulseProgress;
+                pulseScale = 1f + 0.2f * (float)Math.Sin(pulseT * Math.PI);
+            }
 
-            // Draw centered on bounds
-            var drawRect = ui.Bounds;
+            // Get scaled texture
+            int size = (int)(CellSize * gridItem.CurrentScale * pulseScale);
+            var tex = GetOrCreateRoundedRect(size, size, (int)(CornerRadius * gridItem.CurrentScale * pulseScale));
+
+            // Draw centered on bounds (adjusted for pulse)
+            var center = new Vector2(ui.Bounds.X + ui.Bounds.Width / 2f, ui.Bounds.Y + ui.Bounds.Height / 2f);
+            var drawRect = new Rectangle(
+                (int)(center.X - size / 2f),
+                (int)(center.Y - size / 2f),
+                size,
+                size);
             _spriteBatch.Draw(tex, drawRect, cellColor);
 
             // Draw hover highlight
             if (ui.IsHovered && achievement != null && achievement.State != AchievementState.Hidden)
             {
-                _spriteBatch.Draw(tex, drawRect, cellColor);
+                _spriteBatch.Draw(tex, drawRect, cellColor * 0.3f);
             }
+
+            // Draw pulsing exclamation mark on completed-unseen cells
+            if (achievement != null && achievement.State == AchievementState.CompleteUnseen)
+            {
+                DrawExclamationMark(ui.Bounds, gridItem.CurrentScale);
+            }
+        }
+
+        private void DrawExclamationMark(Rectangle cellBounds, float scale)
+        {
+            var font = FontSingleton.TitleFont;
+            if (font == null) return;
+
+            // Calculate pulsing effect
+            float pulse = (float)Math.Sin(_time * ExclamationPulseSpeed);
+            float pulseAlpha = 0.7f + 0.3f * pulse; // Alpha pulses between 0.7 and 1.0
+            float pulseGlow = ExclamationGlowIntensity * (0.5f + 0.5f * pulse); // Glow pulses
+
+            string text = "!";
+            Vector2 textSize = font.MeasureString(text) * ExclamationScale;
+
+            // Center the exclamation mark in the cell
+            Vector2 center = new Vector2(
+                cellBounds.X + cellBounds.Width / 2f,
+                cellBounds.Y + cellBounds.Height / 2f
+            );
+            Vector2 textPos = center - textSize / 2f;
+
+            // Draw glow effect (multiple offset draws with lower alpha)
+            Color glowColor = _exclamationGlowColor * pulseGlow;
+            float glowOffset = 2f;
+            for (int i = 0; i < 4; i++)
+            {
+                float angle = i * MathHelper.PiOver2;
+                Vector2 offset = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * glowOffset;
+                _spriteBatch.DrawString(font, text, textPos + offset, glowColor, 0f, Vector2.Zero, ExclamationScale, SpriteEffects.None, 0f);
+            }
+
+            // Draw main exclamation mark
+            Color mainColor = _exclamationColor * pulseAlpha;
+            _spriteBatch.DrawString(font, text, textPos, mainColor, 0f, Vector2.Zero, ExclamationScale, SpriteEffects.None, 0f);
         }
 
         private Texture2D GetOrCreateRoundedRect(int width, int height, int radius)

@@ -31,13 +31,13 @@ namespace Crusaders30XX.ECS.Systems
 
         // Panel configuration
         [DebugEditable(DisplayName = "Panel X", Step = 10, Min = 500, Max = 1800)]
-        public int PanelX { get; set; } = 1300;
+        public int PanelX { get; set; } = 1280;
 
         [DebugEditable(DisplayName = "Panel Y", Step = 10, Min = 100, Max = 800)]
         public int PanelY { get; set; } = 300;
 
         [DebugEditable(DisplayName = "Panel Width", Step = 10, Min = 200, Max = 800)]
-        public int PanelWidth { get; set; } = 450;
+        public int PanelWidth { get; set; } = 500;
 
         [DebugEditable(DisplayName = "Panel Height", Step = 10, Min = 200, Max = 600)]
         public int PanelHeight { get; set; } = 350;
@@ -49,7 +49,7 @@ namespace Crusaders30XX.ECS.Systems
         public int Padding { get; set; } = 24;
 
         [DebugEditable(DisplayName = "Title Scale", Step = 0.01f, Min = 0.1f, Max = 1f)]
-        public float TitleScale { get; set; } = 0.35f;
+        public float TitleScale { get; set; } = 0.3f;
 
         [DebugEditable(DisplayName = "Description Scale", Step = 0.01f, Min = 0.1f, Max = 0.5f)]
         public float DescriptionScale { get; set; } = 0.18f;
@@ -73,7 +73,7 @@ namespace Crusaders30XX.ECS.Systems
         public int ProgressMargin { get; set; } = 8;
 
         [DebugEditable(DisplayName = "Status Margin", Step = 1, Min = 0, Max = 100)]
-        public int StatusMargin { get; set; } = 30;
+        public int StatusMargin { get; set; } = 45;
 
         public AchievementDescriptionDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb) : base(em)
         {

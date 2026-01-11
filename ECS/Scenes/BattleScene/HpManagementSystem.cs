@@ -75,6 +75,7 @@ namespace Crusaders30XX.ECS.Systems
 				EventQueue.Clear();
 					TimerScheduler.Schedule(1f, () => {
 					Console.WriteLine("[HpManagementSystem] Enemy died, execute transition");
+					EventManager.Publish(new EnemyKilledEvent { Enemy = target });
 					// is this the last enemy?
 					var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 					var queued = queuedEntity.GetComponent<QueuedEvents>();

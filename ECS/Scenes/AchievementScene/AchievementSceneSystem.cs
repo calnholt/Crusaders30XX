@@ -28,6 +28,7 @@ namespace Crusaders30XX.ECS.Systems
         private AchievementMeterDisplaySystem _meterDisplaySystem;
         private AchievementTitleDisplaySystem _titleDisplaySystem;
         private AchievementBackButtonDisplaySystem _backButtonDisplaySystem;
+        private AchievementExplosionSystem _explosionSystem;
 
         public AchievementSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice gd, SpriteBatch sb, ContentManager content)
             : base(em)
@@ -51,6 +52,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (_meterDisplaySystem != null) _world.RemoveSystem(_meterDisplaySystem);
                 if (_titleDisplaySystem != null) _world.RemoveSystem(_titleDisplaySystem);
                 if (_backButtonDisplaySystem != null) _world.RemoveSystem(_backButtonDisplaySystem);
+                if (_explosionSystem != null) _world.RemoveSystem(_explosionSystem);
                 _firstLoad = true;
             });
         }
@@ -100,6 +102,11 @@ namespace Crusaders30XX.ECS.Systems
             if (_backButtonDisplaySystem == null)
                 _backButtonDisplaySystem = new AchievementBackButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
             _world.AddSystem(_backButtonDisplaySystem);
+
+            // Explosion system depends on grid display system for accessing grid entities
+            if (_explosionSystem == null)
+                _explosionSystem = new AchievementExplosionSystem(_world.EntityManager, _gridDisplaySystem);
+            _world.AddSystem(_explosionSystem);
         }
     }
 }

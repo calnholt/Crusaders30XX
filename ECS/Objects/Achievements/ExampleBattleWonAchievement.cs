@@ -17,7 +17,7 @@ namespace Crusaders30XX.ECS.Objects.Achievements
             Description = "Win your first battle";
             Row = 1;
             Column = 0;
-            StartsVisible = true; // Starter achievement
+            StartsVisible = false; // Starter achievement
             Points = 10;
         }
 
