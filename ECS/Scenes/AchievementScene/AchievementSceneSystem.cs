@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly ContentManager _content;
         private bool _firstLoad = true;
 
+        private AchievementBackgroundDisplaySystem _backgroundDisplaySystem;
         private AchievementGridDisplaySystem _gridDisplaySystem;
         private AchievementDescriptionDisplaySystem _descriptionDisplaySystem;
         private AchievementMeterDisplaySystem _meterDisplaySystem;
@@ -48,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 
             EventManager.Subscribe<DeleteCachesEvent>(_ =>
             {
+                if (_backgroundDisplaySystem != null) _world.RemoveSystem(_backgroundDisplaySystem);
                 if (_gridDisplaySystem != null) _world.RemoveSystem(_gridDisplaySystem);
                 if (_descriptionDisplaySystem != null) _world.RemoveSystem(_descriptionDisplaySystem);
                 if (_meterDisplaySystem != null) _world.RemoveSystem(_meterDisplaySystem);
@@ -68,6 +70,8 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
+            if (_backgroundDisplaySystem != null)
+                FrameProfiler.Measure("AchievementBackgroundDisplaySystem.Draw", _backgroundDisplaySystem.Draw);
             if (_gridDisplaySystem != null)
                 FrameProfiler.Measure("AchievementGridDisplaySystem.Draw", _gridDisplaySystem.Draw);
             if (_descriptionDisplaySystem != null)
@@ -86,6 +90,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (!_firstLoad) return;
             _firstLoad = false;
+
+            // Background shader must be added first so it draws behind everything
+            if (_backgroundDisplaySystem == null)
+                _backgroundDisplaySystem = new AchievementBackgroundDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+            _world.AddSystem(_backgroundDisplaySystem);
 
             if (_gridDisplaySystem == null)
                 _gridDisplaySystem = new AchievementGridDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);

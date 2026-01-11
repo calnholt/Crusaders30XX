@@ -1358,6 +1358,12 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/CircularMask.fx
 
+#begin Shaders/AchievementBackground.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/AchievementBackground.fx
+
 #begin Shaders/Shockwave.fx
 /importer:EffectImporter
 /processor:EffectProcessor
