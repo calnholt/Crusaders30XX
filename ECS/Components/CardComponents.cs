@@ -177,7 +177,7 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         public int Value { get; set; } = MAX_HAND_SIZE;
-        public static readonly int MAX_HAND_SIZE = 5;
+        public static readonly int MAX_HAND_SIZE = 4;
     }
 
 
@@ -1046,6 +1046,15 @@ namespace Crusaders30XX.ECS.Components
     /// - Are protected from intimidate, freeze, and discard effects
     /// </summary>
     public class Pledge : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
+    /// Temporary marker for a card being hovered during the Pledge phase.
+    /// Used by PledgeDisplaySystem to show the "PLEDGE" text as a preview.
+    /// </summary>
+    public class PledgePreview : IComponent
     {
         public Entity Owner { get; set; }
     }

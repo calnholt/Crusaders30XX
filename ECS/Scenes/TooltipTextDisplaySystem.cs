@@ -83,7 +83,14 @@ namespace Crusaders30XX.ECS.Systems
 				.Where(x => x.UI?.TooltipType == TooltipType.Text
 					&& x.UI.IsHovered
 					&& !x.UI.IsHidden
-					&& (!string.IsNullOrWhiteSpace(x.UI.Tooltip) || x.E.GetComponent<Frozen>() != null || x.E.GetComponent<Intimidated>() != null || x.E.GetComponent<Shackle>() != null))
+					&& (
+						!string.IsNullOrWhiteSpace(x.UI.Tooltip) || 
+						x.E.GetComponent<Frozen>() != null || 
+						x.E.GetComponent<Intimidated>() != null || 
+						x.E.GetComponent<Shackle>() != null ||
+						x.E.GetComponent<Pledge>() != null ||
+						x.E.GetComponent<PledgePreview>() != null
+					))
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.ToList();
 			var top = hoverables.FirstOrDefault();
@@ -111,6 +118,16 @@ namespace Crusaders30XX.ECS.Systems
 				if (hasShackled)
 				{
 					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is shackled - shackled cards block together.";
+				}
+				var hasPledge = top.E.GetComponent<Pledge>() != null;
+				if (hasPledge)
+				{
+					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is pledged - can only be played during the action phase. Does not count towards your hand size.";
+				}
+				var hasPledgePreview = top.E.GetComponent<PledgePreview>() != null;
+				if (hasPledgePreview)
+				{
+					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}Pledged cards can only be played during the action phase. Does not count towards your hand size.";
 				}
 
 				// Wrap text based on MaxWidth

@@ -23,6 +23,13 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteFont _titleFont = FontSingleton.TitleFont;
         private readonly Texture2D _pixel;
         private bool _isVisible = false;
+        private float _openElapsedSeconds = 0f;
+
+        [DebugEditable(DisplayName = "Fade In (s)", Step = 0.05f, Min = 0.01f, Max = 1.0f)]
+        public float FadeInDurationSec { get; set; } = 0.25f;
+
+        [DebugEditable(DisplayName = "Overlay Alpha", Step = 0.05f, Min = 0.1f, Max = 1.0f)]
+        public float OverlayAlpha { get; set; } = 0.5f;
 
         [DebugEditable(DisplayName = "Button Width", Step = 1, Min = 80, Max = 600)]
         public int ButtonWidth { get; set; } = 180;
@@ -31,7 +38,7 @@ namespace Crusaders30XX.ECS.Systems
         public int ButtonHeight { get; set; } = 50;
 
         [DebugEditable(DisplayName = "Button Offset Y", Step = 5, Min = -2000, Max = 2000)]
-        public int ButtonOffsetY { get; set; } = 550;
+        public int ButtonOffsetY { get; set; } = 750;
 
         [DebugEditable(DisplayName = "Button Z", Step = 100, Min = 0, Max = 20000)]
         public int ButtonZ { get; set; } = 4000;
@@ -96,6 +103,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnSkipPledgePressed()
         {
+            Console.WriteLine("[SkipPledgeDisplaySystem] OnSkipPledgePressed executing");
             _isVisible = false;
             var ui = EntityManager.GetEntity("UIButton_SkipPledge")?.GetComponent<UIElement>();
             if (ui != null)
@@ -123,33 +131,24 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.Draw(_pixel, new Rectangle(r.Right - thickness, r.Y, thickness, r.Height), color);
         }
 
-        public void Draw()
+        public void DrawBackdrop()
         {
-            var btnRect = GetButtonRect();
-            var skipBtn = EntityManager.GetEntitiesWithComponent<UIButton>().FirstOrDefault(e => e.GetComponent<UIButton>().Command == "SkipPledge");
-            var ui = EntityManager.GetEntity("UIButton_SkipPledge")?.GetComponent<UIElement>();
-            
-            if (skipBtn == null)
-            {
-                skipBtn = EntityManager.CreateEntity("UIButton_SkipPledge");
-                EntityManager.AddComponent(skipBtn, new UIButton { Label = "Skip Pledge", Command = "SkipPledge" });
-                EntityManager.AddComponent(skipBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
-                EntityManager.AddComponent(skipBtn, new UIElement { Bounds = btnRect, IsInteractable = false, IsHidden = true, EventType = UIElementEventType.SkipPledge });
-                EntityManager.AddComponent(skipBtn, new HotKey { Button = FaceButton.B });
-                EntityManager.AddComponent(skipBtn, ParallaxLayer.GetUIParallaxLayer());
-            }
-            else
-            {
-                var tr = skipBtn.GetComponent<Transform>();
-                if (tr != null)
-                {
-                    tr.ZOrder = ButtonZ;
-                    tr.BasePosition = new Vector2(btnRect.X, btnRect.Y);
-                    tr.Position = new Vector2(btnRect.X, btnRect.Y);
-                }
-            }
-            
             if (!_isVisible) return;
+
+            int screenWidth = Game1.VirtualWidth;
+            int screenHeight = Game1.VirtualHeight;
+
+            // Draw backdrop (full-screen dim overlay)
+            float fadeT = MathHelper.Clamp(_openElapsedSeconds / FadeInDurationSec, 0f, 1f);
+            float eased = 1f - (1f - fadeT) * (1f - fadeT);
+            float alphaF = MathHelper.Clamp(eased * OverlayAlpha, 0f, 1f);
+            _spriteBatch.Draw(_pixel, new Rectangle(0, 0, screenWidth, screenHeight), new Color(0f, 0f, 0f, alphaF));
+        }
+
+        public void DrawForeground()
+        {
+            if (!_isVisible) return;
+            SyncButtonState();
             
             int screenWidth = Game1.VirtualWidth;
             int screenHeight = Game1.VirtualHeight;
@@ -164,8 +163,11 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.DrawString(_titleFont, promptText, promptPos, Color.White, 0f, Vector2.Zero, PromptTextScale, SpriteEffects.None, 0f);
             
             // Draw the skip button
-            ui = EntityManager.GetEntity("UIButton_SkipPledge")?.GetComponent<UIElement>();
-            if (ui == null || ui.IsHidden) return;
+            var skipBtn = EntityManager.GetEntity("UIButton_SkipPledge");
+            var ui = skipBtn?.GetComponent<UIElement>();
+            if (ui == null) return;
+            
+            var btnRect = GetButtonRect();
             
             // Draw using the entity's current Transform.Position (which includes parallax offset)
             var t = skipBtn?.GetComponent<Transform>();
@@ -185,6 +187,69 @@ namespace Crusaders30XX.ECS.Systems
             if (skipBtnUi != null)
             {
                 skipBtnUi.Bounds = drawRect;
+            }
+        }
+
+        private void SyncButtonState()
+        {
+            var btnRect = GetButtonRect();
+            var skipBtn = EntityManager.GetEntity("UIButton_SkipPledge");
+
+            if (skipBtn == null)
+            {
+                skipBtn = EntityManager.CreateEntity("UIButton_SkipPledge");
+                EntityManager.AddComponent(skipBtn, new UIButton { Label = "Skip Pledge", Command = "SkipPledge" });
+                EntityManager.AddComponent(skipBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
+                // Initialize with current _isVisible state
+                EntityManager.AddComponent(skipBtn, new UIElement { Bounds = btnRect, IsInteractable = _isVisible, IsHidden = !_isVisible, EventType = UIElementEventType.SkipPledge });
+                EntityManager.AddComponent(skipBtn, new HotKey { Button = FaceButton.Y });
+                EntityManager.AddComponent(skipBtn, ParallaxLayer.GetUIParallaxLayer());
+            }
+            else
+            {
+                // Ensure state is synced
+                var uiCmp = skipBtn.GetComponent<UIElement>();
+                if (uiCmp != null)
+                {
+                    uiCmp.IsHidden = !_isVisible;
+                    uiCmp.IsInteractable = _isVisible;
+                }
+
+                var tr = skipBtn.GetComponent<Transform>();
+                if (tr != null)
+                {
+                    tr.ZOrder = ButtonZ;
+                    tr.BasePosition = new Vector2(btnRect.X, btnRect.Y);
+                    tr.Position = new Vector2(btnRect.X, btnRect.Y);
+                }
+            }
+        }
+
+        public void Draw()
+        {
+            SyncButtonState();
+            DrawBackdrop();
+            DrawForeground();
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            SyncButtonState();
+
+            if (!_isVisible)
+            {
+                _openElapsedSeconds = 0f;
+                return;
+            }
+            
+            _openElapsedSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            
+            var ui = EntityManager.GetEntity("UIButton_SkipPledge")?.GetComponent<UIElement>();
+            if (ui != null && ui.IsClicked)
+            {
+                Console.WriteLine("[SkipPledgeDisplaySystem] Button clicked via UIElement.IsClicked");
+                ui.IsClicked = false;
+                OnSkipPledgePressed();
             }
         }
 

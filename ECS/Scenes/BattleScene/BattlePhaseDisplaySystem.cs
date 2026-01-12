@@ -437,6 +437,7 @@ namespace Crusaders30XX.ECS.Systems
 				SubPhase.StartBattle => "Start of Battle",
 				SubPhase.Block => "Block Phase",
 				SubPhase.Action => "Action Phase",
+				SubPhase.Pledge => "Pledge Phase",
 				_ => ""
 			};
 		}

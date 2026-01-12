@@ -283,6 +283,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("AppliedPassivesDisplaySystem.Draw", _appliedPassivesDisplaySystem.Draw);
 			FrameProfiler.Measure("PoisonSystem.Draw", _poisonSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawBackdrop", _payCostOverlaySystem.DrawBackdrop);
+			if (_skipPledgeDisplaySystem != null) FrameProfiler.Measure("SkipPledgeDisplaySystem.DrawBackdrop", _skipPledgeDisplaySystem.DrawBackdrop);
 			FrameProfiler.Measure("UIElementHighlightSystem.Draw", _uiElementHighlightSystem.Draw);
 			FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", _enemyAttackDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDamageMeterDisplaySystem.Draw", _enemyDamageMeterDisplaySystem.Draw);
@@ -297,6 +298,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
 			FrameProfiler.Measure("MillCardSystem.Draw", _millCardSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
+			if (_skipPledgeDisplaySystem != null) FrameProfiler.Measure("SkipPledgeDisplaySystem.DrawForeground", _skipPledgeDisplaySystem.DrawForeground);
 			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
 			FrameProfiler.Measure("DiscardSpecificCardHighlightSystem.Draw", _discardSpecificCardHighlightSystem.Draw);
 			FrameProfiler.Measure("IntimidateDisplaySystem.Draw", _intimidateDisplaySystem.Draw);
@@ -307,7 +309,6 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);
 		if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
 		if (_tutorialDisplaySystem != null) FrameProfiler.Measure("TutorialDisplaySystem.Draw", _tutorialDisplaySystem.Draw);
-		if (_skipPledgeDisplaySystem != null) FrameProfiler.Measure("SkipPledgeDisplaySystem.Draw", _skipPledgeDisplaySystem.Draw);
 		}
 
 		private void CreateBattleSceneEntities() {
@@ -358,6 +359,17 @@ namespace Crusaders30XX.ECS.Systems
 			battleStateInfo.EquipmentTriggeredThisBattle.Clear();
 			// Initialize/Reset per-battle applied passives on player
 			var playerPassives = player.GetComponent<AppliedPassives>();
+
+			// Clear all pledges at start of battle
+			var allCards = EntityManager.GetEntitiesWithComponent<CardData>();
+			foreach (var c in allCards)
+			{
+				if (c.HasComponent<Pledge>())
+				{
+					EntityManager.RemoveComponent<Pledge>(c);
+				}
+			}
+
 			if (playerPassives == null)
 			{
 				_world.AddComponent(player, new AppliedPassives());
@@ -603,7 +615,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Pledge system
 			_pledgeManagementSystem = new PledgeManagementSystem(_world.EntityManager);
-			_pledgeDisplaySystem = new PledgeDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_pledgeDisplaySystem = new PledgeDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_skipPledgeDisplaySystem = new SkipPledgeDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_pledgeManagementSystem);
 			_world.AddSystem(_pledgeDisplaySystem);

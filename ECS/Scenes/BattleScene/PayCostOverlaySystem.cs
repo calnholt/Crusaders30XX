@@ -449,6 +449,9 @@ namespace Crusaders30XX.ECS.Systems
             }
             catch { }
 
+            // Hard guard: pledged cards cannot be used to pay costs
+            if (evt.Card.HasComponent<Pledge>()) return;
+
             var alreadySelected = evt.Card.GetComponent<SelectedForPayment>() != null || state.SelectedCards.Contains(evt.Card);
 
             if (alreadySelected)

@@ -394,6 +394,13 @@ namespace Crusaders30XX.ECS.Systems
             card.OnPlay?.Invoke(EntityManager, evt.Card);
             EventManager.Publish(new TrackingEvent { Type = card.CardId, Delta = 1 });
 
+            // Remove Pledge if present when playing
+            if (evt.Card.HasComponent<Pledge>())
+            {
+                EntityManager.RemoveComponent<Pledge>(evt.Card);
+                Console.WriteLine($"[CardPlaySystem] Removed Pledge from {card.CardId} on play");
+            }
+
             // Award mastery points for Attack and Prayer cards on play
             if (card.Type == CardType.Attack || card.Type == CardType.Prayer)
             {
