@@ -135,7 +135,7 @@ namespace Crusaders30XX.ECS.Factories
             }
             // Attach starting Intellect and MaxHandSize stats
             world.AddComponent(entity, new Intellect { Value = 4 });
-            world.AddComponent(entity, new MaxHandSize { Value = MaxHandSize.MAX_HAND_SIZE });
+            world.AddComponent(entity, new MaxHandSize { Value = MaxHandSize.MAX_HAND_SIZE + (StateSingleton.IsPledgeEnabled ? 0 : 1) });
 
             var st = new BattleStateInfo { Owner = entity };
             world.AddComponent(entity, st);

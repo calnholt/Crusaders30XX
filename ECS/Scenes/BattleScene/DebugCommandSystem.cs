@@ -172,6 +172,11 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.SwordAttack, Volume = 0.5f });
         }
+        [DebugAction("Toggle Pledge")]
+        public void Debug_TogglePledge()
+        {
+            StateSingleton.IsPledgeEnabled = !StateSingleton.IsPledgeEnabled;
+        }
     }
 }
 

@@ -150,7 +150,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            if (canPledge)
+            if (canPledge && StateSingleton.IsPledgeEnabled)
             {
                 // Enter Pledge phase
                 EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
