@@ -389,6 +389,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             card.OnPlay?.Invoke(EntityManager, evt.Card);
+            EventManager.Publish(new CardPlayedEvent { Card = evt.Card });
             EventManager.Publish(new TrackingEvent { Type = card.CardId, Delta = 1 });
 
             // Award mastery points for Attack and Prayer cards on play

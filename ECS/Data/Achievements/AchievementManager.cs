@@ -26,7 +26,7 @@ namespace Crusaders30XX.ECS.Data.Achievements
         /// Creates all achievement instances, loads progress from save, and registers listeners.
         /// Call this once during game startup.
         /// </summary>
-        public static void Initialize()
+        public static void Initialize(EntityManager entityManager)
         {
             if (_initialized) return;
 
@@ -45,7 +45,7 @@ namespace Crusaders30XX.ECS.Data.Achievements
                 foreach (var achievement in _achievements.Values)
                 {
                     progressMap.TryGetValue(achievement.Id, out var progress);
-                    achievement.Initialize(progress ?? new AchievementProgress { AchievementId = achievement.Id });
+                    achievement.Initialize(progress ?? new AchievementProgress { AchievementId = achievement.Id }, entityManager);
                 }
 
                 _initialized = true;
@@ -61,12 +61,14 @@ namespace Crusaders30XX.ECS.Data.Achievements
         {
             // Example achievements demonstrating the pattern
             // These can be removed or replaced with real achievements
-            Register(new ExampleKillAchievement());
-            Register(new ExampleSkeletonSlayerAchievement());
-            Register(new ExampleFirstVictoryAchievement());
-            Register(new ExampleVeteranAchievement());
-            Register(new ExampleCardPlayerAchievement());
-            Register(new ExampleRedCardMasterAchievement());
+            Register(new Slayer());
+            Register(new SkeletonSlayer());
+            Register(new FirstVictory());
+            Register(new JustGettingStarted());
+            Register(new CardPlayer());
+            Register(new RedCardApprentice());
+
+            Register(new OHKO());
         }
 
         /// <summary>

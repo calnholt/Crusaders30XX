@@ -122,7 +122,7 @@ public class Game1 : Game
         FontSingleton.Initialize(Content);
 
         // Initialize Achievement system
-        AchievementManager.Initialize();
+        AchievementManager.Initialize(_world.EntityManager);
 
         // Seed a SceneState entity
         var sceneEntity = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();

@@ -537,4 +537,9 @@ namespace Crusaders30XX.ECS.Events
         public int Level { get; set; }
     }
 
+    public class CardPlayedEvent
+    {
+        public Entity Card {get; set;}
+    }
+
 } 
