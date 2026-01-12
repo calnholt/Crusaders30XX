@@ -39,15 +39,7 @@ namespace Crusaders30XX.ECS.Systems
             var attackDef = GetComponentHelper.GetPlannedAttack(EntityManager);
             if (attackDef == null) return;
             if (evt.Amount <= 0) return;
-            // Select random cards from hand (excluding weapon card)
-            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-            var deck = deckEntity?.GetComponent<Deck>();
-            if (deck == null) return;
-            // Identify weapon to exclude
-            Entity weapon = null;
-            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-            weapon = player?.GetComponent<EquippedWeapon>()?.SpawnedEntity;
-            var candidates = deck.Hand.Where(c => !ReferenceEquals(c, weapon) && c.GetComponent<Pledge>() == null).ToList();
+            var candidates = GetComponentHelper.GetHandOfCards(EntityManager);
             int pick = System.Math.Min(evt.Amount, candidates.Count);
             Console.WriteLine($"[MarkedForSpecificDiscardSystem] Picking {pick} cards from {candidates.Count} candidates");
             if (pick <= 0) return;

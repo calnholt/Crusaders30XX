@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
@@ -51,6 +52,20 @@ namespace Crusaders30XX.ECS.Services
             var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             if (player == null) return null;
             return player.GetComponent<Courage>();
+        }
+
+        /// <summary>
+        /// Returns a list of cards in the player's hand that are not weapons and are not pledged.
+        /// </summary>
+        public static List<Entity> GetHandOfCards(EntityManager entityManager)
+        {
+            var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            if (deckEntity == null) return null;
+            var deck = deckEntity.GetComponent<Deck>();
+            if (deck == null) return null;
+            var hand = deck.Hand;
+            if (hand == null) return null;
+            return [.. hand.Where(c => c.GetComponent<CardData>() != null && c.GetComponent<CardData>().Card.IsWeapon == false && c.GetComponent<Pledge>() == null)];
         }
     }
 }

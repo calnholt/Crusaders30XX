@@ -50,7 +50,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (ui == null || !ui.IsClicked) continue;
                 
                 // Check if this is an eligible card
-                if (!IsEligibleForPledge(card)) continue;
+                if (!IsEligibleForPledge(card, true)) continue;
                 
                 // Card was clicked - pledge it
                 Console.WriteLine($"[PledgeManagementSystem] Card clicked to pledge: {card.GetComponent<CardData>()?.Card.CardId ?? "unknown"}");
@@ -131,7 +131,7 @@ namespace Crusaders30XX.ECS.Systems
             ));
         }
 
-        private bool IsEligibleForPledge(Entity card)
+        private bool IsEligibleForPledge(Entity card, bool showErrorMessage = false)
         {
             if (card == null) return false;
             
@@ -142,16 +142,32 @@ namespace Crusaders30XX.ECS.Systems
             if (card.GetComponent<Pledge>() != null) return false;
 
             // Skip weapons
-            if (cardData.Card.IsWeapon) return false;
+            if (cardData.Card.IsWeapon)
+            {
+                if (showErrorMessage) EventManager.Publish(new CantPlayCardMessage { Message = "Can't pledge weapons!" });
+                return false;
+            };
 
             // Skip block cards - they can't be played from pledge
-            if (cardData.Card.Type == CardType.Block) return false;
+            if (cardData.Card.Type == CardType.Block)
+            {
+                if (showErrorMessage) EventManager.Publish(new CantPlayCardMessage { Message = "Can't pledge block cards!" });
+                return false;
+            };
 
             // Skip relics - they can't be played normally
-            if (cardData.Card.Type == CardType.Relic) return false;
+            if (cardData.Card.Type == CardType.Relic)
+            {
+                if (showErrorMessage) EventManager.Publish(new CantPlayCardMessage { Message = "Can't pledge relics!" });
+                return false;
+            };
 
             // Skip token cards
-            if (cardData.Card.IsToken) return false;
+            if (cardData.Card.IsToken)
+            {
+                if (showErrorMessage) EventManager.Publish(new CantPlayCardMessage { Message = "Can't pledge token cards!" });
+                return false;
+            };
 
             return true;
         }

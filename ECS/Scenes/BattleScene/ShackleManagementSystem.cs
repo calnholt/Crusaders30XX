@@ -43,17 +43,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				return;
 			}
-			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-			if (deckEntity == null) return;
-
-			var deck = deckEntity.GetComponent<Deck>();
-			if (deck == null || deck.Hand == null || deck.Hand.Count == 0) return;
-
-			// Get cards in hand that are not already shackled
-			var availableCards = deck.Hand
-				.Where(c => c.GetComponent<Shackle>() == null)
-				.ToList();
-
+			var availableCards = GetComponentHelper.GetHandOfCards(EntityManager);
 			if (availableCards.Count == 0) return;
 
 			var random = new Random();

@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -56,12 +57,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void ApplyFrozenEffectHand(int amount)
 		{
-			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-			if (deckEntity == null) return;
-			var deck = deckEntity.GetComponent<Deck>();
-			if (deck == null) return;
-			var cardsToFreeze = deck.Hand
-				.Where(c => c.GetComponent<Frozen>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false && c.GetComponent<Pledge>() == null)
+			var cardsToFreeze = GetComponentHelper.GetHandOfCards(EntityManager)
+				.Where(c => c.GetComponent<Frozen>() == null)
 				.OrderBy(x => new Random().Next())
 				.Take(amount)
 				.ToList();
@@ -115,7 +112,7 @@ namespace Crusaders30XX.ECS.Systems
 			
 			if (deck.Hand != null)
 			{
-				availableCards.AddRange(deck.Hand.Where(c => c.GetComponent<Frozen>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false && c.GetComponent<Pledge>() == null));
+				availableCards.AddRange(GetComponentHelper.GetHandOfCards(EntityManager).Where(c => c.GetComponent<Frozen>() == null));
 			}
 
 			if (availableCards.Count == 0)
