@@ -277,6 +277,11 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Emitted when the player skips pledging during the Pledge subphase.
+    /// </summary>
+    public class SkipPledgeRequested { }
+
+    /// <summary>
     /// UI message indicating why a card cannot be played.
     /// Systems can subscribe to display a transient on-screen notification.
     /// </summary>

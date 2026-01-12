@@ -63,9 +63,9 @@ namespace Crusaders30XX.ECS.Systems
 
 			// For each intimidate effect, randomly pick cards
 				
-				// Get cards that are not already intimidated
+				// Get cards that are not already intimidated (exclude pledged cards)
 				var availableCards = deck.Hand
-					.Where(c => c.GetComponent<Intimidated>() == null)
+					.Where(c => c.GetComponent<Intimidated>() == null && c.GetComponent<Pledge>() == null)
 					.ToList();
 
 				if (availableCards.Count == 0) return;

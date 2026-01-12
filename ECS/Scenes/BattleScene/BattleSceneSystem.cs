@@ -114,6 +114,11 @@ namespace Crusaders30XX.ECS.Systems
 		private ActiveCharacterIndicatorDisplaySystem _activeCharacterIndicatorDisplaySystem;
 		private TutorialManager _tutorialManager;
 		private TutorialDisplaySystem _tutorialDisplaySystem;
+		
+		// Pledge system
+		private PledgeManagementSystem _pledgeManagementSystem;
+		private PledgeDisplaySystem _pledgeDisplaySystem;
+		private SkipPledgeDisplaySystem _skipPledgeDisplaySystem;
 
 		// Bloodshot effect system and render targets for background compositing
 		private BloodshotDisplaySystem _bloodshotDisplaySystem;
@@ -302,6 +307,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);
 		if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
 		if (_tutorialDisplaySystem != null) FrameProfiler.Measure("TutorialDisplaySystem.Draw", _tutorialDisplaySystem.Draw);
+		if (_skipPledgeDisplaySystem != null) FrameProfiler.Measure("SkipPledgeDisplaySystem.Draw", _skipPledgeDisplaySystem.Draw);
 		}
 
 		private void CreateBattleSceneEntities() {
@@ -594,6 +600,14 @@ namespace Crusaders30XX.ECS.Systems
 			_tutorialDisplaySystem = new TutorialDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _tutorialManager);
 			_world.AddSystem(_tutorialManager);
 			_world.AddSystem(_tutorialDisplaySystem);
+
+			// Pledge system
+			_pledgeManagementSystem = new PledgeManagementSystem(_world.EntityManager);
+			_pledgeDisplaySystem = new PledgeDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_skipPledgeDisplaySystem = new SkipPledgeDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_world.AddSystem(_pledgeManagementSystem);
+			_world.AddSystem(_pledgeDisplaySystem);
+			_world.AddSystem(_skipPledgeDisplaySystem);
 		}
 
 		public void DrawAdditive()

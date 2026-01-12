@@ -65,6 +65,12 @@ namespace Crusaders30XX.ECS.Systems
 					EventManager.Publish(new CantPlayCardMessage { Message = "Can't block with intimidated cards!" });
 					break;
 				}
+				// Skip pledged cards: they can only be played during action phase
+				if (card.GetComponent<Pledge>() != null)
+				{
+					EventManager.Publish(new CantPlayCardMessage { Message = "Can't block with pledged cards!" });
+					break;
+				}
 				if (data.Card.Type == CardType.Block && !data.Card.CanPlay(EntityManager, card))
 				{
 					return;

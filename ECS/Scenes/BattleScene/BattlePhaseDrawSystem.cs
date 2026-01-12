@@ -96,6 +96,8 @@ namespace Crusaders30XX.ECS.Systems
 				if (e.HasComponent<AnimatingHandToDiscard>()) continue;
 				if (e.HasComponent<AnimatingHandToZone>()) continue;
 				if (e.HasComponent<AnimatingHandToDrawPile>()) continue;
+				// Pledged cards don't count against max hand size
+				if (e.HasComponent<Pledge>()) continue;
 
 				var cd = e.GetComponent<CardData>();
 				if (cd == null) continue;

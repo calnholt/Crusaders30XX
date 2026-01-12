@@ -122,17 +122,11 @@ namespace Crusaders30XX.ECS.Systems
                 "Rule.ChangePhase.PlayerEnd",
                 new ChangeBattlePhaseEvent { Current = SubPhase.PlayerEnd }
             ));
+            // Pledge subphase occurs after PlayerEnd; PledgeManagementSystem handles
+            // the overlay and will enqueue EnemyStart/PreBlock/Block when complete
             EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-                "Rule.ChangePhase.EnemyStart",
-                new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart }
-            ));
-            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-                "Rule.ChangePhase.PreBlock",
-                new ChangeBattlePhaseEvent { Current = SubPhase.PreBlock }
-            ));
-            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-                "Rule.ChangePhase.Block",
-                new ChangeBattlePhaseEvent { Current = SubPhase.Block }
+                "Rule.ChangePhase.Pledge",
+                new ChangeBattlePhaseEvent { Current = SubPhase.Pledge }
             ));
         }
 

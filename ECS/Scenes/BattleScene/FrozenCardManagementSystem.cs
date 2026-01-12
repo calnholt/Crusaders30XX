@@ -61,7 +61,7 @@ namespace Crusaders30XX.ECS.Systems
 			var deck = deckEntity.GetComponent<Deck>();
 			if (deck == null) return;
 			var cardsToFreeze = deck.Hand
-				.Where(c => c.GetComponent<Frozen>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false)
+				.Where(c => c.GetComponent<Frozen>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false && c.GetComponent<Pledge>() == null)
 				.OrderBy(x => new Random().Next())
 				.Take(amount)
 				.ToList();
@@ -115,7 +115,7 @@ namespace Crusaders30XX.ECS.Systems
 			
 			if (deck.Hand != null)
 			{
-				availableCards.AddRange(deck.Hand.Where(c => c.GetComponent<Frozen>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false));
+				availableCards.AddRange(deck.Hand.Where(c => c.GetComponent<Frozen>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false && c.GetComponent<Pledge>() == null));
 			}
 
 			if (availableCards.Count == 0)

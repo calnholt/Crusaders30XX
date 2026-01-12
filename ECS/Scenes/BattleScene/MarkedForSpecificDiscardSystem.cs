@@ -47,7 +47,7 @@ namespace Crusaders30XX.ECS.Systems
             Entity weapon = null;
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             weapon = player?.GetComponent<EquippedWeapon>()?.SpawnedEntity;
-            var candidates = deck.Hand.Where(c => !ReferenceEquals(c, weapon)).ToList();
+            var candidates = deck.Hand.Where(c => !ReferenceEquals(c, weapon) && c.GetComponent<Pledge>() == null).ToList();
             int pick = System.Math.Min(evt.Amount, candidates.Count);
             Console.WriteLine($"[MarkedForSpecificDiscardSystem] Picking {pick} cards from {candidates.Count} candidates");
             if (pick <= 0) return;

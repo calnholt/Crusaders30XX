@@ -853,6 +853,8 @@ namespace Crusaders30XX.ECS.Systems
                 if (cd.Card.IsWeapon) return false;
             }
             catch { }
+            // Disallow using pledged cards to pay costs
+            if (card.HasComponent<Pledge>()) return false;
             // Card is viable if it can satisfy at least one remaining requirement
             foreach (var c in remainingCosts)
             {

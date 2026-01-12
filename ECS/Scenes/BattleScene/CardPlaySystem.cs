@@ -280,6 +280,9 @@ namespace Crusaders30XX.ECS.Systems
                     // Exclude Yellow cards - they cannot be discarded/used to pay costs
                     handNonWeapons = handNonWeapons.Where(e => e.GetComponent<CardData>()?.Color != CardData.CardColor.Yellow).ToList();
 
+                    // Exclude pledged cards - they cannot be used to pay costs
+                    handNonWeapons = handNonWeapons.Where(e => e.GetComponent<Pledge>() == null).ToList();
+
                     // Helper to attempt greedy satisfaction of remaining requirements
                     bool CanSatisfy(List<string> req, List<Entity> candidates, out List<Entity> picks)
                     {
