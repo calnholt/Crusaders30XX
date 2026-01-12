@@ -99,7 +99,10 @@ namespace Crusaders30XX.ECS.Systems
                 bool hasPreview = card.GetComponent<PledgePreview>() != null;
                 bool isTrackedAsPreview = _previewPledges.Contains(card);
 
-                if (isHovered && !hasPledge && !hasPreview)
+                // Only show preview for eligible cards
+                bool isEligible = PledgeManagementSystem.IsEligibleForPledge(card);
+
+                if (isHovered && isEligible && !hasPledge && !hasPreview)
                 {
                     // Add preview pledge
                     EntityManager.AddComponent(card, new PledgePreview { Owner = card });

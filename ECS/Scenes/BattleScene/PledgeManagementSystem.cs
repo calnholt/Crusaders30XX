@@ -49,12 +49,13 @@ namespace Crusaders30XX.ECS.Systems
                 var ui = card.GetComponent<UIElement>();
                 if (ui == null || !ui.IsClicked) continue;
                 
+                ui.IsClicked = false; // Always consume the click first
+
                 // Check if this is an eligible card
                 if (!IsEligibleForPledge(card, true)) continue;
                 
                 // Card was clicked - pledge it
                 Console.WriteLine($"[PledgeManagementSystem] Card clicked to pledge: {card.GetComponent<CardData>()?.Card.CardId ?? "unknown"}");
-                ui.IsClicked = false; // Consume the click
                 AddPledgeToCard(card);
                 _awaitingPledgeSelection = false;
                 ProceedToEnemyStart();
@@ -131,7 +132,7 @@ namespace Crusaders30XX.ECS.Systems
             ));
         }
 
-        private bool IsEligibleForPledge(Entity card, bool showErrorMessage = false)
+        public static bool IsEligibleForPledge(Entity card, bool showErrorMessage = false)
         {
             if (card == null) return false;
             
@@ -201,13 +202,8 @@ namespace Crusaders30XX.ECS.Systems
                 var ui = card.GetComponent<UIElement>();
                 if (ui == null) continue;
                 
-                bool eligible = IsEligibleForPledge(card);
-                ui.IsInteractable = eligible;
-                if (!eligible)
-                {
-                    ui.IsHovered = false;
-                    ui.IsClicked = false;
-                }
+                // Allow interaction with all cards so ineligible clicks can show error messages
+                ui.IsInteractable = true;
             }
         }
 
