@@ -30,7 +30,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Panel Height", Step = 1, Min = 10, Max = 2000)]
         public int PanelHeight { get; set; } = 80;
         [DebugEditable(DisplayName = "Panel Margin", Step = 1, Min = 0, Max = 500)]
-        public int PanelMargin { get; set; } = 20;
+        public int PanelMargin { get; set; } = 30;
         [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.1f, Max = 10f)]
         public float TextScale { get; set; } = 0.2f;
 

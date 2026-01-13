@@ -24,9 +24,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Layout/debug controls
 		[DebugEditable(DisplayName = "Left Margin", Step = 2, Min = 0, Max = 2000)]
-		public int LeftMargin { get; set; } = 0;
+		public int LeftMargin { get; set; } = 30;
 		[DebugEditable(DisplayName = "Top Margin", Step = 2, Min = 0, Max = 2000)]
-		public int TopMargin { get; set; } = 10;
+		public int TopMargin { get; set; } = 20;
 		[DebugEditable(DisplayName = "Icon Size", Step = 1, Min = 8, Max = 512)]
 		public int IconSize { get; set; } = 100;
 		[DebugEditable(DisplayName = "Spacing X", Step = 1, Min = 0, Max = 256)]

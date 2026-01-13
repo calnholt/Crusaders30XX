@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Layout
 		[DebugEditable(DisplayName = "Offset Y", Step = 1, Min = 0, Max = 400)]
-		public int OffsetY { get; set; } = 48;
+		public int OffsetY { get; set; } = 56;
 		[DebugEditable(DisplayName = "Node Spacing", Step = 2, Min = 16, Max = 400)]
 		public int NodeSpacing { get; set; } = 208; // center-to-center
 		[DebugEditable(DisplayName = "Base Radius", Step = 1, Min = 4, Max = 200)]

@@ -542,4 +542,9 @@ namespace Crusaders30XX.ECS.Events
         public Entity Card {get; set;}
     }
 
+    public class CardBlockedEvent
+    {
+        public Entity Card { get; set; }
+    }
+
 } 

@@ -162,6 +162,7 @@ namespace Crusaders30XX.ECS.Systems
                     }
                     var cardData = entity.GetComponent<CardData>();
                     cardData.Card.OnBlock?.Invoke(EntityManager, entity);
+                    EventManager.Publish(new CardBlockedEvent { Card = entity });
                     // Award mastery points for Block cards when used to block
                     if (cardData != null && cardData.Card.Type == CardType.Block)
                     {

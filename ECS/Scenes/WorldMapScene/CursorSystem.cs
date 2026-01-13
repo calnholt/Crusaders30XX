@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
@@ -30,6 +31,10 @@ namespace Crusaders30XX.ECS.Systems
 		private Entity _prevHoverEntityForRumble;
 		private float _rumbleTimeRemaining;
 		private bool _isEnabled = true;
+
+		// Hit zone entry tracking for tie-breaking by recency
+		private Dictionary<Entity, int> _hitZoneEntryOrder = new();
+		private int _entryCounter = 0;
 
 		// Cursor cross debug + animation
 		[DebugEditable(DisplayName = "Cross Scale Multiplier", Step = 0.05f, Min = 0.25f, Max = 3f)]
@@ -84,6 +89,22 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Rumble High Intensity", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float RumbleHigh { get; set; } = 0.2f;
 
+		[DebugEditable(DisplayName = "Hysteresis Threshold", Step = 0.01f, Min = 0f, Max = 0.5f)]
+		public float HysteresisThreshold { get; set; } = 0.15f;
+
+		// Hysteresis: track current top entity to prevent flickering during hover animations
+		private Entity _currentTopEntity;
+
+		// Candidate info used by helper methods
+		private class CandidateInfo
+		{
+			public Entity E;
+			public UIElement UI;
+			public Transform T;
+			public float Coverage;
+			public int EntryOrder;
+		}
+
 		public CursorSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
 		{
@@ -95,7 +116,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<SetCursorEnabledEvent>(_ => { _isEnabled = _.Enabled; });
 		}
 
-		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
 			return EntityManager.GetEntitiesWithComponent<SceneState>();
 		}
@@ -103,8 +124,10 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			if (!_isEnabled) return;
+
 			// Clear last clicked tracking from previous frame (InputSystem owns IsClicked state)
 			_lastClickedEntity = null;
+
 			// Clear last hovered from previous frame
 			if (_lastHoveredEntity != null)
 			{
@@ -128,7 +151,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			var gp = GamePad.GetState(PlayerIndex.One);
 			bool useGamepad = gp.IsConnected;
-			Vector2 stick = useGamepad ? gp.ThumbSticks.Left : Vector2.Zero; // X: right+, Y: up+
+			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			bool ignoringTransitions = StateSingleton.IsActive;
 
 			// Clear hover state on all UI elements to ensure exclusivity
@@ -138,112 +161,117 @@ namespace Crusaders30XX.ECS.Systems
 				if (ui2 != null) ui2.IsHovered = false;
 			}
 
-			// Determine top-most UI intersecting the cursor and flag hover
-			var topCandidate = (object)null;
+			// ─── Input-specific: Update cursor position ───
 			bool isPressed = false;
 			bool isPressedEdge = false;
-			float coverageForTop = 0f;
+			InputMethod inputSource;
+
 			if (useGamepad)
 			{
-				// Manage rumble decay each frame while gamepad is connected
-				float dtRumble = (float)gameTime.ElapsedGameTime.TotalSeconds;
-				if (_rumbleTimeRemaining > 0f)
-				{
-					_rumbleTimeRemaining -= dtRumble;
-					if (_rumbleTimeRemaining > 0f)
-					{
-						GamePad.SetVibration(PlayerIndex.One, MathHelper.Clamp(RumbleLow, 0f, 1f), MathHelper.Clamp(RumbleHigh, 0f, 1f));
-					}
-					else
-					{
-						_rumbleTimeRemaining = 0f;
-						GamePad.SetVibration(PlayerIndex.One, 0f, 0f);
-					}
-				}
+				inputSource = InputMethod.Gamepad;
+				UpdateRumble(dt);
 
-				if (!ignoringTransitions)
-				{
-					int rHitbox = Math.Max(0, HitboxRadius);
-					var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
-						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && !x.UI.IsHidden && (x.UI.IsInteractable || !string.IsNullOrWhiteSpace(x.UI.Tooltip) || x.UI.TooltipType == TooltipType.Card) && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox, x.T?.Rotation ?? 0f) > 0f)
-						.OrderByDescending(x => x.T?.ZOrder ?? 0)
-						.FirstOrDefault();
-					Entity hoveredEntityForRumble = null;
-					if (tc != null)
-					{
-						tc.UI.IsHovered = true;
-						hoveredEntityForRumble = tc.E;
-						_lastHoveredEntity = hoveredEntityForRumble;
-						// Trigger a short rumble when a new entity becomes hovered
-						if (_prevHoverEntityForRumble != hoveredEntityForRumble && tc.UI.IsInteractable && !tc.UI.IsHidden)
-						{
-							_rumbleTimeRemaining = Math.Max(0f, RumbleDurationSeconds);
-							if (_rumbleTimeRemaining > 0f)
-							{
-								GamePad.SetVibration(PlayerIndex.One, MathHelper.Clamp(RumbleLow, 0f, 1f), MathHelper.Clamp(RumbleHigh, 0f, 1f));
-							}
-						}
-						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius), tc.T?.Rotation ?? 0f);
-					}
-					// Cross animation: shrink slightly on entering a new interactable hover, ease back otherwise
-					Entity currentInteractable = (tc != null && tc.UI != null && tc.UI.IsInteractable && !tc.UI.IsHidden) ? tc.E : null;
-					if (_prevHoverInteractable != currentInteractable)
-					{
-						_crossPulseTimer = EnterPulseDuration;
-						_prevHoverInteractable = currentInteractable;
-						if (currentInteractable != null)
-						{
-							EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Interface, Volume = 0.05f, });
-						}
-					}
-					float targetScale = 1f;
-					if (currentInteractable != null)
-					{
-						targetScale = (_crossPulseTimer > 0f) ? (HoverScale - EnterPulseExtra) : HoverScale;
-					}
-					_crossScaleCurrent += (targetScale - _crossScaleCurrent) * MathHelper.Clamp(dtRumble * CrossAnimSpeed, 0f, 1f);
-					_crossPulseTimer = Math.Max(0f, _crossPulseTimer - dtRumble);
-					topCandidate = tc;
-					_prevHoverEntityForRumble = hoveredEntityForRumble;
-				}
-
-				// A button edge-triggered click: use the same coverage criterion as hover
+				// Read button state
 				bool aPressed = gp.Buttons.A == ButtonState.Pressed;
 				bool aPrevPressed = _prevGamePadState.Buttons.A == ButtonState.Pressed;
-				bool aEdge = aPressed && !aPrevPressed;
 				isPressed = aPressed;
-				isPressedEdge = aEdge;
-				if (aEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick && !StateSingleton.PreventClicking && !StateSingleton.IsTutorialActive)
+				isPressedEdge = aPressed && !aPrevPressed;
+			}
+			else
+			{
+				inputSource = InputMethod.Mouse;
+
+				// Mouse-driven: set position directly
+				var ms = Mouse.GetState();
+
+				// Transform mouse coordinates from Screen Space to Virtual Space
+				var dest = Game1.RenderDestination;
+				float scaleX = (float)dest.Width / Game1.VirtualWidth;
+				float scaleY = (float)dest.Height / Game1.VirtualHeight;
+
+				// Avoid division by zero
+				if (scaleX <= 0.001f) scaleX = 1f;
+				if (scaleY <= 0.001f) scaleY = 1f;
+
+				float virtX = (ms.X - dest.X) / scaleX;
+				float virtY = (ms.Y - dest.Y) / scaleY;
+
+				_cursorPosition = new Vector2(virtX, virtY);
+				_cursorPosition.X = MathHelper.Clamp(_cursorPosition.X, 0f, w);
+				_cursorPosition.Y = MathHelper.Clamp(_cursorPosition.Y, 0f, h);
+
+				// Ensure rumble is disabled when switching to mouse
+				if (_rumbleTimeRemaining > 0f)
 				{
-					int rHitboxClick = Math.Max(0, HitboxRadius);
-					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()
-						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && !x.UI.IsHidden && x.UI.IsInteractable && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick, x.T?.Rotation ?? 0f) > 0f)
-						.OrderByDescending(x => x.T?.ZOrder ?? 0)
-						.FirstOrDefault();
-					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
+					_rumbleTimeRemaining = 0f;
+					GamePad.SetVibration(PlayerIndex.One, 0f, 0f);
+				}
+
+				// Read button state
+				bool lPressed = ms.LeftButton == ButtonState.Pressed;
+				bool lPrevPressed = _prevMouseState.LeftButton == ButtonState.Pressed;
+				isPressed = lPressed;
+				isPressedEdge = lPressed && !lPrevPressed;
+
+				_prevMouseState = ms;
+			}
+
+			// ─── Shared: Determine top candidate and handle hover/click ───
+			CandidateInfo topCandidate = null;
+			float coverageForTop = 0f;
+
+			if (!ignoringTransitions)
+			{
+				// Get all candidates with coverage, update entry tracking, and select top
+				var candidates = GetCandidatesWithCoverage(forHover: true);
+				UpdateHitZoneTracking(candidates);
+				topCandidate = GetTopCandidate(candidates);
+
+				if (topCandidate != null)
+				{
+					topCandidate.UI.IsHovered = true;
+					_lastHoveredEntity = topCandidate.E;
+					coverageForTop = topCandidate.Coverage;
+
+					// Gamepad-specific: trigger rumble on new hover
+					if (useGamepad && _prevHoverEntityForRumble != topCandidate.E && topCandidate.UI.IsInteractable && !topCandidate.UI.IsHidden)
 					{
-						// NOTE: InputSystem owns IsClicked state management
-						Console.WriteLine($"[CursorSystem] Clicked: {clickCandidate.E.Id}");
-						_lastClickedEntity = clickCandidate.E;
+						_rumbleTimeRemaining = Math.Max(0f, RumbleDurationSeconds);
+						if (_rumbleTimeRemaining > 0f)
+						{
+							GamePad.SetVibration(PlayerIndex.One, MathHelper.Clamp(RumbleLow, 0f, 1f), MathHelper.Clamp(RumbleHigh, 0f, 1f));
+						}
 					}
 				}
 
-				// Publish cursor state event for other systems
-				EventManager.Publish(new CursorStateEvent
-				{
-					Position = _cursorPosition,
-					IsAPressed = isPressed,
-					IsAPressedEdge = isPressedEdge,
-					Coverage = coverageForTop,
-					TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E),
-					Source = InputMethod.Gamepad
-				});
+				_prevHoverEntityForRumble = topCandidate?.E;
 
+				// Update cross animation
+				UpdateCrossAnimation(dt, topCandidate);
+
+				// Handle click
+				if (isPressedEdge)
+				{
+					HandleClick(topCandidate);
+				}
+			}
+			else
+			{
+				// Ease cross scale back to 1 during transitions
+				_crossScaleCurrent += (1f - _crossScaleCurrent) * MathHelper.Clamp(dt * CrossAnimSpeed, 0f, 1f);
+				_crossPulseTimer = Math.Max(0f, _crossPulseTimer - dt);
+				_prevHoverInteractable = null;
+			}
+
+			// ─── Shared: Publish cursor state ───
+			PublishCursorState(_cursorPosition, isPressed, isPressedEdge, coverageForTop, topCandidate?.E, ignoringTransitions, inputSource);
+
+			// ─── Gamepad-specific: Apply movement with slowdown ───
+			if (useGamepad)
+			{
 				_prevGamePadState = gp;
 
-				// Apply circular deadzone for movement
+				Vector2 stick = gp.ThumbSticks.Left; // X: right+, Y: up+
 				float mag = stick.Length();
 				if (mag < Deadzone)
 				{
@@ -256,20 +284,7 @@ namespace Crusaders30XX.ECS.Systems
 				float speedMultiplier = MathHelper.Clamp((float)Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
 
 				// Slow down when overlapping UI elements beyond threshold
-				int r = Math.Max(1, CursorRadius);
-				float maxCoverage = 0f;
-				if (!ignoringTransitions)
-				{
-					foreach (var e2 in EntityManager.GetEntitiesWithComponent<UIElement>())
-					{
-						var ui2 = e2.GetComponent<UIElement>();
-						var t2 = e2.GetComponent<Transform>();
-						if (ui2 == null || !ui2.IsInteractable || ui2.IsHidden) continue;
-						var bounds2 = ui2.Bounds;
-						if (bounds2.Width < 2 || bounds2.Height < 2) continue;
-						maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r, t2?.Rotation ?? 0f));
-					}
-				}
+				float maxCoverage = GetMaxInteractableCoverage(ignoringTransitions);
 				float rt = gp.Triggers.Right;
 				if (rt <= 0.1f && maxCoverage >= MathHelper.Clamp(SlowdownCoverageThreshold, 0f, 1f))
 				{
@@ -279,122 +294,227 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					speedMultiplier *= LtSpeedMultiplier;
 				}
-				float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
 				// In screen space, up on stick is negative Y
 				Vector2 velocity = new Vector2(dir.X, -dir.Y) * BaseSpeed * speedMultiplier;
 				_cursorPosition += velocity * dt;
 
-				// Clamp cursor center to remain within the screen (allowing the circle to go offscreen)
+				// Clamp cursor center to remain within the screen
 				_cursorPosition.X = MathHelper.Clamp(_cursorPosition.X, 0f, w);
 				_cursorPosition.Y = MathHelper.Clamp(_cursorPosition.Y, 0f, h);
 			}
-			else
+		}
+
+		/// <summary>
+		/// Gets all UI entities that overlap the cursor hitbox, with their coverage calculated.
+		/// </summary>
+		private List<CandidateInfo> GetCandidatesWithCoverage(bool forHover)
+		{
+			int rHitbox = Math.Max(0, HitboxRadius);
+			var result = new List<CandidateInfo>();
+
+			foreach (var e in EntityManager.GetEntitiesWithComponent<UIElement>())
 			{
-				// Mouse-driven path: set position directly and handle hover/click
-				var ms = Mouse.GetState();
-				
-				// Transform mouse coordinates from Screen Space to Virtual Space
-				var dest = Game1.RenderDestination;
-				float scaleX = (float)dest.Width / Game1.VirtualWidth;
-				float scaleY = (float)dest.Height / Game1.VirtualHeight;
-				
-				// Avoid division by zero
-				if (scaleX <= 0.001f) scaleX = 1f;
-				if (scaleY <= 0.001f) scaleY = 1f;
+				var ui = e.GetComponent<UIElement>();
+				var t = e.GetComponent<Transform>();
 
-				float virtX = (ms.X - dest.X) / scaleX;
-				float virtY = (ms.Y - dest.Y) / scaleY;
+				if (ui == null || ui.IsHidden) continue;
+				if (ui.Bounds.Width < 2 || ui.Bounds.Height < 2) continue;
 
-				_cursorPosition = new Vector2(virtX, virtY);
-				_cursorPosition.X = MathHelper.Clamp(_cursorPosition.X, 0f, w);
-				_cursorPosition.Y = MathHelper.Clamp(_cursorPosition.Y, 0f, h);
-				// Ensure rumble is disabled when switching to mouse
+				// For hover, include entities with tooltip or card tooltip type even if not interactable
+				if (forHover && !(ui.IsInteractable || !string.IsNullOrWhiteSpace(ui.Tooltip) || ui.TooltipType == TooltipType.Card))
+					continue;
+
+				float coverage = EstimateCircleRectCoverage(ui.Bounds, _cursorPosition, rHitbox, t?.Rotation ?? 0f);
+				if (coverage > 0f)
+				{
+					result.Add(new CandidateInfo
+					{
+						E = e,
+						UI = ui,
+						T = t,
+						Coverage = coverage,
+						EntryOrder = _hitZoneEntryOrder.GetValueOrDefault(e, 0)
+					});
+				}
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Updates the hit zone entry tracking dictionary.
+		/// Adds new entries for entities that just entered, removes entities that left.
+		/// </summary>
+		private void UpdateHitZoneTracking(List<CandidateInfo> currentCandidates)
+		{
+			var currentEntities = new HashSet<Entity>(currentCandidates.Select(c => c.E));
+
+			// Add new entries
+			foreach (var candidate in currentCandidates)
+			{
+				if (!_hitZoneEntryOrder.ContainsKey(candidate.E))
+				{
+					_entryCounter++;
+					_hitZoneEntryOrder[candidate.E] = _entryCounter;
+					candidate.EntryOrder = _entryCounter;
+				}
+			}
+
+			// Remove entities that are no longer in the hit zone
+			var toRemove = _hitZoneEntryOrder.Keys.Where(e => !currentEntities.Contains(e)).ToList();
+			foreach (var e in toRemove)
+			{
+				_hitZoneEntryOrder.Remove(e);
+			}
+		}
+
+		/// <summary>
+		/// Selects the top candidate from the list with hysteresis.
+		/// The current top entity stays selected unless another entity exceeds its coverage by the threshold.
+		/// Priority: 1) highest coverage, 2) most recent entry (highest entry order).
+		/// </summary>
+		private CandidateInfo GetTopCandidate(List<CandidateInfo> candidates)
+		{
+			if (candidates.Count == 0)
+			{
+				_currentTopEntity = null;
+				return null;
+			}
+
+			// Find the current top's info if it's still in the candidates
+			var currentTopInfo = candidates.FirstOrDefault(c => c.E == _currentTopEntity);
+
+			// If current top is still overlapping, require new candidates to exceed by threshold
+			if (currentTopInfo != null && currentTopInfo.Coverage > 0f)
+			{
+				float requiredCoverage = currentTopInfo.Coverage + HysteresisThreshold;
+				var challenger = candidates
+					.Where(c => c.E != _currentTopEntity && c.Coverage >= requiredCoverage)
+					.OrderByDescending(c => c.Coverage)
+					.ThenByDescending(c => c.EntryOrder)
+					.FirstOrDefault();
+
+				if (challenger != null)
+				{
+					_currentTopEntity = challenger.E;
+					return challenger;
+				}
+
+				// Current top retains selection
+				return currentTopInfo;
+			}
+
+			// Normal selection (no current top or it left the hit zone)
+			var winner = candidates
+				.OrderByDescending(c => c.Coverage)
+				.ThenByDescending(c => c.EntryOrder)
+				.FirstOrDefault();
+
+			_currentTopEntity = winner?.E;
+			return winner;
+		}
+
+		/// <summary>
+		/// Updates the cross cursor animation based on hover state.
+		/// </summary>
+		private void UpdateCrossAnimation(float dt, CandidateInfo topCandidate)
+		{
+			Entity currentInteractable = (topCandidate != null && topCandidate.UI.IsInteractable && !topCandidate.UI.IsHidden) ? topCandidate.E : null;
+
+			if (_prevHoverInteractable != currentInteractable)
+			{
+				_crossPulseTimer = EnterPulseDuration;
+				_prevHoverInteractable = currentInteractable;
+				if (currentInteractable != null)
+				{
+					EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Interface, Volume = 0.05f });
+				}
+			}
+
+			float targetScale = 1f;
+			if (currentInteractable != null)
+			{
+				targetScale = (_crossPulseTimer > 0f) ? (HoverScale - EnterPulseExtra) : HoverScale;
+			}
+
+			_crossScaleCurrent += (targetScale - _crossScaleCurrent) * MathHelper.Clamp(dt * CrossAnimSpeed, 0f, 1f);
+			_crossPulseTimer = Math.Max(0f, _crossPulseTimer - dt);
+		}
+
+		/// <summary>
+		/// Handles click logic when the action button is edge-triggered.
+		/// </summary>
+		private void HandleClick(CandidateInfo topCandidate)
+		{
+			if (topCandidate == null) return;
+			if (topCandidate.UI.IsPreventDefaultClick) return;
+			if (StateSingleton.PreventClicking) return;
+			if (StateSingleton.IsTutorialActive) return;
+
+			// For click, we need an interactable element
+			if (!topCandidate.UI.IsInteractable || topCandidate.UI.IsHidden) return;
+
+			Console.WriteLine($"[CursorSystem] Clicked: {topCandidate.E.Id}");
+			_lastClickedEntity = topCandidate.E;
+		}
+
+		/// <summary>
+		/// Publishes the cursor state event for other systems.
+		/// </summary>
+		private void PublishCursorState(Vector2 position, bool isPressed, bool isPressedEdge, float coverage, Entity topEntity, bool ignoringTransitions, InputMethod source)
+		{
+			EventManager.Publish(new CursorStateEvent
+			{
+				Position = position,
+				IsAPressed = isPressed,
+				IsAPressedEdge = isPressedEdge,
+				Coverage = coverage,
+				TopEntity = ignoringTransitions ? null : topEntity,
+				Source = source
+			});
+		}
+
+		/// <summary>
+		/// Updates gamepad rumble state.
+		/// </summary>
+		private void UpdateRumble(float dt)
+		{
+			if (_rumbleTimeRemaining > 0f)
+			{
+				_rumbleTimeRemaining -= dt;
 				if (_rumbleTimeRemaining > 0f)
+				{
+					GamePad.SetVibration(PlayerIndex.One, MathHelper.Clamp(RumbleLow, 0f, 1f), MathHelper.Clamp(RumbleHigh, 0f, 1f));
+				}
+				else
 				{
 					_rumbleTimeRemaining = 0f;
 					GamePad.SetVibration(PlayerIndex.One, 0f, 0f);
 				}
-
-				float dtMouse = (float)gameTime.ElapsedGameTime.TotalSeconds;
-				if (!ignoringTransitions)
-				{
-					int rHitbox = Math.Max(0, HitboxRadius);
-					var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
-						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox, x.T?.Rotation ?? 0f) > 0f)
-						.OrderByDescending(x => x.T?.ZOrder ?? 0)
-						.FirstOrDefault();
-					if (tc != null)
-					{
-						tc.UI.IsHovered = true;
-						_lastHoveredEntity = tc.E;
-						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius), tc.T?.Rotation ?? 0f);
-					}
-					// Cross animation: shrink slightly on entering a new interactable hover, ease back otherwise
-					Entity currentInteractable = (tc != null && tc.UI != null && tc.UI.IsInteractable && !tc.UI.IsHidden) ? tc.E : null;
-					if (_prevHoverInteractable != currentInteractable)
-					{
-						_crossPulseTimer = EnterPulseDuration;
-						_prevHoverInteractable = currentInteractable;
-						if (currentInteractable != null)
-						{
-							EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Interface, Volume = 0.05f });
-						}
-					}
-					float targetScale = 1f;
-					if (currentInteractable != null)
-					{
-						targetScale = (_crossPulseTimer > 0f) ? (HoverScale - EnterPulseExtra) : HoverScale;
-					}
-					_crossScaleCurrent += (targetScale - _crossScaleCurrent) * MathHelper.Clamp(dtMouse * CrossAnimSpeed, 0f, 1f);
-					_crossPulseTimer = Math.Max(0f, _crossPulseTimer - dtMouse);
-					topCandidate = tc;
-				}
-
-				bool lPressed = ms.LeftButton == ButtonState.Pressed;
-				bool lPrevPressed = _prevMouseState.LeftButton == ButtonState.Pressed;
-				bool lEdge = lPressed && !lPrevPressed;
-				isPressed = lPressed;
-				isPressedEdge = lEdge;
-				if (lEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick && !StateSingleton.PreventClicking && !StateSingleton.IsTutorialActive)
-				{
-					int rHitboxClick = Math.Max(0, HitboxRadius);
-					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()
-						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick, x.T?.Rotation ?? 0f) > 0f)
-						.OrderByDescending(x => x.T?.ZOrder ?? 0)
-						.FirstOrDefault();
-					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
-					{
-						// NOTE: InputSystem owns IsClicked state management
-						Console.WriteLine($"[CursorSystem] Clicked: {clickCandidate.E.Id}");
-						_lastClickedEntity = clickCandidate.E;
-					}
-				}
-
-				EventManager.Publish(new CursorStateEvent
-				{
-					Position = _cursorPosition,
-					IsAPressed = isPressed,
-					IsAPressedEdge = isPressedEdge,
-					Coverage = coverageForTop,
-					TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E),
-					Source = InputMethod.Mouse
-				});
-
-				_prevMouseState = ms;
 			}
+		}
 
-			// Ease cross scale back to 1 during transitions (when not hovering)
-			if (ignoringTransitions)
+		/// <summary>
+		/// Gets the maximum coverage of any interactable UI element for slowdown calculation.
+		/// </summary>
+		private float GetMaxInteractableCoverage(bool ignoringTransitions)
+		{
+			if (ignoringTransitions) return 0f;
+
+			int r = Math.Max(1, CursorRadius);
+			float maxCoverage = 0f;
+
+			foreach (var e in EntityManager.GetEntitiesWithComponent<UIElement>())
 			{
-				float dtGeneral = (float)gameTime.ElapsedGameTime.TotalSeconds;
-				_crossScaleCurrent += (1f - _crossScaleCurrent) * MathHelper.Clamp(dtGeneral * CrossAnimSpeed, 0f, 1f);
-				_crossPulseTimer = Math.Max(0f, _crossPulseTimer - dtGeneral);
-				_prevHoverInteractable = null;
+				var ui = e.GetComponent<UIElement>();
+				var t = e.GetComponent<Transform>();
+				if (ui == null || !ui.IsInteractable || ui.IsHidden) continue;
+				if (ui.Bounds.Width < 2 || ui.Bounds.Height < 2) continue;
+				maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(ui.Bounds, _cursorPosition, r, t?.Rotation ?? 0f));
 			}
 
+			return maxCoverage;
 		}
 
 		public void Draw()
@@ -407,16 +527,6 @@ namespace Crusaders30XX.ECS.Systems
 			float a = MathHelper.Clamp(CursorOpacity, 0f, 1f);
 			var whiteWithAlpha = Color.FromNonPremultiplied(255, 255, 255, (byte)Math.Round(a * 255f));
 			_spriteBatch.Draw(_circleTexture, dst, whiteWithAlpha);
-
-			// Draw the inner hitbox circle
-			// int rHitboxDraw = Math.Max(0, HitboxRadius);
-			// if (rHitboxDraw > 0)
-			// {
-			// 	var hitboxTexture = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, rHitboxDraw);
-			// 	var dstHitbox = new Rectangle((int)Math.Round(_cursorPosition.X) - rHitboxDraw, (int)Math.Round(_cursorPosition.Y) - rHitboxDraw, rHitboxDraw * 2, rHitboxDraw * 2);
-			// 	var hitboxColor = Color.FromNonPremultiplied(Color.Gold.R, Color.Gold.G, Color.Gold.B, (byte)Math.Round(a * 255f));
-			// 	_spriteBatch.Draw(hitboxTexture, dstHitbox, hitboxColor);
-			// }
 
 			// Draw the cross overlay, centered and scaled within the cursor
 			if (_cursorCross != null)
