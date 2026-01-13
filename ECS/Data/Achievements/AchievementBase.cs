@@ -55,6 +55,8 @@ namespace Crusaders30XX.ECS.Data.Achievements
         /// </summary>
         public int TargetValue { get; protected set; } = 0;
 
+        protected EntityManager EntityManager;
+
         #endregion
 
         #region Runtime State
@@ -92,10 +94,10 @@ namespace Crusaders30XX.ECS.Data.Achievements
         /// Initialize the achievement with its progress data.
         /// Called by AchievementManager after loading progress from save.
         /// </summary>
-        public void Initialize(AchievementProgress progress)
+        public void Initialize(AchievementProgress progress, EntityManager entityManager)
         {
             Progress = progress ?? new AchievementProgress { AchievementId = Id };
-
+            this.EntityManager = entityManager;
             // Ensure the progress has the correct ID
             if (string.IsNullOrEmpty(Progress.AchievementId))
             {

@@ -392,6 +392,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             card.OnPlay?.Invoke(EntityManager, evt.Card);
+            EventManager.Publish(new CardPlayedEvent { Card = evt.Card });
             EventManager.Publish(new TrackingEvent { Type = card.CardId, Delta = 1 });
 
             // Remove Pledge if present when playing
