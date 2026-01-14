@@ -22,7 +22,7 @@ namespace Crusaders30XX.ECS.Objects.Medals
         }
         public override void Activate()
         {
-            EventManager.Publish(new ModifyCourageRequestEvent { Delta = 1, Reason = Id });
+            EventManager.Publish(new ModifyCourageRequestEvent { Delta = 1, Reason = Id, Type = ModifyCourageType.Gain });
         }
 
         private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)

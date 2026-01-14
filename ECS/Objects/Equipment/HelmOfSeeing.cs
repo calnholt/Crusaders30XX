@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
         EventManager.Publish(new RequestDrawCardsEvent { Count = Cards });
         EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
         EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
-        EventManager.Publish(new ModifyCourageRequestEvent { Delta = -Courage });
+        EventManager.Publish(new ModifyCourageRequestEvent { Delta = -Courage, Type = ModifyCourageType.Spent });
         for (int i = 0; i < Cost; i++)
         {
           RemainingUses--;

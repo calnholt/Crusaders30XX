@@ -133,7 +133,7 @@ namespace Crusaders30XX.ECS.Systems
                         {
                             if (eq.Equipment.Color == CardData.CardColor.Red)
                             {
-                                EventManager.Publish(new ModifyCourageRequestEvent { Delta = 1 });
+                                EventManager.Publish(new ModifyCourageRequestEvent { Delta = 1, Type = ModifyCourageType.Gain });
                             }
                             else if (eq.Equipment.Color == CardData.CardColor.White)
                             {

@@ -75,6 +75,14 @@ namespace Crusaders30XX.ECS.Events
     {
         public int Delta { get; set; } = 0;
         public string Reason { get; set; } = "";
+        public ModifyCourageType Type {get; set;}
+
+    }
+    public enum ModifyCourageType
+    {
+        Gain,
+        Spent,
+        Lost
     }
     public class ModifyCourageEvent
     {

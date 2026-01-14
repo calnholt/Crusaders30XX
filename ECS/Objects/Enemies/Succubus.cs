@@ -83,7 +83,7 @@ public class Succubus : EnemyBase
     if (courage == null) return;
     var courageAmount = courage.GetComponent<Courage>().Amount;
     int courageLost = System.Math.Min(System.Math.Abs(amount), courageAmount);
-    EventManager.Publish(new ModifyCourageRequestEvent { Delta = -amount, Reason = "Succubus" });
+    EventManager.Publish(new ModifyCourageRequestEvent { Delta = -amount, Reason = "Succubus", Type = ModifyCourageType.Lost });
     EventManager.Publish(new TrackingEvent { Type = "courage_lost", Delta = courageLost });
   }
 

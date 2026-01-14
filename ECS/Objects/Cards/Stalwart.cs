@@ -17,7 +17,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             
             OnBlock = (entityManager, card) =>
             {
-                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -ValuesParse[0] });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -ValuesParse[0], Type = ModifyCourageType.Spent });
             };
 
             CanPlay = (entityManager, card) =>
