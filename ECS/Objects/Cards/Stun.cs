@@ -22,7 +22,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
             OnPlay = (entityManager, card) =>
             {
-                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -CourageCost });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -CourageCost, Type = ModifyCourageType.Spent });
                 var enemy = entityManager.GetEntity("Enemy");
                 EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Stun, Delta = 1 });
             };

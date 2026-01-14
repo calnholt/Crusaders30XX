@@ -51,6 +51,15 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Emitted when a frostbite passive effect is triggered (similar to PassiveTriggered).
+    /// Used by display system to play pulse animation.
+    /// </summary>
+    public class FrostbiteTriggered
+    {
+        public Entity Target { get; set; }
+    }
+
+    /// <summary>
     /// Emitted when a tribulation effect is triggered (similar to MedalTriggered).
     /// Used by display system to play pulse animation.
     /// </summary>

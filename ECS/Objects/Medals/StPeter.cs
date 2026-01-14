@@ -18,19 +18,19 @@ namespace Crusaders30XX.ECS.Objects.Medals
 
         public override void Initialize(EntityManager entityManager, Entity medalEntity)
         {
-            EventManager.Subscribe<CardMoveRequested>(OnCardMoveRequested);
+            EventManager.Subscribe<CardBlockedEvent>(OnCardBlockedEvent);
             EntityManager = entityManager;
             MedalEntity = medalEntity;
         }
 
-        private void OnCardMoveRequested(CardMoveRequested evt)
+        private void OnCardBlockedEvent(CardBlockedEvent evt)
         {
-            if (Activated) return;
-            if ((evt.Destination == CardZoneType.DiscardPile || evt.Destination == CardZoneType.ExhaustPile) && evt.Card.GetComponent<CardData>()?.Color == CardColor.Black)
+            if (evt.Card.GetComponent<CardData>()?.Color == CardColor.Black)
             {
                 CurrentCount++;
                 if (CurrentCount >= MaxCount)
                 {
+                    CurrentCount = 0;
                     EmitActivateEvent();
                 }
             }
@@ -39,8 +39,6 @@ namespace Crusaders30XX.ECS.Objects.Medals
         public override void Activate()
         {
             Console.WriteLine($"[StPeter] Activate: Drawing 1 card");
-            CurrentCount = 0;
-            Activated = true;
             EventManager.Publish(new RequestDrawCardsEvent { Count = 1 });
         }
     }

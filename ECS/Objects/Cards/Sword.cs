@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
-                EventManager.Publish(new ModifyCourageRequestEvent { Delta = +ValuesParse[0] });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = +ValuesParse[0], Type = ModifyCourageType.Gain });
             };
         }
     }

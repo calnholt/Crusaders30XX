@@ -38,7 +38,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Layout constants (pixels)
 		[DebugEditable(DisplayName = "Left Margin", Step = 2, Min = 0, Max = 2000)]
-		public int LeftMargin { get; set; } = 8;
+		public int LeftMargin { get; set; } = 30;
 		[DebugEditable(DisplayName = "Top Margin", Step = 2, Min = 0, Max = 2000)]
 		public int TopMargin { get; set; } = 200;
 		[DebugEditable(DisplayName = "Icon Size", Step = 1, Min = 8, Max = 512)]

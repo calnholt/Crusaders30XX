@@ -11,6 +11,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 {
     public class CinderboltDemon : EnemyBase
     {
+      private bool UsedInsidiousBolt = false;
         public CinderboltDemon()
         {
             Id = "cinderbolt_demon";
@@ -20,8 +21,10 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 
         public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
         {
-          if (turnNumber == 2)
+          var random = Random.Shared.Next(0, 100);
+          if (!UsedInsidiousBolt && (turnNumber == 3 && random < 50 || turnNumber > 3))
           {
+            UsedInsidiousBolt = true;
             return ["insidious_bolt"];
           }
           return ["cinderbolt"];

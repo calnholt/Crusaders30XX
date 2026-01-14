@@ -69,6 +69,16 @@ namespace Crusaders30XX.ECS.Data.Achievements
             Register(new RedCardApprentice());
 
             Register(new OHKO());
+            Register(new BoldInvestment());
+            Register(new LivingOnTheEdge());
+            Register(new KunaiStorm());
+            Register(new FrozenButUnbroken());
+            Register(new Archangel());
+            Register(new QuestMaster());
+            Register(new Unshackled());
+            Register(new YouChosePoorly());
+            Register(new Kenosis());
+            Register(new EmptyDrawPile());
         }
 
         /// <summary>

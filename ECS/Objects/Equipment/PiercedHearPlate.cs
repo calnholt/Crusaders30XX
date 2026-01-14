@@ -22,7 +22,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
 
       OnActivate = (entityManager, entity) =>
       {
-        EventManager.Publish(new ModifyCourageRequestEvent { Delta = Courage });
+        EventManager.Publish(new ModifyCourageRequestEvent { Delta = Courage, Type = ModifyCourageType.Gain});
         EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
         EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
         for (int i = 0; i < Cost; i++)

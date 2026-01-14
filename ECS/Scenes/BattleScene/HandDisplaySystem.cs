@@ -270,22 +270,18 @@ namespace Crusaders30XX.ECS.Systems
                             transform.ZOrder = HandZBase + (cardIndex * HandZStep) + (hovered ? HandZHoverBoost : 0);
                         }
 
-                        // Update UI bounds to axis-aligned bounding box of the rotated card
+                        // Update UI bounds to original unrotated dimensions
                         if (ui != null)
                         {
                             int w = cvs?.CardWidth ?? 250;
                             int h = cvs?.CardHeight ?? 350;
-                            float absCos = Math.Abs((float)Math.Cos(angleRad));
-                            float absSin = Math.Abs((float)Math.Sin(angleRad));
-                            int aabbW = (int)(w * absCos + h * absSin);
-                            int aabbH = (int)(h * absCos + w * absSin);
 
-						ui.Bounds = new Rectangle(
-							(int)transform.Position.X - aabbW / 2,
-							(int)transform.Position.Y - aabbH / 2,
-							aabbW,
-							aabbH
-						);
+                            ui.Bounds = new Rectangle(
+                                (int)transform.Position.X - w / 2,
+                                (int)transform.Position.Y - h / 2,
+                                w,
+                                h
+                            );
                         }
                     }
                 }
