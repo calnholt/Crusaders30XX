@@ -72,6 +72,8 @@ namespace Crusaders30XX.ECS.Data.Achievements
             Register(new BoldInvestment());
             Register(new LivingOnTheEdge());
             Register(new KunaiStorm());
+            Register(new FrozenButUnbroken());
+            Register(new Archangel());
         }
 
         /// <summary>

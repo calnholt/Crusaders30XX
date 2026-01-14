@@ -261,7 +261,8 @@ namespace Crusaders30XX.ECS.Systems
                 case AppliedPassiveType.Frostbite:
                     if (next >= PassiveTooltipTextService.FrostbiteThreshold)
                     {
-                        EventManager.Publish(new ModifyHpRequestEvent { Source = e.Target, Target = e.Target, Delta = -5, DamageType = ModifyTypeEnum.Effect });
+                        EventManager.Publish(new FrostbiteTriggered { Target = e.Target });
+                        EventManager.Publish(new ModifyHpRequestEvent { Source = e.Target, Target = e.Target, Delta = -PassiveTooltipTextService.FrostbiteDamage, DamageType = ModifyTypeEnum.Effect });
                         EventManager.Publish(new UpdatePassive { Owner = e.Target, Type = AppliedPassiveType.Frostbite, Delta = -PassiveTooltipTextService.FrostbiteDamage });
                     }
                     break;
