@@ -74,6 +74,7 @@ namespace Crusaders30XX.ECS.Data.Achievements
             Register(new KunaiStorm());
             Register(new FrozenButUnbroken());
             Register(new Archangel());
+            Register(new QuestMaster());
         }
 
         /// <summary>
