@@ -77,6 +77,8 @@ namespace Crusaders30XX.ECS.Data.Achievements
             Register(new QuestMaster());
             Register(new Unshackled());
             Register(new YouChosePoorly());
+            Register(new Kenosis());
+            Register(new EmptyDrawPile());
         }
 
         /// <summary>
