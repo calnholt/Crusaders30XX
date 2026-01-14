@@ -1,0 +1,10 @@
+[
+  {
+    "key": "dungeon_overview",
+    "text": "This is a dungeon! When playing a dungeon, everything is randomized - your deck of cards, enemies, medals, equipment - you name it! Good luck!",
+    "targetType": "none",
+    "targetId": "",
+    "bubbleOrientation": "top",
+    "condition": "is_dungeon"
+  }
+]
