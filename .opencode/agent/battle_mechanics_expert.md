@@ -69,7 +69,6 @@ Events must complete fully before the next begins, ensuring deterministic execut
 ### Temperance
 - Gained by blocking with **White** cards
 - Used for card costs and certain effects
-- Resets to 0 at battle start
 
 ### Threat
 - Enemy resource, displayed to show danger level
