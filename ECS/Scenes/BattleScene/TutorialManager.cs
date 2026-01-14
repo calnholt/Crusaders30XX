@@ -85,6 +85,10 @@ namespace Crusaders30XX.ECS.Systems
             {
                 TryQueueTutorial("cost");
             }
+            if (currentPhase == SubPhase.Pledge)
+            {
+                TryQueueTutorial("pledge");
+            }
             if (currentPhase == SubPhase.Block)
             {
                 TryQueueTutorial("medal");
@@ -153,9 +157,27 @@ namespace Crusaders30XX.ECS.Systems
                     return HasMedal();
                 case "has_tribulation":
                     return HasTribulation();
+                case "can_pledge":
+                    return CanPledge();
                 default:
                     return true;
             }
+        }
+
+        private bool CanPledge()
+        {
+            // Check if a card is already pledged
+            var pledgedCards = EntityManager.GetEntitiesWithComponent<Pledge>().ToList();
+            if (pledgedCards.Count > 0)
+                return false;
+
+            // Check if there are eligible cards in hand
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck == null || deck.Hand == null)
+                return false;
+
+            return deck.Hand.Any(card => PledgeManagementSystem.IsEligibleForPledge(card));
         }
 
         private bool HasCostCardInHand()

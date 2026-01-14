@@ -1,0 +1,10 @@
+[
+  {
+    "key": "pledge",
+    "text": "If you have unused cards after your action phase, you can choose to pledge one of them. Pledged cards don't count towards your hand limit, but pledged cards cannot be used to block or pay for costs of other cards. Think of it as a way to stash strong cards for later turns!",
+    "targetType": "component_hand",
+    "targetId": "CardData",
+    "bubbleOrientation": "top",
+    "condition": "can_pledge"
+  }
+]
