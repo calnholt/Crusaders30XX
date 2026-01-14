@@ -135,11 +135,15 @@ namespace Crusaders30XX.ECS.Systems
                 if (!alreadyPledged)
                 {
                     // Check for eligible cards
-                    foreach (var c in deck.Hand)
+                    foreach (var e in deck.Hand)
                     {
-                        var cd = c.GetComponent<CardData>();
+                        if (e.HasComponent<AnimatingHandToDiscard>()) continue;
+                        if (e.HasComponent<AnimatingHandToZone>()) continue;
+                        if (e.HasComponent<AnimatingHandToDrawPile>()) continue;
+
+                        var cd = e.GetComponent<CardData>();
                         if (cd == null) continue;
-                        if (c.HasComponent<Pledge>()) continue;
+                        if (e.HasComponent<Pledge>()) continue;
                         if (cd.Card.IsWeapon) continue;
                         if (cd.Card.Type == CardType.Block) continue;
                         if (cd.Card.Type == CardType.Relic) continue;

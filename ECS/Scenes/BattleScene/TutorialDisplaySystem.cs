@@ -12,6 +12,7 @@ using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.ECS.Data.Locations;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -147,7 +148,14 @@ namespace Crusaders30XX.ECS.Systems
         {
             var queuedEntity = EntityManager.GetEntity("QueuedEvents");
             var queued = queuedEntity?.GetComponent<QueuedEvents>();
-            return queued?.LocationId == "desert_1";
+            if (queued != null && LocationDefinitionCache.TryGet(queued.LocationId, out var def))
+            {
+                var poi = def.pointsOfInterest != null && queued.QuestIndex >= 0 && queued.QuestIndex < def.pointsOfInterest.Count 
+                    ? def.pointsOfInterest[queued.QuestIndex] 
+                    : null;
+                return poi?.id == "desert_1";
+            }
+            return false;
         }
 
         private void OnTutorialStarted(TutorialStartedEvent evt)

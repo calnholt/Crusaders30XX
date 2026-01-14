@@ -416,7 +416,23 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = [.. def.GetAttackIds(world.EntityManager, 0)] });
             world.AddComponent(enemyEntity, new AttackIntent());
             world.AddComponent(enemyEntity, new AppliedPassives());
-            world.AddComponent(enemyEntity, new Threat { Amount = 0 });
+            
+            // Check if current quest is "desert_1" to disable Threat
+            bool isDesert1 = false;
+            var queuedEventsEntity = world.EntityManager.GetEntity("QueuedEvents");
+            var queued = queuedEventsEntity?.GetComponent<QueuedEvents>();
+            if (queued != null && LocationDefinitionCache.TryGet(queued.LocationId, out var locDef))
+            {
+                var poi = locDef.pointsOfInterest != null && queued.QuestIndex >= 0 && queued.QuestIndex < locDef.pointsOfInterest.Count 
+                    ? locDef.pointsOfInterest[queued.QuestIndex] 
+                    : null;
+                if (poi?.id == "desert_1") isDesert1 = true;
+            }
+
+            if (!isDesert1)
+            {
+                world.AddComponent(enemyEntity, new Threat { Amount = 0 });
+            }
             world.AddComponent(enemyEntity, ParallaxLayer.GetCharacterParallaxLayer());
 
             var playerEntity = world.EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
