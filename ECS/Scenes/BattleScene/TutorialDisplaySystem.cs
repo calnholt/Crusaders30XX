@@ -124,6 +124,12 @@ namespace Crusaders30XX.ECS.Systems
             if (!IsActive) return;
             base.Update(gameTime);
 
+            if (_isActive && _currentTutorial?.key == "threat" && IsThreatDisabled())
+            {
+                EventManager.Publish(new AdvanceTutorialEvent());
+                return;
+            }
+
             // Update target bounds each frame (entities may move)
             if (_isActive && _tutorialManager != null)
             {
@@ -135,6 +141,13 @@ namespace Crusaders30XX.ECS.Systems
             {
                 StateSingleton.IsTutorialActive = false;
             }
+        }
+
+        private bool IsThreatDisabled()
+        {
+            var queuedEntity = EntityManager.GetEntity("QueuedEvents");
+            var queued = queuedEntity?.GetComponent<QueuedEvents>();
+            return queued?.LocationId == "desert_1";
         }
 
         private void OnTutorialStarted(TutorialStartedEvent evt)

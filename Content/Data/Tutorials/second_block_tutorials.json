@@ -25,6 +25,7 @@
     "text": "At the start of the enemy's turn, the enemy gains X aggression equal to its current threat level (aggression increases the damage of their next attack). Whenever you attack an enemy, it reduces their threat by one. Enemy's gain one threat at the end of their turn.",
     "targetType": "entity_name",
     "targetId": "UI_ThreatTooltip",
+    "condition": "threat_enabled",
     "bubbleOrientation": "left"
   },
   {

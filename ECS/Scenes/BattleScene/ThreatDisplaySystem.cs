@@ -52,18 +52,28 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<SetThreatEvent>(OnSetThreat);
 		}
 
+		private bool IsThreatDisabled()
+		{
+			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
+			var queued = queuedEntity?.GetComponent<QueuedEvents>();
+			return queued?.LocationId == "desert_1";
+		}
+
 		private void OnModifyThreat(ModifyThreatEvent evt)
 		{
+			if (IsThreatDisabled()) return;
 			TriggerPulse();
 		}
 
 		private void OnSetThreat(SetThreatEvent evt)
 		{
+			if (IsThreatDisabled()) return;
 			TriggerPulse();
 		}
 
 		private void TriggerPulse()
 		{
+			if (IsThreatDisabled()) return;
 			var hover = EntityManager.GetEntitiesWithComponent<ThreatTooltipAnchor>().FirstOrDefault();
 			if (hover != null)
 			{
@@ -83,6 +93,18 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			var enemyEntity = GetRelevantEntities().FirstOrDefault();
+			var hover = EntityManager.GetEntitiesWithComponent<ThreatTooltipAnchor>().FirstOrDefault();
+
+			if (IsThreatDisabled())
+			{
+				if (hover != null)
+				{
+					var ui = hover.GetComponent<UIElement>();
+					if (ui != null) ui.Bounds = Rectangle.Empty;
+				}
+				return;
+			}
+
 			if (enemyEntity == null) return;
 
 			var threat = enemyEntity.GetComponent<Threat>();
@@ -120,7 +142,6 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Get pulse transform state from the anchor entity
-			var hover = EntityManager.GetEntitiesWithComponent<ThreatTooltipAnchor>().FirstOrDefault();
 			float rotation = 0f;
 			Vector2 scale = Vector2.One;
 			if (hover != null)

@@ -21,6 +21,13 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ModifyHpRequestEvent>(OnModifyHpRequest);
         }
 
+        private bool IsThreatDisabled()
+        {
+            var queuedEntity = EntityManager.GetEntity("QueuedEvents");
+            var queued = queuedEntity?.GetComponent<QueuedEvents>();
+            return queued?.LocationId == "desert_1";
+        }
+
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
         {
             // No per-frame updates; event-driven
@@ -31,6 +38,8 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
         {
+            if (IsThreatDisabled()) return;
+
             if (evt.Current == SubPhase.EnemyEnd)
             {
                 // Increase threat by +1 at end of enemy turn
@@ -79,6 +88,8 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnModifyHpRequest(ModifyHpRequestEvent e)
         {
+            if (IsThreatDisabled()) return;
+
             // Reduce threat by 1 when enemy takes attack damage
             if (e.DamageType == ModifyTypeEnum.Attack && e.Target != null && e.Target.HasComponent<Enemy>() && e.Delta < 0)
             {

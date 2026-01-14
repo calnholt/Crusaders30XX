@@ -84,6 +84,7 @@ namespace Crusaders30XX.ECS.Systems
             if (currentPhase == SubPhase.Action)
             {
                 TryQueueTutorial("cost");
+                TryQueueTutorial("threat");
             }
             if (currentPhase == SubPhase.Pledge)
             {
@@ -118,7 +119,6 @@ namespace Crusaders30XX.ECS.Systems
             TryQueueTutorial("card_colors");
             TryQueueTutorial("courage");
             TryQueueTutorial("temperance");
-            TryQueueTutorial("threat");
         }
 
         private void TryQueueTutorial(string key)
@@ -162,9 +162,18 @@ namespace Crusaders30XX.ECS.Systems
                     return CanPledge();
                 case "is_dungeon":
                     return IsDungeon();
+                case "threat_enabled":
+                    return IsThreatEnabled();
                 default:
                     return true;
             }
+        }
+
+        private bool IsThreatEnabled()
+        {
+            var queuedEntity = EntityManager.GetEntity("QueuedEvents");
+            var queued = queuedEntity?.GetComponent<QueuedEvents>();
+            return queued?.LocationId != "desert_1";
         }
 
         private bool IsDungeon()
