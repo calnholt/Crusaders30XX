@@ -181,6 +181,12 @@ namespace Crusaders30XX.ECS.Data.Save
 					if (!string.IsNullOrEmpty(path) && File.Exists(path))
 					{
 						_save = SaveRepository.Load(path);
+						if (_save.version < SaveFile.CURRENT_VERSION)
+						{
+							System.Console.WriteLine($"[SaveCache] Version mismatch (found {_save.version}, expected {SaveFile.CURRENT_VERSION}). Resetting save file.");
+							_save = CreateDefaultSave();
+							Persist();
+						}
 					}
 					else
 					{
@@ -191,6 +197,11 @@ namespace Crusaders30XX.ECS.Data.Save
 						if (!string.IsNullOrEmpty(legacyPath) && File.Exists(legacyPath))
 						{
 							_save = SaveRepository.Load(legacyPath) ?? CreateDefaultSave();
+							if (_save.version < SaveFile.CURRENT_VERSION)
+							{
+								System.Console.WriteLine($"[SaveCache] Legacy version mismatch (found {_save.version}, expected {SaveFile.CURRENT_VERSION}). Resetting save file.");
+								_save = CreateDefaultSave();
+							}
 							Persist();
 						}
 						else
@@ -208,6 +219,7 @@ namespace Crusaders30XX.ECS.Data.Save
 		{
 			return new SaveFile
 			{
+				version = SaveFile.CURRENT_VERSION,
 				gold = 0,
 				completedQuests = new List<string>(),
 				collection = new List<string>

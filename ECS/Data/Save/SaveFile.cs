@@ -6,6 +6,9 @@ namespace Crusaders30XX.ECS.Data.Save
 {
 	public class SaveFile
 	{
+		public const int CURRENT_VERSION = 1;
+
+		public int version { get; set; } = 0;
         public int gold { get; set; } = 0;
 		public List<string> completedQuests { get; set; } = new List<string>();
 		public List<string> collection { get; set; } = new List<string>();
