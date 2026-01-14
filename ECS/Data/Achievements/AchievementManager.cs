@@ -69,6 +69,9 @@ namespace Crusaders30XX.ECS.Data.Achievements
             Register(new RedCardApprentice());
 
             Register(new OHKO());
+            Register(new BoldInvestment());
+            Register(new LivingOnTheEdge());
+            Register(new KunaiStorm());
         }
 
         /// <summary>
