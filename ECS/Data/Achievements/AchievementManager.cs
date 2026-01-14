@@ -75,6 +75,8 @@ namespace Crusaders30XX.ECS.Data.Achievements
             Register(new FrozenButUnbroken());
             Register(new Archangel());
             Register(new QuestMaster());
+            Register(new Unshackled());
+            Register(new YouChosePoorly());
         }
 
         /// <summary>
