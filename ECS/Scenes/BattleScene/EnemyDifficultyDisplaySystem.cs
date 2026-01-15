@@ -130,7 +130,9 @@ namespace Crusaders30XX.ECS.Systems
                     _graphicsDevice,
                     ChevronWidth,
                     ChevronHeight,
-                    ChevronThickness
+                    ChevronThickness,
+                    difficultyCount,
+                    ChevronGap
                 );
 
                 if (chevronMask == null) continue;
@@ -138,14 +140,7 @@ namespace Crusaders30XX.ECS.Systems
                 Color tint = new Color(ColorR, ColorG, ColorB) * Alpha;
                 Vector2 scale = new Vector2(ChevronScale);
                 
-                float currentY = transform.Position.Y;
-
-                for (int i = 0; i < difficultyCount; i++)
-                {
-                    Vector2 pos = new Vector2(transform.Position.X, currentY);
-                    _spriteBatch.Draw(chevronMask, pos, null, tint, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-                    currentY += (ChevronHeight + ChevronGap) * ChevronScale;
-                }
+                _spriteBatch.Draw(chevronMask, transform.Position, null, tint, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
             }
         }
     }

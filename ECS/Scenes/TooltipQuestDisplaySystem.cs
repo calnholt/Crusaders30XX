@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Objects.Enemies;
 
 
 
@@ -170,6 +171,24 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Reward Coin Scale", Step = 0.01f, Min = 0.1f, Max = 2f)]
 		public float RewardCoinScale { get; set; } = 0.2f;
+
+		[DebugEditable(DisplayName = "Chevron Width", Step = 1, Min = 2, Max = 100)]
+		public float ChevronWidth { get; set; } = 21f;
+
+		[DebugEditable(DisplayName = "Chevron Height", Step = 1, Min = 2, Max = 100)]
+		public float ChevronHeight { get; set; } = 11f;
+
+		[DebugEditable(DisplayName = "Chevron Thickness", Step = 0.5f, Min = 1, Max = 20)]
+		public float ChevronThickness { get; set; } = 2.5f;
+
+		[DebugEditable(DisplayName = "Chevron Gap", Step = 1, Min = -20, Max = 50)]
+		public float ChevronGap { get; set; } = -3f;
+
+		[DebugEditable(DisplayName = "Chevron Scale", Step = 0.1f, Min = 0.1f, Max = 5f)]
+		public float ChevronScale { get; set; } = 0.5f;
+
+		[DebugEditable(DisplayName = "Chevron Top Margin", Step = 1, Min = 0, Max = 50)]
+		public int ChevronTopMargin { get; set; } = 4;
 
 		private const string TooltipEntityName = "UI_QuestTooltip";
 
@@ -449,6 +468,26 @@ namespace Crusaders30XX.ECS.Systems
 					// The actual drawing uses: targetH = Round(maxH * EnemyScale)
 					int estimatedEnemyHeight = System.Math.Max(1, (int)System.Math.Round(80 * EnemyScale));
 					totalHeight += estimatedEnemyHeight;
+
+					// Add space for chevrons below enemies
+					int maxDiff = 0;
+					foreach (var ev in events)
+					{
+						int d = ev.difficulty switch
+						{
+							EnemyDifficulty.Easy => 1,
+							EnemyDifficulty.Medium => 2,
+							EnemyDifficulty.Hard => 3,
+							_ => 1
+						};
+						if (d > maxDiff) maxDiff = d;
+					}
+					if (maxDiff > 0)
+					{
+						float scaledHeight = ChevronHeight * ChevronScale;
+						int stackHeight = (int)System.Math.Ceiling((maxDiff * scaledHeight) + ((maxDiff - 1) * ChevronGap * ChevronScale));
+						totalHeight += ChevronTopMargin + stackHeight;
+					}
 				}
 			}
 			
@@ -650,32 +689,75 @@ namespace Crusaders30XX.ECS.Systems
 				rewardsSpace = rewardsVert + rewardsLineHeight + System.Math.Max(0, RewardsVerticalSpacing / 2) + pad + rowHeightEst;
 			}
 			
-			int enemiesHeight = System.Math.Max(1, inner.Bottom - enemiesTop - tribulationSpace - rewardsSpace);
+			// Calculate space for chevrons
+			int maxDiff = 0;
+			foreach (var q in questDefs)
+			{
+				int d = q.difficulty switch
+				{
+					EnemyDifficulty.Easy => 1,
+					EnemyDifficulty.Medium => 2,
+					EnemyDifficulty.Hard => 3,
+					_ => 1
+				};
+				if (d > maxDiff) maxDiff = d;
+			}
+			float scaledChevronHeight = ChevronHeight * ChevronScale;
+			int maxChevronStackHeight = (int)System.Math.Ceiling((maxDiff * scaledChevronHeight) + ((maxDiff - 1) * ChevronGap * ChevronScale));
+			int chevronTotalSpace = maxDiff > 0 ? (ChevronTopMargin + maxChevronStackHeight) : 0;
+
+			int enemiesHeight = System.Math.Max(1, inner.Bottom - enemiesTop - tribulationSpace - rewardsSpace - chevronTotalSpace);
 			var enemiesRect = new Rectangle(inner.X, enemiesTop, inner.Width, enemiesHeight);
 
-			// load enemy textures
-			var textures = new List<Texture2D>();
+			// load enemy textures and their definitions
+			var entries = new List<(Texture2D tex, LocationEventDefinition def)>();
 			foreach (var q in questDefs)
 			{
 				var tex = TryLoadEnemyTexture(q.id);
-				if (tex != null) textures.Add(tex);
+				if (tex != null) entries.Add((tex, q));
 			}
-			if (textures.Count == 0) return;
+			if (entries.Count == 0) return;
 
 			int maxH = enemiesRect.Height;
 			int targetH = System.Math.Max(1, (int)System.Math.Round(maxH * EnemyScale));
-			var sizes = textures.Select(t => new Point(
-				(int)System.Math.Round(t.Width * (targetH / (float)System.Math.Max(1, t.Height))),
+			var sizes = entries.Select(e => new Point(
+				(int)System.Math.Round(e.tex.Width * (targetH / (float)System.Math.Max(1, e.tex.Height))),
 				targetH
 			)).ToList();
-			int totalW = sizes.Sum(s => s.X) + (textures.Count - 1) * System.Math.Max(0, EnemySpacing);
+			int totalW = sizes.Sum(s => s.X) + (entries.Count - 1) * System.Math.Max(0, EnemySpacing);
 			int startX = enemiesRect.X + (enemiesRect.Width - totalW) / 2;
-			for (int i = 0; i < textures.Count; i++)
+			for (int i = 0; i < entries.Count; i++)
 			{
 				int drawX = startX;
 				for (int j = 0; j < i; j++) drawX += sizes[j].X + System.Math.Max(0, EnemySpacing);
 				int drawY = enemiesRect.Y + (enemiesRect.Height - sizes[i].Y) / 2;
-				_spriteBatch.Draw(textures[i], new Rectangle(drawX, drawY, sizes[i].X, sizes[i].Y), Color.White * alpha01);
+				_spriteBatch.Draw(entries[i].tex, new Rectangle(drawX, drawY, sizes[i].X, sizes[i].Y), Color.White * alpha01);
+
+				// Draw difficulty chevrons centered under this enemy
+				int diffCount = entries[i].def.difficulty switch
+				{
+					EnemyDifficulty.Easy => 1,
+					EnemyDifficulty.Medium => 2,
+					EnemyDifficulty.Hard => 3,
+					_ => 1
+				};
+
+				Texture2D chevronMask = PrimitiveTextureFactory.GetAntialiasedChevronMask(
+					_graphicsDevice,
+					ChevronWidth,
+					ChevronHeight,
+					ChevronThickness,
+					diffCount,
+					ChevronGap
+				);
+
+				if (chevronMask != null)
+				{
+					float totalStackWidth = ChevronWidth * ChevronScale;
+					float chevronX = drawX + (sizes[i].X - totalStackWidth) / 2f;
+					float chevronY = enemiesRect.Bottom + ChevronTopMargin;
+					_spriteBatch.Draw(chevronMask, new Vector2(chevronX, chevronY), null, Color.White * alpha01, 0f, Vector2.Zero, new Vector2(ChevronScale), SpriteEffects.None, 0f);
+				}
 			}
 
 			// Draw tribulations below enemies (within inner bounds)

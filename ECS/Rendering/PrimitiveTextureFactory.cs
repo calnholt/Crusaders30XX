@@ -19,8 +19,8 @@ namespace Crusaders30XX.ECS.Rendering
 		private static readonly Dictionary<(int deviceId, float width, float height, float leftOffset, float topAngle, float rightAngle, float bottomAngle, float leftAngle), Texture2D> _trapezoidCache = new();
 		// Cache trapezoid masks (white-filled) separately for color-tinting use-cases
 		private static readonly Dictionary<(int deviceId, float width, float height, float leftOffset, float topAngle, float rightAngle, float bottomAngle, float leftAngle), Texture2D> _trapezoidMaskCache = new();
-		// Cache chevrons by device, width, height, and thickness
-		private static readonly Dictionary<(int deviceId, float width, float height, float thickness), Texture2D> _chevronCache = new();
+		// Cache chevrons by device, width, height, thickness, count, and gap
+		private static readonly Dictionary<(int deviceId, float width, float height, float thickness, int count, float gap), Texture2D> _chevronCache = new();
 
 		public static Texture2D GetAntiAliasedCircle(GraphicsDevice device, int radius)
 		{
@@ -322,30 +322,45 @@ namespace Crusaders30XX.ECS.Rendering
 		}
 
 		/// <summary>
-		/// Returns a white-filled antialiased upward-pointing chevron mask.
+		/// Returns a white-filled antialiased upward-pointing chevron mask (or stack of chevrons).
 		/// </summary>
 		public static Texture2D GetAntialiasedChevronMask(
 			GraphicsDevice device,
 			float width,
 			float height,
-			float thickness)
+			float thickness,
+			int count = 1,
+			float gap = 0f)
 		{
 			if (width < 1) width = 1;
 			if (height < 1) height = 1;
 			if (thickness < 1) thickness = 1;
+			if (count < 1) count = 1;
 			int deviceId = device?.GetHashCode() ?? 0;
 
-			var key = (deviceId, (float)System.Math.Round(width, 2), (float)System.Math.Round(height, 2), (float)System.Math.Round(thickness, 2));
+			var key = (deviceId, 
+				(float)System.Math.Round(width, 2), 
+				(float)System.Math.Round(height, 2), 
+				(float)System.Math.Round(thickness, 2),
+				count,
+				(float)System.Math.Round(gap, 2));
+			
 			if (_chevronCache.TryGetValue(key, out var existing) && existing != null) return existing;
 
+			int singleChevronHeight = (int)System.Math.Ceiling(height);
 			int texWidth = (int)System.Math.Ceiling(width);
-			int texHeight = (int)System.Math.Ceiling(height);
+			// Total height: height for the first chevron + (count-1) * (height + gap)
+			int texHeight = (int)System.Math.Ceiling(height + (count - 1) * (height + gap));
+			
 			var tex = new Texture2D(device, texWidth, texHeight);
 			var data = new Color[texWidth * texHeight];
 
 			float centerX = width / 2f;
 			// Slope of the chevron legs: rise/run = height/centerX
 			float m = height / centerX;
+			// cos(theta) = 1 / sqrt(1 + m^2) where tan(theta) = m
+			float cosTheta = 1f / (float)System.Math.Sqrt(1 + m * m);
+			float halfThickness = thickness * 0.5f;
 
 			for (int y = 0; y < texHeight; y++)
 			{
@@ -353,37 +368,42 @@ namespace Crusaders30XX.ECS.Rendering
 				for (int x = 0; x < texWidth; x++)
 				{
 					float px = x + 0.5f;
-					
-					// Distance to the center line of the chevron
-					// Center line: y = m * |x - centerX|
-					float targetY = m * System.Math.Abs(px - centerX);
-					
-					// Distance in Y direction from current pixel to the center line
-					float dy = System.Math.Abs(py - targetY);
-					
-					// Approximate perpendicular distance: dy * cos(theta)
-					// theta is angle of leg with horizontal. tan(theta) = m.
-					// cos(theta) = 1 / sqrt(1 + m^2)
-					float cosTheta = 1f / (float)System.Math.Sqrt(1 + m * m);
-					float dist = dy * cosTheta;
+					float maxAlpha = 0f;
 
-					float halfThickness = thickness * 0.5f;
-					float alpha = 0f;
-
-					if (dist < halfThickness - 0.5f)
+					// Check distance to each chevron in the stack
+					for (int i = 0; i < count; i++)
 					{
-						alpha = 1f;
-					}
-					else if (dist < halfThickness + 0.5f)
-					{
-						alpha = 1f - (dist - (halfThickness - 0.5f));
+						// Offset the targetY for each stacked chevron
+						float yOffset = i * (height + gap);
+						// Center line: y = yOffset + m * |x - centerX|
+						float targetY = yOffset + m * System.Math.Abs(px - centerX);
+						
+						// Distance in Y direction from current pixel to the center line
+						float dy = System.Math.Abs(py - targetY);
+						
+						// Approximate perpendicular distance
+						float dist = dy * cosTheta;
+
+						float alpha = 0f;
+						if (dist < halfThickness - 0.5f)
+						{
+							alpha = 1f;
+						}
+						else if (dist < halfThickness + 0.5f)
+						{
+							alpha = 1f - (dist - (halfThickness - 0.5f));
+						}
+
+						// Sharp bottom edge for each chevron if it exceeds its "cell" height
+						// (Match the behavior from the loop in DisplaySystem where each is drawn at a separate Y)
+						if (py > yOffset + height) alpha = 0f;
+						if (py < yOffset) alpha = 0f;
+
+						if (alpha > maxAlpha) maxAlpha = alpha;
+						if (maxAlpha >= 1f) break; 
 					}
 
-					// Clamp to texture bounds to ensure sharp bottom edges if desired
-					// (Though dist-based logic already handles most of it)
-					if (py > height) alpha = 0f;
-
-					byte alphaByte = (byte)MathHelper.Clamp((int)System.Math.Round(alpha * 255f), 0, 255);
+					byte alphaByte = (byte)MathHelper.Clamp((int)System.Math.Round(maxAlpha * 255f), 0, 255);
 					data[y * texWidth + x] = Color.FromNonPremultiplied(255, 255, 255, alphaByte);
 				}
 			}

@@ -219,7 +219,8 @@
         },
         {
           "id": "demon",
-          "type": "Enemy"
+          "type": "Enemy",
+          "difficulty": "Medium"
         }
       ],
       "Background": "desert-background-crumbling-city.png"
@@ -264,7 +265,7 @@
       "UnrevealedRadius": 150,
       "Type": "Quest",
       "Name": "From the Shadows",
-      "Difficulty": 3,
+      "Difficulty": 2,
       "Reward": {
         "Gold": 3
       },
@@ -372,7 +373,8 @@
         },
         {
           "id": "cinderbolt_demon",
-          "type": "Enemy"
+          "type": "Enemy",
+          "difficulty": "Medium"
         }
       ],
       "Background": "desert-background-city.png"
