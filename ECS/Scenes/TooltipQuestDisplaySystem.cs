@@ -45,7 +45,7 @@ namespace Crusaders30XX.ECS.Systems
 		public float FadeSeconds { get; set; } = 0.12f;
 
 		[DebugEditable(DisplayName = "Max Alpha", Step = 5, Min = 0, Max = 255)]
-		public int MaxAlpha { get; set; } = 140;
+		public int MaxAlpha { get; set; } = 220;
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.5f, Max = 2.0f)]
 		public float TextScale { get; set; } = 0.2f;
@@ -75,7 +75,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int HeaderStripeHeight { get; set; } = 3;
 
 		[DebugEditable(DisplayName = "Box Width", Step = 10, Min = 100, Max = 1920)]
-		public int BoxWidth { get; set; } = 520;
+		public int BoxWidth { get; set; } = 400;
 
 		[DebugEditable(DisplayName = "Box Height", Step = 10, Min = 100, Max = 1080)]
 		public int BoxHeight { get; set; } = 260;
@@ -173,22 +173,22 @@ namespace Crusaders30XX.ECS.Systems
 		public float RewardCoinScale { get; set; } = 0.2f;
 
 		[DebugEditable(DisplayName = "Chevron Width", Step = 1, Min = 2, Max = 100)]
-		public float ChevronWidth { get; set; } = 21f;
+		public float ChevronWidth { get; set; } = 25f;
 
 		[DebugEditable(DisplayName = "Chevron Height", Step = 1, Min = 2, Max = 100)]
 		public float ChevronHeight { get; set; } = 11f;
 
 		[DebugEditable(DisplayName = "Chevron Thickness", Step = 0.5f, Min = 1, Max = 20)]
-		public float ChevronThickness { get; set; } = 2.5f;
+		public float ChevronThickness { get; set; } = 3.5f;
 
 		[DebugEditable(DisplayName = "Chevron Gap", Step = 1, Min = -20, Max = 50)]
-		public float ChevronGap { get; set; } = -3f;
+		public float ChevronGap { get; set; } = 2f;
 
 		[DebugEditable(DisplayName = "Chevron Scale", Step = 0.1f, Min = 0.1f, Max = 5f)]
-		public float ChevronScale { get; set; } = 0.5f;
+		public float ChevronScale { get; set; } = 0.7f;
 
 		[DebugEditable(DisplayName = "Chevron Top Margin", Step = 1, Min = 0, Max = 50)]
-		public int ChevronTopMargin { get; set; } = 4;
+		public int ChevronTopMargin { get; set; } = 15;
 
 		private const string TooltipEntityName = "UI_QuestTooltip";
 
