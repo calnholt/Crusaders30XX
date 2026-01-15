@@ -227,7 +227,8 @@ namespace Crusaders30XX.ECS.Systems
 						var type = ParseQueuedEventType(q?.type);
 						if (!string.IsNullOrEmpty(q?.id))
 						{
-							var queuedEvent = new QueuedEvent { EventId = q.id, EventType = type };
+							Console.WriteLine($"[LocationSelectDisplaySystem] Event difficulty: {q.difficulty}");
+							var queuedEvent = new QueuedEvent { EventId = q.id, EventType = type, Difficulty = q.difficulty };
 							if (q.modifications != null)
 							{
 								queuedEvent.Modifications = new List<EnemyModification>(q.modifications);

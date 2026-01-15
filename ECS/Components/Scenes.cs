@@ -1,6 +1,7 @@
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Dialog;
 using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Objects.Enemies;
 using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Components
@@ -73,6 +74,7 @@ namespace Crusaders30XX.ECS.Components
 	{
 		public string EventId;
 		public QueuedEventType EventType = QueuedEventType.Enemy;
+		public EnemyDifficulty Difficulty { get; set; } = EnemyDifficulty.Easy;
 		public List<EnemyModification> Modifications { get; set; } = new List<EnemyModification>();
 	}
 

@@ -12,6 +12,7 @@ using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Objects.Cards;
+using Crusaders30XX.ECS.Objects.Enemies;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -391,14 +392,14 @@ namespace Crusaders30XX.ECS.Factories
             return entity;
         }
 
-        public static Entity CreateEnemyFromId(World world, string enemyId, EntityManager entityManager, List<EnemyModification> modifications = null)
+        public static Entity CreateEnemyFromId(World world, string enemyId, EntityManager entityManager, EnemyDifficulty difficulty = EnemyDifficulty.Easy)
         {
             var existingEnemy = entityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
             if (existingEnemy != null)
             {
                 entityManager.DestroyEntity(existingEnemy.Id);
             }
-            var def = EnemyFactory.Create(enemyId);
+            var def = EnemyFactory.Create(enemyId, difficulty);
             def.EntityManager = entityManager;
 
             var enemyEntity = world.CreateEntity($"Enemy");
@@ -443,34 +444,34 @@ namespace Crusaders30XX.ECS.Factories
             // }
 
             // Apply quest modifications if any
-            if (modifications != null && modifications.Count > 0)
-            {
-                foreach (var mod in modifications)
-                {
-                    if (string.IsNullOrEmpty(mod.Type)) continue;
+            // if (modifications != null && modifications.Count > 0)
+            // {
+            //     foreach (var mod in modifications)
+            //     {
+            //         if (string.IsNullOrEmpty(mod.Type)) continue;
 
-                    if (mod.Type.Equals("HP", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Apply HP modification
-                        enemy.MaxHealth += mod.Delta;
-                        enemy.CurrentHealth += mod.Delta;
-                        var hpComponent = enemyEntity.GetComponent<HP>();
-                        if (hpComponent != null)
-                        {
-                            hpComponent.Max += mod.Delta;
-                            hpComponent.Current += mod.Delta;
-                        }
-                        Console.WriteLine($"[EntityFactory] Applied HP modification: +{mod.Delta} (new HP: {enemy.MaxHealth})");
-                    }
-                    else if (mod.Type.Equals("Armor", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Apply Armor modification via passive
-                        Enum.TryParse<AppliedPassiveType>("Armor", true, out var armorType);
-                        EventManager.Publish(new ApplyPassiveEvent { Target = enemyEntity, Delta = mod.Delta, Type = armorType });
-                        Console.WriteLine($"[EntityFactory] Applied Armor modification: +{mod.Delta}");
-                    }
-                }
-            }
+            //         if (mod.Type.Equals("HP", StringComparison.OrdinalIgnoreCase))
+            //         {
+            //             // Apply HP modification
+            //             enemy.MaxHealth += mod.Delta;
+            //             enemy.CurrentHealth += mod.Delta;
+            //             var hpComponent = enemyEntity.GetComponent<HP>();
+            //             if (hpComponent != null)
+            //             {
+            //                 hpComponent.Max += mod.Delta;
+            //                 hpComponent.Current += mod.Delta;
+            //             }
+            //             Console.WriteLine($"[EntityFactory] Applied HP modification: +{mod.Delta} (new HP: {enemy.MaxHealth})");
+            //         }
+            //         else if (mod.Type.Equals("Armor", StringComparison.OrdinalIgnoreCase))
+            //         {
+            //             // Apply Armor modification via passive
+            //             Enum.TryParse<AppliedPassiveType>("Armor", true, out var armorType);
+            //             EventManager.Publish(new ApplyPassiveEvent { Target = enemyEntity, Delta = mod.Delta, Type = armorType });
+            //             Console.WriteLine($"[EntityFactory] Applied Armor modification: +{mod.Delta}");
+            //         }
+            //     }
+            // }
 
             // Pre-create Threat tooltip hover entity (bounds updated by ThreatDisplaySystem)
             var threatTooltip = world.CreateEntity("UI_ThreatTooltip");

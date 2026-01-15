@@ -19,7 +19,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
             OnPlay = (entityManager, card) =>
             {
                 EventManager.Publish(new ModifyCourageRequestEvent { Delta = ValuesParse[0], Type = ModifyCourageType.Gain });
-                EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
+                TimerScheduler.Schedule(0.1f, () => {
+                    EventManager.Publish(new DebugCommandEvent { Command = "EndTurn" });
+                });
             };
         }
     }

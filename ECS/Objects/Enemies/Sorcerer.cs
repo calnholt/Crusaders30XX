@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies;
 
 public class Sorcerer : EnemyBase
 {
-  public Sorcerer()
+  public Sorcerer(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "sorcerer";
     Name = "Sorcerer";

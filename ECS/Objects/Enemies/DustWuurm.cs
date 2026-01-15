@@ -9,7 +9,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies;
 
 public class DustWuurm : EnemyBase
 {
-  public DustWuurm()
+  public DustWuurm(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "dust_wuurm";
     Name = "Dust Wuurm";

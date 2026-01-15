@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies;
 
 public class Ninja : EnemyBase
 {
-  public Ninja()
+  public Ninja(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "ninja";
     Name = "Ninja";

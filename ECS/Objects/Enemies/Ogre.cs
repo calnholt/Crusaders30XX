@@ -9,7 +9,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
 {
   public class Ogre : EnemyBase
   {
-    public Ogre()
+    public Ogre(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
     {
       Id = "ogre";
       Name = "Ogre";

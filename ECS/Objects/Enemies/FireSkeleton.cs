@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
     public class FireSkeleton : EnemyBase
     {
         private int Armor = 4;
-        public FireSkeleton()
+        public FireSkeleton(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
         {
             Id = "fire_skeleton";
             Name = "Fire Skeleton";

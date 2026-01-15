@@ -220,7 +220,7 @@ namespace Crusaders30XX.ECS.Data.Save
 			return new SaveFile
 			{
 				version = SaveFile.CURRENT_VERSION,
-				gold = 0,
+				gold = 4,
 				completedQuests = new List<string>(),
 				collection = new List<string>
 				{

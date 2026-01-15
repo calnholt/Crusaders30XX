@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 {
   public class IceDemon : EnemyBase
   {
-    public IceDemon()
+    public IceDemon(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
     {
       Id = "ice_demon";
       Name = "Ice Demon";

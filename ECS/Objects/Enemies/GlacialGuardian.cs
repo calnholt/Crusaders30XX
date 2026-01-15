@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies;
 
 public class GlacialGuardian : EnemyBase
 {
-  public GlacialGuardian()
+  public GlacialGuardian(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "glacial_guardian";
     Name = "Glacial Guardian";

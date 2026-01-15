@@ -50,6 +50,7 @@ namespace Crusaders30XX.ECS.Systems
 		private TemperanceManagerSystem _temperanceManagerSystem;
 		private ThreatManagementSystem _threatManagementSystem;
 		private HPDisplaySystem _hpDisplaySystem;
+		private EnemyDifficultyDisplaySystem _enemyDifficultyDisplaySystem;
 		private AppliedPassivesDisplaySystem _appliedPassivesDisplaySystem;
 		private PoisonSystem _poisonSystem;
 		private CardVisualSettingsDebugSystem _cardVisualSettingsDebugSystem;
@@ -280,6 +281,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("ThreatDisplaySystem.Draw", _threatDisplaySystem.Draw);
 			FrameProfiler.Measure("ActionPointDisplaySystem.Draw", _actionPointDisplaySystem.Draw);
 			FrameProfiler.Measure("HPDisplaySystem.Draw", _hpDisplaySystem.Draw);
+			FrameProfiler.Measure("EnemyDifficultyDisplaySystem.Draw", _enemyDifficultyDisplaySystem.Draw);
 			FrameProfiler.Measure("AppliedPassivesDisplaySystem.Draw", _appliedPassivesDisplaySystem.Draw);
 			FrameProfiler.Measure("PoisonSystem.Draw", _poisonSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawBackdrop", _payCostOverlaySystem.DrawBackdrop);
@@ -377,7 +379,7 @@ namespace Crusaders30XX.ECS.Systems
 			EntityManager.DestroyEntity("Enemy");
 			Console.WriteLine($"queued.Events.Count: {queued.Events.Count}, queued.CurrentIndex: {queued.CurrentIndex}");
 			var nextEvent = queued.Events[++queued.CurrentIndex];
-			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, nextEvent.EventId, EntityManager, nextEvent.Modifications);
+			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, nextEvent.EventId, EntityManager, nextEvent.Difficulty);
 			EventManager.Publish(new ResetDeckEvent { });
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
 			// Reset phase state at the start of every battle so we don't inherit the previous battle's sub-phase.
@@ -453,6 +455,7 @@ namespace Crusaders30XX.ECS.Systems
 			_temperanceManagerSystem = new TemperanceManagerSystem(_world.EntityManager);
 			_threatManagementSystem = new ThreatManagementSystem(_world.EntityManager);
 			_hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_enemyDifficultyDisplaySystem = new EnemyDifficultyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_appliedPassivesDisplaySystem = new AppliedPassivesDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_poisonSystem = new PoisonSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_cardVisualSettingsDebugSystem = new CardVisualSettingsDebugSystem(_world.EntityManager);
@@ -549,6 +552,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_actionPointManagementSystem);
 			_world.AddSystem(_battleBackgroundSystem);
 			_world.AddSystem(_hpDisplaySystem);
+			_world.AddSystem(_enemyDifficultyDisplaySystem);
 			_world.AddSystem(_appliedPassivesDisplaySystem);
 			_world.AddSystem(_cardVisualSettingsDebugSystem);
 			_world.AddSystem(_hpManagementSystem);

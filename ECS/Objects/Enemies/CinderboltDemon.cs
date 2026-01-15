@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
     public class CinderboltDemon : EnemyBase
     {
       private bool UsedInsidiousBolt = false;
-        public CinderboltDemon()
+        public CinderboltDemon(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
         {
             Id = "cinderbolt_demon";
             Name = "Cinderbolt Demon";

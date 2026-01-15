@@ -11,11 +11,11 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public class Demon : EnemyBase
 {
-  public Demon()
+  public Demon(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "demon";
     Name = "Demon";
-    MaxHealth = 100;
+    MaxHealth = 90;
   }
 
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)

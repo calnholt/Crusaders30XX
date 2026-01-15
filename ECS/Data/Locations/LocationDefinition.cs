@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Objects.Enemies;
 
 namespace Crusaders30XX.ECS.Data.Locations
 {
@@ -38,6 +39,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 	{
 		public string id { get; set; }
 		public string type { get; set; }
+		public EnemyDifficulty difficulty { get; set; } = EnemyDifficulty.Easy;
 		public List<EnemyModification> modifications { get; set; } = new List<EnemyModification>();
 	}
 

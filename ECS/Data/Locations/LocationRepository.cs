@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Numerics;
 using Crusaders30XX.ECS.Components;
 using System;
+using Crusaders30XX.ECS.Objects.Enemies;
 
 namespace Crusaders30XX.ECS.Data.Locations
 {
@@ -71,6 +72,8 @@ namespace Crusaders30XX.ECS.Data.Locations
 						foreach (var e in poi.Events)
 						{
 							var eventDef = new LocationEventDefinition { id = e.Id, type = e.Type };
+							Console.WriteLine($"[LocationRepository] Event difficulty: {e.Difficulty}");
+							eventDef.difficulty = Enum.Parse<EnemyDifficulty>(e.Difficulty ?? "Easy");
 							if (e.Modifications != null)
 							{
 								foreach (var mod in e.Modifications)
@@ -152,6 +155,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		{
 			public string Id { get; set; }
 			public string Type { get; set; }
+			public string Difficulty { get; set; }
 			public List<ModificationFileDto> Modifications { get; set; }
 		}
 

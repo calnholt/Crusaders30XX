@@ -10,7 +10,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public class Mummy : EnemyBase
 {
-  public Mummy()
+  public Mummy(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "mummy";
     Name = "Mummy";

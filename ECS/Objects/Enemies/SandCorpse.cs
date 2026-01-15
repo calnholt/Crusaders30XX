@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public class SandCorpse : EnemyBase
 {
-  public SandCorpse()
+  public SandCorpse(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "sand_corpse";
     Name = "Sand Corpse";

@@ -15,6 +15,12 @@ public abstract class EnemyBase : IDisposable
   public int CurrentHealth { get; set; }
   public Action<EntityManager> OnStartOfBattle { get; protected set; }
   public EntityManager EntityManager { get; set; }
+  public EnemyDifficulty Difficulty { get; set; } = EnemyDifficulty.Easy;
+
+  public EnemyBase(EnemyDifficulty difficulty = EnemyDifficulty.Easy)
+  {
+    Difficulty = difficulty;
+  }
 
   public virtual void Dispose()
   {
@@ -22,4 +28,11 @@ public abstract class EnemyBase : IDisposable
   }
 
   public abstract IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber);
+}
+
+public enum EnemyDifficulty
+{
+  Easy = 0,
+  Medium = 1,
+  Hard = 2,
 }

@@ -8,7 +8,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public class Gleeber : EnemyBase
 {
-  public Gleeber()
+  public Gleeber(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "gleeber";
     Name = "Gleeber";

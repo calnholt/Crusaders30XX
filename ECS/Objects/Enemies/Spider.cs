@@ -11,7 +11,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public class Spider : EnemyBase
 {
-  public Spider()
+  public Spider(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "spider";
     Name = "Spider";

@@ -415,6 +415,15 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marker for the difficulty display entity associated with an enemy.
+    /// </summary>
+    public class DifficultyDisplayMarker : IComponent
+    {
+        public Entity Owner { get; set; }
+        public Entity EnemyEntity { get; set; }
+    }
+
+    /// <summary>
     /// Anchor published by HPDisplaySystem describing the last drawn HP bar rectangle for an entity.
     /// Used by other UI systems to align elements relative to the HP bar.
     /// </summary>

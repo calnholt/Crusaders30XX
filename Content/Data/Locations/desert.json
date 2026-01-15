@@ -130,27 +130,11 @@
       "Events": [
         {
           "id": "skeleton",
-          "type": "Enemy",
-          "modifications": [
-            {
-              "type": "HP",
-              "delta": 5
-            },
-            {
-              "type": "Armor",
-              "delta": 1
-            }
-          ]
+          "type": "Enemy"
         },
         {
           "id": "demon",
-          "type": "Enemy",
-          "modifications": [
-            {
-              "type": "HP",
-              "delta": 10
-            }
-          ]
+          "type": "Enemy"
         }
       ]
     },
@@ -171,13 +155,7 @@
       "Events": [
         {
           "id": "skeleton",
-          "type": "Enemy",
-          "modifications": [
-            {
-              "type": "HP",
-              "delta": 10
-            }
-          ]
+          "type": "Enemy"
         },
         {
           "id": "mummy",
@@ -186,12 +164,7 @@
         {
           "id": "skeleton",
           "type": "Enemy",
-          "modifications": [
-            {
-              "type": "Armor",
-              "delta": 2
-            }
-          ]
+          "difficulty": "Medium"
         }
       ]
     },
@@ -205,7 +178,7 @@
       "UnrevealedRadius": 50,
       "Type": "Quest",
       "Name": "Ogre Chaga",
-      "Difficulty": 2,
+      "Difficulty": 1,
       "Reward": {
         "Gold": 3
       },
@@ -333,7 +306,7 @@
       "UnrevealedRadius": 150,
       "Type": "Quest",
       "Name": "From the Depths",
-      "Difficulty": 2,
+      "Difficulty": 3,
       "Reward": {
         "Gold": 2
       },
@@ -358,7 +331,7 @@
       "UnrevealedRadius": 150,
       "Type": "Quest",
       "Name": "Desert Tundra",
-      "Difficulty": 2,
+      "Difficulty": 4,
       "Reward": {
         "Gold": 2
       },
@@ -384,7 +357,7 @@
       "UnrevealedRadius": 150,
       "Type": "Quest",
       "Name": "From a Distance",
-      "Difficulty": 3,
+      "Difficulty": 4,
       "Reward": {
         "Gold": 2
       },
@@ -414,7 +387,7 @@
       "UnrevealedRadius": 150,
       "Type": "Quest",
       "Name": "Rage of the Berserker",
-      "Difficulty": 3,
+      "Difficulty": 4,
       "Reward": {
         "Gold": 2
       },

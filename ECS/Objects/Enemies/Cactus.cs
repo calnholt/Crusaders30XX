@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies;
 public class Cactus : EnemyBase
 {
   public int Thorns { get; set; } = 3;
-  public Cactus()
+  public Cactus(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "cactus";
     Name = "Cactus";

@@ -13,17 +13,20 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public class Skeleton : EnemyBase
 {
-  public Skeleton()
+  private int Armor = 3;
+
+  public Skeleton(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "skeleton";
     Name = "Skeleton";
-    MaxHealth = 65;
+    MaxHealth = 55 + (int)difficulty * 7;
+    Armor += (int)difficulty;
 
     OnStartOfBattle = (entityManager) =>
     {
       EventQueueBridge.EnqueueTriggerAction("Skeleton.OnStartOfBattle", () =>
       {
-        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Armor, Delta = 2 });
+        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Armor, Delta = Armor });
       }, AppliedPassivesManagementSystem.Duration);
     };
   }

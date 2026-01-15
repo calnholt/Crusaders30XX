@@ -14,11 +14,11 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 public class Succubus : EnemyBase
 {
   public static readonly int SiphonMultiplier = 5;
-  public Succubus()
+  public Succubus(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "succubus";
     Name = "Succubus";
-    MaxHealth = 105;
+    MaxHealth = 95;
     CurrentHealth = MaxHealth - 10;
 
     OnStartOfBattle = (entityManager) =>

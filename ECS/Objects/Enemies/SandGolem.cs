@@ -10,7 +10,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public class SandGolem : EnemyBase
 {
-  public SandGolem()
+  public SandGolem(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "sand_golem";
     Name = "Sand Golem";
