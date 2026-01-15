@@ -7,12 +7,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Whirlwind : CardBase
     {
+        private int NumOfHits = 2;
         public Whirlwind()
         {
             CardId = "whirlwind";
             Name = "Whirlwind";
             Target = "Enemy";
-            Text = "Attacks {2} times.";
+            Text = $"Attacks {NumOfHits} times.";
             Cost = ["Black"];
             Animation = "Attack";
             Damage = 8;
@@ -21,7 +22,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             OnPlay = (entityManager, card) =>
             {
                 var time = 0.5f;
-                var numOfHits = ValuesParse[0];
+                var numOfHits = NumOfHits;
                 EventManager.Publish(new EndTurnDisplayEvent { ShowButton = false });
                 TimerScheduler.Schedule(time * numOfHits, () => {
                     EventManager.Publish(new EndTurnDisplayEvent { ShowButton = true });

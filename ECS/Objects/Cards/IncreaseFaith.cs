@@ -6,12 +6,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class IncreaseFaith : CardBase
     {
+        private int PowerGained = 3;
         public IncreaseFaith()
         {
             CardId = "increase_faith";
             Name = "Increase Faith";
             Target = "Player";
-            Text = "Gain {3} power.";
+            Text = $"Gain {PowerGained} power.";
             IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;
@@ -24,7 +25,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 { 
                     Target = player, 
                     Type = AppliedPassiveType.Power, 
-                    Delta = ValuesParse[0] 
+                    Delta = PowerGained 
                 });
             };
         }

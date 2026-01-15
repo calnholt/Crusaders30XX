@@ -9,13 +9,14 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Reap : CardBase
     {
+        private int DamageBonus = 5;
         public Reap()
         {
             CardId = "reap";
             Name = "Reap";
             Target = "Player";
             Cost = ["Any","Any"];
-            Text = "This attack gains +{5} damage for each red card discarded to play this.";
+            Text = $"This attack gains +{DamageBonus} damage for each red card discarded to play this.";
             Animation = "Attack";
             Block = 3;
             Damage = 25;
@@ -37,7 +38,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 EventManager.Publish(new ModifyHpRequestEvent { 
                   Source = entityManager.GetEntity("Player"), 
                   Target = entityManager.GetEntity("Enemy"), 
-                  Delta = -(Damage + (redCards > 0 ? redCards * ValuesParse[0] : 0)), 
+                  Delta = -(Damage + (redCards > 0 ? redCards * DamageBonus : 0)), 
                   DamageType = ModifyTypeEnum.Attack 
                 });
             };
@@ -56,7 +57,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     }
                 }
                 
-                return redCards * ValuesParse[0];
+                return redCards * DamageBonus;
             };
         }
     }

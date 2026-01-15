@@ -6,12 +6,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Sword : CardBase
     {
+        private int CourageGained = 1;
         public Sword()
         {
             CardId = "sword";
             Name = "Sword";
             Target = "Enemy";
-            Text = "Gain {1} courage.";
+            Text = $"Gain {CourageGained} courage.";
             Cost = ["Black", "Any"];
             Animation = "Attack";
             Damage = 17;
@@ -27,7 +28,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
-                EventManager.Publish(new ModifyCourageRequestEvent { Delta = +ValuesParse[0], Type = ModifyCourageType.Gain });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = +CourageGained, Type = ModifyCourageType.Gain });
             };
         }
     }

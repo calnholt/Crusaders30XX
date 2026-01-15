@@ -5,12 +5,13 @@ namespace Crusaders30XX.ECS.Objects.Cards;
 
 public class RazorStorm : CardBase
 {
+  private int NumOfHits = 3;
   public RazorStorm()
   {
     CardId = "razor_storm";
     Name = "Razor Storm";
     Target = "Enemy";
-    Text = "Attacks {3} times.";
+    Text = $"Attacks {NumOfHits} times.";
     Animation = "Attack";
     Damage = 1;
     Block = 2;
@@ -19,7 +20,7 @@ public class RazorStorm : CardBase
     OnPlay = (entityManager, card) =>
     {
       var time = 0.5f;
-      var numOfHits = ValuesParse[0];
+      var numOfHits = NumOfHits;
       EventManager.Publish(new EndTurnDisplayEvent { ShowButton = false });
       TimerScheduler.Schedule(time * numOfHits, () =>
       {

@@ -8,12 +8,15 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class SerpentCrush : CardBase
     {
+        private int CourageCost = 4;
+        private int ActionPointAmount = 1;
+        private int DrawAmount = 1;
         public SerpentCrush()
         {
             CardId = "serpent_crush";
             Name = "Serpent Crush";
             Target = "Enemy";
-            Text = "As an additional cost, lose {4} courage. Gain {1} action point and draw {1} card.";
+            Text = $"As an additional cost, lose {CourageCost} courage. Gain {ActionPointAmount} action point and draw {DrawAmount} card.";
             IsFreeAction = true;
             Animation = "Attack";
             Damage = 12;
@@ -28,9 +31,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
-                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -ValuesParse[0], Type = ModifyCourageType.Spent });
-                EventManager.Publish(new ModifyActionPointsEvent { Delta = ValuesParse[1] });
-                EventManager.Publish(new RequestDrawCardsEvent { Count = ValuesParse[2] });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -CourageCost, Type = ModifyCourageType.Spent });
+                EventManager.Publish(new ModifyActionPointsEvent { Delta = ActionPointAmount });
+                EventManager.Publish(new RequestDrawCardsEvent { Count = DrawAmount });
             };
 
             CanPlay = (entityManager, card) =>
@@ -38,9 +41,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                 var courageCmp = player?.GetComponent<Courage>();
                 int courage = courageCmp?.Amount ?? 0;
-                if (courage < ValuesParse[0])
+                if (courage < CourageCost)
                 {
-                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {ValuesParse[0]} courage!" });
+                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageCost} courage!" });
                     return false;
                 }
                 return true;

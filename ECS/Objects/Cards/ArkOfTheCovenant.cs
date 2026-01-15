@@ -6,20 +6,16 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class ArkOfTheCovenant : CardBase
     {
+        private int HealAmount = 3;
         public ArkOfTheCovenant()
         {
             CardId = "ark_of_the_covenant";
             Name = "Ark of the Covenant";
             Target = "Player";
-            Text = "When this card is discarded to pay for a card cost, heal {3} HP. This card is discarded from your hand at the end of your action phase.";
+            Text = $"When this card is discarded to pay for a card cost, heal {HealAmount} HP.";
             Animation = "Buff";
             Type = CardType.Relic;
             Block = 1;
-
-            OnCreate = (entityManager, card) => 
-            {
-                entityManager.AddComponent(card, new MarkedForEndOfTurnDiscard());
-            };
 
             OnDiscardedForCost = (entityManager, card) =>
             {
@@ -27,7 +23,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 EventManager.Publish(new ModifyHpRequestEvent { 
                     Source = player, 
                     Target = player, 
-                    Delta = +ValuesParse[0], 
+                    Delta = +HealAmount, 
                     DamageType = ModifyTypeEnum.Heal 
                 });
             };

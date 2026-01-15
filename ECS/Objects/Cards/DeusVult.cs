@@ -7,11 +7,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class DeusVult : CardBase
     {
+        private int CourageBonus = 1;
+        private int DamageMultiplier = 2;
         public DeusVult()
         {
             Name = "Deus Vult";
             CardId = "deus_vult";
-            Text = "You can't play this if you have not used your weapon this turn. Gain {1} courage. This gains +X damage, where X is {2} times your courage";
+            Text = $"You can't play this if you have not used your weapon this turn. Gain {CourageBonus} courage. This gains +X damage, where X is {DamageMultiplier} times your courage";
             Animation = "Attack";
             Damage = 3;
             Block = 2;
@@ -21,7 +23,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
-                EventManager.Publish(new ModifyCourageRequestEvent { Delta = ValuesParse[0], Type = ModifyCourageType.Gain });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = CourageBonus, Type = ModifyCourageType.Gain });
                 EventManager.Publish(new ModifyHpRequestEvent { 
                     Source = player, 
                     Target = enemy, 
@@ -34,7 +36,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var player = entityManager.GetEntity("Player");
                 var courage = player.GetComponent<Courage>().Amount;
-                return courage * ValuesParse[1];
+                return courage * DamageMultiplier;
             };
 
             CanPlay = (entityManager, card) =>

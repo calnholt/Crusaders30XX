@@ -6,13 +6,14 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class ShieldOfFaith : CardBase
     {
+        private int AegisGained = 9;
         public ShieldOfFaith()
         {
             CardId = "shield_of_faith";
             Name = "Shield of Faith";
             Target = "Player";
             Cost = ["Any"];
-            Text = "Gain {9} aegis.";
+            Text = $"Gain {AegisGained} aegis.";
             Animation = "Buff";
             Block = 3;
             IsFreeAction = true;
@@ -20,7 +21,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             OnPlay = (entityManager, card) =>
             {
                 var player = entityManager.GetEntity("Player");
-                EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = +ValuesParse[0] });
+                EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = +AegisGained });
             };
         }
     }

@@ -7,12 +7,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Bulwark : CardBase
     {
+        private int BlockBonus = 1;
         public Bulwark()
         {
             CardId = "bulwark";
             Name = "Bulwark";
             Target = "Enemy";
-            Text = "This card gains +{1} block for the duration of the quest.";
+            Text = $"This card gains +{BlockBonus} block for the duration of the quest.";
             Block = 3;
             Damage = 6;
             IsFreeAction = true;
@@ -26,7 +27,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = -Damage, 
                     DamageType = ModifyTypeEnum.Attack 
                 });
-                BlockValueService.ApplyDelta(card, ValuesParse[0], "Bulwark");
+                BlockValueService.ApplyDelta(card, BlockBonus, "Bulwark");
             };
         }
     }

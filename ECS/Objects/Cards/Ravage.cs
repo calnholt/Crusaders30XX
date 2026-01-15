@@ -7,12 +7,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Ravage : CardBase
     {
+        private int MillAmount = 4;
         public Ravage()
         {
             CardId = "ravage";
             Name = "Ravage";
             Target = "Enemy";
-            Text = "As an additional cost, mill {4} cards.";
+            Text = $"As an additional cost, mill {MillAmount} cards.";
             Cost = ["Any"];
             Animation = "Attack";
             Damage = 25;
@@ -22,7 +23,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
-                for (int j = 0; j < ValuesParse[0]; j++)
+                for (int j = 0; j < MillAmount; j++)
                 {
                     EventManager.Publish(new MillCardEvent { });
                 }
@@ -38,10 +39,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 var deck = deckEntity?.GetComponent<Deck>();
-                var show = deck == null || deck.DrawPile.Count < ValuesParse[0];
+                var show = deck == null || deck.DrawPile.Count < MillAmount;
                 if (show)
                 {
-                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {ValuesParse[0]} cards in deck!" });
+                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {MillAmount} cards in deck!" });
                 }
                 return !show;
             };

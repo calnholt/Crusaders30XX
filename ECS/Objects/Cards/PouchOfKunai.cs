@@ -9,12 +9,14 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class PouchOfKunai : CardBase
     {
+        private int MinKunai = 2;
+        private int MaxKunai = 4;
         public PouchOfKunai()
         {
             CardId = "pouch_of_kunai";
             Name = "Pouch of Kunai";
             Target = "Player";
-            Text = "Put {2} to {4} Kunai cards in your hand.";
+            Text = $"Put {MinKunai} to {MaxKunai} Kunai cards in your hand.";
             Cost = ["White"];
             Animation = "Buff";
             Type = CardType.Prayer;
@@ -22,7 +24,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
             OnPlay = (entityManager, card) =>
             {
-                var count = Random.Shared.Next(ValuesParse[0], ValuesParse[1] + 1);
+                var count = Random.Shared.Next(MinKunai, MaxKunai + 1);
                 var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 for (int j = 0; j < count; j++)
                 {

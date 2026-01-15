@@ -7,12 +7,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class DivineProtection : CardBase
     {
+        private int AegisGained = 4;
         public DivineProtection()
         {
             CardId = "divine_protection";
             Name = "Divine Protection";
             Target = "Player";
-            Text = "Gain {4} aegis.";
+            Text = $"Gain {AegisGained} aegis.";
             IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;
@@ -20,7 +21,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
             OnPlay = (entityManager, card) =>
             {
-                EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Aegis, Delta = ValuesParse[0] });
+                EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Aegis, Delta = AegisGained });
             };
         }
     }

@@ -7,12 +7,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Stab : CardBase
     {
+        private int CourageCost = 1;
         public Stab()
         {
             CardId = "stab";
             Name = "Stab";
             Target = "Enemy";
-            Text = "As an additional cost, lose {1} courage.";
+            Text = $"As an additional cost, lose {CourageCost} courage.";
             IsFreeAction = true;
             Animation = "Attack";
             Damage = 10;
@@ -22,7 +23,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
-                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -ValuesParse[0], Type = ModifyCourageType.Spent });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -CourageCost, Type = ModifyCourageType.Spent });
                 EventManager.Publish(new ModifyHpRequestEvent
                 {
                     Source = player,
@@ -37,9 +38,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                 var courageCmp = player?.GetComponent<Courage>();
                 int courage = courageCmp?.Amount ?? 0;
-                if (courage < ValuesParse[0])
+                if (courage < CourageCost)
                 {
-                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {ValuesParse[0]} courage!" });
+                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageCost} courage!" });
                     return false;
                 }
                 return true;

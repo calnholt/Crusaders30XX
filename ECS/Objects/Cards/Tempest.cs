@@ -6,12 +6,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Tempest : CardBase
     {
+        private int TemperanceAmount = 3;
         public Tempest()
         {
             CardId = "tempest";
             Name = "Tempest";
             Target = "Enemy";
-            Text = "Gain {3} temperance.";
+            Text = $"Gain {TemperanceAmount} temperance.";
             Animation = "Attack";
             Cost = ["White"];
             Damage = 15;
@@ -27,7 +28,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
-                EventManager.Publish(new ModifyTemperanceEvent { Delta = ValuesParse[0] });
+                EventManager.Publish(new ModifyTemperanceEvent { Delta = TemperanceAmount });
             };
         }
     }

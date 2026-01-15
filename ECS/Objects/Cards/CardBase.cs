@@ -23,39 +23,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public int Block { get; set; } = 0;
         public List<string> Cost { get; set; } = [];
         
-        private string _text = "";
-        public string Text
-        {
-            get => _text;
-            set
-            {
-                _text = value;
-                
-                if (!string.IsNullOrEmpty(_text))
-                {
-                    var valuesList = new List<int>();
-                    var pattern = @"\{(\d+)\}";
-                    var matches = Regex.Matches(_text, pattern);
-
-                    foreach (Match match in matches)
-                    {
-                        if (int.TryParse(match.Groups[1].Value, out int parsedValue))
-                        {
-                            valuesList.Add(parsedValue);
-                        }
-                    }
-
-                    ValuesParse = valuesList.ToArray();
-
-                    string resolved = _text;
-                    foreach (Match match in matches)
-                    {
-                        resolved = resolved.Replace(match.Value, match.Groups[1].Value);
-                    }
-                    _text = resolved;
-                }
-            }
-        }
+        public string Text { get; set; } = "";
 
         public int GetDerivedDamage(EntityManager entityManager, Entity card)
         {
@@ -65,7 +33,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public string Animation { get; set; } = "";
         public CardType Type { get; set; } = CardType.Attack;
         public string Target { get; set; } = "";
-        public int[] ValuesParse { get; set; } = [];
         public bool IsFreeAction { get; set; } = false;
         public bool ExhaustsOnEndTurn { get; set; } = false;
         public bool CanAddToLoadout { get; set; } = true;

@@ -21,7 +21,6 @@ namespace Crusaders30XX.ECS.Objects.Achievements
             Row = 3;
             Column = 0;
             StartsVisible = false;
-            TargetValue = RequiredCourageSpent;
             Points = 15;
         }
 

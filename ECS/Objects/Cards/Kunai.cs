@@ -7,12 +7,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Kunai : CardBase
     {
+        private int WoundChance = 25;
         public Kunai()
         {
             CardId = "kunai";
             Name = "Kunai";
             Target = "Enemy";
-            Text = "{25}% chance to wound the enemy. Exhaust on play or at the end of your turn";
+            Text = $"{WoundChance}% chance to wound the enemy. Exhaust on play or at the end of your turn";
             IsFreeAction = true;
             Animation = "Attack";
             Damage = 4;
@@ -31,9 +32,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
-                var chance = ValuesParse[0];
                 var random = Random.Shared.Next(0, 100);
-                if (random <= chance)
+                if (random <= WoundChance)
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Wounded, Delta = +1 });
                 }

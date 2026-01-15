@@ -8,13 +8,14 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Purge : CardBase
     {
+        private int DamageBonus = 2;
         public Purge()
         {
             CardId = "purge";
             Name = "Purge";
             Target = "Player";
             Cost = ["Any","Any","Any"];
-            Text = "Each attack card discarded to play this gains +{2} damage for the rest of the quest.";
+            Text = $"Each attack card discarded to play this gains +{DamageBonus} damage for the rest of the quest.";
             Animation = "Attack";
             Block = 3;
             Damage = 35;
@@ -37,7 +38,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     foreach (var paymentCard in paymentCards)
                     {
                         if (paymentCard.GetComponent<CardData>().Card.Type != CardType.Attack) continue;
-                        AttackDamageValueService.ApplyDelta(paymentCard, +ValuesParse[0], "Purge");
+                        AttackDamageValueService.ApplyDelta(paymentCard, +DamageBonus, "Purge");
                     }
                 }
             };

@@ -7,17 +7,18 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Stalwart : CardBase
     {
+        private int CourageCost = 2;
         public Stalwart()
         {
             CardId = "stalwart";
             Name = "Stalwart";
-            Text = "As an additional cost when using this card to block, lose {2} courage.";
+            Text = $"As an additional cost when using this card to block, lose {CourageCost} courage.";
             Type = CardType.Block;
             Block = 7;
             
             OnBlock = (entityManager, card) =>
             {
-                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -ValuesParse[0], Type = ModifyCourageType.Spent });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -CourageCost, Type = ModifyCourageType.Spent });
             };
 
             CanPlay = (entityManager, card) =>
@@ -27,9 +28,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 {
                     var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                     int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
-                    if (courage < ValuesParse[0])
+                    if (courage < CourageCost)
                     {
-                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {ValuesParse[0]} courage!" });
+                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageCost} courage!" });
                         return false;
                     }
                     return true;

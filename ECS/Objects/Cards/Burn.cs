@@ -8,12 +8,16 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Burn : CardBase
     {
+        private int BurnAmount = 4;
+        private int CourageThreshold = 3;
+        private int ActionPointBonus = 1;
+        private int CourageCost = 1;
         public Burn()
         {
             CardId = "burn";
             Name = "Burn";
             Target = "Enemy";
-            Text = "Apply {4} burn to the enemy. If you have {3}+ courage, gain {1} action point and lose {1} courage.";
+            Text = $"Apply {BurnAmount} burn to the enemy. If you have {CourageThreshold}+ courage, gain {ActionPointBonus} action point and lose {CourageCost} courage.";
             Block = 2;
             Type = CardType.Prayer;
             Animation = "Attack";
@@ -21,11 +25,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
             OnPlay = (entityManager, card) =>
             {
                 var courage = entityManager.GetEntity("Player").GetComponent<Courage>().Amount;
-                EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Burn, Delta = ValuesParse[0] });
-                if (courage >= ValuesParse[1])
+                EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Burn, Delta = BurnAmount });
+                if (courage >= CourageThreshold)
                 {
-                    EventManager.Publish(new ModifyActionPointsEvent { Delta = ValuesParse[2] });
-                    EventManager.Publish(new ModifyCourageRequestEvent { Delta = -ValuesParse[3], Type = ModifyCourageType.Spent });
+                    EventManager.Publish(new ModifyActionPointsEvent { Delta = ActionPointBonus });
+                    EventManager.Publish(new ModifyCourageRequestEvent { Delta = -CourageCost, Type = ModifyCourageType.Spent });
                 }
             };
         }

@@ -7,12 +7,14 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Strike : CardBase
     {
+        private int Chance = 50;
+        private int CourageGained = 2;
         public Strike()
         {
             CardId = "strike";
             Name = "Strike";
             Target = "Enemy";
-            Text = "{50}% chance to gain {2} courage.";
+            Text = $"{Chance}% chance to gain {CourageGained} courage.";
             Animation = "Attack";
             Damage = 12;
             Block = 3;
@@ -27,11 +29,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
-                var chance = ValuesParse[0];
+                var chance = Chance;
                 var random = Random.Shared.Next(0, 100);
                 if (random <= chance)
                 {
-                    EventManager.Publish(new ModifyCourageRequestEvent { Delta = ValuesParse[1], Type = ModifyCourageType.Gain });
+                    EventManager.Publish(new ModifyCourageRequestEvent { Delta = CourageGained, Type = ModifyCourageType.Gain });
                 }
             };
         }

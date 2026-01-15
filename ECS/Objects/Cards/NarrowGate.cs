@@ -6,12 +6,14 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class NarrowGate : CardBase
     {
+        private int AegisGained = 6;
+        private int PenanceGained = 1;
         public NarrowGate()
         {
             CardId = "narrow_gate";
             Name = "Narrow Gate";
             Target = "Enemy";
-            Text = "Gain {6} aegis, and gain {1} penance.";
+            Text = $"Gain {AegisGained} aegis, and gain {PenanceGained} penance.";
             Cost = ["White", "Any", "Any"];
             Animation = "Attack";
             Damage = 25;
@@ -27,8 +29,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
-                EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = +ValuesParse[0] });
-                EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Penance, Delta = +ValuesParse[1] });
+                EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = +AegisGained });
+                EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Penance, Delta = +PenanceGained });
             };
         }
     }

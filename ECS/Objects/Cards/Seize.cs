@@ -9,6 +9,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Seize : CardBase
     {
+        private int DamageBonus = 10;
         public Seize()
         {
             CardId = "seize";
@@ -16,7 +17,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Enemy";
             Damage = 6;
             Block = 3;
-            Text = "If you have lost courage during this action phase, this gains +{10} damage.";
+            Text = $"If you have lost courage during this action phase, this gains +{DamageBonus} damage.";
             Animation = "Attack";
 
             OnPlay = (entityManager, card) =>
@@ -34,7 +35,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var battleStateInfo = entityManager.GetEntitiesWithComponent<BattleStateInfo>().FirstOrDefault().GetComponent<BattleStateInfo>();
                 battleStateInfo.PhaseTracking.TryGetValue(TrackingTypeEnum.CourageLost.ToString(), out var courageLost);
-                return courageLost > 0 ? ValuesParse[0] : 0;
+                return courageLost > 0 ? DamageBonus : 0;
             };
 
 
