@@ -173,10 +173,12 @@ namespace Crusaders30XX.ECS.Systems
             string assetName = track switch
             {
                 MusicTrack.Menu => "Music/clash_of_shadows", // .ogg in Content
-                MusicTrack.Battle => "Music/desert_theme_battle",
+                MusicTrack.DesertBattle => "Music/desert_theme_battle",
                 MusicTrack.Customize => "Music/customize",
                 MusicTrack.Map => "Music/desert_map",
                 MusicTrack.QuestComplete => "Music/quest_complete",
+                MusicTrack.Achievements => "Music/achievements",
+                MusicTrack.FrozenBattle => "Music/ice",
                 _ => null
             };
             if (string.IsNullOrEmpty(assetName)) return null;

@@ -5,6 +5,7 @@ using System.Numerics;
 using Crusaders30XX.ECS.Components;
 using System;
 using Crusaders30XX.ECS.Objects.Enemies;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Data.Locations
 {
@@ -55,6 +56,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 						unrevealedRadius = poi.UnrevealedRadius,
 						difficulty = poi.Difficulty,
 						type = Enum.Parse<PointOfInterestType>(poi.Type),
+						musicTrack = Enum.Parse<MusicTrack>(poi.MusicTrack ?? "None"),
 						background = poi.Background ?? string.Empty,
 						rewardGold = 0,
 						events = new List<LocationEventDefinition>()
@@ -145,6 +147,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 			public List<TribulationFileDto> Tribulations { get; set; }
 			public RewardFileDto Reward { get; set; }
 			public List<ForSaleItemFileDto> ForSale { get; set; }
+			public string MusicTrack { get; set; }
 		}
 		private class RewardFileDto
 		{

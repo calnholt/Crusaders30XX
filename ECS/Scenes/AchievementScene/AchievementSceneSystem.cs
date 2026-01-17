@@ -44,6 +44,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<LoadSceneEvent>(_ =>
             {
                 if (_.Scene != SceneId.Achievement) return;
+                EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Achievements });
                 AddAchievementSystems();
             });
 

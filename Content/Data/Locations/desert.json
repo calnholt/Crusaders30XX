@@ -346,7 +346,8 @@
           "type": "Enemy"
         }
       ],
-      "Background": "desert-background-tundra.png"
+      "Background": "desert-background-tundra.png",
+      "MusicTrack": "FrozenBattle"
     },
     {
       "Id": "desert_17",

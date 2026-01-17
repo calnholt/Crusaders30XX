@@ -348,10 +348,12 @@ namespace Crusaders30XX.ECS.Events
     {
         None = 0,
         Menu = 1,
-        Battle = 2,
+        DesertBattle = 2,
         Customize = 3,
         Map = 4,
-        QuestComplete = 5
+        QuestComplete = 5,
+        Achievements = 6,
+        FrozenBattle = 7,
     }
 
     /// <summary>

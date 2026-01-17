@@ -11,6 +11,7 @@ using Crusaders30XX.ECS.Services;
  
 using System;
 using Crusaders30XX.ECS.Scenes.BattleScene;
+using Crusaders30XX.ECS.Data.Locations;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -146,7 +147,10 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					return;
 				}
-				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Battle });
+				var queued = EntityManager.GetEntity("QueuedEvents").GetComponent<QueuedEvents>();
+				LocationDefinitionCache.TryGet(queued.LocationId, out var def);
+				var musicTrack = def?.pointsOfInterest[queued.QuestIndex].musicTrack ?? MusicTrack.DesertBattle;
+				EventManager.Publish(new ChangeMusicTrack { Track = musicTrack });
 				if (!_loadedSystems)
 				{
 					AddBattleSystems();

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.Enemies;
 
 namespace Crusaders30XX.ECS.Data.Locations
@@ -27,6 +28,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public List<LocationEventDefinition> events { get; set; } = new List<LocationEventDefinition>();
 		public List<TribulationDefinition> tribulations { get; set; } = new List<TribulationDefinition>();
 		public List<ForSaleItemDefinition> forSale { get; set; } = new List<ForSaleItemDefinition>();
+		public MusicTrack musicTrack { get; set; } = MusicTrack.None;
 	}
 
 	public class TribulationDefinition

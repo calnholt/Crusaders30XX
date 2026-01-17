@@ -1,4 +1,5 @@
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Components
@@ -16,6 +17,7 @@ namespace Crusaders30XX.ECS.Components
 		public float DisplayRadius { get; set; } = 0f;
 		public PointOfInterestType Type { get; set; } = PointOfInterestType.Quest;
 		public bool IsRevealedByProximity { get; set; } = false;
+		public MusicTrack MusicTrack { get; set; } = MusicTrack.None;
 	}
 
 
