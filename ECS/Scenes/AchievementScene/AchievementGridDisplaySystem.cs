@@ -189,6 +189,8 @@ namespace Crusaders30XX.ECS.Systems
 
             string hoveredId = string.Empty;
 
+            AchievementBase achievement = null;
+
             foreach (var kv in _gridEntities)
             {
                 var ent = kv.Value;
@@ -222,7 +224,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
 
                 // Get achievement state
-                var achievement = !string.IsNullOrEmpty(gridItem.AchievementId)
+                achievement = !string.IsNullOrEmpty(gridItem.AchievementId)
                     ? AchievementManager.GetAchievement(gridItem.AchievementId)
                     : null;
 
@@ -273,8 +275,16 @@ namespace Crusaders30XX.ECS.Systems
                 gridItem.CurrentScale = MathHelper.Lerp(gridItem.CurrentScale, gridItem.TargetScale, dt * ScaleLerpSpeed);
             }
 
-            // Publish hover event
-            EventManager.Publish(new AchievementGridItemHovered { AchievementId = hoveredId });
+            // Publish hover event only if achievement is not hidden
+            achievement = AchievementManager.GetAchievement(hoveredId);
+            if (achievement != null && achievement.State != AchievementState.Hidden)
+            {
+                EventManager.Publish(new AchievementGridItemHovered { AchievementId = hoveredId });
+            }
+            else
+            {
+                EventManager.Publish(new AchievementGridItemHovered { AchievementId = string.Empty });
+            }
         }
 
         /// <summary>
