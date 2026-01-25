@@ -80,7 +80,24 @@ namespace Crusaders30XX.ECS.Systems
 
         private void LoadTextures()
         {
-            string[] textureKeys = { "enemy-attack-splash", "player-attack-splash", "gain-aegis", "gain-burn", "gain-armor", "gain-aggression", "gain-power" };
+            string[] textureKeys = { 
+                "enemy-attack-splash", 
+                "player-attack-splash", 
+                "gain-aegis", 
+                "gain-burn", 
+                "gain-armor", 
+                "gain-aggression", 
+                "gain-power", 
+                "gain-bleed", 
+                "gain-frostbite", 
+                "gain-penance", 
+                "gain-slow", 
+                "gain-sub-zero",
+                "gain-windchill",
+                "gain-wounded",
+                "gain-inferno",
+                "gain-enflamed"
+            };
             foreach (var key in textureKeys)
             {
                 try
@@ -177,6 +194,7 @@ namespace Crusaders30XX.ECS.Systems
         private void OnApplyPassive(ApplyPassiveEvent e)
         {
             // Only show for aegis gains (positive delta)
+            Console.WriteLine($"[SplashEffectAnimationDisplaySystem] OnApplyPassive - {e.Type} - {e.Delta}");
             if (e.Delta <= 0)
                 return;
 
@@ -189,8 +207,17 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Armor => "gain-armor",
                 AppliedPassiveType.Aggression => "gain-aggression",
                 AppliedPassiveType.Power => "gain-power",
+                AppliedPassiveType.Bleed => "gain-bleed",
+                AppliedPassiveType.Frostbite => "gain-frostbite",
+                AppliedPassiveType.Penance => "gain-penance",
+                AppliedPassiveType.Slow => "gain-slow",
+                AppliedPassiveType.SubZero => "gain-sub-zero",
+                AppliedPassiveType.Wounded => "gain-wounded",
+                AppliedPassiveType.Inferno => "gain-inferno",
+                AppliedPassiveType.Enflamed => "gain-enflamed",
                 _ => null
             };
+            Console.WriteLine($"[SplashEffectAnimationDisplaySystem] OnApplyPassive - {textureKey} - {target.Name}");
             if (textureKey == null) return;
             if (!_textures.TryGetValue(textureKey, out var textureToUse) || textureToUse == null) return;
             if (_animations.Count >= MaxConcurrent)
@@ -200,7 +227,6 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             float totalDuration = FadeInDurationSeconds + HoldDurationSeconds + FadeOutDurationSeconds;
-
             _animations.Add(new AnimationInstance
             {
                 TargetEntityId = target.Id,
@@ -360,21 +386,6 @@ namespace Crusaders30XX.ECS.Systems
                 TargetEntityId = 0,
                 Target = EntityManager.GetEntity("Enemy"),
                 Texture = _textures["player-attack-splash"],
-                AgeSeconds = 0f,
-                FadeInDurationSeconds = FadeInDurationSeconds,
-                HoldDurationSeconds = HoldDurationSeconds,
-                FadeOutDurationSeconds = FadeOutDurationSeconds,
-                TotalDurationSeconds = FadeInDurationSeconds + HoldDurationSeconds + FadeOutDurationSeconds
-            });
-        }
-        [DebugAction("Test Burn Animation")]
-        public void Debug_TestBurnAnimation()
-        {
-            _animations.Add(new AnimationInstance
-            {
-                TargetEntityId = 0,
-                Target = EntityManager.GetEntity("Enemy"),
-                Texture = _textures["gain-burn"],
                 AgeSeconds = 0f,
                 FadeInDurationSeconds = FadeInDurationSeconds,
                 HoldDurationSeconds = HoldDurationSeconds,

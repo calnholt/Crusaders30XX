@@ -307,6 +307,13 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Publish(new RemovePassive { Owner = owner, Type = AppliedPassiveType.DowseWithHolyWater });
             EventManager.Publish(new RemovePassive { Owner = owner, Type = AppliedPassiveType.Aggression });
+            var ap = owner.GetComponent<AppliedPassives>();
+            if (ap == null || ap.Passives == null || ap.Passives.Count == 0) return;
+            if (ap.Passives.TryGetValue(AppliedPassiveType.Silenced, out int silencedStacks) && silencedStacks > 0)
+            {
+                EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Silenced });
+                EventManager.Publish(new UpdatePassive { Owner = owner, Type = AppliedPassiveType.Silenced, Delta = -1 });
+            }
         }
 
         public static HashSet<AppliedPassiveType> GetTurnPassives()
@@ -339,6 +346,7 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Windchill,
                 AppliedPassiveType.SubZero,
                 AppliedPassiveType.Aegis,
+                AppliedPassiveType.Anathema,
             };
         }
         public static HashSet<AppliedPassiveType> GetQuestPassives()

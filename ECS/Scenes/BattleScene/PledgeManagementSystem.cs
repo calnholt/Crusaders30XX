@@ -112,6 +112,7 @@ namespace Crusaders30XX.ECS.Systems
             if (card.GetComponent<Pledge>() != null) return; // Already pledged
             
             EntityManager.AddComponent(card, new Pledge { Owner = card });
+            EventManager.Publish(new PledgeAddedEvent { Card = card });
             RestoreCardInteractability();
             Console.WriteLine($"[PledgeManagementSystem] Added Pledge component to {card.GetComponent<CardData>()?.Card.CardId ?? "unknown"}");
         }

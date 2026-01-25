@@ -45,6 +45,10 @@ namespace Crusaders30XX.ECS.Systems
 			i = lowerText.IndexOf("frozen");
 			if (i >= 0) matches.Add((i, "Frozen - When you play a frozen card, gain 1 frostbite and there's a 50% chance it's exhausted. Remove frozen by blocking with it."));
 			if (matches.Count == 0) return string.Empty;
+			i = lowerText.IndexOf("darkness");
+			if (i >= 0) matches.Add((i, "X Darkness - The enemy loses X damage when you pledge a card."));
+			i = lowerText.IndexOf("silenced");
+			if (i >= 0) matches.Add((i, "X Silenced - You cannot play pledged cards. Remove 1 silenced at the end of your action phase."));
 			matches.Sort((a, b) => a.Index.CompareTo(b.Index));
 			var parts = new string[matches.Count];
 			for (int j = 0; j < matches.Count; j++) parts[j] = matches[j].Tooltip;

@@ -83,6 +83,12 @@ namespace Crusaders30XX.ECS.Factories
                 "insidious_bolt" => new InsidiousBolt(),
                 // Berserker attacks
                 "rage" => new Rage(),
+                // Shadow attacks
+                "shadow_strike" => new ShadowStrike(),
+                "dissipating_darkness" => new EncroachingDarkness(),
+                "snuff_out_the_light" => new SnuffOutTheLight(),
+                "night_fall" => new NightFall(),
+                "from_the_shadows" => new FromTheShadows(),
                 // Generic attacks
                 "have_no_mercy" => new HaveNoMercy(),
                 _ => null
@@ -162,6 +168,12 @@ namespace Crusaders30XX.ECS.Factories
                 { "insidious_bolt", new InsidiousBolt() },
                 // Berserker attacks
                 { "rage", new Rage() },
+                // Shadow attacks
+                { "shadow_strike", new ShadowStrike() },
+                { "dissipating_darkness", new EncroachingDarkness() },
+                { "snuff_out_the_light", new SnuffOutTheLight() },
+                { "night_fall", new NightFall() },
+                { "from_the_shadows", new FromTheShadows() },
                 // Generic attacks
                 { "have_no_mercy", new HaveNoMercy() },
             };

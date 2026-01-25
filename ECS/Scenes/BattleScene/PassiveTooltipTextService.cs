@@ -87,6 +87,10 @@ namespace Crusaders30XX.ECS.Systems
           return $"If you have 4+ courage at the end of the action phase, take {stacks} damage.";
         case AppliedPassiveType.Shackled:
           return $"At the start of the block phase, shackle 2 cards from your hand. Remove 1 shackled stacks by blocking with them.";
+        case AppliedPassiveType.Anathema:
+          return $"When you pledge a card, the enemy loses {stacks} damage.";
+        case AppliedPassiveType.Silenced:
+          return $"You cannot play pledged cards. Remove 1 silenced at the end of your action phase.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

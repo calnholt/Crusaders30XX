@@ -1031,7 +1031,9 @@ namespace Crusaders30XX.ECS.Components
         Windchill,
         SubZero,
         Enflamed,
-        Shackled
+        Shackled,
+        Anathema,
+        Silenced
     }
 
     public class MarkedForReturnToDeck : IComponent

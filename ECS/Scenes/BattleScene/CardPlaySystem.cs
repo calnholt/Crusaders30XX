@@ -323,6 +323,14 @@ namespace Crusaders30XX.ECS.Systems
 
                     bool canSatisfy = CanSatisfy(requiredCosts, handNonWeapons, out _);
 
+                    var appliedPassives = GetComponentHelper.GetAppliedPassives(EntityManager, "Player");
+                    var cardIsPledged = evt.Card.HasComponent<Pledge>();
+                    if (appliedPassives != null && appliedPassives.Passives.TryGetValue(AppliedPassiveType.Silenced, out int silencedStacks) && silencedStacks > 0 && cardIsPledged)
+                    {
+                        EventManager.Publish(new CantPlayCardMessage { Message = "You cannot play pledged cards because you are silenced!" });
+                        return;
+                    }
+
                     if (!canSatisfy)
                     {
                         Console.WriteLine("[CardPlaySystem] Cannot satisfy cost requirements; aborting play");

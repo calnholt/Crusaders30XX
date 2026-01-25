@@ -36,6 +36,7 @@ namespace Crusaders30XX.ECS.Factories
                 "cinderbolt_demon" => new CinderboltDemon(difficulty),
                 "fire_skeleton" => new FireSkeleton(difficulty),
                 "berserker" => new Berserker(difficulty),
+                "shadow" => new Shadow(difficulty),
                 _ => null
             };
         }
@@ -65,7 +66,8 @@ namespace Crusaders30XX.ECS.Factories
                 { "glacial_guardian", new GlacialGuardian(difficulty) },
                 { "cinderbolt_demon", new CinderboltDemon(difficulty) },
                 { "fire_skeleton", new FireSkeleton(difficulty) },
-                { "berserker", new Berserker(difficulty) }
+                { "berserker", new Berserker(difficulty) },
+                { "shadow", new Shadow(difficulty) },
             };
         }
     }

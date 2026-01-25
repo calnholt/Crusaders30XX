@@ -11,6 +11,8 @@ namespace Crusaders30XX.ECS.Rendering
 	{
 		// Cache AA circles by GraphicsDevice pointer and radius
 		private static readonly Dictionary<(int deviceId, int radius), Texture2D> _aaCircleCache = new();
+		// Cache AA pie slices by device, radius, and angle range
+		private static readonly Dictionary<(int deviceId, int radius, float startDeg, float endDeg), Texture2D> _pieSliceCache = new();
 		// Cache rounded squares by device, size, and corner radius
 		private static readonly Dictionary<(int deviceId, int size, int radius), Texture2D> _roundedSquareCache = new();
 		// Cache equilateral triangles by device and size
@@ -58,6 +60,87 @@ namespace Crusaders30XX.ECS.Rendering
 			circle.SetData(data);
 			_aaCircleCache[key] = circle;
 			return circle;
+		}
+
+		/// <summary>
+		/// Returns a white antialiased pie-slice mask texture for tinting.
+		/// Angles are in degrees, where 0 is up (12 o'clock) and increase clockwise.
+		/// </summary>
+		public static Texture2D GetAntialiasedPieSliceMask(GraphicsDevice device, int radius, float startAngleDeg, float endAngleDeg)
+		{
+			if (radius < 1) radius = 1;
+			int deviceId = device?.GetHashCode() ?? 0;
+			float start = NormalizeAngleDeg(startAngleDeg);
+			float end = NormalizeAngleDeg(endAngleDeg);
+			var key = (
+				deviceId,
+				radius,
+				(float)System.Math.Round(start, 2),
+				(float)System.Math.Round(end, 2)
+			);
+			if (_pieSliceCache.TryGetValue(key, out var existing) && existing != null) return existing;
+
+			int d = radius * 2;
+			var tex = new Texture2D(device, d, d);
+			var data = new Color[d * d];
+
+			float radiusSq = radius * radius;
+			float[] sampleOffsets = { 0.25f, 0.75f };
+			const int samplesPerPixel = 4;
+
+			for (int y = 0; y < d; y++)
+			{
+				for (int x = 0; x < d; x++)
+				{
+					int hits = 0;
+					for (int sy = 0; sy < sampleOffsets.Length; sy++)
+					{
+						float py = y + sampleOffsets[sy];
+						for (int sx = 0; sx < sampleOffsets.Length; sx++)
+						{
+							float px = x + sampleOffsets[sx];
+							float dx = px - radius;
+							float dy = py - radius;
+							float distSq = dx * dx + dy * dy;
+							if (distSq > radiusSq) continue;
+							float angle = AngleFromUpClockwiseDeg(dx, dy);
+							if (IsAngleBetweenDeg(angle, start, end)) hits++;
+						}
+					}
+
+					float alpha = hits / (float)samplesPerPixel;
+					byte alphaByte = (byte)MathHelper.Clamp((int)System.Math.Round(alpha * 255f), 0, 255);
+					data[y * d + x] = Color.FromNonPremultiplied(255, 255, 255, alphaByte);
+				}
+			}
+
+			tex.SetData(data);
+			_pieSliceCache[key] = tex;
+			return tex;
+		}
+
+		private static float NormalizeAngleDeg(float angle)
+		{
+			angle %= 360f;
+			if (angle < 0f) angle += 360f;
+			return angle;
+		}
+
+		private static bool IsAngleBetweenDeg(float angle, float start, float end)
+		{
+			if (start <= end)
+			{
+				return angle >= start && angle <= end;
+			}
+			return angle >= start || angle <= end;
+		}
+
+		private static float AngleFromUpClockwiseDeg(float dx, float dy)
+		{
+			// atan2 with swapped args makes 0° at up, increasing clockwise
+			float angle = MathHelper.ToDegrees((float)System.Math.Atan2(dx, -dy));
+			if (angle < 0f) angle += 360f;
+			return angle;
 		}
 
 		public static Texture2D GetRoundedSquare(GraphicsDevice device, int size, int radius)

@@ -671,20 +671,29 @@ namespace Crusaders30XX.ECS.Systems
             {
                 float x = startLocalX + i * (diameter + gap) + radius;
                 var costType = costs[i];
-                var fill = GetCostColor(costType);
                 var outline = GetConditionalOutlineColor(cardColor, costType);
-                DrawCirclePipRotatedScaled(cardCenter, rotation, new Vector2(x, y), radius, fill, outline, overallScale);
+                if (EqualsIgnoreCase(costType, "any"))
+                {
+                    DrawAnyCostPipRotatedScaled(cardCenter, rotation, new Vector2(x, y), radius, outline, overallScale);
+                }
+                else
+                {
+                    var fill = GetCostColor(costType);
+                    DrawCirclePipRotatedScaled(cardCenter, rotation, new Vector2(x, y), radius, fill, outline, overallScale);
+                }
             }
         }
 
         private Color? GetConditionalOutlineColor(CardData.CardColor cardColor, string costType)
         {
             // Only outline when card color matches the cost color, with specific outline color rules
-            if (cardColor == CardData.CardColor.Red && EqualsIgnoreCase(costType, "red"))
+            bool isAny = EqualsIgnoreCase(costType, "any");
+            if (isAny) return Color.Gray;
+            if (cardColor == CardData.CardColor.Red)
                 return Color.Black;
-            if (cardColor == CardData.CardColor.White && EqualsIgnoreCase(costType, "white"))
+            if (cardColor == CardData.CardColor.White)
                 return Color.Black;
-            if (cardColor == CardData.CardColor.Black && EqualsIgnoreCase(costType, "black"))
+            if (cardColor == CardData.CardColor.Black)
                 return Color.White;
             return null; // no outline
         }
@@ -718,6 +727,36 @@ namespace Crusaders30XX.ECS.Systems
                 // No outline: draw just the filled circle centered
                 _spriteBatch.Draw(circleTex, worldCenter, null, fillColor, rotation, new Vector2(textureSize / 2f, textureSize / 2f), 1f, SpriteEffects.None, 0f);
             }
+        }
+
+        private void DrawAnyCostPipRotatedScaled(Vector2 cardCenter, float rotation, Vector2 localCenterFromTopLeft, float radius, Color? outlineColor, float overallScale)
+        {
+            int radiusTex = Math.Max(1, (int)Math.Ceiling(radius));
+            var circleTex = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, radiusTex);
+            int textureSize = circleTex.Width;
+
+            float localX = -_settings.CardWidth * overallScale / 2f + localCenterFromTopLeft.X;
+            float localY = -_settings.CardHeight * overallScale / 2f + localCenterFromTopLeft.Y;
+            float cos = (float)Math.Cos(rotation);
+            float sin = (float)Math.Sin(rotation);
+            var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
+            var worldCenter = cardCenter + rotated;
+
+            float fillScale = 1f;
+            if (outlineColor.HasValue)
+            {
+                _spriteBatch.Draw(circleTex, worldCenter, null, outlineColor.Value, rotation, new Vector2(textureSize / 2f, textureSize / 2f), 1f, SpriteEffects.None, 0f);
+                fillScale = Math.Max(0f, 1f - CostPipOutlineFrac * 2f);
+            }
+
+            var sliceTex0 = PrimitiveTextureFactory.GetAntialiasedPieSliceMask(_graphicsDevice, radiusTex, 0f, 120f);
+            var sliceTex1 = PrimitiveTextureFactory.GetAntialiasedPieSliceMask(_graphicsDevice, radiusTex, 120f, 240f);
+            var sliceTex2 = PrimitiveTextureFactory.GetAntialiasedPieSliceMask(_graphicsDevice, radiusTex, 240f, 360f);
+            var origin = new Vector2(textureSize / 2f, textureSize / 2f);
+
+            _spriteBatch.Draw(sliceTex0, worldCenter, null, Color.White, rotation, origin, fillScale, SpriteEffects.None, 0f);
+            _spriteBatch.Draw(sliceTex1, worldCenter, null, Color.Black, rotation, origin, fillScale, SpriteEffects.None, 0f);
+            _spriteBatch.Draw(sliceTex2, worldCenter, null, Color.DarkRed, rotation, origin, fillScale, SpriteEffects.None, 0f);
         }
 
         private void DrawDamageTrapezoidAndValue(Vector2 cardCenter, float rotation, float overallScale, CardData.CardColor cardColor, int damageValue, int damageDelta)

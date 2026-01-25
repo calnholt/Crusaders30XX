@@ -411,6 +411,28 @@
       "Background": "desert-background-prison.png"
     },
     {
+      "Id": "desert_19",
+      "WorldPosition": [
+        1910,
+        2770
+      ],
+      "RevealRadius": 600,
+      "UnrevealedRadius": 150,
+      "Type": "Quest",
+      "Name": "Shadows of the Past",
+      "Difficulty": 4,
+      "Reward": {
+        "Gold": 2
+      },
+      "Events": [
+        {
+          "id": "shadow",
+          "type": "Enemy"
+        }
+      ],
+      "Background": "gothic-background-alley.png"
+    },
+    {
       "Id": "desert_7",
       "WorldPosition": [
         4775,

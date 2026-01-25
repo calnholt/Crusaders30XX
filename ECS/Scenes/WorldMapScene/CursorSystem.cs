@@ -73,7 +73,7 @@ namespace Crusaders30XX.ECS.Systems
 		public float CursorOpacity { get; set; } = .45f;
 
 		[DebugEditable(DisplayName = "Hitbox Radius (px)", Step = 1f, Min = 0f, Max = 256f)]
-		public int HitboxRadius { get; set; } = 34;
+		public int HitboxRadius { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Rumble Duration (s)", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float RumbleDurationSeconds { get; set; } = 0.04f;

@@ -8,6 +8,7 @@ using Crusaders30XX.Diagnostics;
 using System;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Objects.Cards;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {

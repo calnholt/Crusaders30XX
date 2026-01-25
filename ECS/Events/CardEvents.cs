@@ -290,6 +290,14 @@ namespace Crusaders30XX.ECS.Events
     public class SkipPledgeRequested { }
 
     /// <summary>
+    /// Emitted when the player adds a pledge to a card.
+    /// </summary>
+    public class PledgeAddedEvent
+    {
+        public Entity Card { get; set; }
+    }
+
+    /// <summary>
     /// UI message indicating why a card cannot be played.
     /// Systems can subscribe to display a transient on-screen notification.
     /// </summary>
