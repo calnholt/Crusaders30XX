@@ -76,6 +76,8 @@ namespace Crusaders30XX.ECS.Systems
 			_backgroundTexture = content.Load<Texture2D>("desert_background_location");
 			_prevScrollWheelValue = Mouse.GetState().ScrollWheelValue;
 			_prevMouseState = Mouse.GetState();
+			// Restore zoom state from singleton on system creation
+			MapScale = StateSingleton.LocationMapZoom;
 			EventManager.Subscribe<LockLocationCameraEvent>(_ => { _locked = _.Locked; });
 			EventManager.Subscribe<FocusLocationCameraEvent>(_ => {
 				int w = Game1.VirtualWidth;
@@ -237,10 +239,13 @@ namespace Crusaders30XX.ECS.Systems
 				// Convert camera center to map-relative ratio (0-1)
 				float ratioX = _cameraCenter.X / (BaseMapWidth * oldScale);
 				float ratioY = _cameraCenter.Y / (BaseMapHeight * oldScale);
-				
+
 				// Restore camera center using new map size
 				_cameraCenter.X = ratioX * (BaseMapWidth * MapScale);
 				_cameraCenter.Y = ratioY * (BaseMapHeight * MapScale);
+
+				// Save zoom state to singleton
+				StateSingleton.LocationMapZoom = MapScale;
 			}
 
 			if (velocity != Vector2.Zero)
