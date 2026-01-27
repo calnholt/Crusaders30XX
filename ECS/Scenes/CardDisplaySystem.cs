@@ -12,6 +12,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -1001,7 +1002,7 @@ namespace Crusaders30XX.ECS.Systems
                 float startLocalY = -_settings.CardHeight * overallScale / 2f + localOffsetFromTopLeft.Y;
 
                 float currentY = startLocalY;
-                foreach (var line in WrapText(text, maxLineWidth, scale))
+                foreach (var line in TextUtils.WrapText(font, text, scale, (int)maxLineWidth))
                 {
                     // Position of this line's top-left in card-local coords
                     var local = new Vector2(startLocalX, currentY);
@@ -1040,62 +1041,5 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private IEnumerable<string> WrapText(string text, float maxLineWidth, float scale)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                yield break;
-            }
-
-            string[] words = text.Split(' ');
-            string currentLine = string.Empty;
-
-            foreach (var word in words)
-            {
-                string testLine = string.IsNullOrEmpty(currentLine) ? word : currentLine + " " + word;
-                float lineWidth = _nameFont.MeasureString(testLine).X * scale;
-
-                if (lineWidth <= maxLineWidth)
-                {
-                    currentLine = testLine;
-                }
-                else
-                {
-                    if (!string.IsNullOrEmpty(currentLine))
-                    {
-                        yield return currentLine;
-                        currentLine = word; // start new line with the current word
-                    }
-                    else
-                    {
-                        // Single word longer than line: hard-break by characters
-                        string longWord = word;
-                        string partial = string.Empty;
-                        foreach (char c in longWord)
-                        {
-                            string attempt = partial + c;
-                            if (_nameFont.MeasureString(attempt).X * scale <= maxLineWidth)
-                            {
-                                partial = attempt;
-                            }
-                            else
-                            {
-                                if (partial.Length > 0)
-                                {
-                                    yield return partial;
-                                }
-                                partial = c.ToString();
-                            }
-                        }
-                        currentLine = partial;
-                    }
-                }
-            }
-
-            if (!string.IsNullOrEmpty(currentLine))
-            {
-                yield return currentLine;
-            }
-        }
     }
 }
