@@ -54,6 +54,27 @@ namespace Crusaders30XX.ECS.Systems
 					EnqueueBuffKeyframes(scaleAnim);
 				}
 			});
+			EventManager.Subscribe<StartDebuffAnimation>(evt =>
+			{
+				// Apply "Shrink & Strike" animation to convey applying something bad
+				if (evt == null) return;
+				if (evt.TargetIsPlayer)
+				{
+					var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+					if (player == null) return;
+					EnsureHasAnimState(player);
+					EnsureScaleAnim(player, out var scaleAnim);
+					EnqueueDebuffKeyframes(scaleAnim, true);
+				}
+				else
+				{
+					var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+					if (enemy == null) return;
+					EnsureHasAnimState(enemy);
+					EnsureScaleAnim(enemy, out var scaleAnim);
+					EnqueueDebuffKeyframes(scaleAnim, false);
+				}
+			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -144,6 +165,18 @@ namespace Crusaders30XX.ECS.Systems
 			sa.AddKeyframe(new Vector2(1.05f, 0.95f), 0.096f);
 			sa.AddKeyframe(new Vector2(1f, 1f), 0.240f);
 			sa.OnComplete = () => { EventManager.Publish(new BuffAnimationComplete { TargetIsPlayer = true }); };
+		}
+
+		private void EnqueueDebuffKeyframes(ScaleAnim sa, bool targetIsPlayer)
+		{
+			// "Shrink & Strike" animation - compress inward then sharp expand, like coiling before attacking
+			sa.Reset();
+			sa.AddKeyframe(new Vector2(0.85f, 0.85f), 0.15f);  // Compress/coil inward
+			sa.AddKeyframe(new Vector2(0.80f, 0.90f), 0.08f);  // Slight asymmetric tension
+			sa.AddKeyframe(new Vector2(1.25f, 1.10f), 0.10f);  // Sharp strike outward
+			sa.AddKeyframe(new Vector2(1.05f, 0.95f), 0.12f);  // Recoil
+			sa.AddKeyframe(new Vector2(1.0f, 1.0f), 0.15f);    // Settle
+			sa.OnComplete = () => { EventManager.Publish(new DebuffAnimationComplete { TargetIsPlayer = targetIsPlayer }); };
 		}
 
 		private class ScaleAnim

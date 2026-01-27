@@ -85,6 +85,17 @@ namespace Crusaders30XX.ECS.Events
 		public bool TargetIsPlayer;
 	}
 
+	// Enemy debuff animation when applying negative effects to player
+	public class StartDebuffAnimation
+	{
+		public bool TargetIsPlayer; // Which entity animates (false = enemy animates)
+	}
+
+	public class DebuffAnimationComplete
+	{
+		public bool TargetIsPlayer;
+	}
+
 	// Shows a temporary "Stunned!" overlay on the enemy
 	public class ShowStunnedOverlay
 	{

@@ -104,6 +104,13 @@ namespace Crusaders30XX.ECS.Systems
 					float bump = 1f + 0.15f * (float)System.Math.Sin(tp * System.Math.PI);
 					scale *= bump;
 				}
+				// Apply scale multiplier from PlayerAnimationState (used for buff/debuff animations)
+				var animState = e.GetComponent<PlayerAnimationState>();
+				Vector2 scaleVec = new Vector2(scale, scale);
+				if (animState != null)
+				{
+					scaleVec *= animState.ScaleMultiplier;
+				}
 				var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
 				var basePos = new Vector2(
 					viewportW * (0.5f + CenterOffsetXPct),
@@ -155,7 +162,7 @@ namespace Crusaders30XX.ECS.Systems
 					int y0 = (int)System.Math.Round(drawPos.Y - hPx / 2f);
 					ui.Bounds = new Rectangle(x0, y0, wPx, hPx);
 				}
-				_spriteBatch.Draw(tex, position: drawPos, sourceRectangle: null, color: Color.White, rotation: 0f, origin: origin, scale: scale, effects: SpriteEffects.None, layerDepth: 0f);
+				_spriteBatch.Draw(tex, position: drawPos, sourceRectangle: null, color: Color.White, rotation: 0f, origin: origin, scale: scaleVec, effects: SpriteEffects.None, layerDepth: 0f);
 			}
 		}
 

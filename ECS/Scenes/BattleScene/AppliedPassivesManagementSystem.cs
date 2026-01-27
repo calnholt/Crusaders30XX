@@ -61,6 +61,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (enemyBase != null && enemyBase.EnemyBase != null && enemyBase.EnemyBase.OnStartOfBattle != null)
                 {
                     Console.WriteLine($"[AppliedPassivesManagementSystem] OnChangeBattlePhase - OnStartOfBattle - {enemyBase.EnemyBase.Id}");
+                    EventManager.Publish(new StartDebuffAnimation { TargetIsPlayer = false });
                     enemyBase.EnemyBase.OnStartOfBattle(EntityManager);
                 }
                 EnemyShieldsMaintenance(enemy);
