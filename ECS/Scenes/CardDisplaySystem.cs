@@ -358,11 +358,7 @@ namespace Crusaders30XX.ECS.Systems
                     effectiveDamage = Math.Max(0, card.Damage);
                     damageDelta = 0;
                 }
-
-                if (effectiveDamage > 0)
-                {
-                    DrawDamageTrapezoidAndValue(cardCenter, rotation, visualScale, cardData.Color, effectiveDamage, damageDelta);
-                }
+                DrawDamageTrapezoidAndValue(cardCenter, rotation, visualScale, cardData.Color, effectiveDamage, damageDelta);
             }
 
             // Draw block value and shield icon at bottom-left, but hide for weapons
@@ -761,7 +757,6 @@ namespace Crusaders30XX.ECS.Systems
 
         private void DrawDamageTrapezoidAndValue(Vector2 cardCenter, float rotation, float overallScale, CardData.CardColor cardColor, int damageValue, int damageDelta)
         {
-            if (damageValue <= 0) return;
             if (_settings == null) _settings = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>();
 
             float uiScale = _settings.UIScale;

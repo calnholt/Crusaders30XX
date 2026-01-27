@@ -22,6 +22,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font;
         private readonly Texture2D _pixel;
+        private readonly RasterizerState _scissorRasterizer;
         private int? _lastWheel;
         [DebugEditable(DisplayName = "Modal Margin", Step = 1, Min = 0, Max = 200)]
         public int ModalMargin { get; set; } = 40;
@@ -70,6 +71,7 @@ namespace Crusaders30XX.ECS.Systems
             _font = FontSingleton.TitleFont;
             _pixel = new Texture2D(graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
+            _scissorRasterizer = new RasterizerState { ScissorTestEnable = true, CullMode = CullMode.None };
 
             EventManager.Subscribe<OpenCardListModalEvent>(OpenModal);
             EventManager.Subscribe<CloseCardListModalEvent>(_ => CloseModal());
@@ -215,12 +217,16 @@ namespace Crusaders30XX.ECS.Systems
                 _lastWheel = mouse.ScrollWheelValue;
             }
 
-            // Clip drawing to the content area with scissor rectangle
+            // End current batch to establish new state with scissor clipping
             var prevScissor = _graphicsDevice.ScissorRectangle;
-            var prevState = _graphicsDevice.RasterizerState;
+            _spriteBatch.End();
+
+            // Begin new batch with scissor-enabled rasterizer
+            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, _scissorRasterizer);
+
+            // Set scissor rectangle for clipping
             var clipRect = new Rectangle(rect.X + Padding, cursorY, rect.Width - Padding * 2, visibleHeight);
             _graphicsDevice.ScissorRectangle = clipRect;
-            _graphicsDevice.RasterizerState = new RasterizerState { ScissorTestEnable = true };
 
             int startY = gridY - modal.ScrollOffset;
             foreach (var cd in cards)
@@ -244,14 +250,11 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            // Mask overflow (belt-and-suspenders in case scissor is disabled)
-            var topMask = new Rectangle(rect.X + Padding, rect.Y + Padding, rect.Width - Padding * 2, Math.Max(0, contentRect.Y - (rect.Y + Padding)));
-            var botMask = new Rectangle(rect.X + Padding, contentRect.Bottom, rect.Width - Padding * 2, Math.Max(0, (rect.Bottom - Padding) - contentRect.Bottom));
-            if (topMask.Height > 0) _spriteBatch.Draw(_pixel, topMask, panelColor);
-            if (botMask.Height > 0) _spriteBatch.Draw(_pixel, botMask, panelColor);
+            // End clipped batch and resume normal drawing
+            _spriteBatch.End();
+            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, _scissorRasterizer);
 
-            // Restore scissor state
-            _graphicsDevice.RasterizerState = prevState;
+            // Restore scissor to full screen
             _graphicsDevice.ScissorRectangle = prevScissor;
 
             // Draw close button (top-right)
