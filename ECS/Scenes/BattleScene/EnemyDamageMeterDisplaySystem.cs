@@ -200,7 +200,8 @@ namespace Crusaders30XX.ECS.Systems
 			// Calculate target values (block prioritized over aegis)
 			int baseDamage = progress.DamageBeforePrevention;
 			int assignedBlock = Math.Max(0, progress.AssignedBlockTotal);
-			int totalAegis = Math.Max(0, progress.AegisTotal);
+			// When attack ignores aegis, don't show aegis in the damage meter
+			int totalAegis = progress.IgnoresAegis ? 0 : Math.Max(0, progress.AegisTotal);
 			int conditionVal = Math.Max(0, progress.PreventedDamageFromBlockCondition);
 
 			int effectiveBlock = Math.Min(assignedBlock, baseDamage);

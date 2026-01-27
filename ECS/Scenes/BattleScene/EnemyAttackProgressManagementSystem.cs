@@ -224,9 +224,11 @@ namespace Crusaders30XX.ECS.Systems
 			if (def == null) return;
 
 			int full = DamagePredictionService.ComputeFullDamage(def);
+			// Copy IgnoresAegis flag from attack definition
+			p.IgnoresAegis = def.IgnoresAegis;
 			// Use the snapshot value maintained from passive events rather than re-reading passives here
-			int aegis = Math.Max(0, p.AegisTotal);
-			p.AegisTotal = aegis;
+			// When attack ignores aegis, treat it as 0 for damage calculation
+			int aegis = p.IgnoresAegis ? 0 : Math.Max(0, p.AegisTotal);
 			p.DamageBeforePrevention = full;
 
 			bool specialEffectExecuted = def.ProgressOverride != null ? def.ProgressOverride(EntityManager) : false;

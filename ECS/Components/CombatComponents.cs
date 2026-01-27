@@ -72,6 +72,7 @@ namespace Crusaders30XX.ECS.Components
 		public int BaseDamage { get; set; }
 		public int TotalPreventedDamage { get; internal set; }
 		public bool FullyPreventedBySpecial { get; set; }
+		public bool IgnoresAegis { get; set; }
     }
 
 	/// <summary>

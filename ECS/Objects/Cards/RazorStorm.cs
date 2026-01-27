@@ -13,7 +13,7 @@ public class RazorStorm : CardBase
     Target = "Enemy";
     Text = $"Attacks {NumOfHits} times.";
     Animation = "Attack";
-    Damage = 1;
+    Damage = 2;
     Block = 2;
     IsFreeAction = true;
 

@@ -310,7 +310,7 @@ namespace Crusaders30XX.ECS.Systems
                 try
                 {
                     // Base damage includes printed damage plus any conditional damage from the card definition
-                    int baseDamage = card.Damage;
+                    int baseDamage = Math.Max(0, card.Damage);
                     try
                     {
                         baseDamage = Math.Max(0, baseDamage + card.GetConditionalDamage(EntityManager, entity) + AttackDamageValueService.GetTotalDelta(entity));
@@ -329,7 +329,7 @@ namespace Crusaders30XX.ECS.Systems
                         var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                         var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
 
-                        if (player != null && enemy != null && baseDamage > 0)
+                        if (player != null && enemy != null)
                         {
                             var previewEvent = new ModifyHpRequestEvent
                             {

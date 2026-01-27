@@ -24,6 +24,10 @@ namespace Crusaders30XX.ECS.Events
         public Entity Card { get; set; }
         public Vector2 Position { get; set; }
         public float Scale { get; set; } = 1f;
+        /// <summary>
+        /// Optional clip rectangle. If set, the card will be clipped to this region using scissor test.
+        /// </summary>
+        public Rectangle? ClipRect { get; set; }
     }
 
     /// <summary>

@@ -53,7 +53,8 @@ namespace Crusaders30XX.ECS.Systems
 			var targetPassives = target.GetComponent<AppliedPassives>()?.Passives;
 			if (targetPassives != null && newDelta < 0)
 			{
-				if (TryConsumeAegis(target, targetPassives, ref newDelta))
+				// Skip aegis consumption if the attack ignores aegis
+				if (!e.IgnoresAegis && TryConsumeAegis(target, targetPassives, ref newDelta))
 				{
 					e.Delta = newDelta - passiveDelta;
 				}

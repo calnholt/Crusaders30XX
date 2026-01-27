@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     public bool IsTextConditionFulfilled { get; set; } = true;
     public bool IsOneBattleOrLastBattle { get; set; } = false;
     public int Channel { get; set; } = 0;
+    public bool IgnoresAegis { get; set; } = false;
     public static EntityManager EntityManager { get; set; }
 
     #nullable enable annotations

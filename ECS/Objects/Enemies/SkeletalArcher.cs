@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 public class SkeletalArcher : EnemyBase
 {
   private int Armor = 3;
+  private int SnipeCount = 0;
 
   public SkeletalArcher(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
@@ -34,8 +35,9 @@ public class SkeletalArcher : EnemyBase
   {
     int roll = Random.Shared.Next(0, 100);
 
-    if (roll <= 50)
+    if (roll <= 5 || SnipeCount >= 2 || turnNumber == 1)
     {
+      SnipeCount = SnipeCount == 2 ? 0 : SnipeCount;
       // 70%: 3 attacks from pool
       var pool = new List<string> { "piercing_shot", "pinning_arrow", "quick_shot" };
       return ArrayUtils.TakeRandomWithoutReplacement(pool, 2);
@@ -43,6 +45,7 @@ public class SkeletalArcher : EnemyBase
     else
     {
       // 30%: Single heavy attack
+      SnipeCount++;
       return ["snipe"];
     }
   }
@@ -56,17 +59,20 @@ public class PiercingShot : EnemyAttackBase
     Id = "piercing_shot";
     Name = "Piercing Shot";
     Damage = 4;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, customText: $"Deal {PiercingDamage} damage when revealed.");
+    Text = "On Attack - Deal " + PiercingDamage + " damage.";
 
     OnAttackReveal = (entityManager) =>
     {
-      EventManager.Publish(new ModifyHpRequestEvent
+      EventQueueBridge.EnqueueTriggerAction("PiercingShot.OnAttackReveal", () =>
       {
-        Source = entityManager.GetEntity("Enemy"),
-        Target = entityManager.GetEntity("Player"),
-        Delta = -PiercingDamage,
-        DamageType = ModifyTypeEnum.Effect
-      });
+        EventManager.Publish(new ModifyHpRequestEvent
+        {
+          Source = entityManager.GetEntity("Enemy"),
+          Target = entityManager.GetEntity("Player"),
+          Delta = -PiercingDamage,
+          DamageType = ModifyTypeEnum.Effect
+        });
+      }, AppliedPassivesManagementSystem.Duration);
     };
   }
 }
@@ -112,6 +118,11 @@ public class PinningArrow : EnemyAttackBase
         .Where(e => !e.GetComponent<AssignedBlockCard>().IsEquipment)
         .ToList();
 
+      if(p.IsConditionMet)
+      {
+        return false;
+      }
+
       foreach (var card in assignedBlockCards)
       {
         entityManager.AddComponent(card, new ExhaustOnBlock { Owner = card });
@@ -140,17 +151,7 @@ public class Snipe : EnemyAttackBase
     Id = "snipe";
     Name = "Snipe";
     Damage = 10;
+    IgnoresAegis = true;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, customText: "Ignores aegis.");
-
-    ProgressOverride = (entityManager) =>
-    {
-      var progressEntity = entityManager.GetEntitiesWithComponent<EnemyAttackProgress>().FirstOrDefault();
-      if (progressEntity == null) return false;
-
-      var p = progressEntity.GetComponent<EnemyAttackProgress>();
-      p.AegisTotal = 0;
-
-      return false; // Continue normal damage processing
-    };
   }
 }

@@ -81,13 +81,16 @@ namespace Crusaders30XX.ECS.Systems
                 if (finalDamage > 0)
                 {
                     var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
-                    wasHit = finalDamage - prog.AegisTotal > 0;
-                    Console.WriteLine($"[EnemyDamageManagerSystem] ModifyHpRequestEvent finalDamage={finalDamage} aegisTotal={prog.AegisTotal} wasHit={wasHit}");
-                    EventManager.Publish(new ModifyHpRequestEvent 
-                    { 
-                        Source = enemy, 
-                        Target = player, 
-                        Delta = -finalDamage
+                    bool ignoresAegis = prog?.IgnoresAegis ?? false;
+                    int effectiveAegis = ignoresAegis ? 0 : prog?.AegisTotal ?? 0;
+                    wasHit = finalDamage - effectiveAegis > 0;
+                    Console.WriteLine($"[EnemyDamageManagerSystem] ModifyHpRequestEvent finalDamage={finalDamage} aegisTotal={prog?.AegisTotal} ignoresAegis={ignoresAegis} wasHit={wasHit}");
+                    EventManager.Publish(new ModifyHpRequestEvent
+                    {
+                        Source = enemy,
+                        Target = player,
+                        Delta = -finalDamage,
+                        IgnoresAegis = ignoresAegis
                     });
                 }
             }

@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Events
         public Entity Source { get; set; }
         public int Delta { get; set; }
         public ModifyTypeEnum DamageType { get; set; } = ModifyTypeEnum.Attack;
+        public bool IgnoresAegis { get; set; } = false;
     }
     public enum ModifyTypeEnum
     {
