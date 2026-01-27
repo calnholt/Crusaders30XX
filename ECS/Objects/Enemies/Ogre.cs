@@ -40,6 +40,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
   }
   public class PummelIntoSubmission : EnemyAttackBase
   {
+    private int Penance = 1;
     public PummelIntoSubmission()
     {
       Id = "pummel_into_submission";
@@ -49,16 +50,17 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
       Text = $"{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Intimidate, 1)}\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, 1, ConditionType)}";
       OnAttackReveal = (entityManager) =>
       {
-        EventManager.Publish(new IntimidateEvent { Amount = ValuesParse[0] });
+        EventManager.Publish(new IntimidateEvent { Amount = Penance });
       };
       OnAttackHit = (entityManager) =>
       {
-        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = ValuesParse[1] });
+        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = Penance });
       };
     }
   }
   public class TreeStomp : EnemyAttackBase
   {
+    private int IntimidateAmount = 2;
     public TreeStomp()
     {
       Id = "tree_stomp";
@@ -67,13 +69,14 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
       Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Intimidate, 2);
       OnAttackReveal = (entityManager) =>
       {
-        EventManager.Publish(new IntimidateEvent { Amount = ValuesParse[0] });
+        EventManager.Publish(new IntimidateEvent { Amount = IntimidateAmount });
       };
     }
   }
 
   public class SlamTrunk : EnemyAttackBase
   {
+    private int IntimidateAmount = 1;
     public SlamTrunk()
     {
       Id = "slam_trunk";
@@ -82,13 +85,14 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
       Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Intimidate, 1);
       OnAttackReveal = (entityManager) =>
       {
-        EventManager.Publish(new IntimidateEvent { Amount = ValuesParse[0] });
+        EventManager.Publish(new IntimidateEvent { Amount = IntimidateAmount });
       };
     }
   }
 
   public class FakeOut : EnemyAttackBase
   {
+    private int IntimidateAmount = 2;
     public FakeOut()
     {
       Id = "fake_out";
@@ -97,12 +101,13 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
       Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Intimidate, 2);
       OnAttackReveal = (entityManager) =>
       {
-        EventManager.Publish(new IntimidateEvent { Amount = ValuesParse[0] });
+        EventManager.Publish(new IntimidateEvent { Amount = IntimidateAmount });
       };
     }
   }
   public class Thud : EnemyAttackBase
   {
+    private int WoundedAmount = 1;
     public Thud()
     {
       Id = "thud";
@@ -112,7 +117,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
       ConditionType = ConditionType.OnHit;
       OnAttackHit = (entityManager) =>
       {
-        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Wounded, Delta = ValuesParse[0] });
+        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Wounded, Delta = WoundedAmount });
       };
     }
   }

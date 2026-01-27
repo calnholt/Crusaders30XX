@@ -29,6 +29,7 @@ public class Mummy : EnemyBase
 
 public class Entomb : EnemyAttackBase
 {
+  private int Threshold = 2;
   public Entomb()
   {
     Id = "entomb";
@@ -44,7 +45,7 @@ public class Entomb : EnemyAttackBase
               .ToList();
       var cards = entityManager.GetEntitiesWithComponent<CardData>().ToList();
       cards.ForEach(e => entityManager.RemoveComponent<ExhaustOnBlock>(e));
-      if (assignedBlockCards.Count == ValuesParse[0])
+      if (assignedBlockCards.Count == Threshold)
       {
         int fullDamage = p.DamageBeforePrevention > 0 ? p.DamageBeforePrevention : Damage;
         int blockFromCards = Math.Max(0, p.AssignedBlockTotal);
@@ -73,6 +74,7 @@ public class Entomb : EnemyAttackBase
 
 public class Mummify : EnemyAttackBase
 {
+  private int Penance = 2;
   public Mummify()
   {
     Id = "mummify";
@@ -83,7 +85,7 @@ public class Mummify : EnemyAttackBase
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = ValuesParse[0] });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = Penance });
     };
   }
 }

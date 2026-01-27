@@ -96,6 +96,7 @@ public class Succubus : EnemyBase
 
 public class SoulSiphon : EnemyAttackBase
 {
+  private int CourageLoss = 3;
   public SoulSiphon()
   {
     Id = "soul_siphon";
@@ -107,7 +108,7 @@ public class SoulSiphon : EnemyAttackBase
 
     OnAttackHit = (entityManager) =>
     {
-      Succubus.HandleLoseCourage(entityManager, ValuesParse[0]);
+      Succubus.HandleLoseCourage(entityManager, CourageLoss);
     };
   }
 }
@@ -131,35 +132,37 @@ public class EnthrallingGaze : EnemyAttackBase
 
 public class TeasingNip : EnemyAttackBase
 {
+  private int CourageLoss = 1;
   public TeasingNip()
   {
     Id = "teasing_nip";
     Name = "Teasing Nip";
     Damage = 2;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, 0, ConditionType, 50, "Lose [1] courage.");
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, 0, ConditionType, 50, $"Lose {CourageLoss} courage.");
 
     OnAttackHit = (entityManager) =>
     {
       if (Random.Shared.Next(0, 100) >= 50) return;
-      Succubus.HandleLoseCourage(entityManager, ValuesParse[0]);
+      Succubus.HandleLoseCourage(entityManager, CourageLoss);
     };
   }
 }
 
 public class CrushingAdoration : EnemyAttackBase
 {
+  private int Aggression = 2;
   public CrushingAdoration()
   {
     Id = "crushing_adoration";
     Name = "Crushing Adoration";
     Damage = 2;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Aggression, 2, ConditionType);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Aggression, Aggression, ConditionType);
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Aggression, Delta = ValuesParse[0] });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Aggression, Delta = Aggression });
     };
   }
 }

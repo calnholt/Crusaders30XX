@@ -24,34 +24,36 @@ public class SandGolem : EnemyBase
 
 public class SandPound : EnemyAttackBase
 {
+  private int Threshold = 1;
   public SandPound()
   {
     Id = "sand_pound";
     Name = "Sand Pound";
     Damage = 6;
     ConditionType = ConditionType.MustBeBlockedByExactly1Card;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedExactly, 1);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedExactly, Threshold);
 
     OnAttackReveal = (entityManager) =>
     {
-      EventManager.Publish(new MustBeBlockedEvent { Threshold = ValuesParse[0], Type = MustBeBlockedByType.Exactly });
+      EventManager.Publish(new MustBeBlockedEvent { Threshold = Threshold, Type = MustBeBlockedByType.Exactly });
     };
   }
 }
 
 public class SandSlam : EnemyAttackBase
 {
+  private int Threshold = 2;
   public SandSlam()
   {
     Id = "sand_slam";
     Name = "Sand Slam";
     Damage = 9;
     ConditionType = ConditionType.MustBeBlockedByExactly2Cards;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedExactly, 2);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedExactly, Threshold);
 
     OnAttackReveal = (entityManager) =>
     {
-      EventManager.Publish(new MustBeBlockedEvent { Threshold = ValuesParse[0], Type = MustBeBlockedByType.Exactly });
+      EventManager.Publish(new MustBeBlockedEvent { Threshold = Threshold, Type = MustBeBlockedByType.Exactly });
     };
   }
 }

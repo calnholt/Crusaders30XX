@@ -35,6 +35,7 @@ public class Demon : EnemyBase
 
 public class RazorMaw : EnemyAttackBase
 {
+  private int Burn = 1;
   public RazorMaw()
   {
     Id = "razor_maw";
@@ -45,7 +46,7 @@ public class RazorMaw : EnemyAttackBase
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = ValuesParse[0] });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = Burn });
     };
   }
 }

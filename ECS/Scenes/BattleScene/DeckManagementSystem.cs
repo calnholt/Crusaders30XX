@@ -116,7 +116,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (transform != null)
                 {
                     transform.BasePosition = Vector2.Zero;
-                    transform.Position = Vector2.Zero;
+                    transform.Position = new Vector2(-1000, -1000); 
                     transform.Rotation = 0f;
                 }
                 deck.Hand.Add(card);

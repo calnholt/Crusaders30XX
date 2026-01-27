@@ -34,6 +34,7 @@ public class Spider : EnemyBase
 
 public class SuffocatingSilk : EnemyAttackBase
 {
+  private int Slow = 4;
   public SuffocatingSilk()
   {
     Id = "suffocating_silk";
@@ -45,13 +46,14 @@ public class SuffocatingSilk : EnemyAttackBase
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Slow, Delta = ValuesParse[0] });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Slow, Delta = Slow });
     };
   }
 }
 
 public class MandibleBreaker : EnemyAttackBase
 {
+  private int Fear = 3;
   public MandibleBreaker()
   {
     Id = "mandible_breaker";
@@ -62,13 +64,14 @@ public class MandibleBreaker : EnemyAttackBase
     AmbushPercentage = 75;
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Fear, Delta = ValuesParse[0] });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Fear, Delta = Fear });
     };
   }
 }
 
 public class RafterfallAmbush : EnemyAttackBase
 {
+  private int Threshold = 1;
   public RafterfallAmbush()
   {
     Id = "rafterfall_ambush";
@@ -79,7 +82,7 @@ public class RafterfallAmbush : EnemyAttackBase
     AmbushPercentage = 75;
     OnAttackReveal = (entityManager) =>
     {
-      EventManager.Publish(new MustBeBlockedEvent { Threshold = ValuesParse[0], Type = MustBeBlockedByType.AtLeast });
+      EventManager.Publish(new MustBeBlockedEvent { Threshold = Threshold, Type = MustBeBlockedByType.AtLeast });
     };
   }
 }
@@ -103,6 +106,8 @@ public class EightLimbsOfDeath : EnemyAttackBase
 
 public class FangFeint : EnemyAttackBase
 {
+  private int Aggression = 4;
+  private int Chance = 50;
   public FangFeint()
   {
     Id = "fang_feint";
@@ -113,9 +118,9 @@ public class FangFeint : EnemyAttackBase
     AmbushPercentage = 75;
     OnAttackHit = (entityManager) =>
     {
-      if (Random.Shared.Next(0, 100) < ValuesParse[1])
+      if (Random.Shared.Next(0, 100) < Chance)
       {
-        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Aggression, Delta = ValuesParse[0] });
+        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Aggression, Delta = Aggression });
       }
     };
   }

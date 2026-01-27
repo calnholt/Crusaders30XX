@@ -66,34 +66,36 @@ public class GlacialGuardian : EnemyBase
 
 public class GlacialStrike : EnemyAttackBase
 {
+  private int Threshold = 1;
   public GlacialStrike()
   {
     Id = "glacial_strike";
     Name = "Glacial Strike";
     Damage = 8;
     ConditionType = ConditionType.MustBeBlockedByAtLeast1Card;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 1);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, Threshold);
 
     OnAttackReveal = (entityManager) =>
 {
-  EventManager.Publish(new MustBeBlockedEvent { Threshold = ValuesParse[0], Type = MustBeBlockedByType.AtLeast });
+  EventManager.Publish(new MustBeBlockedEvent { Threshold = Threshold, Type = MustBeBlockedByType.AtLeast });
 };
   }
 }
 
 public class GlacialBlast : EnemyAttackBase
 {
+  private int Threshold = 2;
   public GlacialBlast()
   {
     Id = "glacial_blast";
     Name = "Glacial Blast";
     Damage = 11;
     ConditionType = ConditionType.MustBeBlockedByAtLeast2Cards;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 2);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, Threshold);
 
     OnAttackReveal = (entityManager) =>
     {
-      EventManager.Publish(new MustBeBlockedEvent { Threshold = ValuesParse[0], Type = MustBeBlockedByType.AtLeast });
+      EventManager.Publish(new MustBeBlockedEvent { Threshold = Threshold, Type = MustBeBlockedByType.AtLeast });
     };
   }
 }

@@ -18,40 +18,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     public int AdditionalDamage { get; set; } = 0;
     public ConditionType ConditionType { get; set; } = ConditionType.None;
     public BlockingRestrictionType BlockingRestrictionType { get; set; } = BlockingRestrictionType.None;
-    public int[] ValuesParse { get; set; } = [];
-    private string _text = "";
-    public string Text
-    {
-        get => _text;
-        set
-        {
-            _text = value;
-            
-            if (!string.IsNullOrEmpty(_text))
-            {
-                var valuesList = new List<int>();
-                var pattern = @"\[(\d+)\]";
-                var matches = Regex.Matches(_text, pattern);
-
-                foreach (Match match in matches)
-                {
-                    if (int.TryParse(match.Groups[1].Value, out int parsedValue))
-                    {
-                        valuesList.Add(parsedValue);
-                    }
-                }
-
-                ValuesParse = valuesList.ToArray();
-
-                string resolved = _text;
-                foreach (Match match in matches)
-                {
-                    resolved = resolved.Replace(match.Value, match.Groups[1].Value);
-                }
-                _text = resolved;
-            }
-        }
-    }
+    public string Text { get; set; } = "";
     public int AmbushPercentage { get; set; } = 0;
     public bool IsTextConditionFulfilled { get; set; } = true;
     public bool IsOneBattleOrLastBattle { get; set; } = false;

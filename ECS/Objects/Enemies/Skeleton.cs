@@ -59,29 +59,31 @@ public class Skeleton : EnemyBase
 
 public class BoneStrike : EnemyAttackBase
 {
+  private int Penance = 1;
   public BoneStrike()
   {
     Id = "bone_strike";
     Name = "Bone Strike";
     Damage = 2;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, 1, ConditionType.OnHit);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, Penance, ConditionType.OnHit);
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = ValuesParse[0] });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = Penance });
     };
   }
 }
 
 public class Sweep : EnemyAttackBase
 {
+  private int Corrode = 1;
   public Sweep()
   {
     Id = "sweep";
     Name = "Sweep";
     Damage = 4;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Corrode, 1);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Corrode, Corrode);
 
     OnAttackReveal = (entityManager) =>
     {
@@ -96,7 +98,7 @@ public class Sweep : EnemyAttackBase
       if (!IsOneBattleOrLastBattle)
       {
         // TODO: should send an event
-        BlockValueService.ApplyDelta(card, -ValuesParse[0], "Corrode");
+        BlockValueService.ApplyDelta(card, -Corrode, "Corrode");
       }
     };
   }
@@ -104,17 +106,18 @@ public class Sweep : EnemyAttackBase
 
 public class Calcify : EnemyAttackBase
 {
+  private int Armor = 1;
   public Calcify()
   {
     Id = "calcify";
     Name = "Calcify";
     Damage = 2;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Armor, 1, ConditionType);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Armor, Armor, ConditionType);
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Armor, Delta = ValuesParse[0] });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Armor, Delta = Armor });
     };
   }
 }
