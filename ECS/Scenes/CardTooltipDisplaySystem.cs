@@ -102,7 +102,11 @@ namespace Crusaders30XX.ECS.Systems
 				if (cardEntity != null)
 				{
 					var ui = cardEntity.GetComponent<UIElement>();
-					if (ui != null) ui.IsInteractable = false; // ensure the tooltip card never intercepts hover/clicks
+					if (ui != null)
+					{
+						ui.IsInteractable = false; // ensure the tooltip card never intercepts hover/clicks
+						ui.TooltipType = TooltipType.None; // prevent tooltip cards from generating their own tooltips
+					}
 					_tooltipCardCache[key] = cardEntity;
 				}
 			}
