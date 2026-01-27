@@ -9,8 +9,8 @@
   {
     "key": "block_phase_overview",
     "text": "The enemy is attacking! This shows information about the enemy's attack.",
-    "targetType": "ui_region",
-    "targetId": "enemy_attack_display",
+    "targetType": "entity_name",
+    "targetId": "EnemyAttackBannerAnchor",
     "bubbleOrientation": "bottom"
   },
   {

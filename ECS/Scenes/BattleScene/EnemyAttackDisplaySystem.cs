@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System;
 using Crusaders30XX.ECS.Utils;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Objects.EnemyAttacks;
 using Microsoft.Xna.Framework.Content;
 
 namespace Crusaders30XX.ECS.Systems
@@ -32,6 +33,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Texture2D _enemyAttackSkullTexture;
 	private readonly System.Collections.Generic.Dictionary<string, Entity> _effectTooltipUiByKey = new();
 	private Entity _attackTextTooltipEntity = null;
+	private Rectangle _bannerRect = Rectangle.Empty;
 
 	// Animation state
 	private string _lastContextId = null;
@@ -420,6 +422,18 @@ namespace Crusaders30XX.ECS.Systems
 					_absorbCompleteFired = true;
 				}
 			}
+
+			// Calculate and store banner rect for TutorialDisplaySystem to query
+			if (_showBanner && _contentFont != null)
+			{
+				var pa = intent.Planned[0];
+				var def = pa.AttackDefinition;
+				if (def != null)
+				{
+					_bannerRect = CalculateBannerRect(entity, phaseNow, def);
+					UpdateAnchorBounds(_bannerRect);
+				}
+			}
 		}
 
 		public void Draw()
@@ -771,7 +785,119 @@ namespace Crusaders30XX.ECS.Systems
 		return false;
 	}
 
+	private Rectangle CalculateBannerRect(Entity enemy, SubPhase phaseNow, EnemyAttackBase def)
+	{
+		int pad = Math.Max(0, PanelPadding);
+		int vx = Game1.VirtualWidth;
+		int vy = Game1.VirtualHeight;
+		float percent = Math.Clamp(PanelMaxWidthPercent, 0.1f, 1f);
+		int maxPanelWidthPx = (int)Math.Round(vx * percent);
+		float minPercent = Math.Clamp(PanelMinWidthPercent, 0f, 1f);
+		int minPanelWidthPx = (int)Math.Round(vx * minPercent);
+		int contentWidthLimitPx = Math.Max(50, maxPanelWidthPx - pad * 2);
 
+		// Measure content to determine panel size
+		var lines = new List<(string text, float scale)>();
+		lines.Add((def.Name, TitleScale));
+		lines.Add((def.Text, TextScale));
+
+		float maxW = 0f;
+		float totalH = 0f;
+		bool isFirstTitle = true;
+		foreach (var (text, lineScale) in lines)
+		{
+			var parts = TextUtils.WrapText(_contentFont, text, lineScale, contentWidthLimitPx);
+			foreach (var p in parts)
+			{
+				var sz = _contentFont.MeasureString(p);
+				maxW = Math.Max(maxW, sz.X * lineScale);
+				float spacing = isFirstTitle ? TitleSpacingExtra : LineSpacingExtra;
+				totalH += sz.Y * lineScale + spacing;
+				if (isFirstTitle) isFirstTitle = false;
+			}
+		}
+
+		int w = (int)Math.Ceiling(Math.Min(maxW + pad * 2, maxPanelWidthPx));
+		w = Math.Max(w, minPanelWidthPx);
+		int h = (int)Math.Ceiling(totalH) + pad * 2;
+
+		// Calculate animation effects
+		float panelScale = 1f;
+		float squashX = 1f;
+		float squashY = 1f;
+
+		if (phaseNow == SubPhase.EnemyAttack)
+		{
+			var dur = Math.Max(0.05f, AbsorbDurationSeconds);
+			float tTween = MathHelper.Clamp(_absorbElapsedSeconds / dur, 0f, 1f);
+			float ease = 1f - (float)Math.Pow(1f - tTween, 3);
+			panelScale = MathHelper.Lerp(1f, 0f, ease);
+		}
+
+		if (_impactActive)
+		{
+			float t = Math.Clamp(_squashElapsedSeconds / Math.Max(0.0001f, SquashDurationSeconds), 0f, 1f);
+			float back = 1f + (OvershootIntensity) * (float)Math.Pow(1f - t, 3);
+			squashX = MathHelper.Lerp(SquashXFactor, 1f, t) * back;
+			squashY = MathHelper.Lerp(SquashYFactor, 1f, t) / back;
+		}
+
+		int drawW = (int)Math.Round(w * panelScale * squashX);
+		int drawH = (int)Math.Round(h * panelScale * squashY);
+
+		// Calculate position
+		var anchorEntity = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault();
+		var anchorTransform = anchorEntity?.GetComponent<Transform>();
+		Vector2 parallaxOffset = Vector2.Zero;
+		if (anchorTransform != null)
+		{
+			parallaxOffset = anchorTransform.Position - anchorTransform.BasePosition;
+		}
+
+		var centerBase = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY);
+		var center = centerBase + parallaxOffset;
+		Vector2 approachPos = center;
+
+		if (phaseNow == SubPhase.EnemyAttack)
+		{
+			var enemyT = enemy?.GetComponent<Transform>();
+			if (enemyT != null)
+			{
+				var dur = Math.Max(0.05f, AbsorbDurationSeconds);
+				float tTween = MathHelper.Clamp(_absorbElapsedSeconds / dur, 0f, 1f);
+				float ease = 1f - (float)Math.Pow(1f - tTween, 3);
+				var targetPos = enemyT.Position + new Vector2(0, AbsorbTargetYOffset);
+				approachPos = Vector2.Lerp(center, targetPos, ease);
+			}
+		}
+
+		// Note: Shake effect is not included here for stable bounds that TutorialDisplaySystem can use
+		// The visual shake is applied separately in Draw()
+		return new Rectangle(
+			(int)(approachPos.X - drawW / 2f),
+			(int)(approachPos.Y),
+			drawW,
+			drawH
+		);
+	}
+
+	private void UpdateAnchorBounds(Rectangle bannerRect)
+	{
+		var anchorEntity = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault();
+		if (anchorEntity == null) return;
+
+		var anchorUi = anchorEntity.GetComponent<UIElement>();
+		if (anchorUi == null)
+		{
+			anchorUi = new UIElement { Bounds = bannerRect, IsInteractable = false };
+			EntityManager.AddComponent(anchorEntity, anchorUi);
+		}
+		else
+		{
+			anchorUi.Bounds = bannerRect;
+			anchorUi.IsInteractable = false;
+		}
+	}
 
 		private EnemyAttackProgress FindEnemyAttackProgress(string contextId)
 		{
