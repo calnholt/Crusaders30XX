@@ -37,10 +37,10 @@ namespace Crusaders30XX.ECS.Systems
         public int PanelY { get; set; } = 300;
 
         [DebugEditable(DisplayName = "Panel Width", Step = 10, Min = 200, Max = 800)]
-        public int PanelWidth { get; set; } = 500;
+        public int PanelWidth { get; set; } = 530;
 
         [DebugEditable(DisplayName = "Panel Height", Step = 10, Min = 200, Max = 600)]
-        public int PanelHeight { get; set; } = 350;
+        public int PanelHeight { get; set; } = 400;
 
         [DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 30)]
         public int CornerRadius { get; set; } = 12;

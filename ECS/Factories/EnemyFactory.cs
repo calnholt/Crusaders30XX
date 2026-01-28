@@ -38,6 +38,7 @@ namespace Crusaders30XX.ECS.Factories
                 "fire_skeleton" => new FireSkeleton(difficulty),
                 "berserker" => new Berserker(difficulty),
                 "shadow" => new Shadow(difficulty),
+                "earth_demon" => new EarthDemon(difficulty),
                 _ => null
             };
         }
@@ -70,6 +71,7 @@ namespace Crusaders30XX.ECS.Factories
                 { "fire_skeleton", new FireSkeleton(difficulty) },
                 { "berserker", new Berserker(difficulty) },
                 { "shadow", new Shadow(difficulty) },
+                { "earth_demon", new EarthDemon(difficulty) },
             };
         }
     }

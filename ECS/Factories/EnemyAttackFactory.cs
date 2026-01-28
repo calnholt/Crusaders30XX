@@ -94,6 +94,10 @@ namespace Crusaders30XX.ECS.Factories
                 "snuff_out_the_light" => new SnuffOutTheLight(),
                 "night_fall" => new NightFall(),
                 "from_the_shadows" => new FromTheShadows(),
+                // EarthDemon attacks
+                "tremor_strike" => new TremorStrike(),
+                "stone_barrage" => new StoneBarrage(),
+                "earthen_wall" => new EarthenWall(),
                 // Generic attacks
                 "have_no_mercy" => new HaveNoMercy(),
                 _ => null
@@ -184,6 +188,10 @@ namespace Crusaders30XX.ECS.Factories
                 { "snuff_out_the_light", new SnuffOutTheLight() },
                 { "night_fall", new NightFall() },
                 { "from_the_shadows", new FromTheShadows() },
+                // EarthDemon attacks
+                { "tremor_strike", new TremorStrike() },
+                { "stone_barrage", new StoneBarrage() },
+                { "earthen_wall", new EarthenWall() },
                 // Generic attacks
                 { "have_no_mercy", new HaveNoMercy() },
             };
