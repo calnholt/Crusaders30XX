@@ -151,3 +151,52 @@ Petrified cards have 0-3 cracks. **Cracks only accumulate while the card is in h
 - **Damage threshold**: TBD - needs to be achievable but require offensive commitment
 - **Start of battle**: Does it grab immediately, or first grab happens turn 1?
 - **Empty deck**: What happens when deck runs out? Passive stops? Grabs from discard?
+
+---
+
+## Dark Scout Theme
+
+### Marked (Passive)
+**Triggers**: Start of pre-block phase each turn
+**Effect**: One card in the player's hand is marked with a random mark type. Mark is visible to player.
+
+- If player **blocks** with the marked card → mark jumps to another card in hand with a new random mark type
+- If player **plays** the marked card → mark is cleared entirely
+- If player **ends turn** with marked card still in hand → enemy gains 2 Power (permanent scaling)
+
+### Mark Pool
+
+**"Don't block with this" marks** (push player to play the card):
+| Mark | Penalty when blocking |
+|------|----------------------|
+| Searing Mark | Take 2 damage |
+| Exposed Mark | -2 block value |
+| Shattered Mark | Card is exhausted after blocking |
+
+**"Don't play this" marks** (push player to block with the card):
+| Mark | Penalty when playing |
+|------|---------------------|
+| Draining Mark | Enemy gains 2 Armor |
+| Cursed Mark | Gain 2 Burn |
+| Leaden Mark | Costs +1 discard |
+
+### Why It's Interesting
+- **Asymmetric decisions**: Some marks push "play it to clear", others push "block to pass it along"
+- **Gambling on jumps**: Blocking passes the mark but you don't know what the new mark will be
+- **Forced engagement**: Can't ignore the mark - end-of-turn punishment is rough (enemy scaling)
+- **Hand evaluation changes**: Each turn, one card is "hot" and you must decide how to handle it
+- **Clear escape route**: Playing the marked card always clears it - but costs your action
+
+### Key Decisions
+| Mark Type | Best Response | Trade-off |
+|-----------|---------------|-----------|
+| Searing/Exposed/Shattered | Play the card | Uses your action on that specific card |
+| Draining/Cursed/Leaden | Block with it | Mark jumps, new random mark appears |
+| Any mark, bad card | Block with it | Get rid of bad card, accept new mark |
+| Any mark, key card | Play it | Clear mark, but might not be optimal action |
+
+### Open Questions
+- **Attack pattern**: Multi-jab with high ambush? How many attacks, what effects?
+- **Health tier**: Fragile (40-60) fits scout archetype?
+- **Mark on empty hand**: What if all cards used before mark can jump? Mark waits for draw phase?
+- **Multiple scouts**: Do marks stack? Multiple marked cards?
