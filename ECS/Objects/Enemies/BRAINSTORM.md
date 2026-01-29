@@ -121,3 +121,33 @@ Petrified cards have 0-3 cracks. **Cracks only accumulate while the card is in h
 - **Stone Stare** (6 dmg): On reveal, petrify top card of draw pile (buried, unknown)
 - **Basilisk Glare** (3+3 dmg): Two-hit. On hit, shuffle a petrified card from hand into draw pile (delays progress)
 - **Serpent Strike** (7 dmg): On hit, all petrified cards lose 1 crack (undoes progress)
+
+---
+
+## Wyvern Theme
+
+### Plunder (Passive)
+**Triggers**: Enemy preblock phase each turn
+**Effect**: Wyvern grabs a random card from the player's deck. The plundered card is visible to the player.
+
+- If the player deals X damage to the Wyvern this turn → plundered card goes to player's hand (bonus card!)
+- If the player doesn't hit the threshold → plundered card is discarded, new card grabbed next turn
+
+### Why It's Interesting
+- **Positive-feeling mechanic**: It's a rescue mission, not a debuff
+- **Turn-by-turn evaluation**: Each turn you decide if the current card is worth fighting for
+- **Risk/reward scaling**: Good card grabbed = go aggressive, take hits. Bad card = play safe, let it go
+- **Deck matters**: Since no reshuffle, every discarded card is a real loss
+- **Damage threshold creates tension**: Must commit to offense over defense to rescue
+
+### Key Decisions
+| Grabbed Card | Player Tendency |
+|--------------|-----------------|
+| Key card | Overextend, take risks to rescue |
+| Decent card | Weigh damage taken vs. card value |
+| Bad/situational card | Play safe, let it go, hope for better next turn |
+
+### Open Questions
+- **Damage threshold**: TBD - needs to be achievable but require offensive commitment
+- **Start of battle**: Does it grab immediately, or first grab happens turn 1?
+- **Empty deck**: What happens when deck runs out? Passive stops? Grabs from discard?

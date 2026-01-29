@@ -103,6 +103,15 @@ This design space isn't worth the cognitive overhead.
 
 ---
 
+## No Hand Adjacency Mechanics
+
+Never design mechanics based on card position or adjacency in the player's hand. Effects like "spreads to adjacent cards" or "affects neighboring cards" don't work with the game's design:
+- Hand order isn't a meaningful player decision
+
+If you want cascading or spreading effects, use other vectors: card color, card type, or random targeting.
+
+---
+
 ## Force Hand Re-evaluation
 
 Effects that make the player look at their hand differently are valuable. The best designs create tradeoffs where the "right" play isn't obvious:
