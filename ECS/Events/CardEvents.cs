@@ -555,6 +555,31 @@ namespace Crusaders30XX.ECS.Events
         Hand,
     }
 
+    public enum SealType
+    {
+        Hand,           // Random from hand
+        TopOfDrawPile,  // Top card(s) of draw pile
+    }
+
+    public class SealCardsEvent
+    {
+        public int Amount { get; set; }
+        public SealType Type { get; set; }
+    }
+
+    /// <summary>
+    /// Modifies cracks on all sealed cards in hand. Use negative Delta to remove cracks.
+    /// </summary>
+    public class ModifySealCracksEvent
+    {
+        public int Delta { get; set; }
+    }
+
+    /// <summary>
+    /// Shuffles sealed cards from hand back into the draw pile.
+    /// </summary>
+    public class ShuffleSealedIntoDrawPileEvent { }
+
     /// <summary>
     /// Event published when a card reaches mastery (50 points).
     /// </summary>

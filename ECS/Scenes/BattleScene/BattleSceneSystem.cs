@@ -106,6 +106,8 @@ namespace Crusaders30XX.ECS.Systems
 		private IntimidateDisplaySystem _intimidateDisplaySystem;
 		private FrozenCardManagementSystem _frozenCardManagementSystem;
 		private FrozenCardDisplaySystem _frozenCardDisplaySystem;
+		private SealManagementSystem _sealManagementSystem;
+		private SealDisplaySystem _sealDisplaySystem;
 		private ShackleDisplaySystem _shackleDisplaySystem;
 		private UIElementHighlightSystem _uiElementHighlightSystem;
 		private QuestRewardModalDisplaySystem _questRewardModalDisplaySystem;
@@ -513,6 +515,9 @@ namespace Crusaders30XX.ECS.Systems
 			_frozenCardManagementSystem = new FrozenCardManagementSystem(_world.EntityManager);
 			var frostTexture = _content.Load<Texture2D>("frost");
 			_frozenCardDisplaySystem = new FrozenCardDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, frostTexture);
+			_sealManagementSystem = new SealManagementSystem(_world.EntityManager);
+			var sealTexture = _content.Load<Texture2D>("seal");
+			_sealDisplaySystem = new SealDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, sealTexture);
 			var shackleTexture = _content.Load<Texture2D>("shackles");
 			_shackleDisplaySystem = new ShackleDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, shackleTexture);
 			_intimidateDisplaySystem = new IntimidateDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -608,6 +613,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_intimidateDisplaySystem);
 			_world.AddSystem(_frozenCardManagementSystem);
 			_world.AddSystem(_frozenCardDisplaySystem);
+			_world.AddSystem(_sealManagementSystem);
+			_world.AddSystem(_sealDisplaySystem);
 			_world.AddSystem(_shackleDisplaySystem);
 			_world.AddSystem(_questRewardModalDisplaySystem);
 			_world.AddSystem(_quitCurrentQuestDisplaySystem);

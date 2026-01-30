@@ -203,6 +203,13 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
+            // Sealed cards cannot be played
+            if (evt.Card.GetComponent<Sealed>() != null)
+            {
+                EventManager.Publish(new CantPlayCardMessage { Message = "Sealed cards cannot be played!" });
+                return;
+            }
+
             // Weapons can only be played during Action phase (already gated) and cannot be used to pay costs of other cards
             bool isWeapon = card.IsWeapon;
 
@@ -282,6 +289,9 @@ namespace Crusaders30XX.ECS.Systems
 
                     // Exclude pledged cards - they cannot be used to pay costs
                     handNonWeapons = handNonWeapons.Where(e => e.GetComponent<Pledge>() == null).ToList();
+
+                    // Exclude sealed cards - they cannot be used to pay costs
+                    handNonWeapons = handNonWeapons.Where(e => e.GetComponent<Sealed>() == null).ToList();
 
                     // Helper to attempt greedy satisfaction of remaining requirements
                     bool CanSatisfy(List<string> req, List<Entity> candidates, out List<Entity> picks)

@@ -281,6 +281,18 @@
 /processorParam:TextureFormat=Color
 /build:Ogre.png
 
+#begin Medusa.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Medusa.png
+
 #begin Succubus.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -844,6 +856,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:frost.png
+
+#begin seal.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:seal.png
 
 #begin shackles.png
 /importer:TextureImporter

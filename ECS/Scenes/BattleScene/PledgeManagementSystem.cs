@@ -143,6 +143,13 @@ namespace Crusaders30XX.ECS.Systems
             // Skip if already pledged
             if (card.GetComponent<Pledge>() != null) return false;
 
+            // Skip sealed cards - they cannot be pledged
+            if (card.GetComponent<Sealed>() != null)
+            {
+                if (showErrorMessage) EventManager.Publish(new CantPlayCardMessage { Message = "Sealed cards cannot be pledged!" });
+                return false;
+            }
+
             // Skip weapons
             if (cardData.Card.IsWeapon)
             {

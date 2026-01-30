@@ -491,6 +491,16 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marks a card as sealed (petrified). Sealed cards cannot be played or pledged, but can block.
+    /// Cracks accumulate in hand: +1 per block, +1 per card played. At 3 cracks, card is freed.
+    /// </summary>
+    public class Sealed : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int Cracks { get; set; } = 0;
+    }
+
+    /// <summary>
     /// Marks a card as having its block value modified.
     /// </summary>
     public class ModifiedBlock : IComponent
@@ -1033,7 +1043,8 @@ namespace Crusaders30XX.ECS.Components
         Enflamed,
         Shackled,
         Anathema,
-        Silenced
+        Silenced,
+        Sealed
     }
 
     public class MarkedForReturnToDeck : IComponent

@@ -100,6 +100,11 @@ namespace Crusaders30XX.ECS.Factories
                 "earthen_wall" => new EarthenWall(),
                 // Generic attacks
                 "have_no_mercy" => new HaveNoMercy(),
+                // Medusa attacks
+                "gaze" => new Gaze(),
+                "stone_stare" => new StoneStare(),
+                "basilisk_glare" => new BasiliskGlare(),
+                "serpent_strike" => new SerpentStrike(),
                 _ => null
             };
         }
@@ -194,6 +199,11 @@ namespace Crusaders30XX.ECS.Factories
                 { "earthen_wall", new EarthenWall() },
                 // Generic attacks
                 { "have_no_mercy", new HaveNoMercy() },
+                // Medusa attacks
+                { "gaze", new Gaze() },
+                { "stone_stare", new StoneStare() },
+                { "basilisk_glare", new BasiliskGlare() },
+                { "serpent_strike", new SerpentStrike() },
             };
         }
     }
