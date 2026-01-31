@@ -25,7 +25,6 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<SealCardsEvent>(OnSealCards);
 			EventManager.Subscribe<CardMoved>(OnCardMoved);
 			EventManager.Subscribe<CardPlayedEvent>(OnCardPlayed);
-			// TODO: needs to be all sealed cards, not just in hand
 			EventManager.Subscribe<ModifySealCracksEvent>(OnModifySealCracks);
 			EventManager.Subscribe<ShuffleSealedIntoDrawPileEvent>(OnShuffleSealedIntoDrawPile);
 		}
@@ -117,12 +116,12 @@ namespace Crusaders30XX.ECS.Systems
 		}
 
 		/// <summary>
-		/// Modifies cracks on all sealed cards in hand. Used by Serpent Strike to remove cracks.
+		/// Modifies cracks on all sealed cards across all zones (hand, deck, discard, exhaust).
 		/// </summary>
 		private void OnModifySealCracks(ModifySealCracksEvent evt)
 		{
-			var sealedInHand = GetSealedCardsInHand();
-			foreach (var card in sealedInHand)
+			var allSealedCards = GetAllSealedCards();
+			foreach (var card in allSealedCards)
 			{
 				var sealedComp = card.GetComponent<Sealed>();
 				if (sealedComp != null)
@@ -164,6 +163,24 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			return GetComponentHelper.GetHandOfCards(EntityManager)
 				.Where(c => c.GetComponent<Sealed>() != null);
+		}
+
+		private System.Collections.Generic.IEnumerable<Entity> GetAllSealedCards()
+		{
+			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+			if (deckEntity == null) return Enumerable.Empty<Entity>();
+
+			var deck = deckEntity.GetComponent<Deck>();
+			if (deck == null) return Enumerable.Empty<Entity>();
+
+			var allCards = new System.Collections.Generic.List<Entity>();
+
+			if (deck.Hand != null) allCards.AddRange(deck.Hand);
+			if (deck.DrawPile != null) allCards.AddRange(deck.DrawPile);
+			if (deck.DiscardPile != null) allCards.AddRange(deck.DiscardPile);
+			if (deck.ExhaustPile != null) allCards.AddRange(deck.ExhaustPile);
+
+			return allCards.Where(c => c.GetComponent<Sealed>() != null);
 		}
 
 		private void AddCracks(Entity card, int amount, string reason)

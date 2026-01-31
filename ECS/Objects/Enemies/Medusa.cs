@@ -56,7 +56,7 @@ public class Gaze : EnemyAttackBase
 	{
 		Id = "gaze";
 		Name = "Gaze";
-		Damage = 3;
+		Damage = 8;
 		ConditionType = ConditionType.OnHit;
 		Text = "On attack - Seal 1 random card from your hand.\n\nOn hit - Seal the top card of your deck.";
 
@@ -82,7 +82,7 @@ public class StoneStare : EnemyAttackBase
 	{
 		Id = "stone_stare";
 		Name = "Stone Stare";
-		Damage = 6;
+		Damage = 9;
 		Text = "On attack - Seal the top card of your draw pile.";
 
 		OnAttackReveal = (entityManager) =>
@@ -102,7 +102,7 @@ public class BasiliskGlare : EnemyAttackBase
 	{
 		Id = "basilisk_glare";
 		Name = "Basilisk Glare";
-		Damage = 3;
+		Damage = 9;
 		ConditionType = ConditionType.OnHit;
 		Text = "This cannot be blocked by sealed cards.";
 

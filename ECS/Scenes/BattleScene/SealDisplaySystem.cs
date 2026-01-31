@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private Texture2D _sealTexture;
 		private CardVisualSettings _settings;
+		private float _elapsedTime = 0f;
 
 		[DebugEditable(DisplayName = "Seal Alpha", Step = 5, Min = 0, Max = 255)]
 		public int SealAlpha { get; set; } = 255;
@@ -33,6 +34,18 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Seal Offset Y", Step = 1f, Min = -100f, Max = 100f)]
 		public float SealOffsetY { get; set; } = 0f;
+
+		[DebugEditable(DisplayName = "Icon Rotation Speed", Step = 0.1f, Min = 0f, Max = 10f)]
+		public float IconRotationSpeed { get; set; } = 0.1f;
+
+		[DebugEditable(DisplayName = "Pulse Speed", Step = 0.1f, Min = 0f, Max = 10f)]
+		public float PulseSpeed { get; set; } = 0.6f;
+
+		[DebugEditable(DisplayName = "Min Alpha", Step = 5, Min = 0, Max = 255)]
+		public int MinAlpha { get; set; } = 90;
+
+		[DebugEditable(DisplayName = "Max Alpha", Step = 5, Min = 0, Max = 255)]
+		public int MaxAlpha { get; set; } = 165;
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.01f, Min = 0.05f, Max = 3.0f)]
 		public float TextScale { get; set; } = 0.15f;
@@ -57,7 +70,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			// No per-frame update needed
+			_elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
 		}
 
 		public void Draw()
@@ -129,8 +142,14 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void DrawSealOverlay(Vector2 center, float cardWidth, float cardHeight, float scale, float rotation, int cracks)
 		{
-			float finalAlpha = SealAlpha / 255f;
+			// Calculate pulsing alpha using sine wave
+			float alphaPulse = (float)Math.Sin(_elapsedTime * PulseSpeed * Math.PI) * 0.5f + 0.5f;
+			int currentAlpha = (int)MathHelper.Lerp(MinAlpha, MaxAlpha, alphaPulse);
+			float finalAlpha = (currentAlpha / 255f) * (SealAlpha / 255f);
 			finalAlpha = MathHelper.Clamp(finalAlpha, 0f, 1f);
+
+			// Calculate rotation offset for the seal icon
+			float rotationOffset = _elapsedTime * IconRotationSpeed;
 
 			// Use uniform scale (no stretching) - fit to card width
 			float uniformScale = (cardWidth / (float)_sealTexture.Width) * SealScale * scale;
@@ -141,14 +160,14 @@ namespace Crusaders30XX.ECS.Systems
 				center,
 				null,
 				Color.White * finalAlpha,
-				rotation,
+				rotation + rotationOffset,
 				new Vector2(_sealTexture.Width / 2f, _sealTexture.Height / 2f),
 				uniformScale,
 				SpriteEffects.None,
 				0f
 			);
 
-			// Draw crack count text at bottom right of card
+			// Draw crack count text at bottom right of card (without rotation offset)
 			DrawCrackCount(center, cardWidth, cardHeight, scale, rotation, cracks);
 		}
 
