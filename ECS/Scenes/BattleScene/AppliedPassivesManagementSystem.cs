@@ -348,6 +348,7 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.SubZero,
                 AppliedPassiveType.Aegis,
                 AppliedPassiveType.Anathema,
+                AppliedPassiveType.Plunder,
             };
         }
         public static HashSet<AppliedPassiveType> GetQuestPassives()

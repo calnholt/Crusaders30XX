@@ -105,6 +105,8 @@ namespace Crusaders30XX.ECS.Factories
                 "stone_stare" => new StoneStare(),
                 "basilisk_glare" => new BasiliskGlare(),
                 "serpent_strike" => new SerpentStrike(),
+                // Wyvern attacks
+                "wyvern_strike" => new WyvernStrike(),
                 _ => null
             };
         }
@@ -204,6 +206,8 @@ namespace Crusaders30XX.ECS.Factories
                 { "stone_stare", new StoneStare() },
                 { "basilisk_glare", new BasiliskGlare() },
                 { "serpent_strike", new SerpentStrike() },
+                // Wyvern attacks
+                { "wyvern_strike", new WyvernStrike() },
             };
         }
     }

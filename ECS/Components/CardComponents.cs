@@ -1044,7 +1044,8 @@ namespace Crusaders30XX.ECS.Components
         Shackled,
         Anathema,
         Silenced,
-        Sealed
+        Sealed,
+        Plunder
     }
 
     public class MarkedForReturnToDeck : IComponent
@@ -1085,5 +1086,22 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         public string Reason { get; set; }
+    }
+
+    /// <summary>
+    /// Marks a card as plundered by an enemy (e.g., Wyvern).
+    /// The card is held by the enemy and can be rescued by dealing enough damage.
+    /// </summary>
+    public class Plundered : IComponent
+    {
+        public Entity Owner { get; set; }
+        /// <summary>
+        /// Damage threshold required to rescue this card (4-8).
+        /// </summary>
+        public int DamageThreshold { get; set; }
+        /// <summary>
+        /// Cumulative damage dealt to the enemy this turn.
+        /// </summary>
+        public int DamageDealt { get; set; }
     }
 }

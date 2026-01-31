@@ -40,6 +40,7 @@ namespace Crusaders30XX.ECS.Factories
                 "shadow" => new Shadow(difficulty),
                 "earth_demon" => new EarthDemon(difficulty),
                 "medusa" => new Medusa(difficulty),
+                "wyvern" => new Wyvern(difficulty),
                 _ => null
             };
         }
@@ -74,6 +75,7 @@ namespace Crusaders30XX.ECS.Factories
                 { "shadow", new Shadow(difficulty) },
                 { "earth_demon", new EarthDemon(difficulty) },
                 { "medusa", new Medusa(difficulty) },
+                { "wyvern", new Wyvern(difficulty) },
             };
         }
     }

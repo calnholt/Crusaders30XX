@@ -124,6 +124,10 @@ namespace Crusaders30XX.ECS.Systems
 		private PledgeDisplaySystem _pledgeDisplaySystem;
 		private SkipPledgeDisplaySystem _skipPledgeDisplaySystem;
 
+		// Plunder system (Wyvern)
+		private PlunderManagementSystem _plunderManagementSystem;
+		private PlunderDisplaySystem _plunderDisplaySystem;
+
 		// Bloodshot effect system and render targets for background compositing
 		private BloodshotDisplaySystem _bloodshotDisplaySystem;
 		private RenderTarget2D _bgRt;
@@ -271,6 +275,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("PlayerDisplaySystem.Draw", _playerDisplaySystem.Draw);
 			FrameProfiler.Measure("GuardianAngelDisplaySystem.Draw", _guardianAngelDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);
+			FrameProfiler.Measure("PlunderDisplaySystem.Draw", _plunderDisplaySystem.Draw);
 			FrameProfiler.Measure("ActiveCharacterIndicatorDisplaySystem.Draw", _activeCharacterIndicatorDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", _enemyIntentPipsSystem.Draw);
 			FrameProfiler.Measure("AmbushDisplaySystem.Draw", _ambushDisplaySystem.Draw);
@@ -526,7 +531,11 @@ namespace Crusaders30XX.ECS.Systems
 			_quitCurrentQuestDisplaySystem = new QuitCurrentQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_mustBeBlockedSystem = new MustBeBlockedSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_activeCharacterIndicatorDisplaySystem = new ActiveCharacterIndicatorDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
-			
+
+			// Plunder system (Wyvern)
+			_plunderManagementSystem = new PlunderManagementSystem(_world.EntityManager);
+			_plunderDisplaySystem = new PlunderDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+
 			// Bloodshot effect system and render targets for background compositing
 			_bloodshotDisplaySystem = new BloodshotDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_bgRt = new RenderTarget2D(_graphicsDevice, Game1.VirtualWidth, Game1.VirtualHeight, false, SurfaceFormat.Color, DepthFormat.None);
@@ -616,6 +625,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_sealManagementSystem);
 			_world.AddSystem(_sealDisplaySystem);
 			_world.AddSystem(_shackleDisplaySystem);
+			_world.AddSystem(_plunderManagementSystem);
+			_world.AddSystem(_plunderDisplaySystem);
 			_world.AddSystem(_questRewardModalDisplaySystem);
 			_world.AddSystem(_quitCurrentQuestDisplaySystem);
 			_world.AddSystem(_mustBeBlockedSystem);
