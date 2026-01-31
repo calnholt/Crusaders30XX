@@ -84,7 +84,7 @@ public class EncroachingDarkness : EnemyAttackBase
   public EncroachingDarkness()
   {
     Id = "dissipating_darkness";
-    Name = "Dissipating Darkness";
+    Name = "Encroaching Darkness";
     Damage = 10;
     ConditionType = ConditionType.OnBlockedByAtLeast2Cards;
     Text = $"{EnemyAttackTextHelper.GetConditionText(ConditionType)} the enemy gains {AnathemaGain} anathema.";

@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"Attacks {NumOfHits} times.";
             Cost = ["Black"];
             Animation = "Attack";
-            Damage = 8;
+            Damage = 3;
             Block = 3;
 
             OnPlay = (entityManager, card) =>

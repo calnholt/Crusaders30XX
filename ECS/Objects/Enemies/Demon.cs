@@ -53,7 +53,7 @@ public class RazorMaw : EnemyAttackBase
 
 public class ScorchingClaw : EnemyAttackBase
 {
-  private int Burn = 3;
+  private int Burn = 2;
   public ScorchingClaw()
   {
     Id = "scorching_claw";

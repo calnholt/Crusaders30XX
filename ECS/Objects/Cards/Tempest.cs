@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"Gain {TemperanceAmount} temperance.";
             Animation = "Attack";
             Cost = ["White"];
-            Damage = 15;
+            Damage = 4;
             Block = 3;
 
             OnPlay = (entityManager, card) =>

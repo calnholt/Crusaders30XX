@@ -8,7 +8,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
     public class Vindicate : CardBase
     {
         private int CourageThreshold = 5;
-        private int DamageBonus = 20;
+        private int DamageBonus = 7;
         public Vindicate()
         {
             CardId = "vindicate";
@@ -17,7 +17,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"If you have {CourageThreshold} or more courage, this attack gains +{DamageBonus} damage and lose all courage.";
             Cost = ["Red", "Any"];
             Animation = "Attack";
-            Damage = 25;
+            Damage = 8;
             Block = 3;
 
             OnPlay = (entityManager, card) =>

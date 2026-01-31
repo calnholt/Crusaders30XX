@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"Gain {CourageGained} courage.";
             Cost = ["Black", "Any"];
             Animation = "Attack";
-            Damage = 17;
+            Damage = 5;
             IsWeapon = true;
 
             OnPlay = (entityManager, card) =>

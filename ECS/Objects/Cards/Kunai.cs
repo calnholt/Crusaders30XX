@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Kunai : CardBase
     {
-        private int WoundChance = 25;
+        private int WoundChance = 20;
         public Kunai()
         {
             CardId = "kunai";
@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"{WoundChance}% chance to wound the enemy. Exhaust on play or at the end of your turn";
             IsFreeAction = true;
             Animation = "Attack";
-            Damage = 4;
+            Damage = 1;
             ExhaustsOnEndTurn = true;
             CanAddToLoadout = false;
             IsToken = true;

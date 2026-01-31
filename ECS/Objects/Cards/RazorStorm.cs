@@ -5,7 +5,7 @@ namespace Crusaders30XX.ECS.Objects.Cards;
 
 public class RazorStorm : CardBase
 {
-  private int NumOfHits = 3;
+  private int NumOfHits = 2;
   public RazorStorm()
   {
     CardId = "razor_storm";
@@ -13,7 +13,7 @@ public class RazorStorm : CardBase
     Target = "Enemy";
     Text = $"Attacks {NumOfHits} times.";
     Animation = "Attack";
-    Damage = 2;
+    Damage = 1;
     Block = 2;
     IsFreeAction = true;
 

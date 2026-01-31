@@ -8,7 +8,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Burn : CardBase
     {
-        private int BurnAmount = 4;
+        private int BurnAmount = 1;
         private int CourageThreshold = 3;
         private int ActionPointBonus = 1;
         private int CourageCost = 1;

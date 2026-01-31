@@ -13,11 +13,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Name = "Mace";
             Target = "Enemy";
             Text = $"Gain {PowerGained} power.";
-            Cost = ["Red"];
+            Cost = ["Red", "Any", "Any"];
             Animation = "Attack";
-            Damage = 4;
-            IsWeapon = true;
+            Damage = 2;
             IsFreeAction = true;
+            IsWeapon = true;
 
             OnPlay = (entityManager, card) =>
             {

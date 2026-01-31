@@ -6,14 +6,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class IncreaseFaith : CardBase
     {
-        private int PowerGained = 3;
+        private int PowerGained = 1;
         public IncreaseFaith()
         {
             CardId = "increase_faith";
             Name = "Increase Faith";
             Target = "Player";
             Text = $"Gain {PowerGained} power.";
-            IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;
             Block = 2;

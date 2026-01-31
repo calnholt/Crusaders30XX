@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Reconciled : CardBase
     {
-        private int DamageBonus = 15;
+        private int DamageBonus = 5;
         public Reconciled()
         {
             CardId = "reconciled";
@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"If you have no scars or penance, this attack gains +{DamageBonus} damage.";
             Cost = ["Red", "Red"];
             Animation = "Attack";
-            Damage = 25;
+            Damage = 9;
             Block = 2;
 
             OnPlay = (entityManager, card) =>
