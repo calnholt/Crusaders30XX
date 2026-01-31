@@ -12,14 +12,14 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public class SkeletalArcher : EnemyBase
 {
-  private int Armor = 3;
+  private int Armor = 1;
   private int SnipeCount = 0;
 
   public SkeletalArcher(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "skeletal_archer";
     Name = "Skeletal Archer";
-    MaxHealth = 48 + (int)difficulty * 7;
+    MaxHealth = 12 + (int)difficulty * 2;
     Armor += (int)difficulty;
 
     OnStartOfBattle = (entityManager) =>

@@ -17,7 +17,7 @@ public class Cactus : EnemyBase
   {
     Id = "cactus";
     Name = "Cactus";
-    MaxHealth = 80;
+    MaxHealth = 20;
 
 
     OnStartOfBattle = (entityManager) =>

@@ -15,7 +15,7 @@ public class Spider : EnemyBase
   {
     Id = "spider";
     Name = "Spider";
-    MaxHealth = 80;
+    MaxHealth = 20;
   }
 
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)

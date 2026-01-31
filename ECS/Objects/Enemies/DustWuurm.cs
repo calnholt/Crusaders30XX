@@ -13,7 +13,7 @@ public class DustWuurm : EnemyBase
   {
     Id = "dust_wuurm";
     Name = "Dust Wuurm";
-    MaxHealth = 110;
+    MaxHealth = 28;
 
     OnStartOfBattle = (entityManager) =>
     {

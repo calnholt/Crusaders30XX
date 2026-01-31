@@ -13,13 +13,13 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public class Succubus : EnemyBase
 {
-  public static readonly int SiphonMultiplier = 5;
+  public static readonly int SiphonMultiplier = 1;
   public Succubus(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "succubus";
     Name = "Succubus";
-    MaxHealth = 95;
-    CurrentHealth = MaxHealth - 10;
+    MaxHealth = 24;
+    CurrentHealth = MaxHealth - 3;
 
     OnStartOfBattle = (entityManager) =>
     {
@@ -96,7 +96,7 @@ public class Succubus : EnemyBase
 
 public class SoulSiphon : EnemyAttackBase
 {
-  private int CourageLoss = 3;
+  private int CourageLoss = 1;
   public SoulSiphon()
   {
     Id = "soul_siphon";
@@ -104,7 +104,7 @@ public class SoulSiphon : EnemyAttackBase
     Damage = 4;
     ConditionType = ConditionType.OnHit;
     BlockingRestrictionType = BlockingRestrictionType.NotRed;
-    Text = $"{EnemyAttackTextHelper.GetBlockingRestrictionText(BlockingRestrictionType)}\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, 0, ConditionType, 100, "Lose [1] courage.")}";
+    Text = $"{EnemyAttackTextHelper.GetBlockingRestrictionText(BlockingRestrictionType)}\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, 0, ConditionType, 100, $"Lose {CourageLoss} courage.")}";
 
     OnAttackHit = (entityManager) =>
     {
@@ -169,7 +169,7 @@ public class CrushingAdoration : EnemyAttackBase
 
 public class VelvetFangs : EnemyAttackBase
 {
-  public int Multiplier { get; set; } = 3;
+  public int Multiplier { get; set; } = 1;
   public VelvetFangs()
   {
     Id = "velvet_fangs";

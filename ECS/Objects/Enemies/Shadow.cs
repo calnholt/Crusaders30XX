@@ -11,13 +11,13 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 {
   public class Shadow : EnemyBase
   {
-    private int StartAnathema = 15;
+    private int StartAnathema = 4;
     public Shadow(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
     {
       Id = "shadow";
       Name = "Shadow";
-      MaxHealth = 150 + (int)difficulty * 5;
-      StartAnathema -= (int)difficulty * 2;
+      MaxHealth = 38 + (int)difficulty * 1;
+      StartAnathema -= (int)difficulty * 1;
 
       OnStartOfBattle = (entityManager) =>
       {
@@ -62,7 +62,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 
 public class ShadowStrike : EnemyAttackBase
 {
-  private int AnathemaLoss = 4;
+  private int AnathemaLoss = 1;
   public ShadowStrike()
   {
     Id = "shadow_strike";
@@ -80,7 +80,7 @@ public class ShadowStrike : EnemyAttackBase
 
 public class EncroachingDarkness : EnemyAttackBase
 {
-  private int AnathemaGain = 2;
+  private int AnathemaGain = 1;
   public EncroachingDarkness()
   {
     Id = "dissipating_darkness";
@@ -134,7 +134,7 @@ public class FromTheShadows : EnemyAttackBase
 
 public class NightFall : EnemyAttackBase
 {
-  private int AnathemaLoss = 2;
+  private int AnathemaLoss = 1;
   public NightFall()
   {
     Id = "night_fall";
