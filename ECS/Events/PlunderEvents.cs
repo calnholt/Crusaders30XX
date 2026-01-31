@@ -27,4 +27,25 @@ namespace Crusaders30XX.ECS.Events
     {
         public Entity Card { get; set; }
     }
+
+    /// <summary>
+    /// Event to trigger the plunder snatch animation.
+    /// Published after card selection, before zone mutation.
+    /// </summary>
+    public class PlunderSnatchAnimationRequested
+    {
+        public Entity Card { get; set; }
+        public Microsoft.Xna.Framework.Vector2 StartPos { get; set; }
+        public Microsoft.Xna.Framework.Vector2 TargetPos { get; set; }
+        public int DamageThreshold { get; set; }
+    }
+
+    /// <summary>
+    /// Event published when the plunder snatch animation completes.
+    /// </summary>
+    public class PlunderSnatchAnimationCompleted
+    {
+        public Entity Card { get; set; }
+        public int DamageThreshold { get; set; }
+    }
 }

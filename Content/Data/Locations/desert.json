@@ -454,6 +454,28 @@
       ],
       "Background": "gothic-background-alley.png"
     },
+    {   
+      "Id": "desert_21",
+      "WorldPosition": [
+        3000,
+        1560
+      ],
+      "RevealRadius": 600,
+      "UnrevealedRadius": 150,
+      "Type": "Quest",
+      "Name": "Why Mr. Wyvern?",
+      "Difficulty": 4,
+      "Reward": {
+        "Gold": 2
+      },
+      "Events": [
+        {
+          "id": "wyvern",
+          "type": "Enemy"
+        }
+      ],
+      "Background": "gothic-background-alley.png"
+    },
     {
       "Id": "desert_7",
       "WorldPosition": [

@@ -127,6 +127,7 @@ namespace Crusaders30XX.ECS.Systems
 		// Plunder system (Wyvern)
 		private PlunderManagementSystem _plunderManagementSystem;
 		private PlunderDisplaySystem _plunderDisplaySystem;
+		private PlunderSnatchDisplaySystem _plunderSnatchDisplaySystem;
 
 		// Bloodshot effect system and render targets for background compositing
 		private BloodshotDisplaySystem _bloodshotDisplaySystem;
@@ -276,6 +277,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("GuardianAngelDisplaySystem.Draw", _guardianAngelDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);
 			FrameProfiler.Measure("PlunderDisplaySystem.Draw", _plunderDisplaySystem.Draw);
+			FrameProfiler.Measure("PlunderSnatchDisplaySystem.Draw", _plunderSnatchDisplaySystem.Draw);
 			FrameProfiler.Measure("ActiveCharacterIndicatorDisplaySystem.Draw", _activeCharacterIndicatorDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", _enemyIntentPipsSystem.Draw);
 			FrameProfiler.Measure("AmbushDisplaySystem.Draw", _ambushDisplaySystem.Draw);
@@ -533,8 +535,9 @@ namespace Crusaders30XX.ECS.Systems
 			_activeCharacterIndicatorDisplaySystem = new ActiveCharacterIndicatorDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 
 			// Plunder system (Wyvern)
-			_plunderManagementSystem = new PlunderManagementSystem(_world.EntityManager);
+			_plunderManagementSystem = new PlunderManagementSystem(_world.EntityManager, _graphicsDevice);
 			_plunderDisplaySystem = new PlunderDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_plunderSnatchDisplaySystem = new PlunderSnatchDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 
 			// Bloodshot effect system and render targets for background compositing
 			_bloodshotDisplaySystem = new BloodshotDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
@@ -627,6 +630,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_shackleDisplaySystem);
 			_world.AddSystem(_plunderManagementSystem);
 			_world.AddSystem(_plunderDisplaySystem);
+			_world.AddSystem(_plunderSnatchDisplaySystem);
 			_world.AddSystem(_questRewardModalDisplaySystem);
 			_world.AddSystem(_quitCurrentQuestDisplaySystem);
 			_world.AddSystem(_mustBeBlockedSystem);

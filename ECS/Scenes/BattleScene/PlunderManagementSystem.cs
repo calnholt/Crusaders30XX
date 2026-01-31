@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -16,12 +17,19 @@ namespace Crusaders30XX.ECS.Systems
     public class PlunderManagementSystem : Core.System
     {
         private static readonly Random _random = new Random();
+        private readonly GraphicsDevice _graphicsDevice;
 
-        public PlunderManagementSystem(EntityManager entityManager) : base(entityManager)
+        // Pending animation state
+        private Entity _pendingCard;
+        private int _pendingThreshold;
+
+        public PlunderManagementSystem(EntityManager entityManager, GraphicsDevice graphicsDevice) : base(entityManager)
         {
+            _graphicsDevice = graphicsDevice;
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
             EventManager.Subscribe<ModifyHpEvent>(OnModifyHp);
             EventManager.Subscribe<PlunderTriggerEvent>(OnPlunderTrigger);
+            EventManager.Subscribe<PlunderSnatchAnimationCompleted>(OnAnimationCompleted);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -88,18 +96,66 @@ namespace Crusaders30XX.ECS.Systems
             // Remove from draw pile (but don't add to any zone - it's "held" by the wyvern)
             deck.DrawPile.Remove(cardToPlunder);
 
-            // Add Plundered component
-            EntityManager.AddComponent(cardToPlunder, new Plundered
-            {
-                Owner = cardToPlunder,
-                DamageThreshold = threshold,
-                DamageDealt = 0
-            });
-
             var cardData = cardToPlunder.GetComponent<CardData>();
             Console.WriteLine($"[PlunderManagementSystem] Plundered card: {cardData?.Card.CardId ?? "unknown"}, threshold: {threshold}");
 
-            EventManager.Publish(new PlunderCardEvent { Card = cardToPlunder, DamageThreshold = threshold });
+            // Calculate animation positions
+            var viewport = _graphicsDevice.Viewport;
+            var startPos = new Vector2(viewport.Width - 60, viewport.Height - 70); // Draw pile position
+
+            // Get enemy position for target
+            var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+            var enemyTransform = enemy?.GetComponent<Transform>();
+            var enemyPos = enemyTransform?.Position ?? new Vector2(400, 300);
+            var targetPos = new Vector2(enemyPos.X + 180, enemyPos.Y - 20); // Match PlunderDisplaySystem offsets
+
+            // Store pending state for when animation completes
+            _pendingCard = cardToPlunder;
+            _pendingThreshold = threshold;
+
+            // Queue animation through event queue so game waits for it
+            EventQueueBridge.EnqueueTriggerAction("PlunderManagementSystem.SnatchAnimation", () =>
+            {
+                EventManager.Publish(new PlunderSnatchAnimationRequested
+                {
+                    Card = cardToPlunder,
+                    StartPos = startPos,
+                    TargetPos = targetPos,
+                    DamageThreshold = threshold
+                });
+            }, 0f);
+        }
+
+        private void OnAnimationCompleted(PlunderSnatchAnimationCompleted evt)
+        {
+            if (evt.Card == null) return;
+
+            // Remove flight component
+            if (evt.Card.HasComponent<PlunderSnatchFlight>())
+            {
+                EntityManager.RemoveComponent<PlunderSnatchFlight>(evt.Card);
+            }
+
+            // Add Plundered component now that animation is done
+            if (!evt.Card.HasComponent<Plundered>())
+            {
+                EntityManager.AddComponent(evt.Card, new Plundered
+                {
+                    Owner = evt.Card,
+                    DamageThreshold = evt.DamageThreshold,
+                    DamageDealt = 0
+                });
+            }
+
+            var cardData = evt.Card.GetComponent<CardData>();
+            Console.WriteLine($"[PlunderManagementSystem] Animation completed for card: {cardData?.Card.CardId ?? "unknown"}");
+
+            // Now publish the PlunderCardEvent to notify other systems
+            EventManager.Publish(new PlunderCardEvent { Card = evt.Card, DamageThreshold = evt.DamageThreshold });
+
+            // Clear pending state
+            _pendingCard = null;
+            _pendingThreshold = 0;
         }
 
         private void OnModifyHp(ModifyHpEvent evt)

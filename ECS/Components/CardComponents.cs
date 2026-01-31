@@ -1104,4 +1104,29 @@ namespace Crusaders30XX.ECS.Components
         /// </summary>
         public int DamageDealt { get; set; }
     }
+
+    /// <summary>
+    /// Animation state for the plunder "snatch" effect when a card is stolen from the deck.
+    /// </summary>
+    public class PlunderSnatchFlight : IComponent
+    {
+        public Entity Owner { get; set; }
+        public PlunderSnatchPhase Phase { get; set; } = PlunderSnatchPhase.Lift;
+        public Vector2 OriginPos { get; set; }
+        public Vector2 LiftedPos { get; set; }
+        public Vector2 TargetPos { get; set; }
+        public Vector2 CurrentPos { get; set; }
+        public float PhaseElapsed { get; set; }
+        public float CurrentScale { get; set; } = 1f;
+        public float CurrentRotation { get; set; }
+    }
+
+    public enum PlunderSnatchPhase
+    {
+        Lift,
+        Pause,
+        Arc,
+        Settle,
+        Complete
+    }
 }
