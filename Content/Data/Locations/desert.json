@@ -433,6 +433,28 @@
       "Background": "gothic-background-alley.png"
     },
     {
+      "Id": "desert_20",
+      "WorldPosition": [
+        500,
+        2160
+      ],
+      "RevealRadius": 600,
+      "UnrevealedRadius": 150,
+      "Type": "Quest",
+      "Name": "Maze of the Medusa",
+      "Difficulty": 4,
+      "Reward": {
+        "Gold": 2
+      },
+      "Events": [
+        {
+          "id": "medusa",
+          "type": "Enemy"
+        }
+      ],
+      "Background": "gothic-background-alley.png"
+    },
+    {
       "Id": "desert_7",
       "WorldPosition": [
         4775,

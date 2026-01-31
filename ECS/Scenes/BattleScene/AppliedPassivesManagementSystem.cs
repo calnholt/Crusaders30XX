@@ -361,7 +361,8 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Bleed,
                 AppliedPassiveType.Frostbite,
                 AppliedPassiveType.Enflamed,
-                AppliedPassiveType.Scar
+                AppliedPassiveType.Scar,
+                AppliedPassiveType.Sealed
             };
         }
     }

@@ -72,6 +72,17 @@ The player has **20 HP** and burn deals **X damage per turn** (where X is burn s
 
 ---
 
+## Bleed Design
+
+Bleed works differently from burn: it deals 1 damage at the start of your turn, then removes one stack. This creates important design implications:
+
+- **1 bleed = deferred damage**: A single bleed stack is just 1 damage that happens next turn instead of now. This isn't interesting pressure - it's barely noticeable.
+- **Multiple stacks matter**: 3+ bleed creates real pressure because it takes multiple turns to clear. The player must weigh whether to end the fight quickly or risk carrying bleed into the next battle.
+- **Cross-battle persistence**: Unlike burn (which might be cleared between fights), bleed that isn't fully cleared carries forward. This makes high bleed stacks threatening even against fragile enemies - kill them fast or pay later.
+- **Design for 2+ per application**: When designing bleed-applying attacks, apply 2+ stacks per hit to create meaningful pressure. Single-stack applications feel like chip damage with extra steps.
+
+---
+
 ## Passives Must Change Decisions
 
 A passive is only worth adding if it changes **what the player does**, not just how much damage they take.

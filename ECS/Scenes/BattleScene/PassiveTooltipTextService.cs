@@ -91,6 +91,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"When you pledge a card, the enemy loses {stacks} damage.";
         case AppliedPassiveType.Silenced:
           return $"You cannot play pledged cards. Remove 1 silenced at the end of your action phase.";
+        case AppliedPassiveType.Sealed:
+          return $"Sealed cards cannot be played or pledged, but can block. Cracks accumulate: +1 per block, +1 per card played. At 3 cracks, seal is broken.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

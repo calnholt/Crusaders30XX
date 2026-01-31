@@ -129,6 +129,11 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}Pledged cards can only be played during the action phase. Does not count towards your hand size.";
 				}
+				var hasSealed = top.E.GetComponent<Sealed>() != null;
+				if (hasSealed)
+				{
+					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is sealed - cannot be played or pledged, but can block. Cracks accumulate: +1 per block, +1 per card played. At 3 cracks, seal is broken.";
+				}
 
 				// Wrap text based on MaxWidth
 				var wrappedLines = TextUtils.WrapText(_font, text, TextScale, MaxWidth);

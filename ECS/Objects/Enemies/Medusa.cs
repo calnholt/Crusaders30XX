@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Objects.Enemies
@@ -20,7 +21,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 		{
 			Id = "medusa";
 			Name = "Medusa";
-			MaxHealth = 80;
+			MaxHealth = 95;
 		}
 
 		public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
@@ -55,13 +56,18 @@ public class Gaze : EnemyAttackBase
 	{
 		Id = "gaze";
 		Name = "Gaze";
-		Damage = 4;
+		Damage = 3;
 		ConditionType = ConditionType.OnHit;
-		Text = "On hit - Seal 1 random card from your hand.";
+		Text = "On attack - Seal 1 random card from your hand.\n\nOn hit - Seal the top card of your deck.";
+
+		OnAttackReveal = (entityManager) =>
+		{
+			EventManager.Publish(new SealCardsEvent { Amount = 1, Type = SealType.Hand });
+		};
 
 		OnAttackHit = (entityManager) =>
 		{
-			EventManager.Publish(new SealCardsEvent { Amount = 1, Type = SealType.Hand });
+			EventManager.Publish(new SealCardsEvent { Amount = 1, Type = SealType.TopOfDrawPile });
 		};
 	}
 }
@@ -98,11 +104,23 @@ public class BasiliskGlare : EnemyAttackBase
 		Name = "Basilisk Glare";
 		Damage = 3;
 		ConditionType = ConditionType.OnHit;
-		Text = "On hit - Shuffle a sealed card from your hand into your draw pile.";
+		Text = "This cannot be blocked by sealed cards.";
 
-		OnAttackHit = (entityManager) =>
+		OnAttackReveal = (entityManager) =>
 		{
-			EventManager.Publish(new ShuffleSealedIntoDrawPileEvent());
+			var cards = GetComponentHelper.GetHandOfCards(entityManager).Where(x => x.GetComponent<Sealed>() != null).ToList();
+			cards.ForEach(x => {
+				var cannotBlock = new CannotBlockThisAttack{ Reason = "This attack cannot be blocked by sealed cards." };
+				entityManager.AddComponent(x, cannotBlock);
+			});
+		};
+
+		OnBlocksConfirmed = (entityManager) =>
+		{
+			var cards = GetComponentHelper.GetHandOfCards(entityManager);
+			cards.ForEach(x => {
+				entityManager.RemoveComponent<CannotBlockThisAttack>(x);
+			});
 		};
 	}
 }
@@ -119,7 +137,7 @@ public class SerpentStrike : EnemyAttackBase
 		Name = "Serpent Strike";
 		Damage = 7;
 		ConditionType = ConditionType.OnHit;
-		Text = "On hit - All sealed cards lose 1 crack.";
+		Text = "On hit - All sealed cards you own lose 1 crack.";
 
 		OnAttackHit = (entityManager) =>
 		{

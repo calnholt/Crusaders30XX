@@ -25,6 +25,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<SealCardsEvent>(OnSealCards);
 			EventManager.Subscribe<CardMoved>(OnCardMoved);
 			EventManager.Subscribe<CardPlayedEvent>(OnCardPlayed);
+			// TODO: needs to be all sealed cards, not just in hand
 			EventManager.Subscribe<ModifySealCracksEvent>(OnModifySealCracks);
 			EventManager.Subscribe<ShuffleSealedIntoDrawPileEvent>(OnShuffleSealedIntoDrawPile);
 		}

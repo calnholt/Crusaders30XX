@@ -83,44 +83,44 @@ Simple sustain threat. Chip damage now extends the fight - every point you let t
 
 ---
 
-## Petrify (Medusa Theme)
+## Seal (Medusa Theme)
 
 ### Core Mechanic
-**Petrified** cards:
+**Sealed** cards:
 - Cannot be played
 - Cannot be pledged
 - CAN block
 - Persists across battles until freed
 
 ### Crack System
-Petrified cards have 0-3 cracks. **Cracks only accumulate while the card is in hand:**
+Sealed cards have 0-3 cracks. **Cracks only accumulate while the card is in hand:**
 - +1 crack when this card is used to block
-- +1 crack for each card you play (applies to ALL petrified cards in hand)
-- At 3 cracks: remove Petrified, card is freed
+- +1 crack for each card you play (applies to ALL sealed cards in hand)
+- At 3 cracks: remove Sealed, card is freed
 
 ### Key Interactions
 | Interaction | Ruling |
 |-------------|--------|
-| Multiple petrified cards in hand | All gain +1 crack per card played |
+| Multiple sealed cards in hand | All gain +1 crack per card played |
 | Freed mid-block | Completes block normally, goes to discard freed |
-| Pledged cards | Cannot become petrified (immune) |
-| Stacking (Frozen, Shackled) | Can stack - card can be Petrified AND Frozen |
-| Forced exhaust/discard | Can target petrified cards; stays petrified in exhaust pile |
-| In draw/discard pile | Stays petrified, but no crack accumulation |
+| Pledged cards | Cannot become sealed (immune) |
+| Stacking (Frozen, Shackled) | Can stack - card can be Sealed AND Frozen |
+| Forced exhaust/discard | Can target sealed cards; stays sealed in exhaust pile |
+| In draw/discard pile | Stays sealed, but no crack accumulation |
 
 ### Why It's Interesting
 - **Not fully dead**: Can still block, which chips away at the curse
 - **Activity = freedom**: Aggressive play breaks stone faster; turtling stays cursed
 - **Draw matters**: Must actually draw the card to make progress
 - **Quest persistence**: Medusa leaves her mark - you walk away cursed
-- **Discard tension**: Discarding petrified card pauses progress
-- **Exhaust = disaster**: Petrified card in exhaust pile is nearly unfreeable
+- **Discard tension**: Discarding sealed card pauses progress
+- **Exhaust = disaster**: Sealed card in exhaust pile is nearly unfreeable
 
 ### Medusa Attack Concepts
-- **Gaze** (4 dmg): On hit, petrify 1 random card from hand
-- **Stone Stare** (6 dmg): On reveal, petrify top card of draw pile (buried, unknown)
-- **Basilisk Glare** (3+3 dmg): Two-hit. On hit, shuffle a petrified card from hand into draw pile (delays progress)
-- **Serpent Strike** (7 dmg): On hit, all petrified cards lose 1 crack (undoes progress)
+- **Gaze** (4 dmg): On hit, seal 1 random card from hand
+- **Stone Stare** (6 dmg): On reveal, seal top card of draw pile
+- **Basilisk Glare** (3 dmg): On hit, shuffle a sealed card from hand into draw pile (delays progress)
+- **Serpent Strike** (7 dmg): On hit, all sealed in your deck cards lose 1 crack (undoes progress)
 
 ---
 
@@ -149,54 +149,61 @@ Petrified cards have 0-3 cracks. **Cracks only accumulate while the card is in h
 
 ### Open Questions
 - **Damage threshold**: TBD - needs to be achievable but require offensive commitment
-- **Start of battle**: Does it grab immediately, or first grab happens turn 1?
 - **Empty deck**: What happens when deck runs out? Passive stops? Grabs from discard?
+
+
 
 ---
 
-## Dark Scout Theme
+## Blood Martyr Theme
 
-### Marked (Passive)
-**Triggers**: Start of pre-block phase each turn
-**Effect**: One card in the player's hand is marked with a random mark type. Mark is visible to player.
+### Core Fantasy
+Masochistic cultist who weaponizes suffering. Hurts itself, manipulates its own defenses, and curses you for hitting too hard.
 
-- If player **blocks** with the marked card → mark jumps to another card in hand with a new random mark type
-- If player **plays** the marked card → mark is cleared entirely
-- If player **ends turn** with marked card still in hand → enemy gains 2 Power (permanent scaling)
+### Sanguine Curse (Passive)
+**Triggers**: When you deal 6+ damage in a single attack
+**Effect**: Gain 4 bleed
 
-### Mark Pool
-
-**"Don't block with this" marks** (push player to play the card):
-| Mark | Penalty when blocking |
-|------|----------------------|
-| Searing Mark | Take 2 damage |
-| Exposed Mark | -2 block value |
-| Shattered Mark | Card is exhausted after blocking |
-
-**"Don't play this" marks** (push player to block with the card):
-| Mark | Penalty when playing |
-|------|---------------------|
-| Draining Mark | Enemy gains 2 Armor |
-| Cursed Mark | Gain 2 Burn |
-| Leaden Mark | Costs +1 discard |
+The threshold is affected by the enemy's own Wounded and Armor stacks:
+- `actual damage = base damage + wounded - armor`
+- Player must constantly recalculate whether their attacks are "safe"
 
 ### Why It's Interesting
-- **Asymmetric decisions**: Some marks push "play it to clear", others push "block to pass it along"
-- **Gambling on jumps**: Blocking passes the mark but you don't know what the new mark will be
-- **Forced engagement**: Can't ignore the mark - end-of-turn punishment is rough (enemy scaling)
-- **Hand evaluation changes**: Each turn, one card is "hot" and you must decide how to handle it
-- **Clear escape route**: Playing the marked card always clears it - but costs your action
+- **Changes what you DO**: Instead of maximizing damage, you're evaluating "is this hit worth the curse?"
+- **Dynamic puzzle**: The martyr's attacks shift its own Armor/Wounded, changing the math each turn
+- **Self-harm theme**: Burns itself, creating urgency (it's slowly dying) while pressuring you
+- **Multiple viable strategies**: Chip it down safely, burst and accept bleed, or time your big hits when Armor is high
 
-### Key Decisions
-| Mark Type | Best Response | Trade-off |
-|-----------|---------------|-----------|
-| Searing/Exposed/Shattered | Play the card | Uses your action on that specific card |
-| Draining/Cursed/Leaden | Block with it | Mark jumps, new random mark appears |
-| Any mark, bad card | Block with it | Get rid of bad card, accept new mark |
-| Any mark, key card | Play it | Clear mark, but might not be optimal action |
+### Attacks
+
+| Attack | Damage | Self-Effect | Role |
+|--------|--------|-------------|------|
+| **Flagellation** | 3 | Gains 2 burn, 1 Wounded | Self-harm, becomes more vulnerable |
+| **Blood Ward** | 3 | Gains 2 Armor | Protection, becomes tankier |
+| **Blood Tithe** | 5 | None (+2 if you have bleed) | Punish attack |
+
+### Attack Pattern
+**Weighted random** - each attack is a fresh reveal, forcing reassessment:
+- After Flagellation: Wounded up → your hits more likely to cross threshold
+- After Blood Ward: Armor up → your hits safer
+- Blood Tithe: Pure pressure, punishes existing bleed
+
+### Player Decision Tree
+| Situation | Consideration |
+|-----------|---------------|
+| High Wounded, low Armor | Chip attacks only, or accept the curse for burst |
+| High Armor, low Wounded | Window for heavy attacks |
+| Already bleeding | Blood Tithe hurts more - prioritize blocking or killing fast |
+| Martyr burning low | Can wait it out if your HP is stable |
+
+### Stats
+- **Health**: 80 (Standard tier)
+- **Attack pattern**: Random selection each turn
 
 ### Open Questions
-- **Attack pattern**: Multi-jab with high ambush? How many attacks, what effects?
-- **Health tier**: Fragile (40-60) fits scout archetype?
-- **Mark on empty hand**: What if all cards used before mark can jump? Mark waits for draw phase?
-- **Multiple scouts**: Do marks stack? Multiple marked cards?
+- **Threshold tuning**: Is 6 the right number? Could be 5 (tighter) or 7 (looser)
+- **Bleed amount**: 4 bleed = 4 damage over 4 turns. Too harsh? Too mild?
+- **Armor/Wounded caps**: Should there be maximums to prevent runaway stacking?
+
+
+I lsot enemy idea of marking random card in hand, jumps to different card when used to block. playing marked card has negative attrivutbe. each jump changes attribute. ending turn without playing a marked card is even worse penalty

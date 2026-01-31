@@ -57,6 +57,12 @@ Then the player **may pledge a card** from hand.
 - **Defeat:** Player HP reaches 0
 - **No reshuffle:** Your deck does not reshuffle when it empties
 
+## Quest Structure
+
+- A **quest** consists of one or more battles
+- **HP fully recovers** after each battle within a quest
+- This design makes each encounter a true fight for survival rather than an exercise in HP preservation
+
 ## Card Colors
 
 There are three card colors, each with distinct blocking mechanics:

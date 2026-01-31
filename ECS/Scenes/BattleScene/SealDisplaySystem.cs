@@ -94,7 +94,7 @@ namespace Crusaders30XX.ECS.Systems
 			center.Y += SealOffsetY;
 
 			var sealedComp = evt.Card.GetComponent<Sealed>();
-			DrawSealOverlay(center, bounds.Width, bounds.Height, 1f, sealedComp?.Cracks ?? 0);
+			DrawSealOverlay(center, bounds.Width, bounds.Height, 1f, transform.Rotation, sealedComp?.Cracks ?? 0);
 		}
 
 		private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
@@ -117,7 +117,7 @@ namespace Crusaders30XX.ECS.Systems
 			center.Y += SealOffsetY * evt.Scale;
 
 			var sealedComp = evt.Card.GetComponent<Sealed>();
-			DrawSealOverlay(center, cardWidth, cardHeight, evt.Scale, sealedComp?.Cracks ?? 0);
+			DrawSealOverlay(center, cardWidth, cardHeight, evt.Scale, transform.Rotation, sealedComp?.Cracks ?? 0);
 		}
 
 		private bool ShouldRenderSeal(Entity card)
@@ -127,7 +127,7 @@ namespace Crusaders30XX.ECS.Systems
 				&& _sealTexture != null;
 		}
 
-		private void DrawSealOverlay(Vector2 center, float cardWidth, float cardHeight, float scale, int cracks)
+		private void DrawSealOverlay(Vector2 center, float cardWidth, float cardHeight, float scale, float rotation, int cracks)
 		{
 			float finalAlpha = SealAlpha / 255f;
 			finalAlpha = MathHelper.Clamp(finalAlpha, 0f, 1f);
@@ -135,13 +135,13 @@ namespace Crusaders30XX.ECS.Systems
 			// Use uniform scale (no stretching) - fit to card width
 			float uniformScale = (cardWidth / (float)_sealTexture.Width) * SealScale * scale;
 
-			// Draw the seal texture centered on the card with uniform scale
+			// Draw the seal texture centered on the card with uniform scale and rotation
 			_spriteBatch.Draw(
 				_sealTexture,
 				center,
 				null,
 				Color.White * finalAlpha,
-				0,
+				rotation,
 				new Vector2(_sealTexture.Width / 2f, _sealTexture.Height / 2f),
 				uniformScale,
 				SpriteEffects.None,
@@ -149,10 +149,10 @@ namespace Crusaders30XX.ECS.Systems
 			);
 
 			// Draw crack count text at bottom right of card
-			DrawCrackCount(center, cardWidth, cardHeight, scale, cracks);
+			DrawCrackCount(center, cardWidth, cardHeight, scale, rotation, cracks);
 		}
 
-		private void DrawCrackCount(Vector2 center, float cardWidth, float cardHeight, float scale, int cracks)
+		private void DrawCrackCount(Vector2 center, float cardWidth, float cardHeight, float scale, float rotation, int cracks)
 		{
 			var font = FontSingleton.ContentFont;
 			if (font == null) return;
@@ -161,20 +161,35 @@ namespace Crusaders30XX.ECS.Systems
 			var textSize = font.MeasureString(text);
 			float textScaleFinal = TextScale * scale;
 
-			// Position text at bottom right of the card
+			// Calculate text position at bottom right of card (before rotation)
 			float padding = 8f * scale;
-			var textPos = new Vector2(
-				center.X + (cardWidth * scale / 2f) - (textSize.X * textScaleFinal) - padding,
-				center.Y + (cardHeight * scale / 2f) - (textSize.Y * textScaleFinal) - padding + TextOffsetY * scale
+			var localOffset = new Vector2(
+				(cardWidth * scale / 2f) - (textSize.X * textScaleFinal) - padding,
+				(cardHeight * scale / 2f) - (textSize.Y * textScaleFinal) - padding + TextOffsetY * scale
 			);
+
+			// Rotate the offset around the center
+			float cos = (float)Math.Cos(rotation);
+			float sin = (float)Math.Sin(rotation);
+			var rotatedOffset = new Vector2(
+				localOffset.X * cos - localOffset.Y * sin,
+				localOffset.X * sin + localOffset.Y * cos
+			);
+
+			var textPos = center + rotatedOffset;
 
 			// Color #00ffbf (cyan/teal)
 			var textColor = new Color(0x00, 0xff, 0xbf);
 
-			// Draw text with shadow for readability
+			// Draw text with shadow for readability, rotated to match card
 			var shadowOffset = new Vector2(2 * scale, 2 * scale);
-			_spriteBatch.DrawString(font, text, textPos + shadowOffset, Color.Black * 0.7f, 0f, Vector2.Zero, textScaleFinal, SpriteEffects.None, 0f);
-			_spriteBatch.DrawString(font, text, textPos, textColor, 0f, Vector2.Zero, textScaleFinal, SpriteEffects.None, 0f);
+			// Rotate shadow offset too
+			var rotatedShadow = new Vector2(
+				shadowOffset.X * cos - shadowOffset.Y * sin,
+				shadowOffset.X * sin + shadowOffset.Y * cos
+			);
+			_spriteBatch.DrawString(font, text, textPos + rotatedShadow, Color.Black * 0.7f, rotation, Vector2.Zero, textScaleFinal, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(font, text, textPos, textColor, rotation, Vector2.Zero, textScaleFinal, SpriteEffects.None, 0f);
 		}
 	}
 }

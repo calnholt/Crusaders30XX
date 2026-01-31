@@ -1080,4 +1080,10 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
     }
+
+    public class CannotBlockThisAttack : IComponent
+    {
+        public Entity Owner { get; set; }
+        public string Reason { get; set; }
+    }
 }

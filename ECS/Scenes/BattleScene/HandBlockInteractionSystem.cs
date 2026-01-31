@@ -71,6 +71,11 @@ namespace Crusaders30XX.ECS.Systems
 					EventManager.Publish(new CantPlayCardMessage { Message = "Can't block with pledged card!" });
 					break;
 				}
+				if (card.GetComponent<CannotBlockThisAttack>() != null)
+				{
+					EventManager.Publish(card.GetComponent<CannotBlockThisAttack>().Reason);
+					break;
+				}
 				if (data.Card.Type == CardType.Block && !data.Card.CanPlay(EntityManager, card))
 				{
 					return;
