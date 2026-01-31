@@ -8,7 +8,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Purge : CardBase
     {
-        private int DamageBonus = 2;
+        private int DamageBonus = 1;
         public Purge()
         {
             CardId = "purge";
@@ -18,7 +18,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"Each attack card discarded to play this gains +{DamageBonus} damage for the rest of the quest.";
             Animation = "Attack";
             Block = 3;
-            Damage = 35;
+            Damage = 14;
 
             OnPlay = (entityManager, card) =>
             {

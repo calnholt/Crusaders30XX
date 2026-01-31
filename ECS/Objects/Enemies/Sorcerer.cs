@@ -16,7 +16,7 @@ public class Sorcerer : EnemyBase
   {
     Id = "sorcerer";
     Name = "Sorcerer";
-    MaxHealth = 120;
+    MaxHealth = 30;
 
     OnStartOfBattle = (entityManager) =>
     {

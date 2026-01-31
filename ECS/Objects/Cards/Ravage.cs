@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"As an additional cost, mill {MillAmount} cards.";
             Cost = ["Any"];
             Animation = "Attack";
-            Damage = 25;
+            Damage = 8;
             Block = 3;
 
             OnPlay = (entityManager, card) =>

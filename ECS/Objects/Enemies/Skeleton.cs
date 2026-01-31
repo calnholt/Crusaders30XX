@@ -13,13 +13,13 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public class Skeleton : EnemyBase
 {
-  private int Armor = 3;
+  private int Armor = 1;
 
   public Skeleton(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "skeleton";
     Name = "Skeleton";
-    MaxHealth = 55 + (int)difficulty * 7;
+    MaxHealth = 14 + (int)difficulty * 2;
     Armor += (int)difficulty;
 
     OnStartOfBattle = (entityManager) =>

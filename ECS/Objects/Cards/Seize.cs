@@ -9,13 +9,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Seize : CardBase
     {
-        private int DamageBonus = 10;
+        private int DamageBonus = 2;
         public Seize()
         {
             CardId = "seize";
             Name = "Seize";
             Target = "Enemy";
-            Damage = 6;
+            Damage = 2;
             Block = 3;
             Text = $"If you have lost courage during this action phase, this gains +{DamageBonus} damage.";
             Animation = "Attack";

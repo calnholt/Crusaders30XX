@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"Gain {AegisGained} aegis, and gain {PenanceGained} penance.";
             Cost = ["White", "Any", "Any"];
             Animation = "Attack";
-            Damage = 25;
+            Damage = 11;
             Block = 2;
 
             OnPlay = (entityManager, card) =>

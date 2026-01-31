@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
         {
             Id = "cinderbolt_demon";
             Name = "Cinderbolt Demon";
-            MaxHealth = 105 + (int)difficulty * 10;
+            MaxHealth = 27 + (int)difficulty * 2;
         }
 
         public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)

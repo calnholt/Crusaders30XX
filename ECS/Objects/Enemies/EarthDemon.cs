@@ -14,13 +14,13 @@ namespace Crusaders30XX.ECS.Objects.Enemies;
 /// </summary>
 public class EarthDemon : EnemyBase
 {
-    private int StartingArmor = 2;
+    private int StartingArmor = 1;
 
     public EarthDemon(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
     {
         Id = "earth_demon";
         Name = "Earth Demon";
-        MaxHealth = 50 + (int)difficulty * 7;
+        MaxHealth = 13 + (int)difficulty * 2;
 
         // Earthen Resilience: Start of battle, gain 3 Armor
         OnStartOfBattle = (entityManager) =>
@@ -126,7 +126,7 @@ public class StoneBarrage : EnemyAttackBase
 /// </summary>
 public class EarthenWall : EnemyAttackBase
 {
-    private int ArmorGain = 2;
+    private int ArmorGain = 1;
 
     public EarthenWall()
     {

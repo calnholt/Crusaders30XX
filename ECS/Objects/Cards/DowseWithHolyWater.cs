@@ -6,9 +6,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class DowseWithHolyWater : CardBase
     {
-        private int Aggression = 5;
+        private int Aggression = 1;
         private int CourageThreshold = 5;
-        private int AggressionBonus = 15;
+        private int AggressionBonus = 4;
         public DowseWithHolyWater()
         {
             CardId = "dowse_with_holy_water";

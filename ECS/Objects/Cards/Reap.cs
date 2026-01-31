@@ -9,21 +9,30 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Reap : CardBase
     {
-        private int DamageBonus = 5;
+        private int DamageBonus = 4;
         public Reap()
         {
             CardId = "reap";
             Name = "Reap";
             Target = "Player";
             Cost = ["Any","Any"];
-            Text = $"This attack gains +{DamageBonus} damage for each red card discarded to play this.";
+            Text = $"This attack gains +{DamageBonus} damage if two red cards were discarded to play this.";
             Animation = "Attack";
             Block = 3;
-            Damage = 25;
+            Damage = 8;
 
             OnPlay = (entityManager, card) =>
             {
-                // Get payment cards with proper null checking
+                EventManager.Publish(new ModifyHpRequestEvent { 
+                  Source = entityManager.GetEntity("Player"), 
+                  Target = entityManager.GetEntity("Enemy"), 
+                  Delta = -GetDerivedDamage(entityManager, card), 
+                  DamageType = ModifyTypeEnum.Attack 
+                });
+            };
+
+            GetConditionalDamage = (entityManager, card) =>
+            {
                 var cacheEntity = entityManager.GetEntitiesWithComponent<LastPaymentCache>().FirstOrDefault();
                 var paymentCards = cacheEntity?.GetComponent<LastPaymentCache>()?.PaymentCards;
                 var redCards = 0;
@@ -34,30 +43,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
                         if (paymentCard.GetComponent<CardData>().Color == CardColor.Red) redCards++;
                     }
                 }
-
-                EventManager.Publish(new ModifyHpRequestEvent { 
-                  Source = entityManager.GetEntity("Player"), 
-                  Target = entityManager.GetEntity("Enemy"), 
-                  Delta = -(Damage + (redCards > 0 ? redCards * DamageBonus : 0)), 
-                  DamageType = ModifyTypeEnum.Attack 
-                });
-            };
-
-            GetConditionalDamage = (entityManager, card) =>
-            {
-                var selectedForPayment = entityManager.GetEntitiesWithComponent<SelectedForPayment>();
-                int redCards = 0;
                 
-                foreach (var entity in selectedForPayment)
-                {
-                    var cardData = entity.GetComponent<CardData>();
-                    if (cardData != null && cardData.Color == CardColor.Red)
-                    {
-                        redCards++;
-                    }
-                }
-                
-                return redCards * DamageBonus;
+                return redCards == 2 ? DamageBonus : 0;
             };
         }
     }

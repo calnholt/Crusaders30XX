@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Enemy";
             Text = $"This card gains +{BlockBonus} block for the duration of the quest.";
             Block = 3;
-            Damage = 6;
+            Damage = 1;
             IsFreeAction = true;
             Animation = "Attack";
 

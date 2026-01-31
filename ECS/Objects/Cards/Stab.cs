@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"As an additional cost, lose {CourageCost} courage.";
             IsFreeAction = true;
             Animation = "Attack";
-            Damage = 14;
+            Damage = 4;
             Block = 3;
 
             OnPlay = (entityManager, card) =>

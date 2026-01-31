@@ -11,12 +11,12 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 {
     public class FireSkeleton : EnemyBase
     {
-        private int Armor = 4;
+        private int Armor = 2;
         public FireSkeleton(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
         {
             Id = "fire_skeleton";
             Name = "Fire Skeleton";
-            MaxHealth = 70;
+            MaxHealth = 18;
 
 
             OnStartOfBattle = (entityManager) =>

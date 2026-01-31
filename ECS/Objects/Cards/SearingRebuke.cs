@@ -6,13 +6,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class SearingRebuke : CardBase
     {
-        public int BurnAmount = 2;
+        public int BurnAmount = 1;
         public SearingRebuke()
         {
             CardId = "searing_rebuke";
             Name = "Searing Rebuke";
             Text = $"Apply {BurnAmount} burn to the enemy.";
-            Block = 4;
+            Block = 2;
             Animation = "Block";
             Type = CardType.Block;
 

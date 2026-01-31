@@ -9,7 +9,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Carve : CardBase
     {
-        private int DamageBonus = 5;
+        private int DamageBonus = 1;
         private int Chance = 50;
         public Carve()
         {
@@ -18,7 +18,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Enemy";
             Text = $"This gains +{DamageBonus} damage for the rest of the quest. {Chance}% chance this is shuffled back into the deck.";
             Block = 3;
-            Damage = 10;
+            Damage = 3;
             Animation = "Attack";
 
             OnPlay = (entityManager, card) =>

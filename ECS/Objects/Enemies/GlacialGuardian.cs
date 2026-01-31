@@ -16,7 +16,7 @@ public class GlacialGuardian : EnemyBase
   {
     Id = "glacial_guardian";
     Name = "Glacial Guardian";
-    MaxHealth = 110;
+    MaxHealth = 28;
 
     OnStartOfBattle = (entityManager) =>
     {

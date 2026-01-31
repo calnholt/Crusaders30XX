@@ -14,7 +14,7 @@ public class Mummy : EnemyBase
   {
     Id = "mummy";
     Name = "Mummy";
-    MaxHealth = 70;
+    MaxHealth = 18;
   }
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {
