@@ -1129,4 +1129,26 @@ namespace Crusaders30XX.ECS.Components
         Settle,
         Complete
     }
+
+    /// <summary>
+    /// Animation state for the plunder rescue effect when a card returns to the player's hand.
+    /// </summary>
+    public class PlunderRescueFlight : IComponent
+    {
+        public Entity Owner { get; set; }
+        public PlunderRescuePhase Phase { get; set; } = PlunderRescuePhase.Arc;
+        public Vector2 StartPos { get; set; }
+        public Vector2 TargetPos { get; set; }
+        public Vector2 CurrentPos { get; set; }
+        public float PhaseElapsed { get; set; }
+        public float CurrentScale { get; set; } = 0.55f;
+        public float CurrentRotation { get; set; }
+    }
+
+    public enum PlunderRescuePhase
+    {
+        Arc,
+        Settle,
+        Complete
+    }
 }

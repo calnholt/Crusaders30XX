@@ -48,4 +48,34 @@ namespace Crusaders30XX.ECS.Events
         public Entity Card { get; set; }
         public int DamageThreshold { get; set; }
     }
+
+    /// <summary>
+    /// Event to trigger the plunder rescue animation (card returning to player's hand).
+    /// Published after damage threshold reached, before zone mutation.
+    /// </summary>
+    public class PlunderRescueAnimationRequested
+    {
+        public Entity Card { get; set; }
+        public Microsoft.Xna.Framework.Vector2 StartPos { get; set; }
+        public Microsoft.Xna.Framework.Vector2 TargetPos { get; set; }
+    }
+
+    /// <summary>
+    /// Event published when the plunder rescue animation completes.
+    /// </summary>
+    public class PlunderRescueAnimationCompleted
+    {
+        public Entity Card { get; set; }
+    }
+
+    /// <summary>
+    /// Event to trigger animation of a replaced plundered card going to discard.
+    /// Published when a new card is plundered and replaces an existing one.
+    /// </summary>
+    public class PlunderDiscardAnimationRequested
+    {
+        public Entity Card { get; set; }
+        public Entity Deck { get; set; }
+        public Microsoft.Xna.Framework.Vector2 StartPos { get; set; }
+    }
 }

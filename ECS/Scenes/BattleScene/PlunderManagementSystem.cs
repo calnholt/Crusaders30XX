@@ -99,9 +99,8 @@ namespace Crusaders30XX.ECS.Systems
             var cardData = cardToPlunder.GetComponent<CardData>();
             Console.WriteLine($"[PlunderManagementSystem] Plundered card: {cardData?.Card.CardId ?? "unknown"}, threshold: {threshold}");
 
-            // Calculate animation positions
-            var viewport = _graphicsDevice.Viewport;
-            var startPos = new Vector2(viewport.Width - 60, viewport.Height - 70); // Draw pile position
+            // Calculate animation positions - get draw pile position from UI entity
+            var startPos = ResolveDrawPileAnchor();
 
             // Get enemy position for target
             var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
@@ -212,14 +211,41 @@ namespace Crusaders30XX.ECS.Systems
             var deck = deckEntity.GetComponent<Deck>();
             if (deck == null) return;
 
+            // Calculate animation start position (current plundered card display position)
+            var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+            var enemyTransform = enemy?.GetComponent<Transform>();
+            var enemyPos = enemyTransform?.Position ?? new Vector2(400, 300);
+            var startPos = new Vector2(enemyPos.X + 180, enemyPos.Y - 20);
+
             // Remove Plundered component
             EntityManager.RemoveComponent<Plundered>(card);
 
-            // Add to discard pile
-            deck.DiscardPile.Add(card);
+            // Set card position for animation start
+            var transform = card.GetComponent<Transform>();
+            if (transform != null)
+            {
+                transform.Position = startPos;
+            }
+
+            // Add animating marker component
+            if (!card.HasComponent<AnimatingHandToZone>())
+            {
+                EntityManager.AddComponent(card, new AnimatingHandToZone { Destination = CardZoneType.DiscardPile });
+            }
 
             var cardData = card.GetComponent<CardData>();
-            Console.WriteLine($"[PlunderManagementSystem] Previously plundered card discarded: {cardData?.Card.CardId ?? "unknown"}");
+            Console.WriteLine($"[PlunderManagementSystem] Starting discard animation for previously plundered card: {cardData?.Card.CardId ?? "unknown"}");
+
+            // Queue animation - reuse CardMoveDisplaySystem
+            EventQueueBridge.EnqueueTriggerAction("PlunderManagementSystem.DiscardAnimation", () =>
+            {
+                EventManager.Publish(new PlayCardToDiscardAnimationRequested
+                {
+                    Card = card,
+                    Deck = deckEntity,
+                    ContextId = "plunder_discard"
+                });
+            }, 0f);
         }
 
         private void ResetDamageTracking()
@@ -233,6 +259,15 @@ namespace Crusaders30XX.ECS.Systems
                 plundered.DamageDealt = 0;
                 Console.WriteLine("[PlunderManagementSystem] Damage tracking reset for new turn.");
             }
+        }
+
+        private Vector2 ResolveDrawPileAnchor()
+        {
+            var root = EntityManager.GetEntity("UI_DrawPileRoot");
+            var tr = root?.GetComponent<Transform>();
+            if (tr != null) return tr.Position;
+            var vp = _graphicsDevice.Viewport;
+            return new Vector2(vp.Width - 60, vp.Height - 60);
         }
     }
 }

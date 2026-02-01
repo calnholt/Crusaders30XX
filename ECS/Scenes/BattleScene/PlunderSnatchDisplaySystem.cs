@@ -43,6 +43,20 @@ namespace Crusaders30XX.ECS.Systems
 
         private readonly List<SnatchAnim> _anims = new List<SnatchAnim>();
 
+        private class RescueAnim
+        {
+            public Entity Card;
+            public PlunderRescuePhase Phase;
+            public Vector2 StartPos;
+            public Vector2 TargetPos;
+            public float PhaseElapsed;
+            public float CurrentScale;
+            public float CurrentRotation;
+            public readonly List<TrailNode> Trail = new List<TrailNode>();
+        }
+
+        private readonly List<RescueAnim> _rescueAnims = new List<RescueAnim>();
+
         #region Phase Durations
         [DebugEditable(DisplayName = "Lift Duration (s)", Step = 0.01f, Min = 0.01f, Max = 0.5f)]
         public float LiftDuration { get; set; } = 0.12f;
@@ -109,13 +123,40 @@ namespace Crusaders30XX.ECS.Systems
         public int TrailB { get; set; } = 180;
         #endregion
 
+        #region Rescue Animation Parameters
+        [DebugEditable(DisplayName = "Rescue Arc Duration (s)", Step = 0.01f, Min = 0.1f, Max = 1.0f)]
+        public float RescueArcDuration { get; set; } = 0.40f;
+
+        [DebugEditable(DisplayName = "Rescue Settle Duration (s)", Step = 0.01f, Min = 0.01f, Max = 0.3f)]
+        public float RescueSettleDuration { get; set; } = 0.12f;
+
+        [DebugEditable(DisplayName = "Rescue Arc Height (px)", Step = 10, Min = 50, Max = 400)]
+        public int RescueArcHeightPx { get; set; } = 150;
+
+        [DebugEditable(DisplayName = "Rescue Start Scale", Step = 0.02f, Min = 0.3f, Max = 1.0f)]
+        public float RescueStartScale { get; set; } = 0.55f;
+
+        [DebugEditable(DisplayName = "Rescue End Scale", Step = 0.02f, Min = 0.8f, Max = 1.5f)]
+        public float RescueEndScale { get; set; } = 1.0f;
+
+        [DebugEditable(DisplayName = "Rescue Trail Color R", Step = 5, Min = 0, Max = 255)]
+        public int RescueTrailR { get; set; } = 50;
+
+        [DebugEditable(DisplayName = "Rescue Trail Color G", Step = 5, Min = 0, Max = 255)]
+        public int RescueTrailG { get; set; } = 200;
+
+        [DebugEditable(DisplayName = "Rescue Trail Color B", Step = 5, Min = 0, Max = 255)]
+        public int RescueTrailB { get; set; } = 100;
+        #endregion
+
         public PlunderSnatchDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             EventManager.Subscribe<PlunderSnatchAnimationRequested>(OnAnimRequested);
-            EventManager.Subscribe<DeleteCachesEvent>(_ => _anims.Clear());
+            EventManager.Subscribe<PlunderRescueAnimationRequested>(OnRescueAnimRequested);
+            EventManager.Subscribe<DeleteCachesEvent>(_ => { _anims.Clear(); _rescueAnims.Clear(); });
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -153,6 +194,30 @@ namespace Crusaders30XX.ECS.Systems
                         DamageThreshold = a.DamageThreshold
                     });
                     _anims.RemoveAt(i);
+                }
+            }
+
+            // Process rescue animations
+            for (int i = _rescueAnims.Count - 1; i >= 0; i--)
+            {
+                var r = _rescueAnims[i];
+                r.PhaseElapsed += dt;
+
+                // Age trail nodes and cull old ones
+                for (int t = r.Trail.Count - 1; t >= 0; t--)
+                {
+                    var node = r.Trail[t];
+                    node.Age += dt;
+                    if (node.Age > TrailLifetime) { r.Trail.RemoveAt(t); }
+                    else { r.Trail[t] = node; }
+                }
+
+                UpdateRescuePhase(r);
+
+                if (r.Phase == PlunderRescuePhase.Complete)
+                {
+                    EventManager.Publish(new PlunderRescueAnimationCompleted { Card = r.Card });
+                    _rescueAnims.RemoveAt(i);
                 }
             }
         }
@@ -268,14 +333,87 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
+        private void UpdateRescuePhase(RescueAnim r)
+        {
+            switch (r.Phase)
+            {
+                case PlunderRescuePhase.Arc:
+                    UpdateRescueArc(r);
+                    break;
+                case PlunderRescuePhase.Settle:
+                    UpdateRescueSettle(r);
+                    break;
+            }
+        }
+
+        private void UpdateRescueArc(RescueAnim r)
+        {
+            float t = MathHelper.Clamp(r.PhaseElapsed / Math.Max(0.001f, RescueArcDuration), 0f, 1f);
+            float eased = EaseOut(t);
+
+            // Position: arc from start (enemy) to target (offscreen right for hand entry)
+            var pos = GetArcPosition(r.StartPos, r.TargetPos, RescueArcHeightPx, eased);
+
+            // Scale: grow from plundered scale to full scale
+            r.CurrentScale = MathHelper.Lerp(RescueStartScale, RescueEndScale, eased);
+
+            // Rotation: sin curve that peaks mid-flight (opposite direction from snatch)
+            float rotationRad = (float)Math.Sin(Math.PI * t) * MathHelper.ToRadians(-MaxRotationDeg);
+            r.CurrentRotation = rotationRad;
+
+            // Add trail node during arc phase
+            r.Trail.Add(new TrailNode { Pos = pos, Age = 0f });
+
+            UpdateRescueFlightComponent(r, pos);
+
+            if (r.PhaseElapsed >= RescueArcDuration)
+            {
+                r.Phase = PlunderRescuePhase.Settle;
+                r.PhaseElapsed = 0f;
+            }
+        }
+
+        private void UpdateRescueSettle(RescueAnim r)
+        {
+            float t = MathHelper.Clamp(r.PhaseElapsed / Math.Max(0.001f, RescueSettleDuration), 0f, 1f);
+            float eased = EaseOut(t);
+
+            // Scale: subtle bounce then settle
+            float bounceScale = RescueEndScale * 1.05f;
+            r.CurrentScale = MathHelper.Lerp(bounceScale, RescueEndScale, eased);
+
+            // Rotation: ease back to 0
+            r.CurrentRotation = MathHelper.Lerp(r.CurrentRotation, 0f, eased);
+
+            UpdateRescueFlightComponent(r, r.TargetPos);
+
+            if (r.PhaseElapsed >= RescueSettleDuration)
+            {
+                r.Phase = PlunderRescuePhase.Complete;
+            }
+        }
+
+        private void UpdateRescueFlightComponent(RescueAnim r, Vector2 pos)
+        {
+            var flight = r.Card.GetComponent<PlunderRescueFlight>();
+            if (flight != null)
+            {
+                flight.CurrentPos = pos;
+                flight.CurrentScale = r.CurrentScale;
+                flight.CurrentRotation = r.CurrentRotation;
+                flight.Phase = r.Phase;
+            }
+        }
+
         public void Draw()
         {
-            if (_anims.Count == 0) return;
+            if (_anims.Count == 0 && _rescueAnims.Count == 0) return;
 
-            // Draw trail first (behind card)
+            // Draw trails first (behind cards)
             DrawTrails();
+            DrawRescueTrails();
 
-            // Draw cards
+            // Draw snatch animation cards
             for (int i = 0; i < _anims.Count; i++)
             {
                 var a = _anims[i];
@@ -296,6 +434,27 @@ namespace Crusaders30XX.ECS.Systems
                     Scale = flight.CurrentScale
                 });
             }
+
+            // Draw rescue animation cards
+            for (int i = 0; i < _rescueAnims.Count; i++)
+            {
+                var r = _rescueAnims[i];
+                var flight = r.Card.GetComponent<PlunderRescueFlight>();
+                if (flight == null) continue;
+
+                var t = r.Card.GetComponent<Transform>();
+                if (t != null)
+                {
+                    t.Rotation = flight.CurrentRotation;
+                }
+
+                EventManager.Publish(new CardRenderScaledRotatedEvent
+                {
+                    Card = r.Card,
+                    Position = flight.CurrentPos,
+                    Scale = flight.CurrentScale
+                });
+            }
         }
 
         private void DrawTrails()
@@ -310,6 +469,49 @@ namespace Crusaders30XX.ECS.Systems
                 for (int j = 0; j < a.Trail.Count; j++)
                 {
                     var node = a.Trail[j];
+                    float w = 1f - MathHelper.Clamp(node.Age / Math.Max(0.001f, TrailLifetime), 0f, 1f);
+
+                    // Outer glow
+                    _spriteBatch.Draw(
+                        circle,
+                        node.Pos,
+                        null,
+                        coreColor * (TrailGlowAlpha * w),
+                        0f,
+                        origin,
+                        TrailGlowScale * MathHelper.Lerp(0.6f, 1f, w),
+                        SpriteEffects.None,
+                        0f
+                    );
+
+                    // Inner core
+                    _spriteBatch.Draw(
+                        circle,
+                        node.Pos,
+                        null,
+                        coreColor * (TrailCoreAlpha * w),
+                        0f,
+                        origin,
+                        TrailCoreScale * MathHelper.Lerp(0.5f, 1f, w),
+                        SpriteEffects.None,
+                        0f
+                    );
+                }
+            }
+        }
+
+        private void DrawRescueTrails()
+        {
+            var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, Math.Max(1, TrailRadiusPx));
+            var origin = new Vector2(circle.Width / 2f, circle.Height / 2f);
+            var coreColor = new Color(ClampByte(RescueTrailR), ClampByte(RescueTrailG), ClampByte(RescueTrailB));
+
+            for (int i = 0; i < _rescueAnims.Count; i++)
+            {
+                var r = _rescueAnims[i];
+                for (int j = 0; j < r.Trail.Count; j++)
+                {
+                    var node = r.Trail[j];
                     float w = 1f - MathHelper.Clamp(node.Age / Math.Max(0.001f, TrailLifetime), 0f, 1f);
 
                     // Outer glow
@@ -378,6 +580,40 @@ namespace Crusaders30XX.ECS.Systems
             _anims.Add(anim);
         }
 
+        private void OnRescueAnimRequested(PlunderRescueAnimationRequested evt)
+        {
+            if (evt == null || evt.Card == null) return;
+
+            var anim = new RescueAnim
+            {
+                Card = evt.Card,
+                Phase = PlunderRescuePhase.Arc,
+                StartPos = evt.StartPos,
+                TargetPos = evt.TargetPos,
+                PhaseElapsed = 0f,
+                CurrentScale = RescueStartScale,
+                CurrentRotation = 0f
+            };
+
+            // Add flight component to card for tracking
+            if (!evt.Card.HasComponent<PlunderRescueFlight>())
+            {
+                EntityManager.AddComponent(evt.Card, new PlunderRescueFlight
+                {
+                    Owner = evt.Card,
+                    Phase = PlunderRescuePhase.Arc,
+                    StartPos = evt.StartPos,
+                    TargetPos = evt.TargetPos,
+                    CurrentPos = evt.StartPos,
+                    PhaseElapsed = 0f,
+                    CurrentScale = RescueStartScale,
+                    CurrentRotation = 0f
+                });
+            }
+
+            _rescueAnims.Add(anim);
+        }
+
         private static float EaseOut(float t)
         {
             t = MathHelper.Clamp(t, 0f, 1f);
@@ -410,6 +646,6 @@ namespace Crusaders30XX.ECS.Systems
             return (byte)v;
         }
 
-        public bool IsAnimating => _anims.Count > 0;
+        public bool IsAnimating => _anims.Count > 0 || _rescueAnims.Count > 0;
     }
 }

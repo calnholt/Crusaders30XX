@@ -88,6 +88,13 @@ namespace Crusaders30XX.ECS.Systems
             var plunderedCard = EntityManager.GetEntitiesWithComponent<Plundered>().FirstOrDefault();
             if (plunderedCard == null) return;
 
+            // Don't draw if card is currently animating (PlunderSnatchDisplaySystem handles rendering)
+            if (plunderedCard.HasComponent<PlunderSnatchFlight>() ||
+                plunderedCard.HasComponent<PlunderRescueFlight>())
+            {
+                return;
+            }
+
             var plundered = plunderedCard.GetComponent<Plundered>();
             if (plundered == null) return;
 
