@@ -11,12 +11,6 @@ namespace Crusaders30XX.ECS.Objects.Enemies;
 
 public class BloodMartyr : EnemyBase
 {
-  private const int SanguineCurseThreshold = 7;
-  private const int SanguineCursePenance = 1;
-
-  private int SanguineCurseCurrent = 0;
-  private bool HasTriggeredThisTurn = false;
-
   public BloodMartyr(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "blood_martyr";
@@ -26,44 +20,7 @@ public class BloodMartyr : EnemyBase
     OnStartOfBattle = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.SanguineCurse, Delta = 1 });
-      EventManager.Subscribe<ModifyHpEvent>(OnModifyHp);
-      EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
     };
-  }
-
-  private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
-  {
-    if (evt.Current == SubPhase.EnemyStart)
-    {
-      this.SanguineCurseCurrent = 0;
-      this.HasTriggeredThisTurn = false;
-    }
-  }
-
-  private void OnModifyHp(ModifyHpEvent evt)
-  {
-    if (this.HasTriggeredThisTurn) return;
-    // Only track damage dealt to enemy
-    if (evt.Delta >= 0) return;
-    var enemy = EntityManager.GetEntity("Enemy");
-    if (evt.Target != enemy) return;
-
-    // Calculate actual damage (already accounts for Armor/Wounded in the HP system)
-    int actualDamage = Math.Abs(evt.Delta);
-
-    this.SanguineCurseCurrent += actualDamage;
-
-    if (SanguineCurseCurrent >= SanguineCurseThreshold)
-    {
-      EventManager.Publish(new ApplyPassiveEvent
-      {
-        Target = EntityManager.GetEntity("Player"),
-        Type = AppliedPassiveType.Penance,
-        Delta = SanguineCursePenance
-      });
-      this.SanguineCurseCurrent = 0;
-      this.HasTriggeredThisTurn = false;
-    }
   }
 
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
@@ -74,9 +31,7 @@ public class BloodMartyr : EnemyBase
 
   public override void Dispose()
   {
-    EventManager.Unsubscribe<ModifyHpEvent>(OnModifyHp);
-    EventManager.Unsubscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
-    Console.WriteLine($"[BloodMartyr] Unsubscribed from events");
+    // No event subscriptions to clean up - SanguineCurseSystem handles the logic
   }
 }
 
@@ -148,11 +103,11 @@ public class Masochism : EnemyAttackBase
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ModifyHpRequestEvent { 
-        Source = EntityManager.GetEntity("Enemy"), 
-        Target = EntityManager.GetEntity("Enemy"), 
-        Delta = -SelfDamage, 
-        DamageType = ModifyTypeEnum.Effect 
+      EventManager.Publish(new ModifyHpRequestEvent {
+        Source = EntityManager.GetEntity("Enemy"),
+        Target = EntityManager.GetEntity("Enemy"),
+        Delta = -SelfDamage,
+        DamageType = ModifyTypeEnum.Effect
       });
     };
   }

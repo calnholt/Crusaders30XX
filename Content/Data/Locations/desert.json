@@ -498,6 +498,28 @@
       ],
       "Background": "gothic-background-alley.png"
     },
+    {      
+      "Id": "desert_23",
+      "WorldPosition": [
+        3500,
+        1260
+      ],
+      "RevealRadius": 600,
+      "UnrevealedRadius": 150,
+      "Type": "Quest",
+      "Name": "Spotted",
+      "Difficulty": 4,
+      "Reward": {
+        "Gold": 2
+      },
+      "Events": [
+        {
+          "id": "sniper",
+          "type": "Enemy"
+        }
+      ],
+      "Background": "gothic-background-alley.png"
+    },
     {
       "Id": "desert_7",
       "WorldPosition": [

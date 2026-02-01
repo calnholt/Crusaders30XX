@@ -54,6 +54,8 @@ namespace Crusaders30XX.ECS.Systems
 		private EnemyDifficultyDisplaySystem _enemyDifficultyDisplaySystem;
 		private AppliedPassivesDisplaySystem _appliedPassivesDisplaySystem;
 		private PoisonSystem _poisonSystem;
+		private PassiveMeterRenderSystem _passiveMeterRenderSystem;
+		private SanguineCurseSystem _sanguineCurseSystem;
 		private CardVisualSettingsDebugSystem _cardVisualSettingsDebugSystem;
 		private HpManagementSystem _hpManagementSystem;
 		private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
@@ -128,6 +130,10 @@ namespace Crusaders30XX.ECS.Systems
 		private PlunderManagementSystem _plunderManagementSystem;
 		private PlunderDisplaySystem _plunderDisplaySystem;
 		private PlunderSnatchDisplaySystem _plunderSnatchDisplaySystem;
+
+		// Marksman system (Sniper)
+		private MarkManagementSystem _markManagementSystem;
+		private MarkDisplaySystem _markDisplaySystem;
 
 		// Bloodshot effect system and render targets for background compositing
 		private BloodshotDisplaySystem _bloodshotDisplaySystem;
@@ -296,7 +302,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("HPDisplaySystem.Draw", _hpDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDifficultyDisplaySystem.Draw", _enemyDifficultyDisplaySystem.Draw);
 			FrameProfiler.Measure("AppliedPassivesDisplaySystem.Draw", _appliedPassivesDisplaySystem.Draw);
-			FrameProfiler.Measure("PoisonSystem.Draw", _poisonSystem.Draw);
+			FrameProfiler.Measure("PassiveMeterRenderSystem.Draw", _passiveMeterRenderSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawBackdrop", _payCostOverlaySystem.DrawBackdrop);
 			if (_skipPledgeDisplaySystem != null) FrameProfiler.Measure("SkipPledgeDisplaySystem.DrawBackdrop", _skipPledgeDisplaySystem.DrawBackdrop);
 			FrameProfiler.Measure("UIElementHighlightSystem.Draw", _uiElementHighlightSystem.Draw);
@@ -470,7 +476,9 @@ namespace Crusaders30XX.ECS.Systems
 			_hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_enemyDifficultyDisplaySystem = new EnemyDifficultyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_appliedPassivesDisplaySystem = new AppliedPassivesDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_poisonSystem = new PoisonSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_poisonSystem = new PoisonSystem(_world.EntityManager);
+			_passiveMeterRenderSystem = new PassiveMeterRenderSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_sanguineCurseSystem = new SanguineCurseSystem(_world.EntityManager);
 			_cardVisualSettingsDebugSystem = new CardVisualSettingsDebugSystem(_world.EntityManager);
 			_hpManagementSystem = new HpManagementSystem(_world.EntityManager);
 			_eventQueueSystem = new EventQueueSystem(_world.EntityManager);
@@ -539,6 +547,11 @@ namespace Crusaders30XX.ECS.Systems
 			_plunderDisplaySystem = new PlunderDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_plunderSnatchDisplaySystem = new PlunderSnatchDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 
+			// Marksman system (Sniper)
+			_markManagementSystem = new MarkManagementSystem(_world.EntityManager);
+			var markTexture = _content.Load<Texture2D>("mark");
+			_markDisplaySystem = new MarkDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, markTexture);
+
 			// Bloodshot effect system and render targets for background compositing
 			_bloodshotDisplaySystem = new BloodshotDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_bgRt = new RenderTarget2D(_graphicsDevice, Game1.VirtualWidth, Game1.VirtualHeight, false, SurfaceFormat.Color, DepthFormat.None);
@@ -581,6 +594,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_enemyDisplaySystem);
 			_world.AddSystem(_enemyIntentPipsSystem);
 			_world.AddSystem(_poisonSystem);
+			_world.AddSystem(_passiveMeterRenderSystem);
+			_world.AddSystem(_sanguineCurseSystem);
 			_world.AddSystem(_enemyIntentPlanningSystem);
 			_world.AddSystem(_enemyAttackProgressManagementSystem);
 			_world.AddSystem(_markedForSpecificDiscardSystem);
@@ -631,6 +646,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_plunderManagementSystem);
 			_world.AddSystem(_plunderDisplaySystem);
 			_world.AddSystem(_plunderSnatchDisplaySystem);
+			_world.AddSystem(_markManagementSystem);
+			_world.AddSystem(_markDisplaySystem);
 			_world.AddSystem(_questRewardModalDisplaySystem);
 			_world.AddSystem(_quitCurrentQuestDisplaySystem);
 			_world.AddSystem(_mustBeBlockedSystem);

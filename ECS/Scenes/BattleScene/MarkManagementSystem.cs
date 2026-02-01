@@ -1,0 +1,271 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Events;
+using Microsoft.Xna.Framework;
+
+namespace Crusaders30XX.ECS.Systems
+{
+    /// <summary>
+    /// Handles the Marksman passive for the Sniper enemy.
+    /// At start of enemy turn, marks a random card in hand with a penalty.
+    /// Playing the marked card triggers the penalty.
+    /// Blocking with the marked card moves the mark to a different card.
+    /// Pledging a marked card gives 1 penance.
+    /// Holding a marked card until end of action phase gives 1 penance.
+    /// </summary>
+    public class MarkManagementSystem : Core.System
+    {
+        private static readonly Random _random = new Random();
+        private static readonly MarkEffectType[] _effectPool = new[]
+        {
+            MarkEffectType.Lose1HP,
+            MarkEffectType.Lose2HP,
+            MarkEffectType.Gain1Penance,
+            MarkEffectType.Gain2Bleed,
+            MarkEffectType.Gain1Burn
+        };
+
+        public MarkManagementSystem(EntityManager entityManager) : base(entityManager)
+        {
+            EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
+            EventManager.Subscribe<CardPlayedEvent>(OnCardPlayed);
+            EventManager.Subscribe<CardBlockedEvent>(OnCardBlocked);
+            EventManager.Subscribe<PledgeAddedEvent>(OnPledgeAdded);
+        }
+
+        protected override IEnumerable<Entity> GetRelevantEntities()
+        {
+            return Array.Empty<Entity>();
+        }
+
+        protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+
+        private bool HasMarksmanEnemy()
+        {
+            var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+            if (enemy == null) return false;
+
+            var ap = enemy.GetComponent<AppliedPassives>();
+            return ap != null && ap.Passives.ContainsKey(AppliedPassiveType.Marksman);
+        }
+
+        private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
+        {
+            if (!HasMarksmanEnemy()) return;
+
+            if (evt.Current == SubPhase.EnemyStart)
+            {
+                // Clear all existing marks
+                ClearAllMarks();
+
+                // Apply a new mark to a random hand card
+                ApplyNewMark();
+            }
+            else if (evt.Current == SubPhase.PlayerEnd)
+            {
+                // If any marked cards remain in hand, player gains 1 penance per marked card
+                var markedCards = EntityManager.GetEntitiesWithComponent<Marked>().ToList();
+                foreach (var card in markedCards)
+                {
+                    var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+                    if (deck?.Hand?.Contains(card) == true)
+                    {
+                        Console.WriteLine("[MarkManagementSystem] Marked card held until PlayerEnd - applying 1 penance.");
+                        var player = EntityManager.GetEntity("Player");
+                        EventManager.Publish(new ApplyPassiveEvent
+                        {
+                            Target = player,
+                            Type = AppliedPassiveType.Penance,
+                            Delta = 1
+                        });
+                        EntityManager.RemoveComponent<Marked>(card);
+                    }
+                }
+            }
+        }
+
+        private void OnCardPlayed(CardPlayedEvent evt)
+        {
+            if (!HasMarksmanEnemy()) return;
+            if (evt.Card == null) return;
+
+            var marked = evt.Card.GetComponent<Marked>();
+            if (marked == null) return;
+
+            // Trigger the penalty effect
+            ApplyPenaltyEffect(marked.EffectType);
+            EntityManager.RemoveComponent<Marked>(evt.Card);
+        }
+
+        private void OnCardBlocked(CardBlockedEvent evt)
+        {
+            if (!HasMarksmanEnemy()) return;
+            if (evt.Card == null) return;
+
+            var marked = evt.Card.GetComponent<Marked>();
+            if (marked == null) return;
+
+            // Remove mark from this card
+            EntityManager.RemoveComponent<Marked>(evt.Card);
+
+            // Move mark to a different card in hand with a new random effect
+            var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+            if (deck?.Hand == null) return;
+
+            var eligibleCards = deck.Hand
+                .Where(c => c != evt.Card)
+                .Where(c => c.GetComponent<Marked>() == null)
+                .Where(c => c.GetComponent<Pledge>() == null)
+                .ToList();
+
+            if (eligibleCards.Count > 0)
+            {
+                var newTarget = eligibleCards[_random.Next(eligibleCards.Count)];
+                var newEffect = _effectPool[_random.Next(_effectPool.Length)];
+                EntityManager.AddComponent(newTarget, new Marked { EffectType = newEffect });
+
+                var cardData = newTarget.GetComponent<CardData>();
+                Console.WriteLine($"[MarkManagementSystem] Mark moved to {cardData?.Card?.CardId ?? "unknown"} with effect {newEffect}");
+            }
+            else
+            {
+                Console.WriteLine("[MarkManagementSystem] No eligible card to move mark to - mark disappears.");
+            }
+        }
+
+        private void OnPledgeAdded(PledgeAddedEvent evt)
+        {
+            if (!HasMarksmanEnemy()) return;
+            if (evt.Card == null) return;
+
+            var marked = evt.Card.GetComponent<Marked>();
+            if (marked == null) return;
+
+            // Pledging a marked card gives 1 penance
+            Console.WriteLine("[MarkManagementSystem] Marked card pledged - applying 1 penance.");
+            var player = EntityManager.GetEntity("Player");
+            EventManager.Publish(new ApplyPassiveEvent
+            {
+                Target = player,
+                Type = AppliedPassiveType.Penance,
+                Delta = 1
+            });
+            EntityManager.RemoveComponent<Marked>(evt.Card);
+        }
+
+        private void ClearAllMarks()
+        {
+            var markedCards = EntityManager.GetEntitiesWithComponent<Marked>().ToList();
+            foreach (var card in markedCards)
+            {
+                EntityManager.RemoveComponent<Marked>(card);
+            }
+        }
+
+        private void ApplyNewMark()
+        {
+            var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+            if (deck?.Hand == null || deck.Hand.Count == 0)
+            {
+                Console.WriteLine("[MarkManagementSystem] No cards in hand to mark.");
+                return;
+            }
+
+            // Exclude pledged cards from being marked
+            var eligibleCards = deck.Hand
+                .Where(c => c.GetComponent<Pledge>() == null)
+                .Where(c => c.GetComponent<Marked>() == null)
+                .ToList();
+
+            if (eligibleCards.Count == 0)
+            {
+                Console.WriteLine("[MarkManagementSystem] No eligible cards to mark.");
+                return;
+            }
+
+            var cardToMark = eligibleCards[_random.Next(eligibleCards.Count)];
+            var effect = _effectPool[_random.Next(_effectPool.Length)];
+
+            EntityManager.AddComponent(cardToMark, new Marked { EffectType = effect });
+
+            var cardData = cardToMark.GetComponent<CardData>();
+            Console.WriteLine($"[MarkManagementSystem] Marked card: {cardData?.Card?.CardId ?? "unknown"} with effect {effect}");
+        }
+
+        private void ApplyPenaltyEffect(MarkEffectType effectType)
+        {
+            var player = EntityManager.GetEntity("Player");
+
+            switch (effectType)
+            {
+                case MarkEffectType.Lose1HP:
+                    Console.WriteLine("[MarkManagementSystem] Applying penalty: Lose 1 HP");
+                    EventManager.Publish(new ModifyHpRequestEvent
+                    {
+                        Source = EntityManager.GetEntity("Enemy"),
+                        Target = player,
+                        Delta = -1,
+                        DamageType = ModifyTypeEnum.Effect
+                    });
+                    break;
+
+                case MarkEffectType.Lose2HP:
+                    Console.WriteLine("[MarkManagementSystem] Applying penalty: Lose 2 HP");
+                    EventManager.Publish(new ModifyHpRequestEvent
+                    {
+                        Source = EntityManager.GetEntity("Enemy"),
+                        Target = player,
+                        Delta = -2,
+                        DamageType = ModifyTypeEnum.Effect
+                    });
+                    break;
+
+                case MarkEffectType.Gain1Penance:
+                    Console.WriteLine("[MarkManagementSystem] Applying penalty: Gain 1 Penance");
+                    EventManager.Publish(new ApplyPassiveEvent
+                    {
+                        Target = player,
+                        Type = AppliedPassiveType.Penance,
+                        Delta = 1
+                    });
+                    break;
+
+                case MarkEffectType.Gain2Bleed:
+                    Console.WriteLine("[MarkManagementSystem] Applying penalty: Gain 2 Bleed");
+                    EventManager.Publish(new ApplyPassiveEvent
+                    {
+                        Target = player,
+                        Type = AppliedPassiveType.Bleed,
+                        Delta = 2
+                    });
+                    break;
+
+                case MarkEffectType.Gain1Burn:
+                    Console.WriteLine("[MarkManagementSystem] Applying penalty: Gain 1 Burn");
+                    EventManager.Publish(new ApplyPassiveEvent
+                    {
+                        Target = player,
+                        Type = AppliedPassiveType.Burn,
+                        Delta = 1
+                    });
+                    break;
+            }
+        }
+
+        public static string GetEffectDescription(MarkEffectType effectType)
+        {
+            return effectType switch
+            {
+                MarkEffectType.Lose1HP => "Lose 1 HP",
+                MarkEffectType.Lose2HP => "Lose 2 HP",
+                MarkEffectType.Gain1Penance => "+1 Penance",
+                MarkEffectType.Gain2Bleed => "+2 Bleed",
+                MarkEffectType.Gain1Burn => "+1 Burn",
+                _ => "Unknown"
+            };
+        }
+    }
+}

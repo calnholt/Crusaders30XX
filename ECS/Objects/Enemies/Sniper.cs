@@ -1,0 +1,55 @@
+using System.Collections.Generic;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Objects.EnemyAttacks;
+
+namespace Crusaders30XX.ECS.Objects.Enemies;
+
+/// <summary>
+/// Sniper enemy with the Marksman passive.
+/// A fragile ranged enemy that marks cards in the player's hand,
+/// forcing difficult decisions about how to handle the marked card.
+/// </summary>
+public class Sniper : EnemyBase
+{
+    public Sniper(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
+    {
+        Id = "sniper";
+        Name = "Sniper";
+        MaxHealth = 48;
+
+        OnStartOfBattle = (entityManager) =>
+        {
+            EventManager.Publish(new ApplyPassiveEvent
+            {
+                Target = entityManager.GetEntity("Enemy"),
+                Type = AppliedPassiveType.Marksman,
+                Delta = 1
+            });
+        };
+    }
+
+    public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
+    {
+        return new[] { "sniper_shot" };
+    }
+
+    public override void Dispose()
+    {
+        // No event subscriptions to clean up - MarkManagementSystem handles the logic
+    }
+}
+
+/// <summary>
+/// Sniper's basic attack - a single precise shot.
+/// </summary>
+public class SniperShot : EnemyAttackBase
+{
+    public SniperShot()
+    {
+        Id = "sniper_shot";
+        Name = "Sniper Shot";
+        Damage = 10;
+    }
+}

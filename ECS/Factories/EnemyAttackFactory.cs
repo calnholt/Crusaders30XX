@@ -112,6 +112,8 @@ namespace Crusaders30XX.ECS.Factories
                 "blood_ward" => new BloodWard(),
                 "blood_tithe" => new BloodTithe(),
                 "masochism" => new Masochism(),
+                // Sniper attacks
+                "sniper_shot" => new SniperShot(),
                 _ => null
             };
         }
@@ -218,6 +220,8 @@ namespace Crusaders30XX.ECS.Factories
                 { "blood_ward", new BloodWard() },
                 { "blood_tithe", new BloodTithe() },
                 { "masochism", new Masochism() },
+                // Sniper attacks
+                { "sniper_shot", new SniperShot() },
             };
         }
     }

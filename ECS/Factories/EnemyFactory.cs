@@ -42,6 +42,7 @@ namespace Crusaders30XX.ECS.Factories
                 "medusa" => new Medusa(difficulty),
                 "wyvern" => new Wyvern(difficulty),
                 "blood_martyr" => new BloodMartyr(difficulty),
+                "sniper" => new Sniper(difficulty),
                 _ => null
             };
         }
@@ -78,6 +79,7 @@ namespace Crusaders30XX.ECS.Factories
                 { "medusa", new Medusa(difficulty) },
                 { "wyvern", new Wyvern(difficulty) },
                 { "blood_martyr", new BloodMartyr(difficulty) },
+                { "sniper", new Sniper(difficulty) },
             };
         }
     }
