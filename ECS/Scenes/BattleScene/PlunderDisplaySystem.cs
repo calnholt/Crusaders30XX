@@ -31,7 +31,7 @@ namespace Crusaders30XX.ECS.Systems
         public float CardYOffset { get; set; } = -20f;
 
         [DebugEditable(DisplayName = "Card Scale", Step = 0.05f, Min = 0.2f, Max = 1.5f)]
-        public float CardScale { get; set; } = 0.55f;
+        public float CardScale { get; set; } = 0.6f;
 
         [DebugEditable(DisplayName = "Gauge Width", Step = 5, Min = 50, Max = 300)]
         public int GaugeWidth { get; set; } = 140;
@@ -40,7 +40,7 @@ namespace Crusaders30XX.ECS.Systems
         public int GaugeHeight { get; set; } = 24;
 
         [DebugEditable(DisplayName = "Gauge Y Offset", Step = 5f, Min = 0f, Max = 200f)]
-        public float GaugeYOffset { get; set; } = 130f;
+        public float GaugeYOffset { get; set; } = 90f;
 
         [DebugEditable(DisplayName = "Gauge BG Color R", Step = 5, Min = 0, Max = 255)]
         public int GaugeBgColorR { get; set; } = 40;
@@ -61,7 +61,7 @@ namespace Crusaders30XX.ECS.Systems
         public int GaugeFillColorB { get; set; } = 50;
 
         [DebugEditable(DisplayName = "Font Scale", Step = 0.02f, Min = 0.1f, Max = 0.5f)]
-        public float FontScale { get; set; } = 0.18f;
+        public float FontScale { get; set; } = 0.12f;
 
         #endregion
 
