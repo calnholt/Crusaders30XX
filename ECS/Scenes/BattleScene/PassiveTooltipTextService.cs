@@ -8,6 +8,7 @@ namespace Crusaders30XX.ECS.Systems
   {
     public static readonly int FrostbiteThreshold = 3;
     public static readonly int FrostbiteDamage = 3;
+    public static readonly int SanguineCurseThreshold = 7;
 
     public static string GetText(AppliedPassiveType type, bool isPlayer, int stacks)
     {
@@ -46,7 +47,7 @@ namespace Crusaders30XX.ECS.Systems
         case AppliedPassiveType.Scar:
           return $"Lose {stacks} max HP.";
         case AppliedPassiveType.Penance:
-          return $"Your attacks deal {stacks} less damage. At the start of the next battle, these are converted to scars.";
+          return $"Your attacks deal 1 less damage if you have 1 or more penance. At the start of the next battle, these are converted to scars.";
         case AppliedPassiveType.Aggression:
           return $"The next attack this turn gains {stacks} damage.";
         case AppliedPassiveType.Stealth:
@@ -95,6 +96,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"Sealed cards cannot be played or pledged, but can block. Cracks accumulate: +1 per block, +1 per card played. At 3 cracks, seal is broken.";
         case AppliedPassiveType.Plunder:
           return $"At the start of the block phase, steals a card from your deck. Deal enough damage to rescue it.";
+        case AppliedPassiveType.SanguineCurse:
+          return $"When this enemy is dealt {SanguineCurseThreshold} or more damage in a single turn, you gain 1 penance.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

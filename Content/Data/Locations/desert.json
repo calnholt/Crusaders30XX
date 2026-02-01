@@ -476,6 +476,28 @@
       ],
       "Background": "gothic-background-alley.png"
     },
+    {     
+      "Id": "desert_22",
+      "WorldPosition": [
+        2600,
+        1560
+      ],
+      "RevealRadius": 600,
+      "UnrevealedRadius": 150,
+      "Type": "Quest",
+      "Name": "Blood Blood Blood",
+      "Difficulty": 4,
+      "Reward": {
+        "Gold": 2
+      },
+      "Events": [
+        {
+          "id": "blood_martyr",
+          "type": "Enemy"
+        }
+      ],
+      "Background": "gothic-background-alley.png"
+    },
     {
       "Id": "desert_7",
       "WorldPosition": [

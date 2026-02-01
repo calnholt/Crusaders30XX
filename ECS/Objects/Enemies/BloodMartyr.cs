@@ -12,17 +12,20 @@ namespace Crusaders30XX.ECS.Objects.Enemies;
 public class BloodMartyr : EnemyBase
 {
   private const int SanguineCurseThreshold = 7;
-  private const int SanguineCurseBleed = 4;
+  private const int SanguineCursePenance = 1;
+
+  private int SanguineCurseCurrent = 0;
+  private bool HasTriggeredThisTurn = false;
 
   public BloodMartyr(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
   {
     Id = "blood_martyr";
     Name = "Blood Martyr";
-    MaxHealth = 80;
+    MaxHealth = 32;
 
     OnStartOfBattle = (entityManager) =>
     {
-      EntityManager = entityManager;
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.SanguineCurse, Delta = 1 });
       EventManager.Subscribe<ModifyHpEvent>(OnModifyHp);
       EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
     };
@@ -32,47 +35,41 @@ public class BloodMartyr : EnemyBase
   {
     if (evt.Current == SubPhase.EnemyStart)
     {
-      var battleStateInfo = GetComponentHelper.GetBattleStateInfo(EntityManager);
-      if (battleStateInfo != null)
-      {
-        battleStateInfo.BattleTracking["sanguine_curse_triggered"] = 0;
-      }
+      this.SanguineCurseCurrent = 0;
+      this.HasTriggeredThisTurn = false;
     }
   }
 
   private void OnModifyHp(ModifyHpEvent evt)
   {
+    if (this.HasTriggeredThisTurn) return;
     // Only track damage dealt to enemy
     if (evt.Delta >= 0) return;
     var enemy = EntityManager.GetEntity("Enemy");
     if (evt.Target != enemy) return;
 
-    // Check if already triggered this turn
-    var battleStateInfo = GetComponentHelper.GetBattleStateInfo(EntityManager);
-    if (battleStateInfo == null) return;
-
-    battleStateInfo.BattleTracking.TryGetValue("sanguine_curse_triggered", out int triggered);
-    if (triggered > 0) return;
-
     // Calculate actual damage (already accounts for Armor/Wounded in the HP system)
     int actualDamage = Math.Abs(evt.Delta);
 
-    if (actualDamage >= SanguineCurseThreshold)
+    this.SanguineCurseCurrent += actualDamage;
+
+    if (SanguineCurseCurrent >= SanguineCurseThreshold)
     {
-      battleStateInfo.BattleTracking["sanguine_curse_triggered"] = 1;
       EventManager.Publish(new ApplyPassiveEvent
       {
         Target = EntityManager.GetEntity("Player"),
-        Type = AppliedPassiveType.Bleed,
-        Delta = SanguineCurseBleed
+        Type = AppliedPassiveType.Penance,
+        Delta = SanguineCursePenance
       });
+      this.SanguineCurseCurrent = 0;
+      this.HasTriggeredThisTurn = false;
     }
   }
 
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {
-    var attacks = new List<string> { "flagellation", "blood_ward", "blood_tithe" };
-    return ArrayUtils.TakeRandomWithoutReplacement(attacks, 1);
+    var attacks = new List<string> { "flagellation", "blood_ward", "blood_tithe", "masochism" };
+    return ArrayUtils.TakeRandomWithoutReplacement(attacks, 2);
   }
 
   public override void Dispose()
@@ -85,18 +82,18 @@ public class BloodMartyr : EnemyBase
 
 public class Flagellation : EnemyAttackBase
 {
-  private const int BurnAmount = 2;
+  private const int BurnAmount = 1;
   private const int WoundedAmount = 1;
 
   public Flagellation()
   {
     Id = "flagellation";
     Name = "Flagellation";
-    Damage = 3;
+    Damage = 7;
     ConditionType = ConditionType.OnHit;
-    Text = $"On hit - this enemy gains {BurnAmount} burn and {WoundedAmount} wounded.";
+    Text = $"On attack - this enemy gains {BurnAmount} burn and {WoundedAmount} wounded.";
 
-    OnAttackHit = (entityManager) =>
+    OnAttackReveal = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent
       {
@@ -116,7 +113,7 @@ public class Flagellation : EnemyAttackBase
 
 public class BloodWard : EnemyAttackBase
 {
-  private const int ArmorAmount = 2;
+  private const int ArmorAmount = 1;
 
   public BloodWard()
   {
@@ -138,9 +135,32 @@ public class BloodWard : EnemyAttackBase
   }
 }
 
+public class Masochism : EnemyAttackBase
+{
+  private const int SelfDamage = 1;
+  public Masochism()
+  {
+    Id = "masochism";
+    Name = "Masochism";
+    Damage = 4;
+    ConditionType = ConditionType.OnBlockedByAtLeast1Card;
+    Text = $"On not blocked by at least one card - The enemy loses {SelfDamage} HP.";
+
+    OnAttackHit = (entityManager) =>
+    {
+      EventManager.Publish(new ModifyHpRequestEvent { 
+        Source = EntityManager.GetEntity("Enemy"), 
+        Target = EntityManager.GetEntity("Enemy"), 
+        Delta = -SelfDamage, 
+        DamageType = ModifyTypeEnum.Effect 
+      });
+    };
+  }
+}
+
 public class BloodTithe : EnemyAttackBase
 {
-  private const int BaseDamage = 5;
+  private const int BaseDamage = 3;
   private const int BonusDamage = 2;
 
   public BloodTithe()
@@ -148,22 +168,35 @@ public class BloodTithe : EnemyAttackBase
     Id = "blood_tithe";
     Name = "Blood Tithe";
     Damage = BaseDamage;
+    Text = $"This attack gains +{BonusDamage} if you have penance.\n\nOn hit - remove all burn and wounded from Blood Martyr.";
 
     OnAttackReveal = (entityManager) =>
     {
       var playerPassives = GetComponentHelper.GetAppliedPassives(entityManager, "Player");
       if (playerPassives?.Passives != null &&
-          playerPassives.Passives.TryGetValue(AppliedPassiveType.Bleed, out int bleedStacks) &&
-          bleedStacks > 0)
+          playerPassives.Passives.TryGetValue(AppliedPassiveType.Penance, out int penanceStacks) &&
+          penanceStacks > 0)
       {
         Damage = BaseDamage + BonusDamage;
-        Text = $"+{BonusDamage} damage (you have bleed).";
       }
       else
       {
         Damage = BaseDamage;
-        Text = "";
       }
+    };
+
+    OnAttackHit = (entityManager) =>
+    {
+      EventManager.Publish(new RemovePassive
+      {
+        Owner = entityManager.GetEntity("Enemy"),
+        Type = AppliedPassiveType.Wounded,
+      });
+      EventManager.Publish(new RemovePassive
+      {
+        Owner = entityManager.GetEntity("Enemy"),
+        Type = AppliedPassiveType.Burn,
+      });
     };
   }
 }

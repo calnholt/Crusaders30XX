@@ -111,6 +111,7 @@ namespace Crusaders30XX.ECS.Factories
                 "flagellation" => new Flagellation(),
                 "blood_ward" => new BloodWard(),
                 "blood_tithe" => new BloodTithe(),
+                "masochism" => new Masochism(),
                 _ => null
             };
         }
@@ -216,6 +217,7 @@ namespace Crusaders30XX.ECS.Factories
                 { "flagellation", new Flagellation() },
                 { "blood_ward", new BloodWard() },
                 { "blood_tithe", new BloodTithe() },
+                { "masochism", new Masochism() },
             };
         }
     }

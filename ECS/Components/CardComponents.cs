@@ -1045,7 +1045,8 @@ namespace Crusaders30XX.ECS.Components
         Anathema,
         Silenced,
         Sealed,
-        Plunder
+        Plunder,
+        SanguineCurse,
     }
 
     public class MarkedForReturnToDeck : IComponent
