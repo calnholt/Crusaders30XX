@@ -71,6 +71,10 @@ Combat uses block mechanics, enemy AI with planned attacks via `AttackIntent` an
 - Use imports, not fully-qualified names (e.g., avoid `Crusaders30XX.ECS.Data.Cards`)
 - Prioritize readability over complexity
 
+## Display Systems
+
+- Always create as many `DebugEditable` as possible for maximum visual control, never hardcode magic numbers.
+
 ## Adding New Content
 
 ### New Card

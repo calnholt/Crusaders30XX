@@ -98,6 +98,8 @@ namespace Crusaders30XX.ECS.Systems
           return $"At the start of the block phase, steals a card from your deck. Deal enough damage to rescue it.";
         case AppliedPassiveType.SanguineCurse:
           return $"When this enemy is dealt {SanguineCurseThreshold} or more damage in a single turn, you gain 1 penance.";
+        case AppliedPassiveType.Marksman:
+          return $"Each turn a random card in your hand is marked. Playing a marked card removes the mark and applies the negative effect. Blocking with a marked card moves the mark to a different card and changes the negative effect. If you don't play a marked card on your action phase, gain 1 penance.";
         default:
           return StringUtils.ToSentenceCase(type.ToString());
       }

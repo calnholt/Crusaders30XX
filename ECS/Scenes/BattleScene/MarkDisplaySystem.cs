@@ -21,34 +21,51 @@ namespace Crusaders30XX.ECS.Systems
         private readonly GraphicsDevice _graphicsDevice;
         private Texture2D _markTexture;
         private CardVisualSettings _settings;
-        private float _elapsedTime = 0f;
 
         [DebugEditable(DisplayName = "Mark Alpha", Step = 5, Min = 0, Max = 255)]
         public int MarkAlpha { get; set; } = 220;
 
         [DebugEditable(DisplayName = "Mark Scale", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
-        public float MarkScale { get; set; } = 0.5f;
+        public float MarkScale { get; set; } = 0.35f;
 
-        [DebugEditable(DisplayName = "Mark Offset X", Step = 1f, Min = -100f, Max = 100f)]
+        [DebugEditable(DisplayName = "Mark Offset X", Step = 1f, Min = -1000f, Max = 1000f)]
         public float MarkOffsetX { get; set; } = 0f;
 
-        [DebugEditable(DisplayName = "Mark Offset Y", Step = 1f, Min = -100f, Max = 100f)]
-        public float MarkOffsetY { get; set; } = -20f;
+        [DebugEditable(DisplayName = "Mark Offset Y", Step = 1f, Min = -1000f, Max = 1000f)]
+        public float MarkOffsetY { get; set; } = -207f;
 
-        [DebugEditable(DisplayName = "Pulse Speed", Step = 0.1f, Min = 0f, Max = 10f)]
-        public float PulseSpeed { get; set; } = 1.5f;
-
-        [DebugEditable(DisplayName = "Min Alpha", Step = 5, Min = 0, Max = 255)]
-        public int MinAlpha { get; set; } = 140;
-
-        [DebugEditable(DisplayName = "Max Alpha", Step = 5, Min = 0, Max = 255)]
-        public int MaxAlpha { get; set; } = 255;
+        [DebugEditable(DisplayName = "Combined Y Offset", Step = 1f, Min = -100f, Max = 100f)]
+        public float CombinedYOffset { get; set; } = 0f;
 
         [DebugEditable(DisplayName = "Text Scale", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
-        public float TextScale { get; set; } = 0.12f;
+        public float TextScale { get; set; } = 0.15f;
 
-        [DebugEditable(DisplayName = "Text Offset Y", Step = 1f, Min = -100f, Max = 100f)]
-        public float TextOffsetY { get; set; } = 30f;
+        [DebugEditable(DisplayName = "Text Offset Y", Step = 1f, Min = -1000f, Max = 1000f)]
+        public float TextOffsetY { get; set; } = -60f;
+
+        [DebugEditable(DisplayName = "Text Background Padding X", Step = 1f, Min = 0f, Max = 20f)]
+        public float TextBgPaddingX { get; set; } = 4f;
+
+        [DebugEditable(DisplayName = "Text Background Padding Y", Step = 1f, Min = 0f, Max = 20f)]
+        public float TextBgPaddingY { get; set; } = 2f;
+
+        [DebugEditable(DisplayName = "Text Background Height Multiplier", Step = 0.05f, Min = 0.5f, Max = 2.0f)]
+        public float TextBgHeightMultiplier { get; set; } = 1.0f;
+
+        [DebugEditable(DisplayName = "Trap Left Angle", Step = 1f, Min = -45f, Max = 45f)]
+        public float TrapLeftAngle { get; set; } = 11f;
+
+        [DebugEditable(DisplayName = "Trap Right Angle", Step = 1f, Min = -45f, Max = 45f)]
+        public float TrapRightAngle { get; set; } = -23f;
+
+        [DebugEditable(DisplayName = "Trap Top Angle", Step = 1f, Min = -45f, Max = 45f)]
+        public float TrapTopAngle { get; set; } = 2f;
+
+        [DebugEditable(DisplayName = "Trap Bottom Angle", Step = 1f, Min = -45f, Max = 45f)]
+        public float TrapBottomAngle { get; set; } = -2f;
+
+        [DebugEditable(DisplayName = "Trap Left Offset", Step = 1f, Min = 0f, Max = 50f)]
+        public float TrapLeftOffset { get; set; } = 0f;
 
         public MarkDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Texture2D markTexture)
             : base(entityManager)
@@ -67,7 +84,7 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
-            _elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            // No update needed - rendering is event-driven
         }
 
         public void Draw()
@@ -101,7 +118,7 @@ namespace Crusaders30XX.ECS.Systems
             var center = new Vector2(bounds.X + bounds.Width / 2f, bounds.Y + bounds.Height / 2f);
 
             center.X += MarkOffsetX;
-            center.Y += MarkOffsetY;
+            center.Y += MarkOffsetY + CombinedYOffset;
 
             var marked = evt.Card.GetComponent<Marked>();
             DrawMarkOverlay(center, bounds.Width, bounds.Height, 1f, transform.Rotation, marked?.EffectType ?? MarkEffectType.Lose1HP);
@@ -124,7 +141,7 @@ namespace Crusaders30XX.ECS.Systems
             center.Y -= offsetY;
 
             center.X += MarkOffsetX * evt.Scale;
-            center.Y += MarkOffsetY * evt.Scale;
+            center.Y += (MarkOffsetY + CombinedYOffset) * evt.Scale;
 
             var marked = evt.Card.GetComponent<Marked>();
             DrawMarkOverlay(center, cardWidth, cardHeight, evt.Scale, transform.Rotation, marked?.EffectType ?? MarkEffectType.Lose1HP);
@@ -139,10 +156,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void DrawMarkOverlay(Vector2 center, float cardWidth, float cardHeight, float scale, float rotation, MarkEffectType effectType)
         {
-            // Calculate pulsing alpha using sine wave
-            float alphaPulse = (float)Math.Sin(_elapsedTime * PulseSpeed * Math.PI) * 0.5f + 0.5f;
-            int currentAlpha = (int)MathHelper.Lerp(MinAlpha, MaxAlpha, alphaPulse);
-            float finalAlpha = (currentAlpha / 255f) * (MarkAlpha / 255f);
+            float finalAlpha = MarkAlpha / 255f;
             finalAlpha = MathHelper.Clamp(finalAlpha, 0f, 1f);
 
             // Use uniform scale - fit to card width
@@ -162,7 +176,7 @@ namespace Crusaders30XX.ECS.Systems
                 0f
             );
 
-            // Draw effect text below the mark icon
+            // Draw effect text above the mark icon
             DrawEffectText(center, cardWidth, cardHeight, scale, rotation, effectType, finalAlpha);
         }
 
@@ -175,7 +189,17 @@ namespace Crusaders30XX.ECS.Systems
             var textSize = font.MeasureString(text);
             float textScaleFinal = TextScale * scale;
 
-            // Calculate text position below the mark icon
+            // Calculate scaled text size for background
+            var scaledTextSize = textSize * textScaleFinal;
+            float bgHeight = (scaledTextSize.Y + (TextBgPaddingY * 2f * scale)) * TextBgHeightMultiplier;
+
+            // Compensate for trapezoid angles - angled sides reduce usable width at text level
+            float leftAngleRad = MathHelper.ToRadians(Math.Abs(TrapLeftAngle));
+            float rightAngleRad = MathHelper.ToRadians(Math.Abs(TrapRightAngle));
+            float angleCompensation = bgHeight * ((float)Math.Tan(leftAngleRad) + (float)Math.Tan(rightAngleRad));
+            float bgWidth = scaledTextSize.X + (TextBgPaddingX * 2f * scale) + angleCompensation;
+
+            // Calculate text position above the mark icon
             var localOffset = new Vector2(0f, TextOffsetY * scale);
 
             // Rotate the offset around the center
@@ -188,26 +212,36 @@ namespace Crusaders30XX.ECS.Systems
 
             var textPos = center + rotatedOffset;
 
+            // Draw white trapezoid background
+            var trapezoidTexture = ECS.Rendering.PrimitiveTextureFactory.GetAntialiasedTrapezoidMask(
+                _graphicsDevice,
+                bgWidth,
+                bgHeight,
+                TrapLeftOffset,
+                TrapTopAngle,
+                TrapRightAngle,
+                TrapBottomAngle,
+                TrapLeftAngle
+            );
+
+            var bgOrigin = new Vector2(bgWidth / 2f, bgHeight / 2f);
+            _spriteBatch.Draw(
+                trapezoidTexture,
+                textPos,
+                null,
+                Color.White,
+                rotation,
+                bgOrigin,
+                1f,
+                SpriteEffects.None,
+                0f
+            );
+
             // Center the text
             var textOrigin = new Vector2(textSize.X / 2f, textSize.Y / 2f);
 
-            // Color based on effect type
-            Color textColor = effectType switch
-            {
-                MarkEffectType.Lose1HP or MarkEffectType.Lose2HP => new Color(255, 100, 100),
-                MarkEffectType.Gain1Penance => new Color(180, 100, 255),
-                MarkEffectType.Gain2Bleed => new Color(200, 50, 50),
-                MarkEffectType.Gain1Burn => new Color(255, 150, 50),
-                _ => Color.White
-            };
-
-            // Draw text with shadow for readability
-            var shadowOffset = new Vector2(2 * scale, 2 * scale);
-            var rotatedShadow = new Vector2(
-                shadowOffset.X * cos - shadowOffset.Y * sin,
-                shadowOffset.X * sin + shadowOffset.Y * cos
-            );
-            _spriteBatch.DrawString(font, text, textPos + rotatedShadow, Color.Black * (alpha * 0.8f), rotation, textOrigin, textScaleFinal, SpriteEffects.None, 0f);
+            // Draw text in red
+            var textColor = Color.DarkRed; // Red color
             _spriteBatch.DrawString(font, text, textPos, textColor * alpha, rotation, textOrigin, textScaleFinal, SpriteEffects.None, 0f);
         }
     }
