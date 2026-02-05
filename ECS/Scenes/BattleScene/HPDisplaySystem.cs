@@ -176,21 +176,36 @@ namespace Crusaders30XX.ECS.Systems
 				var parentTransform = hpEntity.GetComponent<Transform>();
 				if (hp == null || parentTransform == null) continue;
 
-				int width = Math.Max(4, BarWidth);
-				int height = Math.Max(2, BarHeight);
-
-				// Position below the entity's portrait, using base (stable) scale if provided
-				float visualHalfHeight = 0f;
-				var pInfo = hpEntity.GetComponent<PortraitInfo>();
-				if (pInfo != null)
+				// Per-entity override takes priority over global defaults
+				var hpOverride = hpEntity.GetComponent<HPBarOverride>();
+				int width, height;
+				int x, y;
+				if (hpOverride != null)
 				{
-					float baseScale = (pInfo.BaseScale > 0f) ? pInfo.BaseScale : 1f;
-					visualHalfHeight = Math.Max(visualHalfHeight, (pInfo.TextureHeight * baseScale) * 0.5f);
+					width = Math.Max(4, hpOverride.BarWidth);
+					height = Math.Max(2, hpOverride.BarHeight);
+					var center = new Vector2(parentTransform.Position.X + hpOverride.OffsetX, parentTransform.Position.Y + hpOverride.OffsetY);
+					x = (int)Math.Round(center.X - width / 2f);
+					y = (int)Math.Round(center.Y - height / 2f);
 				}
-				// Center X aligns to entity; OffsetX shifts from center, OffsetY moves downward/upward
-				var center = new Vector2(parentTransform.Position.X + OffsetX, parentTransform.Position.Y + visualHalfHeight + OffsetY);
-				int x = (int)Math.Round(center.X - width / 2f);
-				int y = (int)Math.Round(center.Y - height / 2f);
+				else
+				{
+					width = Math.Max(4, BarWidth);
+					height = Math.Max(2, BarHeight);
+
+					// Position below the entity's portrait, using base (stable) scale if provided
+					float visualHalfHeight = 0f;
+					var pInfo = hpEntity.GetComponent<PortraitInfo>();
+					if (pInfo != null)
+					{
+						float baseScale = (pInfo.BaseScale > 0f) ? pInfo.BaseScale : 1f;
+						visualHalfHeight = Math.Max(visualHalfHeight, (pInfo.TextureHeight * baseScale) * 0.5f);
+					}
+					// Center X aligns to entity; OffsetX shifts from center, OffsetY moves downward/upward
+					var center = new Vector2(parentTransform.Position.X + OffsetX, parentTransform.Position.Y + visualHalfHeight + OffsetY);
+					x = (int)Math.Round(center.X - width / 2f);
+					y = (int)Math.Round(center.Y - height / 2f);
+				}
 
 			// Prepare rounded textures (cache per size)
 			int radius = Math.Max(0, Math.Min(CornerRadius, Math.Min(width, height) / 2));
@@ -375,5 +390,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
-

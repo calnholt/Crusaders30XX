@@ -144,6 +144,14 @@ namespace Crusaders30XX.ECS.Systems
                     DamageThreshold = evt.DamageThreshold,
                     DamageDealt = 0
                 });
+
+                // Add HP component for PlunderDisplaySystem to render the gauge (starts full, counts down)
+                EntityManager.AddComponent(evt.Card, new HP
+                {
+                    Owner = evt.Card,
+                    Current = evt.DamageThreshold,
+                    Max = evt.DamageThreshold
+                });
             }
 
             var cardData = evt.Card.GetComponent<CardData>();
@@ -176,6 +184,13 @@ namespace Crusaders30XX.ECS.Systems
             int damageDealt = Math.Abs(evt.Delta);
             plundered.DamageDealt += damageDealt;
 
+            // Sync HP component for PlunderDisplaySystem (count down)
+            var hp = plunderedCard.GetComponent<HP>();
+            if (hp != null)
+            {
+                hp.Current = plundered.DamageThreshold - plundered.DamageDealt;
+            }
+
             var cardData = plunderedCard.GetComponent<CardData>();
             Console.WriteLine($"[PlunderManagementSystem] Damage dealt to enemy: {damageDealt}, total: {plundered.DamageDealt}/{plundered.DamageThreshold}");
 
@@ -194,8 +209,10 @@ namespace Crusaders30XX.ECS.Systems
             var deck = deckEntity.GetComponent<Deck>();
             if (deck == null) return;
 
-            // Remove Plundered component
+            // Remove Plundered, HP, and HPBarOverride components
             EntityManager.RemoveComponent<Plundered>(card);
+            EntityManager.RemoveComponent<HP>(card);
+            EntityManager.RemoveComponent<HPBarOverride>(card);
 
             // Add to player's hand
             deck.Hand.Add(card);
@@ -217,8 +234,10 @@ namespace Crusaders30XX.ECS.Systems
             var enemyPos = enemyTransform?.Position ?? new Vector2(400, 300);
             var startPos = new Vector2(enemyPos.X + 180, enemyPos.Y - 20);
 
-            // Remove Plundered component
+            // Remove Plundered, HP, and HPBarOverride components
             EntityManager.RemoveComponent<Plundered>(card);
+            EntityManager.RemoveComponent<HP>(card);
+            EntityManager.RemoveComponent<HPBarOverride>(card);
 
             // Set card position for animation start
             var transform = card.GetComponent<Transform>();
@@ -257,6 +276,14 @@ namespace Crusaders30XX.ECS.Systems
             if (plundered != null)
             {
                 plundered.DamageDealt = 0;
+
+                // Reset HP.Current back to Max so the bar is full again
+                var hp = plunderedCard.GetComponent<HP>();
+                if (hp != null)
+                {
+                    hp.Current = hp.Max;
+                }
+
                 Console.WriteLine("[PlunderManagementSystem] Damage tracking reset for new turn.");
             }
         }

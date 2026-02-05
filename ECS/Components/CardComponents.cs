@@ -432,7 +432,20 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
         public Microsoft.Xna.Framework.Rectangle Rect { get; set; }
     }
-    
+
+    /// <summary>
+    /// Per-entity override for HP bar positioning and size.
+    /// When present, HPDisplaySystem uses these values instead of its global defaults.
+    /// </summary>
+    public class HPBarOverride : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int OffsetX { get; set; }
+        public int OffsetY { get; set; }
+        public int BarWidth { get; set; }
+        public int BarHeight { get; set; }
+    }
+
     public enum TooltipPosition
     {
         Above,

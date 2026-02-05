@@ -17,6 +17,8 @@ dotnet publish -c Release
 
 This is a .NET 8.0 MonoGame DesktopGL project. Content assets are compiled via the MonoGame Content Builder pipeline (`Content/Content.mgcb`).
 
+DO NOT build the project to verify changes unless explicitly asked it.
+
 ## Architecture
 
 Crusaders30XX is a deckbuilder card game built with an Entity Component System (ECS) architecture.
@@ -70,6 +72,7 @@ Combat uses block mechanics, enemy AI with planned attacks via `AttackIntent` an
 - Add `DebugEditable` and `DebugTab` attributes to systems with Draw functions
 - Use imports, not fully-qualified names (e.g., avoid `Crusaders30XX.ECS.Data.Cards`)
 - Prioritize readability over complexity
+- Structure draw code to be as readable as possible using comments and good naming to convey behavior, breaking down logical sections into well named functions
 
 ## Display Systems
 
@@ -89,4 +92,3 @@ Combat uses block mechanics, enemy AI with planned attacks via `AttackIntent` an
 
 ### New Component
 1. Create class implementing `IComponent`
-2. Add to entities via `world.AddComponent()`

@@ -25,8 +25,11 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Mark Alpha", Step = 5, Min = 0, Max = 255)]
         public int MarkAlpha { get; set; } = 220;
 
-        [DebugEditable(DisplayName = "Mark Scale", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
-        public float MarkScale { get; set; } = 0.35f;
+        [DebugEditable(DisplayName = "Icon Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
+        public float IconScale { get; set; } = 0.08f;
+
+        [DebugEditable(DisplayName = "Icon Text Gap", Step = 1f, Min = 0f, Max = 50f)]
+        public float IconTextGap { get; set; } = 4f;
 
         [DebugEditable(DisplayName = "Mark Offset X", Step = 1f, Min = -1000f, Max = 1000f)]
         public float MarkOffsetX { get; set; } = 0f;
@@ -40,9 +43,6 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Text Scale", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
         public float TextScale { get; set; } = 0.15f;
 
-        [DebugEditable(DisplayName = "Text Offset Y", Step = 1f, Min = -1000f, Max = 1000f)]
-        public float TextOffsetY { get; set; } = -60f;
-
         [DebugEditable(DisplayName = "Text Background Padding X", Step = 1f, Min = 0f, Max = 20f)]
         public float TextBgPaddingX { get; set; } = 4f;
 
@@ -50,7 +50,7 @@ namespace Crusaders30XX.ECS.Systems
         public float TextBgPaddingY { get; set; } = 2f;
 
         [DebugEditable(DisplayName = "Text Background Height Multiplier", Step = 0.05f, Min = 0.5f, Max = 2.0f)]
-        public float TextBgHeightMultiplier { get; set; } = 1.0f;
+        public float TextBgHeightMultiplier { get; set; } = 0.55f;
 
         [DebugEditable(DisplayName = "Trap Left Angle", Step = 1f, Min = -45f, Max = 45f)]
         public float TrapLeftAngle { get; set; } = 11f;
@@ -159,90 +159,68 @@ namespace Crusaders30XX.ECS.Systems
             float finalAlpha = MarkAlpha / 255f;
             finalAlpha = MathHelper.Clamp(finalAlpha, 0f, 1f);
 
-            // Use uniform scale - fit to card width
-            float uniformScale = (cardWidth / (float)_markTexture.Width) * MarkScale * scale;
-
-            // Draw the mark texture centered on the card with red tint for danger
-            var markColor = new Color(255, 80, 80) * finalAlpha;
-            _spriteBatch.Draw(
-                _markTexture,
-                center,
-                null,
-                markColor,
-                rotation,
-                new Vector2(_markTexture.Width / 2f, _markTexture.Height / 2f),
-                uniformScale,
-                SpriteEffects.None,
-                0f
-            );
-
-            // Draw effect text above the mark icon
-            DrawEffectText(center, cardWidth, cardHeight, scale, rotation, effectType, finalAlpha);
+            DrawChip(center, scale, rotation, effectType, finalAlpha);
         }
 
-        private void DrawEffectText(Vector2 center, float cardWidth, float cardHeight, float scale, float rotation, MarkEffectType effectType, float alpha)
+        private void DrawChip(Vector2 chipCenter, float scale, float rotation, MarkEffectType effectType, float alpha)
         {
             var font = FontSingleton.ContentFont;
-            if (font == null) return;
+            if (font == null || _markTexture == null) return;
 
             string text = MarkManagementSystem.GetEffectDescription(effectType);
-            var textSize = font.MeasureString(text);
             float textScaleFinal = TextScale * scale;
+            var rawTextSize = font.MeasureString(text);
+            var scaledTextSize = rawTextSize * textScaleFinal;
 
-            // Calculate scaled text size for background
-            var scaledTextSize = textSize * textScaleFinal;
-            float bgHeight = (scaledTextSize.Y + (TextBgPaddingY * 2f * scale)) * TextBgHeightMultiplier;
+            // Icon size (independent scale)
+            float iconScaleFinal = IconScale * scale;
+            float iconW = _markTexture.Width * iconScaleFinal;
+            float iconH = _markTexture.Height * iconScaleFinal;
+
+            float gap = IconTextGap * scale;
+            float contentW = iconW + gap + scaledTextSize.X;
+            float contentH = Math.Max(iconH, scaledTextSize.Y);
+
+            float bgHeight = (contentH + TextBgPaddingY * 2f * scale) * TextBgHeightMultiplier;
 
             // Compensate for trapezoid angles - angled sides reduce usable width at text level
             float leftAngleRad = MathHelper.ToRadians(Math.Abs(TrapLeftAngle));
             float rightAngleRad = MathHelper.ToRadians(Math.Abs(TrapRightAngle));
             float angleCompensation = bgHeight * ((float)Math.Tan(leftAngleRad) + (float)Math.Tan(rightAngleRad));
-            float bgWidth = scaledTextSize.X + (TextBgPaddingX * 2f * scale) + angleCompensation;
+            float bgWidth = contentW + TextBgPaddingX * 2f * scale + angleCompensation;
 
-            // Calculate text position above the mark icon
-            var localOffset = new Vector2(0f, TextOffsetY * scale);
+            // Draw trapezoid background
+            var trapezoidTexture = ECS.Rendering.PrimitiveTextureFactory.GetAntialiasedTrapezoidMask(
+                _graphicsDevice, bgWidth, bgHeight, TrapLeftOffset, TrapTopAngle, TrapRightAngle, TrapBottomAngle, TrapLeftAngle);
 
-            // Rotate the offset around the center
+            var bgOrigin = new Vector2(trapezoidTexture.Width / 2f, trapezoidTexture.Height / 2f);
+            _spriteBatch.Draw(trapezoidTexture, chipCenter, null, Color.Black, rotation, bgOrigin, 0.5f, SpriteEffects.None, 0f);
+
+            // Position icon and text within the chip (local coords relative to chip center)
+            float contentStartX = -contentW / 2f;
+            var iconLocal = new Vector2(contentStartX + iconW / 2f, 0f);
+            var textLocal = new Vector2(contentStartX + iconW + gap + scaledTextSize.X / 2f, 0f);
+
+            // Rotate local offsets for card rotation
             float cos = (float)Math.Cos(rotation);
             float sin = (float)Math.Sin(rotation);
-            var rotatedOffset = new Vector2(
-                localOffset.X * cos - localOffset.Y * sin,
-                localOffset.X * sin + localOffset.Y * cos
-            );
 
-            var textPos = center + rotatedOffset;
+            var iconWorldOffset = new Vector2(
+                iconLocal.X * cos - iconLocal.Y * sin,
+                iconLocal.X * sin + iconLocal.Y * cos);
+            var textWorldOffset = new Vector2(
+                textLocal.X * cos - textLocal.Y * sin,
+                textLocal.X * sin + textLocal.Y * cos);
 
-            // Draw white trapezoid background
-            var trapezoidTexture = ECS.Rendering.PrimitiveTextureFactory.GetAntialiasedTrapezoidMask(
-                _graphicsDevice,
-                bgWidth,
-                bgHeight,
-                TrapLeftOffset,
-                TrapTopAngle,
-                TrapRightAngle,
-                TrapBottomAngle,
-                TrapLeftAngle
-            );
+            // Draw icon
+            var markColor = new Color(255, 80, 80) * alpha;
+            var iconOrigin = new Vector2(_markTexture.Width / 2f, _markTexture.Height / 2f);
+            _spriteBatch.Draw(_markTexture, chipCenter + iconWorldOffset, null, markColor, rotation, iconOrigin, iconScaleFinal, SpriteEffects.None, 0f);
 
-            var bgOrigin = new Vector2(bgWidth / 2f, bgHeight / 2f);
-            _spriteBatch.Draw(
-                trapezoidTexture,
-                textPos,
-                null,
-                Color.White,
-                rotation,
-                bgOrigin,
-                1f,
-                SpriteEffects.None,
-                0f
-            );
-
-            // Center the text
-            var textOrigin = new Vector2(textSize.X / 2f, textSize.Y / 2f);
-
-            // Draw text in red
-            var textColor = Color.DarkRed; // Red color
-            _spriteBatch.DrawString(font, text, textPos, textColor * alpha, rotation, textOrigin, textScaleFinal, SpriteEffects.None, 0f);
+            // Draw text
+            var textOrigin = new Vector2(rawTextSize.X / 2f, rawTextSize.Y / 2f);
+            var textColor = Color.DarkRed;
+            _spriteBatch.DrawString(font, text, chipCenter + textWorldOffset, textColor, rotation, textOrigin, textScaleFinal, SpriteEffects.None, 0f);
         }
     }
 }
