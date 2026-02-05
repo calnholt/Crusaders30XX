@@ -29,33 +29,33 @@ public static class EnemyAttackTextHelper
       switch (type)
       {
         case EnemyAttackTextType.Intimidate:
-          return $"Intimidates [{amount}] card{(amount > 1 ? "s" : "")} from your hand (can't block with intimidated cards for the rest of the turn).";
+          return $"Intimidates {amount} card{(amount > 1 ? "s" : "")} from your hand (can't block with intimidated cards for the rest of the turn).";
         case EnemyAttackTextType.MustBeBlockedByAtLeast:
-          return $"This attack must be blocked with at least [{amount}] card{(amount > 1 ? "s" : "")}/equipment if possible.";
+          return $"This attack must be blocked with at least {amount} card{(amount > 1 ? "s" : "")}/equipment if possible.";
         case EnemyAttackTextType.MustBeBlockedExactly:
-          return $"This attack must be blocked with exactly [{amount}] card{(amount > 1 ? "s" : "")}/equipment if possible.";
+          return $"This attack must be blocked with exactly {amount} card{(amount > 1 ? "s" : "")}/equipment if possible.";
         case EnemyAttackTextType.Burn:
-          return $"Gain [{amount}] burn.";
+          return $"Gain {amount} burn.";
         case EnemyAttackTextType.Penance:
-          return $"Gain [{amount}] penance.";
+          return $"Gain {amount} penance.";
         case EnemyAttackTextType.Armor:
-          return $"The enemy gains [{amount}] armor.";
+          return $"The enemy gains {amount} armor.";
         case EnemyAttackTextType.Corrode:
-          return $"Each card used to block this attack reduces the block value by [{amount}] for the rest of the quest.";
+          return $"Each card used to block this attack reduces the block value by {amount} for the rest of the quest.";
         case EnemyAttackTextType.Slow:
-          return $"Gain [{amount}] slow.";
+          return $"Gain {amount} slow.";
         case EnemyAttackTextType.Fear:
-          return $"Gain [{amount}] fear.";
+          return $"Gain {amount} fear.";
         case EnemyAttackTextType.Aggression:
-          return $"The enemy gains [{amount}] aggression.";
+          return $"The enemy gains {amount} aggression.";
         case EnemyAttackTextType.GlassCannon:
-          return $"If this is blocked with exactly [{amount}] cards, this attack deals no damage and the blocking cards are exhausted.";
+          return $"If this is blocked with exactly {amount} cards, this attack deals no damage and the blocking cards are exhausted.";
         case EnemyAttackTextType.Wounded:
-          return $"Gain [{amount}] wounded.";
+          return $"Gain {amount} wounded.";
         case EnemyAttackTextType.Frozen:
-          return $"Freeze [{amount}] random cards from your hand/draw pile.";
+          return $"Freeze {amount} random cards from your hand/draw pile.";
         case EnemyAttackTextType.Frostbite:
-          return $"Gain [{amount}] frostbite.";
+          return $"Gain {amount} frostbite.";
         case EnemyAttackTextType.Custom:
           return customText;
         default:

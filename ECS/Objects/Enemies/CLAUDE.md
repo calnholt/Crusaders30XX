@@ -15,12 +15,7 @@ For detailed design philosophy and rationale, see `DESIGN_PHILOSOPHY.md`.
 
 ### Health Ranges
 
-| Tier | HP | Examples |
-|------|----|----------|
-| Fragile | 40-60 | Gleeber (50), SkeletalArcher (48) |
-| Standard | 70-90 | Spider (80), Ninja (80), Demon (90) |
-| Tough | 95-120 | Sorcerer (120), GlacialGuardian (110) |
-| Boss | 120+ | Shadow (150) |
+- 15 - 40
 
 ### Damage Ranges
 
@@ -29,13 +24,7 @@ For detailed design philosophy and rationale, see `DESIGN_PHILOSOPHY.md`.
 | Chip | 1-4 | Setup, condition delivery |
 | Standard | 5-7 | Core pressure |
 | Heavy | 8-11 | Enders, punishes |
-| Devastating | 12+ | Boss moves, needs counterplay |
 
-### Burn Guidelines
-
-- Player has 20 HP, burn deals X damage/turn
-- 2-3 burn per attack is meaningful; 4+ needs clear counterplay
-- 5 burn = 4 turn death clock
 
 ### Pattern Examples
 
@@ -66,26 +55,3 @@ For detailed design philosophy and rationale, see `DESIGN_PHILOSOPHY.md`.
 5. **Scaling?** (does the enemy get worse if fight drags?)
 6. **Conditions?** (1-2 max, reinforce identity)
 7. **Counterplay?** (smart play should mitigate)
-
----
-
-## Common Conditions
-
-### Applied to Player
-
-| Condition | Frequency | Role |
-|-----------|-----------|------|
-| Burn | Very common | Sustained damage |
-| Penance | Common | Punishes behaviors |
-| Intimidate | Common | Restricts plays |
-| Frozen | Moderate | Disables cards |
-| Corrode | Rare | Degrades blockers |
-
-### Applied to Enemy (Self-Buffs)
-
-| Condition | Role |
-|-----------|------|
-| Armor | Damage reduction |
-| Channel | Attack scaling |
-| Power | Damage scaling |
-| Thorns | Reflection damage |
