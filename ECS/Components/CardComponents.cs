@@ -412,6 +412,7 @@ namespace Crusaders30XX.ECS.Components
 			AbandonQuest,
         PayCostCancel,
         SkipPledge,
+        LeaveShop,
     }
 
     /// <summary>

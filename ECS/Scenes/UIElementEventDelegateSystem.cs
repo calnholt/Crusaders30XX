@@ -46,6 +46,16 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
                     break;
                 }
+                case UIElementEventType.GoToCustomize:
+                {
+                    EventManager.Publish(new ShowTransition { Scene = SceneId.Customization });
+                    break;
+                }
+                case UIElementEventType.LeaveShop:
+                {
+                    EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+                    break;
+                }
                 default:
                 {
                     Console.WriteLine($"UIElementEventDelegateSystem: clicked unknown event type {type} on entity {entity.Id}");

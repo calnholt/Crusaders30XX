@@ -79,7 +79,7 @@ namespace Crusaders30XX.ECS.Systems
         case AppliedPassiveType.Frostbite:
           return $"When you have {FrostbiteThreshold} stacks of frostbite, take {FrostbiteDamage} damage and lose {FrostbiteThreshold} frostbite.";
         case AppliedPassiveType.Frozen:
-          return $"When you play a frozen card, gain 1 frostbite and there's a 50% chance it's exhausted. Remove frozen by blocking with it.";
+          return $"When you play a frozen card, gain 1 frostbite. Remove frozen by blocking with it.";
         case AppliedPassiveType.SubZero:
           return $"At the start of the enemy turn, freeze one card from your hand.";
         case AppliedPassiveType.Windchill:

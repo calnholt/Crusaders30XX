@@ -466,8 +466,6 @@ namespace Crusaders30XX.ECS.Systems
                     if (evt.Card.GetComponent<Frozen>() != null)
                     {
                         EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Frostbite, Delta = 1 });
-                        destination = Random.Shared.Next(0, 100) < 50 ? CardZoneType.ExhaustPile : destination;
-                        Console.WriteLine($"[CardPlaySystem] Card frozen; moving to {destination}");
                     }
                 }
                 EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = destination, Reason = "PlayCard" });
