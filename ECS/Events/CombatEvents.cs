@@ -103,9 +103,10 @@ namespace Crusaders30XX.ECS.Events
 	}
 
 	// Fired when a battle is won (enemy defeated), to trigger scene transition
-	public class ShowTransition 
-	{ 
+	public class ShowTransition
+	{
 		public SceneId Scene;
+		public bool SkipHold;
 	}
 
 	public class TransitionCompleteEvent

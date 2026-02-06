@@ -128,7 +128,7 @@ namespace Crusaders30XX.ECS.Systems
             }
             if (exitUi != null && exitUi.IsClicked)
             {
-                EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+                EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
                 TimerScheduler.Schedule(.8f, () => {
                     // Clear customization state before exiting
                     var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault();

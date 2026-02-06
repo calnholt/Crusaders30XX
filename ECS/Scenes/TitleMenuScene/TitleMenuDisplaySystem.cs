@@ -117,7 +117,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				else
 				{
-					EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+					EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
 				}
 			}
 

@@ -43,17 +43,17 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case UIElementEventType.AbandonQuest:
                 {
-                    EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+                    EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
                     break;
                 }
                 case UIElementEventType.GoToCustomize:
                 {
-                    EventManager.Publish(new ShowTransition { Scene = SceneId.Customization });
+                    EventManager.Publish(new ShowTransition { Scene = SceneId.Customization, SkipHold = true });
                     break;
                 }
                 case UIElementEventType.LeaveShop:
                 {
-                    EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+                    EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
                     break;
                 }
                 default:

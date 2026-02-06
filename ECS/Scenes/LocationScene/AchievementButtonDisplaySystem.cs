@@ -88,7 +88,7 @@ namespace Crusaders30XX.ECS.Systems
 			var buttonUI = buttonEnt?.GetComponent<UIElement>();
 			if (buttonUI != null && buttonUI.IsClicked)
 			{
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Achievement });
+				EventManager.Publish(new ShowTransition { Scene = SceneId.Achievement, SkipHold = true });
 			}
 		}
 

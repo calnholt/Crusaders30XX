@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 		private Phase _phase = Phase.Idle;
 		private float _t = 0f; // time within current phase
 		private bool _suppressLoadScene = false; // one-shot debug preview flag
+		private bool _skipHold = false;
         private SceneId _nextScene;
 
         [DebugEditable(DisplayName = "Wipe Duration (s)", Step = 0.05f, Min = 0.05f, Max = 3f)]
@@ -75,9 +76,27 @@ namespace Crusaders30XX.ECS.Systems
 				case Phase.WipeIn:
 					if (_t >= WipeDurationSeconds)
 					{
-						// Fully black now; start hold and request next battle
-						_phase = Phase.Hold; 
-						_t = 0f;
+						if (_skipHold)
+						{
+							// Skip hold phase — fire scene load immediately and go straight to wipe out
+							if (!_suppressLoadScene)
+							{
+								Console.WriteLine($"[TransitionDisplaySystem] Loading scene: {_nextScene}");
+								EventManager.Publish(new DeleteCachesEvent { Scene = _nextScene });
+								DeleteEntities(_nextScene);
+								EventManager.Publish(new LoadSceneEvent { Scene = _nextScene });
+							}
+							else
+							{
+								_suppressLoadScene = false;
+							}
+							_phase = Phase.WipeOut; _t = 0f;
+						}
+						else
+						{
+							_phase = Phase.Hold;
+							_t = 0f;
+						}
 					}
 					break;
 				case Phase.Hold:
@@ -156,7 +175,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			if (_phase == Phase.Hold) coveredAtCenter = true;
 
-			if (coveredAtCenter && _font != null)
+			if (coveredAtCenter && !_skipHold && _font != null)
 			{
 				string text = "Deus Vult!";
 				float scale = TextScale;
@@ -175,6 +194,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void BeginWipeIn(ShowTransition transition)
 		{
 			_suppressLoadScene = transition.Scene == SceneId.None;
+			_skipHold = transition.SkipHold;
 			_nextScene = transition.Scene;
 			_phase = Phase.WipeIn;
 			_t = 0f;

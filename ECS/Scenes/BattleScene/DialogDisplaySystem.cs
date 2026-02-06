@@ -466,7 +466,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private Entity EnsureEndButtonEntity()
         {
-            _skipButtonTexture ??= ButtonTextureFactory.Create(_graphicsDevice, "Skip", Color.White, Color.Red);
+            _skipButtonTexture ??= ButtonTextureFactory.Create(_graphicsDevice, "Skip", Color.White, Color.DarkRed);
             int btnW = _skipButtonTexture.Width;
             int btnH = _skipButtonTexture.Height;
 
