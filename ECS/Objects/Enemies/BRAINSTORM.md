@@ -91,5 +91,3 @@ Simple sustain threat. Chip damage now extends the fight - every point you let t
 Linker+ender pattern forces you to block two attacks, but over-committing cards to blocking crosses a threshold that punishes you. Creates a "just enough" blocking puzzle - assign the minimum cards needed to survive.
 
 ---
-
-I lsot enemy idea of marking random card in hand, jumps to different card when used to block. playing marked card has negative attrivutbe. each jump changes attribute. ending turn without playing a marked card is even worse penalty
