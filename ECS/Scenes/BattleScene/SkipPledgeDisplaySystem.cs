@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Rendering;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -22,6 +23,8 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteFont _font = FontSingleton.ContentFont;
         private readonly SpriteFont _titleFont = FontSingleton.TitleFont;
         private readonly Texture2D _pixel;
+        private Texture2D _cachedButtonTexture;
+        private string _cachedButtonText;
         private bool _isVisible = false;
         private float _openElapsedSeconds = 0f;
 
@@ -123,14 +126,6 @@ namespace Crusaders30XX.ECS.Systems
             return new Rectangle(x, y, ButtonWidth, ButtonHeight);
         }
 
-        private void DrawRect(Rectangle r, Color color, int thickness)
-        {
-            _spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Y, r.Width, thickness), color);
-            _spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Bottom - thickness, r.Width, thickness), color);
-            _spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Y, thickness, r.Height), color);
-            _spriteBatch.Draw(_pixel, new Rectangle(r.Right - thickness, r.Y, thickness, r.Height), color);
-        }
-
         public void DrawBackdrop()
         {
             if (!_isVisible) return;
@@ -174,13 +169,18 @@ namespace Crusaders30XX.ECS.Systems
             Vector2 drawPos = (t != null) ? t.Position : new Vector2(btnRect.X, btnRect.Y);
             var drawRect = new Rectangle((int)drawPos.X, (int)drawPos.Y, btnRect.Width, btnRect.Height);
 
-            // Gray/neutral color for skip button
-            _spriteBatch.Draw(_pixel, drawRect, new Color(80, 80, 80, 220));
-            DrawRect(drawRect, Color.White, 2);
+            // Ensure cached button texture
             string label = "Skip Pledge";
-            var size = _font.MeasureString(label) * ButtonTextScale;
-            var posText = new Vector2(drawRect.Center.X - size.X / 2f, drawRect.Center.Y - size.Y / 2f);
-            _spriteBatch.DrawString(_font, label, posText, Color.White, 0f, Vector2.Zero, ButtonTextScale, SpriteEffects.None, 0f);
+            if (_cachedButtonTexture == null || _cachedButtonText != label)
+            {
+                _cachedButtonTexture?.Dispose();
+                _cachedButtonTexture = ButtonTextureFactory.Create(
+                    _graphicsDevice, label, Color.White, Color.DarkRed);
+                _cachedButtonText = label;
+            }
+            _spriteBatch.Draw(_cachedButtonTexture,
+                new Rectangle(drawRect.X, drawRect.Y, drawRect.Width, drawRect.Height),
+                Color.White);
 
             // Keep UI bounds aligned with drawn rect
             var skipBtnUi = skipBtn?.GetComponent<UIElement>();

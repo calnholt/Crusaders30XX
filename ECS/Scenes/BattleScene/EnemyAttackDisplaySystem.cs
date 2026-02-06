@@ -8,6 +8,7 @@ using Crusaders30XX.ECS.Events;
 using System.Collections.Generic;
 using System;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Rendering;
 using Microsoft.Xna.Framework.Content;
 
 namespace Crusaders30XX.ECS.Systems
@@ -30,6 +31,10 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Texture2D _enemyAttackCornerBrTexture;
 		private readonly Texture2D _enemyAttackTopTexture;
 		private readonly Texture2D _enemyAttackSkullTexture;
+
+		// Confirm button texture cache
+		private Texture2D _cachedConfirmTexture;
+		private string _cachedConfirmText;
 
 		// Tooltip state
 		private Entity _attackTextTooltipEntity = null;

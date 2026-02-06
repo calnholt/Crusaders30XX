@@ -11,6 +11,7 @@ using Crusaders30XX.ECS.Utils;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Scenes.BattleScene;
 using Crusaders30XX.ECS.Utils.RichText;
+using Crusaders30XX.ECS.Rendering;
 using System;
 using Crusaders30XX.ECS.Singletons;
 
@@ -27,6 +28,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private Texture2D _rounded;
         private int _cachedW, _cachedH, _cachedR;
+        private Texture2D _skipButtonTexture;
 
         // Debug-editable layout
         [DebugEditable(DisplayName = "Panel Height %", Step = 0.01f, Min = 0.1f, Max = 0.6f)]
@@ -60,17 +62,8 @@ namespace Crusaders30XX.ECS.Systems
         public float CharsPerSecond { get; set; } = 80f;
 
         // End/Skip button settings
-        [DebugEditable(DisplayName = "End Btn Width", Step = 1, Min = 40, Max = 400)]
-        public int EndButtonWidth { get; set; } = 120;
-
-        [DebugEditable(DisplayName = "End Btn Height", Step = 1, Min = 20, Max = 200)]
-        public int EndButtonHeight { get; set; } = 44;
-
         [DebugEditable(DisplayName = "End Btn Margin", Step = 1, Min = 0, Max = 200)]
         public int EndButtonMargin { get; set; } = 16;
-
-        [DebugEditable(DisplayName = "End Btn Text Scale", Step = 0.05f, Min = 0.05f, Max = 2f)]
-        public float EndButtonTextScale { get; set; } = 0.2f;
 
         private int _cachedLineIndex = -1;
         private string _cachedFilteredMessage = string.Empty;
@@ -421,26 +414,14 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Draw End button (top-right overlay)
+            _skipButtonTexture ??= ButtonTextureFactory.Create(_graphicsDevice, "Skip", Color.White, Color.DarkRed);
             var btnEnt = EnsureEndButtonEntity();
             var t = btnEnt?.GetComponent<Transform>();
             var uiEnd = btnEnt?.GetComponent<UIElement>();
             if (t != null && uiEnd != null)
             {
-                int w = EndButtonWidth;
-                int h = EndButtonHeight;
-                var drawRect = new Rectangle((int)t.Position.X, (int)t.Position.Y, w, h);
-                _spriteBatch.Draw(_pixel, drawRect, new Color(40, 40, 40, 220));
-                // Border
-                _spriteBatch.Draw(_pixel, new Rectangle(drawRect.X, drawRect.Y, drawRect.Width, 2), Color.White);
-                _spriteBatch.Draw(_pixel, new Rectangle(drawRect.X, drawRect.Bottom - 2, drawRect.Width, 2), Color.White);
-                _spriteBatch.Draw(_pixel, new Rectangle(drawRect.X, drawRect.Y, 2, drawRect.Height), Color.White);
-                _spriteBatch.Draw(_pixel, new Rectangle(drawRect.Right - 2, drawRect.Y, 2, drawRect.Height), Color.White);
-                // Label
-                string label = "Skip";
-                var size = _font.MeasureString(label) * EndButtonTextScale;
-                var posText = new Vector2(drawRect.Center.X - size.X / 2f, drawRect.Center.Y - size.Y / 2f);
-                _spriteBatch.DrawString(_font, label, posText, Color.White, 0f, Vector2.Zero, EndButtonTextScale, SpriteEffects.None, 0f);
-                // Sync bounds
+                var drawRect = new Rectangle((int)t.Position.X, (int)t.Position.Y, _skipButtonTexture.Width, _skipButtonTexture.Height);
+                _spriteBatch.Draw(_skipButtonTexture, drawRect, Color.White);
                 uiEnd.Bounds = drawRect;
             }
         }
@@ -485,15 +466,19 @@ namespace Crusaders30XX.ECS.Systems
 
         private Entity EnsureEndButtonEntity()
         {
+            _skipButtonTexture ??= ButtonTextureFactory.Create(_graphicsDevice, "Skip", Color.White, Color.Red);
+            int btnW = _skipButtonTexture.Width;
+            int btnH = _skipButtonTexture.Height;
+
             var ent = EntityManager.GetEntity("DialogEndButton");
             if (ent == null)
             {
                 ent = EntityManager.CreateEntity("DialogEndButton");
                 int vw = Game1.VirtualWidth;
-                int x = vw - System.Math.Max(0, EndButtonMargin) - System.Math.Max(40, EndButtonWidth);
+                int x = vw - System.Math.Max(0, EndButtonMargin) - btnW;
                 int y = System.Math.Max(0, EndButtonMargin);
                 EntityManager.AddComponent(ent, new Transform { BasePosition = new Vector2(x, y), Position = new Vector2(x, y), ZOrder = ZOrder + 1 });
-                EntityManager.AddComponent(ent, new UIElement { Bounds = new Rectangle(x, y, System.Math.Max(40, EndButtonWidth), System.Math.Max(20, EndButtonHeight)), IsInteractable = true, LayerType = UILayerType.Overlay });
+                EntityManager.AddComponent(ent, new UIElement { Bounds = new Rectangle(x, y, btnW, btnH), IsInteractable = true, LayerType = UILayerType.Overlay });
                 EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Start, RequiresHold = true });
                 EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
             }
@@ -501,7 +486,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 // Keep anchored to top-right
                 int vw = Game1.VirtualWidth;
-                int x = vw - System.Math.Max(0, EndButtonMargin) - System.Math.Max(40, EndButtonWidth);
+                int x = vw - System.Math.Max(0, EndButtonMargin) - btnW;
                 int y = System.Math.Max(0, EndButtonMargin);
                 var t = ent.GetComponent<Transform>();
                 if (t != null)

@@ -4,6 +4,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
+using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -357,15 +358,18 @@ namespace Crusaders30XX.ECS.Systems
 					ConfirmButtonWidth,
 					ConfirmButtonHeight
 				);
-				_spriteBatch.Draw(_pixel, btnRect, new Color(40, 120, 40, 220));
-				DrawRect(btnRect, Color.White, 2);
-				if (_contentFont != null)
+				// Ensure cached confirm button texture
+				string label = "Confirm";
+				if (_cachedConfirmTexture == null || _cachedConfirmText != label)
 				{
-					string label = "Confirm";
-					var size = _contentFont.MeasureString(label) * ConfirmButtonTextScale;
-					var posText = new Vector2(btnRect.Center.X - size.X / 2f, btnRect.Center.Y - size.Y / 2f);
-					_spriteBatch.DrawString(_contentFont, label, posText, Color.White, 0f, Vector2.Zero, ConfirmButtonTextScale, SpriteEffects.None, 0f);
+					_cachedConfirmTexture?.Dispose();
+					_cachedConfirmTexture = ButtonTextureFactory.Create(
+						_graphicsDevice, label, Color.White, Color.DarkRed);
+					_cachedConfirmText = label;
 				}
+				_spriteBatch.Draw(_cachedConfirmTexture,
+					new Rectangle(btnRect.X, btnRect.Y, btnRect.Width, btnRect.Height),
+					Color.White);
 
 				var ui = primaryBtn.GetComponent<UIElement>();
 				var tr = primaryBtn.GetComponent<Transform>();

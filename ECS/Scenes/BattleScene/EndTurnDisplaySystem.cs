@@ -9,6 +9,7 @@ using System;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Rendering;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -22,7 +23,8 @@ namespace Crusaders30XX.ECS.Systems
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font = FontSingleton.ContentFont;
-        private readonly Texture2D _pixel;
+        private Texture2D _cachedButtonTexture;
+        private string _cachedButtonText;
 
         // Visuals similar to EnemyAttackDisplaySystem confirm button
         [DebugEditable(DisplayName = "Button Width", Step = 1, Min = 80, Max = 600)]
@@ -44,8 +46,6 @@ namespace Crusaders30XX.ECS.Systems
         {
             _graphicsDevice = gd;
             _spriteBatch = sb;
-            _pixel = new Texture2D(gd, 1, 1);
-            _pixel.SetData(new[] { Color.White });
 
             // Hook debug command to support button click via input system
             EventManager.Subscribe<DebugCommandEvent>(evt =>
@@ -196,14 +196,6 @@ namespace Crusaders30XX.ECS.Systems
             return new Rectangle(x, y, ButtonWidth, ButtonHeight);
         }
 
-        private void DrawRect(Rectangle r, Color color, int thickness)
-        {
-            _spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Y, r.Width, thickness), color);
-            _spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Bottom - thickness, r.Width, thickness), color);
-            _spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Y, thickness, r.Height), color);
-            _spriteBatch.Draw(_pixel, new Rectangle(r.Right - thickness, r.Y, thickness, r.Height), color);
-        }
-
         public void Draw()
         {
 			// Ensure a clickable UI entity exists and keep its base anchored; ParallaxLayer will offset Position
@@ -237,12 +229,18 @@ namespace Crusaders30XX.ECS.Systems
 			Vector2 drawPos = (t != null) ? t.Position : new Vector2(btnRect.X, btnRect.Y);
 			var drawRect = new Rectangle((int)drawPos.X, (int)drawPos.Y, btnRect.Width, btnRect.Height);
 
-			_spriteBatch.Draw(_pixel, drawRect, new Color(40, 120, 40, 220));
-			DrawRect(drawRect, Color.White, 2);
+			// Ensure cached button texture
 			string label = "End Turn";
-			var size = _font.MeasureString(label) * ButtonTextScale;
-			var posText = new Vector2(drawRect.Center.X - size.X / 2f, drawRect.Center.Y - size.Y / 2f);
-			_spriteBatch.DrawString(_font, label, posText, Color.White, 0f, Vector2.Zero, ButtonTextScale, SpriteEffects.None, 0f);
+			if (_cachedButtonTexture == null || _cachedButtonText != label)
+			{
+				_cachedButtonTexture?.Dispose();
+				_cachedButtonTexture = ButtonTextureFactory.Create(
+					_graphicsDevice, label, Color.White, Color.DarkRed);
+				_cachedButtonText = label;
+			}
+			_spriteBatch.Draw(_cachedButtonTexture,
+				new Rectangle(drawRect.X, drawRect.Y, drawRect.Width, drawRect.Height),
+				Color.White);
 
 			// Keep UI bounds aligned with drawn rect
 			var endBtnUi = endBtn?.GetComponent<UIElement>();

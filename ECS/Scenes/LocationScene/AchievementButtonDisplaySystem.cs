@@ -1,4 +1,3 @@
-using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
@@ -20,28 +19,13 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font = FontSingleton.ContentFont;
-		private Texture2D _roundedRectCache;
+		private Texture2D _cachedTexture;
+		private string _cachedText;
 		private Texture2D _badgeCircleCache;
-		private Texture2D _pixel;
 		private float _pulseTimer;
-
-		[DebugEditable(DisplayName = "Button Width", Step = 2, Min = 40, Max = 800)]
-		public int ButtonWidth { get; set; } = 250;
-
-		[DebugEditable(DisplayName = "Button Height", Step = 2, Min = 24, Max = 300)]
-		public int ButtonHeight { get; set; } = 56;
 
 		[DebugEditable(DisplayName = "Button Margin", Step = 1, Min = 0, Max = 120)]
 		public int ButtonMargin { get; set; } = 16;
-
-		[DebugEditable(DisplayName = "Button Padding", Step = 1, Min = 0, Max = 64)]
-		public int ButtonPadding { get; set; } = 8;
-
-		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
-		public float TextScale { get; set; } = 0.2f;
-
-		[DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 64)]
-		public int CornerRadius { get; set; } = 12;
 
 		[DebugEditable(DisplayName = "Badge Size", Step = 2, Min = 8, Max = 128)]
 		public int BadgeSize { get; set; } = 40;
@@ -65,8 +49,6 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_pixel = new Texture2D(_graphicsDevice, 1, 1);
-			_pixel.SetData(new[] { Color.White });
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -81,17 +63,25 @@ namespace Crusaders30XX.ECS.Systems
 
 			_pulseTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
+			// Regenerate texture when text changes
+			string text = "Achievements";
+			if (_cachedTexture == null || _cachedText != text)
+			{
+				_cachedTexture?.Dispose();
+				_cachedTexture = ButtonTextureFactory.Create(_graphicsDevice, text, Color.Black, Color.White);
+				_cachedText = text;
+			}
+
+			// Ensure button entity exists and is positioned correctly
+			int vw = Game1.VirtualWidth;
+			int vh = Game1.VirtualHeight;
+			EnsureButtonEntity(vw, vh);
+
 			// Block interactions during scene transition
 			if (StateSingleton.IsActive)
 			{
 				return;
 			}
-
-			int vw = Game1.VirtualWidth;
-			int vh = Game1.VirtualHeight;
-
-			// Ensure button entity exists and is positioned correctly
-			EnsureButtonEntity(vw, vh);
 
 			// Handle click
 			var buttonEnt = EntityManager.GetEntity("Location_AchievementButton");
@@ -104,14 +94,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
-			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-			if (scene == null || scene.Current != SceneId.Location) return;
-
-			int vw = Game1.VirtualWidth;
-			int vh = Game1.VirtualHeight;
-
-			// Ensure button entity exists
-			EnsureButtonEntity(vw, vh);
+			if (_cachedTexture == null) return;
 
 			var buttonEnt = EntityManager.GetEntity("Location_AchievementButton");
 			var buttonUI = buttonEnt?.GetComponent<UIElement>();
@@ -120,29 +103,10 @@ namespace Crusaders30XX.ECS.Systems
 			var rect = buttonUI.Bounds;
 			if (rect.Width <= 0 || rect.Height <= 0) return;
 
-			// Draw background
-			if (CornerRadius > 0)
-			{
-				var tex = _roundedRectCache;
-				if (tex == null || tex.Width != rect.Width || tex.Height != rect.Height)
-				{
-					int radius = System.Math.Max(0, CornerRadius);
-					tex = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, rect.Width, rect.Height, radius);
-					_roundedRectCache = tex;
-				}
-				_spriteBatch.Draw(tex, rect, Color.Black);
-			}
-			else
-			{
-				_spriteBatch.Draw(_pixel, rect, Color.Black);
-			}
-
-			// Draw text
-			string text = "Achievements";
-			var size = _font.MeasureString(text) * TextScale;
-			var textRect = new Rectangle(rect.X + ButtonPadding, rect.Y + ButtonPadding, rect.Width - ButtonPadding * 2, rect.Height - ButtonPadding * 2);
-			var pos = new Vector2(textRect.X + (textRect.Width - size.X) / 2f, textRect.Y + (textRect.Height - size.Y) / 2f);
-			_spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+			// Draw the texture centered within the UIElement bounds
+			var texX = rect.X + (rect.Width - _cachedTexture.Width) / 2;
+			var texY = rect.Y + (rect.Height - _cachedTexture.Height) / 2;
+			_spriteBatch.Draw(_cachedTexture, new Rectangle(texX, texY, _cachedTexture.Width, _cachedTexture.Height), Color.White);
 
 			// Draw notification badge if there are unseen achievements
 			if (AchievementManager.GetUnseenCount() > 0)
@@ -166,7 +130,7 @@ namespace Crusaders30XX.ECS.Systems
 
 				// Draw white '!'
 				string exclamation = "!";
-				float exclamationScale = TextScale * BadgeExclamationScale;
+				float exclamationScale = 0.2f * BadgeExclamationScale;
 				Vector2 exclSize = _font.MeasureString(exclamation);
 				Vector2 exclOrigin = exclSize / 2f;
 
@@ -176,8 +140,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void EnsureButtonEntity(int viewportW, int viewportH)
 		{
-			int btnW = System.Math.Max(40, ButtonWidth);
-			int btnH = System.Math.Max(24, ButtonHeight);
+			int btnW = System.Math.Max(40, _cachedTexture.Width);
+			int btnH = System.Math.Max(24, _cachedTexture.Height);
 			int margin = System.Math.Max(0, ButtonMargin);
 			// Position to the left of the Customize button (top-right)
 			var rect = new Rectangle(viewportW - btnW * 2 - margin * 2, margin, btnW, btnH);
