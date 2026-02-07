@@ -78,12 +78,6 @@ Combat uses block mechanics, enemy AI with planned attacks via `AttackIntent` an
 
 - Always create as many `DebugEditable` as possible for maximum visual control, never hardcode magic numbers.
 
-## Adding New Content
-
-### New Card
-1. Create class in `ECS/Objects/Cards/` inheriting from `CardBase`
-2. Register in CardFactory if needed
-
 ### New System
 1. Inherit from `ECS/Core/System`
 2. Override `GetRelevantEntities()` and `UpdateEntity()`
