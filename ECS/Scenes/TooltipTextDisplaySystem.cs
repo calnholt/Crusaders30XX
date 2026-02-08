@@ -107,7 +107,7 @@ namespace Crusaders30XX.ECS.Systems
 				var hasFrozen = top.E.GetComponent<Frozen>() != null;
 				if (hasFrozen)
 				{
-					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is frozen - when played, gain 1 frostbite. Remove frozen by blocking with it. Lasts for the rest of the quest.";
+					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is frozen - when played, gain 1 frostbite. Lasts for the rest of the quest.";
 				}
 				var hasIntimidated = top.E.GetComponent<Intimidated>() != null;
 				if (hasIntimidated)

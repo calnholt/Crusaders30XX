@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
+using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Components
 {
@@ -91,11 +92,13 @@ namespace Crusaders30XX.ECS.Components
 	public class PlayerAnimationState : IComponent
 	{
 		public Entity Owner { get; set; }
-		public Microsoft.Xna.Framework.Vector2 DrawOffset { get; set; }
-		public Microsoft.Xna.Framework.Vector2 ScaleMultiplier { get; set; } = new Microsoft.Xna.Framework.Vector2(1f, 1f);
+		public Vector2 DrawOffset { get; set; }
+		public Vector2 ScaleMultiplier { get; set; } = new Vector2(1f, 1f);
 		public float AttackAnimTimer { get; set; }
 		public float AttackAnimDuration { get; set; } = 0.2f;
-		public Microsoft.Xna.Framework.Vector2 AttackTargetPos { get; set; }
+		public Vector2 AttackTargetPos { get; set; }
+		public Color TintColor { get; set; } = Color.White;
+		public float DamageFlashTimer { get; set; }
 	}
 
 
@@ -113,15 +116,15 @@ namespace Crusaders30XX.ECS.Components
 		public bool IsEquipment { get; set; } = false;
 		public string ColorKey { get; set; } = "White"; // "Red" | "White" | "Black"
 		public string Tooltip { get; set; } = string.Empty;
-		public Microsoft.Xna.Framework.Color DisplayBgColor { get; set; } = Microsoft.Xna.Framework.Color.White;
-		public Microsoft.Xna.Framework.Color DisplayFgColor { get; set; } = Microsoft.Xna.Framework.Color.Black;
-		public Microsoft.Xna.Framework.Vector2 ReturnTargetPos { get; set; } = Microsoft.Xna.Framework.Vector2.Zero;
+		public Color DisplayBgColor { get; set; } = Color.White;
+		public Color DisplayFgColor { get; set; } = Color.Black;
+		public Vector2 ReturnTargetPos { get; set; } = Vector2.Zero;
 		public string EquipmentType { get; set; } = string.Empty; // Head | Chest | Arms | Legs for equipment
 		public enum PhaseState { Pullback, Launch, Impact, Idle, Returning }
 		public PhaseState Phase { get; set; } = PhaseState.Pullback;
-		public Microsoft.Xna.Framework.Vector2 StartPos { get; set; }
-		public Microsoft.Xna.Framework.Vector2 TargetPos { get; set; }
-		public Microsoft.Xna.Framework.Vector2 CurrentPos { get; set; }
+		public Vector2 StartPos { get; set; }
+		public Vector2 TargetPos { get; set; }
+		public Vector2 CurrentPos { get; set; }
 		public float StartScale { get; set; } = 1f;
 		public float TargetScale { get; set; } = 0.4f;
 		public float CurrentScale { get; set; } = 1f;

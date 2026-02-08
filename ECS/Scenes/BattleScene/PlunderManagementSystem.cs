@@ -30,6 +30,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ModifyHpEvent>(OnModifyHp);
             EventManager.Subscribe<PlunderTriggerEvent>(OnPlunderTrigger);
             EventManager.Subscribe<PlunderSnatchAnimationCompleted>(OnAnimationCompleted);
+            EventManager.Subscribe<PlunderForceDiscardEvent>(OnPlunderForceDiscard);
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -163,6 +164,17 @@ namespace Crusaders30XX.ECS.Systems
             // Clear pending state
             _pendingCard = null;
             _pendingThreshold = 0;
+        }
+
+        private void OnPlunderForceDiscard(PlunderForceDiscardEvent evt)
+        {
+            var plunderedCard = EntityManager.GetEntitiesWithComponent<Plundered>().FirstOrDefault();
+            if (plunderedCard == null) return;
+
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            if (deckEntity == null) return;
+
+            DiscardPlunderedCard(plunderedCard, deckEntity);
         }
 
         private void OnModifyHp(ModifyHpEvent evt)

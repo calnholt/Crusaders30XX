@@ -1,4 +1,3 @@
-using System;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -11,7 +10,8 @@ namespace Crusaders30XX.ECS.Objects.Medals
         {
             Id = "st_louie_ix";
             Name = "St. Louie IX, King of France";
-            Text = "At the start of battle, gain 1 power.";
+            Text = "At the start of every third turn, gain 1 aggression.";
+            MaxCount = 3;
         }
 
         public override void Initialize(EntityManager entityManager, Entity medalEntity)
@@ -23,21 +23,25 @@ namespace Crusaders30XX.ECS.Objects.Medals
 
         private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
         {
-            if (evt.Current == SubPhase.StartBattle)
+            if (evt.Current == SubPhase.PlayerStart)
             {
-                EmitActivateEvent();
+                CurrentCount++;
+                if (CurrentCount >= MaxCount)
+                {
+                    CurrentCount = 0;
+                    EmitActivateEvent();
+                }
             }
         }
 
         public override void Activate()
         {
-            EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Power, Delta = 1 });
+            EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Aggression, Delta = 1 });
         }
 
         public override void Dispose()
         {
             EventManager.Unsubscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
-            Console.WriteLine($"[StLouieIX] Unsubscribed from ChangeBattlePhaseEvent");
         }
     }
 }

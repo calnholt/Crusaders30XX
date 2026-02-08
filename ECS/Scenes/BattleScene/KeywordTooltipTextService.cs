@@ -43,7 +43,7 @@ namespace Crusaders30XX.ECS.Systems
 			i = lowerText.IndexOf("frostbite");
 			if (i >= 0) matches.Add((i, $"X Frostbite - When you have 3 stacks of frostbite, take {PassiveTooltipTextService.FrostbiteDamage} damage and lose 3 frostbite."));
 			i = lowerText.IndexOf("frozen");
-			if (i >= 0) matches.Add((i, "Frozen - When you play a frozen card, gain 1 frostbite. Remove frozen by blocking with it."));
+			if (i >= 0) matches.Add((i, "Frozen - When you play a frozen card, gain 1 frostbite."));
 			if (matches.Count == 0) return string.Empty;
 			i = lowerText.IndexOf("darkness");
 			if (i >= 0) matches.Add((i, "X Darkness - The enemy loses X damage when you pledge a card."));

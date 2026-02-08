@@ -1,4 +1,5 @@
 using System.Linq;
+using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -10,10 +11,20 @@ namespace Crusaders30XX.ECS.Systems
 	/// Handles player portrait animations (e.g., attack lunge) and publishes impact signals.
 	/// Keeps UI stable by writing only to PlayerAnimationState.DrawOffset.
 	/// </summary>
+	[DebugTab("Player Animation")]
 	public class PlayerAnimationSystem : Core.System
 	{
 		private readonly Vector2 _attackOffset = new Vector2(80f, -20f);
 		private readonly float _attackNudgePixels = 36f;
+
+		[DebugEditable(DisplayName = "Damage Flash Duration (s)", Step = 0.05f, Min = 0.05f, Max = 2f)]
+		public float DamageFlashDurationSec { get; set; } = 0.3f;
+		[DebugEditable(DisplayName = "Damage Flash R", Step = 1f, Min = 0f, Max = 255f)]
+		public float DamageFlashColorR { get; set; } = 255f;
+		[DebugEditable(DisplayName = "Damage Flash G", Step = 1f, Min = 0f, Max = 255f)]
+		public float DamageFlashColorG { get; set; } = 80f;
+		[DebugEditable(DisplayName = "Damage Flash B", Step = 1f, Min = 0f, Max = 255f)]
+		public float DamageFlashColorB { get; set; } = 80f;
 
 		public PlayerAnimationSystem(EntityManager entityManager) : base(entityManager)
 		{
@@ -75,6 +86,13 @@ namespace Crusaders30XX.ECS.Systems
 					EnqueueDebuffKeyframes(scaleAnim, false);
 				}
 			});
+			EventManager.Subscribe<ModifyHpEvent>(evt =>
+			{
+				if (evt == null || evt.Delta >= 0 || evt.Target == null) return;
+				EnsureHasAnimState(evt.Target);
+				var anim = evt.Target.GetComponent<PlayerAnimationState>();
+				anim.DamageFlashTimer = DamageFlashDurationSec;
+			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -90,6 +108,14 @@ namespace Crusaders30XX.ECS.Systems
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			anim.DrawOffset = Vector2.Zero;
 			anim.ScaleMultiplier = new Vector2(1f, 1f);
+			anim.TintColor = Color.White;
+			if (anim.DamageFlashTimer > 0f)
+			{
+				anim.DamageFlashTimer = System.Math.Max(0f, anim.DamageFlashTimer - dt);
+				float progress = anim.DamageFlashTimer / System.Math.Max(0.0001f, DamageFlashDurationSec);
+				var flashColor = new Color((int)DamageFlashColorR, (int)DamageFlashColorG, (int)DamageFlashColorB);
+				anim.TintColor = Color.Lerp(Color.White, flashColor, progress);
+			}
 			if (anim.AttackAnimTimer > 0f)
 			{
 				anim.AttackAnimTimer = System.Math.Max(0f, anim.AttackAnimTimer - dt);

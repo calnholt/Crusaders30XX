@@ -31,6 +31,8 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 
         public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
         {
+            if (turnNumber % 2 == 0)
+                return ["wyvern_threat"];
             return ["wyvern_strike"];
         }
     }
@@ -43,5 +45,22 @@ public class WyvernStrike : EnemyAttackBase
         Id = "wyvern_strike";
         Name = "Talon Swipe";
         Damage = 10;
+    }
+}
+
+public class WyvernThreat : EnemyAttackBase
+{
+    public WyvernThreat()
+    {
+        Id = "wyvern_threat";
+        Name = "Rend & Ruin";
+        Damage = 10;
+        ConditionType = ConditionType.OnBlockedByAtLeast2Cards;
+        Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, conditionType: ConditionType, customText: "Discards the plundered card.");
+
+        OnAttackHit = (entityManager) =>
+        {
+            EventManager.Publish(new PlunderForceDiscardEvent());
+        };
     }
 }

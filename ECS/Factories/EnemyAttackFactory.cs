@@ -107,6 +107,7 @@ namespace Crusaders30XX.ECS.Factories
                 "serpent_strike" => new SerpentStrike(),
                 // Wyvern attacks
                 "wyvern_strike" => new WyvernStrike(),
+                "wyvern_threat" => new WyvernThreat(),
                 // BloodMartyr attacks
                 "flagellation" => new Flagellation(),
                 "blood_ward" => new BloodWard(),
@@ -215,6 +216,7 @@ namespace Crusaders30XX.ECS.Factories
                 { "serpent_strike", new SerpentStrike() },
                 // Wyvern attacks
                 { "wyvern_strike", new WyvernStrike() },
+                { "wyvern_threat", new WyvernThreat() },
                 // BloodMartyr attacks
                 { "flagellation", new Flagellation() },
                 { "blood_ward", new BloodWard() },

@@ -107,7 +107,7 @@ namespace Crusaders30XX.ECS.Systems
                 _crusaderTexture,
                 position,
                 sourceRectangle: null,
-                color: Color.White,
+                color: animState?.TintColor ?? Color.White,
                 rotation: 0f,
                 origin: origin,
                 scale: scaleVec,

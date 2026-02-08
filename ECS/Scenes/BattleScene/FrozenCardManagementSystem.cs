@@ -21,7 +21,6 @@ namespace Crusaders30XX.ECS.Systems
 		public FrozenCardManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<FreezeCardsEvent>(OnFreezeCards);
-      EventManager.Subscribe<CardMoved>(OnCardMoved);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -30,14 +29,6 @@ namespace Crusaders30XX.ECS.Systems
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
-
-		private void OnCardMoved(CardMoved evt)
-		{
-			if (evt.To == CardZoneType.DiscardPile && evt.From == CardZoneType.AssignedBlock)
-			{
-				evt.Card.RemoveComponent<Frozen>();
-			}
-		}
 
 		private void OnFreezeCards(FreezeCardsEvent evt)
 		{

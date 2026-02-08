@@ -78,4 +78,10 @@ namespace Crusaders30XX.ECS.Events
         public Entity Deck { get; set; }
         public Microsoft.Xna.Framework.Vector2 StartPos { get; set; }
     }
+
+    /// <summary>
+    /// Event published when the Wyvern's threat attack hits (not blocked by 2 cards).
+    /// Signals PlunderManagementSystem to discard the currently plundered card.
+    /// </summary>
+    public class PlunderForceDiscardEvent { }
 }

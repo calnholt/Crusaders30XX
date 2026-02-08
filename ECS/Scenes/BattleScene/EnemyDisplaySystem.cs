@@ -162,7 +162,7 @@ namespace Crusaders30XX.ECS.Systems
 					int y0 = (int)System.Math.Round(drawPos.Y - hPx / 2f);
 					ui.Bounds = new Rectangle(x0, y0, wPx, hPx);
 				}
-				_spriteBatch.Draw(tex, position: drawPos, sourceRectangle: null, color: Color.White, rotation: 0f, origin: origin, scale: scaleVec, effects: SpriteEffects.None, layerDepth: 0f);
+				_spriteBatch.Draw(tex, position: drawPos, sourceRectangle: null, color: animState?.TintColor ?? Color.White, rotation: 0f, origin: origin, scale: scaleVec, effects: SpriteEffects.None, layerDepth: 0f);
 			}
 		}
 
