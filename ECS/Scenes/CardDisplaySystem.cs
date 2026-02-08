@@ -746,14 +746,9 @@ namespace Crusaders30XX.ECS.Systems
                 fillScale = Math.Max(0f, 1f - CostPipOutlineFrac * 2f);
             }
 
-            var sliceTex0 = PrimitiveTextureFactory.GetAntialiasedPieSliceMask(_graphicsDevice, radiusTex, 0f, 120f);
-            var sliceTex1 = PrimitiveTextureFactory.GetAntialiasedPieSliceMask(_graphicsDevice, radiusTex, 120f, 240f);
-            var sliceTex2 = PrimitiveTextureFactory.GetAntialiasedPieSliceMask(_graphicsDevice, radiusTex, 240f, 360f);
+            var anyPipTex = PrimitiveTextureFactory.GetAnyCostPipTexture(_graphicsDevice, radiusTex);
             var origin = new Vector2(textureSize / 2f, textureSize / 2f);
-
-            _spriteBatch.Draw(sliceTex0, worldCenter, null, Color.White, rotation, origin, fillScale, SpriteEffects.None, 0f);
-            _spriteBatch.Draw(sliceTex1, worldCenter, null, Color.Black, rotation, origin, fillScale, SpriteEffects.None, 0f);
-            _spriteBatch.Draw(sliceTex2, worldCenter, null, Color.DarkRed, rotation, origin, fillScale, SpriteEffects.None, 0f);
+            _spriteBatch.Draw(anyPipTex, worldCenter, null, Color.White, rotation, origin, fillScale, SpriteEffects.None, 0f);
         }
 
         private void DrawDamageTrapezoidAndValue(Vector2 cardCenter, float rotation, float overallScale, CardData.CardColor cardColor, int damageValue, int damageDelta)

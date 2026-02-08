@@ -57,10 +57,10 @@ namespace Crusaders30XX.ECS.Systems
 		public int RowBorderLeftWidth { get; set; } = 3;
 
 		[DebugEditable(DisplayName = "Group Gap", Step = 1, Min = 0, Max = 16)]
-		public int GroupGap { get; set; } = 8;
+		public int GroupGap { get; set; } = 13;
 
 		[DebugEditable(DisplayName = "Instance Gap", Step = 1, Min = 0, Max = 8)]
-		public int InstanceGap { get; set; } = 1;
+		public int InstanceGap { get; set; } = 2;
 
 		[DebugEditable(DisplayName = "Name Scale", Step = 0.01f, Min = 0.05f, Max = 0.3f)]
 		public float NameScale { get; set; } = 0.13f;
@@ -69,13 +69,13 @@ namespace Crusaders30XX.ECS.Systems
 		public float TypeScale { get; set; } = 0.08f;
 
 		[DebugEditable(DisplayName = "Pip Radius", Step = 1, Min = 2, Max = 10)]
-		public int PipRadius { get; set; } = 5;
+		public int PipRadius { get; set; } = 10;
 
 		[DebugEditable(DisplayName = "Pip Gap", Step = 1, Min = 0, Max = 10)]
-		public int PipGap { get; set; } = 3;
+		public int PipGap { get; set; } = 8;
 
 		[DebugEditable(DisplayName = "Pip To Name Gap", Step = 1, Min = 0, Max = 20)]
-		public int PipToNameGap { get; set; } = 8;
+		public int PipToNameGap { get; set; } = 4;
 
 		[DebugEditable(DisplayName = "Hover Slide X", Step = 1, Min = 0, Max = 20)]
 		public float HoverSlideX { get; set; } = 4f;
@@ -326,9 +326,18 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					foreach (var cost in item.card.Cost)
 					{
-						var pipColor = GetCostPipColor(cost);
-						var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, PipRadius);
-						_spriteBatch.Draw(circle, new Rectangle((int)pipX, (int)(pipCenterY - PipRadius), PipRadius * 2, PipRadius * 2), pipColor);
+						bool isAny = string.Equals(cost?.Trim(), "any", StringComparison.OrdinalIgnoreCase);
+						if (isAny)
+						{
+							var anyTex = PrimitiveTextureFactory.GetAnyCostPipTexture(_graphicsDevice, PipRadius);
+							_spriteBatch.Draw(anyTex, new Rectangle((int)pipX, (int)(pipCenterY - PipRadius), PipRadius * 2, PipRadius * 2), Color.White);
+						}
+						else
+						{
+							var pipColor = GetCostPipColor(cost);
+							var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, PipRadius);
+							_spriteBatch.Draw(circle, new Rectangle((int)pipX, (int)(pipCenterY - PipRadius), PipRadius * 2, PipRadius * 2), pipColor);
+						}
 						pipX += PipRadius * 2 + PipGap;
 					}
 				}
@@ -413,17 +422,17 @@ namespace Crusaders30XX.ECS.Systems
 
 		private static Color GetCardColorValue(CardData.CardColor c) => c switch
 		{
-			CardData.CardColor.White => new Color(224, 224, 224),
-			CardData.CardColor.Red => new Color(160, 0, 0),
-			CardData.CardColor.Black => new Color(80, 80, 80),
+			CardData.CardColor.White => Color.White,
+			CardData.CardColor.Red => Color.DarkRed,
+			CardData.CardColor.Black => Color.Black,
 			_ => new Color(128, 128, 128)
 		};
 
 		private static Color GetCostPipColor(string cost) => (cost?.ToLowerInvariant()) switch
 		{
-			"red" => new Color(160, 0, 0),
-			"black" => new Color(51, 51, 51),
-			"any" => new Color(136, 136, 136),
+			"white" => Color.White,
+			"red" => Color.DarkRed,
+			"black" => Color.Black,
 			_ => new Color(224, 224, 224)
 		};
 	}

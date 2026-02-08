@@ -8,7 +8,6 @@ using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Objects.Cards;
-using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -23,7 +22,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly World _world;
 		private readonly SpriteFont _headingFont = FontSingleton.TitleFont;
-		private readonly SpriteFont _contentFont = FontSingleton.ContentFont;
 		private readonly Dictionary<string, int> _createdCardIds = new();
 		private CursorStateEvent _cursorEvent;
 		private Texture2D _pixel;
@@ -32,8 +30,6 @@ namespace Crusaders30XX.ECS.Systems
 		// Caches
 		private List<(string key, CardBase card, CardData.CardColor color)> _cachedEntries;
 		private bool _entriesDirty = true;
-		private Dictionary<string, int> _cachedCopyCounts;
-		private bool _copyCountsDirty = true;
 		private CardVisualSettings _cachedCardVisualSettings;
 
 		[DebugEditable(DisplayName = "Columns", Step = 1, Min = 1, Max = 8)]
@@ -54,12 +50,6 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Grid Pad X", Step = 2, Min = 0, Max = 60)]
 		public int GridPadX { get; set; } = 20;
 
-		[DebugEditable(DisplayName = "Flash Duration", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
-		public float FlashDuration { get; set; } = 0.4f;
-
-		[DebugEditable(DisplayName = "Flash Alpha", Step = 5, Min = 0, Max = 255)]
-		public int FlashAlpha { get; set; } = 80;
-
 		[DebugEditable(DisplayName = "Right Panel Width", Step = 4, Min = 200, Max = 600)]
 		public int RightPanelWidth { get; set; } = 380;
 
@@ -71,9 +61,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Title Pad Y", Step = 2, Min = 0, Max = 60)]
 		public int TitlePadY { get; set; } = 20;
-
-		[DebugEditable(DisplayName = "Badge Scale", Step = 0.01f, Min = 0.05f, Max = 0.2f)]
-		public float BadgeScale { get; set; } = 0.08f;
 
 		[DebugEditable(DisplayName = "Scroll Speed", Step = 100, Min = 500, Max = 5000)]
 		public float ScrollSpeed { get; set; } = 2200f;
@@ -95,24 +82,14 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<ShowTransition>(_ => { ClearCards(); InvalidateCaches(); });
 			EventManager.Subscribe<SwitchCustomizationV2Tab>(_ => { ClearCards(); InvalidateCaches(); });
 			EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
-			EventManager.Subscribe<DeckV2CardAdded>(e =>
-			{
-				InvalidateCaches();
-				var deck = EntityManager.GetEntitiesWithComponent<CustomizationV2DeckState>().FirstOrDefault()?.GetComponent<CustomizationV2DeckState>();
-				if (deck != null && e.CardKey != null)
-				{
-					deck.AddFlashTimers[e.CardKey] = FlashDuration;
-				}
-			});
+			EventManager.Subscribe<DeckV2CardAdded>(_ => InvalidateCaches());
 			EventManager.Subscribe<DeckV2CardRemoved>(_ => InvalidateCaches());
 			EventManager.Subscribe<DeckV2DeckChanged>(_ => InvalidateCaches());
 			EventManager.Subscribe<DeleteCachesEvent>(_ =>
 			{
 				_cachedEntries = null;
-				_cachedCopyCounts = null;
 				_cachedCardVisualSettings = null;
 				_entriesDirty = true;
-				_copyCountsDirty = true;
 			});
 		}
 
@@ -134,15 +111,6 @@ namespace Crusaders30XX.ECS.Systems
 			if (deck == null) return;
 
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-			// Update flash timers
-			var expiredFlash = new List<string>();
-			foreach (var kvp in deck.AddFlashTimers)
-			{
-				deck.AddFlashTimers[kvp.Key] = kvp.Value - dt;
-				if (deck.AddFlashTimers[kvp.Key] <= 0) expiredFlash.Add(kvp.Key);
-			}
-			foreach (var key in expiredFlash) deck.AddFlashTimers.Remove(key);
 
 			// Compute max scroll for clamping
 			var cvs0 = GetCardVisualSettings();
@@ -276,8 +244,6 @@ namespace Crusaders30XX.ECS.Systems
 			var previousScissor = _graphicsDevice.ScissorRectangle;
 			_graphicsDevice.ScissorRectangle = clipRect;
 
-			var copyCounts = GetCopyCounts(deck);
-
 			var entries = GetAvailableEntries();
 			int idx = 0;
 			foreach (var entry in entries)
@@ -299,29 +265,6 @@ namespace Crusaders30XX.ECS.Systems
 				if (tempCard != null)
 				{
 					EventManager.Publish(new CardRenderScaledEvent { Card = tempCard, Position = new Vector2(x, y), Scale = CardScale, ClipRect = clipRect });
-				}
-
-				// Draw copy count badge
-				string cardName = (entry.card.Name ?? entry.card.CardId).ToLowerInvariant();
-				int copies = copyCounts.TryGetValue(cardName, out var cnt) ? cnt : 0;
-				if (copies > 0)
-				{
-					string badgeText = $"{copies}/2";
-					var badgeSize = _contentFont.MeasureString(badgeText) * BadgeScale;
-					int bx = x + scaledW / 2 - (int)badgeSize.X - 4;
-					int by = y - scaledH / 2 + 4;
-					var badgeBg = copies >= 2 ? new Color(160, 0, 0, 200) : new Color(42, 42, 42, 200);
-					_spriteBatch.Draw(_pixel, new Rectangle(bx - 2, by - 1, (int)badgeSize.X + 4, (int)badgeSize.Y + 2), badgeBg);
-					var badgeColor = copies >= 2 ? new Color(255, 200, 200) : new Color(200, 200, 200);
-					_spriteBatch.DrawString(_contentFont, badgeText, new Vector2(bx, by), badgeColor, 0f, Vector2.Zero, BadgeScale, SpriteEffects.None, 0f);
-				}
-
-				// Flash overlay on add
-				if (deck.AddFlashTimers.TryGetValue(entry.key, out float timer) && timer > 0)
-				{
-					float alpha = (timer / FlashDuration) * FlashAlpha / 255f;
-					var flashColor = new Color(0, 200, 0) * alpha;
-					_spriteBatch.Draw(_pixel, new Rectangle(x - scaledW / 2, y - scaledH / 2, scaledW, scaledH), flashColor);
 				}
 
 				idx++;
@@ -356,6 +299,9 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (!_entriesDirty && _cachedEntries != null) return _cachedEntries;
 
+			var deck = EntityManager.GetEntitiesWithComponent<CustomizationV2DeckState>().FirstOrDefault()?.GetComponent<CustomizationV2DeckState>();
+			var inDeckSet = deck?.DeckCardKeys != null ? new HashSet<string>(deck.DeckCardKeys) : new HashSet<string>();
+
 			var collection = SaveCache.GetCollectionSet();
 			var defs = CardFactory.GetAllCards().Values
 				.Where(d => !d.IsWeapon)
@@ -371,35 +317,13 @@ namespace Crusaders30XX.ECS.Systems
 				foreach (var color in colorOrder)
 				{
 					string key = (def.CardId ?? def.Name).ToLowerInvariant() + "|" + color;
+					if (inDeckSet.Contains(key)) continue;
 					result.Add((key, def, color));
 				}
 			}
 			_cachedEntries = result;
 			_entriesDirty = false;
 			return result;
-		}
-
-		private Dictionary<string, int> GetCopyCounts(CustomizationV2DeckState deck)
-		{
-			if (!_copyCountsDirty && _cachedCopyCounts != null) return _cachedCopyCounts;
-
-			var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-			if (deck.DeckCardKeys != null)
-			{
-				// Build a name lookup from all cards once, instead of calling Create() per key
-				var allCards = CardFactory.GetAllCards();
-				foreach (var key in deck.DeckCardKeys)
-				{
-					string baseId = key.Split('|')[0].ToLowerInvariant();
-					string name = allCards.TryGetValue(baseId, out var card)
-						? (card.Name ?? baseId).ToLowerInvariant()
-						: baseId;
-					counts[name] = (counts.TryGetValue(name, out var c) ? c : 0) + 1;
-				}
-			}
-			_cachedCopyCounts = counts;
-			_copyCountsDirty = false;
-			return counts;
 		}
 
 		private CardVisualSettings GetCardVisualSettings()
@@ -412,7 +336,6 @@ namespace Crusaders30XX.ECS.Systems
 		private void InvalidateCaches()
 		{
 			_entriesDirty = true;
-			_copyCountsDirty = true;
 		}
 
 		private Entity EnsureTempCard(CardBase card, CardData.CardColor color)

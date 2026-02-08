@@ -23,6 +23,8 @@ namespace Crusaders30XX.ECS.Rendering
 		private static readonly Dictionary<(int deviceId, float width, float height, float leftOffset, float topAngle, float rightAngle, float bottomAngle, float leftAngle), Texture2D> _trapezoidMaskCache = new();
 		// Cache chevrons by device, width, height, thickness, count, and gap
 		private static readonly Dictionary<(int deviceId, float width, float height, float thickness, int count, float gap), Texture2D> _chevronCache = new();
+		// Cache "any" cost pip textures (tri-color circle: white/black/red thirds)
+		private static readonly Dictionary<(int deviceId, int radius), Texture2D> _anyCostPipCache = new();
 
 		public static Texture2D GetAntiAliasedCircle(GraphicsDevice device, int radius)
 		{
@@ -516,6 +518,65 @@ namespace Crusaders30XX.ECS.Rendering
 
 			tex.SetData(data);
 			_chevronCache[key] = tex;
+			return tex;
+		}
+
+		/// <summary>
+		/// Returns a cached tri-color "any" cost pip texture (white/black/red thirds) for the given radius.
+		/// </summary>
+		public static Texture2D GetAnyCostPipTexture(GraphicsDevice device, int radius)
+		{
+			if (radius < 1) radius = 1;
+			int deviceId = device?.GetHashCode() ?? 0;
+			var key = (deviceId, radius);
+			if (_anyCostPipCache.TryGetValue(key, out var existing) && existing != null) return existing;
+
+			int d = radius * 2;
+			var tex = new Texture2D(device, d, d);
+			var data = new Color[d * d];
+
+			// Build composite from three pie slices
+			var slice0 = GetAntialiasedPieSliceMask(device, radius, 0f, 120f);
+			var slice1 = GetAntialiasedPieSliceMask(device, radius, 120f, 240f);
+			var slice2 = GetAntialiasedPieSliceMask(device, radius, 240f, 360f);
+
+			var s0 = new Color[d * d];
+			var s1 = new Color[d * d];
+			var s2 = new Color[d * d];
+			slice0.GetData(s0);
+			slice1.GetData(s1);
+			slice2.GetData(s2);
+
+			// Tint colors for each third
+			var c0 = Color.White;
+			var c1 = Color.Black;
+			var c2 = Color.DarkRed;
+
+			for (int i = 0; i < data.Length; i++)
+			{
+				float a0 = s0[i].A / 255f;
+				float a1 = s1[i].A / 255f;
+				float a2 = s2[i].A / 255f;
+				float totalA = a0 + a1 + a2;
+				if (totalA <= 0f)
+				{
+					data[i] = Color.Transparent;
+					continue;
+				}
+				float r = (c0.R * a0 + c1.R * a1 + c2.R * a2) / totalA;
+				float g = (c0.G * a0 + c1.G * a1 + c2.G * a2) / totalA;
+				float b = (c0.B * a0 + c1.B * a1 + c2.B * a2) / totalA;
+				float a = System.Math.Min(totalA, 1f);
+				data[i] = Color.FromNonPremultiplied(
+					(int)MathHelper.Clamp(r, 0, 255),
+					(int)MathHelper.Clamp(g, 0, 255),
+					(int)MathHelper.Clamp(b, 0, 255),
+					(int)MathHelper.Clamp(a * 255f, 0, 255)
+				);
+			}
+
+			tex.SetData(data);
+			_anyCostPipCache[key] = tex;
 			return tex;
 		}
 	}
