@@ -11,7 +11,7 @@ using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
+
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -24,7 +24,11 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _contentFont = FontSingleton.ContentFont;
 		private CursorStateEvent _cursorEvent;
 		private Texture2D _pixel;
-		private int? _lastWheel;
+		private readonly List<Entity> _tooltipEntities = new();
+		private const string TooltipEntityPrefix = "DeckV2Tooltip_";
+
+		[DebugEditable(DisplayName = "Tooltip Scale", Step = 0.05f, Min = 0.1f, Max = 1.0f)]
+		public float TooltipScale { get; set; } = 0.85f;
 
 		[DebugEditable(DisplayName = "Right Panel Width", Step = 4, Min = 200, Max = 600)]
 		public int RightPanelWidth { get; set; } = 380;
@@ -108,6 +112,12 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
 		}
 
+		public override void SetActive(bool active)
+		{
+			base.SetActive(active);
+			if (!active) HideTooltipEntities();
+		}
+
 		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
 			return EntityManager.GetEntitiesWithComponent<SceneState>();
@@ -116,14 +126,14 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			var scene = entity.GetComponent<SceneState>();
-			if (scene == null || scene.Current != SceneId.CustomizationV2) return;
+			if (scene == null || scene.Current != SceneId.CustomizationV2) { HideTooltipEntities(); return; }
 
 			var nav = EntityManager.GetEntitiesWithComponent<CustomizationV2NavigationState>().FirstOrDefault()?.GetComponent<CustomizationV2NavigationState>();
-			if (nav == null || nav.ActiveTab != CustomizationV2TabType.Deck) return;
-			if (StateSingleton.IsActive) return;
+			if (nav == null || nav.ActiveTab != CustomizationV2TabType.Deck) { HideTooltipEntities(); return; }
+			if (StateSingleton.IsActive) { HideTooltipEntities(); return; }
 
 			var deck = EntityManager.GetEntitiesWithComponent<CustomizationV2DeckState>().FirstOrDefault()?.GetComponent<CustomizationV2DeckState>();
-			if (deck == null) return;
+			if (deck == null) { HideTooltipEntities(); return; }
 
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -152,45 +162,25 @@ namespace Crusaders30XX.ECS.Systems
 			int visibleH = Game1.VirtualHeight - headerH0;
 			int maxScroll = Math.Max(0, contentH - Game1.VirtualHeight);
 
-			// Gamepad scroll for right panel
+			// Scroll via CursorStateEvent
 			int panelX0 = Game1.VirtualWidth - RightPanelWidth;
 			var panelRect0 = new Rectangle(panelX0, 0, RightPanelWidth, Game1.VirtualHeight);
-			var gp = GamePad.GetState(PlayerIndex.One);
-			if (gp.IsConnected && _cursorEvent != null)
+			if (_cursorEvent != null && panelRect0.Contains(new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y))))
 			{
-				float y = gp.ThumbSticks.Right.Y;
-				const float Deadzone = 0.2f;
-				if (MathF.Abs(y) > Deadzone)
+				if (_cursorEvent.ScrollDelta != 0f)
 				{
-					var p = new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y));
-					if (panelRect0.Contains(p))
-					{
-						deck.DeckListScroll = Math.Max(0, deck.DeckListScroll - (int)Math.Round(y * ScrollSpeed * dt));
-						deck.DeckListScroll = Math.Clamp(deck.DeckListScroll, 0, maxScroll);
-					}
+					deck.DeckListScroll -= (int)Math.Round(_cursorEvent.ScrollDelta) * MouseScrollStep;
+					deck.DeckListScroll = Math.Clamp(deck.DeckListScroll, 0, maxScroll);
+				}
+				if (_cursorEvent.ScrollStickY != 0f)
+				{
+					deck.DeckListScroll = Math.Max(0, deck.DeckListScroll - (int)Math.Round(_cursorEvent.ScrollStickY * ScrollSpeed * dt));
+					deck.DeckListScroll = Math.Clamp(deck.DeckListScroll, 0, maxScroll);
 				}
 			}
 
-			// Mouse wheel scroll for right panel
-			var mouse = Mouse.GetState();
-			if (_cursorEvent != null && panelRect0.Contains(new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y))))
-			{
-				int wheelValue = mouse.ScrollWheelValue;
-				if (_lastWheel.HasValue)
-				{
-					int diff = wheelValue - _lastWheel.Value;
-					if (diff != 0)
-					{
-						deck.DeckListScroll -= Math.Sign(diff) * MouseScrollStep;
-						deck.DeckListScroll = Math.Clamp(deck.DeckListScroll, 0, maxScroll);
-					}
-				}
-				_lastWheel = wheelValue;
-			}
-			else
-			{
-				_lastWheel = mouse.ScrollWheelValue;
-			}
+			// Sync tooltip entities with current deck rows
+			UpdateTooltipEntities(deck, sorted0, headerH0);
 
 			// Click to remove card
 			if (_cursorEvent == null || !_cursorEvent.IsAPressedEdge) return;
@@ -369,7 +359,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Scrollbar
 			int scrollAreaTop = headerH + titleAreaHeight;
-			int contentHeight = drawY;
+			int contentHeight = drawY - scrollAreaTop;
 			int visibleHeight = vh - scrollAreaTop;
 			if (contentHeight > visibleHeight)
 			{
@@ -384,6 +374,80 @@ namespace Crusaders30XX.ECS.Systems
 				_spriteBatch.Draw(_pixel, new Rectangle(scrollX, scrollAreaTop, ScrollbarWidth, visibleHeight), new Color(10, 10, 10));
 				_spriteBatch.Draw(_pixel, new Rectangle(scrollX, thumbY, ScrollbarWidth, thumbH), new Color(51, 51, 51));
 			}
+		}
+
+		private void UpdateTooltipEntities(
+			CustomizationV2DeckState deck,
+			List<(string key, string id, CardData.CardColor color, string name, CardBase card)> sorted,
+			int headerH)
+		{
+			int titleAreaHeight = ContentPad + (int)(_headingFont.MeasureString("A").Y * TitleTextScale) + ContentPad;
+			int panelX = Game1.VirtualWidth - RightPanelWidth;
+			int rowX = panelX + ContentPad;
+			int rowW = RightPanelWidth - ContentPad * 2;
+			int vh = Game1.VirtualHeight;
+			int visibleTop = headerH + titleAreaHeight;
+
+			// Ensure correct number of tooltip entities
+			while (_tooltipEntities.Count < sorted.Count)
+			{
+				int idx = _tooltipEntities.Count;
+				var e = EntityManager.CreateEntity(TooltipEntityPrefix + idx);
+				EntityManager.AddComponent(e, new Transform { ZOrder = 50000 });
+				EntityManager.AddComponent(e, new UIElement
+				{
+					IsInteractable = true,
+					TooltipType = TooltipType.Card,
+					TooltipPosition = TooltipPosition.Left,
+					IsPreventDefaultClick = true
+				});
+				EntityManager.AddComponent(e, new CardTooltip());
+				EntityManager.AddComponent(e, new CardData());
+				_tooltipEntities.Add(e);
+			}
+			while (_tooltipEntities.Count > sorted.Count)
+			{
+				var last = _tooltipEntities[_tooltipEntities.Count - 1];
+				EntityManager.DestroyEntity(last.Id);
+				_tooltipEntities.RemoveAt(_tooltipEntities.Count - 1);
+			}
+
+			// Update each tooltip entity's bounds and card data
+			int drawY = headerH + titleAreaHeight;
+			string prevGroup = null;
+			for (int i = 0; i < sorted.Count; i++)
+			{
+				var item = sorted[i];
+				string groupKey = item.name.ToLowerInvariant();
+				if (prevGroup != null && prevGroup != groupKey) drawY += GroupGap;
+				else if (prevGroup == groupKey) drawY += InstanceGap;
+				prevGroup = groupKey;
+
+				int rowY = drawY - deck.DeckListScroll;
+				bool visible = rowY + RowHeight >= visibleTop && rowY < vh;
+
+				var e = _tooltipEntities[i];
+				var ui = e.GetComponent<UIElement>();
+				ui.Bounds = new Rectangle(rowX, rowY, rowW, RowHeight);
+				ui.IsInteractable = visible;
+
+				var ct = e.GetComponent<CardTooltip>();
+				ct.CardId = item.id;
+				ct.TooltipScale = TooltipScale;
+
+				var cd = e.GetComponent<CardData>();
+				cd.Color = item.color;
+
+				drawY += RowHeight;
+			}
+		}
+
+		private void HideTooltipEntities()
+		{
+			if (_tooltipEntities.Count == 0) return;
+			foreach (var e in _tooltipEntities)
+				EntityManager.DestroyEntity(e.Id);
+			_tooltipEntities.Clear();
 		}
 
 		private List<(string key, string id, CardData.CardColor color, string name, CardBase card)> GetSortedGroupedDeck(CustomizationV2DeckState deck)

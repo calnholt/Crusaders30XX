@@ -7,7 +7,6 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
-using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
@@ -23,7 +22,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteFont _font;
         private readonly Texture2D _pixel;
         private readonly RasterizerState _scissorRasterizer;
-        private int? _lastWheel;
+        private CursorStateEvent _cursorEvent;
         [DebugEditable(DisplayName = "Modal Margin", Step = 1, Min = 0, Max = 200)]
         public int ModalMargin { get; set; } = 40;
         [DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 200)]
@@ -73,6 +72,7 @@ namespace Crusaders30XX.ECS.Systems
             _pixel.SetData(new[] { Color.White });
             _scissorRasterizer = new RasterizerState { ScissorTestEnable = true, CullMode = CullMode.None };
 
+            EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
             EventManager.Subscribe<OpenCardListModalEvent>(OpenModal);
             EventManager.Subscribe<CloseCardListModalEvent>(_ => CloseModal());
         }
@@ -92,42 +92,48 @@ namespace Crusaders30XX.ECS.Systems
             if (modalEntity == null) return;
             var modal = modalEntity.GetComponent<CardListModal>();
             if (modal == null || !modal.IsOpen || modal.Cards == null) return;
-            // Gamepad right-stick scrolling
-            if (Game1.WindowIsActive && !StateSingleton.IsActive)
+            // Scroll via CursorStateEvent (mouse wheel + gamepad stick)
+            if (_cursorEvent != null && Game1.WindowIsActive && !StateSingleton.IsActive)
             {
-                var gp = GamePad.GetState(PlayerIndex.One);
-                if (gp.IsConnected)
+                bool hasScroll = _cursorEvent.ScrollDelta != 0f || _cursorEvent.ScrollStickY != 0f;
+                if (hasScroll)
                 {
-                    var stick = gp.ThumbSticks.Right; // X: right+, Y: up+
-                    float mag = stick.Length();
-                    if (mag >= RightStickDeadzone)
+                    int w = Game1.VirtualWidth;
+                    int h = Game1.VirtualHeight;
+                    var rect = new Rectangle(ModalMargin, ModalMargin, w - ModalMargin * 2, h - ModalMargin * 2);
+
+                    int cursorY = rect.Y + Padding;
+                    cursorY += (int)(_font.LineSpacing * TitleScale) + Padding;
+
+                    var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
+                    var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+                    int topNudge = Math.Max(0, cvs?.CardOffsetYExtra ?? 0);
+
+                    int maxCols = Math.Max(1, (rect.Width - Padding * 2 + GridGap) / (GridCellW + GridGap));
+                    int rows = (((modal.Cards?.Count) ?? 0) + maxCols - 1) / maxCols;
+                    int contentHeight = Math.Max(0, rows * (GridCellH + GridGap) - GridGap + topNudge);
+                    int visibleHeight = rect.Bottom - cursorY - Padding;
+                    int maxScroll = Math.Max(0, contentHeight - visibleHeight);
+
+                    // Mouse wheel: discrete steps
+                    if (_cursorEvent.ScrollDelta != 0f)
                     {
-                        int w = Game1.VirtualWidth;
-                        int h = Game1.VirtualHeight;
-                        var rect = new Rectangle(ModalMargin, ModalMargin, w - ModalMargin * 2, h - ModalMargin * 2);
+                        modal.ScrollOffset -= (int)Math.Round(_cursorEvent.ScrollDelta) * ScrollStep;
+                        modal.ScrollOffset = Math.Clamp(modal.ScrollOffset, 0, maxScroll);
+                    }
 
-                        int cursorY = rect.Y + Padding;
-                        cursorY += (int)(_font.LineSpacing * TitleScale) + Padding;
-
-                        var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-                        var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
-                        int topNudge = Math.Max(0, cvs?.CardOffsetYExtra ?? 0);
-
-                        int maxCols = Math.Max(1, (rect.Width - Padding * 2 + GridGap) / (GridCellW + GridGap));
-                        int rows = (((modal.Cards?.Count) ?? 0) + maxCols - 1) / maxCols;
-                        int contentHeight = Math.Max(0, rows * (GridCellH + GridGap) - GridGap + topNudge);
-                        int visibleHeight = rect.Bottom - cursorY - Padding;
-                        int maxScroll = Math.Max(0, contentHeight - visibleHeight);
-
-                        Vector2 dir = (mag > 0f) ? (stick / mag) : Vector2.Zero;
-                        float normalized = MathHelper.Clamp((mag - RightStickDeadzone) / (1f - RightStickDeadzone), 0f, 1f);
-                        float speedMultiplier = MathHelper.Clamp((float)System.Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
+                    // Gamepad stick: analog with speed curve
+                    if (_cursorEvent.ScrollStickY != 0f)
+                    {
+                        float mag = MathF.Abs(_cursorEvent.ScrollStickY);
+                        float normalized = MathHelper.Clamp(mag, 0f, 1f);
+                        float speedMultiplier = MathHelper.Clamp((float)Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
                         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-                        float delta = -(dir.Y) * GamepadScrollSpeed * speedMultiplier * dt;
-                        if (System.Math.Abs(delta) > 0.01f)
+                        float delta = -Math.Sign(_cursorEvent.ScrollStickY) * GamepadScrollSpeed * speedMultiplier * dt;
+                        if (Math.Abs(delta) > 0.01f)
                         {
                             float next = MathHelper.Clamp(modal.ScrollOffset + delta, 0, maxScroll);
-                            modal.ScrollOffset = (int)System.Math.Round(next);
+                            modal.ScrollOffset = (int)Math.Round(next);
                         }
                     }
                 }
@@ -193,29 +199,6 @@ namespace Crusaders30XX.ECS.Systems
             int contentHeight = Math.Max(0, rows * (GridCellH + GridGap) - GridGap + topNudge);
             int visibleHeight = rect.Bottom - cursorY - Padding;
             int maxScroll = Math.Max(0, contentHeight - visibleHeight);
-
-            // Handle mouse wheel scrolling within content area
-            var mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
-            var contentRect = new Rectangle(rect.X + Padding, cursorY, rect.Width - Padding * 2, visibleHeight);
-            if (contentRect.Contains(mouse.Position))
-            {
-                int delta = mouse.ScrollWheelValue;
-                if (_lastWheel.HasValue)
-                {
-                    int diff = delta - _lastWheel.Value;
-                    if (diff != 0)
-                    {
-                        modal.ScrollOffset -= Math.Sign(diff) * ScrollStep;
-                        if (modal.ScrollOffset < 0) modal.ScrollOffset = 0;
-                        if (modal.ScrollOffset > maxScroll) modal.ScrollOffset = maxScroll;
-                    }
-                }
-                _lastWheel = delta;
-            }
-            else
-            {
-                _lastWheel = mouse.ScrollWheelValue;
-            }
 
             // End current batch to establish new state with scissor clipping
             var prevScissor = _graphicsDevice.ScissorRectangle;
@@ -341,8 +324,6 @@ namespace Crusaders30XX.ECS.Systems
             {
                 EntityManager.DestroyEntity(btn.Id);
             }
-            // Reset wheel so a future open starts fresh
-            _lastWheel = null;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
@@ -20,6 +21,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _contentFont = FontSingleton.ContentFont;
 		private Texture2D _pixel;
 		private CursorStateEvent _cursorEvent;
+
+		public DeckV2InvalidDeckDialogSystem InvalidDeckDialogSystem { get; set; }
 
 		[DebugEditable(DisplayName = "Header Height", Step = 2, Min = 32, Max = 100)]
 		public int HeaderHeight { get; set; } = 56;
@@ -104,6 +107,7 @@ namespace Crusaders30XX.ECS.Systems
 			var scene = entity.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.CustomizationV2) return;
 			if (StateSingleton.IsActive) return;
+			if (InvalidDeckDialogSystem != null && InvalidDeckDialogSystem.IsDialogOpen) return;
 
 			var nav = EntityManager.GetEntitiesWithComponent<CustomizationV2NavigationState>().FirstOrDefault()?.GetComponent<CustomizationV2NavigationState>();
 			if (nav == null) return;
@@ -131,6 +135,17 @@ namespace Crusaders30XX.ECS.Systems
 			var exitRect = new Rectangle(exitX, 0, (int)exitSize.X + KeyHintSize + 10, HeaderHeight);
 			if (exitRect.Contains(click))
 			{
+				// If on Deck tab with an invalid deck, show confirmation dialog instead of exiting
+				if (nav.ActiveTab == CustomizationV2TabType.Deck && InvalidDeckDialogSystem != null)
+				{
+					var deck = EntityManager.GetEntitiesWithComponent<CustomizationV2DeckState>().FirstOrDefault()?.GetComponent<CustomizationV2DeckState>();
+					int count = deck?.DeckCardKeys?.Count ?? 0;
+					if (count != DeckRules.RequiredDeckSize)
+					{
+						InvalidDeckDialogSystem.ShowDialog(count);
+						return;
+					}
+				}
 				EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
 			}
 		}

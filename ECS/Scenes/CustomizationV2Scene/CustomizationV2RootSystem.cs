@@ -77,6 +77,7 @@ namespace Crusaders30XX.ECS.Systems
 			_availableGridSystem.StatsBarSystem = _statsBarSystem;
 			_deckListSystem.HeaderSystem = _headerSystem;
 			_deckListSystem.StatsBarSystem = _statsBarSystem;
+			_headerSystem.InvalidDeckDialogSystem = _invalidDeckDialogSystem;
 
 			_wheelSegmentDisplaySystem.LayoutSystem = _wheelLayoutSystem;
 			_wheelRingDisplaySystem.LayoutSystem = _wheelLayoutSystem;

@@ -1,6 +1,7 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
@@ -16,7 +17,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _font;
 		private Texture2D _pixel;
 		private float _scrollY = 0f;
-		private int _prevWheel = 0;
+		private CursorStateEvent _cursorEvent;
 		private bool _wasOpen = false;
 		private bool _prevLeftDown = false;
 
@@ -39,6 +40,7 @@ namespace Crusaders30XX.ECS.Systems
 			_font = font;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -48,19 +50,28 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			// Close on click anywhere; handle mouse wheel scrolling when open
+			// Close on click anywhere; handle scrolling when open
 			var state = entity.GetComponent<HowToPlayOverlay>();
 			if (state == null) return;
 			var mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
 			if (state.IsOpen)
 			{
 				if (!_wasOpen) { _scrollY = 0f; _prevLeftDown = mouse.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed; }
-				int wheel = mouse.ScrollWheelValue;
-				int delta = wheel - _prevWheel;
-				if (delta != 0)
+
+				// Scroll via CursorStateEvent
+				float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+				if (_cursorEvent != null)
 				{
-					_scrollY = System.Math.Max(0f, _scrollY - delta * 0.25f);
+					if (_cursorEvent.ScrollDelta != 0f)
+					{
+						_scrollY = System.Math.Max(0f, _scrollY - _cursorEvent.ScrollDelta * 30f);
+					}
+					if (_cursorEvent.ScrollStickY != 0f)
+					{
+						_scrollY = System.Math.Max(0f, _scrollY - _cursorEvent.ScrollStickY * 600f * dt);
+					}
 				}
+
 				bool leftNow = mouse.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
 				if (leftNow && !_prevLeftDown)
 				{
@@ -68,7 +79,6 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				_prevLeftDown = leftNow;
 			}
-			_prevWheel = mouse.ScrollWheelValue;
 			_wasOpen = state.IsOpen;
 		}
 

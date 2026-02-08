@@ -18,6 +18,8 @@ namespace Crusaders30XX.ECS.Events
 		public float Coverage { get; set; }
 		public Entity TopEntity { get; set; }
 		public InputMethod Source { get; set; }
+		public float ScrollDelta { get; set; }
+		public float ScrollStickY { get; set; }
 	}
 
 	public class SetCursorEnabledEvent

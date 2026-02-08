@@ -44,7 +44,7 @@ namespace Crusaders30XX.ECS.Core
         /// <summary>
         /// Enables or disables this system
         /// </summary>
-        public void SetActive(bool active)
+        public virtual void SetActive(bool active)
         {
             IsActive = active;
         }

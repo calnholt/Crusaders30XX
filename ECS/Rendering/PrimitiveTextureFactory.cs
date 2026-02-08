@@ -417,15 +417,18 @@ namespace Crusaders30XX.ECS.Rendering
 			float skewPercent)
 		{
 			float skew = width * skewPercent / 100f;
+			// Both edges slant the same way: top-left inset by skew, bottom-left at 0
+			// Edge angle: tan(angle) = -skew / height (edges lean left going downward)
+			float edgeAngleDeg = MathHelper.ToDegrees((float)System.Math.Atan2(-skew, height));
 			return GetAntialiasedTrapezoidMask(
 				device,
 				width,
 				height,
 				skew,
 				0f,
+				edgeAngleDeg,
 				0f,
-				0f,
-				0f
+				edgeAngleDeg
 			);
 		}
 

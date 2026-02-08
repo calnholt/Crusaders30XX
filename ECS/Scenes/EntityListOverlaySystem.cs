@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -19,6 +20,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private Texture2D _pixel;
+        private CursorStateEvent _cursorEvent;
         private MouseState _prevMouse;
 
         public EntityListOverlaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
@@ -28,7 +30,7 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch = spriteBatch;
             _pixel = new Texture2D(_graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
-            _prevMouse = Mouse.GetState();
+            EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -38,7 +40,18 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
-            // no-op
+            var overlay = entity.GetComponent<EntityListOverlay>();
+            if (overlay == null || !overlay.IsOpen || _cursorEvent == null) return;
+
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (_cursorEvent.ScrollDelta != 0f)
+            {
+                overlay.ScrollOffset = Math.Max(0f, overlay.ScrollOffset - _cursorEvent.ScrollDelta * overlay.RowHeight * 2f);
+            }
+            if (_cursorEvent.ScrollStickY != 0f)
+            {
+                overlay.ScrollOffset = Math.Max(0f, overlay.ScrollOffset - _cursorEvent.ScrollStickY * overlay.RowHeight * 20f * dt);
+            }
         }
 
         public void Draw()
@@ -52,12 +65,6 @@ namespace Crusaders30XX.ECS.Systems
 
             var mouse = Mouse.GetState();
             bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
-            bool wheelMoved = mouse.ScrollWheelValue != _prevMouse.ScrollWheelValue;
-            if (wheelMoved)
-            {
-                float delta = (mouse.ScrollWheelValue - _prevMouse.ScrollWheelValue) / 120f; // notches
-                overlay.ScrollOffset = Math.Max(0f, overlay.ScrollOffset - delta * overlay.RowHeight * 2f);
-            }
 
             // Panel
             int x = overlay.PanelX;

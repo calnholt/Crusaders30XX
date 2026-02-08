@@ -67,10 +67,21 @@ Events have states: Pending → Resolving → Waiting → Complete. This ensures
 - Structure draw code to be as readable as possible using comments and good naming to convey behavior, breaking down logical sections into well named functions
 - Draw() functions never manage state - strictly for rendering
 - Performance is important - cache when logical; use `DeleteCachesEvent` to clear
+- NEVER use MouseState or GamePad state - use CursorEvents 
 
 ## Display Systems
 
 - Always create as many `DebugEditable` as possible for maximum visual control, never hardcode magic numbers.
+
+## Entities
+
+- ALWAYS create entities for objects that have functionality or bounds
+- When creating buttons, ALWAYS create an entity with `Transform` and `UIElement` components
+
+## Events
+
+- Create events to drive behavior across different systems
+- Prioritize leveraging `UIElementEventDelegateService` for simple events rather than `IsClicked`
 
 ### New System
 1. Inherit from `ECS/Core/System`

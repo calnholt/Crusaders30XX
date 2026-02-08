@@ -4,7 +4,6 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Factories;
 using System;
@@ -21,7 +20,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font = FontSingleton.TitleFont;
         private readonly Texture2D _pixel;
-        private MouseState _prevMouse;
+        private CursorStateEvent _cursorEvent;
 		private readonly Dictionary<string, int> _cardEntityIds = new Dictionary<string, int>();
 
         [DebugEditable(DisplayName = "Left Panel Width", Step = 4, Min = 100, Max = 2000)]
@@ -49,9 +48,9 @@ namespace Crusaders30XX.ECS.Systems
             _world = world;
             _graphicsDevice = gd;
             _spriteBatch = sb;
-            _prevMouse = Mouse.GetState();
             _pixel = new Texture2D(_graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
+            EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
             EventManager.Subscribe<ShowTransition>(_ => OnLoadScene());
         }
 
@@ -76,39 +75,24 @@ namespace Crusaders30XX.ECS.Systems
             var scene = entity.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Customization) return;
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-            if (st == null) return;
-            var mouse = Mouse.GetState();
-            bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
-            int vw = Game1.VirtualWidth;
-            int cardW = GetCvs().CardWidth;
-            int cardH = GetCvs().CardHeight;
+            if (st == null || _cursorEvent == null) return;
 
-            int panelX = 0;
-            int panelY = 0;
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             int panelH = Game1.VirtualHeight;
-            int colW = (int)(cardW * CardScale) + 20;
-            int col = Math.Max(1, Columns);
+            var panelRect = new Rectangle(0, 0, PanelWidth, panelH);
+            var cursorPt = new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y));
 
-            // Mouse wheel scroll when cursor is in left panel (convert mouse to virtual space)
-            var dest = Game1.RenderDestination;
-            float scaleX = (float)dest.Width / Game1.VirtualWidth;
-            float scaleY = (float)dest.Height / Game1.VirtualHeight;
-            if (scaleX <= 0.001f) scaleX = 1f;
-            if (scaleY <= 0.001f) scaleY = 1f;
-            var virtPoint = new Point(
-                (int)System.Math.Round((mouse.Position.X - dest.X) / scaleX),
-                (int)System.Math.Round((mouse.Position.Y - dest.Y) / scaleY)
-            );
-
-            // Mouse wheel scroll when cursor is in left panel (virtual coords)
-            if (new Rectangle(panelX, panelY, PanelWidth, panelH).Contains(virtPoint))
+            if (panelRect.Contains(cursorPt))
             {
-                int delta = mouse.ScrollWheelValue - _prevMouse.ScrollWheelValue;
-                st.LeftScroll = Math.Max(0, st.LeftScroll - delta / 2);
+                if (_cursorEvent.ScrollDelta != 0f)
+                {
+                    st.LeftScroll = Math.Max(0, st.LeftScroll - (int)Math.Round(_cursorEvent.ScrollDelta * 60));
+                }
+                if (_cursorEvent.ScrollStickY != 0f)
+                {
+                    st.LeftScroll = Math.Max(0, st.LeftScroll - (int)Math.Round(_cursorEvent.ScrollStickY * 1200f * dt));
+                }
             }
-
-            // Content layout and clicks moved to AvailableCardDisplaySystem
-            _prevMouse = mouse;
         }
 
         public void Draw()

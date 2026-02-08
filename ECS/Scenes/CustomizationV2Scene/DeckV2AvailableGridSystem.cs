@@ -11,7 +11,7 @@ using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
+
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -25,7 +25,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Dictionary<string, int> _createdCardIds = new();
 		private CursorStateEvent _cursorEvent;
 		private Texture2D _pixel;
-		private int? _lastWheel;
 
 		// Caches
 		private List<(string key, CardBase card, CardData.CardColor color)> _cachedEntries;
@@ -61,6 +60,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Title Pad Y", Step = 2, Min = 0, Max = 60)]
 		public int TitlePadY { get; set; } = 20;
+
+		[DebugEditable(DisplayName = "Grid Content Pad Y", Step = 2, Min = 0, Max = 60)]
+		public int GridContentPadY { get; set; } = 12;
 
 		[DebugEditable(DisplayName = "Scroll Speed", Step = 100, Min = 500, Max = 5000)]
 		public float ScrollSpeed { get; set; } = 2200f;
@@ -115,46 +117,29 @@ namespace Crusaders30XX.ECS.Systems
 			// Compute max scroll for clamping
 			var cvs0 = GetCardVisualSettings();
 			int scaledH0 = (int)(cvs0.CardHeight * CardScale);
+			int offsetY0 = (int)Math.Round(cvs0.CardOffsetYExtra * (double)CardScale);
 			int col0 = Math.Max(1, Columns);
 			var entries0 = GetAvailableEntries();
 			int headerH0 = (HeaderSystem?.HeaderHeight ?? 56) + (StatsBarSystem?.BarHeight ?? 50);
 			int gridTopY0 = headerH0 + TitlePadY + (int)(_headingFont.MeasureString("A").Y * TitleTextScale) + GridTopMargin;
+			int visibleH0 = Game1.VirtualHeight - gridTopY0;
 			int totalRows0 = Math.Max(0, (entries0.Count + col0 - 1) / col0);
-			int contentHeight0 = gridTopY0 + totalRows0 * (scaledH0 + RowGap);
-			int maxScroll = Math.Max(0, contentHeight0 - Game1.VirtualHeight);
+			int contentHeight0 = GridContentPadY + totalRows0 * (scaledH0 + RowGap);
+			int maxScroll = Math.Max(0, contentHeight0 - visibleH0);
 
-			// Scroll via mouse wheel
-			var mouse = Mouse.GetState();
+			// Scroll via CursorStateEvent
 			int panelW0 = Game1.VirtualWidth - RightPanelWidth;
 			var gridRect = new Rectangle(0, headerH0, panelW0, Game1.VirtualHeight - headerH0);
 			if (_cursorEvent != null && gridRect.Contains(new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y))))
 			{
-				int wheelValue = mouse.ScrollWheelValue;
-				if (_lastWheel.HasValue)
+				if (_cursorEvent.ScrollDelta != 0f)
 				{
-					int diff = wheelValue - _lastWheel.Value;
-					if (diff != 0)
-					{
-						deck.AvailableScroll -= Math.Sign(diff) * MouseScrollStep;
-						deck.AvailableScroll = Math.Clamp(deck.AvailableScroll, 0, maxScroll);
-					}
+					deck.AvailableScroll -= (int)Math.Round(_cursorEvent.ScrollDelta) * MouseScrollStep;
+					deck.AvailableScroll = Math.Clamp(deck.AvailableScroll, 0, maxScroll);
 				}
-				_lastWheel = wheelValue;
-			}
-			else
-			{
-				_lastWheel = mouse.ScrollWheelValue;
-			}
-
-			// Gamepad scroll
-			var gp = GamePad.GetState(PlayerIndex.One);
-			if (gp.IsConnected && _cursorEvent != null)
-			{
-				float y = gp.ThumbSticks.Right.Y;
-				const float Deadzone = 0.2f;
-				if (MathF.Abs(y) > Deadzone)
+				if (_cursorEvent.ScrollStickY != 0f)
 				{
-					deck.AvailableScroll = Math.Max(0, deck.AvailableScroll - (int)Math.Round(y * ScrollSpeed * dt));
+					deck.AvailableScroll = Math.Max(0, deck.AvailableScroll - (int)Math.Round(_cursorEvent.ScrollStickY * ScrollSpeed * dt));
 					deck.AvailableScroll = Math.Clamp(deck.AvailableScroll, 0, maxScroll);
 				}
 			}
@@ -181,9 +166,9 @@ namespace Crusaders30XX.ECS.Systems
 				int r = idx / col;
 				int c = idx % col;
 				int x = GridPadX + c * colW + scaledW / 2;
-				int y = headerH + TitlePadY + (int)(_headingFont.MeasureString("A").Y * TitleTextScale) + GridTopMargin + r * (scaledH + RowGap) + scaledH / 2 - deck.AvailableScroll;
+				int y = headerH + TitlePadY + (int)(_headingFont.MeasureString("A").Y * TitleTextScale) + GridTopMargin + GridContentPadY + r * (scaledH + RowGap) + scaledH / 2 + offsetY0 - deck.AvailableScroll;
 
-				var rect = new Rectangle(x - scaledW / 2, y - scaledH / 2, scaledW, scaledH);
+				var rect = new Rectangle(x - scaledW / 2, y - scaledH / 2 - offsetY0, scaledW, scaledH);
 				if (rect.X < panelW && rect.Contains(click))
 				{
 					EventManager.Publish(new AddCardToLoadoutRequested { CardKey = entry.key });
@@ -236,11 +221,12 @@ namespace Crusaders30XX.ECS.Systems
 			int col = Math.Max(1, Columns);
 			int scaledW = (int)(cardW * CardScale);
 			int scaledH = (int)(cardH * CardScale);
+			int offsetY = (int)Math.Round(cvs.CardOffsetYExtra * (double)CardScale);
 			int colW = scaledW + ColGap;
 			int gridTopY = headerH + TitlePadY + (int)titleSize.Y + GridTopMargin;
 
-			// Clip rect for scrolling — set scissor to mask cards outside the grid area
-			var clipRect = new Rectangle(0, headerH, panelW, Game1.VirtualHeight - headerH);
+			// Clip rect for scrolling — starts below the title so cards don't overlap it
+			var clipRect = new Rectangle(0, gridTopY, panelW, Game1.VirtualHeight - gridTopY);
 			var previousScissor = _graphicsDevice.ScissorRectangle;
 			_graphicsDevice.ScissorRectangle = clipRect;
 
@@ -251,10 +237,10 @@ namespace Crusaders30XX.ECS.Systems
 				int r = idx / col;
 				int cIdx = idx % col;
 				int x = GridPadX + cIdx * colW + scaledW / 2;
-				int y = gridTopY + r * (scaledH + RowGap) + scaledH / 2 - deck.AvailableScroll;
+				int y = gridTopY + GridContentPadY + r * (scaledH + RowGap) + scaledH / 2 + offsetY - deck.AvailableScroll;
 
-				// Skip if off-screen
-				if (y + scaledH / 2 < headerH || y - scaledH / 2 > Game1.VirtualHeight)
+				// Skip if off-screen (use visual bounds which account for CardOffsetYExtra)
+				if (y - offsetY + scaledH / 2 < gridTopY || y - offsetY - scaledH / 2 > Game1.VirtualHeight)
 				{
 					idx++;
 					continue;
@@ -274,23 +260,23 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice.ScissorRectangle = previousScissor;
 
 			// Clamp scroll (also clamped in Update, but guard against stale values after resize)
+			int visibleHeight = Game1.VirtualHeight - gridTopY;
 			int totalRows = Math.Max(0, (entries.Count + col - 1) / col);
-			int contentHeight = gridTopY + totalRows * (scaledH + RowGap);
-			int maxScrollDraw = Math.Max(0, contentHeight - Game1.VirtualHeight);
+			int contentHeight = GridContentPadY + totalRows * (scaledH + RowGap);
+			int maxScrollDraw = Math.Max(0, contentHeight - visibleHeight);
 			if (deck.AvailableScroll > maxScrollDraw) deck.AvailableScroll = maxScrollDraw;
 
-			// Scrollbar
-			int visibleHeight = Game1.VirtualHeight - headerH;
+			// Scrollbar — aligned with the card grid area (below the title)
 			if (contentHeight > visibleHeight)
 			{
 				int maxScroll = contentHeight - visibleHeight;
 				float thumbRatio = (float)visibleHeight / contentHeight;
 				int thumbH = Math.Max(20, (int)(visibleHeight * thumbRatio));
 				float scrollFraction = maxScroll > 0 ? (float)deck.AvailableScroll / maxScroll : 0;
-				int thumbY = headerH + (int)((visibleHeight - thumbH) * scrollFraction);
+				int thumbY = gridTopY + (int)((visibleHeight - thumbH) * scrollFraction);
 				int scrollX = panelW - ScrollbarWidth;
 
-				_spriteBatch.Draw(_pixel, new Rectangle(scrollX, headerH, ScrollbarWidth, visibleHeight), new Color(10, 10, 10));
+				_spriteBatch.Draw(_pixel, new Rectangle(scrollX, gridTopY, ScrollbarWidth, visibleHeight), new Color(10, 10, 10));
 				_spriteBatch.Draw(_pixel, new Rectangle(scrollX, thumbY, ScrollbarWidth, thumbH), new Color(51, 51, 51));
 			}
 		}

@@ -30,6 +30,7 @@ namespace Crusaders30XX.ECS.Systems
 		private Entity _prevHoverEntityForRumble;
 		private float _rumbleTimeRemaining;
 		private bool _isEnabled = true;
+		private int _prevScrollWheelValue;
 
 		// Cursor cross debug + animation
 		[DebugEditable(DisplayName = "Cross Scale Multiplier", Step = 0.05f, Min = 0.25f, Max = 3f)]
@@ -84,6 +85,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Rumble High Intensity", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float RumbleHigh { get; set; } = 0.2f;
 
+		[DebugEditable(DisplayName = "Scroll Stick Deadzone", Step = 0.01f, Min = 0f, Max = 0.5f)]
+		public float ScrollStickDeadzone { get; set; } = 0.15f;
+
 		public CursorSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
 		{
@@ -92,6 +96,7 @@ namespace Crusaders30XX.ECS.Systems
 			_content = content;
 			// Load cross texture once
 			_cursorCross = _content.Load<Texture2D>("cursor_cross");
+			_prevScrollWheelValue = Mouse.GetState().ScrollWheelValue;
 			EventManager.Subscribe<SetCursorEnabledEvent>(_ => { _isEnabled = _.Enabled; });
 		}
 
@@ -230,6 +235,18 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 
+				// Read scroll input (mouse wheel works even with gamepad connected)
+				var scrollMs = Mouse.GetState();
+				int scrollWheelNow = scrollMs.ScrollWheelValue;
+				float scrollDelta = 0f;
+				int scrollRaw = scrollWheelNow - _prevScrollWheelValue;
+				if (scrollRaw != 0) scrollDelta = Math.Sign(scrollRaw);
+				_prevScrollWheelValue = scrollWheelNow;
+
+				float scrollStickY = 0f;
+				float rsY = gp.ThumbSticks.Right.Y;
+				if (MathF.Abs(rsY) > ScrollStickDeadzone) scrollStickY = rsY;
+
 				// Publish cursor state event for other systems
 				EventManager.Publish(new CursorStateEvent
 				{
@@ -238,7 +255,9 @@ namespace Crusaders30XX.ECS.Systems
 					IsAPressedEdge = isPressedEdge,
 					Coverage = coverageForTop,
 					TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E),
-					Source = InputMethod.Gamepad
+					Source = InputMethod.Gamepad,
+					ScrollDelta = scrollDelta,
+					ScrollStickY = scrollStickY
 				});
 
 				_prevGamePadState = gp;
@@ -373,6 +392,13 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 
+				// Read mouse wheel scroll delta
+				int mouseScrollNow = ms.ScrollWheelValue;
+				float mouseScrollDelta = 0f;
+				int mouseScrollRaw = mouseScrollNow - _prevScrollWheelValue;
+				if (mouseScrollRaw != 0) mouseScrollDelta = Math.Sign(mouseScrollRaw);
+				_prevScrollWheelValue = mouseScrollNow;
+
 				EventManager.Publish(new CursorStateEvent
 				{
 					Position = _cursorPosition,
@@ -380,7 +406,9 @@ namespace Crusaders30XX.ECS.Systems
 					IsAPressedEdge = isPressedEdge,
 					Coverage = coverageForTop,
 					TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E),
-					Source = InputMethod.Mouse
+					Source = InputMethod.Mouse,
+					ScrollDelta = mouseScrollDelta,
+					ScrollStickY = 0f
 				});
 
 				_prevMouseState = ms;
