@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int HeaderHeight { get; set; } = 56;
 
 		[DebugEditable(DisplayName = "Tab Width", Step = 4, Min = 80, Max = 300)]
-		public int TabWidth { get; set; } = 160;
+		public int TabWidth { get; set; } = 250;
 
 		[DebugEditable(DisplayName = "Tab Gap", Step = 1, Min = 0, Max = 20)]
 		public int TabGap { get; set; } = 4;

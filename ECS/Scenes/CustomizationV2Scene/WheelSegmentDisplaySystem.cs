@@ -47,19 +47,19 @@ namespace Crusaders30XX.ECS.Systems
 		public int ActiveBgB { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Label Scale", Step = 0.01f, Min = 0.03f, Max = 0.2f)]
-		public float LabelScale { get; set; } = 0.08f;
+		public float LabelScale { get; set; } = 0.12f;
 
 		[DebugEditable(DisplayName = "Name Scale", Step = 0.01f, Min = 0.05f, Max = 0.3f)]
-		public float NameScale { get; set; } = 0.12f;
+		public float NameScale { get; set; } = 0.15f;
 
 		[DebugEditable(DisplayName = "Skew %", Step = 1, Min = 0, Max = 20)]
-		public float SkewPercent { get; set; } = 8f;
+		public float SkewPercent { get; set; } = 28f;
 
-		[DebugEditable(DisplayName = "Segment Width", Step = 4, Min = 60, Max = 200)]
-		public int SegmentWidth { get; set; } = 140;
+		[DebugEditable(DisplayName = "Segment Width", Step = 4, Min = 60, Max = 1000)]
+		public int SegmentWidth { get; set; } = 300;
 
-		[DebugEditable(DisplayName = "Segment Height", Step = 2, Min = 30, Max = 80)]
-		public int SegmentHeight { get; set; } = 52;
+		[DebugEditable(DisplayName = "Segment Height", Step = 2, Min = 30, Max = 1000)]
+		public int SegmentHeight { get; set; } = 100;
 
 		public WheelLayoutSystem LayoutSystem { get; set; }
 

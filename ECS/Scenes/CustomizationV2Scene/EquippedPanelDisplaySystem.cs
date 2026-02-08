@@ -20,7 +20,7 @@ namespace Crusaders30XX.ECS.Systems
 		private Texture2D _pixel;
 
 		[DebugEditable(DisplayName = "Panel Width", Step = 4, Min = 160, Max = 400)]
-		public int PanelWidth { get; set; } = 240;
+		public int PanelWidth { get; set; } = 308;
 
 		[DebugEditable(DisplayName = "Panel BG R", Step = 1, Min = 0, Max = 255)]
 		public int PanelBgR { get; set; } = 26;
@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int PanelBgB { get; set; } = 26;
 
 		[DebugEditable(DisplayName = "Row Height", Step = 2, Min = 40, Max = 100)]
-		public int RowHeight { get; set; } = 72;
+		public int RowHeight { get; set; } = 76;
 
 		[DebugEditable(DisplayName = "Row Pad X", Step = 2, Min = 4, Max = 30)]
 		public int RowPadX { get; set; } = 16;
@@ -41,19 +41,19 @@ namespace Crusaders30XX.ECS.Systems
 		public int RowPadY { get; set; } = 8;
 
 		[DebugEditable(DisplayName = "Label Scale", Step = 0.01f, Min = 0.03f, Max = 0.2f)]
-		public float LabelScale { get; set; } = 0.07f;
+		public float LabelScale { get; set; } = 0.11f;
 
 		[DebugEditable(DisplayName = "Name Scale", Step = 0.01f, Min = 0.05f, Max = 0.2f)]
-		public float NameScale { get; set; } = 0.10f;
+		public float NameScale { get; set; } = 0.13f;
 
 		[DebugEditable(DisplayName = "Stat Scale", Step = 0.01f, Min = 0.03f, Max = 0.15f)]
-		public float StatScale { get; set; } = 0.08f;
+		public float StatScale { get; set; } = 0.1f;
 
 		[DebugEditable(DisplayName = "Top Margin", Step = 2, Min = 40, Max = 200)]
 		public int TopMargin { get; set; } = 80;
 
 		[DebugEditable(DisplayName = "Title Scale", Step = 0.01f, Min = 0.05f, Max = 0.3f)]
-		public float TitleScale { get; set; } = 0.10f;
+		public float TitleScale { get; set; } = 0.16f;
 
 		[DebugEditable(DisplayName = "Highlight BG R", Step = 1, Min = 0, Max = 255)]
 		public int HighlightBgR { get; set; } = 60;

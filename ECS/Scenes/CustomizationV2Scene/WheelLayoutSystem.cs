@@ -16,13 +16,13 @@ namespace Crusaders30XX.ECS.Systems
 		private bool _segmentsCreated;
 
 		[DebugEditable(DisplayName = "Wheel Center X", Step = 4, Min = 100, Max = 1200)]
-		public int WheelCenterX { get; set; } = 480;
+		public int WheelCenterX { get; set; } = 832;
 
 		[DebugEditable(DisplayName = "Wheel Center Y", Step = 4, Min = 100, Max = 900)]
-		public int WheelCenterY { get; set; } = 540;
+		public int WheelCenterY { get; set; } = 564;
 
-		[DebugEditable(DisplayName = "Wheel Radius", Step = 4, Min = 100, Max = 400)]
-		public int WheelRadius { get; set; } = 235;
+		[DebugEditable(DisplayName = "Wheel Radius", Step = 4, Min = 100, Max = 700)]
+		public int WheelRadius { get; set; } = 400;
 
 		[DebugEditable(DisplayName = "Segment Width", Step = 4, Min = 60, Max = 200)]
 		public int SegmentWidth { get; set; } = 140;
@@ -31,10 +31,10 @@ namespace Crusaders30XX.ECS.Systems
 		public int SegmentHeight { get; set; } = 52;
 
 		[DebugEditable(DisplayName = "Angle Spacing", Step = 1, Min = 20, Max = 60)]
-		public float AngleSpacing { get; set; } = 40f;
+		public float AngleSpacing { get; set; } = 39f;
 
 		[DebugEditable(DisplayName = "Start Angle", Step = 5, Min = 0, Max = 360)]
-		public float StartAngle { get; set; } = 270f;
+		public float StartAngle { get; set; } = 285f;
 
 		private static readonly WheelSlotType[] SlotOrder =
 		{
