@@ -27,18 +27,6 @@ public class CursorTrailDisplaySystem : Core.System
 
     private Vector2 _cursorPos;
     private bool _hasCursorPos;
-    private bool _needsInitialClear = true;
-
-    // Blend state for drawing the decayed trail (multiply alpha for fade)
-    private static readonly BlendState DecayBlend = new BlendState
-    {
-        ColorSourceBlend = Blend.DestinationColor,
-        ColorDestinationBlend = Blend.Zero,
-        ColorBlendFunction = BlendFunction.Add,
-        AlphaSourceBlend = Blend.DestinationAlpha,
-        AlphaDestinationBlend = Blend.Zero,
-        AlphaBlendFunction = BlendFunction.Add
-    };
 
     // Additive blend for compositing trail over scene
     private static readonly BlendState AdditiveAlpha = new BlendState
@@ -113,20 +101,11 @@ public class CursorTrailDisplaySystem : Core.System
         // --- Step 1: Decay existing trail into _blurA ---
         _gd.SetRenderTarget(_blurA);
 
-        if (_needsInitialClear)
-        {
-            _gd.Clear(Color.Transparent);
-            _needsInitialClear = false;
-        }
-        else
-        {
-            _gd.Clear(Color.Transparent);
-        }
+        _gd.Clear(Color.Transparent);
 
-        // Draw previous trail with decay (darken / fade)
-        byte decayByte = (byte)(TrailDecay * 255);
-        Color decayColor = new Color(decayByte, decayByte, decayByte, decayByte);
-        _sb.Begin(SpriteSortMode.Immediate, DecayBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
+        // Draw previous trail with decay (fade via tint color)
+        Color decayColor = new Color(TrailDecay, TrailDecay, TrailDecay, 1f);
+        _sb.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
         _sb.Draw(_trailRt, _gd.Viewport.Bounds, decayColor);
         _sb.End();
 
@@ -195,7 +174,6 @@ public class CursorTrailDisplaySystem : Core.System
         _trailRt = new RenderTarget2D(_gd, w, h, false, SurfaceFormat.Color, DepthFormat.None);
         _blurA = new RenderTarget2D(_gd, w, h, false, SurfaceFormat.Color, DepthFormat.None);
         _blurB = new RenderTarget2D(_gd, w, h, false, SurfaceFormat.Color, DepthFormat.None);
-        _needsInitialClear = true;
     }
 
     private void DisposeTargets()
