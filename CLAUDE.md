@@ -59,14 +59,6 @@ Events have states: Pending → Resolving → Waiting → Complete. This ensures
 
 `Game1.cs` initializes the World, registers all systems, and runs the game loop. Systems are updated each frame via `World.Update()`.
 
-### Card System
-
-Cards have:
-- Color costs: Red, White, Black, Any
-- Card definitions in `ECS/Objects/Cards/` inheriting from `CardBase`
-
-Combat uses block mechanics, enemy AI with planned attacks via `AttackIntent` and `PlannedAttack` components.
-
 ## Coding Standards
 
 - Add `DebugEditable` and `DebugTab` attributes to systems with Draw functions
@@ -74,6 +66,7 @@ Combat uses block mechanics, enemy AI with planned attacks via `AttackIntent` an
 - Prioritize readability over complexity
 - Structure draw code to be as readable as possible using comments and good naming to convey behavior, breaking down logical sections into well named functions
 - Draw() functions never manage state - strictly for rendering
+- Performance is important - cache when logical; use `DeleteCachesEvent` to clear
 
 ## Display Systems
 

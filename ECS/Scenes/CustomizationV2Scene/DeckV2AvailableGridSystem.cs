@@ -81,6 +81,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Mouse Scroll Step", Step = 10, Min = 10, Max = 300)]
 		public int MouseScrollStep { get; set; } = 60;
 
+		[DebugEditable(DisplayName = "Scrollbar Width", Step = 1, Min = 2, Max = 12)]
+		public int ScrollbarWidth { get; set; } = 6;
+
 		public CustomizationV2HeaderSystem HeaderSystem { get; set; }
 		public DeckV2StatsBarSystem StatsBarSystem { get; set; }
 
@@ -268,8 +271,10 @@ namespace Crusaders30XX.ECS.Systems
 			int colW = scaledW + ColGap;
 			int gridTopY = headerH + TitlePadY + (int)titleSize.Y + GridTopMargin;
 
-			// Clip rect for scrolling
+			// Clip rect for scrolling — set scissor to mask cards outside the grid area
 			var clipRect = new Rectangle(0, headerH, panelW, Game1.VirtualHeight - headerH);
+			var previousScissor = _graphicsDevice.ScissorRectangle;
+			_graphicsDevice.ScissorRectangle = clipRect;
 
 			var copyCounts = GetCopyCounts(deck);
 
@@ -322,11 +327,29 @@ namespace Crusaders30XX.ECS.Systems
 				idx++;
 			}
 
+			// Restore scissor rectangle
+			_graphicsDevice.ScissorRectangle = previousScissor;
+
 			// Clamp scroll (also clamped in Update, but guard against stale values after resize)
 			int totalRows = Math.Max(0, (entries.Count + col - 1) / col);
 			int contentHeight = gridTopY + totalRows * (scaledH + RowGap);
 			int maxScrollDraw = Math.Max(0, contentHeight - Game1.VirtualHeight);
 			if (deck.AvailableScroll > maxScrollDraw) deck.AvailableScroll = maxScrollDraw;
+
+			// Scrollbar
+			int visibleHeight = Game1.VirtualHeight - headerH;
+			if (contentHeight > visibleHeight)
+			{
+				int maxScroll = contentHeight - visibleHeight;
+				float thumbRatio = (float)visibleHeight / contentHeight;
+				int thumbH = Math.Max(20, (int)(visibleHeight * thumbRatio));
+				float scrollFraction = maxScroll > 0 ? (float)deck.AvailableScroll / maxScroll : 0;
+				int thumbY = headerH + (int)((visibleHeight - thumbH) * scrollFraction);
+				int scrollX = panelW - ScrollbarWidth;
+
+				_spriteBatch.Draw(_pixel, new Rectangle(scrollX, headerH, ScrollbarWidth, visibleHeight), new Color(10, 10, 10));
+				_spriteBatch.Draw(_pixel, new Rectangle(scrollX, thumbY, ScrollbarWidth, thumbH), new Color(51, 51, 51));
+			}
 		}
 
 		private List<(string key, CardBase card, CardData.CardColor color)> GetAvailableEntries()
