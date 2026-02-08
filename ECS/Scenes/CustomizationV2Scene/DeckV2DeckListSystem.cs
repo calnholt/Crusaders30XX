@@ -24,6 +24,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _contentFont = FontSingleton.ContentFont;
 		private CursorStateEvent _cursorEvent;
 		private Texture2D _pixel;
+		private int? _lastWheel;
 
 		[DebugEditable(DisplayName = "Right Panel Width", Step = 4, Min = 200, Max = 600)]
 		public int RightPanelWidth { get; set; } = 380;
@@ -94,6 +95,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Scroll Speed", Step = 100, Min = 500, Max = 5000)]
 		public float ScrollSpeed { get; set; } = 2200f;
 
+		[DebugEditable(DisplayName = "Mouse Scroll Step", Step = 10, Min = 10, Max = 300)]
+		public int MouseScrollStep { get; set; } = 60;
+
 		public CustomizationV2HeaderSystem HeaderSystem { get; set; }
 		public DeckV2StatsBarSystem StatsBarSystem { get; set; }
 
@@ -132,7 +136,25 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			foreach (var key in expired) deck.RemoveSlideTimers.Remove(key);
 
+			// Compute max scroll for clamping
+			int headerH0 = (HeaderSystem?.HeaderHeight ?? 56) + (StatsBarSystem?.BarHeight ?? 50);
+			var sorted0 = GetSortedGroupedDeck(deck);
+			int contentH = headerH0 + ContentPad + (int)(_headingFont.MeasureString("A").Y * TitleTextScale) + ContentPad;
+			string prevG = null;
+			foreach (var item in sorted0)
+			{
+				string gk = item.name.ToLowerInvariant();
+				if (prevG != null && prevG != gk) contentH += GroupGap;
+				else if (prevG == gk) contentH += InstanceGap;
+				prevG = gk;
+				contentH += RowHeight;
+			}
+			int visibleH = Game1.VirtualHeight - headerH0;
+			int maxScroll = Math.Max(0, contentH - Game1.VirtualHeight);
+
 			// Gamepad scroll for right panel
+			int panelX0 = Game1.VirtualWidth - RightPanelWidth;
+			var panelRect0 = new Rectangle(panelX0, 0, RightPanelWidth, Game1.VirtualHeight);
 			var gp = GamePad.GetState(PlayerIndex.One);
 			if (gp.IsConnected && _cursorEvent != null)
 			{
@@ -140,14 +162,34 @@ namespace Crusaders30XX.ECS.Systems
 				const float Deadzone = 0.2f;
 				if (MathF.Abs(y) > Deadzone)
 				{
-					int panelX = Game1.VirtualWidth - RightPanelWidth;
-					var panelRect = new Rectangle(panelX, 0, RightPanelWidth, Game1.VirtualHeight);
 					var p = new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y));
-					if (panelRect.Contains(p))
+					if (panelRect0.Contains(p))
 					{
 						deck.DeckListScroll = Math.Max(0, deck.DeckListScroll - (int)Math.Round(y * ScrollSpeed * dt));
+						deck.DeckListScroll = Math.Clamp(deck.DeckListScroll, 0, maxScroll);
 					}
 				}
+			}
+
+			// Mouse wheel scroll for right panel
+			var mouse = Mouse.GetState();
+			if (_cursorEvent != null && panelRect0.Contains(new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y))))
+			{
+				int wheelValue = mouse.ScrollWheelValue;
+				if (_lastWheel.HasValue)
+				{
+					int diff = wheelValue - _lastWheel.Value;
+					if (diff != 0)
+					{
+						deck.DeckListScroll -= Math.Sign(diff) * MouseScrollStep;
+						deck.DeckListScroll = Math.Clamp(deck.DeckListScroll, 0, maxScroll);
+					}
+				}
+				_lastWheel = wheelValue;
+			}
+			else
+			{
+				_lastWheel = mouse.ScrollWheelValue;
 			}
 
 			// Click to remove card

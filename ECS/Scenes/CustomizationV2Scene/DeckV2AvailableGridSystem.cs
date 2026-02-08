@@ -27,6 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Dictionary<string, int> _createdCardIds = new();
 		private CursorStateEvent _cursorEvent;
 		private Texture2D _pixel;
+		private int? _lastWheel;
 
 		// Caches
 		private List<(string key, CardBase card, CardData.CardColor color)> _cachedEntries;
@@ -76,6 +77,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Scroll Speed", Step = 100, Min = 500, Max = 5000)]
 		public float ScrollSpeed { get; set; } = 2200f;
+
+		[DebugEditable(DisplayName = "Mouse Scroll Step", Step = 10, Min = 10, Max = 300)]
+		public int MouseScrollStep { get; set; } = 60;
 
 		public CustomizationV2HeaderSystem HeaderSystem { get; set; }
 		public DeckV2StatsBarSystem StatsBarSystem { get; set; }
@@ -137,11 +141,38 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			foreach (var key in expiredFlash) deck.AddFlashTimers.Remove(key);
 
+			// Compute max scroll for clamping
+			var cvs0 = GetCardVisualSettings();
+			int scaledH0 = (int)(cvs0.CardHeight * CardScale);
+			int col0 = Math.Max(1, Columns);
+			var entries0 = GetAvailableEntries();
+			int headerH0 = (HeaderSystem?.HeaderHeight ?? 56) + (StatsBarSystem?.BarHeight ?? 50);
+			int gridTopY0 = headerH0 + TitlePadY + (int)(_headingFont.MeasureString("A").Y * TitleTextScale) + GridTopMargin;
+			int totalRows0 = Math.Max(0, (entries0.Count + col0 - 1) / col0);
+			int contentHeight0 = gridTopY0 + totalRows0 * (scaledH0 + RowGap);
+			int maxScroll = Math.Max(0, contentHeight0 - Game1.VirtualHeight);
+
 			// Scroll via mouse wheel
 			var mouse = Mouse.GetState();
-			if (mouse.ScrollWheelValue != 0)
+			int panelW0 = Game1.VirtualWidth - RightPanelWidth;
+			var gridRect = new Rectangle(0, headerH0, panelW0, Game1.VirtualHeight - headerH0);
+			if (_cursorEvent != null && gridRect.Contains(new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y))))
 			{
-				// MonoGame accumulates scroll value, we use delta by comparing
+				int wheelValue = mouse.ScrollWheelValue;
+				if (_lastWheel.HasValue)
+				{
+					int diff = wheelValue - _lastWheel.Value;
+					if (diff != 0)
+					{
+						deck.AvailableScroll -= Math.Sign(diff) * MouseScrollStep;
+						deck.AvailableScroll = Math.Clamp(deck.AvailableScroll, 0, maxScroll);
+					}
+				}
+				_lastWheel = wheelValue;
+			}
+			else
+			{
+				_lastWheel = mouse.ScrollWheelValue;
 			}
 
 			// Gamepad scroll
@@ -153,6 +184,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (MathF.Abs(y) > Deadzone)
 				{
 					deck.AvailableScroll = Math.Max(0, deck.AvailableScroll - (int)Math.Round(y * ScrollSpeed * dt));
+					deck.AvailableScroll = Math.Clamp(deck.AvailableScroll, 0, maxScroll);
 				}
 			}
 
@@ -290,11 +322,11 @@ namespace Crusaders30XX.ECS.Systems
 				idx++;
 			}
 
-			// Clamp scroll
+			// Clamp scroll (also clamped in Update, but guard against stale values after resize)
 			int totalRows = Math.Max(0, (entries.Count + col - 1) / col);
 			int contentHeight = gridTopY + totalRows * (scaledH + RowGap);
-			int maxScroll = Math.Max(0, contentHeight - Game1.VirtualHeight);
-			if (deck.AvailableScroll > maxScroll) deck.AvailableScroll = maxScroll;
+			int maxScrollDraw = Math.Max(0, contentHeight - Game1.VirtualHeight);
+			if (deck.AvailableScroll > maxScrollDraw) deck.AvailableScroll = maxScrollDraw;
 		}
 
 		private List<(string key, CardBase card, CardData.CardColor color)> GetAvailableEntries()
