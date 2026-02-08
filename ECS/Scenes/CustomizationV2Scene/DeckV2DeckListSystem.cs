@@ -249,25 +249,14 @@ namespace Crusaders30XX.ECS.Systems
 			// Left border
 			_spriteBatch.Draw(_pixel, new Rectangle(panelX, headerH, 1, vh - headerH), new Color(51, 51, 51));
 
-			// Section title: "CURRENT DECK"
+			// Measure title for layout
 			string title = "CURRENT DECK";
 			var titleSize = _headingFont.MeasureString(title) * TitleTextScale;
-			float titleX = panelX + ContentPad;
-			float titleY = headerH + ContentPad;
-			_spriteBatch.DrawString(_headingFont, title, new Vector2(titleX, titleY), Color.White, 0f, Vector2.Zero, TitleTextScale, SpriteEffects.None, 0f);
-
-			// Decorative line
-			float lineX = titleX + titleSize.X + 8;
-			float lineY2 = titleY + titleSize.Y / 2f;
-			int lineW = panelX + RightPanelWidth - (int)lineX - ContentPad;
-			if (lineW > 0)
-			{
-				_spriteBatch.Draw(_pixel, new Rectangle((int)lineX, (int)lineY2, lineW, 1), new Color(51, 51, 51));
-			}
+			int titleAreaHeight = ContentPad + (int)Math.Ceiling(titleSize.Y) + ContentPad;
 
 			// Draw card rows
 			var sorted = GetSortedGroupedDeck(deck);
-			int drawY = headerH + ContentPad + (int)titleSize.Y + ContentPad;
+			int drawY = headerH + titleAreaHeight;
 
 			// Determine hover position
 			bool isHovering = _cursorEvent != null && !_cursorEvent.IsAPressedEdge;
@@ -286,8 +275,8 @@ namespace Crusaders30XX.ECS.Systems
 
 				int rowY = drawY - deck.DeckListScroll;
 
-				// Skip off-screen
-				if (rowY + RowHeight < headerH || rowY > vh)
+				// Skip off-screen (use title area bottom as top boundary)
+				if (rowY + RowHeight < headerH + titleAreaHeight || rowY > vh)
 				{
 					drawY += RowHeight;
 					continue;
@@ -359,9 +348,29 @@ namespace Crusaders30XX.ECS.Systems
 				drawY += RowHeight;
 			}
 
+			// Title area background (drawn after cards to cover any that scrolled up)
+			_spriteBatch.Draw(_pixel, new Rectangle(panelX, headerH, RightPanelWidth, titleAreaHeight), new Color(PanelBgR, PanelBgG, PanelBgB));
+			// Left border over title area
+			_spriteBatch.Draw(_pixel, new Rectangle(panelX, headerH, 1, titleAreaHeight), new Color(51, 51, 51));
+
+			// Section title: "CURRENT DECK"
+			float titleX = panelX + ContentPad;
+			float titleY = headerH + ContentPad;
+			_spriteBatch.DrawString(_headingFont, title, new Vector2(titleX, titleY), Color.White, 0f, Vector2.Zero, TitleTextScale, SpriteEffects.None, 0f);
+
+			// Decorative line
+			float lineX = titleX + titleSize.X + 8;
+			float lineY2 = titleY + titleSize.Y / 2f;
+			int lineW = panelX + RightPanelWidth - (int)lineX - ContentPad;
+			if (lineW > 0)
+			{
+				_spriteBatch.Draw(_pixel, new Rectangle((int)lineX, (int)lineY2, lineW, 1), new Color(51, 51, 51));
+			}
+
 			// Scrollbar
+			int scrollAreaTop = headerH + titleAreaHeight;
 			int contentHeight = drawY;
-			int visibleHeight = vh - headerH;
+			int visibleHeight = vh - scrollAreaTop;
 			if (contentHeight > visibleHeight)
 			{
 				int maxScroll = contentHeight - visibleHeight;
@@ -369,10 +378,10 @@ namespace Crusaders30XX.ECS.Systems
 				float thumbRatio = (float)visibleHeight / contentHeight;
 				int thumbH = Math.Max(20, (int)(visibleHeight * thumbRatio));
 				float scrollFraction = maxScroll > 0 ? (float)deck.DeckListScroll / maxScroll : 0;
-				int thumbY = headerH + (int)((visibleHeight - thumbH) * scrollFraction);
+				int thumbY = scrollAreaTop + (int)((visibleHeight - thumbH) * scrollFraction);
 				int scrollX = panelX + RightPanelWidth - ScrollbarWidth;
 
-				_spriteBatch.Draw(_pixel, new Rectangle(scrollX, headerH, ScrollbarWidth, visibleHeight), new Color(10, 10, 10));
+				_spriteBatch.Draw(_pixel, new Rectangle(scrollX, scrollAreaTop, ScrollbarWidth, visibleHeight), new Color(10, 10, 10));
 				_spriteBatch.Draw(_pixel, new Rectangle(scrollX, thumbY, ScrollbarWidth, thumbH), new Color(51, 51, 51));
 			}
 		}
