@@ -16,6 +16,7 @@ namespace Crusaders30XX.ECS.Components
 		Location,
 		Shop,
 		Achievement,
+		CustomizationV2,
 		None
 	}
 

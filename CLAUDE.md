@@ -73,6 +73,7 @@ Combat uses block mechanics, enemy AI with planned attacks via `AttackIntent` an
 - Use imports, not fully-qualified names (e.g., avoid `Crusaders30XX.ECS.Data.Cards`)
 - Prioritize readability over complexity
 - Structure draw code to be as readable as possible using comments and good naming to convey behavior, breaking down logical sections into well named functions
+- Draw() functions never manage state - strictly for rendering
 
 ## Display Systems
 

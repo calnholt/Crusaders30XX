@@ -405,6 +405,29 @@ namespace Crusaders30XX.ECS.Rendering
 		}
 
 		/// <summary>
+		/// Returns a white-filled parallelogram mask with the specified skew percentage.
+		/// The shape leans right: the top-left corner is inset by skew%, bottom-right by skew%.
+		/// </summary>
+		public static Texture2D GetParallelogramMask(
+			GraphicsDevice device,
+			float width,
+			float height,
+			float skewPercent)
+		{
+			float skew = width * skewPercent / 100f;
+			return GetAntialiasedTrapezoidMask(
+				device,
+				width,
+				height,
+				skew,
+				0f,
+				0f,
+				0f,
+				0f
+			);
+		}
+
+		/// <summary>
 		/// Returns a white-filled antialiased upward-pointing chevron mask (or stack of chevrons).
 		/// </summary>
 		public static Texture2D GetAntialiasedChevronMask(

@@ -48,7 +48,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case UIElementEventType.GoToCustomize:
                 {
-                    EventManager.Publish(new ShowTransition { Scene = SceneId.Customization, SkipHold = true });
+                    EventManager.Publish(new ShowTransition { Scene = SceneId.CustomizationV2, SkipHold = true });
                     break;
                 }
                 case UIElementEventType.LeaveShop:
