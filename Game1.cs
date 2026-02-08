@@ -44,6 +44,7 @@ public class Game1 : Game
     private ParallaxLayerSystem _parallaxLayerSystem;
     private UIElementHighlightSystem _uiElementHighlightSystem;
     private CursorSystem _cursorSystem;
+    private CursorTrailDisplaySystem _cursorTrailDisplaySystem;
     private HotKeySystem _hotKeySystem;
     private HotKeyProgressRingSystem _hotKeyProgressRingSystem;
     private UIElementBorderDebugSystem _uiElementBorderDebugSystem;
@@ -155,6 +156,7 @@ public class Game1 : Game
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         // _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _cursorTrailDisplaySystem = new CursorTrailDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _hotKeySystem = new HotKeySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _hotKeyProgressRingSystem = new HotKeyProgressRingSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _world.SystemManager);
         _parallaxLayerSystem = new ParallaxLayerSystem(_world.EntityManager, GraphicsDevice);
@@ -182,6 +184,7 @@ public class Game1 : Game
         _world.AddSystem(_locationNameDisplaySystem);
         // _world.AddSystem(_worldMapSystem);
         _world.AddSystem(_cursorSystem);
+        _world.AddSystem(_cursorTrailDisplaySystem);
         _world.AddSystem(_hotKeySystem);
         _world.AddSystem(_hotKeyProgressRingSystem);
         _world.AddSystem(_parallaxLayerSystem);
@@ -394,6 +397,10 @@ public class Game1 : Game
         FrameProfiler.Measure("DialogDisplaySystem.Draw", _dialogDisplaySystem.Draw);
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
+        // Cursor blur trail (additive pass before cursor)
+        _spriteBatch.End();
+        _cursorTrailDisplaySystem.DrawTrail();
+        _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
         FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
         _spriteBatch.End();
     }

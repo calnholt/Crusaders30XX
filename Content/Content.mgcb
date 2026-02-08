@@ -1543,6 +1543,12 @@
 
 #---------------------------------- Tutorials ---------------------------------#
 
+#begin Shaders/GaussianBlur.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/GaussianBlur.fx
+
 #begin Data/Tutorials/action_phase_tutorials.json
 /copy:Data/Tutorials/action_phase_tutorials.json
 
