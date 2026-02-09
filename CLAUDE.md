@@ -67,7 +67,9 @@ Events have states: Pending → Resolving → Waiting → Complete. This ensures
 - Structure draw code to be as readable as possible using comments and good naming to convey behavior, breaking down logical sections into well named functions
 - Draw() functions never manage state - strictly for rendering
 - Performance is important - cache when logical; use `DeleteCachesEvent` to clear
-- NEVER use MouseState or GamePad state - use CursorEvents 
+- NEVER use MouseState or GamePad state - use CursorEvents
+- When presented multiple different approaches, never take the easy way out - prefer the hard but comprehensive approach
+	- NO SLOP; STAY DRY
 
 ## Display Systems
 

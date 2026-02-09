@@ -28,6 +28,17 @@ public class CursorTrailDisplaySystem : Core.System
     private Vector2 _cursorPos;
     private bool _hasCursorPos;
 
+    // Erase blend: punches a soft hole by multiplying dest by (1 - srcAlpha)
+    private static readonly BlendState EraseBlend = new BlendState
+    {
+        ColorSourceBlend = Blend.Zero,
+        ColorDestinationBlend = Blend.InverseSourceAlpha,
+        ColorBlendFunction = BlendFunction.Add,
+        AlphaSourceBlend = Blend.Zero,
+        AlphaDestinationBlend = Blend.InverseSourceAlpha,
+        AlphaBlendFunction = BlendFunction.Add
+    };
+
     // Additive blend for compositing trail over scene
     private static readonly BlendState AdditiveAlpha = new BlendState
     {
@@ -59,6 +70,9 @@ public class CursorTrailDisplaySystem : Core.System
 
     [DebugEditable(DisplayName = "Stamp Radius", Step = 1f, Min = 2f, Max = 128f)]
     public int StampRadius { get; set; } = 24;
+
+    [DebugEditable(DisplayName = "Cutout Radius", Step = 1f, Min = 2f, Max = 128f)]
+    public int CutoutRadius { get; set; } = 28;
 
     public CursorTrailDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content)
         : base(em)
@@ -143,11 +157,32 @@ public class CursorTrailDisplaySystem : Core.System
     /// </summary>
     public void DrawTrail()
     {
-        if (_trailRt == null || !_hasCursorPos) return;
+        if (_trailRt == null || _blurB == null || !_hasCursorPos) return;
+
+        // Copy trail into _blurB so we can punch a hole without modifying _trailRt
+        var prevTargets = _gd.GetRenderTargets();
+        RenderTarget2D prevRt = prevTargets.Length > 0 ? prevTargets[0].RenderTarget as RenderTarget2D : null;
+
+        _gd.SetRenderTarget(_blurB);
+        _gd.Clear(Color.Transparent);
+
+        // Draw trail data into temp buffer
+        _sb.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
+        _sb.Draw(_trailRt, _gd.Viewport.Bounds, Color.White);
+        _sb.End();
+
+        // Erase a soft circle at cursor position
+        var cutoutTex = PrimitiveTextureFactory.GetAntiAliasedCircle(_gd, CutoutRadius);
+        _sb.Begin(SpriteSortMode.Immediate, EraseBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
+        _sb.Draw(cutoutTex, _cursorPos, null, Color.White, 0f, new Vector2(CutoutRadius, CutoutRadius), 1f, SpriteEffects.None, 0f);
+        _sb.End();
+
+        // Restore and composite to screen
+        _gd.SetRenderTarget(prevRt);
 
         Color tint = new Color(1f, 1f, 1f, TrailAlpha);
         _sb.Begin(SpriteSortMode.Immediate, AdditiveAlpha, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
-        _sb.Draw(_trailRt, _gd.Viewport.Bounds, tint);
+        _sb.Draw(_blurB, _gd.Viewport.Bounds, tint);
         _sb.End();
     }
 
