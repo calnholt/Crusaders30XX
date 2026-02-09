@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
         {
             Id = "wyvern";
             Name = "Wyvern";
-            MaxHealth = 44;
+            MaxHealth = 50;
 
             OnStartOfBattle = (entityManager) =>
             {

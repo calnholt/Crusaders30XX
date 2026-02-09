@@ -439,6 +439,12 @@ namespace Crusaders30XX.ECS.Systems
 
             if (deckEntity != null)
             {
+                // Apply Frostbite when playing any Frozen card (including weapons)
+                if (evt.Card.GetComponent<Frozen>() != null)
+                {
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Frostbite, Delta = 1 });
+                }
+
                 if (isWeapon)
                 {
                     // Remove from hand without adding to discard/exhaust; stays out until re-added by phase rules
@@ -462,10 +468,6 @@ namespace Crusaders30XX.ECS.Systems
                         destination = CardZoneType.ExhaustPile;
                         Console.WriteLine("[CardPlaySystem] Card exhausted");
                         EntityManager.RemoveComponent<MarkedForExhaust>(evt.Card);
-                    }
-                    if (evt.Card.GetComponent<Frozen>() != null)
-                    {
-                        EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Frostbite, Delta = 1 });
                     }
                 }
                 EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = destination, Reason = "PlayCard" });
