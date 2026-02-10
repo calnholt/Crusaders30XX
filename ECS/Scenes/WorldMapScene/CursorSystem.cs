@@ -166,6 +166,50 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 
+				// Apply stick movement to _cursorPosition BEFORE hover detection
+				// so the CursorStateEvent publishes the current-frame position
+				float mag = stick.Length();
+				if (mag >= Deadzone)
+				{
+					Vector2 dir = (mag > 0f) ? (stick / mag) : Vector2.Zero;
+					float normalized = MathHelper.Clamp((mag - Deadzone) / (1f - Deadzone), 0f, 1f);
+					float speedMultiplier = MathHelper.Clamp((float)Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
+
+					// Slow down when overlapping UI elements beyond threshold
+					int r = Math.Max(1, CursorRadius);
+					float maxCoverage = 0f;
+					if (!ignoringTransitions)
+					{
+						foreach (var e2 in EntityManager.GetEntitiesWithComponent<UIElement>())
+						{
+							var ui2 = e2.GetComponent<UIElement>();
+							var t2 = e2.GetComponent<Transform>();
+							if (ui2 == null || !ui2.IsInteractable || ui2.IsHidden) continue;
+							var bounds2 = ui2.Bounds;
+							if (bounds2.Width < 2 || bounds2.Height < 2) continue;
+							maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r, t2?.Rotation ?? 0f));
+						}
+					}
+					float rt = gp.Triggers.Right;
+					if (rt <= 0.1f && maxCoverage >= MathHelper.Clamp(SlowdownCoverageThreshold, 0f, 1f))
+					{
+						speedMultiplier *= MathHelper.Clamp(SlowdownMultiplier, 0.05f, 1f);
+					}
+					if (rt > 0.1f)
+					{
+						speedMultiplier *= LtSpeedMultiplier;
+					}
+					float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+					// In screen space, up on stick is negative Y
+					Vector2 velocity = new Vector2(dir.X, -dir.Y) * BaseSpeed * speedMultiplier;
+					_cursorPosition += velocity * dt;
+
+					// Clamp cursor center to remain within the screen (allowing the circle to go offscreen)
+					_cursorPosition.X = MathHelper.Clamp(_cursorPosition.X, 0f, w);
+					_cursorPosition.Y = MathHelper.Clamp(_cursorPosition.Y, 0f, h);
+				}
+
 				if (!ignoringTransitions)
 				{
 					int rHitbox = Math.Max(0, HitboxRadius);
@@ -261,52 +305,6 @@ namespace Crusaders30XX.ECS.Systems
 				});
 
 				_prevGamePadState = gp;
-
-				// Apply circular deadzone for movement
-				float mag = stick.Length();
-				if (mag < Deadzone)
-				{
-					return;
-				}
-
-				// Normalize and scale by exponent curve
-				Vector2 dir = (mag > 0f) ? (stick / mag) : Vector2.Zero;
-				float normalized = MathHelper.Clamp((mag - Deadzone) / (1f - Deadzone), 0f, 1f);
-				float speedMultiplier = MathHelper.Clamp((float)Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
-
-				// Slow down when overlapping UI elements beyond threshold
-				int r = Math.Max(1, CursorRadius);
-				float maxCoverage = 0f;
-				if (!ignoringTransitions)
-				{
-					foreach (var e2 in EntityManager.GetEntitiesWithComponent<UIElement>())
-					{
-						var ui2 = e2.GetComponent<UIElement>();
-						var t2 = e2.GetComponent<Transform>();
-						if (ui2 == null || !ui2.IsInteractable || ui2.IsHidden) continue;
-						var bounds2 = ui2.Bounds;
-						if (bounds2.Width < 2 || bounds2.Height < 2) continue;
-						maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r, t2?.Rotation ?? 0f));
-					}
-				}
-				float rt = gp.Triggers.Right;
-				if (rt <= 0.1f && maxCoverage >= MathHelper.Clamp(SlowdownCoverageThreshold, 0f, 1f))
-				{
-					speedMultiplier *= MathHelper.Clamp(SlowdownMultiplier, 0.05f, 1f);
-				}
-				if (rt > 0.1f)
-				{
-					speedMultiplier *= LtSpeedMultiplier;
-				}
-				float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-				// In screen space, up on stick is negative Y
-				Vector2 velocity = new Vector2(dir.X, -dir.Y) * BaseSpeed * speedMultiplier;
-				_cursorPosition += velocity * dt;
-
-				// Clamp cursor center to remain within the screen (allowing the circle to go offscreen)
-				_cursorPosition.X = MathHelper.Clamp(_cursorPosition.X, 0f, w);
-				_cursorPosition.Y = MathHelper.Clamp(_cursorPosition.Y, 0f, h);
 			}
 			else
 			{

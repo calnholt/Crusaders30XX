@@ -51,13 +51,13 @@ public class CursorTrailDisplaySystem : Core.System
     };
 
     [DebugEditable(DisplayName = "Trail Decay", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float TrailDecay { get; set; } = 0.88f;
+    public float TrailDecay { get; set; } = 0.95f;
 
     [DebugEditable(DisplayName = "Blur Radius", Step = 0.5f, Min = 0f, Max = 20f)]
-    public float BlurRadius { get; set; } = 6f;
+    public float BlurRadius { get; set; } = 8.5f;
 
     [DebugEditable(DisplayName = "Trail Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float TrailAlpha { get; set; } = 0.6f;
+    public float TrailAlpha { get; set; } = 0.5f;
 
     [DebugEditable(DisplayName = "Trail R", Step = 0.01f, Min = 0f, Max = 1f)]
     public float TrailR { get; set; } = 0.6f;
@@ -69,10 +69,10 @@ public class CursorTrailDisplaySystem : Core.System
     public float TrailB { get; set; } = 1.0f;
 
     [DebugEditable(DisplayName = "Stamp Radius", Step = 1f, Min = 2f, Max = 128f)]
-    public int StampRadius { get; set; } = 24;
+    public int StampRadius { get; set; } = 44;
 
     [DebugEditable(DisplayName = "Cutout Radius", Step = 1f, Min = 2f, Max = 128f)]
-    public int CutoutRadius { get; set; } = 28;
+    public int CutoutRadius { get; set; } = 39;
 
     public CursorTrailDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content)
         : base(em)
@@ -110,7 +110,6 @@ public class CursorTrailDisplaySystem : Core.System
 
         // Save whatever render target is currently active
         var prevTargets = _gd.GetRenderTargets();
-        RenderTarget2D prevRt = prevTargets.Length > 0 ? prevTargets[0].RenderTarget as RenderTarget2D : null;
 
         // --- Step 1: Decay existing trail into _blurA ---
         _gd.SetRenderTarget(_blurA);
@@ -148,21 +147,22 @@ public class CursorTrailDisplaySystem : Core.System
         _blurOverlay.End(_sb);
 
         // Restore previous render target
-        _gd.SetRenderTarget(prevRt);
+        if (prevTargets.Length > 0)
+            _gd.SetRenderTargets(prevTargets);
+        else
+            _gd.SetRenderTarget(null);
     }
 
     /// <summary>
     /// Draw the blurred trail over the current scene. Call during DrawScene() before cursor draw.
     /// The caller is responsible for ending/beginning any surrounding SpriteBatch.
     /// </summary>
-    public void DrawTrail()
+    /// <param name="restoreTarget">The render target to restore after compositing (typically _sceneRt)</param>
+    public void DrawTrail(RenderTarget2D restoreTarget)
     {
         if (_trailRt == null || _blurB == null || !_hasCursorPos) return;
 
         // Copy trail into _blurB so we can punch a hole without modifying _trailRt
-        var prevTargets = _gd.GetRenderTargets();
-        RenderTarget2D prevRt = prevTargets.Length > 0 ? prevTargets[0].RenderTarget as RenderTarget2D : null;
-
         _gd.SetRenderTarget(_blurB);
         _gd.Clear(Color.Transparent);
 
@@ -171,15 +171,16 @@ public class CursorTrailDisplaySystem : Core.System
         _sb.Draw(_trailRt, _gd.Viewport.Bounds, Color.White);
         _sb.End();
 
-        // Erase a soft circle at cursor position
+        // Erase a soft circle at current cursor position so the trail doesn't show under the cursor sprite
         var cutoutTex = PrimitiveTextureFactory.GetAntiAliasedCircle(_gd, CutoutRadius);
         _sb.Begin(SpriteSortMode.Immediate, EraseBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
         _sb.Draw(cutoutTex, _cursorPos, null, Color.White, 0f, new Vector2(CutoutRadius, CutoutRadius), 1f, SpriteEffects.None, 0f);
         _sb.End();
 
-        // Restore and composite to screen
-        _gd.SetRenderTarget(prevRt);
+        // Explicitly restore to the provided target
+        _gd.SetRenderTarget(restoreTarget);
 
+        // Composite trail to scene
         Color tint = new Color(1f, 1f, 1f, TrailAlpha);
         _sb.Begin(SpriteSortMode.Immediate, AdditiveAlpha, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
         _sb.Draw(_blurB, _gd.Viewport.Bounds, tint);
