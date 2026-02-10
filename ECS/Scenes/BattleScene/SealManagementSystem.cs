@@ -11,21 +11,19 @@ namespace Crusaders30XX.ECS.Systems
 	/// <summary>
 	/// Handles sealed (petrified) effects from enemy attacks (Medusa).
 	/// Sealed cards cannot be played or pledged, but CAN block.
-	/// Cracks accumulate: +1 per card played (applies to ALL sealed cards in hand),
-	/// +1 when the sealed card is used to block.
-	/// At 3 cracks, the card is freed (Sealed removed).
+	/// Seals count down: -1 per card played (applies to ALL sealed cards in hand),
+	/// -1 when the sealed card is used to block.
+	/// At 0 seals, the card is freed (Sealed removed).
 	/// Pledged cards are immune to sealing.
 	/// </summary>
 	public class SealManagementSystem : Core.System
 	{
-		private const int CRACKS_TO_FREE = 3;
-
 		public SealManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<SealCardsEvent>(OnSealCards);
 			EventManager.Subscribe<CardMoved>(OnCardMoved);
 			EventManager.Subscribe<CardPlayedEvent>(OnCardPlayed);
-			EventManager.Subscribe<ModifySealCracksEvent>(OnModifySealCracks);
+			EventManager.Subscribe<ModifySealsEvent>(OnModifySeals);
 			EventManager.Subscribe<ShuffleSealedIntoDrawPileEvent>(OnShuffleSealedIntoDrawPile);
 		}
 
@@ -60,7 +58,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			foreach (var card in cardsToSeal)
 			{
-				EntityManager.AddComponent(card, new Sealed { Owner = card, Cracks = 0 });
+				EntityManager.AddComponent(card, new Sealed { Owner = card, Seals = 3 });
 				var cardData = card.GetComponent<CardData>();
 				Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been sealed!");
 			}
@@ -82,26 +80,26 @@ namespace Crusaders30XX.ECS.Systems
 
 			foreach (var card in cardsToSeal)
 			{
-				EntityManager.AddComponent(card, new Sealed { Owner = card, Cracks = 0 });
+				EntityManager.AddComponent(card, new Sealed { Owner = card, Seals = 3 });
 				var cardData = card.GetComponent<CardData>();
 				Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been sealed (from draw pile)!");
 			}
 		}
 
 		/// <summary>
-		/// When a card is played, all sealed cards in hand gain +1 crack.
+		/// When a card is played, all sealed cards in hand lose 1 seal.
 		/// </summary>
 		private void OnCardPlayed(CardPlayedEvent evt)
 		{
 			var sealedInHand = GetSealedCardsInHand();
 			foreach (var card in sealedInHand)
 			{
-				AddCracks(card, 1, "card played");
+				RemoveSeals(card, 1, "card played");
 			}
 		}
 
 		/// <summary>
-		/// When a sealed card is used to block (moves from AssignedBlock to DiscardPile), it gains +1 crack.
+		/// When a sealed card is used to block (moves from AssignedBlock to DiscardPile), it loses 1 seal.
 		/// </summary>
 		private void OnCardMoved(CardMoved evt)
 		{
@@ -110,15 +108,15 @@ namespace Crusaders30XX.ECS.Systems
 				var sealedComp = evt.Card.GetComponent<Sealed>();
 				if (sealedComp != null)
 				{
-					AddCracks(evt.Card, 1, "used to block");
+					RemoveSeals(evt.Card, 1, "used to block");
 				}
 			}
 		}
 
 		/// <summary>
-		/// Modifies cracks on all sealed cards across all zones (hand, deck, discard, exhaust).
+		/// Modifies seals on all sealed cards across all zones (hand, deck, discard, exhaust).
 		/// </summary>
-		private void OnModifySealCracks(ModifySealCracksEvent evt)
+		private void OnModifySeals(ModifySealsEvent evt)
 		{
 			var allSealedCards = GetAllSealedCards();
 			foreach (var card in allSealedCards)
@@ -126,9 +124,9 @@ namespace Crusaders30XX.ECS.Systems
 				var sealedComp = card.GetComponent<Sealed>();
 				if (sealedComp != null)
 				{
-					sealedComp.Cracks = Math.Max(0, sealedComp.Cracks + evt.Delta);
+					sealedComp.Seals = Math.Max(0, sealedComp.Seals + evt.Delta);
 					var cardData = card.GetComponent<CardData>();
-					Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} cracks modified by {evt.Delta}, now {sealedComp.Cracks}");
+					Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} seals modified by {evt.Delta}, now {sealedComp.Seals}");
 				}
 			}
 		}
@@ -183,16 +181,16 @@ namespace Crusaders30XX.ECS.Systems
 			return allCards.Where(c => c.GetComponent<Sealed>() != null);
 		}
 
-		private void AddCracks(Entity card, int amount, string reason)
+		private void RemoveSeals(Entity card, int amount, string reason)
 		{
 			var sealedComp = card.GetComponent<Sealed>();
 			if (sealedComp == null) return;
 
-			sealedComp.Cracks += amount;
+			sealedComp.Seals -= amount;
 			var cardData = card.GetComponent<CardData>();
-			Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} gained {amount} crack(s) ({reason}), now {sealedComp.Cracks}/{CRACKS_TO_FREE}");
+			Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} lost {amount} seal(s) ({reason}), now {sealedComp.Seals}");
 
-			if (sealedComp.Cracks >= CRACKS_TO_FREE)
+			if (sealedComp.Seals <= 0)
 			{
 				FreeCard(card);
 			}

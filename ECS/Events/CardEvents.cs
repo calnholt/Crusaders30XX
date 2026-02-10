@@ -568,9 +568,9 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
-    /// Modifies cracks on all sealed cards in hand. Use negative Delta to remove cracks.
+    /// Modifies seals on all sealed cards. Positive Delta adds seals, negative removes seals.
     /// </summary>
-    public class ModifySealCracksEvent
+    public class ModifySealsEvent
     {
         public int Delta { get; set; }
     }

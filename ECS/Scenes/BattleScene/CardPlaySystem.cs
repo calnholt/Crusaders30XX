@@ -203,12 +203,9 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
-            // Sealed cards cannot be played
-            if (evt.Card.GetComponent<Sealed>() != null)
-            {
-                EventManager.Publish(new CantPlayCardMessage { Message = "Sealed cards cannot be played!" });
-                return;
-            }
+            // Capture sealed state before playing (will be used after play resolves to apply HP cost)
+            var sealedComp = evt.Card.GetComponent<Sealed>();
+            int sealCount = sealedComp?.Seals ?? 0;
 
             // Weapons can only be played during Action phase (already gated) and cannot be used to pay costs of other cards
             bool isWeapon = card.IsWeapon;
@@ -412,6 +409,22 @@ namespace Crusaders30XX.ECS.Systems
             card.OnPlay?.Invoke(EntityManager, evt.Card);
             EventManager.Publish(new CardPlayedEvent { Card = evt.Card });
             EventManager.Publish(new TrackingEvent { Type = card.CardId, Delta = 1 });
+
+            // If the card was sealed, apply HP cost and remove the seal
+            if (sealCount > 0)
+            {
+                EventManager.Publish(new ModifyHpRequestEvent
+                {
+                    Source = player,
+                    Target = player,
+                    Delta = -sealCount,
+                    DamageType = ModifyTypeEnum.Effect,
+                    IgnoresAegis = true
+                });
+                if (sealedComp != null)
+                    EntityManager.RemoveComponent<Sealed>(evt.Card);
+                Console.WriteLine($"[CardPlaySystem] Removed Seal from {card.CardId} (cost {sealCount} HP)");
+            }
 
             // Remove Pledge if present when playing
             if (evt.Card.HasComponent<Pledge>())

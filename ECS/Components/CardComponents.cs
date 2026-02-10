@@ -506,12 +506,12 @@ namespace Crusaders30XX.ECS.Components
 
     /// <summary>
     /// Marks a card as sealed (petrified). Sealed cards cannot be played or pledged, but can block.
-    /// Cracks accumulate in hand: +1 per block, +1 per card played. At 3 cracks, card is freed.
+    /// Seals count down: -1 per block, -1 per card played. At 0 seals, card is freed.
     /// </summary>
     public class Sealed : IComponent
     {
         public Entity Owner { get; set; }
-        public int Cracks { get; set; } = 0;
+        public int Seals { get; set; } = 3;
     }
 
     /// <summary>

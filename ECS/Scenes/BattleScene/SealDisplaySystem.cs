@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
 	/// Draws the seal.png texture over cards that have the Sealed component.
-	/// Also displays the crack count (X/3) on the seal.
+	/// Also displays the remaining seal count on the seal.
 	/// </summary>
 	[DebugTab("Seal Display")]
 	public class SealDisplaySystem : Core.System
@@ -107,7 +107,7 @@ namespace Crusaders30XX.ECS.Systems
 			center.Y += SealOffsetY;
 
 			var sealedComp = evt.Card.GetComponent<Sealed>();
-			DrawSealOverlay(center, bounds.Width, bounds.Height, 1f, transform.Rotation, sealedComp?.Cracks ?? 0);
+			DrawSealOverlay(center, bounds.Width, bounds.Height, 1f, transform.Rotation, sealedComp?.Seals ?? 0);
 		}
 
 		private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
@@ -130,7 +130,7 @@ namespace Crusaders30XX.ECS.Systems
 			center.Y += SealOffsetY * evt.Scale;
 
 			var sealedComp = evt.Card.GetComponent<Sealed>();
-			DrawSealOverlay(center, cardWidth, cardHeight, evt.Scale, transform.Rotation, sealedComp?.Cracks ?? 0);
+			DrawSealOverlay(center, cardWidth, cardHeight, evt.Scale, transform.Rotation, sealedComp?.Seals ?? 0);
 		}
 
 		private bool ShouldRenderSeal(Entity card)
@@ -140,7 +140,7 @@ namespace Crusaders30XX.ECS.Systems
 				&& _sealTexture != null;
 		}
 
-		private void DrawSealOverlay(Vector2 center, float cardWidth, float cardHeight, float scale, float rotation, int cracks)
+		private void DrawSealOverlay(Vector2 center, float cardWidth, float cardHeight, float scale, float rotation, int seals)
 		{
 			// Calculate pulsing alpha using sine wave
 			float alphaPulse = (float)Math.Sin(_elapsedTime * PulseSpeed * Math.PI) * 0.5f + 0.5f;
@@ -167,16 +167,16 @@ namespace Crusaders30XX.ECS.Systems
 				0f
 			);
 
-			// Draw crack count text at bottom right of card (without rotation offset)
-			DrawCrackCount(center, cardWidth, cardHeight, scale, rotation, cracks);
+			// Draw seal count text at bottom right of card (without rotation offset)
+			DrawSealCount(center, cardWidth, cardHeight, scale, rotation, seals);
 		}
 
-		private void DrawCrackCount(Vector2 center, float cardWidth, float cardHeight, float scale, float rotation, int cracks)
+		private void DrawSealCount(Vector2 center, float cardWidth, float cardHeight, float scale, float rotation, int seals)
 		{
 			var font = FontSingleton.ContentFont;
 			if (font == null) return;
 
-			string text = $"{cracks}/3";
+			string text = $"{seals}";
 			var textSize = font.MeasureString(text);
 			float textScaleFinal = TextScale * scale;
 

@@ -132,7 +132,7 @@ namespace Crusaders30XX.ECS.Systems
 				var hasSealed = top.E.GetComponent<Sealed>() != null;
 				if (hasSealed)
 				{
-					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is sealed - cannot be played or pledged, but can block. Cracks accumulate: +1 per block, +1 per card played. At 3 cracks, seal is broken.";
+					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is sealed - costs HP to play (3 minus cracks). Cracks accumulate: +1 per block, +1 per card played. At 3 cracks, seal is broken.";
 				}
 
 				// Wrap text based on MaxWidth

@@ -58,7 +58,7 @@ public class Gaze : EnemyAttackBase
 		Name = "Gaze";
 		Damage = 8;
 		ConditionType = ConditionType.OnHit;
-		Text = "On attack - Seal 1 random card from your hand.\n\nOn hit - Seal the top card of your deck.";
+		Text = "On attack - A random card in your hand gains 3 seals.\n\nOn hit - Top card of your deck gains 3 seals.";
 
 		OnAttackReveal = (entityManager) =>
 		{
@@ -83,7 +83,7 @@ public class StoneStare : EnemyAttackBase
 		Id = "stone_stare";
 		Name = "Stone Stare";
 		Damage = 9;
-		Text = "On attack - Seal the top card of your draw pile.";
+		Text = "On attack - Top card of your draw pile gains 3 seals.";
 
 		OnAttackReveal = (entityManager) =>
 		{
@@ -126,8 +126,8 @@ public class BasiliskGlare : EnemyAttackBase
 }
 
 /// <summary>
-/// Serpent Strike - High damage attack that removes crack progress.
-/// 7 damage, On hit: all sealed cards lose 1 crack.
+/// Serpent Strike - High damage attack that adds seals back.
+/// 7 damage, On hit: all sealed cards gain 1 seal.
 /// </summary>
 public class SerpentStrike : EnemyAttackBase
 {
@@ -137,11 +137,11 @@ public class SerpentStrike : EnemyAttackBase
 		Name = "Serpent Strike";
 		Damage = 7;
 		ConditionType = ConditionType.OnHit;
-		Text = "On hit - All sealed cards you own lose 1 crack.";
+		Text = "On hit - All sealed cards you own gains 1 seal.";
 
 		OnAttackHit = (entityManager) =>
 		{
-			EventManager.Publish(new ModifySealCracksEvent { Delta = -1 });
+			EventManager.Publish(new ModifySealsEvent { Delta = 1 });
 		};
 	}
 }
