@@ -109,8 +109,22 @@ battleStateInfo.PhaseTracking.TryGetValue(TrackingTypeEnum.CourageLost.ToString(
 - **Red**: Blocking grants 1 courage
 - **Black**: Cards get +1 block value automatically (applied in `EntityFactory`)
 
-## Style Notes
+## Common Card Archetypes
 
-- Use private fields for numeric constants (e.g., `private int DamageBonus = 4;`) and interpolate them into `Text`
+### Vanilla Attack (no text, just damage)
+Target `"Enemy"`, Animation `"Attack"`, Block typically 2–3. `Text` left empty. OnPlay only publishes `ModifyHpRequestEvent`. See `Smite`, `Fervor`, `Reckoning`, `Absolution`.
+
+### Courage-Gated Attack (additional cost: lose N courage)
+Same as vanilla attack but adds `CanPlay` + `OnCantPlay` for courage validation, and spends courage in `OnPlay` before dealing damage. Text: `"As an additional cost, lose {N} courage."` See `Stab`, `Impale`, `Exaltation`.
+
+### Buff Prayer
+Target `"Player"`, Animation `"Buff"`, `Type = CardType.Prayer`, typically `IsFreeAction = true`, Block typically 2–3. OnPlay publishes `ApplyPassiveEvent`. See `IncreaseFaith`, `DowseWithHolyWater`, `LitanyOfWrath`.
+
+## Conventions
+
+- Attacks: Target `"Enemy"`, Animation `"Attack"`
+- Prayers/Buffs: Target `"Player"`, Animation `"Buff"`
+- All attacks must call `GetDerivedDamage()` for damage (never use raw `Damage`)
+- Use private fields for numeric constants and interpolate into `Text`
 - Keep `OnPlay` focused — publish events, don't manage state directly
-- For courage-gated cards, implement `CanPlay` as a pure bool check and `OnCantPlay` to publish `CantPlayCardMessage` on failure
+- `CanPlay` must be a pure bool check (no side effects); `OnCantPlay` publishes `CantPlayCardMessage`
