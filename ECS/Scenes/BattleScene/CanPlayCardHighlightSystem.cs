@@ -115,14 +115,23 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
 
                 if (!canPlay) continue;
 
-                // Get bounds from UIElement
-                var ui = cardEntity.GetComponent<UIElement>();
-                if (ui == null || ui.Bounds.Width <= 1 || ui.Bounds.Height <= 1) continue;
-
                 var t = cardEntity.GetComponent<Transform>();
-                float rotation = t?.Rotation ?? 0f;
+                if (t == null) continue;
 
-                DrawGlow(ui.Bounds, rotation, cornerRadius, borderThickness, hs, pulseAmount, glowColor);
+                int cw = cvs?.CardWidth ?? 250;
+                int ch = cvs?.CardHeight ?? 350;
+                int offsetYExtra = cvs?.CardOffsetYExtra ?? (int)Math.Round((cvs?.UIScale ?? 1f) * 25);
+                var cardRect = new Rectangle(
+                    (int)t.Position.X - cw / 2,
+                    (int)t.Position.Y - (ch / 2 + offsetYExtra),
+                    cw,
+                    ch);
+
+                if (cardRect.Width <= 1 || cardRect.Height <= 1) continue;
+
+                float rotation = t.Rotation;
+
+                DrawGlow(cardRect, rotation, cornerRadius, borderThickness, hs, pulseAmount, glowColor);
             }
         }
 
