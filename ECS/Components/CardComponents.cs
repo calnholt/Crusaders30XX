@@ -1109,6 +1109,15 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marker for a card that should be hidden from the hand display during the pay-cost overlay.
+    /// Set by PayCostOverlaySystem; consumed by HandDisplaySystem and CanPlayCardHighlightSystem.
+    /// </summary>
+    public class FilteredFromHand : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
     /// Marks a card as pledged (Arsenal zone). Pledged cards:
     /// - Stay in hand ignoring max hand size
     /// - Can only be played during Action phase

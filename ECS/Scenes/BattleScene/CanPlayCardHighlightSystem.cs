@@ -23,12 +23,24 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
         private double _totalSeconds;
 
+        // Cached per-frame state for the event handler
+        private readonly HashSet<Entity> _playableCards = new();
+        private CanPlayHighlightSettings _cachedSettings;
+        private int _cachedCornerRadius;
+        private int _cachedBorderThickness;
+        private int _cachedCardWidth;
+        private int _cachedCardHeight;
+        private int _cachedOffsetYExtra;
+        private float _cachedPulseAmount;
+        private Color _cachedGlowColor;
+
         public CanPlayCardHighlightSystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             EventManager.Subscribe<DeleteCachesEvent>(_ => _roundedRectCache.Clear());
+            EventManager.Subscribe<HighlightRenderEvent>(OnHighlightRender);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities() => Array.Empty<Entity>();
@@ -37,11 +49,8 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         public override void Update(GameTime gameTime)
         {
             _totalSeconds = gameTime.TotalGameTime.TotalSeconds;
-            base.Update(gameTime);
-        }
+            _playableCards.Clear();
 
-        public void Draw()
-        {
             // Get current phase
             var phaseEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
             if (phaseEntity == null) return;
@@ -53,24 +62,27 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             var deck = deckEntity?.GetComponent<Deck>();
             if (deck == null || deck.Hand.Count == 0) return;
 
-            // Get settings
+            // Cache settings
             var settingsEntity = EntityManager.GetEntitiesWithComponent<CanPlayHighlightSettings>().FirstOrDefault();
-            var hs = settingsEntity?.GetComponent<CanPlayHighlightSettings>() ?? new CanPlayHighlightSettings();
+            _cachedSettings = settingsEntity?.GetComponent<CanPlayHighlightSettings>() ?? new CanPlayHighlightSettings();
 
-            // Get card visual settings for bounds/radius
             var cvEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
             var cvs = cvEntity?.GetComponent<CardVisualSettings>();
-            int cornerRadius = cvs?.CardCornerRadius ?? 18;
-            int borderThickness = cvs?.HighlightBorderThickness ?? 5;
+            _cachedCornerRadius = cvs?.CardCornerRadius ?? 18;
+            _cachedBorderThickness = cvs?.HighlightBorderThickness ?? 5;
+            _cachedCardWidth = cvs?.CardWidth ?? 250;
+            _cachedCardHeight = cvs?.CardHeight ?? 350;
+            _cachedOffsetYExtra = cvs?.CardOffsetYExtra ?? (int)Math.Round((cvs?.UIScale ?? 1f) * 25);
 
-            // Pulse animation (shared across all playable cards)
+            // Pulse animation
+            var hs = _cachedSettings;
             float pulse01 = (float)(Math.Cos(_totalSeconds * hs.GlowPulseSpeed) * 0.5 + 0.5);
             float eased = (float)Math.Pow(MathHelper.Clamp(pulse01, 0f, 1f), hs.GlowEasingPower);
-            float pulseAmount = MathHelper.Lerp(
+            _cachedPulseAmount = MathHelper.Lerp(
                 MathHelper.Clamp(hs.GlowMinIntensity, 0f, 1f),
                 MathHelper.Clamp(hs.GlowMaxIntensity, 0f, 1f),
                 eased);
-            Color glowColor = new Color((byte)hs.GlowColorR, (byte)hs.GlowColorG, (byte)hs.GlowColorB);
+            _cachedGlowColor = new Color((byte)hs.GlowColorR, (byte)hs.GlowColorG, (byte)hs.GlowColorB);
 
             // Pre-gather data needed for action phase checks
             Entity player = null;
@@ -95,14 +107,15 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
                 hasActiveAttack = pa != null && !string.IsNullOrEmpty(pa.ContextId);
             }
 
+            // Build set of playable cards
             foreach (var cardEntity in deck.Hand)
             {
-                // Skip cards that are animating or assigned as block
                 if (cardEntity.GetComponent<AnimatingHandToDiscard>() != null) continue;
                 if (cardEntity.GetComponent<AnimatingHandToZone>() != null) continue;
                 if (cardEntity.GetComponent<AnimatingHandToDrawPile>() != null) continue;
                 if (cardEntity.GetComponent<AssignedBlockCard>() != null) continue;
                 if (cardEntity.GetComponent<SelectedForPayment>() != null) continue;
+                if (cardEntity.GetComponent<FilteredFromHand>() != null) continue;
 
                 var data = cardEntity.GetComponent<CardData>();
                 if (data == null) continue;
@@ -113,26 +126,29 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
                 else if (phase.Sub == SubPhase.Block)
                     canPlay = IsPlayableInBlock(cardEntity, data, hasActiveAttack);
 
-                if (!canPlay) continue;
-
-                var t = cardEntity.GetComponent<Transform>();
-                if (t == null) continue;
-
-                int cw = cvs?.CardWidth ?? 250;
-                int ch = cvs?.CardHeight ?? 350;
-                int offsetYExtra = cvs?.CardOffsetYExtra ?? (int)Math.Round((cvs?.UIScale ?? 1f) * 25);
-                var cardRect = new Rectangle(
-                    (int)t.Position.X - cw / 2,
-                    (int)t.Position.Y - (ch / 2 + offsetYExtra),
-                    cw,
-                    ch);
-
-                if (cardRect.Width <= 1 || cardRect.Height <= 1) continue;
-
-                float rotation = t.Rotation;
-
-                DrawGlow(cardRect, rotation, cornerRadius, borderThickness, hs, pulseAmount, glowColor);
+                if (canPlay)
+                    _playableCards.Add(cardEntity);
             }
+
+            base.Update(gameTime);
+        }
+
+        private void OnHighlightRender(HighlightRenderEvent evt)
+        {
+            if (!_playableCards.Contains(evt.Entity)) return;
+
+            var t = evt.Transform;
+            if (t == null) return;
+
+            var cardRect = new Rectangle(
+                (int)t.Position.X - _cachedCardWidth / 2,
+                (int)t.Position.Y - (_cachedCardHeight / 2 + _cachedOffsetYExtra),
+                _cachedCardWidth,
+                _cachedCardHeight);
+
+            if (cardRect.Width <= 1 || cardRect.Height <= 1) return;
+
+            DrawGlow(cardRect, t.Rotation, _cachedCornerRadius, _cachedBorderThickness, _cachedSettings, _cachedPulseAmount, _cachedGlowColor);
         }
 
         // --- Action phase playability check ---
