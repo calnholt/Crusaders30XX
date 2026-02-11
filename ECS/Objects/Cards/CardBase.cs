@@ -59,6 +59,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Action<EntityManager, Entity>? OnCreate {get; protected set; }
         public Action<EntityManager, Entity>? OnDiscardedForCost {get; protected set; }
         public Func<EntityManager, Entity, bool>? CanPlay { get; protected set; } = (a, b) => true;
+        public Action<EntityManager, Entity>? OnCantPlay { get; protected set; }
         public Func<EntityManager, Entity, int>? GetConditionalDamage { get; protected set; } = (a, b) => 0;
 
         public string GetCardHint(CardData.CardColor color)

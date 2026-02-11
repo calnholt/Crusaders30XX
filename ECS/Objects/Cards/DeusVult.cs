@@ -46,13 +46,18 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var battleState = entityManager.GetEntitiesWithComponent<BattleStateInfo>().FirstOrDefault().GetComponent<BattleStateInfo>();
                 if (battleState == null) return false;
                 battleState.PhaseTracking.TryGetValue(weaponId, out var weaponAttacked);
-                var weaponAttackCount = weaponAttacked > 0;
-                if (!weaponAttackCount)
-                {
-                    EventManager.Publish(new CantPlayCardMessage { Message = "You must attack with your weapon this turn!" });
-                    return false;
-                }
+                if (weaponAttacked <= 0) return false;
                 return true;
+            };
+            OnCantPlay = (entityManager, card) =>
+            {
+                var player = entityManager.GetEntity("Player");
+                var weaponId = player.GetComponent<EquippedWeapon>().WeaponId;
+                var battleState = entityManager.GetEntitiesWithComponent<BattleStateInfo>().FirstOrDefault().GetComponent<BattleStateInfo>();
+                if (battleState == null) return;
+                battleState.PhaseTracking.TryGetValue(weaponId, out var weaponAttacked);
+                if (weaponAttacked <= 0)
+                    EventManager.Publish(new CantPlayCardMessage { Message = "You must attack with your weapon this turn!" });
             };
         }
     }

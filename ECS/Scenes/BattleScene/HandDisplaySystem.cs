@@ -359,6 +359,10 @@ namespace Crusaders30XX.ECS.Systems
 							}
 						}
 						catch { }
+						// Never show sealed cards during pay-cost overlay
+						if (e.HasComponent<Sealed>()) return false;
+						// Never show pledged cards during pay-cost overlay
+						if (e.HasComponent<Pledge>()) return false;
                         foreach (var req in payState.RequiredCosts)
                         {
                             if (req == "Any") return true;

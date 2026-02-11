@@ -39,12 +39,14 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 var deck = deckEntity?.GetComponent<Deck>();
-                var show = deck == null || deck.DrawPile.Count < MillAmount;
-                if (show)
-                {
+                return deck != null && deck.DrawPile.Count >= MillAmount;
+            };
+            OnCantPlay = (entityManager, card) =>
+            {
+                var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                var deck = deckEntity?.GetComponent<Deck>();
+                if (deck == null || deck.DrawPile.Count < MillAmount)
                     EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {MillAmount} cards in deck!" });
-                }
-                return !show;
             };
         }
     }

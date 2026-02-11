@@ -89,7 +89,8 @@ namespace Crusaders30XX.ECS.Systems
 						x.E.GetComponent<Intimidated>() != null || 
 						x.E.GetComponent<Shackle>() != null ||
 						x.E.GetComponent<Pledge>() != null ||
-						x.E.GetComponent<PledgePreview>() != null
+						x.E.GetComponent<PledgePreview>() != null ||
+						x.E.GetComponent<Sealed>() != null
 					))
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.ToList();
@@ -132,7 +133,7 @@ namespace Crusaders30XX.ECS.Systems
 				var hasSealed = top.E.GetComponent<Sealed>() != null;
 				if (hasSealed)
 				{
-					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is sealed - costs HP to play (3 minus cracks). Cracks accumulate: +1 per block, +1 per card played. At 3 cracks, seal is broken.";
+					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is sealed - costs HP equal to remaining seals. Cannot be discarded to pay for costs. Seals decrease: -1 per block, -1 per card played. At 0 seals, card is freed.";
 				}
 
 				// Wrap text based on MaxWidth

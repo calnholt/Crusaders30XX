@@ -903,6 +903,26 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Shared highlight visual settings for can-play card glow in hand.
+    /// </summary>
+    public class CanPlayHighlightSettings : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int GlowLayers { get; set; } = 40;
+        public float GlowSpread { get; set; } = 0.006f;
+        public float GlowSpreadSpeed { get; set; } = 2.5f;
+        public float GlowSpreadAmplitude { get; set; } = 0.22f;
+        public float MaxAlpha { get; set; } = 0.06f;
+        public float GlowPulseSpeed { get; set; } = 2.0f;
+        public float GlowEasingPower { get; set; } = 0.8f;
+        public float GlowMinIntensity { get; set; } = 0.30f;
+        public float GlowMaxIntensity { get; set; } = 0.8f;
+        public int GlowColorR { get; set; } = 255;
+        public int GlowColorG { get; set; } = 215;
+        public int GlowColorB { get; set; } = 0;
+    }
+
+    /// <summary>
     /// A single equipped medal. Multiple instances may exist, each referencing the owning player.
     /// </summary>
     public class EquippedMedal : IComponent, IDisposable

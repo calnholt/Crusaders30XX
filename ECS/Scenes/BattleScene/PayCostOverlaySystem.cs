@@ -452,6 +452,9 @@ namespace Crusaders30XX.ECS.Systems
             // Hard guard: pledged cards cannot be used to pay costs
             if (evt.Card.HasComponent<Pledge>()) return;
 
+            // Hard guard: sealed cards cannot be used to pay costs
+            if (evt.Card.HasComponent<Sealed>()) return;
+
             var alreadySelected = evt.Card.GetComponent<SelectedForPayment>() != null || state.SelectedCards.Contains(evt.Card);
 
             if (alreadySelected)
@@ -858,6 +861,8 @@ namespace Crusaders30XX.ECS.Systems
             catch { }
             // Disallow using pledged cards to pay costs
             if (card.HasComponent<Pledge>()) return false;
+            // Disallow using sealed cards to pay costs
+            if (card.HasComponent<Sealed>()) return false;
             // Card is viable if it can satisfy at least one remaining requirement
             foreach (var c in remainingCosts)
             {

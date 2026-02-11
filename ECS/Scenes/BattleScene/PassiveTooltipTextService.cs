@@ -93,7 +93,7 @@ namespace Crusaders30XX.ECS.Systems
         case AppliedPassiveType.Silenced:
           return $"You cannot play pledged cards. Remove 1 silenced at the end of your action phase.";
         case AppliedPassiveType.Sealed:
-          return $"Sealed cards cost HP equal to remaining seals. Seals decrease: -1 per block, -1 per card played. At 0 seals, card is freed.";
+          return $"Sealed cards cost HP equal to remaining seals. Cannot be discarded to pay for costs. Seals decrease: -1 per block, -1 per card played. At 0 seals, card is freed.";
         case AppliedPassiveType.Plunder:
           return $"At the start of the block phase, steals a card from your deck. Deal enough damage to rescue it.";
         case AppliedPassiveType.SanguineCurse:

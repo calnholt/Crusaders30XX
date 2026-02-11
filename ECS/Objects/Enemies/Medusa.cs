@@ -10,99 +10,72 @@ using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Objects.Enemies
 {
-	/// <summary>
-	/// Medusa - A petrifying enemy that seals cards.
-	/// Identity: Card control through sealing/petrification mechanics.
-	/// Decision: Balance blocking with sealed cards vs playing cards to crack the seals.
-	/// </summary>
 	public class Medusa : EnemyBase
 	{
 		public Medusa(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
 		{
 			Id = "medusa";
 			Name = "Medusa";
-			MaxHealth = 24;
+			MaxHealth = 28;
 		}
+
+		private static readonly string[] BaseAttacks = new[]
+		{
+			"gaze", "petrifying_gaze", "vipers_curse"
+		};
+
+		private static readonly string[] SealReliantAttacks = new[]
+		{
+			"basilisk_glare", "serpent_strike", "stone_skin", "crumbling_stone"
+		};
 
 		public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
 		{
-			// Weighted random selection:
-			// Gaze: 35%, Stone Stare: 25%, Basilisk Glare: 20%, Serpent Strike: 20%
+			var playerHasSeals = GetComponentHelper.GetHandOfCards(entityManager)
+				.Any(c => c.GetComponent<Sealed>() != null);
+
+			var pool = playerHasSeals
+				? BaseAttacks.Concat(SealReliantAttacks).ToArray()
+				: BaseAttacks;
+
 			var random = new Random();
-			int roll = random.Next(100);
-
-			string attack;
-			if (roll < 35)
-				attack = "gaze";
-			else if (roll < 60)  // 35 + 25
-				attack = "stone_stare";
-			else if (roll < 80)  // 60 + 20
-				attack = "basilisk_glare";
-			else
-				attack = "serpent_strike";
-
-			return new List<string> { attack };
+			var attacks = new List<string>();
+			for (int i = 0; i < 3; i++)
+			{
+				attacks.Add(pool[random.Next(pool.Length)]);
+			}
+			return attacks;
 		}
 	}
 }
 
-/// <summary>
-/// Gaze - Medusa's basic attack that seals a card on hit.
-/// 4 damage, On hit: seal 1 random card from hand.
-/// </summary>
 public class Gaze : EnemyAttackBase
 {
+	private int RevealSeals = 3;
+	private int HitSeals = 3;
+
 	public Gaze()
 	{
 		Id = "gaze";
 		Name = "Gaze";
-		Damage = 8;
+		Damage = new Random().Next(2, 6);
 		ConditionType = ConditionType.OnHit;
-		Text = "On attack - A random card in your hand gains 3 seals.\n\nOn hit - Top card of your deck gains 3 seals.";
-
-		OnAttackReveal = (entityManager) =>
-		{
-			EventManager.Publish(new SealCardsEvent { Amount = 1, Type = SealType.Hand });
-		};
+		Text = $"On hit - Top card of your deck gains {HitSeals} seals.";
 
 		OnAttackHit = (entityManager) =>
 		{
-			EventManager.Publish(new SealCardsEvent { Amount = 1, Type = SealType.TopOfDrawPile });
+			EventManager.Publish(new SealCardsEvent { Amount = HitSeals, Type = SealType.TopOfDrawPile });
 		};
 	}
 }
 
-/// <summary>
-/// Stone Stare - Medusa's preemptive seal attack.
-/// 6 damage, On reveal: seal top card of draw pile.
-/// </summary>
-public class StoneStare : EnemyAttackBase
-{
-	public StoneStare()
-	{
-		Id = "stone_stare";
-		Name = "Stone Stare";
-		Damage = 9;
-		Text = "On attack - Top card of your draw pile gains 3 seals.";
-
-		OnAttackReveal = (entityManager) =>
-		{
-			EventManager.Publish(new SealCardsEvent { Amount = 1, Type = SealType.TopOfDrawPile });
-		};
-	}
-}
-
-/// <summary>
-/// Basilisk Glare - Low damage attack that delays sealed cards.
-/// 3 damage, On hit: shuffle a sealed card from hand into draw pile.
-/// </summary>
 public class BasiliskGlare : EnemyAttackBase
 {
 	public BasiliskGlare()
 	{
 		Id = "basilisk_glare";
 		Name = "Basilisk Glare";
-		Damage = 9;
+		Damage = new Random().Next(2, 6);
 		ConditionType = ConditionType.OnHit;
 		Text = "This cannot be blocked by sealed cards.";
 
@@ -125,23 +98,117 @@ public class BasiliskGlare : EnemyAttackBase
 	}
 }
 
-/// <summary>
-/// Serpent Strike - High damage attack that adds seals back.
-/// 7 damage, On hit: all sealed cards gain 1 seal.
-/// </summary>
 public class SerpentStrike : EnemyAttackBase
 {
+	private int SealDelta = 1;
+
 	public SerpentStrike()
 	{
 		Id = "serpent_strike";
 		Name = "Serpent Strike";
-		Damage = 7;
+		Damage = new Random().Next(2, 6);
 		ConditionType = ConditionType.OnHit;
-		Text = "On hit - All sealed cards you own gains 1 seal.";
+		Text = $"On hit - All sealed cards you own gain {SealDelta} seal.";
 
 		OnAttackHit = (entityManager) =>
 		{
-			EventManager.Publish(new ModifySealsEvent { Delta = 1 });
+			EventManager.Publish(new ModifySealsEvent { Delta = SealDelta });
+		};
+	}
+}
+
+public class PetrifyingGaze : EnemyAttackBase
+{
+	private int SealsGained = 2;
+
+	public PetrifyingGaze()
+	{
+		Id = "petrifying_gaze";
+		Name = "Petrifying Gaze";
+		Damage = new Random().Next(2, 6);
+		Text = $"Each card that blocks this gains {SealsGained} seals.";
+
+		OnBlockProcessed = (entityManager, card) =>
+		{
+			var sealedComp = card.GetComponent<Sealed>();
+			if (sealedComp != null)
+			{
+				sealedComp.Seals += SealsGained;
+			}
+			else
+			{
+				entityManager.AddComponent(card, new Sealed { Owner = card, Seals = SealsGained });
+			}
+		};
+	}
+}
+
+public class StoneSkin : EnemyAttackBase
+{
+	private int BlockReduction = 1;
+
+	public StoneSkin()
+	{
+		Id = "stone_skin";
+		Name = "Stone Skin";
+		Damage = new Random().Next(2, 6);
+		Text = $"Sealed cards block for {BlockReduction} less.";
+
+		ProgressOverride = (entityManager) =>
+		{
+			var p = entityManager.GetEntitiesWithComponent<EnemyAttackProgress>().FirstOrDefault().GetComponent<EnemyAttackProgress>();
+			var sealedBlockCards = entityManager.GetEntitiesWithComponent<AssignedBlockCard>()
+				.Where(e => !e.GetComponent<AssignedBlockCard>().IsEquipment && e.GetComponent<Sealed>() != null)
+				.ToList();
+			if (sealedBlockCards.Count > 0)
+			{
+				p.AssignedBlockTotal -= sealedBlockCards.Count * BlockReduction;
+			}
+			return false;
+		};
+	}
+}
+
+public class VipersCurse : EnemyAttackBase
+{
+	private int SealsApplied = 2;
+
+	public VipersCurse()
+	{
+		Id = "vipers_curse";
+		Name = "Viper's Curse";
+		Damage = new Random().Next(1, 4);
+		Text = $"On attack - Random card in hand gains {SealsApplied} seal.";
+
+		OnAttackReveal = (entityManager) =>
+		{
+			EventManager.Publish(new SealCardsEvent { Amount = SealsApplied, Type = SealType.Hand });
+		};
+	}
+}
+
+public class CrumblingStone : EnemyAttackBase
+{
+	private int SealsRemoved = 2;
+
+	public CrumblingStone()
+	{
+		Id = "crumbling_stone";
+		Name = "Crumbling Stone";
+		Damage = new Random().Next(2, 6);
+		Text = $"Blocking cards lose {SealsRemoved} seals.";
+
+		OnBlockProcessed = (entityManager, card) =>
+		{
+			var sealedComp = card.GetComponent<Sealed>();
+			if (sealedComp != null)
+			{
+				sealedComp.Seals = Math.Max(0, sealedComp.Seals - SealsRemoved);
+				if (sealedComp.Seals <= 0)
+				{
+					entityManager.RemoveComponent<Sealed>(card);
+				}
+			}
 		};
 	}
 }

@@ -28,15 +28,25 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 {
                     var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                     int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
-                    if (courage < CourageCost)
-                    {
-                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageCost} courage!" });
-                        return false;
-                    }
+                    if (courage < CourageCost) return false;
                     return true;
                 }
-                EventManager.Publish(new CantPlayCardMessage { Message = $"Can only pay during block phase!" });
                 return false;
+            };
+            OnCantPlay = (entityManager, card) =>
+            {
+                var phase = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+                if (phase.Sub == SubPhase.Block)
+                {
+                    var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                    int courage = player?.GetComponent<Courage>()?.Amount ?? 0;
+                    if (courage < CourageCost)
+                        EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageCost} courage!" });
+                }
+                else
+                {
+                    EventManager.Publish(new CantPlayCardMessage { Message = $"Can only pay during block phase!" });
+                }
             };
         }
     }
