@@ -183,8 +183,8 @@
   .card .name {
     font-family: 'New Rocker', cursive;
     font-size: 1.3rem;
-    letter-spacing: 1px;
     line-height: 1.1;
+    text-align: center;
   }
   .card.w .name { color: #1a1a1a; }
   .card.r .name { color: #f0e0d8; }
@@ -196,7 +196,6 @@
     letter-spacing: 2px;
     text-transform: uppercase;
     margin-top: 2px;
-    align-self: flex-start;
   }
   .card.w .type-notch { color: #999; }
   .card.r .type-notch { color: #884433; }
@@ -216,13 +215,33 @@
   .type-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     margin-top: 2px;
   }
 
+  .type-row:not(:has(.cost-section)) {
+    justify-content: flex-end;
+  }
+
+  .cost-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cost-label {
+    font-size: 0.48rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .card.w .cost-label { color: #999; }
+  .card.r .cost-label { color: #884433; }
+  .card.k .cost-label { color: #555; }
+
   .cost-pips {
-    display: inline-flex;
+    display: flex;
     gap: 4px;
-    margin-left: 6px;
   }
 
   .cost-pip {
@@ -500,6 +519,8 @@
     <li>BLK chip is solid fill (steel blue) with no outline — mirrors ATK chip treatment</li>
     <li>AP/FREE chip on black cards uses white palette instead of red — reinforces black card identity</li>
     <li>AP label moved above chip as a label slab — consistent with BLK and ATK chip layout</li>
+    <li>Card name centered in title area</li>
+    <li>Cost pips moved to left side with "COST" label; type text moved to right side — clearer separation</li>
     <li>Kept inline burn pips only (Approach A from V1)</li>
   </ul>
 </div>
@@ -518,11 +539,14 @@
         <div class="title-band">
           <div class="name">Reap</div>
           <div class="type-row">
+            <div class="cost-section">
+              <span class="cost-label">Discard</span>
+              <span class="cost-pips">
+                <span class="cost-pip pip-any"></span>
+                <span class="cost-pip pip-any"></span>
+              </span>
+            </div>
             <span class="type-notch">Attack</span>
-            <span class="cost-pips">
-              <span class="cost-pip pip-any"></span>
-              <span class="cost-pip pip-any"></span>
-            </span>
           </div>
           <div class="rule"></div>
         </div>
@@ -598,11 +622,14 @@
         <div class="title-band">
           <div class="name">Reap</div>
           <div class="type-row">
+            <div class="cost-section">
+              <span class="cost-label">Discard</span>
+              <span class="cost-pips">
+                <span class="cost-pip pip-any"></span>
+                <span class="cost-pip pip-any"></span>
+              </span>
+            </div>
             <span class="type-notch">Attack</span>
-            <span class="cost-pips">
-              <span class="cost-pip pip-any"></span>
-              <span class="cost-pip pip-any"></span>
-            </span>
           </div>
           <div class="rule"></div>
         </div>
@@ -640,11 +667,14 @@
         <div class="title-band">
           <div class="name">Reap</div>
           <div class="type-row">
+            <div class="cost-section">
+              <span class="cost-label">Discard</span>
+              <span class="cost-pips">
+                <span class="cost-pip pip-red"></span>
+                <span class="cost-pip pip-any"></span>
+              </span>
+            </div>
             <span class="type-notch">Attack</span>
-            <span class="cost-pips">
-              <span class="cost-pip pip-red"></span>
-              <span class="cost-pip pip-any"></span>
-            </span>
           </div>
           <div class="rule"></div>
         </div>
@@ -689,11 +719,14 @@
         <div class="title-band">
           <div class="name">Reap</div>
           <div class="type-row">
+            <div class="cost-section">
+              <span class="cost-label">Discard</span>
+              <span class="cost-pips">
+                <span class="cost-pip pip-any"></span>
+                <span class="cost-pip pip-any"></span>
+              </span>
+            </div>
             <span class="type-notch">Attack</span>
-            <span class="cost-pips">
-              <span class="cost-pip pip-any"></span>
-              <span class="cost-pip pip-any"></span>
-            </span>
           </div>
           <div class="rule"></div>
         </div>
@@ -769,11 +802,14 @@
         <div class="title-band">
           <div class="name">Reap</div>
           <div class="type-row">
+            <div class="cost-section">
+              <span class="cost-label">Discard</span>
+              <span class="cost-pips">
+                <span class="cost-pip pip-any"></span>
+                <span class="cost-pip pip-any"></span>
+              </span>
+            </div>
             <span class="type-notch">Attack</span>
-            <span class="cost-pips">
-              <span class="cost-pip pip-any"></span>
-              <span class="cost-pip pip-any"></span>
-            </span>
           </div>
           <div class="rule"></div>
         </div>
@@ -818,11 +854,14 @@
         <div class="title-band">
           <div class="name">Reap</div>
           <div class="type-row">
+            <div class="cost-section">
+              <span class="cost-label">Discard</span>
+              <span class="cost-pips">
+                <span class="cost-pip pip-any"></span>
+                <span class="cost-pip pip-any"></span>
+              </span>
+            </div>
             <span class="type-notch">Attack</span>
-            <span class="cost-pips">
-              <span class="cost-pip pip-any"></span>
-              <span class="cost-pip pip-any"></span>
-            </span>
           </div>
           <div class="rule"></div>
         </div>
@@ -898,11 +937,14 @@
         <div class="title-band">
           <div class="name">Reap</div>
           <div class="type-row">
+            <div class="cost-section">
+              <span class="cost-label">Discard</span>
+              <span class="cost-pips">
+                <span class="cost-pip pip-any"></span>
+                <span class="cost-pip pip-any"></span>
+              </span>
+            </div>
             <span class="type-notch">Attack</span>
-            <span class="cost-pips">
-              <span class="cost-pip pip-any"></span>
-              <span class="cost-pip pip-any"></span>
-            </span>
           </div>
           <div class="rule"></div>
         </div>
@@ -930,6 +972,153 @@
     </div>
     <div class="card-label">Cost 2 · -Delta</div>
   </div>
+</div>
+
+<br>
+<br>
+
+<!-- ── MIXED COST REFERENCE ── -->
+<p class="color-label">Mixed Cost Reference (1R + 1Any)</p>
+<div class="card-row">
+
+  <!-- Neutral with mixed cost -->
+  <div class="card-wrapper">
+    <div class="card w">
+      <div class="bg"></div>
+      <div class="stripe"></div>
+      <div class="stat-gutter"></div>
+      <div class="card-inner">
+        <div class="title-band">
+          <div class="name">Reap</div>
+          <div class="type-row">
+            <div class="cost-section">
+              <span class="cost-label">Discard</span>
+              <span class="cost-pips">
+                <span class="cost-pip pip-red"></span>
+                <span class="cost-pip pip-any"></span>
+              </span>
+            </div>
+            <span class="type-notch">Attack</span>
+          </div>
+          <div class="rule"></div>
+        </div>
+        <div class="content">
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="chip-slot">
+          <div class="label-slab label-slab-blk">BLK</div>
+          <div class="chip chip-blk chip-has-label"><span class="v">8</span></div>
+          <div class="chip-spacer"></div>
+        </div>
+        <div class="chip-slot">
+          <div class="label-slab label-slab-atk">ATK</div>
+          <div class="chip chip-atk chip-has-label"><span class="v">3</span></div>
+          <div class="chip-spacer"></div>
+        </div>
+        <div class="chip-slot-ap">
+          <div class="label-slab label-slab-ap">AP</div>
+          <div class="chip chip-ap chip-has-label"><span class="v">1</span></div>
+        </div>
+      </div>
+      <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+    </div>
+    <div class="card-label">Neutral</div>
+  </div>
+
+  <!-- Red with mixed cost -->
+  <div class="card-wrapper">
+    <div class="card r">
+      <div class="bg"></div>
+      <div class="stripe"></div>
+      <div class="stat-gutter"></div>
+      <div class="card-inner">
+        <div class="title-band">
+          <div class="name">Reap</div>
+          <div class="type-row">
+            <div class="cost-section">
+              <span class="cost-label">Discard</span>
+              <span class="cost-pips">
+                <span class="cost-pip pip-red"></span>
+                <span class="cost-pip pip-any"></span>
+              </span>
+            </div>
+            <span class="type-notch">Attack</span>
+          </div>
+          <div class="rule"></div>
+        </div>
+        <div class="content">
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="chip-slot">
+          <div class="label-slab label-slab-blk">BLK</div>
+          <div class="chip chip-blk chip-has-label"><span class="v">8</span></div>
+          <div class="chip-spacer"></div>
+        </div>
+        <div class="chip-slot">
+          <div class="label-slab label-slab-atk">ATK</div>
+          <div class="chip chip-atk chip-has-label"><span class="v">3</span></div>
+          <div class="chip-spacer"></div>
+        </div>
+        <div class="chip-slot-ap">
+          <div class="label-slab label-slab-ap">AP</div>
+          <div class="chip chip-ap chip-has-label"><span class="v">1</span></div>
+        </div>
+      </div>
+      <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+    </div>
+    <div class="card-label">Red</div>
+  </div>
+
+  <!-- Black with mixed cost -->
+  <div class="card-wrapper">
+    <div class="card k">
+      <div class="bg"></div>
+      <div class="stripe"></div>
+      <div class="stat-gutter"></div>
+      <div class="card-inner">
+        <div class="title-band">
+          <div class="name">Reap</div>
+          <div class="type-row">
+            <div class="cost-section">
+              <span class="cost-label">Discard</span>
+              <span class="cost-pips">
+                <span class="cost-pip pip-red"></span>
+                <span class="cost-pip pip-any"></span>
+              </span>
+            </div>
+            <span class="type-notch">Attack</span>
+          </div>
+          <div class="rule"></div>
+        </div>
+        <div class="content">
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="chip-slot">
+          <div class="label-slab label-slab-blk">BLK</div>
+          <div class="chip chip-blk chip-has-label"><span class="v">8</span></div>
+          <div class="chip-spacer"></div>
+        </div>
+        <div class="chip-slot">
+          <div class="label-slab label-slab-atk">ATK</div>
+          <div class="chip chip-atk chip-has-label"><span class="v">3</span></div>
+          <div class="chip-spacer"></div>
+        </div>
+        <div class="chip-slot-ap">
+          <div class="label-slab label-slab-ap">AP</div>
+          <div class="chip chip-ap chip-has-label"><span class="v">1</span></div>
+        </div>
+      </div>
+      <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+    </div>
+    <div class="card-label">Black</div>
+  </div>
+
 </div>
 
 </body>

@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Name = "Reap";
             Target = "Player";
             Cost = ["Any","Any"];
-            Text = $"This attack gains +{DamageBonus} damage if two red cards were discarded to play this.";
+            Text = $"This attack gains +{DamageBonus} damage if two red cards are discarded to play this.";
             Animation = "Attack";
             Block = 3;
             Damage = 8;
