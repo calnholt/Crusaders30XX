@@ -47,7 +47,7 @@ namespace Crusaders30XX.ECS.Systems
 		private Entity _prevHoverInteractable;
 
 		[DebugEditable(DisplayName = "Cursor Radius (px)", Step = 1f, Min = 2f, Max = 256f)]
-		public int CursorRadius { get; set; } = 40;
+		public int CursorRadius { get; set; } = 26;
 
 		[DebugEditable(DisplayName = "Base Speed (px/s)", Step = 10f, Min = 50f, Max = 4000f)]
 		public float BaseSpeed { get; set; } = 1450f;

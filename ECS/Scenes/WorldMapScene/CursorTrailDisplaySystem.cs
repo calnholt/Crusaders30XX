@@ -69,10 +69,10 @@ public class CursorTrailDisplaySystem : Core.System
     public float TrailB { get; set; } = 1.0f;
 
     [DebugEditable(DisplayName = "Stamp Radius", Step = 1f, Min = 2f, Max = 128f)]
-    public int StampRadius { get; set; } = 44;
+    public int StampRadius { get; set; } = 27;
 
     [DebugEditable(DisplayName = "Cutout Radius", Step = 1f, Min = 2f, Max = 128f)]
-    public int CutoutRadius { get; set; } = 39;
+    public int CutoutRadius { get; set; } = 25;
 
     public CursorTrailDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content)
         : base(em)
