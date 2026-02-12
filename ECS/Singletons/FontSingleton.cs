@@ -9,10 +9,12 @@ namespace Crusaders30XX.ECS.Singletons
 	{
 		private static SpriteFont _titleFont;
 		private static SpriteFont _contentFont;
+		private static SpriteFont _chakraPetchFont;
 		private static readonly object _lock = new object();
 
 		public static SpriteFont TitleFont => _titleFont;
 		public static SpriteFont ContentFont => _contentFont;
+		public static SpriteFont ChakraPetchFont => _chakraPetchFont;
 
 		public static void Initialize(ContentManager content)
 		{
@@ -20,6 +22,7 @@ namespace Crusaders30XX.ECS.Singletons
 			{
 				_titleFont = content.Load<SpriteFont>("Fonts/NewRocker");
 				_contentFont = content.Load<SpriteFont>("Fonts/NewRocker");
+				_chakraPetchFont = content.Load<SpriteFont>("Fonts/ChakraPetch");
 			}
 		}
 	}
