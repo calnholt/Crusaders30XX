@@ -12,6 +12,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Data.Achievements;
+using System.IO;
 
 namespace Crusaders30XX;
 
@@ -52,6 +53,7 @@ public class Game1 : Game
     private DialogDisplaySystem _dialogDisplaySystem;
     private DebugCommandSystem _debugCommandSystem;
     private LocationNameDisplaySystem _locationNameDisplaySystem;
+    private CardDebugSceneSystem _cardDebugSceneSystem;
     private QuestStartSystem _questStartSystem;
     
     // ECS System
@@ -76,6 +78,9 @@ public class Game1 : Game
 		AlphaDestinationBlend = Blend.One,
 		AlphaBlendFunction = BlendFunction.Add
 	};
+
+    public bool CardDebugMode { get; set; }
+    public string CardDebugId { get; set; }
 
     public static bool WindowIsActive { get; private set; } = true;
     public static int VirtualWidth = 1920;
@@ -193,6 +198,8 @@ public class Game1 : Game
         _world.AddSystem(_parallaxLayerSystem);
         _world.AddSystem(_uiElementBorderDebugSystem);
         _world.AddSystem(_debugCommandSystem);
+        _cardDebugSceneSystem = new CardDebugSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, CardDebugId);
+        _world.AddSystem(_cardDebugSceneSystem);
         _questStartSystem = new QuestStartSystem(_world.EntityManager);
         _world.AddSystem(_questStartSystem);
         // Global music manager
@@ -220,7 +227,15 @@ public class Game1 : Game
         }
         // Allocate render targets
         AllocateRenderTargets();
-        // TODO: use this.Content to load your game content here
+
+        // Card debug mode: override scene and trigger load
+        if (CardDebugMode)
+        {
+            CardDisplayToggle.UseV2 = true;
+            var ss = sceneEntity.GetComponent<SceneState>();
+            ss.Current = SceneId.CardDebug;
+            EventManager.Publish(new LoadSceneEvent { Scene = SceneId.CardDebug });
+        }
     }
     
     protected override void Update(GameTime gameTime)
@@ -311,6 +326,23 @@ public class Game1 : Game
             }
         }
 
+        // Card debug capture: save render target as PNG and exit
+        if (CardDebugMode && _cardDebugSceneSystem.ReadyToCapture)
+        {
+            var cardId = _cardDebugSceneSystem.ResolvedCardId ?? "card";
+            var dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "debug", "cards");
+            Directory.CreateDirectory(dir);
+            var filePath = Path.Combine(dir, $"{cardId}.png");
+            using (var stream = File.Create(filePath))
+            {
+                _sceneRt.SaveAsPng(stream, _sceneRt.Width, _sceneRt.Height);
+            }
+            Console.WriteLine($"[CardDebug] Saved: {Path.GetFullPath(filePath)}");
+            GraphicsDevice.SetRenderTarget(null);
+            Exit();
+            return;
+        }
+
         // Final draw to backbuffer with letterboxing
         GraphicsDevice.SetRenderTarget(null);
         GraphicsDevice.Clear(Color.Black);
@@ -373,6 +405,11 @@ public class Game1 : Game
                 FrameProfiler.Measure("AchievementSceneSystem.Draw", _achievementSceneSystem.Draw);
                 break;
             }
+            case SceneId.CardDebug:
+            {
+                _cardDebugSceneSystem.Draw();
+                break;
+            }
             case SceneId.WorldMap:
             {
                 // Draw location tiles with crisp pixel sampling
@@ -400,12 +437,15 @@ public class Game1 : Game
         FrameProfiler.Measure("DialogDisplaySystem.Draw", _dialogDisplaySystem.Draw);
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
-        // Cursor blur trail (additive pass before cursor)
+        // Cursor blur trail (additive pass before cursor) — skip in card debug mode
         _spriteBatch.End();
-        _cursorTrailDisplaySystem.DrawTrail(_sceneRt);
-        _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
-        FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
-        _spriteBatch.End();
+        if (!CardDebugMode)
+        {
+            _cursorTrailDisplaySystem.DrawTrail(_sceneRt);
+            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
+            FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
+            _spriteBatch.End();
+        }
     }
 
 	protected override void UnloadContent()

@@ -4,4 +4,7 @@ obj/
 Content/bin/
 Content/obj/
 
+# Debug output
+debug/
+
 

@@ -17,6 +17,7 @@ namespace Crusaders30XX.ECS.Components
 		Shop,
 		Achievement,
 		CustomizationV2,
+		CardDebug,
 		None
 	}
 
