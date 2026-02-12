@@ -399,7 +399,7 @@ public class Game1 : Game
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         // Cursor blur trail (additive pass before cursor)
         _spriteBatch.End();
-        _cursorTrailDisplaySystem.DrawTrail();
+        _cursorTrailDisplaySystem.DrawTrail(_sceneRt);
         _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
         FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
         _spriteBatch.End();
@@ -413,7 +413,8 @@ public class Game1 : Game
 
     private void AllocateRenderTargets()
     {
-        _sceneRt = new RenderTarget2D(GraphicsDevice, VirtualWidth, VirtualHeight, false, SurfaceFormat.Color, DepthFormat.None);
+        _sceneRt = new RenderTarget2D(GraphicsDevice, VirtualWidth, VirtualHeight, false,
+            SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
         _ppA = new RenderTarget2D(GraphicsDevice, VirtualWidth, VirtualHeight, false, SurfaceFormat.Color, DepthFormat.None);
         _ppB = new RenderTarget2D(GraphicsDevice, VirtualWidth, VirtualHeight, false, SurfaceFormat.Color, DepthFormat.None);
     }
