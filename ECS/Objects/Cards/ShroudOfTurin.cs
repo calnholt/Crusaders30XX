@@ -43,17 +43,27 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var deck = deckEntity?.GetComponent<Deck>();
                 if (deck == null) return false;
                 var cardsInHand = deck.Hand.FindAll(c => {
-                    if (c == card) return false; // Exclude the card being played
+                    if (c == card) return false;
+                    var cd = c.GetComponent<CardData>();
+                    if (cd == null) return false;
+                    return !cd.Card.IsWeapon;
+                });
+                if (cardsInHand.Count < 1) return false;
+                return true;
+            };
+            OnCantPlay = (entityManager, card) =>
+            {
+                var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                var deck = deckEntity?.GetComponent<Deck>();
+                if (deck == null) return;
+                var cardsInHand = deck.Hand.FindAll(c => {
+                    if (c == card) return false;
                     var cd = c.GetComponent<CardData>();
                     if (cd == null) return false;
                     return !cd.Card.IsWeapon;
                 });
                 if (cardsInHand.Count < 1)
-                {
                     EventManager.Publish(new CantPlayCardMessage { Message = $"Requires at least one card in hand!" });
-                    return false;
-                }
-                return true;  
             };
         }
     }

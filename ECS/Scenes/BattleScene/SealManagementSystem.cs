@@ -53,12 +53,12 @@ namespace Crusaders30XX.ECS.Systems
 				.Where(c => c.GetComponent<Sealed>() == null)
 				.Where(c => c.GetComponent<Pledge>() == null) // Pledged cards are immune
 				.OrderBy(x => new Random().Next())
-				.Take(amount)
+				.Take(1)
 				.ToList();
 
 			foreach (var card in cardsToSeal)
 			{
-				EntityManager.AddComponent(card, new Sealed { Owner = card, Seals = 3 });
+				EntityManager.AddComponent(card, new Sealed { Owner = card, Seals = amount });
 				var cardData = card.GetComponent<CardData>();
 				Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been sealed!");
 			}
@@ -75,12 +75,12 @@ namespace Crusaders30XX.ECS.Systems
 				.Where(c => c.GetComponent<Sealed>() == null)
 				.Where(c => c.GetComponent<Pledge>() == null) // Pledged cards are immune
 				.Where(c => (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false)
-				.Take(amount) // Take from top of draw pile
+				.Take(1) // Take from top of draw pile
 				.ToList();
 
 			foreach (var card in cardsToSeal)
 			{
-				EntityManager.AddComponent(card, new Sealed { Owner = card, Seals = 3 });
+				EntityManager.AddComponent(card, new Sealed { Owner = card, Seals = amount });
 				var cardData = card.GetComponent<CardData>();
 				Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been sealed (from draw pile)!");
 			}

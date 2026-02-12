@@ -193,6 +193,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (stagedDone && !anyReturning)
                 {
                     // Fully close overlay and clear flags
+                    ClearAllFilteredFromHandMarkers();
                     state.IsReturning = false;
                     state.IsOpen = false;
                     state.RequiredCosts.Clear();
@@ -307,6 +308,11 @@ namespace Crusaders30XX.ECS.Systems
                 stagedT.ZOrder = 30000;
             }
 
+            // Mark the staged card as filtered so it doesn't appear in the hand fan
+            // (weapons stay in deck.Hand even after HandStaged move, so this is necessary)
+            if (!state.CardToPlay.HasComponent<FilteredFromHand>())
+                EntityManager.AddComponent(state.CardToPlay, new FilteredFromHand());
+
             // Update interactability of remaining hand cards to only those viable to pay costs
             UpdateInteractablesForRemainingCosts(state);
         }
@@ -353,6 +359,7 @@ namespace Crusaders30XX.ECS.Systems
                 else
                 {
                     // Successful pay: do not return to hand; close immediately
+                    ClearAllFilteredFromHandMarkers();
                     state.IsReturning = false;
                     state.ReturnElapsedSeconds = 0f;
                     state.IsOpen = false;
@@ -372,6 +379,9 @@ namespace Crusaders30XX.ECS.Systems
             if (e == null) return;
             var state = e.GetComponent<PayCostOverlayState>();
             if (state == null) return;
+
+            // Clear filtered markers so cards reappear while return animation plays
+            ClearAllFilteredFromHandMarkers();
 
             // Restore overall hand interactability
             RestoreHandInteractables();
@@ -451,6 +461,9 @@ namespace Crusaders30XX.ECS.Systems
 
             // Hard guard: pledged cards cannot be used to pay costs
             if (evt.Card.HasComponent<Pledge>()) return;
+
+            // Hard guard: sealed cards cannot be used to pay costs
+            if (evt.Card.HasComponent<Sealed>()) return;
 
             var alreadySelected = evt.Card.GetComponent<SelectedForPayment>() != null || state.SelectedCards.Contains(evt.Card);
 
@@ -846,6 +859,18 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
+        private void ClearAllFilteredFromHandMarkers()
+        {
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck == null) return;
+            foreach (var c in deck.Hand)
+            {
+                if (c.HasComponent<FilteredFromHand>())
+                    EntityManager.RemoveComponent<FilteredFromHand>(c);
+            }
+        }
+
         private static bool IsCardViableForCosts(Entity card, List<string> remainingCosts)
         {
             var cd = card.GetComponent<CardData>();
@@ -858,6 +883,8 @@ namespace Crusaders30XX.ECS.Systems
             catch { }
             // Disallow using pledged cards to pay costs
             if (card.HasComponent<Pledge>()) return false;
+            // Disallow using sealed cards to pay costs
+            if (card.HasComponent<Sealed>()) return false;
             // Card is viable if it can satisfy at least one remaining requirement
             foreach (var c in remainingCosts)
             {
@@ -885,6 +912,13 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     ui.IsHovered = false;
                     ui.IsClicked = false;
+                    if (!c.HasComponent<FilteredFromHand>())
+                        EntityManager.AddComponent(c, new FilteredFromHand());
+                }
+                else
+                {
+                    if (c.HasComponent<FilteredFromHand>())
+                        EntityManager.RemoveComponent<FilteredFromHand>(c);
                 }
             }
         }

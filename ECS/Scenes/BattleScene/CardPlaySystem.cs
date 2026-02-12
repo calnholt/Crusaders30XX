@@ -227,6 +227,7 @@ namespace Crusaders30XX.ECS.Systems
             // Evaluate any additional costs/requirements tied to the card id
             if (card.CanPlay(EntityManager, evt.Card) == false)
             {
+                card.OnCantPlay?.Invoke(EntityManager, evt.Card);
                 Console.WriteLine($"[CardPlaySystem] Additional cost check failed for id={card.CardId}; aborting play");
                 return;
             }

@@ -135,6 +135,10 @@ namespace Crusaders30XX.ECS.Systems
 		private MarkManagementSystem _markManagementSystem;
 		private MarkDisplaySystem _markDisplaySystem;
 
+		// Can-play card highlight
+		private CanPlayCardHighlightSystem _canPlayCardHighlightSystem;
+		private CanPlayHighlightSettingsSystem _canPlayHighlightSettingsSystem;
+
 		// Bloodshot effect system and render targets for background compositing
 		private BloodshotDisplaySystem _bloodshotDisplaySystem;
 		private RenderTarget2D _bgRt;
@@ -552,6 +556,10 @@ namespace Crusaders30XX.ECS.Systems
 			var markTexture = _content.Load<Texture2D>("mark");
 			_markDisplaySystem = new MarkDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, markTexture);
 
+			// Can-play card highlight
+			_canPlayCardHighlightSystem = new CanPlayCardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_canPlayHighlightSettingsSystem = new CanPlayHighlightSettingsSystem(_world.EntityManager);
+
 			// Bloodshot effect system and render targets for background compositing
 			_bloodshotDisplaySystem = new BloodshotDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_bgRt = new RenderTarget2D(_graphicsDevice, Game1.VirtualWidth, Game1.VirtualHeight, false, SurfaceFormat.Color, DepthFormat.None);
@@ -653,6 +661,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_mustBeBlockedSystem);
 			_world.AddSystem(_activeCharacterIndicatorDisplaySystem);
 			_world.AddSystem(_bloodshotDisplaySystem);
+			_world.AddSystem(_canPlayCardHighlightSystem);
+			_world.AddSystem(_canPlayHighlightSettingsSystem);
 
 			// Tutorial system
 			_tutorialManager = new TutorialManager(_world.EntityManager);

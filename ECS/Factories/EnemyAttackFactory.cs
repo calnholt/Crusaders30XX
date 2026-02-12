@@ -102,9 +102,12 @@ namespace Crusaders30XX.ECS.Factories
                 "have_no_mercy" => new HaveNoMercy(),
                 // Medusa attacks
                 "gaze" => new Gaze(),
-                "stone_stare" => new StoneStare(),
                 "basilisk_glare" => new BasiliskGlare(),
                 "serpent_strike" => new SerpentStrike(),
+                "petrifying_gaze" => new PetrifyingGaze(),
+                "stone_skin" => new StoneSkin(),
+                "vipers_curse" => new VipersCurse(),
+                "crumbling_stone" => new CrumblingStone(),
                 // Wyvern attacks
                 "wyvern_strike" => new WyvernStrike(),
                 "wyvern_threat" => new WyvernThreat(),
@@ -211,9 +214,12 @@ namespace Crusaders30XX.ECS.Factories
                 { "have_no_mercy", new HaveNoMercy() },
                 // Medusa attacks
                 { "gaze", new Gaze() },
-                { "stone_stare", new StoneStare() },
                 { "basilisk_glare", new BasiliskGlare() },
                 { "serpent_strike", new SerpentStrike() },
+                { "petrifying_gaze", new PetrifyingGaze() },
+                { "stone_skin", new StoneSkin() },
+                { "vipers_curse", new VipersCurse() },
+                { "crumbling_stone", new CrumblingStone() },
                 // Wyvern attacks
                 { "wyvern_strike", new WyvernStrike() },
                 { "wyvern_threat", new WyvernThreat() },

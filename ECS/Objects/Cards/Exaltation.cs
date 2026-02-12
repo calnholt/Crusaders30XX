@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
@@ -6,34 +5,31 @@ using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Objects.Cards
 {
-    public class SerpentCrush : CardBase
+    public class Exaltation : CardBase
     {
         private int CourageCost = 4;
-        private int ActionPointAmount = 1;
-        private int DrawAmount = 1;
-        public SerpentCrush()
+        public Exaltation()
         {
-            CardId = "serpent_crush";
-            Name = "Serpent Crush";
+            CardId = "exaltation";
+            Name = "Exaltation";
             Target = "Enemy";
-            Text = $"As an additional cost, lose {CourageCost} courage. Gain {ActionPointAmount} action point and draw {DrawAmount} card.";
-            IsFreeAction = true;
+            Text = $"As an additional cost, lose {CourageCost} courage.";
             Animation = "Attack";
-            Damage = 3;
-            Type = CardType.Attack;
+            Damage = 6;
             Block = 3;
 
             OnPlay = (entityManager, card) =>
             {
-                EventManager.Publish(new ModifyHpRequestEvent { 
-                    Source = entityManager.GetEntity("Player"), 
-                    Target = entityManager.GetEntity("Enemy"), 
-                    Delta = -GetDerivedDamage(entityManager, card), 
-                    DamageType = ModifyTypeEnum.Attack 
-                });
+                var player = entityManager.GetEntity("Player");
+                var enemy = entityManager.GetEntity("Enemy");
                 EventManager.Publish(new ModifyCourageRequestEvent { Delta = -CourageCost, Type = ModifyCourageType.Spent });
-                EventManager.Publish(new ModifyActionPointsEvent { Delta = ActionPointAmount });
-                EventManager.Publish(new RequestDrawCardsEvent { Count = DrawAmount });
+                EventManager.Publish(new ModifyHpRequestEvent
+                {
+                    Source = player,
+                    Target = enemy,
+                    Delta = -GetDerivedDamage(entityManager, card),
+                    DamageType = ModifyTypeEnum.Attack
+                });
             };
 
             CanPlay = (entityManager, card) =>
@@ -41,8 +37,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                 var courageCmp = player?.GetComponent<Courage>();
                 int courage = courageCmp?.Amount ?? 0;
-                if (courage < CourageCost) return false;
-                return true;
+                return courage >= CourageCost;
             };
             OnCantPlay = (entityManager, card) =>
             {
@@ -53,7 +48,5 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageCost} courage!" });
             };
         }
-
-        
     }
 }

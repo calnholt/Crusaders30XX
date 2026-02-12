@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Card Concepts V2</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #111015; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: #eee;
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+
+  h1 {
+    text-align: center;
+    font-family: 'New Rocker', cursive;
+    font-size: 2.4rem;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #e44, #f88, #e44);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #777;
+    font-size: 0.85rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 60px;
+  }
+
+  .concept-section { margin-bottom: 80px; }
+
+  .concept-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 8px;
+    padding-left: 20px;
+  }
+
+  .concept-number {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.6rem;
+    color: #c33;
+  }
+
+  .concept-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .concept-desc {
+    color: #777;
+    font-size: 0.8rem;
+    padding-left: 20px;
+    margin-bottom: 30px;
+    max-width: 750px;
+    line-height: 1.5;
+  }
+
+  .card-row {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 0 20px;
+  }
+
+  .card-label {
+    text-align: center;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #555;
+    margin-top: 12px;
+  }
+
+  .card-wrapper {
+    transition: transform 0.2s ease;
+    cursor: pointer;
+  }
+  .card-wrapper:hover { transform: translateY(-4px); }
+
+  /* ===================================================================
+     SHARED BASE — All 3 concepts share the Concept 3 skeleton
+     =================================================================== */
+
+  .card {
+    width: 230px;
+    height: 330px;
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .card .card-bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+  }
+
+  /* Color variants */
+  .white .card-bg { background: #e2ded8; }
+  .red .card-bg { background: #1a1016; }
+  .black .card-bg { background: #141218; }
+
+  .card .left-stripe {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    z-index: 3;
+  }
+  .white .left-stripe { background: #888; }
+  .red .left-stripe { background: #dd3333; }
+  .black .left-stripe { background: #665588; }
+
+  /* Stat column */
+  .card .stat-column {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    bottom: 12px;
+    width: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 4;
+  }
+
+  .card .stat-chip {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card .stat-chip .val {
+    font-family: 'New Rocker', cursive;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .card .stat-chip .ico {
+    font-size: 0.45rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 1px;
+    font-weight: 600;
+  }
+
+  .card .chip-atk { background: #cc2222; color: #fff; }
+  .card .chip-atk .ico { color: #ffbbaa; }
+
+  /* Block chip with shield icon */
+  .card .chip-blk {
+    border: 2px solid;
+    position: relative;
+  }
+  .white .chip-blk { border-color: #aaa59c; color: #444; }
+  .white .chip-blk .ico { color: #777; }
+  .red .chip-blk { border-color: #cc3333; color: #ff9988; }
+  .red .chip-blk .ico { color: #cc6655; }
+  .black .chip-blk { border-color: #554477; color: #ccbbee; }
+  .black .chip-blk .ico { color: #887799; }
+
+  .card .chip-blk .shield-mark {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 12px;
+    height: 12px;
+  }
+  .white .chip-blk .shield-mark { fill: #888; }
+  .red .chip-blk .shield-mark { fill: #cc3333; }
+  .black .chip-blk .shield-mark { fill: #665588; }
+
+  .card .chip-ap { margin-top: auto; }
+  .white .chip-ap { background: #444; color: #e2ded8; }
+  .white .chip-ap .ico { color: #aaa; }
+  .red .chip-ap { background: #331111; color: #dd4433; }
+  .red .chip-ap .ico { color: #993322; }
+  .black .chip-ap { background: #1c1828; color: #8866aa; }
+  .black .chip-ap .ico { color: #554466; }
+
+  /* Content area right of stats */
+  .card .card-inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card .cost-row {
+    display: flex;
+    gap: 4px;
+    padding: 14px 14px 0;
+    margin-left: 40px;
+  }
+
+  .card .cost-pip {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .white .cost-pip { background: #a09888; }
+  .red .cost-pip { background: #555; }
+  .black .cost-pip { background: #444; }
+
+  .card .card-name {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.2rem;
+    padding: 6px 14px 0;
+    margin-left: 40px;
+    letter-spacing: 1px;
+  }
+  .white .card-name { color: #222; }
+  .red .card-name { color: #eee; }
+  .black .card-name { color: #ddd8e4; }
+
+  .card .thin-rule {
+    height: 1px;
+    margin: 8px 14px 0;
+    margin-left: 54px;
+  }
+  .white .thin-rule { background: #c0bab0; }
+  .red .thin-rule { background: #442222; }
+  .black .thin-rule { background: #2a2636; }
+
+  .card .card-text {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    padding: 8px 14px;
+    margin-left: 40px;
+  }
+  .white .card-text { color: #444; }
+  .red .card-text { color: #bb9988; }
+  .black .card-text { color: #8884a0; }
+
+  .card .pattern-lines {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    z-index: 1;
+    opacity: 0.04;
+    background: repeating-linear-gradient(
+      -45deg, transparent, transparent 4px,
+      currentColor 4px, currentColor 5px
+    );
+  }
+  .white .pattern-lines { color: #000; }
+  .red .pattern-lines { color: #ff4444; }
+  .black .pattern-lines { color: #8866aa; }
+
+  /* ===================================================================
+     APPROACH A: Art in bottom-right panel
+     Art sits in a dedicated rectangular zone, lower-right
+     =================================================================== */
+
+  .a-card .art-zone {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 90px;
+    height: 80px;
+    z-index: 3;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .a-card .art-zone img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+  }
+
+  .a-card.white .art-zone { background: #d4cfc6; }
+  .a-card.red .art-zone { background: #1f1520; }
+  .a-card.black .art-zone { background: #1a1724; }
+
+  /* Text needs to not overlap art */
+  .a-card .card-text { flex: 1; }
+
+  /* ===================================================================
+     APPROACH B: Art as large background bleed, faded
+     Art fills the bottom half as a ghosted watermark behind text
+     =================================================================== */
+
+  .b-card .art-bleed {
+    position: absolute;
+    bottom: -5px;
+    right: -10px;
+    width: 160px;
+    height: 140px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .b-card .art-bleed img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .b-card.white .art-bleed img { opacity: 0.08; }
+  .b-card.red .art-bleed img { opacity: 0.12; filter: saturate(0.3) brightness(1.5); }
+  .b-card.black .art-bleed img { opacity: 0.10; filter: saturate(0.2) brightness(1.3); }
+
+  .b-card .card-text { flex: 1; position: relative; z-index: 2; }
+
+  /* ===================================================================
+     APPROACH C: Art in a horizontal band between text and bottom
+     A full-width strip that acts as a scene divider
+     =================================================================== */
+
+  .c-card .card-text { position: relative; z-index: 2; }
+
+  .c-card .art-band {
+    margin-left: 48px;
+    margin-right: 8px;
+    height: 75px;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+  }
+
+  .c-card .art-band img {
+    height: 90%;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
+  }
+
+  .c-card.white .art-band { background: #d0cbc2; }
+  .c-card.red .art-band { background: linear-gradient(180deg, #1f1520, #251018); }
+  .c-card.black .art-band { background: linear-gradient(180deg, #1a1724, #16132a); }
+
+  /* Push art band toward bottom */
+  .c-card .text-flex { flex: 1; }
+  .c-card .art-band { margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Crusaders30XX</h1>
+<p class="subtitle">Card Concepts V2 — Art Integration</p>
+
+
+<!-- ====== APPROACH A: Boxed Art Panel ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">A.</span>
+    <span class="concept-title">Boxed Art Panel</span>
+  </div>
+  <p class="concept-desc">
+    Card art sits in a contained rectangular panel at the bottom-right. Clean separation between text and art.
+    The panel acts as a defined "window" — easy to implement as a clipped rectangle in MonoGame. Art stays out of the way of stats and text.
+  </p>
+  <div class="card-row">
+    <!-- White -->
+    <div class="card-wrapper">
+      <div class="card a-card white">
+        <div class="card-bg"></div>
+        <div class="left-stripe"></div>
+        <div class="pattern-lines"></div>
+        <div class="stat-column">
+          <div class="stat-chip chip-atk">
+            <span class="val">3</span>
+            <span class="ico">ATK</span>
+          </div>
+          <div class="stat-chip chip-blk">
+            <span class="val">8</span>
+            <span class="ico">BLK</span>
+            <svg class="shield-mark" viewBox="0 0 24 24"><path d="M12 2L4 6v5c0 5.25 3.4 10.14 8 11.38C16.6 21.14 20 16.25 20 11V6l-8-4z"/></svg>
+          </div>
+          <div class="stat-chip chip-ap">
+            <span class="val">1</span>
+            <span class="ico">AP</span>
+          </div>
+        </div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="thin-rule"></div>
+          <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art-zone">
+          <img src="Content/CardArt/reap.png" alt="Reap">
+        </div>
+      </div>
+      <div class="card-label">Neutral</div>
+    </div>
+
+    <!-- Red -->
+    <div class="card-wrapper">
+      <div class="card a-card red">
+        <div class="card-bg"></div>
+        <div class="left-stripe"></div>
+        <div class="pattern-lines"></div>
+        <div class="stat-column">
+          <div class="stat-chip chip-atk">
+            <span class="val">3</span>
+            <span class="ico">ATK</span>
+          </div>
+          <div class="stat-chip chip-blk">
+            <span class="val">8</span>
+            <span class="ico">BLK</span>
+            <svg class="shield-mark" viewBox="0 0 24 24"><path d="M12 2L4 6v5c0 5.25 3.4 10.14 8 11.38C16.6 21.14 20 16.25 20 11V6l-8-4z"/></svg>
+          </div>
+          <div class="stat-chip chip-ap">
+            <span class="val">1</span>
+            <span class="ico">AP</span>
+          </div>
+        </div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="thin-rule"></div>
+          <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art-zone">
+          <img src="Content/CardArt/reap.png" alt="Reap">
+        </div>
+      </div>
+      <div class="card-label">Red</div>
+    </div>
+
+    <!-- Black -->
+    <div class="card-wrapper">
+      <div class="card a-card black">
+        <div class="card-bg"></div>
+        <div class="left-stripe"></div>
+        <div class="pattern-lines"></div>
+        <div class="stat-column">
+          <div class="stat-chip chip-atk">
+            <span class="val">3</span>
+            <span class="ico">ATK</span>
+          </div>
+          <div class="stat-chip chip-blk">
+            <span class="val">8</span>
+            <span class="ico">BLK</span>
+            <svg class="shield-mark" viewBox="0 0 24 24"><path d="M12 2L4 6v5c0 5.25 3.4 10.14 8 11.38C16.6 21.14 20 16.25 20 11V6l-8-4z"/></svg>
+          </div>
+          <div class="stat-chip chip-ap">
+            <span class="val">1</span>
+            <span class="ico">AP</span>
+          </div>
+        </div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="thin-rule"></div>
+          <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art-zone">
+          <img src="Content/CardArt/reap.png" alt="Reap">
+        </div>
+      </div>
+      <div class="card-label">Black</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ====== APPROACH B: Ghost Bleed ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">B.</span>
+    <span class="concept-title">Ghost Bleed</span>
+  </div>
+  <p class="concept-desc">
+    Art bleeds large across the bottom-right as a faded watermark. Gives the card atmosphere and identity at a glance
+    without competing with text readability. In MonoGame, just draw the art texture at low opacity beneath the text layer.
+  </p>
+  <div class="card-row">
+    <!-- White -->
+    <div class="card-wrapper">
+      <div class="card b-card white">
+        <div class="card-bg"></div>
+        <div class="left-stripe"></div>
+        <div class="pattern-lines"></div>
+        <div class="art-bleed">
+          <img src="Content/CardArt/reap.png" alt="Reap">
+        </div>
+        <div class="stat-column">
+          <div class="stat-chip chip-atk">
+            <span class="val">3</span>
+            <span class="ico">ATK</span>
+          </div>
+          <div class="stat-chip chip-blk">
+            <span class="val">8</span>
+            <span class="ico">BLK</span>
+            <svg class="shield-mark" viewBox="0 0 24 24"><path d="M12 2L4 6v5c0 5.25 3.4 10.14 8 11.38C16.6 21.14 20 16.25 20 11V6l-8-4z"/></svg>
+          </div>
+          <div class="stat-chip chip-ap">
+            <span class="val">1</span>
+            <span class="ico">AP</span>
+          </div>
+        </div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="thin-rule"></div>
+          <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+      </div>
+      <div class="card-label">Neutral</div>
+    </div>
+
+    <!-- Red -->
+    <div class="card-wrapper">
+      <div class="card b-card red">
+        <div class="card-bg"></div>
+        <div class="left-stripe"></div>
+        <div class="pattern-lines"></div>
+        <div class="art-bleed">
+          <img src="Content/CardArt/reap.png" alt="Reap">
+        </div>
+        <div class="stat-column">
+          <div class="stat-chip chip-atk">
+            <span class="val">3</span>
+            <span class="ico">ATK</span>
+          </div>
+          <div class="stat-chip chip-blk">
+            <span class="val">8</span>
+            <span class="ico">BLK</span>
+            <svg class="shield-mark" viewBox="0 0 24 24"><path d="M12 2L4 6v5c0 5.25 3.4 10.14 8 11.38C16.6 21.14 20 16.25 20 11V6l-8-4z"/></svg>
+          </div>
+          <div class="stat-chip chip-ap">
+            <span class="val">1</span>
+            <span class="ico">AP</span>
+          </div>
+        </div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="thin-rule"></div>
+          <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+      </div>
+      <div class="card-label">Red</div>
+    </div>
+
+    <!-- Black -->
+    <div class="card-wrapper">
+      <div class="card b-card black">
+        <div class="card-bg"></div>
+        <div class="left-stripe"></div>
+        <div class="pattern-lines"></div>
+        <div class="art-bleed">
+          <img src="Content/CardArt/reap.png" alt="Reap">
+        </div>
+        <div class="stat-column">
+          <div class="stat-chip chip-atk">
+            <span class="val">3</span>
+            <span class="ico">ATK</span>
+          </div>
+          <div class="stat-chip chip-blk">
+            <span class="val">8</span>
+            <span class="ico">BLK</span>
+            <svg class="shield-mark" viewBox="0 0 24 24"><path d="M12 2L4 6v5c0 5.25 3.4 10.14 8 11.38C16.6 21.14 20 16.25 20 11V6l-8-4z"/></svg>
+          </div>
+          <div class="stat-chip chip-ap">
+            <span class="val">1</span>
+            <span class="ico">AP</span>
+          </div>
+        </div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="thin-rule"></div>
+          <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+      </div>
+      <div class="card-label">Black</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ====== APPROACH C: Art Band ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">C.</span>
+    <span class="concept-title">Art Band</span>
+  </div>
+  <p class="concept-desc">
+    A horizontal strip across the bottom showcases the art prominently, like a scene window. Text sits above, art below —
+    clear visual hierarchy. In MonoGame, a simple clipped rectangle with the art centered inside.
+  </p>
+  <div class="card-row">
+    <!-- White -->
+    <div class="card-wrapper">
+      <div class="card c-card white">
+        <div class="card-bg"></div>
+        <div class="left-stripe"></div>
+        <div class="pattern-lines"></div>
+        <div class="stat-column">
+          <div class="stat-chip chip-atk">
+            <span class="val">3</span>
+            <span class="ico">ATK</span>
+          </div>
+          <div class="stat-chip chip-blk">
+            <span class="val">8</span>
+            <span class="ico">BLK</span>
+            <svg class="shield-mark" viewBox="0 0 24 24"><path d="M12 2L4 6v5c0 5.25 3.4 10.14 8 11.38C16.6 21.14 20 16.25 20 11V6l-8-4z"/></svg>
+          </div>
+          <div class="stat-chip chip-ap">
+            <span class="val">1</span>
+            <span class="ico">AP</span>
+          </div>
+        </div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="thin-rule"></div>
+          <div class="card-text text-flex">This attack gains +4 damage if two red cards were discarded to play this.</div>
+          <div class="art-band">
+            <img src="Content/CardArt/reap.png" alt="Reap">
+          </div>
+        </div>
+      </div>
+      <div class="card-label">Neutral</div>
+    </div>
+
+    <!-- Red -->
+    <div class="card-wrapper">
+      <div class="card c-card red">
+        <div class="card-bg"></div>
+        <div class="left-stripe"></div>
+        <div class="pattern-lines"></div>
+        <div class="stat-column">
+          <div class="stat-chip chip-atk">
+            <span class="val">3</span>
+            <span class="ico">ATK</span>
+          </div>
+          <div class="stat-chip chip-blk">
+            <span class="val">8</span>
+            <span class="ico">BLK</span>
+            <svg class="shield-mark" viewBox="0 0 24 24"><path d="M12 2L4 6v5c0 5.25 3.4 10.14 8 11.38C16.6 21.14 20 16.25 20 11V6l-8-4z"/></svg>
+          </div>
+          <div class="stat-chip chip-ap">
+            <span class="val">1</span>
+            <span class="ico">AP</span>
+          </div>
+        </div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="thin-rule"></div>
+          <div class="card-text text-flex">This attack gains +4 damage if two red cards were discarded to play this.</div>
+          <div class="art-band">
+            <img src="Content/CardArt/reap.png" alt="Reap">
+          </div>
+        </div>
+      </div>
+      <div class="card-label">Red</div>
+    </div>
+
+    <!-- Black -->
+    <div class="card-wrapper">
+      <div class="card c-card black">
+        <div class="card-bg"></div>
+        <div class="left-stripe"></div>
+        <div class="pattern-lines"></div>
+        <div class="stat-column">
+          <div class="stat-chip chip-atk">
+            <span class="val">3</span>
+            <span class="ico">ATK</span>
+          </div>
+          <div class="stat-chip chip-blk">
+            <span class="val">8</span>
+            <span class="ico">BLK</span>
+            <svg class="shield-mark" viewBox="0 0 24 24"><path d="M12 2L4 6v5c0 5.25 3.4 10.14 8 11.38C16.6 21.14 20 16.25 20 11V6l-8-4z"/></svg>
+          </div>
+          <div class="stat-chip chip-ap">
+            <span class="val">1</span>
+            <span class="ico">AP</span>
+          </div>
+        </div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="thin-rule"></div>
+          <div class="card-text text-flex">This attack gains +4 damage if two red cards were discarded to play this.</div>
+          <div class="art-band">
+            <img src="Content/CardArt/reap.png" alt="Reap">
+          </div>
+        </div>
+      </div>
+      <div class="card-label">Black</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

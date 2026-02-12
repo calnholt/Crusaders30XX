@@ -40,6 +40,14 @@
 /processorParam:Smoothing=Normal
 /build:Fonts/Grenze.spritefont
 
+#begin Fonts/ChakraPetch.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/processorParam:Smoothing=Normal
+/build:Fonts/ChakraPetch.spritefont
+
 #begin cursor_cross.png
 /importer:TextureImporter
 /processor:TextureProcessor

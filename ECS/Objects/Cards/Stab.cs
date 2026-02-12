@@ -38,12 +38,16 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                 var courageCmp = player?.GetComponent<Courage>();
                 int courage = courageCmp?.Amount ?? 0;
-                if (courage < CourageCost)
-                {
-                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageCost} courage!" });
-                    return false;
-                }
+                if (courage < CourageCost) return false;
                 return true;
+            };
+            OnCantPlay = (entityManager, card) =>
+            {
+                var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                var courageCmp = player?.GetComponent<Courage>();
+                int courage = courageCmp?.Amount ?? 0;
+                if (courage < CourageCost)
+                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageCost} courage!" });
             };
         }
     }

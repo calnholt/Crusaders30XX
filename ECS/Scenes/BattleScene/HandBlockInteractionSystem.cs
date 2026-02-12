@@ -78,6 +78,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				if (data.Card.Type == CardType.Block && !data.Card.CanPlay(EntityManager, card))
 				{
+					data.Card.OnCantPlay?.Invoke(EntityManager, card);
 					return;
 				}
 

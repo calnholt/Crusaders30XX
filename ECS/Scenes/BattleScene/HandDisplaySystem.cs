@@ -162,15 +162,20 @@ namespace Crusaders30XX.ECS.Systems
             if (deckEntity != null)
             {
                 var deck = deckEntity.GetComponent<Deck>();
-                if (deck != null && deck.Hand.Contains(entity) && entity.GetComponent<AnimatingHandToDiscard>() == null && entity.GetComponent<AnimatingHandToZone>() == null && entity.GetComponent<AnimatingHandToDrawPile>() == null)
+                if (deck != null && deck.Hand.Contains(entity) && entity.GetComponent<AnimatingHandToDiscard>() == null && entity.GetComponent<AnimatingHandToZone>() == null && entity.GetComponent<AnimatingHandToDrawPile>() == null && entity.GetComponent<FilteredFromHand>() == null)
                 {
-                    // Get the index of this card in the hand
-                    var cardIndex = deck.Hand.IndexOf(entity);
-                    
+                    // Build visible hand excluding animating and filtered cards for correct fan layout
+                    var visibleHand = deck.Hand.Where(e =>
+                        e.GetComponent<AnimatingHandToDiscard>() == null &&
+                        e.GetComponent<AnimatingHandToZone>() == null &&
+                        e.GetComponent<AnimatingHandToDrawPile>() == null &&
+                        e.GetComponent<FilteredFromHand>() == null).ToList();
+                    var cardIndex = visibleHand.IndexOf(entity);
+
                     if (cardIndex >= 0)
                     {
                         // Compute fan layout positions around bottom-center pivot
-                        int count = deck.Hand.Count;
+                        int count = visibleHand.Count;
                         float screenWidth = Game1.VirtualWidth;
                         float screenHeight = Game1.VirtualHeight;
 
@@ -326,52 +331,19 @@ namespace Crusaders30XX.ECS.Systems
                 var deck = deckEntity.GetComponent<Deck>();
                 if (deck != null)
                 {
-                    // Only draw cards that are actually in the hand and not currently animating to discard or draw pile
+                    // Only draw cards that are actually in the hand, not animating, and not filtered out by pay-cost overlay
                     var cardsInHand = deck.Hand
-                        .Where(e => e.GetComponent<AnimatingHandToDiscard>() == null && e.GetComponent<AnimatingHandToZone>() == null && e.GetComponent<AnimatingHandToDrawPile>() == null)
-                        .OrderBy(e => 
+                        .Where(e => e.GetComponent<AnimatingHandToDiscard>() == null
+                            && e.GetComponent<AnimatingHandToZone>() == null
+                            && e.GetComponent<AnimatingHandToDrawPile>() == null
+                            && e.GetComponent<FilteredFromHand>() == null)
+                        .OrderBy(e =>
                     {
                         var transform = e.GetComponent<Transform>();
                         return transform?.ZOrder ?? 0;
                     });
-                    
-                    // If pay-cost overlay is open, hide cards that are not viable to pay remaining costs,
-                    // and hide any cards already selected for payment.
-                    var payStateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
-                    var payState = payStateEntity?.GetComponent<PayCostOverlayState>();
-                    bool isPayOpen = payState != null && payState.IsOpen;
 
-                    bool IsViable(Entity e)
-                    {
-                        if (!isPayOpen) return true;
-                        if (e == payState.CardToPlay) return false;
-                        if (payState.SelectedCards.Contains(e)) return false;
-                        var cd = e.GetComponent<CardData>();
-                        if (cd == null) return false;
-						// Never allow the weapon to be used to pay costs; hide it
-						try
-						{
-							string id = cd.Card.CardId ?? string.Empty;
-							var cardObj = CardFactory.Create(id);
-							if (!string.IsNullOrEmpty(id) && cardObj != null)
-							{
-								if (cardObj.IsWeapon) return false;
-							}
-						}
-						catch { }
-                        foreach (var req in payState.RequiredCosts)
-                        {
-                            if (req == "Any") return true;
-                            if (req == "Red" && cd.Color == CardData.CardColor.Red) return true;
-                            if (req == "White" && cd.Color == CardData.CardColor.White) return true;
-                            if (req == "Black" && cd.Color == CardData.CardColor.Black) return true;
-                        }
-                        return false;
-                    }
-
-                    var toDraw = isPayOpen ? cardsInHand.Where(IsViable) : cardsInHand;
-
-                    foreach (var entity in toDraw)
+                    foreach (var entity in cardsInHand)
                     {
                         var transform = entity.GetComponent<Transform>();
                         if (transform != null)

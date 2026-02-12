@@ -24,6 +24,7 @@ public class Game1 : Game
     private EntityListOverlaySystem _entityListOverlaySystem;
     private TransitionDisplaySystem _transitionDisplaySystem;
     private CardDisplaySystem _cardDisplaySystem;
+    private CardDisplaySystemV2 _cardDisplaySystemV2;
     private InputSystem _inputSystem;
 	private CurrencyDisplaySystem _currencyDisplaySystem;
 
@@ -146,6 +147,7 @@ public class Game1 : Game
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _cardDisplaySystemV2 = new CardDisplaySystemV2(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _inputSystem = new InputSystem(_world.EntityManager);
         _tooltipTextDisplaySystem = new TooltipTextDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
@@ -175,6 +177,7 @@ public class Game1 : Game
         _world.AddSystem(_entityListOverlaySystem);
         _world.AddSystem(_transitionDisplaySystem);
         _world.AddSystem(_cardDisplaySystem);
+        _world.AddSystem(_cardDisplaySystemV2);
         _world.AddSystem(_dialogDisplaySystem);
         _world.AddSystem(_inputSystem);
         _world.AddSystem(_tooltipTextDisplaySystem);

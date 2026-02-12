@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Card Concepts</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #111015;
+    --text-muted: #777;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: #eee;
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+
+  h1 {
+    text-align: center;
+    font-family: 'New Rocker', cursive;
+    font-size: 2.4rem;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #e44, #f88, #e44);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 60px;
+  }
+
+  .concept-section {
+    margin-bottom: 80px;
+  }
+
+  .concept-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 8px;
+    padding-left: 20px;
+  }
+
+  .concept-number {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.6rem;
+    color: #c33;
+  }
+
+  .concept-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .concept-desc {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding-left: 20px;
+    margin-bottom: 30px;
+    max-width: 700px;
+    line-height: 1.5;
+  }
+
+  .card-row {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 0 20px;
+  }
+
+  .card-label {
+    text-align: center;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #555;
+    margin-top: 12px;
+  }
+
+  /* ===========================
+     CONCEPT 1: BATTLE FORGED
+     Angular, geometric, bold
+     =========================== */
+
+  .c1-card {
+    width: 220px;
+    height: 320px;
+    position: relative;
+    overflow: hidden;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+
+  .c1-card .card-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .c1-white .card-bg {
+    background: linear-gradient(170deg, #e8e4df 0%, #d5d0c9 100%);
+  }
+  .c1-red .card-bg {
+    background: linear-gradient(170deg, #8b1a1a 0%, #5c0e0e 100%);
+  }
+  .c1-black .card-bg {
+    background: linear-gradient(170deg, #2a2730 0%, #17151c 100%);
+  }
+
+  .c1-card .card-inner {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Top bar with angular cut */
+  .c1-card .top-bar {
+    height: 6px;
+    margin: 0 0 0 0;
+  }
+  .c1-white .top-bar { background: #555; }
+  .c1-red .top-bar { background: #ff4444; }
+  .c1-black .top-bar { background: #c33; }
+
+  /* Cost row */
+  .c1-card .cost-row {
+    display: flex;
+    gap: 5px;
+    padding: 10px 12px 4px;
+  }
+
+  .c1-card .cost-pip {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid;
+  }
+
+  .c1-white .cost-pip {
+    background: #888;
+    border-color: #666;
+  }
+  .c1-red .cost-pip {
+    background: #888;
+    border-color: #555;
+  }
+  .c1-black .cost-pip {
+    background: #888;
+    border-color: #555;
+  }
+
+  /* Name */
+  .c1-card .card-name {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.3rem;
+    padding: 2px 12px 6px;
+    letter-spacing: 1px;
+  }
+  .c1-white .card-name { color: #1a1a1a; }
+  .c1-red .card-name { color: #ffe8e0; }
+  .c1-black .card-name { color: #e8e4df; }
+
+  /* Divider line - angular */
+  .c1-card .divider {
+    height: 2px;
+    margin: 0 12px;
+    position: relative;
+  }
+  .c1-card .divider::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    transform: rotate(45deg);
+  }
+  .c1-white .divider { background: #999; }
+  .c1-white .divider::after { background: #999; }
+  .c1-red .divider { background: #ff4444; }
+  .c1-red .divider::after { background: #ff4444; }
+  .c1-black .divider { background: #c33; }
+  .c1-black .divider::after { background: #c33; }
+
+  /* Description */
+  .c1-card .card-text {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.68rem;
+    line-height: 1.45;
+    padding: 10px 12px;
+    flex: 1;
+  }
+  .c1-white .card-text { color: #333; }
+  .c1-red .card-text { color: #ffd4cc; }
+  .c1-black .card-text { color: #aaa8b0; }
+
+  /* Stats bar at bottom */
+  .c1-card .stats-bar {
+    display: flex;
+    align-items: flex-end;
+    padding: 0 0 0 0;
+    gap: 0;
+  }
+
+  .c1-card .stat-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 0;
+    min-width: 44px;
+  }
+
+  .c1-card .stat-value {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+
+  .c1-card .stat-label {
+    font-size: 0.5rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .c1-card .stat-atk {
+    background: #c33;
+    color: #fff;
+    clip-path: polygon(4px 0, 100% 0, 100% 100%, 0 100%);
+    padding-left: 6px;
+  }
+  .c1-card .stat-atk .stat-label { color: #ffcccc; }
+
+  .c1-card .stat-blk {
+    padding: 6px 8px;
+  }
+  .c1-white .stat-blk { background: #ccc8c0; color: #333; }
+  .c1-white .stat-blk .stat-label { color: #666; }
+  .c1-red .stat-blk { background: #6b1515; color: #ffccbb; }
+  .c1-red .stat-blk .stat-label { color: #ff9988; }
+  .c1-black .stat-blk { background: #222028; color: #ddd; }
+  .c1-black .stat-blk .stat-label { color: #888; }
+
+  .c1-card .stat-ap {
+    padding: 6px 8px;
+    clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 100%, 0 100%);
+  }
+  .c1-white .stat-ap { background: #444; color: #fff; }
+  .c1-white .stat-ap .stat-label { color: #bbb; }
+  .c1-red .stat-ap { background: #2a0a0a; color: #ff8877; }
+  .c1-red .stat-ap .stat-label { color: #cc6655; }
+  .c1-black .stat-ap { background: #0d0c10; color: #c33; }
+  .c1-black .stat-ap .stat-label { color: #883333; }
+
+  .c1-card .art-area {
+    position: absolute;
+    bottom: 40px;
+    right: 10px;
+    width: 60px;
+    height: 60px;
+    opacity: 0.15;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .c1-card .art-area svg { width: 48px; height: 48px; }
+  .c1-white .art-area svg { fill: #333; }
+  .c1-red .art-area svg { fill: #ff6655; }
+  .c1-black .art-area svg { fill: #c33; }
+
+  /* Accent corner marks */
+  .c1-card .corner-mark {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+  }
+  .c1-card .corner-mark.tr {
+    top: 8px;
+    right: 0;
+    border-right: 2px solid;
+    border-top: 2px solid;
+  }
+  .c1-white .corner-mark { border-color: #bbb !important; }
+  .c1-red .corner-mark { border-color: #ff444466 !important; }
+  .c1-black .corner-mark { border-color: #c3333366 !important; }
+
+  /* Stats spacer pushes right */
+  .c1-card .stats-spacer { flex: 1; }
+
+  /* ===========================
+     CONCEPT 2: ROYAL DECREE
+     Elegant, layered, refined
+     =========================== */
+
+  .c2-card {
+    width: 220px;
+    height: 320px;
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .c2-card .card-bg {
+    position: absolute;
+    inset: 0;
+  }
+
+  .c2-white .card-bg {
+    background: #ddd8d0;
+    border: 1px solid #bbb5aa;
+  }
+  .c2-red .card-bg {
+    background: #7a1818;
+    border: 1px solid #a02020;
+  }
+  .c2-black .card-bg {
+    background: #1c1a22;
+    border: 1px solid #333040;
+  }
+
+  .c2-card .card-bg { border-radius: 10px; }
+
+  /* Inner border frame */
+  .c2-card .inner-frame {
+    position: absolute;
+    inset: 5px;
+    border-radius: 7px;
+    border: 1px solid;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .c2-white .inner-frame { border-color: #c8c2b8; }
+  .c2-red .inner-frame { border-color: #a8303066; }
+  .c2-black .inner-frame { border-color: #44405566; }
+
+  .c2-card .card-inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 14px;
+  }
+
+  /* Cost row */
+  .c2-card .cost-row {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 6px;
+  }
+
+  .c2-card .cost-pip {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid;
+  }
+  .c2-white .cost-pip { background: #a09888; border-color: #8a8278; }
+  .c2-red .cost-pip { background: #777; border-color: #555; }
+  .c2-black .cost-pip { background: #666; border-color: #444; }
+
+  /* Name with decorative underline */
+  .c2-card .name-block {
+    margin-bottom: 10px;
+  }
+
+  .c2-card .card-name {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.25rem;
+    letter-spacing: 1.5px;
+  }
+  .c2-white .card-name { color: #2a2520; }
+  .c2-red .card-name { color: #ffe8e0; }
+  .c2-black .card-name { color: #e0dce8; }
+
+  .c2-card .name-underline {
+    height: 1px;
+    margin-top: 4px;
+    position: relative;
+  }
+  .c2-card .name-underline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 1px;
+  }
+  .c2-card .name-underline::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -1px;
+    width: 30px;
+    height: 3px;
+    border-radius: 2px;
+  }
+  .c2-white .name-underline::before { background: #b5ae a4; background: #b5aea4; }
+  .c2-white .name-underline::after { background: #8a8278; }
+  .c2-red .name-underline::before { background: #a0303066; }
+  .c2-red .name-underline::after { background: #dd4444; }
+  .c2-black .name-underline::before { background: #44405566; }
+  .c2-black .name-underline::after { background: #8866aa; }
+
+  /* Text panel */
+  .c2-card .text-panel {
+    border-radius: 6px;
+    padding: 10px 11px;
+    flex: 1;
+    margin-bottom: 10px;
+  }
+  .c2-white .text-panel { background: #c8c2b866; }
+  .c2-red .text-panel { background: #5a0e0e88; }
+  .c2-black .text-panel { background: #12101866; }
+
+  .c2-card .card-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .c2-white .card-text { color: #3a3530; }
+  .c2-red .card-text { color: #eeccbb; }
+  .c2-black .card-text { color: #a8a4b4; }
+
+  /* Art watermark */
+  .c2-card .art-area {
+    position: absolute;
+    bottom: 50px;
+    right: 14px;
+    width: 55px;
+    height: 55px;
+    opacity: 0.08;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .c2-card .art-area svg { width: 45px; height: 45px; }
+  .c2-white .art-area svg { fill: #2a2520; }
+  .c2-red .art-area svg { fill: #ff8877; }
+  .c2-black .art-area svg { fill: #aa88cc; }
+
+  /* Stats row */
+  .c2-card .stats-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .c2-card .stat-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+  }
+
+  .c2-card .stat-badge .val {
+    font-family: 'New Rocker', cursive;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .c2-card .stat-badge .lbl {
+    font-size: 0.48rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .c2-card .badge-atk {
+    background: #c33;
+    color: #fff;
+  }
+
+  .c2-card .badge-blk {
+    border: 1.5px solid;
+  }
+  .c2-white .badge-blk { border-color: #8a8278; color: #3a3530; }
+  .c2-red .badge-blk { border-color: #cc5544; color: #ffccbb; }
+  .c2-black .badge-blk { border-color: #6655aa; color: #ccbbee; }
+
+  .c2-card .badge-ap {
+    margin-left: auto;
+    font-family: 'New Rocker', cursive;
+    font-size: 0.8rem;
+    padding: 3px 7px;
+    border-radius: 4px;
+  }
+  .c2-white .badge-ap { background: #3a3530; color: #ddd8d0; }
+  .c2-red .badge-ap { background: #2a0808; color: #ee7766; }
+  .c2-black .badge-ap { background: #0a0810; color: #aa88cc; }
+
+  /* Corner ornament */
+  .c2-card .ornament {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 16px;
+    height: 16px;
+    opacity: 0.3;
+  }
+  .c2-card .ornament::before,
+  .c2-card .ornament::after {
+    content: '';
+    position: absolute;
+  }
+  .c2-card .ornament::before {
+    width: 16px;
+    height: 1px;
+    top: 7px;
+    left: 0;
+  }
+  .c2-card .ornament::after {
+    width: 1px;
+    height: 16px;
+    top: 0;
+    left: 7px;
+  }
+  .c2-white .ornament::before, .c2-white .ornament::after { background: #666; }
+  .c2-red .ornament::before, .c2-red .ornament::after { background: #ff6655; }
+  .c2-black .ornament::before, .c2-black .ornament::after { background: #aa88cc; }
+
+
+  /* ===========================
+     CONCEPT 3: TACTICAL EDGE
+     Minimal, clean, modern stat badges
+     =========================== */
+
+  .c3-card {
+    width: 220px;
+    height: 320px;
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .c3-card .card-bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+  }
+
+  .c3-white .card-bg {
+    background: #e2ded8;
+  }
+  .c3-red .card-bg {
+    background: #1a1016;
+  }
+  .c3-black .card-bg {
+    background: #141218;
+  }
+
+  .c3-card .card-inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Color stripe on left */
+  .c3-card .left-stripe {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    z-index: 3;
+  }
+  .c3-white .left-stripe { background: #888; }
+  .c3-red .left-stripe { background: #dd3333; }
+  .c3-black .left-stripe { background: #665588; }
+
+  /* Stat column on left */
+  .c3-card .stat-column {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    bottom: 12px;
+    width: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 3;
+  }
+
+  .c3-card .stat-chip {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .c3-card .stat-chip .val {
+    font-family: 'New Rocker', cursive;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .c3-card .stat-chip .ico {
+    font-size: 0.45rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 1px;
+    font-weight: 600;
+  }
+
+  .c3-card .chip-atk {
+    background: #cc2222;
+    color: #fff;
+  }
+  .c3-card .chip-atk .ico { color: #ffbbaa; }
+
+  .c3-card .chip-blk {
+    border: 2px solid;
+  }
+  .c3-white .chip-blk { border-color: #aaa59c; color: #444; }
+  .c3-white .chip-blk .ico { color: #777; }
+  .c3-red .chip-blk { border-color: #cc3333; color: #ff9988; }
+  .c3-red .chip-blk .ico { color: #cc6655; }
+  .c3-black .chip-blk { border-color: #554477; color: #ccbbee; }
+  .c3-black .chip-blk .ico { color: #887799; }
+
+  .c3-card .chip-ap {
+    margin-top: auto;
+  }
+  .c3-white .chip-ap { background: #444; color: #e2ded8; }
+  .c3-white .chip-ap .ico { color: #aaa; }
+  .c3-red .chip-ap { background: #331111; color: #dd4433; }
+  .c3-red .chip-ap .ico { color: #993322; }
+  .c3-black .chip-ap { background: #1c1828; color: #8866aa; }
+  .c3-black .chip-ap .ico { color: #554466; }
+
+  /* Cost circles - top right of content area */
+  .c3-card .cost-row {
+    display: flex;
+    gap: 4px;
+    padding: 14px 14px 0;
+    margin-left: 40px;
+  }
+
+  .c3-card .cost-pip {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .c3-white .cost-pip { background: #a09888; }
+  .c3-red .cost-pip { background: #555; }
+  .c3-black .cost-pip { background: #444; }
+
+  /* Name */
+  .c3-card .card-name {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.2rem;
+    padding: 6px 14px 0;
+    margin-left: 40px;
+    letter-spacing: 1px;
+  }
+  .c3-white .card-name { color: #222; }
+  .c3-red .card-name { color: #eee; }
+  .c3-black .card-name { color: #ddd8e4; }
+
+  /* Thin line */
+  .c3-card .thin-rule {
+    height: 1px;
+    margin: 8px 14px 0;
+    margin-left: 54px;
+  }
+  .c3-white .thin-rule { background: #c0bab0; }
+  .c3-red .thin-rule { background: #442222; }
+  .c3-black .thin-rule { background: #2a2636; }
+
+  /* Description */
+  .c3-card .card-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem;
+    line-height: 1.55;
+    padding: 10px 14px;
+    margin-left: 40px;
+    flex: 1;
+  }
+  .c3-white .card-text { color: #555; }
+  .c3-red .card-text { color: #998877; }
+  .c3-black .card-text { color: #777488; }
+
+  /* Art area */
+  .c3-card .art-area {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    width: 55px;
+    height: 55px;
+    border-radius: 6px;
+    opacity: 0.08;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .c3-card .art-area svg { width: 42px; height: 42px; }
+  .c3-white .art-area svg { fill: #222; }
+  .c3-red .art-area svg { fill: #dd3333; }
+  .c3-black .art-area svg { fill: #8866aa; }
+
+  /* Subtle pattern lines on c3 */
+  .c3-card .pattern-lines {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    z-index: 1;
+    opacity: 0.04;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 4px,
+      currentColor 4px,
+      currentColor 5px
+    );
+  }
+  .c3-white .pattern-lines { color: #000; }
+  .c3-red .pattern-lines { color: #ff4444; }
+  .c3-black .pattern-lines { color: #8866aa; }
+
+  /* Hover effects */
+  .card-wrapper {
+    transition: transform 0.2s ease;
+    cursor: pointer;
+  }
+  .card-wrapper:hover {
+    transform: translateY(-4px);
+  }
+
+  /* Shield SVG for art placeholder */
+  .shield-svg {
+    display: none;
+  }
+
+  /* Font suggestion labels */
+  .font-note {
+    text-align: center;
+    font-size: 0.6rem;
+    color: #555;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Hidden SVG for reuse -->
+<svg class="shield-svg" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <symbol id="shield-icon" viewBox="0 0 24 24">
+      <path d="M12 2L3 7v5c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm0 2.18l7 3.82v4c0 4.52-3.13 8.69-7 9.93-3.87-1.24-7-5.41-7-9.93v-4l7-3.82z"/>
+      <path d="M12 6.5L7 9.27V12c0 3.08 2.13 5.92 5 6.75 2.87-.83 5-3.67 5-6.75V9.27L12 6.5z" opacity="0.3"/>
+    </symbol>
+    <symbol id="sword-icon" viewBox="0 0 24 24">
+      <path d="M6.92 5H5L3.5 7.5l1 1L7 7V5.5zM19.5 2l-7 7-1.5-1.5-3.5 3.5 1 1-4 4 1.5 1.5 4-4 1 1 3.5-3.5L13 9l7-7z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<h1>Crusaders30XX</h1>
+<p class="subtitle">Card Design Concepts</p>
+
+<!-- ====== CONCEPT 1: BATTLE FORGED ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">I.</span>
+    <span class="concept-title">Battle Forged</span>
+  </div>
+  <p class="concept-desc">
+    Angular clip-paths and hard geometric edges. Stats live in a bold bottom bar with angled cuts.
+    The top accent stripe sets card color. Aggressive, tactical feel. Description font: <strong>Chakra Petch</strong> (techy, readable).
+  </p>
+  <div class="card-row">
+    <!-- White -->
+    <div class="card-wrapper">
+      <div class="c1-card c1-white">
+        <div class="card-bg"></div>
+        <div class="card-inner">
+          <div class="top-bar"></div>
+          <div class="corner-mark tr"></div>
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="divider"></div>
+          <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+          <div class="art-area">
+            <svg><use href="#shield-icon"/></svg>
+          </div>
+          <div class="stats-bar">
+            <div class="stat-block stat-atk">
+              <span class="stat-value">3</span>
+              <span class="stat-label">ATK</span>
+            </div>
+            <div class="stat-block stat-blk">
+              <span class="stat-value">8</span>
+              <span class="stat-label">BLK</span>
+            </div>
+            <div class="stat-block stat-ap">
+              <span class="stat-value">1</span>
+              <span class="stat-label">AP</span>
+            </div>
+            <div class="stats-spacer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-label">Neutral</div>
+    </div>
+
+    <!-- Red -->
+    <div class="card-wrapper">
+      <div class="c1-card c1-red">
+        <div class="card-bg"></div>
+        <div class="card-inner">
+          <div class="top-bar"></div>
+          <div class="corner-mark tr"></div>
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="divider"></div>
+          <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+          <div class="art-area">
+            <svg><use href="#shield-icon"/></svg>
+          </div>
+          <div class="stats-bar">
+            <div class="stat-block stat-atk">
+              <span class="stat-value">3</span>
+              <span class="stat-label">ATK</span>
+            </div>
+            <div class="stat-block stat-blk">
+              <span class="stat-value">8</span>
+              <span class="stat-label">BLK</span>
+            </div>
+            <div class="stat-block stat-ap">
+              <span class="stat-value">1</span>
+              <span class="stat-label">AP</span>
+            </div>
+            <div class="stats-spacer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-label">Red</div>
+    </div>
+
+    <!-- Black -->
+    <div class="card-wrapper">
+      <div class="c1-card c1-black">
+        <div class="card-bg"></div>
+        <div class="card-inner">
+          <div class="top-bar"></div>
+          <div class="corner-mark tr"></div>
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="divider"></div>
+          <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+          <div class="art-area">
+            <svg><use href="#shield-icon"/></svg>
+          </div>
+          <div class="stats-bar">
+            <div class="stat-block stat-atk">
+              <span class="stat-value">3</span>
+              <span class="stat-label">ATK</span>
+            </div>
+            <div class="stat-block stat-blk">
+              <span class="stat-value">8</span>
+              <span class="stat-label">BLK</span>
+            </div>
+            <div class="stat-block stat-ap">
+              <span class="stat-value">1</span>
+              <span class="stat-label">AP</span>
+            </div>
+            <div class="stats-spacer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-label">Black</div>
+    </div>
+  </div>
+  <p class="font-note">Body font: Chakra Petch — geometric, techy, clean</p>
+</div>
+
+
+<!-- ====== CONCEPT 2: ROYAL DECREE ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">II.</span>
+    <span class="concept-title">Royal Decree</span>
+  </div>
+  <p class="concept-desc">
+    Layered panels with subtle inner borders and ornamental touches. The description sits in a recessed panel.
+    A thicker accent bar under the name gives weight. Elegant but readable. Description font: <strong>Cormorant Garamond</strong> (literary, medieval feel).
+  </p>
+  <div class="card-row">
+    <!-- White -->
+    <div class="card-wrapper">
+      <div class="c2-card c2-white">
+        <div class="card-bg"></div>
+        <div class="inner-frame"></div>
+        <div class="ornament"></div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="name-block">
+            <div class="card-name">Reap</div>
+            <div class="name-underline"></div>
+          </div>
+          <div class="text-panel">
+            <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+          </div>
+          <div class="art-area">
+            <svg><use href="#shield-icon"/></svg>
+          </div>
+          <div class="stats-row">
+            <div class="stat-badge badge-atk">
+              <span class="val">3</span>
+              <span class="lbl">ATK</span>
+            </div>
+            <div class="stat-badge badge-blk">
+              <span class="val">8</span>
+              <span class="lbl">BLK</span>
+            </div>
+            <div class="stat-badge badge-ap">1 AP</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-label">Neutral</div>
+    </div>
+
+    <!-- Red -->
+    <div class="card-wrapper">
+      <div class="c2-card c2-red">
+        <div class="card-bg"></div>
+        <div class="inner-frame"></div>
+        <div class="ornament"></div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="name-block">
+            <div class="card-name">Reap</div>
+            <div class="name-underline"></div>
+          </div>
+          <div class="text-panel">
+            <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+          </div>
+          <div class="art-area">
+            <svg><use href="#shield-icon"/></svg>
+          </div>
+          <div class="stats-row">
+            <div class="stat-badge badge-atk">
+              <span class="val">3</span>
+              <span class="lbl">ATK</span>
+            </div>
+            <div class="stat-badge badge-blk">
+              <span class="val">8</span>
+              <span class="lbl">BLK</span>
+            </div>
+            <div class="stat-badge badge-ap">1 AP</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-label">Red</div>
+    </div>
+
+    <!-- Black -->
+    <div class="card-wrapper">
+      <div class="c2-card c2-black">
+        <div class="card-bg"></div>
+        <div class="inner-frame"></div>
+        <div class="ornament"></div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="name-block">
+            <div class="card-name">Reap</div>
+            <div class="name-underline"></div>
+          </div>
+          <div class="text-panel">
+            <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+          </div>
+          <div class="art-area">
+            <svg><use href="#shield-icon"/></svg>
+          </div>
+          <div class="stats-row">
+            <div class="stat-badge badge-atk">
+              <span class="val">3</span>
+              <span class="lbl">ATK</span>
+            </div>
+            <div class="stat-badge badge-blk">
+              <span class="val">8</span>
+              <span class="lbl">BLK</span>
+            </div>
+            <div class="stat-badge badge-ap">1 AP</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-label">Black</div>
+    </div>
+  </div>
+  <p class="font-note">Body font: Cormorant Garamond — serif, medieval, literary</p>
+</div>
+
+
+<!-- ====== CONCEPT 3: TACTICAL EDGE ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">III.</span>
+    <span class="concept-title">Tactical Edge</span>
+  </div>
+  <p class="concept-desc">
+    Stats stacked vertically in a left-side column as chunky chips — maximally visible when fanned.
+    Color identity via a left stripe. Body area is clean and open. Description font: <strong>Share Tech Mono</strong> (monospace, digital/retro feel).
+  </p>
+  <div class="card-row">
+    <!-- White -->
+    <div class="card-wrapper">
+      <div class="c3-card c3-white">
+        <div class="card-bg"></div>
+        <div class="left-stripe"></div>
+        <div class="pattern-lines"></div>
+        <div class="stat-column">
+          <div class="stat-chip chip-atk">
+            <span class="val">3</span>
+            <span class="ico">ATK</span>
+          </div>
+          <div class="stat-chip chip-blk">
+            <span class="val">8</span>
+            <span class="ico">BLK</span>
+          </div>
+          <div class="stat-chip chip-ap">
+            <span class="val">1</span>
+            <span class="ico">AP</span>
+          </div>
+        </div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="thin-rule"></div>
+          <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+          <div class="art-area">
+            <svg><use href="#shield-icon"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="card-label">Neutral</div>
+    </div>
+
+    <!-- Red -->
+    <div class="card-wrapper">
+      <div class="c3-card c3-red">
+        <div class="card-bg"></div>
+        <div class="left-stripe"></div>
+        <div class="pattern-lines"></div>
+        <div class="stat-column">
+          <div class="stat-chip chip-atk">
+            <span class="val">3</span>
+            <span class="ico">ATK</span>
+          </div>
+          <div class="stat-chip chip-blk">
+            <span class="val">8</span>
+            <span class="ico">BLK</span>
+          </div>
+          <div class="stat-chip chip-ap">
+            <span class="val">1</span>
+            <span class="ico">AP</span>
+          </div>
+        </div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="thin-rule"></div>
+          <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+          <div class="art-area">
+            <svg><use href="#shield-icon"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="card-label">Red</div>
+    </div>
+
+    <!-- Black -->
+    <div class="card-wrapper">
+      <div class="c3-card c3-black">
+        <div class="card-bg"></div>
+        <div class="left-stripe"></div>
+        <div class="pattern-lines"></div>
+        <div class="stat-column">
+          <div class="stat-chip chip-atk">
+            <span class="val">3</span>
+            <span class="ico">ATK</span>
+          </div>
+          <div class="stat-chip chip-blk">
+            <span class="val">8</span>
+            <span class="ico">BLK</span>
+          </div>
+          <div class="stat-chip chip-ap">
+            <span class="val">1</span>
+            <span class="ico">AP</span>
+          </div>
+        </div>
+        <div class="card-inner">
+          <div class="cost-row">
+            <div class="cost-pip"></div>
+            <div class="cost-pip"></div>
+          </div>
+          <div class="card-name">Reap</div>
+          <div class="thin-rule"></div>
+          <div class="card-text">This attack gains +4 damage if two red cards were discarded to play this.</div>
+          <div class="art-area">
+            <svg><use href="#shield-icon"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="card-label">Black</div>
+    </div>
+  </div>
+  <p class="font-note">Body font: Share Tech Mono — monospace, digital, retro-futuristic</p>
+</div>
+
+</body>
+</html>

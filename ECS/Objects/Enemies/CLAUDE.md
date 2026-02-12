@@ -43,6 +43,7 @@ For detailed design philosophy and rationale, see `DESIGN_PHILOSOPHY.md`.
 2. Inherit from `EnemyBase`, define attacks inheriting from `EnemyAttackBase`
 3. Register enemy in `EnemyFactory.cs`
 4. Register attacks in `EnemyAttackFactory.cs`
+5. Use private fields for numbers, eg - `private int Armor = 1;`
 
 ---
 
