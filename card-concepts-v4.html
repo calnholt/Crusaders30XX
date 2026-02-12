@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Card Concepts V4</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0c0b0f;
+    color: #eee;
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 100px;
+  }
+
+  h1 {
+    text-align: center;
+    font-family: 'New Rocker', cursive;
+    font-size: 2.4rem;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #e44, #f88, #e44);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #555;
+    font-size: 0.8rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 60px;
+  }
+
+  .concept-section { margin-bottom: 90px; }
+
+  .concept-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 6px;
+    padding-left: 20px;
+  }
+
+  .concept-number {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.5rem;
+    color: #c33;
+  }
+
+  .concept-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .concept-desc {
+    color: #666;
+    font-size: 0.78rem;
+    padding-left: 20px;
+    margin-bottom: 32px;
+    max-width: 780px;
+    line-height: 1.5;
+  }
+
+  .card-row {
+    display: flex;
+    gap: 36px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .card-label {
+    text-align: center;
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #444;
+    margin-top: 14px;
+  }
+
+  .card-wrapper {
+    transition: transform 0.25s ease;
+    cursor: pointer;
+  }
+  .card-wrapper:hover { transform: translateY(-6px); }
+
+
+  /* ===================================================================
+     SHARED: Delta display system
+     When a chip has a delta, we show the base value plus a small
+     +N indicator. Used across all three approaches.
+     =================================================================== */
+
+  .delta {
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 0.55rem;
+    line-height: 1;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    color: #4f4;
+  }
+
+  .chip-has-delta .v {
+    /* nudge value left/down slightly to make room */
+    position: relative;
+    left: -2px;
+  }
+
+
+  /* ===================================================================
+     APPROACH D — "Forged Plate"
+     Keeps Iron Sigil's hard-cornered chips and direct text.
+     Stat gutter gets a subtle darkened/lighter panel behind it.
+     Card type is a small stamped label below the rule line.
+     Delta shown as a tiny superscript badge on the chip.
+     =================================================================== */
+
+  .d-card {
+    width: 240px;
+    height: 340px;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .d-card .bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+  }
+  .d-card.w .bg { background: #dcd7ce; }
+  .d-card.r .bg { background: #1c0c0c; }
+  .d-card.k .bg { background: #131313; }
+
+  /* Single stripe */
+  .d-card .stripe {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 5px;
+    z-index: 6;
+  }
+  .d-card.w .stripe { background: #999; }
+  .d-card.r .stripe { background: #cc2222; }
+  .d-card.k .stripe { background: #cc2222; }
+
+  /* Stat gutter background */
+  .d-card .stat-gutter {
+    position: absolute;
+    left: 5px; top: 0; bottom: 0;
+    width: 56px;
+    z-index: 1;
+  }
+  .d-card.w .stat-gutter { background: rgba(0,0,0,0.06); }
+  .d-card.r .stat-gutter { background: rgba(0,0,0,0.25); }
+  .d-card.k .stat-gutter { background: rgba(255,255,255,0.03); }
+
+  /* Stat column */
+  .d-card .stats {
+    position: absolute;
+    left: 12px; top: 14px; bottom: 14px;
+    width: 42px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 5;
+  }
+
+  .d-card .chip {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    position: relative;
+  }
+
+  .d-card .chip .v {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .d-card .chip .l {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* BLK chip — consistent coloring: outlined, dark fill */
+  .d-card .chip-blk {
+    border: 2.5px solid #777;
+    background: rgba(80,80,80,0.15);
+    color: #bbb;
+  }
+  .d-card .chip-blk .l { color: #888; }
+  .d-card.w .chip-blk { border-color: #999; color: #555; background: rgba(0,0,0,0.08); }
+  .d-card.w .chip-blk .l { color: #777; }
+
+  /* ATK chip */
+  .d-card .chip-atk {
+    background: #cc2222;
+    color: #fff;
+  }
+  .d-card .chip-atk .l { color: #ffccbb; }
+
+  /* AP chip */
+  .d-card .chip-ap {
+    margin-top: auto;
+  }
+  .d-card.w .chip-ap { background: #444; color: #ddd; }
+  .d-card.w .chip-ap .l { color: #aaa; }
+  .d-card.r .chip-ap { background: #330e0e; color: #dd4433; }
+  .d-card.r .chip-ap .l { color: #993322; }
+  .d-card.k .chip-ap { background: #1e1e1e; color: #dd4433; }
+  .d-card.k .chip-ap .l { color: #993322; }
+
+  /* FREE chip */
+  .d-card .chip-free {
+    margin-top: auto;
+    border: 2px dashed;
+    background: transparent;
+  }
+  .d-card.w .chip-free { border-color: #aaa; color: #888; }
+  .d-card.w .chip-free .l { color: #aaa; }
+  .d-card.r .chip-free { border-color: #883322; color: #cc5544; }
+  .d-card.r .chip-free .l { color: #883322; }
+  .d-card.k .chip-free { border-color: #883322; color: #cc5544; }
+  .d-card.k .chip-free .l { color: #883322; }
+
+  /* Content area */
+  .d-card .content {
+    position: relative;
+    z-index: 3;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-left: 62px;
+    padding: 14px 14px 14px 0;
+  }
+
+  .d-card .cost-row {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 4px;
+    min-height: 13px;
+  }
+
+  .d-card .pip {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+  }
+  .d-card.w .pip { background: #a09888; }
+  .d-card.r .pip { background: #666; }
+  .d-card.k .pip { background: #555; }
+
+  .d-card .name {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.25rem;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .d-card.w .name { color: #1a1a1a; }
+  .d-card.r .name { color: #f0e0d8; }
+  .d-card.k .name { color: #e8e4e0; }
+
+  /* Card type label */
+  .d-card .card-type {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .d-card.w .card-type { color: #a09888; }
+  .d-card.r .card-type { color: #774433; }
+  .d-card.k .card-type { color: #555; }
+
+  .d-card .rule {
+    height: 2px;
+    margin-bottom: 8px;
+    border-radius: 1px;
+  }
+  .d-card.w .rule { background: #c0b8aa; }
+  .d-card.r .rule { background: #442020; }
+  .d-card.k .rule { background: #333; }
+
+  .d-card .desc {
+    font-size: 14px;
+    line-height: 1.45;
+    flex: 1;
+  }
+  .d-card.w .desc { color: #444; }
+  .d-card.r .desc { color: #cc9988; }
+  .d-card.k .desc { color: #999; }
+
+  /* Ghost bleed art */
+  .d-card .art {
+    position: absolute;
+    bottom: -10px;
+    right: -15px;
+    width: 170px;
+    height: 150px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .d-card .art img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 1;
+  }
+
+  /* Delta styling for D */
+  .d-card .delta {
+    color: #4f4;
+    font-size: 0.5rem;
+    top: 1px;
+    right: 2px;
+  }
+  .d-card.w .delta { color: #2a8a2a; }
+
+
+  /* ===================================================================
+     APPROACH E — "Branded Iron"
+     Card type sits in a small branded tab that extends from the stripe.
+     Stat gutter has a vertical gradient wash.
+     Delta shown inline next to the value with a colored arrow-up glyph.
+     More compact, tighter spacing.
+     =================================================================== */
+
+  .e-card {
+    width: 240px;
+    height: 340px;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .e-card .bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+  }
+  .e-card.w .bg { background: #dcd7ce; }
+  .e-card.r .bg { background: #1c0c0c; }
+  .e-card.k .bg { background: #131313; }
+
+  /* Single stripe */
+  .e-card .stripe {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 5px;
+    z-index: 6;
+  }
+  .e-card.w .stripe { background: #999; }
+  .e-card.r .stripe { background: #cc2222; }
+  .e-card.k .stripe { background: #cc2222; }
+
+  /* Stat gutter — vertical gradient wash */
+  .e-card .stat-gutter {
+    position: absolute;
+    left: 5px; top: 0; bottom: 0;
+    width: 56px;
+    z-index: 1;
+  }
+  .e-card.w .stat-gutter {
+    background: linear-gradient(180deg, rgba(0,0,0,0.07) 0%, rgba(0,0,0,0.02) 100%);
+  }
+  .e-card.r .stat-gutter {
+    background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 100%);
+  }
+  .e-card.k .stat-gutter {
+    background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  }
+
+  /* Card type tab — extends from stripe */
+  .e-card .type-tab {
+    position: absolute;
+    left: 5px;
+    bottom: 12px;
+    z-index: 7;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 8px 3px;
+    border-radius: 0 3px 3px 0;
+  }
+  .e-card.w .type-tab { background: #c0b8aa; color: #666; }
+  .e-card.r .type-tab { background: #3a1111; color: #cc5544; }
+  .e-card.k .type-tab { background: #222; color: #888; }
+
+  /* Stat column */
+  .e-card .stats {
+    position: absolute;
+    left: 12px; top: 14px; bottom: 14px;
+    width: 42px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 5;
+  }
+
+  .e-card .chip {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    position: relative;
+  }
+
+  .e-card .chip .v {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .e-card .chip .l {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* BLK chip — consistent across variants */
+  .e-card .chip-blk {
+    border: 2.5px solid #777;
+    background: rgba(80,80,80,0.15);
+    color: #bbb;
+  }
+  .e-card .chip-blk .l { color: #888; }
+  .e-card.w .chip-blk { border-color: #999; color: #555; background: rgba(0,0,0,0.08); }
+  .e-card.w .chip-blk .l { color: #777; }
+
+  /* ATK chip */
+  .e-card .chip-atk {
+    background: #cc2222;
+    color: #fff;
+  }
+  .e-card .chip-atk .l { color: #ffccbb; }
+
+  /* AP chip */
+  .e-card .chip-ap {
+    margin-top: auto;
+  }
+  .e-card.w .chip-ap { background: #444; color: #ddd; }
+  .e-card.w .chip-ap .l { color: #aaa; }
+  .e-card.r .chip-ap { background: #330e0e; color: #dd4433; }
+  .e-card.r .chip-ap .l { color: #993322; }
+  .e-card.k .chip-ap { background: #1e1e1e; color: #dd4433; }
+  .e-card.k .chip-ap .l { color: #993322; }
+
+  /* FREE chip */
+  .e-card .chip-free {
+    margin-top: auto;
+    border: 2px dashed;
+    background: transparent;
+  }
+  .e-card.w .chip-free { border-color: #aaa; color: #888; }
+  .e-card.w .chip-free .l { color: #aaa; }
+  .e-card.r .chip-free { border-color: #883322; color: #cc5544; }
+  .e-card.r .chip-free .l { color: #883322; }
+  .e-card.k .chip-free { border-color: #883322; color: #cc5544; }
+  .e-card.k .chip-free .l { color: #883322; }
+
+  /* Delta — inline arrow style for E */
+  .e-card .delta-inline {
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 0.6rem;
+    line-height: 1;
+    color: #4f4;
+    margin-left: 1px;
+  }
+  .e-card.w .delta-inline { color: #2a8a2a; }
+  .e-card .v-row {
+    display: flex;
+    align-items: baseline;
+    gap: 1px;
+  }
+
+  /* Content area */
+  .e-card .content {
+    position: relative;
+    z-index: 3;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-left: 62px;
+    padding: 14px 14px 14px 0;
+  }
+
+  .e-card .cost-row {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 4px;
+    min-height: 13px;
+  }
+
+  .e-card .pip {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+  }
+  .e-card.w .pip { background: #a09888; }
+  .e-card.r .pip { background: #666; }
+  .e-card.k .pip { background: #555; }
+
+  .e-card .name {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.25rem;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .e-card.w .name { color: #1a1a1a; }
+  .e-card.r .name { color: #f0e0d8; }
+  .e-card.k .name { color: #e8e4e0; }
+
+  .e-card .rule {
+    height: 2px;
+    margin-bottom: 8px;
+    border-radius: 1px;
+  }
+  .e-card.w .rule { background: #c0b8aa; }
+  .e-card.r .rule { background: #442020; }
+  .e-card.k .rule { background: #333; }
+
+  .e-card .desc {
+    font-size: 14px;
+    line-height: 1.45;
+    flex: 1;
+  }
+  .e-card.w .desc { color: #444; }
+  .e-card.r .desc { color: #cc9988; }
+  .e-card.k .desc { color: #999; }
+
+  /* Ghost bleed art */
+  .e-card .art {
+    position: absolute;
+    bottom: -10px;
+    right: -15px;
+    width: 170px;
+    height: 150px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .e-card .art img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 1;
+  }
+
+
+  /* ===================================================================
+     APPROACH F — "Runic Slab"
+     Card type is etched into a small notched area at the top-right.
+     Stat gutter has a sharp diagonal cut at the bottom.
+     Delta shown as a small pip-sized circle with arrow overlaid on chip.
+     Heavier, more monolithic feel — slightly wider stripe.
+     =================================================================== */
+
+  .f-card {
+    width: 240px;
+    height: 340px;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .f-card .bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+  }
+  .f-card.w .bg { background: #dcd7ce; }
+  .f-card.r .bg { background: #1c0c0c; }
+  .f-card.k .bg { background: #131313; }
+
+  /* Slightly wider stripe */
+  .f-card .stripe {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 6px;
+    z-index: 6;
+  }
+  .f-card.w .stripe { background: #999; }
+  .f-card.r .stripe { background: #cc2222; }
+  .f-card.k .stripe { background: #cc2222; }
+
+  /* Stat gutter — solid tint with diagonal clip at bottom */
+  .f-card .stat-gutter {
+    position: absolute;
+    left: 6px; top: 0; bottom: 0;
+    width: 55px;
+    z-index: 1;
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%);
+  }
+  .f-card.w .stat-gutter { background: rgba(0,0,0,0.05); }
+  .f-card.r .stat-gutter { background: rgba(0,0,0,0.22); }
+  .f-card.k .stat-gutter { background: rgba(255,255,255,0.025); }
+
+  /* Card type — etched notch top-right */
+  .f-card .type-notch {
+    position: absolute;
+    top: 0; right: 0;
+    z-index: 7;
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 10px 5px 14px;
+    border-radius: 0 8px 0 8px;
+  }
+  .f-card.w .type-notch { background: rgba(0,0,0,0.06); color: #999; }
+  .f-card.r .type-notch { background: rgba(200,30,30,0.15); color: #884433; }
+  .f-card.k .type-notch { background: rgba(255,255,255,0.04); color: #555; }
+
+  /* Stat column */
+  .f-card .stats {
+    position: absolute;
+    left: 14px; top: 14px; bottom: 14px;
+    width: 42px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 5;
+  }
+
+  .f-card .chip {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    position: relative;
+  }
+
+  .f-card .chip .v {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .f-card .chip .l {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* BLK chip — consistent across variants */
+  .f-card .chip-blk {
+    border: 2.5px solid #777;
+    background: rgba(80,80,80,0.15);
+    color: #bbb;
+  }
+  .f-card .chip-blk .l { color: #888; }
+  .f-card.w .chip-blk { border-color: #999; color: #555; background: rgba(0,0,0,0.08); }
+  .f-card.w .chip-blk .l { color: #777; }
+
+  /* ATK chip */
+  .f-card .chip-atk {
+    background: #cc2222;
+    color: #fff;
+  }
+  .f-card .chip-atk .l { color: #ffccbb; }
+
+  /* AP chip */
+  .f-card .chip-ap {
+    margin-top: auto;
+  }
+  .f-card.w .chip-ap { background: #444; color: #ddd; }
+  .f-card.w .chip-ap .l { color: #aaa; }
+  .f-card.r .chip-ap { background: #330e0e; color: #dd4433; }
+  .f-card.r .chip-ap .l { color: #993322; }
+  .f-card.k .chip-ap { background: #1e1e1e; color: #dd4433; }
+  .f-card.k .chip-ap .l { color: #993322; }
+
+  /* FREE chip */
+  .f-card .chip-free {
+    margin-top: auto;
+    border: 2px dashed;
+    background: transparent;
+  }
+  .f-card.w .chip-free { border-color: #aaa; color: #888; }
+  .f-card.w .chip-free .l { color: #aaa; }
+  .f-card.r .chip-free { border-color: #883322; color: #cc5544; }
+  .f-card.r .chip-free .l { color: #883322; }
+  .f-card.k .chip-free { border-color: #883322; color: #cc5544; }
+  .f-card.k .chip-free .l { color: #883322; }
+
+  /* Delta — circular badge overlaid on chip corner */
+  .f-card .delta-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #1a6b1a;
+    color: #6f6;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 8;
+    border: 1.5px solid #2a2a2a;
+  }
+  .f-card.w .delta-badge { background: #2a8a2a; color: #cfc; border-color: #dcd7ce; }
+
+  /* Content area */
+  .f-card .content {
+    position: relative;
+    z-index: 3;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-left: 65px;
+    padding: 14px 14px 14px 0;
+  }
+
+  .f-card .cost-row {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 4px;
+    min-height: 13px;
+  }
+
+  .f-card .pip {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+  }
+  .f-card.w .pip { background: #a09888; }
+  .f-card.r .pip { background: #666; }
+  .f-card.k .pip { background: #555; }
+
+  .f-card .name {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.25rem;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .f-card.w .name { color: #1a1a1a; }
+  .f-card.r .name { color: #f0e0d8; }
+  .f-card.k .name { color: #e8e4e0; }
+
+  .f-card .rule {
+    height: 2px;
+    margin-bottom: 8px;
+    border-radius: 1px;
+  }
+  .f-card.w .rule { background: #c0b8aa; }
+  .f-card.r .rule { background: #442020; }
+  .f-card.k .rule { background: #333; }
+
+  .f-card .desc {
+    font-size: 14px;
+    line-height: 1.45;
+    flex: 1;
+  }
+  .f-card.w .desc { color: #444; }
+  .f-card.r .desc { color: #cc9988; }
+  .f-card.k .desc { color: #999; }
+
+  /* Ghost bleed art */
+  .f-card .art {
+    position: absolute;
+    bottom: -10px;
+    right: -15px;
+    width: 170px;
+    height: 150px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .f-card .art img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<h1>Crusaders30XX</h1>
+<p class="subtitle">Card Concepts V4 — Refined</p>
+
+
+<!-- ====== APPROACH D: Forged Plate ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">D.</span>
+    <span class="concept-title">Forged Plate</span>
+  </div>
+  <p class="concept-desc">
+    Keeps hard-cornered chips and direct text on surface. Stat gutter has a subtle darkened panel behind it for separation.
+    Card type is a small stamped label below the name. Delta shown as a superscript badge on the chip corner.
+    Middle card demonstrates +1 ATK / +1 BLK delta and no cost pips.
+  </p>
+  <div class="card-row">
+
+    <!-- Neutral — normal -->
+    <div class="card-wrapper">
+      <div class="d-card w">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">8</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">3</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="card-type">Attack</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Neutral</div>
+    </div>
+
+    <!-- Red — with delta, no cost -->
+    <div class="card-wrapper">
+      <div class="d-card r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="stats">
+          <div class="chip chip-blk chip-has-delta">
+            <span class="delta">+1</span>
+            <span class="v">9</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk chip-has-delta">
+            <span class="delta">+1</span>
+            <span class="v">4</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-free">
+            <span class="v">0</span><span class="l">FREE</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><!-- no cost --></div>
+          <div class="name">Reap</div>
+          <div class="card-type">Attack</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Red — Free + Delta</div>
+    </div>
+
+    <!-- Black — normal -->
+    <div class="card-wrapper">
+      <div class="d-card k">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">8</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">3</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="card-type">Attack</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Black</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ====== APPROACH E: Branded Iron ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">E.</span>
+    <span class="concept-title">Branded Iron</span>
+  </div>
+  <p class="concept-desc">
+    Card type sits in a vertical tab extending from the stripe — branded into the left edge. Stat gutter uses a vertical gradient wash that fades downward.
+    Delta shown inline next to the stat value with an arrow glyph. More compact feel. Middle card has delta and no cost.
+  </p>
+  <div class="card-row">
+
+    <!-- Neutral — normal -->
+    <div class="card-wrapper">
+      <div class="e-card w">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-tab">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">8</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">3</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Neutral</div>
+    </div>
+
+    <!-- Red — with delta, no cost -->
+    <div class="card-wrapper">
+      <div class="e-card r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-tab">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <div class="v-row">
+              <span class="v">9</span><span class="delta-inline">+1</span>
+            </div>
+            <span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk">
+            <div class="v-row">
+              <span class="v">4</span><span class="delta-inline">+1</span>
+            </div>
+            <span class="l">ATK</span>
+          </div>
+          <div class="chip chip-free">
+            <span class="v">0</span><span class="l">FREE</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><!-- no cost --></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Red — Free + Delta</div>
+    </div>
+
+    <!-- Black — normal -->
+    <div class="card-wrapper">
+      <div class="e-card k">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-tab">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">8</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">3</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Black</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ====== APPROACH F: Runic Slab ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">F.</span>
+    <span class="concept-title">Runic Slab</span>
+  </div>
+  <p class="concept-desc">
+    Heavier, monolithic feel. Card type etched into a notch at the top-right corner. Stat gutter has a diagonal clip at the bottom edge.
+    Slightly wider stripe. Delta shown as small circular badges overlaid on the chip corner. Middle card has delta and no cost.
+  </p>
+  <div class="card-row">
+
+    <!-- Neutral — normal -->
+    <div class="card-wrapper">
+      <div class="f-card w">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">8</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">3</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Neutral</div>
+    </div>
+
+    <!-- Red — with delta, no cost -->
+    <div class="card-wrapper">
+      <div class="f-card r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">9</span><span class="l">BLK</span>
+            <span class="delta-badge">+1</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">4</span><span class="l">ATK</span>
+            <span class="delta-badge">+1</span>
+          </div>
+          <div class="chip chip-free">
+            <span class="v">0</span><span class="l">FREE</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><!-- no cost --></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Red — Free + Delta</div>
+    </div>
+
+    <!-- Black — normal -->
+    <div class="card-wrapper">
+      <div class="f-card k">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">8</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">3</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Black</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

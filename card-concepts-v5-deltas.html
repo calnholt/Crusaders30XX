@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Delta Display Exploration V5</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0c0b0f;
+    color: #eee;
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 100px;
+  }
+
+  h1 {
+    text-align: center;
+    font-family: 'New Rocker', cursive;
+    font-size: 2.4rem;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #e44, #f88, #e44);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #555;
+    font-size: 0.8rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 60px;
+  }
+
+  .concept-section { margin-bottom: 90px; }
+
+  .concept-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 6px;
+    padding-left: 20px;
+  }
+
+  .concept-number {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.5rem;
+    color: #c33;
+  }
+
+  .concept-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .concept-desc {
+    color: #666;
+    font-size: 0.78rem;
+    padding-left: 20px;
+    margin-bottom: 32px;
+    max-width: 780px;
+    line-height: 1.5;
+  }
+
+  .card-row {
+    display: flex;
+    gap: 36px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .card-label {
+    text-align: center;
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #444;
+    margin-top: 14px;
+  }
+
+  .card-wrapper {
+    transition: transform 0.25s ease;
+    cursor: pointer;
+  }
+  .card-wrapper:hover { transform: translateY(-6px); }
+
+
+  /* ===================================================================
+     BASE CARD — Runic Slab with full-height gutter (no slant)
+     Shared across all 5 delta approaches
+     =================================================================== */
+
+  .card {
+    width: 240px;
+    height: 340px;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .card .bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+  }
+  .card.w .bg { background: #dcd7ce; }
+  .card.r .bg { background: #1c0c0c; }
+  .card.k .bg { background: #131313; }
+
+  .card .stripe {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 6px;
+    z-index: 6;
+  }
+  .card.w .stripe { background: #999; }
+  .card.r .stripe { background: #cc2222; }
+  .card.k .stripe { background: #cc2222; }
+
+  /* Full-height stat gutter — no diagonal clip */
+  .card .stat-gutter {
+    position: absolute;
+    left: 6px; top: 0; bottom: 0;
+    width: 55px;
+    z-index: 1;
+  }
+  .card.w .stat-gutter { background: rgba(0,0,0,0.05); }
+  .card.r .stat-gutter { background: rgba(0,0,0,0.22); }
+  .card.k .stat-gutter { background: rgba(255,255,255,0.025); }
+
+  /* Card type notch */
+  .card .type-notch {
+    position: absolute;
+    top: 0; right: 0;
+    z-index: 7;
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 10px 5px 14px;
+    border-radius: 0 8px 0 8px;
+  }
+  .card.w .type-notch { background: rgba(0,0,0,0.06); color: #999; }
+  .card.r .type-notch { background: rgba(200,30,30,0.15); color: #884433; }
+  .card.k .type-notch { background: rgba(255,255,255,0.04); color: #555; }
+
+  /* Stat column */
+  .card .stats {
+    position: absolute;
+    left: 14px; top: 14px; bottom: 14px;
+    width: 42px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 5;
+  }
+
+  .card .chip {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    position: relative;
+  }
+
+  .card .chip .v {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .card .chip .l {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* BLK chip */
+  .card .chip-blk {
+    border: 2.5px solid #777;
+    background: rgba(80,80,80,0.15);
+    color: #bbb;
+  }
+  .card .chip-blk .l { color: #888; }
+  .card.w .chip-blk { border-color: #999; color: #555; background: rgba(0,0,0,0.08); }
+  .card.w .chip-blk .l { color: #777; }
+
+  /* ATK chip */
+  .card .chip-atk {
+    background: #cc2222;
+    color: #fff;
+  }
+  .card .chip-atk .l { color: #ffccbb; }
+
+  /* AP chip */
+  .card .chip-ap { margin-top: auto; }
+  .card.w .chip-ap { background: #444; color: #ddd; }
+  .card.w .chip-ap .l { color: #aaa; }
+  .card.r .chip-ap { background: #330e0e; color: #dd4433; }
+  .card.r .chip-ap .l { color: #993322; }
+  .card.k .chip-ap { background: #1e1e1e; color: #dd4433; }
+  .card.k .chip-ap .l { color: #993322; }
+
+  /* FREE chip */
+  .card .chip-free {
+    margin-top: auto;
+    border: 2px dashed;
+    background: transparent;
+  }
+  .card.w .chip-free { border-color: #aaa; color: #888; }
+  .card.w .chip-free .l { color: #aaa; }
+  .card.r .chip-free { border-color: #883322; color: #cc5544; }
+  .card.r .chip-free .l { color: #883322; }
+  .card.k .chip-free { border-color: #883322; color: #cc5544; }
+  .card.k .chip-free .l { color: #883322; }
+
+  /* Content area */
+  .card .content {
+    position: relative;
+    z-index: 3;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-left: 65px;
+    padding: 14px 14px 14px 0;
+  }
+
+  .card .cost-row {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 4px;
+    min-height: 13px;
+  }
+
+  .card .pip {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+  }
+  .card.w .pip { background: #a09888; }
+  .card.r .pip { background: #666; }
+  .card.k .pip { background: #555; }
+
+  .card .name {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.25rem;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .card.w .name { color: #1a1a1a; }
+  .card.r .name { color: #f0e0d8; }
+  .card.k .name { color: #e8e4e0; }
+
+  .card .rule {
+    height: 2px;
+    margin-bottom: 8px;
+    border-radius: 1px;
+  }
+  .card.w .rule { background: #c0b8aa; }
+  .card.r .rule { background: #442020; }
+  .card.k .rule { background: #333; }
+
+  .card .desc {
+    font-size: 14px;
+    line-height: 1.45;
+    flex: 1;
+  }
+  .card.w .desc { color: #444; }
+  .card.r .desc { color: #cc9988; }
+  .card.k .desc { color: #999; }
+
+  .card .art {
+    position: absolute;
+    bottom: -10px;
+    right: -15px;
+    width: 170px;
+    height: 150px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .card .art img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 1;
+  }
+
+
+  /* ===================================================================
+     APPROACH 1 — "Shoulder Tab"
+     A small rectangular tab extends from the RIGHT edge of the chip,
+     protruding out like a welded-on bracket. Contains the delta value.
+     Green tab = buff, amber/gold tab = debuff.
+     Large enough to read, visually distinct from the chip itself.
+     =================================================================== */
+
+  .a1 .delta-tab {
+    position: absolute;
+    right: -22px;
+    top: 50%;
+    transform: translateY(-50%);
+    min-width: 20px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 0.65rem;
+    line-height: 1;
+    border-radius: 0 3px 3px 0;
+    padding: 0 3px;
+    z-index: 9;
+  }
+
+  .a1 .delta-tab.pos {
+    background: #1a6b1a;
+    color: #5eff5e;
+    border-left: 2px solid #2a2a2a;
+  }
+  .a1.w .delta-tab.pos {
+    background: #2a8a2a;
+    color: #fff;
+    border-left: 2px solid #bbb;
+  }
+
+  .a1 .delta-tab.neg {
+    background: #6b4a00;
+    color: #ffcc44;
+    border-left: 2px solid #2a2a2a;
+  }
+  .a1.w .delta-tab.neg {
+    background: #8a6a10;
+    color: #fff;
+    border-left: 2px solid #bbb;
+  }
+
+
+  /* ===================================================================
+     APPROACH 2 — "Chip Border Glow + Overlay"
+     The entire chip gets a colored border glow (green for buff,
+     amber for debuff). Delta value sits as bold overlay text
+     at top-right of chip. Chip background subtly tinted.
+     =================================================================== */
+
+  .a2 .chip-buffed {
+    box-shadow: 0 0 0 2px #3a3a3a, 0 0 0 4px #2aaa2a;
+  }
+  .a2.w .chip-buffed {
+    box-shadow: 0 0 0 2px #ccc, 0 0 0 4px #2a8a2a;
+  }
+
+  .a2 .chip-nerfed {
+    box-shadow: 0 0 0 2px #3a3a3a, 0 0 0 4px #aa8a22;
+  }
+  .a2.w .chip-nerfed {
+    box-shadow: 0 0 0 2px #ccc, 0 0 0 4px #8a7a10;
+  }
+
+  .a2 .delta-overlay {
+    position: absolute;
+    top: -1px;
+    right: 1px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    line-height: 1;
+    z-index: 9;
+  }
+
+  .a2 .delta-overlay.pos { color: #5eff5e; }
+  .a2.w .delta-overlay.pos { color: #1a7a1a; }
+
+  .a2 .delta-overlay.neg { color: #ffcc44; }
+  .a2.w .delta-overlay.neg { color: #8a6a00; }
+
+  /* Nudge the value down-left to avoid overlap */
+  .a2 .chip-has-delta .v {
+    position: relative;
+    left: -2px;
+    top: 1px;
+  }
+
+
+  /* ===================================================================
+     APPROACH 3 — "Stacked Slab"
+     A thin horizontal slab sits BELOW the chip, showing the delta.
+     Directly attached — like a nameplate welded underneath.
+     Green slab for buff, amber slab for debuff.
+     Larger text, very easy to read.
+     =================================================================== */
+
+  .a3 .chip-with-slab {
+    margin-bottom: 0;
+  }
+
+  .a3 .delta-slab {
+    width: 42px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 0.65rem;
+    line-height: 1;
+    border-radius: 0 0 4px 4px;
+    margin-top: -2px;
+    z-index: 4;
+    position: relative;
+  }
+
+  .a3 .delta-slab.pos {
+    background: #1a5a1a;
+    color: #5eff5e;
+  }
+  .a3.w .delta-slab.pos {
+    background: #2a8a2a;
+    color: #fff;
+  }
+
+  .a3 .delta-slab.neg {
+    background: #5a4200;
+    color: #ffcc44;
+  }
+  .a3.w .delta-slab.neg {
+    background: #7a6210;
+    color: #fff;
+  }
+
+  /* Round only bottom of chip when slab is present */
+  .a3 .chip-with-slab {
+    border-radius: 4px 4px 0 0;
+  }
+
+
+  /* ===================================================================
+     APPROACH 4 — "Ghost Echo"
+     The original (base) value is shown as a ghosted/struck number
+     at smaller size, with an arrow pointing to the current value.
+     No extra UI element — the chip itself tells the story.
+     Green tint on chip for buff, amber tint for debuff.
+     =================================================================== */
+
+  .a4 .chip-delta-echo {
+    gap: 0;
+  }
+
+  .a4 .chip-delta-echo .v-group {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    line-height: 1;
+  }
+
+  .a4 .chip-delta-echo .v-base {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-decoration: line-through;
+    opacity: 0.5;
+    line-height: 1;
+  }
+
+  .a4 .chip-delta-echo .v-arrow {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.5rem;
+    font-weight: 700;
+    line-height: 1;
+    opacity: 0.6;
+  }
+
+  .a4 .chip-delta-echo .v-current {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+
+  /* Buff tint */
+  .a4 .chip-blk.chip-buff {
+    border-color: #2aaa2a;
+    background: rgba(40,140,40,0.2);
+  }
+  .a4 .chip-blk.chip-buff .v-current { color: #5eff5e; }
+  .a4.w .chip-blk.chip-buff {
+    border-color: #2a8a2a;
+    background: rgba(40,140,40,0.15);
+  }
+  .a4.w .chip-blk.chip-buff .v-current { color: #1a6a1a; }
+
+  .a4 .chip-atk.chip-buff {
+    background: linear-gradient(135deg, #cc2222 60%, #22aa22);
+  }
+  .a4 .chip-atk.chip-buff .v-current { color: #fff; }
+
+  /* Nerf tint */
+  .a4 .chip-blk.chip-nerf {
+    border-color: #aa8a22;
+    background: rgba(140,110,20,0.2);
+  }
+  .a4 .chip-blk.chip-nerf .v-current { color: #ffcc44; }
+  .a4.w .chip-blk.chip-nerf {
+    border-color: #8a7a10;
+    background: rgba(140,110,20,0.15);
+  }
+  .a4.w .chip-blk.chip-nerf .v-current { color: #6a5a00; }
+
+  .a4 .chip-atk.chip-nerf {
+    background: linear-gradient(135deg, #cc2222 60%, #aa8a22);
+  }
+  .a4 .chip-atk.chip-nerf .v-current { color: #fff; }
+
+
+  /* ===================================================================
+     APPROACH 5 — "Side Pips"
+     Small diamond/square pips appear in a vertical stack to the
+     LEFT of the chip (inside the gutter). Green diamonds for +,
+     amber diamonds for -. Number of pips = magnitude of delta.
+     Simple visual language — instantly readable at any size.
+     =================================================================== */
+
+  .a5 .chip-pip-wrap {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    position: relative;
+  }
+
+  .a5 .delta-pips {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: absolute;
+    left: -11px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .a5 .delta-pip {
+    width: 7px;
+    height: 7px;
+    transform: rotate(45deg);
+  }
+
+  .a5 .delta-pip.pos {
+    background: #2aaa2a;
+    box-shadow: 0 0 4px rgba(42,170,42,0.4);
+  }
+  .a5.w .delta-pip.pos {
+    background: #2a8a2a;
+    box-shadow: 0 0 4px rgba(42,138,42,0.3);
+  }
+
+  .a5 .delta-pip.neg {
+    background: #aa8a22;
+    box-shadow: 0 0 4px rgba(170,138,34,0.4);
+  }
+  .a5.w .delta-pip.neg {
+    background: #8a7a10;
+    box-shadow: 0 0 4px rgba(138,122,16,0.3);
+  }
+
+  /* Subtle chip tint when modified */
+  .a5 .chip-blk.pip-modified {
+    border-color: #2aaa2a;
+  }
+  .a5.w .chip-blk.pip-modified {
+    border-color: #2a8a2a;
+  }
+  .a5 .chip-blk.pip-modified-neg {
+    border-color: #aa8a22;
+  }
+  .a5.w .chip-blk.pip-modified-neg {
+    border-color: #8a7a10;
+  }
+
+</style>
+</head>
+<body>
+
+<h1>Crusaders30XX</h1>
+<p class="subtitle">V5 — Delta Display Exploration</p>
+
+
+<!-- ====== APPROACH 1: Shoulder Tab ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">1.</span>
+    <span class="concept-title">Shoulder Tab</span>
+  </div>
+  <p class="concept-desc">
+    A small rectangular tab protrudes from the right edge of the chip — welded on like a bracket.
+    Green tab for buffs, amber/gold tab for debuffs. Large enough to read clearly without crowding the chip's own value.
+  </p>
+  <div class="card-row">
+
+    <!-- Neutral -->
+    <div class="card-wrapper">
+      <div class="card a1 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">8</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">3</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">No Delta</div>
+    </div>
+
+    <!-- Positive delta -->
+    <div class="card-wrapper">
+      <div class="card a1 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">9</span><span class="l">BLK</span>
+            <span class="delta-tab pos">+1</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">4</span><span class="l">ATK</span>
+            <span class="delta-tab pos">+1</span>
+          </div>
+          <div class="chip chip-free">
+            <span class="v">0</span><span class="l">FREE</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Positive Delta</div>
+    </div>
+
+    <!-- Negative delta -->
+    <div class="card-wrapper">
+      <div class="card a1 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">7</span><span class="l">BLK</span>
+            <span class="delta-tab neg">-1</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">2</span><span class="l">ATK</span>
+            <span class="delta-tab neg">-1</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Negative Delta</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ====== APPROACH 2: Chip Border Glow + Overlay ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">2.</span>
+    <span class="concept-title">Border Glow + Corner Badge</span>
+  </div>
+  <p class="concept-desc">
+    Modified chips get a double-ring border glow — green for buffs, amber for debuffs. The delta value sits as bold text
+    at the top-right corner of the chip. The glow draws the eye to which stats changed, and the corner text tells you by how much.
+  </p>
+  <div class="card-row">
+
+    <!-- Neutral -->
+    <div class="card-wrapper">
+      <div class="card a2 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">8</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">3</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">No Delta</div>
+    </div>
+
+    <!-- Positive delta -->
+    <div class="card-wrapper">
+      <div class="card a2 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk chip-buffed chip-has-delta">
+            <span class="delta-overlay pos">+1</span>
+            <span class="v">9</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk chip-buffed chip-has-delta">
+            <span class="delta-overlay pos">+1</span>
+            <span class="v">4</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-free">
+            <span class="v">0</span><span class="l">FREE</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Positive Delta</div>
+    </div>
+
+    <!-- Negative delta -->
+    <div class="card-wrapper">
+      <div class="card a2 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk chip-nerfed chip-has-delta">
+            <span class="delta-overlay neg">-1</span>
+            <span class="v">7</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk chip-nerfed chip-has-delta">
+            <span class="delta-overlay neg">-1</span>
+            <span class="v">2</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Negative Delta</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ====== APPROACH 3: Stacked Slab ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">3.</span>
+    <span class="concept-title">Stacked Slab</span>
+  </div>
+  <p class="concept-desc">
+    A thin horizontal bar attaches directly below the chip — like a nameplate welded underneath.
+    Green slab for buffs, amber slab for debuffs. Largest and most readable delta text of all approaches.
+    The chip's bottom corners become square to merge seamlessly with the slab.
+  </p>
+  <div class="card-row">
+
+    <!-- Neutral -->
+    <div class="card-wrapper">
+      <div class="card a3 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">8</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">3</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">No Delta</div>
+    </div>
+
+    <!-- Positive delta -->
+    <div class="card-wrapper">
+      <div class="card a3 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk chip-with-slab">
+            <span class="v">9</span><span class="l">BLK</span>
+          </div>
+          <div class="delta-slab pos">+1</div>
+          <div class="chip chip-atk chip-with-slab">
+            <span class="v">4</span><span class="l">ATK</span>
+          </div>
+          <div class="delta-slab pos">+1</div>
+          <div class="chip chip-free">
+            <span class="v">0</span><span class="l">FREE</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Positive Delta</div>
+    </div>
+
+    <!-- Negative delta -->
+    <div class="card-wrapper">
+      <div class="card a3 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk chip-with-slab">
+            <span class="v">7</span><span class="l">BLK</span>
+          </div>
+          <div class="delta-slab neg">-1</div>
+          <div class="chip chip-atk chip-with-slab">
+            <span class="v">2</span><span class="l">ATK</span>
+          </div>
+          <div class="delta-slab neg">-1</div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Negative Delta</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ====== APPROACH 4: Ghost Echo ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">4.</span>
+    <span class="concept-title">Ghost Echo</span>
+  </div>
+  <p class="concept-desc">
+    No extra UI elements — the chip itself tells the story. The original base value appears as a small
+    struck-through ghost, with an arrow leading to the current value. The chip's background subtly
+    tints green for buffs or amber for debuffs. Self-contained and information-dense.
+  </p>
+  <div class="card-row">
+
+    <!-- Neutral -->
+    <div class="card-wrapper">
+      <div class="card a4 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">8</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">3</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">No Delta</div>
+    </div>
+
+    <!-- Positive delta -->
+    <div class="card-wrapper">
+      <div class="card a4 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk chip-buff chip-delta-echo">
+            <div class="v-group">
+              <span class="v-base">8</span>
+              <span class="v-arrow">›</span>
+              <span class="v-current">9</span>
+            </div>
+            <span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk chip-buff chip-delta-echo">
+            <div class="v-group">
+              <span class="v-base">3</span>
+              <span class="v-arrow">›</span>
+              <span class="v-current">4</span>
+            </div>
+            <span class="l">ATK</span>
+          </div>
+          <div class="chip chip-free">
+            <span class="v">0</span><span class="l">FREE</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Positive Delta</div>
+    </div>
+
+    <!-- Negative delta -->
+    <div class="card-wrapper">
+      <div class="card a4 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk chip-nerf chip-delta-echo">
+            <div class="v-group">
+              <span class="v-base">8</span>
+              <span class="v-arrow">›</span>
+              <span class="v-current">7</span>
+            </div>
+            <span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk chip-nerf chip-delta-echo">
+            <div class="v-group">
+              <span class="v-base">3</span>
+              <span class="v-arrow">›</span>
+              <span class="v-current">2</span>
+            </div>
+            <span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Negative Delta</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ====== APPROACH 5: Side Pips ====== -->
+<div class="concept-section">
+  <div class="concept-header">
+    <span class="concept-number">5.</span>
+    <span class="concept-title">Side Pips</span>
+  </div>
+  <p class="concept-desc">
+    Small diamond-shaped pips appear to the left of the chip, stacked vertically inside the gutter.
+    Green diamonds for buffs, amber diamonds for debuffs. Number of pips matches the magnitude of the delta.
+    The chip's border also tints to match. Instantly scannable visual language — like tally marks.
+  </p>
+  <div class="card-row">
+
+    <!-- Neutral -->
+    <div class="card-wrapper">
+      <div class="card a5 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip chip-blk">
+            <span class="v">8</span><span class="l">BLK</span>
+          </div>
+          <div class="chip chip-atk">
+            <span class="v">3</span><span class="l">ATK</span>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">No Delta</div>
+    </div>
+
+    <!-- Positive delta -->
+    <div class="card-wrapper">
+      <div class="card a5 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip-pip-wrap">
+            <div class="delta-pips">
+              <div class="delta-pip pos"></div>
+            </div>
+            <div class="chip chip-blk pip-modified">
+              <span class="v">9</span><span class="l">BLK</span>
+            </div>
+          </div>
+          <div class="chip-pip-wrap">
+            <div class="delta-pips">
+              <div class="delta-pip pos"></div>
+            </div>
+            <div class="chip chip-atk">
+              <span class="v">4</span><span class="l">ATK</span>
+            </div>
+          </div>
+          <div class="chip chip-free">
+            <span class="v">0</span><span class="l">FREE</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Positive Delta</div>
+    </div>
+
+    <!-- Negative delta -->
+    <div class="card-wrapper">
+      <div class="card a5 r">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">Attack</div>
+        <div class="stats">
+          <div class="chip-pip-wrap">
+            <div class="delta-pips">
+              <div class="delta-pip neg"></div>
+            </div>
+            <div class="chip chip-blk pip-modified-neg">
+              <span class="v">7</span><span class="l">BLK</span>
+            </div>
+          </div>
+          <div class="chip-pip-wrap">
+            <div class="delta-pips">
+              <div class="delta-pip neg"></div>
+            </div>
+            <div class="chip chip-atk">
+              <span class="v">2</span><span class="l">ATK</span>
+            </div>
+          </div>
+          <div class="chip chip-ap">
+            <span class="v">1</span><span class="l">AP</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row"><div class="pip"></div><div class="pip"></div></div>
+          <div class="name">Reap</div>
+          <div class="rule"></div>
+          <div class="desc">This attack gains +4 damage if two red cards were discarded to play this.</div>
+        </div>
+        <div class="art"><img src="Content/CardArt/reap.png" alt="Reap"></div>
+      </div>
+      <div class="card-label">Negative Delta</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
