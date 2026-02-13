@@ -33,7 +33,7 @@ namespace Crusaders30XX.ECS.Systems
 
         // Stripe
         [DebugEditable(DisplayName = "Stripe Width", Step = 1, Min = 0, Max = 30)]
-        public int StripeWidth { get; set; } = 5;
+        public int StripeWidth { get; set; } = 6;
 
         // Stat Gutter
         [DebugEditable(DisplayName = "Gutter X", Step = 1, Min = 0, Max = 60)]
@@ -41,7 +41,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Gutter Width", Step = 1, Min = 10, Max = 120)]
         public int GutterWidth { get; set; } = 55;
         [DebugEditable(DisplayName = "Gutter Top Y", Step = 1, Min = 30, Max = 100)]
-        public int GutterTopY { get; set; } = 56;
+        public int GutterTopY { get; set; } = 50;
 
         // Title Band
         [DebugEditable(DisplayName = "Title Band Pad Top", Step = 1, Min = 0, Max = 30)]
@@ -63,7 +63,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Cost Label Gap", Step = 1, Min = 0, Max = 20)]
         public int CostLabelGap { get; set; } = 6;
         [DebugEditable(DisplayName = "Cost Label Font Scale", Step = 0.01f, Min = 0.02f, Max = 0.2f)]
-        public float CostLabelFontScale { get; set; } = 0.08f;
+        public float CostLabelFontScale { get; set; } = 0.065f;
 
         // Chip Layout
         [DebugEditable(DisplayName = "Chip Size", Step = 1, Min = 20, Max = 80)]
@@ -75,7 +75,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Chip Column Top Y", Step = 1, Min = 0, Max = 100)]
         public int ChipColumnTopY { get; set; } = 62;
         [DebugEditable(DisplayName = "Chip Slot Height", Step = 1, Min = 40, Max = 100)]
-        public int ChipSlotHeight { get; set; } = 60;
+        public int ChipSlotHeight { get; set; } = 72;
         [DebugEditable(DisplayName = "Chip Border Thickness", Step = 1, Min = 1, Max = 6)]
         public int ChipBorderThickness { get; set; } = 3;
         [DebugEditable(DisplayName = "Chip Value Font Scale", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
@@ -109,7 +109,7 @@ namespace Crusaders30XX.ECS.Systems
 
         // Name
         [DebugEditable(DisplayName = "V2 Name Font Scale", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
-        public float V2NameFontScale { get; set; } = 0.11f;
+        public float V2NameFontScale { get; set; } = 0.10f;
 
         // Rule Line
         [DebugEditable(DisplayName = "Rule Height", Step = 1, Min = 1, Max = 6)]
@@ -117,13 +117,13 @@ namespace Crusaders30XX.ECS.Systems
 
         // Description
         [DebugEditable(DisplayName = "V2 Desc Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.5f)]
-        public float V2DescFontScale { get; set; } = 0.11f;
+        public float V2DescFontScale { get; set; } = 0.12f;
 
         // Art
         [DebugEditable(DisplayName = "V2 Art Width", Step = 1, Min = 50, Max = 300)]
         public int V2ArtWidth { get; set; } = 191;
         [DebugEditable(DisplayName = "V2 Art Height", Step = 1, Min = 50, Max = 300)]
-        public int V2ArtHeight { get; set; } = 124;
+        public int V2ArtHeight { get; set; } = 166;
         [DebugEditable(DisplayName = "V2 Art Offset Right", Step = 1, Min = -60, Max = 60)]
         public int V2ArtOffsetRight { get; set; } = -15;
         [DebugEditable(DisplayName = "V2 Art Offset Bottom", Step = 1, Min = -60, Max = 60)]
@@ -131,7 +131,7 @@ namespace Crusaders30XX.ECS.Systems
 
         // AP Chip Y position
         [DebugEditable(DisplayName = "AP Chip Y", Step = 1, Min = 200, Max = 340)]
-        public int APChipY { get; set; } = 270;
+        public int APChipY { get; set; } = 311;
 
         // Color Palettes
         private static readonly Dictionary<CardData.CardColor, Color> BgColors = new()
@@ -404,9 +404,13 @@ namespace Crusaders30XX.ECS.Systems
                 effects: SpriteEffects.None,
                 layerDepth: 0f);
 
-            // 2. Stripe (full height)
+            // 2. Stripe (full height, rounded on left to match card corners)
             var stripeColor = GetPaletteColor(StripeColors, cc, new Color(153, 153, 153));
-            V2Rect(cardCenter, rotation, new Vector2(0, 0), StripeWidth * vs, sh, stripeColor, vs);
+            int stripeW = (int)(StripeWidth * vs);
+            int stripeH = (int)sh;
+            int stripeCR = (int)(V2CornerRadius * vs);
+            var stripeTex = GetPerCornerRoundedRectTexture(stripeW, stripeH, stripeCR, 0, 0, stripeCR);
+            V2Tex(cardCenter, rotation, new Vector2(0, 0), stripeTex, new Vector2(stripeW, stripeH), stripeColor, vs);
 
             // 3. Title Band (full width)
             float titleBandEndY = 0f;
@@ -485,6 +489,10 @@ namespace Crusaders30XX.ECS.Systems
             string typeLabel = GetTypeLabel(card.Type);
             var typeColor = GetPaletteColor(TypeTextColors, cc, new Color(153, 153, 153));
             float typeScale = CostLabelFontScale * vs;
+
+            // Add letter spacing for type label measurement and drawing
+            float savedTypeSpacing = _bodyFont.Spacing;
+            _bodyFont.Spacing = 2f * vs;
             var typeSize = _bodyFont.MeasureString(typeLabel) * typeScale;
 
             var costs = card.Cost.ToArray();
@@ -493,9 +501,11 @@ namespace Crusaders30XX.ECS.Systems
             if (hasCost)
             {
                 // Left side: "DISCARD" label + diamond pips
-                string costLabel = "Discard";
+                string costLabel = "DISCARD";
                 var costLabelColor = GetPaletteColor(CostLabelColors, cc, new Color(153, 153, 153));
                 float costLabelScale = CostLabelFontScale * vs;
+
+                // Letter spacing already active from type label setup (2f * vs)
                 var costLabelSize = _bodyFont.MeasureString(costLabel) * costLabelScale;
 
                 float leftX = padLeft;
@@ -529,6 +539,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             cursorY += typeSize.Y + RuleMarginTop * vs;
+            _bodyFont.Spacing = savedTypeSpacing;
 
             // Rule Line — full width with padding
             var ruleColor = GetPaletteColor(RuleLineColors, cc, new Color(192, 184, 170));
