@@ -860,6 +860,16 @@ namespace Crusaders30XX.ECS.Components
     /// </summary>
     public class CardVisualSettings : IComponent
     {
+        // V1 defaults
+        public const int V1Width = 250;
+        public const int V1Height = 350;
+        public const int V1CornerRadius = 18;
+
+        // V2 defaults
+        public const int V2Width = 268;
+        public const int V2Height = 377;
+        public const int V2CornerRadius = 10;
+
         public Entity Owner { get; set; }
         public float UIScale { get; set; }
         public int CardWidth { get; set; }

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
 
@@ -32,6 +33,24 @@ namespace Crusaders30XX.ECS.Systems
 
 		public CardVisualSettingsDebugSystem(EntityManager entityManager) : base(entityManager)
 		{
+			EventManager.Subscribe<CardDisplayToggleChangedEvent>(OnCardDisplayToggleChanged);
+		}
+
+		private void OnCardDisplayToggleChanged(CardDisplayToggleChangedEvent evt)
+		{
+			var s = EnsureSettings();
+			if (evt.UseV2)
+			{
+				s.CardWidth = CardVisualSettings.V2Width;
+				s.CardHeight = CardVisualSettings.V2Height;
+				s.CardCornerRadius = CardVisualSettings.V2CornerRadius;
+			}
+			else
+			{
+				s.CardWidth = CardVisualSettings.V1Width;
+				s.CardHeight = CardVisualSettings.V1Height;
+				s.CardCornerRadius = CardVisualSettings.V1CornerRadius;
+			}
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()

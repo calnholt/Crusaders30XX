@@ -217,16 +217,20 @@ namespace Crusaders30XX.ECS.Factories
         public static Entity CreateCardVisualSettings(World world)
         {
             float sU = 1.0f; // starting UI scale
+            bool v2 = CardDisplayToggle.UseV2;
+            int w = v2 ? CardVisualSettings.V2Width : CardVisualSettings.V1Width;
+            int h = v2 ? CardVisualSettings.V2Height : CardVisualSettings.V1Height;
+            int cr = v2 ? CardVisualSettings.V2CornerRadius : CardVisualSettings.V1CornerRadius;
             var entity = world.CreateEntity("CardVisualSettings");
             world.AddComponent(entity, new CardVisualSettings
             {
                 UIScale = sU,
-                CardWidth = (int)Math.Round(250 * sU),
-                CardHeight = (int)Math.Round(350 * sU),
+                CardWidth = (int)Math.Round(w * sU),
+                CardHeight = (int)Math.Round(h * sU),
                 CardOffsetYExtra = (int)Math.Round(25 * sU),
                 CardGap = (int)Math.Round(-20 * sU),
                 CardBorderThickness = (int)Math.Max(0, Math.Round(0 * sU)),
-                CardCornerRadius = (int)Math.Max(2, Math.Round(18 * sU)),
+                CardCornerRadius = (int)Math.Max(2, Math.Round(cr * sU)),
                 HighlightBorderThickness = (int)Math.Max(1, Math.Round(5 * sU)),
                 TextMarginX = (int)Math.Round(16 * sU),
                 TextMarginY = (int)Math.Round(16 * sU),

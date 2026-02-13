@@ -599,4 +599,12 @@ namespace Crusaders30XX.ECS.Events
         public Entity Card { get; set; }
     }
 
+    /// <summary>
+    /// Published when the V1/V2 card display toggle changes.
+    /// </summary>
+    public class CardDisplayToggleChangedEvent
+    {
+        public bool UseV2 { get; set; }
+    }
+
 } 

@@ -23,14 +23,6 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Use V2 Card Display")]
         public bool UseV2 { get => CardDisplayToggle.UseV2; set => CardDisplayToggle.UseV2 = value; }
 
-        // Card Frame
-        [DebugEditable(DisplayName = "V2 Card Width", Step = 1, Min = 100, Max = 400)]
-        public int V2CardWidth { get; set; } = 268;
-        [DebugEditable(DisplayName = "V2 Card Height", Step = 1, Min = 100, Max = 600)]
-        public int V2CardHeight { get; set; } = 377;
-        [DebugEditable(DisplayName = "V2 Corner Radius", Step = 1, Min = 0, Max = 32)]
-        public int V2CornerRadius { get; set; } = 10;
-
         // Stripe
         [DebugEditable(DisplayName = "Stripe Width", Step = 1, Min = 0, Max = 30)]
         public int StripeWidth { get; set; } = 6;
@@ -41,7 +33,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Gutter Width", Step = 1, Min = 10, Max = 120)]
         public int GutterWidth { get; set; } = 55;
         [DebugEditable(DisplayName = "Gutter Top Y", Step = 1, Min = 30, Max = 100)]
-        public int GutterTopY { get; set; } = 50;
+        public int GutterTopY { get; set; } = 63;
 
         // Title Band
         [DebugEditable(DisplayName = "Title Band Pad Top", Step = 1, Min = 0, Max = 30)]
@@ -71,9 +63,9 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Chip Corner Radius", Step = 1, Min = 0, Max = 16)]
         public int ChipCornerRadius { get; set; } = 4;
         [DebugEditable(DisplayName = "Chip Column X", Step = 1, Min = 0, Max = 60)]
-        public int ChipColumnX { get; set; } = 14;
+        public int ChipColumnX { get; set; } = 13;
         [DebugEditable(DisplayName = "Chip Column Top Y", Step = 1, Min = 0, Max = 100)]
-        public int ChipColumnTopY { get; set; } = 62;
+        public int ChipColumnTopY { get; set; } = 71;
         [DebugEditable(DisplayName = "Chip Slot Height", Step = 1, Min = 40, Max = 100)]
         public int ChipSlotHeight { get; set; } = 72;
         [DebugEditable(DisplayName = "Chip Border Thickness", Step = 1, Min = 1, Max = 6)]
@@ -101,15 +93,15 @@ namespace Crusaders30XX.ECS.Systems
 
         // Content Area
         [DebugEditable(DisplayName = "Content Margin Left", Step = 1, Min = 30, Max = 120)]
-        public int ContentMarginLeft { get; set; } = 65;
+        public int ContentMarginLeft { get; set; } = 68;
         [DebugEditable(DisplayName = "Content Pad Top", Step = 1, Min = 0, Max = 40)]
         public int ContentPadTop { get; set; } = 4;
         [DebugEditable(DisplayName = "Content Pad Right", Step = 1, Min = 0, Max = 40)]
-        public int ContentPadRight { get; set; } = 14;
+        public int ContentPadRight { get; set; } = 4;
 
         // Name
         [DebugEditable(DisplayName = "V2 Name Font Scale", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
-        public float V2NameFontScale { get; set; } = 0.10f;
+        public float V2NameFontScale { get; set; } = 0.14f;
 
         // Rule Line
         [DebugEditable(DisplayName = "Rule Height", Step = 1, Min = 1, Max = 6)]
@@ -117,7 +109,7 @@ namespace Crusaders30XX.ECS.Systems
 
         // Description
         [DebugEditable(DisplayName = "V2 Desc Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.5f)]
-        public float V2DescFontScale { get; set; } = 0.12f;
+        public float V2DescFontScale { get; set; } = 0.11f;
 
         // Art
         [DebugEditable(DisplayName = "V2 Art Width", Step = 1, Min = 50, Max = 300)]
@@ -129,9 +121,13 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "V2 Art Offset Bottom", Step = 1, Min = -60, Max = 60)]
         public int V2ArtOffsetBottom { get; set; } = -10;
 
-        // AP Chip Y position
-        [DebugEditable(DisplayName = "AP Chip Y", Step = 1, Min = 200, Max = 340)]
-        public int APChipY { get; set; } = 311;
+        // AP Chip — offset up from card bottom
+        [DebugEditable(DisplayName = "AP Chip Bottom Offset", Step = 1, Min = 30, Max = 180)]
+        public int APChipBottomOffset { get; set; } = 66;
+
+        // Responsive chip scaling
+        [DebugEditable(DisplayName = "Chip Scale With Title")]
+        public bool ChipScaleWithTitle { get; set; } = true;
 
         // Color Palettes
         private static readonly Dictionary<CardData.CardColor, Color> BgColors = new()
@@ -289,8 +285,8 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<CardRenderScaledRotatedEvent>(OnCardRenderScaledRotatedEvent);
         }
 
-        private float CW => V2CardWidth;
-        private float CH => V2CardHeight;
+        private float CW => GetSettings().CardWidth;
+        private float CH => GetSettings().CardHeight;
 
         private void V2Rect(Vector2 cc, float rot, Vector2 off, float w, float h, Color c, float s)
             => DrawRectangleRotatedLocalScaled(cc, rot, off, w, h, c, s, CW, CH);
@@ -333,7 +329,7 @@ namespace Crusaders30XX.ECS.Systems
                 transform.Scale = originalScale;
                 transform.Rotation = originalRotation;
                 transform.Position = originalPosition;
-                if (ui != null) ui.Bounds = GetCardVisualRect(evt.Position, evt.Scale, V2CardWidth, V2CardHeight);
+                if (ui != null) ui.Bounds = GetCardVisualRect(evt.Position, evt.Scale, GetSettings().CardWidth, GetSettings().CardHeight);
             }
             else
             {
@@ -360,7 +356,7 @@ namespace Crusaders30XX.ECS.Systems
                 DrawCardV2(evt.Card, evt.Position);
                 transform.Scale = originalScale;
                 transform.Position = originalPosition;
-                if (ui != null) ui.Bounds = GetCardVisualRect(evt.Position, evt.Scale, V2CardWidth, V2CardHeight);
+                if (ui != null) ui.Bounds = GetCardVisualRect(evt.Position, evt.Scale, GetSettings().CardWidth, GetSettings().CardHeight);
             }
             else
             {
@@ -377,22 +373,23 @@ namespace Crusaders30XX.ECS.Systems
             var transform = entity.GetComponent<Transform>();
             if (cardData == null) return;
 
+            var settings = GetSettings();
             float vs = transform?.Scale.X ?? 1f;
             float rotation = transform?.Rotation ?? 0f;
             CardBase card = cardData.Card;
             bool hasDef = card != null;
             var cc = cardData.Color;
 
-            var rect = GetCardVisualRect(position, vs, V2CardWidth, V2CardHeight);
+            var rect = GetCardVisualRect(position, vs, settings.CardWidth, settings.CardHeight);
             var cardCenter = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
 
-            float sw = V2CardWidth * vs;
-            float sh = V2CardHeight * vs;
+            float sw = settings.CardWidth * vs;
+            float sh = settings.CardHeight * vs;
 
             // 1. Background
-            int bgW = (int)Math.Round(V2CardWidth * vs);
-            int bgH = (int)Math.Round(V2CardHeight * vs);
-            var bgTex = GetRoundedRectTexture(bgW, bgH, (int)(V2CornerRadius * vs));
+            int bgW = (int)Math.Round(settings.CardWidth * vs);
+            int bgH = (int)Math.Round(settings.CardHeight * vs);
+            var bgTex = GetRoundedRectTexture(bgW, bgH, (int)(settings.CardCornerRadius * vs));
             var bgColor = GetPaletteColor(BgColors, cc, new Color(220, 215, 206));
             _spriteBatch.Draw(bgTex,
                 position: cardCenter,
@@ -408,7 +405,7 @@ namespace Crusaders30XX.ECS.Systems
             var stripeColor = GetPaletteColor(StripeColors, cc, new Color(153, 153, 153));
             int stripeW = (int)(StripeWidth * vs);
             int stripeH = (int)sh;
-            int stripeCR = (int)(V2CornerRadius * vs);
+            int stripeCR = (int)(settings.CardCornerRadius * vs);
             var stripeTex = GetPerCornerRoundedRectTexture(stripeW, stripeH, stripeCR, 0, 0, stripeCR);
             V2Tex(cardCenter, rotation, new Vector2(0, 0), stripeTex, new Vector2(stripeW, stripeH), stripeColor, vs);
 
@@ -433,7 +430,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // 6. Description (content area, below rule line, right of chips)
             float contentX = ContentMarginLeft * vs;
-            float contentWidth = (V2CardWidth - ContentMarginLeft - ContentPadRight) * vs;
+            float contentWidth = (settings.CardWidth - ContentMarginLeft - ContentPadRight) * vs;
             float cursorY = titleBandEndY + ContentPadTop * vs;
 
             if (hasDef)
@@ -473,7 +470,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             float padLeft = TitleBandPadLeft * vs;
             float padRight = TitleBandPadRight * vs;
-            float cardWidth = V2CardWidth * vs;
+            float cardWidth = GetSettings().CardWidth * vs;
             float cursorY = TitleBandPadTop * vs;
 
             // Card Name — centered across full card width
@@ -585,6 +582,30 @@ namespace Crusaders30XX.ECS.Systems
         {
             float chipX = ChipColumnX * vs;
 
+            // AP chip Y anchored to card bottom
+            float apLabelY = (GetSettings().CardHeight - APChipBottomOffset) * vs;
+
+            // Responsive chip scaling: derive effective slot height from available space
+            float effectiveChipSlotHeight = ChipSlotHeight;
+            float effectiveChipSize = ChipSize;
+            if (ChipScaleWithTitle)
+            {
+                // Available space between gutter top and AP label
+                float availableHeight = (GetSettings().CardHeight - APChipBottomOffset) - GutterTopY;
+                // AP slot occupies LabelSlabHeight + ChipSize at the bottom of available space
+                float apSlotHeight = LabelSlabHeight + ChipSize;
+                float remainingAboveAp = availableHeight - apSlotHeight;
+                // Each stat slot (BLK/ATK) needs ChipSlotHeight; cap to fit
+                float dynamicMaxSlotHeight = remainingAboveAp / 2f;
+                effectiveChipSlotHeight = Math.Min(ChipSlotHeight, dynamicMaxSlotHeight);
+                // Scale chip body proportionally if slot shrunk
+                if (effectiveChipSlotHeight < ChipSlotHeight)
+                {
+                    float ratio = effectiveChipSlotHeight / ChipSlotHeight;
+                    effectiveChipSize = Math.Min(ChipSize, ChipSize * ratio);
+                }
+            }
+
             // BLK chip (slot 0)
             int blockValue = BlockValueService.GetTotalBlockValue(entity);
             int printedBlock = card.Block;
@@ -599,12 +620,12 @@ namespace Crusaders30XX.ECS.Systems
                 float chipBodyY = chipY + LabelSlabHeight * vs;
 
                 // Chip
-                DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, blockValue.ToString(), ChipVariant.BLK, true, hasDelta);
+                DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, blockValue.ToString(), ChipVariant.BLK, true, hasDelta, effectiveChipSize);
 
                 // Delta slab
                 if (hasDelta)
                 {
-                    float slabY = chipBodyY + ChipSize * vs;
+                    float slabY = chipBodyY + effectiveChipSize * vs;
                     DrawDeltaSlab(cardCenter, rotation, vs, cc, chipX, slabY, blockDelta);
                 }
             }
@@ -614,7 +635,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 int damage = GetEffectiveDamage(entity, card);
                 int damageDelta = damage - card.Damage;
-                float chipY = (ChipColumnTopY + ChipSlotHeight) * vs;
+                float chipY = (ChipColumnTopY + effectiveChipSlotHeight) * vs;
                 bool hasDelta = damageDelta != 0;
 
                 // Label slab
@@ -622,18 +643,17 @@ namespace Crusaders30XX.ECS.Systems
                 float chipBodyY = chipY + LabelSlabHeight * vs;
 
                 // Chip
-                DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, damage.ToString(), ChipVariant.ATK, true, hasDelta);
+                DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, damage.ToString(), ChipVariant.ATK, true, hasDelta, effectiveChipSize);
 
                 // Delta slab
                 if (hasDelta)
                 {
-                    float slabY = chipBodyY + ChipSize * vs;
+                    float slabY = chipBodyY + effectiveChipSize * vs;
                     DrawDeltaSlab(cardCenter, rotation, vs, cc, chipX, slabY, damageDelta);
                 }
             }
 
             // AP / FREE chip (bottom slot)
-            float apLabelY = APChipY * vs;
             bool isFree = card.IsFreeAction || card.Type == CardType.Block;
 
             if (isFree)
@@ -708,10 +728,10 @@ namespace Crusaders30XX.ECS.Systems
         /// Draws a stat chip — value-only, no label inside.
         /// </summary>
         private void DrawChip(Vector2 cardCenter, float rotation, float vs, CardData.CardColor cc,
-            float x, float y, string value, ChipVariant variant, bool hasLabelAbove, bool hasDeltaBelow)
+            float x, float y, string value, ChipVariant variant, bool hasLabelAbove, bool hasDeltaBelow, float chipSizeOverride = -1)
         {
             float chipW = ChipWidth * vs;
-            float chipH = ChipSize * vs;
+            float chipH = (chipSizeOverride > 0 ? chipSizeOverride : ChipSize) * vs;
             int cr = (int)(ChipCornerRadius * vs);
 
             // Corner radii: flat top if label above, flat bottom if delta below

@@ -66,11 +66,18 @@ namespace Crusaders30XX.ECS.Systems
         
 		// Root entity removed; each card owns its transform base and parallax
 
-		public HandDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice) 
+		public HandDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
+            EventManager.Subscribe<CardDisplayToggleChangedEvent>(OnCardDisplayToggleChanged);
         }
+
+		private void OnCardDisplayToggleChanged(CardDisplayToggleChangedEvent evt)
+		{
+			_baselineCaptured = false;
+			_lastAppliedScale = -1f;
+		}
 
 		// Baseline snapshot of CardVisualSettings captured once to compute scaled values from
 		private bool _baselineCaptured;
