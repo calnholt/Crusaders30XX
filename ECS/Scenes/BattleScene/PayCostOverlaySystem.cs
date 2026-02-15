@@ -462,8 +462,6 @@ namespace Crusaders30XX.ECS.Systems
             // Hard guard: pledged cards cannot be used to pay costs
             if (evt.Card.HasComponent<Pledge>()) return;
 
-            // Hard guard: sealed cards cannot be used to pay costs
-            if (evt.Card.HasComponent<Sealed>()) return;
 
             var alreadySelected = evt.Card.GetComponent<SelectedForPayment>() != null || state.SelectedCards.Contains(evt.Card);
 
@@ -539,6 +537,23 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         foreach (var c in state.SelectedCards.ToList())
                         {
+                            // If sealed, apply HP cost and remove seal before discarding
+                            var sealedComp = c.GetComponent<Sealed>();
+                            if (sealedComp != null)
+                            {
+                                var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                                EventManager.Publish(new ModifyHpRequestEvent
+                                {
+                                    Source = player,
+                                    Target = player,
+                                    Delta = -sealedComp.Seals,
+                                    DamageType = ModifyTypeEnum.Effect,
+                                    IgnoresAegis = true
+                                });
+                                EntityManager.RemoveComponent<Sealed>(c);
+                                Console.WriteLine($"[PayCostOverlay] Sealed card used for cost - took {sealedComp.Seals} damage");
+                            }
+
                             EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PayCost" });
                             var card = c.GetComponent<CardData>().Card;
                             if (card != null && card.OnDiscardedForCost != null)
@@ -883,8 +898,7 @@ namespace Crusaders30XX.ECS.Systems
             catch { }
             // Disallow using pledged cards to pay costs
             if (card.HasComponent<Pledge>()) return false;
-            // Disallow using sealed cards to pay costs
-            if (card.HasComponent<Sealed>()) return false;
+
             // Card is viable if it can satisfy at least one remaining requirement
             foreach (var c in remainingCosts)
             {

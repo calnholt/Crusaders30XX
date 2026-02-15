@@ -426,6 +426,15 @@
       },
       "Events": [
         {
+          "id": "berserker",
+          "type": "Enemy"
+        },
+        {
+          "id": "ogre",
+          "type": "Enemy",
+          "difficulty": "Hard"
+        },
+        {
           "id": "shadow",
           "type": "Enemy"
         }
@@ -450,6 +459,15 @@
         {
           "id": "medusa",
           "type": "Enemy"
+        },
+        {
+          "id": "skeleton",
+          "type": "Enemy",
+          "difficulty": "Hard"
+        },
+        {     
+          "id": "medusa",
+          "type": "Enemy"
         }
       ],
       "Background": "gothic-background-alley.png"
@@ -457,7 +475,7 @@
     {   
       "Id": "desert_21",
       "WorldPosition": [
-        3000,
+        2600,
         1560
       ],
       "RevealRadius": 600,
@@ -470,29 +488,17 @@
       },
       "Events": [
         {
-          "id": "wyvern",
-          "type": "Enemy"
-        }
-      ],
-      "Background": "gothic-background-alley.png"
-    },
-    {     
-      "Id": "desert_22",
-      "WorldPosition": [
-        2600,
-        1560
-      ],
-      "RevealRadius": 600,
-      "UnrevealedRadius": 150,
-      "Type": "Quest",
-      "Name": "Blood Blood Blood",
-      "Difficulty": 4,
-      "Reward": {
-        "Gold": 2
-      },
-      "Events": [
+          "id": "skeleton",
+          "type": "Enemy",
+          "difficulty": "Medium"
+        },
         {
-          "id": "blood_martyr",
+          "id": "skeletal_archer",
+          "type": "Enemy",
+          "difficulty": "Medium"
+        },
+        {
+          "id": "wyvern",
           "type": "Enemy"
         }
       ],
@@ -501,8 +507,8 @@
     {      
       "Id": "desert_23",
       "WorldPosition": [
-        3500,
-        1260
+        3000,
+        1560
       ],
       "RevealRadius": 600,
       "UnrevealedRadius": 150,

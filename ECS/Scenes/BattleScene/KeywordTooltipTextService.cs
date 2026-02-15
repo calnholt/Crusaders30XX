@@ -50,7 +50,7 @@ namespace Crusaders30XX.ECS.Systems
 			i = lowerText.IndexOf("silenced");
 			if (i >= 0) matches.Add((i, "X Silenced - You cannot play pledged cards. Remove 1 silenced at the end of your action phase."));
 			i = lowerText.IndexOf("seal");
-			if (i >= 0) matches.Add((i, "Sealed - Sealed cards cost HP equal to remaining seals. Cannot be discarded to pay for costs. Seals decrease: -1 per block, -1 per card played. At 0 seals, card is freed."));
+			if (i >= 0) matches.Add((i, "Sealed - Sealed cards cost HP equal to remaining seals when played or discarded to pay for costs. Seals decrease: -1 per block, -1 per card played. At 0 seals, card is freed."));
 			matches.Sort((a, b) => a.Index.CompareTo(b.Index));
 			var parts = new string[matches.Count];
 			for (int j = 0; j < matches.Count; j++) parts[j] = matches[j].Tooltip;

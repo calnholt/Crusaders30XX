@@ -50,7 +50,6 @@ namespace Crusaders30XX.ECS.Systems
 		private void ApplySealToHand(int amount)
 		{
 			var cardsToSeal = GetComponentHelper.GetHandOfCards(EntityManager)
-				.Where(c => c.GetComponent<Sealed>() == null)
 				.Where(c => c.GetComponent<Pledge>() == null) // Pledged cards are immune
 				.OrderBy(x => new Random().Next())
 				.Take(1)
@@ -58,7 +57,15 @@ namespace Crusaders30XX.ECS.Systems
 
 			foreach (var card in cardsToSeal)
 			{
-				EntityManager.AddComponent(card, new Sealed { Owner = card, Seals = amount });
+				var sealedComp = card.GetComponent<Sealed>();
+				if (sealedComp == null)
+				{
+					EntityManager.AddComponent(card, new Sealed { Owner = card, Seals = amount });
+				}
+				else
+				{
+					sealedComp.Seals += amount;
+				}
 				var cardData = card.GetComponent<CardData>();
 				Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been sealed!");
 			}
@@ -72,7 +79,6 @@ namespace Crusaders30XX.ECS.Systems
 			if (deck?.DrawPile == null) return;
 
 			var cardsToSeal = deck.DrawPile
-				.Where(c => c.GetComponent<Sealed>() == null)
 				.Where(c => c.GetComponent<Pledge>() == null) // Pledged cards are immune
 				.Where(c => (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false)
 				.Take(1) // Take from top of draw pile
@@ -80,7 +86,15 @@ namespace Crusaders30XX.ECS.Systems
 
 			foreach (var card in cardsToSeal)
 			{
-				EntityManager.AddComponent(card, new Sealed { Owner = card, Seals = amount });
+				var sealedComp = card.GetComponent<Sealed>();
+				if (sealedComp == null)
+				{
+					EntityManager.AddComponent(card, new Sealed { Owner = card, Seals = amount });
+				}
+				else
+				{
+					sealedComp.Seals += amount;
+				}
 				var cardData = card.GetComponent<CardData>();
 				Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been sealed (from draw pile)!");
 			}
