@@ -402,12 +402,12 @@ namespace Crusaders30XX.ECS.Systems
                 layerDepth: 0f);
 
             // 2. Stripe (full height, rounded on left to match card corners)
-            var stripeColor = GetPaletteColor(StripeColors, cc, new Color(153, 153, 153));
-            int stripeW = (int)(StripeWidth * vs);
-            int stripeH = (int)sh;
-            int stripeCR = (int)(settings.CardCornerRadius * vs);
-            var stripeTex = GetPerCornerRoundedRectTexture(stripeW, stripeH, stripeCR, 0, 0, stripeCR);
-            V2Tex(cardCenter, rotation, new Vector2(0, 0), stripeTex, new Vector2(stripeW, stripeH), stripeColor, vs);
+            // var stripeColor = GetPaletteColor(StripeColors, cc, new Color(153, 153, 153));
+            // int stripeW = (int)(StripeWidth * vs);
+            // int stripeH = (int)sh;
+            // int stripeCR = (int)(settings.CardCornerRadius * vs);
+            // var stripeTex = GetPerCornerRoundedRectTexture(stripeW, stripeH, stripeCR, 0, 0, stripeCR);
+            // V2Tex(cardCenter, rotation, new Vector2(0, 0), stripeTex, new Vector2(stripeW, stripeH), stripeColor, vs);
 
             // 3. Title Band (full width)
             float titleBandEndY = 0f;

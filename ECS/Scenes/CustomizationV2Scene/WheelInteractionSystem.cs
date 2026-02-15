@@ -41,10 +41,9 @@ namespace Crusaders30XX.ECS.Systems
 
 			var kb = Keyboard.GetState();
 
-			// Click-to-select segment
-			if (_cursorEvent != null && _cursorEvent.IsAPressedEdge)
+			// Hover-to-select segment
 			{
-				bool clickedSegment = false;
+				bool anySegmentHovered = false;
 				var segments = EntityManager.GetEntitiesWithComponent<WheelSegment>();
 				foreach (var seg in segments)
 				{
@@ -52,38 +51,50 @@ namespace Crusaders30XX.ECS.Systems
 					var ws = seg.GetComponent<WheelSegment>();
 					if (ui != null && ws != null && ui.IsHovered)
 					{
-						if (loadout.HoveredSegmentIndex == ws.SegmentIndex)
-						{
-							// Already selected - equip browsed item
-							EventManager.Publish(new EquipBrowsedItemRequested { SlotType = ws.SlotType });
-						}
-						else
+						anySegmentHovered = true;
+						if (loadout.HoveredSegmentIndex != ws.SegmentIndex)
 						{
 							loadout.HoveredSegmentIndex = ws.SegmentIndex;
 							EventManager.Publish(new WheelSegmentSelected { SegmentIndex = ws.SegmentIndex, SlotType = ws.SlotType });
 						}
-						clickedSegment = true;
 						break;
 					}
 				}
 
-				// Click on center hub = equip
-				if (!clickedSegment && loadout.HoveredSegmentIndex >= 0)
+				// If no segment hovered and cursor isn't over the center hub, deselect
+				if (!anySegmentHovered)
 				{
 					var hub = EntityManager.GetEntitiesWithComponent<CenterHub>().FirstOrDefault();
 					var hubUi = hub?.GetComponent<UIElement>();
-					if (hubUi != null && hubUi.IsHovered)
+					bool overHub = hubUi != null && hubUi.IsHovered;
+					if (!overHub && loadout.HoveredSegmentIndex >= 0)
 					{
-						var slot = WheelLayoutSystem.GetSlotType(loadout.HoveredSegmentIndex);
-						EventManager.Publish(new EquipBrowsedItemRequested { SlotType = slot });
-						clickedSegment = true;
+						loadout.HoveredSegmentIndex = -1;
+					}
+				}
+			}
+
+			// Click on hovered segment or center hub = equip browsed item
+			if (_cursorEvent != null && _cursorEvent.IsAPressedEdge && loadout.HoveredSegmentIndex >= 0)
+			{
+				var segments = EntityManager.GetEntitiesWithComponent<WheelSegment>();
+				foreach (var seg in segments)
+				{
+					var ui = seg.GetComponent<UIElement>();
+					var ws = seg.GetComponent<WheelSegment>();
+					if (ui != null && ws != null && ui.IsHovered)
+					{
+						EventManager.Publish(new EquipBrowsedItemRequested { SlotType = ws.SlotType });
+						break;
 					}
 				}
 
-				// Click outside = deselect
-				if (!clickedSegment && loadout.HoveredSegmentIndex >= 0)
+				var hub = EntityManager.GetEntitiesWithComponent<CenterHub>().FirstOrDefault();
+				var hubUi = hub?.GetComponent<UIElement>();
+				if (hubUi != null && hubUi.IsHovered)
 				{
-					loadout.HoveredSegmentIndex = -1;
+					var slot = WheelLayoutSystem.GetSlotType(loadout.HoveredSegmentIndex);
+					EventManager.Publish(new EquipBrowsedItemRequested { SlotType = slot });
 				}
 			}
 

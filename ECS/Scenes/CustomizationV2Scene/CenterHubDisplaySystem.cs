@@ -26,7 +26,7 @@ namespace Crusaders30XX.ECS.Systems
 		private float _idlePulse;
 
 		[DebugEditable(DisplayName = "Hub Radius", Step = 4, Min = 60, Max = 600)]
-		public int HubRadius { get; set; } = 300;
+		public int HubRadius { get; set; } = 230;
 
 		[DebugEditable(DisplayName = "Hub BG R", Step = 1, Min = 0, Max = 255)]
 		public int HubBgR { get; set; } = 26;

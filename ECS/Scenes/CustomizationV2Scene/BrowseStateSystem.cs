@@ -5,6 +5,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Temperance;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Microsoft.Xna.Framework;
@@ -84,6 +85,7 @@ namespace Crusaders30XX.ECS.Systems
 		private List<string> BuildItemListForSlot(WheelSlotType slot)
 		{
 			var items = new List<string>();
+			var collection = SaveCache.GetCollectionSet();
 			switch (slot)
 			{
 				case WheelSlotType.Weapon:
@@ -91,6 +93,7 @@ namespace Crusaders30XX.ECS.Systems
 					var cards = CardFactory.GetAllCards().Values
 						.Where(c => c.IsWeapon)
 						.Select(c => c.CardId)
+						.Where(id => collection.Contains(id))
 						.OrderBy(id => id)
 						.ToList();
 					items.AddRange(cards);
@@ -111,6 +114,7 @@ namespace Crusaders30XX.ECS.Systems
 					var equipment = EquipmentFactory.GetAllEquipment().Values
 						.Where(e => e.Slot == equipSlot)
 						.Select(e => e.Id)
+						.Where(id => collection.Contains(id))
 						.OrderBy(id => id)
 						.ToList();
 					// Add empty option at start
@@ -121,6 +125,7 @@ namespace Crusaders30XX.ECS.Systems
 				case WheelSlotType.Temperance:
 					var tempAbilities = TemperanceAbilityDefinitionCache.GetAll()
 						.Select(kv => kv.Key)
+						.Where(id => collection.Contains(id))
 						.OrderBy(id => id)
 						.ToList();
 					items.Add("");
@@ -132,6 +137,7 @@ namespace Crusaders30XX.ECS.Systems
 				case WheelSlotType.Medal3:
 					var medals = MedalFactory.GetAllMedals()
 						.Select(kv => kv.Key)
+						.Where(id => collection.Contains(id))
 						.OrderBy(id => id)
 						.ToList();
 					items.Add("");

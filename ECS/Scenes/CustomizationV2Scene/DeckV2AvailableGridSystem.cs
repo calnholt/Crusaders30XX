@@ -32,10 +32,10 @@ namespace Crusaders30XX.ECS.Systems
 		private CardVisualSettings _cachedCardVisualSettings;
 
 		[DebugEditable(DisplayName = "Columns", Step = 1, Min = 1, Max = 8)]
-		public int Columns { get; set; } = 6;
+		public int Columns { get; set; } = 5;
 
 		[DebugEditable(DisplayName = "Card Scale", Step = 0.01f, Min = 0.2f, Max = 1.0f)]
-		public float CardScale { get; set; } = 0.86f;
+		public float CardScale { get; set; } = 1.00f;
 
 		[DebugEditable(DisplayName = "Grid Top Margin", Step = 2, Min = 0, Max = 200)]
 		public int GridTopMargin { get; set; } = 48;
