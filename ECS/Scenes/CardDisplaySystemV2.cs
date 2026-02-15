@@ -616,7 +616,7 @@ namespace Crusaders30XX.ECS.Systems
                 bool hasDelta = blockDelta != 0;
 
                 // Label slab
-                DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, chipY, "BLK", ChipVariant.BLK);
+                DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, chipY, "BLOCK", ChipVariant.BLK);
                 float chipBodyY = chipY + LabelSlabHeight * vs;
 
                 // Chip
@@ -639,7 +639,7 @@ namespace Crusaders30XX.ECS.Systems
                 bool hasDelta = damageDelta != 0;
 
                 // Label slab
-                DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, chipY, "ATK", ChipVariant.ATK);
+                DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, chipY, "DAMAGE", ChipVariant.ATK);
                 float chipBodyY = chipY + LabelSlabHeight * vs;
 
                 // Chip

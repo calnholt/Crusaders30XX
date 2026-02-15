@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -65,13 +66,34 @@ namespace Crusaders30XX.ECS.Systems
 		public int IdleDotRadius { get; set; } = 6;
 
 		[DebugEditable(DisplayName = "Tooltip Label Scale", Step = 0.01f, Min = 0.03f, Max = 0.2f)]
-		public float TooltipLabelScale { get; set; } = 0.08f;
+		public float TooltipLabelScale { get; set; } = 0.10f;
 
 		[DebugEditable(DisplayName = "Tooltip Name Scale", Step = 0.01f, Min = 0.05f, Max = 0.3f)]
-		public float TooltipNameScale { get; set; } = 0.14f;
+		public float TooltipNameScale { get; set; } = 0.18f;
 
 		[DebugEditable(DisplayName = "Tooltip Desc Scale", Step = 0.01f, Min = 0.03f, Max = 0.2f)]
-		public float TooltipDescScale { get; set; } = 0.09f;
+		public float TooltipDescScale { get; set; } = 0.10f;
+
+		[DebugEditable(DisplayName = "Stat Line Scale", Step = 0.01f, Min = 0.03f, Max = 0.2f)]
+		public float StatLineScale { get; set; } = 0.12f;
+
+		[DebugEditable(DisplayName = "Equipped Badge Scale", Step = 0.01f, Min = 0.03f, Max = 0.15f)]
+		public float EquippedBadgeScale { get; set; } = 0.06f;
+
+		[DebugEditable(DisplayName = "Content Top Offset", Step = 4, Min = 20, Max = 120)]
+		public int ContentTopOffset { get; set; } = 50;
+
+		[DebugEditable(DisplayName = "Section Gap", Step = 1, Min = 2, Max = 20)]
+		public int SectionGap { get; set; } = 8;
+
+		[DebugEditable(DisplayName = "Desc Max Width Pct", Step = 0.05f, Min = 0.5f, Max = 1.0f)]
+		public float DescMaxWidthPct { get; set; } = 0.85f;
+
+		[DebugEditable(DisplayName = "Stat Pip Radius", Step = 1, Min = 2, Max = 12)]
+		public int StatPipRadius { get; set; } = 5;
+
+		[DebugEditable(DisplayName = "Stat Pip Gap", Step = 1, Min = 1, Max = 10)]
+		public int StatPipGap { get; set; } = 4;
 
 		public WheelLayoutSystem LayoutSystem { get; set; }
 		public BrowseStateSystem BrowseSystem { get; set; }
@@ -145,8 +167,6 @@ namespace Crusaders30XX.ECS.Systems
 			// Hub border
 			var borderCircle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, HubRadius + HubBorderWidth);
 			int bd = (HubRadius + HubBorderWidth) * 2;
-			// Draw border behind hub bg by re-drawing at a larger size with border color
-			// Actually draw ring: outer then punch inner
 			var borderColor = new Color(HubBorderR, HubBorderG, HubBorderB);
 			_spriteBatch.Draw(borderCircle, new Rectangle((int)(center.X - HubRadius - HubBorderWidth), (int)(center.Y - HubRadius - HubBorderWidth), bd, bd), borderColor);
 			_spriteBatch.Draw(hubBg, new Rectangle((int)(center.X - HubRadius), (int)(center.Y - HubRadius), d, d), new Color(HubBgR, HubBgG, HubBgB));
@@ -196,59 +216,177 @@ namespace Crusaders30XX.ECS.Systems
 			string itemName = GetItemName(itemId);
 			string itemDesc = GetItemDescription(itemId);
 			bool isEquipped = IsCurrentlyEquipped(slot, itemId, loadout);
-			int browseIdx = BrowseSystem?.GetBrowseIndex() ?? 0;
-			int browseCount = BrowseSystem?.GetBrowseCount() ?? 0;
+			var stats = GetItemStats(itemId);
 
-			float y = center.Y - HubRadius + 30;
+			float y = center.Y - HubRadius + ContentTopOffset;
 
-			// Slot label
-			var labelSize = _headingFont.MeasureString(slotLabel) * TooltipLabelScale;
-			float lx = center.X - labelSize.X / 2f;
-			_spriteBatch.DrawString(_headingFont, slotLabel, new Vector2(lx, y), new Color(196, 30, 58), 0f, Vector2.Zero, TooltipLabelScale, SpriteEffects.None, 0f);
-			y += labelSize.Y + 6;
+			// Slot label (red, uppercase)
+			y = DrawCenteredText(_headingFont, slotLabel, center.X, y, TooltipLabelScale, new Color(196, 30, 58));
+			y += SectionGap;
 
-			// Item name
+			// Item name (white, large)
 			if (!string.IsNullOrEmpty(itemName))
 			{
-				var nameSize = _headingFont.MeasureString(itemName) * TooltipNameScale;
-				float nx = center.X - nameSize.X / 2f;
-				_spriteBatch.DrawString(_headingFont, itemName, new Vector2(nx, y), Color.White, 0f, Vector2.Zero, TooltipNameScale, SpriteEffects.None, 0f);
-				y += nameSize.Y + 4;
+				y = DrawCenteredText(_headingFont, itemName, center.X, y, TooltipNameScale, Color.White);
+				y += SectionGap / 2;
 			}
 
-			// Equipped badge
+			// Stat line (red, type-specific)
+			if (stats.HasStats)
+			{
+				y = DrawStatLine(center.X, y, stats);
+				y += SectionGap;
+			}
+
+			// Description (gray, word-wrapped within hub circle)
+			if (!string.IsNullOrEmpty(itemDesc))
+			{
+				int maxWidth = (int)(HubRadius * 2 * DescMaxWidthPct);
+				var wrappedLines = TextUtils.WrapText(_contentFont, itemDesc, TooltipDescScale, maxWidth);
+				var descColor = new Color(136, 136, 136);
+				foreach (var line in wrappedLines)
+				{
+					if (string.IsNullOrEmpty(line)) { y += SectionGap; continue; }
+					y = DrawCenteredText(_contentFont, line, center.X, y, TooltipDescScale, descColor);
+				}
+				y += SectionGap;
+			}
+
+			// Equipped badge (red)
 			if (isEquipped)
 			{
 				string badge = "EQUIPPED";
-				var badgeSize = _headingFont.MeasureString(badge) * 0.06f;
-				float bx = center.X - badgeSize.X / 2f;
-				_spriteBatch.DrawString(_headingFont, badge, new Vector2(bx, y), new Color(196, 30, 58), 0f, Vector2.Zero, 0.06f, SpriteEffects.None, 0f);
-				y += badgeSize.Y + 4;
-			}
-
-			// Description
-			if (!string.IsNullOrEmpty(itemDesc))
-			{
-				var descSize = _contentFont.MeasureString(itemDesc) * TooltipDescScale;
-				float dx = center.X - descSize.X / 2f;
-				// Clamp to hub bounds
-				if (descSize.X > HubRadius * 1.6f)
-				{
-					dx = center.X - HubRadius * 0.8f;
-				}
-				_spriteBatch.DrawString(_contentFont, itemDesc, new Vector2(dx, y), new Color(136, 136, 136), 0f, Vector2.Zero, TooltipDescScale, SpriteEffects.None, 0f);
-				y += descSize.Y + 8;
-			}
-
-			// Browse counter
-			if (browseCount > 0)
-			{
-				string counter = $"{browseIdx + 1} / {browseCount}";
-				var counterSize = _headingFont.MeasureString(counter) * 0.10f;
-				float cx = center.X - counterSize.X / 2f;
-				_spriteBatch.DrawString(_headingFont, counter, new Vector2(cx, y), new Color(102, 102, 102), 0f, Vector2.Zero, 0.10f, SpriteEffects.None, 0f);
+				y = DrawCenteredText(_headingFont, badge, center.X, y, EquippedBadgeScale, new Color(196, 30, 58));
 			}
 		}
+
+		private float DrawCenteredText(SpriteFont font, string text, float centerX, float y, float scale, Color color)
+		{
+			var size = font.MeasureString(text) * scale;
+			float x = centerX - size.X / 2f;
+			_spriteBatch.DrawString(font, text, new Vector2(x, y), color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+			return y + size.Y;
+		}
+
+		private struct ItemStats
+		{
+			public bool HasStats;
+			public string Label;
+			public int Value;
+			public int SecondaryValue;
+			public bool HasSecondary;
+			public List<string> CostPips;
+			public WheelSlotType SlotType;
+		}
+
+		private ItemStats GetItemStats(string id)
+		{
+			if (string.IsNullOrEmpty(id)) return default;
+
+			// Weapon: show DMG + cost pips
+			var card = Factories.CardFactory.Create(id);
+			if (card != null && card.IsWeapon)
+			{
+				return new ItemStats
+				{
+					HasStats = true,
+					Label = "DMG",
+					Value = card.Damage,
+					CostPips = card.Cost,
+					SlotType = WheelSlotType.Weapon
+				};
+			}
+
+			// Equipment: show BLK + uses
+			var eq = Factories.EquipmentFactory.Create(id);
+			if (eq != null)
+			{
+				return new ItemStats
+				{
+					HasStats = true,
+					Label = "BLK",
+					Value = eq.Block,
+					SecondaryValue = eq.Uses,
+					HasSecondary = true,
+					SlotType = WheelSlotType.Head
+				};
+			}
+
+			// Temperance: show threshold
+			if (Data.Temperance.TemperanceAbilityDefinitionCache.TryGet(id, out var temp) && temp != null)
+			{
+				return new ItemStats
+				{
+					HasStats = true,
+					Label = "Threshold",
+					Value = temp.threshold,
+					SlotType = WheelSlotType.Temperance
+				};
+			}
+
+			return default;
+		}
+
+		private float DrawStatLine(float centerX, float y, ItemStats stats)
+		{
+			var statColor = new Color(196, 30, 58);
+			string statText = $"{stats.Label}: {stats.Value}";
+
+			// For equipment, append uses
+			if (stats.HasSecondary && stats.SecondaryValue > 0)
+			{
+				statText += $"  x{stats.SecondaryValue}";
+			}
+
+			var textSize = _headingFont.MeasureString(statText) * StatLineScale;
+
+			// Calculate total width including cost pips for weapons
+			float totalWidth = textSize.X;
+			if (stats.CostPips != null && stats.CostPips.Count > 0)
+			{
+				float pipWidth = stats.CostPips.Count * (StatPipRadius * 2 + StatPipGap) - StatPipGap;
+				totalWidth += SectionGap + pipWidth;
+			}
+
+			float startX = centerX - totalWidth / 2f;
+
+			// Draw stat text
+			_spriteBatch.DrawString(_headingFont, statText, new Vector2(startX, y), statColor, 0f, Vector2.Zero, StatLineScale, SpriteEffects.None, 0f);
+
+			// Draw cost pips for weapons
+			if (stats.CostPips != null && stats.CostPips.Count > 0)
+			{
+				float pipX = startX + textSize.X + SectionGap;
+				float pipCenterY = y + textSize.Y / 2f;
+
+				foreach (var cost in stats.CostPips)
+				{
+					bool isAny = string.Equals(cost?.Trim(), "any", StringComparison.OrdinalIgnoreCase);
+					if (isAny)
+					{
+						var anyTex = PrimitiveTextureFactory.GetAnyCostPipTexture(_graphicsDevice, StatPipRadius);
+						_spriteBatch.Draw(anyTex, new Rectangle((int)pipX, (int)(pipCenterY - StatPipRadius), StatPipRadius * 2, StatPipRadius * 2), Color.White);
+					}
+					else
+					{
+						var pipColor = GetCostPipColor(cost);
+						var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, StatPipRadius);
+						_spriteBatch.Draw(circle, new Rectangle((int)pipX, (int)(pipCenterY - StatPipRadius), StatPipRadius * 2, StatPipRadius * 2), pipColor);
+					}
+					pipX += StatPipRadius * 2 + StatPipGap;
+				}
+			}
+
+			return y + textSize.Y;
+		}
+
+		private static Color GetCostPipColor(string cost) => (cost?.ToLowerInvariant()) switch
+		{
+			"white" => Color.White,
+			"red" => Color.DarkRed,
+			"black" => Color.Black,
+			_ => new Color(224, 224, 224)
+		};
 
 		private string GetItemName(string id)
 		{
@@ -273,6 +411,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (medal != null) return medal.Text ?? "";
 			if (Data.Temperance.TemperanceAbilityDefinitionCache.TryGet(id, out var temp) && temp != null)
 				return temp.text ?? "";
+			var card = Factories.CardFactory.Create(id);
+			if (card != null) return card.Text ?? "";
 			return "";
 		}
 

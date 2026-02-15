@@ -17,28 +17,42 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _headingFont = FontSingleton.TitleFont;
-		private Texture2D _pixel;
 
-		[DebugEditable(DisplayName = "Arrow Size", Step = 2, Min = 10, Max = 40)]
-		public int ArrowSize { get; set; } = 20;
+		[DebugEditable(DisplayName = "Button Radius", Step = 1, Min = 8, Max = 30)]
+		public int ButtonRadius { get; set; } = 13;
+
+		[DebugEditable(DisplayName = "Button Border Width", Step = 1, Min = 1, Max = 4)]
+		public int ButtonBorderWidth { get; set; } = 1;
+
+		[DebugEditable(DisplayName = "Button BG R", Step = 1, Min = 0, Max = 255)]
+		public int ButtonBgR { get; set; } = 10;
+
+		[DebugEditable(DisplayName = "Button BG G", Step = 1, Min = 0, Max = 255)]
+		public int ButtonBgG { get; set; } = 10;
+
+		[DebugEditable(DisplayName = "Button BG B", Step = 1, Min = 0, Max = 255)]
+		public int ButtonBgB { get; set; } = 10;
+
+		[DebugEditable(DisplayName = "Button Border R", Step = 1, Min = 0, Max = 255)]
+		public int ButtonBorderR { get; set; } = 51;
+
+		[DebugEditable(DisplayName = "Button Border G", Step = 1, Min = 0, Max = 255)]
+		public int ButtonBorderG { get; set; } = 51;
+
+		[DebugEditable(DisplayName = "Button Border B", Step = 1, Min = 0, Max = 255)]
+		public int ButtonBorderB { get; set; } = 51;
+
+		[DebugEditable(DisplayName = "Arrow Text Scale", Step = 0.01f, Min = 0.03f, Max = 0.2f)]
+		public float ArrowTextScale { get; set; } = 0.10f;
+
+		[DebugEditable(DisplayName = "Counter Scale", Step = 0.01f, Min = 0.03f, Max = 0.15f)]
+		public float CounterScale { get; set; } = 0.09f;
 
 		[DebugEditable(DisplayName = "Arrow Offset X", Step = 4, Min = 40, Max = 200)]
 		public int ArrowOffsetX { get; set; } = 120;
 
 		[DebugEditable(DisplayName = "Arrow Offset Y", Step = 4, Min = -60, Max = 60)]
 		public int ArrowOffsetY { get; set; } = 40;
-
-		[DebugEditable(DisplayName = "Arrow Alpha", Step = 5, Min = 0, Max = 255)]
-		public int ArrowAlpha { get; set; } = 180;
-
-		[DebugEditable(DisplayName = "Arrow R", Step = 1, Min = 0, Max = 255)]
-		public int ArrowR { get; set; } = 196;
-
-		[DebugEditable(DisplayName = "Arrow G", Step = 1, Min = 0, Max = 255)]
-		public int ArrowG { get; set; } = 30;
-
-		[DebugEditable(DisplayName = "Arrow B", Step = 1, Min = 0, Max = 255)]
-		public int ArrowB { get; set; } = 58;
 
 		[DebugEditable(DisplayName = "Key Hint Scale", Step = 0.01f, Min = 0.03f, Max = 0.15f)]
 		public float KeyHintScale { get; set; } = 0.07f;
@@ -76,32 +90,50 @@ namespace Crusaders30XX.ECS.Systems
 			if (LayoutSystem == null || BrowseSystem == null) return;
 			if (BrowseSystem.GetBrowseCount() <= 1) return;
 
-			if (_pixel == null)
-			{
-				_pixel = new Texture2D(_graphicsDevice, 1, 1);
-				_pixel.SetData(new[] { Color.White });
-			}
-
 			var center = LayoutSystem.GetWheelCenter();
-			var arrowColor = new Color(ArrowR, ArrowG, ArrowB, ArrowAlpha);
+			float btnY = center.Y + ArrowOffsetY;
 
-			// Left arrow
-			DrawArrow(center.X - ArrowOffsetX, center.Y + ArrowOffsetY, -1, arrowColor);
+			// Left arrow button
+			DrawCircleButton(center.X - ArrowOffsetX, btnY, "<", Color.White);
 
-			// Right arrow
-			DrawArrow(center.X + ArrowOffsetX, center.Y + ArrowOffsetY, 1, arrowColor);
+			// Right arrow button
+			DrawCircleButton(center.X + ArrowOffsetX, btnY, ">", Color.White);
+
+			// Browse counter between arrows
+			int browseIdx = BrowseSystem.GetBrowseIndex();
+			int browseCount = BrowseSystem.GetBrowseCount();
+			string counter = $"{browseIdx + 1}/{browseCount}";
+			var counterSize = _headingFont.MeasureString(counter) * CounterScale;
+			float cx = center.X - counterSize.X / 2f;
+			float cy = btnY - counterSize.Y / 2f;
+			_spriteBatch.DrawString(_headingFont, counter, new Vector2(cx, cy), new Color(102, 102, 102), 0f, Vector2.Zero, CounterScale, SpriteEffects.None, 0f);
 
 			// Key hints
-			DrawKeyHint(center.X - ArrowOffsetX, center.Y + ArrowOffsetY + KeyHintOffsetY, "A");
-			DrawKeyHint(center.X + ArrowOffsetX, center.Y + ArrowOffsetY + KeyHintOffsetY, "D");
+			DrawKeyHint(center.X - ArrowOffsetX, btnY + ButtonRadius + KeyHintOffsetY, "A");
+			DrawKeyHint(center.X + ArrowOffsetX, btnY + ButtonRadius + KeyHintOffsetY, "D");
 		}
 
-		private void DrawArrow(float x, float y, int direction, Color color)
+		private void DrawCircleButton(float x, float y, string symbol, Color textColor)
 		{
-			var triangle = PrimitiveTextureFactory.GetEquilateralTriangle(_graphicsDevice, ArrowSize);
-			float rotation = direction > 0 ? MathHelper.PiOver2 : -MathHelper.PiOver2;
-			var origin = new Vector2(triangle.Width / 2f, triangle.Height / 2f);
-			_spriteBatch.Draw(triangle, new Vector2(x, y), null, color, rotation, origin, 1f, SpriteEffects.None, 0f);
+			var borderColor = new Color(ButtonBorderR, ButtonBorderG, ButtonBorderB);
+			var bgColor = new Color(ButtonBgR, ButtonBgG, ButtonBgB);
+
+			// Outer circle (border)
+			int outerRadius = ButtonRadius + ButtonBorderWidth;
+			var outerCircle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, outerRadius);
+			int od = outerRadius * 2;
+			_spriteBatch.Draw(outerCircle, new Rectangle((int)(x - outerRadius), (int)(y - outerRadius), od, od), borderColor);
+
+			// Inner circle (background)
+			var innerCircle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, ButtonRadius);
+			int id = ButtonRadius * 2;
+			_spriteBatch.Draw(innerCircle, new Rectangle((int)(x - ButtonRadius), (int)(y - ButtonRadius), id, id), bgColor);
+
+			// Arrow symbol centered inside
+			var symbolSize = _headingFont.MeasureString(symbol) * ArrowTextScale;
+			float sx = x - symbolSize.X / 2f;
+			float sy = y - symbolSize.Y / 2f;
+			_spriteBatch.DrawString(_headingFont, symbol, new Vector2(sx, sy), textColor, 0f, Vector2.Zero, ArrowTextScale, SpriteEffects.None, 0f);
 		}
 
 		private void DrawKeyHint(float x, float y, string key)
