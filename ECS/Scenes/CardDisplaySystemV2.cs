@@ -329,7 +329,7 @@ namespace Crusaders30XX.ECS.Systems
                 transform.Scale = originalScale;
                 transform.Rotation = originalRotation;
                 transform.Position = originalPosition;
-                if (ui != null) ui.Bounds = GetCardVisualRect(evt.Position, evt.Scale, GetSettings().CardWidth, GetSettings().CardHeight);
+                if (ui != null) ui.Bounds = GetCardVisualRect(evt.Position, evt.Scale, GetSettings().CardWidth, GetSettings().CardHeight, GetSettings().CardOffsetYExtra);
             }
             else
             {
@@ -356,7 +356,7 @@ namespace Crusaders30XX.ECS.Systems
                 DrawCardV2(evt.Card, evt.Position);
                 transform.Scale = originalScale;
                 transform.Position = originalPosition;
-                if (ui != null) ui.Bounds = GetCardVisualRect(evt.Position, evt.Scale, GetSettings().CardWidth, GetSettings().CardHeight);
+                if (ui != null) ui.Bounds = GetCardVisualRect(evt.Position, evt.Scale, GetSettings().CardWidth, GetSettings().CardHeight, GetSettings().CardOffsetYExtra);
             }
             else
             {
@@ -380,7 +380,7 @@ namespace Crusaders30XX.ECS.Systems
             bool hasDef = card != null;
             var cc = cardData.Color;
 
-            var rect = GetCardVisualRect(position, vs, settings.CardWidth, settings.CardHeight);
+            var rect = GetCardVisualRect(position, vs, settings.CardWidth, settings.CardHeight, settings.CardOffsetYExtra);
             var cardCenter = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
 
             float sw = settings.CardWidth * vs;

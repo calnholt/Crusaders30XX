@@ -5,7 +5,7 @@ namespace Crusaders30XX.ECS.Systems
 {
     public static class CardDisplayToggle
     {
-        private static bool _useV2 = false;
+        private static bool _useV2 = true;
         public static bool UseV2
         {
             get => _useV2;
