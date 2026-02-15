@@ -4,6 +4,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
@@ -17,6 +18,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _headingFont = FontSingleton.TitleFont;
+		private InputMethod _inputSource;
 
 		[DebugEditable(DisplayName = "Button Radius", Step = 1, Min = 8, Max = 30)]
 		public int ButtonRadius { get; set; } = 13;
@@ -67,6 +69,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
+			EventManager.Subscribe<CursorStateEvent>(e => _inputSource = e.Source);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -109,8 +112,9 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.DrawString(_headingFont, counter, new Vector2(cx, cy), new Color(102, 102, 102), 0f, Vector2.Zero, CounterScale, SpriteEffects.None, 0f);
 
 			// Key hints
-			DrawKeyHint(center.X - ArrowOffsetX, btnY + ButtonRadius + KeyHintOffsetY, "A");
-			DrawKeyHint(center.X + ArrowOffsetX, btnY + ButtonRadius + KeyHintOffsetY, "D");
+			bool gamepad = _inputSource == InputMethod.Gamepad;
+			DrawKeyHint(center.X - ArrowOffsetX, btnY + ButtonRadius + KeyHintOffsetY, gamepad ? "LB" : "A");
+			DrawKeyHint(center.X + ArrowOffsetX, btnY + ButtonRadius + KeyHintOffsetY, gamepad ? "RB" : "D");
 		}
 
 		private void DrawCircleButton(float x, float y, string symbol, Color textColor)

@@ -51,11 +51,13 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Cost Pip Size", Step = 1, Min = 4, Max = 20)]
         public int CostPipSize { get; set; } = 8;
         [DebugEditable(DisplayName = "Cost Pip Gap", Step = 1, Min = 0, Max = 12)]
-        public int CostPipGap { get; set; } = 4;
+        public int CostPipGap { get; set; } = 6;
         [DebugEditable(DisplayName = "Cost Label Gap", Step = 1, Min = 0, Max = 20)]
         public int CostLabelGap { get; set; } = 6;
         [DebugEditable(DisplayName = "Cost Label Font Scale", Step = 0.01f, Min = 0.02f, Max = 0.2f)]
         public float CostLabelFontScale { get; set; } = 0.065f;
+        [DebugEditable(DisplayName = "Cost Pip Outline Frac", Step = 0.01f, Min = 0.0f, Max = 0.4f)]
+        public float CostPipOutlineFrac { get; set; } = 0.15f;
 
         // Chip Layout
         [DebugEditable(DisplayName = "Chip Size", Step = 1, Min = 20, Max = 80)]
@@ -78,8 +80,8 @@ namespace Crusaders30XX.ECS.Systems
         // Label Slab
         [DebugEditable(DisplayName = "Label Slab Height", Step = 1, Min = 8, Max = 30)]
         public int LabelSlabHeight { get; set; } = 14;
-        [DebugEditable(DisplayName = "Label Slab Font Scale", Step = 0.01f, Min = 0.02f, Max = 0.2f)]
-        public float LabelSlabFontScale { get; set; } = 0.05f;
+        [DebugEditable(DisplayName = "Label Slab Font Scale", Step = 0.001f, Min = 0.02f, Max = 0.2f)]
+        public float LabelSlabFontScale { get; set; } = 0.055f;
 
         // Delta Slab
         [DebugEditable(DisplayName = "Slab Width", Step = 1, Min = 20, Max = 80)]
@@ -133,7 +135,7 @@ namespace Crusaders30XX.ECS.Systems
         private static readonly Dictionary<CardData.CardColor, Color> BgColors = new()
         {
             { CardData.CardColor.White, new Color(220, 215, 206) },
-            { CardData.CardColor.Red,   new Color(28, 12, 12) },
+            { CardData.CardColor.Red,   new Color(78, 12, 12) },
             { CardData.CardColor.Black, new Color(19, 19, 19) },
         };
 
@@ -180,6 +182,15 @@ namespace Crusaders30XX.ECS.Systems
         };
 
         private static readonly Color CostPipRedColor = new Color(204, 34, 34);
+        private static readonly Color CostPipWhiteColor = Color.White;
+        private static readonly Color CostPipBlackColor = new Color(19, 19, 19);
+
+        private static readonly Dictionary<CardData.CardColor, Color> CostPipOutlineColors = new()
+        {
+            { CardData.CardColor.White, Color.Black },
+            { CardData.CardColor.Red,   Color.Black },
+            { CardData.CardColor.Black, Color.White },
+        };
 
         private static readonly Dictionary<CardData.CardColor, Color> RuleLineColors = new()
         {
@@ -518,10 +529,9 @@ namespace Crusaders30XX.ECS.Systems
                 for (int i = 0; i < costs.Length; i++)
                 {
                     float pipX = pipStartX + i * (pipSize + pipGap);
-                    Color pipColor = costs[i].Equals("Red", StringComparison.OrdinalIgnoreCase)
-                        ? CostPipRedColor
-                        : GetPaletteColor(CostPipAnyColors, cc, new Color(160, 152, 136));
-                    DrawDiamondPip(cardCenter, rotation, vs, pipX, pipCenterY - pipSize / 2f, pipSize, pipColor);
+                    Color pipColor = GetCostPipColor(costs[i], cc);
+                    bool showOutline = NeedsPipOutline(costs[i], cc);
+                    DrawDiamondPip(cardCenter, rotation, vs, pipX, pipCenterY - pipSize / 2f, pipSize, pipColor, cc, showOutline);
                 }
 
                 // Right side: type text
@@ -551,7 +561,7 @@ namespace Crusaders30XX.ECS.Systems
         /// Draws a diamond-shaped pip (square rotated 45deg) at the given position.
         /// </summary>
         private void DrawDiamondPip(Vector2 cardCenter, float rotation, float vs,
-            float x, float y, float size, Color color)
+            float x, float y, float size, Color color, CardData.CardColor cc, bool showOutline)
         {
             // Create a small square texture and draw it rotated 45 degrees
             int texSize = Math.Max(1, (int)Math.Ceiling(size));
@@ -570,12 +580,31 @@ namespace Crusaders30XX.ECS.Systems
             var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
             var world = cardCenter + rotated;
 
-            // Draw with 45deg rotation added to card rotation
             float diamondRotation = rotation + MathHelper.PiOver4;
-            _spriteBatch.Draw(tex, world, null, color, diamondRotation,
-                new Vector2(texSize / 2f, texSize / 2f),
-                new Vector2(size / texSize, size / texSize),
-                SpriteEffects.None, 0f);
+            var drawScale = new Vector2(size / texSize, size / texSize);
+
+            if (showOutline)
+            {
+                // Draw outline at full size, then fill at reduced scale
+                var outlineColor = GetPaletteColor(CostPipOutlineColors, cc, Color.Black);
+                _spriteBatch.Draw(tex, world, null, outlineColor, diamondRotation,
+                    new Vector2(texSize / 2f, texSize / 2f),
+                    drawScale,
+                    SpriteEffects.None, 0f);
+
+                float fillScale = Math.Max(0f, 1f - CostPipOutlineFrac * 2f);
+                _spriteBatch.Draw(tex, world, null, color, diamondRotation,
+                    new Vector2(texSize / 2f, texSize / 2f),
+                    drawScale * fillScale,
+                    SpriteEffects.None, 0f);
+            }
+            else
+            {
+                _spriteBatch.Draw(tex, world, null, color, diamondRotation,
+                    new Vector2(texSize / 2f, texSize / 2f),
+                    drawScale,
+                    SpriteEffects.None, 0f);
+            }
         }
 
         private void DrawStatChips(Vector2 cardCenter, float rotation, float vs, CardData.CardColor cc, Entity entity, CardBase card)
@@ -845,6 +874,31 @@ namespace Crusaders30XX.ECS.Systems
             float textX = x + (slabW - textSize.X) / 2f;
             float textY = y + (slabH - textSize.Y) / 2f;
             V2Text(cardCenter, rotation, new Vector2(textX, textY), deltaText, textColor, SlabFontScale * vs, vs, _bodyFont);
+        }
+
+        private static Color GetCostPipColor(string costType, CardData.CardColor cc)
+        {
+            return costType.Trim().ToLowerInvariant() switch
+            {
+                "red"   => CostPipRedColor,
+                "white" => CostPipWhiteColor,
+                "black" => CostPipBlackColor,
+                _       => GetPaletteColor(CostPipAnyColors, cc, new Color(160, 152, 136)),
+            };
+        }
+
+        /// <summary>
+        /// Outline only when pip color matches card color (would blend into background). Never for "Any".
+        /// </summary>
+        private static bool NeedsPipOutline(string costType, CardData.CardColor cc)
+        {
+            return costType.Trim().ToLowerInvariant() switch
+            {
+                "white" => cc == CardData.CardColor.White,
+                "red"   => cc == CardData.CardColor.Red,
+                "black" => cc == CardData.CardColor.Black,
+                _       => false,
+            };
         }
 
         private static string GetTypeLabel(CardType type) => type switch

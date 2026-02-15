@@ -16,6 +16,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private CursorStateEvent _cursorEvent;
 		private KeyboardState _prevKeyboard;
+		private GamePadState _prevGamePadState;
 
 		public WheelInteractionSystem(EntityManager em) : base(em)
 		{
@@ -131,16 +132,17 @@ namespace Crusaders30XX.ECS.Systems
 			if (gp.IsConnected)
 			{
 				// LB/RB for browse
-				if (gp.IsButtonDown(Buttons.LeftShoulder) && loadout.HoveredSegmentIndex >= 0)
+				if (gp.IsButtonDown(Buttons.LeftShoulder) && !_prevGamePadState.IsButtonDown(Buttons.LeftShoulder) && loadout.HoveredSegmentIndex >= 0)
 				{
 					EventManager.Publish(new BrowseItemRequested { Direction = -1 });
 				}
-				if (gp.IsButtonDown(Buttons.RightShoulder) && loadout.HoveredSegmentIndex >= 0)
+				if (gp.IsButtonDown(Buttons.RightShoulder) && !_prevGamePadState.IsButtonDown(Buttons.RightShoulder) && loadout.HoveredSegmentIndex >= 0)
 				{
 					EventManager.Publish(new BrowseItemRequested { Direction = 1 });
 				}
 			}
 
+			_prevGamePadState = gp;
 			_prevKeyboard = kb;
 		}
 	}
