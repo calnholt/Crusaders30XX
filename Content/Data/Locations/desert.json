@@ -154,7 +154,7 @@
       },
       "Events": [
         {
-          "id": "skeleton",
+          "id": "skeletal_archer",
           "type": "Enemy"
         },
         {
@@ -188,7 +188,7 @@
           "type": "Enemy"
         },
         {
-          "id": "ogre",
+          "id": "skeletal_archer",
           "type": "Enemy"
         },
         {
@@ -223,7 +223,7 @@
           "type": "Enemy"
         },
         {
-          "id": "skeleton",
+          "id": "skeletal_archer",
           "type": "Enemy"
         },
         {
