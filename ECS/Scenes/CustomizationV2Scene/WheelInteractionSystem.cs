@@ -131,12 +131,15 @@ namespace Crusaders30XX.ECS.Systems
 			var gp = GamePad.GetState(PlayerIndex.One);
 			if (gp.IsConnected)
 			{
-				// LB/RB for browse
-				if (gp.IsButtonDown(Buttons.LeftShoulder) && !_prevGamePadState.IsButtonDown(Buttons.LeftShoulder) && loadout.HoveredSegmentIndex >= 0)
+				// DPad left/right for browse
+				bool dpadLeft = gp.DPad.Left == ButtonState.Pressed && _prevGamePadState.DPad.Left == ButtonState.Released;
+				bool dpadRight = gp.DPad.Right == ButtonState.Pressed && _prevGamePadState.DPad.Right == ButtonState.Released;
+
+				if (dpadLeft && loadout.HoveredSegmentIndex >= 0)
 				{
 					EventManager.Publish(new BrowseItemRequested { Direction = -1 });
 				}
-				if (gp.IsButtonDown(Buttons.RightShoulder) && !_prevGamePadState.IsButtonDown(Buttons.RightShoulder) && loadout.HoveredSegmentIndex >= 0)
+				if (dpadRight && loadout.HoveredSegmentIndex >= 0)
 				{
 					EventManager.Publish(new BrowseItemRequested { Direction = 1 });
 				}

@@ -8,7 +8,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Impale : CardBase
     {
-        private int CourageCost = 2;
+        private int CourageCost = 3;
         public Impale()
         {
             CardId = "impale";
@@ -17,8 +17,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"As an additional cost, lose {CourageCost} courage.";
             IsFreeAction = true;
             Animation = "Attack";
-            Damage = 5;
-            Block = 3;
+            Damage = 6;
+            Block = 2;
 
             OnPlay = (entityManager, card) =>
             {

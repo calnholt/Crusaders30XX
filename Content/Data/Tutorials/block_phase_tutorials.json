@@ -15,7 +15,7 @@
   },
   {
     "key": "card_block_value",
-    "text": "Each card has a block value on the bottom left. Select cards from your hand to assign them to block incoming damage.",
+    "text": "Each card has a block value in the blue BLOCK section. Select cards from your hand to assign them to block incoming damage.",
     "targetType": "component_hand",
     "targetId": "CardData",
     "bubbleOrientation": "top"

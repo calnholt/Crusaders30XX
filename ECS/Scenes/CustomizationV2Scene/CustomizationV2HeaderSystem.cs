@@ -22,6 +22,10 @@ namespace Crusaders30XX.ECS.Systems
 		private Texture2D _pixel;
 		private CursorStateEvent _cursorEvent;
 
+		private Entity _tabDeckEntity;
+		private Entity _tabLoadoutEntity;
+		private Entity _exitButtonEntity;
+
 		public DeckV2InvalidDeckDialogSystem InvalidDeckDialogSystem { get; set; }
 
 		[DebugEditable(DisplayName = "Header Height", Step = 2, Min = 32, Max = 100)]
@@ -95,6 +99,89 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
 			EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
+			EventManager.Subscribe<LoadSceneEvent>(OnSceneLoad);
+			EventManager.Subscribe<HotKeySelectEvent>(OnHotKeySelect);
+		}
+
+		private void OnSceneLoad(LoadSceneEvent evt)
+		{
+			if (evt.Scene != SceneId.CustomizationV2) return;
+			EnsureTabEntities();
+			EnsureExitEntity();
+		}
+
+		private void EnsureTabEntities()
+		{
+			if (_tabDeckEntity == null || EntityManager.GetEntity(_tabDeckEntity.Id) == null)
+			{
+				int tabX = TabLeftPad;
+				var deckRect = new Rectangle(tabX, 0, TabWidth, HeaderHeight);
+				_tabDeckEntity = EntityManager.CreateEntity("CV2_TabDeck");
+				EntityManager.AddComponent(_tabDeckEntity, new Transform { Position = new Vector2(deckRect.X, deckRect.Y), ZOrder = 9000 });
+				EntityManager.AddComponent(_tabDeckEntity, new UIElement { Bounds = deckRect, IsInteractable = true });
+				EntityManager.AddComponent(_tabDeckEntity, new HotKey { Button = FaceButton.LB, Position = HotKeyPosition.Below });
+			}
+
+			if (_tabLoadoutEntity == null || EntityManager.GetEntity(_tabLoadoutEntity.Id) == null)
+			{
+				int tabX = TabLeftPad + TabWidth + TabGap;
+				var loadoutRect = new Rectangle(tabX, 0, TabWidth, HeaderHeight);
+				_tabLoadoutEntity = EntityManager.CreateEntity("CV2_TabLoadout");
+				EntityManager.AddComponent(_tabLoadoutEntity, new Transform { Position = new Vector2(loadoutRect.X, loadoutRect.Y), ZOrder = 9000 });
+				EntityManager.AddComponent(_tabLoadoutEntity, new UIElement { Bounds = loadoutRect, IsInteractable = true });
+				EntityManager.AddComponent(_tabLoadoutEntity, new HotKey { Button = FaceButton.RB, Position = HotKeyPosition.Below });
+			}
+		}
+
+		private void EnsureExitEntity()
+		{
+			if (_exitButtonEntity == null || EntityManager.GetEntity(_exitButtonEntity.Id) == null)
+			{
+				string exitText = "EXIT";
+				var exitSize = _font.MeasureString(exitText) * ExitTextScale;
+				int exitX = Game1.VirtualWidth - ExitRightPad - (int)exitSize.X;
+				var exitRect = new Rectangle(exitX - 40, 0, (int)exitSize.X + 40, HeaderHeight);
+				_exitButtonEntity = EntityManager.CreateEntity("CV2_ExitButton");
+				EntityManager.AddComponent(_exitButtonEntity, new Transform { Position = new Vector2(exitRect.X, exitRect.Y), ZOrder = 9000 });
+				EntityManager.AddComponent(_exitButtonEntity, new UIElement { Bounds = exitRect, IsInteractable = true });
+				EntityManager.AddComponent(_exitButtonEntity, new HotKey { Button = FaceButton.B, Position = HotKeyPosition.Left });
+			}
+		}
+
+		private void OnHotKeySelect(HotKeySelectEvent evt)
+		{
+			if (evt.Entity == _tabDeckEntity)
+			{
+				EventManager.Publish(new SwitchCustomizationV2Tab { Tab = CustomizationV2TabType.Deck });
+			}
+			else if (evt.Entity == _tabLoadoutEntity)
+			{
+				EventManager.Publish(new SwitchCustomizationV2Tab { Tab = CustomizationV2TabType.Loadout });
+			}
+			else if (evt.Entity == _exitButtonEntity)
+			{
+				HandleExitClick();
+			}
+		}
+
+		private void HandleExitClick()
+		{
+			if (InvalidDeckDialogSystem != null && InvalidDeckDialogSystem.IsDialogOpen) return;
+
+			var nav = EntityManager.GetEntitiesWithComponent<CustomizationV2NavigationState>().FirstOrDefault()?.GetComponent<CustomizationV2NavigationState>();
+			if (nav == null) return;
+
+			if (nav.ActiveTab == CustomizationV2TabType.Deck && InvalidDeckDialogSystem != null)
+			{
+				var deck = EntityManager.GetEntitiesWithComponent<CustomizationV2DeckState>().FirstOrDefault()?.GetComponent<CustomizationV2DeckState>();
+				int count = deck?.DeckCardKeys?.Count ?? 0;
+				if (count != DeckRules.RequiredDeckSize)
+				{
+					InvalidDeckDialogSystem.ShowDialog(count);
+					return;
+				}
+			}
+			EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -112,41 +199,60 @@ namespace Crusaders30XX.ECS.Systems
 			var nav = EntityManager.GetEntitiesWithComponent<CustomizationV2NavigationState>().FirstOrDefault()?.GetComponent<CustomizationV2NavigationState>();
 			if (nav == null) return;
 
-			if (_cursorEvent == null || !_cursorEvent.IsAPressedEdge) return;
-			var click = new Point((int)System.Math.Round(_cursorEvent.Position.X), (int)System.Math.Round(_cursorEvent.Position.Y));
+			// Update tab entity bounds in case layout properties changed
+			UpdateTabEntityBounds();
 
-			// Check tab clicks
-			int tabX = TabLeftPad;
-			var tabs = new[] { CustomizationV2TabType.Deck, CustomizationV2TabType.Loadout };
-			foreach (var tab in tabs)
+			// Handle tab clicks via UIElement
+			if (_tabDeckEntity != null)
 			{
-				var tabRect = new Rectangle(tabX, 0, TabWidth, HeaderHeight);
-				if (tabRect.Contains(click) && nav.ActiveTab != tab)
+				var ui = _tabDeckEntity.GetComponent<UIElement>();
+				if (ui != null && ui.IsClicked && nav.ActiveTab != CustomizationV2TabType.Deck)
 				{
-					EventManager.Publish(new SwitchCustomizationV2Tab { Tab = tab });
+					EventManager.Publish(new SwitchCustomizationV2Tab { Tab = CustomizationV2TabType.Deck });
 				}
-				tabX += TabWidth + TabGap;
+			}
+			if (_tabLoadoutEntity != null)
+			{
+				var ui = _tabLoadoutEntity.GetComponent<UIElement>();
+				if (ui != null && ui.IsClicked && nav.ActiveTab != CustomizationV2TabType.Loadout)
+				{
+					EventManager.Publish(new SwitchCustomizationV2Tab { Tab = CustomizationV2TabType.Loadout });
+				}
 			}
 
-			// Check exit click
-			string exitText = "EXIT";
-			var exitSize = _font.MeasureString(exitText) * ExitTextScale;
-			int exitX = Game1.VirtualWidth - ExitRightPad - (int)exitSize.X - KeyHintSize - 10;
-			var exitRect = new Rectangle(exitX, 0, (int)exitSize.X + KeyHintSize + 10, HeaderHeight);
-			if (exitRect.Contains(click))
+			// Handle exit click via UIElement
+			if (_exitButtonEntity != null)
 			{
-				// If on Deck tab with an invalid deck, show confirmation dialog instead of exiting
-				if (nav.ActiveTab == CustomizationV2TabType.Deck && InvalidDeckDialogSystem != null)
+				var ui = _exitButtonEntity.GetComponent<UIElement>();
+				if (ui != null && ui.IsClicked)
 				{
-					var deck = EntityManager.GetEntitiesWithComponent<CustomizationV2DeckState>().FirstOrDefault()?.GetComponent<CustomizationV2DeckState>();
-					int count = deck?.DeckCardKeys?.Count ?? 0;
-					if (count != DeckRules.RequiredDeckSize)
-					{
-						InvalidDeckDialogSystem.ShowDialog(count);
-						return;
-					}
+					HandleExitClick();
 				}
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
+			}
+		}
+
+		private void UpdateTabEntityBounds()
+		{
+			if (_tabDeckEntity != null)
+			{
+				var ui = _tabDeckEntity.GetComponent<UIElement>();
+				if (ui != null) ui.Bounds = new Rectangle(TabLeftPad, 0, TabWidth, HeaderHeight);
+			}
+			if (_tabLoadoutEntity != null)
+			{
+				var ui = _tabLoadoutEntity.GetComponent<UIElement>();
+				if (ui != null) ui.Bounds = new Rectangle(TabLeftPad + TabWidth + TabGap, 0, TabWidth, HeaderHeight);
+			}
+			if (_exitButtonEntity != null)
+			{
+				var ui = _exitButtonEntity.GetComponent<UIElement>();
+				if (ui != null)
+				{
+					string exitText = "EXIT";
+					var exitSize = _font.MeasureString(exitText) * ExitTextScale;
+					int exitX = Game1.VirtualWidth - ExitRightPad - (int)exitSize.X;
+					ui.Bounds = new Rectangle(exitX - 40, 0, (int)exitSize.X + 40, HeaderHeight);
+				}
 			}
 		}
 
@@ -204,25 +310,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			string exitText = "EXIT";
 			var exitSize = _font.MeasureString(exitText) * ExitTextScale;
-
-			// Key hint badge
-			int hintX = vw - ExitRightPad - KeyHintSize;
-			int hintY = (HeaderHeight - KeyHintSize) / 2;
-			var hintRect = new Rectangle(hintX, hintY, KeyHintSize, KeyHintSize);
-			_spriteBatch.Draw(_pixel, hintRect, new Color(10, 10, 10));
-
-			// Hint border
-			DrawRectBorder(hintRect, 1, new Color(51, 51, 51));
-
-			// ESC text in hint
-			string escText = "ESC";
-			var escSize = _contentFont.MeasureString(escText) * 0.08f;
-			float escX = hintRect.X + (hintRect.Width - escSize.X) / 2f;
-			float escY = hintRect.Y + (hintRect.Height - escSize.Y) / 2f;
-			_spriteBatch.DrawString(_contentFont, escText, new Vector2(escX, escY), new Color(102, 102, 102), 0f, Vector2.Zero, 0.08f, SpriteEffects.None, 0f);
-
-			// EXIT text
-			float exitTextX = hintX - 10 - exitSize.X;
+			float exitTextX = vw - ExitRightPad - exitSize.X;
 			float exitTextY = (HeaderHeight - exitSize.Y) / 2f;
 			_spriteBatch.DrawString(_font, exitText, new Vector2(exitTextX, exitTextY), new Color(224, 224, 224), 0f, Vector2.Zero, ExitTextScale, SpriteEffects.None, 0f);
 		}

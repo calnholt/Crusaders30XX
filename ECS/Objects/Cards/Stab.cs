@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Stab : CardBase
     {
-        private int CourageCost = 1;
+        private int CourageCost = 2;
         public Stab()
         {
             CardId = "stab";
@@ -16,8 +16,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"As an additional cost, lose {CourageCost} courage.";
             IsFreeAction = true;
             Animation = "Attack";
-            Damage = 4;
-            Block = 3;
+            Damage = 5;
+            Block = 2;
 
             OnPlay = (entityManager, card) =>
             {

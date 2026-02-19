@@ -1,7 +1,7 @@
 [
   {
     "key": "action_phase_overview",
-    "text": "This is the action phase. Play the remaining cards from your hand to deal damage and trigger powerful effects! At the end of the turn, you will draw four cards, or up to five (your max hand size).",
+    "text": "This is the action phase. Play the remaining cards from your hand to deal damage and trigger powerful effects! At the end of the turn, you will draw up to your maximum hand size of four cards.",
     "targetType": "component_hand",
     "targetId": "CardData",
     "bubbleOrientation": "top"
@@ -15,7 +15,7 @@
   },
   {
     "key": "card_damage",
-    "text": "The number on the bottom left of the card is the damage it deals when played.",
+    "text": "The DAMAGE value on the left of attack cards is the damage it deals when played.",
     "targetType": "component_hand",
     "targetId": "CardData",
     "bubbleOrientation": "top"
@@ -29,7 +29,7 @@
   },
   {
     "key": "cost",
-    "text": "Some cards have a cost. To play them, you must discard other cards from your hand equal to their cost, represented by the white/red/black circles below the card name (gray is any color, and your weapon cannot be used to pay costs).",
+    "text": "Some cards have a cost. To play them, you must DISCARD other cards from your hand equal to their cost, represented by the white/red/black diamonds below the card name (gray is any color, and your weapon cannot be used to pay costs).",
     "targetType": "card_with_cost",
     "targetId": "CardData",
     "bubbleOrientation": "top",

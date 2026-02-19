@@ -700,8 +700,10 @@ namespace Crusaders30XX.ECS.Components
         B,
         X,
         Y,
-        Back,         
-        Start
+        Back,
+        Start,
+        LB,
+        RB
     }
 
     public enum HotKeyPosition

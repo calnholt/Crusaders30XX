@@ -45,7 +45,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     {
       Id = "pummel_into_submission";
       Name = "Pummel Into Submission";
-      Damage = 10;
+      Damage = 6;
       ConditionType = ConditionType.OnHit;
       Text = $"{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Intimidate, 1)}\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, 1, ConditionType)}";
       OnAttackReveal = (entityManager) =>

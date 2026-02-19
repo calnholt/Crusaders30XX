@@ -186,6 +186,15 @@
         {
           "id": "ogre",
           "type": "Enemy"
+        },
+        {
+          "id": "ogre",
+          "type": "Enemy"
+        },
+        {
+          "id": "ogre",
+          "type": "Enemy",
+          "difficulty": "Medium"
         }
       ],
       "Background": "desert-background-crumbling-city.png"
@@ -640,14 +649,18 @@
           "Type": "Card",
           "Price": 1
         },
-
         {
-          "Id": "vindicate",
+          "Id": "strike",
           "Type": "Card",
           "Price": 1
         },
         {
-          "Id": "narrow_gate",
+          "Id": "reap",
+          "Type": "Card",
+          "Price": 1
+        },
+        {
+          "Id": "serpent_crush",
           "Type": "Card",
           "Price": 1
         },
@@ -684,7 +697,7 @@
       "Background": "desert-mountain-merchant",
       "ForSale": [
         {
-          "Id": "pouch_of_kunai",
+          "Id": "dowse_with_holy_water",
           "Type": "Card",
           "Price": 1
         },
@@ -709,7 +722,7 @@
           "Price": 1
         },
         {
-          "Id": "shield_of_faith",
+          "Id": "carve",
           "Type": "Card",
           "Price": 1
         },
@@ -736,7 +749,7 @@
       "Background": "desert-oasis-market",
       "ForSale": [
         {
-          "Id": "heavens_glory",
+          "Id": "deus_vult",
           "Type": "Card",
           "Price": 1
         },

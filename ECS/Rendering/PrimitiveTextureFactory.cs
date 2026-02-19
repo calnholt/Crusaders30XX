@@ -25,6 +25,10 @@ namespace Crusaders30XX.ECS.Rendering
 		private static readonly Dictionary<(int deviceId, float width, float height, float thickness, int count, float gap), Texture2D> _chevronCache = new();
 		// Cache "any" cost pip textures (tri-color circle: white/black/red thirds)
 		private static readonly Dictionary<(int deviceId, int radius), Texture2D> _anyCostPipCache = new();
+		// Cache diamond textures by device and size
+		private static readonly Dictionary<(int deviceId, int size), Texture2D> _diamondCache = new();
+		// Cache "any" cost diamond pip textures (tri-color diamond)
+		private static readonly Dictionary<(int deviceId, int size), Texture2D> _anyDiamondPipCache = new();
 
 		public static Texture2D GetAntiAliasedCircle(GraphicsDevice device, int radius)
 		{
@@ -527,6 +531,100 @@ namespace Crusaders30XX.ECS.Rendering
 		/// <summary>
 		/// Returns a cached tri-color "any" cost pip texture (white/black/red thirds) for the given radius.
 		/// </summary>
+		/// <summary>
+		/// Returns a cached anti-aliased diamond (rotated square) texture of the given size.
+		/// </summary>
+		public static Texture2D GetDiamondTexture(GraphicsDevice device, int size)
+		{
+			if (size < 1) size = 1;
+			int deviceId = device?.GetHashCode() ?? 0;
+			var key = (deviceId, size);
+			if (_diamondCache.TryGetValue(key, out var existing) && existing != null) return existing;
+
+			var tex = new Texture2D(device, size, size);
+			var data = new Color[size * size];
+			float half = size / 2f;
+
+			for (int y = 0; y < size; y++)
+			{
+				float dy = System.Math.Abs(y + 0.5f - half);
+				for (int x = 0; x < size; x++)
+				{
+					float dx = System.Math.Abs(x + 0.5f - half);
+					// Diamond: |dx| + |dy| <= half
+					float dist = dx + dy;
+					float alpha;
+					if (dist <= half - 0.7f) alpha = 1f;
+					else if (dist >= half + 0.3f) alpha = 0f;
+					else alpha = 1f - (dist - (half - 0.7f)) / 1f;
+
+					byte A = (byte)MathHelper.Clamp((int)System.Math.Round(alpha * 255f), 0, 255);
+					data[y * size + x] = Color.FromNonPremultiplied(255, 255, 255, A);
+				}
+			}
+
+			tex.SetData(data);
+			_diamondCache[key] = tex;
+			return tex;
+		}
+
+		/// <summary>
+		/// Returns a cached tri-color "any" cost diamond pip texture (white/black/red thirds).
+		/// </summary>
+		public static Texture2D GetAnyDiamondCostPipTexture(GraphicsDevice device, int size)
+		{
+			if (size < 1) size = 1;
+			int deviceId = device?.GetHashCode() ?? 0;
+			var key = (deviceId, size);
+			if (_anyDiamondPipCache.TryGetValue(key, out var existing) && existing != null) return existing;
+
+			var tex = new Texture2D(device, size, size);
+			var data = new Color[size * size];
+			float half = size / 2f;
+
+			var c0 = Color.White;
+			var c1 = Color.Black;
+			var c2 = Color.DarkRed;
+
+			for (int y = 0; y < size; y++)
+			{
+				float py = y + 0.5f;
+				float dy = System.Math.Abs(py - half);
+				for (int x = 0; x < size; x++)
+				{
+					float px = x + 0.5f;
+					float dx = System.Math.Abs(px - half);
+					float dist = dx + dy;
+					float alpha;
+					if (dist <= half - 0.7f) alpha = 1f;
+					else if (dist >= half + 0.3f) alpha = 0f;
+					else alpha = 1f - (dist - (half - 0.7f)) / 1f;
+
+					if (alpha <= 0f)
+					{
+						data[y * size + x] = Color.Transparent;
+						continue;
+					}
+
+					// Determine which third (120-degree sectors) this pixel falls in
+					float angle = MathHelper.ToDegrees((float)System.Math.Atan2(px - half, -(py - half)));
+					if (angle < 0f) angle += 360f;
+
+					Color tint;
+					if (angle < 120f) tint = c0;
+					else if (angle < 240f) tint = c1;
+					else tint = c2;
+
+					byte A = (byte)MathHelper.Clamp((int)System.Math.Round(alpha * 255f), 0, 255);
+					data[y * size + x] = Color.FromNonPremultiplied(tint.R, tint.G, tint.B, A);
+				}
+			}
+
+			tex.SetData(data);
+			_anyDiamondPipCache[key] = tex;
+			return tex;
+		}
+
 		public static Texture2D GetAnyCostPipTexture(GraphicsDevice device, int radius)
 		{
 			if (radius < 1) radius = 1;

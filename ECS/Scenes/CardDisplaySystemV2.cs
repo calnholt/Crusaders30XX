@@ -402,6 +402,10 @@ namespace Crusaders30XX.ECS.Systems
             int bgH = (int)Math.Round(settings.CardHeight * vs);
             var bgTex = GetRoundedRectTexture(bgW, bgH, (int)(settings.CardCornerRadius * vs));
             var bgColor = GetPaletteColor(BgColors, cc, new Color(220, 215, 206));
+            if (card.IsWeapon)
+            {
+                bgColor = new Color(215, 186, 147);
+            }
             _spriteBatch.Draw(bgTex,
                 position: cardCenter,
                 sourceRectangle: null,

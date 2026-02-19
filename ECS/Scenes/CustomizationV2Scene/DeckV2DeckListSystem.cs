@@ -303,19 +303,20 @@ namespace Crusaders30XX.ECS.Systems
 
 				if (item.card != null && item.card.Cost != null)
 				{
+					int diamondSize = PipRadius * 2;
 					foreach (var cost in item.card.Cost)
 					{
 						bool isAny = string.Equals(cost?.Trim(), "any", StringComparison.OrdinalIgnoreCase);
 						if (isAny)
 						{
-							var anyTex = PrimitiveTextureFactory.GetAnyCostPipTexture(_graphicsDevice, PipRadius);
-							_spriteBatch.Draw(anyTex, new Rectangle((int)pipX, (int)(pipCenterY - PipRadius), PipRadius * 2, PipRadius * 2), Color.White);
+							var anyTex = PrimitiveTextureFactory.GetAnyDiamondCostPipTexture(_graphicsDevice, diamondSize);
+							_spriteBatch.Draw(anyTex, new Rectangle((int)pipX, (int)(pipCenterY - PipRadius), diamondSize, diamondSize), Color.White);
 						}
 						else
 						{
 							var pipColor = GetCostPipColor(cost);
-							var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, PipRadius);
-							_spriteBatch.Draw(circle, new Rectangle((int)pipX, (int)(pipCenterY - PipRadius), PipRadius * 2, PipRadius * 2), pipColor);
+							var diamond = PrimitiveTextureFactory.GetDiamondTexture(_graphicsDevice, diamondSize);
+							_spriteBatch.Draw(diamond, new Rectangle((int)pipX, (int)(pipCenterY - PipRadius), diamondSize, diamondSize), pipColor);
 						}
 						pipX += PipRadius * 2 + PipGap;
 					}

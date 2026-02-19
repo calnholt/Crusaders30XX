@@ -153,14 +153,18 @@ namespace Crusaders30XX.ECS.Systems
             bool edgeB = gp.Buttons.B == ButtonState.Pressed && _prevGamePadState.Buttons.B == ButtonState.Released;
             bool edgeX = gp.Buttons.X == ButtonState.Pressed && _prevGamePadState.Buttons.X == ButtonState.Released;
             bool edgeStart = gp.Buttons.Start == ButtonState.Pressed && _prevGamePadState.Buttons.Start == ButtonState.Released;
+            bool edgeLB = gp.Buttons.LeftShoulder == ButtonState.Pressed && _prevGamePadState.Buttons.LeftShoulder == ButtonState.Released;
+            bool edgeRB = gp.Buttons.RightShoulder == ButtonState.Pressed && _prevGamePadState.Buttons.RightShoulder == ButtonState.Released;
 
-            if (edgeY || edgeB || edgeX || edgeStart)
+            if (edgeY || edgeB || edgeX || edgeStart || edgeLB || edgeRB)
             {
                 FaceButton? pressed = null;
                 if (edgeY) pressed = FaceButton.Y;
                 else if (edgeB) pressed = FaceButton.B;
                 else if (edgeX) pressed = FaceButton.X;
                 else if (edgeStart) pressed = FaceButton.Start;
+                else if (edgeLB) pressed = FaceButton.LB;
+                else if (edgeRB) pressed = FaceButton.RB;
 
                 // If any overlay UI is present, suppress default-layer hotkeys
                 bool overlayPresent = EntityManager.GetEntitiesWithComponent<UIElement>()
@@ -270,7 +274,11 @@ namespace Crusaders30XX.ECS.Systems
                 // Skip drawing if gamepad is not connected and this is not an X button
                 if (!gamepadConnected) continue;
                 
-                if (x.HK.Button == FaceButton.Start)
+                if (x.HK.Button == FaceButton.LB || x.HK.Button == FaceButton.RB)
+                {
+                    DrawBumperBadge(cx, cy, x.HK.Button == FaceButton.LB ? "LB" : "RB", isPS);
+                }
+                else if (x.HK.Button == FaceButton.Start)
                 {
                     if (isPS)
                     {
@@ -373,6 +381,21 @@ namespace Crusaders30XX.ECS.Systems
                 case FaceButton.Y: return new Color(220, 200, 60);
                 default: return Color.White;
             }
+        }
+
+        private void DrawBumperBadge(int cx, int cy, string label, bool isPS)
+        {
+            int badgeWidth = (int)System.Math.Round(HintRadius * 2.5f);
+            int badgeHeight = (int)System.Math.Round(HintRadius * 1.2f);
+            int cornerRadius = System.Math.Max(2, badgeHeight / 4);
+            var badgeTex = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, badgeWidth, badgeHeight, cornerRadius);
+            var badgePos = new Vector2(cx - badgeWidth / 2f, cy - badgeHeight / 2f);
+
+            string text = isPS ? (label == "LB" ? "L1" : "R1") : label;
+            _spriteBatch.Draw(badgeTex, badgePos, new Color(36, 36, 36));
+            var textSize = _font.MeasureString(text) * TextScale;
+            var textPos = new Vector2(cx - textSize.X / 2f, cy - textSize.Y / 2f - 2f);
+            _spriteBatch.DrawString(_font, text, textPos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
         }
 
         private void DrawKeyboardKey(int cx, int cy)

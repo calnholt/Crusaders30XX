@@ -19,10 +19,12 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _headingFont = FontSingleton.TitleFont;
 		private readonly SpriteFont _contentFont = FontSingleton.ContentFont;
-		private CursorStateEvent _cursorEvent;
 		private Texture2D _pixel;
 		private bool _isDialogOpen;
 		private int _pendingDeckCount;
+		private Entity _overlayBlockerEntity;
+		private Entity _exitButtonEntity;
+		private Entity _cancelButtonEntity;
 
 		[DebugEditable(DisplayName = "Dialog Width", Step = 4, Min = 200, Max = 800)]
 		public int DialogWidth { get; set; } = 480;
@@ -61,13 +63,69 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
-			EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
 		}
 
 		public void ShowDialog(int deckCount)
 		{
 			_isDialogOpen = true;
 			_pendingDeckCount = deckCount;
+			CreateDialogEntities();
+		}
+
+		private void CreateDialogEntities()
+		{
+			int vw = Game1.VirtualWidth;
+			int vh = Game1.VirtualHeight;
+
+			// Fullscreen overlay blocker
+			_overlayBlockerEntity = EntityManager.CreateEntity("DeckV2Dialog_Blocker");
+			EntityManager.AddComponent(_overlayBlockerEntity, new Transform { Position = Vector2.Zero, ZOrder = 19000 });
+			EntityManager.AddComponent(_overlayBlockerEntity, new UIElement
+			{
+				Bounds = new Rectangle(0, 0, vw, vh),
+				IsInteractable = true,
+				LayerType = UILayerType.Overlay,
+				IsPreventDefaultClick = true,
+				IsHidden = false
+			});
+
+			// Button positions
+			int dx = (vw - DialogWidth) / 2;
+			int dy = (vh - DialogHeight) / 2;
+			int btnY = dy + DialogHeight - ButtonHeight - 20;
+			int totalBtnW = ButtonWidth * 2 + ButtonGap;
+			int btnStartX = dx + (DialogWidth - totalBtnW) / 2;
+
+			// Exit Anyway button entity
+			var exitRect = new Rectangle(btnStartX, btnY, ButtonWidth, ButtonHeight);
+			_exitButtonEntity = EntityManager.CreateEntity("DeckV2Dialog_Exit");
+			EntityManager.AddComponent(_exitButtonEntity, new Transform { Position = new Vector2(exitRect.X, exitRect.Y), ZOrder = 19001 });
+			EntityManager.AddComponent(_exitButtonEntity, new UIElement
+			{
+				Bounds = exitRect,
+				IsInteractable = true,
+				LayerType = UILayerType.Overlay
+			});
+			EntityManager.AddComponent(_exitButtonEntity, new HotKey { Button = FaceButton.B, Position = HotKeyPosition.Below });
+
+			// Cancel button entity
+			var cancelRect = new Rectangle(btnStartX + ButtonWidth + ButtonGap, btnY, ButtonWidth, ButtonHeight);
+			_cancelButtonEntity = EntityManager.CreateEntity("DeckV2Dialog_Cancel");
+			EntityManager.AddComponent(_cancelButtonEntity, new Transform { Position = new Vector2(cancelRect.X, cancelRect.Y), ZOrder = 19001 });
+			EntityManager.AddComponent(_cancelButtonEntity, new UIElement
+			{
+				Bounds = cancelRect,
+				IsInteractable = true,
+				LayerType = UILayerType.Overlay
+			});
+			EntityManager.AddComponent(_cancelButtonEntity, new HotKey { Button = FaceButton.X, Position = HotKeyPosition.Below });
+		}
+
+		private void DestroyDialogEntities()
+		{
+			if (_overlayBlockerEntity != null) { EntityManager.DestroyEntity(_overlayBlockerEntity.Id); _overlayBlockerEntity = null; }
+			if (_exitButtonEntity != null) { EntityManager.DestroyEntity(_exitButtonEntity.Id); _exitButtonEntity = null; }
+			if (_cancelButtonEntity != null) { EntityManager.DestroyEntity(_cancelButtonEntity.Id); _cancelButtonEntity = null; }
 		}
 
 		public bool IsDialogOpen => _isDialogOpen;
@@ -80,38 +138,37 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			if (!_isDialogOpen) return;
-			if (_cursorEvent == null || !_cursorEvent.IsAPressedEdge) return;
 
-			var click = new Point((int)Math.Round(_cursorEvent.Position.X), (int)Math.Round(_cursorEvent.Position.Y));
-			int vw = Game1.VirtualWidth;
-			int vh = Game1.VirtualHeight;
-			int dx = (vw - DialogWidth) / 2;
-			int dy = (vh - DialogHeight) / 2;
-
-			// Exit Anyway button
-			int btnY = dy + DialogHeight - ButtonHeight - 20;
-			int totalBtnW = ButtonWidth * 2 + ButtonGap;
-			int btnStartX = dx + (DialogWidth - totalBtnW) / 2;
-			var exitRect = new Rectangle(btnStartX, btnY, ButtonWidth, ButtonHeight);
-			var cancelRect = new Rectangle(btnStartX + ButtonWidth + ButtonGap, btnY, ButtonWidth, ButtonHeight);
-
-			if (exitRect.Contains(click))
+			// Check exit button click via UIElement
+			if (_exitButtonEntity != null)
 			{
-				_isDialogOpen = false;
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
-				TimerScheduler.Schedule(0.8f, () =>
+				var ui = _exitButtonEntity.GetComponent<UIElement>();
+				if (ui != null && ui.IsClicked)
 				{
-					var st = EntityManager.GetEntitiesWithComponent<CustomizationV2DeckState>().FirstOrDefault();
-					if (st != null) EntityManager.DestroyEntity(st.Id);
-					var nav = EntityManager.GetEntitiesWithComponent<CustomizationV2NavigationState>().FirstOrDefault();
-					if (nav != null) EntityManager.DestroyEntity(nav.Id);
-					var loadout = EntityManager.GetEntitiesWithComponent<CustomizationV2LoadoutState>().FirstOrDefault();
-					if (loadout != null) EntityManager.DestroyEntity(loadout.Id);
-				});
+					_isDialogOpen = false;
+					DestroyDialogEntities();
+					EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
+					TimerScheduler.Schedule(0.8f, () =>
+					{
+						var st = EntityManager.GetEntitiesWithComponent<CustomizationV2DeckState>().FirstOrDefault();
+						if (st != null) EntityManager.DestroyEntity(st.Id);
+						var nav = EntityManager.GetEntitiesWithComponent<CustomizationV2NavigationState>().FirstOrDefault();
+						if (nav != null) EntityManager.DestroyEntity(nav.Id);
+						var loadout = EntityManager.GetEntitiesWithComponent<CustomizationV2LoadoutState>().FirstOrDefault();
+						if (loadout != null) EntityManager.DestroyEntity(loadout.Id);
+					});
+				}
 			}
-			else if (cancelRect.Contains(click))
+
+			// Check cancel button click via UIElement
+			if (_cancelButtonEntity != null)
 			{
-				_isDialogOpen = false;
+				var ui = _cancelButtonEntity.GetComponent<UIElement>();
+				if (ui != null && ui.IsClicked)
+				{
+					_isDialogOpen = false;
+					DestroyDialogEntities();
+				}
 			}
 		}
 

@@ -113,8 +113,8 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Key hints
 			bool gamepad = _inputSource == InputMethod.Gamepad;
-			DrawKeyHint(center.X - ArrowOffsetX, btnY + ButtonRadius + KeyHintOffsetY, gamepad ? "LB" : "A");
-			DrawKeyHint(center.X + ArrowOffsetX, btnY + ButtonRadius + KeyHintOffsetY, gamepad ? "RB" : "D");
+			DrawKeyHint(center.X - ArrowOffsetX, btnY + ButtonRadius + KeyHintOffsetY, gamepad ? "D<" : "A");
+			DrawKeyHint(center.X + ArrowOffsetX, btnY + ButtonRadius + KeyHintOffsetY, gamepad ? "D>" : "D");
 		}
 
 		private void DrawCircleButton(float x, float y, string symbol, Color textColor)

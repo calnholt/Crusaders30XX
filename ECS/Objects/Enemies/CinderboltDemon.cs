@@ -73,7 +73,7 @@ public class Cinderbolt : EnemyAttackBase
 
 public class InsidiousBolt : EnemyAttackBase
 {
-  private int Penance = 3;
+  private int Penance = 1;
   private bool AppliedPenance = false;
   private CardData.CardColor Color = CardData.CardColor.White;
   public InsidiousBolt()

@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Grid Columns", Step = 1, Min = 1, Max = 6)]
         public int Columns { get; set; } = 3;
         [DebugEditable(DisplayName = "Card Scale", Step = 0.05f, Min = 0.1f, Max = 1.0f)]
-        public float CardScale { get; set; } = 0.75f;
+        public float CardScale { get; set; } = 0.70f;
 
         [DebugEditable(DisplayName = "Header Height", Step = 2, Min = 0, Max = 200)]
         public int HeaderHeight { get; set; } = 82;

@@ -1,3 +1,4 @@
+using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -6,6 +7,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Fervor : CardBase
     {
+        private int CourageThreshold = 5;
+        private int DamageBonus = 3;
         public Fervor()
         {
             CardId = "fervor";
@@ -13,8 +16,26 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Enemy";
             Cost = ["Red"];
             Animation = "Attack";
-            Damage = 7;
+            Damage = 6;
             Block = 3;
+            Text = $"If you have {CourageThreshold} or more courage, this attack gains +{DamageBonus} damage.";
+
+            CanPlay = (entityManager, card) =>
+            {
+                var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                var courageCmp = player?.GetComponent<Courage>();
+                int courage = courageCmp?.Amount ?? 0;
+                return courage >= CourageThreshold;
+            };
+
+            OnCantPlay = (entityManager, card) =>
+            {
+                var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                var courageCmp = player?.GetComponent<Courage>();
+                int courage = courageCmp?.Amount ?? 0;
+                if (courage < CourageThreshold)
+                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageThreshold} courage!" });
+            };
 
             OnPlay = (entityManager, card) =>
             {
@@ -27,6 +48,16 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     DamageType = ModifyTypeEnum.Attack
                 });
             };
+
+            GetConditionalDamage = (entityManager, card) =>
+            {
+                var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                var courageCmp = player?.GetComponent<Courage>();
+                int courage = courageCmp?.Amount ?? 0;
+                return courage >= CourageThreshold ? DamageBonus : 0;
+            };
+
+
         }
     }
 }
