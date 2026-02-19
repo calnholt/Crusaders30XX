@@ -8,7 +8,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
   public class PurgingBracers : EquipmentBase
   {
     private readonly int Cost = 1;
-    private readonly int Aggression = 8;
+    private readonly int Aggression = 2;
     public PurgingBracers()
     {
       Id = "purging_bracers";

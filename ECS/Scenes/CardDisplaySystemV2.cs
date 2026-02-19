@@ -73,7 +73,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Chip Border Thickness", Step = 1, Min = 1, Max = 6)]
         public int ChipBorderThickness { get; set; } = 3;
         [DebugEditable(DisplayName = "Chip Value Font Scale", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
-        public float ChipValueFontScale { get; set; } = 0.18f;
+        public float ChipValueFontScale { get; set; } = 0.22f;
         [DebugEditable(DisplayName = "Chip Width", Step = 1, Min = 20, Max = 80)]
         public int ChipWidth { get; set; } = 42;
 
@@ -81,7 +81,7 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Label Slab Height", Step = 1, Min = 8, Max = 30)]
         public int LabelSlabHeight { get; set; } = 14;
         [DebugEditable(DisplayName = "Label Slab Font Scale", Step = 0.001f, Min = 0.02f, Max = 0.2f)]
-        public float LabelSlabFontScale { get; set; } = 0.055f;
+        public float LabelSlabFontScale { get; set; } = 0.058f;
 
         // Delta Slab
         [DebugEditable(DisplayName = "Slab Width", Step = 1, Min = 20, Max = 80)]

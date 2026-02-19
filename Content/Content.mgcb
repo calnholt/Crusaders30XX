@@ -1357,7 +1357,7 @@
 /processorParam:TextureFormat=Color
 /build:CardArt/razor_storm.png
 
-#begin CardArt/exhaltation.png
+#begin CardArt/exaltation.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=0,0,0,0
@@ -1366,7 +1366,18 @@
 /processorParam:PremultiplyAlpha=True
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:TextureFormat=Color
-/build:CardArt/exhaltation.png
+/build:CardArt/exaltation.png
+
+#begin CardArt/hold_the_line.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:CardArt/hold_the_line.png
 
 #begin CardArt/absolution.png
 /importer:TextureImporter
