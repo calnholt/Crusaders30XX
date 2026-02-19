@@ -17,7 +17,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Cost = ["Red"];
             Animation = "Attack";
             Damage = 6;
-            Block = 3;
+            Block = 2;
             Text = $"If you have {CourageThreshold} or more courage, this attack gains +{DamageBonus} damage.";
 
             CanPlay = (entityManager, card) =>

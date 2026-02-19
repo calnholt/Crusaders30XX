@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Animation = "Attack";
             Cost = ["White"];
             Damage = 4;
-            Block = 3;
+            Block = 2;
 
             OnPlay = (entityManager, card) =>
             {

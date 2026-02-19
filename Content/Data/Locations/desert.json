@@ -178,7 +178,7 @@
       "UnrevealedRadius": 50,
       "Type": "Quest",
       "Name": "Ogre Chaga",
-      "Difficulty": 1,
+      "Difficulty": 3,
       "Reward": {
         "Gold": 3
       },
