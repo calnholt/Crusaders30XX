@@ -202,6 +202,11 @@ namespace Crusaders30XX.ECS.Systems
                 EventManager.Publish(new CantPlayCardMessage { Message = "Relics can only be discarded to pay for costs!" });
                 return;
             }
+            if (data.Card.Type == CardType.Block)
+            {
+                EventManager.Publish(new CantPlayCardMessage { Message = "Block cards can only be used to block!" });
+                return;
+            }
 
             // Capture sealed state before playing (will be used after play resolves to apply HP cost)
             var sealedComp = evt.Card.GetComponent<Sealed>();

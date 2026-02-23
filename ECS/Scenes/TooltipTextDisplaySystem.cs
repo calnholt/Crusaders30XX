@@ -133,7 +133,7 @@ namespace Crusaders30XX.ECS.Systems
 				var hasSealed = top.E.GetComponent<Sealed>() != null;
 				if (hasSealed)
 				{
-					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is sealed - costs HP equal to remaining seals. Cannot be discarded to pay for costs. Seals decrease: -1 per block, -1 per card played. At 0 seals, card is freed.";
+					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is sealed - costs HP equal to remaining seals to play. Seals decrease: -1 per block, -1 per card played. At 0 seals, card is freed. Cannot be pledged.";
 				}
 
 				// Wrap text based on MaxWidth

@@ -18,7 +18,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"Each attack card discarded to play this gains +{DamageBonus} damage for the rest of the quest.";
             Animation = "Attack";
             Block = 3;
-            Damage = 11;
+            Damage = 8;
 
             OnPlay = (entityManager, card) =>
             {

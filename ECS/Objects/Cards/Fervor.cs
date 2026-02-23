@@ -18,24 +18,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Animation = "Attack";
             Damage = 6;
             Block = 2;
+            Type = CardType.Attack;
             Text = $"If you have {CourageThreshold} or more courage, this attack gains +{DamageBonus} damage.";
-
-            CanPlay = (entityManager, card) =>
-            {
-                var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-                var courageCmp = player?.GetComponent<Courage>();
-                int courage = courageCmp?.Amount ?? 0;
-                return courage >= CourageThreshold;
-            };
-
-            OnCantPlay = (entityManager, card) =>
-            {
-                var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-                var courageCmp = player?.GetComponent<Courage>();
-                int courage = courageCmp?.Amount ?? 0;
-                if (courage < CourageThreshold)
-                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageThreshold} courage!" });
-            };
 
             OnPlay = (entityManager, card) =>
             {
@@ -56,7 +40,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 int courage = courageCmp?.Amount ?? 0;
                 return courage >= CourageThreshold ? DamageBonus : 0;
             };
-
 
         }
     }

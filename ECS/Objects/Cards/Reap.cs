@@ -9,7 +9,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Reap : CardBase
     {
-        private int DamageBonus = 5;
+        private int DamageBonus = 3;
         public Reap()
         {
             CardId = "reap";
@@ -19,7 +19,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"This attack gains +{DamageBonus} damage if two red cards are discarded to play this.";
             Animation = "Attack";
             Block = 3;
-            Damage = 9;
+            Damage = 7;
 
             OnPlay = (entityManager, card) =>
             {

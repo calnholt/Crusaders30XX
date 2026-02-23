@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Exaltation : CardBase
     {
-        private int CourageCost = 4;
+        private int CourageCost = 3;
         public Exaltation()
         {
             CardId = "exaltation";

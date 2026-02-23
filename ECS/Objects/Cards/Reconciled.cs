@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Reconciled : CardBase
     {
-        private int DamageBonus = 5;
+        private int DamageBonus = 4;
         public Reconciled()
         {
             CardId = "reconciled";
