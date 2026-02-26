@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class AnointTheSick : CardBase
     {
-        private int Heal = 4;
+        private int Heal = 3;
         public AnointTheSick()
         {
             CardId = "anoint_the_sick";

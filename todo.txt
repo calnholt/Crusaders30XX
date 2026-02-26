@@ -1,5 +1,3 @@
-- Wyvern card going to hand is sometimes(?) unclickable.
-- Player sometimes doesnt draw enough cards at start of enemy turn - there must be cards still considered "in-hand"
 
 
 UX
@@ -7,3 +5,14 @@ UX
 - new equipment chicklet
 - new equipment tooltip
 - replace AP section from relic/block cards with a symbol for better identification
+
+Animations
+
+- payment discards cards, then play card
+
+Bugs
+- Wyvern card going to hand is sometimes(?) unclickable.
+- Player sometimes doesnt draw enough cards at start of enemy turn - there must be cards still considered "in-hand" - Courageous issue
+- Marksman ability doesn't trigger if marked card is used for discard
+- Intimidate and Shackled not playing nice
+- Enemy attacks that look at hand for blocking cards need to ignore pledged card

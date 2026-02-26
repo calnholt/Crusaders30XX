@@ -19,7 +19,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Damage = 6;
             Block = 2;
             Type = CardType.Attack;
-            Text = $"If you have {CourageThreshold} or more courage, this attack gains +{DamageBonus} damage.";
+            Text = $"If you have {CourageThreshold}+ courage, this attack gains +{DamageBonus} damage.";
 
             OnPlay = (entityManager, card) =>
             {
