@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -277,7 +278,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Create or update tooltip entity for def.Text if keywords are present
-			string keywordTooltip = KeywordTooltipTextService.GetTooltip(ctx.Def.Text);
+			string keywordTooltip = TooltipTextService.GetKeywordTooltip(ctx.Def.Text);
 			if (!string.IsNullOrEmpty(keywordTooltip) && hasDefTextLines)
 			{
 				var defTextBounds = new Rectangle(

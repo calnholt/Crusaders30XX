@@ -7,6 +7,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Systems
@@ -90,7 +91,8 @@ namespace Crusaders30XX.ECS.Systems
 						x.E.GetComponent<Shackle>() != null ||
 						x.E.GetComponent<Pledge>() != null ||
 						x.E.GetComponent<PledgePreview>() != null ||
-						x.E.GetComponent<Sealed>() != null
+						x.E.GetComponent<Sealed>() != null ||
+					x.E.GetComponent<Recoil>() != null
 					))
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.ToList();
@@ -104,37 +106,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (top != null)
 			{
-				string text = top.UI.Tooltip;
-				var hasFrozen = top.E.GetComponent<Frozen>() != null;
-				if (hasFrozen)
-				{
-					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is frozen - when played, gain 1 frostbite. Lasts for the rest of the quest.";
-				}
-				var hasIntimidated = top.E.GetComponent<Intimidated>() != null;
-				if (hasIntimidated)
-				{
-					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is intimidated - cannot be used to block during the block phase.";
-				}
-				var hasShackled = top.E.GetComponent<Shackle>() != null;
-				if (hasShackled)
-				{
-					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is shackled - shackled cards block together.";
-				}
-				var hasPledge = top.E.GetComponent<Pledge>() != null;
-				if (hasPledge)
-				{
-					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is pledged - can only be played during the action phase. Does not count towards your hand size.";
-				}
-				var hasPledgePreview = top.E.GetComponent<PledgePreview>() != null;
-				if (hasPledgePreview)
-				{
-					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}Pledged cards can only be played during the action phase. Does not count towards your hand size.";
-				}
-				var hasSealed = top.E.GetComponent<Sealed>() != null;
-				if (hasSealed)
-				{
-					text += $"{(string.IsNullOrWhiteSpace(text) ? "" : "\n\n")}This card is sealed - costs HP equal to remaining seals to play. Seals decrease: -1 per block, -1 per card played. At 0 seals, card is freed. Cannot be pledged.";
-				}
+				string text = TooltipTextService.BuildCardTooltip(top.E, top.UI.Tooltip);
 
 				// Wrap text based on MaxWidth
 				var wrappedLines = TextUtils.WrapText(_font, text, TextScale, MaxWidth);

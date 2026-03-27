@@ -23,7 +23,7 @@
 | `ExhaustsOnEndTurn` | bool | false | — |
 | `IsToken` | bool | false | — |
 | `CanAddToLoadout` | bool | true | — |
-| `Tooltip` | string | "" | Auto-processed for keywords via `KeywordTooltipTextService` |
+| `Tooltip` | string | "" | Auto-processed for keywords via `TooltipTextService` |
 | `CardTooltip` | string | "" | — |
 
 ## Callbacks

@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Systems;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Objects.Cards
 {
@@ -44,7 +44,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             get => _tooltip;
             set
             {
-                _tooltip = KeywordTooltipTextService.GetTooltip(value);
+                _tooltip = TooltipTextService.GetKeywordTooltip(value);
             }
         }
         public string CardTooltip { get; set; } = "";

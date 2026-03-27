@@ -10,6 +10,7 @@ using Crusaders30XX.ECS.Utils;
 using System.Collections.Generic;
 using System;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -257,7 +258,7 @@ namespace Crusaders30XX.ECS.Systems
 					_spriteBatch.Draw(chipTexture, chipRect, chipBg);
                     var textPos = new Vector2(x + (w - sizes[i].X) / 2f + TextOffsetX, baseY + (h - sizes[i].Y) / 2f + TextOffsetY);
                     _spriteBatch.DrawString(_font, StringUtils.ToTitleCase(items[i].Label), textPos, textColor, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
-                    UpdateTooltipUi(key, chipRect, PassiveTooltipTextService.GetText(items[i].Type, isPlayer, items[i].Count));
+                    UpdateTooltipUi(key, chipRect, TooltipTextService.GetPassiveText(items[i].Type, isPlayer, items[i].Count));
                     x += w + Spacing;
                 }
                 // Remove any tooltip UI for passives no longer present

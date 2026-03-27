@@ -260,11 +260,11 @@ namespace Crusaders30XX.ECS.Systems
             switch (e.Type)
             {
                 case AppliedPassiveType.Frostbite:
-                    if (next >= PassiveTooltipTextService.FrostbiteThreshold)
+                    if (next >= TooltipTextService.FrostbiteThreshold)
                     {
                         EventManager.Publish(new FrostbiteTriggered { Target = e.Target });
-                        EventManager.Publish(new ModifyHpRequestEvent { Source = e.Target, Target = e.Target, Delta = -PassiveTooltipTextService.FrostbiteDamage, DamageType = ModifyTypeEnum.Effect });
-                        EventManager.Publish(new UpdatePassive { Owner = e.Target, Type = AppliedPassiveType.Frostbite, Delta = -PassiveTooltipTextService.FrostbiteDamage });
+                        EventManager.Publish(new ModifyHpRequestEvent { Source = e.Target, Target = e.Target, Delta = -TooltipTextService.FrostbiteDamage, DamageType = ModifyTypeEnum.Effect });
+                        EventManager.Publish(new UpdatePassive { Owner = e.Target, Type = AppliedPassiveType.Frostbite, Delta = -TooltipTextService.FrostbiteDamage });
                     }
                     break;
                 default:
