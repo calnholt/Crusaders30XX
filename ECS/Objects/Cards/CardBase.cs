@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Systems;
 
 namespace Crusaders30XX.ECS.Objects.Cards
 {
