@@ -8,14 +8,18 @@ Enemies need a defensive mechanic that creates strategic tension: guards absorb 
 
 **Guard** is a queue of value-based shields on an enemy. Each guard has a numeric value (1..X).
 
-### Guard Gain (Sentinel-specific)
+### Guard Gain (Passive-driven)
 
-At **PreBlock** phase, before the player sees each attack:
+Enemies with the `AppliedPassiveType.Sentinel` passive automatically gain guard from their attacks. The `GuardManagementSystem` handles this — no per-attack callback logic needed.
+
+At **PreBlock** phase, `GuardManagementSystem` checks if the enemy has the `Sentinel` passive. If so, for each planned attack:
 
 1. Roll conversion: 50% chance of 0 (no conversion)
 2. Remaining 50% is uniform across 1..D (D = attack damage)
 3. **Partial conversion** (amount < D): reduce attack damage by that amount, add guard(value) to queue
 4. **Full conversion** (amount == D): skip the attack entirely, add guard(value) to queue, do not show the attack in `EnemyAttackDisplaySystem`, proceed to next attack
+
+Any enemy can gain this behavior by receiving the `Sentinel` passive.
 
 ### Guard Consumption (Player Attacks Enemy)
 
@@ -81,7 +85,9 @@ Guard absorbs **raw** incoming damage before Armor, Aegis, or Shield. This ensur
 
 Responsibilities:
 - Subscribe to `AddGuardEvent`: push value onto `GuardQueue`, publish `GuardGainedEvent`
-- Subscribe to `ChangeBattlePhaseEvent` at `EnemyStart`: count guards → publish aggression → clear queue
+- Subscribe to `ChangeBattlePhaseEvent`:
+  - At `EnemyStart`: count guards → publish `ApplyPassiveEvent { Type=Aggression, Delta=count }` → clear queue
+  - At `PreBlock`: check if enemy has `AppliedPassiveType.Sentinel` passive. If yes, iterate each planned attack and perform the guard conversion roll (50% zero, else uniform 1..D). Partial conversion reduces `AttackDefinition.Damage` and publishes `AddGuardEvent`. Full conversion removes the planned attack from `AttackIntent.Planned` and publishes `AddGuardEvent`. If no attacks remain after conversion, short-circuit to `EnemyEnd` (same pattern as Stun).
 - Cleanup on `LoadSceneEvent` or `DeleteCachesEvent`
 
 ### GuardQueueDisplaySystem
@@ -109,7 +115,8 @@ System attributes: `[DebugTab("Guard Queue Display")]` with `[DebugEditable]` on
 
 ### OnStartOfBattle
 
-Adds `GuardQueue` component to the enemy entity.
+- Adds `GuardQueue` component to the enemy entity
+- Applies `AppliedPassiveType.Sentinel` passive (marks this enemy for automatic guard conversion)
 
 ### Attack Patterns
 
@@ -119,13 +126,7 @@ Three patterns, chosen randomly each turn (equal weight):
 2. **Twin Strike** — 2 hits, 5 damage each
 3. **Rapid Jabs** — 3 hits, 3 damage each
 
-No additional effects (no conditions, no blocking restrictions).
-
-Each attack's `OnAttackReveal` callback performs the guard conversion roll:
-- 50% → 0 (no conversion)
-- 50% → uniform 1..D
-- Partial: reduce `AttackDefinition.Damage`, publish `AddGuardEvent`
-- Full: remove planned attack from `AttackIntent.Planned`, publish `AddGuardEvent`. If no attacks remain, short-circuit to `EnemyEnd` (same pattern as Stun)
+No additional effects (no conditions, no blocking restrictions, no `OnAttackReveal` callbacks). Guard conversion is handled entirely by `GuardManagementSystem` based on the `Sentinel` passive.
 
 ### Registration
 
@@ -149,6 +150,7 @@ Each attack's `OnAttackReveal` callback performs the guard conversion roll:
 
 | File | Change |
 |------|--------|
+| `ECS/Components/CardComponents.cs` | Add `AppliedPassiveType.Sentinel` to enum |
 | `ECS/Scenes/BattleScene/HpManagementSystem.cs` | Add `TryConsumeGuard` before `GetPassiveDelta` (~15 lines) |
 | `ECS/Factories/EnemyFactory.cs` | Register Sentinel |
 | `ECS/Factories/EnemyAttackFactory.cs` | Register 3 Sentinel attacks |
