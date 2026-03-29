@@ -42,6 +42,8 @@ public static class EnemyAttackTextHelper
           return $"The enemy gains {amount} armor.";
         case EnemyAttackTextType.Corrode:
           return $"Each card used to block this attack reduces the block value by {amount} for the rest of the quest.";
+        case EnemyAttackTextType.Recoil:
+          return $"On reveal - a random card in your hand gains Recoil {amount}. If you don't block with it this turn, take {amount} damage.";
         case EnemyAttackTextType.Slow:
           return $"Gain {amount} slow.";
         case EnemyAttackTextType.Fear:
@@ -103,6 +105,7 @@ public static class EnemyAttackTextHelper
     Burn,
     Armor,
     Corrode,
+    Recoil,
     Frozen,
     Frostbite,
     Custom

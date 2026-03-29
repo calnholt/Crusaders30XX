@@ -505,6 +505,16 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marks a card with recoil stacks. If the card is not used to block the current attack,
+    /// the player takes damage equal to Stacks. Removed each attack resolve.
+    /// </summary>
+    public class Recoil : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int Stacks { get; set; } = 1;
+    }
+
+    /// <summary>
     /// Marks a card as sealed (petrified). Sealed cards cannot be played or pledged, but can block.
     /// Seals count down: -1 per block, -1 per card played. At 0 seals, card is freed.
     /// </summary>

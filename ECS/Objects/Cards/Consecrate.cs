@@ -1,0 +1,48 @@
+using System.Linq;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
+
+namespace Crusaders30XX.ECS.Objects.Cards
+{
+    public class Consecrate : CardBase
+    {
+        private int DamageBonus = 2;
+        private int CourageGain = 1;
+        public Consecrate()
+        {
+            CardId = "consecrate";
+            Name = "Consecrate";
+            Target = "Enemy";
+            Cost = ["Black"];
+            Animation = "Attack";
+            Damage = 6;
+            Block = 3;
+            Text = $"If this card is pledged, it gains +{DamageBonus} damage and gain {CourageGain} courage.";
+
+            OnPlay = (entityManager, card) =>
+            {
+                var player = entityManager.GetEntity("Player");
+                var enemy = entityManager.GetEntity("Enemy");
+
+                if (card.GetComponent<Pledge>() != null)
+                {
+                    EventManager.Publish(new ModifyCourageRequestEvent { Delta = CourageGain, Type = ModifyCourageType.Gain });
+                }
+
+                EventManager.Publish(new ModifyHpRequestEvent
+                {
+                    Source = player,
+                    Target = enemy,
+                    Delta = -GetDerivedDamage(entityManager, card),
+                    DamageType = ModifyTypeEnum.Attack
+                });
+            };
+
+            GetConditionalDamage = (entityManager, card) =>
+            {
+                return card.GetComponent<Pledge>() != null ? DamageBonus : 0;
+            };
+        }
+    }
+}

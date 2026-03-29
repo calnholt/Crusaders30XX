@@ -91,34 +91,39 @@ namespace Crusaders30XX.ECS.Systems
 			if (deck == null) return;
 
 			int effectiveHandCount = 0;
+			System.Console.WriteLine($"[DrawHandSystem] DrawUpToIntellect evaluating deck.Hand.Count={deck.Hand.Count} intellect={intellect} maxHandSize={maxHandSize}");
 			foreach (var e in deck.Hand)
 			{
-				if (e.HasComponent<AnimatingHandToDiscard>()) continue;
-				if (e.HasComponent<AnimatingHandToZone>()) continue;
-				if (e.HasComponent<AnimatingHandToDrawPile>()) continue;
+				string debugId = e.GetComponent<CardData>()?.Card?.CardId ?? $"entity#{e.Id}";
+				bool isActive = e.IsActive;
+				if (e.HasComponent<AnimatingHandToDiscard>()) { System.Console.WriteLine($"[DrawHandSystem]   skip {debugId} (AnimatingHandToDiscard) active={isActive}"); continue; }
+				if (e.HasComponent<AnimatingHandToZone>()) { System.Console.WriteLine($"[DrawHandSystem]   skip {debugId} (AnimatingHandToZone) active={isActive}"); continue; }
+				if (e.HasComponent<AnimatingHandToDrawPile>()) { System.Console.WriteLine($"[DrawHandSystem]   skip {debugId} (AnimatingHandToDrawPile) active={isActive}"); continue; }
 				// Pledged cards don't count against max hand size
-				if (e.HasComponent<Pledge>()) continue;
+				if (e.HasComponent<Pledge>()) { System.Console.WriteLine($"[DrawHandSystem]   skip {debugId} (Pledge) active={isActive}"); continue; }
 
 				var cd = e.GetComponent<CardData>();
-				if (cd == null) continue;
+				if (cd == null) { System.Console.WriteLine($"[DrawHandSystem]   skip entity#{e.Id} (no CardData) active={isActive}"); continue; }
 				string id = cd.Card.CardId ?? string.Empty;
-				if (string.IsNullOrEmpty(id)) continue;
+				if (string.IsNullOrEmpty(id)) { System.Console.WriteLine($"[DrawHandSystem]   skip entity#{e.Id} (empty CardId) active={isActive}"); continue; }
 				var card = CardFactory.Create(id);
 				if (card != null)
 				{
-					if (!card.IsWeapon) effectiveHandCount++;
+					if (!card.IsWeapon) { effectiveHandCount++; System.Console.WriteLine($"[DrawHandSystem]   count {id} (non-weapon) active={isActive}"); }
+					else { System.Console.WriteLine($"[DrawHandSystem]   skip {id} (weapon) active={isActive}"); }
 				}
 				else
 				{
 					effectiveHandCount++;
+					System.Console.WriteLine($"[DrawHandSystem]   count {id} (factory returned null) active={isActive}");
 				}
 			}
 
 			int spaceLeft = System.Math.Max(0, maxHandSize - effectiveHandCount);
 			int toDraw = System.Math.Min(spaceLeft, intellect);
+			System.Console.WriteLine($"[DrawHandSystem] DrawUpToIntellect effectiveHandCount={effectiveHandCount} spaceLeft={spaceLeft} toDraw={toDraw}");
 			if (toDraw > 0)
 			{
-				System.Console.WriteLine($"[DrawHandSystem] DrawUpToIntellect toDraw={toDraw}");
 				EventManager.Publish(new RequestDrawCardsEvent { Count = toDraw });
 			}
 			CheckForPlayerDeath();

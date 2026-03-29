@@ -39,7 +39,13 @@ namespace Crusaders30XX.ECS.Systems
             if (deck == null) return;
 
             Console.WriteLine($"[DeckManagementSystem] OnRequestDrawCards count={evt.Count} hand={deck.Hand.Count} drawPile={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
-            DrawCards(deck, Math.Max(1, evt.Count));
+            int drawn = DrawCards(deck, Math.Max(1, evt.Count));
+            Console.WriteLine($"[DeckManagementSystem] AfterDraw drawn={drawn} hand={deck.Hand.Count} drawPile={deck.DrawPile.Count}");
+            foreach (var c in deck.Hand)
+            {
+                string cId = c.GetComponent<CardData>()?.Card?.CardId ?? $"entity#{c.Id}";
+                Console.WriteLine($"[DeckManagementSystem]   inHand: {cId} active={c.IsActive}");
+            }
 
         }
 

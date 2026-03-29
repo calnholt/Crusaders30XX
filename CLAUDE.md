@@ -59,6 +59,10 @@ Events have states: Pending → Resolving → Waiting → Complete. This ensures
 
 `Game1.cs` initializes the World, registers all systems, and runs the game loop. Systems are updated each frame via `World.Update()`.
 
+### Parallax System
+
+The `ParallaxLayerSystem` is fully agnostic — external systems cooperate with it only through `Transform.Position`, never by reading or writing `ParallaxLayer` fields directly. Layout systems freely write `Position` every frame to assert the entity's base; the parallax system detects external writes, derives the anchor, and applies its offset. No system should reference `ParallaxLayer.Anchor`, `AnchorInitialized`, `LastWrittenPosition`, or any other internal parallax state.
+
 ## Coding Standards
 
 - Add `DebugEditable` and `DebugTab` attributes to systems with Draw functions

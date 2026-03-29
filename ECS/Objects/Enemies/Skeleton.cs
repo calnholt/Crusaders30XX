@@ -77,29 +77,17 @@ public class BoneStrike : EnemyAttackBase
 
 public class Sweep : EnemyAttackBase
 {
-  private int Corrode = 1;
+  private int Recoil = 1;
   public Sweep()
   {
     Id = "sweep";
     Name = "Sweep";
     Damage = 4;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Corrode, Corrode);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Recoil, Recoil);
 
     OnAttackReveal = (entityManager) =>
     {
-      if (IsOneBattleOrLastBattle)
-      {
-        Text = string.Empty;
-      }
-    };
-    
-    OnBlockProcessed = (entityManager, card) =>
-    {
-      if (!IsOneBattleOrLastBattle)
-      {
-        // TODO: should send an event
-        BlockValueService.ApplyDelta(card, -Corrode, "Corrode");
-      }
+      EventManager.Publish(new ApplyRecoilEvent { Amount = Recoil });
     };
   }
 }

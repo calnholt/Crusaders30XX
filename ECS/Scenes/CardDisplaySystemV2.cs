@@ -686,22 +686,21 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            // AP / FREE chip (bottom slot)
-            bool isFree = card.IsFreeAction || card.Type == CardType.Block;
-
-            if (isFree)
+            // AP / FREE chip (bottom slot) — skip for Block and Relic cards (no action points)
+            if (card.Type != CardType.Block && card.Type != CardType.Relic)
             {
-                // Label slab
-                DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, apLabelY, "FREE", ChipVariant.FREE);
-                float chipBodyY = apLabelY + LabelSlabHeight * vs;
-                DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "0", ChipVariant.FREE, true, false);
-            }
-            else
-            {
-                // Label slab
-                DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, apLabelY, "AP", ChipVariant.AP);
-                float chipBodyY = apLabelY + LabelSlabHeight * vs;
-                DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "1", ChipVariant.AP, true, false);
+                if (card.IsFreeAction)
+                {
+                    DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, apLabelY, "FREE", ChipVariant.FREE);
+                    float chipBodyY = apLabelY + LabelSlabHeight * vs;
+                    DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "0", ChipVariant.FREE, true, false);
+                }
+                else
+                {
+                    DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, apLabelY, "AP", ChipVariant.AP);
+                    float chipBodyY = apLabelY + LabelSlabHeight * vs;
+                    DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "1", ChipVariant.AP, true, false);
+                }
             }
         }
 
