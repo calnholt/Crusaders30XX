@@ -118,6 +118,10 @@ namespace Crusaders30XX.ECS.Factories
                 "masochism" => new Masochism(),
                 // Sniper attacks
                 "sniper_shot" => new SniperShot(),
+                // Sentinel attacks
+                "sentinel_slam" => new SentinelSlam(),
+                "twin_strike" => new TwinStrike(),
+                "rapid_jab" => new RapidJab(),
                 _ => null
             };
         }
@@ -230,6 +234,10 @@ namespace Crusaders30XX.ECS.Factories
                 { "masochism", new Masochism() },
                 // Sniper attacks
                 { "sniper_shot", new SniperShot() },
+                // Sentinel attacks
+                { "sentinel_slam", new SentinelSlam() },
+                { "twin_strike", new TwinStrike() },
+                { "rapid_jab", new RapidJab() },
             };
         }
     }
