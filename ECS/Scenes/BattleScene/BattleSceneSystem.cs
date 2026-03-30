@@ -110,6 +110,8 @@ namespace Crusaders30XX.ECS.Systems
 		private FrozenCardDisplaySystem _frozenCardDisplaySystem;
 		private RecoilManagementSystem _recoilManagementSystem;
 		private RecoilDisplaySystem _recoilDisplaySystem;
+		private GuardManagementSystem _guardManagementSystem;
+		private GuardQueueDisplaySystem _guardQueueDisplaySystem;
 		private SealManagementSystem _sealManagementSystem;
 		private SealDisplaySystem _sealDisplaySystem;
 		private ShackleDisplaySystem _shackleDisplaySystem;
@@ -292,6 +294,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("PlunderSnatchDisplaySystem.Draw", _plunderSnatchDisplaySystem.Draw);
 			FrameProfiler.Measure("ActiveCharacterIndicatorDisplaySystem.Draw", _activeCharacterIndicatorDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", _enemyIntentPipsSystem.Draw);
+			FrameProfiler.Measure("GuardQueueDisplaySystem.Draw", _guardQueueDisplaySystem.Draw);
 			FrameProfiler.Measure("AmbushDisplaySystem.Draw", _ambushDisplaySystem.Draw);
 			FrameProfiler.Measure("QueuedEventsDisplaySystem.Draw", _queuedEventsDisplaySystem.Draw);
 			FrameProfiler.Measure("AttackAnimationDisplaySystem.Draw", _attackAnimationDisplaySystem.Draw);
@@ -538,6 +541,8 @@ namespace Crusaders30XX.ECS.Systems
 			_frozenCardDisplaySystem = new FrozenCardDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, frostTexture);
 			_recoilManagementSystem = new RecoilManagementSystem(_world.EntityManager);
 			_recoilDisplaySystem = new RecoilDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_guardManagementSystem = new GuardManagementSystem(_world.EntityManager);
+			_guardQueueDisplaySystem = new GuardQueueDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_sealManagementSystem = new SealManagementSystem(_world.EntityManager);
 			var sealTexture = _content.Load<Texture2D>("seal");
 			_sealDisplaySystem = new SealDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, sealTexture);
@@ -654,6 +659,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_frozenCardDisplaySystem);
 			_world.AddSystem(_recoilManagementSystem);
 			_world.AddSystem(_recoilDisplaySystem);
+			_world.AddSystem(_guardManagementSystem);
+			_world.AddSystem(_guardQueueDisplaySystem);
 			_world.AddSystem(_sealManagementSystem);
 			_world.AddSystem(_sealDisplaySystem);
 			_world.AddSystem(_shackleDisplaySystem);
