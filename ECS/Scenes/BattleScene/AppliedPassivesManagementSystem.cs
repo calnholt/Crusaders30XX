@@ -349,7 +349,8 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Aegis,
                 AppliedPassiveType.Anathema,
                 AppliedPassiveType.Plunder,
-                AppliedPassiveType.SanguineCurse
+                AppliedPassiveType.SanguineCurse,
+                AppliedPassiveType.Sentinel
             };
         }
         public static HashSet<AppliedPassiveType> GetQuestPassives()
