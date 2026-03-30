@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
@@ -22,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		// Animation state
 		private readonly Dictionary<int, BreakAnim> _breakAnims = new();
 		private readonly List<GainAnim> _gainAnims = new();
+		private readonly Dictionary<int, float> _pipScales = new(); // queue index → gain scale, recomputed each frame
 		private int _nextAnimId = 0;
 
 		[DebugEditable(DisplayName = "Offset Y", Step = 2, Min = -400, Max = 400)]
@@ -47,6 +47,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Gain Duration", Step = 0.05f, Min = 0.1f, Max = 1f)]
 		public float GainDuration { get; set; } = 0.25f;
+
+		[DebugEditable(DisplayName = "Gain Overshoot Scale", Step = 0.05f, Min = 1f, Max = 2f)]
+		public float GainOvershootScale { get; set; } = 1.15f;
+
+		[DebugEditable(DisplayName = "Gain Overshoot Peak", Step = 0.05f, Min = 0.1f, Max = 0.9f)]
+		public float GainOvershootPeak { get; set; } = 0.6f;
 
 		[DebugEditable(DisplayName = "Pip Color R", Step = 5, Min = 0, Max = 255)]
 		public int PipColorR { get; set; } = 100;
@@ -95,6 +101,17 @@ namespace Crusaders30XX.ECS.Systems
 				if (_gainAnims[i].Elapsed >= GainDuration)
 					_gainAnims.RemoveAt(i);
 			}
+
+			// Precompute pip scale for each queue index from active gain animations
+			_pipScales.Clear();
+			foreach (var anim in _gainAnims)
+			{
+				float progress = Math.Clamp(anim.Elapsed / GainDuration, 0f, 1f);
+				float scale = progress < GainOvershootPeak
+					? MathHelper.Lerp(0f, GainOvershootScale, progress / GainOvershootPeak)
+					: MathHelper.Lerp(GainOvershootScale, 1f, (progress - GainOvershootPeak) / (1f - GainOvershootPeak));
+				_pipScales[anim.QueueIndex] = scale;
+			}
 		}
 
 		public void Draw()
@@ -137,18 +154,8 @@ namespace Crusaders30XX.ECS.Systems
 				int value = gq.Queue[i];
 				int x = startX + i * (diameter + PipGap) + PipRadius;
 
-				// Apply gain animation scale if this pip was just added
-				float scale = 1f;
-				var gainAnim = _gainAnims.FirstOrDefault(g => g.QueueIndex == i && !g.Used);
-				if (gainAnim != null)
-				{
-					float progress = Math.Clamp(gainAnim.Elapsed / GainDuration, 0f, 1f);
-					// Overshoot: scale 0 → 1.15 then settles to 1.0
-					scale = progress < 0.6f
-						? MathHelper.Lerp(0f, 1.15f, progress / 0.6f)
-						: MathHelper.Lerp(1.15f, 1f, (progress - 0.6f) / 0.4f);
-					gainAnim.Used = true;
-				}
+				// Apply gain animation scale if this pip was just added (precomputed in UpdateEntity)
+				float scale = _pipScales.TryGetValue(i, out var pipScale) ? pipScale : 1f;
 
 				DrawGuardPip(new Vector2(x, (int)centerY), PipRadius, pipColor, scale, 1f, value);
 			}
@@ -220,8 +227,7 @@ namespace Crusaders30XX.ECS.Systems
 			_gainAnims.Add(new GainAnim
 			{
 				QueueIndex = gq.Queue.Count - 1,
-				Elapsed = 0f,
-				Used = false
+				Elapsed = 0f
 			});
 		}
 
@@ -295,7 +301,6 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			public int QueueIndex;
 			public float Elapsed;
-			public bool Used;
 		}
 	}
 }
