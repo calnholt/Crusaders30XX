@@ -40,7 +40,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Guard absorption: absorb raw incoming attack damage before passives
 			if (e.Delta < 0 && e.DamageType == ModifyTypeEnum.Attack)
 			{
-				int guardAbsorbed = TryConsumeGuard(target, System.Math.Abs(e.Delta));
+				int guardAbsorbed = TryConsumeGuard(target, Math.Abs(e.Delta));
 				if (guardAbsorbed > 0)
 				{
 					e.Delta += guardAbsorbed;
@@ -227,7 +227,8 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				int guardValue = gq.Queue[0];
 				gq.Queue.RemoveAt(0);
-				int absorbed = System.Math.Min(guardValue, remaining);
+				// absorbed is capped at remaining so we don't over-count when the guard value exceeds incoming damage
+				int absorbed = Math.Min(guardValue, remaining);
 				totalAbsorbed += absorbed;
 				remaining -= guardValue; // guard is fully consumed; if guardValue > remaining, remaining goes negative (clamped below)
 				EventManager.Publish(new GuardConsumedEvent { Enemy = target, GuardValue = guardValue, RemainingCount = gq.Queue.Count });
