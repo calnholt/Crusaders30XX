@@ -1104,6 +1104,7 @@ namespace Crusaders30XX.ECS.Components
         Plunder,
         SanguineCurse,
         Marksman,
+        Sentinel,
     }
 
     public class PassiveMeterComponent : IComponent
