@@ -10,6 +10,8 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
 public class Sentinel : EnemyBase
 {
+	private int SentinelStacks = 1;
+
 	public Sentinel(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
 	{
 		Id = "sentinel";
@@ -22,7 +24,7 @@ public class Sentinel : EnemyBase
 			entityManager.AddComponent(enemy, new GuardQueue());
 			EventQueueBridge.EnqueueTriggerAction("Sentinel.OnStartOfBattle", () =>
 			{
-				EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Sentinel, Delta = 1 });
+				EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Sentinel, Delta = SentinelStacks });
 			}, AppliedPassivesManagementSystem.Duration);
 		};
 	}
