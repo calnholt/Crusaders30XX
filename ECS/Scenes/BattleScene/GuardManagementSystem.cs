@@ -97,6 +97,7 @@ namespace Crusaders30XX.ECS.Systems
 
 				EventQueueBridge.EnqueueTriggerAction("GuardManagementSystem.FullConversion", () =>
 				{
+					EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Sentinel });
 					EventManager.Publish(new AddGuardEvent { Enemy = enemy, Value = damage });
 
 					EventQueue.Clear();
@@ -133,6 +134,7 @@ namespace Crusaders30XX.ECS.Systems
 
 				EventQueueBridge.EnqueueTriggerAction("GuardManagementSystem.PartialConversion", () =>
 				{
+					EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Sentinel });
 					EventManager.Publish(new AddGuardEvent { Enemy = enemy, Value = conversionAmount });
 				}, Duration);
 			}
@@ -140,6 +142,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private int RollGuardConversion(int damage)
 		{
+			if (damage <= 0) return 0;
 			// 50% chance of 0; remaining 50% uniform across 1..damage
 			int roll = Random.Shared.Next(0, damage * 2);
 			if (roll < damage)
