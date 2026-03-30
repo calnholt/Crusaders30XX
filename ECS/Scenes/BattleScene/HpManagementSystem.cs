@@ -37,6 +37,16 @@ namespace Crusaders30XX.ECS.Systems
 			var hp = target.GetComponent<HP>();
 			if (hp == null) return;
 			int before = hp.Current;
+			// Guard absorption: absorb raw incoming attack damage before passives
+			if (e.Delta < 0 && e.DamageType == ModifyTypeEnum.Attack)
+			{
+				int guardAbsorbed = TryConsumeGuard(target, System.Math.Abs(e.Delta));
+				if (guardAbsorbed > 0)
+				{
+					e.Delta += guardAbsorbed;
+					if (e.Delta >= 0) return;
+				}
+			}
 			// TODO: iterate through applied passives and apply their effects
 			int passiveDelta = AppliedPassivesService.GetPassiveDelta(e);
 			Console.WriteLine($"[HpManagementSystem] OnModifyHpRequest passiveDelta={passiveDelta}");
@@ -205,6 +215,25 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new UpdatePassive { Owner = target, Type = AppliedPassiveType.Aegis, Delta = -useAegis });
 			newDelta += useAegis;
 			return true;
+		}
+
+		private int TryConsumeGuard(Entity target, int rawDamage)
+		{
+			var gq = target.GetComponent<GuardQueue>();
+			if (gq == null || gq.Queue.Count == 0) return 0;
+			int remaining = rawDamage;
+			int totalAbsorbed = 0;
+			while (remaining > 0 && gq.Queue.Count > 0)
+			{
+				int guardValue = gq.Queue[0];
+				gq.Queue.RemoveAt(0);
+				int absorbed = System.Math.Min(guardValue, remaining);
+				totalAbsorbed += absorbed;
+				remaining -= guardValue; // guard is fully consumed; if guardValue > remaining, remaining goes negative (clamped below)
+				EventManager.Publish(new GuardConsumedEvent { Enemy = target, GuardValue = guardValue, RemainingCount = gq.Queue.Count });
+			}
+			if (remaining < 0) remaining = 0;
+			return totalAbsorbed;
 		}
 
 		private void OnIncreaseMaxHp(IncreaseMaxHpEvent e)
