@@ -142,14 +142,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private int RollGuardConversion(int damage)
 		{
-			if (damage <= 0) return 0;
-			// 50% chance of 0; remaining 50% uniform across 1..damage
-			int roll = Random.Shared.Next(0, damage * 2);
-			if (roll < damage)
-			{
-				return 0; // 50% chance: no conversion
-			}
-			return roll - damage + 1; // maps [damage..damage*2-1] to [1..damage]
+			if (damage <= 1) return 0;
+			// 50% chance of 0; remaining 50% uniform across 1..(damage - 1)
+			// (prevents returning the full `damage` amount).
+			if (Random.Shared.Next(0, 2) == 0) return 0;
+			return Random.Shared.Next(1, damage); // max is exclusive => [1..damage-1]
 		}
 
 		private void OnLoadScene(LoadSceneEvent e)

@@ -25,19 +25,19 @@ namespace Crusaders30XX.ECS.Systems
 		private int _nextAnimId = 0;
 
 		[DebugEditable(DisplayName = "Offset Y", Step = 2, Min = -400, Max = 400)]
-		public int OffsetY { get; set; } = -260;
+		public int OffsetY { get; set; } = -180;
 
 		[DebugEditable(DisplayName = "Pip Radius", Step = 1, Min = 4, Max = 32)]
-		public int PipRadius { get; set; } = 12;
+		public int PipRadius { get; set; } = 15;
 
 		[DebugEditable(DisplayName = "Pip Gap", Step = 1, Min = 0, Max = 32)]
 		public int PipGap { get; set; } = 8;
 
 		[DebugEditable(DisplayName = "Pip Thickness", Step = 1, Min = 1, Max = 8)]
-		public int PipThickness { get; set; } = 3;
+		public int PipThickness { get; set; } = 4;
 
 		[DebugEditable(DisplayName = "Font Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
-		public float FontScale { get; set; } = 0.5f;
+		public float FontScale { get; set; } = 0.15f;
 
 		[DebugEditable(DisplayName = "Break Duration", Step = 0.05f, Min = 0.1f, Max = 1f)]
 		public float BreakDuration { get; set; } = 0.3f;

@@ -78,6 +78,8 @@ The `ParallaxLayerSystem` is fully agnostic — external systems cooperate with 
 ## Display Systems
 
 - Always create as many `DebugEditable` as possible for maximum visual control, never hardcode magic numbers.
+- `FontSingleton.ContentFont` is a large font (~100px+ native). Small UI text requires `FontScale` in the `0.05–0.15` range; default to low values and tune up.
+- Text display fields (e.g. `FontScale`) always use `Step = 0.01f` in `DebugEditable`.
 
 ## Entities
 
