@@ -24,6 +24,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteFont _font = FontSingleton.TitleFont;
         private readonly Texture2D _pixel;
         private CardVisualSettings _cardSettings;
+        private readonly HashSet<Entity> _suppressedByPayCost = new HashSet<Entity>();
 
         [DebugEditable(DisplayName = "Fade In (s)", Step = 0.05f, Min = 0.01f, Max = 1.0f)]
         public float FadeInDurationSec { get; set; } = 0.25f;
@@ -282,6 +283,23 @@ namespace Crusaders30XX.ECS.Systems
             state.OpenElapsedSeconds = 0f;
             state.Type = evt.Type;
 
+            // Suppress all interactable entities except cancel button and viable hand/selected cards
+            RestorePayCostSuppressed();
+            var deckEntity2 = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck2 = deckEntity2?.GetComponent<Deck>();
+            foreach (var ent in EntityManager.GetEntitiesWithComponent<UIElement>())
+            {
+                if (ent.GetComponent<PayCostCancelButton>() != null) continue;
+                var isCard = ent.GetComponent<CardData>() != null;
+                if (isCard && ((deck2 != null && deck2.Hand.Contains(ent)) || ent.GetComponent<SelectedForPayment>() != null)) continue;
+                var ui = ent.GetComponent<UIElement>();
+                if (ui != null && ui.BaseInteractable)
+                {
+                    ui.Suppress();
+                    _suppressedByPayCost.Add(ent);
+                }
+            }
+
             // Stage the card: record original index and move to HandStaged zone
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             var deck = deckEntity?.GetComponent<Deck>();
@@ -319,6 +337,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void Close()
         {
+            RestorePayCostSuppressed();
             var e = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
             if (e == null) return;
             var state = e.GetComponent<PayCostOverlayState>();
@@ -959,6 +978,16 @@ namespace Crusaders30XX.ECS.Systems
             }
             catch { }
             return cd.Card.Name ?? cd.Card.CardId ?? "Card";
+        }
+
+        private void RestorePayCostSuppressed()
+        {
+            foreach (var ent in _suppressedByPayCost)
+            {
+                var ui = ent.GetComponent<UIElement>();
+                ui?.Restore();
+            }
+            _suppressedByPayCost.Clear();
         }
 
         private void DrawBorder(Rectangle rect, Color color, int thickness)

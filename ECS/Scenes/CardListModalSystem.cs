@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly Texture2D _pixel;
         private readonly RasterizerState _scissorRasterizer;
         private CursorStateEvent _cursorEvent;
+        private readonly HashSet<Entity> _suppressedByModal = new HashSet<Entity>();
         [DebugEditable(DisplayName = "Modal Margin", Step = 1, Min = 0, Max = 200)]
         public int ModalMargin { get; set; } = 40;
         [DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 200)]
@@ -268,6 +269,16 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
+        private void RestoreModalSuppressed()
+        {
+            foreach (var e in _suppressedByModal)
+            {
+                var ui = e.GetComponent<UIElement>();
+                ui?.Restore();
+            }
+            _suppressedByModal.Clear();
+        }
+
         private void DrawBorder(Rectangle r, Color color, int thickness)
         {
             _spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Y, r.Width, thickness), color);
@@ -295,10 +306,25 @@ namespace Crusaders30XX.ECS.Systems
                     cmp.ScrollOffset = 0;
                 }
             }
+
+            // Suppress all interactable entities except the modal's close button and displayed cards
+            RestoreModalSuppressed();
+            foreach (var e in EntityManager.GetEntitiesWithComponent<UIElement>())
+            {
+                if (e.GetComponent<CardListModalClose>() != null) continue;
+                if (e.GetComponent<CardData>() != null) continue;
+                var ui = e.GetComponent<UIElement>();
+                if (ui != null && ui.BaseInteractable)
+                {
+                    ui.Suppress();
+                    _suppressedByModal.Add(e);
+                }
+            }
         }
 
         private void CloseModal()
         {
+            RestoreModalSuppressed();
             var modal = EntityManager.GetEntitiesWithComponent<CardListModal>().FirstOrDefault();
             if (modal == null) return;
             var cmp = modal.GetComponent<CardListModal>();
