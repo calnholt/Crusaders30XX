@@ -246,7 +246,7 @@ namespace Crusaders30XX.ECS.Systems
             var uiElement = entity.GetComponent<UIElement>();
             if (uiElement != null && uiElement.EventType != UIElementEventType.None)
             {
-                UIElementEventDelegateService.HandleEvent(uiElement.EventType, entity);
+                UIElementEventDelegateService.HandleEvent(uiElement.EventType, entity, EntityManager);
             }
 
             // Handle different types of UI clicks

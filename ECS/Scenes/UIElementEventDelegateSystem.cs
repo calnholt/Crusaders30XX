@@ -2,18 +2,20 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using System;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
 {
-	internal static class UIElementEventDelegateService
-	{
-        public static void HandleEvent(UIElementEventType type, Entity entity)
+    internal static class UIElementEventDelegateService
+    {
+        public static void HandleEvent(UIElementEventType type, Entity entity, EntityManager entityManager)
         {
             switch(type)
             {
                 case UIElementEventType.ConfirmBlocks:
                 {
-                    EventManager.Publish(new DebugCommandEvent { Command = "ConfirmEnemyAttack" });
+                    EventManager.Publish(new ConfirmBlocksRequested());
                     break;
                 }
                 case UIElementEventType.UnassignCardAsBlock:
@@ -56,9 +58,56 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
                     break;
                 }
+                case UIElementEventType.CardClicked:
+                {
+                    var payStateEntity = entityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
+                    var payState = payStateEntity?.GetComponent<PayCostOverlayState>();
+                    if (payState != null && payState.IsOpen)
+                    {
+                        EventManager.Publish(new PayCostCandidateClicked { Card = entity });
+                    }
+                    else
+                    {
+                        EventManager.Publish(new PlayCardRequested { Card = entity });
+                    }
+                    break;
+                }
+                case UIElementEventType.EndTurn:
+                {
+                    EventManager.Publish(new EndTurnRequested());
+                    break;
+                }
+                case UIElementEventType.SkipPledge:
+                {
+                    EventManager.Publish(new SkipPledgeRequested());
+                    break;
+                }
+                case UIElementEventType.ViewDeck:
+                {
+                    var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                    var deck = deckEntity?.GetComponent<Deck>();
+                    if (deck != null)
+                    {
+                        EventManager.Publish(new OpenCardListModalEvent { Title = "Draw Pile", Cards = deck.DrawPile.ToList() });
+                    }
+                    break;
+                }
+                case UIElementEventType.ViewDiscard:
+                {
+                    var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+                    var deck = deckEntity?.GetComponent<Deck>();
+                    if (deck != null)
+                    {
+                        EventManager.Publish(new OpenCardListModalEvent { Title = "Discard Pile", Cards = deck.DiscardPile.ToList() });
+                    }
+                    break;
+                }
                 default:
                 {
-                    Console.WriteLine($"UIElementEventDelegateSystem: clicked unknown event type {type} on entity {entity.Id}");
+                    if (type != UIElementEventType.None)
+                    {
+                        Console.WriteLine($"UIElementEventDelegateService: unhandled event type {type} on entity {entity.Id}");
+                    }
                     break;
                 }
             }
