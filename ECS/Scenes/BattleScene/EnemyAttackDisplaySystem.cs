@@ -198,13 +198,10 @@ namespace Crusaders30XX.ECS.Systems
 			_enemyAttackTopTexture = TryLoadDecorationTexture("enemy_attack_top");
 			_enemyAttackSkullTexture = TryLoadDecorationTexture("enemy_attack_skull");
 
-			EventManager.Subscribe<DebugCommandEvent>(evt =>
+			EventManager.Subscribe<ConfirmBlocksRequested>(_ =>
 			{
-				if (evt.Command == "ConfirmEnemyAttack")
-				{
-                    Console.WriteLine("[EnemyAttackDisplaySystem] DebugCommand ConfirmEnemyAttack received");
-					OnConfirmPressed();
-				}
+                Console.WriteLine("[EnemyAttackDisplaySystem] ConfirmBlocksRequested received");
+				OnConfirmPressed();
 			});
 
 			// Clear any transient visuals when leaving Enemy phases

@@ -38,14 +38,6 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_content = content;
-			EventManager.Subscribe<DebugCommandEvent>(evt =>
-			{
-				if (evt.Command == "EnemyAbsorbPulse")
-				{
-					_pulseTimerSeconds = _pulseDurationSeconds;
-					System.Console.WriteLine("[EnemyDisplaySystem] DebugCommand EnemyAbsorbPulse received");
-				}
-			});
 			EventManager.Subscribe<StartEnemyAttackAnimation>(evt =>
 			{
 				// Start a brief attack animation timer; on completion, signal impact

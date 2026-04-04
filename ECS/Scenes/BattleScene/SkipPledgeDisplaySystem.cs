@@ -62,14 +62,11 @@ namespace Crusaders30XX.ECS.Systems
             _pixel = new Texture2D(gd, 1, 1);
             _pixel.SetData(new[] { Color.White });
 
-            // Handle button click via debug command
-            EventManager.Subscribe<DebugCommandEvent>(evt =>
+            // Handle button click via input system
+            EventManager.Subscribe<SkipPledgeRequested>(_ =>
             {
-                if (evt.Command == "SkipPledge")
-                {
-                    Console.WriteLine("[SkipPledgeDisplaySystem] SkipPledge command received");
-                    OnSkipPledgePressed();
-                }
+                Console.WriteLine("[SkipPledgeDisplaySystem] SkipPledgeRequested received");
+                OnSkipPledgePressed();
             });
             
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);

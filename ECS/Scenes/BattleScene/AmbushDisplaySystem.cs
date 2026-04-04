@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
 	/// Shows an "Ambush!" intro animation and a timed meter for ambush attacks.
-	/// Auto-confirms the enemy attack when the timer expires by publishing DebugCommandEvent("ConfirmEnemyAttack").
+	/// Auto-confirms the enemy attack when the timer expires by publishing ConfirmBlocksRequested.
 	/// </summary>
 	[DebugTab("Ambush Display")]
 	public class AmbushDisplaySystem : Core.System
@@ -206,7 +206,7 @@ namespace Crusaders30XX.ECS.Systems
 						{
 							EventManager.Publish(new AmbushTimerExpired { ContextId = st.ContextId });
 						}
-						EventManager.Publish(new DebugCommandEvent { Command = "ConfirmEnemyAttack" });
+						EventManager.Publish(new ConfirmBlocksRequested());
 					}
 				}
 				UpdateAnchorTransforms();
@@ -317,7 +317,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugAction("Auto Confirm Now")]
 		public void Debug_AutoConfirmNow()
 		{
-			EventManager.Publish(new DebugCommandEvent { Command = "ConfirmEnemyAttack" });
+			EventManager.Publish(new ConfirmBlocksRequested());
 		}
 
 	private void Deactivate()
