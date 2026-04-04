@@ -47,14 +47,11 @@ namespace Crusaders30XX.ECS.Systems
             _graphicsDevice = gd;
             _spriteBatch = sb;
 
-            // Hook debug command to support button click via input system
-            EventManager.Subscribe<DebugCommandEvent>(evt =>
+            // Hook to support button click via input system
+            EventManager.Subscribe<EndTurnRequested>(_ =>
             {
-                if (evt.Command == "EndTurn")
-                {
-                    System.Console.WriteLine("[EndTurnDisplaySystem] DebugCommand EndTurn received");
-                    OnEndTurnPressed();
-                }
+                System.Console.WriteLine("[EndTurnDisplaySystem] EndTurnRequested received");
+                OnEndTurnPressed();
             });
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
             EventManager.Subscribe<OpenPayCostOverlayEvent>(_ => HideEndTurnButton());
@@ -207,7 +204,7 @@ namespace Crusaders30XX.ECS.Systems
                 endBtn = EntityManager.CreateEntity("UIButton_EndTurn");
                 EntityManager.AddComponent(endBtn, new UIButton { Label = "End Turn", Command = "EndTurn" });
 				EntityManager.AddComponent(endBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
-				EntityManager.AddComponent(endBtn, new UIElement { Bounds = btnRect, IsInteractable = true, IsHidden = true });
+				EntityManager.AddComponent(endBtn, new UIElement { Bounds = btnRect, IsInteractable = true, IsHidden = true, EventType = UIElementEventType.EndTurn });
 				EntityManager.AddComponent(endBtn, new HotKey { Button = FaceButton.Y });
 				EntityManager.AddComponent(endBtn, ParallaxLayer.GetUIParallaxLayer());
             }

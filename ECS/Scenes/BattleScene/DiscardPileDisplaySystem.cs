@@ -132,7 +132,7 @@ namespace Crusaders30XX.ECS.Systems
             var rootUi = root.GetComponent<UIElement>();
 			if (rootUi == null)
 			{
-                EntityManager.AddComponent(root, new UIElement { Bounds = scaledRect, IsInteractable = true, Tooltip = "View Discard Pile" });
+                EntityManager.AddComponent(root, new UIElement { Bounds = scaledRect, IsInteractable = true, Tooltip = "View Discard Pile", EventType = UIElementEventType.ViewDiscard });
                 EntityManager.AddComponent(root, new DiscardPileClickable());
 			}
 			else

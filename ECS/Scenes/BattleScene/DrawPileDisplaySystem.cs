@@ -131,7 +131,7 @@ namespace Crusaders30XX.ECS.Systems
             var rootUi = root.GetComponent<UIElement>();
 			if (rootUi == null)
 			{
-                EntityManager.AddComponent(root, new UIElement { Bounds = scaledRect, IsInteractable = true, Tooltip = "View Draw Pile" });
+                EntityManager.AddComponent(root, new UIElement { Bounds = scaledRect, IsInteractable = true, Tooltip = "View Draw Pile", EventType = UIElementEventType.ViewDeck });
                 EntityManager.AddComponent(root, new DrawPileClickable());
 			}
 			else
