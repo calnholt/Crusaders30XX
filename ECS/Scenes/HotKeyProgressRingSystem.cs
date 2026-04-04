@@ -102,11 +102,11 @@ namespace Crusaders30XX.ECS.Systems
                     
                     // Find top-most eligible entity with this hotkey that requires hold
                     var target = EntityManager.GetEntitiesWithComponent<HotKey>()
-                        .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), Btn = e.GetComponent<UIButton>() })
+                        .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>() })
                         .Where(x => x.HK != null && x.HK.IsActive && x.UI != null && x.UI.IsInteractable && x.HK.Button == pressed && x.HK.RequiresHold && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
                         .OrderByDescending(x => x.T?.ZOrder ?? 0)
                         .FirstOrDefault();
-                    
+
                     if (target != null)
                     {
                         _holdProgress[target.E] = 0f;
@@ -198,7 +198,7 @@ namespace Crusaders30XX.ECS.Systems
 
                     // Find top-most eligible entity with this hotkey that requires hold
                     var target = EntityManager.GetEntitiesWithComponent<HotKey>()
-                        .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), Btn = e.GetComponent<UIButton>() })
+                        .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>() })
                         .Where(x => x.HK != null && x.HK.IsActive && x.UI != null && x.UI.IsInteractable && x.HK.Button == pressed && x.HK.RequiresHold && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
                         .OrderByDescending(x => x.T?.ZOrder ?? 0)
                         .FirstOrDefault();

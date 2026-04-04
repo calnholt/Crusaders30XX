@@ -53,7 +53,6 @@ namespace Crusaders30XX.ECS.Systems
 
         private void ProcessHotKeyClick(Entity entity)
         {
-            var btn = entity.GetComponent<UIButton>();
             var ui = entity.GetComponent<UIElement>();
             var hotKey = entity.GetComponent<HotKey>();
 
@@ -64,16 +63,11 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
-            Console.WriteLine($"Processing hotkey click for entity: {entity.Id} {entity.Name} btn={btn?.Command} ui={ui?.EventType} uiClicked={ui?.IsClicked}");
-            
-            if (btn != null && !string.IsNullOrEmpty(btn.Command))
-            {
-                EventManager.Publish(new DebugCommandEvent { Command = btn.Command });
-            }
-            else if (ui != null && ui.EventType != UIElementEventType.None)
+            Console.WriteLine($"Processing hotkey click for entity: {entity.Id} {entity.Name} ui={ui?.EventType} uiClicked={ui?.IsClicked}");
+
+            if (ui != null && ui.EventType != UIElementEventType.None)
             {
                 UIElementEventDelegateService.HandleEvent(ui.EventType, entity, EntityManager);
-                // Publish HotKeySelectEvent for UI element actions triggered via hotkey
                 if (ui.IsInteractable)
                 {
                     EventManager.Publish(new HotKeySelectEvent { Entity = entity });
@@ -82,7 +76,6 @@ namespace Crusaders30XX.ECS.Systems
             else if (ui != null)
             {
                 ui.IsClicked = true;
-                // Publish HotKeySelectEvent for UI element actions triggered via hotkey
                 if (ui.IsInteractable)
                 {
                     EventManager.Publish(new HotKeySelectEvent { Entity = entity });
@@ -127,7 +120,7 @@ namespace Crusaders30XX.ECS.Systems
 
                     // Choose top-most eligible entity with this hotkey by ZOrder
                     var target = EntityManager.GetEntitiesWithComponent<HotKey>()
-                        .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), Btn = e.GetComponent<UIButton>() })
+                        .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>() })
                         .Where(x => x.HK != null && x.HK.IsActive && x.UI != null && x.UI.IsInteractable && !x.UI.IsHidden && x.HK.Button == pressed && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
                         .OrderByDescending(x => x.T?.ZOrder ?? 0)
                         .FirstOrDefault();
@@ -179,7 +172,7 @@ namespace Crusaders30XX.ECS.Systems
 
                 // Choose top-most eligible entity with this hotkey by ZOrder
                 var target = EntityManager.GetEntitiesWithComponent<HotKey>()
-                    .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), Btn = e.GetComponent<UIButton>() })
+                    .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>() })
                     .Where(x => x.HK != null && x.HK.IsActive && x.UI != null && x.UI.IsInteractable && !x.UI.IsHidden && x.HK.Button == pressed && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
                     .OrderByDescending(x => x.T?.ZOrder ?? 0)
                     .FirstOrDefault();
