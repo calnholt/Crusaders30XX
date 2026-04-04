@@ -335,11 +335,17 @@ namespace Crusaders30XX.ECS.Components
     public class UIElement : IComponent
     {
         public Entity Owner { get; set; }
-        
+
         public Rectangle Bounds { get; set; }
+        public bool BaseInteractable { get; set; } = false;
+        public int SuppressCount { get; set; } = 0;
+        public bool IsInteractable
+        {
+            get => BaseInteractable && SuppressCount == 0;
+            set => BaseInteractable = value;
+        }
         public bool IsHovered { get; set; } = false;
         public bool IsClicked { get; set; } = false;
-        public bool IsInteractable { get; set; } = false;
         public string Tooltip { get; set; } = "";
         public TooltipType TooltipType { get; set; } = TooltipType.Text;
         public TooltipPosition TooltipPosition { get; set; } = TooltipPosition.Above;
@@ -348,6 +354,9 @@ namespace Crusaders30XX.ECS.Components
         public UILayerType LayerType { get; set; } = UILayerType.Default;
         public bool IsPreventDefaultClick { get; set; } = false;
         public bool IsHidden { get; set; } = false;
+
+        public void Suppress() => SuppressCount++;
+        public void Restore() => SuppressCount = Math.Max(0, SuppressCount - 1);
     }
 
     /// <summary>
@@ -413,6 +422,7 @@ namespace Crusaders30XX.ECS.Components
         PayCostCancel,
         SkipPledge,
         LeaveShop,
+        CardClicked,
     }
 
     /// <summary>

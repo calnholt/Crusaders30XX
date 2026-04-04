@@ -612,4 +612,8 @@ namespace Crusaders30XX.ECS.Events
         public bool UseV2 { get; set; }
     }
 
+    public class EndTurnRequested { }
+
+    public class ConfirmBlocksRequested { }
+
 } 
