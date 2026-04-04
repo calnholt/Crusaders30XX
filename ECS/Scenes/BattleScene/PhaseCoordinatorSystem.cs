@@ -1,9 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
-using System;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -13,9 +14,12 @@ namespace Crusaders30XX.ECS.Systems
 	/// </summary>
 	public class PhaseCoordinatorSystem : Core.System
 	{
+		private readonly HashSet<Entity> _actionPhaseSuppressed = new HashSet<Entity>();
+
 		public PhaseCoordinatorSystem(EntityManager em) : base(em)
 		{
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
+			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnPhaseChangedForInteractability);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -58,6 +62,37 @@ namespace Crusaders30XX.ECS.Systems
 		}
 		ps.Sub = evt.Current;
 	}
+
+		private void OnPhaseChangedForInteractability(ChangeBattlePhaseEvent evt)
+		{
+			// Restore any previously suppressed cards
+			foreach (var e in _actionPhaseSuppressed)
+			{
+				var ui = e.GetComponent<UIElement>();
+				ui?.Restore();
+			}
+			_actionPhaseSuppressed.Clear();
+
+			// During Action phase, suppress non-hand cards
+			if (evt.Current == SubPhase.Action)
+			{
+				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+				var deck = deckEntity?.GetComponent<Deck>();
+				if (deck != null)
+				{
+					foreach (var e in EntityManager.GetEntitiesWithComponent<CardData>())
+					{
+						if (deck.Hand.Contains(e)) continue;
+						var ui = e.GetComponent<UIElement>();
+						if (ui != null && ui.BaseInteractable)
+						{
+							ui.Suppress();
+							_actionPhaseSuppressed.Add(e);
+						}
+					}
+				}
+			}
+		}
 
 	}
 }
