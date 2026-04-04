@@ -271,6 +271,22 @@ public class Game1 : Game
             ToggleEntityListOverlay();
         }
 
+        // Toggle profiler overlay on P key press
+        if (kb.IsKeyDown(Keys.P) && !_prevKeyboard.IsKeyDown(Keys.P))
+        {
+            var e = _world.EntityManager.GetEntitiesWithComponent<ProfilerOverlay>().FirstOrDefault();
+            if (e == null)
+            {
+                e = _world.EntityManager.CreateEntity("ProfilerOverlay");
+                _world.EntityManager.AddComponent(e, new ProfilerOverlay { IsOpen = true });
+            }
+            else
+            {
+                var p = e.GetComponent<ProfilerOverlay>();
+                p.IsOpen = !p.IsOpen;
+            }
+        }
+
         // Update ECS World (this includes input processing)
         _world.Update(gameTime);
 
