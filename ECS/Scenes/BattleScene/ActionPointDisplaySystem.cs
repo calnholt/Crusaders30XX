@@ -89,12 +89,12 @@ namespace Crusaders30XX.ECS.Systems
 
 			int count = System.Math.Max(0, ap.Current);
 
-			// Position relative to discard pile clickable
-			var discardClickable = EntityManager.GetEntitiesWithComponent<DiscardPileClickable>().FirstOrDefault();
+			// Position relative to discard pile
+			var discardRoot = EntityManager.GetEntity("UI_DiscardPileRoot");
 			Rectangle? discardRect = null;
-			if (discardClickable != null)
+			if (discardRoot != null)
 			{
-				var uiDP = discardClickable.GetComponent<UIElement>();
+				var uiDP = discardRoot.GetComponent<UIElement>();
 				if (uiDP != null && uiDP.Bounds.Width > 0 && uiDP.Bounds.Height > 0) discardRect = uiDP.Bounds;
 			}
 			// Update hoverable UI element for tooltip (entity pre-created in factory as UI_APTooltip)

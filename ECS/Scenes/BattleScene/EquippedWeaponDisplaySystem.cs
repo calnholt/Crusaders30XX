@@ -117,11 +117,11 @@ namespace Crusaders30XX.ECS.Systems
             if (player == null) return;
 
             // Discover discard pile rect for anchoring
-            var discardClickable = EntityManager.GetEntitiesWithComponent<DiscardPileClickable>().FirstOrDefault();
+            var discardRoot = EntityManager.GetEntity("UI_DiscardPileRoot");
             Rectangle? discardRect = null;
-            if (discardClickable != null)
+            if (discardRoot != null)
             {
-                var uiDP = discardClickable.GetComponent<UIElement>();
+                var uiDP = discardRoot.GetComponent<UIElement>();
                 if (uiDP != null && uiDP.Bounds.Width > 0 && uiDP.Bounds.Height > 0) discardRect = uiDP.Bounds;
             }
 

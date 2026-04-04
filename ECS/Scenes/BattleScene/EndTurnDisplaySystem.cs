@@ -197,12 +197,11 @@ namespace Crusaders30XX.ECS.Systems
         {
 			// Ensure a clickable UI entity exists and keep its base anchored; ParallaxLayer will offset Position
             var btnRect = GetButtonRect();
-            var endBtn = EntityManager.GetEntitiesWithComponent<UIButton>().FirstOrDefault(e => e.GetComponent<UIButton>().Command == "EndTurn");
+            var endBtn = EntityManager.GetEntity("UIButton_EndTurn");
             var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
             if (endBtn == null)
             {
                 endBtn = EntityManager.CreateEntity("UIButton_EndTurn");
-                EntityManager.AddComponent(endBtn, new UIButton { Label = "End Turn", Command = "EndTurn" });
 				EntityManager.AddComponent(endBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
 				EntityManager.AddComponent(endBtn, new UIElement { Bounds = btnRect, IsInteractable = true, IsHidden = true, EventType = UIElementEventType.EndTurn });
 				EntityManager.AddComponent(endBtn, new HotKey { Button = FaceButton.Y });

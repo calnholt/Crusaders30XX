@@ -553,11 +553,7 @@ public class Game1 : Game
         {
             var menu = menuEntity.GetComponent<DebugMenu>();
             menu.IsOpen = !menu.IsOpen;
-            foreach (var e in em.GetEntitiesWithComponent<UIButton>())
-            {
-                var ui = e.GetComponent<UIElement>();
-                if (ui != null) ui.IsInteractable = menu.IsOpen;
-            }
+            // All interactive UIElements are suppressed/restored together via their suppress state
         }
     }
 

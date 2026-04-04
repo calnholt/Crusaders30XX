@@ -655,21 +655,6 @@ namespace Crusaders30XX.ECS.Components
         public bool IsOpen { get; set; } = false;
     }
 
-    /// <summary>
-    /// Marker component for the clickable draw pile UI area
-    /// </summary>
-    public class DrawPileClickable : IComponent
-    {
-        public Entity Owner { get; set; }
-    }
-
-    /// <summary>
-    /// Marker component for the clickable discard pile UI area
-    /// </summary>
-    public class DiscardPileClickable : IComponent
-    {
-        public Entity Owner { get; set; }
-    }
 
     /// <summary>
     /// Component representing a generic card list modal
@@ -705,15 +690,6 @@ namespace Crusaders30XX.ECS.Components
         public bool IsPositionSet { get; set; } = false;
     }
 
-    /// <summary>
-    /// Component for a generic UI button
-    /// </summary>
-    public class UIButton : IComponent
-    {
-        public Entity Owner { get; set; }
-        public string Label { get; set; } = "";
-        public string Command { get; set; } = ""; // e.g., "DrawCard"
-    }
 
     public enum FaceButton
     {

@@ -195,7 +195,6 @@ namespace Crusaders30XX.ECS.Systems
             if (skipBtn == null)
             {
                 skipBtn = EntityManager.CreateEntity("UIButton_SkipPledge");
-                EntityManager.AddComponent(skipBtn, new UIButton { Label = "Skip Pledge", Command = "SkipPledge" });
                 EntityManager.AddComponent(skipBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
                 // Initialize with current _isVisible state
                 EntityManager.AddComponent(skipBtn, new UIElement { Bounds = btnRect, IsInteractable = _isVisible, IsHidden = !_isVisible, EventType = UIElementEventType.SkipPledge });
