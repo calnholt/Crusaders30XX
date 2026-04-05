@@ -215,7 +215,6 @@ namespace Crusaders30XX.ECS.Systems
                 if (tr != null)
                 {
                     tr.ZOrder = ButtonZ;
-                    tr.BasePosition = new Vector2(btnRect.X, btnRect.Y);
                     tr.Position = new Vector2(btnRect.X, btnRect.Y);
                 }
             }

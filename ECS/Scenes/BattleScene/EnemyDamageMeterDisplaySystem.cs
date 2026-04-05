@@ -530,7 +530,6 @@ namespace Crusaders30XX.ECS.Systems
 				var tr = uiEntity.GetComponent<Transform>();
 				if (tr != null)
 				{
-					tr.BasePosition = new Vector2(rect.X, rect.Y);
 					tr.Position = new Vector2(rect.X, rect.Y);
 					tr.ZOrder = 10000;
 				}

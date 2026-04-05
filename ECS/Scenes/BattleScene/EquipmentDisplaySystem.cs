@@ -127,7 +127,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			// No-op: layout will be applied during Draw by setting BasePosition per item
+			// No-op: layout will be applied during Draw by setting Position per item
 		}
 
 		public override void Update(GameTime gameTime)
@@ -182,11 +182,10 @@ namespace Crusaders30XX.ECS.Systems
 						// Resolve equipment definition for visuals and tooltip
 						int bgW = IconSize + BgPadding * 2;
 						int bgH = IconSize + BgPadding * 2;
-						// Write layout to BasePosition; ParallaxLayerSystem will produce Position
 						var tEquip = item.Owner.GetComponent<Transform>();
 						if (tEquip != null)
 						{
-							tEquip.BasePosition = new Vector2(x, y);
+							tEquip.Position = new Vector2(x, y);
 							tEquip.ZOrder = 10001;
 						}
 						// Build bg rect from current Position (after parallax)

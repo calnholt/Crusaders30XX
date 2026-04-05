@@ -141,9 +141,8 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				int bgW = IconSize + BgPadding * 2;
 				int bgH = IconSize + BgPadding * 2;
-				// Ensure transform and parallax; write layout to BasePosition only
 				var t = m.Owner.GetComponent<Transform>();
-				t.BasePosition = new Vector2(x, y);
+				t.Position = new Vector2(x, y);
 				var cur = t.Position;
 				var rect = new Rectangle((int)System.Math.Round(cur.X), (int)System.Math.Round(cur.Y), bgW, bgH);
 				// Backgrounds removed: draw medals without black rounded panels

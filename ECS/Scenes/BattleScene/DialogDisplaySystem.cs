@@ -492,7 +492,6 @@ namespace Crusaders30XX.ECS.Systems
                 if (t != null)
                 {
                     t.ZOrder = ZOrder + 1;
-                    t.BasePosition = new Vector2(x, y);
                     t.Position = new Vector2(x, y);
                 }
                 var ui = ent.GetComponent<UIElement>();

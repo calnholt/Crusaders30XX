@@ -226,38 +226,18 @@ namespace Crusaders30XX.ECS.Systems
 				int py = PanelMarginTop + row * (TileHeight + VerticalGap);
 				var tileRect = new Rectangle(px, py, TileWidth, TileHeight);
 
-				// Compute base center and apply parallax offset (from Transform.Position - BasePosition)
 				var baseCenter = new Vector2(tileRect.X + tileRect.Width / 2f, tileRect.Y + tileRect.Height / 2f);
-				Vector2 offset = Vector2.Zero;
 				if (x.T != null)
 				{
-					// Initialize transform to its layout center so it doesn't slide in from (0,0)
-					if (x.T.BasePosition == Vector2.Zero)
-					{
-						x.T.BasePosition = baseCenter;
-						x.T.Position = baseCenter;
-					}
-					// Update BasePosition for ParallaxLayerSystem
-					x.T.BasePosition = baseCenter;
-					// Only apply offset when Transform.Position looks initialized (avoid first-frame jump)
-					var pos = x.T.Position;
-					if (pos != Vector2.Zero)
-					{
-						var cand = pos - x.T.BasePosition;
-						// Guard against absurd offsets from uninitialized transforms
-						if (System.Math.Abs(cand.X) <= 512 && System.Math.Abs(cand.Y) <= 512)
-						{
-							offset = cand;
-						}
-					}
-					// Maintain draw ordering above background
+					x.T.Position = baseCenter;
 					x.T.ZOrder = 10002;
 				}
 
-				// Apply parallax offset to the tile for visuals and UI bounds
+				// Build draw rect from the entity's current Position (which includes parallax offset)
+				var pos = x.T != null ? x.T.Position : baseCenter;
 				var drawRect = new Rectangle(
-					(int)System.Math.Round(tileRect.X + offset.X),
-					(int)System.Math.Round(tileRect.Y + offset.Y),
+					(int)System.Math.Round(pos.X - tileRect.Width / 2f),
+					(int)System.Math.Round(pos.Y - tileRect.Height / 2f),
 					tileRect.Width,
 					tileRect.Height);
 

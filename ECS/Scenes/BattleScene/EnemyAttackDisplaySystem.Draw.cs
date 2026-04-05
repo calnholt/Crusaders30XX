@@ -126,13 +126,8 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(anchorEntity, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = false });
 			}
 			var anchorTransform = anchorEntity.GetComponent<Transform>();
-			Vector2 parallaxOffset = Vector2.Zero;
-			if (anchorTransform != null)
-			{
-				parallaxOffset = anchorTransform.Position - anchorTransform.BasePosition;
-			}
 			var centerBase = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY);
-			var center = centerBase + parallaxOffset;
+			var center = centerBase;
 
 			// Absorb tween
 			Vector2 approachPos = center;
@@ -375,7 +370,7 @@ namespace Crusaders30XX.ECS.Systems
 				var ui = primaryBtn.GetComponent<UIElement>();
 				var tr = primaryBtn.GetComponent<Transform>();
 				if (ui != null) { ui.Bounds = btnRect; }
-				if (tr != null) { tr.ZOrder = ConfirmButtonZ; tr.BasePosition = new Vector2(btnRect.X, btnRect.Y); tr.Position = new Vector2(btnRect.X, btnRect.Y); }
+				if (tr != null) { tr.ZOrder = ConfirmButtonZ; tr.Position = new Vector2(btnRect.X, btnRect.Y); }
 			}
 		}
 
@@ -399,11 +394,7 @@ namespace Crusaders30XX.ECS.Systems
 			var anchorTransform = ctx.AnchorEntity.GetComponent<Transform>();
 			if (anchorTransform != null)
 			{
-				anchorTransform.BasePosition = new Vector2(ctx.CenterBase.X, ctx.CenterBase.Y + ctx.DrawH / 2f);
-				if (anchorTransform.Position == Vector2.Zero)
-				{
-					anchorTransform.Position = anchorTransform.BasePosition;
-				}
+				anchorTransform.Position = new Vector2(ctx.CenterBase.X, ctx.CenterBase.Y + ctx.DrawH / 2f);
 				anchorTransform.Scale = Vector2.One;
 				anchorTransform.Rotation = 0f;
 			}
@@ -450,16 +441,8 @@ namespace Crusaders30XX.ECS.Systems
 			int drawH = (int)Math.Round(h * panelScale * squashY);
 
 			// Calculate position
-			var anchorEntity = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault();
-			var anchorTransform = anchorEntity?.GetComponent<Transform>();
-			Vector2 parallaxOffset = Vector2.Zero;
-			if (anchorTransform != null)
-			{
-				parallaxOffset = anchorTransform.Position - anchorTransform.BasePosition;
-			}
-
 			var centerBase = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY);
-			var center = centerBase + parallaxOffset;
+			var center = centerBase;
 			Vector2 approachPos = center;
 
 			if (phaseNow == SubPhase.EnemyAttack)
