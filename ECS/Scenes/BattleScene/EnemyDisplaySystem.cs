@@ -75,6 +75,18 @@ namespace Crusaders30XX.ECS.Systems
 					_pendingContextId = null;
 				}
 			}
+
+			// Write base position so parallax system can adjust it before Draw
+			var t = entity.GetComponent<Transform>();
+			if (t != null)
+			{
+				int viewportW = Game1.VirtualWidth;
+				int viewportH = Game1.VirtualHeight;
+				t.Position = new Vector2(
+					viewportW * (0.5f + CenterOffsetXPct),
+					viewportH * (0.5f + CenterOffsetYPct)
+				);
+			}
 		}
 
 		public void Draw()
@@ -104,33 +116,6 @@ namespace Crusaders30XX.ECS.Systems
 					scaleVec *= animState.ScaleMultiplier;
 				}
 				var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
-				var basePos = new Vector2(
-					viewportW * (0.5f + CenterOffsetXPct),
-					viewportH * (0.5f + CenterOffsetYPct)
-				);
-				var posForAnim = basePos;
-				// Simple smash animation: move toward player then back
-				if (_attackAnimTimer > 0f)
-				{
-					float ta = 1f - (_attackAnimTimer / _attackAnimDuration); // 0->1
-					float outPhase = System.Math.Min(0.5f, ta) * 2f; // 0..1 over first half
-					float backPhase = System.Math.Max(0f, ta - 0.5f) * 2f; // 0..1 over second half
-					// move a short nudge toward player direction, then back
-					Vector2 desired = _attackTargetPos + _attackOffset;
-					Vector2 dir = desired - basePos;
-					if (dir.LengthSquared() > 0.0001f)
-					{
-						dir = Vector2.Normalize(dir);
-					}
-					else
-					{
-						dir = Vector2.Normalize(_attackOffset);
-					}
-					Vector2 outPos = basePos + dir * AttackNudgePixels;
-					Vector2 mid = Vector2.Lerp(basePos, outPos, 1f - (float)System.Math.Pow(1f - outPhase, 3));
-					posForAnim = Vector2.Lerp(mid, basePos, backPhase);
-				}
-				t.Position = basePos;
 				// Share scale and texture dims for accurate HP positioning if needed
 				var info = e.GetComponent<PortraitInfo>();
 				if (info == null)
@@ -141,8 +126,27 @@ namespace Crusaders30XX.ECS.Systems
 				info.TextureHeight = tex.Height;
 				info.CurrentScale = scale;
 				info.BaseScale = desiredHeight / tex.Height;
-				// Draw at Transform.Position plus the attack nudge offset (immediate, not smoothed by parallax)
-				var drawPos = t.Position + (posForAnim - basePos);
+				// t.Position is parallax-adjusted (written in Update, offset by ParallaxLayerSystem)
+				var drawPos = t.Position;
+				if (_attackAnimTimer > 0f)
+				{
+					float ta = 1f - (_attackAnimTimer / _attackAnimDuration); // 0->1
+					float outPhase = System.Math.Min(0.5f, ta) * 2f; // 0..1 over first half
+					float backPhase = System.Math.Max(0f, ta - 0.5f) * 2f; // 0..1 over second half
+					Vector2 desired = _attackTargetPos + _attackOffset;
+					Vector2 dir = desired - t.Position;
+					if (dir.LengthSquared() > 0.0001f)
+					{
+						dir = Vector2.Normalize(dir);
+					}
+					else
+					{
+						dir = Vector2.Normalize(_attackOffset);
+					}
+					Vector2 outPos = t.Position + dir * AttackNudgePixels;
+					Vector2 mid = Vector2.Lerp(t.Position, outPos, 1f - (float)System.Math.Pow(1f - outPhase, 3));
+					drawPos = Vector2.Lerp(mid, t.Position, backPhase);
+				}
 				// Update UI bounds so hover/tooltip works over the enemy portrait
 				var ui = e.GetComponent<UIElement>();
 				if (ui != null)
