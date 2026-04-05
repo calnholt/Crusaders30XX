@@ -274,7 +274,10 @@ namespace Crusaders30XX.ECS.Systems
 			EntityManager.AddComponent(primaryBtn, new Transform{});
 			EntityManager.AddComponent(primaryBtn, new UIElement { IsInteractable = true, EventType = UIElementEventType.ConfirmBlocks });
 			EntityManager.AddComponent(primaryBtn, new HotKey { Button = FaceButton.Y });
-			EntityManager.AddComponent(primaryBtn, ParallaxLayer.GetUIParallaxLayer());
+			var parallaxLayer = ParallaxLayer.GetUIParallaxLayer();
+			parallaxLayer.MultiplierX = 0.045f;
+			parallaxLayer.MultiplierY = 0.045f;
+			EntityManager.AddComponent(primaryBtn, parallaxLayer);
 		}
 
 		private void OnConfirmPressed()
@@ -404,6 +407,46 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					_bannerRect = CalculateBannerRect(entity, phaseNow, def);
 					UpdateAnchorBounds(_bannerRect);
+				}
+			}
+
+			// Ensure banner anchor entity exists (unconditional so BuildDrawContext finds it)
+			var anchorEntity = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault();
+			if (anchorEntity == null)
+			{
+				anchorEntity = EntityManager.CreateEntity("EnemyAttackBannerAnchor");
+				EntityManager.AddComponent(anchorEntity, new EnemyAttackBannerAnchor());
+				EntityManager.AddComponent(anchorEntity, new Transform());
+				var parallaxLayer = ParallaxLayer.GetUIParallaxLayer();
+				parallaxLayer.MultiplierX = 0.045f;
+				parallaxLayer.MultiplierY = 0.045f;
+				EntityManager.AddComponent(anchorEntity, parallaxLayer);
+				EntityManager.AddComponent(anchorEntity, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = false });
+			}
+
+			// Only write Positions when banner rect is valid (banner is visible)
+			if (_bannerRect != Rectangle.Empty)
+			{
+				var anchorTransform = anchorEntity.GetComponent<Transform>();
+				if (anchorTransform != null)
+				{
+					var centerBase = new Vector2(Game1.VirtualWidth / 2f + OffsetX, Game1.VirtualHeight / 2f + OffsetY);
+					anchorTransform.Position = new Vector2(centerBase.X, centerBase.Y + _bannerRect.Height / 2f);
+				}
+
+				// Write confirm button Position so parallax can adjust it
+				var confirmBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
+				if (confirmBtn != null)
+				{
+					var btnTransform = confirmBtn.GetComponent<Transform>();
+					if (btnTransform != null)
+					{
+						btnTransform.Position = new Vector2(
+							_bannerRect.X + _bannerRect.Width / 2f - ConfirmButtonWidth / 2f,
+							_bannerRect.Bottom + ConfirmButtonOffsetY
+						);
+						btnTransform.ZOrder = ConfirmButtonZ;
+					}
 				}
 			}
 		}

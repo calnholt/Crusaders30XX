@@ -18,7 +18,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			public Rectangle Rect;
 			public float PanelScale, SquashX, SquashY, ContentScale;
-			public Vector2 Shake, ApproachPos, CenterBase;
+			public Vector2 Shake, ApproachPos;
 			public int Padding, BgAlpha, DrawW, DrawH;
 			public SubPhase PhaseNow;
 			public Entity Enemy, AnchorEntity;
@@ -112,22 +112,11 @@ namespace Crusaders30XX.ECS.Systems
 			w = Math.Max(w, minPanelWidthPx);
 			int h = (int)Math.Ceiling(totalH) + pad * 2;
 
-			// Calculate panel center from viewport center plus parallax offset
 			var anchorEntity = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault();
-			if (anchorEntity == null)
-			{
-				anchorEntity = EntityManager.CreateEntity("EnemyAttackBannerAnchor");
-				EntityManager.AddComponent(anchorEntity, new EnemyAttackBannerAnchor());
-				EntityManager.AddComponent(anchorEntity, new Transform());
-				var parallaxLayer = ParallaxLayer.GetUIParallaxLayer();
-				parallaxLayer.MultiplierX = 0.045f;
-				parallaxLayer.MultiplierY = 0.045f;
-				EntityManager.AddComponent(anchorEntity, parallaxLayer);
-				EntityManager.AddComponent(anchorEntity, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = false });
-			}
+			if (anchorEntity == null) return null; // Anchor not yet created by Update
 			var anchorTransform = anchorEntity.GetComponent<Transform>();
-			var centerBase = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY);
-			var center = centerBase;
+			// Read parallax-adjusted center from the anchor entity
+			var center = anchorTransform?.Position ?? new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY);
 
 			// Absorb tween
 			Vector2 approachPos = center;
@@ -169,7 +158,6 @@ namespace Crusaders30XX.ECS.Systems
 				ContentScale = contentScale,
 				Shake = shake,
 				ApproachPos = approachPos,
-				CenterBase = centerBase,
 				Padding = pad,
 				BgAlpha = bgAlpha,
 				DrawW = drawW,
@@ -348,9 +336,12 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (showConfirm)
 			{
+				// Read parallax-adjusted button position (written in Update, offset by parallax)
+				var btnTr = primaryBtn.GetComponent<Transform>();
+				var btnPos = btnTr?.Position ?? new Vector2(ctx.Rect.X + ctx.Rect.Width / 2f - ConfirmButtonWidth / 2f, ctx.Rect.Bottom + ConfirmButtonOffsetY);
 				var btnRect = new Rectangle(
-					(int)(ctx.Rect.X + ctx.Rect.Width / 2f - ConfirmButtonWidth / 2f),
-					ctx.Rect.Bottom + ConfirmButtonOffsetY,
+					(int)btnPos.X,
+					(int)btnPos.Y,
 					ConfirmButtonWidth,
 					ConfirmButtonHeight
 				);
@@ -368,9 +359,7 @@ namespace Crusaders30XX.ECS.Systems
 					Color.White);
 
 				var ui = primaryBtn.GetComponent<UIElement>();
-				var tr = primaryBtn.GetComponent<Transform>();
 				if (ui != null) { ui.Bounds = btnRect; }
-				if (tr != null) { tr.ZOrder = ConfirmButtonZ; tr.Position = new Vector2(btnRect.X, btnRect.Y); }
 			}
 		}
 
@@ -394,7 +383,6 @@ namespace Crusaders30XX.ECS.Systems
 			var anchorTransform = ctx.AnchorEntity.GetComponent<Transform>();
 			if (anchorTransform != null)
 			{
-				anchorTransform.Position = new Vector2(ctx.CenterBase.X, ctx.CenterBase.Y + ctx.DrawH / 2f);
 				anchorTransform.Scale = Vector2.One;
 				anchorTransform.Rotation = 0f;
 			}
