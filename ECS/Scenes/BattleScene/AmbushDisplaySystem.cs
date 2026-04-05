@@ -117,7 +117,6 @@ namespace Crusaders30XX.ECS.Systems
 					st.TimerDurationSeconds = Math.Max(1f, DefaultTimerSeconds - GetSlowStacks());
 					st.TimerRemainingSeconds = st.TimerDurationSeconds;
 					_introElapsed = 0f;
-					ResetAnchorParallax();
 					UpdateAnchorTransforms();
 				}
 				_waitingForPhaseAnimation = false;
@@ -358,28 +357,6 @@ namespace Crusaders30XX.ECS.Systems
 			EntityManager.AddComponent(_timerAnchorEntity, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
 			EntityManager.AddComponent(_timerAnchorEntity, ParallaxLayer.GetUIParallaxLayer());
 		}
-		}
-
-		private void ResetAnchorParallax()
-		{
-			if (_textAnchorEntity != null)
-			{
-				var pl = _textAnchorEntity.GetComponent<ParallaxLayer>();
-				if (pl != null)
-				{
-					pl.LastAppliedOffset = Vector2.Zero;
-					pl.LastAppliedPosition = Vector2.Zero;
-				}
-			}
-			if (_timerAnchorEntity != null)
-			{
-				var pl = _timerAnchorEntity.GetComponent<ParallaxLayer>();
-				if (pl != null)
-				{
-					pl.LastAppliedOffset = Vector2.Zero;
-					pl.LastAppliedPosition = Vector2.Zero;
-				}
-			}
 		}
 
 		private void UpdateAnchorTransforms()
