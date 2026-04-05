@@ -477,7 +477,7 @@ namespace Crusaders30XX.ECS.Systems
                 int vw = Game1.VirtualWidth;
                 int x = vw - System.Math.Max(0, EndButtonMargin) - btnW;
                 int y = System.Math.Max(0, EndButtonMargin);
-                EntityManager.AddComponent(ent, new Transform { BasePosition = new Vector2(x, y), Position = new Vector2(x, y), ZOrder = ZOrder + 1 });
+                EntityManager.AddComponent(ent, new Transform { Position = new Vector2(x, y), ZOrder = ZOrder + 1 });
                 EntityManager.AddComponent(ent, new UIElement { Bounds = new Rectangle(x, y, btnW, btnH), IsInteractable = true, LayerType = UILayerType.Overlay });
                 EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Start, RequiresHold = true });
                 EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());

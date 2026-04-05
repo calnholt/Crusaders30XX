@@ -202,7 +202,7 @@ namespace Crusaders30XX.ECS.Systems
             if (endBtn == null)
             {
                 endBtn = EntityManager.CreateEntity("UIButton_EndTurn");
-				EntityManager.AddComponent(endBtn, new Transform { BasePosition = new Vector2(btnRect.X, btnRect.Y), Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
+				EntityManager.AddComponent(endBtn, new Transform { Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
 				EntityManager.AddComponent(endBtn, new UIElement { Bounds = btnRect, IsInteractable = true, IsHidden = true, EventType = UIElementEventType.EndTurn });
 				EntityManager.AddComponent(endBtn, new HotKey { Button = FaceButton.Y });
 				EntityManager.AddComponent(endBtn, ParallaxLayer.GetUIParallaxLayer());

@@ -183,7 +183,7 @@ namespace Crusaders30XX.ECS.Systems
 				int bh = System.Math.Max(30, ButtonHeight);
 				int bx = (vw - bw) / 2;
 				int by = (vh + PanelHeight) / 2 - System.Math.Max(12, (int)(PanelHeight * 0.12f)) - bh;
-				EntityManager.AddComponent(ent, new Transform { BasePosition = new Vector2(bx, by), Position = new Vector2(bx, by), ZOrder = ZOrder + 1 });
+				EntityManager.AddComponent(ent, new Transform { Position = new Vector2(bx, by), ZOrder = ZOrder + 1 });
 				EntityManager.AddComponent(ent, new UIElement { Bounds = new Rectangle(bx, by, bw, bh), IsInteractable = false, LayerType = UILayerType.Overlay });
 				EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Y });
 				EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());

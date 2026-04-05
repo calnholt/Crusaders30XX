@@ -369,7 +369,6 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					pl.LastAppliedOffset = Vector2.Zero;
 					pl.LastAppliedPosition = Vector2.Zero;
-					pl.CaptureBaseOnFirstUpdate = true;
 				}
 			}
 			if (_timerAnchorEntity != null)
@@ -379,7 +378,6 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					pl.LastAppliedOffset = Vector2.Zero;
 					pl.LastAppliedPosition = Vector2.Zero;
-					pl.CaptureBaseOnFirstUpdate = true;
 				}
 			}
 		}

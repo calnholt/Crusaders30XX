@@ -511,7 +511,6 @@ namespace Crusaders30XX.ECS.Systems
 				uiEntity = EntityManager.CreateEntity($"UI_DamageMeter_{key}");
 				EntityManager.AddComponent(uiEntity, new Transform
 				{
-					BasePosition = new Vector2(rect.X, rect.Y),
 					Position = new Vector2(rect.X, rect.Y),
 					ZOrder = 10000
 				});

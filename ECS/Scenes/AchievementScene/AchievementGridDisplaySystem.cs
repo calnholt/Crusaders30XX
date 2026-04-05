@@ -136,7 +136,7 @@ namespace Crusaders30XX.ECS.Systems
                     var rect = GetCellRect(row, col);
                     var pos = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
 
-                    EntityManager.AddComponent(ent, new Transform { Position = pos, BasePosition = pos, ZOrder = 100 });
+                    EntityManager.AddComponent(ent, new Transform { Position = pos, ZOrder = 100 });
                     EntityManager.AddComponent(ent, new UIElement
                     {
                         Bounds = rect,

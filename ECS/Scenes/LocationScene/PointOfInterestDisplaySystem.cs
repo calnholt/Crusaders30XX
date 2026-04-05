@@ -251,7 +251,7 @@ namespace Crusaders30XX.ECS.Systems
 				var e = EntityManager.CreateEntity($"POI_{i++}");
 				_worldByEntityId[e.Id] = pos.worldPosition;
 				_pois.Add(e);
-				// Initialize transform: Position will be driven by Parallax from BasePosition
+				// Initialize transform: Position will be updated each frame by the parallax system
 				EntityManager.AddComponent(e, new Transform { Position = pos.worldPosition, ZOrder = 10 });
 				
 				// Determine POI type and appropriate texture
@@ -271,7 +271,7 @@ namespace Crusaders30XX.ECS.Systems
 					boundsHeight = (int)(IconSize * aspectRatio);
 				}
 				
-				// UI bounds size only; Parallax will center bounds at Transform.Position when AffectsUIBounds is true
+				// UI bounds size only; Parallax will center bounds at Transform.Position
 				// Hellrift POIs are not interactable
 				bool isInteractable = pos.isRevealed || poiType == PointOfInterestType.Shop || poiType == PointOfInterestType.Quest || poiType == PointOfInterestType.Dungeon;
 				var tooltipType = (poiType == PointOfInterestType.Shop) ? TooltipType.None : TooltipType.Quests;

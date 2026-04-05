@@ -421,7 +421,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				e = EntityManager.CreateEntity(GuardianEntityName);
 				// Seed initial transform; will be updated each frame
-				EntityManager.AddComponent(e, new Transform { Position = Vector2.Zero, BasePosition = Vector2.Zero, ZOrder = 0 });
+				EntityManager.AddComponent(e, new Transform { Position = Vector2.Zero, ZOrder = 0 });
 				// Character-like subtle parallax
 				EntityManager.AddComponent(e, ParallaxLayer.GetCharacterParallaxLayer());
 			}

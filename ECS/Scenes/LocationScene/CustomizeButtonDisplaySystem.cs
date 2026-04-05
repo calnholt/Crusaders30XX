@@ -83,12 +83,10 @@ namespace Crusaders30XX.ECS.Systems
 			if (ent == null)
 			{
 				ent = EntityManager.CreateEntity("Location_CustomizeButton");
-				EntityManager.AddComponent(ent, new Transform { Position = position, BasePosition = position, ZOrder = 10000 });
+				EntityManager.AddComponent(ent, new Transform { Position = position, ZOrder = 10000 });
 				EntityManager.AddComponent(ent, new UIElement { Bounds = rect, IsInteractable = true, EventType = eventType });
 				EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Y, Position = HotKeyPosition.Below, RequiresHold = true });
-				var layer = ParallaxLayer.GetUIParallaxLayer();
-				layer.AffectsUIBounds = true;
-				EntityManager.AddComponent(ent, layer);
+				EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
 			}
 			else
 			{
@@ -101,7 +99,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				else
 				{
-					EntityManager.AddComponent(ent, new Transform { Position = position, BasePosition = position, ZOrder = 10000 });
+					EntityManager.AddComponent(ent, new Transform { Position = position, ZOrder = 10000 });
 				}
 
 				var ui = ent.GetComponent<UIElement>();

@@ -170,11 +170,9 @@ namespace Crusaders30XX.ECS.Systems
 				if (!_locationEntitiesById.TryGetValue(key, out var e) || e == null)
 				{
 					e = EntityManager.CreateEntity($"Location_{key}");
-					EntityManager.AddComponent(e, new Transform { Position = position, BasePosition = position, ZOrder = 0 });
+					EntityManager.AddComponent(e, new Transform { Position = position, ZOrder = 0 });
 					EntityManager.AddComponent(e, new UIElement { Bounds = rect, IsInteractable = true, TooltipType = TooltipType.Quests });
-					var layer = ParallaxLayer.GetUIParallaxLayer();
-					layer.AffectsUIBounds = true;
-					EntityManager.AddComponent(e, layer);
+					EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
 					_locationEntitiesById[key] = e;
 				}
 			}
