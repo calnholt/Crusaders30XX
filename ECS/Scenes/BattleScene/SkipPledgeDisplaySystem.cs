@@ -63,11 +63,7 @@ namespace Crusaders30XX.ECS.Systems
             _pixel.SetData(new[] { Color.White });
 
             // Handle button click via input system
-            EventManager.Subscribe<SkipPledgeRequested>(_ =>
-            {
-                Console.WriteLine("[SkipPledgeDisplaySystem] SkipPledgeRequested received");
-                OnSkipPledgePressed();
-            });
+            EventManager.Subscribe<SkipPledgeRequested>(_ => OnSkipPledgePressed());
             
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
             EventManager.Subscribe<LoadSceneEvent>(_ => HideAll());
@@ -103,7 +99,6 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnSkipPledgePressed()
         {
-            Console.WriteLine("[SkipPledgeDisplaySystem] OnSkipPledgePressed executing");
             _isVisible = false;
             var ui = EntityManager.GetEntity("UIButton_SkipPledge")?.GetComponent<UIElement>();
             if (ui != null)
@@ -111,7 +106,6 @@ namespace Crusaders30XX.ECS.Systems
                 ui.IsHidden = true;
                 ui.IsInteractable = false;
             }
-            EventManager.Publish(new SkipPledgeRequested());
         }
 
         private Rectangle GetButtonRect()
@@ -237,14 +231,6 @@ namespace Crusaders30XX.ECS.Systems
             }
             
             _openElapsedSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
-            
-            var ui = EntityManager.GetEntity("UIButton_SkipPledge")?.GetComponent<UIElement>();
-            if (ui != null && ui.IsClicked)
-            {
-                Console.WriteLine("[SkipPledgeDisplaySystem] Button clicked via UIElement.IsClicked");
-                ui.IsClicked = false;
-                OnSkipPledgePressed();
-            }
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
