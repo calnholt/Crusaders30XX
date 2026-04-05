@@ -313,12 +313,10 @@ namespace Crusaders30XX.ECS.Systems
 			bool uiBoundsValid = anchorUi != null && anchorUi.Bounds.Width >= 16 && anchorUi.Bounds.Height >= 16;
 			if (uiBoundsValid)
 			{
-				// Align above the banner panel: use its top-center as the anchor baseline
 				basePoint = new Vector2(anchorUi.Bounds.Center.X, anchorUi.Bounds.Top);
 			}
 			else
 			{
-				// Fallback to the anchor transform (parallax-adjusted) or viewport center
 				basePoint = anchorT?.Position ?? new Vector2(Game1.VirtualWidth * 0.5f, Game1.VirtualHeight * 0.5f);
 			}
 			var center = new Vector2(basePoint.X + AnchorOffsetX, basePoint.Y + AnchorOffsetY);

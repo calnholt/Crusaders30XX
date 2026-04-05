@@ -399,6 +399,8 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Calculate and store banner rect for TutorialDisplaySystem to query
+			// Note: anchor Bounds are written in Draw (UpdateAnchorEntity) with parallax-adjusted
+			// values — do NOT overwrite them here, or downstream systems lose parallax.
 			if (_showBanner && _contentFont != null)
 			{
 				var pa = intent.Planned[0];
@@ -406,7 +408,6 @@ namespace Crusaders30XX.ECS.Systems
 				if (def != null)
 				{
 					_bannerRect = CalculateBannerRect(entity, phaseNow, def);
-					UpdateAnchorBounds(_bannerRect);
 				}
 			}
 
@@ -431,7 +432,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (anchorTransform != null)
 				{
 					var centerBase = new Vector2(Game1.VirtualWidth / 2f + OffsetX, Game1.VirtualHeight / 2f + OffsetY);
-					anchorTransform.Position = new Vector2(centerBase.X, centerBase.Y + _bannerRect.Height / 2f);
+					anchorTransform.Position = centerBase;
 				}
 
 				// Write confirm button Position so parallax can adjust it
