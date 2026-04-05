@@ -365,6 +365,7 @@ namespace Crusaders30XX.ECS.Factories
             entityManager.AddComponent(entity, sprite);
             entityManager.AddComponent(entity, uiElement);
             entityManager.AddComponent(entity, ParallaxLayer.GetUIParallaxLayer());
+            entityManager.AddComponent(entity, new PositionTween { Speed = 12f });
             entityManager.AddComponent(entity, new Hint { Text = card.GetCardHint(color) });
             entityManager.AddComponent(entity, new DontDestroyOnReload());
             var modifiedBlock = new ModifiedBlock { Modifications = new List<Modification>() };
@@ -693,6 +694,7 @@ namespace Crusaders30XX.ECS.Factories
 
             // Create fresh ParallaxLayer (fresh animation state)
             entityManager.AddComponent(clonedEntity, ParallaxLayer.GetUIParallaxLayer());
+            entityManager.AddComponent(clonedEntity, new PositionTween { Speed = 12f });
 
             // Note: Explicitly excluding transient state components:
             // - AnimatingHandToDiscard

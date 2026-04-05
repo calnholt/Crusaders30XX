@@ -234,27 +234,30 @@ namespace Crusaders30XX.ECS.Systems
                         }
                         float y = pivot.Y + HandFanCurveOffset + yArc;
 
-						// If this card just appeared, spawn its base offscreen to the right so it flies in
-						if (transform.BasePosition == Vector2.Zero)
-						{
-							float spawnX = Game1.VirtualWidth + ((cvs?.CardWidth ?? 250) * 1.5f);
-							float spawnY = pivot.Y + HandFanCurveOffset;
-							var spawn = new Vector2(spawnX, spawnY);
-							transform.BasePosition = spawn;
-							transform.Position = spawn;
-						}
-
                         // Hover lift
                         var ui = entity.GetComponent<UIElement>();
                         bool hovered = ui?.IsHovered == true;
                         if (hovered) { y -= HandHoverLift; }
 
-						// Smooth tween the BasePosition toward the layout target; ParallaxLayer will set current Position
-						var baseCurrent = transform.BasePosition;
-						var baseTarget = new Vector2(x, y);
-						float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-						float alpha = 1f - (float)Math.Exp(-HandTweenSpeed * dt);
-						transform.BasePosition = Vector2.Lerp(baseCurrent, baseTarget, MathHelper.Clamp(alpha, 0f, 1f));
+                        var tween = entity.GetComponent<PositionTween>();
+                        if (tween != null)
+                        {
+                            // If this card just appeared, spawn offscreen to the right so it flies in
+                            if (!tween.Initialized)
+                            {
+                                float spawnX = Game1.VirtualWidth + ((cvs?.CardWidth ?? 250) * 1.5f);
+                                float spawnY = pivot.Y + HandFanCurveOffset;
+                                tween.Current = new Vector2(spawnX, spawnY);
+                                transform.Position = tween.Current;
+                            }
+                            tween.Target = new Vector2(x, y);
+                            tween.Speed = HandTweenSpeed;
+                        }
+                        else
+                        {
+                            // No tween component — write position directly
+                            transform.Position = new Vector2(x, y);
+                        }
                         transform.Rotation = angleRad; // reserved for future visual rotation support
                         transform.Scale = new Vector2(HandHoverScale, HandHoverScale);
 
