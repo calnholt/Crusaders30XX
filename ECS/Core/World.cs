@@ -24,6 +24,7 @@ namespace Crusaders30XX.ECS.Core
         public void Update(GameTime gameTime)
         {
             SystemManager.Update(gameTime);
+            SystemManager.LateUpdate(gameTime);
         }
         
         /// <summary>
@@ -72,6 +73,14 @@ namespace Crusaders30XX.ECS.Core
         public void AddSystem(System system)
         {
             SystemManager.AddSystem(system);
+        }
+
+        /// <summary>
+        /// Adds a system that runs after all normal systems have updated.
+        /// </summary>
+        public void AddLateSystem(System system)
+        {
+            SystemManager.AddLateSystem(system);
         }
         
         /// <summary>

@@ -11,13 +11,14 @@ namespace Crusaders30XX.ECS.Core
     public class SystemManager
     {
         private readonly List<System> _systems = new();
+        private readonly List<System> _lateSystems = new();
         private readonly EntityManager _entityManager;
-        
+
         public SystemManager(EntityManager entityManager)
         {
             _entityManager = entityManager;
         }
-        
+
         /// <summary>
         /// Adds a system to the manager
         /// </summary>
@@ -28,13 +29,26 @@ namespace Crusaders30XX.ECS.Core
                 _systems.Add(system);
             }
         }
-        
+
+        /// <summary>
+        /// Adds a system that runs after all normal systems have updated.
+        /// Use this for systems that must see final Position values (e.g. parallax).
+        /// </summary>
+        public void AddLateSystem(System system)
+        {
+            if (!_lateSystems.Contains(system))
+            {
+                _lateSystems.Add(system);
+            }
+        }
+
         /// <summary>
         /// Removes a system from the manager
         /// </summary>
         public void RemoveSystem(System system)
         {
             _systems.Remove(system);
+            _lateSystems.Remove(system);
         }
         
         /// <summary>
@@ -73,6 +87,18 @@ namespace Crusaders30XX.ECS.Core
                 system.Update(gameTime);
             }
         }
+
+        /// <summary>
+        /// Updates late systems (runs after all normal systems).
+        /// </summary>
+        public void LateUpdate(GameTime gameTime)
+        {
+            var snapshot = _lateSystems.ToArray();
+            foreach (var system in snapshot)
+            {
+                system.Update(gameTime);
+            }
+        }
         
         /// <summary>
         /// Enables or disables all systems
@@ -91,6 +117,7 @@ namespace Crusaders30XX.ECS.Core
         public void Clear()
         {
             _systems.Clear();
+            _lateSystems.Clear();
         }
         
         /// <summary>

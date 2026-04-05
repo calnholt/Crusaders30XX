@@ -197,8 +197,8 @@ public class Game1 : Game
         _world.AddSystem(_cursorTrailDisplaySystem);
         _world.AddSystem(_hotKeySystem);
         _world.AddSystem(_hotKeyProgressRingSystem);
-        _world.AddSystem(_positionTweenSystem);
-        _world.AddSystem(_parallaxLayerSystem);
+        _world.AddLateSystem(_positionTweenSystem);
+        _world.AddLateSystem(_parallaxLayerSystem);
         _world.AddSystem(_uiElementBorderDebugSystem);
         _world.AddSystem(_debugCommandSystem);
         _cardDebugSceneSystem = new CardDebugSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, CardDebugId);
