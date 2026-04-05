@@ -164,7 +164,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Ensure guardian entity exists with Transform + Parallax
 			EnsureGuardianEntity();
 
-			// Compute current guardian base position relative to player for spawning dust and for Transform.BasePosition
+			// Compute current guardian base position relative to player
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var pt = player?.GetComponent<Transform>();
 			var guardian = EntityManager.GetEntity(GuardianEntityName);
@@ -185,8 +185,15 @@ namespace Crusaders30XX.ECS.Systems
 				motion.Y += bob;
 				_pos = baseRight + motion;
 				_prevPos = oldPos;
-				// Update entity transform base position; ParallaxLayerSystem will produce Position
-				gt.BasePosition = _pos;
+				var tween = guardian.GetComponent<PositionTween>();
+				if (tween != null)
+				{
+					tween.Target = _pos;
+				}
+				else
+				{
+					gt.Position = _pos;
+				}
 			}
 
 			// Spawn dust based on accumulator
@@ -422,8 +429,8 @@ namespace Crusaders30XX.ECS.Systems
 				e = EntityManager.CreateEntity(GuardianEntityName);
 				// Seed initial transform; will be updated each frame
 				EntityManager.AddComponent(e, new Transform { Position = Vector2.Zero, ZOrder = 0 });
-				// Character-like subtle parallax
 				EntityManager.AddComponent(e, ParallaxLayer.GetCharacterParallaxLayer());
+				EntityManager.AddComponent(e, new PositionTween { Speed = 10f });
 			}
         }
     }
