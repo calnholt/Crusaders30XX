@@ -68,8 +68,7 @@ namespace Crusaders30XX.ECS.Systems
                 );
                 var anim = player.GetComponent<PlayerAnimationState>();
                 _attackDrawOffset = anim?.DrawOffset ?? Vector2.Zero;
-                // Keep the Transform reflecting the base position and scale only (parallax owns Position)
-                transform.BasePosition = basePosition;
+                transform.Position = basePosition;
                 transform.Scale = new Vector2(scale, scale);
                 var pinfo = player.GetComponent<PortraitInfo>();
                 if (pinfo != null) { pinfo.CurrentScale = scale; pinfo.BaseScale = desiredHeight / (_crusaderTexture?.Height ?? 1); }

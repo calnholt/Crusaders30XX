@@ -96,7 +96,6 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			EnsureRootEntity();
-			// Re-anchor weapon center relative to Discard root each frame; ParallaxLayer will offset after
 			var discardRoot = EntityManager.GetEntity("UI_DiscardPileRoot");
 			var discardUI = discardRoot?.GetComponent<UIElement>();
 			var tRoot = EntityManager.GetEntity(RootEntityName)?.GetComponent<Transform>();
@@ -106,7 +105,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					int r = System.Math.Max(4, CircleRadius);
 					var dr = discardUI.Bounds;
-					tRoot.BasePosition = new Vector2(dr.Center.X, dr.Y - AboveDiscardOffsetY - r);
+					tRoot.Position = new Vector2(dr.Center.X, dr.Y - AboveDiscardOffsetY - r);
 				}
 			}
 		}

@@ -121,8 +121,7 @@ namespace Crusaders30XX.ECS.Systems
                 var transform = card.GetComponent<Transform>();
                 if (transform != null)
                 {
-                    transform.BasePosition = Vector2.Zero;
-                    transform.Position = new Vector2(-1000, -1000); 
+                    transform.Position = new Vector2(-1000, -1000);
                     transform.Rotation = 0f;
                 }
                 deck.Hand.Add(card);
@@ -274,7 +273,6 @@ namespace Crusaders30XX.ECS.Systems
                 var t = c.GetComponent<Transform>();
                 if (t != null)
                 {
-                    t.BasePosition = Vector2.Zero;
                     t.Position = Vector2.Zero;
                     t.Rotation = 0f;
                     t.Scale = Vector2.One;
@@ -316,7 +314,6 @@ namespace Crusaders30XX.ECS.Systems
             var t = card.GetComponent<Transform>();
             if (t != null)
             {
-                t.BasePosition = Vector2.Zero;
                 t.Position = Vector2.Zero;
                 t.Rotation = 0f;
                 t.Scale = Vector2.One;

@@ -138,8 +138,7 @@ namespace Crusaders30XX.ECS.Systems
 				// Scale world position by map scale to match scaled world space
 				var scaledWorld = world * mapScale;
 				var screenPos = scaledWorld - origin;
-				// Hand off screen base position to the Parallax system; it will set t.Position
-				t.BasePosition = screenPos;
+				t.Position = screenPos;
 
 				// Update hover scale animation
 				var ui = e.GetComponent<UIElement>();

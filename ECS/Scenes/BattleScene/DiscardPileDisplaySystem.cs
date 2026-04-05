@@ -74,7 +74,7 @@ namespace Crusaders30XX.ECS.Systems
                 int rectH = PanelHeight;
                 int m = PanelMargin;
                 var center = new Vector2(rectW / 2f + m, h - rectH / 2f - m);
-                t.BasePosition = center;
+                t.Position = center;
             }
 		}
 

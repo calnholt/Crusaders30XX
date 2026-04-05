@@ -117,7 +117,6 @@ namespace Crusaders30XX.ECS.Systems
 
 			LayoutAndSyncLocationEntities(Game1.VirtualWidth, Game1.VirtualHeight);
 
-			// After layout, update BasePosition for each location entity from its UI bounds center
 			var i = 0;
 			foreach (var kv in _locationEntitiesById)
 			{
@@ -129,7 +128,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					var rect = GetRect(Game1.VirtualWidth, Game1.VirtualHeight, TotalSlots, i);
 					var position = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
-					t.BasePosition = position;
+					t.Position = position;
 					i++;
 				}
 			}

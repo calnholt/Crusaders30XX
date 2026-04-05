@@ -202,12 +202,9 @@ namespace Crusaders30XX.ECS.Systems
 
                 if (ui == null || gridItem == null || transform == null) continue;
 
-                // Update BasePosition in case grid settings changed
                 var baseRect = GetCellRect(gridItem.Row, gridItem.Column);
-                transform.BasePosition = new Vector2(baseRect.X + baseRect.Width / 2f, baseRect.Y + baseRect.Height / 2f);
-
-                // ALWAYS apply explosion offset to position (this is set by the explosion system)
-                transform.Position = transform.BasePosition + gridItem.ExplosionOffset;
+                var baseCenter = new Vector2(baseRect.X + baseRect.Width / 2f, baseRect.Y + baseRect.Height / 2f);
+                transform.Position = baseCenter + gridItem.ExplosionOffset;
 
                 // Update bounds based on scale and current position (with explosion offset)
                 int scaledSize = (int)(CellSize * gridItem.CurrentScale);

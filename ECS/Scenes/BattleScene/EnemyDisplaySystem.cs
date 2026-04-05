@@ -130,8 +130,7 @@ namespace Crusaders30XX.ECS.Systems
 					Vector2 mid = Vector2.Lerp(basePos, outPos, 1f - (float)System.Math.Pow(1f - outPhase, 3));
 					posForAnim = Vector2.Lerp(mid, basePos, backPhase);
 				}
-				// Keep the entity's transform base position stable for parallax and UI
-				t.BasePosition = basePos;
+				t.Position = basePos;
 				// Share scale and texture dims for accurate HP positioning if needed
 				var info = e.GetComponent<PortraitInfo>();
 				if (info == null)

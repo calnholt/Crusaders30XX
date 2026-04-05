@@ -162,7 +162,6 @@ namespace Crusaders30XX.ECS.Systems
 				if (transform != null)
 				{
 					transform.Position = position;
-					transform.BasePosition = position;
 					transform.ZOrder = 10000;
 				}
 				else
