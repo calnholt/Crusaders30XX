@@ -123,6 +123,28 @@ namespace Crusaders30XX.ECS.Systems
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
+            UpdateMedalPositions();
+        }
+
+        private void UpdateMedalPositions()
+        {
+            var player = GetRelevantEntities().FirstOrDefault();
+            if (player == null) return;
+            var medals = EntityManager.GetEntitiesWithComponent<EquippedMedal>()
+                .Where(e => e.GetComponent<EquippedMedal>().EquippedOwner == player)
+                .Select(e => e.GetComponent<EquippedMedal>())
+                .ToList();
+            if (medals.Count == 0) return;
+
+            int x = LeftMargin;
+            int y = TopMargin;
+            int bgW = IconSize + BgPadding * 2;
+            foreach (var m in medals)
+            {
+                var t = m.Owner.GetComponent<Transform>();
+                if (t != null) t.Position = new Vector2(x, y);
+                x += bgW + SpacingX;
+            }
         }
 
 		public void Draw()
@@ -135,15 +157,12 @@ namespace Crusaders30XX.ECS.Systems
 				.ToList();
 			if (medals.Count == 0) return;
 
-			int x = LeftMargin;
-			int y = TopMargin;
 			foreach (var m in medals)
 			{
 				int bgW = IconSize + BgPadding * 2;
 				int bgH = IconSize + BgPadding * 2;
 				var t = m.Owner.GetComponent<Transform>();
-				t.Position = new Vector2(x, y);
-				var cur = t.Position;
+				var cur = t != null ? t.Position : Vector2.Zero;
 				var rect = new Rectangle((int)System.Math.Round(cur.X), (int)System.Math.Round(cur.Y), bgW, bgH);
 				// Backgrounds removed: draw medals without black rounded panels
 				UpdateTooltipForMedal(m, rect);
@@ -157,8 +176,6 @@ namespace Crusaders30XX.ECS.Systems
 					DrawMedalCounter(m, rect);
 				}
 
-				// Advance by intended layout width to preserve consistent margins across medals
-				x += bgW + SpacingX;
 			}
 		}
 

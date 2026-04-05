@@ -128,9 +128,38 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<ForSaleItem>();
 		}
 
-		protected override void UpdateEntity(Entity entity, GameTime gameTime)
+		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+
+		public override void Update(GameTime gameTime)
 		{
-			// draw-only system; we rebuild lazily in Draw
+			base.Update(gameTime);
+			UpdateShopPositions();
+		}
+
+		private void UpdateShopPositions()
+		{
+			EnsureInventoryEntities();
+			var items = EntityManager.GetEntitiesWithComponent<ForSaleItem>()
+				.Select(e => new { E = e, T = e.GetComponent<Transform>(), FS = e.GetComponent<ForSaleItem>() })
+				.Where(x => x.FS != null)
+				.ToList();
+			if (items.Count == 0) return;
+
+			int cols = System.Math.Max(1, MaxColumns);
+			for (int i = 0; i < items.Count; i++)
+			{
+				var x = items[i];
+				int row = i / cols;
+				int col = i % cols;
+				int px = PanelMarginX + col * (TileWidth + HorizontalGap);
+				int py = PanelMarginTop + row * (TileHeight + VerticalGap);
+				var baseCenter = new Vector2(px + TileWidth / 2f, py + TileHeight / 2f);
+				if (x.T != null)
+				{
+					x.T.Position = baseCenter;
+					x.T.ZOrder = 10002;
+				}
+			}
 		}
 
 		private void OnHotKeyHoldCompleted(HotKeyHoldCompletedEvent evt)
@@ -227,13 +256,7 @@ namespace Crusaders30XX.ECS.Systems
 				var tileRect = new Rectangle(px, py, TileWidth, TileHeight);
 
 				var baseCenter = new Vector2(tileRect.X + tileRect.Width / 2f, tileRect.Y + tileRect.Height / 2f);
-				if (x.T != null)
-				{
-					x.T.Position = baseCenter;
-					x.T.ZOrder = 10002;
-				}
-
-				// Build draw rect from the entity's current Position (which includes parallax offset)
+				// Read current Position (parallax-adjusted from Update)
 				var pos = x.T != null ? x.T.Position : baseCenter;
 				var drawRect = new Rectangle(
 					(int)System.Math.Round(pos.X - tileRect.Width / 2f),

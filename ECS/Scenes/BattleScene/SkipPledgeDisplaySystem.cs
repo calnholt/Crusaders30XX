@@ -222,7 +222,6 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
-            SyncButtonState();
             DrawBackdrop();
             DrawForeground();
         }

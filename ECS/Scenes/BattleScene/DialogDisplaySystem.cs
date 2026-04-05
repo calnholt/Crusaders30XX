@@ -413,9 +413,9 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            // Draw End button (top-right overlay)
+            // Draw End button (top-right overlay) — entity synced in UpdateEntity
             _skipButtonTexture ??= ButtonTextureFactory.Create(_graphicsDevice, "Skip", Color.White, Color.DarkRed);
-            var btnEnt = EnsureEndButtonEntity();
+            var btnEnt = EntityManager.GetEntity("DialogEndButton");
             var t = btnEnt?.GetComponent<Transform>();
             var uiEnd = btnEnt?.GetComponent<UIElement>();
             if (t != null && uiEnd != null)

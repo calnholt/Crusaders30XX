@@ -195,30 +195,11 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
-			// Ensure a clickable UI entity exists and keep its base anchored; ParallaxLayer will offset Position
             var btnRect = GetButtonRect();
             var endBtn = EntityManager.GetEntity("UIButton_EndTurn");
-            var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
-            if (endBtn == null)
-            {
-                endBtn = EntityManager.CreateEntity("UIButton_EndTurn");
-				EntityManager.AddComponent(endBtn, new Transform { Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
-				EntityManager.AddComponent(endBtn, new UIElement { Bounds = btnRect, IsInteractable = true, IsHidden = true, EventType = UIElementEventType.EndTurn });
-				EntityManager.AddComponent(endBtn, new HotKey { Button = FaceButton.Y });
-				EntityManager.AddComponent(endBtn, ParallaxLayer.GetUIParallaxLayer());
-            }
-            else
-            {
-                var tr = endBtn.GetComponent<Transform>();
-                if (tr != null)
-                {
-                    tr.ZOrder = ButtonZ;
-					tr.Position = new Vector2(btnRect.X, btnRect.Y);
-                }
-            }
-            ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
+            var ui = endBtn?.GetComponent<UIElement>();
             if (ui == null || ui.IsHidden == true) return;
-            
+
 			// Draw using the entity's current Transform.Position (which includes parallax offset)
 			var t = endBtn?.GetComponent<Transform>();
 			Vector2 drawPos = (t != null) ? t.Position : new Vector2(btnRect.X, btnRect.Y);
@@ -245,9 +226,35 @@ namespace Crusaders30XX.ECS.Systems
 			}
         }
 
-        protected override void UpdateEntity(Entity entity, GameTime gameTime)
+        protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+
+        public override void Update(GameTime gameTime)
         {
-            throw new NotImplementedException();
+            base.Update(gameTime);
+            SyncEndTurnButton();
+        }
+
+        private void SyncEndTurnButton()
+        {
+            var btnRect = GetButtonRect();
+            var endBtn = EntityManager.GetEntity("UIButton_EndTurn");
+            if (endBtn == null)
+            {
+                endBtn = EntityManager.CreateEntity("UIButton_EndTurn");
+                EntityManager.AddComponent(endBtn, new Transform { Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
+                EntityManager.AddComponent(endBtn, new UIElement { Bounds = btnRect, IsInteractable = true, IsHidden = true, EventType = UIElementEventType.EndTurn });
+                EntityManager.AddComponent(endBtn, new HotKey { Button = FaceButton.Y });
+                EntityManager.AddComponent(endBtn, ParallaxLayer.GetUIParallaxLayer());
+            }
+            else
+            {
+                var tr = endBtn.GetComponent<Transform>();
+                if (tr != null)
+                {
+                    tr.ZOrder = ButtonZ;
+                    tr.Position = new Vector2(btnRect.X, btnRect.Y);
+                }
+            }
         }
     }
 }

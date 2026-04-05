@@ -127,7 +127,39 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			// No-op: layout will be applied during Draw by setting Position per item
+			// Layout equipment positions so parallax can process them
+			var allEquipmentForPlayer = EntityManager.GetEntitiesWithComponent<EquippedEquipment>()
+				.Where(e => e.GetComponent<EquippedEquipment>().EquippedOwner == entity)
+				.Select(e => e.GetComponent<EquippedEquipment>())
+				.ToList();
+			var equipment = allEquipmentForPlayer
+				.Where(eq => (eq.Owner.GetComponent<EquipmentZone>()?.Zone ?? EquipmentZoneType.Default) == EquipmentZoneType.Default)
+				.ToList();
+			if (equipment.Count == 0) return;
+
+			EquipmentSlot[] order = [EquipmentSlot.Head, EquipmentSlot.Chest, EquipmentSlot.Arms, EquipmentSlot.Legs];
+			int baseX = LeftMargin;
+			int y = TopMargin;
+			int rowHeight = (IconSize + BgPadding * 2) + RowGap;
+			foreach (var type in order)
+			{
+				var items = equipment.Where(eq => eq.Equipment.Slot == type).ToList();
+				if (items.Count > 0)
+				{
+					int x = baseX;
+					foreach (var item in items)
+					{
+						var tEquip = item.Owner.GetComponent<Transform>();
+						if (tEquip != null)
+						{
+							tEquip.Position = new Vector2(x, y);
+							tEquip.ZOrder = 10001;
+						}
+						x += (IconSize + BgPadding * 2) + ColGap;
+					}
+					y += rowHeight;
+				}
+			}
 		}
 
 		public override void Update(GameTime gameTime)
@@ -183,12 +215,7 @@ namespace Crusaders30XX.ECS.Systems
 						int bgW = IconSize + BgPadding * 2;
 						int bgH = IconSize + BgPadding * 2;
 						var tEquip = item.Owner.GetComponent<Transform>();
-						if (tEquip != null)
-						{
-							tEquip.Position = new Vector2(x, y);
-							tEquip.ZOrder = 10001;
-						}
-						// Build bg rect from current Position (after parallax)
+						// Read current Position (parallax-adjusted from Update)
 						var curPos = tEquip != null ? tEquip.Position : new Vector2(x, y);
 						var uiEquip = item.Owner.GetComponent<UIElement>();
 						var bgRect = new Rectangle((int)System.Math.Round(curPos.X), (int)System.Math.Round(curPos.Y), bgW, bgH);

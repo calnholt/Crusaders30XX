@@ -90,19 +90,6 @@ namespace Crusaders30XX.ECS.Systems
             t.Position = newPos;
             state.LastWrittenPos = newPos;
             _states[id] = state;
-
-            // Keep UI bounds aligned with parallax-adjusted position
-            var ui = entity.GetComponent<UIElement>();
-            if (ui != null)
-            {
-                int tileW = ui.Bounds.Width;
-                int tileH = ui.Bounds.Height;
-                ui.Bounds = new Rectangle(
-                    (int)Math.Round(newPos.X - tileW / 2f),
-                    (int)Math.Round(newPos.Y - tileH / 2f),
-                    tileW,
-                    tileH);
-            }
         }
 
         private static Vector2 ClampMagnitude(Vector2 v, float maxLen)
