@@ -43,6 +43,7 @@ public class Game1 : Game
     private CardTooltipDisplaySystem _cardTooltipDisplaySystem;
     private ProfilerSystem _profilerSystem;
     // private LocationSelectDisplaySystem _worldMapSystem;
+    private PositionTweenSystem _positionTweenSystem;
     private ParallaxLayerSystem _parallaxLayerSystem;
     private UIElementHighlightSystem _uiElementHighlightSystem;
     private CursorSystem _cursorSystem;
@@ -166,6 +167,7 @@ public class Game1 : Game
         _cursorTrailDisplaySystem = new CursorTrailDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _hotKeySystem = new HotKeySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _hotKeyProgressRingSystem = new HotKeyProgressRingSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _world.SystemManager);
+        _positionTweenSystem = new PositionTweenSystem(_world.EntityManager);
         _parallaxLayerSystem = new ParallaxLayerSystem(_world.EntityManager, GraphicsDevice);
         _uiElementBorderDebugSystem = new UIElementBorderDebugSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
@@ -195,6 +197,7 @@ public class Game1 : Game
         _world.AddSystem(_cursorTrailDisplaySystem);
         _world.AddSystem(_hotKeySystem);
         _world.AddSystem(_hotKeyProgressRingSystem);
+        _world.AddSystem(_positionTweenSystem);
         _world.AddSystem(_parallaxLayerSystem);
         _world.AddSystem(_uiElementBorderDebugSystem);
         _world.AddSystem(_debugCommandSystem);
