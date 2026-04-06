@@ -117,12 +117,17 @@ namespace Crusaders30XX.ECS.Systems
             {
                 var card = deck.DrawPile[0];
                 deck.DrawPile.RemoveAt(0);
-                // Reset transform so the HandDisplaySystem spawns it from offscreen east
+                // Spawn off-screen right so the card flies into the hand
                 var transform = card.GetComponent<Transform>();
                 if (transform != null)
                 {
-                    transform.Position = new Vector2(-1000, -1000);
+                    var cvs = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
+                    float cardW = cvs?.CardWidth ?? 250;
+                    var spawn = new Vector2(Game1.VirtualWidth + (cardW * 1.5f), (float)Game1.VirtualHeight);
+                    transform.Position = spawn;
                     transform.Rotation = 0f;
+                    var tween = card.GetComponent<PositionTween>();
+                    if (tween != null) tween.Current = spawn;
                 }
                 deck.Hand.Add(card);
                 // Ensure UI becomes interactable again when a card enters the hand

@@ -43,6 +43,17 @@ namespace Crusaders30XX.ECS.Systems
 				if (!deck.Hand.Contains(weapon))
 				{
 					deck.Hand.Insert(0, weapon);
+					// Reset to off-screen left so weapon flies in from the left
+					var tween = weapon.GetComponent<PositionTween>();
+					var transform = weapon.GetComponent<Transform>();
+					if (tween != null && transform != null)
+					{
+						var cvs = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
+						float cardW = cvs?.CardWidth ?? 250;
+						var spawnPos = new Vector2(-(cardW * 1.5f), Game1.VirtualHeight);
+						tween.Current = spawnPos;
+						transform.Position = spawnPos;
+					}
 					var ui = weapon.GetComponent<UIElement>();
 					if (ui != null)
 					{
@@ -129,12 +140,16 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			string name = card.Name ?? card.CardId ?? "Weapon";
 			var e = EntityManager.CreateEntity($"Weapon");
+			// Spawn off-screen left so weapon flies in from the left
+			var cvs = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
+			float cardW = cvs?.CardWidth ?? 250;
+			var spawnPos = new Vector2(-(cardW * 1.5f), Game1.VirtualHeight);
 			var cd = new CardData
 			{
 					Card = card,
 					Color = CardData.CardColor.Yellow
 			};
-			var t = new Transform { Position = Vector2.Zero, Scale = Vector2.One };
+			var t = new Transform { Position = spawnPos, Scale = Vector2.One };
 			var s = new Sprite { TexturePath = string.Empty, IsVisible = true };
 			var ui = new UIElement { Bounds = new Rectangle(0, 0, 250, 350), IsInteractable = true, TooltipType = TooltipType.Card, EventType = UIElementEventType.CardClicked };
 			EntityManager.AddComponent(e, cd);
@@ -142,6 +157,7 @@ namespace Crusaders30XX.ECS.Systems
 			EntityManager.AddComponent(e, s);
 			EntityManager.AddComponent(e, ui);
 			EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
+			EntityManager.AddComponent(e, new PositionTween { Speed = 12f, Current = spawnPos });
 			EntityManager.AddComponent(e, new ModifiedDamage { Modifications = [] });
 			// Run OnCreate callback (e.g. adds Frozen component for GlacialMaul)
 			card.OnCreate?.Invoke(EntityManager, e);

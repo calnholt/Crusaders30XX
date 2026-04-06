@@ -86,6 +86,7 @@ namespace Crusaders30XX.ECS.Systems
 		private float _baseUIScale, _baseNameScale, _baseCostScale, _baseDescriptionScale, _baseBlockScale, _baseBlockNumberScale;
 		private float _lastAppliedScale = -1f;
 
+
 		private void CaptureBaselineIfNeeded(CardVisualSettings s)
 		{
 			if (_baselineCaptured || s == null) return;
@@ -242,16 +243,14 @@ namespace Crusaders30XX.ECS.Systems
                         var tween = entity.GetComponent<PositionTween>();
                         if (tween != null)
                         {
-                            // If this card just appeared, spawn offscreen to the right so it flies in
-                            if (!tween.Initialized)
-                            {
-                                float spawnX = Game1.VirtualWidth + ((cvs?.CardWidth ?? 250) * 1.5f);
-                                float spawnY = pivot.Y + HandFanCurveOffset;
-                                tween.Current = new Vector2(spawnX, spawnY);
-                                transform.Position = tween.Current;
-                            }
-                            tween.Target = new Vector2(x, y);
-                            tween.Speed = HandTweenSpeed;
+                            // Self-contained tween: lerp tween.Current toward target each frame,
+                            // then neutralize PositionTweenSystem by syncing Target to Current
+                            var target = new Vector2(x, y);
+                            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                            float alpha = 1f - (float)Math.Exp(-HandTweenSpeed * dt);
+                            tween.Current = Vector2.Lerp(tween.Current, target, MathHelper.Clamp(alpha, 0f, 1f));
+                            transform.Position = tween.Current;
+                            tween.Target = tween.Current;
                         }
                         else
                         {
@@ -302,7 +301,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
         }
-        
+
         /// <summary>
         /// Triggers deck shuffling and drawing of cards by publishing events
         /// </summary>
