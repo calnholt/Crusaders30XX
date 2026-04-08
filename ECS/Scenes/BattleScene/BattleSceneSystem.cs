@@ -456,7 +456,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (_loadedSystems) return;
 			_loadedSystems = true;
-			Console.WriteLine("[BattleSceneSystem] AddBattleSystems");
+			LoggingService.Append("BattleSceneSystem.AddBattleSystems", new System.Text.Json.Nodes.JsonObject { ["action"] = "Adding battle systems" });
 		_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
 		_battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 		_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);

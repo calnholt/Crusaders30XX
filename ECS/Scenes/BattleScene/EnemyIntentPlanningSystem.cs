@@ -102,9 +102,8 @@ namespace Crusaders30XX.ECS.Systems
 					// If current (this turn) is empty, fill it using the current turn's selection
 					if (intent.Planned.Count == 0)
 					{
-						Console.WriteLine("[EnemyIntentPlanningSystem] Planning current turn");
 						var currentIds = enemyCmp?.EnemyBase?.GetAttackIds(EntityManager, turnNumber) ?? [];
-						Console.WriteLine("[EnemyIntentPlanningSystem] Current turn IDs: " + string.Join(", ", currentIds));
+						LoggingService.Append("EnemyIntentPlanningSystem.OnStartEnemyTurn", new System.Text.Json.Nodes.JsonObject { ["action"] = "Planning current turn", ["currentTurnIds"] = string.Join(", ", currentIds) });
 						AddPlanned(currentIds, intent, enemyId);
 					}
 					// Plan next-turn preview using next turn's selection
