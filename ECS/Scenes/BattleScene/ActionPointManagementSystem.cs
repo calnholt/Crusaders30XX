@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using System;
 
@@ -30,6 +31,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnChangePhase(ChangeBattlePhaseEvent evt)
 		{
+			LoggingService.Append("ActionPointManagementSystem.OnChangePhase", new System.Text.Json.Nodes.JsonObject
+			{
+				["phase"] = evt.Current.ToString()
+			});
 			if (evt.Current == SubPhase.PlayerStart) {
 				Console.WriteLine($"[ActionPointManagementSystem] OnChangePhase - set AP to 1");
 				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
@@ -40,6 +45,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnModifyAp(ModifyActionPointsEvent evt)
 		{
+			LoggingService.Append("ActionPointManagementSystem.OnModifyAp", new System.Text.Json.Nodes.JsonObject
+			{
+				["delta"] = evt.Delta
+			});
             Console.WriteLine($"[ActionPointManagementSystem] OnModifyAp delta={evt.Delta}");
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			if (player == null) return;

@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -108,6 +109,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardRenderEvent(CardRenderEvent evt)
         {
+            LoggingService.Append("MarkDisplaySystem.OnCardRenderEvent", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = evt.Card?.Id ?? -1,
+                ["effectType"] = evt.Card?.GetComponent<Marked>()?.EffectType.ToString() ?? "None"
+            });
             if (!ShouldRenderMark(evt.Card)) return;
 
             var transform = evt.Card.GetComponent<Transform>();
@@ -126,6 +132,12 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
         {
+            LoggingService.Append("MarkDisplaySystem.OnCardRenderScaledEvent", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = evt.Card?.Id ?? -1,
+                ["scale"] = evt.Scale,
+                ["effectType"] = evt.Card?.GetComponent<Marked>()?.EffectType.ToString() ?? "None"
+            });
             if (!ShouldRenderMark(evt.Card)) return;
 
             var transform = evt.Card.GetComponent<Transform>();

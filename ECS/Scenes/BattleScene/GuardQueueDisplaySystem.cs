@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
@@ -195,6 +196,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnGuardConsumed(GuardConsumedEvent e)
 		{
+			LoggingService.Append("GuardQueueDisplaySystem.OnGuardConsumed", new System.Text.Json.Nodes.JsonObject
+			{
+				["guardValue"] = e.GuardValue,
+				["remainingCount"] = e.RemainingCount
+			});
 			// Compute the position of the consumed (front) pip before removal
 			var enemy = EntityManager.GetEntity("Enemy");
 			if (enemy == null) return;
@@ -219,6 +225,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnGuardGained(GuardGainedEvent e)
 		{
+			LoggingService.Append("GuardQueueDisplaySystem.OnGuardGained", new System.Text.Json.Nodes.JsonObject
+			{
+				["guardValue"] = e.GuardValue
+			});
 			var enemy = EntityManager.GetEntity("Enemy");
 			if (enemy == null) return;
 			var gq = enemy.GetComponent<GuardQueue>();
@@ -233,6 +243,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnDeleteCaches(DeleteCachesEvent evt)
 		{
+			LoggingService.Append("GuardQueueDisplaySystem.OnDeleteCaches", new System.Text.Json.Nodes.JsonObject
+			{
+				["cacheCount"] = _ringCache.Count
+			});
 			foreach (var kv in _ringCache)
 			{
 				try { kv.Value?.Dispose(); } catch { }
@@ -242,6 +256,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnLoadScene(LoadSceneEvent e)
 		{
+			LoggingService.Append("GuardQueueDisplaySystem.OnLoadScene", new System.Text.Json.Nodes.JsonObject
+			{
+				["sceneId"] = e.Scene.ToString()
+			});
 			_breakAnims.Clear();
 			_gainAnims.Clear();
 		}

@@ -110,6 +110,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnDeleteCachesEvent(DeleteCachesEvent evt)
         {
+            LoggingService.Append("AppliedPassivesDisplaySystem.OnDeleteCachesEvent", new System.Text.Json.Nodes.JsonObject
+            {
+                ["tooltipCount"] = _tooltipUiByKey.Count,
+                ["rippleCount"] = _ripples.Count
+            });
             _tooltipUiByKey.Values.ToList().ForEach(ui => EntityManager.DestroyEntity(ui.Id));
             _tooltipUiByKey.Clear();
             _ripples.Clear();
@@ -117,6 +122,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnLoadSceneEvent(LoadSceneEvent evt)
         {
+            LoggingService.Append("AppliedPassivesDisplaySystem.OnLoadSceneEvent", new System.Text.Json.Nodes.JsonObject
+            {
+                ["sceneId"] = evt.Scene.ToString()
+            });
             var player = evt.Scene == SceneId.Battle ? EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault() : null;
             if (player == null) return;
             var appliedPassives = player.GetComponent<AppliedPassives>();
@@ -274,12 +283,23 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnPassiveTriggered(PassiveTriggered e)
         {
+            LoggingService.Append("AppliedPassivesDisplaySystem.OnPassiveTriggered", new System.Text.Json.Nodes.JsonObject
+            {
+                ["passiveType"] = e.Type.ToString(),
+                ["ownerId"] = e.Owner?.Id ?? -1
+            });
             if (e?.Owner == null) return;
             _ripples[(e.Owner.Id, e.Type)] = new Ripple { Elapsed = 0f, Duration = Math.Max(0.05f, RippleSeconds) };
         }
 
         private void OnApplyPassive(ApplyPassiveEvent e)
         {
+            LoggingService.Append("AppliedPassivesDisplaySystem.OnApplyPassive", new System.Text.Json.Nodes.JsonObject
+            {
+                ["passiveType"] = e.Type.ToString(),
+                ["delta"] = e.Delta,
+                ["targetId"] = e.Target?.Id ?? -1
+            });
             if (e?.Target == null) return;
             var ap = e.Target.GetComponent<AppliedPassives>();
             // If the passive is not currently present, trigger the ripple animation when it's added

@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.Diagnostics;
 using System.Collections.Generic;
 
@@ -38,6 +39,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnCardDisplayToggleChanged(CardDisplayToggleChangedEvent evt)
 		{
+			LoggingService.Append("CardVisualSettingsDebugSystem.OnCardDisplayToggleChanged", new System.Text.Json.Nodes.JsonObject
+			{
+				["useV2"] = evt.UseV2
+			});
 			var s = EnsureSettings();
 			if (evt.UseV2)
 			{

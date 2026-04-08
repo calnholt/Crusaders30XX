@@ -4,6 +4,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -38,6 +39,10 @@ namespace Crusaders30XX.ECS.Systems
 
 	private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
 	{
+		LoggingService.Append("PhaseCoordinatorSystem.OnChangeBattlePhaseEvent", new System.Text.Json.Nodes.JsonObject
+		{
+			["phase"] = evt.Current.ToString()
+		});
 		var ps = GetOrCreate();
 		if (ps == null) return;
 		if (evt.Current == SubPhase.EnemyStart) {
@@ -65,6 +70,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnPhaseChangedForInteractability(ChangeBattlePhaseEvent evt)
 		{
+			LoggingService.Append("PhaseCoordinatorSystem.OnPhaseChangedForInteractability", new System.Text.Json.Nodes.JsonObject
+			{
+				["phase"] = evt.Current.ToString(),
+				["suppressedCount"] = _actionPhaseSuppressed.Count
+			});
 			// Restore any previously suppressed cards
 			foreach (var e in _actionPhaseSuppressed)
 			{

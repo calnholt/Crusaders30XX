@@ -32,6 +32,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnModifyHpRequest(ModifyHpRequestEvent e)
 		{
+			LoggingService.Append("HpManagementSystem.OnModifyHpRequest", new System.Text.Json.Nodes.JsonObject
+			{
+				["delta"] = e.Delta,
+				["damageType"] = e.DamageType.ToString(),
+				["targetId"] = e.Target?.Id ?? -1
+			});
 			var target = ResolveTarget(e.Target);
 			if (target == null) return;
 			var hp = target.GetComponent<HP>();
@@ -116,6 +122,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnSetHp(SetHpEvent e)
 		{
+			LoggingService.Append("HpManagementSystem.OnSetHp", new System.Text.Json.Nodes.JsonObject
+			{
+				["value"] = e.Value,
+				["targetId"] = e.Target?.Id ?? -1
+			});
 			var target = ResolveTarget(e.Target);
 			if (target == null) return;
 			var hp = target.GetComponent<HP>();
@@ -130,6 +141,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnHeal(HealEvent e)
 		{
+			LoggingService.Append("HpManagementSystem.OnHeal", new System.Text.Json.Nodes.JsonObject
+			{
+				["delta"] = e.Delta,
+				["targetId"] = e.Target?.Id ?? -1
+			});
 			var target = ResolveTarget(e.Target);
 			if (target == null) return;
 			var hp = target.GetComponent<HP>();
@@ -139,6 +155,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnFullyHeal(FullyHealEvent e)
 		{
+			LoggingService.Append("HpManagementSystem.OnFullyHeal", new System.Text.Json.Nodes.JsonObject
+			{
+				["targetId"] = e.Target?.Id ?? -1
+			});
 			var target = ResolveTarget(e.Target);
 			if (target == null || !target.HasComponent<Player>()) return;
 			var hp = target.GetComponent<HP>();
@@ -157,6 +177,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnApplyPassive(ApplyPassiveEvent e)
 		{
+			LoggingService.Append("HpManagementSystem.OnApplyPassive", new System.Text.Json.Nodes.JsonObject
+			{
+				["passiveType"] = e.Type.ToString(),
+				["delta"] = e.Delta,
+				["targetId"] = e.Target?.Id ?? -1
+			});
 			switch (e.Type)
 			{
 				case AppliedPassiveType.Scar:
@@ -239,6 +265,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnIncreaseMaxHp(IncreaseMaxHpEvent e)
 		{
+			LoggingService.Append("HpManagementSystem.OnIncreaseMaxHp", new System.Text.Json.Nodes.JsonObject
+			{
+				["delta"] = e.Delta,
+				["targetId"] = e.Target?.Id ?? -1
+			});
 			var target = ResolveTarget(e.Target);
 			if (target == null) return;
 			var hp = target.GetComponent<HP>();

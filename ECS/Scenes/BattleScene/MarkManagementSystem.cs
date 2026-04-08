@@ -4,6 +4,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -54,6 +55,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
         {
+            LoggingService.Append("MarkManagementSystem.OnChangeBattlePhase", new System.Text.Json.Nodes.JsonObject
+            {
+                ["phase"] = evt.Current.ToString()
+            });
             if (!HasMarksmanEnemy()) return;
 
             if (evt.Current == SubPhase.EnemyStart)
@@ -89,6 +94,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardPlayed(CardPlayedEvent evt)
         {
+            LoggingService.Append("MarkManagementSystem.OnCardPlayed", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = evt.Card?.Id ?? -1,
+                ["isMarked"] = evt.Card?.GetComponent<Marked>() != null
+            });
             if (!HasMarksmanEnemy()) return;
             if (evt.Card == null) return;
 
@@ -102,6 +112,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardBlocked(CardBlockedEvent evt)
         {
+            LoggingService.Append("MarkManagementSystem.OnCardBlocked", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = evt.Card?.Id ?? -1,
+                ["isMarked"] = evt.Card?.GetComponent<Marked>() != null
+            });
             if (!HasMarksmanEnemy()) return;
             if (evt.Card == null) return;
 
@@ -138,6 +153,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnPledgeAdded(PledgeAddedEvent evt)
         {
+            LoggingService.Append("MarkManagementSystem.OnPledgeAdded", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = evt.Card?.Id ?? -1,
+                ["isMarked"] = evt.Card?.GetComponent<Marked>() != null
+            });
             if (!HasMarksmanEnemy()) return;
             if (evt.Card == null) return;
 

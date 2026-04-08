@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -94,6 +95,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnCardRenderEvent(CardRenderEvent evt)
 		{
+			LoggingService.Append("SealDisplaySystem.OnCardRenderEvent", new System.Text.Json.Nodes.JsonObject
+			{
+				["cardId"] = evt.Card?.Id ?? -1,
+				["seals"] = evt.Card?.GetComponent<Sealed>()?.Seals ?? 0
+			});
 			if (!ShouldRenderSeal(evt.Card)) return;
 
 			var transform = evt.Card.GetComponent<Transform>();
@@ -112,6 +118,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
 		{
+			LoggingService.Append("SealDisplaySystem.OnCardRenderScaledEvent", new System.Text.Json.Nodes.JsonObject
+			{
+				["cardId"] = evt.Card?.Id ?? -1,
+				["scale"] = evt.Scale,
+				["seals"] = evt.Card?.GetComponent<Sealed>()?.Seals ?? 0
+			});
 			if (!ShouldRenderSeal(evt.Card)) return;
 
 			var transform = evt.Card.GetComponent<Transform>();

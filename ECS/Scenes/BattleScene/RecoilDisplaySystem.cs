@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Singletons;
@@ -81,6 +82,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardRenderEvent(CardRenderEvent evt)
         {
+            LoggingService.Append("RecoilDisplaySystem.OnCardRenderEvent", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = evt.Card?.Id ?? -1,
+                ["recoilStacks"] = evt.Card?.GetComponent<Recoil>()?.Stacks ?? 0
+            });
             var card = evt.Card;
             var recoil = card?.GetComponent<Recoil>();
             if (recoil == null) return;

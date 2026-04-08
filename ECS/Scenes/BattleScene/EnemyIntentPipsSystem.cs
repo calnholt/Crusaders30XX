@@ -1,6 +1,7 @@
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
@@ -249,6 +250,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnDeleteCaches(DeleteCachesEvent evt)
 		{
+			LoggingService.Append("EnemyIntentPipsSystem.OnDeleteCaches", new System.Text.Json.Nodes.JsonObject
+			{
+				["cacheCount"] = _ringCache.Count
+			});
 			foreach (var kv in _ringCache)
 			{
 				try { kv.Value?.Dispose(); } catch { }

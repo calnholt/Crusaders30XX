@@ -31,6 +31,12 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnApplyEffect(ApplyEffect effect)
         {
+            LoggingService.Append("AppliedPassivesManagementSystem.OnApplyEffect", new System.Text.Json.Nodes.JsonObject
+            {
+                ["effectType"] = effect.EffectType ?? "unknown",
+                ["amount"] = effect.Amount,
+                ["targetId"] = effect.Target?.Id ?? -1
+            });
             var typeName = effect.EffectType ?? string.Empty;
             if (!Enum.TryParse<AppliedPassiveType>(typeName, true, out var passiveType)) return;
             EventManager.Publish(new ApplyPassiveEvent { Delta = effect.Amount, Target = effect.Target, Type = passiveType });
@@ -52,6 +58,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
         {
+            LoggingService.Append("AppliedPassivesManagementSystem.OnChangeBattlePhase", new System.Text.Json.Nodes.JsonObject
+            {
+                ["phase"] = evt.Current.ToString()
+            });
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
             if (evt == null) return;
@@ -92,6 +102,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnLoadScene(LoadSceneEvent @event)
         {
+            LoggingService.Append("AppliedPassivesManagementSystem.OnLoadScene", new System.Text.Json.Nodes.JsonObject
+            {
+                ["sceneId"] = @event.Scene.ToString()
+            });
             // this is bad, make a direct event call to clean
             if (@event.Scene != SceneId.Battle) return;
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
@@ -234,6 +248,12 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnApplyPassive(ApplyPassiveEvent e)
         {
+            LoggingService.Append("AppliedPassivesManagementSystem.OnApplyPassive", new System.Text.Json.Nodes.JsonObject
+            {
+                ["passiveType"] = e.Type.ToString(),
+                ["delta"] = e.Delta,
+                ["targetId"] = e.Target?.Id ?? -1
+            });
             if (e == null || e.Target == null) return;
             var ap = e.Target.GetComponent<AppliedPassives>();
             if (ap == null)
@@ -274,6 +294,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnRemovePassive(RemovePassive e)
         {
+            LoggingService.Append("AppliedPassivesManagementSystem.OnRemovePassive", new System.Text.Json.Nodes.JsonObject
+            {
+                ["passiveType"] = e.Type.ToString(),
+                ["ownerId"] = e.Owner?.Id ?? -1
+            });
             Console.WriteLine($"[AppliedPassivesManagementSystem] OnRemovePassive - {e.Type} - {e.Owner.Name}");
             if (e == null || e.Owner == null) return;
             var ap = e.Owner.GetComponent<AppliedPassives>();
@@ -286,6 +311,12 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnUpdatePassive(UpdatePassive e)
         {
+            LoggingService.Append("AppliedPassivesManagementSystem.OnUpdatePassive", new System.Text.Json.Nodes.JsonObject
+            {
+                ["passiveType"] = e.Type.ToString(),
+                ["delta"] = e.Delta,
+                ["ownerId"] = e.Owner?.Id ?? -1
+            });
             if (e == null || e.Owner == null) return;
             var ap = e.Owner.GetComponent<AppliedPassives>();
             if (ap == null || ap.Passives == null) return;
@@ -298,6 +329,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnRemoveAllPassives(RemoveAllPassives e)
         {
+            LoggingService.Append("AppliedPassivesManagementSystem.OnRemoveAllPassives", new System.Text.Json.Nodes.JsonObject
+            {
+                ["ownerId"] = e.Owner?.Id ?? -1
+            });
             if (e == null || e.Owner == null) return;
             var ap = e.Owner.GetComponent<AppliedPassives>();
             if (ap == null || ap.Passives == null) return;

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -28,6 +29,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnAddGuard(AddGuardEvent e)
 		{
+			LoggingService.Append("GuardManagementSystem.OnAddGuard", new System.Text.Json.Nodes.JsonObject
+			{
+				["guardValue"] = e.Value,
+				["enemyId"] = e.Enemy?.Id ?? -1
+			});
 			if (e.Enemy == null || e.Value <= 0) return;
 			var gq = e.Enemy.GetComponent<GuardQueue>();
 			if (gq == null)
@@ -41,6 +47,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
 		{
+			LoggingService.Append("GuardManagementSystem.OnChangeBattlePhase", new System.Text.Json.Nodes.JsonObject
+			{
+				["phase"] = evt.Current.ToString()
+			});
 			var enemy = EntityManager.GetEntity("Enemy");
 			if (enemy == null) return;
 
@@ -151,6 +161,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnLoadScene(LoadSceneEvent e)
 		{
+			LoggingService.Append("GuardManagementSystem.OnLoadScene", new System.Text.Json.Nodes.JsonObject
+			{
+				["sceneId"] = e.Scene.ToString()
+			});
 			// Cleanup guard queues on scene transitions
 			foreach (var entity in GetRelevantEntities().ToList())
 			{

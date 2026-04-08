@@ -2,6 +2,7 @@ using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Crusaders30XX.Diagnostics;
 
@@ -44,6 +45,10 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
 
 		private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
 		{
+			LoggingService.Append("SanguineCurseSystem.OnChangeBattlePhase", new System.Text.Json.Nodes.JsonObject
+			{
+				["phase"] = evt.Current.ToString()
+			});
 			if (evt.Current == SubPhase.EnemyStart)
 			{
 				_currentDamage = 0;
@@ -53,6 +58,12 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
 
 		private void OnModifyHp(ModifyHpEvent evt)
 		{
+			LoggingService.Append("SanguineCurseSystem.OnModifyHp", new System.Text.Json.Nodes.JsonObject
+			{
+				["delta"] = evt.Delta,
+				["currentDamage"] = _currentDamage,
+				["targetId"] = evt.Target?.Id ?? -1
+			});
 			if (_hasTriggeredThisTurn) return;
 			// Only track damage dealt to enemy
 			if (evt.Delta >= 0) return;

@@ -5,6 +5,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -545,6 +546,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnAnimRequested(PlunderSnatchAnimationRequested evt)
         {
+            LoggingService.Append("PlunderSnatchDisplaySystem.OnAnimRequested", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = evt.Card?.Id ?? -1,
+                ["damageThreshold"] = evt.DamageThreshold
+            });
             if (evt == null || evt.Card == null) return;
 
             var anim = new SnatchAnim
@@ -582,6 +588,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnRescueAnimRequested(PlunderRescueAnimationRequested evt)
         {
+            LoggingService.Append("PlunderSnatchDisplaySystem.OnRescueAnimRequested", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = evt.Card?.Id ?? -1
+            });
             if (evt == null || evt.Card == null) return;
 
             var anim = new RescueAnim

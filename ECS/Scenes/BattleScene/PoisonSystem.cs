@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Crusaders30XX.Diagnostics;
 
@@ -29,11 +30,19 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnTutorialStarted(TutorialStartedEvent e)
 		{
+			LoggingService.Append("PoisonSystem.OnTutorialStarted", new System.Text.Json.Nodes.JsonObject
+			{
+				["eventType"] = "TutorialStarted"
+			});
 			_paused = true;
 		}
 
 		private void OnTutorialCompleted(TutorialCompletedEvent e)
 		{
+			LoggingService.Append("PoisonSystem.OnTutorialCompleted", new System.Text.Json.Nodes.JsonObject
+			{
+				["eventType"] = "TutorialCompleted"
+			});
 			_paused = false;
 		}
 
@@ -97,6 +106,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnUpdatePassive(UpdatePassive e)
 		{
+			LoggingService.Append("PoisonSystem.OnUpdatePassive", new System.Text.Json.Nodes.JsonObject
+			{
+				["passiveType"] = e.Type.ToString(),
+				["ownerId"] = e.Owner?.Id ?? -1
+			});
 			if (e == null || e.Owner == null) return;
 			var player = EntityManager.GetEntity("Player");
 			if (player == null || e.Owner.Id != player.Id) return;

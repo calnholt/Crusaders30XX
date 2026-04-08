@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Crusaders30XX.ECS.Services;
 
@@ -36,6 +37,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnSealCards(SealCardsEvent evt)
 		{
+			LoggingService.Append("SealManagementSystem.OnSealCards", new System.Text.Json.Nodes.JsonObject
+			{
+				["sealType"] = evt.Type.ToString(),
+				["amount"] = evt.Amount
+			});
 			switch (evt.Type)
 			{
 				case SealType.Hand:
@@ -105,6 +111,10 @@ namespace Crusaders30XX.ECS.Systems
 		/// </summary>
 		private void OnCardPlayed(CardPlayedEvent evt)
 		{
+			LoggingService.Append("SealManagementSystem.OnCardPlayed", new System.Text.Json.Nodes.JsonObject
+			{
+				["cardId"] = evt.Card?.Id ?? -1
+			});
 			var sealedInHand = GetSealedCardsInHand();
 			foreach (var card in sealedInHand)
 			{
@@ -117,6 +127,12 @@ namespace Crusaders30XX.ECS.Systems
 		/// </summary>
 		private void OnCardMoved(CardMoved evt)
 		{
+			LoggingService.Append("SealManagementSystem.OnCardMoved", new System.Text.Json.Nodes.JsonObject
+			{
+				["cardId"] = evt.Card?.Id ?? -1,
+				["from"] = evt.From.ToString(),
+				["to"] = evt.To.ToString()
+			});
 			if (evt.From == CardZoneType.AssignedBlock && evt.To == CardZoneType.DiscardPile)
 			{
 				var sealedComp = evt.Card.GetComponent<Sealed>();
@@ -132,6 +148,10 @@ namespace Crusaders30XX.ECS.Systems
 		/// </summary>
 		private void OnModifySeals(ModifySealsEvent evt)
 		{
+			LoggingService.Append("SealManagementSystem.OnModifySeals", new System.Text.Json.Nodes.JsonObject
+			{
+				["delta"] = evt.Delta
+			});
 			var allSealedCards = GetAllSealedCards();
 			foreach (var card in allSealedCards)
 			{
@@ -150,6 +170,10 @@ namespace Crusaders30XX.ECS.Systems
 		/// </summary>
 		private void OnShuffleSealedIntoDrawPile(ShuffleSealedIntoDrawPileEvent evt)
 		{
+			LoggingService.Append("SealManagementSystem.OnShuffleSealedIntoDrawPile", new System.Text.Json.Nodes.JsonObject
+			{
+				["sealedCount"] = GetSealedCardsInHand().Count()
+			});
 			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 			if (deckEntity == null) return;
 
