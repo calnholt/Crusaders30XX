@@ -55,7 +55,7 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var card in cardsToShackle)
 			{
 				EntityManager.AddComponent(card, new Shackle { Owner = card });
-				Console.WriteLine($"[ShackleManagementSystem] Card {card.Id} has been shackled!");
+				LoggingService.Append("ShackleManagementSystem.ApplyShackleEffect", new System.Text.Json.Nodes.JsonObject { ["action"] = "Card shackled", ["cardId"] = card.Id });
 			}
 		}
 
@@ -183,7 +183,7 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var entity in shackledEntities)
 			{
 				EntityManager.RemoveComponent<Shackle>(entity);
-				Console.WriteLine($"[ShackleManagementSystem] Removed shackle from entity {entity.Id}");
+				LoggingService.Append("ShackleManagementSystem.RemoveAllShackles", new System.Text.Json.Nodes.JsonObject { ["action"] = "Removed shackle", ["entityId"] = entity.Id });
 			}
 		}
 	}

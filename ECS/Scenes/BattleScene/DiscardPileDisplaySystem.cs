@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -44,7 +45,7 @@ namespace Crusaders30XX.ECS.Systems
             _pixel = new Texture2D(graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
             EventManager.Subscribe<CardMoved>(OnCardMoved);
-            Console.WriteLine("[DiscardPileDisplaySystem] Subscribed to CardMoved");
+            LoggingService.Append("DiscardPileDisplaySystem.constructor", new System.Text.Json.Nodes.JsonObject { ["action"] = "Subscribed to CardMoved" });
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

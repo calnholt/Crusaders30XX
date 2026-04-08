@@ -9,6 +9,7 @@ using Crusaders30XX.ECS.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Scenes.BattleScene
 {
@@ -267,12 +268,17 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
 
         private void OnDeleteCachesEvent(DeleteCachesEvent evt)
         {
+            LoggingService.Append("BloodshotDisplaySystem.OnDeleteCachesEvent", new System.Text.Json.Nodes.JsonObject());
             _isActive = false;
             _fadeIntensity = 0f;
         }
 
         private void OnPhaseChanged(ChangeBattlePhaseEvent evt)
         {
+            LoggingService.Append("BloodshotDisplaySystem.OnPhaseChanged", new System.Text.Json.Nodes.JsonObject
+            {
+                ["current"] = evt.Current.ToString()
+            });
             _isActive = evt.Current == SubPhase.EnemyStart || evt.Current == SubPhase.EnemyAttack || evt.Current == SubPhase.EnemyEnd || evt.Current == SubPhase.Block || evt.Current == SubPhase.PreBlock;
         }
 
@@ -285,13 +291,13 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         {
             if (_effect == null)
             {
-                try 
+                try
                 {
                     _effect = _content.Load<Effect>("Shaders/Bloodshot");
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"[BloodshotDisplaySystem] Failed to load shader: {e.Message}");
+                    LoggingService.Append("BloodshotDisplaySystem.EnsureLoaded", new System.Text.Json.Nodes.JsonObject { ["error"] = "Failed to load shader", ["exception"] = e.Message });
                     _effect = null;
                     _failed = true;
                 }
@@ -408,7 +414,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         public void Debug_ToggleBloodshot()
         {
             _isActive = !_isActive;
-            Console.WriteLine($"[BloodshotDisplaySystem] Bloodshot toggled: {_isActive}");
+            LoggingService.Append("BloodshotDisplaySystem.Debug_ToggleBloodshot", new System.Text.Json.Nodes.JsonObject { ["action"] = "Bloodshot toggled", ["active"] = _isActive });
         }
 
         [DebugAction("Reset to Defaults")]
@@ -441,8 +447,8 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             _overlay.ClarityStart = 0.8f;
             _overlay.ClarityEnd = 0.2f;
             _overlay.BlurDarkness = 0.7f;
-            
-            Console.WriteLine("[BloodshotDisplaySystem] Reset all parameters to defaults");
+
+            LoggingService.Append("BloodshotDisplaySystem.Debug_ResetDefaults", new System.Text.Json.Nodes.JsonObject { ["action"] = "Reset all parameters to defaults" });
         }
     }
 }

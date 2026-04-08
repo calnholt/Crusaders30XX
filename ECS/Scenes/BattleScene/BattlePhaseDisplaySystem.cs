@@ -9,6 +9,7 @@ using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -106,7 +107,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = spriteBatch;
 
 			EventManager.Subscribe<ShowStartOfBattleAnimationEvent>(_ => {
-				Console.WriteLine($"[BattlePhaseDisplaySystem] ShowStartOfBattleAnimationEvent");
+				LoggingService.Append("BattlePhaseDisplaySystem.OnShowStartOfBattleAnimation", new System.Text.Json.Nodes.JsonObject { ["event"] = "ShowStartOfBattleAnimationEvent" });
 				StartAnimation(SubPhaseToString(SubPhase.StartBattle));
 			});
 			EventManager.Subscribe<DeleteCachesEvent>(_ => {

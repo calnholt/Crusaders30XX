@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -151,7 +152,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void SpawnBurst(Vector2 origin)
 		{
 			EnsurePixel();
-			Console.WriteLine("[CardPlayedAnimationSystem]: Spawn burst");
+			LoggingService.Append("CardPlayedAnimationSystem.SpawnBurst", new System.Text.Json.Nodes.JsonObject { ["action"] = "Spawn burst", ["originX"] = (decimal)origin.X, ["originY"] = (decimal)origin.Y });
 			var burst = new Burst { Origin = origin, Age = 0f };
 			int count = Math.Max(0, BurstCount);
 			for (int i = 0; i < count; i++)

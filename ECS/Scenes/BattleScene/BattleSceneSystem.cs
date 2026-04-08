@@ -157,13 +157,13 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_content = content;
-			EventManager.Subscribe<StartBattleRequested>(_ => 
+			EventManager.Subscribe<StartBattleRequested>(_ =>
 			{
-				Console.WriteLine("[BattleSceneSystem] StartBattleRequested");
+				LoggingService.Append("BattleSceneSystem.OnStartBattleRequested", new System.Text.Json.Nodes.JsonObject { ["event"] = "StartBattleRequested" });
 				InitBattle();
 			});
 			EventManager.Subscribe<LoadSceneEvent>(_ => {
-				Console.WriteLine("[BattleSceneSystem] LoadSceneEvent");
+				LoggingService.Append("BattleSceneSystem.OnLoadSceneEvent", new System.Text.Json.Nodes.JsonObject { ["event"] = "LoadSceneEvent", ["scene"] = _.Scene.ToString() });
 				if (_.Scene != SceneId.Battle) 
 				{
 					return;
@@ -188,9 +188,9 @@ namespace Crusaders30XX.ECS.Systems
 					// EnqueueBattleRules(false);
 				}
 			});
-			EventManager.Subscribe<DialogEnded>(_ => 
+			EventManager.Subscribe<DialogEnded>(_ =>
 			{
-				Console.WriteLine("[BattleSceneSystem] DialogEnded");
+				LoggingService.Append("BattleSceneSystem.OnDialogEnded", new System.Text.Json.Nodes.JsonObject { ["event"] = "DialogEnded" });
 				if (!_loadedEntities) 
 				{
 					CreateBattleSceneEntities();
@@ -203,7 +203,7 @@ namespace Crusaders30XX.ECS.Systems
 			});
 			EventManager.Subscribe<DeleteCachesEvent>(_ => {
 				if (_.Scene == SceneId.Battle) return;
-				Console.WriteLine("[BattleSceneSystem] DeleteCachesEvent");
+				LoggingService.Append("BattleSceneSystem.OnDeleteCachesEvent", new System.Text.Json.Nodes.JsonObject { ["event"] = "DeleteCachesEvent", ["scene"] = _.Scene.ToString() });
 				_loadedEntities = false;
 				// EventQueue.Clear();
 				// RemoveBattleSystems();
@@ -405,7 +405,7 @@ namespace Crusaders30XX.ECS.Systems
 				_world.AddComponent(player, new AppliedPassives());
 			}
 			EntityManager.DestroyEntity("Enemy");
-			Console.WriteLine($"queued.Events.Count: {queued.Events.Count}, queued.CurrentIndex: {queued.CurrentIndex}");
+			LoggingService.Append("BattleSceneSystem.InitBattle", new System.Text.Json.Nodes.JsonObject { ["eventsCount"] = queued.Events.Count, ["currentIndex"] = queued.CurrentIndex });
 			var nextEvent = queued.Events[++queued.CurrentIndex];
 			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, nextEvent.EventId, EntityManager, nextEvent.Difficulty);
 			EventManager.Publish(new ResetDeckEvent { });

@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -43,7 +44,7 @@ namespace Crusaders30XX.ECS.Systems
             _pixel.SetData(new[] { Color.White });
 
             EventManager.Subscribe<CardsDrawnEvent>(OnCardsDrawn);
-            Console.WriteLine("[DrawPileDisplaySystem] Subscribed to CardsDrawnEvent");
+            LoggingService.Append("DrawPileDisplaySystem.constructor", new System.Text.Json.Nodes.JsonObject { ["action"] = "Subscribed to CardsDrawnEvent" });
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

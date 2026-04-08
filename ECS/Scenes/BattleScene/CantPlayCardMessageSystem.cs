@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -101,6 +102,10 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnCantPlay(CantPlayCardMessage evt)
 		{
 			if (evt == null || string.IsNullOrWhiteSpace(evt.Message)) return;
+			LoggingService.Append("CantPlayCardMessageSystem.OnCantPlay", new System.Text.Json.Nodes.JsonObject
+			{
+				["message"] = evt.Message
+			});
 			_activeMessage = evt.Message;
 			_elapsed = 0f;
 			_isActive = true;

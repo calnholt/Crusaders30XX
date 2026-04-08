@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using System.IO;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -33,7 +34,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnStartEnemyTurn(ChangeBattlePhaseEvent evt)
 		{
-			Console.WriteLine($"[EnemyIntentPlanningSystem] OnStartEnemyTurn called with Current={evt.Current}");
+			LoggingService.Append("EnemyIntentPlanningSystem.OnStartEnemyTurn", new System.Text.Json.Nodes.JsonObject { ["event"] = "ChangeBattlePhaseEvent", ["current"] = evt.Current.ToString() });
 			// Reset planning guard when a new battle starts so turn 1 can plan again
 			if (evt.Current == SubPhase.StartBattle)
 			{
@@ -55,15 +56,15 @@ namespace Crusaders30XX.ECS.Systems
 				bool isNewTurn = previousPhase == SubPhase.PlayerEnd || previousPhase == SubPhase.Action || previousPhase == SubPhase.PlayerStart || previousPhase == SubPhase.Pledge;
 				int turnNumber = isNewTurn ? currentTurnNumber + 1 : currentTurnNumber;
 				
-				Console.WriteLine($"[EnemyIntentPlanningSystem] EnemyStart event received, currentTurn={currentTurnNumber}, planningTurn={turnNumber}, _lastPlannedTurnNumber={_lastPlannedTurnNumber}, previousPhase={previousPhase}, isNewTurn={isNewTurn}");
-				
+				LoggingService.Append("EnemyIntentPlanningSystem.OnStartEnemyTurn", new System.Text.Json.Nodes.JsonObject { ["currentTurn"] = currentTurnNumber, ["planningTurn"] = turnNumber, ["lastPlannedTurn"] = _lastPlannedTurnNumber, ["previousPhase"] = previousPhase.ToString(), ["isNewTurn"] = isNewTurn });
+
 				// Guard: prevent multiple plans for the same EnemyStart turn
 				if (_lastPlannedTurnNumber == turnNumber)
 				{
-					Console.WriteLine($"[EnemyIntentPlanningSystem] Skipping - already planned for turn {turnNumber}");
+					LoggingService.Append("EnemyIntentPlanningSystem.OnStartEnemyTurn", new System.Text.Json.Nodes.JsonObject { ["action"] = "Skipping - already planned", ["turn"] = turnNumber });
 					return;
 				}
-				Console.WriteLine("[EnemyIntentPlanningSystem] Planning intents");
+				LoggingService.Append("EnemyIntentPlanningSystem.OnStartEnemyTurn", new System.Text.Json.Nodes.JsonObject { ["action"] = "Planning intents" });
 				foreach (var enemy in GetRelevantEntities())
 				{
 					var enemyCmp = enemy.GetComponent<Enemy>();
@@ -86,7 +87,7 @@ namespace Crusaders30XX.ECS.Systems
 					// If this is a new turn (different from last planned), clear old attacks
 					if (_lastPlannedTurnNumber != -1 && turnNumber != _lastPlannedTurnNumber)
 					{
-						Console.WriteLine($"[EnemyIntentPlanningSystem] New turn detected ({_lastPlannedTurnNumber} -> {turnNumber}), clearing old attacks");
+						LoggingService.Append("EnemyIntentPlanningSystem.OnStartEnemyTurn", new System.Text.Json.Nodes.JsonObject { ["action"] = "New turn detected, clearing old attacks", ["from"] = _lastPlannedTurnNumber, ["to"] = turnNumber });
 						intent.Planned.Clear();
 					}
 

@@ -14,6 +14,7 @@ using Crusaders30XX.ECS.Utils.RichText;
 using Crusaders30XX.ECS.Rendering;
 using System;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -455,7 +456,7 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(e, new DialogOverlayState());
                 EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
                 EntityManager.AddComponent(e, new DontDestroyOnLoad());
-                Console.WriteLine("[DialogOverlaySystem] DialogOverlay created");
+                LoggingService.Append("DialogDisplaySystem.EnsureDialogOverlay", new System.Text.Json.Nodes.JsonObject { ["action"] = "DialogOverlay created" });
             }
             else
             {

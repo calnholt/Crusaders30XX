@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Objects.Cards;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -123,7 +124,7 @@ namespace Crusaders30XX.ECS.Systems
                     if (eqComp != null && !string.IsNullOrEmpty(eqComp.Equipment.Id))
                     {
                         eqComp.Equipment.DecrementRemainingUses();
-                        Console.WriteLine($"[AssignedBlocksToDiscardSystem] Equipment {eqComp.Equipment.Id} remaining uses: {eqComp.Equipment.RemainingUses}");
+                        LoggingService.Append("AssignedBlocksToDiscardSystem.UpdateEntity", new System.Text.Json.Nodes.JsonObject { ["equipmentId"] = eqComp.Equipment.Id, ["remainingUses"] = eqComp.Equipment.RemainingUses });
                     }
                     // Mirror card resolution rewards: red equipment grants Courage, white grants Temperance
                     try

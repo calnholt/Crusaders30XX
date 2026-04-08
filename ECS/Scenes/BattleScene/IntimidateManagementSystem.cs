@@ -80,8 +80,9 @@ namespace Crusaders30XX.ECS.Systems
 				// Add Intimidated component to selected cards
 				foreach (var card in cardsToIntimidate)
 				{
+					var cardData = card.GetComponent<CardData>();
 					EntityManager.AddComponent(card, new Intimidated { Owner = card });
-					Console.WriteLine($"[IntimidateManagementSystem] Card {card.GetComponent<CardData>().Card.CardId} has been intimidated!");
+					LoggingService.Append("IntimidateManagementSystem.ApplyIntimidateEffects", new System.Text.Json.Nodes.JsonObject { ["action"] = "Card intimidated", ["cardId"] = cardData?.Card.CardId ?? "unknown" });
 				}
 		}
 
@@ -92,8 +93,9 @@ namespace Crusaders30XX.ECS.Systems
 
 			foreach (var card in intimidatedCards)
 			{
+				var cardData = card.GetComponent<CardData>();
 				EntityManager.RemoveComponent<Intimidated>(card);
-				Console.WriteLine($"[IntimidateManagementSystem] Removed intimidation from card {card.GetComponent<CardData>().Card.CardId}");
+				LoggingService.Append("IntimidateManagementSystem.RemoveAllIntimidateEffects", new System.Text.Json.Nodes.JsonObject { ["action"] = "Removed intimidation", ["cardId"] = cardData?.Card.CardId ?? "unknown" });
 			}
 		}
 	}

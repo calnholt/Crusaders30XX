@@ -10,6 +10,7 @@ using System;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Rendering;
 using Microsoft.Xna.Framework.Content;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -200,7 +201,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			EventManager.Subscribe<ConfirmBlocksRequested>(_ =>
 			{
-                Console.WriteLine("[EnemyAttackDisplaySystem] ConfirmBlocksRequested received");
+                LoggingService.Append("EnemyAttackDisplaySystem.OnConfirmBlocksRequested", new System.Text.Json.Nodes.JsonObject { ["event"] = "ConfirmBlocksRequested" });
 				OnConfirmPressed();
 			});
 
