@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Nodes;
 using System.Linq;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
@@ -7,6 +8,7 @@ using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -140,6 +142,10 @@ namespace Crusaders30XX.ECS.Systems
 			// Subscribe to phase changes to reset absorb timer
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(evt =>
 			{
+				LoggingService.Append("EnemyDamageMeterDisplaySystem.OnChangeBattlePhaseEvent", new JsonObject {
+					{ "Current", evt.Current.ToString() },
+					{ "Previous", evt.Previous.ToString() }
+				});
 				if (evt.Current == SubPhase.Block && evt.Previous != SubPhase.Block)
 				{
 					_absorbElapsedSeconds = 0f;

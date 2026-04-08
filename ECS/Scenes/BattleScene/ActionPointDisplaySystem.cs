@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
@@ -7,6 +8,7 @@ using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -43,6 +45,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnModifyActionPoints(ModifyActionPointsEvent evt)
 		{
+			LoggingService.Append("ActionPointDisplaySystem.OnModifyActionPoints", new JsonObject {
+				{ "Delta", evt.Delta }
+			});
 			var apHover = EntityManager.GetEntity("UI_APTooltip");
 			if (apHover != null)
 			{
@@ -62,13 +67,17 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
 		{
+			LoggingService.Append("ActionPointDisplaySystem.OnChangeBattlePhaseEvent", new JsonObject {
+				{ "Current", evt.Current.ToString() },
+				{ "Previous", evt.Previous.ToString() }
+			});
 			var apHover = EntityManager.GetEntity("UI_APTooltip");
 			var ui = apHover.GetComponent<UIElement>();
 			if (evt.Current == SubPhase.EnemyStart)
 			{
 				ui.IsHidden = true;
 			}
-			else 
+			else
 			{
 				ui.IsHidden = false;
 			}

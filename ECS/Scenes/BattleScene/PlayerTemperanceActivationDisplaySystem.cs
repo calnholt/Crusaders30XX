@@ -1,10 +1,12 @@
 using System.Linq;
+using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -44,7 +46,13 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_crusaderTexture = crusaderTexture;
-			EventManager.Subscribe<TriggerTemperance>(_ => { _active = true; _animTime = 0f; });
+			EventManager.Subscribe<TriggerTemperance>(e => {
+				LoggingService.Append("PlayerTemperanceActivationDisplaySystem.OnTriggerTemperance", new JsonObject {
+					{ "AbilityId", e.AbilityId }
+				});
+				_active = true;
+				_animTime = 0f;
+			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

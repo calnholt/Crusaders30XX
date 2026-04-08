@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
@@ -8,6 +9,7 @@ using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -54,6 +56,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
         {
+            LoggingService.Append("EquippedWeaponDisplaySystem.OnChangeBattlePhaseEvent", new JsonObject {
+                { "Current", evt.Current.ToString() },
+                { "Previous", evt.Previous.ToString() }
+            });
             var rootUi = EntityManager.GetEntity(RootEntityName)?.GetComponent<UIElement>();
             if (rootUi != null)
             {

@@ -1,9 +1,11 @@
 using System.Linq;
+using System.Text.Json.Nodes;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -42,7 +44,12 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = sb;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
-			EventManager.Subscribe<ShowQuestRewardOverlay>(_ => Open(_.Message));
+			EventManager.Subscribe<ShowQuestRewardOverlay>(e => {
+				LoggingService.Append("QuestRewardModalDisplaySystem.OnShowQuestRewardOverlay", new JsonObject {
+					{ "Message", e.Message }
+				});
+				Open(e.Message);
+			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

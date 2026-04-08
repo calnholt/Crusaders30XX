@@ -1,5 +1,7 @@
+using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -31,6 +33,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnImpact(PlayerAttackImpactNow _)
 		{
+			LoggingService.Append("QueuedWaitPlayerImpactEvent.OnImpact", new JsonObject { });
 			EventManager.Unsubscribe(_handler);
 			State = EventQueue.EventState.Complete;
 		}

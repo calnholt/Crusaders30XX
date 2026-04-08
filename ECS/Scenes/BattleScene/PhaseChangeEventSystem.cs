@@ -1,9 +1,11 @@
 using System.Linq;
+using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using System.Collections.Generic;
 using System;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -19,6 +21,10 @@ namespace Crusaders30XX.ECS.Systems
             // Simplified handler: only handle subsequent blocks in same turn
             EventManager.Subscribe<ChangeBattlePhaseEvent>(evt =>
             {
+                LoggingService.Append("PhaseChangeEventSystem.OnChangeBattlePhaseEvent", new JsonObject {
+                    { "Current", evt.Current.ToString() },
+                    { "Previous", evt.Previous.ToString() }
+                });
                 if (evt.Current == SubPhase.Block)
                 {
                     var phaseState = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
@@ -40,6 +46,9 @@ namespace Crusaders30XX.ECS.Systems
 
             EventManager.Subscribe<BattlePhaseAnimationCompleteEvent>(evt =>
             {
+                LoggingService.Append("PhaseChangeEventSystem.OnBattlePhaseAnimationCompleteEvent", new JsonObject {
+                    { "SubPhase", evt.SubPhase.ToString() }
+                });
                 // Mark first block as processed when Block phase animation completes
                 if (evt.SubPhase == SubPhase.Block)
                 {
@@ -49,6 +58,7 @@ namespace Crusaders30XX.ECS.Systems
                 CheckAndTriggerNextAttack();
             });
             EventManager.Subscribe<DeleteCachesEvent>(_ => {
+                LoggingService.Append("PhaseChangeEventSystem.OnDeleteCachesEvent", new JsonObject { });
                 _waitingForAnimation = false;
                 _lastSeenContextId = null;
                 _lastTurn = -1;

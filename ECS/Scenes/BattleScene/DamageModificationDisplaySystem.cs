@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Nodes;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
@@ -6,6 +7,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -135,6 +137,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnModifyHp(ModifyHpEvent e)
         {
+            LoggingService.Append("DamageModificationDisplaySystem.OnModifyHp", new JsonObject {
+                { "Delta", e.Delta },
+                { "DamageType", e.DamageType.ToString() }
+            });
             var target = ResolveTarget(e.Target);
             if (target == null) return;
             int amt = e.Delta;

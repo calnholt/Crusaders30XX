@@ -1,10 +1,12 @@
 using System;
+using System.Text.Json.Nodes;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -84,6 +86,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnDeleteCaches(DeleteCachesEvent evt)
 		{
+			LoggingService.Append("MillCardSystem.OnDeleteCachesEvent", new JsonObject { });
 			// Return any milling cards to discard pile so they get shuffled back
 			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 			var deck = deckEntity?.GetComponent<Deck>();
@@ -226,12 +229,16 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnMillRequested(MillCardEvent evt)
 		{
+			LoggingService.Append("MillCardSystem.OnMillCardEvent", new JsonObject { });
 			// Ask deck manager to remove the top card; animation starts when response arrives
 			EventManager.Publish(new RemoveTopCardFromDrawPileRequested { });
 		}
 
 		private void OnTopCardRemovedForMill(TopCardRemovedForMillEvent evt)
 		{
+			LoggingService.Append("MillCardSystem.OnTopCardRemovedForMillEvent", new JsonObject {
+				{ "CardName", evt?.Card?.Name }
+			});
 			if (evt?.Card == null) return;
 			// If no animation is in Stage1/Hold, start immediately; otherwise enqueue
 			bool hasStage1OrHold = _anims.Any(x => !x.InStage2);

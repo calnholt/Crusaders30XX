@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
@@ -9,6 +10,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -86,6 +88,9 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnMedalTriggered(MedalTriggered evt)
         {
+            LoggingService.Append("MedalDisplaySystem.OnMedalTriggered", new JsonObject {
+                { "MedalId", evt.MedalId }
+            });
             if (evt?.MedalEntity == null) return;
             var cfg = new JigglePulseConfig
             {

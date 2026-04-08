@@ -1,5 +1,7 @@
+using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -33,6 +35,9 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnImpact(EnemyAttackImpactNow e)
         {
+            LoggingService.Append("QueuedWaitImpactEvent.OnImpact", new JsonObject {
+                { "ContextId", e?.ContextId }
+            });
             if (e == null || string.IsNullOrEmpty(e.ContextId)) return;
             if (e.ContextId != _contextId) return;
             EventManager.Unsubscribe(_handler);

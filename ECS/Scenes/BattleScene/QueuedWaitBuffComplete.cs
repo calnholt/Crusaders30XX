@@ -1,5 +1,7 @@
+using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -30,6 +32,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnComplete(BuffAnimationComplete e)
 		{
+			LoggingService.Append("QueuedWaitBuffComplete.OnComplete", new JsonObject {
+				{ "TargetIsPlayer", e?.TargetIsPlayer }
+			});
 			if (e == null || e.TargetIsPlayer != _targetIsPlayer) return;
 			EventManager.Unsubscribe(_handler);
 			State = EventQueue.EventState.Complete;

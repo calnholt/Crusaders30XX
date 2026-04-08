@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -7,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using System;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -86,6 +88,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		EventManager.Subscribe<ChangeBattlePhaseEvent>(evt =>
 		{
+			LoggingService.Append("AmbushDisplaySystem.OnChangeBattlePhaseEvent", new JsonObject {
+				{ "Current", evt.Current.ToString() },
+				{ "Previous", evt.Previous.ToString() }
+			});
 			// Reset intro when leaving block/attack phases
 			if (evt.Current != SubPhase.Block && evt.Current != SubPhase.EnemyAttack)
 			{
@@ -103,6 +109,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		EventManager.Subscribe<BattlePhaseAnimationCompleteEvent>(evt =>
 		{
+			LoggingService.Append("AmbushDisplaySystem.OnBattlePhaseAnimationCompleteEvent", new JsonObject {
+				{ "SubPhase", evt.SubPhase.ToString() }
+			});
 			// When phase animation completes, activate the ambush intro if we were waiting
 			if (_waitingForPhaseAnimation && !string.IsNullOrEmpty(_pendingContextId))
 			{

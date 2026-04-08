@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
@@ -41,7 +42,13 @@ namespace Crusaders30XX.ECS.Systems
 			_font = font;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
-			EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
+			EventManager.Subscribe<CursorStateEvent>(e => {
+				LoggingService.Append("HowToPlayOverlaySystem.OnCursorStateEvent", new JsonObject {
+					{ "ScrollDelta", e.ScrollDelta },
+					{ "ScrollStickY", e.ScrollStickY }
+				});
+				_cursorEvent = e;
+			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

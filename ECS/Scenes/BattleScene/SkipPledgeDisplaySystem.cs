@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -8,6 +9,7 @@ using Crusaders30XX.Diagnostics;
 using System;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -63,10 +65,18 @@ namespace Crusaders30XX.ECS.Systems
             _pixel.SetData(new[] { Color.White });
 
             // Handle button click via input system
-            EventManager.Subscribe<SkipPledgeRequested>(_ => OnSkipPledgePressed());
-            
+            EventManager.Subscribe<SkipPledgeRequested>(e => {
+                LoggingService.Append("SkipPledgeDisplaySystem.OnSkipPledgeRequested", new JsonObject { });
+                OnSkipPledgePressed();
+            });
+
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
-            EventManager.Subscribe<LoadSceneEvent>(_ => HideAll());
+            EventManager.Subscribe<LoadSceneEvent>(e => {
+                LoggingService.Append("SkipPledgeDisplaySystem.OnLoadSceneEvent", new JsonObject {
+                    { "Scene", e.Scene.ToString() }
+                });
+                HideAll();
+            });
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -75,7 +85,11 @@ namespace Crusaders30XX.ECS.Systems
         }
 
         public void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
-        { 
+        {
+            LoggingService.Append("SkipPledgeDisplaySystem.OnChangeBattlePhaseEvent", new JsonObject {
+                { "Current", evt.Current.ToString() },
+                { "Previous", evt.Previous.ToString() }
+            });
             _isVisible = evt.Current == SubPhase.Pledge;
             
             var ui = EntityManager.GetEntity("UIButton_SkipPledge")?.GetComponent<UIElement>();

@@ -1,10 +1,12 @@
 using System;
+using System.Text.Json.Nodes;
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -35,16 +37,27 @@ namespace Crusaders30XX.ECS.Systems
 
 		private float _elapsedTime = 0f;
 
-	public FrozenCardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Texture2D frostTexture) 
+	public FrozenCardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Texture2D frostTexture)
 		: base(entityManager)
 	{
 		_graphicsDevice = graphicsDevice;
 		_spriteBatch = spriteBatch;
 		_frostTexture = frostTexture;
 		// Subscribe to CardRenderEvent to draw frost overlay right after each card is drawn
-		EventManager.Subscribe<CardRenderEvent>(evt => FrameProfiler.Measure("FrozenCardDisplaySystem.OnCardRenderEvent", () => OnCardRenderEvent(evt)));
+		EventManager.Subscribe<CardRenderEvent>(evt => {
+			LoggingService.Append("FrozenCardDisplaySystem.OnCardRenderEvent", new JsonObject {
+				{ "CardId", evt.Card?.Name }
+			});
+			FrameProfiler.Measure("FrozenCardDisplaySystem.OnCardRenderEvent", () => OnCardRenderEvent(evt));
+		});
 		// Subscribe to CardRenderScaledEvent for cards in modals/overlays
-		EventManager.Subscribe<CardRenderScaledEvent>(evt => FrameProfiler.Measure("FrozenCardDisplaySystem.OnCardRenderScaledEvent", () => OnCardRenderScaledEvent(evt)));
+		EventManager.Subscribe<CardRenderScaledEvent>(evt => {
+			LoggingService.Append("FrozenCardDisplaySystem.OnCardRenderScaledEvent", new JsonObject {
+				{ "CardId", evt.Card?.Name },
+				{ "Scale", evt.Scale }
+			});
+			FrameProfiler.Measure("FrozenCardDisplaySystem.OnCardRenderScaledEvent", () => OnCardRenderScaledEvent(evt));
+		});
 	}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
