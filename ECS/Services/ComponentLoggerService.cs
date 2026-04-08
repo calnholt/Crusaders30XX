@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Core;
@@ -61,7 +60,6 @@ namespace Crusaders30XX.ECS.Services
 
             foreach (var field in GetFields(component.GetType()))
             {
-                if (field.Name == "Owner") continue;
                 var node = SerializeValue(field.GetValue(component), depth, maxDepth);
                 if (node != null) obj[field.Name] = node;
             }
@@ -127,7 +125,7 @@ namespace Crusaders30XX.ECS.Services
             int count = 0;
             foreach (var item in enumerable)
             {
-                if (count >= CollectionCap) { arr.Add($"...{CountRemaining(enumerable, count)} more"); break; }
+                if (count >= CollectionCap) { arr.Add("...more"); break; }
                 var node = SerializeValue(item, depth + 1, maxDepth);
                 arr.Add(node ?? JsonValue.Create("null"));
                 count++;
@@ -163,13 +161,6 @@ namespace Crusaders30XX.ECS.Services
                 if (node != null) result[field.Name] = node;
             }
             return result;
-        }
-
-        private static int CountRemaining(IEnumerable enumerable, int alreadyCounted)
-        {
-            int total = 0;
-            foreach (var _ in enumerable) total++;
-            return total - alreadyCounted;
         }
 
         private static bool IsPrimitiveLike(Type type) =>
