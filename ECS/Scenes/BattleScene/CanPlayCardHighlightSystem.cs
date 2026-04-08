@@ -135,12 +135,6 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
 
         private void OnHighlightRender(HighlightRenderEvent evt)
         {
-            LoggingService.Append("CanPlayCardHighlightSystem.OnHighlightRender", new System.Text.Json.Nodes.JsonObject
-            {
-                ["entityId"] = evt.Entity?.Id ?? -1,
-                ["isPlayable"] = _playableCards.Contains(evt.Entity),
-                ["playableCount"] = _playableCards.Count
-            });
             if (!_playableCards.Contains(evt.Entity)) return;
 
             var t = evt.Transform;
