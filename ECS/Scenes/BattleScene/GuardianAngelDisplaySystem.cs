@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Collections.Generic;
 using System;
 using Crusaders30XX.Diagnostics;
@@ -10,6 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -234,6 +236,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnChangeBattlePhase(ChangeBattlePhaseEvent e)
 		{
+			LoggingService.Append("GuardianAngelDisplaySystem.OnChangeBattlePhase", new JsonObject {
+				{ "Current", e.Current.ToString() },
+				{ "Previous", e.Previous.ToString() }
+			});
 			TimerScheduler.Schedule(0.5f, () => {
 				if (e.Current == SubPhase.StartBattle)
 				{
@@ -253,11 +259,17 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnTriggerTemperance(TriggerTemperance e)
 		{
+			LoggingService.Append("GuardianAngelDisplaySystem.OnTriggerTemperance", new JsonObject {
+				{ "AbilityId", e.AbilityId }
+			});
 			ShowBubble(GuardianAngelMessageService.GetMessage(GuardianMessageType.Temperance), BubbleDuration);
 		}
 
 		private void OnLoadSceneEvent(LoadSceneEvent @event)
 		{
+			LoggingService.Append("GuardianAngelDisplaySystem.OnLoadSceneEvent", new JsonObject {
+				{ "Scene", @event.Scene.ToString() }
+			});
 			_bubbleActive = false;
 		}
 

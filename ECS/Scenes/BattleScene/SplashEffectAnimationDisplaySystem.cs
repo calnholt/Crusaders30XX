@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Nodes;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
@@ -194,7 +196,7 @@ namespace Crusaders30XX.ECS.Systems
         private void OnApplyPassive(ApplyPassiveEvent e)
         {
             // Only show for aegis gains (positive delta)
-            Console.WriteLine($"[SplashEffectAnimationDisplaySystem] OnApplyPassive - {e.Type} - {e.Delta}");
+            LoggingService.Append("SplashEffectAnimationDisplaySystem.OnApplyPassive", new System.Text.Json.Nodes.JsonObject { ["passiveType"] = e.Type.ToString(), ["delta"] = e.Delta });
             if (e.Delta <= 0)
                 return;
 
@@ -217,7 +219,7 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Enflamed => "gain-enflamed",
                 _ => null
             };
-            Console.WriteLine($"[SplashEffectAnimationDisplaySystem] OnApplyPassive - {textureKey} - {target.Name}");
+            LoggingService.Append("SplashEffectAnimationDisplaySystem.OnApplyPassive.TextureResolved", new System.Text.Json.Nodes.JsonObject { ["textureKey"] = textureKey ?? "null", ["targetName"] = target.Name });
             if (textureKey == null) return;
             if (!_textures.TryGetValue(textureKey, out var textureToUse) || textureToUse == null) return;
             if (_animations.Count >= MaxConcurrent)
