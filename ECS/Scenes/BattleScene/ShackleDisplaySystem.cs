@@ -89,11 +89,6 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnCardRenderEvent(CardRenderEvent evt)
 		{
 			if (!ShouldRenderShackles(evt.Card)) return;
-
-			LoggingService.Append("ShackleDisplaySystem.OnCardRenderEvent", new System.Text.Json.Nodes.JsonObject
-			{
-				["cardId"] = evt.Card?.Id ?? -1
-			});
 			var transform = evt.Card.GetComponent<Transform>();
 			var ui = evt.Card.GetComponent<UIElement>();
 			if (transform == null || ui == null) return;

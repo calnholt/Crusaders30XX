@@ -109,11 +109,6 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardRenderEvent(CardRenderEvent evt)
         {
-            LoggingService.Append("MarkDisplaySystem.OnCardRenderEvent", new System.Text.Json.Nodes.JsonObject
-            {
-                ["cardId"] = evt.Card?.Id ?? -1,
-                ["effectType"] = evt.Card?.GetComponent<Marked>()?.EffectType.ToString() ?? "None"
-            });
             if (!ShouldRenderMark(evt.Card)) return;
 
             var transform = evt.Card.GetComponent<Transform>();

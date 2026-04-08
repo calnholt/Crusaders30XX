@@ -95,11 +95,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnCardRenderEvent(CardRenderEvent evt)
 		{
-			LoggingService.Append("SealDisplaySystem.OnCardRenderEvent", new System.Text.Json.Nodes.JsonObject
-			{
-				["cardId"] = evt.Card?.Id ?? -1,
-				["seals"] = evt.Card?.GetComponent<Sealed>()?.Seals ?? 0
-			});
 			if (!ShouldRenderSeal(evt.Card)) return;
 
 			var transform = evt.Card.GetComponent<Transform>();

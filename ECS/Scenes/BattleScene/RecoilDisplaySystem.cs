@@ -82,11 +82,6 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardRenderEvent(CardRenderEvent evt)
         {
-            LoggingService.Append("RecoilDisplaySystem.OnCardRenderEvent", new System.Text.Json.Nodes.JsonObject
-            {
-                ["cardId"] = evt.Card?.Id ?? -1,
-                ["recoilStacks"] = evt.Card?.GetComponent<Recoil>()?.Stacks ?? 0
-            });
             var card = evt.Card;
             var recoil = card?.GetComponent<Recoil>();
             if (recoil == null) return;

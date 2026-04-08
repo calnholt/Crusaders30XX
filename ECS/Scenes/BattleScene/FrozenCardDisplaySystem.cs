@@ -44,12 +44,7 @@ namespace Crusaders30XX.ECS.Systems
 		_spriteBatch = spriteBatch;
 		_frostTexture = frostTexture;
 		// Subscribe to CardRenderEvent to draw frost overlay right after each card is drawn
-		EventManager.Subscribe<CardRenderEvent>(evt => {
-			LoggingService.Append("FrozenCardDisplaySystem.OnCardRenderEvent", new JsonObject {
-				{ "CardId", evt.Card?.Name }
-			});
-			FrameProfiler.Measure("FrozenCardDisplaySystem.OnCardRenderEvent", () => OnCardRenderEvent(evt));
-		});
+		EventManager.Subscribe<CardRenderEvent>(evt => FrameProfiler.Measure("FrozenCardDisplaySystem.OnCardRenderEvent", () => OnCardRenderEvent(evt)));
 		// Subscribe to CardRenderScaledEvent for cards in modals/overlays
 		EventManager.Subscribe<CardRenderScaledEvent>(evt => {
 			LoggingService.Append("FrozenCardDisplaySystem.OnCardRenderScaledEvent", new JsonObject {

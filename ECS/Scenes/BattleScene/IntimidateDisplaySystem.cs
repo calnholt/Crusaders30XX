@@ -153,10 +153,6 @@ namespace Crusaders30XX.ECS.Systems
 			// Only draw overlay for intimidated cards
 			var card = evt.Card;
 			if (card == null || card.GetComponent<Intimidated>() == null) return;
-			LoggingService.Append("IntimidateDisplaySystem.OnCardRenderEvent", new System.Text.Json.Nodes.JsonObject
-			{
-				["cardId"] = card.Id
-			});
 			var transform = card.GetComponent<Transform>();
 			var ui = card.GetComponent<UIElement>();
 			if (transform == null || ui == null) return;
