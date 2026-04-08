@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -48,7 +47,7 @@ namespace Crusaders30XX.ECS.Services
 
         // Not marked [Conditional] — called from within [Conditional] methods only,
         // so it is already unreachable in release builds.
-        public static void Append(string context, JsonObject entry)
+        internal static void Append(string context, JsonObject entry)
         {
             entry["seq"] = ++_seqCounter;
             entry["frame"] = _frameCount;
@@ -69,7 +68,7 @@ namespace Crusaders30XX.ECS.Services
                 string json = JsonSerializer.Serialize(_buffer, _writeOptions);
                 File.WriteAllText(LogPath, json);
             }
-            catch { }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[LoggingService] Flush failed: {ex.Message}"); }
         }
     }
 }
