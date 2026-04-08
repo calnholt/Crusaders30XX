@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
@@ -31,6 +32,12 @@ namespace Crusaders30XX.ECS.Systems
         private void OnCardMoved(CardMoved evt)
         {
             Console.WriteLine($"[TemperanceManagerSystem] OnCardMoved from={evt.From} to={evt.To}");
+            LoggingService.Append("TemperanceManagerSystem.OnCardMoved", new System.Text.Json.Nodes.JsonObject
+            {
+                ["from"] = evt.From.ToString(),
+                ["to"] = evt.To.ToString(),
+                ["cardId"] = evt.Card?.Id ?? -1
+            });
             // When assigned blocks land in discard, grant Temperance for white cards
             if (evt.To == CardZoneType.DiscardPile && evt.From == CardZoneType.AssignedBlock) {
               var data = evt.Card.GetComponent<CardData>();
@@ -53,6 +60,12 @@ namespace Crusaders30XX.ECS.Systems
             int before = t.Amount;
             t.Amount = Math.Max(0, t.Amount + evt.Delta);
             Console.WriteLine($"[TemperanceManagerSystem] Temperance changed {before} -> {t.Amount}");
+            LoggingService.Append("TemperanceManagerSystem.OnModifyTemperance", new System.Text.Json.Nodes.JsonObject
+            {
+                ["delta"] = evt.Delta,
+                ["before"] = before,
+                ["after"] = t.Amount
+            });
             TryTriggerTemperanceAbility(player, t);
         }
         private void OnSetTemperanceEvent(SetTemperanceEvent evt)
@@ -60,6 +73,10 @@ namespace Crusaders30XX.ECS.Systems
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             if (player == null) return;
             var t = player.GetComponent<Temperance>();
+            LoggingService.Append("TemperanceManagerSystem.OnSetTemperanceEvent", new System.Text.Json.Nodes.JsonObject
+            {
+                ["amount"] = evt.Amount
+            });
             t.Amount = evt.Amount;
         }
 

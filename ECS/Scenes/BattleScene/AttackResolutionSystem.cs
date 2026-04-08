@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -29,6 +30,10 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnResolveAttack(ResolveAttack e)
 		{
 			if (string.IsNullOrEmpty(e.ContextId)) return;
+			LoggingService.Append("AttackResolutionSystem.OnResolveAttack", new System.Text.Json.Nodes.JsonObject
+			{
+				["contextId"] = e.ContextId
+			});
 			// Find the planned attack by context
 			var enemy = GetRelevantEntities().FirstOrDefault(en => en.GetComponent<AttackIntent>().Planned.Any(pa => pa.ContextId == e.ContextId));
 			if (enemy == null) return;

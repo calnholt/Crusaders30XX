@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -208,6 +209,11 @@ namespace Crusaders30XX.ECS.Systems
         private void OnAnimRequested(PlayCardToDiscardAnimationRequested evt)
         {
             if (evt == null || evt.Card == null) return;
+            LoggingService.Append("CardMoveDisplaySystem.OnAnimRequested", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = evt.Card?.Id ?? -1,
+                ["contextId"] = evt.ContextId
+            });
             var t = evt.Card.GetComponent<Transform>();
             var ui = evt.Card.GetComponent<UIElement>();
             if (t == null && ui == null) return;
@@ -241,6 +247,11 @@ namespace Crusaders30XX.ECS.Systems
         private void OnDrawPileAnimRequested(PlayCardToDrawPileAnimationRequested evt)
         {
             if (evt == null || evt.Card == null) return;
+            LoggingService.Append("CardMoveDisplaySystem.OnDrawPileAnimRequested", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = evt.Card?.Id ?? -1,
+                ["contextId"] = evt.ContextId
+            });
             var t = evt.Card.GetComponent<Transform>();
             var ui = evt.Card.GetComponent<UIElement>();
             if (t == null && ui == null) return;

@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
@@ -60,11 +61,19 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnModifyTemperance(ModifyTemperanceEvent evt)
 		{
+			LoggingService.Append("TemperanceDisplaySystem.OnModifyTemperance", new System.Text.Json.Nodes.JsonObject
+			{
+				["delta"] = evt.Delta
+			});
 			TriggerPulse();
 		}
 
 		private void OnSetTemperance(SetTemperanceEvent evt)
 		{
+			LoggingService.Append("TemperanceDisplaySystem.OnSetTemperance", new System.Text.Json.Nodes.JsonObject
+			{
+				["amount"] = evt.Amount
+			});
 			TriggerPulse();
 		}
 

@@ -5,6 +5,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -32,6 +33,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnMedalActivate(MedalActivateEvent e)
 		{
+			LoggingService.Append("MedalManagerSystem.OnMedalActivate", new System.Text.Json.Nodes.JsonObject
+			{
+				["medalId"] = e.MedalId,
+				["entityId"] = e.MedalEntity?.Id ?? -1
+			});
 			EventQueueBridge.EnqueueTriggerAction(() =>
 			{
 				var medal = e.MedalEntity.GetComponent<EquippedMedal>().Medal;

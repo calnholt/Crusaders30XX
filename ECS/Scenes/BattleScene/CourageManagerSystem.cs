@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -32,6 +33,11 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnModifyCourage(ModifyCourageRequestEvent evt)
 		{
             Console.WriteLine($"[CourageManagerSystem] OnModifyCourage delta={evt.Delta}");
+			LoggingService.Append("CourageManagerSystem.OnModifyCourage", new System.Text.Json.Nodes.JsonObject
+			{
+				["delta"] = evt.Delta,
+				["reason"] = evt.Reason
+			});
 			var player = EntityManager.GetEntitiesWithComponent<Player>()
 				.FirstOrDefault(e => e.HasComponent<Courage>());
 			if (player == null) return;
@@ -47,6 +53,10 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnSetCourageEvent(SetCourageEvent evt)
 		{
             Console.WriteLine($"[CourageManagerSystem] OnSetCourageEvent amount={evt.Amount}");
+			LoggingService.Append("CourageManagerSystem.OnSetCourageEvent", new System.Text.Json.Nodes.JsonObject
+			{
+				["amount"] = evt.Amount
+			});
 			var player = EntityManager.GetEntitiesWithComponent<Player>()
 				.FirstOrDefault(e => e.HasComponent<Courage>());
 			if (player == null) return;
@@ -60,6 +70,11 @@ namespace Crusaders30XX.ECS.Systems
 			// Translate data-driven effects to resource changes
 			string type = evt.EffectType ?? string.Empty;
 			if (type != "LoseCourage") return;
+			LoggingService.Append("CourageManagerSystem.OnApplyEffect", new System.Text.Json.Nodes.JsonObject
+			{
+				["effectType"] = evt.EffectType,
+				["amount"] = evt.Amount
+			});
 			// Only apply if the target is the player
 			if (evt.Target == null || !evt.Target.HasComponent<Player>()) return;
 			int amt = Math.Max(0, evt.Amount);
@@ -70,6 +85,12 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnCardMoved(CardMoved evt)
 		{
             Console.WriteLine($"[CourageManagerSystem] OnCardMoved from={evt.From} to={evt.To}");
+			LoggingService.Append("CourageManagerSystem.OnCardMoved", new System.Text.Json.Nodes.JsonObject
+			{
+				["from"] = evt.From.ToString(),
+				["to"] = evt.To.ToString(),
+				["cardId"] = evt.Card?.Id ?? -1
+			});
 			// When assigned blocks land in discard, grant Courage for red cards
 			if (evt.To == CardZoneType.DiscardPile && evt.From == CardZoneType.AssignedBlock) {
 				var data = evt.Card.GetComponent<CardData>();

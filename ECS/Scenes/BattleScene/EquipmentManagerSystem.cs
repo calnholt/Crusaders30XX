@@ -4,6 +4,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -25,6 +26,11 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnEquipmentActivate(EquipmentActivateEvent e)
 		{
 			if (e.EquipmentEntity == null) return;
+			LoggingService.Append("EquipmentManagerSystem.OnEquipmentActivate", new System.Text.Json.Nodes.JsonObject
+			{
+				["equipmentId"] = e.EquipmentId,
+				["entityId"] = e.EquipmentEntity.Id
+			});
 			var equipment = e.EquipmentEntity.GetComponent<EquippedEquipment>();
 			if (equipment == null) return;
 			if (!equipment.Equipment.CanActivate())

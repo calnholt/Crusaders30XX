@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -55,6 +56,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnDeleteCachesEvent(DeleteCachesEvent evt)
 		{
+			LoggingService.Append("GameOverOverlayDisplaySystem.OnDeleteCachesEvent", new System.Text.Json.Nodes.JsonObject());
 			_active = false;
 			_elapsed = 0f;
 			_sceneSwitched = false;
@@ -63,6 +65,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnPlayerDied(PlayerDied evt)
 		{
 			if (_active) return;
+			LoggingService.Append("GameOverOverlayDisplaySystem.OnPlayerDied", new System.Text.Json.Nodes.JsonObject());
 			_active = true;
 			_elapsed = 0f;
 			_sceneSwitched = false;

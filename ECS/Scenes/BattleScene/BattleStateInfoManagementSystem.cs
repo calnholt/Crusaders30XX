@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System;
@@ -39,6 +40,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
         {
+            LoggingService.Append("BattleStateInfoManagementSystem.OnChangeBattlePhase", new System.Text.Json.Nodes.JsonObject
+            {
+                ["current"] = evt.Current.ToString(),
+                ["previous"] = evt.Previous.ToString()
+            });
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             if (player == null) return;
             var st = player.GetComponent<BattleStateInfo>();
@@ -60,6 +66,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnLoadScene(LoadSceneEvent e)
         {
+            LoggingService.Append("BattleStateInfoManagementSystem.OnLoadScene", new System.Text.Json.Nodes.JsonObject
+            {
+                ["sceneId"] = e.SceneId.ToString()
+            });
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             if (player == null) return;
             var st = player.GetComponent<BattleStateInfo>();
@@ -68,6 +78,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnTrackingEvent(TrackingEvent e)
         {
+          LoggingService.Append("BattleStateInfoManagementSystem.OnTrackingEvent", new System.Text.Json.Nodes.JsonObject
+          {
+              ["type"] = e.Type.ToString(),
+              ["delta"] = e.Delta
+          });
           AddToAllDictionaries(e);
         }
 
@@ -97,10 +112,18 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnModifyCourage(ModifyCourageRequestEvent e)
         {
+          LoggingService.Append("BattleStateInfoManagementSystem.OnModifyCourage", new System.Text.Json.Nodes.JsonObject
+          {
+              ["delta"] = e.Delta
+          });
           OnTrackingEvent(new TrackingEvent { Type = e.Delta > 0 ? TrackingTypeEnum.CourageGained.ToString() : TrackingTypeEnum.CourageLost.ToString(), Delta = Math.Abs(e.Delta) });
         }
         private void OnSetCourageEvent(SetCourageEvent e)
         {
+          LoggingService.Append("BattleStateInfoManagementSystem.OnSetCourageEvent", new System.Text.Json.Nodes.JsonObject
+          {
+              ["amount"] = e.Amount
+          });
           var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
           var courage = player.GetComponent<Courage>();
           var delta = courage.Amount - e.Amount;
@@ -108,6 +131,12 @@ namespace Crusaders30XX.ECS.Systems
         }
         private void OnApplyEffect(ApplyEffect e)
         {
+          LoggingService.Append("BattleStateInfoManagementSystem.OnApplyEffect", new System.Text.Json.Nodes.JsonObject
+          {
+              ["effectType"] = e.EffectType,
+              ["amount"] = e.Amount,
+              ["attackId"] = e.attackId
+          });
           if (!string.IsNullOrEmpty(e.attackId))
           {
             OnTrackingEvent(new TrackingEvent { Type = TrackingTypeEnum.NumberOfAttacksHitPlayer.ToString(), Delta = 1 });
@@ -119,10 +148,10 @@ namespace Crusaders30XX.ECS.Systems
         private void debug_PrintTracking()
         {
           var st = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault().GetComponent<BattleStateInfo>();
-          Console.WriteLine($"[BattleStateInfoManagementSystem] RunTracking: {string.Join(", ", st.RunTracking.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
-          Console.WriteLine($"[BattleStateInfoManagementSystem] BattleTracking: {string.Join(", ", st.BattleTracking.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
-          Console.WriteLine($"[BattleStateInfoManagementSystem] TurnTracking: {string.Join(", ", st.TurnTracking.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
-          Console.WriteLine($"[BattleStateInfoManagementSystem] PhaseTracking: {string.Join(", ", st.PhaseTracking.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
+          LoggingService.Append("BattleStateInfoManagementSystem.debug_PrintTracking.RunTracking", new System.Text.Json.Nodes.JsonObject { ["tracking"] = string.Join(", ", st.RunTracking.Select(kvp => $"{kvp.Key}: {kvp.Value}")) });
+          LoggingService.Append("BattleStateInfoManagementSystem.debug_PrintTracking.BattleTracking", new System.Text.Json.Nodes.JsonObject { ["tracking"] = string.Join(", ", st.BattleTracking.Select(kvp => $"{kvp.Key}: {kvp.Value}")) });
+          LoggingService.Append("BattleStateInfoManagementSystem.debug_PrintTracking.TurnTracking", new System.Text.Json.Nodes.JsonObject { ["tracking"] = string.Join(", ", st.TurnTracking.Select(kvp => $"{kvp.Key}: {kvp.Value}")) });
+          LoggingService.Append("BattleStateInfoManagementSystem.debug_PrintTracking.PhaseTracking", new System.Text.Json.Nodes.JsonObject { ["tracking"] = string.Join(", ", st.PhaseTracking.Select(kvp => $"{kvp.Key}: {kvp.Value}")) });
         }
     }
 }

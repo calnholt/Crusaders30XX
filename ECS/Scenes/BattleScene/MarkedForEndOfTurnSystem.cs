@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -33,6 +34,10 @@ namespace Crusaders30XX.ECS.Systems
             {
                 return;
             }
+            LoggingService.Append("MarkedForEndOfTurnSystem.OnChangeBattlePhase", new System.Text.Json.Nodes.JsonObject
+            {
+                ["current"] = evt.Current.ToString()
+            });
 
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             if (deckEntity == null)

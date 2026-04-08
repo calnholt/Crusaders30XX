@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Singletons;
@@ -19,7 +20,13 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
-			EventManager.Subscribe<ShowStunnedOverlay>(e => { _timer = 1.0f; });
+			EventManager.Subscribe<ShowStunnedOverlay>(e => OnShowStunnedOverlay(e));
+		}
+
+		private void OnShowStunnedOverlay(ShowStunnedOverlay evt)
+		{
+			LoggingService.Append("StunnedOverlaySystem.OnShowStunnedOverlay", new System.Text.Json.Nodes.JsonObject());
+			_timer = 1.0f;
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
