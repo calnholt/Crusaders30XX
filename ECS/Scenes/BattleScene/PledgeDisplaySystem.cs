@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
@@ -107,14 +108,14 @@ namespace Crusaders30XX.ECS.Systems
                     // Add preview pledge
                     EntityManager.AddComponent(card, new PledgePreview { Owner = card });
                     _previewPledges.Add(card);
-                    Console.WriteLine($"[PledgeDisplaySystem] Hovered card: adding preview pledge to {card.GetComponent<CardData>()?.Card.CardId ?? "unknown"}");
+                    LoggingService.Append("PledgeDisplaySystem.OnCardHovered", new System.Text.Json.Nodes.JsonObject { ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown", ["action"] = "adding preview pledge" });
                 }
                 else if (!isHovered && isTrackedAsPreview)
                 {
                     // Remove preview pledge
                     EntityManager.RemoveComponent<PledgePreview>(card);
                     _previewPledges.Remove(card);
-                    Console.WriteLine($"[PledgeDisplaySystem] Unhovered card: removing preview pledge from {card.GetComponent<CardData>()?.Card.CardId ?? "unknown"}");
+                    LoggingService.Append("PledgeDisplaySystem.OnCardUnhovered", new System.Text.Json.Nodes.JsonObject { ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown", ["action"] = "removing preview pledge" });
                 }
                 else if (hasPledge && isTrackedAsPreview)
                 {

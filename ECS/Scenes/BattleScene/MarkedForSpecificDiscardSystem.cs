@@ -41,7 +41,7 @@ namespace Crusaders30XX.ECS.Systems
             if (evt.Amount <= 0) return;
             var candidates = GetComponentHelper.GetHandOfCards(EntityManager);
             int pick = System.Math.Min(evt.Amount, candidates.Count);
-            Console.WriteLine($"[MarkedForSpecificDiscardSystem] Picking {pick} cards from {candidates.Count} candidates");
+            LoggingService.Append("MarkedForSpecificDiscardSystem.TryPreselectSpecificDiscards", new System.Text.Json.Nodes.JsonObject { ["pickCount"] = pick, ["candidateCount"] = candidates.Count });
             if (pick <= 0) return;
             // Shuffle candidates and take the first N
             var selected = candidates.OrderBy(_ => _random.Next()).Take(pick).ToList();

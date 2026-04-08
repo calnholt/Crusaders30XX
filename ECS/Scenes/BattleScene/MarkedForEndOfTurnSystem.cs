@@ -71,7 +71,7 @@ namespace Crusaders30XX.ECS.Systems
                     Reason = "EndOfTurnDiscard" 
                 });
                 EntityManager.RemoveComponent<MarkedForEndOfTurnDiscard>(card);
-                Console.WriteLine($"[MarkedForEndOfTurnSystem] Requested move to DiscardPile for card {card.Id}");
+                LoggingService.Append("MarkedForEndOfTurnSystem.OnChangeBattlePhase", new System.Text.Json.Nodes.JsonObject { ["cardId"] = card.Id });
             }
         }
     }

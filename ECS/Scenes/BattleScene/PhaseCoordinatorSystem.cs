@@ -51,9 +51,9 @@ namespace Crusaders30XX.ECS.Systems
 			int oldTurn = ps.TurnNumber;
 			if (ps.Sub != SubPhase.StartBattle) {
 				ps.TurnNumber++;
-				Console.WriteLine($"[PhaseCoordinatorSystem] Incremented turn number: {oldTurn} -> {ps.TurnNumber} (previous sub: {ps.Sub})");
+				LoggingService.Append("PhaseCoordinatorSystem.OnChangePhaseFromEnemy", new System.Text.Json.Nodes.JsonObject { ["oldTurn"] = oldTurn, ["newTurn"] = ps.TurnNumber, ["previousSub"] = ps.Sub.ToString() });
 			} else {
-				Console.WriteLine($"[PhaseCoordinatorSystem] Not incrementing turn (coming from StartBattle, turn={ps.TurnNumber})");
+				LoggingService.Append("PhaseCoordinatorSystem.OnChangePhaseFromEnemy", new System.Text.Json.Nodes.JsonObject { ["message"] = "Not incrementing turn (coming from StartBattle)", ["turn"] = ps.TurnNumber });
 			}
 		}
 		if (evt.Current == SubPhase.EnemyStart || evt.Current == SubPhase.PreBlock || evt.Current == SubPhase.Block || evt.Current == SubPhase.EnemyAttack || evt.Current == SubPhase.EnemyEnd) {

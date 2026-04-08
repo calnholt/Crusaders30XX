@@ -3,6 +3,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -43,7 +44,7 @@ namespace Crusaders30XX.ECS.Systems
 				// Start a brief attack animation timer; on completion, signal impact
 				_attackAnimTimer = _attackAnimDuration;
 				_pendingContextId = evt.ContextId;
-				System.Console.WriteLine($"[EnemyDisplaySystem] StartEnemyAttackAnimation context={evt.ContextId}");
+				LoggingService.Append("EnemyDisplaySystem.OnStartEnemyAttackAnimation", new System.Text.Json.Nodes.JsonObject { ["contextId"] = evt.ContextId });
 				// Capture current player position as target (find Player Transform)
 				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 				var pt = player?.GetComponent<Transform>();

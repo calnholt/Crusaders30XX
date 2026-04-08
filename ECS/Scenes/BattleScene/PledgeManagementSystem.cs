@@ -101,7 +101,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnSkipPledge(SkipPledgeRequested evt)
         {
-            Console.WriteLine("[PledgeManagementSystem] Pledge skipped by player");
+            LoggingService.Append("PledgeManagementSystem.OnSkipPledge", new System.Text.Json.Nodes.JsonObject { ["message"] = "pledge skipped by player" });
             _awaitingPledgeSelection = false;
             RestoreCardInteractability();
             ProceedToEnemyStart();
@@ -115,7 +115,7 @@ namespace Crusaders30XX.ECS.Systems
             EntityManager.AddComponent(card, new Pledge { Owner = card });
             EventManager.Publish(new PledgeAddedEvent { Card = card });
             RestoreCardInteractability();
-            Console.WriteLine($"[PledgeManagementSystem] Added Pledge component to {card.GetComponent<CardData>()?.Card.CardId ?? "unknown"}");
+            LoggingService.Append("PledgeManagementSystem.AddPledgeToCard", new System.Text.Json.Nodes.JsonObject { ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown" });
         }
 
         private void ProceedToEnemyStart()
@@ -239,7 +239,7 @@ namespace Crusaders30XX.ECS.Systems
             foreach (var card in pledgedCards)
             {
                 EntityManager.RemoveComponent<Pledge>(card);
-                Console.WriteLine($"[PledgeManagementSystem] Cleared pledge from {card.GetComponent<CardData>()?.Card.CardId ?? "unknown"}");
+                LoggingService.Append("PledgeManagementSystem.ClearAllPledges", new System.Text.Json.Nodes.JsonObject { ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown" });
             }
         }
     }

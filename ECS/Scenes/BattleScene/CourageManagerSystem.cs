@@ -19,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<SetCourageEvent>(OnSetCourageEvent);
 			EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
 			EventManager.Subscribe<CardMoved>(OnCardMoved);
-            Console.WriteLine("[CourageManagerSystem] Subscribed to ModifyCourageEvent, CardMoved");
+			LoggingService.Append("CourageManagerSystem.ctor", new System.Text.Json.Nodes.JsonObject { ["message"] = "subscribed to ModifyCourageEvent, CardMoved" });
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -32,7 +32,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnModifyCourage(ModifyCourageRequestEvent evt)
 		{
-            Console.WriteLine($"[CourageManagerSystem] OnModifyCourage delta={evt.Delta}");
 			LoggingService.Append("CourageManagerSystem.OnModifyCourage", new System.Text.Json.Nodes.JsonObject
 			{
 				["delta"] = evt.Delta,
@@ -52,7 +51,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnSetCourageEvent(SetCourageEvent evt)
 		{
-            Console.WriteLine($"[CourageManagerSystem] OnSetCourageEvent amount={evt.Amount}");
 			LoggingService.Append("CourageManagerSystem.OnSetCourageEvent", new System.Text.Json.Nodes.JsonObject
 			{
 				["amount"] = evt.Amount
@@ -84,7 +82,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnCardMoved(CardMoved evt)
 		{
-            Console.WriteLine($"[CourageManagerSystem] OnCardMoved from={evt.From} to={evt.To}");
 			LoggingService.Append("CourageManagerSystem.OnCardMoved", new System.Text.Json.Nodes.JsonObject
 			{
 				["from"] = evt.From.ToString(),

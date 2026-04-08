@@ -49,7 +49,6 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				["delta"] = evt.Delta
 			});
-            Console.WriteLine($"[ActionPointManagementSystem] OnModifyAp delta={evt.Delta}");
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			if (player == null) return;
 			var ap = player.GetComponent<ActionPoints>();

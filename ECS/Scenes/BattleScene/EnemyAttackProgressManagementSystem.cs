@@ -71,7 +71,7 @@ namespace Crusaders30XX.ECS.Systems
 		// This ensures fresh state for each enemy in a quest
 		if (e.Scene == SceneId.Battle)
 		{
-			Console.WriteLine("[EnemyAttackProgressManagementSystem] Cleaning up all EnemyAttackProgress entities for new battle");
+			LoggingService.Append("EnemyAttackProgressManagementSystem.OnLoadSceneEvent", new System.Text.Json.Nodes.JsonObject { ["message"] = "cleaning up all EnemyAttackProgress entities for new battle" });
 			var allProgress = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>().ToList();
 			foreach (var entity in allProgress)
 			{
@@ -82,7 +82,7 @@ namespace Crusaders30XX.ECS.Systems
 
 	private void PrintProgress(EnemyAttackProgress p)
 	{
-		Console.WriteLine($"[EnemyAttackProgressManagementSystem] Progress p={p.ContextId} playedCards={p.PlayedCards} playedRed={p.PlayedRed} playedWhite={p.PlayedWhite} playedBlack={p.PlayedBlack} assignedBlockTotal={p.AssignedBlockTotal} additionalConditionalDamageTotal={p.AdditionalConditionalDamageTotal} isConditionMet={p.IsConditionMet} actualDamage={p.ActualDamage} preventedDamage={p.AegisTotal} damageBeforePrevention={p.DamageBeforePrevention} baseDamage={p.BaseDamage} aegisTotal={p.AegisTotal} totalPreventedDamage={p.TotalPreventedDamage}");
+		LoggingService.Append("EnemyAttackProgressManagementSystem.PrintProgress", new System.Text.Json.Nodes.JsonObject { ["contextId"] = p.ContextId, ["playedCards"] = p.PlayedCards, ["playedRed"] = p.PlayedRed, ["playedWhite"] = p.PlayedWhite, ["playedBlack"] = p.PlayedBlack, ["assignedBlockTotal"] = p.AssignedBlockTotal, ["additionalConditionalDamageTotal"] = p.AdditionalConditionalDamageTotal, ["isConditionMet"] = p.IsConditionMet, ["actualDamage"] = p.ActualDamage, ["preventedDamage"] = p.AegisTotal, ["baseDamage"] = p.BaseDamage, ["totalPreventedDamage"] = p.TotalPreventedDamage });
 	}
 
 		[DebugAction("Print Progress")]
@@ -96,7 +96,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnBlockAssignmentAdded(BlockAssignmentAdded e)
 		{
-			Console.WriteLine($"[EnemyAttackProgressManagementSystem] BlockAssignmentAdded ctx={e.ContextId} color={e.Color} delta={e.DeltaBlock}");
+			LoggingService.Append("EnemyAttackProgressManagementSystem.OnBlockAssignmentAdded", new System.Text.Json.Nodes.JsonObject { ["contextId"] = e.ContextId, ["color"] = e.Color, ["deltaBlock"] = e.DeltaBlock });
 			if (e == null || string.IsNullOrWhiteSpace(e.Color)) return;
 			string color = NormalizeColorKey(e.Color);
 			if (string.IsNullOrEmpty(e.ContextId)) return;
@@ -125,7 +125,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnBlockAssignmentRemoved(BlockAssignmentRemoved e)
 		{
-			Console.WriteLine($"[EnemyAttackProgressManagementSystem] BlockAssignmentRemoved ctx={e.ContextId} color={e.Color} delta={e.DeltaBlock}");
+			LoggingService.Append("EnemyAttackProgressManagementSystem.OnBlockAssignmentRemoved", new System.Text.Json.Nodes.JsonObject { ["contextId"] = e.ContextId, ["color"] = e.Color, ["deltaBlock"] = e.DeltaBlock });
 			if (e == null || string.IsNullOrEmpty(e.ContextId)) return;
 
 			// Find the owning enemy and attack for this context
@@ -257,7 +257,7 @@ namespace Crusaders30XX.ECS.Systems
 						.Sum(abc => abc.BlockAmount);
 					if (liveAssigned != p.AssignedBlockTotal)
 					{
-						Console.WriteLine($"[EnemyAttackProgressManagementSystem] WARNING: AssignedBlockTotal desync for ctx={p.ContextId}: snapshot={p.AssignedBlockTotal}, live={liveAssigned}");
+						LoggingService.Append("EnemyAttackProgressManagementSystem.Recompute.desync", new System.Text.Json.Nodes.JsonObject { ["contextId"] = p.ContextId, ["snapshot"] = p.AssignedBlockTotal, ["live"] = liveAssigned });
 					}
 				}
 			}

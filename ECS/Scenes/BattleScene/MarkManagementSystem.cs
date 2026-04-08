@@ -78,7 +78,7 @@ namespace Crusaders30XX.ECS.Systems
                     var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
                     if (deck?.Hand?.Contains(card) == true)
                     {
-                        Console.WriteLine("[MarkManagementSystem] Marked card held until PlayerEnd - applying 1 penance.");
+                        LoggingService.Append("MarkManagementSystem.OnChangeBattlePhase.PlayerEnd", new System.Text.Json.Nodes.JsonObject { ["message"] = "marked card held until PlayerEnd, applying 1 penance" });
                         var player = EntityManager.GetEntity("Player");
                         EventManager.Publish(new ApplyPassiveEvent
                         {
@@ -143,11 +143,11 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(newTarget, new Marked { EffectType = newEffect });
 
                 var cardData = newTarget.GetComponent<CardData>();
-                Console.WriteLine($"[MarkManagementSystem] Mark moved to {cardData?.Card?.CardId ?? "unknown"} with effect {newEffect}");
+                LoggingService.Append("MarkManagementSystem.OnCardBlocked", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card?.CardId ?? "unknown", ["newEffect"] = newEffect.ToString() });
             }
             else
             {
-                Console.WriteLine("[MarkManagementSystem] No eligible card to move mark to - mark disappears.");
+                LoggingService.Append("MarkManagementSystem.OnCardBlocked", new System.Text.Json.Nodes.JsonObject { ["message"] = "no eligible card to move mark to, mark disappears" });
             }
         }
 
@@ -165,7 +165,7 @@ namespace Crusaders30XX.ECS.Systems
             if (marked == null) return;
 
             // Pledging a marked card gives 1 penance
-            Console.WriteLine("[MarkManagementSystem] Marked card pledged - applying 1 penance.");
+            LoggingService.Append("MarkManagementSystem.OnPledgeAdded", new System.Text.Json.Nodes.JsonObject { ["message"] = "marked card pledged, applying 1 penance" });
             var player = EntityManager.GetEntity("Player");
             EventManager.Publish(new ApplyPassiveEvent
             {
@@ -190,7 +190,7 @@ namespace Crusaders30XX.ECS.Systems
             var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
             if (deck?.Hand == null || deck.Hand.Count == 0)
             {
-                Console.WriteLine("[MarkManagementSystem] No cards in hand to mark.");
+                LoggingService.Append("MarkManagementSystem.ApplyNewMark", new System.Text.Json.Nodes.JsonObject { ["message"] = "no cards in hand to mark" });
                 return;
             }
 
@@ -202,7 +202,7 @@ namespace Crusaders30XX.ECS.Systems
 
             if (eligibleCards.Count == 0)
             {
-                Console.WriteLine("[MarkManagementSystem] No eligible cards to mark.");
+                LoggingService.Append("MarkManagementSystem.ApplyNewMark", new System.Text.Json.Nodes.JsonObject { ["message"] = "no eligible cards to mark" });
                 return;
             }
 
@@ -212,7 +212,7 @@ namespace Crusaders30XX.ECS.Systems
             EntityManager.AddComponent(cardToMark, new Marked { EffectType = effect });
 
             var cardData = cardToMark.GetComponent<CardData>();
-            Console.WriteLine($"[MarkManagementSystem] Marked card: {cardData?.Card?.CardId ?? "unknown"} with effect {effect}");
+            LoggingService.Append("MarkManagementSystem.ApplyNewMark", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card?.CardId ?? "unknown", ["effect"] = effect.ToString() });
         }
 
         private void ApplyPenaltyEffect(MarkEffectType effectType)
@@ -222,7 +222,7 @@ namespace Crusaders30XX.ECS.Systems
             switch (effectType)
             {
                 case MarkEffectType.Lose1HP:
-                    Console.WriteLine("[MarkManagementSystem] Applying penalty: Lose 1 HP");
+                    LoggingService.Append("MarkManagementSystem.ApplyMarkEffect", new System.Text.Json.Nodes.JsonObject { ["effect"] = "Lose1HP" });
                     EventManager.Publish(new ModifyHpRequestEvent
                     {
                         Source = EntityManager.GetEntity("Enemy"),
@@ -233,7 +233,7 @@ namespace Crusaders30XX.ECS.Systems
                     break;
 
                 case MarkEffectType.Lose2HP:
-                    Console.WriteLine("[MarkManagementSystem] Applying penalty: Lose 2 HP");
+                    LoggingService.Append("MarkManagementSystem.ApplyMarkEffect", new System.Text.Json.Nodes.JsonObject { ["effect"] = "Lose2HP" });
                     EventManager.Publish(new ModifyHpRequestEvent
                     {
                         Source = EntityManager.GetEntity("Enemy"),
@@ -244,7 +244,7 @@ namespace Crusaders30XX.ECS.Systems
                     break;
 
                 case MarkEffectType.Gain1Penance:
-                    Console.WriteLine("[MarkManagementSystem] Applying penalty: Gain 1 Penance");
+                    LoggingService.Append("MarkManagementSystem.ApplyMarkEffect", new System.Text.Json.Nodes.JsonObject { ["effect"] = "Gain1Penance" });
                     EventManager.Publish(new ApplyPassiveEvent
                     {
                         Target = player,
@@ -254,7 +254,7 @@ namespace Crusaders30XX.ECS.Systems
                     break;
 
                 case MarkEffectType.Gain2Bleed:
-                    Console.WriteLine("[MarkManagementSystem] Applying penalty: Gain 2 Bleed");
+                    LoggingService.Append("MarkManagementSystem.ApplyMarkEffect", new System.Text.Json.Nodes.JsonObject { ["effect"] = "Gain2Bleed" });
                     EventManager.Publish(new ApplyPassiveEvent
                     {
                         Target = player,
@@ -264,7 +264,7 @@ namespace Crusaders30XX.ECS.Systems
                     break;
 
                 case MarkEffectType.Gain1Burn:
-                    Console.WriteLine("[MarkManagementSystem] Applying penalty: Gain 1 Burn");
+                    LoggingService.Append("MarkManagementSystem.ApplyMarkEffect", new System.Text.Json.Nodes.JsonObject { ["effect"] = "Gain1Burn" });
                     EventManager.Publish(new ApplyPassiveEvent
                     {
                         Target = player,

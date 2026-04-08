@@ -72,7 +72,7 @@ namespace Crusaders30XX.ECS.Systems
 					sealedComp.Seals += amount;
 				}
 				var cardData = card.GetComponent<CardData>();
-				Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been sealed!");
+				LoggingService.Append("SealManagementSystem.OnApplySeal", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown", ["message"] = "card has been sealed" });
 			}
 		}
 
@@ -101,7 +101,7 @@ namespace Crusaders30XX.ECS.Systems
 					sealedComp.Seals += amount;
 				}
 				var cardData = card.GetComponent<CardData>();
-				Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been sealed (from draw pile)!");
+				LoggingService.Append("SealManagementSystem.OnCardMoved", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown", ["message"] = "card has been sealed from draw pile" });
 			}
 		}
 
@@ -159,7 +159,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					sealedComp.Seals = Math.Max(0, sealedComp.Seals + evt.Delta);
 					var cardData = card.GetComponent<CardData>();
-					Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} seals modified by {evt.Delta}, now {sealedComp.Seals}");
+					LoggingService.Append("SealManagementSystem.OnModifySeals", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown", ["delta"] = evt.Delta, ["newSealCount"] = sealedComp.Seals });
 				}
 			}
 		}
@@ -187,7 +187,7 @@ namespace Crusaders30XX.ECS.Systems
 					Reason = "ShuffleSealedIntoDrawPile"
 				});
 				var cardData = card.GetComponent<CardData>();
-				Console.WriteLine($"[SealManagementSystem] Sealed card {cardData?.Card.CardId ?? "unknown"} shuffled into draw pile!");
+				LoggingService.Append("SealManagementSystem.OnCardMoved", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown", ["message"] = "sealed card shuffled into draw pile" });
 			}
 
 			// Shuffle the draw pile
@@ -225,7 +225,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			sealedComp.Seals -= amount;
 			var cardData = card.GetComponent<CardData>();
-			Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} lost {amount} seal(s) ({reason}), now {sealedComp.Seals}");
+			LoggingService.Append("SealManagementSystem.RemoveSeals", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown", ["amountRemoved"] = amount, ["reason"] = reason, ["sealCount"] = sealedComp.Seals });
 
 			if (sealedComp.Seals <= 0)
 			{
@@ -237,7 +237,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			EntityManager.RemoveComponent<Sealed>(card);
 			var cardData = card.GetComponent<CardData>();
-			Console.WriteLine($"[SealManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been freed from seal!");
+			LoggingService.Append("SealManagementSystem.FreeCard", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown" });
 		}
 	}
 }

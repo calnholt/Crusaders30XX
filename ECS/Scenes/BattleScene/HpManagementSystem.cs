@@ -55,7 +55,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			// TODO: iterate through applied passives and apply their effects
 			int passiveDelta = AppliedPassivesService.GetPassiveDelta(e);
-			Console.WriteLine($"[HpManagementSystem] OnModifyHpRequest passiveDelta={passiveDelta}");
+			LoggingService.Append("HpManagementSystem.OnModifyHpRequest", new System.Text.Json.Nodes.JsonObject { ["passiveDelta"] = passiveDelta });
 			int newDelta = e.Delta + passiveDelta;
 			if (e.DamageType == ModifyTypeEnum.Heal && newDelta < 0)
 			{
@@ -91,7 +91,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EventQueue.Clear();
 					TimerScheduler.Schedule(1f, () => {
-					Console.WriteLine("[HpManagementSystem] Enemy died, execute transition");
+					LoggingService.Append("HpManagementSystem.OnModifyHpRequest.EnemyDied", new System.Text.Json.Nodes.JsonObject { ["message"] = "enemy died, execute transition" });
 					EventManager.Publish(new EnemyKilledEvent { Enemy = target });
 					// is this the last enemy?
 					var queuedEntity = EntityManager.GetEntity("QueuedEvents");
@@ -102,7 +102,7 @@ namespace Crusaders30XX.ECS.Systems
 							&& queued.CurrentIndex >= 0 
 							&& queued.CurrentIndex == queued.Events.Count - 1)
 					{
-						Console.WriteLine($"[HpManagementSystem] Attempting to save quest completion");
+						LoggingService.Append("HpManagementSystem.OnModifyHpRequest.QuestComplete", new System.Text.Json.Nodes.JsonObject { ["message"] = "attempting to save quest completion" });
 						var completion = QuestCompleteService.SaveIfCompletedHighest(EntityManager);
 						string msg = "Quest Complete!";
 						if (completion.IsNewlyCompleted || completion.IsDungeon)

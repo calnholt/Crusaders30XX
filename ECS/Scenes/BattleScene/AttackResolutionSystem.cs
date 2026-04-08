@@ -17,7 +17,7 @@ namespace Crusaders30XX.ECS.Systems
 		public AttackResolutionSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<ResolveAttack>(OnResolveAttack);
-			Console.WriteLine("[AttackResolutionSystem] Subscribed to ResolveAttack");
+			LoggingService.Append("AttackResolutionSystem.ctor", new System.Text.Json.Nodes.JsonObject { ["message"] = "subscribed to ResolveAttack" });
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -59,7 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			var source = enemy;
-			Console.WriteLine($"[AttackResolutionSystem] ResolveAttack {pa.AttackId} {def.Damage} isBlocked: {blocked}, fullyPreventedBySpecial: {fullyPreventedBySpecial}");
+			LoggingService.Append("AttackResolutionSystem.OnResolveAttack", new System.Text.Json.Nodes.JsonObject { ["attackId"] = pa.AttackId, ["damage"] = def.Damage, ["isBlocked"] = blocked, ["fullyPreventedBySpecial"] = fullyPreventedBySpecial });
 
 			if (def.Damage > 0 && !fullyPreventedBySpecial)
 			{

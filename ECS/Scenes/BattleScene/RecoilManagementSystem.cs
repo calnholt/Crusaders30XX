@@ -43,7 +43,7 @@ namespace Crusaders30XX.ECS.Systems
 
             var card = available.OrderBy(_ => _random.Next()).First();
             EntityManager.AddComponent(card, new Recoil { Owner = card, Stacks = evt.Amount });
-            Console.WriteLine($"[RecoilManagementSystem] Card {card.GetComponent<CardData>().Card.CardId} gained Recoil {evt.Amount}");
+            LoggingService.Append("RecoilManagementSystem.OnApplyRecoil", new System.Text.Json.Nodes.JsonObject { ["cardId"] = card.GetComponent<CardData>().Card.CardId, ["amount"] = evt.Amount });
         }
 
         private void OnCardBlocked(CardBlockedEvent evt)
@@ -55,7 +55,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // Card was used to block — safe exit, no damage
             EntityManager.RemoveComponent<Recoil>(card);
-            Console.WriteLine($"[RecoilManagementSystem] Card {card.GetComponent<CardData>().Card.CardId} blocked — Recoil removed, no penalty.");
+            LoggingService.Append("RecoilManagementSystem.OnCardBlocked", new System.Text.Json.Nodes.JsonObject { ["cardId"] = card.GetComponent<CardData>().Card.CardId, ["message"] = "recoil removed, no penalty" });
         }
 
         private void OnAttackResolved(AttackResolved evt)
@@ -69,7 +69,7 @@ namespace Crusaders30XX.ECS.Systems
                 var recoil = card.GetComponent<Recoil>();
                 if (recoil == null) continue;
 
-                Console.WriteLine($"[RecoilManagementSystem] Card {card.GetComponent<CardData>().Card.CardId} not blocked with — dealing {recoil.Stacks} recoil damage.");
+                LoggingService.Append("RecoilManagementSystem.OnAttackResolved", new System.Text.Json.Nodes.JsonObject { ["cardId"] = card.GetComponent<CardData>().Card.CardId, ["damage"] = recoil.Stacks });
                 EventManager.Publish(new ModifyHpRequestEvent
                 {
                     Target = playerEntity,

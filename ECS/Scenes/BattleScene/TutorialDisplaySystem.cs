@@ -5,6 +5,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Data.Tutorials;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Utils;
@@ -178,7 +179,7 @@ namespace Crusaders30XX.ECS.Systems
             // Create continue button with HotKey for hold-to-continue
             CreateContinueButton();
 
-            Console.WriteLine($"[TutorialDisplaySystem] Started: {_currentTutorial.key}");
+            LoggingService.Append("TutorialDisplaySystem.OnTutorialStarted", new System.Text.Json.Nodes.JsonObject { ["key"] = _currentTutorial.key });
         }
 
         private void OnTutorialCompleted(TutorialCompletedEvent evt)
@@ -221,7 +222,7 @@ namespace Crusaders30XX.ECS.Systems
             // Destroy continue button
             DestroyContinueButton();
 
-            Console.WriteLine("[TutorialDisplaySystem] Cleaned up");
+            LoggingService.Append("TutorialDisplaySystem.OnAllTutorialsCompleted", new System.Text.Json.Nodes.JsonObject { ["message"] = "cleaned up" });
         }
 
         private void PrepareText()
@@ -347,7 +348,7 @@ namespace Crusaders30XX.ECS.Systems
                 IsActive = true
             });
 
-            Console.WriteLine("[TutorialDisplaySystem] Created continue button");
+            LoggingService.Append("TutorialDisplaySystem.CreateContinueButton", new System.Text.Json.Nodes.JsonObject { ["message"] = "created continue button" });
         }
 
         private void DestroyContinueButton()

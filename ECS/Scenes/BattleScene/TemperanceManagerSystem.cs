@@ -19,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<CardMoved>(OnCardMoved);
             EventManager.Subscribe<ModifyTemperanceEvent>(OnModifyTemperance);
             EventManager.Subscribe<SetTemperanceEvent>(OnSetTemperanceEvent);
-            Console.WriteLine("[TemperanceManagerSystem] Subscribed to CardMoved, ModifyTemperanceEvent");
+            LoggingService.Append("TemperanceManagerSystem.ctor", new System.Text.Json.Nodes.JsonObject { ["message"] = "subscribed to CardMoved, ModifyTemperanceEvent" });
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -31,7 +31,6 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardMoved(CardMoved evt)
         {
-            Console.WriteLine($"[TemperanceManagerSystem] OnCardMoved from={evt.From} to={evt.To}");
             LoggingService.Append("TemperanceManagerSystem.OnCardMoved", new System.Text.Json.Nodes.JsonObject
             {
                 ["from"] = evt.From.ToString(),
@@ -59,7 +58,6 @@ namespace Crusaders30XX.ECS.Systems
             if (t == null) { t = new Temperance(); EntityManager.AddComponent(player, t); }
             int before = t.Amount;
             t.Amount = Math.Max(0, t.Amount + evt.Delta);
-            Console.WriteLine($"[TemperanceManagerSystem] Temperance changed {before} -> {t.Amount}");
             LoggingService.Append("TemperanceManagerSystem.OnModifyTemperance", new System.Text.Json.Nodes.JsonObject
             {
                 ["delta"] = evt.Delta,
