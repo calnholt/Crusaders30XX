@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Core;
 // duplicate removed
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Events;
 using System;
 using Crusaders30XX.Diagnostics;
@@ -116,6 +117,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
+        LoggingService.Initialize();
         CalculateRenderDestination();
         // Initialize ECS World
         _world = new World();
@@ -243,6 +245,7 @@ public class Game1 : Game
     
     protected override void Update(GameTime gameTime)
     {
+        LoggingService.Tick();
         WindowIsActive = IsActive;
         // Hide system mouse cursor when no gamepad is connected (custom cursor will be drawn)
         var gp = GamePad.GetState(PlayerIndex.One);
@@ -469,6 +472,7 @@ public class Game1 : Game
 
 	protected override void UnloadContent()
 	{
+		LoggingService.Flush();
 		try { _currencyDisplaySystem?.Dispose(); } catch { }
 		base.UnloadContent();
 	}
