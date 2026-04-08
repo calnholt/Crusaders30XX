@@ -2,6 +2,7 @@ using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
@@ -34,7 +35,7 @@ namespace Crusaders30XX.ECS.Systems
             _content = content;
 
             EventManager.Subscribe<ChangeBattleLocationEvent>(OnChangeLocation);
-            Console.WriteLine("[BattleBackgroundSystem] Subscribed to ChangeBattleLocationEvent");
+            LoggingService.Append("BattleBackgroundSystem.ctor", new System.Text.Json.Nodes.JsonObject { ["message"] = "subscribed to ChangeBattleLocationEvent" });
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -77,7 +78,7 @@ namespace Crusaders30XX.ECS.Systems
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to load background: {ex.Message}");
+                LoggingService.Append("BattleBackgroundSystem.OnChangeLocation.error", new System.Text.Json.Nodes.JsonObject { ["message"] = ex.Message });
             }
         }
 

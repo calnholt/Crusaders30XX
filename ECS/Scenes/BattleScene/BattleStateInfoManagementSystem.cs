@@ -68,7 +68,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             LoggingService.Append("BattleStateInfoManagementSystem.OnLoadScene", new System.Text.Json.Nodes.JsonObject
             {
-                ["sceneId"] = e.SceneId.ToString()
+                ["scene"] = e.Scene.ToString()
             });
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             if (player == null) return;

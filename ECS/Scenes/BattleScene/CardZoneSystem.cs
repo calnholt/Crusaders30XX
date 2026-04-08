@@ -21,7 +21,6 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<CardMoved>(OnCardMoved);
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
             EventManager.Subscribe<CardMoveFinalizeRequested>(OnCardMoveFinalizeRequested);
-            Console.WriteLine("[CardZoneSystem] Subscribed to CardMoveRequested");
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -64,8 +63,14 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardMoveRequested(CardMoveRequested evt)
         {
-            Console.WriteLine($"[CardZoneSystem] CardMoveRequested card={evt.Card?.Id} to={evt.Destination} reason={evt.Reason}");
             if (evt == null || evt.Card == null) return;
+
+            LoggingService.Append("CardZoneSystem.OnCardMoveRequested", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = evt.Card.Id,
+                ["destination"] = evt.Destination.ToString(),
+                ["reason"] = evt.Reason
+            });
 
             var deckEntity = evt.Deck ?? EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             var deck = deckEntity?.GetComponent<Deck>();
@@ -190,7 +195,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiH.IsInteractable = true;
                         uiH.IsHovered = false;
                         uiH.IsClicked = false;
-                        uiH.EventType = UIElementEventType.None;
+                        uiH.EventType = UIElementEventType.CardClicked;
                     }
                     // Fallback restore of tooltip config if a backup still exists (e.g., if BlockAssignmentRemoved didn't run)
                     {
@@ -358,7 +363,12 @@ namespace Crusaders30XX.ECS.Systems
                 To = evt.Destination,
                 ContextId = evt.ContextId
             });
-            Console.WriteLine($"[CardZoneSystem] CardMoved from={from} to={evt.Destination}");
+
+            LoggingService.Append("CardZoneSystem.CardMoveInProgress", new System.Text.Json.Nodes.JsonObject
+            {
+                ["from"] = from.ToString(),
+                ["to"] = evt.Destination.ToString()
+            });
         }
 
         private void OnCardMoveFinalizeRequested(CardMoveFinalizeRequested evt)
@@ -451,7 +461,12 @@ namespace Crusaders30XX.ECS.Systems
                 To = evt.Destination,
                 ContextId = evt.ContextId
             });
-            Console.WriteLine($"[CardZoneSystem] Finalized CardMoved from={from} to={evt.Destination}");
+
+            LoggingService.Append("CardZoneSystem.OnCardMoveFinalizeRequested", new System.Text.Json.Nodes.JsonObject
+            {
+                ["from"] = from.ToString(),
+                ["to"] = evt.Destination.ToString()
+            });
         }
 
         private static string NormalizeColorKey(string c)

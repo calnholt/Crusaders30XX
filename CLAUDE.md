@@ -74,6 +74,7 @@ The `ParallaxLayerSystem` is fully agnostic — external systems cooperate with 
 - NEVER use MouseState or GamePad state - use CursorEvents
 - When presented multiple different approaches, never take the easy way out - prefer the hard but comprehensive approach
 	- NO SLOP; STAY DRY
+- Systems own their outputs exclusively — never duplicate another system's logic or neutralize it (e.g., overwriting its output each frame to suppress it). Fix ordering or initialization issues at the source instead
 
 ## Display Systems
 

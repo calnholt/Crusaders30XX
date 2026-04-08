@@ -4,6 +4,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Data.Tutorials;
 using Crusaders30XX.ECS.Objects.Cards;
@@ -66,7 +67,7 @@ namespace Crusaders30XX.ECS.Systems
             _lastProcessedTurn = turnNumber;
             _lastProcessedPhase = currentPhase;
 
-            Console.WriteLine($"[TutorialManager] OnChangeBattlePhase: {currentPhase} {turnNumber}");
+            LoggingService.Append("TutorialManager.OnChangeBattlePhase", new System.Text.Json.Nodes.JsonObject { ["phase"] = currentPhase.ToString(), ["turnNumber"] = turnNumber });
 
             // Queue tutorials based on phase and turn number
             if (currentPhase == SubPhase.Block && turnNumber == 1)
@@ -131,7 +132,7 @@ namespace Crusaders30XX.ECS.Systems
             // Try to get tutorial definition
             if (!TutorialDefinitionCache.TryGet(key, out var tutorial) || tutorial == null)
             {
-                Console.WriteLine($"[TutorialManager] Tutorial not found: {key}");
+                LoggingService.Append("TutorialManager.QueueTutorial.notFound", new System.Text.Json.Nodes.JsonObject { ["key"] = key });
                 return;
             }
 
@@ -141,7 +142,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // Queue the tutorial
             _tutorialQueue.Enqueue(tutorial);
-            Console.WriteLine($"[TutorialManager] Queued tutorial: {key}");
+            LoggingService.Append("TutorialManager.QueueTutorial.queued", new System.Text.Json.Nodes.JsonObject { ["key"] = key });
         }
 
         private bool CheckCondition(string condition)
@@ -260,7 +261,7 @@ namespace Crusaders30XX.ECS.Systems
             // Mark as seen immediately so it won't be queued again
             SaveCache.MarkTutorialSeen(_activeTutorial.key);
 
-            Console.WriteLine($"[TutorialManager] Starting tutorial: {_activeTutorial.key}");
+            LoggingService.Append("TutorialManager.StartNextTutorial", new System.Text.Json.Nodes.JsonObject { ["key"] = _activeTutorial.key });
             EventManager.Publish(new TutorialStartedEvent { Tutorial = _activeTutorial });
         }
 
@@ -269,7 +270,7 @@ namespace Crusaders30XX.ECS.Systems
             if (!_tutorialActive || _activeTutorial == null)
                 return;
 
-            Console.WriteLine($"[TutorialManager] Completed tutorial: {_activeTutorial.key}");
+            LoggingService.Append("TutorialManager.OnAdvanceTutorial", new System.Text.Json.Nodes.JsonObject { ["key"] = _activeTutorial.key });
             EventManager.Publish(new TutorialCompletedEvent { Tutorial = _activeTutorial });
 
             _activeTutorial = null;
@@ -429,7 +430,7 @@ namespace Crusaders30XX.ECS.Systems
             var equipmentEntity = EntityManager.GetEntitiesWithComponent<EquippedEquipment>().FirstOrDefault();
             if (equipmentEntity == null)
             {
-                Console.WriteLine($"[TutorialManager] Equipment entity not found");
+                LoggingService.Append("TutorialManager.GetEquipmentBounds", new System.Text.Json.Nodes.JsonObject { ["message"] = "entity not found" });
                 return Rectangle.Empty;
             }
 
@@ -439,7 +440,7 @@ namespace Crusaders30XX.ECS.Systems
                 return new Rectangle(ui.Bounds.X, ui.Bounds.Y, ui.Bounds.Width, ui.Bounds.Height);
             }
 
-            Console.WriteLine($"[TutorialManager] Equipment bounds not found");
+            LoggingService.Append("TutorialManager.GetEquipmentBounds", new System.Text.Json.Nodes.JsonObject { ["message"] = "bounds not found" });
             return Rectangle.Empty;
         }
 
@@ -448,7 +449,7 @@ namespace Crusaders30XX.ECS.Systems
             var medalEntity = EntityManager.GetEntitiesWithComponent<EquippedMedal>().FirstOrDefault();
             if (medalEntity == null)
             {
-                Console.WriteLine($"[TutorialManager] Medal entity not found");
+                LoggingService.Append("TutorialManager.GetMedalBounds", new System.Text.Json.Nodes.JsonObject { ["message"] = "entity not found" });
                 return Rectangle.Empty;
             }
             var ui = medalEntity.GetComponent<UIElement>();
@@ -457,7 +458,7 @@ namespace Crusaders30XX.ECS.Systems
                 return new Rectangle(ui.Bounds.X, ui.Bounds.Y, ui.Bounds.Width, ui.Bounds.Height);
             }
 
-            Console.WriteLine($"[TutorialManager] Medal bounds not found");
+            LoggingService.Append("TutorialManager.GetMedalBounds", new System.Text.Json.Nodes.JsonObject { ["message"] = "bounds not found" });
             return Rectangle.Empty;
         }
         private Rectangle GetTribulationBounds()
@@ -472,7 +473,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 return new Rectangle(ui.Bounds.X, ui.Bounds.Y, ui.Bounds.Width, ui.Bounds.Height);
             }
-            Console.WriteLine($"[TutorialManager] Tribulation bounds not found");
+            LoggingService.Append("TutorialManager.GetTribulationBounds", new System.Text.Json.Nodes.JsonObject { ["message"] = "bounds not found" });
             return Rectangle.Empty;
         }
         private Rectangle GetUIRegionBounds(string regionId)

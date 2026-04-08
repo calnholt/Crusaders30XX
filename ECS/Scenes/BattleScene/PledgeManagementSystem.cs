@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Objects.Cards;
 using Microsoft.Xna.Framework;
 
@@ -55,7 +56,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (!IsEligibleForPledge(card, true)) continue;
                 
                 // Card was clicked - pledge it
-                Console.WriteLine($"[PledgeManagementSystem] Card clicked to pledge: {card.GetComponent<CardData>()?.Card.CardId ?? "unknown"}");
+                LoggingService.Append("PledgeManagementSystem.Update.cardClicked", new System.Text.Json.Nodes.JsonObject { ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown" });
                 AddPledgeToCard(card);
                 _awaitingPledgeSelection = false;
                 ProceedToEnemyStart();
@@ -71,13 +72,13 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
-            Console.WriteLine("[PledgeManagementSystem] Entered Pledge subphase");
+            LoggingService.Append("PledgeManagementSystem.OnPhaseChanged.Pledge", new System.Text.Json.Nodes.JsonObject { ["message"] = "entered pledge subphase" });
 
             // Check if a card is already pledged
             var pledgedCards = EntityManager.GetEntitiesWithComponent<Pledge>().ToList();
             if (pledgedCards.Count > 0)
             {
-                Console.WriteLine("[PledgeManagementSystem] Card already pledged, skipping to EnemyStart");
+                LoggingService.Append("PledgeManagementSystem.OnPhaseChanged.Pledge", new System.Text.Json.Nodes.JsonObject { ["message"] = "card already pledged, skipping to EnemyStart" });
                 ProceedToEnemyStart();
                 return;
             }
@@ -86,12 +87,12 @@ namespace Crusaders30XX.ECS.Systems
             var eligibleCards = GetEligiblePledgeCards();
             if (eligibleCards.Count == 0)
             {
-                Console.WriteLine("[PledgeManagementSystem] No eligible cards to pledge, skipping to EnemyStart");
+                LoggingService.Append("PledgeManagementSystem.OnPhaseChanged.Pledge", new System.Text.Json.Nodes.JsonObject { ["message"] = "no eligible cards to pledge, skipping to EnemyStart" });
                 ProceedToEnemyStart();
                 return;
             }
 
-            Console.WriteLine($"[PledgeManagementSystem] {eligibleCards.Count} eligible card(s), awaiting selection");
+            LoggingService.Append("PledgeManagementSystem.OnPhaseChanged.Pledge", new System.Text.Json.Nodes.JsonObject { ["eligibleCount"] = eligibleCards.Count, ["awaitingSelection"] = true });
             _awaitingPledgeSelection = true;
             
             // Update interactability - only eligible cards should be clickable

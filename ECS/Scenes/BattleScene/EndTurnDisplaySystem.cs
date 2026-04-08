@@ -50,7 +50,7 @@ namespace Crusaders30XX.ECS.Systems
             // Hook to support button click via input system
             EventManager.Subscribe<EndTurnRequested>(_ =>
             {
-                System.Console.WriteLine("[EndTurnDisplaySystem] EndTurnRequested received");
+                LoggingService.Append("EndTurnDisplaySystem.OnEndTurnRequested", new System.Text.Json.Nodes.JsonObject { ["message"] = "received" });
                 OnEndTurnPressed();
             });
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);

@@ -457,7 +457,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			catch
 			{
-				Console.WriteLine($"[EquipmentDisplaySystem] Missing icon for type '{type}' (expected content asset '{assetName}')");
+				LoggingService.Append("EquipmentDisplaySystem.GetOrCreateIcon.missing", new System.Text.Json.Nodes.JsonObject { ["type"] = type, ["assetName"] = assetName });
 				_iconCache[key] = null;
 				return null;
 			}

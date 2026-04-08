@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System;
@@ -18,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
             EventManager.Subscribe<EnemyAttackImpactNow>(OnImpactNow);
-            Console.WriteLine("[EnemyDamageManagerSystem] Subscribed to ApplyEffect, EnemyAttackImpactNow");
+            LoggingService.Append("EnemyDamageManagerSystem.ctor", new System.Text.Json.Nodes.JsonObject { ["message"] = "subscribed to ApplyEffect, EnemyAttackImpactNow" });
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -32,7 +33,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             if ((e.EffectType ?? string.Empty) != "Damage") return;
             // Accumulate incoming damage; apply on EnemyAttackImpactNow
-            Console.WriteLine($"[EnemyDamageManagerSystem] ApplyEffect {e.EffectType} {e.Amount} {e.Percentage}");
+            LoggingService.Append("EnemyDamageManagerSystem.OnApplyEffect", new System.Text.Json.Nodes.JsonObject { ["effectType"] = e.EffectType, ["amount"] = e.Amount, ["percentage"] = e.Percentage });
             if (e.Percentage != 100 && Random.Shared.Next(0, 100) > e.Percentage) return;
             int amt = Math.Max(0, e.Amount);
             _pendingDamage += amt;
@@ -42,7 +43,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnImpactNow(EnemyAttackImpactNow e)
         {
-            Console.WriteLine($"[EnemyDamageManagerSystem] EnemyAttackImpactNow context={e.ContextId} pending={_pendingDamage}");
+            LoggingService.Append("EnemyDamageManagerSystem.OnImpactNow", new System.Text.Json.Nodes.JsonObject { ["contextId"] = e.ContextId, ["pendingDamage"] = _pendingDamage });
             int baseDamage = _pendingDamage;
             _pendingDamage = 0;
 
@@ -84,7 +85,7 @@ namespace Crusaders30XX.ECS.Systems
                     bool ignoresAegis = prog?.IgnoresAegis ?? false;
                     int effectiveAegis = ignoresAegis ? 0 : prog?.AegisTotal ?? 0;
                     wasHit = finalDamage - effectiveAegis > 0;
-                    Console.WriteLine($"[EnemyDamageManagerSystem] ModifyHpRequestEvent finalDamage={finalDamage} aegisTotal={prog?.AegisTotal} ignoresAegis={ignoresAegis} wasHit={wasHit}");
+                    LoggingService.Append("EnemyDamageManagerSystem.OnImpactNow.modifyHp", new System.Text.Json.Nodes.JsonObject { ["finalDamage"] = finalDamage, ["aegisTotal"] = prog?.AegisTotal, ["ignoresAegis"] = ignoresAegis, ["wasHit"] = wasHit });
                     EventManager.Publish(new ModifyHpRequestEvent
                     {
                         Source = enemy,

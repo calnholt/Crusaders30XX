@@ -68,7 +68,7 @@ namespace Crusaders30XX.ECS.Systems
             var deck = deckEntity.GetComponent<Deck>();
             if (deck?.DrawPile == null || deck.DrawPile.Count == 0)
             {
-                Console.WriteLine("[PlunderManagementSystem] No cards in deck to plunder.");
+                LoggingService.Append("PlunderManagementSystem.OnPlunderTrigger", new System.Text.Json.Nodes.JsonObject { ["message"] = "no cards in deck to plunder" });
                 return;
             }
 
@@ -87,7 +87,7 @@ namespace Crusaders30XX.ECS.Systems
 
             if (eligibleCards.Count == 0)
             {
-                Console.WriteLine("[PlunderManagementSystem] No eligible cards to plunder.");
+                LoggingService.Append("PlunderManagementSystem.OnPlunderTrigger", new System.Text.Json.Nodes.JsonObject { ["message"] = "no eligible cards to plunder" });
                 return;
             }
 
@@ -98,7 +98,7 @@ namespace Crusaders30XX.ECS.Systems
             deck.DrawPile.Remove(cardToPlunder);
 
             var cardData = cardToPlunder.GetComponent<CardData>();
-            Console.WriteLine($"[PlunderManagementSystem] Plundered card: {cardData?.Card.CardId ?? "unknown"}, threshold: {threshold}");
+            LoggingService.Append("PlunderManagementSystem.OnPlunderTrigger.plundered", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown", ["threshold"] = threshold });
 
             // Calculate animation positions - get draw pile position from UI entity
             var startPos = ResolveDrawPileAnchor();
@@ -156,7 +156,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             var cardData = evt.Card.GetComponent<CardData>();
-            Console.WriteLine($"[PlunderManagementSystem] Animation completed for card: {cardData?.Card.CardId ?? "unknown"}");
+            LoggingService.Append("PlunderManagementSystem.OnAnimationCompleted", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown" });
 
             // Now publish the PlunderCardEvent to notify other systems
             EventManager.Publish(new PlunderCardEvent { Card = evt.Card, DamageThreshold = evt.DamageThreshold });
@@ -204,7 +204,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             var cardData = plunderedCard.GetComponent<CardData>();
-            Console.WriteLine($"[PlunderManagementSystem] Damage dealt to enemy: {damageDealt}, total: {plundered.DamageDealt}/{plundered.DamageThreshold}");
+            LoggingService.Append("PlunderManagementSystem.OnModifyHp", new System.Text.Json.Nodes.JsonObject { ["damageDealt"] = damageDealt, ["total"] = $"{plundered.DamageDealt}/{plundered.DamageThreshold}" });
 
             // Check if threshold reached
             if (plundered.DamageDealt >= plundered.DamageThreshold)
@@ -230,7 +230,7 @@ namespace Crusaders30XX.ECS.Systems
             deck.Hand.Add(card);
 
             var cardData = card.GetComponent<CardData>();
-            Console.WriteLine($"[PlunderManagementSystem] Card rescued: {cardData?.Card.CardId ?? "unknown"}");
+            LoggingService.Append("PlunderManagementSystem.RescueCard", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown" });
 
             EventManager.Publish(new PlunderRescueEvent { Card = card });
         }
@@ -265,7 +265,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             var cardData = card.GetComponent<CardData>();
-            Console.WriteLine($"[PlunderManagementSystem] Starting discard animation for previously plundered card: {cardData?.Card.CardId ?? "unknown"}");
+            LoggingService.Append("PlunderManagementSystem.DiscardPlunderedCard", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown" });
 
             // Queue animation - reuse CardMoveDisplaySystem
             EventQueueBridge.EnqueueTriggerAction("PlunderManagementSystem.DiscardAnimation", () =>
@@ -296,7 +296,7 @@ namespace Crusaders30XX.ECS.Systems
                     hp.Current = hp.Max;
                 }
 
-                Console.WriteLine("[PlunderManagementSystem] Damage tracking reset for new turn.");
+                LoggingService.Append("PlunderManagementSystem.ResetDamageTracking", new System.Text.Json.Nodes.JsonObject { ["message"] = "damage tracking reset for new turn" });
             }
         }
 

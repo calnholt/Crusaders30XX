@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Crusaders30XX.ECS.Data.Locations;
 
@@ -62,7 +63,7 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         threat.Amount = Math.Max(0, Math.Min(3, threat.Amount + 1));
                         EventManager.Publish(new ModifyThreatEvent { Target = enemy, Delta = 1 });
-                        Console.WriteLine($"[ThreatManagementSystem] Enemy threat increased to {threat.Amount} at end of turn");
+                        LoggingService.Append("ThreatManagementSystem.OnChangeBattlePhase.EnemyEnd", new System.Text.Json.Nodes.JsonObject { ["threatAmount"] = threat.Amount });
                     }
                 }
             }
@@ -87,7 +88,7 @@ namespace Crusaders30XX.ECS.Systems
                                 Delta = threat.Amount 
                             });
                             EventManager.Publish(new JigglePulseEvent { Target = EntityManager.GetEntity("UI_ThreatTooltip") });
-                            Console.WriteLine($"[ThreatManagementSystem] Applied {threat.Amount} Aggression to enemy at start of turn");
+                            LoggingService.Append("ThreatManagementSystem.OnChangeBattlePhase.EnemyStart", new System.Text.Json.Nodes.JsonObject { ["aggressionAmount"] = threat.Amount });
                         }, .5f);
                     }
                 }
@@ -109,7 +110,7 @@ namespace Crusaders30XX.ECS.Systems
                     if (before != threat.Amount)
                     {
                         EventManager.Publish(new ModifyThreatEvent { Target = e.Target, Delta = -1 });
-                        Console.WriteLine($"[ThreatManagementSystem] Enemy threat reduced from {before} to {threat.Amount} due to attack damage");
+                        LoggingService.Append("ThreatManagementSystem.OnModifyHpRequest", new System.Text.Json.Nodes.JsonObject { ["before"] = before, ["after"] = threat.Amount });
                     }
                 }
             }

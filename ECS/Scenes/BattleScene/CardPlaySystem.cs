@@ -22,7 +22,6 @@ namespace Crusaders30XX.ECS.Systems
         public CardPlaySystem(EntityManager entityManager) : base(entityManager)
         {
             EventManager.Subscribe<PlayCardRequested>(OnPlayCardRequested);
-            Console.WriteLine("[CardPlaySystem] Subscribed to PlayCardRequested");
             EventManager.Subscribe<PayCostSatisfied>(OnPayCostSatisfied);
         }
 
@@ -183,9 +182,19 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (evt?.Card == null) return;
 
+            ComponentLoggerService.LogEntity(evt.Card, "PlayCardRequested received");
+
             // Only in Action phase
             var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
-            if (phase.Sub != SubPhase.Action) { Console.WriteLine($"[CardPlaySystem] Ignored play, phase={phase}"); return; }
+            if (phase.Sub != SubPhase.Action)
+            {
+                LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["reason"] = "InvalidPhase",
+                    ["phase"] = phase.Sub.ToString()
+                });
+                return;
+            }
 
             var data = evt.Card.GetComponent<CardData>();
             if (data == null) return;
@@ -233,7 +242,11 @@ namespace Crusaders30XX.ECS.Systems
             if (card.CanPlay(EntityManager, evt.Card) == false)
             {
                 card.OnCantPlay?.Invoke(EntityManager, evt.Card);
-                Console.WriteLine($"[CardPlaySystem] Additional cost check failed for id={card.CardId}; aborting play");
+                LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["reason"] = "CantPlay",
+                    ["cardId"] = card.CardId
+                });
                 return;
             }
 
@@ -344,7 +357,10 @@ namespace Crusaders30XX.ECS.Systems
 
                     if (!canSatisfy)
                     {
-                        Console.WriteLine("[CardPlaySystem] Cannot satisfy cost requirements; aborting play");
+                        LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                        {
+                            ["reason"] = "CannotSatisfyCost"
+                        });
                         EventManager.Publish(new CantPlayCardMessage { Message = "Can't pay card's cost!" });
                         return;
                     }
@@ -354,7 +370,10 @@ namespace Crusaders30XX.ECS.Systems
 
                     if (solutionCount == 0)
                     {
-                        Console.WriteLine("[CardPlaySystem] Cannot satisfy cost requirements; aborting play");
+                        LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                        {
+                            ["reason"] = "NoSolutionForCost"
+                        });
                         EventManager.Publish(new CantPlayCardMessage { Message = "Can't pay card's cost!" });
                         return;
                     }
@@ -362,7 +381,11 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         // Exactly one way to satisfy cost - auto-pay
                         var solution = FindFirstSolution(requiredCosts, handNonWeapons);
-                        Console.WriteLine($"[CardPlaySystem] Auto-paying cost with {solution.Count} card(s)");
+                        LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                        {
+                            ["reason"] = "AutoPayCost",
+                            ["paymentCount"] = solution.Count
+                        });
                         foreach (var c in solution)
                         {
                             EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
@@ -383,6 +406,8 @@ namespace Crusaders30XX.ECS.Systems
                         cache.CardPlayed = evt.Card;
                         cache.PaymentCards = new List<Entity>(solution);
                         cache.HasData = true;
+
+                        ComponentLoggerService.LogComponent(cache, $"Auto-pay complete, {solution.Count} cards discarded");
                         
                         EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
                         return;
@@ -390,7 +415,11 @@ namespace Crusaders30XX.ECS.Systems
                     else
                     {
                         // Multiple ways to satisfy cost - show overlay for player choice
-                        Console.WriteLine($"[CardPlaySystem] {solutionCount} distinct ways to satisfy cost; opening pay-cost overlay");
+                        LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                        {
+                            ["reason"] = "MultipleCostSolutions",
+                            ["solutionCount"] = solutionCount
+                        });
                         EventManager.Publish(new OpenPayCostOverlayEvent { CardToPlay = evt.Card, RequiredCosts = requiredCosts, Type = PayCostOverlayType.ColorDiscard });
                         return;
                     }
@@ -405,11 +434,15 @@ namespace Crusaders30XX.ECS.Systems
             }
             else if (string.Equals(card.Animation, "Buff", StringComparison.OrdinalIgnoreCase))
             {
-                Console.WriteLine($"[CardPlaySystem] Buff");
+                LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["animation"] = "Buff"
+                });
                 EventQueue.EnqueueRule(new QueuedStartBuffAnimation(true));
                 EventQueue.EnqueueRule(new QueuedWaitBuffComplete(true));
             }
 
+            ComponentLoggerService.LogEntity(evt.Card, "Executing card OnPlay effect");
             card.OnPlay?.Invoke(EntityManager, evt.Card);
             EventManager.Publish(new CardPlayedEvent { Card = evt.Card });
             EventManager.Publish(new TrackingEvent { Type = card.CardId, Delta = 1 });
@@ -427,14 +460,23 @@ namespace Crusaders30XX.ECS.Systems
                 });
                 if (sealedComp != null)
                     EntityManager.RemoveComponent<Sealed>(evt.Card);
-                Console.WriteLine($"[CardPlaySystem] Removed Seal from {card.CardId} (cost {sealCount} HP)");
+                LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["reason"] = "SealRemoved",
+                    ["cardId"] = card.CardId,
+                    ["sealCost"] = sealCount
+                });
             }
 
             // Remove Pledge if present when playing
             if (evt.Card.HasComponent<Pledge>())
             {
                 EntityManager.RemoveComponent<Pledge>(evt.Card);
-                Console.WriteLine($"[CardPlaySystem] Removed Pledge from {card.CardId} on play");
+                LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["reason"] = "PledgeRemoved",
+                    ["cardId"] = card.CardId
+                });
             }
 
             // Award mastery points for Attack and Prayer cards on play
@@ -451,7 +493,11 @@ namespace Crusaders30XX.ECS.Systems
             if (!isFree)
             {
                 EventManager.Publish(new ModifyActionPointsEvent { Delta = -1 });
-                Console.WriteLine("[CardPlaySystem] Consumed 1 AP");
+                LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["reason"] = "APConsumed",
+                    ["cardId"] = card.CardId
+                });
             }
 
             if (deckEntity != null)
@@ -468,7 +514,11 @@ namespace Crusaders30XX.ECS.Systems
                     // CardZoneSystem will remove from lists when destination not specified; emulate by not re-adding
                     var deck = deckEntity.GetComponent<Deck>();
                     deck?.Hand.Remove(evt.Card);
-                    Console.WriteLine("[CardPlaySystem] Weapon used; removed from hand without discarding");
+                    LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                    {
+                        ["reason"] = "WeaponUsed",
+                        ["cardId"] = card.CardId
+                    });
                     EntityManager.DestroyEntity(evt.Card.Id);
                     return;
                 }
@@ -477,13 +527,21 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         destination = CardZoneType.DrawPile;
                         EventManager.Publish(new DeckShuffleEvent { Deck = deckEntity });
-                        Console.WriteLine("[CardPlaySystem] Card returned to deck");
+                        LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                        {
+                            ["reason"] = "CardReturnedToDeck",
+                            ["cardId"] = card.CardId
+                        });
                         EntityManager.RemoveComponent<MarkedForReturnToDeck>(evt.Card);
                     }
                     if (evt.Card.GetComponent<MarkedForExhaust>() != null)
                     {
                         destination = CardZoneType.ExhaustPile;
-                        Console.WriteLine("[CardPlaySystem] Card exhausted");
+                        LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                        {
+                            ["reason"] = "CardExhausted",
+                            ["cardId"] = card.CardId
+                        });
                         EntityManager.RemoveComponent<MarkedForExhaust>(evt.Card);
                     }
                 }
@@ -494,6 +552,16 @@ namespace Crusaders30XX.ECS.Systems
         private void OnPayCostSatisfied(PayCostSatisfied evt)
         {
             if (evt?.CardToPlay == null) return;
+
+            ComponentLoggerService.LogEntity(evt.CardToPlay, "PayCostSatisfied - proceeding to play");
+            if (evt.PaymentCards != null)
+            {
+                LoggingService.Append("CardPlaySystem.OnPayCostSatisfied", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["paymentCardCount"] = evt.PaymentCards.Count
+                });
+            }
+
             // Once costs are paid, proceed to resolve effect by re-publishing play with CostsPaid
             EventManager.Publish(new PlayCardRequested { Card = evt.CardToPlay, CostsPaid = true, PaymentCards = evt.PaymentCards });
         }

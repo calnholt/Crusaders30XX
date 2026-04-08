@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
@@ -59,7 +60,7 @@ namespace Crusaders30XX.ECS.Systems
 			var hover = EntityManager.GetEntitiesWithComponent<CourageTooltipAnchor>().FirstOrDefault();
 			if (hover != null)
 			{
-				Console.WriteLine($"[CourageDisplaySystem] OnModifyCourage delta={evt.Delta}");
+				LoggingService.Append("CourageDisplaySystem.OnModifyCourage", new System.Text.Json.Nodes.JsonObject { ["delta"] = evt.Delta });
 				EventManager.Publish(new JigglePulseEvent { Target = hover, Config = JigglePulseConfig.Default });
 			}
 		}

@@ -2,6 +2,7 @@ using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,15 +39,16 @@ namespace Crusaders30XX.ECS.Systems
             var deck = deckEntity.GetComponent<Deck>();
             if (deck == null) return;
 
-            Console.WriteLine($"[DeckManagementSystem] OnRequestDrawCards count={evt.Count} hand={deck.Hand.Count} drawPile={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
             int drawn = DrawCards(deck, Math.Max(1, evt.Count));
-            Console.WriteLine($"[DeckManagementSystem] AfterDraw drawn={drawn} hand={deck.Hand.Count} drawPile={deck.DrawPile.Count}");
-            foreach (var c in deck.Hand)
-            {
-                string cId = c.GetComponent<CardData>()?.Card?.CardId ?? $"entity#{c.Id}";
-                Console.WriteLine($"[DeckManagementSystem]   inHand: {cId} active={c.IsActive}");
-            }
 
+            LoggingService.Append("DeckManagementSystem.OnRequestDrawCards", new System.Text.Json.Nodes.JsonObject
+            {
+                ["requestedCount"] = evt.Count,
+                ["drawnCount"] = drawn,
+                ["handCount"] = deck.Hand.Count,
+                ["drawPileCount"] = deck.DrawPile.Count,
+                ["discardCount"] = deck.DiscardPile.Count
+            });
         }
 
         private void OnRedrawHandEvent(RedrawHandEvent evt)
@@ -56,7 +58,6 @@ namespace Crusaders30XX.ECS.Systems
             var deck = deckEntity.GetComponent<Deck>();
             if (deck == null) return;
 
-            Console.WriteLine($"[DeckManagementSystem] OnRedrawHand drawCount={evt.DrawCount} before hand={deck.Hand.Count} drawPile={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
             // Move current hand to discard, then reshuffle, then draw
             // Move current hand to discard and reset their transforms, so re-drawn cards animate from spawn
             foreach (var c in deck.Hand)
@@ -78,7 +79,14 @@ namespace Crusaders30XX.ECS.Systems
                 Deck = deckEntity,
                 DrawnCards = deck.Hand.ToList()
             });
-            Console.WriteLine($"[DeckManagementSystem] OnRedrawHand after hand={deck.Hand.Count} drawPile={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
+
+            LoggingService.Append("DeckManagementSystem.OnRedrawHandEvent", new System.Text.Json.Nodes.JsonObject
+            {
+                ["drawCount"] = evt.DrawCount,
+                ["handCount"] = deck.Hand.Count,
+                ["drawPileCount"] = deck.DrawPile.Count,
+                ["discardCount"] = deck.DiscardPile.Count
+            });
         }
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
@@ -127,7 +135,12 @@ namespace Crusaders30XX.ECS.Systems
                     transform.Position = spawn;
                     transform.Rotation = 0f;
                     var tween = card.GetComponent<PositionTween>();
-                    if (tween != null) tween.Current = spawn;
+                    if (tween != null)
+                    {
+                        tween.Current = spawn;
+                        tween.Target = spawn;
+                        tween.Initialized = true;
+                    }
                 }
                 deck.Hand.Add(card);
                 // Ensure UI becomes interactable again when a card enters the hand
@@ -137,6 +150,7 @@ namespace Crusaders30XX.ECS.Systems
                     ui.IsInteractable = true;
                     ui.IsHovered = false;
                     ui.IsClicked = false;
+                    ui.EventType = UIElementEventType.CardClicked;
                 }
                 return true;
             }
@@ -192,9 +206,14 @@ namespace Crusaders30XX.ECS.Systems
             var deckEntity = evt.Deck ?? EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             var deck = deckEntity?.GetComponent<Deck>();
             if (deck == null) return;
-            Console.WriteLine($"[DeckManagementSystem] OnDeckShuffle drawPile(before)={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
+
             ShuffleDrawPile(deck);
-            Console.WriteLine($"[DeckManagementSystem] OnDeckShuffle drawPile(after)={deck.DrawPile.Count}");
+
+            LoggingService.Append("DeckManagementSystem.OnDeckShuffleEvent", new System.Text.Json.Nodes.JsonObject
+            {
+                ["drawPileCount"] = deck.DrawPile.Count,
+                ["discardCount"] = deck.DiscardPile.Count
+            });
         }
 
         /// <summary>
@@ -205,7 +224,6 @@ namespace Crusaders30XX.ECS.Systems
             var deck = evt.Deck.GetComponent<Deck>();
             if (deck != null)
             {
-                Console.WriteLine($"[DeckManagementSystem] OnDeckShuffleDraw drawCount={evt.DrawCount} hand(before)={deck.Hand.Count}");
                 var drawnCards = ShuffleAndDraw(deck, evt.DrawCount);
 
                 // Publish event for cards drawn
@@ -214,7 +232,13 @@ namespace Crusaders30XX.ECS.Systems
                     Deck = evt.Deck,
                     DrawnCards = deck.Hand.ToList()
                 });
-                Console.WriteLine($"[DeckManagementSystem] OnDeckShuffleDraw drawn={drawnCards} hand(after)={deck.Hand.Count}");
+
+                LoggingService.Append("DeckManagementSystem.OnDeckShuffleDrawEvent", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["requestedDrawCount"] = evt.DrawCount,
+                    ["actualDrawn"] = drawnCards,
+                    ["handCount"] = deck.Hand.Count
+                });
             }
         }
 
@@ -333,9 +357,15 @@ namespace Crusaders30XX.ECS.Systems
             var deckEntity = evt.Deck ?? EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             var deck = deckEntity?.GetComponent<Deck>();
             if (deck == null) return;
-            Console.WriteLine($"[DeckManagementSystem] OnResetDeck before hand={deck.Hand.Count} draw={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
+
             ResetDeckExcludingWeapon(deck);
-            Console.WriteLine($"[DeckManagementSystem] OnResetDeck after hand={deck.Hand.Count} draw={deck.DrawPile.Count} discard={deck.DiscardPile.Count}");
+
+            LoggingService.Append("DeckManagementSystem.OnResetDeckEvent", new System.Text.Json.Nodes.JsonObject
+            {
+                ["handCount"] = deck.Hand.Count,
+                ["drawPileCount"] = deck.DrawPile.Count,
+                ["discardCount"] = deck.DiscardPile.Count
+            });
         }
 
         /// <summary>
@@ -366,7 +396,12 @@ namespace Crusaders30XX.ECS.Systems
                 Deck = deckEntity,
                 Card = card
             });
-            Console.WriteLine("[DeckManagementSystem] Removed top card for mill animation and published TopCardRemovedForMillEvent");
+
+            LoggingService.Append("DeckManagementSystem.OnRemoveTopCardFromDrawPileRequested", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = card?.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                ["remainingDrawPile"] = deck.DrawPile.Count
+            });
         }
 
         private void OnDiscardAllCards(DiscardAllCardsEvent evt)

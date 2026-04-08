@@ -70,7 +70,7 @@ namespace Crusaders30XX.ECS.Systems
                 var enemyBase = enemy.GetComponent<Enemy>();
                 if (enemyBase != null && enemyBase.EnemyBase != null && enemyBase.EnemyBase.OnStartOfBattle != null)
                 {
-                    Console.WriteLine($"[AppliedPassivesManagementSystem] OnChangeBattlePhase - OnStartOfBattle - {enemyBase.EnemyBase.Id}");
+                    LoggingService.Append("AppliedPassivesManagementSystem.OnChangeBattlePhase.StartOfBattle", new System.Text.Json.Nodes.JsonObject { ["enemyId"] = enemyBase.EnemyBase.Id });
                     EventManager.Publish(new StartDebuffAnimation { TargetIsPlayer = false });
                     enemyBase.EnemyBase.OnStartOfBattle(EntityManager);
                 }
@@ -157,7 +157,7 @@ namespace Crusaders30XX.ECS.Systems
             }
             if ((ap.Passives.TryGetValue(AppliedPassiveType.Burn, out int burnStacks) || hasInferno) && (burnStacks > 0 || infernoStacks > 0))
             {
-                Console.WriteLine($"[AppliedPassivesManagementSystem] ApplyStartOfTurnPassives.Burn - {burnStacks} + {infernoStacks}");
+                LoggingService.Append("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Burn", new System.Text.Json.Nodes.JsonObject { ["burn"] = burnStacks, ["inferno"] = infernoStacks });
                 EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Burn", () =>
                 {
                     EventManager.Publish(new ModifyHpRequestEvent { Source = owner, Target = owner, Delta = -(burnStacks + infernoStacks), DamageType = ModifyTypeEnum.Effect });
@@ -228,7 +228,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (attackDef == null) return;
                 attackDef.Damage += aggressionStacks;
                 attackDef.AdditionalDamage += aggressionStacks;
-                Console.WriteLine($"[AppliedPassivesManagementSystem] ApplyStartOfPreBlockPassives.Aggression - {attackDef.Damage}");
+                LoggingService.Append("AppliedPassivesManagementSystem.ApplyStartOfPreBlockPassives.Aggression", new System.Text.Json.Nodes.JsonObject { ["damage"] = attackDef.Damage });
                 EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Aggression });
                 TimerScheduler.Schedule(Duration, () =>
                 {
@@ -241,7 +241,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (attackDef == null) return;
                 attackDef.Damage += powerStacks;
                 attackDef.AdditionalDamage += powerStacks;
-                Console.WriteLine($"[AppliedPassivesManagementSystem] ApplyStartOfPreBlockPassives.Power - {attackDef.Damage}");
+                LoggingService.Append("AppliedPassivesManagementSystem.ApplyStartOfPreBlockPassives.Power", new System.Text.Json.Nodes.JsonObject { ["damage"] = attackDef.Damage });
                 EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Power });
             }
         }
@@ -266,7 +266,7 @@ namespace Crusaders30XX.ECS.Systems
 
             ap.Passives.TryGetValue(e.Type, out int current);
             int next = current + e.Delta;
-            Console.WriteLine($"[AppliedPassivesManagementSystem] OnApplyPassive - {e.Type} - {current} -> {next}");
+            LoggingService.Append("AppliedPassivesManagementSystem.OnApplyPassive", new System.Text.Json.Nodes.JsonObject { ["type"] = e.Type.ToString(), ["before"] = current, ["after"] = next });
             if (next <= 0)
             {
                 // remove from dictionary if zero or less
@@ -297,9 +297,9 @@ namespace Crusaders30XX.ECS.Systems
             LoggingService.Append("AppliedPassivesManagementSystem.OnRemovePassive", new System.Text.Json.Nodes.JsonObject
             {
                 ["passiveType"] = e.Type.ToString(),
-                ["ownerId"] = e.Owner?.Id ?? -1
+                ["ownerId"] = e.Owner?.Id ?? -1,
+                ["ownerName"] = e.Owner?.Name
             });
-            Console.WriteLine($"[AppliedPassivesManagementSystem] OnRemovePassive - {e.Type} - {e.Owner.Name}");
             if (e == null || e.Owner == null) return;
             var ap = e.Owner.GetComponent<AppliedPassives>();
             if (ap == null || ap.Passives == null) return;

@@ -19,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangePhase);
 			EventManager.Subscribe<ModifyActionPointsEvent>(OnModifyAp);
-			Console.WriteLine("[ActionPointManagementSystem] Subscribed to ChangeBattlePhaseEvent, ModifyActionPointsEvent");
+			LoggingService.Append("ActionPointManagementSystem.ctor", new System.Text.Json.Nodes.JsonObject { ["message"] = "subscribed to ChangeBattlePhaseEvent, ModifyActionPointsEvent" });
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -36,7 +36,7 @@ namespace Crusaders30XX.ECS.Systems
 				["phase"] = evt.Current.ToString()
 			});
 			if (evt.Current == SubPhase.PlayerStart) {
-				Console.WriteLine($"[ActionPointManagementSystem] OnChangePhase - set AP to 1");
+				LoggingService.Append("ActionPointManagementSystem.OnChangePhase.PlayerStart", new System.Text.Json.Nodes.JsonObject { ["action"] = "set AP to 1" });
 				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 				var ap = player.GetComponent<ActionPoints>();
 				ap.Current = 1;

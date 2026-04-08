@@ -28,8 +28,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (e.EquipmentEntity == null) return;
 			LoggingService.Append("EquipmentManagerSystem.OnEquipmentActivate", new System.Text.Json.Nodes.JsonObject
 			{
-				["equipmentId"] = e.EquipmentId,
-				["entityId"] = e.EquipmentEntity.Id
+				["entityId"] = e.EquipmentEntity?.Id ?? -1
 			});
 			var equipment = e.EquipmentEntity.GetComponent<EquippedEquipment>();
 			if (equipment == null) return;

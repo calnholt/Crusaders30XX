@@ -108,7 +108,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (availableCards.Count == 0)
 			{
-				Console.WriteLine("[FrozenCardManagementSystem] No available cards to freeze");
+				LoggingService.Append("FrozenCardManagementSystem.ApplyFrozenEffectHandAndDrawPile", new System.Text.Json.Nodes.JsonObject { ["message"] = "no available cards to freeze" });
 				return;
 			}
 
@@ -124,7 +124,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EntityManager.AddComponent(card, new Frozen { Owner = card });
 				var cardData = card.GetComponent<CardData>();
-				Console.WriteLine($"[FrozenCardManagementSystem] Card {cardData?.Card.CardId ?? "unknown"} has been frozen!");
+				LoggingService.Append("FrozenCardManagementSystem.ApplyFrozenEffectHandAndDrawPile.frozen", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown" });
 			}
 		}
 
@@ -137,7 +137,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EntityManager.RemoveComponent<Frozen>(card);
 				var cardData = card.GetComponent<CardData>();
-				Console.WriteLine($"[FrozenCardManagementSystem] Removed frozen from card {cardData?.Card.CardId ?? "unknown"}");
+				LoggingService.Append("FrozenCardManagementSystem.RemoveAllFrozenEffects.unfrozen", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown" });
 			}
 		}
 

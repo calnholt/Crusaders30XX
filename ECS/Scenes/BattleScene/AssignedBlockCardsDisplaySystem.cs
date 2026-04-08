@@ -1,6 +1,7 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
@@ -79,7 +80,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnUnassignCardAsBlockRequested(UnassignCardAsBlockRequested evt)
 		{
-			Console.WriteLine($"[AssignedBlockCardsDisplaySystem] OnUnassignCardAsBlockRequested: {evt.CardEntity.Id}");
+			LoggingService.Append("AssignedBlockCardsDisplaySystem.OnUnassignCardAsBlockRequested", new System.Text.Json.Nodes.JsonObject { ["entityId"] = evt.CardEntity.Id });
 			var abc = evt.CardEntity.GetComponent<AssignedBlockCard>();
 			// Immediately move B HotKey to the previous assigned (if available)
 			var hk = evt.CardEntity.GetComponent<HotKey>();

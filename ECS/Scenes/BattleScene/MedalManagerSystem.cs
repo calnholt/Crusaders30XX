@@ -35,7 +35,6 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			LoggingService.Append("MedalManagerSystem.OnMedalActivate", new System.Text.Json.Nodes.JsonObject
 			{
-				["medalId"] = e.MedalId,
 				["entityId"] = e.MedalEntity?.Id ?? -1
 			});
 			EventQueueBridge.EnqueueTriggerAction(() =>

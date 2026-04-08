@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
@@ -570,7 +571,7 @@ namespace Crusaders30XX.ECS.Systems
                                     IgnoresAegis = true
                                 });
                                 EntityManager.RemoveComponent<Sealed>(c);
-                                Console.WriteLine($"[PayCostOverlay] Sealed card used for cost - took {sealedComp.Seals} damage");
+                                LoggingService.Append("PayCostOverlaySystem.sealed", new System.Text.Json.Nodes.JsonObject { ["damage"] = sealedComp.Seals });
                             }
 
                             EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PayCost" });

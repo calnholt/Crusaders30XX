@@ -96,7 +96,7 @@ battleStateInfo.PhaseTracking.TryGetValue(TrackingTypeEnum.CourageLost.ToString(
 
 ## Key Components
 
-- `Frozen` — Card cannot be played during action phase; removed when used to block
+- `Frozen` — When played, player gains 1 frostbite
 - `Sealed` — Cannot play or pledge, can still block
 - `Intimidated` — Cannot block
 - `MarkedForExhaust` — Exhausts after play

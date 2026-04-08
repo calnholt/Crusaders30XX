@@ -63,7 +63,7 @@
       },
       "Events": [
         {
-          "id": "sand_golem",
+          "id": "sentinel",
           "type": "Enemy"
         }
       ]

@@ -5,7 +5,6 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
-using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {

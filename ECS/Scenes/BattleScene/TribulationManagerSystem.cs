@@ -38,7 +38,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (e.Current != SubPhase.StartBattle) return;
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			if (player == null) return;
-			Console.WriteLine($"[TribulationManagerSystem] OnPhaseChanged {e.Current}");
+			LoggingService.Append("TribulationManagerSystem.OnPhaseChanged", new System.Text.Json.Nodes.JsonObject { ["phase"] = e.Current.ToString() });
 
 			// Get all tribulations for the player
 			var tribulations = EntityManager.GetEntitiesWithComponent<Tribulation>()
@@ -46,7 +46,7 @@ namespace Crusaders30XX.ECS.Systems
 				.Select(e => e.GetComponent<Tribulation>())
 				.Where(t => t != null && string.Equals(t.Trigger, "StartOfBattle", StringComparison.OrdinalIgnoreCase))
 				.ToList();
-			Console.WriteLine($"[TribulationManagerSystem] Found {tribulations.Count} tribulations");
+			LoggingService.Append("TribulationManagerSystem.OnPhaseChanged.found", new System.Text.Json.Nodes.JsonObject { ["count"] = tribulations.Count });
 			foreach (var tribulation in tribulations)
 			{
 				ActivateTribulation(player, tribulation);
@@ -55,7 +55,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void ActivateTribulation(Entity player, Tribulation tribulation)
 		{
-			Console.WriteLine($"[TribulationManagerSystem] Activating tribulation for quest {tribulation.QuestId}");
+			LoggingService.Append("TribulationManagerSystem.ActivateTribulation", new System.Text.Json.Nodes.JsonObject { ["questId"] = tribulation.QuestId });
 			if (player == null || tribulation == null || string.IsNullOrEmpty(tribulation.QuestId)) return;
 
 			EventQueueBridge.EnqueueTriggerAction(() =>

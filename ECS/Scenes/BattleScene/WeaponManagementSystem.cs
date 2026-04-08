@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Factories;
@@ -52,6 +53,8 @@ namespace Crusaders30XX.ECS.Systems
 						float cardW = cvs?.CardWidth ?? 250;
 						var spawnPos = new Vector2(-(cardW * 1.5f), Game1.VirtualHeight);
 						tween.Current = spawnPos;
+						tween.Target = spawnPos;
+						tween.Initialized = true;
 						transform.Position = spawnPos;
 					}
 					var ui = weapon.GetComponent<UIElement>();
@@ -61,6 +64,13 @@ namespace Crusaders30XX.ECS.Systems
 						ui.IsHovered = false;
 						ui.IsClicked = false;
 					}
+
+					LoggingService.Append("WeaponManagementSystem.OnPhaseChanged", new System.Text.Json.Nodes.JsonObject
+					{
+						["action"] = "WeaponAdded",
+						["phase"] = evt.Current.ToString(),
+						["handIndex"] = 0
+					});
 				}
 				else
 				{
@@ -70,6 +80,14 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						deck.Hand.RemoveAt(idx);
 						deck.Hand.Insert(0, weapon);
+
+						LoggingService.Append("WeaponManagementSystem.OnPhaseChanged", new System.Text.Json.Nodes.JsonObject
+						{
+							["action"] = "WeaponReordered",
+							["phase"] = evt.Current.ToString(),
+							["fromIndex"] = idx,
+							["toIndex"] = 0
+						});
 					}
 				}
 			}
@@ -87,6 +105,12 @@ namespace Crusaders30XX.ECS.Systems
 						ui.IsHovered = false;
 						ui.IsClicked = false;
 					}
+
+					LoggingService.Append("WeaponManagementSystem.OnPhaseChanged", new System.Text.Json.Nodes.JsonObject
+					{
+						["action"] = "WeaponRemoved",
+						["phase"] = evt.Current.ToString()
+					});
 				}
 			}
 		}
@@ -157,7 +181,7 @@ namespace Crusaders30XX.ECS.Systems
 			EntityManager.AddComponent(e, s);
 			EntityManager.AddComponent(e, ui);
 			EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
-			EntityManager.AddComponent(e, new PositionTween { Speed = 12f, Current = spawnPos });
+			EntityManager.AddComponent(e, new PositionTween { Speed = 12f, Current = spawnPos, Target = spawnPos, Initialized = true });
 			EntityManager.AddComponent(e, new ModifiedDamage { Modifications = [] });
 			// Run OnCreate callback (e.g. adds Frozen component for GlacialMaul)
 			card.OnCreate?.Invoke(EntityManager, e);

@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
@@ -81,7 +82,7 @@ namespace Crusaders30XX.ECS.Systems
 							// Skip hold phase — fire scene load immediately and go straight to wipe out
 							if (!_suppressLoadScene)
 							{
-								Console.WriteLine($"[TransitionDisplaySystem] Loading scene: {_nextScene}");
+								LoggingService.Append("TransitionDisplaySystem.Update.Phase.WipeIn", new System.Text.Json.Nodes.JsonObject { ["nextScene"] = _nextScene.ToString() });
 								EventManager.Publish(new DeleteCachesEvent { Scene = _nextScene });
 								DeleteEntities(_nextScene);
 								EventManager.Publish(new LoadSceneEvent { Scene = _nextScene });
@@ -104,7 +105,7 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						if (!_suppressLoadScene)
 						{
-							Console.WriteLine($"[TransitionDisplaySystem] Loading scene: {_nextScene}");
+							LoggingService.Append("TransitionDisplaySystem.Update.Phase.Hold", new System.Text.Json.Nodes.JsonObject { ["nextScene"] = _nextScene.ToString() });
 							EventManager.Publish(new DeleteCachesEvent { Scene = _nextScene });
 							DeleteEntities(_nextScene);
 							EventManager.Publish(new LoadSceneEvent { Scene = _nextScene });
@@ -207,11 +208,11 @@ namespace Crusaders30XX.ECS.Systems
 			var sceneEntity = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
 			var scene = sceneEntity.GetComponent<SceneState>();
 			var previous = scene.Current;
-			Console.WriteLine($"[TransitionDisplaySystem] Deleting entities for scene {previous} to {nextScene}");
+			LoggingService.Append("TransitionDisplaySystem.DeleteEntities", new System.Text.Json.Nodes.JsonObject { ["from"] = previous.ToString(), ["to"] = nextScene.ToString() });
 			scene.Current = nextScene;
 			// Destroy previous scene's entities except those marked DontDestroyOnLoad
 			var isReload = previous == nextScene;
-			Console.WriteLine($"[TransitionDisplaySystem] isReload: {isReload}");
+			LoggingService.Append("TransitionDisplaySystem.DeleteEntities.isReload", new System.Text.Json.Nodes.JsonObject { ["isReload"] = isReload });
 			var toDestroy = EntityManager.GetAllEntities()
 				.Where(e =>
 					e.HasComponent<OwnedByScene>() &&
@@ -223,7 +224,7 @@ namespace Crusaders30XX.ECS.Systems
 				.ToList();
 			foreach (var e in toDestroy)
 			{
-				Console.WriteLine($"[SceneLifecycleSystem] Destroying entity {e.Id} ({e.Name})");
+				LoggingService.Append("TransitionDisplaySystem.DeleteEntities.destroying", new System.Text.Json.Nodes.JsonObject { ["entityId"] = e.Id, ["entityName"] = e.Name });
 				EntityManager.DestroyEntity(e.Id);
 			}
 		}

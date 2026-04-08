@@ -16,7 +16,7 @@ public class Sentinel : EnemyBase
 	{
 		Id = "sentinel";
 		Name = "Sentinel";
-		MaxHealth = 16 + (int)difficulty * 2;
+		MaxHealth = 24 + (int)difficulty * 2;
 
 		OnStartOfBattle = (entityManager) =>
 		{

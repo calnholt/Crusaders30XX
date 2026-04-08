@@ -91,37 +91,37 @@ namespace Crusaders30XX.ECS.Systems
 			if (deck == null) return;
 
 			int effectiveHandCount = 0;
-			System.Console.WriteLine($"[DrawHandSystem] DrawUpToIntellect evaluating deck.Hand.Count={deck.Hand.Count} intellect={intellect} maxHandSize={maxHandSize}");
+			LoggingService.Append("DrawHandSystem.DrawUpToIntellect", new System.Text.Json.Nodes.JsonObject { ["deckHandCount"] = deck.Hand.Count, ["intellect"] = intellect, ["maxHandSize"] = maxHandSize });
 			foreach (var e in deck.Hand)
 			{
 				string debugId = e.GetComponent<CardData>()?.Card?.CardId ?? $"entity#{e.Id}";
 				bool isActive = e.IsActive;
-				if (e.HasComponent<AnimatingHandToDiscard>()) { System.Console.WriteLine($"[DrawHandSystem]   skip {debugId} (AnimatingHandToDiscard) active={isActive}"); continue; }
-				if (e.HasComponent<AnimatingHandToZone>()) { System.Console.WriteLine($"[DrawHandSystem]   skip {debugId} (AnimatingHandToZone) active={isActive}"); continue; }
-				if (e.HasComponent<AnimatingHandToDrawPile>()) { System.Console.WriteLine($"[DrawHandSystem]   skip {debugId} (AnimatingHandToDrawPile) active={isActive}"); continue; }
+				if (e.HasComponent<AnimatingHandToDiscard>()) { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["cardId"] = debugId, ["reason"] = "AnimatingHandToDiscard", ["isActive"] = isActive }); continue; }
+				if (e.HasComponent<AnimatingHandToZone>()) { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["cardId"] = debugId, ["reason"] = "AnimatingHandToZone", ["isActive"] = isActive }); continue; }
+				if (e.HasComponent<AnimatingHandToDrawPile>()) { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["cardId"] = debugId, ["reason"] = "AnimatingHandToDrawPile", ["isActive"] = isActive }); continue; }
 				// Pledged cards don't count against max hand size
-				if (e.HasComponent<Pledge>()) { System.Console.WriteLine($"[DrawHandSystem]   skip {debugId} (Pledge) active={isActive}"); continue; }
+				if (e.HasComponent<Pledge>()) { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["cardId"] = debugId, ["reason"] = "Pledge", ["isActive"] = isActive }); continue; }
 
 				var cd = e.GetComponent<CardData>();
-				if (cd == null) { System.Console.WriteLine($"[DrawHandSystem]   skip entity#{e.Id} (no CardData) active={isActive}"); continue; }
+				if (cd == null) { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["entityId"] = e.Id, ["reason"] = "no CardData", ["isActive"] = isActive }); continue; }
 				string id = cd.Card.CardId ?? string.Empty;
-				if (string.IsNullOrEmpty(id)) { System.Console.WriteLine($"[DrawHandSystem]   skip entity#{e.Id} (empty CardId) active={isActive}"); continue; }
+				if (string.IsNullOrEmpty(id)) { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["entityId"] = e.Id, ["reason"] = "empty CardId", ["isActive"] = isActive }); continue; }
 				var card = CardFactory.Create(id);
 				if (card != null)
 				{
-					if (!card.IsWeapon) { effectiveHandCount++; System.Console.WriteLine($"[DrawHandSystem]   count {id} (non-weapon) active={isActive}"); }
-					else { System.Console.WriteLine($"[DrawHandSystem]   skip {id} (weapon) active={isActive}"); }
+					if (!card.IsWeapon) { effectiveHandCount++; LoggingService.Append("DrawHandSystem.DrawUpToIntellect.count", new System.Text.Json.Nodes.JsonObject { ["cardId"] = id, ["reason"] = "non-weapon", ["isActive"] = isActive }); }
+					else { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["cardId"] = id, ["reason"] = "weapon", ["isActive"] = isActive }); }
 				}
 				else
 				{
 					effectiveHandCount++;
-					System.Console.WriteLine($"[DrawHandSystem]   count {id} (factory returned null) active={isActive}");
+					LoggingService.Append("DrawHandSystem.DrawUpToIntellect.count", new System.Text.Json.Nodes.JsonObject { ["cardId"] = id, ["reason"] = "factory returned null", ["isActive"] = isActive });
 				}
 			}
 
 			int spaceLeft = System.Math.Max(0, maxHandSize - effectiveHandCount);
 			int toDraw = System.Math.Min(spaceLeft, intellect);
-			System.Console.WriteLine($"[DrawHandSystem] DrawUpToIntellect effectiveHandCount={effectiveHandCount} spaceLeft={spaceLeft} toDraw={toDraw}");
+			LoggingService.Append("DrawHandSystem.DrawUpToIntellect.result", new System.Text.Json.Nodes.JsonObject { ["effectiveHandCount"] = effectiveHandCount, ["spaceLeft"] = spaceLeft, ["toDraw"] = toDraw });
 			if (toDraw > 0)
 			{
 				EventManager.Publish(new RequestDrawCardsEvent { Count = toDraw });

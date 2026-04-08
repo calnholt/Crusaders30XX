@@ -66,7 +66,7 @@ namespace Crusaders30XX.ECS.Systems
             if (evt == null) return;
             LoggingService.Append("QuestTribulationDisplaySystem.OnTribulationTriggered", new System.Text.Json.Nodes.JsonObject
             {
-                ["tribulationText"] = evt.Tribulation?.Text ?? ""
+                ["questId"] = evt.QuestId
             });
             if (_chaliceEntity != null)
             {

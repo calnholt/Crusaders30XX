@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -77,6 +78,11 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_baselineCaptured = false;
 			_lastAppliedScale = -1f;
+
+			LoggingService.Append("HandDisplaySystem.OnCardDisplayToggleChanged", new System.Text.Json.Nodes.JsonObject
+			{
+				["useV2"] = evt.UseV2
+			});
 		}
 
 		// Baseline snapshot of CardVisualSettings captured once to compute scaled values from
@@ -243,18 +249,11 @@ namespace Crusaders30XX.ECS.Systems
                         var tween = entity.GetComponent<PositionTween>();
                         if (tween != null)
                         {
-                            // Self-contained tween: lerp tween.Current toward target each frame,
-                            // then neutralize PositionTweenSystem by syncing Target to Current
-                            var target = new Vector2(x, y);
-                            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-                            float alpha = 1f - (float)Math.Exp(-HandTweenSpeed * dt);
-                            tween.Current = Vector2.Lerp(tween.Current, target, MathHelper.Clamp(alpha, 0f, 1f));
-                            transform.Position = tween.Current;
-                            tween.Target = tween.Current;
+                            tween.Target = new Vector2(x, y);
+                            tween.Speed = HandTweenSpeed;
                         }
                         else
                         {
-                            // No tween component — write position directly
                             transform.Position = new Vector2(x, y);
                         }
                         transform.Rotation = angleRad; // reserved for future visual rotation support

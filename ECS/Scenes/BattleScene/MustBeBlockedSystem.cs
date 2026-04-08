@@ -35,7 +35,7 @@ namespace Crusaders30XX.ECS.Systems
             
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
             EventManager.Subscribe<AmbushTimerExpired>(OnAmbushTimerExpired);
-            Console.WriteLine($"[MustBeBlockedSystem] MustBeBlockedSystem initialized");
+            LoggingService.Append("MustBeBlockedSystem.ctor", new System.Text.Json.Nodes.JsonObject { ["message"] = "initialized" });
             EventManager.Subscribe<MustBeBlockedEvent>(OnMustBeBlockedEvent);
 		}
 
@@ -84,7 +84,7 @@ namespace Crusaders30XX.ECS.Systems
             mustBeBlockedAttackDefinition = plannedAttack?.AttackDefinition;
             mustBeBlockedThreshold = evt.Threshold;
             requirementType = evt.Type;
-            Console.WriteLine("[MustBeBeBlockedSystem] InitializeBlockRequirement: mustBeBlockedContextId=" + mustBeBlockedContextId + ", mustBeBlockedAttackDefinition=" + mustBeBlockedAttackDefinition?.Name + ", mustBeBlockedThreshold=" + mustBeBlockedThreshold + ", requirementType=" + requirementType);
+            LoggingService.Append("MustBeBlockedSystem.InitializeBlockRequirement", new System.Text.Json.Nodes.JsonObject { ["contextId"] = mustBeBlockedContextId, ["attackName"] = mustBeBlockedAttackDefinition?.Name, ["threshold"] = mustBeBlockedThreshold, ["requirementType"] = requirementType.ToString() });
         }
 
         private List<Entity> GetEligibleBlockCards(Deck deck)
@@ -156,7 +156,7 @@ namespace Crusaders30XX.ECS.Systems
             var ui = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack").GetComponent<UIElement>();
             ui.IsInteractable = true;
             ui.IsHidden = false;
-            Console.WriteLine($"[MustBeBlockedSystem] OnChangeBattlePhaseEvent: evt={evt}");
+            LoggingService.Append("MustBeBlockedSystem.OnChangeBattlePhaseEvent", new System.Text.Json.Nodes.JsonObject { ["phase"] = evt.Current.ToString() });
             blockCount = 0;
             
             // Initialize the block requirement (checks for both MustBeBlocked and MustBeBlockedExactly)
@@ -244,7 +244,7 @@ namespace Crusaders30XX.ECS.Systems
                 var eligible = GetEligibleBlockCards(deck);
                 if (eligible.Count == 0)
                 {
-                    Console.WriteLine("[MustBeBlockedSystem] OnAmbushTimerExpired: no eligible cards to auto-assign");
+                    LoggingService.Append("MustBeBlockedSystem.OnAmbushTimerExpired", new System.Text.Json.Nodes.JsonObject { ["message"] = "no eligible cards to auto-assign" });
                     return;
                 }
 
@@ -256,7 +256,7 @@ namespace Crusaders30XX.ECS.Systems
                     .Take(toAssign)
                     .ToList();
 
-                Console.WriteLine($"[MustBeBlockedSystem] OnAmbushTimerExpired: auto-assigning {randomized.Count} cards (needed={needed}, currentCount={blockCount}, threshold={mustBeBlockedThreshold})");
+                LoggingService.Append("MustBeBlockedSystem.OnAmbushTimerExpired", new System.Text.Json.Nodes.JsonObject { ["assigningCount"] = randomized.Count, ["needed"] = needed, ["currentCount"] = blockCount, ["threshold"] = mustBeBlockedThreshold });
 
                 foreach (var card in randomized)
                 {
@@ -298,7 +298,7 @@ namespace Crusaders30XX.ECS.Systems
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[MustBeBlockedSystem] OnAmbushTimerExpired exception: {ex}");
+                LoggingService.Append("MustBeBlockedSystem.OnAmbushTimerExpired.error", new System.Text.Json.Nodes.JsonObject { ["exception"] = ex.ToString() });
             }
         }
 
