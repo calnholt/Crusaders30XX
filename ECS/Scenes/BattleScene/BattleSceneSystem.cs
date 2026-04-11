@@ -35,6 +35,7 @@ namespace Crusaders30XX.ECS.Systems
 		private BattleBackgroundSystem _battleBackgroundSystem;
 		private DrawPileDisplaySystem _drawPileDisplaySystem;
 		private DiscardPileDisplaySystem _discardPileDisplaySystem;
+		private DrawPileColorCountDisplaySystem _drawPileColorCountDisplaySystem;
 		private CardListModalSystem _cardListModalSystem;
 		private PlayerDisplaySystem _playerDisplaySystem;
 		private PlayerWispParticleSystem _playerWispParticleSystem;
@@ -45,11 +46,11 @@ namespace Crusaders30XX.ECS.Systems
 		private CourageDisplaySystem _courageDisplaySystem;
 		private ActionPointDisplaySystem _actionPointDisplaySystem;
 		private TemperanceDisplaySystem _temperanceDisplaySystem;
-		private ThreatDisplaySystem _threatDisplaySystem;
+		// private ThreatDisplaySystem _threatDisplaySystem;
 		private CourageManagerSystem _courageManagerSystem;
 		private ActionPointManagementSystem _actionPointManagementSystem;
 		private TemperanceManagerSystem _temperanceManagerSystem;
-		private ThreatManagementSystem _threatManagementSystem;
+		// private ThreatManagementSystem _threatManagementSystem;
 		private HPDisplaySystem _hpDisplaySystem;
 		private EnemyDifficultyDisplaySystem _enemyDifficultyDisplaySystem;
 		private AppliedPassivesDisplaySystem _appliedPassivesDisplaySystem;
@@ -306,7 +307,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("CourageDisplaySystem.Draw", _courageDisplaySystem.Draw);
 			FrameProfiler.Measure("QuestTribulationDisplaySystem.Draw", _questTribulationDisplaySystem.Draw);
 			FrameProfiler.Measure("TemperanceDisplaySystem.Draw", _temperanceDisplaySystem.Draw);
-			FrameProfiler.Measure("ThreatDisplaySystem.Draw", _threatDisplaySystem.Draw);
+			// FrameProfiler.Measure("ThreatDisplaySystem.Draw", _threatDisplaySystem.Draw);
 			FrameProfiler.Measure("ActionPointDisplaySystem.Draw", _actionPointDisplaySystem.Draw);
 			FrameProfiler.Measure("HPDisplaySystem.Draw", _hpDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDifficultyDisplaySystem.Draw", _enemyDifficultyDisplaySystem.Draw);
@@ -325,6 +326,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("EquippedWeaponDisplaySystem.Draw", _equippedWeaponDisplaySystem.Draw);
 			FrameProfiler.Measure("MedalDisplaySystem.Draw", _medalDisplaySystem.Draw);
 			FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
+			FrameProfiler.Measure("DrawPileColorCountDisplaySystem.Draw", _drawPileColorCountDisplaySystem.Draw);
 			FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
 			FrameProfiler.Measure("MillCardSystem.Draw", _millCardSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
@@ -464,6 +466,7 @@ namespace Crusaders30XX.ECS.Systems
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
 			_drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_discardPileDisplaySystem = new DiscardPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_drawPileColorCountDisplaySystem = new DrawPileColorCountDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_millCardSystem = new MillCardSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_cardListModalSystem = new CardListModalSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			var crusaderTexture = _content.Load<Texture2D>("Crusader");
@@ -476,12 +479,12 @@ namespace Crusaders30XX.ECS.Systems
 			_courageDisplaySystem = new CourageDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_actionPointDisplaySystem = new ActionPointDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_threatDisplaySystem = new ThreatDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			// _threatDisplaySystem = new ThreatDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_cardMoveDisplaySystem = new CardMoveDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_courageManagerSystem = new CourageManagerSystem(_world.EntityManager);
 			_actionPointManagementSystem = new ActionPointManagementSystem(_world.EntityManager);
 			_temperanceManagerSystem = new TemperanceManagerSystem(_world.EntityManager);
-			_threatManagementSystem = new ThreatManagementSystem(_world.EntityManager);
+			// _threatManagementSystem = new ThreatManagementSystem(_world.EntityManager);
 			_hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_enemyDifficultyDisplaySystem = new EnemyDifficultyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_appliedPassivesDisplaySystem = new AppliedPassivesDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -584,6 +587,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_eventQueueSystem);
 			_world.AddSystem(_drawPileDisplaySystem);
 			_world.AddSystem(_discardPileDisplaySystem);
+			_world.AddSystem(_drawPileColorCountDisplaySystem);
 			_world.AddSystem(_millCardSystem);
 			_world.AddSystem(_cardListModalSystem);
 			_world.AddSystem(_playerDisplaySystem);
@@ -595,11 +599,11 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_playerTemperanceActivationDisplaySystem);
 			_world.AddSystem(_courageDisplaySystem);
 			_world.AddSystem(_temperanceDisplaySystem);
-			_world.AddSystem(_threatDisplaySystem);
+			// _world.AddSystem(_threatDisplaySystem);
 			_world.AddSystem(_actionPointDisplaySystem);
 			_world.AddSystem(_courageManagerSystem);
 			_world.AddSystem(_temperanceManagerSystem);
-			_world.AddSystem(_threatManagementSystem);
+			// _world.AddSystem(_threatManagementSystem);
 			_world.AddSystem(_actionPointManagementSystem);
 			_world.AddSystem(_battleBackgroundSystem);
 			_world.AddSystem(_hpDisplaySystem);
