@@ -43,7 +43,6 @@ namespace Crusaders30XX.ECS.Factories
                 "wyvern" => new Wyvern(difficulty),
                 "blood_martyr" => new BloodMartyr(difficulty),
                 "sniper" => new Sniper(difficulty),
-                "sentinel" => new Sentinel(difficulty),
                 _ => null
             };
         }
@@ -81,7 +80,6 @@ namespace Crusaders30XX.ECS.Factories
                 { "wyvern", new Wyvern(difficulty) },
                 { "blood_martyr", new BloodMartyr(difficulty) },
                 { "sniper", new Sniper(difficulty) },
-                { "sentinel", new Sentinel(difficulty) },
             };
         }
     }
