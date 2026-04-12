@@ -26,6 +26,25 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     public bool IgnoresAegis { get; set; } = false;
     public static EntityManager EntityManager { get; set; }
 
+    // Probability (0.0–1.0) that guard conversion is attempted. Set to 0f to opt out.
+    public float GuardConversionChance { get; protected set; } = 0.75f;
+
+    // Min conversion as a ratio of damage (floor applied, clamped to minimum of 1)
+    public float GuardConversionMinRatio { get; protected set; } = 0f;
+
+    // Max conversion as a ratio of damage (exclusive upper bound, floor applied)
+    public float GuardConversionMaxRatio { get; protected set; } = 0.5f;
+
+    public virtual int RollGuardConversion(int damage)
+    {
+      if (damage <= 1) return 0;
+      if (Random.Shared.NextDouble() >= GuardConversionChance) return 0;
+      int min = Math.Max(1, (int)Math.Floor(damage * GuardConversionMinRatio));
+      int max = (int)Math.Floor(damage * GuardConversionMaxRatio);
+      if (max <= min) return min;
+      return Random.Shared.Next(min, max);
+    }
+
     #nullable enable annotations
     public Action<EntityManager>? OnAttackReveal { get; protected set; }
     public Action<EntityManager>? OnAttackHit { get; protected set; }
