@@ -16,6 +16,7 @@ namespace Crusaders30XX.ECS.Systems
 		public GuardManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<AddGuardEvent>(OnAddGuard);
+			EventManager.Subscribe<RemoveGuardEvent>(OnRemoveGuard);
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
 			EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
 		}
@@ -43,6 +44,34 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			gq.Queue.Add(e.Value);
 			EventManager.Publish(new GuardGainedEvent { Enemy = e.Enemy, GuardValue = e.Value });
+		}
+
+		private void OnRemoveGuard(RemoveGuardEvent e)
+		{
+			LoggingService.Append("GuardManagementSystem.OnRemoveGuard", new System.Text.Json.Nodes.JsonObject
+			{
+				["removeValue"] = e.Value,
+				["enemyId"] = e.Enemy?.Id ?? -1
+			});
+			if (e.Enemy == null || e.Value <= 0) return;
+			var gq = e.Enemy.GetComponent<GuardQueue>();
+			if (gq == null || gq.Queue.Count == 0) return;
+
+			int remaining = e.Value;
+			while (remaining > 0 && gq.Queue.Count > 0)
+			{
+				int pip = gq.Queue[gq.Queue.Count - 1];
+				if (pip <= remaining)
+				{
+					remaining -= pip;
+					gq.Queue.RemoveAt(gq.Queue.Count - 1);
+				}
+				else
+				{
+					gq.Queue[gq.Queue.Count - 1] -= remaining;
+					remaining = 0;
+				}
+			}
 		}
 
 		private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
@@ -85,9 +114,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void TryGuardConversion(Entity enemy)
 		{
-			var ap = enemy.GetComponent<AppliedPassives>();
-			if (ap == null || !ap.Passives.ContainsKey(AppliedPassiveType.Sentinel)) return;
-
 			var intent = enemy.GetComponent<AttackIntent>();
 			if (intent == null || intent.Planned == null || intent.Planned.Count == 0) return;
 
@@ -97,7 +123,12 @@ namespace Crusaders30XX.ECS.Systems
 			if (attackDef == null || attackDef.Damage <= 0) return;
 
 			int damage = attackDef.Damage;
-			int conversionAmount = RollGuardConversion(damage);
+			int conversionAmount = attackDef.RollGuardConversion(damage);
+			LoggingService.Append("GuardManagementSystem.TryGuardConversion", new System.Text.Json.Nodes.JsonObject
+			{
+				["damage"] = damage,
+				["conversionAmount"] = conversionAmount
+			});
 			if (conversionAmount <= 0) return;
 
 			if (conversionAmount >= damage)
@@ -107,7 +138,6 @@ namespace Crusaders30XX.ECS.Systems
 
 				EventQueueBridge.EnqueueTriggerAction("GuardManagementSystem.FullConversion", () =>
 				{
-					EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Sentinel });
 					EventManager.Publish(new AddGuardEvent { Enemy = enemy, Value = damage });
 
 					EventQueue.Clear();
@@ -144,19 +174,9 @@ namespace Crusaders30XX.ECS.Systems
 
 				EventQueueBridge.EnqueueTriggerAction("GuardManagementSystem.PartialConversion", () =>
 				{
-					EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Sentinel });
 					EventManager.Publish(new AddGuardEvent { Enemy = enemy, Value = conversionAmount });
 				}, Duration);
 			}
-		}
-
-		private int RollGuardConversion(int damage)
-		{
-			if (damage <= 1) return 0;
-			// 50% chance of 0; remaining 50% uniform across 1..(damage - 1)
-			// (prevents returning the full `damage` amount).
-			if (Random.Shared.Next(0, 2) == 0) return 0;
-			return Random.Shared.Next(1, damage); // max is exclusive => [1..damage-1]
 		}
 
 		private void OnLoadScene(LoadSceneEvent e)
