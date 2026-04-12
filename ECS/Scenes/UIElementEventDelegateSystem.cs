@@ -4,13 +4,20 @@ using Crusaders30XX.ECS.Events;
 using System;
 using System.Linq;
 using System.Collections.Generic;
-
+using Crusaders30XX.ECS.Services;
 namespace Crusaders30XX.ECS.Systems
 {
     internal static class UIElementEventDelegateService
     {
         public static void HandleEvent(UIElementEventType type, Entity entity, EntityManager entityManager)
         {
+            LoggingService.Append("UIElementEventDelegateService.HandleEvent", new System.Text.Json.Nodes.JsonObject
+            {
+                ["type"] = type.ToString(),
+                ["entityId"] = entity.Id,
+                ["entityName"] = entity.Name,
+                ["entityType"] = entity.GetType().Name,
+            });
             switch(type)
             {
                 case UIElementEventType.ConfirmBlocks:
@@ -64,10 +71,21 @@ namespace Crusaders30XX.ECS.Systems
                     var payState = payStateEntity?.GetComponent<PayCostOverlayState>();
                     if (payState != null && payState.IsOpen)
                     {
+                        LoggingService.Append("UIElementEventDelegateService.CardClicked", new System.Text.Json.Nodes.JsonObject
+                        {
+                            ["branch"] = "PayCostCandidateClicked",
+                            ["entityId"] = entity.Id,
+                        });
                         EventManager.Publish(new PayCostCandidateClicked { Card = entity });
                     }
                     else
                     {
+                        LoggingService.Append("UIElementEventDelegateService.CardClicked", new System.Text.Json.Nodes.JsonObject
+                        {
+                            ["branch"] = "PlayCardRequested",
+                            ["entityId"] = entity.Id,
+                            ["payStateExists"] = payStateEntity != null,
+                        });
                         EventManager.Publish(new PlayCardRequested { Card = entity });
                     }
                     break;

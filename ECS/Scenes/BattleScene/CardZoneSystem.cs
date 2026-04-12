@@ -192,6 +192,7 @@ namespace Crusaders30XX.ECS.Systems
                     var uiH = evt.Card.GetComponent<UIElement>();
                     if (uiH != null)
                     {
+                        uiH.SuppressCount = 0; // clear any phase suppression carried from draw pile
                         uiH.IsInteractable = true;
                         uiH.IsHovered = false;
                         uiH.IsClicked = false;

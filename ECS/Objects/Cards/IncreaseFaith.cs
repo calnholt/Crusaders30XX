@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"Gain {PowerGained} power.";
             Animation = "Buff";
             Type = CardType.Prayer;
-            Block = 2;
+            Block = 3;
 
             OnPlay = (entityManager, card) =>
             {

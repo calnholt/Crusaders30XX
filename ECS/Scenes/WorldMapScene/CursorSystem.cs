@@ -3,11 +3,13 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Events;
 using System;
+using System.Text.Json.Nodes;
 using Microsoft.Xna.Framework.Content;
 
 namespace Crusaders30XX.ECS.Systems
@@ -273,9 +275,23 @@ namespace Crusaders30XX.ECS.Systems
 						.FirstOrDefault();
 					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
 					{
-						// NOTE: InputSystem owns IsClicked state management
-						Console.WriteLine($"[CursorSystem] Clicked: {clickCandidate.E.Id}");
 						_lastClickedEntity = clickCandidate.E;
+						var clickLog = new JsonObject {
+							["entityId"] = clickCandidate.E.Id,
+							["source"] = "Gamepad",
+							["uiElement"] = new JsonObject {
+								["isInteractable"] = clickCandidate.UI.IsInteractable,
+								["isHidden"] = clickCandidate.UI.IsHidden,
+								["bounds"] = $"x:{clickCandidate.UI.Bounds.X} y:{clickCandidate.UI.Bounds.Y} w:{clickCandidate.UI.Bounds.Width} h:{clickCandidate.UI.Bounds.Height}",
+								["tooltipType"] = clickCandidate.UI.TooltipType.ToString(),
+								["eventType"] = clickCandidate.UI.EventType.ToString(),
+								["isClicked"] = clickCandidate.UI.IsClicked,
+								["isHovered"] = clickCandidate.UI.IsHovered,
+								["isPreventDefaultClick"] = clickCandidate.UI.IsPreventDefaultClick
+							}
+						};
+						LoggingService.Append("CursorSystem_Click", clickLog);
+	
 					}
 				}
 
@@ -384,9 +400,8 @@ namespace Crusaders30XX.ECS.Systems
 						.FirstOrDefault();
 					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
 					{
-						// NOTE: InputSystem owns IsClicked state management
-						Console.WriteLine($"[CursorSystem] Clicked: {clickCandidate.E.Id}");
 						_lastClickedEntity = clickCandidate.E;
+						LoggingService.Append("CursorSystem_Click", new JsonObject { ["entityId"] = clickCandidate.E.Id, ["source"] = "Mouse" });
 					}
 				}
 

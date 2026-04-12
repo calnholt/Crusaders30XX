@@ -226,8 +226,17 @@ namespace Crusaders30XX.ECS.Systems
             EntityManager.RemoveComponent<HP>(card);
             EntityManager.RemoveComponent<HPBarOverride>(card);
 
-            // Add to player's hand
+            // Add to player's hand and restore interactability
             deck.Hand.Add(card);
+            var ui = card.GetComponent<UIElement>();
+            if (ui != null)
+            {
+                ui.SuppressCount = 0;
+                ui.IsInteractable = true;
+                ui.IsHovered = false;
+                ui.IsClicked = false;
+                ui.EventType = UIElementEventType.CardClicked;
+            }
 
             var cardData = card.GetComponent<CardData>();
             LoggingService.Append("PlunderManagementSystem.RescueCard", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown" });

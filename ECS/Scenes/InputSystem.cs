@@ -2,10 +2,12 @@ using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Nodes;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -68,18 +70,20 @@ namespace Crusaders30XX.ECS.Systems
             var pointerPoint = new Point((int)Math.Round(pointerVec.X), (int)Math.Round(pointerVec.Y));
             var keyboardState = Keyboard.GetState();
 
-            // Collect all interactable UI elements — trust IsInteractable (overlay systems manage suppression)
-            var uiEntities = GetRelevantEntities()
+            // Collect all UI elements, reset hover/click on all so suppressed entities never keep stale state
+            var allUiEntities = GetRelevantEntities()
                 .Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), IsCard = e.GetComponent<CardData>() != null })
-                .Where(x => x.UI != null && x.UI.IsInteractable)
+                .Where(x => x.UI != null)
                 .ToList();
 
-            // Reset hover and click flags
-            foreach (var x in uiEntities)
+            foreach (var x in allUiEntities)
             {
                 x.UI.IsHovered = false;
                 x.UI.IsClicked = false;
             }
+
+            // Restrict hover/click detection to interactable entities only
+            var uiEntities = allUiEntities.Where(x => x.UI.IsInteractable).ToList();
 
             // Determine the top entity under cursor
             dynamic top = null;
@@ -107,21 +111,82 @@ namespace Crusaders30XX.ECS.Systems
                 top = underMouse.FirstOrDefault();
             }
 
+            // Detect click intent before guards so dropped clicks can be diagnosed
+            bool mouseEdge = mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released;
+            bool controllerEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge && _cursorEvent.Source != InputMethod.Mouse;
+            bool isClickAttempt = mouseEdge || controllerEdge;
+
+            if (isClickAttempt && top == null)
+            {
+                var diagLog = new JsonObject
+                {
+                    ["source"] = mouseEdge ? "mouse" : "controller",
+                    ["preventClicking"] = StateSingleton.PreventClicking,
+                    ["isTutorialActive"] = StateSingleton.IsTutorialActive,
+                };
+                if (_cursorEvent?.TopEntity != null)
+                {
+                    var cursorTop = _cursorEvent.TopEntity;
+                    var cursorTopUI = cursorTop.GetComponent<UIElement>();
+                    diagLog["cursorTopEntityId"] = cursorTop.Id;
+                    diagLog["cursorTopEntityName"] = cursorTop.Name;
+                    diagLog["cursorTopInUiEntities"] = uiEntities.Any(x => x.E == cursorTop);
+                    if (cursorTopUI != null)
+                    {
+                        diagLog["isInteractable"] = cursorTopUI.IsInteractable;
+                        diagLog["isHidden"] = cursorTopUI.IsHidden;
+                        diagLog["eventType"] = cursorTopUI.EventType.ToString();
+                        diagLog["suppressCount"] = cursorTopUI.SuppressCount;
+                        diagLog["bounds"] = $"x:{cursorTopUI.Bounds.X} y:{cursorTopUI.Bounds.Y} w:{cursorTopUI.Bounds.Width} h:{cursorTopUI.Bounds.Height}";
+                    }
+                    else
+                    {
+                        diagLog["hasUIElement"] = false;
+                    }
+                }
+                else
+                {
+                    diagLog["cursorTopEntity"] = "null";
+                }
+                LoggingService.Append("InputSystem_ClickDropped", diagLog);
+            }
+            else if (isClickAttempt && top != null && (StateSingleton.PreventClicking || StateSingleton.IsTutorialActive))
+            {
+                LoggingService.Append("InputSystem_ClickBlocked", new JsonObject
+                {
+                    ["entityId"] = ((Entity)top.E).Id,
+                    ["entityName"] = ((Entity)top.E).Name,
+                    ["preventClicking"] = StateSingleton.PreventClicking,
+                    ["isTutorialActive"] = StateSingleton.IsTutorialActive
+                });
+            }
+
             if (top != null && !StateSingleton.PreventClicking && !StateSingleton.IsTutorialActive)
             {
                 top.UI.IsHovered = true;
 
-                bool mouseEdge = mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released;
-                bool controllerEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge && _cursorEvent.Source != InputMethod.Mouse;
-                bool isClickEdge = mouseEdge || controllerEdge;
-
-                if (isClickEdge)
+                if (isClickAttempt)
                 {
                     top.UI.IsClicked = true;
                     var uiElement = ((Entity)top.E).GetComponent<UIElement>();
+                    LoggingService.Append("InputSystem_Click", new JsonObject
+                    {
+                        ["entityId"] = ((Entity)top.E).Id,
+                        ["eventType"] = uiElement?.EventType.ToString() ?? "null",
+                        ["isInteractable"] = uiElement?.IsInteractable ?? false,
+                        ["suppressCount"] = uiElement?.SuppressCount ?? 0,
+                    });
                     if (uiElement != null && uiElement.EventType != UIElementEventType.None)
                     {
                         UIElementEventDelegateService.HandleEvent(uiElement.EventType, top.E, EntityManager);
+                    }
+                    else
+                    {
+                        LoggingService.Append("InputSystem_ClickNoEvent", new JsonObject
+                        {
+                            ["entityId"] = ((Entity)top.E).Id,
+                            ["reason"] = uiElement == null ? "NoUIElement" : "EventTypeNone",
+                        });
                     }
                 }
             }

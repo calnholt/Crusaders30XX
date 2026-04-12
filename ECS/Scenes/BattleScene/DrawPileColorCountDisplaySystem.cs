@@ -39,7 +39,7 @@ namespace Crusaders30XX.ECS.Systems
         private int _cachedCornerRadius;
 
         [DebugEditable(DisplayName = "Pill Width", Step = 1, Min = 10, Max = 500)]
-        public int PillWidth { get; set; } = 40;
+        public int PillWidth { get; set; } = 26;
 
         [DebugEditable(DisplayName = "Pill Height", Step = 1, Min = 6, Max = 200)]
         public int PillHeight { get; set; } = 22;
@@ -51,10 +51,10 @@ namespace Crusaders30XX.ECS.Systems
         public int PillGap { get; set; } = 8;
 
         [DebugEditable(DisplayName = "Corner Radius", Step = 1, Min = 0, Max = 100)]
-        public int CornerRadius { get; set; } = 6;
+        public int CornerRadius { get; set; } = 4;
 
         [DebugEditable(DisplayName = "Text Scale", Step = 0.01f, Min = 0.01f, Max = 2f)]
-        public float TextScale { get; set; } = 0.08f;
+        public float TextScale { get; set; } = 0.11f;
 
         // Reference copies of DrawPileDisplaySystem values — no cross-system coupling
         [DebugEditable(DisplayName = "Draw Pile Ref Width", Step = 1, Min = 0, Max = 500)]

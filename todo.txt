@@ -16,3 +16,7 @@ Bugs
 - Marksman ability doesn't trigger if marked card is used for discard
 - Intimidate and Shackled not playing nice
 - Enemy attacks that look at hand for blocking cards need to ignore pledged card
+
+Gameplay
+- remove penance as currently functions
+- skeleton attack on hits need to be completely rethought

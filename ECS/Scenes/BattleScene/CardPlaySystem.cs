@@ -233,8 +233,16 @@ namespace Crusaders30XX.ECS.Systems
                 int currentAp = ap?.Current ?? 0;
                 if (currentAp <= 0)
                 {
+                    LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                    {
+                        ["reason"] = "NoActionPoints",
+                        ["cardId"] = card.CardId,
+                        ["isWeapon"] = isWeapon,
+                        ["isFree"] = isFree,
+                        ["currentAp"] = currentAp
+                    });
                     EventManager.Publish(new CantPlayCardMessage { Message = "Not enough action points!" });
-                    return; // cannot play without AP
+                    return;
                 }
             }
 

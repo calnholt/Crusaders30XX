@@ -122,9 +122,9 @@ namespace Crusaders30XX.ECS.Systems
 			int spaceLeft = System.Math.Max(0, maxHandSize - effectiveHandCount);
 			int toDraw = System.Math.Min(spaceLeft, intellect);
 			LoggingService.Append("DrawHandSystem.DrawUpToIntellect.result", new System.Text.Json.Nodes.JsonObject { ["effectiveHandCount"] = effectiveHandCount, ["spaceLeft"] = spaceLeft, ["toDraw"] = toDraw });
-			if (toDraw > 0)
+			for (int i = 0; i < toDraw; i++)
 			{
-				EventManager.Publish(new RequestDrawCardsEvent { Count = toDraw });
+				EventQueueBridge.EnqueueTriggerAction("DrawHandSystem.DrawCard", () => EventManager.Publish(new RequestDrawCardsEvent { Count = 1 }), 0.12f);
 			}
 			CheckForPlayerDeath();
 		}

@@ -110,6 +110,12 @@ namespace Crusaders30XX.ECS.Systems
 
             deck.DrawPile.Clear();
             deck.DrawPile.AddRange(cards);
+
+            LoggingService.Append("DeckManagementSystem.ShuffleDrawPile", new System.Text.Json.Nodes.JsonObject
+            {
+                ["shuffledCount"] = cards.Count,
+                ["drawPileCount"] = deck.DrawPile.Count
+            });
         }
 
         /// <summary>
@@ -119,6 +125,14 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (deck.DrawPile.Count == 0)
             {
+                LoggingService.Append("DeckManagementSystem.DrawCard", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["result"] = "failed",
+                    ["reason"] = "drawPileEmpty",
+                    ["handCount"] = deck.Hand.Count,
+                    ["drawPileCount"] = 0,
+                    ["discardPileCount"] = deck.DiscardPile.Count
+                });
                 return false; // No cards to draw
             }
             if (deck.DrawPile.Count > 0)
@@ -147,11 +161,21 @@ namespace Crusaders30XX.ECS.Systems
                 var ui = card.GetComponent<UIElement>();
                 if (ui != null)
                 {
+                    ui.SuppressCount = 0; // clear any phase suppression carried from draw pile
                     ui.IsInteractable = true;
                     ui.IsHovered = false;
                     ui.IsClicked = false;
                     ui.EventType = UIElementEventType.CardClicked;
                 }
+
+                LoggingService.Append("DeckManagementSystem.DrawCard", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["result"] = "success",
+                    ["cardId"] = card?.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                    ["handCount"] = deck.Hand.Count,
+                    ["drawPileCount"] = deck.DrawPile.Count,
+                    ["discardPileCount"] = deck.DiscardPile.Count
+                });
                 return true;
             }
 
@@ -167,6 +191,14 @@ namespace Crusaders30XX.ECS.Systems
             {
                 deck.Hand.Remove(card);
                 deck.DiscardPile.Add(card);
+
+                LoggingService.Append("DeckManagementSystem.DiscardCard", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["cardId"] = card?.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                    ["handCount"] = deck.Hand.Count,
+                    ["drawPileCount"] = deck.DrawPile.Count,
+                    ["discardPileCount"] = deck.DiscardPile.Count
+                });
             }
         }
 
@@ -194,6 +226,28 @@ namespace Crusaders30XX.ECS.Systems
                 Deck = deck.Owner,
                 DrawnCards = deck.Hand.ToList()
             });
+            // Log for each card currently in hand as "drawn" (assuming these were newly drawn)
+            // Alternatively, accumulate drawn cards in DrawCards and log only those - but current method logs what we know
+            foreach (var card in deck.Hand.TakeLast(drawnCount))
+            {
+                LoggingService.Append("DeckManagementSystem.DrawCard", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["result"] = "success",
+                    ["cardId"] = card?.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                    ["entityId"] = card?.Id ?? -1,
+                    ["handCount"] = deck.Hand.Count,
+                    ["drawPileCount"] = deck.DrawPile.Count,
+                    ["discardPileCount"] = deck.DiscardPile.Count
+                });
+            }
+            LoggingService.Append("DeckManagementSystem.DrawCards", new System.Text.Json.Nodes.JsonObject
+            {
+                ["drawnCount"] = drawnCount,
+                ["handCount"] = deck.Hand.Count,
+                ["drawPileCount"] = deck.DrawPile.Count,
+                ["discardPileCount"] = deck.DiscardPile.Count,
+            });
+ 
             return drawnCount;
         }
 
@@ -257,7 +311,18 @@ namespace Crusaders30XX.ECS.Systems
             ShuffleDrawPile(deck);
 
             // Draw the specified number of cards
-            return DrawCards(deck, drawCount);
+            int drawn = DrawCards(deck, drawCount);
+
+            LoggingService.Append("DeckManagementSystem.ShuffleAndDraw", new System.Text.Json.Nodes.JsonObject
+            {
+                ["requestedDrawCount"] = drawCount,
+                ["actualDrawn"] = drawn,
+                ["handCount"] = deck.Hand.Count,
+                ["drawPileCount"] = deck.DrawPile.Count,
+                ["discardPileCount"] = deck.DiscardPile.Count
+            });
+
+            return drawn;
         }
 
         /// <summary>
@@ -325,6 +390,16 @@ namespace Crusaders30XX.ECS.Systems
 
             // Shuffle draw pile after returning
             ShuffleDrawPile(deck);
+
+            LoggingService.Append("DeckManagementSystem.ResetDeckExcludingWeapon", new System.Text.Json.Nodes.JsonObject
+            {
+                ["totalCardsCollected"] = allCards.Count,
+                ["cardsReturnedToDraw"] = toReturn.Count,
+                ["weaponExcluded"] = weapon != null,
+                ["handCount"] = deck.Hand.Count,
+                ["drawPileCount"] = deck.DrawPile.Count,
+                ["discardPileCount"] = deck.DiscardPile.Count
+            });
         }
 
         private void ResetCard(Entity card)
@@ -410,12 +485,21 @@ namespace Crusaders30XX.ECS.Systems
             if (deckEntity == null) return;
             var deck = deckEntity.GetComponent<Deck>();
             if (deck == null) return;
+            int discardedCount = deck.Hand.Count;
             foreach (var c in deck.Hand)
             {
                 ResetCard(c);
             }
             deck.DiscardPile.AddRange(deck.Hand);
             deck.Hand.Clear();
+
+            LoggingService.Append("DeckManagementSystem.OnDiscardAllCards", new System.Text.Json.Nodes.JsonObject
+            {
+                ["discardedCount"] = discardedCount,
+                ["handCount"] = deck.Hand.Count,
+                ["drawPileCount"] = deck.DrawPile.Count,
+                ["discardPileCount"] = deck.DiscardPile.Count
+            });
         }
     }
 }

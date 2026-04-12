@@ -8,6 +8,12 @@ namespace Crusaders30XX.ECS.Events
 		public int Value { get; set; }
 	}
 
+	public class RemoveGuardEvent
+	{
+		public Entity Enemy { get; set; }
+		public int Value { get; set; }
+	}
+
 	public class GuardConsumedEvent
 	{
 		public Entity Enemy { get; set; }

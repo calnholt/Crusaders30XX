@@ -60,9 +60,11 @@ namespace Crusaders30XX.ECS.Systems
 					var ui = weapon.GetComponent<UIElement>();
 					if (ui != null)
 					{
+						ui.SuppressCount = 0; // clear any phase suppression carried over
 						ui.IsInteractable = true;
 						ui.IsHovered = false;
 						ui.IsClicked = false;
+						ui.EventType = UIElementEventType.CardClicked; // restore after ResetDeckExcludingWeapon wipes it
 					}
 
 					LoggingService.Append("WeaponManagementSystem.OnPhaseChanged", new System.Text.Json.Nodes.JsonObject

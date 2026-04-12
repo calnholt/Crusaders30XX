@@ -54,6 +54,10 @@ namespace Crusaders30XX.ECS.Systems
 		private float _absorbElapsedSeconds;
 		private SubPhase? _lastPhase;
 
+		// Logging state — track previous values to avoid per-frame noise
+		private bool _lastDrawGuardPassed;
+		private float _lastLoggedPanelScale = -1f;
+
 		#region Debug-Editable Fields
 
 		[DebugEditable(DisplayName = "Animation Speed", Step = 1f, Min = 1f, Max = 50f)]
@@ -249,11 +253,56 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Get banner anchor bounds
 			var anchorEntity = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault();
-			if (anchorEntity == null) return;
+			if (anchorEntity == null)
+			{
+				if (_lastDrawGuardPassed)
+				{
+					LoggingService.Append("EnemyDamageMeterDisplaySystem.DrawGuardFailed", new JsonObject {
+						{ "Reason", "AnchorEntityNull" },
+						{ "Phase", phase.Sub.ToString() }
+					});
+					_lastDrawGuardPassed = false;
+				}
+				return;
+			}
 			var anchorUi = anchorEntity.GetComponent<UIElement>();
-			if (anchorUi == null || anchorUi.Bounds.Width < 1 || anchorUi.Bounds.Height < 1) return;
+			bool boundsUninitialized = anchorUi == null
+				|| anchorUi.Bounds.Width < 2
+				|| anchorUi.Bounds.Height < 2
+				|| (anchorUi.Bounds.X == 0 && anchorUi.Bounds.Y == 0);
+			if (boundsUninitialized)
+			{
+				if (_lastDrawGuardPassed)
+				{
+					LoggingService.Append("EnemyDamageMeterDisplaySystem.DrawGuardFailed", new JsonObject {
+						{ "Reason", anchorUi == null ? "UIElementNull" : "UninitializedBounds" },
+						{ "Bounds", anchorUi == null ? "null" : $"({anchorUi.Bounds.X},{anchorUi.Bounds.Y} {anchorUi.Bounds.Width}x{anchorUi.Bounds.Height})" },
+						{ "Phase", phase.Sub.ToString() }
+					});
+					_lastDrawGuardPassed = false;
+				}
+				return;
+			}
+
+			if (!_lastDrawGuardPassed)
+			{
+				LoggingService.Append("EnemyDamageMeterDisplaySystem.DrawGuardPassed", new JsonObject {
+					{ "Bounds", $"({anchorUi.Bounds.X},{anchorUi.Bounds.Y} {anchorUi.Bounds.Width}x{anchorUi.Bounds.Height})" },
+					{ "Phase", phase.Sub.ToString() }
+				});
+				_lastDrawGuardPassed = true;
+			}
 
 			var bannerBounds = anchorUi.Bounds;
+
+			// Log when bounds position looks uninitialized (likely cause of top-left flicker)
+			if (bannerBounds.X == 0 && bannerBounds.Y == 0)
+			{
+				LoggingService.Append("EnemyDamageMeterDisplaySystem.DrawingAtOriginBounds", new JsonObject {
+					{ "BannerBounds", $"({bannerBounds.X},{bannerBounds.Y} {bannerBounds.Width}x{bannerBounds.Height})" },
+					{ "Phase", phase.Sub.ToString() }
+				});
+			}
 
 			// Get current progress (for display text showing target values)
 			var progress = GetCurrentProgress();
@@ -276,8 +325,31 @@ namespace Crusaders30XX.ECS.Systems
 			// Don't render if fully scaled down
 			if (panelScale < 0.01f)
 			{
+				if (_lastLoggedPanelScale >= 0.01f)
+				{
+					LoggingService.Append("EnemyDamageMeterDisplaySystem.PanelScaleHidden", new JsonObject {
+						{ "PanelScale", panelScale },
+						{ "Phase", phase.Sub.ToString() },
+						{ "AbsorbElapsed", _absorbElapsedSeconds }
+					});
+				}
+				_lastLoggedPanelScale = panelScale;
 				CleanupTooltips(new HashSet<string>());
 				return;
+			}
+
+			// Log meaningful panel scale transitions (1.0 → animating → hidden)
+			float roundedScale = (float)Math.Round(panelScale, 2);
+			float roundedLast  = (float)Math.Round(_lastLoggedPanelScale, 2);
+			if (Math.Abs(roundedScale - roundedLast) >= 0.05f || (_lastLoggedPanelScale < 0))
+			{
+				LoggingService.Append("EnemyDamageMeterDisplaySystem.PanelScaleChanged", new JsonObject {
+					{ "PanelScale", roundedScale },
+					{ "Phase", phase.Sub.ToString() },
+					{ "AbsorbElapsed", _absorbElapsedSeconds },
+					{ "BannerBounds", $"({bannerBounds.X},{bannerBounds.Y} {bannerBounds.Width}x{bannerBounds.Height})" }
+				});
+				_lastLoggedPanelScale = panelScale;
 			}
 
 			// Build segments list using animated values for width calculation

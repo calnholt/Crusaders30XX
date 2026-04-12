@@ -8,7 +8,7 @@ namespace Crusaders30XX.ECS.Services
 {
     public static class LoggingService
     {
-        private static Dictionary<string, List<JsonNode>> _buffer = new();
+        private static List<JsonNode> _buffer = new();
         private static int _callCount = 0;
         private static int _frameCount = 0;
         private static int _seqCounter = 0;
@@ -26,7 +26,7 @@ namespace Crusaders30XX.ECS.Services
             _frameCount = 0;
             _seqCounter = 0;
             Directory.CreateDirectory("logs");
-            File.WriteAllText(LogPath, "{}");
+            File.WriteAllText(LogPath, "[]");
         }
 
         [System.Diagnostics.Conditional("DEBUG")]
@@ -52,13 +52,12 @@ namespace Crusaders30XX.ECS.Services
         {
             entry["seq"] = ++_seqCounter;
             entry["frame"] = _frameCount;
+            entry["context"] = context;
 
-            if (!_buffer.TryGetValue(context, out var list))
-            {
-                list = new List<JsonNode>();
-                _buffer[context] = list;
-            }
-            list.Add(entry);
+            var json = JsonSerializer.Serialize(entry, _writeOptions);
+            Console.WriteLine($"{context}: {json}");
+
+            _buffer.Add(entry);
             _callCount++;
         }
 

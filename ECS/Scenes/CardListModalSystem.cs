@@ -307,12 +307,14 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            // Suppress all interactable entities except the modal's close button and displayed cards
+            // Suppress all interactable entities except the modal's close button and the specific cards being displayed
+            var modalCmp = modal.GetComponent<CardListModal>();
+            var modalCardSet = new HashSet<Entity>(modalCmp?.Cards ?? new List<Entity>());
             RestoreModalSuppressed();
             foreach (var e in EntityManager.GetEntitiesWithComponent<UIElement>())
             {
                 if (e.GetComponent<CardListModalClose>() != null) continue;
-                if (e.GetComponent<CardData>() != null) continue;
+                if (modalCardSet.Contains(e)) continue;
                 var ui = e.GetComponent<UIElement>();
                 if (ui != null && ui.BaseInteractable)
                 {

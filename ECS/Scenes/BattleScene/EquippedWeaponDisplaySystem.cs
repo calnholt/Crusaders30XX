@@ -103,16 +103,17 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			EnsureRootEntity();
 			var discardRoot = EntityManager.GetEntity("UI_DiscardPileRoot");
-			var discardUI = discardRoot?.GetComponent<UIElement>();
+			var discardT = discardRoot?.GetComponent<Transform>();
 			var tRoot = EntityManager.GetEntity(RootEntityName)?.GetComponent<Transform>();
-			if (tRoot != null)
+			if (tRoot != null && discardT != null)
 			{
-				if (discardUI != null && discardUI.Bounds.Width > 0 && discardUI.Bounds.Height > 0)
-				{
-					int r = System.Math.Max(4, CircleRadius);
-					var dr = discardUI.Bounds;
-					tRoot.Position = new Vector2(dr.Center.X, dr.Y - AboveDiscardOffsetY - r);
-				}
+				int r = System.Math.Max(4, CircleRadius);
+				// Use Transform.Position (logical, written this frame by DiscardPileDisplaySystem) instead of
+				// UIElement.Bounds (stale post-parallax from last frame's Draw) to avoid double-parallax.
+				// Bounds.Height is safe to read — it's the fixed panel size, not affected by parallax.
+				var discardUI = discardRoot.GetComponent<UIElement>();
+				float discardHalfH = discardUI != null && discardUI.Bounds.Height > 0 ? discardUI.Bounds.Height / 2f : 0f;
+				tRoot.Position = new Vector2(discardT.Position.X, discardT.Position.Y - discardHalfH - AboveDiscardOffsetY - r);
 			}
 		}
 
@@ -121,32 +122,14 @@ namespace Crusaders30XX.ECS.Systems
             var player = GetRelevantEntities().FirstOrDefault();
             if (player == null) return;
 
-            // Discover discard pile rect for anchoring
-            var discardRoot = EntityManager.GetEntity("UI_DiscardPileRoot");
-            Rectangle? discardRect = null;
-            if (discardRoot != null)
-            {
-                var uiDP = discardRoot.GetComponent<UIElement>();
-                if (uiDP != null && uiDP.Bounds.Width > 0 && uiDP.Bounds.Height > 0) discardRect = uiDP.Bounds;
-            }
-
             int r = System.Math.Max(4, CircleRadius);
             var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, r);
-			EnsureRootEntity();
-			var root = EntityManager.GetEntity(RootEntityName);
-			var tRoot = root?.GetComponent<Transform>();
-            Vector2 center = new Vector2(100, Game1.VirtualHeight - 200);
-            if (discardRect.HasValue)
-            {
-                var dr = discardRect.Value;
-                center = new Vector2(dr.Center.X, dr.Y - AboveDiscardOffsetY - r);
-			}
-			// Do not overwrite root position here; ParallaxLayer has already adjusted after Update
-            else
-            {
-                // fall back to current root pos if available
-                if (tRoot != null) center = tRoot.Position;
-            }
+            EnsureRootEntity();
+            var root = EntityManager.GetEntity(RootEntityName);
+            var tRoot = root?.GetComponent<Transform>();
+            if (tRoot == null) return;
+            // ParallaxLayer has adjusted tRoot.Position after Update; use it directly as the draw center
+            Vector2 center = tRoot.Position;
 
             // Draw gold filled circle
             var gold = new Color(GoldR, GoldG, GoldB);

@@ -25,6 +25,9 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Texture2D _pixel;
 		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
 		private readonly List<Entity> _pendingReturn = new();
+		// Logical base point set in UpdateEntity each frame; used by Draw to compute the banner's
+		// live parallax delta without touching t.Position (which PositionTweenSystem owns).
+		private Vector2 _lastLogicalBasePoint;
 
 		[DebugEditable(DisplayName = "Anchor Offset X", Step = 2, Min = -1000, Max = 1000)]
 		public int AnchorOffsetX { get; set; } = 0;
@@ -309,17 +312,11 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(anchorEntity, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = false });
 			}
 			var anchorT = anchorEntity.GetComponent<Transform>();
-			var anchorUi = anchorEntity.GetComponent<UIElement>();
-			Vector2 basePoint;
-			bool uiBoundsValid = anchorUi != null && anchorUi.Bounds.Width >= 16 && anchorUi.Bounds.Height >= 16;
-			if (uiBoundsValid)
-			{
-				basePoint = new Vector2(anchorUi.Bounds.Center.X, anchorUi.Bounds.Top);
-			}
-			else
-			{
-				basePoint = anchorT?.Position ?? new Vector2(Game1.VirtualWidth * 0.5f, Game1.VirtualHeight * 0.5f);
-			}
+			// Read logical position written this frame by EnemyAttackDisplaySystem (pre-parallax).
+			// UIElement.Bounds is set in Draw() and contains last frame's post-parallax position — using
+			// it would chase a stale target and compound with the card's own parallax offset.
+			Vector2 basePoint = anchorT?.Position ?? new Vector2(Game1.VirtualWidth * 0.5f, Game1.VirtualHeight * 0.5f);
+			_lastLogicalBasePoint = basePoint;
 			var center = new Vector2(basePoint.X + AnchorOffsetX, basePoint.Y + AnchorOffsetY);
 			float offsetIndex = indexInContext - (countInContext - 1) * 0.5f;
 			// Place centers so that cards sit above the banner baseline
@@ -546,13 +543,18 @@ namespace Crusaders30XX.ECS.Systems
 			if (pa == null) return;
 			var list = GetRelevantEntities().Where(e => e.GetComponent<AssignedBlockCard>()?.ContextId == pa.ContextId).ToList();
 			if (list.Count == 0) return;
+			// Compute the banner anchor's live parallax delta (post-LateUpdate) so cards shift with it.
+			// abc.CurrentPos is in logical space; adding the delta keeps cards visually locked to the banner.
+			var anchorEntity = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault();
+			var anchorT = anchorEntity?.GetComponent<Transform>();
+			Vector2 parallaxDelta = anchorT != null ? anchorT.Position - _lastLogicalBasePoint : Vector2.Zero;
 			// Draw newest on top: reverse order for render
 			for (int i = list.Count - 1; i >= 0; i--)
 			{
 				var card = list[i];
 				var abc = card.GetComponent<AssignedBlockCard>();
 				if (abc == null) continue;
-				var pos = abc.CurrentPos;
+				var pos = abc.CurrentPos + parallaxDelta;
 				int cw = (int)(CardDrawWidth * abc.CurrentScale);
 				int ch = (int)(CardDrawHeight * abc.CurrentScale);
 				var rect = new Rectangle((int)(pos.X - cw / 2f), (int)(pos.Y - ch / 2f), cw, ch);

@@ -43,8 +43,13 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				return;
 			}
-			var availableCards = GetComponentHelper.GetHandOfCards(EntityManager);
-			if (availableCards.Count == 0) return;
+			var handCards = GetComponentHelper.GetHandOfCards(EntityManager);
+			var availableCards = handCards
+				.Where(c => c.GetComponent<Intimidated>() == null)
+				.ToList();
+
+			// Need at least 2 non-intimidated cards to apply shackle
+			if (availableCards.Count <= 1) return;
 
 			var random = new Random();
 			var cardsToShackle = availableCards
