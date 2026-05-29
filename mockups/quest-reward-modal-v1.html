@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Quest Reward Modal (Split Ledger)</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black-0: #050505;
+    --black-1: #0a0a0a;
+    --black-2: #141414;
+    --black-3: #1e1e1e;
+    --black-4: #2a2a2a;
+    --white-1: #ffffff;
+    --white-2: #f0ece6;
+    --white-3: #c8c0b8;
+    --red-3: #c41e3a;
+    --red-glow: rgba(196, 30, 58, 0.45);
+    --gold: #e8c84a;
+    --gold-dim: #a08030;
+    --panel-border: rgba(255, 255, 255, 0.85);
+    --game-w: 1920px;
+    --game-h: 1080px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black-0);
+    color: var(--white-2);
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  .page-header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--black-4);
+    background: var(--black-1);
+  }
+
+  .page-header h1 {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: var(--white-1);
+    margin-bottom: 4px;
+  }
+
+  .page-header p {
+    color: var(--white-3);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    max-width: 720px;
+    line-height: 1.5;
+  }
+
+  .page-main {
+    padding: 32px 40px 60px;
+  }
+
+  .viewport-scaler {
+    width: 100%;
+    max-width: min(calc(100vw - 80px), 1100px);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--black-2);
+    border: 1px solid var(--black-4);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+    min-height: 320px;
+  }
+
+  .viewport {
+    width: var(--game-w);
+    height: var(--game-h);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform-origin: top center;
+    overflow: hidden;
+  }
+
+  .bg-scene {
+    position: absolute;
+    inset: 0;
+    background: url('../Content/desert-background-city.png') center / cover no-repeat;
+  }
+
+  .bg-dim {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  /* ─── Card (red variant) ─── */
+  .card {
+    width: 240px;
+    height: 340px;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    transform: scale(1.05);
+  }
+
+  .card .bg { position: absolute; inset: 0; border-radius: 8px; background: #1c0c0c; }
+  .card .stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; z-index: 6; background: #cc2222; }
+  .card .stat-gutter {
+    position: absolute; left: 6px; top: 0; bottom: 0; width: 55px; z-index: 1;
+    background: rgba(0,0,0,0.22);
+  }
+  .card .type-notch {
+    position: absolute; top: 0; right: 0; z-index: 7;
+    font-size: 0.5rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    padding: 5px 10px 5px 14px; border-radius: 0 8px 0 8px;
+    background: rgba(200,30,30,0.15); color: #884433;
+  }
+  .card .stats {
+    position: absolute; left: 14px; top: 14px; bottom: 14px; width: 42px;
+    display: flex; flex-direction: column; z-index: 5;
+  }
+  .chip-slot { height: 62px; display: flex; flex-direction: column; flex-shrink: 0; }
+  .chip-slot-ap { margin-top: auto; flex-shrink: 0; }
+  .card .chip {
+    width: 42px; height: 42px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; border-radius: 4px; flex-shrink: 0;
+  }
+  .card .chip .v { font-family: 'New Rocker', cursive; font-size: 1.25rem; line-height: 1; }
+  .card .chip .l { font-size: 0.55rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+  .card .chip-blk { border: 2.5px solid #777; background: rgba(80,80,80,0.15); color: #bbb; }
+  .card .chip-blk .l { color: #888; }
+  .card .chip-atk { background: #cc2222; color: #fff; }
+  .card .chip-atk .l { color: #ffccbb; }
+  .card .chip-ap { background: #330e0e; color: #dd4433; }
+  .card .chip-ap .l { color: #993322; }
+  .card .content {
+    position: relative; z-index: 3; height: 100%; display: flex; flex-direction: column;
+    margin-left: 65px; padding: 14px 14px 14px 0;
+  }
+  .card .cost-row { display: flex; gap: 5px; margin-bottom: 4px; min-height: 13px; }
+  .card .pip { width: 13px; height: 13px; border-radius: 50%; background: #666; }
+  .card .name { font-family: 'New Rocker', cursive; font-size: 1.25rem; letter-spacing: 1px; margin-bottom: 6px; color: #f0e0d8; }
+  .card .rule { height: 2px; margin-bottom: 8px; border-radius: 1px; background: #442020; }
+  .card .desc { font-size: 14px; line-height: 1.45; flex: 1; color: #cc9988; }
+  .card .art {
+    position: absolute; bottom: -10px; right: -15px; width: 170px; height: 150px;
+    z-index: 2; pointer-events: none;
+  }
+  .card .art img { width: 100%; height: 100%; object-fit: contain; }
+
+  /* ─── Split Ledger modal ─── */
+  .modal {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 920px;
+    min-height: 520px;
+    background: rgba(8, 8, 8, 0.92);
+    border: 2px solid var(--panel-border);
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset, 0 32px 80px rgba(0,0,0,0.75);
+  }
+
+  .modal-left {
+    border-right: 1px solid rgba(255,255,255,0.15);
+    padding: 40px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    background: rgba(0,0,0,0.35);
+  }
+
+  .modal-title {
+    font-family: 'New Rocker', cursive;
+    font-size: 36px;
+    letter-spacing: 3px;
+    color: var(--white-1);
+    text-align: center;
+    line-height: 1.1;
+    text-shadow: 0 2px 24px rgba(0,0,0,0.8);
+  }
+
+  .red-rule {
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--red-3), transparent);
+  }
+
+  .rewards-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .gold-reward {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .gold-label {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+  }
+
+  .gold-amount {
+    font-family: 'New Rocker', cursive;
+    font-size: 42px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(232, 200, 74, 0.35);
+  }
+
+  .modal-right {
+    padding: 36px 40px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .card-stage-label {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--white-3);
+  }
+
+  .card-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    padding: 8px 0;
+  }
+
+  .modal-footer {
+    grid-column: 1 / -1;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    background: rgba(0,0,0,0.25);
+  }
+
+  .btn-proceed {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    height: 64px;
+    padding: 0 32px;
+    background: var(--black-3);
+    border: 2px solid var(--white-1);
+    color: var(--white-1);
+    font-family: 'New Rocker', cursive;
+    font-size: 28px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-proceed:hover {
+    background: #a00000;
+    border-color: var(--red-3);
+    box-shadow: 0 0 24px var(--red-glow);
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Quest Reward Modal — Split Ledger</h1>
+  <p>
+    Selected layout for <strong>Quest Complete</strong> with gold + card rewards.
+    Palette: white, red, black. Virtual resolution: 1920×1080.
+  </p>
+</header>
+
+<main class="page-main">
+  <div class="viewport-scaler">
+    <div class="viewport">
+      <div class="bg-scene"></div>
+      <div class="bg-dim"></div>
+      <div class="modal">
+        <aside class="modal-left">
+          <h2 class="modal-title">Quest<br>Complete!</h2>
+          <div class="red-rule"></div>
+          <div class="rewards-stack">
+            <div class="gold-reward">
+              <span class="gold-label">Gold</span>
+              <span class="gold-amount">+10,000</span>
+            </div>
+          </div>
+        </aside>
+        <div class="modal-right">
+          <span class="card-stage-label">Reward</span>
+          <div class="card-wrap">
+            <article class="card">
+              <div class="bg"></div>
+              <div class="stripe"></div>
+              <div class="stat-gutter"></div>
+              <div class="type-notch">Attack</div>
+              <div class="stats">
+                <div class="chip-slot">
+                  <div class="chip chip-blk"><span class="v">3</span><span class="l">BLK</span></div>
+                </div>
+                <div class="chip-slot">
+                  <div class="chip chip-atk"><span class="v">8</span><span class="l">DMG</span></div>
+                </div>
+                <div class="chip-slot-ap">
+                  <div class="chip chip-ap"><span class="v">1</span><span class="l">AP</span></div>
+                </div>
+              </div>
+              <div class="content">
+                <div class="cost-row"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+                <div class="name">Purge</div>
+                <div class="rule"></div>
+                <div class="desc">Each attack card discarded to play this gains +1 damage for the rest of the quest.</div>
+              </div>
+              <div class="art"><img src="../Content/CardArt/purge.png" alt="Purge"></div>
+            </article>
+          </div>
+        </div>
+        <footer class="modal-footer">
+          <button type="button" class="btn-proceed">Proceed</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const GAME_W = 1920;
+  const GAME_H = 1080;
+
+  function fitViewport() {
+    const scaler = document.querySelector('.viewport-scaler');
+    const vp = document.querySelector('.viewport');
+    if (!scaler || !vp) return;
+    const scale = scaler.clientWidth / GAME_W;
+    vp.style.transform = `translateX(-50%) scale(${scale})`;
+    scaler.style.height = `${GAME_H * scale}px`;
+  }
+
+  window.addEventListener('resize', fitViewport);
+  window.addEventListener('load', fitViewport);
+  fitViewport();
+</script>
+</body>
+</html>

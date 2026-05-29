@@ -104,14 +104,10 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						LoggingService.Append("HpManagementSystem.OnModifyHpRequest.QuestComplete", new System.Text.Json.Nodes.JsonObject { ["message"] = "attempting to save quest completion" });
 						var completion = QuestCompleteService.SaveIfCompletedHighest(EntityManager);
-						string msg = "Quest Complete!";
-						if (completion.IsNewlyCompleted || completion.IsDungeon)
-						{
-							msg += $"\nGold +{completion.RewardGold}";
-						}
 						EventManager.Publish(new ShowQuestRewardOverlay
 						{
-							Message = msg,
+							Message = "Quest Complete!",
+							RewardGold = (completion.IsNewlyCompleted || completion.IsDungeon) ? completion.RewardGold : 0,
 							HasCardReward = completion.HasCardReward,
 							RewardCardKey = completion.RewardCardKey
 						});

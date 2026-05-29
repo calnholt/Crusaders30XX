@@ -210,6 +210,7 @@ namespace Crusaders30XX.ECS.Components
 			public Entity Owner { get; set; }
 			public bool IsOpen { get; set; } = false;
 			public string Message { get; set; } = "Quest Complete";
+			public int RewardGold { get; set; } = 0;
 			public bool HasCardReward { get; set; } = false;
 			public string RewardCardKey { get; set; } = string.Empty;
 		}
