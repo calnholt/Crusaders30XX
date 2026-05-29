@@ -11,7 +11,7 @@ public class SandCorpse : EnemyBase
   {
     Id = "sand_corpse";
     Name = "Sand Corpse";
-    MaxHealth = 15;
+    HealthPerCard = 0.5f;
   }
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {

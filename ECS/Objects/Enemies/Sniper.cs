@@ -17,7 +17,7 @@ public class Sniper : EnemyBase
     {
         Id = "sniper";
         Name = "Sniper";
-        MaxHealth = 48;
+        HealthPerCard = 1.6f;
 
         OnStartOfBattle = (entityManager) =>
         {

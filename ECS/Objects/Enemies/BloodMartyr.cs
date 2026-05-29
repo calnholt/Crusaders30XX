@@ -15,7 +15,7 @@ public class BloodMartyr : EnemyBase
   {
     Id = "blood_martyr";
     Name = "Blood Martyr";
-    MaxHealth = 32;
+    HealthPerCard = 1.0666667f;
 
     OnStartOfBattle = (entityManager) =>
     {

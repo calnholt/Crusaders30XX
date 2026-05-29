@@ -19,7 +19,7 @@ public class Skeleton : EnemyBase
   {
     Id = "skeleton";
     Name = "Skeleton";
-    MaxHealth = 14 + (int)difficulty * 2;
+    HealthPerCard = 0.4666667f;
     Armor += (int)difficulty;
 
     OnStartOfBattle = (entityManager) =>

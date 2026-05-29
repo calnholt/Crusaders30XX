@@ -17,7 +17,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
     {
       Id = "shadow";
       Name = "Shadow";
-      MaxHealth = 38 + (int)difficulty * 1;
+      HealthPerCard = 1.2666667f;
       StartAnathema -= (int)difficulty * 1;
 
       OnStartOfBattle = (entityManager) =>

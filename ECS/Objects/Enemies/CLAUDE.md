@@ -13,9 +13,12 @@ For detailed design philosophy and rationale, see `DESIGN_PHILOSOPHY.md`.
 
 ## Quick Reference
 
-### Health Ranges
+### HealthPerCard
 
-- 15 - 40
+- **Range:** ~0.43 - 1.6 (`HealthPerCard` on each enemy)
+- **Max HP at spawn:** `Round(HealthPerCard * Deck.Cards.Count)` via `EnemyBase.ApplyHealthFromDeckSize` in `EntityFactory.CreateEnemyFromId`
+- **30-card deck:** same max HP as legacy Easy base (e.g. Skeletal Archer 19, Sniper 48)
+- **Difficulty** does not affect max HP; it still affects attacks/passives where defined (e.g. Skeleton armor, Shadow anathema)
 
 ### Damage Ranges
 
@@ -52,7 +55,7 @@ For detailed design philosophy and rationale, see `DESIGN_PHILOSOPHY.md`.
 1. **What's the identity?** (one sentence)
 2. **What decision does the player make?** (beyond "block the big attack")
 3. **Attack pattern?** (single/linker+ender/multi-jab/alternating)
-4. **Health tier?** (fragile/standard/tough)
+4. **HealthPerCard tier?** (fragile ~0.43-0.6 / standard ~0.65-0.95 / tough ~1.0+)
 5. **Scaling?** (does the enemy get worse if fight drags?)
 6. **Conditions?** (1-2 max, reinforce identity)
 7. **Counterplay?** (smart play should mitigate)

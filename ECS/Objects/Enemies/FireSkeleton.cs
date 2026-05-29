@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
         {
             Id = "fire_skeleton";
             Name = "Fire Skeleton";
-            MaxHealth = 18;
+            HealthPerCard = 0.6f;
 
 
             OnStartOfBattle = (entityManager) =>

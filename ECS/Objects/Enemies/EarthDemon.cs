@@ -20,7 +20,7 @@ public class EarthDemon : EnemyBase
     {
         Id = "earth_demon";
         Name = "Earth Demon";
-        MaxHealth = 13 + (int)difficulty * 2;
+        HealthPerCard = 0.4333333f;
 
         // Earthen Resilience: Start of battle, gain 3 Armor
         OnStartOfBattle = (entityManager) =>

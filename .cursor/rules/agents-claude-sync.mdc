@@ -1,0 +1,10 @@
+---
+description: AGENTS.md and CLAUDE.md are one file; build after plan execution
+alwaysApply: true
+---
+
+# AGENTS.md / CLAUDE.md
+
+- `CLAUDE.md` is a **symlink** to `AGENTS.md`. Never edit them separately; change `AGENTS.md` only and preserve `CLAUDE.md -> AGENTS.md`.
+- If the symlink is missing or broken, recreate it: `ln -sf AGENTS.md CLAUDE.md` from the repo root.
+- After finishing an **implementation plan**, always run `dotnet build` and fix compile errors before marking work complete.

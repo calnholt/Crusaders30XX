@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
     {
       Id = "berserker";
       Name = "Berserker";
-      MaxHealth = 28 + ((int)difficulty * 3);
+      HealthPerCard = 0.9333333f;
 
       OnStartOfBattle = (entityManager) =>
       {

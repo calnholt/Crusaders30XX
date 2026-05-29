@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file provides guidance to coding agents when working with code in this repository.
+This file provides guidance to coding agents when working with code in this repository. `CLAUDE.md` is a symlink to this file; edit only `AGENTS.md` and keep the symlink intact.
 
 ## Build & Run
 
@@ -11,11 +11,20 @@ dotnet build
 # Run the game
 dotnet run
 
+# Display snapshots (headless PNG capture for visual verification)
+# See docs/display-snapshots.md for all commands
+dotnet run -- snapshot card strike
+dotnet run -- snapshot quest-reward-modal --gold 500 --card 'strike|white'
+
 # Publish for distribution
 dotnet publish -c Release
 ```
 
 This is a .NET 8.0 MonoGame DesktopGL project. Content assets are compiled via the MonoGame Content Builder pipeline (`Content/Content.mgcb`).
+
+### After executing a plan
+
+When you finish implementing an attached or approved plan, **always** run `dotnet build` from the repo root before marking work complete. Fix any compile errors before handing off.
 
 ## Architecture
 
@@ -66,6 +75,7 @@ The `ParallaxLayerSystem` is fully agnostic — external systems cooperate with 
 
 ## Coding Standards
 
+- Plans list only required work — never optional, nice-to-have, or "if time permits" items
 - Add `DebugEditable` and `DebugTab` attributes to systems with Draw functions
 - Use imports, not fully-qualified names (e.g., avoid `Crusaders30XX.ECS.Data.Cards`)
 - Prioritize readability over complexity

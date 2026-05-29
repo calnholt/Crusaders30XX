@@ -13,6 +13,8 @@ public abstract class EnemyBase : IDisposable
   public string Name { get; set; }
   public int MaxHealth { get; set; }
   public int CurrentHealth { get; set; }
+  public float HealthPerCard { get; protected set; }
+  protected int StartingHealthBelowMax { get; set; }
   public Action<EntityManager> OnStartOfBattle { get; protected set; }
   public EntityManager EntityManager { get; set; }
   public EnemyDifficulty Difficulty { get; set; } = EnemyDifficulty.Easy;
@@ -20,6 +22,12 @@ public abstract class EnemyBase : IDisposable
   public EnemyBase(EnemyDifficulty difficulty = EnemyDifficulty.Easy)
   {
     Difficulty = difficulty;
+  }
+
+  public void ApplyHealthFromDeckSize(int deckCardCount)
+  {
+    MaxHealth = (int)Math.Round(HealthPerCard * deckCardCount);
+    CurrentHealth = MaxHealth - StartingHealthBelowMax;
   }
 
   public virtual void Dispose()

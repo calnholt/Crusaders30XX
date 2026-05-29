@@ -407,12 +407,20 @@ namespace Crusaders30XX.ECS.Factories
             var def = EnemyFactory.Create(enemyId, difficulty);
             def.EntityManager = entityManager;
 
+            var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            var deck = deckEntity?.GetComponent<Deck>();
+            if (deck == null || deck.Cards.Count == 0)
+            {
+                throw new InvalidOperationException("Cannot spawn enemy: player deck is missing or empty.");
+            }
+            def.ApplyHealthFromDeckSize(deck.Cards.Count);
+
             var enemyEntity = world.CreateEntity($"Enemy");
             // TODO: Add equipment HP modifier
             // var numEquippedEquipment = world.EntityManager.GetEntitiesWithComponent<EquippedEquipment>().Count();
             // int equipmentHpModifier = numEquippedEquipment * 3;
             // def.MaxHealth += equipmentHpModifier;
-            var enemy = new Enemy { Id = def.Id, Name = def.Id, MaxHealth = def.MaxHealth, CurrentHealth = def.CurrentHealth != 0 ? def.CurrentHealth : def.MaxHealth, EnemyBase = def };
+            var enemy = new Enemy { Id = def.Id, Name = def.Id, MaxHealth = def.MaxHealth, CurrentHealth = def.CurrentHealth, EnemyBase = def };
             var enemyTransform = new Transform { Position = new Vector2(world.EntityManager.GetEntitiesWithComponent<Player>().Any() ? 1200 : 1000, 260), Scale = Vector2.One };
             world.AddComponent(enemyEntity, enemy);
             world.AddComponent(enemyEntity, enemyTransform);

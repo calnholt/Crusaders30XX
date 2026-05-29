@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 		{
 			Id = "medusa";
 			Name = "Medusa";
-			MaxHealth = 34;
+			HealthPerCard = 1.1333333f;
 		}
 
 		private static readonly string[] BaseAttacks = new[]

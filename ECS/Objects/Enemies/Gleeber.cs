@@ -12,7 +12,7 @@ public class Gleeber : EnemyBase
   {
     Id = "gleeber";
     Name = "Gleeber";
-    MaxHealth = 13;
+    HealthPerCard = 0.4333333f;
   }
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {

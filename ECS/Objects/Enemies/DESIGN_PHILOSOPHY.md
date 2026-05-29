@@ -158,7 +158,7 @@ The player has **20 HP**. All enemy stats should be understood relative to this.
 | Tough | 95-120 | Sorcerer (120), Glacial Guardian (110) | Extended battles, scaling threats |
 | Boss-tier | 120+ | Shadow (150) | Marathon fights, attrition-based |
 
-Health scales with difficulty: typically `BaseHP + difficulty * 5-10`.
+Enemy max HP scales with **deck size**, not difficulty: set `HealthPerCard` (legacy Easy HP / 30) on the enemy; at spawn, `MaxHealth = Round(HealthPerCard * Deck.Cards.Count)`. Difficulty affects attacks and passives where coded, not max HP.
 
 ### Attack Damage Ranges
 
