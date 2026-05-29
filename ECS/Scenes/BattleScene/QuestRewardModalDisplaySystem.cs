@@ -4,6 +4,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
@@ -18,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private readonly Texture2D _pixel;
+		private Entity _rewardCardEntity;
 
 		[DebugEditable(DisplayName = "Z Order", Step = 10, Min = 0, Max = 100000)]
 		public int ZOrder { get; set; } = 52000;
@@ -25,11 +27,16 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Panel Width", Step = 10, Min = 100, Max = 1600)]
 		public int PanelWidth { get; set; } = 720;
 		[DebugEditable(DisplayName = "Panel Height", Step = 10, Min = 80, Max = 1200)]
-		public int PanelHeight { get; set; } = 280;
+		public int PanelHeight { get; set; } = 560;
 		[DebugEditable(DisplayName = "Panel Alpha", Step = 5, Min = 0, Max = 255)]
 		public int PanelAlpha { get; set; } = 200;
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
 		public float TextScale { get; set; } = 0.4f;
+
+		[DebugEditable(DisplayName = "Card Preview Scale", Step = 0.01f, Min = 0.1f, Max = 2f)]
+		public float CardPreviewScale { get; set; } = 1.0f;
+		[DebugEditable(DisplayName = "Card Preview Offset Y", Step = 2, Min = -400, Max = 400)]
+		public int CardPreviewOffsetY { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Button Width", Step = 5, Min = 60, Max = 800)]
 		public int ButtonWidth { get; set; } = 220;
@@ -46,10 +53,13 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel.SetData(new[] { Color.White });
 			EventManager.Subscribe<ShowQuestRewardOverlay>(e => {
 				LoggingService.Append("QuestRewardModalDisplaySystem.OnShowQuestRewardOverlay", new JsonObject {
-					{ "Message", e.Message }
+					{ "Message", e.Message },
+					{ "HasCardReward", e.HasCardReward },
+					{ "RewardCardKey", e.RewardCardKey ?? string.Empty }
 				});
-				Open(e.Message);
+				Open(e.Message, e.HasCardReward, e.RewardCardKey);
 			});
+			EventManager.Subscribe<DeleteCachesEvent>(_ => DestroyRewardCard());
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -79,19 +89,28 @@ namespace Crusaders30XX.ECS.Systems
 				if (state.IsOpen && btnUi.IsClicked)
 				{
 					btnUi.IsClicked = false;
-					state.IsOpen = false;
+					CloseOverlay(state);
 					EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
 				}
 			}
 		}
 
-		public void Open(string message = null)
+		public void Open(string message = null, bool hasCardReward = false, string rewardCardKey = null)
 		{
 			EnsureOverlayEntity();
 			var e = EntityManager.GetEntity("QuestRewardOverlay");
 			var st = e.GetComponent<QuestRewardOverlayState>();
+
+			DestroyRewardCard();
 			if (!string.IsNullOrEmpty(message)) st.Message = message;
+			st.HasCardReward = hasCardReward;
+			st.RewardCardKey = rewardCardKey ?? string.Empty;
 			st.IsOpen = true;
+
+			if (hasCardReward && !string.IsNullOrEmpty(rewardCardKey))
+			{
+				_rewardCardEntity = CreateRewardCard(rewardCardKey);
+			}
 		}
 
 		public void Draw()
@@ -123,11 +142,12 @@ namespace Crusaders30XX.ECS.Systems
 			// Title text
 			string title = st.Message ?? "Quest Complete";
 			var titleSize = _font.MeasureString(title) * TextScale;
-			var titlePos = new Vector2(panelRect.Center.X - titleSize.X / 2f, panelRect.Y + System.Math.Max(8, (int)(panelRect.Height * 0.18f)) - titleSize.Y / 2f);
+			var titlePos = new Vector2(panelRect.Center.X - titleSize.X / 2f, panelRect.Y + System.Math.Max(8, (int)(panelRect.Height * 0.08f)));
 			_spriteBatch.DrawString(_font, title, titlePos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
 
 			// Proceed button
 			var btn = EntityManager.GetEntity("QuestRewardProceedButton");
+			int buttonTop = panelRect.Bottom;
 			if (btn != null)
 			{
 				var btnUi = btn.GetComponent<UIElement>();
@@ -137,7 +157,8 @@ namespace Crusaders30XX.ECS.Systems
 					int bw = System.Math.Max(60, ButtonWidth);
 					int bh = System.Math.Max(30, ButtonHeight);
 					int bx = panelRect.Center.X - bw / 2;
-					int by = panelRect.Bottom - bh - System.Math.Max(12, (int)(panelRect.Height * 0.12f));
+					int by = panelRect.Bottom - bh - System.Math.Max(12, (int)(panelRect.Height * 0.08f));
+					buttonTop = by;
 					var drawRect = new Rectangle(bx, by, bw, bh);
 					// Background
 					_spriteBatch.Draw(_pixel, drawRect, new Color(40, 40, 40, 220));
@@ -154,6 +175,65 @@ namespace Crusaders30XX.ECS.Systems
 					// Sync bounds
 					btnUi.Bounds = drawRect;
 				}
+			}
+
+			// Full card render between title and proceed button
+			if (st.HasCardReward && _rewardCardEntity != null)
+			{
+				int titleBottom = (int)(titlePos.Y + titleSize.Y);
+				int cardAreaCenterY = (titleBottom + buttonTop) / 2 + CardPreviewOffsetY;
+				var cardCenter = new Vector2(panelRect.Center.X, cardAreaCenterY);
+				EventManager.Publish(new CardRenderScaledEvent
+				{
+					Card = _rewardCardEntity,
+					Position = cardCenter,
+					Scale = CardPreviewScale
+				});
+			}
+		}
+
+		private void CloseOverlay(QuestRewardOverlayState state)
+		{
+			state.IsOpen = false;
+			state.HasCardReward = false;
+			state.RewardCardKey = string.Empty;
+			DestroyRewardCard();
+		}
+
+		private void DestroyRewardCard()
+		{
+			if (_rewardCardEntity == null) return;
+			EntityManager.DestroyEntity(_rewardCardEntity.Id);
+			_rewardCardEntity = null;
+		}
+
+		private Entity CreateRewardCard(string cardKey)
+		{
+			var parts = cardKey.Split('|');
+			if (parts.Length < 2) return null;
+			string cardId = parts[0];
+			var color = ParseColor(parts[1]);
+			var created = EntityFactory.CreateCardFromDefinition(EntityManager, cardId, color);
+			if (created == null) return null;
+
+			var ui = created.GetComponent<UIElement>();
+			if (ui != null)
+			{
+				ui.IsInteractable = false;
+				ui.TooltipType = TooltipType.None;
+				ui.Tooltip = string.Empty;
+			}
+			return created;
+		}
+
+		private static CardData.CardColor ParseColor(string color)
+		{
+			if (string.IsNullOrEmpty(color)) return CardData.CardColor.White;
+			switch (color.Trim().ToLowerInvariant())
+			{
+				case "red": return CardData.CardColor.Red;
+				case "black": return CardData.CardColor.Black;
+				default: return CardData.CardColor.White;
 			}
 		}
 
@@ -189,7 +269,7 @@ namespace Crusaders30XX.ECS.Systems
 				int bw = System.Math.Max(60, ButtonWidth);
 				int bh = System.Math.Max(30, ButtonHeight);
 				int bx = (vw - bw) / 2;
-				int by = (vh + PanelHeight) / 2 - System.Math.Max(12, (int)(PanelHeight * 0.12f)) - bh;
+				int by = (vh + PanelHeight) / 2 - System.Math.Max(12, (int)(PanelHeight * 0.08f)) - bh;
 				EntityManager.AddComponent(ent, new Transform { Position = new Vector2(bx, by), ZOrder = ZOrder + 1 });
 				EntityManager.AddComponent(ent, new UIElement { Bounds = new Rectangle(bx, by, bw, bh), IsInteractable = false, LayerType = UILayerType.Overlay });
 				EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Y });
@@ -206,5 +286,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
-

@@ -17,6 +17,8 @@ namespace Crusaders30XX.ECS.Services
 			public string LocationId;
 			public string QuestId;
 			public int RewardGold;
+			public bool HasCardReward;
+			public string RewardCardKey;
 		}
 		/// <summary>
 		/// If the player completed a quest for the current location and it's not already saved, save it and trigger the POI reveal cutscene.
@@ -86,6 +88,13 @@ namespace Crusaders30XX.ECS.Services
 							result.RewardGold = reward;
 						}
 						result.IsNewlyCompleted = true;
+
+						var cardReward = QuestCardRewardService.TryGrantRandomCard();
+						if (cardReward.Granted)
+						{
+							result.HasCardReward = true;
+							result.RewardCardKey = cardReward.CardKey;
+						}
 					}
 				}
 			}

@@ -355,6 +355,44 @@ namespace Crusaders30XX.ECS.Data.Save
 			return null;
 		}
 
+		public static void AddToCollectionIfMissing(string itemId)
+		{
+			if (string.IsNullOrWhiteSpace(itemId)) return;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				if (_save.collection == null) _save.collection = new List<string>();
+				if (!_save.collection.Contains(itemId))
+				{
+					_save.collection.Add(itemId);
+					Persist();
+				}
+			}
+		}
+
+		public static bool AddCardToLoadout(string loadoutId, string cardKey)
+		{
+			if (string.IsNullOrWhiteSpace(loadoutId) || string.IsNullOrWhiteSpace(cardKey)) return false;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				if (_save.loadouts == null) _save.loadouts = new List<LoadoutDefinition>();
+
+				var loadout = _save.loadouts.FirstOrDefault(l => l.id == loadoutId);
+				if (loadout == null)
+				{
+					loadout = new LoadoutDefinition { id = loadoutId, name = loadoutId };
+					_save.loadouts.Add(loadout);
+				}
+				if (loadout.cardIds == null) loadout.cardIds = new List<string>();
+				loadout.cardIds.Add(cardKey);
+				Persist();
+				return true;
+			}
+		}
+
 		public static bool TrySpendGoldAndAddToCollection(string itemId, int price, ForSaleItemType itemType, out int newGold)
 		{
 			newGold = 0;

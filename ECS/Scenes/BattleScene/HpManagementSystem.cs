@@ -109,7 +109,12 @@ namespace Crusaders30XX.ECS.Systems
 						{
 							msg += $"\nGold +{completion.RewardGold}";
 						}
-						EventManager.Publish(new ShowQuestRewardOverlay { Message = msg });
+						EventManager.Publish(new ShowQuestRewardOverlay
+						{
+							Message = msg,
+							HasCardReward = completion.HasCardReward,
+							RewardCardKey = completion.RewardCardKey
+						});
 						EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.QuestComplete });
 					}
 					else
