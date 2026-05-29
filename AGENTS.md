@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents when working with code in this repository.
 
 ## Build & Run
 
@@ -17,8 +17,6 @@ dotnet publish -c Release
 
 This is a .NET 8.0 MonoGame DesktopGL project. Content assets are compiled via the MonoGame Content Builder pipeline (`Content/Content.mgcb`).
 
-DO NOT build the project to verify changes unless explicitly asked it.
-
 ## Architecture
 
 Crusaders30XX is a deckbuilder card game built with an Entity Component System (ECS) architecture.
@@ -34,22 +32,25 @@ Crusaders30XX is a deckbuilder card game built with an Entity Component System (
 
 ### Key Directories
 
-| Directory | Purpose |
-|-----------|---------|
-| `ECS/Components/` | Data containers (CardComponents, CombatComponents, etc.) |
-| `ECS/Systems/` | Game logic |
-| `ECS/Scenes/` | Scene-specific systems (BattleScene, WorldMapScene, ShopScene, etc.) |
-| `ECS/Factories/` | Entity creation (CardFactory, EnemyFactory, etc.) |
-| `ECS/Events/` | Event definitions for pub-sub communication |
-| `ECS/Objects/` | Game entity definitions (Cards/, Enemies/, Equipment/, Medals/) |
-| `ECS/Data/` | Data models, JSON loaders, save system |
-| `ECS/Services/` | Business logic and calculations |
-| `ECS/Singletons/` | Shared state managers (StateSingleton, FontSingleton) |
-| `Content/Data/` | JSON game data (locations, decks, enemies) |
+
+| Directory         | Purpose                                                              |
+| ----------------- | -------------------------------------------------------------------- |
+| `ECS/Components/` | Data containers (CardComponents, CombatComponents, etc.)             |
+| `ECS/Systems/`    | Game logic                                                           |
+| `ECS/Scenes/`     | Scene-specific systems (BattleScene, WorldMapScene, ShopScene, etc.) |
+| `ECS/Factories/`  | Entity creation (CardFactory, EnemyFactory, etc.)                    |
+| `ECS/Events/`     | Event definitions for pub-sub communication                          |
+| `ECS/Objects/`    | Game entity definitions (Cards/, Enemies/, Equipment/, Medals/)      |
+| `ECS/Data/`       | Data models, JSON loaders, save system                               |
+| `ECS/Services/`   | Business logic and calculations                                      |
+| `ECS/Singletons/` | Shared state managers (StateSingleton, FontSingleton)                |
+| `Content/Data/`   | JSON game data (locations, decks, enemies)                           |
+
 
 ### Event Queue System
 
 The game uses a hybrid event queue with two queues:
+
 - **Rules Queue**: Mandatory events from core systems (phases, timers)
 - **Trigger Queue**: Reactive events from abilities and conditions
 
@@ -73,8 +74,9 @@ The `ParallaxLayerSystem` is fully agnostic — external systems cooperate with 
 - Performance is important - cache when logical; use `DeleteCachesEvent` to clear
 - NEVER use MouseState or GamePad state - use CursorEvents
 - When presented multiple different approaches, never take the easy way out - prefer the hard but comprehensive approach
-	- NO SLOP; STAY DRY
+  - NO SLOP; STAY DRY
 - Systems own their outputs exclusively — never duplicate another system's logic or neutralize it (e.g., overwriting its output each frame to suppress it). Fix ordering or initialization issues at the source instead
+- Keep systems self-contained: encode state on components (fields the owning system writes), not public static snapshots (`HashSet`, etc.) that other code must query
 
 ## Display Systems
 
@@ -94,10 +96,13 @@ The `ParallaxLayerSystem` is fully agnostic — external systems cooperate with 
 - Prioritize leveraging `UIElementEventDelegateService` for simple events rather than `IsClicked`
 
 ### New System
+
 1. Inherit from `ECS/Core/System`
 2. Override `GetRelevantEntities()` and `UpdateEntity()`
 3. Register with `world.AddSystem()` in `Game1.cs`
 4. Add `DebugEditable`/`DebugTab` attributes if it has a Draw function
 
 ### New Component
+
 1. Create class implementing `IComponent`
+

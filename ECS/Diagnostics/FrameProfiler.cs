@@ -9,8 +9,14 @@ namespace Crusaders30XX.Diagnostics
     {
         private static readonly object _lock = new object();
         private static readonly Queue<Entry> _entries = new Queue<Entry>(2048);
-        private static readonly Queue<double> _frameTimes = new Queue<double>(512);
+        private static readonly Queue<FrameMarker> _frames = new Queue<FrameMarker>(512);
         private static long _currentFrameId = 0;
+
+        private struct FrameMarker
+        {
+            public double TimeSeconds;
+            public long FrameId;
+        }
         private static readonly Stopwatch _clock = Stopwatch.StartNew();
         public static double WindowSeconds { get; set; } = 1.0; // rolling window size
 
@@ -37,7 +43,7 @@ namespace Crusaders30XX.Diagnostics
             {
                 double now = _clock.Elapsed.TotalSeconds;
                 _currentFrameId++;
-                _frameTimes.Enqueue(now);
+                _frames.Enqueue(new FrameMarker { TimeSeconds = now, FrameId = _currentFrameId });
                 PruneOld(now);
             }
         }
@@ -100,40 +106,48 @@ namespace Crusaders30XX.Diagnostics
                 double cutoff = now - WindowSeconds;
                 double tickToMs = 1000.0 / Stopwatch.Frequency;
 
-                // Determine number of frames within the window
                 int framesInWindow = 0;
-                foreach (var ft in _frameTimes)
+                foreach (var f in _frames)
                 {
-                    if (ft >= cutoff) framesInWindow++;
+                    if (f.TimeSeconds >= cutoff) framesInWindow++;
                 }
                 framesInWindow = Math.Max(framesInWindow, 1);
 
-                // Aggregate per name within the window
-                var map = new Dictionary<string, (long ticks, int calls)>(64);
+                // Sum ticks per name per frame, then average across draw frames in the window.
+                var perNamePerFrame = new Dictionary<string, Dictionary<long, (long ticks, int calls)>>(64);
                 foreach (var e in _entries)
                 {
                     if (e.TimeSeconds < cutoff) continue;
-                    if (!map.TryGetValue(e.Name, out var v)) v = (0L, 0);
-                    v.ticks += e.Ticks;
-                    v.calls += 1;
-                    map[e.Name] = v;
+                    if (!perNamePerFrame.TryGetValue(e.Name, out var byFrame))
+                    {
+                        byFrame = new Dictionary<long, (long ticks, int calls)>(8);
+                        perNamePerFrame[e.Name] = byFrame;
+                    }
+                    if (!byFrame.TryGetValue(e.FrameId, out var frameTotal)) frameTotal = (0L, 0);
+                    frameTotal.ticks += e.Ticks;
+                    frameTotal.calls += 1;
+                    byFrame[e.FrameId] = frameTotal;
                 }
 
-                return map
-                    .Select(kv => new Sample
+                return perNamePerFrame
+                    .Select(kv =>
                     {
-                        Name = kv.Key,
-                        Calls = kv.Value.calls,
-                        TotalMs = kv.Value.ticks * tickToMs,
-                        AvgMs = kv.Value.calls > 0 ? (kv.Value.ticks * tickToMs) / kv.Value.calls : 0.0
-                    })
-                    .Select(s => new Sample
-                    {
-                        Name = s.Name,
-                        Calls = s.Calls,
-                        TotalMs = s.TotalMs,
-                        AvgMs = s.AvgMs,
-                        FrameAvgMs = s.TotalMs / framesInWindow
+                        long windowTicks = 0L;
+                        int calls = 0;
+                        foreach (var frame in kv.Value.Values)
+                        {
+                            windowTicks += frame.ticks;
+                            calls += frame.calls;
+                        }
+                        double totalMs = windowTicks * tickToMs;
+                        return new Sample
+                        {
+                            Name = kv.Key,
+                            Calls = calls,
+                            TotalMs = totalMs,
+                            AvgMs = calls > 0 ? totalMs / calls : 0.0,
+                            FrameAvgMs = totalMs / framesInWindow
+                        };
                     })
                     .OrderByDescending(s => s.FrameAvgMs)
                     .Take(count)
@@ -148,9 +162,9 @@ namespace Crusaders30XX.Diagnostics
             {
                 _entries.Dequeue();
             }
-            while (_frameTimes.Count > 0 && _frameTimes.Peek() < pruneBefore)
+            while (_frames.Count > 0 && _frames.Peek().TimeSeconds < pruneBefore)
             {
-                _frameTimes.Dequeue();
+                _frames.Dequeue();
             }
         }
     }

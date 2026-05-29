@@ -39,7 +39,8 @@ namespace Crusaders30XX.ECS.Systems
         [Crusaders30XX.Diagnostics.DebugEditable(DisplayName = "Header Padding", Step = 1, Min = 0, Max = 64)]
         public int HeaderPadding { get => _headerPadding; set => _headerPadding = Math.Max(0, value); }
         private const int AxisLabelWidth = 44; // space for Y-axis labels
-        private const float GraphMaxFps = 120f;
+        // Frame time (ms) on Y axis; lower is better. 33.3ms = 30 FPS.
+        private const float GraphMaxFrameMs = 33.33f;
         private byte _graphBackgroundAlpha = 0;   // more transparent white fill
         private byte _graphGridLineAlpha = 12;    // more transparent grid lines
         [Crusaders30XX.Diagnostics.DebugEditable(DisplayName = "Graph Background Alpha", Step = 1, Min = 0, Max = 255)]
@@ -62,7 +63,7 @@ namespace Crusaders30XX.ECS.Systems
         public float WhiteAlphaMultiplier { get => _whiteAlphaMultiplier; set => _whiteAlphaMultiplier = MathHelper.Clamp(value, 0f, 1f); }
         
         // Minimal caching to reduce per-frame allocations/measurements
-        private static readonly int[] YTicks = new[] { 0, 30, 60, 90, (int)GraphMaxFps };
+        private static readonly int[] YTicksMs = new[] { 0, 8, 16, 24, 33 };
         private int _cachedHeaderHeight;
         private int _cachedHeaderBaseHeight;
         private int _cachedHeaderPadding;
@@ -103,7 +104,7 @@ namespace Crusaders30XX.ECS.Systems
                 _accumulatedTime = 0f;
             }
 
-            // Push dt to rolling window for graph (cap to MaxSamples)
+            // Rolling window of wall-clock frame duration (seconds between Update calls; includes Draw + vsync wait)
             _frameTimes.Enqueue(dt);
             while (_frameTimes.Count > MaxSamples)
             {
@@ -164,22 +165,19 @@ namespace Crusaders30XX.ECS.Systems
             int gw = Math.Max(1, panelW - (gx - panelX) - 12 - reservedRight);
             int gh = Math.Max(1, panelH - headerHeight - 16);
 
-            // Y-axis ticks and labels (0..GraphMaxFps)
-            foreach (int t in YTicks)
+            // Y-axis: frame time in ms (0 at bottom = fast, 33ms top = 30 FPS)
+            foreach (int t in YTicksMs)
             {
-                int ty = gy + gh - (int)(gh * (t / GraphMaxFps));
-                // tick line
+                int ty = gy + gh - (int)(gh * (t / GraphMaxFrameMs));
                 DrawRect(new Rectangle(gx, ty, gw, 1), new Color(255, 255, 255, (int)_graphGridLineAlpha));
-                // label at left
                 var labelPos = new Vector2(panelX + 10, ty - 8);
                 _spriteBatch.DrawString(_font, t.ToString(), labelPos, Color.White, 0f, Vector2.Zero, _tableTextScale, SpriteEffects.None, 0f);
             }
 
-            // Plot line of FPS over time (higher is better)
+            // Plot wall-clock frame duration (ms); spikes = hitches
             if (_frameTimes.Count >= 2)
             {
-                // Convert dt to FPS; clamp to [0, 120] for scale
-                var samples = _frameTimes.Select(t => t > 0 ? Math.Min(GraphMaxFps, 1f / t) : GraphMaxFps).ToArray();
+                var samples = _frameTimes.Select(t => t > 0 ? Math.Min(GraphMaxFrameMs, t * 1000f) : GraphMaxFrameMs).ToArray();
                 int n = samples.Length;
                 for (int i = 1; i < n; i++)
                 {
@@ -187,16 +185,15 @@ namespace Crusaders30XX.ECS.Systems
                     float t1 = samples[i];
                     int x0 = gx + (i - 1) * gw / (n - 1);
                     int x1 = gx + i * gw / (n - 1);
-                    int y0 = gy + gh - (int)(gh * (t0 / GraphMaxFps));
-                    int y1 = gy + gh - (int)(gh * (t1 / GraphMaxFps));
+                    int y0 = gy + gh - (int)(gh * (t0 / GraphMaxFrameMs));
+                    int y1 = gy + gh - (int)(gh * (t1 / GraphMaxFrameMs));
                     DrawLine(x0, y0, x1, y1, new Color(0, 200, 255, 200));
                 }
 
-                // Annotate latest value near the right edge
-                float lastFps = samples[^1];
+                float lastMs = samples[^1];
                 int lx = gx + gw - 2;
-                int ly = gy + gh - (int)(gh * (lastFps / GraphMaxFps));
-                string lastLabel = $"{lastFps:0}";
+                int ly = gy + gh - (int)(gh * (lastMs / GraphMaxFrameMs));
+                string lastLabel = $"{lastMs:0.0}";
                 _spriteBatch.DrawString(_font, lastLabel, new Vector2(lx - 32, ly - 16), Color.Cyan, 0f, Vector2.Zero, _tableTextScale, SpriteEffects.None, 0f);
             }
 
@@ -208,7 +205,7 @@ namespace Crusaders30XX.ECS.Systems
             int listMaxWidth = _sidePanelWidth - _sidePanelPadding * 2;
             float tableScale = _tableTextScale;
             float tableLineH = _font.LineSpacing * tableScale;
-            DrawStringClippedScaled("Top Draw (ms / calls)", new Vector2(listX, listY), Color.White, listMaxWidth, tableScale);
+            DrawStringClippedScaled("Top Draw (ms/f, calls)", new Vector2(listX, listY), Color.White, listMaxWidth, tableScale);
             listY += (int)(tableLineH + 4);
             // Column widths based on font metrics (scaled) - cached by scale
             EnsureTableMetricsCached();
@@ -216,7 +213,7 @@ namespace Crusaders30XX.ECS.Systems
             float col2W = _cachedCol2W;
             foreach (var s in top)
             {
-                string col1 = $"{s.TotalMs:0.00}";
+                string col1 = $"{s.FrameAvgMs:0.00}";
                 string col2 = $"({s.Calls})";
                 float nameMax = listMaxWidth - col1W - col2W;
                 _spriteBatch.DrawString(_font, col1, new Vector2(listX, listY), Color.White, 0f, Vector2.Zero, tableScale, SpriteEffects.None, 0f);

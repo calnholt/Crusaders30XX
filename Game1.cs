@@ -378,6 +378,7 @@ public class Game1 : Game
 
     private void DrawScene()
     {
+        FrameProfiler.BeginFrame();
         _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
         // Delegate drawing to active parent systems
         var scene = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
