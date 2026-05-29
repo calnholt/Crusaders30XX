@@ -129,7 +129,6 @@ namespace Crusaders30XX.ECS.Systems
 		// Pledge system
 		private PledgeManagementSystem _pledgeManagementSystem;
 		private PledgeDisplaySystem _pledgeDisplaySystem;
-		private SkipPledgeDisplaySystem _skipPledgeDisplaySystem;
 
 		// Plunder system (Wyvern)
 		private PlunderManagementSystem _plunderManagementSystem;
@@ -314,7 +313,6 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("AppliedPassivesDisplaySystem.Draw", _appliedPassivesDisplaySystem.Draw);
 			FrameProfiler.Measure("PassiveMeterRenderSystem.Draw", _passiveMeterRenderSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawBackdrop", _payCostOverlaySystem.DrawBackdrop);
-			if (_skipPledgeDisplaySystem != null) FrameProfiler.Measure("SkipPledgeDisplaySystem.DrawBackdrop", _skipPledgeDisplaySystem.DrawBackdrop);
 			FrameProfiler.Measure("UIElementHighlightSystem.Draw", _uiElementHighlightSystem.Draw);
 			FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", _enemyAttackDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDamageMeterDisplaySystem.Draw", _enemyDamageMeterDisplaySystem.Draw);
@@ -330,7 +328,6 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
 			FrameProfiler.Measure("MillCardSystem.Draw", _millCardSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
-			if (_skipPledgeDisplaySystem != null) FrameProfiler.Measure("SkipPledgeDisplaySystem.DrawForeground", _skipPledgeDisplaySystem.DrawForeground);
 			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
 			FrameProfiler.Measure("DiscardSpecificCardHighlightSystem.Draw", _discardSpecificCardHighlightSystem.Draw);
 			FrameProfiler.Measure("IntimidateDisplaySystem.Draw", _intimidateDisplaySystem.Draw);
@@ -690,10 +687,8 @@ namespace Crusaders30XX.ECS.Systems
 			// Pledge system
 			_pledgeManagementSystem = new PledgeManagementSystem(_world.EntityManager);
 			_pledgeDisplaySystem = new PledgeDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
-			_skipPledgeDisplaySystem = new SkipPledgeDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_pledgeManagementSystem);
 			_world.AddSystem(_pledgeDisplaySystem);
-			_world.AddSystem(_skipPledgeDisplaySystem);
 		}
 
 		public void DrawAdditive()

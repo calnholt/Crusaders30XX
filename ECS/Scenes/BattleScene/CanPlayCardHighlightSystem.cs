@@ -169,6 +169,9 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             // Card-specific CanPlay check (now pure bool, safe per-frame)
             if (card.CanPlay != null && !card.CanPlay(EntityManager, cardEntity)) return false;
 
+            var pledge = cardEntity.GetComponent<Pledge>();
+            if (pledge != null && !pledge.CanPlay) return false;
+
             // Silenced + pledged can't play
             if (cardEntity.HasComponent<Pledge>() && appliedPassives != null)
             {

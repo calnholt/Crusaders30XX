@@ -217,6 +217,13 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
+            var pledge = evt.Card.GetComponent<Pledge>();
+            if (pledge != null && !pledge.CanPlay)
+            {
+                EventManager.Publish(new CantPlayCardMessage { Message = "You can't play a card you pledged this turn!" });
+                return;
+            }
+
             // Capture sealed state before playing (will be used after play resolves to apply HP cost)
             var sealedComp = evt.Card.GetComponent<Sealed>();
             int sealCount = sealedComp?.Seals ?? 0;

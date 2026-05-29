@@ -122,60 +122,18 @@ namespace Crusaders30XX.ECS.Systems
                 new ChangeBattlePhaseEvent { Current = SubPhase.PlayerEnd }
             ));
 
-            // Check if we should enter Pledge phase
-            bool canPledge = false;
-            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-            var deck = deckEntity?.GetComponent<Deck>();
-            if (deck != null)
-            {
-                // Check if already pledged
-                bool alreadyPledged = EntityManager.GetEntitiesWithComponent<Pledge>().Any();
-                if (!alreadyPledged)
-                {
-                    // Check for eligible cards
-                    foreach (var e in deck.Hand)
-                    {
-                        if (e.HasComponent<AnimatingHandToDiscard>()) continue;
-                        if (e.HasComponent<AnimatingHandToZone>()) continue;
-                        if (e.HasComponent<AnimatingHandToDrawPile>()) continue;
-
-                        var cd = e.GetComponent<CardData>();
-                        if (cd == null) continue;
-                        if (e.HasComponent<Pledge>()) continue;
-                        if (cd.Card.IsWeapon) continue;
-                        if (cd.Card.Type == CardType.Block) continue;
-                        if (cd.Card.Type == CardType.Relic) continue;
-                        if (cd.Card.IsToken) continue;
-                        canPledge = true;
-                        break;
-                    }
-                }
-            }
-
-            if (canPledge && StateSingleton.IsPledgeEnabled)
-            {
-                // Enter Pledge phase
-                EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-                    "Rule.ChangePhase.Pledge",
-                    new ChangeBattlePhaseEvent { Current = SubPhase.Pledge }
-                ));
-            }
-            else
-            {
-                // Skip Pledge, proceed to EnemyStart sequence
-                EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-                    "Rule.ChangePhase.EnemyStart",
-                    new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart }
-                ));
-                EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-                    "Rule.ChangePhase.PreBlock",
-                    new ChangeBattlePhaseEvent { Current = SubPhase.PreBlock }
-                ));
-                EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-                    "Rule.ChangePhase.Block",
-                    new ChangeBattlePhaseEvent { Current = SubPhase.Block }
-                ));
-            }
+            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+                "Rule.ChangePhase.EnemyStart",
+                new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart }
+            ));
+            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+                "Rule.ChangePhase.PreBlock",
+                new ChangeBattlePhaseEvent { Current = SubPhase.PreBlock }
+            ));
+            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
+                "Rule.ChangePhase.Block",
+                new ChangeBattlePhaseEvent { Current = SubPhase.Block }
+            ));
         }
 
         [DebugAction("Trigger End Turn Now")]

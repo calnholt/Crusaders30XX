@@ -53,7 +53,7 @@ namespace Crusaders30XX.ECS.Systems
 				
 				// If coming from a player phase, PhaseCoordinatorSystem will increment the turn
 				// So we need to plan for the incremented turn number
-				bool isNewTurn = previousPhase == SubPhase.PlayerEnd || previousPhase == SubPhase.Action || previousPhase == SubPhase.PlayerStart || previousPhase == SubPhase.Pledge;
+				bool isNewTurn = previousPhase == SubPhase.PlayerEnd || previousPhase == SubPhase.Action || previousPhase == SubPhase.PlayerStart;
 				int turnNumber = isNewTurn ? currentTurnNumber + 1 : currentTurnNumber;
 				
 				LoggingService.Append("EnemyIntentPlanningSystem.OnStartEnemyTurn", new System.Text.Json.Nodes.JsonObject { ["currentTurn"] = currentTurnNumber, ["planningTurn"] = turnNumber, ["lastPlannedTurn"] = _lastPlannedTurnNumber, ["previousPhase"] = previousPhase.ToString(), ["isNewTurn"] = isNewTurn });

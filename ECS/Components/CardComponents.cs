@@ -389,7 +389,7 @@ namespace Crusaders30XX.ECS.Components
         ViewDeck,
 			AbandonQuest,
         PayCostCancel,
-        SkipPledge,
+        PledgeCard,
         LeaveShop,
         CardClicked,
     }
@@ -1097,18 +1097,25 @@ namespace Crusaders30XX.ECS.Components
     /// <summary>
     /// Marks a card as pledged (Arsenal zone). Pledged cards:
     /// - Stay in hand ignoring max hand size
-    /// - Can only be played during Action phase
+    /// - Can only be played during Action phase once CanPlay is true (unlocked at end of player turn)
+    /// - Cannot be played the same turn they were pledged (CanPlay starts false)
     /// - Cannot be used to block or pay for other cards' costs
     /// - Are protected from intimidate, freeze, and discard effects
     /// </summary>
     public class Pledge : IComponent
     {
         public Entity Owner { get; set; }
+
+        /// <summary>
+        /// False when pledged this turn; PledgeManagementSystem sets true when the player turn ends.
+        /// When true, the card may be played during a future action phase (subject to normal rules).
+        /// </summary>
+        public bool CanPlay { get; set; }
     }
 
     /// <summary>
-    /// Temporary marker for a card being hovered during the Pledge phase.
-    /// Used by PledgeDisplaySystem to show the "PLEDGE" text as a preview.
+    /// Temporary marker for a card being hovered during the Action phase before pledging.
+    /// Used by PledgeDisplaySystem to show the pledge icon as a preview.
     /// </summary>
     public class PledgePreview : IComponent
     {

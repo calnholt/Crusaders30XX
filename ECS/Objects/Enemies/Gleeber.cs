@@ -27,5 +27,6 @@ public class Pounce : EnemyAttackBase
     Id = "pounce";
     Name = "Pounce";
     Damage = 5;
+    GuardConversionChance = 0f;
   }
 }

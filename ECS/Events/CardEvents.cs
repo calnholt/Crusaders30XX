@@ -289,9 +289,12 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
-    /// Emitted when the player skips pledging during the Pledge subphase.
+    /// Emitted when the player requests to pledge a card during the Action phase.
     /// </summary>
-    public class SkipPledgeRequested { }
+    public class PledgeCardRequested
+    {
+        public Entity Card { get; set; }
+    }
 
     /// <summary>
     /// Emitted when the player adds a pledge to a card.

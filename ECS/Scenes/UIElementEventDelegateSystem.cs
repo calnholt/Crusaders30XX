@@ -95,9 +95,9 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new EndTurnRequested());
                     break;
                 }
-                case UIElementEventType.SkipPledge:
+                case UIElementEventType.PledgeCard:
                 {
-                    EventManager.Publish(new SkipPledgeRequested());
+                    EventManager.Publish(new PledgeCardRequested { Card = entity });
                     break;
                 }
                 case UIElementEventType.ViewDeck:

@@ -87,9 +87,6 @@ namespace Crusaders30XX.ECS.Systems
             {
                 TryQueueTutorial("cost");
                 TryQueueTutorial("threat");
-            }
-            if (currentPhase == SubPhase.Pledge)
-            {
                 TryQueueTutorial("pledge");
             }
             if (currentPhase == SubPhase.Block)

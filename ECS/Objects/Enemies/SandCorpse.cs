@@ -25,6 +25,7 @@ public class SandBlast : EnemyAttackBase
     Id = "sand_blast";
     Name = "Sand Blast";
     Damage = 4;
+    GuardConversionChance = 0f;
   }
 }
 
@@ -35,5 +36,6 @@ public class SandStorm : EnemyAttackBase
     Id = "sand_storm";
     Name = "Sand Storm";
     Damage = 3;
+    GuardConversionChance = 0f;
   }
 }

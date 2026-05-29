@@ -1,33 +1,55 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Objects.Cards;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace Crusaders30XX.ECS.Systems
 {
     /// <summary>
-    /// Manages the Pledge subphase (Arsenal zone mechanic).
-    /// At end of turn, if there's no pledged card and eligible cards in hand,
-    /// allows player to optionally pledge one card by clicking it.
+    /// Manages pledging during the Action phase (Arsenal zone mechanic).
+    /// Players may pledge one eligible hand card per action phase via right-click, space, or gamepad X.
     /// </summary>
     public class PledgeManagementSystem : Core.System
     {
-        private bool _awaitingPledgeSelection = false;
+        private bool _pledgedThisActionPhase;
+
+        private MouseState _prevMouseState;
+        private KeyboardState _prevKeyboardState;
+        private GamePadState _prevGamePadState;
 
         public PledgeManagementSystem(EntityManager entityManager) : base(entityManager)
         {
+            _prevMouseState = Mouse.GetState();
+            _prevKeyboardState = Keyboard.GetState();
+            _prevGamePadState = GamePad.GetState(PlayerIndex.One);
+
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnPhaseChanged);
-            EventManager.Subscribe<SkipPledgeRequested>(OnSkipPledge);
-            
-            // Clear pledges at start of battle
+            EventManager.Subscribe<PledgeCardRequested>(OnPledgeCardRequested);
             EventManager.Subscribe<StartBattleRequested>(_ => ClearAllPledges());
         }
 
-        protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+        public static bool PledgedThisActionPhase { get; private set; }
+
+        public static bool CanPledgeMore(EntityManager entityManager)
+        {
+            if (!StateSingleton.IsPledgeEnabled) return false;
+            if (PledgedThisActionPhase) return false;
+
+            var deck = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+            if (deck?.Hand == null) return false;
+            if (deck.Hand.Any(c => c.GetComponent<Pledge>() != null)) return false;
+
+            return deck.Hand.Any(c => IsEligibleForPledge(c));
+        }
+
+        protected override IEnumerable<Entity> GetRelevantEntities()
         {
             return Array.Empty<Entity>();
         }
@@ -37,209 +59,181 @@ namespace Crusaders30XX.ECS.Systems
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-            
-            if (!_awaitingPledgeSelection) return;
-            
-            // Check for card clicks in hand during pledge phase
-            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-            var deck = deckEntity?.GetComponent<Deck>();
-            if (deck == null) return;
-            
-            foreach (var card in deck.Hand)
-            {
-                var ui = card.GetComponent<UIElement>();
-                if (ui == null || !ui.IsClicked) continue;
-                
-                ui.IsClicked = false; // Always consume the click first
 
-                // Check if this is an eligible card
-                if (!IsEligibleForPledge(card, true)) continue;
-                
-                // Card was clicked - pledge it
-                LoggingService.Append("PledgeManagementSystem.Update.cardClicked", new System.Text.Json.Nodes.JsonObject { ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown" });
-                AddPledgeToCard(card);
-                _awaitingPledgeSelection = false;
-                ProceedToEnemyStart();
+            var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+            if (phase == null || phase.Sub != SubPhase.Action) return;
+            if (!StateSingleton.IsPledgeEnabled) return;
+            if (StateSingleton.PreventClicking || StateSingleton.IsTutorialActive) return;
+
+            var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+            if (deck?.Hand == null) return;
+
+            var hoveredCard = GetHoveredHandCard(deck);
+            if (hoveredCard == null)
+            {
+                AdvanceInputState();
                 return;
             }
+
+            var mouseState = Mouse.GetState();
+            var keyboardState = Keyboard.GetState();
+            var gp = GamePad.GetState(PlayerIndex.One);
+            var caps = GamePad.GetCapabilities(PlayerIndex.One);
+
+            bool rightClickEdge = mouseState.RightButton == ButtonState.Pressed
+                && _prevMouseState.RightButton == ButtonState.Released;
+            bool spaceEdge = keyboardState.IsKeyDown(Keys.Space) && !_prevKeyboardState.IsKeyDown(Keys.Space);
+            bool gamepadXEdge = caps.IsConnected
+                && gp.Buttons.X == ButtonState.Pressed
+                && _prevGamePadState.Buttons.X == ButtonState.Released;
+
+            if (rightClickEdge || spaceEdge || gamepadXEdge)
+            {
+                TryPledge(hoveredCard);
+            }
+
+            AdvanceInputState();
+        }
+
+        private void AdvanceInputState()
+        {
+            _prevMouseState = Mouse.GetState();
+            _prevKeyboardState = Keyboard.GetState();
+            _prevGamePadState = GamePad.GetState(PlayerIndex.One);
+        }
+
+        private Entity GetHoveredHandCard(Deck deck)
+        {
+            return deck.Hand
+                .Where(c =>
+                {
+                    var ui = c.GetComponent<UIElement>();
+                    return ui != null && ui.IsHovered;
+                })
+                .OrderByDescending(c => c.GetComponent<Transform>()?.ZOrder ?? 0)
+                .FirstOrDefault();
+        }
+
+        private void OnPledgeCardRequested(PledgeCardRequested evt)
+        {
+            if (evt?.Card == null) return;
+            TryPledge(evt.Card);
         }
 
         private void OnPhaseChanged(ChangeBattlePhaseEvent evt)
         {
-            if (evt.Current != SubPhase.Pledge)
+            if (evt.Current != SubPhase.Action) return;
+
+            _pledgedThisActionPhase = false;
+            PledgedThisActionPhase = false;
+
+            // Unlock pledges from prior turns. Previous is rarely set on ChangeBattlePhaseEvent,
+            // so we unlock at Action start (Shadow still sees !CanPlay at PlayerEnd entry).
+            foreach (var card in EntityManager.GetEntitiesWithComponent<Pledge>())
             {
-                _awaitingPledgeSelection = false;
-                return;
+                var pledge = card.GetComponent<Pledge>();
+                if (pledge != null)
+                    pledge.CanPlay = true;
             }
-
-            LoggingService.Append("PledgeManagementSystem.OnPhaseChanged.Pledge", new System.Text.Json.Nodes.JsonObject { ["message"] = "entered pledge subphase" });
-
-            // Check if a card is already pledged
-            var pledgedCards = EntityManager.GetEntitiesWithComponent<Pledge>().ToList();
-            if (pledgedCards.Count > 0)
-            {
-                LoggingService.Append("PledgeManagementSystem.OnPhaseChanged.Pledge", new System.Text.Json.Nodes.JsonObject { ["message"] = "card already pledged, skipping to EnemyStart" });
-                ProceedToEnemyStart();
-                return;
-            }
-
-            // Get eligible cards in hand
-            var eligibleCards = GetEligiblePledgeCards();
-            if (eligibleCards.Count == 0)
-            {
-                LoggingService.Append("PledgeManagementSystem.OnPhaseChanged.Pledge", new System.Text.Json.Nodes.JsonObject { ["message"] = "no eligible cards to pledge, skipping to EnemyStart" });
-                ProceedToEnemyStart();
-                return;
-            }
-
-            LoggingService.Append("PledgeManagementSystem.OnPhaseChanged.Pledge", new System.Text.Json.Nodes.JsonObject { ["eligibleCount"] = eligibleCards.Count, ["awaitingSelection"] = true });
-            _awaitingPledgeSelection = true;
-            
-            // Update interactability - only eligible cards should be clickable
-            UpdateCardInteractability();
         }
 
-        private void OnSkipPledge(SkipPledgeRequested evt)
+        public void TryPledge(Entity card)
         {
-            LoggingService.Append("PledgeManagementSystem.OnSkipPledge", new System.Text.Json.Nodes.JsonObject { ["message"] = "pledge skipped by player" });
-            _awaitingPledgeSelection = false;
-            RestoreCardInteractability();
-            ProceedToEnemyStart();
+            var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+            if (phase == null || phase.Sub != SubPhase.Action) return;
+
+            if (!StateSingleton.IsPledgeEnabled) return;
+
+            var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+            if (deck?.Hand == null || !deck.Hand.Contains(card)) return;
+
+            if (!IsEligibleForPledge(card, true)) return;
+
+            if (_pledgedThisActionPhase)
+            {
+                EventManager.Publish(new CantPlayCardMessage { Message = "You can only pledge one card per action phase!" });
+                return;
+            }
+
+            if (deck.Hand.Any(c => c.GetComponent<Pledge>() != null))
+            {
+                EventManager.Publish(new CantPlayCardMessage { Message = "You already have a pledged card in hand!" });
+                return;
+            }
+
+            AddPledgeToCard(card);
+            _pledgedThisActionPhase = true;
+            PledgedThisActionPhase = true;
         }
 
         private void AddPledgeToCard(Entity card)
         {
             if (card == null) return;
-            if (card.GetComponent<Pledge>() != null) return; // Already pledged
-            
-            EntityManager.AddComponent(card, new Pledge { Owner = card });
-            EventManager.Publish(new PledgeAddedEvent { Card = card });
-            RestoreCardInteractability();
-            LoggingService.Append("PledgeManagementSystem.AddPledgeToCard", new System.Text.Json.Nodes.JsonObject { ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown" });
-        }
+            if (card.GetComponent<Pledge>() != null) return;
 
-        private void ProceedToEnemyStart()
-        {
-            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-                "Rule.ChangePhase.EnemyStart",
-                new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart }
-            ));
-            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-                "Rule.ChangePhase.PreBlock",
-                new ChangeBattlePhaseEvent { Current = SubPhase.PreBlock }
-            ));
-            EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
-                "Rule.ChangePhase.Block",
-                new ChangeBattlePhaseEvent { Current = SubPhase.Block }
-            ));
+            EntityManager.AddComponent(card, new Pledge { Owner = card, CanPlay = false });
+            EventManager.Publish(new PledgeAddedEvent { Card = card });
+            LoggingService.Append("PledgeManagementSystem.AddPledgeToCard", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown"
+            });
         }
 
         public static bool IsEligibleForPledge(Entity card, bool showErrorMessage = false)
         {
             if (card == null) return false;
-            
+
             var cardData = card.GetComponent<CardData>();
             if (cardData == null) return false;
 
-            // Skip if already pledged
             if (card.GetComponent<Pledge>() != null) return false;
 
-            // Skip sealed cards - they cannot be pledged
             if (card.GetComponent<Sealed>() != null)
             {
                 if (showErrorMessage) EventManager.Publish(new CantPlayCardMessage { Message = "Sealed cards cannot be pledged!" });
                 return false;
             }
 
-            // Skip weapons
             if (cardData.Card.IsWeapon)
             {
                 if (showErrorMessage) EventManager.Publish(new CantPlayCardMessage { Message = "Can't pledge weapons!" });
                 return false;
-            };
+            }
 
-            // Skip block cards - they can't be played from pledge
             if (cardData.Card.Type == CardType.Block)
             {
                 if (showErrorMessage) EventManager.Publish(new CantPlayCardMessage { Message = "Can't pledge block cards!" });
                 return false;
-            };
+            }
 
-            // Skip relics - they can't be played normally
             if (cardData.Card.Type == CardType.Relic)
             {
                 if (showErrorMessage) EventManager.Publish(new CantPlayCardMessage { Message = "Can't pledge relics!" });
                 return false;
-            };
+            }
 
-            // Skip token cards
             if (cardData.Card.IsToken)
             {
                 if (showErrorMessage) EventManager.Publish(new CantPlayCardMessage { Message = "Can't pledge token cards!" });
                 return false;
-            };
+            }
 
             return true;
         }
 
-        private System.Collections.Generic.List<Entity> GetEligiblePledgeCards()
-        {
-            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-            var deck = deckEntity?.GetComponent<Deck>();
-            if (deck == null) return new System.Collections.Generic.List<Entity>();
-
-            var eligible = new System.Collections.Generic.List<Entity>();
-            foreach (var card in deck.Hand)
-            {
-                if (IsEligibleForPledge(card))
-                {
-                    eligible.Add(card);
-                }
-            }
-
-            return eligible;
-        }
-
-        private void UpdateCardInteractability()
-        {
-            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-            var deck = deckEntity?.GetComponent<Deck>();
-            if (deck == null) return;
-
-            foreach (var card in deck.Hand)
-            {
-                var ui = card.GetComponent<UIElement>();
-                if (ui == null) continue;
-                
-                // Allow interaction with all cards so ineligible clicks can show error messages
-                ui.IsInteractable = true;
-            }
-        }
-
-        private void RestoreCardInteractability()
-        {
-            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-            var deck = deckEntity?.GetComponent<Deck>();
-            if (deck == null) return;
-
-            foreach (var card in deck.Hand)
-            {
-                var ui = card.GetComponent<UIElement>();
-                if (ui != null)
-                {
-                    ui.IsInteractable = true;
-                }
-            }
-        }
-
         private void ClearAllPledges()
         {
-            _awaitingPledgeSelection = false;
+            _pledgedThisActionPhase = false;
+            PledgedThisActionPhase = false;
+
             var pledgedCards = EntityManager.GetEntitiesWithComponent<Pledge>().ToList();
             foreach (var card in pledgedCards)
             {
                 EntityManager.RemoveComponent<Pledge>(card);
-                LoggingService.Append("PledgeManagementSystem.ClearAllPledges", new System.Text.Json.Nodes.JsonObject { ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown" });
+                LoggingService.Append("PledgeManagementSystem.ClearAllPledges", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown"
+                });
             }
         }
     }

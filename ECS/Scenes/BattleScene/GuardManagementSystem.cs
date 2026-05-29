@@ -89,7 +89,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			else if (evt.Current == SubPhase.PreBlock)
 			{
-				TryGuardConversion(enemy);
+				// TryGuardConversion(enemy);
 			}
 		}
 

@@ -170,10 +170,6 @@ namespace Crusaders30XX.ECS.Systems
 						StartAnimation(newText);
 					}
 				}
-				else if (phase.Sub == SubPhase.Pledge)
-				{
-					// suppress animation
-				}
 				else
 				{
 					StartAnimation(newText);

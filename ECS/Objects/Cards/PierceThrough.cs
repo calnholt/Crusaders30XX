@@ -10,10 +10,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "pierce_through";
             Name = "Pierce Through";
             Target = "Enemy";
-            Text = "Remove 1 guard from the enemy";
+            Text = "Remove 1 guard from the enemy.";
             Animation = "Attack";
-            Damage = 8;
-            Cost = ["Black", "Any"];
+            Damage = 10;
+            Cost = ["Black", "Red"];
             IsFreeAction = false;
 
             OnPlay = (entityManager, card) =>

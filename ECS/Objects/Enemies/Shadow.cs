@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -21,19 +22,32 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 
       OnStartOfBattle = (entityManager) =>
       {
-        EventManager.Subscribe<PledgeAddedEvent>(OnPledgeAddedEvent);
+        EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Anathema, Delta = StartAnathema });
       };
             Difficulty = difficulty;
         }
 
-    private void OnPledgeAddedEvent(PledgeAddedEvent evt)
+    private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
     {
+      if (evt.Current != SubPhase.PlayerEnd) return;
+
+      var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+      if (deck?.Hand == null) return;
+
+      bool anyNewPledge = deck.Hand.Any(c =>
+      {
+        var p = c.GetComponent<Pledge>();
+        return p != null && !p.CanPlay;
+      });
+
+      if (!anyNewPledge) return;
+
       var ap = GetComponentHelper.GetAppliedPassives(EntityManager, "Enemy");
       if (ap == null || ap.Passives == null || ap.Passives.Count == 0) return;
       if (ap.Passives.TryGetValue(AppliedPassiveType.Anathema, out int darknessStacks) && darknessStacks > 0)
       {
-        Console.WriteLine($"[Shadow] Anathema triggered - darknessStacks={darknessStacks}");
+        Console.WriteLine($"[Shadow] Anathema triggered at end of action - darknessStacks={darknessStacks}");
         EventManager.Publish(new ModifyHpRequestEvent
         {
           Source = EntityManager.GetEntity("Enemy"),
@@ -43,6 +57,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
         });
       }
     }
+
     public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
     {
       if (turnNumber % 2 == 0)
@@ -54,8 +69,8 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 
     public override void Dispose()
     {
-      Console.WriteLine($"[Shadow] Unsubscribed from PledgeAddedEvent");
-      EventManager.Unsubscribe<PledgeAddedEvent>(OnPledgeAddedEvent);
+      Console.WriteLine($"[Shadow] Unsubscribed from ChangeBattlePhaseEvent");
+      EventManager.Unsubscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
     }
   }
 }

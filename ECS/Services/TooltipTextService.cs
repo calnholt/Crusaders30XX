@@ -33,11 +33,17 @@ namespace Crusaders30XX.ECS.Services
 			if (entity.GetComponent<Shackle>() != null)
 				text += Sep(text) + "This card is shackled - shackled cards block together.";
 
-			if (entity.GetComponent<Pledge>() != null)
-				text += Sep(text) + "This card is pledged - can only be played during the action phase. Does not count towards your hand size.";
+			var pledge = entity.GetComponent<Pledge>();
+			if (pledge != null)
+			{
+				if (!pledge.CanPlay)
+					text += Sep(text) + "This card is pledged - cannot be played until a later action phase. Does not count towards your hand size.";
+				else
+					text += Sep(text) + "This card is pledged - can be played during the action phase. Does not count towards your hand size.";
+			}
 
 			if (entity.GetComponent<PledgePreview>() != null)
-				text += Sep(text) + "Pledged cards can only be played during the action phase. Does not count towards your hand size.";
+				text += Sep(text) + "Pledged cards cannot be played the turn they are pledged. Does not count towards your hand size.";
 
 			if (entity.GetComponent<Sealed>() != null)
 				text += Sep(text) + "This card is sealed - costs HP equal to remaining seals to play. Seals decrease: -1 per block, -1 per card played. At 0 seals, card is freed. Cannot be pledged.";
