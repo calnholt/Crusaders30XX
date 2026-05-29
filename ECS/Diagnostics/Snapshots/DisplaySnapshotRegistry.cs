@@ -1,0 +1,27 @@
+using System;
+using System.Collections.Generic;
+using Crusaders30XX.Diagnostics.Snapshots.Fixtures;
+
+namespace Crusaders30XX.Diagnostics.Snapshots
+{
+    public static class DisplaySnapshotRegistry
+    {
+        private static readonly Dictionary<string, IDisplaySnapshotFixture> Fixtures = new(StringComparer.OrdinalIgnoreCase);
+
+        static DisplaySnapshotRegistry()
+        {
+            Register(new CardDisplaySnapshotFixture());
+            Register(new QuestRewardModalSnapshotFixture());
+        }
+
+        public static void Register(IDisplaySnapshotFixture fixture)
+        {
+            Fixtures[fixture.Id] = fixture;
+        }
+
+        public static bool TryGet(string fixtureId, out IDisplaySnapshotFixture fixture)
+        {
+            return Fixtures.TryGetValue(fixtureId, out fixture);
+        }
+    }
+}

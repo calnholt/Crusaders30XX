@@ -8,6 +8,7 @@ using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Events;
 using System;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.Diagnostics.Snapshots;
 using Crusaders30XX.ECS.Components;
 using System.Linq;
 using Crusaders30XX.ECS.Systems;
@@ -55,8 +56,9 @@ public class Game1 : Game
     private DialogDisplaySystem _dialogDisplaySystem;
     private DebugCommandSystem _debugCommandSystem;
     private LocationNameDisplaySystem _locationNameDisplaySystem;
-    private CardDebugSceneSystem _cardDebugSceneSystem;
     private QuestStartSystem _questStartSystem;
+    private DisplaySnapshotHost _snapshotHost;
+    private readonly DisplaySnapshotLaunchOptions _snapshotOptions;
     
     // ECS System
     private World _world;
@@ -81,16 +83,14 @@ public class Game1 : Game
 		AlphaBlendFunction = BlendFunction.Add
 	};
 
-    public bool CardDebugMode { get; set; }
-    public string CardDebugId { get; set; }
-
     public static bool WindowIsActive { get; private set; } = true;
     public static int VirtualWidth = 1920;
     public static int VirtualHeight = 1080;
     public static Rectangle RenderDestination { get; private set; }
     
-    public Game1()
+    public Game1(DisplaySnapshotLaunchOptions snapshotOptions = null)
     {
+        _snapshotOptions = snapshotOptions;
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         Window.AllowUserResizing = true;
@@ -203,8 +203,6 @@ public class Game1 : Game
         _world.AddLateSystem(_parallaxLayerSystem);
         _world.AddSystem(_uiElementBorderDebugSystem);
         _world.AddSystem(_debugCommandSystem);
-        _cardDebugSceneSystem = new CardDebugSceneSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, CardDebugId);
-        _world.AddSystem(_cardDebugSceneSystem);
         _questStartSystem = new QuestStartSystem(_world.EntityManager);
         _world.AddSystem(_questStartSystem);
         // Global music manager
@@ -233,14 +231,8 @@ public class Game1 : Game
         // Allocate render targets
         AllocateRenderTargets();
 
-        // Card debug mode: override scene and trigger load
-        if (CardDebugMode)
-        {
-            CardDisplayToggle.UseV2 = true;
-            var ss = sceneEntity.GetComponent<SceneState>();
-            ss.Current = SceneId.CardDebug;
-            EventManager.Publish(new LoadSceneEvent { Scene = SceneId.CardDebug });
-        }
+        _snapshotHost = DisplaySnapshotHost.TryCreate(_snapshotOptions, this, GraphicsDevice, Content);
+        _snapshotHost?.OnGameReady(_world, sceneEntity, _spriteBatch);
     }
     
     protected override void Update(GameTime gameTime)
@@ -254,42 +246,45 @@ public class Game1 : Game
         if ((kb.IsKeyDown(Keys.Escape) && kb.IsKeyDown(Keys.LeftShift)))
             Exit();
 
-        if (kb.IsKeyDown(Keys.F11) && !_prevKeyboard.IsKeyDown(Keys.F11))
+        if (_snapshotHost?.IsActive != true)
         {
-            ToggleFullScreen();
-        }
-
-        // Global debug menu toggle so it's available in the main menu too
-        if (kb.IsKeyDown(Keys.D) && !_prevKeyboard.IsKeyDown(Keys.D) && kb.IsKeyDown(Keys.LeftShift))
-        {
-            ToggleDebugMenu();
-            var debugMenu = _world.EntityManager.GetEntitiesWithComponent<DebugMenu>().FirstOrDefault();
-            if (debugMenu != null)
+            if (kb.IsKeyDown(Keys.F11) && !_prevKeyboard.IsKeyDown(Keys.F11))
             {
-                debugMenu.GetComponent<UIElement>().IsInteractable = !debugMenu.GetComponent<UIElement>().IsInteractable;
-                Console.WriteLine($"Debug menu interactable: {debugMenu.GetComponent<UIElement>().IsInteractable}");
+                ToggleFullScreen();
             }
-        }
 
-        // Entity list overlay toggle: Shift + W
-        if ((kb.IsKeyDown(Keys.LeftShift) || kb.IsKeyDown(Keys.RightShift)) && kb.IsKeyDown(Keys.W) && !_prevKeyboard.IsKeyDown(Keys.W))
-        {
-            ToggleEntityListOverlay();
-        }
-
-        // Toggle profiler overlay on P key press
-        if (kb.IsKeyDown(Keys.P) && !_prevKeyboard.IsKeyDown(Keys.P))
-        {
-            var e = _world.EntityManager.GetEntitiesWithComponent<ProfilerOverlay>().FirstOrDefault();
-            if (e == null)
+            // Global debug menu toggle so it's available in the main menu too
+            if (kb.IsKeyDown(Keys.D) && !_prevKeyboard.IsKeyDown(Keys.D) && kb.IsKeyDown(Keys.LeftShift))
             {
-                e = _world.EntityManager.CreateEntity("ProfilerOverlay");
-                _world.EntityManager.AddComponent(e, new ProfilerOverlay { IsOpen = true });
+                ToggleDebugMenu();
+                var debugMenu = _world.EntityManager.GetEntitiesWithComponent<DebugMenu>().FirstOrDefault();
+                if (debugMenu != null)
+                {
+                    debugMenu.GetComponent<UIElement>().IsInteractable = !debugMenu.GetComponent<UIElement>().IsInteractable;
+                    Console.WriteLine($"Debug menu interactable: {debugMenu.GetComponent<UIElement>().IsInteractable}");
+                }
             }
-            else
+
+            // Entity list overlay toggle: Shift + W
+            if ((kb.IsKeyDown(Keys.LeftShift) || kb.IsKeyDown(Keys.RightShift)) && kb.IsKeyDown(Keys.W) && !_prevKeyboard.IsKeyDown(Keys.W))
             {
-                var p = e.GetComponent<ProfilerOverlay>();
-                p.IsOpen = !p.IsOpen;
+                ToggleEntityListOverlay();
+            }
+
+            // Toggle profiler overlay on P key press
+            if (kb.IsKeyDown(Keys.P) && !_prevKeyboard.IsKeyDown(Keys.P))
+            {
+                var e = _world.EntityManager.GetEntitiesWithComponent<ProfilerOverlay>().FirstOrDefault();
+                if (e == null)
+                {
+                    e = _world.EntityManager.CreateEntity("ProfilerOverlay");
+                    _world.EntityManager.AddComponent(e, new ProfilerOverlay { IsOpen = true });
+                }
+                else
+                {
+                    var p = e.GetComponent<ProfilerOverlay>();
+                    p.IsOpen = !p.IsOpen;
+                }
             }
         }
 
@@ -308,7 +303,7 @@ public class Game1 : Game
         EnsureRenderTargetsMatchVirtual();
         
         GraphicsDevice.SetRenderTarget(_sceneRt);
-        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GraphicsDevice.Clear(_snapshotHost?.IsActive == true ? Color.Black : Color.CornflowerBlue);
 
         DrawScene();
 
@@ -348,20 +343,8 @@ public class Game1 : Game
             }
         }
 
-        // Card debug capture: save render target as PNG and exit
-        if (CardDebugMode && _cardDebugSceneSystem.ReadyToCapture)
+        if (_snapshotHost?.IsActive == true && _snapshotHost.TickAfterDraw(_sceneRt))
         {
-            var cardId = _cardDebugSceneSystem.ResolvedCardId ?? "card";
-            var dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "debug", "cards");
-            Directory.CreateDirectory(dir);
-            var filePath = Path.Combine(dir, $"{cardId}.png");
-            using (var stream = File.Create(filePath))
-            {
-                _sceneRt.SaveAsPng(stream, _sceneRt.Width, _sceneRt.Height);
-            }
-            Console.WriteLine($"[CardDebug] Saved: {Path.GetFullPath(filePath)}");
-            GraphicsDevice.SetRenderTarget(null);
-            Exit();
             return;
         }
 
@@ -380,6 +363,14 @@ public class Game1 : Game
     {
         FrameProfiler.BeginFrame();
         _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
+
+        if (_snapshotHost?.IsActive == true)
+        {
+            _snapshotHost.DrawScene(_spriteBatch);
+            _spriteBatch.End();
+            return;
+        }
+
         // Delegate drawing to active parent systems
         var scene = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
         switch(scene.Current)
@@ -428,11 +419,6 @@ public class Game1 : Game
                 FrameProfiler.Measure("AchievementSceneSystem.Draw", _achievementSceneSystem.Draw);
                 break;
             }
-            case SceneId.CardDebug:
-            {
-                _cardDebugSceneSystem.Draw();
-                break;
-            }
             case SceneId.WorldMap:
             {
                 // Draw location tiles with crisp pixel sampling
@@ -462,7 +448,7 @@ public class Game1 : Game
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         // Cursor blur trail (additive pass before cursor) — skip in card debug mode
         _spriteBatch.End();
-        if (!CardDebugMode)
+        if (_snapshotHost?.ShouldSkipGlobalOverlays != true)
         {
             _cursorTrailDisplaySystem.DrawTrail(_sceneRt);
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);

@@ -214,7 +214,7 @@ namespace Crusaders30XX.ECS.Systems
 			var st = e?.GetComponent<QuestRewardOverlayState>();
 			if (st == null || !st.IsOpen) return;
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-			if (scene == null || scene.Current != SceneId.Battle) return;
+			if (scene == null || (scene.Current != SceneId.Battle && scene.Current != SceneId.Snapshot)) return;
 
 			int vw = Game1.VirtualWidth;
 			int vh = Game1.VirtualHeight;

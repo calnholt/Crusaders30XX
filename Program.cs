@@ -1,16 +1,10 @@
-﻿string debugCardId = null;
-bool isCardDebug = false;
+﻿using Crusaders30XX.Diagnostics.Snapshots;
 
-if (args.Length >= 1 && args[0] == "card-debug")
+DisplaySnapshotLaunchOptions snapshotOptions = null;
+if (DisplaySnapshotLaunchOptions.TryParse(args, out var parsed))
 {
-    isCardDebug = true;
-    debugCardId = args.Length >= 2 ? args[1] : null;
+    snapshotOptions = parsed;
 }
 
-using var game = new Crusaders30XX.Game1();
-if (isCardDebug)
-{
-    game.CardDebugMode = true;
-    game.CardDebugId = debugCardId;
-}
+using var game = new Crusaders30XX.Game1(snapshotOptions);
 game.Run();
