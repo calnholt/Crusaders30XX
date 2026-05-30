@@ -224,6 +224,18 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
+            if (evt.Card.HasComponent<Pledge>())
+            {
+                var appliedPassives = GetComponentHelper.GetAppliedPassives(EntityManager, "Player");
+                if (appliedPassives != null
+                    && appliedPassives.Passives.TryGetValue(AppliedPassiveType.Silenced, out int silencedStacks)
+                    && silencedStacks > 0)
+                {
+                    EventManager.Publish(new CantPlayCardMessage { Message = "You cannot play pledged cards because you are silenced!" });
+                    return;
+                }
+            }
+
             // Capture sealed state before playing (will be used after play resolves to apply HP cost)
             var sealedComp = evt.Card.GetComponent<Sealed>();
             int sealCount = sealedComp?.Seals ?? 0;
@@ -361,14 +373,6 @@ namespace Crusaders30XX.ECS.Systems
                     }
 
                     bool canSatisfy = CanSatisfy(requiredCosts, handNonWeapons, out _);
-
-                    var appliedPassives = GetComponentHelper.GetAppliedPassives(EntityManager, "Player");
-                    var cardIsPledged = evt.Card.HasComponent<Pledge>();
-                    if (appliedPassives != null && appliedPassives.Passives.TryGetValue(AppliedPassiveType.Silenced, out int silencedStacks) && silencedStacks > 0 && cardIsPledged)
-                    {
-                        EventManager.Publish(new CantPlayCardMessage { Message = "You cannot play pledged cards because you are silenced!" });
-                        return;
-                    }
 
                     if (!canSatisfy)
                     {
