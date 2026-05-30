@@ -27,8 +27,7 @@ namespace Crusaders30XX.ECS.Components
 	{
 		Quest,
 		Shop,
-		Hellrift,
-		Dungeon
+		Hellrift
 	}
 }
 

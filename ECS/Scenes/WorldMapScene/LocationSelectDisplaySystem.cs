@@ -211,8 +211,6 @@ namespace Crusaders30XX.ECS.Systems
 						EntityManager.AddComponent(qeEntity, new DontDestroyOnLoad());
 					}
 					var qe = qeEntity.GetComponent<QueuedEvents>();
-					// Ensure any previous dungeon loadout is removed for a normal quest
-					EntityManager.RemoveComponent<DungeonLoadout>(qeEntity);
 					qe.CurrentIndex = -1;
 					qe.Events.Clear();
 					// Record quest context for dialog lookup

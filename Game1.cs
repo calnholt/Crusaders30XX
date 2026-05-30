@@ -208,6 +208,7 @@ public class Game1 : Game
         _world.AddSystem(_debugCommandSystem);
         _questStartSystem = new QuestStartSystem(_world.EntityManager);
         _world.AddSystem(_questStartSystem);
+        _world.AddSystem(new RunDeckLifecycleSystem(_world.EntityManager));
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
         // Global sound effect manager

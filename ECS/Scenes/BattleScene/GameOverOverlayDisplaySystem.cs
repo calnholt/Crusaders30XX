@@ -85,7 +85,7 @@ namespace Crusaders30XX.ECS.Systems
 			float total = System.Math.Max(0.0001f, OverlayFadeInSeconds) + System.Math.Max(0.0001f, TextFadeOutSeconds);
 			if (!_sceneSwitched && _elapsed >= total)
 			{
-				RunLifecycleService.EndCurrentRun();
+				RunLifecycleService.EndCurrentRun(EntityManager);
 				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Menu });
 				EventManager.Publish(new ShowTransition { Scene = SceneId.TitleMenu, SkipWipe = true });
 				_sceneSwitched = true;

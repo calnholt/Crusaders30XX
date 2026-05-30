@@ -102,7 +102,6 @@ namespace Crusaders30XX.ECS.Systems
             TryQueueTutorial("how_to_win");
             TryQueueTutorial("block_phase_overview");
             TryQueueTutorial("card_block_value");
-            TryQueueTutorial("dungeon_overview");
         }
 
         private void QueueTutorialsForFirstActionPhase()
@@ -159,8 +158,6 @@ namespace Crusaders30XX.ECS.Systems
                     return HasTribulation();
                 case "can_pledge":
                     return CanPledge();
-                case "is_dungeon":
-                    return IsDungeon();
                 case "threat_enabled":
                     return IsThreatEnabled();
                 default:
@@ -173,12 +170,6 @@ namespace Crusaders30XX.ECS.Systems
             var queued = EntityManager.GetEntity("QueuedEvents")?.GetComponent<QueuedEvents>();
             if (queued != null && queued.QuestIndex == 0) return false;
             return true;
-        }
-
-        private bool IsDungeon()
-        {
-            var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
-            return qeEntity != null && qeEntity.GetComponent<DungeonLoadout>() != null;
         }
 
         private bool CanPledge()

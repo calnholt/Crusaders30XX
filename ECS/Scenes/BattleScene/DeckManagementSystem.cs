@@ -2,7 +2,9 @@ using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -139,6 +141,19 @@ namespace Crusaders30XX.ECS.Systems
             {
                 var card = deck.DrawPile[0];
                 deck.DrawPile.RemoveAt(0);
+                if (card.GetComponent<CardData>()?.Card?.IsWeapon == true)
+                {
+                    deck.DiscardPile.Add(card);
+                    LoggingService.Append("DeckManagementSystem.DrawCard", new System.Text.Json.Nodes.JsonObject
+                    {
+                        ["result"] = "skipped",
+                        ["reason"] = "weaponCardInDrawPile",
+                        ["cardId"] = card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                        ["handCount"] = deck.Hand.Count,
+                        ["drawPileCount"] = deck.DrawPile.Count
+                    });
+                    return DrawCard(deck);
+                }
                 // Spawn off-screen right so the card flies into the hand
                 var transform = card.GetComponent<Transform>();
                 if (transform != null)
@@ -327,28 +342,22 @@ namespace Crusaders30XX.ECS.Systems
 
         /// <summary>
         /// Moves all non-weapon cards from Hand and Discard back into the Draw pile and shuffles.
-        /// Weapon card (from EquippedWeapon) is removed from hand/discard but NOT added to draw pile.
+        /// Battle-scoped weapon entities are destroyed here so they never persist into the draw pile.
         /// </summary>
         private void ResetDeckExcludingWeapon(Deck deck)
         {
             if (deck == null) return;
 
-            // Identify the equipped weapon entity if any
-            Entity weapon = null;
-            try
-            {
-                var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-                var equipped = player?.GetComponent<EquippedWeapon>();
-                weapon = equipped?.SpawnedEntity;
-            }
-            catch { }
+            int weaponsDestroyed = DestroyBattleWeaponCards(deck);
 
-            // Collect all cards currently in play (Hand + Discard)
+            // Collect surviving cards from all zones (draw, hand, discard)
             var allCards = new List<Entity>();
+            allCards.AddRange(deck.DrawPile);
             allCards.AddRange(deck.Hand);
             allCards.AddRange(deck.DiscardPile);
 
             var toReturn = new List<Entity>();
+            var seen = new HashSet<Entity>();
 
             foreach (var c in allCards)
             {
@@ -372,13 +381,47 @@ namespace Crusaders30XX.ECS.Systems
                     t.Scale = Vector2.One;
                 }
 
-                // If it's the weapon, skip adding to toReturn (so it won't go into DrawPile)
-                if (weapon != null && ReferenceEquals(c, weapon)) continue;
+                if (c.GetComponent<CardData>()?.Card?.IsWeapon == true) continue;
 
-                toReturn.Add(c);
+                if (seen.Add(c))
+                {
+                    toReturn.Add(c);
+                }
+            }
+
+            // Cards listed in deck.Cards but not in any zone (e.g. after location hub)
+            if (deck.Cards != null)
+            {
+                foreach (var c in deck.Cards)
+                {
+                    if (c == null) continue;
+                    if (c.GetComponent<CardData>()?.Card?.IsWeapon == true) continue;
+                    if (seen.Contains(c)) continue;
+                    var ui = c.GetComponent<UIElement>();
+                    if (ui != null)
+                    {
+                        ui.IsInteractable = false;
+                        ui.IsHovered = false;
+                        ui.IsClicked = false;
+                        ui.EventType = UIElementEventType.None;
+                        ui.Bounds = new Rectangle(-1000, -1000, 1, 1);
+                    }
+                    var t = c.GetComponent<Transform>();
+                    if (t != null)
+                    {
+                        t.Position = Vector2.Zero;
+                        t.Rotation = 0f;
+                        t.Scale = Vector2.One;
+                    }
+                    if (seen.Add(c))
+                    {
+                        toReturn.Add(c);
+                    }
+                }
             }
 
             // Clear original zones entirely (removes weapon from hand/discard as well)
+            deck.DrawPile.Clear();
             deck.Hand.Clear();
             deck.DiscardPile.Clear();
 
@@ -395,11 +438,65 @@ namespace Crusaders30XX.ECS.Systems
             {
                 ["totalCardsCollected"] = allCards.Count,
                 ["cardsReturnedToDraw"] = toReturn.Count,
-                ["weaponExcluded"] = weapon != null,
+                ["weaponsDestroyed"] = weaponsDestroyed,
                 ["handCount"] = deck.Hand.Count,
                 ["drawPileCount"] = deck.DrawPile.Count,
                 ["discardPileCount"] = deck.DiscardPile.Count
             });
+        }
+
+        /// <summary>
+        /// Destroys every weapon card entity from deck zones and deck.Cards. Clears EquippedWeapon.SpawnedEntity.
+        /// Weapons are re-spawned per battle by WeaponManagementSystem; they must not shuffle with the run deck.
+        /// </summary>
+        private int DestroyBattleWeaponCards(Deck deck)
+        {
+            var toDestroy = new HashSet<Entity>();
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            var equipped = player?.GetComponent<EquippedWeapon>();
+
+            void Consider(Entity card)
+            {
+                if (card == null || !card.IsActive) return;
+                if (card.GetComponent<CardData>()?.Card?.IsWeapon == true)
+                {
+                    toDestroy.Add(card);
+                }
+            }
+
+            if (equipped?.SpawnedEntity != null)
+            {
+                toDestroy.Add(equipped.SpawnedEntity);
+            }
+
+            foreach (var card in deck.DrawPile) Consider(card);
+            foreach (var card in deck.Hand) Consider(card);
+            foreach (var card in deck.DiscardPile) Consider(card);
+            foreach (var card in deck.ExhaustPile) Consider(card);
+            if (deck.Cards != null)
+            {
+                foreach (var card in deck.Cards) Consider(card);
+            }
+
+            foreach (var card in toDestroy)
+            {
+                deck.DrawPile.Remove(card);
+                deck.Hand.Remove(card);
+                deck.DiscardPile.Remove(card);
+                deck.ExhaustPile.Remove(card);
+                deck.Cards?.Remove(card);
+                if (card.IsActive)
+                {
+                    EntityManager.DestroyEntity(card.Id);
+                }
+            }
+
+            if (equipped != null)
+            {
+                equipped.SpawnedEntity = null;
+            }
+
+            return toDestroy.Count;
         }
 
         private void ResetCard(Entity card)

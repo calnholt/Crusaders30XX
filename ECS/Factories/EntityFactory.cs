@@ -37,17 +37,9 @@ namespace Crusaders30XX.ECS.Factories
                 Scale = Vector2.One
             };
             
-            // Try to find a DungeonLoadout first, otherwise fall back to loadout_1
-            LoadoutDefinition loadout = null;
-            var qeEntity = world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
-            if (qeEntity != null && qeEntity.HasComponent<DungeonLoadout>())
-            {
-                loadout = qeEntity.GetComponent<DungeonLoadout>().Loadout;
-            }
-            else
-            {
-                loadout = LoadoutDefinitionCache.TryGet("loadout_1", out var def) ? def : null;
-            }
+            LoadoutDefinitionCache.TryGet("loadout_1", out var loadout);
+            loadout ??= SaveCache.GetLoadout("loadout_1");
+            loadout ??= new LoadoutDefinition { id = "loadout_1", name = "loadout_1" };
 
             var sprite = new Sprite
             {
@@ -245,47 +237,12 @@ namespace Crusaders30XX.ECS.Factories
             return entity;
         }
         
+        [Obsolete("Use RunDeckService.EnsureRunDeck for run deck cards.")]
         public static List<Entity> CreateDeckFromLoadout(EntityManager entityManager)
         {
-			var result = new List<Entity>();
-            
-            // Try to find a DungeonLoadout first, otherwise fall back to loadout_1
-            LoadoutDefinition loadout = null;
-            var qeEntity = entityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
-            if (qeEntity != null && qeEntity.HasComponent<DungeonLoadout>())
-            {
-                loadout = qeEntity.GetComponent<DungeonLoadout>().Loadout;
-            }
-            else
-            {
-                loadout = LoadoutDefinitionCache.TryGet("loadout_1", out var lo) ? lo : null;
-            }
-
-			if (loadout == null || loadout.cardIds == null || loadout.cardIds.Count == 0) return result;
-			foreach (var entry in loadout.cardIds)
-			{
-				if (string.IsNullOrWhiteSpace(entry)) continue;
-				string cardId = entry;
-				CardData.CardColor color = CardData.CardColor.White;
-				int sep = entry.IndexOf('|');
-				if (sep >= 0)
-				{
-					cardId = entry.Substring(0, sep);
-					var colorKey = entry.Substring(sep + 1);
-					color = ParseColor(colorKey);
-				}
-                var card = CardFactory.Create(cardId);
-				if (card == null) continue;
-				if (card.IsWeapon) continue; // weapons are not in the deck
-                var entity = CreateCardFromDefinition(entityManager, cardId, color);
-				var cd = entity.GetComponent<CardData>();
-				if (cd != null)
-				{
-                    // already initialized in CreateCardFromDefinition
-				}
-				result.Add(entity);
-			}
-			return result;
+			var deckEntity = RunDeckService.EnsureRunDeck(entityManager);
+			var deck = deckEntity?.GetComponent<Deck>();
+			return deck?.Cards?.ToList() ?? new List<Entity>();
         }
 
         // Dynamic description generation removed; we now use JSON 'text' exclusively
@@ -300,6 +257,16 @@ namespace Crusaders30XX.ECS.Factories
                 case "white":
                 default: return CardData.CardColor.White;
             }
+        }
+
+        private static string ColorToKeyString(CardData.CardColor color)
+        {
+            return color switch
+            {
+                CardData.CardColor.Red => "Red",
+                CardData.CardColor.Black => "Black",
+                _ => "White"
+            };
         }
 
         private static CardData.CardRarity ParseRarity(string rarity)
@@ -329,7 +296,14 @@ namespace Crusaders30XX.ECS.Factories
         }
 
         // Helper: create card entity from CardDefinition id and color
-        public static Entity CreateCardFromDefinition(EntityManager entityManager, string cardId, CardData.CardColor color, bool allowWeapons = false, int index = 0)
+        public static Entity CreateCardFromDefinition(
+            EntityManager entityManager,
+            string cardId,
+            CardData.CardColor color,
+            bool allowWeapons = false,
+            int index = 0,
+            string cardKey = null,
+            bool persistForRun = false)
         {
             var card = CardFactory.Create(cardId);
             if (card == null) return null;
@@ -367,7 +341,20 @@ namespace Crusaders30XX.ECS.Factories
             entityManager.AddComponent(entity, ParallaxLayer.GetUIParallaxLayer());
             entityManager.AddComponent(entity, new PositionTween { Speed = 12f });
             entityManager.AddComponent(entity, new Hint { Text = card.GetCardHint(color) });
-            entityManager.AddComponent(entity, new DontDestroyOnReload());
+            if (persistForRun)
+            {
+                string key = cardKey;
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    key = $"{cardId}|{ColorToKeyString(color)}";
+                }
+                entityManager.AddComponent(entity, new RunDeckCard { CardKey = key });
+                entityManager.AddComponent(entity, new DontDestroyOnLoad());
+            }
+            else
+            {
+                entityManager.AddComponent(entity, new DontDestroyOnReload());
+            }
             var modifiedBlock = new ModifiedBlock { Modifications = new List<Modification>() };
             entityManager.AddComponent(entity, modifiedBlock);
             if (color == CardData.CardColor.Black)

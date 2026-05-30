@@ -8,6 +8,8 @@ using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Objects.Equipment;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Data.Save
@@ -510,6 +512,31 @@ namespace Crusaders30XX.ECS.Data.Save
 				if (loadout.cardIds == null) loadout.cardIds = new List<string>();
 				loadout.cardIds.Add(cardKey);
 				Persist();
+				EventManager.Publish(new LoadoutCardAdded { LoadoutId = loadoutId, CardKey = cardKey });
+				return true;
+			}
+		}
+
+		public static bool RemoveCardFromLoadout(string loadoutId, string cardKey, bool publishChange = true)
+		{
+			if (string.IsNullOrWhiteSpace(loadoutId) || string.IsNullOrWhiteSpace(cardKey)) return false;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save?.loadouts == null) return false;
+				var loadout = _save.loadouts.FirstOrDefault(l => l.id == loadoutId);
+				if (loadout?.cardIds == null) return false;
+
+				int idx = loadout.cardIds.FindIndex(k =>
+					string.Equals(k, cardKey, StringComparison.OrdinalIgnoreCase));
+				if (idx < 0) return false;
+
+				loadout.cardIds.RemoveAt(idx);
+				Persist();
+				if (publishChange)
+				{
+					EventManager.Publish(new LoadoutCardRemoved { LoadoutId = loadoutId, CardKey = cardKey });
+				}
 				return true;
 			}
 		}
@@ -578,6 +605,10 @@ namespace Crusaders30XX.ECS.Data.Save
 				}
 
 				Persist();
+				if (!string.IsNullOrEmpty(shopCardKey))
+				{
+					EventManager.Publish(new LoadoutCardAdded { LoadoutId = loadout.id, CardKey = shopCardKey });
+				}
 				newGold = _save.gold;
 				return true;
 			}

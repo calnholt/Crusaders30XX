@@ -13,7 +13,6 @@ namespace Crusaders30XX.ECS.Services
 		public struct QuestCompletionResult
 		{
 			public bool IsNewlyCompleted;
-			public bool IsDungeon;
 			public string LocationId;
 			public string QuestId;
 			public int RewardGold;
@@ -26,7 +25,7 @@ namespace Crusaders30XX.ECS.Services
 		/// </summary>
 		public static QuestCompletionResult SaveIfCompletedHighest(Crusaders30XX.ECS.Core.EntityManager entityManager)
 		{
-			var result = new QuestCompletionResult { IsNewlyCompleted = false, IsDungeon = false, LocationId = string.Empty, QuestId = string.Empty, RewardGold = 0 };
+			var result = new QuestCompletionResult { IsNewlyCompleted = false, LocationId = string.Empty, QuestId = string.Empty, RewardGold = 0 };
 			if (entityManager == null) return result;
 			try
 			{

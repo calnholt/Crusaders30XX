@@ -107,7 +107,7 @@ namespace Crusaders30XX.ECS.Systems
 						EventManager.Publish(new ShowQuestRewardOverlay
 						{
 							Message = "Quest Complete!",
-							RewardGold = (completion.IsNewlyCompleted || completion.IsDungeon) ? completion.RewardGold : 0,
+							RewardGold = completion.IsNewlyCompleted ? completion.RewardGold : 0,
 							HasCardReward = completion.HasCardReward,
 							RewardCardKey = completion.RewardCardKey
 						});

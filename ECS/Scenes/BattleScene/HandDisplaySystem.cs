@@ -176,14 +176,10 @@ namespace Crusaders30XX.ECS.Systems
             if (deckEntity != null)
             {
                 var deck = deckEntity.GetComponent<Deck>();
-                if (deck != null && deck.Hand.Contains(entity) && entity.GetComponent<AnimatingHandToDiscard>() == null && entity.GetComponent<AnimatingHandToZone>() == null && entity.GetComponent<AnimatingHandToDrawPile>() == null && entity.GetComponent<FilteredFromHand>() == null)
+                if (deck != null && deck.Hand.Contains(entity) && CountsForHandLayout(entity))
                 {
-                    // Build visible hand excluding animating and filtered cards for correct fan layout
-                    var visibleHand = deck.Hand.Where(e =>
-                        e.GetComponent<AnimatingHandToDiscard>() == null &&
-                        e.GetComponent<AnimatingHandToZone>() == null &&
-                        e.GetComponent<AnimatingHandToDrawPile>() == null &&
-                        e.GetComponent<FilteredFromHand>() == null).ToList();
+                    // Build visible hand excluding animating, filtered, and weapon cards (equipped weapon uses its own spawn path).
+                    var visibleHand = deck.Hand.Where(CountsForHandLayout).ToList();
                     var cardIndex = visibleHand.IndexOf(entity);
 
                     if (cardIndex >= 0)
@@ -301,6 +297,17 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
+        private static bool CountsForHandLayout(Entity e)
+        {
+            if (e == null) return false;
+            if (e.GetComponent<AnimatingHandToDiscard>() != null) return false;
+            if (e.GetComponent<AnimatingHandToZone>() != null) return false;
+            if (e.GetComponent<AnimatingHandToDrawPile>() != null) return false;
+            if (e.GetComponent<FilteredFromHand>() != null) return false;
+            if (e.GetComponent<CardData>()?.Card?.IsWeapon == true) return false;
+            return true;
+        }
+
         /// <summary>
         /// Triggers deck shuffling and drawing of cards by publishing events
         /// </summary>
@@ -341,10 +348,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     // Only draw cards that are actually in the hand, not animating, and not filtered out by pay-cost overlay
                     var cardsInHand = deck.Hand
-                        .Where(e => e.GetComponent<AnimatingHandToDiscard>() == null
-                            && e.GetComponent<AnimatingHandToZone>() == null
-                            && e.GetComponent<AnimatingHandToDrawPile>() == null
-                            && e.GetComponent<FilteredFromHand>() == null)
+                        .Where(CountsForHandLayout)
                         .OrderBy(e =>
                     {
                         var transform = e.GetComponent<Transform>();

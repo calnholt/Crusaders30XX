@@ -56,7 +56,6 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(qeEntity, new DontDestroyOnLoad());
             }
             var qe = qeEntity.GetComponent<QueuedEvents>();
-            EntityManager.RemoveComponent<DungeonLoadout>(qeEntity);
             qe.CurrentIndex = -1;
             qe.Events.Clear();
             qe.LocationId = DesertLocationId;

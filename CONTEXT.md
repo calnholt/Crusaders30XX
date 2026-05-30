@@ -30,7 +30,15 @@ The player's configured battle kit for the run: deck card list, weapon, temperan
 
 ## Deck
 
-The ordered set of card entries (card plus color) on the loadout used in battle. A new run begins with a 20-card starting deck; the deck may grow beyond 20 during the run. There is no maximum deck size.
+The player's deck for the current run: the ordered set of card entries (card plus color) on the loadout, plus how those cards are distributed in battle (draw pile, hand, discard). A new run begins with a 20-card starting deck; the deck may grow beyond 20 during the run. There is no maximum deck size.
+
+## Exhaust
+
+Removing a card from the deck for the rest of the run. Exhausted cards do not return in later battles. Exhaustion removes that card entry from the save loadout and destroys the run deck entity.
+
+## Inter-battle deck reset
+
+At the start of each battle, all surviving cards (draw pile, hand, and discard) combine into one draw pile, which is then shuffled. Exhausted cards are not included.
 
 ## Starter pool
 

@@ -349,14 +349,13 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(sceneEntity, new SceneState { Current = SceneId.Internal_QueueEventsMenu });
 			}
 			EntityFactory.CreateGameState(_world);
+			var deckEntity = RunDeckService.EnsureRunDeck(EntityManager);
 			EntityFactory.CreatePlayer(_world);
-			var deckEntity = EntityFactory.CreateDeck(_world);
-			var deckCards = EntityFactory.CreateDeckFromLoadout(EntityManager);
-			var deck = deckEntity.GetComponent<Deck>();
-			if (deck != null)
+			var player = EntityManager.GetEntity("Player");
+			var playerComp = player?.GetComponent<Player>();
+			if (playerComp != null)
 			{
-				deck.Cards.AddRange(deckCards);
-				deck.DrawPile.AddRange(deckCards);
+				playerComp.DeckEntity = deckEntity;
 			}
 			// Create tribulations for the current quest
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
@@ -371,14 +370,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void InitBattle() 
 		{
+			RunDeckService.EnsureRunDeck(EntityManager);
 			EventManager.Publish(new ResetDeckEvent { });
-			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault().GetComponent<Deck>();
-			if (deck.Cards.Count == 0)
-			{
-				var deckCards = EntityFactory.CreateDeckFromLoadout(EntityManager);
-				deck.Cards.AddRange(deckCards);
-				deck.DrawPile.AddRange(deckCards);
-			}
+			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });

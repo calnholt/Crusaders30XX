@@ -351,7 +351,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case CardZoneType.ExhaustPile:
                 {
-                    EntityManager.DestroyEntity(evt.Card.Id);
+                    RunDeckService.ExhaustRunCard(EntityManager, evt.Card);
                     break;
                 }
             }
@@ -410,7 +410,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case CardZoneType.ExhaustPile:
                 {
-                    EntityManager.DestroyEntity(evt.Card.Id);
+                    RunDeckService.ExhaustRunCard(EntityManager, evt.Card);
                     break;
                 }
                 case CardZoneType.DrawPile:

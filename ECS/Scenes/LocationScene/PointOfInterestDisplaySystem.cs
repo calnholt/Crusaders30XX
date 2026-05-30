@@ -23,7 +23,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Texture2D _questIconTexture;
 		private readonly Texture2D _hellriftIconTexture;
 		private readonly Texture2D _shopIconTexture;
-		private readonly Texture2D _dungeonIconTexture;
 		private readonly Texture2D _skullTexture;
 		private bool _spawned;
 		private readonly System.Collections.Generic.List<Entity> _pois = new System.Collections.Generic.List<Entity>();
@@ -91,14 +90,6 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			try
 			{
-				_dungeonIconTexture = content.Load<Texture2D>("Dungeon_poi");
-			}
-			catch
-			{
-				_dungeonIconTexture = null;
-			}
-			try
-			{
 				_skullTexture = content.Load<Texture2D>("skull");
 			}
 			catch
@@ -161,7 +152,6 @@ namespace Crusaders30XX.ECS.Systems
 						Texture2D iconTexture =
 							(poi.Type == PointOfInterestType.Hellrift && _hellriftIconTexture != null) ? _hellriftIconTexture :
 							(poi.Type == PointOfInterestType.Shop && _shopIconTexture != null) ? _shopIconTexture :
-							(poi.Type == PointOfInterestType.Dungeon && _dungeonIconTexture != null) ? _dungeonIconTexture :
 							_questIconTexture;
 						
 						// Calculate bounds size scaled by map zoom and hover scale
@@ -293,7 +283,6 @@ namespace Crusaders30XX.ECS.Systems
 				Texture2D iconTexture =
 					(x.P.Type == PointOfInterestType.Hellrift && _hellriftIconTexture != null) ? _hellriftIconTexture :
 					(x.P.Type == PointOfInterestType.Shop && _shopIconTexture != null) ? _shopIconTexture :
-					(x.P.Type == PointOfInterestType.Dungeon && _dungeonIconTexture != null) ? _dungeonIconTexture :
 					_questIconTexture;
 				
 				// Calculate icon dimensions preserving aspect ratio, scaled by map zoom
