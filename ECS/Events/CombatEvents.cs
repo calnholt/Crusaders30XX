@@ -107,6 +107,7 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public SceneId Scene;
 		public bool SkipHold;
+		public bool SkipWipe;
 	}
 
 	public class TransitionCompleteEvent

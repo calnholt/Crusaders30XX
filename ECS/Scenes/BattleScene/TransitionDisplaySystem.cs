@@ -83,9 +83,7 @@ namespace Crusaders30XX.ECS.Systems
 							if (!_suppressLoadScene)
 							{
 								LoggingService.Append("TransitionDisplaySystem.Update.Phase.WipeIn", new System.Text.Json.Nodes.JsonObject { ["nextScene"] = _nextScene.ToString() });
-								EventManager.Publish(new DeleteCachesEvent { Scene = _nextScene });
-								DeleteEntities(_nextScene);
-								EventManager.Publish(new LoadSceneEvent { Scene = _nextScene });
+								LoadTargetScene(_nextScene, publishComplete: false);
 							}
 							else
 							{
@@ -106,9 +104,7 @@ namespace Crusaders30XX.ECS.Systems
 						if (!_suppressLoadScene)
 						{
 							LoggingService.Append("TransitionDisplaySystem.Update.Phase.Hold", new System.Text.Json.Nodes.JsonObject { ["nextScene"] = _nextScene.ToString() });
-							EventManager.Publish(new DeleteCachesEvent { Scene = _nextScene });
-							DeleteEntities(_nextScene);
-							EventManager.Publish(new LoadSceneEvent { Scene = _nextScene });
+							LoadTargetScene(_nextScene, publishComplete: false);
 						}
 						else
 						{
@@ -197,10 +193,31 @@ namespace Crusaders30XX.ECS.Systems
 			_suppressLoadScene = transition.Scene == SceneId.None;
 			_skipHold = transition.SkipHold;
 			_nextScene = transition.Scene;
+
+			if (transition.SkipWipe)
+			{
+				if (!_suppressLoadScene)
+					LoadTargetScene(_nextScene, publishComplete: true);
+				else
+					_suppressLoadScene = false;
+				_phase = Phase.Idle;
+				_t = 0f;
+				return;
+			}
+
 			_phase = Phase.WipeIn;
 			_t = 0f;
 			EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Transition, Volume = 0.5f });
 			EnsureTransitionFlag(true);
+		}
+
+		private void LoadTargetScene(SceneId nextScene, bool publishComplete)
+		{
+			EventManager.Publish(new DeleteCachesEvent { Scene = nextScene });
+			DeleteEntities(nextScene);
+			EventManager.Publish(new LoadSceneEvent { Scene = nextScene });
+			if (publishComplete)
+				EventManager.Publish(new TransitionCompleteEvent { Scene = nextScene });
 		}
 
 		private void DeleteEntities(SceneId nextScene)
