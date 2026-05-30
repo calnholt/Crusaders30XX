@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
@@ -120,12 +121,24 @@ namespace Crusaders30XX.ECS.Systems
 			var origin = cam.Origin;
 			float mapScale = cam.MapScale;
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+			var runNodes = SaveCache.GetRunMapNodes();
 			foreach (var e in _pois)
 			{
 				var t = e.GetComponent<Transform>();
 				if (t == null) continue;
 				if (!_worldByEntityId.TryGetValue(e.Id, out var world)) continue;
 				var poiComp = e.GetComponent<PointOfInterest>();
+				if (poiComp != null && poiComp.Type == PointOfInterestType.Shop && !string.IsNullOrEmpty(poiComp.ShopId))
+				{
+					if (SaveCache.TryGetRunShop(poiComp.ShopId, out var shop, out _))
+					{
+						var uiShop = e.GetComponent<UIElement>();
+						if (uiShop != null)
+						{
+							uiShop.IsInteractable = RunMapShopService.IsEnterable(shop, runNodes);
+						}
+					}
+				}
 				// Scale world position by map scale to match scaled world space
 				var scaledWorld = world * mapScale;
 				var screenPos = scaledWorld - origin;
@@ -247,6 +260,51 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				EntityManager.AddComponent(e, poi);
 			}
+
+			SpawnShopPois(ref i, runNodes);
+		}
+
+		private void SpawnShopPois(ref int entityIndex, IReadOnlyList<RunMapNode> runNodes)
+		{
+			foreach (var shop in SaveCache.GetRunMapShops())
+			{
+				if (shop == null || string.IsNullOrEmpty(shop.id)) continue;
+
+				var worldPos = new Vector2(shop.worldX, shop.worldY);
+				var e = EntityManager.CreateEntity($"POI_Shop_{entityIndex++}");
+				_worldByEntityId[e.Id] = worldPos;
+				_pois.Add(e);
+				EntityManager.AddComponent(e, new Transform { Position = worldPos, ZOrder = 10 });
+
+				int boundsWidth = (int)IconSize;
+				int boundsHeight = (int)IconSize;
+				if (_shopIconTexture != null && _shopIconTexture.Width > 0 && _shopIconTexture.Height > 0)
+				{
+					float aspectRatio = _shopIconTexture.Height / (float)_shopIconTexture.Width;
+					boundsHeight = (int)(IconSize * aspectRatio);
+				}
+
+				bool canEnter = RunMapShopService.IsEnterable(shop, runNodes);
+				EntityManager.AddComponent(e, new UIElement
+				{
+					Bounds = new Rectangle(0, 0, boundsWidth, boundsHeight),
+					IsInteractable = canEnter,
+					TooltipType = TooltipType.None,
+					EventType = UIElementEventType.None,
+					IsPreventDefaultClick = true,
+				});
+				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
+				EntityManager.AddComponent(e, new PointOfInterest
+				{
+					Id = shop.id,
+					ShopId = shop.id,
+					WorldPosition = worldPos,
+					Type = PointOfInterestType.Shop,
+					IsMapVisibleFromStart = true,
+					RunMapIndex = -1,
+					DisplayRadius = 0f,
+				});
+			}
 		}
 
 		public void Draw()
@@ -266,12 +324,19 @@ namespace Crusaders30XX.ECS.Systems
 			// Draw only POIs that are revealed or completed (strict graph fog)
 			foreach (var x in list)
 			{
-				bool isVisible = x.P.IsRevealed || x.P.IsCompleted;
+				bool isVisible = x.P.IsMapVisibleFromStart || x.P.IsRevealed || x.P.IsCompleted;
 
 				if (x.UI != null)
 				{
 					x.UI.IsHidden = !isVisible;
-					x.UI.IsInteractable = isVisible && x.P.IsRevealed && !x.P.IsCompleted;
+					if (x.P.Type == PointOfInterestType.Shop)
+					{
+						// Interactability updated each frame in UpdateEntity
+					}
+					else
+					{
+						x.UI.IsInteractable = isVisible && x.P.IsRevealed && !x.P.IsCompleted;
+					}
 				}
 
 				if (!isVisible) continue;

@@ -134,9 +134,10 @@ namespace Crusaders30XX.ECS.Data.Save
 					}
 					return;
 				}
-				var (seed, nodes) = GenerateRunMapForSave();
+				var (seed, nodes, shops) = GenerateRunMapForSave();
 				_save.runMapSeed = seed;
 				_save.runMapNodes = nodes;
+				_save.runMapShops = shops;
 				if (string.IsNullOrEmpty(_save.lastLocation) && nodes.Count > 0)
 				{
 					_save.lastLocation = nodes[0].id;
@@ -405,7 +406,7 @@ namespace Crusaders30XX.ECS.Data.Save
 
 		private static SaveFile CreateDefaultSave()
 		{
-			var (seed, nodes) = GenerateRunMapForSave();
+			var (seed, nodes, shops) = GenerateRunMapForSave();
 			var startingDeck = StartingDeckGeneratorService.Generate(
 				StartingDeckGeneratorService.DefaultStarterCardPool,
 				seed);
@@ -415,6 +416,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				gold = 4,
 				runMapSeed = seed,
 				runMapNodes = nodes,
+				runMapShops = shops,
 				items = new List<SaveItem>(),
 				lastLocation = nodes.Count > 0 ? nodes[0].id : "run_0",
 				loadouts = new List<LoadoutDefinition>
@@ -457,13 +459,64 @@ namespace Crusaders30XX.ECS.Data.Save
 			return Path.GetDirectoryName(path);
 		}
 
-		private static (int seed, List<RunMapNode> nodes) GenerateRunMapForSave()
+		private static (int seed, List<RunMapNode> nodes, List<RunMapShop> shops) GenerateRunMapForSave()
 		{
 			var (seed, nodes) = LocationMapGeneratorService.Generate();
+			var shops = RunMapShopGeneratorService.Generate(seed, nodes);
 #if DEBUG
 			RunMapGeneratorLog.Append(LocationMapGeneratorService.ComputeSpreadMetrics(seed, nodes));
 #endif
-			return (seed, nodes);
+			return (seed, nodes, shops);
+		}
+
+		public static IReadOnlyList<RunMapShop> GetRunMapShops()
+		{
+			EnsureLoaded();
+			EnsureRunMap();
+			return _save?.runMapShops ?? new List<RunMapShop>();
+		}
+
+		public static bool TryGetRunShop(string shopId, out RunMapShop shop, out int index)
+		{
+			shop = null;
+			index = -1;
+			EnsureRunMap();
+			return RunMapShopService.TryGetShop(shopId, _save?.runMapShops, out shop, out index);
+		}
+
+		public static bool TryPurchaseRunMapShopItem(string shopId, int slotIndex, out int newGold)
+		{
+			newGold = 0;
+			if (string.IsNullOrWhiteSpace(shopId) || slotIndex < 0) return false;
+
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) return false;
+				if (!TryGetRunShop(shopId, out var shop, out _) || shop?.items == null) return false;
+				if (slotIndex >= shop.items.Count) return false;
+
+				var item = shop.items[slotIndex];
+				if (item == null || item.isPurchased) return false;
+				if (string.IsNullOrWhiteSpace(item.cardId) || string.IsNullOrWhiteSpace(item.color)) return false;
+
+				int price = System.Math.Max(0, item.price);
+				if (_save.gold < price) return false;
+
+				EnsurePrimaryLoadout(_save);
+				var loadout = _save.loadouts[0];
+				if (loadout.cardIds == null) loadout.cardIds = new List<string>();
+
+				string cardKey = $"{item.cardId}|{item.color}";
+				_save.gold = System.Math.Max(0, _save.gold - price);
+				loadout.cardIds.Add(cardKey);
+				item.isPurchased = true;
+				Persist();
+
+				EventManager.Publish(new LoadoutCardAdded { LoadoutId = loadout.id, CardKey = cardKey });
+				newGold = _save.gold;
+				return true;
+			}
 		}
 
 		private static IEnumerable<string> EnumerateSaveFilePaths()

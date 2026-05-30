@@ -34,5 +34,17 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public const int DefaultUnrevealedRadius = 50;
 		public const int QuestRewardGold = 10;
 		public const int MaxChildrenPerNode = 3;
+		public const int RunMapShopCount = 3;
+		public const int RunMapShopItemsPerShop = 3;
+		public const int RunMapShopCardPrice = 30;
+
+		// Shops sit inside completed-quest fog; clearance is icon-scale, not map MinNodeSpacing.
+		public const float RunMapShopClearanceFromQuest = 80f;
+
+		private const float RunMapShopMinSeparationFloor = 1000f;
+
+		/// <summary>Minimum distance between shop markers (~38% of playable height).</summary>
+		public static float RunMapShopMinSeparation =>
+			Math.Max(RunMapShopMinSeparationFloor, PlayableMinDimension * 0.38f);
 	}
 }

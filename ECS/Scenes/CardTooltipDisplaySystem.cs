@@ -94,7 +94,7 @@ namespace Crusaders30XX.ECS.Systems
 			var center = new Vector2(rx + w / 2f, ry + (h / 2f + offsetY));
 
 			// Get or create the visualization card entity for this tooltip
-			var color = top.CD?.Color ?? CardData.CardColor.White;
+			var color = top.CT.CardColor ?? top.CD?.Color ?? CardData.CardColor.White;
 			var key = top.CT.CardId + "|" + color.ToString();
 			if (!_tooltipCardCache.TryGetValue(key, out var cardEntity) || cardEntity == null)
 			{

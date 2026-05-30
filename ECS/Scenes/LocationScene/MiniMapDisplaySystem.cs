@@ -135,8 +135,13 @@ namespace Crusaders30XX.ECS.Systems
 				foreach (var p in pois)
 				{
 					bool isCompleted = p.IsCompleted;
-					bool isVisible = isCompleted || p.IsRevealed;
+					bool isVisible = p.IsMapVisibleFromStart || isCompleted || p.IsRevealed;
 					if (!isVisible) continue;
+
+					float dotSize = DotSize;
+					Color dotColor = p.Type == PointOfInterestType.Shop
+						? new Color(255, 200, 80)
+						: (isCompleted ? Color.White : Color.Red);
 
 					float minimapPoiX = actualMinimapX + (p.WorldPosition.X * cam.MapScale * scale);
 					float minimapPoiY = actualMinimapY + (p.WorldPosition.Y * cam.MapScale * scale);
@@ -146,9 +151,6 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						continue;
 					}
-
-					float dotSize = DotSize;
-					Color dotColor = isCompleted ? Color.White : Color.Red;
 
 					var dotRect = new Rectangle(
 						(int)(minimapPoiX - dotSize / 2f),
@@ -188,6 +190,29 @@ namespace Crusaders30XX.ECS.Systems
 						(int)dotSize
 					);
 					_spriteBatch.Draw(_pixel, dotRect, dotColor);
+				}
+
+				foreach (var shop in SaveCache.GetRunMapShops())
+				{
+					if (shop == null) continue;
+
+					float minimapPoiX = actualMinimapX + (shop.worldX * cam.MapScale * scale);
+					float minimapPoiY = actualMinimapY + (shop.worldY * cam.MapScale * scale);
+
+					if (minimapPoiX < minimapX || minimapPoiX > minimapX + minimapWidth ||
+						minimapPoiY < minimapY || minimapPoiY > minimapY + minimapHeight)
+					{
+						continue;
+					}
+
+					float shopDotSize = DotSize;
+					var shopDotRect = new Rectangle(
+						(int)(minimapPoiX - shopDotSize / 2f),
+						(int)(minimapPoiY - shopDotSize / 2f),
+						(int)shopDotSize,
+						(int)shopDotSize
+					);
+					_spriteBatch.Draw(_pixel, shopDotRect, new Color(255, 200, 80));
 				}
 			}
 

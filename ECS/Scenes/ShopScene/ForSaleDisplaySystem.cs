@@ -5,10 +5,11 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Rendering;
-using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -25,6 +26,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _font = FontSingleton.ContentFont;
 
 		private string _currentShopTitle = "Shop";
+		private string _currentShopId = string.Empty;
 		private bool _needsRebuild = true;
 
 		private Texture2D _goldIcon;
@@ -118,6 +120,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<SetShopTitle>(_ =>
 			{
 				_currentShopTitle = string.IsNullOrWhiteSpace(_.Title) ? "Shop" : _.Title;
+				_currentShopId = _.ShopId ?? string.Empty;
 				_needsRebuild = true;
 			});
 			EventManager.Subscribe<HotKeyHoldCompletedEvent>(OnHotKeyHoldCompleted);
@@ -199,31 +202,15 @@ namespace Crusaders30XX.ECS.Systems
 			var existing = EntityManager.GetEntitiesWithComponent<ForSaleItem>().ToList();
 			foreach (var e in existing) EntityManager.DestroyEntity(e.Id);
 
-			// Find matching shop by title; fallback to first shop with items
-			var all = LocationDefinitionCache.GetAll();
-			PointOfInterestDefinition chosen = null;
-			PointOfInterestDefinition fallback = null;
-			foreach (var kv in all)
-			{
-				var def = kv.Value;
-				if (def?.pointsOfInterest == null) continue;
-				foreach (var poi in def.pointsOfInterest)
-				{
-					if (poi?.type != PointOfInterestType.Shop) continue;
-					if (poi?.forSale == null || poi.forSale.Count == 0) continue;
-					if (fallback == null) fallback = poi;
-					if (!string.IsNullOrWhiteSpace(_currentShopTitle) && string.Equals(poi.name ?? string.Empty, _currentShopTitle, StringComparison.OrdinalIgnoreCase))
-					{
-						chosen = poi;
-						break;
-					}
-				}
-				if (chosen != null) break;
-			}
-			var target = chosen ?? fallback;
-			if (target == null || target.forSale == null || target.forSale.Count == 0) return;
+			string shopId = !string.IsNullOrWhiteSpace(_currentShopId)
+				? _currentShopId
+				: StateSingleton.ActiveRunShopId;
+			if (string.IsNullOrWhiteSpace(shopId)) return;
 
-			EntityFactory.CreateForSale(EntityManager, target.forSale, target.name ?? "Shop");
+			if (!SaveCache.TryGetRunShop(shopId, out var shop, out _) || shop?.items == null || shop.items.Count == 0)
+				return;
+
+			EntityFactory.CreateForSaleFromRunShop(EntityManager, shop);
 
 			// ensure gold icon
 			_goldIcon ??= SafeLoadTexture("gold");
@@ -304,7 +291,23 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					case ForSaleItemType.Card:
 					{
-						if (ColorFanEnabled)
+						if (x.FS.CardColor.HasValue)
+						{
+							var previewColor = x.FS.CardColor.Value;
+							var card = EnsureCardPreview(x.FS.Id, previewColor);
+							if (card != null)
+							{
+								var t = card.GetComponent<Transform>();
+								if (t != null) t.Rotation = MathHelper.ToRadians(x.FS.DisplayRotationDeg);
+								EventManager.Publish(new CardRenderScaledRotatedEvent
+								{
+									Card = card,
+									Position = contentCenter,
+									Scale = ContentScale
+								});
+							}
+						}
+						else if (ColorFanEnabled)
 						{
 							float angle = MathHelper.ToRadians(ColorFanAngleStepDeg);
 							var drawSpecs = new (CardData.CardColor color, int dx, float rot)[]

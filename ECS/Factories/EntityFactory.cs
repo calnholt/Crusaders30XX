@@ -558,6 +558,67 @@ namespace Crusaders30XX.ECS.Factories
 			return result;
 		}
 
+		public static List<Entity> CreateForSaleFromRunShop(
+			EntityManager entityManager,
+			RunMapShop shop)
+		{
+			var result = new List<Entity>();
+			if (shop?.items == null) return result;
+
+			for (int slotIndex = 0; slotIndex < shop.items.Count; slotIndex++)
+			{
+				var item = shop.items[slotIndex];
+				if (item == null || string.IsNullOrWhiteSpace(item.cardId)) continue;
+
+				string id = item.cardId;
+				string displayName = id;
+				var card = CardFactory.Create(id);
+				if (card != null)
+				{
+					displayName = string.IsNullOrWhiteSpace(card.Name) ? id : card.Name;
+				}
+
+				var color = ParseCardColor(item.color);
+				var e = entityManager.CreateEntity($"ShopItem_{shop.id}_{slotIndex}");
+				entityManager.AddComponent(e, new Transform { Position = new Vector2(-1000, -1000), ZOrder = 10002 });
+				entityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
+				var uiElement = new UIElement
+				{
+					Bounds = new Rectangle(-1000, -1000, 1, 1),
+					IsInteractable = !item.isPurchased,
+					TooltipType = TooltipType.Card,
+				};
+				entityManager.AddComponent(e, new ForSaleItem
+				{
+					Id = id,
+					ItemType = ForSaleItemType.Card,
+					Price = item.price,
+					IsPurchased = item.isPurchased,
+					DisplayName = displayName,
+					SourceShopName = shop.id,
+					ShopId = shop.id,
+					ShopSlotIndex = slotIndex,
+					CardColor = color,
+					DisplayRotationDeg = item.displayRotationDeg,
+				});
+				entityManager.AddComponent(e, new CardTooltip { CardId = id, TooltipScale = 0.8f, CardColor = color });
+				entityManager.AddComponent(e, uiElement);
+				entityManager.AddComponent(e, new OwnedByScene { Scene = SceneId.Shop });
+				result.Add(e);
+			}
+
+			return result;
+		}
+
+		private static CardData.CardColor ParseCardColor(string color)
+		{
+			if (string.Equals(color, "Red", StringComparison.OrdinalIgnoreCase))
+				return CardData.CardColor.Red;
+			if (string.Equals(color, "Black", StringComparison.OrdinalIgnoreCase))
+				return CardData.CardColor.Black;
+			return CardData.CardColor.White;
+		}
+
         /// <summary>
         /// Clones a card entity, copying all gameplay-affecting components while creating fresh visual/animation state.
         /// </summary>
@@ -630,7 +691,8 @@ namespace Crusaders30XX.ECS.Factories
                 {
                     Owner = clonedEntity,
                     CardId = sourceCardTooltip.CardId,
-                    TooltipScale = sourceCardTooltip.TooltipScale
+                    TooltipScale = sourceCardTooltip.TooltipScale,
+                    CardColor = sourceCardTooltip.CardColor,
                 });
             }
 

@@ -20,6 +20,8 @@ namespace Crusaders30XX.ECS.Components
 		public MusicTrack MusicTrack { get; set; } = MusicTrack.None;
 		public System.Collections.Generic.List<string> ChildPoiIds { get; set; } = new System.Collections.Generic.List<string>();
 		public int RunMapIndex { get; set; } = -1;
+		public string ShopId { get; set; } = string.Empty;
+		public bool IsMapVisibleFromStart { get; set; }
 	}
 
 

@@ -1,7 +1,8 @@
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -22,7 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly ContentManager _content;
 		private Texture2D _background;
 
-		private string _currentShopTitle = "Shop";
+		private string _backgroundAsset = string.Empty;
 
 		[DebugEditable(DisplayName = "Offset Y", Step = 2, Min = -2000, Max = 2000)]
 		public int OffsetY { get; set; } = 0;
@@ -36,36 +37,56 @@ namespace Crusaders30XX.ECS.Systems
 
 			EventManager.Subscribe<SetShopTitle>(OnSetShopTitle);
 			EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
-
-			TryLoad();
 		}
 
 		private void OnSetShopTitle(SetShopTitle evt)
 		{
-			_currentShopTitle = string.IsNullOrWhiteSpace(evt?.Title) ? "Shop" : evt.Title;
+			_backgroundAsset = ResolveBackgroundAsset(evt);
 			TryLoad();
 		}
 
 		private void OnLoadScene(LoadSceneEvent evt)
 		{
 			if (evt == null || evt.Scene != SceneId.Shop) return;
+			if (string.IsNullOrWhiteSpace(_backgroundAsset) &&
+				!string.IsNullOrWhiteSpace(StateSingleton.ActiveRunShopId) &&
+				SaveCache.TryGetRunShop(StateSingleton.ActiveRunShopId, out var shop, out _))
+			{
+				_backgroundAsset = shop.backgroundAsset ?? string.Empty;
+			}
 			TryLoad();
+		}
+
+		private static string ResolveBackgroundAsset(SetShopTitle evt)
+		{
+			if (!string.IsNullOrWhiteSpace(evt?.BackgroundAsset))
+			{
+				return evt.BackgroundAsset;
+			}
+
+			if (!string.IsNullOrWhiteSpace(evt?.ShopId) &&
+				SaveCache.TryGetRunShop(evt.ShopId, out var shop, out _) &&
+				!string.IsNullOrWhiteSpace(shop.backgroundAsset))
+			{
+				return shop.backgroundAsset;
+			}
+
+			return string.Empty;
 		}
 
 		private void TryLoad()
 		{
 			try
 			{
-				// Resolve background from location POI definitions, falling back to generic shop background.
-				string path = ResolveBackgroundPath();
+				_background = null;
+				if (!string.IsNullOrWhiteSpace(_backgroundAsset))
+				{
+					_background = SafeLoadTexture(_backgroundAsset);
+				}
 
-				// Try POI-specific background first
-				_background = SafeLoadTexture(path);
-
-				// Fallback to generic shop background if needed
 				if (_background == null)
 				{
-					_background = SafeLoadTexture("shop_background");
+					_background = SafeLoadTexture("desert-background");
 				}
 			}
 			catch (Exception ex)
@@ -89,63 +110,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private static string RemoveExtension(string p)
-		{
-			if (string.IsNullOrWhiteSpace(p)) return p;
-			try { return System.IO.Path.GetFileNameWithoutExtension(p); }
-			catch { return p; }
-		}
-
-		private string ResolveBackgroundPath()
-		{
-			PointOfInterestDefinition chosen = null;
-			PointOfInterestDefinition fallback = null;
-
-			try
-			{
-				Dictionary<string, LocationDefinition> all = LocationDefinitionCache.GetAll();
-				if (all == null) return null;
-
-				foreach (var kv in all)
-				{
-					var def = kv.Value;
-					if (def?.pointsOfInterest == null) continue;
-
-					foreach (var poi in def.pointsOfInterest)
-					{
-						if (poi == null) continue;
-						if (poi.type != PointOfInterestType.Shop) continue;
-						if (string.IsNullOrWhiteSpace(poi.background)) continue;
-
-						if (fallback == null)
-						{
-							fallback = poi;
-						}
-
-						if (!string.IsNullOrWhiteSpace(_currentShopTitle) &&
-							string.Equals(poi.name ?? string.Empty, _currentShopTitle, StringComparison.OrdinalIgnoreCase))
-						{
-							chosen = poi;
-							break;
-						}
-					}
-
-					if (chosen != null) break;
-				}
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"[ShopBackgroundDisplaySystem] Failed to resolve background path: {ex.Message}");
-				return null;
-			}
-
-			var target = chosen ?? fallback;
-			if (target == null || string.IsNullOrWhiteSpace(target.background)) return null;
-
-			return RemoveExtension(target.background);
-		}
-
-		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
+		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
 			yield break;
 		}
@@ -177,6 +142,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
-
-	

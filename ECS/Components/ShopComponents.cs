@@ -1,4 +1,5 @@
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Objects.Cards;
 
 namespace Crusaders30XX.ECS.Components
 {
@@ -20,6 +21,10 @@ namespace Crusaders30XX.ECS.Components
 		public bool IsPurchased { get; set; } = false;
 		public string DisplayName { get; set; } = string.Empty;
 		public string SourceShopName { get; set; } = string.Empty;
+		public string ShopId { get; set; } = string.Empty;
+		public int ShopSlotIndex { get; set; } = -1;
+		public CardData.CardColor? CardColor { get; set; }
+		public float DisplayRotationDeg { get; set; }
 	}
 }
 

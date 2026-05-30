@@ -50,7 +50,9 @@ The 20-card deck assigned at new-run creation by random selection from the start
 
 ## Copy limit
 
-A deck may include at most one copy of a given card identity and color pairing, and at most two copies of the same card identity across all colors.
+A deck may include at most one copy of a given card identity and color pairing, and at most two copies of the same card identity across all colors. Quest rewards and other non-shop sources follow this limit.
+
+Shop purchases are an exception: buying from a run-map shop may add a card entry even when it would exceed the normal copy limit. Each shop listing can still only be bought once per run (`isPurchased` on that slot).
 
 ## Location (desert)
 
@@ -82,7 +84,23 @@ A node becomes fightable when `isRevealed` is true. Reveal happens when its pare
 
 ## Map fog
 
-Unrevealed nodes are hidden and cannot be interacted with. Fog radius around revealed/completed nodes is visual only and must not expose unrevealed nodes early.
+Unrevealed quest nodes are hidden and cannot be interacted with. Fog radius around revealed/completed nodes is visual only and must not expose unrevealed quest nodes early.
+
+Shop markers are an exception: their map icon and minimap dot are visible from the start of the run. A shop becomes enterable when the fog circle of any **revealed or completed** quest node covers the shop's world position (same radius rules as quest fog). Shops do not add their own fog-clear circles. Unrevealed shops (not yet inside any quest fog) do not show a tooltip or enter prompt on hover.
+
+## Shop (run map)
+
+A card vendor on the desert run map. Three shops exist per run. Shops are **not** quest nodes: they have no parent/child links in the battle tree and do not replace any of the 20 combat nodes.
+
+After the 20-node battle map is generated, each shop is placed at a world position within completed-quest fog range of at least one battle node (so completing that battle can unlock the shop). Each shop has three fixed listings (identity, color, price) generated at run creation and stored in save.
+
+## Shop reveal (enterable)
+
+A shop becomes enterable when its world position lies inside the fog circle of at least one **completed** quest node (full reveal radius). Merely revealing a nearby quest without completing it is not enough.
+
+The same card identity may appear in more than one shop in a run; within one shop the three listings use distinct identities and distinct colors.
+
+_Avoid_: Shop node (when meaning the map marker; prefer **shop** vs **quest node**)
 
 ## Quest reward
 

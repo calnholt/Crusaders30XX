@@ -43,6 +43,7 @@ namespace Crusaders30XX.ECS.Systems
         private void TryStartQuestFromPoi(PointOfInterest poi)
         {
             if (poi == null || string.IsNullOrEmpty(poi.Id)) return;
+            if (poi.Type == PointOfInterestType.Shop) return;
 
             if (!SaveCache.TryGetRunNode(poi.Id, out var node, out int questIndex)) return;
             if (!node.isRevealed || node.isCompleted) return;

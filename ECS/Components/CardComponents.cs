@@ -442,6 +442,7 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
         public string CardId { get; set; } = "";
         public float TooltipScale { get; set; } = 0.6f;
+        public CardData.CardColor? CardColor { get; set; }
     }
 
     /// <summary>

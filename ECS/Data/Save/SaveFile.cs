@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Data.Save
         public int gold { get; set; } = 0;
 		public int runMapSeed { get; set; }
 		public List<RunMapNode> runMapNodes { get; set; } = new List<RunMapNode>();
+		public List<RunMapShop> runMapShops { get; set; } = new List<RunMapShop>();
 		public List<SaveItem> items { get; set; } = new List<SaveItem>();
 		public string lastLocation { get; set; } = string.Empty;
 		public List<LoadoutDefinition> loadouts { get; set; } = new List<LoadoutDefinition>();

@@ -2,8 +2,10 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -30,7 +32,6 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Left Side Offset", Step = 1, Min = 0, Max = 120)]
 		public int LeftSideOffset { get; set; } = 16;
 
-		// 8 independent angle controls (deg)
 		[DebugEditable(DisplayName = "Top-Left Angle", Step = 1f, Min = -45f, Max = 45f)]
 		public float TopLeftAngleDegrees { get; set; } = 2f;
 		[DebugEditable(DisplayName = "Top-Right Angle", Step = 1f, Min = -45f, Max = 45f)]
@@ -64,43 +65,33 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var scene = entity.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Location) return;
+			if (StateSingleton.IsActive || StateSingleton.PreventClicking) return;
 
-			// Find top-most hovered Shop POI
+			var runNodes = SaveCache.GetRunMapNodes();
 			var hovered = EntityManager.GetEntitiesWithComponent<UIElement>()
 				.Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), P = e.GetComponent<PointOfInterest>() })
 				.Where(x => x.UI != null && !x.UI.IsHidden && x.UI.IsHovered && x.P != null && x.P.Type == PointOfInterestType.Shop)
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.FirstOrDefault();
 
-			if (hovered == null)
+			if (hovered == null || string.IsNullOrEmpty(hovered.P.ShopId))
 			{
-				if (_tooltipEntity != null)
-				{
-					EntityManager.DestroyEntity(_tooltipEntity.Id);
-					_tooltipEntity = null;
-				}
+				DestroyTooltip();
 				return;
 			}
 
-			// Determine title
-			string title = "Shop";
-			if (!string.IsNullOrEmpty(hovered.P?.Id))
+			if (!SaveCache.TryGetRunShop(hovered.P.ShopId, out var shop, out _) ||
+				!RunMapShopService.IsEnterable(shop, runNodes))
 			{
-				var all = LocationDefinitionCache.GetAll();
-				foreach (var kv in all)
-				{
-					var def = kv.Value;
-					if (def?.pointsOfInterest == null) continue;
-					var found = def.pointsOfInterest.FirstOrDefault(p => p?.id == hovered.P.Id);
-					if (found != null && !string.IsNullOrWhiteSpace(found.name))
-					{
-						title = found.name;
-						break;
-					}
-				}
+				DestroyTooltip();
+				return;
 			}
 
-			// Compute rect to the left or right of the hovered icon, based on available space (similar to quest tooltip)
+			string title = "Shop";
+			if (!string.IsNullOrWhiteSpace(shop.displayName))
+			{
+				title = shop.displayName;
+			}
 			int pad = System.Math.Max(0, Padding);
 			var size = _font.MeasureString(title) * TextScale;
 			int width = (int)System.Math.Ceiling(size.X) + pad * 2 + System.Math.Max(0, LeftSideOffset);
@@ -109,7 +100,6 @@ namespace Crusaders30XX.ECS.Systems
 			int viewportW = Game1.VirtualWidth;
 			int viewportH = Game1.VirtualHeight;
 
-			// Prefer the side with more room; default preference by screen halves
 			int rightSpace = viewportW - (r.Right + Gap);
 			int leftSpace = r.Left - Gap;
 			bool canPlaceRight = rightSpace >= width;
@@ -120,19 +110,22 @@ namespace Crusaders30XX.ECS.Systems
 
 			int rx = placeRight ? (r.Right + Gap + 35) : (r.Left - Gap - width - 35);
 			int ry = r.Y + (r.Height - height) / 2;
-
-			// Screen clamp
 			rx = System.Math.Max(0, System.Math.Min(rx, viewportW - width));
 			ry = System.Math.Max(0, System.Math.Min(ry, viewportH - height));
-			var rect = new Microsoft.Xna.Framework.Rectangle(rx, ry, width, height);
+			var rect = new Rectangle(rx, ry, width, height);
 
 			if (_tooltipEntity == null)
 			{
 				_tooltipEntity = EntityManager.CreateEntity(TooltipEntityName);
 				EntityManager.AddComponent(_tooltipEntity, new Transform { Position = new Vector2(rect.X, rect.Y), ZOrder = 10001 });
 				EntityManager.AddComponent(_tooltipEntity, new UIElement { Bounds = rect, IsInteractable = true, TooltipOffsetPx = 30 });
-				// Add a hold-to-enter hotkey attached to the hovered POI
-				EntityManager.AddComponent(_tooltipEntity, new HotKey { Button = FaceButton.X, RequiresHold = true, ParentEntity = hovered.E, Position = HotKeyPosition.Below });
+				EntityManager.AddComponent(_tooltipEntity, new HotKey
+				{
+					Button = FaceButton.X,
+					RequiresHold = true,
+					ParentEntity = hovered.E,
+					Position = HotKeyPosition.Below
+				});
 			}
 			else
 			{
@@ -148,7 +141,6 @@ namespace Crusaders30XX.ECS.Systems
 				if (hk != null) hk.ParentEntity = hovered.E;
 			}
 
-			// Stash the title on the entity via Hint for easy retrieval during Draw
 			var hint = _tooltipEntity.GetComponent<Hint>();
 			if (hint == null)
 			{
@@ -160,6 +152,13 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
+		private void DestroyTooltip()
+		{
+			if (_tooltipEntity == null) return;
+			EntityManager.DestroyEntity(_tooltipEntity.Id);
+			_tooltipEntity = null;
+		}
+
 		public void Draw()
 		{
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
@@ -167,15 +166,13 @@ namespace Crusaders30XX.ECS.Systems
 			if (_tooltipEntity == null) return;
 
 			var ui = _tooltipEntity.GetComponent<UIElement>();
-			var t = _tooltipEntity.GetComponent<Transform>();
 			var hint = _tooltipEntity.GetComponent<Hint>();
-			if (ui == null || t == null || hint == null) return;
+			if (ui == null || hint == null) return;
 
 			string title = string.IsNullOrEmpty(hint.Text) ? "Shop" : hint.Text;
 			int pad = System.Math.Max(0, Padding);
 			var rect = ui.Bounds;
 
-			// Average paired angles to the factory's 4 inputs
 			float top = (TopLeftAngleDegrees + TopRightAngleDegrees) * 0.5f;
 			float right = (RightTopAngleDegrees + RightBottomAngleDegrees) * 0.5f;
 			float bottom = (BottomLeftAngleDegrees + BottomRightAngleDegrees) * 0.5f;
@@ -193,12 +190,9 @@ namespace Crusaders30XX.ECS.Systems
 			);
 			_spriteBatch.Draw(trap, rect, Color.White);
 
-			// Draw text centered
 			var size = _font.MeasureString(title) * TextScale;
 			var pos = new Vector2(rect.X + (rect.Width - size.X) / 2f, rect.Y + (rect.Height - size.Y) / 2f);
 			_spriteBatch.DrawString(_font, title, pos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
 		}
 	}
 }
-
-
