@@ -1,14 +1,21 @@
 ﻿using System;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.Diagnostics.Snapshots;
+using Crusaders30XX.ECS.Data.Save;
 
 ShaderRuntimeOptions.ConfigureFromArgs(args);
+NewGameLaunchOptions.ConfigureFromArgs(args);
 if (!ShaderRuntimeOptions.ShadersEnabled)
 {
     Console.WriteLine("[Launch] GPU screen effects disabled (no-shaders)");
 }
 
-var appArgs = ShaderRuntimeOptions.StripLaunchFlags(args);
+if (NewGameLaunchOptions.DeleteSaveBeforeLaunch)
+{
+    SaveCache.DeleteSaveFilesIfPresent();
+}
+
+var appArgs = NewGameLaunchOptions.StripLaunchFlag(ShaderRuntimeOptions.StripLaunchFlags(args));
 
 DisplaySnapshotLaunchOptions snapshotOptions = null;
 if (DisplaySnapshotLaunchOptions.TryParse(appArgs, out var parsed))

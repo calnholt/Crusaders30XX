@@ -31,12 +31,38 @@ namespace Crusaders30XX.ECS.Services
 	public static class LocationMapGeneratorService
 	{
 		private const int CandidateAttempts = 32;
+		private const int GlobalScatterAttempts = 64;
 		private const int SpiralAngleSteps = 16;
 		private const int SpiralRingSteps = 12;
+		private const int MaxGenerateAttempts = 128;
 
 		public static (int seed, List<RunMapNode> nodes) Generate(int? seedOverride = null)
 		{
-			int seed = seedOverride ?? Random.Shared.Next();
+			if (seedOverride.HasValue)
+			{
+				return GenerateCore(seedOverride.Value);
+			}
+
+			InvalidOperationException lastFailure = null;
+			for (int attempt = 0; attempt < MaxGenerateAttempts; attempt++)
+			{
+				try
+				{
+					return GenerateCore(Random.Shared.Next());
+				}
+				catch (InvalidOperationException ex)
+				{
+					lastFailure = ex;
+				}
+			}
+
+			throw new InvalidOperationException(
+				$"[LocationMapGeneratorService] Failed to generate run map after {MaxGenerateAttempts} attempts.",
+				lastFailure);
+		}
+
+		private static (int seed, List<RunMapNode> nodes) GenerateCore(int seed)
+		{
 			var rng = new Random(seed);
 			var nodes = new List<RunMapNode>(LocationMapConstants.NodeCount);
 			var depths = new int[LocationMapConstants.NodeCount];
@@ -237,9 +263,34 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			if (TrySpiralPlacement(nodes, parent, out x, out y)) return;
+			if (TryGlobalScatterPlacement(rng, nodes, out x, out y)) return;
 
 			throw new InvalidOperationException(
 				$"[LocationMapGeneratorService] Failed to place child of {parent.id} without violating min spacing.");
+		}
+
+		private static bool TryGlobalScatterPlacement(Random rng, List<RunMapNode> nodes, out float x, out float y)
+		{
+			float minX = LocationMapConstants.MapMargin;
+			float maxX = LocationMapConstants.BaseMapWidth - LocationMapConstants.MapMargin;
+			float minY = LocationMapConstants.MapMargin;
+			float maxY = LocationMapConstants.BaseMapHeight - LocationMapConstants.MapMargin;
+
+			for (int attempt = 0; attempt < GlobalScatterAttempts; attempt++)
+			{
+				float cx = minX + (float)rng.NextDouble() * (maxX - minX);
+				float cy = minY + (float)rng.NextDouble() * (maxY - minY);
+				if (!OverlapsExisting(nodes, cx, cy))
+				{
+					x = cx;
+					y = cy;
+					return true;
+				}
+			}
+
+			x = 0f;
+			y = 0f;
+			return false;
 		}
 
 		private static bool TryRandomCandidate(Random rng, RunMapNode parent, List<RunMapNode> nodes, out float cx, out float cy)
@@ -256,11 +307,14 @@ namespace Crusaders30XX.ECS.Services
 
 		private static bool TrySpiralPlacement(List<RunMapNode> nodes, RunMapNode parent, out float x, out float y)
 		{
+			float maxDist = Math.Max(
+				LocationMapConstants.MaxStep,
+				LocationMapConstants.PlayableMinDimension * 0.45f);
+
 			for (int ring = 1; ring <= SpiralRingSteps; ring++)
 			{
 				float t = ring / (float)SpiralRingSteps;
-				float dist = LocationMapConstants.MinStep +
-					t * (LocationMapConstants.MaxStep - LocationMapConstants.MinStep);
+				float dist = LocationMapConstants.MinStep + t * (maxDist - LocationMapConstants.MinStep);
 				for (int a = 0; a < SpiralAngleSteps; a++)
 				{
 					float angle = a * (float)(Math.PI * 2.0 / SpiralAngleSteps);

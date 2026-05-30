@@ -353,6 +353,30 @@ namespace Crusaders30XX.ECS.Data.Save
 		}
 
 		/// <summary>
+		/// Removes on-disk save files (primary and legacy locations) and clears the in-memory cache.
+		/// The next <see cref="EnsureLoaded"/> creates a fresh default save.
+		/// </summary>
+		public static void DeleteSaveFilesIfPresent()
+		{
+			lock (_lock)
+			{
+				_save = null;
+				bool deletedAny = false;
+				foreach (string path in EnumerateSaveFilePaths())
+				{
+					if (!File.Exists(path)) continue;
+					File.Delete(path);
+					System.Console.WriteLine($"[SaveCache] Deleted save file: {path}");
+					deletedAny = true;
+				}
+				if (!deletedAny)
+				{
+					System.Console.WriteLine("[SaveCache] No save file found to delete.");
+				}
+			}
+		}
+
+		/// <summary>
 		/// Any save whose version is not CURRENT_VERSION is discarded and replaced with a new default save.
 		/// No migration between versions.
 		/// </summary>
@@ -442,7 +466,22 @@ namespace Crusaders30XX.ECS.Data.Save
 			return (seed, nodes);
 		}
 
+		private static IEnumerable<string> EnumerateSaveFilePaths()
+		{
+			string primary = ResolvePrimarySaveFilePath(ensureSaveDirectory: false);
+			if (!string.IsNullOrEmpty(primary)) yield return primary;
+			string legacy = ResolveLegacyFilePath();
+			if (!string.IsNullOrEmpty(legacy)) yield return legacy;
+		}
+
 		private static string ResolveFilePath()
+		{
+			string path = ResolvePrimarySaveFilePath(ensureSaveDirectory: true);
+			if (!string.IsNullOrEmpty(path)) _filePath = path;
+			return path;
+		}
+
+		private static string ResolvePrimarySaveFilePath(bool ensureSaveDirectory)
 		{
 			if (!string.IsNullOrEmpty(_filePath)) return _filePath;
 			try
@@ -450,9 +489,8 @@ namespace Crusaders30XX.ECS.Data.Save
 				var appData = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
 				if (string.IsNullOrEmpty(appData)) return string.Empty;
 				var saveDir = Path.Combine(appData, "Crusaders30XX");
-				if (!Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
-				_filePath = Path.Combine(saveDir, "save_file.json");
-				return _filePath;
+				if (ensureSaveDirectory && !Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
+				return Path.Combine(saveDir, "save_file.json");
 			}
 			catch
 			{

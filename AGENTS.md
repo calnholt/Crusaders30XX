@@ -11,6 +11,9 @@ dotnet build
 # Run the game
 dotnet run
 
+# Delete existing save (primary and legacy paths) then start fresh
+dotnet run -- new
+
 # Run without GPU screen effects (weak GPU / dev performance)
 dotnet run -- no-shaders
 dotnet run --launch-profile no-shaders
