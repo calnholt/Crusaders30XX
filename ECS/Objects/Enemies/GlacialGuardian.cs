@@ -16,7 +16,7 @@ public class GlacialGuardian : EnemyBase
   {
     Id = "glacial_guardian";
     Name = "Glacial Guardian";
-    HealthPerCard = 0.9333333f;
+    HealthPerCard = 1.4f;
 
     OnStartOfBattle = (entityManager) =>
     {

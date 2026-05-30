@@ -19,7 +19,7 @@ public class SkeletalArcher : EnemyBase
   {
     Id = "skeletal_archer";
     Name = "Skeletal Archer";
-    HealthPerCard = 0.6333333f;
+    HealthPerCard = 0.95f;
 
     OnStartOfBattle = (entityManager) =>
     {

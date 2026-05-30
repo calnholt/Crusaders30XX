@@ -13,7 +13,7 @@ public class DustWuurm : EnemyBase
   {
     Id = "dust_wuurm";
     Name = "Dust Wuurm";
-    HealthPerCard = 0.9333333f;
+    HealthPerCard = 1.4f;
 
     OnStartOfBattle = (entityManager) =>
     {

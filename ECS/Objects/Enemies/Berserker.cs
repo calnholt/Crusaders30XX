@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
     {
       Id = "berserker";
       Name = "Berserker";
-      HealthPerCard = 0.9333333f;
+      HealthPerCard = 1.4f;
 
       OnStartOfBattle = (entityManager) =>
       {

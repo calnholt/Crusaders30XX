@@ -17,7 +17,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
     {
       Id = "shadow";
       Name = "Shadow";
-      HealthPerCard = 1.2666667f;
+      HealthPerCard = 1.9f;
       StartAnathema -= (int)difficulty * 1;
       Difficulty = difficulty;
 

@@ -16,7 +16,7 @@ public class Sorcerer : EnemyBase
   {
     Id = "sorcerer";
     Name = "Sorcerer";
-    HealthPerCard = 1f;
+    HealthPerCard = 1.5f;
 
     OnStartOfBattle = (entityManager) =>
     {

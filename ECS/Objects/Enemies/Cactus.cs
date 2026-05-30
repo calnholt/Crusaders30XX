@@ -17,7 +17,7 @@ public class Cactus : EnemyBase
   {
     Id = "cactus";
     Name = "Cactus";
-    HealthPerCard = 0.6666667f;
+    HealthPerCard = 1.0f;
 
 
     OnStartOfBattle = (entityManager) =>
