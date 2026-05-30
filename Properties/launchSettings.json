@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Crusaders30XX": {
+      "commandName": "Project"
+    },
+    "no-shaders": {
+      "commandName": "Project",
+      "commandLineArgs": "no-shaders"
+    }
+  }
+}

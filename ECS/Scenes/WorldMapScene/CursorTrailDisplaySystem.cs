@@ -101,6 +101,7 @@ public class CursorTrailDisplaySystem : Core.System
     public override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
+        if (!ShaderRuntimeOptions.ShadersEnabled) return;
 
         if (!_hasCursorPos) return;
 
@@ -160,6 +161,7 @@ public class CursorTrailDisplaySystem : Core.System
     /// <param name="restoreTarget">The render target to restore after compositing (typically _sceneRt)</param>
     public void DrawTrail(RenderTarget2D restoreTarget)
     {
+        if (!ShaderRuntimeOptions.ShadersEnabled) return;
         if (_trailRt == null || _blurB == null || !_hasCursorPos) return;
 
         // Copy trail into _blurB so we can punch a hole without modifying _trailRt
@@ -189,6 +191,7 @@ public class CursorTrailDisplaySystem : Core.System
 
     private void EnsureLoaded()
     {
+        if (!ShaderRuntimeOptions.ShadersEnabled) return;
         if (_blurEffect == null)
         {
             try { _blurEffect = _content.Load<Effect>("Shaders/GaussianBlur"); }

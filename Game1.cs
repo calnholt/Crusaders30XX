@@ -314,7 +314,7 @@ public class Game1 : Game
         
         Texture2D finalTexture = _sceneRt;
 
-        if (hasPoison || hasCircularWaves || hasRectangularWaves)
+        if (ShaderRuntimeOptions.ShadersEnabled && (hasPoison || hasCircularWaves || hasRectangularWaves))
         {
             // Composite effects in order: Poison → Circular Shockwaves → Rectangular Shockwaves
             
@@ -450,7 +450,11 @@ public class Game1 : Game
         _spriteBatch.End();
         if (_snapshotHost?.ShouldSkipGlobalOverlays != true)
         {
-            _cursorTrailDisplaySystem.DrawTrail(_sceneRt);
+            if (ShaderRuntimeOptions.ShadersEnabled)
+            {
+                _cursorTrailDisplaySystem.DrawTrail(_sceneRt);
+            }
+
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
             FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
             _spriteBatch.End();

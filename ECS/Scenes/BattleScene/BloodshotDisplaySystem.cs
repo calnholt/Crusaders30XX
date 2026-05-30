@@ -289,6 +289,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
 
         private void EnsureLoaded()
         {
+            if (!ShaderRuntimeOptions.ShadersEnabled) return;
             if (_effect == null)
             {
                 try
@@ -341,6 +342,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
 
         public override void Update(GameTime gameTime)
         {
+            if (!ShaderRuntimeOptions.ShadersEnabled) return;
             if (_failed) return;
             base.Update(gameTime);
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -369,7 +371,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         /// </summary>
         public new bool IsActive()
         {
-            return _fadeIntensity > 0.001f;
+            return ShaderRuntimeOptions.ShadersEnabled && _fadeIntensity > 0.001f;
         }
 
         /// <summary>
@@ -380,6 +382,16 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         /// <param name="finalTarget">The final destination (null for backbuffer)</param>
         public void Composite(Texture2D sceneSrc, RenderTarget2D tempOutput, RenderTarget2D finalTarget = null)
         {
+            if (!ShaderRuntimeOptions.ShadersEnabled)
+            {
+                if (sceneSrc == null) return;
+                _gd.SetRenderTarget(finalTarget);
+                _sb.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
+                _sb.Draw(sceneSrc, _gd.Viewport.Bounds, Color.White);
+                _sb.End();
+                return;
+            }
+
             // Skip rendering if fade is fully out
             if (_overlay == null || sceneSrc == null || _fadeIntensity <= 0.001f)
             {

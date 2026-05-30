@@ -30,7 +30,7 @@ public class PoisonDamageDisplaySystem : Core.System
 
     private ActivePoison? _activePoison;
 
-    public bool HasActivePoison => _activePoison.HasValue;
+    public bool HasActivePoison => ShaderRuntimeOptions.ShadersEnabled && _activePoison.HasValue;
 
     public PoisonDamageDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content)
         : base(em)
@@ -46,6 +46,7 @@ public class PoisonDamageDisplaySystem : Core.System
     public override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
+        if (!ShaderRuntimeOptions.ShadersEnabled) return;
         _timeSeconds += MathHelper.Max(0f, (float)gameTime.ElapsedGameTime.TotalSeconds);
         if (_overlay == null) EnsureLoaded();
         if (_overlay == null) return;
@@ -63,6 +64,7 @@ public class PoisonDamageDisplaySystem : Core.System
 
     private void OnPoisonDamageEvent(PoisonDamageEvent e)
     {
+        if (!ShaderRuntimeOptions.ShadersEnabled) return;
         EnsureLoaded();
         if (_overlay == null) return;
         // Single poison effect - replaces previous
@@ -85,6 +87,16 @@ public class PoisonDamageDisplaySystem : Core.System
     // Composites poison effect over sceneSrc and outputs to finalTarget (null = backbuffer)
     public void Composite(Texture2D sceneSrc, RenderTarget2D tempOutput, RenderTarget2D finalTarget = null)
     {
+        if (!ShaderRuntimeOptions.ShadersEnabled)
+        {
+            if (sceneSrc == null) return;
+            _gd.SetRenderTarget(finalTarget);
+            _sb.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
+            _sb.Draw(sceneSrc, _gd.Viewport.Bounds, Color.White);
+            _sb.End();
+            return;
+        }
+
         if (_overlay == null || sceneSrc == null || !_activePoison.HasValue)
         {
             // Fallback: blit original scene directly to finalTarget

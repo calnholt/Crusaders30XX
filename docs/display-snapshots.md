@@ -36,6 +36,7 @@ dotnet run -- snapshot <fixture-id> [fixture-args...]
 - Virtual resolution 1920×1080; no profiler, tooltips, debug menu, or cursor in the PNG
 - `CardDisplayToggle.UseV2` is set where needed for card rendering
 - Does not publish `LoadSceneEvent` — uses `SceneId.Snapshot` only
+- Optional launch flag `no-shaders` (e.g. `dotnet run -- snapshot card no-shaders`) disables GPU screen effects; PNGs are not comparable to full-effect baselines
 
 ---
 

@@ -76,6 +76,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
+			if (!ShaderRuntimeOptions.ShadersEnabled) return;
 			var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Location) return;
 
@@ -191,8 +192,9 @@ namespace Crusaders30XX.ECS.Systems
 			var savedRasterizer = _graphicsDevice.RasterizerState;
 			_spriteBatch.End();
 
-			// Decide whether we can apply masking
-			bool canMask = (_overlay != null && _overlay.IsAvailable && centers.Count > 0);
+			// Decide whether we can apply the fog shader (always blit scene when shader is off or unavailable)
+			bool canMask = ShaderRuntimeOptions.ShadersEnabled &&
+				_overlay != null && _overlay.IsAvailable && centers.Count > 0;
 			if (canMask)
 			{
 				// Composite the captured scene texture via the mask effect
@@ -226,6 +228,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void EnsureOverlayLoaded()
 		{
+			if (!ShaderRuntimeOptions.ShadersEnabled) return;
 			if (_overlay != null) return;
 			Effect fx = null;
 			try

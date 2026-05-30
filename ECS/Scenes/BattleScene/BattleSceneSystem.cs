@@ -255,7 +255,8 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.End();
 			
 			// Apply bloodshot effect to backgrounds if active
-			bool hasBloodshot = _bloodshotDisplaySystem != null && _bloodshotDisplaySystem.IsActive();
+			bool hasBloodshot = ShaderRuntimeOptions.ShadersEnabled &&
+				_bloodshotDisplaySystem != null && _bloodshotDisplaySystem.IsActive();
 			if (hasBloodshot)
 			{
 				// Composite bloodshot effect onto _bgTemp

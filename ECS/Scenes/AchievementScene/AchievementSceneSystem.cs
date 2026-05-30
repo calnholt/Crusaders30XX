@@ -71,7 +71,7 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
-            if (_backgroundDisplaySystem != null)
+            if (ShaderRuntimeOptions.ShadersEnabled && _backgroundDisplaySystem != null)
                 FrameProfiler.Measure("AchievementBackgroundDisplaySystem.Draw", _backgroundDisplaySystem.Draw);
             if (_gridDisplaySystem != null)
                 FrameProfiler.Measure("AchievementGridDisplaySystem.Draw", _gridDisplaySystem.Draw);

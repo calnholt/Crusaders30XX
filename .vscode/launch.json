@@ -9,6 +9,13 @@
         "type": "dotnet",
         "request": "launch",
         "projectPath": "${workspaceFolder}/Crusaders30XX.csproj"
+      },
+      {
+        "name": "C#: Crusaders30XX (no-shaders)",
+        "type": "dotnet",
+        "request": "launch",
+        "projectPath": "${workspaceFolder}/Crusaders30XX.csproj",
+        "commandLineArgs": "no-shaders"
       }
     ],
   }

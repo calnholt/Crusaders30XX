@@ -11,6 +11,10 @@ dotnet build
 # Run the game
 dotnet run
 
+# Run without GPU screen effects (weak GPU / dev performance)
+dotnet run -- no-shaders
+dotnet run --launch-profile no-shaders
+
 # Display snapshots (headless PNG capture for visual verification)
 # See docs/display-snapshots.md for all commands
 dotnet run -- snapshot card strike

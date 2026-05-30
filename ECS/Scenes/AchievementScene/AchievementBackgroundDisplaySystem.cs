@@ -106,6 +106,7 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
+            if (!ShaderRuntimeOptions.ShadersEnabled) return;
             var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
             if (scene == null || scene.Current != SceneId.Achievement) return;
 
@@ -155,6 +156,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void EnsureOverlayLoaded()
         {
+            if (!ShaderRuntimeOptions.ShadersEnabled) return;
             if (_overlay != null) return;
             Effect fx = null;
             try

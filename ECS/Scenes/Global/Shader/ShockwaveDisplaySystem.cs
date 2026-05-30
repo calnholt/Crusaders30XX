@@ -30,7 +30,7 @@ public class ShockwaveDisplaySystem : Core.System
 
     private readonly List<ActiveWave> _waves = new();
 
-    public bool HasActiveWaves => _waves.Count > 0;
+    public bool HasActiveWaves => ShaderRuntimeOptions.ShadersEnabled && _waves.Count > 0;
 
     public ShockwaveDisplaySystem(EntityManager em, GraphicsDevice gd, SpriteBatch sb, ContentManager content)
         : base(em)
@@ -46,6 +46,7 @@ public class ShockwaveDisplaySystem : Core.System
     public override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
+        if (!ShaderRuntimeOptions.ShadersEnabled) return;
         _timeSeconds += MathHelper.Max(0f, (float)gameTime.ElapsedGameTime.TotalSeconds);
         if (_overlay == null) EnsureLoaded();
         if (_overlay == null) return;
@@ -61,6 +62,7 @@ public class ShockwaveDisplaySystem : Core.System
 
     private void OnShockwaveEvent(ShockwaveEvent e)
     {
+        if (!ShaderRuntimeOptions.ShadersEnabled) return;
         EnsureLoaded();
         if (_overlay == null) return;
         _waves.Add(new ActiveWave { Evt = e, StartTime = _timeSeconds });
@@ -68,6 +70,7 @@ public class ShockwaveDisplaySystem : Core.System
 
     private void EnsureLoaded()
     {
+        if (!ShaderRuntimeOptions.ShadersEnabled) return;
         if (_effect == null)
         {
             try { _effect = _content.Load<Effect>("Shaders/Shockwave"); }
@@ -82,6 +85,22 @@ public class ShockwaveDisplaySystem : Core.System
     // Composites all active waves over sceneSrc and presents to backbuffer using ping-pong render targets
     public void Composite(Texture2D sceneSrc, RenderTarget2D ppA, RenderTarget2D ppB, RenderTarget2D finalTarget = null)
     {
+        if (!ShaderRuntimeOptions.ShadersEnabled)
+        {
+            if (sceneSrc == null) return;
+            if (finalTarget != null && ReferenceEquals(sceneSrc, finalTarget))
+            {
+                _gd.SetRenderTarget(null);
+                return;
+            }
+
+            _gd.SetRenderTarget(finalTarget);
+            _sb.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
+            _sb.Draw(sceneSrc, _gd.Viewport.Bounds, Color.White);
+            _sb.End();
+            return;
+        }
+
         if (_overlay == null || sceneSrc == null)
         {
             // Fallback: blit original scene

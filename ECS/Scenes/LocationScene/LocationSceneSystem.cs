@@ -136,7 +136,7 @@ namespace Crusaders30XX.ECS.Systems
 				savedRasterizer
 			);
 
-			// Composite: warp + darken outside holes while keeping inside undistorted
+			// Composite: blit captured map; optional fog shader when ShadersEnabled
 			FrameProfiler.Measure("FogDisplaySystem.Composite", () => _fogDisplaySystem.DrawComposite(_sceneRT));
 			FrameProfiler.Measure("MiniMapDisplaySystem.Draw", _miniMapDisplaySystem.Draw);
 			FrameProfiler.Measure("HellRiftIndicatorDisplaySystem.Draw", _hellRiftIndicatorDisplaySystem.Draw);
