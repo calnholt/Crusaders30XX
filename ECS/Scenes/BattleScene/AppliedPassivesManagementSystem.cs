@@ -106,15 +106,24 @@ namespace Crusaders30XX.ECS.Systems
             {
                 ["sceneId"] = @event.Scene.ToString()
             });
-            // this is bad, make a direct event call to clean
-            if (@event.Scene != SceneId.Battle) return;
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            if (player == null) return;
             var ap = player.GetComponent<AppliedPassives>();
-            if (ap == null) return;
-            foreach (var passive in ap.Passives)
+            if (ap == null || ap.Passives == null) return;
+
+            var keep = @event.Scene == SceneId.Battle
+                ? new HashSet<AppliedPassiveType>(GetRunLongPassives().Concat(GetQuestPassives()))
+                : new HashSet<AppliedPassiveType>(GetRunLongPassives());
+
+            foreach (var passive in ap.Passives.Keys.ToList())
             {
-                if (GetQuestPassives().Contains(passive.Key)) continue;
-                EventManager.Publish(new RemovePassive { Owner = player, Type = passive.Key });
+                if (keep.Contains(passive)) continue;
+                EventManager.Publish(new RemovePassive { Owner = player, Type = passive });
+            }
+
+            if (player.HasComponent<Player>())
+            {
+                RunScopedStateService.SyncRunLongPassivesFromPlayer(player);
             }
         }
 
@@ -290,6 +299,11 @@ namespace Crusaders30XX.ECS.Systems
                 default:
                     break;
             }
+
+            if (e.Target.HasComponent<Player>() && GetRunLongPassives().Contains(e.Type))
+            {
+                RunScopedStateService.SyncRunLongPassivesFromPlayer(e.Target);
+            }
         }
 
         private void OnRemovePassive(RemovePassive e)
@@ -306,6 +320,11 @@ namespace Crusaders30XX.ECS.Systems
             if (ap.Passives.ContainsKey(e.Type))
             {
                 ap.Passives.Remove(e.Type);
+            }
+
+            if (e.Owner.HasComponent<Player>() && GetRunLongPassives().Contains(e.Type))
+            {
+                RunScopedStateService.SyncRunLongPassivesFromPlayer(e.Owner);
             }
         }
 
@@ -324,6 +343,11 @@ namespace Crusaders30XX.ECS.Systems
             if (ap.Passives[e.Type] <= 0)
             {
                 ap.Passives.Remove(e.Type);
+            }
+
+            if (e.Owner.HasComponent<Player>() && GetRunLongPassives().Contains(e.Type))
+            {
+                RunScopedStateService.SyncRunLongPassivesFromPlayer(e.Owner);
             }
         }
 
@@ -387,6 +411,14 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.SanguineCurse
             };
         }
+        public static HashSet<AppliedPassiveType> GetRunLongPassives()
+        {
+            return new HashSet<AppliedPassiveType>
+            {
+                AppliedPassiveType.Frostbite,
+            };
+        }
+
         public static HashSet<AppliedPassiveType> GetQuestPassives()
         {
             return new HashSet<AppliedPassiveType>
@@ -396,7 +428,6 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Penance,
                 AppliedPassiveType.Fear,
                 AppliedPassiveType.Bleed,
-                AppliedPassiveType.Frostbite,
                 AppliedPassiveType.Enflamed,
                 AppliedPassiveType.Scar,
                 AppliedPassiveType.Sealed,

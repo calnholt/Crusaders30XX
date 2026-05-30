@@ -14,7 +14,13 @@ namespace Crusaders30XX.ECS.Services
 			AchievementManager.SaveProgress();
 			if (entityManager != null)
 			{
+				RunScopedStateService.ClearRunCardRestrictionComponents(entityManager);
 				RunDeckService.DestroyRunDeck(entityManager);
+			}
+			SaveCache.ClearRunScopedState();
+			if (entityManager != null)
+			{
+				RunPlayerService.DestroyRunPlayer(entityManager);
 			}
 			SaveCache.StartNewRun();
 		}

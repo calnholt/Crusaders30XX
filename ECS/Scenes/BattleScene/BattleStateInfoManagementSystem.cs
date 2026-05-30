@@ -70,10 +70,6 @@ namespace Crusaders30XX.ECS.Systems
             {
                 ["scene"] = e.Scene.ToString()
             });
-            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-            if (player == null) return;
-            var st = player.GetComponent<BattleStateInfo>();
-            st.RunTracking?.Clear();
         }
 
         private void OnTrackingEvent(TrackingEvent e)

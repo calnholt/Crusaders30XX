@@ -71,6 +71,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					sealedComp.Seals += amount;
 				}
+				RunScopedStateService.SyncCardRestrictionsFromComponents(card);
 				var cardData = card.GetComponent<CardData>();
 				LoggingService.Append("SealManagementSystem.OnApplySeal", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown", ["message"] = "card has been sealed" });
 			}
@@ -100,6 +101,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					sealedComp.Seals += amount;
 				}
+				RunScopedStateService.SyncCardRestrictionsFromComponents(card);
 				var cardData = card.GetComponent<CardData>();
 				LoggingService.Append("SealManagementSystem.OnCardMoved", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown", ["message"] = "card has been sealed from draw pile" });
 			}
@@ -236,6 +238,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void FreeCard(Entity card)
 		{
 			EntityManager.RemoveComponent<Sealed>(card);
+			RunScopedStateService.SyncCardRestrictionsFromComponents(card);
 			var cardData = card.GetComponent<CardData>();
 			LoggingService.Append("SealManagementSystem.FreeCard", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown" });
 		}

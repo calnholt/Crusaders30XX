@@ -56,6 +56,7 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var card in cardsToFreeze)
 			{
 				EntityManager.AddComponent(card, new Frozen { Owner = card });
+				RunScopedStateService.SyncCardRestrictionsFromComponents(card);
 			}
 		}
 
@@ -76,6 +77,7 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var card in cardsToFreeze)
 			{
 				EntityManager.AddComponent(card, new Frozen { Owner = card });
+				RunScopedStateService.SyncCardRestrictionsFromComponents(card);
 			}
 		}
 
@@ -123,6 +125,7 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var card in cardsToFreeze)
 			{
 				EntityManager.AddComponent(card, new Frozen { Owner = card });
+				RunScopedStateService.SyncCardRestrictionsFromComponents(card);
 				var cardData = card.GetComponent<CardData>();
 				LoggingService.Append("FrozenCardManagementSystem.ApplyFrozenEffectHandAndDrawPile.frozen", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown" });
 			}

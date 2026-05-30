@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangePhase);
 			EventManager.Subscribe<ModifyActionPointsEvent>(OnModifyAp);
+			EventManager.Subscribe<SetActionPointsEvent>(OnSetActionPoints);
 			LoggingService.Append("ActionPointManagementSystem.ctor", new System.Text.Json.Nodes.JsonObject { ["message"] = "subscribed to ChangeBattlePhaseEvent, ModifyActionPointsEvent" });
 		}
 
@@ -59,6 +60,23 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			int next = ap.Current + evt.Delta;
 			ap.Current = next < 0 ? 0 : next;
+		}
+
+		private void OnSetActionPoints(SetActionPointsEvent evt)
+		{
+			LoggingService.Append("ActionPointManagementSystem.OnSetActionPoints", new System.Text.Json.Nodes.JsonObject
+			{
+				["amount"] = evt.Amount
+			});
+			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+			if (player == null) return;
+			var ap = player.GetComponent<ActionPoints>();
+			if (ap == null)
+			{
+				ap = new ActionPoints { Current = 0 };
+				EntityManager.AddComponent(player, ap);
+			}
+			ap.Current = evt.Amount < 0 ? 0 : evt.Amount;
 		}
 	}
 }

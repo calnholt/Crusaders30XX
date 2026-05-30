@@ -800,5 +800,108 @@ namespace Crusaders30XX.ECS.Data.Save
 				Persist();
 			}
 		}
+
+		public static void ClearRunScopedState()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				_save.runLongPassives = new Dictionary<string, int>();
+				_save.runCardRestrictions = new Dictionary<string, List<string>>();
+				Persist();
+			}
+		}
+
+		public static IReadOnlyDictionary<string, int> GetRunLongPassivesSnapshot()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save?.runLongPassives == null) return new Dictionary<string, int>();
+				return new Dictionary<string, int>(_save.runLongPassives);
+			}
+		}
+
+		public static void SetRunLongPassive(string passiveTypeName, int stacks)
+		{
+			if (string.IsNullOrWhiteSpace(passiveTypeName)) return;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				if (_save.runLongPassives == null) _save.runLongPassives = new Dictionary<string, int>();
+				if (stacks <= 0) _save.runLongPassives.Remove(passiveTypeName);
+				else _save.runLongPassives[passiveTypeName] = stacks;
+				Persist();
+			}
+		}
+
+		public static List<string> GetRunCardRestrictions(string cardKey)
+		{
+			if (string.IsNullOrWhiteSpace(cardKey)) return new List<string>();
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save?.runCardRestrictions == null) return new List<string>();
+				if (!_save.runCardRestrictions.TryGetValue(cardKey, out var list) || list == null) return new List<string>();
+				return new List<string>(list);
+			}
+		}
+
+		public static void AddRunCardRestriction(string cardKey, string restrictionName)
+		{
+			if (string.IsNullOrWhiteSpace(cardKey) || string.IsNullOrWhiteSpace(restrictionName)) return;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				if (_save.runCardRestrictions == null) _save.runCardRestrictions = new Dictionary<string, List<string>>();
+				if (!_save.runCardRestrictions.TryGetValue(cardKey, out var list) || list == null)
+				{
+					list = new List<string>();
+					_save.runCardRestrictions[cardKey] = list;
+				}
+				if (!list.Contains(restrictionName, StringComparer.OrdinalIgnoreCase))
+				{
+					list.Add(restrictionName);
+				}
+				Persist();
+			}
+		}
+
+		public static void RemoveRunCardRestriction(string cardKey, string restrictionName)
+		{
+			if (string.IsNullOrWhiteSpace(cardKey) || string.IsNullOrWhiteSpace(restrictionName)) return;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save?.runCardRestrictions == null) return;
+				if (!_save.runCardRestrictions.TryGetValue(cardKey, out var list) || list == null) return;
+				list.RemoveAll(r => string.Equals(r, restrictionName, StringComparison.OrdinalIgnoreCase));
+				if (list.Count == 0) _save.runCardRestrictions.Remove(cardKey);
+				Persist();
+			}
+		}
+
+		public static void SetRunCardRestrictionsForCard(string cardKey, List<string> restrictionNames)
+		{
+			if (string.IsNullOrWhiteSpace(cardKey)) return;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				if (_save.runCardRestrictions == null) _save.runCardRestrictions = new Dictionary<string, List<string>>();
+				if (restrictionNames == null || restrictionNames.Count == 0)
+				{
+					_save.runCardRestrictions.Remove(cardKey);
+				}
+				else
+				{
+					_save.runCardRestrictions[cardKey] = new List<string>(restrictionNames);
+				}
+				Persist();
+			}
+		}
 	}
 }

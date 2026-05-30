@@ -75,6 +75,7 @@ namespace Crusaders30XX.ECS.Factories
                 world.AddComponent(equipHeadEntity, new UIElement { IsInteractable = true });
                 world.AddComponent(equipHeadEntity, new EquippedEquipment { EquippedOwner = entity, Equipment = equipment });
                 world.AddComponent(equipHeadEntity, ParallaxLayer.GetUIParallaxLayer());
+                TagPersistAcrossScenes(world.EntityManager, equipHeadEntity);
             }
             if (!string.IsNullOrWhiteSpace(loadout.legsId))
             {
@@ -85,6 +86,7 @@ namespace Crusaders30XX.ECS.Factories
                 world.AddComponent(equipLegsEntity, new UIElement { IsInteractable = true });
                 world.AddComponent(equipLegsEntity, new EquippedEquipment { EquippedOwner = entity, Equipment = equipment });
                 world.AddComponent(equipLegsEntity, ParallaxLayer.GetUIParallaxLayer());
+                TagPersistAcrossScenes(world.EntityManager, equipLegsEntity);
             }
             if (!string.IsNullOrWhiteSpace(loadout.armsId))
             {
@@ -95,6 +97,7 @@ namespace Crusaders30XX.ECS.Factories
                 world.AddComponent(equipArmsEntity, new UIElement { IsInteractable = true });
                 world.AddComponent(equipArmsEntity, new EquippedEquipment { EquippedOwner = entity, Equipment = equipment });
                 world.AddComponent(equipArmsEntity, ParallaxLayer.GetUIParallaxLayer());
+                TagPersistAcrossScenes(world.EntityManager, equipArmsEntity);
             }
             if (!string.IsNullOrWhiteSpace(loadout.chestId))
             {
@@ -105,6 +108,7 @@ namespace Crusaders30XX.ECS.Factories
                 world.AddComponent(equipChestEntity, new UIElement { IsInteractable = true });
                 world.AddComponent(equipChestEntity, new EquippedEquipment { EquippedOwner = entity, Equipment = equipment });
                 world.AddComponent(equipChestEntity, ParallaxLayer.GetUIParallaxLayer());
+                TagPersistAcrossScenes(world.EntityManager, equipChestEntity);
             }
             // Parallax handled by UI root in EquipmentDisplaySystem
             // Attach Courage resource component by default (optional mechanics can read presence)
@@ -125,6 +129,7 @@ namespace Crusaders30XX.ECS.Factories
                 world.AddComponent(medalEntity, ParallaxLayer.GetUIParallaxLayer());
                 world.AddComponent(medalEntity, new UIElement { IsInteractable = false });
                 world.AddComponent(medalEntity, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
+                TagPersistAcrossScenes(world.EntityManager, medalEntity);
             }
             // Attach starting Intellect and MaxHandSize stats
             world.AddComponent(entity, new Intellect { Value = 4 });
@@ -163,7 +168,19 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(weaponTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
             world.AddComponent(weaponTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = "Weapon" });
 
+            TagPersistAcrossScenes(world.EntityManager, entity);
+            TagPersistAcrossScenes(world.EntityManager, courageTooltip);
+            TagPersistAcrossScenes(world.EntityManager, temperanceTooltip);
+            TagPersistAcrossScenes(world.EntityManager, apTooltip);
+            TagPersistAcrossScenes(world.EntityManager, weaponTooltip);
+
             return entity;
+        }
+
+        private static void TagPersistAcrossScenes(EntityManager entityManager, Entity entity)
+        {
+            if (entity == null || entity.HasComponent<DontDestroyOnLoad>()) return;
+            entityManager.AddComponent(entity, new DontDestroyOnLoad());
         }
         
         /// <summary>

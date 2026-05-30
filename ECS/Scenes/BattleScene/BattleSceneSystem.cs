@@ -350,8 +350,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			EntityFactory.CreateGameState(_world);
 			var deckEntity = RunDeckService.EnsureRunDeck(EntityManager);
-			EntityFactory.CreatePlayer(_world);
-			var player = EntityManager.GetEntity("Player");
+			var player = RunPlayerService.EnsureRunPlayer(_world);
 			var playerComp = player?.GetComponent<Player>();
 			if (playerComp != null)
 			{
@@ -376,9 +375,15 @@ namespace Crusaders30XX.ECS.Systems
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
+			EventManager.Publish(new SetActionPointsEvent { Amount = 0 });
 			// Dialog is now handled globally; do not open here
 			// TODO: should handle through events rather than directly but im lazy right now
 			var player = EntityManager.GetEntity("Player");
+			if (player == null)
+			{
+				LoggingService.Append("BattleSceneSystem.InitBattle", new System.Text.Json.Nodes.JsonObject { ["error"] = "Player entity missing" });
+				return;
+			}
 			var battleStateInfo = player.GetComponent<BattleStateInfo>();
 			battleStateInfo.EquipmentTriggeredThisBattle.Clear();
 			// Initialize/Reset per-battle applied passives on player

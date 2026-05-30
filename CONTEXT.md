@@ -6,6 +6,28 @@ Terms only. No implementation details.
 
 A single playthrough from a fresh (or reset) save through the procedurally generated quest map. One save file holds exactly one run in v1.
 
+## Run-long applied passive
+
+A debuff or status on the player that lasts for the whole **run**: it survives leaving battle, visiting the location hub, shopping, and starting other **quest nodes**, until **run failure**, **quest abandon**, or **new run start**. Frostbite is the first run-long applied passive.
+
+_Avoid_: Quest passive (when meaning run-long; use **run-long applied passive**)
+
+## Quest-scoped applied passive
+
+A debuff or status on the player tied to the current **quest node** attempt: it persists across **queued encounters** within that node, but is removed when the player leaves the battle scene to the location hub, shop, or other non-battle scene. It is not written to the save file.
+
+Examples: Penance, Shackled, Bleed (see implementation list `GetQuestPassives`).
+
+_Avoid_: Quest passive (when meaning run-long; use **run-long applied passive**)
+
+## Queued encounter
+
+One enemy fight in the sequential battle queue for a **quest node** (`QueuedEvents` advances one step per **queued encounter**). A quest node may have several queued encounters before the player returns to the location hub.
+
+**Temperance** built during one queued encounter carries to the next encounter in the same quest node. **Temperance** resets to zero when the player leaves the battle scene (e.g. return to the location hub). Courage, HP, and action points reset at the start of each queued encounter.
+
+_Avoid_: Battle node (ambiguous with **quest node** on the map)
+
 ## Run failure
 
 Losing a battle (v1: only in battle). The current run ends only after the game-over sequence finishes, when run state on disk is replaced with a new run and the player returns to the title screen. Until then, the failed run's progress still exists in the save file. Meta earned during that fight is kept.
@@ -20,7 +42,7 @@ Progress that survives run failure and new-run creation: achievements, card mast
 
 ## Save
 
-Persistent file for the active run plus meta. Run state includes map topology, node progress, gold, loadouts, and inventory. Starting a new run replaces run state only; meta is kept.
+Persistent file for the active run plus meta. Run state includes map topology, node progress, gold, loadouts, inventory, **run-long applied passive** stacks on the player, and **run-long card restriction** markers per deck card entry. Starting a new run replaces run state only; meta is kept.
 
 The save file has a `version` field. If it does not match the game's current save version, the entire file is replaced with a new default save. There is no migration between versions. Omitting `version` or using an old version number clears all progress (map, gold, deck, mastery, achievements, tutorials).
 
@@ -39,6 +61,10 @@ Removing a card from the deck for the rest of the run. Exhausted cards do not re
 ## Inter-battle deck reset
 
 At the start of each battle, all surviving cards (draw pile, hand, and discard) combine into one draw pile, which is then shuffled. Exhausted cards are not included.
+
+## Run-long card restriction
+
+A combat effect attached to a specific deck card entity (e.g. frozen, shackled, sealed) that lasts for the whole **run** until **run failure**, **quest abandon**, or **new run start**. Restrictions survive leaving battle and hub visits; they are cleared when the run ends, not at each queued encounter.
 
 ## Starter pool
 

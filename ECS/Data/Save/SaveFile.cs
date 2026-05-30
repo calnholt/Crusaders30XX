@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Data.Save
 {
 	public class SaveFile
 	{
-		public const int CURRENT_VERSION = 3;
+		public const int CURRENT_VERSION = 4;
 
 		public int version { get; set; } = 0;
         public int gold { get; set; } = 0;
@@ -20,6 +20,10 @@ namespace Crusaders30XX.ECS.Data.Save
 		public List<string> seenTutorials { get; set; } = new List<string>();
 		public Dictionary<string, CardMastery> cardMastery { get; set; } = new Dictionary<string, CardMastery>();
 		public Dictionary<string, AchievementProgress> achievements { get; set; } = new Dictionary<string, AchievementProgress>();
+		/// <summary>Run-long applied passive type name to stack count (e.g. Frostbite).</summary>
+		public Dictionary<string, int> runLongPassives { get; set; } = new Dictionary<string, int>();
+		/// <summary>Run deck card key to restriction names (Frozen, Shackle, Sealed).</summary>
+		public Dictionary<string, List<string>> runCardRestrictions { get; set; } = new Dictionary<string, List<string>>();
 	}
 
 	public class SaveItem

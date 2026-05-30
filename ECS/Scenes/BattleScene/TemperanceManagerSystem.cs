@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<CardMoved>(OnCardMoved);
             EventManager.Subscribe<ModifyTemperanceEvent>(OnModifyTemperance);
             EventManager.Subscribe<SetTemperanceEvent>(OnSetTemperanceEvent);
+            EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
             LoggingService.Append("TemperanceManagerSystem.ctor", new System.Text.Json.Nodes.JsonObject { ["message"] = "subscribed to CardMoved, ModifyTemperanceEvent" });
         }
 
@@ -71,11 +72,18 @@ namespace Crusaders30XX.ECS.Systems
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             if (player == null) return;
             var t = player.GetComponent<Temperance>();
+            if (t == null) { t = new Temperance(); EntityManager.AddComponent(player, t); }
             LoggingService.Append("TemperanceManagerSystem.OnSetTemperanceEvent", new System.Text.Json.Nodes.JsonObject
             {
                 ["amount"] = evt.Amount
             });
-            t.Amount = evt.Amount;
+            t.Amount = Math.Max(0, evt.Amount);
+        }
+
+        private void OnLoadScene(LoadSceneEvent evt)
+        {
+            if (evt.Scene == SceneId.Battle) return;
+            EventManager.Publish(new SetTemperanceEvent { Amount = 0 });
         }
 
         private void TryTriggerTemperanceAbility(Entity player, Temperance t)

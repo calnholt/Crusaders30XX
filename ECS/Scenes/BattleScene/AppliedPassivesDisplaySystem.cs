@@ -88,6 +88,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly HashSet<AppliedPassiveType> _turnPassives;
         private readonly HashSet<AppliedPassiveType> _battlePassives;
         private readonly HashSet<AppliedPassiveType> _questPassives;
+        private readonly HashSet<AppliedPassiveType> _runLongPassives;
 
         public AppliedPassivesDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
@@ -97,6 +98,7 @@ namespace Crusaders30XX.ECS.Systems
             _turnPassives = AppliedPassivesManagementSystem.GetTurnPassives();
             _battlePassives = AppliedPassivesManagementSystem.GetBattlePassives();
             _questPassives = AppliedPassivesManagementSystem.GetQuestPassives();
+            _runLongPassives = AppliedPassivesManagementSystem.GetRunLongPassives();
             EventManager.Subscribe<PassiveTriggered>(OnPassiveTriggered);
             EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
             EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCachesEvent);
@@ -253,7 +255,7 @@ namespace Crusaders30XX.ECS.Systems
                         chipBg = Color.FromNonPremultiplied(139, 0, 0, (byte)BgA);
                         textColor = Color.White;
                     }
-                    else if (_questPassives.Contains(items[i].Type))
+                    else if (_questPassives.Contains(items[i].Type) || _runLongPassives.Contains(items[i].Type))
                     {
                         chipBg = Color.FromNonPremultiplied(255, 255, 255, (byte)BgA);
                         textColor = Color.Black;

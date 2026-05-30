@@ -71,6 +71,8 @@ namespace Crusaders30XX.ECS.Services
 				}
 			}
 
+			RunScopedStateService.HydrateRunCardRestrictions(entityManager);
+
 			return deckEntity;
 		}
 
@@ -147,6 +149,7 @@ namespace Crusaders30XX.ECS.Services
 
 		public static void DestroyRunDeck(EntityManager entityManager)
 		{
+			RunScopedStateService.ClearRunCardRestrictionComponents(entityManager);
 			foreach (var card in entityManager.GetEntitiesWithComponent<RunDeckCard>().ToList())
 			{
 				if (card != null && card.IsActive)

@@ -244,6 +244,11 @@ namespace Crusaders30XX.ECS.Events
         public int Delta { get; set; } = 0;
     }
 
+    public class SetActionPointsEvent
+    {
+        public int Amount { get; set; } = 0;
+    }
+
     /// <summary>
     /// Opens the pay-cost overlay for a specific card with required costs.
     /// </summary>

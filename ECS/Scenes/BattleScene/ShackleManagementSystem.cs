@@ -60,6 +60,7 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var card in cardsToShackle)
 			{
 				EntityManager.AddComponent(card, new Shackle { Owner = card });
+				RunScopedStateService.SyncCardRestrictionsFromComponents(card);
 				LoggingService.Append("ShackleManagementSystem.ApplyShackleEffect", new System.Text.Json.Nodes.JsonObject { ["action"] = "Card shackled", ["cardId"] = card.Id });
 			}
 		}
