@@ -11,8 +11,8 @@ using Crusaders30XX.ECS.Singletons;
 namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
-	/// Displays a simple game-over overlay when the player dies: shows red centered text,
-	/// then fades the screen to black and returns to the main menu.
+	/// Displays a game-over overlay on run failure or abandon: centered text, fade to black,
+	/// then resets run state (preserving meta) and returns to the title screen.
 	/// </summary>
 	[DebugTab("Game Over Overlay")]
 	public class GameOverOverlayDisplaySystem : Core.System
@@ -50,7 +50,8 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch = sb;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
-			EventManager.Subscribe<PlayerDied>(OnPlayerDied);
+			EventManager.Subscribe<PlayerDied>(_ => BeginRunEndOverlay());
+			EventManager.Subscribe<RunEndSequenceRequested>(_ => BeginRunEndOverlay());
 			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCachesEvent);
 		}
 
@@ -62,10 +63,10 @@ namespace Crusaders30XX.ECS.Systems
 			_sceneSwitched = false;
 		}
 
-		private void OnPlayerDied(PlayerDied evt)
+		private void BeginRunEndOverlay()
 		{
 			if (_active) return;
-			LoggingService.Append("GameOverOverlayDisplaySystem.OnPlayerDied", new System.Text.Json.Nodes.JsonObject());
+			LoggingService.Append("GameOverOverlayDisplaySystem.BeginRunEndOverlay", new System.Text.Json.Nodes.JsonObject());
 			_active = true;
 			_elapsed = 0f;
 			_sceneSwitched = false;
@@ -84,8 +85,9 @@ namespace Crusaders30XX.ECS.Systems
 			float total = System.Math.Max(0.0001f, OverlayFadeInSeconds) + System.Math.Max(0.0001f, TextFadeOutSeconds);
 			if (!_sceneSwitched && _elapsed >= total)
 			{
-				// Switch back to menu
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+				RunLifecycleService.EndCurrentRun();
+				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Menu });
+				EventManager.Publish(new ShowTransition { Scene = SceneId.TitleMenu });
 				_sceneSwitched = true;
 				_active = false; // stop drawing after switch
 			}
@@ -119,5 +121,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
-

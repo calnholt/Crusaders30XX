@@ -52,7 +52,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case UIElementEventType.AbandonQuest:
                 {
-                    EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
+                    EventManager.Publish(new RunEndSequenceRequested());
                     break;
                 }
                 case UIElementEventType.GoToCustomize:

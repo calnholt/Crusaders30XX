@@ -67,6 +67,7 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel.SetData(new[] { Color.White });
 			_prevKeyboard = Keyboard.GetState();
 			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
+			EventManager.Subscribe<RunEndSequenceRequested>(_ => DismissOverlay());
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -80,8 +81,14 @@ namespace Crusaders30XX.ECS.Systems
 			_overlayTextEntity = null;
 			_confirmParentEntity = null;
 			_overlayBlockerEntity = null;
+			DismissOverlay();
+		}
+
+		private void DismissOverlay()
+		{
 			_state = OverlayState.Hidden;
 			_alpha01 = 0f;
+			SyncEntitiesActive(false);
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
@@ -253,7 +260,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Draw(_pixel, new Rectangle(0, 0, w, h), new Color(0, 0, 0, alpha));
 
 			// Centered text
-			string text = "Abandon quest?";
+			string text = "Abandon run?";
 			var size = _font.MeasureString(text) * TextScale;
 			var pos = new Vector2((w - size.X) / 2f, (h - size.Y) / 2f);
 			_spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);

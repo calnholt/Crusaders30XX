@@ -6,9 +6,21 @@ Terms only. No implementation details.
 
 A single playthrough from a fresh (or reset) save through the procedurally generated quest map. One save file holds exactly one run in v1.
 
+## Run failure
+
+Losing a battle (v1: only in battle). The current run ends only after the game-over sequence finishes, when run state on disk is replaced with a new run and the player returns to the title screen. Until then, the failed run's progress still exists in the save file. Meta earned during that fight is kept.
+
+## Quest abandon
+
+Voluntarily ending the current run from the in-battle quit overlay (prompt: "Abandon run?"). Uses the same game-over sequence as run failure, then replaces run state on disk and returns to the title screen.
+
+## Meta
+
+Progress that survives run failure and new-run creation: achievements, card mastery, and seen tutorials.
+
 ## Save
 
-Persistent player state for the current run: map topology, node progress, gold, loadouts, and related meta. Starting a new run replaces or resets this state.
+Persistent file for the active run plus meta. Run state includes map topology, node progress, gold, loadouts, and inventory. Starting a new run replaces run state only; meta is kept.
 
 The save file has a `version` field. If it does not match the game's current save version, the entire file is replaced with a new default save. There is no migration between versions. Omitting `version` or using an old version number clears all progress (map, gold, deck, mastery, achievements, tutorials).
 
@@ -34,7 +46,11 @@ A deck may include at most one copy of a given card identity and color pairing, 
 
 ## Location (desert)
 
-The desert is a presentation wrapper for the run map (background, title). It is not a separately authored level graph in v1. The world map scene is bypassed in v1; the run map (location scene) is the hub after the title menu.
+The desert is a presentation wrapper for the run map (background, title). It is not a separately authored level graph in v1. The world map scene is bypassed in v1. The location scene is the mid-run hub once at least one quest node is completed; a brand-new run starts from the title screen straight into the first quest battle.
+
+## New run start
+
+Entry from the title screen after run failure or on first launch. The player begins the first available quest battle without visiting the location hub until at least one node is completed.
 
 ## Quest node
 
