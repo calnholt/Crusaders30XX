@@ -33,6 +33,9 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnPhaseChanged);
             EventManager.Subscribe<PledgeCardRequested>(OnPledgeCardRequested);
             EventManager.Subscribe<StartBattleRequested>(_ => ClearAllPledges());
+            EventManager.Subscribe<CardMoved>(OnCardMoved);
+            EventManager.Subscribe<DiscardAllCardsEvent>(OnDiscardAllCards, priority: 10);
+            EventManager.Subscribe<RedrawHandEvent>(OnRedrawHand, priority: 10);
         }
 
         public static bool PledgedThisActionPhase { get; private set; }
@@ -118,6 +121,30 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (evt?.Card == null) return;
             TryPledge(evt.Card);
+        }
+
+        private void OnCardMoved(CardMoved evt)
+        {
+            if (evt?.Card == null) return;
+            if (evt.From != CardZoneType.Hand) return;
+            if (evt.To == CardZoneType.Hand || evt.To == CardZoneType.HandStaged) return;
+            RemovePledgeFromCard(evt.Card);
+        }
+
+        private void OnDiscardAllCards(DiscardAllCardsEvent evt)
+        {
+            var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+            if (deck?.Hand == null) return;
+            foreach (var card in deck.Hand.ToList())
+                RemovePledgeFromCard(card);
+        }
+
+        private void OnRedrawHand(RedrawHandEvent evt)
+        {
+            var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+            if (deck?.Hand == null) return;
+            foreach (var card in deck.Hand.ToList())
+                RemovePledgeFromCard(card);
         }
 
         private void OnPhaseChanged(ChangeBattlePhaseEvent evt)
@@ -221,20 +248,26 @@ namespace Crusaders30XX.ECS.Systems
             return true;
         }
 
+        private void RemovePledgeFromCard(Entity card)
+        {
+            if (card == null || card.GetComponent<Pledge>() == null) return;
+
+            EntityManager.RemoveComponent<Pledge>(card);
+            _pledgedThisActionPhase = false;
+            PledgedThisActionPhase = false;
+            LoggingService.Append("PledgeManagementSystem.RemovePledgeFromCard", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown"
+            });
+        }
+
         private void ClearAllPledges()
         {
             _pledgedThisActionPhase = false;
             PledgedThisActionPhase = false;
 
-            var pledgedCards = EntityManager.GetEntitiesWithComponent<Pledge>().ToList();
-            foreach (var card in pledgedCards)
-            {
-                EntityManager.RemoveComponent<Pledge>(card);
-                LoggingService.Append("PledgeManagementSystem.ClearAllPledges", new System.Text.Json.Nodes.JsonObject
-                {
-                    ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown"
-                });
-            }
+            foreach (var card in EntityManager.GetEntitiesWithComponent<Pledge>().ToList())
+                RemovePledgeFromCard(card);
         }
     }
 }
