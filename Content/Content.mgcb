@@ -1637,6 +1637,11 @@
 
 #---------------------------------- Tutorials ---------------------------------#
 
+#begin Shaders/GaussianBlur.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/GaussianBlur.fx
 
 #begin Data/Tutorials/action_phase_tutorials.json
 /copy:Data/Tutorials/action_phase_tutorials.json
@@ -1649,6 +1654,40 @@
 
 #---------------------------------- Shaders ---------------------------------#
 
+#begin Shaders/Bloodshot.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Bloodshot.fx
 
+#begin Shaders/CircularMask.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/CircularMask.fx
+
+#begin Shaders/AchievementBackground.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/AchievementBackground.fx
+
+#begin Shaders/Shockwave.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Shockwave.fx
+
+#begin Shaders/RectangularShockwave.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/RectangularShockwave.fx
+
+#begin Shaders/Poison.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Poison.fx
 
 #---------------------------------- Music ---------------------------------#

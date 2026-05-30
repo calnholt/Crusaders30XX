@@ -22,6 +22,17 @@ dotnet publish -c Release
 
 This is a .NET 8.0 MonoGame DesktopGL project. Content assets are compiled via the MonoGame Content Builder pipeline (`Content/Content.mgcb`).
 
+### macOS / Linux: shader compilation (MGFXC)
+
+`.fx` shaders compile through Wine. One-time setup:
+
+```bash
+chmod +x scripts/setup-mgfxc-wine.sh
+./scripts/setup-mgfxc-wine.sh
+```
+
+Requires Wine 8+ and `7z` (`brew install --cask wine-stable p7zip`). Creates `~/.winemonogame`. `Directory.Build.targets` sets `MGFXC_WINE_PATH` for `dotnet build` on macOS and Linux.
+
 ### After executing a plan
 
 When you finish implementing an attached or approved plan, **always** run `dotnet build` from the repo root before marking work complete. Fix any compile errors before handing off.
