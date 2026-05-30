@@ -30,8 +30,9 @@ namespace Crusaders30XX.ECS.Services
 			"shadow",
 			"medusa",
 			"wyvern",
-			"blood_martyr",
-			"sniper",
+			// "blood_martyr",
+			"sand_golem",
+			// "sniper", // marksman - disabled from run encounters
 		};
 
 		public static string ToAssetName(string enemyId)
@@ -51,8 +52,7 @@ namespace Crusaders30XX.ECS.Services
 		private static readonly HashSet<string> RunMapExcludedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
 			"gleeber",
-			"sand_corpse",
-			"sand_golem",
+			"sand_corpse"
 		};
 
 		public static IReadOnlyList<string> GetRunMapEnemyPool()
