@@ -30,8 +30,18 @@ namespace Crusaders30XX.ECS.Data.Locations
 		// Root quest node offset from geometric center (large wiggle).
 		public static float RootWiggleRadius => PlayableWidth * 0.20f;
 
-		public const int DefaultRevealRadius = 300;
-		public const int DefaultUnrevealedRadius = 50;
+		// Quest map icon (~140px) plus default fog feather headroom (FogDisplaySystem.FeatherPx up to 64).
+		public const int QuestIconRadiusReferencePx = 140;
+		public const int FogFeatherHeadroomPx = 64;
+		public const int MinFogRadiusForIconPx = QuestIconRadiusReferencePx + FogFeatherHeadroomPx;
+
+		/// <summary>
+		/// Fog clear radius for completed/revealed quests. Must cover child nodes placed up to <see cref="MaxStep"/> away.
+		/// </summary>
+		public static int DefaultRevealRadius => (int)Math.Ceiling(MaxStep);
+
+		/// <summary>Starting radius for completion cutscene lerp; must fit the quest icon inside the hole.</summary>
+		public static int DefaultUnrevealedRadius => MinFogRadiusForIconPx;
 		public const int QuestRewardGold = 10;
 		public const int MaxChildrenPerNode = 3;
 		public const int RunMapShopCount = 3;

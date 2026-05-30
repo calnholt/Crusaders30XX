@@ -86,6 +86,8 @@ A node becomes fightable when `isRevealed` is true. Reveal happens when its pare
 
 Unrevealed quest nodes are hidden and cannot be interacted with. Fog radius around revealed/completed nodes is visual only and must not expose unrevealed quest nodes early.
 
+`DefaultRevealRadius` matches the generator's max parent-child step (`MaxStep`, ~1000 world units on the desert map) so completing a quest clears fog out to newly revealed children. Revealed children also emit a full reveal-radius fog circle at their position. `DefaultUnrevealedRadius` is icon-scale (~204px) and is used only as the starting size for the completion cutscene lerp on the node just cleared.
+
 Shop markers are an exception: their map icon and minimap dot are visible from the start of the run. A shop becomes enterable when the fog circle of any **revealed or completed** quest node covers the shop's world position (same radius rules as quest fog). Shops do not add their own fog-clear circles. Unrevealed shops (not yet inside any quest fog) do not show a tooltip or enter prompt on hover.
 
 ## Shop (run map)

@@ -121,7 +121,7 @@ namespace Crusaders30XX.ECS.Systems
 				var childPoi = childEntity?.GetComponent<PointOfInterest>();
 				if (childPoi == null || childPoi.IsRevealed) continue;
 				childPoi.IsRevealed = true;
-				childPoi.DisplayRadius = childPoi.UnrevealedRadius;
+				childPoi.DisplayRadius = childPoi.RevealRadius;
 				var childUi = childEntity.GetComponent<UIElement>();
 				if (childUi != null && !childPoi.IsCompleted)
 				{

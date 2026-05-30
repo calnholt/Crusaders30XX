@@ -16,7 +16,7 @@ Deck building normally enforces copy limits (one per identity+color, two per ide
 
 1. **Separate save list** `runMapShops` (ids `shop_0`..), each with `worldX`/`worldY` and three `RunMapShopItem` listings. The 20-node `runMapNodes` list is unchanged.
 
-2. **Generation order**: build the battle tree as today, then scatter three shops. Placement rejects overlap with battle nodes (`MinNodeSpacing`); shops may be closer to each other. Each shop must lie within `DefaultRevealRadius` of at least one battle node so some completion can unlock it.
+2. **Generation order**: build the battle tree as today, then scatter three shops. Placement rejects overlap with battle nodes (`MinNodeSpacing`); shops may be closer to each other. Each shop must lie within `DefaultRevealRadius` (derived from `MaxStep`, same constant as quest fog) of at least one battle node so some completion can unlock it.
 
 3. **Enterable rule**: a shop is enterable when its position lies inside the fog circle of any **completed** quest node (full `RevealRadius`). Revealed-but-incomplete nearby quests do not unlock shops.
 

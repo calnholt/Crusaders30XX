@@ -85,7 +85,7 @@ namespace Crusaders30XX.ECS.Systems
 			var list = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
 				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
-				.Where(x => x.P != null && x.T != null)
+				.Where(x => x.P != null && x.T != null && (x.P.IsRevealed || x.P.IsCompleted))
 				.ToList();
 
 			foreach (var x in list)
@@ -93,27 +93,40 @@ namespace Crusaders30XX.ECS.Systems
 				var cx = x.T.Position.X;
 				var cy = x.T.Position.Y;
 
-				int rReveal = x.P.RevealRadius;
-				if (ShowRevealRadius && rReveal > 0)
+				if (ShowRevealRadius)
 				{
-					float scaledRadius = rReveal * mapScale;
-					// simple viewport cull
-					if (!(cx + scaledRadius < 0 || cy + scaledRadius < 0 || cx - scaledRadius > screenW || cy - scaledRadius > screenH))
+					float effectiveRadius = GetEffectiveFogRadiusPx(x.P);
+					if (effectiveRadius > 0f)
 					{
-						DrawRing(new Vector2(cx, cy), (int)scaledRadius, Color.Red, thickness);
+						float scaledRadius = effectiveRadius * mapScale;
+						if (!(cx + scaledRadius < 0 || cy + scaledRadius < 0 || cx - scaledRadius > screenW || cy - scaledRadius > screenH))
+						{
+							DrawRing(new Vector2(cx, cy), (int)scaledRadius, Color.Red, thickness);
+						}
 					}
 				}
 
-				int rUnrevealed = x.P.UnrevealedRadius;
-				if (ShowUnrevealedRadius && rUnrevealed > 0)
+				if (ShowUnrevealedRadius)
 				{
-					float scaledRadius = rUnrevealed * mapScale;
-					if (!(cx + scaledRadius < 0 || cy + scaledRadius < 0 || cx - scaledRadius > screenW || cy - scaledRadius > screenH))
+					int rUnrevealed = x.P.UnrevealedRadius;
+					if (rUnrevealed > 0)
 					{
-						DrawRing(new Vector2(cx, cy), (int)scaledRadius, Color.Blue, thickness);
+						float scaledRadius = rUnrevealed * mapScale;
+						if (!(cx + scaledRadius < 0 || cy + scaledRadius < 0 || cx - scaledRadius > screenW || cy - scaledRadius > screenH))
+						{
+							DrawRing(new Vector2(cx, cy), (int)scaledRadius, Color.Blue, thickness);
+						}
 					}
 				}
 			}
+		}
+
+		/// <summary>Matches <see cref="FogDisplaySystem"/> mask radius selection.</summary>
+		private static float GetEffectiveFogRadiusPx(PointOfInterest poi)
+		{
+			return (poi.DisplayRadius > 0f)
+				? poi.DisplayRadius
+				: (poi.IsCompleted ? poi.RevealRadius : poi.UnrevealedRadius);
 		}
 
 		private void OnDeleteCaches()

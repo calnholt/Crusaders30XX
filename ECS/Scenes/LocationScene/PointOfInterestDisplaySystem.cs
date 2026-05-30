@@ -252,7 +252,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				else if (poi.IsRevealed)
 				{
-					poi.DisplayRadius = poi.UnrevealedRadius;
+					poi.DisplayRadius = poi.RevealRadius;
 				}
 				else
 				{
