@@ -86,7 +86,7 @@ namespace Crusaders30XX.ECS.Systems
 			var unlockers = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
 				.Select(e => new { P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
-				.Where(x => x.P != null && x.T != null && (x.P.IsRevealed || x.P.IsCompleted))
+				.Where(x => x.P != null && x.T != null && x.P.IsCompleted)
 				.ToList();
 			var centers = new System.Collections.Generic.List<Microsoft.Xna.Framework.Vector2>();
 			var radii = new System.Collections.Generic.List<float>();
@@ -95,7 +95,7 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var u in unlockers)
 			{
 				centers.Add(new Microsoft.Xna.Framework.Vector2(u.T.Position.X, u.T.Position.Y));
-				var drawRadius = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
+				var drawRadius = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : u.P.RevealRadius;
 				radii.Add(drawRadius * mapScale);
 			}
 
@@ -151,7 +151,7 @@ namespace Crusaders30XX.ECS.Systems
 			var unlockers = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
 				.Select(e => new { P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
-				.Where(x => x.P != null && x.T != null && (x.P.IsRevealed || x.P.IsCompleted))
+				.Where(x => x.P != null && x.T != null && x.P.IsCompleted)
 				.ToList();
 			var centers = new System.Collections.Generic.List<Microsoft.Xna.Framework.Vector2>();
 			var radii = new System.Collections.Generic.List<float>();
@@ -160,7 +160,7 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var u in unlockers)
 			{
 				centers.Add(new Microsoft.Xna.Framework.Vector2(u.T.Position.X, u.T.Position.Y));
-				var drawRadius = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
+				var drawRadius = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : u.P.RevealRadius;
 				radii.Add(drawRadius * mapScale);
 			}
 

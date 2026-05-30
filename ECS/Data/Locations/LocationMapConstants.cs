@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public const float MapMargin = 200f;
 
 		// Bump when placement algorithm changes; clears run_map_generator.log on increase.
-		public const int MapGeneratorVersion = 2;
+		public const int MapGeneratorVersion = 4;
 
 		public static float PlayableWidth => BaseMapWidth - 2f * MapMargin;
 		public static float PlayableHeight => BaseMapHeight - 2f * MapMargin;
@@ -23,7 +23,11 @@ namespace Crusaders30XX.ECS.Data.Locations
 		private const float MaxStepFloor = 1000f;
 
 		// Pan-to-explore: generous gaps and wide parent-child hops.
-		public static float MinNodeSpacing => Math.Max(MinNodeSpacingFloor, PlayableMinDimension * 0.07f);
+		public static float MinNodeSpacing => Math.Max(MinNodeSpacingFloor, PlayableMinDimension * 0.10f);
+
+		public const float MinSpreadBboxWidthFraction = 0.40f;
+		public const float MinSpreadBboxHeightFraction = 0.30f;
+		public static float MinSpreadPairwiseDistance => MinNodeSpacing * 0.98f;
 		public static float MinStep => Math.Max(MinStepFloor, PlayableMinDimension * 0.09f);
 		public static float MaxStep => Math.Max(MaxStepFloor, PlayableMinDimension * 0.18f);
 
@@ -36,7 +40,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public const int MinFogRadiusForIconPx = QuestIconRadiusReferencePx + FogFeatherHeadroomPx;
 
 		/// <summary>
-		/// Fog clear radius for completed/revealed quests. Must cover child nodes placed up to <see cref="MaxStep"/> away.
+		/// Fog clear radius for completed quests. Sized for nodes placed up to <see cref="MaxStep"/> away.
 		/// </summary>
 		public static int DefaultRevealRadius => (int)Math.Ceiling(MaxStep);
 
@@ -44,6 +48,17 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public static int DefaultUnrevealedRadius => MinFogRadiusForIconPx;
 		public const int QuestRewardGold = 10;
 		public const int MaxChildrenPerNode = 3;
+
+		/// <summary>Max quest nodes revealed when a single quest is completed (cutscene + save).</summary>
+		public const int MaxQuestRevealsPerCompletion = 3;
+
+		/// <summary>Playable strip along each map edge; too many nodes here fails spread validation.</summary>
+		public const float PlayableEdgeBandFraction = 0.12f;
+
+		public const int MaxNodesPerPlayableEdgeBand = 2;
+
+		/// <summary>Placement rejects candidates closer than this to any playable border.</summary>
+		public static float MinPlacementEdgeInset => Math.Max(250f, PlayableMinDimension * 0.08f);
 		public const int RunMapShopCount = 3;
 		public const int RunMapShopItemsPerShop = 3;
 		public const int RunMapShopCardPrice = 30;

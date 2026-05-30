@@ -40,7 +40,13 @@ namespace Crusaders30XX.ECS.Services
 		{
 			if (seedOverride.HasValue)
 			{
-				return GenerateCore(seedOverride.Value);
+				var seeded = GenerateCore(seedOverride.Value);
+				if (!MeetsSpreadThresholds(ComputeSpreadMetrics(seeded.seed, seeded.nodes), seeded.nodes))
+				{
+					throw new InvalidOperationException(
+						"[LocationMapGeneratorService] Seeded map failed spread thresholds.");
+				}
+				return seeded;
 			}
 
 			InvalidOperationException lastFailure = null;
@@ -48,7 +54,13 @@ namespace Crusaders30XX.ECS.Services
 			{
 				try
 				{
-					return GenerateCore(Random.Shared.Next());
+					var result = GenerateCore(Random.Shared.Next());
+					if (!MeetsSpreadThresholds(ComputeSpreadMetrics(result.seed, result.nodes), result.nodes))
+					{
+						throw new InvalidOperationException(
+							"[LocationMapGeneratorService] Generated map failed spread thresholds.");
+					}
+					return result;
 				}
 				catch (InvalidOperationException ex)
 				{
@@ -59,6 +71,45 @@ namespace Crusaders30XX.ECS.Services
 			throw new InvalidOperationException(
 				$"[LocationMapGeneratorService] Failed to generate run map after {MaxGenerateAttempts} attempts.",
 				lastFailure);
+		}
+
+		private static bool MeetsSpreadThresholds(RunMapSpreadMetrics metrics, List<RunMapNode> nodes)
+		{
+			if (metrics.BboxWidthFraction < LocationMapConstants.MinSpreadBboxWidthFraction) return false;
+			if (metrics.BboxHeightFraction < LocationMapConstants.MinSpreadBboxHeightFraction) return false;
+			if (metrics.MinPairwiseDistance < LocationMapConstants.MinSpreadPairwiseDistance) return false;
+			if (CountNodesInTopPlayableBand(nodes) > LocationMapConstants.MaxNodesPerPlayableEdgeBand) return false;
+			if (CountNodesInBottomPlayableBand(nodes) > LocationMapConstants.MaxNodesPerPlayableEdgeBand) return false;
+			return true;
+		}
+
+		public static int CountNodesInTopPlayableBand(IReadOnlyList<RunMapNode> nodes)
+		{
+			float maxY = LocationMapConstants.MapMargin +
+				LocationMapConstants.PlayableHeight * LocationMapConstants.PlayableEdgeBandFraction;
+			return CountNodesInHorizontalBand(nodes, maxYInclusive: maxY);
+		}
+
+		public static int CountNodesInBottomPlayableBand(IReadOnlyList<RunMapNode> nodes)
+		{
+			float minY = LocationMapConstants.BaseMapHeight - LocationMapConstants.MapMargin -
+				LocationMapConstants.PlayableHeight * LocationMapConstants.PlayableEdgeBandFraction;
+			return CountNodesInHorizontalBand(nodes, minYInclusive: minY);
+		}
+
+		private static int CountNodesInHorizontalBand(
+			IReadOnlyList<RunMapNode> nodes,
+			float maxYInclusive = float.MaxValue,
+			float minYInclusive = float.MinValue)
+		{
+			if (nodes == null) return 0;
+			int count = 0;
+			foreach (var node in nodes)
+			{
+				if (node == null) continue;
+				if (node.worldY <= maxYInclusive && node.worldY >= minYInclusive) count++;
+			}
+			return count;
 		}
 
 		private static (int seed, List<RunMapNode> nodes) GenerateCore(int seed)
@@ -217,11 +268,17 @@ namespace Crusaders30XX.ECS.Services
 
 		private static int PickParentIndex(Random rng, List<int> eligibleParents, int[] depths)
 		{
+			int maxDepth = 0;
+			for (int i = 0; i < eligibleParents.Count; i++)
+			{
+				maxDepth = Math.Max(maxDepth, depths[eligibleParents[i]]);
+			}
+
 			float total = 0f;
 			var weights = new float[eligibleParents.Count];
 			for (int i = 0; i < eligibleParents.Count; i++)
 			{
-				float w = depths[eligibleParents[i]] + 1;
+				float w = maxDepth - depths[eligibleParents[i]] + 1;
 				weights[i] = w;
 				total += w;
 			}
@@ -238,6 +295,12 @@ namespace Crusaders30XX.ECS.Services
 
 		private static void PlaceChild(Random rng, List<RunMapNode> nodes, RunMapNode parent, out float x, out float y)
 		{
+			int childCount = parent.childIndices?.Count ?? 0;
+			if (childCount >= LocationMapConstants.MaxChildrenPerNode - 1)
+			{
+				if (TryGlobalScatterPlacement(rng, nodes, out x, out y)) return;
+			}
+
 			float bestX = 0f, bestY = 0f;
 			float bestScore = -1f;
 			bool found = false;
@@ -245,7 +308,7 @@ namespace Crusaders30XX.ECS.Services
 			for (int attempt = 0; attempt < CandidateAttempts; attempt++)
 			{
 				if (!TryRandomCandidate(rng, parent, nodes, out float cx, out float cy)) continue;
-				float score = DistanceFromMapCenter(cx, cy);
+				float score = ScorePlacementCandidate(nodes, cx, cy);
 				if (!found || score > bestScore)
 				{
 					found = true;
@@ -280,7 +343,7 @@ namespace Crusaders30XX.ECS.Services
 			{
 				float cx = minX + (float)rng.NextDouble() * (maxX - minX);
 				float cy = minY + (float)rng.NextDouble() * (maxY - minY);
-				if (!OverlapsExisting(nodes, cx, cy))
+				if (IsValidPlacement(nodes, cx, cy))
 				{
 					x = cx;
 					y = cy;
@@ -302,11 +365,15 @@ namespace Crusaders30XX.ECS.Services
 			cy = parent.worldY + (float)Math.Sin(angle) * dist;
 			cx = Clamp(cx, LocationMapConstants.MapMargin, LocationMapConstants.BaseMapWidth - LocationMapConstants.MapMargin);
 			cy = Clamp(cy, LocationMapConstants.MapMargin, LocationMapConstants.BaseMapHeight - LocationMapConstants.MapMargin);
-			return !OverlapsExisting(nodes, cx, cy);
+			return IsValidPlacement(nodes, cx, cy);
 		}
 
 		private static bool TrySpiralPlacement(List<RunMapNode> nodes, RunMapNode parent, out float x, out float y)
 		{
+			float bestX = 0f, bestY = 0f;
+			float bestScore = -1f;
+			bool found = false;
+
 			float maxDist = Math.Max(
 				LocationMapConstants.MaxStep,
 				LocationMapConstants.PlayableMinDimension * 0.45f);
@@ -322,13 +389,24 @@ namespace Crusaders30XX.ECS.Services
 					float cy = parent.worldY + (float)Math.Sin(angle) * dist;
 					cx = Clamp(cx, LocationMapConstants.MapMargin, LocationMapConstants.BaseMapWidth - LocationMapConstants.MapMargin);
 					cy = Clamp(cy, LocationMapConstants.MapMargin, LocationMapConstants.BaseMapHeight - LocationMapConstants.MapMargin);
-					if (!OverlapsExisting(nodes, cx, cy))
+					if (!IsValidPlacement(nodes, cx, cy)) continue;
+
+					float score = ScorePlacementCandidate(nodes, cx, cy);
+					if (!found || score > bestScore)
 					{
-						x = cx;
-						y = cy;
-						return true;
+						found = true;
+						bestScore = score;
+						bestX = cx;
+						bestY = cy;
 					}
 				}
+			}
+
+			if (found)
+			{
+				x = bestX;
+				y = bestY;
+				return true;
 			}
 
 			x = 0f;
@@ -341,6 +419,53 @@ namespace Crusaders30XX.ECS.Services
 			float dx = x - LocationMapConstants.MapCenterX;
 			float dy = y - LocationMapConstants.MapCenterY;
 			return (float)Math.Sqrt(dx * dx + dy * dy);
+		}
+
+		private static float MinDistanceToAnyNode(List<RunMapNode> nodes, float x, float y)
+		{
+			float minDist = 0f;
+			bool any = false;
+			foreach (var n in nodes)
+			{
+				if (n == null) continue;
+				float dx = n.worldX - x;
+				float dy = n.worldY - y;
+				float d = (float)Math.Sqrt(dx * dx + dy * dy);
+				if (!any || d < minDist)
+				{
+					minDist = d;
+					any = true;
+				}
+			}
+
+			return any ? minDist : 0f;
+		}
+
+		private static bool IsValidPlacement(List<RunMapNode> nodes, float x, float y)
+		{
+			if (OverlapsExisting(nodes, x, y)) return false;
+			if (MinDistanceToPlayableEdge(x, y) < LocationMapConstants.MinPlacementEdgeInset) return false;
+			return true;
+		}
+
+		private static float ScorePlacementCandidate(List<RunMapNode> nodes, float x, float y)
+		{
+			return MinDistanceToAnyNode(nodes, x, y)
+				+ 0.25f * DistanceFromMapCenter(x, y)
+				+ 0.4f * MinDistanceToPlayableEdge(x, y);
+		}
+
+		private static float MinDistanceToPlayableEdge(float x, float y)
+		{
+			float minX = LocationMapConstants.MapMargin;
+			float maxX = LocationMapConstants.BaseMapWidth - LocationMapConstants.MapMargin;
+			float minY = LocationMapConstants.MapMargin;
+			float maxY = LocationMapConstants.BaseMapHeight - LocationMapConstants.MapMargin;
+			float toLeft = x - minX;
+			float toRight = maxX - x;
+			float toTop = y - minY;
+			float toBottom = maxY - y;
+			return Math.Min(Math.Min(toLeft, toRight), Math.Min(toTop, toBottom));
 		}
 
 		private static bool OverlapsExisting(List<RunMapNode> nodes, float x, float y)

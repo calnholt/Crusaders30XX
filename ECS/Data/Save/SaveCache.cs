@@ -4,13 +4,13 @@ using System.Linq;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Data.Achievements;
 using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Objects.Equipment;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Data.Save
 {
@@ -227,21 +227,16 @@ namespace Crusaders30XX.ECS.Data.Save
 			return changed;
 		}
 
-		public static void RevealRunNodeChildren(string completedNodeId)
+		public static bool TryRevealRunNode(string nodeId)
 		{
-			if (!TryGetRunNode(completedNodeId, out var node, out _)) return;
-			if (node.childIndices == null || node.childIndices.Count == 0) return;
+			if (!TryGetRunNode(nodeId, out var node, out _)) return false;
+			if (node.isRevealed) return false;
 			lock (_lock)
 			{
-				foreach (int childIndex in node.childIndices)
-				{
-					if (childIndex >= 0 && childIndex < _save.runMapNodes.Count)
-					{
-						_save.runMapNodes[childIndex].isRevealed = true;
-					}
-				}
+				node.isRevealed = true;
 				Persist();
 			}
+			return true;
 		}
 
 		public static int GetGold()

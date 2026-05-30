@@ -8,6 +8,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -120,10 +121,22 @@ namespace Crusaders30XX.ECS.Systems
 				ClampCamera(ref _cameraCenter, w, h);
 			}
 
-			// Auto-pan camera on scene load (only if not coming from quest completion)
-			if (!_hasPannedOnLoad && !StateSingleton.HasPendingLocationPoiReveal)
+			if (!_hasPannedOnLoad)
 			{
-				TryAutoPanCamera();
+				if (StateSingleton.HasPendingLocationPoiReveal &&
+					!string.IsNullOrEmpty(StateSingleton.PendingPoiId) &&
+					SaveCache.TryGetRunNode(StateSingleton.PendingPoiId, out var pendingNode, out _))
+				{
+					EventManager.Publish(new FocusLocationCameraEvent
+					{
+						WorldPos = new Vector2(pendingNode.worldX, pendingNode.worldY),
+					});
+				}
+				else if (!StateSingleton.HasPendingLocationPoiReveal)
+				{
+					TryAutoPanCamera();
+				}
+
 				_hasPannedOnLoad = true;
 			}
 

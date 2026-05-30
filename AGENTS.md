@@ -29,6 +29,10 @@ dotnet publish -c Release
 
 This is a .NET 8.0 MonoGame DesktopGL project. Content assets are compiled via the MonoGame Content Builder pipeline (`Content/Content.mgcb`).
 
+### Saves
+
+Do not migrate, reconcile, or preserve backward compatibility for existing save files. When save shape or rules change, assume a fresh run (`dotnet run -- new`). Do not add one-off sanitizers for in-progress saves unless explicitly requested.
+
 ### macOS / Linux: shader compilation (MGFXC)
 
 `.fx` shaders compile through Wine. One-time setup:

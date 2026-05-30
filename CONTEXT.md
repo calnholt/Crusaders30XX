@@ -64,15 +64,19 @@ Entry from the title screen after run failure or on first launch. The player beg
 
 ## Quest node
 
-A single battle POI on the run map. Completing it marks the node completed and may reveal child nodes. On the location hub, quest node and POI refer to the same map marker in v1.
+A single battle POI on the run map. Completing it marks the node completed and may reveal other quest nodes within map fog range. On the location hub, quest node and POI refer to the same map marker in v1.
 
 ## Root quest node
 
-The first quest node in a run. It is the player's initial battle and the anchor of the procedural map tree. Its position is near the desert map center with random offset so it is not always at the exact geometric center.
+The first quest node in a run. It is the player's initial battle and the anchor for procedural placement. Its position is near the desert map center with random offset so it is not always at the exact geometric center.
+
+## Run map tree
+
+Internal parent/child links used only when generating the 20 quest positions. Not shown on the desert map in v1 and does not gate which quests can be revealed or fought.
 
 ## Run map coverage
 
-How widely quest nodes are distributed across the playable desert. Good coverage means the player must pan and zoom to see the whole run; nodes should not sit in one tight cluster. Uneven blobs are acceptable; symmetry across quadrants is not required.
+How widely quest nodes are distributed across the playable desert. Good coverage means the player must pan and zoom to see the whole run; nodes should not sit in one tight cluster. Uneven blobs are acceptable; symmetry across quadrants is not required. A new run is not created until the generator produces a layout that meets minimum spread standards.
 
 ## Node completion
 
@@ -80,25 +84,31 @@ Whether the player has won the battle at that quest node. Stored only on the run
 
 ## Node reveal
 
-A node becomes fightable when `isRevealed` is true. Reveal happens when its parent is completed (all children revealed at once). The player may tackle any revealed, incomplete node; branches are not mutually exclusive.
+A node becomes fightable when it is **revealed**. The root quest node is revealed at run start. When a quest is **completed**, up to three other quest nodes within **map fog range** of that completed node can become revealed as its fog circle expands (closest first; see **Reveal cutscene**). Revealed quests are visible and can be started; they do **not** clear map fog. Only **completed** quests clear fog. Merely revealing a quest does not reveal further quests until that quest is completed. The player may tackle any revealed, incomplete node; branches are not mutually exclusive.
+
+## Map fog range
+
+The distance from a **completed** quest node's world position used for revealing other quests and for the maximum radius of fog that node clears. Measured center-to-center; icon size and fog feather are visual only. Uses `DefaultRevealRadius` (~1000 world units on the desert map). Shop enterability uses the same range but only from **completed** quests whose fog actually covers the shop.
 
 ## Map fog
 
-Unrevealed quest nodes are hidden and cannot be interacted with. Fog radius around revealed/completed nodes is visual only and must not expose unrevealed quest nodes early.
+The desert overlay that hides unexplored areas. Only **completed** quest nodes clear map fog (a circular cleared area centered on the node). **Revealed** but incomplete quests do not clear fog; they only become visible and fightable when reached. `DefaultUnrevealedRadius` is icon-scale (~204px) and is the starting size for the expanding fog circle in the **Reveal cutscene** on the node just completed.
 
-`DefaultRevealRadius` matches the generator's max parent-child step (`MaxStep`, ~1000 world units on the desert map) so completing a quest clears fog out to newly revealed children. Revealed children also emit a full reveal-radius fog circle at their position. `DefaultUnrevealedRadius` is icon-scale (~204px) and is used only as the starting size for the completion cutscene lerp on the node just cleared.
+## Reveal cutscene
 
-Shop markers are an exception: their map icon and minimap dot are visible from the start of the run. A shop becomes enterable when the fog circle of any **revealed or completed** quest node covers the shop's world position (same radius rules as quest fog). Shops do not add their own fog-clear circles. Unrevealed shops (not yet inside any quest fog) do not show a tooltip or enter prompt on hover.
+After completing a quest, returning to the location hub focuses the completed marker, locks player controls, and animates **that completed node's** fog circle from icon size to full **map fog range**. Other hidden quest nodes become **revealed** when the expanding edge reaches them (visible and fightable, no fog clear at their position).
+
+Shop markers are an exception: their map icon and minimap dot are visible from the start of the run. Shops do not clear map fog. Unrevealed shops (not yet enterable) do not show a tooltip or enter prompt on hover.
 
 ## Shop (run map)
 
-A card vendor on the desert run map. Three shops exist per run. Shops are **not** quest nodes: they have no parent/child links in the battle tree and do not replace any of the 20 combat nodes.
+A card vendor on the desert run map. Three shops exist per run. Shops are **not** quest nodes: they are not part of the run map tree and do not replace any of the 20 combat nodes.
 
 After the 20-node battle map is generated, each shop is placed at a world position within completed-quest fog range of at least one battle node (so completing that battle can unlock the shop). Each shop has three fixed listings (identity, color, price) generated at run creation and stored in save.
 
 ## Shop reveal (enterable)
 
-A shop becomes enterable when its world position lies inside the fog circle of at least one **completed** quest node (full reveal radius). Merely revealing a nearby quest without completing it is not enough.
+A shop becomes enterable when its world position lies inside cleared map fog from at least one **completed** quest (same center and **map fog range** as that quest's fog circle). A nearby **revealed** quest does not unlock shops. The shop icon can be visible before enterable; until cleared fog reaches it, no tooltip or hold-to-enter.
 
 The same card identity may appear in more than one shop in a run; within one shop the three listings use distinct identities and distinct colors.
 

@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -16,16 +19,35 @@ namespace Crusaders30XX.ECS.Systems
 		private string _targetPoiId;
 		private Entity _poiEntity;
 		private float _animTime;
-		private const float AnimDuration = 1.0f; // seconds, linear
+		private const float AnimDuration = 1.0f;
 		private float _startRadius;
 		private float _targetRadius;
+		private bool _focusedCamera;
+		private HashSet<string> _allowedRevealIds;
+
+		public static bool HasExpandingFog { get; private set; }
+		public static Vector2 ExpandingFogWorldCenter { get; private set; }
+		public static float ExpandingFogRadius { get; private set; }
+
+		public static bool TryGetExpandingFog(out Vector2 worldCenter, out float radius)
+		{
+			if (!HasExpandingFog)
+			{
+				worldCenter = Vector2.Zero;
+				radius = 0f;
+				return false;
+			}
+
+			worldCenter = ExpandingFogWorldCenter;
+			radius = ExpandingFogRadius;
+			return true;
+		}
 
 		public LocationPoiRevealCutsceneSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<LoadSceneEvent>(_ =>
 			{
 				if (_.Scene != SceneId.Location) return;
-				Console.WriteLine($"[LocationPoiRevealCutsceneSystem] LoadSceneEvent -> TryBeginCutsceneFromTransitionState");
 				TryBeginCutsceneFromTransitionState();
 			});
 		}
@@ -42,12 +64,14 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (!_active)
 			{
-				// If we missed LoadSceneEvent race, start from transition flags
 				TryBeginCutsceneFromTransitionState();
-				if (!_active) return;
+				if (!_active)
+				{
+					ClearExpandingFog();
+					return;
+				}
 			}
 
-			// Ensure target POI entity is located
 			if (_poiEntity == null)
 			{
 				_poiEntity = EntityManager
@@ -56,24 +80,28 @@ namespace Crusaders30XX.ECS.Systems
 				if (_poiEntity != null)
 				{
 					var p = _poiEntity.GetComponent<PointOfInterest>();
-					p.IsCompleted = true; // ensure completed
+					p.IsCompleted = true;
 					_startRadius = p.UnrevealedRadius;
 					_targetRadius = p.RevealRadius;
 					p.DisplayRadius = _startRadius;
-					RevealGraphChildren(p);
+					_allowedRevealIds = BuildAllowedRevealIds(p);
+					FocusCameraOnCompletedPoi(p);
 				}
 				else
 				{
-					return; // wait for POIs to spawn
+					return;
 				}
 			}
 
-			// Animate radius
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			_animTime += MathHelper.Max(0f, dt);
 			var poi = _poiEntity.GetComponent<PointOfInterest>();
 			float t = MathHelper.Clamp(_animTime / AnimDuration, 0f, 1f);
-			poi.DisplayRadius = MathHelper.Lerp(_startRadius, _targetRadius, t);
+			float currentRadius = MathHelper.Lerp(_startRadius, _targetRadius, t);
+			poi.DisplayRadius = currentRadius;
+
+			UpdateExpandingFog(poi, currentRadius);
+			RevealQuestsWithinCurrentRadius(poi, currentRadius);
 
 			if (t >= 1f)
 			{
@@ -82,15 +110,82 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
+		private void FocusCameraOnCompletedPoi(PointOfInterest poi)
+		{
+			if (_focusedCamera || poi == null) return;
+			_focusedCamera = true;
+			EventManager.Publish(new FocusLocationCameraEvent { WorldPos = poi.WorldPosition });
+		}
+
+		private static void UpdateExpandingFog(PointOfInterest completedPoi, float currentRadius)
+		{
+			HasExpandingFog = true;
+			ExpandingFogWorldCenter = completedPoi.WorldPosition;
+			ExpandingFogRadius = currentRadius;
+		}
+
+		private static void ClearExpandingFog()
+		{
+			HasExpandingFog = false;
+			ExpandingFogWorldCenter = Vector2.Zero;
+			ExpandingFogRadius = 0f;
+		}
+
+		private HashSet<string> BuildAllowedRevealIds(PointOfInterest completedPoi)
+		{
+			var nodes = SaveCache.GetRunMapNodes();
+			var ids = RunMapRevealService.SelectClosestUnrevealedNodeIds(
+				nodes,
+				completedPoi.WorldPosition.X,
+				completedPoi.WorldPosition.Y,
+				completedPoi.RevealRadius,
+				LocationMapConstants.MaxQuestRevealsPerCompletion);
+			return new HashSet<string>(ids, StringComparer.OrdinalIgnoreCase);
+		}
+
+		private void RevealQuestsWithinCurrentRadius(PointOfInterest completedPoi, float currentRadius)
+		{
+			if (completedPoi == null || _allowedRevealIds == null || _allowedRevealIds.Count == 0) return;
+
+			float originX = completedPoi.WorldPosition.X;
+			float originY = completedPoi.WorldPosition.Y;
+
+			foreach (var entity in EntityManager.GetEntitiesWithComponent<PointOfInterest>())
+			{
+				var questPoi = entity.GetComponent<PointOfInterest>();
+				if (questPoi == null || questPoi.Type != PointOfInterestType.Quest) continue;
+				if (questPoi.IsRevealed || questPoi.Id == completedPoi.Id) continue;
+				if (!_allowedRevealIds.Contains(questPoi.Id)) continue;
+				if (!RunMapRevealService.IsWithinRevealRadius(
+					originX, originY, questPoi.WorldPosition.X, questPoi.WorldPosition.Y, currentRadius))
+				{
+					continue;
+				}
+
+				if (!SaveCache.TryRevealRunNode(questPoi.Id)) continue;
+
+				questPoi.IsRevealed = true;
+				questPoi.DisplayRadius = 0f;
+				var ui = entity.GetComponent<UIElement>();
+				if (ui != null && !questPoi.IsCompleted)
+				{
+					ui.IsInteractable = true;
+					ui.IsHidden = false;
+				}
+
+				EventManager.Publish(new POIRevealedEvent { PoiId = questPoi.Id });
+			}
+		}
+
 		private void TryBeginCutsceneFromTransitionState()
 		{
 			if (!StateSingleton.HasPendingLocationPoiReveal || string.IsNullOrEmpty(StateSingleton.PendingPoiId)) return;
-			Console.WriteLine($"[LocationPoiRevealCutsceneSystem] LoadSceneEvent -> TryBeginCutsceneFromTransitionState -> active");
 			_active = true;
 			_targetPoiId = StateSingleton.PendingPoiId;
 			_poiEntity = null;
 			_animTime = 0f;
-			// Lock interactions and camera immediately
+			_focusedCamera = false;
+			_allowedRevealIds = null;
 			StateSingleton.IsActive = true;
 			EventManager.Publish(new SetCursorEnabledEvent { Enabled = false });
 			EventManager.Publish(new LockLocationCameraEvent { Locked = true });
@@ -102,34 +197,13 @@ namespace Crusaders30XX.ECS.Systems
 			_poiEntity = null;
 			_targetPoiId = null;
 			_animTime = 0f;
+			_focusedCamera = false;
+			ClearExpandingFog();
 			EventManager.Publish(new SetCursorEnabledEvent { Enabled = true });
 			EventManager.Publish(new LockLocationCameraEvent { Locked = false });
 			StateSingleton.HasPendingLocationPoiReveal = false;
 			StateSingleton.PendingPoiId = null;
 			StateSingleton.IsActive = false;
-		}
-
-		private void RevealGraphChildren(PointOfInterest completedPoi)
-		{
-			if (completedPoi?.ChildPoiIds == null) return;
-			foreach (string childId in completedPoi.ChildPoiIds)
-			{
-				if (string.IsNullOrEmpty(childId)) continue;
-				var childEntity = EntityManager
-					.GetEntitiesWithComponent<PointOfInterest>()
-					.FirstOrDefault(e => e.GetComponent<PointOfInterest>()?.Id == childId);
-				var childPoi = childEntity?.GetComponent<PointOfInterest>();
-				if (childPoi == null || childPoi.IsRevealed) continue;
-				childPoi.IsRevealed = true;
-				childPoi.DisplayRadius = childPoi.RevealRadius;
-				var childUi = childEntity.GetComponent<UIElement>();
-				if (childUi != null && !childPoi.IsCompleted)
-				{
-					childUi.IsInteractable = true;
-					childUi.IsHidden = false;
-				}
-				EventManager.Publish(new POIRevealedEvent { PoiId = childId });
-			}
 		}
 
 		[DebugActionInt("Cutscene", Step = 1, Min = 0, Max = 19, Default = 0)]
@@ -140,9 +214,4 @@ namespace Crusaders30XX.ECS.Systems
 			TryBeginCutsceneFromTransitionState();
 		}
 	}
-
-	
-
 }
-
-

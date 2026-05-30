@@ -57,7 +57,6 @@ namespace Crusaders30XX.ECS.Services
 
 				Console.WriteLine($"[QuestCompleteService] Completed run map node {locationId}/{node.id}");
 				SaveCache.SetRunNodeCompleted(node.id, true);
-				SaveCache.RevealRunNodeChildren(node.id);
 
 				StateSingleton.HasPendingLocationPoiReveal = true;
 				StateSingleton.PendingPoiId = node.id;
