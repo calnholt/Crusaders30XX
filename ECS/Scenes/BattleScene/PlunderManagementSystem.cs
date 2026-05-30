@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
@@ -31,6 +32,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<PlunderTriggerEvent>(OnPlunderTrigger);
             EventManager.Subscribe<PlunderSnatchAnimationCompleted>(OnAnimationCompleted);
             EventManager.Subscribe<PlunderForceDiscardEvent>(OnPlunderForceDiscard);
+            EventManager.Subscribe<ResetDeckEvent>(_ => ClearAllPlunderState());
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -307,6 +309,88 @@ namespace Crusaders30XX.ECS.Systems
 
                 LoggingService.Append("PlunderManagementSystem.ResetDamageTracking", new System.Text.Json.Nodes.JsonObject { ["message"] = "damage tracking reset for new turn" });
             }
+        }
+
+        /// <summary>
+        /// Strips battle-scoped plunder state so cards do not carry Plundered into the next battle.
+        /// Called on <see cref="ResetDeckEvent"/> (published from InitBattle only).
+        /// </summary>
+        private void ClearAllPlunderState()
+        {
+            _pendingCard = null;
+            _pendingThreshold = 0;
+
+            var cards = new HashSet<Entity>();
+            foreach (var c in EntityManager.GetEntitiesWithComponent<Plundered>())
+            {
+                cards.Add(c);
+            }
+            foreach (var c in EntityManager.GetEntitiesWithComponent<PlunderSnatchFlight>())
+            {
+                cards.Add(c);
+            }
+            foreach (var c in EntityManager.GetEntitiesWithComponent<PlunderRescueFlight>())
+            {
+                cards.Add(c);
+            }
+
+            foreach (var card in cards)
+            {
+                if (card == null || !card.IsActive) continue;
+                StripPlunderStateFromCard(card);
+            }
+
+            if (cards.Count > 0)
+            {
+                LoggingService.Append("PlunderManagementSystem.ClearAllPlunderState", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["cardsCleared"] = cards.Count
+                });
+            }
+        }
+
+        private void StripPlunderStateFromCard(Entity card)
+        {
+            if (card.HasComponent<Plundered>())
+            {
+                EntityManager.RemoveComponent<Plundered>(card);
+            }
+            if (card.HasComponent<HP>())
+            {
+                EntityManager.RemoveComponent<HP>(card);
+            }
+            if (card.HasComponent<HPBarOverride>())
+            {
+                EntityManager.RemoveComponent<HPBarOverride>(card);
+            }
+            if (card.HasComponent<PlunderSnatchFlight>())
+            {
+                EntityManager.RemoveComponent<PlunderSnatchFlight>(card);
+            }
+            if (card.HasComponent<PlunderRescueFlight>())
+            {
+                EntityManager.RemoveComponent<PlunderRescueFlight>(card);
+            }
+            if (card.HasComponent<AnimatingHandToZone>())
+            {
+                EntityManager.RemoveComponent<AnimatingHandToZone>(card);
+            }
+
+            var ui = card.GetComponent<UIElement>();
+            if (ui != null)
+            {
+                ui.SuppressCount = 0;
+                ui.IsInteractable = false;
+                ui.IsHovered = false;
+                ui.IsClicked = false;
+                ui.EventType = UIElementEventType.None;
+            }
+
+            var cardData = card.GetComponent<CardData>();
+            LoggingService.Append("PlunderManagementSystem.StripPlunderStateFromCard", new System.Text.Json.Nodes.JsonObject
+            {
+                ["cardId"] = cardData?.Card.CardId ?? "unknown"
+            });
         }
 
         private Vector2 ResolveDrawPileAnchor()
