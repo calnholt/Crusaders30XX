@@ -59,6 +59,9 @@ public class Game1 : Game
     private QuestStartSystem _questStartSystem;
     private DisplaySnapshotHost _snapshotHost;
     private readonly DisplaySnapshotLaunchOptions _snapshotOptions;
+#if DEBUG
+    private bool _writePerfReportOnExit;
+#endif
     
     // ECS System
     private World _world;
@@ -237,14 +240,31 @@ public class Game1 : Game
     
     protected override void Update(GameTime gameTime)
     {
+        var kb = Keyboard.GetState();
+        if (kb.IsKeyDown(Keys.Escape) && (kb.IsKeyDown(Keys.LeftShift) || kb.IsKeyDown(Keys.RightShift)))
+        {
+#if DEBUG
+            _writePerfReportOnExit = true;
+#endif
+            Exit();
+            return;
+        }
+
+        FrameProfiler.BeginGameFrame(gameTime, _snapshotHost?.IsActive == true);
+
+#if DEBUG
+        FrameProfiler.MeasureInclusive("Game1.Update", () => RunUpdate(gameTime, kb));
+#else
+        RunUpdate(gameTime, kb);
+#endif
+    }
+
+    private void RunUpdate(GameTime gameTime, KeyboardState kb)
+    {
         LoggingService.Tick();
         WindowIsActive = IsActive;
-        // Hide system mouse cursor when no gamepad is connected (custom cursor will be drawn)
         var gp = GamePad.GetState(PlayerIndex.One);
         IsMouseVisible = gp.IsConnected;
-        var kb = Keyboard.GetState();
-        if ((kb.IsKeyDown(Keys.Escape) && kb.IsKeyDown(Keys.LeftShift)))
-            Exit();
 
         if (_snapshotHost?.IsActive != true)
         {
@@ -253,7 +273,6 @@ public class Game1 : Game
                 ToggleFullScreen();
             }
 
-            // Global debug menu toggle so it's available in the main menu too
             if (kb.IsKeyDown(Keys.D) && !_prevKeyboard.IsKeyDown(Keys.D) && kb.IsKeyDown(Keys.LeftShift))
             {
                 ToggleDebugMenu();
@@ -265,13 +284,11 @@ public class Game1 : Game
                 }
             }
 
-            // Entity list overlay toggle: Shift + W
             if ((kb.IsKeyDown(Keys.LeftShift) || kb.IsKeyDown(Keys.RightShift)) && kb.IsKeyDown(Keys.W) && !_prevKeyboard.IsKeyDown(Keys.W))
             {
                 ToggleEntityListOverlay();
             }
 
-            // Toggle profiler overlay on P key press
             if (kb.IsKeyDown(Keys.P) && !_prevKeyboard.IsKeyDown(Keys.P))
             {
                 var e = _world.EntityManager.GetEntitiesWithComponent<ProfilerOverlay>().FirstOrDefault();
@@ -288,8 +305,13 @@ public class Game1 : Game
             }
         }
 
-        // Update ECS World (this includes input processing)
         _world.Update(gameTime);
+
+#if DEBUG
+        var sceneEntity = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
+        var sceneId = sceneEntity?.GetComponent<SceneState>()?.Current ?? SceneId.None;
+        FrameProfiler.SetActiveScene(sceneId);
+#endif
 
         _prevKeyboard = kb;
         base.Update(gameTime);
@@ -299,42 +321,71 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        // Draw to virtual RT first
+#if DEBUG
+        FrameProfiler.MeasureInclusive("Game1.Draw", () => DrawGame(gameTime));
+        FrameProfiler.EndGameFrame(gameTime);
+#else
+        DrawGame(gameTime);
+#endif
+    }
+
+    private void DrawGame(GameTime gameTime)
+    {
+#if DEBUG
+        FrameProfiler.Measure("Game1.Draw.SceneSetupAndDrawScene", DrawSceneSetup);
+        Texture2D finalTexture = _sceneRt;
+        bool shouldPresent = false;
+        FrameProfiler.Measure("Game1.Draw.ShaderComposite", () =>
+        {
+            shouldPresent = TryCompositeDrawEffects(out finalTexture);
+        });
+        if (!shouldPresent)
+        {
+            return;
+        }
+        FrameProfiler.Measure("Game1.Draw.Present", () => PresentToBackbuffer(finalTexture, gameTime));
+#else
+        DrawSceneSetup();
+        if (!TryCompositeDrawEffects(out Texture2D finalTexture))
+        {
+            return;
+        }
+        PresentToBackbuffer(finalTexture, gameTime);
+#endif
+    }
+
+    private void DrawSceneSetup()
+    {
         EnsureRenderTargetsMatchVirtual();
-        
         GraphicsDevice.SetRenderTarget(_sceneRt);
         GraphicsDevice.Clear(_snapshotHost?.IsActive == true ? Color.Black : Color.CornflowerBlue);
-
         DrawScene();
+    }
 
-        // Process effects
+    private bool TryCompositeDrawEffects(out Texture2D finalTexture)
+    {
         bool hasPoison = _poisonSystem != null && _poisonSystem.HasActivePoison;
         bool hasCircularWaves = _shockwaveSystem != null && _shockwaveSystem.HasActiveWaves;
         bool hasRectangularWaves = _rectangularShockwaveSystem != null && _rectangularShockwaveSystem.HasActiveWaves;
-        
-        Texture2D finalTexture = _sceneRt;
+
+        finalTexture = _sceneRt;
 
         if (ShaderRuntimeOptions.ShadersEnabled && (hasPoison || hasCircularWaves || hasRectangularWaves))
         {
-            // Composite effects in order: Poison → Circular Shockwaves → Rectangular Shockwaves
-            
-            // Apply poison first if active
             if (hasPoison)
             {
                 RenderTarget2D next = (hasCircularWaves || hasRectangularWaves) ? _ppB : _ppA;
                 _poisonSystem.Composite(finalTexture, _ppA, next);
                 finalTexture = next;
             }
-            
-            // Apply circular shockwaves second if any
+
             if (hasCircularWaves)
             {
                 RenderTarget2D dest = (finalTexture == _ppA) ? _ppB : _ppA;
                 _shockwaveSystem.Composite(finalTexture, _ppA, _ppB, dest);
                 finalTexture = dest;
             }
-            
-            // Apply rectangular shockwaves on top if any
+
             if (hasRectangularWaves)
             {
                 RenderTarget2D dest = (finalTexture == _ppA) ? _ppB : _ppA;
@@ -345,13 +396,17 @@ public class Game1 : Game
 
         if (_snapshotHost?.IsActive == true && _snapshotHost.TickAfterDraw(_sceneRt))
         {
-            return;
+            return false;
         }
 
-        // Final draw to backbuffer with letterboxing
+        return true;
+    }
+
+    private void PresentToBackbuffer(Texture2D finalTexture, GameTime gameTime)
+    {
         GraphicsDevice.SetRenderTarget(null);
         GraphicsDevice.Clear(Color.Black);
-        
+
         _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp);
         _spriteBatch.Draw(finalTexture, RenderDestination, Color.White);
         _spriteBatch.End();
@@ -359,9 +414,15 @@ public class Game1 : Game
         base.Draw(gameTime);
     }
 
+#if DEBUG
+    private void MeasureInclusiveSceneDraw(string name, Action draw) =>
+        FrameProfiler.MeasureInclusive(name, draw);
+#else
+    private void MeasureInclusiveSceneDraw(string name, Action draw) => draw();
+#endif
+
     private void DrawScene()
     {
-        FrameProfiler.BeginFrame();
         _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
 
         if (_snapshotHost?.IsActive == true)
@@ -382,17 +443,17 @@ public class Game1 : Game
             }
             case SceneId.Customization:
             {
-                FrameProfiler.Measure("CustomizationRootSystem.Draw", _customizationRootSystem.Draw);
+                MeasureInclusiveSceneDraw("CustomizationRootSystem.Draw", _customizationRootSystem.Draw);
                 break;
             }
             case SceneId.CustomizationV2:
             {
-                FrameProfiler.Measure("CustomizationV2RootSystem.Draw", _customizationV2RootSystem.Draw);
+                MeasureInclusiveSceneDraw("CustomizationV2RootSystem.Draw", _customizationV2RootSystem.Draw);
                 break;
             }
             case SceneId.Battle:
             {
-                FrameProfiler.Measure("BattleSceneSystem.Draw", _battleSceneSystem.Draw);
+                MeasureInclusiveSceneDraw("BattleSceneSystem.Draw", _battleSceneSystem.Draw);
                 // Additive trail pass for card move trails
                 _spriteBatch.End();
 				_spriteBatch.Begin(SpriteSortMode.Immediate, AdditiveAlphaOne, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
@@ -404,19 +465,19 @@ public class Game1 : Game
             }
             case SceneId.Location:
             {
-                FrameProfiler.Measure("LocationSceneSystem.Draw", _locationSceneSystem.Draw);
+                MeasureInclusiveSceneDraw("LocationSceneSystem.Draw", _locationSceneSystem.Draw);
 				FrameProfiler.Measure("CurrencyDisplaySystem.Draw", _currencyDisplaySystem.Draw);
                 break;
             }
             case SceneId.Shop:
             {
-                FrameProfiler.Measure("ShopSceneSystem.Draw", _shopSceneSystem.Draw);
+                MeasureInclusiveSceneDraw("ShopSceneSystem.Draw", _shopSceneSystem.Draw);
 				FrameProfiler.Measure("CurrencyDisplaySystem.Draw", _currencyDisplaySystem.Draw);
                 break;
             }
             case SceneId.Achievement:
             {
-                FrameProfiler.Measure("AchievementSceneSystem.Draw", _achievementSceneSystem.Draw);
+                MeasureInclusiveSceneDraw("AchievementSceneSystem.Draw", _achievementSceneSystem.Draw);
                 break;
             }
             case SceneId.WorldMap:
@@ -463,6 +524,21 @@ public class Game1 : Game
 
 	protected override void UnloadContent()
 	{
+#if DEBUG
+		if (_writePerfReportOnExit)
+		{
+			try
+			{
+				var sceneEntity = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
+				var sceneAtQuit = sceneEntity?.GetComponent<SceneState>()?.Current ?? SceneId.None;
+				FrameProfiler.WriteReport("logs/performance-report.txt", sceneAtQuit, ShaderRuntimeOptions.ShadersEnabled);
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"[FrameProfiler] Report failed: {ex.Message}");
+			}
+		}
+#endif
 		LoggingService.Flush();
 		try { _currencyDisplaySystem?.Dispose(); } catch { }
 		base.UnloadContent();

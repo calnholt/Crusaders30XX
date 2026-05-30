@@ -71,3 +71,17 @@ Unrevealed nodes are hidden and cannot be interacted with. Fog radius around rev
 ## Quest reward
 
 On first completion of a quest node: flat gold (10) and one random card added to the loadout deck. No rewards on repeat attempts (replays disabled).
+
+## Diagnostics
+
+**Profiled game frame**:
+One full game loop iteration: Update phase then Draw phase. Profiler stats for draw and update attach to the same frame id.
+_Avoid_: Draw frame, profiler frame
+
+**Performance report**:
+A plain-text session summary written when the developer quits with Shift+Escape. Lists timing stats per instrumented scope plus frame-level totals.
+_Avoid_: Profiler dump, perf log
+
+**Unaccounted time**:
+Wall-clock time in a profiled game frame not explained by leaf instrumented scopes (shader passes, present, uninstrumented code). Parent/inclusive scopes are listed separately and do not count toward this bucket.
+_Avoid_: Mystery time, overhead

@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Core
 {
@@ -23,8 +24,13 @@ namespace Crusaders30XX.ECS.Core
         /// </summary>
         public void Update(GameTime gameTime)
         {
+#if DEBUG
+            FrameProfiler.MeasureInclusive("ECS.World.Update", () => SystemManager.Update(gameTime));
+            FrameProfiler.MeasureInclusive("ECS.World.LateUpdate", () => SystemManager.LateUpdate(gameTime));
+#else
             SystemManager.Update(gameTime);
             SystemManager.LateUpdate(gameTime);
+#endif
         }
         
         /// <summary>

@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Core
 {
@@ -84,7 +85,11 @@ namespace Crusaders30XX.ECS.Core
             var snapshot = _systems.ToArray();
             foreach (var system in snapshot)
             {
+#if DEBUG
+                FrameProfiler.Measure(system.GetType().Name + ".Update", () => system.Update(gameTime));
+#else
                 system.Update(gameTime);
+#endif
             }
         }
 
@@ -96,7 +101,11 @@ namespace Crusaders30XX.ECS.Core
             var snapshot = _lateSystems.ToArray();
             foreach (var system in snapshot)
             {
+#if DEBUG
+                FrameProfiler.Measure(system.GetType().Name + ".Update", () => system.Update(gameTime));
+#else
                 system.Update(gameTime);
+#endif
             }
         }
         
