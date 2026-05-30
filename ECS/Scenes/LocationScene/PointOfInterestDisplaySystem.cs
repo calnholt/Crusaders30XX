@@ -246,18 +246,7 @@ namespace Crusaders30XX.ECS.Systems
 					RunMapIndex = nodeIndex,
 					ChildPoiIds = childPoiIds,
 				};
-				if (poi.IsCompleted)
-				{
-					poi.DisplayRadius = poi.RevealRadius;
-				}
-				else if (poi.IsRevealed)
-				{
-					poi.DisplayRadius = poi.RevealRadius;
-				}
-				else
-				{
-					poi.DisplayRadius = 0f;
-				}
+				poi.DisplayRadius = poi.IsCompleted ? poi.RevealRadius : 0f;
 				EntityManager.AddComponent(e, poi);
 			}
 
@@ -307,24 +296,37 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		public void Draw()
+		public void DrawShopsOverFog()
+		{
+			DrawPois(PointOfInterestType.Shop, includeAlwaysVisibleShops: true);
+		}
+
+		public void DrawQuestPoisOverFog()
+		{
+			DrawPois(PointOfInterestType.Quest, includeAlwaysVisibleShops: false);
+		}
+
+		private void DrawPois(PointOfInterestType? filterType, bool includeAlwaysVisibleShops)
 		{
 			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
 			if (cam == null) return;
-			var origin = cam.Origin;
 			int w = cam.ViewportW;
 			int h = cam.ViewportH;
 
 			var list = _pois
 				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>(), UI = e.GetComponent<UIElement>() })
 				.Where(x => x.P != null && x.T != null && x.UI != null)
+				.Where(x => filterType == null || x.P.Type == filterType)
 				.ToList();
 			float mapScale = cam.MapScale;
 
-			// Draw only POIs that are revealed or completed (strict graph fog)
 			foreach (var x in list)
 			{
-				bool isVisible = x.P.IsMapVisibleFromStart || x.P.IsRevealed || x.P.IsCompleted;
+				bool isVisible = includeAlwaysVisibleShops && x.P.IsMapVisibleFromStart;
+				if (!isVisible && x.P.Type == PointOfInterestType.Quest)
+				{
+					isVisible = x.P.IsRevealed || x.P.IsCompleted;
+				}
 
 				if (x.UI != null)
 				{

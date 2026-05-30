@@ -107,7 +107,7 @@ namespace Crusaders30XX.ECS.Systems
 			var savedRasterizer = _graphicsDevice.RasterizerState;
 			_spriteBatch.End();
 
-			// Capture the location map + POIs into the render target
+			// Capture the location map into the render target (POIs drawn after fog composite)
 			var prevTargets = _graphicsDevice.GetRenderTargets();
 			_graphicsDevice.SetRenderTarget(_sceneRT);
 			_graphicsDevice.Clear(Color.Transparent);
@@ -119,7 +119,6 @@ namespace Crusaders30XX.ECS.Systems
 				RasterizerState.CullNone
 			);
 			FrameProfiler.Measure("LocationMapDisplaySystem.Draw", _locationMapDisplaySystem.Draw);
-			FrameProfiler.Measure("PointOfInterestDisplaySystem.Draw", _pointOfInterestDisplaySystem.Draw);
 			_spriteBatch.End();
 			// Restore whatever was bound before (offscreen capture or backbuffer)
 			if (prevTargets != null && prevTargets.Length > 0)
@@ -138,6 +137,8 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Composite: blit captured map; optional fog shader when ShadersEnabled
 			FrameProfiler.Measure("FogDisplaySystem.Composite", () => _fogDisplaySystem.DrawComposite(_sceneRT));
+			FrameProfiler.Measure("PointOfInterestDisplaySystem.DrawShopsOverFog", _pointOfInterestDisplaySystem.DrawShopsOverFog);
+			FrameProfiler.Measure("PointOfInterestDisplaySystem.DrawQuestPoisOverFog", _pointOfInterestDisplaySystem.DrawQuestPoisOverFog);
 			FrameProfiler.Measure("MiniMapDisplaySystem.Draw", _miniMapDisplaySystem.Draw);
 			FrameProfiler.Measure("HellRiftIndicatorDisplaySystem.Draw", _hellRiftIndicatorDisplaySystem.Draw);
 			FrameProfiler.Measure("POIRadiusDebugDisplaySystem.Draw", _poiRadiusDebugDisplaySystem.Draw);
