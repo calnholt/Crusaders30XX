@@ -63,7 +63,11 @@ namespace Crusaders30XX.ECS.Systems
             var rootUi = EntityManager.GetEntity(RootEntityName)?.GetComponent<UIElement>();
             if (rootUi != null)
             {
-                rootUi.IsHidden = evt.Current == SubPhase.Action;
+                var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                var weapon = player?.GetComponent<EquippedWeapon>()?.SpawnedEntity;
+                var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+                bool weaponInHand = weapon != null && deck?.Hand.Contains(weapon) == true;
+                rootUi.IsHidden = weaponInHand;
             }
         }
         private void TryLoadWeaponTexture()

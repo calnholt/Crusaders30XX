@@ -178,7 +178,7 @@ namespace Crusaders30XX.ECS.Systems
                 var deck = deckEntity.GetComponent<Deck>();
                 if (deck != null && deck.Hand.Contains(entity) && CountsForHandLayout(entity))
                 {
-                    // Build visible hand excluding animating, filtered, and weapon cards (equipped weapon uses its own spawn path).
+                    // Build visible hand excluding animating and filtered cards (equipped weapon at index 0 included for layout).
                     var visibleHand = deck.Hand.Where(CountsForHandLayout).ToList();
                     var cardIndex = visibleHand.IndexOf(entity);
 
@@ -304,7 +304,6 @@ namespace Crusaders30XX.ECS.Systems
             if (e.GetComponent<AnimatingHandToZone>() != null) return false;
             if (e.GetComponent<AnimatingHandToDrawPile>() != null) return false;
             if (e.GetComponent<FilteredFromHand>() != null) return false;
-            if (e.GetComponent<CardData>()?.Card?.IsWeapon == true) return false;
             return true;
         }
 
