@@ -18,6 +18,7 @@ public class DustWuurm : EnemyBase
     OnStartOfBattle = (entityManager) =>
     {
       EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Rage, Delta = 1 });
     };
   }
 

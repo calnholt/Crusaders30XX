@@ -19,14 +19,14 @@ namespace Crusaders30XX.ECS.Objects.Enemies
       Name = "Shadow";
       HealthPerCard = 1.2666667f;
       StartAnathema -= (int)difficulty * 1;
+      Difficulty = difficulty;
 
       OnStartOfBattle = (entityManager) =>
       {
         EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Anathema, Delta = StartAnathema });
       };
-            Difficulty = difficulty;
-        }
+    }
 
     private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
     {
