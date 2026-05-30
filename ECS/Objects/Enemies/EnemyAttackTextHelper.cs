@@ -40,6 +40,8 @@ public static class EnemyAttackTextHelper
           return $"Gain {amount} penance.";
         case EnemyAttackTextType.Armor:
           return $"The enemy gains {amount} armor.";
+        case EnemyAttackTextType.Guard:
+          return $"The enemy gains {amount} guard.";
         case EnemyAttackTextType.Corrode:
           return $"Each card used to block this attack reduces the block value by {amount} for the rest of the quest.";
         case EnemyAttackTextType.Recoil:
@@ -104,6 +106,7 @@ public static class EnemyAttackTextHelper
     MustBeBlockedExactly,
     Burn,
     Armor,
+    Guard,
     Corrode,
     Recoil,
     Frozen,

@@ -94,18 +94,18 @@ public class Sweep : EnemyAttackBase
 
 public class Calcify : EnemyAttackBase
 {
-  private int Armor = 1;
+  private int Guard = 2;
   public Calcify()
   {
     Id = "calcify";
     Name = "Calcify";
     Damage = 2;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Armor, Armor, ConditionType);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Guard, Guard, ConditionType);
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Armor, Delta = Armor });
+      EventManager.Publish(new AddGuardEvent { Enemy = entityManager.GetEntity("Enemy"), Value = Guard });
     };
   }
 }
