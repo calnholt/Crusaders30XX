@@ -82,15 +82,11 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureOverlayLoaded();
 			if (_overlay == null || !_overlay.IsAvailable) return;
 
-			// Build circles: unlockers (revealed or completed) use DisplayRadius; adjacent-but-unrevealed use UnrevealedRadius
-			// Hellrift POIs are always visible and act as unlockers
-			var list = EntityManager
+			var unlockers = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
-				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
-				.Where(x => x.P != null && x.T != null)
+				.Select(e => new { P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
+				.Where(x => x.P != null && x.T != null && (x.P.IsRevealed || x.P.IsCompleted))
 				.ToList();
-			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == PointOfInterestType.Hellrift).ToList();
-			var unlockerIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
 			var centers = new System.Collections.Generic.List<Microsoft.Xna.Framework.Vector2>();
 			var radii = new System.Collections.Generic.List<float>();
 			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
@@ -100,24 +96,6 @@ namespace Crusaders30XX.ECS.Systems
 				centers.Add(new Microsoft.Xna.Framework.Vector2(u.T.Position.X, u.T.Position.Y));
 				var drawRadius = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
 				radii.Add(drawRadius * mapScale);
-			}
-			foreach (var x in list)
-			{
-				if (unlockerIds.Contains(x.E.Id)) continue;
-				foreach (var u in unlockers)
-				{
-					// Scale world positions by map scale for distance checks
-					float dx = (x.P.WorldPosition.X - u.P.WorldPosition.X) * mapScale;
-					float dy = (x.P.WorldPosition.Y - u.P.WorldPosition.Y) * mapScale;
-					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
-					r *= mapScale; // Scale radius for distance check
-					if ((dx * dx) + (dy * dy) <= (r * r))
-					{
-						centers.Add(new Microsoft.Xna.Framework.Vector2(x.T.Position.X, x.T.Position.Y));
-						radii.Add((float)x.P.UnrevealedRadius * mapScale);
-						break;
-					}
-				}
 			}
 
 			if (centers.Count == 0) return;
@@ -169,15 +147,11 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureOverlayLoaded();
 			if (sceneTexture == null) return;
 
-			// Build circles: unlockers (revealed or completed) use RevealRadius; adjacent-but-unrevealed use UnrevealedRadius
-			// Hellrift POIs are always visible and act as unlockers
-			var list = EntityManager
+			var unlockers = EntityManager
 				.GetEntitiesWithComponent<PointOfInterest>()
-				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
-				.Where(x => x.P != null && x.T != null)
+				.Select(e => new { P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>() })
+				.Where(x => x.P != null && x.T != null && (x.P.IsRevealed || x.P.IsCompleted))
 				.ToList();
-			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == PointOfInterestType.Hellrift).ToList();
-			var unlockerIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
 			var centers = new System.Collections.Generic.List<Microsoft.Xna.Framework.Vector2>();
 			var radii = new System.Collections.Generic.List<float>();
 			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
@@ -187,24 +161,6 @@ namespace Crusaders30XX.ECS.Systems
 				centers.Add(new Microsoft.Xna.Framework.Vector2(u.T.Position.X, u.T.Position.Y));
 				var drawRadius = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
 				radii.Add(drawRadius * mapScale);
-			}
-			foreach (var x in list)
-			{
-				if (unlockerIds.Contains(x.E.Id)) continue;
-				foreach (var u in unlockers)
-				{
-					// Scale world positions by map scale for distance checks
-					float dx = (x.P.WorldPosition.X - u.P.WorldPosition.X) * mapScale;
-					float dy = (x.P.WorldPosition.Y - u.P.WorldPosition.Y) * mapScale;
-					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
-					r *= mapScale; // Scale radius for distance check
-					if ((dx * dx) + (dy * dy) <= (r * r))
-					{
-						centers.Add(new Microsoft.Xna.Framework.Vector2(x.T.Position.X, x.T.Position.Y));
-						radii.Add((float)x.P.UnrevealedRadius * mapScale);
-						break;
-					}
-				}
 			}
 
 			// Configure overlay params (will be used if masking is available)

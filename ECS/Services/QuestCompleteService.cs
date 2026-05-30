@@ -20,8 +20,9 @@ namespace Crusaders30XX.ECS.Services
 			public bool HasCardReward;
 			public string RewardCardKey;
 		}
+
 		/// <summary>
-		/// If the player completed a quest for the current location and it's not already saved, save it and trigger the POI reveal cutscene.
+		/// If the player completed a run-map quest node and it's not already saved, persist and trigger POI reveal cutscene.
 		/// </summary>
 		public static QuestCompletionResult SaveIfCompletedHighest(Crusaders30XX.ECS.Core.EntityManager entityManager)
 		{
@@ -29,7 +30,6 @@ namespace Crusaders30XX.ECS.Services
 			if (entityManager == null) return result;
 			try
 			{
-				// Prefer the queued quest context (persists across scenes) and fall back to QuestSelectState
 				var qe = entityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<QueuedEvents>();
 				string locationId = qe?.LocationId;
 				int? questIndex = qe?.QuestIndex;
@@ -41,61 +41,41 @@ namespace Crusaders30XX.ECS.Services
 				}
 
 				if (string.IsNullOrEmpty(locationId)) return result;
-				LocationDefinitionCache.TryGet(locationId, out var def);
-				if (def == null) return result;
-				int totalPointsOfInterest = System.Math.Max(0, def.pointsOfInterest.Count);
-				int chosenIndex = questIndex ?? SaveCache.GetValueOrDefault(locationId, 0); // default to current highest if unknown
-				int clampedIndex = System.Math.Max(0, System.Math.Min(chosenIndex, totalPointsOfInterest > 0 ? totalPointsOfInterest - 1 : 0));
-				
-				// Check if the quest at clampedIndex exists and is not already completed
-				if (clampedIndex >= 0 && clampedIndex < totalPointsOfInterest)
-				{
-					var poi = def.pointsOfInterest[clampedIndex];
-					var questIdStr = poi?.id;
-					result.LocationId = locationId ?? string.Empty;
-					result.QuestId = questIdStr ?? string.Empty;
-					
-					// Check if this is a Dungeon POI (replayable, don't mark as completed)
-					if (poi?.type == PointOfInterestType.Dungeon)
-					{
-						Console.WriteLine($"[QuestCompleteService] Completed dungeon {locationId}/{questIdStr}");
-						result.IsDungeon = true;
-						// Award gold reward for dungeon completion
-						int reward = poi?.rewardGold ?? 0;
-						if (reward > 0)
-						{
-							SaveCache.AddGold(reward);
-							result.RewardGold = reward;
-						}
-						// Do NOT mark as completed (dungeons are replayable)
-						// Do NOT trigger POI reveal cutscene
-						result.IsNewlyCompleted = false;
-						return result;
-					}
-					
-					if (!string.IsNullOrEmpty(questIdStr) && !SaveCache.IsQuestCompleted(locationId, questIdStr))
-					{
-						Console.WriteLine($"[QuestCompleteService] Completed point of interest {locationId}/{questIdStr}");
-						SaveCache.SetQuestCompleted(locationId, questIdStr, true);
-						// Set flags for POI reveal cutscene when transitioning to Location scene
-						StateSingleton.HasPendingLocationPoiReveal = true;
-						StateSingleton.PendingPoiId = questIdStr;
-						// Award reward if present
-						int reward = poi?.rewardGold ?? 0;
-						if (reward > 0)
-						{
-							SaveCache.AddGold(reward);
-							result.RewardGold = reward;
-						}
-						result.IsNewlyCompleted = true;
+				result.LocationId = locationId;
 
-						var cardReward = QuestCardRewardService.TryGrantRandomCard();
-						if (cardReward.Granted)
-						{
-							result.HasCardReward = true;
-							result.RewardCardKey = cardReward.CardKey;
-						}
-					}
+				int chosenIndex = questIndex ?? 0;
+				var nodes = SaveCache.GetRunMapNodes();
+				int clampedIndex = Math.Max(0, Math.Min(chosenIndex, nodes.Count > 0 ? nodes.Count - 1 : 0));
+
+				if (clampedIndex < 0 || clampedIndex >= nodes.Count) return result;
+
+				var node = nodes[clampedIndex];
+				if (node == null || string.IsNullOrEmpty(node.id)) return result;
+
+				result.QuestId = node.id;
+
+				if (node.isCompleted) return result;
+
+				Console.WriteLine($"[QuestCompleteService] Completed run map node {locationId}/{node.id}");
+				SaveCache.SetRunNodeCompleted(node.id, true);
+				SaveCache.RevealRunNodeChildren(node.id);
+
+				StateSingleton.HasPendingLocationPoiReveal = true;
+				StateSingleton.PendingPoiId = node.id;
+
+				int reward = LocationMapConstants.QuestRewardGold;
+				if (reward > 0)
+				{
+					SaveCache.AddGold(reward);
+					result.RewardGold = reward;
+				}
+				result.IsNewlyCompleted = true;
+
+				var cardReward = QuestCardRewardService.TryGrantRandomCard();
+				if (cardReward.Granted)
+				{
+					result.HasCardReward = true;
+					result.RewardCardKey = cardReward.CardKey;
 				}
 			}
 			catch { }
@@ -103,5 +83,3 @@ namespace Crusaders30XX.ECS.Services
 		}
 	}
 }
-
-

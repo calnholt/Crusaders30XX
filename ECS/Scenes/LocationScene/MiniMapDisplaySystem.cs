@@ -77,12 +77,6 @@ namespace Crusaders30XX.ECS.Systems
 				locationId = "desert"; // Fall back to hardcoded "desert"
 			}
 
-			// Load location definition
-			if (!LocationDefinitionCache.TryGet(locationId, out var def) || def == null || def.pointsOfInterest == null)
-			{
-				return;
-			}
-
 			// Get camera state
 			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
 			if (cam == null) return;
@@ -138,14 +132,10 @@ namespace Crusaders30XX.ECS.Systems
 					.Where(p => p != null)
 					.ToList();
 
-				var unlockers = pois.Where(p => p.IsRevealed || p.IsCompleted).ToList();
-
 				foreach (var p in pois)
 				{
-					bool isHellrift = p.Type == PointOfInterestType.Hellrift;
 					bool isCompleted = p.IsCompleted;
-					// Visible if: always Hellrift, or completed, or revealed, or proximity-visible
-					bool isVisible = isHellrift || isCompleted || p.IsRevealed || IsVisibleByProximity(p, unlockers, cam.MapScale);
+					bool isVisible = isCompleted || p.IsRevealed;
 					if (!isVisible) continue;
 
 					float minimapPoiX = actualMinimapX + (p.WorldPosition.X * cam.MapScale * scale);
@@ -157,7 +147,7 @@ namespace Crusaders30XX.ECS.Systems
 						continue;
 					}
 
-					float dotSize = (isHellrift && !isCompleted) ? HellriftDotSize : DotSize;
+					float dotSize = DotSize;
 					Color dotColor = isCompleted ? Color.White : Color.Red;
 
 					var dotRect = new Rectangle(
@@ -171,22 +161,16 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			else
 			{
-				// Fallback to definitions when live POIs are not present
-				var defUnlockers = def.pointsOfInterest
-					.Where(p => p != null && (p.isRevealed || SaveCache.IsQuestCompleted(locationId, p.id)))
-					.ToList();
-
-				foreach (var poi in def.pointsOfInterest)
+				foreach (var node in SaveCache.GetRunMapNodes())
 				{
-					if (poi == null) continue;
+					if (node == null) continue;
 
-					bool isCompleted = SaveCache.IsQuestCompleted(locationId, poi.id);
-					bool isHellrift = poi.type == PointOfInterestType.Hellrift;
-					bool isVisible = isHellrift || isCompleted || poi.isRevealed || IsVisibleByProximityDef(poi, defUnlockers, locationId, cam.MapScale);
+					bool isCompleted = node.isCompleted;
+					bool isVisible = isCompleted || node.isRevealed;
 					if (!isVisible) continue;
 
-					float minimapPoiX = actualMinimapX + (poi.worldPosition.X * cam.MapScale * scale);
-					float minimapPoiY = actualMinimapY + (poi.worldPosition.Y * cam.MapScale * scale);
+					float minimapPoiX = actualMinimapX + (node.worldX * cam.MapScale * scale);
+					float minimapPoiY = actualMinimapY + (node.worldY * cam.MapScale * scale);
 
 					if (minimapPoiX < minimapX || minimapPoiX > minimapX + minimapWidth ||
 						minimapPoiY < minimapY || minimapPoiY > minimapY + minimapHeight)
@@ -194,7 +178,7 @@ namespace Crusaders30XX.ECS.Systems
 						continue;
 					}
 
-					float dotSize = (isHellrift && !isCompleted) ? HellriftDotSize : DotSize;
+					float dotSize = DotSize;
 					Color dotColor = isCompleted ? Color.White : Color.Red;
 
 					var dotRect = new Rectangle(

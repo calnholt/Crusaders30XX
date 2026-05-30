@@ -166,8 +166,18 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
-			_enemyTexture = _content.Load<Texture2D>(queued.Events[queued.CurrentIndex].EventId);
-			return _enemyTexture;
+			string enemyId = queued.Events[queued.CurrentIndex].EventId;
+			string assetName = EnemyPortraitContent.ToAssetName(enemyId);
+			try
+			{
+				_enemyTexture = _content.Load<Texture2D>(assetName);
+				return _enemyTexture;
+			}
+			catch
+			{
+				_enemyTexture = _content.Load<Texture2D>("Skeleton");
+				return _enemyTexture;
+			}
 		}
 	}
 }

@@ -58,12 +58,9 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity?.GetComponent<QueuedEvents>();
-			if (queued != null && LocationDefinitionCache.TryGet(queued.LocationId, out var def))
+			if (queued != null)
 			{
-				var poi = def.pointsOfInterest != null && queued.QuestIndex >= 0 && queued.QuestIndex < def.pointsOfInterest.Count 
-					? def.pointsOfInterest[queued.QuestIndex] 
-					: null;
-				return poi?.id == "desert_1";
+				return queued.QuestIndex == 0;
 			}
 			return false;
 		}

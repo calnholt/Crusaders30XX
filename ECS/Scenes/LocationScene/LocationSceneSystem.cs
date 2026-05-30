@@ -45,7 +45,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (_.Scene == SceneId.Location)
 				{
 					EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Map });
-					EventManager.Publish(new UpdateLocationNameEvent { Title = LocationDefinitionCache.TryGet("desert", out var def) ? def.name : string.Empty });
+					EventManager.Publish(new UpdateLocationNameEvent { Title = "Desert" });
 					AddLocationSystems();
 				}
 				else

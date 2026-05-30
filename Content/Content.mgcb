@@ -1635,10 +1635,6 @@
 #begin Data/Equipment/purging_bracers.json
 /copy:Data/Equipment/purging_bracers.json
 
-#begin Data/Locations/desert.json
-/copy:Data/Locations/desert.json
-
-
 #---------------------------------- Tutorials ---------------------------------#
 
 

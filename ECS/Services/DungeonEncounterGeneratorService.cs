@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Crusaders30XX.ECS.Factories;
-
 namespace Crusaders30XX.ECS.Services
 {
 	/// <summary>
@@ -17,10 +15,7 @@ namespace Crusaders30XX.ECS.Services
 		/// <returns>List of enemy IDs</returns>
 		public static List<string> GenerateRandomEnemyEncounter(int count = 3)
 		{
-			var allEnemies = EnemyFactory.GetAllEnemies().Keys.ToList();
-			allEnemies.Remove("gleeber");
-			allEnemies.Remove("sand_corpse");
-			allEnemies.Remove("sand_golem");
+			var allEnemies = EnemyPortraitContent.GetRunMapEnemyPool().ToList();
 			var selected = new List<string>();
 			
 			for (int i = 0; i < count && allEnemies.Count > 0; i++)

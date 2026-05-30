@@ -25,14 +25,7 @@ namespace Crusaders30XX.ECS.Services
 			// Example: desert_3 applies burn 1 at start of battle
 			switch (questId)
 			{
-				case "desert_8":
-					EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Poison, Delta = 1 });
-					break;
-				// case "desert_4":
-				// 	EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Poison, Delta = 1 });
-				// 	break;
 				default:
-					// Unknown quest ID - no effect
 					break;
 			}
 		}

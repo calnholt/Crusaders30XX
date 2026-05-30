@@ -170,15 +170,8 @@ namespace Crusaders30XX.ECS.Systems
 
         private bool IsThreatEnabled()
         {
-            var queuedEntity = EntityManager.GetEntity("QueuedEvents");
-            var queued = queuedEntity?.GetComponent<QueuedEvents>();
-            if (queued != null && LocationDefinitionCache.TryGet(queued.LocationId, out var def))
-            {
-                var poi = def.pointsOfInterest != null && queued.QuestIndex >= 0 && queued.QuestIndex < def.pointsOfInterest.Count 
-                    ? def.pointsOfInterest[queued.QuestIndex] 
-                    : null;
-                if (poi?.id == "desert_1") return false;
-            }
+            var queued = EntityManager.GetEntity("QueuedEvents")?.GetComponent<QueuedEvents>();
+            if (queued != null && queued.QuestIndex == 0) return false;
             return true;
         }
 

@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -214,18 +215,16 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (string.IsNullOrEmpty(enemyId)) return null;
 			if (_enemyTextureCache.TryGetValue(enemyId, out var cached)) return cached;
-			// Convention: content texture name is PascalCase of id (e.g., demon -> Demon)
-			string key = enemyId;
-			string contentName = char.ToUpperInvariant(key[0]) + key.Substring(1);
+			string contentName = EnemyPortraitContent.ToAssetName(enemyId);
 			try
 			{
 				var tex = _content.Load<Texture2D>(contentName);
-				_enemyTextureCache[key] = tex;
+				_enemyTextureCache[enemyId] = tex;
 				return tex;
 			}
 			catch
 			{
-				_enemyTextureCache[key] = null;
+				_enemyTextureCache[enemyId] = null;
 				return null;
 			}
 		}

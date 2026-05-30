@@ -183,119 +183,67 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 
-				// Handle Shop POI click → go to Shop scene with title
-				var clickUI = e.GetComponent<UIElement>();
-				if (poiComp != null && clickUI != null && clickUI.IsClicked && poiComp.Type == PointOfInterestType.Shop)
-				{
-					string shopTitle = "Shop";
-					// Try to find POI name by id in loaded definitions
-					var all = LocationDefinitionCache.GetAll();
-					foreach (var kv in all)
-					{
-						var def = kv.Value;
-						if (def?.pointsOfInterest == null) continue;
-						foreach (var p in def.pointsOfInterest)
-						{
-							if (!string.IsNullOrEmpty(p?.id) && p.id == poiComp.Id)
-							{
-								if (!string.IsNullOrWhiteSpace(p.name)) shopTitle = p.name;
-								break;
-							}
-						}
-					}
-					EventManager.Publish(new SetShopTitle { Title = shopTitle });
-					EventManager.Publish(new ShowTransition { Scene = SceneId.Shop });
-				}
-			}
-
-			// Calculate proximity revelation for Hellrift POIs
-			var poiComponents = _pois.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>() })
-				.Where(x => x.P != null)
-				.ToList();
-			
-			// Get unlockers: revealed or completed POIs (excluding Hellrifts)
-			var unlockers = poiComponents
-				.Where(x => x.P.Type != PointOfInterestType.Hellrift && (x.P.IsRevealed || x.P.IsCompleted))
-				.ToList();
-			
-			// For each Hellrift, check if it's within reveal radius of any unlocker
-			foreach (var hellrift in poiComponents.Where(x => x.P.Type == PointOfInterestType.Hellrift))
-			{
-				bool isRevealedByProximity = false;
-				foreach (var u in unlockers)
-				{
-					// Scale world positions by map scale for distance checks
-					float dx = (hellrift.P.WorldPosition.X - u.P.WorldPosition.X) * mapScale;
-					float dy = (hellrift.P.WorldPosition.Y - u.P.WorldPosition.Y) * mapScale;
-					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
-					// Scale radius by map scale for visibility checks
-					r *= mapScale;
-					if ((dx * dx) + (dy * dy) <= (r * r))
-					{
-						isRevealedByProximity = true;
-						break;
-					}
-				}
-				hellrift.P.IsRevealedByProximity = isRevealedByProximity;
 			}
 		}
 
 		private void SpawnPois()
 		{
 			int i = 0;
-			LocationDefinitionCache.TryGet("desert", out var def);
-			
-			foreach (var pos in def.pointsOfInterest)
+			var runNodes = SaveCache.GetRunMapNodes();
+			for (int nodeIndex = 0; nodeIndex < runNodes.Count; nodeIndex++)
 			{
+				var node = runNodes[nodeIndex];
+				if (node == null) continue;
+				var worldPos = new Vector2(node.worldX, node.worldY);
 				var e = EntityManager.CreateEntity($"POI_{i++}");
-				_worldByEntityId[e.Id] = pos.worldPosition;
+				_worldByEntityId[e.Id] = worldPos;
 				_pois.Add(e);
-				// Initialize transform: Position will be updated each frame by the parallax system
-				EntityManager.AddComponent(e, new Transform { Position = pos.worldPosition, ZOrder = 10 });
-				
-				// Determine POI type and appropriate texture
-				PointOfInterestType poiType = pos.type;
-				Texture2D iconTexture =
-					(poiType == PointOfInterestType.Hellrift && _hellriftIconTexture != null) ? _hellriftIconTexture :
-					(poiType == PointOfInterestType.Shop && _shopIconTexture != null) ? _shopIconTexture :
-					(poiType == PointOfInterestType.Dungeon && _dungeonIconTexture != null) ? _dungeonIconTexture :
-					_questIconTexture;
-				
-				// Calculate UI bounds based on actual icon dimensions
+				EntityManager.AddComponent(e, new Transform { Position = worldPos, ZOrder = 10 });
+
 				int boundsWidth = (int)IconSize;
 				int boundsHeight = (int)IconSize;
-				if (iconTexture != null && iconTexture.Width > 0 && iconTexture.Height > 0)
+				if (_questIconTexture != null && _questIconTexture.Width > 0 && _questIconTexture.Height > 0)
 				{
-					float aspectRatio = iconTexture.Height / (float)iconTexture.Width;
+					float aspectRatio = _questIconTexture.Height / (float)_questIconTexture.Width;
 					boundsHeight = (int)(IconSize * aspectRatio);
 				}
-				
-				// UI bounds size only; Parallax will center bounds at Transform.Position
-				// Hellrift POIs are not interactable
-				bool isInteractable = pos.isRevealed || poiType == PointOfInterestType.Shop || poiType == PointOfInterestType.Quest || poiType == PointOfInterestType.Dungeon;
-				var tooltipType = (poiType == PointOfInterestType.Shop) ? TooltipType.None : TooltipType.Quests;
-				var eventType = (poiType == PointOfInterestType.Shop) ? UIElementEventType.None : UIElementEventType.QuestSelect;
-				EntityManager.AddComponent(e, new UIElement { Bounds = new Rectangle(0, 0, boundsWidth, boundsHeight), IsInteractable = isInteractable, TooltipType = tooltipType, EventType = eventType, IsPreventDefaultClick = true });
-				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
-				// Attach POI component for fog-of-war and interactions
-				var poi = new PointOfInterest {
-					Id = pos.id,
-					WorldPosition = pos.worldPosition,
-					Difficulty = pos.difficulty,
-					RevealRadius = pos.revealRadius,
-					UnrevealedRadius = pos.unrevealedRadius,
-					IsRevealed = pos.isRevealed,
-					IsCompleted = SaveCache.IsQuestCompleted(def.id, pos.id),
-					Type = poiType
-				};
-				// Initialize display radius consistent with current state
-				if (poiType == PointOfInterestType.Hellrift)
+
+				bool canFight = node.isRevealed && !node.isCompleted;
+				EntityManager.AddComponent(e, new UIElement
 				{
-					// Hellrift POIs always show with UnrevealedRadius
-					poi.DisplayRadius = poi.UnrevealedRadius;
-					poi.IsRevealed = true; // Always visible
+					Bounds = new Rectangle(0, 0, boundsWidth, boundsHeight),
+					IsInteractable = canFight,
+					TooltipType = TooltipType.Quests,
+					EventType = UIElementEventType.QuestSelect,
+					IsPreventDefaultClick = true,
+				});
+				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
+
+				var childPoiIds = new List<string>();
+				if (node.childIndices != null)
+				{
+					foreach (int childIndex in node.childIndices)
+					{
+						if (childIndex >= 0 && childIndex < runNodes.Count && runNodes[childIndex] != null)
+						{
+							childPoiIds.Add(runNodes[childIndex].id);
+						}
+					}
 				}
-				else if (poi.IsCompleted)
+
+				var poi = new PointOfInterest
+				{
+					Id = node.id,
+					WorldPosition = worldPos,
+					RevealRadius = LocationMapConstants.DefaultRevealRadius,
+					UnrevealedRadius = LocationMapConstants.DefaultUnrevealedRadius,
+					IsRevealed = node.isRevealed,
+					IsCompleted = node.isCompleted,
+					Type = PointOfInterestType.Quest,
+					RunMapIndex = nodeIndex,
+					ChildPoiIds = childPoiIds,
+				};
+				if (poi.IsCompleted)
 				{
 					poi.DisplayRadius = poi.RevealRadius;
 				}
@@ -319,52 +267,21 @@ namespace Crusaders30XX.ECS.Systems
 			int w = cam.ViewportW;
 			int h = cam.ViewportH;
 
-			// Build sets: unlockers (revealed or completed) and visible (unlockers or within any unlocker's reveal radius)
-			// Hellrift POIs are always visible
 			var list = _pois
 				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>(), UI = e.GetComponent<UIElement>() })
 				.Where(x => x.P != null && x.T != null && x.UI != null)
 				.ToList();
-			var unlockers = list.Where(x => x.P.IsRevealed || x.P.IsCompleted || x.P.Type == PointOfInterestType.Hellrift).ToList();
-			var visibleIds = new System.Collections.Generic.HashSet<int>(unlockers.Select(x => x.E.Id));
 			float mapScale = cam.MapScale;
+
+			// Draw only POIs that are revealed or completed (strict graph fog)
 			foreach (var x in list)
 			{
-				if (visibleIds.Contains(x.E.Id)) continue;
-				// Hellrift POIs are always visible, skip distance check (should already be in visibleIds, but double-check)
-				if (x.P.Type == PointOfInterestType.Hellrift)
-				{
-					visibleIds.Add(x.E.Id);
-					continue;
-				}
-				foreach (var u in unlockers)
-				{
-					// Scale world positions by map scale for distance checks
-					float dx = (x.P.WorldPosition.X - u.P.WorldPosition.X) * mapScale;
-					float dy = (x.P.WorldPosition.Y - u.P.WorldPosition.Y) * mapScale;
-					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
-					// Scale radius by map scale for visibility checks
-					r *= mapScale;
-					if ((dx * dx) + (dy * dy) <= (r * r))
-					{
-						visibleIds.Add(x.E.Id);
-						break;
-					}
-				}
-			}
+				bool isVisible = x.P.IsRevealed || x.P.IsCompleted;
 
-			// Draw only POIs that are visible and intersect screen
-			foreach (var x in list)
-			{
-				bool isVisible = visibleIds.Contains(x.E.Id);
-
-				// Sync UI visibility/interactability with fog-of-war visibility
-				// - Hidden POIs: not drawn, not hoverable, not clickable, no rumble
-				// - Visible POIs: drawn; interactable only if non-Hellrift
 				if (x.UI != null)
 				{
 					x.UI.IsHidden = !isVisible;
-					x.UI.IsInteractable = (isVisible && (x.P.Type == PointOfInterestType.Shop || x.P.Type == PointOfInterestType.Quest || x.P.Type == PointOfInterestType.Dungeon)) || x.P.IsRevealedByProximity;
+					x.UI.IsInteractable = isVisible && x.P.IsRevealed && !x.P.IsCompleted;
 				}
 
 				if (!isVisible) continue;

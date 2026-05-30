@@ -107,11 +107,11 @@ namespace Crusaders30XX.ECS.Systems
 			var uiClick = clickArea.GetComponent<UIElement>();
 			if (uiClick != null && uiClick.IsClicked && !StateSingleton.IsActive)
 			{
-				if (!SaveCache.IsQuestCompleted(null, "desert_1"))
+				string startNodeId = SaveCache.GetStartNodeId();
+				if (!SaveCache.IsQuestCompleted(null, startNodeId))
 				{
-					// Start first quest directly
 					var tempPoi = EntityManager.CreateEntity("TempQuestTrigger");
-					EntityManager.AddComponent(tempPoi, new PointOfInterest { Id = "desert_1" });
+					EntityManager.AddComponent(tempPoi, new PointOfInterest { Id = startNodeId });
 					EventManager.Publish(new QuestSelectRequested { Entity = tempPoi });
 					EntityManager.DestroyEntity(tempPoi.Id);
 				}

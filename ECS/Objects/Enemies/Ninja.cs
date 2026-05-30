@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
 using Crusaders30XX.ECS.Systems;
@@ -30,8 +29,7 @@ public class Ninja : EnemyBase
     var hasSliceAndDice = false;
     var attacks = new List<string> { "slice" };
     int random = Random.Shared.Next(0, 100);
-    var isQuestCompleted = SaveCache.IsQuestCompleted("desert", "desert_13");
-    if (random >= 90 || (!isQuestCompleted && turnNumber == 1))
+    if (random >= 90 || turnNumber == 1)
     {
       return ["slice", "dice", "sharpen_blade", "nightveil_guillotine"];
     }

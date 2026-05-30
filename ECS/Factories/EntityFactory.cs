@@ -431,19 +431,14 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(enemyEntity, new AttackIntent());
             world.AddComponent(enemyEntity, new AppliedPassives());
             
-            // Check if current quest is "desert_1" to disable Threat
-            bool isDesert1 = false;
-            var queuedEventsEntity = world.EntityManager.GetEntity("QueuedEvents");
-            var queued = queuedEventsEntity?.GetComponent<QueuedEvents>();
-            if (queued != null && LocationDefinitionCache.TryGet(queued.LocationId, out var locDef))
+            bool isRootQuest = false;
+            var queued = world.EntityManager.GetEntity("QueuedEvents")?.GetComponent<QueuedEvents>();
+            if (queued != null && queued.QuestIndex == 0)
             {
-                var poi = locDef.pointsOfInterest != null && queued.QuestIndex >= 0 && queued.QuestIndex < locDef.pointsOfInterest.Count 
-                    ? locDef.pointsOfInterest[queued.QuestIndex] 
-                    : null;
-                if (poi?.id == "desert_1") isDesert1 = true;
+                isRootQuest = true;
             }
 
-            if (!isDesert1)
+            if (!isRootQuest)
             {
                 world.AddComponent(enemyEntity, new Threat { Amount = 0 });
             }

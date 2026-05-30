@@ -271,32 +271,21 @@ namespace Crusaders30XX.ECS.Systems
 			}
 				else
 				{
-				// Case 2: Location scene POI entity (show only if revealed/completed or revealed by proximity)
+				// Case 2: Location scene run-map POI
 				var poi = hovered.E.GetComponent<PointOfInterest>();
-				if (poi != null && IsPoiVisible(poi) && TryFindLocationByPoiId(poi.Id, out var locId, out var questIdx))
+				if (poi != null && IsPoiVisible(poi) && SaveCache.TryGetRunNode(poi.Id, out var runNode, out var questIdx))
 				{
-					// For Hellrifts, only show tooltip if revealed by proximity
-					if (poi.Type == PointOfInterestType.Hellrift && !poi.IsRevealedByProximity)
+					locationIdTop = "desert";
+					events = new List<LocationEventDefinition>
 					{
-						shouldShowTooltip = false;
-					}
-					else
-					{
-						locationIdTop = locId;
-						var all = LocationDefinitionCache.GetAll();
-						if (all.TryGetValue(locId, out var loc) && questIdx >= 0 && questIdx < (loc.pointsOfInterest?.Count ?? 0))
-						{
-							events = loc.pointsOfInterest[questIdx].events;
-							tribulations = loc.pointsOfInterest[questIdx].tribulations;
-							title = string.IsNullOrWhiteSpace(loc.pointsOfInterest[questIdx].name) ? ("Quest " + (questIdx + 1)) : loc.pointsOfInterest[questIdx].name;
-							rewardGold = System.Math.Max(0, loc.pointsOfInterest[questIdx].rewardGold);
-							var questId = loc.pointsOfInterest[questIdx].id;
-							isCompleted = (!string.IsNullOrEmpty(questId) && SaveCache.IsQuestCompleted(locId, questId)) || (poi?.IsCompleted ?? false);
-							// Get POI type from POI component
-							poiType = poi.Type;
-							shouldShowTooltip = true;
-						}
-					}
+						new LocationEventDefinition { id = runNode.enemyId, type = "Enemy", difficulty = EnemyDifficulty.Easy },
+					};
+					tribulations = new List<TribulationDefinition>();
+					title = "Quest " + (questIdx + 1);
+					rewardGold = LocationMapConstants.QuestRewardGold;
+					isCompleted = runNode.isCompleted || poi.IsCompleted;
+					poiType = PointOfInterestType.Quest;
+					shouldShowTooltip = true;
 				}
 				}
 				
@@ -984,44 +973,16 @@ namespace Crusaders30XX.ECS.Systems
 		private bool IsPoiVisible(PointOfInterest poi)
 		{
 			if (poi == null) return false;
-			// Visible if self revealed or completed
-			if (poi.IsRevealed || poi.IsCompleted) return true;
-			// Or within reveal/unrevealed radius of any unlocker (revealed or completed)
-			var allPoi = EntityManager.GetEntitiesWithComponent<PointOfInterest>()
-				.Select(e => e.GetComponent<PointOfInterest>())
-				.Where(p => p != null && (p.IsRevealed || p.IsCompleted))
-				.ToList();
-			foreach (var u in allPoi)
-			{
-				float dx = poi.WorldPosition.X - u.WorldPosition.X;
-				float dy = poi.WorldPosition.Y - u.WorldPosition.Y;
-				int r = u.IsCompleted ? u.RevealRadius : u.UnrevealedRadius;
-				if ((dx * dx) + (dy * dy) <= (r * r)) return true;
-			}
-			return false;
+			return poi.IsRevealed || poi.IsCompleted;
 		}
 
 		private bool TryFindLocationByPoiId(string poiId, out string locationId, out int questIndex)
 		{
 			locationId = null;
 			questIndex = -1;
-			if (string.IsNullOrEmpty(poiId)) return false;
-			var all = LocationDefinitionCache.GetAll();
-			foreach (var kv in all)
-			{
-				var loc = kv.Value;
-				if (loc?.pointsOfInterest == null) continue;
-				for (int i = 0; i < loc.pointsOfInterest.Count; i++)
-				{
-					if (string.Equals(loc.pointsOfInterest[i].id, poiId, System.StringComparison.OrdinalIgnoreCase))
-					{
-						locationId = kv.Key;
-						questIndex = i;
-						return true;
-					}
-				}
-			}
-			return false;
+			if (!SaveCache.TryGetRunNode(poiId, out _, out questIndex)) return false;
+			locationId = "desert";
+			return true;
 		}
 	}
 }

@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Objects.Equipment;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Data.Save
 {
@@ -67,24 +68,137 @@ namespace Crusaders30XX.ECS.Data.Save
 		public static int GetValueOrDefault(string locationId, int defaultValue = 0)
 		{
 			EnsureLoaded();
-			if (_save == null || string.IsNullOrEmpty(locationId)) return defaultValue;
-			
-			if (!LocationDefinitionCache.TryGet(locationId, out var def) || def == null) return defaultValue;
-
-			if (_save.completedQuests == null) return 0;
-			
+			EnsureRunMap();
+			if (_save?.runMapNodes == null) return defaultValue;
 			int count = 0;
-			if (def.pointsOfInterest != null)
+			foreach (var node in _save.runMapNodes)
 			{
-				foreach (var poi in def.pointsOfInterest)
-				{
-					if (poi != null && !string.IsNullOrEmpty(poi.id) && _save.completedQuests.Contains(poi.id))
-					{
-						count++;
-					}
-				}
+				if (node != null && node.isCompleted) count++;
 			}
 			return count;
+		}
+
+		public static void EnsureRunMap()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				if (_save.runMapNodes != null && _save.runMapNodes.Count > 0)
+				{
+					if (SanitizeRunMapEnemyIds())
+					{
+						Persist();
+					}
+					return;
+				}
+				var (seed, nodes) = LocationMapGeneratorService.Generate();
+				_save.runMapSeed = seed;
+				_save.runMapNodes = nodes;
+				if (string.IsNullOrEmpty(_save.lastLocation) && nodes.Count > 0)
+				{
+					_save.lastLocation = nodes[0].id;
+				}
+				Persist();
+			}
+		}
+
+		public static IReadOnlyList<RunMapNode> GetRunMapNodes()
+		{
+			EnsureLoaded();
+			EnsureRunMap();
+			return _save?.runMapNodes ?? new List<RunMapNode>();
+		}
+
+		public static int RunMapNodeCount => LocationMapConstants.NodeCount;
+
+		public static string GetStartNodeId()
+		{
+			EnsureRunMap();
+			if (_save?.runMapNodes == null || _save.runMapNodes.Count == 0) return "run_0";
+			return _save.runMapNodes[0].id;
+		}
+
+		public static bool TryGetRunNode(string nodeId, out RunMapNode node, out int index)
+		{
+			node = null;
+			index = -1;
+			EnsureRunMap();
+			if (_save?.runMapNodes == null || string.IsNullOrEmpty(nodeId)) return false;
+			for (int i = 0; i < _save.runMapNodes.Count; i++)
+			{
+				var n = _save.runMapNodes[i];
+				if (n != null && string.Equals(n.id, nodeId, System.StringComparison.OrdinalIgnoreCase))
+				{
+					node = n;
+					index = i;
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public static bool TryGetRunNode(int index, out RunMapNode node)
+		{
+			node = null;
+			EnsureRunMap();
+			if (_save?.runMapNodes == null || index < 0 || index >= _save.runMapNodes.Count) return false;
+			node = _save.runMapNodes[index];
+			return node != null;
+		}
+
+		public static void SetRunNodeRevealed(string nodeId, bool revealed = true)
+		{
+			if (!TryGetRunNode(nodeId, out var node, out _)) return;
+			lock (_lock)
+			{
+				node.isRevealed = revealed;
+				Persist();
+			}
+		}
+
+		public static void SetRunNodeCompleted(string nodeId, bool completed = true)
+		{
+			if (!TryGetRunNode(nodeId, out var node, out _)) return;
+			lock (_lock)
+			{
+				node.isCompleted = completed;
+				Persist();
+			}
+		}
+
+		private static bool SanitizeRunMapEnemyIds()
+		{
+			if (_save?.runMapNodes == null || _save.runMapNodes.Count == 0) return false;
+			var pool = EnemyPortraitContent.GetRunMapEnemyPool().ToList();
+			if (pool.Count == 0) return false;
+			var rng = new System.Random(_save.runMapSeed != 0 ? _save.runMapSeed : 1);
+			bool changed = false;
+			foreach (var node in _save.runMapNodes)
+			{
+				if (node == null || string.IsNullOrEmpty(node.enemyId)) continue;
+				if (EnemyPortraitContent.HasPortrait(node.enemyId)) continue;
+				node.enemyId = pool[rng.Next(pool.Count)];
+				changed = true;
+			}
+			return changed;
+		}
+
+		public static void RevealRunNodeChildren(string completedNodeId)
+		{
+			if (!TryGetRunNode(completedNodeId, out var node, out _)) return;
+			if (node.childIndices == null || node.childIndices.Count == 0) return;
+			lock (_lock)
+			{
+				foreach (int childIndex in node.childIndices)
+				{
+					if (childIndex >= 0 && childIndex < _save.runMapNodes.Count)
+					{
+						_save.runMapNodes[childIndex].isRevealed = true;
+					}
+				}
+				Persist();
+			}
 		}
 
 		public static int GetGold()
@@ -117,35 +231,14 @@ namespace Crusaders30XX.ECS.Data.Save
 
 		public static bool IsQuestCompleted(string locationId, string questId)
 		{
-			EnsureLoaded();
-			if (_save == null || string.IsNullOrEmpty(questId)) return false;
-			return _save.completedQuests != null && _save.completedQuests.Contains(questId);
+			EnsureRunMap();
+			if (string.IsNullOrEmpty(questId)) return false;
+			return TryGetRunNode(questId, out var node, out _) && node.isCompleted;
 		}
 
 		public static void SetQuestCompleted(string locationId, string questId, bool completed)
 		{
-			EnsureLoaded();
-			lock (_lock)
-			{
-				if (_save == null) _save = new SaveFile();
-				if (_save.completedQuests == null) _save.completedQuests = new List<string>();
-
-				if (completed)
-				{
-					if (!_save.completedQuests.Contains(questId))
-					{
-						_save.completedQuests.Add(questId);
-					}
-				}
-				else
-				{
-					if (_save.completedQuests.Contains(questId))
-					{
-						_save.completedQuests.Remove(questId);
-					}
-				}
-				Persist();
-			}
+			SetRunNodeCompleted(questId, completed);
 		}
 
 		private static void Persist()
@@ -211,17 +304,20 @@ namespace Crusaders30XX.ECS.Data.Save
 							Persist();
 						}
 					}
+					EnsureRunMap();
 				}
 			}
 		}
 
 		private static SaveFile CreateDefaultSave()
 		{
-			return new SaveFile
+			var (seed, nodes) = LocationMapGeneratorService.Generate();
+			var save = new SaveFile
 			{
 				version = SaveFile.CURRENT_VERSION,
 				gold = 4,
-				completedQuests = new List<string>(),
+				runMapSeed = seed,
+				runMapNodes = nodes,
 				collection = new List<string>
 				{
 					// Starter cards everyone has
@@ -248,7 +344,7 @@ namespace Crusaders30XX.ECS.Data.Save
 					"radiance",
 				},
 				items = new List<SaveItem>(),
-				lastLocation = "desert_1",
+				lastLocation = nodes.Count > 0 ? nodes[0].id : "run_0",
 				loadouts = new List<LoadoutDefinition>
 				{
 					new LoadoutDefinition
@@ -301,6 +397,7 @@ namespace Crusaders30XX.ECS.Data.Save
 					}
 				}
 			};
+			return save;
 		}
 
 		private static string ResolveFilePath()

@@ -288,61 +288,36 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void TryAutoPanCamera()
 		{
-			// Get location ID - try QueuedEvents first, fall back to "desert"
-			string locationId = null;
-			var queuedEventsEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
-			if (queuedEventsEntity != null)
-			{
-				var queuedEvents = queuedEventsEntity.GetComponent<QueuedEvents>();
-				if (!string.IsNullOrEmpty(queuedEvents?.LocationId))
-				{
-					locationId = queuedEvents.LocationId;
-				}
-			}
-			if (string.IsNullOrEmpty(locationId))
-			{
-				locationId = "desert"; // Fall back to hardcoded "desert" matching PointOfInterestDisplaySystem
-			}
+			var nodes = SaveCache.GetRunMapNodes();
+			if (nodes == null || nodes.Count == 0) return;
 
-			// Load location definition
-			if (!LocationDefinitionCache.TryGet(locationId, out var def) || def == null || def.pointsOfInterest == null)
-			{
-				return;
-			}
-
-			// Find target POI: prioritize saved lastLocation
-			PointOfInterestDefinition targetPoi = null;
-
+			RunMapNode target = null;
 			string lastLoc = SaveCache.GetAll().lastLocation;
 			if (!string.IsNullOrEmpty(lastLoc))
 			{
-				targetPoi = def.pointsOfInterest.FirstOrDefault(p => p.id == lastLoc);
+				SaveCache.TryGetRunNode(lastLoc, out target, out _);
 			}
 
-			if (targetPoi == null)
+			if (target == null)
 			{
-				// Fallback: try to find the furthest down completed quest (highest index)
-				for (int i = def.pointsOfInterest.Count - 1; i >= 0; i--)
+				for (int i = nodes.Count - 1; i >= 0; i--)
 				{
-					var poi = def.pointsOfInterest[i];
-					if (SaveCache.IsQuestCompleted(locationId, poi.id))
+					if (nodes[i] != null && nodes[i].isCompleted)
 					{
-						targetPoi = poi;
+						target = nodes[i];
 						break;
 					}
 				}
 			}
 
-			// If no completed quests, find first revealed POI
-			if (targetPoi == null)
+			if (target == null)
 			{
-				targetPoi = def.pointsOfInterest.FirstOrDefault(poi => poi.isRevealed);
+				target = nodes.FirstOrDefault(n => n != null && n.isRevealed);
 			}
 
-			// Pan camera to target POI if found
-			if (targetPoi != null)
+			if (target != null)
 			{
-				EventManager.Publish(new FocusLocationCameraEvent { WorldPos = targetPoi.worldPosition });
+				EventManager.Publish(new FocusLocationCameraEvent { WorldPos = new Vector2(target.worldX, target.worldY) });
 			}
 		}
 

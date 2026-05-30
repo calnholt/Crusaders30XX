@@ -25,16 +25,8 @@ namespace Crusaders30XX.ECS.Systems
 
         private bool IsThreatDisabled()
         {
-            var queuedEntity = EntityManager.GetEntity("QueuedEvents");
-            var queued = queuedEntity?.GetComponent<QueuedEvents>();
-            if (queued != null && LocationDefinitionCache.TryGet(queued.LocationId, out var def))
-            {
-                var poi = def.pointsOfInterest != null && queued.QuestIndex >= 0 && queued.QuestIndex < def.pointsOfInterest.Count 
-                    ? def.pointsOfInterest[queued.QuestIndex] 
-                    : null;
-                return poi?.id == "desert_1";
-            }
-            return false;
+            var queued = EntityManager.GetEntity("QueuedEvents")?.GetComponent<QueuedEvents>();
+            return queued != null && queued.QuestIndex == 0;
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()

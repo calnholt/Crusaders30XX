@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 
@@ -59,8 +60,7 @@ namespace Crusaders30XX.ECS.Systems
 					_startRadius = p.UnrevealedRadius;
 					_targetRadius = p.RevealRadius;
 					p.DisplayRadius = _startRadius;
-					// Focus camera now that we have position
-					EventManager.Publish(new FocusLocationCameraEvent { WorldPos = p.WorldPosition });
+					RevealGraphChildren(p);
 				}
 				else
 				{
@@ -74,31 +74,6 @@ namespace Crusaders30XX.ECS.Systems
 			var poi = _poiEntity.GetComponent<PointOfInterest>();
 			float t = MathHelper.Clamp(_animTime / AnimDuration, 0f, 1f);
 			poi.DisplayRadius = MathHelper.Lerp(_startRadius, _targetRadius, t);
-
-			// Reveal neighbors that become visible within any unlocker's DisplayRadius
-			var all = EntityManager
-				.GetEntitiesWithComponent<PointOfInterest>()
-				.Select(e2 => new { E = e2, P = e2.GetComponent<PointOfInterest>() })
-				.Where(x => x.P != null)
-				.ToList();
-			var unlockers = all.Where(x => x.P.IsCompleted || x.P.IsRevealed).ToList();
-			foreach (var x in all)
-			{
-				if (x.P.IsCompleted || x.P.IsRevealed) continue;
-				foreach (var u in unlockers)
-				{
-					float dx = x.P.WorldPosition.X - u.P.WorldPosition.X;
-					float dy = x.P.WorldPosition.Y - u.P.WorldPosition.Y;
-					float r = (u.P.DisplayRadius > 0f) ? u.P.DisplayRadius : (u.P.IsCompleted ? u.P.RevealRadius : u.P.UnrevealedRadius);
-					if ((dx * dx) + (dy * dy) <= (r * r))
-					{
-						x.P.IsRevealed = true;
-						x.P.DisplayRadius = x.P.UnrevealedRadius;
-						EventManager.Publish(new POIRevealedEvent { PoiId = x.P.Id });
-						break;
-					}
-				}
-			}
 
 			if (t >= 1f)
 			{
@@ -134,11 +109,34 @@ namespace Crusaders30XX.ECS.Systems
 			StateSingleton.IsActive = false;
 		}
 
-		[DebugActionInt("Cutscene", Step = 1, Min = 1, Max = 999, Default = 2)]
+		private void RevealGraphChildren(PointOfInterest completedPoi)
+		{
+			if (completedPoi?.ChildPoiIds == null) return;
+			foreach (string childId in completedPoi.ChildPoiIds)
+			{
+				if (string.IsNullOrEmpty(childId)) continue;
+				var childEntity = EntityManager
+					.GetEntitiesWithComponent<PointOfInterest>()
+					.FirstOrDefault(e => e.GetComponent<PointOfInterest>()?.Id == childId);
+				var childPoi = childEntity?.GetComponent<PointOfInterest>();
+				if (childPoi == null || childPoi.IsRevealed) continue;
+				childPoi.IsRevealed = true;
+				childPoi.DisplayRadius = childPoi.UnrevealedRadius;
+				var childUi = childEntity.GetComponent<UIElement>();
+				if (childUi != null && !childPoi.IsCompleted)
+				{
+					childUi.IsInteractable = true;
+					childUi.IsHidden = false;
+				}
+				EventManager.Publish(new POIRevealedEvent { PoiId = childId });
+			}
+		}
+
+		[DebugActionInt("Cutscene", Step = 1, Min = 0, Max = 19, Default = 0)]
 		public void debug_cutscene(int id)
 		{
 			StateSingleton.HasPendingLocationPoiReveal = true;
-			StateSingleton.PendingPoiId = $"desert_{id}";
+			StateSingleton.PendingPoiId = $"run_{id}";
 			TryBeginCutsceneFromTransitionState();
 		}
 	}
