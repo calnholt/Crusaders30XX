@@ -13,6 +13,7 @@ using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Objects.Enemies;
+using Crusaders30XX.ECS.Objects.Medals;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -588,38 +589,72 @@ namespace Crusaders30XX.ECS.Factories
 				if (item == null || string.IsNullOrWhiteSpace(item.cardId)) continue;
 
 				string id = item.cardId;
-				string displayName = id;
-				var card = CardFactory.Create(id);
-				if (card != null)
-				{
-					displayName = string.IsNullOrWhiteSpace(card.Name) ? id : card.Name;
-				}
-
-				var color = ParseCardColor(item.color);
 				var e = entityManager.CreateEntity($"ShopItem_{shop.id}_{slotIndex}");
 				entityManager.AddComponent(e, new Transform { Position = new Vector2(-1000, -1000), ZOrder = 10002 });
 				entityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
-				var uiElement = new UIElement
+
+				if (item.IsMedal)
 				{
-					Bounds = new Rectangle(-1000, -1000, 1, 1),
-					IsInteractable = !item.isPurchased,
-					TooltipType = TooltipType.Card,
-				};
-				entityManager.AddComponent(e, new ForSaleItem
+					string displayName = id;
+					var medal = MedalFactory.Create(id);
+					if (medal != null)
+					{
+						displayName = string.IsNullOrWhiteSpace(medal.Name) ? id : medal.Name;
+					}
+
+					var uiElement = new UIElement
+					{
+						Bounds = new Rectangle(-1000, -1000, 1, 1),
+						IsInteractable = !item.isPurchased,
+						Tooltip = medal?.Text ?? string.Empty,
+					};
+					entityManager.AddComponent(e, new ForSaleItem
+					{
+						Id = id,
+						ItemType = ForSaleItemType.Medal,
+						Price = item.price,
+						IsPurchased = item.isPurchased,
+						DisplayName = displayName,
+						SourceShopName = shop.id,
+						ShopId = shop.id,
+						ShopSlotIndex = slotIndex,
+						DisplayRotationDeg = item.displayRotationDeg,
+					});
+					entityManager.AddComponent(e, uiElement);
+				}
+				else
 				{
-					Id = id,
-					ItemType = ForSaleItemType.Card,
-					Price = item.price,
-					IsPurchased = item.isPurchased,
-					DisplayName = displayName,
-					SourceShopName = shop.id,
-					ShopId = shop.id,
-					ShopSlotIndex = slotIndex,
-					CardColor = color,
-					DisplayRotationDeg = item.displayRotationDeg,
-				});
-				entityManager.AddComponent(e, new CardTooltip { CardId = id, TooltipScale = 0.8f, CardColor = color });
-				entityManager.AddComponent(e, uiElement);
+					string displayName = id;
+					var card = CardFactory.Create(id);
+					if (card != null)
+					{
+						displayName = string.IsNullOrWhiteSpace(card.Name) ? id : card.Name;
+					}
+
+					var color = ParseCardColor(item.color);
+					var uiElement = new UIElement
+					{
+						Bounds = new Rectangle(-1000, -1000, 1, 1),
+						IsInteractable = !item.isPurchased,
+						TooltipType = TooltipType.Card,
+					};
+					entityManager.AddComponent(e, new ForSaleItem
+					{
+						Id = id,
+						ItemType = ForSaleItemType.Card,
+						Price = item.price,
+						IsPurchased = item.isPurchased,
+						DisplayName = displayName,
+						SourceShopName = shop.id,
+						ShopId = shop.id,
+						ShopSlotIndex = slotIndex,
+						CardColor = color,
+						DisplayRotationDeg = item.displayRotationDeg,
+					});
+					entityManager.AddComponent(e, new CardTooltip { CardId = id, TooltipScale = 0.8f, CardColor = color });
+					entityManager.AddComponent(e, uiElement);
+				}
+
 				entityManager.AddComponent(e, new OwnedByScene { Scene = SceneId.Shop });
 				result.Add(e);
 			}

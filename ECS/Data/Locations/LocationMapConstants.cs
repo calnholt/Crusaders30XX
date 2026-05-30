@@ -62,6 +62,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public const int RunMapShopCount = 3;
 		public const int RunMapShopItemsPerShop = 3;
 		public const int RunMapShopCardPrice = 30;
+		public const int RunMapShopMedalPrice = 50;
 
 		// Shops sit inside completed-quest fog; clearance is icon-scale, not map MinNodeSpacing.
 		public const float RunMapShopClearanceFromQuest = 80f;

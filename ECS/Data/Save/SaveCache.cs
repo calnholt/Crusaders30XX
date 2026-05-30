@@ -493,7 +493,8 @@ namespace Crusaders30XX.ECS.Data.Save
 
 				var item = shop.items[slotIndex];
 				if (item == null || item.isPurchased) return false;
-				if (string.IsNullOrWhiteSpace(item.cardId) || string.IsNullOrWhiteSpace(item.color)) return false;
+				if (string.IsNullOrWhiteSpace(item.cardId)) return false;
+				if (!item.IsMedal && string.IsNullOrWhiteSpace(item.color)) return false;
 
 				int price = System.Math.Max(0, item.price);
 				if (_save.gold < price) return false;
@@ -501,14 +502,25 @@ namespace Crusaders30XX.ECS.Data.Save
 				EnsurePrimaryLoadout(_save);
 				var loadout = _save.loadouts[0];
 				if (loadout.cardIds == null) loadout.cardIds = new List<string>();
+				if (loadout.medalIds == null) loadout.medalIds = new List<string>();
 
-				string cardKey = $"{item.cardId}|{item.color}";
 				_save.gold = System.Math.Max(0, _save.gold - price);
-				loadout.cardIds.Add(cardKey);
 				item.isPurchased = true;
-				Persist();
+				if (item.IsMedal)
+				{
+					loadout.medalIds.Add(item.cardId);
+				}
+				else
+				{
+					string cardKey = $"{item.cardId}|{item.color}";
+					loadout.cardIds.Add(cardKey);
+					Persist();
+					EventManager.Publish(new LoadoutCardAdded { LoadoutId = loadout.id, CardKey = cardKey });
+					newGold = _save.gold;
+					return true;
+				}
 
-				EventManager.Publish(new LoadoutCardAdded { LoadoutId = loadout.id, CardKey = cardKey });
+				Persist();
 				newGold = _save.gold;
 				return true;
 			}
@@ -665,7 +677,7 @@ namespace Crusaders30XX.ECS.Data.Save
 					{
 						loadout.weaponId = itemId;
 					}
-					else if (itemType == ForSaleItemType.Medal && loadout.medalIds.Count < 3)
+					else if (itemType == ForSaleItemType.Medal)
 					{
 						loadout.medalIds.Add(itemId);
 					}

@@ -30,6 +30,7 @@ namespace Crusaders30XX.ECS.Services
 
 			var displayNames = RunMapShopCatalog.PickDisplayNames(rng, LocationMapConstants.RunMapShopCount);
 			var backgroundAssets = RunMapShopCatalog.PickBackgroundAssets(rng, LocationMapConstants.RunMapShopCount);
+			int medalShopIndex = rng.Next(LocationMapConstants.RunMapShopCount);
 
 			for (int shopIndex = 0; shopIndex < LocationMapConstants.RunMapShopCount; shopIndex++)
 			{
@@ -41,6 +42,10 @@ namespace Crusaders30XX.ECS.Services
 
 				placedPositions.Add((x, y));
 				var items = RollShopItems(rng, cardPool);
+				if (shopIndex == medalShopIndex)
+				{
+					InjectRandomMedalOffer(rng, items);
+				}
 				shops.Add(new RunMapShop
 				{
 					id = ShopId(shopIndex),
@@ -94,6 +99,26 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			return items;
+		}
+
+		private static void InjectRandomMedalOffer(Random rng, List<RunMapShopItem> items)
+		{
+			if (items == null || items.Count == 0) return;
+
+			var medalIds = MedalFactory.GetAllMedals().Keys.ToList();
+			if (medalIds.Count == 0) return;
+
+			string medalId = medalIds[rng.Next(medalIds.Count)];
+			int slotIndex = rng.Next(items.Count);
+			items[slotIndex] = new RunMapShopItem
+			{
+				itemType = RunMapShopItem.ItemTypeMedal,
+				cardId = medalId,
+				color = string.Empty,
+				price = LocationMapConstants.RunMapShopMedalPrice,
+				isPurchased = false,
+				displayRotationDeg = rng.Next(-5, 6),
+			};
 		}
 
 		/// <summary>

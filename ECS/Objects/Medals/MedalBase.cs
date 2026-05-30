@@ -26,6 +26,11 @@ namespace Crusaders30XX.ECS.Objects.Medals
             Console.WriteLine($"[MedalBase] Activate: {Id}");
         }
 
+        public virtual void OnAcquire()
+        {
+            Console.WriteLine($"[MedalBase] OnAcquire: {Id}");
+        }
+
         public virtual void Dispose()
         {
             Console.WriteLine($"[MedalBase] Dispose: {Id}");

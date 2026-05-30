@@ -108,6 +108,11 @@ namespace Crusaders30XX.ECS.Services
 				return result;
 			}
 
+			if (fs.ItemType == ForSaleItemType.Medal)
+			{
+				RunMedalService.AcquireAndEquip(entityManager, fs.Id);
+			}
+
 			result.NewGold = newGold;
 			result.Success = true;
 

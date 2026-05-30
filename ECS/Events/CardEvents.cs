@@ -566,6 +566,7 @@ namespace Crusaders30XX.ECS.Events
         TopXCards,
         DrawPile,
         Hand,
+        Deck,
     }
 
     public enum SealType

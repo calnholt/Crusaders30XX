@@ -43,6 +43,28 @@ namespace Crusaders30XX.ECS.Systems
 				case FreezeType.TopXCards:
 					ApplyFrozenEffectTopXCards(evt.Amount);
 					break;
+				case FreezeType.Deck:
+					ApplyFrozenEffectDeck(evt.Amount);
+					break;
+			}
+		}
+
+		private void ApplyFrozenEffectDeck(int amount)
+		{
+			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+			if (deckEntity == null) return;
+			var deck = deckEntity.GetComponent<Deck>();
+			if (deck?.Cards == null) return;
+
+			var cardsToFreeze = deck.Cards
+				.Where(c => c != null && c.GetComponent<Frozen>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false)
+				.OrderBy(_ => new Random().Next())
+				.Take(amount)
+				.ToList();
+			foreach (var card in cardsToFreeze)
+			{
+				EntityManager.AddComponent(card, new Frozen { Owner = card });
+				RunScopedStateService.SyncCardRestrictionsFromComponents(card);
 			}
 		}
 
