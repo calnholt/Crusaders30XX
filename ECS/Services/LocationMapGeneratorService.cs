@@ -6,8 +6,34 @@ using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Services
 {
+	public readonly struct RunMapSpreadMetrics
+	{
+		public int Seed { get; init; }
+		public float BboxWidthFraction { get; init; }
+		public float BboxHeightFraction { get; init; }
+		public float MinPairwiseDistance { get; init; }
+		public float MaxDistanceFromCenter { get; init; }
+
+		public string ToLogLine()
+		{
+			return string.Format(
+				System.Globalization.CultureInfo.InvariantCulture,
+				"v={0} seed={1} bboxW={2:F2} bboxH={3:F2} minPair={4:F0} maxCenter={5:F0}",
+				LocationMapConstants.MapGeneratorVersion,
+				Seed,
+				BboxWidthFraction,
+				BboxHeightFraction,
+				MinPairwiseDistance,
+				MaxDistanceFromCenter);
+		}
+	}
+
 	public static class LocationMapGeneratorService
 	{
+		private const int CandidateAttempts = 32;
+		private const int SpiralAngleSteps = 16;
+		private const int SpiralRingSteps = 12;
+
 		public static (int seed, List<RunMapNode> nodes) Generate(int? seedOverride = null)
 		{
 			int seed = seedOverride ?? Random.Shared.Next();
@@ -15,12 +41,12 @@ namespace Crusaders30XX.ECS.Services
 			var nodes = new List<RunMapNode>(LocationMapConstants.NodeCount);
 			var depths = new int[LocationMapConstants.NodeCount];
 
-			// Root
+			var (rootX, rootY) = PlaceRoot(rng);
 			nodes.Add(new RunMapNode
 			{
 				id = NodeId(0),
-				worldX = LocationMapConstants.MapCenterX,
-				worldY = LocationMapConstants.MapCenterY,
+				worldX = rootX,
+				worldY = rootY,
 				parentIndex = -1,
 				isRevealed = true,
 				childIndices = new List<int>(),
@@ -33,7 +59,6 @@ namespace Crusaders30XX.ECS.Services
 				enemyPool.Add("skeleton");
 			}
 
-			// Topology: shallow-biased random tree with bounded fan-out per node
 			for (int i = 1; i < LocationMapConstants.NodeCount; i++)
 			{
 				var eligibleParents = GetEligibleParentIndices(nodes);
@@ -63,10 +88,86 @@ namespace Crusaders30XX.ECS.Services
 
 			nodes[0].enemyId = PickEnemy(rng, enemyPool);
 
+#if DEBUG
+			var metrics = ComputeSpreadMetrics(seed, nodes);
+			System.Console.WriteLine($"[LocationMapGenerator] {metrics.ToLogLine()}");
+#endif
+
 			return (seed, nodes);
 		}
 
+		public static RunMapSpreadMetrics ComputeSpreadMetrics(int seed, List<RunMapNode> nodes)
+		{
+			if (nodes == null || nodes.Count == 0)
+			{
+				return new RunMapSpreadMetrics { Seed = seed };
+			}
+
+			float minX = float.MaxValue, maxX = float.MinValue;
+			float minY = float.MaxValue, maxY = float.MinValue;
+			float maxCenter = 0f;
+			float centerX = LocationMapConstants.MapCenterX;
+			float centerY = LocationMapConstants.MapCenterY;
+
+			foreach (var n in nodes)
+			{
+				if (n == null) continue;
+				minX = Math.Min(minX, n.worldX);
+				maxX = Math.Max(maxX, n.worldX);
+				minY = Math.Min(minY, n.worldY);
+				maxY = Math.Max(maxY, n.worldY);
+				float dx = n.worldX - centerX;
+				float dy = n.worldY - centerY;
+				maxCenter = Math.Max(maxCenter, (float)Math.Sqrt(dx * dx + dy * dy));
+			}
+
+			float bboxW = LocationMapConstants.PlayableWidth > 0f
+				? (maxX - minX) / LocationMapConstants.PlayableWidth
+				: 0f;
+			float bboxH = LocationMapConstants.PlayableHeight > 0f
+				? (maxY - minY) / LocationMapConstants.PlayableHeight
+				: 0f;
+
+			float minPair = float.MaxValue;
+			for (int i = 0; i < nodes.Count; i++)
+			{
+				var a = nodes[i];
+				if (a == null) continue;
+				for (int j = i + 1; j < nodes.Count; j++)
+				{
+					var b = nodes[j];
+					if (b == null) continue;
+					float dx = a.worldX - b.worldX;
+					float dy = a.worldY - b.worldY;
+					float d = (float)Math.Sqrt(dx * dx + dy * dy);
+					if (d < minPair) minPair = d;
+				}
+			}
+
+			if (minPair == float.MaxValue) minPair = 0f;
+
+			return new RunMapSpreadMetrics
+			{
+				Seed = seed,
+				BboxWidthFraction = bboxW,
+				BboxHeightFraction = bboxH,
+				MinPairwiseDistance = minPair,
+				MaxDistanceFromCenter = maxCenter,
+			};
+		}
+
 		private static string NodeId(int index) => $"run_{index}";
+
+		private static (float x, float y) PlaceRoot(Random rng)
+		{
+			float angle = (float)(rng.NextDouble() * Math.PI * 2.0);
+			float r = (float)Math.Sqrt(rng.NextDouble()) * LocationMapConstants.RootWiggleRadius;
+			float x = LocationMapConstants.MapCenterX + (float)Math.Cos(angle) * r;
+			float y = LocationMapConstants.MapCenterY + (float)Math.Sin(angle) * r;
+			x = Clamp(x, LocationMapConstants.MapMargin, LocationMapConstants.BaseMapWidth - LocationMapConstants.MapMargin);
+			y = Clamp(y, LocationMapConstants.MapMargin, LocationMapConstants.BaseMapHeight - LocationMapConstants.MapMargin);
+			return (x, y);
+		}
 
 		private static List<int> GetEligibleParentIndices(List<RunMapNode> nodes)
 		{
@@ -94,7 +195,7 @@ namespace Crusaders30XX.ECS.Services
 			var weights = new float[eligibleParents.Count];
 			for (int i = 0; i < eligibleParents.Count; i++)
 			{
-				float w = 1f / (depths[eligibleParents[i]] + 1);
+				float w = depths[eligibleParents[i]] + 1;
 				weights[i] = w;
 				total += w;
 			}
@@ -111,28 +212,81 @@ namespace Crusaders30XX.ECS.Services
 
 		private static void PlaceChild(Random rng, List<RunMapNode> nodes, RunMapNode parent, out float x, out float y)
 		{
-			const int maxAttempts = 48;
-			for (int attempt = 0; attempt < maxAttempts; attempt++)
-			{
-				float angle = (float)(rng.NextDouble() * Math.PI * 2.0);
-				float dist = LocationMapConstants.MinStep +
-					(float)rng.NextDouble() * (LocationMapConstants.MaxStep - LocationMapConstants.MinStep);
-				float cx = parent.worldX + (float)Math.Cos(angle) * dist;
-				float cy = parent.worldY + (float)Math.Sin(angle) * dist;
-				cx = Clamp(cx, LocationMapConstants.MapMargin, LocationMapConstants.BaseMapWidth - LocationMapConstants.MapMargin);
-				cy = Clamp(cy, LocationMapConstants.MapMargin, LocationMapConstants.BaseMapHeight - LocationMapConstants.MapMargin);
+			float bestX = 0f, bestY = 0f;
+			float bestScore = -1f;
+			bool found = false;
 
-				if (!OverlapsExisting(nodes, cx, cy))
+			for (int attempt = 0; attempt < CandidateAttempts; attempt++)
+			{
+				if (!TryRandomCandidate(rng, parent, nodes, out float cx, out float cy)) continue;
+				float score = DistanceFromMapCenter(cx, cy);
+				if (!found || score > bestScore)
 				{
-					x = cx;
-					y = cy;
-					return;
+					found = true;
+					bestScore = score;
+					bestX = cx;
+					bestY = cy;
 				}
 			}
 
-			x = Clamp(parent.worldX + LocationMapConstants.MinStep, LocationMapConstants.MapMargin,
-				LocationMapConstants.BaseMapWidth - LocationMapConstants.MapMargin);
-			y = parent.worldY;
+			if (found)
+			{
+				x = bestX;
+				y = bestY;
+				return;
+			}
+
+			if (TrySpiralPlacement(nodes, parent, out x, out y)) return;
+
+			throw new InvalidOperationException(
+				$"[LocationMapGeneratorService] Failed to place child of {parent.id} without violating min spacing.");
+		}
+
+		private static bool TryRandomCandidate(Random rng, RunMapNode parent, List<RunMapNode> nodes, out float cx, out float cy)
+		{
+			float angle = (float)(rng.NextDouble() * Math.PI * 2.0);
+			float dist = LocationMapConstants.MinStep +
+				(float)rng.NextDouble() * (LocationMapConstants.MaxStep - LocationMapConstants.MinStep);
+			cx = parent.worldX + (float)Math.Cos(angle) * dist;
+			cy = parent.worldY + (float)Math.Sin(angle) * dist;
+			cx = Clamp(cx, LocationMapConstants.MapMargin, LocationMapConstants.BaseMapWidth - LocationMapConstants.MapMargin);
+			cy = Clamp(cy, LocationMapConstants.MapMargin, LocationMapConstants.BaseMapHeight - LocationMapConstants.MapMargin);
+			return !OverlapsExisting(nodes, cx, cy);
+		}
+
+		private static bool TrySpiralPlacement(List<RunMapNode> nodes, RunMapNode parent, out float x, out float y)
+		{
+			for (int ring = 1; ring <= SpiralRingSteps; ring++)
+			{
+				float t = ring / (float)SpiralRingSteps;
+				float dist = LocationMapConstants.MinStep +
+					t * (LocationMapConstants.MaxStep - LocationMapConstants.MinStep);
+				for (int a = 0; a < SpiralAngleSteps; a++)
+				{
+					float angle = a * (float)(Math.PI * 2.0 / SpiralAngleSteps);
+					float cx = parent.worldX + (float)Math.Cos(angle) * dist;
+					float cy = parent.worldY + (float)Math.Sin(angle) * dist;
+					cx = Clamp(cx, LocationMapConstants.MapMargin, LocationMapConstants.BaseMapWidth - LocationMapConstants.MapMargin);
+					cy = Clamp(cy, LocationMapConstants.MapMargin, LocationMapConstants.BaseMapHeight - LocationMapConstants.MapMargin);
+					if (!OverlapsExisting(nodes, cx, cy))
+					{
+						x = cx;
+						y = cy;
+						return true;
+					}
+				}
+			}
+
+			x = 0f;
+			y = 0f;
+			return false;
+		}
+
+		private static float DistanceFromMapCenter(float x, float y)
+		{
+			float dx = x - LocationMapConstants.MapCenterX;
+			float dy = y - LocationMapConstants.MapCenterY;
+			return (float)Math.Sqrt(dx * dx + dy * dy);
 		}
 
 		private static bool OverlapsExisting(List<RunMapNode> nodes, float x, float y)

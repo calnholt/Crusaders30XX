@@ -132,7 +132,7 @@ namespace Crusaders30XX.ECS.Data.Save
 					}
 					return;
 				}
-				var (seed, nodes) = LocationMapGeneratorService.Generate();
+				var (seed, nodes) = GenerateRunMapForSave();
 				_save.runMapSeed = seed;
 				_save.runMapNodes = nodes;
 				if (string.IsNullOrEmpty(_save.lastLocation) && nodes.Count > 0)
@@ -379,7 +379,7 @@ namespace Crusaders30XX.ECS.Data.Save
 
 		private static SaveFile CreateDefaultSave()
 		{
-			var (seed, nodes) = LocationMapGeneratorService.Generate();
+			var (seed, nodes) = GenerateRunMapForSave();
 			var startingDeck = StartingDeckGeneratorService.Generate(
 				StartingDeckGeneratorService.DefaultStarterCardPool,
 				seed);
@@ -422,6 +422,22 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 			if (loadout.cardIds == null) loadout.cardIds = new List<string>();
 			if (loadout.medalIds == null) loadout.medalIds = new List<string>();
+		}
+
+		public static string GetSaveDirectory()
+		{
+			string path = ResolveFilePath();
+			if (string.IsNullOrEmpty(path)) return string.Empty;
+			return Path.GetDirectoryName(path);
+		}
+
+		private static (int seed, List<RunMapNode> nodes) GenerateRunMapForSave()
+		{
+			var (seed, nodes) = LocationMapGeneratorService.Generate();
+#if DEBUG
+			RunMapGeneratorLog.Append(LocationMapGeneratorService.ComputeSpreadMetrics(seed, nodes));
+#endif
+			return (seed, nodes);
 		}
 
 		private static string ResolveFilePath()

@@ -54,7 +54,15 @@ Entry from the title screen after run failure or on first launch. The player beg
 
 ## Quest node
 
-A single battle POI on the run map. Completing it marks the node completed and may reveal child nodes.
+A single battle POI on the run map. Completing it marks the node completed and may reveal child nodes. On the location hub, quest node and POI refer to the same map marker in v1.
+
+## Root quest node
+
+The first quest node in a run. It is the player's initial battle and the anchor of the procedural map tree. Its position is near the desert map center with random offset so it is not always at the exact geometric center.
+
+## Run map coverage
+
+How widely quest nodes are distributed across the playable desert. Good coverage means the player must pan and zoom to see the whole run; nodes should not sit in one tight cluster. Uneven blobs are acceptable; symmetry across quadrants is not required.
 
 ## Node completion
 
@@ -73,6 +81,10 @@ Unrevealed nodes are hidden and cannot be interacted with. Fog radius around rev
 On first completion of a quest node: flat gold (10) and one random card added to the loadout deck. No rewards on repeat attempts (replays disabled).
 
 ## Diagnostics
+
+**Run map generator log**:
+An append-only text log written in debug builds when a new run map is created. Each line summarizes spread for one generation (seed, coverage stats). The log is cleared when the map generator version integer is bumped in code.
+_Avoid_: Spread log, map debug file
 
 **Profiled game frame**:
 One full game loop iteration: Update phase then Draw phase. Profiler stats for draw and update attach to the same frame id.
