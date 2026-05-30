@@ -85,63 +85,52 @@ namespace Crusaders30XX.ECS.Systems
 		private List<string> BuildItemListForSlot(WheelSlotType slot)
 		{
 			var items = new List<string>();
-			var collection = SaveCache.GetCollectionSet();
+			var loadout = SaveCache.GetLoadout("loadout_1");
 			switch (slot)
 			{
 				case WheelSlotType.Weapon:
-					// Weapons are cards with IsWeapon flag
-					var cards = CardFactory.GetAllCards().Values
-						.Where(c => c.IsWeapon)
-						.Select(c => c.CardId)
-						.Where(id => collection.Contains(id))
-						.OrderBy(id => id)
-						.ToList();
-					items.AddRange(cards);
+					if (!string.IsNullOrEmpty(loadout?.weaponId))
+					{
+						items.Add(loadout.weaponId);
+					}
 					break;
 
 				case WheelSlotType.Head:
-				case WheelSlotType.Chest:
-				case WheelSlotType.Arms:
-				case WheelSlotType.Legs:
-					var equipSlot = slot switch
-					{
-						WheelSlotType.Head => EquipmentSlot.Head,
-						WheelSlotType.Chest => EquipmentSlot.Chest,
-						WheelSlotType.Arms => EquipmentSlot.Arms,
-						WheelSlotType.Legs => EquipmentSlot.Legs,
-						_ => EquipmentSlot.Head
-					};
-					var equipment = EquipmentFactory.GetAllEquipment().Values
-						.Where(e => e.Slot == equipSlot)
-						.Select(e => e.Id)
-						.Where(id => collection.Contains(id))
-						.OrderBy(id => id)
-						.ToList();
-					// Add empty option at start
 					items.Add("");
-					items.AddRange(equipment);
+					if (!string.IsNullOrEmpty(loadout?.headId)) items.Add(loadout.headId);
+					break;
+
+				case WheelSlotType.Chest:
+					items.Add("");
+					if (!string.IsNullOrEmpty(loadout?.chestId)) items.Add(loadout.chestId);
+					break;
+
+				case WheelSlotType.Arms:
+					items.Add("");
+					if (!string.IsNullOrEmpty(loadout?.armsId)) items.Add(loadout.armsId);
+					break;
+
+				case WheelSlotType.Legs:
+					items.Add("");
+					if (!string.IsNullOrEmpty(loadout?.legsId)) items.Add(loadout.legsId);
 					break;
 
 				case WheelSlotType.Temperance:
-					var tempAbilities = TemperanceAbilityDefinitionCache.GetAll()
-						.Select(kv => kv.Key)
-						.Where(id => collection.Contains(id))
-						.OrderBy(id => id)
-						.ToList();
 					items.Add("");
-					items.AddRange(tempAbilities);
+					if (!string.IsNullOrEmpty(loadout?.temperanceId)) items.Add(loadout.temperanceId);
 					break;
 
 				case WheelSlotType.Medal1:
 				case WheelSlotType.Medal2:
 				case WheelSlotType.Medal3:
-					var medals = MedalFactory.GetAllMedals()
-						.Select(kv => kv.Key)
-						.Where(id => collection.Contains(id))
-						.OrderBy(id => id)
-						.ToList();
 					items.Add("");
-					items.AddRange(medals);
+					if (loadout?.medalIds != null)
+					{
+						foreach (var medalId in loadout.medalIds.OrderBy(id => id))
+						{
+							if (!string.IsNullOrEmpty(medalId)) items.Add(medalId);
+						}
+					}
 					break;
 			}
 			return items;

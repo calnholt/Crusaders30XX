@@ -69,7 +69,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Compose lines
-			string sizeLine = $"Deck Size: {total}/{Data.Loadouts.DeckRules.RequiredDeckSize}";
+			string sizeLine = $"Deck Size: {total}";
 			string whiteLine = $"# of White: {white}";
 			string redLine = $"# of Red: {red}";
 			string blackLine = $"# of Black: {black}";
@@ -135,7 +135,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Lines
 			float y = panelY + PadY;
-			var sizeColor = (total == Data.Loadouts.DeckRules.RequiredDeckSize) ? Color.White : Color.Red;
+			var sizeColor = Color.White;
 			_spriteBatch.DrawString(_font, sizeLine, new Vector2(panelX + PadX, y), sizeColor, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
 			y += s1.Y + lineGap;
 			_spriteBatch.DrawString(_font, whiteLine, new Vector2(panelX + PadX, y), Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);

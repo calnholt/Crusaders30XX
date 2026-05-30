@@ -55,10 +55,11 @@ namespace Crusaders30XX.ECS.Systems
 
 			string equippedId = st.WorkingWeaponId ?? string.Empty;
 
-			var collection = SaveCache.GetCollectionSet();
+			var loadout = SaveCache.GetLoadout("loadout_1");
+			string ownedWeaponId = loadout?.weaponId ?? string.Empty;
 			var defs = CardFactory.GetAllCards().Values
 				.Where(d => d.IsWeapon)
-				.Where(d => collection.Contains(d.CardId))
+				.Where(d => !string.IsNullOrEmpty(ownedWeaponId) && string.Equals(d.CardId, ownedWeaponId, StringComparison.OrdinalIgnoreCase))
 				.Where(d => d.CardId != equippedId)
 				.OrderBy(d => d.Name.ToLowerInvariant())
 				.ToList();
@@ -97,10 +98,11 @@ namespace Crusaders30XX.ECS.Systems
 
 			string equippedId = st.WorkingWeaponId ?? string.Empty;
 
-			var collection = SaveCache.GetCollectionSet();
+			var loadout = SaveCache.GetLoadout("loadout_1");
+			string ownedWeaponId = loadout?.weaponId ?? string.Empty;
 			var defs = CardFactory.GetAllCards().Values
 				.Where(d => d.IsWeapon)
-				.Where(d => collection.Contains(d.CardId))
+				.Where(d => !string.IsNullOrEmpty(ownedWeaponId) && string.Equals(d.CardId, ownedWeaponId, StringComparison.OrdinalIgnoreCase))
 				.Where(d => (d.CardId ?? string.Empty) != equippedId)
 				.OrderBy(d => d.Name.ToLowerInvariant())
 				.ToList();

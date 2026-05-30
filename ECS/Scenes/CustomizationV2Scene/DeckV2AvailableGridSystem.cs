@@ -288,11 +288,11 @@ namespace Crusaders30XX.ECS.Systems
 			var deck = EntityManager.GetEntitiesWithComponent<CustomizationV2DeckState>().FirstOrDefault()?.GetComponent<CustomizationV2DeckState>();
 			var inDeckSet = deck?.DeckCardKeys != null ? new HashSet<string>(deck.DeckCardKeys) : new HashSet<string>();
 
-			var collection = SaveCache.GetCollectionSet();
+			var ownedCardIds = SaveCache.GetOwnedCardIds();
 			var defs = CardFactory.GetAllCards().Values
 				.Where(d => !d.IsWeapon)
 				.Where(d => d.CanAddToLoadout)
-				.Where(d => collection.Contains(d.CardId))
+				.Where(d => ownedCardIds.Contains(d.CardId))
 				.OrderBy(d => ((d.Name ?? d.CardId) ?? string.Empty).ToLowerInvariant())
 				.ToList();
 

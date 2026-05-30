@@ -497,7 +497,7 @@ namespace Crusaders30XX.ECS.Factories
 		{
 			var result = new List<Entity>();
 			if (defs == null) return result;
-			var collection = SaveCache.GetCollectionSet();
+			// Shop ownership is loadout-based; future random-shop PR may refine purchase rules.
 			int idx = 0;
 			foreach (var fs in defs)
 			{
@@ -561,7 +561,7 @@ namespace Crusaders30XX.ECS.Factories
 					Id = id,
 					ItemType = itemType,
 					Price = fs.price,
-					IsPurchased = collection.Contains(id),
+					IsPurchased = SaveCache.IsItemOwned(id, itemType),
 					DisplayName = displayName,
 					SourceShopName = shopName ?? string.Empty
 				});

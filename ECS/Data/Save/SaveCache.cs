@@ -1,6 +1,8 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using Crusaders30XX.ECS.Data.Achievements;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Components;
@@ -55,14 +57,52 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 		}
 
-		public static HashSet<string> GetCollectionSet()
+		public static HashSet<string> GetOwnedCardIds()
 		{
 			EnsureLoaded();
-			if (_save == null || _save.collection == null || _save.collection.Count == 0)
+			var loadout = GetLoadout("loadout_1");
+			if (loadout?.cardIds == null || loadout.cardIds.Count == 0)
 			{
-				return new HashSet<string>();
+				return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 			}
-			return new HashSet<string>(_save.collection);
+			var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			foreach (var key in loadout.cardIds)
+			{
+				string baseId = DeckRules.ParseBaseCardId(key);
+				if (!string.IsNullOrEmpty(baseId)) ids.Add(baseId);
+			}
+			return ids;
+		}
+
+		public static bool IsCardOwned(string cardId)
+		{
+			if (string.IsNullOrWhiteSpace(cardId)) return false;
+			return GetOwnedCardIds().Contains(cardId);
+		}
+
+		public static bool IsItemOwned(string itemId, ForSaleItemType itemType)
+		{
+			if (string.IsNullOrWhiteSpace(itemId)) return false;
+			EnsureLoaded();
+			var loadout = GetLoadout("loadout_1");
+			if (loadout == null) return false;
+
+			switch (itemType)
+			{
+				case ForSaleItemType.Card:
+					return IsCardOwned(itemId);
+				case ForSaleItemType.Weapon:
+					return string.Equals(loadout.weaponId, itemId, StringComparison.OrdinalIgnoreCase);
+				case ForSaleItemType.Medal:
+					return loadout.medalIds != null && loadout.medalIds.Any(m => string.Equals(m, itemId, StringComparison.OrdinalIgnoreCase));
+				case ForSaleItemType.Equipment:
+					return string.Equals(loadout.headId, itemId, StringComparison.OrdinalIgnoreCase)
+						|| string.Equals(loadout.chestId, itemId, StringComparison.OrdinalIgnoreCase)
+						|| string.Equals(loadout.armsId, itemId, StringComparison.OrdinalIgnoreCase)
+						|| string.Equals(loadout.legsId, itemId, StringComparison.OrdinalIgnoreCase);
+				default:
+					return false;
+			}
 		}
 
 		public static int GetValueOrDefault(string locationId, int defaultValue = 0)
@@ -226,6 +266,7 @@ namespace Crusaders30XX.ECS.Data.Save
 			{
 				var path = ResolveFilePath();
 				_save = SaveRepository.Load(path);
+				ApplyVersionPolicy(persist: true);
 			}
 		}
 
@@ -274,12 +315,7 @@ namespace Crusaders30XX.ECS.Data.Save
 					if (!string.IsNullOrEmpty(path) && File.Exists(path))
 					{
 						_save = SaveRepository.Load(path);
-						if (_save.version < SaveFile.CURRENT_VERSION)
-						{
-							System.Console.WriteLine($"[SaveCache] Version mismatch (found {_save.version}, expected {SaveFile.CURRENT_VERSION}). Resetting save file.");
-							_save = CreateDefaultSave();
-							Persist();
-						}
+						ApplyVersionPolicy(persist: true);
 					}
 					else
 					{
@@ -290,12 +326,7 @@ namespace Crusaders30XX.ECS.Data.Save
 						if (!string.IsNullOrEmpty(legacyPath) && File.Exists(legacyPath))
 						{
 							_save = SaveRepository.Load(legacyPath) ?? CreateDefaultSave();
-							if (_save.version < SaveFile.CURRENT_VERSION)
-							{
-								System.Console.WriteLine($"[SaveCache] Legacy version mismatch (found {_save.version}, expected {SaveFile.CURRENT_VERSION}). Resetting save file.");
-								_save = CreateDefaultSave();
-							}
-							Persist();
+							ApplyVersionPolicy(persist: true);
 						}
 						else
 						{
@@ -309,40 +340,55 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 		}
 
+		public static void StartNewRun()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				_save = CreateFreshRunPreservingMeta(_save);
+				Persist();
+			}
+		}
+
+		/// <summary>
+		/// Any save whose version is not CURRENT_VERSION is discarded and replaced with a new default save.
+		/// No migration between versions.
+		/// </summary>
+		private static void ApplyVersionPolicy(bool persist)
+		{
+			if (_save == null || _save.version != SaveFile.CURRENT_VERSION)
+			{
+				int found = _save?.version ?? 0;
+				System.Console.WriteLine($"[SaveCache] Save version {found} != {SaveFile.CURRENT_VERSION}; creating a new save file.");
+				_save = CreateDefaultSave();
+				if (persist) Persist();
+			}
+		}
+
+		private static SaveFile CreateFreshRunPreservingMeta(SaveFile prior)
+		{
+			var mastery = prior?.cardMastery;
+			var achievements = prior?.achievements;
+			var seenTutorials = prior?.seenTutorials;
+			var save = CreateDefaultSave();
+			save.cardMastery = mastery ?? new Dictionary<string, CardMastery>();
+			save.achievements = achievements ?? new Dictionary<string, AchievementProgress>();
+			save.seenTutorials = seenTutorials ?? new List<string>();
+			return save;
+		}
+
 		private static SaveFile CreateDefaultSave()
 		{
 			var (seed, nodes) = LocationMapGeneratorService.Generate();
+			var startingDeck = StartingDeckGeneratorService.Generate(
+				StartingDeckGeneratorService.DefaultStarterCardPool,
+				seed);
 			var save = new SaveFile
 			{
 				version = SaveFile.CURRENT_VERSION,
 				gold = 4,
 				runMapSeed = seed,
 				runMapNodes = nodes,
-				collection = new List<string>
-				{
-					// Starter cards everyone has
-					"anoint_the_sick",
-					"smite",
-					"fervor",
-					"courageous",
-					"reckoning",
-					"absolution",
-					"increase_faith",
-					"litany_of_wrath",
-					"exaltation",
-					"seize",
-					"shield_of_faith",
-					"stab",
-					"tempest",
-					"sword",
-					"razor_storm",
-					"hold_the_line",
-
-					// Temperance abilities
-					"angelic_aura",
-					"fling_fling",
-					"radiance",
-				},
 				items = new List<SaveItem>(),
 				lastLocation = nodes.Count > 0 ? nodes[0].id : "run_0",
 				loadouts = new List<LoadoutDefinition>
@@ -351,53 +397,31 @@ namespace Crusaders30XX.ECS.Data.Save
 					{
 						id = "loadout_1",
 						name = "Deck",
-						cardIds = new List<string>
-						{
-							"anoint_the_sick|Black",
-							"anoint_the_sick|White",
-							"smite|Red",
-							"smite|White",
-							"fervor|Red",
-							"fervor|White",
-							"courageous|Black",
-							"courageous|White",
-							"reckoning|Black",
-							"reckoning|Red",
-							"razor_storm|Red",
-							"razor_storm|Black",
-							"absolution|Red",
-							"absolution|White",
-							"increase_faith|Red",
-							"increase_faith|White",
-							"litany_of_wrath|White",
-							"litany_of_wrath|Red",
-							"exaltation|Black",
-							"exaltation|White",
-							"seize|Red",
-							"seize|White",
-							"stab|White", 
-							"stab|Red",
-							"hold_the_line|White", 
-							"hold_the_line|Red",
-							"shield_of_faith|Red",
-							"shield_of_faith|Black",
-							"tempest|Black",
-							"tempest|White",
-						},
+						cardIds = startingDeck,
 						weaponId = "sword",
 						temperanceId = "angelic_aura",
 						chestId = "",
 						legsId = "",
 						armsId = "",
 						headId = "",
-						medalIds = new List<string>
-						{
-
-						}
+						medalIds = new List<string>()
 					}
 				}
 			};
 			return save;
+		}
+
+		private static void EnsurePrimaryLoadout(SaveFile save)
+		{
+			if (save.loadouts == null) save.loadouts = new List<LoadoutDefinition>();
+			var loadout = save.loadouts.FirstOrDefault(l => l.id == "loadout_1");
+			if (loadout == null)
+			{
+				loadout = new LoadoutDefinition { id = "loadout_1", name = "Deck", medalIds = new List<string>() };
+				save.loadouts.Add(loadout);
+			}
+			if (loadout.cardIds == null) loadout.cardIds = new List<string>();
+			if (loadout.medalIds == null) loadout.medalIds = new List<string>();
 		}
 
 		private static string ResolveFilePath()
@@ -452,22 +476,6 @@ namespace Crusaders30XX.ECS.Data.Save
 			return null;
 		}
 
-		public static void AddToCollectionIfMissing(string itemId)
-		{
-			if (string.IsNullOrWhiteSpace(itemId)) return;
-			EnsureLoaded();
-			lock (_lock)
-			{
-				if (_save == null) _save = new SaveFile();
-				if (_save.collection == null) _save.collection = new List<string>();
-				if (!_save.collection.Contains(itemId))
-				{
-					_save.collection.Add(itemId);
-					Persist();
-				}
-			}
-		}
-
 		public static bool AddCardToLoadout(string loadoutId, string cardKey)
 		{
 			if (string.IsNullOrWhiteSpace(loadoutId) || string.IsNullOrWhiteSpace(cardKey)) return false;
@@ -498,57 +506,56 @@ namespace Crusaders30XX.ECS.Data.Save
 			EnsureLoaded();
 			lock (_lock)
 			{
-				if (_save == null)
+				if (_save == null) return false;
+				if (_save.gold < price) return false;
+
+				EnsurePrimaryLoadout(_save);
+				var loadout = _save.loadouts[0];
+
+				if (!string.IsNullOrWhiteSpace(itemId) && IsItemOwned(itemId, itemType))
 				{
 					return false;
 				}
 
-				if (_save.gold < price)
+				string shopCardKey = null;
+				if (itemType == ForSaleItemType.Card && !string.IsNullOrWhiteSpace(itemId))
 				{
-					return false;
+					shopCardKey = PickShopCardKey(itemId, loadout.cardIds);
+					if (string.IsNullOrEmpty(shopCardKey)) return false;
 				}
 
 				_save.gold = System.Math.Max(0, _save.gold - price);
-				if (_save.collection == null)
-				{
-					_save.collection = new System.Collections.Generic.List<string>();
-				}
 
-				if (!string.IsNullOrWhiteSpace(itemId) && !_save.collection.Contains(itemId))
+				if (!string.IsNullOrWhiteSpace(itemId))
 				{
-					_save.collection.Add(itemId);
-					if (itemType == ForSaleItemType.Medal && _save.loadouts[0].medalIds.Count < 3)
+					if (itemType == ForSaleItemType.Card)
 					{
-						_save.loadouts[0].medalIds.Add(itemId);
+						loadout.cardIds.Add(shopCardKey);
 					}
-					if (itemType == ForSaleItemType.Equipment)
+					else if (itemType == ForSaleItemType.Weapon)
+					{
+						loadout.weaponId = itemId;
+					}
+					else if (itemType == ForSaleItemType.Medal && loadout.medalIds.Count < 3)
+					{
+						loadout.medalIds.Add(itemId);
+					}
+					else if (itemType == ForSaleItemType.Equipment)
 					{
 						EquipmentBase equipment = EquipmentFactory.Create(itemId);
 						switch (equipment.Slot)
 						{
 							case EquipmentSlot.Chest:
-								if (string.IsNullOrEmpty(_save.loadouts[0].chestId))
-								{
-									_save.loadouts[0].chestId = itemId;
-								}
+								loadout.chestId = itemId;
 								break;
 							case EquipmentSlot.Legs:
-								if (string.IsNullOrEmpty(_save.loadouts[0].legsId))
-								{
-									_save.loadouts[0].legsId = itemId;
-								}
+								loadout.legsId = itemId;
 								break;
 							case EquipmentSlot.Arms:
-								if (string.IsNullOrEmpty(_save.loadouts[0].armsId))
-								{
-									_save.loadouts[0].armsId = itemId;
-								}
+								loadout.armsId = itemId;
 								break;
 							case EquipmentSlot.Head:
-								if (string.IsNullOrEmpty(_save.loadouts[0].headId))
-								{
-									_save.loadouts[0].headId = itemId;
-								}
+								loadout.headId = itemId;
 								break;
 						}
 					}
@@ -558,6 +565,21 @@ namespace Crusaders30XX.ECS.Data.Save
 				newGold = _save.gold;
 				return true;
 			}
+		}
+
+		private static string PickShopCardKey(string cardId, List<string> deckKeys)
+		{
+			if (DeckRules.CountCardIdInDeck(deckKeys, cardId) >= DeckRules.MaxCopiesPerCardId) return null;
+			var deckKeySet = new HashSet<string>(deckKeys ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+			string[] colors = { "Red", "White", "Black" };
+			var eligible = new List<string>();
+			foreach (var color in colors)
+			{
+				string key = $"{cardId}|{color}";
+				if (!deckKeySet.Contains(key)) eligible.Add(key);
+			}
+			if (eligible.Count == 0) return null;
+			return eligible[System.Random.Shared.Next(eligible.Count)];
 		}
 
 		public static bool HasSeenTutorial(string key)

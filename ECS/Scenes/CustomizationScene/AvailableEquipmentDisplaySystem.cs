@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Data.Save;
 using System;
+using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
@@ -61,10 +62,11 @@ namespace Crusaders30XX.ECS.Systems
             string equippedId = GetEquippedIdForTab(st, st.SelectedTab) ?? string.Empty;
             string slot = GetSlotName(st.SelectedTab);
 
-            var collection = SaveCache.GetCollectionSet();
+            var loadout = SaveCache.GetLoadout("loadout_1");
+            string ownedSlotId = GetOwnedIdForSlot(loadout, st.SelectedTab);
             var all = EquipmentFactory.GetAllEquipment().Values
                 .Where(d => string.Equals(d.Slot.ToString(), slot, System.StringComparison.OrdinalIgnoreCase))
-                .Where(d => collection.Contains(d.Id))
+                .Where(d => !string.IsNullOrEmpty(ownedSlotId) && string.Equals(d.Id, ownedSlotId, System.StringComparison.OrdinalIgnoreCase))
                 .Where(d => d.Id != equippedId)
                 .OrderBy(d => d.Name.ToLowerInvariant())
                 .ToList();
@@ -111,10 +113,11 @@ namespace Crusaders30XX.ECS.Systems
             string equippedId = GetEquippedIdForTab(st, st.SelectedTab) ?? string.Empty;
             string slot = GetSlotName(st.SelectedTab);
 
-            var collection = SaveCache.GetCollectionSet();
+            var loadout = SaveCache.GetLoadout("loadout_1");
+            string ownedSlotId = GetOwnedIdForSlot(loadout, st.SelectedTab);
             var all = EquipmentFactory.GetAllEquipment().Values
                 .Where(d => string.Equals(d.Slot.ToString(), slot, System.StringComparison.OrdinalIgnoreCase))
-                .Where(d => collection.Contains(d.Id))
+                .Where(d => !string.IsNullOrEmpty(ownedSlotId) && string.Equals(d.Id, ownedSlotId, System.StringComparison.OrdinalIgnoreCase))
                 .Where(d => d.Id != equippedId)
                 .OrderBy(d => d.Name.ToLowerInvariant())
                 .ToList();
@@ -187,6 +190,19 @@ namespace Crusaders30XX.ECS.Systems
                 case CustomizationTabType.Legs: return st.WorkingLegsId;
                 default: return string.Empty;
             }
+        }
+
+        private static string GetOwnedIdForSlot(LoadoutDefinition loadout, CustomizationTabType tab)
+        {
+            if (loadout == null) return string.Empty;
+            return tab switch
+            {
+                CustomizationTabType.Head => loadout.headId ?? string.Empty,
+                CustomizationTabType.Chest => loadout.chestId ?? string.Empty,
+                CustomizationTabType.Arms => loadout.armsId ?? string.Empty,
+                CustomizationTabType.Legs => loadout.legsId ?? string.Empty,
+                _ => string.Empty
+            };
         }
     }
 }

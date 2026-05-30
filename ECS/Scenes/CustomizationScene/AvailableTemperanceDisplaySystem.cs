@@ -60,9 +60,10 @@ namespace Crusaders30XX.ECS.Systems
 
             var equippedId = st.WorkingTemperanceId ?? string.Empty;
 
-            var collection = SaveCache.GetCollectionSet();
+            var loadout = SaveCache.GetLoadout("loadout_1");
+            string ownedTemperanceId = loadout?.temperanceId ?? string.Empty;
             var all = TemperanceAbilityDefinitionCache.GetAll().Values
-                .Where(d => collection.Contains(d.id))
+                .Where(d => !string.IsNullOrEmpty(ownedTemperanceId) && string.Equals(d.id, ownedTemperanceId, System.StringComparison.OrdinalIgnoreCase))
                 .Where(d => d.id != equippedId)
                 .OrderBy(d => (d.name ?? d.id) ?? string.Empty)
                 .ToList();
@@ -108,9 +109,10 @@ namespace Crusaders30XX.ECS.Systems
 
             string equippedId = st.WorkingTemperanceId ?? string.Empty;
 
-            var collection = SaveCache.GetCollectionSet();
+            var loadout = SaveCache.GetLoadout("loadout_1");
+            string ownedTemperanceId = loadout?.temperanceId ?? string.Empty;
             var all = TemperanceAbilityDefinitionCache.GetAll().Values
-                .Where(d => collection.Contains(d.id))
+                .Where(d => !string.IsNullOrEmpty(ownedTemperanceId) && string.Equals(d.id, ownedTemperanceId, System.StringComparison.OrdinalIgnoreCase))
                 .Where(d => d.id != equippedId)
                 .OrderBy(d => (d.name ?? d.id) ?? string.Empty)
                 .ToList();

@@ -171,16 +171,6 @@ namespace Crusaders30XX.ECS.Systems
 			var nav = EntityManager.GetEntitiesWithComponent<CustomizationV2NavigationState>().FirstOrDefault()?.GetComponent<CustomizationV2NavigationState>();
 			if (nav == null) return;
 
-			if (nav.ActiveTab == CustomizationV2TabType.Deck && InvalidDeckDialogSystem != null)
-			{
-				var deck = EntityManager.GetEntitiesWithComponent<CustomizationV2DeckState>().FirstOrDefault()?.GetComponent<CustomizationV2DeckState>();
-				int count = deck?.DeckCardKeys?.Count ?? 0;
-				if (count != DeckRules.RequiredDeckSize)
-				{
-					InvalidDeckDialogSystem.ShowDialog(count);
-					return;
-				}
-			}
 			EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
 		}
 

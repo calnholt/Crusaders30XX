@@ -77,8 +77,8 @@ namespace Crusaders30XX.ECS.Systems
             bool canSave = false;
             try
             {
-                bool withinLimit = IsWithinNameCopyLimit(stc, out _, out _);
-                canSave = stc != null && stc.WorkingCardIds != null && stc.WorkingCardIds.Count == DeckRules.RequiredDeckSize && withinLimit;
+                bool withinLimit = IsWithinCardIdCopyLimit(stc, out _, out _);
+                canSave = stc != null && stc.WorkingCardIds != null && withinLimit;
             }
             catch {}
 
@@ -151,8 +151,8 @@ namespace Crusaders30XX.ECS.Systems
             EnsureAndLayoutButtons(vw, vh);
 
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
-            bool withinLimit = IsWithinNameCopyLimit(st, out _, out _);
-            bool canSave = st != null && st.WorkingCardIds != null && st.WorkingCardIds.Count == DeckRules.RequiredDeckSize && withinLimit;
+            bool withinLimit = IsWithinCardIdCopyLimit(st, out _, out _);
+            bool canSave = st != null && st.WorkingCardIds != null && withinLimit;
             int count = st?.WorkingCardIds?.Count ?? 0;
 
             var saveE = EntityManager.GetEntity("Customization_SaveButton");
@@ -170,7 +170,7 @@ namespace Crusaders30XX.ECS.Systems
             var undoRect = new Rectangle((int)(undoTr?.Position.X ?? 0), (int)(undoTr?.Position.Y ?? 0), ButtonWidth, ButtonHeight);
             var exitRect = new Rectangle((int)(exitTr?.Position.X ?? 0), (int)(exitTr?.Position.Y ?? 0), ButtonWidth, ButtonHeight);
 
-            DrawButton(saveRect, canSave ? "SAVE" : $"SAVE ({count}/{DeckRules.RequiredDeckSize})");
+            DrawButton(saveRect, canSave ? "SAVE" : $"SAVE ({count})");
             DrawButton(cancelRect, "CANCEL");
             DrawButton(undoRect, "UNDO");
             DrawButton(exitRect, "EXIT");
@@ -312,9 +312,9 @@ namespace Crusaders30XX.ECS.Systems
         {
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null) return;
-            if (!IsWithinNameCopyLimit(st, out var overName, out var overCount))
+            if (!IsWithinCardIdCopyLimit(st, out var overId, out var overCount))
             {
-                System.Console.WriteLine($"[Customization] Cannot save: more than 2 copies of '{overName}' ({overCount}).");
+                System.Console.WriteLine($"[Customization] Cannot save: more than 2 copies of '{overId}' ({overCount}).");
                 return;
             }
             // Load existing def and overwrite cardIds
@@ -336,25 +336,21 @@ namespace Crusaders30XX.ECS.Systems
             st.OriginalMedalIds = new List<string>(st.WorkingMedalIds ?? new List<string>());
         }
 
-        private static bool IsWithinNameCopyLimit(Crusaders30XX.ECS.Components.CustomizationState st, out string overName, out int count)
+        private static bool IsWithinCardIdCopyLimit(Crusaders30XX.ECS.Components.CustomizationState st, out string overId, out int count)
         {
-            overName = null; count = 0;
+            overId = null; count = 0;
             if (st?.WorkingCardIds == null) return true;
 
-            var idToName = CardFactory.GetAllCards()
-                .ToDictionary(kv => (kv.Key ?? string.Empty).ToLowerInvariant(),
-                              kv => ((kv.Value?.Name ?? kv.Value?.CardId) ?? string.Empty).Trim());
-
-            var nameCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var idCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             foreach (var key in st.WorkingCardIds)
             {
-                var baseId = ((key?.Split('|')[0]) ?? string.Empty).ToLowerInvariant();
-                var displayName = idToName.TryGetValue(baseId, out var n) ? n : baseId;
-                var newCount = (nameCounts.TryGetValue(displayName, out var c) ? c : 0) + 1;
-                nameCounts[displayName] = newCount;
-                if (newCount > 2)
+                var baseId = DeckRules.ParseBaseCardId(key);
+                if (string.IsNullOrEmpty(baseId)) continue;
+                var newCount = (idCounts.TryGetValue(baseId, out var c) ? c : 0) + 1;
+                idCounts[baseId] = newCount;
+                if (newCount > DeckRules.MaxCopiesPerCardId)
                 {
-                    overName = displayName; count = newCount; return false;
+                    overId = baseId; count = newCount; return false;
                 }
             }
             return true;

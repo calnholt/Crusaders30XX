@@ -37,23 +37,10 @@ namespace Crusaders30XX.ECS.Systems
 			var deck = EntityManager.GetEntitiesWithComponent<CustomizationV2DeckState>().FirstOrDefault()?.GetComponent<CustomizationV2DeckState>();
 			if (deck == null) return;
 
-			// Enforce copy limit: max 2 copies per card name
-			string baseId = evt.CardKey.Split('|')[0].ToLowerInvariant();
-			var card = CardFactory.Create(baseId);
-			string cardName = (card?.Name ?? baseId).ToLowerInvariant();
-
-			int existingCopies = 0;
-			foreach (var key in deck.DeckCardKeys)
+			string baseId = DeckRules.ParseBaseCardId(evt.CardKey);
+			if (DeckRules.CountCardIdInDeck(deck.DeckCardKeys, baseId) >= DeckRules.MaxCopiesPerCardId)
 			{
-				string existingBaseId = key.Split('|')[0].ToLowerInvariant();
-				var existingCard = CardFactory.Create(existingBaseId);
-				string existingName = (existingCard?.Name ?? existingBaseId).ToLowerInvariant();
-				if (existingName == cardName) existingCopies++;
-			}
-
-			if (existingCopies >= 2)
-			{
-				Console.WriteLine($"[DeckV2] Cannot add: already have {existingCopies} copies of '{cardName}'.");
+				Console.WriteLine($"[DeckV2] Cannot add: already have {DeckRules.MaxCopiesPerCardId} copies of '{baseId}'.");
 				return;
 			}
 
@@ -98,8 +85,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void TrySaveToDisk(CustomizationV2DeckState deck)
 		{
-			if (deck.DeckCardKeys.Count != DeckRules.RequiredDeckSize) return;
-			if (!IsWithinNameCopyLimit(deck)) return;
+			if (!DeckRules.IsWithinCardIdCopyLimit(deck.DeckCardKeys)) return;
 
 			if (!LoadoutDefinitionCache.TryGet("loadout_1", out var def) || def == null)
 			{
@@ -110,21 +96,5 @@ namespace Crusaders30XX.ECS.Systems
 			Console.WriteLine("[DeckV2] Deck auto-saved.");
 		}
 
-		private static bool IsWithinNameCopyLimit(CustomizationV2DeckState deck)
-		{
-			if (deck?.DeckCardKeys == null) return true;
-
-			var nameCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-			foreach (var key in deck.DeckCardKeys)
-			{
-				string baseId = key.Split('|')[0].ToLowerInvariant();
-				var card = CardFactory.Create(baseId);
-				string name = (card?.Name ?? baseId).ToLowerInvariant();
-				int count = (nameCounts.TryGetValue(name, out var c) ? c : 0) + 1;
-				nameCounts[name] = count;
-				if (count > 2) return false;
-			}
-			return true;
-		}
 	}
 }

@@ -104,17 +104,15 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Draw(_pixel, new Rectangle(0, barY + BarHeight - 1, vw, 1), new Color(51, 51, 51));
 
 			int count = deck.DeckCardKeys?.Count ?? 0;
-			bool isValid = count == DeckRules.RequiredDeckSize;
 
-			// Count display: "14/30"
 			string countStr = count.ToString();
-			string denomStr = "/" + DeckRules.RequiredDeckSize;
+			string denomStr = " cards";
 			var countSize = _headingFont.MeasureString(countStr) * CountScale;
 			var denomSize = _headingFont.MeasureString(denomStr) * DenomScale;
 
 			float textY = barY + (BarHeight - countSize.Y) / 2f;
 			float denomY = barY + (BarHeight - denomSize.Y) / 2f;
-			var countColor = isValid ? Color.White : new Color(196, 30, 58);
+			var countColor = Color.White;
 			_spriteBatch.DrawString(_headingFont, countStr, new Vector2(PadX, textY), countColor, 0f, Vector2.Zero, CountScale, SpriteEffects.None, 0f);
 			_spriteBatch.DrawString(_headingFont, denomStr, new Vector2(PadX + countSize.X, denomY), new Color(85, 85, 85), 0f, Vector2.Zero, DenomScale, SpriteEffects.None, 0f);
 

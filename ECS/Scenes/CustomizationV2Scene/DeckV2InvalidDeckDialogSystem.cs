@@ -204,7 +204,7 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.DrawString(_headingFont, title, new Vector2(tx, ty), new Color(196, 30, 58), 0f, Vector2.Zero, TitleScale, SpriteEffects.None, 0f);
 
 			// Body
-			string body = $"Your deck has {_pendingDeckCount}/{DeckRules.RequiredDeckSize} cards.\nExit anyway? Changes won't be saved.";
+			string body = $"Your deck has {_pendingDeckCount} cards.\nExit anyway? Changes won't be saved.";
 			var bodySize = _contentFont.MeasureString(body) * BodyScale;
 			float bx = dx + (DialogWidth - bodySize.X) / 2f;
 			float by = ty + titleSize.Y + 16;

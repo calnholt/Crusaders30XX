@@ -8,7 +8,29 @@ A single playthrough from a fresh (or reset) save through the procedurally gener
 
 ## Save
 
-Persistent player state for the current run: map topology, node progress, gold, collection, loadouts, and related meta. Starting a "new run" (future) will replace or reset this state; until then, map generation happens once per save.
+Persistent player state for the current run: map topology, node progress, gold, loadouts, and related meta. Starting a new run replaces or resets this state.
+
+The save file has a `version` field. If it does not match the game's current save version, the entire file is replaced with a new default save. There is no migration between versions. Omitting `version` or using an old version number clears all progress (map, gold, deck, mastery, achievements, tutorials).
+
+## Loadout
+
+The player's configured battle kit for the run: deck card list, weapon, temperance ability, equipment slots, and medals. Shop card purchases append a card entry to the deck list immediately. Quest rewards do the same. There is no separate owned-cards list.
+
+## Deck
+
+The ordered set of card entries (card plus color) on the loadout used in battle. A new run begins with a 20-card starting deck; the deck may grow beyond 20 during the run. There is no maximum deck size.
+
+## Starter pool
+
+The fixed set of card identities used only when rolling a new run's starting deck. Cards earned or bought during a run do not add to the starter pool for future runs.
+
+## Starting deck
+
+The 20-card deck assigned at new-run creation by random selection from the starter pool, subject to color balance and copy limits. Persisted on the loadout until the player edits it.
+
+## Copy limit
+
+A deck may include at most one copy of a given card identity and color pairing, and at most two copies of the same card identity across all colors.
 
 ## Location (desert)
 
@@ -32,4 +54,4 @@ Unrevealed nodes are hidden and cannot be interacted with. Fog radius around rev
 
 ## Quest reward
 
-On first completion of a quest node: flat gold (10) and one random card added to collection/loadout. No rewards on repeat attempts (replays disabled).
+On first completion of a quest node: flat gold (10) and one random card added to the loadout deck. No rewards on repeat attempts (replays disabled).

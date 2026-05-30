@@ -71,11 +71,11 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            var collection = SaveCache.GetCollectionSet();
+            var ownedCardIds = SaveCache.GetOwnedCardIds();
             var defs = CardFactory.GetAllCards().Values
                 .Where(d => !d.IsWeapon)
                 .Where(d => d.CanAddToLoadout)
-                .Where(d => collection.Contains(d.CardId))
+                .Where(d => ownedCardIds.Contains(d.CardId))
                 .OrderBy(d => ((d.Name ?? d.CardId) ?? string.Empty).ToLowerInvariant())
                 .ToList();
             CardData.CardColor[] colorOrder = new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black };
@@ -138,11 +138,11 @@ namespace Crusaders30XX.ECS.Systems
             int colW = (int)(cardW * _libraryPanel.CardScale) + 20;
             int col = Math.Max(1, _libraryPanel.Columns);
 
-            var collection = SaveCache.GetCollectionSet();
+            var ownedCardIds = SaveCache.GetOwnedCardIds();
             var defs = CardFactory.GetAllCards().Values
                 .Where(d => !d.IsWeapon)
                 .Where(d => d.CanAddToLoadout)
-                .Where(d => collection.Contains(d.CardId))
+                .Where(d => ownedCardIds.Contains(d.CardId))
                 .OrderBy(d => ((d.Name ?? d.CardId) ?? string.Empty).ToLowerInvariant())
                 .ToList();
             CardData.CardColor[] colorOrder = new[] { CardData.CardColor.White, CardData.CardColor.Red, CardData.CardColor.Black };

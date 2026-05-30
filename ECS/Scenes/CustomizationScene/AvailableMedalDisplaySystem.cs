@@ -57,10 +57,11 @@ namespace Crusaders30XX.ECS.Systems
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null || st.SelectedTab != CustomizationTabType.Medals) return;
 
-            var collection = SaveCache.GetCollectionSet();
+            var loadout = SaveCache.GetLoadout("loadout_1");
+            var ownedMedalIds = loadout?.medalIds ?? new List<string>();
             var equipped = st.WorkingMedalIds ?? new List<string>();
             var all = MedalFactory.GetAllMedals().Values
-                .Where(d => collection.Contains(d.Id))
+                .Where(d => ownedMedalIds.Contains(d.Id))
                 .Where(d => !equipped.Contains(d.Id))
                 .OrderBy(d => (d.Name ?? d.Id) ?? string.Empty)
                 .ToList();
@@ -106,10 +107,11 @@ namespace Crusaders30XX.ECS.Systems
             var st = EntityManager.GetEntitiesWithComponent<CustomizationState>().FirstOrDefault()?.GetComponent<CustomizationState>();
             if (st == null || st.SelectedTab != CustomizationTabType.Medals) return;
 
-            var collection = SaveCache.GetCollectionSet();
+            var loadout = SaveCache.GetLoadout("loadout_1");
+            var ownedMedalIds = loadout?.medalIds ?? new List<string>();
             var equipped = st.WorkingMedalIds ?? new List<string>();
-                var all = MedalFactory.GetAllMedals().Values
-                .Where(d => collection.Contains(d.Id))
+            var all = MedalFactory.GetAllMedals().Values
+                .Where(d => ownedMedalIds.Contains(d.Id))
                 .Where(d => !equipped.Contains(d.Id))
                 .OrderBy(d => (d.Name ?? d.Id) ?? string.Empty)
                 .ToList();

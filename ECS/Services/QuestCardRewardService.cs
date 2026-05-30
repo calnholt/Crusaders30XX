@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Objects.Cards;
@@ -37,7 +38,6 @@ namespace Crusaders30XX.ECS.Services
 			var pick = eligible[Random.Shared.Next(eligible.Count)];
 			string cardKey = $"{pick.cardId}|{ColorToString(pick.color)}";
 
-			SaveCache.AddToCollectionIfMissing(pick.cardId);
 			SaveCache.AddCardToLoadout("loadout_1", cardKey);
 
 			result.Granted = true;
@@ -59,8 +59,7 @@ namespace Crusaders30XX.ECS.Services
 				string cardId = card.CardId;
 				if (string.IsNullOrWhiteSpace(cardId)) continue;
 
-				string displayName = (card.Name ?? cardId).ToLowerInvariant();
-				if (CountDisplayNameInDeck(deckKeys, displayName) >= 2) continue;
+				if (DeckRules.CountCardIdInDeck(deckKeys, cardId) >= DeckRules.MaxCopiesPerCardId) continue;
 
 				foreach (var color in RewardColors)
 				{
@@ -71,21 +70,6 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			return eligible;
-		}
-
-		private static int CountDisplayNameInDeck(IReadOnlyList<string> deckKeys, string displayName)
-		{
-			if (deckKeys == null || string.IsNullOrEmpty(displayName)) return 0;
-
-			int count = 0;
-			foreach (var key in deckKeys)
-			{
-				string baseId = key.Split('|')[0].ToLowerInvariant();
-				var card = CardFactory.Create(baseId);
-				string name = (card?.Name ?? baseId).ToLowerInvariant();
-				if (name == displayName) count++;
-			}
-			return count;
 		}
 
 		private static string ColorToString(CardData.CardColor color)
