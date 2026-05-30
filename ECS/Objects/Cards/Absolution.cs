@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Enemy";
             Cost = ["Any", "Any", "Any"];
             Animation = "Attack";
-            Damage = 9;
+            Damage = 12;
             Block = 3;
 
             OnPlay = (entityManager, card) =>

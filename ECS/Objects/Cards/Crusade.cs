@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "crusade";
             Name = "Crusade";
             Target = "Enemy";
-            Text = $"If this card is pledged, gain {ActionPointGain}AP and {AggressionGain} aggression.";
+            Text = $"If this card is pledged when played, gain {ActionPointGain}AP and {AggressionGain} aggression.";
             Cost = ["Black"];
             Animation = "Attack";
             Damage = 6;
@@ -25,11 +25,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
 
-                if (card.GetComponent<Pledge>() != null)
-                {
-                    EventManager.Publish(new ModifyActionPointsEvent { Delta = ActionPointGain });
-                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = AggressionGain });
-                }
+                var isPledged = card.GetComponent<Pledge>() != null;
 
                 EventManager.Publish(new ModifyHpRequestEvent
                 {
@@ -38,6 +34,12 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = -GetDerivedDamage(entityManager, card),
                     DamageType = ModifyTypeEnum.Attack
                 });
+
+                if (isPledged)
+                {
+                    EventManager.Publish(new ModifyActionPointsEvent { Delta = ActionPointGain });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = AggressionGain });
+                }
             };
         }
     }
