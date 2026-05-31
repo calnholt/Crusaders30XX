@@ -22,6 +22,11 @@ namespace Crusaders30XX.ECS.Factories
                 "st_nicholas" => new StNicholas(),
                 "st_peter" => new StPeter(),
                 "st_louie_ix" => new StLouieIX(),
+                "st_sebastian" => new StSebastian(),
+                "st_francis_de_sales" => new StFrancisDeSales(),
+                "st_homobonus" => new StHomobonus(),
+                "st_clare" => new StClare(),
+                "st_joan_of_arc" => new StJoanOfArc(),
                 _ => null
             };
         }
@@ -39,6 +44,11 @@ namespace Crusaders30XX.ECS.Factories
                 { "st_nicholas", new StNicholas() },
                 { "st_peter", new StPeter() },
                 { "st_louie_ix", new StLouieIX() },
+                { "st_sebastian", new StSebastian() },
+                { "st_francis_de_sales", new StFrancisDeSales() },
+                { "st_homobonus", new StHomobonus() },
+                { "st_clare", new StClare() },
+                { "st_joan_of_arc", new StJoanOfArc() },
             };
         }
     }

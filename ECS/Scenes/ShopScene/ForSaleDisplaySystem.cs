@@ -366,7 +366,14 @@ namespace Crusaders30XX.ECS.Systems
 					}
 					case ForSaleItemType.Medal:
 					{
-						DrawIconScaled(ResolveMedalTextureName(x.FS.Id), contentCenter, IconSize);
+						MedalIconRenderService.DrawMedalIcon(
+							_spriteBatch,
+							_graphicsDevice,
+							_font,
+							contentCenter,
+							IconSize,
+							x.FS.Id,
+							_content);
 						break;
 					}
 					case ForSaleItemType.Equipment:
@@ -483,16 +490,6 @@ namespace Crusaders30XX.ECS.Systems
 			int drawH = (int)Math.Round(tex.Height * scale);
 			var r = new Rectangle((int)Math.Round(center.X - drawW / 2f), (int)Math.Round(center.Y - drawH / 2f), drawW, drawH);
 			_spriteBatch.Draw(tex, r, Color.White);
-		}
-
-		private string ResolveMedalTextureName(string medalId)
-		{
-			// Try id first, then fallback to generic "medal"
-			if (MedalFactory.GetAllMedals().TryGetValue(medalId, out var _))
-			{
-				if (SafeLoadTexture(medalId) != null) return medalId;
-			}
-			return "medal";
 		}
 
 		private string ResolveEquipmentSlotIcon(string equipmentId)

@@ -26,6 +26,8 @@ One enemy fight in the sequential battle queue for a **quest node** (`QueuedEven
 
 **Temperance** built during one queued encounter carries to the next encounter in the same quest node. **Temperance** resets to zero when the player leaves the battle scene (e.g. return to the location hub). Courage, HP, and action points reset at the start of each queued encounter.
 
+When card or medal text says **win a battle**, that means winning a **queued encounter** (one enemy reaches 0 HP), not completing the whole **quest node**.
+
 _Avoid_: Battle node (ambiguous with **quest node** on the map)
 
 ## Run failure
@@ -66,6 +68,12 @@ At the start of each battle, all surviving cards (draw pile, hand, and discard) 
 
 A combat effect attached to a specific deck card entity (e.g. frozen, shackled, sealed) that lasts for the whole **run** until **run failure**, **quest abandon**, or **new run start**. Restrictions survive leaving battle and hub visits; they are cleared when the run ends, not at each queued encounter.
 
+## Quest-scoped card modification
+
+A permanent change to a deck card's combat numbers (e.g. +1 damage from Carve, +1 block from Bulwark) for the current **quest node** attempt. It persists across **queued encounters** in that node and is removed on **node completion** when the player earns **quest reward**. It does not carry to other quest nodes or the hub.
+
+_Avoid_: Rest of the quest (ambiguous with whole **run**; prefer **quest node** or **quest-scoped card modification**)
+
 ## Starter pool
 
 The fixed set of card identities used only when rolling a new run's starting deck. Cards earned or bought during a run do not add to the starter pool for future runs.
@@ -102,7 +110,7 @@ Internal parent/child links used only when generating the 20 quest positions. No
 
 ## Run map coverage
 
-How widely quest nodes are distributed across the playable desert. Good coverage means the player must pan and zoom to see the whole run; nodes should not sit in one tight cluster. Uneven blobs are acceptable; symmetry across quadrants is not required. A new run is not created until the generator produces a layout that meets minimum spread standards.
+How widely quest nodes are distributed across the playable desert. Good coverage means the player must pan and zoom to see the whole run; nodes should not sit in one tight cluster. Uneven blobs are acceptable; symmetry across quadrants is not required. A new run is not created until the generator produces a layout that meets minimum spread standards and fog reveal can reach every quest from the root (in-progress saves from older generators are not repaired).
 
 ## Node completion
 
@@ -152,7 +160,23 @@ _Avoid_: Treasure POI, treasure node (prefer **Treasure Chest** vs **quest node*
 
 ## Quest reward
 
-On first completion of a quest node: flat gold (30; 75 for a dual-battle quest node) and one random card added to the loadout deck. No rewards on repeat attempts (replays disabled).
+On first completion of a quest node: flat gold (30; 75 for a dual-battle quest node) and one random card added to the loadout deck. No rewards on repeat attempts (replays disabled). The reward modal shows only this quest reward gold; other gold grants (e.g. from medals) may apply at the same moment without changing the modal amount.
+
+## Might (applied passive)
+
+A turn-long buff on the player: each of your attacks this turn deals extra damage equal to your Might stacks. Might does not carry to the next turn. Might stacks with **Power** on the same attack.
+
+## Sharpen (applied passive)
+
+A turn-long buff on the player: your next **weapon** attack this turn deals extra damage equal to your Sharpen stacks, then Sharpen is removed. Non-weapon attacks do not consume Sharpen. Sharpen stacks with **Aggression** on the same weapon hit; both are consumed on that hit. Multiple Sharpen grants in the same turn add their stack counts together.
+
+## Bottom of deck
+
+The end of the draw pile list (drawn last). The top of the draw pile is the card drawn next (`RemoveAt(0)` in battle).
+
+## Medal bonus gold
+
+Gold granted by a medal on **node completion**, separate from **quest reward** gold shown in the completion modal. The player's total gold increases; the modal still displays the quest reward amount only.
 
 ## Diagnostics
 

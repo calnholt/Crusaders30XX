@@ -418,7 +418,17 @@ namespace Crusaders30XX.ECS.Factories
             {
                 throw new InvalidOperationException("Cannot spawn enemy: player deck is missing or empty.");
             }
-            def.ApplyHealthFromDeckSize(deck.Cards.Count);
+            int deckCount = deck.Cards.Count;
+            if (HasEquippedMedal(entityManager, StClare.MedalId))
+            {
+                deckCount = Math.Max(0, deckCount - 4);
+            }
+            def.ApplyHealthFromDeckSize(deckCount);
+            if (def.MaxHealth <= 0)
+            {
+                def.MaxHealth = 1;
+                def.CurrentHealth = 1;
+            }
 
             var enemyEntity = world.CreateEntity($"Enemy");
             // TODO: Add equipment HP modifier
@@ -812,6 +822,21 @@ namespace Crusaders30XX.ECS.Factories
             // - OwnedByScene (auto-added by EntityManager)
 
             return clonedEntity;
+        }
+
+        private static bool HasEquippedMedal(EntityManager entityManager, string medalId)
+        {
+            if (entityManager == null || string.IsNullOrWhiteSpace(medalId)) return false;
+            var player = entityManager.GetEntity("Player");
+            if (player == null) return false;
+            return entityManager.GetEntitiesWithComponent<EquippedMedal>()
+                .Any(e =>
+                {
+                    var equipped = e.GetComponent<EquippedMedal>();
+                    return equipped != null
+                        && equipped.EquippedOwner == player
+                        && string.Equals(equipped.Medal?.Id, medalId, StringComparison.OrdinalIgnoreCase);
+                });
         }
     }
 } 

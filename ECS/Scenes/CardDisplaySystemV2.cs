@@ -936,6 +936,7 @@ namespace Crusaders30XX.ECS.Systems
                             Source = player,
                             Target = enemy,
                             Delta = -baseDamage,
+                            AttackCard = entity,
                             DamageType = ModifyTypeEnum.Attack
                         };
                         int passiveDelta = AppliedPassivesService.GetPassiveDelta(preview, ReadOnly: true);

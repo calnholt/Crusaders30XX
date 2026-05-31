@@ -23,25 +23,14 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 
       OnStartOfBattle = (entityManager) =>
       {
-        EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
+        EventManager.Subscribe<PledgeAddedEvent>(OnPledgeAddedEvent);
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Anathema, Delta = StartAnathema });
       };
     }
 
-    private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
+    private void OnPledgeAddedEvent(PledgeAddedEvent evt)
     {
-      if (evt.Current != SubPhase.PlayerEnd) return;
-
-      var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
-      if (deck?.Hand == null) return;
-
-      bool anyNewPledge = deck.Hand.Any(c =>
-      {
-        var p = c.GetComponent<Pledge>();
-        return p != null && !p.CanPlay;
-      });
-
-      if (!anyNewPledge) return;
+      if (evt.Card == null) return;
 
       var ap = GetComponentHelper.GetAppliedPassives(EntityManager, "Enemy");
       if (ap == null || ap.Passives == null || ap.Passives.Count == 0) return;

@@ -12,8 +12,8 @@ namespace Crusaders30XX.ECS.Objects.Medals
         {
             Id = "st_peter";
             Name = "St. Peter the Apostle";
-            Text = "Each time you block with six black cards this quest, draw a card.";
-            MaxCount = 6;
+            MaxCount = 4;
+            Text = $"Each time you block with {MaxCount} black cards this quest, draw a card.";
         }
 
         public override void Initialize(EntityManager entityManager, Entity medalEntity)

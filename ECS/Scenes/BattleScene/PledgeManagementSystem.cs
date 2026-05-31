@@ -201,6 +201,8 @@ namespace Crusaders30XX.ECS.Systems
 
             EntityManager.AddComponent(card, new Pledge { Owner = card, CanPlay = false });
             EventManager.Publish(new PledgeAddedEvent { Card = card });
+            var cardData = card.GetComponent<CardData>();
+            cardData?.Card?.OnPledged?.Invoke(EntityManager, card);
             LoggingService.Append("PledgeManagementSystem.AddPledgeToCard", new System.Text.Json.Nodes.JsonObject
             {
                 ["entityId"] = card.Id,

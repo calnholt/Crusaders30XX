@@ -208,6 +208,8 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Burn => "gain-burn",
                 AppliedPassiveType.Armor => "gain-armor",
                 AppliedPassiveType.Aggression => "gain-aggression",
+                AppliedPassiveType.Sharpen => "gain-aggression",
+                AppliedPassiveType.Might => "gain-power",
                 AppliedPassiveType.Power => "gain-power",
                 AppliedPassiveType.Bleed => "gain-bleed",
                 AppliedPassiveType.Frostbite => "gain-frostbite",

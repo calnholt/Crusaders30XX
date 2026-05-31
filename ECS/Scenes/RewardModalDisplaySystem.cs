@@ -35,8 +35,6 @@ namespace Crusaders30XX.ECS.Systems
 		private bool _cachedShowCard;
 		private bool _cachedShowMedal;
 		private int _cachedRewardGold;
-		private Texture2D _fallbackMedalTex;
-		private readonly Dictionary<string, Texture2D> _medalTexById = new();
 		private LayoutSignature _layoutSignature;
 		private CachedTextMetrics _textMetrics;
 		private readonly Dictionary<(int w, int h), Texture2D> _gradientRuleCache = new();
@@ -217,7 +215,6 @@ namespace Crusaders30XX.ECS.Systems
 			_content = content;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
-			TryLoadMedalFallback();
 			EventManager.Subscribe<ShowQuestRewardOverlay>(e => {
 				LoggingService.Append("RewardModalDisplaySystem.OnShowQuestRewardOverlay", new JsonObject {
 					{ "Message", e.Message },
@@ -235,12 +232,6 @@ namespace Crusaders30XX.ECS.Systems
 				OpenTreasureChest(e);
 			});
 			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
-		}
-
-		private void TryLoadMedalFallback()
-		{
-			if (_content == null) return;
-			try { _fallbackMedalTex = _content.Load<Texture2D>("medal"); } catch { _fallbackMedalTex = null; }
 		}
 
 		private void OnDeleteCaches(DeleteCachesEvent _)
@@ -716,43 +707,20 @@ namespace Crusaders30XX.ECS.Systems
 		private void DrawRightColumnMedal(bool showMedal, string medalId)
 		{
 			if (!showMedal || string.IsNullOrWhiteSpace(medalId)) return;
-			var tex = GetMedalTexture(medalId);
-			if (tex == null) return;
 
 			var r = _layout.MedalPreviewRect;
 			if (r.Width <= 0 || r.Height <= 0) return;
 
-			float scale = 1f;
-			if (tex.Width > 0 && tex.Height > 0)
-			{
-				float sx = r.Width / (float)tex.Width;
-				float sy = r.Height / (float)tex.Height;
-				scale = System.Math.Min(sx, sy);
-			}
-
-			var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
 			var center = new Vector2(r.Center.X, r.Center.Y);
-			_spriteBatch.Draw(tex, center, null, Color.White, 0f, origin, scale, SpriteEffects.None, 0f);
-		}
-
-		private Texture2D GetMedalTexture(string medalId)
-		{
-			if (string.IsNullOrWhiteSpace(medalId)) return _fallbackMedalTex;
-			if (_medalTexById.TryGetValue(medalId, out var cached) && cached != null) return cached;
-
-			Texture2D tex = null;
-			if (_content != null)
-			{
-				try { tex = _content.Load<Texture2D>(medalId); }
-				catch { tex = _fallbackMedalTex; }
-			}
-			else
-			{
-				tex = _fallbackMedalTex;
-			}
-
-			_medalTexById[medalId] = tex;
-			return tex;
+			int iconSize = System.Math.Min(r.Width, r.Height);
+			MedalIconRenderService.DrawMedalIcon(
+				_spriteBatch,
+				_graphicsDevice,
+				_titleFont,
+				center,
+				iconSize,
+				medalId,
+				_content);
 		}
 
 		private void DrawStageLabel()

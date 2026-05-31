@@ -559,6 +559,15 @@ namespace Crusaders30XX.ECS.Systems
                         });
                         EntityManager.RemoveComponent<MarkedForReturnToDeck>(evt.Card);
                     }
+                    else if (evt.Card.GetComponent<MarkedForBottomOfDrawPile>() != null)
+                    {
+                        destination = CardZoneType.DrawPile;
+                        LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
+                        {
+                            ["reason"] = "CardReturnedToBottomOfDeck",
+                            ["cardId"] = card.CardId
+                        });
+                    }
                     if (evt.Card.GetComponent<MarkedForExhaust>() != null)
                     {
                         destination = CardZoneType.ExhaustPile;

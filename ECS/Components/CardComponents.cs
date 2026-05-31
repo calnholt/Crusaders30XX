@@ -1059,7 +1059,9 @@ namespace Crusaders30XX.ECS.Components
         Sealed,
         Plunder,
         SanguineCurse,
-        Marksman
+        Marksman,
+        Sharpen,
+        Might
     }
 
     public class PassiveMeterComponent : IComponent
@@ -1074,6 +1076,16 @@ namespace Crusaders30XX.ECS.Components
     public enum PassiveMeterDirection { Countdown, FillUp }
 
     public class MarkedForReturnToDeck : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    public class MarkedForBottomOfDrawPile : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    public class RelentlessStrikeBattleState : IComponent
     {
         public Entity Owner { get; set; }
     }

@@ -43,6 +43,8 @@ namespace Crusaders30XX.ECS.Factories
                 "litany_of_wrath" => new LitanyOfWrath(),
                 "narrow_gate" => new NarrowGate(),
                 "quick_wit" => new QuickWit(),
+                "rally_the_faithful" => new RallyTheFaithful(),
+                "relentless_strike" => new RelentlessStrike(),
                 "pouch_of_kunai" => new PouchOfKunai(),
                 "pierce_through" => new PierceThrough(),
                 "purge" => new Purge(),
@@ -62,9 +64,11 @@ namespace Crusaders30XX.ECS.Factories
                 "strike" => new Strike(),
                 // "stun" => new Stun(),
                 "sword" => new Sword(),
+                "temper_the_blade" => new TemperTheBlade(),
                 "tempest" => new Tempest(),
                 "vindicate" => new Vindicate(),
                 "whirlwind" => new Whirlwind(),
+                "zealous_vow" => new ZealousVow(),
                 _ => null
             };
         }
@@ -103,6 +107,8 @@ namespace Crusaders30XX.ECS.Factories
                 { "litany_of_wrath", new LitanyOfWrath() },
                 { "narrow_gate", new NarrowGate() },
                 { "quick_wit", new QuickWit() },
+                { "rally_the_faithful", new RallyTheFaithful() },
+                { "relentless_strike", new RelentlessStrike() },
                 { "pouch_of_kunai", new PouchOfKunai() },
                 { "pierce_through", new PierceThrough() },
                 { "purge", new Purge() },
@@ -122,9 +128,11 @@ namespace Crusaders30XX.ECS.Factories
                 { "strike", new Strike() },
                 // { "stun", new Stun() },
                 { "sword", new Sword() },
+                { "temper_the_blade", new TemperTheBlade() },
                 { "tempest", new Tempest() },
                 { "vindicate", new Vindicate() },
-                { "whirlwind", new Whirlwind() }
+                { "whirlwind", new Whirlwind() },
+                { "zealous_vow", new ZealousVow() }
             };
         }
     }

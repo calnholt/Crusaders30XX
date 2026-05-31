@@ -318,6 +318,7 @@ namespace Crusaders30XX.ECS.Systems
                                 Source = player,
                                 Target = enemy,
                                 Delta = -baseDamage,
+                                AttackCard = entity,
                                 DamageType = ModifyTypeEnum.Attack
                             };
 

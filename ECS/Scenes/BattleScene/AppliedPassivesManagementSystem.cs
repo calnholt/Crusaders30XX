@@ -381,7 +381,9 @@ namespace Crusaders30XX.ECS.Systems
             return new HashSet<AppliedPassiveType>
             {
                 AppliedPassiveType.DowseWithHolyWater,
-                AppliedPassiveType.Aggression
+                AppliedPassiveType.Aggression,
+                AppliedPassiveType.Sharpen,
+                AppliedPassiveType.Might
             };
         }
 

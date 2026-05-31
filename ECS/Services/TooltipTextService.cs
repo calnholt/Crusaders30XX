@@ -96,6 +96,10 @@ namespace Crusaders30XX.ECS.Services
 					return "Your attacks deal 1 less damage if you have 1 or more penance. At the start of the next battle, these are converted to scars.";
 				case AppliedPassiveType.Aggression:
 					return $"The next attack this turn gains {stacks} damage.";
+				case AppliedPassiveType.Sharpen:
+					return $"Your next weapon attack this turn gains {stacks} damage.";
+				case AppliedPassiveType.Might:
+					return $"Your attacks deal +{stacks} damage this turn.";
 				case AppliedPassiveType.Stealth:
 					return "You cannot see the number of attacks this monster plans.";
 				case AppliedPassiveType.Power:
@@ -178,6 +182,10 @@ namespace Crusaders30XX.ECS.Services
 			if (i >= 0) matches.Add((i, "X Aggression - Your next attack this turn gains +X damage."));
 			i = lowerText.IndexOf("power");
 			if (i >= 0) matches.Add((i, "X Power - Your attacks deal +X damage."));
+			i = lowerText.IndexOf("sharpen");
+			if (i >= 0) matches.Add((i, "X Sharpen - Your next weapon attack this turn gains +X damage."));
+			i = lowerText.IndexOf("might");
+			if (i >= 0) matches.Add((i, "X Might - Your attacks deal +X damage this turn."));
 			i = lowerText.IndexOf("penance");
 			if (i >= 0) matches.Add((i, "X Penance - Your attacks deal -1 less damage. At the start of the next battle, these are converted to scars."));
 			var showScar = lowerText.IndexOf("scar ") >= 0 || lowerText.IndexOf("scars") >= 0 || lowerText.IndexOf("scars ") >= 0 || lowerText.IndexOf("scar.") >= 0;

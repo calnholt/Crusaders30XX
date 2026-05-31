@@ -29,6 +29,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Source = player, 
                     Target = enemy, 
                     Delta = -damage, 
+                    AttackCard = card,
+ 
                     DamageType = ModifyTypeEnum.Attack 
                 });
                 EventManager.Publish(new SetCourageEvent { Amount = 0 });

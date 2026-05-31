@@ -4,15 +4,16 @@ using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Objects.Cards
 {
-    public class LitanyOfWrath : CardBase
+    public class TemperTheBlade : CardBase
     {
-        private int AggressionGained = 3;
-        public LitanyOfWrath()
+        private int SharpenAmount = 5;
+
+        public TemperTheBlade()
         {
-            CardId = "litany_of_wrath";
-            Name = "Litany of Wrath";
+            CardId = "temper_the_blade";
+            Name = "Temper the Blade";
             Target = "Player";
-            Text = $"Gain {AggressionGained} aggression.";
+            Text = $"Sharpen {SharpenAmount}.";
             IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;
@@ -24,8 +25,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 EventManager.Publish(new ApplyPassiveEvent
                 {
                     Target = player,
-                    Type = AppliedPassiveType.Aggression,
-                    Delta = AggressionGained
+                    Type = AppliedPassiveType.Sharpen,
+                    Delta = SharpenAmount
                 });
             };
         }

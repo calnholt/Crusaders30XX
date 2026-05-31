@@ -35,6 +35,8 @@ public class RazorStorm : CardBase
             Source = entityManager.GetEntity("Player"),
             Target = entityManager.GetEntity("Enemy"),
             Delta = -GetDerivedDamage(entityManager, card),
+            AttackCard = card,
+
             DamageType = ModifyTypeEnum.Attack
           });
         });

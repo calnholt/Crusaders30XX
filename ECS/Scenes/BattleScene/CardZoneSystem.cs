@@ -365,6 +365,10 @@ namespace Crusaders30XX.ECS.Systems
                 case CardZoneType.DrawPile:
                 {
                     deck.DrawPile.Add(evt.Card);
+                    if (evt.Card.GetComponent<MarkedForBottomOfDrawPile>() != null)
+                    {
+                        EntityManager.RemoveComponent<MarkedForBottomOfDrawPile>(evt.Card);
+                    }
                     // Not interactable in draw pile
                     var uiDP = evt.Card.GetComponent<UIElement>();
                     if (uiDP != null)
@@ -458,6 +462,10 @@ namespace Crusaders30XX.ECS.Systems
                 case CardZoneType.DrawPile:
                 {
                     deck.DrawPile.Add(evt.Card);
+                    if (evt.Card.GetComponent<MarkedForBottomOfDrawPile>() != null)
+                    {
+                        EntityManager.RemoveComponent<MarkedForBottomOfDrawPile>(evt.Card);
+                    }
                     // Not interactable in draw pile
                     var uiDP = evt.Card.GetComponent<UIElement>();
                     if (uiDP != null)

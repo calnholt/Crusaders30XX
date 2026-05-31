@@ -30,6 +30,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Source = player, 
                     Target = enemy, 
                     Delta = -GetDerivedDamage(entityManager, card), 
+                    AttackCard = card,
+ 
                     DamageType = ModifyTypeEnum.Attack 
                 });
                 var random = Random.Shared.Next(0, 100);

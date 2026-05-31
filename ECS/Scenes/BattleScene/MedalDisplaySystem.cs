@@ -21,8 +21,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
 		private readonly SpriteFont _font = FontSingleton.ContentFont;
-		private Texture2D _fallbackMedalTex;
-		private readonly Dictionary<string, Texture2D> _medalTexById = new Dictionary<string, Texture2D>();
 
 		// Layout/debug controls
 		[DebugEditable(DisplayName = "Left Margin", Step = 2, Min = 0, Max = 2000)]
@@ -82,7 +80,6 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_content = content;
-			TryLoadAssets();
 			EventManager.Subscribe<MedalTriggered>(OnMedalTriggered);
 		}
 
@@ -101,22 +98,6 @@ namespace Crusaders30XX.ECS.Systems
             };
             EventManager.Publish(new JigglePulseEvent { Target = evt.MedalEntity, Config = cfg });
         }
-
-		private void TryLoadAssets()
-		{
-			try { _fallbackMedalTex = _content.Load<Texture2D>("medal"); } catch { _fallbackMedalTex = null; }
-		}
-
-		private Texture2D GetMedalTexture(string medalId)
-		{
-			if (string.IsNullOrWhiteSpace(medalId)) return _fallbackMedalTex;
-			if (_medalTexById.TryGetValue(medalId, out var cached) && cached != null) return cached;
-			Texture2D tex = null;
-			try { tex = _content.Load<Texture2D>(medalId); }
-			catch { tex = _fallbackMedalTex; }
-			_medalTexById[medalId] = tex;
-			return tex;
-		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
@@ -171,10 +152,20 @@ namespace Crusaders30XX.ECS.Systems
 				var rect = new Rectangle((int)System.Math.Round(cur.X), (int)System.Math.Round(cur.Y), bgW, bgH);
 				// Backgrounds removed: draw medals without black rounded panels
 				UpdateTooltipForMedal(m, rect);
-				var medalTex = GetMedalTexture(m.Medal.Id);
                 float rot = t?.Rotation ?? 0f;
                 float scalePulse = t?.Scale.X ?? 1f;
-                var drawnRect = DrawMedalIcon(rect, medalTex, scalePulse, rot);
+                float centerX = rect.X + BgPadding + IconSize / 2f;
+                float centerY = rect.Y + BgPadding + IconSize / 2f;
+                var drawnRect = MedalIconRenderService.DrawMedalIcon(
+                    _spriteBatch,
+                    _graphicsDevice,
+                    _font,
+                    new Vector2(centerX, centerY),
+                    IconSize,
+                    m.Medal.Id,
+                    _content,
+                    scalePulse,
+                    rot);
 
 				if (m.Medal.MaxCount > 0)
 				{
@@ -210,31 +201,6 @@ namespace Crusaders30XX.ECS.Systems
 			// Draw white text centered on trapezoid position (before trap offset)
 			Vector2 textPos = new Vector2(centerX - textSize.X / 2f, centerY - textSize.Y / 2f);
 			_spriteBatch.DrawString(_font, counterText, textPos, Color.White, 0f, Vector2.Zero, CounterTextScale, SpriteEffects.None, 0f);
-		}
-
-		private Rectangle DrawMedalIcon(Rectangle bgRect, Texture2D tex, float scale, float rotationRad)
-		{
-			if (tex == null) return Rectangle.Empty;
-			// Compute base uniform scale to fit within IconSize
-			float baseScale = 1f;
-			if (tex.Width > 0 && tex.Height > 0)
-			{
-				float sx = IconSize / (float)tex.Width;
-				float sy = IconSize / (float)tex.Height;
-				baseScale = System.Math.Min(sx, sy);
-			}
-			float finalScale = baseScale * System.Math.Max(0.1f, scale);
-			// Center of inner padded square
-			float centerX = bgRect.X + BgPadding + IconSize / 2f;
-			float centerY = bgRect.Y + BgPadding + IconSize / 2f;
-			var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
-			// Compute drawn bounds for spacing and tooltip
-			int drawW = (int)System.Math.Round(tex.Width * finalScale);
-			int drawH = (int)System.Math.Round(tex.Height * finalScale);
-			int left = (int)System.Math.Round(centerX - drawW / 2f);
-			int top = (int)System.Math.Round(centerY - drawH / 2f);
-			_spriteBatch.Draw(tex, new Vector2(centerX, centerY), null, Color.White, rotationRad, origin, finalScale, SpriteEffects.None, 0f);
-			return new Rectangle(left, top, drawW, drawH);
 		}
 
 		private void UpdateTooltipForMedal(EquippedMedal medal, Rectangle rect)

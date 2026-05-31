@@ -13,6 +13,8 @@ namespace Crusaders30XX.ECS.Events
         public int Delta { get; set; }
         public ModifyTypeEnum DamageType { get; set; } = ModifyTypeEnum.Attack;
         public bool IgnoresAegis { get; set; } = false;
+        /// <summary>Player card entity dealing attack damage, for weapon-only passives (Sharpen).</summary>
+        public Entity AttackCard { get; set; }
     }
     public enum ModifyTypeEnum
     {

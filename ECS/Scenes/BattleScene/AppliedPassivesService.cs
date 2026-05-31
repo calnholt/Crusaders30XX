@@ -43,6 +43,24 @@ namespace Crusaders30XX.ECS.Systems
           sourcePassives.TryGetValue(AppliedPassiveType.Power, out var amount);
           delta += amount;
         }
+        if (sourcePassives.ContainsKey(AppliedPassiveType.Might) && e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
+        {
+          sourcePassives.TryGetValue(AppliedPassiveType.Might, out var amount);
+          delta += amount;
+        }
+        if (e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
+        {
+          var attackCard = e.AttackCard?.GetComponent<CardData>();
+          bool isWeaponAttack = attackCard?.Card?.IsWeapon == true;
+          if (isWeaponAttack && sourcePassives.TryGetValue(AppliedPassiveType.Sharpen, out var sharpen) && sharpen > 0)
+          {
+            delta += sharpen;
+            if (!ReadOnly)
+            {
+              EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.Sharpen });
+            }
+          }
+        }
         if (sourcePassives.ContainsKey(AppliedPassiveType.Penance) && e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
         {
           sourcePassives.TryGetValue(AppliedPassiveType.Penance, out var amount);

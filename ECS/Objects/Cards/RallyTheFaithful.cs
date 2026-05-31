@@ -4,19 +4,20 @@ using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Objects.Cards
 {
-    public class LitanyOfWrath : CardBase
+    public class RallyTheFaithful : CardBase
     {
-        private int AggressionGained = 3;
-        public LitanyOfWrath()
+        private int MightAmount = 2;
+
+        public RallyTheFaithful()
         {
-            CardId = "litany_of_wrath";
-            Name = "Litany of Wrath";
+            CardId = "rally_the_faithful";
+            Name = "Rally the Faithful";
             Target = "Player";
-            Text = $"Gain {AggressionGained} aggression.";
+            Text = $"Gain {MightAmount} might.";
             IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;
-            Block = 3;
+            Block = 2;
 
             OnPlay = (entityManager, card) =>
             {
@@ -24,8 +25,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 EventManager.Publish(new ApplyPassiveEvent
                 {
                     Target = player,
-                    Type = AppliedPassiveType.Aggression,
-                    Delta = AggressionGained
+                    Type = AppliedPassiveType.Might,
+                    Delta = MightAmount
                 });
             };
         }
