@@ -490,6 +490,7 @@ namespace Crusaders30XX.ECS.Systems
 			_sanguineCurseSystem = new SanguineCurseSystem(_world.EntityManager);
 			_cardVisualSettingsDebugSystem = new CardVisualSettingsDebugSystem(_world.EntityManager);
 			_hpManagementSystem = new HpManagementSystem(_world.EntityManager);
+			_pledgeManagementSystem = new PledgeManagementSystem(_world.EntityManager);
 			_eventQueueSystem = new EventQueueSystem(_world.EntityManager);
 			_battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
@@ -581,6 +582,7 @@ namespace Crusaders30XX.ECS.Systems
 		_world.AddSystem(_cardHoverDetectionSystem);
 		_world.AddSystem(_cardZoneSystem);
 			_world.AddSystem(_handBlockInteractionSystem);
+			_world.AddSystem(_pledgeManagementSystem);
 			_world.AddSystem(_eventQueueSystem);
 			_world.AddSystem(_drawPileDisplaySystem);
 			_world.AddSystem(_discardPileDisplaySystem);
@@ -688,9 +690,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Pledge system
-			_pledgeManagementSystem = new PledgeManagementSystem(_world.EntityManager);
 			_pledgeDisplaySystem = new PledgeDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
-			_world.AddSystem(_pledgeManagementSystem);
 			_world.AddSystem(_pledgeDisplaySystem);
 		}
 

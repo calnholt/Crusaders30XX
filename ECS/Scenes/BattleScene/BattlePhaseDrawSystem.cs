@@ -90,35 +90,8 @@ namespace Crusaders30XX.ECS.Systems
 			var deck = deckEntity?.GetComponent<Deck>();
 			if (deck == null) return;
 
-			int effectiveHandCount = 0;
 			LoggingService.Append("DrawHandSystem.DrawUpToIntellect", new System.Text.Json.Nodes.JsonObject { ["deckHandCount"] = deck.Hand.Count, ["intellect"] = intellect, ["maxHandSize"] = maxHandSize });
-			foreach (var e in deck.Hand)
-			{
-				string debugId = e.GetComponent<CardData>()?.Card?.CardId ?? $"entity#{e.Id}";
-				bool isActive = e.IsActive;
-				if (e.HasComponent<AnimatingHandToDiscard>()) { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["cardId"] = debugId, ["reason"] = "AnimatingHandToDiscard", ["isActive"] = isActive }); continue; }
-				if (e.HasComponent<AnimatingHandToZone>()) { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["cardId"] = debugId, ["reason"] = "AnimatingHandToZone", ["isActive"] = isActive }); continue; }
-				if (e.HasComponent<AnimatingHandToDrawPile>()) { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["cardId"] = debugId, ["reason"] = "AnimatingHandToDrawPile", ["isActive"] = isActive }); continue; }
-				// Pledged cards don't count against max hand size
-				if (e.HasComponent<Pledge>()) { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["cardId"] = debugId, ["reason"] = "Pledge", ["isActive"] = isActive }); continue; }
-
-				var cd = e.GetComponent<CardData>();
-				if (cd == null) { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["entityId"] = e.Id, ["reason"] = "no CardData", ["isActive"] = isActive }); continue; }
-				string id = cd.Card.CardId ?? string.Empty;
-				if (string.IsNullOrEmpty(id)) { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["entityId"] = e.Id, ["reason"] = "empty CardId", ["isActive"] = isActive }); continue; }
-				var card = CardFactory.Create(id);
-				if (card != null)
-				{
-					if (!card.IsWeapon) { effectiveHandCount++; LoggingService.Append("DrawHandSystem.DrawUpToIntellect.count", new System.Text.Json.Nodes.JsonObject { ["cardId"] = id, ["reason"] = "non-weapon", ["isActive"] = isActive }); }
-					else { LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["cardId"] = id, ["reason"] = "weapon", ["isActive"] = isActive }); }
-				}
-				else
-				{
-					effectiveHandCount++;
-					LoggingService.Append("DrawHandSystem.DrawUpToIntellect.count", new System.Text.Json.Nodes.JsonObject { ["cardId"] = id, ["reason"] = "factory returned null", ["isActive"] = isActive });
-				}
-			}
-
+			int effectiveHandCount = GetEffectiveHandCountForDraw(deck.Hand, true);
 			int spaceLeft = System.Math.Max(0, maxHandSize - effectiveHandCount);
 			int toDraw = System.Math.Min(spaceLeft, intellect);
 			LoggingService.Append("DrawHandSystem.DrawUpToIntellect.result", new System.Text.Json.Nodes.JsonObject { ["effectiveHandCount"] = effectiveHandCount, ["spaceLeft"] = spaceLeft, ["toDraw"] = toDraw });
@@ -127,6 +100,68 @@ namespace Crusaders30XX.ECS.Systems
 				EventQueueBridge.EnqueueTriggerAction("DrawHandSystem.DrawCard", () => EventManager.Publish(new RequestDrawCardsEvent { Count = 1 }), 0.12f);
 			}
 			CheckForPlayerDeath();
+		}
+
+		public static int CalculateCardsToDraw(int intellect, int maxHandSize, System.Collections.Generic.IEnumerable<Entity> hand)
+		{
+			return CalculateCardsToDraw(intellect, maxHandSize, GetEffectiveHandCountForDraw(hand));
+		}
+
+		public static int GetEffectiveHandCountForDraw(System.Collections.Generic.IEnumerable<Entity> hand, bool emitLogs = false)
+		{
+			int effectiveHandCount = 0;
+			foreach (var e in hand)
+			{
+				string debugId = e.GetComponent<CardData>()?.Card?.CardId ?? $"entity#{e.Id}";
+				bool isActive = e.IsActive;
+				if (e.HasComponent<AnimatingHandToDiscard>()) { LogDrawSkip(emitLogs, debugId, "AnimatingHandToDiscard", isActive); continue; }
+				if (e.HasComponent<AnimatingHandToZone>()) { LogDrawSkip(emitLogs, debugId, "AnimatingHandToZone", isActive); continue; }
+				if (e.HasComponent<AnimatingHandToDrawPile>()) { LogDrawSkip(emitLogs, debugId, "AnimatingHandToDrawPile", isActive); continue; }
+				// Pledged cards don't count against max hand size.
+				if (e.HasComponent<Pledge>()) { LogDrawSkip(emitLogs, debugId, "Pledge", isActive); continue; }
+
+				var cd = e.GetComponent<CardData>();
+				if (cd == null) { LogDrawSkip(emitLogs, e.Id, "no CardData", isActive); continue; }
+				string id = cd.Card.CardId ?? string.Empty;
+				if (string.IsNullOrEmpty(id)) { LogDrawSkip(emitLogs, e.Id, "empty CardId", isActive); continue; }
+				var card = CardFactory.Create(id);
+				if (card != null)
+				{
+					if (!card.IsWeapon) { effectiveHandCount++; LogDrawCount(emitLogs, id, "non-weapon", isActive); }
+					else { LogDrawSkip(emitLogs, id, "weapon", isActive); }
+				}
+				else
+				{
+					effectiveHandCount++;
+					LogDrawCount(emitLogs, id, "factory returned null", isActive);
+				}
+			}
+
+			return effectiveHandCount;
+		}
+
+		private static int CalculateCardsToDraw(int intellect, int maxHandSize, int effectiveHandCount)
+		{
+			int spaceLeft = System.Math.Max(0, maxHandSize - effectiveHandCount);
+			return System.Math.Min(spaceLeft, intellect);
+		}
+
+		private static void LogDrawSkip(bool emitLogs, string cardId, string reason, bool isActive)
+		{
+			if (!emitLogs) return;
+			LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardId, ["reason"] = reason, ["isActive"] = isActive });
+		}
+
+		private static void LogDrawSkip(bool emitLogs, int entityId, string reason, bool isActive)
+		{
+			if (!emitLogs) return;
+			LoggingService.Append("DrawHandSystem.DrawUpToIntellect.skip", new System.Text.Json.Nodes.JsonObject { ["entityId"] = entityId, ["reason"] = reason, ["isActive"] = isActive });
+		}
+
+		private static void LogDrawCount(bool emitLogs, string cardId, string reason, bool isActive)
+		{
+			if (!emitLogs) return;
+			LoggingService.Append("DrawHandSystem.DrawUpToIntellect.count", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardId, ["reason"] = reason, ["isActive"] = isActive });
 		}
 	}
 }
