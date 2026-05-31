@@ -117,7 +117,6 @@ namespace Crusaders30XX.ECS.Systems
 		private SealDisplaySystem _sealDisplaySystem;
 		private ShackleDisplaySystem _shackleDisplaySystem;
 		private UIElementHighlightSystem _uiElementHighlightSystem;
-		private QuestRewardModalDisplaySystem _questRewardModalDisplaySystem;
 		private TribulationManagerSystem _tribulationManagerSystem;
 		private QuestTribulationDisplaySystem _questTribulationDisplaySystem;
 		private QuitCurrentQuestDisplaySystem _quitCurrentQuestDisplaySystem;
@@ -283,11 +282,7 @@ namespace Crusaders30XX.ECS.Systems
 			bool willShowDialog = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<PendingQuestDialog>()?.WillShowDialog ?? false;
 			bool rewardOpen = EntityManager.GetEntitiesWithComponent<QuestRewardOverlayState>().FirstOrDefault()?.GetComponent<QuestRewardOverlayState>()?.IsOpen ?? false;
 			if (willShowDialog) return;
-			if (rewardOpen)
-			{
-				FrameProfiler.Measure("QuestRewardModalDisplaySystem.Draw", _questRewardModalDisplaySystem.Draw);
-				return;
-			}
+			if (rewardOpen) return;
 			FrameProfiler.Measure("PlayerDisplaySystem.Draw", _playerDisplaySystem.Draw);
 			FrameProfiler.Measure("GuardianAngelDisplaySystem.Draw", _guardianAngelDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);
@@ -335,7 +330,6 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", _battlePhaseDisplaySystem.Draw);
 			FrameProfiler.Measure("CardListModalSystem.Draw", _cardListModalSystem.Draw);
 			FrameProfiler.Measure("DamageModificationDisplaySystem.Draw", _damageModificationDisplaySystem.Draw);
-			FrameProfiler.Measure("QuestRewardModalDisplaySystem.Draw", _questRewardModalDisplaySystem.Draw);
 			FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);
 		if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
 		if (_tutorialDisplaySystem != null) FrameProfiler.Measure("TutorialDisplaySystem.Draw", _tutorialDisplaySystem.Draw);
@@ -551,7 +545,6 @@ namespace Crusaders30XX.ECS.Systems
 			_shackleDisplaySystem = new ShackleDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, shackleTexture);
 			_intimidateDisplaySystem = new IntimidateDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_questRewardModalDisplaySystem = new QuestRewardModalDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_quitCurrentQuestDisplaySystem = new QuitCurrentQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_mustBeBlockedSystem = new MustBeBlockedSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_activeCharacterIndicatorDisplaySystem = new ActiveCharacterIndicatorDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
@@ -672,7 +665,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_plunderSnatchDisplaySystem);
 			_world.AddSystem(_markManagementSystem);
 			_world.AddSystem(_markDisplaySystem);
-			_world.AddSystem(_questRewardModalDisplaySystem);
 			_world.AddSystem(_quitCurrentQuestDisplaySystem);
 			_world.AddSystem(_mustBeBlockedSystem);
 			_world.AddSystem(_activeCharacterIndicatorDisplaySystem);

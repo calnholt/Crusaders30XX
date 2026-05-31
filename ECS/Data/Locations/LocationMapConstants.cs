@@ -63,6 +63,10 @@ namespace Crusaders30XX.ECS.Data.Locations
 		/// <summary>Placement rejects candidates closer than this to any playable border.</summary>
 		public static float MinPlacementEdgeInset => Math.Max(250f, PlayableMinDimension * 0.08f);
 		public const int RunMapShopCount = 3;
+		public const int RunMapTreasureCount = 2;
+		public const int RunMapTreasureGoldMin = 10;
+		public const int RunMapTreasureGoldMax = 30;
+		public const int RunMapTreasureMinUnlockDepth = 2;
 		public const int RunMapShopItemsPerShop = 3;
 		public const int RunMapShopCardPrice = 30;
 		public const int RunMapShopMedalPrice = 50;

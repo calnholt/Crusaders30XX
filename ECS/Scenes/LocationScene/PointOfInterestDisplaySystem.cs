@@ -24,6 +24,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Texture2D _questIconTexture;
 		private readonly Texture2D _hellriftIconTexture;
 		private readonly Texture2D _shopIconTexture;
+		private readonly Texture2D _treasureIconTexture;
 		private readonly Texture2D _skullTexture;
 		private bool _spawned;
 		private readonly System.Collections.Generic.List<Entity> _pois = new System.Collections.Generic.List<Entity>();
@@ -91,6 +92,14 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			try
 			{
+				_treasureIconTexture = content.Load<Texture2D>("treasure_chest");
+			}
+			catch
+			{
+				_treasureIconTexture = null;
+			}
+			try
+			{
 				_skullTexture = content.Load<Texture2D>("skull");
 			}
 			catch
@@ -139,6 +148,18 @@ namespace Crusaders30XX.ECS.Systems
 						}
 					}
 				}
+				if (poiComp != null && poiComp.Type == PointOfInterestType.Treasure && !string.IsNullOrEmpty(poiComp.TreasureId))
+				{
+					if (SaveCache.TryGetRunTreasure(poiComp.TreasureId, out var treasure, out _))
+					{
+						poiComp.IsCompleted = treasure.isClaimed;
+						var uiTreasure = e.GetComponent<UIElement>();
+						if (uiTreasure != null)
+						{
+							uiTreasure.IsInteractable = RunMapTreasureService.IsEnterable(treasure, runNodes);
+						}
+					}
+				}
 				// Scale world position by map scale to match scaled world space
 				var scaledWorld = world * mapScale;
 				var screenPos = scaledWorld - origin;
@@ -162,10 +183,7 @@ namespace Crusaders30XX.ECS.Systems
 					var poi = e.GetComponent<PointOfInterest>();
 					if (poi != null)
 					{
-						Texture2D iconTexture =
-							(poi.Type == PointOfInterestType.Hellrift && _hellriftIconTexture != null) ? _hellriftIconTexture :
-							(poi.Type == PointOfInterestType.Shop && _shopIconTexture != null) ? _shopIconTexture :
-							_questIconTexture;
+						Texture2D iconTexture = GetIconTexture(poi.Type);
 						
 						// Calculate bounds size scaled by map zoom and hover scale
 						float boundsWidth = IconSize * mapScale * currentScale;
@@ -251,6 +269,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			SpawnShopPois(ref i, runNodes);
+			SpawnTreasurePois(ref i, runNodes);
 		}
 
 		private void SpawnShopPois(ref int entityIndex, IReadOnlyList<RunMapNode> runNodes)
@@ -296,17 +315,78 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
+		private void SpawnTreasurePois(ref int entityIndex, IReadOnlyList<RunMapNode> runNodes)
+		{
+			foreach (var treasure in SaveCache.GetRunMapTreasures())
+			{
+				if (treasure == null || string.IsNullOrEmpty(treasure.id)) continue;
+
+				var worldPos = new Vector2(treasure.worldX, treasure.worldY);
+				var e = EntityManager.CreateEntity($"POI_Treasure_{entityIndex++}");
+				_worldByEntityId[e.Id] = worldPos;
+				_pois.Add(e);
+				EntityManager.AddComponent(e, new Transform { Position = worldPos, ZOrder = 10 });
+
+				int boundsWidth = (int)IconSize;
+				int boundsHeight = (int)IconSize;
+				if (_treasureIconTexture != null && _treasureIconTexture.Width > 0 && _treasureIconTexture.Height > 0)
+				{
+					float aspectRatio = _treasureIconTexture.Height / (float)_treasureIconTexture.Width;
+					boundsHeight = (int)(IconSize * aspectRatio);
+				}
+
+				bool canEnter = RunMapTreasureService.IsEnterable(treasure, runNodes);
+				EntityManager.AddComponent(e, new UIElement
+				{
+					Bounds = new Rectangle(0, 0, boundsWidth, boundsHeight),
+					IsInteractable = canEnter,
+					TooltipType = TooltipType.None,
+					EventType = UIElementEventType.None,
+					IsPreventDefaultClick = true,
+				});
+				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
+				EntityManager.AddComponent(e, new PointOfInterest
+				{
+					Id = treasure.id,
+					TreasureId = treasure.id,
+					WorldPosition = worldPos,
+					Type = PointOfInterestType.Treasure,
+					IsMapVisibleFromStart = true,
+					RunMapIndex = -1,
+					DisplayRadius = 0f,
+					IsCompleted = treasure.isClaimed,
+				});
+			}
+		}
+
+		public void DrawLandmarksOverFog()
+		{
+			DrawPois(PointOfInterestType.Shop, includeAlwaysVisibleLandmarks: true);
+			DrawPois(PointOfInterestType.Treasure, includeAlwaysVisibleLandmarks: true);
+		}
+
 		public void DrawShopsOverFog()
 		{
-			DrawPois(PointOfInterestType.Shop, includeAlwaysVisibleShops: true);
+			DrawLandmarksOverFog();
 		}
 
 		public void DrawQuestPoisOverFog()
 		{
-			DrawPois(PointOfInterestType.Quest, includeAlwaysVisibleShops: false);
+			DrawPois(PointOfInterestType.Quest, includeAlwaysVisibleLandmarks: false);
 		}
 
-		private void DrawPois(PointOfInterestType? filterType, bool includeAlwaysVisibleShops)
+		private Texture2D GetIconTexture(PointOfInterestType poiType)
+		{
+			return poiType switch
+			{
+				PointOfInterestType.Hellrift when _hellriftIconTexture != null => _hellriftIconTexture,
+				PointOfInterestType.Shop when _shopIconTexture != null => _shopIconTexture,
+				PointOfInterestType.Treasure when _treasureIconTexture != null => _treasureIconTexture,
+				_ => _questIconTexture,
+			};
+		}
+
+		private void DrawPois(PointOfInterestType? filterType, bool includeAlwaysVisibleLandmarks)
 		{
 			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
 			if (cam == null) return;
@@ -322,7 +402,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			foreach (var x in list)
 			{
-				bool isVisible = includeAlwaysVisibleShops && x.P.IsMapVisibleFromStart;
+				bool isVisible = includeAlwaysVisibleLandmarks && x.P.IsMapVisibleFromStart;
 				if (!isVisible && x.P.Type == PointOfInterestType.Quest)
 				{
 					isVisible = x.P.IsRevealed || x.P.IsCompleted;
@@ -331,7 +411,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (x.UI != null)
 				{
 					x.UI.IsHidden = !isVisible;
-					if (x.P.Type == PointOfInterestType.Shop)
+					if (x.P.Type == PointOfInterestType.Shop || x.P.Type == PointOfInterestType.Treasure)
 					{
 						// Interactability updated each frame in UpdateEntity
 					}
@@ -346,11 +426,9 @@ namespace Crusaders30XX.ECS.Systems
 				// Get current hover scale
 				float scale = _hoverScales.TryGetValue(x.E.Id, out float s) ? s : 1f;
 				
-				// Determine which texture to use based on POI type
-				Texture2D iconTexture =
-					(x.P.Type == PointOfInterestType.Hellrift && _hellriftIconTexture != null) ? _hellriftIconTexture :
-					(x.P.Type == PointOfInterestType.Shop && _shopIconTexture != null) ? _shopIconTexture :
-					_questIconTexture;
+				Texture2D iconTexture = GetIconTexture(x.P.Type);
+				bool isClaimedTreasure = x.P.Type == PointOfInterestType.Treasure && x.P.IsCompleted;
+				Color iconTint = isClaimedTreasure ? new Color(120, 120, 120) : Color.White;
 				
 				// Calculate icon dimensions preserving aspect ratio, scaled by map zoom
 				float iconWidth = IconSize * mapScale * scale;
@@ -373,7 +451,7 @@ namespace Crusaders30XX.ECS.Systems
 				// Draw icon texture
 				if (iconTexture != null)
 				{
-					_spriteBatch.Draw(iconTexture, iconRect, Color.White);
+					_spriteBatch.Draw(iconTexture, iconRect, iconTint);
 				}
 				else
 				{

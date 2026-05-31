@@ -11,7 +11,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
         public string Id => "quest-reward-modal";
         public int WarmupFrames => 2;
 
-        private QuestRewardModalDisplaySystem _modal;
+        private RewardModalDisplaySystem _modal;
         private QuestRewardSnapshotVariant _variant;
         private Texture2D _pixel;
 
@@ -37,10 +37,11 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
                 ctx.World.EntityManager.DestroyEntity(probe.Id);
             }
 
-            _modal = new QuestRewardModalDisplaySystem(
+            _modal = new RewardModalDisplaySystem(
                 ctx.World.EntityManager,
                 ctx.GraphicsDevice,
-                ctx.SpriteBatch);
+                ctx.SpriteBatch,
+                ctx.Content);
             ctx.World.AddSystem(_modal);
 
             _modal.Open(

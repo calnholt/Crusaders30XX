@@ -126,6 +126,8 @@ After completing a quest, returning to the location hub focuses the completed ma
 
 Shop markers are an exception: their map icon and minimap dot are visible from the start of the run. Shops do not clear map fog. Unrevealed shops (not yet enterable) do not show a tooltip or enter prompt on hover.
 
+Treasure Chest markers are also visible from run start and do not clear map fog. A chest becomes enterable only after the player has won battles deeper into the desert (cleared fog from a completed battle far enough along the run). Until then, no tooltip or hold-to-open prompt. When enterable, the tooltip reads **Open Treasure**.
+
 ## Shop (run map)
 
 A card vendor on the desert run map. Three shops exist per run. Shops are **not** quest nodes: they are not part of the run map tree and do not replace any of the 20 combat nodes.
@@ -140,9 +142,17 @@ The same card identity may appear in more than one shop in a run; within one sho
 
 _Avoid_: Shop node (when meaning the map marker; prefer **shop** vs **quest node**)
 
+## Treasure Chest (run map)
+
+A one-time loot marker on the desert run map. Two exist per run. Treasure Chests are **not** quest nodes or shops: they are not part of the run map tree.
+
+After the battle map and shops are generated, each chest is placed so that entering it requires having cleared fog from battles deeper into the desert. Opening a chest (hold-to-open on the hub) grants a random amount of gold (10-30 per chest, rolled at run creation) and one medal the player does not already own (excluding medals still for sale in run-map shops). The medal is added to the loadout and equipped immediately. A claimed chest stays on the map as a dimmed icon and cannot be opened again.
+
+_Avoid_: Treasure POI, treasure node (prefer **Treasure Chest** vs **quest node** or **shop**)
+
 ## Quest reward
 
-On first completion of a quest node: flat gold (10) and one random card added to the loadout deck. No rewards on repeat attempts (replays disabled).
+On first completion of a quest node: flat gold (30; 75 for a dual-battle quest node) and one random card added to the loadout deck. No rewards on repeat attempts (replays disabled).
 
 ## Diagnostics
 

@@ -78,7 +78,7 @@ Example: `debug/snapshots/card/strike.png`
 
 ## `quest-reward-modal`
 
-Renders `QuestRewardModalDisplaySystem` with optional gold and card reward columns.
+Renders `RewardModalDisplaySystem` with optional gold and card reward columns.
 
 ### Commands
 

@@ -134,10 +134,11 @@ namespace Crusaders30XX.ECS.Data.Save
 					}
 					return;
 				}
-				var (seed, nodes, shops) = GenerateRunMapForSave();
+				var (seed, nodes, shops, treasures) = GenerateRunMapForSave();
 				_save.runMapSeed = seed;
 				_save.runMapNodes = nodes;
 				_save.runMapShops = shops;
+				_save.runMapTreasures = treasures;
 				if (string.IsNullOrEmpty(_save.lastLocation) && nodes.Count > 0)
 				{
 					_save.lastLocation = nodes[0].id;
@@ -412,7 +413,7 @@ namespace Crusaders30XX.ECS.Data.Save
 
 		private static SaveFile CreateDefaultSave()
 		{
-			var (seed, nodes, shops) = GenerateRunMapForSave();
+			var (seed, nodes, shops, treasures) = GenerateRunMapForSave();
 			var startingDeck = StartingDeckGeneratorService.Generate(
 				StartingDeckGeneratorService.DefaultStarterCardPool,
 				seed);
@@ -423,6 +424,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				runMapSeed = seed,
 				runMapNodes = nodes,
 				runMapShops = shops,
+				runMapTreasures = treasures,
 				items = new List<SaveItem>(),
 				lastLocation = nodes.Count > 0 ? nodes[0].id : "run_0",
 				loadouts = new List<LoadoutDefinition>
@@ -465,14 +467,15 @@ namespace Crusaders30XX.ECS.Data.Save
 			return Path.GetDirectoryName(path);
 		}
 
-		private static (int seed, List<RunMapNode> nodes, List<RunMapShop> shops) GenerateRunMapForSave()
+		private static (int seed, List<RunMapNode> nodes, List<RunMapShop> shops, List<RunMapTreasure> treasures) GenerateRunMapForSave()
 		{
 			var (seed, nodes) = LocationMapGeneratorService.Generate();
 			var shops = RunMapShopGeneratorService.Generate(seed, nodes);
+			var treasures = RunMapTreasureGeneratorService.Generate(seed, nodes, shops);
 #if DEBUG
 			RunMapGeneratorLog.Append(LocationMapGeneratorService.ComputeSpreadMetrics(seed, nodes));
 #endif
-			return (seed, nodes, shops);
+			return (seed, nodes, shops, treasures);
 		}
 
 		public static IReadOnlyList<RunMapShop> GetRunMapShops()
@@ -488,6 +491,54 @@ namespace Crusaders30XX.ECS.Data.Save
 			index = -1;
 			EnsureRunMap();
 			return RunMapShopService.TryGetShop(shopId, _save?.runMapShops, out shop, out index);
+		}
+
+		public static IReadOnlyList<RunMapTreasure> GetRunMapTreasures()
+		{
+			EnsureLoaded();
+			EnsureRunMap();
+			return _save?.runMapTreasures ?? new List<RunMapTreasure>();
+		}
+
+		public static bool TryGetRunTreasure(string treasureId, out RunMapTreasure treasure, out int index)
+		{
+			treasure = null;
+			index = -1;
+			EnsureRunMap();
+			return RunMapTreasureService.TryGetTreasure(treasureId, _save?.runMapTreasures, out treasure, out index);
+		}
+
+		public static bool TryClaimRunMapTreasure(
+			string treasureId,
+			EntityManager entityManager,
+			out int rewardGold,
+			out string rewardMedalId)
+		{
+			rewardGold = 0;
+			rewardMedalId = string.Empty;
+			if (string.IsNullOrWhiteSpace(treasureId)) return false;
+
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) return false;
+				if (!TryGetRunTreasure(treasureId, out var treasure, out int index)) return false;
+				if (treasure == null || treasure.isClaimed) return false;
+
+				var rng = new Random((_save.runMapSeed ^ 0x71EA5A71) + index);
+				rewardMedalId = RunMapTreasureMedalPoolService.PickRandomMedal(rng, entityManager);
+				rewardGold = System.Math.Max(0, treasure.rewardGold);
+
+				EnsurePrimaryLoadout(_save);
+				var loadout = _save.loadouts[0];
+				if (loadout.medalIds == null) loadout.medalIds = new List<string>();
+				loadout.medalIds.Add(rewardMedalId);
+
+				treasure.isClaimed = true;
+				AddGold(rewardGold);
+				Persist();
+				return true;
+			}
 		}
 
 		public static bool TryPurchaseRunMapShopItem(string shopId, int slotIndex, out int newGold)

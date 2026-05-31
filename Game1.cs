@@ -58,6 +58,8 @@ public class Game1 : Game
     private LocationNameDisplaySystem _locationNameDisplaySystem;
     private QuestStartSystem _questStartSystem;
     private ShopStartSystem _shopStartSystem;
+    private TreasureStartSystem _treasureStartSystem;
+    private RewardModalDisplaySystem _rewardModalDisplaySystem;
     private DisplaySnapshotHost _snapshotHost;
     private readonly DisplaySnapshotLaunchOptions _snapshotOptions;
 #if DEBUG
@@ -211,6 +213,10 @@ public class Game1 : Game
         _world.AddSystem(_questStartSystem);
         _shopStartSystem = new ShopStartSystem(_world.EntityManager);
         _world.AddSystem(_shopStartSystem);
+        _treasureStartSystem = new TreasureStartSystem(_world.EntityManager);
+        _world.AddSystem(_treasureStartSystem);
+        _rewardModalDisplaySystem = new RewardModalDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _world.AddSystem(_rewardModalDisplaySystem);
         _world.AddSystem(new RunDeckLifecycleSystem(_world.EntityManager));
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
@@ -509,6 +515,12 @@ public class Game1 : Game
         FrameProfiler.Measure("DebugMenuSystem.Draw", _debugMenuSystem.Draw);
         FrameProfiler.Measure("EntityListOverlaySystem.Draw", _entityListOverlaySystem.Draw);
         FrameProfiler.Measure("DialogDisplaySystem.Draw", _dialogDisplaySystem.Draw);
+        var rewardOpen = _world.EntityManager.GetEntitiesWithComponent<QuestRewardOverlayState>()
+            .FirstOrDefault()?.GetComponent<QuestRewardOverlayState>()?.IsOpen ?? false;
+        if (rewardOpen)
+        {
+            FrameProfiler.Measure("RewardModalDisplaySystem.Draw", _rewardModalDisplaySystem.Draw);
+        }
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         // Cursor blur trail (additive pass before cursor) — skip in card debug mode

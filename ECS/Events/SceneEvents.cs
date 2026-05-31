@@ -24,9 +24,17 @@ namespace Crusaders30XX.ECS.Events
 	public class ShowQuestRewardOverlay
 	{
 		public string Message;
+		public string TitleLine1;
+		public string TitleLine2;
 		public int RewardGold;
 		public bool HasCardReward;
 		public string RewardCardKey;
+	}
+
+	public class TreasureChestOpened
+	{
+		public int RewardGold;
+		public string RewardMedalId;
 	}
 }
 

@@ -201,9 +201,14 @@ namespace Crusaders30XX.ECS.Components
 			public Entity Owner { get; set; }
 			public bool IsOpen { get; set; } = false;
 			public string Message { get; set; } = "Quest Complete";
+			public string TitleLine1 { get; set; } = "Quest";
+			public string TitleLine2 { get; set; } = "Complete!";
 			public int RewardGold { get; set; } = 0;
 			public bool HasCardReward { get; set; } = false;
 			public string RewardCardKey { get; set; } = string.Empty;
+			public bool HasMedalReward { get; set; } = false;
+			public string RewardMedalId { get; set; } = string.Empty;
+			public bool DismissToLocation { get; set; } = true;
 		}
 
 	public class PendingQuestDialog : IComponent

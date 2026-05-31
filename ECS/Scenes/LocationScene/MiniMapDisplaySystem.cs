@@ -139,9 +139,14 @@ namespace Crusaders30XX.ECS.Systems
 					if (!isVisible) continue;
 
 					float dotSize = DotSize;
-					Color dotColor = p.Type == PointOfInterestType.Shop
-						? new Color(255, 200, 80)
-						: (isCompleted ? Color.White : Color.Red);
+					Color dotColor = p.Type switch
+					{
+						PointOfInterestType.Shop => new Color(255, 200, 80),
+						PointOfInterestType.Treasure => p.IsCompleted
+							? new Color(140, 120, 90)
+							: new Color(220, 180, 60),
+						_ => isCompleted ? Color.White : Color.Red,
+					};
 
 					float minimapPoiX = actualMinimapX + (p.WorldPosition.X * cam.MapScale * scale);
 					float minimapPoiY = actualMinimapY + (p.WorldPosition.Y * cam.MapScale * scale);
@@ -213,6 +218,32 @@ namespace Crusaders30XX.ECS.Systems
 						(int)shopDotSize
 					);
 					_spriteBatch.Draw(_pixel, shopDotRect, new Color(255, 200, 80));
+				}
+
+				foreach (var treasure in SaveCache.GetRunMapTreasures())
+				{
+					if (treasure == null) continue;
+
+					float minimapPoiX = actualMinimapX + (treasure.worldX * cam.MapScale * scale);
+					float minimapPoiY = actualMinimapY + (treasure.worldY * cam.MapScale * scale);
+
+					if (minimapPoiX < minimapX || minimapPoiX > minimapX + minimapWidth ||
+						minimapPoiY < minimapY || minimapPoiY > minimapY + minimapHeight)
+					{
+						continue;
+					}
+
+					float treasureDotSize = DotSize;
+					var treasureDotRect = new Rectangle(
+						(int)(minimapPoiX - treasureDotSize / 2f),
+						(int)(minimapPoiY - treasureDotSize / 2f),
+						(int)treasureDotSize,
+						(int)treasureDotSize
+					);
+					Color treasureColor = treasure.isClaimed
+						? new Color(140, 120, 90)
+						: new Color(220, 180, 60);
+					_spriteBatch.Draw(_pixel, treasureDotRect, treasureColor);
 				}
 			}
 
