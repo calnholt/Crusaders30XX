@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "sacrifice";
             Name = "Sacrifice";
             Target = "Player";
-            Text = $"Draw {DrawAmount} cards, gain {TemperanceAmount} temperance, and gain {ScarAmount} scar{ScarAmount == 1 ? "" : "s"}.";
+            Text = $"Draw {DrawAmount} cards, gain {TemperanceAmount} temperance, and gain {ScarAmount} scar{(ScarAmount == 1 ? "" : "s")}.";
             IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;
