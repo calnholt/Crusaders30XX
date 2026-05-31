@@ -164,6 +164,9 @@ namespace Crusaders30XX.ECS.Systems
         
         private void UpdateCardPosition(Entity entity, GameTime gameTime)
         {
+            var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+            if (scene == null || scene.Current != SceneId.Battle) return;
+
 			var transform = entity.GetComponent<Transform>();
             var cardData = entity.GetComponent<CardData>();
             

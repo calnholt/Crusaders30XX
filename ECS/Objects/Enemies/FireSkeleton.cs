@@ -39,9 +39,18 @@ namespace Crusaders30XX.ECS.Objects.Enemies
           var courage = GetComponentHelper.GetCourage(EntityManager);
           if (courage == null || courage.Amount < 4) return;
           var passives = GetComponentHelper.GetAppliedPassives(EntityManager, "Player");
+          if (passives?.Passives == null) return;
           passives.Passives.TryGetValue(AppliedPassiveType.Enflamed, out int enflamedStacks);
-          EventManager.Publish(new PassiveTriggered { Owner = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Enflamed });
-          EventManager.Publish(new ModifyHpRequestEvent { Target = EntityManager.GetEntity("Player"), Delta = -enflamedStacks, DamageType = ModifyTypeEnum.Effect });
+          if (enflamedStacks <= 0) return;
+          var player = EntityManager.GetEntity("Player");
+          EventManager.Publish(new PassiveTriggered { Owner = player, Type = AppliedPassiveType.Enflamed });
+          EventManager.Publish(new ModifyHpRequestEvent
+          {
+            Source = player,
+            Target = player,
+            Delta = -enflamedStacks,
+            DamageType = ModifyTypeEnum.Effect
+          });
         }
 
         public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)

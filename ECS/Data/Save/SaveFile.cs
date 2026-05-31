@@ -22,7 +22,7 @@ namespace Crusaders30XX.ECS.Data.Save
 		public Dictionary<string, AchievementProgress> achievements { get; set; } = new Dictionary<string, AchievementProgress>();
 		/// <summary>Run-long applied passive type name to stack count (e.g. Frostbite).</summary>
 		public Dictionary<string, int> runLongPassives { get; set; } = new Dictionary<string, int>();
-		/// <summary>Run deck card key to restriction names (Frozen, Shackle, Sealed).</summary>
+		/// <summary>Run deck card key to run-long restriction names (Frozen, Sealed). Shackle is battle-only and is not persisted.</summary>
 		public Dictionary<string, List<string>> runCardRestrictions { get; set; } = new Dictionary<string, List<string>>();
 	}
 

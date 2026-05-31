@@ -11,7 +11,6 @@ namespace Crusaders30XX.ECS.Services
 	public static class RunScopedStateService
 	{
 		public const string RestrictionFrozen = "Frozen";
-		public const string RestrictionShackle = "Shackle";
 		public const string RestrictionSealed = "Sealed";
 
 		public static void HydrateRunLongPassivesOntoPlayer(Entity player)
@@ -67,7 +66,6 @@ namespace Crusaders30XX.ECS.Services
 			if (string.IsNullOrWhiteSpace(key)) return;
 			var names = new List<string>();
 			if (card.HasComponent<Frozen>()) names.Add(RestrictionFrozen);
-			if (card.HasComponent<Shackle>()) names.Add(RestrictionShackle);
 			if (card.HasComponent<Sealed>()) names.Add(RestrictionSealed);
 			SaveCache.SetRunCardRestrictionsForCard(key, names);
 		}
@@ -97,12 +95,6 @@ namespace Crusaders30XX.ECS.Services
 					if (card.GetComponent<Frozen>() == null)
 					{
 						if (entityManager != null) entityManager.AddComponent(card, new Frozen { Owner = card });
-					}
-					break;
-				case RestrictionShackle:
-					if (card.GetComponent<Shackle>() == null)
-					{
-						if (entityManager != null) entityManager.AddComponent(card, new Shackle { Owner = card });
 					}
 					break;
 				case RestrictionSealed:

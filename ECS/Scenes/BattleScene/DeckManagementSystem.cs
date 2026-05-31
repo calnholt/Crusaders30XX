@@ -26,6 +26,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ResetDeckEvent>(OnResetDeckEvent);
             EventManager.Subscribe<RemoveTopCardFromDrawPileRequested>(OnRemoveTopCardFromDrawPileRequested);
             EventManager.Subscribe<DiscardAllCardsEvent>(OnDiscardAllCards);
+            EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -497,6 +498,36 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             return toDestroy.Count;
+        }
+
+        private void OnLoadScene(LoadSceneEvent evt)
+        {
+            if (evt.Scene == SceneId.Battle) return;
+            DeactivateAllRunDeckCardPresentation();
+        }
+
+        private void DeactivateAllRunDeckCardPresentation()
+        {
+            var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+            if (deck == null) return;
+
+            var cards = new HashSet<Entity>();
+            cards.UnionWith(deck.DrawPile);
+            cards.UnionWith(deck.Hand);
+            cards.UnionWith(deck.DiscardPile);
+            cards.UnionWith(deck.ExhaustPile);
+            foreach (var c in deck.Cards)
+            {
+                if (c != null) cards.Add(c);
+            }
+
+            foreach (var card in cards)
+            {
+                if (card != null && card.IsActive)
+                {
+                    ResetCard(card);
+                }
+            }
         }
 
         private void ResetCard(Entity card)
