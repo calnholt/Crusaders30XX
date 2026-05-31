@@ -8,23 +8,23 @@ namespace Crusaders30XX.ECS.Objects.Cards
     {
         private int DrawAmount = 2;
         private int TemperanceAmount = 1;
-        private int PenanceAmount = 1;
+        private int ScarAmount = 2;
         public Sacrifice()
         {
             CardId = "sacrifice";
             Name = "Sacrifice";
             Target = "Player";
-            Text = $"Draw {DrawAmount} cards, gain {TemperanceAmount} temperance, and gain {PenanceAmount} penance.";
+            Text = $"Draw {DrawAmount} cards, gain {TemperanceAmount} temperance, and gain {ScarAmount} scar{ScarAmount == 1 ? "" : "s"}.";
             IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;
-            Block = 3;
+            Block = 2;
 
             OnPlay = (entityManager, card) =>
             {
                 EventManager.Publish(new RequestDrawCardsEvent { Count = DrawAmount });
                 EventManager.Publish(new ModifyTemperanceEvent { Delta = TemperanceAmount });
-                EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = PenanceAmount });
+                EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Scar, Delta = ScarAmount });
             };
         }
     }

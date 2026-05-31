@@ -8,13 +8,12 @@ namespace Crusaders30XX.ECS.Objects.Cards
     public class HeavensGlory : CardBase
     {
         private int InfernoAmount = 1;
-        private int BurnAmount = 1;
         public HeavensGlory()
         {
             CardId = "heavens_glory";
             Name = "Heaven's Glory";
             Target = "Enemy";
-            Text = $"The enemy gains {InfernoAmount} inferno and {BurnAmount} burn.";
+            Text = $"The enemy gains {InfernoAmount} inferno.";
             IsFreeAction = true;
             Animation = "Attack";
             Type = CardType.Prayer;
@@ -24,7 +23,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var enemy = entityManager.GetEntity(Target);
                 EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Inferno, Delta = InfernoAmount });
-                EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Burn, Delta = BurnAmount });
             };
         }
     }

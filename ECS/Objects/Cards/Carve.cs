@@ -16,9 +16,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "carve";
             Name = "Carve";
             Target = "Enemy";
-            Text = $"This gains +{DamageBonus} damage for the rest of the quest. {Chance}% chance this is shuffled back into the deck.";
+            Text = $"{Chance}% chance this card gains +{DamageBonus} damage for the rest of the run.";
             Block = 3;
-            Damage = 3;
+            Damage = 2;
             Animation = "Attack";
 
             OnPlay = (entityManager, card) =>
@@ -29,11 +29,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = -GetDerivedDamage(entityManager, card), 
                     DamageType = ModifyTypeEnum.Attack 
                 });
-                AttackDamageValueService.ApplyDelta(card, +DamageBonus, "Carve");
                 var random = Random.Shared.Next(0, 100);
                 if (random <= Chance)
                 {
-                    entityManager.AddComponent(card, new MarkedForReturnToDeck { Owner = card });
+                    AttackDamageValueService.ApplyDelta(card, +DamageBonus, "Carve");
                 }   
             };
         }
