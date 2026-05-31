@@ -679,10 +679,13 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_canPlayHighlightSettingsSystem);
 
 			// Tutorial system
-			_tutorialManager = new TutorialManager(_world.EntityManager);
-			_tutorialDisplaySystem = new TutorialDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _tutorialManager);
-			_world.AddSystem(_tutorialManager);
-			_world.AddSystem(_tutorialDisplaySystem);
+			if (!TutorialLaunchOptions.SkipTutorials)
+			{
+				_tutorialManager = new TutorialManager(_world.EntityManager);
+				_tutorialDisplaySystem = new TutorialDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _tutorialManager);
+				_world.AddSystem(_tutorialManager);
+				_world.AddSystem(_tutorialDisplaySystem);
+			}
 
 			// Pledge system
 			_pledgeManagementSystem = new PledgeManagementSystem(_world.EntityManager);

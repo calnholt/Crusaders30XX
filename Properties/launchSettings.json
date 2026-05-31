@@ -6,6 +6,10 @@
     "no-shaders": {
       "commandName": "Project",
       "commandLineArgs": "no-shaders"
+    },
+    "skip-tutorials": {
+      "commandName": "Project",
+      "commandLineArgs": "skip-tutorials"
     }
   }
 }

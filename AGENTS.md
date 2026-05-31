@@ -18,6 +18,9 @@ dotnet run -- new
 dotnet run -- no-shaders
 dotnet run --launch-profile no-shaders
 
+# Run without in-battle tutorials (dev / testing)
+dotnet run -- skip-tutorials
+
 # Display snapshots (headless PNG capture for visual verification)
 # See docs/display-snapshots.md for all commands
 dotnet run -- snapshot card strike
