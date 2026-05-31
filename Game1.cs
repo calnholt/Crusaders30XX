@@ -299,6 +299,11 @@ public class Game1 : Game
                 ToggleEntityListOverlay();
             }
 
+            if ((kb.IsKeyDown(Keys.LeftShift) || kb.IsKeyDown(Keys.RightShift)) && kb.IsKeyDown(Keys.K) && !_prevKeyboard.IsKeyDown(Keys.K))
+            {
+                _debugCommandSystem.Debug_PlayerDealDamage(999);
+            }
+
             if (kb.IsKeyDown(Keys.P) && !_prevKeyboard.IsKeyDown(Keys.P))
             {
                 var e = _world.EntityManager.GetEntitiesWithComponent<ProfilerOverlay>().FirstOrDefault();
