@@ -58,8 +58,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 
     public override void Dispose()
     {
-      Console.WriteLine($"[Shadow] Unsubscribed from ChangeBattlePhaseEvent");
-      EventManager.Unsubscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
+      EventManager.Unsubscribe<PledgeAddedEvent>(OnPledgeAddedEvent);
     }
   }
 }
