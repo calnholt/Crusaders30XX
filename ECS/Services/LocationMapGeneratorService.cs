@@ -46,6 +46,11 @@ namespace Crusaders30XX.ECS.Services
 					throw new InvalidOperationException(
 						"[LocationMapGeneratorService] Seeded map failed spread thresholds.");
 				}
+				if (!RunMapReachabilityService.AreAllQuestNodesReachable(seeded.nodes))
+				{
+					throw new InvalidOperationException(
+						"[LocationMapGeneratorService] Seeded map failed reachability thresholds.");
+				}
 				return seeded;
 			}
 
@@ -59,6 +64,11 @@ namespace Crusaders30XX.ECS.Services
 					{
 						throw new InvalidOperationException(
 							"[LocationMapGeneratorService] Generated map failed spread thresholds.");
+					}
+					if (!RunMapReachabilityService.AreAllQuestNodesReachable(result.nodes))
+					{
+						throw new InvalidOperationException(
+							"[LocationMapGeneratorService] Generated map failed reachability thresholds.");
 					}
 					return result;
 				}

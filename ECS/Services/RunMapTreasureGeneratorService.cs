@@ -20,9 +20,12 @@ namespace Crusaders30XX.ECS.Services
 
 			var rng = new Random(runMapSeed ^ TreasureRngSalt);
 			var depths = RunMapNodeDepthHelper.ComputeDepths(nodes);
+			var reachableIndices = RunMapReachabilityService.GetReachableNodeIndices(nodes);
 			var anchorNodes = nodes
 				.Select((n, i) => (Node: n, Index: i))
-				.Where(x => x.Node != null && depths[x.Index] >= LocationMapConstants.RunMapTreasureMinUnlockDepth)
+				.Where(x => x.Node != null
+					&& reachableIndices.Contains(x.Index)
+					&& depths[x.Index] >= LocationMapConstants.RunMapTreasureMinUnlockDepth)
 				.Select(x => x.Node)
 				.ToList();
 			if (anchorNodes.Count == 0)

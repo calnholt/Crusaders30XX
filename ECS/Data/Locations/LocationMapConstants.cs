@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public const float MapMargin = 200f;
 
 		// Bump when placement algorithm changes; clears run_map_generator.log on increase.
-		public const int MapGeneratorVersion = 5;
+		public const int MapGeneratorVersion = 6;
 
 		public static float PlayableWidth => BaseMapWidth - 2f * MapMargin;
 		public static float PlayableHeight => BaseMapHeight - 2f * MapMargin;

@@ -21,6 +21,8 @@ public class LocationMapGeneratorServiceTests
 				$"seed {seed} had {top} nodes in top edge band");
 			Assert.True(bottom <= ECS.Data.Locations.LocationMapConstants.MaxNodesPerPlayableEdgeBand,
 				$"seed {seed} had {bottom} nodes in bottom edge band");
+			Assert.True(RunMapReachabilityService.AreAllQuestNodesReachable(nodes),
+				$"seed {seed} had unreachable quest nodes");
 			passed++;
 		}
 

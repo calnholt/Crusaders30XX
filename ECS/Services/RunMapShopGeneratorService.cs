@@ -25,8 +25,17 @@ namespace Crusaders30XX.ECS.Services
 			var cardPool = BuildCardPool();
 			var shops = new List<RunMapShop>(LocationMapConstants.RunMapShopCount);
 			var placedPositions = new List<(float x, float y)>();
-			var anchorNodes = nodes.Where(n => n != null).ToList();
-			if (anchorNodes.Count == 0) return shops;
+			var reachableIndices = RunMapReachabilityService.GetReachableNodeIndices(nodes);
+			var anchorNodes = nodes
+				.Select((n, i) => (Node: n, Index: i))
+				.Where(x => x.Node != null && reachableIndices.Contains(x.Index))
+				.Select(x => x.Node)
+				.ToList();
+			if (anchorNodes.Count == 0)
+			{
+				throw new InvalidOperationException(
+					"[RunMapShopGeneratorService] No reachable quest nodes for shop placement.");
+			}
 
 			var displayNames = RunMapShopCatalog.PickDisplayNames(rng, LocationMapConstants.RunMapShopCount);
 			var backgroundAssets = RunMapShopCatalog.PickBackgroundAssets(rng, LocationMapConstants.RunMapShopCount);
