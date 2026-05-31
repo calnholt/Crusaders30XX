@@ -276,13 +276,20 @@ namespace Crusaders30XX.ECS.Systems
 				if (poi != null && IsPoiVisible(poi) && SaveCache.TryGetRunNode(poi.Id, out var runNode, out var questIdx))
 				{
 					locationIdTop = "desert";
-					events = new List<LocationEventDefinition>
-					{
-						new LocationEventDefinition { id = runNode.enemyId, type = "Enemy", difficulty = EnemyDifficulty.Easy },
-					};
+					var battleEnemyIds = runNode.ResolveBattleEnemyIds();
+					events = battleEnemyIds
+						.Select(id => new LocationEventDefinition
+						{
+							id = id,
+							type = "Enemy",
+							difficulty = EnemyDifficulty.Easy,
+						})
+						.ToList();
 					tribulations = new List<TribulationDefinition>();
 					title = "Quest " + (questIdx + 1);
-					rewardGold = LocationMapConstants.QuestRewardGold;
+					rewardGold = runNode.IsDualBattle
+						? LocationMapConstants.QuestRewardGoldDualBattle
+						: LocationMapConstants.QuestRewardGold;
 					isCompleted = runNode.isCompleted || poi.IsCompleted;
 					poiType = PointOfInterestType.Quest;
 					shouldShowTooltip = true;

@@ -164,6 +164,7 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			nodes[0].enemyId = PickEnemy(rng, enemyPool);
+			AssignDualBattles(rng, nodes, enemyPool);
 
 #if DEBUG
 			var metrics = ComputeSpreadMetrics(seed, nodes);
@@ -264,6 +265,37 @@ namespace Crusaders30XX.ECS.Services
 		{
 			if (pool == null || pool.Count == 0) return "skeleton";
 			return pool[rng.Next(pool.Count)];
+		}
+
+		private static void AssignDualBattles(Random rng, List<RunMapNode> nodes, List<string> enemyPool)
+		{
+			if (nodes == null || nodes.Count <= 1) return;
+
+			int dualCount = Math.Min(
+				LocationMapConstants.RunMapDualBattleQuestCount,
+				nodes.Count - 1);
+
+			var candidateIndices = Enumerable.Range(1, nodes.Count - 1)
+				.OrderBy(_ => rng.Next())
+				.Take(dualCount)
+				.ToList();
+
+			foreach (int index in candidateIndices)
+			{
+				var node = nodes[index];
+				if (node == null) continue;
+
+				string secondEnemy = rng.Next(2) == 0
+					? LocationMapConstants.RunMapDualBattleFirstEnemyId
+					: PickEnemy(rng, enemyPool);
+
+				node.battleEnemyIds = new List<string>
+				{
+					LocationMapConstants.RunMapDualBattleFirstEnemyId,
+					secondEnemy,
+				};
+				node.enemyId = LocationMapConstants.RunMapDualBattleFirstEnemyId;
+			}
 		}
 
 		private static int PickParentIndex(Random rng, List<int> eligibleParents, int[] depths)

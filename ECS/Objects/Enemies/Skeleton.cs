@@ -59,18 +59,18 @@ public class Skeleton : EnemyBase
 
 public class BoneStrike : EnemyAttackBase
 {
-  private int Penance = 1;
+  private int Scar = 1;
   public BoneStrike()
   {
     Id = "bone_strike";
     Name = "Bone Strike";
     Damage = 2;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, Penance, ConditionType.OnHit);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Scar, Scar, ConditionType.OnHit);
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = Penance });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Scar, Delta = Scar });
     };
   }
 }

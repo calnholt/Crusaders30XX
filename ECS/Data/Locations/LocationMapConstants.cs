@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public const float MapMargin = 200f;
 
 		// Bump when placement algorithm changes; clears run_map_generator.log on increase.
-		public const int MapGeneratorVersion = 4;
+		public const int MapGeneratorVersion = 5;
 
 		public static float PlayableWidth => BaseMapWidth - 2f * MapMargin;
 		public static float PlayableHeight => BaseMapHeight - 2f * MapMargin;
@@ -46,7 +46,10 @@ namespace Crusaders30XX.ECS.Data.Locations
 
 		/// <summary>Starting radius for completion cutscene lerp; must fit the quest icon inside the hole.</summary>
 		public static int DefaultUnrevealedRadius => MinFogRadiusForIconPx;
-		public const int QuestRewardGold = 10;
+		public const int QuestRewardGold = 30;
+		public const int QuestRewardGoldDualBattle = 75;
+		public const int RunMapDualBattleQuestCount = 4;
+		public const string RunMapDualBattleFirstEnemyId = "skeleton";
 		public const int MaxChildrenPerNode = 3;
 
 		/// <summary>Max quest nodes revealed when a single quest is completed (cutscene + save).</summary>

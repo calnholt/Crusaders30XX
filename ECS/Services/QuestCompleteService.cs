@@ -61,7 +61,9 @@ namespace Crusaders30XX.ECS.Services
 				StateSingleton.HasPendingLocationPoiReveal = true;
 				StateSingleton.PendingPoiId = node.id;
 
-				int reward = LocationMapConstants.QuestRewardGold;
+				int reward = node.IsDualBattle
+					? LocationMapConstants.QuestRewardGoldDualBattle
+					: LocationMapConstants.QuestRewardGold;
 				if (reward > 0)
 				{
 					SaveCache.AddGold(reward);

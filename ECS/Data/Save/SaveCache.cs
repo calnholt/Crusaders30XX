@@ -219,10 +219,21 @@ namespace Crusaders30XX.ECS.Data.Save
 			bool changed = false;
 			foreach (var node in _save.runMapNodes)
 			{
-				if (node == null || string.IsNullOrEmpty(node.enemyId)) continue;
-				if (EnemyPortraitContent.HasPortrait(node.enemyId)) continue;
-				node.enemyId = pool[rng.Next(pool.Count)];
-				changed = true;
+				if (node == null) continue;
+				if (!string.IsNullOrEmpty(node.enemyId) && !EnemyPortraitContent.HasPortrait(node.enemyId))
+				{
+					node.enemyId = pool[rng.Next(pool.Count)];
+					changed = true;
+				}
+
+				if (node.battleEnemyIds == null || node.battleEnemyIds.Count == 0) continue;
+				for (int i = 0; i < node.battleEnemyIds.Count; i++)
+				{
+					string id = node.battleEnemyIds[i];
+					if (string.IsNullOrEmpty(id) || EnemyPortraitContent.HasPortrait(id)) continue;
+					node.battleEnemyIds[i] = pool[rng.Next(pool.Count)];
+					changed = true;
+				}
 			}
 			return changed;
 		}

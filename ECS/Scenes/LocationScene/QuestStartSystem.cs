@@ -47,7 +47,8 @@ namespace Crusaders30XX.ECS.Systems
 
             if (!SaveCache.TryGetRunNode(poi.Id, out var node, out int questIndex)) return;
             if (!node.isRevealed || node.isCompleted) return;
-            if (string.IsNullOrEmpty(node.enemyId)) return;
+            var battleEnemyIds = node.ResolveBattleEnemyIds();
+            if (battleEnemyIds.Count == 0) return;
 
             var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
             if (qeEntity == null)
@@ -62,12 +63,15 @@ namespace Crusaders30XX.ECS.Systems
             qe.LocationId = DesertLocationId;
             qe.QuestIndex = questIndex;
 
-            qe.Events.Add(new QueuedEvent
+            foreach (string enemyId in battleEnemyIds)
             {
-                EventId = node.enemyId,
-                EventType = QueuedEventType.Enemy,
-                Difficulty = EnemyDifficulty.Easy,
-            });
+                qe.Events.Add(new QueuedEvent
+                {
+                    EventId = enemyId,
+                    EventType = QueuedEventType.Enemy,
+                    Difficulty = EnemyDifficulty.Easy,
+                });
+            }
 
             SaveCache.SetLastLocation(poi.Id);
             EventManager.Publish(new QuestSelected { LocationId = DesertLocationId, QuestIndex = questIndex, QuestId = poi.Id });

@@ -38,6 +38,8 @@ public static class EnemyAttackTextHelper
           return $"Gain {amount} burn.";
         case EnemyAttackTextType.Penance:
           return $"Gain {amount} penance.";
+        case EnemyAttackTextType.Scar:
+          return $"Gain {amount} scar{(amount > 1 ? "s" : "")}.";
         case EnemyAttackTextType.Armor:
           return $"The enemy gains {amount} armor.";
         case EnemyAttackTextType.Guard:
@@ -98,6 +100,7 @@ public static class EnemyAttackTextHelper
     Intimidate,
     Wounded,
     Penance,
+    Scar,
     Aggression,
     Stealth,
     Power,
