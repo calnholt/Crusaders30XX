@@ -284,6 +284,15 @@ namespace Crusaders30XX.ECS.Systems
             state.OpenElapsedSeconds = 0f;
             state.Type = evt.Type;
 
+            LoggingService.Append("PayCostOverlaySystem.OnOpen", new System.Text.Json.Nodes.JsonObject
+            {
+                ["entityId"] = state.CardToPlay.Id,
+                ["cardId"] = state.CardToPlay.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                ["type"] = state.Type.ToString(),
+                ["requiredCosts"] = string.Join(",", state.RequiredCosts),
+                ["card"] = HandStateLoggingService.BuildCardSnapshot(state.CardToPlay)
+            });
+
             // Suppress all interactable entities except cancel button and viable hand/selected cards
             RestorePayCostSuppressed();
             var deckEntity2 = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
@@ -329,8 +338,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // Mark the staged card as filtered so it doesn't appear in the hand fan
             // (weapons stay in deck.Hand even after HandStaged move, so this is necessary)
-            if (!state.CardToPlay.HasComponent<FilteredFromHand>())
-                EntityManager.AddComponent(state.CardToPlay, new FilteredFromHand());
+            AddFilteredFromHand(state.CardToPlay, "staged");
 
             // Update interactability of remaining hand cards to only those viable to pay costs
             UpdateInteractablesForRemainingCosts(state);
@@ -346,6 +354,14 @@ namespace Crusaders30XX.ECS.Systems
             {
                 // If the play was canceled (overlay is closing without PayCostSatisfied), restore staged card to hand
                 bool restoring = state.CardToPlay != null && state.RequiredCosts.Count > 0; // if not satisfied
+                LoggingService.Append("PayCostOverlaySystem.Close", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["restoring"] = restoring,
+                    ["selectedCount"] = state.SelectedCards.Count,
+                    ["remainingCostCount"] = state.RequiredCosts.Count,
+                    ["cardToPlayEntityId"] = state.CardToPlay?.Id ?? -1,
+                    ["cardToPlayCardId"] = state.CardToPlay?.GetComponent<CardData>()?.Card?.CardId ?? "unknown"
+                });
                 // Defer reinsertion until the return tween completes
                 // Restore interactability for all hand cards
                 RestoreHandInteractables();
@@ -487,6 +503,14 @@ namespace Crusaders30XX.ECS.Systems
 
             if (alreadySelected)
             {
+                LoggingService.Append("PayCostOverlaySystem.CardUnselected", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["entityId"] = evt.Card.Id,
+                    ["cardId"] = evt.Card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                    ["requiredCostCountBefore"] = state.RequiredCosts.Count,
+                    ["selectedCountBefore"] = state.SelectedCards.Count,
+                    ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
+                });
                 // Unselect: return requirement and animate back
                 if (state.ConsumedCostByCardId.TryGetValue(evt.Card.Id, out var consumed))
                 {
@@ -545,6 +569,16 @@ namespace Crusaders30XX.ECS.Systems
                 }
 
                 state.SelectedCards.Add(evt.Card);
+                LoggingService.Append("PayCostOverlaySystem.CardSelected", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["entityId"] = evt.Card.Id,
+                    ["cardId"] = evt.Card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                    ["consumedCost"] = consumed,
+                    ["originalHandIndex"] = originalIndex,
+                    ["remainingCostCount"] = state.RequiredCosts.Count,
+                    ["selectedCount"] = state.SelectedCards.Count,
+                    ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
+                });
 
                 // Recompute targets and interactivity for remaining hand
                 RetargetSelectedLayout(state);
@@ -902,7 +936,7 @@ namespace Crusaders30XX.ECS.Systems
             foreach (var c in deck.Hand)
             {
                 if (c.HasComponent<FilteredFromHand>())
-                    EntityManager.RemoveComponent<FilteredFromHand>(c);
+                    RemoveFilteredFromHand(c, "clearAll");
             }
         }
 
@@ -946,15 +980,44 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     ui.IsHovered = false;
                     ui.IsClicked = false;
-                    if (!c.HasComponent<FilteredFromHand>())
-                        EntityManager.AddComponent(c, new FilteredFromHand());
+                    AddFilteredFromHand(c, "nonViableCost");
                 }
                 else
                 {
                     if (c.HasComponent<FilteredFromHand>())
-                        EntityManager.RemoveComponent<FilteredFromHand>(c);
+                        RemoveFilteredFromHand(c, "viableCost");
                 }
             }
+        }
+
+        private void AddFilteredFromHand(Entity card, string reason)
+        {
+            if (card == null || card.HasComponent<FilteredFromHand>()) return;
+
+            EntityManager.AddComponent(card, new FilteredFromHand());
+            LoggingService.Append("PayCostOverlaySystem.FilteredFromHand", new System.Text.Json.Nodes.JsonObject
+            {
+                ["action"] = "add",
+                ["reason"] = reason,
+                ["entityId"] = card.Id,
+                ["cardId"] = card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                ["card"] = HandStateLoggingService.BuildCardSnapshot(card)
+            });
+        }
+
+        private void RemoveFilteredFromHand(Entity card, string reason)
+        {
+            if (card == null || !card.HasComponent<FilteredFromHand>()) return;
+
+            EntityManager.RemoveComponent<FilteredFromHand>(card);
+            LoggingService.Append("PayCostOverlaySystem.FilteredFromHand", new System.Text.Json.Nodes.JsonObject
+            {
+                ["action"] = "remove",
+                ["reason"] = reason,
+                ["entityId"] = card.Id,
+                ["cardId"] = card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                ["card"] = HandStateLoggingService.BuildCardSnapshot(card)
+            });
         }
 
         private List<string> GetDefinitionCosts(Entity card)

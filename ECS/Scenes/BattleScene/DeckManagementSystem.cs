@@ -188,9 +188,16 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     ["result"] = "success",
                     ["cardId"] = card?.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                    ["entityId"] = card?.Id ?? -1,
                     ["handCount"] = deck.Hand.Count,
+                    ["visibleHandCount"] = HandStateLoggingService.CountVisibleHand(deck.Hand),
+                    ["effectiveDrawHandCount"] = HandStateLoggingService.CountEffectiveDrawHand(deck.Hand),
                     ["drawPileCount"] = deck.DrawPile.Count,
-                    ["discardPileCount"] = deck.DiscardPile.Count
+                    ["discardPileCount"] = deck.DiscardPile.Count,
+                    ["spawnX"] = transform?.Position.X ?? 0,
+                    ["spawnY"] = transform?.Position.Y ?? 0,
+                    ["hasPositionTween"] = card?.HasComponent<PositionTween>() ?? false,
+                    ["card"] = HandStateLoggingService.BuildCardSnapshot(card)
                 });
                 return true;
             }
@@ -258,8 +265,11 @@ namespace Crusaders30XX.ECS.Systems
             }
             LoggingService.Append("DeckManagementSystem.DrawCards", new System.Text.Json.Nodes.JsonObject
             {
+                ["requestedCount"] = count,
                 ["drawnCount"] = drawnCount,
                 ["handCount"] = deck.Hand.Count,
+                ["visibleHandCount"] = HandStateLoggingService.CountVisibleHand(deck.Hand),
+                ["effectiveDrawHandCount"] = HandStateLoggingService.CountEffectiveDrawHand(deck.Hand),
                 ["drawPileCount"] = deck.DrawPile.Count,
                 ["discardPileCount"] = deck.DiscardPile.Count,
             });

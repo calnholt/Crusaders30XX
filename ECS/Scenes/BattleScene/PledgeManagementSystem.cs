@@ -162,6 +162,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (pledge != null)
                     pledge.CanPlay = true;
             }
+            LogPledgeHandSnapshot("ActionPhaseUnlock", null);
         }
 
         public void TryPledge(Entity card)
@@ -202,8 +203,11 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Publish(new PledgeAddedEvent { Card = card });
             LoggingService.Append("PledgeManagementSystem.AddPledgeToCard", new System.Text.Json.Nodes.JsonObject
             {
-                ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown"
+                ["entityId"] = card.Id,
+                ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown",
+                ["card"] = HandStateLoggingService.BuildCardSnapshot(card)
             });
+            LogPledgeHandSnapshot("AddPledgeToCard", card);
         }
 
         public static bool IsEligibleForPledge(Entity card, bool showErrorMessage = false)
@@ -257,8 +261,11 @@ namespace Crusaders30XX.ECS.Systems
             PledgedThisActionPhase = false;
             LoggingService.Append("PledgeManagementSystem.RemovePledgeFromCard", new System.Text.Json.Nodes.JsonObject
             {
-                ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown"
+                ["entityId"] = card.Id,
+                ["cardId"] = card.GetComponent<CardData>()?.Card.CardId ?? "unknown",
+                ["card"] = HandStateLoggingService.BuildCardSnapshot(card)
             });
+            LogPledgeHandSnapshot("RemovePledgeFromCard", card);
         }
 
         private void ClearAllPledges()
@@ -268,6 +275,18 @@ namespace Crusaders30XX.ECS.Systems
 
             foreach (var card in EntityManager.GetEntitiesWithComponent<Pledge>().ToList())
                 RemovePledgeFromCard(card);
+        }
+
+        private void LogPledgeHandSnapshot(string reason, Entity card)
+        {
+            var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+            if (deck == null) return;
+
+            var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>()?.Sub;
+            var snapshot = HandStateLoggingService.BuildHandSnapshot(deck, reason, phase);
+            snapshot["pledgedEntityId"] = card?.Id ?? -1;
+            snapshot["pledgedCardId"] = card?.GetComponent<CardData>()?.Card?.CardId ?? "none";
+            LoggingService.Append("PledgeManagementSystem.HandSnapshot", snapshot);
         }
     }
 }

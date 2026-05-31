@@ -71,8 +71,13 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						["action"] = "WeaponAdded",
 						["phase"] = evt.Current.ToString(),
-						["handIndex"] = 0
+						["handIndex"] = 0,
+						["handCount"] = deck.Hand.Count,
+						["visibleHandCount"] = HandStateLoggingService.CountVisibleHand(deck.Hand),
+						["effectiveDrawHandCount"] = HandStateLoggingService.CountEffectiveDrawHand(deck.Hand),
+						["card"] = HandStateLoggingService.BuildCardSnapshot(weapon)
 					});
+					HandStateLoggingService.AppendHandSnapshot("WeaponManagementSystem.HandSnapshot", deck, "WeaponAdded", evt.Current);
 				}
 				else
 				{
@@ -88,8 +93,13 @@ namespace Crusaders30XX.ECS.Systems
 							["action"] = "WeaponReordered",
 							["phase"] = evt.Current.ToString(),
 							["fromIndex"] = idx,
-							["toIndex"] = 0
+							["toIndex"] = 0,
+							["handCount"] = deck.Hand.Count,
+							["visibleHandCount"] = HandStateLoggingService.CountVisibleHand(deck.Hand),
+							["effectiveDrawHandCount"] = HandStateLoggingService.CountEffectiveDrawHand(deck.Hand),
+							["card"] = HandStateLoggingService.BuildCardSnapshot(weapon)
 						});
+						HandStateLoggingService.AppendHandSnapshot("WeaponManagementSystem.HandSnapshot", deck, "WeaponReordered", evt.Current);
 					}
 				}
 			}
@@ -111,8 +121,13 @@ namespace Crusaders30XX.ECS.Systems
 					LoggingService.Append("WeaponManagementSystem.OnPhaseChanged", new System.Text.Json.Nodes.JsonObject
 					{
 						["action"] = "WeaponRemoved",
-						["phase"] = evt.Current.ToString()
+						["phase"] = evt.Current.ToString(),
+						["handCount"] = deck.Hand.Count,
+						["visibleHandCount"] = HandStateLoggingService.CountVisibleHand(deck.Hand),
+						["effectiveDrawHandCount"] = HandStateLoggingService.CountEffectiveDrawHand(deck.Hand),
+						["card"] = HandStateLoggingService.BuildCardSnapshot(weapon)
 					});
+					HandStateLoggingService.AppendHandSnapshot("WeaponManagementSystem.HandSnapshot", deck, "WeaponRemoved", evt.Current);
 				}
 			}
 		}

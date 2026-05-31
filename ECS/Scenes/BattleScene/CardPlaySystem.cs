@@ -532,11 +532,17 @@ namespace Crusaders30XX.ECS.Systems
                     // Remove from hand without adding to discard/exhaust; stays out until re-added by phase rules
                     // CardZoneSystem will remove from lists when destination not specified; emulate by not re-adding
                     var deck = deckEntity.GetComponent<Deck>();
+                    int handCountBeforeWeaponRemove = deck?.Hand.Count ?? 0;
                     deck?.Hand.Remove(evt.Card);
                     LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
                     {
                         ["reason"] = "WeaponUsed",
-                        ["cardId"] = card.CardId
+                        ["cardId"] = card.CardId,
+                        ["entityId"] = evt.Card.Id,
+                        ["handCountBeforeMove"] = handCountBeforeWeaponRemove,
+                        ["handCountAfterMove"] = deck?.Hand.Count ?? 0,
+                        ["stillInHandAfterMove"] = deck?.Hand.Contains(evt.Card) ?? false,
+                        ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
                     });
                     EntityManager.DestroyEntity(evt.Card.Id);
                     return;
@@ -564,6 +570,17 @@ namespace Crusaders30XX.ECS.Systems
                         EntityManager.RemoveComponent<MarkedForExhaust>(evt.Card);
                     }
                 }
+                var deckBeforeMove = deckEntity.GetComponent<Deck>();
+                LoggingService.Append("CardPlaySystem.OnPlayCardRequested.moveCard", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["reason"] = "PlayCard",
+                    ["cardId"] = card.CardId,
+                    ["entityId"] = evt.Card.Id,
+                    ["destination"] = destination.ToString(),
+                    ["handCountBeforeMove"] = deckBeforeMove?.Hand.Count ?? 0,
+                    ["stillInHandBeforeMove"] = deckBeforeMove?.Hand.Contains(evt.Card) ?? false,
+                    ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
+                });
                 EventManager.Publish(new CardMoveRequested { Card = evt.Card, Deck = deckEntity, Destination = destination, Reason = "PlayCard" });
             }
         }

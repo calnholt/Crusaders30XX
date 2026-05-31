@@ -116,6 +116,20 @@ namespace Crusaders30XX.ECS.Systems
                 if (a.Elapsed >= Math.Max(0.001f, a.Duration))
                 {
                     // Finalize: request zone mutation and remove animation
+                    var deck = a.Deck?.GetComponent<Deck>();
+                    LoggingService.Append("CardMoveDisplaySystem.finalize", new System.Text.Json.Nodes.JsonObject
+                    {
+                        ["entityId"] = a.Card?.Id ?? -1,
+                        ["cardId"] = a.Card?.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                        ["destination"] = a.Destination.ToString(),
+                        ["contextId"] = a.ContextId,
+                        ["duration"] = a.Duration,
+                        ["elapsed"] = a.Elapsed,
+                        ["inHandBeforeFinalize"] = deck?.Hand.Contains(a.Card) ?? false,
+                        ["hasAnimatingHandToZone"] = a.Card?.HasComponent<AnimatingHandToZone>() ?? false,
+                        ["hasAnimatingHandToDrawPile"] = a.Card?.HasComponent<AnimatingHandToDrawPile>() ?? false,
+                        ["card"] = HandStateLoggingService.BuildCardSnapshot(a.Card)
+                    });
                     EventManager.Publish(new CardMoveFinalizeRequested
                     {
                         Card = a.Card,
@@ -211,8 +225,11 @@ namespace Crusaders30XX.ECS.Systems
             if (evt == null || evt.Card == null) return;
             LoggingService.Append("CardMoveDisplaySystem.OnAnimRequested", new System.Text.Json.Nodes.JsonObject
             {
-                ["cardId"] = evt.Card?.Id ?? -1,
-                ["contextId"] = evt.ContextId
+                ["entityId"] = evt.Card?.Id ?? -1,
+                ["cardId"] = evt.Card?.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                ["contextId"] = evt.ContextId,
+                ["deckHandContains"] = evt.Deck?.GetComponent<Deck>()?.Hand.Contains(evt.Card) ?? false,
+                ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
             });
             var t = evt.Card.GetComponent<Transform>();
             var ui = evt.Card.GetComponent<UIElement>();
@@ -242,6 +259,19 @@ namespace Crusaders30XX.ECS.Systems
                 ArcHeight = ArcHeightPx
             };
             _anims.Add(anim);
+            LoggingService.Append("CardMoveDisplaySystem.animationQueued", new System.Text.Json.Nodes.JsonObject
+            {
+                ["entityId"] = evt.Card.Id,
+                ["cardId"] = evt.Card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                ["destination"] = destination.ToString(),
+                ["contextId"] = evt.ContextId,
+                ["startX"] = startPos.X,
+                ["startY"] = startPos.Y,
+                ["endX"] = anim.End.X,
+                ["endY"] = anim.End.Y,
+                ["duration"] = anim.Duration,
+                ["activeAnimationCount"] = _anims.Count
+            });
         }
 
         private void OnDrawPileAnimRequested(PlayCardToDrawPileAnimationRequested evt)
@@ -249,8 +279,11 @@ namespace Crusaders30XX.ECS.Systems
             if (evt == null || evt.Card == null) return;
             LoggingService.Append("CardMoveDisplaySystem.OnDrawPileAnimRequested", new System.Text.Json.Nodes.JsonObject
             {
-                ["cardId"] = evt.Card?.Id ?? -1,
-                ["contextId"] = evt.ContextId
+                ["entityId"] = evt.Card?.Id ?? -1,
+                ["cardId"] = evt.Card?.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                ["contextId"] = evt.ContextId,
+                ["deckHandContains"] = evt.Deck?.GetComponent<Deck>()?.Hand.Contains(evt.Card) ?? false,
+                ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
             });
             var t = evt.Card.GetComponent<Transform>();
             var ui = evt.Card.GetComponent<UIElement>();
@@ -275,6 +308,19 @@ namespace Crusaders30XX.ECS.Systems
                 ArcHeight = ArcHeightPx
             };
             _anims.Add(anim);
+            LoggingService.Append("CardMoveDisplaySystem.animationQueued", new System.Text.Json.Nodes.JsonObject
+            {
+                ["entityId"] = evt.Card.Id,
+                ["cardId"] = evt.Card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                ["destination"] = CardZoneType.DrawPile.ToString(),
+                ["contextId"] = evt.ContextId,
+                ["startX"] = startPos.X,
+                ["startY"] = startPos.Y,
+                ["endX"] = anim.End.X,
+                ["endY"] = anim.End.Y,
+                ["duration"] = anim.Duration,
+                ["activeAnimationCount"] = _anims.Count
+            });
         }
 
         private Vector2 ResolveDiscardAnchor()

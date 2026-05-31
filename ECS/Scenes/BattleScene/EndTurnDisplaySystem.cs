@@ -117,6 +117,18 @@ namespace Crusaders30XX.ECS.Systems
                 ui.IsHidden = true;
                 ui.IsInteractable = false;
             }
+            var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+            if (deck != null)
+            {
+                HandStateLoggingService.AppendHandSnapshot("EndTurnDisplaySystem.OnEndTurnPressed.handSnapshot", deck, "beforeQueuedPhaseChain", SubPhase.PlayerEnd);
+            }
+            LoggingService.Append("EndTurnDisplaySystem.OnEndTurnPressed.queue", new System.Text.Json.Nodes.JsonObject
+            {
+                ["phaseChain"] = "PlayerEnd,EnemyStart,PreBlock,Block",
+                ["handCount"] = deck?.Hand.Count ?? 0,
+                ["visibleHandCount"] = deck != null ? HandStateLoggingService.CountVisibleHand(deck.Hand) : 0,
+                ["effectiveDrawHandCount"] = deck != null ? HandStateLoggingService.CountEffectiveDrawHand(deck.Hand) : 0
+            });
             EventQueue.EnqueueRule(new EventQueueBridge.QueuedPublish<ChangeBattlePhaseEvent>(
                 "Rule.ChangePhase.PlayerEnd",
                 new ChangeBattlePhaseEvent { Current = SubPhase.PlayerEnd }

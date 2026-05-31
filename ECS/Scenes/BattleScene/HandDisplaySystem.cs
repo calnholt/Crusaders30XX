@@ -91,6 +91,7 @@ namespace Crusaders30XX.ECS.Systems
 		private int _baseTextMarginX, _baseTextMarginY, _baseBlockNumberMarginX, _baseBlockNumberMarginY, _baseCardOffsetYExtra;
 		private float _baseUIScale, _baseNameScale, _baseCostScale, _baseDescriptionScale, _baseBlockScale, _baseBlockNumberScale;
 		private float _lastAppliedScale = -1f;
+		private string _lastHandReconciliationSignature = string.Empty;
 
 
 		private void CaptureBaselineIfNeeded(CardVisualSettings s)
@@ -179,6 +180,10 @@ namespace Crusaders30XX.ECS.Systems
             if (deckEntity != null)
             {
                 var deck = deckEntity.GetComponent<Deck>();
+                if (deck != null)
+                {
+                    LogHandReconciliationIfChanged(deck, "UpdateCardPosition");
+                }
                 if (deck != null && deck.Hand.Contains(entity) && CountsForHandLayout(entity))
                 {
                     // Build visible hand excluding animating and filtered cards (equipped weapon at index 0 included for layout).
@@ -302,12 +307,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private static bool CountsForHandLayout(Entity e)
         {
-            if (e == null) return false;
-            if (e.GetComponent<AnimatingHandToDiscard>() != null) return false;
-            if (e.GetComponent<AnimatingHandToZone>() != null) return false;
-            if (e.GetComponent<AnimatingHandToDrawPile>() != null) return false;
-            if (e.GetComponent<FilteredFromHand>() != null) return false;
-            return true;
+            return HandStateLoggingService.CountsForHandLayout(e);
         }
 
         /// <summary>
@@ -348,6 +348,7 @@ namespace Crusaders30XX.ECS.Systems
                 var deck = deckEntity.GetComponent<Deck>();
                 if (deck != null)
                 {
+                    LogHandReconciliationIfChanged(deck, "DrawHand");
                     // Only draw cards that are actually in the hand, not animating, and not filtered out by pay-cost overlay
                     var cardsInHand = deck.Hand
                         .Where(CountsForHandLayout)
@@ -373,6 +374,24 @@ namespace Crusaders30XX.ECS.Systems
                     }
                 }
             }
+        }
+
+        private void LogHandReconciliationIfChanged(Deck deck, string reason)
+        {
+            if (deck == null) return;
+
+            var visibleIds = deck.Hand
+                .Where(HandStateLoggingService.CountsForHandLayout)
+                .Select(c => c.Id.ToString());
+            var hiddenIds = deck.Hand
+                .Where(c => !HandStateLoggingService.CountsForHandLayout(c))
+                .Select(c => $"{c.Id}:{HandStateLoggingService.GetLayoutExclusionReason(c)}");
+            string signature = string.Join(",", deck.Hand.Select(c => c.Id)) + "|" + string.Join(",", visibleIds) + "|" + string.Join(",", hiddenIds);
+            if (signature == _lastHandReconciliationSignature) return;
+
+            _lastHandReconciliationSignature = signature;
+            var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>()?.Sub;
+            HandStateLoggingService.AppendHandSnapshot("HandDisplaySystem.HandReconciliation", deck, reason, phase);
         }
     }
 } 

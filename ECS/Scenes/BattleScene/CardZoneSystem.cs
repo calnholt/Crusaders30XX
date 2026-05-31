@@ -64,19 +64,23 @@ namespace Crusaders30XX.ECS.Systems
         private void OnCardMoveRequested(CardMoveRequested evt)
         {
             if (evt == null || evt.Card == null) return;
-
-            LoggingService.Append("CardZoneSystem.OnCardMoveRequested", new System.Text.Json.Nodes.JsonObject
-            {
-                ["cardId"] = evt.Card.Id,
-                ["destination"] = evt.Destination.ToString(),
-                ["reason"] = evt.Reason
-            });
-
             var deckEntity = evt.Deck ?? EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             var deck = deckEntity?.GetComponent<Deck>();
             if (deck == null) return;
 
             var from = GetZoneOf(deck, evt.Card);
+            int handCountBefore = deck.Hand.Count;
+
+            LoggingService.Append("CardZoneSystem.OnCardMoveRequested", new System.Text.Json.Nodes.JsonObject
+            {
+                ["entityId"] = evt.Card.Id,
+                ["cardId"] = evt.Card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                ["from"] = from.ToString(),
+                ["destination"] = evt.Destination.ToString(),
+                ["reason"] = evt.Reason,
+                ["handCountBefore"] = handCountBefore,
+                ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
+            });
 
             // Intercept Hand/HandStaged/CostSelected -> Discard/Exhaust on PlayCard/PayCost to run animati
             // on first; finalize will mutate zones and publish CardMoved
@@ -114,6 +118,17 @@ namespace Crusaders30XX.ECS.Systems
                             ContextId = evt.ContextId
                         });
                     }
+                    LoggingService.Append("CardZoneSystem.deferredMove", new System.Text.Json.Nodes.JsonObject
+                    {
+                        ["entityId"] = evt.Card.Id,
+                        ["cardId"] = evt.Card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                        ["from"] = from.ToString(),
+                        ["destination"] = evt.Destination.ToString(),
+                        ["reason"] = evt.Reason,
+                        ["animationComponent"] = "AnimatingHandToZone",
+                        ["handCount"] = deck.Hand.Count,
+                        ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
+                    });
                     return;
                 }
             }
@@ -122,6 +137,15 @@ namespace Crusaders30XX.ECS.Systems
             if (cardBase.IsWeapon)
             {
                 // Weapons are not moved to any zone; they are kept in hand until re-added by phase rules
+                LoggingService.Append("CardZoneSystem.weaponMoveIgnored", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["entityId"] = evt.Card.Id,
+                    ["cardId"] = cardBase.CardId ?? "unknown",
+                    ["from"] = from.ToString(),
+                    ["destination"] = evt.Destination.ToString(),
+                    ["reason"] = evt.Reason,
+                    ["handCount"] = deck.Hand.Count
+                });
                 return;
             }
 
@@ -149,6 +173,17 @@ namespace Crusaders30XX.ECS.Systems
                             ContextId = evt.ContextId
                         });
                     }
+                    LoggingService.Append("CardZoneSystem.deferredMove", new System.Text.Json.Nodes.JsonObject
+                    {
+                        ["entityId"] = evt.Card.Id,
+                        ["cardId"] = evt.Card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                        ["from"] = from.ToString(),
+                        ["destination"] = evt.Destination.ToString(),
+                        ["reason"] = evt.Reason,
+                        ["animationComponent"] = "AnimatingHandToDrawPile",
+                        ["handCount"] = deck.Hand.Count,
+                        ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
+                    });
                     return;
                 }
             }
@@ -367,8 +402,14 @@ namespace Crusaders30XX.ECS.Systems
 
             LoggingService.Append("CardZoneSystem.CardMoveInProgress", new System.Text.Json.Nodes.JsonObject
             {
+                ["entityId"] = evt.Card.Id,
+                ["cardId"] = evt.Card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
                 ["from"] = from.ToString(),
-                ["to"] = evt.Destination.ToString()
+                ["to"] = evt.Destination.ToString(),
+                ["reason"] = evt.Reason,
+                ["handCountBefore"] = handCountBefore,
+                ["handCountAfter"] = deck.Hand.Count,
+                ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
             });
         }
 
@@ -380,6 +421,7 @@ namespace Crusaders30XX.ECS.Systems
             if (deck == null) return;
 
             var from = GetZoneOf(deck, evt.Card);
+            int handCountBefore = deck.Hand.Count;
             // Normalize lists to avoid duplicates
             deck.DrawPile.Remove(evt.Card);
             deck.Hand.Remove(evt.Card);
@@ -465,8 +507,18 @@ namespace Crusaders30XX.ECS.Systems
 
             LoggingService.Append("CardZoneSystem.OnCardMoveFinalizeRequested", new System.Text.Json.Nodes.JsonObject
             {
+                ["entityId"] = evt.Card.Id,
+                ["cardId"] = evt.Card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
                 ["from"] = from.ToString(),
-                ["to"] = evt.Destination.ToString()
+                ["to"] = evt.Destination.ToString(),
+                ["contextId"] = evt.ContextId,
+                ["handCountBefore"] = handCountBefore,
+                ["handCountAfter"] = deck.Hand.Count,
+                ["stillInHandAfter"] = deck.Hand.Contains(evt.Card),
+                ["hadAnimatingHandToDiscard"] = anim != null,
+                ["hadAnimatingHandToZone"] = animZone != null,
+                ["hadAnimatingHandToDrawPile"] = animDrawPile != null,
+                ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
             });
         }
 

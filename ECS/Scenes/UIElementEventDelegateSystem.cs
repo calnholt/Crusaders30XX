@@ -11,13 +11,23 @@ namespace Crusaders30XX.ECS.Systems
     {
         public static void HandleEvent(UIElementEventType type, Entity entity, EntityManager entityManager)
         {
-            LoggingService.Append("UIElementEventDelegateService.HandleEvent", new System.Text.Json.Nodes.JsonObject
+            var activeDeck = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+            var handleLog = new System.Text.Json.Nodes.JsonObject
             {
                 ["type"] = type.ToString(),
                 ["entityId"] = entity.Id,
                 ["entityName"] = entity.Name,
                 ["entityType"] = entity.GetType().Name,
-            });
+            };
+            if (entity.HasComponent<CardData>())
+            {
+                handleLog["cardId"] = entity.GetComponent<CardData>()?.Card?.CardId ?? "unknown";
+                handleLog["inDeckHand"] = activeDeck?.Hand.Contains(entity) ?? false;
+                handleLog["countsForLayout"] = HandStateLoggingService.CountsForHandLayout(entity);
+                handleLog["countsForDraw"] = HandStateLoggingService.CountsForDraw(entity);
+                handleLog["card"] = HandStateLoggingService.BuildCardSnapshot(entity);
+            }
+            LoggingService.Append("UIElementEventDelegateService.HandleEvent", handleLog);
             switch(type)
             {
                 case UIElementEventType.ConfirmBlocks:
@@ -75,6 +85,9 @@ namespace Crusaders30XX.ECS.Systems
                         {
                             ["branch"] = "PayCostCandidateClicked",
                             ["entityId"] = entity.Id,
+                            ["cardId"] = entity.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                            ["inDeckHand"] = activeDeck?.Hand.Contains(entity) ?? false,
+                            ["card"] = HandStateLoggingService.BuildCardSnapshot(entity)
                         });
                         EventManager.Publish(new PayCostCandidateClicked { Card = entity });
                     }
@@ -84,7 +97,10 @@ namespace Crusaders30XX.ECS.Systems
                         {
                             ["branch"] = "PlayCardRequested",
                             ["entityId"] = entity.Id,
+                            ["cardId"] = entity.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
                             ["payStateExists"] = payStateEntity != null,
+                            ["inDeckHand"] = activeDeck?.Hand.Contains(entity) ?? false,
+                            ["card"] = HandStateLoggingService.BuildCardSnapshot(entity)
                         });
                         EventManager.Publish(new PlayCardRequested { Card = entity });
                     }

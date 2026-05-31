@@ -21,6 +21,12 @@ namespace Crusaders30XX.ECS.Systems
 			var s = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(_ =>
 			{
+				LoggingService.Append("DrawHandSystem.OnChangeBattlePhase", new System.Text.Json.Nodes.JsonObject
+				{
+					["current"] = _.Current.ToString(),
+					["previous"] = _.Previous.ToString()
+				});
+
 				// TODO: mindfog system? - kinda shoehorned in here
 				if (_.Current == SubPhase.PlayerEnd)
 				{
@@ -35,7 +41,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				if (_.Current == SubPhase.EnemyStart)
 				{
-					DrawUpToIntellect();
+					DrawUpToIntellect(_.Current);
 				}
 			});
 		}
@@ -79,7 +85,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void DrawUpToIntellect()
+		private void DrawUpToIntellect(SubPhase phase)
 		{
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 			if (player == null) return;
@@ -90,6 +96,7 @@ namespace Crusaders30XX.ECS.Systems
 			var deck = deckEntity?.GetComponent<Deck>();
 			if (deck == null) return;
 
+			HandStateLoggingService.AppendHandSnapshot("DrawHandSystem.DrawUpToIntellect.handSnapshot", deck, "beforeDrawCalculation", phase);
 			LoggingService.Append("DrawHandSystem.DrawUpToIntellect", new System.Text.Json.Nodes.JsonObject { ["deckHandCount"] = deck.Hand.Count, ["intellect"] = intellect, ["maxHandSize"] = maxHandSize });
 			int effectiveHandCount = GetEffectiveHandCountForDraw(deck.Hand, true);
 			int spaceLeft = System.Math.Max(0, maxHandSize - effectiveHandCount);
@@ -114,26 +121,15 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				string debugId = e.GetComponent<CardData>()?.Card?.CardId ?? $"entity#{e.Id}";
 				bool isActive = e.IsActive;
-				if (e.HasComponent<AnimatingHandToDiscard>()) { LogDrawSkip(emitLogs, debugId, "AnimatingHandToDiscard", isActive); continue; }
-				if (e.HasComponent<AnimatingHandToZone>()) { LogDrawSkip(emitLogs, debugId, "AnimatingHandToZone", isActive); continue; }
-				if (e.HasComponent<AnimatingHandToDrawPile>()) { LogDrawSkip(emitLogs, debugId, "AnimatingHandToDrawPile", isActive); continue; }
-				// Pledged cards don't count against max hand size.
-				if (e.HasComponent<Pledge>()) { LogDrawSkip(emitLogs, debugId, "Pledge", isActive); continue; }
-
-				var cd = e.GetComponent<CardData>();
-				if (cd == null) { LogDrawSkip(emitLogs, e.Id, "no CardData", isActive); continue; }
-				string id = cd.Card.CardId ?? string.Empty;
-				if (string.IsNullOrEmpty(id)) { LogDrawSkip(emitLogs, e.Id, "empty CardId", isActive); continue; }
-				var card = CardFactory.Create(id);
-				if (card != null)
+				string reason = HandStateLoggingService.GetDrawCountReason(e);
+				if (HandStateLoggingService.CountsForDraw(e))
 				{
-					if (!card.IsWeapon) { effectiveHandCount++; LogDrawCount(emitLogs, id, "non-weapon", isActive); }
-					else { LogDrawSkip(emitLogs, id, "weapon", isActive); }
+					effectiveHandCount++;
+					LogDrawCount(emitLogs, debugId, reason, isActive);
 				}
 				else
 				{
-					effectiveHandCount++;
-					LogDrawCount(emitLogs, id, "factory returned null", isActive);
+					LogDrawSkip(emitLogs, debugId, reason, isActive);
 				}
 			}
 
