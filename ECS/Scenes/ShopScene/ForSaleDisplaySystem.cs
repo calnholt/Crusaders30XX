@@ -37,7 +37,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Max Columns", Step = 1, Min = 1, Max = 8)]
 		public int MaxColumns { get; set; } = 4;
 		[DebugEditable(DisplayName = "Tile Width", Step = 5, Min = 80, Max = 800)]
-		public int TileWidth { get; set; } = 425;
+		public int TileWidth { get; set; } = 490;
 		[DebugEditable(DisplayName = "Tile Height", Step = 5, Min = 80, Max = 800)]
 		public int TileHeight { get; set; } = 280;
 		[DebugEditable(DisplayName = "Horizontal Gap", Step = 2, Min = 0, Max = 200)]
@@ -47,7 +47,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Panel Margin X", Step = 2, Min = 0, Max = 400)]
 		public int PanelMarginX { get; set; } = 60;
 		[DebugEditable(DisplayName = "Panel Margin Top", Step = 2, Min = 0, Max = 800)]
-		public int PanelMarginTop { get; set; } = 160;
+		public int PanelMarginTop { get; set; } = 256;
 		[DebugEditable(DisplayName = "Padding X", Step = 1, Min = 0, Max = 100)]
 		public int PaddingX { get; set; } = 12;
 		[DebugEditable(DisplayName = "Padding Y", Step = 1, Min = 0, Max = 100)]
@@ -59,15 +59,17 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Price Text Scale", Step = 0.01f, Min = 0.05f, Max = 1.5f)]
 		public float PriceTextScale { get; set; } = 0.3f;
 		[DebugEditable(DisplayName = "Content Scale", Step = 0.01f, Min = 0.05f, Max = 2f)]
-		public float ContentScale { get; set; } = 0.45f;
+		public float ContentScale { get; set; } = 1f;
 		[DebugEditable(DisplayName = "Icon Size", Step = 2, Min = 16, Max = 512)]
 		public int IconSize { get; set; } = 148;
 		[DebugEditable(DisplayName = "Price Icon Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
 		public float PriceIconScale { get; set; } = 0.3f;
 		[DebugEditable(DisplayName = "Name Offset Y", Step = 2, Min = -100, Max = 200)]
 		public int NameOffsetY { get; set; } = 6;
+		[DebugEditable(DisplayName = "Content Offset X", Step = 2, Min = -200, Max = 300)]
+		public int ContentOffsetX { get; set; } = 50;
 		[DebugEditable(DisplayName = "Content Offset Y", Step = 2, Min = -200, Max = 300)]
-		public int ContentOffsetY { get; set; } = 134;
+		public int ContentOffsetY { get; set; } = 162;
 		[DebugEditable(DisplayName = "Price Offset Y", Step = 2, Min = -200, Max = 300)]
 		public int PriceOffsetY { get; set; } = 140;
 
@@ -286,7 +288,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 
 				// Content
-				Vector2 contentCenter = new Vector2(innerRect.X + innerRect.Width / 2f, innerRect.Y + ContentOffsetY);
+				Vector2 contentCenter = new Vector2(innerRect.X + innerRect.Width / 2f + ContentOffsetX, innerRect.Y + ContentOffsetY);
 				switch (x.FS.ItemType)
 				{
 					case ForSaleItemType.Card:

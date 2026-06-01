@@ -24,6 +24,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _bodyFont = FontSingleton.ChakraPetchFont;
 		private readonly Texture2D _pixel;
 		private Entity _rewardCardEntity;
+		private Entity _rewardMedalEntity;
 		private QuestRewardLayout _layout;
 
 		private bool _layoutValid;
@@ -239,6 +240,7 @@ namespace Crusaders30XX.ECS.Systems
 			InvalidateCaches();
 			DisposeGradientCache();
 			DestroyRewardCard();
+			DestroyRewardMedal();
 		}
 
 		private void InvalidateCaches()
@@ -433,6 +435,23 @@ namespace Crusaders30XX.ECS.Systems
 			bool showMedal = state.HasMedalReward && !string.IsNullOrEmpty(state.RewardMedalId);
 			EnsureLayout(vw, vh, showGold, showCard, showMedal, state.RewardGold, scene);
 
+			var overlayT = overlayEntity.GetComponent<Transform>();
+			if (overlayT != null) overlayT.ZOrder = ZOrder;
+
+			if (showCard) SyncRewardCardHitbox();
+			if (showMedal && _rewardMedalEntity != null)
+			{
+				var medalT = _rewardMedalEntity.GetComponent<Transform>();
+				var medalUi = _rewardMedalEntity.GetComponent<UIElement>();
+				if (medalT != null) medalT.ZOrder = ZOrder + 1;
+				if (medalUi != null) medalUi.Bounds = _layout.MedalPreviewRect;
+			}
+			else if (_rewardMedalEntity != null)
+			{
+				var medalUi = _rewardMedalEntity.GetComponent<UIElement>();
+				if (medalUi != null) medalUi.Bounds = Rectangle.Empty;
+			}
+
 			var btn = EnsureProceedButton();
 			var btnUi = btn?.GetComponent<UIElement>();
 			if (btnUi != null)
@@ -458,6 +477,7 @@ namespace Crusaders30XX.ECS.Systems
 			var st = EntityManager.GetEntity("QuestRewardOverlay").GetComponent<QuestRewardOverlayState>();
 
 			DestroyRewardCard();
+			DestroyRewardMedal();
 			InvalidateCaches();
 			if (!string.IsNullOrEmpty(e?.Message)) st.Message = e.Message;
 			st.TitleLine1 = string.IsNullOrWhiteSpace(e?.TitleLine1) ? TitleLine1 : e.TitleLine1;
@@ -482,6 +502,7 @@ namespace Crusaders30XX.ECS.Systems
 			var st = EntityManager.GetEntity("QuestRewardOverlay").GetComponent<QuestRewardOverlayState>();
 
 			DestroyRewardCard();
+			DestroyRewardMedal();
 			InvalidateCaches();
 			st.Message = string.Empty;
 			st.TitleLine1 = "Treasure";
@@ -493,6 +514,11 @@ namespace Crusaders30XX.ECS.Systems
 			st.RewardMedalId = e?.RewardMedalId ?? string.Empty;
 			st.DismissToLocation = false;
 			st.IsOpen = true;
+
+			if (st.HasMedalReward && !string.IsNullOrEmpty(st.RewardMedalId))
+			{
+				_rewardMedalEntity = CreateRewardMedalHitbox(st.RewardMedalId);
+			}
 		}
 
 		public void Open(string message = null, int rewardGold = 0, bool hasCardReward = false, string rewardCardKey = null)
@@ -506,12 +532,17 @@ namespace Crusaders30XX.ECS.Systems
 			});
 		}
 
+		public static bool IsOverlayOpen(EntityManager entityManager)
+		{
+			var st = entityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
+			return st != null && st.IsOpen;
+		}
+
 		public void Draw()
 		{
-			if (_titleFont == null) return;
+			if (_titleFont == null || !IsOverlayOpen(EntityManager)) return;
 			var e = EntityManager.GetEntity("QuestRewardOverlay");
-			var st = e?.GetComponent<QuestRewardOverlayState>();
-			if (st == null || !st.IsOpen) return;
+			var st = e.GetComponent<QuestRewardOverlayState>();
 
 			int vw = Game1.VirtualWidth;
 			int vh = Game1.VirtualHeight;
@@ -814,6 +845,7 @@ namespace Crusaders30XX.ECS.Systems
 			state.RewardMedalId = string.Empty;
 			StateSingleton.PreventClicking = false;
 			DestroyRewardCard();
+			DestroyRewardMedal();
 			InvalidateCaches();
 		}
 
@@ -822,6 +854,47 @@ namespace Crusaders30XX.ECS.Systems
 			if (_rewardCardEntity == null) return;
 			EntityManager.DestroyEntity(_rewardCardEntity.Id);
 			_rewardCardEntity = null;
+		}
+
+		private void DestroyRewardMedal()
+		{
+			if (_rewardMedalEntity == null)
+			{
+				var orphan = EntityManager.GetEntity("QuestRewardMedalHitbox");
+				if (orphan != null) EntityManager.DestroyEntity(orphan.Id);
+				return;
+			}
+			EntityManager.DestroyEntity(_rewardMedalEntity.Id);
+			_rewardMedalEntity = null;
+		}
+
+		private void SyncRewardCardHitbox()
+		{
+			if (_rewardCardEntity == null) return;
+			var ui = _rewardCardEntity.GetComponent<UIElement>();
+			var t = _rewardCardEntity.GetComponent<Transform>();
+			if (ui == null) return;
+			if (t != null) t.ZOrder = ZOrder + 1;
+			ui.Bounds = GetCardVisualRectScaled(_layout.CardCenter, CardPreviewScale);
+		}
+
+		private Rectangle GetCardVisualRectScaled(Vector2 position, float scale)
+		{
+			var settings = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
+			if (settings == null)
+			{
+				int w = (int)System.Math.Round(200 * scale);
+				int h = (int)System.Math.Round(300 * scale);
+				return new Rectangle((int)position.X - w / 2, (int)position.Y - h / 2, w, h);
+			}
+			int rw = (int)System.Math.Round(settings.CardWidth * scale);
+			int rh = (int)System.Math.Round(settings.CardHeight * scale);
+			int offsetY = (int)System.Math.Round(settings.CardOffsetYExtra * scale);
+			return new Rectangle(
+				(int)position.X - rw / 2,
+				(int)position.Y - (rh / 2 + offsetY),
+				rw,
+				rh);
 		}
 
 		private Entity CreateRewardCard(string cardKey)
@@ -834,13 +907,35 @@ namespace Crusaders30XX.ECS.Systems
 			if (created == null) return null;
 
 			var ui = created.GetComponent<UIElement>();
+			var t = created.GetComponent<Transform>();
 			if (ui != null)
 			{
-				ui.IsInteractable = false;
-				ui.TooltipType = TooltipType.None;
-				ui.Tooltip = string.Empty;
+				ui.IsInteractable = true;
+				ui.EventType = UIElementEventType.None;
+				ui.LayerType = UILayerType.Overlay;
 			}
+			if (t != null) t.ZOrder = ZOrder + 1;
 			return created;
+		}
+
+		private Entity CreateRewardMedalHitbox(string medalId)
+		{
+			var medal = MedalFactory.Create(medalId);
+			if (medal == null) return null;
+
+			var ent = EntityManager.CreateEntity("QuestRewardMedalHitbox");
+			EntityManager.AddComponent(ent, new Transform { Position = Vector2.Zero, ZOrder = ZOrder + 1 });
+			EntityManager.AddComponent(ent, new UIElement
+			{
+				Bounds = Rectangle.Empty,
+				IsInteractable = false,
+				Tooltip = $"{medal.Name}\n\n{medal.Text}",
+				TooltipPosition = TooltipPosition.Below,
+				LayerType = UILayerType.Overlay
+			});
+			EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
+			EntityManager.AddComponent(ent, new DontDestroyOnLoad());
+			return ent;
 		}
 
 		private static CardData.CardColor ParseColor(string color)
@@ -881,7 +976,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (ent == null)
 			{
 				ent = EntityManager.CreateEntity("QuestRewardProceedButton");
-				EntityManager.AddComponent(ent, new Transform { Position = Vector2.Zero, ZOrder = ZOrder + 1 });
+				EntityManager.AddComponent(ent, new Transform { Position = Vector2.Zero, ZOrder = ZOrder + 2 });
 				EntityManager.AddComponent(ent, new UIElement { Bounds = Rectangle.Empty, IsInteractable = false, LayerType = UILayerType.Overlay });
 				EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Y });
 				EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
@@ -889,7 +984,7 @@ namespace Crusaders30XX.ECS.Systems
 			else
 			{
 				var t = ent.GetComponent<Transform>();
-				if (t != null) t.ZOrder = ZOrder + 1;
+				if (t != null) t.ZOrder = ZOrder + 2;
 				var ui = ent.GetComponent<UIElement>();
 				if (ui != null) ui.LayerType = UILayerType.Overlay;
 			}

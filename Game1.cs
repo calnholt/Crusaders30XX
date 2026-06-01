@@ -512,6 +512,7 @@ public class Game1 : Game
         FrameProfiler.Measure("HotKeySystem.Draw", _hotKeySystem.Draw);
         FrameProfiler.Measure("HotKeyProgressRingSystem.Draw", _hotKeyProgressRingSystem.Draw);
         FrameProfiler.Measure("LocationNameDisplaySystem.Draw", _locationNameDisplaySystem.Draw);
+        FrameProfiler.Measure("RewardModalDisplaySystem.Draw", _rewardModalDisplaySystem.Draw);
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipTextDisplaySystem.Draw);
         FrameProfiler.Measure("HintTooltipDisplaySystem.Draw", _hintTooltipDisplaySystem.Draw);
         FrameProfiler.Measure("CardTooltipDisplaySystem.Draw", _cardTooltipDisplaySystem.Draw);
@@ -520,12 +521,6 @@ public class Game1 : Game
         FrameProfiler.Measure("DebugMenuSystem.Draw", _debugMenuSystem.Draw);
         FrameProfiler.Measure("EntityListOverlaySystem.Draw", _entityListOverlaySystem.Draw);
         FrameProfiler.Measure("DialogDisplaySystem.Draw", _dialogDisplaySystem.Draw);
-        var rewardOpen = _world.EntityManager.GetEntitiesWithComponent<QuestRewardOverlayState>()
-            .FirstOrDefault()?.GetComponent<QuestRewardOverlayState>()?.IsOpen ?? false;
-        if (rewardOpen)
-        {
-            FrameProfiler.Measure("RewardModalDisplaySystem.Draw", _rewardModalDisplaySystem.Draw);
-        }
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         // Cursor blur trail (additive pass before cursor) — skip in card debug mode
