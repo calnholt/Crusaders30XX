@@ -932,8 +932,30 @@ namespace Crusaders30XX.ECS.Systems
         {
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             var deck = deckEntity?.GetComponent<Deck>();
-            if (deck == null) return;
-            foreach (var c in deck.Hand)
+            var payState = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault()?.GetComponent<PayCostOverlayState>();
+            var candidates = new HashSet<Entity>();
+
+            void AddCandidate(Entity card)
+            {
+                if (card != null) candidates.Add(card);
+            }
+
+            if (deck != null)
+            {
+                foreach (var c in deck.Hand) AddCandidate(c);
+                foreach (var c in deck.DrawPile) AddCandidate(c);
+                foreach (var c in deck.DiscardPile) AddCandidate(c);
+                foreach (var c in deck.ExhaustPile) AddCandidate(c);
+                foreach (var c in deck.Cards) AddCandidate(c);
+            }
+
+            AddCandidate(payState?.CardToPlay);
+            if (payState?.SelectedCards != null)
+            {
+                foreach (var c in payState.SelectedCards) AddCandidate(c);
+            }
+
+            foreach (var c in candidates)
             {
                 if (c.HasComponent<FilteredFromHand>())
                     RemoveFilteredFromHand(c, "clearAll");

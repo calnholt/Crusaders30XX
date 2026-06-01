@@ -142,6 +142,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 var card = deck.DrawPile[0];
                 deck.DrawPile.RemoveAt(0);
+                CardTransientStateService.ClearHandVisibilityFilters(EntityManager, card);
                 if (card.GetComponent<CardData>()?.Card?.IsWeapon == true)
                 {
                     deck.DiscardPile.Add(card);
