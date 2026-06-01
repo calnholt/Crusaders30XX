@@ -553,12 +553,7 @@ namespace Crusaders30XX.ECS.Factories
 				entityManager.AddComponent(e, new Transform { Position = new Vector2(-1000, -1000), ZOrder = 10002 });
 				entityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
                 var uiElement = new UIElement { Bounds = new Rectangle(-1000, -1000, 1, 1), IsInteractable = true };
-                if (itemType == ForSaleItemType.Card || itemType == ForSaleItemType.Weapon)
-                {
-                    uiElement.TooltipType = TooltipType.Card;
-                    entityManager.AddComponent(e, new CardTooltip { CardId = id, TooltipScale = 0.8f });
-                }
-                else if (itemType == ForSaleItemType.Medal)
+                if (itemType == ForSaleItemType.Medal)
                 {
                     var medal = MedalFactory.Create(id);
                     uiElement.Tooltip = $"{medal.Text}";
