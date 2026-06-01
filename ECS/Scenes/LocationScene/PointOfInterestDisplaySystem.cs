@@ -18,7 +18,6 @@ namespace Crusaders30XX.ECS.Systems
 	[DebugTab("Location POI Display")]
 	public class PointOfInterestDisplaySystem : Core.System
 	{
-		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly Texture2D _pixel;
 		private readonly Texture2D _questIconTexture;
@@ -33,15 +32,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Icon Size", Step = 1f, Min = 10f, Max = 200f)]
 		public float IconSize { get; set; } = 140f;
-
-		[DebugEditable(DisplayName = "Circle Size", Step = 1f, Min = 4f, Max = 32f)]
-		public float CircleSize { get; set; } = 16f;
-
-		[DebugEditable(DisplayName = "Circle Offset X", Step = 0.05f, Min = -2f, Max = 2f)]
-		public float CircleOffsetX { get; set; } = 1f;
-
-		[DebugEditable(DisplayName = "Circle Offset Y", Step = 0.05f, Min = -2f, Max = 2f)]
-		public float CircleOffsetY { get; set; } = -1f;
 
 		[DebugEditable(DisplayName = "Hover Scale", Step = 0.05f, Min = 1f, Max = 2f)]
 		public float HoverScale { get; set; } = 1.1f;
@@ -62,7 +52,6 @@ namespace Crusaders30XX.ECS.Systems
 		public PointOfInterestDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
 		{
-			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
@@ -372,7 +361,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void DrawQuestPoisOverFog()
 		{
-			DrawPois(PointOfInterestType.Quest, includeAlwaysVisibleLandmarks: false);
+			DrawPois(filterType: null, includeAlwaysVisibleLandmarks: false, combatPoisOnly: true);
 		}
 
 		private Texture2D GetIconTexture(PointOfInterestType poiType)
@@ -386,7 +375,7 @@ namespace Crusaders30XX.ECS.Systems
 			};
 		}
 
-		private void DrawPois(PointOfInterestType? filterType, bool includeAlwaysVisibleLandmarks)
+		private void DrawPois(PointOfInterestType? filterType, bool includeAlwaysVisibleLandmarks, bool combatPoisOnly = false)
 		{
 			var cam = EntityManager.GetEntity("LocationCamera")?.GetComponent<LocationCameraState>();
 			if (cam == null) return;
@@ -396,14 +385,16 @@ namespace Crusaders30XX.ECS.Systems
 			var list = _pois
 				.Select(e => new { E = e, P = e.GetComponent<PointOfInterest>(), T = e.GetComponent<Transform>(), UI = e.GetComponent<UIElement>() })
 				.Where(x => x.P != null && x.T != null && x.UI != null)
-				.Where(x => filterType == null || x.P.Type == filterType)
+				.Where(x => combatPoisOnly
+					? PoiVisualStyle.IsCombatPoiType(x.P.Type)
+					: filterType == null || x.P.Type == filterType)
 				.ToList();
 			float mapScale = cam.MapScale;
 
 			foreach (var x in list)
 			{
 				bool isVisible = includeAlwaysVisibleLandmarks && x.P.IsMapVisibleFromStart;
-				if (!isVisible && x.P.Type == PointOfInterestType.Quest)
+				if (!isVisible && PoiVisualStyle.IsCombatPoiType(x.P.Type))
 				{
 					isVisible = x.P.IsRevealed || x.P.IsCompleted;
 				}
@@ -427,8 +418,7 @@ namespace Crusaders30XX.ECS.Systems
 				float scale = _hoverScales.TryGetValue(x.E.Id, out float s) ? s : 1f;
 				
 				Texture2D iconTexture = GetIconTexture(x.P.Type);
-				bool isClaimedTreasure = x.P.Type == PointOfInterestType.Treasure && x.P.IsCompleted;
-				Color iconTint = isClaimedTreasure ? new Color(120, 120, 120) : Color.White;
+				Color iconTint = PoiVisualStyle.GetMapIconTint(x.P);
 				
 				// Calculate icon dimensions preserving aspect ratio, scaled by map zoom
 				float iconWidth = IconSize * mapScale * scale;
@@ -456,13 +446,7 @@ namespace Crusaders30XX.ECS.Systems
 				else
 				{
 					// Fallback to pixel if texture failed to load
-					_spriteBatch.Draw(_pixel, iconRect, x.P.IsCompleted ? Color.Green : Color.Red);
-				}
-				
-				// Draw red circle for incomplete quests (not for Hellrift POIs)
-				if (!x.P.IsCompleted && x.P.Type == PointOfInterestType.Quest)
-				{
-					DrawCircle(iconPos, halfWidth, halfHeight, CircleSize * mapScale * scale);
+					_spriteBatch.Draw(_pixel, iconRect, iconTint);
 				}
 
 				// Draw difficulty skulls below the icon for any POI with Difficulty > 0
@@ -502,23 +486,6 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 			}
-		}
-
-		private void DrawCircle(Vector2 iconCenter, float iconHalfWidth, float iconHalfHeight, float circleSize)
-		{
-			// Position circle relative to icon center
-			float offsetX = iconHalfWidth * CircleOffsetX;
-			float offsetY = iconHalfHeight * CircleOffsetY;
-			Vector2 circlePos = iconCenter + new Vector2(offsetX, offsetY);
-			
-			// Get anti-aliased circle texture
-			int radius = (int)System.Math.Round(circleSize / 2f);
-			if (radius < 1) radius = 1;
-			var circleTexture = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, radius);
-			
-			// Draw circle centered at position
-			Vector2 origin = new Vector2(radius, radius);
-			_spriteBatch.Draw(circleTexture, circlePos, null, Color.Red, 0f, origin, 1f, SpriteEffects.None, 0f);
 		}
 	}
 }
