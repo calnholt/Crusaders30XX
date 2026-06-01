@@ -47,6 +47,14 @@ namespace Crusaders30XX.ECS.Services
 			return result;
 		}
 
+		internal static IReadOnlyList<string> GetEligibleRewardCardIdsForTests(IReadOnlyList<string> deckKeys)
+		{
+			return BuildEligiblePairs(deckKeys)
+				.Select(p => p.cardId)
+				.Distinct(StringComparer.OrdinalIgnoreCase)
+				.ToList();
+		}
+
 		private static List<(string cardId, CardData.CardColor color)> BuildEligiblePairs(IReadOnlyList<string> deckKeys)
 		{
 			var eligible = new List<(string cardId, CardData.CardColor color)>();
@@ -58,6 +66,7 @@ namespace Crusaders30XX.ECS.Services
 
 				string cardId = card.CardId;
 				if (string.IsNullOrWhiteSpace(cardId)) continue;
+				if (StartingDeckGeneratorService.IsInDefaultStarterPool(cardId)) continue;
 
 				if (DeckRules.CountCardIdInDeck(deckKeys, cardId) >= DeckRules.MaxCopiesPerCardId) continue;
 

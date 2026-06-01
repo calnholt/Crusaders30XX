@@ -13,9 +13,6 @@ namespace Crusaders30XX.ECS.Services
 		private const int ShopRngSalt = 0x5A4F5A4F;
 
 		private static readonly string[] ColorNames = { "Red", "White", "Black" };
-		private static readonly HashSet<string> StarterPool = new HashSet<string>(
-			StartingDeckGeneratorService.DefaultStarterCardPool,
-			StringComparer.OrdinalIgnoreCase);
 
 		public static List<RunMapShop> Generate(int runMapSeed, IReadOnlyList<RunMapNode> nodes)
 		{
@@ -76,7 +73,7 @@ namespace Crusaders30XX.ECS.Services
 			{
 				if (card == null || !card.CanAddToLoadout || card.IsWeapon || card.IsToken) continue;
 				string cardId = card.CardId;
-				if (string.IsNullOrWhiteSpace(cardId) || StarterPool.Contains(cardId)) continue;
+				if (string.IsNullOrWhiteSpace(cardId) || StartingDeckGeneratorService.IsInDefaultStarterPool(cardId)) continue;
 				pool.Add(cardId);
 			}
 

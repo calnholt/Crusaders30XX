@@ -27,6 +27,15 @@ namespace Crusaders30XX.ECS.Services
 			"hold_the_line",
 		};
 
+		private static readonly HashSet<string> DefaultStarterCardPoolSet = new HashSet<string>(
+			DefaultStarterCardPool,
+			StringComparer.OrdinalIgnoreCase);
+
+		public static bool IsInDefaultStarterPool(string cardId)
+		{
+			return !string.IsNullOrWhiteSpace(cardId) && DefaultStarterCardPoolSet.Contains(cardId);
+		}
+
 		public static List<string> Generate(IReadOnlyList<string> poolCardIds, int seed)
 		{
 			var result = TryGenerate(poolCardIds, new Random(seed), relaxColorQuotas: false);
