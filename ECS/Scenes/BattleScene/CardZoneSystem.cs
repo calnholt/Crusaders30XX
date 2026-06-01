@@ -149,6 +149,8 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
+            ClearHandVisibilityFiltersForStableZone(evt.Card, evt.Destination);
+
             // Intercept Hand -> DrawPile to run animation first; finalize will mutate zones and publish CardMoved
             if (evt.Destination == CardZoneType.DrawPile)
             {
@@ -432,6 +434,8 @@ namespace Crusaders30XX.ECS.Systems
             deck.DiscardPile.Remove(evt.Card);
             deck.ExhaustPile.Remove(evt.Card);
 
+            ClearHandVisibilityFiltersForStableZone(evt.Card, evt.Destination);
+
             switch (evt.Destination)
             {
                 case CardZoneType.DiscardPile:
@@ -528,6 +532,21 @@ namespace Crusaders30XX.ECS.Systems
                 ["hadAnimatingHandToDrawPile"] = animDrawPile != null,
                 ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
             });
+        }
+
+        private void ClearHandVisibilityFiltersForStableZone(Entity card, CardZoneType destination)
+        {
+            if (!IsStableZone(destination)) return;
+
+            CardTransientStateService.ClearHandVisibilityFilters(EntityManager, card);
+        }
+
+        private static bool IsStableZone(CardZoneType destination)
+        {
+            return destination == CardZoneType.Hand
+                || destination == CardZoneType.DiscardPile
+                || destination == CardZoneType.DrawPile
+                || destination == CardZoneType.ExhaustPile;
         }
 
         private static string NormalizeColorKey(string c)
