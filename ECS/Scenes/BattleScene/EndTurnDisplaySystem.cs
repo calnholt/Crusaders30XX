@@ -111,6 +111,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnEndTurnPressed()
         {
+            if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
             var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
             if (ui != null)
             {
@@ -206,6 +207,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void SyncEndTurnButton()
         {
+            bool frozen = BattleInputGate.IsBattleInputFrozen(EntityManager);
             var btnRect = GetButtonRect();
             var endBtn = EntityManager.GetEntity("UIButton_EndTurn");
             if (endBtn == null)
@@ -224,6 +226,12 @@ namespace Crusaders30XX.ECS.Systems
                     tr.ZOrder = ButtonZ;
                     tr.Position = new Vector2(btnRect.X, btnRect.Y);
                 }
+            }
+
+            var endUi = endBtn?.GetComponent<UIElement>();
+            if (endUi != null && !endUi.IsHidden && frozen)
+            {
+                endUi.IsInteractable = false;
             }
         }
     }

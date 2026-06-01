@@ -97,6 +97,7 @@ namespace Crusaders30XX.ECS.Systems
 				var enemy = e.GetComponent<Enemy>();
 				var t = e.GetComponent<Transform>();
 				if (enemy == null || t == null) continue;
+				if (e.HasComponent<SuppressPortraitRender>()) continue;
 				Texture2D tex = GetTextureFor();
 				if (tex == null) continue;
 				int viewportW = Game1.VirtualWidth;
@@ -148,12 +149,15 @@ namespace Crusaders30XX.ECS.Systems
 					Vector2 mid = Vector2.Lerp(t.Position, outPos, 1f - (float)System.Math.Pow(1f - outPhase, 3));
 					drawPos = Vector2.Lerp(mid, t.Position, backPhase);
 				}
+				info.LastDrawCenter = drawPos;
+				info.LastDrawTopLeft = drawPos - origin * scaleVec;
+				info.LastDrawScale = scaleVec;
 				// Update UI bounds so hover/tooltip works over the enemy portrait
 				var ui = e.GetComponent<UIElement>();
 				if (ui != null)
 				{
-					int wPx = (int)System.Math.Round(tex.Width * scale);
-					int hPx = (int)System.Math.Round(tex.Height * scale);
+					int wPx = (int)System.Math.Round(tex.Width * scaleVec.X);
+					int hPx = (int)System.Math.Round(tex.Height * scaleVec.Y);
 					int x0 = (int)System.Math.Round(drawPos.X - wPx / 2f);
 					int y0 = (int)System.Math.Round(drawPos.Y - hPx / 2f);
 					ui.Bounds = new Rectangle(x0, y0, wPx, hPx);

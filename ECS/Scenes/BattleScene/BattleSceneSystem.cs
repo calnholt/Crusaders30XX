@@ -70,6 +70,8 @@ namespace Crusaders30XX.ECS.Systems
 		private DamageModificationDisplaySystem _damageModificationDisplaySystem;
 		private SplashEffectAnimationDisplaySystem _attackAnimationDisplaySystem;
 		private CardPlayedAnimationSystem _cardPlayedAnimationSystem;
+		private PixelBurstDisplaySystem _pixelBurstDisplaySystem;
+		private EnemyDefeatFlowSystem _enemyDefeatFlowSystem;
 		private CardMoveDisplaySystem _cardMoveDisplaySystem;
 		private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
 		private ExhaustOnBlockDisplaySystem _exhaustOnBlockDisplaySystem;
@@ -286,6 +288,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("PlayerDisplaySystem.Draw", _playerDisplaySystem.Draw);
 			FrameProfiler.Measure("GuardianAngelDisplaySystem.Draw", _guardianAngelDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);
+			FrameProfiler.Measure("PixelBurstDisplaySystem.Draw", _pixelBurstDisplaySystem.Draw);
 			FrameProfiler.Measure("PlunderDisplaySystem.Draw", _plunderDisplaySystem.Draw);
 			FrameProfiler.Measure("PlunderSnatchDisplaySystem.Draw", _plunderSnatchDisplaySystem.Draw);
 			FrameProfiler.Measure("ActiveCharacterIndicatorDisplaySystem.Draw", _activeCharacterIndicatorDisplaySystem.Draw);
@@ -407,6 +410,7 @@ namespace Crusaders30XX.ECS.Systems
 			phaseState.Main = MainPhase.StartBattle;
 			phaseState.Sub = SubPhase.StartBattle;
 			phaseState.TurnNumber = 1;
+			phaseState.DefeatPresentationActive = false;
 			EventManager.Publish(new FullyHealEvent { Target = player });
 			foreach (var e in EntityManager.GetEntitiesWithComponent<CardTooltip>()) {
 				var cardData = e.GetComponent<CardData>();
@@ -497,6 +501,8 @@ namespace Crusaders30XX.ECS.Systems
 			_damageModificationDisplaySystem = new DamageModificationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_attackAnimationDisplaySystem = new SplashEffectAnimationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_cardPlayedAnimationSystem = new CardPlayedAnimationSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_pixelBurstDisplaySystem = new PixelBurstDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_enemyDefeatFlowSystem = new EnemyDefeatFlowSystem(_world.EntityManager, _content);
 			_endTurnDisplaySystem = new EndTurnDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_exhaustOnBlockDisplaySystem = new ExhaustOnBlockDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -604,6 +610,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_appliedPassivesDisplaySystem);
 			_world.AddSystem(_cardVisualSettingsDebugSystem);
 			_world.AddSystem(_hpManagementSystem);
+			_world.AddSystem(_enemyDefeatFlowSystem);
+			_world.AddSystem(_pixelBurstDisplaySystem);
 			_world.AddSystem(_battlePhaseDisplaySystem);
 			_world.AddSystem(_enemyDisplaySystem);
 			_world.AddSystem(_enemyIntentPipsSystem);

@@ -614,6 +614,20 @@ namespace Crusaders30XX.ECS.Components
         public int TextureHeight { get; set; }
         public float CurrentScale { get; set; } = 1f; // actual draw scale this frame (may breathe)
         public float BaseScale { get; set; } = 1f;    // stable baseline scale for layout (no breathing)
+        /// <summary>World center from the last portrait Draw (parallax + attack offset included).</summary>
+        public Vector2 LastDrawCenter;
+        /// <summary>Top-left of the last portrait Draw in world space (matches SpriteBatch placement).</summary>
+        public Vector2 LastDrawTopLeft;
+        /// <summary>Per-axis scale from the last portrait Draw (pulse + animation multiplier included).</summary>
+        public Vector2 LastDrawScale;
+    }
+
+    /// <summary>
+    /// Hides portrait draw for an entity (e.g. during defeat presentation pixel burst).
+    /// </summary>
+    public class SuppressPortraitRender : IComponent
+    {
+        public Entity Owner { get; set; }
     }
 
     /// <summary>
@@ -801,6 +815,7 @@ namespace Crusaders30XX.ECS.Components
         public MainPhase Main { get; set; } = MainPhase.StartBattle;
         public SubPhase Sub { get; set; } = SubPhase.StartBattle;
         public int TurnNumber { get; set; } = 1; // enemy turn counter
+        public bool DefeatPresentationActive { get; set; }
     }
 
     /// <summary>

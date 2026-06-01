@@ -26,7 +26,13 @@ One enemy fight in the sequential battle queue for a **quest node** (`QueuedEven
 
 **Temperance** built during one queued encounter carries to the next encounter in the same quest node. **Temperance** resets to zero when the player leaves the battle scene (e.g. return to the location hub). Courage, HP, and action points reset at the start of each queued encounter.
 
-When card or medal text says **win a battle**, that means winning a **queued encounter** (one enemy reaches 0 HP), not completing the whole **quest node**.
+When card or medal text says **win a battle**, that means winning a **queued encounter** (the enemy's **defeat presentation** has finished and the battle advances), not completing the whole **quest node**. Reaching 0 HP starts **defeat presentation**; the encounter is not won until that presentation ends.
+
+## Defeat presentation
+
+The on-screen sequence when a combatant is reduced to 0 HP before the battle advances. For enemies in v1, this is the pixel-burst animation: the enemy **portrait** is hidden and replaced by the burst; other enemy UI (HP bar, intents, passives) may remain visible until the presentation ends. When it completes, the game runs the normal post-kill flow (achievements, next queued encounter, or quest completion). During defeat presentation the player cannot take battle actions (cards, end turn, equipment). Player defeat presentation is separate (game-over overlay).
+
+_Avoid_: Death animation (ambiguous with attack animations or game-over)
 
 _Avoid_: Battle node (ambiguous with **quest node** on the map)
 

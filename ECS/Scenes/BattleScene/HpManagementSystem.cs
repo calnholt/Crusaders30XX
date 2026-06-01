@@ -89,35 +89,12 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			else if (before > 0 && hp.Current == 0 && target.HasComponent<Enemy>())
 			{
-				EventQueue.Clear();
-					TimerScheduler.Schedule(1f, () => {
-					LoggingService.Append("HpManagementSystem.OnModifyHpRequest.EnemyDied", new System.Text.Json.Nodes.JsonObject { ["message"] = "enemy died, execute transition" });
-					EventManager.Publish(new EnemyKilledEvent { Enemy = target });
-					// is this the last enemy?
-					var queuedEntity = EntityManager.GetEntity("QueuedEvents");
-					var queued = queuedEntity.GetComponent<QueuedEvents>();
-						if (queued != null 
-							&& queued.Events != null 
-							&& queued.Events.Count > 0 
-							&& queued.CurrentIndex >= 0 
-							&& queued.CurrentIndex == queued.Events.Count - 1)
-					{
-						LoggingService.Append("HpManagementSystem.OnModifyHpRequest.QuestComplete", new System.Text.Json.Nodes.JsonObject { ["message"] = "attempting to save quest completion" });
-						var completion = QuestCompleteService.SaveIfCompletedHighest(EntityManager);
-						EventManager.Publish(new ShowQuestRewardOverlay
-						{
-							Message = "Quest Complete!",
-							RewardGold = completion.IsNewlyCompleted ? completion.RewardGold : 0,
-							HasCardReward = completion.HasCardReward,
-							RewardCardKey = completion.RewardCardKey
-						});
-						EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.QuestComplete });
-					}
-					else
-					{
-						EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
-					}
+				if (target.HasComponent<SuppressPortraitRender>()) return;
+				LoggingService.Append("HpManagementSystem.OnModifyHpRequest.EnemyDied", new System.Text.Json.Nodes.JsonObject
+				{
+					["message"] = "enemy defeated, begin presentation"
 				});
+				EventManager.Publish(new BeginDefeatPresentationEvent { Enemy = target, IsPreview = false });
 			}
 		}
 

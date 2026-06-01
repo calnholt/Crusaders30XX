@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -26,6 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 		public override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
+			if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
 			// Ensure all AssignedBlockCard entities have a UIElement so clicks can be detected elsewhere
 			var assigned = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>();
 			foreach (var e in assigned)

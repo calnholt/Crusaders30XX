@@ -25,6 +25,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnEquipmentActivate(EquipmentActivateEvent e)
 		{
+			if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
 			if (e.EquipmentEntity == null) return;
 			LoggingService.Append("EquipmentManagerSystem.OnEquipmentActivate", new System.Text.Json.Nodes.JsonObject
 			{

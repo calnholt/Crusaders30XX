@@ -181,6 +181,7 @@ namespace Crusaders30XX.ECS.Systems
         private void OnPlayCardRequested(PlayCardRequested evt)
         {
             if (evt?.Card == null) return;
+            if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
 
             ComponentLoggerService.LogEntity(evt.Card, "PlayCardRequested received");
 

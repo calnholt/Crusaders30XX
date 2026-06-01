@@ -27,6 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 		public override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
+			if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
 			// Only during Block phase
 			var phaseState = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
 			if (phaseState == null) return;
