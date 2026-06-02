@@ -370,14 +370,20 @@ namespace Crusaders30XX.ECS.Systems
 
         private void RemoveTurnPassives(Entity owner)
         {
-            EventManager.Publish(new RemovePassive { Owner = owner, Type = AppliedPassiveType.DowseWithHolyWater });
-            EventManager.Publish(new RemovePassive { Owner = owner, Type = AppliedPassiveType.Aggression });
-            var ap = owner.GetComponent<AppliedPassives>();
-            if (ap == null || ap.Passives == null || ap.Passives.Count == 0) return;
-            if (ap.Passives.TryGetValue(AppliedPassiveType.Silenced, out int silencedStacks) && silencedStacks > 0)
+            foreach (var passive in GetTurnPassives().ToList())
             {
-                EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Silenced });
-                EventManager.Publish(new UpdatePassive { Owner = owner, Type = AppliedPassiveType.Silenced, Delta = -1 });
+                var ap = owner.GetComponent<AppliedPassives>();
+                if (ap == null || ap.Passives == null) continue;
+                ap.Passives.TryGetValue(passive, out int stacks);
+                EventManager.Publish(new RemovePassive { Owner = owner, Type = passive, Amount = stacks });
+            }
+            foreach (var passive in GetTurnPassivesToDecrement().ToList())
+            {
+                var ap = owner.GetComponent<AppliedPassives>();
+                if (ap == null || ap.Passives == null) continue;
+                ap.Passives.TryGetValue(passive, out int stacks);
+                EventManager.Publish(new UpdatePassive { Owner = owner, Type = passive, Delta = -stacks });
+                EventManager.Publish(new PassiveTriggered { Owner = owner, Type = passive });
             }
         }
 
@@ -388,7 +394,15 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.DowseWithHolyWater,
                 AppliedPassiveType.Aggression,
                 AppliedPassiveType.Sharpen,
-                AppliedPassiveType.Might
+                AppliedPassiveType.Might,
+            };
+        }
+
+        public static HashSet<AppliedPassiveType> GetTurnPassivesToDecrement()
+        {
+            return new HashSet<AppliedPassiveType>
+            {
+                AppliedPassiveType.Silenced,
             };
         }
 
