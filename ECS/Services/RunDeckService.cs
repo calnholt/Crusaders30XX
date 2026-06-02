@@ -196,7 +196,7 @@ namespace Crusaders30XX.ECS.Services
 			if (card == null || card.IsWeapon) return null;
 
 			int index = StableIndexForKey(cardKey);
-			return EntityFactory.CreateCardFromDefinition(
+			var entity = EntityFactory.CreateCardFromDefinition(
 				entityManager,
 				cardId,
 				color,
@@ -204,6 +204,15 @@ namespace Crusaders30XX.ECS.Services
 				index: index,
 				cardKey: cardKey,
 				persistForRun: true);
+			if (entity != null && SaveCache.IsStarterCardKey(cardKey))
+			{
+				var cardData = entity.GetComponent<CardData>();
+				if (cardData?.Card != null)
+				{
+					cardData.Card.IsStarter = true;
+				}
+			}
+			return entity;
 		}
 
 		private static List<string> BuildDesiredKeys(LoadoutDefinition loadout)

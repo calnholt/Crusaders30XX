@@ -25,6 +25,8 @@ namespace Crusaders30XX.ECS.Data.Save
 		public Dictionary<string, int> runLongPassives { get; set; } = new Dictionary<string, int>();
 		/// <summary>Run deck card key to run-long restriction names (Frozen, Sealed). Shackle is battle-only and is not persisted.</summary>
 		public Dictionary<string, List<string>> runCardRestrictions { get; set; } = new Dictionary<string, List<string>>();
+		/// <summary>Loadout card keys from the rolled starting deck at new-run creation.</summary>
+		public List<string> starterCardKeys { get; set; } = new List<string>();
 	}
 
 	public class SaveItem

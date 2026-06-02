@@ -10,6 +10,7 @@ namespace Crusaders30XX.ECS.Factories
 			return eventId switch
 			{
 				"icebound_tithe" => new IceboundTithe(),
+				"pruned_vocation" => new PrunedVocation(),
 				_ => null
 			};
 		}
@@ -19,6 +20,7 @@ namespace Crusaders30XX.ECS.Factories
 			return new Dictionary<string, EventBase>
 			{
 				{ "icebound_tithe", new IceboundTithe() },
+				{ "pruned_vocation", new PrunedVocation() },
 			};
 		}
 	}

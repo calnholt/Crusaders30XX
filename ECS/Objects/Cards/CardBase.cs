@@ -39,6 +39,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public bool CanAddToLoadout { get; set; } = true;
         public bool IsToken { get; set; } = false;
         public bool IsWeapon { get; set; } = false;
+        public bool IsStarter { get; set; } = false;
         private string _tooltip = "";
         public string Tooltip 
         {

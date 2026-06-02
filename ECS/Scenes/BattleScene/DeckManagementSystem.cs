@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -27,6 +28,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<RemoveTopCardFromDrawPileRequested>(OnRemoveTopCardFromDrawPileRequested);
             EventManager.Subscribe<DiscardAllCardsEvent>(OnDiscardAllCards);
             EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
+            EventManager.Subscribe<RemoveRandomCardEvent>(OnRemoveRandomCard);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -638,6 +640,36 @@ namespace Crusaders30XX.ECS.Systems
                 ["handCount"] = deck.Hand.Count,
                 ["drawPileCount"] = deck.DrawPile.Count,
                 ["discardPileCount"] = deck.DiscardPile.Count
+            });
+        }
+
+        private void OnRemoveRandomCard(RemoveRandomCardEvent evt)
+        {
+            if (evt == null || evt.Amount <= 0) return;
+
+            RunDeckService.EnsureRunDeck(EntityManager);
+
+            var candidates = EntityManager
+                .GetEntitiesWithComponent<RunDeckCard>()
+                .Where(e => e.IsActive && e.GetComponent<CardData>()?.Card?.IsStarter == true)
+                .OrderBy(_ => Guid.NewGuid())
+                .Take(evt.Amount)
+                .ToList();
+
+            foreach (var card in candidates)
+            {
+                var cardKey = card.GetComponent<RunDeckCard>()?.CardKey;
+                RunDeckService.ExhaustRunCard(EntityManager, card);
+                if (!string.IsNullOrWhiteSpace(cardKey))
+                {
+                    SaveCache.RemoveStarterCardKey(cardKey);
+                }
+            }
+
+            LoggingService.Append("DeckManagementSystem.OnRemoveRandomCard", new System.Text.Json.Nodes.JsonObject
+            {
+                ["requestedAmount"] = evt.Amount,
+                ["removedCount"] = candidates.Count
             });
         }
     }

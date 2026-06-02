@@ -270,6 +270,30 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 		}
 
+		public static bool IsStarterCardKey(string cardKey)
+		{
+			if (string.IsNullOrWhiteSpace(cardKey)) return false;
+			EnsureLoaded();
+			var keys = _save?.starterCardKeys;
+			if (keys == null || keys.Count == 0) return false;
+			return keys.Any(k => string.Equals(k, cardKey, StringComparison.OrdinalIgnoreCase));
+		}
+
+		public static void RemoveStarterCardKey(string cardKey)
+		{
+			if (string.IsNullOrWhiteSpace(cardKey)) return;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save?.starterCardKeys == null) return;
+				int idx = _save.starterCardKeys.FindIndex(k =>
+					string.Equals(k, cardKey, StringComparison.OrdinalIgnoreCase));
+				if (idx < 0) return;
+				_save.starterCardKeys.RemoveAt(idx);
+				Persist();
+			}
+		}
+
 		public static void Reload()
 		{
 			lock (_lock)
@@ -427,6 +451,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				runMapTreasures = treasures,
 				items = new List<SaveItem>(),
 				lastLocation = nodes.Count > 0 ? nodes[0].id : "run_0",
+				starterCardKeys = new List<string>(startingDeck),
 				loadouts = new List<LoadoutDefinition>
 				{
 					new LoadoutDefinition

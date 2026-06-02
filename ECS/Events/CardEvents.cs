@@ -555,6 +555,11 @@ namespace Crusaders30XX.ECS.Events
         public FreezeType Type { get; set; }
     }
 
+    public class RemoveRandomCardEvent
+    {
+        public int Amount { get; set; }
+    }
+
     public class ApplyRecoilEvent
     {
         public int Amount { get; set; }

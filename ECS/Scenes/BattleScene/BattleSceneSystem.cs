@@ -28,7 +28,6 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Battle systems (logic and draw). Only present while in Battle
 	
-	private DeckManagementSystem _deckManagementSystem;
 
 	private HandDisplaySystem _handDisplaySystem;
 	private CardHoverDetectionSystem _cardHoverDetectionSystem;
@@ -453,7 +452,6 @@ namespace Crusaders30XX.ECS.Systems
 			if (_loadedSystems) return;
 			_loadedSystems = true;
 			LoggingService.Append("BattleSceneSystem.AddBattleSystems", new System.Text.Json.Nodes.JsonObject { ["action"] = "Adding battle systems" });
-		_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
 		_battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 		_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);
 		_cardHoverDetectionSystem = new CardHoverDetectionSystem(_world.EntityManager);
@@ -575,7 +573,6 @@ namespace Crusaders30XX.ECS.Systems
 			_rasterizerState = new RasterizerState { ScissorTestEnable = true, CullMode = CullMode.None };
 			
 		// Register
-		_world.AddSystem(_deckManagementSystem);
 		_world.AddSystem(_handDisplaySystem);
 		_world.AddSystem(_cardHoverDetectionSystem);
 		_world.AddSystem(_cardZoneSystem);

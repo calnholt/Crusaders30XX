@@ -32,6 +32,7 @@ public class Game1 : Game
 	private CurrencyDisplaySystem _currencyDisplaySystem;
 	private GoldManagementService _goldManagementService;
 	private FrozenCardManagementSystem _frozenCardManagementSystem;
+	private DeckManagementSystem _deckManagementSystem;
 
     private KeyboardState _prevKeyboard;
 
@@ -173,6 +174,7 @@ public class Game1 : Game
 		_currencyDisplaySystem = new CurrencyDisplaySystem(GraphicsDevice, _spriteBatch, Content);
 		_goldManagementService = new GoldManagementService();
 		_frozenCardManagementSystem = new FrozenCardManagementSystem(_world.EntityManager);
+		_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         // _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
@@ -193,6 +195,7 @@ public class Game1 : Game
         _world.AddSystem(_achievementSceneSystem);
         _world.AddSystem(new TimerSchedulerSystem(_world.EntityManager));
 		_world.AddSystem(_frozenCardManagementSystem);
+		_world.AddSystem(_deckManagementSystem);
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_entityListOverlaySystem);
         _world.AddSystem(_transitionDisplaySystem);
