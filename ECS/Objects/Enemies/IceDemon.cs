@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Utils;
 
@@ -21,6 +22,12 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 
     public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
     {
+      var cardsInHandEntities = GetComponentHelper.GetHandOfCards(entityManager);
+      var frozenCardsInHand = cardsInHandEntities.Select(c => c.GetComponent<Frozen>()).ToList();
+      if (frozenCardsInHand.Count > 0 && Random.Shared.Next(0, 100) <= 50)
+      {
+        return ["frost_eater"];
+      }
       return ArrayUtils.TakeRandomWithReplacement(new List<string> { "icy_blade", "frozen_claw" }, 1);
     }
   }
@@ -74,7 +81,7 @@ public class FrostEater : EnemyAttackBase
   {
     Id = "frost_eater";
     Name = "Frost Eater";
-    Damage = 10;
+    Damage = 9;
     Text = "Frozen cards have -1 block value when blocking this attack.";
 
     ProgressOverride = (entityManager) =>
