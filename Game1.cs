@@ -30,6 +30,8 @@ public class Game1 : Game
     private CardDisplaySystemV2 _cardDisplaySystemV2;
     private InputSystem _inputSystem;
 	private CurrencyDisplaySystem _currencyDisplaySystem;
+	private GoldManagementService _goldManagementService;
+	private FrozenCardManagementSystem _frozenCardManagementSystem;
 
     private KeyboardState _prevKeyboard;
 
@@ -169,6 +171,8 @@ public class Game1 : Game
         _cardTooltipDisplaySystem = new CardTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _locationNameDisplaySystem = new LocationNameDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
 		_currencyDisplaySystem = new CurrencyDisplaySystem(GraphicsDevice, _spriteBatch, Content);
+		_goldManagementService = new GoldManagementService();
+		_frozenCardManagementSystem = new FrozenCardManagementSystem(_world.EntityManager);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         // _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
@@ -188,6 +192,7 @@ public class Game1 : Game
         _world.AddSystem(_customizationV2RootSystem);
         _world.AddSystem(_achievementSceneSystem);
         _world.AddSystem(new TimerSchedulerSystem(_world.EntityManager));
+		_world.AddSystem(_frozenCardManagementSystem);
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_entityListOverlaySystem);
         _world.AddSystem(_transitionDisplaySystem);
@@ -557,6 +562,7 @@ public class Game1 : Game
 #endif
 		LoggingService.Flush();
 		try { _currencyDisplaySystem?.Dispose(); } catch { }
+		try { _goldManagementService?.Dispose(); } catch { }
 		base.UnloadContent();
 	}
 

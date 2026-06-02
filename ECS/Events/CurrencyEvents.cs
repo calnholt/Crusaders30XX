@@ -9,6 +9,12 @@ namespace Crusaders30XX.ECS.Events
 		public int Delta { get; set; }
 		public string Reason { get; set; } = "";
 	}
+
+	public class ModifyGoldRequestEvent
+	{
+		public int Delta { get; set; }
+		public string Reason { get; set; } = "";
+	}
 }
 
 
