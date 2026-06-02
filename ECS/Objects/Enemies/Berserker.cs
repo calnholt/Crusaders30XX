@@ -40,6 +40,6 @@ public class Rage : EnemyAttackBase
   {
     Id = "rage";
     Name = "Rage";
-    Damage = 11;
+    Damage = 9;
   }
 }
