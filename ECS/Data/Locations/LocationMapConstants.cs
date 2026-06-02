@@ -46,8 +46,8 @@ namespace Crusaders30XX.ECS.Data.Locations
 
 		/// <summary>Starting radius for completion cutscene lerp; must fit the quest icon inside the hole.</summary>
 		public static int DefaultUnrevealedRadius => MinFogRadiusForIconPx;
-		public const int QuestRewardGold = 30;
-		public const int QuestRewardGoldDualBattle = 75;
+		public const int QuestRewardGold = 20;
+		public const int QuestRewardGoldDualBattle = 50;
 		public const int RunMapDualBattleQuestCount = 4;
 		public const string RunMapDualBattleFirstEnemyId = "skeleton";
 		public const int MaxChildrenPerNode = 3;
