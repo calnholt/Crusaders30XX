@@ -23,7 +23,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
             EventManager.Subscribe<ApplyPassiveEvent>(OnApplyPassive);
             EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
-            EventManager.Subscribe<RemovePassive>(OnRemovePassive);
+            EventManager.Subscribe<RemovePassive>(OnRemovePassive, priority: 1);
             EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);
             EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
             EventManager.Subscribe<RemoveAllPassives>(OnRemoveAllPassives);
@@ -308,15 +308,20 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnRemovePassive(RemovePassive e)
         {
-            LoggingService.Append("AppliedPassivesManagementSystem.OnRemovePassive", new System.Text.Json.Nodes.JsonObject
-            {
-                ["passiveType"] = e.Type.ToString(),
-                ["ownerId"] = e.Owner?.Id ?? -1,
-                ["ownerName"] = e.Owner?.Name
-            });
             if (e == null || e.Owner == null) return;
             var ap = e.Owner.GetComponent<AppliedPassives>();
             if (ap == null || ap.Passives == null) return;
+            if (ap.Passives.TryGetValue(e.Type, out int stacks))
+            {
+                e.Amount = stacks;
+            }
+            LoggingService.Append("AppliedPassivesManagementSystem.OnRemovePassive", new System.Text.Json.Nodes.JsonObject
+            {
+                ["passiveType"] = e.Type.ToString(),
+                ["amount"] = e.Amount,
+                ["ownerId"] = e.Owner?.Id ?? -1,
+                ["ownerName"] = e.Owner?.Name
+            });
             if (ap.Passives.ContainsKey(e.Type))
             {
                 ap.Passives.Remove(e.Type);

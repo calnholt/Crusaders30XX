@@ -21,6 +21,11 @@ namespace Crusaders30XX.ECS.Events
     {
         public Entity Owner { get; set; }
         public AppliedPassiveType Type { get; set; }
+        /// <summary>
+        /// Stack count removed. AppliedPassivesManagementSystem sets this from the owner's
+        /// current stacks before removal when the passive is still present (overwrites 0 from generic publishers).
+        /// </summary>
+        public int Amount { get; set; }
     }
 
     /// <summary>

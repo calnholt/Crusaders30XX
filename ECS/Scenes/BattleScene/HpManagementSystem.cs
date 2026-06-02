@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<FullyHealEvent>(OnFullyHeal);
 			EventManager.Subscribe<HealEvent>(OnHeal);
 			EventManager.Subscribe<IncreaseMaxHpEvent>(OnIncreaseMaxHp);
+			EventManager.Subscribe<RemovePassive>(OnRemovePassive);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -174,13 +175,12 @@ namespace Crusaders30XX.ECS.Systems
 						{
 							hp.Current -= e.Delta;
 						}
+						hp.Current = Math.Max(0, Math.Min(hp.Current, hp.Max));
 					}
 					else if (e.Delta < 0)
 					{
-						int amount = -e.Delta;
-						hp.Max = Math.Min(25, hp.Max + amount);
+						RestoreMaxHp(hp, -e.Delta);
 					}
-					hp.Current = Math.Max(0, Math.Min(hp.Current, hp.Max));
 					break;
 				default:
 					return;
@@ -239,6 +239,26 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			if (remaining < 0) remaining = 0;
 			return totalAbsorbed;
+		}
+
+		private void OnRemovePassive(RemovePassive e)
+		{
+			if (e == null || e.Owner == null || e.Type != AppliedPassiveType.Scar || e.Amount <= 0) return;
+			var hp = e.Owner.GetComponent<HP>();
+			if (hp == null) return;
+			LoggingService.Append("HpManagementSystem.OnRemovePassive", new System.Text.Json.Nodes.JsonObject
+			{
+				["passiveType"] = e.Type.ToString(),
+				["amount"] = e.Amount,
+				["ownerId"] = e.Owner?.Id ?? -1
+			});
+			RestoreMaxHp(hp, e.Amount);
+		}
+
+		private static void RestoreMaxHp(HP hp, int amount)
+		{
+			hp.Max = Math.Min(25, hp.Max + amount);
+			hp.Current = Math.Max(0, Math.Min(hp.Current, hp.Max));
 		}
 
 		private void OnIncreaseMaxHp(IncreaseMaxHpEvent e)
