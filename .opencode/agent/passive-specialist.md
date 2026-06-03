@@ -40,7 +40,7 @@ All available passives in the game:
 - **Intellect**: Max hand size and cards drawn increased by X
 - **Intimidated**: X cards intimidated at start of block phase (battle passive)
 - **MindFog**: Discard all cards at end of action phase (battle passive)
-- **Scar**: Lose X max HP (permanent/quest passive)
+- **Scar**: Lose X max HP (run-long passive). Remove one scar when leaving battle after a quest node
 - **Channel**: Increases potency of attacks (battle passive)
 - **Frostbite**: At 3 stacks, take 3 damage and lose 3 frostbite (quest passive)
 - **Frozen**: Frozen cards give 1 frostbite and 50% exhaust chance on play. Remove by blocking (quest passive)
@@ -52,7 +52,8 @@ All available passives in the game:
 ### Passive Duration Categories
 - **Turn passives**: Removed at end of player turn (Aggression, DowseWithHolyWater)
 - **Battle passives**: Persist through battle, removed when battle ends (Stun, Burn, Power, Armor, Wounded, Inferno, Stealth, Poison, Siphon, Thorns, Rage, Intimidated, MindFog, Channel, Windchill, SubZero, Aegis, Shield)
-- **Quest passives**: Persist through multiple battles, cleared when entering new battle (Shackled, Webbing, Penance, Fear, Bleed, Frostbite, Enflamed, Scar)
+- **Quest passives**: Persist through queued encounters in a quest node, cleared when leaving battle (Shackled, Webbing, Penance, Fear, Bleed, Enflamed)
+- **Run-long passives**: Persist for the whole run in save (Frostbite, Scar). Scar loses one stack when leaving battle after a quest node
 
 ### How to Apply Passives
 Use ApplyPassiveEvent:

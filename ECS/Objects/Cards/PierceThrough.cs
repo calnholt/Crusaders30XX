@@ -12,8 +12,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Enemy";
             Text = "Remove 1 guard from the enemy.";
             Animation = "Attack";
-            Damage = 10;
-            Cost = ["Black", "Red"];
+            Damage = 9;
+            Cost = ["Black", "Any"];
             IsFreeAction = false;
 
             OnPlay = (entityManager, card) =>

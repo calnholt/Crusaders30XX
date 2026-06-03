@@ -3,8 +3,9 @@ using Crusaders30XX.ECS.Components;
 namespace Crusaders30XX.ECS.Events
 {
 	public class StartBattleRequested { }
-	public class LoadSceneEvent { 
+	public class LoadSceneEvent {
 		public SceneId Scene;
+		public SceneId PreviousScene { get; set; } = SceneId.None;
 	}
 
 	public class DeleteCachesEvent { public SceneId Scene; }

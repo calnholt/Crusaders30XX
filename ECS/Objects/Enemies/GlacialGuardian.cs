@@ -16,7 +16,7 @@ public class GlacialGuardian : EnemyBase
   {
     Id = "glacial_guardian";
     Name = "Glacial Guardian";
-    HealthPerCard = 1.4f;
+    HealthPerCard = 1.1f;
 
     OnStartOfBattle = (entityManager) =>
     {
@@ -52,7 +52,7 @@ public class GlacialGuardian : EnemyBase
   {
     if ((evt.To == CardZoneType.DiscardPile || evt.To == CardZoneType.ExhaustPile) && evt.From == CardZoneType.AssignedBlock && evt.Card.GetComponent<Frozen>() != null)
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = 1 });
+      EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Scar, Delta = 1 });
     }
   }
 

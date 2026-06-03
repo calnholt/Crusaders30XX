@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Enemy";
             Cost = ["Black", "Black"];
             Animation = "Attack";
-            Damage = 5;
+            Damage = 7;
             Block = 3;
             Text = "Heal X HP where X is the damage dealt from this attack.";
 

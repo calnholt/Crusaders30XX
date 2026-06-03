@@ -8,7 +8,7 @@ A single playthrough from a fresh (or reset) save through the procedurally gener
 
 ## Run-long applied passive
 
-A debuff or status on the player that lasts for the whole **run**: it survives leaving battle, visiting the location hub, shopping, and starting other **quest nodes**, until **run failure**, **quest abandon**, or **new run start**. Frostbite is the first run-long applied passive.
+A debuff or status on the player that lasts for the whole **run**: it survives leaving battle, visiting the location hub, shopping, and starting other **quest nodes**, until **run failure**, **quest abandon**, or **new run start**. Examples: Frostbite, Scar (see implementation list `GetRunLongPassives`). Scar stacks persist across quest nodes; when the player leaves battle after completing a quest node, one scar stack is removed and max HP is restored by that amount.
 
 _Avoid_: Quest passive (when meaning run-long; use **run-long applied passive**)
 

@@ -121,6 +121,14 @@ namespace Crusaders30XX.ECS.Systems
                 EventManager.Publish(new RemovePassive { Owner = player, Type = passive });
             }
 
+            if (@event.PreviousScene == SceneId.Battle && @event.Scene != SceneId.Battle)
+            {
+                if (ap.Passives.TryGetValue(AppliedPassiveType.Scar, out int scarStacks) && scarStacks > 0)
+                {
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Scar, Delta = -1 });
+                }
+            }
+
             if (player.HasComponent<Player>())
             {
                 RunScopedStateService.SyncRunLongPassivesFromPlayer(player);
@@ -437,6 +445,7 @@ namespace Crusaders30XX.ECS.Systems
             return new HashSet<AppliedPassiveType>
             {
                 AppliedPassiveType.Frostbite,
+                AppliedPassiveType.Scar,
             };
         }
 
@@ -450,7 +459,6 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Fear,
                 AppliedPassiveType.Bleed,
                 AppliedPassiveType.Enflamed,
-                AppliedPassiveType.Scar,
                 AppliedPassiveType.Sealed,
                 AppliedPassiveType.Silenced,
             };

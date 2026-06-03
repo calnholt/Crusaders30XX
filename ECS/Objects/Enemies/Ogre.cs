@@ -9,6 +9,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
 {
   public class Ogre : EnemyBase
   {
+    private int PummelIntoSubmissionCount = 0;
     public Ogre(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
     {
       Id = "ogre";
@@ -31,8 +32,9 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
       {
         return ["tree_stomp"];
       }
-      if (random <= 80)
+      if (random <= 80 && PummelIntoSubmissionCount < 2)
       {
+        PummelIntoSubmissionCount++;
         return ["pummel_into_submission"];
       }
       return ["slam_trunk", "have_no_mercy"];
@@ -40,21 +42,21 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
   }
   public class PummelIntoSubmission : EnemyAttackBase
   {
-    private int Penance = 1;
+    private int Scar = 2;
     public PummelIntoSubmission()
     {
       Id = "pummel_into_submission";
       Name = "Pummel Into Submission";
       Damage = 6;
       ConditionType = ConditionType.OnHit;
-      Text = $"{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Intimidate, 1)}\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, 1, ConditionType)}";
+      Text = $"{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Intimidate, 1)}\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Scar, Scar, ConditionType)}";
       OnAttackReveal = (entityManager) =>
       {
-        EventManager.Publish(new IntimidateEvent { Amount = Penance });
+        EventManager.Publish(new IntimidateEvent { Amount = Scar });
       };
       OnAttackHit = (entityManager) =>
       {
-        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = Penance });
+        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Scar, Delta = Scar });
       };
     }
   }

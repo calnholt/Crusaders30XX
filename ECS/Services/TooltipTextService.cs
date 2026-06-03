@@ -91,7 +91,7 @@ namespace Crusaders30XX.ECS.Services
 				case AppliedPassiveType.Inferno:
 					return $"At the start of your turn, gain {stacks} burn{(stacks == 1 ? "" : "s")}.";
 				case AppliedPassiveType.Scar:
-					return $"Lose {stacks} max HP.";
+					return $"Lose {stacks} max HP. Remove one scar at the end of the quest.";
 				case AppliedPassiveType.Penance:
 					return "Your attacks deal 1 less damage if you have 1 or more penance. At the start of the next battle, these are converted to scars.";
 				case AppliedPassiveType.Aggression:
@@ -133,7 +133,7 @@ namespace Crusaders30XX.ECS.Services
 				case AppliedPassiveType.SubZero:
 					return "At the start of the enemy turn, freeze one card from your hand.";
 				case AppliedPassiveType.Windchill:
-					return "Whenever you block with a frozen card, gain 1 penance.";
+					return "Whenever you block with a frozen card, gain 1 scar.";
 				case AppliedPassiveType.Enflamed:
 					return $"If you have 4+ courage at the end of the action phase, take {stacks} damage.";
 				case AppliedPassiveType.Shackled:
@@ -189,7 +189,7 @@ namespace Crusaders30XX.ECS.Services
 			i = lowerText.IndexOf("penance");
 			if (i >= 0) matches.Add((i, "X Penance - Your attacks deal -1 less damage. At the start of the next battle, these are converted to scars."));
 			var showScar = lowerText.IndexOf("scar ") >= 0 || lowerText.IndexOf("scars") >= 0 || lowerText.IndexOf("scars ") >= 0 || lowerText.IndexOf("scar.") >= 0;
-			if (showScar) matches.Add((i, "X Scar - Lose X max HP for the rest of the quest."));
+			if (showScar) matches.Add((i, "X Scar - Lose X max HP. Remove one scar at the end of the quest."));
 			i = lowerText.IndexOf("fear");
 			if (i >= 0) matches.Add((i, "X Fear - Attacks have a (X*10)% chance to become ambush attacks this quest."));
 			i = lowerText.IndexOf("wounded");

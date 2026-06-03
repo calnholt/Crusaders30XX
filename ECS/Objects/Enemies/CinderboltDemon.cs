@@ -21,12 +21,12 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 
         public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
         {
-          var random = Random.Shared.Next(0, 100);
-          if (!UsedInsidiousBolt && (turnNumber == 3 && random < 50 || turnNumber > 3))
-          {
-            UsedInsidiousBolt = true;
-            return ["insidious_bolt"];
-          }
+          // var random = Random.Shared.Next(0, 100);
+          // if (!UsedInsidiousBolt && (turnNumber == 3 && random < 50 || turnNumber > 3))
+          // {
+          //   UsedInsidiousBolt = true;
+          //   return ["insidious_bolt"];
+          // }
           return ["cinderbolt"];
         }
     }
@@ -73,8 +73,8 @@ public class Cinderbolt : EnemyAttackBase
 
 public class InsidiousBolt : EnemyAttackBase
 {
-  private int Penance = 1;
-  private bool AppliedPenance = false;
+  private int Scar = 2;
+  private bool AppliedScar = false;
   private CardData.CardColor Color = CardData.CardColor.White;
   public InsidiousBolt()
   {
@@ -85,16 +85,16 @@ public class InsidiousBolt : EnemyAttackBase
     OnAttackReveal = (entityManager) =>
     {
       Color = Cinderbolt.GetRandomCardColorInPlayerHand(EntityManager);
-      Text = $"Gain {Penance} penance if at least one {Color.ToString().ToLower()} card blocks this.";
+      Text = $"Gain {Scar} scar if at least one {Color.ToString().ToLower()} card blocks this.";
     };
 
     OnBlockProcessed = (entityManager, card) =>
     {
       var color = card.GetComponent<CardData>().Color;
-      if (color == Color && !AppliedPenance)
+      if (color == Color && !AppliedScar)
       {
-        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = Penance });
-        AppliedPenance = true;
+        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Scar, Delta = Scar });
+        AppliedScar = true;
       }
     };
   }

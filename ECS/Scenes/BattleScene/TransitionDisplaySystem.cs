@@ -213,9 +213,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void LoadTargetScene(SceneId nextScene, bool publishComplete)
 		{
+			var sceneEntity = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
+			var previous = sceneEntity?.GetComponent<SceneState>()?.Current ?? SceneId.None;
 			EventManager.Publish(new DeleteCachesEvent { Scene = nextScene });
 			DeleteEntities(nextScene);
-			EventManager.Publish(new LoadSceneEvent { Scene = nextScene });
+			EventManager.Publish(new LoadSceneEvent { Scene = nextScene, PreviousScene = previous });
 			if (publishComplete)
 				EventManager.Publish(new TransitionCompleteEvent { Scene = nextScene });
 		}
