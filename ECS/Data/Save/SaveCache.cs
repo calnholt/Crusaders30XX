@@ -134,11 +134,12 @@ namespace Crusaders30XX.ECS.Data.Save
 					}
 					return;
 				}
-				var (seed, nodes, shops, treasures) = GenerateRunMapForSave();
+				var (seed, nodes, shops, treasures, events) = GenerateRunMapForSave();
 				_save.runMapSeed = seed;
 				_save.runMapNodes = nodes;
 				_save.runMapShops = shops;
 				_save.runMapTreasures = treasures;
+				_save.runMapEvents = events;
 				if (string.IsNullOrEmpty(_save.lastLocation) && nodes.Count > 0)
 				{
 					_save.lastLocation = nodes[0].id;
@@ -437,7 +438,7 @@ namespace Crusaders30XX.ECS.Data.Save
 
 		private static SaveFile CreateDefaultSave()
 		{
-			var (seed, nodes, shops, treasures) = GenerateRunMapForSave();
+			var (seed, nodes, shops, treasures, events) = GenerateRunMapForSave();
 			var startingDeck = StartingDeckGeneratorService.Generate(
 				StartingDeckGeneratorService.DefaultStarterCardPool,
 				seed);
@@ -449,6 +450,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				runMapNodes = nodes,
 				runMapShops = shops,
 				runMapTreasures = treasures,
+				runMapEvents = events,
 				items = new List<SaveItem>(),
 				lastLocation = nodes.Count > 0 ? nodes[0].id : "run_0",
 				starterCardKeys = new List<string>(startingDeck),
@@ -492,15 +494,16 @@ namespace Crusaders30XX.ECS.Data.Save
 			return Path.GetDirectoryName(path);
 		}
 
-		private static (int seed, List<RunMapNode> nodes, List<RunMapShop> shops, List<RunMapTreasure> treasures) GenerateRunMapForSave()
+		private static (int seed, List<RunMapNode> nodes, List<RunMapShop> shops, List<RunMapTreasure> treasures, List<RunMapEvent> events) GenerateRunMapForSave()
 		{
 			var (seed, nodes) = LocationMapGeneratorService.Generate();
 			var shops = RunMapShopGeneratorService.Generate(seed, nodes);
 			var treasures = RunMapTreasureGeneratorService.Generate(seed, nodes, shops);
+			var events = RunMapEventGeneratorService.Generate(seed, nodes, shops, treasures);
 #if DEBUG
 			RunMapGeneratorLog.Append(LocationMapGeneratorService.ComputeSpreadMetrics(seed, nodes));
 #endif
-			return (seed, nodes, shops, treasures);
+			return (seed, nodes, shops, treasures, events);
 		}
 
 		public static IReadOnlyList<RunMapShop> GetRunMapShops()
@@ -531,6 +534,38 @@ namespace Crusaders30XX.ECS.Data.Save
 			index = -1;
 			EnsureRunMap();
 			return RunMapTreasureService.TryGetTreasure(treasureId, _save?.runMapTreasures, out treasure, out index);
+		}
+
+		public static IReadOnlyList<RunMapEvent> GetRunMapEvents()
+		{
+			EnsureLoaded();
+			EnsureRunMap();
+			return _save?.runMapEvents ?? new List<RunMapEvent>();
+		}
+
+		public static bool TryGetRunEvent(string eventId, out RunMapEvent mapEvent, out int index)
+		{
+			mapEvent = null;
+			index = -1;
+			EnsureRunMap();
+			return RunMapEventService.TryGetEvent(eventId, _save?.runMapEvents, out mapEvent, out index);
+		}
+
+		public static bool TryCompleteRunMapEvent(string eventId)
+		{
+			if (string.IsNullOrWhiteSpace(eventId)) return false;
+
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) return false;
+				if (!TryGetRunEvent(eventId, out var mapEvent, out _)) return false;
+				if (mapEvent == null || mapEvent.isCompleted) return false;
+
+				mapEvent.isCompleted = true;
+				Persist();
+				return true;
+			}
 		}
 
 		public static bool TryClaimRunMapTreasure(

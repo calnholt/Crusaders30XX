@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Components
 		public int RunMapIndex { get; set; } = -1;
 		public string ShopId { get; set; } = string.Empty;
 		public string TreasureId { get; set; } = string.Empty;
+		public string EventId { get; set; } = string.Empty;
 		public bool IsMapVisibleFromStart { get; set; }
 	}
 
@@ -32,6 +33,7 @@ namespace Crusaders30XX.ECS.Components
 		Quest,
 		Shop,
 		Treasure,
+		Event,
 		Hellrift
 	}
 }

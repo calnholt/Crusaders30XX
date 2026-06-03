@@ -8,7 +8,7 @@ namespace Crusaders30XX.ECS.Rendering
 		public static readonly Color OpenedMapIconTint = new Color(120, 120, 120);
 
 		public static bool UsesOpenedLookWhenComplete(PointOfInterestType type) =>
-			type is PointOfInterestType.Treasure or PointOfInterestType.Quest or PointOfInterestType.Hellrift;
+			type is PointOfInterestType.Treasure or PointOfInterestType.Event or PointOfInterestType.Quest or PointOfInterestType.Hellrift;
 
 		public static bool IsCombatPoiType(PointOfInterestType type) =>
 			type is PointOfInterestType.Quest or PointOfInterestType.Hellrift;

@@ -64,6 +64,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public static float MinPlacementEdgeInset => Math.Max(250f, PlayableMinDimension * 0.08f);
 		public const int RunMapShopCount = 3;
 		public const int RunMapTreasureCount = 2;
+		public const int RunMapEventCount = 2;
 		public const int RunMapTreasureGoldMin = 10;
 		public const int RunMapTreasureGoldMax = 30;
 		public const int RunMapTreasureMinUnlockDepth = 2;

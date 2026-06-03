@@ -142,6 +142,8 @@ Shop markers are an exception: their map icon and minimap dot are visible from t
 
 Treasure Chest markers are also visible from run start and do not clear map fog. A chest becomes enterable only after the player has won battles deeper into the desert (cleared fog from a completed battle far enough along the run). Until then, no tooltip or hold-to-open prompt. When enterable, the tooltip reads **Open Treasure**.
 
+Map event markers are also visible from run start and do not clear map fog. A Map event becomes enterable when cleared map fog from a **completed** quest covers it (same rule as shops). Until then, no tooltip or hold prompt. When enterable, the tooltip reads **Event**.
+
 ## Shop (run map)
 
 A card vendor on the desert run map. Three shops exist per run. Shops are **not** quest nodes: they are not part of the run map tree and do not replace any of the 20 combat nodes.
@@ -163,6 +165,24 @@ A one-time loot marker on the desert run map. Two exist per run. Treasure Chests
 After the battle map and shops are generated, each chest is placed so that entering it requires having cleared fog from battles deeper into the desert. Opening a chest (hold-to-open on the hub) grants a random amount of gold (10-30 per chest, rolled at run creation) and one medal the player does not already own (excluding medals still for sale in run-map shops). The medal is added to the loadout and equipped immediately. A claimed chest stays on the map as a dimmed icon and cannot be opened again.
 
 _Avoid_: Treasure POI, treasure node (prefer **Treasure Chest** vs **quest node** or **shop**)
+
+## Map event (run map)
+
+A choice landmark on the desert run map. Two exist per run. Map events are **not** quest nodes, shops, or Treasure Chests: they are not part of the run map tree.
+
+After the battle map, shops, and chests are generated, each Map event is placed using the same scatter rules as shops. At run creation each marker rolls a distinct **narrative event** type (stored as `eventTypeId`) from the authored pool. Completing the hold on the hub (stub v1) marks the Map event completed and dims its icon; narrative choice UI is a follow-up milestone.
+
+## Map event reveal (enterable)
+
+A Map event becomes enterable when its world position lies inside cleared map fog from at least one **completed** quest (same center and **map fog range** as that quest's fog circle). A nearby **revealed** quest does not unlock Map events. The red question-mark icon can be visible before enterable; until cleared fog reaches it, no tooltip or hold prompt.
+
+_Avoid_: Event node (when meaning the map marker; prefer **Map event** vs **quest node**)
+
+## Narrative event
+
+Authored hub content with a title, body text, and one to three player choices (`EventBase`). Examples include Icebound Tithe and Pruned Vocation. A Map event's `eventTypeId` selects which narrative event will run when choice UI is wired; v1 stub completion does not open that UI yet.
+
+_Avoid_: Using "event" alone when you mean the map marker or the choice content; use **Map event** or **Narrative event**
 
 ## Quest reward
 

@@ -18,6 +18,7 @@ namespace Crusaders30XX.ECS.Systems
 	[DebugTab("Location POI Display")]
 	public class PointOfInterestDisplaySystem : Core.System
 	{
+		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly Texture2D _pixel;
 		private readonly Texture2D _questIconTexture;
@@ -49,9 +50,13 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Skull Offset Y", Step = 0.05f, Min = -2f, Max = 2f)]
 		public float SkullOffsetY { get; set; } = 0.1f;
 
+		[DebugEditable(DisplayName = "Event ? Scale", Step = 0.01f, Min = 0.05f, Max = 2f)]
+		public float EventQuestionMarkScale { get; set; } = 0.35f;
+
 		public PointOfInterestDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
 		{
+			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
@@ -149,6 +154,18 @@ namespace Crusaders30XX.ECS.Systems
 						}
 					}
 				}
+				if (poiComp != null && poiComp.Type == PointOfInterestType.Event && !string.IsNullOrEmpty(poiComp.EventId))
+				{
+					if (SaveCache.TryGetRunEvent(poiComp.EventId, out var mapEvent, out _))
+					{
+						poiComp.IsCompleted = mapEvent.isCompleted;
+						var uiEvent = e.GetComponent<UIElement>();
+						if (uiEvent != null)
+						{
+							uiEvent.IsInteractable = RunMapEventService.IsEnterable(mapEvent, runNodes);
+						}
+					}
+				}
 				// Scale world position by map scale to match scaled world space
 				var scaledWorld = world * mapScale;
 				var screenPos = scaledWorld - origin;
@@ -172,8 +189,10 @@ namespace Crusaders30XX.ECS.Systems
 					var poi = e.GetComponent<PointOfInterest>();
 					if (poi != null)
 					{
-						Texture2D iconTexture = GetIconTexture(poi.Type);
-						
+						Texture2D iconTexture = poi.Type == PointOfInterestType.Event
+							? null
+							: GetIconTexture(poi.Type);
+
 						// Calculate bounds size scaled by map zoom and hover scale
 						float boundsWidth = IconSize * mapScale * currentScale;
 						float boundsHeight = boundsWidth;
@@ -259,6 +278,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			SpawnShopPois(ref i, runNodes);
 			SpawnTreasurePois(ref i, runNodes);
+			SpawnEventPois(ref i, runNodes);
 		}
 
 		private void SpawnShopPois(ref int entityIndex, IReadOnlyList<RunMapNode> runNodes)
@@ -348,10 +368,49 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
+		private void SpawnEventPois(ref int entityIndex, IReadOnlyList<RunMapNode> runNodes)
+		{
+			foreach (var mapEvent in SaveCache.GetRunMapEvents())
+			{
+				if (mapEvent == null || string.IsNullOrEmpty(mapEvent.id)) continue;
+
+				var worldPos = new Vector2(mapEvent.worldX, mapEvent.worldY);
+				var e = EntityManager.CreateEntity($"POI_Event_{entityIndex++}");
+				_worldByEntityId[e.Id] = worldPos;
+				_pois.Add(e);
+				EntityManager.AddComponent(e, new Transform { Position = worldPos, ZOrder = 10 });
+
+				int boundsWidth = (int)IconSize;
+				int boundsHeight = (int)IconSize;
+				bool canEnter = RunMapEventService.IsEnterable(mapEvent, runNodes);
+				EntityManager.AddComponent(e, new UIElement
+				{
+					Bounds = new Rectangle(0, 0, boundsWidth, boundsHeight),
+					IsInteractable = canEnter,
+					TooltipType = TooltipType.None,
+					EventType = UIElementEventType.None,
+					IsPreventDefaultClick = true,
+				});
+				EntityManager.AddComponent(e, ParallaxLayer.GetLocationParallaxLayer());
+				EntityManager.AddComponent(e, new PointOfInterest
+				{
+					Id = mapEvent.id,
+					EventId = mapEvent.id,
+					WorldPosition = worldPos,
+					Type = PointOfInterestType.Event,
+					IsMapVisibleFromStart = true,
+					RunMapIndex = -1,
+					DisplayRadius = 0f,
+					IsCompleted = mapEvent.isCompleted,
+				});
+			}
+		}
+
 		public void DrawLandmarksOverFog()
 		{
 			DrawPois(PointOfInterestType.Shop, includeAlwaysVisibleLandmarks: true);
 			DrawPois(PointOfInterestType.Treasure, includeAlwaysVisibleLandmarks: true);
+			DrawPois(PointOfInterestType.Event, includeAlwaysVisibleLandmarks: true);
 		}
 
 		public void DrawShopsOverFog()
@@ -402,7 +461,9 @@ namespace Crusaders30XX.ECS.Systems
 				if (x.UI != null)
 				{
 					x.UI.IsHidden = !isVisible;
-					if (x.P.Type == PointOfInterestType.Shop || x.P.Type == PointOfInterestType.Treasure)
+					if (x.P.Type == PointOfInterestType.Shop
+						|| x.P.Type == PointOfInterestType.Treasure
+						|| x.P.Type == PointOfInterestType.Event)
 					{
 						// Interactability updated each frame in UpdateEntity
 					}
@@ -416,36 +477,42 @@ namespace Crusaders30XX.ECS.Systems
 				
 				// Get current hover scale
 				float scale = _hoverScales.TryGetValue(x.E.Id, out float s) ? s : 1f;
-				
-				Texture2D iconTexture = GetIconTexture(x.P.Type);
-				Color iconTint = PoiVisualStyle.GetMapIconTint(x.P);
-				
-				// Calculate icon dimensions preserving aspect ratio, scaled by map zoom
+
 				float iconWidth = IconSize * mapScale * scale;
 				float iconHeight = iconWidth;
-				if (iconTexture != null && iconTexture.Width > 0 && iconTexture.Height > 0)
+				Texture2D iconTexture = null;
+				if (x.P.Type != PointOfInterestType.Event)
 				{
-					float aspectRatio = iconTexture.Height / (float)iconTexture.Width;
-					iconHeight = iconWidth * aspectRatio;
+					iconTexture = GetIconTexture(x.P.Type);
+					if (iconTexture != null && iconTexture.Width > 0 && iconTexture.Height > 0)
+					{
+						float aspectRatio = iconTexture.Height / (float)iconTexture.Width;
+						iconHeight = iconWidth * aspectRatio;
+					}
 				}
-				
-				// Calculate icon bounds
+
+				Color iconTint = PoiVisualStyle.GetMapIconTint(x.P);
 				float halfWidth = iconWidth / 2f;
 				float halfHeight = iconHeight / 2f;
 				var iconPos = new Vector2(x.T.Position.X, x.T.Position.Y);
-				var iconRect = new Rectangle((int)System.Math.Round(iconPos.X - halfWidth), (int)System.Math.Round(iconPos.Y - halfHeight), (int)System.Math.Round(iconWidth), (int)System.Math.Round(iconHeight));
-				
-				// Skip if off-screen
+				var iconRect = new Rectangle(
+					(int)System.Math.Round(iconPos.X - halfWidth),
+					(int)System.Math.Round(iconPos.Y - halfHeight),
+					(int)System.Math.Round(iconWidth),
+					(int)System.Math.Round(iconHeight));
+
 				if (iconRect.Right < 0 || iconRect.Bottom < 0 || iconRect.Left > w || iconRect.Top > h) continue;
-				
-				// Draw icon texture
-				if (iconTexture != null)
+
+				if (x.P.Type == PointOfInterestType.Event)
+				{
+					DrawMapEventIcon(iconRect, iconTint);
+				}
+				else if (iconTexture != null)
 				{
 					_spriteBatch.Draw(iconTexture, iconRect, iconTint);
 				}
 				else
 				{
-					// Fallback to pixel if texture failed to load
 					_spriteBatch.Draw(_pixel, iconRect, iconTint);
 				}
 
@@ -486,6 +553,31 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 			}
+		}
+
+		private void DrawMapEventIcon(Rectangle iconRect, Color tint)
+		{
+			int circleRadiusPx = System.Math.Max(2, (int)System.Math.Round(iconRect.Width / 2f));
+			var circleTex = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, circleRadiusPx);
+			Color circleColor = tint == Color.White
+				? new Color(200, 40, 40)
+				: Color.Lerp(new Color(200, 40, 40), PoiVisualStyle.OpenedMapIconTint, 0.85f);
+			var circleRect = new Rectangle(
+				iconRect.X,
+				iconRect.Y,
+				circleTex.Width,
+				circleTex.Height);
+			_spriteBatch.Draw(circleTex, circleRect, circleColor);
+
+			var font = FontSingleton.TitleFont;
+			const string mark = "?";
+			float textScale = EventQuestionMarkScale * (iconRect.Width / (float)IconSize);
+			var textSize = font.MeasureString(mark) * textScale;
+			var textPos = new Vector2(
+				iconRect.X + (iconRect.Width - textSize.X) / 2f,
+				iconRect.Y + (iconRect.Height - textSize.Y) / 2f);
+			Color textColor = tint == Color.White ? Color.White : Color.Lerp(Color.White, PoiVisualStyle.OpenedMapIconTint, 0.85f);
+			_spriteBatch.DrawString(font, mark, textPos, textColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
 		}
 	}
 }

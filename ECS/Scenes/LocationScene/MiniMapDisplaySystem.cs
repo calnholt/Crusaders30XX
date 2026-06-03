@@ -145,6 +145,9 @@ namespace Crusaders30XX.ECS.Systems
 						PointOfInterestType.Treasure => p.IsCompleted
 							? new Color(140, 120, 90)
 							: new Color(220, 180, 60),
+						PointOfInterestType.Event => p.IsCompleted
+							? new Color(120, 50, 50)
+							: new Color(220, 50, 50),
 						_ => isCompleted ? Color.White : Color.Red,
 					};
 
@@ -244,6 +247,32 @@ namespace Crusaders30XX.ECS.Systems
 						? new Color(140, 120, 90)
 						: new Color(220, 180, 60);
 					_spriteBatch.Draw(_pixel, treasureDotRect, treasureColor);
+				}
+
+				foreach (var mapEvent in SaveCache.GetRunMapEvents())
+				{
+					if (mapEvent == null) continue;
+
+					float minimapPoiX = actualMinimapX + (mapEvent.worldX * cam.MapScale * scale);
+					float minimapPoiY = actualMinimapY + (mapEvent.worldY * cam.MapScale * scale);
+
+					if (minimapPoiX < minimapX || minimapPoiX > minimapX + minimapWidth ||
+						minimapPoiY < minimapY || minimapPoiY > minimapY + minimapHeight)
+					{
+						continue;
+					}
+
+					float eventDotSize = DotSize;
+					var eventDotRect = new Rectangle(
+						(int)(minimapPoiX - eventDotSize / 2f),
+						(int)(minimapPoiY - eventDotSize / 2f),
+						(int)eventDotSize,
+						(int)eventDotSize
+					);
+					Color eventColor = mapEvent.isCompleted
+						? new Color(120, 50, 50)
+						: new Color(220, 50, 50);
+					_spriteBatch.Draw(_pixel, eventDotRect, eventColor);
 				}
 			}
 

@@ -18,7 +18,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font = FontSingleton.TitleFont;
 		private const string TooltipEntityName = "UI_TreasureTooltip";
-		private const string Title = "Open Treasure";
+		private const string TreasureTitle = "Open Treasure";
+		private const string EventTitle = "Event";
 		private Entity _tooltipEntity;
 
 		[DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 40)]
@@ -70,25 +71,55 @@ namespace Crusaders30XX.ECS.Systems
 			var runNodes = SaveCache.GetRunMapNodes();
 			var hovered = EntityManager.GetEntitiesWithComponent<UIElement>()
 				.Select(e => new { E = e, UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>(), P = e.GetComponent<PointOfInterest>() })
-				.Where(x => x.UI != null && !x.UI.IsHidden && x.UI.IsHovered && x.P != null && x.P.Type == PointOfInterestType.Treasure)
+				.Where(x => x.UI != null && !x.UI.IsHidden && x.UI.IsHovered && x.P != null
+					&& (x.P.Type == PointOfInterestType.Treasure || x.P.Type == PointOfInterestType.Event))
 				.OrderByDescending(x => x.T?.ZOrder ?? 0)
 				.FirstOrDefault();
 
-			if (hovered == null || string.IsNullOrEmpty(hovered.P.TreasureId))
+			if (hovered == null)
 			{
 				DestroyTooltip();
 				return;
 			}
 
-			if (!SaveCache.TryGetRunTreasure(hovered.P.TreasureId, out var treasure, out _) ||
-				!RunMapTreasureService.IsEnterable(treasure, runNodes))
+			string tooltipTitle;
+			if (hovered.P.Type == PointOfInterestType.Event)
 			{
-				DestroyTooltip();
-				return;
+				if (string.IsNullOrEmpty(hovered.P.EventId))
+				{
+					DestroyTooltip();
+					return;
+				}
+
+				if (!SaveCache.TryGetRunEvent(hovered.P.EventId, out var mapEvent, out _) ||
+					!RunMapEventService.IsEnterable(mapEvent, runNodes))
+				{
+					DestroyTooltip();
+					return;
+				}
+
+				tooltipTitle = EventTitle;
+			}
+			else
+			{
+				if (string.IsNullOrEmpty(hovered.P.TreasureId))
+				{
+					DestroyTooltip();
+					return;
+				}
+
+				if (!SaveCache.TryGetRunTreasure(hovered.P.TreasureId, out var treasure, out _) ||
+					!RunMapTreasureService.IsEnterable(treasure, runNodes))
+				{
+					DestroyTooltip();
+					return;
+				}
+
+				tooltipTitle = TreasureTitle;
 			}
 
 			int pad = System.Math.Max(0, Padding);
-			var size = _font.MeasureString(Title) * TextScale;
+			var size = _font.MeasureString(tooltipTitle) * TextScale;
 			int width = (int)System.Math.Ceiling(size.X) + pad * 2 + System.Math.Max(0, LeftSideOffset);
 			int height = System.Math.Max(24, TrapezoidHeight);
 			var r = hovered.UI.Bounds;
@@ -121,7 +152,7 @@ namespace Crusaders30XX.ECS.Systems
 					ParentEntity = hovered.E,
 					Position = HotKeyPosition.Below
 				});
-				EntityManager.AddComponent(_tooltipEntity, new Hint { Text = Title });
+				EntityManager.AddComponent(_tooltipEntity, new Hint { Text = tooltipTitle });
 			}
 			else
 			{
@@ -136,7 +167,7 @@ namespace Crusaders30XX.ECS.Systems
 				var hk = _tooltipEntity.GetComponent<HotKey>();
 				if (hk != null) hk.ParentEntity = hovered.E;
 				var hint = _tooltipEntity.GetComponent<Hint>();
-				if (hint != null) hint.Text = Title;
+				if (hint != null) hint.Text = tooltipTitle;
 			}
 		}
 
@@ -157,7 +188,7 @@ namespace Crusaders30XX.ECS.Systems
 			var hint = _tooltipEntity.GetComponent<Hint>();
 			if (ui == null || hint == null) return;
 
-			string title = string.IsNullOrEmpty(hint.Text) ? Title : hint.Text;
+			string title = string.IsNullOrEmpty(hint.Text) ? TreasureTitle : hint.Text;
 			var rect = ui.Bounds;
 
 			float top = (TopLeftAngleDegrees + TopRightAngleDegrees) * 0.5f;

@@ -15,6 +15,7 @@ namespace Crusaders30XX.ECS.Data.Save
 		public List<RunMapNode> runMapNodes { get; set; } = new List<RunMapNode>();
 		public List<RunMapShop> runMapShops { get; set; } = new List<RunMapShop>();
 		public List<RunMapTreasure> runMapTreasures { get; set; } = new List<RunMapTreasure>();
+		public List<RunMapEvent> runMapEvents { get; set; } = new List<RunMapEvent>();
 		public List<SaveItem> items { get; set; } = new List<SaveItem>();
 		public string lastLocation { get; set; } = string.Empty;
 		public List<LoadoutDefinition> loadouts { get; set; } = new List<LoadoutDefinition>();

@@ -62,6 +62,7 @@ public class Game1 : Game
     private QuestStartSystem _questStartSystem;
     private ShopStartSystem _shopStartSystem;
     private TreasureStartSystem _treasureStartSystem;
+    private EventStartSystem _eventStartSystem;
     private RewardModalDisplaySystem _rewardModalDisplaySystem;
     private DisplaySnapshotHost _snapshotHost;
     private readonly DisplaySnapshotLaunchOptions _snapshotOptions;
@@ -223,6 +224,8 @@ public class Game1 : Game
         _world.AddSystem(_shopStartSystem);
         _treasureStartSystem = new TreasureStartSystem(_world.EntityManager);
         _world.AddSystem(_treasureStartSystem);
+        _eventStartSystem = new EventStartSystem(_world.EntityManager);
+        _world.AddSystem(_eventStartSystem);
         _rewardModalDisplaySystem = new RewardModalDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _world.AddSystem(_rewardModalDisplaySystem);
         _world.AddSystem(new RunDeckLifecycleSystem(_world.EntityManager));
