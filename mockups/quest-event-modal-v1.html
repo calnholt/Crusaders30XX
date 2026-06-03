@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Quest Event Modal (EventBase)</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /*
+    MonoGame notes (1920x1080 virtual; page chrome not shipped):
+    - Overlay dim: full screen rgba(0,0,0,0.55) -- same as quest-reward
+    - Modal: 920w x 520min, centered (960, 540) anchor -- same as quest-reward
+    - Modal fill: rgba(8,8,8,0.92); border 2px #fff at 85% -> Color(217,217,217)
+    - Inset highlight: 1px inner white 8% alpha
+    - Title: TitleFont / New Rocker ~36px, letter-spacing 3px
+    - Body: ContentFont scale ~0.14-0.16 / Chakra 22px, line-height 1.55
+    - Red rule: 80x3 centered gradient bar -> 3px solid rect or gradient texture
+    - Option btn: 64px min-height, 2px white border, hover red fill #a00000 border #c41e3a
+    - Option stack gap: 20px; body pad 40px 40px 28px; options footer pad 20px
+    - Hide options when OptionNText empty (no reserved space)
+  */
+  :root {
+    --black-0: #050505;
+    --black-1: #0a0a0a;
+    --black-2: #141414;
+    --black-3: #1e1e1e;
+    --black-4: #2a2a2a;
+    --white-1: #ffffff;
+    --white-2: #f0ece6;
+    --white-3: #c8c0b8;
+    --red-3: #c41e3a;
+    --red-glow: rgba(196, 30, 58, 0.45);
+    --panel-border: rgba(255, 255, 255, 0.85);
+    --game-w: 1920px;
+    --game-h: 1080px;
+
+    /* Layout tokens for html-to-monogame extraction (matches quest-reward-modal-v1) */
+    --modal-w: 920px;
+    --modal-min-h: 520px;
+    --modal-pad-x: 40px;
+    --modal-pad-top: 40px;
+    --option-gap: 20px;
+    --option-min-h: 64px;
+    --title-size: 36px;
+    --body-size: 22px;
+    --option-size: 17px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black-0);
+    color: var(--white-2);
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  .page-header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--black-4);
+    background: var(--black-1);
+  }
+
+  .page-header h1 {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: var(--white-1);
+    margin-bottom: 4px;
+  }
+
+  .page-header p {
+    color: var(--white-3);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    max-width: 820px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .page-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .page-controls label {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white-3);
+    margin-right: 4px;
+  }
+
+  .chip-btn {
+    padding: 6px 14px;
+    background: var(--black-3);
+    border: 1px solid var(--black-4);
+    color: var(--white-2);
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .chip-btn.is-active {
+    border-color: var(--red-3);
+    color: var(--white-1);
+  }
+
+  .page-main {
+    padding: 32px 40px 60px;
+  }
+
+  .viewport-scaler {
+    width: 100%;
+    max-width: min(calc(100vw - 80px), 1100px);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--black-2);
+    border: 1px solid var(--black-4);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+    min-height: 320px;
+  }
+
+  .viewport {
+    width: var(--game-w);
+    height: var(--game-h);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform-origin: top center;
+    overflow: hidden;
+  }
+
+  .bg-scene {
+    position: absolute;
+    inset: 0;
+    background: url('../Content/desert-background-city.png') center / cover no-repeat;
+  }
+
+  .bg-dim {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  /* --- EventBase modal (single column) --- */
+  .modal {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: var(--modal-w);
+    min-height: var(--modal-min-h);
+    background: rgba(8, 8, 8, 0.92);
+    border: 2px solid var(--panel-border);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+      0 32px 80px rgba(0, 0, 0, 0.75);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-body {
+    flex: 1;
+    padding: var(--modal-pad-top) var(--modal-pad-x) 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .modal-title {
+    font-family: 'New Rocker', cursive;
+    font-size: var(--title-size);
+    letter-spacing: 3px;
+    color: var(--white-1);
+    text-align: center;
+    line-height: 1.15;
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.8);
+    max-width: 100%;
+  }
+
+  .red-rule {
+    width: 80px;
+    height: 3px;
+    flex-shrink: 0;
+    background: linear-gradient(90deg, transparent, var(--red-3), transparent);
+  }
+
+  .event-text {
+    width: 100%;
+    font-size: var(--body-size);
+    font-weight: 500;
+    line-height: 1.55;
+    letter-spacing: 0.3px;
+    color: var(--white-2);
+    text-align: left;
+  }
+
+  .modal-options {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--option-gap);
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  /* Same chrome as quest-reward .btn-proceed; body font for long option strings */
+  .btn-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: var(--option-min-h);
+    padding: 14px 24px;
+    background: var(--black-3);
+    border: 2px solid var(--white-1);
+    color: var(--white-1);
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: var(--option-size);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    line-height: 1.35;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-option:hover {
+    background: #a00000;
+    border-color: var(--red-3);
+    box-shadow: 0 0 24px var(--red-glow);
+  }
+
+  .btn-option[hidden] {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Quest Event Modal — EventBase</h1>
+  <p>
+    Overlay for <strong>ECS/Objects/Events/EventBase</strong>: <code>Title</code>, <code>EventText</code>,
+    and 1-3 options from non-empty <code>OptionNText</code>. Palette matches quest-reward modal.
+    Virtual resolution: 1920x1080. Modal shell: 920x520px (same as quest-reward). Option buttons reuse proceed-button border/hover treatment.
+  </p>
+  <div class="page-controls">
+    <label>Sample</label>
+    <button type="button" class="chip-btn is-active" data-sample="icebound">Icebound Tithe</button>
+    <button type="button" class="chip-btn" data-sample="pruned">Pruned Vocation</button>
+    <label style="margin-left: 12px;">Options</label>
+    <button type="button" class="chip-btn is-active" data-options="3">3</button>
+    <button type="button" class="chip-btn" data-options="2">2</button>
+    <button type="button" class="chip-btn" data-options="1">1</button>
+  </div>
+</header>
+
+<main class="page-main">
+  <div class="viewport-scaler">
+    <div class="viewport">
+      <div class="bg-scene"></div>
+      <div class="bg-dim"></div>
+
+      <article class="modal" role="dialog" aria-labelledby="event-title">
+        <div class="modal-body">
+          <h2 class="modal-title" id="event-title">The Icebound Tithe</h2>
+          <div class="red-rule" aria-hidden="true"></div>
+          <p class="event-text" id="event-text">
+            A frost-bound reliquary hums at the roadside. It offers coin if you surrender cards to the cold.
+          </p>
+        </div>
+        <footer class="modal-options">
+          <button type="button" class="btn-option" data-option="1">
+            Offer one card to the frost for 10 gold
+          </button>
+          <button type="button" class="btn-option" data-option="2">
+            Surrender two cards to the cold for 30 gold
+          </button>
+          <button type="button" class="btn-option" data-option="3">
+            Yield three cards to the rime for 50 gold
+          </button>
+        </footer>
+      </article>
+    </div>
+  </div>
+</main>
+
+<script>
+  const GAME_W = 1920;
+  const GAME_H = 1080;
+
+  const SAMPLES = {
+    icebound: {
+      title: 'The Icebound Tithe',
+      text: 'A frost-bound reliquary hums at the roadside. It offers coin if you surrender cards to the cold.',
+      options: [
+        'Offer one card to the frost for 10 gold',
+        'Surrender two cards to the cold for 30 gold',
+        'Yield three cards to the rime for 50 gold'
+      ]
+    },
+    pruned: {
+      title: 'The Pruned Vocation',
+      text: 'A stern pilgrim offers to carve weakness from your deck by taking cards from your first vows.',
+      options: [
+        'Shed one card from your starting vows',
+        'Relinquish two cards from your starting vows',
+        'Abandon three cards from your starting vows'
+      ]
+    }
+  };
+
+  let activeSample = 'icebound';
+  let visibleOptions = 3;
+
+  function fitViewport() {
+    const scaler = document.querySelector('.viewport-scaler');
+    const vp = document.querySelector('.viewport');
+    if (!scaler || !vp) return;
+    const scale = scaler.clientWidth / GAME_W;
+    vp.style.transform = `translateX(-50%) scale(${scale})`;
+    scaler.style.height = `${GAME_H * scale}px`;
+  }
+
+  function applySample() {
+    const data = SAMPLES[activeSample];
+    document.getElementById('event-title').textContent = data.title;
+    document.getElementById('event-text').textContent = data.text;
+    document.querySelectorAll('.btn-option').forEach((btn, i) => {
+      btn.textContent = data.options[i];
+    });
+    applyOptionCount();
+  }
+
+  function applyOptionCount() {
+    document.querySelectorAll('.btn-option').forEach((btn, i) => {
+      const show = i < visibleOptions;
+      btn.hidden = !show;
+    });
+  }
+
+  document.querySelectorAll('[data-sample]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeSample = btn.dataset.sample;
+      document.querySelectorAll('[data-sample]').forEach(b => b.classList.toggle('is-active', b === btn));
+      applySample();
+    });
+  });
+
+  document.querySelectorAll('[data-options]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      visibleOptions = parseInt(btn.dataset.options, 10);
+      document.querySelectorAll('[data-options]').forEach(b => b.classList.toggle('is-active', b === btn));
+      applyOptionCount();
+    });
+  });
+
+  window.addEventListener('resize', fitViewport);
+  window.addEventListener('load', () => {
+    fitViewport();
+    applySample();
+  });
+  fitViewport();
+</script>
+</body>
+</html>
