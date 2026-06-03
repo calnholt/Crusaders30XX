@@ -12,8 +12,8 @@ namespace Crusaders30XX.ECS.Services
 		private static readonly HashSet<string> PortraitEnemyIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
 			"demon",
-			"mummy",
-			"ninja",
+			// "mummy",
+			// "ninja",
 			"ogre",
 			"skeleton",
 			"skeletal_archer",
@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Services
 			"fire_skeleton",
 			"berserker",
 			"shadow",
-			"medusa",
+			// "medusa",
 			"wyvern",
 			// "blood_martyr",
 			"sand_golem",
