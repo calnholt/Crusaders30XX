@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -38,25 +39,13 @@ namespace Crusaders30XX.ECS.Systems
 		private int _cachedRewardGold;
 		private LayoutSignature _layoutSignature;
 		private CachedTextMetrics _textMetrics;
-		private readonly Dictionary<(int w, int h), Texture2D> _gradientRuleCache = new();
+		private readonly HorizontalGradientRuleCache _gradientRuleCache;
 
-		private static readonly Color ModalFill = new Color(8, 8, 8) * 0.92f;
-		private static readonly Color PanelBorder = new Color(255, 255, 255) * 0.85f;
 		private static readonly Color LeftColTint = new Color(0, 0, 0) * 0.35f;
 		private static readonly Color ColumnDivider = new Color(255, 255, 255) * 0.15f;
-		private static readonly Color FooterFill = new Color(0, 0, 0) * 0.25f;
-		private static readonly Color FooterBorderTop = new Color(255, 255, 255) * 0.12f;
-		private static readonly Color InsetHighlight = new Color(255, 255, 255) * 0.08f;
-		private static readonly Color TitleColor = Color.White;
 		private static readonly Color GoldLabelColor = new Color(160, 128, 48);
 		private static readonly Color GoldAmountColor = new Color(232, 200, 74);
 		private static readonly Color StageLabelColor = new Color(200, 192, 184);
-		private static readonly Color RedRuleCenter = new Color(196, 30, 58);
-		private static readonly Color ButtonFill = new Color(30, 30, 30);
-		private static readonly Color ButtonFillHover = new Color(160, 0, 0);
-		private static readonly Color ButtonBorder = Color.White;
-		private static readonly Color ButtonBorderHover = new Color(196, 30, 58);
-		private static readonly Color DropShadow = new Color(0, 0, 0) * 0.75f;
 
 		private const string GoldLabelText = "GOLD";
 		private const string StageLabelText = "REWARD";
@@ -216,6 +205,7 @@ namespace Crusaders30XX.ECS.Systems
 			_content = content;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			_gradientRuleCache = new HorizontalGradientRuleCache(gd);
 			EventManager.Subscribe<ShowQuestRewardOverlay>(e => {
 				LoggingService.Append("RewardModalDisplaySystem.OnShowQuestRewardOverlay", new JsonObject {
 					{ "Message", e.Message },
@@ -238,7 +228,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnDeleteCaches(DeleteCachesEvent _)
 		{
 			InvalidateCaches();
-			DisposeGradientCache();
+			_gradientRuleCache.DisposeAll();
 			DestroyRewardCard();
 			DestroyRewardMedal();
 		}
@@ -247,15 +237,6 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_layoutValid = false;
 			_textMetricsValid = false;
-		}
-
-		private void DisposeGradientCache()
-		{
-			foreach (var kv in _gradientRuleCache)
-			{
-				try { kv.Value?.Dispose(); } catch { }
-			}
-			_gradientRuleCache.Clear();
 		}
 
 		private LayoutSignature CaptureLayoutSignature()
@@ -558,26 +539,19 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (!_drawInBattleOrSnapshot) return;
 
-			// 1. Dim
-			_spriteBatch.Draw(_pixel, new Rectangle(0, 0, vw, vh), new Color(0, 0, 0, System.Math.Clamp(DimAlpha, 0, 255)));
+			ModalOverlayChrome.DrawDim(_spriteBatch, _pixel, vw, vh, DimAlpha);
+			ModalOverlayChrome.DrawDropShadow(_spriteBatch, _pixel, _layout.Modal, DropShadowOffsetY, ModalOverlayPalette.DropShadow);
 
-			// 2. Drop shadow (offset down but clipped to modal bottom — no bleed past border)
-			int shadowY = System.Math.Max(0, DropShadowOffsetY);
-			int shadowH = System.Math.Max(1, _layout.Modal.Height - shadowY);
-			var shadow = new Rectangle(_layout.Modal.X, _layout.Modal.Y + shadowY, _layout.Modal.Width, shadowH);
-			_spriteBatch.Draw(_pixel, shadow, DropShadow);
-
-			// 3. Modal shell + regions inside content
-			_spriteBatch.Draw(_pixel, _layout.Modal, ModalFill);
+			_spriteBatch.Draw(_pixel, _layout.Modal, ModalOverlayPalette.ModalFill);
 			_spriteBatch.Draw(_pixel, _layout.LeftColumn, LeftColTint);
 			if (_layout.ShowRightColumn)
 			{
 				_spriteBatch.Draw(_pixel, _layout.Divider, ColumnDivider);
 			}
-			_spriteBatch.Draw(_pixel, _layout.Footer, FooterFill);
-			_spriteBatch.Draw(_pixel, new Rectangle(_layout.Footer.X, _layout.Footer.Y, _layout.Footer.Width, 1), FooterBorderTop);
-			DrawInsetHighlight(_layout.Content);
-			DrawBorder(_layout.Modal, PanelBorder, BorderThickness);
+			_spriteBatch.Draw(_pixel, _layout.Footer, ModalOverlayPalette.FooterFill);
+			_spriteBatch.Draw(_pixel, new Rectangle(_layout.Footer.X, _layout.Footer.Y, _layout.Footer.Width, 1), ModalOverlayPalette.FooterBorderTop);
+			ModalOverlayChrome.DrawInsetHighlight(_spriteBatch, _pixel, _layout.Content);
+			ModalOverlayChrome.DrawBorder(_spriteBatch, _pixel, _layout.Modal, ModalOverlayPalette.PanelBorder, BorderThickness);
 
 			// 4. Left column text
 			DrawLeftColumn();
@@ -706,11 +680,11 @@ namespace Crusaders30XX.ECS.Systems
 			string line1 = _layoutSignature.TitleLine1;
 			string line2 = _layoutSignature.TitleLine2;
 
-			_spriteBatch.DrawString(_titleFont, line1, m.TitleLine1Pos, TitleColor, 0f, Vector2.Zero, TitleScale, SpriteEffects.None, 0f);
-			_spriteBatch.DrawString(_titleFont, line2, m.TitleLine2Pos, TitleColor, 0f, Vector2.Zero, TitleScale, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_titleFont, line1, m.TitleLine1Pos, ModalOverlayPalette.TitleColor, 0f, Vector2.Zero, TitleScale, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_titleFont, line2, m.TitleLine2Pos, ModalOverlayPalette.TitleColor, 0f, Vector2.Zero, TitleScale, SpriteEffects.None, 0f);
 
 			int centerX = _layout.LeftInner.Center.X;
-			DrawHorizontalGradientRule(centerX, m.RuleY, RedRuleWidth, RedRuleHeight);
+			_gradientRuleCache.DrawRule(_spriteBatch, centerX, m.RuleY, RedRuleWidth, RedRuleHeight);
 
 			if (!m.HasGoldBlock) return;
 
@@ -764,66 +738,17 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void DrawProceedButton(bool hovered)
 		{
-			var r = _layout.ProceedButton;
-			var fill = hovered ? ButtonFillHover : ButtonFill;
-			var border = hovered ? ButtonBorderHover : ButtonBorder;
-			_spriteBatch.Draw(_pixel, r, fill);
-			DrawBorder(r, border, BorderThickness);
-
-			_spriteBatch.DrawString(_titleFont, ProceedLabelText, _textMetrics.ProceedTextPos, Color.White, 0f, Vector2.Zero, ButtonTextScale, SpriteEffects.None, 0f);
-		}
-
-		private void DrawBorder(Rectangle r, Color color, int thickness)
-		{
-			int t = System.Math.Max(1, thickness);
-			_spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Y, r.Width, t), color);
-			_spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Bottom - t, r.Width, t), color);
-			_spriteBatch.Draw(_pixel, new Rectangle(r.X, r.Y, t, r.Height), color);
-			_spriteBatch.Draw(_pixel, new Rectangle(r.Right - t, r.Y, t, r.Height), color);
-		}
-
-		private void DrawInsetHighlight(Rectangle contentRect)
-		{
-			if (contentRect.Width <= 0 || contentRect.Height <= 0) return;
-			DrawBorder(contentRect, InsetHighlight, 1);
-		}
-
-		private Texture2D GetGradientRuleTexture(int width, int height)
-		{
-			if (width < 1) width = 1;
-			if (height < 1) height = 1;
-			var key = (width, height);
-			if (_gradientRuleCache.TryGetValue(key, out var existing) && existing != null && !existing.IsDisposed)
-				return existing;
-
-			const int strips = 9;
-			int stripW = System.Math.Max(1, width / strips);
-			var data = new Color[width * height];
-			for (int i = 0; i < strips; i++)
-			{
-				float t = i / (float)(strips - 1);
-				float dist = System.Math.Abs(t - 0.5f) * 2f;
-				float alpha = 1f - dist;
-				var c = RedRuleCenter * alpha;
-				int x0 = i * stripW;
-				for (int px = 0; px < stripW && x0 + px < width; px++)
-				{
-					for (int y = 0; y < height; y++)
-						data[y * width + x0 + px] = c;
-				}
-			}
-
-			var tex = new Texture2D(_graphicsDevice, width, height);
-			tex.SetData(data);
-			_gradientRuleCache[key] = tex;
-			return tex;
-		}
-
-		private void DrawHorizontalGradientRule(int centerX, int centerY, int width, int height)
-		{
-			var tex = GetGradientRuleTexture(width, height);
-			int half = width / 2;
-			_spriteBatch.Draw(tex, new Rectangle(centerX - half, centerY, width, height), Color.White);
+			ModalOverlayChrome.DrawActionButton(
+				_spriteBatch,
+				_pixel,
+				_layout.ProceedButton,
+				hovered,
+				BorderThickness,
+				_titleFont,
+				ProceedLabelText,
+				_textMetrics.ProceedTextPos,
+				ButtonTextScale,
+				Color.White);
 		}
 
 		private void DrawGoldGlow(string text, Vector2 pos, float scale)

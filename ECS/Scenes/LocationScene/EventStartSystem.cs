@@ -42,8 +42,13 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (!SaveCache.TryGetRunEvent(eventId, out var mapEvent, out _)) return;
 			if (!RunMapEventService.IsEnterable(mapEvent, SaveCache.GetRunMapNodes())) return;
+			if (NarrativeEventModalDisplaySystem.IsOverlayOpen(EntityManager)) return;
 
-			SaveCache.TryCompleteRunMapEvent(eventId);
+			EventManager.Publish(new ShowNarrativeEventOverlay
+			{
+				RunMapEventId = eventId,
+				EventTypeId = mapEvent.eventTypeId
+			});
 		}
 	}
 }

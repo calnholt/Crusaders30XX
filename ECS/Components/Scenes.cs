@@ -196,6 +196,14 @@ namespace Crusaders30XX.ECS.Components
 		/// <summary>
 		/// Overlay state for the simple quest reward modal shown after the last battle in a quest.
 		/// </summary>
+		public class NarrativeEventOverlayState : IComponent
+		{
+			public Entity Owner { get; set; }
+			public bool IsOpen { get; set; } = false;
+			public string RunMapEventId { get; set; } = string.Empty;
+			public string EventTypeId { get; set; } = string.Empty;
+		}
+
 		public class QuestRewardOverlayState : IComponent
 		{
 			public Entity Owner { get; set; }

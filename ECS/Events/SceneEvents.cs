@@ -36,6 +36,19 @@ namespace Crusaders30XX.ECS.Events
 		public int RewardGold;
 		public string RewardMedalId;
 	}
+
+	public class ShowNarrativeEventOverlay
+	{
+		public string RunMapEventId;
+		public string EventTypeId;
+	}
+
+	public class NarrativeEventOverlayClosedEvent
+	{
+		public string RunMapEventId;
+		public string EventTypeId;
+		public int OptionIndex;
+	}
 }
 
 

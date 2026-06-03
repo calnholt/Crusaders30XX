@@ -128,6 +128,39 @@ Example: `'strike|white'`, `'fireball|red'` (quote in shell so `|` is not piped)
 
 ---
 
+## `narrative-event-modal`
+
+Renders `NarrativeEventModalDisplaySystem` for a narrative event type and optional visible option count.
+
+### Commands
+
+```bash
+# Default: icebound_tithe, 3 options
+dotnet run -- snapshot narrative-event-modal
+
+dotnet run -- snapshot narrative-event-modal --event pruned_vocation
+
+dotnet run -- snapshot narrative-event-modal --event icebound_tithe --options 1
+dotnet run -- snapshot narrative-event-modal --event icebound_tithe --options 2
+```
+
+### Output files
+
+| Run | Example path |
+|-----|----------------|
+| Defaults | `debug/snapshots/narrative-event-modal/icebound-tithe-options-3.png` |
+| `--event pruned_vocation` | `debug/snapshots/narrative-event-modal/pruned-vocation-options-3.png` |
+| `--event icebound_tithe --options 1` | `debug/snapshots/narrative-event-modal/icebound-tithe-options-1.png` |
+| `--event icebound_tithe --options 2` | `debug/snapshots/narrative-event-modal/icebound-tithe-options-2.png` |
+
+### Errors
+
+- Unknown `--event` id: exit `1`, no PNG
+- Invalid `--options` (not 1, 2, or 3): exit `1`, no PNG
+- Malformed / unknown CLI token: exit `1`, no PNG
+
+---
+
 ## Removed commands
 
 | Old command | Replacement |

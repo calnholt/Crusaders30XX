@@ -170,7 +170,7 @@ _Avoid_: Treasure POI, treasure node (prefer **Treasure Chest** vs **quest node*
 
 A choice landmark on the desert run map. Two exist per run. Map events are **not** quest nodes, shops, or Treasure Chests: they are not part of the run map tree.
 
-After the battle map, shops, and chests are generated, each Map event is placed using the same scatter rules as shops. At run creation each marker rolls a distinct **narrative event** type (stored as `eventTypeId`) from the authored pool. Completing the hold on the hub (stub v1) marks the Map event completed and dims its icon; narrative choice UI is a follow-up milestone.
+After the battle map, shops, and chests are generated, each Map event is placed using the same scatter rules as shops. At run creation each marker rolls a distinct **narrative event** type (stored as `eventTypeId`) from the authored pool. The hold on the hub opens the **narrative event** choice UI. The Map event is marked completed only after the player selects an option and that choice is resolved.
 
 ## Map event reveal (enterable)
 
@@ -180,7 +180,7 @@ _Avoid_: Event node (when meaning the map marker; prefer **Map event** vs **ques
 
 ## Narrative event
 
-Authored hub content with a title, body text, and one to three player choices (`EventBase`). Examples include Icebound Tithe and Pruned Vocation. A Map event's `eventTypeId` selects which narrative event will run when choice UI is wired; v1 stub completion does not open that UI yet.
+Authored hub content with a title, body text, and one to three player choices (`EventBase`). Examples include Icebound Tithe and Pruned Vocation. A Map event's `eventTypeId` selects which narrative event runs when the player enters that marker on the hub.
 
 _Avoid_: Using "event" alone when you mean the map marker or the choice content; use **Map event** or **Narrative event**
 
