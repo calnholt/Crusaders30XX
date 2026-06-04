@@ -485,6 +485,14 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marker for cards rendered with the brittle crumble shader.
+    /// </summary>
+    public class Brittle : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
     /// Marks a card with recoil stacks. If the card is not used to block the current attack,
     /// the player takes damage equal to Stacks. Removed each attack resolve.
     /// </summary>

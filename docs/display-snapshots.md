@@ -45,6 +45,7 @@ dotnet run -- snapshot <fixture-id> [fixture-args...]
 | Fixture id | Display system | Purpose |
 |------------|----------------|---------|
 | `card` | Card display (V2) | Three color variants of one card on a green background |
+| `brittle-card` | Brittle card shader | One brittle card on a patterned backdrop for shader debugging |
 | `quest-reward-modal` | Quest reward modal | Quest complete overlay (gold and/or card reward) |
 
 ---
@@ -69,6 +70,36 @@ dotnet run -- snapshot card fireball
 `debug/snapshots/card/<cardId>.png`
 
 Example: `debug/snapshots/card/strike.png`
+
+### Errors
+
+- If `<cardId>` is provided but unknown: exit `1`, no PNG
+
+---
+
+## `brittle-card`
+
+Renders one White card with the `Brittle` component attached on a high-contrast patterned backdrop.
+
+### Commands
+
+```bash
+# Default card
+dotnet run -- snapshot brittle-card
+
+# Specific card by definition id
+dotnet run -- snapshot brittle-card strike
+dotnet run -- snapshot brittle-card fireball
+
+# Disable shaders to compare against the normal card render
+dotnet run -- snapshot brittle-card strike no-shaders
+```
+
+### Output file
+
+`debug/snapshots/brittle-card/<cardId>.png`
+
+Example: `debug/snapshots/brittle-card/strike.png`
 
 ### Errors
 

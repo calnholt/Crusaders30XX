@@ -1,0 +1,331 @@
+using System;
+using System.Collections.Generic;
+using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace Crusaders30XX.ECS.Systems;
+
+[DebugTab("Brittle Display")]
+public class BrittleDisplaySystem : Core.System
+{
+    private const int PreRenderPriority = 100;
+    private const int PostRenderPriority = -100;
+
+    private readonly GraphicsDevice _graphicsDevice;
+    private readonly SpriteBatch _spriteBatch;
+    private readonly ContentManager _content;
+
+    private Effect _effect;
+    private BrittleOverlay _overlay;
+    private RenderTarget2D _beforeCardTarget;
+    private RenderTarget2D _afterCardTarget;
+    private bool _failed;
+    private bool _hasCapture;
+    private Entity _capturedCard;
+    private float _timeSeconds;
+
+    [DebugEditable(DisplayName = "Chunk Size Px", Step = 1f, Min = 4f, Max = 80f)]
+    public float ChunkSizePx { get; set; } = 22f;
+
+    [DebugEditable(DisplayName = "Mask Threshold", Step = 0.005f, Min = 0.001f, Max = 0.2f)]
+    public float MaskThreshold { get; set; } = 0.02f;
+
+    [DebugEditable(DisplayName = "Fall Fraction", Step = 0.01f, Min = 0f, Max = 1f)]
+    public float FallFraction { get; set; } = 0.15f;
+
+    [DebugEditable(DisplayName = "Max Fall", Step = 0.5f, Min = 0f, Max = 40f)]
+    public float MaxFall { get; set; } = 12f;
+
+    [DebugEditable(DisplayName = "Max Drift", Step = 0.1f, Min = 0f, Max = 8f)]
+    public float MaxDrift { get; set; } = 1.2f;
+
+    [DebugEditable(DisplayName = "Edge Glow Amount", Step = 0.05f, Min = 0f, Max = 2f)]
+    public float EdgeGlowAmount { get; set; } = 0.6f;
+
+    [DebugEditable(DisplayName = "Hole Darken", Step = 0.05f, Min = 0f, Max = 1.5f)]
+    public float HoleDarken { get; set; } = 1f;
+
+    public BrittleDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
+        : base(entityManager)
+    {
+        _graphicsDevice = graphicsDevice;
+        _spriteBatch = spriteBatch;
+        _content = content;
+
+        EventManager.Subscribe<CardRenderEvent>(OnCardRenderPre, PreRenderPriority);
+        EventManager.Subscribe<CardRenderEvent>(OnCardRenderPost, PostRenderPriority);
+        EventManager.Subscribe<CardRenderScaledEvent>(OnCardRenderScaledPre, PreRenderPriority);
+        EventManager.Subscribe<CardRenderScaledEvent>(OnCardRenderScaledPost, PostRenderPriority);
+        EventManager.Subscribe<CardRenderScaledRotatedEvent>(OnCardRenderScaledRotatedPre, PreRenderPriority);
+        EventManager.Subscribe<CardRenderScaledRotatedEvent>(OnCardRenderScaledRotatedPost, PostRenderPriority);
+        EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCachesEvent);
+    }
+
+    protected override IEnumerable<Entity> GetRelevantEntities()
+    {
+        return EntityManager.GetEntitiesWithComponent<Brittle>();
+    }
+
+    public override void Update(GameTime gameTime)
+    {
+        if (!ShaderRuntimeOptions.ShadersEnabled || _failed) return;
+
+        _timeSeconds += MathHelper.Max(0f, (float)gameTime.ElapsedGameTime.TotalSeconds);
+        if (_overlay == null && HasAnyBrittleCards())
+        {
+            EnsureLoaded();
+        }
+    }
+
+    protected override void UpdateEntity(Entity entity, GameTime gameTime)
+    {
+    }
+
+    private void OnDeleteCachesEvent(DeleteCachesEvent evt)
+    {
+        _hasCapture = false;
+        _capturedCard = null;
+    }
+
+    private void OnCardRenderPre(CardRenderEvent evt)
+    {
+        BeginBrittleRender(evt.Card);
+    }
+
+    private void OnCardRenderPost(CardRenderEvent evt)
+    {
+        EndBrittleRender(evt.Card);
+    }
+
+    private void OnCardRenderScaledPre(CardRenderScaledEvent evt)
+    {
+        BeginBrittleRender(evt.Card);
+    }
+
+    private void OnCardRenderScaledPost(CardRenderScaledEvent evt)
+    {
+        EndBrittleRender(evt.Card);
+    }
+
+    private void OnCardRenderScaledRotatedPre(CardRenderScaledRotatedEvent evt)
+    {
+        BeginBrittleRender(evt.Card);
+    }
+
+    private void OnCardRenderScaledRotatedPost(CardRenderScaledRotatedEvent evt)
+    {
+        EndBrittleRender(evt.Card);
+    }
+
+    private void BeginBrittleRender(Entity card)
+    {
+        _hasCapture = false;
+        _capturedCard = null;
+
+        if (!ShouldRender(card)) return;
+        if (!EnsureLoaded()) return;
+        if (!EnsureTargets()) return;
+
+        var currentTargets = _graphicsDevice.GetRenderTargets();
+        if (!TryGetPrimaryRenderTarget(currentTargets, out var currentTarget)) return;
+
+        var state = CaptureSpriteBatchState();
+        _spriteBatch.End();
+
+        CopyRenderTarget(currentTarget, _beforeCardTarget);
+        RestoreRenderTargets(currentTargets);
+        RestoreSpriteBatchState(state);
+
+        _hasCapture = true;
+        _capturedCard = card;
+    }
+
+    private void EndBrittleRender(Entity card)
+    {
+        if (!_hasCapture || _capturedCard != card)
+        {
+            return;
+        }
+
+        _hasCapture = false;
+        _capturedCard = null;
+
+        if (!ShouldRender(card) || _overlay == null || _beforeCardTarget == null || _afterCardTarget == null)
+        {
+            return;
+        }
+
+        var currentTargets = _graphicsDevice.GetRenderTargets();
+        if (!TryGetPrimaryRenderTarget(currentTargets, out var currentTarget)) return;
+
+        var state = CaptureSpriteBatchState();
+        _spriteBatch.End();
+
+        CopyRenderTarget(currentTarget, _afterCardTarget);
+
+        _overlay.Time = _timeSeconds;
+        _overlay.BackgroundTexture = _beforeCardTarget;
+        _overlay.ChunkSizePx = ChunkSizePx;
+        _overlay.MaskThreshold = MaskThreshold;
+        _overlay.FallFraction = FallFraction;
+        _overlay.MaxFall = MaxFall;
+        _overlay.MaxDrift = MaxDrift;
+        _overlay.EdgeGlowAmount = EdgeGlowAmount;
+        _overlay.HoleDarken = HoleDarken;
+
+        RestoreRenderTargets(currentTargets);
+        _graphicsDevice.Clear(Color.Transparent);
+
+        _overlay.Begin(_spriteBatch);
+        _overlay.Draw(_spriteBatch, _afterCardTarget);
+        _overlay.End(_spriteBatch);
+
+        RestoreSpriteBatchState(state);
+    }
+
+    private bool ShouldRender(Entity card)
+    {
+        return ShaderRuntimeOptions.ShadersEnabled &&
+            !_failed &&
+            card != null &&
+            card.GetComponent<Brittle>() != null;
+    }
+
+    private bool HasAnyBrittleCards()
+    {
+        foreach (var _ in EntityManager.GetEntitiesWithComponent<Brittle>())
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool EnsureLoaded()
+    {
+        if (!ShaderRuntimeOptions.ShadersEnabled || _failed) return false;
+        if (_effect == null)
+        {
+            try
+            {
+                _effect = _content.Load<Effect>("Shaders/Brittle");
+            }
+            catch (Exception e)
+            {
+                LoggingService.Append("BrittleDisplaySystem.EnsureLoaded", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["error"] = "Failed to load shader",
+                    ["exception"] = e.Message
+                });
+                _effect = null;
+                _failed = true;
+                return false;
+            }
+        }
+
+        _overlay ??= new BrittleOverlay(_effect);
+        return _overlay.IsAvailable;
+    }
+
+    private bool EnsureTargets()
+    {
+        var bounds = _graphicsDevice.Viewport.Bounds;
+        if (bounds.Width <= 0 || bounds.Height <= 0) return false;
+
+        if (_beforeCardTarget != null &&
+            _beforeCardTarget.Width == bounds.Width &&
+            _beforeCardTarget.Height == bounds.Height &&
+            _afterCardTarget != null &&
+            _afterCardTarget.Width == bounds.Width &&
+            _afterCardTarget.Height == bounds.Height)
+        {
+            return true;
+        }
+
+        _beforeCardTarget?.Dispose();
+        _afterCardTarget?.Dispose();
+        _beforeCardTarget = new RenderTarget2D(_graphicsDevice, bounds.Width, bounds.Height, false, SurfaceFormat.Color, DepthFormat.None);
+        _afterCardTarget = new RenderTarget2D(_graphicsDevice, bounds.Width, bounds.Height, false, SurfaceFormat.Color, DepthFormat.None);
+        return true;
+    }
+
+    private static bool TryGetPrimaryRenderTarget(RenderTargetBinding[] targets, out RenderTarget2D renderTarget)
+    {
+        renderTarget = null;
+        if (targets == null || targets.Length == 0)
+        {
+            return false;
+        }
+
+        renderTarget = targets[0].RenderTarget as RenderTarget2D;
+        return renderTarget != null;
+    }
+
+    private void CopyRenderTarget(Texture2D source, RenderTarget2D destination)
+    {
+        _graphicsDevice.SetRenderTarget(destination);
+        _graphicsDevice.Clear(Color.Transparent);
+        _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
+        _spriteBatch.Draw(source, _graphicsDevice.Viewport.Bounds, Color.White);
+        _spriteBatch.End();
+    }
+
+    private SpriteBatchState CaptureSpriteBatchState()
+    {
+        return new SpriteBatchState(
+            _graphicsDevice.BlendState,
+            _graphicsDevice.SamplerStates[0],
+            _graphicsDevice.DepthStencilState,
+            _graphicsDevice.RasterizerState,
+            _graphicsDevice.ScissorRectangle);
+    }
+
+    private void RestoreSpriteBatchState(SpriteBatchState state)
+    {
+        _graphicsDevice.ScissorRectangle = state.ScissorRectangle;
+        _spriteBatch.Begin(
+            SpriteSortMode.Immediate,
+            state.BlendState,
+            state.SamplerState,
+            state.DepthStencilState,
+            state.RasterizerState
+        );
+    }
+
+    private void RestoreRenderTargets(RenderTargetBinding[] targets)
+    {
+        if (targets != null && targets.Length > 0)
+        {
+            _graphicsDevice.SetRenderTargets(targets);
+        }
+        else
+        {
+            _graphicsDevice.SetRenderTarget(null);
+        }
+    }
+
+    private readonly struct SpriteBatchState
+    {
+        public SpriteBatchState(BlendState blendState, SamplerState samplerState, DepthStencilState depthStencilState, RasterizerState rasterizerState, Rectangle scissorRectangle)
+        {
+            BlendState = blendState;
+            SamplerState = samplerState;
+            DepthStencilState = depthStencilState;
+            RasterizerState = rasterizerState;
+            ScissorRectangle = scissorRectangle;
+        }
+
+        public BlendState BlendState { get; }
+        public SamplerState SamplerState { get; }
+        public DepthStencilState DepthStencilState { get; }
+        public RasterizerState RasterizerState { get; }
+        public Rectangle ScissorRectangle { get; }
+    }
+}
