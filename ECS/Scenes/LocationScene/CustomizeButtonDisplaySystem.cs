@@ -33,25 +33,20 @@ namespace Crusaders30XX.ECS.Systems
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
 			var scene = entity.GetComponent<SceneState>();
-			if (scene == null || (scene.Current != SceneId.Location && scene.Current != SceneId.Shop)) return;
-
-			// Determine button text and event type based on scene
-			bool isShop = scene.Current == SceneId.Shop;
-			string text = isShop ? "Leave" : "Customize";
-			var eventType = isShop ? UIElementEventType.LeaveShop : UIElementEventType.GoToCustomize;
+			if (scene == null || scene.Current != SceneId.Shop) return;
 
 			// Regenerate texture when text changes
-			if (_cachedTexture == null || _cachedText != text)
+			if (_cachedTexture == null || _cachedText != "Leave")
 			{
 				_cachedTexture?.Dispose();
-				_cachedTexture = ButtonTextureFactory.Create(_graphicsDevice, text, Color.Black, Color.White);
-				_cachedText = text;
+				_cachedTexture = ButtonTextureFactory.Create(_graphicsDevice, "Leave", Color.Black, Color.White);
+				_cachedText = "Leave";
 			}
 
 			// Ensure button entity exists and is positioned correctly
 			int vw = Game1.VirtualWidth;
 			int vh = Game1.VirtualHeight;
-			EnsureButtonEntity(vw, vh, eventType);
+			EnsureButtonEntity(vw, vh, UIElementEventType.LeaveShop);
 		}
 
 		public void Draw()

@@ -17,11 +17,6 @@ namespace Crusaders30XX.ECS.Events
 		public string QuestId;
 	}
 
-	public class SetCustomizationTab
-	{
-		public CustomizationTabType Tab;
-	}
-
 	public class ShowQuestRewardOverlay
 	{
 		public string Message;
@@ -51,5 +46,4 @@ namespace Crusaders30XX.ECS.Events
 		public int OptionIndex;
 	}
 }
-
 

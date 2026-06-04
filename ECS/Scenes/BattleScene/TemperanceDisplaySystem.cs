@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -129,13 +130,13 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Resolve threshold from equipped ability (default to 3 if unavailable)
 			int threshold = 3;
-			Crusaders30XX.ECS.Data.Temperance.TemperanceAbilityDefinition def = null;
 			var equipped = player.GetComponent<EquippedTemperanceAbility>();
 			if (equipped != null && !string.IsNullOrEmpty(equipped.AbilityId))
 			{
-				if (Data.Temperance.TemperanceAbilityDefinitionCache.TryGet(equipped.AbilityId, out def) && def != null)
+				var ability = TemperanceFactory.Create(equipped.AbilityId);
+				if (ability != null)
 				{
-					threshold = Math.Max(1, def.threshold);
+					threshold = Math.Max(1, ability.Threshold);
 				}
 			}
 			int filled = Math.Max(0, Math.Min(temperance.Amount, threshold));
@@ -250,5 +251,4 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 

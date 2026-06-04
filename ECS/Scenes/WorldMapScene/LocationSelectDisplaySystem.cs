@@ -240,15 +240,6 @@ namespace Crusaders30XX.ECS.Systems
 					break;
 				}
 			}
-
-			// Customize click -> load Customization scene
-			var custEnt = EntityManager.GetEntitiesWithComponent<LocationCustomizeButton>().FirstOrDefault();
-			var custUI = custEnt?.GetComponent<UIElement>();
-			if (custUI != null && custUI.IsClicked)
-			{
-				// Switch scene
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Customization });
-			}
 		}
 
 		public void Draw()
@@ -440,5 +431,4 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 

@@ -1,8 +1,0 @@
-{
-  "id": "radiance",
-  "name": "Radiance",
-  "target": "Enemy",
-  "text": "Stun the enemy.",
-  "threshold": 4
-}
-

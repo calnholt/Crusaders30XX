@@ -1,7 +1,6 @@
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Data.Temperance;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -151,10 +150,11 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(temperanceTooltip, new TemperanceTooltipAnchor());
             world.AddComponent(temperanceTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
             string temperanceTooltipText = "Temperance Meter";
-            if (TemperanceAbilityDefinitionCache.TryGet(equippedTemperanceAbility.AbilityId, out var tempDef) && tempDef != null)
+            var tempDef = TemperanceFactory.Create(equippedTemperanceAbility.AbilityId);
+            if (tempDef != null)
             {
-                string nm = string.IsNullOrWhiteSpace(tempDef.name) ? equippedTemperanceAbility.AbilityId : tempDef.name;
-                string tx = tempDef.text ?? string.Empty;
+                string nm = string.IsNullOrWhiteSpace(tempDef.Name) ? equippedTemperanceAbility.AbilityId : tempDef.Name;
+                string tx = tempDef.Text ?? string.Empty;
                 temperanceTooltipText += "\n\n" + nm + "\n\n" + tx + "\n\n" + "(Blocking with white cards increases your temperance by 1)";
             }
             world.AddComponent(temperanceTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = temperanceTooltipText });

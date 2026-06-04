@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -91,15 +92,19 @@ namespace Crusaders30XX.ECS.Systems
             var equipped = player.GetComponent<EquippedTemperanceAbility>();
             if (equipped == null || string.IsNullOrEmpty(equipped.AbilityId)) return;
 
-            if (!Data.Temperance.TemperanceAbilityDefinitionCache.TryGet(equipped.AbilityId, out var def)) return;
-            if (def.threshold <= 0) return;
-            while (t.Amount >= def.threshold)
+            var ability = TemperanceFactory.Create(equipped.AbilityId);
+            if (ability == null)
+            {
+                Console.WriteLine($"[TemperanceManagerSystem] No activation logic for id={equipped.AbilityId}");
+                return;
+            }
+            if (ability.Threshold <= 0) return;
+            while (t.Amount >= ability.Threshold)
             {
                 // Spend threshold and activate
-                t.Amount -= def.threshold;
-                TemperanceAbilityService.Activate(EntityManager, equipped.AbilityId);
+                t.Amount -= ability.Threshold;
+                ability.Activate(EntityManager);
             }
         }
     }
 }
-

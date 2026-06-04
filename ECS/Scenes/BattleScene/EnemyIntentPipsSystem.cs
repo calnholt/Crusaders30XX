@@ -143,60 +143,60 @@ namespace Crusaders30XX.ECS.Systems
 				}
 
 				// Next turn preview row (smaller/faded) if present
-				// var next = e.GetComponent<NextTurnAttackIntent>();
-				// if (next != null && next.Planned.Count > 0)
-				// {
-				// 	int nCount = next.Planned.Count;
-				// 	int nDiameter = System.Math.Max(2, (int)System.Math.Round(PipRadius * 0.75f)) * 2;
-				// 	int nRadius = nDiameter / 2;
-				// 	int nTotalWidth = nCount * nDiameter + (nCount - 1) * PipGap;
-				// 	int nStartX = (int)System.Math.Round(center.X - nTotalWidth / 2f);
-				// 	int y2 = (int)center.Y + RowGap + nRadius + PipRadius;
-				//
-				// 	// Compute which next-turn pips are crossed out if there are remaining stun stacks after current row
-				// 	bool[] crossedNext = new bool[nCount];
-				// 	int remainingAfterCurrent = 0;
-				// 	{
-				// 		// Recompute remaining by simulating how many current would be crossed, same as above
-				// 		int consumedByCurrent = 0;
-				// 		if (stunStacks > 0 && intent.Planned.Count > 0)
-				// 		{
-				// 			var order = intent.Planned
-				// 				.Select((pa, idx) => new { idx, step = pa.ResolveStep })
-				// 				.OrderBy(x => x.step)
-				// 				.ToList();
-				// 			int skip = (isEnemyTurn && order.Count > 0) ? 1 : 0; // cannot consume the current attack during enemy turn
-				// 			int consumable = System.Math.Max(0, order.Count - skip);
-				// 			consumedByCurrent = System.Math.Min(stunStacks, consumable);
-				// 		}
-				// 		remainingAfterCurrent = System.Math.Max(0, stunStacks - consumedByCurrent);
-				// 	}
-				// 	if (remainingAfterCurrent > 0)
-				// 	{
-				// 		var orderNext = next.Planned
-				// 			.Select((pa, idx) => new { idx, step = pa.ResolveStep })
-				// 			.OrderBy(x => x.step)
-				// 			.ToList();
-				// 		int toCross = System.Math.Min(remainingAfterCurrent, orderNext.Count);
-				// 		for (int k = 0; k < toCross; k++) crossedNext[orderNext[k].idx] = true;
-				// 	}
-				// 	for (int i = 0; i < nCount; i++)
-				// 	{
-				// 		int x2 = nStartX + i * (nDiameter + PipGap) + nRadius;
-				// 		bool isCrossed = crossedNext[i];
-				// 		DrawCircle(new Vector2(x2, y2), nRadius, new Color(200, 200, 200, 180), PipThickness);
-				// 		if (isCrossed)
-				// 		{
-				// 			// Draw red X over the next-turn pip
-				// 			var a = new Vector2(x2 - nRadius + 2, y2 - nRadius + 2);
-				// 			var b = new Vector2(x2 + nRadius - 2, y2 + nRadius - 2);
-				// 			var c = new Vector2(x2 - nRadius + 2, y2 + nRadius - 2);
-				// 			var d = new Vector2(x2 + nRadius - 2, y2 - nRadius + 2);
-				// 			DrawLine(a, b, Color.Red, 2);
-				// 			DrawLine(c, d, Color.Red, 2);
-				// 		}
-				// 	}
-				// }
+				var next = e.GetComponent<NextTurnAttackIntent>();
+				if (next != null && next.Planned.Count > 0)
+				{
+					int nCount = next.Planned.Count;
+					int nDiameter = System.Math.Max(2, (int)System.Math.Round(PipRadius * 0.75f)) * 2;
+					int nRadius = nDiameter / 2;
+					int nTotalWidth = nCount * nDiameter + (nCount - 1) * PipGap;
+					int nStartX = (int)System.Math.Round(center.X - nTotalWidth / 2f);
+					int y2 = (int)center.Y + RowGap + nRadius + PipRadius;
+				
+					// Compute which next-turn pips are crossed out if there are remaining stun stacks after current row
+					bool[] crossedNext = new bool[nCount];
+					int remainingAfterCurrent = 0;
+					{
+						// Recompute remaining by simulating how many current would be crossed, same as above
+						int consumedByCurrent = 0;
+						if (stunStacks > 0 && intent.Planned.Count > 0)
+						{
+							var order = intent.Planned
+								.Select((pa, idx) => new { idx, step = pa.ResolveStep })
+								.OrderBy(x => x.step)
+								.ToList();
+							int skip = (isEnemyTurn && order.Count > 0) ? 1 : 0; // cannot consume the current attack during enemy turn
+							int consumable = System.Math.Max(0, order.Count - skip);
+							consumedByCurrent = System.Math.Min(stunStacks, consumable);
+						}
+						remainingAfterCurrent = System.Math.Max(0, stunStacks - consumedByCurrent);
+					}
+					if (remainingAfterCurrent > 0)
+					{
+						var orderNext = next.Planned
+							.Select((pa, idx) => new { idx, step = pa.ResolveStep })
+							.OrderBy(x => x.step)
+							.ToList();
+						int toCross = System.Math.Min(remainingAfterCurrent, orderNext.Count);
+						for (int k = 0; k < toCross; k++) crossedNext[orderNext[k].idx] = true;
+					}
+					for (int i = 0; i < nCount; i++)
+					{
+						int x2 = nStartX + i * (nDiameter + PipGap) + nRadius;
+						bool isCrossed = crossedNext[i];
+						DrawCircle(new Vector2(x2, y2), nRadius, new Color(200, 200, 200, 180), PipThickness);
+						if (isCrossed)
+						{
+							// Draw red X over the next-turn pip
+							var a = new Vector2(x2 - nRadius + 2, y2 - nRadius + 2);
+							var b = new Vector2(x2 + nRadius - 2, y2 + nRadius - 2);
+							var c = new Vector2(x2 - nRadius + 2, y2 + nRadius - 2);
+							var d = new Vector2(x2 + nRadius - 2, y2 - nRadius + 2);
+							DrawLine(a, b, Color.Red, 2);
+							DrawLine(c, d, Color.Red, 2);
+						}
+					}
+				}
 			}
 		}
 

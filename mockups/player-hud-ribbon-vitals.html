@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Vitals Ribbon (D refined)</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black-0: #050505;
+    --black-1: #0a0a0a;
+    --black-2: #141414;
+    --black-3: #1e1e1e;
+    --black-4: #2a2a2a;
+    --white-1: #ffffff;
+    --white-2: #f0ece6;
+    --white-3: #c8c0b8;
+    --red-3: #c41e3a;
+    --red-glow: rgba(196, 30, 58, 0.45);
+    --game-w: 1920px;
+    --game-h: 1080px;
+    --hud-red: #c41e3a;
+    --hud-black: #0a0a0a;
+    --hud-white: #ffffff;
+    --hp-track: #282828;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black-0);
+    color: var(--white-2);
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--black-4);
+    background: var(--black-1);
+  }
+
+  .page-header h1 {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.75rem;
+    letter-spacing: 2px;
+    color: var(--white-1);
+    margin-bottom: 6px;
+  }
+
+  .page-header p {
+    color: var(--white-3);
+    font-size: 0.85rem;
+    line-height: 1.55;
+    max-width: 920px;
+  }
+
+  .controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 28px;
+    padding: 18px 40px;
+    background: var(--black-2);
+    border-bottom: 1px solid var(--black-4);
+    align-items: center;
+  }
+
+  .control-group label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--white-3);
+    margin-bottom: 6px;
+  }
+
+  .tab-row, .phase-row, .toggle-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tab-btn, .phase-btn, .toggle-btn {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    border: 1px solid var(--black-4);
+    background: var(--black-1);
+    color: var(--white-3);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+
+  .tab-btn:hover, .phase-btn:hover, .toggle-btn:hover {
+    border-color: var(--red-3);
+    color: var(--white-1);
+  }
+
+  .tab-btn.active { background: var(--red-3); border-color: var(--red-3); color: var(--white-1); }
+  .phase-btn.active { border-color: var(--white-1); color: var(--white-1); }
+  .toggle-btn.active { background: var(--black-4); color: var(--white-1); }
+
+  input[type="range"] { width: 120px; accent-color: var(--red-3); }
+
+  .page-main { padding: 28px 40px 56px; }
+
+  .design-panel { display: none; }
+  .design-panel.active { display: block; }
+
+  .design-notes {
+    max-width: 920px;
+    margin-bottom: 18px;
+    padding: 14px 18px;
+    background: var(--black-2);
+    border-left: 3px solid var(--red-3);
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--white-3);
+  }
+
+  .design-notes strong { color: var(--white-1); }
+  .design-notes ul { margin: 8px 0 0 18px; }
+
+  .viewport-scaler {
+    width: 100%;
+    max-width: min(calc(100vw - 80px), 1100px);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--black-2);
+    border: 1px solid var(--black-4);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+    min-height: 300px;
+  }
+
+  .viewport {
+    width: var(--game-w);
+    height: var(--game-h);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform-origin: top center;
+    overflow: hidden;
+  }
+
+  .bg-scene {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, #3d2818 0%, #6b3a1f 35%, #8a4a28 55%, #5c3018 100%);
+  }
+
+  .portrait-placeholder {
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 360px;
+    border: 2px dashed rgba(255,255,255,0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.22);
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .phase-label {
+    position: absolute;
+    top: 20px;
+    right: 28px;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    padding: 5px 10px;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+
+  /* ─── Vitals ribbon (shared) ─── */
+  .vitals-ribbon {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    background: var(--hud-black);
+    border: 2px solid var(--hud-white);
+    box-sizing: border-box;
+    padding: 10px 0;
+    min-height: 62px;
+    box-shadow: 0 6px 28px rgba(0,0,0,0.55);
+    overflow: hidden;
+  }
+
+  /* Variant 6: shaped shell — clip-path + ::after border (rect border ignored clip before) */
+  .vitals-ribbon.style-clean,
+  .vitals-ribbon.style-slant {
+    border-color: transparent;
+  }
+
+  .vitals-ribbon.style-clean::after,
+  .vitals-ribbon.style-slant::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--hud-white);
+    pointer-events: none;
+    z-index: 30;
+    box-sizing: border-box;
+  }
+
+  .vitals-ribbon.top-32 { top: 32px; }
+  .vitals-ribbon.top-36 { top: 36px; }
+  .vitals-ribbon.top-40 { top: 40px; }
+  .vitals-ribbon.top-48 { top: 48px; }
+  .vitals-ribbon.w-narrow { width: 620px; }
+  .vitals-ribbon.w-medium { width: 720px; }
+  .vitals-ribbon.w-wide { width: 820px; }
+
+  .ribbon-seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    border-right: 1px solid rgba(255,255,255,0.18);
+  }
+
+  .ribbon-seg:last-child { border-right: none; }
+
+  .ribbon-seg.grow {
+    flex: 1;
+    padding: 0 10px;
+  }
+
+  .ribbon-seg.ap-cap {
+    flex-shrink: 0;
+    min-width: 88px;
+    padding-right: 16px;
+    padding-left: 14px;
+    background: rgba(196, 30, 58, 0.12);
+    transition: background 0.3s, opacity 0.3s;
+  }
+
+  .ribbon-seg.ap-cap.on {
+    background: rgba(196, 30, 58, 0.42);
+    box-shadow: inset 0 0 24px var(--red-glow);
+  }
+
+  .ribbon-seg.ap-cap.off {
+    opacity: 0.32;
+    background: transparent;
+  }
+
+  .ap-cap-text {
+    font-family: 'New Rocker', cursive;
+    font-size: 30px;
+    color: var(--hud-white);
+  }
+
+  .ap-cap-text.small { font-size: 24px; }
+
+  /* Vitals widgets */
+  .temp-gauge {
+    width: 52px;
+    height: 36px;
+    background: var(--hud-black);
+    transform: skewX(-12deg);
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-end;
+    gap: 3px;
+    padding: 4px 5px;
+    flex-shrink: 0;
+  }
+
+  .temp-chunk {
+    width: 10px;
+    transform: skewX(12deg);
+    background: transparent;
+    transition: background 0.2s;
+  }
+
+  .temp-chunk.filled {
+    background: var(--hud-white);
+    clip-path: polygon(20% 0, 100% 0, 80% 100%, 0 100%);
+  }
+
+  .hp-bar-wrap {
+    position: relative;
+    width: 100%;
+    height: 38px;
+  }
+
+  .hp-bar {
+    position: absolute;
+    inset: 0;
+    background: var(--hp-track);
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+    border-radius: 0 19px 19px 0;
+    overflow: hidden;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+      inset 0 2px 6px rgba(0, 0, 0, 0.45);
+  }
+
+  .hp-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--hp-pct, 90%);
+    background: linear-gradient(180deg, #ff3a3a 0%, var(--hud-red) 55%, #8b1528 100%);
+    transition: width 0.25s;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .hp-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 21px;
+    color: var(--hud-white);
+    z-index: 2;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.85);
+  }
+
+  .courage-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--hud-red);
+    border: 3px solid var(--hud-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'New Rocker', cursive;
+    font-size: 22px;
+    color: var(--hud-white);
+    flex-shrink: 0;
+  }
+
+  .courage-badge.large {
+    width: 52px;
+    height: 52px;
+    font-size: 26px;
+  }
+
+  /* Passives (outside ribbon) */
+  .passives-float {
+    position: absolute;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .passive-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 18px 6px 14px;
+    background: var(--hud-black);
+    color: var(--hud-white);
+    font-family: 'New Rocker', cursive;
+    font-size: 22px;
+    clip-path: polygon(12px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+    white-space: nowrap;
+  }
+
+  .passive-chip .val { font-size: 26px; }
+
+  .anchor-line {
+    position: absolute;
+    background: rgba(255,255,255,0.12);
+    pointer-events: none;
+  }
+
+  /* Variant positions */
+  .passives-below-offset {
+    top: 104px;
+    left: 50%;
+    transform: translateX(-22%);
+    max-width: 480px;
+  }
+
+  .passives-below-center {
+    top: 106px;
+    left: 50%;
+    transform: translateX(-50%);
+    justify-content: center;
+    max-width: 560px;
+  }
+
+  .passives-below-left {
+    top: 106px;
+    left: 50%;
+    transform: translateX(-58%);
+    max-width: 520px;
+  }
+
+  .passives-portrait-l {
+    left: calc(50% - 200px);
+    top: 52%;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .passives-portrait-r {
+    left: calc(50% + 120px);
+    top: 52%;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .passives-shoulder {
+    top: 130px;
+    left: 50%;
+    transform: translateX(-50%);
+    justify-content: center;
+    gap: 10px;
+  }
+
+  /* Ribbon style variants (variant 6 toggles) */
+  .vitals-ribbon.style-clean {
+    clip-path: polygon(
+      0 0,
+      calc(100% - 32px) 0,
+      100% 32px,
+      100% 100%,
+      32px 100%,
+      0 calc(100% - 32px)
+    );
+  }
+
+  .vitals-ribbon.style-clean::after {
+    clip-path: polygon(
+      0 0,
+      calc(100% - 32px) 0,
+      100% 32px,
+      100% 100%,
+      32px 100%,
+      0 calc(100% - 32px)
+    );
+  }
+
+  /* Trapezoid: slanted left and right edges */
+  .vitals-ribbon.style-slant {
+    clip-path: polygon(32px 0, 100% 0, calc(100% - 32px) 100%, 0 100%);
+  }
+
+  .vitals-ribbon.style-slant::after {
+    clip-path: polygon(32px 0, 100% 0, calc(100% - 32px) 100%, 0 100%);
+  }
+
+  .vitals-ribbon.style-notch-ap .ribbon-seg.ap-cap {
+    position: relative;
+    z-index: 2;
+    clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%);
+    border-left: 2px solid var(--hud-white);
+    margin-left: -1px;
+  }
+
+  .vitals-ribbon.no-border-segments .ribbon-seg {
+    border-right: none;
+  }
+
+  .vitals-ribbon.no-border-segments .ribbon-seg.grow {
+    padding: 0 14px;
+  }
+
+  .connector-bracket {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 12px;
+    top: 94px;
+    border-left: 1px solid rgba(255,255,255,0.2);
+    border-right: 1px solid rgba(255,255,255,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .connector-bracket.wide { width: 200px; }
+
+  .legend-inline {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.35);
+    text-align: center;
+    max-width: 640px;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Vitals Ribbon — Refined (D)</h1>
+  <p>
+    Single <strong>vitals band only</strong>: temperance, HP, courage, and AP cap (phase-aware).
+    Status passives stay <em>outside</em> the ribbon — variants explore placement and visual tie-back
+    without a second HUD band. Based on ribbon concept D from the main brainstorm.
+  </p>
+</header>
+
+<div class="controls-bar">
+  <div class="control-group">
+    <label>Variant</label>
+    <div class="tab-row" id="layoutTabs">
+      <button class="tab-btn active" data-panel="v1">1: Below offset</button>
+      <button class="tab-btn" data-panel="v2">2: Below centered</button>
+      <button class="tab-btn" data-panel="v3">3: Bracket tie</button>
+      <button class="tab-btn" data-panel="v4">4: Portrait flank</button>
+      <button class="tab-btn" data-panel="v5">5: Shoulder row</button>
+      <button class="tab-btn" data-panel="v6">6: Ribbon styles</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <label>Phase</label>
+    <div class="phase-row">
+      <button class="phase-btn active" data-phase="action">Player action</button>
+      <button class="phase-btn" data-phase="enemy">Enemy / block</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <label>Ribbon shape (variant 6 only)</label>
+    <div class="toggle-row">
+      <button class="toggle-btn active" data-style="clean">Clean corners</button>
+      <button class="toggle-btn" data-style="slant">Slant ends</button>
+      <button class="toggle-btn" data-style="notch-ap">AP notch</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <label>Temp <span id="tempVal">2</span>/3</label>
+    <input type="range" id="tempSlider" min="0" max="3" value="2">
+  </div>
+  <div class="control-group">
+    <label>HP <span id="hpVal">18</span>/20</label>
+    <input type="range" id="hpSlider" min="0" max="20" value="18">
+  </div>
+  <div class="control-group">
+    <label>Courage</label>
+    <input type="range" id="courageSlider" min="0" max="99" value="12">
+  </div>
+  <div class="control-group">
+    <label>Passive count</label>
+    <input type="range" id="passiveCount" min="1" max="5" value="3">
+  </div>
+</div>
+
+<main class="page-main">
+
+  <!-- V1: Classic offset below (like current game) -->
+  <section class="design-panel active" id="v1">
+    <div class="design-notes">
+      <strong>1: Passives below, offset right</strong> — Closest to today: one vitals ribbon replaces the floating top cluster; aggression chips sit under the ribbon with the same offset you use now. Ribbon owns cohesion; passives keep their trapezoid identity.
+    </div>
+    <div class="viewport-scaler" data-viewport>
+      <div class="viewport">
+        <div class="bg-scene"></div>
+        <div class="phase-label" data-phase-label>Player action</div>
+        <div class="portrait-placeholder">Portrait</div>
+        <div class="vitals-ribbon top-40 w-medium" data-ribbon></div>
+        <div class="passives-float passives-below-offset" data-passives></div>
+        <div class="legend-inline">Vitals ribbon is the anchor; passives are secondary and unframed.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- V2: Centered under ribbon -->
+  <section class="design-panel" id="v2">
+    <div class="design-notes">
+      <strong>2: Passives centered under ribbon</strong> — Symmetric read: ribbon centered on portrait, passives centered on ribbon width. Feels more intentional than offset-right.
+      <ul>
+        <li>Good when passive count is low (1-3).</li>
+        <li>Wraps cleanly as count grows (use passive count slider).</li>
+      </ul>
+    </div>
+    <div class="viewport-scaler" data-viewport>
+      <div class="viewport">
+        <div class="bg-scene"></div>
+        <div class="phase-label" data-phase-label>Player action</div>
+        <div class="portrait-placeholder">Portrait</div>
+        <div class="vitals-ribbon top-36 w-medium" data-ribbon></div>
+        <div class="passives-float passives-below-center" data-passives></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- V3: Bracket connector -->
+  <section class="design-panel" id="v3">
+    <div class="design-notes">
+      <strong>3: Bracket tie-in</strong> — Subtle bracket under the ribbon suggests passives "hang from" vitals without putting them in a second band. Optional visual glue if offset passives feel disconnected.
+    </div>
+    <div class="viewport-scaler" data-viewport>
+      <div class="viewport">
+        <div class="bg-scene"></div>
+        <div class="phase-label" data-phase-label>Player action</div>
+        <div class="portrait-placeholder">Portrait</div>
+        <div class="vitals-ribbon top-36 w-medium" data-ribbon></div>
+        <div class="connector-bracket wide"></div>
+        <div class="passives-float passives-below-center" data-passives></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- V4: Portrait flank -->
+  <section class="design-panel" id="v4">
+    <div class="design-notes">
+      <strong>4: Portrait flank columns</strong> — Ribbon stays minimal at top; passives stack beside the portrait (left/right). Frees vertical space between ribbon and shoulders; works if top-center gets crowded with enemy UI.
+      <ul>
+        <li>Left column: negative effects; right: buffs (split is optional in implementation).</li>
+      </ul>
+    </div>
+    <div class="viewport-scaler" data-viewport>
+      <div class="viewport">
+        <div class="bg-scene"></div>
+        <div class="phase-label" data-phase-label>Player action</div>
+        <div class="portrait-placeholder">Portrait</div>
+        <div class="vitals-ribbon top-32 w-narrow" data-ribbon></div>
+        <div class="passives-float passives-portrait-l" data-passives data-split="left"></div>
+        <div class="passives-float passives-portrait-r" data-passives data-split="right"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- V5: Shoulder row -->
+  <section class="design-panel" id="v5">
+    <div class="design-notes">
+      <strong>5: Shoulder row</strong> — Passives sit just below the ribbon in a tight horizontal row (no second band, but reads as a "shelf" under vitals). Slightly lower than variant 2 to clear the ribbon border.
+    </div>
+    <div class="viewport-scaler" data-viewport>
+      <div class="viewport">
+        <div class="bg-scene"></div>
+        <div class="phase-label" data-phase-label>Player action</div>
+        <div class="portrait-placeholder">Portrait</div>
+        <div class="vitals-ribbon top-36 w-wide" data-ribbon></div>
+        <div class="passives-float passives-shoulder" data-passives></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- V6: Ribbon chrome exploration -->
+  <section class="design-panel" id="v6">
+    <div class="design-notes">
+      <strong>6: Ribbon chrome only</strong> — Same passive placement as variant 2; use toggles above to compare ribbon shape and AP cap as a notched segment. AP slot stays in layout during enemy phase (muted) to avoid HUD jump.
+    </div>
+    <div class="viewport-scaler" data-viewport>
+      <div class="viewport">
+        <div class="bg-scene"></div>
+        <div class="phase-label" data-phase-label>Player action</div>
+        <div class="portrait-placeholder">Portrait</div>
+        <div class="vitals-ribbon top-36 w-medium" id="styleRibbon" data-ribbon data-style-target></div>
+        <div class="passives-float passives-below-center" data-passives></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  const GAME_W = 1920;
+  const GAME_H = 1080;
+  const ALL_PASSIVES = [
+    { val: 3, name: 'Aggression' },
+    { val: 2, name: 'Fortify' },
+    { val: 1, name: 'Bleed' },
+    { val: 4, name: 'Vulnerable' },
+    { val: 2, name: 'Regen' },
+  ];
+  let phase = 'action';
+  let temperance = 2;
+  let hp = 18;
+  let courage = 12;
+  let passiveCount = 3;
+  let ribbonStyle = 'clean';
+  const apCount = 1;
+
+  function buildRibbon(el, opts) {
+    if (!el || el.dataset.built === '1' && !opts.force) return;
+    const apSmall = opts.apSmall || false;
+    el.innerHTML = '';
+    el.dataset.built = '1';
+
+    const tSeg = document.createElement('div');
+    tSeg.className = 'ribbon-seg';
+    tSeg.innerHTML = '<div class="temp-gauge" data-temp-gauge></div>';
+    el.appendChild(tSeg);
+
+    const hpSeg = document.createElement('div');
+    hpSeg.className = 'ribbon-seg grow';
+    hpSeg.innerHTML = '<div class="hp-bar-wrap"><div class="hp-bar"><div class="hp-fill" data-hp-fill></div></div><div class="hp-text" data-hp-text>18/20</div></div>';
+    el.appendChild(hpSeg);
+
+    const cSeg = document.createElement('div');
+    cSeg.className = 'ribbon-seg';
+    cSeg.innerHTML = '<div class="courage-badge" data-courage>12</div>';
+    el.appendChild(cSeg);
+
+    const apSeg = document.createElement('div');
+    apSeg.className = 'ribbon-seg ap-cap on';
+    apSeg.setAttribute('data-ap-cap', '');
+    apSeg.innerHTML = '<span class="ap-cap-text' + (apSmall ? ' small' : '') + '" data-ap-text>1 AP</span>';
+    el.appendChild(apSeg);
+  }
+
+  function renderTemp(el) {
+    if (!el) return;
+    el.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const c = document.createElement('div');
+      c.className = 'temp-chunk' + (i < temperance ? ' filled' : '');
+      el.appendChild(c);
+    }
+  }
+
+  function renderPassives(container) {
+    if (!container) return;
+    const split = container.dataset.split;
+    const all = ALL_PASSIVES.slice(0, passiveCount);
+    let list = all;
+    if (split === 'left') list = all.filter((_, i) => i % 2 === 0);
+    if (split === 'right') list = all.filter((_, i) => i % 2 === 1);
+
+    container.innerHTML = '';
+    list.forEach(p => {
+      const chip = document.createElement('div');
+      chip.className = 'passive-chip';
+      chip.innerHTML = '<span class="val">' + p.val + '</span> ' + p.name;
+      container.appendChild(chip);
+    });
+  }
+
+  function applyRibbonStyle() {
+    document.querySelectorAll('[data-style-target]').forEach(el => {
+      el.classList.remove('style-clean', 'style-slant', 'style-notch-ap', 'no-border-segments');
+      if (ribbonStyle === 'clean') {
+        el.classList.add('style-clean');
+      } else if (ribbonStyle === 'slant') {
+        el.classList.add('style-slant');
+      } else if (ribbonStyle === 'notch-ap') {
+        el.classList.add('style-clean');
+        el.classList.add('style-notch-ap');
+        el.classList.add('no-border-segments');
+      }
+    });
+  }
+
+  function updateAll() {
+    document.querySelectorAll('[data-ribbon]').forEach(r => {
+      if (!r.dataset.built) buildRibbon(r, {});
+    });
+
+    document.querySelectorAll('[data-temp-gauge]').forEach(renderTemp);
+    document.querySelectorAll('[data-hp-fill]').forEach(el => {
+      el.style.setProperty('--hp-pct', (hp / 20 * 100) + '%');
+    });
+    document.querySelectorAll('[data-hp-text]').forEach(el => { el.textContent = hp + '/20'; });
+    document.querySelectorAll('[data-courage]').forEach(el => { el.textContent = courage; });
+    document.querySelectorAll('[data-ap-text]').forEach(el => { el.textContent = apCount + ' AP'; });
+    document.querySelectorAll('[data-ap-cap]').forEach(el => {
+      el.classList.toggle('on', phase === 'action');
+      el.classList.toggle('off', phase !== 'action');
+    });
+    document.querySelectorAll('[data-phase-label]').forEach(el => {
+      el.textContent = phase === 'action' ? 'Player action' : 'Enemy / block';
+    });
+    document.querySelectorAll('[data-passives]').forEach(renderPassives);
+
+    document.getElementById('tempVal').textContent = temperance;
+    document.getElementById('hpVal').textContent = hp;
+    applyRibbonStyle();
+  }
+
+  document.getElementById('tempSlider').addEventListener('input', e => { temperance = +e.target.value; updateAll(); });
+  document.getElementById('hpSlider').addEventListener('input', e => { hp = +e.target.value; updateAll(); });
+  document.getElementById('courageSlider').addEventListener('input', e => { courage = +e.target.value; updateAll(); });
+  document.getElementById('passiveCount').addEventListener('input', e => { passiveCount = +e.target.value; updateAll(); });
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.design-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.panel).classList.add('active');
+      applyRibbonStyle();
+      scaleViewports();
+    });
+  });
+
+  document.querySelectorAll('.phase-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.phase-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      phase = btn.dataset.phase;
+      updateAll();
+    });
+  });
+
+  document.querySelectorAll('[data-style]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.style) {
+        document.querySelectorAll('[data-style]').forEach(b => {
+          if (b.dataset.style) b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        ribbonStyle = btn.dataset.style;
+        applyRibbonStyle();
+      }
+    });
+  });
+
+  function scaleViewports() {
+    document.querySelectorAll('[data-viewport]').forEach(scaler => {
+      const vp = scaler.querySelector('.viewport');
+      if (!vp) return;
+      const scale = scaler.clientWidth / GAME_W;
+      scaler.style.height = (GAME_H * scale) + 'px';
+      vp.style.transform = 'translateX(-50%) scale(' + scale + ')';
+    });
+  }
+
+  document.querySelectorAll('[data-ribbon]').forEach(r => buildRibbon(r, {}));
+  window.addEventListener('resize', scaleViewports);
+  applyRibbonStyle();
+  updateAll();
+  scaleViewports();
+})();
+</script>
+</body>
+</html>

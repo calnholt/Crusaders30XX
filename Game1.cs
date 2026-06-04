@@ -41,8 +41,6 @@ public class Game1 : Game
     private BattleSceneSystem _battleSceneSystem;
     private LocationSceneSystem _locationSceneSystem;
     private ShopSceneSystem _shopSceneSystem;
-    private CustomizationRootSystem _customizationRootSystem;
-    private CustomizationV2RootSystem _customizationV2RootSystem;
     private AchievementSceneSystem _achievementSceneSystem;
     private TooltipTextDisplaySystem _tooltipTextDisplaySystem;
     private HintTooltipDisplaySystem _hintTooltipDisplaySystem;
@@ -160,8 +158,6 @@ public class Game1 : Game
         _battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _locationSceneSystem = new LocationSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _shopSceneSystem = new ShopSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
-        _customizationRootSystem = new CustomizationRootSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
-        _customizationV2RootSystem = new CustomizationV2RootSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch);
         _achievementSceneSystem = new AchievementSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _world.SystemManager);
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
@@ -194,8 +190,6 @@ public class Game1 : Game
         _world.AddSystem(_battleSceneSystem);
         _world.AddSystem(_locationSceneSystem);
         _world.AddSystem(_shopSceneSystem);
-        _world.AddSystem(_customizationRootSystem);
-        _world.AddSystem(_customizationV2RootSystem);
         _world.AddSystem(_achievementSceneSystem);
         _world.AddSystem(new TimerSchedulerSystem(_world.EntityManager));
 		_world.AddSystem(_frozenCardManagementSystem);
@@ -471,16 +465,6 @@ public class Game1 : Game
             case SceneId.TitleMenu:
             {
                 FrameProfiler.Measure("TitleMenuDisplaySystem.Draw", _titleMenuDisplaySystem.Draw);
-                break;
-            }
-            case SceneId.Customization:
-            {
-                MeasureInclusiveSceneDraw("CustomizationRootSystem.Draw", _customizationRootSystem.Draw);
-                break;
-            }
-            case SceneId.CustomizationV2:
-            {
-                MeasureInclusiveSceneDraw("CustomizationV2RootSystem.Draw", _customizationV2RootSystem.Draw);
                 break;
             }
             case SceneId.Battle:
