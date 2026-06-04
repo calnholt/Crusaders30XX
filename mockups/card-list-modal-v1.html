@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Card List Modal (Draw Pile)</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /*
+    MonoGame notes (1920x1080 virtual; page chrome not shipped):
+    - Overlay dim: full screen rgba(0,0,0,0.71)
+    - Panel: inset ModalMargin 40px; fill rgba(8,8,8,0.94); border 2px white 85%
+    - Title: centered; TitleFont / New Rocker ~42px
+    - Ledger bar: total count left, divider, white/red/black stats; Chakra labels
+    - Grid: 250x350 cells, gap 12px, 6 cols
+    - Close: 40x40 top-right; hover red like .btn-proceed
+  */
+  :root {
+    --black-0: #050505;
+    --black-1: #0a0a0a;
+    --black-2: #141414;
+    --black-3: #1e1e1e;
+    --black-4: #2a2a2a;
+    --white-1: #ffffff;
+    --white-2: #f0ece6;
+    --white-3: #c8c0b8;
+    --red-3: #c41e3a;
+    --red-glow: rgba(196, 30, 58, 0.45);
+    --panel-border: rgba(255, 255, 255, 0.85);
+    --panel-fill: rgba(8, 8, 8, 0.94);
+    --game-w: 1920px;
+    --game-h: 1080px;
+    --modal-margin: 40px;
+    --modal-pad: 32px;
+    --grid-gap: 12px;
+    --card-w: 250px;
+    --card-h: 350px;
+    --close-size: 40px;
+    --card-white-bg: #dcd7ce;
+    --card-white-stripe: #999999;
+    --card-red-bg: #4e0c0c;
+    --card-red-stripe: #cc2222;
+    --card-black-bg: #131313;
+    --card-black-stripe: #333333;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black-0);
+    color: var(--white-2);
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  .page-header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--black-4);
+    background: var(--black-1);
+  }
+
+  .page-header h1 {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: var(--white-1);
+    margin-bottom: 4px;
+  }
+
+  .page-header p {
+    color: var(--white-3);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    max-width: 900px;
+    line-height: 1.5;
+  }
+
+  .page-main {
+    padding: 32px 40px 60px;
+  }
+
+  .viewport-scaler {
+    width: 100%;
+    max-width: min(calc(100vw - 80px), 1100px);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--black-2);
+    border: 1px solid var(--black-4);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+    min-height: 320px;
+  }
+
+  .viewport {
+    width: var(--game-w);
+    height: var(--game-h);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform-origin: top center;
+    overflow: hidden;
+  }
+
+  .bg-scene {
+    position: absolute;
+    inset: 0;
+    background: url('../Content/desert-background-city.png') center / cover no-repeat;
+  }
+
+  .bg-dim {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.71);
+  }
+
+  .list-modal {
+    position: absolute;
+    inset: var(--modal-margin);
+    background: var(--panel-fill);
+    border: 2px solid var(--panel-border);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+      0 32px 80px rgba(0, 0, 0, 0.75);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    flex-shrink: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(var(--close-size) + var(--modal-pad) * 2);
+    padding: var(--modal-pad);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.22);
+  }
+
+  .header-title-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .modal-title {
+    font-family: 'New Rocker', cursive;
+    font-size: 42px;
+    letter-spacing: 3px;
+    color: var(--white-1);
+    line-height: 1;
+    text-align: center;
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.8);
+  }
+
+  .red-rule {
+    width: 100px;
+    height: 3px;
+    flex-shrink: 0;
+    background: linear-gradient(90deg, transparent, var(--red-3), transparent);
+  }
+
+  .btn-close {
+    position: absolute;
+    top: var(--modal-pad);
+    right: var(--modal-pad);
+    width: var(--close-size);
+    height: var(--close-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--black-3);
+    border: 2px solid var(--white-1);
+    color: var(--white-1);
+    font-family: 'New Rocker', cursive;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-close:hover {
+    background: #a00000;
+    border-color: var(--red-3);
+    box-shadow: 0 0 16px var(--red-glow);
+  }
+
+  .ledger-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: 14px var(--modal-pad);
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .total-stat {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding-right: 32px;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .total-count {
+    font-family: 'New Rocker', cursive;
+    font-size: 28px;
+    color: var(--white-1);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .total-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .ledger-colors {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .color-stat {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .swatch {
+    width: 14px;
+    height: 18px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    align-self: center;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+  }
+
+  .swatch-white {
+    background: var(--card-white-bg);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2), 0 0 0 2px var(--card-white-stripe);
+  }
+
+  .swatch-red {
+    background: var(--card-red-bg);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4), 0 0 0 2px var(--card-red-stripe);
+  }
+
+  .swatch-black {
+    background: var(--card-black-bg);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 0 2px var(--card-black-stripe);
+  }
+
+  .color-count {
+    font-family: 'New Rocker', cursive;
+    font-size: 22px;
+    color: var(--white-1);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .color-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .modal-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px var(--modal-pad) var(--modal-pad);
+    scrollbar-width: thin;
+    scrollbar-color: var(--black-4) transparent;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(6, var(--card-w));
+    gap: var(--grid-gap);
+    justify-content: start;
+  }
+
+  .card-ph {
+    width: var(--card-w);
+    height: var(--card-h);
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  }
+
+  .card-ph .stripe {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    z-index: 2;
+  }
+
+  .card-ph .ph-body {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px 20px 28px;
+    text-align: center;
+  }
+
+  .card-ph .ph-name {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.35rem;
+    letter-spacing: 1px;
+    line-height: 1.15;
+  }
+
+  .card-ph.white { background: var(--card-white-bg); }
+  .card-ph.white .stripe { background: var(--card-white-stripe); }
+  .card-ph.white .ph-name { color: #1a1a1a; }
+
+  .card-ph.red { background: var(--card-red-bg); }
+  .card-ph.red .stripe { background: var(--card-red-stripe); }
+  .card-ph.red .ph-name { color: #f0e0d8; }
+
+  .card-ph.black { background: var(--card-black-bg); }
+  .card-ph.black .stripe { background: var(--card-black-stripe); }
+  .card-ph.black .ph-name { color: #e8e4e0; }
+
+  .phase-hint {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Card List Modal — Draw Pile</h1>
+  <p>
+    Selected layout for <strong>CardListModalSystem</strong>: centered title, ledger bar with total on the left
+    then white / red / black counts. Virtual resolution 1920x1080.
+  </p>
+</header>
+
+<main class="page-main">
+  <div class="viewport-scaler">
+    <div class="viewport">
+      <div class="bg-scene"></div>
+      <div class="bg-dim"></div>
+      <span class="phase-hint">Enemy Turn — Block Phase (1)</span>
+
+      <div class="list-modal">
+        <header class="modal-header">
+          <div class="header-title-block">
+            <h2 class="modal-title">Draw Pile</h2>
+            <div class="red-rule" aria-hidden="true"></div>
+          </div>
+          <button type="button" class="btn-close" title="Close">X</button>
+        </header>
+
+        <div class="ledger-bar" id="barLedger"></div>
+
+        <div class="modal-scroll">
+          <div class="card-grid" id="cardGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const GAME_W = 1920;
+  const GAME_H = 1080;
+
+  const CARDS = [
+    { name: 'Absolution', color: 'white' },
+    { name: 'Anoint the Sick', color: 'black' },
+    { name: 'Courageous', color: 'red' },
+    { name: 'Fervor', color: 'red' },
+    { name: 'Increase Faith', color: 'white' },
+    { name: 'Increase Faith', color: 'black' },
+    { name: 'Smite', color: 'red' },
+    { name: 'Absolution', color: 'white' },
+    { name: 'Fervor', color: 'red' },
+    { name: 'Anoint the Sick', color: 'black' },
+    { name: 'Courageous', color: 'red' },
+    { name: 'Increase Faith', color: 'white' },
+    { name: 'Smite', color: 'red' },
+    { name: 'Absolution', color: 'white' },
+    { name: 'Increase Faith', color: 'black' },
+    { name: 'Fervor', color: 'red' },
+    { name: 'Anoint the Sick', color: 'black' },
+    { name: 'Courageous', color: 'red' },
+  ];
+
+  const COLOR_META = {
+    white: { label: 'White', swatch: 'swatch-white' },
+    red: { label: 'Red', swatch: 'swatch-red' },
+    black: { label: 'Black', swatch: 'swatch-black' },
+  };
+
+  function countByColor() {
+    const counts = { white: 0, red: 0, black: 0 };
+    for (const c of CARDS) counts[c.color]++;
+    return counts;
+  }
+
+  function renderLedgerBar() {
+    const counts = countByColor();
+    const bar = document.getElementById('barLedger');
+    const colorsHtml = ['white', 'red', 'black'].map((key) => {
+      const meta = COLOR_META[key];
+      return `
+        <div class="color-stat">
+          <span class="swatch ${meta.swatch}"></span>
+          <span class="color-count">${counts[key]}</span>
+          <span class="color-label">${meta.label}</span>
+        </div>
+      `;
+    }).join('');
+
+    bar.innerHTML = `
+      <div class="total-stat">
+        <span class="total-count">${CARDS.length}</span>
+        <span class="total-label">Cards</span>
+      </div>
+      <div class="ledger-colors">${colorsHtml}</div>
+    `;
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('cardGrid');
+    grid.innerHTML = '';
+    for (const card of CARDS) {
+      const el = document.createElement('article');
+      el.className = `card-ph ${card.color}`;
+      el.innerHTML = `
+        <div class="stripe"></div>
+        <div class="ph-body">
+          <div class="ph-name">${card.name}</div>
+        </div>
+      `;
+      grid.appendChild(el);
+    }
+  }
+
+  function fitViewport() {
+    const scaler = document.querySelector('.viewport-scaler');
+    const vp = document.querySelector('.viewport');
+    if (!scaler || !vp) return;
+    const scale = scaler.clientWidth / GAME_W;
+    vp.style.transform = `translateX(-50%) scale(${scale})`;
+    scaler.style.height = `${GAME_H * scale}px`;
+  }
+
+  renderLedgerBar();
+  renderGrid();
+
+  window.addEventListener('resize', fitViewport);
+  window.addEventListener('load', fitViewport);
+  fitViewport();
+</script>
+</body>
+</html>
