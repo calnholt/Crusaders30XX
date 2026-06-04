@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Run Setup (Weapon + Difficulty)</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /*
+    MonoGame notes (1920x1080 virtual; page chrome not shipped):
+    - Full-screen scene bg (waystation.png), no overlay dim
+    - Panel fill: rgba(8,8,8,0.92); border 2px white 85%; width 920px centered
+    - Title: New Rocker ~40px; section labels Chakra 14px uppercase letter-spacing 4px
+    - Choice buttons (.btn-choice): shared weapon + difficulty; weapon uses .is-square 200x200
+    - Selected: red fill #a00000, border #c41e3a, glow
+    - Proceed: .btn-proceed from quest-reward (64px, New Rocker 28px)
+  */
+  :root {
+    --black-0: #050505;
+    --black-1: #0a0a0a;
+    --black-2: #141414;
+    --black-3: #1e1e1e;
+    --black-4: #2a2a2a;
+    --white-1: #ffffff;
+    --white-2: #f0ece6;
+    --white-3: #c8c0b8;
+    --red-3: #c41e3a;
+    --red-dim: #a00000;
+    --red-glow: rgba(196, 30, 58, 0.45);
+    --panel-border: rgba(255, 255, 255, 0.85);
+    --game-w: 1920px;
+    --game-h: 1080px;
+    --modal-w: 920px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black-0);
+    color: var(--white-2);
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  .page-header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--black-4);
+    background: var(--black-1);
+  }
+
+  .page-header h1 {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: var(--white-1);
+    margin-bottom: 4px;
+  }
+
+  .page-header p {
+    color: var(--white-3);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    max-width: 820px;
+    line-height: 1.5;
+  }
+
+  .page-main {
+    padding: 32px 40px 60px;
+  }
+
+  .viewport-scaler {
+    width: 100%;
+    max-width: min(calc(100vw - 80px), 1100px);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--black-2);
+    border: 1px solid var(--black-4);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+    min-height: 320px;
+  }
+
+  .viewport {
+    width: var(--game-w);
+    height: var(--game-h);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform-origin: top center;
+    overflow: hidden;
+  }
+
+  .bg-scene {
+    position: absolute;
+    inset: 0;
+    background: url('../Content/waystation.png') center / cover no-repeat;
+  }
+
+  .screen-root {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .panel {
+    width: var(--modal-w);
+    background: rgba(8, 8, 8, 0.92);
+    border: 2px solid var(--panel-border);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+      0 32px 80px rgba(0, 0, 0, 0.75);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-body {
+    padding: 40px 48px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .screen-title {
+    font-family: 'New Rocker', cursive;
+    font-size: 40px;
+    letter-spacing: 3px;
+    line-height: 1.1;
+    color: var(--white-1);
+    text-align: center;
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.8);
+  }
+
+  .red-rule {
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--red-3), transparent);
+    flex-shrink: 0;
+  }
+
+  .setup-block {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-label {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--white-3);
+    text-align: center;
+  }
+
+  .choice-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .btn-choice {
+    flex: 1;
+    min-width: 120px;
+    min-height: 52px;
+    padding: 12px 20px;
+    background: var(--black-3);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: var(--white-2);
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: capitalize;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s;
+  }
+
+  .btn-choice.is-square {
+    flex: none;
+    width: 200px;
+    height: 200px;
+    min-width: 200px;
+    min-height: 200px;
+    font-size: 24px;
+    letter-spacing: 2px;
+  }
+
+  .btn-choice:hover {
+    border-color: var(--white-1);
+    color: var(--white-1);
+  }
+
+  .btn-choice.is-selected {
+    background: var(--red-dim);
+    border-color: var(--red-3);
+    color: var(--white-1);
+    box-shadow: 0 0 20px var(--red-glow);
+  }
+
+  .panel-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  .btn-proceed {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    height: 64px;
+    padding: 0 32px;
+    background: var(--black-3);
+    border: 2px solid var(--white-1);
+    color: var(--white-1);
+    font-family: 'New Rocker', cursive;
+    font-size: 28px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-proceed:hover {
+    background: var(--red-dim);
+    border-color: var(--red-3);
+    box-shadow: 0 0 24px var(--red-glow);
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Run Setup Screen — Weapon + Difficulty</h1>
+  <p>
+    Pre-run choices: <strong>Starting weapon</strong> (Sword, Dagger) and <strong>Difficulty</strong> (Easy, Normal, Hard).
+    Centered modal at 1920x1080. Click options to preview selection state.
+  </p>
+</header>
+
+<main class="page-main">
+  <div class="viewport-scaler">
+    <div class="viewport">
+      <div class="bg-scene"></div>
+
+      <section class="screen-root" aria-label="Run setup screen">
+        <article class="panel" role="dialog" aria-labelledby="run-setup-title">
+          <div class="panel-body">
+            <h2 class="screen-title" id="run-setup-title">Begin the climb</h2>
+            <div class="red-rule" aria-hidden="true"></div>
+
+            <div class="setup-block">
+              <span class="section-label">Starting weapon</span>
+              <div class="choice-row" data-weapon-group>
+                <button type="button" class="btn-choice is-square is-selected" data-weapon="sword" aria-pressed="true">Sword</button>
+                <button type="button" class="btn-choice is-square" data-weapon="dagger" aria-pressed="false">Dagger</button>
+              </div>
+            </div>
+
+            <div class="setup-block">
+              <span class="section-label">Difficulty</span>
+              <div class="choice-row" data-difficulty-group>
+                <button type="button" class="btn-choice is-selected" data-difficulty="easy" aria-pressed="true">Easy</button>
+                <button type="button" class="btn-choice" data-difficulty="normal" aria-pressed="false">Normal</button>
+                <button type="button" class="btn-choice" data-difficulty="hard" aria-pressed="false">Hard</button>
+              </div>
+            </div>
+          </div>
+          <footer class="panel-footer">
+            <button type="button" class="btn-proceed" id="btn-proceed">Depart</button>
+          </footer>
+        </article>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+  const GAME_W = 1920;
+  const GAME_H = 1080;
+
+  const state = { weapon: 'sword', difficulty: 'easy' };
+
+  function fitViewport() {
+    const scaler = document.querySelector('.viewport-scaler');
+    const vp = document.querySelector('.viewport');
+    if (!scaler || !vp) return;
+    const scale = scaler.clientWidth / GAME_W;
+    vp.style.transform = `translateX(-50%) scale(${scale})`;
+    scaler.style.height = `${GAME_H * scale}px`;
+  }
+
+  function syncSelectionUi() {
+    document.querySelectorAll('[data-weapon]').forEach(btn => {
+      const on = btn.dataset.weapon === state.weapon;
+      btn.classList.toggle('is-selected', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+
+    document.querySelectorAll('[data-difficulty]').forEach(btn => {
+      const on = btn.dataset.difficulty === state.difficulty;
+      btn.classList.toggle('is-selected', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  document.querySelectorAll('[data-weapon]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.weapon = btn.dataset.weapon;
+      syncSelectionUi();
+    });
+  });
+
+  document.querySelectorAll('[data-difficulty]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.difficulty = btn.dataset.difficulty;
+      syncSelectionUi();
+    });
+  });
+
+  document.getElementById('btn-proceed').addEventListener('click', () => {
+    console.log('Proceed:', state);
+  });
+
+  window.addEventListener('resize', fitViewport);
+  window.addEventListener('load', () => {
+    fitViewport();
+    syncSelectionUi();
+  });
+  fitViewport();
+</script>
+</body>
+</html>
