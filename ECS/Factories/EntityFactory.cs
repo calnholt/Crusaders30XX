@@ -13,6 +13,7 @@ using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Objects.Enemies;
 using Crusaders30XX.ECS.Objects.Medals;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -424,6 +425,7 @@ namespace Crusaders30XX.ECS.Factories
                 deckCount = Math.Max(0, deckCount - 4);
             }
             def.ApplyHealthFromDeckSize(deckCount);
+            ApplyWayStationEnemyHealthModifier(def);
             if (def.MaxHealth <= 0)
             {
                 def.MaxHealth = 1;
@@ -503,6 +505,17 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(threatTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = "Threat\n\nAt the start of the enemy's turn, it gains X aggression equal to its current threat level.\nWhenever you attack an enemy, it reduces their threat by one.\nEnemy's gain one threat at the end of their turn." });
 
             return enemyEntity;
+        }
+
+        private static void ApplyWayStationEnemyHealthModifier(EnemyBase def)
+        {
+            if (def == null) return;
+            float modifier = WayStationRunSetupSingleton.EnemyHealthModifier;
+            if (modifier <= 0f) modifier = 1f;
+
+            def.MaxHealth = Math.Max(1, (int)Math.Round(def.MaxHealth * modifier));
+            def.CurrentHealth = Math.Max(1, (int)Math.Round(def.CurrentHealth * modifier));
+            def.CurrentHealth = Math.Min(def.CurrentHealth, def.MaxHealth);
         }
 
 		/// <summary>

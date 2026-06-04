@@ -14,6 +14,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots
             Register(new BrittleCardSnapshotFixture());
             Register(new QuestRewardModalSnapshotFixture());
             Register(new NarrativeEventModalSnapshotFixture());
+            Register(new WayStationSnapshotFixture());
         }
 
         public static void Register(IDisplaySnapshotFixture fixture)

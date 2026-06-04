@@ -87,7 +87,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				RunLifecycleService.EndCurrentRun(EntityManager);
 				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Menu });
-				EventManager.Publish(new ShowTransition { Scene = SceneId.TitleMenu, SkipWipe = true });
+				EventManager.Publish(new ShowTransition { Scene = SceneId.WayStation, SkipWipe = true });
 				_sceneSwitched = true;
 				_active = false; // stop drawing after switch
 			}

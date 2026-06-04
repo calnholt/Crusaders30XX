@@ -36,6 +36,50 @@ namespace Crusaders30XX.ECS.Services
 			return !string.IsNullOrWhiteSpace(cardId) && DefaultStarterCardPoolSet.Contains(cardId);
 		}
 
+		public static IReadOnlyList<string> GetSwordStarterCardPool()
+		{
+			return new[]
+			{
+				"anoint_the_sick",
+				"smite",
+				"fervor",
+				"courageous",
+				"reckoning",
+				"absolution",
+				"increase_faith",
+				"litany_of_wrath",
+				"exaltation",
+				"seize",
+				"shield_of_faith",
+				"stab",
+				"tempest",
+				"razor_storm",
+				"hold_the_line",
+			};
+		}
+
+		public static IReadOnlyList<string> GetDaggerStarterCardPool()
+		{
+			return new[]
+			{
+				"anoint_the_sick",
+				"smite",
+				"fervor",
+				"courageous",
+				"reckoning",
+				"absolution",
+				"increase_faith",
+				"litany_of_wrath",
+				"exaltation",
+				"seize",
+				"shield_of_faith",
+				"stab",
+				"tempest",
+				"razor_storm",
+				"hold_the_line",
+			};
+		}
+
 		public static List<string> Generate(IReadOnlyList<string> poolCardIds, int seed)
 		{
 			var result = TryGenerate(poolCardIds, new Random(seed), relaxColorQuotas: false);

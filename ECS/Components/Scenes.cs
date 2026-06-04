@@ -9,6 +9,7 @@ namespace Crusaders30XX.ECS.Components
 	public enum SceneId
 	{
 		TitleMenu,
+		WayStation,
 		Internal_QueueEventsMenu,
 		WorldMap,
 		Battle,
@@ -203,4 +204,3 @@ namespace Crusaders30XX.ECS.Components
 		public Entity Owner { get; set; }
 	}
 }
-

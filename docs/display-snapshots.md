@@ -47,6 +47,7 @@ dotnet run -- snapshot <fixture-id> [fixture-args...]
 | `card` | Card display (V2) | Three color variants of one card on a green background |
 | `brittle-card` | Brittle card shader | One brittle card on a patterned backdrop for shader debugging |
 | `quest-reward-modal` | Quest reward modal | Quest complete overlay (gold and/or card reward) |
+| `waystation` | WayStation run setup | Run setup scene with default Sword/Easy selections |
 
 ---
 
@@ -189,6 +190,22 @@ dotnet run -- snapshot narrative-event-modal --event icebound_tithe --options 2
 - Unknown `--event` id: exit `1`, no PNG
 - Invalid `--options` (not 1, 2, or 3): exit `1`, no PNG
 - Malformed / unknown CLI token: exit `1`, no PNG
+
+---
+
+## `waystation`
+
+Renders the WayStation run setup scene with default Sword/Easy selections.
+
+### Commands
+
+```bash
+dotnet run -- snapshot waystation
+```
+
+### Output file
+
+`debug/snapshots/waystation/default.png`
 
 ---
 

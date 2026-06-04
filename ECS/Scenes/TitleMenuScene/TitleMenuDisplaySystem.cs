@@ -107,18 +107,7 @@ namespace Crusaders30XX.ECS.Systems
 			var uiClick = clickArea.GetComponent<UIElement>();
 			if (uiClick != null && uiClick.IsClicked && !StateSingleton.IsActive)
 			{
-				string startNodeId = SaveCache.GetStartNodeId();
-				if (!SaveCache.IsQuestCompleted(null, startNodeId))
-				{
-					var tempPoi = EntityManager.CreateEntity("TempQuestTrigger");
-					EntityManager.AddComponent(tempPoi, new PointOfInterest { Id = startNodeId });
-					EventManager.Publish(new QuestSelectRequested { Entity = tempPoi });
-					EntityManager.DestroyEntity(tempPoi.Id);
-				}
-				else
-				{
-					EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
-				}
+				EventManager.Publish(new ShowTransition { Scene = SceneId.WayStation, SkipHold = true });
 			}
 
 			_prevMouse = Mouse.GetState();
@@ -154,5 +143,4 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 

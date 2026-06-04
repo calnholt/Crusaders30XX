@@ -59,6 +59,36 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 		}
 
+		public static void ConfigurePrimaryRunSetup(string weaponId, string temperanceId, IReadOnlyList<string> starterCardPool)
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = CreateDefaultSave();
+				EnsureRunMap();
+				EnsurePrimaryLoadout(_save);
+
+				var startingDeck = StartingDeckGeneratorService.Generate(
+					starterCardPool ?? StartingDeckGeneratorService.DefaultStarterCardPool,
+					_save.runMapSeed);
+
+				_save.starterCardKeys = new List<string>(startingDeck);
+				var loadout = _save.loadouts[0];
+				loadout.cardIds = new List<string>(startingDeck);
+				loadout.weaponId = string.IsNullOrWhiteSpace(weaponId) ? "sword" : weaponId;
+				loadout.temperanceId = string.IsNullOrWhiteSpace(temperanceId) ? "angelic_aura" : temperanceId;
+				if (string.IsNullOrWhiteSpace(loadout.name)) loadout.name = "Deck";
+				if (string.IsNullOrWhiteSpace(loadout.id)) loadout.id = "loadout_1";
+				loadout.chestId ??= string.Empty;
+				loadout.legsId ??= string.Empty;
+				loadout.armsId ??= string.Empty;
+				loadout.headId ??= string.Empty;
+				loadout.medalIds ??= new List<string>();
+
+				Persist();
+			}
+		}
+
 		public static HashSet<string> GetOwnedCardIds()
 		{
 			EnsureLoaded();
