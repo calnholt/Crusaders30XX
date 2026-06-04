@@ -6,7 +6,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class ShieldOfFaith : CardBase
     {
-        private int AegisGained = 5;
+        private int AegisGained = 6;
         public ShieldOfFaith()
         {
             CardId = "shield_of_faith";

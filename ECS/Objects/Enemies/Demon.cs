@@ -78,7 +78,7 @@ public class InfernalExecution : EnemyAttackBase
     Id = "infernal_execution";
     Name = "Infernal Execution";
     Damage = 8;
-    ConditionType = ConditionType.MustBeBlockedByAtLeast1Card;
+    ConditionType = ConditionType.MustBeBlockedByAtLeast2Cards;
 
     OnChannelApplied = (entityManager) =>
     {

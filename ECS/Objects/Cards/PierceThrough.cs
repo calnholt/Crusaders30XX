@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = "Remove 1 guard from the enemy.";
             Animation = "Attack";
             Damage = 9;
+            Block = 3;
             Cost = ["Black", "Any"];
             IsFreeAction = false;
 
