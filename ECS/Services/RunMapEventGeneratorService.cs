@@ -8,8 +8,6 @@ namespace Crusaders30XX.ECS.Services
 {
 	public static class RunMapEventGeneratorService
 	{
-		private const int PlacementAttemptsPerEvent = 256;
-		private const int FarAnchorCandidates = 6;
 		private const int EventRngSalt = 0x7E9E7E9E;
 
 		public static List<RunMapEvent> Generate(
@@ -38,10 +36,10 @@ namespace Crusaders30XX.ECS.Services
 
 			for (int eventIndex = 0; eventIndex < LocationMapConstants.RunMapEventCount; eventIndex++)
 			{
-				if (!TryPlaceEvent(rng, anchorNodes, placedPositions, out float x, out float y))
+				if (!RunMapLandmarkPlacementService.TryPlace(rng, anchorNodes, nodes, placedPositions, out float x, out float y))
 				{
 					throw new InvalidOperationException(
-						$"[RunMapEventGeneratorService] Failed to place Map event {eventIndex} after {PlacementAttemptsPerEvent} attempts.");
+						$"[RunMapEventGeneratorService] Failed to place Map event {eventIndex}.");
 				}
 
 				placedPositions.Add((x, y));
@@ -106,106 +104,6 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			return placed;
-		}
-
-		private static bool TryPlaceEvent(
-			Random rng,
-			List<RunMapNode> anchorNodes,
-			List<(float x, float y)> placedLandmarks,
-			out float x,
-			out float y)
-		{
-			float clearance = LocationMapConstants.RunMapShopClearanceFromQuest;
-			float clearanceSq = clearance * clearance;
-			float maxDist = LocationMapConstants.DefaultRevealRadius;
-			float landmarkSep = LocationMapConstants.RunMapShopMinSeparation;
-			float landmarkSepSq = landmarkSep * landmarkSep;
-
-			float minX = LocationMapConstants.MapMargin + clearance;
-			float maxX = LocationMapConstants.BaseMapWidth - LocationMapConstants.MapMargin - clearance;
-			float minY = LocationMapConstants.MapMargin + clearance;
-			float maxY = LocationMapConstants.BaseMapHeight - LocationMapConstants.MapMargin - clearance;
-
-			for (int attempt = 0; attempt < PlacementAttemptsPerEvent; attempt++)
-			{
-				var anchor = PickAnchorNode(rng, anchorNodes, placedLandmarks);
-				float angle = (float)(rng.NextDouble() * Math.PI * 2);
-				float dist = clearance + (float)rng.NextDouble() * (maxDist - clearance);
-				float cx = anchor.worldX + (float)Math.Cos(angle) * dist;
-				float cy = anchor.worldY + (float)Math.Sin(angle) * dist;
-
-				if (cx < minX || cx > maxX || cy < minY || cy > maxY) continue;
-				if (OverlapsBattleNodes(anchorNodes, cx, cy, clearanceSq)) continue;
-				if (OverlapsPlacedLandmarks(placedLandmarks, cx, cy, landmarkSepSq)) continue;
-
-				x = cx;
-				y = cy;
-				return true;
-			}
-
-			x = 0f;
-			y = 0f;
-			return false;
-		}
-
-		private static bool OverlapsBattleNodes(IReadOnlyList<RunMapNode> nodes, float x, float y, float clearanceSq)
-		{
-			foreach (var node in nodes)
-			{
-				if (node == null) continue;
-				float dx = x - node.worldX;
-				float dy = y - node.worldY;
-				if (dx * dx + dy * dy < clearanceSq) return true;
-			}
-
-			return false;
-		}
-
-		private static bool OverlapsPlacedLandmarks(List<(float x, float y)> placed, float x, float y, float sepSq)
-		{
-			foreach (var landmark in placed)
-			{
-				float dx = x - landmark.x;
-				float dy = y - landmark.y;
-				if (dx * dx + dy * dy < sepSq) return true;
-			}
-
-			return false;
-		}
-
-		private static RunMapNode PickAnchorNode(
-			Random rng,
-			List<RunMapNode> anchorNodes,
-			List<(float x, float y)> placedLandmarks)
-		{
-			if (placedLandmarks.Count == 0)
-			{
-				return anchorNodes[rng.Next(anchorNodes.Count)];
-			}
-
-			var ranked = anchorNodes
-				.Select(n =>
-				{
-					float minDistSq = float.MaxValue;
-					foreach (var landmark in placedLandmarks)
-					{
-						float dx = n.worldX - landmark.x;
-						float dy = n.worldY - landmark.y;
-						float dSq = dx * dx + dy * dy;
-						if (dSq < minDistSq) minDistSq = dSq;
-					}
-					return (Node: n, MinDistSq: minDistSq);
-				})
-				.OrderByDescending(x => x.MinDistSq)
-				.Take(FarAnchorCandidates)
-				.ToList();
-
-			if (ranked.Count == 0)
-			{
-				return anchorNodes[rng.Next(anchorNodes.Count)];
-			}
-
-			return ranked[rng.Next(ranked.Count)].Node;
 		}
 
 		private static string EventId(int index) => $"event_{index}";
