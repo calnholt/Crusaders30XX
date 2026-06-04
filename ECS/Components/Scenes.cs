@@ -177,6 +177,7 @@ namespace Crusaders30XX.ECS.Components
 			public bool HasMedalReward { get; set; } = false;
 			public string RewardMedalId { get; set; } = string.Empty;
 			public bool DismissToLocation { get; set; } = true;
+			public bool DismissInProgress { get; set; } = false;
 		}
 
 	public class PendingQuestDialog : IComponent
@@ -202,5 +203,4 @@ namespace Crusaders30XX.ECS.Components
 		public Entity Owner { get; set; }
 	}
 }
-
 

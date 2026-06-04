@@ -222,7 +222,18 @@ namespace Crusaders30XX.ECS.Systems
 				});
 				OpenTreasureChest(e);
 			});
+			EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
 			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
+		}
+
+		private void OnLoadScene(LoadSceneEvent e)
+		{
+			if (e.Scene != SceneId.Location) return;
+
+			var state = EntityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
+			if (state == null || !state.DismissInProgress) return;
+
+			CloseOverlay(state);
 		}
 
 		private void OnDeleteCaches(DeleteCachesEvent _)
@@ -439,19 +450,30 @@ namespace Crusaders30XX.ECS.Systems
 			if (btnUi != null)
 			{
 				btnUi.Bounds = _layout.ProceedButton;
-				btnUi.IsInteractable = true;
+				btnUi.IsInteractable = !state.DismissInProgress;
 				btnUi.IsHidden = false;
 				btnUi.LayerType = UILayerType.Overlay;
 				var btnHotKey = btn.GetComponent<HotKey>();
-				if (btnHotKey != null) btnHotKey.IsActive = true;
+				if (btnHotKey != null) btnHotKey.IsActive = !state.DismissInProgress;
+				if (state.DismissInProgress)
+				{
+					btnUi.IsClicked = false;
+					return;
+				}
 				if (btnUi.IsClicked)
 				{
 					btnUi.IsClicked = false;
 					bool dismissToLocation = state.DismissToLocation;
-					CloseOverlay(state);
 					if (dismissToLocation)
 					{
+						state.DismissInProgress = true;
+						btnUi.IsInteractable = false;
+						if (btnHotKey != null) btnHotKey.IsActive = false;
 						EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+					}
+					else
+					{
+						CloseOverlay(state);
 					}
 				}
 			}
@@ -474,6 +496,7 @@ namespace Crusaders30XX.ECS.Systems
 			st.HasMedalReward = false;
 			st.RewardMedalId = string.Empty;
 			st.DismissToLocation = true;
+			st.DismissInProgress = false;
 			st.IsOpen = true;
 
 			if (st.HasCardReward && !string.IsNullOrEmpty(st.RewardCardKey))
@@ -499,6 +522,7 @@ namespace Crusaders30XX.ECS.Systems
 			st.HasMedalReward = !string.IsNullOrWhiteSpace(e?.RewardMedalId);
 			st.RewardMedalId = e?.RewardMedalId ?? string.Empty;
 			st.DismissToLocation = false;
+			st.DismissInProgress = false;
 			st.IsOpen = true;
 
 			if (st.HasMedalReward && !string.IsNullOrEmpty(st.RewardMedalId))
@@ -768,6 +792,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void CloseOverlay(QuestRewardOverlayState state)
 		{
 			state.IsOpen = false;
+			state.DismissInProgress = false;
 			state.RewardGold = 0;
 			state.HasCardReward = false;
 			state.RewardCardKey = string.Empty;
