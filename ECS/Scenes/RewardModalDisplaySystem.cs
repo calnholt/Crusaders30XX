@@ -402,6 +402,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (!state.IsOpen)
 			{
+				HideProceedButton();
 				StateSingleton.PreventClicking = false;
 				return;
 			}
@@ -439,6 +440,10 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				btnUi.Bounds = _layout.ProceedButton;
 				btnUi.IsInteractable = true;
+				btnUi.IsHidden = false;
+				btnUi.LayerType = UILayerType.Overlay;
+				var btnHotKey = btn.GetComponent<HotKey>();
+				if (btnHotKey != null) btnHotKey.IsActive = true;
 				if (btnUi.IsClicked)
 				{
 					btnUi.IsClicked = false;
@@ -769,9 +774,29 @@ namespace Crusaders30XX.ECS.Systems
 			state.HasMedalReward = false;
 			state.RewardMedalId = string.Empty;
 			StateSingleton.PreventClicking = false;
+			HideProceedButton();
 			DestroyRewardCard();
 			DestroyRewardMedal();
 			InvalidateCaches();
+		}
+
+		private void HideProceedButton()
+		{
+			var btn = EntityManager.GetEntity("QuestRewardProceedButton");
+			if (btn == null) return;
+
+			var ui = btn.GetComponent<UIElement>();
+			if (ui != null)
+			{
+				ui.Bounds = Rectangle.Empty;
+				ui.IsInteractable = false;
+				ui.IsHidden = true;
+				ui.IsClicked = false;
+				ui.LayerType = UILayerType.Overlay;
+			}
+
+			var hotKey = btn.GetComponent<HotKey>();
+			if (hotKey != null) hotKey.IsActive = false;
 		}
 
 		private void DestroyRewardCard()
@@ -902,8 +927,8 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				ent = EntityManager.CreateEntity("QuestRewardProceedButton");
 				EntityManager.AddComponent(ent, new Transform { Position = Vector2.Zero, ZOrder = ZOrder + 2 });
-				EntityManager.AddComponent(ent, new UIElement { Bounds = Rectangle.Empty, IsInteractable = false, LayerType = UILayerType.Overlay });
-				EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Y });
+				EntityManager.AddComponent(ent, new UIElement { Bounds = Rectangle.Empty, IsInteractable = false, IsHidden = true, LayerType = UILayerType.Overlay });
+				EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Y, IsActive = false });
 				EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
 			}
 			else
