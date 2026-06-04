@@ -159,6 +159,7 @@ namespace Crusaders30XX.ECS.Services
 				depths[i] = depths[parentIndex] + 1;
 				var parent = nodes[parentIndex];
 				PlaceChild(rng, nodes, parent, out float x, out float y);
+				string enemyId = PickEnemy(rng, enemyPool);
 
 				var node = new RunMapNode
 				{
@@ -166,15 +167,16 @@ namespace Crusaders30XX.ECS.Services
 					worldX = x,
 					worldY = y,
 					parentIndex = parentIndex,
-					enemyId = PickEnemy(rng, enemyPool),
+					enemyId = enemyId,
+					battleEnemyIds = new List<string> { enemyId },
 					childIndices = new List<int>(),
 				};
 				nodes.Add(node);
 				parent.childIndices.Add(i);
 			}
 
-			nodes[0].enemyId = PickEnemy(rng, enemyPool);
-			AssignDualBattles(rng, nodes, enemyPool);
+			SetBattleEnemySequence(nodes[0], new List<string> { PickEnemy(rng, enemyPool) });
+			AssignMultiBattleSequences(rng, nodes, enemyPool);
 
 #if DEBUG
 			var metrics = ComputeSpreadMetrics(seed, nodes);
@@ -277,17 +279,17 @@ namespace Crusaders30XX.ECS.Services
 			return pool[rng.Next(pool.Count)];
 		}
 
-		private static void AssignDualBattles(Random rng, List<RunMapNode> nodes, List<string> enemyPool)
+		private static void AssignMultiBattleSequences(Random rng, List<RunMapNode> nodes, List<string> enemyPool)
 		{
 			if (nodes == null || nodes.Count <= 1) return;
 
-			int dualCount = Math.Min(
-				LocationMapConstants.RunMapDualBattleQuestCount,
+			int multiBattleCount = Math.Min(
+				LocationMapConstants.RunMapMultiBattleQuestCount,
 				nodes.Count - 1);
 
 			var candidateIndices = Enumerable.Range(1, nodes.Count - 1)
 				.OrderBy(_ => rng.Next())
-				.Take(dualCount)
+				.Take(multiBattleCount)
 				.ToList();
 
 			foreach (int index in candidateIndices)
@@ -296,16 +298,22 @@ namespace Crusaders30XX.ECS.Services
 				if (node == null) continue;
 
 				string secondEnemy = rng.Next(2) == 0
-					? LocationMapConstants.RunMapDualBattleFirstEnemyId
+					? LocationMapConstants.RunMapMultiBattleFirstEnemyId
 					: PickEnemy(rng, enemyPool);
 
-				node.battleEnemyIds = new List<string>
+				SetBattleEnemySequence(node, new List<string>
 				{
-					LocationMapConstants.RunMapDualBattleFirstEnemyId,
+					LocationMapConstants.RunMapMultiBattleFirstEnemyId,
 					secondEnemy,
-				};
-				node.enemyId = LocationMapConstants.RunMapDualBattleFirstEnemyId;
+				});
 			}
+		}
+
+		private static void SetBattleEnemySequence(RunMapNode node, List<string> enemyIds)
+		{
+			if (node == null || enemyIds == null || enemyIds.Count == 0) return;
+			node.battleEnemyIds = enemyIds;
+			node.enemyId = enemyIds[0];
 		}
 
 		private static int PickParentIndex(Random rng, List<int> eligibleParents, int[] depths)

@@ -15,8 +15,6 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public bool isRevealed { get; set; }
 		public bool isCompleted { get; set; }
 
-		public bool IsDualBattle => battleEnemyIds != null && battleEnemyIds.Count > 1;
-
 		public IReadOnlyList<string> ResolveBattleEnemyIds()
 		{
 			if (battleEnemyIds != null && battleEnemyIds.Count > 0)

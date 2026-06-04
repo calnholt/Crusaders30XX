@@ -287,8 +287,8 @@ namespace Crusaders30XX.ECS.Systems
 						.ToList();
 					tribulations = new List<TribulationDefinition>();
 					title = "Quest " + (questIdx + 1);
-					rewardGold = runNode.IsDualBattle
-						? LocationMapConstants.QuestRewardGoldDualBattle
+					rewardGold = battleEnemyIds.Count > 1
+						? LocationMapConstants.QuestRewardGoldMultiBattle
 						: LocationMapConstants.QuestRewardGold;
 					isCompleted = runNode.isCompleted || poi.IsCompleted;
 					poiType = PointOfInterestType.Quest;
@@ -993,5 +993,4 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 
