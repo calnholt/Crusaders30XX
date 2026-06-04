@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
@@ -28,6 +29,7 @@ namespace Crusaders30XX.ECS.Systems
         private Song _pendingSong;
         private bool _pendingLoop;
         private float _expectedVolume = 0.2f;
+        private SceneId _lastSceneMusicScene = SceneId.None;
         [DebugEditable(DisplayName = "Mute")]
         public bool Mute { get; set; } = false;
 
@@ -43,10 +45,28 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
         {
-            return Enumerable.Empty<Entity>();
+            return EntityManager.GetEntitiesWithComponent<SceneState>();
         }
 
-        protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+        protected override void UpdateEntity(Entity entity, GameTime gameTime)
+        {
+            var scene = entity.GetComponent<SceneState>();
+            if (scene == null || scene.Current == _lastSceneMusicScene) return;
+
+            _lastSceneMusicScene = scene.Current;
+
+            var sceneTrack = scene.Current switch
+            {
+                SceneId.TitleMenu => MusicTrack.Customize,
+                SceneId.WayStation => MusicTrack.Customize,
+                _ => MusicTrack.None
+            };
+
+            if (sceneTrack != MusicTrack.None)
+            {
+                OnChangeMusicTrack(new ChangeMusicTrack { Track = sceneTrack });
+            }
+        }
 
         public override void Update(GameTime gameTime)
         {
@@ -221,5 +241,4 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
 
