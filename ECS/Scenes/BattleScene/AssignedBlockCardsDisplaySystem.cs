@@ -26,7 +26,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
 		private readonly List<Entity> _pendingReturn = new();
 		// Logical base point set in UpdateEntity each frame; used by Draw to compute the banner's
-		// live parallax delta without touching t.Position (which PositionTweenSystem owns).
+		// live parallax delta without touching t.Position, which PositionTweenSystem owns for cards.
 		private Vector2 _lastLogicalBasePoint;
 
 		[DebugEditable(DisplayName = "Anchor Offset X", Step = 2, Min = -1000, Max = 1000)]
@@ -313,8 +313,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			var anchorT = anchorEntity.GetComponent<Transform>();
 			// Read logical position written this frame by EnemyAttackDisplaySystem (pre-parallax).
-			// UIElement.Bounds is set in Draw() and contains last frame's post-parallax position — using
-			// it would chase a stale target and compound with the card's own parallax offset.
+			// UIElement.Bounds is set in Draw() and contains last frame's post-parallax position.
 			Vector2 basePoint = anchorT?.Position ?? new Vector2(Game1.VirtualWidth * 0.5f, Game1.VirtualHeight * 0.5f);
 			_lastLogicalBasePoint = basePoint;
 			var center = new Vector2(basePoint.X + AnchorOffsetX, basePoint.Y + AnchorOffsetY);
@@ -459,8 +458,12 @@ namespace Crusaders30XX.ECS.Systems
 				.FirstOrDefault();
 			if (prev == null) return;
 			var hk = prev.GetComponent<HotKey>();
-			if (hk == null) EntityManager.AddComponent(prev, new HotKey { Button = FaceButton.B });
-			else hk.Button = FaceButton.B;
+			if (hk == null) EntityManager.AddComponent(prev, new HotKey { Button = FaceButton.B, Position = HotKeyPosition.Top });
+			else
+			{
+				hk.Button = FaceButton.B;
+				hk.Position = HotKeyPosition.Top;
+			}
 		}
 
 		private void MaintainLatestHotKeyForContext(string contextId)
@@ -499,11 +502,12 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					if (hk == null)
 					{
-						EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.B });
+						EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.B, Position = HotKeyPosition.Top });
 					}
 					else
 					{
 						hk.Button = FaceButton.B;
+						hk.Position = HotKeyPosition.Top;
 					}
 				}
 				else
@@ -543,8 +547,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (pa == null) return;
 			var list = GetRelevantEntities().Where(e => e.GetComponent<AssignedBlockCard>()?.ContextId == pa.ContextId).ToList();
 			if (list.Count == 0) return;
-			// Compute the banner anchor's live parallax delta (post-LateUpdate) so cards shift with it.
-			// abc.CurrentPos is in logical space; adding the delta keeps cards visually locked to the banner.
+			// Assigned cards keep their visual animation in AssignedBlockCard because PositionTweenSystem
+			// owns card Transform.Position. Add the banner's live parallax delta, then sync bounds to it.
 			var anchorEntity = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault();
 			var anchorT = anchorEntity?.GetComponent<Transform>();
 			Vector2 parallaxDelta = anchorT != null ? anchorT.Position - _lastLogicalBasePoint : Vector2.Zero;
@@ -558,6 +562,11 @@ namespace Crusaders30XX.ECS.Systems
 				int cw = (int)(CardDrawWidth * abc.CurrentScale);
 				int ch = (int)(CardDrawHeight * abc.CurrentScale);
 				var rect = new Rectangle((int)(pos.X - cw / 2f), (int)(pos.Y - ch / 2f), cw, ch);
+				var ui = card.GetComponent<UIElement>();
+				if (ui != null)
+				{
+					ui.Bounds = rect;
+				}
 				// Colors now come directly from AssignedBlockCard
 				Color bg = abc.DisplayBgColor;
 				Color fg = abc.DisplayFgColor;
@@ -609,5 +618,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
-
