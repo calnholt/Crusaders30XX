@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Resource Chip Group</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black-0: #050505;
+    --black-1: #0a0a0a;
+    --black-2: #141414;
+    --black-4: #2a2a2a;
+    --white-1: #ffffff;
+    --white-2: #f0ece6;
+    --white-3: #c8c0b8;
+    --red-3: #c41e3a;
+    --red-2: #e02545;
+    --red-dark: #6e1020;
+    --red-glow: rgba(196, 30, 58, 0.5);
+    --game-w: 1920px;
+    --game-h: 1080px;
+    --hud-red: #c41e3a;
+    --hud-black: #0a0a0a;
+    --hud-white: #ffffff;
+    --hp-track: #282828;
+    --chip-overlap: -12px;
+    --chip-h: 44px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black-0);
+    color: var(--white-2);
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--black-4);
+    background: var(--black-1);
+  }
+
+  .page-header h1 {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.75rem;
+    color: var(--white-1);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  .page-header p {
+    color: var(--white-3);
+    font-size: 0.85rem;
+    line-height: 1.55;
+    max-width: 920px;
+  }
+
+  .controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    padding: 18px 40px;
+    background: var(--black-2);
+    border-bottom: 1px solid var(--black-4);
+    align-items: center;
+  }
+
+  .control-group label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--white-3);
+    margin-bottom: 6px;
+  }
+
+  .tab-row, .phase-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .tab-btn, .phase-btn {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    border: 1px solid var(--black-4);
+    background: var(--black-1);
+    color: var(--white-3);
+    cursor: pointer;
+  }
+
+  .tab-btn:hover, .phase-btn:hover { border-color: var(--red-3); color: var(--white-1); }
+  .tab-btn.active { background: var(--red-3); border-color: var(--red-3); color: var(--white-1); }
+  .phase-btn.active { border-color: var(--white-1); color: var(--white-1); }
+
+  input[type="range"] { width: 110px; accent-color: var(--red-3); }
+
+  .page-main { padding: 28px 40px 56px; }
+  .design-panel { display: none; }
+  .design-panel.active { display: block; }
+
+  .design-notes {
+    max-width: 920px;
+    margin-bottom: 16px;
+    padding: 14px 18px;
+    background: var(--black-2);
+    border-left: 3px solid var(--red-3);
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--white-3);
+  }
+
+  .design-notes strong { color: var(--white-1); }
+
+  .viewport-scaler {
+    width: 100%;
+    max-width: min(calc(100vw - 80px), 1100px);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--black-2);
+    border: 1px solid var(--black-4);
+    min-height: 300px;
+  }
+
+  .viewport {
+    width: var(--game-w);
+    height: var(--game-h);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform-origin: top center;
+    overflow: hidden;
+  }
+
+  .bg-scene {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, #3d2818 0%, #6b3a1f 35%, #8a4a28 55%, #5c3018 100%);
+  }
+
+  .portrait-placeholder {
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 360px;
+    border: 2px dashed rgba(255,255,255,0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.22);
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .phase-label {
+    position: absolute;
+    top: 20px;
+    right: 28px;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    padding: 5px 10px;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+
+  /* ─── HUD row: HP + chips ─── */
+  .vitals-row {
+    position: absolute;
+    top: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 860px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55));
+  }
+
+  .hp-shell {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 16px 8px 12px;
+    background: var(--hud-black);
+    border: 2px solid var(--hud-white);
+    min-height: 62px;
+    display: flex;
+    align-items: center;
+    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  }
+
+  .hp-bar-wrap {
+    position: relative;
+    width: 100%;
+    height: 38px;
+  }
+
+  .hp-bar {
+    position: absolute;
+    inset: 0;
+    background: var(--hp-track);
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+    border-radius: 0 19px 19px 0;
+    overflow: hidden;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+      inset 0 2px 6px rgba(0, 0, 0, 0.45);
+  }
+
+  .hp-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--hp-pct, 90%);
+    background: linear-gradient(180deg, #ff3a3a 0%, var(--hud-red) 55%, #8b1528 100%);
+    transition: width 0.25s;
+  }
+
+  .hp-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 21px;
+    color: var(--hud-white);
+    z-index: 2;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.85);
+  }
+
+  /* ─── Chip group ─── */
+  .chip-group {
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    margin-left: 4px;
+  }
+
+  .chip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--chip-h);
+    padding: 8px 22px 8px 18px;
+    margin-left: var(--chip-overlap);
+    font-family: 'New Rocker', cursive;
+    color: var(--hud-white);
+    clip-path: polygon(14px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+    border: 2px solid var(--hud-white);
+    box-sizing: border-box;
+  }
+
+  .chip:first-child { margin-left: 0; z-index: 3; }
+  .chip:nth-child(2) { z-index: 2; }
+  .chip:nth-child(3) { z-index: 1; padding-right: 26px; }
+
+  /* Temperance */
+  .chip-temp {
+    background: var(--hud-black);
+    min-width: 64px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .temp-chunks {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    height: 26px;
+  }
+
+  .temp-chunk {
+    width: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    clip-path: polygon(18% 0, 100% 0, 82% 100%, 0 100%);
+    transition: background 0.2s;
+  }
+
+  .temp-chunk.filled {
+    background: var(--hud-white);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+  }
+
+  /* AP */
+  .chip-ap {
+    background: var(--hud-black);
+    font-size: 28px;
+    letter-spacing: 1px;
+    min-width: 72px;
+    transition: opacity 0.35s, background 0.35s, box-shadow 0.35s;
+  }
+
+  .chip-ap.on {
+    background: linear-gradient(180deg, #1a0a0e 0%, var(--hud-black) 100%);
+    box-shadow: inset 0 0 18px var(--red-glow);
+  }
+
+  .chip-ap.off {
+    opacity: 0.28;
+  }
+
+  /* AP inverted: black on white (pairs with bold red courage) */
+  .chip-ap.ap-white {
+    background: var(--hud-white);
+    color: var(--hud-black);
+    text-shadow: none;
+  }
+
+  .chip-ap.ap-white.on {
+    background: var(--hud-white);
+    box-shadow:
+      inset 0 0 0 2px var(--hud-red),
+      0 0 14px var(--red-glow);
+  }
+
+  .chip-ap.ap-white.off {
+    opacity: 0.38;
+    background: rgba(255, 255, 255, 0.5);
+    color: rgba(0, 0, 0, 0.45);
+    box-shadow: none;
+  }
+
+  /* Courage — shared base */
+  .chip-courage {
+    min-width: 68px;
+    font-size: 30px;
+    line-height: 1;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+  }
+
+  .chip-courage .courage-val {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Courage style A: flat red (passive-shaped, color = meaning) */
+  .courage-a {
+    background: var(--hud-red);
+    border-color: var(--hud-white);
+  }
+
+  /* Courage B: deep gradient + highlight rim */
+  .courage-b {
+    background: linear-gradient(165deg, var(--red-2) 0%, var(--hud-red) 45%, var(--red-dark) 100%);
+    border-color: var(--hud-white);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  /* Courage C: red body, inset black slant (ties to temp chunks) */
+  .courage-c {
+    background: var(--hud-red);
+    padding-left: 14px;
+    padding-right: 24px;
+  }
+
+  .courage-c::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 6px;
+    bottom: 6px;
+    width: 6px;
+    background: rgba(0, 0, 0, 0.35);
+    transform: skewX(-14deg);
+  }
+
+  /* Courage D: red + white ring behind number (not a circle badge) */
+  .courage-d {
+    background: var(--hud-red);
+  }
+
+  .courage-d::after {
+    content: '';
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    border-radius: 50%;
+    z-index: 1;
+  }
+
+  /* Courage E: heart glyph (no text) + number */
+  .courage-e {
+    background: linear-gradient(180deg, #d42848 0%, var(--hud-red) 50%, #8b1528 100%);
+    min-width: 76px;
+    gap: 4px;
+    padding-left: 16px;
+    padding-right: 22px;
+  }
+
+  .courage-e .heart-mark {
+    width: 18px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    transform: rotate(-45deg);
+    position: relative;
+    flex-shrink: 0;
+    margin-right: 2px;
+    opacity: 0.95;
+  }
+
+  .courage-e .heart-mark::before,
+  .courage-e .heart-mark::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: inherit;
+    border-radius: 50%;
+  }
+
+  .courage-e .heart-mark::before { top: -9px; left: 0; }
+  .courage-e .heart-mark::after { left: 9px; top: 0; }
+
+  .courage-e .courage-val { font-size: 26px; }
+
+  /* Courage F: bold number only, thick white border on red */
+  .courage-f {
+    background: var(--hud-red);
+    border-width: 3px;
+    font-size: 32px;
+    min-width: 72px;
+    box-shadow:
+      inset 0 -4px 0 rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Gallery layout */
+  .gallery-row {
+    position: absolute;
+    left: 50%;
+    top: 120px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    width: 900px;
+  }
+
+  .gallery-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .gallery-item .tag {
+    width: 140px;
+    flex-shrink: 0;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--white-3);
+    text-align: right;
+  }
+
+  .gallery-item .chip-group { margin-left: 0; }
+
+  .gallery-item .chip-group .chip-temp,
+  .gallery-item .chip-group .chip-ap {
+    pointer-events: none;
+  }
+
+  /* Magnified chip strip */
+  .chip-strip-large {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -55%) scale(1.85);
+    transform-origin: center center;
+  }
+
+  .chip-strip-large .chip {
+    --chip-h: 52px;
+    font-size: 1.15em;
+  }
+
+  .passives-shoulder {
+    position: absolute;
+    top: 130px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    max-width: 640px;
+  }
+
+  .passive-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 18px 6px 14px;
+    background: var(--hud-black);
+    color: var(--hud-white);
+    font-family: 'New Rocker', cursive;
+    font-size: 22px;
+    clip-path: polygon(12px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+    white-space: nowrap;
+  }
+
+  .passive-chip .val { font-size: 26px; }
+
+  .legend {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Resource Chip Group</h1>
+  <p>
+    Refines the chip row beside HP: temperance (black + white chunks), courage (<strong>red, no label</strong>),
+    AP (black, phase-aware). Passives use the same trapezoid language on the shoulder row.
+  </p>
+</header>
+
+<div class="controls-bar">
+  <div class="control-group">
+    <label>View</label>
+    <div class="tab-row">
+      <button class="tab-btn active" data-panel="play">Playground (pick courage)</button>
+      <button class="tab-btn" data-panel="gallery">Courage gallery</button>
+      <button class="tab-btn" data-panel="zoom">Chips zoomed</button>
+    </div>
+  </div>
+  <div class="control-group" id="couragePickerWrap">
+    <label>Courage chip style</label>
+    <div class="tab-row" id="courageStyles">
+      <button class="tab-btn active" data-courage="f">F: Bold red</button>
+      <button class="tab-btn" data-courage="f-ap-white">F + AP white</button>
+      <button class="tab-btn" data-courage="a">A: Flat red</button>
+      <button class="tab-btn" data-courage="b">B: Gradient</button>
+      <button class="tab-btn" data-courage="c">C: Slant accent</button>
+      <button class="tab-btn" data-courage="d">D: Ring</button>
+      <button class="tab-btn" data-courage="e">E: Heart + num</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <label>Phase</label>
+    <div class="phase-row">
+      <button class="phase-btn active" data-phase="action">Player action</button>
+      <button class="phase-btn" data-phase="enemy">Enemy / block</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <label>Temp <span id="tempVal">2</span>/3</label>
+    <input type="range" id="tempSlider" min="0" max="3" value="2">
+  </div>
+  <div class="control-group">
+    <label>HP <span id="hpVal">18</span>/20</label>
+    <input type="range" id="hpSlider" min="0" max="20" value="18">
+  </div>
+  <div class="control-group">
+    <label>Courage</label>
+    <input type="range" id="courageSlider" min="0" max="99" value="12">
+  </div>
+</div>
+
+<main class="page-main">
+
+  <section class="design-panel active" id="play">
+    <div class="design-notes">
+      <strong>Playground</strong> — Full shoulder HUD with your selected courage chip. Temperance shows empty chunk slots (dim) + filled (white). AP keeps <code>1AP</code> gothic, glows on action phase. No courage text anywhere.
+    </div>
+    <div class="viewport-scaler" data-viewport>
+      <div class="viewport">
+        <div class="bg-scene"></div>
+        <div class="phase-label" data-phase-label>Player action</div>
+        <div class="portrait-placeholder">Portrait</div>
+        <div class="vitals-row" data-vitals-row></div>
+        <div class="passives-shoulder" data-passives></div>
+        <div class="legend">Black chips = build resources | Red chip = courage | AP dims off-turn</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="design-panel" id="gallery">
+    <div class="design-notes">
+      <strong>Courage gallery</strong> — Same temp + AP flanking each courage treatment. Includes <strong>F + AP white</strong> (bold red courage, black <code>1AP</code> on white chip). No labels on courage.
+    </div>
+    <div class="viewport-scaler" data-viewport>
+      <div class="viewport">
+        <div class="bg-scene"></div>
+        <div class="gallery-row" data-gallery></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="design-panel" id="zoom">
+    <div class="design-notes">
+      <strong>Zoomed</strong> — Selected courage style at ~1.85x for pixel-level tuning.
+    </div>
+    <div class="viewport-scaler" data-viewport>
+      <div class="viewport">
+        <div class="bg-scene"></div>
+        <div class="chip-strip-large" data-vitals-row></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  const GAME_W = 1920;
+  const GAME_H = 1080;
+  const PASSIVES = [
+    { val: 3, name: 'Aggression' },
+    { val: 2, name: 'Fortify' },
+    { val: 1, name: 'Bleed' },
+  ];
+
+  const COURAGE_STYLES = [
+    { id: 'f', name: 'F: Bold red', courage: 'f' },
+    { id: 'f-ap-white', name: 'F: Bold red + AP white', courage: 'f', ap: 'white' },
+    { id: 'a', name: 'A: Flat red', courage: 'a' },
+    { id: 'b', name: 'B: Gradient', courage: 'b' },
+    { id: 'c', name: 'C: Slant accent', courage: 'c' },
+    { id: 'd', name: 'D: Ring', courage: 'd' },
+    { id: 'e', name: 'E: Heart + num', courage: 'e' },
+  ];
+
+  function resolveChipStyle(styleKey) {
+    const entry = COURAGE_STYLES.find(s => s.id === styleKey);
+    if (entry) return { courage: entry.courage, ap: entry.ap || 'default' };
+    return { courage: styleKey, ap: 'default' };
+  }
+
+  let phase = 'action';
+  let temperance = 2;
+  let hp = 18;
+  let courage = 12;
+  let courageStyle = 'f';
+  const apCount = 1;
+
+  function renderTemp(container) {
+    const el = container.querySelector('[data-temp-chunks]') || container;
+    if (!el) return;
+    el.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const c = document.createElement('div');
+      c.className = 'temp-chunk' + (i < temperance ? ' filled' : '');
+      el.appendChild(c);
+    }
+  }
+
+  function buildCourageChip(style) {
+    const chip = document.createElement('div');
+    chip.className = 'chip chip-courage courage-' + style;
+
+    if (style === 'e') {
+      chip.innerHTML =
+        '<span class="heart-mark" aria-hidden="true"></span>' +
+        '<span class="courage-val" data-courage>12</span>';
+    } else {
+      chip.innerHTML = '<span class="courage-val" data-courage>12</span>';
+    }
+    return chip;
+  }
+
+  function buildChipGroup(styleKey) {
+    const { courage, ap } = resolveChipStyle(styleKey);
+    const group = document.createElement('div');
+    group.className = 'chip-group';
+
+    const temp = document.createElement('div');
+    temp.className = 'chip chip-temp';
+    temp.innerHTML = '<div class="temp-chunks" data-temp-chunks></div>';
+    group.appendChild(temp);
+
+    group.appendChild(buildCourageChip(courage));
+
+    const apChip = document.createElement('div');
+    apChip.className = 'chip chip-ap on' + (ap === 'white' ? ' ap-white' : '');
+    apChip.setAttribute('data-ap-chip', '');
+    apChip.innerHTML = '<span data-ap-text>1AP</span>';
+    group.appendChild(apChip);
+
+    renderTemp(temp);
+    return group;
+  }
+
+  function buildHpShell() {
+    const shell = document.createElement('div');
+    shell.className = 'hp-shell';
+    shell.innerHTML =
+      '<div class="hp-bar-wrap">' +
+        '<div class="hp-bar"><div class="hp-fill" data-hp-fill></div></div>' +
+        '<div class="hp-text" data-hp-text>18/20</div>' +
+      '</div>';
+    return shell;
+  }
+
+  function mountVitalsRow(container, styleKey) {
+    if (!container) return;
+    container.innerHTML = '';
+    container.appendChild(buildHpShell());
+    container.appendChild(buildChipGroup(styleKey));
+  }
+
+  function buildGallery() {
+    const gallery = document.querySelector('[data-gallery]');
+    if (!gallery || gallery.dataset.built) return;
+    gallery.dataset.built = '1';
+
+    COURAGE_STYLES.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'gallery-item';
+      row.innerHTML = '<div class="tag">' + s.name + '</div>';
+      row.appendChild(buildChipGroup(s.id)); /* id encodes courage + optional ap variant */
+      gallery.appendChild(row);
+    });
+  }
+
+  function updateAll() {
+    document.querySelectorAll('[data-hp-fill]').forEach(el => {
+      el.style.setProperty('--hp-pct', (hp / 20 * 100) + '%');
+    });
+    document.querySelectorAll('[data-hp-text]').forEach(el => { el.textContent = hp + '/20'; });
+    document.querySelectorAll('[data-courage]').forEach(el => { el.textContent = courage; });
+    document.querySelectorAll('[data-ap-text]').forEach(el => { el.textContent = apCount + 'AP'; });
+    document.querySelectorAll('[data-ap-chip]').forEach(el => {
+      el.classList.toggle('on', phase === 'action');
+      el.classList.toggle('off', phase !== 'action');
+    });
+    document.querySelectorAll('[data-temp-chunks]').forEach(renderTemp);
+    document.querySelectorAll('[data-phase-label]').forEach(el => {
+      el.textContent = phase === 'action' ? 'Player action' : 'Enemy / block';
+    });
+    document.querySelectorAll('[data-passives]').forEach(container => {
+      container.innerHTML = '';
+      PASSIVES.forEach(p => {
+        const chip = document.createElement('div');
+        chip.className = 'passive-chip';
+        chip.innerHTML = '<span class="val">' + p.val + '</span> ' + p.name;
+        container.appendChild(chip);
+      });
+    });
+    document.getElementById('tempVal').textContent = temperance;
+    document.getElementById('hpVal').textContent = hp;
+  }
+
+  function refreshPlaygroundRows() {
+    document.querySelectorAll('[data-vitals-row]').forEach(row => {
+      mountVitalsRow(row, courageStyle);
+    });
+    updateAll();
+  }
+
+  document.getElementById('tempSlider').addEventListener('input', e => {
+    temperance = +e.target.value;
+    updateAll();
+  });
+  document.getElementById('hpSlider').addEventListener('input', e => {
+    hp = +e.target.value;
+    updateAll();
+  });
+  document.getElementById('courageSlider').addEventListener('input', e => {
+    courage = +e.target.value;
+    updateAll();
+  });
+
+  document.querySelectorAll('.tab-btn[data-panel]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn[data-panel]').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.design-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.panel).classList.add('active');
+      document.getElementById('couragePickerWrap').style.display =
+        btn.dataset.panel === 'gallery' ? 'none' : '';
+      scaleViewports();
+    });
+  });
+
+  document.querySelectorAll('#courageStyles .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#courageStyles .tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      courageStyle = btn.dataset.courage;
+      refreshPlaygroundRows();
+    });
+  });
+
+  document.querySelectorAll('.phase-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.phase-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      phase = btn.dataset.phase;
+      updateAll();
+    });
+  });
+
+  function scaleViewports() {
+    document.querySelectorAll('[data-viewport]').forEach(scaler => {
+      const vp = scaler.querySelector('.viewport');
+      if (!vp) return;
+      const scale = scaler.clientWidth / GAME_W;
+      scaler.style.height = (GAME_H * scale) + 'px';
+      vp.style.transform = 'translateX(-50%) scale(' + scale + ')';
+    });
+  }
+
+  buildGallery();
+  refreshPlaygroundRows();
+  window.addEventListener('resize', scaleViewports);
+  scaleViewports();
+})();
+</script>
+</body>
+</html>

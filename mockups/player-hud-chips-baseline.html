@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Chip HUD Baseline</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black-0: #050505;
+    --black-1: #0a0a0a;
+    --black-2: #141414;
+    --black-4: #2a2a2a;
+    --white-3: #c8c0b8;
+    --red-3: #c41e3a;
+    --red-glow: rgba(196, 30, 58, 0.45);
+    --game-w: 1920px;
+    --game-h: 1080px;
+    --hud-red: #c41e3a;
+    --hud-black: #0a0a0a;
+    --hud-white: #ffffff;
+    --hud-gap: 0px;
+    --chip-h: 44px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black-0);
+    color: var(--white-2, #f0ece6);
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--black-4);
+    background: var(--black-1);
+  }
+
+  .page-header h1 {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.75rem;
+    color: #fff;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  .page-header p {
+    color: var(--white-3);
+    font-size: 0.85rem;
+    line-height: 1.55;
+    max-width: 920px;
+  }
+
+  .controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    padding: 18px 40px;
+    background: var(--black-2);
+    border-bottom: 1px solid var(--black-4);
+    align-items: center;
+  }
+
+  .control-group label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--white-3);
+    margin-bottom: 6px;
+  }
+
+  .tab-row, .phase-row, .ap-style-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tab-btn, .ap-style-btn {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 7px 10px;
+    border: 1px solid var(--black-4);
+    background: var(--black-1);
+    color: var(--white-3);
+    cursor: pointer;
+  }
+
+  .tab-btn:hover, .ap-style-btn:hover { border-color: var(--red-3); color: #fff; }
+  .tab-btn.active { background: var(--red-3); border-color: var(--red-3); color: #fff; }
+  .ap-style-btn.active { border-color: #fff; color: #fff; background: var(--black-4); }
+
+  .phase-btn {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    border: 1px solid var(--black-4);
+    background: var(--black-1);
+    color: var(--white-3);
+    cursor: pointer;
+  }
+
+  .phase-btn:hover { border-color: var(--red-3); color: #fff; }
+  .phase-btn.active { border-color: #fff; color: #fff; }
+
+  input[type="range"] { width: 160px; accent-color: var(--red-3); }
+
+  .gap-readout {
+    font-size: 0.8rem;
+    color: var(--white-3);
+    min-width: 48px;
+  }
+
+  .page-main { padding: 28px 40px 56px; }
+
+  .design-notes {
+    max-width: 920px;
+    margin-bottom: 16px;
+    padding: 14px 18px;
+    background: var(--black-2);
+    border-left: 3px solid var(--red-3);
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--white-3);
+  }
+
+  .viewport-scaler {
+    width: 100%;
+    max-width: min(calc(100vw - 80px), 1100px);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--black-2);
+    border: 1px solid var(--black-4);
+    min-height: 300px;
+  }
+
+  .viewport {
+    width: var(--game-w);
+    height: var(--game-h);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform-origin: top center;
+    overflow: hidden;
+  }
+
+  .bg-scene {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, #3d2818 0%, #6b3a1f 35%, #8a4a28 55%, #5c3018 100%);
+  }
+
+  .portrait-placeholder {
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 360px;
+    border: 2px dashed rgba(255,255,255,0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.22);
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .phase-label {
+    position: absolute;
+    top: 20px;
+    right: 28px;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    padding: 5px 10px;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+
+  /* ─── Vitals row ─── */
+  .vitals-row {
+    position: absolute;
+    top: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 860px;
+    display: flex;
+    align-items: stretch;
+    gap: var(--hud-gap);
+    filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55));
+  }
+
+  /* HP chip (matches resource chips: split label + no outline) */
+  .hp-shell {
+    flex: 1;
+    min-width: 0;
+    min-height: var(--chip-h);
+    padding: 8px 18px 8px 14px;
+    background: var(--hud-black);
+    border: none;
+    outline: none;
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    clip-path: polygon(14px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+    box-sizing: border-box;
+  }
+
+  .hp-split {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .hp-meter {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Skewed track: black = missing HP, red fill = current HP */
+  .hp-track {
+    width: 100%;
+    height: 26px;
+    background: var(--hud-black);
+    overflow: hidden;
+    transform: skewX(-14deg);
+    border: none;
+    outline: none;
+  }
+
+  .hp-fill {
+    display: block;
+    height: 100%;
+    width: var(--hp-pct, 90%);
+    background: var(--hud-red);
+    transition: width 0.25s;
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .hp-split .hp-frac {
+    flex-shrink: 0;
+    min-width: 76px;
+    text-align: right;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  /* ─── Chip group (no outlines) ─── */
+  .chip-group {
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    gap: var(--hud-gap);
+  }
+
+  .chip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--chip-h);
+    padding: 8px 20px 8px 18px;
+    font-family: 'New Rocker', cursive;
+    color: var(--hud-white);
+    clip-path: polygon(14px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+    border: none;
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* Split label + value (TEMP / COUR / AP) */
+  .res-split {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1;
+  }
+
+  .res-split .res-lbl {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .res-split .res-val {
+    font-family: 'New Rocker', cursive;
+    font-size: 34px;
+    line-height: 1;
+  }
+
+  /* On black chips (TEMP) */
+  .res-split--on-dark .res-lbl {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* On red chip (COUR) */
+  .res-split--on-red .res-lbl {
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .res-split--on-red .res-val {
+    color: var(--hud-white);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+  }
+
+  /* On white chip (AP) */
+  .res-split--on-white .res-lbl {
+    color: rgba(0, 0, 0, 0.55);
+  }
+
+  .res-split--on-white .res-val {
+    color: var(--hud-black);
+  }
+
+  /* Temperance: skewed parallelograms, no stroke */
+  .chip-temp {
+    background: var(--hud-black);
+    min-width: 88px;
+    padding-left: 14px;
+    padding-right: 16px;
+  }
+
+  .temp-chunks {
+    display: flex;
+    align-items: center;
+    gap: var(--hud-gap);
+    height: 28px;
+  }
+
+  .temp-chunk {
+    width: 16px;
+    height: 22px;
+    flex-shrink: 0;
+    transform: skewX(-14deg);
+    background: rgba(255, 255, 255, 0.14);
+    border: none;
+    outline: none;
+    transition: background 0.2s;
+  }
+
+  .temp-chunk.filled {
+    background: var(--hud-white);
+  }
+
+  /* Courage F bold red */
+  .chip-courage {
+    background: var(--hud-red);
+    min-width: 88px;
+    padding-left: 14px;
+    padding-right: 18px;
+    box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  /* AP white */
+  .chip-ap {
+    background: var(--hud-white);
+    min-width: 80px;
+    padding-left: 14px;
+    padding-right: 20px;
+    transition: opacity 0.35s, filter 0.35s;
+  }
+
+  .chip-ap.on {
+    filter: drop-shadow(0 0 10px var(--red-glow));
+  }
+
+  .chip-ap.off {
+    opacity: 0.36;
+  }
+
+  /* AP typography variants (white chip, black text) */
+  .chip-ap .ap-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .ap-fused {
+    font-family: 'New Rocker', cursive;
+    font-size: 28px;
+    letter-spacing: 1px;
+  }
+
+  .ap-space {
+    font-family: 'New Rocker', cursive;
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+
+  .ap-space .ap-n { font-size: 32px; }
+  .ap-space .ap-lbl { font-size: 22px; letter-spacing: 2px; }
+
+  .ap-stack {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    font-family: 'New Rocker', cursive;
+  }
+
+  .ap-stack .ap-n { font-size: 30px; line-height: 0.9; }
+  .ap-stack .ap-lbl {
+    font-size: 14px;
+    letter-spacing: 3px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+  }
+
+  .ap-num-only .ap-n {
+    font-family: 'New Rocker', cursive;
+    font-size: 36px;
+  }
+
+  .ap-prefix {
+    font-family: 'New Rocker', cursive;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .ap-prefix .ap-lbl { font-size: 18px; letter-spacing: 1px; }
+  .ap-prefix .ap-n { font-size: 32px; }
+
+  .ap-dot-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ap-dot-row .ap-dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .ap-dot-row .ap-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--hud-black);
+  }
+
+  .ap-dot-row .ap-dot.empty {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35);
+  }
+
+  .ap-dot-row .ap-n {
+    font-family: 'New Rocker', cursive;
+    font-size: 26px;
+  }
+
+  .ap-tight {
+    font-family: 'New Rocker', cursive;
+    font-size: 30px;
+    letter-spacing: -1px;
+  }
+
+  .ap-tight .ap-sep {
+    opacity: 0.45;
+    margin: 0 2px;
+    font-weight: 400;
+  }
+
+  /* AP gallery rows */
+  .design-panel { display: none; }
+  .design-panel.active { display: block; }
+
+  .ap-gallery {
+    position: absolute;
+    left: 50%;
+    top: 80px;
+    transform: translateX(-50%);
+    width: 920px;
+    display: flex;
+    flex-direction: column;
+    gap: calc(20px + var(--hud-gap));
+  }
+
+  .ap-gallery-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .ap-gallery-row .row-label {
+    width: 130px;
+    flex-shrink: 0;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--white-3);
+    text-align: right;
+  }
+
+  .ap-gallery-row .chip-group {
+    filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
+  }
+
+  .legend {
+    position: absolute;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    text-align: center;
+  }
+
+  .variant-tag {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 4px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    white-space: nowrap;
+  }
+
+  .variant-tag--a { top: 24px; }
+  .variant-tag--b { top: 112px; }
+
+  .vitals-row--lower {
+    top: 132px;
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Chip HUD Baseline</h1>
+  <p>
+    Locked look: <strong>HP</strong> / <strong>COUR</strong> / <strong>TEMP</strong> / <strong>AP</strong> split labels,
+    HP + temp use <strong>red parallelograms</strong> on black, no chip outlines, <strong>0px gap</strong> default.
+  </p>
+</header>
+
+<div class="controls-bar">
+  <div class="control-group">
+    <label>View</label>
+    <div class="tab-row">
+      <button class="tab-btn active" data-panel="play">HUD</button>
+      <button class="tab-btn" data-panel="ap-gallery">AP gallery</button>
+    </div>
+  </div>
+  <div class="control-group" id="apStylePicker">
+    <label>AP display</label>
+    <div class="ap-style-row" id="apStyleButtons"></div>
+  </div>
+  <div class="control-group">
+    <label>AP count</label>
+    <input type="range" id="apSlider" min="0" max="5" value="1">
+    <span class="gap-readout" id="apCountVal">1</span>
+  </div>
+  <div class="control-group">
+    <label>Gap (all) <span class="gap-readout" id="gapVal">0</span>px</label>
+    <input type="range" id="gapSlider" min="-16" max="32" value="0" step="1">
+  </div>
+  <div class="control-group">
+    <label>Phase</label>
+    <div class="phase-row">
+      <button class="phase-btn active" data-phase="action">Player action</button>
+      <button class="phase-btn" data-phase="enemy">Enemy / block</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <label>Temp <span id="tempVal">2</span>/3</label>
+    <input type="range" id="tempSlider" min="0" max="3" value="2">
+  </div>
+  <div class="control-group">
+    <label>HP <span id="hpVal">18</span>/20</label>
+    <input type="range" id="hpSlider" min="0" max="20" value="18">
+  </div>
+  <div class="control-group">
+    <label>Courage</label>
+    <input type="range" id="courageSlider" min="0" max="99" value="12">
+  </div>
+</div>
+
+<main class="page-main">
+
+  <section class="design-panel active" id="play">
+    <div class="design-notes">
+      <strong>Top (A):</strong> HP then chips (COUR / TEMP / AP) on the right.
+      <strong>Bottom (B):</strong> COUR / TEMP / AP on the left, HP on the right. No status passives.
+      Controls apply to both rows.
+    </div>
+    <div class="viewport-scaler" data-viewport>
+      <div class="viewport">
+        <div class="bg-scene"></div>
+        <div class="phase-label" data-phase-label>Player action</div>
+        <div class="portrait-placeholder">Portrait</div>
+
+        <div class="variant-tag variant-tag--a">A: HP + chips right</div>
+        <div class="vitals-row vitals-row--a">
+          <div class="hp-shell">
+            <div class="res-split res-split--on-dark hp-split">
+              <span class="res-lbl">HP</span>
+              <div class="hp-meter">
+                <div class="hp-track">
+                  <div class="hp-fill" data-hp-fill></div>
+                </div>
+              </div>
+              <span class="hp-frac res-val" data-hp-text>18/20</span>
+            </div>
+          </div>
+          <div class="chip-group" data-chip-group></div>
+        </div>
+        <div class="variant-tag variant-tag--b">B: Chips left, HP right</div>
+        <div class="vitals-row vitals-row--lower vitals-row--left">
+          <div class="chip-group" data-chip-group></div>
+          <div class="hp-shell">
+            <div class="res-split res-split--on-dark hp-split">
+              <span class="res-lbl">HP</span>
+              <div class="hp-meter">
+                <div class="hp-track">
+                  <div class="hp-fill" data-hp-fill></div>
+                </div>
+              </div>
+              <span class="hp-frac res-val" data-hp-text>18/20</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="legend">Chip order: COUR, TEMP, AP</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="design-panel" id="ap-gallery">
+    <div class="design-notes">
+      <strong>AP gallery</strong> — Each row is the full chip trio with a different AP treatment (white chip, black type). Phase toggle still dims AP off-turn.
+    </div>
+    <div class="viewport-scaler" data-viewport>
+      <div class="viewport">
+        <div class="bg-scene"></div>
+        <div class="ap-gallery" data-ap-gallery></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  const GAME_W = 1920;
+  const GAME_H = 1080;
+  const AP_STYLES = [
+    { id: 'fused', name: 'Fused 1AP' },
+    { id: 'space', name: '1 AP spaced' },
+    { id: 'stack', name: 'Stacked' },
+    { id: 'split', name: 'Split font' },
+    { id: 'num-only', name: 'Number only' },
+    { id: 'prefix', name: 'AP prefix' },
+    { id: 'dots', name: 'Dots + num' },
+    { id: 'tight', name: '1/AP' },
+  ];
+
+  let phase = 'action';
+  let temperance = 2;
+  let hp = 18;
+  let courage = 12;
+  let apCount = 1;
+  let apStyle = 'split';
+
+  function renderApInner(style, count) {
+    const n = Math.max(0, count);
+    switch (style) {
+      case 'space':
+        return '<div class="ap-inner ap-space"><span class="ap-n">' + n + '</span><span class="ap-lbl">AP</span></div>';
+      case 'stack':
+        return '<div class="ap-inner ap-stack"><span class="ap-n">' + n + '</span><span class="ap-lbl">AP</span></div>';
+      case 'split':
+        return '<div class="ap-inner res-split res-split--on-white"><span class="res-lbl">AP</span><span class="res-val">' + n + '</span></div>';
+      case 'num-only':
+        return '<div class="ap-inner ap-num-only"><span class="ap-n">' + n + '</span></div>';
+      case 'prefix':
+        return '<div class="ap-inner ap-prefix"><span class="ap-lbl">AP</span><span class="ap-n">' + n + '</span></div>';
+      case 'dots': {
+        const maxDots = Math.max(3, n);
+        let dots = '';
+        for (let i = 0; i < maxDots; i++) {
+          dots += '<span class="ap-dot' + (i < n ? '' : ' empty') + '"></span>';
+        }
+        return '<div class="ap-inner ap-dot-row"><span class="ap-dots">' + dots + '</span><span class="ap-n">' + n + '</span></div>';
+      }
+      case 'tight':
+        return '<div class="ap-inner ap-tight"><span class="ap-n">' + n + '</span><span class="ap-sep">/</span><span class="ap-lbl">AP</span></div>';
+      case 'fused':
+      default:
+        return '<div class="ap-inner ap-fused">' + n + 'AP</div>';
+    }
+  }
+
+  function buildChipGroup(apStyleId) {
+    const group = document.createElement('div');
+    group.className = 'chip-group';
+    group.setAttribute('data-chip-group', '');
+
+    const cour = document.createElement('div');
+    cour.className = 'chip chip-courage';
+    cour.innerHTML =
+      '<div class="res-split res-split--on-red">' +
+        '<span class="res-lbl">COUR</span>' +
+        '<span class="res-val" data-courage>' + courage + '</span>' +
+      '</div>';
+    group.appendChild(cour);
+
+    const temp = document.createElement('div');
+    temp.className = 'chip chip-temp';
+    temp.innerHTML =
+      '<div class="res-split res-split--on-dark">' +
+        '<span class="res-lbl">TEMP</span>' +
+        '<div class="temp-chunks" data-temp-chunks></div>' +
+      '</div>';
+    group.appendChild(temp);
+
+    const ap = document.createElement('div');
+    ap.className = 'chip chip-ap on';
+    ap.setAttribute('data-ap-chip', '');
+    ap.innerHTML = renderApInner(apStyleId, apCount);
+    group.appendChild(ap);
+
+    const chunks = temp.querySelector('[data-temp-chunks]');
+    if (chunks) {
+      chunks.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+        const c = document.createElement('div');
+        c.className = 'temp-chunk' + (i < temperance ? ' filled' : '');
+        chunks.appendChild(c);
+      }
+    }
+    return group;
+  }
+
+  function renderTemp() {
+    document.querySelectorAll('[data-temp-chunks]').forEach(el => {
+      el.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+        const c = document.createElement('div');
+        c.className = 'temp-chunk' + (i < temperance ? ' filled' : '');
+        el.appendChild(c);
+      }
+    });
+  }
+
+  function setGap(px) {
+    document.documentElement.style.setProperty('--hud-gap', px + 'px');
+    document.getElementById('gapVal').textContent = px;
+  }
+
+  function mountPlaygroundChips() {
+    document.querySelectorAll('#play [data-chip-group]').forEach(mount => {
+      mount.innerHTML = '';
+      mount.appendChild(buildChipGroup(apStyle));
+    });
+  }
+
+  function buildApGallery() {
+    const gallery = document.querySelector('[data-ap-gallery]');
+    if (!gallery || gallery.dataset.built) return;
+    gallery.dataset.built = '1';
+    AP_STYLES.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'ap-gallery-row';
+      row.innerHTML = '<div class="row-label">' + s.name + '</div>';
+      row.appendChild(buildChipGroup(s.id));
+      gallery.appendChild(row);
+    });
+  }
+
+  function updateAll() {
+    document.querySelectorAll('[data-hp-fill]').forEach(el => {
+      el.style.setProperty('--hp-pct', (hp / 20 * 100) + '%');
+    });
+    document.querySelectorAll('[data-hp-text]').forEach(el => { el.textContent = hp + '/20'; });
+    document.querySelectorAll('[data-courage]').forEach(el => { el.textContent = courage; });
+
+    document.querySelectorAll('[data-ap-chip]').forEach(ap => {
+      const inGallery = ap.closest('[data-ap-gallery]');
+      let style = apStyle;
+      if (inGallery) {
+        const row = ap.closest('.ap-gallery-row');
+        const label = row?.querySelector('.row-label')?.textContent;
+        style = AP_STYLES.find(s => s.name === label)?.id || 'fused';
+      }
+      ap.innerHTML = renderApInner(style, apCount);
+      ap.classList.toggle('on', phase === 'action');
+      ap.classList.toggle('off', phase !== 'action');
+    });
+
+    const phaseLabel = document.querySelector('[data-phase-label]');
+    if (phaseLabel) {
+      phaseLabel.textContent = phase === 'action' ? 'Player action' : 'Enemy / block';
+    }
+    renderTemp();
+    document.getElementById('tempVal').textContent = temperance;
+    document.getElementById('hpVal').textContent = hp;
+    document.getElementById('apCountVal').textContent = apCount;
+  }
+
+  function initApStyleButtons() {
+    const row = document.getElementById('apStyleButtons');
+    AP_STYLES.forEach(s => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ap-style-btn' + (s.id === apStyle ? ' active' : '');
+      btn.dataset.apStyle = s.id;
+      btn.textContent = s.name;
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.ap-style-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        apStyle = s.id;
+        mountPlaygroundChips();
+        updateAll();
+      });
+      row.appendChild(btn);
+    });
+  }
+
+  document.getElementById('gapSlider').addEventListener('input', e => {
+    setGap(+e.target.value);
+  });
+
+  document.getElementById('tempSlider').addEventListener('input', e => {
+    temperance = +e.target.value;
+    updateAll();
+  });
+  document.getElementById('hpSlider').addEventListener('input', e => {
+    hp = +e.target.value;
+    updateAll();
+  });
+  document.getElementById('courageSlider').addEventListener('input', e => {
+    courage = +e.target.value;
+    updateAll();
+  });
+
+  document.getElementById('apSlider').addEventListener('input', e => {
+    apCount = +e.target.value;
+    mountPlaygroundChips();
+    updateAll();
+  });
+
+  document.querySelectorAll('.tab-btn[data-panel]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn[data-panel]').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.design-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.panel).classList.add('active');
+      document.getElementById('apStylePicker').style.display =
+        btn.dataset.panel === 'ap-gallery' ? 'none' : '';
+      scaleViewport();
+    });
+  });
+
+  document.querySelectorAll('.phase-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.phase-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      phase = btn.dataset.phase;
+      updateAll();
+    });
+  });
+
+  function scaleViewport() {
+    document.querySelectorAll('[data-viewport]').forEach(scaler => {
+      const vp = scaler.querySelector('.viewport');
+      if (!vp) return;
+      const scale = scaler.clientWidth / GAME_W;
+      scaler.style.height = (GAME_H * scale) + 'px';
+      vp.style.transform = 'translateX(-50%) scale(' + scale + ')';
+    });
+  }
+
+  initApStyleButtons();
+  buildApGallery();
+  mountPlaygroundChips();
+  setGap(0);
+  updateAll();
+  window.addEventListener('resize', scaleViewport);
+  scaleViewport();
+})();
+</script>
+</body>
+</html>

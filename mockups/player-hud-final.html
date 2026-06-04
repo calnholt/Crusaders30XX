@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Player HUD (Final)</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --game-w: 1920px;
+    --game-h: 1080px;
+    --hud-red: #c41e3a;
+    --hud-black: #0a0a0a;
+    --hud-white: #ffffff;
+    --red-glow: rgba(196, 30, 58, 0.45);
+    --hud-gap: 0px;
+    --chip-h: 44px;
+    --hp-pct: 90%;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #050505;
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    padding: 24px 40px 16px;
+    border-bottom: 1px solid #2a2a2a;
+    background: #0a0a0a;
+  }
+
+  .page-header h1 {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.5rem;
+    color: #fff;
+    letter-spacing: 2px;
+  }
+
+  .page-header p {
+    margin-top: 6px;
+    color: #c8c0b8;
+    font-size: 0.82rem;
+  }
+
+  .page-main {
+    padding: 24px 40px 48px;
+  }
+
+  .viewport-scaler {
+    width: 100%;
+    max-width: min(calc(100vw - 80px), 1100px);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    min-height: 300px;
+  }
+
+  .viewport {
+    width: var(--game-w);
+    height: var(--game-h);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform-origin: top center;
+    overflow: hidden;
+  }
+
+  .bg-scene {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, #3d2818 0%, #6b3a1f 35%, #8a4a28 55%, #5c3018 100%);
+  }
+
+  .portrait-placeholder {
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 360px;
+    border: 2px dashed rgba(255, 255, 255, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.22);
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .vitals-row {
+    position: absolute;
+    top: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 860px;
+    display: flex;
+    align-items: stretch;
+    gap: var(--hud-gap);
+    filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55));
+  }
+
+  .hp-shell {
+    flex: 1;
+    min-width: 0;
+    min-height: var(--chip-h);
+    padding: 8px 18px 8px 14px;
+    background: var(--hud-black);
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    clip-path: polygon(14px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  }
+
+  .hp-split {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1;
+  }
+
+  .hp-split .res-lbl {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    flex-shrink: 0;
+  }
+
+  .hp-meter {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .hp-track {
+    width: 100%;
+    height: 26px;
+    background: var(--hud-black);
+    overflow: hidden;
+    transform: skewX(-14deg);
+  }
+
+  .hp-fill {
+    display: block;
+    height: 100%;
+    width: var(--hp-pct);
+    background: var(--hud-red);
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .hp-frac {
+    font-family: 'New Rocker', cursive;
+    font-size: 34px;
+    line-height: 1;
+    color: var(--hud-white);
+    flex-shrink: 0;
+    min-width: 76px;
+    text-align: right;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  .chip-group {
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    gap: var(--hud-gap);
+  }
+
+  .chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--chip-h);
+    padding: 8px 20px 8px 18px;
+    clip-path: polygon(14px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  }
+
+  .res-split {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1;
+  }
+
+  .res-lbl {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .res-val {
+    font-family: 'New Rocker', cursive;
+    font-size: 34px;
+    line-height: 1;
+  }
+
+  .chip-courage {
+    background: var(--hud-red);
+    min-width: 88px;
+    padding-left: 14px;
+    padding-right: 18px;
+    box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  .chip-courage .res-lbl {
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .chip-courage .res-val {
+    color: var(--hud-white);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+  }
+
+  .chip-temp {
+    background: var(--hud-black);
+    min-width: 88px;
+    padding-left: 14px;
+    padding-right: 16px;
+  }
+
+  .chip-temp .res-lbl {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .temp-chunks {
+    display: flex;
+    align-items: center;
+    gap: var(--hud-gap);
+    height: 28px;
+  }
+
+  .temp-chunk {
+    width: 16px;
+    height: 22px;
+    flex-shrink: 0;
+    transform: skewX(-14deg);
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .temp-chunk.filled {
+    background: var(--hud-white);
+  }
+
+  .chip-ap {
+    background: var(--hud-white);
+    min-width: 80px;
+    padding-left: 14px;
+    padding-right: 20px;
+    filter: drop-shadow(0 0 10px var(--red-glow));
+  }
+
+  .chip-ap .res-lbl {
+    color: rgba(0, 0, 0, 0.55);
+  }
+
+  .chip-ap .res-val {
+    color: var(--hud-black);
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Player HUD — Final</h1>
+  <p>HP + COUR / TEMP / AP | split labels, 0px gap, no status passives. 1920x1080.</p>
+</header>
+
+<main class="page-main">
+  <div class="viewport-scaler" id="scaler">
+    <div class="viewport" id="viewport">
+      <div class="bg-scene"></div>
+      <div class="portrait-placeholder">Portrait</div>
+      <div class="vitals-row">
+        <div class="hp-shell">
+          <div class="hp-split">
+            <span class="res-lbl">HP</span>
+            <div class="hp-meter">
+              <div class="hp-track">
+                <div class="hp-fill"></div>
+              </div>
+            </div>
+            <span class="hp-frac">18/20</span>
+          </div>
+        </div>
+        <div class="chip-group">
+          <div class="chip chip-courage">
+            <div class="res-split">
+              <span class="res-lbl">COUR</span>
+              <span class="res-val">12</span>
+            </div>
+          </div>
+          <div class="chip chip-temp">
+            <div class="res-split">
+              <span class="res-lbl">TEMP</span>
+              <div class="temp-chunks">
+                <div class="temp-chunk filled"></div>
+                <div class="temp-chunk filled"></div>
+                <div class="temp-chunk"></div>
+              </div>
+            </div>
+          </div>
+          <div class="chip chip-ap">
+            <div class="res-split">
+              <span class="res-lbl">AP</span>
+              <span class="res-val">1</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  const GAME_W = 1920;
+  const GAME_H = 1080;
+  function scale() {
+    const scaler = document.getElementById('scaler');
+    const vp = document.getElementById('viewport');
+    const scale = scaler.clientWidth / GAME_W;
+    scaler.style.height = (GAME_H * scale) + 'px';
+    vp.style.transform = 'translateX(-50%) scale(' + scale + ')';
+  }
+  window.addEventListener('resize', scale);
+  scale();
+})();
+</script>
+</body>
+</html>
