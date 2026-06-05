@@ -301,6 +301,11 @@ namespace Crusaders30XX.ECS.Systems
                 case CardZoneType.AssignedBlock:
                 {
                     var t = evt.Card.GetComponent<Transform>();
+                    var inheritedHotKey = evt.Card.GetComponent<HotKey>();
+                    if (inheritedHotKey != null)
+                    {
+                        EntityManager.RemoveComponent<HotKey>(evt.Card);
+                    }
                     var abc = evt.Card.GetComponent<AssignedBlockCard>();
                     if (abc == null)
                     {
@@ -603,5 +608,4 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
 

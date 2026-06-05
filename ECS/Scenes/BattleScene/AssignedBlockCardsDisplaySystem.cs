@@ -387,19 +387,15 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnBlockAssignmentAdded(BlockAssignmentAdded evt)
 		{
 			if (evt == null || string.IsNullOrEmpty(evt.ContextId)) return;
-			// Immediately remove the previous HotKey (if exists) for this context
+			RemoveAssignedBlockHotKey(evt.Card);
+			// Immediately remove stale HotKeys for this context; the newest idle assignment gets B later.
 			RemovePreviousForContext(evt.ContextId, evt.Card);
 		}
 
 		private void OnBlockAssignmentRemoved(BlockAssignmentRemoved evt)
 		{
 			if (evt == null || string.IsNullOrEmpty(evt.ContextId)) return;
-			// If removal pertains to equipment, ensure its hotkey is removed immediately
-			if (evt.Card != null && evt.Card.GetComponent<EquippedEquipment>() != null)
-			{
-				var hk = evt.Card.GetComponent<HotKey>();
-				if (hk != null) { EntityManager.RemoveComponent<HotKey>(evt.Card); }
-			}
+			RemoveAssignedBlockHotKey(evt.Card);
 			// Restore tooltip settings for cards (ignore equipment)
 			if (evt.Card != null && evt.Card.GetComponent<EquippedEquipment>() == null)
 			{
@@ -431,13 +427,9 @@ namespace Crusaders30XX.ECS.Systems
 			if (evt == null) return;
 			if (evt.From == CardZoneType.AssignedBlock)
 			{
-				var hk = evt.Card?.GetComponent<HotKey>();
-				if (hk != null && hk.Button == FaceButton.B)
-				{
-					// Remove B and reassign immediately to previous (if available)
-					EntityManager.RemoveComponent<HotKey>(evt.Card);
-					AssignHotKeyToPrevious(evt.Card, evt.ContextId, evt.Card.GetComponent<AssignedBlockCard>()?.AssignedAtTicks ?? long.MaxValue);
-				}
+				var removedAssignedAt = evt.Card?.GetComponent<AssignedBlockCard>()?.AssignedAtTicks ?? long.MaxValue;
+				RemoveAssignedBlockHotKey(evt.Card);
+				AssignHotKeyToPrevious(evt.Card, evt.ContextId, removedAssignedAt);
 				if (!string.IsNullOrEmpty(evt.ContextId))
 				{
 					MaintainLatestHotKeyForContext(evt.ContextId);
@@ -476,13 +468,12 @@ namespace Crusaders30XX.ECS.Systems
 				var hk = e.GetComponent<HotKey>();
 				if (hk == null || hk.Button != FaceButton.B) continue;
 				var abc = e.GetComponent<AssignedBlockCard>();
+				var ui = e.GetComponent<UIElement>();
+				bool isAssignedBlockHotKey = abc != null || (ui != null && ui.EventType == UIElementEventType.UnassignCardAsBlock);
+				if (!isAssignedBlockHotKey) continue;
 				if (abc == null || abc.ContextId != contextId || abc.Phase != AssignedBlockCard.PhaseState.Idle)
 				{
-					var ui = e.GetComponent<UIElement>();
-					if (ui != null && ui.EventType == UIElementEventType.UnassignCardAsBlock)
-					{
-						EntityManager.RemoveComponent<HotKey>(e);
-					}
+					RemoveAssignedBlockHotKey(e);
 				}
 			}
 
@@ -535,7 +526,16 @@ namespace Crusaders30XX.ECS.Systems
 			var hkPrev = prev.GetComponent<HotKey>();
 			if (hkPrev != null && hkPrev.Button == FaceButton.B)
 			{
-				EntityManager.RemoveComponent<HotKey>(prev);
+				RemoveAssignedBlockHotKey(prev);
+			}
+		}
+
+		private void RemoveAssignedBlockHotKey(Entity entity)
+		{
+			var hk = entity?.GetComponent<HotKey>();
+			if (hk != null)
+			{
+				EntityManager.RemoveComponent<HotKey>(entity);
 			}
 		}
 
