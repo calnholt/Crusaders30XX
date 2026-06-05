@@ -45,11 +45,9 @@ namespace Crusaders30XX.ECS.Systems
 		private CourageDisplaySystem _courageDisplaySystem;
 		private ActionPointDisplaySystem _actionPointDisplaySystem;
 		private TemperanceDisplaySystem _temperanceDisplaySystem;
-		// private ThreatDisplaySystem _threatDisplaySystem;
 		private CourageManagerSystem _courageManagerSystem;
 		private ActionPointManagementSystem _actionPointManagementSystem;
 		private TemperanceManagerSystem _temperanceManagerSystem;
-		// private ThreatManagementSystem _threatManagementSystem;
 		private HPDisplaySystem _hpDisplaySystem;
 		private EnemyDifficultyDisplaySystem _enemyDifficultyDisplaySystem;
 		private AppliedPassivesDisplaySystem _appliedPassivesDisplaySystem;
@@ -593,11 +591,9 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_playerTemperanceActivationDisplaySystem);
 			_world.AddSystem(_courageDisplaySystem);
 			_world.AddSystem(_temperanceDisplaySystem);
-			// _world.AddSystem(_threatDisplaySystem);
 			_world.AddSystem(_actionPointDisplaySystem);
 			_world.AddSystem(_courageManagerSystem);
 			_world.AddSystem(_temperanceManagerSystem);
-			// _world.AddSystem(_threatManagementSystem);
 			_world.AddSystem(_actionPointManagementSystem);
 			_world.AddSystem(_battleBackgroundSystem);
 			_world.AddSystem(_hpDisplaySystem);
