@@ -9,6 +9,27 @@ namespace Crusaders30XX.ECS.Systems
 {
 	public static class ConditionService
 	{
+		/// <summary>
+		/// Whether OnAttackHit-style effects should run after damage resolves.
+		/// For distinct-color block conditions, only the block-color requirement matters (not whether damage landed).
+		/// </summary>
+		public static bool ShouldTriggerNotBlockedEffect(
+			ConditionType conditionType,
+			EntityManager entityManager,
+			EnemyAttackProgress progress,
+			bool blockedAtResolution,
+			bool wasHit,
+			int damage)
+		{
+			if (conditionType == ConditionType.OnBlockedByAtLeast2DifferentColors)
+			{
+				return !Evaluate(conditionType, entityManager, progress);
+			}
+
+			bool gameplayBlocked = damage > 0 && !wasHit;
+			return !blockedAtResolution && !gameplayBlocked;
+		}
+
 		public static bool Evaluate(ConditionType conditionType, EntityManager entityManager, EnemyAttackProgress progress)
 		{
 			switch (conditionType)

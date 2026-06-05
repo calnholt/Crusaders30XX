@@ -95,15 +95,20 @@ namespace Crusaders30XX.ECS.Systems
 			onApplied = (evt) =>
 			{
 				if (evt.ContextId != pa.ContextId) return;
-				
-				bool gameplayBlocked = (def.Damage > 0 && !evt.WasHit);
 
-				if (!blockedAtResolution && !gameplayBlocked)
+				var impactProgress = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>()
+					.FirstOrDefault(ent => ent.GetComponent<EnemyAttackProgress>()?.ContextId == pa.ContextId)
+					?.GetComponent<EnemyAttackProgress>();
+
+				if (ConditionService.ShouldTriggerNotBlockedEffect(
+					def.ConditionType,
+					EntityManager,
+					impactProgress,
+					blockedAtResolution,
+					evt.WasHit,
+					def.Damage))
 				{
-					if (def.OnAttackHit != null)
-					{
-						def.OnAttackHit(EntityManager);
-					}
+					def.OnAttackHit?.Invoke(EntityManager);
 				}
 				if (evt.WasHit)
 				{
