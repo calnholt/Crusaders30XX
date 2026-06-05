@@ -70,6 +70,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     OnHit,
     OnBlockedByAtLeast1Card,
     OnBlockedByAtLeast2Cards,
+    OnBlockedByAtLeast2DifferentColors,
     MustBeBlockedByAtLeast1Card,
     MustBeBlockedByAtLeast2Cards,
     MustBeBlockedByExactly1Card,

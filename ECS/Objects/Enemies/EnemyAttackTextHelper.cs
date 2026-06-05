@@ -19,6 +19,8 @@ public static class EnemyAttackTextHelper
             return "If not blocked by at least 1 card - ";
           case ConditionType.OnBlockedByAtLeast2Cards:
             return "If not blocked by at least 2 cards - ";
+          case ConditionType.OnBlockedByAtLeast2DifferentColors:
+            return "If not blocked by 2 different colored cards - ";
           default:
             return "";
         }

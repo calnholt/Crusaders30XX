@@ -27,6 +27,8 @@ namespace Crusaders30XX.ECS.Systems
 					return OnBlockedByCards(1, progress);
 				case ConditionType.OnBlockedByAtLeast2Cards:
 					return OnBlockedByCards(2, progress);
+				case ConditionType.OnBlockedByAtLeast2DifferentColors:
+					return OnBlockedByDistinctColors(2, progress);
 				default:
 					return true;
 			}
@@ -41,6 +43,16 @@ namespace Crusaders30XX.ECS.Systems
 		private static bool OnBlockedByCards(int required, EnemyAttackProgress progress)
 		{
 			return progress.PlayedCards >= required;
+		}
+
+		private static bool OnBlockedByDistinctColors(int required, EnemyAttackProgress progress)
+		{
+			if (progress == null) return false;
+			int distinct = 0;
+			if (progress.PlayedRed > 0) distinct++;
+			if (progress.PlayedWhite > 0) distinct++;
+			if (progress.PlayedBlack > 0) distinct++;
+			return distinct >= required;
 		}
 
 		/// <summary>
