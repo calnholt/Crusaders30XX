@@ -70,7 +70,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (isPreview)
 			{
-				ClearPresentationState(enemy);
+				EndDefeatPresentationAndRestorePortrait(enemy);
 				return;
 			}
 
@@ -79,7 +79,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void CompleteRealDefeat(Entity enemy)
 		{
-			ClearPresentationState(enemy);
+			EndDefeatPresentationInputFreeze();
 
 			LoggingService.Append("EnemyDefeatFlowSystem.CompleteRealDefeat", new System.Text.Json.Nodes.JsonObject
 			{
@@ -129,16 +129,26 @@ namespace Crusaders30XX.ECS.Systems
 			ResetPending();
 			if (isPreview)
 			{
-				ClearPresentationState(enemy);
+				EndDefeatPresentationAndRestorePortrait(enemy);
 				return;
 			}
 
 			CompleteRealDefeat(enemy);
 		}
 
-		private void ClearPresentationState(Entity enemy)
+		private void EndDefeatPresentationInputFreeze()
 		{
 			SetDefeatPresentationActive(false);
+		}
+
+		private void EndDefeatPresentationAndRestorePortrait(Entity enemy)
+		{
+			EndDefeatPresentationInputFreeze();
+			RestorePortraitAfterPreview(enemy);
+		}
+
+		private void RestorePortraitAfterPreview(Entity enemy)
+		{
 			if (enemy != null && enemy.HasComponent<SuppressPortraitRender>())
 			{
 				EntityManager.RemoveComponent<SuppressPortraitRender>(enemy);
