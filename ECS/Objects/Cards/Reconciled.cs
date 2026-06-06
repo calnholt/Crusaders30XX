@@ -13,10 +13,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "reconciled";
             Name = "Reconciled";
             Target = "Enemy";
-            Text = $"If you have no scars or penance, this attack gains +{DamageBonus} damage.";
+            Text = $"If you have no scars, this attack gains +{DamageBonus} damage.";
             Cost = ["Red", "Red"];
             Animation = "Attack";
-            Damage = 9;
+            Damage = 10;
             Block = 2;
 
             OnPlay = (entityManager, card) =>
@@ -38,8 +38,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntity("Player");
                 var passives = player.GetComponent<AppliedPassives>().Passives;
                 passives.TryGetValue(AppliedPassiveType.Scar, out var scar);
-                passives.TryGetValue(AppliedPassiveType.Penance, out var penance);
-                return scar == 0 && penance == 0 ? DamageBonus : 0;
+                return scar == 0 ? DamageBonus : 0;
             };
         }
     }

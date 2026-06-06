@@ -376,6 +376,56 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 		}
 
+		public static void SetPendingBattleNode(string nodeId)
+		{
+			if (string.IsNullOrEmpty(nodeId)) return;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				_save.pendingBattleNodeId = nodeId;
+				Persist();
+			}
+		}
+
+		public static void ClearPendingBattle()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) return;
+				if (string.IsNullOrEmpty(_save.pendingBattleNodeId)) return;
+				_save.pendingBattleNodeId = string.Empty;
+				Persist();
+			}
+		}
+
+		public static bool TryGetResumableBattleNode(out string nodeId)
+		{
+			nodeId = string.Empty;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) return false;
+				nodeId = _save.pendingBattleNodeId ?? string.Empty;
+			}
+
+			if (string.IsNullOrEmpty(nodeId)) return false;
+			if (!TryGetRunNode(nodeId, out var node, out _))
+			{
+				ClearPendingBattle();
+				return false;
+			}
+
+			if (!node.isRevealed || node.isCompleted || node.ResolveBattleEnemyIds().Count == 0)
+			{
+				ClearPendingBattle();
+				return false;
+			}
+
+			return true;
+		}
+
 		private static void EnsureLoaded()
 		{
 			if (_save != null) return;
@@ -504,6 +554,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				runMapEvents = new List<RunMapEvent>(),
 				items = new List<SaveItem>(),
 				lastLocation = string.Empty,
+				pendingBattleNodeId = string.Empty,
 				loadouts = new List<LoadoutDefinition>(),
 				runLongPassives = new Dictionary<string, int>(),
 				runCardRestrictions = new Dictionary<string, List<string>>(),
@@ -532,6 +583,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				runMapEvents = events,
 				items = new List<SaveItem>(),
 				lastLocation = nodes.Count > 0 ? nodes[0].id : "run_0",
+				pendingBattleNodeId = string.Empty,
 				starterCardKeys = new List<string>(startingDeck),
 				loadouts = new List<LoadoutDefinition>
 				{

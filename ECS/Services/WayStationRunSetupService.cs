@@ -38,11 +38,17 @@ namespace Crusaders30XX.ECS.Services
 			if (world == null) return;
 			if (SaveCache.IsStartQuestCompleted()) return;
 
+			BeginBattleFromNodeId(world, SaveCache.GetStartNodeId());
+		}
+
+		public static void BeginBattleFromNodeId(World world, string nodeId)
+		{
+			if (world == null || string.IsNullOrEmpty(nodeId)) return;
+
 			PrepareRunEntitiesForBattle(world);
 
-			string startNodeId = SaveCache.GetStartNodeId();
-			var tempPoi = world.EntityManager.CreateEntity("TempWayStationQuestTrigger");
-			world.EntityManager.AddComponent(tempPoi, new PointOfInterest { Id = startNodeId });
+			var tempPoi = world.EntityManager.CreateEntity("TempQuestBattleTrigger");
+			world.EntityManager.AddComponent(tempPoi, new PointOfInterest { Id = nodeId });
 			EventManager.Publish(new QuestSelectRequested { Entity = tempPoi });
 			world.EntityManager.DestroyEntity(tempPoi.Id);
 		}

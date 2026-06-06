@@ -11,19 +11,31 @@ namespace Crusaders30XX.ECS.Services
 		{
 			if (!SaveCache.IsRunActive()) return SceneId.WayStation;
 			if (!SaveCache.IsStartQuestCompleted()) return null;
+			if (SaveCache.TryGetResumableBattleNode(out _)) return null;
 			return SceneId.Location;
 		}
 
 		public static void OnTitleMenuClicked(World world)
 		{
-			var scene = ResolveDirectTransitionScene();
-			if (scene == null)
+			if (!SaveCache.IsRunActive())
+			{
+				EventManager.Publish(new ShowTransition { Scene = SceneId.WayStation, SkipHold = true });
+				return;
+			}
+
+			if (!SaveCache.IsStartQuestCompleted())
 			{
 				WayStationRunSetupService.BeginStartQuestBattle(world);
 				return;
 			}
 
-			EventManager.Publish(new ShowTransition { Scene = scene.Value, SkipHold = true });
+			if (SaveCache.TryGetResumableBattleNode(out var nodeId))
+			{
+				WayStationRunSetupService.BeginBattleFromNodeId(world, nodeId);
+				return;
+			}
+
+			EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
 		}
 	}
 }

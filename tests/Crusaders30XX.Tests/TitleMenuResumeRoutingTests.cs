@@ -1,3 +1,4 @@
+using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Services;
@@ -51,5 +52,48 @@ public class TitleMenuResumeRoutingTests
 
 		Assert.False(SaveCache.IsRunActive());
 		Assert.Equal(SceneId.WayStation, TitleMenuResumeService.ResolveDirectTransitionScene());
+	}
+
+	[Fact]
+	public void Active_run_with_pending_incomplete_battle_routes_to_battle_path()
+	{
+		SaveCache.DeleteSaveFilesIfPresent();
+		SaveCache.StartNewRun();
+		SaveCache.SetQuestCompleted(null, SaveCache.GetStartNodeId(), true);
+
+		var nodes = SaveCache.GetRunMapNodes().ToList();
+		var startNode = nodes[0];
+		Assert.NotEmpty(startNode.childIndices);
+		string childId = nodes[startNode.childIndices[0]].id;
+		SaveCache.SetRunNodeRevealed(childId, true);
+		SaveCache.SetPendingBattleNode(childId);
+
+		Assert.Null(TitleMenuResumeService.ResolveDirectTransitionScene());
+		Assert.True(SaveCache.TryGetResumableBattleNode(out var nodeId));
+		Assert.Equal(childId, nodeId);
+	}
+
+	[Fact]
+	public void TryGetResumableBattleNode_clears_stale_flag_when_node_completed()
+	{
+		SaveCache.DeleteSaveFilesIfPresent();
+		SaveCache.StartNewRun();
+		string nodeId = SaveCache.GetStartNodeId();
+		SaveCache.SetPendingBattleNode(nodeId);
+		SaveCache.SetQuestCompleted(null, nodeId, true);
+
+		Assert.False(SaveCache.TryGetResumableBattleNode(out _));
+		Assert.Empty(SaveCache.GetAll().pendingBattleNodeId);
+	}
+
+	[Fact]
+	public void TryGetResumableBattleNode_clears_stale_flag_when_node_missing()
+	{
+		SaveCache.DeleteSaveFilesIfPresent();
+		SaveCache.StartNewRun();
+		SaveCache.SetPendingBattleNode("nonexistent_node");
+
+		Assert.False(SaveCache.TryGetResumableBattleNode(out _));
+		Assert.Empty(SaveCache.GetAll().pendingBattleNodeId);
 	}
 }

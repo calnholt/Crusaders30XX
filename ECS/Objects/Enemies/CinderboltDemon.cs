@@ -21,12 +21,12 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 
         public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
         {
-          // var random = Random.Shared.Next(0, 100);
-          // if (!UsedInsidiousBolt && (turnNumber == 3 && random < 50 || turnNumber > 3))
-          // {
-          //   UsedInsidiousBolt = true;
-          //   return ["insidious_bolt"];
-          // }
+          var random = Random.Shared.Next(0, 100);
+          if (!UsedInsidiousBolt && (turnNumber == 3 && random < 50 || turnNumber > 3))
+          {
+            UsedInsidiousBolt = true;
+            return ["insidious_bolt"];
+          }
           return ["cinderbolt"];
         }
     }

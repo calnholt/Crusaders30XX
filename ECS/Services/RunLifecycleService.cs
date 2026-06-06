@@ -22,6 +22,7 @@ namespace Crusaders30XX.ECS.Services
 			{
 				RunPlayerService.DestroyRunPlayer(entityManager);
 			}
+			SaveCache.ClearPendingBattle();
 			SaveCache.MarkRunInactive();
 		}
 	}

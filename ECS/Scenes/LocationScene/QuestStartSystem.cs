@@ -76,6 +76,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             SaveCache.SetLastLocation(poi.Id);
+            SaveCache.SetPendingBattleNode(poi.Id);
             EventManager.Publish(new QuestSelected { LocationId = DesertLocationId, QuestIndex = questIndex, QuestId = poi.Id });
             EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
         }

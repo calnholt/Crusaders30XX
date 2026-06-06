@@ -19,6 +19,8 @@ namespace Crusaders30XX.ECS.Data.Save
 		public List<RunMapEvent> runMapEvents { get; set; } = new List<RunMapEvent>();
 		public List<SaveItem> items { get; set; } = new List<SaveItem>();
 		public string lastLocation { get; set; } = string.Empty;
+		/// <summary>Run-map node id when the player entered battle but has not returned to the location map.</summary>
+		public string pendingBattleNodeId { get; set; } = string.Empty;
 		public List<LoadoutDefinition> loadouts { get; set; } = new List<LoadoutDefinition>();
 		public List<string> seenTutorials { get; set; } = new List<string>();
 		public Dictionary<string, CardMastery> cardMastery { get; set; } = new Dictionary<string, CardMastery>();

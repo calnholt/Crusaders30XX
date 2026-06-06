@@ -6,19 +6,19 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class ZealousVow : CardBase
     {
-        private int SharpenAmount = 2;
-        private int AggressionOnPledge = 2;
+        private int SharpenAmount = 3;
+        private int AggressionAmount = 3;
 
         public ZealousVow()
         {
             CardId = "zealous_vow";
             Name = "Zealous Vow";
             Target = "Player";
-            Text = $"When this is pledged, gain {AggressionOnPledge} aggression. Sharpen {SharpenAmount}.";
+            Text = $"Gain {AggressionAmount} aggression.\n\nWhen this is pledged, gain {SharpenAmount} sharpen. ";
             IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;
-            Block = 3;
+            Block = 2;
 
             OnPlay = (entityManager, card) =>
             {
@@ -26,8 +26,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 EventManager.Publish(new ApplyPassiveEvent
                 {
                     Target = player,
-                    Type = AppliedPassiveType.Sharpen,
-                    Delta = SharpenAmount
+                    Type = AppliedPassiveType.Aggression,
+                    Delta = AggressionAmount
                 });
             };
 
@@ -37,8 +37,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 EventManager.Publish(new ApplyPassiveEvent
                 {
                     Target = player,
-                    Type = AppliedPassiveType.Aggression,
-                    Delta = AggressionOnPledge
+                    Type = AppliedPassiveType.Sharpen,
+                    Delta = SharpenAmount
                 });
             };
         }

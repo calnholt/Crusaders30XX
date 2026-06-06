@@ -3,6 +3,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -45,6 +46,7 @@ namespace Crusaders30XX.ECS.Systems
       EventManager.Subscribe<LoadSceneEvent>(_ => {
 				if (_.Scene == SceneId.Location)
 				{
+					SaveCache.ClearPendingBattle();
 					EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Map });
 					EventManager.Publish(new UpdateLocationNameEvent { Title = "Desert" });
 					AddLocationSystems();
