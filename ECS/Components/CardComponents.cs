@@ -470,7 +470,8 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
-    /// Marker for cards rendered with the brittle crumble shader.
+    /// Marks a card as brittle. If used as the sole blocker for an attack, mills 1.
+    /// Persists for the entire run. Rendered with the brittle crumble shader.
     /// </summary>
     public class Brittle : IComponent
     {

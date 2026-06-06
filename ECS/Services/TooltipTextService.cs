@@ -27,6 +27,9 @@ namespace Crusaders30XX.ECS.Services
 			if (entity.GetComponent<Frozen>() != null)
 				text += Sep(text) + "This card is frozen - when played, gain 1 frostbite. Lasts for the rest of the quest.";
 
+			if (entity.GetComponent<Brittle>() != null)
+				text += Sep(text) + "This card is brittle - if you block an attack with only this card, mill 1. Lasts for the rest of the run.";
+
 			if (entity.GetComponent<Intimidated>() != null)
 				text += Sep(text) + "This card is intimidated - cannot be used to block during the block phase.";
 

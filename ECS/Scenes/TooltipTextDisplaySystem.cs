@@ -86,7 +86,8 @@ namespace Crusaders30XX.ECS.Systems
 					&& !x.UI.IsHidden
 					&& (
 						!string.IsNullOrWhiteSpace(x.UI.Tooltip) || 
-						x.E.GetComponent<Frozen>() != null || 
+						x.E.GetComponent<Frozen>() != null ||
+						x.E.GetComponent<Brittle>() != null ||
 						x.E.GetComponent<Intimidated>() != null || 
 						x.E.GetComponent<Shackle>() != null ||
 						x.E.GetComponent<Pledge>() != null ||

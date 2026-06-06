@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Services
 	{
 		public const string RestrictionFrozen = "Frozen";
 		public const string RestrictionSealed = "Sealed";
+		public const string RestrictionBrittle = "Brittle";
 
 		public static void HydrateRunLongPassivesOntoPlayer(Entity player)
 		{
@@ -67,6 +68,7 @@ namespace Crusaders30XX.ECS.Services
 			var names = new List<string>();
 			if (card.HasComponent<Frozen>()) names.Add(RestrictionFrozen);
 			if (card.HasComponent<Sealed>()) names.Add(RestrictionSealed);
+			if (card.HasComponent<Brittle>()) names.Add(RestrictionBrittle);
 			SaveCache.SetRunCardRestrictionsForCard(key, names);
 		}
 
@@ -103,6 +105,12 @@ namespace Crusaders30XX.ECS.Services
 						if (entityManager != null) entityManager.AddComponent(card, new Sealed { Owner = card, Seals = 1 });
 					}
 					break;
+				case RestrictionBrittle:
+					if (card.GetComponent<Brittle>() == null)
+					{
+						if (entityManager != null) entityManager.AddComponent(card, new Brittle { Owner = card });
+					}
+					break;
 			}
 		}
 
@@ -111,6 +119,7 @@ namespace Crusaders30XX.ECS.Services
 			if (card.HasComponent<Frozen>()) entityManager.RemoveComponent<Frozen>(card);
 			if (card.HasComponent<Shackle>()) entityManager.RemoveComponent<Shackle>(card);
 			if (card.HasComponent<Sealed>()) entityManager.RemoveComponent<Sealed>(card);
+			if (card.HasComponent<Brittle>()) entityManager.RemoveComponent<Brittle>(card);
 		}
 	}
 }
