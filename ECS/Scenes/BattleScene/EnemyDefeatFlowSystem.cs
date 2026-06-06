@@ -106,7 +106,8 @@ namespace Crusaders30XX.ECS.Systems
 					Message = "Quest Complete!",
 					RewardGold = completion.IsNewlyCompleted ? completion.RewardGold : 0,
 					HasCardReward = completion.HasCardReward,
-					RewardCardKey = completion.RewardCardKey
+					RewardCardKey = completion.RewardCardKey,
+					RewardCardKeys = completion.RewardCardKeys
 				});
 				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.QuestComplete });
 			}

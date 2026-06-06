@@ -24,7 +24,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _titleFont = FontSingleton.TitleFont;
 		private readonly SpriteFont _bodyFont = FontSingleton.ChakraPetchFont;
 		private readonly Texture2D _pixel;
-		private Entity _rewardCardEntity;
+		private readonly List<Entity> _rewardCardEntities = new();
 		private Entity _rewardMedalEntity;
 		private QuestRewardLayout _layout;
 
@@ -37,6 +37,7 @@ namespace Crusaders30XX.ECS.Systems
 		private bool _cachedShowCard;
 		private bool _cachedShowMedal;
 		private int _cachedRewardGold;
+		private int _cachedRewardCardCount;
 		private LayoutSignature _layoutSignature;
 		private CachedTextMetrics _textMetrics;
 		private readonly HorizontalGradientRuleCache _gradientRuleCache;
@@ -49,7 +50,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		private const string GoldLabelText = "GOLD";
 		private const string StageLabelText = "REWARD";
+		private const string QuestStageLabelText = "CHOOSE YOUR REWARD";
 		private const string ProceedLabelText = "Proceed";
+		private const int MaxRewardCardChoices = 2;
 
 		[DebugEditable(DisplayName = "Z Order", Step = 10, Min = 0, Max = 100000)]
 		public int ZOrder { get; set; } = 52000;
@@ -109,6 +112,10 @@ namespace Crusaders30XX.ECS.Systems
 		public int CardPreviewOffsetX { get; set; } = 0;
 		[DebugEditable(DisplayName = "Card Preview Offset Y", Step = 2, Min = -400, Max = 400)]
 		public int CardPreviewOffsetY { get; set; } = -20;
+		[DebugEditable(DisplayName = "Card Choice Gap", Step = 2, Min = 0, Max = 240)]
+		public int CardChoiceGap { get; set; } = 32;
+		[DebugEditable(DisplayName = "Card Select Anim (s)", Step = 0.01f, Min = 0.05f, Max = 2f)]
+		public float CardSelectionAnimationSeconds { get; set; } = 0.55f;
 
 		[DebugEditable(DisplayName = "Medal Preview Size", Step = 2, Min = 40, Max = 400)]
 		public int MedalPreviewSize { get; set; } = 180;
@@ -137,6 +144,7 @@ namespace Crusaders30XX.ECS.Systems
 			public Rectangle Footer;
 			public Rectangle ProceedButton;
 			public Vector2 CardCenter;
+			public Vector2[] CardChoiceCenters;
 			public Rectangle MedalPreviewRect;
 			public float StageLabelHeight;
 			public bool ShowRightColumn;
@@ -171,10 +179,12 @@ namespace Crusaders30XX.ECS.Systems
 			public float CardPreviewScale;
 			public int CardPreviewOffsetX;
 			public int CardPreviewOffsetY;
+			public int CardChoiceGap;
 			public int FooterPadding;
 			public int ButtonWidth;
 			public int ButtonHeight;
 			public float ButtonTextScale;
+			public int CardWidth;
 			public int CardHeight;
 			public int CardOffsetYExtra;
 		}
@@ -240,7 +250,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			InvalidateCaches();
 			_gradientRuleCache.DisposeAll();
-			DestroyRewardCard();
+			DestroyRewardCards();
 			DestroyRewardMedal();
 		}
 
@@ -280,27 +290,29 @@ namespace Crusaders30XX.ECS.Systems
 				CardPreviewScale = CardPreviewScale,
 				CardPreviewOffsetX = CardPreviewOffsetX,
 				CardPreviewOffsetY = CardPreviewOffsetY,
+				CardChoiceGap = CardChoiceGap,
 				FooterPadding = FooterPadding,
 				ButtonWidth = ButtonWidth,
 				ButtonHeight = ButtonHeight,
 				ButtonTextScale = ButtonTextScale,
+				CardWidth = settings?.CardWidth ?? 250,
 				CardHeight = settings?.CardHeight ?? 340,
 				CardOffsetYExtra = settings?.CardOffsetYExtra ?? 0
 			};
 		}
 
-		private bool NeedsLayoutRebuild(int vw, int vh, bool showGold, bool showCard, bool showMedal, int rewardGold)
+		private bool NeedsLayoutRebuild(int vw, int vh, bool showGold, bool showCard, bool showMedal, int rewardGold, int rewardCardCount)
 		{
 			if (!_layoutValid) return true;
 			if (vw != _cachedVw || vh != _cachedVh) return true;
-			if (showGold != _cachedShowGold || showCard != _cachedShowCard || showMedal != _cachedShowMedal || rewardGold != _cachedRewardGold) return true;
+			if (showGold != _cachedShowGold || showCard != _cachedShowCard || showMedal != _cachedShowMedal || rewardGold != _cachedRewardGold || rewardCardCount != _cachedRewardCardCount) return true;
 			var sig = CaptureLayoutSignature();
 			return !sig.Equals(_layoutSignature);
 		}
 
-		private void EnsureLayout(int vw, int vh, bool showGold, bool showCard, bool showMedal, int rewardGold, SceneState scene)
+		private void EnsureLayout(int vw, int vh, bool showGold, bool showCard, bool showMedal, int rewardGold, int rewardCardCount, SceneState scene)
 		{
-			if (!NeedsLayoutRebuild(vw, vh, showGold, showCard, showMedal, rewardGold)) return;
+			if (!NeedsLayoutRebuild(vw, vh, showGold, showCard, showMedal, rewardGold, rewardCardCount)) return;
 
 			_cachedVw = vw;
 			_cachedVh = vh;
@@ -308,13 +320,14 @@ namespace Crusaders30XX.ECS.Systems
 			_cachedShowCard = showCard;
 			_cachedShowMedal = showMedal;
 			_cachedRewardGold = rewardGold;
+			_cachedRewardCardCount = rewardCardCount;
 			_layoutSignature = CaptureLayoutSignature();
 			_drawInBattleOrSnapshot = scene != null
 				&& (scene.Current == SceneId.Battle
 					|| scene.Current == SceneId.Location
 					|| scene.Current == SceneId.Snapshot);
 
-			_layout = ComputeLayout(vw, vh, showGold, showCard, showMedal, _layoutSignature);
+			_layout = ComputeLayout(vw, vh, showGold, showCard, showMedal, rewardCardCount, _layoutSignature);
 			RebuildTextMetrics(rewardGold, showGold);
 			_layoutValid = true;
 			_textMetricsValid = true;
@@ -378,7 +391,8 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (_bodyFont != null && _layout.ShowRightColumn)
 			{
-				var stageSize = _bodyFont.MeasureString(StageLabelText) * StageLabelScale;
+				string stageLabel = GetStageLabelText();
+				var stageSize = _bodyFont.MeasureString(stageLabel) * StageLabelScale;
 				float labelX = _layout.RightInner.X + (_layout.RightInner.Width - stageSize.X) / 2f;
 				float labelY = _layout.RightColumn.Y + RightPaddingTop;
 				metrics.StageLabelPos = new Vector2(labelX, labelY);
@@ -424,14 +438,22 @@ namespace Crusaders30XX.ECS.Systems
 			int vw = Game1.VirtualWidth;
 			int vh = Game1.VirtualHeight;
 			bool showGold = state.RewardGold > 0;
-			bool showCard = state.HasCardReward && _rewardCardEntity != null;
+			int rewardCardCount = _rewardCardEntities.Count;
+			bool showCard = state.HasCardReward && rewardCardCount > 0;
 			bool showMedal = state.HasMedalReward && !string.IsNullOrEmpty(state.RewardMedalId);
-			EnsureLayout(vw, vh, showGold, showCard, showMedal, state.RewardGold, scene);
+			EnsureLayout(vw, vh, showGold, showCard, showMedal, state.RewardGold, rewardCardCount, scene);
 
 			var overlayT = overlayEntity.GetComponent<Transform>();
 			if (overlayT != null) overlayT.ZOrder = ZOrder;
 
-			if (showCard) SyncRewardCardHitbox();
+			if (showCard)
+			{
+				HideProceedButton();
+				SyncRewardCardHitboxes(state);
+				UpdateRewardCardSelection(state, gameTime);
+				return;
+			}
+
 			if (showMedal && _rewardMedalEntity != null)
 			{
 				var medalT = _rewardMedalEntity.GetComponent<Transform>();
@@ -484,7 +506,7 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureOverlayEntity();
 			var st = EntityManager.GetEntity("QuestRewardOverlay").GetComponent<QuestRewardOverlayState>();
 
-			DestroyRewardCard();
+			DestroyRewardCards();
 			DestroyRewardMedal();
 			InvalidateCaches();
 			if (!string.IsNullOrEmpty(e?.Message)) st.Message = e.Message;
@@ -493,15 +515,24 @@ namespace Crusaders30XX.ECS.Systems
 			st.RewardGold = e?.RewardGold ?? 0;
 			st.HasCardReward = e?.HasCardReward ?? false;
 			st.RewardCardKey = e?.RewardCardKey ?? string.Empty;
+			st.RewardCardKeys = NormalizeRewardCardKeys(e);
 			st.HasMedalReward = false;
 			st.RewardMedalId = string.Empty;
 			st.DismissToLocation = true;
 			st.DismissInProgress = false;
+			st.CardSelectionInProgress = false;
+			st.SelectedRewardCardIndex = -1;
+			st.CardSelectionElapsedSeconds = 0f;
 			st.IsOpen = true;
 
-			if (st.HasCardReward && !string.IsNullOrEmpty(st.RewardCardKey))
+			if (st.HasCardReward)
 			{
-				_rewardCardEntity = CreateRewardCard(st.RewardCardKey);
+				foreach (var cardKey in st.RewardCardKeys.Take(MaxRewardCardChoices))
+				{
+					var rewardCard = CreateRewardCard(cardKey);
+					if (rewardCard != null) _rewardCardEntities.Add(rewardCard);
+				}
+				st.HasCardReward = _rewardCardEntities.Count > 0;
 			}
 		}
 
@@ -510,7 +541,7 @@ namespace Crusaders30XX.ECS.Systems
 			EnsureOverlayEntity();
 			var st = EntityManager.GetEntity("QuestRewardOverlay").GetComponent<QuestRewardOverlayState>();
 
-			DestroyRewardCard();
+			DestroyRewardCards();
 			DestroyRewardMedal();
 			InvalidateCaches();
 			st.Message = string.Empty;
@@ -519,10 +550,14 @@ namespace Crusaders30XX.ECS.Systems
 			st.RewardGold = e?.RewardGold ?? 0;
 			st.HasCardReward = false;
 			st.RewardCardKey = string.Empty;
+			st.RewardCardKeys = new List<string>();
 			st.HasMedalReward = !string.IsNullOrWhiteSpace(e?.RewardMedalId);
 			st.RewardMedalId = e?.RewardMedalId ?? string.Empty;
 			st.DismissToLocation = false;
 			st.DismissInProgress = false;
+			st.CardSelectionInProgress = false;
+			st.SelectedRewardCardIndex = -1;
+			st.CardSelectionElapsedSeconds = 0f;
 			st.IsOpen = true;
 
 			if (st.HasMedalReward && !string.IsNullOrEmpty(st.RewardMedalId))
@@ -531,7 +566,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		public void Open(string message = null, int rewardGold = 0, bool hasCardReward = false, string rewardCardKey = null)
+		public void Open(string message = null, int rewardGold = 0, bool hasCardReward = false, string rewardCardKey = null, List<string> rewardCardKeys = null)
 		{
 			OpenQuestReward(new ShowQuestRewardOverlay
 			{
@@ -539,6 +574,7 @@ namespace Crusaders30XX.ECS.Systems
 				RewardGold = rewardGold,
 				HasCardReward = hasCardReward,
 				RewardCardKey = rewardCardKey,
+				RewardCardKeys = rewardCardKeys ?? new List<string>(),
 			});
 		}
 
@@ -546,6 +582,26 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var st = entityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
 			return st != null && st.IsOpen;
+		}
+
+		private static List<string> NormalizeRewardCardKeys(ShowQuestRewardOverlay e)
+		{
+			var keys = new List<string>();
+			if (e?.RewardCardKeys != null)
+			{
+				foreach (var key in e.RewardCardKeys)
+				{
+					if (!string.IsNullOrWhiteSpace(key)) keys.Add(key);
+				}
+			}
+			if (keys.Count == 0 && !string.IsNullOrWhiteSpace(e?.RewardCardKey))
+			{
+				keys.Add(e.RewardCardKey);
+			}
+			return keys
+				.Distinct(System.StringComparer.OrdinalIgnoreCase)
+				.Take(MaxRewardCardChoices)
+				.ToList();
 		}
 
 		public void Draw()
@@ -557,13 +613,14 @@ namespace Crusaders30XX.ECS.Systems
 			int vw = Game1.VirtualWidth;
 			int vh = Game1.VirtualHeight;
 			bool showGold = st.RewardGold > 0;
-			bool showCard = st.HasCardReward && _rewardCardEntity != null;
+			int rewardCardCount = _rewardCardEntities.Count;
+			bool showCard = st.HasCardReward && rewardCardCount > 0;
 			bool showMedal = st.HasMedalReward && !string.IsNullOrEmpty(st.RewardMedalId);
 
 			if (!_layoutValid || !_textMetricsValid)
 			{
 				var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-				EnsureLayout(vw, vh, showGold, showCard, showMedal, st.RewardGold, scene);
+				EnsureLayout(vw, vh, showGold, showCard, showMedal, st.RewardGold, rewardCardCount, scene);
 			}
 
 			if (!_drawInBattleOrSnapshot) return;
@@ -577,8 +634,11 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_spriteBatch.Draw(_pixel, _layout.Divider, ColumnDivider);
 			}
-			_spriteBatch.Draw(_pixel, _layout.Footer, ModalOverlayPalette.FooterFill);
-			_spriteBatch.Draw(_pixel, new Rectangle(_layout.Footer.X, _layout.Footer.Y, _layout.Footer.Width, 1), ModalOverlayPalette.FooterBorderTop);
+			if (_layout.Footer.Height > 0)
+			{
+				_spriteBatch.Draw(_pixel, _layout.Footer, ModalOverlayPalette.FooterFill);
+				_spriteBatch.Draw(_pixel, new Rectangle(_layout.Footer.X, _layout.Footer.Y, _layout.Footer.Width, 1), ModalOverlayPalette.FooterBorderTop);
+			}
 			ModalOverlayChrome.DrawInsetHighlight(_spriteBatch, _pixel, _layout.Content);
 			ModalOverlayChrome.DrawBorder(_spriteBatch, _pixel, _layout.Modal, ModalOverlayPalette.PanelBorder, BorderThickness);
 
@@ -593,13 +653,15 @@ namespace Crusaders30XX.ECS.Systems
 				DrawRightColumnMedal(showMedal, st.RewardMedalId);
 			}
 
-			// 6. Proceed button
-			var btn = EntityManager.GetEntity("QuestRewardProceedButton");
-			bool hovered = btn?.GetComponent<UIElement>()?.IsHovered ?? false;
-			DrawProceedButton(hovered);
+			if (!showCard)
+			{
+				var btn = EntityManager.GetEntity("QuestRewardProceedButton");
+				bool hovered = btn?.GetComponent<UIElement>()?.IsHovered ?? false;
+				DrawProceedButton(hovered);
+			}
 		}
 
-		private QuestRewardLayout ComputeLayout(int vw, int vh, bool showGold, bool showCard, bool showMedal, LayoutSignature sig)
+		private QuestRewardLayout ComputeLayout(int vw, int vh, bool showGold, bool showCard, bool showMedal, int rewardCardCount, LayoutSignature sig)
 		{
 			int modalW = sig.ModalWidth;
 			if (showGold && !showCard && !showMedal)
@@ -623,7 +685,7 @@ namespace Crusaders30XX.ECS.Systems
 				System.Math.Max(1, modal.Width - border * 2),
 				System.Math.Max(1, modal.Height - border * 2));
 
-			int footerH = sig.FooterPadding * 2 + System.Math.Max(30, sig.ButtonHeight);
+			int footerH = showCard ? 0 : sig.FooterPadding * 2 + System.Math.Max(30, sig.ButtonHeight);
 			int bodyH = System.Math.Max(1, content.Height - footerH);
 			var footer = new Rectangle(content.X, content.Y + bodyH, content.Width, footerH);
 			var body = new Rectangle(content.X, content.Y, content.Width, bodyH);
@@ -641,6 +703,7 @@ namespace Crusaders30XX.ECS.Systems
 			Rectangle rightColumn = Rectangle.Empty;
 			Rectangle rightInner = Rectangle.Empty;
 			Vector2 cardCenter = Vector2.Zero;
+			Vector2[] cardChoiceCenters = System.Array.Empty<Vector2>();
 			Rectangle medalPreviewRect = Rectangle.Empty;
 			float stageLabelH = 0f;
 
@@ -666,6 +729,27 @@ namespace Crusaders30XX.ECS.Systems
 				cardCenter = new Vector2(
 					rightInner.X + rightInner.Width / 2f + sig.CardPreviewOffsetX,
 					cardTop + cardHalfH + sig.CardPreviewOffsetY);
+				if (showCard)
+				{
+					int cardCount = System.Math.Max(1, rewardCardCount);
+					cardChoiceCenters = new Vector2[cardCount];
+					if (cardCount == 1)
+					{
+						cardChoiceCenters[0] = cardCenter;
+					}
+					else
+					{
+						float cardW = sig.CardWidth * sig.CardPreviewScale;
+						float totalW = cardW * cardCount + sig.CardChoiceGap * (cardCount - 1);
+						float startX = cardCenter.X - totalW / 2f + cardW / 2f;
+						for (int i = 0; i < cardCount; i++)
+						{
+							cardChoiceCenters[i] = new Vector2(
+								startX + i * (cardW + sig.CardChoiceGap),
+								cardCenter.Y);
+						}
+					}
+				}
 
 				if (showMedal)
 				{
@@ -676,11 +760,15 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 
-			int bw = System.Math.Max(60, sig.ButtonWidth);
-			int bh = System.Math.Max(30, sig.ButtonHeight);
-			int bx = content.X + (content.Width - bw) / 2;
-			int by = footer.Y + sig.FooterPadding;
-			var proceedButton = new Rectangle(bx, by, bw, bh);
+			var proceedButton = Rectangle.Empty;
+			if (!showCard)
+			{
+				int bw = System.Math.Max(60, sig.ButtonWidth);
+				int bh = System.Math.Max(30, sig.ButtonHeight);
+				int bx = content.X + (content.Width - bw) / 2;
+				int by = footer.Y + sig.FooterPadding;
+				proceedButton = new Rectangle(bx, by, bw, bh);
+			}
 
 			return new QuestRewardLayout
 			{
@@ -694,6 +782,7 @@ namespace Crusaders30XX.ECS.Systems
 				Footer = footer,
 				ProceedButton = proceedButton,
 				CardCenter = cardCenter,
+				CardChoiceCenters = cardChoiceCenters,
 				MedalPreviewRect = medalPreviewRect,
 				StageLabelHeight = stageLabelH,
 				ShowRightColumn = showRightColumn,
@@ -729,13 +818,21 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void DrawRightColumnCard(bool showCard)
 		{
-			if (!showCard || _rewardCardEntity == null) return;
-			EventManager.Publish(new CardRenderScaledEvent
+			if (!showCard || _rewardCardEntities.Count == 0) return;
+			var st = EntityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
+			for (int i = 0; i < _rewardCardEntities.Count; i++)
 			{
-				Card = _rewardCardEntity,
-				Position = _layout.CardCenter,
-				Scale = CardPreviewScale
-			});
+				var card = _rewardCardEntities[i];
+				if (card == null || !card.IsActive) continue;
+				float scale = GetRewardCardDisplayScale(i, st);
+				if (scale <= 0.001f) continue;
+				EventManager.Publish(new CardRenderScaledRotatedEvent
+				{
+					Card = card,
+					Position = GetRewardCardCenter(i),
+					Scale = scale
+				});
+			}
 		}
 
 		private void DrawRightColumnMedal(bool showMedal, string medalId)
@@ -760,9 +857,15 @@ namespace Crusaders30XX.ECS.Systems
 		private void DrawStageLabel()
 		{
 			if (_bodyFont == null || !_layout.ShowRightColumn) return;
-			_spriteBatch.DrawString(_bodyFont, StageLabelText,
+			_spriteBatch.DrawString(_bodyFont, GetStageLabelText(),
 				_textMetrics.StageLabelPos,
 				StageLabelColor, 0f, Vector2.Zero, StageLabelScale, SpriteEffects.None, 0f);
+		}
+
+		private string GetStageLabelText()
+		{
+			var state = EntityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
+			return state?.DismissToLocation == true ? QuestStageLabelText : StageLabelText;
 		}
 
 		private void DrawProceedButton(bool hovered)
@@ -796,11 +899,15 @@ namespace Crusaders30XX.ECS.Systems
 			state.RewardGold = 0;
 			state.HasCardReward = false;
 			state.RewardCardKey = string.Empty;
+			state.RewardCardKeys = new List<string>();
 			state.HasMedalReward = false;
 			state.RewardMedalId = string.Empty;
+			state.CardSelectionInProgress = false;
+			state.SelectedRewardCardIndex = -1;
+			state.CardSelectionElapsedSeconds = 0f;
 			StateSingleton.PreventClicking = false;
 			HideProceedButton();
-			DestroyRewardCard();
+			DestroyRewardCards();
 			DestroyRewardMedal();
 			InvalidateCaches();
 		}
@@ -824,11 +931,16 @@ namespace Crusaders30XX.ECS.Systems
 			if (hotKey != null) hotKey.IsActive = false;
 		}
 
-		private void DestroyRewardCard()
+		private void DestroyRewardCards()
 		{
-			if (_rewardCardEntity == null) return;
-			EntityManager.DestroyEntity(_rewardCardEntity.Id);
-			_rewardCardEntity = null;
+			foreach (var card in _rewardCardEntities.ToList())
+			{
+				if (card != null)
+				{
+					EntityManager.DestroyEntity(card.Id);
+				}
+			}
+			_rewardCardEntities.Clear();
 		}
 
 		private void DestroyRewardMedal()
@@ -843,14 +955,160 @@ namespace Crusaders30XX.ECS.Systems
 			_rewardMedalEntity = null;
 		}
 
-		private void SyncRewardCardHitbox()
+		private void SyncRewardCardHitboxes(QuestRewardOverlayState state)
 		{
-			if (_rewardCardEntity == null) return;
-			var ui = _rewardCardEntity.GetComponent<UIElement>();
-			var t = _rewardCardEntity.GetComponent<Transform>();
-			if (ui == null) return;
-			if (t != null) t.ZOrder = ZOrder + 1;
-			ui.Bounds = GetCardVisualRectScaled(_layout.CardCenter, CardPreviewScale);
+			for (int i = 0; i < _rewardCardEntities.Count; i++)
+			{
+				var card = _rewardCardEntities[i];
+				if (card == null) continue;
+				var ui = card.GetComponent<UIElement>();
+				var t = card.GetComponent<Transform>();
+				if (ui == null) continue;
+				if (t != null) t.ZOrder = ZOrder + 1 + i;
+				float scale = GetRewardCardDisplayScale(i, state);
+				ui.Bounds = scale > 0.001f
+					? GetCardVisualRectScaled(GetRewardCardCenter(i), scale)
+					: Rectangle.Empty;
+				ui.IsInteractable = state != null && state.IsOpen && !state.CardSelectionInProgress && !state.DismissInProgress;
+				ui.LayerType = UILayerType.Overlay;
+			}
+		}
+
+		private void UpdateRewardCardSelection(QuestRewardOverlayState state, GameTime gameTime)
+		{
+			if (state == null) return;
+
+			if (state.CardSelectionInProgress)
+			{
+				state.CardSelectionElapsedSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
+				if (state.CardSelectionElapsedSeconds >= System.Math.Max(0.05f, CardSelectionAnimationSeconds) && !state.DismissInProgress)
+				{
+					state.DismissInProgress = true;
+					if (state.DismissToLocation)
+					{
+						EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+					}
+					else
+					{
+						CloseOverlay(state);
+					}
+				}
+				return;
+			}
+
+			for (int i = 0; i < _rewardCardEntities.Count; i++)
+			{
+				var card = _rewardCardEntities[i];
+				if (card == null) continue;
+				var ui = card.GetComponent<UIElement>();
+				if (ui == null) continue;
+
+				if (ui.IsHovered)
+				{
+					var hk = card.GetComponent<HotKey>();
+					if (hk == null)
+					{
+						EntityManager.AddComponent(card, new HotKey { Button = FaceButton.X, RequiresHold = true, Position = HotKeyPosition.Below });
+					}
+					else
+					{
+						hk.Button = FaceButton.X;
+						hk.RequiresHold = true;
+						hk.Position = HotKeyPosition.Below;
+						hk.IsActive = true;
+					}
+				}
+				else
+				{
+					var hk = card.GetComponent<HotKey>();
+					if (hk != null) EntityManager.RemoveComponent<HotKey>(card);
+				}
+
+				if (!ui.IsClicked) continue;
+				ui.IsClicked = false;
+				SelectRewardCard(state, i);
+				break;
+			}
+		}
+
+		private void SelectRewardCard(QuestRewardOverlayState state, int selectedIndex)
+		{
+			if (state == null || state.CardSelectionInProgress) return;
+			if (selectedIndex < 0 || selectedIndex >= state.RewardCardKeys.Count) return;
+
+			string selectedKey = state.RewardCardKeys[selectedIndex];
+			var grant = QuestCardRewardService.GrantCard(selectedKey);
+			if (!grant.Granted) return;
+
+			state.CardSelectionInProgress = true;
+			state.SelectedRewardCardIndex = selectedIndex;
+			state.RewardCardKey = selectedKey;
+			state.CardSelectionElapsedSeconds = 0f;
+
+			for (int i = 0; i < _rewardCardEntities.Count; i++)
+			{
+				var card = _rewardCardEntities[i];
+				if (card == null) continue;
+				var ui = card.GetComponent<UIElement>();
+				if (ui != null)
+				{
+					ui.IsClicked = false;
+					ui.IsInteractable = false;
+				}
+				var hk = card.GetComponent<HotKey>();
+				if (hk != null) EntityManager.RemoveComponent<HotKey>(card);
+			}
+
+			var selected = _rewardCardEntities.ElementAtOrDefault(selectedIndex);
+			if (selected != null)
+			{
+				EventManager.Publish(new JigglePulseEvent
+				{
+					Target = selected,
+					Config = new JigglePulseConfig
+					{
+						PulseDurationSeconds = System.Math.Max(0.05f, CardSelectionAnimationSeconds),
+						PulseScaleAmplitude = 0.12f,
+						JiggleDegrees = 7f,
+						PulseFrequencyHz = 6f
+					}
+				});
+			}
+		}
+
+		private Vector2 GetRewardCardCenter(int index)
+		{
+			if (_layout.CardChoiceCenters != null && index >= 0 && index < _layout.CardChoiceCenters.Length)
+			{
+				return _layout.CardChoiceCenters[index];
+			}
+			return _layout.CardCenter;
+		}
+
+		private float GetRewardCardDisplayScale(int index, QuestRewardOverlayState state)
+		{
+			float scale = CardPreviewScale;
+			if (state != null && state.CardSelectionInProgress && state.SelectedRewardCardIndex >= 0 && index != state.SelectedRewardCardIndex)
+			{
+				float t = MathHelper.Clamp(state.CardSelectionElapsedSeconds / System.Math.Max(0.05f, CardSelectionAnimationSeconds), 0f, 1f);
+				float shrink = 1f - SmoothStep(t);
+				scale *= shrink;
+			}
+
+			var transform = index >= 0 && index < _rewardCardEntities.Count
+				? _rewardCardEntities[index]?.GetComponent<Transform>()
+				: null;
+			if (transform != null)
+			{
+				scale *= transform.Scale.X;
+			}
+			return scale;
+		}
+
+		private static float SmoothStep(float t)
+		{
+			t = MathHelper.Clamp(t, 0f, 1f);
+			return t * t * (3f - 2f * t);
 		}
 
 		private Rectangle GetCardVisualRectScaled(Vector2 position, float scale)

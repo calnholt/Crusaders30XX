@@ -1,4 +1,5 @@
 using Crusaders30XX.ECS.Components;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Events
 {
@@ -25,6 +26,7 @@ namespace Crusaders30XX.ECS.Events
 		public int RewardGold;
 		public bool HasCardReward;
 		public string RewardCardKey;
+		public List<string> RewardCardKeys = new List<string>();
 	}
 
 	public class TreasureChestOpened
@@ -46,4 +48,3 @@ namespace Crusaders30XX.ECS.Events
 		public int OptionIndex;
 	}
 }
-

@@ -175,10 +175,14 @@ namespace Crusaders30XX.ECS.Components
 			public int RewardGold { get; set; } = 0;
 			public bool HasCardReward { get; set; } = false;
 			public string RewardCardKey { get; set; } = string.Empty;
+			public List<string> RewardCardKeys { get; set; } = new List<string>();
 			public bool HasMedalReward { get; set; } = false;
 			public string RewardMedalId { get; set; } = string.Empty;
 			public bool DismissToLocation { get; set; } = true;
 			public bool DismissInProgress { get; set; } = false;
+			public bool CardSelectionInProgress { get; set; } = false;
+			public int SelectedRewardCardIndex { get; set; } = -1;
+			public float CardSelectionElapsedSeconds { get; set; } = 0f;
 		}
 
 	public class PendingQuestDialog : IComponent

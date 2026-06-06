@@ -26,15 +26,18 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 
             if (_variant.HasCardReward)
             {
-                var parts = _variant.RewardCardKey.Split('|');
-                var color = QuestRewardSnapshotVariant.ParseColor(parts[1]);
-                var probe = EntityFactory.CreateCardFromDefinition(ctx.World.EntityManager, parts[0], color);
-                if (probe == null)
+                foreach (var cardKey in _variant.RewardCardKeys)
                 {
-                    throw new DisplaySnapshotSetupException(
-                        $"Failed to create reward card: '{_variant.RewardCardKey}'");
+                    var parts = cardKey.Split('|');
+                    var color = QuestRewardSnapshotVariant.ParseColor(parts[1]);
+                    var probe = EntityFactory.CreateCardFromDefinition(ctx.World.EntityManager, parts[0], color);
+                    if (probe == null)
+                    {
+                        throw new DisplaySnapshotSetupException(
+                            $"Failed to create reward card: '{cardKey}'");
+                    }
+                    ctx.World.EntityManager.DestroyEntity(probe.Id);
                 }
-                ctx.World.EntityManager.DestroyEntity(probe.Id);
             }
 
             _modal = new RewardModalDisplaySystem(
@@ -48,7 +51,8 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
                 message: null,
                 rewardGold: _variant.RewardGold,
                 hasCardReward: _variant.HasCardReward,
-                rewardCardKey: _variant.RewardCardKey);
+                rewardCardKey: _variant.RewardCardKey,
+                rewardCardKeys: _variant.RewardCardKeys);
 
             _pixel = new Texture2D(ctx.GraphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });

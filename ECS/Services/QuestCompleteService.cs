@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Systems;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Crusaders30XX.ECS.Services
@@ -18,6 +19,7 @@ namespace Crusaders30XX.ECS.Services
 			public int RewardGold;
 			public bool HasCardReward;
 			public string RewardCardKey;
+			public List<string> RewardCardKeys;
 		}
 
 		/// <summary>
@@ -25,7 +27,7 @@ namespace Crusaders30XX.ECS.Services
 		/// </summary>
 		public static QuestCompletionResult SaveIfCompletedHighest(Crusaders30XX.ECS.Core.EntityManager entityManager)
 		{
-			var result = new QuestCompletionResult { IsNewlyCompleted = false, LocationId = string.Empty, QuestId = string.Empty, RewardGold = 0 };
+			var result = new QuestCompletionResult { IsNewlyCompleted = false, LocationId = string.Empty, QuestId = string.Empty, RewardGold = 0, RewardCardKeys = new List<string>() };
 			if (entityManager == null) return result;
 			try
 			{
@@ -71,11 +73,15 @@ namespace Crusaders30XX.ECS.Services
 				}
 				result.IsNewlyCompleted = true;
 
-				var cardReward = QuestCardRewardService.TryGrantRandomCard();
-				if (cardReward.Granted)
+				var cardRewards = QuestCardRewardService.GenerateRandomCardChoices();
+				if (cardRewards.Count >= 2)
 				{
 					result.HasCardReward = true;
-					result.RewardCardKey = cardReward.CardKey;
+					result.RewardCardKey = cardRewards[0].CardKey;
+					result.RewardCardKeys = cardRewards
+						.Select(r => r.CardKey)
+						.Where(k => !string.IsNullOrWhiteSpace(k))
+						.ToList();
 				}
 			}
 			catch { }

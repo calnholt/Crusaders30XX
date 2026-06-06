@@ -26,23 +26,48 @@ namespace Crusaders30XX.ECS.Services
 			public string CardKey;
 		}
 
-		public static QuestCardRewardResult TryGrantRandomCard()
+		public static IReadOnlyList<QuestCardRewardResult> GenerateRandomCardChoices(int choiceCount = 2)
 		{
-			var result = new QuestCardRewardResult();
 			var loadout = SaveCache.GetLoadout("loadout_1");
 			var deckKeys = loadout?.cardIds ?? new List<string>();
+			return GenerateRandomCardChoices(deckKeys, choiceCount);
+		}
 
+		internal static IReadOnlyList<QuestCardRewardResult> GenerateRandomCardChoices(IReadOnlyList<string> deckKeys, int choiceCount = 2)
+		{
+			var choices = new List<QuestCardRewardResult>();
 			var eligible = BuildEligiblePairs(deckKeys);
-			if (eligible.Count == 0) return result;
+			if (eligible.Count == 0) return choices;
 
-			var pick = eligible[Random.Shared.Next(eligible.Count)];
-			string cardKey = $"{pick.cardId}|{ColorToString(pick.color)}";
+			var remaining = eligible.ToList();
+			while (choices.Count < Math.Max(1, choiceCount) && remaining.Count > 0)
+			{
+				var pick = remaining[Random.Shared.Next(remaining.Count)];
+				string cardKey = $"{pick.cardId}|{ColorToString(pick.color)}";
 
-			SaveCache.AddCardToLoadout("loadout_1", cardKey);
+				choices.Add(new QuestCardRewardResult
+				{
+					Granted = false,
+					CardId = pick.cardId,
+					Color = pick.color,
+					CardKey = cardKey
+				});
+
+				remaining.RemoveAll(p => string.Equals(p.cardId, pick.cardId, StringComparison.OrdinalIgnoreCase));
+			}
+
+			return choices;
+		}
+
+		public static QuestCardRewardResult GrantCard(string cardKey)
+		{
+			var result = new QuestCardRewardResult();
+			if (!RunDeckService.TryParseCardKey(cardKey, out var cardId, out var color)) return result;
+			if (!SaveCache.AddCardToLoadout("loadout_1", cardKey)) return result;
 
 			result.Granted = true;
-			result.CardId = pick.cardId;
-			result.Color = pick.color;
+			result.CardId = cardId;
+			result.Color = color;
 			result.CardKey = cardKey;
 			return result;
 		}

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Factories;
 
@@ -9,12 +10,13 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
         public int RewardGold { get; init; }
         public bool HasCardReward { get; init; }
         public string RewardCardKey { get; init; } = string.Empty;
+        public List<string> RewardCardKeys { get; init; } = new();
         public string FileSlug { get; init; } = "default";
 
         public static QuestRewardSnapshotVariant Parse(string[] args)
         {
             int? gold = null;
-            string cardKey = null;
+            var cardKeys = new List<string>();
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -33,7 +35,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
                     {
                         throw new DisplaySnapshotSetupException("Invalid --card value; expected cardId|color");
                     }
-                    cardKey = args[i + 1];
+                    cardKeys.Add(args[i + 1]);
                     i++;
                 }
                 else
@@ -42,26 +44,31 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
                 }
             }
 
-            if (gold == null && cardKey == null)
+            if (gold == null && cardKeys.Count == 0)
             {
                 gold = 500;
-                cardKey = "strike|white";
+                cardKeys.Add("strike|white");
+                cardKeys.Add("smite|red");
             }
 
-            bool hasCard = !string.IsNullOrEmpty(cardKey);
+            bool hasCard = cardKeys.Count > 0;
             if (hasCard)
             {
-                ValidateCardKey(cardKey);
+                foreach (var cardKey in cardKeys)
+                {
+                    ValidateCardKey(cardKey);
+                }
             }
 
             int rewardGold = gold ?? 0;
-            string slug = BuildSlug(rewardGold, hasCard, cardKey);
+            string slug = BuildSlug(rewardGold, hasCard, cardKeys);
 
             return new QuestRewardSnapshotVariant
             {
                 RewardGold = rewardGold,
                 HasCardReward = hasCard,
-                RewardCardKey = cardKey ?? string.Empty,
+                RewardCardKey = hasCard ? cardKeys[0] : string.Empty,
+                RewardCardKeys = cardKeys,
                 FileSlug = slug
             };
         }
@@ -87,15 +94,20 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
             }
         }
 
-        private static string BuildSlug(int gold, bool hasCard, string cardKey)
+        private static string BuildSlug(int gold, bool hasCard, List<string> cardKeys)
         {
             if (!hasCard)
             {
                 return $"gold-{gold}";
             }
 
-            var parts = cardKey.Split('|');
-            string cardSlug = $"{parts[0]}-{parts[1].Trim().ToLowerInvariant()}";
+            var cardSlugs = new List<string>();
+            foreach (var cardKey in cardKeys)
+            {
+                var parts = cardKey.Split('|');
+                cardSlugs.Add($"{parts[0]}-{parts[1].Trim().ToLowerInvariant()}");
+            }
+            string cardSlug = string.Join("-choice-", cardSlugs);
             if (gold > 0)
             {
                 return $"gold-{gold}-card-{cardSlug}";
