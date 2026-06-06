@@ -21,6 +21,34 @@ namespace Crusaders30XX.ECS.Services
 				GetSelectedTemperanceId(),
 				GetSelectedStarterPool());
 
+			PrepareRunEntitiesForBattle(world);
+
+			if (!SaveCache.IsStartQuestCompleted())
+			{
+				BeginStartQuestBattle(world);
+			}
+			else
+			{
+				EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
+			}
+		}
+
+		public static void BeginStartQuestBattle(World world)
+		{
+			if (world == null) return;
+			if (SaveCache.IsStartQuestCompleted()) return;
+
+			PrepareRunEntitiesForBattle(world);
+
+			string startNodeId = SaveCache.GetStartNodeId();
+			var tempPoi = world.EntityManager.CreateEntity("TempWayStationQuestTrigger");
+			world.EntityManager.AddComponent(tempPoi, new PointOfInterest { Id = startNodeId });
+			EventManager.Publish(new QuestSelectRequested { Entity = tempPoi });
+			world.EntityManager.DestroyEntity(tempPoi.Id);
+		}
+
+		private static void PrepareRunEntitiesForBattle(World world)
+		{
 			var deckEntity = RunDeckService.EnsureRunDeck(world.EntityManager);
 			var player = RunPlayerService.EnsureRunPlayer(world);
 			var playerComponent = player?.GetComponent<Player>();
@@ -29,19 +57,6 @@ namespace Crusaders30XX.ECS.Services
 				playerComponent.DeckEntity = deckEntity;
 			}
 			ApplySelectedPlayerHp(player);
-
-			string startNodeId = SaveCache.GetStartNodeId();
-			if (!SaveCache.IsQuestCompleted(null, startNodeId))
-			{
-				var tempPoi = world.EntityManager.CreateEntity("TempWayStationQuestTrigger");
-				world.EntityManager.AddComponent(tempPoi, new PointOfInterest { Id = startNodeId });
-				EventManager.Publish(new QuestSelectRequested { Entity = tempPoi });
-				world.EntityManager.DestroyEntity(tempPoi.Id);
-			}
-			else
-			{
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
-			}
 		}
 
 		public static void ApplySelectedPlayerHp(Entity player)

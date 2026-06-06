@@ -61,8 +61,13 @@ namespace Crusaders30XX.ECS.Systems
 				// Guard: prevent multiple plans for the same EnemyStart turn
 				if (_lastPlannedTurnNumber == turnNumber)
 				{
-					LoggingService.Append("EnemyIntentPlanningSystem.OnStartEnemyTurn", new System.Text.Json.Nodes.JsonObject { ["action"] = "Skipping - already planned", ["turn"] = turnNumber });
-					return;
+					bool needsReplan = GetRelevantEntities().Any(enemy =>
+						(enemy.GetComponent<AttackIntent>()?.Planned.Count ?? 0) == 0);
+					if (!needsReplan)
+					{
+						LoggingService.Append("EnemyIntentPlanningSystem.OnStartEnemyTurn", new System.Text.Json.Nodes.JsonObject { ["action"] = "Skipping - already planned", ["turn"] = turnNumber });
+						return;
+					}
 				}
 				LoggingService.Append("EnemyIntentPlanningSystem.OnStartEnemyTurn", new System.Text.Json.Nodes.JsonObject { ["action"] = "Planning intents" });
 				foreach (var enemy in GetRelevantEntities())

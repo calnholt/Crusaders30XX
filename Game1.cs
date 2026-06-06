@@ -155,7 +155,7 @@ public class Game1 : Game
         }
         EntityFactory.CreateCardVisualSettings(_world);
         // Add parent scene systems only
-        _titleMenuDisplaySystem = new TitleMenuDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _titleMenuDisplaySystem = new TitleMenuDisplaySystem(_world, GraphicsDevice, _spriteBatch);
         _wayStationDisplaySystem = new WayStationDisplaySystem(_world, GraphicsDevice, _spriteBatch, Content);
         _battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _locationSceneSystem = new LocationSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);

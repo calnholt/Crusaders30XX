@@ -2,8 +2,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
-using Crusaders30XX.ECS.Data.Save;
-using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -14,6 +13,7 @@ namespace Crusaders30XX.ECS.Systems
 	[DebugTab("Title Menu")]
 	public class TitleMenuDisplaySystem : Core.System
 	{
+		private readonly World _world;
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private Texture2D _pixel;
@@ -44,9 +44,10 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Background Alpha", Step = 0.05f, Min = 0f, Max = 1f)]
 		public float BackgroundAlpha { get; set; } = 1f;
 
-		public TitleMenuDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
-			: base(entityManager)
+		public TitleMenuDisplaySystem(World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+			: base(world.EntityManager)
 		{
+			_world = world;
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
@@ -107,7 +108,7 @@ namespace Crusaders30XX.ECS.Systems
 			var uiClick = clickArea.GetComponent<UIElement>();
 			if (uiClick != null && uiClick.IsClicked && !StateSingleton.IsActive)
 			{
-				EventManager.Publish(new ShowTransition { Scene = SceneId.WayStation, SkipHold = true });
+				TitleMenuResumeService.OnTitleMenuClicked(_world);
 			}
 
 			_prevMouse = Mouse.GetState();

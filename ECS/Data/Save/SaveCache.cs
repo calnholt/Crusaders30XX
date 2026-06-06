@@ -344,6 +344,11 @@ namespace Crusaders30XX.ECS.Data.Save
 			return TryGetRunNode(questId, out var node, out _) && node.isCompleted;
 		}
 
+		public static bool IsStartQuestCompleted()
+		{
+			return IsQuestCompleted(null, GetStartNodeId());
+		}
+
 		public static void SetQuestCompleted(string locationId, string questId, bool completed)
 		{
 			SetRunNodeCompleted(questId, completed);
@@ -397,8 +402,8 @@ namespace Crusaders30XX.ECS.Data.Save
 						}
 						else
 						{
-							// Create default save file for new users
-							_save = CreateDefaultSave();
+							// New profiles start inactive; WayStation Depart creates the first active run.
+							_save = CreateInactiveSavePreservingMeta(null);
 							Persist();
 						}
 					}
