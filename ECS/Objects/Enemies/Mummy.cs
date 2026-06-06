@@ -74,18 +74,18 @@ public class Entomb : EnemyAttackBase
 
 public class Mummify : EnemyAttackBase
 {
-  private int Penance = 2;
+  private int Brittle = 2;
   public Mummify()
   {
     Id = "mummify";
     Name = "Mummify";
     Damage = 8;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, 2, ConditionType);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Brittle, Brittle, ConditionType);
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = Penance });
+      EventManager.Publish(new BrittleCardsEvent { Amount = Brittle, Type = FreezeType.DrawPileAndDiscard });
     };
   }
 }

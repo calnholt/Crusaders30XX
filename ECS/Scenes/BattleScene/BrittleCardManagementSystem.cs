@@ -45,6 +45,9 @@ namespace Crusaders30XX.ECS.Systems
 				case FreezeType.Deck:
 					ApplyBrittleEffectDeck(evt.Amount);
 					break;
+				case FreezeType.DrawPileAndDiscard:
+					ApplyBrittleEffectDrawPileAndDiscard(evt.Amount);
+					break;
 			}
 		}
 
@@ -114,6 +117,47 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EntityManager.AddComponent(card, new Brittle { Owner = card });
 				RunScopedStateService.SyncCardRestrictionsFromComponents(card);
+			}
+		}
+
+		private void ApplyBrittleEffectDrawPileAndDiscard(int amount)
+		{
+			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+			if (deckEntity == null) return;
+
+			var deck = deckEntity.GetComponent<Deck>();
+			if (deck == null) return;
+
+			var availableCards = new System.Collections.Generic.List<Entity>();
+
+			if (deck.DrawPile != null)
+			{
+				availableCards.AddRange(deck.DrawPile.Where(c => c.GetComponent<Brittle>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false));
+			}
+
+			if (deck.DiscardPile != null)
+			{
+				availableCards.AddRange(deck.DiscardPile.Where(c => c.GetComponent<Brittle>() == null && (c.GetComponent<CardData>()?.Card.IsWeapon ?? false) == false));
+			}
+
+			if (availableCards.Count == 0)
+			{
+				LoggingService.Append("BrittleCardManagementSystem.ApplyBrittleEffectDrawPileAndDiscard", new System.Text.Json.Nodes.JsonObject { ["message"] = "no available cards to brittle" });
+				return;
+			}
+
+			var random = new Random();
+			var cardsToBrittle = availableCards
+				.OrderBy(x => random.Next())
+				.Take(amount)
+				.ToList();
+
+			foreach (var card in cardsToBrittle)
+			{
+				EntityManager.AddComponent(card, new Brittle { Owner = card });
+				RunScopedStateService.SyncCardRestrictionsFromComponents(card);
+				var cardData = card.GetComponent<CardData>();
+				LoggingService.Append("BrittleCardManagementSystem.ApplyBrittleEffectDrawPileAndDiscard.brittle", new System.Text.Json.Nodes.JsonObject { ["cardId"] = cardData?.Card.CardId ?? "unknown" });
 			}
 		}
 

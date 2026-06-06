@@ -550,6 +550,7 @@ namespace Crusaders30XX.ECS.Events
         HandAndDrawPile,
         TopXCards,
         DrawPile,
+        DrawPileAndDiscard,
         Hand,
         Deck,
     }

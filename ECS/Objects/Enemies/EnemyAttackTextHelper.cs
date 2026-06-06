@@ -62,6 +62,8 @@ public static class EnemyAttackTextHelper
           return $"Gain {amount} wounded.";
         case EnemyAttackTextType.Frozen:
           return $"Freeze {amount} random cards from your hand/draw pile.";
+        case EnemyAttackTextType.Brittle:
+          return $"Apply brittle to {amount} random card{(amount > 1 ? "s" : "")} in your deck/discard pile.";
         case EnemyAttackTextType.Frostbite:
           return $"Gain {amount} frostbite.";
         case EnemyAttackTextType.Custom:
@@ -115,6 +117,7 @@ public static class EnemyAttackTextHelper
     Corrode,
     Recoil,
     Frozen,
+    Brittle,
     Frostbite,
     Custom
   }
