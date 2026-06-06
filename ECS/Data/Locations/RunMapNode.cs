@@ -2,9 +2,16 @@ using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Data.Locations
 {
+	public enum RunMapCombatNodeType
+	{
+		Quest,
+		Hellrift,
+	}
+
 	public class RunMapNode
 	{
 		public string id { get; set; } = string.Empty;
+		public RunMapCombatNodeType combatNodeType { get; set; } = RunMapCombatNodeType.Quest;
 		public float worldX { get; set; }
 		public float worldY { get; set; }
 		public string enemyId { get; set; } = string.Empty;

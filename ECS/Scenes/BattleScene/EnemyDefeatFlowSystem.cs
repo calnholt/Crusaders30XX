@@ -88,6 +88,13 @@ namespace Crusaders30XX.ECS.Systems
 
 			EventManager.Publish(new EnemyKilledEvent { Enemy = enemy });
 
+			var enemyId = enemy?.GetComponent<Enemy>()?.EnemyBase?.Id;
+			if (string.Equals(enemyId, "fallen_shepherd", StringComparison.OrdinalIgnoreCase))
+			{
+				EventManager.Publish(new ShowTransition { Scene = SceneId.WayStation, EndRunOnLoad = true });
+				return;
+			}
+
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity?.GetComponent<QueuedEvents>();
 			if (queued != null

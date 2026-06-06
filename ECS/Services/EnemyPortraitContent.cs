@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Services
 {
@@ -32,6 +33,7 @@ namespace Crusaders30XX.ECS.Services
 			"wyvern",
 			// "blood_martyr",
 			"sand_golem",
+			"fallen_shepherd",
 			// "sniper", // marksman - disabled from run encounters
 		};
 
@@ -52,13 +54,17 @@ namespace Crusaders30XX.ECS.Services
 		private static readonly HashSet<string> RunMapExcludedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
 			"gleeber",
-			"sand_corpse"
+			"sand_corpse",
 		};
 
 		public static IReadOnlyList<string> GetRunMapEnemyPool()
 		{
-			return PortraitEnemyIds
-				.Where(id => !RunMapExcludedIds.Contains(id))
+			return EnemyFactory.GetAllEnemies()
+				.Where(entry => entry.Value != null
+					&& !entry.Value.IsBoss
+					&& HasPortrait(entry.Key)
+					&& !RunMapExcludedIds.Contains(entry.Key))
+				.Select(entry => entry.Key)
 				.OrderBy(id => id, StringComparer.OrdinalIgnoreCase)
 				.ToList();
 		}

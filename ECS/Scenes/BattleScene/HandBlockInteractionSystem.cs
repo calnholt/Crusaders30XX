@@ -40,6 +40,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Hit-test hand cards
 			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+			if (deck?.Hand == null) return;
 			// Iterate topmost first (reverse Z)
 			var handOrdered = deck.Hand.OrderByDescending(e => e.GetComponent<Transform>()?.ZOrder ?? 0).ToList();
 			foreach (var card in handOrdered)

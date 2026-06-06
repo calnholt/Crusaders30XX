@@ -32,9 +32,10 @@ public class TemperanceFactoryTests
     {
         var abilities = TemperanceFactory.GetAllTemperanceAbilities();
 
-        Assert.Equal(3, abilities.Count);
+        Assert.Equal(4, abilities.Count);
         Assert.Contains("angelic_aura", abilities.Keys);
         Assert.Contains("fling_fling", abilities.Keys);
+        Assert.Contains("measured_breath", abilities.Keys);
         Assert.Contains("radiance", abilities.Keys);
     }
 }

@@ -108,6 +108,7 @@ namespace Crusaders30XX.ECS.Events
 		public SceneId Scene;
 		public bool SkipHold;
 		public bool SkipWipe;
+		public bool EndRunOnLoad;
 	}
 
 	public class TransitionCompleteEvent
@@ -118,6 +119,20 @@ namespace Crusaders30XX.ECS.Events
 	public class DialogEnded
 	{
 		
+	}
+
+	public class EncounterDialogueRequested
+	{
+		public string DefinitionId { get; set; } = string.Empty;
+		public string SegmentId { get; set; } = string.Empty;
+		public System.Guid RequestId { get; set; }
+	}
+
+	public class EncounterDialogueCompleted
+	{
+		public string DefinitionId { get; set; } = string.Empty;
+		public string SegmentId { get; set; } = string.Empty;
+		public System.Guid RequestId { get; set; }
 	}
 
 	public class TriggerEnemyAttackDisplayEvent
@@ -137,5 +152,16 @@ namespace Crusaders30XX.ECS.Events
 	public class EnemyKilledEvent
 	{
 		public Entity Enemy;
+	}
+
+	public class EnemyPhaseLethalEvent
+	{
+		public Entity Enemy { get; set; }
+	}
+
+	public class EnemyPhaseResetEvent
+	{
+		public Entity Enemy { get; set; }
+		public int CurrentPhase { get; set; }
 	}
 }

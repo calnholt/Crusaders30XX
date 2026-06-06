@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
@@ -101,7 +102,7 @@ namespace Crusaders30XX.ECS.Systems
 			poi.DisplayRadius = currentRadius;
 
 			UpdateExpandingFog(poi, currentRadius);
-			RevealQuestsWithinCurrentRadius(poi, currentRadius);
+			RevealCombatPoisWithinCurrentRadius(poi, currentRadius);
 
 			if (t >= 1f)
 			{
@@ -143,7 +144,7 @@ namespace Crusaders30XX.ECS.Systems
 			return new HashSet<string>(ids, StringComparer.OrdinalIgnoreCase);
 		}
 
-		private void RevealQuestsWithinCurrentRadius(PointOfInterest completedPoi, float currentRadius)
+		private void RevealCombatPoisWithinCurrentRadius(PointOfInterest completedPoi, float currentRadius)
 		{
 			if (completedPoi == null || _allowedRevealIds == null || _allowedRevealIds.Count == 0) return;
 
@@ -152,29 +153,56 @@ namespace Crusaders30XX.ECS.Systems
 
 			foreach (var entity in EntityManager.GetEntitiesWithComponent<PointOfInterest>())
 			{
-				var questPoi = entity.GetComponent<PointOfInterest>();
-				if (questPoi == null || questPoi.Type != PointOfInterestType.Quest) continue;
-				if (questPoi.IsRevealed || questPoi.Id == completedPoi.Id) continue;
-				if (!_allowedRevealIds.Contains(questPoi.Id)) continue;
-				if (!RunMapRevealService.IsWithinRevealRadius(
-					originX, originY, questPoi.WorldPosition.X, questPoi.WorldPosition.Y, currentRadius))
+				var combatPoi = entity.GetComponent<PointOfInterest>();
+				if (!TryRevealCombatPoi(
+					combatPoi,
+					_allowedRevealIds,
+					completedPoi.Id,
+					originX,
+					originY,
+					currentRadius,
+					SaveCache.TryRevealRunNode))
 				{
 					continue;
 				}
 
-				if (!SaveCache.TryRevealRunNode(questPoi.Id)) continue;
-
-				questPoi.IsRevealed = true;
-				questPoi.DisplayRadius = 0f;
 				var ui = entity.GetComponent<UIElement>();
-				if (ui != null && !questPoi.IsCompleted)
+				if (ui != null && !combatPoi.IsCompleted)
 				{
 					ui.IsInteractable = true;
 					ui.IsHidden = false;
 				}
 
-				EventManager.Publish(new POIRevealedEvent { PoiId = questPoi.Id });
+				EventManager.Publish(new POIRevealedEvent { PoiId = combatPoi.Id });
 			}
+		}
+
+		internal static bool TryRevealCombatPoi(
+			PointOfInterest combatPoi,
+			ISet<string> allowedRevealIds,
+			string completedPoiId,
+			float originX,
+			float originY,
+			float currentRadius,
+			Func<string, bool> persistReveal)
+		{
+			if (combatPoi == null || !PoiVisualStyle.IsCombatPoiType(combatPoi.Type)) return false;
+			if (combatPoi.IsRevealed || combatPoi.Id == completedPoiId) return false;
+			if (allowedRevealIds == null || !allowedRevealIds.Contains(combatPoi.Id)) return false;
+			if (!RunMapRevealService.IsWithinRevealRadius(
+				originX,
+				originY,
+				combatPoi.WorldPosition.X,
+				combatPoi.WorldPosition.Y,
+				currentRadius))
+			{
+				return false;
+			}
+			if (persistReveal == null || !persistReveal(combatPoi.Id)) return false;
+
+			combatPoi.IsRevealed = true;
+			combatPoi.DisplayRadius = 0f;
+			return true;
 		}
 
 		private void TryBeginCutsceneFromTransitionState()

@@ -156,6 +156,7 @@ namespace Crusaders30XX.ECS.Data.Save
 			lock (_lock)
 			{
 				if (_save == null) _save = new SaveFile();
+				if (!_save.isRunActive) return;
 				if (_save.runMapNodes != null && _save.runMapNodes.Count > 0)
 				{
 					if (SanitizeRunMapEnemyIds())
@@ -181,6 +182,7 @@ namespace Crusaders30XX.ECS.Data.Save
 		public static IReadOnlyList<RunMapNode> GetRunMapNodes()
 		{
 			EnsureLoaded();
+			if (_save?.isRunActive != true) return new List<RunMapNode>();
 			EnsureRunMap();
 			return _save?.runMapNodes ?? new List<RunMapNode>();
 		}
@@ -411,6 +413,23 @@ namespace Crusaders30XX.ECS.Data.Save
 			lock (_lock)
 			{
 				_save = CreateFreshRunPreservingMeta(_save);
+				_save.isRunActive = true;
+				Persist();
+			}
+		}
+
+		public static bool IsRunActive()
+		{
+			EnsureLoaded();
+			return _save?.isRunActive == true;
+		}
+
+		public static void MarkRunInactive()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				_save = CreateInactiveSavePreservingMeta(_save);
 				Persist();
 			}
 		}
@@ -466,6 +485,30 @@ namespace Crusaders30XX.ECS.Data.Save
 			return save;
 		}
 
+		private static SaveFile CreateInactiveSavePreservingMeta(SaveFile prior)
+		{
+			return new SaveFile
+			{
+				version = SaveFile.CURRENT_VERSION,
+				isRunActive = false,
+				gold = 0,
+				runMapSeed = 0,
+				runMapNodes = new List<RunMapNode>(),
+				runMapShops = new List<RunMapShop>(),
+				runMapTreasures = new List<RunMapTreasure>(),
+				runMapEvents = new List<RunMapEvent>(),
+				items = new List<SaveItem>(),
+				lastLocation = string.Empty,
+				loadouts = new List<LoadoutDefinition>(),
+				runLongPassives = new Dictionary<string, int>(),
+				runCardRestrictions = new Dictionary<string, List<string>>(),
+				starterCardKeys = new List<string>(),
+				cardMastery = prior?.cardMastery ?? new Dictionary<string, CardMastery>(),
+				achievements = prior?.achievements ?? new Dictionary<string, AchievementProgress>(),
+				seenTutorials = prior?.seenTutorials ?? new List<string>(),
+			};
+		}
+
 		private static SaveFile CreateDefaultSave()
 		{
 			var (seed, nodes, shops, treasures, events) = GenerateRunMapForSave();
@@ -475,6 +518,7 @@ namespace Crusaders30XX.ECS.Data.Save
 			var save = new SaveFile
 			{
 				version = SaveFile.CURRENT_VERSION,
+				isRunActive = true,
 				gold = 4,
 				runMapSeed = seed,
 				runMapNodes = nodes,

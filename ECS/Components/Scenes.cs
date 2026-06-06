@@ -152,6 +152,10 @@ namespace Crusaders30XX.ECS.Components
 		public bool IsActive { get; set; } = false;
 		public List<DialogLine> Lines { get; set; } = new List<DialogLine>();
 		public int Index { get; set; } = 0;
+		public bool IsEncounterDialogue { get; set; }
+		public string DefinitionId { get; set; } = string.Empty;
+		public string SegmentId { get; set; } = string.Empty;
+		public System.Guid RequestId { get; set; }
 	}
 
 		/// <summary>
@@ -189,6 +193,8 @@ namespace Crusaders30XX.ECS.Components
 	{
 		public Entity Owner { get; set; }
 		public string DialogId { get; set; } = string.Empty;
+		public string SegmentId { get; set; } = string.Empty;
+		public System.Guid RequestId { get; set; }
 		public bool WillShowDialog { get; set; } = false;
 	}
 

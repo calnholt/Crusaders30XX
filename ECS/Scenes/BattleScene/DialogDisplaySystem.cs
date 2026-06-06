@@ -15,6 +15,8 @@ using Crusaders30XX.ECS.Rendering;
 using System;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Data.Save;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -165,6 +167,7 @@ namespace Crusaders30XX.ECS.Systems
             // Prepare/launch dialog via events
             EventManager.Subscribe<QuestSelected>(OnQuestSelected);
             EventManager.Subscribe<TransitionCompleteEvent>(OnTransitionComplete);
+            EventManager.Subscribe<EncounterDialogueRequested>(OnEncounterDialogueRequested);
             EventManager.Subscribe<DialogEnded>(_ => ClearPendingDialog());
         }
 
@@ -251,7 +254,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     endUi2.IsClicked = false;
                     state.IsActive = false;
-                    EventManager.Publish(new DialogEnded());
+                    CompleteDialog(state);
                 }
             }
 
@@ -270,7 +273,7 @@ namespace Crusaders30XX.ECS.Systems
                     if (state.Index >= (state.Lines?.Count ?? 0))
                     {
                         state.IsActive = false;
-                        EventManager.Publish(new DialogEnded());
+                        CompleteDialog(state);
                     }
                     else
                     {
@@ -289,7 +292,53 @@ namespace Crusaders30XX.ECS.Systems
             st.Lines = def.lines;
             st.Index = 0;
             st.IsActive = true;
+            st.IsEncounterDialogue = false;
+            st.DefinitionId = def.id ?? string.Empty;
+            st.SegmentId = string.Empty;
+            st.RequestId = Guid.Empty;
             ResetTypewriterForCurrentLine(st);
+        }
+
+        private void OnEncounterDialogueRequested(EncounterDialogueRequested request)
+        {
+            if (request == null || request.RequestId == Guid.Empty) return;
+            if (!DialogDefinitionCache.TryGet(request.DefinitionId, out var definition) || definition == null) return;
+
+            var lines = definition.ResolveSegment(request.SegmentId);
+            if (lines == null || lines.Count == 0) return;
+
+            EnsureOverlayEntity();
+            var state = EntityManager.GetEntity("DialogOverlay")?.GetComponent<DialogOverlayState>();
+            if (state == null) return;
+
+            state.Lines = lines.ToList();
+            state.Index = 0;
+            state.IsActive = true;
+            state.IsEncounterDialogue = true;
+            state.DefinitionId = request.DefinitionId ?? string.Empty;
+            state.SegmentId = request.SegmentId ?? string.Empty;
+            state.RequestId = request.RequestId;
+            ResetTypewriterForCurrentLine(state);
+        }
+
+        private static void CompleteDialog(DialogOverlayState state)
+        {
+            if (state != null && state.IsEncounterDialogue)
+            {
+                EventManager.Publish(new EncounterDialogueCompleted
+                {
+                    DefinitionId = state.DefinitionId,
+                    SegmentId = state.SegmentId,
+                    RequestId = state.RequestId,
+                });
+                state.IsEncounterDialogue = false;
+                state.DefinitionId = string.Empty;
+                state.SegmentId = string.Empty;
+                state.RequestId = Guid.Empty;
+                return;
+            }
+
+            EventManager.Publish(new DialogEnded());
         }
 
         public void Draw()
@@ -438,6 +487,7 @@ namespace Crusaders30XX.ECS.Systems
                 if (key == "gleeber") return _content.Load<Texture2D>("Gleeber");
                 if (key == "skeleton") return _content.Load<Texture2D>("Skeleton");
                 if (key == "sand_corpse") return _content.Load<Texture2D>("Sand_Corpse");
+                if (key == "fallen shepherd") return _content.Load<Texture2D>("Fallen_Shepherd");
             }
             catch { }
             return null;
@@ -529,16 +579,27 @@ namespace Crusaders30XX.ECS.Systems
             // If a dialog exists for this quest, mark it pending on QueuedEvents
             var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
             if (qeEntity == null) return;
-            if (DialogDefinitionCache.TryGet(id, out var _))
+            bool isGate = SaveCache.TryGetRunNode(id, out var node, out _)
+                && node.combatNodeType == RunMapCombatNodeType.Hellrift;
+            string dialogId = isGate ? "fallen_shepherd" : id;
+            if (DialogDefinitionCache.TryGet(dialogId, out var _))
             {
                 var existing = qeEntity.GetComponent<PendingQuestDialog>();
                 if (existing == null)
                 {
-                    EntityManager.AddComponent(qeEntity, new PendingQuestDialog { DialogId = id, WillShowDialog = true });
+                    EntityManager.AddComponent(qeEntity, new PendingQuestDialog
+                    {
+                        DialogId = dialogId,
+                        SegmentId = isGate ? "intro" : string.Empty,
+                        RequestId = isGate ? Guid.NewGuid() : Guid.Empty,
+                        WillShowDialog = true,
+                    });
                 }
                 else
                 {
-                    existing.DialogId = id;
+                    existing.DialogId = dialogId;
+                    existing.SegmentId = isGate ? "intro" : string.Empty;
+                    existing.RequestId = isGate ? Guid.NewGuid() : Guid.Empty;
                     existing.WillShowDialog = true;
                 }
             }
@@ -561,7 +622,19 @@ namespace Crusaders30XX.ECS.Systems
             if (DialogDefinitionCache.TryGet(pending.DialogId, out var def) && def != null)
             {
 				if (!pending.WillShowDialog) return;
-                Open(def);
+                if (pending.RequestId != Guid.Empty)
+                {
+                    EventManager.Publish(new EncounterDialogueRequested
+                    {
+                        DefinitionId = pending.DialogId,
+                        SegmentId = pending.SegmentId,
+                        RequestId = pending.RequestId,
+                    });
+                }
+                else
+                {
+                    Open(def);
+                }
             }
             else
             {
@@ -626,5 +699,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
-

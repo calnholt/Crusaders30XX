@@ -12,6 +12,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Objects.Enemies;
+using Crusaders30XX.ECS.Services;
 
 
 
@@ -286,12 +287,10 @@ namespace Crusaders30XX.ECS.Systems
 						})
 						.ToList();
 					tribulations = new List<TribulationDefinition>();
-					title = "Quest " + (questIdx + 1);
-					rewardGold = battleEnemyIds.Count > 1
-						? LocationMapConstants.QuestRewardGoldMultiBattle
-						: LocationMapConstants.QuestRewardGold;
+					title = RunMapCombatNodePresentationService.GetTitle(runNode, questIdx);
+					rewardGold = RunMapCombatNodePresentationService.GetRewardGold(runNode);
 					isCompleted = runNode.isCompleted || poi.IsCompleted;
-					poiType = PointOfInterestType.Quest;
+					poiType = RunMapCombatNodePresentationService.GetPoiType(runNode);
 					shouldShowTooltip = true;
 				}
 				}
@@ -944,8 +943,8 @@ namespace Crusaders30XX.ECS.Systems
 		private Texture2D TryLoadEnemyTexture(string id)
 		{
 			if (string.IsNullOrEmpty(id)) return null;
-			string title = char.ToUpper(id[0]) + (id.Length > 1 ? id.Substring(1) : string.Empty);
-			try { return _content.Load<Texture2D>(title); } catch { }
+			string assetName = EnemyPortraitContent.ToAssetName(id);
+			try { return _content.Load<Texture2D>(assetName); } catch { }
 			try { return _content.Load<Texture2D>(id); } catch { }
 			return null;
 		}
@@ -993,4 +992,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-

@@ -58,7 +58,12 @@ namespace Crusaders30XX.ECS.Services
 			for (int i = 0; i < nodes.Count; i++)
 			{
 				var node = nodes[i];
-				if (node == null || node.isRevealed || string.IsNullOrEmpty(node.id)) continue;
+				if (!RunMapCombatNodePresentationService.IsRevealEligible(node)
+					|| node.isRevealed
+					|| string.IsNullOrEmpty(node.id))
+				{
+					continue;
+				}
 				if (!IsWithinRevealRadius(originX, originY, node.worldX, node.worldY, radius)) continue;
 
 				float dx = node.worldX - originX;

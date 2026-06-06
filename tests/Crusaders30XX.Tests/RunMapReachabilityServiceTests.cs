@@ -23,6 +23,34 @@ public class RunMapReachabilityServiceTests
 	}
 
 	[Fact]
+	public void Completed_parent_can_reveal_a_nearby_hellrift()
+	{
+		var nodes = new List<RunMapNode>
+		{
+			new()
+			{
+				id = "run_5",
+				worldX = 5534.3f,
+				worldY = 463.4f,
+				parentIndex = -1,
+			},
+			new()
+			{
+				id = "run_6",
+				combatNodeType = RunMapCombatNodeType.Hellrift,
+				worldX = 4702.6f,
+				worldY = 748.1f,
+				parentIndex = 0,
+			},
+		};
+
+		var result = RunMapReachabilityService.SimulateRevealClosure(nodes);
+
+		Assert.Equal(2, result.RevealedCount);
+		Assert.Empty(result.UnreachableNodeIds);
+	}
+
+	[Fact]
 	public void Two_clusters_beyond_reveal_radius_are_not_reachable()
 	{
 		float gap = LocationMapConstants.DefaultRevealRadius * 2.5f;

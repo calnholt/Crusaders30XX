@@ -33,6 +33,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnPhaseChanged);
             EventManager.Subscribe<PledgeCardRequested>(OnPledgeCardRequested);
             EventManager.Subscribe<StartBattleRequested>(_ => ClearAllPledges());
+            EventManager.Subscribe<EnemyPhaseResetEvent>(_ => ClearAllPledges());
             EventManager.Subscribe<CardMoved>(OnCardMoved);
             EventManager.Subscribe<DiscardAllCardsEvent>(OnDiscardAllCards, priority: 10);
             EventManager.Subscribe<RedrawHandEvent>(OnRedrawHand, priority: 10);

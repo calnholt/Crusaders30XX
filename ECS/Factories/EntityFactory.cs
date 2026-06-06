@@ -405,12 +405,17 @@ namespace Crusaders30XX.ECS.Factories
 
         public static Entity CreateEnemyFromId(World world, string enemyId, EntityManager entityManager, EnemyDifficulty difficulty = EnemyDifficulty.Easy)
         {
+            var def = EnemyFactory.Create(enemyId, difficulty);
+            if (def == null)
+            {
+                throw new InvalidOperationException($"Cannot spawn enemy: unknown enemy ID '{enemyId ?? string.Empty}'.");
+            }
+
             var existingEnemy = entityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
             if (existingEnemy != null)
             {
                 entityManager.DestroyEntity(existingEnemy.Id);
             }
-            var def = EnemyFactory.Create(enemyId, difficulty);
             def.EntityManager = entityManager;
 
             var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();

@@ -91,6 +91,12 @@ namespace Crusaders30XX.ECS.Systems
 			else if (before > 0 && hp.Current == 0 && target.HasComponent<Enemy>())
 			{
 				if (target.HasComponent<SuppressPortraitRender>()) return;
+				var enemyBase = target.GetComponent<Enemy>()?.EnemyBase;
+				if (enemyBase != null && enemyBase.Phases > 1)
+				{
+					EventManager.Publish(new EnemyPhaseLethalEvent { Enemy = target });
+					return;
+				}
 				LoggingService.Append("HpManagementSystem.OnModifyHpRequest.EnemyDied", new System.Text.Json.Nodes.JsonObject
 				{
 					["message"] = "enemy defeated, begin presentation"
@@ -278,5 +284,4 @@ namespace Crusaders30XX.ECS.Systems
 	}
 
 }
-
 

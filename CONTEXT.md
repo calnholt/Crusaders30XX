@@ -4,7 +4,15 @@ Terms only. No implementation details.
 
 ## Run
 
-A single playthrough from a fresh (or reset) save through the procedurally generated quest map. One save file holds exactly one run in v1.
+A single playthrough from WayStation Depart through the procedurally generated combat map until victory, failure, or abandon. A save may hold one active run or no active run.
+
+## Active run
+
+A run whose map, deck, gold, inventory, and run-scoped state exist in the save. WayStation Depart creates and activates a run before applying the selected setup.
+
+## Inactive run
+
+The persisted state after run victory, run failure, or run abandon. Meta remains, but map data, gold, loadout, inventory, and other run-scoped data are cleared. Loading an inactive save does not generate a replacement run; only WayStation Depart creates the next run.
 
 ## Run-long applied passive
 
@@ -38,11 +46,11 @@ _Avoid_: Battle node (ambiguous with **quest node** on the map)
 
 ## Run failure
 
-Losing a battle (v1: only in battle). The current run ends only after the game-over sequence finishes, when run state on disk is replaced with a new run and the player returns to the title screen. Until then, the failed run's progress still exists in the save file. Meta earned during that fight is kept.
+Losing a battle. The current run ends after the game-over sequence finishes: run entities and run-scoped save data are cleared, an inactive run is persisted, and the player returns to WayStation. Meta earned during that fight is kept.
 
 ## Quest abandon
 
-Voluntarily ending the current run from the in-battle quit overlay (prompt: "Abandon run?"). Uses the same game-over sequence as run failure, then replaces run state on disk and returns to the title screen.
+Voluntarily ending the current run from the in-battle quit overlay (prompt: "Abandon run?"). Uses the same game-over sequence as run failure, persists an inactive run, and returns to WayStation.
 
 ## Meta
 
@@ -50,7 +58,7 @@ Progress that survives run failure and new-run creation: achievements, card mast
 
 ## Save
 
-Persistent file for the active run plus meta. Run state includes map topology, node progress, gold, loadouts, inventory, **run-long applied passive** stacks on the player, and **run-long card restriction** markers per deck card entry. Starting a new run replaces run state only; meta is kept.
+Persistent file for run lifecycle state plus meta. An active run includes map topology, node progress, gold, loadouts, inventory, **run-long applied passive** stacks on the player, and **run-long card restriction** markers per deck card entry. An inactive run contains none of that run-scoped data. Starting a new run replaces run state only; meta is kept.
 
 The save file has a `version` field. If it does not match the game's current save version, the entire file is replaced with a new default save. There is no migration between versions. Omitting `version` or using an old version number clears all progress (map, gold, deck, mastery, achievements, tutorials).
 
@@ -100,11 +108,21 @@ The desert is a presentation wrapper for the run map (background, title). It is 
 
 ## New run start
 
-Entry from the title screen after run failure or on first launch. The player begins the first available quest battle without visiting the location hub until at least one node is completed.
+WayStation Depart after first launch or after an inactive run. Depart creates and activates the run, applies the selected weapon and difficulty setup, then starts the root combat node.
+
+## Combat node
+
+One battle location in the 20-node run map. A combat node is either a **quest node** or a **Hellrift**.
 
 ## Quest node
 
-A single battle POI on the run map. Completing it marks the node completed and may reveal other quest nodes within map fog range. On the location hub, quest node and POI refer to the same map marker in v1.
+An ordinary combat node on the run map. Each run has 19 quest nodes. Completing one marks it completed, grants a quest reward, and may reveal other combat nodes within map fog range.
+
+## Hellrift
+
+The non-quest combat-node type. Each run has exactly one Hellrift, named **The Gate**, placed on a deepest leaf with at least six quest ancestors. It contains only the Fallen Shepherd encounter and grants no quest reward.
+
+The Gate follows normal spatial node reveal. Before reveal it has no map icon, minimap marker, tooltip, or off-screen indicator. Once revealed it behaves like an ordinary fightable combat marker.
 
 ## Root quest node
 
@@ -112,11 +130,11 @@ The first quest node in a run. It is the player's initial battle and the anchor 
 
 ## Run map tree
 
-Internal parent/child links used only when generating the 20 quest positions. Not shown on the desert map in v1 and does not gate which quests can be revealed or fought.
+Internal parent/child links used only when generating the 20 combat-node positions. Not shown on the desert map and does not gate which combat nodes can be revealed or fought.
 
 ## Run map coverage
 
-How widely quest nodes are distributed across the playable desert. Good coverage means the player must pan and zoom to see the whole run; nodes should not sit in one tight cluster. Uneven blobs are acceptable; symmetry across quadrants is not required. A new run is not created until the generator produces a layout that meets minimum spread standards and fog reveal can reach every quest from the root (in-progress saves from older generators are not repaired).
+How widely combat nodes are distributed across the playable desert. Good coverage means the player must pan and zoom to see the whole run; nodes should not sit in one tight cluster. Uneven blobs are acceptable; symmetry across quadrants is not required. A new run is not created until the generator produces a layout that meets minimum spread standards and fog reveal can reach every combat node from the root.
 
 ## Node completion
 
@@ -124,7 +142,17 @@ Whether the player has won the battle at that quest node. Stored only on the run
 
 ## Node reveal
 
-A node becomes fightable when it is **revealed**. The root quest node is revealed at run start. When a quest is **completed**, up to three other quest nodes within **map fog range** of that completed node can become revealed as its fog circle expands (closest first; see **Reveal cutscene**). Revealed quests are visible and can be started; they do **not** clear map fog. Only **completed** quests clear fog. Merely revealing a quest does not reveal further quests until that quest is completed. The player may tackle any revealed, incomplete node; branches are not mutually exclusive.
+A combat node becomes fightable when it is **revealed**. The root quest node is revealed at run start. When a quest is **completed**, up to three other combat nodes within **map fog range** of that completed node can become revealed as its fog circle expands (closest first; see **Reveal cutscene**). Revealed combat nodes are visible and can be started; they do **not** clear map fog. Only **completed** quest nodes clear fog. Merely revealing a node does not reveal further nodes until a quest node is completed. The player may tackle any revealed, incomplete combat node; branches are not mutually exclusive.
+
+## Boss phase
+
+One segment of a multi-phase enemy battle. `EnemyBase.Phases` is the total phase count and `CurrentPhase` is the active phase. Lethal damage before the final phase ends the current phase without publishing enemy-kill, battle-win, node-completion, or reward signals.
+
+## Phase reset
+
+The transition between boss phases after checkpoint dialogue. It advances `CurrentPhase`, rebuilds the enemy arsenal, fully heals player and enemy, merges and shuffles hand/draw/discard while leaving exhausted cards removed, clears pledges and transient card/attack interaction state, and removes only turn-duration passives from player and enemy.
+
+Courage, Temperance, Guard, battle/quest/run passives, card restrictions, card modifications, and cumulative turn number persist. A phase reset does not publish StartBattle, rerun start-of-battle abilities, or show the Start of Battle banner. It enters the next EnemyStart flow directly.
 
 ## Map fog range
 
@@ -146,7 +174,7 @@ Map event markers are also visible from run start and do not clear map fog. A Ma
 
 ## Shop (run map)
 
-A card vendor on the desert run map. Three shops exist per run. Shops are **not** quest nodes: they are not part of the run map tree and do not replace any of the 20 combat nodes.
+A card vendor on the desert run map. Three shops exist per run. Shops are **not** combat nodes: they are not part of the run map tree and do not replace any of the 20 combat nodes.
 
 After the 20-node battle map is generated, each shop is placed at a world position within completed-quest fog range of at least one battle node (so completing that battle can unlock the shop). Each shop has three fixed listings (identity, color, price) generated at run creation and stored in save.
 
@@ -186,7 +214,11 @@ _Avoid_: Using "event" alone when you mean the map marker or the choice content;
 
 ## Quest reward
 
-On first completion of a quest node: flat gold (30; 75 for a dual-battle quest node) and one random card added to the loadout deck. No rewards on repeat attempts (replays disabled). The reward modal shows only this quest reward gold; other gold grants (e.g. from medals) may apply at the same moment without changing the modal amount.
+On first completion of a quest node: flat gold (30; 75 for a dual-battle quest node) and one random card added to the loadout deck. The Gate is not a quest node and grants no quest reward. No rewards on repeat attempts (replays disabled). The reward modal shows only this quest reward gold; other gold grants (e.g. from medals) may apply at the same moment without changing the modal amount.
+
+## Run victory
+
+Defeating the Fallen Shepherd's final phase. Victory dialogue finishes first, then the normal enemy defeat presentation and enemy-kill signal run. No node completion or reward is granted. The run is ended, an inactive run is persisted, and the game transitions to WayStation.
 
 ## Might (applied passive)
 

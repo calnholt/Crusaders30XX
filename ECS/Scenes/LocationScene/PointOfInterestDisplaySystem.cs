@@ -231,13 +231,15 @@ namespace Crusaders30XX.ECS.Systems
 
 				int boundsWidth = (int)IconSize;
 				int boundsHeight = (int)IconSize;
-				if (_questIconTexture != null && _questIconTexture.Width > 0 && _questIconTexture.Height > 0)
+				var poiType = RunMapCombatNodePresentationService.GetPoiType(node);
+				var iconTexture = GetIconTexture(poiType);
+				if (iconTexture != null && iconTexture.Width > 0 && iconTexture.Height > 0)
 				{
-					float aspectRatio = _questIconTexture.Height / (float)_questIconTexture.Width;
+					float aspectRatio = iconTexture.Height / (float)iconTexture.Width;
 					boundsHeight = (int)(IconSize * aspectRatio);
 				}
 
-				bool canFight = node.isRevealed && !node.isCompleted;
+				bool canFight = RunMapCombatNodePresentationService.IsVisible(node) && !node.isCompleted;
 				EntityManager.AddComponent(e, new UIElement
 				{
 					Bounds = new Rectangle(0, 0, boundsWidth, boundsHeight),
@@ -268,7 +270,7 @@ namespace Crusaders30XX.ECS.Systems
 					UnrevealedRadius = LocationMapConstants.DefaultUnrevealedRadius,
 					IsRevealed = node.isRevealed,
 					IsCompleted = node.isCompleted,
-					Type = PointOfInterestType.Quest,
+					Type = poiType,
 					RunMapIndex = nodeIndex,
 					ChildPoiIds = childPoiIds,
 				};
@@ -581,5 +583,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
-

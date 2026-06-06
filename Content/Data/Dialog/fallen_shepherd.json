@@ -1,0 +1,28 @@
+{
+  "segments": {
+    "intro": [
+      {
+        "actor": "Fallen Shepherd",
+        "message": "..."
+      }
+    ],
+    "phase_1_end": [
+      {
+        "actor": "Fallen Shepherd",
+        "message": "..."
+      }
+    ],
+    "phase_2_end": [
+      {
+        "actor": "Fallen Shepherd",
+        "message": "..."
+      }
+    ],
+    "victory": [
+      {
+        "actor": "Fallen Shepherd",
+        "message": "..."
+      }
+    ]
+  }
+}

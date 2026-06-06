@@ -7,9 +7,10 @@ namespace Crusaders30XX.ECS.Data.Save
 {
 	public class SaveFile
 	{
-		public const int CURRENT_VERSION = 5;
+		public const int CURRENT_VERSION = 6;
 
 		public int version { get; set; } = 0;
+		public bool isRunActive { get; set; } = true;
         public int gold { get; set; } = 0;
 		public int runMapSeed { get; set; }
 		public List<RunMapNode> runMapNodes { get; set; } = new List<RunMapNode>();

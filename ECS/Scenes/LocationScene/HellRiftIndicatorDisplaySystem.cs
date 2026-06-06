@@ -76,7 +76,10 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var poiEntity in allPois)
 			{
 				var poi = poiEntity.GetComponent<PointOfInterest>();
-				if (poi != null && poi.Type == PointOfInterestType.Hellrift && !poi.IsCompleted)
+				if (poi != null
+					&& poi.Type == PointOfInterestType.Hellrift
+					&& poi.IsRevealed
+					&& !poi.IsCompleted)
 				{
 					_incompleteHellrifts.Add(poiEntity);
 				}
@@ -290,4 +293,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-

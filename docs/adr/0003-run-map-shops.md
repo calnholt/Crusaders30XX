@@ -6,7 +6,7 @@ Accepted (2026-05-30)
 
 ## Context
 
-The desert run map is a procedural tree of 20 quest (combat) nodes. We want three card shops per run: visible landmarks from the start, enterable only after the player has cleared nearby battles, selling fixed non-starter listings at 30 gold with no separate collection layer.
+The desert run map is a procedural tree of 20 combat nodes. We want three card shops per run: visible landmarks from the start, enterable only after the player has cleared nearby battles, selling fixed non-starter listings at 30 gold with no separate collection layer.
 
 Quest nodes use radius reveal when a completed quest's fog circle reaches them; only **completed** quests clear map fog. Shops need different rules: always visible on the map (drawn after fog composite), not in the battle tree, and enterable only when inside **completed** quest cleared fog.
 

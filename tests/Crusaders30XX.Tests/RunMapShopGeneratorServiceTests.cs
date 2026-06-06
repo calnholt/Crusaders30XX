@@ -53,12 +53,14 @@ public class RunMapShopGeneratorServiceTests
 	}
 
 	[Fact]
-	public void User_save_seed_fails_map_generation()
+	public void User_save_seed_generates_with_current_spine_rules()
 	{
 		const int problematicSeed = 1365672886;
 
-		Assert.Throws<System.InvalidOperationException>(
-			() => LocationMapGeneratorService.Generate(problematicSeed));
+		var (_, nodes) = LocationMapGeneratorService.Generate(problematicSeed);
+
+		Assert.Equal(LocationMapConstants.NodeCount, nodes.Count);
+		Assert.Single(nodes.FindAll(node => node.combatNodeType == RunMapCombatNodeType.Hellrift));
 	}
 
 	private static void MarkAllNodesCompleted(List<RunMapNode> nodes)

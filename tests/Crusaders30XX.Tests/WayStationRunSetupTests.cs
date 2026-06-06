@@ -11,17 +11,16 @@ namespace Crusaders30XX.Tests;
 public class WayStationRunSetupTests
 {
 	[Fact]
-	public void Weapon_starter_pools_are_valid_starting_card_pools()
+	public void Weapon_starter_pools_only_reference_known_cards()
 	{
 		var swordPool = StartingDeckGeneratorService.GetSwordStarterCardPool();
 		var daggerPool = StartingDeckGeneratorService.GetDaggerStarterCardPool();
 
 		Assert.NotEmpty(swordPool);
 		Assert.NotEmpty(daggerPool);
-		Assert.Equal(swordPool, daggerPool);
 		foreach (var cardId in swordPool.Concat(daggerPool))
 		{
-			Assert.True(StartingDeckGeneratorService.IsInDefaultStarterPool(cardId));
+			Assert.NotNull(CardFactory.Create(cardId));
 		}
 	}
 

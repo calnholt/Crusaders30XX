@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Services
 	public static class RunLifecycleService
 	{
 		/// <summary>
-		/// Persists meta progress and replaces on-disk run state with a fresh run.
+		/// Persists meta progress, destroys run entities, and leaves the save without an active run.
 		/// </summary>
 		public static void EndCurrentRun(EntityManager entityManager = null)
 		{
@@ -22,7 +22,7 @@ namespace Crusaders30XX.ECS.Services
 			{
 				RunPlayerService.DestroyRunPlayer(entityManager);
 			}
-			SaveCache.StartNewRun();
+			SaveCache.MarkRunInactive();
 		}
 	}
 }

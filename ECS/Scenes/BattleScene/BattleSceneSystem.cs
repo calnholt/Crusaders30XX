@@ -69,6 +69,7 @@ namespace Crusaders30XX.ECS.Systems
 		private CardPlayedAnimationSystem _cardPlayedAnimationSystem;
 		private PixelBurstDisplaySystem _pixelBurstDisplaySystem;
 		private EnemyDefeatFlowSystem _enemyDefeatFlowSystem;
+		private EnemyPhaseFlowSystem _enemyPhaseFlowSystem;
 		private CardMoveDisplaySystem _cardMoveDisplaySystem;
 		private AssignedBlockCardsDisplaySystem _assignedBlockCardsDisplaySystem;
 		private ExhaustOnBlockDisplaySystem _exhaustOnBlockDisplaySystem;
@@ -189,6 +190,9 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<DialogEnded>(_ =>
 			{
 				LoggingService.Append("BattleSceneSystem.OnDialogEnded", new System.Text.Json.Nodes.JsonObject { ["event"] = "DialogEnded" });
+				var pending = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()
+					?.GetComponent<PendingQuestDialog>();
+				if (pending == null || !pending.WillShowDialog || pending.RequestId != Guid.Empty) return;
 				if (!_loadedEntities) 
 				{
 					CreateBattleSceneEntities();
@@ -198,6 +202,29 @@ namespace Crusaders30XX.ECS.Systems
 					EventManager.Publish(new ShowStartOfBattleAnimationEvent());
 				});
 				// EnqueueBattleRules(true);
+			});
+			EventManager.Subscribe<EncounterDialogueCompleted>(completed =>
+			{
+				var pending = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()
+					?.GetComponent<PendingQuestDialog>();
+				if (pending == null
+					|| !pending.WillShowDialog
+					|| pending.RequestId == Guid.Empty
+					|| completed.RequestId != pending.RequestId)
+				{
+					return;
+				}
+
+				pending.WillShowDialog = false;
+				if (!_loadedEntities)
+				{
+					CreateBattleSceneEntities();
+				}
+				InitBattle();
+				TimerScheduler.Schedule(0.3f, () =>
+				{
+					EventManager.Publish(new ShowStartOfBattleAnimationEvent());
+				});
 			});
 			EventManager.Subscribe<DeleteCachesEvent>(_ => {
 				if (_.Scene == SceneId.Battle) return;
@@ -279,7 +306,9 @@ namespace Crusaders30XX.ECS.Systems
 			
 			// If there will be dialog to show for the quest, skip drawing battle UI (overlay is drawn globally)
 			bool willShowDialog = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<PendingQuestDialog>()?.WillShowDialog ?? false;
-			if (willShowDialog) return;
+			bool encounterDialogueActive = EntityManager.GetEntitiesWithComponent<DialogOverlayState>()
+				.FirstOrDefault()?.GetComponent<DialogOverlayState>()?.IsActive ?? false;
+			if (willShowDialog || encounterDialogueActive) return;
 			if (RewardModalDisplaySystem.IsOverlayOpen(EntityManager)) return;
 			FrameProfiler.Measure("PlayerDisplaySystem.Draw", _playerDisplaySystem.Draw);
 			FrameProfiler.Measure("GuardianAngelDisplaySystem.Draw", _guardianAngelDisplaySystem.Draw);
@@ -498,6 +527,7 @@ namespace Crusaders30XX.ECS.Systems
 			_cardPlayedAnimationSystem = new CardPlayedAnimationSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_pixelBurstDisplaySystem = new PixelBurstDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_enemyDefeatFlowSystem = new EnemyDefeatFlowSystem(_world.EntityManager, _content);
+			_enemyPhaseFlowSystem = new EnemyPhaseFlowSystem(_world.EntityManager);
 			_endTurnDisplaySystem = new EndTurnDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_assignedBlockCardsDisplaySystem = new AssignedBlockCardsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_exhaustOnBlockDisplaySystem = new ExhaustOnBlockDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -602,6 +632,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_cardVisualSettingsDebugSystem);
 			_world.AddSystem(_hpManagementSystem);
 			_world.AddSystem(_enemyDefeatFlowSystem);
+			_world.AddSystem(_enemyPhaseFlowSystem);
 			_world.AddSystem(_pixelBurstDisplaySystem);
 			_world.AddSystem(_battlePhaseDisplaySystem);
 			_world.AddSystem(_enemyDisplaySystem);
@@ -693,5 +724,4 @@ namespace Crusaders30XX.ECS.Systems
 
 	}
 }
-
 

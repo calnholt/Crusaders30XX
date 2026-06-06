@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -176,7 +177,7 @@ namespace Crusaders30XX.ECS.Systems
 					if (node == null) continue;
 
 					bool isCompleted = node.isCompleted;
-					bool isVisible = isCompleted || node.isRevealed;
+					bool isVisible = RunMapCombatNodePresentationService.IsVisible(node);
 					if (!isVisible) continue;
 
 					float minimapPoiX = actualMinimapX + (node.worldX * cam.MapScale * scale);
@@ -342,4 +343,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-

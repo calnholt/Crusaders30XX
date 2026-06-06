@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
 	/// Displays a game-over overlay on run failure or abandon: centered text, fade to black,
-	/// then resets run state (preserving meta) and returns to the title screen.
+	/// then clears run state (preserving meta), persists an inactive run, and returns to WayStation.
 	/// </summary>
 	[DebugTab("Game Over Overlay")]
 	public class GameOverOverlayDisplaySystem : Core.System

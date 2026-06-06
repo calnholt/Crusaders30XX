@@ -30,6 +30,8 @@ namespace Crusaders30XX.ECS.Services
 
 	public static class LocationMapGeneratorService
 	{
+		private const int GateMinimumQuestAncestorCount = 6;
+		private const string FallenShepherdEnemyId = "fallen_shepherd";
 		private const int CandidateAttempts = 32;
 		private const int GlobalScatterAttempts = 64;
 		private const int SpiralAngleSteps = 16;
@@ -148,14 +150,23 @@ namespace Crusaders30XX.ECS.Services
 
 			for (int i = 1; i < LocationMapConstants.NodeCount; i++)
 			{
-				var eligibleParents = GetEligibleParentIndices(nodes);
-				if (eligibleParents.Count == 0)
+				int parentIndex;
+				if (i <= GateMinimumQuestAncestorCount)
 				{
-					throw new InvalidOperationException(
-						$"[LocationMapGeneratorService] No eligible parent for node {i}; check MaxChildrenPerNode.");
+					parentIndex = i - 1;
+				}
+				else
+				{
+					var eligibleParents = GetEligibleParentIndices(nodes);
+					if (eligibleParents.Count == 0)
+					{
+						throw new InvalidOperationException(
+							$"[LocationMapGeneratorService] No eligible parent for node {i}; check MaxChildrenPerNode.");
+					}
+
+					parentIndex = PickParentIndex(rng, eligibleParents, depths);
 				}
 
-				int parentIndex = PickParentIndex(rng, eligibleParents, depths);
 				depths[i] = depths[parentIndex] + 1;
 				var parent = nodes[parentIndex];
 				PlaceChild(rng, nodes, parent, out float x, out float y);
@@ -177,6 +188,7 @@ namespace Crusaders30XX.ECS.Services
 
 			SetBattleEnemySequence(nodes[0], new List<string> { PickEnemy(rng, enemyPool) });
 			AssignMultiBattleSequences(rng, nodes, enemyPool);
+			AssignGate(rng, nodes, depths);
 
 #if DEBUG
 			var metrics = ComputeSpreadMetrics(seed, nodes);
@@ -314,6 +326,36 @@ namespace Crusaders30XX.ECS.Services
 			if (node == null || enemyIds == null || enemyIds.Count == 0) return;
 			node.battleEnemyIds = enemyIds;
 			node.enemyId = enemyIds[0];
+		}
+
+		private static void AssignGate(Random rng, List<RunMapNode> nodes, int[] depths)
+		{
+			int deepestEligibleDepth = nodes
+				.Select((node, index) => new { node, index })
+				.Where(x => x.node != null
+					&& (x.node.childIndices?.Count ?? 0) == 0
+					&& depths[x.index] >= GateMinimumQuestAncestorCount)
+				.Select(x => depths[x.index])
+				.DefaultIfEmpty(-1)
+				.Max();
+
+			if (deepestEligibleDepth < GateMinimumQuestAncestorCount)
+			{
+				throw new InvalidOperationException(
+					"[LocationMapGeneratorService] Generated map has no depth-6 leaf for The Gate.");
+			}
+
+			var candidates = nodes
+				.Select((node, index) => new { node, index })
+				.Where(x => x.node != null
+					&& (x.node.childIndices?.Count ?? 0) == 0
+					&& depths[x.index] == deepestEligibleDepth)
+				.Select(x => x.index)
+				.ToList();
+
+			var gate = nodes[candidates[rng.Next(candidates.Count)]];
+			gate.combatNodeType = RunMapCombatNodeType.Hellrift;
+			SetBattleEnemySequence(gate, new List<string> { FallenShepherdEnemyId });
 		}
 
 		private static int PickParentIndex(Random rng, List<int> eligibleParents, int[] depths)

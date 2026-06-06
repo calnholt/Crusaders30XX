@@ -25,6 +25,7 @@ namespace Crusaders30XX.ECS.Systems
 		private float _t = 0f; // time within current phase
 		private bool _suppressLoadScene = false; // one-shot debug preview flag
 		private bool _skipHold = false;
+		private bool _endRunOnLoad = false;
         private SceneId _nextScene;
 
         [DebugEditable(DisplayName = "Wipe Duration (s)", Step = 0.05f, Min = 0.05f, Max = 3f)]
@@ -192,6 +193,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_suppressLoadScene = transition.Scene == SceneId.None;
 			_skipHold = transition.SkipHold;
+			_endRunOnLoad = transition.EndRunOnLoad;
 			_nextScene = transition.Scene;
 
 			if (transition.SkipWipe)
@@ -213,6 +215,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void LoadTargetScene(SceneId nextScene, bool publishComplete)
 		{
+			if (_endRunOnLoad)
+			{
+				RunLifecycleService.EndCurrentRun(EntityManager);
+				_endRunOnLoad = false;
+			}
+
 			var sceneEntity = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
 			var previous = sceneEntity?.GetComponent<SceneState>()?.Current ?? SceneId.None;
 			EventManager.Publish(new DeleteCachesEvent { Scene = nextScene });

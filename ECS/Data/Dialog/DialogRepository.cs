@@ -22,6 +22,7 @@ namespace Crusaders30XX.ECS.Data.Dialog
 
                     // Accept either top-level array or object with lines property
                     List<DialogLine> lines = null;
+                    Dictionary<string, List<DialogLine>> segments = null;
                     if (root is JsonArray arr)
                     {
                         lines = arr.Deserialize<List<DialogLine>>(opts);
@@ -30,10 +31,19 @@ namespace Crusaders30XX.ECS.Data.Dialog
                     {
                         lines = linesArr.Deserialize<List<DialogLine>>(opts);
                     }
+                    if (root["segments"] is JsonObject segmentsObject)
+                    {
+                        segments = segmentsObject.Deserialize<Dictionary<string, List<DialogLine>>>(opts);
+                    }
 
-                    if (lines == null) continue;
+                    if (lines == null && (segments == null || segments.Count == 0)) continue;
                     string id = Path.GetFileNameWithoutExtension(file);
-                    map[id] = new DialogDefinition { id = id, lines = lines };
+                    map[id] = new DialogDefinition
+                    {
+                        id = id,
+                        lines = lines ?? new List<DialogLine>(),
+                        segments = segments ?? new Dictionary<string, List<DialogLine>>(),
+                    };
                 }
                 catch (System.Exception ex)
                 {
@@ -44,5 +54,4 @@ namespace Crusaders30XX.ECS.Data.Dialog
         }
     }
 }
-
 

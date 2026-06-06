@@ -6,10 +6,10 @@ namespace Crusaders30XX.ECS.Services
 {
 	internal static class RunMapLandmarkPlacementService
 	{
-		private const int RingSteps = 8;
-		private const int AngleSteps = 32;
+		private const int RingSteps = 12;
+		private const int AngleSteps = 64;
 
-		private static readonly float[] LandmarkSeparationTiers = { 1f, 0.9f, 0.8f, 0.7f };
+		private static readonly float[] LandmarkSeparationTiers = { 1f, 0.9f, 0.8f, 0.7f, 0.6f, 0.5f, 0.4f };
 
 		public static bool TryPlace(
 			Random rng,
