@@ -118,6 +118,10 @@ namespace Crusaders30XX.ECS.Factories
                 "masochism" => new Masochism(),
                 // Sniper attacks
                 "sniper_shot" => new SniperShot(),
+                // FallenShepherd attacks
+                "fallen_shepherd_phase_1" => new FallenShepherdPhase1(),
+                "fallen_shepherd_phase_2" => new FallenShepherdPhase2(),
+                "fallen_shepherd_phase_3" => new FallenShepherdPhase3(),
                 _ => null
             };
         }
@@ -230,6 +234,10 @@ namespace Crusaders30XX.ECS.Factories
                 { "masochism", new Masochism() },
                 // Sniper attacks
                 { "sniper_shot", new SniperShot() },
+                // FallenShepherd attacks
+                { "fallen_shepherd_phase_1", new FallenShepherdPhase1() },
+                { "fallen_shepherd_phase_2", new FallenShepherdPhase2() },
+                { "fallen_shepherd_phase_3", new FallenShepherdPhase3() },
             };
         }
     }

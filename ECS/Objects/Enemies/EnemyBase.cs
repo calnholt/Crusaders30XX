@@ -18,6 +18,9 @@ public abstract class EnemyBase : IDisposable
   public Action<EntityManager> OnStartOfBattle { get; protected set; }
   public EntityManager EntityManager { get; set; }
   public EnemyDifficulty Difficulty { get; set; } = EnemyDifficulty.Easy;
+  public bool IsBoss { get; set; } = false;
+  public int Phases { get; set; } = 1;
+  public int CurrentPhase { get; set; } = 1;
 
   public EnemyBase(EnemyDifficulty difficulty = EnemyDifficulty.Easy)
   {
