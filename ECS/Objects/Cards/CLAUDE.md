@@ -35,11 +35,40 @@ All callbacks are nullable and optional.
 | `OnPlay` | `Action<EntityManager, Entity>` | Main card effect when played |
 | `OnBlock` | `Action<EntityManager, Entity>` | Effect when used to block |
 | `OnDraw` | `Action<EntityManager, Entity>` | Effect when drawn |
-| `OnCreate` | `Action<EntityManager, Entity>` | Runs when entity is created in `EntityFactory` |
+| `OnCreate` | `Action<EntityManager, Entity>` | Runs when entity is created (invoked from `Initialize`) |
 | `OnDiscardedForCost` | `Action<EntityManager, Entity>` | Runs when discarded to pay another card's cost |
 | `CanPlay` | `Func<EntityManager, Entity, bool>` | Pure validation; return false to block play (no side effects) |
 | `OnCantPlay` | `Action<EntityManager, Entity>` | Publish `CantPlayCardMessage` when play is rejected; called by systems after `CanPlay` returns false |
 | `GetConditionalDamage` | `Func<EntityManager, Entity, int>` | Bonus damage shown on card and added via `GetDerivedDamage()` |
+
+## Lifecycle (Initialize / Dispose)
+
+`CardBase` implements `IDisposable` with a virtual `Initialize(EntityManager, Entity)` called when a card entity is created (`EntityFactory`, `WeaponManagementSystem`, `CloneEntity`). `CardData` also implements `IDisposable` and calls `Card.Dispose()` when the entity is destroyed.
+
+Use `override Initialize` + `override Dispose` for persistent event subscriptions. `OnCreate` still works for one-shot setup (invoked from base `Initialize`).
+
+```csharp
+public class MyCard : CardBase
+{
+    public MyCard() { /* set CardId, OnPlay, etc. */ }
+
+    public override void Initialize(EntityManager entityManager, Entity cardEntity)
+    {
+        base.Initialize(entityManager, cardEntity);
+        EventManager.Subscribe<SomeEvent>(OnSomeEvent);
+    }
+
+    private void OnSomeEvent(SomeEvent evt) { /* ... */ }
+
+    public override void Dispose()
+    {
+        EventManager.Unsubscribe<SomeEvent>(OnSomeEvent);
+        base.Dispose();
+    }
+}
+```
+
+`EntityManager` and `CardEntity` are set on `CardBase` during `Initialize` and available to event handlers.
 
 ## Dealing Damage
 

@@ -16,8 +16,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
         Block,
         Relic
     }
-    public class CardBase
+    public class CardBase : IDisposable
     {
+        public EntityManager EntityManager { get; set; }
+        public Entity CardEntity { get; set; }
+
         public string CardId { get; set; }
         public string Name { get; set; } = "";
         public int Damage { get; set; } = 0;
@@ -64,6 +67,18 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Func<EntityManager, Entity, bool>? CanPlay { get; protected set; } = (a, b) => true;
         public Action<EntityManager, Entity>? OnCantPlay { get; protected set; }
         public Func<EntityManager, Entity, int>? GetConditionalDamage { get; protected set; } = (a, b) => 0;
+
+        public virtual void Initialize(EntityManager entityManager, Entity cardEntity)
+        {
+            EntityManager = entityManager;
+            CardEntity = cardEntity;
+            OnCreate?.Invoke(entityManager, cardEntity);
+        }
+
+        public virtual void Dispose()
+        {
+            Console.WriteLine($"[CardBase] Dispose: {CardId}");
+        }
 
         public string GetCardHint(CardData.CardColor color)
         {

@@ -338,14 +338,11 @@ namespace Crusaders30XX.ECS.Factories
             
             try
             {
-                if (cardData.Card?.OnCreate != null)
-                {
-                    cardData.Card.OnCreate(entityManager, entity);
-                }
+                cardData.Card?.Initialize(entityManager, entity);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in OnCreate for card {cardId}: {ex}");
+                Console.WriteLine($"Error in Initialize for card {cardId}: {ex}");
                 throw;
             }
 
@@ -716,6 +713,7 @@ namespace Crusaders30XX.ECS.Factories
                 Owner = clonedEntity
             };
             entityManager.AddComponent(clonedEntity, clonedCardData);
+            clonedCardData.Card?.Initialize(entityManager, clonedEntity);
 
             // Deep copy ModifiedBlock (with all modifications)
             var sourceModifiedBlock = sourceEntity.GetComponent<ModifiedBlock>();

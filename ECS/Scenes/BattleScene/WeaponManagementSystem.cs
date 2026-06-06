@@ -200,8 +200,7 @@ namespace Crusaders30XX.ECS.Systems
 			EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
 			EntityManager.AddComponent(e, new PositionTween { Speed = 12f, Current = spawnPos, Target = spawnPos, Initialized = true });
 			EntityManager.AddComponent(e, new ModifiedDamage { Modifications = [] });
-			// Run OnCreate callback (e.g. adds Frozen component for GlacialMaul)
-			card.OnCreate?.Invoke(EntityManager, e);
+			card.Initialize(EntityManager, e);
 			return e;
 		}
 

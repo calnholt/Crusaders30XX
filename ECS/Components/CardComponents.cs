@@ -16,11 +16,16 @@ namespace Crusaders30XX.ECS.Components
     /// </summary>
     /// 
     /// 
-    public class CardData : IComponent
+    public class CardData : IComponent, IDisposable
     {
         public Entity Owner { get; set; }
         
         public CardBase Card { get; set; }
+
+        public void Dispose()
+        {
+            Card?.Dispose();
+        }
         
         // Instance-specific properties for the card entity
         public CardColor Color { get; set; } = CardColor.White;
