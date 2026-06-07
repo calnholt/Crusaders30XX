@@ -29,7 +29,7 @@ namespace Crusaders30XX.ECS.Systems
 	private LocationPoiRevealCutsceneSystem _poiCutsceneSystem;
 	private POIRadiusDebugDisplaySystem _poiRadiusDebugDisplaySystem;
 	private HellRiftIndicatorDisplaySystem _hellRiftIndicatorDisplaySystem;
-	private CustomizeButtonDisplaySystem _customizeButtonDisplaySystem;
+	private LoadoutButtonDisplaySystem _loadoutButtonDisplaySystem;
 	private AchievementButtonDisplaySystem _achievementButtonDisplaySystem;
 	private MiniMapDisplaySystem _miniMapDisplaySystem;
 		private RenderTarget2D _sceneRT;
@@ -67,7 +67,7 @@ namespace Crusaders30XX.ECS.Systems
 				_world.RemoveSystem(_poiCutsceneSystem);
 				_world.RemoveSystem(_poiRadiusDebugDisplaySystem);
 				_world.RemoveSystem(_hellRiftIndicatorDisplaySystem);
-				_world.RemoveSystem(_customizeButtonDisplaySystem);
+				_world.RemoveSystem(_loadoutButtonDisplaySystem);
 				_world.RemoveSystem(_achievementButtonDisplaySystem);
 				_world.RemoveSystem(_miniMapDisplaySystem);
 				_firstLoad = true;
@@ -149,7 +149,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("ShopPOITooltipDisplaySystem.Draw", _shopPoiTooltipDisplaySystem.Draw);
 			FrameProfiler.Measure("TreasurePOITooltipDisplaySystem.Draw", _treasurePoiTooltipDisplaySystem.Draw);
 			FrameProfiler.Measure("TooltipQuestDisplaySystem.Draw", _tooltipQuestDisplaySystem.Draw);
-			FrameProfiler.Measure("CustomizeButtonDisplaySystem.Draw", _customizeButtonDisplaySystem.Draw);
+			FrameProfiler.Measure("LoadoutButtonDisplaySystem.Draw", _loadoutButtonDisplaySystem.Draw);
 			FrameProfiler.Measure("AchievementButtonDisplaySystem.Draw", _achievementButtonDisplaySystem.Draw);
 		}
     private void AddLocationSystems()
@@ -174,8 +174,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_treasurePoiTooltipDisplaySystem);
 			_hellRiftIndicatorDisplaySystem = new HellRiftIndicatorDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_hellRiftIndicatorDisplaySystem);
-			_customizeButtonDisplaySystem = new CustomizeButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_world.AddSystem(_customizeButtonDisplaySystem);
+			_loadoutButtonDisplaySystem = new LoadoutButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_world.AddSystem(_loadoutButtonDisplaySystem);
 			_achievementButtonDisplaySystem = new AchievementButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_world.AddSystem(_achievementButtonDisplaySystem);
 			_miniMapDisplaySystem = new MiniMapDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);

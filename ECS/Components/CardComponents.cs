@@ -381,6 +381,7 @@ namespace Crusaders30XX.ECS.Components
         PayCostCancel,
         PledgeCard,
         LeaveShop,
+        OpenLoadout,
         CardClicked,
     }
 

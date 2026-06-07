@@ -65,6 +65,7 @@ public class Game1 : Game
     private EventStartSystem _eventStartSystem;
     private RewardModalDisplaySystem _rewardModalDisplaySystem;
     private NarrativeEventModalDisplaySystem _narrativeEventModalDisplaySystem;
+    private CardListModalSystem _cardListModalSystem;
     private DisplaySnapshotHost _snapshotHost;
     private readonly DisplaySnapshotLaunchOptions _snapshotOptions;
 #if DEBUG
@@ -231,6 +232,8 @@ public class Game1 : Game
         _world.AddSystem(_rewardModalDisplaySystem);
         _narrativeEventModalDisplaySystem = new NarrativeEventModalDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _world.AddSystem(_narrativeEventModalDisplaySystem);
+        _cardListModalSystem = new CardListModalSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _world.AddSystem(_cardListModalSystem);
         _world.AddSystem(new RunDeckLifecycleSystem(_world.EntityManager));
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
@@ -523,6 +526,7 @@ public class Game1 : Game
         FrameProfiler.Measure("LocationNameDisplaySystem.Draw", _locationNameDisplaySystem.Draw);
         FrameProfiler.Measure("RewardModalDisplaySystem.Draw", _rewardModalDisplaySystem.Draw);
         FrameProfiler.Measure("NarrativeEventModalDisplaySystem.Draw", _narrativeEventModalDisplaySystem.Draw);
+        FrameProfiler.Measure("CardListModalSystem.Draw", _cardListModalSystem.Draw);
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipTextDisplaySystem.Draw);
         FrameProfiler.Measure("HintTooltipDisplaySystem.Draw", _hintTooltipDisplaySystem.Draw);
         FrameProfiler.Measure("CardTooltipDisplaySystem.Draw", _cardTooltipDisplaySystem.Draw);

@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
-	/// Displays the Achievement button in the Location scene (top-right corner, left of Customize button).
+	/// Displays the Achievement button in the Location scene (top-right corner, left of Loadout button).
 	/// </summary>
 	[DebugTab("Achievement Button")]
 	public class AchievementButtonDisplaySystem : Core.System
@@ -143,7 +143,7 @@ namespace Crusaders30XX.ECS.Systems
 			int btnW = System.Math.Max(40, _cachedTexture.Width);
 			int btnH = System.Math.Max(24, _cachedTexture.Height);
 			int margin = System.Math.Max(0, ButtonMargin);
-			// Position to the left of the Customize button (top-right)
+			// Position to the left of the Loadout button (top-right)
 			var rect = new Rectangle(viewportW - btnW * 2 - margin * 2, margin, btnW, btnH);
 			var position = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
 

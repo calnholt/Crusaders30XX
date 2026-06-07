@@ -70,6 +70,16 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
                     break;
                 }
+                case UIElementEventType.OpenLoadout:
+                {
+                    var deckEntity = RunDeckService.EnsureRunDeck(entityManager);
+                    var deck = deckEntity?.GetComponent<Deck>();
+                    if (deck?.Cards != null)
+                    {
+                        EventManager.Publish(new OpenCardListModalEvent { Title = "Loadout", Cards = deck.Cards.ToList() });
+                    }
+                    break;
+                }
                 case UIElementEventType.CardClicked:
                 {
                     var payStateEntity = entityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();

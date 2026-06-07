@@ -25,7 +25,7 @@ namespace Crusaders30XX.ECS.Systems
 		private string _shopBackgroundAsset = string.Empty;
 
 		private ShopBackgroundDisplaySystem _shopBackgroundDisplaySystem;
-		private CustomizeButtonDisplaySystem _customizeButtonDisplaySystem;
+		private LoadoutButtonDisplaySystem _loadoutButtonDisplaySystem;
 		private ForSaleDisplaySystem _forSaleDisplaySystem;
 
 		public ShopSceneSystem(EntityManager em, SystemManager sm, World world, GraphicsDevice gd, SpriteBatch sb, ContentManager content) : base(em)
@@ -58,7 +58,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_world.RemoveSystem(_shopBackgroundDisplaySystem);
 				_world.RemoveSystem(_forSaleDisplaySystem);
-				_world.RemoveSystem(_customizeButtonDisplaySystem);
+				_world.RemoveSystem(_loadoutButtonDisplaySystem);
 				_firstLoad = true;
 			});
 		}
@@ -72,7 +72,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			FrameProfiler.Measure("ShopBackgroundDisplaySystem.Draw", _shopBackgroundDisplaySystem.Draw);
 			FrameProfiler.Measure("ForSaleDisplaySystem.Draw", _forSaleDisplaySystem.Draw);
-			FrameProfiler.Measure("CustomizeButtonDisplaySystem.Draw", _customizeButtonDisplaySystem.Draw);
+			FrameProfiler.Measure("LoadoutButtonDisplaySystem.Draw", _loadoutButtonDisplaySystem.Draw);
 		}
 
 		private void ApplyShopFromSaveIfNeeded()
@@ -101,8 +101,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_shopBackgroundDisplaySystem);
 			_forSaleDisplaySystem = new ForSaleDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_forSaleDisplaySystem);
-			_customizeButtonDisplaySystem = new CustomizeButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_world.AddSystem(_customizeButtonDisplaySystem);
+			_loadoutButtonDisplaySystem = new LoadoutButtonDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_world.AddSystem(_loadoutButtonDisplaySystem);
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
