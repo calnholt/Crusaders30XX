@@ -20,31 +20,31 @@ namespace Crusaders30XX.ECS.Systems
 		public const string PledgeEntityName = "UI_PlayerHudPledge";
 
 		[DebugEditable(DisplayName = "Portrait Gap", Step = 1, Min = -200, Max = 400)]
-		public int PortraitGap { get; set; } = 12;
+		public int PortraitGap { get; set; } = 4;
 
 		[DebugEditable(DisplayName = "Chip Height", Step = 1, Min = 20, Max = 120)]
-		public int ChipHeight { get; set; } = 44;
+		public int ChipHeight { get; set; } = 36;
 
 		[DebugEditable(DisplayName = "Chip Slant", Step = 1, Min = 0, Max = 60)]
 		public int Slant { get; set; } = 14;
 
 		[DebugEditable(DisplayName = "Chip Overlap", Step = 1, Min = 0, Max = 60)]
-		public int RegionOverlap { get; set; } = 13;
+		public int RegionOverlap { get; set; } = 14;
 
 		[DebugEditable(DisplayName = "HP Width Extension", Step = 1, Min = 0, Max = 80)]
-		public int HpWidthExtension { get; set; } = 6;
+		public int HpWidthExtension { get; set; } = 14;
 
 		[DebugEditable(DisplayName = "Courage Width", Step = 1, Min = 40, Max = 400)]
-		public int CourageWidth { get; set; } = 185;
+		public int CourageWidth { get; set; } = 110;
 
 		[DebugEditable(DisplayName = "Temperance Width", Step = 1, Min = 40, Max = 400)]
-		public int TemperanceWidth { get; set; } = 165;
+		public int TemperanceWidth { get; set; } = 144;
 
 		[DebugEditable(DisplayName = "Action Point Width", Step = 1, Min = 40, Max = 400)]
-		public int ActionPointWidth { get; set; } = 127;
+		public int ActionPointWidth { get; set; } = 85;
 
 		[DebugEditable(DisplayName = "Pledge Width", Step = 1, Min = 80, Max = 500)]
-		public int PledgeWidth { get; set; } = 280;
+		public int PledgeWidth { get; set; } = 262;
 
 		[DebugEditable(DisplayName = "Pledge Icon Size", Step = 1, Min = 8, Max = 100)]
 		public int PledgeIconSize { get; set; } = 36;
@@ -53,7 +53,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int ContentGap { get; set; } = 8;
 
 		[DebugEditable(DisplayName = "Label Letter Spacing", Step = 1, Min = 0, Max = 20)]
-		public int LabelLetterSpacing { get; set; } = 3;
+		public int LabelLetterSpacing { get; set; } = 2;
 
 		[DebugEditable(DisplayName = "Health Padding Left", Step = 1, Min = 0, Max = 80)]
 		public int HealthPaddingLeft { get; set; } = 14;
@@ -62,7 +62,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int HealthPaddingRight { get; set; } = 18;
 
 		[DebugEditable(DisplayName = "Health Padding Vertical", Step = 1, Min = 0, Max = 40)]
-		public int HealthPaddingVertical { get; set; } = 8;
+		public int HealthPaddingVertical { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Health Track Height", Step = 1, Min = 4, Max = 80)]
 		public int HealthTrackHeight { get; set; } = 26;
@@ -71,10 +71,10 @@ namespace Crusaders30XX.ECS.Systems
 		public int HealthTrackBorderThickness { get; set; } = 2;
 
 		[DebugEditable(DisplayName = "Courage Padding Left", Step = 1, Min = 0, Max = 80)]
-		public int CouragePaddingLeft { get; set; } = 14;
+		public int CouragePaddingLeft { get; set; } = 4;
 
 		[DebugEditable(DisplayName = "Courage Padding Right", Step = 1, Min = 0, Max = 80)]
-		public int CouragePaddingRight { get; set; } = 18;
+		public int CouragePaddingRight { get; set; } = 2;
 
 		[DebugEditable(DisplayName = "Temperance Padding Left", Step = 1, Min = 0, Max = 80)]
 		public int TemperancePaddingLeft { get; set; } = 14;
@@ -83,10 +83,10 @@ namespace Crusaders30XX.ECS.Systems
 		public int TemperancePaddingRight { get; set; } = 16;
 
 		[DebugEditable(DisplayName = "Action Point Padding Left", Step = 1, Min = 0, Max = 80)]
-		public int ActionPointPaddingLeft { get; set; } = 14;
+		public int ActionPointPaddingLeft { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Action Point Padding Right", Step = 1, Min = 0, Max = 80)]
-		public int ActionPointPaddingRight { get; set; } = 20;
+		public int ActionPointPaddingRight { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Pledge Padding Left", Step = 1, Min = 0, Max = 80)]
 		public int PledgePaddingLeft { get; set; } = 12;
@@ -101,16 +101,16 @@ namespace Crusaders30XX.ECS.Systems
 		public int PledgeContentGap { get; set; } = 10;
 
 		[DebugEditable(DisplayName = "Temperance Chunk Width", Step = 1, Min = 2, Max = 80)]
-		public int TemperanceChunkWidth { get; set; } = 16;
+		public int TemperanceChunkWidth { get; set; } = 17;
 
 		[DebugEditable(DisplayName = "Temperance Chunk Height", Step = 1, Min = 2, Max = 80)]
-		public int TemperanceChunkHeight { get; set; } = 22;
+		public int TemperanceChunkHeight { get; set; } = 26;
 
 		[DebugEditable(DisplayName = "Temperance Chunk Gap", Step = 1, Min = 0, Max = 40)]
-		public int TemperanceChunkGap { get; set; } = 2;
+		public int TemperanceChunkGap { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Label Font Scale", Step = 0.01f, Min = 0.01f, Max = 1f)]
-		public float LabelFontScale { get; set; } = 0.13f;
+		public float LabelFontScale { get; set; } = 0.1f;
 
 		[DebugEditable(DisplayName = "Value Font Scale", Step = 0.01f, Min = 0.01f, Max = 1f)]
 		public float ValueFontScale { get; set; } = 0.20f;
