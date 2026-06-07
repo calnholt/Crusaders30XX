@@ -381,23 +381,37 @@ namespace Crusaders30XX.ECS.Factories
             {
                 entityManager.AddComponent(entity, new ModifiedDamage { Modifications = new List<Modification>() });
             }
-            // Auto-generate tooltip from card text keywords
+            ConfigureCardTooltip(entityManager, entity, uiElement, card);
+            return entity;
+        }
+
+        private static void ConfigureCardTooltip(
+            EntityManager entityManager,
+            Entity entity,
+            UIElement uiElement,
+            CardBase card,
+            CardData.CardColor? cardColor = null)
+        {
+            if (uiElement == null || card == null) return;
+
             if (string.IsNullOrEmpty(card.Tooltip) && !string.IsNullOrEmpty(card.Text))
             {
-                card.Tooltip = card.Text;  // Setter will process keywords via TooltipTextService
+                card.Tooltip = card.Text;
             }
-            // Set tooltip from definition (precomputed in CardDefinitionCache)
-            if (!string.IsNullOrEmpty(card.Tooltip))
+
+            uiElement.Tooltip = card.Tooltip ?? string.Empty;
+            uiElement.TooltipType = TooltipType.Text;
+            uiElement.TooltipPosition = TooltipPosition.Above;
+            uiElement.TooltipOffsetPx = 30;
+
+            if (string.IsNullOrWhiteSpace(card.CardTooltip)) return;
+
+            entityManager.AddComponent(entity, new CardTooltip
             {
-                uiElement.Tooltip = card.Tooltip;
-            }
-            // Attach CardTooltip when data specifies a tooltip card, and mark UI tooltip type
-            if (!string.IsNullOrWhiteSpace(card.CardTooltip))
-            {
-                entityManager.AddComponent(entity, new CardTooltip { CardId = card.CardTooltip });
-                uiElement.TooltipType = TooltipType.Card;
-            }
-            return entity;
+                CardId = card.CardTooltip,
+                CardColor = cardColor,
+            });
+            uiElement.TooltipType = TooltipType.Card;
         }
 
         public static Entity CreateEnemyFromId(World world, string enemyId, EntityManager entityManager, EnemyDifficulty difficulty = EnemyDifficulty.Easy)
@@ -567,16 +581,25 @@ namespace Crusaders30XX.ECS.Factories
 				var e = entityManager.CreateEntity($"ShopItem_{id}_{idx}");
 				entityManager.AddComponent(e, new Transform { Position = new Vector2(-1000, -1000), ZOrder = 10002 });
 				entityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
-                var uiElement = new UIElement { Bounds = new Rectangle(-1000, -1000, 1, 1), IsInteractable = true };
-                if (itemType == ForSaleItemType.Medal)
+                var uiElement = new UIElement
+                {
+                    Bounds = new Rectangle(-1000, -1000, 1, 1),
+                    IsInteractable = true,
+                    TooltipPosition = TooltipPosition.Above,
+                };
+                if ((itemType == ForSaleItemType.Card || itemType == ForSaleItemType.Weapon) && card != null)
+                {
+                    ConfigureCardTooltip(entityManager, e, uiElement, card);
+                }
+                else if (itemType == ForSaleItemType.Medal)
                 {
                     var medal = MedalFactory.Create(id);
-                    uiElement.Tooltip = $"{medal.Text}";
+                    uiElement.Tooltip = medal == null ? string.Empty : $"{medal.Name}\n\n{medal.Text}";
                 }
                 else if (itemType == ForSaleItemType.Equipment)
                 {
                     var equipment = EquipmentFactory.Create(id);
-                    uiElement.Tooltip = EquipmentService.GetTooltipText(equipment, EquipmentTooltipType.Shop);
+                    uiElement.Tooltip = EquipmentService.GetTooltipText(equipment);
                 }
 				// Always attach UIElement for hover/click regardless of item type
 				entityManager.AddComponent(e, uiElement);
@@ -626,7 +649,8 @@ namespace Crusaders30XX.ECS.Factories
 					{
 						Bounds = new Rectangle(-1000, -1000, 1, 1),
 						IsInteractable = !item.isPurchased,
-						Tooltip = medal?.Text ?? string.Empty,
+						Tooltip = medal == null ? string.Empty : $"{medal.Name}\n\n{medal.Text}",
+						TooltipPosition = TooltipPosition.Above,
 					};
 					entityManager.AddComponent(e, new ForSaleItem
 					{
@@ -656,8 +680,9 @@ namespace Crusaders30XX.ECS.Factories
 					{
 						Bounds = new Rectangle(-1000, -1000, 1, 1),
 						IsInteractable = !item.isPurchased,
-						TooltipType = TooltipType.Card,
+						TooltipPosition = TooltipPosition.Above,
 					};
+					ConfigureCardTooltip(entityManager, e, uiElement, card, color);
 					entityManager.AddComponent(e, new ForSaleItem
 					{
 						Id = id,
@@ -671,7 +696,6 @@ namespace Crusaders30XX.ECS.Factories
 						CardColor = color,
 						DisplayRotationDeg = item.displayRotationDeg,
 					});
-					entityManager.AddComponent(e, new CardTooltip { CardId = id, TooltipScale = 0.8f, CardColor = color });
 					entityManager.AddComponent(e, uiElement);
 				}
 

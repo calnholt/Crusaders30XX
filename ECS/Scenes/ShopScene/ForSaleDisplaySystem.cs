@@ -456,13 +456,10 @@ namespace Crusaders30XX.ECS.Systems
 			string key = $"{cardId}|{color}";
 			if (_cardPreviewCache.TryGetValue(key, out var existing) && existing != null)
 			{
-				// Ensure preview cards are not interactive in the shop grid
 				var uiExisting = existing.GetComponent<UIElement>();
 				if (uiExisting != null)
 				{
 					uiExisting.IsInteractable = false;
-					uiExisting.TooltipType = TooltipType.None;
-					uiExisting.Tooltip = string.Empty;
 				}
 				return existing;
 			}
@@ -470,13 +467,10 @@ namespace Crusaders30XX.ECS.Systems
 			if (created != null)
 			{
 				_cardPreviewCache[key] = created;
-				// Ensure preview cards are not interactive in the shop grid
 				var ui = created.GetComponent<UIElement>();
 				if (ui != null)
 				{
 					ui.IsInteractable = false;
-					ui.TooltipType = TooltipType.None;
-					ui.Tooltip = string.Empty;
 				}
 			}
 			return created;
@@ -513,7 +507,6 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 
 
 
