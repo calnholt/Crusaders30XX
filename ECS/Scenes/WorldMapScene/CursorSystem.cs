@@ -187,7 +187,7 @@ namespace Crusaders30XX.ECS.Systems
 							var ui2 = e2.GetComponent<UIElement>();
 							var t2 = e2.GetComponent<Transform>();
 							if (ui2 == null || !ui2.IsInteractable || ui2.IsHidden) continue;
-							var bounds2 = ui2.Bounds;
+							var bounds2 = ResolveUIBounds(e2, ui2);
 							if (bounds2.Width < 2 || bounds2.Height < 2) continue;
 							maxCoverage = Math.Max(maxCoverage, EstimateCircleRectCoverage(bounds2, _cursorPosition, r, t2?.Rotation ?? 0f));
 						}
@@ -217,7 +217,21 @@ namespace Crusaders30XX.ECS.Systems
 					int rHitbox = Math.Max(0, HitboxRadius);
 					var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
 						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && !x.UI.IsHidden && (x.UI.IsInteractable || !string.IsNullOrWhiteSpace(x.UI.Tooltip) || x.UI.TooltipType == TooltipType.Card) && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox, x.T?.Rotation ?? 0f) > 0f)
+						.Where(x =>
+						{
+							if (x.UI == null || x.UI.IsHidden
+								|| (!x.UI.IsInteractable
+									&& string.IsNullOrWhiteSpace(x.UI.Tooltip)
+									&& x.UI.TooltipType != TooltipType.Card))
+							{
+								return false;
+							}
+
+							Rectangle bounds = ResolveUIBounds(x.E, x.UI);
+							return bounds.Width >= 2
+								&& bounds.Height >= 2
+								&& EstimateCircleRectCoverage(bounds, _cursorPosition, rHitbox, x.T?.Rotation ?? 0f) > 0f;
+						})
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
 					Entity hoveredEntityForRumble = null;
@@ -235,7 +249,11 @@ namespace Crusaders30XX.ECS.Systems
 								GamePad.SetVibration(PlayerIndex.One, MathHelper.Clamp(RumbleLow, 0f, 1f), MathHelper.Clamp(RumbleHigh, 0f, 1f));
 							}
 						}
-						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius), tc.T?.Rotation ?? 0f);
+						coverageForTop = EstimateCircleRectCoverage(
+							ResolveUIBounds(tc.E, tc.UI),
+							_cursorPosition,
+							Math.Max(0, HitboxRadius),
+							tc.T?.Rotation ?? 0f);
 					}
 					// Cross animation: shrink slightly on entering a new interactable hover, ease back otherwise
 					Entity currentInteractable = (tc != null && tc.UI != null && tc.UI.IsInteractable && !tc.UI.IsHidden) ? tc.E : null;
@@ -270,19 +288,27 @@ namespace Crusaders30XX.ECS.Systems
 					int rHitboxClick = Math.Max(0, HitboxRadius);
 					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()
 						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && !x.UI.IsHidden && x.UI.IsInteractable && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick, x.T?.Rotation ?? 0f) > 0f)
+						.Where(x =>
+						{
+							if (x.UI == null || x.UI.IsHidden || !x.UI.IsInteractable) return false;
+							Rectangle bounds = ResolveUIBounds(x.E, x.UI);
+							return bounds.Width >= 2
+								&& bounds.Height >= 2
+								&& EstimateCircleRectCoverage(bounds, _cursorPosition, rHitboxClick, x.T?.Rotation ?? 0f) > 0f;
+						})
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
 					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
 					{
 						_lastClickedEntity = clickCandidate.E;
+						Rectangle clickBounds = ResolveUIBounds(clickCandidate.E, clickCandidate.UI);
 						var clickLog = new JsonObject {
 							["entityId"] = clickCandidate.E.Id,
 							["source"] = "Gamepad",
 							["uiElement"] = new JsonObject {
 								["isInteractable"] = clickCandidate.UI.IsInteractable,
 								["isHidden"] = clickCandidate.UI.IsHidden,
-								["bounds"] = $"x:{clickCandidate.UI.Bounds.X} y:{clickCandidate.UI.Bounds.Y} w:{clickCandidate.UI.Bounds.Width} h:{clickCandidate.UI.Bounds.Height}",
+								["bounds"] = $"x:{clickBounds.X} y:{clickBounds.Y} w:{clickBounds.Width} h:{clickBounds.Height}",
 								["tooltipType"] = clickCandidate.UI.TooltipType.ToString(),
 								["eventType"] = clickCandidate.UI.EventType.ToString(),
 								["isClicked"] = clickCandidate.UI.IsClicked,
@@ -357,14 +383,25 @@ namespace Crusaders30XX.ECS.Systems
 					int rHitbox = Math.Max(0, HitboxRadius);
 					var tc = EntityManager.GetEntitiesWithComponent<UIElement>()
 						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitbox, x.T?.Rotation ?? 0f) > 0f)
+						.Where(x =>
+						{
+							if (x.UI == null) return false;
+							Rectangle bounds = ResolveUIBounds(x.E, x.UI);
+							return bounds.Width >= 2
+								&& bounds.Height >= 2
+								&& EstimateCircleRectCoverage(bounds, _cursorPosition, rHitbox, x.T?.Rotation ?? 0f) > 0f;
+						})
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
 					if (tc != null)
 					{
 						tc.UI.IsHovered = true;
 						_lastHoveredEntity = tc.E;
-						coverageForTop = EstimateCircleRectCoverage(tc.UI.Bounds, _cursorPosition, Math.Max(0, HitboxRadius), tc.T?.Rotation ?? 0f);
+						coverageForTop = EstimateCircleRectCoverage(
+							ResolveUIBounds(tc.E, tc.UI),
+							_cursorPosition,
+							Math.Max(0, HitboxRadius),
+							tc.T?.Rotation ?? 0f);
 					}
 					// Cross animation: shrink slightly on entering a new interactable hover, ease back otherwise
 					Entity currentInteractable = (tc != null && tc.UI != null && tc.UI.IsInteractable && !tc.UI.IsHidden) ? tc.E : null;
@@ -400,7 +437,14 @@ namespace Crusaders30XX.ECS.Systems
 					int rHitboxClick = Math.Max(0, HitboxRadius);
 					var clickCandidate = EntityManager.GetEntitiesWithComponent<UIElement>()
 						.Select(e2 => new { E = e2, UI = e2.GetComponent<UIElement>(), T = e2.GetComponent<Transform>() })
-						.Where(x => x.UI != null && x.UI.Bounds.Width >= 2 && x.UI.Bounds.Height >= 2 && EstimateCircleRectCoverage(x.UI.Bounds, _cursorPosition, rHitboxClick, x.T?.Rotation ?? 0f) > 0f)
+						.Where(x =>
+						{
+							if (x.UI == null) return false;
+							Rectangle bounds = ResolveUIBounds(x.E, x.UI);
+							return bounds.Width >= 2
+								&& bounds.Height >= 2
+								&& EstimateCircleRectCoverage(bounds, _cursorPosition, rHitboxClick, x.T?.Rotation ?? 0f) > 0f;
+						})
 						.OrderByDescending(x => x.T?.ZOrder ?? 0)
 						.FirstOrDefault();
 					if (clickCandidate != null && !clickCandidate.UI.IsPreventDefaultClick && !clickCandidate.UI.IsHidden)
@@ -475,6 +519,11 @@ namespace Crusaders30XX.ECS.Systems
 				float scale = baseFit * MathHelper.Clamp(CrossScale, 0.25f, 3f) * _crossScaleCurrent;
 				_spriteBatch.Draw(_cursorCross, _cursorPosition, null, whiteWithAlpha, 0f, origin, scale, SpriteEffects.None, 0f);
 			}
+		}
+
+		private Rectangle ResolveUIBounds(Entity entity, UIElement uiElement)
+		{
+			return TransformResolverService.ResolveUIBounds(EntityManager, entity, uiElement);
 		}
 
 		private static float EstimateCircleRectCoverage(Rectangle rect, Vector2 center, int radius, float rotation = 0f)

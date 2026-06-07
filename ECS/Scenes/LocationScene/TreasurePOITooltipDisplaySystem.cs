@@ -122,7 +122,7 @@ namespace Crusaders30XX.ECS.Systems
 			var size = _font.MeasureString(tooltipTitle) * TextScale;
 			int width = (int)System.Math.Ceiling(size.X) + pad * 2 + System.Math.Max(0, LeftSideOffset);
 			int height = System.Math.Max(24, TrapezoidHeight);
-			var r = hovered.UI.Bounds;
+			var r = TransformResolverService.ResolveUIBounds(EntityManager, hovered.E, hovered.UI);
 			int viewportW = Game1.VirtualWidth;
 			int viewportH = Game1.VirtualHeight;
 

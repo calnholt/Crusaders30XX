@@ -103,7 +103,8 @@ namespace Crusaders30XX.ECS.Systems
                 var underMouse = uiEntities
                     .Where(x =>
                     {
-                        if (x.UI.Bounds.Width < 2 || x.UI.Bounds.Height < 2) return false;
+                        Rectangle bounds = TransformResolverService.ResolveUIBounds(EntityManager, x.E, x.UI);
+                        if (bounds.Width < 2 || bounds.Height < 2) return false;
                         return IsUnderMouse(x, pointerPoint);
                     })
                     .OrderByDescending(x => x.T?.ZOrder ?? 0)
@@ -135,11 +136,12 @@ namespace Crusaders30XX.ECS.Systems
                     diagLog["cursorTopInUiEntities"] = uiEntities.Any(x => x.E == cursorTop);
                     if (cursorTopUI != null)
                     {
+                        Rectangle bounds = TransformResolverService.ResolveUIBounds(EntityManager, cursorTop, cursorTopUI);
                         diagLog["isInteractable"] = cursorTopUI.IsInteractable;
                         diagLog["isHidden"] = cursorTopUI.IsHidden;
                         diagLog["eventType"] = cursorTopUI.EventType.ToString();
                         diagLog["suppressCount"] = cursorTopUI.SuppressCount;
-                        diagLog["bounds"] = $"x:{cursorTopUI.Bounds.X} y:{cursorTopUI.Bounds.Y} w:{cursorTopUI.Bounds.Width} h:{cursorTopUI.Bounds.Height}";
+                        diagLog["bounds"] = $"x:{bounds.X} y:{bounds.Y} w:{bounds.Width} h:{bounds.Height}";
                     }
                     else
                     {
@@ -207,18 +209,20 @@ namespace Crusaders30XX.ECS.Systems
 
         private bool IsUnderMouse(dynamic x, Point mousePosition)
         {
+			var entity = x.E as Entity;
+			var ui = x.UI as UIElement;
+			if (entity == null || ui == null) return false;
+			Rectangle resolvedBounds = TransformResolverService.ResolveUIBounds(EntityManager, entity, ui);
+
 			if (!x.IsCard)
 			{
 				// Fallback to AABB for non-card UI
-				return x.UI.Bounds.Contains(mousePosition);
+				return resolvedBounds.Contains(mousePosition);
 			}
 
 			// Rotated-rect hit test for cards using UI bounds (already scaled/positioned)
 			var transform = x.T as Transform;
-			var ui = x.UI as UIElement;
-			if (ui == null) return false;
-
-			var r = ui.Bounds;
+			var r = resolvedBounds;
 			if (r.Width < 2 || r.Height < 2) return false;
 
 			Vector2 center = new Vector2(r.X + r.Width / 2f, r.Y + r.Height / 2f);

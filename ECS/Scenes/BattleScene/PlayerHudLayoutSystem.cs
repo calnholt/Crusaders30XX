@@ -31,6 +31,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Chip Overlap", Step = 1, Min = 0, Max = 60)]
 		public int RegionOverlap { get; set; } = 14;
 
+		[DebugEditable(DisplayName = "Row Overlap", Step = 1, Min = 0, Max = 10)]
+		public int RowOverlap { get; set; } = 1;
+
 		[DebugEditable(DisplayName = "HP Width Extension", Step = 1, Min = 0, Max = 80)]
 		public int HpWidthExtension { get; set; } = 14;
 
@@ -101,19 +104,19 @@ namespace Crusaders30XX.ECS.Systems
 		public int PledgeContentGap { get; set; } = 10;
 
 		[DebugEditable(DisplayName = "Temperance Chunk Width", Step = 1, Min = 2, Max = 80)]
-		public int TemperanceChunkWidth { get; set; } = 17;
+		public int TemperanceChunkWidth { get; set; } = 21;
 
 		[DebugEditable(DisplayName = "Temperance Chunk Height", Step = 1, Min = 2, Max = 80)]
 		public int TemperanceChunkHeight { get; set; } = 26;
 
-		[DebugEditable(DisplayName = "Temperance Chunk Gap", Step = 1, Min = 0, Max = 40)]
-		public int TemperanceChunkGap { get; set; } = 0;
+		[DebugEditable(DisplayName = "Temperance Chunk Gap", Step = 1, Min = -20, Max = 40)]
+		public int TemperanceChunkGap { get; set; } = -8;
 
 		[DebugEditable(DisplayName = "Label Font Scale", Step = 0.01f, Min = 0.01f, Max = 1f)]
 		public float LabelFontScale { get; set; } = 0.1f;
 
 		[DebugEditable(DisplayName = "Value Font Scale", Step = 0.01f, Min = 0.01f, Max = 1f)]
-		public float ValueFontScale { get; set; } = 0.20f;
+		public float ValueFontScale { get; set; } = 0.2f;
 
 		[DebugEditable(DisplayName = "HUD Red R", Step = 1, Min = 0, Max = 255)]
 		public int HudRedR { get; set; } = 196;
@@ -128,7 +131,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int HudBlackValue { get; set; } = 10;
 
 		[DebugEditable(DisplayName = "Courage Inset Shadow Height", Step = 1, Min = 0, Max = 20)]
-		public int CourageInsetShadowHeight { get; set; } = 4;
+		public int CourageInsetShadowHeight { get; set; } = 0;
 
 		[DebugEditable(DisplayName = "Courage Inset Shadow Alpha", Step = 1, Min = 0, Max = 255)]
 		public int CourageInsetShadowAlpha { get; set; } = 64;
@@ -193,27 +196,36 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void EnsureHudEntities()
 		{
-			EnsureRegion(PlayerHudRegionType.Root, RootEntityName, false, string.Empty, false);
-			EnsureRegion(PlayerHudRegionType.Health, HealthEntityName, false, string.Empty, false);
+			var root = EnsureRegion(
+				PlayerHudRegionType.Root,
+				RootEntityName,
+				false,
+				string.Empty,
+				false,
+				null);
+			EnsureRegion(PlayerHudRegionType.Health, HealthEntityName, false, string.Empty, false, root);
 			EnsureRegion(
 				PlayerHudRegionType.Courage,
 				CourageEntityName,
 				true,
 				"Courage\n\nBlocking with red cards increases your courage by 1.",
-				true);
+				true,
+				root);
 			EnsureRegion(
 				PlayerHudRegionType.Temperance,
 				TemperanceEntityName,
 				true,
 				"Temperance",
-				true);
+				true,
+				root);
 			EnsureRegion(
 				PlayerHudRegionType.ActionPoint,
 				ActionPointEntityName,
 				true,
 				"Action Points",
-				true);
-			EnsureRegion(PlayerHudRegionType.Pledge, PledgeEntityName, false, string.Empty, false);
+				true,
+				root);
+			EnsureRegion(PlayerHudRegionType.Pledge, PledgeEntityName, false, string.Empty, false, root);
 		}
 
 		private Entity EnsureRegion(
@@ -221,7 +233,8 @@ namespace Crusaders30XX.ECS.Systems
 			string name,
 			bool interactable,
 			string tooltip,
-			bool hasFeedback)
+			bool hasFeedback,
+			Entity parent)
 		{
 			var matching = EntityManager.GetEntitiesWithComponent<PlayerHudRegion>()
 				.Where(entity => entity.GetComponent<PlayerHudRegion>()?.Type == type)
@@ -237,14 +250,57 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				entity = EntityManager.CreateEntity(name);
 				EntityManager.AddComponent(entity, new PlayerHudRegion { Type = type });
+			}
+			if (!entity.HasComponent<Transform>())
+			{
 				EntityManager.AddComponent(entity, new Transform());
+			}
+			if (!entity.HasComponent<UIElement>())
+			{
 				EntityManager.AddComponent(entity, new UIElement());
 			}
 
 			entity.Name = name;
-			if (type == PlayerHudRegionType.Root && !entity.HasComponent<PlayerHudAnchor>())
+			if (type == PlayerHudRegionType.Root)
 			{
-				EntityManager.AddComponent(entity, new PlayerHudAnchor());
+				if (!entity.HasComponent<PlayerHudAnchor>())
+				{
+					EntityManager.AddComponent(entity, new PlayerHudAnchor());
+				}
+				if (entity.HasComponent<ParentTransform>())
+				{
+					EntityManager.RemoveComponent<ParentTransform>(entity);
+				}
+
+				var defaultParallax = ParallaxLayer.GetUIParallaxLayer();
+				var parallax = entity.GetComponent<ParallaxLayer>();
+				if (parallax == null)
+				{
+					EntityManager.AddComponent(entity, defaultParallax);
+				}
+				else
+				{
+					parallax.MultiplierX = defaultParallax.MultiplierX;
+					parallax.MultiplierY = defaultParallax.MultiplierY;
+					parallax.MaxOffset = defaultParallax.MaxOffset;
+					parallax.SmoothTime = defaultParallax.SmoothTime;
+				}
+			}
+			else
+			{
+				var parentTransform = entity.GetComponent<ParentTransform>();
+				if (parentTransform == null)
+				{
+					EntityManager.AddComponent(entity, new ParentTransform { Parent = parent });
+				}
+				else
+				{
+					parentTransform.Parent = parent;
+				}
+				if (entity.HasComponent<ParallaxLayer>())
+				{
+					EntityManager.RemoveComponent<ParallaxLayer>(entity);
+				}
 			}
 			if (hasFeedback && !entity.HasComponent<PlayerHudFeedbackState>())
 			{
@@ -287,29 +343,55 @@ namespace Crusaders30XX.ECS.Systems
 
 			int chipHeight = Math.Max(1, ChipHeight);
 			int overlap = Math.Max(0, RegionOverlap);
+			int rowOverlap = Math.Clamp(RowOverlap, 0, chipHeight - 1);
 			int resourceWidth = Math.Max(1,
 				CourageWidth + TemperanceWidth + ActionPointWidth + PledgeWidth - overlap * 3);
 			int rootWidth = resourceWidth + Math.Max(0, HpWidthExtension);
 			int rootX = (int)Math.Round(playerTransform.Position.X - rootWidth / 2f);
 			int rootY = portraitBounds.Bottom + PortraitGap;
-			var rootBounds = new Rectangle(rootX, rootY, rootWidth, chipHeight * 2);
-			var resourceRow = new Rectangle(rootX, rootY + chipHeight, resourceWidth, chipHeight);
+			var rootBounds = new Rectangle(0, 0, rootWidth, chipHeight * 2 - rowOverlap);
+			var resourceRow = new Rectangle(0, chipHeight - rowOverlap, resourceWidth, chipHeight);
 			var healthRow = new Rectangle(
-				rootX + Math.Max(0, Slant),
-				rootY,
+				Math.Max(0, Slant),
+				0,
 				Math.Max(1, resourceWidth - Math.Max(0, Slant) + Math.Max(0, HpWidthExtension)),
 				chipHeight);
 
 			int x = resourceRow.X;
-			SetRegionBounds(PlayerHudRegionType.Courage, new Rectangle(x, resourceRow.Y, CourageWidth, chipHeight), true);
+			SetRegionBounds(
+				PlayerHudRegionType.Courage,
+				new Rectangle(0, 0, CourageWidth, chipHeight),
+				new Vector2(x, resourceRow.Y),
+				true);
 			x += CourageWidth - overlap;
-			SetRegionBounds(PlayerHudRegionType.Temperance, new Rectangle(x, resourceRow.Y, TemperanceWidth, chipHeight), true);
+			SetRegionBounds(
+				PlayerHudRegionType.Temperance,
+				new Rectangle(0, 0, TemperanceWidth, chipHeight),
+				new Vector2(x, resourceRow.Y),
+				true);
 			x += TemperanceWidth - overlap;
-			SetRegionBounds(PlayerHudRegionType.ActionPoint, new Rectangle(x, resourceRow.Y, ActionPointWidth, chipHeight), true);
+			SetRegionBounds(
+				PlayerHudRegionType.ActionPoint,
+				new Rectangle(0, 0, ActionPointWidth, chipHeight),
+				new Vector2(x, resourceRow.Y),
+				true);
 			x += ActionPointWidth - overlap;
-			SetRegionBounds(PlayerHudRegionType.Pledge, new Rectangle(x, resourceRow.Y, PledgeWidth, chipHeight), true);
-			SetRegionBounds(PlayerHudRegionType.Health, healthRow, true);
-			SetRegionBounds(PlayerHudRegionType.Root, rootBounds, true);
+			SetRegionBounds(
+				PlayerHudRegionType.Pledge,
+				new Rectangle(0, 0, PledgeWidth, chipHeight),
+				new Vector2(x, resourceRow.Y),
+				true);
+			SetRegionBounds(
+				PlayerHudRegionType.Health,
+				new Rectangle(0, 0, healthRow.Width, healthRow.Height),
+				new Vector2(healthRow.X, healthRow.Y),
+				true);
+			SetRegionBounds(
+				PlayerHudRegionType.Root,
+				rootBounds,
+				new Vector2(rootX, rootY),
+				true,
+				new Rectangle(rootX, rootY, rootWidth, chipHeight * 2 - rowOverlap));
 
 			var anchor = root.GetComponent<PlayerHudAnchor>();
 			anchor.Bounds = rootBounds;
@@ -340,7 +422,7 @@ namespace Crusaders30XX.ECS.Systems
 			anchor.PledgeContentGap = Math.Max(0, PledgeContentGap);
 			anchor.TemperanceChunkWidth = Math.Max(1, TemperanceChunkWidth);
 			anchor.TemperanceChunkHeight = Math.Max(1, TemperanceChunkHeight);
-			anchor.TemperanceChunkGap = Math.Max(0, TemperanceChunkGap);
+			anchor.TemperanceChunkGap = TemperanceChunkGap;
 			anchor.HudRed = new Color(ClampByte(HudRedR), ClampByte(HudRedG), ClampByte(HudRedB));
 			byte black = ClampByte(HudBlackValue);
 			anchor.HudBlack = new Color(black, black, black);
@@ -358,7 +440,12 @@ namespace Crusaders30XX.ECS.Systems
 			anchor.ResourcePulseMaxScale = Math.Max(1f, ResourcePulseMaxScale);
 		}
 
-		private void SetRegionBounds(PlayerHudRegionType type, Rectangle bounds, bool inScope)
+		private void SetRegionBounds(
+			PlayerHudRegionType type,
+			Rectangle bounds,
+			Vector2 position,
+			bool inScope,
+			Rectangle? uiBounds = null)
 		{
 			var entity = GetRegionEntity(type);
 			if (entity == null) return;
@@ -366,10 +453,10 @@ namespace Crusaders30XX.ECS.Systems
 			var transform = entity.GetComponent<Transform>();
 			var ui = entity.GetComponent<UIElement>();
 			region.Bounds = bounds;
-			transform.Position = new Vector2(bounds.X, bounds.Y);
+			transform.Position = position;
 			transform.Rotation = 0f;
 			transform.Scale = Vector2.One;
-			ui.Bounds = bounds;
+			ui.Bounds = uiBounds ?? bounds;
 			ui.IsHidden = !inScope;
 			if (!inScope)
 			{
@@ -382,7 +469,11 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			foreach (var entity in EntityManager.GetEntitiesWithComponent<PlayerHudRegion>().ToList())
 			{
-				SetRegionBounds(entity.GetComponent<PlayerHudRegion>().Type, Rectangle.Empty, false);
+				SetRegionBounds(
+					entity.GetComponent<PlayerHudRegion>().Type,
+					Rectangle.Empty,
+					Vector2.Zero,
+					false);
 			}
 		}
 

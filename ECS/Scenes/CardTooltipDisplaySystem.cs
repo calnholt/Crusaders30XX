@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Services;
 using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
@@ -60,26 +61,27 @@ namespace Crusaders30XX.ECS.Systems
 			int w = (int)System.Math.Round(_settings.CardWidth * top.CT.TooltipScale);
 			int h = (int)System.Math.Round(_settings.CardHeight * top.CT.TooltipScale);
 			int gap = GapOverride > 0 ? GapOverride : System.Math.Max(0, top.UI.TooltipOffsetPx);
+			Rectangle anchorBounds = TransformResolverService.ResolveUIBounds(EntityManager, top.E, top.UI);
 
-			int rx = top.UI.Bounds.X;
-			int ry = top.UI.Bounds.Y;
+			int rx = anchorBounds.X;
+			int ry = anchorBounds.Y;
 			switch (top.UI.TooltipPosition)
 			{
 				case TooltipPosition.Above:
-					rx = top.UI.Bounds.X + (top.UI.Bounds.Width - w) / 2;
-					ry = top.UI.Bounds.Y - h - gap;
+					rx = anchorBounds.X + (anchorBounds.Width - w) / 2;
+					ry = anchorBounds.Y - h - gap;
 					break;
 				case TooltipPosition.Below:
-					rx = top.UI.Bounds.X + (top.UI.Bounds.Width - w) / 2;
-					ry = top.UI.Bounds.Bottom + gap;
+					rx = anchorBounds.X + (anchorBounds.Width - w) / 2;
+					ry = anchorBounds.Bottom + gap;
 					break;
 				case TooltipPosition.Right:
-					rx = top.UI.Bounds.Right + gap;
-					ry = top.UI.Bounds.Y + (top.UI.Bounds.Height - h) / 2;
+					rx = anchorBounds.Right + gap;
+					ry = anchorBounds.Y + (anchorBounds.Height - h) / 2;
 					break;
 				case TooltipPosition.Left:
-					rx = top.UI.Bounds.X - w - gap;
-					ry = top.UI.Bounds.Y + (top.UI.Bounds.Height - h) / 2;
+					rx = anchorBounds.X - w - gap;
+					ry = anchorBounds.Y + (anchorBounds.Height - h) / 2;
 					break;
 			}
 
@@ -117,7 +119,6 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 
 
 

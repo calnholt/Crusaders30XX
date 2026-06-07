@@ -87,6 +87,7 @@ namespace Crusaders30XX.ECS.Systems
 				PlayerHudRegionType.ActionPoint,
 				out var anchor,
 				out var region,
+				out var regionBounds,
 				out var feedback,
 				out var player))
 			{
@@ -98,7 +99,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			float pulseScale = Math.Max(0.01f, feedback?.Scale ?? 1f);
 			return new PlayerHudResourceRenderState(
-				PlayerHudResourceDisplayHelper.ScaleAroundCenter(region.Bounds, pulseScale),
+				PlayerHudResourceDisplayHelper.ScaleAroundCenter(regionBounds, pulseScale),
 				pulseScale,
 				Math.Max(0, (int)Math.Round(anchor.Slant * pulseScale)),
 				Label,

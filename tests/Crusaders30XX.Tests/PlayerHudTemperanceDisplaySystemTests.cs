@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Systems;
 using Microsoft.Xna.Framework;
 using Xunit;
@@ -43,6 +44,7 @@ public class PlayerHudTemperanceDisplaySystemTests : IDisposable
 		player.GetComponent<EquippedTemperanceAbility>().AbilityId = "angelic_aura";
 		var regionEntity = GetRegionEntity(entityManager);
 		Rectangle bounds = regionEntity.GetComponent<PlayerHudRegion>().Bounds;
+		Rectangle worldBounds = TransformResolverService.ResolveLocalBounds(entityManager, regionEntity, bounds);
 		Vector2 position = regionEntity.GetComponent<Transform>().Position;
 		regionEntity.GetComponent<PlayerHudFeedbackState>().Scale = 1.25f;
 		var system = new PlayerHudTemperanceDisplaySystem(entityManager, null, null);
@@ -52,7 +54,7 @@ public class PlayerHudTemperanceDisplaySystemTests : IDisposable
 		Assert.Equal(3, state.Threshold);
 		Assert.Equal(2, state.FilledChunks);
 		Assert.Equal(1.25f, state.PulseScale);
-		Assert.Equal(bounds.Center, state.Bounds.Center);
+		Assert.Equal(worldBounds.Center, state.Bounds.Center);
 		Assert.Equal(bounds, regionEntity.GetComponent<PlayerHudRegion>().Bounds);
 		Assert.Equal(position, regionEntity.GetComponent<Transform>().Position);
 	}

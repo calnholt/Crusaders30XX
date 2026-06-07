@@ -207,16 +207,19 @@ namespace Crusaders30XX.ECS.Systems
 
 		internal Vector2? ResolveCourageAnchor(Entity player)
 		{
-			var courageRegion = EntityManager.GetEntitiesWithComponent<PlayerHudRegion>()
-				.Select(entity => entity.GetComponent<PlayerHudRegion>())
-				.FirstOrDefault(region => region?.Type == PlayerHudRegionType.Courage);
+			var courageRegionEntity = EntityManager.GetEntitiesWithComponent<PlayerHudRegion>()
+				.FirstOrDefault(entity => entity.GetComponent<PlayerHudRegion>()?.Type == PlayerHudRegionType.Courage);
+			var courageRegion = courageRegionEntity?.GetComponent<PlayerHudRegion>();
+			Rectangle bounds = courageRegionEntity == null || courageRegion == null
+				? Rectangle.Empty
+				: TransformResolverService.ResolveLocalBounds(EntityManager, courageRegionEntity, courageRegion.Bounds);
 			if (courageRegion != null
-				&& courageRegion.Bounds.Width > 0
-				&& courageRegion.Bounds.Height > 0)
+				&& bounds.Width > 0
+				&& bounds.Height > 0)
 			{
 				return new Vector2(
-					courageRegion.Bounds.Right,
-					courageRegion.Bounds.Center.Y);
+					bounds.Right,
+					bounds.Center.Y);
 			}
 
 			return player?.GetComponent<Transform>()?.Position;

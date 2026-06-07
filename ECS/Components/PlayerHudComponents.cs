@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Components
 
 	/// <summary>
 	/// Stable battle HUD anchor and shared visual settings published by PlayerHudLayoutSystem.
-	/// Bounds include the permanently reserved pledge region.
+	/// Bounds are local to the HUD root and include the permanently reserved pledge region.
 	/// </summary>
 	public class PlayerHudAnchor : IComponent
 	{

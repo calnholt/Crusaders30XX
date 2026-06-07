@@ -5,6 +5,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -233,15 +234,20 @@ namespace Crusaders30XX.ECS.Systems
 			var hp = player?.GetComponent<HP>();
 			var root = EntityManager.GetEntitiesWithComponent<PlayerHudAnchor>().FirstOrDefault();
 			var anchor = root?.GetComponent<PlayerHudAnchor>();
-			var healthRegion = GetHealthRegion();
-			var font = FontSingleton.ContentFont;
+			var healthRegionEntity = GetHealthRegionEntity();
+			var healthRegion = healthRegionEntity?.GetComponent<PlayerHudRegion>();
+			Rectangle healthBounds = healthRegionEntity == null || healthRegion == null
+				? Rectangle.Empty
+				: TransformResolverService.ResolveLocalBounds(EntityManager, healthRegionEntity, healthRegion.Bounds);
+			var font = FontSingleton.ChakraPetchFont;
 			if (player == null
 				|| hp == null
 				|| anchor == null
 				|| healthRegion == null
+				|| font == null
 				|| !healthRegion.IsVisible
-				|| healthRegion.Bounds.Width <= 0
-				|| healthRegion.Bounds.Height <= 0)
+				|| healthBounds.Width <= 0
+				|| healthBounds.Height <= 0)
 			{
 				return;
 			}
@@ -261,16 +267,16 @@ namespace Crusaders30XX.ECS.Systems
 				incomingDamage,
 				LowHealthThresholdPercent);
 
-			DrawParallelogram(healthRegion.Bounds, anchor.Slant, anchor.HudBlack);
+			DrawParallelogram(healthBounds, anchor.Slant, anchor.HudBlack);
 
 			float labelWidth = MeasureSpacedText(font, "HP", anchor.LabelFontScale, anchor.LabelLetterSpacing).X;
 			var trackBounds = PlayerHudHealthRendering.CalculateTrackBounds(
-				healthRegion.Bounds,
+				healthBounds,
 				anchor,
 				labelWidth);
 			if (trackBounds.Width <= 0 || trackBounds.Height <= 0) return;
 
-			DrawHealthLabel(font, healthRegion.Bounds, anchor);
+			DrawHealthLabel(font, healthBounds, anchor);
 			DrawTrack(trackBounds, anchor, renderState);
 			DrawFraction(font, trackBounds, anchor, renderState.FractionText);
 		}
@@ -295,7 +301,11 @@ namespace Crusaders30XX.ECS.Systems
 			var anchor = EntityManager.GetEntitiesWithComponent<PlayerHudAnchor>()
 				.FirstOrDefault()
 				?.GetComponent<PlayerHudAnchor>();
-			var healthRegion = GetHealthRegion();
+			var healthRegionEntity = GetHealthRegionEntity();
+			var healthRegion = healthRegionEntity?.GetComponent<PlayerHudRegion>();
+			Rectangle healthBounds = healthRegionEntity == null || healthRegion == null
+				? Rectangle.Empty
+				: TransformResolverService.ResolveLocalBounds(EntityManager, healthRegionEntity, healthRegion.Bounds);
 			var hpBarAnchor = player.GetComponent<HPBarAnchor>();
 			if (hpBarAnchor == null)
 			{
@@ -306,26 +316,31 @@ namespace Crusaders30XX.ECS.Systems
 			if (anchor == null
 				|| healthRegion == null
 				|| !healthRegion.IsVisible
-				|| healthRegion.Bounds.Width <= 0
-				|| healthRegion.Bounds.Height <= 0)
+				|| healthBounds.Width <= 0
+				|| healthBounds.Height <= 0)
 			{
 				hpBarAnchor.Rect = Rectangle.Empty;
 				return;
 			}
 
-			var font = FontSingleton.ContentFont;
+			var font = FontSingleton.ChakraPetchFont;
+			if (font == null)
+			{
+				hpBarAnchor.Rect = Rectangle.Empty;
+				return;
+			}
+
 			float labelWidth = MeasureSpacedText(font, "HP", anchor.LabelFontScale, anchor.LabelLetterSpacing).X;
 			hpBarAnchor.Rect = PlayerHudHealthRendering.CalculateTrackBounds(
-				healthRegion.Bounds,
+				healthBounds,
 				anchor,
 				labelWidth);
 		}
 
-		private PlayerHudRegion GetHealthRegion()
+		private Entity GetHealthRegionEntity()
 		{
 			return EntityManager.GetEntitiesWithComponent<PlayerHudRegion>()
-				.Select(entity => entity.GetComponent<PlayerHudRegion>())
-				.FirstOrDefault(region => region?.Type == PlayerHudRegionType.Health);
+				.FirstOrDefault(entity => entity.GetComponent<PlayerHudRegion>()?.Type == PlayerHudRegionType.Health);
 		}
 
 		private void DrawHealthLabel(

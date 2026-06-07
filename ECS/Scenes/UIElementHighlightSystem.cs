@@ -5,6 +5,7 @@ using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -97,7 +98,7 @@ namespace Crusaders30XX.ECS.Systems
                     // Prefer live UI bounds if available (e.g., tweened/selected cards) else fallback to computed hand bounds
                     if (ui != null && ui.Bounds.Width > 1 && ui.Bounds.Height > 1)
                     {
-                        targetRect = ui.Bounds;
+                        targetRect = TransformResolverService.ResolveUIBounds(EntityManager, e, ui);
                     }
                     else
                     {
@@ -106,7 +107,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 else
                 {
-                    targetRect = ui.Bounds;
+                    targetRect = TransformResolverService.ResolveUIBounds(EntityManager, e, ui);
                 }
                 rot = t?.Rotation ?? 0f;
 

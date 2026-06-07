@@ -108,6 +108,10 @@ namespace Crusaders30XX.ECS.Systems
 			if (top != null)
 			{
 				string text = TooltipTextService.BuildCardTooltip(top.E, top.UI.Tooltip);
+				Rectangle anchorBounds = TransformResolverService.ResolveUIBounds(
+					EntityManager,
+					top.E,
+					top.UI);
 
 				// Wrap text based on MaxWidth
 				var wrappedLines = TextUtils.WrapText(_font, text, TextScale, MaxWidth);
@@ -119,26 +123,26 @@ namespace Crusaders30XX.ECS.Systems
 				int h = (int)System.Math.Ceiling(size.Y) + pad * 2;
 
 				// Position based on UI.TooltipPosition
-				int rx = top.UI.Bounds.X;
-				int ry = top.UI.Bounds.Y;
+				int rx = anchorBounds.X;
+				int ry = anchorBounds.Y;
 				int gap = System.Math.Max(0, top.UI.TooltipOffsetPx);
 				switch (top.UI.TooltipPosition)
 				{
 					case TooltipPosition.Above:
-						rx = top.UI.Bounds.X + (top.UI.Bounds.Width - w) / 2;
-						ry = top.UI.Bounds.Y - h - gap;
+						rx = anchorBounds.X + (anchorBounds.Width - w) / 2;
+						ry = anchorBounds.Y - h - gap;
 						break;
 					case TooltipPosition.Below:
-						rx = top.UI.Bounds.X + (top.UI.Bounds.Width - w) / 2;
-						ry = top.UI.Bounds.Bottom + gap;
+						rx = anchorBounds.X + (anchorBounds.Width - w) / 2;
+						ry = anchorBounds.Bottom + gap;
 						break;
 					case TooltipPosition.Right:
-						rx = top.UI.Bounds.Right + gap;
-						ry = top.UI.Bounds.Y + (top.UI.Bounds.Height - h) / 2;
+						rx = anchorBounds.Right + gap;
+						ry = anchorBounds.Y + (anchorBounds.Height - h) / 2;
 						break;
 					case TooltipPosition.Left:
-						rx = top.UI.Bounds.X - w - gap;
-						ry = top.UI.Bounds.Y + (top.UI.Bounds.Height - h) / 2;
+						rx = anchorBounds.X - w - gap;
+						ry = anchorBounds.Y + (anchorBounds.Height - h) / 2;
 						break;
 				}
 				var rect = new Rectangle(rx, ry, w, h);
@@ -196,5 +200,4 @@ namespace Crusaders30XX.ECS.Systems
 
 	}
 }
-
 

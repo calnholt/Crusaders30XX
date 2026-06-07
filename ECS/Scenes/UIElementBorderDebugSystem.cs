@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.ECS.Singletons;
@@ -62,7 +63,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			foreach (var x in entities)
 			{
-				var r = x.UI.Bounds;
+				var r = TransformResolverService.ResolveUIBounds(EntityManager, x.E, x.UI);
 				int inner = System.Math.Max(0, InnerThickness);
 				int outer = System.Math.Max(0, OuterThickness);
 				if (outer > 0)
@@ -99,5 +100,4 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 

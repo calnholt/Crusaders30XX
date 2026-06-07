@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Systems;
 using Microsoft.Xna.Framework;
 using Xunit;
@@ -130,6 +131,8 @@ public class PlayerHudResourceDisplaySystemTests : IDisposable
 		var actionPointTransform = actionPoint.GetComponent<Transform>();
 		Rectangle courageBounds = courageRegion.Bounds;
 		Rectangle actionPointBounds = actionPointRegion.Bounds;
+		Rectangle courageWorldBounds = TransformResolverService.ResolveLocalBounds(entityManager, courage, courageBounds);
+		Rectangle actionPointWorldBounds = TransformResolverService.ResolveLocalBounds(entityManager, actionPoint, actionPointBounds);
 		Vector2 couragePosition = courageTransform.Position;
 		Vector2 actionPointPosition = actionPointTransform.Position;
 		courage.GetComponent<PlayerHudFeedbackState>().Scale = 1.25f;
@@ -138,18 +141,18 @@ public class PlayerHudResourceDisplaySystemTests : IDisposable
 		var actionPointSystem = new PlayerHudActionPointDisplaySystem(entityManager, null, null);
 
 		var courageState = AssertNullable(courageSystem.GetRenderState());
-			var actionPointState = AssertNullable(actionPointSystem.GetRenderState());
+		var actionPointState = AssertNullable(actionPointSystem.GetRenderState());
 
-			Assert.Equal(1.25f, courageState.PulseScale);
-			Assert.Equal((int)Math.Round(courageBounds.Width * 1.25f), courageState.Bounds.Width);
-			Assert.Equal((int)Math.Round(courageBounds.Height * 1.25f), courageState.Bounds.Height);
-			Assert.Equal(courageBounds.Center, courageState.Bounds.Center);
-			Assert.Equal(5, courageState.EffectSize);
+		Assert.Equal(1.25f, courageState.PulseScale);
+		Assert.Equal((int)Math.Round(courageBounds.Width * 1.25f), courageState.Bounds.Width);
+		Assert.Equal((int)Math.Round(courageBounds.Height * 1.25f), courageState.Bounds.Height);
+		Assert.Equal(courageWorldBounds.Center, courageState.Bounds.Center);
+		Assert.Equal(5, courageState.EffectSize);
 
-			Assert.Equal(1.5f, actionPointState.PulseScale);
-			Assert.Equal((int)Math.Round(actionPointBounds.Width * 1.5f), actionPointState.Bounds.Width);
-			Assert.Equal((int)Math.Round(actionPointBounds.Height * 1.5f), actionPointState.Bounds.Height);
-		Assert.Equal(actionPointBounds.Center, actionPointState.Bounds.Center);
+		Assert.Equal(1.5f, actionPointState.PulseScale);
+		Assert.Equal((int)Math.Round(actionPointBounds.Width * 1.5f), actionPointState.Bounds.Width);
+		Assert.Equal((int)Math.Round(actionPointBounds.Height * 1.5f), actionPointState.Bounds.Height);
+		Assert.Equal(actionPointWorldBounds.Center, actionPointState.Bounds.Center);
 		Assert.Equal(15, actionPointState.EffectSize);
 
 		Assert.Equal(courageBounds, courageRegion.Bounds);

@@ -90,7 +90,7 @@ namespace Crusaders30XX.ECS.Systems
 			Vector2 labelSize = MeasureSpacedString(font, Label, labelScale, letterSpacing);
 			int chunkWidth = Math.Max(1, (int)Math.Round(drawState.ChunkWidth * drawState.PulseScale));
 			int chunkHeight = Math.Max(1, (int)Math.Round(drawState.ChunkHeight * drawState.PulseScale));
-			int chunkGap = Math.Max(0, (int)Math.Round(drawState.ChunkGap * drawState.PulseScale));
+			int chunkGap = (int)Math.Round(drawState.ChunkGap * drawState.PulseScale);
 			int chunksWidth = drawState.Threshold * chunkWidth
 				+ Math.Max(0, drawState.Threshold - 1) * chunkGap;
 			float gap = Math.Max(0f, drawState.ContentGap * drawState.PulseScale);
@@ -134,6 +134,7 @@ namespace Crusaders30XX.ECS.Systems
 				PlayerHudRegionType.Temperance,
 				out var anchor,
 				out var region,
+				out var regionBounds,
 				out var feedback,
 				out var player))
 			{
@@ -148,7 +149,7 @@ namespace Crusaders30XX.ECS.Systems
 				ResolveThreshold(player));
 			float pulseScale = Math.Max(0.01f, feedback?.Scale ?? 1f);
 			return new PlayerHudTemperanceRenderState(
-				PlayerHudResourceDisplayHelper.ScaleAroundCenter(region.Bounds, pulseScale),
+				PlayerHudResourceDisplayHelper.ScaleAroundCenter(regionBounds, pulseScale),
 				pulseScale,
 				Math.Max(0, (int)Math.Round(anchor.Slant * pulseScale)),
 				chunks.Threshold,

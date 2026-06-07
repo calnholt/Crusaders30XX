@@ -97,36 +97,39 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var root = EntityManager.GetEntitiesWithComponent<PlayerHudAnchor>().FirstOrDefault();
 			var anchor = root?.GetComponent<PlayerHudAnchor>();
-			var region = EntityManager.GetEntitiesWithComponent<PlayerHudRegion>()
-				.Select(entity => entity.GetComponent<PlayerHudRegion>())
-				.FirstOrDefault(candidate => candidate?.Type == PlayerHudRegionType.Pledge);
+			var regionEntity = EntityManager.GetEntitiesWithComponent<PlayerHudRegion>()
+				.FirstOrDefault(entity => entity.GetComponent<PlayerHudRegion>()?.Type == PlayerHudRegionType.Pledge);
+			var region = regionEntity?.GetComponent<PlayerHudRegion>();
+			Rectangle regionBounds = regionEntity == null || region == null
+				? Rectangle.Empty
+				: TransformResolverService.ResolveLocalBounds(EntityManager, regionEntity, region.Bounds);
 			if (anchor == null
 				|| region == null
 				|| !region.IsVisible
-				|| region.Bounds.Width <= 0
-				|| region.Bounds.Height <= 0)
+				|| regionBounds.Width <= 0
+				|| regionBounds.Height <= 0)
 			{
 				return null;
 			}
 
 			int iconSize = Math.Min(
 				Math.Max(1, anchor.PledgeIconSize),
-				Math.Max(1, region.Bounds.Height - anchor.PledgePaddingVertical * 2));
-			int contentLeft = region.Bounds.X + anchor.Slant + anchor.PledgePaddingLeft;
-			int contentRight = region.Bounds.Right - anchor.PledgePaddingRight;
+				Math.Max(1, regionBounds.Height - anchor.PledgePaddingVertical * 2));
+			int contentLeft = regionBounds.X + anchor.Slant + anchor.PledgePaddingLeft;
+			int contentRight = regionBounds.Right - anchor.PledgePaddingRight;
 			var iconBounds = new Rectangle(
 				Math.Max(contentLeft, contentRight - iconSize),
-				region.Bounds.Center.Y - iconSize / 2,
+				regionBounds.Center.Y - iconSize / 2,
 				iconSize,
 				iconSize);
 			var textBounds = new Rectangle(
 				contentLeft,
-				region.Bounds.Y,
+				regionBounds.Y,
 				Math.Max(0, iconBounds.X - anchor.PledgeContentGap - contentLeft),
-				region.Bounds.Height);
+				regionBounds.Height);
 
 			return new PlayerHudPledgeRenderState(
-				region.Bounds,
+				regionBounds,
 				iconBounds,
 				textBounds,
 				anchor.Slant,

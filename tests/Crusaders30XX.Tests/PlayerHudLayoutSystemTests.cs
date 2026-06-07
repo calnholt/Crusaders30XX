@@ -3,6 +3,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Systems;
 using Microsoft.Xna.Framework;
 using Xunit;
@@ -30,10 +31,13 @@ public class PlayerHudLayoutSystemTests : IDisposable
 		system.Update(new GameTime());
 
 		var anchor = GetAnchor(entityManager);
+		var rootEntity = GetRegionEntity(entityManager, PlayerHudRegionType.Root);
+		var worldBounds = TransformResolverService.ResolveLocalBounds(entityManager, rootEntity, anchor.Bounds);
 		Assert.Equal(new Rectangle(450, 200, 100, 200), anchor.StablePortraitBounds);
-		Assert.Equal(500, anchor.Bounds.Center.X);
-		Assert.Equal(anchor.StablePortraitBounds.Bottom + system.PortraitGap, anchor.Bounds.Y);
-		Assert.Equal(system.ChipHeight * 2, anchor.Bounds.Height);
+		Assert.Equal(500, worldBounds.Center.X);
+		Assert.Equal(anchor.StablePortraitBounds.Bottom + system.PortraitGap, worldBounds.Y);
+		Assert.Equal(system.ChipHeight * 2 - system.RowOverlap, anchor.Bounds.Height);
+		Assert.Equal(new Vector2(worldBounds.X, worldBounds.Y), rootEntity.GetComponent<Transform>().Position);
 
 		var animation = player.GetComponent<PlayerAnimationState>();
 		animation.DrawOffset = new Vector2(700, -300);
@@ -43,6 +47,7 @@ public class PlayerHudLayoutSystemTests : IDisposable
 
 		Assert.Equal(new Rectangle(450, 200, 100, 200), GetAnchor(entityManager).StablePortraitBounds);
 		Assert.Equal(anchor.Bounds, GetAnchor(entityManager).Bounds);
+		Assert.Equal(worldBounds, TransformResolverService.ResolveLocalBounds(entityManager, rootEntity, GetAnchor(entityManager).Bounds));
 	}
 
 	[Fact]
@@ -53,38 +58,46 @@ public class PlayerHudLayoutSystemTests : IDisposable
 
 		system.Update(new GameTime());
 
-		var root = GetRegion(entityManager, PlayerHudRegionType.Root);
-		var health = GetRegion(entityManager, PlayerHudRegionType.Health);
-		var courage = GetRegion(entityManager, PlayerHudRegionType.Courage);
-		var temperance = GetRegion(entityManager, PlayerHudRegionType.Temperance);
-		var actionPoint = GetRegion(entityManager, PlayerHudRegionType.ActionPoint);
-		var pledge = GetRegion(entityManager, PlayerHudRegionType.Pledge);
+		var root = GetRegionEntity(entityManager, PlayerHudRegionType.Root);
+		var health = GetRegionEntity(entityManager, PlayerHudRegionType.Health);
+		var courage = GetRegionEntity(entityManager, PlayerHudRegionType.Courage);
+		var temperance = GetRegionEntity(entityManager, PlayerHudRegionType.Temperance);
+		var actionPoint = GetRegionEntity(entityManager, PlayerHudRegionType.ActionPoint);
+		var pledge = GetRegionEntity(entityManager, PlayerHudRegionType.Pledge);
+		var rootBounds = GetWorldBounds(entityManager, PlayerHudRegionType.Root);
+		var healthBounds = GetWorldBounds(entityManager, PlayerHudRegionType.Health);
+		var courageBounds = GetWorldBounds(entityManager, PlayerHudRegionType.Courage);
+		var temperanceBounds = GetWorldBounds(entityManager, PlayerHudRegionType.Temperance);
+		var actionPointBounds = GetWorldBounds(entityManager, PlayerHudRegionType.ActionPoint);
+		var pledgeBounds = GetWorldBounds(entityManager, PlayerHudRegionType.Pledge);
 
 		Assert.All(new[] { health, courage, temperance, actionPoint, pledge },
-			region => Assert.Equal(36, region.Bounds.Height));
-		Assert.Equal(root.Bounds.Y, health.Bounds.Y);
-		Assert.Equal(root.Bounds.Y + 36, courage.Bounds.Y);
-		Assert.Equal(14, courage.Bounds.Right - temperance.Bounds.X);
-		Assert.Equal(14, temperance.Bounds.Right - actionPoint.Bounds.X);
-		Assert.Equal(14, actionPoint.Bounds.Right - pledge.Bounds.X);
-		Assert.Equal(14, health.Bounds.X - root.Bounds.X);
-		Assert.Equal(14, health.Bounds.Right - pledge.Bounds.Right);
+			entity => Assert.Equal(new Rectangle(0, 0, entity.GetComponent<PlayerHudRegion>().Bounds.Width, 36), entity.GetComponent<PlayerHudRegion>().Bounds));
+		Assert.Equal(rootBounds.Y, healthBounds.Y);
+		Assert.Equal(rootBounds.Y + system.ChipHeight - system.RowOverlap, courageBounds.Y);
+		Assert.Equal(14, courageBounds.Right - temperanceBounds.X);
+		Assert.Equal(14, temperanceBounds.Right - actionPointBounds.X);
+		Assert.Equal(14, actionPointBounds.Right - pledgeBounds.X);
+		Assert.Equal(14, healthBounds.X - rootBounds.X);
+		Assert.Equal(14, healthBounds.Right - pledgeBounds.Right);
+		Assert.Equal(new Vector2(14, 0), health.GetComponent<Transform>().Position);
+		Assert.Equal(new Vector2(0, system.ChipHeight - system.RowOverlap), courage.GetComponent<Transform>().Position);
 		var anchor = GetAnchor(entityManager);
 		Assert.Equal(36, anchor.PledgeIconSize);
 		Assert.Equal(new Color(196, 30, 58), anchor.HudRed);
 		Assert.Equal(new Color(10, 10, 10), anchor.HudBlack);
 		Assert.Equal(Color.White, anchor.HudWhite);
 		Assert.Equal(0.1f, anchor.LabelFontScale);
-		Assert.Equal(0.20f, anchor.ValueFontScale);
+		Assert.Equal(0.2f, anchor.ValueFontScale);
 		Assert.Equal(2, anchor.LabelLetterSpacing);
 		Assert.Equal(8, anchor.ContentGap);
 		Assert.Equal(26, anchor.HealthTrackHeight);
 		Assert.Equal(2, anchor.HealthTrackBorderThickness);
-		Assert.Equal(17, anchor.TemperanceChunkWidth);
+		Assert.Equal(21, anchor.TemperanceChunkWidth);
 		Assert.Equal(26, anchor.TemperanceChunkHeight);
-		Assert.Equal(0, anchor.TemperanceChunkGap);
+		Assert.Equal(-8, anchor.TemperanceChunkGap);
 		Assert.Equal(10, anchor.PledgeContentGap);
-		Assert.Equal(4, anchor.CourageInsetShadowHeight);
+		Assert.Equal(0, anchor.CourageInsetShadowHeight);
 		Assert.Equal(64, anchor.CourageInsetShadowAlpha);
 		Assert.Equal(10, anchor.ActionPointGlowRadius);
 		Assert.Equal(115, anchor.ActionPointGlowAlpha);
@@ -92,13 +105,42 @@ public class PlayerHudLayoutSystemTests : IDisposable
 		Assert.Equal(20, anchor.ShadowBlurRadius);
 		Assert.Equal(140, anchor.ShadowAlpha);
 
-		var reservedRootBounds = root.Bounds;
-		var reservedPledgeBounds = pledge.Bounds;
-		pledge.IsVisible = false;
+		var reservedRootBounds = root.GetComponent<PlayerHudRegion>().Bounds;
+		var reservedPledgeBounds = pledge.GetComponent<PlayerHudRegion>().Bounds;
+		pledge.GetComponent<PlayerHudRegion>().IsVisible = false;
 		system.Update(new GameTime());
 
 		Assert.Equal(reservedRootBounds, GetRegion(entityManager, PlayerHudRegionType.Root).Bounds);
 		Assert.Equal(reservedPledgeBounds, GetRegion(entityManager, PlayerHudRegionType.Pledge).Bounds);
+	}
+
+	[Fact]
+	public void Layout_repairs_transform_hierarchy_and_root_ui_parallax()
+	{
+		var entityManager = BuildWorld(SceneId.Battle, out _);
+		var system = new PlayerHudLayoutSystem(entityManager);
+
+		system.Update(new GameTime());
+
+		var root = GetRegionEntity(entityManager, PlayerHudRegionType.Root);
+		var rootParallax = root.GetComponent<ParallaxLayer>();
+		var expectedParallax = ParallaxLayer.GetUIParallaxLayer();
+		Assert.NotNull(rootParallax);
+		Assert.Equal(expectedParallax.MultiplierX, rootParallax.MultiplierX);
+		Assert.Equal(expectedParallax.MultiplierY, rootParallax.MultiplierY);
+		Assert.Equal(expectedParallax.MaxOffset, rootParallax.MaxOffset);
+		Assert.Equal(expectedParallax.SmoothTime, rootParallax.SmoothTime);
+
+		var childRegions = entityManager.GetEntitiesWithComponent<PlayerHudRegion>()
+			.Where(entity => entity.GetComponent<PlayerHudRegion>().Type != PlayerHudRegionType.Root)
+			.ToList();
+		Assert.All(childRegions, entity =>
+		{
+			Assert.Same(root, entity.GetComponent<ParentTransform>().Parent);
+			Assert.False(entity.HasComponent<ParallaxLayer>());
+			Assert.Equal(Rectangle.Empty.Location, entity.GetComponent<PlayerHudRegion>().Bounds.Location);
+			Assert.Equal(Rectangle.Empty.Location, entity.GetComponent<UIElement>().Bounds.Location);
+		});
 	}
 
 	[Fact]
@@ -110,6 +152,7 @@ public class PlayerHudLayoutSystemTests : IDisposable
 		var courageEntity = GetRegionEntity(entityManager, PlayerHudRegionType.Courage);
 		var transform = courageEntity.GetComponent<Transform>();
 		var ui = courageEntity.GetComponent<UIElement>();
+		var expectedPosition = transform.Position;
 
 		transform.Position = new Vector2(-1000, -1000);
 		transform.Scale = new Vector2(8f, 9f);
@@ -118,7 +161,7 @@ public class PlayerHudLayoutSystemTests : IDisposable
 		system.Update(new GameTime());
 
 		var bounds = courageEntity.GetComponent<PlayerHudRegion>().Bounds;
-		Assert.Equal(new Vector2(bounds.X, bounds.Y), transform.Position);
+		Assert.Equal(expectedPosition, transform.Position);
 		Assert.Equal(Vector2.One, transform.Scale);
 		Assert.Equal(0f, transform.Rotation);
 		Assert.Equal(bounds, ui.Bounds);
@@ -285,5 +328,14 @@ public class PlayerHudLayoutSystemTests : IDisposable
 	private static PlayerHudRegion GetRegion(EntityManager entityManager, PlayerHudRegionType type)
 	{
 		return GetRegionEntity(entityManager, type).GetComponent<PlayerHudRegion>();
+	}
+
+	private static Rectangle GetWorldBounds(EntityManager entityManager, PlayerHudRegionType type)
+	{
+		var entity = GetRegionEntity(entityManager, type);
+		return TransformResolverService.ResolveLocalBounds(
+			entityManager,
+			entity,
+			entity.GetComponent<PlayerHudRegion>().Bounds);
 	}
 }

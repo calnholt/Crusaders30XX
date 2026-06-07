@@ -5,6 +5,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -101,6 +102,7 @@ namespace Crusaders30XX.ECS.Systems
 				PlayerHudRegionType.Courage,
 				out var anchor,
 				out var region,
+				out var regionBounds,
 				out var feedback,
 				out var player))
 			{
@@ -112,7 +114,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			float pulseScale = Math.Max(0.01f, feedback?.Scale ?? 1f);
 			return new PlayerHudResourceRenderState(
-				PlayerHudResourceDisplayHelper.ScaleAroundCenter(region.Bounds, pulseScale),
+				PlayerHudResourceDisplayHelper.ScaleAroundCenter(regionBounds, pulseScale),
 				pulseScale,
 				Math.Max(0, (int)Math.Round(anchor.Slant * pulseScale)),
 				Label,
@@ -156,6 +158,7 @@ namespace Crusaders30XX.ECS.Systems
 			PlayerHudRegionType type,
 			out PlayerHudAnchor anchor,
 			out PlayerHudRegion region,
+			out Rectangle worldBounds,
 			out PlayerHudFeedbackState feedback,
 			out Entity player)
 		{
@@ -165,14 +168,20 @@ namespace Crusaders30XX.ECS.Systems
 			var regionEntity = entityManager.GetEntitiesWithComponent<PlayerHudRegion>()
 				.FirstOrDefault(entity => entity.GetComponent<PlayerHudRegion>()?.Type == type);
 			region = regionEntity?.GetComponent<PlayerHudRegion>();
+			worldBounds = regionEntity == null || region == null
+				? Rectangle.Empty
+				: TransformResolverService.ResolveLocalBounds(
+					entityManager,
+					regionEntity,
+					region.Bounds);
 			feedback = regionEntity?.GetComponent<PlayerHudFeedbackState>();
 			player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 
 			return anchor != null
 				&& region != null
 				&& region.IsVisible
-				&& region.Bounds.Width > 0
-				&& region.Bounds.Height > 0
+				&& worldBounds.Width > 0
+				&& worldBounds.Height > 0
 				&& player != null;
 		}
 

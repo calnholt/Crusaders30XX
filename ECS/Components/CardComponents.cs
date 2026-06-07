@@ -241,6 +241,16 @@ namespace Crusaders30XX.ECS.Components
         public Vector2 Scale { get; set; } = Vector2.One;
         public int ZOrder { get; set; } = 0;
     }
+
+    /// <summary>
+    /// Makes an entity's transform local to another entity's transform.
+    /// Parent rotation and scale are intentionally not propagated.
+    /// </summary>
+    public class ParentTransform : IComponent
+    {
+        public Entity Owner { get; set; }
+        public Entity Parent { get; set; }
+    }
     
     /// <summary>
     /// Parallax configuration for UI/scene entities that should subtly move opposite the cursor.

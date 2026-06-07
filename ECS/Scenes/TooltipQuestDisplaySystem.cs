@@ -298,7 +298,11 @@ namespace Crusaders30XX.ECS.Systems
 				// Calculate tooltip rect after we have the content
 				if (shouldShowTooltip && !string.IsNullOrEmpty(locationIdTop) && events != null && events.Count > 0)
 				{
-					tooltipRect = ComputeTooltipRect(hovered.UI.Bounds, hovered.T, title, events, tribulations, rewardGold, isCompleted);
+					Rectangle anchorBounds = TransformResolverService.ResolveUIBounds(
+						EntityManager,
+						hovered.E,
+						hovered.UI);
+					tooltipRect = ComputeTooltipRect(anchorBounds, hovered.T, title, events, tribulations, rewardGold, isCompleted);
 				}
 			}
 

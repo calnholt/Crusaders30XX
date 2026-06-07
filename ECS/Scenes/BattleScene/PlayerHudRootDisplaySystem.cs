@@ -5,6 +5,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -38,14 +39,7 @@ namespace Crusaders30XX.ECS.Systems
 			var anchor = root?.GetComponent<PlayerHudAnchor>();
 			if (anchor == null || anchor.Bounds.Width <= 0 || anchor.Bounds.Height <= 0) return;
 
-			var regions = EntityManager.GetEntitiesWithComponent<PlayerHudRegion>()
-				.Select(entity => entity.GetComponent<PlayerHudRegion>())
-				.Where(region => region != null
-					&& region.Type != PlayerHudRegionType.Root
-					&& region.IsVisible
-					&& region.Bounds.Width > 0
-					&& region.Bounds.Height > 0)
-				.ToList();
+			var regions = GetShadowRegionBounds();
 
 			int blur = Math.Max(0, anchor.ShadowBlurRadius);
 			const int layers = 5;
@@ -54,11 +48,31 @@ namespace Crusaders30XX.ECS.Systems
 				float fraction = layer / (float)layers;
 				int spread = (int)Math.Round(blur * fraction);
 				byte alpha = (byte)Math.Round(anchor.ShadowAlpha * (1f - fraction * 0.72f) / layers);
-				foreach (var region in regions)
+				foreach (var bounds in regions)
 				{
-					DrawRegionShadow(region.Bounds, anchor, spread, alpha);
+					DrawRegionShadow(bounds, anchor, spread, alpha);
 				}
 			}
+		}
+
+		internal IReadOnlyList<Rectangle> GetShadowRegionBounds()
+		{
+			return EntityManager.GetEntitiesWithComponent<PlayerHudRegion>()
+				.Select(entity => new
+				{
+					Region = entity.GetComponent<PlayerHudRegion>(),
+					Bounds = TransformResolverService.ResolveLocalBounds(
+						EntityManager,
+						entity,
+						entity.GetComponent<PlayerHudRegion>()?.Bounds ?? Rectangle.Empty),
+				})
+				.Where(item => item.Region != null
+					&& item.Region.Type != PlayerHudRegionType.Root
+					&& item.Region.IsVisible
+					&& item.Bounds.Width > 0
+					&& item.Bounds.Height > 0)
+				.Select(item => item.Bounds)
+				.ToList();
 		}
 
 		private void DrawRegionShadow(Rectangle bounds, PlayerHudAnchor anchor, int spread, byte alpha)

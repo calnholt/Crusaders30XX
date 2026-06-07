@@ -267,13 +267,17 @@ namespace Crusaders30XX.ECS.Systems
             var playerHudAnchor = isPlayer
                 ? EntityManager.GetEntitiesWithComponent<PlayerHudAnchor>()
                     .FirstOrDefault()
-                    ?.GetComponent<PlayerHudAnchor>()
                 : null;
-            if (playerHudAnchor != null && playerHudAnchor.Bounds.Width > 0)
+            var playerHudAnchorComponent = playerHudAnchor?.GetComponent<PlayerHudAnchor>();
+            if (playerHudAnchorComponent != null && playerHudAnchorComponent.Bounds.Width > 0)
             {
+                Rectangle hudBounds = TransformResolverService.ResolveLocalBounds(
+                    EntityManager,
+                    playerHudAnchor,
+                    playerHudAnchorComponent.Bounds);
                 return new Point(
-                    playerHudAnchor.Bounds.Center.X,
-                    playerHudAnchor.Bounds.Bottom + OffsetY);
+                    hudBounds.Center.X,
+                    hudBounds.Bottom + OffsetY);
             }
 
             var hpAnchor = entity.GetComponent<HPBarAnchor>();

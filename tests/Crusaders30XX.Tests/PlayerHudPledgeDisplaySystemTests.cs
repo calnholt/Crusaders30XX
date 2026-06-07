@@ -39,8 +39,8 @@ public class PlayerHudPledgeDisplaySystemTests : IDisposable
 
 		Assert.True(region.IsVisible);
 		Assert.Equal(reservedBounds, region.Bounds);
-		Assert.Equal(36, state.IconBounds.Width);
-		Assert.Equal(36, state.IconBounds.Height);
+		Assert.Equal(28, state.IconBounds.Width);
+		Assert.Equal(28, state.IconBounds.Height);
 		Assert.False(ui.IsInteractable);
 		Assert.False(ui.IsHovered);
 		Assert.Equal(TooltipType.None, ui.TooltipType);

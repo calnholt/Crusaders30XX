@@ -4,6 +4,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -218,7 +219,7 @@ namespace Crusaders30XX.ECS.Systems
             Rectangle anchor;
             if (ui != null && ui.Bounds.Width > 1 && ui.Bounds.Height > 1)
             {
-                anchor = ui.Bounds;
+                anchor = TransformResolverService.ResolveUIBounds(EntityManager, e, ui);
             }
             else
             {
@@ -320,5 +321,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
-
