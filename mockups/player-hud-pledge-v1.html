@@ -3,12 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Crusaders30XX — Player HUD (Final)</title>
+<title>Crusaders30XX — Player HUD + Pledge Available</title>
 <link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /*
+    MonoGame notes (1920x1080 virtual; page chrome not shipped):
+    - Row 1: HP bar (full width)
+    - Row 2: COUR / TEMP / AP + pledge callout (when CanPledgeMore)
+    - Asset: Content/pledge.png (wax seal, transparent bg)
+  */
   :root {
-    --game-w: 1920px;
-    --game-h: 1080px;
     --hud-red: #c41e3a;
     --hud-black: #0a0a0a;
     --hud-white: #ffffff;
@@ -19,6 +23,7 @@
     --row-gap: 0px;
     --slant: 14px;
     --hp-width-extra: 6px;
+    --pledge-icon: 36px;
     --stat-val-size: 34px;
   }
 
@@ -47,44 +52,47 @@
     margin-top: 6px;
     color: #c8c0b8;
     font-size: 0.82rem;
+    max-width: 900px;
+    line-height: 1.5;
+  }
+
+  .page-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 14px;
+  }
+
+  .page-controls label {
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #c8c0b8;
+    margin-right: 2px;
+  }
+
+  .chip-btn {
+    padding: 6px 14px;
+    background: #1e1e1e;
+    border: 1px solid #2a2a2a;
+    color: #f0ece6;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .chip-btn.is-active {
+    border-color: var(--hud-red);
+    color: #fff;
   }
 
   .page-main {
     padding: 24px 40px 48px;
-  }
-
-  .viewport-scaler {
-    width: 100%;
-    max-width: min(calc(100vw - 80px), 1100px);
-    margin: 0 auto;
-    position: relative;
-    overflow: hidden;
-    background: #141414;
-    border: 1px solid #2a2a2a;
-    min-height: 300px;
-  }
-
-  .viewport {
-    width: var(--game-w);
-    height: var(--game-h);
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform-origin: top center;
-    overflow: hidden;
-  }
-
-  .bg-scene {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(160deg, #3d2818 0%, #6b3a1f 35%, #8a4a28 55%, #5c3018 100%);
+    background: #ffeb3b;
   }
 
   .hud-stack {
-    position: absolute;
-    top: 36px;
-    left: 50%;
-    transform: translateX(-50%);
     display: inline-flex;
     flex-direction: column;
     align-items: stretch;
@@ -209,7 +217,6 @@
     min-width: 88px;
     padding-left: 14px;
     padding-right: 18px;
-    box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.25);
   }
 
   .chip-courage .res-lbl {
@@ -265,53 +272,94 @@
   .chip-ap .res-val {
     color: var(--hud-black);
   }
+
+  .pledge-callout {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: var(--chip-h);
+    padding: 6px 18px 6px 12px;
+    background: var(--hud-black);
+    clip-path: polygon(14px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  }
+
+  .pledge-icon {
+    width: var(--pledge-icon);
+    height: var(--pledge-icon);
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.55));
+  }
+
+  .pledge-callout-title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--hud-white);
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .hud-stack.pledge-unavailable .pledge-callout {
+    visibility: hidden;
+  }
+
 </style>
 </head>
 <body>
 
 <header class="page-header">
-  <h1>Player HUD — Final</h1>
-  <p>Row 1: HP. Row 2: COUR / TEMP / AP. Split labels, 0px gap, no status passives. 1920x1080.</p>
+  <h1>Player HUD — Pledge Available</h1>
+  <p>
+    HP on row 1; COUR / TEMP / AP + pledge callout on row 2. Pledge pill uses
+    <code>Content/pledge.png</code> and only shows when the player can still pledge.
+  </p>
+  <div class="page-controls">
+    <label>Pledge</label>
+    <button type="button" class="chip-btn is-active" data-pledge="available">Available</button>
+    <button type="button" class="chip-btn" data-pledge="unavailable">Unavailable</button>
+  </div>
 </header>
 
 <main class="page-main">
-  <div class="viewport-scaler" id="scaler">
-    <div class="viewport" id="viewport">
-      <div class="bg-scene"></div>
-      <div class="hud-stack" id="hud-stack">
-        <div class="resources-row">
-          <div class="chip chip-courage">
-            <div class="res-split">
-              <span class="res-lbl">COUR</span>
-              <span class="res-val">12</span>
-            </div>
-          </div>
-          <div class="chip chip-temp">
-            <div class="res-split">
-              <span class="res-lbl">TEMP</span>
-              <div class="temp-chunks">
-                <div class="temp-chunk filled"></div>
-                <div class="temp-chunk filled"></div>
-                <div class="temp-chunk"></div>
-              </div>
-            </div>
-          </div>
-          <div class="chip chip-ap">
-            <div class="res-split">
-              <span class="res-lbl">AP</span>
-              <span class="res-val">1</span>
-            </div>
+  <div class="hud-stack" id="hud-stack">
+    <div class="resources-row">
+      <div class="chip chip-courage">
+        <div class="res-split">
+          <span class="res-lbl">COUR</span>
+          <span class="res-val">12</span>
+        </div>
+      </div>
+      <div class="chip chip-temp">
+        <div class="res-split">
+          <span class="res-lbl">TEMP</span>
+          <div class="temp-chunks">
+            <div class="temp-chunk filled"></div>
+            <div class="temp-chunk filled"></div>
+            <div class="temp-chunk"></div>
           </div>
         </div>
-        <div class="hp-shell">
-          <div class="hp-split">
-            <span class="res-lbl">HP</span>
-            <div class="hp-meter">
-              <div class="hp-track">
-                <div class="hp-fill">
-                  <span class="hp-frac">18/20</span>
-                </div>
-              </div>
+      </div>
+      <div class="chip chip-ap">
+        <div class="res-split">
+          <span class="res-lbl">AP</span>
+          <span class="res-val">1</span>
+        </div>
+      </div>
+      <div class="pledge-callout" aria-label="Pledge available">
+        <span class="pledge-callout-title">Pledge Available</span>
+        <img class="pledge-icon" src="../Content/pledge.png" alt="" width="36" height="36">
+      </div>
+    </div>
+    <div class="hp-shell">
+      <div class="hp-split">
+        <span class="res-lbl">HP</span>
+        <div class="hp-meter">
+          <div class="hp-track">
+            <div class="hp-fill">
+              <span class="hp-frac">18/20</span>
             </div>
           </div>
         </div>
@@ -322,34 +370,40 @@
 
 <script>
 (function () {
-  const GAME_W = 1920;
-  const GAME_H = 1080;
+  const hud = document.getElementById('hud-stack');
+  const hpShell = hud.querySelector('.hp-shell');
+  const resourcesRow = hud.querySelector('.resources-row');
 
-  function syncHpWidth() {
-    const hud = document.getElementById('hud-stack');
-    if (!hud) return;
-    const hpShell = hud.querySelector('.hp-shell');
-    const resourcesRow = hud.querySelector('.resources-row');
-    const stackRect = hud.getBoundingClientRect();
-    const resourcesRect = resourcesRow.getBoundingClientRect();
-    const extra = parseFloat(getComputedStyle(hud).getPropertyValue('--hp-width-extra')) || 0;
-    hpShell.style.width = (resourcesRect.right - stackRect.left + extra) + 'px';
+  let hpWidthPx = null;
+
+  function syncHpWidth(reset) {
+    if (reset) hpWidthPx = null;
+    if (hpWidthPx === null) {
+      const stackRect = hud.getBoundingClientRect();
+      const resourcesRect = resourcesRow.getBoundingClientRect();
+      const extra = parseFloat(getComputedStyle(hud).getPropertyValue('--hp-width-extra')) || 0;
+      hpWidthPx = resourcesRect.right - stackRect.left + extra;
+    }
+    hpShell.style.width = hpWidthPx + 'px';
   }
 
-  function scale() {
-    const scaler = document.getElementById('scaler');
-    const vp = document.getElementById('viewport');
-    const scale = scaler.clientWidth / GAME_W;
-    scaler.style.height = (GAME_H * scale) + 'px';
-    vp.style.transform = 'translateX(-50%) scale(' + scale + ')';
+  function setPledge(available) {
+    hud.classList.toggle('pledge-unavailable', !available);
+    document.querySelectorAll('[data-pledge]').forEach(btn => {
+      const isActive = (btn.dataset.pledge === 'available') === available;
+      btn.classList.toggle('is-active', isActive);
+    });
   }
-  window.addEventListener('resize', () => {
-    scale();
-    syncHpWidth();
+
+  document.querySelectorAll('[data-pledge]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setPledge(btn.dataset.pledge === 'available');
+    });
   });
-  if (document.fonts) document.fonts.ready.then(() => { scale(); syncHpWidth(); });
-  scale();
-  syncHpWidth();
+
+  window.addEventListener('resize', () => syncHpWidth(true));
+  if (document.fonts) document.fonts.ready.then(() => syncHpWidth(true));
+  syncHpWidth(true);
 })();
 </script>
 </body>

@@ -100,7 +100,7 @@ namespace Crusaders30XX.ECS.Systems
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             _content = content;
-            _font = FontSingleton.ContentFont;
+            _font = FontSingleton.ChakraPetchFont;
             _tutorialManager = tutorialManager;
             _overlay = new TutorialOverlay(graphicsDevice);
 

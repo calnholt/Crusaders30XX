@@ -8,7 +8,7 @@ namespace Crusaders30XX.ECS.Objects.Events
 	{
 		private int GoldAmount1 = 10;
 		private int GoldAmount2 = 30;
-		private int GoldAmount3 = 50;
+		private int GoldAmount3 = 60;
 		public IceboundTithe()
 		{
 			Id = "icebound_tithe";

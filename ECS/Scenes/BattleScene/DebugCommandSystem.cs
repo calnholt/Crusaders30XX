@@ -177,6 +177,17 @@ namespace Crusaders30XX.ECS.Systems
         {
             StateSingleton.IsPledgeEnabled = !StateSingleton.IsPledgeEnabled;
         }
+
+        [DebugAction("Apply Brittle (hand)")]
+        public void Debug_ApplyBrittleHand()
+        {
+            EventManager.Publish(new ApplyCardApplicationEvent
+            {
+                Amount = 1,
+                Type = CardApplicationType.Brittle,
+                Target = CardApplicationTarget.Hand,
+            });
+        }
     }
 }
 
