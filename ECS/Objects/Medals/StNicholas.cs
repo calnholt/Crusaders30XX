@@ -24,7 +24,12 @@ namespace Crusaders30XX.ECS.Objects.Medals
         public override void OnAcquire()
         {
             EventManager.Publish(new IncreaseMaxHpEvent { Target = EntityManager.GetEntity("Player"), Delta = HpIncrease });
-            EventManager.Publish(new FreezeCardsEvent { Amount = FrozenCards, Type = FreezeType.Deck });
+            EventManager.Publish(new ApplyCardApplicationEvent
+            {
+                Amount = FrozenCards,
+                Type = CardApplicationType.Frozen,
+                Target = CardApplicationTarget.Deck,
+            });
         }
     }
 }

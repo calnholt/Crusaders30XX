@@ -44,7 +44,12 @@ public class GlacialGuardian : EnemyBase
     Console.WriteLine($"[GlacialGuardian] OnChangeBattlePhase - {evt.Current}");
     if (evt.Current == SubPhase.EnemyStart)
     {
-      EventManager.Publish(new FreezeCardsEvent { Amount = 1, Type = FreezeType.Hand });
+      EventManager.Publish(new ApplyCardApplicationEvent
+      {
+        Amount = 1,
+        Type = CardApplicationType.Frozen,
+        Target = CardApplicationTarget.Hand,
+      });
     }
   }
 

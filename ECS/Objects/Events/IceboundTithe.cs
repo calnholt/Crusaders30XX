@@ -27,7 +27,12 @@ namespace Crusaders30XX.ECS.Objects.Events
 		private void Resolve(EntityManager entityManager, int freezeCount, int goldAmount)
 		{
 			RunDeckService.EnsureRunDeck(entityManager);
-			EventManager.Publish(new FreezeCardsEvent { Amount = freezeCount, Type = FreezeType.Deck });
+			EventManager.Publish(new ApplyCardApplicationEvent
+			{
+				Amount = freezeCount,
+				Type = CardApplicationType.Frozen,
+				Target = CardApplicationTarget.Deck,
+			});
 			EventManager.Publish(new ModifyGoldRequestEvent { Delta = goldAmount, Reason = Id });
 		}
 	}

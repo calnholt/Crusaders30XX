@@ -68,7 +68,12 @@ public class FrozenClaw : EnemyAttackBase
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new FreezeCardsEvent { Amount = 1, Type = FreezeType.TopXCards });
+      EventManager.Publish(new ApplyCardApplicationEvent
+      {
+        Amount = 1,
+        Type = CardApplicationType.Frozen,
+        Target = CardApplicationTarget.TopXCards,
+      });
     };
   }
 }

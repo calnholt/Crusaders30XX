@@ -32,8 +32,7 @@ public class Game1 : Game
     private InputSystem _inputSystem;
 	private CurrencyDisplaySystem _currencyDisplaySystem;
 	private GoldManagementService _goldManagementService;
-	private FrozenCardManagementSystem _frozenCardManagementSystem;
-	private BrittleCardManagementSystem _brittleCardManagementSystem;
+	private CardApplicationManagementSystem _cardApplicationManagementSystem;
 	private DeckManagementSystem _deckManagementSystem;
 
     private KeyboardState _prevKeyboard;
@@ -176,8 +175,7 @@ public class Game1 : Game
         _locationNameDisplaySystem = new LocationNameDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
 		_currencyDisplaySystem = new CurrencyDisplaySystem(GraphicsDevice, _spriteBatch, Content);
 		_goldManagementService = new GoldManagementService();
-		_frozenCardManagementSystem = new FrozenCardManagementSystem(_world.EntityManager);
-		_brittleCardManagementSystem = new BrittleCardManagementSystem(_world.EntityManager);
+		_cardApplicationManagementSystem = new CardApplicationManagementSystem(_world.EntityManager);
 		_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         // _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
@@ -197,8 +195,7 @@ public class Game1 : Game
         _world.AddSystem(_shopSceneSystem);
         _world.AddSystem(_achievementSceneSystem);
         _world.AddSystem(new TimerSchedulerSystem(_world.EntityManager));
-		_world.AddSystem(_frozenCardManagementSystem);
-		_world.AddSystem(_brittleCardManagementSystem);
+		_world.AddSystem(_cardApplicationManagementSystem);
 		_world.AddSystem(_deckManagementSystem);
         _world.AddSystem(_debugMenuSystem);
         _world.AddSystem(_entityListOverlaySystem);

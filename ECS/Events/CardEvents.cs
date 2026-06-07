@@ -523,16 +523,17 @@ namespace Crusaders30XX.ECS.Events
         public int Amount { get; set; }
     }
 
-    public class FreezeCardsEvent
+    public class ApplyCardApplicationEvent
     {
         public int Amount { get; set; }
-        public FreezeType Type { get; set; }
+        public CardApplicationType Type { get; set; }
+        public CardApplicationTarget Target { get; set; }
     }
 
-    public class BrittleCardsEvent
+    public enum CardApplicationType
     {
-        public int Amount { get; set; }
-        public FreezeType Type { get; set; }
+        Frozen,
+        Brittle,
     }
 
     public class RemoveRandomCardEvent
@@ -545,7 +546,7 @@ namespace Crusaders30XX.ECS.Events
         public int Amount { get; set; }
     }
 
-    public enum FreezeType
+    public enum CardApplicationTarget
     {
         HandAndDrawPile,
         TopXCards,

@@ -85,7 +85,12 @@ public class Mummify : EnemyAttackBase
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new BrittleCardsEvent { Amount = Brittle, Type = FreezeType.DrawPileAndDiscard });
+      EventManager.Publish(new ApplyCardApplicationEvent
+      {
+        Amount = Brittle,
+        Type = CardApplicationType.Brittle,
+        Target = CardApplicationTarget.DrawPileAndDiscard,
+      });
     };
   }
 }

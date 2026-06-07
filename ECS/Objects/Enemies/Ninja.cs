@@ -130,7 +130,12 @@ public class SilencingStab : EnemyAttackBase
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new FreezeCardsEvent { Amount = Frozen });
+      EventManager.Publish(new ApplyCardApplicationEvent
+      {
+        Amount = Frozen,
+        Type = CardApplicationType.Frozen,
+        Target = CardApplicationTarget.HandAndDrawPile,
+      });
     };
   }
 }
