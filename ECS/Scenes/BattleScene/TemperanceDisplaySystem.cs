@@ -15,6 +15,8 @@ using Crusaders30XX.ECS.Singletons;
 namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
+	/// Archival player HUD renderer. PlayerHudTemperanceDisplaySystem is the registered implementation.
+	///
 	/// Displays the player's Temperance as a chunked meter composed of slanted parallelogram chunks.
 	/// Number of chunks equals the equipped Temperance ability's threshold. Filled chunks are white with
 	/// black outline; empty chunks are black with black outline and a white slant indicator.
@@ -251,4 +253,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-

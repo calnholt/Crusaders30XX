@@ -13,6 +13,8 @@ using Crusaders30XX.ECS.Services;
 namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
+	/// Archival player HUD renderer. PlayerHudActionPointDisplaySystem is the registered implementation.
+	///
 	/// Draws the player's Action Points as text "{number}AP" centered inside a black AA circle
 	/// positioned to the right of the discard pile panel.
 	/// </summary>
@@ -173,6 +175,5 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 
 

@@ -3,7 +3,6 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Services;
@@ -14,11 +13,14 @@ namespace Crusaders30XX.ECS.Systems
 	[Crusaders30XX.Diagnostics.DebugTab("Combat Debug")]
 	public class HandBlockInteractionSystem : Core.System
 	{
-		public HandBlockInteractionSystem(EntityManager entityManager) : base(entityManager) { }
+		public HandBlockInteractionSystem(EntityManager entityManager) : base(entityManager)
+		{
+			EventManager.Subscribe<AssignCardAsBlockRequested>(OnAssignCardAsBlockRequested);
+		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
 		{
-			// Operates on hand cards; return empty and drive via Update
+			// Event-driven system; assignment requests are handled synchronously.
 			return System.Array.Empty<Entity>();
 		}
 
@@ -27,6 +29,12 @@ namespace Crusaders30XX.ECS.Systems
 		public override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
+		}
+
+		private void OnAssignCardAsBlockRequested(AssignCardAsBlockRequested evt)
+		{
+			var card = evt?.Card;
+			if (card == null) return;
 			if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
 			// Only during Block phase
 			var phaseState = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
@@ -40,148 +48,115 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Hit-test hand cards
 			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
-			if (deck?.Hand == null) return;
-			// Iterate topmost first (reverse Z)
-			var handOrdered = deck.Hand.OrderByDescending(e => e.GetComponent<Transform>()?.ZOrder ?? 0).ToList();
-			foreach (var card in handOrdered)
+			if (deck?.Hand == null || !deck.Hand.Contains(card)) return;
+
+			var ui = card.GetComponent<UIElement>();
+			var data = card.GetComponent<CardData>();
+			if (ui == null || data?.Card == null) return;
+			if (card.GetComponent<AssignedBlockCard>() != null) return;
+
+			string id = data.Card.CardId ?? string.Empty;
+			// Weapons and tokens cannot be assigned as block.
+			try
 			{
-				var ui = card.GetComponent<UIElement>();
-				var data = card.GetComponent<CardData>();
-				if (ui == null || data == null) continue;
-				if (!ui.IsClicked) continue;
-				// Skip cards that are transitioning (being assigned or returning from assignment)
-				if (card.GetComponent<AssignedBlockCard>() != null) continue;
-				string id = data.Card.CardId ?? string.Empty;
-                // Skip weapons: they cannot be assigned as block
-				try
+				if (!string.IsNullOrEmpty(id))
 				{
-					if (!string.IsNullOrEmpty(id))
+					if (data.Card.IsWeapon || data.Card.IsToken) return;
+				}
+			}
+			catch { }
+
+			if (card.GetComponent<Intimidated>() != null)
+			{
+				EventManager.Publish(new CantPlayCardMessage { Message = "Can't block with intimidated cards!" });
+				return;
+			}
+
+			if (card.GetComponent<Pledge>() != null)
+			{
+				EventManager.Publish(new CantPlayCardMessage { Message = "Can't block with pledged card!" });
+				return;
+			}
+
+			if (card.GetComponent<CannotBlockThisAttack>() is CannotBlockThisAttack cannotBlock)
+			{
+				EventManager.Publish(cannotBlock.Reason);
+				return;
+			}
+
+			if (data.Card.Type == CardType.Block && !data.Card.CanPlay(EntityManager, card))
+			{
+				data.Card.OnCantPlay?.Invoke(EntityManager, card);
+				return;
+			}
+
+			if (card.GetComponent<Shackle>() != null)
+			{
+				var allShackled = deck.Hand.Where(c => c.GetComponent<Shackle>() != null).ToList();
+				foreach (var shackledCard in allShackled)
+				{
+					var shackledData = shackledCard.GetComponent<CardData>();
+					if (shackledData?.Card != null
+						&& shackledData.Card.Type == CardType.Block
+						&& !shackledData.Card.CanPlay(EntityManager, shackledCard))
 					{
-						if (data.Card.IsWeapon || data.Card.IsToken) { break; }
+						EventManager.Publish(new CantPlayCardMessage { Message = "All shackled cards must be playable!" });
+						return;
 					}
 				}
-				catch { }
-				// Skip intimidated cards: they cannot be used to block
-				if (card.GetComponent<Intimidated>() != null)
+			}
+
+			var enemyAttack = GetComponentHelper.GetPlannedAttack(EntityManager);
+			if (enemyAttack != null && enemyAttack.BlockingRestrictionType != BlockingRestrictionType.None)
+			{
+				var message = EnemyAttackTextHelper.GetBlockingRestrictionText(enemyAttack.BlockingRestrictionType);
+				if (message.EndsWith(".")) message = message.Substring(0, message.Length - 1) + "!";
+				bool canPlay = enemyAttack.BlockingRestrictionType switch
 				{
-					EventManager.Publish(new CantPlayCardMessage { Message = "Can't block with intimidated cards!" });
-					break;
-				}
-				// Skip pledged cards: they can only be played during action phase
-				if (card.GetComponent<Pledge>() != null)
+					BlockingRestrictionType.OnlyRed => data.Color == CardData.CardColor.Red,
+					BlockingRestrictionType.OnlyBlack => data.Color == CardData.CardColor.Black,
+					BlockingRestrictionType.OnlyWhite => data.Color == CardData.CardColor.White,
+					BlockingRestrictionType.NotRed => data.Color != CardData.CardColor.Red,
+					BlockingRestrictionType.NotBlack => data.Color != CardData.CardColor.Black,
+					BlockingRestrictionType.NotWhite => data.Color != CardData.CardColor.White,
+					_ => true,
+				};
+				if (!canPlay)
 				{
-					EventManager.Publish(new CantPlayCardMessage { Message = "Can't block with pledged card!" });
-					break;
-				}
-				if (card.GetComponent<CannotBlockThisAttack>() != null)
-				{
-					EventManager.Publish(card.GetComponent<CannotBlockThisAttack>().Reason);
-					break;
-				}
-				if (data.Card.Type == CardType.Block && !data.Card.CanPlay(EntityManager, card))
-				{
-					data.Card.OnCantPlay?.Invoke(EntityManager, card);
+					EventManager.Publish(new CantPlayCardMessage { Message = message });
 					return;
 				}
-
-				// If shackled, check all other shackled cards in hand
-				if (card.GetComponent<Shackle>() != null)
-				{
-					var allShackled = deck.Hand.Where(c => c.GetComponent<Shackle>() != null).ToList();
-					foreach (var sCard in allShackled)
-					{
-						var sData = sCard.GetComponent<CardData>();
-						if (sData != null && sData.Card.Type == CardType.Block && !sData.Card.CanPlay(EntityManager, sCard))
-						{
-							// If any shackled card cannot be played, prevent assignment
-							EventManager.Publish(new CantPlayCardMessage { Message = "All shackled cards must be playable!" });
-							return;
-						}
-					}
-				}
-
-				var enemyAttack = GetComponentHelper.GetPlannedAttack(EntityManager);
-				if (enemyAttack != null && enemyAttack.BlockingRestrictionType != BlockingRestrictionType.None)
-				{
-					var message = EnemyAttackTextHelper.GetBlockingRestrictionText(enemyAttack.BlockingRestrictionType);
-					if (message.EndsWith(".")) message = message.Substring(0, message.Length - 1) + "!";
-					var canPlay = true;
-					switch (enemyAttack.BlockingRestrictionType)
-					{
-						case BlockingRestrictionType.OnlyRed:
-							if (data.Color != CardData.CardColor.Red) 
-							{ 
-								canPlay = false;
-							}
-							break;
-						case BlockingRestrictionType.OnlyBlack:
-							if (data.Color != CardData.CardColor.Black) 
-							{ 
-								canPlay = false;
-							}
-							break;
-						case BlockingRestrictionType.OnlyWhite:
-							if (data.Color != CardData.CardColor.White) 
-							{ 
-								canPlay = false;
-							}
-							break;
-						case BlockingRestrictionType.NotRed:
-							if (data.Color == CardData.CardColor.Red) 
-							{ 
-								canPlay = false;
-							}
-							break;
-						case BlockingRestrictionType.NotBlack:
-							if (data.Color == CardData.CardColor.Black) 
-							{ 
-								canPlay = false;
-							}
-							break; 
-						case BlockingRestrictionType.NotWhite:
-							if (data.Color == CardData.CardColor.White) 
-							{ 
-								canPlay = false;
-							}
-							break;
-					}
-					if (!canPlay)
-					{
-						EventManager.Publish(new CantPlayCardMessage { Message = message });
-						break;
-					}
-						
-				}
-				// Assign this card as block (always assign from hand); color from card
-				int blockVal = BlockValueService.GetTotalBlockValue(card);
-				string color = data.Color.ToString();
-				// Move card out of hand into AssignedBlock zone; unassign is handled by clicking assigned banner
-				var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-				var t = card.GetComponent<Transform>();
-				if (deckEntity != null && t != null)
-				{
-					// Record the click-time hand position as the return target on the AssignedBlockCard
-					var startPos = t.Position;
-					EventManager.Publish(new CardMoveRequested
-					{
-						Card = card,
-						Deck = deckEntity,
-						Destination = CardZoneType.AssignedBlock,
-						ContextId = pa.ContextId,
-						Reason = "AssignBlock"
-					});
-					// After move request (handled synchronously), set ReturnTargetPos so unassign knows where to go
-					var abc = card.GetComponent<AssignedBlockCard>();
-					if (abc != null)
-					{
-						abc.ReturnTargetPos = startPos;
-					}
-				}
-				EventManager.Publish(new BlockAssignmentAdded { ContextId = pa.ContextId, Card = card, Color = color, DeltaBlock = blockVal });
-				break; // Only one card per click
 			}
+
+			int blockValue = BlockValueService.GetTotalBlockValue(card);
+			string color = data.Color.ToString();
+			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+			var transform = card.GetComponent<Transform>();
+			if (deckEntity != null && transform != null)
+			{
+				var startPosition = transform.Position;
+				EventManager.Publish(new CardMoveRequested
+				{
+					Card = card,
+					Deck = deckEntity,
+					Destination = CardZoneType.AssignedBlock,
+					ContextId = pa.ContextId,
+					Reason = "AssignBlock"
+				});
+				var assignedBlock = card.GetComponent<AssignedBlockCard>();
+				if (assignedBlock != null)
+				{
+					assignedBlock.ReturnTargetPos = startPosition;
+				}
+			}
+
+			EventManager.Publish(new BlockAssignmentAdded
+			{
+				ContextId = pa.ContextId,
+				Card = card,
+				Color = color,
+				DeltaBlock = blockValue,
+			});
 		}
 	}
 }
-
-

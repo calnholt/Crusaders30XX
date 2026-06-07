@@ -18,6 +18,10 @@ All commands use `dotnet run --` so arguments are passed to the game, not MSBuil
 dotnet run -- snapshot <fixture-id> [fixture-args...]
 ```
 
+Add `--verify` to compare against the approved image, or `--accept` to
+explicitly replace it. These flags are mutually exclusive and are not passed
+to the fixture.
+
 | Part | Description |
 |------|-------------|
 | `snapshot` | Required first argument (replaces the removed `card-debug` command) |
@@ -48,6 +52,7 @@ dotnet run -- snapshot <fixture-id> [fixture-args...]
 | `brittle-card` | Brittle card shader | One brittle card on a patterned backdrop for shader debugging |
 | `quest-reward-modal` | Quest reward modal | Quest complete overlay (gold and/or card reward) |
 | `waystation` | WayStation run setup | Run setup scene with default Sword/Easy selections |
+| `player-hud` | Production player HUD systems | Player HUD geometry and state variants |
 
 ---
 
@@ -206,6 +211,28 @@ dotnet run -- snapshot waystation
 ### Output file
 
 `debug/snapshots/waystation/default.png`
+
+---
+
+## `player-hud`
+
+Renders the production player HUD systems against a fixed portrait and solid
+backdrop. Approved images are stored under
+`tests/VisualBaselines/player-hud/`.
+
+```bash
+dotnet run -- snapshot player-hud default
+dotnet run -- snapshot player-hud unavailable
+dotnet run -- snapshot player-hud incoming-damage
+dotnet run -- snapshot player-hud low-health
+dotnet run -- snapshot player-hud expanded
+
+./scripts/verify-player-hud-snapshots.sh
+./scripts/verify-player-hud-snapshots.sh --accept
+```
+
+The verification script is read-only by default. `--accept` explicitly
+replaces all five approved baselines.
 
 ---
 

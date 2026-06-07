@@ -140,40 +140,12 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(entity, st);
 
             world.AddComponent(entity, new AppliedPassives());
-            // Pre-create Courage tooltip hover entity (bounds updated by CourageDisplaySystem)
-            var courageTooltip = world.CreateEntity("UI_CourageTooltip");
-            world.AddComponent(courageTooltip, new CourageTooltipAnchor());
-            world.AddComponent(courageTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-            world.AddComponent(courageTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = "Courage\n\n(Blocking with red cards increases your courage by 1)" });
-
-            // Pre-create Temperance tooltip hover entity (bounds updated by TemperanceDisplaySystem)
-            var temperanceTooltip = world.CreateEntity("UI_TemperanceTooltip");
-            world.AddComponent(temperanceTooltip, new TemperanceTooltipAnchor());
-            world.AddComponent(temperanceTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-            string temperanceTooltipText = "Temperance Meter";
-            var tempDef = TemperanceFactory.Create(equippedTemperanceAbility.AbilityId);
-            if (tempDef != null)
-            {
-                string nm = string.IsNullOrWhiteSpace(tempDef.Name) ? equippedTemperanceAbility.AbilityId : tempDef.Name;
-                string tx = tempDef.Text ?? string.Empty;
-                temperanceTooltipText += "\n\n" + nm + "\n\n" + tx + "\n\n" + "(Blocking with white cards increases your temperance by 1)";
-            }
-            world.AddComponent(temperanceTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = temperanceTooltipText });
-
-            // Pre-create Action Points tooltip hover entity (bounds updated by ActionPointDisplaySystem)
-            var apTooltip = world.CreateEntity("UI_APTooltip");
-            world.AddComponent(apTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
-            world.AddComponent(apTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = "Action Points" });
-
             // Pre-create Weapon tooltip hover entity (bounds updated by EquippedWeaponDisplaySystem)
             var weaponTooltip = world.CreateEntity("UI_WeaponTooltip");
             world.AddComponent(weaponTooltip, new Transform { Position = Vector2.Zero, ZOrder = 10001 });
             world.AddComponent(weaponTooltip, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), Tooltip = "Weapon" });
 
             TagPersistAcrossScenes(world.EntityManager, entity);
-            TagPersistAcrossScenes(world.EntityManager, courageTooltip);
-            TagPersistAcrossScenes(world.EntityManager, temperanceTooltip);
-            TagPersistAcrossScenes(world.EntityManager, apTooltip);
             TagPersistAcrossScenes(world.EntityManager, weaponTooltip);
 
             return entity;
@@ -348,7 +320,15 @@ namespace Crusaders30XX.ECS.Factories
 
             var transform = new Transform { Position = new Vector2(-1000, -1000), Scale = Vector2.One };
             var sprite = new Sprite { TexturePath = string.Empty, IsVisible = true };
-            var uiElement = new UIElement { Bounds = new Rectangle(-1000, -1000, 250, 350), IsInteractable = true, TooltipPosition = TooltipPosition.Above, TooltipOffsetPx = 30, EventType = UIElementEventType.CardClicked };
+            var uiElement = new UIElement
+            {
+                Bounds = new Rectangle(-1000, -1000, 250, 350),
+                IsInteractable = true,
+                TooltipPosition = TooltipPosition.Above,
+                TooltipOffsetPx = 30,
+                EventType = UIElementEventType.CardClicked,
+                SecondaryEventType = UIElementEventType.PledgeCard,
+            };
 
             entityManager.AddComponent(entity, cardData);
             entityManager.AddComponent(entity, transform);
@@ -826,7 +806,8 @@ namespace Crusaders30XX.ECS.Factories
                 EventType = UIElementEventType.None,
                 LayerType = sourceUIElement?.LayerType ?? UILayerType.Default,
                 IsPreventDefaultClick = false,
-                IsHidden = false
+                IsHidden = false,
+                ShowHoverHighlight = sourceUIElement?.ShowHoverHighlight ?? true
             };
             entityManager.AddComponent(clonedEntity, clonedUIElement);
 

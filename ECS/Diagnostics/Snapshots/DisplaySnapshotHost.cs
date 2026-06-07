@@ -18,6 +18,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots
         private IDisplaySnapshotFixture _fixture;
         private DisplaySnapshotContext _ctx;
         private int _frameCount;
+        private string _repositoryRoot;
 
         public bool IsActive => _fixture != null;
         public bool ShouldSkipGlobalOverlays => IsActive;
@@ -75,6 +76,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots
             }
 
             _frameCount = 0;
+            _repositoryRoot = DisplaySnapshotBaselineComparer.FindRepositoryRoot();
             Console.WriteLine($"[DisplaySnapshot] Fixture '{_fixture.Id}' ready");
         }
 
@@ -97,28 +99,68 @@ namespace Crusaders30XX.Diagnostics.Snapshots
             _frameCount++;
             if (_frameCount < _fixture.WarmupFrames) return false;
 
-            var dir = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory,
-                "..", "..", "..",
-                "debug", "snapshots", _fixture.Id);
-            Directory.CreateDirectory(dir);
+            var paths = DisplaySnapshotBaselineComparer.BuildPaths(
+                _repositoryRoot,
+                _fixture.Id,
+                _fixture.OutputFileName);
 
-            var fileName = _fixture.OutputFileName;
-            if (!fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+            switch (_options.BaselineMode)
             {
-                fileName += ".png";
+                case DisplaySnapshotBaselineMode.Accept:
+                    AcceptBaseline(sceneRt, paths);
+                    break;
+                case DisplaySnapshotBaselineMode.Verify:
+                    VerifyBaseline(sceneRt, paths);
+                    break;
+                default:
+                    Capture(sceneRt, paths.CapturePath);
+                    break;
             }
 
-            var filePath = Path.Combine(dir, fileName);
-            using (var stream = File.Create(filePath))
-            {
-                sceneRt.SaveAsPng(stream, sceneRt.Width, sceneRt.Height);
-            }
-
-            Console.WriteLine($"[DisplaySnapshot] Saved: {Path.GetFullPath(filePath)}");
             _graphicsDevice.SetRenderTarget(null);
             _game.Exit();
             return true;
+        }
+
+        private static void Capture(Texture2D scene, string path)
+        {
+            DisplaySnapshotBaselineComparer.SavePng(scene, path);
+            Console.WriteLine($"[DisplaySnapshot] Saved: {Path.GetFullPath(path)}");
+        }
+
+        private static void AcceptBaseline(Texture2D scene, DisplaySnapshotPaths paths)
+        {
+            DisplaySnapshotBaselineComparer.SavePng(scene, paths.BaselinePath);
+            Console.WriteLine($"[DisplaySnapshot] Accepted baseline: {Path.GetFullPath(paths.BaselinePath)}");
+        }
+
+        private void VerifyBaseline(Texture2D scene, DisplaySnapshotPaths paths)
+        {
+            var result = DisplaySnapshotBaselineComparer.Compare(
+                _graphicsDevice,
+                scene,
+                paths.BaselinePath);
+
+            if (result.Passed)
+            {
+                Console.WriteLine(
+                    $"[DisplaySnapshot] Verified: {Path.GetFullPath(paths.BaselinePath)} " +
+                    $"({result.DifferingPixelCount} differing pixels)");
+                return;
+            }
+
+            DisplaySnapshotBaselineComparer.SavePng(scene, paths.FailureActualPath);
+            DisplaySnapshotBaselineComparer.SaveDiffPng(
+                _graphicsDevice,
+                result,
+                paths.FailureDiffPath);
+
+            Console.Error.WriteLine($"[DisplaySnapshot] Verification failed: {result.FailureMessage}");
+            Console.Error.WriteLine(
+                $"[DisplaySnapshot] Actual: {Path.GetFullPath(paths.FailureActualPath)}");
+            Console.Error.WriteLine(
+                $"[DisplaySnapshot] Diff: {Path.GetFullPath(paths.FailureDiffPath)}");
+            Environment.ExitCode = 1;
         }
     }
 }

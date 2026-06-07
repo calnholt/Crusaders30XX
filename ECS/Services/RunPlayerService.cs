@@ -57,9 +57,6 @@ namespace Crusaders30XX.ECS.Services
 
 			string[] tooltipNames =
 			{
-				"UI_CourageTooltip",
-				"UI_TemperanceTooltip",
-				"UI_APTooltip",
 				"UI_WeaponTooltip"
 			};
 			foreach (var name in tooltipNames)

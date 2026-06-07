@@ -13,6 +13,8 @@ using Crusaders30XX.ECS.Singletons;
 namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
+	/// Archival player HUD renderer. PlayerHudCourageDisplaySystem is the registered implementation.
+	///
 	/// Renders the player's Courage as a red circle with a white outline and centered white text,
 	/// anchored just below the player portrait.
 	/// </summary>
@@ -261,5 +263,4 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 

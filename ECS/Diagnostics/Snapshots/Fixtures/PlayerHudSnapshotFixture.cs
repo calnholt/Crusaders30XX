@@ -1,0 +1,220 @@
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Systems;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
+{
+	public sealed class PlayerHudSnapshotFixture : IDisplaySnapshotFixture
+	{
+		public string Id => "player-hud";
+		public int WarmupFrames => 2;
+		public string OutputFileName => _variant?.FileSlug ?? "default";
+
+		private static readonly Color BackdropColor = new(64, 38, 26);
+		private PlayerHudSnapshotVariant _variant;
+		private Texture2D _pixel;
+		private Texture2D _portrait;
+		private Entity _player;
+		private float _portraitScale;
+
+		private PlayerHudRootDisplaySystem _rootDisplay;
+		private PlayerHudHealthDisplaySystem _healthDisplay;
+		private PlayerHudCourageDisplaySystem _courageDisplay;
+		private PlayerHudTemperanceDisplaySystem _temperanceDisplay;
+		private PlayerHudActionPointDisplaySystem _actionPointDisplay;
+		private PlayerHudPledgeDisplaySystem _pledgeDisplay;
+		private AppliedPassivesDisplaySystem _passivesDisplay;
+
+		public void Setup(DisplaySnapshotContext ctx, string[] args)
+		{
+			_variant = PlayerHudSnapshotVariant.Parse(args);
+			_pixel = new Texture2D(ctx.GraphicsDevice, 1, 1);
+			_pixel.SetData(new[] { Color.White });
+			_portrait = ctx.Content.Load<Texture2D>("Crusader");
+			_portraitScale = 0.36f;
+
+			EntityFactory.CreateGameState(ctx.World);
+			var phaseEntity = ctx.World.EntityManager.GetEntity("PhaseState");
+			var phase = phaseEntity.GetComponent<PhaseState>();
+			phase.Main = MainPhase.PlayerTurn;
+			phase.Sub = SubPhase.Action;
+
+			_player = EntityFactory.CreatePlayer(ctx.World);
+			ctx.World.EntityManager.RemoveComponent<ParallaxLayer>(_player);
+			var playerTransform = _player.GetComponent<Transform>();
+			playerTransform.Position = new Vector2(Game1.VirtualWidth / 2f, 260f);
+			playerTransform.Scale = Vector2.One;
+			var portraitInfo = _player.GetComponent<PortraitInfo>();
+			portraitInfo.TextureWidth = _portrait.Width;
+			portraitInfo.TextureHeight = _portrait.Height;
+			portraitInfo.BaseScale = _portraitScale;
+			portraitInfo.CurrentScale = _portraitScale;
+			if (!_player.HasComponent<PlayerAnimationState>())
+			{
+				ctx.World.AddComponent(_player, new PlayerAnimationState());
+			}
+
+			var deckEntity = ctx.World.CreateEntity("Deck");
+			var deck = new Deck();
+			ctx.World.AddComponent(deckEntity, deck);
+			_player.GetComponent<Player>().DeckEntity = deckEntity;
+			var eligibleCard = EntityFactory.CreateCardFromDefinition(
+				ctx.World.EntityManager,
+				"strike",
+				CardData.CardColor.White);
+			if (eligibleCard == null)
+			{
+				throw new DisplaySnapshotSetupException(
+					"Failed to create the player HUD pledge card");
+			}
+			deck.Hand.Add(eligibleCard);
+
+			ConfigureVariant(ctx, phaseEntity);
+			CreateSystems(ctx);
+		}
+
+		public void Draw(DisplaySnapshotContext ctx)
+		{
+			ctx.SpriteBatch.Draw(
+				_pixel,
+				new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight),
+				BackdropColor);
+			ctx.SpriteBatch.Draw(
+				_portrait,
+				_player.GetComponent<Transform>().Position,
+				null,
+				Color.White,
+				0f,
+				new Vector2(_portrait.Width / 2f, _portrait.Height / 2f),
+				_portraitScale,
+				SpriteEffects.None,
+				0f);
+
+			_rootDisplay.Draw();
+			_healthDisplay.Draw();
+			_courageDisplay.Draw();
+			_temperanceDisplay.Draw();
+			_actionPointDisplay.Draw();
+			_pledgeDisplay.Draw();
+			_passivesDisplay.Draw();
+		}
+
+		private void ConfigureVariant(DisplaySnapshotContext ctx, Entity phaseEntity)
+		{
+			var hp = _player.GetComponent<HP>();
+			var courage = _player.GetComponent<Courage>();
+			var temperance = _player.GetComponent<Temperance>();
+			var actionPoints = _player.GetComponent<ActionPoints>();
+			var equippedTemperance = _player.GetComponent<EquippedTemperanceAbility>();
+			var passives = _player.GetComponent<AppliedPassives>();
+
+			hp.Max = 20;
+			hp.Current = 18;
+			courage.Amount = 12;
+			temperance.Amount = 2;
+			actionPoints.Current = 1;
+			equippedTemperance.AbilityId = "angelic_aura";
+			passives.Passives.Clear();
+			passives.Passives[AppliedPassiveType.Aegis] = 2;
+			passives.Passives[AppliedPassiveType.Armor] = 1;
+
+			switch (_variant.Id)
+			{
+				case PlayerHudSnapshotVariantId.Unavailable:
+					ctx.World.AddComponent(
+						phaseEntity,
+						new PledgeAvailabilityState { PledgedThisActionPhase = true });
+					break;
+				case PlayerHudSnapshotVariantId.IncomingDamage:
+					CreateIncomingAttack(ctx, "snapshot-attack-1", 4);
+					CreateIncomingAttack(ctx, "snapshot-attack-2", 7);
+					break;
+				case PlayerHudSnapshotVariantId.LowHealth:
+					hp.Current = 3;
+					break;
+				case PlayerHudSnapshotVariantId.Expanded:
+					hp.Max = 150;
+					hp.Current = 120;
+					courage.Amount = 123;
+					temperance.Amount = 8;
+					actionPoints.Current = 12;
+					equippedTemperance.AbilityId = "radiance";
+					passives.Passives[AppliedPassiveType.Power] = 10;
+					passives.Passives[AppliedPassiveType.Thorns] = 25;
+					break;
+			}
+		}
+
+		private static void CreateIncomingAttack(
+			DisplaySnapshotContext ctx,
+			string contextId,
+			int actualDamage)
+		{
+			var enemy = ctx.World.CreateEntity($"Enemy_{contextId}");
+			var intent = new AttackIntent();
+			intent.Planned.Add(new PlannedAttack { ContextId = contextId });
+			ctx.World.AddComponent(enemy, intent);
+			var progressEntity = ctx.World.CreateEntity($"AttackProgress_{contextId}");
+			ctx.World.AddComponent(progressEntity, new EnemyAttackProgress
+			{
+				ContextId = contextId,
+				Enemy = enemy,
+				ActualDamage = actualDamage,
+			});
+		}
+
+		private void CreateSystems(DisplaySnapshotContext ctx)
+		{
+			var layout = new PlayerHudLayoutSystem(ctx.World.EntityManager);
+			var feedback = new PlayerHudFeedbackSystem(ctx.World.EntityManager);
+			_rootDisplay = new PlayerHudRootDisplaySystem(
+				ctx.World.EntityManager,
+				ctx.GraphicsDevice,
+				ctx.SpriteBatch);
+			_healthDisplay = new PlayerHudHealthDisplaySystem(
+				ctx.World.EntityManager,
+				ctx.GraphicsDevice,
+				ctx.SpriteBatch)
+			{
+				LowHealthAlphaMin = 0.55f,
+				LowHealthAlphaMax = 0.55f,
+				IncomingDamageAlphaMin = 0.35f,
+				IncomingDamageAlphaMax = 0.35f,
+			};
+			_courageDisplay = new PlayerHudCourageDisplaySystem(
+				ctx.World.EntityManager,
+				ctx.GraphicsDevice,
+				ctx.SpriteBatch);
+			_temperanceDisplay = new PlayerHudTemperanceDisplaySystem(
+				ctx.World.EntityManager,
+				ctx.GraphicsDevice,
+				ctx.SpriteBatch);
+			_actionPointDisplay = new PlayerHudActionPointDisplaySystem(
+				ctx.World.EntityManager,
+				ctx.GraphicsDevice,
+				ctx.SpriteBatch);
+			_pledgeDisplay = new PlayerHudPledgeDisplaySystem(
+				ctx.World.EntityManager,
+				ctx.GraphicsDevice,
+				ctx.SpriteBatch,
+				ctx.Content);
+			_passivesDisplay = new AppliedPassivesDisplaySystem(
+				ctx.World.EntityManager,
+				ctx.GraphicsDevice,
+				ctx.SpriteBatch);
+
+			ctx.World.AddSystem(layout);
+			ctx.World.AddSystem(feedback);
+			ctx.World.AddSystem(_rootDisplay);
+			ctx.World.AddSystem(_healthDisplay);
+			ctx.World.AddSystem(_courageDisplay);
+			ctx.World.AddSystem(_temperanceDisplay);
+			ctx.World.AddSystem(_actionPointDisplay);
+			ctx.World.AddSystem(_pledgeDisplay);
+			ctx.World.AddSystem(_passivesDisplay);
+		}
+	}
+}

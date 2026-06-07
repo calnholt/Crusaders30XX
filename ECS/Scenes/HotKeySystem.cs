@@ -135,6 +135,10 @@ namespace Crusaders30XX.ECS.Systems
 
                         ProcessHotKeyClick(target.E);
                     }
+                    else
+                    {
+                        ProcessHoveredSecondaryAction(overlayPresent);
+                    }
                 }
                 
                 _prevKeyboardState = kb;
@@ -188,10 +192,41 @@ namespace Crusaders30XX.ECS.Systems
 
                     ProcessHotKeyClick(target.E);
                 }
+                else if (pressed == FaceButton.X)
+                {
+                    ProcessHoveredSecondaryAction(overlayPresent);
+                }
             }
 
             _prevGamePadState = gp;
             _prevKeyboardState = kb;
+        }
+
+        private void ProcessHoveredSecondaryAction(bool overlayPresent)
+        {
+            var target = EntityManager.GetEntitiesWithComponent<UIElement>()
+                .Select(entity => new
+                {
+                    Entity = entity,
+                    UI = entity.GetComponent<UIElement>(),
+                    Transform = entity.GetComponent<Transform>(),
+                })
+                .Where(x => x.UI != null
+                    && x.UI.IsHovered
+                    && x.UI.IsInteractable
+                    && !x.UI.IsHidden
+                    && x.UI.SecondaryEventType != UIElementEventType.None
+                    && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
+                .OrderByDescending(x => x.Transform?.ZOrder ?? 0)
+                .FirstOrDefault();
+
+            if (target == null) return;
+
+            UIElementEventDelegateService.HandleEvent(
+                target.UI.SecondaryEventType,
+                target.Entity,
+                EntityManager);
+            EventManager.Publish(new HotKeySelectEvent { Entity = target.Entity });
         }
 
         public (int cx, int cy) CalculateHintPosition(Microsoft.Xna.Framework.Rectangle bounds, HotKeyPosition position, int hintRadius, int hintGapX, int hintGapY)
@@ -412,5 +447,4 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
 

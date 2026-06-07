@@ -174,18 +174,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private bool CanPledge()
         {
-            // Check if a card is already pledged
-            var pledgedCards = EntityManager.GetEntitiesWithComponent<Pledge>().ToList();
-            if (pledgedCards.Count > 0)
-                return false;
-
-            // Check if there are eligible cards in hand
-            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-            var deck = deckEntity?.GetComponent<Deck>();
-            if (deck == null || deck.Hand == null)
-                return false;
-
-            return deck.Hand.Any(card => PledgeManagementSystem.IsEligibleForPledge(card));
+            return PledgeAvailabilityService.IsAvailable(EntityManager);
         }
 
         private bool HasCostCardInHand()
@@ -501,4 +490,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-

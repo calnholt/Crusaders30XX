@@ -181,25 +181,9 @@ namespace Crusaders30XX.ECS.Systems
                 }
 
                 // Anchor baseline at bottom of HP bar if available; else just below entity
-                int baseX = (int)Math.Round(t.Position.X);
-                int baseY;
-                var hpAnchor = e.GetComponent<HPBarAnchor>();
-                if (hpAnchor != null)
-                {
-                    baseY = hpAnchor.Rect.Bottom + OffsetY;
-                }
-                else
-                {
-                    // Fallback under portrait
-                    float visualHalfHeight = 0f;
-                    var pInfo = e.GetComponent<PortraitInfo>();
-                    if (pInfo != null)
-                    {
-                        float baseScale = (pInfo.BaseScale > 0f) ? pInfo.BaseScale : 1f;
-                        visualHalfHeight = Math.Max(visualHalfHeight, (pInfo.TextureHeight * baseScale) * 0.5f);
-                    }
-                    baseY = (int)Math.Round(t.Position.Y + visualHalfHeight + 20 + OffsetY);
-                }
+                var passiveAnchor = ResolvePassiveAnchor(e, t, isPlayer);
+                int baseX = passiveAnchor.X;
+                int baseY = passiveAnchor.Y;
 
                 // Render each passive as "<stacks> <Name>" chip, left-to-right centered under entity
                 var items = ap.Passives.Select(kv => new { Type = kv.Key, Count = kv.Value, Label = $"{(ShowStacks(kv.Key) ? $"{kv.Value} " : "")}{StringUtils.ToSentenceCase(kv.Key.ToString())}" }).ToList();
@@ -276,6 +260,43 @@ namespace Crusaders30XX.ECS.Systems
                 var presentTypes = new System.Collections.Generic.HashSet<AppliedPassiveType>(items.Select(it => it.Type));
                 CleanupTooltipUiForOwner(e.Id, presentTypes);
             }
+        }
+
+        internal Point ResolvePassiveAnchor(Entity entity, Transform transform, bool isPlayer)
+        {
+            var playerHudAnchor = isPlayer
+                ? EntityManager.GetEntitiesWithComponent<PlayerHudAnchor>()
+                    .FirstOrDefault()
+                    ?.GetComponent<PlayerHudAnchor>()
+                : null;
+            if (playerHudAnchor != null && playerHudAnchor.Bounds.Width > 0)
+            {
+                return new Point(
+                    playerHudAnchor.Bounds.Center.X,
+                    playerHudAnchor.Bounds.Bottom + OffsetY);
+            }
+
+            var hpAnchor = entity.GetComponent<HPBarAnchor>();
+            if (hpAnchor != null)
+            {
+                return new Point(
+                    (int)Math.Round(transform.Position.X),
+                    hpAnchor.Rect.Bottom + OffsetY);
+            }
+
+            float visualHalfHeight = 0f;
+            var portrait = entity.GetComponent<PortraitInfo>();
+            if (portrait != null)
+            {
+                float baseScale = portrait.BaseScale > 0f ? portrait.BaseScale : 1f;
+                visualHalfHeight = Math.Max(
+                    visualHalfHeight,
+                    portrait.TextureHeight * baseScale * 0.5f);
+            }
+
+            return new Point(
+                (int)Math.Round(transform.Position.X),
+                (int)Math.Round(transform.Position.Y + visualHalfHeight + 20 + OffsetY));
         }
 
         private Boolean ShowStacks(AppliedPassiveType type)
@@ -364,5 +385,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
-

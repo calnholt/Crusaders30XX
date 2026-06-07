@@ -15,6 +15,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots
             Register(new QuestRewardModalSnapshotFixture());
             Register(new NarrativeEventModalSnapshotFixture());
             Register(new WayStationSnapshotFixture());
+            Register(new PlayerHudSnapshotFixture());
         }
 
         public static void Register(IDisplaySnapshotFixture fixture)

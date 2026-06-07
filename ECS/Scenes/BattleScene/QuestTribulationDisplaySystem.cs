@@ -121,30 +121,13 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
-			// Get courage center position (duplicate logic from CourageDisplaySystem)
+			// Anchor to the layout-owned courage region.
 			var courage = playerEntity.GetComponent<Courage>();
 			if (courage == null) return;
 
-			var anchor = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-			if (anchor == null) return;
-			var anchorTransform = anchor.GetComponent<Transform>();
-			if (anchorTransform == null) return;
-
-			Vector2 courageCenter;
-			var hpAnchor = playerEntity.GetComponent<HPBarAnchor>();
-			if (hpAnchor != null && hpAnchor.Rect.Width > 0 && hpAnchor.Rect.Height > 0)
-			{
-				// Use same logic as CourageDisplaySystem for consistency
-				int xRight = hpAnchor.Rect.X + hpAnchor.Rect.Width;
-				int yMid = hpAnchor.Rect.Y + hpAnchor.Rect.Height / 2;
-				// Get courage radius from CourageDisplaySystem's default or calculate
-				int courageRadius = 20; // Default CircleRadius from CourageDisplaySystem
-				courageCenter = new Vector2(xRight + Math.Max(-128, 8) + courageRadius, yMid);
-			}
-			else
-			{
-				courageCenter = new Vector2(anchorTransform.Position.X, anchorTransform.Position.Y + 224);
-			}
+			Vector2? courageCenterValue = ResolveCourageAnchor(playerEntity);
+			if (!courageCenterValue.HasValue) return;
+			Vector2 courageCenter = courageCenterValue.Value;
 
 			// Position chalice to the right of courage display
 			Vector2 chalicePosition = new Vector2(
@@ -221,6 +204,22 @@ namespace Crusaders30XX.ECS.Systems
 			if (tribulations == null || tribulations.Count == 0) return string.Empty;
 			return string.Join("\n\n", tribulations.Select(t => t.Text ?? string.Empty));
 		}
+
+		internal Vector2? ResolveCourageAnchor(Entity player)
+		{
+			var courageRegion = EntityManager.GetEntitiesWithComponent<PlayerHudRegion>()
+				.Select(entity => entity.GetComponent<PlayerHudRegion>())
+				.FirstOrDefault(region => region?.Type == PlayerHudRegionType.Courage);
+			if (courageRegion != null
+				&& courageRegion.Bounds.Width > 0
+				&& courageRegion.Bounds.Height > 0)
+			{
+				return new Vector2(
+					courageRegion.Bounds.Right,
+					courageRegion.Bounds.Center.Y);
+			}
+
+			return player?.GetComponent<Transform>()?.Position;
+		}
 	}
 }
-

@@ -325,9 +325,11 @@ namespace Crusaders30XX.ECS.Components
         public TooltipPosition TooltipPosition { get; set; } = TooltipPosition.Above;
         public int TooltipOffsetPx { get; set; } = 6; // gap from element to tooltip
         public UIElementEventType EventType { get; set; } = UIElementEventType.None;
+        public UIElementEventType SecondaryEventType { get; set; } = UIElementEventType.None;
         public UILayerType LayerType { get; set; } = UILayerType.Default;
         public bool IsPreventDefaultClick { get; set; } = false;
         public bool IsHidden { get; set; } = false;
+        public bool ShowHoverHighlight { get; set; } = true;
 
         public void Suppress() => SuppressCount++;
         public void Restore() => SuppressCount = Math.Max(0, SuppressCount - 1);
@@ -1139,6 +1141,12 @@ namespace Crusaders30XX.ECS.Components
         /// When true, the card may be played during a future action phase (subject to normal rules).
         /// </summary>
         public bool CanPlay { get; set; }
+    }
+
+    public class PledgeAvailabilityState : IComponent
+    {
+        public Entity Owner { get; set; }
+        public bool PledgedThisActionPhase { get; set; }
     }
 
     /// <summary>

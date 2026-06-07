@@ -98,6 +98,28 @@ namespace Crusaders30XX.ECS.Systems
                     }
                     else
                     {
+                        var phase = entityManager.GetEntitiesWithComponent<PhaseState>()
+                            .FirstOrDefault()
+                            ?.GetComponent<PhaseState>();
+                        bool isHandCard = activeDeck?.Hand.Contains(entity) == true;
+                        if (isHandCard && phase?.Sub == SubPhase.Block)
+                        {
+                            LoggingService.Append("UIElementEventDelegateService.CardClicked", new System.Text.Json.Nodes.JsonObject
+                            {
+                                ["branch"] = "AssignCardAsBlockRequested",
+                                ["entityId"] = entity.Id,
+                                ["cardId"] = entity.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                                ["card"] = HandStateLoggingService.BuildCardSnapshot(entity)
+                            });
+                            EventManager.Publish(new AssignCardAsBlockRequested { Card = entity });
+                            break;
+                        }
+
+                        if (phase?.Sub != SubPhase.Action)
+                        {
+                            break;
+                        }
+
                         LoggingService.Append("UIElementEventDelegateService.CardClicked", new System.Text.Json.Nodes.JsonObject
                         {
                             ["branch"] = "PlayCardRequested",
@@ -118,7 +140,19 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case UIElementEventType.PledgeCard:
                 {
+                    var phase = entityManager.GetEntitiesWithComponent<PhaseState>()
+                        .FirstOrDefault()
+                        ?.GetComponent<PhaseState>();
+                    if (phase?.Sub != SubPhase.Action || activeDeck?.Hand.Contains(entity) != true)
+                    {
+                        break;
+                    }
                     EventManager.Publish(new PledgeCardRequested { Card = entity });
+                    break;
+                }
+                case UIElementEventType.AssignCardAsBlock:
+                {
+                    EventManager.Publish(new AssignCardAsBlockRequested { Card = entity });
                     break;
                 }
                 case UIElementEventType.ViewDeck:

@@ -448,6 +448,11 @@ namespace Crusaders30XX.ECS.Events
         public Entity CardEntity;
     }
 
+    public class AssignCardAsBlockRequested
+    {
+        public Entity Card { get; set; }
+    }
+
     public class AssignEquipmentAsBlockRequested
     {
         public Entity EquipmentEntity;

@@ -115,7 +115,13 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
 		{
-			return EntityManager.GetEntitiesWithComponent<Crusaders30XX.ECS.Components.HP>();
+			return EntityManager.GetEntitiesWithComponent<Crusaders30XX.ECS.Components.HP>()
+				.Where(ShouldRenderLegacyHp);
+		}
+
+		internal static bool ShouldRenderLegacyHp(Entity entity)
+		{
+			return entity != null && !entity.HasComponent<Player>();
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)

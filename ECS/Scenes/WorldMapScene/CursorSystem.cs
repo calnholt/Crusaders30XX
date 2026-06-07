@@ -313,6 +313,8 @@ namespace Crusaders30XX.ECS.Systems
 					Position = _cursorPosition,
 					IsAPressed = isPressed,
 					IsAPressedEdge = isPressedEdge,
+					IsSecondaryPressed = false,
+					IsSecondaryPressedEdge = false,
 					Coverage = coverageForTop,
 					TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E),
 					Source = InputMethod.Gamepad,
@@ -388,6 +390,9 @@ namespace Crusaders30XX.ECS.Systems
 				bool lPressed = ms.LeftButton == ButtonState.Pressed;
 				bool lPrevPressed = _prevMouseState.LeftButton == ButtonState.Pressed;
 				bool lEdge = lPressed && !lPrevPressed;
+				bool rPressed = ms.RightButton == ButtonState.Pressed;
+				bool rPrevPressed = _prevMouseState.RightButton == ButtonState.Pressed;
+				bool rEdge = rPressed && !rPrevPressed;
 				isPressed = lPressed;
 				isPressedEdge = lEdge;
 				if (lEdge && !ignoringTransitions && topCandidate != null && !((dynamic)topCandidate).UI.IsPreventDefaultClick && !StateSingleton.PreventClicking && !StateSingleton.IsTutorialActive)
@@ -417,6 +422,8 @@ namespace Crusaders30XX.ECS.Systems
 					Position = _cursorPosition,
 					IsAPressed = isPressed,
 					IsAPressedEdge = isPressedEdge,
+					IsSecondaryPressed = rPressed,
+					IsSecondaryPressedEdge = rEdge,
 					Coverage = coverageForTop,
 					TopEntity = ignoringTransitions ? null : ((topCandidate == null) ? null : ((dynamic)topCandidate).E),
 					Source = InputMethod.Mouse,

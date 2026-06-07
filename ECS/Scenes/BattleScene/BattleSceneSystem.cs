@@ -41,9 +41,14 @@ namespace Crusaders30XX.ECS.Systems
 		private PlayerAnimationSystem _playerAnimationSystem;
 		private CathedralLightingSystem _cathedralLightingSystem;
 		private DesertBackgroundEffectSystem _desertBackgroundEffectSystem;
-		private CourageDisplaySystem _courageDisplaySystem;
-		private ActionPointDisplaySystem _actionPointDisplaySystem;
-		private TemperanceDisplaySystem _temperanceDisplaySystem;
+		private PlayerHudLayoutSystem _playerHudLayoutSystem;
+		private PlayerHudFeedbackSystem _playerHudFeedbackSystem;
+		private PlayerHudRootDisplaySystem _playerHudRootDisplaySystem;
+		private PlayerHudHealthDisplaySystem _playerHudHealthDisplaySystem;
+		private PlayerHudCourageDisplaySystem _playerHudCourageDisplaySystem;
+		private PlayerHudTemperanceDisplaySystem _playerHudTemperanceDisplaySystem;
+		private PlayerHudActionPointDisplaySystem _playerHudActionPointDisplaySystem;
+		private PlayerHudPledgeDisplaySystem _playerHudPledgeDisplaySystem;
 		private CourageManagerSystem _courageManagerSystem;
 		private ActionPointManagementSystem _actionPointManagementSystem;
 		private TemperanceManagerSystem _temperanceManagerSystem;
@@ -326,11 +331,13 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("ExhaustOnBlockDisplaySystem.Draw", _exhaustOnBlockDisplaySystem.Draw);
 			FrameProfiler.Measure("PlayerWispParticleSystem.Draw", _playerWispParticleSystem.Draw);
 			FrameProfiler.Measure("PlayerTemperanceActivationDisplaySystem.Draw", _playerTemperanceActivationDisplaySystem.Draw);
-			FrameProfiler.Measure("CourageDisplaySystem.Draw", _courageDisplaySystem.Draw);
+			FrameProfiler.Measure("PlayerHudRootDisplaySystem.Draw", _playerHudRootDisplaySystem.Draw);
+			FrameProfiler.Measure("PlayerHudHealthDisplaySystem.Draw", _playerHudHealthDisplaySystem.Draw);
+			FrameProfiler.Measure("PlayerHudCourageDisplaySystem.Draw", _playerHudCourageDisplaySystem.Draw);
+			FrameProfiler.Measure("PlayerHudTemperanceDisplaySystem.Draw", _playerHudTemperanceDisplaySystem.Draw);
+			FrameProfiler.Measure("PlayerHudActionPointDisplaySystem.Draw", _playerHudActionPointDisplaySystem.Draw);
+			FrameProfiler.Measure("PlayerHudPledgeDisplaySystem.Draw", _playerHudPledgeDisplaySystem.Draw);
 			FrameProfiler.Measure("QuestTribulationDisplaySystem.Draw", _questTribulationDisplaySystem.Draw);
-			FrameProfiler.Measure("TemperanceDisplaySystem.Draw", _temperanceDisplaySystem.Draw);
-			// FrameProfiler.Measure("ThreatDisplaySystem.Draw", _threatDisplaySystem.Draw);
-			FrameProfiler.Measure("ActionPointDisplaySystem.Draw", _actionPointDisplaySystem.Draw);
 			FrameProfiler.Measure("HPDisplaySystem.Draw", _hpDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDifficultyDisplaySystem.Draw", _enemyDifficultyDisplaySystem.Draw);
 			FrameProfiler.Measure("AppliedPassivesDisplaySystem.Draw", _appliedPassivesDisplaySystem.Draw);
@@ -492,9 +499,14 @@ namespace Crusaders30XX.ECS.Systems
 			_playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_playerTemperanceActivationDisplaySystem = new PlayerTemperanceActivationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, crusaderTexture);
 			_playerAnimationSystem = new PlayerAnimationSystem(_world.EntityManager);
-			_courageDisplaySystem = new CourageDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_actionPointDisplaySystem = new ActionPointDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_temperanceDisplaySystem = new TemperanceDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_playerHudLayoutSystem = new PlayerHudLayoutSystem(_world.EntityManager);
+			_playerHudFeedbackSystem = new PlayerHudFeedbackSystem(_world.EntityManager);
+			_playerHudRootDisplaySystem = new PlayerHudRootDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_playerHudHealthDisplaySystem = new PlayerHudHealthDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_playerHudCourageDisplaySystem = new PlayerHudCourageDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_playerHudTemperanceDisplaySystem = new PlayerHudTemperanceDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_playerHudActionPointDisplaySystem = new PlayerHudActionPointDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_playerHudPledgeDisplaySystem = new PlayerHudPledgeDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			// _threatDisplaySystem = new ThreatDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_cardMoveDisplaySystem = new CardMoveDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_courageManagerSystem = new CourageManagerSystem(_world.EntityManager);
@@ -615,9 +627,14 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_playerWispParticleSystem);
 			_world.AddSystem(_playerAnimationSystem);
 			_world.AddSystem(_playerTemperanceActivationDisplaySystem);
-			_world.AddSystem(_courageDisplaySystem);
-			_world.AddSystem(_temperanceDisplaySystem);
-			_world.AddSystem(_actionPointDisplaySystem);
+			_world.AddSystem(_playerHudLayoutSystem);
+			_world.AddSystem(_playerHudFeedbackSystem);
+			_world.AddSystem(_playerHudRootDisplaySystem);
+			_world.AddSystem(_playerHudHealthDisplaySystem);
+			_world.AddSystem(_playerHudCourageDisplaySystem);
+			_world.AddSystem(_playerHudTemperanceDisplaySystem);
+			_world.AddSystem(_playerHudActionPointDisplaySystem);
+			_world.AddSystem(_playerHudPledgeDisplaySystem);
 			_world.AddSystem(_courageManagerSystem);
 			_world.AddSystem(_temperanceManagerSystem);
 			_world.AddSystem(_actionPointManagementSystem);
@@ -720,4 +737,3 @@ namespace Crusaders30XX.ECS.Systems
 
 	}
 }
-

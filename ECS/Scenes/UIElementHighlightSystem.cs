@@ -59,7 +59,7 @@ namespace Crusaders30XX.ECS.Systems
                 .Where(e =>
                 {
                     var ui = e.GetComponent<UIElement>();
-                    if (ui == null || !ui.IsHovered || !ui.IsInteractable || ui.IsHidden)
+                    if (!ShouldShowHoverHighlight(ui))
                         return false;
                     
                     // Filter out cards that are in hand
@@ -112,6 +112,15 @@ namespace Crusaders30XX.ECS.Systems
 
                 DrawHighlight(targetRect, rot, fakeGameTime);
             }
+        }
+
+        public static bool ShouldShowHoverHighlight(UIElement ui)
+        {
+            return ui != null
+                && ui.ShowHoverHighlight
+                && ui.IsHovered
+                && ui.IsInteractable
+                && !ui.IsHidden;
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)

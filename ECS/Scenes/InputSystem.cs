@@ -114,7 +114,9 @@ namespace Crusaders30XX.ECS.Systems
             // Detect click intent before guards so dropped clicks can be diagnosed
             bool mouseEdge = mouseState.LeftButton == ButtonState.Pressed && _previousMouseState.LeftButton == ButtonState.Released;
             bool controllerEdge = _cursorEvent != null && _cursorEvent.IsAPressedEdge && _cursorEvent.Source != InputMethod.Mouse;
-            bool isClickAttempt = mouseEdge || controllerEdge;
+            bool isPrimaryClickAttempt = mouseEdge || controllerEdge;
+            bool isSecondaryClickAttempt = _cursorEvent?.IsSecondaryPressedEdge == true;
+            bool isClickAttempt = isPrimaryClickAttempt || isSecondaryClickAttempt;
 
             if (isClickAttempt && top == null)
             {
@@ -167,18 +169,25 @@ namespace Crusaders30XX.ECS.Systems
 
                 if (isClickAttempt)
                 {
-                    top.UI.IsClicked = true;
                     var uiElement = ((Entity)top.E).GetComponent<UIElement>();
+                    var eventType = isPrimaryClickAttempt
+                        ? uiElement?.EventType ?? UIElementEventType.None
+                        : uiElement?.SecondaryEventType ?? UIElementEventType.None;
+                    if (isPrimaryClickAttempt)
+                    {
+                        top.UI.IsClicked = true;
+                    }
                     LoggingService.Append("InputSystem_Click", new JsonObject
                     {
                         ["entityId"] = ((Entity)top.E).Id,
-                        ["eventType"] = uiElement?.EventType.ToString() ?? "null",
+                        ["button"] = isPrimaryClickAttempt ? "primary" : "secondary",
+                        ["eventType"] = eventType.ToString(),
                         ["isInteractable"] = uiElement?.IsInteractable ?? false,
                         ["suppressCount"] = uiElement?.SuppressCount ?? 0,
                     });
-                    if (uiElement != null && uiElement.EventType != UIElementEventType.None)
+                    if (uiElement != null && eventType != UIElementEventType.None)
                     {
-                        UIElementEventDelegateService.HandleEvent(uiElement.EventType, top.E, EntityManager);
+                        UIElementEventDelegateService.HandleEvent(eventType, top.E, EntityManager);
                     }
                     else
                     {
@@ -239,4 +248,4 @@ namespace Crusaders30XX.ECS.Systems
             _cursorEvent = e;
         }
     }
-} 
+}

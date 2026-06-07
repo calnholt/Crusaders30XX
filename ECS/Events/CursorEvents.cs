@@ -15,6 +15,8 @@ namespace Crusaders30XX.ECS.Events
 		public Vector2 Position { get; set; }
 		public bool IsAPressed { get; set; }
 		public bool IsAPressedEdge { get; set; }
+		public bool IsSecondaryPressed { get; set; }
+		public bool IsSecondaryPressedEdge { get; set; }
 		public float Coverage { get; set; }
 		public Entity TopEntity { get; set; }
 		public InputMethod Source { get; set; }
@@ -32,5 +34,4 @@ namespace Crusaders30XX.ECS.Events
 		public Entity Entity { get; set; }
 	}
 }
-
 

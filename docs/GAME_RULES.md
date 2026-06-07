@@ -23,30 +23,28 @@ Crusaders30XX is a deckbuilder card game where players battle enemies using a ha
 
 ### 3. Action Phase
 
-- Player gains **1 Action Point (AP)**
+- Player begins the turn with **1 Action Point (AP)**
 - Player may play:
-  - **One card** that costs an action point
+  - Cards that cost an action point while AP remains
   - **Any number of free action cards** in any order
+- Card effects may grant additional AP
 - Some cards have **discard costs** requiring the player to discard cards of a specific or any color
+- The player may pledge one eligible card from hand when **Pledge available**:
+  - Pledging is enabled
+  - The player has not pledged during this Action phase
+  - No card is already pledged
+  - The hand contains an eligible card
+- Sealed cards, weapons, block cards, relics, tokens, and cards already pledged cannot be pledged
+- A pledged card does not count towards max hand size
+- A pledged card cannot be played during the Action phase in which it was pledged
+- A pledged card must be played as an action; it cannot block or pay another card's cost
 - Player can end their turn at any time
 
-### 4. Pledge Phase
-
-If the player:
-- Does **not** already have a pledged card, AND
-- Ended their action phase with card(s) in hand
-
-Then the player **may pledge a card** from hand.
-
-**Pledge rules:**
-- A pledged card does not count towards max hand size
-- A pledged card **must be used as an action** (cannot be used to block or pay for another card's cost)
-
-### 5. Draw Phase
+### 4. Draw Phase
 
 - Player draws up to their max hand size
 
-### 6. Enemy Turn
+### 5. Enemy Turn
 
 - Enemy takes their turn
 - Loop returns to Block Phase

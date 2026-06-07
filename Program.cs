@@ -25,9 +25,18 @@ var appArgs = TutorialLaunchOptions.StripLaunchFlag(
     NewGameLaunchOptions.StripLaunchFlag(ShaderRuntimeOptions.StripLaunchFlags(args)));
 
 DisplaySnapshotLaunchOptions snapshotOptions = null;
-if (DisplaySnapshotLaunchOptions.TryParse(appArgs, out var parsed))
+try
 {
-    snapshotOptions = parsed;
+    if (DisplaySnapshotLaunchOptions.TryParse(appArgs, out var parsed))
+    {
+        snapshotOptions = parsed;
+    }
+}
+catch (DisplaySnapshotSetupException ex)
+{
+    Console.Error.WriteLine($"[DisplaySnapshot] {ex.Message}");
+    Environment.ExitCode = 1;
+    return;
 }
 
 using var game = new Crusaders30XX.Game1(snapshotOptions);

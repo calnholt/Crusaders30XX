@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Equipment Tooltip (Card Gutter)</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /*
+    MonoGame notes (1920x1080 virtual; page chrome not shipped):
+    - Archetype D (Scene HUD overlay tooltip beside equipment column)
+    - Fonts: TitleFont / New Rocker for names; Chakra Petch for body and labels
+    - Color variants match card palettes (red / white / black)
+    - Inline equipment: Framed Socket panel beside Card Gutter tooltip
+    - Ability mark: star icon, panel top-left, has-ability panels only
+  */
+  :root {
+    --black-0: #050505;
+    --black-1: #0a0a0a;
+    --black-2: #141414;
+    --black-4: #2a2a2a;
+    --white-1: #ffffff;
+    --white-2: #f0ece6;
+    --white-3: #c8c0b8;
+    --red-3: #c41e3a;
+    --red-stripe: #cc2222;
+    --white-stripe: #999999;
+    --black-stripe: #333333;
+    /* BLK chip — CardDisplaySystemV2 BlkChipBgColors / BlkChipTextColors */
+    --blk-chip-bg: #2a4a5e;
+    --blk-chip-text: #ffffff;
+    --panel-border: rgba(255, 255, 255, 0.85);
+    --panel-fill: rgba(8, 8, 8, 0.94);
+    --preview-row-gap: 80px;
+    --tooltip-gap: 20px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black-0);
+    color: var(--white-2);
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--black-4);
+    background: var(--black-1);
+  }
+
+  .page-header h1 {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: var(--white-1);
+    margin-bottom: 6px;
+  }
+
+  .page-header p {
+    color: var(--white-3);
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    max-width: 720px;
+    line-height: 1.55;
+  }
+
+  .page-main {
+    padding: 32px 40px 60px;
+  }
+
+  .preview-area {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 36px 32px 48px;
+    background: var(--black-2);
+    border: 1px solid var(--black-4);
+    border-radius: 4px;
+  }
+
+  .preview-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--preview-row-gap);
+  }
+
+  .preview-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--tooltip-gap);
+  }
+
+  /* ─── Inline equipment: Framed Socket ─── */
+  .eq-panel {
+    width: 108px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--panel-fill);
+    border: 2px solid var(--panel-border);
+    position: relative;
+  }
+
+  .eq-panel.red {
+    border-color: rgba(204, 34, 34, 0.55);
+  }
+
+  .eq-panel.white {
+    border-color: rgba(200, 192, 180, 0.85);
+    background: rgba(220, 215, 206, 0.18);
+  }
+
+  .eq-panel.black {
+    border-color: rgba(85, 85, 85, 0.7);
+    background: rgba(8, 8, 8, 0.98);
+  }
+
+  .eq-panel .socket {
+    flex: 1;
+    min-height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 12px 8px;
+    background: rgba(0, 0, 0, 0.22);
+  }
+
+  .eq-panel.red .socket {
+    background: rgba(78, 12, 12, 0.55);
+  }
+
+  .eq-panel.white .socket {
+    background: rgba(220, 215, 206, 0.72);
+  }
+
+  .eq-panel.black .socket {
+    background: rgba(19, 19, 19, 0.95);
+  }
+
+  .eq-panel .slot-icon {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .eq-panel .slot-icon img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .eq-panel .footer {
+    display: flex;
+    align-items: stretch;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .eq-panel .foot-stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    padding: 5px 4px 6px;
+    line-height: 1;
+  }
+
+  .eq-panel .foot-stat:first-child {
+    background: var(--blk-chip-bg);
+  }
+
+  .eq-panel .foot-stat:first-child .foot-lbl,
+  .eq-panel .foot-stat:first-child .foot-val {
+    color: var(--blk-chip-text);
+  }
+
+  .eq-panel .foot-stat:last-child {
+    background: var(--black-1);
+  }
+
+  .eq-panel .foot-div {
+    width: 1px;
+    background: rgba(255, 255, 255, 0.12);
+    margin: 6px 0;
+  }
+
+  .eq-panel.black .footer {
+    border-top-color: rgba(85, 85, 85, 0.5);
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .eq-panel .foot-lbl {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--white-3);
+  }
+
+  .eq-panel.black .foot-lbl { color: #888888; }
+
+  .eq-panel .foot-val {
+    font-family: 'New Rocker', cursive;
+    font-size: 17px;
+    color: var(--white-1);
+  }
+
+  .eq-panel.black .foot-val { color: #e8e4e0; }
+
+  .eq-panel.hovered {
+    border-color: var(--red-3);
+  }
+
+  /* Ability indicator (has-ability panels only) */
+  .eq-panel:not(.has-ability) .ability-mark {
+    display: none;
+  }
+
+  .ability-mark {
+    position: absolute;
+    z-index: 2;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .ability-mark .mark-star {
+    width: 14px;
+    height: 14px;
+    fill: var(--red-3);
+  }
+
+  /* ─── Card Gutter tooltip ─── */
+  .tooltip {
+    width: 300px;
+    min-height: 148px;
+    display: flex;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--panel-fill);
+    border: 2px solid var(--panel-border);
+  }
+
+  .tooltip .stripe {
+    width: 6px;
+    flex-shrink: 0;
+  }
+
+  .tooltip.red .stripe { background: var(--red-stripe); }
+  .tooltip.white .stripe { background: var(--white-stripe); }
+  .tooltip.black .stripe { background: var(--black-stripe); }
+
+  .tooltip .gutter {
+    width: 54px;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.28);
+    padding: 10px 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .tooltip .gutter-slot {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tooltip .gutter-slot img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  }
+
+  .tooltip .chip {
+    width: 38px;
+    height: 38px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .tooltip .chip .v {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+
+  .tooltip .chip .l {
+    font-size: 0.45rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  .tooltip .chip-blk {
+    background: var(--blk-chip-bg);
+    border: 2px solid var(--blk-chip-bg);
+    color: var(--blk-chip-text);
+  }
+
+  .tooltip .chip-blk .v,
+  .tooltip .chip-blk .l {
+    color: var(--blk-chip-text);
+  }
+
+  .tooltip .chip-use {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--white-2);
+  }
+
+  .tooltip .chip-use .l { color: var(--white-3); }
+
+  .tooltip .body {
+    flex: 1;
+    padding: 12px 14px 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .tooltip .name {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    color: var(--white-1);
+    line-height: 1.15;
+  }
+
+  .tooltip .rule {
+    height: 2px;
+    border-radius: 1px;
+    margin: 2px 0;
+    background: #888;
+  }
+
+  .tooltip .desc {
+    font-size: 13px;
+    line-height: 1.45;
+    color: #b8b0a8;
+  }
+
+  .tooltip .flavor {
+    font-size: 13px;
+    line-height: 1.45;
+    font-style: italic;
+    color: var(--white-3);
+  }
+
+  .tooltip .tag-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 4px;
+  }
+
+  .tooltip .tag {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--white-3);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Equipment Tooltip — Card Gutter</h1>
+  <p>
+    Final mockup for battle equipment. Framed Socket inline panel plus Card Gutter tooltip.
+    Helm of Seeing, Pierced Heart Plate, Purging Bracers, and Knightly Grieves using real game data and slot art.
+  </p>
+</header>
+
+<main class="page-main">
+  <div class="preview-area">
+    <div class="preview-stack">
+
+      <div class="preview-row">
+        <div class="eq-panel red hovered has-ability">
+          <span class="ability-mark" aria-hidden="true">
+            <svg class="mark-star" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 9.8 6h4.7l-3.8 2.8 1.5 4.7L8 11.2l-4.2 2.3 1.5-4.7L1.5 6h4.7L8 1.5z"/></svg>
+          </span>
+          <div class="socket">
+            <div class="slot-icon"><img src="../Content/head.png" alt="Head"></div>
+          </div>
+          <div class="footer">
+            <div class="foot-stat foot-stat-blk"><span class="foot-lbl">BLOCK</span><span class="foot-val">2</span></div>
+            <div class="foot-div"></div>
+            <div class="foot-stat"><span class="foot-lbl">USES</span><span class="foot-val">1/1</span></div>
+          </div>
+        </div>
+        <div class="tooltip red">
+          <div class="stripe"></div>
+          <div class="gutter">
+            <div class="gutter-slot"><img src="../Content/head.png" alt="Head"></div>
+            <div class="chip chip-blk"><span class="v">2</span><span class="l">BLOCK</span></div>
+            <div class="chip chip-use"><span class="v">1</span><span class="l">USES</span></div>
+          </div>
+          <div class="body">
+            <div class="name">Helm of Seeing</div>
+            <div class="rule"></div>
+            <div class="desc">Draw 1 card. Lose 1 use and 4 courage.</div>
+            <div class="tag-row"><span class="tag">Free Action</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-row">
+        <div class="eq-panel black has-ability">
+          <span class="ability-mark" aria-hidden="true">
+            <svg class="mark-star" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 9.8 6h4.7l-3.8 2.8 1.5 4.7L8 11.2l-4.2 2.3 1.5-4.7L1.5 6h4.7L8 1.5z"/></svg>
+          </span>
+          <div class="socket">
+            <div class="slot-icon"><img src="../Content/chest.png" alt="Chest"></div>
+          </div>
+          <div class="footer">
+            <div class="foot-stat foot-stat-blk"><span class="foot-lbl">BLOCK</span><span class="foot-val">1</span></div>
+            <div class="foot-div"></div>
+            <div class="foot-stat"><span class="foot-lbl">USES</span><span class="foot-val">2/2</span></div>
+          </div>
+        </div>
+        <div class="tooltip black">
+          <div class="stripe"></div>
+          <div class="gutter">
+            <div class="gutter-slot"><img src="../Content/chest.png" alt="Chest"></div>
+            <div class="chip chip-blk"><span class="v">1</span><span class="l">BLOCK</span></div>
+            <div class="chip chip-use"><span class="v">2</span><span class="l">USES</span></div>
+          </div>
+          <div class="body">
+            <div class="name">Pierced Heart Plate</div>
+            <div class="rule"></div>
+            <div class="desc">Gain 2 courage. Costs 2 uses.</div>
+            <div class="tag-row"><span class="tag">Free Action</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-row">
+        <div class="eq-panel white has-ability">
+          <span class="ability-mark" aria-hidden="true">
+            <svg class="mark-star" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 9.8 6h4.7l-3.8 2.8 1.5 4.7L8 11.2l-4.2 2.3 1.5-4.7L1.5 6h4.7L8 1.5z"/></svg>
+          </span>
+          <div class="socket">
+            <div class="slot-icon"><img src="../Content/arms.png" alt="Arms"></div>
+          </div>
+          <div class="footer">
+            <div class="foot-stat foot-stat-blk"><span class="foot-lbl">BLOCK</span><span class="foot-val">2</span></div>
+            <div class="foot-div"></div>
+            <div class="foot-stat"><span class="foot-lbl">USES</span><span class="foot-val">1/1</span></div>
+          </div>
+        </div>
+        <div class="tooltip white">
+          <div class="stripe"></div>
+          <div class="gutter">
+            <div class="gutter-slot"><img src="../Content/arms.png" alt="Arms"></div>
+            <div class="chip chip-blk"><span class="v">2</span><span class="l">BLOCK</span></div>
+            <div class="chip chip-use"><span class="v">1</span><span class="l">USES</span></div>
+          </div>
+          <div class="body">
+            <div class="name">Purging Bracers</div>
+            <div class="rule"></div>
+            <div class="desc">Gain 2 aggression. Lose 1 use.</div>
+            <div class="tag-row"><span class="tag">Free Action</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-row">
+        <div class="eq-panel black">
+          <div class="socket">
+            <div class="slot-icon"><img src="../Content/legs.png" alt="Legs"></div>
+          </div>
+          <div class="footer">
+            <div class="foot-stat foot-stat-blk"><span class="foot-lbl">BLOCK</span><span class="foot-val">2</span></div>
+            <div class="foot-div"></div>
+            <div class="foot-stat"><span class="foot-lbl">USES</span><span class="foot-val">2/2</span></div>
+          </div>
+        </div>
+        <div class="tooltip black">
+          <div class="stripe"></div>
+          <div class="gutter">
+            <div class="gutter-slot"><img src="../Content/legs.png" alt="Legs"></div>
+            <div class="chip chip-blk"><span class="v">2</span><span class="l">BLOCK</span></div>
+            <div class="chip chip-use"><span class="v">2</span><span class="l">USES</span></div>
+          </div>
+          <div class="body">
+            <div class="name">Knightly Grieves</div>
+            <div class="rule"></div>
+            <div class="flavor">Standard issue of the order. Built to hold the line when the march grows long.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

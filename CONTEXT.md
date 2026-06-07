@@ -36,6 +36,14 @@ One enemy fight in the sequential battle queue for a **quest node** (`QueuedEven
 
 When card or medal text says **win a battle**, that means winning a **queued encounter** (the enemy's **defeat presentation** has finished and the battle advances), not completing the whole **quest node**. Reaching 0 HP starts **defeat presentation**; the encounter is not won until that presentation ends.
 
+## Action Point
+
+A battle resource spent to play cards during the **Action phase**. Playing a card that is not a free action costs one Action Point; free action cards cost none. The player begins each turn with one Action Point, and card effects may grant more.
+
+## Pledge available
+
+The player may pledge during the **Action phase** when pledging is enabled, they have not pledged during that Action phase, no card is already pledged, and their hand contains an eligible card. Sealed cards, weapons, block cards, relics, tokens, and cards already pledged are not eligible.
+
 ## Defeat presentation
 
 The on-screen sequence when a combatant is reduced to 0 HP before the battle advances. For enemies in v1, this is the pixel-burst animation: the enemy **portrait** is hidden and replaced by the burst; other enemy UI (HP bar, intents, passives) may remain visible until the presentation ends. When it completes, the game runs the normal post-kill flow (achievements, next queued encounter, or quest completion). During defeat presentation the player cannot take battle actions (cards, end turn, equipment). Player defeat presentation is separate (game-over overlay).

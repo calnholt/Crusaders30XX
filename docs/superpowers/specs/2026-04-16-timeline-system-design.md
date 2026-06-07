@@ -1,13 +1,17 @@
 # Timeline System Design
 
 **Date:** 2026-04-16
-**Status:** Approved (post-grill)
+**Status:** Rejected
+
+## Decision
+
+This proposal is retained as historical design material only. It was rejected because Action Points and the current phase model remain canonical. Nothing below is approved for implementation.
 
 ## Overview
 
-Replace the discrete phase machine (EnemyTurn → Block → Action → Pledge) with a continuous timeline. The player advances through an infinite timeline by taking actions. Enemy attacks are placed at specific positions on the timeline by each enemy's own scheduling logic. Every 4 spaces the player crosses a refresh marker that resets block, draws cards, ticks passives, and grants a pledge credit.
+The rejected proposal would have replaced the discrete phase machine with a continuous timeline. The player would have advanced through an infinite timeline by taking actions. Enemy attacks would have been placed at specific positions on the timeline by each enemy's own scheduling logic. Every 4 spaces crossed, a refresh marker would have reset block, drawn cards, ticked passives, and granted a pledge credit.
 
-AP (Action Points) are removed entirely. Time is the new currency.
+Under this rejected proposal, AP (Action Points) would have been removed entirely and time would have become the new currency.
 
 ---
 
