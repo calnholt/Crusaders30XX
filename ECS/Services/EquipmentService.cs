@@ -7,22 +7,30 @@ namespace Crusaders30XX.ECS.Services
 	{
 		public static string GetTooltipText(EquipmentBase equipment, EquipmentTooltipType type = EquipmentTooltipType.Battle)
 		{
-			if (equipment != null)
-				{
-					var parts = new List<string>();
-					parts.Add(equipment.Text);
-					string abilities = string.Join("\n", parts);
-          string blockAndUses = equipment.Block > 0 ? $"Block: {equipment.Block} (uses: {equipment.Uses})" : string.Empty;
-          if (type == EquipmentTooltipType.Shop) {
-            return abilities + "\n\n" + blockAndUses;
-          }
-					var hasText = !string.IsNullOrWhiteSpace(equipment.Text);
-					if (hasText) {
-						return type == EquipmentTooltipType.Battle ? (equipment.Name + "\n\n" + abilities) : abilities;
-					}
-					return equipment.Name;
-				}
-			return string.Empty;
+			if (equipment == null) return string.Empty;
+
+			var sections = new List<string>();
+			if (!string.IsNullOrWhiteSpace(equipment.Name))
+			{
+				sections.Add(equipment.Name);
+			}
+			if (!string.IsNullOrWhiteSpace(equipment.Text))
+			{
+				sections.Add(equipment.Text);
+			}
+			if (!string.IsNullOrWhiteSpace(equipment.FlavorText))
+			{
+				sections.Add(equipment.FlavorText);
+			}
+			if (type == EquipmentTooltipType.Shop && equipment.Block > 0)
+			{
+				sections.Add($"Block: {equipment.Block} | Uses: {equipment.Uses}");
+			}
+			if (equipment.CanActivateDuringActionPhase)
+			{
+				sections.Add("Free Action");
+			}
+			return string.Join("\n\n", sections);
 		}
 	}
 

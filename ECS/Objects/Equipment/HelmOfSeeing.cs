@@ -19,7 +19,8 @@ namespace Crusaders30XX.ECS.Objects.Equipment
       Block = 2;
       Uses = 1;
       Color = CardData.CardColor.Red;
-      Text = $"Draw {Cards} card. Lose {Cost} use and {Courage} courage. Free action.";
+      Text = $"Draw {Cards} card. Lose {Cost} use and {Courage} courage.";
+      CanActivateDuringActionPhase = true;
       CanActivate = () => {
         return RemainingUses == Uses && EntityManager.GetEntitiesWithComponent<Courage>().FirstOrDefault()?.GetComponent<Courage>().Amount >= Courage;
       };

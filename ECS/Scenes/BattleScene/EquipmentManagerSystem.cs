@@ -14,6 +14,7 @@ namespace Crusaders30XX.ECS.Systems
 		public EquipmentManagerSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<EquipmentActivateEvent>(OnEquipmentActivate);
+			EventManager.Subscribe<ShowQuestRewardOverlay>(OnQuestRewardOverlay);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -33,6 +34,11 @@ namespace Crusaders30XX.ECS.Systems
 			});
 			var equipment = e.EquipmentEntity.GetComponent<EquippedEquipment>();
 			if (equipment == null) return;
+			if (!equipment.Equipment.CanActivateDuringActionPhase || !equipment.Equipment.HasUses)
+			{
+				equipment.Equipment.CantActivateMessage();
+				return;
+			}
 			if (!equipment.Equipment.CanActivate())
 			{
 				equipment.Equipment.CantActivateMessage();
@@ -42,7 +48,14 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new EquipmentAbilityTriggered { Equipment = e.EquipmentEntity, EquipmentId = equipment.Equipment.Id });
 		}
 
+		private void OnQuestRewardOverlay(ShowQuestRewardOverlay evt)
+		{
+			foreach (var entity in EntityManager.GetEntitiesWithComponent<EquippedEquipment>())
+			{
+				entity.GetComponent<EquippedEquipment>()?.Equipment?.ReplenishUses();
+			}
+		}
+
 	}
 }
-
 

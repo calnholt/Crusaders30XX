@@ -18,7 +18,9 @@ namespace Crusaders30XX.ECS.Objects.Equipment
       Uses = 1;
 
       Color = CardData.CardColor.White;
-      Text = $"Gain {Aggression} aggression. Lose {Cost} use. Free action.";
+      Text = $"Gain {Aggression} aggression. Lose {Cost} use.";
+      CanActivateDuringActionPhase = true;
+      CanActivate = () => RemainingUses >= Cost;
       
       OnActivate = (entityManager, entity) =>
       {

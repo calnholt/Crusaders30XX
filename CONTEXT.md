@@ -38,7 +38,15 @@ When card or medal text says **win a battle**, that means winning a **queued enc
 
 ## Action Point
 
-A battle resource spent to play cards during the **Action phase**. Playing a card that is not a free action costs one Action Point; free action cards cost none. The player begins each turn with one Action Point, and card effects may grant more.
+A battle resource spent to play cards during the **Action phase**. Playing a card that is not a **Free Action** costs one Action Point. The player begins each turn with one Action Point, and card effects may grant more.
+
+## Free Action
+
+A card play or equipment ability that can be activated during the **Action phase** without spending an Action Point. Equipment marked as a Free Action still consumes any equipment uses or other resources listed by its ability.
+
+## Equipment use
+
+A quest-node-scoped charge shared by an equipment item's block and activation behavior. Blocking with equipment or activating its ability consumes the listed uses. Uses do not reset between **queued encounters** in the same **quest node**. All equipped items replenish to their total uses when the **quest reward** overlay opens after node completion.
 
 ## Pledge available
 
@@ -72,7 +80,7 @@ The save file has a `version` field. If it does not match the game's current sav
 
 ## Loadout
 
-The player's configured battle kit for the run: deck card list, weapon, temperance ability, equipment slots, and medals. Shop card purchases append a card entry to the deck list immediately. Quest rewards do the same. There is no separate owned-cards list.
+The player's configured battle kit for the run: deck card list, weapon, temperance ability, equipment slots, and medals. Shop card purchases append a card entry to the deck list immediately. Quest rewards do the same. There is no separate owned-cards list. Equipment is one piece per slot (head, chest, arms, legs). Gaining new equipment in a slot replaces whatever was in that slot; the replaced piece cannot be re-equipped later in the run.
 
 ## Deck
 
@@ -182,9 +190,9 @@ Map event markers are also visible from run start and do not clear map fog. A Ma
 
 ## Shop (run map)
 
-A card vendor on the desert run map. Three shops exist per run. Shops are **not** combat nodes: they are not part of the run map tree and do not replace any of the 20 combat nodes.
+A vendor on the desert run map. Three shops exist per run. Shops are **not** combat nodes: they are not part of the run map tree and do not replace any of the 20 combat nodes.
 
-After the 20-node battle map is generated, each shop is placed at a world position within completed-quest fog range of at least one battle node (so completing that battle can unlock the shop). Each shop has three fixed listings (identity, color, price) generated at run creation and stored in save.
+After the 20-node battle map is generated, each shop is placed at a world position within completed-quest fog range of at least one battle node (so completing that battle can unlock the shop). Each shop has three fixed listings generated at run creation and stored in save. Listings are usually cards; one shop per run also lists a medal and one non-medal shop lists equipment.
 
 ## Shop reveal (enterable)
 
@@ -196,9 +204,9 @@ _Avoid_: Shop node (when meaning the map marker; prefer **shop** vs **quest node
 
 ## Treasure Chest (run map)
 
-A one-time loot marker on the desert run map. Two exist per run. Treasure Chests are **not** quest nodes or shops: they are not part of the run map tree.
+A one-time loot marker on the desert run map. Three exist per run. Treasure Chests are **not** quest nodes or shops: they are not part of the run map tree.
 
-After the battle map and shops are generated, each chest is placed so that entering it requires having cleared fog from battles deeper into the desert. Opening a chest (hold-to-open on the hub) grants a random amount of gold (10-30 per chest, rolled at run creation) and one medal the player does not already own (excluding medals still for sale in run-map shops). The medal is added to the loadout and equipped immediately. A claimed chest stays on the map as a dimmed icon and cannot be opened again.
+After the battle map and shops are generated, each chest is placed so that entering it requires having cleared fog from battles deeper into the desert. Opening a chest (hold-to-open on the hub) grants a random amount of gold (10-30 per chest, rolled at run creation). Two chests per run also grant one medal the player does not already own (excluding medals still for sale in run-map shops); the medal is added to the loadout and equipped immediately. One chest per run (chosen at random) grants equipment instead of a medal; that equipment is a different slot type than the equipment listed in run-map shops and is equipped immediately. A claimed chest stays on the map as a dimmed icon and cannot be opened again.
 
 _Avoid_: Treasure POI, treasure node (prefer **Treasure Chest** vs **quest node** or **shop**)
 

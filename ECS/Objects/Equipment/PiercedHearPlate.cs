@@ -17,7 +17,8 @@ namespace Crusaders30XX.ECS.Objects.Equipment
       Block = 1;
       Uses = 2;
       Color = CardData.CardColor.Black;
-      Text = $"Gain {Courage} courage. Costs {Cost} uses. Free action.";
+      Text = $"Gain {Courage} courage. Costs {Cost} uses.";
+      CanActivateDuringActionPhase = true;
       CanActivate = () => RemainingUses == Uses;
 
       OnActivate = (entityManager, entity) =>

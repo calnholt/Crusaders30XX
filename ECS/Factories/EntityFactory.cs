@@ -75,7 +75,6 @@ namespace Crusaders30XX.ECS.Factories
                 world.AddComponent(equipHeadEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
                 world.AddComponent(equipHeadEntity, new UIElement { IsInteractable = true });
                 world.AddComponent(equipHeadEntity, new EquippedEquipment { EquippedOwner = entity, Equipment = equipment });
-                world.AddComponent(equipHeadEntity, ParallaxLayer.GetUIParallaxLayer());
                 TagPersistAcrossScenes(world.EntityManager, equipHeadEntity);
             }
             if (!string.IsNullOrWhiteSpace(loadout.legsId))
@@ -86,7 +85,6 @@ namespace Crusaders30XX.ECS.Factories
                 world.AddComponent(equipLegsEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
                 world.AddComponent(equipLegsEntity, new UIElement { IsInteractable = true });
                 world.AddComponent(equipLegsEntity, new EquippedEquipment { EquippedOwner = entity, Equipment = equipment });
-                world.AddComponent(equipLegsEntity, ParallaxLayer.GetUIParallaxLayer());
                 TagPersistAcrossScenes(world.EntityManager, equipLegsEntity);
             }
             if (!string.IsNullOrWhiteSpace(loadout.armsId))
@@ -97,7 +95,6 @@ namespace Crusaders30XX.ECS.Factories
                 world.AddComponent(equipArmsEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
                 world.AddComponent(equipArmsEntity, new UIElement { IsInteractable = true });
                 world.AddComponent(equipArmsEntity, new EquippedEquipment { EquippedOwner = entity, Equipment = equipment });
-                world.AddComponent(equipArmsEntity, ParallaxLayer.GetUIParallaxLayer());
                 TagPersistAcrossScenes(world.EntityManager, equipArmsEntity);
             }
             if (!string.IsNullOrWhiteSpace(loadout.chestId))
@@ -108,7 +105,6 @@ namespace Crusaders30XX.ECS.Factories
                 world.AddComponent(equipChestEntity, new Transform { Position = new Vector2(0, 0), ZOrder = 10001 });
                 world.AddComponent(equipChestEntity, new UIElement { IsInteractable = true });
                 world.AddComponent(equipChestEntity, new EquippedEquipment { EquippedOwner = entity, Equipment = equipment });
-                world.AddComponent(equipChestEntity, ParallaxLayer.GetUIParallaxLayer());
                 TagPersistAcrossScenes(world.EntityManager, equipChestEntity);
             }
             // Parallax handled by UI root in EquipmentDisplaySystem
@@ -579,7 +575,9 @@ namespace Crusaders30XX.ECS.Factories
                 else if (itemType == ForSaleItemType.Equipment)
                 {
                     var equipment = EquipmentFactory.Create(id);
-                    uiElement.Tooltip = EquipmentService.GetTooltipText(equipment);
+                    uiElement.Tooltip = EquipmentService.GetTooltipText(
+                        equipment,
+                        EquipmentTooltipType.Shop);
                 }
 				// Always attach UIElement for hover/click regardless of item type
 				entityManager.AddComponent(e, uiElement);

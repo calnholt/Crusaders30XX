@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
             Block = 2;
             Uses = 2;
             Color = CardData.CardColor.Black;
+            FlavorText = "Standard issue of the order. Built to hold the line when the march grows long.";
             CanActivate = () => false;
         }
     }

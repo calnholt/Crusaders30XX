@@ -26,7 +26,9 @@ Crusaders30XX is a deckbuilder card game where players battle enemies using a ha
 - Player begins the turn with **1 Action Point (AP)**
 - Player may play:
   - Cards that cost an action point while AP remains
-  - **Any number of free action cards** in any order
+  - **Any number of Free Action cards** in any order
+  - Equipment abilities marked **Free Action**, without spending AP
+- Equipment activation still requires remaining equipment uses and any resources listed by the ability
 - Card effects may grant additional AP
 - Some cards have **discard costs** requiring the player to discard cards of a specific or any color
 - The player may pledge one eligible card from hand when **Pledge available**:
@@ -59,7 +61,17 @@ Crusaders30XX is a deckbuilder card game where players battle enemies using a ha
 
 - A **quest** consists of one or more battles
 - **HP fully recovers** after each battle within a quest
+- Equipment uses are shared across all queued encounters in the same quest node
+- Blocking with equipment and activating an equipment ability consume its uses
+- Equipment uses replenish when the quest reward overlay opens after completing the quest node
 - This design makes each encounter a true fight for survival rather than an exercise in HP preservation
+
+## Equipment
+
+- Equipment remains visible and inspectable after it runs out of uses
+- During the Block phase, equipment with remaining uses may be assigned as block
+- During the Action phase, equipment marked **Free Action** may activate without spending AP
+- Equipment without remaining uses cannot block or activate
 
 ## Card Colors
 

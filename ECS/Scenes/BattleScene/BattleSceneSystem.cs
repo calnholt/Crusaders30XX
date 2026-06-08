@@ -102,6 +102,7 @@ namespace Crusaders30XX.ECS.Systems
 		private MedalDisplaySystem _medalDisplaySystem;
 		private EquippedWeaponDisplaySystem _equippedWeaponDisplaySystem;
 		private EquipmentDisplaySystem _equipmentDisplaySystem;
+		private EquipmentTooltipDisplaySystem _equipmentTooltipDisplaySystem;
 		private HighlightSettingsSystem _equipmentHighlightSettingsDebugSystem;
 		private EquipmentBlockInteractionSystem _equipmentBlockInteractionSystem;
 		private AppliedPassivesManagementSystem _appliedPassivesManagementSystem;
@@ -351,6 +352,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("CardMoveDisplaySystem.DrawAlpha", _cardMoveDisplaySystem.DrawAlpha);
 			FrameProfiler.Measure("CardPlayedAnimationSystem.Draw", _cardPlayedAnimationSystem.Draw);
 			FrameProfiler.Measure("EquipmentDisplaySystem.Draw", _equipmentDisplaySystem.Draw);
+			FrameProfiler.Measure("EquipmentTooltipDisplaySystem.Draw", _equipmentTooltipDisplaySystem.Draw);
 			FrameProfiler.Measure("EquippedWeaponDisplaySystem.Draw", _equippedWeaponDisplaySystem.Draw);
 			FrameProfiler.Measure("MedalDisplaySystem.Draw", _medalDisplaySystem.Draw);
 			FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
@@ -561,6 +563,7 @@ namespace Crusaders30XX.ECS.Systems
 			_medalManagerSystem = new MedalManagerSystem(_world.EntityManager);
 			_tribulationManagerSystem = new TribulationManagerSystem(_world.EntityManager);
 			_equipmentDisplaySystem = new EquipmentDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			_equipmentTooltipDisplaySystem = new EquipmentTooltipDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_equippedWeaponDisplaySystem = new EquippedWeaponDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_medalDisplaySystem = new MedalDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_questTribulationDisplaySystem = new QuestTribulationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
@@ -681,6 +684,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_medalManagerSystem);
 			_world.AddSystem(_tribulationManagerSystem);
 			_world.AddSystem(_equipmentDisplaySystem);
+			_world.AddSystem(_equipmentTooltipDisplaySystem);
 			_world.AddSystem(_equippedWeaponDisplaySystem);
 			_world.AddSystem(_medalDisplaySystem);
 			_world.AddSystem(_questTribulationDisplaySystem);

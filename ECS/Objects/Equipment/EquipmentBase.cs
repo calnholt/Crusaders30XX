@@ -10,6 +10,8 @@ namespace Crusaders30XX.ECS.Objects.Equipment
     public string Id { get; set; }
     public string Name { get; set; }
     public string Text { get; set; }
+    public string FlavorText { get; set; }
+    public bool CanActivateDuringActionPhase { get; set; }
     public EntityManager EntityManager { get; set; }
     public int Block { get; set; }
     public int Uses { get; set; }
@@ -42,7 +44,11 @@ namespace Crusaders30XX.ECS.Objects.Equipment
     public bool HasUses { get => RemainingUses > 0; }
 
     public void DecrementRemainingUses(){
-      RemainingUses--;
+      RemainingUses = Math.Max(0, RemainingUses - 1);
+    }
+
+    public void ReplenishUses(){
+      RemainingUses = Uses;
     }
 
     public Action<EntityManager, Entity> OnActivate { get; protected set; } = (entityManager, entity) => { };

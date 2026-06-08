@@ -4,7 +4,6 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using System;
 
 namespace Crusaders30XX.ECS.Systems
@@ -75,17 +74,25 @@ namespace Crusaders30XX.ECS.Systems
 				var comp = eqEntity.GetComponent<EquippedEquipment>();
 				if (ui == null || comp == null) continue;
 				if (!ui.IsInteractable || !ui.IsClicked) continue;
-				// Prevent use if destroyed
-				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-				// Prevent block use if out of uses during Block phase
-				if (isBlockPhase)
-				{
-					if (!comp.Equipment.HasUses) { return; }
-				}
+				ui.IsClicked = false;
 
 				if (isBlockPhase)
 				{
-					if (string.IsNullOrEmpty(ctx)) { return; }
+					if (!comp.Equipment.HasUses)
+					{
+						PublishInvalidClick("Not enough uses!");
+						break;
+					}
+					if (comp.Equipment.Block <= 0)
+					{
+						PublishInvalidClick("This equipment cannot block!");
+						break;
+					}
+					if (string.IsNullOrEmpty(ctx))
+					{
+						PublishInvalidClick("There is no attack to block!");
+						break;
+					}
 					// Existing assign as block behavior
 					// Lookup block value and color from definition
 					int blockVal = 0;
@@ -99,8 +106,20 @@ namespace Crusaders30XX.ECS.Systems
 						}
 					}
 					catch { }
-					if (blockVal <= 0) { return; }
-					
+					if (blockVal <= 0)
+					{
+						PublishInvalidClick("This equipment cannot block!");
+						break;
+					}
+
+					var t = eqEntity.GetComponent<Transform>();
+					var uiElem = eqEntity.GetComponent<UIElement>();
+					var panelBounds = uiElem == null
+						? Rectangle.Empty
+						: TransformResolverService.ResolveUIBounds(EntityManager, eqEntity, uiElem);
+					var resolvedPanelCenter = panelBounds.Width > 0 && panelBounds.Height > 0
+						? new Vector2(panelBounds.Center.X, panelBounds.Center.Y)
+						: TransformResolverService.ResolveWorldPosition(EntityManager, eqEntity);
 					var zone = eqEntity.GetComponent<EquipmentZone>();
 					if (zone == null)
 					{
@@ -111,24 +130,41 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						zone.Zone = EquipmentZoneType.AssignedBlock;
 					}
+					var panelCenter = zone.LastPanelCenter != Vector2.Zero
+						? zone.LastPanelCenter
+						: resolvedPanelCenter;
+					if (zone.LastPanelCenter == Vector2.Zero && panelCenter != Vector2.Zero)
+					{
+						zone.LastPanelCenter = panelCenter;
+					}
+					if (eqEntity.HasComponent<ParentTransform>())
+					{
+						EntityManager.RemoveComponent<ParentTransform>(eqEntity);
+					}
+					if (uiElem != null && panelBounds != Rectangle.Empty)
+					{
+						uiElem.Bounds = panelBounds;
+					}
+					if (t == null)
+					{
+						t = new Transform();
+						EntityManager.AddComponent(eqEntity, t);
+					}
+					t.Position = panelCenter;
+					t.Scale = Vector2.One;
 					// Create AssignedBlockCard animation state
-					var t = eqEntity.GetComponent<Transform>();
 					var abc = eqEntity.GetComponent<AssignedBlockCard>();
 					if (abc == null)
 					{
 						var equipZone = eqEntity.GetComponent<EquipmentZone>();
-						var uiElem = eqEntity.GetComponent<UIElement>();
-						var uiCenter = uiElem != null ? new Vector2(uiElem.Bounds.X + uiElem.Bounds.Width * 0.5f, uiElem.Bounds.Y + uiElem.Bounds.Height * 0.5f) : (t?.Position ?? Vector2.Zero);
-						var returnPos = (equipZone != null && equipZone.LastPanelCenter != Vector2.Zero) ? equipZone.LastPanelCenter : uiCenter;
+						var returnPos = (equipZone != null && equipZone.LastPanelCenter != Vector2.Zero) ? equipZone.LastPanelCenter : panelCenter;
 						abc = new AssignedBlockCard { ContextId = ctx, BlockAmount = blockVal, AssignedAtTicks = System.DateTime.UtcNow.Ticks, StartPos = t?.Position ?? Vector2.Zero, CurrentPos = t?.Position ?? Vector2.Zero, TargetPos = t?.Position ?? Vector2.Zero, StartScale = t?.Scale.X ?? 1f, TargetScale = 0.35f, Phase = AssignedBlockCard.PhaseState.Pullback, Elapsed = 0f, IsEquipment = true, ColorKey = NormalizeColorKey(color), Tooltip = BuildEquipmentTooltip(comp), DisplayBgColor = ResolveEquipmentBgColor(color), DisplayFgColor = ResolveFgForBg(ResolveEquipmentBgColor(color)), ReturnTargetPos = returnPos, EquipmentType = comp.Equipment.Slot.ToString() };
 						EntityManager.AddComponent(eqEntity, abc);
 					}
 					else
 					{
 						var equipZone = eqEntity.GetComponent<EquipmentZone>();
-						var uiElem = eqEntity.GetComponent<UIElement>();
-						var uiCenter = uiElem != null ? new Vector2(uiElem.Bounds.X + uiElem.Bounds.Width * 0.5f, uiElem.Bounds.Y + uiElem.Bounds.Height * 0.5f) : (t?.Position ?? Vector2.Zero);
-						var returnPos = (equipZone != null && equipZone.LastPanelCenter != Vector2.Zero) ? equipZone.LastPanelCenter : uiCenter;
+						var returnPos = (equipZone != null && equipZone.LastPanelCenter != Vector2.Zero) ? equipZone.LastPanelCenter : panelCenter;
 						abc.ContextId = ctx; abc.BlockAmount = blockVal; abc.AssignedAtTicks = System.DateTime.UtcNow.Ticks; abc.Phase = AssignedBlockCard.PhaseState.Pullback; abc.Elapsed = 0f; abc.IsEquipment = true; abc.ColorKey = NormalizeColorKey(color); abc.Tooltip = BuildEquipmentTooltip(comp); abc.DisplayBgColor = ResolveEquipmentBgColor(color); abc.DisplayFgColor = ResolveFgForBg(abc.DisplayBgColor); abc.ReturnTargetPos = returnPos; abc.EquipmentType = comp.Equipment.Slot.ToString();
 					}
 					EventManager.Publish(new BlockAssignmentAdded { ContextId = ctx, Card = eqEntity, DeltaBlock = blockVal, Color = color });
@@ -152,12 +188,32 @@ namespace Crusaders30XX.ECS.Systems
 
 				if (isActionPhase)
 				{
+					if (!comp.Equipment.CanActivateDuringActionPhase)
+					{
+						PublishInvalidClick("This equipment cannot be activated during the Action phase!");
+						break;
+					}
+					if (!comp.Equipment.HasUses)
+					{
+						PublishInvalidClick("Not enough uses!");
+						break;
+					}
+					if (!comp.Equipment.CanActivate())
+					{
+						comp.Equipment.CantActivateMessage();
+						break;
+					}
 					comp.Equipment.EmitActivateEvent();
 					break;
 				}
 			}
 
 			// No raw mouse state tracking needed anymore
+		}
+
+		private static void PublishInvalidClick(string message)
+		{
+			EventManager.Publish(new CantPlayCardMessage { Message = message });
 		}
 		private static string NormalizeColorKey(string c)
 		{
@@ -202,5 +258,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
-

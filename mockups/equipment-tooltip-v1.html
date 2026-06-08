@@ -29,6 +29,9 @@
     /* BLK chip — CardDisplaySystemV2 BlkChipBgColors / BlkChipTextColors */
     --blk-chip-bg: #2a4a5e;
     --blk-chip-text: #ffffff;
+    /* Out-of-uses preview — EquipmentDisplaySystem DisabledFill */
+    --blk-chip-bg-dim: #111e26;
+    --foot-stat-text-dim: #888888;
     --panel-border: rgba(255, 255, 255, 0.85);
     --panel-fill: rgba(8, 8, 8, 0.94);
     --preview-row-gap: 80px;
@@ -64,6 +67,31 @@
     letter-spacing: 0.5px;
     max-width: 720px;
     line-height: 1.55;
+  }
+
+  .page-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 14px;
+  }
+
+  .toggle-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--white-2);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle-control input {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--red-3);
+    cursor: pointer;
   }
 
   .page-main {
@@ -188,7 +216,6 @@
   .eq-panel .foot-div {
     width: 1px;
     background: rgba(255, 255, 255, 0.12);
-    margin: 6px 0;
   }
 
   .eq-panel.black .footer {
@@ -216,6 +243,47 @@
 
   .eq-panel.hovered {
     border-color: var(--red-3);
+  }
+
+  /* Out-of-uses preview (inline panels only; tooltips unchanged) */
+  .eq-panel.out-of-uses {
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+
+  .eq-panel.red.out-of-uses {
+    border-color: rgba(204, 34, 34, 0.28);
+  }
+
+  .eq-panel.hovered.out-of-uses {
+    border-color: rgba(196, 30, 58, 0.35);
+  }
+
+  .eq-panel.white.out-of-uses {
+    border-color: rgba(200, 192, 180, 0.35);
+  }
+
+  .eq-panel.black.out-of-uses {
+    border-color: rgba(85, 85, 85, 0.4);
+  }
+
+  .eq-panel.out-of-uses .socket {
+    filter: brightness(0.4) saturate(0.55);
+  }
+
+  .eq-panel.out-of-uses .ability-mark .mark-star {
+    fill: #666666;
+    opacity: 0.45;
+  }
+
+  .eq-panel.out-of-uses .foot-stat-blk {
+    background: var(--blk-chip-bg-dim);
+  }
+
+  .eq-panel.out-of-uses .foot-stat-blk .foot-lbl,
+  .eq-panel.out-of-uses .foot-stat-blk .foot-val,
+  .eq-panel.out-of-uses .foot-stat-use .foot-lbl,
+  .eq-panel.out-of-uses .foot-stat-use .foot-val {
+    color: var(--foot-stat-text-dim);
   }
 
   /* Ability indicator (has-ability panels only) */
@@ -399,6 +467,12 @@
     Final mockup for battle equipment. Framed Socket inline panel plus Card Gutter tooltip.
     Helm of Seeing, Pierced Heart Plate, Purging Bracers, and Knightly Grieves using real game data and slot art.
   </p>
+  <div class="page-controls">
+    <label class="toggle-control">
+      <input type="checkbox" id="toggle-out-of-uses">
+      <span>Out of uses (panels only)</span>
+    </label>
+  </div>
 </header>
 
 <main class="page-main">
@@ -416,7 +490,7 @@
           <div class="footer">
             <div class="foot-stat foot-stat-blk"><span class="foot-lbl">BLOCK</span><span class="foot-val">2</span></div>
             <div class="foot-div"></div>
-            <div class="foot-stat"><span class="foot-lbl">USES</span><span class="foot-val">1/1</span></div>
+            <div class="foot-stat foot-stat-use" data-remaining="1" data-total="1"><span class="foot-lbl">USES</span><span class="foot-val">1/1</span></div>
           </div>
         </div>
         <div class="tooltip red">
@@ -446,7 +520,7 @@
           <div class="footer">
             <div class="foot-stat foot-stat-blk"><span class="foot-lbl">BLOCK</span><span class="foot-val">1</span></div>
             <div class="foot-div"></div>
-            <div class="foot-stat"><span class="foot-lbl">USES</span><span class="foot-val">2/2</span></div>
+            <div class="foot-stat foot-stat-use" data-remaining="2" data-total="2"><span class="foot-lbl">USES</span><span class="foot-val">2/2</span></div>
           </div>
         </div>
         <div class="tooltip black">
@@ -476,7 +550,7 @@
           <div class="footer">
             <div class="foot-stat foot-stat-blk"><span class="foot-lbl">BLOCK</span><span class="foot-val">2</span></div>
             <div class="foot-div"></div>
-            <div class="foot-stat"><span class="foot-lbl">USES</span><span class="foot-val">1/1</span></div>
+            <div class="foot-stat foot-stat-use" data-remaining="1" data-total="1"><span class="foot-lbl">USES</span><span class="foot-val">1/1</span></div>
           </div>
         </div>
         <div class="tooltip white">
@@ -503,7 +577,7 @@
           <div class="footer">
             <div class="foot-stat foot-stat-blk"><span class="foot-lbl">BLOCK</span><span class="foot-val">2</span></div>
             <div class="foot-div"></div>
-            <div class="foot-stat"><span class="foot-lbl">USES</span><span class="foot-val">2/2</span></div>
+            <div class="foot-stat foot-stat-use" data-remaining="2" data-total="2"><span class="foot-lbl">USES</span><span class="foot-val">2/2</span></div>
           </div>
         </div>
         <div class="tooltip black">
@@ -524,6 +598,30 @@
     </div>
   </div>
 </main>
+
+<script>
+(function () {
+  const toggle = document.getElementById('toggle-out-of-uses');
+  const panels = document.querySelectorAll('.eq-panel');
+
+  function setUsesText(useStat, remaining) {
+    const total = parseInt(useStat.dataset.total, 10);
+    useStat.querySelector('.foot-val').textContent = remaining + '/' + total;
+  }
+
+  function setOutOfUses(on) {
+    panels.forEach(panel => {
+      panel.classList.toggle('out-of-uses', on);
+      const useStat = panel.querySelector('.foot-stat-use');
+      if (!useStat) return;
+      const remaining = on ? 0 : parseInt(useStat.dataset.remaining, 10);
+      setUsesText(useStat, remaining);
+    });
+  }
+
+  toggle.addEventListener('change', () => setOutOfUses(toggle.checked));
+})();
+</script>
 
 </body>
 </html>

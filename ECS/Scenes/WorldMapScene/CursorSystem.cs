@@ -222,7 +222,8 @@ namespace Crusaders30XX.ECS.Systems
 							if (x.UI == null || x.UI.IsHidden
 								|| (!x.UI.IsInteractable
 									&& string.IsNullOrWhiteSpace(x.UI.Tooltip)
-									&& x.UI.TooltipType != TooltipType.Card))
+									&& x.UI.TooltipType != TooltipType.Card
+									&& x.UI.TooltipType != TooltipType.Equipment))
 							{
 								return false;
 							}

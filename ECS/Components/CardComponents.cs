@@ -366,6 +366,7 @@ namespace Crusaders30XX.ECS.Components
         None,
         Quests,
         Card,
+        Equipment,
         Text,
     }
 
