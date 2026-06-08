@@ -6,7 +6,7 @@ public static class EnemyAttackTextHelper
     {
       var conditionText = GetConditionText(conditionType);
       var enemyAttackText = GetEnemyAttackText(type, amount, customText);
-      var percentageText = percentage == 100 ? "" : $" ([{percentage}]% chance)";
+      var percentageText = percentage == 100 ? "" : $" ({percentage}% chance)";
       return $"{conditionText}{enemyAttackText}{percentageText}";
     }
     public static string GetConditionText(ConditionType conditionType)

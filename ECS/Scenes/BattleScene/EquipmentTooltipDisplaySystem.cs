@@ -18,6 +18,13 @@ namespace Crusaders30XX.ECS.Systems
 	[DebugTab("Equipment Tooltip")]
 	public class EquipmentTooltipDisplaySystem : Core.System
 	{
+		private const string FreeActionTagText = "FREE ACTION";
+
+		// v1 mockup .tooltip .tag
+		private static readonly Color TagFill = new Color(255, 255, 255, 15);
+		private static readonly Color TagBorder = new Color(255, 255, 255, 46);
+		private static readonly Color TagText = new Color(200, 192, 184);
+
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
@@ -68,7 +75,19 @@ namespace Crusaders30XX.ECS.Systems
 		public float ChipLabelFontScale { get; set; } = 0.05f;
 
 		[DebugEditable(DisplayName = "Tag Font Scale", Step = 0.01f, Min = 0.01f, Max = 1f)]
-		public float TagFontScale { get; set; } = 0.06f;
+		public float TagFontScale { get; set; } = 0.070f;
+
+		[DebugEditable(DisplayName = "Tag Corner Radius", Step = 1, Min = 0, Max = 20)]
+		public int TagCornerRadius { get; set; } = 3;
+
+		[DebugEditable(DisplayName = "Tag Padding X", Step = 1, Min = 0, Max = 40)]
+		public int TagPaddingX { get; set; } = 8;
+
+		[DebugEditable(DisplayName = "Tag Padding Y", Step = 1, Min = 0, Max = 40)]
+		public int TagPaddingY { get; set; } = 3;
+
+		[DebugEditable(DisplayName = "Tag Row Padding Top", Step = 1, Min = 0, Max = 40)]
+		public int TagRowPaddingTop { get; set; } = 4;
 
 		[DebugEditable(DisplayName = "Fade Seconds", Step = 0.01f, Min = 0.01f, Max = 1f)]
 		public float FadeSeconds { get; set; } = 0.10f;
@@ -223,7 +242,9 @@ namespace Crusaders30XX.ECS.Systems
 			height += MeasureWrappedHeight(bodyFont, equipment.FlavorText, BodyFontScale, bodyWidth);
 			if (equipment.CanActivateDuringActionPhase)
 			{
-				height += 27;
+				height += TagRowPaddingTop
+					+ TagPaddingY * 2
+					+ bodyFont.MeasureString(FreeActionTagText).Y * TagFontScale;
 			}
 			height += BodyPadding;
 			return Math.Max(TooltipMinHeight, (int)Math.Ceiling(height));
@@ -368,26 +389,57 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (equipment.CanActivateDuringActionPhase)
 			{
-				string tag = "FREE ACTION";
-				Vector2 size = bodyFont.MeasureString(tag) * TagFontScale;
-				var tagBounds = new Rectangle(
-					(int)x,
-					Math.Max((int)(y + 8f), body.Bottom - BodyPadding - (int)size.Y - 8),
-					(int)Math.Ceiling(size.X) + 16,
-					(int)Math.Ceiling(size.Y) + 6);
-				_spriteBatch.Draw(_pixel, tagBounds, new Color(255, 255, 255, 15) * alpha);
-				DrawBorder(tagBounds, new Color(255, 255, 255, 46) * alpha, 1);
-				_spriteBatch.DrawString(
-					bodyFont,
-					tag,
-					new Vector2(tagBounds.X + 8, tagBounds.Y + 3),
-					new Color(200, 192, 184) * alpha,
-					0f,
-					Vector2.Zero,
-					TagFontScale,
-					SpriteEffects.None,
-					0f);
+				DrawFreeActionTag(body, bodyFont, x, y, alpha);
 			}
+		}
+
+		private void DrawFreeActionTag(
+			Rectangle body,
+			SpriteFont bodyFont,
+			float contentX,
+			float contentY,
+			float alpha)
+		{
+			var tagBounds = ComputeFreeActionTagBounds(bodyFont, body, contentX, contentY);
+			DrawRoundedFilledBordered(tagBounds, TagCornerRadius, 1, TagFill, TagBorder, alpha);
+			_spriteBatch.DrawString(
+				bodyFont,
+				FreeActionTagText,
+				new Vector2(tagBounds.X + TagPaddingX, tagBounds.Y + TagPaddingY),
+				TagText * alpha,
+				0f,
+				Vector2.Zero,
+				TagFontScale,
+				SpriteEffects.None,
+				0f);
+		}
+
+		private Rectangle ComputeFreeActionTagBounds(
+			SpriteFont font,
+			Rectangle body,
+			float contentX,
+			float contentY)
+		{
+			Vector2 textSize = font.MeasureString(FreeActionTagText) * TagFontScale;
+			int pillW = (int)Math.Ceiling(textSize.X) + TagPaddingX * 2;
+			int pillH = (int)Math.Ceiling(textSize.Y) + TagPaddingY * 2;
+			int pillY = body.Bottom - BodyPadding - pillH;
+			pillY = Math.Max((int)(contentY + TagRowPaddingTop), pillY);
+			return new Rectangle((int)contentX, pillY, pillW, pillH);
+		}
+
+		private void DrawRoundedFilledBordered(
+			Rectangle bounds,
+			int radius,
+			int borderThickness,
+			Color fill,
+			Color border,
+			float alpha)
+		{
+			DrawRoundedRectWithRadius(bounds, border * alpha, radius);
+			var inner = Inset(bounds, borderThickness);
+			if (inner.Width <= 0 || inner.Height <= 0) return;
+			DrawRoundedRectWithRadius(inner, fill * alpha, Math.Max(0, radius - borderThickness));
 		}
 
 		private float DrawWrappedText(
@@ -447,6 +499,12 @@ namespace Crusaders30XX.ECS.Systems
 		private void DrawRoundedRect(Rectangle bounds, Color color)
 		{
 			int radius = Math.Min(CornerRadius, Math.Min(bounds.Width, bounds.Height) / 2);
+			DrawRoundedRectWithRadius(bounds, color, radius);
+		}
+
+		private void DrawRoundedRectWithRadius(Rectangle bounds, Color color, int radius)
+		{
+			radius = Math.Min(radius, Math.Min(bounds.Width, bounds.Height) / 2);
 			var key = (Width: bounds.Width, Height: bounds.Height, Radius: radius);
 			if (!_roundedRectCache.TryGetValue(key, out var texture))
 			{
