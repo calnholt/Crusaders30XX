@@ -43,17 +43,30 @@ namespace Crusaders30XX.ECS.Systems
 			if (!SaveCache.TryGetRunTreasure(treasureId, out var treasure, out _)) return;
 			if (!RunMapTreasureService.IsEnterable(treasure, SaveCache.GetRunMapNodes())) return;
 
-			if (!SaveCache.TryClaimRunMapTreasure(treasureId, EntityManager, out int rewardGold, out string rewardMedalId))
+			if (!SaveCache.TryClaimRunMapTreasure(
+				treasureId,
+				EntityManager,
+				out int rewardGold,
+				out string rewardMedalId,
+				out string rewardEquipmentId))
 			{
 				return;
 			}
 
-			RunMedalService.AcquireAndEquip(EntityManager, rewardMedalId);
+			if (!string.IsNullOrWhiteSpace(rewardEquipmentId))
+			{
+				RunEquipmentService.EquipOnPlayer(EntityManager, rewardEquipmentId);
+			}
+			else if (!string.IsNullOrWhiteSpace(rewardMedalId))
+			{
+				RunMedalService.AcquireAndEquip(EntityManager, rewardMedalId);
+			}
 
 			EventManager.Publish(new TreasureChestOpened
 			{
 				RewardGold = rewardGold,
-				RewardMedalId = rewardMedalId,
+				RewardMedalId = rewardMedalId ?? string.Empty,
+				RewardEquipmentId = rewardEquipmentId ?? string.Empty,
 			});
 		}
 	}

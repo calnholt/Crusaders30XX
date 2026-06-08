@@ -134,6 +134,7 @@ namespace Crusaders30XX.ECS.Services
 		{
 			foreach (var assigned in entityManager.GetEntitiesWithComponent<AssignedBlockCard>().ToList())
 			{
+				CardTransientStateService.ClearAssignedBlockHotKey(entityManager, assigned);
 				entityManager.RemoveComponent<AssignedBlockCard>(assigned);
 				var equipmentZone = assigned.GetComponent<EquipmentZone>();
 				if (equipmentZone != null) equipmentZone.Zone = EquipmentZoneType.Default;
@@ -141,6 +142,7 @@ namespace Crusaders30XX.ECS.Services
 
 			foreach (var card in entityManager.GetEntitiesWithComponent<CardData>().ToList())
 			{
+				CardTransientStateService.ClearAssignedBlockHotKey(entityManager, card);
 				RemoveIfPresent<Pledge>(entityManager, card);
 				RemoveIfPresent<PledgePreview>(entityManager, card);
 				RemoveIfPresent<SelectedForPayment>(entityManager, card);

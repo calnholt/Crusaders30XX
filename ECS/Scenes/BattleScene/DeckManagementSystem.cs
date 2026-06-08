@@ -145,6 +145,7 @@ namespace Crusaders30XX.ECS.Systems
                 var card = deck.DrawPile[0];
                 deck.DrawPile.RemoveAt(0);
                 CardTransientStateService.ClearHandVisibilityFilters(EntityManager, card);
+                CardTransientStateService.ClearAssignedBlockHotKey(EntityManager, card);
                 if (card.GetComponent<CardData>()?.Card?.IsWeapon == true)
                 {
                     deck.DiscardPile.Add(card);
@@ -375,6 +376,8 @@ namespace Crusaders30XX.ECS.Systems
 
             foreach (var c in allCards)
             {
+                CardTransientStateService.ClearAssignedBlockHotKey(EntityManager, c);
+
                 // Reset UI/transform state for ALL cards so they are hidden and reset
                 var ui = c.GetComponent<UIElement>();
                 if (ui != null)
@@ -409,6 +412,7 @@ namespace Crusaders30XX.ECS.Systems
                 foreach (var c in deck.Cards)
                 {
                     if (c == null) continue;
+                    CardTransientStateService.ClearAssignedBlockHotKey(EntityManager, c);
                     if (c.GetComponent<CardData>()?.Card?.IsWeapon == true) continue;
                     if (seen.Contains(c)) continue;
                     var ui = c.GetComponent<UIElement>();

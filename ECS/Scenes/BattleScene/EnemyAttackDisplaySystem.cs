@@ -27,6 +27,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly ContentManager _content;
 		private readonly SpriteFont _titleFont = FontSingleton.TitleFont;
 		private readonly SpriteFont _contentFont = FontSingleton.ContentFont;
+		private readonly SpriteFont _bodyFont = FontSingleton.ChakraPetchFont;
 		private readonly Texture2D _pixel;
 		private readonly Texture2D _enemyAttackCornerBlTexture;
 		private readonly Texture2D _enemyAttackCornerBrTexture;
@@ -402,7 +403,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Calculate and store banner rect for TutorialDisplaySystem to query
 			// Note: anchor Bounds are written in Draw (UpdateAnchorEntity) with parallax-adjusted
 			// values — do NOT overwrite them here, or downstream systems lose parallax.
-			if (_showBanner && _contentFont != null)
+			if (_showBanner && _contentFont != null && _bodyFont != null)
 			{
 				var pa = intent.Planned[0];
 				var def = pa.AttackDefinition;

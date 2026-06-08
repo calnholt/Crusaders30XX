@@ -13,8 +13,7 @@ namespace Crusaders30XX.ECS.Services
 			return RunMapLandmarkAccessService.IsWithinCompletedQuestFog(
 				treasure.worldX,
 				treasure.worldY,
-				nodes,
-				LocationMapConstants.RunMapTreasureMinUnlockDepth);
+				nodes);
 		}
 
 		public static bool TryGetTreasure(

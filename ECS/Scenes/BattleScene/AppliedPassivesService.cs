@@ -1,4 +1,3 @@
-using System;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -18,16 +17,6 @@ namespace Crusaders30XX.ECS.Systems
         var sourcePassives = e.Source.GetComponent<AppliedPassives>().Passives;
         var targetPassives = e.Target.GetComponent<AppliedPassives>().Passives;
         // var phaseState = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
-        if (sourcePassives.ContainsKey(AppliedPassiveType.Aggression) && e.DamageType == ModifyTypeEnum.Attack)
-        {
-          sourcePassives.TryGetValue(AppliedPassiveType.Aggression, out var amount);
-          delta += amount;
-          if (!ReadOnly)
-          {
-            Console.WriteLine($"[AppliedPassivesService] GetPassiveDelta.Aggression - {amount}");
-            EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.Aggression });
-          }
-        }
         if (targetPassives.ContainsKey(AppliedPassiveType.Armor) && e.DamageType == ModifyTypeEnum.Attack)
         {
           targetPassives.TryGetValue(AppliedPassiveType.Armor, out var amount);
@@ -52,6 +41,14 @@ namespace Crusaders30XX.ECS.Systems
         {
           var attackCard = e.AttackCard?.GetComponent<CardData>();
           bool isWeaponAttack = attackCard?.Card?.IsWeapon == true;
+          if (!isWeaponAttack && sourcePassives.TryGetValue(AppliedPassiveType.Aggression, out var aggression) && aggression > 0)
+          {
+            delta += aggression;
+            if (!ReadOnly)
+            {
+              EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.Aggression });
+            }
+          }
           if (isWeaponAttack && sourcePassives.TryGetValue(AppliedPassiveType.Sharpen, out var sharpen) && sharpen > 0)
           {
             delta += sharpen;

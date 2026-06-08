@@ -182,6 +182,8 @@ namespace Crusaders30XX.ECS.Components
 			public List<string> RewardCardKeys { get; set; } = new List<string>();
 			public bool HasMedalReward { get; set; } = false;
 			public string RewardMedalId { get; set; } = string.Empty;
+			public bool HasEquipmentReward { get; set; } = false;
+			public string RewardEquipmentId { get; set; } = string.Empty;
 			public bool DismissToLocation { get; set; } = true;
 			public bool DismissInProgress { get; set; } = false;
 			public bool CardSelectionInProgress { get; set; } = false;

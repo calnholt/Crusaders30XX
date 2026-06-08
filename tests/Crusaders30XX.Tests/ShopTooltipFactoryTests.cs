@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Services;
 using Xunit;
 
 namespace Crusaders30XX.Tests;
@@ -51,6 +52,25 @@ public class ShopTooltipFactoryTests
 		Assert.Equal("kunai", tooltip.CardId);
 		Assert.Equal(0.6f, tooltip.TooltipScale);
 		Assert.Equal(CardData.CardColor.Red, tooltip.CardColor);
+	}
+
+	[Fact]
+	public void Run_shop_equipment_uses_equipment_service_tooltip_above()
+	{
+		var entityManager = new EntityManager();
+		var shopEquipment = CreateRunShopItem(entityManager, new RunMapShopItem
+		{
+			itemType = RunMapShopItem.ItemTypeEquipment,
+			cardId = "helm_of_seeing",
+		});
+
+		var equipment = EquipmentFactory.Create("helm_of_seeing");
+		var ui = shopEquipment.GetComponent<UIElement>();
+		var fs = shopEquipment.GetComponent<ForSaleItem>();
+
+		Assert.Equal(ForSaleItemType.Equipment, fs.ItemType);
+		Assert.Equal(EquipmentService.GetTooltipText(equipment, EquipmentTooltipType.Shop), ui.Tooltip);
+		Assert.Equal(TooltipPosition.Above, ui.TooltipPosition);
 	}
 
 	[Fact]

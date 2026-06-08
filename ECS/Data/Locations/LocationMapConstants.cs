@@ -63,7 +63,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		/// <summary>Placement rejects candidates closer than this to any playable border.</summary>
 		public static float MinPlacementEdgeInset => Math.Max(250f, PlayableMinDimension * 0.08f);
 		public const int RunMapShopCount = 3;
-		public const int RunMapTreasureCount = 2;
+		public const int RunMapTreasureCount = 3;
 		public const int RunMapEventCount = 2;
 		public const int RunMapTreasureGoldMin = 10;
 		public const int RunMapTreasureGoldMax = 30;
@@ -71,6 +71,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 		public const int RunMapShopItemsPerShop = 3;
 		public const int RunMapShopCardPrice = 30;
 		public const int RunMapShopMedalPrice = 50;
+		public const int RunMapShopEquipmentPrice = 50;
 
 		// Shops sit inside completed-quest fog; clearance is icon-scale, not map MinNodeSpacing.
 		public const float RunMapShopClearanceFromQuest = 400f;

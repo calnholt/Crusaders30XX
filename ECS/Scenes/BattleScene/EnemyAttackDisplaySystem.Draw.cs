@@ -49,7 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();
-			if (intent == null || intent.Planned.Count == 0 || _contentFont == null) return null;
+			if (intent == null || intent.Planned.Count == 0 || _contentFont == null || _bodyFont == null) return null;
 
 			var phaseNow = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>().Sub;
 			if (phaseNow != SubPhase.Block && phaseNow != SubPhase.EnemyAttack) return null;
@@ -89,7 +89,8 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				var (text, lineScale, color) = lines[i];
 				bool centerTitle = (i == 0);
-				var parts = TextUtils.WrapText(_contentFont, text, lineScale, contentWidthLimitPx);
+				var font = centerTitle ? _contentFont : _bodyFont;
+				var parts = TextUtils.WrapText(font, text, lineScale, contentWidthLimitPx);
 				foreach (var p in parts)
 				{
 					wrappedLines.Add((p, lineScale, color, centerTitle));
@@ -102,7 +103,8 @@ namespace Crusaders30XX.ECS.Systems
 			bool isFirstTitleForHeight = true;
 			foreach (var (text, lineScale, _, centerTitle) in wrappedLines)
 			{
-				var sz = _contentFont.MeasureString(text);
+				var font = centerTitle ? _contentFont : _bodyFont;
+				var sz = font.MeasureString(text);
 				maxW = Math.Max(maxW, sz.X * lineScale);
 				float spacing = (isFirstTitleForHeight && centerTitle) ? TitleSpacingExtra : LineSpacingExtra;
 				totalH += sz.Y * lineScale + spacing;
@@ -235,13 +237,14 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var (text, baseScale, color, centerTitle) in ctx.WrappedLines)
 			{
 				float s = baseScale * ctx.PanelScale * ctx.ContentScale;
-				var sz = _contentFont.MeasureString(text);
+				var font = centerTitle ? _contentFont : _bodyFont;
+				var sz = font.MeasureString(text);
 				float textWidth = sz.X * s;
 				float textHeight = sz.Y * s;
 				float x = centerTitle
 					? ctx.Rect.X + (ctx.Rect.Width - textWidth) / 2f
 					: ctx.Rect.X + ctx.Padding * ctx.PanelScale * ctx.ContentScale;
-				_spriteBatch.DrawString(_contentFont, text, new Vector2(x, y), color, 0f, Vector2.Zero, s, SpriteEffects.None, 0f);
+				_spriteBatch.DrawString(font, text, new Vector2(x, y), color, 0f, Vector2.Zero, s, SpriteEffects.None, 0f);
 
 				// Track bounds for non-title lines (these are the def.Text lines)
 				if (!centerTitle)
@@ -399,14 +402,31 @@ namespace Crusaders30XX.ECS.Systems
 			int minPanelWidthPx = (int)Math.Round(vx * minPercent);
 			int contentWidthLimitPx = Math.Max(50, maxPanelWidthPx - pad * 2);
 
-			// Use shared service for panel measurement
-			var lines = new List<(string text, float scale)>();
-			lines.Add((def.Name, TitleScale));
-			lines.Add((def.Text, TextScale));
+			var lines = new List<(string text, float scale, SpriteFont font)>
+			{
+				(def.Name, TitleScale, _contentFont),
+				(def.Text, TextScale, _bodyFont),
+			};
 
-			var (w, h) = EnemyAttackAnimationService.MeasurePanelSize(
-				_contentFont, lines, pad, maxPanelWidthPx, minPanelWidthPx,
-				contentWidthLimitPx, TitleSpacingExtra, LineSpacingExtra);
+			float maxW = 0f;
+			float totalH = 0f;
+			bool isFirstTitle = true;
+			foreach (var (text, lineScale, font) in lines)
+			{
+				var parts = TextUtils.WrapText(font, text, lineScale, contentWidthLimitPx);
+				foreach (var p in parts)
+				{
+					var sz = font.MeasureString(p);
+					maxW = Math.Max(maxW, sz.X * lineScale);
+					float spacing = isFirstTitle ? TitleSpacingExtra : LineSpacingExtra;
+					totalH += sz.Y * lineScale + spacing;
+					if (isFirstTitle) isFirstTitle = false;
+				}
+			}
+
+			int w = (int)Math.Ceiling(Math.Min(maxW + pad * 2, maxPanelWidthPx));
+			w = Math.Max(w, minPanelWidthPx);
+			int h = (int)Math.Ceiling(totalH) + pad * 2;
 
 			// Calculate animation effects via shared service
 			float panelScale = 1f;

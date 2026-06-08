@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Objects.Equipment;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Services;
@@ -26,6 +27,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Texture2D _pixel;
 		private readonly List<Entity> _rewardCardEntities = new();
 		private Entity _rewardMedalEntity;
+		private Entity _rewardEquipmentEntity;
+		private readonly Dictionary<string, Texture2D> _equipmentIconCache = new();
 		private QuestRewardLayout _layout;
 
 		private bool _layoutValid;
@@ -36,6 +39,7 @@ namespace Crusaders30XX.ECS.Systems
 		private bool _cachedShowGold;
 		private bool _cachedShowCard;
 		private bool _cachedShowMedal;
+		private bool _cachedShowEquipment;
 		private int _cachedRewardGold;
 		private int _cachedRewardCardCount;
 		private LayoutSignature _layoutSignature;
@@ -119,6 +123,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Medal Preview Size", Step = 2, Min = 40, Max = 400)]
 		public int MedalPreviewSize { get; set; } = 180;
+		[DebugEditable(DisplayName = "Equipment Name Scale", Step = 0.01f, Min = 0.05f, Max = 0.5f)]
+		public float EquipmentNameScale { get; set; } = 0.14f;
 
 		[DebugEditable(DisplayName = "Drop Shadow Offset Y", Step = 1, Min = 0, Max = 40)]
 		public int DropShadowOffsetY { get; set; } = 16;
@@ -252,6 +258,7 @@ namespace Crusaders30XX.ECS.Systems
 			_gradientRuleCache.DisposeAll();
 			DestroyRewardCards();
 			DestroyRewardMedal();
+			DestroyRewardEquipment();
 		}
 
 		private void InvalidateCaches()
@@ -301,24 +308,25 @@ namespace Crusaders30XX.ECS.Systems
 			};
 		}
 
-		private bool NeedsLayoutRebuild(int vw, int vh, bool showGold, bool showCard, bool showMedal, int rewardGold, int rewardCardCount)
+		private bool NeedsLayoutRebuild(int vw, int vh, bool showGold, bool showCard, bool showMedal, bool showEquipment, int rewardGold, int rewardCardCount)
 		{
 			if (!_layoutValid) return true;
 			if (vw != _cachedVw || vh != _cachedVh) return true;
-			if (showGold != _cachedShowGold || showCard != _cachedShowCard || showMedal != _cachedShowMedal || rewardGold != _cachedRewardGold || rewardCardCount != _cachedRewardCardCount) return true;
+			if (showGold != _cachedShowGold || showCard != _cachedShowCard || showMedal != _cachedShowMedal || showEquipment != _cachedShowEquipment || rewardGold != _cachedRewardGold || rewardCardCount != _cachedRewardCardCount) return true;
 			var sig = CaptureLayoutSignature();
 			return !sig.Equals(_layoutSignature);
 		}
 
-		private void EnsureLayout(int vw, int vh, bool showGold, bool showCard, bool showMedal, int rewardGold, int rewardCardCount, SceneState scene)
+		private void EnsureLayout(int vw, int vh, bool showGold, bool showCard, bool showMedal, bool showEquipment, int rewardGold, int rewardCardCount, SceneState scene)
 		{
-			if (!NeedsLayoutRebuild(vw, vh, showGold, showCard, showMedal, rewardGold, rewardCardCount)) return;
+			if (!NeedsLayoutRebuild(vw, vh, showGold, showCard, showMedal, showEquipment, rewardGold, rewardCardCount)) return;
 
 			_cachedVw = vw;
 			_cachedVh = vh;
 			_cachedShowGold = showGold;
 			_cachedShowCard = showCard;
 			_cachedShowMedal = showMedal;
+			_cachedShowEquipment = showEquipment;
 			_cachedRewardGold = rewardGold;
 			_cachedRewardCardCount = rewardCardCount;
 			_layoutSignature = CaptureLayoutSignature();
@@ -327,7 +335,7 @@ namespace Crusaders30XX.ECS.Systems
 					|| scene.Current == SceneId.Location
 					|| scene.Current == SceneId.Snapshot);
 
-			_layout = ComputeLayout(vw, vh, showGold, showCard, showMedal, rewardCardCount, _layoutSignature);
+			_layout = ComputeLayout(vw, vh, showGold, showCard, showMedal || showEquipment, rewardCardCount, _layoutSignature);
 			RebuildTextMetrics(rewardGold, showGold);
 			_layoutValid = true;
 			_textMetricsValid = true;
@@ -441,7 +449,8 @@ namespace Crusaders30XX.ECS.Systems
 			int rewardCardCount = _rewardCardEntities.Count;
 			bool showCard = state.HasCardReward && rewardCardCount > 0;
 			bool showMedal = state.HasMedalReward && !string.IsNullOrEmpty(state.RewardMedalId);
-			EnsureLayout(vw, vh, showGold, showCard, showMedal, state.RewardGold, rewardCardCount, scene);
+			bool showEquipment = state.HasEquipmentReward && !string.IsNullOrEmpty(state.RewardEquipmentId);
+			EnsureLayout(vw, vh, showGold, showCard, showMedal, showEquipment, state.RewardGold, rewardCardCount, scene);
 
 			var overlayT = overlayEntity.GetComponent<Transform>();
 			if (overlayT != null) overlayT.ZOrder = ZOrder;
@@ -465,6 +474,19 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				var medalUi = _rewardMedalEntity.GetComponent<UIElement>();
 				if (medalUi != null) medalUi.Bounds = Rectangle.Empty;
+			}
+
+			if (showEquipment && _rewardEquipmentEntity != null)
+			{
+				var equipT = _rewardEquipmentEntity.GetComponent<Transform>();
+				var equipUi = _rewardEquipmentEntity.GetComponent<UIElement>();
+				if (equipT != null) equipT.ZOrder = ZOrder + 1;
+				if (equipUi != null) equipUi.Bounds = _layout.MedalPreviewRect;
+			}
+			else if (_rewardEquipmentEntity != null)
+			{
+				var equipUi = _rewardEquipmentEntity.GetComponent<UIElement>();
+				if (equipUi != null) equipUi.Bounds = Rectangle.Empty;
 			}
 
 			var btn = EnsureProceedButton();
@@ -508,6 +530,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			DestroyRewardCards();
 			DestroyRewardMedal();
+			DestroyRewardEquipment();
 			InvalidateCaches();
 			if (!string.IsNullOrEmpty(e?.Message)) st.Message = e.Message;
 			st.TitleLine1 = string.IsNullOrWhiteSpace(e?.TitleLine1) ? TitleLine1 : e.TitleLine1;
@@ -518,6 +541,8 @@ namespace Crusaders30XX.ECS.Systems
 			st.RewardCardKeys = NormalizeRewardCardKeys(e);
 			st.HasMedalReward = false;
 			st.RewardMedalId = string.Empty;
+			st.HasEquipmentReward = false;
+			st.RewardEquipmentId = string.Empty;
 			st.DismissToLocation = true;
 			st.DismissInProgress = false;
 			st.CardSelectionInProgress = false;
@@ -543,6 +568,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			DestroyRewardCards();
 			DestroyRewardMedal();
+			DestroyRewardEquipment();
 			InvalidateCaches();
 			st.Message = string.Empty;
 			st.TitleLine1 = "Treasure";
@@ -553,6 +579,8 @@ namespace Crusaders30XX.ECS.Systems
 			st.RewardCardKeys = new List<string>();
 			st.HasMedalReward = !string.IsNullOrWhiteSpace(e?.RewardMedalId);
 			st.RewardMedalId = e?.RewardMedalId ?? string.Empty;
+			st.HasEquipmentReward = !string.IsNullOrWhiteSpace(e?.RewardEquipmentId);
+			st.RewardEquipmentId = e?.RewardEquipmentId ?? string.Empty;
 			st.DismissToLocation = false;
 			st.DismissInProgress = false;
 			st.CardSelectionInProgress = false;
@@ -563,6 +591,10 @@ namespace Crusaders30XX.ECS.Systems
 			if (st.HasMedalReward && !string.IsNullOrEmpty(st.RewardMedalId))
 			{
 				_rewardMedalEntity = CreateRewardMedalHitbox(st.RewardMedalId);
+			}
+			else if (st.HasEquipmentReward && !string.IsNullOrEmpty(st.RewardEquipmentId))
+			{
+				_rewardEquipmentEntity = CreateRewardEquipmentHitbox(st.RewardEquipmentId);
 			}
 		}
 
@@ -616,11 +648,12 @@ namespace Crusaders30XX.ECS.Systems
 			int rewardCardCount = _rewardCardEntities.Count;
 			bool showCard = st.HasCardReward && rewardCardCount > 0;
 			bool showMedal = st.HasMedalReward && !string.IsNullOrEmpty(st.RewardMedalId);
+			bool showEquipment = st.HasEquipmentReward && !string.IsNullOrEmpty(st.RewardEquipmentId);
 
 			if (!_layoutValid || !_textMetricsValid)
 			{
 				var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-				EnsureLayout(vw, vh, showGold, showCard, showMedal, st.RewardGold, rewardCardCount, scene);
+				EnsureLayout(vw, vh, showGold, showCard, showMedal, showEquipment, st.RewardGold, rewardCardCount, scene);
 			}
 
 			if (!_drawInBattleOrSnapshot) return;
@@ -651,6 +684,7 @@ namespace Crusaders30XX.ECS.Systems
 				DrawStageLabel();
 				DrawRightColumnCard(showCard);
 				DrawRightColumnMedal(showMedal, st.RewardMedalId);
+				DrawRightColumnEquipment(showEquipment, st.RewardEquipmentId);
 			}
 
 			if (!showCard)
@@ -902,6 +936,8 @@ namespace Crusaders30XX.ECS.Systems
 			state.RewardCardKeys = new List<string>();
 			state.HasMedalReward = false;
 			state.RewardMedalId = string.Empty;
+			state.HasEquipmentReward = false;
+			state.RewardEquipmentId = string.Empty;
 			state.CardSelectionInProgress = false;
 			state.SelectedRewardCardIndex = -1;
 			state.CardSelectionElapsedSeconds = 0f;
@@ -909,6 +945,7 @@ namespace Crusaders30XX.ECS.Systems
 			HideProceedButton();
 			DestroyRewardCards();
 			DestroyRewardMedal();
+			DestroyRewardEquipment();
 			InvalidateCaches();
 		}
 
@@ -953,6 +990,18 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			EntityManager.DestroyEntity(_rewardMedalEntity.Id);
 			_rewardMedalEntity = null;
+		}
+
+		private void DestroyRewardEquipment()
+		{
+			if (_rewardEquipmentEntity == null)
+			{
+				var orphan = EntityManager.GetEntity("QuestRewardEquipmentHitbox");
+				if (orphan != null) EntityManager.DestroyEntity(orphan.Id);
+				return;
+			}
+			EntityManager.DestroyEntity(_rewardEquipmentEntity.Id);
+			_rewardEquipmentEntity = null;
 		}
 
 		private void SyncRewardCardHitboxes(QuestRewardOverlayState state)
@@ -1169,6 +1218,81 @@ namespace Crusaders30XX.ECS.Systems
 			EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
 			EntityManager.AddComponent(ent, new DontDestroyOnLoad());
 			return ent;
+		}
+
+		private Entity CreateRewardEquipmentHitbox(string equipmentId)
+		{
+			var equipment = EquipmentFactory.Create(equipmentId);
+			if (equipment == null) return null;
+
+			var ent = EntityManager.CreateEntity("QuestRewardEquipmentHitbox");
+			EntityManager.AddComponent(ent, new Transform { Position = Vector2.Zero, ZOrder = ZOrder + 1 });
+			EntityManager.AddComponent(ent, new UIElement
+			{
+				Bounds = Rectangle.Empty,
+				IsInteractable = true,
+				Tooltip = EquipmentService.GetTooltipText(equipment, EquipmentTooltipType.Shop),
+				TooltipPosition = TooltipPosition.Below,
+				LayerType = UILayerType.Overlay
+			});
+			EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
+			EntityManager.AddComponent(ent, new DontDestroyOnLoad());
+			return ent;
+		}
+
+		private void DrawRightColumnEquipment(bool showEquipment, string equipmentId)
+		{
+			if (!showEquipment || string.IsNullOrWhiteSpace(equipmentId)) return;
+
+			var equipment = EquipmentFactory.Create(equipmentId);
+			if (equipment == null) return;
+
+			var r = _layout.MedalPreviewRect;
+			if (r.Width <= 0 || r.Height <= 0) return;
+
+			var icon = GetEquipmentSlotIcon(equipment.Slot);
+			if (icon != null)
+			{
+				int iconSize = System.Math.Min(r.Width, r.Height);
+				var iconRect = new Rectangle(
+					r.X + (r.Width - iconSize) / 2,
+					r.Y,
+					iconSize,
+					iconSize);
+				_spriteBatch.Draw(icon, iconRect, Color.White);
+			}
+
+			if (_bodyFont == null || string.IsNullOrWhiteSpace(equipment.Name)) return;
+
+			Vector2 nameSize = _bodyFont.MeasureString(equipment.Name) * EquipmentNameScale;
+			float nameX = r.X + r.Width / 2f - nameSize.X / 2f;
+			float nameY = r.Bottom + 8f;
+			_spriteBatch.DrawString(
+				_bodyFont,
+				equipment.Name,
+				new Vector2(nameX, nameY),
+				Color.White,
+				0f,
+				Vector2.Zero,
+				EquipmentNameScale,
+				SpriteEffects.None,
+				0f);
+		}
+
+		private Texture2D GetEquipmentSlotIcon(EquipmentSlot slot)
+		{
+			string key = slot.ToString().ToLowerInvariant();
+			if (_equipmentIconCache.TryGetValue(key, out var cached)) return cached;
+			try
+			{
+				cached = _content?.Load<Texture2D>(key);
+			}
+			catch
+			{
+				cached = null;
+			}
+			_equipmentIconCache[key] = cached;
+			return cached;
 		}
 
 		private static CardData.CardColor ParseColor(string color)

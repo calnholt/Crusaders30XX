@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Services;
 using Xunit;
@@ -17,6 +18,7 @@ public class RunMapTreasureGeneratorServiceTests
 			var shops = RunMapShopGeneratorService.Generate(seed, nodes);
 			var treasures = RunMapTreasureGeneratorService.Generate(seed, nodes, shops);
 			Assert.Equal(LocationMapConstants.RunMapTreasureCount, treasures.Count);
+			Assert.Equal(1, treasures.Count(t => t.grantsEquipmentReward));
 
 			var depths = RunMapNodeDepthHelper.ComputeDepths(nodes);
 			for (int n = 0; n < nodes.Count; n++)

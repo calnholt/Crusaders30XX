@@ -214,6 +214,37 @@ public sealed class EquipmentDisplaySystemTests : IDisposable
 	}
 
 	[Fact]
+	public void Layout_enables_hover_highlight_when_equipment_has_uses()
+	{
+		var entityManager = BuildBattle(out var player, SubPhase.Action);
+		var equipment = AddEquipment(entityManager, player, "helm_of_seeing");
+		var display = new EquipmentDisplaySystem(entityManager, null, null, null);
+
+		display.Update(Frame());
+
+		var ui = equipment.GetComponent<UIElement>();
+		Assert.True(ui.ShowHoverHighlight);
+		ui.IsHovered = true;
+		Assert.True(UIElementHighlightSystem.ShouldShowHoverHighlight(ui));
+	}
+
+	[Fact]
+	public void Layout_disables_hover_highlight_when_equipment_exhausted()
+	{
+		var entityManager = BuildBattle(out var player, SubPhase.Action);
+		var equipment = AddEquipment(entityManager, player, "helm_of_seeing");
+		equipment.GetComponent<EquippedEquipment>().Equipment.RemainingUses = 0;
+		var display = new EquipmentDisplaySystem(entityManager, null, null, null);
+
+		display.Update(Frame());
+
+		var ui = equipment.GetComponent<UIElement>();
+		Assert.False(ui.ShowHoverHighlight);
+		ui.IsHovered = true;
+		Assert.False(UIElementHighlightSystem.ShouldShowHoverHighlight(ui));
+	}
+
+	[Fact]
 	public void Action_phase_click_on_available_free_action_equipment_emits_activation_event()
 	{
 		var entityManager = BuildBattle(out var player, SubPhase.Action);

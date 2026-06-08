@@ -903,9 +903,9 @@ namespace Crusaders30XX.ECS.Components
         public float GlowMaxIntensity { get; set; } = 0.8f;
         public int CornerRadius { get; set; } = 23;
         public int HighlightBorderThickness { get; set; } = 4;
-        public int GlowColorR { get; set; } = 0;
-        public int GlowColorG { get; set; } = 0;
-        public int GlowColorB { get; set; } = 0;
+        public int GlowColorR { get; set; } = 196;
+        public int GlowColorG { get; set; } = 30;
+        public int GlowColorB { get; set; } = 58;
     }
 
     /// <summary>

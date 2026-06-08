@@ -46,6 +46,7 @@ public class EnemyPhaseResetServiceTests
 		var exhaustedCard = CreateCard(world, "Exhausted");
 		world.AddComponent(handCard, new Pledge());
 		world.AddComponent(handCard, new Frozen());
+		world.AddComponent(handCard, new HotKey { Button = FaceButton.B, Position = HotKeyPosition.Top });
 		deck.Cards.AddRange(new[] { drawCard, handCard, discardCard, exhaustedCard });
 		deck.DrawPile.Add(drawCard);
 		deck.Hand.Add(handCard);
@@ -102,6 +103,7 @@ public class EnemyPhaseResetServiceTests
 		Assert.DoesNotContain(exhaustedCard, deck.DrawPile);
 		Assert.True(handCard.HasComponent<Frozen>());
 		Assert.False(handCard.HasComponent<Pledge>());
+		Assert.False(handCard.HasComponent<HotKey>());
 	}
 
 	private static Entity CreateCard(World world, string name)

@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "fury";
             Name = "Fury";
             Target = "Player";
-            Text = "Double your aggression.";
+            Text = "Gain 1 aggression, then double your aggression.";
             IsFreeAction = true;
             Animation = "Buff";
             Block = 3;
@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             OnPlay = (entityManager, card) =>
             {
                 var player = entityManager.GetEntity("Player");
+                EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = 1 });
                 player.GetComponent<AppliedPassives>().Passives.TryGetValue(AppliedPassiveType.Aggression, out var amount);
                 if (amount > 0)
                 {

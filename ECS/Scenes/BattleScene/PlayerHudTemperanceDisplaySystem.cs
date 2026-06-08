@@ -68,9 +68,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (ui == null) return;
 
 			var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-			int amount = player?.GetComponent<Temperance>()?.Amount ?? 0;
-			int threshold = ResolveThreshold(player);
-			ui.Tooltip = $"{amount}/{threshold} Temperance";
+			ui.Tooltip = BuildTooltip(player);
 			ui.TooltipType = TooltipType.Text;
 			ui.TooltipPosition = TooltipPosition.Above;
 			ui.ShowHoverHighlight = false;
@@ -173,6 +171,21 @@ namespace Crusaders30XX.ECS.Systems
 			string abilityId = player?.GetComponent<EquippedTemperanceAbility>()?.AbilityId;
 			var ability = string.IsNullOrEmpty(abilityId) ? null : TemperanceFactory.Create(abilityId);
 			return Math.Max(1, ability?.Threshold ?? 1);
+		}
+
+		internal static string BuildTooltip(Entity player)
+		{
+			const string blockingRule = "Blocking with white cards gains temperance.";
+			string abilityId = player?.GetComponent<EquippedTemperanceAbility>()?.AbilityId;
+			var ability = string.IsNullOrEmpty(abilityId) ? null : TemperanceFactory.Create(abilityId);
+			string name = ability?.Name ?? string.Empty;
+			string abilityText = ability?.Text ?? string.Empty;
+			string abilityLine = !string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(abilityText)
+				? $"{name} - {abilityText}"
+				: !string.IsNullOrEmpty(name) ? name : abilityText;
+			return string.IsNullOrEmpty(abilityLine)
+				? $"Temperance\n\n\n\n{blockingRule}"
+				: $"Temperance\n\n{abilityLine}\n\n{blockingRule}";
 		}
 
 		private void DrawParallelogram(Rectangle bounds, int slant, Color color)

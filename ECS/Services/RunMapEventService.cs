@@ -13,8 +13,7 @@ namespace Crusaders30XX.ECS.Services
 			return RunMapLandmarkAccessService.IsWithinCompletedQuestFog(
 				mapEvent.worldX,
 				mapEvent.worldY,
-				nodes,
-				minCompletedDepth: 0);
+				nodes);
 		}
 
 		public static bool TryGetEvent(

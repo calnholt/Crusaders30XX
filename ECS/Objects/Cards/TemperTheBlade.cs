@@ -6,18 +6,18 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class TemperTheBlade : CardBase
     {
-        private int SharpenAmount = 5;
+        private int SharpenAmount = 4;
 
         public TemperTheBlade()
         {
             CardId = "temper_the_blade";
             Name = "Temper the Blade";
             Target = "Player";
-            Text = $"Sharpen {SharpenAmount}.";
+            Text = $"Gain sharpen {SharpenAmount}.";
             IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;
-            Block = 3;
+            Block = 2;
 
             OnPlay = (entityManager, card) =>
             {

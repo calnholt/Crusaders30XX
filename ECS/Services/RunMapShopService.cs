@@ -13,8 +13,7 @@ namespace Crusaders30XX.ECS.Services
 			return RunMapLandmarkAccessService.IsWithinCompletedQuestFog(
 				shop.worldX,
 				shop.worldY,
-				nodes,
-				minCompletedDepth: 0);
+				nodes);
 		}
 
 		public static bool TryGetShop(string shopId, IReadOnlyList<RunMapShop> shops, out RunMapShop shop, out int index)

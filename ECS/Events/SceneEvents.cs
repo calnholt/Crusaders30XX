@@ -33,6 +33,7 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public int RewardGold;
 		public string RewardMedalId;
+		public string RewardEquipmentId;
 	}
 
 	public class ShowNarrativeEventOverlay

@@ -111,7 +111,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 rot = t?.Rotation ?? 0f;
 
-                DrawHighlight(targetRect, rot, fakeGameTime);
+                DrawHighlight(e, targetRect, rot, fakeGameTime);
             }
         }
 
@@ -157,11 +157,28 @@ namespace Crusaders30XX.ECS.Systems
             );
         }
 
-        private void DrawHighlight(Rectangle targetRect, float rotation, GameTime gameTime)
+        private void DrawHighlight(Entity entity, Rectangle targetRect, float rotation, GameTime gameTime)
         {
-            var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-            var s = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
-            int th = s?.HighlightBorderThickness ?? 5;
+            var esEntity = EntityManager.GetEntitiesWithComponent<EquipmentHighlightSettings>().FirstOrDefault();
+            var es = esEntity?.GetComponent<EquipmentHighlightSettings>() ?? new EquipmentHighlightSettings();
+            bool isEquipment = entity.GetComponent<EquippedEquipment>() != null
+                && entity.GetComponent<CardData>() == null;
+
+            int th;
+            int cornerRadius;
+            if (isEquipment)
+            {
+                th = es.HighlightBorderThickness;
+                cornerRadius = es.CornerRadius;
+            }
+            else
+            {
+                var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
+                var s = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+                th = s?.HighlightBorderThickness ?? 5;
+                cornerRadius = s?.CardCornerRadius ?? 18;
+            }
+
             var highlightRect = new Rectangle(
                 targetRect.X - th,
                 targetRect.Y - th,
@@ -170,13 +187,11 @@ namespace Crusaders30XX.ECS.Systems
             );
 
             var hoverDuration = gameTime.TotalGameTime.TotalSeconds - _pulseStartSeconds;
-            var esEntity = EntityManager.GetEntitiesWithComponent<EquipmentHighlightSettings>().FirstOrDefault();
-            var es = esEntity?.GetComponent<EquipmentHighlightSettings>() ?? new EquipmentHighlightSettings();
             float pulse01 = (float)(Math.Cos(hoverDuration * es.GlowPulseSpeed) * 0.5f + 0.5f);
             float eased = (float)Math.Pow(MathHelper.Clamp(pulse01, 0f, 1f), es.GlowEasingPower);
             float pulseAmount = MathHelper.Lerp(MathHelper.Clamp(es.GlowMinIntensity, 0f, 1f), MathHelper.Clamp(es.GlowMaxIntensity, 0f, 1f), eased);
 
-            int radius = Math.Max(0, (s?.CardCornerRadius ?? 18) + th);
+            int radius = Math.Max(0, cornerRadius + th);
             var baseTex = GetRoundedRectTexture(highlightRect.Width, highlightRect.Height, radius);
             var center = new Vector2(highlightRect.X + highlightRect.Width / 2f, highlightRect.Y + highlightRect.Height / 2f);
 

@@ -313,7 +313,7 @@ namespace Crusaders30XX.ECS.Systems
 					ui.TooltipPosition = TooltipPosition.Right;
 					ui.TooltipOffsetPx = 20;
 					ui.EventType = UIElementEventType.None;
-					ui.ShowHoverHighlight = false;
+					ui.ShowHoverHighlight = entity.GetComponent<EquippedEquipment>().Equipment.HasUses;
 
 					Rectangle worldBounds = TransformResolverService.ResolveUIBounds(EntityManager, entity, ui);
 					if (zone.LastPanelCenter == Vector2.Zero)
@@ -339,7 +339,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (stableBounds.Width <= 0 || stableBounds.Height <= 0) return;
 			Rectangle drawBounds = ScaleAroundCenter(stableBounds, GetPulseScale(entity.Id));
 			bool exhausted = !equipped.Equipment.HasUses;
-			Color border = GetPanelBorder(equipped.Equipment.Color, entity.GetComponent<UIElement>()?.IsHovered == true, exhausted);
+			Color border = GetPanelBorder(equipped.Equipment.Color, exhausted);
 			Color socket = GetSocketColor(equipped.Equipment.Color, exhausted);
 
 			DrawRoundedRect(drawBounds, border);
@@ -574,9 +574,8 @@ namespace Crusaders30XX.ECS.Systems
 			};
 		}
 
-		private Color GetPanelBorder(CardData.CardColor color, bool hovered, bool exhausted)
+		private Color GetPanelBorder(CardData.CardColor color, bool exhausted)
 		{
-			if (hovered && !exhausted) return new Color(196, 30, 58);
 			Color baseColor = color switch
 			{
 				CardData.CardColor.Red => new Color(204, 34, 34, 140),

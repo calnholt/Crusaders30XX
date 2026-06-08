@@ -6,8 +6,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class ZealousVow : CardBase
     {
-        private int SharpenAmount = 3;
-        private int AggressionAmount = 3;
+        private int SharpenAmount = 2;
+        private int AggressionAmount = 2;
 
         public ZealousVow()
         {
@@ -18,7 +18,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;
-            Block = 2;
+            Block = 3;
 
             OnPlay = (entityManager, card) =>
             {

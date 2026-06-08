@@ -23,7 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly ContentManager _content;
         private Texture2D _angelTexture;
         private Texture2D _pixel;
-        private SpriteFont _font = FontSingleton.ContentFont;
+        private SpriteFont _font = FontSingleton.ChakraPetchFont;
 
         private float _t;
 		private Vector2 _pos;

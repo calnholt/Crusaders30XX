@@ -40,20 +40,15 @@ namespace Crusaders30XX.ECS.Services
 		{
 			return new[]
 			{
-				// "anoint_the_sick",
 				"smite",
 				"fervor",
 				"courageous",
 				"reckoning",
-				// "absolution",
 				"increase_faith",
 				"litany_of_wrath",
 				"exaltation",
-				// "seize",
-				// "shield_of_faith",
 				"stab",
 				"tempest",
-				// "razor_storm",
 				"hold_the_line",
 			};
 		}
@@ -62,22 +57,16 @@ namespace Crusaders30XX.ECS.Services
 		{
 			return new[]
 			{
-				"anoint_the_sick",
 				"strike",
-				// "fervor",
 				"courageous",
 				"reckoning",
-				// "absolution",
 				"increase_faith",
-				// "litany_of_wrath",
-				// "exaltation",
 				"seize",
-				"shield_of_faith",
-				"stab",
-				// "tempest",
 				"razor_storm",
-				// "hold_the_line",
 				"rally_the_faithful",
+				"sudden_thrust",
+				"hidden_kunai",
+				"zealous_vow"
 			};
 		}
 

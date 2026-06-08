@@ -35,6 +35,10 @@ namespace Crusaders30XX.ECS.Services
 			var displayNames = RunMapShopCatalog.PickDisplayNames(rng, LocationMapConstants.RunMapShopCount);
 			var backgroundAssets = RunMapShopCatalog.PickBackgroundAssets(rng, LocationMapConstants.RunMapShopCount);
 			int medalShopIndex = rng.Next(LocationMapConstants.RunMapShopCount);
+			var nonMedalIndices = Enumerable.Range(0, LocationMapConstants.RunMapShopCount)
+				.Where(i => i != medalShopIndex)
+				.ToList();
+			int equipmentShopIndex = nonMedalIndices[rng.Next(nonMedalIndices.Count)];
 
 			for (int shopIndex = 0; shopIndex < LocationMapConstants.RunMapShopCount; shopIndex++)
 			{
@@ -49,6 +53,10 @@ namespace Crusaders30XX.ECS.Services
 				if (shopIndex == medalShopIndex)
 				{
 					InjectRandomMedalOffer(rng, items);
+				}
+				else if (shopIndex == equipmentShopIndex)
+				{
+					InjectRandomEquipmentOffer(rng, items);
 				}
 				shops.Add(new RunMapShop
 				{
@@ -120,6 +128,26 @@ namespace Crusaders30XX.ECS.Services
 				cardId = medalId,
 				color = string.Empty,
 				price = LocationMapConstants.RunMapShopMedalPrice,
+				isPurchased = false,
+				displayRotationDeg = rng.Next(-5, 6),
+			};
+		}
+
+		private static void InjectRandomEquipmentOffer(Random rng, List<RunMapShopItem> items)
+		{
+			if (items == null || items.Count == 0) return;
+
+			var pool = RunMapEquipmentPoolService.BuildShopOfferPool(loadout: null);
+			if (pool.Count == 0) return;
+
+			string equipmentId = pool[rng.Next(pool.Count)];
+			int slotIndex = rng.Next(items.Count);
+			items[slotIndex] = new RunMapShopItem
+			{
+				itemType = RunMapShopItem.ItemTypeEquipment,
+				cardId = equipmentId,
+				color = string.Empty,
+				price = LocationMapConstants.RunMapShopEquipmentPrice,
 				isPurchased = false,
 				displayRotationDeg = rng.Next(-5, 6),
 			};

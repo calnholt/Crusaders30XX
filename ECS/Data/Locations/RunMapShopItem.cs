@@ -6,6 +6,7 @@ namespace Crusaders30XX.ECS.Data.Locations
 	{
 		public const string ItemTypeCard = "card";
 		public const string ItemTypeMedal = "medal";
+		public const string ItemTypeEquipment = "equipment";
 
 		public string itemType { get; set; } = ItemTypeCard;
 		public string cardId { get; set; } = string.Empty;
@@ -16,5 +17,8 @@ namespace Crusaders30XX.ECS.Data.Locations
 
 		public bool IsMedal =>
 			string.Equals(itemType, ItemTypeMedal, StringComparison.OrdinalIgnoreCase);
+
+		public bool IsEquipment =>
+			string.Equals(itemType, ItemTypeEquipment, StringComparison.OrdinalIgnoreCase);
 	}
 }

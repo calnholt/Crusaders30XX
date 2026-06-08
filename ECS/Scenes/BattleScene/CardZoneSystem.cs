@@ -149,7 +149,7 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
-            ClearHandVisibilityFiltersForStableZone(evt.Card, evt.Destination);
+            ClearTransientStateForStableZone(evt.Card, from, evt.Destination);
 
             // Intercept Hand -> DrawPile to run animation first; finalize will mutate zones and publish CardMoved
             if (evt.Destination == CardZoneType.DrawPile)
@@ -439,7 +439,7 @@ namespace Crusaders30XX.ECS.Systems
             deck.DiscardPile.Remove(evt.Card);
             deck.ExhaustPile.Remove(evt.Card);
 
-            ClearHandVisibilityFiltersForStableZone(evt.Card, evt.Destination);
+            ClearTransientStateForStableZone(evt.Card, from, evt.Destination);
 
             switch (evt.Destination)
             {
@@ -539,11 +539,15 @@ namespace Crusaders30XX.ECS.Systems
             });
         }
 
-        private void ClearHandVisibilityFiltersForStableZone(Entity card, CardZoneType destination)
+        private void ClearTransientStateForStableZone(Entity card, CardZoneType source, CardZoneType destination)
         {
             if (!IsStableZone(destination)) return;
 
             CardTransientStateService.ClearHandVisibilityFilters(EntityManager, card);
+            if (source == CardZoneType.AssignedBlock)
+            {
+                CardTransientStateService.ClearAssignedBlockHotKey(EntityManager, card);
+            }
         }
 
         private static bool IsStableZone(CardZoneType destination)
@@ -608,4 +612,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-

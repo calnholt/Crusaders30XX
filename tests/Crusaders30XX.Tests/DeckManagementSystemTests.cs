@@ -21,6 +21,7 @@ public class DeckManagementSystemTests
         var deck = new Deck();
         var card = CreateCard(entityManager);
         entityManager.AddComponent(card, new FilteredFromHand());
+        entityManager.AddComponent(card, new HotKey { Button = FaceButton.B, Position = HotKeyPosition.Top });
         deck.DrawPile.Add(card);
         var system = new DeckManagementSystem(entityManager);
 
@@ -30,6 +31,7 @@ public class DeckManagementSystemTests
         Assert.Contains(card, deck.Hand);
         Assert.DoesNotContain(card, deck.DrawPile);
         Assert.False(card.HasComponent<FilteredFromHand>());
+        Assert.False(card.HasComponent<HotKey>());
         Assert.True(HandStateLoggingService.CountsForHandLayout(card));
     }
 

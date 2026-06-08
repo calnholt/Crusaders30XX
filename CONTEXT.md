@@ -240,9 +240,15 @@ Defeating the Fallen Shepherd's final phase. Victory dialogue finishes first, th
 
 A turn-long buff on the player: each of your attacks this turn deals extra damage equal to your Might stacks. Might does not carry to the next turn. Might stacks with **Power** on the same attack.
 
+## Aggression (applied passive)
+
+A turn-long buff on the player: your next **non-weapon** attack this turn deals extra damage equal to your Aggression stacks, then Aggression is removed. Weapon attacks do not consume Aggression. Multiple Aggression grants in the same turn add their stack counts together.
+
 ## Sharpen (applied passive)
 
-A turn-long buff on the player: your next **weapon** attack this turn deals extra damage equal to your Sharpen stacks, then Sharpen is removed. Non-weapon attacks do not consume Sharpen. Sharpen stacks with **Aggression** on the same weapon hit; both are consumed on that hit. Multiple Sharpen grants in the same turn add their stack counts together.
+A turn-long buff on the player: your next **weapon** attack this turn deals extra damage equal to your Sharpen stacks, then Sharpen is removed. Non-weapon attacks do not consume Sharpen. Multiple Sharpen grants in the same turn add their stack counts together.
+
+Aggression and Sharpen are complementary (non-weapon vs weapon) and do not apply to the same attack.
 
 ## Bottom of deck
 

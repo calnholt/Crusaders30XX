@@ -25,33 +25,43 @@ public class RunMapTreasureServiceTests
 	}
 
 	[Fact]
-	public void IsEnterable_requires_completed_depth_two_fog_not_depth_one()
+	public void IsEnterable_true_within_completed_first_node_fog()
 	{
 		float radius = LocationMapConstants.DefaultRevealRadius;
-		float treasureX = radius * 0.5f;
 		var nodes = new List<RunMapNode>
 		{
 			new() { id = "run_0", worldX = 0f, worldY = 0f, parentIndex = -1, isCompleted = true },
-			new() { id = "run_1", worldX = treasureX, worldY = 0f, parentIndex = 0, isCompleted = true },
-			new() { id = "run_2", worldX = treasureX, worldY = 0f, parentIndex = 1, isCompleted = false },
 		};
-
-		var depths = RunMapNodeDepthHelper.ComputeDepths(nodes);
-		Assert.Equal(1, depths[1]);
-		Assert.Equal(2, depths[2]);
 
 		var treasure = new RunMapTreasure
 		{
 			id = "treasure_0",
-			worldX = treasureX,
+			worldX = radius * 0.5f,
+			worldY = 0f,
+			isClaimed = false,
+		};
+
+		Assert.True(RunMapTreasureService.IsEnterable(treasure, nodes));
+	}
+
+	[Fact]
+	public void IsEnterable_false_outside_completed_node_fog()
+	{
+		float radius = LocationMapConstants.DefaultRevealRadius;
+		var nodes = new List<RunMapNode>
+		{
+			new() { id = "run_0", worldX = 0f, worldY = 0f, parentIndex = -1, isCompleted = true },
+		};
+
+		var treasure = new RunMapTreasure
+		{
+			id = "treasure_0",
+			worldX = radius + 1f,
 			worldY = 0f,
 			isClaimed = false,
 		};
 
 		Assert.False(RunMapTreasureService.IsEnterable(treasure, nodes));
-
-		nodes[2].isCompleted = true;
-		Assert.True(RunMapTreasureService.IsEnterable(treasure, nodes));
 	}
 
 	[Fact]
@@ -60,8 +70,6 @@ public class RunMapTreasureServiceTests
 		var nodes = new List<RunMapNode>
 		{
 			new() { id = "run_0", worldX = 0f, worldY = 0f, parentIndex = -1, isCompleted = true },
-			new() { id = "run_1", worldX = 0f, worldY = 0f, parentIndex = 0, isCompleted = true },
-			new() { id = "run_2", worldX = 0f, worldY = 0f, parentIndex = 1, isCompleted = true },
 		};
 
 		var treasure = new RunMapTreasure

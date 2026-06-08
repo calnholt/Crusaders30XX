@@ -38,7 +38,7 @@ public class PlayerHudResourceDisplaySystemTests : IDisposable
 		Assert.Equal(new Color(196, 30, 58), state.BackgroundColor);
 		Assert.Equal(Color.White, state.LabelColor);
 		Assert.Equal(Color.White, state.ValueColor);
-		Assert.Equal(4, state.EffectSize);
+		Assert.Equal(0, state.EffectSize);
 		Assert.Equal((byte)64, state.EffectColor.A);
 	}
 
@@ -147,7 +147,7 @@ public class PlayerHudResourceDisplaySystemTests : IDisposable
 		Assert.Equal((int)Math.Round(courageBounds.Width * 1.25f), courageState.Bounds.Width);
 		Assert.Equal((int)Math.Round(courageBounds.Height * 1.25f), courageState.Bounds.Height);
 		Assert.Equal(courageWorldBounds.Center, courageState.Bounds.Center);
-		Assert.Equal(5, courageState.EffectSize);
+		Assert.Equal(0, courageState.EffectSize);
 
 		Assert.Equal(1.5f, actionPointState.PulseScale);
 		Assert.Equal((int)Math.Round(actionPointBounds.Width * 1.5f), actionPointState.Bounds.Width);

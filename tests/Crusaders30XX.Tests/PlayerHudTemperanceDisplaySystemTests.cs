@@ -72,10 +72,28 @@ public class PlayerHudTemperanceDisplaySystemTests : IDisposable
 		system.Update(new GameTime());
 
 		Assert.Equal(bounds, ui.Bounds);
-		Assert.Equal("1/3 Temperance", ui.Tooltip);
+		Assert.Equal(
+			"Temperance\n\nAngelic Aura - Gain 4 aegis.\n\nBlocking with white cards gains temperance.",
+			ui.Tooltip);
 		Assert.Equal(TooltipType.Text, ui.TooltipType);
 		Assert.Equal(TooltipPosition.Above, ui.TooltipPosition);
 		Assert.False(ui.ShowHoverHighlight);
+	}
+
+	[Fact]
+	public void Tooltip_falls_back_when_no_ability_is_equipped()
+	{
+		var entityManager = BuildHud(out var player);
+		player.GetComponent<EquippedTemperanceAbility>().AbilityId = string.Empty;
+		var regionEntity = GetRegionEntity(entityManager);
+		var ui = regionEntity.GetComponent<UIElement>();
+		var system = new PlayerHudTemperanceDisplaySystem(entityManager, null, null);
+
+		system.Update(new GameTime());
+
+		Assert.Equal(
+			"Temperance\n\n\n\nBlocking with white cards gains temperance.",
+			ui.Tooltip);
 	}
 
 	private static EntityManager BuildHud(out Entity player)

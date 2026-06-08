@@ -33,7 +33,7 @@ This document summarizes all passive effects in the game. Each passive has a dur
 | Keyword | Effect |
 |---------|--------|
 | **Power** | Attacks deal +X damage |
-| **Aggression** | The next attack this turn gains X damage |
+| **Aggression** | Your next non-weapon attack this turn gains X damage |
 | **Channel** | Increases the potency of attacks |
 | **Rage** | Gain X power at the start of the action phase (player) or block phase (enemy) |
 | **Anathema** | When you pledge a card, the enemy loses X damage |

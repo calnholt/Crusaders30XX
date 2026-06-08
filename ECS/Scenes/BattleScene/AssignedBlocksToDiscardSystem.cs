@@ -145,9 +145,7 @@ namespace Crusaders30XX.ECS.Systems
                     catch { }
                     EntityManager.RemoveComponent<CardToDiscardFlight>(entity);
                     EntityManager.RemoveComponent<AssignedBlockCard>(entity);
-                    // Remove lingering hotkey from equipment returning to panel
-                    var hk = entity.GetComponent<HotKey>();
-                    if (hk != null) { EntityManager.RemoveComponent<HotKey>(entity); }
+                    CardTransientStateService.ClearAssignedBlockHotKey(EntityManager, entity);
                     var uiE = entity.GetComponent<UIElement>();
                     if (uiE != null) { uiE.IsHovered = false; uiE.IsInteractable = true; uiE.Tooltip = string.Empty; uiE.EventType = UIElementEventType.None; }
                 }
@@ -169,6 +167,7 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         SaveCache.AddMasteryPoints(cardData.Card.CardId, 1);
                     }
+                    CardTransientStateService.ClearAssignedBlockHotKey(EntityManager, entity);
                     EventManager.Publish(new CardMoveRequested
                     {
                         Card = entity,
@@ -261,5 +260,4 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
 

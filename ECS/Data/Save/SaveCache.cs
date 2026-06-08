@@ -703,10 +703,12 @@ namespace Crusaders30XX.ECS.Data.Save
 			string treasureId,
 			EntityManager entityManager,
 			out int rewardGold,
-			out string rewardMedalId)
+			out string rewardMedalId,
+			out string rewardEquipmentId)
 		{
 			rewardGold = 0;
 			rewardMedalId = string.Empty;
+			rewardEquipmentId = string.Empty;
 			if (string.IsNullOrWhiteSpace(treasureId)) return false;
 
 			EnsureLoaded();
@@ -717,13 +719,26 @@ namespace Crusaders30XX.ECS.Data.Save
 				if (treasure == null || treasure.isClaimed) return false;
 
 				var rng = new Random((_save.runMapSeed ^ 0x71EA5A71) + index);
-				rewardMedalId = RunMapTreasureMedalPoolService.PickRandomMedal(rng, entityManager);
 				rewardGold = System.Math.Max(0, treasure.rewardGold);
 
 				EnsurePrimaryLoadout(_save);
 				var loadout = _save.loadouts[0];
-				if (loadout.medalIds == null) loadout.medalIds = new List<string>();
-				loadout.medalIds.Add(rewardMedalId);
+
+				if (treasure.grantsEquipmentReward)
+				{
+					rewardEquipmentId = RunMapEquipmentPoolService.PickRandomEquipment(
+						rng,
+						loadout,
+						_save.runMapShops,
+						excludeShopOffers: true);
+					RunMapEquipmentPoolService.ApplyEquipmentToLoadout(loadout, rewardEquipmentId);
+				}
+				else
+				{
+					rewardMedalId = RunMapTreasureMedalPoolService.PickRandomMedal(rng, entityManager);
+					if (loadout.medalIds == null) loadout.medalIds = new List<string>();
+					loadout.medalIds.Add(rewardMedalId);
+				}
 
 				treasure.isClaimed = true;
 				AddGold(rewardGold);
@@ -747,7 +762,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				var item = shop.items[slotIndex];
 				if (item == null || item.isPurchased) return false;
 				if (string.IsNullOrWhiteSpace(item.cardId)) return false;
-				if (!item.IsMedal && string.IsNullOrWhiteSpace(item.color)) return false;
+				if (!item.IsMedal && !item.IsEquipment && string.IsNullOrWhiteSpace(item.color)) return false;
 
 				int price = System.Math.Max(0, item.price);
 				if (_save.gold < price) return false;
@@ -757,11 +772,20 @@ namespace Crusaders30XX.ECS.Data.Save
 				if (loadout.cardIds == null) loadout.cardIds = new List<string>();
 				if (loadout.medalIds == null) loadout.medalIds = new List<string>();
 
+				if (item.IsEquipment && IsItemOwned(item.cardId, ForSaleItemType.Equipment))
+				{
+					return false;
+				}
+
 				_save.gold = System.Math.Max(0, _save.gold - price);
 				item.isPurchased = true;
 				if (item.IsMedal)
 				{
 					loadout.medalIds.Add(item.cardId);
+				}
+				else if (item.IsEquipment)
+				{
+					RunMapEquipmentPoolService.ApplyEquipmentToLoadout(loadout, item.cardId);
 				}
 				else
 				{

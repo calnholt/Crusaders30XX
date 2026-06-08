@@ -28,7 +28,7 @@ All available passives in the game:
 - **Webbing**: At start of turn, gain X slow (quest passive)
 - **Inferno**: At start of turn, gain X burn stacks (battle passive)
 - **Penance**: Attacks deal X less damage. Converted to scars at next battle (quest passive)
-- **Aggression**: Next attack this turn gains X damage (turn passive)
+- **Aggression**: Next non-weapon attack this turn gains X damage (turn passive)
 - **Stealth**: Cannot see number of attacks planned (battle passive)
 - **Poison**: Every 60 seconds, lose 1 HP (battle passive)
 - **Shield**: Prevent all damage from first source each turn (battle passive)
@@ -147,7 +147,7 @@ public override void OnExecute(EntityManager entityManager)
 - **Penance**: Converted to Scars at StartBattle phase
 - **Stun**: Removes attacks from enemy AttackIntent
 - **Shield**: Decremented by 1 each enemy turn
-- **Aggression**: Only affects next attack in turn, then removed
+- **Aggression**: Only affects next non-weapon attack in turn, then removed; weapon attacks do not consume it
 
 ## Your Role
 When asked to:

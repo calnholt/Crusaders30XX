@@ -34,6 +34,7 @@ namespace Crusaders30XX.ECS.Services
 
 			var treasures = new List<RunMapTreasure>(LocationMapConstants.RunMapTreasureCount);
 			var placedPositions = BuildPlacedPositions(shops);
+			int equipmentTreasureIndex = rng.Next(LocationMapConstants.RunMapTreasureCount);
 
 			for (int treasureIndex = 0; treasureIndex < LocationMapConstants.RunMapTreasureCount; treasureIndex++)
 			{
@@ -53,6 +54,7 @@ namespace Crusaders30XX.ECS.Services
 					worldX = x,
 					worldY = y,
 					rewardGold = gold,
+					grantsEquipmentReward = treasureIndex == equipmentTreasureIndex,
 					isClaimed = false,
 				});
 			}

@@ -644,6 +644,36 @@ namespace Crusaders30XX.ECS.Factories
 					});
 					entityManager.AddComponent(e, uiElement);
 				}
+				else if (item.IsEquipment)
+				{
+					string displayName = id;
+					var equipment = EquipmentFactory.Create(id);
+					if (equipment != null)
+					{
+						displayName = string.IsNullOrWhiteSpace(equipment.Name) ? id : equipment.Name;
+					}
+
+					var uiElement = new UIElement
+					{
+						Bounds = new Rectangle(-1000, -1000, 1, 1),
+						IsInteractable = !item.isPurchased,
+						Tooltip = EquipmentService.GetTooltipText(equipment, EquipmentTooltipType.Shop),
+						TooltipPosition = TooltipPosition.Above,
+					};
+					entityManager.AddComponent(e, new ForSaleItem
+					{
+						Id = id,
+						ItemType = ForSaleItemType.Equipment,
+						Price = item.price,
+						IsPurchased = item.isPurchased || SaveCache.IsItemOwned(id, ForSaleItemType.Equipment),
+						DisplayName = displayName,
+						SourceShopName = shop.id,
+						ShopId = shop.id,
+						ShopSlotIndex = slotIndex,
+						DisplayRotationDeg = item.displayRotationDeg,
+					});
+					entityManager.AddComponent(e, uiElement);
+				}
 				else
 				{
 					string displayName = id;
