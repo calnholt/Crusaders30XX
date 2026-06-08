@@ -14,9 +14,7 @@ namespace Crusaders30XX.ECS.Systems
 	public class TitleMenuDisplaySystem : Core.System
 	{
 		private readonly World _world;
-		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private Texture2D _pixel;
 		private float _t;
 		private MouseState _prevMouse;
 
@@ -41,17 +39,11 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Text Offset Y", Step = 2, Min = -2000, Max = 2000)]
 		public int TextOffsetY { get; set; } = 0;
 
-		[DebugEditable(DisplayName = "Background Alpha", Step = 0.05f, Min = 0f, Max = 1f)]
-		public float BackgroundAlpha { get; set; } = 1f;
-
-		public TitleMenuDisplaySystem(World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+		public TitleMenuDisplaySystem(World world, SpriteBatch spriteBatch)
 			: base(world.EntityManager)
 		{
 			_world = world;
-			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_pixel = new Texture2D(graphicsDevice, 1, 1);
-			_pixel.SetData(new[] { Color.White });
 			_prevMouse = Mouse.GetState();
 		}
 
@@ -122,9 +114,6 @@ namespace Crusaders30XX.ECS.Systems
 			int w = Game1.VirtualWidth;
 			int h = Game1.VirtualHeight;
 
-			// Fill black background
-			_spriteBatch.Draw(_pixel, new Rectangle(0, 0, w, h), new Color(0f, 0f, 0f, MathHelper.Clamp(BackgroundAlpha, 0f, 1f)));
-
 			// Compute scale from viewport width
 			string text = TitleText ?? string.Empty;
 			var baseSize = FontSingleton.TitleFont.MeasureString(text);
@@ -144,4 +133,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-

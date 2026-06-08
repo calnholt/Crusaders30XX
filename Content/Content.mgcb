@@ -1708,4 +1708,10 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/Brittle.fx
 
+#begin Shaders/DrippingBlood.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/DrippingBlood.fx
+
 #---------------------------------- Music ---------------------------------#

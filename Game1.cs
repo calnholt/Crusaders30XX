@@ -37,6 +37,7 @@ public class Game1 : Game
 
     private KeyboardState _prevKeyboard;
 
+    private DrippingBloodDisplaySystem _drippingBloodDisplaySystem;
     private TitleMenuDisplaySystem _titleMenuDisplaySystem;
     private WayStationDisplaySystem _wayStationDisplaySystem;
     private BattleSceneSystem _battleSceneSystem;
@@ -156,7 +157,8 @@ public class Game1 : Game
         }
         EntityFactory.CreateCardVisualSettings(_world);
         // Add parent scene systems only
-        _titleMenuDisplaySystem = new TitleMenuDisplaySystem(_world, GraphicsDevice, _spriteBatch);
+        _drippingBloodDisplaySystem = new DrippingBloodDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _titleMenuDisplaySystem = new TitleMenuDisplaySystem(_world, _spriteBatch);
         _wayStationDisplaySystem = new WayStationDisplaySystem(_world, GraphicsDevice, _spriteBatch, Content);
         _battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _locationSceneSystem = new LocationSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
@@ -189,6 +191,7 @@ public class Game1 : Game
         _uiElementBorderDebugSystem = new UIElementBorderDebugSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _debugCommandSystem = new DebugCommandSystem(_world.EntityManager);
+        _world.AddSystem(_drippingBloodDisplaySystem);
         _world.AddSystem(_titleMenuDisplaySystem);
         _world.AddSystem(_wayStationDisplaySystem);
         _world.AddSystem(_battleSceneSystem);
@@ -470,6 +473,7 @@ public class Game1 : Game
         {
             case SceneId.TitleMenu:
             {
+                FrameProfiler.Measure("DrippingBloodDisplaySystem.Draw", _drippingBloodDisplaySystem.Draw);
                 FrameProfiler.Measure("TitleMenuDisplaySystem.Draw", _titleMenuDisplaySystem.Draw);
                 break;
             }
