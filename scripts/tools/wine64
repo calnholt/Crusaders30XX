@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+if command -v wine >/dev/null 2>&1; then
+  exec wine "$@"
+fi
+
+for wine64 in /usr/local/bin/wine64 /opt/homebrew/bin/wine64 /usr/bin/wine64; do
+  if [ -x "$wine64" ]; then
+    exec "$wine64" "$@"
+  fi
+done
+
+echo "error: wine or wine64 not found." >&2
+exit 127

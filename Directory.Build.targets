@@ -3,7 +3,7 @@
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX')) Or $([MSBuild]::IsOSPlatform('Linux'))">
     <MonoGameMgfxcWinePath Condition="'$(MonoGameMgfxcWinePath)' == ''">$(HOME)/.winemonogame</MonoGameMgfxcWinePath>
     <_MgfxcWineDotNet>$(MonoGameMgfxcWinePath)/drive_c/windows/system32/dotnet.exe</_MgfxcWineDotNet>
-    <_MgfxcExecEnvironmentVariables>MGFXC_WINE_PATH=$(MonoGameMgfxcWinePath)</_MgfxcExecEnvironmentVariables>
+    <_MgfxcExecEnvironmentVariables>PATH=$(MSBuildProjectDirectory)/scripts/tools:$(PATH);MGFXC_WINE_PATH=$(MonoGameMgfxcWinePath)</_MgfxcExecEnvironmentVariables>
   </PropertyGroup>
 
   <Target
