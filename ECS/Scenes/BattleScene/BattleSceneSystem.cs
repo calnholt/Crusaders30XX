@@ -41,6 +41,7 @@ namespace Crusaders30XX.ECS.Systems
 		private PlayerAnimationSystem _playerAnimationSystem;
 		private CathedralLightingSystem _cathedralLightingSystem;
 		private DesertBackgroundEffectSystem _desertBackgroundEffectSystem;
+		private DesertStormDisplaySystem _desertStormDisplaySystem;
 		private PlayerHudLayoutSystem _playerHudLayoutSystem;
 		private PlayerHudFeedbackSystem _playerHudFeedbackSystem;
 		private PlayerHudRootDisplaySystem _playerHudRootDisplaySystem;
@@ -281,28 +282,39 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _rasterizerState);
 			FrameProfiler.Measure("BattleBackgroundSystem.Draw", _battleBackgroundSystem.Draw);
 			FrameProfiler.Measure("CathedralLightingSystem.Draw", _cathedralLightingSystem.Draw);
-			FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", _desertBackgroundEffectSystem.Draw);
+			bool hasDesertStorm = _desertStormDisplaySystem?.CanComposite == true;
+			if (!hasDesertStorm)
+			{
+				FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", _desertBackgroundEffectSystem.Draw);
+			}
 			_spriteBatch.End();
+
+			Texture2D backgroundSource = _bgRt;
+			if (hasDesertStorm)
+			{
+				FrameProfiler.Measure(
+					"DesertStormDisplaySystem.Composite",
+					() => _desertStormDisplaySystem.Composite(_bgRt, _bgTemp)
+				);
+				backgroundSource = _bgTemp;
+			}
 			
 			// Apply bloodshot effect to backgrounds if active
 			bool hasBloodshot = ShaderRuntimeOptions.ShadersEnabled &&
 				_bloodshotDisplaySystem != null && _bloodshotDisplaySystem.IsActive();
 			if (hasBloodshot)
 			{
-				// Composite bloodshot effect onto _bgTemp
-				_bloodshotDisplaySystem.Composite(_bgRt, _bgTemp, _bgTemp);
-				// Blit _bgTemp to the original render target
-				_graphicsDevice.SetRenderTarget(originalRt);
-				_spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
-				_spriteBatch.Draw(_bgTemp, _graphicsDevice.Viewport.Bounds, Color.White);
-				_spriteBatch.End();
+				RenderTarget2D bloodshotTemp = ReferenceEquals(backgroundSource, _bgRt) ? _bgTemp : _bgRt;
+				FrameProfiler.Measure(
+					"BloodshotDisplaySystem.Composite",
+					() => _bloodshotDisplaySystem.Composite(backgroundSource, bloodshotTemp, originalRt)
+				);
 			}
 			else
 			{
-				// Blit _bgRt directly to the original render target
 				_graphicsDevice.SetRenderTarget(originalRt);
 				_spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
-				_spriteBatch.Draw(_bgRt, _graphicsDevice.Viewport.Bounds, Color.White);
+				_spriteBatch.Draw(backgroundSource, _graphicsDevice.Viewport.Bounds, Color.White);
 				_spriteBatch.End();
 			}
 			
@@ -498,6 +510,7 @@ namespace Crusaders30XX.ECS.Systems
 			_playerDisplaySystem = new PlayerDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, crusaderTexture);
 			_cathedralLightingSystem = new CathedralLightingSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_desertBackgroundEffectSystem = new DesertBackgroundEffectSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_desertStormDisplaySystem = new DesertStormDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_playerTemperanceActivationDisplaySystem = new PlayerTemperanceActivationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, crusaderTexture);
 			_playerAnimationSystem = new PlayerAnimationSystem(_world.EntityManager);
@@ -627,6 +640,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_guardianAngelDisplaySystem);
 			_world.AddSystem(_cathedralLightingSystem);
 			_world.AddSystem(_desertBackgroundEffectSystem);
+			_world.AddSystem(_desertStormDisplaySystem);
 			_world.AddSystem(_playerWispParticleSystem);
 			_world.AddSystem(_playerAnimationSystem);
 			_world.AddSystem(_playerTemperanceActivationDisplaySystem);

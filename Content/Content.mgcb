@@ -1714,4 +1714,10 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/DrippingBlood.fx
 
+#begin Shaders/DesertStorm.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/DesertStorm.fx
+
 #---------------------------------- Music ---------------------------------#

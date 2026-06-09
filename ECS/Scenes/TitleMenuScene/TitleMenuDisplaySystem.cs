@@ -19,7 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 		private MouseState _prevMouse;
 
 		[DebugEditable(DisplayName = "Title Text", Step = 1)]
-		public string TitleText { get; set; } = "Crusader 30XX";
+		public string TitleText { get; set; } = "Church\nSuffering";
 
 		[DebugEditable(DisplayName = "Target Width %", Step = 0.05f, Min = 0.1f, Max = 1f)]
 		public float TargetWidthPercent { get; set; } = 0.6f;
@@ -115,10 +115,11 @@ namespace Crusaders30XX.ECS.Systems
 			int h = Game1.VirtualHeight;
 
 			// Compute scale from viewport width
-			string text = TitleText ?? string.Empty;
-			var baseSize = FontSingleton.TitleFont.MeasureString(text);
+			string[] lines = (TitleText ?? string.Empty).Replace("\r", string.Empty).Split('\n');
+			var lineSizes = lines.Select(FontSingleton.TitleFont.MeasureString).ToArray();
+			float widestLine = lineSizes.Length > 0 ? lineSizes.Max(size => size.X) : 0f;
 			float targetWidth = MathHelper.Clamp(TargetWidthPercent, 0.1f, 1f) * w;
-			float scale = baseSize.X > 0.001f ? targetWidth / baseSize.X : 1f;
+			float scale = widestLine > 0.001f ? targetWidth / widestLine : 1f;
 			scale = MathHelper.Clamp(scale, System.Math.Max(0.01f, MinTextScale), System.Math.Max(MinTextScale, MaxTextScale));
 
 			// Fade alpha from 0 -> 1
@@ -126,10 +127,16 @@ namespace Crusaders30XX.ECS.Systems
 			float t01 = MathHelper.Clamp(_t / denom, 0f, 1f);
 			var color = Color.White * t01;
 
-			// Center text
-			var size = baseSize * scale;
-			var pos = new Vector2(w / 2f - size.X / 2f + TextOffsetX, h / 2f - size.Y / 2f + TextOffsetY);
-			_spriteBatch.DrawString(FontSingleton.TitleFont, text, pos, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+			// Center each line independently within the title block.
+			float lineHeight = FontSingleton.TitleFont.LineSpacing * scale;
+			float blockHeight = lineHeight * lines.Length;
+			float startY = h / 2f - blockHeight / 2f + TextOffsetY;
+			for (int i = 0; i < lines.Length; i++)
+			{
+				float lineWidth = lineSizes[i].X * scale;
+				var pos = new Vector2(w / 2f - lineWidth / 2f + TextOffsetX, startY + i * lineHeight);
+				_spriteBatch.DrawString(FontSingleton.TitleFont, lines[i], pos, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+			}
 		}
 	}
 }
