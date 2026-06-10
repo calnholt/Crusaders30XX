@@ -12,7 +12,7 @@ This document summarizes all passive effects in the game. Each passive has a dur
 | Keyword | Effect |
 |---------|--------|
 | **Burn** | At the start of your turn, take damage equal to stacks |
-| **Bleed** | Lose 1 HP at the start of your turn, then remove one bleed |
+| **Bleed** (Run) | Lose 1 HP for each color you block with using 2 or more cards (including equipment), then remove one bleed per trigger |
 | **Poison** | Every 60 seconds, lose 1 HP |
 | **Frostbite** | At 3 stacks, take 3 damage and lose 3 frostbite |
 

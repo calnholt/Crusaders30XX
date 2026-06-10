@@ -16,7 +16,7 @@ The persisted state after run victory, run failure, or run abandon. Meta remains
 
 ## Run-long applied passive
 
-A debuff or status on the player that lasts for the whole **run**: it survives leaving battle, visiting the location hub, shopping, and starting other **quest nodes**, until **run failure**, **quest abandon**, or **new run start**. Examples: Frostbite, Scar (see implementation list `GetRunLongPassives`). Scar stacks persist across quest nodes; when the player leaves battle after completing a quest node, one scar stack is removed and max HP is restored by that amount.
+A debuff or status on the player that lasts for the whole **run**: it survives leaving battle, visiting the location hub, shopping, and starting other **quest nodes**, until **run failure**, **quest abandon**, or **new run start**. Examples: Frostbite, Scar, Bleed, Shackled (see implementation list `GetRunLongPassives`). Scar stacks persist across quest nodes; when the player leaves battle after completing a quest node, one scar stack is removed and max HP is restored by that amount.
 
 _Avoid_: Quest passive (when meaning run-long; use **run-long applied passive**)
 
@@ -24,7 +24,7 @@ _Avoid_: Quest passive (when meaning run-long; use **run-long applied passive**)
 
 A debuff or status on the player tied to the current **quest node** attempt: it persists across **queued encounters** within that node, but is removed when the player leaves the battle scene to the location hub, shop, or other non-battle scene. It is not written to the save file.
 
-Examples: Penance, Shackled, Bleed (see implementation list `GetQuestPassives`).
+Examples: Penance, Webbing, Fear, Enflamed (see implementation list `GetQuestPassives`).
 
 _Avoid_: Quest passive (when meaning run-long; use **run-long applied passive**)
 

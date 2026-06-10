@@ -189,15 +189,6 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Webbing });
                 }, Duration);
             }
-            if (ap.Passives.TryGetValue(AppliedPassiveType.Bleed, out int bleedStacks) && bleedStacks > 0)
-            {
-                EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Bleed", () =>
-                {
-                    EventManager.Publish(new ModifyHpRequestEvent { Source = owner, Target = owner, Delta = -1, DamageType = ModifyTypeEnum.Effect });
-                    EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.Bleed });
-                    EventManager.Publish(new UpdatePassive { Owner = owner, Type = AppliedPassiveType.Bleed, Delta = -1 });
-                }, Duration);
-            }
         }
 
         private void ApplyStartOfPreBlockPassives(Entity enemy)
@@ -446,6 +437,8 @@ namespace Crusaders30XX.ECS.Systems
             {
                 AppliedPassiveType.Frostbite,
                 AppliedPassiveType.Scar,
+                AppliedPassiveType.Bleed,
+                AppliedPassiveType.Shackled,
             };
         }
 
@@ -453,11 +446,9 @@ namespace Crusaders30XX.ECS.Systems
         {
             return new HashSet<AppliedPassiveType>
             {
-                AppliedPassiveType.Shackled,
                 AppliedPassiveType.Webbing,
                 AppliedPassiveType.Penance,
                 AppliedPassiveType.Fear,
-                AppliedPassiveType.Bleed,
                 AppliedPassiveType.Enflamed,
                 AppliedPassiveType.Sealed,
                 AppliedPassiveType.Silenced,
