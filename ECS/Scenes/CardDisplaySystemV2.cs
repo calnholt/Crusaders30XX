@@ -639,10 +639,15 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
+            bool suppressDelta = entity.HasComponent<SuppressStatDeltaDisplay>();
+
             // BLK chip (slot 0)
-            int blockValue = BlockValueService.GetTotalBlockValue(entity);
             int printedBlock = card.Block;
-            int blockDelta = blockValue - printedBlock;
+            int blackCardBlockBonus = GetBlackCardBlockBonus(entity);
+            int blockValue = suppressDelta
+                ? printedBlock + blackCardBlockBonus
+                : BlockValueService.GetTotalBlockValue(entity);
+            int blockDelta = suppressDelta ? blackCardBlockBonus : blockValue - printedBlock;
             if (blockValue > 0 && !card.IsWeapon)
             {
                 float chipY = ChipColumnTopY * vs;
@@ -666,8 +671,8 @@ namespace Crusaders30XX.ECS.Systems
             // ATK chip (slot 1)
             if (card.Type == CardType.Attack)
             {
-                int damage = GetEffectiveDamage(entity, card);
-                int damageDelta = damage - card.Damage;
+                int damage = suppressDelta ? card.Damage : GetEffectiveDamage(entity, card);
+                int damageDelta = suppressDelta ? 0 : damage - card.Damage;
                 float chipY = (ChipColumnTopY + effectiveChipSlotHeight) * vs;
                 bool hasDelta = damageDelta != 0;
 
@@ -951,6 +956,22 @@ namespace Crusaders30XX.ECS.Systems
             {
                 return Math.Max(0, card.Damage);
             }
+        }
+
+        private static int GetBlackCardBlockBonus(Entity entity)
+        {
+            var modifiedBlock = entity.GetComponent<ModifiedBlock>();
+            if (modifiedBlock?.Modifications == null) return 0;
+
+            int bonus = 0;
+            foreach (var mod in modifiedBlock.Modifications)
+            {
+                if (mod.Reason == "Black card")
+                {
+                    bonus += mod.Delta;
+                }
+            }
+            return bonus;
         }
 
         private static Color GetPaletteColor(Dictionary<CardData.CardColor, Color> palette, CardData.CardColor cc, Color fallback)

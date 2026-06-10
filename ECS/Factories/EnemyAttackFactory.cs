@@ -31,7 +31,7 @@ namespace Crusaders30XX.ECS.Factories
                 "skull_crusher" => new SkullCrusher(),
                 // SkeletalArcher attacks
                 "piercing_shot" => new PiercingShot(),
-                "pinning_arrow" => new PinningArrow(),
+                "weathering_shot" => new WeatheringShot(),
                 "quick_shot" => new QuickShot(),
                 "snipe" => new Snipe(),
                 // Ninja attacks
@@ -147,7 +147,7 @@ namespace Crusaders30XX.ECS.Factories
                 { "skull_crusher", new SkullCrusher() },
                 // SkeletalArcher attacks
                 { "piercing_shot", new PiercingShot() },
-                { "pinning_arrow", new PinningArrow() },
+                { "weathering_shot", new WeatheringShot() },
                 { "quick_shot", new QuickShot() },
                 { "snipe", new Snipe() },
                 // Ninja attacks

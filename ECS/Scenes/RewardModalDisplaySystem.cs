@@ -1185,7 +1185,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (parts.Length < 2) return null;
 			string cardId = parts[0];
 			var color = ParseColor(parts[1]);
-			var created = EntityFactory.CreateCardFromDefinition(EntityManager, cardId, color);
+			var created = EntityFactory.CreateCardFromDefinition(EntityManager, cardId, color, suppressStatDeltaDisplay: true);
 			if (created == null) return null;
 
 			var ui = created.GetComponent<UIElement>();

@@ -290,7 +290,8 @@ namespace Crusaders30XX.ECS.Factories
             bool allowWeapons = false,
             int index = 0,
             string cardKey = null,
-            bool persistForRun = false)
+            bool persistForRun = false,
+            bool suppressStatDeltaDisplay = false)
         {
             var card = CardFactory.Create(cardId);
             if (card == null) return null;
@@ -356,6 +357,10 @@ namespace Crusaders30XX.ECS.Factories
             if (card.Type == CardType.Attack)
             {
                 entityManager.AddComponent(entity, new ModifiedDamage { Modifications = new List<Modification>() });
+            }
+            if (suppressStatDeltaDisplay)
+            {
+                entityManager.AddComponent(entity, new SuppressStatDeltaDisplay { Owner = entity });
             }
             ConfigureCardTooltip(entityManager, entity, uiElement, card);
             return entity;

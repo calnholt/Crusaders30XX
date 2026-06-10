@@ -11,7 +11,8 @@ namespace Crusaders30XX.ECS.Systems
 	/// <summary>
 	/// Handles intimidate effects from enemy attacks.
 	/// During the block phase, if an attack has effectsOnAttack with type=Intimidate,
-	/// randomly picks cards from the player's hand and adds the Intimidated component.
+	/// randomly picks cards from the player's hand (block value greater than 0 only)
+	/// and adds the Intimidated component.
 	/// At the end of the enemy turn, removes all Intimidate components.
 	/// </summary>
 	public class IntimidateManagementSystem : Core.System
@@ -63,9 +64,12 @@ namespace Crusaders30XX.ECS.Systems
 
 			// For each intimidate effect, randomly pick cards
 				
-				// Get cards that are not already intimidated (exclude pledged cards)
+				// Get cards that are not already intimidated (exclude pledged cards and zero-block cards)
 				var availableCards = deck.Hand
-					.Where(c => c.GetComponent<Intimidated>() == null && c.GetComponent<Pledge>() == null && c.GetComponent<Shackle>() == null)
+					.Where(c => c.GetComponent<Intimidated>() == null
+						&& c.GetComponent<Pledge>() == null
+						&& c.GetComponent<Shackle>() == null
+						&& BlockValueService.GetTotalBlockValue(c) > 0)
 					.ToList();
 
 				if (availableCards.Count == 0) return;

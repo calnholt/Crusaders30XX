@@ -2,6 +2,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Systems;
@@ -33,6 +34,32 @@ public class DeckManagementSystemTests
         Assert.False(card.HasComponent<FilteredFromHand>());
         Assert.False(card.HasComponent<HotKey>());
         Assert.True(HandStateLoggingService.CountsForHandLayout(card));
+    }
+
+    [Fact]
+    public void Run_deck_cards_do_not_get_suppress_stat_delta_display()
+    {
+        EventManager.Clear();
+        var entityManager = new EntityManager();
+        const string cardKey = "strike|Black";
+
+        RunDeckService.AddCardFromKey(entityManager, cardKey);
+
+        var deckCard = entityManager
+            .GetEntitiesWithComponent<RunDeckCard>()
+            .FirstOrDefault(e => e.GetComponent<RunDeckCard>()?.CardKey == cardKey);
+
+        Assert.NotNull(deckCard);
+        Assert.False(deckCard.HasComponent<SuppressStatDeltaDisplay>());
+
+        var previewCard = EntityFactory.CreateCardFromDefinition(
+            entityManager,
+            "strike",
+            CardData.CardColor.Black,
+            suppressStatDeltaDisplay: true);
+
+        Assert.NotNull(previewCard);
+        Assert.True(previewCard.HasComponent<SuppressStatDeltaDisplay>());
     }
 
     [Fact]

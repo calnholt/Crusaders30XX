@@ -463,7 +463,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				return existing;
 			}
-			var created = EntityFactory.CreateCardFromDefinition(EntityManager, cardId, color, allowWeapons: true);
+			var created = EntityFactory.CreateCardFromDefinition(EntityManager, cardId, color, allowWeapons: true, suppressStatDeltaDisplay: true);
 			if (created != null)
 			{
 				_cardPreviewCache[key] = created;

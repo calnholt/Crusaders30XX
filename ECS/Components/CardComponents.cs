@@ -644,6 +644,15 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Hides non-intrinsic DAMAGE/BLOCK deltas in preview contexts.
+    /// Block still includes the black-card +1 bonus in value and delta slab.
+    /// </summary>
+    public class SuppressStatDeltaDisplay : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
     /// State for the on-screen profiler overlay
     /// </summary>
     public class ProfilerOverlay : IComponent

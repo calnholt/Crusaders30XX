@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.Enemies;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Utils;
 
@@ -38,7 +39,7 @@ public class SkeletalArcher : EnemyBase
     {
       SnipeCount = SnipeCount == 2 ? 0 : SnipeCount;
       // 70%: 3 attacks from pool
-      var pool = new List<string> { "piercing_shot", "pinning_arrow", "quick_shot" };
+      var pool = new List<string> { "piercing_shot", "weathering_shot", "quick_shot" };
       return ArrayUtils.TakeRandomWithoutReplacement(pool, 2);
     }
     else
@@ -76,15 +77,15 @@ public class PiercingShot : EnemyAttackBase
   }
 }
 
-public class PinningArrow : EnemyAttackBase
+public class WeatheringShot : EnemyAttackBase
 {
-  public PinningArrow()
+  public WeatheringShot()
   {
-    Id = "pinning_arrow";
-    Name = "Pinning Arrow";
+    Id = "weathering_shot";
+    Name = "Weathering Shot";
     Damage = 5;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, conditionType: ConditionType.OnHit, customText: "Exhaust all cards used to block this attack.");
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, conditionType: ConditionType.OnHit, customText: "Apply brittle to each card used to block this attack.");
 
     OnAttackHit = (entityManager) =>
     {
@@ -94,43 +95,12 @@ public class PinningArrow : EnemyAttackBase
 
       foreach (var card in assignedBlockCards)
       {
-        entityManager.AddComponent(card, new ExhaustOnBlock { Owner = card });
+        if (card.GetComponent<Brittle>() != null) continue;
+        entityManager.AddComponent(card, new Brittle { Owner = card });
+        RunScopedStateService.SyncCardRestrictionsFromComponents(card);
       }
-    };
-
-    ProgressOverride = (entityManager) =>
-    {
-      var progressEntity = entityManager.GetEntitiesWithComponent<EnemyAttackProgress>().FirstOrDefault();
-      if (progressEntity == null) return false;
-
-      var p = progressEntity.GetComponent<EnemyAttackProgress>();
-
-      // Remove ExhaustOnBlock from all cards
-      var allCards = entityManager.GetEntitiesWithComponent<CardData>().ToList();
-      foreach (var card in allCards)
-      {
-        entityManager.RemoveComponent<ExhaustOnBlock>(card);
-      }
-
-      // Add ExhaustOnBlock to assigned block card entities
-      var assignedBlockCards = entityManager.GetEntitiesWithComponent<AssignedBlockCard>()
-        .Where(e => !e.GetComponent<AssignedBlockCard>().IsEquipment)
-        .ToList();
-
-      if(p.IsConditionMet)
-      {
-        return false;
-      }
-
-      foreach (var card in assignedBlockCards)
-      {
-        entityManager.AddComponent(card, new ExhaustOnBlock { Owner = card });
-      }
-      return false;
     };
   }
-
-  
 }
 
 public class QuickShot : EnemyAttackBase

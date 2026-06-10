@@ -6,7 +6,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class RallyTheFaithful : CardBase
     {
-        private int MightAmount = 2;
+        private int MightAmount = 1;
 
         public RallyTheFaithful()
         {
@@ -17,7 +17,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             IsFreeAction = true;
             Animation = "Buff";
             Type = CardType.Prayer;
-            Block = 2;
+            Block = 3;
 
             OnPlay = (entityManager, card) =>
             {
