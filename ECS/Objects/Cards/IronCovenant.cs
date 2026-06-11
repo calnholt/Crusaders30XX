@@ -1,0 +1,48 @@
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
+
+namespace Crusaders30XX.ECS.Objects.Cards
+{
+    public class IronCovenant : CardBase
+    {
+        private int VigorGained = 1;
+
+        public IronCovenant()
+        {
+            CardId = "iron_covenant";
+            Name = "Iron Covenant";
+            Target = "Enemy";
+            Text = $"When this is pledged, gain {VigorGained} vigor.";
+            Cost = ["Red", "Black", "Any", "Any"];
+            Animation = "Attack";
+            Damage = 20;
+            Block = 3;
+
+            OnPlay = (entityManager, card) =>
+            {
+                var player = entityManager.GetEntity("Player");
+                var enemy = entityManager.GetEntity("Enemy");
+                EventManager.Publish(new ModifyHpRequestEvent
+                {
+                    Source = player,
+                    Target = enemy,
+                    Delta = -GetDerivedDamage(entityManager, card),
+                    AttackCard = card,
+                    DamageType = ModifyTypeEnum.Attack
+                });
+            };
+
+            OnPledged = (entityManager, card) =>
+            {
+                var player = entityManager.GetEntity("Player");
+                EventManager.Publish(new ApplyPassiveEvent
+                {
+                    Target = player,
+                    Type = AppliedPassiveType.Vigor,
+                    Delta = VigorGained
+                });
+            };
+        }
+    }
+}
