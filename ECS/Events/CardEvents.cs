@@ -530,6 +530,20 @@ namespace Crusaders30XX.ECS.Events
 
     public class ApplyCardApplicationEvent
     {
+        public Entity Card { get; set; }
+        public int Amount { get; set; }
+        public CardApplicationType Type { get; set; }
+        public CardApplicationTarget Target { get; set; }
+    }
+
+    public class RemoveCardApplication
+    {
+        public Entity Card { get; set; }
+        public CardApplicationType Type { get; set; }
+    }
+
+    public class RemoveCardApplications
+    {
         public int Amount { get; set; }
         public CardApplicationType Type { get; set; }
         public CardApplicationTarget Target { get; set; }
@@ -539,6 +553,7 @@ namespace Crusaders30XX.ECS.Events
     {
         Frozen,
         Brittle,
+        Colorless,
     }
 
     public class RemoveRandomCardEvent

@@ -325,7 +325,8 @@ namespace Crusaders30XX.ECS.Systems
                             Elapsed = 0f,
                             AssignedAtTicks = DateTime.UtcNow.Ticks,
                             IsEquipment = false,
-                            ColorKey = NormalizeColorKey(cd?.Color.ToString() ?? "White"),
+                            ColorKey = NormalizeColorKey(
+                                CardColorQualificationService.GetQualifiedColor(evt.Card)?.ToString()),
                             Tooltip = ResolveCardName(cd),
                             DisplayBgColor = bg,
                             DisplayFgColor = fg
@@ -560,7 +561,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private static string NormalizeColorKey(string c)
         {
-            if (string.IsNullOrWhiteSpace(c)) return "White";
+            if (string.IsNullOrWhiteSpace(c)) return string.Empty;
             switch (c.Trim().ToLowerInvariant())
             {
                 case "r": case "red": return "Red";

@@ -88,9 +88,7 @@ namespace Crusaders30XX.ECS.Systems
             _redCount = 0; _whiteCount = 0; _blackCount = 0;
             foreach (var cardEntity in deck.DrawPile)
             {
-                var cardData = cardEntity.GetComponent<CardData>();
-                if (cardData == null) continue;
-                switch (cardData.Color)
+                switch (CardColorQualificationService.GetQualifiedColor(cardEntity))
                 {
                     case CardData.CardColor.Red:   _redCount++;   break;
                     case CardData.CardColor.White: _whiteCount++; break;

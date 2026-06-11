@@ -14,22 +14,31 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private sealed record ApplicationDefinition(
 			Func<Entity, bool> IsApplied,
-			Action<EntityManager, Entity> Apply);
+			Action<EntityManager, Entity> Apply,
+			Action<EntityManager, Entity> Remove);
 
 		private static readonly IReadOnlyDictionary<CardApplicationType, ApplicationDefinition> ApplicationDefinitions =
 			new Dictionary<CardApplicationType, ApplicationDefinition>
 			{
 				[CardApplicationType.Frozen] = new(
 					card => card.HasComponent<Frozen>(),
-					(entityManager, card) => entityManager.AddComponent(card, new Frozen())),
+					(entityManager, card) => entityManager.AddComponent(card, new Frozen { Owner = card }),
+					(entityManager, card) => entityManager.RemoveComponent<Frozen>(card)),
 				[CardApplicationType.Brittle] = new(
 					card => card.HasComponent<Brittle>(),
-					(entityManager, card) => entityManager.AddComponent(card, new Brittle())),
+					(entityManager, card) => entityManager.AddComponent(card, new Brittle { Owner = card }),
+					(entityManager, card) => entityManager.RemoveComponent<Brittle>(card)),
+				[CardApplicationType.Colorless] = new(
+					card => card.HasComponent<Colorless>(),
+					(entityManager, card) => entityManager.AddComponent(card, new Colorless { Owner = card }),
+					(entityManager, card) => entityManager.RemoveComponent<Colorless>(card)),
 			};
 
 		public CardApplicationManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<ApplyCardApplicationEvent>(OnApplyCardApplication);
+			EventManager.Subscribe<RemoveCardApplication>(OnRemoveCardApplication);
+			EventManager.Subscribe<RemoveCardApplications>(OnRemoveCardApplications);
 			EventManager.Subscribe<CardBlockedEvent>(OnCardBlocked);
 		}
 
@@ -45,7 +54,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (evt.Amount <= 0) return;
 
 			var definition = GetDefinition(evt.Type);
-			var cards = ResolveCandidates(evt.Target)
+			var cards = ResolveCandidates(evt.Card, evt.Target)
+				.Where(IsEligibleForApplication)
 				.Where(card => !definition.IsApplied(card))
 				.Distinct()
 				.OrderBy(_ => Random.Shared.Next())
@@ -80,14 +90,53 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
+		private void OnRemoveCardApplication(RemoveCardApplication evt)
+		{
+			if (evt?.Card == null) return;
+			RemoveApplication(evt.Card, evt.Type);
+		}
+
+		private void OnRemoveCardApplications(RemoveCardApplications evt)
+		{
+			if (evt == null || evt.Amount <= 0) return;
+
+			var definition = GetDefinition(evt.Type);
+			var cards = ResolveCandidates(null, evt.Target)
+				.Where(IsNonWeaponCard)
+				.Where(definition.IsApplied)
+				.Distinct()
+				.OrderBy(_ => Random.Shared.Next())
+				.Take(evt.Amount)
+				.ToList();
+
+			foreach (var card in cards)
+			{
+				RemoveApplication(card, evt.Type);
+			}
+		}
+
+		private void RemoveApplication(Entity card, CardApplicationType type)
+		{
+			var definition = GetDefinition(type);
+			if (!definition.IsApplied(card)) return;
+
+			definition.Remove(EntityManager, card);
+			RunScopedStateService.SyncCardRestrictionsFromComponents(card);
+		}
+
 		private ApplicationDefinition GetDefinition(CardApplicationType type)
 		{
 			if (ApplicationDefinitions.TryGetValue(type, out var definition)) return definition;
 			throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported card application type.");
 		}
 
-		private IEnumerable<Entity> ResolveCandidates(CardApplicationTarget target)
+		private IEnumerable<Entity> ResolveCandidates(Entity exactCard, CardApplicationTarget target)
 		{
+			if (exactCard != null)
+			{
+				return new[] { exactCard };
+			}
+
 			var deck = EntityManager.GetEntitiesWithComponent<Deck>()
 				.FirstOrDefault()
 				?.GetComponent<Deck>();
@@ -115,10 +164,20 @@ namespace Crusaders30XX.ECS.Systems
 
 		private static IEnumerable<Entity> GetNonWeaponCards(IEnumerable<Entity> cards)
 		{
-			return cards?.Where(card =>
-				card != null &&
-				(card.GetComponent<CardData>()?.Card?.IsWeapon ?? false) == false)
+			return cards?.Where(IsNonWeaponCard)
 				?? Enumerable.Empty<Entity>();
+		}
+
+		private static bool IsEligibleForApplication(Entity card)
+		{
+			return IsNonWeaponCard(card) && !card.HasComponent<Pledge>();
+		}
+
+		private static bool IsNonWeaponCard(Entity card)
+		{
+			return card != null
+				&& card.GetComponent<CardData>() != null
+				&& (card.GetComponent<CardData>()?.Card?.IsWeapon ?? false) == false;
 		}
 
 		private void OnCardBlocked(CardBlockedEvent evt)

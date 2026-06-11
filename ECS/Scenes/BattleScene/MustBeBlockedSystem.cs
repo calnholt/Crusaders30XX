@@ -128,6 +128,15 @@ namespace Crusaders30XX.ECS.Systems
                     continue;
                 }
 
+                var plannedAttack = GetComponentHelper.GetPlannedAttack(EntityManager);
+                if (plannedAttack != null
+                    && !CardColorQualificationService.MeetsBlockingRestriction(
+                        card,
+                        plannedAttack.BlockingRestrictionType))
+                {
+                    continue;
+                }
+
                 // If shackled, ensure ALL shackled partners are also playable
                 if (card.GetComponent<Shackle>() != null)
                 {
@@ -286,7 +295,7 @@ namespace Crusaders30XX.ECS.Systems
                     }
 
                     int blockVal = BlockValueService.GetTotalBlockValue(card);
-                    string color = data.Color.ToString();
+                    string color = CardColorQualificationService.GetQualifiedColor(card)?.ToString();
                     EventManager.Publish(new BlockAssignmentAdded
                     {
                         ContextId = pa.ContextId,

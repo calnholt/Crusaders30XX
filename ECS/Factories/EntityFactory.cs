@@ -781,6 +781,10 @@ namespace Crusaders30XX.ECS.Factories
             {
                 entityManager.AddComponent(clonedEntity, new Frozen { Owner = clonedEntity });
             }
+            if (sourceEntity.HasComponent<Colorless>())
+            {
+                entityManager.AddComponent(clonedEntity, new Colorless { Owner = clonedEntity });
+            }
 
             // Copy Hint
             var sourceHint = sourceEntity.GetComponent<Hint>();

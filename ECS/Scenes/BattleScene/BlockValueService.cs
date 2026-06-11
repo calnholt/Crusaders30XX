@@ -29,7 +29,9 @@ namespace Crusaders30XX.ECS.Systems
             return GetBaseBlockValue(card);
           }
           var baseBlock = GetBaseBlockValue(card);
-          return modifiedBlock.Modifications.Sum(m => m.Delta) + baseBlock;
+          return modifiedBlock.Modifications
+            .Where(m => !card.HasComponent<Colorless>() || m.Reason != "Black card")
+            .Sum(m => m.Delta) + baseBlock;
         }
 
         public static int GetBaseBlockValue(Entity card)

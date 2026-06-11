@@ -2,6 +2,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Achievements;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Objects.Achievements
 {
@@ -37,8 +38,7 @@ namespace Crusaders30XX.ECS.Objects.Achievements
         private void OnCardPlayedEvent(CardPlayedEvent evt)
         {
             // Check if it's a red card
-            var cardData = evt.Card?.GetComponent<CardData>();
-            if (cardData == null || cardData.Color != CardData.CardColor.Red) return;
+            if (!CardColorQualificationService.QualifiesAs(evt.Card, CardData.CardColor.Red)) return;
 
             IncrementProgress();
         }

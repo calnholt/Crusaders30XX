@@ -111,16 +111,9 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				var message = EnemyAttackTextHelper.GetBlockingRestrictionText(enemyAttack.BlockingRestrictionType);
 				if (message.EndsWith(".")) message = message.Substring(0, message.Length - 1) + "!";
-				bool canPlay = enemyAttack.BlockingRestrictionType switch
-				{
-					BlockingRestrictionType.OnlyRed => data.Color == CardData.CardColor.Red,
-					BlockingRestrictionType.OnlyBlack => data.Color == CardData.CardColor.Black,
-					BlockingRestrictionType.OnlyWhite => data.Color == CardData.CardColor.White,
-					BlockingRestrictionType.NotRed => data.Color != CardData.CardColor.Red,
-					BlockingRestrictionType.NotBlack => data.Color != CardData.CardColor.Black,
-					BlockingRestrictionType.NotWhite => data.Color != CardData.CardColor.White,
-					_ => true,
-				};
+				bool canPlay = CardColorQualificationService.MeetsBlockingRestriction(
+					card,
+					enemyAttack.BlockingRestrictionType);
 				if (!canPlay)
 				{
 					EventManager.Publish(new CantPlayCardMessage { Message = message });
@@ -129,7 +122,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			int blockValue = BlockValueService.GetTotalBlockValue(card);
-			string color = data.Color.ToString();
+			string color = CardColorQualificationService.GetQualifiedColor(card)?.ToString();
 			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 			var transform = card.GetComponent<Transform>();
 			if (deckEntity != null && transform != null)

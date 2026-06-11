@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
 using Crusaders30XX.ECS.Systems;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Objects.Enemies;
 
@@ -89,7 +90,7 @@ public class TremorStrike : EnemyAttackBase
 public class StoneBarrage : EnemyAttackBase
 {
     private int BleedPerCard = 2;
-    private CardData.CardColor Color = CardData.CardColor.White;
+    private CardData.CardColor? Color;
 
     public StoneBarrage()
     {
@@ -101,12 +102,14 @@ public class StoneBarrage : EnemyAttackBase
         OnAttackReveal = (entityManager) =>
         {
             Color = Cinderbolt.GetRandomCardColorInPlayerHand(EntityManager);
-            Text = $"Gain {BleedPerCard} bleed for each {Color.ToString().ToLower()} card that blocks this.";
+            Text = Color.HasValue
+                ? $"Gain {BleedPerCard} bleed for each {Color.Value.ToString().ToLower()} card that blocks this."
+                : $"Gain {BleedPerCard} bleed for each card of the selected color that blocks this. No color is selected.";
         };
 
         OnBlockProcessed = (entityManager, card) =>
         {
-            var color = card.GetComponent<CardData>().Color;
+            var color = CardColorQualificationService.GetQualifiedColor(card);
             if (color == Color)
             {
                 EventManager.Publish(new ApplyPassiveEvent

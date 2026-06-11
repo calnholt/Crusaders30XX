@@ -9,6 +9,12 @@ public static class EnemyAttackTextHelper
       var percentageText = percentage == 100 ? "" : $" ({percentage}% chance)";
       return $"{conditionText}{enemyAttackText}{percentageText}";
     }
+
+    public static string GetDamageThresholdText(int minimumDamage, string effectText)
+    {
+      return $"If this attack deals {minimumDamage} or more damage - {effectText}";
+    }
+
     public static string GetConditionText(ConditionType conditionType)
     {
         switch (conditionType)

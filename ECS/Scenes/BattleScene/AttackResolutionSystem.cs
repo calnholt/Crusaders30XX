@@ -110,6 +110,11 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					def.OnAttackHit?.Invoke(EntityManager);
 				}
+				if (def.MinimumDamageToTriggerEffect is int minimumDamage &&
+					evt.FinalDamage >= minimumDamage)
+				{
+					def.OnDamageThresholdMet?.Invoke(EntityManager);
+				}
 				if (evt.WasHit)
 				{
 					EventManager.Publish(new OnEnemyAttackHitEvent {} );
@@ -128,5 +133,4 @@ namespace Crusaders30XX.ECS.Systems
 
 	}
 }
-
 

@@ -50,6 +50,7 @@ to the fixture.
 |------------|----------------|---------|
 | `card` | Card display (V2) | Three color variants of one card on a green background |
 | `brittle-card` | Brittle card shader | One brittle card on a patterned backdrop for shader debugging |
+| `colorless-card` | Card display (V2) | Colorless cards across all three printed colors and cost-pip colors |
 | `quest-reward-modal` | Quest reward modal | Quest complete overlay (gold and/or card reward) |
 | `waystation` | WayStation run setup | Run setup scene with default Sword/Easy selections |
 | `player-hud` | Production player HUD systems | Player HUD geometry and state variants |
@@ -110,6 +111,19 @@ Example: `debug/snapshots/brittle-card/strike.png`
 ### Errors
 
 - If `<cardId>` is provided but unknown: exit `1`, no PNG
+
+---
+
+## `colorless-card`
+
+Renders Colorless copies of a printed White, Red, and Black card with Red, White, Black, and Any cost pips.
+
+```bash
+dotnet run -- snapshot colorless-card
+dotnet run -- snapshot colorless-card --verify
+```
+
+Output: `debug/snapshots/colorless-card/all-printed-colors.png`
 
 ---
 

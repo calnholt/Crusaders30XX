@@ -57,6 +57,7 @@ namespace Crusaders30XX.ECS.Services
 			foreach (var kv in existingByKey.ToList())
 			{
 				if (desiredSet.Contains(kv.Key)) continue;
+				SaveCache.SetRunCardRestrictionsForCard(kv.Key, new List<string>());
 				RemoveCardFromDeckLists(deck, kv.Value);
 				deck.Cards.Remove(kv.Value);
 				entityManager.DestroyEntity(kv.Value.Id);
@@ -111,7 +112,11 @@ namespace Crusaders30XX.ECS.Services
 				.GetEntitiesWithComponent<RunDeckCard>()
 				.FirstOrDefault(e => e.IsActive &&
 					string.Equals(e.GetComponent<RunDeckCard>()?.CardKey, cardKey, StringComparison.OrdinalIgnoreCase));
-			if (card == null) return;
+			if (card == null)
+			{
+				ClearRestrictionsIfCardKeyIsAbsentFromLoadout(cardKey);
+				return;
+			}
 
 			var deckEntity = GetRunDeckEntity(entityManager);
 			var deck = deckEntity?.GetComponent<Deck>();
@@ -122,6 +127,7 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			entityManager.DestroyEntity(card.Id);
+			ClearRestrictionsIfCardKeyIsAbsentFromLoadout(cardKey);
 		}
 
 		public static void ExhaustRunCard(EntityManager entityManager, Entity card)
@@ -144,6 +150,7 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			SaveCache.RemoveCardFromLoadout(PrimaryLoadoutId, cardKey, publishChange: false);
+			ClearRestrictionsIfCardKeyIsAbsentFromLoadout(cardKey);
 			entityManager.DestroyEntity(card.Id);
 		}
 
@@ -234,6 +241,18 @@ namespace Crusaders30XX.ECS.Services
 			if (!TryParseCardKey(cardKey, out var cardId, out _)) return false;
 			var card = CardFactory.Create(cardId);
 			return card?.IsWeapon == true;
+		}
+
+		private static void ClearRestrictionsIfCardKeyIsAbsentFromLoadout(string cardKey)
+		{
+			var loadout = GetLoadoutForRun();
+			if (loadout?.cardIds?.Any(key =>
+				string.Equals(key, cardKey, StringComparison.OrdinalIgnoreCase)) == true)
+			{
+				return;
+			}
+
+			SaveCache.SetRunCardRestrictionsForCard(cardKey, new List<string>());
 		}
 
 		public static bool TryParseCardKey(string cardKey, out string cardId, out CardData.CardColor color)

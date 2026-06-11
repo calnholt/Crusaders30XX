@@ -498,6 +498,15 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marks a card as colorless. Its printed color remains unchanged, but it does not
+    /// qualify as red, white, or black during combat.
+    /// </summary>
+    public class Colorless : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
     /// Marks a card with recoil stacks. If the card is not used to block the current attack,
     /// the player takes damage equal to Stacks. Removed each attack resolve.
     /// </summary>

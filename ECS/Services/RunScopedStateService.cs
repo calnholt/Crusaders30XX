@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Services
 		public const string RestrictionFrozen = "Frozen";
 		public const string RestrictionSealed = "Sealed";
 		public const string RestrictionBrittle = "Brittle";
+		public const string RestrictionColorless = "Colorless";
 
 		public static void HydrateRunLongPassivesOntoPlayer(Entity player)
 		{
@@ -69,6 +70,7 @@ namespace Crusaders30XX.ECS.Services
 			if (card.HasComponent<Frozen>()) names.Add(RestrictionFrozen);
 			if (card.HasComponent<Sealed>()) names.Add(RestrictionSealed);
 			if (card.HasComponent<Brittle>()) names.Add(RestrictionBrittle);
+			if (card.HasComponent<Colorless>()) names.Add(RestrictionColorless);
 			SaveCache.SetRunCardRestrictionsForCard(key, names);
 		}
 
@@ -111,6 +113,12 @@ namespace Crusaders30XX.ECS.Services
 						if (entityManager != null) entityManager.AddComponent(card, new Brittle { Owner = card });
 					}
 					break;
+				case RestrictionColorless:
+					if (card.GetComponent<Colorless>() == null)
+					{
+						if (entityManager != null) entityManager.AddComponent(card, new Colorless { Owner = card });
+					}
+					break;
 			}
 		}
 
@@ -120,6 +128,7 @@ namespace Crusaders30XX.ECS.Services
 			if (card.HasComponent<Shackle>()) entityManager.RemoveComponent<Shackle>(card);
 			if (card.HasComponent<Sealed>()) entityManager.RemoveComponent<Sealed>(card);
 			if (card.HasComponent<Brittle>()) entityManager.RemoveComponent<Brittle>(card);
+			if (card.HasComponent<Colorless>()) entityManager.RemoveComponent<Colorless>(card);
 		}
 	}
 }

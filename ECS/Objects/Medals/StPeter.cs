@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using static Crusaders30XX.ECS.Components.CardData;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Objects.Medals
 {
@@ -25,7 +26,7 @@ namespace Crusaders30XX.ECS.Objects.Medals
 
         private void OnCardBlockedEvent(CardBlockedEvent evt)
         {
-            if (evt.Card.GetComponent<CardData>()?.Color == CardColor.Black)
+            if (CardColorQualificationService.QualifiesAs(evt.Card, CardColor.Black))
             {
                 CurrentCount++;
                 if (CurrentCount >= MaxCount)

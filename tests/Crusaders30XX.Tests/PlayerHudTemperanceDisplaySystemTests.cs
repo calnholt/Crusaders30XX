@@ -51,7 +51,7 @@ public class PlayerHudTemperanceDisplaySystemTests : IDisposable
 
 		var state = AssertNullable(system.GetRenderState());
 
-		Assert.Equal(3, state.Threshold);
+		Assert.Equal(2, state.Threshold);
 		Assert.Equal(2, state.FilledChunks);
 		Assert.Equal(1.25f, state.PulseScale);
 		Assert.Equal(worldBounds.Center, state.Bounds.Center);
@@ -73,7 +73,7 @@ public class PlayerHudTemperanceDisplaySystemTests : IDisposable
 
 		Assert.Equal(bounds, ui.Bounds);
 		Assert.Equal(
-			"Temperance\n\nAngelic Aura - Gain 4 aegis.\n\nBlocking with white cards gains temperance.",
+			"Temperance\n\nAngelic Aura - Gain 3 aegis.\n\nBlocking with white cards gains temperance.",
 			ui.Tooltip);
 		Assert.Equal(TooltipType.Text, ui.TooltipType);
 		Assert.Equal(TooltipPosition.Above, ui.TooltipPosition);

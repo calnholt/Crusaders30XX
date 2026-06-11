@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Systems;
+using Crusaders30XX.ECS.Services;
 using static Crusaders30XX.ECS.Components.CardData;
 
 namespace Crusaders30XX.ECS.Objects.Cards
@@ -42,7 +43,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 {
                     foreach (var paymentCard in paymentCards)
                     {
-                        if (paymentCard.GetComponent<CardData>().Color == CardColor.Red) redCards++;
+                        if (CardColorQualificationService.QualifiesAs(paymentCard, CardColor.Red)) redCards++;
                     }
                 }
                 

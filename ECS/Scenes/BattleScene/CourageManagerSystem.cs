@@ -90,9 +90,7 @@ namespace Crusaders30XX.ECS.Systems
 			});
 			// When assigned blocks land in discard, grant Courage for red cards
 			if (evt.To == CardZoneType.DiscardPile && evt.From == CardZoneType.AssignedBlock) {
-				var data = evt.Card.GetComponent<CardData>();
-				if (data == null) return;
-				if (data.Color != CardData.CardColor.Red) return;
+				if (!CardColorQualificationService.QualifiesAs(evt.Card, CardData.CardColor.Red)) return;
 				var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
 				if (player == null) return;
 				var c = player.GetComponent<Courage>();
@@ -102,6 +100,5 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 
 

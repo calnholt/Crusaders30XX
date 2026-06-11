@@ -444,16 +444,14 @@ namespace Crusaders30XX.ECS.Systems
             EntityManager.DestroyEntity("PayCostOverlay_Cancel");
         }
 
-        private static bool TryConsumeCostForCard(List<string> remainingCosts, CardData.CardColor candidateColor, out int consumedIndex)
+        private static bool TryConsumeCostForCard(List<string> remainingCosts, Entity candidate, out int consumedIndex)
         {
             consumedIndex = -1;
             // Prefer consuming a specific matching color first
             for (int i = 0; i < remainingCosts.Count; i++)
             {
                 string c = remainingCosts[i];
-                if ((c == "Red" && candidateColor == CardData.CardColor.Red) ||
-                    (c == "White" && candidateColor == CardData.CardColor.White) ||
-                    (c == "Black" && candidateColor == CardData.CardColor.Black))
+                if (c != "Any" && CardColorQualificationService.IsEligibleForCost(candidate, c))
                 {
                     consumedIndex = i;
                     return true;
@@ -538,7 +536,7 @@ namespace Crusaders30XX.ECS.Systems
             // Selecting from hand
             if (!deck.Hand.Contains(evt.Card)) return;
 
-            if (TryConsumeCostForCard(state.RequiredCosts, cd.Color, out int idx))
+            if (TryConsumeCostForCard(state.RequiredCosts, evt.Card, out int idx))
             {
                 // Remember consumed requirement and remove from remaining
                 var consumed = state.RequiredCosts[idx];
@@ -985,10 +983,7 @@ namespace Crusaders30XX.ECS.Systems
             // Card is viable if it can satisfy at least one remaining requirement
             foreach (var c in remainingCosts)
             {
-                if (c == "Any") return true;
-                if (c == "Red" && cd.Color == CardData.CardColor.Red) return true;
-                if (c == "White" && cd.Color == CardData.CardColor.White) return true;
-                if (c == "Black" && cd.Color == CardData.CardColor.Black) return true;
+                if (CardColorQualificationService.IsEligibleForCost(card, c)) return true;
             }
             return false;
         }
@@ -1092,4 +1087,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-

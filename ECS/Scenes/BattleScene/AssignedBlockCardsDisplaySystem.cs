@@ -58,6 +58,18 @@ namespace Crusaders30XX.ECS.Systems
 		public int AssignedCornerRadius { get; set; } = 6;
 		[DebugEditable(DisplayName = "Assigned Background Alpha", Step = 1, Min = 0, Max = 255)]
 		public int AssignedBackgroundAlpha { get; set; } = 225;
+		[DebugEditable(DisplayName = "Colorless Background R", Step = 1, Min = 0, Max = 255)]
+		public int ColorlessBackgroundR { get; set; } = 92;
+		[DebugEditable(DisplayName = "Colorless Background G", Step = 1, Min = 0, Max = 255)]
+		public int ColorlessBackgroundG { get; set; } = 96;
+		[DebugEditable(DisplayName = "Colorless Background B", Step = 1, Min = 0, Max = 255)]
+		public int ColorlessBackgroundB { get; set; } = 102;
+		[DebugEditable(DisplayName = "Colorless Foreground R", Step = 1, Min = 0, Max = 255)]
+		public int ColorlessForegroundR { get; set; } = 235;
+		[DebugEditable(DisplayName = "Colorless Foreground G", Step = 1, Min = 0, Max = 255)]
+		public int ColorlessForegroundG { get; set; } = 235;
+		[DebugEditable(DisplayName = "Colorless Foreground B", Step = 1, Min = 0, Max = 255)]
+		public int ColorlessForegroundB { get; set; } = 235;
 
 		[DebugEditable(DisplayName = "Equip Icon Height", Step = 1, Min = 8, Max = 128)]
 		public int EquipIconHeight { get; set; } = 99;
@@ -567,9 +579,13 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					ui.Bounds = rect;
 				}
-				// Colors now come directly from AssignedBlockCard
-				Color bg = abc.DisplayBgColor;
-				Color fg = abc.DisplayFgColor;
+				bool isColorless = card.HasComponent<Colorless>();
+				Color bg = isColorless
+					? new Color(ClampByte(ColorlessBackgroundR), ClampByte(ColorlessBackgroundG), ClampByte(ColorlessBackgroundB))
+					: abc.DisplayBgColor;
+				Color fg = isColorless
+					? new Color(ClampByte(ColorlessForegroundR), ClampByte(ColorlessForegroundG), ClampByte(ColorlessForegroundB))
+					: abc.DisplayFgColor;
 				bg = new Color(bg.R, bg.G, bg.B, (byte)System.Math.Clamp(AssignedBackgroundAlpha, 0, 255));
 				int radius = System.Math.Max(0, AssignedCornerRadius);
 				var rounded = GetRoundedRectTexture(rect.Width, rect.Height, radius);
@@ -616,5 +632,7 @@ namespace Crusaders30XX.ECS.Systems
 			string assetName = key; // expects head.png, chest.png, arms.png, legs.png
 			try { return _content.Load<Texture2D>(assetName); } catch { return null; }
 		}
+
+		private static byte ClampByte(int value) => (byte)Math.Clamp(value, 0, 255);
 	}
 }

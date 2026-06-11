@@ -70,6 +70,7 @@ namespace Crusaders30XX.ECS.Systems
             int extraDamage = _pendingDamage;
             _pendingDamage = 0;
             int totalDamage = baseDamage + extraDamage;
+            int damageAfterBlock = totalDamage;
             int finalDamage = totalDamage;
             bool wasHit = false;
 
@@ -77,20 +78,22 @@ namespace Crusaders30XX.ECS.Systems
             if (player != null && totalDamage > 0)
             {
                 int useAssigned = Math.Min(assignedBlock, totalDamage);
-                finalDamage -= useAssigned;
+                damageAfterBlock -= useAssigned;
+                finalDamage = damageAfterBlock;
 
-                if (finalDamage > 0)
+                if (damageAfterBlock > 0)
                 {
                     var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
                     bool ignoresAegis = prog?.IgnoresAegis ?? false;
                     int effectiveAegis = ignoresAegis ? 0 : prog?.AegisTotal ?? 0;
-                    wasHit = finalDamage - effectiveAegis > 0;
+                    finalDamage = Math.Max(0, damageAfterBlock - effectiveAegis);
+                    wasHit = finalDamage > 0;
                     LoggingService.Append("EnemyDamageManagerSystem.OnImpactNow.modifyHp", new System.Text.Json.Nodes.JsonObject { ["finalDamage"] = finalDamage, ["aegisTotal"] = prog?.AegisTotal, ["ignoresAegis"] = ignoresAegis, ["wasHit"] = wasHit });
                     EventManager.Publish(new ModifyHpRequestEvent
                     {
                         Source = enemy,
                         Target = player,
-                        Delta = -finalDamage,
+                        Delta = -damageAfterBlock,
                         IgnoresAegis = ignoresAegis
                     });
                 }
@@ -105,5 +108,4 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
 

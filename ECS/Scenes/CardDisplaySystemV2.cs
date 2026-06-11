@@ -139,6 +139,34 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Chip Scale With Title")]
         public bool ChipScaleWithTitle { get; set; } = true;
 
+        [DebugEditable(DisplayName = "Colorless Background R", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessBackgroundR { get; set; } = 92;
+        [DebugEditable(DisplayName = "Colorless Background G", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessBackgroundG { get; set; } = 96;
+        [DebugEditable(DisplayName = "Colorless Background B", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessBackgroundB { get; set; } = 102;
+
+        [DebugEditable(DisplayName = "Colorless Primary Text R", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessPrimaryTextR { get; set; } = 235;
+        [DebugEditable(DisplayName = "Colorless Primary Text G", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessPrimaryTextG { get; set; } = 235;
+        [DebugEditable(DisplayName = "Colorless Primary Text B", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessPrimaryTextB { get; set; } = 235;
+
+        [DebugEditable(DisplayName = "Colorless Muted Text R", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessMutedTextR { get; set; } = 170;
+        [DebugEditable(DisplayName = "Colorless Muted Text G", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessMutedTextG { get; set; } = 170;
+        [DebugEditable(DisplayName = "Colorless Muted Text B", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessMutedTextB { get; set; } = 170;
+
+        [DebugEditable(DisplayName = "Colorless Surface R", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessSurfaceR { get; set; } = 58;
+        [DebugEditable(DisplayName = "Colorless Surface G", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessSurfaceG { get; set; } = 61;
+        [DebugEditable(DisplayName = "Colorless Surface B", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessSurfaceB { get; set; } = 66;
+
         // Color Palettes
         private static readonly Dictionary<CardData.CardColor, Color> BgColors = new()
         {
@@ -405,6 +433,7 @@ namespace Crusaders30XX.ECS.Systems
             CardBase card = cardData.Card;
             bool hasDef = card != null;
             var cc = cardData.Color;
+            bool isColorless = entity.HasComponent<Colorless>();
 
             var rect = GetCardVisualRect(position, vs, settings.CardWidth, settings.CardHeight, settings.CardOffsetYExtra);
             var cardCenter = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
@@ -416,8 +445,10 @@ namespace Crusaders30XX.ECS.Systems
             int bgW = (int)Math.Round(settings.CardWidth * vs);
             int bgH = (int)Math.Round(settings.CardHeight * vs);
             var bgTex = GetRoundedRectTexture(bgW, bgH, (int)(settings.CardCornerRadius * vs));
-            var bgColor = GetPaletteColor(BgColors, cc, new Color(220, 215, 206));
-            if (card.IsWeapon)
+            var bgColor = isColorless
+                ? ColorlessBackground
+                : GetPaletteColor(BgColors, cc, new Color(220, 215, 206));
+            if (card.IsWeapon && !isColorless)
             {
                 bgColor = new Color(215, 186, 147);
             }
@@ -445,11 +476,13 @@ namespace Crusaders30XX.ECS.Systems
             {
                 int vigorStacks = VigorService.GetPlayerVigorStacks(EntityManager);
                 int waivedPipCount = VigorService.GetWaivedPipCount(card, vigorStacks);
-                titleBandEndY = DrawTitleBand(cardCenter, rotation, vs, cc, card, waivedPipCount);
+                titleBandEndY = DrawTitleBand(cardCenter, rotation, vs, cc, card, waivedPipCount, isColorless);
             }
 
             // 4. Stat Gutter (starts below title band)
-            var gutterColor = GetPaletteColor(GutterColors, cc, Color.Black * 0.05f);
+            var gutterColor = isColorless
+                ? ColorlessSurface
+                : GetPaletteColor(GutterColors, cc, Color.Black * 0.05f);
             float gutterY = GutterTopY * vs;
             V2Rect(cardCenter, rotation, new Vector2(GutterX * vs, gutterY),
                 GutterWidth * vs, sh - gutterY, gutterColor, vs);
@@ -457,7 +490,7 @@ namespace Crusaders30XX.ECS.Systems
             // 5. Stat Chips (with label slabs)
             if (hasDef)
             {
-                DrawStatChips(cardCenter, rotation, vs, cc, entity, card);
+                DrawStatChips(cardCenter, rotation, vs, cc, entity, card, isColorless);
             }
 
             // 6. Description (content area, below rule line, right of chips)
@@ -468,7 +501,9 @@ namespace Crusaders30XX.ECS.Systems
             if (hasDef)
             {
                 string desc = card.Text ?? "";
-                var descColor = GetPaletteColor(DescTextColors, cc, new Color(68, 68, 68));
+                var descColor = isColorless
+                    ? ColorlessMutedText
+                    : GetPaletteColor(DescTextColors, cc, new Color(68, 68, 68));
                 V2TextWrapped(cardCenter, rotation, new Vector2(contentX, cursorY), desc, descColor, V2DescFontScale * vs, vs, _bodyFont, contentWidth);
             }
 
@@ -498,7 +533,7 @@ namespace Crusaders30XX.ECS.Systems
         /// Returns the Y position where the title band ends (for content positioning below).
         /// </summary>
         private float DrawTitleBand(Vector2 cardCenter, float rotation, float vs,
-            CardData.CardColor cc, CardBase card, int waivedPipCount)
+            CardData.CardColor cc, CardBase card, int waivedPipCount, bool isColorless)
         {
             float padLeft = TitleBandPadLeft * vs;
             float padRight = TitleBandPadRight * vs;
@@ -507,7 +542,9 @@ namespace Crusaders30XX.ECS.Systems
 
             // Card Name — centered across full card width
             string name = card.Name ?? "";
-            var nameColor = GetPaletteColor(NameTextColors, cc, new Color(26, 26, 26));
+            var nameColor = isColorless
+                ? ColorlessPrimaryText
+                : GetPaletteColor(NameTextColors, cc, new Color(26, 26, 26));
             float nameScale = V2NameFontScale * vs;
             var nameSize = _nameFont.MeasureString(name) * nameScale;
             float nameX = (cardWidth - nameSize.X) / 2f;
@@ -516,7 +553,9 @@ namespace Crusaders30XX.ECS.Systems
 
             // Type Row — space-between: cost section (left) | type text (right)
             string typeLabel = GetTypeLabel(card.Type);
-            var typeColor = GetPaletteColor(TypeTextColors, cc, new Color(153, 153, 153));
+            var typeColor = isColorless
+                ? ColorlessMutedText
+                : GetPaletteColor(TypeTextColors, cc, new Color(153, 153, 153));
             float typeScale = CostLabelFontScale * vs;
 
             // Add letter spacing for type label measurement and drawing
@@ -531,7 +570,9 @@ namespace Crusaders30XX.ECS.Systems
             {
                 // Left side: "DISCARD" label + diamond pips
                 string costLabel = "DISCARD";
-                var costLabelColor = GetPaletteColor(CostLabelColors, cc, new Color(153, 153, 153));
+                var costLabelColor = isColorless
+                    ? ColorlessMutedText
+                    : GetPaletteColor(CostLabelColors, cc, new Color(153, 153, 153));
                 float costLabelScale = CostLabelFontScale * vs;
 
                 // Letter spacing already active from type label setup (2f * vs)
@@ -553,11 +594,11 @@ namespace Crusaders30XX.ECS.Systems
                 for (int i = 0; i < costs.Length; i++)
                 {
                     float pipX = pipStartX + i * (pipSize + pipGap);
-                    Color pipColor = GetCostPipColor(costs[i], cc);
-                    bool showOutline = NeedsPipOutline(costs[i], cc);
+                    Color pipColor = GetCostPipColor(costs[i], cc, isColorless);
+                    bool showOutline = NeedsPipOutline(costs[i], cc, isColorless);
                     bool isWaived = VigorService.IsWaivedPipIndex(i, costs.Length, waivedPipCount);
                     float alpha = isWaived ? flashAlpha : 1f;
-                    DrawDiamondPip(cardCenter, rotation, vs, pipX, pipCenterY - pipSize / 2f, pipSize, pipColor, cc, showOutline, alpha);
+                    DrawDiamondPip(cardCenter, rotation, vs, pipX, pipCenterY - pipSize / 2f, pipSize, pipColor, cc, showOutline, isColorless, alpha);
                 }
 
                 // Right side: type text
@@ -575,7 +616,9 @@ namespace Crusaders30XX.ECS.Systems
             _bodyFont.Spacing = savedTypeSpacing;
 
             // Rule Line — full width with padding
-            var ruleColor = GetPaletteColor(RuleLineColors, cc, new Color(192, 184, 170));
+            var ruleColor = isColorless
+                ? Color.Lerp(ColorlessSurface, ColorlessMutedText, 0.45f)
+                : GetPaletteColor(RuleLineColors, cc, new Color(192, 184, 170));
             float ruleWidth = cardWidth - padLeft - padRight;
             V2Rect(cardCenter, rotation, new Vector2(padLeft, cursorY), ruleWidth, RuleHeight * vs, ruleColor, vs);
             cursorY += RuleHeight * vs;
@@ -587,7 +630,8 @@ namespace Crusaders30XX.ECS.Systems
         /// Draws a diamond-shaped pip (square rotated 45deg) at the given position.
         /// </summary>
         private void DrawDiamondPip(Vector2 cardCenter, float rotation, float vs,
-            float x, float y, float size, Color color, CardData.CardColor cc, bool showOutline, float alpha = 1f)
+            float x, float y, float size, Color color, CardData.CardColor cc, bool showOutline,
+            bool isColorless, float alpha = 1f)
         {
             // Create a small square texture and draw it rotated 45 degrees
             int texSize = Math.Max(1, (int)Math.Ceiling(size));
@@ -614,7 +658,9 @@ namespace Crusaders30XX.ECS.Systems
             if (showOutline)
             {
                 // Draw outline at full size, then fill at reduced scale
-                var outlineColor = GetPaletteColor(CostPipOutlineColors, cc, Color.Black) * alpha;
+                var outlineColor = (isColorless
+                    ? Color.Black
+                    : GetPaletteColor(CostPipOutlineColors, cc, Color.Black)) * alpha;
                 _spriteBatch.Draw(tex, world, null, outlineColor, diamondRotation,
                     new Vector2(texSize / 2f, texSize / 2f),
                     drawScale,
@@ -635,7 +681,8 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private void DrawStatChips(Vector2 cardCenter, float rotation, float vs, CardData.CardColor cc, Entity entity, CardBase card)
+        private void DrawStatChips(Vector2 cardCenter, float rotation, float vs, CardData.CardColor cc,
+            Entity entity, CardBase card, bool isColorless)
         {
             float chipX = ChipColumnX * vs;
 
@@ -678,11 +725,11 @@ namespace Crusaders30XX.ECS.Systems
                 bool hasDelta = blockDelta != 0;
 
                 // Label slab
-                DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, chipY, "BLOCK", ChipVariant.BLK);
+                DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, chipY, "BLOCK", ChipVariant.BLK, isColorless);
                 float chipBodyY = chipY + LabelSlabHeight * vs;
 
                 // Chip
-                DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, blockValue.ToString(), ChipVariant.BLK, true, hasDelta, effectiveChipSize);
+                DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, blockValue.ToString(), ChipVariant.BLK, true, hasDelta, isColorless, effectiveChipSize);
 
                 // Delta slab
                 if (hasDelta)
@@ -701,11 +748,11 @@ namespace Crusaders30XX.ECS.Systems
                 bool hasDelta = damageDelta != 0;
 
                 // Label slab
-                DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, chipY, "DAMAGE", ChipVariant.ATK);
+                DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, chipY, "DAMAGE", ChipVariant.ATK, isColorless);
                 float chipBodyY = chipY + LabelSlabHeight * vs;
 
                 // Chip
-                DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, damage.ToString(), ChipVariant.ATK, true, hasDelta, effectiveChipSize);
+                DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, damage.ToString(), ChipVariant.ATK, true, hasDelta, isColorless, effectiveChipSize);
 
                 // Delta slab
                 if (hasDelta)
@@ -720,15 +767,15 @@ namespace Crusaders30XX.ECS.Systems
             {
                 if (card.IsFreeAction)
                 {
-                    DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, apLabelY, "FREE", ChipVariant.FREE);
+                    DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, apLabelY, "FREE", ChipVariant.FREE, isColorless);
                     float chipBodyY = apLabelY + LabelSlabHeight * vs;
-                    DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "0", ChipVariant.FREE, true, false);
+                    DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "0", ChipVariant.FREE, true, false, isColorless);
                 }
                 else
                 {
-                    DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, apLabelY, "AP", ChipVariant.AP);
+                    DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, apLabelY, "AP", ChipVariant.AP, isColorless);
                     float chipBodyY = apLabelY + LabelSlabHeight * vs;
-                    DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "1", ChipVariant.AP, true, false);
+                    DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "1", ChipVariant.AP, true, false, isColorless);
                 }
             }
         }
@@ -739,7 +786,7 @@ namespace Crusaders30XX.ECS.Systems
         /// Draws a label slab above a chip (rounded top corners, flat bottom).
         /// </summary>
         private void DrawChipLabelSlab(Vector2 cardCenter, float rotation, float vs,
-            CardData.CardColor cc, float x, float y, string label, ChipVariant variant)
+            CardData.CardColor cc, float x, float y, string label, ChipVariant variant, bool isColorless)
         {
             float slabW = ChipWidth * vs;
             float slabH = LabelSlabHeight * vs;
@@ -774,6 +821,13 @@ namespace Crusaders30XX.ECS.Systems
                     textColor = Color.White;
                     break;
             }
+            if (isColorless && variant != ChipVariant.ATK)
+            {
+                bgColor = variant == ChipVariant.FREE
+                    ? Color.Transparent
+                    : Color.Lerp(ColorlessSurface, ColorlessBackground, 0.25f);
+                textColor = ColorlessMutedText;
+            }
 
             V2Tex(cardCenter, rotation, new Vector2(x, y), slabTex, new Vector2(slabW, slabH), bgColor, vs);
 
@@ -789,7 +843,8 @@ namespace Crusaders30XX.ECS.Systems
         /// Draws a stat chip — value-only, no label inside.
         /// </summary>
         private void DrawChip(Vector2 cardCenter, float rotation, float vs, CardData.CardColor cc,
-            float x, float y, string value, ChipVariant variant, bool hasLabelAbove, bool hasDeltaBelow, float chipSizeOverride = -1)
+            float x, float y, string value, ChipVariant variant, bool hasLabelAbove, bool hasDeltaBelow,
+            bool isColorless, float chipSizeOverride = -1)
         {
             float chipW = ChipWidth * vs;
             float chipH = (chipSizeOverride > 0 ? chipSizeOverride : ChipSize) * vs;
@@ -806,8 +861,12 @@ namespace Crusaders30XX.ECS.Systems
                 case ChipVariant.BLK:
                 {
                     // Solid fill — steel blue tint
-                    Color bgColor = GetPaletteColor(BlkChipBgColors, cc, new Color(42, 74, 94));
-                    Color valColor = GetPaletteColor(BlkChipTextColors, cc, new Color(176, 212, 232));
+                    Color bgColor = isColorless
+                        ? Color.Lerp(ColorlessSurface, ColorlessMutedText, 0.18f)
+                        : GetPaletteColor(BlkChipBgColors, cc, new Color(42, 74, 94));
+                    Color valColor = isColorless
+                        ? ColorlessPrimaryText
+                        : GetPaletteColor(BlkChipTextColors, cc, new Color(176, 212, 232));
 
                     var tex = GetPerCornerRoundedRectTexture((int)chipW, (int)chipH, rTL, rTR, rBR, rBL);
                     V2Tex(cardCenter, rotation, new Vector2(x, y), tex, new Vector2(chipW, chipH), bgColor, vs);
@@ -826,8 +885,12 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 case ChipVariant.AP:
                 {
-                    Color bgColor = GetPaletteColor(ApChipBgColors, cc, new Color(68, 68, 68));
-                    Color valColor = GetPaletteColor(ApChipTextColors, cc, new Color(221, 221, 221));
+                    Color bgColor = isColorless
+                        ? ColorlessSurface
+                        : GetPaletteColor(ApChipBgColors, cc, new Color(68, 68, 68));
+                    Color valColor = isColorless
+                        ? ColorlessPrimaryText
+                        : GetPaletteColor(ApChipTextColors, cc, new Color(221, 221, 221));
 
                     var tex = GetPerCornerRoundedRectTexture((int)chipW, (int)chipH, rTL, rTR, rBR, rBL);
                     V2Tex(cardCenter, rotation, new Vector2(x, y), tex, new Vector2(chipW, chipH), bgColor, vs);
@@ -837,8 +900,12 @@ namespace Crusaders30XX.ECS.Systems
                 case ChipVariant.FREE:
                 {
                     // Dashed border — approximate with solid border + card bg fill
-                    Color borderColor = GetPaletteColor(FreeChipBorderColors, cc, new Color(170, 170, 170));
-                    Color valColor = GetPaletteColor(FreeChipTextColors, cc, new Color(136, 136, 136));
+                    Color borderColor = isColorless
+                        ? ColorlessMutedText
+                        : GetPaletteColor(FreeChipBorderColors, cc, new Color(170, 170, 170));
+                    Color valColor = isColorless
+                        ? ColorlessPrimaryText
+                        : GetPaletteColor(FreeChipTextColors, cc, new Color(136, 136, 136));
 
                     var outerTex = GetPerCornerRoundedRectTexture((int)chipW, (int)chipH, rTL, rTR, rBR, rBL);
                     V2Tex(cardCenter, rotation, new Vector2(x, y), outerTex, new Vector2(chipW, chipH), borderColor, vs);
@@ -848,7 +915,9 @@ namespace Crusaders30XX.ECS.Systems
                     float innerH = chipH - bt * 2;
                     if (innerW > 0 && innerH > 0)
                     {
-                        var innerBg = GetPaletteColor(BgColors, cc, new Color(220, 215, 206));
+                        var innerBg = isColorless
+                            ? ColorlessBackground
+                            : GetPaletteColor(BgColors, cc, new Color(220, 215, 206));
                         var innerTex = GetPerCornerRoundedRectTexture((int)innerW, (int)innerH,
                             Math.Max(0, rTL - bt), Math.Max(0, rTR - bt),
                             Math.Max(0, rBR - bt), Math.Max(0, rBL - bt));
@@ -908,22 +977,28 @@ namespace Crusaders30XX.ECS.Systems
             V2Text(cardCenter, rotation, new Vector2(textX, textY), deltaText, textColor, SlabFontScale * vs, vs, _bodyFont);
         }
 
-        private static Color GetCostPipColor(string costType, CardData.CardColor cc)
+        private Color GetCostPipColor(string costType, CardData.CardColor cc, bool isColorless)
         {
             return costType.Trim().ToLowerInvariant() switch
             {
                 "red"   => CostPipRedColor,
                 "white" => CostPipWhiteColor,
                 "black" => CostPipBlackColor,
-                _       => GetPaletteColor(CostPipAnyColors, cc, new Color(160, 152, 136)),
+                _       => isColorless
+                    ? ColorlessMutedText
+                    : GetPaletteColor(CostPipAnyColors, cc, new Color(160, 152, 136)),
             };
         }
 
         /// <summary>
-        /// Outline only when pip color matches card color (would blend into background). Never for "Any".
+        /// Outline when a pip would blend into the card, plus gray Any pips on Colorless cards.
         /// </summary>
-        private static bool NeedsPipOutline(string costType, CardData.CardColor cc)
+        private static bool NeedsPipOutline(string costType, CardData.CardColor cc, bool isColorless)
         {
+            if (isColorless && string.Equals(costType.Trim(), "Any", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
             return costType.Trim().ToLowerInvariant() switch
             {
                 "white" => cc == CardData.CardColor.White,
@@ -984,6 +1059,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private static int GetBlackCardBlockBonus(Entity entity)
         {
+            if (entity.HasComponent<Colorless>()) return 0;
             var modifiedBlock = entity.GetComponent<ModifiedBlock>();
             if (modifiedBlock?.Modifications == null) return 0;
 
@@ -1002,5 +1078,27 @@ namespace Crusaders30XX.ECS.Systems
         {
             return palette.TryGetValue(cc, out var c) ? c : fallback;
         }
+
+        private Color ColorlessBackground => new(
+            ClampByte(ColorlessBackgroundR),
+            ClampByte(ColorlessBackgroundG),
+            ClampByte(ColorlessBackgroundB));
+
+        private Color ColorlessPrimaryText => new(
+            ClampByte(ColorlessPrimaryTextR),
+            ClampByte(ColorlessPrimaryTextG),
+            ClampByte(ColorlessPrimaryTextB));
+
+        private Color ColorlessMutedText => new(
+            ClampByte(ColorlessMutedTextR),
+            ClampByte(ColorlessMutedTextG),
+            ClampByte(ColorlessMutedTextB));
+
+        private Color ColorlessSurface => new(
+            ClampByte(ColorlessSurfaceR),
+            ClampByte(ColorlessSurfaceG),
+            ClampByte(ColorlessSurfaceB));
+
+        private static byte ClampByte(int value) => (byte)Math.Clamp(value, 0, 255);
     }
 }

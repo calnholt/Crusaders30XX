@@ -6,9 +6,10 @@ namespace Crusaders30XX.Tests;
 public class TemperanceFactoryTests
 {
     [Theory]
-    [InlineData("angelic_aura", "Angelic Aura", "Player", "Gain 4 aegis.", 3)]
+    [InlineData("angelic_aura", "Angelic Aura", "Player", "Gain 3 aegis.", 2)]
     [InlineData("fling_fling", "Fling Fling", "Player", "Add 2 Kunai cards to your hand.", 3)]
     [InlineData("radiance", "Radiance", "Enemy", "Stun the enemy.", 4)]
+    [InlineData("unsheath", "Unsheath", "Player", "Gain 4 sharpen.", 3)]
     public void Create_returns_temperance_metadata(string id, string name, string target, string text, int threshold)
     {
         var ability = TemperanceFactory.Create(id);
@@ -32,10 +33,11 @@ public class TemperanceFactoryTests
     {
         var abilities = TemperanceFactory.GetAllTemperanceAbilities();
 
-        Assert.Equal(4, abilities.Count);
+        Assert.Equal(5, abilities.Count);
         Assert.Contains("angelic_aura", abilities.Keys);
         Assert.Contains("fling_fling", abilities.Keys);
         Assert.Contains("measured_breath", abilities.Keys);
         Assert.Contains("radiance", abilities.Keys);
+        Assert.Contains("unsheath", abilities.Keys);
     }
 }

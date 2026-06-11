@@ -247,12 +247,8 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             foreach (var e in candidates)
             {
                 if (remaining.Count == 0) break;
-                var cd = e.GetComponent<CardData>();
-                if (cd == null) continue;
                 int idx = remaining.FindIndex(r =>
-                    (r == "Red" && cd.Color == CardData.CardColor.Red) ||
-                    (r == "White" && cd.Color == CardData.CardColor.White) ||
-                    (r == "Black" && cd.Color == CardData.CardColor.Black));
+                    r != "Any" && CardColorQualificationService.IsEligibleForCost(e, r));
                 if (idx >= 0)
                 {
                     used.Add(e);

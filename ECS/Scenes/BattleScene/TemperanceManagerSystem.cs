@@ -41,8 +41,7 @@ namespace Crusaders30XX.ECS.Systems
             });
             // When assigned blocks land in discard, grant Temperance for white cards
             if (evt.To == CardZoneType.DiscardPile && evt.From == CardZoneType.AssignedBlock) {
-              var data = evt.Card.GetComponent<CardData>();
-              if (data == null || data.Color != CardData.CardColor.White) return;
+              if (!CardColorQualificationService.QualifiesAs(evt.Card, CardData.CardColor.White)) return;
               var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
               if (player == null) return;
               var t = player.GetComponent<Temperance>();

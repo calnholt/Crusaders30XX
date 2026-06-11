@@ -89,8 +89,7 @@ namespace Crusaders30XX.ECS.Systems
 					if (card.GetComponent<AssignedBlockCard>() != null) continue;
 
 					int blockVal = BlockValueService.GetTotalBlockValue(card);
-					var data = card.GetComponent<CardData>();
-					string color = data?.Color.ToString() ?? "White";
+					string color = CardColorQualificationService.GetQualifiedColor(card)?.ToString();
 
 					var t = card.GetComponent<Transform>();
 					if (t != null)

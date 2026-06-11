@@ -7,6 +7,7 @@ using Crusaders30XX.ECS.Objects.EnemyAttacks;
 using Crusaders30XX.ECS.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using static Crusaders30XX.ECS.Components.CardData;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Objects.Enemies;
 
@@ -48,7 +49,7 @@ public class Cactus : EnemyBase
 public class PricklyBurst : EnemyAttackBase
 {
   private int Bleed = 2;
-  private CardData.CardColor Color = CardData.CardColor.Red;
+  private CardData.CardColor? Color;
   public PricklyBurst()
   {
     Id = "prickly_burst";
@@ -59,12 +60,14 @@ public class PricklyBurst : EnemyAttackBase
     OnAttackReveal = (entityManager) =>
     {
       Color = Cinderbolt.GetRandomCardColorInPlayerHand(EntityManager);
-      Text = $"Gain {Bleed} bleed for each {Color.ToString().ToLower()} card that blocks this.";
+      Text = Color.HasValue
+        ? $"Gain {Bleed} bleed for each {Color.Value.ToString().ToLower()} card that blocks this."
+        : $"Gain {Bleed} bleed for each card of the selected color that blocks this. No color is selected.";
     };
 
     OnBlockProcessed = (entityManager, card) =>
     {
-      var color = card.GetComponent<CardData>().Color;
+      var color = CardColorQualificationService.GetQualifiedColor(card);
       if (color == Color)
       {
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Bleed, Delta = Bleed });

@@ -1,8 +1,11 @@
+using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Systems;
+using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Services;
 using Xunit;
 
 namespace Crusaders30XX.Tests;
@@ -65,9 +68,86 @@ public class CardApplicationManagementSystemTests
 
 			Apply(CardApplicationType.Frozen);
 			Apply(CardApplicationType.Brittle);
+			Apply(CardApplicationType.Colorless);
 
 			Assert.True(card.HasComponent<Frozen>());
 			Assert.True(card.HasComponent<Brittle>());
+			Assert.True(card.HasComponent<Colorless>());
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void Exact_card_apply_and_remove_synchronize_persistence()
+	{
+		EventManager.Clear();
+		SaveCache.DeleteSaveFilesIfPresent();
+		try
+		{
+			var entityManager = new EntityManager();
+			var deck = CreateDeck(entityManager);
+			var card = AddCard(entityManager, deck, deck.Hand, new Tempest());
+			entityManager.AddComponent(card, new RunDeckCard { CardKey = "tempest|White" });
+			_ = new CardApplicationManagementSystem(entityManager);
+
+			EventManager.Publish(new ApplyCardApplicationEvent
+			{
+				Card = card,
+				Amount = 1,
+				Type = CardApplicationType.Colorless,
+				Target = CardApplicationTarget.Deck,
+			});
+
+			Assert.True(card.HasComponent<Colorless>());
+			Assert.Contains(
+				RunScopedStateService.RestrictionColorless,
+				SaveCache.GetRunCardRestrictions("tempest|White"));
+
+			EventManager.Publish(new RemoveCardApplication
+			{
+				Card = card,
+				Type = CardApplicationType.Colorless,
+			});
+
+			Assert.False(card.HasComponent<Colorless>());
+			Assert.DoesNotContain(
+				RunScopedStateService.RestrictionColorless,
+				SaveCache.GetRunCardRestrictions("tempest|White"));
+		}
+		finally
+		{
+			EventManager.Clear();
+			SaveCache.DeleteSaveFilesIfPresent();
+		}
+	}
+
+	[Fact]
+	public void Random_zone_remove_only_removes_selected_application()
+	{
+		EventManager.Clear();
+		try
+		{
+			var entityManager = new EntityManager();
+			var deck = CreateDeck(entityManager);
+			var first = AddCard(entityManager, deck, deck.Hand, new Tempest());
+			var second = AddCard(entityManager, deck, deck.Hand, new Tempest());
+			entityManager.AddComponent(first, new Colorless());
+			entityManager.AddComponent(second, new Colorless());
+			entityManager.AddComponent(first, new Brittle());
+			_ = new CardApplicationManagementSystem(entityManager);
+
+			EventManager.Publish(new RemoveCardApplications
+			{
+				Amount = 1,
+				Type = CardApplicationType.Colorless,
+				Target = CardApplicationTarget.Hand,
+			});
+
+			Assert.Equal(1, new[] { first, second }.Count(card => card.HasComponent<Colorless>()));
+			Assert.True(first.HasComponent<Brittle>());
 		}
 		finally
 		{

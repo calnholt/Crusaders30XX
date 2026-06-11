@@ -6,3 +6,6 @@ Gameplay
 
 Cleanup
 - update cards to track state (Deus Vult, etc)
+
+cards
+- as an additional cost, discard your pledge card that wasn't pledged this turn. 

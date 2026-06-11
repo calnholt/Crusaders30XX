@@ -9,6 +9,9 @@ namespace Crusaders30XX.ECS.Services
 {
 	internal static class TooltipTextService
 	{
+		public const string ColorlessStatus =
+			"Colorless: Retains its printed color, but currently qualifies as no color.";
+
 		// --- Constants ---
 		public static readonly int FrostbiteThreshold = 3;
 		public static readonly int FrostbiteDamage = 3;
@@ -18,7 +21,7 @@ namespace Crusaders30XX.ECS.Services
 
 		/// <summary>
 		/// Returns the full tooltip text for a card entity: base tooltip text plus any appended
-		/// status-effect descriptions (Frozen, Intimidated, Shackle, Pledge, Sealed, Recoil).
+		/// status-effect descriptions (Frozen, Brittle, Colorless, Intimidated, Shackle, Pledge, Sealed, Recoil).
 		/// </summary>
 		public static string BuildCardTooltip(Entity entity, string baseText)
 		{
@@ -29,6 +32,9 @@ namespace Crusaders30XX.ECS.Services
 
 			if (entity.GetComponent<Brittle>() != null)
 				text += Sep(text) + "This card is brittle - if you block an attack with only this card, mill 1. Lasts for the rest of the run.";
+
+			if (entity.GetComponent<Colorless>() != null)
+				text += Sep(text) + ColorlessStatus;
 
 			if (entity.GetComponent<Intimidated>() != null)
 				text += Sep(text) + "This card is intimidated - cannot be used to block during the block phase.";

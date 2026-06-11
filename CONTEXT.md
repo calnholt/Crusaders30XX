@@ -86,6 +86,14 @@ The player's configured battle kit for the run: deck card list, weapon, temperan
 
 The player's deck for the current run: the ordered set of card entries (card plus color) on the loadout, plus how those cards are distributed in battle (draw pile, hand, discard). A new run begins with a 20-card starting deck; the deck may grow beyond 20 during the run. There is no maximum deck size.
 
+## Printed color
+
+The immutable Red, White, or Black identity stored on a card entry. Printed color determines deck construction, rewards, save keys, and the card's normal combat color. Effects may change whether the card qualifies as that color in combat without changing its printed color.
+
+## Colorless
+
+A **run-long card restriction** that makes a card qualify as no color during combat while preserving its **printed color**. A Colorless card can pay an `Any` color cost but not a Red, White, or Black cost. It does not count for color predicates, color resources, or the printed-Black block bonus.
+
 ## Exhaust
 
 Removing a card from the deck for the rest of the run. Exhausted cards do not return in later battles. Exhaustion removes that card entry from the save loadout and destroys the run deck entity.
@@ -96,7 +104,9 @@ At the start of each battle, all surviving cards (draw pile, hand, and discard) 
 
 ## Run-long card restriction
 
-A combat effect attached to a specific deck card entity (e.g. frozen, shackled, sealed) that lasts for the whole **run** until **run failure**, **quest abandon**, or **new run start**. Restrictions survive leaving battle and hub visits; they are cleared when the run ends, not at each queued encounter.
+A combat effect attached to a specific deck card entity (e.g. Frozen, Sealed, Brittle, or Colorless) that lasts for the whole **run** until **run failure**, **quest abandon**, or **new run start**. Restrictions survive leaving battle and hub visits; they are cleared when the run ends, not at each queued encounter.
+
+The run-long **Shackled** player passive is not a card restriction. Battle-local **Shackle** markers link cards so they are assigned and unassigned as blockers together; those markers are not persisted.
 
 ## Quest-scoped card modification
 

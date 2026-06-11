@@ -57,16 +57,16 @@ public class FrozenClaw : EnemyAttackBase
   {
     Id = "frozen_claw";
     Name = "Frozen Claw";
-    Damage = 6;
-    ConditionType = ConditionType.OnHit;
-    Text = "On attack - Intimidate 1 card.\n\nOn hit - Freeze the top card of your draw pile.";
+    Damage = 10;
+    MinimumDamageToTriggerEffect = 3;
+    Text = $"On attack - Intimidate 1 card.\n\n{EnemyAttackTextHelper.GetDamageThresholdText(3, "Freeze the top card of your draw pile.")}";
 
     OnAttackReveal = (entityManager) =>
     {
       EventManager.Publish(new IntimidateEvent { Amount = 1 });
     };
 
-    OnAttackHit = (entityManager) =>
+    OnDamageThresholdMet = (entityManager) =>
     {
       EventManager.Publish(new ApplyCardApplicationEvent
       {

@@ -97,7 +97,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnBlockAssignmentAdded(BlockAssignmentAdded e)
 		{
 			LoggingService.Append("EnemyAttackProgressManagementSystem.OnBlockAssignmentAdded", new System.Text.Json.Nodes.JsonObject { ["contextId"] = e.ContextId, ["color"] = e.Color, ["deltaBlock"] = e.DeltaBlock });
-			if (e == null || string.IsNullOrWhiteSpace(e.Color)) return;
+			if (e == null) return;
 			string color = NormalizeColorKey(e.Color);
 			if (string.IsNullOrEmpty(e.ContextId)) return;
 
@@ -307,6 +307,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private static string NormalizeColorKey(string color)
 		{
+			if (string.IsNullOrWhiteSpace(color)) return string.Empty;
 			string c = color.Trim().ToLowerInvariant();
 			switch (c)
 			{
@@ -333,5 +334,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
-

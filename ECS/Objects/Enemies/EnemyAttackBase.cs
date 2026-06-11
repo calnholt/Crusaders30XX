@@ -25,6 +25,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     public int Channel { get; set; } = 0;
     public bool IgnoresAegis { get; set; } = false;
     public static EntityManager EntityManager { get; set; }
+    public int? MinimumDamageToTriggerEffect { get; protected set; }
 
     // Probability (0.0–1.0) that guard conversion is attempted. Set to 0f to opt out.
     public float GuardConversionChance { get; protected set; } = 0.75f;
@@ -48,6 +49,7 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
     #nullable enable annotations
     public Action<EntityManager>? OnAttackReveal { get; protected set; }
     public Action<EntityManager>? OnAttackHit { get; protected set; }
+    public Action<EntityManager>? OnDamageThresholdMet { get; protected set; }
     public Action<EntityManager>? OnBlocksConfirmed { get; protected set; }
     public Action<EntityManager, Entity>? OnBlockProcessed { get; protected set; }
     public Action<EntityManager>? OnBlockAssigned { get; protected set; }

@@ -11,7 +11,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "pierce_through";
             Name = "Pierce Through";
             Target = "Enemy";
-            Text = "Remove 1 guard from the enemy.";
+            Text = "Remove all guard from the enemy.";
             Animation = "Attack";
             Damage = 9;
             Block = 3;

@@ -188,6 +188,27 @@ namespace Crusaders30XX.ECS.Systems
                 Target = CardApplicationTarget.Hand,
             });
         }
+
+        [DebugAction("Apply Colorless (hand)")]
+        public void Debug_ApplyColorlessHand()
+        {
+            EventManager.Publish(new ApplyCardApplicationEvent
+            {
+                Amount = 1,
+                Type = CardApplicationType.Colorless,
+                Target = CardApplicationTarget.Hand,
+            });
+        }
+
+        [DebugAction("Remove Colorless (hand)")]
+        public void Debug_RemoveColorlessHand()
+        {
+            EventManager.Publish(new RemoveCardApplications
+            {
+                Amount = 1,
+                Type = CardApplicationType.Colorless,
+                Target = CardApplicationTarget.Hand,
+            });
+        }
     }
 }
-

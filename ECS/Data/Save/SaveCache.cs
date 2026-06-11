@@ -913,6 +913,11 @@ namespace Crusaders30XX.ECS.Data.Save
 				if (idx < 0) return false;
 
 				loadout.cardIds.RemoveAt(idx);
+				if (!loadout.cardIds.Any(k =>
+					string.Equals(k, cardKey, StringComparison.OrdinalIgnoreCase)))
+				{
+					_save.runCardRestrictions?.Remove(cardKey);
+				}
 				Persist();
 				if (publishChange)
 				{

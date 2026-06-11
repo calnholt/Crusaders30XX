@@ -98,6 +98,18 @@ There are three card colors, each with distinct blocking mechanics:
 - Block for **+1 compared to red/white counterparts**
 - Do not grant any resource when blocking
 
+### Colorless Restriction
+
+- Colorless is a run-long restriction, not a fourth card color
+- A card keeps its printed Red, White, or Black identity for deck construction, rewards, and save keys
+- During combat, a Colorless card qualifies as no color
+- It can pay an **Any** color cost, but cannot pay a specific Red, White, or Black cost
+- It does not generate Courage or Temperance from blocking
+- A printed-Black Colorless card loses the intrinsic +1 block bonus
+- It does not count for positive color checks, color counts, selections, achievements, medals, enemy effects, or battle UI color totals
+- It fails Only Red/White/Black restrictions and passes Not Red/White/Black restrictions
+- Removing Colorless immediately restores normal printed-color behavior
+
 ## Deck Building Rules
 
 - Each card exists in all three colors (red, white, black variants)
