@@ -44,5 +44,32 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 }
             };
         }
+
+        public override void Initialize(EntityManager entityManager, Entity cardEntity)
+        {
+            base.Initialize(entityManager, cardEntity);
+            EventManager.Subscribe<EnemyKilledEvent>(OnBattleEnd);
+        }
+
+        private void OnBattleEnd(EnemyKilledEvent evt)
+        {
+            ClearBattleScopedState();
+        }
+
+        private void ClearBattleScopedState()
+        {
+            if (CardEntity == null) return;
+            AttackDamageValueService.RemoveModification(CardEntity, ModificationReason);
+            if (CardEntity.GetComponent<RelentlessStrikeBattleState>() != null)
+            {
+                EntityManager.RemoveComponent<RelentlessStrikeBattleState>(CardEntity);
+            }
+        }
+
+        public override void Dispose()
+        {
+            EventManager.Unsubscribe<EnemyKilledEvent>(OnBattleEnd);
+            base.Dispose();
+        }
     }
 }

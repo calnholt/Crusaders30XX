@@ -40,6 +40,7 @@ namespace Crusaders30XX.ECS.Services
 		{
 			return new[]
 			{
+				"absolution",
 				"smite",
 				"fervor",
 				"courageous",
@@ -53,32 +54,65 @@ namespace Crusaders30XX.ECS.Services
 			};
 		}
 
+		public static IReadOnlyList<string> GetSwordSingleCopyStarterCardPool()
+		{
+			return new[] { "fervor" };
+		}
+
 		public static IReadOnlyList<string> GetDaggerStarterCardPool()
 		{
 			return new[]
 			{
+				"crusade",
 				"strike",
 				"courageous",
 				"reckoning",
-				"increase_faith",
+				"sacrifice",
 				"seize",
 				"razor_storm",
 				"rally_the_faithful",
 				"sudden_thrust",
 				"hidden_kunai",
-				"zealous_vow"
+				"zealous_vow",
 			};
 		}
 
-		public static List<string> Generate(IReadOnlyList<string> poolCardIds, int seed)
+		public static IReadOnlyList<string> GetDaggerSingleCopyStarterCardPool()
 		{
-			var result = TryGenerate(poolCardIds, new Random(seed), relaxColorQuotas: false);
+			return new[] { "sacrifice" };
+		}
+
+		private static HashSet<string> BuildSingleCopySet(IReadOnlyList<string> singleCopyCardIds)
+		{
+			if (singleCopyCardIds == null || singleCopyCardIds.Count == 0)
+			{
+				return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			}
+
+			return new HashSet<string>(
+				singleCopyCardIds.Where(id => !string.IsNullOrWhiteSpace(id)),
+				StringComparer.OrdinalIgnoreCase);
+		}
+
+		private static int GetMaxCopiesForStarterCard(string cardId, IReadOnlySet<string> singleCopyCardIds)
+		{
+			return singleCopyCardIds.Contains(cardId) ? 1 : DeckRules.MaxCopiesPerCardId;
+		}
+
+		public static List<string> Generate(
+			IReadOnlyList<string> poolCardIds,
+			int seed,
+			IReadOnlyList<string> singleCopyCardIds = null)
+		{
+			var singleCopySet = BuildSingleCopySet(singleCopyCardIds);
+
+			var result = TryGenerate(poolCardIds, singleCopySet, new Random(seed), relaxColorQuotas: false);
 			if (result.Count >= DeckRules.StartingDeckSize) return result;
 
-			result = TryGenerate(poolCardIds, new Random(seed + 1), relaxColorQuotas: false);
+			result = TryGenerate(poolCardIds, singleCopySet, new Random(seed + 1), relaxColorQuotas: false);
 			if (result.Count >= DeckRules.StartingDeckSize) return result;
 
-			result = TryGenerate(poolCardIds, new Random(seed + 2), relaxColorQuotas: true);
+			result = TryGenerate(poolCardIds, singleCopySet, new Random(seed + 2), relaxColorQuotas: true);
 			if (result.Count < DeckRules.StartingDeckSize)
 			{
 				Console.WriteLine($"[StartingDeckGenerator] Built {result.Count}/{DeckRules.StartingDeckSize} cards from pool size {poolCardIds?.Count ?? 0}.");
@@ -86,7 +120,11 @@ namespace Crusaders30XX.ECS.Services
 			return result;
 		}
 
-		private static List<string> TryGenerate(IReadOnlyList<string> poolCardIds, Random rng, bool relaxColorQuotas)
+		private static List<string> TryGenerate(
+			IReadOnlyList<string> poolCardIds,
+			IReadOnlySet<string> singleCopyCardIds,
+			Random rng,
+			bool relaxColorQuotas)
 		{
 			var finalDeck = new List<string>();
 			var cardIdUsage = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -102,6 +140,18 @@ namespace Crusaders30XX.ECS.Services
 				.Where(id => !string.IsNullOrWhiteSpace(id))
 				.Distinct(StringComparer.OrdinalIgnoreCase)
 				.ToList();
+
+			ReserveGuaranteedSingleCopyCards(
+				distinctPool,
+				singleCopyCardIds,
+				rng,
+				relaxColorQuotas,
+				ref redLeft,
+				ref whiteLeft,
+				ref blackLeft,
+				finalDeck,
+				deckKeySet,
+				cardIdUsage);
 
 			var allPairs = new List<(string Id, string Color)>();
 			foreach (var cardId in distinctPool)
@@ -124,7 +174,7 @@ namespace Crusaders30XX.ECS.Services
 				if (deckKeySet.Contains(key)) continue;
 
 				cardIdUsage.TryGetValue(pair.Id, out int usage);
-				if (usage >= DeckRules.MaxCopiesPerCardId) continue;
+				if (usage >= GetMaxCopiesForStarterCard(pair.Id, singleCopyCardIds)) continue;
 
 				if (!relaxColorQuotas)
 				{
@@ -143,6 +193,67 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			return finalDeck.OrderBy(_ => rng.Next()).ToList();
+		}
+
+		private static void ReserveGuaranteedSingleCopyCards(
+			IReadOnlyList<string> distinctPool,
+			IReadOnlySet<string> singleCopyCardIds,
+			Random rng,
+			bool relaxColorQuotas,
+			ref int redLeft,
+			ref int whiteLeft,
+			ref int blackLeft,
+			List<string> finalDeck,
+			HashSet<string> deckKeySet,
+			Dictionary<string, int> cardIdUsage)
+		{
+			if (singleCopyCardIds == null || singleCopyCardIds.Count == 0) return;
+
+			var poolSet = new HashSet<string>(distinctPool, StringComparer.OrdinalIgnoreCase);
+			var guaranteedIds = singleCopyCardIds
+				.Where(id => poolSet.Contains(id))
+				.OrderBy(_ => rng.Next())
+				.ToList();
+
+			foreach (var cardId in guaranteedIds)
+			{
+				if (finalDeck.Count >= DeckRules.StartingDeckSize) break;
+				if (!CardFactory.GetAllCards().TryGetValue(cardId, out var card) || card == null) continue;
+				if (!card.CanAddToLoadout || card.IsWeapon || card.IsToken) continue;
+
+				cardIdUsage.TryGetValue(cardId, out int usage);
+				if (usage >= 1) continue;
+
+				var colors = new List<string> { "Red", "White", "Black" };
+				colors = colors.OrderBy(_ => rng.Next()).ToList();
+
+				string chosenColor = null;
+				foreach (var color in colors)
+				{
+					if (!relaxColorQuotas)
+					{
+						if (color == "Red" && redLeft <= 0) continue;
+						if (color == "White" && whiteLeft <= 0) continue;
+						if (color == "Black" && blackLeft <= 0) continue;
+					}
+
+					chosenColor = color;
+					break;
+				}
+
+				if (chosenColor == null) continue;
+
+				string key = $"{card.CardId}|{chosenColor}";
+				if (deckKeySet.Contains(key)) continue;
+
+				finalDeck.Add(key);
+				deckKeySet.Add(key);
+				cardIdUsage[card.CardId] = usage + 1;
+
+				if (chosenColor == "Red") redLeft--;
+				else if (chosenColor == "White") whiteLeft--;
+				else blackLeft--;
+			}
 		}
 	}
 }

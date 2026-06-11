@@ -19,6 +19,51 @@ public class StarterDeckSaveTests
 	}
 
 	[Fact]
+	public void Generate_enforces_single_copy_limit_for_overlay_cards()
+	{
+		var pool = new[] { "smite", "fervor", "courageous", "reckoning" };
+		var singleCopy = new[] { "smite" };
+
+		for (int seed = 0; seed < 100; seed++)
+		{
+			var deck = StartingDeckGeneratorService.Generate(pool, seed, singleCopy);
+			Assert.True(DeckRules.CountCardIdInDeck(deck, "smite") <= 1);
+		}
+	}
+
+	[Fact]
+	public void Generate_ignores_single_copy_ids_not_in_main_pool()
+	{
+		var pool = new[] { "fervor", "courageous" };
+		var singleCopy = new[] { "smite" };
+
+		for (int seed = 0; seed < 50; seed++)
+		{
+			var deck = StartingDeckGeneratorService.Generate(pool, seed, singleCopy);
+			Assert.Equal(0, DeckRules.CountCardIdInDeck(deck, "smite"));
+		}
+	}
+
+	[Fact]
+	public void Weapon_starter_pools_include_guaranteed_single_copy_cards()
+	{
+		for (int seed = 0; seed < 100; seed++)
+		{
+			var swordDeck = StartingDeckGeneratorService.Generate(
+				StartingDeckGeneratorService.GetSwordStarterCardPool(),
+				seed,
+				StartingDeckGeneratorService.GetSwordSingleCopyStarterCardPool());
+			Assert.Equal(1, DeckRules.CountCardIdInDeck(swordDeck, "fervor"));
+
+			var daggerDeck = StartingDeckGeneratorService.Generate(
+				StartingDeckGeneratorService.GetDaggerStarterCardPool(),
+				seed,
+				StartingDeckGeneratorService.GetDaggerSingleCopyStarterCardPool());
+			Assert.Equal(1, DeckRules.CountCardIdInDeck(daggerDeck, "sacrifice"));
+		}
+	}
+
+	[Fact]
 	public void StartNewRun_persists_starterCardKeys_matching_loadout()
 	{
 		SaveCache.DeleteSaveFilesIfPresent();

@@ -59,7 +59,11 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 		}
 
-		public static void ConfigurePrimaryRunSetup(string weaponId, string temperanceId, IReadOnlyList<string> starterCardPool)
+		public static void ConfigurePrimaryRunSetup(
+			string weaponId,
+			string temperanceId,
+			IReadOnlyList<string> starterCardPool,
+			IReadOnlyList<string> singleCopyCardIds = null)
 		{
 			EnsureLoaded();
 			lock (_lock)
@@ -70,7 +74,8 @@ namespace Crusaders30XX.ECS.Data.Save
 
 				var startingDeck = StartingDeckGeneratorService.Generate(
 					starterCardPool ?? StartingDeckGeneratorService.DefaultStarterCardPool,
-					_save.runMapSeed);
+					_save.runMapSeed,
+					singleCopyCardIds);
 
 				_save.starterCardKeys = new List<string>(startingDeck);
 				var loadout = _save.loadouts[0];

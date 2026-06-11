@@ -109,7 +109,6 @@ namespace Crusaders30XX.ECS.Systems
 		private AppliedPassivesManagementSystem _appliedPassivesManagementSystem;
 		private BleedManagementSystem _bleedManagementSystem;
 		private BattleStateInfoManagementSystem _battleStateInfoManagementSystem;
-		private RelentlessStrikeBattleResetSystem _relentlessStrikeBattleResetSystem;
 		private DiscardSpecificCardHighlightSystem _discardSpecificCardHighlightSystem;
 		private MillCardSystem _millCardSystem;
 		private IntimidateManagementSystem _intimidateManagementSystem;
@@ -586,7 +585,6 @@ namespace Crusaders30XX.ECS.Systems
 			_appliedPassivesManagementSystem = new AppliedPassivesManagementSystem(_world.EntityManager);
 			_bleedManagementSystem = new BleedManagementSystem(_world.EntityManager);
 			_battleStateInfoManagementSystem = new BattleStateInfoManagementSystem(_world.EntityManager);
-			_relentlessStrikeBattleResetSystem = new RelentlessStrikeBattleResetSystem(_world.EntityManager);
 			_discardSpecificCardHighlightSystem = new DiscardSpecificCardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_intimidateManagementSystem = new IntimidateManagementSystem(_world.EntityManager);
 			_shackleManagementSystem = new ShackleManagementSystem(_world.EntityManager);
@@ -709,7 +707,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_appliedPassivesManagementSystem);
 			_world.AddSystem(_bleedManagementSystem);
 			_world.AddSystem(_battleStateInfoManagementSystem);
-			_world.AddSystem(_relentlessStrikeBattleResetSystem);
 			_world.AddSystem(_payCostOverlaySystem);
 			_world.AddSystem(_cantPlayCardMessageSystem);
 			_world.AddSystem(_gameOverOverlayDisplaySystem);

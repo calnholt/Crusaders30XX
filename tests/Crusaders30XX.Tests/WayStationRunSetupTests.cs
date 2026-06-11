@@ -15,10 +15,17 @@ public class WayStationRunSetupTests
 	{
 		var swordPool = StartingDeckGeneratorService.GetSwordStarterCardPool();
 		var daggerPool = StartingDeckGeneratorService.GetDaggerStarterCardPool();
+		var swordSingleCopyPool = StartingDeckGeneratorService.GetSwordSingleCopyStarterCardPool();
+		var daggerSingleCopyPool = StartingDeckGeneratorService.GetDaggerSingleCopyStarterCardPool();
 
 		Assert.NotEmpty(swordPool);
 		Assert.NotEmpty(daggerPool);
-		foreach (var cardId in swordPool.Concat(daggerPool))
+		Assert.Contains("fervor", swordPool);
+		Assert.Contains("sacrifice", daggerPool);
+		foreach (var cardId in swordPool
+			.Concat(daggerPool)
+			.Concat(swordSingleCopyPool)
+			.Concat(daggerSingleCopyPool))
 		{
 			Assert.NotNull(CardFactory.Create(cardId));
 		}
