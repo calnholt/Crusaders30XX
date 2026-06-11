@@ -55,7 +55,6 @@ This document summarizes all passive effects in the game. Each passive has a dur
 | Keyword | Effect |
 |---------|--------|
 | **Scar** | Lose X max HP for the run. Remove one scar when leaving battle after completing a quest node |
-| **Penance** | Attacks deal X less damage. Converts to scars at start of next battle |
 | **Fear** | Attacks have X*10% chance to become ambush attacks |
 | **Intimidated** | At the start of the block phase, X cards from your hand are intimidated |
 | **MindFog** | At the end of your action phase, discard all cards in your hand |
@@ -70,7 +69,7 @@ This document summarizes all passive effects in the game. Each passive has a dur
 |---------|--------|
 | **Frozen** | Playing a frozen card: gain 1 frostbite, 50% chance to exhaust. Remove by blocking with it |
 | **SubZero** | At the start of the enemy turn, freeze one card from your hand |
-| **Windchill** | Whenever you block with a frozen card, gain 1 penance |
+| **Windchill** | Whenever you block with a frozen card, gain 1 scar |
 | **Frostbite** | At 3 stacks, take 3 damage and lose 3 frostbite |
 
 ---

@@ -1,22 +1,8 @@
-
-
 UX
-
-- new equipment chicklet
-- new equipment tooltip
 - replace AP section from relic/block cards with a symbol for better identification
-
-Animations
-
-- payment discards cards, then play card
-
-Bugs
-- Wyvern card going to hand is sometimes(?) unclickable.
-- Player sometimes doesnt draw enough cards at start of enemy turn - there must be cards still considered "in-hand" - Courageous issue
-- Marksman ability doesn't trigger if marked card is used for discard
-- Intimidate and Shackled not playing nice
-- Enemy attacks that look at hand for blocking cards need to ignore pledged card
 
 Gameplay
 - remove penance as currently functions
-- skeleton attack on hits need to be completely rethought
+- change guard to use passive system, basically an enemy can ever gain 1 guard
+- weaks cards that are permanently added to deck (colorless 2 block, etc)
+- 

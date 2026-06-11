@@ -26,6 +26,15 @@ public class FallenShepherd : EnemyBase
     }
 }
 
+/**
+    attack ideas:
+    on attack - brittle hand 1, frozen hand 1, shackle 3, recoil 1 hand 2, colorless 1, bleed 3, ambush
+    
+    IMPLEMENT-- if this attack deals X damage EnemyAttackBase hook
+
+    scar, specific discard, discard pledge, frostbite, 
+*/
+
 public class FallenShepherdPhase1 : EnemyAttackBase
 {
     public FallenShepherdPhase1()
