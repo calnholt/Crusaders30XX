@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -29,68 +28,41 @@ public class Mummy : EnemyBase
 
 public class Entomb : EnemyAttackBase
 {
-  private int Threshold = 2;
   public Entomb()
   {
     Id = "entomb";
     Name = "Entomb";
-    Damage = 16;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.GlassCannon, 2);
+    Damage = 10;
+    MinimumDamageToTriggerEffect = 3;
+    Text = EnemyAttackTextHelper.GetDamageThresholdText(
+      3, "Apply brittle to the top card of your draw pile.");
 
-    ProgressOverride = (entityManager) =>
+    OnDamageThresholdMet = (entityManager) =>
     {
-      var p = entityManager.GetEntitiesWithComponent<EnemyAttackProgress>().FirstOrDefault().GetComponent<EnemyAttackProgress>();
-      var assignedBlockCards = entityManager.GetEntitiesWithComponent<AssignedBlockCard>()
-              .Where(e => !e.GetComponent<AssignedBlockCard>().IsEquipment)
-              .ToList();
-      var cards = entityManager.GetEntitiesWithComponent<CardData>().ToList();
-      cards.ForEach(e => entityManager.RemoveComponent<ExhaustOnBlock>(e));
-      if (assignedBlockCards.Count == Threshold)
+      EventManager.Publish(new ApplyCardApplicationEvent
       {
-        int fullDamage = p.DamageBeforePrevention > 0 ? p.DamageBeforePrevention : Damage;
-        int blockFromCards = Math.Max(0, p.AssignedBlockTotal);
-
-        p.ActualDamage = 0;
-        p.IsConditionMet = true;
-        p.BaseDamage = Damage;
-        p.AegisTotal = 0;
-        p.PreventedDamageFromBlockCondition = Math.Max(0, fullDamage - blockFromCards);
-        p.TotalPreventedDamage = fullDamage;
-        p.FullyPreventedBySpecial = true;
-        Console.WriteLine($"[Entomb] Base damage: {p.BaseDamage}");
-        Console.WriteLine($"[Entomb] Prevented damage: {p.PreventedDamageFromBlockCondition}");
-        Console.WriteLine($"[Entomb] Total prevented damage: {p.TotalPreventedDamage}");
-        foreach (var e in assignedBlockCards)
-        {
-          entityManager.AddComponent(e, new ExhaustOnBlock { Owner = e });
-        }
-        return true;
-      }
-      p.IsConditionMet = false;
-      return false;
+        Amount = 1,
+        Type = CardApplicationType.Brittle,
+        Target = CardApplicationTarget.TopXCards,
+      });
     };
   }
 }
 
 public class Mummify : EnemyAttackBase
 {
-  private int Brittle = 2;
+  private int Scar = 2;
   public Mummify()
   {
     Id = "mummify";
     Name = "Mummify";
     Damage = 8;
     ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Brittle, Brittle, ConditionType);
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Scar, Scar, ConditionType);
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new ApplyCardApplicationEvent
-      {
-        Amount = Brittle,
-        Type = CardApplicationType.Brittle,
-        Target = CardApplicationTarget.DrawPileAndDiscard,
-      });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Scar, Delta = Scar });
     };
   }
 }
