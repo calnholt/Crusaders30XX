@@ -99,7 +99,8 @@ namespace Crusaders30XX.ECS.Services
 		{
 			return WayStationRunSetupSingleton.SelectedWeapon switch
 			{
-				StartingWeapon.Sword => "angelic_aura",
+				StartingWeapon.Sword => "unsheath",
+				StartingWeapon.Hammer => "angelic_aura",
 				StartingWeapon.Dagger => "measured_breath",
 				_ => "angelic_aura"
 			};

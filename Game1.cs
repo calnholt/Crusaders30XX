@@ -131,6 +131,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         LoggingService.Initialize();
+        CardUsageTelemetryRuntime.Initialize(_snapshotOptions == null);
         CalculateRenderDestination();
         // Initialize ECS World
         _world = new World();
@@ -199,6 +200,12 @@ public class Game1 : Game
         _world.AddSystem(_shopSceneSystem);
         _world.AddSystem(_achievementSceneSystem);
         _world.AddSystem(new TimerSchedulerSystem(_world.EntityManager));
+        if (CardUsageTelemetryRuntime.Store != null)
+        {
+            _world.AddSystem(new CardUsageTrackingSystem(
+                _world.EntityManager,
+                CardUsageTelemetryRuntime.Store));
+        }
 		_world.AddSystem(_cardApplicationManagementSystem);
 		_world.AddSystem(_deckManagementSystem);
         _world.AddSystem(_debugMenuSystem);
@@ -558,6 +565,7 @@ public class Game1 : Game
 
 	protected override void UnloadContent()
 	{
+		CardUsageTelemetryRuntime.ExportCsv();
 #if DEBUG
 		if (_writePerfReportOnExit)
 		{

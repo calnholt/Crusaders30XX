@@ -84,6 +84,7 @@ namespace Crusaders30XX.ECS.Systems
             else if (evt.Current == SubPhase.EnemyStart)
             {
                 EnemyShieldsMaintenance(enemy);
+                ConvertGuardToAggression(enemy);
                 ApplyStartOfTurnPassives(enemy);
             }
             else if (evt.Current == SubPhase.EnemyEnd)
@@ -143,6 +144,20 @@ namespace Crusaders30XX.ECS.Systems
             {
                 EventManager.Publish(new ApplyPassiveEvent { Target = enemyEntity, Type = AppliedPassiveType.Shield, Delta = 1 });
             }
+        }
+
+        private void ConvertGuardToAggression(Entity enemy)
+        {
+            var ap = enemy?.GetComponent<AppliedPassives>();
+            if (ap == null || ap.Passives == null) return;
+            if (!ap.Passives.TryGetValue(AppliedPassiveType.Guard, out int guardStacks) || guardStacks <= 0) return;
+
+            EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ConvertGuardToAggression", () =>
+            {
+                EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Aggression, Delta = 1 });
+                EventManager.Publish(new RemovePassive { Owner = enemy, Type = AppliedPassiveType.Guard });
+                EventManager.Publish(new PassiveTriggered { Owner = enemy, Type = AppliedPassiveType.Guard });
+            }, Duration);
         }
 
         private void ConvertPenanceToScar(Entity player)
@@ -426,9 +441,11 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Windchill,
                 AppliedPassiveType.SubZero,
                 AppliedPassiveType.Aegis,
+                AppliedPassiveType.Guard,
                 AppliedPassiveType.Anathema,
                 AppliedPassiveType.Plunder,
-                AppliedPassiveType.SanguineCurse
+                AppliedPassiveType.SanguineCurse,
+                AppliedPassiveType.Vigor
             };
         }
         public static HashSet<AppliedPassiveType> GetRunLongPassives()

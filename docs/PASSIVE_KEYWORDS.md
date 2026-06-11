@@ -78,6 +78,7 @@ This document summarizes all passive effects in the game. Each passive has a dur
 
 | Keyword | Effect |
 |---------|--------|
+| **Guard** | Prevents the next X damage from attacks. Any damage removes all guard. At the start of the enemy turn, converts to 1 aggression |
 | **Stealth** | Hides the number of attacks the monster plans |
 | **Thorns** | Player gains X bleed whenever attacking this enemy |
 | **Siphon** | For each courage removed from player, enemy heals X * multiplier HP |

@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Factories
                 "fling_fling" => new FlingFling(),
                 "measured_breath" => new MeasuredBreath(),
                 "radiance" => new Radiance(),
+                "unsheath" => new Unsheath(),
                 _ => null
             };
         }
@@ -25,6 +26,7 @@ namespace Crusaders30XX.ECS.Factories
                 { "fling_fling", new FlingFling() },
                 { "measured_breath", new MeasuredBreath() },
                 { "radiance", new Radiance() },
+                { "unsheath", new Unsheath() },
             };
         }
     }

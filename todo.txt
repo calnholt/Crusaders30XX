@@ -2,7 +2,13 @@ UX
 - replace AP section from relic/block cards with a symbol for better identification
 
 Gameplay
-- remove penance as currently functions
-- change guard to use passive system, basically an enemy can ever gain 1 guard
 - weaks cards that are permanently added to deck (colorless 2 block, etc)
-- 
+
+Weapon
+- Hammer: [any, any, any] 6 damage -> gain 1 vigor (the next non-weapon card with a cost you play costs 1 discard less; allow stacking); temp 2 gain 3 aegis
+
+Cleanup
+- update cards to track state (Deus Vult, etc)
+
+cards
+- When this is pledged, gain 1 vigor. [red, black, any, any], 3 block, 20 damage

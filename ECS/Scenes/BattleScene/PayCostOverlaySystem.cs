@@ -608,6 +608,7 @@ namespace Crusaders30XX.ECS.Systems
                                 LoggingService.Append("PayCostOverlaySystem.sealed", new System.Text.Json.Nodes.JsonObject { ["damage"] = sealedComp.Seals });
                             }
 
+                            EventManager.Publish(new CardDiscardedForCostEvent { Card = c });
                             EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntity, Destination = CardZoneType.DiscardPile, Reason = "PayCost" });
                             var card = c.GetComponent<CardData>().Card;
                             if (card != null && card.OnDiscardedForCost != null)
@@ -692,8 +693,11 @@ namespace Crusaders30XX.ECS.Systems
             // If returning, skip overlay text/buttons and only draw the staged card tweening back
             var cd = state.CardToPlay?.GetComponent<CardData>();
             string cardName = ResolveCardName(cd);
-            var defTextCosts = GetDefinitionCosts(state.CardToPlay);
-            string costText = BuildCostPhrase(defTextCosts);
+            var cardDef = cd?.Card;
+            var effectiveCosts = cardDef != null
+                ? VigorService.GetEffectiveCost(cardDef, VigorService.GetPlayerVigorStacks(EntityManager))
+                : GetDefinitionCosts(state.CardToPlay);
+            string costText = BuildCostPhrase(effectiveCosts);
             string line = "";
             switch(state.Type)
             {
@@ -833,8 +837,11 @@ namespace Crusaders30XX.ECS.Systems
             string line = "";
             var cd = state.CardToPlay?.GetComponent<CardData>();
             string cardName = ResolveCardName(cd);
-            var defTextCosts = GetDefinitionCosts(state.CardToPlay);
-            string costText = BuildCostPhrase(defTextCosts);
+            var cardDef = cd?.Card;
+            var effectiveCosts = cardDef != null
+                ? VigorService.GetEffectiveCost(cardDef, VigorService.GetPlayerVigorStacks(EntityManager))
+                : GetDefinitionCosts(state.CardToPlay);
+            string costText = BuildCostPhrase(effectiveCosts);
             switch(state.Type)
             {
                 case PayCostOverlayType.ColorDiscard: line = $"Discard {costText} to pay for {cardName}"; break;
@@ -1085,5 +1092,4 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
 

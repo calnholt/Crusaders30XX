@@ -11,6 +11,7 @@ namespace Crusaders30XX.ECS.Services
 		/// </summary>
 		public static void EndCurrentRun(EntityManager entityManager = null)
 		{
+			CardUsageTelemetryRuntime.EndCurrentRun();
 			AchievementManager.SaveProgress();
 			if (entityManager != null)
 			{

@@ -103,6 +103,8 @@ namespace Crusaders30XX.ECS.Services
 					return $"Your next weapon attack this turn gains {stacks} damage.";
 				case AppliedPassiveType.Might:
 					return $"Your attacks deal +{stacks} damage this turn.";
+				case AppliedPassiveType.Vigor:
+					return $"The next non-weapon card with a cost you play costs {stacks} discard less.";
 				case AppliedPassiveType.Stealth:
 					return "You cannot see the number of attacks this monster plans.";
 				case AppliedPassiveType.Power:
@@ -111,6 +113,8 @@ namespace Crusaders30XX.ECS.Services
 					return "Every 60 seconds, lose 1 HP.";
 				case AppliedPassiveType.Shield:
 					return "Prevent all damage from the first source each turn.";
+				case AppliedPassiveType.Guard:
+					return $"Prevents the next {stacks} damage from attacks. Any damage removes all guard. At the start of the enemy turn, converts to 1 aggression.";
 				case AppliedPassiveType.Fear:
 					return $"Attacks have a {stacks * 10}% chance to become ambush attacks.";
 				case AppliedPassiveType.Siphon:
@@ -189,6 +193,8 @@ namespace Crusaders30XX.ECS.Services
 			if (i >= 0) matches.Add((i, "X Sharpen - Your next weapon attack this turn gains +X damage."));
 			i = lowerText.IndexOf("might");
 			if (i >= 0) matches.Add((i, "X Might - Your attacks deal +X damage this turn."));
+			i = lowerText.IndexOf("vigor");
+			if (i >= 0) matches.Add((i, "X Vigor - The next non-weapon card with a cost you play costs X discard less."));
 			i = lowerText.IndexOf("penance");
 			if (i >= 0) matches.Add((i, "X Penance - Your attacks deal -1 less damage. At the start of the next battle, these are converted to scars."));
 			var showScar = lowerText.IndexOf("scar ") >= 0 || lowerText.IndexOf("scars") >= 0 || lowerText.IndexOf("scars ") >= 0 || lowerText.IndexOf("scar.") >= 0;
@@ -199,6 +205,8 @@ namespace Crusaders30XX.ECS.Services
 			if (i >= 0) matches.Add((i, "X Wounded - Take X more damage from all sources this battle."));
 			i = lowerText.IndexOf("armor");
 			if (i >= 0) matches.Add((i, "X Armor - Take X less damage from attacks this battle."));
+			i = lowerText.IndexOf("guard");
+			if (i >= 0) matches.Add((i, "X Guard - Prevents the next X damage from attacks. Any damage removes all guard. At the start of the enemy turn, converts to 1 aggression."));
 			i = lowerText.IndexOf("bleed");
 			if (i >= 0) matches.Add((i, "X Bleed - While you have bleed, lose 1 HP for each color you block with using 2 or more cards (including equipment), then remove one bleed per trigger. Lasts for the rest of the run."));
 			i = lowerText.IndexOf("mill");

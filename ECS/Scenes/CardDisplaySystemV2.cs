@@ -58,6 +58,14 @@ namespace Crusaders30XX.ECS.Systems
         public float CostLabelFontScale { get; set; } = 0.065f;
         [DebugEditable(DisplayName = "Cost Pip Outline Frac", Step = 0.01f, Min = 0.0f, Max = 0.4f)]
         public float CostPipOutlineFrac { get; set; } = 0.15f;
+        [DebugEditable(DisplayName = "Cost Pip Flash Min Alpha", Step = 0.01f, Min = 0.2f, Max = 0.5f)]
+        public float CostPipFlashMinAlpha { get; set; } = 0.2f;
+        [DebugEditable(DisplayName = "Cost Pip Flash Max Alpha", Step = 0.01f, Min = 0.2f, Max = 0.5f)]
+        public float CostPipFlashMaxAlpha { get; set; } = 0.5f;
+        [DebugEditable(DisplayName = "Cost Pip Flash Hz", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
+        public float CostPipFlashHz { get; set; } = 0.3f;
+
+        private float _elapsedTime;
 
         // Chip Layout
         [DebugEditable(DisplayName = "Chip Size", Step = 1, Min = 20, Max = 80)]
@@ -296,6 +304,13 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<CardRenderScaledRotatedEvent>(OnCardRenderScaledRotatedEvent);
         }
 
+        protected override void UpdateEntity(Entity entity, GameTime gameTime)
+        {
+            var ids = EntityManager.GetEntitiesWithComponent<CardData>().Select(e => e.Id).ToList();
+            if (ids.Count == 0 || entity.Id != ids.Min()) return;
+            _elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+        }
+
         private float CW => GetSettings().CardWidth;
         private float CH => GetSettings().CardHeight;
 
@@ -428,7 +443,9 @@ namespace Crusaders30XX.ECS.Systems
             float titleBandEndY = 0f;
             if (hasDef)
             {
-                titleBandEndY = DrawTitleBand(cardCenter, rotation, vs, cc, card);
+                int vigorStacks = VigorService.GetPlayerVigorStacks(EntityManager);
+                int waivedPipCount = VigorService.GetWaivedPipCount(card, vigorStacks);
+                titleBandEndY = DrawTitleBand(cardCenter, rotation, vs, cc, card, waivedPipCount);
             }
 
             // 4. Stat Gutter (starts below title band)
@@ -481,7 +498,7 @@ namespace Crusaders30XX.ECS.Systems
         /// Returns the Y position where the title band ends (for content positioning below).
         /// </summary>
         private float DrawTitleBand(Vector2 cardCenter, float rotation, float vs,
-            CardData.CardColor cc, CardBase card)
+            CardData.CardColor cc, CardBase card, int waivedPipCount)
         {
             float padLeft = TitleBandPadLeft * vs;
             float padRight = TitleBandPadRight * vs;
@@ -530,12 +547,17 @@ namespace Crusaders30XX.ECS.Systems
                 float pipGap = CostPipGap * vs;
                 float pipCenterY = cursorY + typeSize.Y / 2f;
 
+                float flashT = (float)Math.Sin(_elapsedTime * MathHelper.TwoPi * CostPipFlashHz) * 0.5f + 0.5f;
+                float flashAlpha = MathHelper.Lerp(CostPipFlashMinAlpha, CostPipFlashMaxAlpha, flashT);
+
                 for (int i = 0; i < costs.Length; i++)
                 {
                     float pipX = pipStartX + i * (pipSize + pipGap);
                     Color pipColor = GetCostPipColor(costs[i], cc);
                     bool showOutline = NeedsPipOutline(costs[i], cc);
-                    DrawDiamondPip(cardCenter, rotation, vs, pipX, pipCenterY - pipSize / 2f, pipSize, pipColor, cc, showOutline);
+                    bool isWaived = VigorService.IsWaivedPipIndex(i, costs.Length, waivedPipCount);
+                    float alpha = isWaived ? flashAlpha : 1f;
+                    DrawDiamondPip(cardCenter, rotation, vs, pipX, pipCenterY - pipSize / 2f, pipSize, pipColor, cc, showOutline, alpha);
                 }
 
                 // Right side: type text
@@ -565,7 +587,7 @@ namespace Crusaders30XX.ECS.Systems
         /// Draws a diamond-shaped pip (square rotated 45deg) at the given position.
         /// </summary>
         private void DrawDiamondPip(Vector2 cardCenter, float rotation, float vs,
-            float x, float y, float size, Color color, CardData.CardColor cc, bool showOutline)
+            float x, float y, float size, Color color, CardData.CardColor cc, bool showOutline, float alpha = 1f)
         {
             // Create a small square texture and draw it rotated 45 degrees
             int texSize = Math.Max(1, (int)Math.Ceiling(size));
@@ -587,10 +609,12 @@ namespace Crusaders30XX.ECS.Systems
             float diamondRotation = rotation + MathHelper.PiOver4;
             var drawScale = new Vector2(size / texSize, size / texSize);
 
+            color *= alpha;
+
             if (showOutline)
             {
                 // Draw outline at full size, then fill at reduced scale
-                var outlineColor = GetPaletteColor(CostPipOutlineColors, cc, Color.Black);
+                var outlineColor = GetPaletteColor(CostPipOutlineColors, cc, Color.Black) * alpha;
                 _spriteBatch.Draw(tex, world, null, outlineColor, diamondRotation,
                     new Vector2(texSize / 2f, texSize / 2f),
                     drawScale,

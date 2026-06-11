@@ -229,22 +229,13 @@ namespace Crusaders30XX.ECS.Systems
 
 		private int TryConsumeGuard(Entity target, int rawDamage)
 		{
-			var gq = target.GetComponent<GuardQueue>();
-			if (gq == null || gq.Queue.Count == 0) return 0;
-			int remaining = rawDamage;
-			int totalAbsorbed = 0;
-			while (remaining > 0 && gq.Queue.Count > 0)
-			{
-				int guardValue = gq.Queue[0];
-				gq.Queue.RemoveAt(0);
-				// absorbed is capped at remaining so we don't over-count when the guard value exceeds incoming damage
-				int absorbed = Math.Min(guardValue, remaining);
-				totalAbsorbed += absorbed;
-				remaining -= guardValue; // guard is fully consumed; if guardValue > remaining, remaining goes negative (clamped below)
-				EventManager.Publish(new GuardConsumedEvent { Enemy = target, GuardValue = guardValue, RemainingCount = gq.Queue.Count });
-			}
-			if (remaining < 0) remaining = 0;
-			return totalAbsorbed;
+			var passives = target.GetComponent<AppliedPassives>()?.Passives;
+			if (passives == null) return 0;
+			if (!passives.TryGetValue(AppliedPassiveType.Guard, out int guardStacks) || guardStacks <= 0) return 0;
+			int absorbed = Math.Min(guardStacks, rawDamage);
+			EventManager.Publish(new RemovePassive { Owner = target, Type = AppliedPassiveType.Guard });
+			EventManager.Publish(new PassiveTriggered { Owner = target, Type = AppliedPassiveType.Guard });
+			return absorbed;
 		}
 
 		private void OnRemovePassive(RemovePassive e)

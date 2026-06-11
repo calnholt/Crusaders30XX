@@ -3,7 +3,8 @@ namespace Crusaders30XX.ECS.Singletons
 	public enum StartingWeapon
 	{
 		Sword,
-		Dagger
+		Dagger,
+		Hammer
 	}
 
 	public enum RunDifficulty

@@ -1075,6 +1075,7 @@ namespace Crusaders30XX.ECS.Components
         Stealth,
         Poison,
         Shield,
+        Guard,
         Fear,
         Siphon,
         Thorns,
@@ -1098,7 +1099,8 @@ namespace Crusaders30XX.ECS.Components
         SanguineCurse,
         Marksman,
         Sharpen,
-        Might
+        Might,
+        Vigor
     }
 
     public class PassiveMeterComponent : IComponent

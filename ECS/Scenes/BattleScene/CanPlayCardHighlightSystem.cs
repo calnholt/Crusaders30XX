@@ -9,6 +9,7 @@ using Crusaders30XX.ECS.Objects.EnemyAttacks;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -179,8 +180,8 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
                 if (silencedStacks > 0) return false;
             }
 
-            // Check discard costs can be satisfied
-            var costs = card.Cost;
+            // Check discard costs can be satisfied (after Vigor reduction)
+            var costs = VigorService.GetEffectiveCost(card, VigorService.GetPlayerVigorStacks(EntityManager));
             if (costs != null && costs.Count > 0)
             {
                 // Build available cards excluding self

@@ -4,23 +4,23 @@ using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Objects.Temperance
 {
-    public class AngelicAura : TemperanceBase
+    public class Unsheath : TemperanceBase
     {
-        public int AegisAmount = 3;
-        public AngelicAura()
+        public int SharpenAmount = 4;
+        public Unsheath()
         {
-            Id = "angelic_aura";
-            Name = "Angelic Aura";
+            Id = "unsheath";
+            Name = "Unsheath";
             Target = "Player";
-            Text = $"Gain {AegisAmount} aegis.";
-            Threshold = 2;
+            Text = $"Gain {SharpenAmount} sharpen.";
+            Threshold = 3;
         }
 
         public override void Activate(EntityManager entityManager)
         {
             PublishTrigger(entityManager);
             var player = GetPlayer(entityManager);
-            EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aegis, Delta = AegisAmount });
+            EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Sharpen, Delta = SharpenAmount });
         }
     }
 }

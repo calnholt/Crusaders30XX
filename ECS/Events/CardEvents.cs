@@ -605,6 +605,11 @@ namespace Crusaders30XX.ECS.Events
         public Entity Card { get; set; }
     }
 
+    public class CardDiscardedForCostEvent
+    {
+        public Entity Card { get; set; }
+    }
+
     /// <summary>
     /// Published when the V1/V2 card display toggle changes.
     /// </summary>

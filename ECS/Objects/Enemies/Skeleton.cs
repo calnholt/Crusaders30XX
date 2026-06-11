@@ -105,7 +105,7 @@ public class Calcify : EnemyAttackBase
 
     OnAttackHit = (entityManager) =>
     {
-      EventManager.Publish(new AddGuardEvent { Enemy = entityManager.GetEntity("Enemy"), Value = Guard });
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Guard, Delta = Guard });
     };
   }
 }

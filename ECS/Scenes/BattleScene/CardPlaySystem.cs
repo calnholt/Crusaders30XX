@@ -290,7 +290,7 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new OpenPayCostOverlayEvent { CardToPlay = evt.Card, RequiredCosts = ["Any"], Type = PayCostOverlayType.SelectOneCard });
                     return;
                 }
-                var requiredCosts = card.Cost.ToList();
+                var requiredCosts = VigorService.GetEffectiveCost(card, VigorService.GetPlayerVigorStacks(EntityManager));
                 if (requiredCosts.Count > 0 && deck != null)
                 {
                     // Build hand color multiset excluding the card being played
@@ -408,6 +408,7 @@ namespace Crusaders30XX.ECS.Systems
                         });
                         foreach (var c in solution)
                         {
+                            EventManager.Publish(new CardDiscardedForCostEvent { Card = c });
                             EventManager.Publish(new CardMoveRequested { Card = c, Deck = deckEntityForCost, Destination = CardZoneType.DiscardPile, Reason = "AutoPayCost" });
                             var cardData = c.GetComponent<CardData>();
                             if (cardData != null && cardData.Card.OnDiscardedForCost != null)
@@ -615,5 +616,3 @@ namespace Crusaders30XX.ECS.Systems
         
     }
 }
-
-

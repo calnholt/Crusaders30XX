@@ -475,6 +475,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				_save = CreateFreshRunPreservingMeta(_save);
 				_save.isRunActive = true;
 				Persist();
+				CardUsageTelemetryRuntime.StartNewRun(_save.runMapSeed);
 			}
 		}
 
