@@ -4,12 +4,84 @@ UX
 Gameplay
 - weaks cards that are permanently added to deck (colorless 2 block, etc)
 
-Cleanup
-- update cards to track state (Deus Vult, etc)
-
 cards
 - as an additional cost, discard your pledge card that wasn't pledged this turn. 
 
-bugs
-- colorless card tooltip needs to show card as colorless
-- equipment tooltips not showing in other places
+tech debt
+- remove battlestateinfo
+
+
+persistent card states:
+- colorless
+- frozen
+- brittle
+- 
+
+Goal - design an updated guided tutorial that creates stock hands and forces specific plays during specific phases to clearly explain the different mechanics of the game in a digestible way. During tutorial, we will suppress deck display, discard display, and abandon quest functionality. Get rid of using the jsons and instead just have that information hardcoded in cs files. For all force blocks, have the enemy attack declare which card(s) must block. Do NOT allow these enemies to be used in map generation - these are strictly tutorial enemies.
+
+- battle 1
+  - repeat literal same hand of cards (Smite, litany of wrath, reckoning, absolution) all black each turn
+  - suppress weapon for this battle
+  - enemy has 19HP - use and update Gleeber
+  - first enemy attack: 9 damage
+    - explain blocking (highlight hand)
+    - force block with litany, reckoning, absolution
+  - first action phase:
+    - explain action points (highlight action points AND the AP section of Smite) - not sure if multiple entity highliting is currently possible, plus not sure if we can specifically targer the AP section of the card - will need to THOUGHTFULLY consider best approach
+    - force play Smite
+  - second enemy attack: 9 damage
+    - highlight hand of cards and explain that at the start of each enemy turn you draw up to your max hand size of 4
+    - force block with reckoning and absolution
+  - second action phase:
+    - explain free actions (highlight litany of wrath)
+    - force play litany of wrath then Smite
+  - third enemy attack: 9 damage
+    - force no blocks
+  - third action phase:
+    - explain discard costs
+    - force play either absolution or reckoning, allowing for litany then reckoning
+
+
+
+- battle 2
+  - enemy has 21HP - use and update Sand Corpse
+  - enemy has two attacks to show intent
+
+  - first enemy attack phase attacks: 4 damage, 3 damage 
+    - highlight and explain colors (red, white, black) on at a time, highlight the relevant cards + temoerance/courage section of the player HUD
+    - highlight and explain enemy intent
+    - hand of cards (smite B, litany of wrath B, reckoning W, absolution R)
+    - force absolution block first attack
+    - force reckoning block second attack
+  - first action phase
+    - highlight and explain weapons
+    - force weapon attack
+  - second enemy phase attacks 4, 3
+    - hand of cards (fervor R, smite B, litany of wrath B, absolution B)
+    - allow litany or absolution for either attack
+    - force keep fervor, smite
+  - second action phase
+    - highlight and explain pledge
+    - force pledge fervor, force play smite
+  - third enemy attacks
+    - hand of cards (smite R, litany of wrath R, reckoning R, absolution R)
+    - highlight hand of cards and explain that we want to keep litany + one red to play fervor and kill the enemy
+    - must keep at least one red + litany of wrath
+  - third action phase
+    - play litany + fervor
+
+Before battle 1, i want to display this Dialog below (Remiel is the name of the angel, update dialog to properly reference).
+
+**REMIEL:** There you are, eyes open — now I need you awake a great deal faster than that, because we've a problem brewing about thirty feet to your left. 
+**CRUSADER:** …Where is my sword. 
+**REMIEL:** It came with you — but it's out of reach. Come on up you get! Quick recap: you died, took a spear, very gallant — 
+**CRUSADER:** And woke to sulphur and something breathing in the dark. So this is hell. I always suspected I'd earned it. 
+**REMIEL:** Hell? No no no, this is purgatory. How would an angel end up in hell with you? 
+**CRUSADER:** …Then tell me, angel — why is something like that here?
+**REMIEL:** …Yeah. That's the part keeping me from enjoying being right.
+**CRUSADER:** Then it doesn't need explaining -- it needs to be put down.
+
+After batte 1, display the following dialog then go to battle 2:
+
+**CRUSADER:** One down, one more to go. And now I have my sword. Keep up.
+**REMIEL** Trying!!!

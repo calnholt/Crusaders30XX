@@ -235,13 +235,6 @@ namespace Crusaders30XX.ECS.Systems
             { CardData.CardColor.Black, new Color(51, 51, 51) },
         };
 
-        private static readonly Dictionary<CardData.CardColor, Color> DescTextColors = new()
-        {
-            { CardData.CardColor.White, new Color(68, 68, 68) },
-            { CardData.CardColor.Red,   new Color(204, 153, 136) },
-            { CardData.CardColor.Black, new Color(153, 153, 153) },
-        };
-
         // BLK Chip Colors (solid fill)
         private static readonly Dictionary<CardData.CardColor, Color> BlkChipBgColors = new()
         {
@@ -502,8 +495,8 @@ namespace Crusaders30XX.ECS.Systems
             {
                 string desc = card.Text ?? "";
                 var descColor = isColorless
-                    ? ColorlessMutedText
-                    : GetPaletteColor(DescTextColors, cc, new Color(68, 68, 68));
+                    ? ColorlessPrimaryText
+                    : GetPaletteColor(NameTextColors, cc, new Color(26, 26, 26));
                 V2TextWrapped(cardCenter, rotation, new Vector2(contentX, cursorY), desc, descColor, V2DescFontScale * vs, vs, _bodyFont, contentWidth);
             }
 

@@ -9,6 +9,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
     {
         private int CourageBonus = 1;
         private int DamageMultiplier = 1;
+        private bool _weaponUsedThisPhase;
+
         public DeusVult()
         {
             Name = "Deus Vult";
@@ -41,26 +43,51 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 return courage * DamageMultiplier;
             };
 
-            CanPlay = (entityManager, card) =>
-            {
-                var player = entityManager.GetEntity("Player");
-                var weaponId = player.GetComponent<EquippedWeapon>().WeaponId;
-                var battleState = entityManager.GetEntitiesWithComponent<BattleStateInfo>().FirstOrDefault().GetComponent<BattleStateInfo>();
-                if (battleState == null) return false;
-                battleState.PhaseTracking.TryGetValue(weaponId, out var weaponAttacked);
-                if (weaponAttacked <= 0) return false;
-                return true;
-            };
+            CanPlay = (entityManager, card) => _weaponUsedThisPhase;
+
             OnCantPlay = (entityManager, card) =>
             {
-                var player = entityManager.GetEntity("Player");
-                var weaponId = player.GetComponent<EquippedWeapon>().WeaponId;
-                var battleState = entityManager.GetEntitiesWithComponent<BattleStateInfo>().FirstOrDefault().GetComponent<BattleStateInfo>();
-                if (battleState == null) return;
-                battleState.PhaseTracking.TryGetValue(weaponId, out var weaponAttacked);
-                if (weaponAttacked <= 0)
+                if (!_weaponUsedThisPhase)
                     EventManager.Publish(new CantPlayCardMessage { Message = "You must attack with your weapon this turn!" });
             };
+        }
+
+        public override void Initialize(EntityManager entityManager, Entity cardEntity)
+        {
+            base.Initialize(entityManager, cardEntity);
+            EventManager.Subscribe<CardPlayedEvent>(OnCardPlayed);
+            EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
+        }
+
+        private void OnCardPlayed(CardPlayedEvent evt)
+        {
+            if (evt?.Card == null) return;
+
+            var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+            if (phase?.Sub != SubPhase.Action) return;
+
+            var cardData = evt.Card.GetComponent<CardData>();
+            if (cardData?.Card == null) return;
+
+            var player = EntityManager.GetEntity("Player");
+            var weaponId = player?.GetComponent<EquippedWeapon>()?.WeaponId;
+            if (string.IsNullOrEmpty(weaponId)) return;
+
+            if (cardData.Card.CardId == weaponId)
+                _weaponUsedThisPhase = true;
+        }
+
+        private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
+        {
+            if (evt.Current == SubPhase.Action || evt.Previous == SubPhase.Action)
+                _weaponUsedThisPhase = false;
+        }
+
+        public override void Dispose()
+        {
+            EventManager.Unsubscribe<CardPlayedEvent>(OnCardPlayed);
+            EventManager.Unsubscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
+            base.Dispose();
         }
     }
 }

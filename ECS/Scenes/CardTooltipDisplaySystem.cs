@@ -97,7 +97,8 @@ namespace Crusaders30XX.ECS.Systems
 
 			// Get or create the visualization card entity for this tooltip
 			var color = top.CT.CardColor ?? top.CD?.Color ?? CardData.CardColor.White;
-			var key = top.CT.CardId + "|" + color.ToString();
+			bool isColorless = top.E.HasComponent<Colorless>();
+			var key = top.CT.CardId + "|" + color + (isColorless ? "|colorless" : "");
 			if (!_tooltipCardCache.TryGetValue(key, out var cardEntity) || cardEntity == null)
 			{
 				cardEntity = ECS.Factories.EntityFactory.CreateCardFromDefinition(EntityManager, top.CT.CardId, color, allowWeapons: true, index: 0);
@@ -108,6 +109,10 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						ui.IsInteractable = false; // ensure the tooltip card never intercepts hover/clicks
 						ui.TooltipType = TooltipType.None; // prevent tooltip cards from generating their own tooltips
+					}
+					if (isColorless)
+					{
+						EntityManager.AddComponent(cardEntity, new Colorless { Owner = cardEntity });
 					}
 					_tooltipCardCache[key] = cardEntity;
 				}

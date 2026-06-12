@@ -1,15 +1,15 @@
-using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Systems;
 
 namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Seize : CardBase
     {
         private int DamageBonus = 2;
+        private bool _courageLostThisPhase;
+
         public Seize()
         {
             CardId = "seize";
@@ -34,13 +34,54 @@ namespace Crusaders30XX.ECS.Objects.Cards
             };
 
             GetConditionalDamage = (entityManager, card) =>
-            {
-                var battleStateInfo = entityManager.GetEntitiesWithComponent<BattleStateInfo>().FirstOrDefault().GetComponent<BattleStateInfo>();
-                battleStateInfo.PhaseTracking.TryGetValue(TrackingTypeEnum.CourageLost.ToString(), out var courageLost);
-                return courageLost > 0 ? DamageBonus : 0;
-            };
+                _courageLostThisPhase ? DamageBonus : 0;
+        }
 
+        public override void Initialize(EntityManager entityManager, Entity cardEntity)
+        {
+            base.Initialize(entityManager, cardEntity);
+            EventManager.Subscribe<ModifyCourageRequestEvent>(OnModifyCourage);
+            EventManager.Subscribe<SetCourageEvent>(OnSetCourage);
+            EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
+        }
 
+        private bool IsActionPhase()
+        {
+            var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+            return phase?.Sub == SubPhase.Action;
+        }
+
+        private void OnModifyCourage(ModifyCourageRequestEvent evt)
+        {
+            if (!IsActionPhase()) return;
+            if (evt.Delta < 0)
+                _courageLostThisPhase = true;
+        }
+
+        private void OnSetCourage(SetCourageEvent evt)
+        {
+            if (!IsActionPhase()) return;
+
+            var player = EntityManager.GetEntity("Player");
+            var courage = player?.GetComponent<Courage>();
+            if (courage == null) return;
+
+            if (evt.Amount < courage.Amount)
+                _courageLostThisPhase = true;
+        }
+
+        private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
+        {
+            if (evt.Current == SubPhase.Action || evt.Previous == SubPhase.Action)
+                _courageLostThisPhase = false;
+        }
+
+        public override void Dispose()
+        {
+            EventManager.Unsubscribe<ModifyCourageRequestEvent>(OnModifyCourage);
+            EventManager.Unsubscribe<SetCourageEvent>(OnSetCourage);
+            EventManager.Unsubscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
+            base.Dispose();
         }
     }
 }
