@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using System.IO;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Data.Tutorials;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -137,6 +138,21 @@ namespace Crusaders30XX.ECS.Systems
 			foreach (var id in attackIds)
 			{
 				var attackDef = EnemyAttackFactory.Create(id);
+				var tutorialState = GuidedTutorialService.GetState(EntityManager);
+				if (tutorialState != null)
+				{
+					int definitionTurn = tutorialState.Turn + (target is NextTurnAttackIntent ? 1 : 0);
+					var turn = GuidedTutorialDefinitions.GetTurn(tutorialState.Battle, definitionTurn);
+					int ruleIndex = Math.Min(index, turn.BlockRules.Count - 1);
+					if (ruleIndex >= 0)
+					{
+						string requirement = turn.BlockRules[ruleIndex].RequirementText;
+						if (!string.IsNullOrWhiteSpace(requirement))
+							attackDef.Text = string.IsNullOrWhiteSpace(attackDef.Text)
+								? requirement
+								: $"{attackDef.Text} {requirement}";
+					}
+				}
 				attackDef.Initialize(EntityManager);
 				string ctx = Guid.NewGuid().ToString("N");
 				var passives = EntityManager.GetEntity("Player").GetComponent<AppliedPassives>().Passives;
@@ -171,5 +187,3 @@ namespace Crusaders30XX.ECS.Systems
 
 	}
 }
-
-

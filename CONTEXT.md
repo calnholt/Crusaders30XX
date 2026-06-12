@@ -6,6 +6,26 @@ Terms only. No implementation details.
 
 A single playthrough from WayStation Depart through the procedurally generated combat map until victory, failure, or abandon. A save may hold one active run or no active run.
 
+## Fresh profile
+
+A save containing only **meta** progress. It has no active run, run map, deck, gold, loadout, inventory, or queued encounter. The **Guided Tutorial** may run from a fresh profile, but only WayStation Depart creates the first run.
+
+## Guided Tutorial
+
+A one-time, two-battle instructional sequence launched from the title screen before any run exists. It is meta progression and exists outside run, quest-node, and queued-encounter lifecycles. Interruption restarts the sequence from its opening dialogue and first battle. Completion transitions directly to WayStation.
+
+## Tutorial battle
+
+One of the two battles inside the **Guided Tutorial**. Tutorial battles use temporary player and deck entities, grant no rewards or progression, emit no run telemetry, and do not create or mutate a run.
+
+## Stock hand
+
+The exact authored set of card identities and printed colors created fresh for a Guided Tutorial turn. Stock cards use normal draw presentation. A pledged Fervor is the only card explicitly retained between stock hands.
+
+## Tutorial enemy
+
+An enemy classification reserved for the **Guided Tutorial**. Tutorial enemies can be spawned explicitly by the tutorial but are excluded from procedural maps and ordinary encounter pools.
+
 ## Active run
 
 A run whose map, deck, gold, inventory, and run-scoped state exist in the save. WayStation Depart creates and activates a run before applying the selected setup.
@@ -70,13 +90,13 @@ Voluntarily ending the current run from the in-battle quit overlay (prompt: "Aba
 
 ## Meta
 
-Progress that survives run failure and new-run creation: achievements, card mastery, and seen tutorials.
+Progress that survives run failure and new-run creation: achievements, card mastery, seen tutorials, and Guided Tutorial completion.
 
 ## Save
 
-Persistent file for run lifecycle state plus meta. An active run includes map topology, node progress, gold, loadouts, inventory, **run-long applied passive** stacks on the player, and **run-long card restriction** markers per deck card entry. An inactive run contains none of that run-scoped data. Starting a new run replaces run state only; meta is kept.
+Persistent file for run lifecycle state plus meta. A fresh profile and an inactive profile contain meta only. An active run includes map topology, node progress, gold, loadouts, inventory, **run-long applied passive** stacks on the player, and **run-long card restriction** markers per deck card entry. Starting a new run replaces run state only; meta is kept.
 
-The save file has a `version` field. If it does not match the game's current save version, the entire file is replaced with a new default save. There is no migration between versions. Omitting `version` or using an old version number clears all progress (map, gold, deck, mastery, achievements, tutorials).
+The save file has a `version` field. If it does not match the game's current save version, the entire file is replaced with a fresh meta-only profile. There is no migration between versions. Omitting `version` or using an old version number clears all prior progress.
 
 ## Loadout
 
@@ -130,7 +150,7 @@ Shop purchases are an exception: buying from a run-map shop may add a card entry
 
 ## Location (desert)
 
-The desert is a presentation wrapper for the run map (background, title). It is not a separately authored level graph in v1. The world map scene is bypassed in v1. The location scene is the mid-run hub once at least one quest node is completed; a brand-new run starts from the title screen straight into the first quest battle.
+The desert is a presentation wrapper for the run map (background, title). It is not a separately authored level graph in v1. The world map scene is bypassed in v1. The location scene is the mid-run hub once at least one quest node is completed. A fresh profile completes or skips the Guided Tutorial, visits WayStation, and creates its first run only by selecting Depart.
 
 ## New run start
 

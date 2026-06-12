@@ -1,54 +1,48 @@
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 
 namespace Crusaders30XX.ECS.Data.Tutorials
 {
     public static class TutorialDefinitionCache
     {
-        private static Dictionary<string, TutorialDefinition> _cache;
-        private static string _folderPath;
-        private static readonly object _lock = new object();
+        private static readonly Dictionary<string, TutorialDefinition> Definitions =
+            BuildDefinitions();
 
         public static Dictionary<string, TutorialDefinition> GetAll()
         {
-            EnsureLoaded();
-            return _cache;
+            return Definitions;
         }
 
         public static bool TryGet(string key, out TutorialDefinition def)
         {
-            EnsureLoaded();
-            return _cache.TryGetValue(key, out def);
+            return Definitions.TryGetValue(key, out def);
         }
 
-        public static void Reload()
-        {
-            lock (_lock)
-            {
-                var folder = ResolveFolderPath();
-                _cache = TutorialRepository.LoadFromFolder(folder);
-            }
-        }
+        public static void Reload() { }
 
-        private static void EnsureLoaded()
+        private static Dictionary<string, TutorialDefinition> BuildDefinitions()
         {
-            if (_cache != null) return;
-            lock (_lock)
+            var definitions = GuidedTutorialDefinitions.GuidedMessages
+                .ToDictionary(def => def.key, def => def);
+
+            void Add(string key, string text, string targetType, string targetId, string orientation, string condition = null)
             {
-                if (_cache == null)
+                definitions[key] = new TutorialDefinition
                 {
-                    var folder = ResolveFolderPath();
-                    _cache = TutorialRepository.LoadFromFolder(folder);
-                }
+                    key = key,
+                    text = text,
+                    targetType = targetType,
+                    targetId = targetId,
+                    bubbleOrientation = orientation,
+                    condition = condition,
+                };
             }
-        }
 
-        private static string ResolveFolderPath()
-        {
-            if (!string.IsNullOrEmpty(_folderPath) && Directory.Exists(_folderPath)) return _folderPath;
-            _folderPath = Path.Combine(System.AppContext.BaseDirectory, "Content", "Data", "Tutorials");
-            return _folderPath;
+            Add("equipment", "Equipment can block or activate for an effect. Most equipment has limited uses.", "equipment", "Equipment", "right", "has_equipment");
+            Add("medal", "Medals provide passive benefits. You can equip up to three.", "medal", "Medal", "bottom", "has_medal");
+            Add("tribulation", "Tribulations change a quest. Hover over the chalice to review the current effects.", "entity_name", "TribulationChalice", "right", "has_tribulation");
+            Add("threat", "Threat increases enemy aggression at the start of its turn.", "entity_name", "UI_ThreatTooltip", "right", "threat_enabled");
+            return definitions;
         }
     }
 }
-

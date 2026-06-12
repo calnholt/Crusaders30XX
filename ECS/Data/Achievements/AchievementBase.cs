@@ -1,6 +1,7 @@
 using System;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Data.Achievements
 {
@@ -143,6 +144,7 @@ namespace Crusaders30XX.ECS.Data.Achievements
         /// </summary>
         protected void IncrementProgress(int amount = 1)
         {
+            if (GuidedTutorialService.IsActive(EntityManager)) return;
             if (Progress == null || IsCompleted) return;
 
             Progress.CurrentValue += amount;
@@ -154,6 +156,7 @@ namespace Crusaders30XX.ECS.Data.Achievements
         /// </summary>
         protected void SetProgress(int value)
         {
+            if (GuidedTutorialService.IsActive(EntityManager)) return;
             if (Progress == null || IsCompleted) return;
 
             Progress.CurrentValue = value;
@@ -178,6 +181,7 @@ namespace Crusaders30XX.ECS.Data.Achievements
         /// </summary>
         protected void Complete()
         {
+            if (GuidedTutorialService.IsActive(EntityManager)) return;
             if (Progress == null) return;
 
             // Already completed

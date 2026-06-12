@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -99,6 +100,11 @@ namespace Crusaders30XX.ECS.Systems
 			// Restrict to Battle scene for now
 			var scene = entity.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Battle) return;
+			if (GuidedTutorialService.IsActive(EntityManager))
+			{
+				DismissOverlay();
+				return;
+			}
 
 			var kb = Keyboard.GetState();
 			var caps = GamePad.GetCapabilities(PlayerIndex.One);
@@ -307,4 +313,3 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-

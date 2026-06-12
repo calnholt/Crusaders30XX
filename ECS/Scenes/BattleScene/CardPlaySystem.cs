@@ -168,6 +168,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (evt?.Card == null) return;
             if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
+            if (!BattleInputGate.TryAllowTutorialAction(EntityManager, TutorialAction.PlayCard, evt.Card)) return;
 
             ComponentLoggerService.LogEntity(evt.Card, "PlayCardRequested received");
 
@@ -398,7 +399,8 @@ namespace Crusaders30XX.ECS.Systems
                                 cardData.Card.OnDiscardedForCost(EntityManager, c);
                             }
                             // Award mastery points for Relic cards discarded for cost
-                            if (cardData != null && cardData.Card.Type == CardType.Relic)
+                            if (!GuidedTutorialService.IsActive(EntityManager)
+                                && cardData != null && cardData.Card.Type == CardType.Relic)
                             {
                                 SaveCache.AddMasteryPoints(cardData.Card.CardId, 1);
                             }
@@ -448,7 +450,8 @@ namespace Crusaders30XX.ECS.Systems
             ComponentLoggerService.LogEntity(evt.Card, "Executing card OnPlay effect");
             card.OnPlay?.Invoke(EntityManager, evt.Card);
             EventManager.Publish(new CardPlayedEvent { Card = evt.Card });
-            EventManager.Publish(new TrackingEvent { Type = card.CardId, Delta = 1 });
+            if (!GuidedTutorialService.IsActive(EntityManager))
+                EventManager.Publish(new TrackingEvent { Type = card.CardId, Delta = 1 });
 
             // If the card was sealed, apply HP cost and remove the seal
             if (sealCount > 0)
@@ -483,7 +486,8 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Award mastery points for Attack and Prayer cards on play
-            if (card.Type == CardType.Attack || card.Type == CardType.Prayer)
+            if (!GuidedTutorialService.IsActive(EntityManager)
+                && (card.Type == CardType.Attack || card.Type == CardType.Prayer))
             {
                 SaveCache.AddMasteryPoints(card.CardId, 1);
             }

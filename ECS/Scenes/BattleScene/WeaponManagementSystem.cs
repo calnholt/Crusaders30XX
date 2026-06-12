@@ -33,6 +33,13 @@ namespace Crusaders30XX.ECS.Systems
 			var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
 			var deck = deckEntity?.GetComponent<Deck>();
 			if (deck == null) return;
+			var tutorial = GuidedTutorialService.GetState(EntityManager);
+			if (tutorial?.Battle == TutorialBattle.Gleeber)
+			{
+				var hiddenWeapon = GetEquippedWeaponEntityIfSpawned();
+				if (hiddenWeapon != null) deck.Hand.Remove(hiddenWeapon);
+				return;
+			}
 
 			bool isPlayerTurn = evt.Current == SubPhase.PlayerStart || evt.Current == SubPhase.Action || evt.Current == SubPhase.PlayerEnd;
 
@@ -206,5 +213,4 @@ namespace Crusaders30XX.ECS.Systems
 
 	}
 }
-
 

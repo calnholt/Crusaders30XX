@@ -51,6 +51,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         {
             _totalSeconds = gameTime.TotalGameTime.TotalSeconds;
             _playableCards.Clear();
+            if (GuidedTutorialService.IsActive(EntityManager)) return;
 
             // Get current phase
             var phaseEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();

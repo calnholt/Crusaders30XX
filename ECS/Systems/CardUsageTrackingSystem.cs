@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Telemetry;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -35,6 +36,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void Record(Entity card, CardUsageKind kind)
 		{
+			if (GuidedTutorialService.IsActive(EntityManager)) return;
 			var definition = card?.GetComponent<CardData>()?.Card;
 			if (definition == null || string.IsNullOrWhiteSpace(definition.CardId)) return;
 

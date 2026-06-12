@@ -37,6 +37,7 @@ namespace Crusaders30XX.ECS.Objects.Achievements
 
         private void OnCardPlayedEvent(CardPlayedEvent evt)
         {
+            if (GuidedTutorialService.IsActive(EntityManager)) return;
             // Check if it's a red card
             if (!CardColorQualificationService.QualifiesAs(evt.Card, CardData.CardColor.Red)) return;
 

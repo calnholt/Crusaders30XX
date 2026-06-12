@@ -59,6 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 
             int turnNumber = phaseState.TurnNumber;
             SubPhase currentPhase = evt.Current;
+            var guided = GuidedTutorialService.GetState(EntityManager);
 
             // Avoid reprocessing the same phase/turn combination
             if (turnNumber == _lastProcessedTurn && currentPhase == _lastProcessedPhase)
@@ -68,6 +69,12 @@ namespace Crusaders30XX.ECS.Systems
             _lastProcessedPhase = currentPhase;
 
             LoggingService.Append("TutorialManager.OnChangeBattlePhase", new System.Text.Json.Nodes.JsonObject { ["phase"] = currentPhase.ToString(), ["turnNumber"] = turnNumber });
+
+            if (guided != null)
+            {
+                QueueGuidedTutorials(guided, currentPhase);
+                return;
+            }
 
             // Queue tutorials based on phase and turn number
             if (currentPhase == SubPhase.Block && turnNumber == 1)
@@ -95,6 +102,35 @@ namespace Crusaders30XX.ECS.Systems
                 TryQueueTutorial("equipment");
                 TryQueueTutorial("tribulation");
             }
+        }
+
+        private void QueueGuidedTutorials(GuidedTutorial guided, SubPhase phase)
+        {
+            if (guided.Battle == TutorialBattle.Gleeber)
+            {
+                if (guided.Turn == 1 && phase == SubPhase.Block)
+                    QueueTutorialRange("guided_win", "guided_loss", "guided_block");
+                else if (guided.Turn == 1 && phase == SubPhase.Action)
+                    QueueTutorialRange("guided_ap", "guided_damage");
+                else if (guided.Turn == 2 && phase == SubPhase.Block)
+                    QueueTutorialRange("guided_draw", "guided_free", "guided_cost");
+                else if (guided.Turn == 3 && phase == SubPhase.Block)
+                    QueueTutorialRange("guided_red", "guided_white", "guided_black", "guided_intent");
+                return;
+            }
+
+            if (guided.Turn == 1 && phase == SubPhase.Action)
+                QueueTutorialRange("guided_weapon");
+            else if (guided.Turn == 2 && phase == SubPhase.Action)
+                QueueTutorialRange("guided_pledge", "guided_fervor");
+            else if (guided.Turn == 3 && phase == SubPhase.Action)
+                QueueTutorialRange("guided_lethal");
+        }
+
+        private void QueueTutorialRange(params string[] keys)
+        {
+            foreach (string key in keys)
+                TryQueueTutorial(key);
         }
 
         private void QueueTutorialsForFirstBlockPhase()
@@ -229,7 +265,8 @@ namespace Crusaders30XX.ECS.Systems
             _tutorialActive = true;
 
             // Mark as seen immediately so it won't be queued again
-            SaveCache.MarkTutorialSeen(_activeTutorial.key);
+            if (!_activeTutorial.key.StartsWith("guided_", StringComparison.Ordinal))
+                SaveCache.MarkTutorialSeen(_activeTutorial.key);
 
             LoggingService.Append("TutorialManager.StartNextTutorial", new System.Text.Json.Nodes.JsonObject { ["key"] = _activeTutorial.key });
             EventManager.Publish(new TutorialStartedEvent { Tutorial = _activeTutorial });
@@ -448,6 +485,25 @@ namespace Crusaders30XX.ECS.Systems
         }
         private Rectangle GetUIRegionBounds(string regionId)
         {
+            Rectangle CardBounds(string cardId)
+            {
+                var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+                var card = deck?.Hand?.FirstOrDefault(entity =>
+                    string.Equals(entity.GetComponent<CardData>()?.Card?.CardId, cardId, StringComparison.OrdinalIgnoreCase));
+                return card?.GetComponent<UIElement>()?.Bounds ?? Rectangle.Empty;
+            }
+
+            Rectangle Union(params Rectangle[] rectangles)
+            {
+                var valid = rectangles.Where(rect => rect.Width > 0 && rect.Height > 0).ToList();
+                if (valid.Count == 0) return Rectangle.Empty;
+                int left = valid.Min(rect => rect.Left);
+                int top = valid.Min(rect => rect.Top);
+                int right = valid.Max(rect => rect.Right);
+                int bottom = valid.Max(rect => rect.Bottom);
+                return new Rectangle(left, top, right - left, bottom - top);
+            }
+
             // Predefined UI regions
             switch (regionId)
             {
@@ -458,6 +514,22 @@ namespace Crusaders30XX.ECS.Systems
                 case "enemy_attack_display":
                     // Return bounds for the enemy attack display area
                     return new Rectangle(Game1.VirtualWidth / 4, Game1.VirtualHeight / 4, Game1.VirtualWidth / 2, 150);
+                case "ap_and_smite_ap":
+                    return Union(GetEntityBounds("UI_APTooltip"), CardBounds("smite"));
+                case "smite_damage":
+                    return CardBounds("smite");
+                case "absolution_reckoning_costs":
+                    return Union(CardBounds("absolution"), CardBounds("reckoning"));
+                case "absolution_and_courage":
+                    return Union(CardBounds("absolution"), GetEntityBounds("UI_CourageTooltip"));
+                case "reckoning_and_temperance":
+                    return Union(CardBounds("reckoning"), GetEntityBounds("UI_TemperanceTooltip"));
+                case "smite_and_litany":
+                    return Union(CardBounds("smite"), CardBounds("litany_of_wrath"));
+                case "fervor_and_pledge":
+                    return Union(CardBounds("fervor"), GetEntityBounds("UI_PledgeTooltip"));
+                case "litany_and_fervor":
+                    return Union(CardBounds("litany_of_wrath"), CardBounds("fervor"));
 
                 default:
                     return Rectangle.Empty;

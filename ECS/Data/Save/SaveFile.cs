@@ -7,10 +7,10 @@ namespace Crusaders30XX.ECS.Data.Save
 {
 	public class SaveFile
 	{
-		public const int CURRENT_VERSION = 6;
+		public const int CURRENT_VERSION = 7;
 
 		public int version { get; set; } = 0;
-		public bool isRunActive { get; set; } = true;
+		public bool isRunActive { get; set; }
         public int gold { get; set; } = 0;
 		public int runMapSeed { get; set; }
 		public List<RunMapNode> runMapNodes { get; set; } = new List<RunMapNode>();
@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Data.Save
 		public string pendingBattleNodeId { get; set; } = string.Empty;
 		public List<LoadoutDefinition> loadouts { get; set; } = new List<LoadoutDefinition>();
 		public List<string> seenTutorials { get; set; } = new List<string>();
+		public bool guidedTutorialCompleted { get; set; }
 		public Dictionary<string, CardMastery> cardMastery { get; set; } = new Dictionary<string, CardMastery>();
 		public Dictionary<string, AchievementProgress> achievements { get; set; } = new Dictionary<string, AchievementProgress>();
 		/// <summary>Run-long applied passive type name to stack count (e.g. Frostbite).</summary>

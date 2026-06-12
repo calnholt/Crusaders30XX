@@ -84,6 +84,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (StateSingleton.PreventClicking || StateSingleton.IsTutorialActive) return;
             if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
+            if (!BattleInputGate.TryAllowTutorialAction(EntityManager, TutorialAction.PledgeCard, card)) return;
 
             var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
             if (deck?.Hand == null || !deck.Hand.Contains(card)) return;

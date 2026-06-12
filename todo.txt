@@ -42,7 +42,6 @@ Goal - design an updated guided tutorial that creates stock hands and forces spe
     - force play either absolution or reckoning, allowing for litany then reckoning
 
 
-
 - battle 2
   - enemy has 21HP - use and update Sand Corpse
   - enemy has two attacks to show intent

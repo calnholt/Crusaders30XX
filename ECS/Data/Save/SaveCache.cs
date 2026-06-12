@@ -11,6 +11,7 @@ using Crusaders30XX.ECS.Objects.Equipment;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Data.Tutorials;
 
 namespace Crusaders30XX.ECS.Data.Save
 {
@@ -68,7 +69,7 @@ namespace Crusaders30XX.ECS.Data.Save
 			EnsureLoaded();
 			lock (_lock)
 			{
-				if (_save == null) _save = CreateDefaultSave();
+				if (_save == null) _save = CreateDefaultRunSave();
 				EnsureRunMap();
 				EnsurePrimaryLoadout(_save);
 
@@ -452,7 +453,7 @@ namespace Crusaders30XX.ECS.Data.Save
 						string legacyPath = ResolveLegacyFilePath();
 						if (!string.IsNullOrEmpty(legacyPath) && File.Exists(legacyPath))
 						{
-							_save = SaveRepository.Load(legacyPath) ?? CreateDefaultSave();
+							_save = SaveRepository.Load(legacyPath) ?? CreateInactiveSavePreservingMeta(null);
 							ApplyVersionPolicy(persist: true);
 						}
 						else
@@ -529,7 +530,7 @@ namespace Crusaders30XX.ECS.Data.Save
 			{
 				int found = _save?.version ?? 0;
 				System.Console.WriteLine($"[SaveCache] Save version {found} != {SaveFile.CURRENT_VERSION}; creating a new save file.");
-				_save = CreateDefaultSave();
+				_save = CreateInactiveSavePreservingMeta(null);
 				if (persist) Persist();
 			}
 		}
@@ -539,10 +540,11 @@ namespace Crusaders30XX.ECS.Data.Save
 			var mastery = prior?.cardMastery;
 			var achievements = prior?.achievements;
 			var seenTutorials = prior?.seenTutorials;
-			var save = CreateDefaultSave();
+			var save = CreateDefaultRunSave();
 			save.cardMastery = mastery ?? new Dictionary<string, CardMastery>();
 			save.achievements = achievements ?? new Dictionary<string, AchievementProgress>();
 			save.seenTutorials = seenTutorials ?? new List<string>();
+			save.guidedTutorialCompleted = prior?.guidedTutorialCompleted == true;
 			return save;
 		}
 
@@ -568,10 +570,11 @@ namespace Crusaders30XX.ECS.Data.Save
 				cardMastery = prior?.cardMastery ?? new Dictionary<string, CardMastery>(),
 				achievements = prior?.achievements ?? new Dictionary<string, AchievementProgress>(),
 				seenTutorials = prior?.seenTutorials ?? new List<string>(),
+				guidedTutorialCompleted = prior?.guidedTutorialCompleted == true,
 			};
 		}
 
-		private static SaveFile CreateDefaultSave()
+		private static SaveFile CreateDefaultRunSave()
 		{
 			var (seed, nodes, shops, treasures, events) = GenerateRunMapForSave();
 			var startingDeck = StartingDeckGeneratorService.Generate(
@@ -1036,6 +1039,31 @@ namespace Crusaders30XX.ECS.Data.Save
 					_save.seenTutorials.Add(key);
 					Persist();
 				}
+			}
+		}
+
+		public static bool IsGuidedTutorialCompleted()
+		{
+			EnsureLoaded();
+			return _save?.guidedTutorialCompleted == true;
+		}
+
+		public static void CompleteGuidedTutorial()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = CreateInactiveSavePreservingMeta(null);
+				_save.guidedTutorialCompleted = true;
+				_save.seenTutorials ??= new List<string>();
+				foreach (string key in GuidedTutorialDefinitions.CoveredTutorialKeys.Append(GuidedTutorialDefinitions.CompletionTutorialKey))
+				{
+					if (!_save.seenTutorials.Contains(key))
+					{
+						_save.seenTutorials.Add(key);
+					}
+				}
+				Persist();
 			}
 		}
 

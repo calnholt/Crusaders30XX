@@ -493,10 +493,6 @@ namespace Crusaders30XX.ECS.Systems
             }
             catch { }
 
-            // Hard guard: pledged cards cannot be used to pay costs
-            if (evt.Card.HasComponent<Pledge>()) return;
-
-
             var alreadySelected = evt.Card.GetComponent<SelectedForPayment>() != null || state.SelectedCards.Contains(evt.Card);
 
             if (alreadySelected)
@@ -534,6 +530,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Selecting from hand
+            if (!BattleInputGate.TryAllowTutorialAction(EntityManager, TutorialAction.PayCost, evt.Card)) return;
             if (!deck.Hand.Contains(evt.Card)) return;
 
             if (TryConsumeCostForCard(state.RequiredCosts, evt.Card, out int idx))
@@ -614,7 +611,8 @@ namespace Crusaders30XX.ECS.Systems
                                 card.OnDiscardedForCost(EntityManager, c);
                             }
                             // Award mastery points for Relic cards discarded for cost
-                            if (card != null && card.Type == CardType.Relic)
+                            if (!GuidedTutorialService.IsActive(EntityManager)
+                                && card != null && card.Type == CardType.Relic)
                             {
                                 SaveCache.AddMasteryPoints(card.CardId, 1);
                             }

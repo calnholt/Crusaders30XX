@@ -284,6 +284,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnConfirmPressed()
 		{
+			if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
+			if (!BattleInputGate.TryAllowTutorialAction(EntityManager, TutorialAction.ConfirmBlocks)) return;
 			// Determine current context id first
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();

@@ -16,6 +16,7 @@ namespace Crusaders30XX.ECS.Systems
 		private Guid? _pendingBurstId;
 		private Entity _pendingEnemy;
 		private bool _pendingIsPreview;
+		private Guid _tutorialDialogueRequestId;
 
 		public EnemyDefeatFlowSystem(EntityManager entityManager, ContentManager content) : base(entityManager)
 		{
@@ -24,6 +25,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<PixelBurstAnimationCompleted>(OnPixelBurstCompleted);
 			EventManager.Subscribe<DeleteCachesEvent>(_ => OnCachesCleared());
 			EventManager.Subscribe<StartBattleRequested>(_ => OnCachesCleared());
+			EventManager.Subscribe<EncounterDialogueCompleted>(OnTutorialDialogueCompleted);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -89,6 +91,25 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Publish(new EnemyKilledEvent { Enemy = enemy });
 
 			var enemyId = enemy?.GetComponent<Enemy>()?.EnemyBase?.Id;
+			var tutorial = GuidedTutorialService.GetState(EntityManager);
+			if (tutorial != null)
+			{
+				if (tutorial.Battle == TutorialBattle.Gleeber)
+				{
+					_tutorialDialogueRequestId = Guid.NewGuid();
+					EventManager.Publish(new EncounterDialogueRequested
+					{
+						DefinitionId = "guided_tutorial",
+						SegmentId = "gleeber_victory",
+						RequestId = _tutorialDialogueRequestId,
+					});
+				}
+				else
+				{
+					GuidedTutorialService.Complete(EntityManager);
+				}
+				return;
+			}
 			if (string.Equals(enemyId, "fallen_shepherd", StringComparison.OrdinalIgnoreCase))
 			{
 				EventManager.Publish(new ShowTransition { Scene = SceneId.WayStation, EndRunOnLoad = true });
@@ -122,6 +143,14 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
 			}
+		}
+
+		private void OnTutorialDialogueCompleted(EncounterDialogueCompleted evt)
+		{
+			if (evt == null || evt.RequestId == Guid.Empty || evt.RequestId != _tutorialDialogueRequestId) return;
+			_tutorialDialogueRequestId = Guid.Empty;
+			GuidedTutorialService.BeginSecondBattle(EntityManager);
+			EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
 		}
 
 		private void FinishWithoutBurst(Entity enemy, bool isPreview)
@@ -184,6 +213,7 @@ namespace Crusaders30XX.ECS.Systems
 			_pendingBurstId = null;
 			_pendingEnemy = null;
 			_pendingIsPreview = false;
+			_tutorialDialogueRequestId = Guid.Empty;
 		}
 	}
 }

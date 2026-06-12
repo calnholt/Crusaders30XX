@@ -51,19 +51,14 @@ namespace Crusaders30XX.ECS.Services
 		public static bool HasPortrait(string enemyId) =>
 			!string.IsNullOrEmpty(enemyId) && PortraitEnemyIds.Contains(enemyId);
 
-		private static readonly HashSet<string> RunMapExcludedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-		{
-			"gleeber",
-			"sand_corpse",
-		};
-
 		public static IReadOnlyList<string> GetRunMapEnemyPool()
 		{
 			return EnemyFactory.GetAllEnemies()
 				.Where(entry => entry.Value != null
 					&& !entry.Value.IsBoss
+					&& !entry.Value.IsTutorialOnly
 					&& HasPortrait(entry.Key)
-					&& !RunMapExcludedIds.Contains(entry.Key))
+				)
 				.Select(entry => entry.Key)
 				.OrderBy(id => id, StringComparer.OrdinalIgnoreCase)
 				.ToList();

@@ -30,6 +30,10 @@ public class EnemyFactoryTests
 
 		Assert.NotEmpty(pool);
 		Assert.DoesNotContain("fallen_shepherd", pool);
+		Assert.DoesNotContain("gleeber", pool);
+		Assert.DoesNotContain("sand_corpse", pool);
+		Assert.True(EnemyFactory.Create("gleeber").IsTutorialOnly);
+		Assert.True(EnemyFactory.Create("sand_corpse").IsTutorialOnly);
 		foreach (string enemyId in pool)
 		{
 			var enemy = EnemyFactory.Create(enemyId);

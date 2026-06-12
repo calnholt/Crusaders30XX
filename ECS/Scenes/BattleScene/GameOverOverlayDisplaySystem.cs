@@ -65,6 +65,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void BeginRunEndOverlay()
 		{
+			if (GuidedTutorialService.IsActive(EntityManager)) return;
 			if (_active) return;
 			LoggingService.Append("GameOverOverlayDisplaySystem.BeginRunEndOverlay", new System.Text.Json.Nodes.JsonObject());
 			_active = true;

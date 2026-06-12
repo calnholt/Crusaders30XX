@@ -49,9 +49,12 @@ namespace Crusaders30XX.ECS.Factories
                 "infernal_execution" => new InfernalExecution(),
                 // Gleeber attacks
                 "pounce" => new Pounce(),
+                "tutorial_gleeber_strike" => new TutorialGleeberStrike(),
                 // SandCorpse attacks
                 "sand_blast" => new SandBlast(),
                 "sand_storm" => new SandStorm(),
+                "tutorial_sand_blast" => new TutorialSandBlast(),
+                "tutorial_sand_storm" => new TutorialSandStorm(),
                 // SandGolem attacks
                 "sand_pound" => new SandPound(),
                 "sand_slam" => new SandSlam(),
@@ -165,9 +168,12 @@ namespace Crusaders30XX.ECS.Factories
                 { "infernal_execution", new InfernalExecution() },
                 // Gleeber attacks
                 { "pounce", new Pounce() },
+                { "tutorial_gleeber_strike", new TutorialGleeberStrike() },
                 // SandCorpse attacks
                 { "sand_blast", new SandBlast() },
                 { "sand_storm", new SandStorm() },
+                { "tutorial_sand_blast", new TutorialSandBlast() },
+                { "tutorial_sand_storm", new TutorialSandStorm() },
                 // SandGolem attacks
                 { "sand_pound", new SandPound() },
                 { "sand_slam", new SandSlam() },
@@ -242,4 +248,3 @@ namespace Crusaders30XX.ECS.Factories
         }
     }
 }
-

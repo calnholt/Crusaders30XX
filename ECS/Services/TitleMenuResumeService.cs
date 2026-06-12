@@ -2,6 +2,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Services
 {
@@ -9,6 +10,8 @@ namespace Crusaders30XX.ECS.Services
 	{
 		public static SceneId? ResolveDirectTransitionScene()
 		{
+			ApplySkipTutorialsOption();
+			if (!SaveCache.IsGuidedTutorialCompleted()) return null;
 			if (!SaveCache.IsRunActive()) return SceneId.WayStation;
 			if (!SaveCache.IsStartQuestCompleted()) return null;
 			if (SaveCache.TryGetResumableBattleNode(out _)) return null;
@@ -17,6 +20,13 @@ namespace Crusaders30XX.ECS.Services
 
 		public static void OnTitleMenuClicked(World world)
 		{
+			ApplySkipTutorialsOption();
+			if (!SaveCache.IsGuidedTutorialCompleted())
+			{
+				GuidedTutorialService.Start(world);
+				return;
+			}
+
 			if (!SaveCache.IsRunActive())
 			{
 				EventManager.Publish(new ShowTransition { Scene = SceneId.WayStation, SkipHold = true });
@@ -36,6 +46,14 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
+		}
+
+		private static void ApplySkipTutorialsOption()
+		{
+			if (TutorialLaunchOptions.SkipTutorials && !SaveCache.IsGuidedTutorialCompleted())
+			{
+				SaveCache.CompleteGuidedTutorial();
+			}
 		}
 	}
 }

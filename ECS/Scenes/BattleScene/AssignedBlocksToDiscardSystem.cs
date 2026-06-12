@@ -163,7 +163,8 @@ namespace Crusaders30XX.ECS.Systems
                     cardData.Card.OnBlock?.Invoke(EntityManager, entity);
                     EventManager.Publish(new CardBlockedEvent { Card = entity });
                     // Award mastery points for Block cards when used to block
-                    if (cardData != null && cardData.Card.Type == CardType.Block)
+                    if (!GuidedTutorialService.IsActive(EntityManager)
+                        && cardData != null && cardData.Card.Type == CardType.Block)
                     {
                         SaveCache.AddMasteryPoints(cardData.Card.CardId, 1);
                     }
@@ -260,4 +261,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-

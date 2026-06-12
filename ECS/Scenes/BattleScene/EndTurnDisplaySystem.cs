@@ -10,6 +10,7 @@ using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Data.Tutorials;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -112,6 +113,7 @@ namespace Crusaders30XX.ECS.Systems
         private void OnEndTurnPressed()
         {
             if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
+            if (!BattleInputGate.TryAllowTutorialAction(EntityManager, TutorialAction.EndTurn)) return;
             var ui = EntityManager.GetEntity("UIButton_EndTurn")?.GetComponent<UIElement>();
             if (ui != null)
             {
@@ -229,12 +231,12 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             var endUi = endBtn?.GetComponent<UIElement>();
-            if (endUi != null && !endUi.IsHidden && frozen)
+            if (endUi != null && !endUi.IsHidden)
             {
-                endUi.IsInteractable = false;
+                var guided = GuidedTutorialService.GetState(EntityManager);
+                endUi.IsInteractable = !frozen
+                    && (guided == null || GuidedTutorialDefinitions.AreActionRequirementsComplete(guided));
             }
         }
     }
 }
-
-

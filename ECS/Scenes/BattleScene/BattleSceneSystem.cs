@@ -129,6 +129,7 @@ namespace Crusaders30XX.ECS.Systems
 		private ActiveCharacterIndicatorDisplaySystem _activeCharacterIndicatorDisplaySystem;
 		private TutorialManager _tutorialManager;
 		private TutorialDisplaySystem _tutorialDisplaySystem;
+		private GuidedTutorialDirectorSystem _guidedTutorialDirectorSystem;
 		
 		// Pledge system
 		private PledgeManagementSystem _pledgeManagementSystem;
@@ -174,7 +175,9 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				var queued = EntityManager.GetEntity("QueuedEvents").GetComponent<QueuedEvents>();
 				LocationDefinitionCache.TryGet(queued.LocationId, out var def);
-				var musicTrack = def?.pointsOfInterest[queued.QuestIndex].musicTrack ?? MusicTrack.DesertBattle;
+				var musicTrack = GuidedTutorialService.IsActive(EntityManager)
+					? MusicTrack.DesertBattle
+					: def?.pointsOfInterest[queued.QuestIndex].musicTrack ?? MusicTrack.DesertBattle;
 				EventManager.Publish(new ChangeMusicTrack { Track = musicTrack });
 				if (!_loadedSystems)
 				{
@@ -335,7 +338,8 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("ActiveCharacterIndicatorDisplaySystem.Draw", _activeCharacterIndicatorDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", _enemyIntentPipsSystem.Draw);
 			FrameProfiler.Measure("AmbushDisplaySystem.Draw", _ambushDisplaySystem.Draw);
-			FrameProfiler.Measure("QueuedEventsDisplaySystem.Draw", _queuedEventsDisplaySystem.Draw);
+			bool guidedTutorial = GuidedTutorialService.IsActive(EntityManager);
+			if (!guidedTutorial) FrameProfiler.Measure("QueuedEventsDisplaySystem.Draw", _queuedEventsDisplaySystem.Draw);
 			FrameProfiler.Measure("AttackAnimationDisplaySystem.Draw", _attackAnimationDisplaySystem.Draw);
 			FrameProfiler.Measure("StunnedOverlaySystem.Draw", _stunnedOverlaySystem.Draw);
 			FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", _assignedBlockCardsDisplaySystem.Draw);
@@ -350,7 +354,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("PlayerHudPledgeDisplaySystem.Draw", _playerHudPledgeDisplaySystem.Draw);
 			FrameProfiler.Measure("QuestTribulationDisplaySystem.Draw", _questTribulationDisplaySystem.Draw);
 			FrameProfiler.Measure("HPDisplaySystem.Draw", _hpDisplaySystem.Draw);
-			FrameProfiler.Measure("EnemyDifficultyDisplaySystem.Draw", _enemyDifficultyDisplaySystem.Draw);
+			if (!guidedTutorial) FrameProfiler.Measure("EnemyDifficultyDisplaySystem.Draw", _enemyDifficultyDisplaySystem.Draw);
 			FrameProfiler.Measure("AppliedPassivesDisplaySystem.Draw", _appliedPassivesDisplaySystem.Draw);
 			FrameProfiler.Measure("PassiveMeterRenderSystem.Draw", _passiveMeterRenderSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawBackdrop", _payCostOverlaySystem.DrawBackdrop);
@@ -363,11 +367,13 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("CardPlayedAnimationSystem.Draw", _cardPlayedAnimationSystem.Draw);
 			FrameProfiler.Measure("EquipmentDisplaySystem.Draw", _equipmentDisplaySystem.Draw);
 			FrameProfiler.Measure("EquipmentTooltipDisplaySystem.Draw", _equipmentTooltipDisplaySystem.Draw);
-			FrameProfiler.Measure("EquippedWeaponDisplaySystem.Draw", _equippedWeaponDisplaySystem.Draw);
+			var guidedState = GuidedTutorialService.GetState(EntityManager);
+			if (guidedState == null || guidedState.Battle == TutorialBattle.SandCorpse)
+				FrameProfiler.Measure("EquippedWeaponDisplaySystem.Draw", _equippedWeaponDisplaySystem.Draw);
 			FrameProfiler.Measure("MedalDisplaySystem.Draw", _medalDisplaySystem.Draw);
-			FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
-			FrameProfiler.Measure("DrawPileColorCountDisplaySystem.Draw", _drawPileColorCountDisplaySystem.Draw);
-			FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
+			if (!guidedTutorial) FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
+			if (!guidedTutorial) FrameProfiler.Measure("DrawPileColorCountDisplaySystem.Draw", _drawPileColorCountDisplaySystem.Draw);
+			if (!guidedTutorial) FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
 			FrameProfiler.Measure("MillCardSystem.Draw", _millCardSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
 			FrameProfiler.Measure("CantPlayCardMessageSystem.Draw", _cantPlayCardMessageSystem.Draw);
@@ -375,8 +381,8 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("IntimidateDisplaySystem.Draw", _intimidateDisplaySystem.Draw);
 			FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", _battlePhaseDisplaySystem.Draw);
 			FrameProfiler.Measure("DamageModificationDisplaySystem.Draw", _damageModificationDisplaySystem.Draw);
-			FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);
-		if (_gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
+			if (!guidedTutorial) FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);
+		if (!guidedTutorial && _gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
 		if (_tutorialDisplaySystem != null) FrameProfiler.Measure("TutorialDisplaySystem.Draw", _tutorialDisplaySystem.Draw);
 		}
 
@@ -388,8 +394,13 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(sceneEntity, new SceneState { Current = SceneId.Internal_QueueEventsMenu });
 			}
 			EntityFactory.CreateGameState(_world);
-			var deckEntity = RunDeckService.EnsureRunDeck(EntityManager);
-			var player = RunPlayerService.EnsureRunPlayer(_world);
+			bool guidedTutorial = GuidedTutorialService.IsActive(EntityManager);
+			var deckEntity = guidedTutorial
+				? EntityManager.GetEntitiesWithComponent<StockHand>().FirstOrDefault()
+				: RunDeckService.EnsureRunDeck(EntityManager);
+			var player = guidedTutorial
+				? EntityManager.GetEntity("Player")
+				: RunPlayerService.EnsureRunPlayer(_world);
 			var playerComp = player?.GetComponent<Player>();
 			if (playerComp != null)
 			{
@@ -398,7 +409,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Create tribulations for the current quest
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
-			if (!string.IsNullOrEmpty(queued.LocationId))
+			if (!guidedTutorial && !string.IsNullOrEmpty(queued.LocationId))
 			{
 				TribulationQuestService.CreateTribulationsForQuest(EntityManager, queued.LocationId, queued.QuestIndex);
 			}
@@ -408,8 +419,14 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void InitBattle() 
 		{
-			RunDeckService.EnsureRunDeck(EntityManager);
-			EventManager.Publish(new ResetDeckEvent { });
+			bool guidedTutorial = GuidedTutorialService.IsActive(EntityManager);
+			if (guidedTutorial)
+				GuidedTutorialService.PrepareStockHand(EntityManager);
+			else
+			{
+				RunDeckService.EnsureRunDeck(EntityManager);
+				EventManager.Publish(new ResetDeckEvent { });
+			}
 			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
@@ -446,14 +463,28 @@ namespace Crusaders30XX.ECS.Systems
 			LoggingService.Append("BattleSceneSystem.InitBattle", new System.Text.Json.Nodes.JsonObject { ["eventsCount"] = queued.Events.Count, ["currentIndex"] = queued.CurrentIndex });
 			var nextEvent = queued.Events[++queued.CurrentIndex];
 			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, nextEvent.EventId, EntityManager, nextEvent.Difficulty);
-			EventManager.Publish(new ResetDeckEvent { });
+			if (!guidedTutorial)
+				EventManager.Publish(new ResetDeckEvent { });
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
 			// Reset phase state at the start of every battle so we don't inherit the previous battle's sub-phase.
 			phaseState.Main = MainPhase.StartBattle;
 			phaseState.Sub = SubPhase.StartBattle;
 			phaseState.TurnNumber = 1;
 			phaseState.DefeatPresentationActive = false;
-			EventManager.Publish(new FullyHealEvent { Target = player });
+			if (guidedTutorial)
+			{
+				var tutorial = GuidedTutorialService.GetState(EntityManager);
+				var hp = player.GetComponent<HP>();
+				if (hp != null)
+				{
+					hp.Max = 25;
+					hp.Current = tutorial.PlayerHp;
+				}
+			}
+			else
+			{
+				EventManager.Publish(new FullyHealEvent { Target = player });
+			}
 			foreach (var e in EntityManager.GetEntitiesWithComponent<CardTooltip>()) {
 				var cardData = e.GetComponent<CardData>();
 				var card = CardFactory.Create(cardData.Card.CardId);
@@ -566,6 +597,7 @@ namespace Crusaders30XX.ECS.Systems
 			_assignedBlocksToDiscardSystem = new AssignedBlocksToDiscardSystem(_world.EntityManager, _graphicsDevice);
 			_enemyDamageManagerSystem = new EnemyDamageManagerSystem(_world.EntityManager);
 			_cardPlaySystem = new CardPlaySystem(_world.EntityManager);
+			_guidedTutorialDirectorSystem = new GuidedTutorialDirectorSystem(_world.EntityManager);
 			_battlePhaseDrawSystem = new DrawHandSystem(_world.EntityManager);
 			_phaseCoordinatorSystem = new PhaseCoordinatorSystem(_world.EntityManager);
 			_phaseChangeEventSystem = new PhaseChangeEventSystem(_world.EntityManager);
@@ -687,6 +719,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_assignedBlocksToDiscardSystem);
 			_world.AddSystem(_enemyDamageManagerSystem);
 			_world.AddSystem(_cardPlaySystem);
+			_world.AddSystem(_guidedTutorialDirectorSystem);
 			_world.AddSystem(_battlePhaseDrawSystem);
 			_world.AddSystem(_phaseCoordinatorSystem);
 			_world.AddSystem(_phaseChangeEventSystem);

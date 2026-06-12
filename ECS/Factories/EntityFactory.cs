@@ -14,6 +14,7 @@ using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Objects.Enemies;
 using Crusaders30XX.ECS.Objects.Medals;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Data.Tutorials;
 
 namespace Crusaders30XX.ECS.Factories
 {
@@ -409,6 +410,7 @@ namespace Crusaders30XX.ECS.Factories
                 entityManager.DestroyEntity(existingEnemy.Id);
             }
             def.EntityManager = entityManager;
+            bool isGuidedTutorial = GuidedTutorialService.IsActive(entityManager) && def.IsTutorialOnly;
 
             var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             var deck = deckEntity?.GetComponent<Deck>();
@@ -421,8 +423,18 @@ namespace Crusaders30XX.ECS.Factories
             {
                 deckCount = Math.Max(0, deckCount - 4);
             }
-            def.ApplyHealthFromDeckSize(deckCount);
-            ApplyWayStationEnemyHealthModifier(def);
+            if (isGuidedTutorial)
+            {
+                var tutorial = GuidedTutorialService.GetState(entityManager);
+                int hp = GuidedTutorialDefinitions.GetBattle(tutorial.Battle).EnemyHp;
+                def.MaxHealth = hp;
+                def.CurrentHealth = hp;
+            }
+            else
+            {
+                def.ApplyHealthFromDeckSize(deckCount);
+                ApplyWayStationEnemyHealthModifier(def);
+            }
             if (def.MaxHealth <= 0)
             {
                 def.MaxHealth = 1;
@@ -444,6 +456,10 @@ namespace Crusaders30XX.ECS.Factories
             world.AddComponent(enemyEntity, new EnemyArsenal { AttackIds = [.. def.GetAttackIds(world.EntityManager, 0)] });
             world.AddComponent(enemyEntity, new AttackIntent());
             world.AddComponent(enemyEntity, new AppliedPassives());
+            if (isGuidedTutorial)
+            {
+                world.AddComponent(enemyEntity, new TutorialEnemy());
+            }
             
             bool isRootQuest = false;
             var queued = world.EntityManager.GetEntity("QueuedEvents")?.GetComponent<QueuedEvents>();
@@ -452,7 +468,7 @@ namespace Crusaders30XX.ECS.Factories
                 isRootQuest = true;
             }
 
-            if (!isRootQuest)
+            if (!isRootQuest && !isGuidedTutorial)
             {
                 world.AddComponent(enemyEntity, new Threat { Amount = 0 });
             }

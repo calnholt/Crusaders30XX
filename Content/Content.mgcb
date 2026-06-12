@@ -1617,21 +1617,6 @@
 
 #---------------------------------- Data JSON Files ---------------------------------#
 
-#begin Data/Dialog/desert_1.json
-/copy:Data/Dialog/desert_1.json
-
-#begin Data/Dialog/desert_2.json
-/copy:Data/Dialog/desert_2.json
-
-#begin Data/Dialog/desert_3.json
-/copy:Data/Dialog/desert_3.json
-
-#begin Data/Dialog/desert_4.json
-/copy:Data/Dialog/desert_4.json
-
-#begin Data/Dialog/desert_5.json
-/copy:Data/Dialog/desert_5.json
-
 #begin Data/Equipment/focus_visor.json
 /copy:Data/Equipment/focus_visor.json
 
@@ -1654,15 +1639,6 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Shaders/GaussianBlur.fx
-
-#begin Data/Tutorials/action_phase_tutorials.json
-/copy:Data/Tutorials/action_phase_tutorials.json
-
-#begin Data/Tutorials/block_phase_tutorials.json
-/copy:Data/Tutorials/block_phase_tutorials.json
-
-#begin Data/Tutorials/second_block_tutorials.json
-/copy:Data/Tutorials/second_block_tutorials.json
 
 #---------------------------------- Shaders ---------------------------------#
 

@@ -3,6 +3,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Data.Achievements;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Objects.Achievements
 {
@@ -50,6 +51,7 @@ namespace Crusaders30XX.ECS.Objects.Achievements
 
         private void OnCardPlayed(CardPlayedEvent evt)
         {
+            if (GuidedTutorialService.IsActive(EntityManager)) return;
             if (evt?.Card == null) return;
             
             var cardData = evt.Card.GetComponent<CardData>();

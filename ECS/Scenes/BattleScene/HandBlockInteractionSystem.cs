@@ -36,6 +36,7 @@ namespace Crusaders30XX.ECS.Systems
 			var card = evt?.Card;
 			if (card == null) return;
 			if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
+			if (!BattleInputGate.TryAllowTutorialAction(EntityManager, TutorialAction.AssignBlock, card)) return;
 			// Only during Block phase
 			var phaseState = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
 			if (phaseState == null) return;
