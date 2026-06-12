@@ -9,3 +9,7 @@ Cleanup
 
 cards
 - as an additional cost, discard your pledge card that wasn't pledged this turn. 
+
+bugs
+- colorless card tooltip needs to show card as colorless
+- equipment tooltips not showing in other places

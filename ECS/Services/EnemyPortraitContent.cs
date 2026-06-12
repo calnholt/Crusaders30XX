@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Services
 		private static readonly HashSet<string> PortraitEnemyIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
 			"demon",
-			// "mummy",
+			"mummy",
 			// "ninja",
 			"ogre",
 			"skeleton",
