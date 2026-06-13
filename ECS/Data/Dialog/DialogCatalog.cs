@@ -15,12 +15,19 @@ namespace Crusaders30XX.ECS.Data.Dialog
 					{
 						["intro"] =
 						[
-							new() { actor = "Remiel", message = "Your survival depends on understanding the rhythm of battle." },
-							new() { actor = "Remiel", message = "Watch the enemy's intent, block deliberately, then answer during your Action phase." },
+							new() { actor = "Remiel", message = "There you are, eyes open. Now I need you awake a great deal faster, because we have a problem brewing about thirty feet to your left." },
+							new() { actor = "Crusader", message = "...Where is my sword?" },
+							new() { actor = "Remiel", message = "It came with you, but it is out of reach. Come on, up you get! Quick recap: you died, took a spear, very gallant..." },
+							new() { actor = "Crusader", message = "And woke to sulphur and something breathing in the dark. So this is Hell. I always suspected I had earned it." },
+							new() { actor = "Remiel", message = "Hell? No, no, no. This is Purgatory. How would an angel end up in Hell with you?" },
+							new() { actor = "Crusader", message = "...Then tell me, angel. Why is something like that here?" },
+							new() { actor = "Remiel", message = "...Yeah. That is the part keeping me from enjoying being right." },
+							new() { actor = "Crusader", message = "Then it does not need explaining. It needs to be put down." },
 						],
 						["gleeber_victory"] =
 						[
-							new() { actor = "Remiel", message = "Good. Now use color, costs, your weapon, and a pledge together." },
+							new() { actor = "Crusader", message = "One down. One more to go. And now I have my sword. Keep up." },
+							new() { actor = "Remiel", message = "Trying!" },
 						],
 					},
 				},

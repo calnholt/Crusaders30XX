@@ -60,6 +60,13 @@ public class StarterDeckSaveTests
 				seed,
 				StartingDeckGeneratorService.GetDaggerSingleCopyStarterCardPool());
 			Assert.Equal(1, DeckRules.CountCardIdInDeck(daggerDeck, "sacrifice"));
+
+			var hammerDeck = StartingDeckGeneratorService.Generate(
+				StartingDeckGeneratorService.GetHammerStarterCardPool(),
+				seed,
+				StartingDeckGeneratorService.GetHammerSingleCopyStarterCardPool());
+			Assert.Equal(1, DeckRules.CountCardIdInDeck(hammerDeck, "iron_covenant"));
+			Assert.Equal(1, DeckRules.CountCardIdInDeck(hammerDeck, "vanguards_promise"));
 		}
 	}
 

@@ -381,6 +381,7 @@ namespace Crusaders30XX.ECS.Systems
 				// New context: reset confirm lock for previous and ensure button can show again
 				_confirmedForContext.RemoveWhere(id => id != currentContextId);
 			}
+			UpdateConfirmAvailability(phaseNow, currentContextId);
 
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 			if (_impactActive)
@@ -453,6 +454,32 @@ namespace Crusaders30XX.ECS.Systems
 						btnTransform.ZOrder = ConfirmButtonZ;
 					}
 				}
+			}
+		}
+
+		private void UpdateConfirmAvailability(SubPhase phaseNow, string contextId)
+		{
+			var confirmButton = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
+			var ui = confirmButton?.GetComponent<UIElement>();
+			var hotkey = confirmButton?.GetComponent<HotKey>();
+			if (ui == null) return;
+
+			bool tutorialRequirementMet = BattleInputGate.IsTutorialActionAllowed(
+				EntityManager,
+				TutorialAction.ConfirmBlocks);
+			bool available = phaseNow == SubPhase.Block
+				&& !_confirmedForContext.Contains(contextId)
+				&& !IsAnyBlockAssignmentAnimating()
+				&& tutorialRequirementMet;
+
+			if (GuidedTutorialService.IsActive(EntityManager))
+			{
+				ui.IsInteractable = available;
+				if (!available) ui.Bounds = Rectangle.Empty;
+			}
+			if (hotkey != null)
+			{
+				hotkey.IsActive = available && ui.IsInteractable;
 			}
 		}
 

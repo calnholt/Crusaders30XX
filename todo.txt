@@ -5,10 +5,23 @@ Gameplay
 - weaks cards that are permanently added to deck (colorless 2 block, etc)
 
 cards
-- as an additional cost, discard your pledge card that wasn't pledged this turn. 
+
+hammer
+-* as an additional cost, lose 1 courage. Gain 2 vigor. free action, 2block
+-* as an additional cost, discard your pledge card that wasn't pledged this turn. Gain sharpen 6. 3 block
+-* if no cards were discarded to play this, this gains +6 damage. [White, Any] 7dmg, 3block
+-* [black, any] 4 damage free action draw two cards, 3block
+-* pledge the top card of your deck is you do not have a pledged card 1dmg 0 cost 3block x1 
+-* block card type, 4 block (no text)
+-* lose 2 courage, gain 1 vigor. Repeat up to three times if possible.
+- absolution
+- temper the blade
+- impale
+- iron covenant x 1
 
 tech debt
 - remove battlestateinfo
+- pledge services need to send events to change state not directly manipulate entities
 
 
 persistent card states:
@@ -69,18 +82,60 @@ Goal - design an updated guided tutorial that creates stock hands and forces spe
   - third action phase
     - play litany + fervor
 
+There are several issues with the tutorial changes we made in a recent commit:
+
+intro dialog not correct; "if hp reaches zero you lose" - not highlighting correct spot (seems like its the middle of the screen instead of HP bar); "assign cards from your hand to block" should highlight full cards not just bottom half, should also mention that the BLCOK value is the block damage; hide confirm button for attacks until condition is met; condition text should be the light red when condition isnt met, then white when met; when moving to the second turn of the first battle, it repeats the first turns steps (reduce the enemy's HP..) AND the new hand of cards is not drawn. Cant proceed any further since no cards in hand; Remiel should use guardian angel picture; intro dialog with remiel should be below --
+
 Before battle 1, i want to display this Dialog below (Remiel is the name of the angel, update dialog to properly reference).
 
-**REMIEL:** There you are, eyes open — now I need you awake a great deal faster than that, because we've a problem brewing about thirty feet to your left. 
-**CRUSADER:** …Where is my sword. 
-**REMIEL:** It came with you — but it's out of reach. Come on up you get! Quick recap: you died, took a spear, very gallant — 
-**CRUSADER:** And woke to sulphur and something breathing in the dark. So this is hell. I always suspected I'd earned it. 
-**REMIEL:** Hell? No no no, this is purgatory. How would an angel end up in hell with you? 
-**CRUSADER:** …Then tell me, angel — why is something like that here?
-**REMIEL:** …Yeah. That's the part keeping me from enjoying being right.
-**CRUSADER:** Then it doesn't need explaining -- it needs to be put down.
+  REMIEL: There you are, eyes open. Now I need you awake a great deal faster, because we have a problem brewing about thirty feet to your left.
+  CRUSADER: ...Where is my sword?
+  REMIEL: It came with you, but it is out of reach. Come on, up you get! Quick recap: you died, took a spear, very gallant...
+  CRUSADER: And woke to sulphur and something breathing in the dark. So this is Hell. I always suspected I had earned it.
+  REMIEL: Hell? No, no, no. This is Purgatory. How would an angel end up in Hell with you?
+  CRUSADER: ...Then tell me, angel. Why is something like that here?
+  REMIEL: ...Yeah. That is the part keeping me from enjoying being right.
+  CRUSADER: Then it does not need explaining. It needs to be put down.
 
 After batte 1, display the following dialog then go to battle 2:
 
-**CRUSADER:** One down, one more to go. And now I have my sword. Keep up.
-**REMIEL** Trying!!!
+  CRUSADER: One down. One more to go. And now I have my sword. Keep up.
+  REMIEL: Trying!
+
+
+
+DesertStormDisplaySystem settings - update the system with these values:
+TimeScale=3.27
+BaseScale=2.89
+Lacunarity=2
+Persistence=0.5
+WarpStrength=2.97
+DensityRemapLow=0.4
+DensityRemapHigh=0.93
+DriftSpeed=0.025
+DriftVertical=0.006
+WarpDriftA=0.018
+WarpDriftB=0.012
+MorphSpeed=0.008
+ShadowR=0.55
+ShadowG=0.47
+ShadowB=0.37
+MidR=0.7
+MidG=0.62
+MidB=0.51
+HighlightR=0.82
+HighlightG=0.75
+HighlightB=0.64
+BrightR=0.89
+BrightG=0.82
+BrightB=0.71
+VerticalGradient=0.08
+DustBase=0.55
+DustDensity=0.45
+SceneTintR=0.9
+SceneTintG=0.82
+SceneTintB=0.68
+SceneTintStrength=0.4
+GrainIntensity=0.02
+GrainFineness=1
+VignetteAmount=0

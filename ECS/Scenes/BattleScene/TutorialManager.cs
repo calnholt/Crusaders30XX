@@ -495,21 +495,17 @@ namespace Crusaders30XX.ECS.Systems
 
             Rectangle Union(params Rectangle[] rectangles)
             {
-                var valid = rectangles.Where(rect => rect.Width > 0 && rect.Height > 0).ToList();
-                if (valid.Count == 0) return Rectangle.Empty;
-                int left = valid.Min(rect => rect.Left);
-                int top = valid.Min(rect => rect.Top);
-                int right = valid.Max(rect => rect.Right);
-                int bottom = valid.Max(rect => rect.Bottom);
-                return new Rectangle(left, top, right - left, bottom - top);
+                return UnionBounds(rectangles);
             }
 
             // Predefined UI regions
             switch (regionId)
             {
                 case "player_hand":
-                    // Return bounds encompassing the hand area at bottom of screen
-                    return new Rectangle(Game1.VirtualWidth / 4, Game1.VirtualHeight - 200, Game1.VirtualWidth / 2, 180);
+                    var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+                    return UnionBounds(deck?.Hand
+                        .Select(card => card.GetComponent<UIElement>()?.Bounds ?? Rectangle.Empty)
+                        ?? Enumerable.Empty<Rectangle>());
 
                 case "enemy_attack_display":
                     // Return bounds for the enemy attack display area
@@ -534,6 +530,18 @@ namespace Crusaders30XX.ECS.Systems
                 default:
                     return Rectangle.Empty;
             }
+        }
+
+        internal static Rectangle UnionBounds(IEnumerable<Rectangle> rectangles)
+        {
+            var valid = rectangles.Where(rect => rect.Width > 0 && rect.Height > 0).ToList();
+            if (valid.Count == 0) return Rectangle.Empty;
+
+            int left = valid.Min(rect => rect.Left);
+            int top = valid.Min(rect => rect.Top);
+            int right = valid.Max(rect => rect.Right);
+            int bottom = valid.Max(rect => rect.Bottom);
+            return new Rectangle(left, top, right - left, bottom - top);
         }
 
         private Rectangle GetCardWithCostBounds()

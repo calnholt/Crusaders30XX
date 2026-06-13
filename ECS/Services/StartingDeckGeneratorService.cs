@@ -82,6 +82,29 @@ namespace Crusaders30XX.ECS.Services
 			return new[] { "sacrifice" };
 		}
 
+		public static IReadOnlyList<string> GetHammerStarterCardPool()
+		{
+			return new[]
+			{
+				"steel_the_spirit",
+				"renounce_and_hone",
+				"unburdened_strike",
+				"crushing_insight",
+				"vanguards_promise",
+				"mantlet",
+				"stoke_the_furnace",
+				"absolution",
+				"temper_the_blade",
+				"impale",
+				"iron_covenant",
+			};
+		}
+
+		public static IReadOnlyList<string> GetHammerSingleCopyStarterCardPool()
+		{
+			return new[] { "iron_covenant", "vanguards_promise" };
+		}
+
 		private static HashSet<string> BuildSingleCopySet(IReadOnlyList<string> singleCopyCardIds)
 		{
 			if (singleCopyCardIds == null || singleCopyCardIds.Count == 0)

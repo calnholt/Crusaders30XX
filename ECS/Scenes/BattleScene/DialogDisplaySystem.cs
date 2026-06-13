@@ -478,19 +478,29 @@ namespace Crusaders30XX.ECS.Systems
 
         private Texture2D ResolvePortrait(string actor)
         {
-            if (string.IsNullOrWhiteSpace(actor)) return null;
-            string key = actor.Trim().ToLowerInvariant();
+            string assetName = ResolvePortraitAssetName(actor);
+            if (string.IsNullOrEmpty(assetName)) return null;
             try
             {
-                if (key == "angel") return _content.Load<Texture2D>("guardian_angel");
-                if (key == "crusader") return _content.Load<Texture2D>("Crusader");
-                if (key == "gleeber") return _content.Load<Texture2D>("Gleeber");
-                if (key == "skeleton") return _content.Load<Texture2D>("Skeleton");
-                if (key == "sand_corpse") return _content.Load<Texture2D>("Sand_Corpse");
-                if (key == "fallen shepherd") return _content.Load<Texture2D>("Fallen_Shepherd");
+                return _content.Load<Texture2D>(assetName);
             }
             catch { }
             return null;
+        }
+
+        internal static string ResolvePortraitAssetName(string actor)
+        {
+            if (string.IsNullOrWhiteSpace(actor)) return string.Empty;
+            return actor.Trim().ToLowerInvariant() switch
+            {
+                "angel" or "remiel" => "guardian_angel",
+                "crusader" => "Crusader",
+                "gleeber" => "Gleeber",
+                "skeleton" => "Skeleton",
+                "sand_corpse" => "Sand_Corpse",
+                "fallen shepherd" => "Fallen_Shepherd",
+                _ => string.Empty,
+            };
         }
 
         private void EnsureOverlayEntity()

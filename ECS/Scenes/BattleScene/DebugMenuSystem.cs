@@ -48,6 +48,7 @@ namespace Crusaders30XX.ECS.Systems
 			= new();
 		private readonly Dictionary<Type, List<(string label, MethodInfo method, DebugActionIntAttribute meta, int current)>> _debugActionsIntCache
 			= new();
+		private readonly Dictionary<Type, Dictionary<string, object>> _bootSnapshots = new();
 
         // Editable layout and behavior settings
 		[DebugEditable(DisplayName = "Margin", Step = 1, Min = 0, Max = 200)]
@@ -711,31 +712,72 @@ namespace Crusaders30XX.ECS.Systems
                     _debugActionsIntCache.Clear();
                     _lastSceneId = currentScene;
                     _systemsSignatureSnapshot = sig;
+                    CaptureMissingBootSnapshots();
                 }
             }
             catch { }
         }
 
-		private static string BuildSettingsExport(Core.System system)
+		private void CaptureMissingBootSnapshots()
+		{
+			foreach (var (_, sys) in GetAnnotatedSystemsCached())
+			{
+				var type = sys.GetType();
+				if (_bootSnapshots.ContainsKey(type)) continue;
+				var snap = new Dictionary<string, object>();
+				foreach (var (label, get, _, _, _) in GetEditableMembers(sys))
+				{
+					snap[label] = get();
+				}
+				_bootSnapshots[type] = snap;
+			}
+		}
+
+		private string BuildSettingsExport(Core.System system)
         {
+            CaptureMissingBootSnapshots();
             var sb = new StringBuilder();
             string systemName = system.GetType().Name;
-            sb.AppendLine($"{systemName} settings - update the system with these values:");
+            var systemType = system.GetType();
+            _bootSnapshots.TryGetValue(systemType, out var baseline);
+            bool anyChanged = false;
             var members = GetEditableMembers(system);
-            foreach (var (label, get, _, type, _attr) in members)
+            foreach (var (label, get, _, memberType, _attr) in members)
             {
-                object v = get();
-                if (type == typeof(int) || type == typeof(byte))
+                if (memberType != typeof(int) && memberType != typeof(byte) && memberType != typeof(float))
+                    continue;
+                object current = get();
+                if (baseline == null || !baseline.TryGetValue(label, out var bootValue))
+                    continue;
+                if (ValuesEqual(current, bootValue, memberType))
+                    continue;
+                if (!anyChanged)
                 {
-                    sb.AppendLine($"{label}={Convert.ToInt32(v)}");
+                    sb.AppendLine($"{systemName} changed settings - update the system with these values:");
+                    anyChanged = true;
                 }
-                else if (type == typeof(float))
+                if (memberType == typeof(int) || memberType == typeof(byte))
                 {
-                    sb.AppendLine($"{label}={Convert.ToSingle(v):0.###}");
+                    sb.AppendLine($"{label}={Convert.ToInt32(current)}");
+                }
+                else if (memberType == typeof(float))
+                {
+                    sb.AppendLine($"{label}={Convert.ToSingle(current):0.###}");
                 }
             }
+            if (!anyChanged)
+                return $"{systemName}: no changed settings";
             return sb.ToString();
         }
+
+		private static bool ValuesEqual(object current, object baseline, Type type)
+		{
+			if (type == typeof(int) || type == typeof(byte))
+				return Convert.ToInt32(current) == Convert.ToInt32(baseline);
+			if (type == typeof(float))
+				return Math.Abs(Convert.ToSingle(current) - Convert.ToSingle(baseline)) < 0.0005f;
+			return Equals(current, baseline);
+		}
 
 		private List<(string name, Core.System sys)> GetAnnotatedSystemsCached()
 		{
@@ -744,6 +786,7 @@ namespace Crusaders30XX.ECS.Systems
 				_annotatedSystemsCache = GetAnnotatedSystems(_systemManager.GetAllSystems())
 					.OrderBy(t => t.name)
 					.ToList();
+				CaptureMissingBootSnapshots();
 			}
 			return _annotatedSystemsCache;
 		}

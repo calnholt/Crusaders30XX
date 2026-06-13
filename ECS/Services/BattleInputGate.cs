@@ -22,11 +22,28 @@ namespace Crusaders30XX.ECS.Services
 			TutorialAction action,
 			Entity card = null)
 		{
+			bool allowed = IsTutorialActionAllowed(entityManager, action, card);
+
+			if (!allowed)
+			{
+				EventManager.Publish(new CantPlayCardMessage
+				{
+					Message = "That action is not available at this tutorial step."
+				});
+			}
+			return allowed;
+		}
+
+		public static bool IsTutorialActionAllowed(
+			EntityManager entityManager,
+			TutorialAction action,
+			Entity card = null)
+		{
 			var state = GuidedTutorialService.GetState(entityManager);
 			if (state == null) return true;
 
 			string cardId = card?.GetComponent<CardData>()?.Card?.CardId ?? string.Empty;
-			bool allowed = action switch
+			return action switch
 			{
 				TutorialAction.AssignBlock => CanAssignBlock(entityManager, state, cardId),
 				TutorialAction.ConfirmBlocks => CanConfirmBlocks(entityManager, state),
@@ -39,15 +56,6 @@ namespace Crusaders30XX.ECS.Services
 				TutorialAction.EndTurn => GuidedTutorialDefinitions.AreActionRequirementsComplete(state),
 				_ => false,
 			};
-
-			if (!allowed)
-			{
-				EventManager.Publish(new CantPlayCardMessage
-				{
-					Message = "That action is not available at this tutorial step."
-				});
-			}
-			return allowed;
 		}
 
 		private static bool CanPayCost(EntityManager entityManager, Entity card)

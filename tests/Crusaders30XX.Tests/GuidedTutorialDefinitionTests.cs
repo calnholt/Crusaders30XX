@@ -1,7 +1,12 @@
 using System.Linq;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Tutorials;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Systems;
+using Microsoft.Xna.Framework;
 using Xunit;
 
 namespace Crusaders30XX.Tests;
@@ -94,5 +99,70 @@ public class GuidedTutorialDefinitionTests
 		hp -= 2; // worst turn 3 mapping
 		Assert.Equal(9, hp);
 		Assert.True(hp >= 5);
+	}
+
+	[Fact]
+	public void Tutorial_targets_player_hud_health_and_full_hand_bounds()
+	{
+		var loss = GuidedTutorialDefinitions.GuidedMessages.Single(message => message.key == "guided_loss");
+		Assert.Equal(PlayerHudLayoutSystem.HealthEntityName, loss.targetId);
+
+		var block = GuidedTutorialDefinitions.GuidedMessages.Single(message => message.key == "guided_block");
+		Assert.Contains("blue BLOCK value", block.text);
+
+		var bounds = TutorialManager.UnionBounds(
+		[
+			new Rectangle(100, 400, 120, 180),
+			new Rectangle(200, 360, 120, 180),
+			new Rectangle(300, 420, 120, 180),
+		]);
+		Assert.Equal(new Rectangle(100, 360, 320, 240), bounds);
+	}
+
+	[Fact]
+	public void Enemy_start_advances_tutorial_and_prepares_second_turn_stock_hand()
+	{
+		EventManager.Clear();
+		try
+		{
+			var manager = new EntityManager();
+			var stateEntity = manager.CreateEntity("GuidedTutorial");
+			var state = new GuidedTutorial
+			{
+				Battle = TutorialBattle.Gleeber,
+				Turn = 1,
+				StockHandPrepared = true,
+			};
+			manager.AddComponent(stateEntity, state);
+
+			var deckEntity = manager.CreateEntity("Deck");
+			var deck = new Deck();
+			manager.AddComponent(deckEntity, deck);
+			manager.AddComponent(deckEntity, new StockHand
+			{
+				Battle = TutorialBattle.Gleeber,
+				Turn = 1,
+			});
+
+			var phaseEntity = manager.CreateEntity("PhaseState");
+			manager.AddComponent(phaseEntity, new PhaseState
+			{
+				Sub = SubPhase.PlayerEnd,
+				TurnNumber = 1,
+			});
+
+			_ = new GuidedTutorialDirectorSystem(manager);
+			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart });
+
+			Assert.Equal(2, state.Turn);
+			Assert.True(state.StockHandPrepared);
+			Assert.Equal(4, deck.DrawPile.Count);
+			Assert.Empty(deck.Hand);
+			Assert.All(deck.DrawPile, card => Assert.NotNull(card.GetComponent<CardData>()));
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
 	}
 }

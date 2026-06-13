@@ -51,8 +51,8 @@ namespace Crusaders30XX.ECS.Data.Tutorials
 		public static readonly IReadOnlyList<TutorialDefinition> GuidedMessages =
 		[
 			new() { key = "guided_win", text = "Reduce the enemy's HP to zero to win the battle.", targetType = "entity_name", targetId = "Enemy", bubbleOrientation = "bottom" },
-			new() { key = "guided_loss", text = "If your HP reaches zero, you lose. Empty draw piles do not reshuffle.", targetType = "entity_name", targetId = "UI_PlayerHealth", bubbleOrientation = "right" },
-			new() { key = "guided_block", text = "Assign cards from your hand to block incoming damage.", targetType = "ui_region", targetId = "player_hand", bubbleOrientation = "top" },
+			new() { key = "guided_loss", text = "If your HP reaches zero, you lose. Empty draw piles do not reshuffle.", targetType = "entity_name", targetId = "UI_PlayerHudHealth", bubbleOrientation = "right" },
+			new() { key = "guided_block", text = "Assign cards from your hand to block incoming damage. A card's blue BLOCK value is how much damage it blocks.", targetType = "ui_region", targetId = "player_hand", bubbleOrientation = "top" },
 			new() { key = "guided_ap", text = "You receive one AP each turn. Smite uses one AP.", targetType = "ui_region", targetId = "ap_and_smite_ap", bubbleOrientation = "right" },
 			new() { key = "guided_damage", text = "DAMAGE shows how much HP an attack removes. Play Smite.", targetType = "ui_region", targetId = "smite_damage", bubbleOrientation = "top" },
 			new() { key = "guided_draw", text = "At the start of each turn, draw until you hold four cards.", targetType = "ui_region", targetId = "player_hand", bubbleOrientation = "top" },

@@ -40,6 +40,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private const string SwordButtonName = "WayStation_Button_Sword";
 		private const string DaggerButtonName = "WayStation_Button_Dagger";
+		private const string HammerButtonName = "WayStation_Button_Hammer";
 		private const string EasyButtonName = "WayStation_Button_Easy";
 		private const string NormalButtonName = "WayStation_Button_Normal";
 		private const string HardButtonName = "WayStation_Button_Hard";
@@ -116,6 +117,7 @@ namespace Crusaders30XX.ECS.Systems
 			public Rectangle Rule;
 			public Rectangle SwordButton;
 			public Rectangle DaggerButton;
+			public Rectangle HammerButton;
 			public Rectangle EasyButton;
 			public Rectangle NormalButton;
 			public Rectangle HardButton;
@@ -163,6 +165,7 @@ namespace Crusaders30XX.ECS.Systems
 			var layout = ComputeLayout(Game1.VirtualWidth, Game1.VirtualHeight);
 			SyncButton(SwordButtonName, layout.SwordButton);
 			SyncButton(DaggerButtonName, layout.DaggerButton);
+			SyncButton(HammerButtonName, layout.HammerButton);
 			SyncButton(EasyButtonName, layout.EasyButton);
 			SyncButton(NormalButtonName, layout.NormalButton);
 			SyncButton(HardButtonName, layout.HardButton);
@@ -170,6 +173,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (WasClicked(SwordButtonName)) WayStationRunSetupSingleton.SelectedWeapon = StartingWeapon.Sword;
 			if (WasClicked(DaggerButtonName)) WayStationRunSetupSingleton.SelectedWeapon = StartingWeapon.Dagger;
+			if (WasClicked(HammerButtonName)) WayStationRunSetupSingleton.SelectedWeapon = StartingWeapon.Hammer;
 			if (WasClicked(EasyButtonName)) WayStationRunSetupSingleton.SelectedDifficulty = RunDifficulty.Easy;
 			if (WasClicked(NormalButtonName)) WayStationRunSetupSingleton.SelectedDifficulty = RunDifficulty.Normal;
 			if (WasClicked(HardButtonName)) WayStationRunSetupSingleton.SelectedDifficulty = RunDifficulty.Hard;
@@ -214,10 +218,11 @@ namespace Crusaders30XX.ECS.Systems
 			var weaponLabelPos = new Vector2(panel.Center.X - weaponLabelSize.X / 2f, cursorY);
 			cursorY += weaponLabelSize.Y + LabelGap;
 
-			int weaponRowWidth = WeaponButtonSize * 2 + ChoiceGap;
+			int weaponRowWidth = WeaponButtonSize * 3 + ChoiceGap * 2;
 			int weaponX = panel.Center.X - weaponRowWidth / 2;
 			var sword = new Rectangle(weaponX, (int)System.Math.Round(cursorY), WeaponButtonSize, WeaponButtonSize);
 			var dagger = new Rectangle(sword.Right + ChoiceGap, sword.Y, WeaponButtonSize, WeaponButtonSize);
+			var hammer = new Rectangle(dagger.Right + ChoiceGap, sword.Y, WeaponButtonSize, WeaponButtonSize);
 			cursorY += WeaponButtonSize + BlockGap;
 
 			var difficultyLabelSize = Measure(_bodyFont, "DIFFICULTY", LabelScale);
@@ -243,6 +248,7 @@ namespace Crusaders30XX.ECS.Systems
 				Rule = rule,
 				SwordButton = sword,
 				DaggerButton = dagger,
+				HammerButton = hammer,
 				EasyButton = easy,
 				NormalButton = normal,
 				HardButton = hard,
@@ -300,6 +306,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			DrawChoiceButton(layout.SwordButton, "Sword", WeaponChoiceScale, IsSelected(StartingWeapon.Sword), IsHovered(SwordButtonName));
 			DrawChoiceButton(layout.DaggerButton, "Dagger", WeaponChoiceScale, IsSelected(StartingWeapon.Dagger), IsHovered(DaggerButtonName));
+			DrawChoiceButton(layout.HammerButton, "Hammer", WeaponChoiceScale, IsSelected(StartingWeapon.Hammer), IsHovered(HammerButtonName));
 			DrawChoiceButton(layout.EasyButton, "Easy", ChoiceScale, IsSelected(RunDifficulty.Easy), IsHovered(EasyButtonName));
 			DrawChoiceButton(layout.NormalButton, "Normal", ChoiceScale, IsSelected(RunDifficulty.Normal), IsHovered(NormalButtonName));
 			DrawChoiceButton(layout.HardButton, "Hard", ChoiceScale, IsSelected(RunDifficulty.Hard), IsHovered(HardButtonName));
@@ -439,6 +446,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			yield return SwordButtonName;
 			yield return DaggerButtonName;
+			yield return HammerButtonName;
 			yield return EasyButtonName;
 			yield return NormalButtonName;
 			yield return HardButtonName;

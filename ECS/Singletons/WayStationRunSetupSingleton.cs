@@ -39,6 +39,7 @@ namespace Crusaders30XX.ECS.Singletons
 		{
 			StartingWeapon.Sword => "sword",
 			StartingWeapon.Dagger => "dagger",
+			StartingWeapon.Hammer => "hammer",
 			_ => "sword"
 		};
 	}

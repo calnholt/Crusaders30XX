@@ -119,13 +119,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void AddPledgeToCard(Entity card)
         {
-            if (card == null) return;
-            if (card.GetComponent<Pledge>() != null) return;
-
-            EntityManager.AddComponent(card, new Pledge { Owner = card, CanPlay = false });
-            EventManager.Publish(new PledgeAddedEvent { Card = card });
-            var cardData = card.GetComponent<CardData>();
-            cardData?.Card?.OnPledged?.Invoke(EntityManager, card);
+            PledgeService.ApplyPledgeToHandCard(EntityManager, card, markPledgedThisActionPhase: false);
             LoggingService.Append("PledgeManagementSystem.AddPledgeToCard", new System.Text.Json.Nodes.JsonObject
             {
                 ["entityId"] = card.Id,
@@ -139,7 +133,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (card == null || card.GetComponent<Pledge>() == null) return;
 
-            EntityManager.RemoveComponent<Pledge>(card);
+            PledgeService.RemovePledgeFromCard(EntityManager, card);
             LoggingService.Append("PledgeManagementSystem.RemovePledgeFromCard", new System.Text.Json.Nodes.JsonObject
             {
                 ["entityId"] = card.Id,

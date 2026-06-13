@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
 				int turn = phase?.TurnNumber ?? state.Turn;
-				if (evt.Previous is SubPhase.PlayerEnd or SubPhase.Action or SubPhase.PlayerStart)
+				if (phase?.Sub is SubPhase.PlayerEnd or SubPhase.Action or SubPhase.PlayerStart)
 					turn++;
 				GuidedTutorialService.BeginNextTurn(EntityManager, turn);
 			}

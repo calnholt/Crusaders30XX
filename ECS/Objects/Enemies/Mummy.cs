@@ -33,9 +33,12 @@ public class Entomb : EnemyAttackBase
     Id = "entomb";
     Name = "Entomb";
     Damage = 10;
-    MinimumDamageToTriggerEffect = 3;
-    Text = EnemyAttackTextHelper.GetDamageThresholdText(
-      3, "Apply brittle to the top card of your draw pile.");
+    MinimumDamageToTriggerEffect = 4;
+
+    OnAttackReveal = (entityManager) => 
+    {
+      Text = EnemyAttackTextHelper.GetDamageThresholdText((int)MinimumDamageToTriggerEffect, "Apply brittle to the top card of your draw pile.");
+    };
 
     OnDamageThresholdMet = (entityManager) =>
     {
@@ -56,11 +59,15 @@ public class Mummify : EnemyAttackBase
   {
     Id = "mummify";
     Name = "Mummify";
-    Damage = 8;
-    ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Scar, Scar, ConditionType);
+    Damage = 10;
+    MinimumDamageToTriggerEffect = 4;
 
-    OnAttackHit = (entityManager) =>
+    OnAttackReveal = (entityManager) => 
+    {
+      Text = EnemyAttackTextHelper.GetDamageThresholdText((int)MinimumDamageToTriggerEffect, $"Gain {Scar} scars.");
+    };
+
+    OnDamageThresholdMet = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Scar, Delta = Scar });
     };

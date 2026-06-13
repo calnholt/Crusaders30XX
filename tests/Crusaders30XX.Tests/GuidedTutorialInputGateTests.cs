@@ -3,6 +3,8 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Systems;
+using Microsoft.Xna.Framework;
 using Xunit;
 
 namespace Crusaders30XX.Tests;
@@ -50,6 +52,32 @@ public class GuidedTutorialInputGateTests
 		AddAssigned(manager, "reckoning");
 
 		Assert.True(BattleInputGate.TryAllowTutorialAction(manager, TutorialAction.ConfirmBlocks));
+	}
+
+	[Fact]
+	public void Confirmation_validity_is_side_effect_free_and_tracks_requirement_state()
+	{
+		EventManager.Clear();
+		var manager = new EntityManager();
+		var stateEntity = manager.CreateEntity("GuidedTutorial");
+		manager.AddComponent(stateEntity, new GuidedTutorial
+		{
+			Battle = TutorialBattle.Gleeber,
+			Turn = 2,
+		});
+		int messages = 0;
+		EventManager.Subscribe<CantPlayCardMessage>(_ => messages++);
+
+		Assert.False(BattleInputGate.IsTutorialActionAllowed(manager, TutorialAction.ConfirmBlocks));
+		Assert.Equal(0, messages);
+
+		AddAssigned(manager, "reckoning");
+		AddAssigned(manager, "absolution");
+
+		Assert.True(BattleInputGate.IsTutorialActionAllowed(manager, TutorialAction.ConfirmBlocks));
+		Assert.Equal(0, messages);
+		Assert.Equal(new Color(255, 150, 150, 255), EnemyAttackDisplaySystem.GetConditionTextColor(false));
+		Assert.Equal(Color.White, EnemyAttackDisplaySystem.GetConditionTextColor(true));
 	}
 
 	private static void AddAssigned(EntityManager manager, string cardId)

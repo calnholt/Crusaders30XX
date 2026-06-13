@@ -81,6 +81,7 @@ namespace Crusaders30XX.ECS.Services
 			{
 				StartingWeapon.Sword => StartingDeckGeneratorService.GetSwordStarterCardPool(),
 				StartingWeapon.Dagger => StartingDeckGeneratorService.GetDaggerStarterCardPool(),
+				StartingWeapon.Hammer => StartingDeckGeneratorService.GetHammerStarterCardPool(),
 				_ => StartingDeckGeneratorService.GetSwordStarterCardPool()
 			};
 		}
@@ -91,6 +92,7 @@ namespace Crusaders30XX.ECS.Services
 			{
 				StartingWeapon.Sword => StartingDeckGeneratorService.GetSwordSingleCopyStarterCardPool(),
 				StartingWeapon.Dagger => StartingDeckGeneratorService.GetDaggerSingleCopyStarterCardPool(),
+				StartingWeapon.Hammer => StartingDeckGeneratorService.GetHammerSingleCopyStarterCardPool(),
 				_ => StartingDeckGeneratorService.GetSwordSingleCopyStarterCardPool()
 			};
 		}

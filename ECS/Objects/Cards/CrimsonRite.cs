@@ -12,9 +12,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "crimson_rite";
             Name = "Crimson Rite";
             Target = "Enemy";
-            Cost = ["Black", "Black"];
+            Cost = ["Black", "Any"];
             Animation = "Attack";
-            Damage = 7;
+            Damage = 5;
             Block = 3;
             Text = "Heal X HP where X is the damage dealt from this attack.";
 

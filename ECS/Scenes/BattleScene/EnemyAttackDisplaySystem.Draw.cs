@@ -70,7 +70,10 @@ namespace Crusaders30XX.ECS.Systems
 			var progress = FindEnemyAttackProgress(pa.ContextId);
 			if (progress != null)
 			{
-				lines.Add(($"{def.Text}", TextScale, progress.IsConditionMet ? Color.White : new Color(255, 150, 150, 255)));
+				bool conditionMet = GuidedTutorialService.IsActive(EntityManager)
+					? BattleInputGate.IsTutorialActionAllowed(EntityManager, TutorialAction.ConfirmBlocks)
+					: progress.IsConditionMet;
+				lines.Add(($"{def.Text}", TextScale, GetConditionTextColor(conditionMet)));
 			}
 
 			// Measure panel
@@ -321,21 +324,16 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			Entity primaryBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
 			bool isAnimating = IsAnyBlockAssignmentAnimating();
-			var isInteractable = primaryBtn?.GetComponent<UIElement>()?.IsInteractable ?? false;
+			var ui = primaryBtn?.GetComponent<UIElement>();
+			bool tutorialRequirementMet = BattleInputGate.IsTutorialActionAllowed(
+				EntityManager,
+				TutorialAction.ConfirmBlocks);
+			var isInteractable = ui?.IsInteractable ?? false;
 			bool showConfirm = ctx.PhaseNow == SubPhase.Block
 				&& !_confirmedForContext.Contains(ctx.PlannedAttack.ContextId)
+				&& tutorialRequirementMet
 				&& isInteractable
 				&& !isAnimating;
-
-			// Manage hotkey IsActive flag based on animation state
-			if (primaryBtn != null)
-			{
-				var hotkey = primaryBtn.GetComponent<HotKey>();
-				if (hotkey != null)
-				{
-					hotkey.IsActive = !isAnimating && ctx.PhaseNow == SubPhase.Block && !_confirmedForContext.Contains(ctx.PlannedAttack.ContextId);
-				}
-			}
 
 			if (showConfirm)
 			{
@@ -361,10 +359,12 @@ namespace Crusaders30XX.ECS.Systems
 					new Rectangle(btnRect.X, btnRect.Y, btnRect.Width, btnRect.Height),
 					Color.White);
 
-				var ui = primaryBtn.GetComponent<UIElement>();
 				if (ui != null) { ui.Bounds = btnRect; }
 			}
 		}
+
+		internal static Color GetConditionTextColor(bool conditionMet) =>
+			conditionMet ? Color.White : new Color(255, 150, 150, 255);
 
 		private void UpdateAnchorEntity(DrawContext ctx)
 		{
