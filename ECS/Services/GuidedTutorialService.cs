@@ -143,7 +143,10 @@ namespace Crusaders30XX.ECS.Services
 			var state = GetState(entityManager);
 			if (state == null) return;
 			var playerHp = entityManager.GetEntity("Player")?.GetComponent<HP>();
-			state.PlayerHp = playerHp?.Current ?? state.PlayerHp;
+			int restoredHp = playerHp?.Max ?? 25;
+			if (playerHp != null)
+				playerHp.Current = restoredHp;
+			state.PlayerHp = restoredHp;
 			state.Battle = TutorialBattle.SandCorpse;
 			state.Turn = 1;
 			state.StockHandPrepared = false;

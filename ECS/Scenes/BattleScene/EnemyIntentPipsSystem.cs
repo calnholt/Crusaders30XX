@@ -12,6 +12,8 @@ namespace Crusaders30XX.ECS.Systems
 	[DebugTab("Enemy Intent Pips")] 
 	public class EnemyIntentPipsSystem : Core.System
 	{
+		public const string TargetEntityName = "EnemyIntentPips";
+
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private Texture2D _pixel;
@@ -43,7 +45,37 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<Enemy>().Where(e => e.HasComponent<AttackIntent>());
 		}
 
-		protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
+		protected override void UpdateEntity(Entity entity, GameTime gameTime)
+		{
+			var transform = entity.GetComponent<Transform>();
+			var info = entity.GetComponent<PortraitInfo>();
+			var intent = entity.GetComponent<AttackIntent>();
+			var next = entity.GetComponent<NextTurnAttackIntent>();
+			var target = EnsureTargetEntity();
+			var targetUi = target.GetComponent<UIElement>();
+			var targetTransform = target.GetComponent<Transform>();
+			if (transform == null || info == null || intent == null || targetUi == null || targetTransform == null)
+			{
+				if (targetUi != null)
+				{
+					targetUi.Bounds = Rectangle.Empty;
+					targetUi.IsHidden = true;
+				}
+				return;
+			}
+
+			Rectangle bounds = CalculatePipBounds(
+				transform.Position,
+				intent.Planned.Count,
+				next?.Planned.Count ?? 0,
+				PipRadius,
+				PipGap,
+				OffsetY,
+				RowGap);
+			targetTransform.Position = Vector2.Zero;
+			targetUi.Bounds = bounds;
+			targetUi.IsHidden = bounds.IsEmpty;
+		}
 
 		public void Draw()
 		{
@@ -274,7 +306,68 @@ namespace Crusaders30XX.ECS.Systems
 			float ang = System.MathF.Atan2(dy, dx);
 			_spriteBatch.Draw(_pixel, position: a, sourceRectangle: null, color: color, rotation: ang, origin: Vector2.Zero, scale: new Vector2(len, thickness), effects: SpriteEffects.None, layerDepth: 0f);
 		}
+
+		internal static Rectangle CalculatePipBounds(
+			Vector2 enemyPosition,
+			int currentCount,
+			int nextCount,
+			int pipRadius,
+			int pipGap,
+			int offsetY,
+			int rowGap)
+		{
+			int radius = System.Math.Max(1, pipRadius);
+			int gap = System.Math.Max(0, pipGap);
+			int centerY = (int)System.Math.Round(enemyPosition.Y + offsetY);
+			var rows = new System.Collections.Generic.List<Rectangle>();
+
+			if (currentCount > 0)
+			{
+				int diameter = radius * 2;
+				int width = currentCount * diameter + (currentCount - 1) * gap;
+				rows.Add(new Rectangle(
+					(int)System.Math.Round(enemyPosition.X - width / 2f),
+					centerY - radius,
+					width,
+					diameter));
+			}
+
+			if (nextCount > 0)
+			{
+				int nextRadius = System.Math.Max(1, (int)System.Math.Round(radius * 0.75f));
+				int diameter = nextRadius * 2;
+				int width = nextCount * diameter + (nextCount - 1) * gap;
+				int nextCenterY = centerY + System.Math.Max(0, rowGap) + nextRadius + radius;
+				rows.Add(new Rectangle(
+					(int)System.Math.Round(enemyPosition.X - width / 2f),
+					nextCenterY - nextRadius,
+					width,
+					diameter));
+			}
+
+			if (rows.Count == 0) return Rectangle.Empty;
+			int left = rows.Min(row => row.Left);
+			int top = rows.Min(row => row.Top);
+			int right = rows.Max(row => row.Right);
+			int bottom = rows.Max(row => row.Bottom);
+			return new Rectangle(left, top, right - left, bottom - top);
+		}
+
+		private Entity EnsureTargetEntity()
+		{
+			var entity = EntityManager.GetEntity(TargetEntityName);
+			if (entity == null)
+			{
+				entity = EntityManager.CreateEntity(TargetEntityName);
+				EntityManager.AddComponent(entity, new Transform());
+				EntityManager.AddComponent(entity, new UIElement
+				{
+					IsInteractable = false,
+					IsHidden = true,
+					ShowHoverHighlight = false,
+				});
+			}
+			return entity;
+		}
 	}
 }
-
-

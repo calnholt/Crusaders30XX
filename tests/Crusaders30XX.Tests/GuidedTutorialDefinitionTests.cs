@@ -120,6 +120,115 @@ public class GuidedTutorialDefinitionTests
 	}
 
 	[Fact]
+	public void Guided_messages_are_scheduled_in_their_authored_battle_turn_and_phase()
+	{
+		Assert.Equal(
+			["guided_draw"],
+			GuidedTutorialDefinitions.GetMessageKeys(TutorialBattle.Gleeber, 2, SubPhase.Block, 0));
+		Assert.Equal(
+			["guided_free"],
+			GuidedTutorialDefinitions.GetMessageKeys(TutorialBattle.Gleeber, 2, SubPhase.Action, 1));
+		Assert.Equal(
+			["guided_cost"],
+			GuidedTutorialDefinitions.GetMessageKeys(TutorialBattle.Gleeber, 3, SubPhase.Action, 1));
+		Assert.Empty(GuidedTutorialDefinitions.GetMessageKeys(
+			TutorialBattle.Gleeber,
+			3,
+			SubPhase.Block,
+			0));
+		Assert.Equal(
+			["guided_red", "guided_white", "guided_black", "guided_intent"],
+			GuidedTutorialDefinitions.GetMessageKeys(TutorialBattle.SandCorpse, 1, SubPhase.Block, 0));
+		Assert.Empty(GuidedTutorialDefinitions.GetMessageKeys(
+			TutorialBattle.SandCorpse,
+			1,
+			SubPhase.Block,
+			1));
+	}
+
+	[Theory]
+	[InlineData(true, "Press X while hovering over Fervor.")]
+	[InlineData(false, "Press Spacebar while hovering over Fervor.")]
+	public void Pledge_message_uses_connected_controller_wording(
+		bool isGamepadConnected,
+		string expected)
+	{
+		string text = GuidedTutorialDefinitions.ResolveMessageText(
+			"guided_pledge",
+			"Pledge Fervor.",
+			isGamepadConnected);
+
+		Assert.Contains(expected, text);
+	}
+
+	[Fact]
+	public void Named_entity_target_resolves_parent_transformed_hud_bounds()
+	{
+		EventManager.Clear();
+		try
+		{
+			var manager = new EntityManager();
+			var root = manager.CreateEntity("HUD");
+			manager.AddComponent(root, new Transform { Position = new Vector2(400, 500) });
+			var health = manager.CreateEntity(PlayerHudLayoutSystem.HealthEntityName);
+			manager.AddComponent(health, new Transform { Position = new Vector2(20, 30) });
+			manager.AddComponent(health, new ParentTransform { Parent = root });
+			manager.AddComponent(health, new UIElement
+			{
+				Bounds = new Rectangle(0, 0, 300, 36),
+			});
+			var tutorialManager = new TutorialManager(manager);
+
+			Assert.Equal(
+				new Rectangle(420, 530, 300, 36),
+				tutorialManager.GetEntityBounds(PlayerHudLayoutSystem.HealthEntityName));
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void Guided_attack_requirement_copy_and_exact_sand_blockers_are_authored()
+	{
+		var gleeberTurnThree = GuidedTutorialDefinitions.GetTurn(TutorialBattle.Gleeber, 3);
+		Assert.Equal("Can't be blocked by any cards.", gleeberTurnThree.BlockRules[0].RequirementText);
+
+		var sandTurnTwo = GuidedTutorialDefinitions.GetTurn(TutorialBattle.SandCorpse, 2);
+		Assert.Equal(["litany_of_wrath"], sandTurnTwo.BlockRules[0].AllowedCardIds);
+		Assert.Equal(["absolution"], sandTurnTwo.BlockRules[1].AllowedCardIds);
+
+		var sandTurnThree = GuidedTutorialDefinitions.GetTurn(TutorialBattle.SandCorpse, 3);
+		Assert.Equal(["smite"], sandTurnThree.BlockRules[0].AllowedCardIds);
+		Assert.Equal(["reckoning"], sandTurnThree.BlockRules[1].AllowedCardIds);
+
+		var weapon = GuidedTutorialDefinitions.GuidedMessages.Single(message => message.key == "guided_weapon");
+		Assert.EndsWith("Play Sword.", weapon.text);
+
+		var freeAction = GuidedTutorialDefinitions.GuidedMessages.Single(message => message.key == "guided_free");
+		Assert.EndsWith("Play Litany of Wrath, then play Smite.", freeAction.text);
+	}
+
+	[Fact]
+	public void Beginning_second_battle_fully_restores_player_hp()
+	{
+		var manager = new EntityManager();
+		var stateEntity = manager.CreateEntity("GuidedTutorial");
+		var state = new GuidedTutorial { PlayerHp = 9 };
+		manager.AddComponent(stateEntity, state);
+		var player = manager.CreateEntity("Player");
+		var hp = new HP { Current = 9, Max = 25 };
+		manager.AddComponent(player, hp);
+
+		GuidedTutorialService.BeginSecondBattle(manager);
+
+		Assert.Equal(TutorialBattle.SandCorpse, state.Battle);
+		Assert.Equal(25, state.PlayerHp);
+		Assert.Equal(25, hp.Current);
+	}
+
+	[Fact]
 	public void Enemy_start_advances_tutorial_and_prepares_second_turn_stock_hand()
 	{
 		EventManager.Clear();

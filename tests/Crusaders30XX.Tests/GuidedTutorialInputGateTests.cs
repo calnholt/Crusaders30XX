@@ -55,6 +55,63 @@ public class GuidedTutorialInputGateTests
 	}
 
 	[Fact]
+	public void Gleeber_turn_three_requires_no_blockers()
+	{
+		EventManager.Clear();
+		var manager = new EntityManager();
+		var stateEntity = manager.CreateEntity("GuidedTutorial");
+		manager.AddComponent(stateEntity, new GuidedTutorial
+		{
+			Battle = TutorialBattle.Gleeber,
+			Turn = 3,
+		});
+
+		Assert.True(BattleInputGate.IsTutorialActionAllowed(
+			manager,
+			TutorialAction.ConfirmBlocks));
+
+		AddAssigned(manager, "reckoning");
+
+		Assert.False(BattleInputGate.IsTutorialActionAllowed(
+			manager,
+			TutorialAction.ConfirmBlocks));
+	}
+
+	[Theory]
+	[InlineData(2, 0, "litany_of_wrath", true)]
+	[InlineData(2, 0, "absolution", false)]
+	[InlineData(2, 1, "absolution", true)]
+	[InlineData(2, 1, "litany_of_wrath", false)]
+	[InlineData(3, 0, "smite", true)]
+	[InlineData(3, 0, "reckoning", false)]
+	[InlineData(3, 1, "reckoning", true)]
+	[InlineData(3, 1, "absolution", false)]
+	public void Sand_attacks_require_the_exact_authored_blocker(
+		int turn,
+		int confirmedAttackCount,
+		string cardId,
+		bool expected)
+	{
+		EventManager.Clear();
+		var manager = new EntityManager();
+		var stateEntity = manager.CreateEntity("GuidedTutorial");
+		var state = new GuidedTutorial
+		{
+			Battle = TutorialBattle.SandCorpse,
+			Turn = turn,
+			ConfirmedAttackCountThisTurn = confirmedAttackCount,
+		};
+		if (confirmedAttackCount == 1)
+			state.BlockedCardIdsThisTurn.Add(turn == 2 ? "litany_of_wrath" : "smite");
+		manager.AddComponent(stateEntity, state);
+		AddAssigned(manager, cardId);
+
+		Assert.Equal(
+			expected,
+			BattleInputGate.IsTutorialActionAllowed(manager, TutorialAction.ConfirmBlocks));
+	}
+
+	[Fact]
 	public void Confirmation_validity_is_side_effect_free_and_tracks_requirement_state()
 	{
 		EventManager.Clear();

@@ -106,25 +106,14 @@ namespace Crusaders30XX.ECS.Systems
 
         private void QueueGuidedTutorials(GuidedTutorial guided, SubPhase phase)
         {
-            if (guided.Battle == TutorialBattle.Gleeber)
+            foreach (string key in GuidedTutorialDefinitions.GetMessageKeys(
+                guided.Battle,
+                guided.Turn,
+                phase,
+                guided.ConfirmedAttackCountThisTurn))
             {
-                if (guided.Turn == 1 && phase == SubPhase.Block)
-                    QueueTutorialRange("guided_win", "guided_loss", "guided_block");
-                else if (guided.Turn == 1 && phase == SubPhase.Action)
-                    QueueTutorialRange("guided_ap", "guided_damage");
-                else if (guided.Turn == 2 && phase == SubPhase.Block)
-                    QueueTutorialRange("guided_draw", "guided_free", "guided_cost");
-                else if (guided.Turn == 3 && phase == SubPhase.Block)
-                    QueueTutorialRange("guided_red", "guided_white", "guided_black", "guided_intent");
-                return;
+                TryQueueTutorial(key);
             }
-
-            if (guided.Turn == 1 && phase == SubPhase.Action)
-                QueueTutorialRange("guided_weapon");
-            else if (guided.Turn == 2 && phase == SubPhase.Action)
-                QueueTutorialRange("guided_pledge", "guided_fervor");
-            else if (guided.Turn == 3 && phase == SubPhase.Action)
-                QueueTutorialRange("guided_lethal");
         }
 
         private void QueueTutorialRange(params string[] keys)
@@ -360,7 +349,7 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private Rectangle GetEntityBounds(string entityName)
+        internal Rectangle GetEntityBounds(string entityName)
         {
             var entity = EntityManager.GetEntity(entityName);
             if (entity == null)
@@ -368,7 +357,7 @@ namespace Crusaders30XX.ECS.Systems
 
             var ui = entity.GetComponent<UIElement>();
             if (ui != null && ui.Bounds.Width > 0 && ui.Bounds.Height > 0)
-                return ui.Bounds;
+                return TransformResolverService.ResolveUIBounds(EntityManager, entity, ui);
 
             var transform = entity.GetComponent<Transform>();
             if (transform != null)

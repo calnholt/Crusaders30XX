@@ -2,6 +2,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.Enemies;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
@@ -76,6 +77,30 @@ public class TestFightSetupServiceTests
 			Assert.Empty(player.GetComponent<AppliedPassives>().Passives);
 			Assert.Equal(20, player.GetComponent<HP>().Max);
 			Assert.Equal(20, player.GetComponent<HP>().Current);
+		}
+		finally
+		{
+			EventManager.Clear();
+			TestFightRuntime.Reset();
+		}
+	}
+
+	[Fact]
+	public void RegenerateDeck_clears_accumulated_temperance()
+	{
+		EventManager.Clear();
+		TestFightRuntime.Configure(Options());
+		try
+		{
+			var world = BuildWorld();
+			TestFightSetupService.PrepareWorld(world);
+			_ = new TemperanceManagerSystem(world.EntityManager);
+			var player = world.EntityManager.GetEntity("Player");
+			player.GetComponent<Temperance>().Amount = 3;
+
+			TestFightSetupService.RegenerateDeck(world.EntityManager);
+
+			Assert.Equal(0, player.GetComponent<Temperance>().Amount);
 		}
 		finally
 		{

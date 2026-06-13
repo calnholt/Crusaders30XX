@@ -110,12 +110,12 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						var currentIds = enemyCmp?.EnemyBase?.GetAttackIds(EntityManager, turnNumber) ?? [];
 						LoggingService.Append("EnemyIntentPlanningSystem.OnStartEnemyTurn", new System.Text.Json.Nodes.JsonObject { ["action"] = "Planning current turn", ["currentTurnIds"] = string.Join(", ", currentIds) });
-						AddPlanned(currentIds, intent, enemyId);
+						AddPlanned(currentIds, intent, enemyId, turnNumber);
 					}
 					// Plan next-turn preview using next turn's selection
 					var nextIds = enemyCmp?.EnemyBase?.GetAttackIds(EntityManager, turnNumber + 1) ?? [];
 					{
-						AddPlanned(nextIds, next, enemyId);
+						AddPlanned(nextIds, next, enemyId, turnNumber + 1);
 					}
 				}
 				_lastPlannedTurnNumber = turnNumber;
@@ -132,7 +132,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void AddPlanned(IEnumerable<string> attackIds, dynamic target, string enemyId)
+		private void AddPlanned(IEnumerable<string> attackIds, dynamic target, string enemyId, int plannedTurn)
 		{
 			int index = (target.Planned is List<PlannedAttack> l) ? l.Count : 0;
 			foreach (var id in attackIds)
@@ -141,8 +141,7 @@ namespace Crusaders30XX.ECS.Systems
 				var tutorialState = GuidedTutorialService.GetState(EntityManager);
 				if (tutorialState != null)
 				{
-					int definitionTurn = tutorialState.Turn + (target is NextTurnAttackIntent ? 1 : 0);
-					var turn = GuidedTutorialDefinitions.GetTurn(tutorialState.Battle, definitionTurn);
+					var turn = GuidedTutorialDefinitions.GetTurn(tutorialState.Battle, plannedTurn);
 					int ruleIndex = Math.Min(index, turn.BlockRules.Count - 1);
 					if (ruleIndex >= 0)
 					{

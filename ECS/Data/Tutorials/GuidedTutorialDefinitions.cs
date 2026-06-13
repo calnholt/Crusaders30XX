@@ -56,13 +56,13 @@ namespace Crusaders30XX.ECS.Data.Tutorials
 			new() { key = "guided_ap", text = "You receive one AP each turn. Smite uses one AP.", targetType = "ui_region", targetId = "ap_and_smite_ap", bubbleOrientation = "right" },
 			new() { key = "guided_damage", text = "DAMAGE shows how much HP an attack removes. Play Smite.", targetType = "ui_region", targetId = "smite_damage", bubbleOrientation = "top" },
 			new() { key = "guided_draw", text = "At the start of each turn, draw until you hold four cards.", targetType = "ui_region", targetId = "player_hand", bubbleOrientation = "top" },
-			new() { key = "guided_free", text = "Free Actions do not spend AP. Litany of Wrath is a Free Action.", targetType = "entity_name", targetId = "Card_Litany of Wrath_Black_1", bubbleOrientation = "top" },
-			new() { key = "guided_cost", text = "Card costs discard other cards from your hand. Gray cost symbols accept any color.", targetType = "ui_region", targetId = "absolution_reckoning_costs", bubbleOrientation = "top" },
+			new() { key = "guided_free", text = "Free Actions do not spend AP. Litany of Wrath is a Free Action. Play Litany of Wrath, then play Smite.", targetType = "entity_name", targetId = "Card_Litany of Wrath_Black_1", bubbleOrientation = "top" },
+			new() { key = "guided_cost", text = "Card costs discard other cards from your hand. Gray cost symbols accept any color. Play Absolution OR Litany of Wrath then Reckoning.", targetType = "ui_region", targetId = "absolution_reckoning_costs", bubbleOrientation = "top" },
 			new() { key = "guided_red", text = "Blocking with red cards builds Courage.", targetType = "ui_region", targetId = "absolution_and_courage", bubbleOrientation = "right" },
 			new() { key = "guided_white", text = "Blocking with white cards builds Temperance.", targetType = "ui_region", targetId = "reckoning_and_temperance", bubbleOrientation = "right" },
 			new() { key = "guided_black", text = "Black cards receive one additional BLOCK.", targetType = "ui_region", targetId = "smite_and_litany", bubbleOrientation = "top" },
 			new() { key = "guided_intent", text = "Intent pips show the order of incoming enemy attacks.", targetType = "entity_name", targetId = "EnemyIntentPips", bubbleOrientation = "bottom" },
-			new() { key = "guided_weapon", text = "Your weapon appears during the Action phase and can be used once each turn.", targetType = "entity_name", targetId = "Weapon", bubbleOrientation = "top" },
+			new() { key = "guided_weapon", text = "Your weapon appears during the Action phase and can be used once each turn. Play Sword.", targetType = "entity_name", targetId = "Weapon", bubbleOrientation = "top" },
 			new() { key = "guided_pledge", text = "Pledge one card to retain it for a later turn. Pledged cards cannot block or pay costs.", targetType = "ui_region", targetId = "fervor_and_pledge", bubbleOrientation = "right" },
 			new() { key = "guided_fervor", text = "Retain Fervor while building Courage so its bonus damage is ready later.", targetType = "entity_name", targetId = "Card_Fervor_Red_0", bubbleOrientation = "top" },
 			new() { key = "guided_lethal", text = "Play Litany of Wrath, then play pledged Fervor for lethal damage.", targetType = "ui_region", targetId = "litany_and_fervor", bubbleOrientation = "top" },
@@ -86,7 +86,7 @@ namespace Crusaders30XX.ECS.Data.Tutorials
 				Turn(
 					[Black("smite"), Black("litany_of_wrath"), Black("reckoning"), Black("absolution")],
 					["tutorial_gleeber_strike"],
-					[new TutorialBlockRule([], 0, MustNotBlock: true, RequirementText: "Must not be blocked.")],
+					[new TutorialBlockRule([], 0, MustNotBlock: true, RequirementText: "Can't be blocked by any cards.")],
 					[]),
 			]);
 
@@ -107,8 +107,8 @@ namespace Crusaders30XX.ECS.Data.Tutorials
 					[Red("fervor"), Black("smite"), Black("litany_of_wrath"), Red("absolution")],
 					["tutorial_sand_blast", "tutorial_sand_storm"],
 					[
-						Rule(["litany_of_wrath", "absolution"], 1, text: "Must be blocked by Litany of Wrath or Absolution. Each card must block one attack."),
-						Rule(["litany_of_wrath", "absolution"], 1, text: "Must be blocked by Litany of Wrath or Absolution. Each card must block one attack."),
+						Rule(["litany_of_wrath"], 1, true, text: "Must be blocked by Litany of Wrath."),
+						Rule(["absolution"], 1, true, text: "Must be blocked by Absolution."),
 					],
 					["smite"],
 					"fervor"),
@@ -116,11 +116,55 @@ namespace Crusaders30XX.ECS.Data.Tutorials
 					[Red("smite"), Red("litany_of_wrath"), Red("reckoning"), Red("absolution")],
 					["tutorial_sand_blast", "tutorial_sand_storm"],
 					[
-						Rule(["smite", "reckoning", "absolution"], 1, text: "Across both attacks, use exactly two blockers from Smite, Reckoning, and Absolution. Keep Litany of Wrath and one other card in hand."),
-						Rule(["smite", "reckoning", "absolution"], 1, text: "Across both attacks, use exactly two blockers from Smite, Reckoning, and Absolution. Keep Litany of Wrath and one other card in hand."),
+						Rule(["smite"], 1, true, text: "Must be blocked by Smite."),
+						Rule(["reckoning"], 1, true, text: "Must be blocked by Reckoning."),
 					],
 					["litany_of_wrath", "fervor"]),
 			]);
+
+		public static IReadOnlyList<string> GetMessageKeys(
+			TutorialBattle battle,
+			int turn,
+			SubPhase phase,
+			int confirmedAttackCount)
+		{
+			if (battle == TutorialBattle.Gleeber)
+			{
+				if (turn == 1 && phase == SubPhase.Block)
+					return ["guided_win", "guided_loss", "guided_block"];
+				if (turn == 1 && phase == SubPhase.Action)
+					return ["guided_ap", "guided_damage"];
+				if (turn == 2 && phase == SubPhase.Block)
+					return ["guided_draw"];
+				if (turn == 2 && phase == SubPhase.Action)
+					return ["guided_free"];
+				if (turn == 3 && phase == SubPhase.Action)
+					return ["guided_cost"];
+				return Array.Empty<string>();
+			}
+
+			if (turn == 1 && phase == SubPhase.Block && confirmedAttackCount == 0)
+				return ["guided_red", "guided_white", "guided_black", "guided_intent"];
+			if (turn == 1 && phase == SubPhase.Action)
+				return ["guided_weapon"];
+			if (turn == 2 && phase == SubPhase.Action)
+				return ["guided_pledge", "guided_fervor"];
+			if (turn == 3 && phase == SubPhase.Action)
+				return ["guided_lethal"];
+			return Array.Empty<string>();
+		}
+
+		public static string ResolveMessageText(
+			string key,
+			string defaultText,
+			bool isGamepadConnected)
+		{
+			if (!string.Equals(key, "guided_pledge", StringComparison.Ordinal))
+				return defaultText ?? string.Empty;
+
+			string input = isGamepadConnected ? "X" : "Spacebar";
+			return $"{defaultText} Press {input} while hovering over Fervor.";
+		}
 
 		public static TutorialBattleDefinition GetBattle(TutorialBattle battle) =>
 			battle == TutorialBattle.SandCorpse ? SandCorpse : Gleeber;

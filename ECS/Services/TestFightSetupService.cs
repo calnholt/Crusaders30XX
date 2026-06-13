@@ -191,6 +191,8 @@ namespace Crusaders30XX.ECS.Services
 			battleState?.TurnTracking?.Clear();
 			battleState?.PhaseTracking?.Clear();
 
+			EventManager.Publish(new SetTemperanceEvent { Amount = 0 });
+
 			var hp = player.GetComponent<HP>();
 			if (hp != null)
 			{

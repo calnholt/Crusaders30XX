@@ -13,6 +13,7 @@ using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Data.Locations;
 
 namespace Crusaders30XX.ECS.Systems
@@ -225,7 +226,11 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
-            var lines = TextUtils.WrapText(_font, _currentTutorial.text, BubbleTextScale, BubbleMaxWidth - BubblePadX * 2);
+            string text = GuidedTutorialDefinitions.ResolveMessageText(
+                _currentTutorial.key,
+                _currentTutorial.text,
+                GamePad.GetCapabilities(PlayerIndex.One).IsConnected);
+            var lines = TextUtils.WrapText(_font, text, BubbleTextScale, BubbleMaxWidth - BubblePadX * 2);
             _wrappedText = string.Join("\n", lines);
         }
 
@@ -530,4 +535,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
