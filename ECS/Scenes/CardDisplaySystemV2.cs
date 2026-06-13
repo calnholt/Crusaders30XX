@@ -1032,12 +1032,10 @@ namespace Crusaders30XX.ECS.Systems
                         {
                             Source = player,
                             Target = enemy,
-                            Delta = -baseDamage,
                             AttackCard = entity,
                             DamageType = ModifyTypeEnum.Attack
                         };
-                        int passiveDelta = AppliedPassivesService.GetPassiveDelta(preview, ReadOnly: true);
-                        finalDamage = Math.Max(0, -(preview.Delta + passiveDelta));
+                        finalDamage = AppliedPassivesService.GetPreviewAttackDamage(preview, baseDamage, ReadOnly: true);
                     }
                 }
                 catch { finalDamage = baseDamage; }

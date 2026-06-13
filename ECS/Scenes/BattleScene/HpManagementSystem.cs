@@ -229,10 +229,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		private int TryConsumeGuard(Entity target, int rawDamage)
 		{
-			var passives = target.GetComponent<AppliedPassives>()?.Passives;
-			if (passives == null) return 0;
-			if (!passives.TryGetValue(AppliedPassiveType.Guard, out int guardStacks) || guardStacks <= 0) return 0;
-			int absorbed = Math.Min(guardStacks, rawDamage);
+			int absorbed = AppliedPassivesService.GetGuardAbsorption(target, rawDamage);
+			if (absorbed <= 0) return 0;
 			EventManager.Publish(new RemovePassive { Owner = target, Type = AppliedPassiveType.Guard });
 			EventManager.Publish(new PassiveTriggered { Owner = target, Type = AppliedPassiveType.Guard });
 			return absorbed;

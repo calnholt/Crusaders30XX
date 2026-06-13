@@ -1,3 +1,4 @@
+using System;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -6,6 +7,34 @@ namespace Crusaders30XX.ECS.Systems
 {
     internal static class AppliedPassivesService
     {
+      public static int GetGuardAbsorption(Entity target, int rawAttackDamage)
+      {
+        if (rawAttackDamage <= 0 || target == null) return 0;
+        var passives = target.GetComponent<AppliedPassives>()?.Passives;
+        if (passives == null) return 0;
+        if (!passives.TryGetValue(AppliedPassiveType.Guard, out int guardStacks) || guardStacks <= 0) return 0;
+        return Math.Min(guardStacks, rawAttackDamage);
+      }
+
+      public static int GetPreviewAttackDamage(ModifyHpRequestEvent e, int rawDamage, bool ReadOnly = true)
+      {
+        e.Delta = -rawDamage;
+        if (e.DamageType == ModifyTypeEnum.Attack && rawDamage > 0)
+        {
+          int guardAbsorbed = GetGuardAbsorption(e.Target, rawDamage);
+          if (guardAbsorbed > 0)
+          {
+            e.Delta += guardAbsorbed;
+            if (e.Delta >= 0) return 0;
+          }
+        }
+
+        int passiveDelta = GetPassiveDelta(e, ReadOnly);
+        int newDelta = e.Delta + passiveDelta;
+        if (e.DamageType == ModifyTypeEnum.Attack && newDelta > 0) return 0;
+        return Math.Max(0, -newDelta);
+      }
+
       public static int GetPassiveDelta(ModifyHpRequestEvent e, bool ReadOnly = false)
       {
         if (e.DamageType == ModifyTypeEnum.Heal)
