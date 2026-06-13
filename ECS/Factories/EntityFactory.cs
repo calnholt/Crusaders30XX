@@ -27,7 +27,10 @@ namespace Crusaders30XX.ECS.Factories
         /// <summary>
         /// Creates a player entity
         /// </summary>
-        public static Entity CreatePlayer(World world, string name = "Player")
+        public static Entity CreatePlayer(
+            World world,
+            string name = "Player",
+            LoadoutDefinition loadoutOverride = null)
         {
             var entity = world.CreateEntity(name);
             
@@ -39,8 +42,12 @@ namespace Crusaders30XX.ECS.Factories
                 Scale = Vector2.One
             };
             
-            LoadoutDefinitionCache.TryGet("loadout_1", out var loadout);
-            loadout ??= SaveCache.GetLoadout("loadout_1");
+            var loadout = loadoutOverride;
+            if (loadout == null)
+            {
+                LoadoutDefinitionCache.TryGet("loadout_1", out loadout);
+                loadout ??= SaveCache.GetLoadout("loadout_1");
+            }
             loadout ??= new LoadoutDefinition { id = "loadout_1", name = "loadout_1" };
 
             var sprite = new Sprite

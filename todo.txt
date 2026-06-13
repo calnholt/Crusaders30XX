@@ -5,19 +5,8 @@ Gameplay
 - weaks cards that are permanently added to deck (colorless 2 block, etc)
 
 cards
+- gain 4 courage. at the end of the turn, lose all courage.
 
-hammer
--* as an additional cost, lose 1 courage. Gain 2 vigor. free action, 2block
--* as an additional cost, discard your pledge card that wasn't pledged this turn. Gain sharpen 6. 3 block
--* if no cards were discarded to play this, this gains +6 damage. [White, Any] 7dmg, 3block
--* [black, any] 4 damage free action draw two cards, 3block
--* pledge the top card of your deck is you do not have a pledged card 1dmg 0 cost 3block x1 
--* block card type, 4 block (no text)
--* lose 2 courage, gain 1 vigor. Repeat up to three times if possible.
-- absolution
-- temper the blade
-- impale
-- iron covenant x 1
 
 tech debt
 - remove battlestateinfo

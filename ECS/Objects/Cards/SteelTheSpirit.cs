@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class SteelTheSpirit : CardBase
     {
-        private int CourageCost = 1;
+        private int CourageCost = 3;
         private int VigorGained = 2;
 
         public SteelTheSpirit()

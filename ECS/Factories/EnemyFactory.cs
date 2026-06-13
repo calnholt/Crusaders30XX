@@ -55,6 +55,11 @@ namespace Crusaders30XX.ECS.Factories
                 : null;
         }
 
+        public static bool IsRegistered(string enemyId)
+        {
+            return !string.IsNullOrWhiteSpace(enemyId) && EnemyConstructors.ContainsKey(enemyId);
+        }
+
         /// <summary>
         /// Returns a dictionary of all available enemies, keyed by enemy ID
         /// </summary>

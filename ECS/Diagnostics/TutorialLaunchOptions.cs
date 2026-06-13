@@ -16,6 +16,11 @@ namespace Crusaders30XX.Diagnostics
                 args.Any(a => string.Equals(a, SkipTutorialsLaunchFlag, StringComparison.OrdinalIgnoreCase));
         }
 
+        public static void ForceSkip()
+        {
+            SkipTutorials = true;
+        }
+
         public static string[] StripLaunchFlag(string[] args)
         {
             if (args == null || args.Length == 0)

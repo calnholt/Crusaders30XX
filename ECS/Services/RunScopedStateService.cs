@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Systems;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Services
 {
@@ -17,6 +18,7 @@ namespace Crusaders30XX.ECS.Services
 
 		public static void HydrateRunLongPassivesOntoPlayer(Entity player)
 		{
+			if (TestFightRuntime.IsActive) return;
 			if (player == null) return;
 			var ap = player.GetComponent<AppliedPassives>();
 			if (ap == null) return;
@@ -37,6 +39,7 @@ namespace Crusaders30XX.ECS.Services
 
 		public static void SyncRunLongPassivesFromPlayer(Entity player)
 		{
+			if (TestFightRuntime.IsActive) return;
 			if (player == null || !player.HasComponent<Player>()) return;
 			var ap = player.GetComponent<AppliedPassives>();
 			foreach (var type in AppliedPassivesManagementSystem.GetRunLongPassives())
@@ -52,6 +55,7 @@ namespace Crusaders30XX.ECS.Services
 
 		public static void HydrateRunCardRestrictions(EntityManager entityManager)
 		{
+			if (TestFightRuntime.IsActive) return;
 			foreach (var card in entityManager.GetEntitiesWithComponent<RunDeckCard>())
 			{
 				if (!card.IsActive) continue;
@@ -63,6 +67,7 @@ namespace Crusaders30XX.ECS.Services
 
 		public static void SyncCardRestrictionsFromComponents(Entity card)
 		{
+			if (TestFightRuntime.IsActive) return;
 			if (card == null) return;
 			var key = card.GetComponent<RunDeckCard>()?.CardKey;
 			if (string.IsNullOrWhiteSpace(key)) return;

@@ -25,6 +25,46 @@ public sealed class HammerStarterCardTests : IDisposable
 	}
 
 	[Fact]
+	public void Battering_blow_gains_courage_when_no_cards_were_discarded()
+	{
+		var entityManager = BuildPlayerWithCourage(0);
+		_ = new CourageManagerSystem(entityManager);
+
+		var card = new BatteringBlow();
+		var cardEntity = entityManager.CreateEntity("BatteringBlow");
+		entityManager.AddComponent(cardEntity, new CardData { Card = card });
+		entityManager.AddComponent(cardEntity, new ModifiedDamage());
+
+		card.OnPlay(entityManager, cardEntity);
+
+		var player = entityManager.GetEntity("Player");
+		Assert.Equal(3, player.GetComponent<Courage>().Amount);
+	}
+
+	[Fact]
+	public void Battering_blow_does_not_gain_courage_when_cards_were_discarded()
+	{
+		var entityManager = BuildPlayerWithCourage(0);
+		_ = new CourageManagerSystem(entityManager);
+
+		var cacheEntity = entityManager.CreateEntity("LastPaymentCache");
+		entityManager.AddComponent(cacheEntity, new LastPaymentCache
+		{
+			PaymentCards = [entityManager.CreateEntity("Payment")]
+		});
+
+		var card = new BatteringBlow();
+		var cardEntity = entityManager.CreateEntity("BatteringBlow");
+		entityManager.AddComponent(cardEntity, new CardData { Card = card });
+		entityManager.AddComponent(cardEntity, new ModifiedDamage());
+
+		card.OnPlay(entityManager, cardEntity);
+
+		var player = entityManager.GetEntity("Player");
+		Assert.Equal(0, player.GetComponent<Courage>().Amount);
+	}
+
+	[Fact]
 	public void Unburdened_strike_gains_bonus_damage_when_no_cards_were_discarded()
 	{
 		var entityManager = new EntityManager();

@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Dialog;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
@@ -111,6 +112,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private static bool HasDialogueSegment(string definitionId, string segmentId)
 		{
+			if (TestFightRuntime.IsActive) return false;
 			return DialogDefinitionCache.TryGet(definitionId, out var definition)
 				&& definition?.ResolveSegment(segmentId)?.Count > 0;
 		}

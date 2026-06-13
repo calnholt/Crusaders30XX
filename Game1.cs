@@ -69,6 +69,7 @@ public class Game1 : Game
     private CardListModalSystem _cardListModalSystem;
     private DisplaySnapshotHost _snapshotHost;
     private readonly DisplaySnapshotLaunchOptions _snapshotOptions;
+    private readonly TestFightLaunchOptions _testFightOptions;
 #if DEBUG
     private bool _writePerfReportOnExit;
 #endif
@@ -101,9 +102,16 @@ public class Game1 : Game
     public static int VirtualHeight = 1080;
     public static Rectangle RenderDestination { get; private set; }
     
-    public Game1(DisplaySnapshotLaunchOptions snapshotOptions = null)
+    public Game1(
+        DisplaySnapshotLaunchOptions snapshotOptions = null,
+        TestFightLaunchOptions testFightOptions = null)
     {
         _snapshotOptions = snapshotOptions;
+        _testFightOptions = testFightOptions;
+        if (_testFightOptions != null)
+        {
+            TestFightRuntime.Configure(_testFightOptions);
+        }
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         Window.AllowUserResizing = true;
@@ -131,7 +139,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         LoggingService.Initialize();
-        CardUsageTelemetryRuntime.Initialize(_snapshotOptions == null);
+        CardUsageTelemetryRuntime.Initialize(_snapshotOptions == null && _testFightOptions == null);
         CalculateRenderDestination();
         // Initialize ECS World
         _world = new World();
@@ -147,7 +155,10 @@ public class Game1 : Game
         FontSingleton.Initialize(Content);
 
         // Initialize Achievement system
-        AchievementManager.Initialize(_world.EntityManager);
+        if (_testFightOptions == null)
+        {
+            AchievementManager.Initialize(_world.EntityManager);
+        }
 
         // Seed a SceneState entity
         var sceneEntity = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault();
@@ -273,6 +284,16 @@ public class Game1 : Game
 
         _snapshotHost = DisplaySnapshotHost.TryCreate(_snapshotOptions, this, GraphicsDevice, Content);
         _snapshotHost?.OnGameReady(_world, sceneEntity, _spriteBatch);
+
+        if (_testFightOptions != null)
+        {
+            TestFightSetupService.PrepareWorld(_world);
+            EventManager.Publish(new ShowTransition
+            {
+                Scene = SceneId.Battle,
+                SkipWipe = true,
+            });
+        }
     }
     
     protected override void Update(GameTime gameTime)

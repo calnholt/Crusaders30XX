@@ -21,6 +21,9 @@ dotnet run --launch-profile no-shaders
 # Run without in-battle tutorials (dev / testing)
 dotnet run -- skip-tutorials
 
+# Repeated isolated balance fight; tutorials and persistence are disabled
+dotnet run -- test-fight hammer skeleton hard
+
 # Display snapshots (headless PNG capture for visual verification)
 # See docs/display-snapshots.md for all commands
 dotnet run -- snapshot card strike
@@ -140,4 +143,3 @@ The `ParallaxLayerSystem` is fully agnostic — external systems cooperate with 
 ### New Component
 
 1. Create class implementing `IComponent`
-

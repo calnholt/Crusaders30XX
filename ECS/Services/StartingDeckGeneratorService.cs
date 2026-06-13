@@ -95,7 +95,7 @@ namespace Crusaders30XX.ECS.Services
 				"stoke_the_furnace",
 				"absolution",
 				"temper_the_blade",
-				"impale",
+				"battering_blow",
 				"iron_covenant",
 			};
 		}

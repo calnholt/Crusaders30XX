@@ -11,6 +11,37 @@ if (!ShaderRuntimeOptions.ShadersEnabled)
     Console.WriteLine("[Launch] GPU screen effects disabled (no-shaders)");
 }
 
+var appArgs = TutorialLaunchOptions.StripLaunchFlag(
+    NewGameLaunchOptions.StripLaunchFlag(ShaderRuntimeOptions.StripLaunchFlags(args)));
+
+DisplaySnapshotLaunchOptions snapshotOptions = null;
+TestFightLaunchOptions testFightOptions = null;
+try
+{
+    if (TestFightLaunchOptions.TryParse(appArgs, out var parsedTestFight))
+    {
+        if (NewGameLaunchOptions.DeleteSaveBeforeLaunch)
+        {
+            throw new TestFightSetupException(
+                "The new flag cannot be combined with test-fight because test fights do not modify saves.");
+        }
+        testFightOptions = parsedTestFight;
+        TutorialLaunchOptions.ForceSkip();
+        Console.WriteLine(
+            $"[Launch] Test fight: {testFightOptions.WeaponId} vs {testFightOptions.EnemyId} ({testFightOptions.Difficulty})");
+    }
+    else if (DisplaySnapshotLaunchOptions.TryParse(appArgs, out var parsed))
+    {
+        snapshotOptions = parsed;
+    }
+}
+catch (Exception ex) when (ex is DisplaySnapshotSetupException or TestFightSetupException)
+{
+    Console.Error.WriteLine($"[Launch] {ex.Message}");
+    Environment.ExitCode = 1;
+    return;
+}
+
 if (TutorialLaunchOptions.SkipTutorials)
 {
     Console.WriteLine("[Launch] Tutorials disabled (skip-tutorials)");
@@ -21,23 +52,5 @@ if (NewGameLaunchOptions.DeleteSaveBeforeLaunch)
     SaveCache.DeleteSaveFilesIfPresent();
 }
 
-var appArgs = TutorialLaunchOptions.StripLaunchFlag(
-    NewGameLaunchOptions.StripLaunchFlag(ShaderRuntimeOptions.StripLaunchFlags(args)));
-
-DisplaySnapshotLaunchOptions snapshotOptions = null;
-try
-{
-    if (DisplaySnapshotLaunchOptions.TryParse(appArgs, out var parsed))
-    {
-        snapshotOptions = parsed;
-    }
-}
-catch (DisplaySnapshotSetupException ex)
-{
-    Console.Error.WriteLine($"[DisplaySnapshot] {ex.Message}");
-    Environment.ExitCode = 1;
-    return;
-}
-
-using var game = new Crusaders30XX.Game1(snapshotOptions);
+using var game = new Crusaders30XX.Game1(snapshotOptions, testFightOptions);
 game.Run();

@@ -62,6 +62,7 @@ namespace Crusaders30XX.ECS.Systems
 		private CardVisualSettingsDebugSystem _cardVisualSettingsDebugSystem;
 		private HpManagementSystem _hpManagementSystem;
 		private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
+		private TestFightHpDisplaySystem _testFightHpDisplaySystem;
 		private EnemyDisplaySystem _enemyDisplaySystem;
 		private GuardianAngelDisplaySystem _guardianAngelDisplaySystem;
 		private EnemyIntentPipsSystem _enemyIntentPipsSystem;
@@ -97,6 +98,7 @@ namespace Crusaders30XX.ECS.Systems
 		private PayCostOverlaySystem _payCostOverlaySystem;
 		private CantPlayCardMessageSystem _cantPlayCardMessageSystem;
 		private GameOverOverlayDisplaySystem _gameOverOverlayDisplaySystem;
+		private TestFightFlowSystem _testFightFlowSystem;
 		private WeaponManagementSystem _weaponManagementSystem;
 		private EquipmentManagerSystem _equipmentManagerSystem;
 		private MedalManagerSystem _medalManagerSystem;
@@ -380,9 +382,10 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("DiscardSpecificCardHighlightSystem.Draw", _discardSpecificCardHighlightSystem.Draw);
 			FrameProfiler.Measure("IntimidateDisplaySystem.Draw", _intimidateDisplaySystem.Draw);
 			FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", _battlePhaseDisplaySystem.Draw);
+			FrameProfiler.Measure("TestFightHpDisplaySystem.Draw", _testFightHpDisplaySystem.Draw);
 			FrameProfiler.Measure("DamageModificationDisplaySystem.Draw", _damageModificationDisplaySystem.Draw);
-			if (!guidedTutorial) FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);
-		if (!guidedTutorial && _gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
+			if (!guidedTutorial && !TestFightRuntime.IsActive) FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);
+		if (!guidedTutorial && !TestFightRuntime.IsActive && _gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
 		if (_tutorialDisplaySystem != null) FrameProfiler.Measure("TutorialDisplaySystem.Draw", _tutorialDisplaySystem.Draw);
 		}
 
@@ -395,10 +398,14 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			EntityFactory.CreateGameState(_world);
 			bool guidedTutorial = GuidedTutorialService.IsActive(EntityManager);
-			var deckEntity = guidedTutorial
+			var deckEntity = TestFightRuntime.IsActive
+				? EntityManager.GetEntity("Deck")
+				: guidedTutorial
 				? EntityManager.GetEntitiesWithComponent<StockHand>().FirstOrDefault()
 				: RunDeckService.EnsureRunDeck(EntityManager);
-			var player = guidedTutorial
+			var player = TestFightRuntime.IsActive
+				? EntityManager.GetEntity("Player")
+				: guidedTutorial
 				? EntityManager.GetEntity("Player")
 				: RunPlayerService.EnsureRunPlayer(_world);
 			var playerComp = player?.GetComponent<Player>();
@@ -422,6 +429,11 @@ namespace Crusaders30XX.ECS.Systems
 			bool guidedTutorial = GuidedTutorialService.IsActive(EntityManager);
 			if (guidedTutorial)
 				GuidedTutorialService.PrepareStockHand(EntityManager);
+			else if (TestFightRuntime.IsActive)
+			{
+				TestFightSetupService.RegenerateDeck(EntityManager);
+				EventManager.Publish(new ResetDeckEvent { });
+			}
 			else
 			{
 				RunDeckService.EnsureRunDeck(EntityManager);
@@ -463,6 +475,7 @@ namespace Crusaders30XX.ECS.Systems
 			LoggingService.Append("BattleSceneSystem.InitBattle", new System.Text.Json.Nodes.JsonObject { ["eventsCount"] = queued.Events.Count, ["currentIndex"] = queued.CurrentIndex });
 			var nextEvent = queued.Events[++queued.CurrentIndex];
 			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, nextEvent.EventId, EntityManager, nextEvent.Difficulty);
+			TestFightSetupService.ApplyEnemyHpDelta(nextEnemy);
 			if (!guidedTutorial)
 				EventManager.Publish(new ResetDeckEvent { });
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
@@ -568,6 +581,7 @@ namespace Crusaders30XX.ECS.Systems
 			_pledgeManagementSystem = new PledgeManagementSystem(_world.EntityManager);
 			_eventQueueSystem = new EventQueueSystem(_world.EntityManager);
 			_battlePhaseDisplaySystem = new BattlePhaseDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_testFightHpDisplaySystem = new TestFightHpDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_enemyDisplaySystem = new EnemyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_guardianAngelDisplaySystem = new GuardianAngelDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_enemyIntentPipsSystem = new EnemyIntentPipsSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -587,6 +601,7 @@ namespace Crusaders30XX.ECS.Systems
 			_payCostOverlaySystem = new PayCostOverlaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_cantPlayCardMessageSystem = new CantPlayCardMessageSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_gameOverOverlayDisplaySystem = new GameOverOverlayDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_testFightFlowSystem = new TestFightFlowSystem(_world.EntityManager);
 			_enemyIntentPlanningSystem = new EnemyIntentPlanningSystem(_world.EntityManager);
 			_enemyAttackProgressManagementSystem = new EnemyAttackProgressManagementSystem(_world.EntityManager);
 			_markedForSpecificDiscardSystem = new MarkedForSpecificDiscardSystem(_world.EntityManager);
@@ -694,6 +709,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_enemyPhaseFlowSystem);
 			_world.AddSystem(_pixelBurstDisplaySystem);
 			_world.AddSystem(_battlePhaseDisplaySystem);
+			_world.AddSystem(_testFightHpDisplaySystem);
 			_world.AddSystem(_enemyDisplaySystem);
 			_world.AddSystem(_enemyIntentPipsSystem);
 			_world.AddSystem(_poisonSystem);
@@ -741,6 +757,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_payCostOverlaySystem);
 			_world.AddSystem(_cantPlayCardMessageSystem);
 			_world.AddSystem(_gameOverOverlayDisplaySystem);
+			_world.AddSystem(_testFightFlowSystem);
 			_world.AddSystem(_discardSpecificCardHighlightSystem);
 			_world.AddSystem(_intimidateManagementSystem);
 			_world.AddSystem(_shackleManagementSystem);

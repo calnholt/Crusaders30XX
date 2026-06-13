@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 
@@ -89,6 +90,14 @@ namespace Crusaders30XX.ECS.Systems
 			});
 
 			EventManager.Publish(new EnemyKilledEvent { Enemy = enemy });
+
+			if (TestFightRuntime.IsActive)
+			{
+				TestFightRuntime.RecordVictory();
+				TestFightSetupService.ResetEncounterQueue(EntityManager);
+				EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
+				return;
+			}
 
 			var enemyId = enemy?.GetComponent<Enemy>()?.EnemyBase?.Id;
 			var tutorial = GuidedTutorialService.GetState(EntityManager);

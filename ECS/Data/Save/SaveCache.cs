@@ -12,6 +12,7 @@ using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Data.Tutorials;
+using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Data.Save
 {
@@ -1071,6 +1072,7 @@ namespace Crusaders30XX.ECS.Data.Save
 
 		public static CardMastery GetMasteryData(string cardId)
 		{
+			if (TestFightRuntime.IsActive) return null;
 			if (string.IsNullOrEmpty(cardId)) return null;
 			EnsureLoaded();
 			if (_save == null || _save.cardMastery == null) return null;
@@ -1080,6 +1082,7 @@ namespace Crusaders30XX.ECS.Data.Save
 
 		public static void AddMasteryPoints(string cardId, int points)
 		{
+			if (TestFightRuntime.IsActive) return;
 			if (string.IsNullOrEmpty(cardId) || points <= 0) return;
 			EnsureLoaded();
 			lock (_lock)
