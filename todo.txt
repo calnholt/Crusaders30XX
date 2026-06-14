@@ -65,5 +65,3 @@ SceneTintStrength=0.4
 GrainIntensity=0.02
 GrainFineness=1
 VignetteAmount=0
-
-
