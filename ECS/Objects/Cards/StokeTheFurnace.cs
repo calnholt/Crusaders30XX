@@ -25,6 +25,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             OnPlay = (entityManager, card) =>
             {
                 var player = entityManager.GetEntity("Player");
+                var enemy = entityManager.GetEntity("Enemy");
                 for (int i = 0; i < MaxRepeats; i++)
                 {
                     var courageCmp = player?.GetComponent<Courage>();
@@ -39,6 +40,14 @@ namespace Crusaders30XX.ECS.Objects.Cards
                         Delta = VigorGained
                     });
                 }
+                EventManager.Publish(new ModifyHpRequestEvent
+                {
+                    Source = player,
+                    Target = enemy,
+                    Delta = -GetDerivedDamage(entityManager, card),
+                    AttackCard = card,
+                    DamageType = ModifyTypeEnum.Attack
+                });
             };
 
         }

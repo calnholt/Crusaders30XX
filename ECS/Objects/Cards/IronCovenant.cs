@@ -14,9 +14,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Name = "Iron Covenant";
             Target = "Enemy";
             Text = $"When this is pledged, gain {VigorGained} vigor.";
-            Cost = ["Red", "Black", "Any", "Any"];
+            Cost = ["Red", "Black", "Any", "Any", "Any"];
             Animation = "Attack";
-            Damage = 20;
+            Damage = 15;
             Block = 3;
 
             OnPlay = (entityManager, card) =>

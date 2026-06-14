@@ -1,31 +1,34 @@
 UX
 - replace AP section from relic/block cards with a symbol for better identification
+- dialogue transitions, text, name section
 
 Gameplay
 - weaks cards that are permanently added to deck (colorless 2 block, etc)
+- tokens need to be weapon color, filter to prevent from being discarded for costs
 
 cards
 - gain 4 courage. at the end of the turn, lose all courage.
+- if you have dealt 10 or more damage this turn...
 
 medals
 - whenever you pledge 6 cards, gain 1 vigor
 - the start of the next x battles, the enemy gains 1 anathema
 
 weapons
-- change dagger temperance ability to either gaining might or kunai - drawing a card with empty deck feels bad
+- 
 
 
 tech debt
-- remove battlestateinfo
 - pledge services need to send events to change state not directly manipulate entities
 - remove original card display system
+- centralize keyboard and gamepad all through cursor (no other system reads keyboard or gamepad)
 
 
 persistent card states:
 - colorless
 - frozen
 - brittle
-- 
+- update sealed to reduce on block ONLY, can be pledged
 
 DesertStormDisplaySystem settings - update the system with these values:
 TimeScale=3.27
@@ -64,5 +67,3 @@ GrainFineness=1
 VignetteAmount=0
 
 
-
-I want to update weapon images and also have the crusader reflect the equipped weapon. Move    to  and use those images for the  for    as well as  . Rename  to "crusader_sword.png" and keep displaying this for the  . When sword is equipped, display this for  ; when hammer is equiiped, display  ; when dagger is equipped display  

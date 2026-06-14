@@ -6,10 +6,10 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -24,6 +24,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly ContentManager _content;
         private Texture2D _weaponTex;
+        private string _loadedWeaponId;
 		private const string RootEntityName = "UI_EquippedWeaponRoot";
 
         // Layout/debug controls
@@ -72,28 +73,17 @@ namespace Crusaders30XX.ECS.Systems
         }
         private void TryLoadWeaponTexture()
         {
-            // Try to load weapon sprite from Content by id of equipped weapon; fallback to sword or shield
-            string[] fallbacks = new[] { "sword", "weapon_sword", "shield" };
-            Texture2D tex = null;
-            // Try to infer from EquippedWeapon if available
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             var ew = player?.GetComponent<EquippedWeapon>();
-            if (ew != null && !string.IsNullOrWhiteSpace(ew.WeaponId))
+            string weaponId = !string.IsNullOrWhiteSpace(ew?.WeaponId) ? ew.WeaponId : "sword";
+            if (_weaponTex != null && weaponId == _loadedWeaponId) return;
+
+            _loadedWeaponId = weaponId;
+            Texture2D tex = null;
+            try { tex = _content.Load<Texture2D>(CrusaderPortraitAssets.ResolveWeaponCardArtAsset(weaponId)); } catch { tex = null; }
+            if (tex == null && weaponId != "sword")
             {
-                string[] candidates = new[] { ew.WeaponId, "weapon_" + ew.WeaponId };
-                foreach (var c in candidates)
-                {
-                    try { tex = _content.Load<Texture2D>(c); } catch { tex = null; }
-                    if (tex != null) break;
-                }
-            }
-            if (tex == null)
-            {
-                foreach (var id in fallbacks)
-                {
-                    try { tex = _content.Load<Texture2D>(id); } catch { tex = null; }
-                    if (tex != null) break;
-                }
+                try { tex = _content.Load<Texture2D>(CrusaderPortraitAssets.ResolveWeaponCardArtAsset("sword")); } catch { tex = null; }
             }
             _weaponTex = tex;
         }

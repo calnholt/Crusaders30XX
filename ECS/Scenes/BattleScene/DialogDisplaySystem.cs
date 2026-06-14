@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Data.Dialog;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Utils;
@@ -14,7 +15,6 @@ using Crusaders30XX.ECS.Utils.RichText;
 using Crusaders30XX.ECS.Rendering;
 using System;
 using Crusaders30XX.ECS.Singletons;
-using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
 
@@ -494,7 +494,7 @@ namespace Crusaders30XX.ECS.Systems
             return actor.Trim().ToLowerInvariant() switch
             {
                 "angel" or "remiel" => "guardian_angel",
-                "crusader" => "Crusader",
+                "crusader" => CrusaderPortraitAssets.DialogPortraitAsset,
                 "gleeber" => "Gleeber",
                 "skeleton" => "Skeleton",
                 "sand_corpse" => "Sand_Corpse",

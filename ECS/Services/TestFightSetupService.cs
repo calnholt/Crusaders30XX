@@ -241,13 +241,7 @@ namespace Crusaders30XX.ECS.Services
 
 		private static string GetTemperanceId(string weaponId)
 		{
-			return weaponId switch
-			{
-				"sword" => "unsheath",
-				"hammer" => "angelic_aura",
-				"dagger" => "fling_fling",
-				_ => "angelic_aura",
-			};
+			return StartingDeckGeneratorService.GetDefaultTemperanceId(weaponId);
 		}
 
 		private static void ApplyRunDifficulty(RunDifficulty difficulty)

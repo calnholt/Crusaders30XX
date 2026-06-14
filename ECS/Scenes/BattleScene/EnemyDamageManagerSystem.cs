@@ -103,6 +103,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 ContextId = e.ContextId,
                 FinalDamage = finalDamage,
+                TotalDamage = totalDamage,
                 WasHit = wasHit
             });
         }

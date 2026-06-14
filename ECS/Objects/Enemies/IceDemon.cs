@@ -17,7 +17,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
     {
       Id = "ice_demon";
       Name = "Ice Demon";
-      HealthPerCard = 1.375f;
+      HealthPerCard = 1.65f;
     }
 
     public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
@@ -40,7 +40,7 @@ public class IcyBlade : EnemyAttackBase
   {
     Id = "icy_blade";
     Name = "Icy Blade";
-    Damage = 10;
+    Damage = 11;
     ConditionType = ConditionType.OnBlockedByAtLeast2Cards;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Frostbite, Frostbite, ConditionType);
 
@@ -58,8 +58,8 @@ public class FrozenClaw : EnemyAttackBase
     Id = "frozen_claw";
     Name = "Frozen Claw";
     Damage = 10;
-    MinimumDamageToTriggerEffect = 3;
-    Text = $"On attack - Intimidate 1 card.\n\n{EnemyAttackTextHelper.GetDamageThresholdText(3, "Freeze the top card of your draw pile.")}";
+    BlockRequiredToPreventEffect = 6;
+    Text = $"On attack - Intimidate 1 card.\n\n{EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, "Freeze the top card of your draw pile.")}";
 
     OnAttackReveal = (entityManager) =>
     {

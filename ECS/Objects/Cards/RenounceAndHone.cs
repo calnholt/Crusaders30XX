@@ -8,14 +8,15 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class RenounceAndHone : CardBase
     {
-        private int SharpenAmount = 6;
+        private int VigorAmount = 2;
+        private int CourageAmount = 2;
 
         public RenounceAndHone()
         {
             CardId = "renounce_and_hone";
             Name = "Renounce and Hone";
             Target = "Player";
-            Text = "As an additional cost, discard your pledged card that was not pledged this turn. Gain sharpen 6.";
+            Text = $"As an additional cost, discard your pledged card that was not pledged this turn. Gain {VigorAmount} vigor and {CourageAmount} courage.";
             Animation = "Buff";
             Type = CardType.Prayer;
             Block = 3;
@@ -40,9 +41,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 EventManager.Publish(new ApplyPassiveEvent
                 {
                     Target = player,
-                    Type = AppliedPassiveType.Sharpen,
-                    Delta = SharpenAmount
+                    Type = AppliedPassiveType.Vigor,
+                    Delta = VigorAmount
                 });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = CourageAmount, Type = ModifyCourageType.Gain });
             };
 
             CanPlay = (entityManager, card) =>

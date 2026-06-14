@@ -61,6 +61,7 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public string ContextId;
 		public int FinalDamage;
+		public int TotalDamage;
 		public bool WasHit;
 	}
 

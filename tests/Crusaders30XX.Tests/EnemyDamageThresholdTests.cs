@@ -23,16 +23,16 @@ public class EnemyDamageThresholdTests : IDisposable
     [Theory]
     [InlineData(5, 0, 0, false, 1)]
     [InlineData(5, 1, 0, false, 0)]
-    [InlineData(5, 0, 1, false, 0)]
+    [InlineData(5, 0, 1, false, 1)]
     [InlineData(5, 0, 1, true, 1)]
-    public void Threshold_effect_uses_final_damage_after_prevention(
+    public void Threshold_effect_uses_block_required_and_final_damage_after_prevention(
         int damage,
         int assignedBlock,
         int aegis,
         bool ignoresAegis,
         int expectedTriggers)
     {
-        var attack = new ThresholdAttack(damage, minimumDamage: 5, ignoresAegis);
+        var attack = new ThresholdAttack(damage, blockRequired: 1, ignoresAegis);
         var entityManager = CreateCombat(attack, assignedBlock, aegis);
 
         ResolveAttack(entityManager);
@@ -43,7 +43,7 @@ public class EnemyDamageThresholdTests : IDisposable
     [Fact]
     public void Threshold_effect_does_not_run_when_special_effect_fully_prevents_damage()
     {
-        var attack = new ThresholdAttack(damage: 5, minimumDamage: 5, ignoresAegis: false);
+        var attack = new ThresholdAttack(damage: 5, blockRequired: 1, ignoresAegis: false);
         var entityManager = CreateCombat(attack, assignedBlock: 0, aegis: 0, fullyPreventedBySpecial: true);
 
         ResolveAttack(entityManager);
@@ -54,13 +54,40 @@ public class EnemyDamageThresholdTests : IDisposable
     [Fact]
     public void Threshold_and_on_hit_effects_can_both_run_once()
     {
-        var attack = new ThresholdAttack(damage: 5, minimumDamage: 5, ignoresAegis: false, useOnHit: true);
+        var attack = new ThresholdAttack(damage: 5, blockRequired: 1, ignoresAegis: false, useOnHit: true);
         var entityManager = CreateCombat(attack, assignedBlock: 0, aegis: 0);
 
         ResolveAttack(entityManager);
 
         Assert.Equal(1, attack.ThresholdTriggerCount);
         Assert.Equal(1, attack.OnHitTriggerCount);
+    }
+
+    [Theory]
+    [InlineData(10, 5, 0, 1)]
+    [InlineData(10, 6, 0, 0)]
+    [InlineData(10, 5, 5, 0)]
+    [InlineData(10, 5, 2, 1)]
+    public void Threshold_effect_matches_block_required_cases(
+        int damage,
+        int assignedBlock,
+        int aegis,
+        int expectedTriggers)
+    {
+        var attack = new ThresholdAttack(damage, blockRequired: 6, ignoresAegis: false);
+        var entityManager = CreateCombat(attack, assignedBlock, aegis);
+
+        ResolveAttack(entityManager);
+
+        Assert.Equal(expectedTriggers, attack.ThresholdTriggerCount);
+    }
+
+    [Fact]
+    public void Block_threshold_text_describes_required_block()
+    {
+        Assert.Equal(
+            "Unless at least 6 damage is blocked - Freeze the top card of your draw pile.",
+            EnemyAttackTextHelper.GetBlockThresholdText(6, "Freeze the top card of your draw pile."));
     }
 
     [Fact]
@@ -124,12 +151,12 @@ public class EnemyDamageThresholdTests : IDisposable
         public int ThresholdTriggerCount { get; private set; }
         public int OnHitTriggerCount { get; private set; }
 
-        public ThresholdAttack(int damage, int minimumDamage, bool ignoresAegis, bool useOnHit = false)
+        public ThresholdAttack(int damage, int blockRequired, bool ignoresAegis, bool useOnHit = false)
         {
             Id = "threshold_test";
             Name = "Threshold Test";
             Damage = damage;
-            MinimumDamageToTriggerEffect = minimumDamage;
+            BlockRequiredToPreventEffect = blockRequired;
             IgnoresAegis = ignoresAegis;
             ConditionType = useOnHit ? ConditionType.OnHit : ConditionType.None;
             OnDamageThresholdMet = _ => ThresholdTriggerCount++;

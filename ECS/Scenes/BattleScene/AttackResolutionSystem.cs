@@ -110,10 +110,14 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					def.OnAttackHit?.Invoke(EntityManager);
 				}
-				if (def.MinimumDamageToTriggerEffect is int minimumDamage &&
-					evt.FinalDamage >= minimumDamage)
+				if (def.BlockRequiredToPreventEffect is int blockRequired &&
+					impactProgress?.FullyPreventedBySpecial != true)
 				{
-					def.OnDamageThresholdMet?.Invoke(EntityManager);
+					int assignedBlock = impactProgress?.AssignedBlockTotal ?? 0;
+					if (assignedBlock < blockRequired && evt.FinalDamage > 0)
+					{
+						def.OnDamageThresholdMet?.Invoke(EntityManager);
+					}
 				}
 				if (evt.WasHit)
 				{

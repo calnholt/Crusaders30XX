@@ -11,6 +11,7 @@ namespace Crusaders30XX.ECS.Factories
             {
                 "angelic_aura" => new AngelicAura(),
                 "fling_fling" => new FlingFling(),
+                "iron_resolve" => new IronResolve(),
                 "measured_breath" => new MeasuredBreath(),
                 "radiance" => new Radiance(),
                 "unsheath" => new Unsheath(),
@@ -24,6 +25,7 @@ namespace Crusaders30XX.ECS.Factories
             {
                 { "angelic_aura", new AngelicAura() },
                 { "fling_fling", new FlingFling() },
+                { "iron_resolve", new IronResolve() },
                 { "measured_breath", new MeasuredBreath() },
                 { "radiance", new Radiance() },
                 { "unsheath", new Unsheath() },

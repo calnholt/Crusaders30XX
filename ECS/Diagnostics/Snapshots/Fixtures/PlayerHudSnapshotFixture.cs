@@ -33,7 +33,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 			_variant = PlayerHudSnapshotVariant.Parse(args);
 			_pixel = new Texture2D(ctx.GraphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
-			_portrait = ctx.Content.Load<Texture2D>("Crusader");
+			_portrait = ctx.Content.Load<Texture2D>("crusader_sword");
 			_portraitScale = 0.36f;
 
 			EntityFactory.CreateGameState(ctx.World);

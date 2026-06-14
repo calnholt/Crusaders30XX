@@ -15,8 +15,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Enemy";
             Text = "If you have no pledged card, pledge the top card of your deck.";
             Animation = "Attack";
-            Damage = 1;
-            Block = 3;
+            Damage = 2;
+            Block = 2;
+            IsFreeAction = true;
 
             OnPlay = (entityManager, card) =>
             {

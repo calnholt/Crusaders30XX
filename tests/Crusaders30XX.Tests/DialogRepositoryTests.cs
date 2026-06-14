@@ -36,5 +36,6 @@ public class DialogCatalogTests
 		Assert.Equal("Trying!", victory[1].message);
 
 		Assert.Equal("guardian_angel", DialogDisplaySystem.ResolvePortraitAssetName("Remiel"));
+		Assert.Equal("crusader_sword", DialogDisplaySystem.ResolvePortraitAssetName("Crusader"));
 	}
 }

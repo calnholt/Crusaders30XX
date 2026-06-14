@@ -25,14 +25,15 @@ public class EntombTests : IDisposable
         ApplyCardApplicationEvent publishedEvent = null;
         EventManager.Subscribe<ApplyCardApplicationEvent>(evt => publishedEvent = evt);
 
+        attack.OnAttackReveal(new EntityManager());
         attack.OnDamageThresholdMet(new EntityManager());
 
         Assert.Equal(10, attack.Damage);
-        Assert.Equal(3, attack.MinimumDamageToTriggerEffect);
+        Assert.Equal(6, attack.BlockRequiredToPreventEffect);
         Assert.Equal(ConditionType.None, attack.ConditionType);
         Assert.Null(attack.OnAttackHit);
         Assert.Equal(
-            "If this attack deals 3 or more damage - Apply brittle to the top card of your draw pile.",
+            "Unless at least 6 damage is blocked - Apply brittle to the top card of your draw pile.",
             attack.Text);
         Assert.NotNull(publishedEvent);
         Assert.Equal(1, publishedEvent.Amount);

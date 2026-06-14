@@ -33,11 +33,11 @@ public class Entomb : EnemyAttackBase
     Id = "entomb";
     Name = "Entomb";
     Damage = 10;
-    MinimumDamageToTriggerEffect = 4;
+    BlockRequiredToPreventEffect = 6;
 
     OnAttackReveal = (entityManager) => 
     {
-      Text = EnemyAttackTextHelper.GetDamageThresholdText((int)MinimumDamageToTriggerEffect, "Apply brittle to the top card of your draw pile.");
+      Text = EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, "Apply brittle to the top card of your draw pile.");
     };
 
     OnDamageThresholdMet = (entityManager) =>
@@ -60,11 +60,11 @@ public class Mummify : EnemyAttackBase
     Id = "mummify";
     Name = "Mummify";
     Damage = 10;
-    MinimumDamageToTriggerEffect = 4;
+    BlockRequiredToPreventEffect = 6;
 
     OnAttackReveal = (entityManager) => 
     {
-      Text = EnemyAttackTextHelper.GetDamageThresholdText((int)MinimumDamageToTriggerEffect, $"Gain {Scar} scars.");
+      Text = EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, $"Gain {Scar} scars.");
     };
 
     OnDamageThresholdMet = (entityManager) =>

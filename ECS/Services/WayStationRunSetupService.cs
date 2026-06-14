@@ -99,13 +99,7 @@ namespace Crusaders30XX.ECS.Services
 
 		private static string GetSelectedTemperanceId()
 		{
-			return WayStationRunSetupSingleton.SelectedWeapon switch
-			{
-				StartingWeapon.Sword => "unsheath",
-				StartingWeapon.Hammer => "angelic_aura",
-				StartingWeapon.Dagger => "fling_fling",
-				_ => "angelic_aura"
-			};
+			return StartingDeckGeneratorService.GetDefaultTemperanceId(WayStationRunSetupSingleton.SelectedWeapon);
 		}
 	}
 }

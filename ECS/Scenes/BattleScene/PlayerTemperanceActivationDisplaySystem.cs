@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Services;
 
@@ -18,7 +19,9 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly Texture2D _crusaderTexture;
+		private readonly ContentManager _content;
+		private Texture2D _crusaderTexture;
+		private string _loadedWeaponId;
 		private float _elapsed;
 		private bool _active;
 		private float _animTime;
@@ -41,11 +44,11 @@ namespace Crusaders30XX.ECS.Systems
 		public int OffsetY { get; set; } = 0;
 
 
-		public PlayerTemperanceActivationDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Texture2D crusaderTexture) : base(entityManager)
+		public PlayerTemperanceActivationDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content) : base(entityManager)
 		{
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
-			_crusaderTexture = crusaderTexture;
+			_content = content;
 			EventManager.Subscribe<TriggerTemperance>(e => {
 				LoggingService.Append("PlayerTemperanceActivationDisplaySystem.OnTriggerTemperance", new JsonObject {
 					{ "AbilityId", e.AbilityId }
@@ -79,6 +82,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (player == null) return;
 			var t = player.GetComponent<Transform>();
 			var pinfo = player.GetComponent<PortraitInfo>();
+			EnsureCrusaderTexture(player);
 			if (t == null || pinfo == null || _crusaderTexture == null) return;
 
 			float progress = MathHelper.Clamp(_animTime / System.Math.Max(0.0001f, DurationSeconds), 0f, 1f);
@@ -124,6 +128,23 @@ namespace Crusaders30XX.ECS.Systems
 			);
 		}
 
+		private void EnsureCrusaderTexture(Entity player)
+		{
+			string weaponId = player?.GetComponent<EquippedWeapon>()?.WeaponId;
+			if (string.IsNullOrWhiteSpace(weaponId)) weaponId = "sword";
+			if (_crusaderTexture != null && weaponId == _loadedWeaponId) return;
+
+			_loadedWeaponId = weaponId;
+			_crusaderTexture = TryLoadPortrait(CrusaderPortraitAssets.ResolveBattlePortraitAsset(weaponId))
+				?? TryLoadPortrait(CrusaderPortraitAssets.DialogPortraitAsset);
+		}
+
+		private Texture2D TryLoadPortrait(string assetName)
+		{
+			try { return _content.Load<Texture2D>(assetName); }
+			catch { return null; }
+		}
+
 		[DebugAction("Simulate Temperance Trigger")]
 		public void Debug_SimulateTemperanceTrigger()
 		{
@@ -132,5 +153,4 @@ namespace Crusaders30XX.ECS.Systems
 
 	}
 }
-
 

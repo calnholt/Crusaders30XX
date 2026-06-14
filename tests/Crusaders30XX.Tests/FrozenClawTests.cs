@@ -29,11 +29,11 @@ public class FrozenClawTests : IDisposable
         attack.OnDamageThresholdMet(new EntityManager());
 
         Assert.Equal(10, attack.Damage);
-        Assert.Equal(3, attack.MinimumDamageToTriggerEffect);
+        Assert.Equal(6, attack.BlockRequiredToPreventEffect);
         Assert.Equal(ConditionType.None, attack.ConditionType);
         Assert.Null(attack.OnAttackHit);
         Assert.Equal(
-            "On attack - Intimidate 1 card.\n\nIf this attack deals 3 or more damage - Freeze the top card of your draw pile.",
+            "On attack - Intimidate 1 card.\n\nUnless at least 6 damage is blocked - Freeze the top card of your draw pile.",
             attack.Text);
         Assert.NotNull(publishedEvent);
         Assert.Equal(1, publishedEvent.Amount);

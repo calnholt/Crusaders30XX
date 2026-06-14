@@ -2,8 +2,9 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Crusaders30XX.ECS.Events;
+using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.Diagnostics;
+using Crusaders30XX.ECS.Services;
 using System;
 using System.Linq;
 
@@ -17,7 +18,9 @@ namespace Crusaders30XX.ECS.Systems
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
-        private readonly Texture2D _crusaderTexture;
+        private readonly ContentManager _content;
+        private Texture2D _crusaderTexture;
+        private string _loadedWeaponId;
         private float _elapsedSeconds;
         private Vector2 _attackDrawOffset = Vector2.Zero; // now sourced from PlayerAnimationState
 
@@ -31,13 +34,12 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Center Offset Y (% of height)", Step = 0.01f, Min = -1.0f, Max = 1.0f)]
         public float CenterOffsetYPct { get; set; } = -0.11f; // negative = up, positive = down
 
-        public PlayerDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, Texture2D crusaderTexture)
+        public PlayerDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
-            _crusaderTexture = crusaderTexture;
-
+            _content = content;
         }
 
         protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -51,6 +53,7 @@ namespace Crusaders30XX.ECS.Systems
             _elapsedSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             var transform = player?.GetComponent<Transform>();
+            EnsureCrusaderTexture(player);
 
             if (_crusaderTexture != null && player != null)
             {
@@ -87,6 +90,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
             var transform = player?.GetComponent<Transform>();
+            EnsureCrusaderTexture(player);
             if (_crusaderTexture == null) return;
             if (transform == null) return;
 
@@ -115,8 +119,23 @@ namespace Crusaders30XX.ECS.Systems
             );
 
         }
-        
+
+        private void EnsureCrusaderTexture(Entity player)
+        {
+            string weaponId = player?.GetComponent<EquippedWeapon>()?.WeaponId;
+            if (string.IsNullOrWhiteSpace(weaponId)) weaponId = "sword";
+            if (_crusaderTexture != null && weaponId == _loadedWeaponId) return;
+
+            _loadedWeaponId = weaponId;
+            _crusaderTexture = TryLoadPortrait(CrusaderPortraitAssets.ResolveBattlePortraitAsset(weaponId))
+                ?? TryLoadPortrait(CrusaderPortraitAssets.DialogPortraitAsset);
+        }
+
+        private Texture2D TryLoadPortrait(string assetName)
+        {
+            try { return _content.Load<Texture2D>(assetName); }
+            catch { return null; }
+        }
     }
 }
-
 

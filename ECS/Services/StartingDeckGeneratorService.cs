@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Services
 {
@@ -104,6 +105,22 @@ namespace Crusaders30XX.ECS.Services
 		{
 			return new[] { "iron_covenant", "vanguards_promise" };
 		}
+
+		public static string GetDefaultTemperanceId(string weaponId) => weaponId switch
+		{
+			"sword" => "unsheath",
+			"hammer" => "iron_resolve",
+			"dagger" => "fling_fling",
+			_ => "angelic_aura",
+		};
+
+		public static string GetDefaultTemperanceId(StartingWeapon weapon) => weapon switch
+		{
+			StartingWeapon.Sword => "unsheath",
+			StartingWeapon.Hammer => "iron_resolve",
+			StartingWeapon.Dagger => "fling_fling",
+			_ => "angelic_aura",
+		};
 
 		private static HashSet<string> BuildSingleCopySet(IReadOnlyList<string> singleCopyCardIds)
 		{
