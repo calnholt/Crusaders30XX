@@ -21,6 +21,9 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly ContentManager _content;
 		private readonly Texture2D _pixel;
 		private readonly Texture2D _background;
+		private readonly Texture2D _swordArt;
+		private readonly Texture2D _daggerArt;
+		private readonly Texture2D _hammerArt;
 		private readonly SpriteFont _titleFont = FontSingleton.TitleFont;
 		private readonly SpriteFont _bodyFont = FontSingleton.ChakraPetchFont;
 
@@ -96,6 +99,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Weapon Button Size", Step = 2, Min = 80, Max = 400)]
 		public int WeaponButtonSize { get; set; } = 200;
+		[DebugEditable(DisplayName = "Weapon Art Padding", Step = 2, Min = 0, Max = 60)]
+		public int WeaponArtPadding { get; set; } = 12;
+		[DebugEditable(DisplayName = "Weapon Label Height", Step = 2, Min = 12, Max = 80)]
+		public int WeaponLabelHeight { get; set; } = 28;
+		[DebugEditable(DisplayName = "Weapon Label Scale", Step = 0.01f, Min = 0.05f, Max = 1f)]
+		public float WeaponLabelScale { get; set; } = 0.10f;
 		[DebugEditable(DisplayName = "Difficulty Row Width", Step = 2, Min = 200, Max = 900)]
 		public int DifficultyRowWidth { get; set; } = 520;
 		[DebugEditable(DisplayName = "Difficulty Label Offset Y", Step = 2, Min = 200, Max = 560)]
@@ -137,6 +146,9 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			_background = content.Load<Texture2D>("waystation");
+			_swordArt = content.Load<Texture2D>(CrusaderPortraitAssets.ResolveWeaponCardArtAsset("sword"));
+			_daggerArt = content.Load<Texture2D>(CrusaderPortraitAssets.ResolveWeaponCardArtAsset("dagger"));
+			_hammerArt = content.Load<Texture2D>(CrusaderPortraitAssets.ResolveWeaponCardArtAsset("hammer"));
 			EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
 		}
 
@@ -304,9 +316,9 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void DrawButtons(WayStationLayout layout)
 		{
-			DrawChoiceButton(layout.SwordButton, "Sword", WeaponChoiceScale, IsSelected(StartingWeapon.Sword), IsHovered(SwordButtonName));
-			DrawChoiceButton(layout.DaggerButton, "Dagger", WeaponChoiceScale, IsSelected(StartingWeapon.Dagger), IsHovered(DaggerButtonName));
-			DrawChoiceButton(layout.HammerButton, "Hammer", WeaponChoiceScale, IsSelected(StartingWeapon.Hammer), IsHovered(HammerButtonName));
+			DrawWeaponChoiceButton(layout.SwordButton, _swordArt, "Sword", IsSelected(StartingWeapon.Sword), IsHovered(SwordButtonName));
+			DrawWeaponChoiceButton(layout.DaggerButton, _daggerArt, "Dagger", IsSelected(StartingWeapon.Dagger), IsHovered(DaggerButtonName));
+			DrawWeaponChoiceButton(layout.HammerButton, _hammerArt, "Hammer", IsSelected(StartingWeapon.Hammer), IsHovered(HammerButtonName));
 			DrawChoiceButton(layout.EasyButton, "Easy", ChoiceScale, IsSelected(RunDifficulty.Easy), IsHovered(EasyButtonName));
 			DrawChoiceButton(layout.NormalButton, "Normal", ChoiceScale, IsSelected(RunDifficulty.Normal), IsHovered(NormalButtonName));
 			DrawChoiceButton(layout.HardButton, "Hard", ChoiceScale, IsSelected(RunDifficulty.Hard), IsHovered(HardButtonName));
@@ -327,6 +339,52 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.Draw(_pixel, rect, fill);
 			DrawBorder(rect, border, 2);
 			DrawCenteredString(_bodyFont, label, rect, text, scale);
+		}
+
+		private void DrawWeaponChoiceButton(Rectangle rect, Texture2D art, string label, bool selected, bool hovered)
+		{
+			if (selected)
+			{
+				_spriteBatch.Draw(_pixel, new Rectangle(rect.X - 4, rect.Y - 4, rect.Width + 8, rect.Height + 8), SelectedGlow);
+			}
+
+			var fill = selected ? SelectedFill : ChoiceFill;
+			var border = selected ? SelectedBorder : (hovered ? Color.White : Color.White * 0.5f);
+			var text = selected || hovered ? Color.White : BodyText;
+			var artTint = selected || hovered ? Color.White : BodyText;
+
+			_spriteBatch.Draw(_pixel, rect, fill);
+			DrawBorder(rect, border, 2);
+
+			int padding = System.Math.Max(0, WeaponArtPadding);
+			int labelHeight = System.Math.Max(12, WeaponLabelHeight);
+			var artBounds = new Rectangle(
+				rect.X + padding,
+				rect.Y + padding,
+				System.Math.Max(1, rect.Width - padding * 2),
+				System.Math.Max(1, rect.Height - padding * 2 - labelHeight));
+			if (art != null)
+			{
+				DrawTextureFitted(artBounds, art, artTint);
+			}
+
+			var labelRect = new Rectangle(rect.X, rect.Bottom - labelHeight, rect.Width, labelHeight);
+			DrawCenteredString(_bodyFont, label, labelRect, text, WeaponLabelScale);
+		}
+
+		private void DrawTextureFitted(Rectangle bounds, Texture2D texture, Color tint)
+		{
+			if (bounds.Width <= 0 || bounds.Height <= 0 || texture == null) return;
+
+			float scale = System.Math.Min(bounds.Width / (float)texture.Width, bounds.Height / (float)texture.Height);
+			int drawW = System.Math.Max(1, (int)System.Math.Round(texture.Width * scale));
+			int drawH = System.Math.Max(1, (int)System.Math.Round(texture.Height * scale));
+			var dst = new Rectangle(
+				bounds.X + (bounds.Width - drawW) / 2,
+				bounds.Y + (bounds.Height - drawH) / 2,
+				drawW,
+				drawH);
+			_spriteBatch.Draw(texture, dst, tint);
 		}
 
 		private void DrawProceedButton(Rectangle rect, bool hovered)

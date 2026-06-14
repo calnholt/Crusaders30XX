@@ -6,7 +6,7 @@ namespace Crusaders30XX.ECS.Objects.Temperance
 {
     public class Unsheath : TemperanceBase
     {
-        public int SharpenAmount = 4;
+        public int SharpenAmount = 5;
         public Unsheath()
         {
             Id = "unsheath";
