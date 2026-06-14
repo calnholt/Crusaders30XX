@@ -29,6 +29,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ModifyCourageRequestEvent>(OnModifyCourage);
             EventManager.Subscribe<SetCourageEvent>(OnSetCourageEvent);
             EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
+            EventManager.Subscribe<ModifyHpEvent>(OnModifyHp);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -51,11 +52,33 @@ namespace Crusaders30XX.ECS.Systems
             // Clear per-subphase tracking whenever sub phase changes
             st.PhaseTracking?.Clear();
 
+            if (evt.Current == SubPhase.Action)
+            {
+                st.PlayerActionPhaseAttackHits = 0;
+            }
+
             // When enemy turn starts, clear per-turn tracking
             if (evt.Current == SubPhase.EnemyStart)
             {
                 st.TurnTracking?.Clear();
             }
+        }
+
+        private void OnModifyHp(ModifyHpEvent evt)
+        {
+            if (evt.DamageType != ModifyTypeEnum.Attack || evt.Delta >= 0) return;
+
+            var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
+            if (phase?.Sub != SubPhase.Action) return;
+
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+            if (player == null || enemy == null) return;
+            if (evt.Source != player || evt.Target != enemy) return;
+
+            var st = player.GetComponent<BattleStateInfo>();
+            if (st == null) return;
+            st.PlayerActionPhaseAttackHits++;
         }
 
         private void ClearBattleTracking()

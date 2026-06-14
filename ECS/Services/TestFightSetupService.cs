@@ -245,7 +245,7 @@ namespace Crusaders30XX.ECS.Services
 			{
 				"sword" => "unsheath",
 				"hammer" => "angelic_aura",
-				"dagger" => "measured_breath",
+				"dagger" => "fling_fling",
 				_ => "angelic_aura",
 			};
 		}

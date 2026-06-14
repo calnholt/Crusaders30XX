@@ -20,11 +20,10 @@ namespace Crusaders30XX.ECS.Objects.Temperance
 
         public override void Activate(EntityManager entityManager)
         {
-            PublishTrigger(entityManager);
             var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             for (int i = 0; i < 2; i++)
             {
-                var kunai = EntityFactory.CreateCardFromDefinition(entityManager, "kunai", CardData.CardColor.White, false, i + 1);
+                var kunai = EntityFactory.CreateCardFromDefinition(entityManager, "kunai", CardData.CardColor.White, false, i);
                 EventManager.Publish(new CardMoveRequested { Card = kunai, Deck = deckEntity, Destination = CardZoneType.Hand, Reason = "FlingFling" });
             }
         }

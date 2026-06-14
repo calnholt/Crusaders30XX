@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"Draw {DrawAmount} cards.";
             Cost = ["Black", "Any"];
             Animation = "Attack";
-            Damage = 4;
+            Damage = 6;
             Block = 3;
             IsFreeAction = true;
 

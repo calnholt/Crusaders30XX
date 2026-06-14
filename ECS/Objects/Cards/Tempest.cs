@@ -6,7 +6,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Tempest : CardBase
     {
-        private int TemperanceAmount = 4;
+        private int TemperanceAmount = 5;
         public Tempest()
         {
             CardId = "tempest";
@@ -14,9 +14,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Target = "Enemy";
             Text = $"Gain {TemperanceAmount} temperance.";
             Animation = "Attack";
-            Cost = ["White", "Any"];
-            Damage = 7;
-            Block = 2;
+            Cost = ["White"];
+            Damage = 2;
+            Block = 3;
+            IsFreeAction = true;
 
             OnPlay = (entityManager, card) =>
             {

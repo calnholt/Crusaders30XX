@@ -219,6 +219,8 @@ namespace Crusaders30XX.ECS.Components
         public Dictionary<string, int> BattleTracking { get; set; } = new();
         public Dictionary<string, int> TurnTracking { get; set; } = new();
         public Dictionary<string, int> PhaseTracking { get; set; } = new();
+        /// <summary>Player attack hits that dealt damage to the enemy during the current action phase.</summary>
+        public int PlayerActionPhaseAttackHits { get; set; }
 
 	}
 

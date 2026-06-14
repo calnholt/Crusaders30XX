@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class UnburdenedStrike : CardBase
     {
-        private int DamageBonus = 6;
+        private int DamageBonus = 3;
 
         public UnburdenedStrike()
         {
@@ -17,8 +17,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"If no cards were discarded to play this, this gains +{DamageBonus} damage.";
             Cost = ["White", "Any"];
             Animation = "Attack";
-            Damage = 7;
-            Block = 3;
+            Damage = 8;
+            Block = 2;
 
             OnPlay = (entityManager, card) =>
             {

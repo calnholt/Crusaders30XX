@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Name = "Hammer";
             Target = "Enemy";
             Text = $"Gain {VigorGained} vigor.";
-            Cost = ["Black", "Any", "Any"];
+            Cost = ["Any", "Any", "Any"];
             Animation = "Attack";
             Damage = 6;
             IsWeapon = true;

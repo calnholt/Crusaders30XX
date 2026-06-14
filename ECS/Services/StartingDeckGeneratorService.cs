@@ -90,11 +90,13 @@ namespace Crusaders30XX.ECS.Services
 				"renounce_and_hone",
 				"unburdened_strike",
 				"crushing_insight",
+				"vanguards_promise",
 				"mantlet",
 				"stoke_the_furnace",
 				"absolution",
 				"temper_the_blade",
 				"battering_blow",
+				"iron_covenant",
 			};
 		}
 

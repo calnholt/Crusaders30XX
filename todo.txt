@@ -11,6 +11,9 @@ medals
 - whenever you pledge 6 cards, gain 1 vigor
 - the start of the next x battles, the enemy gains 1 anathema
 
+weapons
+- change dagger temperance ability to either gaining might or kunai - drawing a card with empty deck feels bad
+
 
 tech debt
 - remove battlestateinfo
@@ -59,3 +62,7 @@ SceneTintStrength=0.4
 GrainIntensity=0.02
 GrainFineness=1
 VignetteAmount=0
+
+
+
+I want to update weapon images and also have the crusader reflect the equipped weapon. Move    to  and use those images for the  for    as well as  . Rename  to "crusader_sword.png" and keep displaying this for the  . When sword is equipped, display this for  ; when hammer is equiiped, display  ; when dagger is equipped display  

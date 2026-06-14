@@ -103,7 +103,7 @@ namespace Crusaders30XX.ECS.Services
 			{
 				StartingWeapon.Sword => "unsheath",
 				StartingWeapon.Hammer => "angelic_aura",
-				StartingWeapon.Dagger => "measured_breath",
+				StartingWeapon.Dagger => "fling_fling",
 				_ => "angelic_aura"
 			};
 		}

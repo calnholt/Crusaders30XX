@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Text = $"Gain {CourageGain} courage.";
             IsFreeAction = true;
             Animation = "Attack";
-            Damage = 1;
+            Damage = 2;
             Block = 3;
 
             OnPlay = (entityManager, card) =>
