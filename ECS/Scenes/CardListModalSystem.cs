@@ -8,6 +8,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Input;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -22,8 +24,6 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteFont _font;
         private readonly Texture2D _pixel;
         private readonly RasterizerState _scissorRasterizer;
-        private CursorStateEvent _cursorEvent;
-        private readonly HashSet<Entity> _suppressedByModal = new HashSet<Entity>();
         [DebugEditable(DisplayName = "Modal Margin", Step = 1, Min = 0, Max = 200)]
         public int ModalMargin { get; set; } = 40;
         [DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 200)]
@@ -73,7 +73,6 @@ namespace Crusaders30XX.ECS.Systems
             _pixel.SetData(new[] { Color.White });
             _scissorRasterizer = new RasterizerState { ScissorTestEnable = true, CullMode = CullMode.None };
 
-            EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
             EventManager.Subscribe<OpenCardListModalEvent>(OpenModal);
             EventManager.Subscribe<CloseCardListModalEvent>(_ => CloseModal());
         }
@@ -88,21 +87,35 @@ namespace Crusaders30XX.ECS.Systems
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-            // Ensure modal cards are top-most and use zero rotation for accurate hover detection
             var modalEntity = GetRelevantEntities().FirstOrDefault();
             if (modalEntity == null) return;
             var modal = modalEntity.GetComponent<CardListModal>();
-            if (modal == null || !modal.IsOpen || modal.Cards == null) return;
-            // Scroll via CursorStateEvent (mouse wheel + gamepad stick)
-            if (_cursorEvent != null && Game1.WindowIsActive && !StateSingleton.IsActive)
+            if (modal == null) return;
+            EnsureModalRoot(modalEntity, modal);
+            if (!modal.IsOpen || modal.Cards == null)
             {
-                bool hasScroll = _cursorEvent.ScrollDelta != 0f || _cursorEvent.ScrollStickY != 0f;
+                SetCloseButtonActive(false);
+                return;
+            }
+
+            var rect = new Rectangle(
+                ModalMargin,
+                ModalMargin,
+                Game1.VirtualWidth - ModalMargin * 2,
+                Game1.VirtualHeight - ModalMargin * 2);
+            EnsureCloseButton(new Rectangle(
+                rect.Right - Padding - CloseSize,
+                rect.Y + Padding,
+                CloseSize,
+                CloseSize));
+
+            PlayerInputFrame input = PlayerInputService.GetFrame(EntityManager);
+            if (Game1.WindowIsActive && !StateSingleton.IsActive)
+            {
+                bool hasScroll = input.ScrollDelta != 0f
+                    || MathF.Abs(input.RightStick.Y) > RightStickDeadzone;
                 if (hasScroll)
                 {
-                    int w = Game1.VirtualWidth;
-                    int h = Game1.VirtualHeight;
-                    var rect = new Rectangle(ModalMargin, ModalMargin, w - ModalMargin * 2, h - ModalMargin * 2);
-
                     int cursorY = rect.Y + Padding;
                     cursorY += (int)(_font.LineSpacing * TitleScale) + Padding;
 
@@ -116,21 +129,19 @@ namespace Crusaders30XX.ECS.Systems
                     int visibleHeight = rect.Bottom - cursorY - Padding;
                     int maxScroll = Math.Max(0, contentHeight - visibleHeight);
 
-                    // Mouse wheel: discrete steps
-                    if (_cursorEvent.ScrollDelta != 0f)
+                    if (input.ScrollDelta != 0f)
                     {
-                        modal.ScrollOffset -= (int)Math.Round(_cursorEvent.ScrollDelta) * ScrollStep;
+                        modal.ScrollOffset -= (int)Math.Round(input.ScrollDelta) * ScrollStep;
                         modal.ScrollOffset = Math.Clamp(modal.ScrollOffset, 0, maxScroll);
                     }
 
-                    // Gamepad stick: analog with speed curve
-                    if (_cursorEvent.ScrollStickY != 0f)
+                    if (MathF.Abs(input.RightStick.Y) > RightStickDeadzone)
                     {
-                        float mag = MathF.Abs(_cursorEvent.ScrollStickY);
+                        float mag = MathF.Abs(input.RightStick.Y);
                         float normalized = MathHelper.Clamp(mag, 0f, 1f);
                         float speedMultiplier = MathHelper.Clamp((float)Math.Pow(normalized, SpeedExponent) * MaxMultiplier, 0f, 10f);
                         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-                        float delta = -Math.Sign(_cursorEvent.ScrollStickY) * GamepadScrollSpeed * speedMultiplier * dt;
+                        float delta = -Math.Sign(input.RightStick.Y) * GamepadScrollSpeed * speedMultiplier * dt;
                         if (Math.Abs(delta) > 0.01f)
                         {
                             float next = MathHelper.Clamp(modal.ScrollOffset + delta, 0, maxScroll);
@@ -151,7 +162,12 @@ namespace Crusaders30XX.ECS.Systems
                 if (ui != null)
                 {
                     ui.IsInteractable = true;
+                    ui.LayerType = UILayerType.Overlay;
                 }
+                InputContextService.EnsureMember(
+                    EntityManager,
+                    card,
+                    "overlay.card-list");
             }
         }
 
@@ -252,31 +268,6 @@ namespace Crusaders30XX.ECS.Systems
             Vector2 xPos = new Vector2(closeRect.Center.X - xMeasure.X / 2f, closeRect.Center.Y - xMeasure.Y / 2f);
             _spriteBatch.DrawString(_font, xLabel, xPos, Color.White, 0f, Vector2.Zero, xScale, SpriteEffects.None, 0f);
 
-            // Sync a clickable close entity
-            var closeBtn = EntityManager.GetEntitiesWithComponent<CardListModalClose>().FirstOrDefault();
-            if (closeBtn == null)
-            {
-                closeBtn = EntityManager.CreateEntity("CardListModal_Close");
-                EntityManager.AddComponent(closeBtn, new Transform { Position = new Vector2(closeRect.X, closeRect.Y), ZOrder = 20000 });
-                EntityManager.AddComponent(closeBtn, new UIElement { Bounds = closeRect, IsInteractable = true, Tooltip = "Close", LayerType = UILayerType.Overlay, EventType = UIElementEventType.CardListModalClose });
-                EntityManager.AddComponent(closeBtn, new HotKey { Button = FaceButton.B });
-                EntityManager.AddComponent(closeBtn, new CardListModalClose());
-            }
-            else
-            {
-                var ui = closeBtn.GetComponent<UIElement>();
-                if (ui != null) ui.Bounds = closeRect;
-            }
-        }
-
-        private void RestoreModalSuppressed()
-        {
-            foreach (var e in _suppressedByModal)
-            {
-                var ui = e.GetComponent<UIElement>();
-                ui?.Restore();
-            }
-            _suppressedByModal.Clear();
         }
 
         private void DrawBorder(Rectangle r, Color color, int thickness)
@@ -307,26 +298,19 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            // Suppress all interactable entities except the modal's close button and the specific cards being displayed
             var modalCmp = modal.GetComponent<CardListModal>();
-            var modalCardSet = new HashSet<Entity>(modalCmp?.Cards ?? new List<Entity>());
-            RestoreModalSuppressed();
-            foreach (var e in EntityManager.GetEntitiesWithComponent<UIElement>())
+            EnsureModalRoot(modal, modalCmp);
+            foreach (Entity card in modalCmp?.Cards ?? new List<Entity>())
             {
-                if (e.GetComponent<CardListModalClose>() != null) continue;
-                if (modalCardSet.Contains(e)) continue;
-                var ui = e.GetComponent<UIElement>();
-                if (ui != null && ui.BaseInteractable)
-                {
-                    ui.Suppress();
-                    _suppressedByModal.Add(e);
-                }
+                InputContextService.EnsureMember(
+                    EntityManager,
+                    card,
+                    "overlay.card-list");
             }
         }
 
         private void CloseModal()
         {
-            RestoreModalSuppressed();
             var modal = EntityManager.GetEntitiesWithComponent<CardListModal>().FirstOrDefault();
             if (modal == null) return;
             var cmp = modal.GetComponent<CardListModal>();
@@ -353,6 +337,79 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.DestroyEntity(btn.Id);
             }
         }
+
+        private void EnsureModalRoot(Entity entity, CardListModal modal)
+        {
+            if (entity.GetComponent<Transform>() == null)
+            {
+                EntityManager.AddComponent(entity, new Transform
+                {
+                    Position = Vector2.Zero,
+                    ZOrder = 19000,
+                });
+            }
+            UIElement ui = entity.GetComponent<UIElement>();
+            if (ui == null)
+            {
+                ui = new UIElement { LayerType = UILayerType.Overlay };
+                EntityManager.AddComponent(entity, ui);
+            }
+            ui.IsInteractable = modal?.IsOpen == true;
+            ui.Bounds = modal?.IsOpen == true
+                ? new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight)
+                : Rectangle.Empty;
+            InputContextService.EnsureContext(
+                EntityManager,
+                entity,
+                "overlay.card-list",
+                740,
+                modal?.IsOpen == true);
+        }
+
+        private void EnsureCloseButton(Rectangle bounds)
+        {
+            Entity closeButton = EntityManager
+                .GetEntitiesWithComponent<CardListModalClose>()
+                .FirstOrDefault();
+            if (closeButton == null)
+            {
+                closeButton = EntityManager.CreateEntity("CardListModal_Close");
+                EntityManager.AddComponent(closeButton, new Transform
+                {
+                    Position = new Vector2(bounds.X, bounds.Y),
+                    ZOrder = 20000,
+                });
+                EntityManager.AddComponent(closeButton, new UIElement
+                {
+                    Tooltip = "Close",
+                    LayerType = UILayerType.Overlay,
+                    EventType = UIElementEventType.CardListModalClose,
+                });
+                EntityManager.AddComponent(closeButton, new HotKey { Button = FaceButton.B });
+                EntityManager.AddComponent(closeButton, new CardListModalClose());
+                InputContextService.EnsureMember(
+                    EntityManager,
+                    closeButton,
+                    "overlay.card-list");
+            }
+
+            closeButton.GetComponent<Transform>().Position = new Vector2(bounds.X, bounds.Y);
+            UIElement ui = closeButton.GetComponent<UIElement>();
+            ui.Bounds = bounds;
+            ui.IsInteractable = true;
+            ui.IsHidden = false;
+        }
+
+        private void SetCloseButtonActive(bool active)
+        {
+            UIElement ui = EntityManager
+                .GetEntitiesWithComponent<CardListModalClose>()
+                .FirstOrDefault()
+                ?.GetComponent<UIElement>();
+            if (ui == null) return;
+            ui.IsInteractable = active;
+            ui.IsHidden = !active;
+            if (!active) ui.Bounds = Rectangle.Empty;
+        }
     }
 }
-

@@ -5,7 +5,6 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
@@ -16,7 +15,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly World _world;
 		private readonly SpriteBatch _spriteBatch;
 		private float _t;
-		private MouseState _prevMouse;
 
 		[DebugEditable(DisplayName = "Title Text", Step = 1)]
 		public string TitleText { get; set; } = "Church\nSuffering";
@@ -44,7 +42,6 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_world = world;
 			_spriteBatch = spriteBatch;
-			_prevMouse = Mouse.GetState();
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -59,7 +56,6 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				// Reset timer when not active so fade restarts upon returning
 				_t = 0f;
-				_prevMouse = Mouse.GetState();
 				// Disable title menu click area if it exists
 				var existing = EntityManager.GetEntity("TitleMenu_ClickArea");
 				var uiExisting = existing?.GetComponent<UIElement>();
@@ -103,7 +99,6 @@ namespace Crusaders30XX.ECS.Systems
 				TitleMenuResumeService.OnTitleMenuClicked(_world);
 			}
 
-			_prevMouse = Mouse.GetState();
 		}
 
 		public void Draw()

@@ -76,9 +76,9 @@ namespace Crusaders30XX.ECS.Core
         /// <summary>
         /// Adds a system to the world
         /// </summary>
-        public void AddSystem(System system)
+        public void AddSystem(System system, SystemUpdatePhase phase = SystemUpdatePhase.Gameplay)
         {
-            SystemManager.AddSystem(system);
+            SystemManager.AddSystem(system, phase);
         }
 
         /// <summary>

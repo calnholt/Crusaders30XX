@@ -6,9 +6,9 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -46,10 +46,6 @@ namespace Crusaders30XX.ECS.Systems
 		private OverlayState _state = OverlayState.Hidden;
 		private float _alpha01 = 0f; // 0..1
 
-		// Input edge tracking
-		private GamePadState _prevGamePad;
-		private KeyboardState _prevKeyboard;
-
 		// Entities
 		private Entity _overlayTextEntity;
 		private Entity _confirmParentEntity;
@@ -66,7 +62,6 @@ namespace Crusaders30XX.ECS.Systems
 			_font = FontSingleton.TitleFont;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
-			_prevKeyboard = Keyboard.GetState();
 			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
 			EventManager.Subscribe<RunEndSequenceRequested>(_ => DismissOverlay());
 		}
@@ -106,12 +101,9 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
-			var kb = Keyboard.GetState();
-			var caps = GamePad.GetCapabilities(PlayerIndex.One);
-			var gp = caps.IsConnected ? GamePad.GetState(PlayerIndex.One) : default;
-
-			bool edgeEsc = kb.IsKeyDown(Keys.Escape) && !_prevKeyboard.IsKeyDown(Keys.Escape);
-			bool edgeBackHw = caps.IsConnected && gp.Buttons.Back == ButtonState.Pressed && _prevGamePad.Buttons.Back == ButtonState.Released;
+			PlayerInputFrame input = PlayerInputService.GetFrame(EntityManager);
+			bool edgeEsc = input.WasPressed(PlayerButton.Escape);
+			bool edgeBackHw = input.WasPressed(PlayerButton.Back);
 
 			// Determine if any other overlay UI is present (avoid opening over modals)
 			bool anyOverlayUi = EntityManager.GetEntitiesWithComponent<UIElement>()
@@ -177,8 +169,11 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 
-			_prevGamePad = gp;
-			_prevKeyboard = kb;
+			if (_state != OverlayState.Hidden)
+			{
+				UpdateEntityLayout();
+				SyncEntitiesActive(true);
+			}
 		}
 
 		private void EnsureEntities()
@@ -189,6 +184,10 @@ namespace Crusaders30XX.ECS.Systems
 				_confirmParentEntity = EntityManager.CreateEntity("QuitQuest_ConfirmParent");
 				EntityManager.AddComponent(_confirmParentEntity, new Transform { Position = new Vector2(-10000, -10000), ZOrder = OverlayZ });
 				EntityManager.AddComponent(_confirmParentEntity, new UIElement { Bounds = Rectangle.Empty, IsInteractable = false, LayerType = UILayerType.Overlay, EventType = UIElementEventType.AbandonQuest });
+				InputContextService.EnsureMember(
+					EntityManager,
+					_confirmParentEntity,
+					"overlay.quit-quest");
 			}
 
 			// Centered text entity with Start hotkey (parented to confirm)
@@ -198,6 +197,10 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(_overlayTextEntity, new Transform { Position = Vector2.Zero, ZOrder = OverlayZ });
 				EntityManager.AddComponent(_overlayTextEntity, new UIElement { Bounds = Rectangle.Empty, IsInteractable = false, LayerType = UILayerType.Overlay, Tooltip = "" });
 				EntityManager.AddComponent(_overlayTextEntity, new HotKey { Button = FaceButton.X, ParentEntity = _confirmParentEntity, Position = HotKeyPosition.Below, RequiresHold = true });
+				InputContextService.EnsureMember(
+					EntityManager,
+					_overlayTextEntity,
+					"overlay.quit-quest");
 			}
 
 			// Fullscreen blocker that swallows clicks behind the overlay
@@ -214,6 +217,12 @@ namespace Crusaders30XX.ECS.Systems
 					IsPreventDefaultClick = true,
 					IsHidden = false,
 				});
+				InputContextService.EnsureContext(
+					EntityManager,
+					_overlayBlockerEntity,
+					"overlay.quit-quest",
+					760,
+					true);
 			}
 		}
 
@@ -224,6 +233,8 @@ namespace Crusaders30XX.ECS.Systems
 			var uiParent = _confirmParentEntity?.GetComponent<UIElement>();
 			var uiBlocker = _overlayBlockerEntity?.GetComponent<UIElement>();
 			var tBlocker = _overlayBlockerEntity?.GetComponent<Transform>();
+			var context = _overlayBlockerEntity?.GetComponent<InputContext>();
+			if (context != null) context.IsActive = active;
 			if (uiText != null)
 			{
 				uiText.IsInteractable = active;
@@ -270,8 +281,15 @@ namespace Crusaders30XX.ECS.Systems
 			var size = _font.MeasureString(text) * TextScale;
 			var pos = new Vector2((w - size.X) / 2f, (h - size.Y) / 2f);
 			_spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+		}
 
-			// Update entity transforms and bounds so hotkey hints anchor to text
+		private void UpdateEntityLayout()
+		{
+			string text = "Abandon run?";
+			var size = _font.MeasureString(text) * TextScale;
+			var pos = new Vector2(
+				(Game1.VirtualWidth - size.X) / 2f,
+				(Game1.VirtualHeight - size.Y) / 2f);
 			_textRect = new Rectangle((int)Math.Round(pos.X), (int)Math.Round(pos.Y), (int)Math.Ceiling(size.X), (int)Math.Ceiling(size.Y));
 
 			if (_overlayTextEntity != null)

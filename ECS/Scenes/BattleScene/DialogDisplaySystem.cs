@@ -183,6 +183,13 @@ namespace Crusaders30XX.ECS.Systems
             var ui = overlayEntity?.GetComponent<UIElement>();
             var state = overlayEntity?.GetComponent<DialogOverlayState>();
             if (ui == null || state == null) return;
+            InputContextService.EnsureContext(
+                EntityManager,
+                overlayEntity,
+                "overlay.dialog",
+                800,
+                state.IsActive);
+            ui.LayerType = UILayerType.Overlay;
 
             // Only interactable while active so it doesn't capture hover/clicks
             ui.IsInteractable = state.IsActive;
@@ -514,6 +521,12 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(e, t);
                 EntityManager.AddComponent(e, ui);
                 EntityManager.AddComponent(e, new DialogOverlayState());
+                InputContextService.EnsureContext(
+                    EntityManager,
+                    e,
+                    "overlay.dialog",
+                    800,
+                    false);
                 EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
                 EntityManager.AddComponent(e, new DontDestroyOnLoad());
                 LoggingService.Append("DialogDisplaySystem.EnsureDialogOverlay", new System.Text.Json.Nodes.JsonObject { ["action"] = "DialogOverlay created" });
@@ -541,6 +554,10 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(ent, new Transform { Position = new Vector2(x, y), ZOrder = ZOrder + 1 });
                 EntityManager.AddComponent(ent, new UIElement { Bounds = new Rectangle(x, y, btnW, btnH), IsInteractable = true, LayerType = UILayerType.Overlay });
                 EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Start, RequiresHold = true });
+                InputContextService.EnsureMember(
+                    EntityManager,
+                    ent,
+                    "overlay.dialog");
                 EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
             }
             else

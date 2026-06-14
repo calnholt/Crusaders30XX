@@ -25,7 +25,6 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteFont _font = FontSingleton.TitleFont;
         private readonly Texture2D _pixel;
         private CardVisualSettings _cardSettings;
-        private readonly HashSet<Entity> _suppressedByPayCost = new HashSet<Entity>();
 
         [DebugEditable(DisplayName = "Fade In (s)", Step = 0.05f, Min = 0.01f, Max = 1.0f)]
         public float FadeInDurationSec { get; set; } = 0.25f;
@@ -116,6 +115,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var state = entity.GetComponent<PayCostOverlayState>();
             if (state == null) return;
+            EnsureInputContext(entity, state);
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             if (state.IsOpen)
             {
@@ -235,6 +235,15 @@ namespace Crusaders30XX.ECS.Systems
             {
                 e = EntityManager.CreateEntity("PayCostOverlay");
                 EntityManager.AddComponent(e, new PayCostOverlayState { IsOpen = false });
+                EntityManager.AddComponent(e, new Transform
+                {
+                    Position = Vector2.Zero,
+                    ZOrder = 19000,
+                });
+                EntityManager.AddComponent(e, new UIElement
+                {
+                    LayerType = UILayerType.Overlay,
+                });
             }
             // Ensure a cancel button entity exists (bounds updated in Draw)
             var cancel = EntityManager.GetEntitiesWithComponent<PayCostCancelButton>().FirstOrDefault();
@@ -245,6 +254,10 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(cancel, new UIElement { Bounds = new Rectangle(0, 0, 1, 1), IsInteractable = true, Tooltip = "Cancel", LayerType = UILayerType.Overlay, EventType = UIElementEventType.PayCostCancel });
                 EntityManager.AddComponent(cancel, new HotKey { Button = FaceButton.B, Position = HotKeyPosition.Below });
                 EntityManager.AddComponent(cancel, new PayCostCancelButton());
+                InputContextService.EnsureMember(
+                    EntityManager,
+                    cancel,
+                    "overlay.pay-cost");
             }
         }
 
@@ -293,23 +306,6 @@ namespace Crusaders30XX.ECS.Systems
                 ["card"] = HandStateLoggingService.BuildCardSnapshot(state.CardToPlay)
             });
 
-            // Suppress all interactable entities except cancel button and viable hand/selected cards
-            RestorePayCostSuppressed();
-            var deckEntity2 = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-            var deck2 = deckEntity2?.GetComponent<Deck>();
-            foreach (var ent in EntityManager.GetEntitiesWithComponent<UIElement>())
-            {
-                if (ent.GetComponent<PayCostCancelButton>() != null) continue;
-                var isCard = ent.GetComponent<CardData>() != null;
-                if (isCard && ((deck2 != null && deck2.Hand.Contains(ent)) || ent.GetComponent<SelectedForPayment>() != null)) continue;
-                var ui = ent.GetComponent<UIElement>();
-                if (ui != null && ui.BaseInteractable)
-                {
-                    ui.Suppress();
-                    _suppressedByPayCost.Add(ent);
-                }
-            }
-
             // Stage the card: record original index and move to HandStaged zone
             var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
             var deck = deckEntity?.GetComponent<Deck>();
@@ -346,7 +342,6 @@ namespace Crusaders30XX.ECS.Systems
 
         private void Close()
         {
-            RestorePayCostSuppressed();
             var e = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
             if (e == null) return;
             var state = e.GetComponent<PayCostOverlayState>();
@@ -996,6 +991,10 @@ namespace Crusaders30XX.ECS.Systems
                 if (c == state.CardToPlay) continue;
                 var ui = c.GetComponent<UIElement>();
                 if (ui == null) continue;
+                InputContextService.EnsureMember(
+                    EntityManager,
+                    c,
+                    "overlay.pay-cost");
                 bool viable = IsCardViableForCosts(c, state.RequiredCosts);
                 ui.IsInteractable = viable;
                 if (!viable)
@@ -1066,14 +1065,25 @@ namespace Crusaders30XX.ECS.Systems
             return cd.Card.Name ?? cd.Card.CardId ?? "Card";
         }
 
-        private void RestorePayCostSuppressed()
+        private void EnsureInputContext(Entity entity, PayCostOverlayState state)
         {
-            foreach (var ent in _suppressedByPayCost)
+            UIElement ui = entity.GetComponent<UIElement>();
+            if (ui == null)
             {
-                var ui = ent.GetComponent<UIElement>();
-                ui?.Restore();
+                ui = new UIElement { LayerType = UILayerType.Overlay };
+                EntityManager.AddComponent(entity, ui);
             }
-            _suppressedByPayCost.Clear();
+            bool active = state.IsOpen || state.IsReturning;
+            ui.IsInteractable = active;
+            ui.Bounds = active
+                ? new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight)
+                : Rectangle.Empty;
+            InputContextService.EnsureContext(
+                EntityManager,
+                entity,
+                "overlay.pay-cost",
+                600,
+                active);
         }
 
         private void DrawBorder(Rectangle rect, Color color, int thickness)

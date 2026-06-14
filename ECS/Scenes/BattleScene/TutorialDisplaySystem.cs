@@ -6,6 +6,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Input;
 using Crusaders30XX.ECS.Data.Tutorials;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Utils;
@@ -13,7 +14,6 @@ using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Data.Locations;
 
 namespace Crusaders30XX.ECS.Systems
@@ -40,6 +40,7 @@ namespace Crusaders30XX.ECS.Systems
         private Rectangle _bubbleRect;
 
         private const string ContinueEntityName = "TutorialContinueButton";
+        private const string TutorialContextEntityName = "TutorialInputContext";
 
         // Overlay settings
         [DebugEditable(DisplayName = "Overlay Alpha (0-255)", Step = 5, Min = 0, Max = 255)]
@@ -159,6 +160,7 @@ namespace Crusaders30XX.ECS.Systems
 
             // Block input
             StateSingleton.IsTutorialActive = true;
+            SetTutorialContextActive(true);
 
             // Resolve target bounds
             _targetBounds = _tutorialManager.ResolveTargetBounds();
@@ -182,6 +184,7 @@ namespace Crusaders30XX.ECS.Systems
             _currentTutorial = null;
             _targetBounds.Clear();
             DestroyContinueButton();
+            SetTutorialContextActive(false);
         }
 
         private void OnAllTutorialsCompleted(AllTutorialsCompletedEvent evt)
@@ -211,6 +214,8 @@ namespace Crusaders30XX.ECS.Systems
 
             // Restore input
             StateSingleton.PreventClicking = false;
+            StateSingleton.IsTutorialActive = false;
+            SetTutorialContextActive(false);
 
             // Destroy continue button
             DestroyContinueButton();
@@ -229,7 +234,7 @@ namespace Crusaders30XX.ECS.Systems
             string text = GuidedTutorialDefinitions.ResolveMessageText(
                 _currentTutorial.key,
                 _currentTutorial.text,
-                GamePad.GetCapabilities(PlayerIndex.One).IsConnected);
+                PlayerInputService.GetFrame(EntityManager).IsGamepadConnected);
             var lines = TextUtils.WrapText(_font, text, BubbleTextScale, BubbleMaxWidth - BubblePadX * 2);
             _wrappedText = string.Join("\n", lines);
         }
@@ -344,6 +349,10 @@ namespace Crusaders30XX.ECS.Systems
                 Position = HotKeyPosition.Below,
                 IsActive = true
             });
+            InputContextService.EnsureMember(
+                EntityManager,
+                entity,
+                "overlay.tutorial");
 
             LoggingService.Append("TutorialDisplaySystem.CreateContinueButton", new System.Text.Json.Nodes.JsonObject { ["message"] = "created continue button" });
         }
@@ -355,6 +364,22 @@ namespace Crusaders30XX.ECS.Systems
             {
                 EntityManager.DestroyEntity(entity.Id);
             }
+        }
+
+        private void SetTutorialContextActive(bool active)
+        {
+            Entity contextEntity = EntityManager.GetEntity(TutorialContextEntityName);
+            if (contextEntity == null)
+            {
+                contextEntity = EntityManager.CreateEntity(TutorialContextEntityName);
+                EntityManager.AddComponent(contextEntity, new DontDestroyOnLoad());
+            }
+            InputContextService.EnsureContext(
+                EntityManager,
+                contextEntity,
+                "overlay.tutorial",
+                900,
+                active);
         }
 
         public void Draw()

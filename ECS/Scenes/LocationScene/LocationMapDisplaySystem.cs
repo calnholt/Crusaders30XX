@@ -8,11 +8,11 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Input;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -29,10 +29,7 @@ namespace Crusaders30XX.ECS.Systems
 		private Vector2 _cameraCenter;
 		private bool _locked;
 		private bool _hasPannedOnLoad = false;
-		private int _prevScrollWheelValue;
-		private MouseState _prevMouseState;
 		private bool _isDragging;
-		private Vector2 _dragStartPosition;
 
 		// Map configuration
 		private const int BaseMapWidth = 6000;
@@ -75,8 +72,6 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			_backgroundTexture = content.Load<Texture2D>("desert_background_location");
-			_prevScrollWheelValue = Mouse.GetState().ScrollWheelValue;
-			_prevMouseState = Mouse.GetState();
 			// Restore zoom state from singleton on system creation
 			MapScale = StateSingleton.LocationMapZoom;
 			EventManager.Subscribe<LockLocationCameraEvent>(_ => { _locked = _.Locked; });
@@ -142,7 +137,6 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (!Game1.WindowIsActive)
 			{
-				_prevScrollWheelValue = Mouse.GetState().ScrollWheelValue;
 				_isDragging = false;
 				PublishCameraState(w, h);
 				return;
@@ -150,7 +144,6 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (_locked)
 			{
-				_prevScrollWheelValue = Mouse.GetState().ScrollWheelValue;
 				_isDragging = false;
 				PublishCameraState(w, h);
 				return;
@@ -159,10 +152,11 @@ namespace Crusaders30XX.ECS.Systems
 			// Gather combined input (keyboard + gamepad)
 			Vector2 velocity = Vector2.Zero;
 
-			// Keyboard (WASD) — screen-space: up is negative Y
-			var ks = Keyboard.GetState();
-			int xAxis = (ks.IsKeyDown(Keys.D) ? 1 : 0) - (ks.IsKeyDown(Keys.A) ? 1 : 0);
-			int yAxis = (ks.IsKeyDown(Keys.S) ? 1 : 0) - (ks.IsKeyDown(Keys.W) ? 1 : 0);
+			PlayerInputFrame input = PlayerInputService.GetFrame(EntityManager);
+			int xAxis = (input.IsDown(PlayerButton.MoveRight) ? 1 : 0)
+				- (input.IsDown(PlayerButton.MoveLeft) ? 1 : 0);
+			int yAxis = (input.IsDown(PlayerButton.MoveDown) ? 1 : 0)
+				- (input.IsDown(PlayerButton.MoveUp) ? 1 : 0);
 			if (xAxis != 0 || yAxis != 0)
 			{
 				var kbDir = new Vector2(xAxis, yAxis);
@@ -171,10 +165,9 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			// Gamepad right stick (keep existing feel)
-			var gp = GamePad.GetState(PlayerIndex.One);
-			if (gp.IsConnected)
+			if (input.IsGamepadConnected)
 			{
-				Vector2 stick = gp.ThumbSticks.Right; // X: right+, Y: up+
+				Vector2 stick = input.RightStick;
 				float mag = stick.Length();
 				if (mag >= Deadzone)
 				{
@@ -193,14 +186,14 @@ namespace Crusaders30XX.ECS.Systems
 			bool zoomChanged = false;
 			
 			// Gamepad zoom
-			if (gp.IsConnected)
+			if (input.IsGamepadConnected)
 			{
-				if (gp.IsButtonDown(Buttons.LeftShoulder))
+				if (input.IsDown(PlayerButton.LeftShoulder))
 				{
 					MapScale = MathHelper.Clamp(MapScale - ZoomSpeed * dt, MinZoom, MaxZoom);
 					zoomChanged = true;
 				}
-				if (gp.IsButtonDown(Buttons.RightShoulder))
+				if (input.IsDown(PlayerButton.RightShoulder))
 				{
 					MapScale = MathHelper.Clamp(MapScale + ZoomSpeed * dt, MinZoom, MaxZoom);
 					zoomChanged = true;
@@ -208,37 +201,28 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			
 			// Mouse wheel zoom
-			var mouse = Mouse.GetState();
-			int scrollDelta = mouse.ScrollWheelValue - _prevScrollWheelValue;
-			if (scrollDelta != 0)
+			if (input.ScrollDelta != 0f)
 			{
-				// Scroll wheel typically uses 120 units per notch
-				// Scale the zoom change based on scroll delta
-				float zoomDelta = (scrollDelta / 120f) * ZoomSpeed * dt * 10f; // Multiply by 10 for more responsive scroll zoom
+				float zoomDelta = input.ScrollDelta * ZoomSpeed * dt * 10f;
 				MapScale = MathHelper.Clamp(MapScale + zoomDelta, MinZoom, MaxZoom);
 				zoomChanged = true;
 			}
-			_prevScrollWheelValue = mouse.ScrollWheelValue;
 
 			// Right mouse button drag-to-pan
-			bool rmbPressed = mouse.RightButton == ButtonState.Pressed;
-			bool rmbPrevPressed = _prevMouseState.RightButton == ButtonState.Pressed;
-			bool rmbEdge = rmbPressed && !rmbPrevPressed;
+			bool rmbPressed = input.Device == PlayerInputDevice.KeyboardMouse
+				&& input.IsDown(PlayerButton.Secondary);
+			bool rmbEdge = input.Device == PlayerInputDevice.KeyboardMouse
+				&& input.WasPressed(PlayerButton.Secondary);
 
 			if (rmbEdge)
 			{
 				// Start drag
 				_isDragging = true;
-				_dragStartPosition = new Vector2(mouse.X, mouse.Y);
 			}
 			else if (_isDragging && rmbPressed)
 			{
-				// Continue dragging
-				Vector2 currentMousePos = new Vector2(mouse.X, mouse.Y);
-				Vector2 delta = currentMousePos - _dragStartPosition;
 				// Move camera opposite to drag direction (natural map dragging feel)
-				_cameraCenter -= delta;
-				_dragStartPosition = currentMousePos;
+				_cameraCenter -= input.PointerDelta;
 			}
 			else if (!rmbPressed && _isDragging)
 			{
@@ -270,8 +254,6 @@ namespace Crusaders30XX.ECS.Systems
 			ClampCamera(ref _cameraCenter, w, h);
 			PublishCameraState(w, h);
 
-			// Update previous mouse state for next frame
-			_prevMouseState = mouse;
 		}
 
 		private void PublishCameraState(int viewportW, int viewportH)
@@ -401,5 +383,4 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 

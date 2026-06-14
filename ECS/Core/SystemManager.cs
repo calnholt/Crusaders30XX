@@ -5,13 +5,27 @@ using Crusaders30XX.Diagnostics;
 
 namespace Crusaders30XX.ECS.Core
 {
+    public enum SystemUpdatePhase
+    {
+        Input,
+        Interaction,
+        Gameplay,
+        Presentation,
+    }
+
     /// <summary>
     /// Manages all systems in the ECS architecture.
     /// Handles system registration, ordering, and updates.
     /// </summary>
     public class SystemManager
     {
-        private readonly List<System> _systems = new();
+        private readonly Dictionary<SystemUpdatePhase, List<System>> _systems = new()
+        {
+            [SystemUpdatePhase.Input] = new(),
+            [SystemUpdatePhase.Interaction] = new(),
+            [SystemUpdatePhase.Gameplay] = new(),
+            [SystemUpdatePhase.Presentation] = new(),
+        };
         private readonly List<System> _lateSystems = new();
         private readonly EntityManager _entityManager;
 
@@ -23,11 +37,11 @@ namespace Crusaders30XX.ECS.Core
         /// <summary>
         /// Adds a system to the manager
         /// </summary>
-        public void AddSystem(System system)
+        public void AddSystem(System system, SystemUpdatePhase phase = SystemUpdatePhase.Gameplay)
         {
-            if (!_systems.Contains(system))
+            if (!_systems.Values.Any(systems => systems.Contains(system)))
             {
-                _systems.Add(system);
+                _systems[phase].Add(system);
             }
         }
 
@@ -48,7 +62,10 @@ namespace Crusaders30XX.ECS.Core
         /// </summary>
         public void RemoveSystem(System system)
         {
-            _systems.Remove(system);
+            foreach (var systems in _systems.Values)
+            {
+                systems.Remove(system);
+            }
             _lateSystems.Remove(system);
         }
         
@@ -57,7 +74,7 @@ namespace Crusaders30XX.ECS.Core
         /// </summary>
         public T GetSystem<T>() where T : System
         {
-            return _systems.OfType<T>().FirstOrDefault();
+            return _systems.Values.SelectMany(systems => systems).OfType<T>().FirstOrDefault();
         }
         
         /// <summary>
@@ -65,7 +82,7 @@ namespace Crusaders30XX.ECS.Core
         /// </summary>
         public IEnumerable<T> GetSystems<T>() where T : System
         {
-            return _systems.OfType<T>();
+            return _systems.Values.SelectMany(systems => systems).OfType<T>();
         }
         
         /// <summary>
@@ -73,7 +90,7 @@ namespace Crusaders30XX.ECS.Core
         /// </summary>
         public IEnumerable<System> GetAllSystems()
         {
-            return _systems;
+            return _systems.Values.SelectMany(systems => systems).Concat(_lateSystems);
         }
         
         /// <summary>
@@ -82,14 +99,17 @@ namespace Crusaders30XX.ECS.Core
         public void Update(GameTime gameTime)
         {
             // Iterate over a snapshot to avoid modification during enumeration
-            var snapshot = _systems.ToArray();
-            foreach (var system in snapshot)
+            foreach (var phase in global::System.Enum.GetValues<SystemUpdatePhase>())
             {
+                var snapshot = _systems[phase].ToArray();
+                foreach (var system in snapshot)
+                {
 #if DEBUG
-                FrameProfiler.Measure(system.GetType().Name + ".Update", () => system.Update(gameTime));
+                    FrameProfiler.Measure(system.GetType().Name + ".Update", () => system.Update(gameTime));
 #else
-                system.Update(gameTime);
+                    system.Update(gameTime);
 #endif
+                }
             }
         }
 
@@ -114,7 +134,11 @@ namespace Crusaders30XX.ECS.Core
         /// </summary>
         public void SetAllSystemsActive(bool active)
         {
-            foreach (var system in _systems)
+            foreach (var system in _systems.Values.SelectMany(systems => systems))
+            {
+                system.SetActive(active);
+            }
+            foreach (var system in _lateSystems)
             {
                 system.SetActive(active);
             }
@@ -125,13 +149,16 @@ namespace Crusaders30XX.ECS.Core
         /// </summary>
         public void Clear()
         {
-            _systems.Clear();
+            foreach (var systems in _systems.Values)
+            {
+                systems.Clear();
+            }
             _lateSystems.Clear();
         }
         
         /// <summary>
         /// Gets the number of registered systems
         /// </summary>
-        public int SystemCount => _systems.Count;
+        public int SystemCount => _systems.Values.Sum(systems => systems.Count);
     }
 } 

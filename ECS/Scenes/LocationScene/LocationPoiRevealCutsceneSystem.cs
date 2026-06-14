@@ -215,7 +215,7 @@ namespace Crusaders30XX.ECS.Systems
 			_focusedCamera = false;
 			_allowedRevealIds = null;
 			StateSingleton.IsActive = true;
-			EventManager.Publish(new SetCursorEnabledEvent { Enabled = false });
+			EventManager.Publish(new SetPlayerInputEnabledEvent { Enabled = false });
 			EventManager.Publish(new LockLocationCameraEvent { Locked = true });
 		}
 
@@ -227,7 +227,7 @@ namespace Crusaders30XX.ECS.Systems
 			_animTime = 0f;
 			_focusedCamera = false;
 			ClearExpandingFog();
-			EventManager.Publish(new SetCursorEnabledEvent { Enabled = true });
+			EventManager.Publish(new SetPlayerInputEnabledEvent { Enabled = true });
 			EventManager.Publish(new LockLocationCameraEvent { Locked = false });
 			StateSingleton.HasPendingLocationPoiReveal = false;
 			StateSingleton.PendingPoiId = null;

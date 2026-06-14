@@ -10,9 +10,10 @@ using Crusaders30XX.ECS.Events;
 using System.Diagnostics;
 using System.Text;
 using System.Reflection;
-using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Utils;
 using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Input;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -27,7 +28,8 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteFont _font = FontSingleton.ContentFont;
         private readonly SystemManager _systemManager;
         private Texture2D _pixel;
-        private MouseState _prevMouse;
+        private PlayerInputFrame _inputFrame;
+        private readonly List<Action> _drawCommands = new();
         private DateTime _lastDrawTime = DateTime.UtcNow;
         private float _scrollOffset = 0f; // vertical scroll for panel content
         private float _dropdownScrollOffset = 0f; // vertical scroll for open dropdown list
@@ -129,7 +131,6 @@ namespace Crusaders30XX.ECS.Systems
             _systemManager = systemManager;
             _pixel = new Texture2D(graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
-            _prevMouse = Mouse.GetState();
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -139,11 +140,23 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
-            // No periodic updates needed
+            _inputFrame = PlayerInputService.GetFrame(EntityManager);
+            var menu = entity.GetComponent<DebugMenu>();
+            InputContextService.EnsureContext(
+                EntityManager,
+                entity,
+                "diagnostic.debug-menu",
+                900,
+                menu?.IsOpen == true,
+                true);
+            var ui = entity.GetComponent<UIElement>();
+            if (ui != null) ui.IsInteractable = menu?.IsOpen == true;
+            BuildFrame();
         }
 
-        public void Draw()
+        private void BuildFrame()
         {
+			_drawCommands.Clear();
 			// Early-out if there is no menu; while ensuring UIElement interactivity reflects open state
 			var menuEntity = GetRelevantEntities().FirstOrDefault();
 			if (menuEntity == null) return;
@@ -176,25 +189,12 @@ namespace Crusaders30XX.ECS.Systems
 			// Invalidate debug menu caches when scene or system set changes
 			TryInvalidateCachesOnSceneOrSystemsChange();
 
-            var mouse = Mouse.GetState();
-            
-            // Transform mouse coordinates from screen space to virtual space
-            var dest = Game1.RenderDestination;
-            float scaleX = (float)dest.Width / Game1.VirtualWidth;
-            float scaleY = (float)dest.Height / Game1.VirtualHeight;
-            
-            // Avoid division by zero
-            if (scaleX <= 0.001f) scaleX = 1f;
-            if (scaleY <= 0.001f) scaleY = 1f;
-            
-            int virtMouseX = (int)Math.Round((mouse.X - dest.X) / scaleX);
-            int virtMouseY = (int)Math.Round((mouse.Y - dest.Y) / scaleY);
-            Point mousePosition = new Point(virtMouseX, virtMouseY);
+            Point mousePosition = _inputFrame.PointerPosition.ToPoint();
             
             var now = DateTime.UtcNow;
             double dt = (now - _lastDrawTime).TotalSeconds;
             _lastDrawTime = now;
-            bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
+            bool click = _inputFrame.WasPressed(PlayerButton.Primary);
             bool clickForContent = click;
 
             // Layout values
@@ -209,8 +209,8 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Allow dragging by the title label area
-            bool mouseDown = mouse.LeftButton == ButtonState.Pressed;
-            bool mouseJustPressed = mouseDown && _prevMouse.LeftButton == ButtonState.Released;
+            bool mouseDown = _inputFrame.IsDown(PlayerButton.Primary);
+            bool mouseJustPressed = _inputFrame.WasPressed(PlayerButton.Primary);
 
             int panelX = menu.PanelX;
             int panelY = menu.PanelY;
@@ -223,7 +223,6 @@ namespace Crusaders30XX.ECS.Systems
                 ui.Bounds = panelRectEmpty;
                 DrawFilledRect(panelRectEmpty, new Color(15, 30, 55) * 0.95f);
                 DrawRect(panelRectEmpty, Color.White, PanelBorderThickness);
-                _prevMouse = mouse;
                 return;
             }
             if (menu.ActiveTabIndex < 0 || menu.ActiveTabIndex >= systems.Count)
@@ -350,6 +349,10 @@ namespace Crusaders30XX.ECS.Systems
                 var ddBounds = new Rectangle(panelX + Padding, cursorY, PanelWidth - Padding * 2, DropdownRowHeight);
                 EntityManager.AddComponent(ddEntity, dd);
                 EntityManager.AddComponent(ddEntity, new UIElement { Bounds = ddBounds, IsInteractable = true });
+                EntityManager.AddComponent(ddEntity, new InputContextMember
+                {
+                    ContextId = "diagnostic.debug-menu",
+                });
                 // Set very high Z so dropdown (and especially its options) stays on top of other UI
                 EntityManager.AddComponent(ddEntity, new Transform { Position = new Vector2(ddBounds.X, ddBounds.Y), ZOrder = 50000 });
             }
@@ -369,6 +372,10 @@ namespace Crusaders30XX.ECS.Systems
                     // Boost ZOrder while open to ensure options render above everything and capture hover
                     tDD.ZOrder = dd.IsOpen ? 60000 : 50000;
                 }
+                InputContextService.EnsureMember(
+                    EntityManager,
+                    ddEntity,
+                    "diagnostic.debug-menu");
             }
             var ddCurrent = ddEntity.GetComponent<UIDropdown>();
             var ddUI = ddEntity.GetComponent<UIElement>();
@@ -426,8 +433,7 @@ namespace Crusaders30XX.ECS.Systems
             }
             else
             {
-                int wheelDelta = mouse.ScrollWheelValue - _prevMouse.ScrollWheelValue; // + when scrolled up
-                float deltaPixels = -(wheelDelta / 120f) * ScrollPixelsPerNotch; // adjustable px per notch
+                float deltaPixels = -_inputFrame.ScrollDelta * ScrollPixelsPerNotch;
                 _scrollOffset = MathHelper.Clamp(_scrollOffset + deltaPixels, 0f, maxScroll);
             }
             int yOffset = -(int)Math.Round(_scrollOffset);
@@ -510,7 +516,7 @@ namespace Crusaders30XX.ECS.Systems
                         }
                     }
                     // Holding logic
-                    if (mouse.LeftButton == ButtonState.Pressed && _hold != null)
+                    if (_inputFrame.IsDown(PlayerButton.Primary) && _hold != null)
                     {
                         // Refresh current rect positions to keep tracking in case layout shifts slightly
                         if ((_hold.Rect == minusRect || _hold.Rect == plusRect) && _hold.Rect.Contains(mousePosition))
@@ -656,8 +662,7 @@ namespace Crusaders30XX.ECS.Systems
                 float rowOffset = 0f;
                 if (dropdownNeedScroll2)
                 {
-                    int wheelDelta = mouse.ScrollWheelValue - _prevMouse.ScrollWheelValue;
-                    float deltaPixels = -(wheelDelta / 120f) * ScrollPixelsPerNotch;
+                    float deltaPixels = -_inputFrame.ScrollDelta * ScrollPixelsPerNotch;
                     float maxDD = Math.Max(0, listTotalHeight2 - listDisplayHeight2);
                     _dropdownScrollOffset = MathHelper.Clamp(_dropdownScrollOffset + deltaPixels, 0f, maxDD);
                     firstRow = (int)Math.Floor(_dropdownScrollOffset / deferredRowH);
@@ -691,7 +696,6 @@ namespace Crusaders30XX.ECS.Systems
                 }
             }
 
-            _prevMouse = mouse;
         }
 
         private void TryInvalidateCachesOnSceneOrSystemsChange()
@@ -942,6 +946,14 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
+        public void Draw()
+        {
+            foreach (Action drawCommand in _drawCommands)
+            {
+                drawCommand();
+            }
+        }
+
         private static IEnumerable<(string name, Core.System sys)> GetAnnotatedSystems(IEnumerable<Core.System> systems)
         {
             foreach (var s in systems)
@@ -1035,19 +1047,22 @@ namespace Crusaders30XX.ECS.Systems
 
         private void DrawFilledRect(Rectangle rect, Color color)
         {
-            _spriteBatch.Draw(_pixel, rect, color);
+            _drawCommands.Add(() => _spriteBatch.Draw(_pixel, rect, color));
         }
 
         private void DrawRect(Rectangle rect, Color color, int thickness)
         {
-            // top
-            _spriteBatch.Draw(_pixel, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
-            // bottom
-            _spriteBatch.Draw(_pixel, new Rectangle(rect.X, rect.Bottom - thickness, rect.Width, thickness), color);
-            // left
-            _spriteBatch.Draw(_pixel, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
-            // right
-            _spriteBatch.Draw(_pixel, new Rectangle(rect.Right - thickness, rect.Y, thickness, rect.Height), color);
+            Rectangle top = new(rect.X, rect.Y, rect.Width, thickness);
+            Rectangle bottom = new(rect.X, rect.Bottom - thickness, rect.Width, thickness);
+            Rectangle left = new(rect.X, rect.Y, thickness, rect.Height);
+            Rectangle right = new(rect.Right - thickness, rect.Y, thickness, rect.Height);
+            _drawCommands.Add(() =>
+            {
+                _spriteBatch.Draw(_pixel, top, color);
+                _spriteBatch.Draw(_pixel, bottom, color);
+                _spriteBatch.Draw(_pixel, left, color);
+                _spriteBatch.Draw(_pixel, right, color);
+            });
         }
 
         private void DrawStringScaled(string text, Vector2 position, Color color, float scale)
@@ -1055,7 +1070,16 @@ namespace Crusaders30XX.ECS.Systems
             if (_font == null || string.IsNullOrEmpty(text)) return;
             string safe = TextUtils.FilterUnsupportedGlyphs(_font, text);
             if (string.IsNullOrEmpty(safe)) return;
-            _spriteBatch.DrawString(_font, safe, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            _drawCommands.Add(() => _spriteBatch.DrawString(
+                _font,
+                safe,
+                position,
+                color,
+                0f,
+                Vector2.Zero,
+                scale,
+                SpriteEffects.None,
+                0f));
         }
 
         private void DrawStringClippedScaled(string text, Vector2 position, Color color, int maxWidth, float scale)
@@ -1066,7 +1090,16 @@ namespace Crusaders30XX.ECS.Systems
             float width = _font.MeasureString(safeText).X * scale;
             if (width <= maxWidth)
             {
-                _spriteBatch.DrawString(_font, safeText, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                _drawCommands.Add(() => _spriteBatch.DrawString(
+                    _font,
+                    safeText,
+                    position,
+                    color,
+                    0f,
+                    Vector2.Zero,
+                    scale,
+                    SpriteEffects.None,
+                    0f));
                 return;
             }
             const string ellipsis = "...";
@@ -1076,7 +1109,17 @@ namespace Crusaders30XX.ECS.Systems
             {
                 s = s.Substring(0, s.Length - 1);
             }
-            _spriteBatch.DrawString(_font, s + ellipsis, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            string clipped = s + ellipsis;
+            _drawCommands.Add(() => _spriteBatch.DrawString(
+                _font,
+                clipped,
+                position,
+                color,
+                0f,
+                Vector2.Zero,
+                scale,
+                SpriteEffects.None,
+                0f));
         }
 
         // Simple rasterized triangle draw helpers using the 1x1 pixel texture
@@ -1090,7 +1133,8 @@ namespace Crusaders30XX.ECS.Systems
                 int w = Math.Max(1, (int)Math.Round(r.Width * t));
                 int x = r.X + (r.Width - w) / 2;
                 int y = r.Y + i;
-                _spriteBatch.Draw(_pixel, new Rectangle(x, y, w, 1), color);
+                Rectangle line = new(x, y, w, 1);
+                _drawCommands.Add(() => _spriteBatch.Draw(_pixel, line, color));
             }
         }
 
@@ -1104,9 +1148,9 @@ namespace Crusaders30XX.ECS.Systems
                 int w = Math.Max(1, (int)Math.Round(r.Width * t));
                 int x = r.X + (r.Width - w) / 2;
                 int y = r.Y + i;
-                _spriteBatch.Draw(_pixel, new Rectangle(x, y, w, 1), color);
+                Rectangle line = new(x, y, w, 1);
+                _drawCommands.Add(() => _spriteBatch.Draw(_pixel, line, color));
             }
         }
     }
 }
-

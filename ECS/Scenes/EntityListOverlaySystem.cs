@@ -4,9 +4,9 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System.Diagnostics;
 using Crusaders30XX.ECS.Singletons;
 
@@ -20,8 +20,9 @@ namespace Crusaders30XX.ECS.Systems
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private Texture2D _pixel;
-        private CursorStateEvent _cursorEvent;
-        private MouseState _prevMouse;
+        private const string CopyButtonName = "EntityListOverlay_Copy";
+        private Rectangle _panelRect;
+        private Rectangle _copyRect;
 
         public EntityListOverlaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
@@ -30,7 +31,6 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch = spriteBatch;
             _pixel = new Texture2D(_graphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
-            EventManager.Subscribe<CursorStateEvent>(e => _cursorEvent = e);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -41,16 +41,53 @@ namespace Crusaders30XX.ECS.Systems
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
             var overlay = entity.GetComponent<EntityListOverlay>();
-            if (overlay == null || !overlay.IsOpen || _cursorEvent == null) return;
+            if (overlay == null) return;
+
+            EnsureRootComponents(entity, overlay);
+            InputContext context = entity.GetComponent<InputContext>();
+            UIElement rootUi = entity.GetComponent<UIElement>();
+            context.IsActive = overlay.IsOpen;
+            rootUi.IsInteractable = overlay.IsOpen;
+            if (!overlay.IsOpen)
+            {
+                rootUi.Bounds = Rectangle.Empty;
+                SetCopyButtonActive(false);
+                return;
+            }
+
+            int width = Math.Min(overlay.PanelWidth, Game1.VirtualWidth - overlay.PanelX - 10);
+            int height = Math.Min(overlay.PanelHeight, Game1.VirtualHeight - overlay.PanelY - 10);
+            _panelRect = new Rectangle(overlay.PanelX, overlay.PanelY, width, height);
+            _copyRect = new Rectangle(
+                _panelRect.Right - overlay.Padding - 120,
+                _panelRect.Y + overlay.Padding,
+                120,
+                overlay.RowHeight);
+            rootUi.Bounds = _panelRect;
+
+            Entity copyButton = EnsureCopyButton(context.Id);
+            UIElement copyUi = copyButton.GetComponent<UIElement>();
+            copyUi.Bounds = _copyRect;
+            copyUi.IsInteractable = true;
+            copyButton.GetComponent<Transform>().Position = new Vector2(_copyRect.X, _copyRect.Y);
+            if (copyUi.IsClicked)
+            {
+                TryCopyToClipboard(BuildEntityListExport());
+            }
 
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (_cursorEvent.ScrollDelta != 0f)
+            PlayerInputFrame input = PlayerInputService.GetFrame(EntityManager);
+            if (input.ScrollDelta != 0f)
             {
-                overlay.ScrollOffset = Math.Max(0f, overlay.ScrollOffset - _cursorEvent.ScrollDelta * overlay.RowHeight * 2f);
+                overlay.ScrollOffset = Math.Max(
+                    0f,
+                    overlay.ScrollOffset - input.ScrollDelta * overlay.RowHeight * 2f);
             }
-            if (_cursorEvent.ScrollStickY != 0f)
+            if (MathF.Abs(input.RightStick.Y) > 0.15f)
             {
-                overlay.ScrollOffset = Math.Max(0f, overlay.ScrollOffset - _cursorEvent.ScrollStickY * overlay.RowHeight * 20f * dt);
+                overlay.ScrollOffset = Math.Max(
+                    0f,
+                    overlay.ScrollOffset - input.RightStick.Y * overlay.RowHeight * 20f * dt);
             }
         }
 
@@ -59,40 +96,27 @@ namespace Crusaders30XX.ECS.Systems
 			var overlayEntity = GetRelevantEntities().FirstOrDefault();
 			if (overlayEntity == null) return;
 			var overlay = overlayEntity.GetComponent<EntityListOverlay>();
-			var ui = overlayEntity.GetComponent<UIElement>();
-			if (ui != null) ui.IsInteractable = overlay != null && overlay.IsOpen;
 			if (overlay == null || !overlay.IsOpen) return;
 
-            var mouse = Mouse.GetState();
-            bool click = mouse.LeftButton == ButtonState.Pressed && _prevMouse.LeftButton == ButtonState.Released;
-
             // Panel
-            int x = overlay.PanelX;
-            int y = overlay.PanelY;
-            int w = Math.Min(overlay.PanelWidth, Game1.VirtualWidth - x - 10);
-            int h = Math.Min(overlay.PanelHeight, Game1.VirtualHeight - y - 10);
-            var panelRect = new Rectangle(x, y, w, h);
-            Fill(panelRect, new Color(10, 10, 10, 200));
-            Stroke(panelRect, Color.White, 1);
+            int x = _panelRect.X;
+            int y = _panelRect.Y;
+            int w = _panelRect.Width;
+            int h = _panelRect.Height;
+            Fill(_panelRect, new Color(10, 10, 10, 200));
+            Stroke(_panelRect, Color.White, 1);
 
             int cursorY = y + overlay.Padding;
             // Title
             string title = "Entities";
             _spriteBatch.DrawString(FontSingleton.ContentFont, title, new Vector2(x + overlay.Padding, cursorY), Color.White, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
             // Copy button at top-right
-            int btnW = 120;
-            int btnH = overlay.RowHeight;
-            var copyRect = new Rectangle(x + w - overlay.Padding - btnW, y + overlay.Padding, btnW, btnH);
-            bool hoverCopy = copyRect.Contains(mouse.Position);
+            Entity copyButton = EntityManager.GetEntity(CopyButtonName);
+            bool hoverCopy = copyButton?.GetComponent<UIElement>()?.IsHovered == true;
             var copyBg = hoverCopy ? new Color(120, 120, 120) : new Color(70, 70, 70);
-            Fill(copyRect, copyBg);
-            Stroke(copyRect, Color.White, 1);
-            _spriteBatch.DrawString(FontSingleton.ContentFont, "Copy", new Vector2(copyRect.X + 10, copyRect.Y + 3), Color.White, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
-            if (click && hoverCopy)
-            {
-                string export = BuildEntityListExport();
-                TryCopyToClipboard(export);
-            }
+            Fill(_copyRect, copyBg);
+            Stroke(_copyRect, Color.White, 1);
+            _spriteBatch.DrawString(FontSingleton.ContentFont, "Copy", new Vector2(_copyRect.X + 10, _copyRect.Y + 3), Color.White, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
             cursorY += (int)Math.Round(FontSingleton.ContentFont.LineSpacing * overlay.TextScale) + overlay.Padding;
 
             // Header row
@@ -129,7 +153,67 @@ namespace Crusaders30XX.ECS.Systems
                 _spriteBatch.DrawString(FontSingleton.ContentFont, line2, new Vector2(x + overlay.Padding + 20, line2Y), Color.LightGray, 0f, Vector2.Zero, overlay.TextScale, SpriteEffects.None, 0f);
             }
 
-            _prevMouse = mouse;
+        }
+
+        private void EnsureRootComponents(Entity entity, EntityListOverlay overlay)
+        {
+            if (entity.GetComponent<Transform>() == null)
+            {
+                EntityManager.AddComponent(entity, new Transform
+                {
+                    Position = Vector2.Zero,
+                    ZOrder = 50000,
+                });
+            }
+            if (entity.GetComponent<UIElement>() == null)
+            {
+                EntityManager.AddComponent(entity, new UIElement());
+            }
+            if (entity.GetComponent<InputContext>() == null)
+            {
+                EntityManager.AddComponent(entity, new InputContext
+                {
+                    Id = "diagnostic.entity-list",
+                    Priority = 910,
+                    IsActive = overlay.IsOpen,
+                    IsDiagnostic = true,
+                });
+            }
+            if (entity.GetComponent<InputContextMember>() == null)
+            {
+                EntityManager.AddComponent(entity, new InputContextMember
+                {
+                    ContextId = "diagnostic.entity-list",
+                });
+            }
+        }
+
+        private Entity EnsureCopyButton(string contextId)
+        {
+            Entity entity = EntityManager.GetEntity(CopyButtonName);
+            if (entity != null) return entity;
+
+            entity = EntityManager.CreateEntity(CopyButtonName);
+            EntityManager.AddComponent(entity, new Transform
+            {
+                Position = Vector2.Zero,
+                ZOrder = 50001,
+            });
+            EntityManager.AddComponent(entity, new UIElement());
+            EntityManager.AddComponent(entity, new InputContextMember
+            {
+                ContextId = contextId,
+            });
+            EntityManager.AddComponent(entity, new DontDestroyOnLoad());
+            return entity;
+        }
+
+        private void SetCopyButtonActive(bool active)
+        {
+            UIElement ui = EntityManager.GetEntity(CopyButtonName)?.GetComponent<UIElement>();
+            if (ui == null) return;
+            ui.IsInteractable = active;
+            if (!active) ui.Bounds = Rectangle.Empty;
         }
 
         private string BuildEntityListExport()
@@ -252,5 +336,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
-

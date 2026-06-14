@@ -10,6 +10,7 @@ using Crusaders30XX.ECS.Objects.Events;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Utils;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -181,6 +182,12 @@ namespace Crusaders30XX.ECS.Systems
 			var ui = overlayEntity.GetComponent<UIElement>();
 			var state = overlayEntity.GetComponent<NarrativeEventOverlayState>();
 			if (ui == null || state == null) return;
+			InputContextService.EnsureContext(
+				EntityManager,
+				overlayEntity,
+				"overlay.narrative-event",
+				730,
+				state.IsOpen);
 
 			ui.IsInteractable = state.IsOpen;
 			ui.LayerType = state.IsOpen ? UILayerType.Overlay : UILayerType.Default;
@@ -530,6 +537,12 @@ namespace Crusaders30XX.ECS.Systems
 					LayerType = UILayerType.Overlay
 				});
 				EntityManager.AddComponent(e, new NarrativeEventOverlayState());
+				InputContextService.EnsureContext(
+					EntityManager,
+					e,
+					"overlay.narrative-event",
+					730,
+					false);
 				EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
 				EntityManager.AddComponent(e, new DontDestroyOnLoad());
 			}
@@ -556,6 +569,10 @@ namespace Crusaders30XX.ECS.Systems
 					LayerType = UILayerType.Overlay
 				});
 				EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
+				InputContextService.EnsureMember(
+					EntityManager,
+					ent,
+					"overlay.narrative-event");
 				EntityManager.AddComponent(ent, new DontDestroyOnLoad());
 			}
 			return ent;

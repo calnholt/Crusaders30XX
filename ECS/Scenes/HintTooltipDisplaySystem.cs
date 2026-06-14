@@ -6,10 +6,10 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Utils;
+using Crusaders30XX.ECS.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Systems
@@ -26,7 +26,6 @@ namespace Crusaders30XX.ECS.Systems
         private int _cachedW, _cachedH, _cachedR;
 
         // Runtime state
-        private GamePadState _prevGamePadState;
         private bool _targetVisible;
         private float _alpha01;
         private int _visibleForEntityId = -1;
@@ -115,16 +114,14 @@ namespace Crusaders30XX.ECS.Systems
         public override void Update(GameTime gameTime)
         {
             if (!IsActive) return;
-            if (!Game1.WindowIsActive) { _prevGamePadState = GamePad.GetState(PlayerIndex.One); return; }
-
-            var gp = GamePad.GetState(PlayerIndex.One);
-            bool useGamepad = gp.IsConnected;
+            if (!Game1.WindowIsActive) return;
+            PlayerInputFrame input = PlayerInputService.GetFrame(EntityManager);
+            bool useGamepad = input.IsGamepadConnected;
             if (!useGamepad)
             {
                 // Hide if switching away from gamepad
                 _targetVisible = false;
                 StepFade(gameTime);
-                _prevGamePadState = gp;
                 return;
             }
 
@@ -142,7 +139,7 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Toggle on Left Stick press edge
-            bool edgeL3 = gp.Buttons.LeftStick == ButtonState.Pressed && _prevGamePadState.Buttons.LeftStick == ButtonState.Released;
+            bool edgeL3 = input.WasPressed(PlayerButton.LeftStick);
             if (edgeL3 && hovered != null)
             {
                 if (!_targetVisible || _visibleForEntityId != hovered.E.Id)
@@ -156,7 +153,6 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             StepFade(gameTime);
-            _prevGamePadState = gp;
             base.Update(gameTime);
         }
 

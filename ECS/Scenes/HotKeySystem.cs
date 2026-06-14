@@ -4,11 +4,12 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Input;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -18,9 +19,10 @@ namespace Crusaders30XX.ECS.Systems
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font;
-        private GamePadState _prevGamePadState;
-        private KeyboardState _prevKeyboardState;
         private Texture2D _circleTexSmall;
+        private readonly HotKeyHoldTracker _holdTracker = new();
+
+        public IReadOnlyDictionary<Entity, float> HoldProgress => _holdTracker.Progress;
 
         [DebugEditable(DisplayName = "Hint Radius (px)", Step = 1f, Min = 4f, Max = 64f)]
         public int HintRadius { get; set; } = 20;
@@ -41,8 +43,6 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch = sb;
             _font = FontSingleton.ContentFont;
             _circleTexSmall = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, HintRadius);
-            _prevKeyboardState = Keyboard.GetState();
-            
             EventManager.Subscribe<HotKeyHoldCompletedEvent>(OnHotKeyHoldCompleted);
         }
 
@@ -91,118 +91,117 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
-            // Poll controller once per frame
-            if (!Game1.WindowIsActive || StateSingleton.IsActive || StateSingleton.PreventClicking) return;
-            var caps = GamePad.GetCapabilities(PlayerIndex.One);
-            var kb = Keyboard.GetState();
-            
-            if (!caps.IsConnected)
+            if (!Game1.WindowIsActive || StateSingleton.IsActive) return;
+            PlayerInputFrame frame = PlayerInputService.GetFrame(EntityManager);
+            string contextId = InputContextResolver.ResolveCommandContext(EntityManager);
+            if (StateSingleton.PreventClicking
+                && contextId == InputContextIds.Gameplay)
             {
-                _prevGamePadState = default;
-                // Handle keyboard input when gamepad is not connected
-                bool edgeSpace = kb.IsKeyDown(Keys.Space) && !_prevKeyboardState.IsKeyDown(Keys.Space);
-                
-                if (edgeSpace)
+                return;
+            }
+            FaceButton? pressed = GetPressedButton(frame);
+            if (pressed.HasValue)
+            {
+                var target = FindTarget(pressed.Value, contextId);
+                if (target != null)
                 {
-                    // Treat spacebar as FaceButton.X
-                    FaceButton pressed = FaceButton.X;
-
-                    // If any overlay UI is present, suppress default-layer hotkeys
-                    bool overlayPresent = EntityManager.GetEntitiesWithComponent<UIElement>()
-                        .Any(e => {
-                            var ui = e.GetComponent<UIElement>();
-                            return ui != null 
-                                && ui.LayerType == UILayerType.Overlay 
-                                && ui.IsInteractable 
-                                && ui.Bounds.Width > 0 
-                                && ui.Bounds.Height > 0;
-                        });
-
-                    // Choose top-most eligible entity with this hotkey by ZOrder
-                    var target = EntityManager.GetEntitiesWithComponent<HotKey>()
-                        .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>() })
-                        .Where(x => x.HK != null && x.HK.IsActive && x.UI != null && x.UI.IsInteractable && !x.UI.IsHidden && x.HK.Button == pressed && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
-                        .OrderByDescending(x => x.T?.ZOrder ?? 0)
-                        .FirstOrDefault();
-                    if (target != null)
+                    if (target.GetComponent<HotKey>().RequiresHold)
                     {
-                        // Skip activation if RequiresHold - let HotKeyProgressRingSystem handle it
-                        if (target.HK.RequiresHold)
-                        {
-                            _prevKeyboardState = kb;
-                            return;
-                        }
-
-                        ProcessHotKeyClick(target.E);
+                        _holdTracker.Start(target, pressed.Value);
                     }
                     else
                     {
-                        ProcessHoveredSecondaryAction(overlayPresent);
+                        ProcessHotKeyClick(target);
                     }
-                }
-                
-                _prevKeyboardState = kb;
-                return;
-            }
-            
-            var gp = GamePad.GetState(PlayerIndex.One);
-            bool edgeY = gp.Buttons.Y == ButtonState.Pressed && _prevGamePadState.Buttons.Y == ButtonState.Released;
-            bool edgeB = gp.Buttons.B == ButtonState.Pressed && _prevGamePadState.Buttons.B == ButtonState.Released;
-            bool edgeX = gp.Buttons.X == ButtonState.Pressed && _prevGamePadState.Buttons.X == ButtonState.Released;
-            bool edgeStart = gp.Buttons.Start == ButtonState.Pressed && _prevGamePadState.Buttons.Start == ButtonState.Released;
-            bool edgeLB = gp.Buttons.LeftShoulder == ButtonState.Pressed && _prevGamePadState.Buttons.LeftShoulder == ButtonState.Released;
-            bool edgeRB = gp.Buttons.RightShoulder == ButtonState.Pressed && _prevGamePadState.Buttons.RightShoulder == ButtonState.Released;
-
-            if (edgeY || edgeB || edgeX || edgeStart || edgeLB || edgeRB)
-            {
-                FaceButton? pressed = null;
-                if (edgeY) pressed = FaceButton.Y;
-                else if (edgeB) pressed = FaceButton.B;
-                else if (edgeX) pressed = FaceButton.X;
-                else if (edgeStart) pressed = FaceButton.Start;
-                else if (edgeLB) pressed = FaceButton.LB;
-                else if (edgeRB) pressed = FaceButton.RB;
-
-                // If any overlay UI is present, suppress default-layer hotkeys
-                bool overlayPresent = EntityManager.GetEntitiesWithComponent<UIElement>()
-                    .Any(e => {
-                        var ui = e.GetComponent<UIElement>();
-                        return ui != null 
-                            && ui.LayerType == UILayerType.Overlay 
-                            && ui.IsInteractable 
-                            && ui.Bounds.Width > 0 
-                            && ui.Bounds.Height > 0;
-                    });
-
-                // Choose top-most eligible entity with this hotkey by ZOrder
-                var target = EntityManager.GetEntitiesWithComponent<HotKey>()
-                    .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>() })
-                    .Where(x => x.HK != null && x.HK.IsActive && x.UI != null && x.UI.IsInteractable && !x.UI.IsHidden && x.HK.Button == pressed && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
-                    .OrderByDescending(x => x.T?.ZOrder ?? 0)
-                    .FirstOrDefault();
-                if (target != null)
-                {
-                    // Skip activation if RequiresHold - let HotKeyProgressRingSystem handle it
-                    if (target.HK.RequiresHold)
-                    {
-                        _prevGamePadState = gp;
-                        _prevKeyboardState = kb;
-                        return;
-                    }
-
-                    ProcessHotKeyClick(target.E);
                 }
                 else if (pressed == FaceButton.X)
                 {
-                    ProcessHoveredSecondaryAction(overlayPresent);
+                    ProcessHoveredSecondaryAction(contextId);
                 }
             }
 
-            _prevGamePadState = gp;
-            _prevKeyboardState = kb;
+            UpdateHolds(frame, contextId, (float)gameTime.ElapsedGameTime.TotalSeconds);
         }
 
-        private void ProcessHoveredSecondaryAction(bool overlayPresent)
+        private Entity FindTarget(FaceButton button, string contextId)
+        {
+            return EntityManager.GetEntitiesWithComponent<HotKey>()
+                .Select(entity => new
+                {
+                    Entity = entity,
+                    HotKey = entity.GetComponent<HotKey>(),
+                    UI = entity.GetComponent<UIElement>(),
+                    Transform = entity.GetComponent<Transform>(),
+                })
+                .Where(item => item.HotKey != null
+                    && item.HotKey.IsActive
+                    && item.HotKey.Button == button
+                    && item.UI != null
+                    && item.UI.IsInteractable
+                    && !item.UI.IsHidden
+                    && InputContextResolver.IsMember(item.Entity, contextId))
+                .OrderByDescending(item => item.Transform?.ZOrder ?? 0)
+                .Select(item => item.Entity)
+                .FirstOrDefault();
+        }
+
+        private void UpdateHolds(PlayerInputFrame frame, string contextId, float elapsed)
+        {
+            foreach (Entity heldEntity in _holdTracker.Progress.Keys.ToList())
+            {
+                HotKey hotKey = heldEntity.GetComponent<HotKey>();
+                UIElement ui = heldEntity.GetComponent<UIElement>();
+                bool eligible = hotKey != null
+                    && hotKey.IsActive
+                    && ui != null
+                    && ui.IsInteractable
+                    && !ui.IsHidden
+                    && InputContextResolver.IsMember(heldEntity, contextId)
+                    && IsButtonDown(frame, _holdTracker.GetButton(heldEntity));
+                if (_holdTracker.Advance(
+                    heldEntity,
+                    elapsed,
+                    hotKey?.HoldDurationSeconds ?? 0f,
+                    eligible))
+                {
+                    EventManager.Publish(new HotKeyHoldCompletedEvent { Entity = heldEntity });
+                }
+            }
+        }
+
+        private static FaceButton? GetPressedButton(PlayerInputFrame frame)
+        {
+            if (frame.Device == PlayerInputDevice.KeyboardMouse
+                && frame.WasPressed(PlayerButton.Space))
+            {
+                return FaceButton.X;
+            }
+            if (frame.WasPressed(PlayerButton.FaceY)) return FaceButton.Y;
+            if (frame.WasPressed(PlayerButton.Cancel)) return FaceButton.B;
+            if (frame.WasPressed(PlayerButton.FaceX)) return FaceButton.X;
+            if (frame.WasPressed(PlayerButton.Start)) return FaceButton.Start;
+            if (frame.WasPressed(PlayerButton.LeftShoulder)) return FaceButton.LB;
+            if (frame.WasPressed(PlayerButton.RightShoulder)) return FaceButton.RB;
+            return null;
+        }
+
+        private static bool IsButtonDown(PlayerInputFrame frame, FaceButton button)
+        {
+            return button switch
+            {
+                FaceButton.Y => frame.IsDown(PlayerButton.FaceY),
+                FaceButton.B => frame.IsDown(PlayerButton.Cancel),
+                FaceButton.X => frame.Device == PlayerInputDevice.KeyboardMouse
+                    ? frame.IsDown(PlayerButton.Space)
+                    : frame.IsDown(PlayerButton.FaceX),
+                FaceButton.Start => frame.IsDown(PlayerButton.Start),
+                FaceButton.LB => frame.IsDown(PlayerButton.LeftShoulder),
+                FaceButton.RB => frame.IsDown(PlayerButton.RightShoulder),
+                _ => false,
+            };
+        }
+
+        private void ProcessHoveredSecondaryAction(string contextId)
         {
             var target = EntityManager.GetEntitiesWithComponent<UIElement>()
                 .Select(entity => new
@@ -216,7 +215,7 @@ namespace Crusaders30XX.ECS.Systems
                     && x.UI.IsInteractable
                     && !x.UI.IsHidden
                     && x.UI.SecondaryEventType != UIElementEventType.None
-                    && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
+                    && InputContextResolver.IsMember(x.Entity, contextId))
                 .OrderByDescending(x => x.Transform?.ZOrder ?? 0)
                 .FirstOrDefault();
 
@@ -260,30 +259,29 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
-            if (StateSingleton.PreventClicking) return;
-            // Draw hints for interactable HotKey UI elements
-            var caps = GamePad.GetCapabilities(PlayerIndex.One);
-            bool gamepadConnected = caps.IsConnected;
-            
-            bool overlayPresent = EntityManager.GetEntitiesWithComponent<UIElement>()
-                .Any(e => {
-                    var ui = e.GetComponent<UIElement>();
-                    return ui != null 
-                        && ui.LayerType == UILayerType.Overlay 
-                        && ui.IsInteractable 
-                        && ui.Bounds.Width > 0 
-                        && ui.Bounds.Height > 0;
-                });
+            PlayerInputFrame frame = PlayerInputService.GetFrame(EntityManager);
+            bool gamepadConnected = frame.IsGamepadConnected;
+            string contextId = InputContextResolver.ResolveCommandContext(EntityManager);
+            if (StateSingleton.PreventClicking
+                && contextId == InputContextIds.Gameplay)
+            {
+                return;
+            }
 
             var items = EntityManager.GetEntitiesWithComponent<HotKey>()
                 .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>() })
-                .Where(x => x.HK != null && x.HK.IsActive && x.UI != null && x.UI.IsInteractable && !x.UI.IsHidden && (!overlayPresent || x.UI.LayerType == UILayerType.Overlay))
+                .Where(x => x.HK != null
+                    && x.HK.IsActive
+                    && x.UI != null
+                    && x.UI.IsInteractable
+                    && !x.UI.IsHidden
+                    && InputContextResolver.IsMember(x.E, contextId))
                 .OrderByDescending(x => x.T?.ZOrder ?? 0)
                 .ToList();
 
             // Ensure radius texture matches current setting
             _circleTexSmall = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, System.Math.Max(2, HintRadius));
-            bool isPS = IsPlayStation(caps);
+            bool isPS = frame.GamepadGlyphStyle == GamepadGlyphStyle.PlayStation;
 
             foreach (var x in items)
             {
@@ -354,13 +352,6 @@ namespace Crusaders30XX.ECS.Systems
                     }
                 }
             }
-        }
-
-        private static bool IsPlayStation(GamePadCapabilities caps)
-        {
-            string name = ((caps.DisplayName ?? string.Empty) + " " + (caps.Identifier ?? string.Empty)).ToLowerInvariant();
-            return name.Contains("dualshock") || name.Contains("dualsense") || name.Contains("playstation")
-                || name.Contains("sony") || name.Contains("wireless controller") || name.Contains("ps4") || name.Contains("ps5");
         }
 
         private void DrawPlayStationIcon(FaceButton b, int cx, int cy)
@@ -447,4 +438,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-

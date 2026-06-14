@@ -1,9 +1,7 @@
 using System.Linq;
-using System.Text.Json.Nodes;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Events;
-using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
@@ -18,10 +16,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font;
 		private Texture2D _pixel;
-		private float _scrollY = 0f;
-		private CursorStateEvent _cursorEvent;
 		private bool _wasOpen = false;
-		private bool _prevLeftDown = false;
 
 		[DebugEditable(DisplayName = "Backdrop Alpha (0-255)", Step = 5, Min = 0, Max = 255)]
 		public int BackdropAlpha { get; set; } = 140;
@@ -42,13 +37,6 @@ namespace Crusaders30XX.ECS.Systems
 			_font = font;
 			_pixel = new Texture2D(gd, 1, 1);
 			_pixel.SetData(new[] { Color.White });
-			EventManager.Subscribe<CursorStateEvent>(e => {
-				LoggingService.Append("HowToPlayOverlaySystem.OnCursorStateEvent", new JsonObject {
-					{ "ScrollDelta", e.ScrollDelta },
-					{ "ScrollStickY", e.ScrollStickY }
-				});
-				_cursorEvent = e;
-			});
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -58,44 +46,48 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			// Close on click anywhere; handle scrolling when open
 			var state = entity.GetComponent<HowToPlayOverlay>();
 			if (state == null) return;
-			var mouse = Microsoft.Xna.Framework.Input.Mouse.GetState();
+			EnsureInputComponents(entity, state);
+			var ui = entity.GetComponent<UIElement>();
+			var context = entity.GetComponent<InputContext>();
+			context.IsActive = state.IsOpen;
+			ui.IsInteractable = state.IsOpen;
+			ui.Bounds = state.IsOpen
+				? new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight)
+				: Rectangle.Empty;
+
 			if (state.IsOpen)
 			{
-				if (!_wasOpen) { _scrollY = 0f; _prevLeftDown = mouse.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed; }
-
-				// Scroll via CursorStateEvent
-				float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-				if (_cursorEvent != null)
+				PlayerInputFrame input = PlayerInputService.GetFrame(EntityManager);
+				if (!_wasOpen)
 				{
-					if (_cursorEvent.ScrollDelta != 0f)
-					{
-						_scrollY = System.Math.Max(0f, _scrollY - _cursorEvent.ScrollDelta * 30f);
-					}
-					if (_cursorEvent.ScrollStickY != 0f)
-					{
-						_scrollY = System.Math.Max(0f, _scrollY - _cursorEvent.ScrollStickY * 600f * dt);
-					}
+					state.ScrollOffset = 0f;
+					state.OpenedInputSequence = input.Sequence;
 				}
 
-				bool leftNow = mouse.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
-				if (leftNow && !_prevLeftDown)
+				float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+				if (input.ScrollDelta != 0f)
 				{
+					state.ScrollOffset = System.Math.Max(
+						0f,
+						state.ScrollOffset - input.ScrollDelta * 30f);
+				}
+				if (System.MathF.Abs(input.RightStick.Y) > 0.15f)
+				{
+					state.ScrollOffset = System.Math.Max(
+						0f,
+						state.ScrollOffset - input.RightStick.Y * 600f * dt);
+				}
+				ClampScroll(state);
+
+				if (ui.IsClicked && input.Sequence > state.OpenedInputSequence)
+				{
+					ui.IsClicked = false;
 					state.IsOpen = false;
 				}
-				_prevLeftDown = leftNow;
 			}
 			_wasOpen = state.IsOpen;
-		}
-
-		// For contexts where this system isn't registered in the SystemManager, allow manual input handling
-		public void UpdateFromMenu()
-		{
-			var e = GetRelevantEntities().FirstOrDefault();
-			if (e == null) return;
-			UpdateEntity(e, new GameTime());
 		}
 
 		public void Draw()
@@ -137,8 +129,8 @@ namespace Crusaders30XX.ECS.Systems
 			float viewTop = rect.Y + 60;
 			float viewBottom = rect.Bottom - bottomReserved;
 			float maxScroll = System.Math.Max(0f, contentH - (viewBottom - viewTop));
-			if (_scrollY > maxScroll) _scrollY = maxScroll;
-			float lineY = viewTop - _scrollY;
+			float scrollOffset = System.Math.Min(st.ScrollOffset, maxScroll);
+			float lineY = viewTop - scrollOffset;
 			for (int i = 0; i < lines.Count; i++)
 			{
 				string line = lines[i];
@@ -165,13 +157,63 @@ namespace Crusaders30XX.ECS.Systems
 				// thumb size proportional to view/content
 				float ratio = (viewBottom - viewTop) / contentH;
 				int thumbH = System.Math.Max(12, (int)(trackH * ratio));
-				int thumbY = trackY + (int)((trackH - thumbH) * (_scrollY / maxScroll));
+				int thumbY = trackY + (int)((trackH - thumbH) * (scrollOffset / maxScroll));
 				_spriteBatch.Draw(_pixel, new Rectangle(trackX, thumbY, barW, thumbH), new Color(255, 255, 255, 120));
 			}
 
 			// Close hint
 			var hpos = new Vector2(rect.X + (w - hsize.X) / 2f, rect.Bottom - hsize.Y - 12);
 			_spriteBatch.DrawString(_font, hint, hpos, Color.Gray, 0f, Vector2.Zero, 0.15f, SpriteEffects.None, 0f);
+		}
+
+		private void EnsureInputComponents(Entity entity, HowToPlayOverlay state)
+		{
+			if (entity.GetComponent<Transform>() == null)
+			{
+				EntityManager.AddComponent(entity, new Transform
+				{
+					Position = Vector2.Zero,
+					ZOrder = 70000,
+				});
+			}
+			if (entity.GetComponent<UIElement>() == null)
+			{
+				EntityManager.AddComponent(entity, new UIElement
+				{
+					LayerType = UILayerType.Overlay,
+					IsPreventDefaultClick = false,
+				});
+			}
+			if (entity.GetComponent<InputContext>() == null)
+			{
+				EntityManager.AddComponent(entity, new InputContext
+				{
+					Id = "overlay.how-to-play",
+					Priority = 700,
+					IsActive = state.IsOpen,
+				});
+			}
+			if (entity.GetComponent<InputContextMember>() == null)
+			{
+				EntityManager.AddComponent(entity, new InputContextMember
+				{
+					ContextId = "overlay.how-to-play",
+				});
+			}
+		}
+
+		private void ClampScroll(HowToPlayOverlay state)
+		{
+			int width = System.Math.Min(PanelWidth, Game1.VirtualWidth - 40);
+			int height = System.Math.Min(PanelHeight, Game1.VirtualHeight - 40);
+			int contentWidth = System.Math.Max(10, width - 48);
+			int lineCount = WrapText(state.Text ?? string.Empty, TextScale, contentWidth).Count();
+			float contentHeight = lineCount * _font.LineSpacing * TextScale;
+			float viewHeight = System.Math.Max(0f, height - 100f);
+			state.ScrollOffset = MathHelper.Clamp(
+				state.ScrollOffset,
+				0f,
+				System.Math.Max(0f, contentHeight - viewHeight));
 		}
 
 		private IEnumerable<string> WrapText(string text, float scale, int maxWidth)
@@ -222,5 +264,4 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 

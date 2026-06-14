@@ -1,0 +1,88 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Nodes;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Input;
+using Crusaders30XX.ECS.Services;
+using Microsoft.Xna.Framework;
+
+namespace Crusaders30XX.ECS.Systems
+{
+    public class UIInteractionSystem : Core.System
+    {
+        public UIInteractionSystem(EntityManager entityManager) : base(entityManager)
+        {
+        }
+
+        protected override IEnumerable<Entity> GetRelevantEntities()
+        {
+            return EntityManager.GetEntitiesWithComponent<UIElement>();
+        }
+
+        protected override void UpdateEntity(Entity entity, GameTime gameTime)
+        {
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            if (!IsActive) return;
+
+            foreach (Entity entity in GetRelevantEntities())
+            {
+                UIElement ui = entity.GetComponent<UIElement>();
+                ui.IsHovered = false;
+                ui.IsClicked = false;
+            }
+
+            PlayerInputState input = EntityManager
+                .GetEntitiesWithComponent<PlayerInputState>()
+                .FirstOrDefault()
+                ?.GetComponent<PlayerInputState>();
+            if (input == null || !input.IsCursorInteractionEnabled) return;
+
+            Entity target = input.CursorTarget.Entity;
+            UIElement targetUi = target?.GetComponent<UIElement>();
+            if (targetUi == null || targetUi.IsHidden) return;
+
+            targetUi.IsHovered = true;
+            PlayerInputFrame frame = input.Frame;
+            bool primary = frame.WasPressed(PlayerButton.Primary);
+            bool secondary = frame.WasPressed(PlayerButton.Secondary);
+            if (!primary && !secondary) return;
+            string contextId = InputContextResolver.ResolveCursorContext(
+                EntityManager,
+                frame.PointerPosition);
+            bool gameplayBlocked = contextId == InputContextIds.Gameplay
+                && StateSingleton.PreventClicking;
+
+            if (!targetUi.IsInteractable
+                || targetUi.IsPreventDefaultClick
+                || gameplayBlocked
+                || StateSingleton.IsTutorialActive)
+            {
+                LoggingService.Append("UIInteractionSystem_ClickBlocked", new JsonObject
+                {
+                    ["entityId"] = target.Id,
+                    ["isInteractable"] = targetUi.IsInteractable,
+                    ["preventClicking"] = gameplayBlocked,
+                    ["isTutorialActive"] = StateSingleton.IsTutorialActive,
+                });
+                return;
+            }
+
+            UIElementEventType eventType = primary
+                ? targetUi.EventType
+                : targetUi.SecondaryEventType;
+            if (primary)
+            {
+                targetUi.IsClicked = true;
+            }
+
+            if (eventType != UIElementEventType.None)
+            {
+                UIElementEventDelegateService.HandleEvent(eventType, target, EntityManager);
+            }
+        }
+    }
+}

@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Crusaders30XX.ECS.Core;
 // duplicate removed
 using Crusaders30XX.ECS.Factories;
@@ -15,6 +14,7 @@ using Crusaders30XX.ECS.Systems;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Data.Achievements;
 using System.IO;
+using Crusaders30XX.ECS.Input;
 
 namespace Crusaders30XX;
 
@@ -29,13 +29,12 @@ public class Game1 : Game
     private CardDisplaySystem _cardDisplaySystem;
     private CardDisplaySystemV2 _cardDisplaySystemV2;
     private BrittleDisplaySystem _brittleDisplaySystem;
-    private InputSystem _inputSystem;
+    private PlayerInputSystem _playerInputSystem;
+    private UIInteractionSystem _uiInteractionSystem;
 	private CurrencyDisplaySystem _currencyDisplaySystem;
 	private GoldManagementService _goldManagementService;
 	private CardApplicationManagementSystem _cardApplicationManagementSystem;
 	private DeckManagementSystem _deckManagementSystem;
-
-    private KeyboardState _prevKeyboard;
 
     private DrippingBloodDisplaySystem _drippingBloodDisplaySystem;
     private TitleMenuDisplaySystem _titleMenuDisplaySystem;
@@ -52,7 +51,7 @@ public class Game1 : Game
     private PositionTweenSystem _positionTweenSystem;
     private ParallaxLayerSystem _parallaxLayerSystem;
     private UIElementHighlightSystem _uiElementHighlightSystem;
-    private CursorSystem _cursorSystem;
+    private CursorDisplaySystem _cursorDisplaySystem;
     private CursorTrailDisplaySystem _cursorTrailDisplaySystem;
     private HotKeySystem _hotKeySystem;
     private HotKeyProgressRingSystem _hotKeyProgressRingSystem;
@@ -67,6 +66,7 @@ public class Game1 : Game
     private RewardModalDisplaySystem _rewardModalDisplaySystem;
     private NarrativeEventModalDisplaySystem _narrativeEventModalDisplaySystem;
     private CardListModalSystem _cardListModalSystem;
+    private HowToPlayOverlaySystem _howToPlayOverlaySystem;
     private DisplaySnapshotHost _snapshotHost;
     private readonly DisplaySnapshotLaunchOptions _snapshotOptions;
     private readonly TestFightLaunchOptions _testFightOptions;
@@ -121,6 +121,7 @@ public class Game1 : Game
         _graphics.PreferredBackBufferHeight = VirtualHeight;
         
         _graphics.ApplyChanges();
+        IsMouseVisible = false;
 
         Window.ClientSizeChanged += (sender, args) =>
         {
@@ -183,7 +184,10 @@ public class Game1 : Game
         _cardDisplaySystemV2 = new CardDisplaySystemV2(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _brittleDisplaySystem = new BrittleDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
-        _inputSystem = new InputSystem(_world.EntityManager);
+        _playerInputSystem = new PlayerInputSystem(
+            _world.EntityManager,
+            new MonoGamePlayerInputAdapter());
+        _uiInteractionSystem = new UIInteractionSystem(_world.EntityManager);
         _tooltipTextDisplaySystem = new TooltipTextDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _hintTooltipDisplaySystem = new HintTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _cardTooltipDisplaySystem = new CardTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
@@ -194,7 +198,7 @@ public class Game1 : Game
 		_deckManagementSystem = new DeckManagementSystem(_world.EntityManager);
         _profilerSystem = new ProfilerSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         // _worldMapSystem = new LocationSelectDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
-        _cursorSystem = new CursorSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _cursorDisplaySystem = new CursorDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _cursorTrailDisplaySystem = new CursorTrailDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _hotKeySystem = new HotKeySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _hotKeyProgressRingSystem = new HotKeyProgressRingSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _world.SystemManager);
@@ -226,14 +230,15 @@ public class Game1 : Game
         _world.AddSystem(_cardDisplaySystemV2);
         _world.AddSystem(_brittleDisplaySystem);
         _world.AddSystem(_dialogDisplaySystem);
-        _world.AddSystem(_inputSystem);
+        _world.AddSystem(_playerInputSystem, SystemUpdatePhase.Input);
+        _world.AddSystem(_uiInteractionSystem, SystemUpdatePhase.Interaction);
         _world.AddSystem(_tooltipTextDisplaySystem);
         _world.AddSystem(_hintTooltipDisplaySystem);
         _world.AddSystem(_cardTooltipDisplaySystem);
         _world.AddSystem(_profilerSystem);
         _world.AddSystem(_locationNameDisplaySystem);
         // _world.AddSystem(_worldMapSystem);
-        _world.AddSystem(_cursorSystem);
+        _world.AddSystem(_cursorDisplaySystem, SystemUpdatePhase.Presentation);
         _world.AddSystem(_cursorTrailDisplaySystem);
         _world.AddSystem(_hotKeySystem);
         _world.AddSystem(_hotKeyProgressRingSystem);
@@ -255,6 +260,15 @@ public class Game1 : Game
         _world.AddSystem(_narrativeEventModalDisplaySystem);
         _cardListModalSystem = new CardListModalSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _world.AddSystem(_cardListModalSystem);
+        _howToPlayOverlaySystem = new HowToPlayOverlaySystem(
+            _world.EntityManager,
+            GraphicsDevice,
+            _spriteBatch,
+            FontSingleton.ContentFont);
+        _world.AddSystem(_howToPlayOverlaySystem);
+        var howToPlayEntity = _world.CreateEntity("HowToPlayOverlay");
+        _world.AddComponent(howToPlayEntity, new HowToPlayOverlay());
+        _world.AddComponent(howToPlayEntity, new DontDestroyOnLoad());
         _world.AddSystem(new RunDeckLifecycleSystem(_world.EntityManager));
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
@@ -271,6 +285,7 @@ public class Game1 : Game
         _world.AddSystem(new JigglePulseDisplaySystem(_world.EntityManager));
         _alertDisplaySystem = new AlertDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _world.AddSystem(_alertDisplaySystem);
+        EventManager.Subscribe<PlayerCommandEvent>(OnPlayerCommand);
 
         // Mark persistent entities
         _world.AddComponent(sceneEntity, new DontDestroyOnLoad());
@@ -298,75 +313,20 @@ public class Game1 : Game
     
     protected override void Update(GameTime gameTime)
     {
-        var kb = Keyboard.GetState();
-        if (kb.IsKeyDown(Keys.Escape) && (kb.IsKeyDown(Keys.LeftShift) || kb.IsKeyDown(Keys.RightShift)))
-        {
-#if DEBUG
-            _writePerfReportOnExit = true;
-#endif
-            Exit();
-            return;
-        }
-
         FrameProfiler.BeginGameFrame(gameTime, _snapshotHost?.IsActive == true);
 
 #if DEBUG
-        FrameProfiler.MeasureInclusive("Game1.Update", () => RunUpdate(gameTime, kb));
+        FrameProfiler.MeasureInclusive("Game1.Update", () => RunUpdate(gameTime));
 #else
-        RunUpdate(gameTime, kb);
+        RunUpdate(gameTime);
 #endif
     }
 
-    private void RunUpdate(GameTime gameTime, KeyboardState kb)
+    private void RunUpdate(GameTime gameTime)
     {
         LoggingService.Tick();
         WindowIsActive = IsActive;
-        var gp = GamePad.GetState(PlayerIndex.One);
-        IsMouseVisible = gp.IsConnected;
-
-        if (_snapshotHost?.IsActive != true)
-        {
-            if (kb.IsKeyDown(Keys.F11) && !_prevKeyboard.IsKeyDown(Keys.F11))
-            {
-                ToggleFullScreen();
-            }
-
-            if (kb.IsKeyDown(Keys.D) && !_prevKeyboard.IsKeyDown(Keys.D) && kb.IsKeyDown(Keys.LeftShift))
-            {
-                ToggleDebugMenu();
-                var debugMenu = _world.EntityManager.GetEntitiesWithComponent<DebugMenu>().FirstOrDefault();
-                if (debugMenu != null)
-                {
-                    debugMenu.GetComponent<UIElement>().IsInteractable = !debugMenu.GetComponent<UIElement>().IsInteractable;
-                    Console.WriteLine($"Debug menu interactable: {debugMenu.GetComponent<UIElement>().IsInteractable}");
-                }
-            }
-
-            if ((kb.IsKeyDown(Keys.LeftShift) || kb.IsKeyDown(Keys.RightShift)) && kb.IsKeyDown(Keys.W) && !_prevKeyboard.IsKeyDown(Keys.W))
-            {
-                ToggleEntityListOverlay();
-            }
-
-            if ((kb.IsKeyDown(Keys.LeftShift) || kb.IsKeyDown(Keys.RightShift)) && kb.IsKeyDown(Keys.K) && !_prevKeyboard.IsKeyDown(Keys.K))
-            {
-                _debugCommandSystem.Debug_PlayerDealDamage(999);
-            }
-
-            if (kb.IsKeyDown(Keys.P) && !_prevKeyboard.IsKeyDown(Keys.P))
-            {
-                var e = _world.EntityManager.GetEntitiesWithComponent<ProfilerOverlay>().FirstOrDefault();
-                if (e == null)
-                {
-                    e = _world.EntityManager.CreateEntity("ProfilerOverlay");
-                    _world.EntityManager.AddComponent(e, new ProfilerOverlay { IsOpen = true });
-                }
-                else
-                {
-                    var p = e.GetComponent<ProfilerOverlay>();
-                    p.IsOpen = !p.IsOpen;
-                }
-            }
-        }
+        IsMouseVisible = false;
 
         _world.Update(gameTime);
 
@@ -376,8 +336,56 @@ public class Game1 : Game
         FrameProfiler.SetActiveScene(sceneId);
 #endif
 
-        _prevKeyboard = kb;
         base.Update(gameTime);
+    }
+
+    private void OnPlayerCommand(PlayerCommandEvent command)
+    {
+        if (command == null) return;
+        if (command.Command == PlayerCommand.QuitApplication)
+        {
+#if DEBUG
+            _writePerfReportOnExit = true;
+#endif
+            Exit();
+            return;
+        }
+
+        if (_snapshotHost?.IsActive == true) return;
+        switch (command.Command)
+        {
+            case PlayerCommand.ToggleFullScreen:
+                ToggleFullScreen();
+                break;
+            case PlayerCommand.ToggleDebugMenu:
+                ToggleDebugMenu();
+                break;
+            case PlayerCommand.ToggleEntityList:
+                ToggleEntityListOverlay();
+                break;
+            case PlayerCommand.DealDebugDamage:
+                _debugCommandSystem.Debug_PlayerDealDamage(999);
+                break;
+            case PlayerCommand.ToggleProfiler:
+                ToggleProfiler();
+                break;
+        }
+    }
+
+    private void ToggleProfiler()
+    {
+        var entity = _world.EntityManager
+            .GetEntitiesWithComponent<ProfilerOverlay>()
+            .FirstOrDefault();
+        if (entity == null)
+        {
+            entity = _world.EntityManager.CreateEntity("ProfilerOverlay");
+            _world.EntityManager.AddComponent(entity, new ProfilerOverlay { IsOpen = true });
+            return;
+        }
+
+        var profiler = entity.GetComponent<ProfilerOverlay>();
+        profiler.IsOpen = !profiler.IsOpen;
     }
 
     public RasterizerState GetRasterizerState() => _spriteRasterizer;
@@ -559,6 +567,7 @@ public class Game1 : Game
         FrameProfiler.Measure("RewardModalDisplaySystem.Draw", _rewardModalDisplaySystem.Draw);
         FrameProfiler.Measure("NarrativeEventModalDisplaySystem.Draw", _narrativeEventModalDisplaySystem.Draw);
         FrameProfiler.Measure("CardListModalSystem.Draw", _cardListModalSystem.Draw);
+        FrameProfiler.Measure("HowToPlayOverlaySystem.Draw", _howToPlayOverlaySystem.Draw);
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipTextDisplaySystem.Draw);
         FrameProfiler.Measure("HintTooltipDisplaySystem.Draw", _hintTooltipDisplaySystem.Draw);
         FrameProfiler.Measure("CardTooltipDisplaySystem.Draw", _cardTooltipDisplaySystem.Draw);
@@ -579,7 +588,7 @@ public class Game1 : Game
             }
 
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
-            FrameProfiler.Measure("WorldMapCursorSystem.Draw", _cursorSystem.Draw);
+            FrameProfiler.Measure("CursorDisplaySystem.Draw", _cursorDisplaySystem.Draw);
             _spriteBatch.End();
         }
     }
@@ -685,13 +694,25 @@ public class Game1 : Game
             _world.AddComponent(menuEntity, new DebugMenu { IsOpen = true });
             _world.AddComponent(menuEntity, new Transform { Position = new Vector2(1800, 200), ZOrder = 5000 });
             _world.AddComponent(menuEntity, new UIElement { Bounds = new Rectangle(1750, 150, 150, 300), IsInteractable = true });
+            _world.AddComponent(menuEntity, new InputContext
+            {
+                Id = "diagnostic.debug-menu",
+                Priority = 900,
+                IsActive = true,
+                IsDiagnostic = true,
+            });
+            _world.AddComponent(menuEntity, new InputContextMember
+            {
+                ContextId = "diagnostic.debug-menu",
+            });
             _world.AddComponent(menuEntity, new DontDestroyOnLoad());
         }
         else
         {
             var menu = menuEntity.GetComponent<DebugMenu>();
             menu.IsOpen = !menu.IsOpen;
-            // All interactive UIElements are suppressed/restored together via their suppress state
+            var context = menuEntity.GetComponent<InputContext>();
+            if (context != null) context.IsActive = menu.IsOpen;
         }
     }
 
@@ -703,12 +724,27 @@ public class Game1 : Game
         {
             overlayEntity = _world.CreateEntity("EntityListOverlay");
             _world.AddComponent(overlayEntity, new EntityListOverlay { IsOpen = true });
+            _world.AddComponent(overlayEntity, new Transform { Position = Vector2.Zero, ZOrder = 50000 });
+            _world.AddComponent(overlayEntity, new UIElement { IsInteractable = true });
+            _world.AddComponent(overlayEntity, new InputContext
+            {
+                Id = "diagnostic.entity-list",
+                Priority = 910,
+                IsActive = true,
+                IsDiagnostic = true,
+            });
+            _world.AddComponent(overlayEntity, new InputContextMember
+            {
+                ContextId = "diagnostic.entity-list",
+            });
             _world.AddComponent(overlayEntity, new DontDestroyOnLoad());
         }
         else
         {
             var o = overlayEntity.GetComponent<EntityListOverlay>();
             o.IsOpen = !o.IsOpen;
+            var context = overlayEntity.GetComponent<InputContext>();
+            if (context != null) context.IsActive = o.IsOpen;
         }
     }
 }

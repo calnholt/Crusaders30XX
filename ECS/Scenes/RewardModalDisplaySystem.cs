@@ -426,6 +426,12 @@ namespace Crusaders30XX.ECS.Systems
 			var ui = overlayEntity.GetComponent<UIElement>();
 			var state = overlayEntity.GetComponent<QuestRewardOverlayState>();
 			if (ui == null || state == null) return;
+			InputContextService.EnsureContext(
+				EntityManager,
+				overlayEntity,
+				"overlay.quest-reward",
+				720,
+				state.IsOpen);
 
 			ui.IsInteractable = state.IsOpen;
 			ui.LayerType = state.IsOpen ? UILayerType.Overlay : UILayerType.Default;
@@ -1020,6 +1026,10 @@ namespace Crusaders30XX.ECS.Systems
 					: Rectangle.Empty;
 				ui.IsInteractable = state != null && state.IsOpen && !state.CardSelectionInProgress && !state.DismissInProgress;
 				ui.LayerType = UILayerType.Overlay;
+				InputContextService.EnsureMember(
+					EntityManager,
+					card,
+					"overlay.quest-reward");
 			}
 		}
 
@@ -1217,6 +1227,10 @@ namespace Crusaders30XX.ECS.Systems
 			});
 			EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
 			EntityManager.AddComponent(ent, new DontDestroyOnLoad());
+			InputContextService.EnsureMember(
+				EntityManager,
+				ent,
+				"overlay.quest-reward");
 			return ent;
 		}
 
@@ -1237,6 +1251,10 @@ namespace Crusaders30XX.ECS.Systems
 			});
 			EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
 			EntityManager.AddComponent(ent, new DontDestroyOnLoad());
+			InputContextService.EnsureMember(
+				EntityManager,
+				ent,
+				"overlay.quest-reward");
 			return ent;
 		}
 
@@ -1317,6 +1335,12 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(e, t);
 				EntityManager.AddComponent(e, ui);
 				EntityManager.AddComponent(e, new QuestRewardOverlayState());
+				InputContextService.EnsureContext(
+					EntityManager,
+					e,
+					"overlay.quest-reward",
+					720,
+					false);
 				EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
 				EntityManager.AddComponent(e, new DontDestroyOnLoad());
 			}
@@ -1336,6 +1360,10 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.AddComponent(ent, new Transform { Position = Vector2.Zero, ZOrder = ZOrder + 2 });
 				EntityManager.AddComponent(ent, new UIElement { Bounds = Rectangle.Empty, IsInteractable = false, IsHidden = true, LayerType = UILayerType.Overlay });
 				EntityManager.AddComponent(ent, new HotKey { Button = FaceButton.Y, IsActive = false });
+				InputContextService.EnsureMember(
+					EntityManager,
+					ent,
+					"overlay.quest-reward");
 				EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
 			}
 			else
