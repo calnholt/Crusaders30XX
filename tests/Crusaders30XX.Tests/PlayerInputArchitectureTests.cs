@@ -96,6 +96,255 @@ public class PlayerInputArchitectureTests
     }
 
     [Fact]
+    public void Player_input_state_is_persistent_and_recovers_after_entity_destruction()
+    {
+        EventManager.Clear();
+        var entityManager = new EntityManager();
+        Entity scene = entityManager.CreateEntity("Scene");
+        entityManager.AddComponent(scene, new SceneState());
+        var source = new FakeInputSource(
+            Frame(sequence: 1),
+            Frame(sequence: 2));
+        var system = new PlayerInputSystem(entityManager, source);
+
+        system.Update(new GameTime());
+        Entity original = entityManager
+            .GetEntitiesWithComponent<PlayerInputState>()
+            .Single();
+        Assert.NotNull(original.GetComponent<DontDestroyOnLoad>());
+
+        entityManager.DestroyEntity(original.Id);
+        system.Update(new GameTime());
+
+        Entity replacement = entityManager
+            .GetEntitiesWithComponent<PlayerInputState>()
+            .Single();
+        Assert.NotEqual(original.Id, replacement.Id);
+        Assert.Equal(2, replacement.GetComponent<PlayerInputState>().Frame.Sequence);
+        Assert.NotNull(replacement.GetComponent<DontDestroyOnLoad>());
+        EventManager.Clear();
+    }
+
+    [Fact]
+    public void Cursor_target_ignores_non_interactable_entities_above_controls()
+    {
+        EventManager.Clear();
+        var entityManager = new EntityManager();
+        Entity scene = entityManager.CreateEntity("Scene");
+        entityManager.AddComponent(scene, new SceneState());
+        Entity control = CreateUi(
+            entityManager,
+            "Control",
+            10,
+            new Rectangle(0, 0, 100, 100));
+        Entity blocker = CreateUi(
+            entityManager,
+            "InactiveBlocker",
+            100,
+            new Rectangle(0, 0, 100, 100));
+        blocker.GetComponent<UIElement>().IsInteractable = false;
+        var system = new PlayerInputSystem(
+            entityManager,
+            new FakeInputSource(Frame(pointer: new Vector2(50, 50))));
+
+        system.Update(new GameTime());
+
+        PlayerInputState state = entityManager
+            .GetEntitiesWithComponent<PlayerInputState>()
+            .Single()
+            .GetComponent<PlayerInputState>();
+        Assert.Same(control, state.CursorTarget.Entity);
+        EventManager.Clear();
+    }
+
+    [Fact]
+    public void Cursor_target_includes_non_interactable_tooltip_entities()
+    {
+        EventManager.Clear();
+        var entityManager = new EntityManager();
+        Entity scene = entityManager.CreateEntity("Scene");
+        entityManager.AddComponent(scene, new SceneState());
+        Entity textTooltip = CreateUi(
+            entityManager,
+            "TextTooltip",
+            10,
+            new Rectangle(0, 0, 100, 100));
+        UIElement textUi = textTooltip.GetComponent<UIElement>();
+        textUi.IsInteractable = false;
+        textUi.Tooltip = "Passive description";
+
+        Entity cardTooltip = CreateUi(
+            entityManager,
+            "CardTooltip",
+            10,
+            new Rectangle(100, 0, 100, 100));
+        UIElement cardUi = cardTooltip.GetComponent<UIElement>();
+        cardUi.IsInteractable = false;
+        cardUi.Tooltip = string.Empty;
+        cardUi.TooltipType = TooltipType.Card;
+
+        var system = new PlayerInputSystem(
+            entityManager,
+            new FakeInputSource(
+                Frame(sequence: 1, pointer: new Vector2(50, 50)),
+                Frame(sequence: 2, pointer: new Vector2(150, 50))));
+        var interaction = new UIInteractionSystem(entityManager);
+
+        system.Update(new GameTime());
+        interaction.Update(new GameTime());
+        PlayerInputState state = entityManager
+            .GetEntitiesWithComponent<PlayerInputState>()
+            .Single()
+            .GetComponent<PlayerInputState>();
+        Assert.Same(textTooltip, state.CursorTarget.Entity);
+        Assert.True(textUi.IsHovered);
+
+        system.Update(new GameTime());
+        interaction.Update(new GameTime());
+        Assert.Same(cardTooltip, state.CursorTarget.Entity);
+        Assert.True(cardUi.IsHovered);
+        Assert.False(textUi.IsHovered);
+        EventManager.Clear();
+    }
+
+    [Fact]
+    public void Active_modal_context_routes_cursor_to_member_control()
+    {
+        EventManager.Clear();
+        var entityManager = new EntityManager();
+        Entity scene = entityManager.CreateEntity("Scene");
+        entityManager.AddComponent(scene, new SceneState());
+        CreateUi(
+            entityManager,
+            "GameplayControl",
+            100,
+            new Rectangle(0, 0, 100, 100));
+        Entity modalRoot = entityManager.CreateEntity("ModalRoot");
+        entityManager.AddComponent(modalRoot, new InputContext
+        {
+            Id = "overlay.modal",
+            Priority = 700,
+            IsActive = true,
+        });
+        Entity modalControl = CreateUi(
+            entityManager,
+            "ModalControl",
+            10,
+            new Rectangle(0, 0, 100, 100));
+        entityManager.AddComponent(modalControl, new InputContextMember
+        {
+            ContextId = "overlay.modal",
+        });
+        var system = new PlayerInputSystem(
+            entityManager,
+            new FakeInputSource(Frame(pointer: new Vector2(50, 50))));
+
+        system.Update(new GameTime());
+
+        PlayerInputState state = entityManager
+            .GetEntitiesWithComponent<PlayerInputState>()
+            .Single()
+            .GetComponent<PlayerInputState>();
+        Assert.Same(modalControl, state.CursorTarget.Entity);
+        EventManager.Clear();
+    }
+
+    [Fact]
+    public void Closing_modal_context_restores_gameplay_cursor_routing()
+    {
+        EventManager.Clear();
+        var entityManager = new EntityManager();
+        Entity scene = entityManager.CreateEntity("Scene");
+        entityManager.AddComponent(scene, new SceneState());
+        Entity gameplayControl = CreateUi(
+            entityManager,
+            "LocationControl",
+            10,
+            new Rectangle(0, 0, 100, 100));
+        Entity modalRoot = entityManager.CreateEntity("ModalRoot");
+        var context = new InputContext
+        {
+            Id = "overlay.modal",
+            Priority = 700,
+            IsActive = true,
+        };
+        entityManager.AddComponent(modalRoot, context);
+        Entity modalControl = CreateUi(
+            entityManager,
+            "ModalControl",
+            100,
+            new Rectangle(0, 0, 100, 100));
+        modalControl.GetComponent<UIElement>().LayerType = UILayerType.Overlay;
+        entityManager.AddComponent(modalControl, new InputContextMember
+        {
+            ContextId = "overlay.modal",
+        });
+        var system = new PlayerInputSystem(
+            entityManager,
+            new FakeInputSource(
+                Frame(sequence: 1, pointer: new Vector2(50, 50)),
+                Frame(sequence: 2, pointer: new Vector2(50, 50))));
+
+        system.Update(new GameTime());
+        PlayerInputState state = entityManager
+            .GetEntitiesWithComponent<PlayerInputState>()
+            .Single()
+            .GetComponent<PlayerInputState>();
+        Assert.Same(modalControl, state.CursorTarget.Entity);
+
+        context.IsActive = false;
+        UIElement modalUi = modalControl.GetComponent<UIElement>();
+        modalUi.IsInteractable = false;
+        modalUi.IsHidden = true;
+        modalUi.Bounds = Rectangle.Empty;
+
+        system.Update(new GameTime());
+
+        Assert.Same(gameplayControl, state.CursorTarget.Entity);
+        EventManager.Clear();
+    }
+
+    [Fact]
+    public void Full_screen_overlay_receives_primary_click()
+    {
+        EventManager.Clear();
+        var entityManager = new EntityManager();
+        Entity scene = entityManager.CreateEntity("Scene");
+        entityManager.AddComponent(scene, new SceneState());
+        Entity overlay = CreateUi(
+            entityManager,
+            "DialogOverlay",
+            100,
+            new Rectangle(0, 0, 1920, 1080));
+        overlay.GetComponent<UIElement>().ShowHoverHighlight = false;
+        entityManager.AddComponent(overlay, new InputContext
+        {
+            Id = "overlay.dialog",
+            Priority = 800,
+            IsActive = true,
+        });
+        entityManager.AddComponent(overlay, new InputContextMember
+        {
+            ContextId = "overlay.dialog",
+        });
+        var input = new PlayerInputSystem(
+            entityManager,
+            new FakeInputSource(Frame(
+                pointer: new Vector2(500, 500),
+                down: PlayerInputFrame.Mask(PlayerButton.Primary),
+                pressed: PlayerInputFrame.Mask(PlayerButton.Primary))));
+        var interaction = new UIInteractionSystem(entityManager);
+
+        input.Update(new GameTime());
+        interaction.Update(new GameTime());
+
+        UIElement ui = overlay.GetComponent<UIElement>();
+        Assert.True(ui.IsHovered);
+        Assert.True(ui.IsClicked);
+        EventManager.Clear();
+    }
+
+    [Fact]
     public void Context_resolution_uses_priority_and_diagnostic_region_override()
     {
         var entityManager = new EntityManager();

@@ -179,21 +179,14 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var overlayEntity = EntityManager.GetEntity("NarrativeEventOverlay");
 			if (overlayEntity == null) return;
-			var ui = overlayEntity.GetComponent<UIElement>();
 			var state = overlayEntity.GetComponent<NarrativeEventOverlayState>();
-			if (ui == null || state == null) return;
+			if (state == null) return;
 			InputContextService.EnsureContext(
 				EntityManager,
 				overlayEntity,
 				"overlay.narrative-event",
 				730,
 				state.IsOpen);
-
-			ui.IsInteractable = state.IsOpen;
-			ui.LayerType = state.IsOpen ? UILayerType.Overlay : UILayerType.Default;
-			ui.Bounds = state.IsOpen
-				? new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight)
-				: new Rectangle(0, 0, 0, 0);
 
 			if (!state.IsOpen)
 			{
@@ -239,6 +232,7 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						btnUi.IsClicked = false;
 						ResolveOption(state, entry.OptionIndex);
+						return;
 					}
 				}
 				else
@@ -492,7 +486,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void CloseOverlay()
 		{
-			var st = EntityManager.GetEntity("NarrativeEventOverlay")?.GetComponent<NarrativeEventOverlayState>();
+			var overlayEntity = EntityManager.GetEntity("NarrativeEventOverlay");
+			var st = overlayEntity?.GetComponent<NarrativeEventOverlayState>();
 			if (st == null) return;
 
 			st.IsOpen = false;
@@ -502,6 +497,11 @@ namespace Crusaders30XX.ECS.Systems
 			_snapshotVisibleOptionCap = 0;
 			_forceSnapshotDraw = false;
 			StateSingleton.PreventClicking = false;
+			var context = overlayEntity.GetComponent<InputContext>();
+			if (context != null)
+			{
+				context.IsActive = false;
+			}
 
 			for (int i = 1; i <= 3; i++)
 			{
@@ -513,6 +513,7 @@ namespace Crusaders30XX.ECS.Systems
 					btnUi.IsHidden = true;
 				}
 			}
+			_visibleOptions.Clear();
 
 			InvalidateCaches();
 		}
@@ -530,12 +531,6 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				e = EntityManager.CreateEntity("NarrativeEventOverlay");
 				EntityManager.AddComponent(e, new Transform { Position = Vector2.Zero, ZOrder = ZOrder });
-				EntityManager.AddComponent(e, new UIElement
-				{
-					Bounds = new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight),
-					IsInteractable = false,
-					LayerType = UILayerType.Overlay
-				});
 				EntityManager.AddComponent(e, new NarrativeEventOverlayState());
 				InputContextService.EnsureContext(
 					EntityManager,
@@ -548,6 +543,10 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			else
 			{
+				if (e.GetComponent<UIElement>() != null)
+				{
+					EntityManager.RemoveComponent<UIElement>(e);
+				}
 				var t = e.GetComponent<Transform>();
 				if (t != null) t.ZOrder = ZOrder;
 			}

@@ -119,7 +119,14 @@ namespace Crusaders30XX.ECS.Systems
 
         private void EnsureState()
         {
-            if (_state != null) return;
+            if (_state?.Owner != null
+                && ReferenceEquals(
+                    EntityManager.GetEntity(_state.Owner.Id),
+                    _state.Owner))
+            {
+                return;
+            }
+
             var stateEntity = EntityManager.GetEntity("PlayerInput");
             if (stateEntity == null)
             {
@@ -131,6 +138,11 @@ namespace Crusaders30XX.ECS.Systems
             {
                 _state = new PlayerInputState();
                 EntityManager.AddComponent(stateEntity, _state);
+            }
+
+            if (stateEntity.GetComponent<DontDestroyOnLoad>() == null)
+            {
+                EntityManager.AddComponent(stateEntity, new DontDestroyOnLoad());
             }
         }
 
@@ -192,6 +204,7 @@ namespace Crusaders30XX.ECS.Systems
                 })
                 .Where(item => item.UI != null
                     && !item.UI.IsHidden
+                    && CanReceiveCursorHover(item.Entity, item.UI)
                     && InputContextResolver.IsMember(item.Entity, contextId))
                 .Where(item =>
                 {
@@ -211,6 +224,16 @@ namespace Crusaders30XX.ECS.Systems
                 ? CursorTargetKind.Diagnostic
                 : CursorTargetKind.UI;
             return new CursorTarget(candidate.Entity, kind, 1f);
+        }
+
+        private static bool CanReceiveCursorHover(Entity entity, UIElement ui)
+        {
+            return ui.IsInteractable
+                || !string.IsNullOrWhiteSpace(ui.Tooltip)
+                || ui.TooltipType == TooltipType.Card
+                || ui.TooltipType == TooltipType.Equipment
+                || ui.TooltipType == TooltipType.Quests
+                || entity.GetComponent<Hint>() != null;
         }
 
         private static bool ContainsPoint(Rectangle bounds, float rotation, Vector2 point)

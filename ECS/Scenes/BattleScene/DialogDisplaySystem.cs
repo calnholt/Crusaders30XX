@@ -190,6 +190,7 @@ namespace Crusaders30XX.ECS.Systems
                 800,
                 state.IsActive);
             ui.LayerType = UILayerType.Overlay;
+            ui.ShowHoverHighlight = false;
 
             // Only interactable while active so it doesn't capture hover/clicks
             ui.IsInteractable = state.IsActive;
@@ -517,7 +518,13 @@ namespace Crusaders30XX.ECS.Systems
             {
                 e = EntityManager.CreateEntity("DialogOverlay");
                 var t = new Transform { Position = Vector2.Zero, ZOrder = ZOrder };
-                var ui = new UIElement { Bounds = new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight), IsInteractable = true };
+                var ui = new UIElement
+                {
+                    Bounds = new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight),
+                    IsInteractable = true,
+                    LayerType = UILayerType.Overlay,
+                    ShowHoverHighlight = false,
+                };
                 EntityManager.AddComponent(e, t);
                 EntityManager.AddComponent(e, ui);
                 EntityManager.AddComponent(e, new DialogOverlayState());

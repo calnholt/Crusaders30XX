@@ -241,10 +241,6 @@ namespace Crusaders30XX.ECS.Systems
                     Position = Vector2.Zero,
                     ZOrder = 19000,
                 });
-                EntityManager.AddComponent(e, new UIElement
-                {
-                    LayerType = UILayerType.Overlay,
-                });
             }
             // Ensure a cancel button entity exists (bounds updated in Draw)
             var cancel = EntityManager.GetEntitiesWithComponent<PayCostCancelButton>().FirstOrDefault();
@@ -1069,17 +1065,12 @@ namespace Crusaders30XX.ECS.Systems
 
         private void EnsureInputContext(Entity entity, PayCostOverlayState state)
         {
-            UIElement ui = entity.GetComponent<UIElement>();
-            if (ui == null)
+            if (entity.GetComponent<UIElement>() != null)
             {
-                ui = new UIElement { LayerType = UILayerType.Overlay };
-                EntityManager.AddComponent(entity, ui);
+                EntityManager.RemoveComponent<UIElement>(entity);
             }
+
             bool active = state.IsOpen || state.IsReturning;
-            ui.IsInteractable = active;
-            ui.Bounds = active
-                ? new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight)
-                : Rectangle.Empty;
             InputContextService.EnsureContext(
                 EntityManager,
                 entity,

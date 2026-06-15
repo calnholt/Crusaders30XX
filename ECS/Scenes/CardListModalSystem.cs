@@ -344,24 +344,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private void EnsureModalRoot(Entity entity, CardListModal modal)
         {
-            if (entity.GetComponent<Transform>() == null)
+            if (entity.GetComponent<UIElement>() != null)
             {
-                EntityManager.AddComponent(entity, new Transform
-                {
-                    Position = Vector2.Zero,
-                    ZOrder = 19000,
-                });
+                EntityManager.RemoveComponent<UIElement>(entity);
             }
-            UIElement ui = entity.GetComponent<UIElement>();
-            if (ui == null)
-            {
-                ui = new UIElement { LayerType = UILayerType.Overlay };
-                EntityManager.AddComponent(entity, ui);
-            }
-            ui.IsInteractable = modal?.IsOpen == true;
-            ui.Bounds = modal?.IsOpen == true
-                ? new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight)
-                : Rectangle.Empty;
+
             InputContextService.EnsureContext(
                 EntityManager,
                 entity,
