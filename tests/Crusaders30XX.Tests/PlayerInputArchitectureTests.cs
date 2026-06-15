@@ -208,6 +208,147 @@ public class PlayerInputArchitectureTests
     }
 
     [Fact]
+    public void Gamepad_cursor_slows_over_interactable_ui()
+    {
+        EventManager.Clear();
+        var entityManager = CreateSceneEntityManager();
+        CreateUi(
+            entityManager,
+            "Control",
+            10,
+            new Rectangle(0, 0, 200, 200));
+        var system = new PlayerInputSystem(
+            entityManager,
+            new FakeInputSource(
+                Frame(sequence: 1, pointer: new Vector2(50, 50)),
+                Frame(
+                    sequence: 2,
+                    device: PlayerInputDevice.Gamepad,
+                    previousDevice: PlayerInputDevice.KeyboardMouse,
+                    gamepadConnected: true,
+                    leftStick: new Vector2(1f, 0f))));
+
+        system.Update(new GameTime());
+        system.Update(TenthSecondGameTime());
+
+        PlayerInputState state = GetPlayerInputState(entityManager);
+        Assert.Equal(108f, state.Frame.PointerPosition.X, precision: 2);
+        Assert.Equal(50f, state.Frame.PointerPosition.Y, precision: 2);
+        EventManager.Clear();
+    }
+
+    [Fact]
+    public void Gamepad_cursor_does_not_slow_over_tooltip_only_ui()
+    {
+        EventManager.Clear();
+        var entityManager = CreateSceneEntityManager();
+        Entity tooltip = CreateUi(
+            entityManager,
+            "TooltipOnly",
+            10,
+            new Rectangle(0, 0, 200, 200));
+        UIElement ui = tooltip.GetComponent<UIElement>();
+        ui.IsInteractable = false;
+        ui.Tooltip = "Passive description";
+        var system = new PlayerInputSystem(
+            entityManager,
+            new FakeInputSource(
+                Frame(sequence: 1, pointer: new Vector2(50, 50)),
+                Frame(
+                    sequence: 2,
+                    device: PlayerInputDevice.Gamepad,
+                    previousDevice: PlayerInputDevice.KeyboardMouse,
+                    gamepadConnected: true,
+                    leftStick: new Vector2(1f, 0f))));
+
+        system.Update(new GameTime());
+        system.Update(TenthSecondGameTime());
+
+        PlayerInputState state = GetPlayerInputState(entityManager);
+        Assert.Equal(195f, state.Frame.PointerPosition.X, precision: 2);
+        Assert.Equal(50f, state.Frame.PointerPosition.Y, precision: 2);
+        EventManager.Clear();
+    }
+
+    [Fact]
+    public void Gamepad_cursor_trigger_boost_bypasses_ui_slowdown()
+    {
+        EventManager.Clear();
+        var entityManager = CreateSceneEntityManager();
+        CreateUi(
+            entityManager,
+            "Control",
+            10,
+            new Rectangle(0, 0, 200, 200));
+        var system = new PlayerInputSystem(
+            entityManager,
+            new FakeInputSource(
+                Frame(sequence: 1, pointer: new Vector2(50, 50)),
+                Frame(
+                    sequence: 2,
+                    device: PlayerInputDevice.Gamepad,
+                    previousDevice: PlayerInputDevice.KeyboardMouse,
+                    gamepadConnected: true,
+                    leftStick: new Vector2(1f, 0f),
+                    rightTrigger: 1f)));
+
+        system.Update(new GameTime());
+        system.Update(TenthSecondGameTime());
+
+        PlayerInputState state = GetPlayerInputState(entityManager);
+        Assert.Equal(340f, state.Frame.PointerPosition.X, precision: 2);
+        Assert.Equal(50f, state.Frame.PointerPosition.Y, precision: 2);
+        EventManager.Clear();
+    }
+
+    [Fact]
+    public void Gamepad_cursor_slowdown_uses_active_input_context()
+    {
+        EventManager.Clear();
+        var entityManager = CreateSceneEntityManager();
+        Entity gameplayControl = CreateUi(
+            entityManager,
+            "GameplayControl",
+            10,
+            new Rectangle(0, 0, 200, 200));
+        Entity modalRoot = entityManager.CreateEntity("ModalRoot");
+        entityManager.AddComponent(modalRoot, new InputContext
+        {
+            Id = "overlay.modal",
+            Priority = 700,
+            IsActive = true,
+        });
+        Entity modalControl = CreateUi(
+            entityManager,
+            "ModalControl",
+            100,
+            new Rectangle(500, 500, 100, 100));
+        entityManager.AddComponent(modalControl, new InputContextMember
+        {
+            ContextId = "overlay.modal",
+        });
+        Assert.True(gameplayControl.GetComponent<UIElement>().IsInteractable);
+        var system = new PlayerInputSystem(
+            entityManager,
+            new FakeInputSource(
+                Frame(sequence: 1, pointer: new Vector2(50, 50)),
+                Frame(
+                    sequence: 2,
+                    device: PlayerInputDevice.Gamepad,
+                    previousDevice: PlayerInputDevice.KeyboardMouse,
+                    gamepadConnected: true,
+                    leftStick: new Vector2(1f, 0f))));
+
+        system.Update(new GameTime());
+        system.Update(TenthSecondGameTime());
+
+        PlayerInputState state = GetPlayerInputState(entityManager);
+        Assert.Equal(195f, state.Frame.PointerPosition.X, precision: 2);
+        Assert.Equal(50f, state.Frame.PointerPosition.Y, precision: 2);
+        EventManager.Clear();
+    }
+
+    [Fact]
     public void Active_modal_context_routes_cursor_to_member_control()
     {
         EventManager.Clear();
@@ -455,6 +596,27 @@ public class PlayerInputArchitectureTests
         return entity;
     }
 
+    private static EntityManager CreateSceneEntityManager()
+    {
+        var entityManager = new EntityManager();
+        Entity scene = entityManager.CreateEntity("Scene");
+        entityManager.AddComponent(scene, new SceneState());
+        return entityManager;
+    }
+
+    private static PlayerInputState GetPlayerInputState(EntityManager entityManager)
+    {
+        return entityManager
+            .GetEntitiesWithComponent<PlayerInputState>()
+            .Single()
+            .GetComponent<PlayerInputState>();
+    }
+
+    private static GameTime TenthSecondGameTime()
+    {
+        return new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(0.1));
+    }
+
     private static PlayerInputFrame Frame(
         long sequence = 1,
         Vector2 pointer = default,
@@ -463,7 +625,9 @@ public class PlayerInputArchitectureTests
         bool gamepadConnected = false,
         PlayerButtonMask down = PlayerButtonMask.None,
         PlayerButtonMask pressed = PlayerButtonMask.None,
-        PlayerButtonMask released = PlayerButtonMask.None)
+        PlayerButtonMask released = PlayerButtonMask.None,
+        Vector2 leftStick = default,
+        float rightTrigger = 0f)
     {
         return new PlayerInputFrame(
             sequence,
@@ -475,10 +639,10 @@ public class PlayerInputArchitectureTests
             pointer,
             Vector2.Zero,
             0f,
-            Vector2.Zero,
+            leftStick,
             Vector2.Zero,
             0f,
-            0f,
+            rightTrigger,
             down,
             pressed,
             released);

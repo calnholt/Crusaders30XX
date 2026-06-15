@@ -5,6 +5,8 @@ UX
 Gameplay
 - weaks cards that are permanently added to deck (colorless 2 block, etc)
 - tokens need to be weapon color, filter to prevent from being discarded for costs
+- quest rewards replace existing cards, deck size doesnt change. pools of cards will need to be curated for each weapon
+- map needs to feel like worker placement -- think about HOW
 
 cards
 - gain 4 courage. at the end of the turn, lose all courage.
@@ -21,7 +23,6 @@ weapons
 tech debt
 - pledge services need to send events to change state not directly manipulate entities
 - remove original card display system
-- centralize keyboard and gamepad all through cursor (no other system reads keyboard or gamepad)
 
 
 persistent card states:
@@ -65,3 +66,5 @@ SceneTintStrength=0.4
 GrainIntensity=0.02
 GrainFineness=1
 VignetteAmount=0
+
+

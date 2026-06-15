@@ -42,6 +42,9 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "RT Speed Multiplier", Step = 0.1f, Min = 0.1f, Max = 10f)]
         public float TriggerSpeedMultiplier { get; set; } = 2f;
 
+        [DebugEditable(DisplayName = "UI Slowdown Multiplier", Step = 0.05f, Min = 0.05f, Max = 1f)]
+        public float SlowdownMultiplier { get; set; } = 0.4f;
+
         [DebugEditable(DisplayName = "Rumble Duration (s)", Step = 0.01f, Min = 0f, Max = 1f)]
         public float RumbleDurationSeconds { get; set; } = 0.04f;
 
@@ -180,6 +183,10 @@ namespace Crusaders30XX.ECS.Systems
             {
                 multiplier *= TriggerSpeedMultiplier;
             }
+            else
+            {
+                multiplier *= CalculateUiSlowdownMultiplier();
+            }
 
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
             _cursorPosition += new Vector2(direction.X, -direction.Y)
@@ -188,6 +195,43 @@ namespace Crusaders30XX.ECS.Systems
                 * elapsed;
             _cursorPosition.X = MathHelper.Clamp(_cursorPosition.X, 0f, Game1.VirtualWidth);
             _cursorPosition.Y = MathHelper.Clamp(_cursorPosition.Y, 0f, Game1.VirtualHeight);
+        }
+
+        private float CalculateUiSlowdownMultiplier()
+        {
+            if (StateSingleton.IsActive) return 1f;
+
+            string contextId = InputContextResolver.ResolveCursorContext(
+                EntityManager,
+                _cursorPosition);
+            bool isOverInteractable = EntityManager.GetEntitiesWithComponent<UIElement>()
+                .Select(entity => new
+                {
+                    Entity = entity,
+                    UI = entity.GetComponent<UIElement>(),
+                    Transform = entity.GetComponent<Transform>(),
+                })
+                .Where(item => item.UI != null
+                    && item.UI.IsInteractable
+                    && !item.UI.IsHidden
+                    && InputContextResolver.IsMember(item.Entity, contextId))
+                .Any(item =>
+                {
+                    Rectangle bounds = TransformResolverService.ResolveUIBounds(
+                        EntityManager,
+                        item.Entity,
+                        item.UI);
+                    return bounds.Width >= 2
+                        && bounds.Height >= 2
+                        && ContainsPoint(
+                            bounds,
+                            item.Transform?.Rotation ?? 0f,
+                            _cursorPosition);
+                });
+
+            return isOverInteractable
+                ? MathHelper.Clamp(SlowdownMultiplier, 0.05f, 1f)
+                : 1f;
         }
 
         private CursorTarget ResolveCursorTarget(Vector2 position)
