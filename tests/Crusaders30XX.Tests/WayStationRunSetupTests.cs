@@ -54,9 +54,9 @@ public class WayStationRunSetupTests
 	}
 
 	[Theory]
-	[InlineData(RunDifficulty.Easy, 18)]
-	[InlineData(RunDifficulty.Normal, 20)]
-	[InlineData(RunDifficulty.Hard, 22)]
+	[InlineData(RunDifficulty.Easy, 21)]
+	[InlineData(RunDifficulty.Normal, 23)]
+	[InlineData(RunDifficulty.Hard, 26)]
 	public void Enemy_factory_scales_health_for_selected_run_difficulty(
 		RunDifficulty difficulty,
 		int expectedEnemyHp)

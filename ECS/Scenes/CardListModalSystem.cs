@@ -321,6 +321,10 @@ namespace Crusaders30XX.ECS.Systems
                 var cards = cmp.Cards ?? new List<Entity>();
                 foreach (var card in cards)
                 {
+                    InputContextService.RemoveMember(
+                        EntityManager,
+                        card,
+                        "overlay.card-list");
                     var ui = card.GetComponent<UIElement>();
                     if (ui != null)
                     {

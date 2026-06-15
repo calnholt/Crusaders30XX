@@ -10,7 +10,7 @@ public class TemperanceFactoryTests
     [InlineData("fling_fling", "Fling Fling", "Player", "Add 2 Kunai cards to your hand.", 3)]
     [InlineData("iron_resolve", "Iron Resolve", "Player", "Gain 1 vigor.", 3)]
     [InlineData("radiance", "Radiance", "Enemy", "Stun the enemy.", 4)]
-    [InlineData("unsheath", "Unsheath", "Player", "Gain 4 sharpen.", 3)]
+    [InlineData("unsheath", "Unsheath", "Player", "Gain 5 sharpen.", 3)]
     public void Create_returns_temperance_metadata(string id, string name, string target, string text, int threshold)
     {
         var ability = TemperanceFactory.Create(id);

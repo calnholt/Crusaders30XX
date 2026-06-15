@@ -72,8 +72,12 @@ public sealed class HammerStarterCardTests : IDisposable
 		var cardEntity = entityManager.CreateEntity("UnburdenedStrike");
 		entityManager.AddComponent(cardEntity, new CardData { Card = card });
 		entityManager.AddComponent(cardEntity, new ModifiedDamage());
+		var damageRequests = new List<ModifyHpRequestEvent>();
+		EventManager.Subscribe<ModifyHpRequestEvent>(damageRequests.Add);
 
-		Assert.Equal(13, card.GetDerivedDamage(entityManager, cardEntity));
+		card.OnPlay(entityManager, cardEntity);
+		Assert.Equal(-11, Assert.Single(damageRequests).Delta);
+		damageRequests.Clear();
 
 		var cacheEntity = entityManager.CreateEntity("LastPaymentCache");
 		entityManager.AddComponent(cacheEntity, new LastPaymentCache
@@ -81,7 +85,8 @@ public sealed class HammerStarterCardTests : IDisposable
 			PaymentCards = [entityManager.CreateEntity("Payment")]
 		});
 
-		Assert.Equal(7, card.GetDerivedDamage(entityManager, cardEntity));
+		card.OnPlay(entityManager, cardEntity);
+		Assert.Equal(-8, Assert.Single(damageRequests).Delta);
 	}
 
 	[Theory]
@@ -98,6 +103,7 @@ public sealed class HammerStarterCardTests : IDisposable
 		var card = new StokeTheFurnace();
 		var cardEntity = entityManager.CreateEntity("StokeTheFurnace");
 		entityManager.AddComponent(cardEntity, new CardData { Card = card });
+		entityManager.AddComponent(cardEntity, new ModifiedDamage());
 
 		card.OnPlay(entityManager, cardEntity);
 

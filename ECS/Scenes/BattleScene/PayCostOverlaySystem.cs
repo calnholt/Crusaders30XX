@@ -204,6 +204,7 @@ namespace Crusaders30XX.ECS.Systems
                     state.StagedMoveElapsedSeconds = 0f;
                     state.ReturnElapsedSeconds = 0f;
                     state.OriginalHandIndex = -1;
+                    RemovePayCostMemberships();
                 }
             }
 
@@ -400,6 +401,7 @@ namespace Crusaders30XX.ECS.Systems
                     state.OpenElapsedSeconds = 0f;
                     state.StagedMoveElapsedSeconds = 0f;
                     state.OriginalHandIndex = -1;
+                    RemovePayCostMemberships();
                 }
             }
         }
@@ -1084,6 +1086,20 @@ namespace Crusaders30XX.ECS.Systems
                 "overlay.pay-cost",
                 600,
                 active);
+        }
+
+        private void RemovePayCostMemberships()
+        {
+            foreach (Entity entity in EntityManager
+                .GetEntitiesWithComponent<InputContextMember>()
+                .Where(entity => entity.GetComponent<CardData>() != null)
+                .ToList())
+            {
+                InputContextService.RemoveMember(
+                    EntityManager,
+                    entity,
+                    "overlay.pay-cost");
+            }
         }
 
         private void DrawBorder(Rectangle rect, Color color, int thickness)

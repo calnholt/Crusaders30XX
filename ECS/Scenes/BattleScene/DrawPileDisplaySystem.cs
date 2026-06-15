@@ -128,7 +128,7 @@ namespace Crusaders30XX.ECS.Systems
                 _spriteBatch.DrawString(_font, text, pos, Color.White, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
             }
 
-            // Sync root entity UIElement for hit-testing and tooltips; mark with component for InputSystem routing
+            // Sync root UI bounds for centralized interaction routing and tooltips.
             var rootUi = root.GetComponent<UIElement>();
 			if (rootUi == null)
 			{
@@ -174,4 +174,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-

@@ -42,5 +42,17 @@ namespace Crusaders30XX.ECS.Services
             }
             member.ContextId = contextId;
         }
+
+        public static void RemoveMember(
+            EntityManager entityManager,
+            Entity entity,
+            string contextId)
+        {
+            InputContextMember member = entity?.GetComponent<InputContextMember>();
+            if (member?.ContextId == contextId)
+            {
+                entityManager.RemoveComponent<InputContextMember>(entity);
+            }
+        }
     }
 }

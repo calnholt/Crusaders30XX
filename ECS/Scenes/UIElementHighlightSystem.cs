@@ -76,7 +76,7 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
-            // InputSystem typically ensures only one hovered at a time; draw all just in case
+            // UIInteractionSystem ensures only one hovered target; draw all defensively.
             foreach (var e in hoveredEntities)
             {
                 if (e.GetComponent<Intimidated>() != null) continue;
@@ -126,7 +126,7 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
-            // Determine top-most hovered card (InputSystem ensures only one IsHovered)
+            // Determine the top-most hovered card.
             var uiElement = entity.GetComponent<UIElement>();
             if (uiElement != null && uiElement.IsHovered)
             {
