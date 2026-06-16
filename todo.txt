@@ -9,7 +9,8 @@ Gameplay
 - make hand display agnostic of carddata, probably involves refactoring some components and data objects
 - fix hand display card uielement bounds
 - make cardlistmodaldisplay not a modal, tinted overlay with floating UI
-- card icons
+- try to move draw effects to drawing random card from discard pile to prevent deck depletion
+
 
 cards
 - gain 4 courage. at the end of the turn, lose all courage.

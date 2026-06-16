@@ -52,7 +52,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public bool IsWeapon { get; set; } = false;
         public bool CanDiscardForCost => !IsWeapon && !IsToken;
         public bool IsStarter { get; set; } = false;
-        public Rarity Rarity { get; set; } = Rarity.Starter;
+        public Rarity Rarity { get; set; } = Rarity.Common;
         private string _tooltip = "";
         public string Tooltip 
         {

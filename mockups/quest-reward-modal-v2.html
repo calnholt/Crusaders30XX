@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crusaders30XX — Quest Reward Modal (Card Exchange)</title>
+<link href="https://fonts.googleapis.com/css2?family=New+Rocker&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /*
+    MonoGame notes (1920x1080 virtual; page chrome not shipped):
+    - Same overlay dim + split-ledger shell as quest-reward-modal-v1
+    - Modal: 920w, centered; left column 280px (title + gold)
+    - New mechanic: pick 1 of 3 deck exchanges (outgoing card -> incoming card)
+    - Three layout variants below share palette + card draw path from v1
+  */
+  :root {
+    --black-0: #050505;
+    --black-1: #0a0a0a;
+    --black-2: #141414;
+    --black-3: #1e1e1e;
+    --black-4: #2a2a2a;
+    --white-1: #ffffff;
+    --white-2: #f0ece6;
+    --white-3: #c8c0b8;
+    --red-3: #c41e3a;
+    --red-glow: rgba(196, 30, 58, 0.45);
+    --gold: #e8c84a;
+    --gold-dim: #a08030;
+    --panel-border: rgba(255, 255, 255, 0.85);
+    --game-w: 1920px;
+    --game-h: 1080px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black-0);
+    color: var(--white-2);
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  .page-header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--black-4);
+    background: var(--black-1);
+  }
+
+  .page-header h1 {
+    font-family: 'New Rocker', cursive;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: var(--white-1);
+    margin-bottom: 4px;
+  }
+
+  .page-header p {
+    color: var(--white-3);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    max-width: 820px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .page-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .page-controls label {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white-3);
+    margin-right: 4px;
+  }
+
+  .chip-btn {
+    padding: 6px 14px;
+    background: var(--black-3);
+    border: 1px solid var(--black-4);
+    color: var(--white-2);
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .chip-btn.is-active {
+    border-color: var(--red-3);
+    color: var(--white-1);
+  }
+
+  .variant-note {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--black-2);
+    border-left: 3px solid var(--red-3);
+    max-width: 820px;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--white-3);
+  }
+
+  .page-main {
+    padding: 32px 40px 60px;
+  }
+
+  .viewport-scaler {
+    width: 100%;
+    max-width: min(calc(100vw - 80px), 1100px);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--black-2);
+    border: 1px solid var(--black-4);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+    min-height: 320px;
+  }
+
+  .viewport {
+    width: var(--game-w);
+    height: var(--game-h);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform-origin: top center;
+    overflow: hidden;
+  }
+
+  .bg-scene {
+    position: absolute;
+    inset: 0;
+    background: url('../Content/desert-background-city.png') center / cover no-repeat;
+  }
+
+  .bg-dim {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  /* --- Card primitives (from v1; sm + color variants) --- */
+  .card {
+    width: 240px;
+    height: 340px;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  .card.card-sm {
+    width: 148px;
+    height: 210px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  }
+
+  .card.card-xs {
+    width: 118px;
+    height: 168px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  }
+
+  .card .bg { position: absolute; inset: 0; border-radius: 8px; background: #1c0c0c; }
+  .card.w .bg { background: #1a1814; }
+  .card.k .bg { background: #0e0e0e; }
+  .card .stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; z-index: 6; background: #cc2222; }
+  .card.w .stripe { background: #c0b8aa; }
+  .card.k .stripe { background: #555; }
+  .card .stat-gutter {
+    position: absolute; left: 6px; top: 0; bottom: 0; width: 55px; z-index: 1;
+    background: rgba(0,0,0,0.22);
+  }
+  .card.card-sm .stat-gutter { width: 34px; }
+  .card.card-xs .stat-gutter { width: 28px; }
+  .card .type-notch {
+    position: absolute; top: 0; right: 0; z-index: 7;
+    font-size: 0.5rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    padding: 5px 10px 5px 14px; border-radius: 0 8px 0 8px;
+    background: rgba(200,30,30,0.15); color: #884433;
+  }
+  .card.w .type-notch { background: rgba(180,170,150,0.2); color: #666; }
+  .card.k .type-notch { background: rgba(80,80,80,0.25); color: #888; }
+  .card.card-sm .type-notch,
+  .card.card-xs .type-notch { font-size: 0.38rem; padding: 3px 6px 3px 8px; letter-spacing: 1px; }
+  .card .stats {
+    position: absolute; left: 14px; top: 14px; bottom: 14px; width: 42px;
+    display: flex; flex-direction: column; z-index: 5;
+  }
+  .card.card-sm .stats { left: 9px; top: 9px; bottom: 9px; width: 26px; }
+  .card.card-xs .stats { left: 7px; top: 7px; bottom: 7px; width: 22px; }
+  .chip-slot { height: 62px; display: flex; flex-direction: column; flex-shrink: 0; }
+  .chip-slot-ap { margin-top: auto; flex-shrink: 0; }
+  .card.card-sm .chip-slot { height: 38px; }
+  .card.card-xs .chip-slot { height: 30px; }
+  .card .chip {
+    width: 42px; height: 42px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; border-radius: 4px; flex-shrink: 0;
+  }
+  .card.card-sm .chip { width: 26px; height: 26px; border-radius: 3px; }
+  .card.card-xs .chip { width: 22px; height: 22px; border-radius: 2px; }
+  .card .chip .v { font-family: 'New Rocker', cursive; font-size: 1.25rem; line-height: 1; }
+  .card.card-sm .chip .v { font-size: 0.78rem; }
+  .card.card-xs .chip .v { font-size: 0.65rem; }
+  .card .chip .l { font-size: 0.55rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+  .card.card-sm .chip .l,
+  .card.card-xs .chip .l { font-size: 0.35rem; margin-top: 1px; letter-spacing: 0.5px; }
+  .card .chip-blk { border: 2.5px solid #777; background: rgba(80,80,80,0.15); color: #bbb; }
+  .card .chip-blk .l { color: #888; }
+  .card .chip-atk { background: #cc2222; color: #fff; }
+  .card .chip-atk .l { color: #ffccbb; }
+  .card .chip-ap { background: #330e0e; color: #dd4433; }
+  .card .chip-ap .l { color: #993322; }
+  .card.w .chip-ap { background: #2a2618; color: #aa9977; }
+  .card.w .chip-ap .l { color: #776655; }
+  .card .content {
+    position: relative; z-index: 3; height: 100%; display: flex; flex-direction: column;
+    margin-left: 65px; padding: 14px 14px 14px 0;
+  }
+  .card.card-sm .content { margin-left: 40px; padding: 8px 8px 8px 0; }
+  .card.card-xs .content { margin-left: 32px; padding: 6px 6px 6px 0; }
+  .card .cost-row { display: flex; gap: 5px; margin-bottom: 4px; min-height: 13px; }
+  .card.card-sm .cost-row,
+  .card.card-xs .cost-row { gap: 3px; min-height: 8px; margin-bottom: 2px; }
+  .card .pip { width: 13px; height: 13px; border-radius: 50%; background: #666; }
+  .card.card-sm .pip { width: 8px; height: 8px; }
+  .card.card-xs .pip { width: 6px; height: 6px; }
+  .card .name { font-family: 'New Rocker', cursive; font-size: 1.25rem; letter-spacing: 1px; margin-bottom: 6px; color: #f0e0d8; }
+  .card.card-sm .name { font-size: 0.78rem; margin-bottom: 3px; }
+  .card.card-xs .name { font-size: 0.62rem; margin-bottom: 2px; }
+  .card .rule { height: 2px; margin-bottom: 8px; border-radius: 1px; background: #442020; }
+  .card.w .rule { background: #443820; }
+  .card.k .rule { background: #333; }
+  .card.card-sm .rule,
+  .card.card-xs .rule { margin-bottom: 4px; }
+  .card .desc { font-size: 14px; line-height: 1.45; flex: 1; color: #cc9988; }
+  .card.w .desc { color: #998877; }
+  .card.k .desc { color: #888; }
+  .card.card-sm .desc { font-size: 8px; line-height: 1.35; }
+  .card.card-xs .desc { font-size: 7px; line-height: 1.3; }
+  .card .art {
+    position: absolute; bottom: -10px; right: -15px; width: 170px; height: 150px;
+    z-index: 2; pointer-events: none;
+  }
+  .card.card-sm .art { bottom: -6px; right: -8px; width: 105px; height: 92px; }
+  .card.card-xs .art { bottom: -4px; right: -6px; width: 84px; height: 74px; }
+  .card .art img { width: 100%; height: 100%; object-fit: contain; }
+
+  .card.is-outgoing { opacity: 0.72; filter: saturate(0.75); }
+  .card.is-incoming { transform: scale(1.04); }
+
+  /* --- Split ledger shell (v1) --- */
+  .modal {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 920px;
+    min-height: 520px;
+    background: rgba(8, 8, 8, 0.92);
+    border: 2px solid var(--panel-border);
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset, 0 32px 80px rgba(0,0,0,0.75);
+  }
+
+  .modal-left {
+    border-right: 1px solid rgba(255,255,255,0.15);
+    padding: 40px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    background: rgba(0,0,0,0.35);
+  }
+
+  .modal-title {
+    font-family: 'New Rocker', cursive;
+    font-size: 36px;
+    letter-spacing: 3px;
+    color: var(--white-1);
+    text-align: center;
+    line-height: 1.1;
+    text-shadow: 0 2px 24px rgba(0,0,0,0.8);
+  }
+
+  .red-rule {
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--red-3), transparent);
+  }
+
+  .rewards-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .gold-reward {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .gold-label {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+  }
+
+  .gold-amount {
+    font-family: 'New Rocker', cursive;
+    font-size: 42px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(232, 200, 74, 0.35);
+  }
+
+  .modal-right {
+    padding: 28px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    min-height: 0;
+  }
+
+  .card-stage-label {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--white-3);
+    text-align: center;
+  }
+
+  .card-stage-hint {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--white-3);
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+
+  .modal-footer {
+    grid-column: 1 / -1;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    background: rgba(0,0,0,0.25);
+  }
+
+  .btn-proceed {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    height: 64px;
+    padding: 0 32px;
+    background: var(--black-3);
+    border: 2px solid var(--white-1);
+    color: var(--white-1);
+    font-family: 'New Rocker', cursive;
+    font-size: 28px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-proceed:hover:not(:disabled) {
+    background: #a00000;
+    border-color: var(--red-3);
+    box-shadow: 0 0 24px var(--red-glow);
+  }
+
+  .btn-proceed:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .swap-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-shrink: 0;
+    color: var(--white-3);
+    min-width: 44px;
+  }
+
+  .swap-arrow .glyph {
+    font-size: 28px;
+    line-height: 1;
+    color: var(--red-3);
+    text-shadow: 0 0 12px var(--red-glow);
+  }
+
+  .swap-arrow .label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .swap-arrow.is-vertical .glyph { transform: rotate(90deg); }
+
+  /* --- Variant A: Trade Rows --- */
+  .variant-panel { display: none; flex: 1; min-height: 0; }
+  .variant-panel.is-active { display: flex; flex-direction: column; gap: 10px; }
+
+  .trade-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.35);
+    border: 2px solid rgba(255,255,255,0.18);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .trade-row:hover,
+  .trade-row.is-selected {
+    background: rgba(80, 0, 0, 0.35);
+    border-color: var(--red-3);
+    box-shadow: 0 0 20px rgba(196, 30, 58, 0.2);
+  }
+
+  .trade-row .row-badge {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(255,255,255,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--white-3);
+    flex-shrink: 0;
+  }
+
+  .trade-row.is-selected .row-badge {
+    border-color: var(--red-3);
+    color: var(--white-1);
+    background: rgba(196, 30, 58, 0.25);
+  }
+
+  .trade-row .pair {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .trade-row .card-caption {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white-3);
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  .trade-row .card-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* --- Variant B: Exchange Columns --- */
+  .exchange-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+  }
+
+  .exchange-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 8px 12px;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,255,255,0.14);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .exchange-col:hover,
+  .exchange-col.is-selected {
+    background: rgba(80, 0, 0, 0.32);
+    border-color: var(--red-3);
+    box-shadow: inset 0 0 24px rgba(196, 30, 58, 0.12);
+  }
+
+  .exchange-col .col-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--white-3);
+  }
+
+  .exchange-col .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .exchange-col .pick-cta {
+    margin-top: auto;
+    width: 100%;
+    padding: 8px 6px;
+    border: 1px solid rgba(255,255,255,0.2);
+    text-align: center;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white-2);
+  }
+
+  .exchange-col.is-selected .pick-cta {
+    border-color: var(--red-3);
+    color: var(--white-1);
+    background: rgba(196, 30, 58, 0.2);
+  }
+
+  /* --- Variant C: Ledger Lanes --- */
+  .ledger-lanes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .ledger-lane {
+    display: grid;
+    grid-template-columns: 72px 1fr 44px 1fr;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.45), rgba(30,0,0,0.15) 50%, rgba(0,0,0,0.45));
+    border: 1px solid rgba(255,255,255,0.12);
+    border-left: 3px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .ledger-lane:hover,
+  .ledger-lane.is-selected {
+    border-left-color: var(--red-3);
+    border-color: rgba(196, 30, 58, 0.45);
+    background: linear-gradient(90deg, rgba(40,0,0,0.5), rgba(80,0,0,0.25) 50%, rgba(40,0,0,0.5));
+    box-shadow: 0 0 16px rgba(196, 30, 58, 0.15);
+  }
+
+  .ledger-lane .lane-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  .ledger-lane .lane-num {
+    font-family: 'New Rocker', cursive;
+    font-size: 22px;
+    color: var(--white-1);
+    line-height: 1;
+  }
+
+  .ledger-lane .lane-tag {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white-3);
+  }
+
+  .ledger-lane .lane-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .ledger-lane .lane-side-label {
+    font-size: 8px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white-3);
+  }
+
+  .ledger-lane .lane-side.is-reward .lane-side-label { color: var(--gold-dim); }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Quest Reward Modal — Card Exchange</h1>
+  <p>
+    New reward flow: player receives gold and must pick <strong>one of three exchanges</strong>.
+    Each option removes a card from the deck and replaces it with a random new card.
+    Three layout variants share the split-ledger shell from v1. Virtual resolution: 1920x1080.
+  </p>
+  <div class="page-controls">
+    <label>Layout</label>
+    <button type="button" class="chip-btn is-active" data-variant="a">A — Trade Rows</button>
+    <button type="button" class="chip-btn" data-variant="b">B — Exchange Columns</button>
+    <button type="button" class="chip-btn" data-variant="c">C — Ledger Lanes</button>
+  </div>
+  <p class="variant-note" id="variant-note">
+    <strong>A — Trade Rows:</strong> Three full-width selectable rows. Each row reads left-to-right as outgoing card, arrow, incoming card. Best when you want the clearest scan line and parity with quest-event option buttons.
+  </p>
+</header>
+
+<main class="page-main">
+  <div class="viewport-scaler">
+    <div class="viewport">
+      <div class="bg-scene"></div>
+      <div class="bg-dim"></div>
+      <div class="modal">
+        <aside class="modal-left">
+          <h2 class="modal-title">Quest<br>Complete!</h2>
+          <div class="red-rule"></div>
+          <div class="rewards-stack">
+            <div class="gold-reward">
+              <span class="gold-label">Gold</span>
+              <span class="gold-amount">+350</span>
+            </div>
+          </div>
+        </aside>
+
+        <div class="modal-right">
+          <span class="card-stage-label">Deck Exchange</span>
+          <p class="card-stage-hint">Choose one trade. The outgoing card is removed from your deck.</p>
+
+          <div class="variant-panel is-active" id="variant-a" data-variant="a"></div>
+          <div class="variant-panel" id="variant-b" data-variant="b"></div>
+          <div class="variant-panel" id="variant-c" data-variant="c"></div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn-proceed" id="btn-proceed" disabled>Proceed</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const GAME_W = 1920;
+  const GAME_H = 1080;
+
+  const SWAPS = [
+    {
+      out: { name: 'Strike', type: 'Attack', blk: 0, atk: 4, ap: 1, art: 'sword.png', color: 'w', desc: 'Deal 4 damage.' },
+      in:  { name: 'Smite', type: 'Attack', blk: 0, atk: 9, ap: 2, art: 'smite.png', color: 'r', desc: 'Deal 9 damage. Costs 2 AP.' }
+    },
+    {
+      out: { name: 'Hold the Line', type: 'Skill', blk: 6, atk: 0, ap: 1, art: 'hold_the_line.png', color: 'r', desc: 'Gain 6 block.' },
+      in:  { name: 'Reckoning', type: 'Attack', blk: 0, atk: 12, ap: 2, art: 'reckoning.png', color: 'r', desc: 'Deal 12 damage if you blocked last turn.' }
+    },
+    {
+      out: { name: 'Fervor', type: 'Power', blk: 0, atk: 0, ap: 1, art: 'fervor.png', color: 'r', desc: 'Start of turn: gain 1 courage.' },
+      in:  { name: 'Exaltation', type: 'Power', blk: 0, atk: 0, ap: 2, art: 'exaltation.png', color: 'r', desc: 'When you gain courage, gain 1 more.' }
+    }
+  ];
+
+  const VARIANT_NOTES = {
+    a: '<strong>A — Trade Rows:</strong> Three full-width selectable rows. Each row reads left-to-right as outgoing card, arrow, incoming card. Best when you want the clearest scan line and parity with quest-event option buttons.',
+    b: '<strong>B — Exchange Columns:</strong> Three vertical pillars with outgoing card above, arrow below, incoming card emphasized at the bottom. Each column is one tap target. Best when you want equal visual weight on all three offers.',
+    c: '<strong>C — Ledger Lanes:</strong> Compact ledger rows with numbered lanes, side labels (Remove / Gain), and smaller cards. Best when vertical space is tight or you want a bookkeeping feel that matches the split-ledger title column.'
+  };
+
+  let activeVariant = 'a';
+  let selectedIndex = -1;
+
+  function fitViewport() {
+    const scaler = document.querySelector('.viewport-scaler');
+    const vp = document.querySelector('.viewport');
+    if (!scaler || !vp) return;
+    const scale = scaler.clientWidth / GAME_W;
+    vp.style.transform = `translateX(-50%) scale(${scale})`;
+    scaler.style.height = `${GAME_H * scale}px`;
+  }
+
+  function cardHtml(card, sizeClass, roleClass) {
+    const colorClass = card.color === 'w' ? ' w' : card.color === 'k' ? ' k' : '';
+    const blk = card.blk > 0
+      ? `<div class="chip-slot"><div class="chip chip-blk"><span class="v">${card.blk}</span><span class="l">BLK</span></div></div>`
+      : '<div class="chip-slot"></div>';
+    const atk = card.atk > 0
+      ? `<div class="chip-slot"><div class="chip chip-atk"><span class="v">${card.atk}</span><span class="l">DMG</span></div></div>`
+      : '<div class="chip-slot"></div>';
+    const pips = card.ap > 1
+      ? '<div class="pip"></div><div class="pip"></div>'
+      : card.ap === 1 ? '<div class="pip"></div>' : '';
+    return `
+      <article class="card${sizeClass}${colorClass} ${roleClass}">
+        <div class="bg"></div>
+        <div class="stripe"></div>
+        <div class="stat-gutter"></div>
+        <div class="type-notch">${card.type}</div>
+        <div class="stats">
+          ${blk}
+          ${atk}
+          <div class="chip-slot-ap">
+            <div class="chip chip-ap"><span class="v">${card.ap}</span><span class="l">AP</span></div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="cost-row">${pips}</div>
+          <div class="name">${card.name}</div>
+          <div class="rule"></div>
+          <div class="desc">${card.desc}</div>
+        </div>
+        <div class="art"><img src="../Content/CardArt/${card.art}" alt="${card.name}"></div>
+      </article>`;
+  }
+
+  function arrowHtml(vertical) {
+    return `
+      <div class="swap-arrow${vertical ? ' is-vertical' : ''}" aria-hidden="true">
+        <span class="glyph">&#8594;</span>
+        <span class="label">Trade</span>
+      </div>`;
+  }
+
+  function renderVariantA() {
+    const root = document.getElementById('variant-a');
+    root.innerHTML = SWAPS.map((swap, i) => `
+      <button type="button" class="trade-row${selectedIndex === i ? ' is-selected' : ''}" data-index="${i}">
+        <span class="row-badge">${i + 1}</span>
+        <div class="pair">
+          <div class="card-slot">
+            ${cardHtml(swap.out, ' card-sm', 'is-outgoing')}
+            <span class="card-caption">Remove</span>
+          </div>
+          ${arrowHtml(false)}
+          <div class="card-slot">
+            ${cardHtml(swap.in, ' card-sm', 'is-incoming')}
+            <span class="card-caption">Gain</span>
+          </div>
+        </div>
+      </button>
+    `).join('');
+    bindOptionClicks(root);
+  }
+
+  function renderVariantB() {
+    const root = document.getElementById('variant-b');
+    root.innerHTML = `<div class="exchange-columns">${SWAPS.map((swap, i) => `
+      <button type="button" class="exchange-col${selectedIndex === i ? ' is-selected' : ''}" data-index="${i}">
+        <span class="col-title">Option ${i + 1}</span>
+        <div class="stack">
+          ${cardHtml(swap.out, ' card-xs', 'is-outgoing')}
+          ${arrowHtml(true)}
+          ${cardHtml(swap.in, ' card-sm', 'is-incoming')}
+        </div>
+        <span class="pick-cta">${selectedIndex === i ? 'Selected' : 'Choose'}</span>
+      </button>
+    `).join('')}</div>`;
+    bindOptionClicks(root);
+  }
+
+  function renderVariantC() {
+    const root = document.getElementById('variant-c');
+    root.innerHTML = `<div class="ledger-lanes">${SWAPS.map((swap, i) => `
+      <button type="button" class="ledger-lane${selectedIndex === i ? ' is-selected' : ''}" data-index="${i}">
+        <div class="lane-meta">
+          <span class="lane-num">${String(i + 1).padStart(2, '0')}</span>
+          <span class="lane-tag">Exchange</span>
+        </div>
+        <div class="lane-side">
+          <span class="lane-side-label">Remove</span>
+          ${cardHtml(swap.out, ' card-xs', 'is-outgoing')}
+        </div>
+        ${arrowHtml(false)}
+        <div class="lane-side is-reward">
+          <span class="lane-side-label">Gain</span>
+          ${cardHtml(swap.in, ' card-xs', 'is-incoming')}
+        </div>
+      </button>
+    `).join('')}</div>`;
+    bindOptionClicks(root);
+  }
+
+  function bindOptionClicks(root) {
+    root.querySelectorAll('[data-index]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedIndex = parseInt(btn.dataset.index, 10);
+        renderAllVariants();
+        updateProceed();
+      });
+    });
+  }
+
+  function renderAllVariants() {
+    renderVariantA();
+    renderVariantB();
+    renderVariantC();
+  }
+
+  function setVariant(id) {
+    activeVariant = id;
+    document.querySelectorAll('[data-variant]').forEach(el => {
+      if (el.classList.contains('chip-btn')) {
+        el.classList.toggle('is-active', el.dataset.variant === id);
+      } else if (el.classList.contains('variant-panel')) {
+        el.classList.toggle('is-active', el.dataset.variant === id);
+      }
+    });
+    document.getElementById('variant-note').innerHTML = VARIANT_NOTES[id];
+  }
+
+  function updateProceed() {
+    document.getElementById('btn-proceed').disabled = selectedIndex < 0;
+  }
+
+  document.querySelectorAll('.chip-btn[data-variant]').forEach(btn => {
+    btn.addEventListener('click', () => setVariant(btn.dataset.variant));
+  });
+
+  document.getElementById('btn-proceed').addEventListener('click', () => {
+    if (selectedIndex < 0) return;
+    const swap = SWAPS[selectedIndex];
+    alert(`Proceed with: ${swap.out.name} -> ${swap.in.name}`);
+  });
+
+  window.addEventListener('resize', fitViewport);
+  window.addEventListener('load', () => {
+    fitViewport();
+    renderAllVariants();
+    updateProceed();
+  });
+  fitViewport();
+</script>
+</body>
+</html>
