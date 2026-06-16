@@ -43,12 +43,27 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 return courage * DamageMultiplier;
             };
 
-            CanPlay = (entityManager, card) => _weaponUsedThisPhase;
+            CanPlay = (entityManager, card) => {
+                if (IsUpgraded)
+                {
+                    return true;
+                }
+                return _weaponUsedThisPhase;
+            };
 
             OnCantPlay = (entityManager, card) =>
             {
+                if (IsUpgraded)
+                {
+                    return;
+                }
                 if (!_weaponUsedThisPhase)
                     EventManager.Publish(new CantPlayCardMessage { Message = "You must attack with your weapon this turn!" });
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"Gain {CourageBonus} courage. This gains +X damage, where X is your courage";
             };
         }
 

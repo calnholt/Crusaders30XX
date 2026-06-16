@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Services;
 using Xunit;
 
@@ -276,6 +278,58 @@ public class QuestCardRewardServiceTests
 	}
 
 	[Fact]
+	public void OnUpgrade_spawn_path_runs_when_upgraded_card_initializes()
+	{
+		TestOnUpgradeCard.ResetCounts();
+		var entityManager = new EntityManager();
+		var entity = entityManager.CreateEntity("TestOnUpgradeCard");
+		var card = new TestOnUpgradeCard { IsUpgraded = true };
+		card.Initialize(entityManager, entity);
+
+		Assert.Equal(1, TestOnUpgradeCard.SpawnInvokeCount);
+		Assert.Equal(0, TestOnUpgradeCard.ApplyInvokeCount);
+	}
+
+	[Fact]
+	public void OnUpgrade_apply_path_runs_when_upgrade_confirmed()
+	{
+		TestOnUpgradeCard.ResetCounts();
+		CardUpgradeService.InvokeUpgradeConfirmedOnCard(new TestOnUpgradeCard());
+
+		Assert.Equal(0, TestOnUpgradeCard.SpawnInvokeCount);
+		Assert.Equal(1, TestOnUpgradeCard.ApplyInvokeCount);
+	}
+
+	[Fact]
+	public void ApplyPendingOfferOption_upgrade_invokes_upgrade_confirmed_hook()
+	{
+		CardUpgradeService.UpgradeConfirmedInvokeCountForTests = 0;
+		SaveCache.DeleteSaveFilesIfPresent();
+		SaveCache.StartNewRun();
+		var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
+		loadout.cardIds = new List<string> { "smite|White" };
+		SaveCache.SaveLoadout(loadout);
+
+		SaveCache.SetPendingDeckRewardOffer(new DeckRewardOfferSave
+		{
+			options = new List<DeckRewardOfferOptionSave>
+			{
+				new()
+				{
+					kind = DeckRewardOfferKinds.Upgrade,
+					loadoutIndex = 0,
+					outgoingCardKey = "smite|White",
+					upgradedCardKey = "smite|White|Upgraded"
+				}
+			}
+		});
+
+		Assert.True(QuestCardRewardService.ApplyPendingOfferOption(0));
+		Assert.Equal("smite|White|Upgraded", SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cardIds.Single());
+		Assert.Equal(1, CardUpgradeService.UpgradeConfirmedInvokeCountForTests);
+	}
+
+	[Fact]
 	public void IsInDefaultStarterPool_recognizes_all_default_starter_cards()
 	{
 		foreach (var cardId in StartingDeckGeneratorService.DefaultStarterCardPool)
@@ -296,6 +350,31 @@ public class QuestCardRewardServiceTests
 				RunDeckService.TryParseCardKey(option.incomingCardKey, out var incomingId, out _),
 				$"Invalid incoming key {option.incomingCardKey}");
 			Assert.Contains(incomingId, allowed);
+		}
+	}
+
+	private sealed class TestOnUpgradeCard : CardBase
+	{
+		public const string CardId = "test_on_upgrade_card";
+		public static int SpawnInvokeCount;
+		public static int ApplyInvokeCount;
+
+		public TestOnUpgradeCard()
+		{
+			this.CardId = CardId;
+			OnUpgrade = (entityManager, card) =>
+			{
+				if (card != null)
+					SpawnInvokeCount++;
+				else
+					ApplyInvokeCount++;
+			};
+		}
+
+		public static void ResetCounts()
+		{
+			SpawnInvokeCount = 0;
+			ApplyInvokeCount = 0;
 		}
 	}
 }

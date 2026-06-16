@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
     public class Kunai : CardBase
     {
         private int RequiredAttackHits = 4;
-
+        private int RequiredAttackHitsUpgrade = 1;
         public Kunai()
         {
             CardId = "kunai";
@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
                 var battleState = player?.GetComponent<BattleStateInfo>();
-                if (battleState != null && battleState.PlayerActionPhaseAttackHits >= RequiredAttackHits)
+                if (battleState != null && battleState.PlayerActionPhaseAttackHits >= GetRequiredAttackHits(IsUpgraded))
                 {
                     EventManager.Publish(new ApplyPassiveEvent { Target = enemy, Type = AppliedPassiveType.Wounded, Delta = +1 });
                 }
@@ -41,6 +41,17 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 });
                 entityManager.AddComponent(card, new MarkedForExhaust { Owner = card });
             };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                RequiredAttackHits = GetRequiredAttackHits(IsUpgraded);
+                Text = $"Wounds the enemy if you have dealt attack damage {RequiredAttackHits} times this action phase. Exhaust on play or at the end of your turn";
+            };
+        }
+
+        private int GetRequiredAttackHits(bool isUpgraded)
+        {
+            return isUpgraded ? RequiredAttackHits - RequiredAttackHitsUpgrade : RequiredAttackHits;
         }
     }
 }

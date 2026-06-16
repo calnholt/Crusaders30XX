@@ -6,6 +6,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Absolution : CardBase
     {
+        private int CourageUpgradeAmount = 2;
         public Absolution()
         {
             CardId = "absolution";
@@ -29,6 +30,21 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
                     DamageType = ModifyTypeEnum.Attack
                 });
+            };
+
+            OnPledged = (entityManager, card) =>
+            {
+                if (IsUpgraded)
+                {
+                    EventManager.Publish(new ModifyCourageEvent {
+                        Delta = CourageUpgradeAmount
+                    });
+                }
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"When this is pledged, gain {CourageUpgradeAmount} courage.";
             };
         }
     }

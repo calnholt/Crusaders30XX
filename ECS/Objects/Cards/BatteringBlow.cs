@@ -19,7 +19,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Animation = "Attack";
             Damage = 6;
             Block = 3;
-            IsFreeAction = true;
+            IsFreeAction = false;
 
             OnPlay = (entityManager, card) =>
             {
@@ -42,6 +42,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     AttackCard = card,
                     DamageType = ModifyTypeEnum.Attack
                 });
+            };
+            OnUpgrade = (entityManager, card) =>
+            {
+                IsFreeAction = true;
             };
         }
     }

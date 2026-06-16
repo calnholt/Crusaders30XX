@@ -1,3 +1,4 @@
+using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 
@@ -5,6 +6,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class ForgeStrike : CardBase
     {
+        private int MightGainedUpgrade = 1;
         public ForgeStrike()
         {
             CardId = "forge_strike";
@@ -27,6 +29,17 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     AttackCard = card,
                     DamageType = ModifyTypeEnum.Attack
                 });
+                EventManager.Publish(new ApplyPassiveEvent
+                {
+                    Target = entityManager.GetEntity("Player"),
+                    Type = AppliedPassiveType.Might,
+                    Delta = MightGainedUpgrade
+                });
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"Gain {MightGainedUpgrade} might.";
             };
         }
     }

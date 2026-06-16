@@ -7,7 +7,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class DivineProtection : CardBase
     {
-        private int AegisGained = 3;
+        private int AegisGained = 4;
+        private int AegisGainedUpgrade = 1;
         public DivineProtection()
         {
             CardId = "divine_protection";
@@ -23,6 +24,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Aegis, Delta = AegisGained });
             };
+            
+            OnUpgrade = (entityManager, card) =>
+            {
+                AegisGained += AegisGainedUpgrade;
+                Text = $"Gain {AegisGained} aegis.";
+            };
         }
+
     }
 }

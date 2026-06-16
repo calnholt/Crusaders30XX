@@ -6,6 +6,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Smite : CardBase
     {
+        private int TemperanceUpgradeAmount = 1;
         public Smite()
         {
             CardId = "smite";
@@ -28,6 +29,27 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
                     DamageType = ModifyTypeEnum.Attack
                 });
+                if (IsUpgraded)
+                {
+                    EventManager.Publish(new ModifyTemperanceEvent {
+                        Delta = TemperanceUpgradeAmount
+                    });
+                }
+            };
+
+            OnPledged = (entityManager, card) =>
+            {
+                if (IsUpgraded) 
+                {
+                    EventManager.Publish(new ModifyTemperanceEvent {
+                        Delta = TemperanceUpgradeAmount
+                    });
+                }
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"When this is pledged, gain {TemperanceUpgradeAmount} temperance.";
             };
         }
     }

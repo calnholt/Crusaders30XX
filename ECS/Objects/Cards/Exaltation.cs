@@ -8,6 +8,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
     public class Exaltation : CardBase
     {
         private int CourageCost = 3;
+        private int CourageCostUpgrade = 1;
+
         public Exaltation()
         {
             CardId = "exaltation";
@@ -40,16 +42,27 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                 var courageCmp = player?.GetComponent<Courage>();
                 int courage = courageCmp?.Amount ?? 0;
-                return courage >= CourageCost;
+                return courage >= GetCourageCost(IsUpgraded);
             };
+            
             OnCantPlay = (entityManager, card) =>
             {
                 var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                 var courageCmp = player?.GetComponent<Courage>();
                 int courage = courageCmp?.Amount ?? 0;
-                if (courage < CourageCost)
+                if (courage < GetCourageCost(IsUpgraded))
                     EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageCost} courage!" });
             };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"As an additional cost, lose {GetCourageCost(IsUpgraded)} courage.";
+            };
+        }
+
+        private int GetCourageCost(bool isUpgraded)
+        {
+            return isUpgraded ? CourageCost - CourageCostUpgrade : CourageCost;
         }
     }
 }

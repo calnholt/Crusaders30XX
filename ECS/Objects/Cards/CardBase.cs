@@ -81,6 +81,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Action<EntityManager, Entity>? OnCreate {get; protected set; }
         public Action<EntityManager, Entity>? OnDiscardedForCost {get; protected set; }
         public Action<EntityManager, Entity>? OnPledged { get; protected set; }
+        public Action<EntityManager, Entity>? OnUpgrade { get; protected set; }
         public Func<EntityManager, Entity, bool>? CanPlay { get; protected set; } = (a, b) => true;
         public Action<EntityManager, Entity>? OnCantPlay { get; protected set; }
         public Func<EntityManager, Entity, int>? GetConditionalDamage { get; protected set; } = (a, b) => 0;
@@ -90,6 +91,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
             EntityManager = entityManager;
             CardEntity = cardEntity;
             OnCreate?.Invoke(entityManager, cardEntity);
+            if (IsUpgraded)
+                OnUpgrade?.Invoke(entityManager, cardEntity);
         }
 
         public virtual void Dispose()

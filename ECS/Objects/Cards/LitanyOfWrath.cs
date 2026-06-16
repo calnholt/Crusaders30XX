@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -7,6 +8,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
     public class LitanyOfWrath : CardBase
     {
         private int AggressionGained = 3;
+        private int AggressionGainedUpgrade = 5;
+        private List<string> CostUpgrade = ["White"];
         public LitanyOfWrath()
         {
             CardId = "litany_of_wrath";
@@ -28,6 +31,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Type = AppliedPassiveType.Aggression,
                     Delta = AggressionGained
                 });
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                AggressionGained += AggressionGainedUpgrade;
+                Cost = CostUpgrade;
+                Text = $"Gain {AggressionGained} aggression.";
             };
         }
     }

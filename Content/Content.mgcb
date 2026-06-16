@@ -1111,17 +1111,6 @@
 /processorParam:TextureFormat=Color
 /build:CardArt/ark_of_the_covenant.png
 
-#begin CardArt/bulwark.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:CardArt/bulwark.png
-
 #begin CardArt/burn.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -1132,17 +1121,6 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:TextureFormat=Color
 /build:CardArt/burn.png
-
-#begin CardArt/carve.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:CardArt/carve.png
 
 #begin CardArt/courageous.png
 /importer:TextureImporter
@@ -1210,17 +1188,6 @@
 /processorParam:TextureFormat=Color
 /build:CardArt/fury.png
 
-#begin CardArt/heavens_glory.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:CardArt/heavens_glory.png
-
 #begin CardArt/impale.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -1243,17 +1210,6 @@
 /processorParam:TextureFormat=Color
 /build:CardArt/increase_faith.png
 
-#begin CardArt/narrow_gate.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:CardArt/narrow_gate.png
-
 #begin CardArt/pouch_of_kunai.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -1264,17 +1220,6 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:TextureFormat=Color
 /build:CardArt/pouch_of_kunai.png
-
-#begin CardArt/purge.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:CardArt/purge.png
 
 #begin CardArt/ravage.png
 /importer:TextureImporter
@@ -1297,28 +1242,6 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:TextureFormat=Color
 /build:CardArt/reap.png
-
-#begin CardArt/reconciled.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:CardArt/reconciled.png
-
-#begin CardArt/sacrifice.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:CardArt/sacrifice.png
 
 #begin CardArt/serpent_crush.png
 /importer:TextureImporter
@@ -1407,17 +1330,6 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:TextureFormat=Color
 /build:CardArt/sword.png
-
-#begin CardArt/stun.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:CardArt/stun.png
 
 #begin CardArt/tempest.png
 /importer:TextureImporter

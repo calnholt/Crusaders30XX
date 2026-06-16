@@ -6,7 +6,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class CarpeDiem : CardBase
     {
-        private const int CourageGain = 4;
+        private int CourageGain = 4;
+        private int MightGainUpgrade = 1;
 
         public CarpeDiem()
         {
@@ -29,6 +30,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Type = AppliedPassiveType.CarpeDiem,
                     Delta = 1
                 });
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"Gain {CourageGain} courage and {MightGainUpgrade} might. At the end of the turn, lose all courage.";
             };
         }
     }

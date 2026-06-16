@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -7,6 +8,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class CrimsonRite : CardBase
     {
+        private List<string> CostUpgrade = ["Any", "Any"];
         public CrimsonRite()
         {
             CardId = "crimson_rite";
@@ -54,6 +56,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     }
                 };
                 EventManager.Subscribe(healHandler);
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Cost = CostUpgrade;
             };
         }
     }

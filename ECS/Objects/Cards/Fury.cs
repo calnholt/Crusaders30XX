@@ -9,6 +9,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Fury : CardBase
     {
+        private List<string> CostUpgrade = ["Red", "Any"];
         public Fury()
         {
             CardId = "fury";
@@ -23,12 +24,27 @@ namespace Crusaders30XX.ECS.Objects.Cards
             OnPlay = (entityManager, card) =>
             {
                 var player = entityManager.GetEntity("Player");
-                EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = 1 });
-                player.GetComponent<AppliedPassives>().Passives.TryGetValue(AppliedPassiveType.Aggression, out var amount);
-                if (amount > 0)
+                if (!IsUpgraded)
                 {
-                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = amount });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = 1 });
+                    player.GetComponent<AppliedPassives>().Passives.TryGetValue(AppliedPassiveType.Aggression, out var amount);
+                    if (amount > 0)
+                    {
+                        EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = amount });
+                    }
                 }
+                else
+                {
+                    var courage = player.GetComponent<Courage>().Amount;
+                    EventManager.Publish(new ModifyCourageRequestEvent { Delta = -courage, Type = ModifyCourageType.Spent });
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = courage * 2 });
+                }
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Cost = CostUpgrade;
+                Text = "Lose all courage. Gain X aggression, where X is the number of courage you lost, then double your aggression.";
             };
         }
     }

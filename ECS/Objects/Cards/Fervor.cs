@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
@@ -9,6 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
     {
         private int CourageThreshold = 5;
         private int DamageBonus = 3;
+        private List<string> CostUpgrade = ["Any", "Any"];
         public Fervor()
         {
             CardId = "fervor";
@@ -42,6 +44,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var courageCmp = player?.GetComponent<Courage>();
                 int courage = courageCmp?.Amount ?? 0;
                 return courage >= CourageThreshold ? DamageBonus : 0;
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Cost = CostUpgrade;
             };
 
         }

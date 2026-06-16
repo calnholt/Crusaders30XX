@@ -9,6 +9,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         private int Aggression = 1;
         private int CourageThreshold = 5;
         private int AggressionBonus = 4;
+        private int CourageOnPledgeUpgrade = 1;
         public DowseWithHolyWater()
         {
             CardId = "dowse_with_holy_water";
@@ -24,10 +25,34 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var player = entityManager.GetEntity("Player");
                 var courage = player.GetComponent<Courage>().Amount;
-                var delta = courage >= CourageThreshold ? AggressionBonus : Aggression;
-                EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = delta });
+                if (!IsUpgraded)
+                {
+                    var delta = courage >= CourageThreshold ? AggressionBonus : Aggression;
+                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = delta });
+                }
+                else
+                {
+                    if (courage >= CourageThreshold)
+                    {
+                        EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Aggression, Delta = AggressionBonus });
+                    }
+                }
+            };
+
+            OnPledged = (entityManager, card) =>
+            {
+                if (IsUpgraded)
+                {
+                    EventManager.Publish(new ModifyCourageRequestEvent { Delta = CourageOnPledgeUpgrade, Type = ModifyCourageType.Gain });
+                }
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"When this is pledged, gain {CourageOnPledgeUpgrade} courage. Gain {Aggression} aggression. If you have {CourageThreshold}+ courage, gain {AggressionBonus} aggression instead.";
             };
         }
+        
     }
 }
 

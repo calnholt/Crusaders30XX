@@ -44,7 +44,12 @@ namespace Crusaders30XX.ECS.Services
 			"steadfast_resolve",
 			"exhaltation",
 			"deus_vult",
-			"carpe_diem"
+			"carpe_diem",
+			"crimson_rite",
+			"consecrate",
+			"ark_of_the_covenant",
+			"dowse_with_holy_water",
+			"fury"
 		};
 
 		private static readonly string[] HammerRewardPool =
@@ -172,6 +177,8 @@ namespace Crusaders30XX.ECS.Services
 
 			if (applied)
 			{
+				if (string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, StringComparison.OrdinalIgnoreCase))
+					CardUpgradeService.InvokeUpgradeConfirmed(option.upgradedCardKey);
 				SaveCache.ClearPendingDeckRewardOffer();
 			}
 			return applied;

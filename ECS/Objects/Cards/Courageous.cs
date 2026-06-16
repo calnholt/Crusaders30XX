@@ -21,9 +21,17 @@ namespace Crusaders30XX.ECS.Objects.Cards
             OnPlay = (entityManager, card) =>
             {
                 EventManager.Publish(new ModifyCourageRequestEvent { Delta = CourageBonus, Type = ModifyCourageType.Gain });
-                TimerScheduler.Schedule(0.1f, () => {
-                    EventManager.Publish(new EndTurnRequested());
-                });
+                if (!IsUpgraded)
+                {
+                    TimerScheduler.Schedule(0.1f, () => {
+                        EventManager.Publish(new EndTurnRequested());
+                    });
+                }
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"Gain {CourageBonus} courage.";
             };
         }
     }

@@ -130,7 +130,7 @@ The run-long **Shackled** player passive is not a card restriction. Battle-local
 
 ## Quest-scoped card modification
 
-A permanent change to a deck card's combat numbers (e.g. +1 damage from Carve, +1 block from Bulwark) for the current **quest node** attempt. It persists across **queued encounters** in that node and is removed on **node completion** when the player earns **quest reward**. It does not carry to other quest nodes or the hub.
+A permanent change to a deck card's combat numbers (e.g. +1 damage from a card's quest-scoped effect) for the current **quest node** attempt. It persists across **queued encounters** in that node and is removed on **node completion** when the player earns **quest reward**. It does not carry to other quest nodes or the hub.
 
 _Avoid_: Rest of the quest (ambiguous with whole **run**; prefer **quest node** or **quest-scoped card modification**)
 

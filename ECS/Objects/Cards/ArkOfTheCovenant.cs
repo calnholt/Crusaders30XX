@@ -6,7 +6,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class ArkOfTheCovenant : CardBase
     {
-        private int HealAmount = 3;
+        private int HealAmount = 2;
+        private int HealAmountUpgrade = 1;
         public ArkOfTheCovenant()
         {
             CardId = "ark_of_the_covenant";
@@ -26,6 +27,12 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Delta = +HealAmount, 
                     DamageType = ModifyTypeEnum.Heal 
                 });
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                HealAmount += HealAmountUpgrade;
+                Text = $"When this card is discarded to pay for a card cost, heal {HealAmount} HP.";
             };
         }
     }

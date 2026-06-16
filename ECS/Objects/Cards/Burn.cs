@@ -11,13 +11,12 @@ namespace Crusaders30XX.ECS.Objects.Cards
         private int BurnAmount = 1;
         private int CourageThreshold = 3;
         private int ActionPointBonus = 1;
-        private int CourageCost = 1;
         public Burn()
         {
             CardId = "burn";
             Name = "Burn";
             Target = "Enemy";
-            Text = $"Apply {BurnAmount} burn to the enemy. If you have {CourageThreshold}+ courage, gain {ActionPointBonus} action point and lose {CourageCost} courage.";
+            Text = $"Apply {BurnAmount} burn to the enemy. If you have {CourageThreshold}+ courage, gain {ActionPointBonus} action point.";
             Block = 2;
             Type = CardType.Prayer;
             Animation = "Attack";
@@ -29,8 +28,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 if (courage >= CourageThreshold)
                 {
                     EventManager.Publish(new ModifyActionPointsEvent { Delta = ActionPointBonus });
-                    EventManager.Publish(new ModifyCourageRequestEvent { Delta = -CourageCost, Type = ModifyCourageType.Spent });
                 }
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                IsFreeAction = true;
+                Text = $"Apply {BurnAmount} burn to the enemy.";
             };
         }
     }

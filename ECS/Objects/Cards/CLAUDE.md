@@ -37,9 +37,35 @@ All callbacks are nullable and optional.
 | `OnDraw` | `Action<EntityManager, Entity>` | Effect when drawn |
 | `OnCreate` | `Action<EntityManager, Entity>` | Runs when entity is created (invoked from `Initialize`) |
 | `OnDiscardedForCost` | `Action<EntityManager, Entity>` | Runs when discarded to pay another card's cost |
+| `OnPledged` | `Action<EntityManager, Entity>` | Runs when pledge is applied to the card |
+| `OnUpgrade` | `Action<EntityManager, Entity>` | Runs when the card is upgraded (see below) |
 | `CanPlay` | `Func<EntityManager, Entity, bool>` | Pure validation; return false to block play (no side effects) |
 | `OnCantPlay` | `Action<EntityManager, Entity>` | Publish `CantPlayCardMessage` when play is rejected; called by systems after `CanPlay` returns false |
 | `GetConditionalDamage` | `Func<EntityManager, Entity, int>` | Bonus damage shown on card and added via `GetDerivedDamage()` |
+
+### OnUpgrade (spawn vs apply)
+
+`OnUpgrade` fires on two paths when a card has `IsUpgraded == true`:
+
+| Path | When | `entityManager` / `card` | Intended use |
+|---|---|---|---|
+| Spawn | `Initialize` after `OnCreate` | non-null | Per-instance stat/display changes (`Damage`, `Block`, `Text`, add components) |
+| Apply | `CardUpgradeService.InvokeUpgradeConfirmed` after reward-modal upgrade is saved | `null` / `null` | One-time run/meta effects (`SaveCache`, achievements, etc.) |
+
+Guard on `card == null` vs `card != null` so stat bumps run only on spawn and meta effects only on apply:
+
+```csharp
+OnUpgrade = (entityManager, card) =>
+{
+    if (card != null)
+    {
+        Damage += 2;
+        Text = $"Deal {Damage} damage.";
+        return;
+    }
+    // one-time run meta
+};
+```
 
 ## Lifecycle (Initialize / Dispose)
 

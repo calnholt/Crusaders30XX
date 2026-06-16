@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
@@ -9,6 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
     {
         private int DamageBonus = 2;
         private int CourageGain = 1;
+        private List<string> CostUpgrade = ["Any"];
         public Consecrate()
         {
             CardId = "consecrate";
@@ -18,7 +20,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Animation = "Attack";
             Damage = 6;
             Block = 3;
-            Text = $"If this card is pledged, it gains +{DamageBonus} damage and gain {CourageGain} courage.";
+            Text = $"If this card is pledged when played, it gains +{DamageBonus} damage and gain {CourageGain} courage.";
 
             OnPlay = (entityManager, card) =>
             {
@@ -44,6 +46,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
             GetConditionalDamage = (entityManager, card) =>
             {
                 return card.GetComponent<Pledge>() != null ? DamageBonus : 0;
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Cost = CostUpgrade;
             };
         }
     }

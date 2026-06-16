@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
@@ -9,6 +10,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
     {
         private int ActionPointGain = 1;
         private int MightGain = 2;
+        private List<string> CostUpgrade = [];
+        private int DamageUpgradeAmount = 2;
         public Crusade()
         {
             CardId = "crusade";
@@ -41,6 +44,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     EventManager.Publish(new ModifyActionPointsEvent { Delta = ActionPointGain });
                     EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Might, Delta = MightGain });
                 }
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Cost = CostUpgrade;
+                Damage -= DamageUpgradeAmount;
+                Text = $"If this card is pledged when played, gain {ActionPointGain}AP and {MightGain} might.";
             };
         }
     }
