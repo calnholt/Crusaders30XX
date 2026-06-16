@@ -32,6 +32,9 @@ public class EnemyFactoryTests
 		Assert.DoesNotContain("fallen_shepherd", pool);
 		Assert.DoesNotContain("gleeber", pool);
 		Assert.DoesNotContain("sand_corpse", pool);
+		Assert.DoesNotContain("training_demon", pool);
+		Assert.False(EnemyPortraitContent.HasPortrait("training_demon"));
+		Assert.True(EnemyFactory.IsRegistered("training_demon"));
 		Assert.True(EnemyFactory.Create("gleeber").IsTutorialOnly);
 		Assert.True(EnemyFactory.Create("sand_corpse").IsTutorialOnly);
 		foreach (string enemyId in pool)

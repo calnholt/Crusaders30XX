@@ -1,5 +1,4 @@
 UX
-- replace AP section from relic/block cards with a symbol for better identification
 - dialogue transitions, text, name section
 
 Gameplay

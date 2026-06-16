@@ -35,6 +35,7 @@ namespace Crusaders30XX.ECS.Services
 			"sand_golem",
 			"fallen_shepherd",
 			// "sniper", // marksman - disabled from run encounters
+			// "training_demon", // test-fight only
 		};
 
 		public static string ToAssetName(string enemyId)

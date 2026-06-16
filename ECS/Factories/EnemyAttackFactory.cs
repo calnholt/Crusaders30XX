@@ -91,6 +91,8 @@ namespace Crusaders30XX.ECS.Factories
                 "insidious_bolt" => new InsidiousBolt(),
                 // Berserker attacks
                 "rage" => new Rage(),
+                // TrainingDemon attacks
+                "training_strike" => new TrainingStrike(),
                 // Shadow attacks
                 "shadow_strike" => new ShadowStrike(),
                 "dissipating_darkness" => new EncroachingDarkness(),
@@ -210,6 +212,8 @@ namespace Crusaders30XX.ECS.Factories
                 { "insidious_bolt", new InsidiousBolt() },
                 // Berserker attacks
                 { "rage", new Rage() },
+                // TrainingDemon attacks
+                { "training_strike", new TrainingStrike() },
                 // Shadow attacks
                 { "shadow_strike", new ShadowStrike() },
                 { "dissipating_darkness", new EncroachingDarkness() },

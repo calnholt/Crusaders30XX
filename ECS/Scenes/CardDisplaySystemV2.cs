@@ -85,6 +85,10 @@ namespace Crusaders30XX.ECS.Systems
         public float ChipValueFontScale { get; set; } = 0.22f;
         [DebugEditable(DisplayName = "Chip Width", Step = 1, Min = 20, Max = 80)]
         public int ChipWidth { get; set; } = 42;
+        [DebugEditable(DisplayName = "Chip Gap", Step = 1, Min = 0, Max = 20)]
+        public int ChipGap { get; set; } = 4;
+        [DebugEditable(DisplayName = "Chip Column Bottom Pad", Step = 1, Min = 0, Max = 60)]
+        public int ChipColumnBottomPad { get; set; } = 14;
 
         // Label Slab
         [DebugEditable(DisplayName = "Label Slab Height", Step = 1, Min = 8, Max = 30)]
@@ -137,10 +141,6 @@ namespace Crusaders30XX.ECS.Systems
         public int V2ArtOffsetRight { get; set; } = -15;
         [DebugEditable(DisplayName = "V2 Art Offset Bottom", Step = 1, Min = -60, Max = 60)]
         public int V2ArtOffsetBottom { get; set; } = -10;
-
-        // AP Chip — offset up from card bottom
-        [DebugEditable(DisplayName = "AP Chip Bottom Offset", Step = 1, Min = 30, Max = 180)]
-        public int APChipBottomOffset { get; set; } = 66;
 
         // Responsive chip scaling
         [DebugEditable(DisplayName = "Chip Scale With Title")]
@@ -714,99 +714,128 @@ namespace Crusaders30XX.ECS.Systems
             Entity entity, CardBase card, bool isColorless)
         {
             float chipX = ChipColumnX * vs;
-
-            // AP chip Y anchored to card bottom
-            float apLabelY = (GetSettings().CardHeight - APChipBottomOffset) * vs;
-
-            // Responsive chip scaling: derive effective slot height from available space
-            float effectiveChipSlotHeight = ChipSlotHeight;
-            float effectiveChipSize = ChipSize;
-            if (ChipScaleWithTitle)
-            {
-                // Available space between gutter top and AP label
-                float availableHeight = (GetSettings().CardHeight - APChipBottomOffset) - GutterTopY;
-                // AP slot occupies LabelSlabHeight + ChipSize at the bottom of available space
-                float apSlotHeight = LabelSlabHeight + ChipSize;
-                float remainingAboveAp = availableHeight - apSlotHeight;
-                // Each stat slot (BLK/ATK) needs ChipSlotHeight; cap to fit
-                float dynamicMaxSlotHeight = remainingAboveAp / 2f;
-                effectiveChipSlotHeight = Math.Min(ChipSlotHeight, dynamicMaxSlotHeight);
-                // Scale chip body proportionally if slot shrunk
-                if (effectiveChipSlotHeight < ChipSlotHeight)
-                {
-                    float ratio = effectiveChipSlotHeight / ChipSlotHeight;
-                    effectiveChipSize = Math.Min(ChipSize, ChipSize * ratio);
-                }
-            }
-
             bool suppressDelta = entity.HasComponent<SuppressStatDeltaDisplay>();
 
-            // BLK chip (slot 0)
             int printedBlock = card.Block;
             int blackCardBlockBonus = GetBlackCardBlockBonus(entity);
             int blockValue = suppressDelta
                 ? printedBlock + blackCardBlockBonus
                 : BlockValueService.GetTotalBlockValue(entity);
             int blockDelta = suppressDelta ? blackCardBlockBonus : blockValue - printedBlock;
-            if (blockValue > 0 && !card.IsWeapon && !card.IsToken)
+            bool showBlock = blockValue > 0 && !card.IsWeapon && !card.IsToken;
+            bool showAttack = card.Type == CardType.Attack;
+            bool showAp = card.Type != CardType.Block && card.Type != CardType.Relic;
+
+            float effectiveChipSlotHeight = ChipSlotHeight;
+            float effectiveChipSize = ChipSize;
+            if (ChipScaleWithTitle)
+            {
+                float availableHeight = GetSettings().CardHeight - ChipColumnTopY - ChipColumnBottomPad;
+                float totalNeeded = EstimateColumnHeight(ChipSize, ChipSlotHeight, showBlock, showAttack, showAp);
+                if (totalNeeded > availableHeight && totalNeeded > 0f)
+                {
+                    float ratio = availableHeight / totalNeeded;
+                    effectiveChipSlotHeight = ChipSlotHeight * ratio;
+                    effectiveChipSize = ChipSize * ratio;
+                }
+            }
+
+            float lastChipBottomY = ChipColumnTopY * vs;
+            bool drewStatChip = false;
+
+            // BLK chip (slot 0)
+            if (showBlock)
             {
                 float chipY = ChipColumnTopY * vs;
                 bool hasDelta = blockDelta != 0;
 
-                // Label slab
                 DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, chipY, "BLOCK", ChipVariant.BLK, isColorless);
                 float chipBodyY = chipY + LabelSlabHeight * vs;
 
-                // Chip
                 DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, blockValue.ToString(), ChipVariant.BLK, true, hasDelta, isColorless, effectiveChipSize);
 
-                // Delta slab
                 if (hasDelta)
                 {
                     float slabY = chipBodyY + effectiveChipSize * vs;
                     DrawDeltaSlab(cardCenter, rotation, vs, cc, chipX, slabY, blockDelta);
                 }
+
+                lastChipBottomY = chipY + GetChipGroupHeight(vs, effectiveChipSize, reserveDeltaSlab: true);
+                drewStatChip = true;
             }
 
             // ATK chip (slot 1)
-            if (card.Type == CardType.Attack)
+            if (showAttack)
             {
                 int damage = suppressDelta ? card.Damage : GetEffectiveDamage(entity, card);
                 int damageDelta = suppressDelta ? 0 : damage - card.Damage;
                 float chipY = (ChipColumnTopY + effectiveChipSlotHeight) * vs;
                 bool hasDelta = damageDelta != 0;
 
-                // Label slab
                 DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, chipY, "DAMAGE", ChipVariant.ATK, isColorless);
                 float chipBodyY = chipY + LabelSlabHeight * vs;
 
-                // Chip
                 DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, damage.ToString(), ChipVariant.ATK, true, hasDelta, isColorless, effectiveChipSize);
 
-                // Delta slab
                 if (hasDelta)
                 {
                     float slabY = chipBodyY + effectiveChipSize * vs;
                     DrawDeltaSlab(cardCenter, rotation, vs, cc, chipX, slabY, damageDelta);
                 }
+
+                // Always reserve delta slab space so AP position is stable when modifiers appear
+                lastChipBottomY = chipY + GetChipGroupHeight(vs, effectiveChipSize, reserveDeltaSlab: true);
+                drewStatChip = true;
             }
 
-            // AP / FREE chip (bottom slot) — skip for Block and Relic cards (no action points)
-            if (card.Type != CardType.Block && card.Type != CardType.Relic)
+            // AP / FREE chip — flows below last stat chip; skip for Block and Relic cards
+            if (showAp)
             {
+                float apLabelY = drewStatChip
+                    ? lastChipBottomY + ChipGap * vs
+                    : ChipColumnTopY * vs;
+
                 if (card.IsFreeAction)
                 {
                     DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, apLabelY, "FREE", ChipVariant.FREE, isColorless);
                     float chipBodyY = apLabelY + LabelSlabHeight * vs;
-                    DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "0", ChipVariant.FREE, true, false, isColorless);
+                    DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "0", ChipVariant.FREE, true, false, isColorless, effectiveChipSize);
                 }
                 else
                 {
                     DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, apLabelY, "AP", ChipVariant.AP, isColorless);
                     float chipBodyY = apLabelY + LabelSlabHeight * vs;
-                    DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "1", ChipVariant.AP, true, false, isColorless);
+                    DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "1", ChipVariant.AP, true, false, isColorless, effectiveChipSize);
                 }
             }
+        }
+
+        private float GetChipGroupHeight(float vs, float chipSize, bool reserveDeltaSlab)
+            => (LabelSlabHeight + chipSize + (reserveDeltaSlab ? SlabHeight : 0)) * vs;
+
+        /// <summary>
+        /// Estimates total chip column height from column top, using worst-case delta slabs for scaling.
+        /// </summary>
+        private float EstimateColumnHeight(float chipSize, float slotHeight, bool showBlock, bool showAttack, bool showAp)
+        {
+            if (showAp && !showBlock && !showAttack)
+                return LabelSlabHeight + chipSize;
+
+            float bottom = ChipColumnTopY;
+
+            if (showBlock)
+                bottom = Math.Max(bottom, ChipColumnTopY + LabelSlabHeight + chipSize + SlabHeight);
+
+            if (showAttack)
+            {
+                float atkTop = ChipColumnTopY + slotHeight;
+                bottom = Math.Max(bottom, atkTop + LabelSlabHeight + chipSize + SlabHeight);
+            }
+
+            if (showAp)
+                bottom += ChipGap + LabelSlabHeight + chipSize;
+
+            return bottom - ChipColumnTopY;
         }
 
         private enum ChipVariant { BLK, ATK, AP, FREE }

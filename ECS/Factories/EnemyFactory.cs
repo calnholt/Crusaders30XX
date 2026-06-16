@@ -40,6 +40,7 @@ namespace Crusaders30XX.ECS.Factories
                 { "blood_martyr", difficulty => new BloodMartyr(difficulty) },
                 { "sniper", difficulty => new Sniper(difficulty) },
                 { "fallen_shepherd", difficulty => new FallenShepherd(difficulty) },
+                { "training_demon", difficulty => new TrainingDemon(difficulty) },
             };
 
         /// <summary>
