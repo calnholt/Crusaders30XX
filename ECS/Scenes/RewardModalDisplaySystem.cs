@@ -324,9 +324,6 @@ namespace Crusaders30XX.ECS.Systems
 		private static bool IsTreasureChestOverlay(QuestRewardOverlayState state) =>
 			string.Equals(state?.TitleLine1, "Treasure", System.StringComparison.Ordinal);
 
-		private int ResolveStandardModalHeight(QuestRewardOverlayState state) =>
-			IsTreasureChestOverlay(state) ? TreasureChestModalHeight : QuestRewardModalHeight;
-
 		private LayoutSignature CaptureLayoutSignature()
 		{
 			var overlayState = EntityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();

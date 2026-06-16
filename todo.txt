@@ -2,7 +2,6 @@ UX
 - dialogue transitions, text, name section
 
 Gameplay
-- quest rewards replace existing cards, deck size doesnt change. pools of cards will need to be curated for each weapon
 - map needs to feel like worker placement -- think about HOW -- gain resources @ battles, use to buy, time costs to visit places, tableu building? conversions
 - maybe remove istoken/isweapon and make as components?
 - hand display - when have lots of cards in hand, the reach outside bounds of screen, need to clamp the bounds and just make them overlap more
@@ -13,7 +12,6 @@ Gameplay
 
 
 cards
-- gain 4 courage. at the end of the turn, lose all courage.
 - if you have dealt 10 or more damage this turn...
 
 medals
@@ -36,112 +34,6 @@ persistent card states:
 - brittle
 - update sealed to reduce on block ONLY, can be pledged
 
-DesertStormDisplaySystem settings - update the system with these values:
-TimeScale=3.27
-BaseScale=2.89
-Lacunarity=2
-Persistence=0.5
-WarpStrength=2.97
-DensityRemapLow=0.4
-DensityRemapHigh=0.93
-DriftSpeed=0.025
-DriftVertical=0.006
-WarpDriftA=0.018
-WarpDriftB=0.012
-MorphSpeed=0.008
-ShadowR=0.55
-ShadowG=0.47
-ShadowB=0.37
-MidR=0.7
-MidG=0.62
-MidB=0.51
-HighlightR=0.82
-HighlightG=0.75
-HighlightB=0.64
-BrightR=0.89
-BrightG=0.82
-BrightB=0.71
-VerticalGradient=0.08
-DustBase=0.55
-DustDensity=0.45
-SceneTintR=0.9
-SceneTintG=0.82
-SceneTintB=0.68
-SceneTintStrength=0.4
-GrainIntensity=0.02
-GrainFineness=1
-VignetteAmount=0
 
 
-Starter decks:
 
-HAMMER
-• absolution
-• courageous
-• forge_strike
-• litany_of_wrath
-• reckoning
-• smite
-- mantlet
-- stoke_the_furnace
-- steadfast_resolve
-* unburdened_strike
-* increase_faith
-
-
-DAGGER
-• absolution
-• courageous
-• forge_strike
-• litany_of_wrath
-• reckoning
-• smite
-- seize
-- rally_the_faithful
-- whirlwind
-* razor_storm
-* increase_faith
-
-
-SWORD
-• absolution
-• courageous
-• forge_strike
-• litany_of_wrath
-• reckoning
-• smite
-- fervor
-- hold_the_line
-- stab
-* exhaltation
-* increase_faith
-
-
-ALL POOLS
-- strike
-- crusade
-- zealous_vow
-- tempest
-- shield_of_faith
-- increase_faith
-- renounce_and_hone
-- steel_the_spirit
-- iron_covenant
-- whirlwind
-- pouch_of_kunai
-- ravage
-- reap
-- relentless_strike
-- serpent_crush
-- stalwart
-- temper_the_blade
-- vindicate
-- vanguards_promise
-- steadfast_resolve
-- exhaltation
-- deus_vult
-- carpe_diem
-
-HAMMER ONLY CARDS
-- unburdened_strike
-- battering_blow

@@ -46,7 +46,7 @@ public class DesertStormDisplaySystem : Core.System
     public float WarpStrength { get; set; } = 2.97f;
 
     [DebugEditable(DisplayName = "Density Low", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float DensityRemapLow { get; set; } = 0.39f;
+    public float DensityRemapLow { get; set; } = 0.4f;
 
     [DebugEditable(DisplayName = "Density High", Step = 0.01f, Min = 0f, Max = 1f)]
     public float DensityRemapHigh { get; set; } = 0.93f;
@@ -124,13 +124,13 @@ public class DesertStormDisplaySystem : Core.System
     public float SceneTintStrength { get; set; } = 0.40f;
 
     [DebugEditable(DisplayName = "Grain Intensity", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float GrainIntensity { get; set; } = 0.10f;
+    public float GrainIntensity { get; set; } = 0.02f;
 
     [DebugEditable(DisplayName = "Grain Fineness", Step = 0.01f, Min = 0.01f, Max = 4f)]
     public float GrainFineness { get; set; } = 1f;
 
     [DebugEditable(DisplayName = "Vignette Amount", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float VignetteAmount { get; set; } = 0.20f;
+    public float VignetteAmount { get; set; } = 0f;
 
     public DesertStormDisplaySystem(
         EntityManager entityManager,
