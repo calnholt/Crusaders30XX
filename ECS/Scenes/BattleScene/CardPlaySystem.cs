@@ -282,7 +282,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     // Build hand color multiset excluding the card being played
                     var handOthers = deck.Hand.Where(c => c != evt.Card).ToList();
-                    // Exclude weapons from being considered as payment candidates
+                    // Exclude weapons and tokens from being considered as payment candidates
                     List<Entity> handNonWeapons = new List<Entity>();
                     foreach (var e in handOthers)
                     {
@@ -298,14 +298,14 @@ namespace Crusaders30XX.ECS.Systems
                             var ocard = CardFactory.Create(oid);
                             if (ocard != null)
                             {
-                                if (!ocard.IsWeapon)
+                                if (ocard.CanDiscardForCost)
                                 {
                                     handNonWeapons.Add(e);
                                 }
                             }
                             else
                             {
-                                // If no definition found, treat as non-weapon to avoid false negatives
+                                // If no definition found, treat as eligible to avoid false negatives
                                 handNonWeapons.Add(e);
                             }
                         }

@@ -478,11 +478,10 @@ namespace Crusaders30XX.ECS.Systems
             var cd = evt.Card.GetComponent<CardData>();
             if (cd == null) return;
 
-            // Hard guard: weapons cannot be used to pay costs under any circumstance
+            // Hard guard: weapons and tokens cannot be used to pay costs under any circumstance
             try
             {
-                string id = cd.Card.CardId ?? string.Empty;
-                if (cd.Card.IsWeapon) return;
+                if (!cd.Card.CanDiscardForCost) return;
             }
             catch { }
 
@@ -962,10 +961,10 @@ namespace Crusaders30XX.ECS.Systems
         {
             var cd = card.GetComponent<CardData>();
             if (cd == null) return false;
-            // Disallow using weapons to pay costs
+            // Disallow using weapons and tokens to pay costs
             try
             {
-                if (cd.Card.IsWeapon) return false;
+                if (!cd.Card.CanDiscardForCost) return false;
             }
             catch { }
             // Disallow using pledged cards to pay costs

@@ -66,6 +66,7 @@ namespace Crusaders30XX.ECS.Systems
         public float CostPipFlashHz { get; set; } = 0.3f;
 
         private float _elapsedTime;
+        private readonly Dictionary<CardType, Texture2D> _typeIconTextures = new();
 
         // Chip Layout
         [DebugEditable(DisplayName = "Chip Size", Step = 1, Min = 20, Max = 80)]
@@ -108,6 +109,12 @@ namespace Crusaders30XX.ECS.Systems
         public int ContentPadTop { get; set; } = 4;
         [DebugEditable(DisplayName = "Content Pad Right", Step = 1, Min = 0, Max = 40)]
         public int ContentPadRight { get; set; } = 4;
+        [DebugEditable(DisplayName = "Type Icon Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
+        public float TypeIconScale { get; set; } = 0.13f;
+        [DebugEditable(DisplayName = "Type Icon Alpha", Step = 0.01f, Min = 0.0f, Max = 1.0f)]
+        public float TypeIconAlpha { get; set; } = 0.3f;
+        [DebugEditable(DisplayName = "Type Icon Offset Y", Step = 1, Min = 0, Max = 200)]
+        public int TypeIconOffsetY { get; set; } = 20;
 
         // Name
         [DebugEditable(DisplayName = "V2 Name Font Scale", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
@@ -320,9 +327,19 @@ namespace Crusaders30XX.ECS.Systems
         public CardDisplaySystemV2(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
             : base(entityManager, graphicsDevice, spriteBatch, content)
         {
+            LoadTypeIconTextures();
             EventManager.Subscribe<CardRenderEvent>(OnCardRenderEvent);
             EventManager.Subscribe<CardRenderScaledEvent>(OnCardRenderScaledEvent);
             EventManager.Subscribe<CardRenderScaledRotatedEvent>(OnCardRenderScaledRotatedEvent);
+        }
+
+        private void LoadTypeIconTextures()
+        {
+            if (_typeIconTextures.Count > 0) return;
+            _typeIconTextures[CardType.Attack] = GetOrLoadTexture("card_icon_attack");
+            _typeIconTextures[CardType.Prayer] = GetOrLoadTexture("card_icon_prayer");
+            _typeIconTextures[CardType.Block] = GetOrLoadTexture("card_icon_shield");
+            _typeIconTextures[CardType.Relic] = GetOrLoadTexture("card_icon_relic");
         }
 
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
@@ -441,7 +458,7 @@ namespace Crusaders30XX.ECS.Systems
             var bgColor = isColorless
                 ? ColorlessBackground
                 : GetPaletteColor(BgColors, cc, new Color(220, 215, 206));
-            if (card.IsWeapon && !isColorless)
+            if ((card.IsWeapon || card.IsToken) && !isColorless)
             {
                 bgColor = new Color(215, 186, 147);
             }
@@ -486,10 +503,16 @@ namespace Crusaders30XX.ECS.Systems
                 DrawStatChips(cardCenter, rotation, vs, cc, entity, card, isColorless);
             }
 
-            // 6. Description (content area, below rule line, right of chips)
+            // 6. Type icon watermark + description (content area, below rule line, right of chips)
             float contentX = ContentMarginLeft * vs;
             float contentWidth = (settings.CardWidth - ContentMarginLeft - ContentPadRight) * vs;
-            float cursorY = titleBandEndY + ContentPadTop * vs;
+            float contentTop = titleBandEndY + ContentPadTop * vs;
+            float cursorY = contentTop;
+
+            if (hasDef)
+            {
+                DrawTypeIconWatermark(cardCenter, rotation, vs, card, contentX, contentTop, contentWidth);
+            }
 
             if (hasDef)
             {
@@ -519,6 +542,19 @@ namespace Crusaders30XX.ECS.Systems
                     V2Tex(cardCenter, rotation, new Vector2(artLocalX, artLocalY), artTex, new Vector2(artW, artH), Color.White, vs);
                 }
             }
+        }
+
+        private void DrawTypeIconWatermark(Vector2 cardCenter, float rotation, float vs, CardBase card,
+            float contentX, float contentTop, float contentWidth)
+        {
+            if (!_typeIconTextures.TryGetValue(card.Type, out var tex) || tex == null) return;
+
+            float iconW = tex.Width * TypeIconScale * vs;
+            float iconH = tex.Height * TypeIconScale * vs;
+            float iconX = contentX + (contentWidth - iconW) / 2f;
+            float iconY = contentTop + TypeIconOffsetY * vs;
+            var iconColor = Color.White * TypeIconAlpha;
+            V2Tex(cardCenter, rotation, new Vector2(iconX, iconY), tex, new Vector2(iconW, iconH), iconColor, vs);
         }
 
         /// <summary>
@@ -712,7 +748,7 @@ namespace Crusaders30XX.ECS.Systems
                 ? printedBlock + blackCardBlockBonus
                 : BlockValueService.GetTotalBlockValue(entity);
             int blockDelta = suppressDelta ? blackCardBlockBonus : blockValue - printedBlock;
-            if (blockValue > 0 && !card.IsWeapon)
+            if (blockValue > 0 && !card.IsWeapon && !card.IsToken)
             {
                 float chipY = ChipColumnTopY * vs;
                 bool hasDelta = blockDelta != 0;

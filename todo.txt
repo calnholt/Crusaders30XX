@@ -3,10 +3,14 @@ UX
 - dialogue transitions, text, name section
 
 Gameplay
-- weaks cards that are permanently added to deck (colorless 2 block, etc)
-- tokens need to be weapon color, filter to prevent from being discarded for costs
 - quest rewards replace existing cards, deck size doesnt change. pools of cards will need to be curated for each weapon
-- map needs to feel like worker placement -- think about HOW
+- map needs to feel like worker placement -- think about HOW -- gain resources @ battles, use to buy, time costs to visit places, tableu building? conversions
+- maybe remove istoken/isweapon and make as components?
+- hand display - when have lots of cards in hand, the reach outside bounds of screen, need to clamp the bounds and just make them overlap more
+- make hand display agnostic of carddata, probably involves refactoring some components and data objects
+- fix hand display card uielement bounds
+- make cardlistmodaldisplay not a modal, tinted overlay with floating UI
+- card icons
 
 cards
 - gain 4 courage. at the end of the turn, lose all courage.
@@ -17,7 +21,8 @@ medals
 - the start of the next x battles, the enemy gains 1 anathema
 
 weapons
-- 
+- rapier? - if fully block attack, gain riposte passive, cards trigger off riposte, temperance is aegis
+- summons - start with a summon, have hp, lower max hp, temperiace is skip next enemy turn
 
 
 tech debt

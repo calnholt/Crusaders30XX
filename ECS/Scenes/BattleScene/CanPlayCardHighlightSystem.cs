@@ -222,7 +222,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             return true;
         }
 
-        // --- Build list of cards eligible to pay costs (excludes weapons, yellow, pledged) ---
+        // --- Build list of cards eligible to pay costs (excludes weapons, tokens, yellow, pledged) ---
         private List<Entity> BuildCostEligibleCards(Deck deck)
         {
             var result = new List<Entity>();
@@ -231,7 +231,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
                 var cd = c.GetComponent<CardData>();
                 if (cd == null) continue;
                 if (cd.Color == CardData.CardColor.Yellow) continue;
-                if (cd.Card.IsWeapon) continue;
+                if (!cd.Card.CanDiscardForCost) continue;
                 if (c.GetComponent<Pledge>() != null) continue;
                 result.Add(c);
             }
