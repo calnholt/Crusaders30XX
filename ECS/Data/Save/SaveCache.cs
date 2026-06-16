@@ -569,6 +569,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				runLongPassives = new Dictionary<string, int>(),
 				runCardRestrictions = new Dictionary<string, List<string>>(),
 				starterCardKeys = new List<string>(),
+				pendingDeckRewardOffer = null,
 				cardMastery = prior?.cardMastery ?? new Dictionary<string, CardMastery>(),
 				achievements = prior?.achievements ?? new Dictionary<string, AchievementProgress>(),
 				seenTutorials = prior?.seenTutorials ?? new List<string>(),
@@ -595,6 +596,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				items = new List<SaveItem>(),
 				lastLocation = nodes.Count > 0 ? nodes[0].id : "run_0",
 				pendingBattleNodeId = string.Empty,
+				pendingDeckRewardOffer = null,
 				starterCardKeys = new List<string>(startingDeck),
 				loadouts = new List<LoadoutDefinition>
 				{
@@ -930,6 +932,98 @@ namespace Crusaders30XX.ECS.Data.Save
 				}
 				return true;
 			}
+		}
+
+		public static bool ReplaceCardInLoadoutAtIndex(
+			string loadoutId,
+			int index,
+			string expectedOldCardKey,
+			string newCardKey,
+			bool publishChange = true)
+		{
+			if (string.IsNullOrWhiteSpace(loadoutId) || index < 0 || string.IsNullOrWhiteSpace(newCardKey)) return false;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save?.loadouts == null) return false;
+				var loadout = _save.loadouts.FirstOrDefault(l => l.id == loadoutId);
+				if (loadout?.cardIds == null || index >= loadout.cardIds.Count) return false;
+
+				string oldKey = loadout.cardIds[index];
+				if (!string.IsNullOrWhiteSpace(expectedOldCardKey)
+					&& !string.Equals(oldKey, expectedOldCardKey, StringComparison.OrdinalIgnoreCase))
+				{
+					return false;
+				}
+
+				loadout.cardIds[index] = newCardKey;
+				if (!loadout.cardIds.Any(k => string.Equals(k, oldKey, StringComparison.OrdinalIgnoreCase)))
+				{
+					_save.runCardRestrictions?.Remove(oldKey);
+				}
+				Persist();
+				if (publishChange)
+				{
+					EventManager.Publish(new LoadoutCardRemoved { LoadoutId = loadoutId, CardKey = oldKey });
+					EventManager.Publish(new LoadoutCardAdded { LoadoutId = loadoutId, CardKey = newCardKey });
+				}
+				return true;
+			}
+		}
+
+		public static DeckRewardOfferSave GetPendingDeckRewardOffer()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				return CloneDeckRewardOffer(_save?.pendingDeckRewardOffer);
+			}
+		}
+
+		public static void SetPendingDeckRewardOffer(DeckRewardOfferSave offer)
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				_save.pendingDeckRewardOffer = CloneDeckRewardOffer(offer);
+				Persist();
+			}
+		}
+
+		public static void ClearPendingDeckRewardOffer()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null || _save.pendingDeckRewardOffer == null) return;
+				_save.pendingDeckRewardOffer = null;
+				Persist();
+			}
+		}
+
+		private static DeckRewardOfferSave CloneDeckRewardOffer(DeckRewardOfferSave offer)
+		{
+			if (offer == null) return null;
+			var clone = new DeckRewardOfferSave
+			{
+				rewardGold = offer.rewardGold,
+				options = new List<DeckRewardOfferOptionSave>()
+			};
+			if (offer.options == null) return clone;
+			foreach (var option in offer.options)
+			{
+				if (option == null) continue;
+				clone.options.Add(new DeckRewardOfferOptionSave
+				{
+					kind = option.kind ?? string.Empty,
+					loadoutIndex = option.loadoutIndex,
+					outgoingCardKey = option.outgoingCardKey ?? string.Empty,
+					incomingCardKey = option.incomingCardKey ?? string.Empty,
+					upgradedCardKey = option.upgradedCardKey ?? string.Empty,
+				});
+			}
+			return clone;
 		}
 
 		public static bool TrySpendGoldAndAddToCollection(string itemId, int price, ForSaleItemType itemType, out int newGold)

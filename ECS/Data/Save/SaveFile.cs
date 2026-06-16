@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Data.Save
 {
 	public class SaveFile
 	{
-		public const int CURRENT_VERSION = 7;
+		public const int CURRENT_VERSION = 8;
 
 		public int version { get; set; } = 0;
 		public bool isRunActive { get; set; }
@@ -32,6 +32,29 @@ namespace Crusaders30XX.ECS.Data.Save
 		public Dictionary<string, List<string>> runCardRestrictions { get; set; } = new Dictionary<string, List<string>>();
 		/// <summary>Loadout card keys from the rolled starting deck at new-run creation.</summary>
 		public List<string> starterCardKeys { get; set; } = new List<string>();
+		/// <summary>Exact unresolved deck reward offer shown after a quest reward.</summary>
+		public DeckRewardOfferSave pendingDeckRewardOffer { get; set; }
+	}
+
+	public class DeckRewardOfferSave
+	{
+		public int rewardGold { get; set; }
+		public List<DeckRewardOfferOptionSave> options { get; set; } = new List<DeckRewardOfferOptionSave>();
+	}
+
+	public class DeckRewardOfferOptionSave
+	{
+		public string kind { get; set; } = DeckRewardOfferKinds.Exchange;
+		public int loadoutIndex { get; set; } = -1;
+		public string outgoingCardKey { get; set; } = string.Empty;
+		public string incomingCardKey { get; set; } = string.Empty;
+		public string upgradedCardKey { get; set; } = string.Empty;
+	}
+
+	public static class DeckRewardOfferKinds
+	{
+		public const string Exchange = "exchange";
+		public const string Upgrade = "upgrade";
 	}
 
 	public class SaveItem

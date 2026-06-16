@@ -100,7 +100,7 @@ The save file has a `version` field. If it does not match the game's current sav
 
 ## Loadout
 
-The player's configured battle kit for the run: deck card list, weapon, temperance ability, equipment slots, and medals. Shop card purchases append a card entry to the deck list immediately. Quest rewards do the same. There is no separate owned-cards list. Equipment is one piece per slot (head, chest, arms, legs). Gaining new equipment in a slot replaces whatever was in that slot; the replaced piece cannot be re-equipped later in the run.
+The player's configured battle kit for the run: deck card list, weapon, temperance ability, equipment slots, and medals. Shop card purchases append a card entry to the deck list immediately. Resolving a deck reward offer replaces the selected loadout entry in place. There is no separate owned-cards list. Equipment is one piece per slot (head, chest, arms, legs). Gaining new equipment in a slot replaces whatever was in that slot; the replaced piece cannot be re-equipped later in the run.
 
 ## Deck
 
@@ -144,9 +144,9 @@ The 20-card deck assigned at new-run creation by random selection from the start
 
 ## Copy limit
 
-A deck may include at most one copy of a given card identity and color pairing, and at most two copies of the same card identity across all colors. Quest rewards and other non-shop sources follow this limit.
+A deck may include at most one copy of a given card identity and color pairing, and at most two copies of the same card identity across all colors. Starting deck construction follows this limit.
 
-Shop purchases are an exception: buying from a run-map shop may add a card entry even when it would exceed the normal copy limit. Each shop listing can still only be bought once per run (`isPurchased` on that slot).
+Shop purchases and deck reward exchanges are exceptions: either may add a card entry even when it would exceed the normal copy limit. Each shop listing can still only be bought once per run (`isPurchased` on that slot).
 
 ## Location (desert)
 
@@ -260,7 +260,11 @@ _Avoid_: Using "event" alone when you mean the map marker or the choice content;
 
 ## Quest reward
 
-On first completion of a quest node: flat gold (30; 75 for a dual-battle quest node) and one random card added to the loadout deck. The Gate is not a quest node and grants no quest reward. No rewards on repeat attempts (replays disabled). The reward modal shows only this quest reward gold; other gold grants (e.g. from medals) may apply at the same moment without changing the modal amount.
+On first completion of a quest node: quest gold and a deck reward offer. The Gate is not a quest node and grants no quest reward. No rewards on repeat attempts (replays disabled). The reward modal shows only this quest reward gold; other gold grants (e.g. from medals) may apply at the same moment without changing the modal amount.
+
+## Deck reward offer
+
+A persisted unresolved offer created by a quest reward. Resolving the offer chooses one exchange or upgrade lane and replaces that lane's targeted loadout entry in place. Deck reward exchanges ignore copy limits.
 
 ## Run victory
 

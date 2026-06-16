@@ -102,7 +102,7 @@ namespace Crusaders30XX.ECS.Systems
 		public int TriangleRightPadding { get; set; } = 15;
 
 		[DebugEditable(DisplayName = "Scroll Pixels / Notch", Step = 2, Min = 8, Max = 200)]
-		public float ScrollPixelsPerNotch { get; set; } = 16f;
+		public float ScrollPixelsPerNotch { get; set; } = 56f;
 
 		[DebugEditable(DisplayName = "Initial Offset Y", Step = 2, Min = 0, Max = 400)]
 		public int InitialOffsetY { get; set; } = 50;

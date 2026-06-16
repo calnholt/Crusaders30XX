@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.ECS.Data.Save;
 using System.Text.Json.Nodes;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
@@ -26,6 +27,9 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _bodyFont = FontSingleton.ChakraPetchFont;
 		private readonly Texture2D _pixel;
 		private readonly List<Entity> _rewardCardEntities = new();
+		private readonly List<DeckRewardOptionView> _deckRewardOptionViews = new();
+		private readonly List<Entity> _deckRewardLaneEntities = new();
+		private Entity _deckRewardSkipButton;
 		private Entity _rewardMedalEntity;
 		private Entity _rewardEquipmentEntity;
 		private readonly Dictionary<string, Texture2D> _equipmentIconCache = new();
@@ -56,6 +60,7 @@ namespace Crusaders30XX.ECS.Systems
 		private const string StageLabelText = "REWARD";
 		private const string QuestStageLabelText = "CHOOSE YOUR REWARD";
 		private const string ProceedLabelText = "Proceed";
+		private const string SkipRewardLabelText = "Skip Reward";
 		private const int MaxRewardCardChoices = 2;
 
 		[DebugEditable(DisplayName = "Z Order", Step = 10, Min = 0, Max = 100000)]
@@ -63,8 +68,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Modal Width", Step = 10, Min = 200, Max = 1600)]
 		public int ModalWidth { get; set; } = 920;
-		[DebugEditable(DisplayName = "Modal Height", Step = 10, Min = 200, Max = 1200)]
-		public int ModalHeight { get; set; } = 520;
+		[DebugEditable(DisplayName = "Quest Reward Modal Height", Step = 10, Min = 200, Max = 1200)]
+		public int QuestRewardModalHeight { get; set; } = 1030;
+		[DebugEditable(DisplayName = "Treasure Chest Modal Height", Step = 10, Min = 200, Max = 1200)]
+		public int TreasureChestModalHeight { get; set; } = 520;
 		[DebugEditable(DisplayName = "Left Col Width", Step = 10, Min = 120, Max = 600)]
 		public int LeftColWidth { get; set; } = 280;
 		[DebugEditable(DisplayName = "Gold Only Modal Width", Step = 10, Min = 200, Max = 800)]
@@ -138,6 +145,36 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Button Text Scale", Step = 0.01f, Min = 0.1f, Max = 2f)]
 		public float ButtonTextScale { get; set; } = 0.28f;
 
+		[DebugEditable(DisplayName = "Deck Lane Card Scale", Step = 0.01f, Min = 0.1f, Max = 1f)]
+		public float DeckLaneCardScale { get; set; } = 0.64f;
+		[DebugEditable(DisplayName = "Deck Lane Gap", Step = 1, Min = 0, Max = 40)]
+		public int DeckLaneGap { get; set; } = 6;
+		[DebugEditable(DisplayName = "Deck Lane Pair Width", Step = 5, Min = 200, Max = 700)]
+		public int DeckLanePairWidth { get; set; } = 555;
+		[DebugEditable(DisplayName = "Deck Lane Meta Width", Step = 5, Min = 40, Max = 180)]
+		public int DeckLaneMetaWidth { get; set; } = 86;
+
+		private struct DeckRewardOptionView
+		{
+			public Entity Lane;
+			public Entity OutgoingCard;
+			public Entity IncomingCard;
+		}
+
+		private struct DeckRewardOfferLayout
+		{
+			public Rectangle Modal;
+			public Rectangle Content;
+			public Rectangle Masthead;
+			public Rectangle Stage;
+			public Rectangle Footer;
+			public Rectangle SkipButton;
+			public Rectangle[] Lanes;
+			public Vector2[] OutgoingCardCenters;
+			public Vector2[] IncomingCardCenters;
+			public Vector2[] ArrowCenters;
+		}
+
 		private struct QuestRewardLayout
 		{
 			public Rectangle Modal;
@@ -162,7 +199,9 @@ namespace Crusaders30XX.ECS.Systems
 		private struct LayoutSignature
 		{
 			public int ModalWidth;
-			public int ModalHeight;
+			public int QuestRewardModalHeight;
+			public int TreasureChestModalHeight;
+			public bool IsTreasureChest;
 			public int LeftColWidth;
 			public int GoldOnlyModalWidth;
 			public int BorderThickness;
@@ -247,9 +286,23 @@ namespace Crusaders30XX.ECS.Systems
 			if (e.Scene != SceneId.Location) return;
 
 			var state = EntityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
-			if (state == null || !state.DismissInProgress) return;
+			if (state != null && state.DismissInProgress)
+			{
+				CloseOverlay(state);
+				return;
+			}
 
-			CloseOverlay(state);
+			if (state?.IsOpen == true) return;
+
+			var pendingOffer = SaveCache.GetPendingDeckRewardOffer();
+			if (pendingOffer?.options == null || pendingOffer.options.Count == 0) return;
+
+			OpenQuestReward(new ShowQuestRewardOverlay
+			{
+				RewardGold = pendingOffer.rewardGold,
+				HasCardReward = true,
+				DeckRewardOffer = pendingOffer
+			});
 		}
 
 		private void OnDeleteCaches(DeleteCachesEvent _)
@@ -257,6 +310,7 @@ namespace Crusaders30XX.ECS.Systems
 			InvalidateCaches();
 			_gradientRuleCache.DisposeAll();
 			DestroyRewardCards();
+			DestroyDeckRewardControls();
 			DestroyRewardMedal();
 			DestroyRewardEquipment();
 		}
@@ -267,6 +321,12 @@ namespace Crusaders30XX.ECS.Systems
 			_textMetricsValid = false;
 		}
 
+		private static bool IsTreasureChestOverlay(QuestRewardOverlayState state) =>
+			string.Equals(state?.TitleLine1, "Treasure", System.StringComparison.Ordinal);
+
+		private int ResolveStandardModalHeight(QuestRewardOverlayState state) =>
+			IsTreasureChestOverlay(state) ? TreasureChestModalHeight : QuestRewardModalHeight;
+
 		private LayoutSignature CaptureLayoutSignature()
 		{
 			var overlayState = EntityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
@@ -274,7 +334,9 @@ namespace Crusaders30XX.ECS.Systems
 			return new LayoutSignature
 			{
 				ModalWidth = ModalWidth,
-				ModalHeight = ModalHeight,
+				QuestRewardModalHeight = QuestRewardModalHeight,
+				TreasureChestModalHeight = TreasureChestModalHeight,
+				IsTreasureChest = IsTreasureChestOverlay(overlayState),
 				LeftColWidth = LeftColWidth,
 				GoldOnlyModalWidth = GoldOnlyModalWidth,
 				BorderThickness = BorderThickness,
@@ -461,6 +523,13 @@ namespace Crusaders30XX.ECS.Systems
 			var overlayT = overlayEntity.GetComponent<Transform>();
 			if (overlayT != null) overlayT.ZOrder = ZOrder;
 
+			if (state.HasDeckRewardOffer)
+			{
+				HideProceedButton();
+				UpdateDeckRewardOfferControls(state, scene);
+				return;
+			}
+
 			if (showCard)
 			{
 				HideProceedButton();
@@ -535,6 +604,7 @@ namespace Crusaders30XX.ECS.Systems
 			var st = EntityManager.GetEntity("QuestRewardOverlay").GetComponent<QuestRewardOverlayState>();
 
 			DestroyRewardCards();
+			DestroyDeckRewardControls();
 			DestroyRewardMedal();
 			DestroyRewardEquipment();
 			InvalidateCaches();
@@ -545,6 +615,7 @@ namespace Crusaders30XX.ECS.Systems
 			st.HasCardReward = e?.HasCardReward ?? false;
 			st.RewardCardKey = e?.RewardCardKey ?? string.Empty;
 			st.RewardCardKeys = NormalizeRewardCardKeys(e);
+			st.DeckRewardOffer = CloneDeckRewardOffer(e?.DeckRewardOffer);
 			st.HasMedalReward = false;
 			st.RewardMedalId = string.Empty;
 			st.HasEquipmentReward = false;
@@ -556,7 +627,12 @@ namespace Crusaders30XX.ECS.Systems
 			st.CardSelectionElapsedSeconds = 0f;
 			st.IsOpen = true;
 
-			if (st.HasCardReward)
+			if (st.HasDeckRewardOffer)
+			{
+				CreateDeckRewardOfferViews(st.DeckRewardOffer);
+				st.HasCardReward = _deckRewardOptionViews.Count > 0;
+			}
+			else if (st.HasCardReward)
 			{
 				foreach (var cardKey in st.RewardCardKeys.Take(MaxRewardCardChoices))
 				{
@@ -573,6 +649,7 @@ namespace Crusaders30XX.ECS.Systems
 			var st = EntityManager.GetEntity("QuestRewardOverlay").GetComponent<QuestRewardOverlayState>();
 
 			DestroyRewardCards();
+			DestroyDeckRewardControls();
 			DestroyRewardMedal();
 			DestroyRewardEquipment();
 			InvalidateCaches();
@@ -583,6 +660,7 @@ namespace Crusaders30XX.ECS.Systems
 			st.HasCardReward = false;
 			st.RewardCardKey = string.Empty;
 			st.RewardCardKeys = new List<string>();
+			st.DeckRewardOffer = null;
 			st.HasMedalReward = !string.IsNullOrWhiteSpace(e?.RewardMedalId);
 			st.RewardMedalId = e?.RewardMedalId ?? string.Empty;
 			st.HasEquipmentReward = !string.IsNullOrWhiteSpace(e?.RewardEquipmentId);
@@ -604,7 +682,13 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		public void Open(string message = null, int rewardGold = 0, bool hasCardReward = false, string rewardCardKey = null, List<string> rewardCardKeys = null)
+		public void Open(
+			string message = null,
+			int rewardGold = 0,
+			bool hasCardReward = false,
+			string rewardCardKey = null,
+			List<string> rewardCardKeys = null,
+			DeckRewardOfferSave deckRewardOffer = null)
 		{
 			OpenQuestReward(new ShowQuestRewardOverlay
 			{
@@ -613,6 +697,7 @@ namespace Crusaders30XX.ECS.Systems
 				HasCardReward = hasCardReward,
 				RewardCardKey = rewardCardKey,
 				RewardCardKeys = rewardCardKeys ?? new List<string>(),
+				DeckRewardOffer = deckRewardOffer
 			});
 		}
 
@@ -642,6 +727,30 @@ namespace Crusaders30XX.ECS.Systems
 				.ToList();
 		}
 
+		private static DeckRewardOfferSave CloneDeckRewardOffer(DeckRewardOfferSave offer)
+		{
+			if (offer == null) return null;
+			var clone = new DeckRewardOfferSave
+			{
+				rewardGold = offer.rewardGold,
+				options = new List<DeckRewardOfferOptionSave>()
+			};
+			if (offer.options == null) return clone;
+			foreach (var option in offer.options)
+			{
+				if (option == null) continue;
+				clone.options.Add(new DeckRewardOfferOptionSave
+				{
+					kind = option.kind ?? string.Empty,
+					loadoutIndex = option.loadoutIndex,
+					outgoingCardKey = option.outgoingCardKey ?? string.Empty,
+					incomingCardKey = option.incomingCardKey ?? string.Empty,
+					upgradedCardKey = option.upgradedCardKey ?? string.Empty,
+				});
+			}
+			return clone;
+		}
+
 		public void Draw()
 		{
 			if (_titleFont == null || !IsOverlayOpen(EntityManager)) return;
@@ -655,6 +764,20 @@ namespace Crusaders30XX.ECS.Systems
 			bool showCard = st.HasCardReward && rewardCardCount > 0;
 			bool showMedal = st.HasMedalReward && !string.IsNullOrEmpty(st.RewardMedalId);
 			bool showEquipment = st.HasEquipmentReward && !string.IsNullOrEmpty(st.RewardEquipmentId);
+
+			if (st.HasDeckRewardOffer)
+			{
+				var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
+				bool canDraw = scene != null
+					&& (scene.Current == SceneId.Battle
+						|| scene.Current == SceneId.Location
+						|| scene.Current == SceneId.Snapshot);
+				if (canDraw)
+				{
+					DrawDeckRewardOffer(st, vw, vh);
+				}
+				return;
+			}
 
 			if (!_layoutValid || !_textMetricsValid)
 			{
@@ -713,7 +836,7 @@ namespace Crusaders30XX.ECS.Systems
 				modalW = System.Math.Max(sig.LeftColWidth + sig.BorderThickness * 2, 320);
 			}
 
-			int modalH = System.Math.Max(200, sig.ModalHeight);
+			int modalH = System.Math.Max(200, sig.IsTreasureChest ? sig.TreasureChestModalHeight : sig.QuestRewardModalHeight);
 			int border = System.Math.Max(1, sig.BorderThickness);
 			int modalX = (vw - modalW) / 2;
 			int modalY = (vh - modalH) / 2;
@@ -932,6 +1055,140 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.DrawString(_titleFont, text, pos + new Vector2(0, 2), glow, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 		}
 
+		private void DrawDeckRewardOffer(QuestRewardOverlayState state, int vw, int vh)
+		{
+			if (state?.DeckRewardOffer?.options == null) return;
+			var layout = ComputeDeckRewardOfferLayout(vw, vh, state.DeckRewardOffer.options.Count);
+
+			ModalOverlayChrome.DrawDim(_spriteBatch, _pixel, vw, vh, DimAlpha);
+			ModalOverlayChrome.DrawDropShadow(_spriteBatch, _pixel, layout.Modal, DropShadowOffsetY, ModalOverlayPalette.DropShadow);
+			_spriteBatch.Draw(_pixel, layout.Modal, ModalOverlayPalette.ModalFill);
+			_spriteBatch.Draw(_pixel, layout.Masthead, new Color(0, 0, 0) * 0.20f);
+			_spriteBatch.Draw(_pixel, layout.Footer, ModalOverlayPalette.FooterFill);
+			_spriteBatch.Draw(_pixel, new Rectangle(layout.Masthead.X, layout.Masthead.Bottom, layout.Masthead.Width, 1), ModalOverlayPalette.FooterBorderTop);
+			_spriteBatch.Draw(_pixel, new Rectangle(layout.Footer.X, layout.Footer.Y, layout.Footer.Width, 1), ModalOverlayPalette.FooterBorderTop);
+			ModalOverlayChrome.DrawInsetHighlight(_spriteBatch, _pixel, layout.Content);
+			ModalOverlayChrome.DrawBorder(_spriteBatch, _pixel, layout.Modal, ModalOverlayPalette.PanelBorder, BorderThickness);
+
+			DrawDeckRewardMasthead(layout, state.RewardGold);
+			DrawDeckRewardStageLabel(layout);
+
+			for (int i = 0; i < state.DeckRewardOffer.options.Count && i < layout.Lanes.Length; i++)
+			{
+				var option = state.DeckRewardOffer.options[i];
+				if (option == null) continue;
+				bool isUpgrade = string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, System.StringComparison.OrdinalIgnoreCase);
+				bool hovered = i < _deckRewardOptionViews.Count
+					&& (_deckRewardOptionViews[i].Lane?.GetComponent<UIElement>()?.IsHovered ?? false);
+				DrawDeckRewardLane(layout, option, i, isUpgrade, hovered);
+
+				if (i < _deckRewardOptionViews.Count)
+				{
+					var view = _deckRewardOptionViews[i];
+					EventManager.Publish(new CardRenderScaledRotatedEvent
+					{
+						Card = view.OutgoingCard,
+						Position = layout.OutgoingCardCenters[i],
+						Scale = DeckLaneCardScale
+					});
+					EventManager.Publish(new CardRenderScaledRotatedEvent
+					{
+						Card = view.IncomingCard,
+						Position = layout.IncomingCardCenters[i],
+						Scale = DeckLaneCardScale
+					});
+				}
+			}
+
+			var skipUi = _deckRewardSkipButton?.GetComponent<UIElement>();
+			bool skipHovered = skipUi?.IsHovered ?? false;
+			var skipSize = _bodyFont?.MeasureString(SkipRewardLabelText) * 0.15f ?? Vector2.Zero;
+			var skipPos = new Vector2(
+				layout.SkipButton.Center.X - skipSize.X / 2f,
+				layout.SkipButton.Center.Y - skipSize.Y / 2f);
+			ModalOverlayChrome.DrawActionButton(
+				_spriteBatch,
+				_pixel,
+				layout.SkipButton,
+				skipHovered,
+				BorderThickness,
+				_bodyFont,
+				SkipRewardLabelText,
+				skipPos,
+				0.15f,
+				StageLabelColor);
+		}
+
+		private void DrawDeckRewardMasthead(DeckRewardOfferLayout layout, int rewardGold)
+		{
+			DrawCenteredString(_titleFont, "Quest Complete", new Vector2(layout.Masthead.Center.X, layout.Masthead.Y + 16), 0.24f, ModalOverlayPalette.TitleColor);
+			_gradientRuleCache.DrawRule(_spriteBatch, layout.Masthead.Center.X, layout.Masthead.Y + 56, 64, 2);
+
+			string goldText = rewardGold > 0 ? $"Reward +{rewardGold:N0}" : "Reward";
+			Vector2 rowCenter = new Vector2(layout.Masthead.Center.X, layout.Masthead.Y + 72);
+			if (_bodyFont != null)
+			{
+				var goldSize = _bodyFont.MeasureString(goldText) * 0.12f;
+				var prompt = "Pick one reward";
+				var promptSize = _bodyFont.MeasureString(prompt) * 0.10f;
+				float totalW = goldSize.X + 24f + promptSize.X;
+				float x = rowCenter.X - totalW / 2f;
+				_spriteBatch.DrawString(_bodyFont, goldText, new Vector2(x, rowCenter.Y), GoldAmountColor, 0f, Vector2.Zero, 0.12f, SpriteEffects.None, 0f);
+				int dividerX = (int)(x + goldSize.X + 12f);
+				_spriteBatch.Draw(_pixel, new Rectangle(dividerX, (int)rowCenter.Y, 1, 16), ColumnDivider);
+				_spriteBatch.DrawString(_bodyFont, prompt, new Vector2(dividerX + 12f, rowCenter.Y + 1f), StageLabelColor, 0f, Vector2.Zero, 0.10f, SpriteEffects.None, 0f);
+			}
+		}
+
+		private void DrawDeckRewardStageLabel(DeckRewardOfferLayout layout)
+		{
+			DrawCenteredString(_bodyFont, "Deck Reward", new Vector2(layout.Stage.Center.X, layout.Stage.Y + 14), StageLabelScale, StageLabelColor);
+		}
+
+		private void DrawDeckRewardLane(DeckRewardOfferLayout layout, DeckRewardOfferOptionSave option, int index, bool isUpgrade, bool hovered)
+		{
+			var lane = layout.Lanes[index];
+			var fill = isUpgrade
+				? (hovered ? new Color(46, 38, 4) * 0.88f : new Color(22, 18, 2) * 0.88f)
+				: (hovered ? new Color(50, 0, 0) * 0.86f : new Color(12, 0, 0) * 0.80f);
+			var border = isUpgrade
+				? (hovered ? GoldAmountColor * 0.65f : GoldAmountColor * 0.28f)
+				: (hovered ? new Color(196, 30, 58) * 0.70f : ColumnDivider);
+			_spriteBatch.Draw(_pixel, lane, fill);
+			_spriteBatch.Draw(_pixel, new Rectangle(lane.X, lane.Y, 3, lane.Height), isUpgrade ? GoldAmountColor * 0.55f : new Color(196, 30, 58) * 0.55f);
+			ModalOverlayChrome.DrawBorder(_spriteBatch, _pixel, lane, border, 1);
+
+			string laneNum = (index + 1).ToString("00");
+			string tag = isUpgrade ? "Upgrade" : "Exchange";
+			float metaX = lane.X + 14;
+			DrawString(_titleFont, laneNum, new Vector2(metaX, lane.Center.Y - 28), 0.18f, ModalOverlayPalette.TitleColor);
+			DrawString(_bodyFont, tag, new Vector2(metaX, lane.Center.Y + 4), 0.08f, isUpgrade ? GoldLabelColor : StageLabelColor);
+
+			string leftLabel = isUpgrade ? "Current" : "Remove";
+			string rightLabel = isUpgrade ? "Upgraded" : "Gain";
+			DrawCenteredString(_bodyFont, leftLabel, new Vector2(layout.OutgoingCardCenters[index].X, lane.Y + 8), 0.08f, StageLabelColor);
+			DrawCenteredString(_bodyFont, rightLabel, new Vector2(layout.IncomingCardCenters[index].X, lane.Y + 8), 0.08f, isUpgrade ? GoldLabelColor : StageLabelColor);
+
+			string arrow = isUpgrade ? "^" : ">>";
+			string arrowLabel = isUpgrade ? "Upgrade" : "Trade";
+			DrawCenteredString(_titleFont, arrow, layout.ArrowCenters[index] + new Vector2(0, -18), isUpgrade ? 0.24f : 0.20f, isUpgrade ? GoldAmountColor : new Color(196, 30, 58));
+			DrawCenteredString(_bodyFont, arrowLabel, layout.ArrowCenters[index] + new Vector2(0, 20), 0.09f, isUpgrade ? GoldLabelColor : StageLabelColor);
+		}
+
+		private void DrawString(SpriteFont font, string text, Vector2 position, float scale, Color color)
+		{
+			if (font == null || string.IsNullOrEmpty(text)) return;
+			_spriteBatch.DrawString(font, text, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+		}
+
+		private void DrawCenteredString(SpriteFont font, string text, Vector2 centerTop, float scale, Color color)
+		{
+			if (font == null || string.IsNullOrEmpty(text)) return;
+			var size = font.MeasureString(text) * scale;
+			var pos = new Vector2(centerTop.X - size.X / 2f, centerTop.Y);
+			_spriteBatch.DrawString(font, text, pos, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+		}
+
 		private void CloseOverlay(QuestRewardOverlayState state)
 		{
 			state.IsOpen = false;
@@ -940,6 +1197,7 @@ namespace Crusaders30XX.ECS.Systems
 			state.HasCardReward = false;
 			state.RewardCardKey = string.Empty;
 			state.RewardCardKeys = new List<string>();
+			state.DeckRewardOffer = null;
 			state.HasMedalReward = false;
 			state.RewardMedalId = string.Empty;
 			state.HasEquipmentReward = false;
@@ -950,6 +1208,7 @@ namespace Crusaders30XX.ECS.Systems
 			StateSingleton.PreventClicking = false;
 			HideProceedButton();
 			DestroyRewardCards();
+			DestroyDeckRewardControls();
 			DestroyRewardMedal();
 			DestroyRewardEquipment();
 			InvalidateCaches();
@@ -984,6 +1243,251 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 			_rewardCardEntities.Clear();
+			_deckRewardOptionViews.Clear();
+		}
+
+		private void DestroyDeckRewardControls()
+		{
+			foreach (var lane in _deckRewardLaneEntities.ToList())
+			{
+				if (lane != null) EntityManager.DestroyEntity(lane.Id);
+			}
+			_deckRewardLaneEntities.Clear();
+
+			if (_deckRewardSkipButton != null)
+			{
+				EntityManager.DestroyEntity(_deckRewardSkipButton.Id);
+				_deckRewardSkipButton = null;
+			}
+		}
+
+		private void CreateDeckRewardOfferViews(DeckRewardOfferSave offer)
+		{
+			if (offer?.options == null) return;
+			for (int i = 0; i < offer.options.Count; i++)
+			{
+				var option = offer.options[i];
+				if (option == null) continue;
+
+				string incomingKey = string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, System.StringComparison.OrdinalIgnoreCase)
+					? option.upgradedCardKey
+					: option.incomingCardKey;
+				var outgoing = CreateRewardCard(option.outgoingCardKey);
+				var incoming = CreateRewardCard(incomingKey);
+				if (outgoing == null || incoming == null)
+				{
+					if (outgoing != null) EntityManager.DestroyEntity(outgoing.Id);
+					if (incoming != null) EntityManager.DestroyEntity(incoming.Id);
+					continue;
+				}
+
+				_rewardCardEntities.Add(outgoing);
+				_rewardCardEntities.Add(incoming);
+				var lane = EnsureDeckRewardLaneEntity(i);
+				_deckRewardOptionViews.Add(new DeckRewardOptionView
+				{
+					Lane = lane,
+					OutgoingCard = outgoing,
+					IncomingCard = incoming
+				});
+			}
+		}
+
+		private Entity EnsureDeckRewardLaneEntity(int index)
+		{
+			while (_deckRewardLaneEntities.Count <= index)
+			{
+				int next = _deckRewardLaneEntities.Count;
+				var ent = EntityManager.CreateEntity($"QuestRewardDeckLane_{next}");
+				EntityManager.AddComponent(ent, new Transform { Position = Vector2.Zero, ZOrder = ZOrder + 3 + next });
+				EntityManager.AddComponent(ent, new UIElement
+				{
+					Bounds = Rectangle.Empty,
+					IsInteractable = false,
+					EventType = UIElementEventType.None,
+					LayerType = UILayerType.Overlay
+				});
+				EntityManager.AddComponent(ent, ParallaxLayer.GetUIParallaxLayer());
+				EntityManager.AddComponent(ent, new DontDestroyOnLoad());
+				InputContextService.EnsureMember(EntityManager, ent, "overlay.quest-reward");
+				_deckRewardLaneEntities.Add(ent);
+			}
+			return _deckRewardLaneEntities[index];
+		}
+
+		private Entity EnsureDeckRewardSkipButton()
+		{
+			if (_deckRewardSkipButton != null && _deckRewardSkipButton.IsActive) return _deckRewardSkipButton;
+
+			_deckRewardSkipButton = EntityManager.CreateEntity("QuestRewardSkipButton");
+			EntityManager.AddComponent(_deckRewardSkipButton, new Transform { Position = Vector2.Zero, ZOrder = ZOrder + 4 });
+			EntityManager.AddComponent(_deckRewardSkipButton, new UIElement
+			{
+				Bounds = Rectangle.Empty,
+				IsInteractable = false,
+				EventType = UIElementEventType.None,
+				LayerType = UILayerType.Overlay
+			});
+			EntityManager.AddComponent(_deckRewardSkipButton, new HotKey { Button = FaceButton.Y, IsActive = false });
+			EntityManager.AddComponent(_deckRewardSkipButton, ParallaxLayer.GetUIParallaxLayer());
+			EntityManager.AddComponent(_deckRewardSkipButton, new DontDestroyOnLoad());
+			InputContextService.EnsureMember(EntityManager, _deckRewardSkipButton, "overlay.quest-reward");
+			return _deckRewardSkipButton;
+		}
+
+		private void UpdateDeckRewardOfferControls(QuestRewardOverlayState state, SceneState scene)
+		{
+			if (state?.DeckRewardOffer?.options == null) return;
+			var layout = ComputeDeckRewardOfferLayout(Game1.VirtualWidth, Game1.VirtualHeight, state.DeckRewardOffer.options.Count);
+
+			for (int i = 0; i < _deckRewardOptionViews.Count; i++)
+			{
+				var view = _deckRewardOptionViews[i];
+				var laneUi = view.Lane?.GetComponent<UIElement>();
+				if (laneUi != null)
+				{
+					laneUi.Bounds = i < layout.Lanes.Length ? layout.Lanes[i] : Rectangle.Empty;
+					laneUi.IsInteractable = state.IsOpen && !state.DismissInProgress;
+					laneUi.LayerType = UILayerType.Overlay;
+					if (laneUi.IsClicked)
+					{
+						laneUi.IsClicked = false;
+						if (QuestCardRewardService.ApplyPendingOfferOption(i))
+						{
+							CompleteDeckRewardOfferResolution(state, scene);
+							return;
+						}
+					}
+				}
+
+				PreparePreviewCard(view.OutgoingCard, i * 2, state);
+				PreparePreviewCard(view.IncomingCard, i * 2 + 1, state);
+			}
+
+			var skip = EnsureDeckRewardSkipButton();
+			var skipUi = skip.GetComponent<UIElement>();
+			if (skipUi != null)
+			{
+				skipUi.Bounds = layout.SkipButton;
+				skipUi.IsInteractable = state.IsOpen && !state.DismissInProgress;
+				skipUi.LayerType = UILayerType.Overlay;
+				if (skipUi.IsClicked)
+				{
+					skipUi.IsClicked = false;
+					QuestCardRewardService.SkipPendingOffer();
+					CompleteDeckRewardOfferResolution(state, scene);
+				}
+			}
+			var hotKey = skip.GetComponent<HotKey>();
+			if (hotKey != null) hotKey.IsActive = state.IsOpen && !state.DismissInProgress;
+		}
+
+		private void PreparePreviewCard(Entity card, int zOffset, QuestRewardOverlayState state)
+		{
+			if (card == null) return;
+			var ui = card.GetComponent<UIElement>();
+			if (ui != null)
+			{
+				ui.Bounds = Rectangle.Empty;
+				ui.IsInteractable = false;
+				ui.IsClicked = false;
+				ui.LayerType = UILayerType.Overlay;
+			}
+			var transform = card.GetComponent<Transform>();
+			if (transform != null)
+			{
+				transform.ZOrder = ZOrder + 1 + zOffset;
+			}
+			InputContextService.EnsureMember(EntityManager, card, "overlay.quest-reward");
+		}
+
+		private void CompleteDeckRewardOfferResolution(QuestRewardOverlayState state, SceneState scene)
+		{
+			if (state == null) return;
+			if (state.DismissToLocation && scene?.Current == SceneId.Battle)
+			{
+				state.DismissInProgress = true;
+				DisableDeckRewardControls();
+				EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+				return;
+			}
+
+			CloseOverlay(state);
+		}
+
+		private void DisableDeckRewardControls()
+		{
+			foreach (var lane in _deckRewardLaneEntities)
+			{
+				var ui = lane?.GetComponent<UIElement>();
+				if (ui == null) continue;
+				ui.IsInteractable = false;
+				ui.IsClicked = false;
+			}
+			var skipUi = _deckRewardSkipButton?.GetComponent<UIElement>();
+			if (skipUi != null)
+			{
+				skipUi.IsInteractable = false;
+				skipUi.IsClicked = false;
+			}
+			var hotKey = _deckRewardSkipButton?.GetComponent<HotKey>();
+			if (hotKey != null) hotKey.IsActive = false;
+		}
+
+		private DeckRewardOfferLayout ComputeDeckRewardOfferLayout(int vw, int vh, int laneCount)
+		{
+			int modalW = System.Math.Max(600, ModalWidth);
+			int modalH = System.Math.Max(560, QuestRewardModalHeight);
+			int modalX = (vw - modalW) / 2;
+			int modalY = (vh - modalH) / 2;
+			var modal = new Rectangle(modalX, modalY, modalW, modalH);
+			var content = new Rectangle(modal.X + BorderThickness, modal.Y + BorderThickness, modal.Width - BorderThickness * 2, modal.Height - BorderThickness * 2);
+			var masthead = new Rectangle(content.X, content.Y, content.Width, 104);
+			var footer = new Rectangle(content.X, content.Bottom - 88, content.Width, 88);
+			var stage = new Rectangle(content.X, masthead.Bottom, content.Width, footer.Y - masthead.Bottom);
+
+			int count = System.Math.Max(0, laneCount);
+			var lanes = new Rectangle[count];
+			var outgoing = new Vector2[count];
+			var incoming = new Vector2[count];
+			var arrows = new Vector2[count];
+			if (count > 0)
+			{
+				int gap = System.Math.Max(0, DeckLaneGap);
+				int lanesX = stage.X + 20;
+				int lanesY = stage.Y + 52;
+				int lanesW = stage.Width - 40;
+				int lanesH = System.Math.Max(1, stage.Bottom - 12 - lanesY);
+				int laneH = System.Math.Max(64, (lanesH - gap * (count - 1)) / count);
+				float cardSeparation = System.Math.Max(120, DeckLanePairWidth) / 2f;
+				for (int i = 0; i < count; i++)
+				{
+					lanes[i] = new Rectangle(lanesX, lanesY + i * (laneH + gap), lanesW, laneH);
+					float pairCenterX = lanes[i].Center.X + DeckLaneMetaWidth / 2f;
+					float centerY = lanes[i].Center.Y + 12;
+					outgoing[i] = new Vector2(pairCenterX - cardSeparation / 2f, centerY);
+					incoming[i] = new Vector2(pairCenterX + cardSeparation / 2f, centerY);
+					arrows[i] = new Vector2(pairCenterX, lanes[i].Center.Y + 8);
+				}
+			}
+
+			int buttonW = System.Math.Max(120, ButtonWidth - 40);
+			int buttonH = System.Math.Max(40, ButtonHeight - 8);
+			var skip = new Rectangle(content.Center.X - buttonW / 2, footer.Y + (footer.Height - buttonH) / 2, buttonW, buttonH);
+
+			return new DeckRewardOfferLayout
+			{
+				Modal = modal,
+				Content = content,
+				Masthead = masthead,
+				Stage = stage,
+				Footer = footer,
+				SkipButton = skip,
+				Lanes = lanes,
+				OutgoingCardCenters = outgoing,
+				IncomingCardCenters = incoming,
+				ArrowCenters = arrows
+			};
 		}
 
 		private void DestroyRewardMedal()
@@ -1191,11 +1695,13 @@ namespace Crusaders30XX.ECS.Systems
 
 		private Entity CreateRewardCard(string cardKey)
 		{
-			var parts = cardKey.Split('|');
-			if (parts.Length < 2) return null;
-			string cardId = parts[0];
-			var color = ParseColor(parts[1]);
-			var created = EntityFactory.CreateCardFromDefinition(EntityManager, cardId, color, suppressStatDeltaDisplay: true);
+			if (!RunDeckService.TryParseCardKey(cardKey, out var cardId, out var color, out var isUpgraded)) return null;
+			var created = EntityFactory.CreateCardFromDefinition(
+				EntityManager,
+				cardId,
+				color,
+				suppressStatDeltaDisplay: true,
+				isUpgraded: isUpgraded);
 			if (created == null) return null;
 
 			var ui = created.GetComponent<UIElement>();

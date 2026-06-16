@@ -299,17 +299,24 @@ namespace Crusaders30XX.ECS.Factories
             int index = 0,
             string cardKey = null,
             bool persistForRun = false,
-            bool suppressStatDeltaDisplay = false)
+            bool suppressStatDeltaDisplay = false,
+            bool isUpgraded = false)
         {
             var card = CardFactory.Create(cardId);
             if (card == null) return null;
             if (card.IsWeapon && !allowWeapons) return null; // only non-weapons for deck/library
-            string name = card.Name ?? cardId;
+            if (!isUpgraded && !string.IsNullOrWhiteSpace(cardKey)
+                && RunDeckService.TryParseCardKey(cardKey, out _, out _, out var keyIsUpgraded))
+            {
+                isUpgraded = keyIsUpgraded;
+            }
+            card.IsUpgraded = isUpgraded;
+            string name = card.DisplayName ?? cardId;
             var entity = entityManager.CreateEntity($"Card_{name}_{color}_{index}");
 
             var cardData = new CardData
             {
-                Card = CardFactory.Create(cardId),
+                Card = card,
                 Color = color
             };
             
@@ -347,7 +354,7 @@ namespace Crusaders30XX.ECS.Factories
                 string key = cardKey;
                 if (string.IsNullOrWhiteSpace(key))
                 {
-                    key = $"{cardId}|{ColorToKeyString(color)}";
+                    key = RunDeckService.BuildCardKey(cardId, color, isUpgraded);
                 }
                 entityManager.AddComponent(entity, new RunDeckCard { CardKey = key });
                 entityManager.AddComponent(entity, new DontDestroyOnLoad());
@@ -383,9 +390,10 @@ namespace Crusaders30XX.ECS.Factories
         {
             if (uiElement == null || card == null) return;
 
-            if (string.IsNullOrEmpty(card.Tooltip) && !string.IsNullOrEmpty(card.Text))
+            string displayText = card.GetDisplayText();
+            if (string.IsNullOrEmpty(card.Tooltip) && !string.IsNullOrEmpty(displayText))
             {
-                card.Tooltip = card.Text;
+                card.Tooltip = displayText;
             }
 
             uiElement.Tooltip = card.Tooltip ?? string.Empty;
@@ -762,13 +770,18 @@ namespace Crusaders30XX.ECS.Factories
             var sourceCardData = sourceEntity.GetComponent<CardData>();
             if (sourceCardData == null) return null; // Only supports card entities for now
 
-            string name = sourceCardData.Card?.Name ?? "Card";
+            string name = sourceCardData.Card?.DisplayName ?? "Card";
             var clonedEntity = entityManager.CreateEntity($"Card_{name}_{sourceCardData.Color}_Clone_{sourceEntity.Id}");
 
             // Deep copy CardData
+            var clonedCard = CardFactory.Create(sourceCardData.Card.CardId);
+            if (clonedCard != null)
+            {
+                clonedCard.IsUpgraded = sourceCardData.Card.IsUpgraded;
+            }
             var clonedCardData = new CardData
             {
-                Card = CardFactory.Create(sourceCardData.Card.CardId),
+                Card = clonedCard,
                 Color = sourceCardData.Color,
                 Owner = clonedEntity
             };

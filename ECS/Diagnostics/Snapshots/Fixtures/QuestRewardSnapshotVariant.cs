@@ -1,22 +1,27 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 {
     public sealed class QuestRewardSnapshotVariant
     {
         public int RewardGold { get; init; }
-        public bool HasCardReward { get; init; }
-        public string RewardCardKey { get; init; } = string.Empty;
+        public bool HasCardReward => DeckRewardOffer?.options != null && DeckRewardOffer.options.Count > 0;
+        public string RewardCardKey => RewardCardKeys.FirstOrDefault() ?? string.Empty;
         public List<string> RewardCardKeys { get; init; } = new();
+        public DeckRewardOfferSave DeckRewardOffer { get; init; }
         public string FileSlug { get; init; } = "default";
 
         public static QuestRewardSnapshotVariant Parse(string[] args)
         {
             int? gold = null;
-            var cardKeys = new List<string>();
+            var options = new List<DeckRewardOfferOptionSave>();
+            var legacyCardKeys = new List<string>();
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -29,13 +34,55 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
                     gold = value;
                     i++;
                 }
+                else if (string.Equals(args[i], "--exchange", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (i + 2 >= args.Length)
+                    {
+                        throw new DisplaySnapshotSetupException("Invalid --exchange value; expected outgoingKey incomingKey");
+                    }
+                    string outgoing = args[i + 1];
+                    string incoming = args[i + 2];
+                    ValidateCardKey(outgoing);
+                    ValidateCardKey(incoming);
+                    options.Add(new DeckRewardOfferOptionSave
+                    {
+                        kind = DeckRewardOfferKinds.Exchange,
+                        loadoutIndex = options.Count,
+                        outgoingCardKey = outgoing,
+                        incomingCardKey = incoming
+                    });
+                    i += 2;
+                }
+                else if (string.Equals(args[i], "--upgrade", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (i + 1 >= args.Length || string.IsNullOrWhiteSpace(args[i + 1]))
+                    {
+                        throw new DisplaySnapshotSetupException("Invalid --upgrade value; expected cardId|color");
+                    }
+                    string outgoing = args[i + 1];
+                    ValidateCardKey(outgoing);
+                    string upgraded = RunDeckService.BuildUpgradedCardKey(outgoing);
+                    if (string.IsNullOrWhiteSpace(upgraded))
+                    {
+                        throw new DisplaySnapshotSetupException($"Invalid --upgrade key '{outgoing}'");
+                    }
+                    options.Add(new DeckRewardOfferOptionSave
+                    {
+                        kind = DeckRewardOfferKinds.Upgrade,
+                        loadoutIndex = options.Count,
+                        outgoingCardKey = outgoing,
+                        upgradedCardKey = upgraded
+                    });
+                    i++;
+                }
                 else if (string.Equals(args[i], "--card", StringComparison.OrdinalIgnoreCase))
                 {
                     if (i + 1 >= args.Length || string.IsNullOrWhiteSpace(args[i + 1]))
                     {
                         throw new DisplaySnapshotSetupException("Invalid --card value; expected cardId|color");
                     }
-                    cardKeys.Add(args[i + 1]);
+                    ValidateCardKey(args[i + 1]);
+                    legacyCardKeys.Add(args[i + 1]);
                     i++;
                 }
                 else
@@ -44,76 +91,103 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
                 }
             }
 
-            if (gold == null && cardKeys.Count == 0)
+            int rewardGold = gold ?? 500;
+            if (options.Count == 0 && legacyCardKeys.Count > 0)
             {
-                gold = 500;
-                cardKeys.Add("strike|white");
-                cardKeys.Add("smite|red");
-            }
-
-            bool hasCard = cardKeys.Count > 0;
-            if (hasCard)
-            {
-                foreach (var cardKey in cardKeys)
+                string[] outgoingDefaults = { "strike|white", "smite|red" };
+                for (int i = 0; i < legacyCardKeys.Count; i++)
                 {
-                    ValidateCardKey(cardKey);
+                    string outgoing = outgoingDefaults[Math.Min(i, outgoingDefaults.Length - 1)];
+                    options.Add(new DeckRewardOfferOptionSave
+                    {
+                        kind = DeckRewardOfferKinds.Exchange,
+                        loadoutIndex = i,
+                        outgoingCardKey = outgoing,
+                        incomingCardKey = legacyCardKeys[i]
+                    });
                 }
             }
 
-            int rewardGold = gold ?? 0;
-            string slug = BuildSlug(rewardGold, hasCard, cardKeys);
+            if (options.Count == 0)
+            {
+                options.Add(new DeckRewardOfferOptionSave
+                {
+                    kind = DeckRewardOfferKinds.Exchange,
+                    loadoutIndex = 0,
+                    outgoingCardKey = "strike|white",
+                    incomingCardKey = "smite|red"
+                });
+                options.Add(new DeckRewardOfferOptionSave
+                {
+                    kind = DeckRewardOfferKinds.Exchange,
+                    loadoutIndex = 1,
+                    outgoingCardKey = "reckoning|white",
+                    incomingCardKey = "unburdened_strike|black"
+                });
+                options.Add(new DeckRewardOfferOptionSave
+                {
+                    kind = DeckRewardOfferKinds.Upgrade,
+                    loadoutIndex = 2,
+                    outgoingCardKey = "smite|white",
+                    upgradedCardKey = "smite|white|Upgraded"
+                });
+            }
+
+            var offer = new DeckRewardOfferSave
+            {
+                rewardGold = rewardGold,
+                options = options.Take(3).ToList()
+            };
+            var rewardKeys = offer.options
+                .Select(o => string.Equals(o.kind, DeckRewardOfferKinds.Upgrade, StringComparison.OrdinalIgnoreCase)
+                    ? o.upgradedCardKey
+                    : o.incomingCardKey)
+                .Where(k => !string.IsNullOrWhiteSpace(k))
+                .ToList();
 
             return new QuestRewardSnapshotVariant
             {
                 RewardGold = rewardGold,
-                HasCardReward = hasCard,
-                RewardCardKey = hasCard ? cardKeys[0] : string.Empty,
-                RewardCardKeys = cardKeys,
-                FileSlug = slug
+                RewardCardKeys = rewardKeys,
+                DeckRewardOffer = offer,
+                FileSlug = BuildSlug(rewardGold, offer.options)
             };
         }
 
         private static void ValidateCardKey(string cardKey)
         {
-            var parts = cardKey.Split('|');
-            if (parts.Length < 2)
+            if (!RunDeckService.TryParseCardKey(cardKey, out var cardId, out _, out _))
             {
-                throw new DisplaySnapshotSetupException($"Invalid --card format '{cardKey}'; expected cardId|color");
+                throw new DisplaySnapshotSetupException($"Invalid card key '{cardKey}'; expected cardId|color or cardId|color|Upgraded");
             }
 
-            string cardId = parts[0];
             if (CardFactory.Create(cardId) == null)
             {
-                throw new DisplaySnapshotSetupException($"Unknown card id in --card: '{cardId}'");
-            }
-
-            string colorToken = parts[1].Trim().ToLowerInvariant();
-            if (colorToken is not ("white" or "red" or "black"))
-            {
-                throw new DisplaySnapshotSetupException($"Invalid card color '{parts[1]}'; expected white, red, or black");
+                throw new DisplaySnapshotSetupException($"Unknown card id in card key: '{cardId}'");
             }
         }
 
-        private static string BuildSlug(int gold, bool hasCard, List<string> cardKeys)
+        private static string BuildSlug(int gold, List<DeckRewardOfferOptionSave> options)
         {
-            if (!hasCard)
+            if (options == null || options.Count == 0) return $"gold-{gold}";
+            var parts = new List<string> { $"gold-{gold}", "deck-offer" };
+            foreach (var option in options)
             {
-                return $"gold-{gold}";
+                string key = string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, StringComparison.OrdinalIgnoreCase)
+                    ? option.upgradedCardKey
+                    : option.incomingCardKey;
+                parts.Add(ToSlug(key));
             }
+            return string.Join("-", parts);
+        }
 
-            var cardSlugs = new List<string>();
-            foreach (var cardKey in cardKeys)
-            {
-                var parts = cardKey.Split('|');
-                cardSlugs.Add($"{parts[0]}-{parts[1].Trim().ToLowerInvariant()}");
-            }
-            string cardSlug = string.Join("-choice-", cardSlugs);
-            if (gold > 0)
-            {
-                return $"gold-{gold}-card-{cardSlug}";
-            }
-
-            return $"card-{cardSlug}";
+        private static string ToSlug(string cardKey)
+        {
+            if (string.IsNullOrWhiteSpace(cardKey)) return "empty";
+            return cardKey
+                .Replace("|", "-", StringComparison.Ordinal)
+                .Trim()
+                .ToLowerInvariant();
         }
 
         public static CardData.CardColor ParseColor(string color)

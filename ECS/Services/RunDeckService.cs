@@ -238,7 +238,7 @@ namespace Crusaders30XX.ECS.Services
 			string cardKey,
 			IReadOnlySet<string> starterCardKeys = null)
 		{
-			if (!TryParseCardKey(cardKey, out var cardId, out var color)) return null;
+			if (!TryParseCardKey(cardKey, out var cardId, out var color, out var isUpgraded)) return null;
 			var card = CardFactory.Create(cardId);
 			if (card == null || card.IsWeapon) return null;
 
@@ -250,7 +250,8 @@ namespace Crusaders30XX.ECS.Services
 				allowWeapons: false,
 				index: index,
 				cardKey: cardKey,
-				persistForRun: true);
+				persistForRun: true,
+				isUpgraded: isUpgraded);
 			if (entity != null && IsStarterCardKey(cardKey, starterCardKeys))
 			{
 				var cardData = entity.GetComponent<CardData>();
@@ -306,7 +307,7 @@ namespace Crusaders30XX.ECS.Services
 
 		private static bool IsWeaponCardKey(string cardKey)
 		{
-			if (!TryParseCardKey(cardKey, out var cardId, out _)) return false;
+			if (!TryParseCardKey(cardKey, out var cardId, out _, out _)) return false;
 			var card = CardFactory.Create(cardId);
 			return card?.IsWeapon == true;
 		}
@@ -325,17 +326,45 @@ namespace Crusaders30XX.ECS.Services
 
 		public static bool TryParseCardKey(string cardKey, out string cardId, out CardData.CardColor color)
 		{
+			return TryParseCardKey(cardKey, out cardId, out color, out _);
+		}
+
+		public static bool TryParseCardKey(string cardKey, out string cardId, out CardData.CardColor color, out bool isUpgraded)
+		{
 			cardId = cardKey;
 			color = CardData.CardColor.White;
+			isUpgraded = false;
 			if (string.IsNullOrWhiteSpace(cardKey)) return false;
 
-			int sep = cardKey.IndexOf('|');
-			if (sep >= 0)
+			var parts = cardKey.Split('|');
+			cardId = parts[0].Trim();
+			if (parts.Length >= 2)
 			{
-				cardId = cardKey.Substring(0, sep);
-				color = ParseColor(cardKey.Substring(sep + 1));
+				color = ParseColor(parts[1]);
+			}
+			if (parts.Length >= 3)
+			{
+				isUpgraded = string.Equals(parts[2].Trim(), "Upgraded", StringComparison.OrdinalIgnoreCase);
 			}
 			return !string.IsNullOrWhiteSpace(cardId) && CardFactory.Create(cardId) != null;
+		}
+
+		public static string BuildCardKey(string cardId, CardData.CardColor color, bool isUpgraded = false)
+		{
+			if (string.IsNullOrWhiteSpace(cardId)) return string.Empty;
+			string key = $"{cardId.Trim()}|{ColorToKeyString(color)}";
+			return isUpgraded ? $"{key}|Upgraded" : key;
+		}
+
+		public static string BuildUpgradedCardKey(string cardKey)
+		{
+			if (!TryParseCardKey(cardKey, out var cardId, out var color, out _)) return string.Empty;
+			return BuildCardKey(cardId, color, isUpgraded: true);
+		}
+
+		public static bool IsUpgradedCardKey(string cardKey)
+		{
+			return TryParseCardKey(cardKey, out _, out _, out var isUpgraded) && isUpgraded;
 		}
 
 		private static CardData.CardColor ParseColor(string color)
@@ -348,6 +377,16 @@ namespace Crusaders30XX.ECS.Services
 				case "white":
 				default: return CardData.CardColor.White;
 			}
+		}
+
+		private static string ColorToKeyString(CardData.CardColor color)
+		{
+			return color switch
+			{
+				CardData.CardColor.Red => "Red",
+				CardData.CardColor.Black => "Black",
+				_ => "White"
+			};
 		}
 
 		private static int StableIndexForKey(string cardKey)

@@ -516,7 +516,7 @@ namespace Crusaders30XX.ECS.Systems
 
             if (hasDef)
             {
-                string desc = card.Text ?? "";
+                string desc = card.GetDisplayText();
                 var descColor = isColorless
                     ? ColorlessPrimaryText
                     : GetPaletteColor(NameTextColors, cc, new Color(26, 26, 26));
@@ -570,7 +570,7 @@ namespace Crusaders30XX.ECS.Systems
             float cursorY = TitleBandPadTop * vs;
 
             // Card Name — centered across full card width
-            string name = card.Name ?? "";
+            string name = card.DisplayName ?? "";
             var nameColor = isColorless
                 ? ColorlessPrimaryText
                 : GetPaletteColor(NameTextColors, cc, new Color(26, 26, 26));

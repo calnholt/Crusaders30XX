@@ -1,6 +1,7 @@
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Dialog;
 using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Objects.Enemies;
 using System.Collections.Generic;
 
@@ -180,6 +181,8 @@ namespace Crusaders30XX.ECS.Components
 			public bool HasCardReward { get; set; } = false;
 			public string RewardCardKey { get; set; } = string.Empty;
 			public List<string> RewardCardKeys { get; set; } = new List<string>();
+			public DeckRewardOfferSave DeckRewardOffer { get; set; }
+			public bool HasDeckRewardOffer => DeckRewardOffer?.options != null && DeckRewardOffer.options.Count > 0;
 			public bool HasMedalReward { get; set; } = false;
 			public string RewardMedalId { get; set; } = string.Empty;
 			public bool HasEquipmentReward { get; set; } = false;

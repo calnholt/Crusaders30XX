@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
-using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Objects.Cards;
@@ -11,12 +10,51 @@ namespace Crusaders30XX.ECS.Services
 {
 	public static class QuestCardRewardService
 	{
+		private const int MaxOfferOptions = 3;
+		private const int PreferredExchangeOptions = 2;
+
 		private static readonly CardData.CardColor[] RewardColors =
 		{
 			CardData.CardColor.Red,
 			CardData.CardColor.White,
 			CardData.CardColor.Black
 		};
+
+		private static readonly string[] SharedRewardPool =
+		{
+			"strike",
+			"crusade",
+			"zealous_vow",
+			"tempest",
+			"shield_of_faith",
+			"increase_faith",
+			"renounce_and_hone",
+			"steel_the_spirit",
+			"iron_covenant",
+			"whirlwind",
+			"pouch_of_kunai",
+			"ravage",
+			"reap",
+			"relentless_strike",
+			"serpent_crush",
+			"stalwart",
+			"temper_the_blade",
+			"vindicate",
+			"vanguards_promise",
+			"steadfast_resolve",
+			"exhaltation",
+			"deus_vult",
+			"carpe_diem"
+		};
+
+		private static readonly string[] HammerRewardPool =
+		{
+			"unburdened_strike",
+			"battering_blow"
+		};
+
+		private static readonly string[] SwordRewardPool = Array.Empty<string>();
+		private static readonly string[] DaggerRewardPool = Array.Empty<string>();
 
 		public struct QuestCardRewardResult
 		{
@@ -26,44 +64,141 @@ namespace Crusaders30XX.ECS.Services
 			public string CardKey;
 		}
 
+		private readonly struct DeckEntry
+		{
+			public DeckEntry(int index, string cardKey, string cardId, CardData.CardColor color, CardBase card)
+			{
+				Index = index;
+				CardKey = cardKey;
+				CardId = cardId;
+				Color = color;
+				Card = card;
+			}
+
+			public int Index { get; }
+			public string CardKey { get; }
+			public string CardId { get; }
+			public CardData.CardColor Color { get; }
+			public CardBase Card { get; }
+		}
+
+		public static DeckRewardOfferSave GenerateAndPersistPendingOffer(int rewardGold = 0)
+		{
+			var offer = GenerateDeckRewardOffer(rewardGold);
+			if (offer?.options?.Count > 0)
+			{
+				SaveCache.SetPendingDeckRewardOffer(offer);
+			}
+			else
+			{
+				SaveCache.ClearPendingDeckRewardOffer();
+			}
+			return offer;
+		}
+
+		public static DeckRewardOfferSave GenerateDeckRewardOffer(int rewardGold = 0)
+		{
+			var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
+			var deckKeys = loadout?.cardIds ?? new List<string>();
+			string weaponId = loadout?.weaponId ?? string.Empty;
+			return GenerateDeckRewardOffer(deckKeys, weaponId, rewardGold);
+		}
+
+		internal static DeckRewardOfferSave GenerateDeckRewardOffer(IReadOnlyList<string> deckKeys, string weaponId, int rewardGold = 0)
+		{
+			var offer = new DeckRewardOfferSave { rewardGold = Math.Max(0, rewardGold) };
+			var usedIndices = new HashSet<int>();
+
+			foreach (var entry in PickExchangeOutgoingEntries(deckKeys).Take(PreferredExchangeOptions))
+			{
+				string incomingKey = PickIncomingCardKey(entry.CardId, weaponId);
+				if (string.IsNullOrWhiteSpace(incomingKey)) continue;
+
+				offer.options.Add(new DeckRewardOfferOptionSave
+				{
+					kind = DeckRewardOfferKinds.Exchange,
+					loadoutIndex = entry.Index,
+					outgoingCardKey = entry.CardKey,
+					incomingCardKey = incomingKey
+				});
+				usedIndices.Add(entry.Index);
+			}
+
+			while (offer.options.Count < MaxOfferOptions)
+			{
+				var upgrade = PickUpgradeEntry(deckKeys, usedIndices);
+				if (upgrade == null) break;
+				var entry = upgrade.Value;
+				string upgradedKey = RunDeckService.BuildUpgradedCardKey(entry.CardKey);
+				if (string.IsNullOrWhiteSpace(upgradedKey)) break;
+
+				offer.options.Add(new DeckRewardOfferOptionSave
+				{
+					kind = DeckRewardOfferKinds.Upgrade,
+					loadoutIndex = entry.Index,
+					outgoingCardKey = entry.CardKey,
+					upgradedCardKey = upgradedKey
+				});
+				usedIndices.Add(entry.Index);
+			}
+
+			return offer;
+		}
+
+		public static bool ApplyPendingOfferOption(int optionIndex)
+		{
+			var offer = SaveCache.GetPendingDeckRewardOffer();
+			if (offer?.options == null || optionIndex < 0 || optionIndex >= offer.options.Count) return false;
+			var option = offer.options[optionIndex];
+			if (option == null) return false;
+
+			bool applied = false;
+			if (string.Equals(option.kind, DeckRewardOfferKinds.Exchange, StringComparison.OrdinalIgnoreCase))
+			{
+				applied = SaveCache.ReplaceCardInLoadoutAtIndex(
+					RunDeckService.PrimaryLoadoutId,
+					option.loadoutIndex,
+					option.outgoingCardKey,
+					option.incomingCardKey);
+			}
+			else if (string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, StringComparison.OrdinalIgnoreCase))
+			{
+				applied = SaveCache.ReplaceCardInLoadoutAtIndex(
+					RunDeckService.PrimaryLoadoutId,
+					option.loadoutIndex,
+					option.outgoingCardKey,
+					option.upgradedCardKey);
+			}
+
+			if (applied)
+			{
+				SaveCache.ClearPendingDeckRewardOffer();
+			}
+			return applied;
+		}
+
+		public static void SkipPendingOffer()
+		{
+			SaveCache.ClearPendingDeckRewardOffer();
+		}
+
 		public static IReadOnlyList<QuestCardRewardResult> GenerateRandomCardChoices(int choiceCount = 2)
 		{
-			var loadout = SaveCache.GetLoadout("loadout_1");
-			var deckKeys = loadout?.cardIds ?? new List<string>();
-			return GenerateRandomCardChoices(deckKeys, choiceCount);
+			var offer = GenerateDeckRewardOffer();
+			return ConvertExchangeOptionsToLegacyResults(offer, choiceCount);
 		}
 
 		internal static IReadOnlyList<QuestCardRewardResult> GenerateRandomCardChoices(IReadOnlyList<string> deckKeys, int choiceCount = 2)
 		{
-			var choices = new List<QuestCardRewardResult>();
-			var eligible = BuildEligiblePairs(deckKeys);
-			if (eligible.Count == 0) return choices;
-
-			var remaining = eligible.ToList();
-			while (choices.Count < Math.Max(1, choiceCount) && remaining.Count > 0)
-			{
-				var pick = remaining[Random.Shared.Next(remaining.Count)];
-				string cardKey = $"{pick.cardId}|{ColorToString(pick.color)}";
-
-				choices.Add(new QuestCardRewardResult
-				{
-					Granted = false,
-					CardId = pick.cardId,
-					Color = pick.color,
-					CardKey = cardKey
-				});
-
-				remaining.RemoveAll(p => string.Equals(p.cardId, pick.cardId, StringComparison.OrdinalIgnoreCase));
-			}
-
-			return choices;
+			var offer = GenerateDeckRewardOffer(deckKeys, string.Empty);
+			return ConvertExchangeOptionsToLegacyResults(offer, choiceCount);
 		}
 
 		public static QuestCardRewardResult GrantCard(string cardKey)
 		{
 			var result = new QuestCardRewardResult();
 			if (!RunDeckService.TryParseCardKey(cardKey, out var cardId, out var color)) return result;
-			if (!SaveCache.AddCardToLoadout("loadout_1", cardKey)) return result;
+			if (!SaveCache.AddCardToLoadout(RunDeckService.PrimaryLoadoutId, cardKey)) return result;
 
 			result.Granted = true;
 			result.CardId = cardId;
@@ -74,46 +209,149 @@ namespace Crusaders30XX.ECS.Services
 
 		internal static IReadOnlyList<string> GetEligibleRewardCardIdsForTests(IReadOnlyList<string> deckKeys)
 		{
-			return BuildEligiblePairs(deckKeys)
-				.Select(p => p.cardId)
+			return GetEligibleRewardCardIdsForTests(deckKeys, string.Empty);
+		}
+
+		internal static IReadOnlyList<string> GetEligibleRewardCardIdsForTests(IReadOnlyList<string> deckKeys, string weaponId)
+		{
+			return BuildIncomingPool(weaponId)
+				.Select(NormalizeCardId)
+				.Where(id => !string.IsNullOrWhiteSpace(id))
 				.Distinct(StringComparer.OrdinalIgnoreCase)
 				.ToList();
 		}
 
-		private static List<(string cardId, CardData.CardColor color)> BuildEligiblePairs(IReadOnlyList<string> deckKeys)
+		internal static IReadOnlyList<string> GetExchangeOutgoingCardKeysForTests(IReadOnlyList<string> deckKeys)
 		{
-			var eligible = new List<(string cardId, CardData.CardColor color)>();
-			var deckKeySet = new HashSet<string>(deckKeys ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
-
-			foreach (var card in CardFactory.GetAllCards().Values)
-			{
-				if (!card.CanAddToLoadout || card.IsWeapon || card.IsToken) continue;
-
-				string cardId = card.CardId;
-				if (string.IsNullOrWhiteSpace(cardId)) continue;
-				if (StartingDeckGeneratorService.IsInDefaultStarterPool(cardId)) continue;
-
-				if (DeckRules.CountCardIdInDeck(deckKeys, cardId) >= DeckRules.MaxCopiesPerCardId) continue;
-
-				foreach (var color in RewardColors)
-				{
-					string key = $"{cardId}|{ColorToString(color)}";
-					if (deckKeySet.Contains(key)) continue;
-					eligible.Add((cardId, color));
-				}
-			}
-
-			return eligible;
+			return PickExchangeOutgoingEntries(deckKeys).Select(e => e.CardKey).ToList();
 		}
 
-		private static string ColorToString(CardData.CardColor color)
+		internal static IReadOnlyList<string> GetUpgradeCardKeysForTests(IReadOnlyList<string> deckKeys)
 		{
-			return color switch
+			return BuildEligibleDeckEntries(deckKeys).Select(e => e.CardKey).ToList();
+		}
+
+		private static IReadOnlyList<QuestCardRewardResult> ConvertExchangeOptionsToLegacyResults(DeckRewardOfferSave offer, int choiceCount)
+		{
+			var results = new List<QuestCardRewardResult>();
+			if (offer?.options == null) return results;
+			foreach (var option in offer.options)
 			{
-				CardData.CardColor.Red => "Red",
-				CardData.CardColor.Black => "Black",
-				_ => "White"
-			};
+				if (results.Count >= Math.Max(1, choiceCount)) break;
+				if (!string.Equals(option.kind, DeckRewardOfferKinds.Exchange, StringComparison.OrdinalIgnoreCase)) continue;
+				if (!RunDeckService.TryParseCardKey(option.incomingCardKey, out var cardId, out var color)) continue;
+				results.Add(new QuestCardRewardResult
+				{
+					Granted = false,
+					CardId = cardId,
+					Color = color,
+					CardKey = option.incomingCardKey
+				});
+			}
+			return results;
+		}
+
+		private static IReadOnlyList<DeckEntry> PickExchangeOutgoingEntries(IReadOnlyList<string> deckKeys)
+		{
+			var eligible = BuildEligibleDeckEntries(deckKeys);
+			var picked = new List<DeckEntry>();
+
+			foreach (var starter in eligible.Where(e => e.Card.Rarity == Rarity.Starter))
+			{
+				if (picked.Count >= PreferredExchangeOptions) break;
+				picked.Add(starter);
+			}
+
+			if (picked.Count >= PreferredExchangeOptions) return picked;
+
+			var nonStarters = eligible
+				.Where(e => e.Card.Rarity != Rarity.Starter && picked.All(p => p.Index != e.Index))
+				.ToList();
+			while (picked.Count < PreferredExchangeOptions && nonStarters.Count > 0)
+			{
+				int idx = Random.Shared.Next(nonStarters.Count);
+				picked.Add(nonStarters[idx]);
+				nonStarters.RemoveAt(idx);
+			}
+
+			return picked;
+		}
+
+		private static DeckEntry? PickUpgradeEntry(IReadOnlyList<string> deckKeys, HashSet<int> usedIndices)
+		{
+			var eligible = BuildEligibleDeckEntries(deckKeys)
+				.Where(e => usedIndices == null || !usedIndices.Contains(e.Index))
+				.ToList();
+			if (eligible.Count == 0) return null;
+			return eligible[Random.Shared.Next(eligible.Count)];
+		}
+
+		private static List<DeckEntry> BuildEligibleDeckEntries(IReadOnlyList<string> deckKeys)
+		{
+			var entries = new List<DeckEntry>();
+			if (deckKeys == null) return entries;
+
+			for (int i = 0; i < deckKeys.Count; i++)
+			{
+				string key = deckKeys[i];
+				if (!RunDeckService.TryParseCardKey(key, out var cardId, out var color, out var isUpgraded)) continue;
+				if (isUpgraded) continue;
+				var card = CardFactory.Create(cardId);
+				if (card == null || card.IsWeapon || card.IsToken || !card.CanAddToLoadout) continue;
+				entries.Add(new DeckEntry(i, key, cardId, color, card));
+			}
+
+			return entries;
+		}
+
+		private static string PickIncomingCardKey(string outgoingCardId, string weaponId)
+		{
+			var pool = BuildIncomingPool(weaponId)
+				.Select(NormalizeCardId)
+				.Where(id => !string.IsNullOrWhiteSpace(id))
+				.Where(id => !string.Equals(id, outgoingCardId, StringComparison.OrdinalIgnoreCase))
+				.Where(id =>
+				{
+					var card = CardFactory.Create(id);
+					return card != null && card.CanAddToLoadout && !card.IsWeapon && !card.IsToken;
+				})
+				.Distinct(StringComparer.OrdinalIgnoreCase)
+				.ToList();
+			if (pool.Count == 0) return string.Empty;
+
+			string incomingId = pool[Random.Shared.Next(pool.Count)];
+			var color = RewardColors[Random.Shared.Next(RewardColors.Length)];
+			return RunDeckService.BuildCardKey(incomingId, color);
+		}
+
+		private static IEnumerable<string> BuildIncomingPool(string weaponId)
+		{
+			foreach (var id in SharedRewardPool)
+			{
+				yield return id;
+			}
+
+			if (string.Equals(weaponId, "hammer", StringComparison.OrdinalIgnoreCase))
+			{
+				foreach (var id in HammerRewardPool) yield return id;
+			}
+			else if (string.Equals(weaponId, "sword", StringComparison.OrdinalIgnoreCase))
+			{
+				foreach (var id in SwordRewardPool) yield return id;
+			}
+			else if (string.Equals(weaponId, "dagger", StringComparison.OrdinalIgnoreCase))
+			{
+				foreach (var id in DaggerRewardPool) yield return id;
+			}
+		}
+
+		private static string NormalizeCardId(string cardId)
+		{
+			if (string.IsNullOrWhiteSpace(cardId)) return string.Empty;
+			string id = cardId.Trim();
+			return string.Equals(id, "exhaltation", StringComparison.OrdinalIgnoreCase)
+				? "exaltation"
+				: id;
 		}
 	}
 }

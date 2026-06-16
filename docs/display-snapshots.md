@@ -51,7 +51,7 @@ to the fixture.
 | `card` | Card display (V2) | Three color variants of one card on a green background |
 | `brittle-card` | Brittle card shader | One brittle card on a patterned backdrop for shader debugging |
 | `colorless-card` | Card display (V2) | Colorless cards across all three printed colors and cost-pip colors |
-| `quest-reward-modal` | Quest reward modal | Quest complete overlay (gold and/or card reward) |
+| `quest-reward-modal` | Quest reward modal | Quest complete overlay with deck reward offer lanes |
 | `waystation` | WayStation run setup | Run setup scene with default Sword/Easy selections |
 | `player-hud` | Production player HUD systems | Player HUD geometry and state variants |
 
@@ -129,28 +129,24 @@ Output: `debug/snapshots/colorless-card/all-printed-colors.png`
 
 ## `quest-reward-modal`
 
-Renders `RewardModalDisplaySystem` with optional gold and card reward columns.
+Renders `RewardModalDisplaySystem` in quest deck-offer mode: exchange lanes and upgrade lanes with optional gold in the masthead.
 
 ### Commands
 
 ```bash
-# Default: gold 500 + card strike|white (full two-column layout)
+# Default: gold 500 + two exchanges and one upgrade
 dotnet run -- snapshot quest-reward-modal
 
-# Gold only (narrow modal)
-dotnet run -- snapshot quest-reward-modal --gold 1200
+# Explicit structured offer
+dotnet run -- snapshot quest-reward-modal --gold 500 --exchange 'strike|white' 'smite|red' --exchange 'reckoning|white' 'unburdened_strike|black' --upgrade 'smite|white'
 
-# Card reward only (must include color)
+# Compatibility shortcut: creates exchange lanes using default outgoing cards
 dotnet run -- snapshot quest-reward-modal --card 'strike|white'
-
-# Full layout with explicit values
-dotnet run -- snapshot quest-reward-modal --gold 500 --card 'strike|white'
-dotnet run -- snapshot quest-reward-modal --gold 250 --card 'fireball|red'
 ```
 
-### `--card` format
+### Card key format
 
-`cardId|color` — same as production `RewardCardKey`:
+`cardId|color` or `cardId|color|Upgraded`:
 
 | Color | Token |
 |-------|--------|
@@ -158,23 +154,29 @@ dotnet run -- snapshot quest-reward-modal --gold 250 --card 'fireball|red'
 | Red | `red` |
 | Black | `black` |
 
-Example: `'strike|white'`, `'fireball|red'` (quote in shell so `|` is not piped)
+Example: `'strike|white'`, `'smite|red|Upgraded'` (quote in shell so `|` is not piped)
+
+### Offer args
+
+| Arg | Values |
+|-----|--------|
+| `--exchange` | `outgoingCardKey incomingCardKey` |
+| `--upgrade` | `cardKey` |
+| `--gold` | non-negative integer |
 
 ### Output files
 
 | Run | Example path |
 |-----|----------------|
-| Defaults | `debug/snapshots/quest-reward-modal/gold-500-card-strike-white.png` |
-| `--gold 1200` | `debug/snapshots/quest-reward-modal/gold-1200.png` |
-| `--card strike\|white` only | `debug/snapshots/quest-reward-modal/card-strike-white.png` |
-| Both explicit | `debug/snapshots/quest-reward-modal/gold-500-card-strike-white.png` |
+| Defaults | `debug/snapshots/quest-reward-modal/gold-500-deck-offer-smite-red-unburdened_strike-black-smite-white-upgraded.png` |
+| Explicit structured offer | `debug/snapshots/quest-reward-modal/gold-500-deck-offer-...png` |
 
 (Slugs are defined by `QuestRewardSnapshotVariant` at implementation time; adjust this table if slugs change.)
 
 ### Errors
 
-- Invalid or unknown `cardId` in `--card`: exit `1`, no PNG
-- Malformed `--card` (missing `|` or color): exit `1`, no PNG
+- Invalid or unknown `cardId` in any card key: exit `1`, no PNG
+- Malformed card key: exit `1`, no PNG
 - Invalid `--gold` (non-integer): exit `1`, no PNG
 
 ---

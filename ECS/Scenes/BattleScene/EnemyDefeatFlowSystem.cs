@@ -144,7 +144,8 @@ namespace Crusaders30XX.ECS.Systems
 					RewardGold = completion.IsNewlyCompleted ? completion.RewardGold : 0,
 					HasCardReward = completion.HasCardReward,
 					RewardCardKey = completion.RewardCardKey,
-					RewardCardKeys = completion.RewardCardKeys
+					RewardCardKeys = completion.RewardCardKeys,
+					DeckRewardOffer = completion.DeckRewardOffer
 				});
 				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.QuestComplete });
 			}

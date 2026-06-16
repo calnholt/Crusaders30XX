@@ -27,7 +27,7 @@ dotnet run -- test-fight hammer skeleton hard
 # Display snapshots (headless PNG capture for visual verification)
 # See docs/display-snapshots.md for all commands
 dotnet run -- snapshot card strike
-dotnet run -- snapshot quest-reward-modal --gold 500 --card 'strike|white'
+dotnet run -- snapshot quest-reward-modal --gold 500 --exchange 'strike|white' 'smite|red' --upgrade 'smite|white'
 
 # Publish for distribution
 dotnet publish -c Release

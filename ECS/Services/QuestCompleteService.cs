@@ -20,6 +20,7 @@ namespace Crusaders30XX.ECS.Services
 			public bool HasCardReward;
 			public string RewardCardKey;
 			public List<string> RewardCardKeys;
+			public DeckRewardOfferSave DeckRewardOffer;
 		}
 
 		/// <summary>
@@ -74,15 +75,18 @@ namespace Crusaders30XX.ECS.Services
 				}
 				result.IsNewlyCompleted = true;
 
-				var cardRewards = QuestCardRewardService.GenerateRandomCardChoices();
-				if (cardRewards.Count >= 2)
+				var deckRewardOffer = QuestCardRewardService.GenerateAndPersistPendingOffer(result.RewardGold);
+				if (deckRewardOffer?.options?.Count > 0)
 				{
 					result.HasCardReward = true;
-					result.RewardCardKey = cardRewards[0].CardKey;
-					result.RewardCardKeys = cardRewards
-						.Select(r => r.CardKey)
+					result.DeckRewardOffer = deckRewardOffer;
+					result.RewardCardKeys = deckRewardOffer.options
+						.Select(o => string.Equals(o.kind, DeckRewardOfferKinds.Exchange, StringComparison.OrdinalIgnoreCase)
+							? o.incomingCardKey
+							: o.upgradedCardKey)
 						.Where(k => !string.IsNullOrWhiteSpace(k))
 						.ToList();
+					result.RewardCardKey = result.RewardCardKeys.FirstOrDefault() ?? string.Empty;
 				}
 			}
 			catch { }

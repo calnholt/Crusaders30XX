@@ -36,6 +36,13 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public List<string> Cost { get; set; } = [];
         
         public string Text { get; set; } = "";
+        public bool IsUpgraded { get; set; } = false;
+
+        public string DisplayName => IsUpgraded && !string.IsNullOrWhiteSpace(Name) ? $"{Name}+" : Name;
+        public string GetDisplayText()
+        {
+            return Text ?? string.Empty;
+        }
 
         public int GetDerivedDamage(EntityManager entityManager, Entity card)
         {

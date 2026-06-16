@@ -279,13 +279,13 @@ namespace Crusaders30XX.ECS.Systems
             var cardCenter = new Vector2(cardRectForCenter.X + cardRectForCenter.Width / 2f, cardRectForCenter.Y + cardRectForCenter.Height / 2f);
 
             var textColor = isWeaponDetected ? Color.Black : GetCardTextColor(cardData.Color);
-            string displayName = hasDef ? (card.Name ?? string.Empty) : string.Empty;
+            string displayName = hasDef ? (card.DisplayName ?? string.Empty) : string.Empty;
             V1DrawTextWrapped(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, _settings.TextMarginY * visualScale), displayName, textColor, _settings.NameScale * visualScale, visualScale, _nameFont);
 
             var defCosts = hasDef ? card.Cost.ToArray() : [];
             DrawCostPipsScaled(cardCenter, rotation, (int)(_settings.TextMarginX * visualScale), (int)Math.Round((_settings.TextMarginY + 34 * _settings.UIScale) * visualScale), cardData.Color, defCosts, visualScale);
 
-            string displayText = hasDef ? (card.Text ?? string.Empty) : string.Empty;
+            string displayText = hasDef ? card.GetDisplayText() : string.Empty;
             V1DrawTextWrapped(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, (_settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)) * visualScale), displayText, textColor, _settings.DescriptionScale * visualScale, visualScale, _contentFont);
 
             int effectiveDamage = 0;

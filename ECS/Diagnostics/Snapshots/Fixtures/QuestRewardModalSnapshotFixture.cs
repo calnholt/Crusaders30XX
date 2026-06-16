@@ -1,5 +1,7 @@
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -26,11 +28,17 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 
             if (_variant.HasCardReward)
             {
-                foreach (var cardKey in _variant.RewardCardKeys)
+                foreach (var cardKey in EnumerateOfferCardKeys(_variant.DeckRewardOffer))
                 {
-                    var parts = cardKey.Split('|');
-                    var color = QuestRewardSnapshotVariant.ParseColor(parts[1]);
-                    var probe = EntityFactory.CreateCardFromDefinition(ctx.World.EntityManager, parts[0], color);
+                    if (!RunDeckService.TryParseCardKey(cardKey, out var cardId, out var color, out var isUpgraded))
+                    {
+                        throw new DisplaySnapshotSetupException($"Invalid reward card key: '{cardKey}'");
+                    }
+                    var probe = EntityFactory.CreateCardFromDefinition(
+                        ctx.World.EntityManager,
+                        cardId,
+                        color,
+                        isUpgraded: isUpgraded);
                     if (probe == null)
                     {
                         throw new DisplaySnapshotSetupException(
@@ -52,7 +60,8 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
                 rewardGold: _variant.RewardGold,
                 hasCardReward: _variant.HasCardReward,
                 rewardCardKey: _variant.RewardCardKey,
-                rewardCardKeys: _variant.RewardCardKeys);
+                rewardCardKeys: _variant.RewardCardKeys,
+                deckRewardOffer: _variant.DeckRewardOffer);
 
             _pixel = new Texture2D(ctx.GraphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
@@ -64,6 +73,18 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
             int vh = Game1.VirtualHeight;
             ctx.SpriteBatch.Draw(_pixel, new Rectangle(0, 0, vw, vh), BackdropColor);
             _modal.Draw();
+        }
+
+        private static System.Collections.Generic.IEnumerable<string> EnumerateOfferCardKeys(DeckRewardOfferSave offer)
+        {
+            if (offer?.options == null) yield break;
+            foreach (var option in offer.options)
+            {
+                if (option == null) continue;
+                if (!string.IsNullOrWhiteSpace(option.outgoingCardKey)) yield return option.outgoingCardKey;
+                if (!string.IsNullOrWhiteSpace(option.incomingCardKey)) yield return option.incomingCardKey;
+                if (!string.IsNullOrWhiteSpace(option.upgradedCardKey)) yield return option.upgradedCardKey;
+            }
         }
     }
 }
