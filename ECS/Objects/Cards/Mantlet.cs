@@ -5,6 +5,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Mantlet()
         {
             CardId = "mantlet";
+            Rarity = Rarity.Common;
             Name = "Mantlet";
             Block = 4;
             Animation = "Block";

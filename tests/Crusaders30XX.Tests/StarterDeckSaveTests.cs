@@ -32,7 +32,7 @@ public class StarterDeckSaveTests
 	}
 
 	[Fact]
-	public void Generate_ignores_single_copy_ids_not_in_main_pool()
+	public void Generate_includes_single_copy_ids_not_in_main_pool()
 	{
 		var pool = new[] { "fervor", "courageous" };
 		var singleCopy = new[] { "smite" };
@@ -40,7 +40,7 @@ public class StarterDeckSaveTests
 		for (int seed = 0; seed < 50; seed++)
 		{
 			var deck = StartingDeckGeneratorService.Generate(pool, seed, singleCopy);
-			Assert.Equal(0, DeckRules.CountCardIdInDeck(deck, "smite"));
+			Assert.Equal(1, DeckRules.CountCardIdInDeck(deck, "smite"));
 		}
 	}
 
@@ -53,20 +53,22 @@ public class StarterDeckSaveTests
 				StartingDeckGeneratorService.GetSwordStarterCardPool(),
 				seed,
 				StartingDeckGeneratorService.GetSwordSingleCopyStarterCardPool());
-			Assert.Equal(1, DeckRules.CountCardIdInDeck(swordDeck, "fervor"));
+			Assert.Equal(1, DeckRules.CountCardIdInDeck(swordDeck, "exaltation"));
+			Assert.Equal(1, DeckRules.CountCardIdInDeck(swordDeck, "increase_faith"));
 
 			var daggerDeck = StartingDeckGeneratorService.Generate(
 				StartingDeckGeneratorService.GetDaggerStarterCardPool(),
 				seed,
 				StartingDeckGeneratorService.GetDaggerSingleCopyStarterCardPool());
-			Assert.Equal(1, DeckRules.CountCardIdInDeck(daggerDeck, "sacrifice"));
+			Assert.Equal(1, DeckRules.CountCardIdInDeck(daggerDeck, "razor_storm"));
+			Assert.Equal(1, DeckRules.CountCardIdInDeck(daggerDeck, "increase_faith"));
 
 			var hammerDeck = StartingDeckGeneratorService.Generate(
 				StartingDeckGeneratorService.GetHammerStarterCardPool(),
 				seed,
 				StartingDeckGeneratorService.GetHammerSingleCopyStarterCardPool());
-			Assert.Equal(1, DeckRules.CountCardIdInDeck(hammerDeck, "iron_covenant"));
-			Assert.Equal(1, DeckRules.CountCardIdInDeck(hammerDeck, "vanguards_promise"));
+			Assert.Equal(1, DeckRules.CountCardIdInDeck(hammerDeck, "unburdened_strike"));
+			Assert.Equal(1, DeckRules.CountCardIdInDeck(hammerDeck, "increase_faith"));
 		}
 	}
 

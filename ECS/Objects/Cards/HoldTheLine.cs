@@ -9,6 +9,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public HoldTheLine()
         {
             CardId = "hold_the_line";
+            Rarity = Rarity.Common;
             Name = "Hold the Line";
             Text = $"Gain {Courage} courage.";
             Block = 3;

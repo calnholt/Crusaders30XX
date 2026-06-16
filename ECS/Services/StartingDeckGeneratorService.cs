@@ -9,24 +9,56 @@ namespace Crusaders30XX.ECS.Services
 {
 	public static class StartingDeckGeneratorService
 	{
-		public static readonly string[] DefaultStarterCardPool =
+		public static readonly string[] SharedWeaponRunStarterCardPool =
 		{
-			"anoint_the_sick",
-			"smite",
-			"fervor",
-			"courageous",
-			"reckoning",
 			"absolution",
-			"increase_faith",
+			"courageous",
+			"forge_strike",
 			"litany_of_wrath",
-			"exaltation",
-			"seize",
-			"shield_of_faith",
-			"stab",
-			"tempest",
-			"razor_storm",
-			"hold_the_line",
+			"reckoning",
+			"smite",
 		};
+
+		private static readonly string[] HammerCommonStarterCards =
+		{
+			"mantlet",
+			"stoke_the_furnace",
+			"steadfast_resolve",
+		};
+
+		private static readonly string[] HammerUncommonSingleCopyStarterCards =
+		{
+			"unburdened_strike",
+			"increase_faith",
+		};
+
+		private static readonly string[] DaggerCommonStarterCards =
+		{
+			"seize",
+			"rally_the_faithful",
+			"whirlwind",
+		};
+
+		private static readonly string[] DaggerUncommonSingleCopyStarterCards =
+		{
+			"razor_storm",
+			"increase_faith",
+		};
+
+		private static readonly string[] SwordCommonStarterCards =
+		{
+			"fervor",
+			"hold_the_line",
+			"stab",
+		};
+
+		private static readonly string[] SwordUncommonSingleCopyStarterCards =
+		{
+			"exaltation",
+			"increase_faith",
+		};
+
+		public static readonly string[] DefaultStarterCardPool = BuildDefaultStarterCardPool();
 
 		private static readonly HashSet<string> DefaultStarterCardPoolSet = new HashSet<string>(
 			DefaultStarterCardPool,
@@ -39,71 +71,80 @@ namespace Crusaders30XX.ECS.Services
 
 		public static IReadOnlyList<string> GetSwordStarterCardPool()
 		{
-			return new[]
-			{
-				"absolution",
-				"smite",
-				"fervor",
-				"courageous",
-				"reckoning",
-				"increase_faith",
-				"litany_of_wrath",
-				"exaltation",
-				"stab",
-				"tempest",
-				"hold_the_line",
-			};
+			return SharedWeaponRunStarterCardPool.Concat(SwordCommonStarterCards).ToArray();
 		}
 
 		public static IReadOnlyList<string> GetSwordSingleCopyStarterCardPool()
 		{
-			return new[] { "fervor" };
+			return SwordUncommonSingleCopyStarterCards;
 		}
 
 		public static IReadOnlyList<string> GetDaggerStarterCardPool()
 		{
-			return new[]
-			{
-				"crusade",
-				"strike",
-				"courageous",
-				"reckoning",
-				"sacrifice",
-				"seize",
-				"razor_storm",
-				"rally_the_faithful",
-				"sudden_thrust",
-				"hidden_kunai",
-				"zealous_vow",
-			};
+			return SharedWeaponRunStarterCardPool.Concat(DaggerCommonStarterCards).ToArray();
 		}
 
 		public static IReadOnlyList<string> GetDaggerSingleCopyStarterCardPool()
 		{
-			return new[] { "sacrifice" };
+			return DaggerUncommonSingleCopyStarterCards;
 		}
 
 		public static IReadOnlyList<string> GetHammerStarterCardPool()
 		{
-			return new[]
-			{
-				"steel_the_spirit",
-				"renounce_and_hone",
-				"unburdened_strike",
-				"forge_strike",
-				"vanguards_promise",
-				"mantlet",
-				"stoke_the_furnace",
-				"absolution",
-				"steadfast_resolve",
-				"battering_blow",
-				"iron_covenant",
-			};
+			return SharedWeaponRunStarterCardPool.Concat(HammerCommonStarterCards).ToArray();
 		}
 
 		public static IReadOnlyList<string> GetHammerSingleCopyStarterCardPool()
 		{
-			return new[] { "iron_covenant", "vanguards_promise" };
+			return HammerUncommonSingleCopyStarterCards;
+		}
+
+		public static IReadOnlyList<string> GetStarterCardPool(string weaponId)
+		{
+			return weaponId switch
+			{
+				"sword" => GetSwordStarterCardPool(),
+				"dagger" => GetDaggerStarterCardPool(),
+				"hammer" => GetHammerStarterCardPool(),
+				_ => GetSwordStarterCardPool(),
+			};
+		}
+
+		public static IReadOnlyList<string> GetSingleCopyStarterCardPool(string weaponId)
+		{
+			return weaponId switch
+			{
+				"sword" => GetSwordSingleCopyStarterCardPool(),
+				"dagger" => GetDaggerSingleCopyStarterCardPool(),
+				"hammer" => GetHammerSingleCopyStarterCardPool(),
+				_ => GetSwordSingleCopyStarterCardPool(),
+			};
+		}
+
+		public static List<string> GenerateStartingDeck(string weaponId, int seed)
+		{
+			return Generate(
+				GetStarterCardPool(weaponId),
+				seed,
+				GetSingleCopyStarterCardPool(weaponId));
+		}
+
+		public static LoadoutDefinition BuildStartingLoadout(string weaponId, int seed, string loadoutId = "loadout_1")
+		{
+			var cardIds = GenerateStartingDeck(weaponId, seed);
+			return new LoadoutDefinition
+			{
+				id = loadoutId,
+				name = loadoutId == "test_fight" ? "Test Fight" : "Deck",
+				weaponId = string.IsNullOrWhiteSpace(weaponId) ? "sword" : weaponId,
+				temperanceId = GetDefaultTemperanceId(weaponId),
+				cardIds = cardIds,
+				chestId = string.Empty,
+				legsId = string.Empty,
+				armsId = string.Empty,
+				headId = string.Empty,
+				medalIds = new List<string>(),
+			};
 		}
 
 		public static string GetDefaultTemperanceId(string weaponId) => weaponId switch
@@ -121,6 +162,29 @@ namespace Crusaders30XX.ECS.Services
 			StartingWeapon.Dagger => "fling_fling",
 			_ => "angelic_aura",
 		};
+
+		private static string[] BuildDefaultStarterCardPool()
+		{
+			return GetSwordStarterCardPool()
+				.Concat(GetSwordSingleCopyStarterCardPool())
+				.Concat(GetDaggerStarterCardPool())
+				.Concat(GetDaggerSingleCopyStarterCardPool())
+				.Concat(GetHammerStarterCardPool())
+				.Concat(GetHammerSingleCopyStarterCardPool())
+				.Distinct(StringComparer.OrdinalIgnoreCase)
+				.ToArray();
+		}
+
+		private static List<string> BuildEffectivePool(
+			IReadOnlyList<string> poolCardIds,
+			IReadOnlyList<string> singleCopyCardIds)
+		{
+			return (poolCardIds ?? Array.Empty<string>())
+				.Concat(singleCopyCardIds ?? Array.Empty<string>())
+				.Where(id => !string.IsNullOrWhiteSpace(id))
+				.Distinct(StringComparer.OrdinalIgnoreCase)
+				.ToList();
+		}
 
 		private static HashSet<string> BuildSingleCopySet(IReadOnlyList<string> singleCopyCardIds)
 		{
@@ -145,23 +209,24 @@ namespace Crusaders30XX.ECS.Services
 			IReadOnlyList<string> singleCopyCardIds = null)
 		{
 			var singleCopySet = BuildSingleCopySet(singleCopyCardIds);
+			var effectivePool = BuildEffectivePool(poolCardIds, singleCopyCardIds);
 
-			var result = TryGenerate(poolCardIds, singleCopySet, new Random(seed), relaxColorQuotas: false);
+			var result = TryGenerate(effectivePool, singleCopySet, new Random(seed), relaxColorQuotas: false);
 			if (result.Count >= DeckRules.StartingDeckSize) return result;
 
-			result = TryGenerate(poolCardIds, singleCopySet, new Random(seed + 1), relaxColorQuotas: false);
+			result = TryGenerate(effectivePool, singleCopySet, new Random(seed + 1), relaxColorQuotas: false);
 			if (result.Count >= DeckRules.StartingDeckSize) return result;
 
-			result = TryGenerate(poolCardIds, singleCopySet, new Random(seed + 2), relaxColorQuotas: true);
+			result = TryGenerate(effectivePool, singleCopySet, new Random(seed + 2), relaxColorQuotas: true);
 			if (result.Count < DeckRules.StartingDeckSize)
 			{
-				Console.WriteLine($"[StartingDeckGenerator] Built {result.Count}/{DeckRules.StartingDeckSize} cards from pool size {poolCardIds?.Count ?? 0}.");
+				Console.WriteLine($"[StartingDeckGenerator] Built {result.Count}/{DeckRules.StartingDeckSize} cards from pool size {effectivePool.Count}.");
 			}
 			return result;
 		}
 
 		private static List<string> TryGenerate(
-			IReadOnlyList<string> poolCardIds,
+			IReadOnlyList<string> distinctPool,
 			IReadOnlySet<string> singleCopyCardIds,
 			Random rng,
 			bool relaxColorQuotas)
@@ -176,13 +241,7 @@ namespace Crusaders30XX.ECS.Services
 			else if (shortColorIndex == 1) whiteLeft = 6;
 			else blackLeft = 6;
 
-			var distinctPool = (poolCardIds ?? Array.Empty<string>())
-				.Where(id => !string.IsNullOrWhiteSpace(id))
-				.Distinct(StringComparer.OrdinalIgnoreCase)
-				.ToList();
-
 			ReserveGuaranteedSingleCopyCards(
-				distinctPool,
 				singleCopyCardIds,
 				rng,
 				relaxColorQuotas,
@@ -236,7 +295,6 @@ namespace Crusaders30XX.ECS.Services
 		}
 
 		private static void ReserveGuaranteedSingleCopyCards(
-			IReadOnlyList<string> distinctPool,
 			IReadOnlySet<string> singleCopyCardIds,
 			Random rng,
 			bool relaxColorQuotas,
@@ -249,9 +307,8 @@ namespace Crusaders30XX.ECS.Services
 		{
 			if (singleCopyCardIds == null || singleCopyCardIds.Count == 0) return;
 
-			var poolSet = new HashSet<string>(distinctPool, StringComparer.OrdinalIgnoreCase);
 			var guaranteedIds = singleCopyCardIds
-				.Where(id => poolSet.Contains(id))
+				.Where(id => !string.IsNullOrWhiteSpace(id))
 				.OrderBy(_ => rng.Next())
 				.ToList();
 

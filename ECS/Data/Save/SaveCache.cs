@@ -63,9 +63,7 @@ namespace Crusaders30XX.ECS.Data.Save
 
 		public static void ConfigurePrimaryRunSetup(
 			string weaponId,
-			string temperanceId,
-			IReadOnlyList<string> starterCardPool,
-			IReadOnlyList<string> singleCopyCardIds = null)
+			string temperanceId)
 		{
 			EnsureLoaded();
 			lock (_lock)
@@ -74,23 +72,26 @@ namespace Crusaders30XX.ECS.Data.Save
 				EnsureRunMap();
 				EnsurePrimaryLoadout(_save);
 
-				var startingDeck = StartingDeckGeneratorService.Generate(
-					starterCardPool ?? StartingDeckGeneratorService.DefaultStarterCardPool,
+				var resolvedWeaponId = string.IsNullOrWhiteSpace(weaponId) ? "sword" : weaponId;
+				var loadout = StartingDeckGeneratorService.BuildStartingLoadout(
+					resolvedWeaponId,
 					_save.runMapSeed,
-					singleCopyCardIds);
+					"loadout_1");
 
-				_save.starterCardKeys = new List<string>(startingDeck);
-				var loadout = _save.loadouts[0];
-				loadout.cardIds = new List<string>(startingDeck);
-				loadout.weaponId = string.IsNullOrWhiteSpace(weaponId) ? "sword" : weaponId;
-				loadout.temperanceId = string.IsNullOrWhiteSpace(temperanceId) ? "angelic_aura" : temperanceId;
-				if (string.IsNullOrWhiteSpace(loadout.name)) loadout.name = "Deck";
-				if (string.IsNullOrWhiteSpace(loadout.id)) loadout.id = "loadout_1";
-				loadout.chestId ??= string.Empty;
-				loadout.legsId ??= string.Empty;
-				loadout.armsId ??= string.Empty;
-				loadout.headId ??= string.Empty;
-				loadout.medalIds ??= new List<string>();
+				_save.starterCardKeys = new List<string>(loadout.cardIds);
+				var savedLoadout = _save.loadouts[0];
+				savedLoadout.cardIds = new List<string>(loadout.cardIds);
+				savedLoadout.weaponId = resolvedWeaponId;
+				savedLoadout.temperanceId = string.IsNullOrWhiteSpace(temperanceId)
+					? loadout.temperanceId
+					: temperanceId;
+				if (string.IsNullOrWhiteSpace(savedLoadout.name)) savedLoadout.name = "Deck";
+				if (string.IsNullOrWhiteSpace(savedLoadout.id)) savedLoadout.id = "loadout_1";
+				savedLoadout.chestId ??= string.Empty;
+				savedLoadout.legsId ??= string.Empty;
+				savedLoadout.armsId ??= string.Empty;
+				savedLoadout.headId ??= string.Empty;
+				savedLoadout.medalIds ??= new List<string>();
 
 				Persist();
 			}

@@ -9,6 +9,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Smite()
         {
             CardId = "smite";
+            Rarity = Rarity.Starter;
             Name = "Smite";
             Target = "Enemy";
             Animation = "Attack";

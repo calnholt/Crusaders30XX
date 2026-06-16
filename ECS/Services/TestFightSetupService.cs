@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
@@ -75,40 +74,13 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			ResetPlayerState(entityManager);
-			DestroyExistingCards(entityManager, deck);
 
 			int seed = TestFightRuntime.BeginBattle();
-			var generatedKeys = StartingDeckGeneratorService.Generate(
-				GetStarterPool(TestFightRuntime.Options.WeaponId),
+			var loadout = StartingDeckGeneratorService.BuildStartingLoadout(
+				TestFightRuntime.Options.WeaponId,
 				seed,
-				GetSingleCopyPool(TestFightRuntime.Options.WeaponId));
-
-			for (int i = 0; i < generatedKeys.Count; i++)
-			{
-				if (!RunDeckService.TryParseCardKey(generatedKeys[i], out var cardId, out var color))
-				{
-					continue;
-				}
-
-				var card = EntityFactory.CreateCardFromDefinition(
-					entityManager,
-					cardId,
-					color,
-					index: i);
-				if (card == null) continue;
-
-				var cardDefinition = card.GetComponent<CardData>()?.Card;
-				if (cardDefinition != null)
-				{
-					cardDefinition.IsStarter = true;
-				}
-				deck.Cards.Add(card);
-			}
-
-			if (deck.Cards.Count == 0)
-			{
-				throw new InvalidOperationException("Cannot start test fight: generated deck is empty.");
-			}
+				"test_fight");
+			RunDeckService.ReplaceDeckFromLoadout(entityManager, loadout, loadout.cardIds);
 		}
 
 		public static void ApplyEnemyHpDelta(Entity enemyEntity)
@@ -139,33 +111,6 @@ namespace Crusaders30XX.ECS.Services
 			{
 				queued.CurrentIndex = -1;
 			}
-		}
-
-		private static void DestroyExistingCards(EntityManager entityManager, Deck deck)
-		{
-			var player = entityManager.GetEntity("Player");
-			var equippedWeapon = player?.GetComponent<EquippedWeapon>();
-			if (equippedWeapon?.SpawnedEntity != null)
-			{
-				entityManager.DestroyEntity(equippedWeapon.SpawnedEntity.Id);
-				equippedWeapon.SpawnedEntity = null;
-			}
-
-			var cards = new HashSet<Entity>(deck.Cards);
-			cards.UnionWith(deck.DrawPile);
-			cards.UnionWith(deck.DiscardPile);
-			cards.UnionWith(deck.ExhaustPile);
-			cards.UnionWith(deck.Hand);
-			foreach (var card in cards.Where(card => card != null).ToList())
-			{
-				entityManager.DestroyEntity(card.Id);
-			}
-
-			deck.Cards.Clear();
-			deck.DrawPile.Clear();
-			deck.DiscardPile.Clear();
-			deck.ExhaustPile.Clear();
-			deck.Hand.Clear();
 		}
 
 		private static void ResetPlayerState(EntityManager entityManager)
@@ -203,45 +148,10 @@ namespace Crusaders30XX.ECS.Services
 
 		private static LoadoutDefinition BuildLoadout()
 		{
-			return new LoadoutDefinition
-			{
-				id = "test_fight",
-				name = "Test Fight",
-				weaponId = TestFightRuntime.Options.WeaponId,
-				temperanceId = GetTemperanceId(TestFightRuntime.Options.WeaponId),
-				chestId = string.Empty,
-				legsId = string.Empty,
-				armsId = string.Empty,
-				headId = string.Empty,
-				medalIds = new List<string>(),
-			};
-		}
-
-		private static IReadOnlyList<string> GetStarterPool(string weaponId)
-		{
-			return weaponId switch
-			{
-				"sword" => StartingDeckGeneratorService.GetSwordStarterCardPool(),
-				"dagger" => StartingDeckGeneratorService.GetDaggerStarterCardPool(),
-				"hammer" => StartingDeckGeneratorService.GetHammerStarterCardPool(),
-				_ => throw new InvalidOperationException($"Unsupported test-fight weapon '{weaponId}'."),
-			};
-		}
-
-		private static IReadOnlyList<string> GetSingleCopyPool(string weaponId)
-		{
-			return weaponId switch
-			{
-				"sword" => StartingDeckGeneratorService.GetSwordSingleCopyStarterCardPool(),
-				"dagger" => StartingDeckGeneratorService.GetDaggerSingleCopyStarterCardPool(),
-				"hammer" => StartingDeckGeneratorService.GetHammerSingleCopyStarterCardPool(),
-				_ => throw new InvalidOperationException($"Unsupported test-fight weapon '{weaponId}'."),
-			};
-		}
-
-		private static string GetTemperanceId(string weaponId)
-		{
-			return StartingDeckGeneratorService.GetDefaultTemperanceId(weaponId);
+			return StartingDeckGeneratorService.BuildStartingLoadout(
+				TestFightRuntime.Options.WeaponId,
+				seed: 0,
+				loadoutId: "test_fight");
 		}
 
 		private static void ApplyRunDifficulty(RunDifficulty difficulty)

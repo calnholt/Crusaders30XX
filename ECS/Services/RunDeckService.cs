@@ -28,6 +28,7 @@ namespace Crusaders30XX.ECS.Services
 
 			var loadout = GetLoadoutForRun();
 			var desiredKeys = BuildDesiredKeys(loadout);
+			var starterCardKeys = BuildStarterCardKeySet();
 			var existingByKey = entityManager
 				.GetEntitiesWithComponent<RunDeckCard>()
 				.Where(e => e.IsActive)
@@ -46,7 +47,7 @@ namespace Crusaders30XX.ECS.Services
 			foreach (var key in desiredKeys)
 			{
 				if (existingByKey.ContainsKey(key)) continue;
-				var created = CreateRunDeckCard(entityManager, key);
+				var created = CreateRunDeckCard(entityManager, key, starterCardKeys);
 				if (created != null)
 				{
 					existingByKey[key] = created;
@@ -77,6 +78,42 @@ namespace Crusaders30XX.ECS.Services
 			return deckEntity;
 		}
 
+		public static void ReplaceDeckFromLoadout(
+			EntityManager entityManager,
+			LoadoutDefinition loadout,
+			IReadOnlyCollection<string> starterCardKeys)
+		{
+			if (entityManager == null) return;
+
+			var deckEntity = GetRunDeckEntity(entityManager)
+				?? entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault(e => e.IsActive);
+			var deck = deckEntity?.GetComponent<Deck>();
+			if (deckEntity == null || deck == null)
+			{
+				throw new InvalidOperationException("Cannot replace deck: deck entity is missing.");
+			}
+
+			ClearEquippedWeapon(entityManager);
+			DestroyAllDeckCards(entityManager, deck);
+
+			var starterKeySet = BuildStarterCardKeySet(starterCardKeys);
+			var desiredKeys = BuildDesiredKeys(loadout);
+			deck.Cards.Clear();
+			foreach (var key in desiredKeys)
+			{
+				var created = CreateRunDeckCard(entityManager, key, starterKeySet);
+				if (created != null)
+				{
+					deck.Cards.Add(created);
+				}
+			}
+
+			if (deck.Cards.Count == 0)
+			{
+				throw new InvalidOperationException("Cannot replace deck: generated deck is empty.");
+			}
+		}
+
 		public static void AddCardFromKey(EntityManager entityManager, string cardKey)
 		{
 			if (string.IsNullOrWhiteSpace(cardKey)) return;
@@ -98,7 +135,7 @@ namespace Crusaders30XX.ECS.Services
 				return;
 			}
 
-			var created = CreateRunDeckCard(entityManager, cardKey);
+			var created = CreateRunDeckCard(entityManager, cardKey, BuildStarterCardKeySet());
 			if (created != null && !deck.Cards.Contains(created))
 			{
 				deck.Cards.Add(created);
@@ -196,7 +233,10 @@ namespace Crusaders30XX.ECS.Services
 			return entity;
 		}
 
-		private static Entity CreateRunDeckCard(EntityManager entityManager, string cardKey)
+		private static Entity CreateRunDeckCard(
+			EntityManager entityManager,
+			string cardKey,
+			IReadOnlySet<string> starterCardKeys = null)
 		{
 			if (!TryParseCardKey(cardKey, out var cardId, out var color)) return null;
 			var card = CardFactory.Create(cardId);
@@ -211,7 +251,7 @@ namespace Crusaders30XX.ECS.Services
 				index: index,
 				cardKey: cardKey,
 				persistForRun: true);
-			if (entity != null && SaveCache.IsStarterCardKey(cardKey))
+			if (entity != null && IsStarterCardKey(cardKey, starterCardKeys))
 			{
 				var cardData = entity.GetComponent<CardData>();
 				if (cardData?.Card != null)
@@ -220,6 +260,34 @@ namespace Crusaders30XX.ECS.Services
 				}
 			}
 			return entity;
+		}
+
+		private static bool IsStarterCardKey(string cardKey, IReadOnlySet<string> starterCardKeys)
+		{
+			if (starterCardKeys != null)
+			{
+				return starterCardKeys.Contains(cardKey);
+			}
+
+			return SaveCache.IsStarterCardKey(cardKey);
+		}
+
+		private static HashSet<string> BuildStarterCardKeySet(IReadOnlyCollection<string> starterCardKeys = null)
+		{
+			if (starterCardKeys != null)
+			{
+				return new HashSet<string>(
+					starterCardKeys.Where(key => !string.IsNullOrWhiteSpace(key)),
+					StringComparer.OrdinalIgnoreCase);
+			}
+
+			var keys = SaveCache.GetAll()?.starterCardKeys;
+			if (keys == null || keys.Count == 0)
+			{
+				return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			}
+
+			return new HashSet<string>(keys, StringComparer.OrdinalIgnoreCase);
 		}
 
 		private static List<string> BuildDesiredKeys(LoadoutDefinition loadout)
@@ -314,6 +382,40 @@ namespace Crusaders30XX.ECS.Services
 				deck.Cards.Remove(card);
 			}
 			entityManager.DestroyEntity(card.Id);
+		}
+
+		private static void ClearEquippedWeapon(EntityManager entityManager)
+		{
+			var player = entityManager.GetEntity("Player");
+			var equippedWeapon = player?.GetComponent<EquippedWeapon>();
+			if (equippedWeapon?.SpawnedEntity == null) return;
+
+			entityManager.DestroyEntity(equippedWeapon.SpawnedEntity.Id);
+			equippedWeapon.SpawnedEntity = null;
+		}
+
+		private static void DestroyAllDeckCards(EntityManager entityManager, Deck deck)
+		{
+			var cards = new HashSet<Entity>(deck.Cards);
+			cards.UnionWith(deck.DrawPile);
+			cards.UnionWith(deck.DiscardPile);
+			cards.UnionWith(deck.ExhaustPile);
+			cards.UnionWith(deck.Hand);
+			foreach (var card in entityManager.GetEntitiesWithComponent<RunDeckCard>().Where(card => card != null && card.IsActive))
+			{
+				cards.Add(card);
+			}
+
+			foreach (var card in cards.Where(card => card != null).ToList())
+			{
+				entityManager.DestroyEntity(card.Id);
+			}
+
+			deck.Cards.Clear();
+			deck.DrawPile.Clear();
+			deck.DiscardPile.Clear();
+			deck.ExhaustPile.Clear();
+			deck.Hand.Clear();
 		}
 	}
 }

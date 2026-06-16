@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public UnburdenedStrike()
         {
             CardId = "unburdened_strike";
+            Rarity = Rarity.Uncommon;
             Name = "Unburdened Strike";
             Target = "Enemy";
             Text = $"If no cards were discarded to play this, this gains +{DamageBonus} damage.";

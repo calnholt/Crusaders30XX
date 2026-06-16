@@ -10,6 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public IncreaseFaith()
         {
             CardId = "increase_faith";
+            Rarity = Rarity.Uncommon;
             Name = "Increase Faith";
             Target = "Player";
             Text = $"Gain {PowerGained} power.";

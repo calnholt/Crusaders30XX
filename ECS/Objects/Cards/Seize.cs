@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Seize()
         {
             CardId = "seize";
+            Rarity = Rarity.Common;
             Name = "Seize";
             Target = "Enemy";
             Damage = 2;

@@ -11,6 +11,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public SteadfastResolve()
         {
             CardId = "steadfast_resolve";
+            Rarity = Rarity.Common;
             Name = "Steadfast Resolve";
             Target = "Player";
             Text = $"Gain {VigorGained} vigor.";

@@ -20,13 +20,15 @@ public class WayStationRunSetupTests
 		var daggerSingleCopyPool = StartingDeckGeneratorService.GetDaggerSingleCopyStarterCardPool();
 		var hammerSingleCopyPool = StartingDeckGeneratorService.GetHammerSingleCopyStarterCardPool();
 
-		Assert.NotEmpty(swordPool);
-		Assert.NotEmpty(daggerPool);
-		Assert.NotEmpty(hammerPool);
+		Assert.Equal(9, swordPool.Count);
+		Assert.Equal(9, daggerPool.Count);
+		Assert.Equal(9, hammerPool.Count);
 		Assert.Contains("fervor", swordPool);
-		Assert.Contains("sacrifice", daggerPool);
-		Assert.Contains("iron_covenant", hammerPool);
-		Assert.Contains("vanguards_promise", hammerPool);
+		Assert.Contains("seize", daggerPool);
+		Assert.Contains("mantlet", hammerPool);
+		Assert.DoesNotContain("exaltation", swordPool);
+		Assert.DoesNotContain("razor_storm", daggerPool);
+		Assert.DoesNotContain("unburdened_strike", hammerPool);
 		foreach (var cardId in swordPool
 			.Concat(daggerPool)
 			.Concat(hammerPool)
@@ -36,6 +38,28 @@ public class WayStationRunSetupTests
 		{
 			Assert.NotNull(CardFactory.Create(cardId));
 		}
+	}
+
+	[Fact]
+	public void All_weapon_main_pools_include_shared_weapon_run_starter_cards()
+	{
+		foreach (var sharedCardId in StartingDeckGeneratorService.SharedWeaponRunStarterCardPool)
+		{
+			Assert.Contains(sharedCardId, StartingDeckGeneratorService.GetSwordStarterCardPool());
+			Assert.Contains(sharedCardId, StartingDeckGeneratorService.GetDaggerStarterCardPool());
+			Assert.Contains(sharedCardId, StartingDeckGeneratorService.GetHammerStarterCardPool());
+		}
+	}
+
+	[Fact]
+	public void Weapon_main_pools_do_not_overlap_single_copy_pools()
+	{
+		Assert.Empty(StartingDeckGeneratorService.GetSwordStarterCardPool()
+			.Intersect(StartingDeckGeneratorService.GetSwordSingleCopyStarterCardPool(), System.StringComparer.OrdinalIgnoreCase));
+		Assert.Empty(StartingDeckGeneratorService.GetDaggerStarterCardPool()
+			.Intersect(StartingDeckGeneratorService.GetDaggerSingleCopyStarterCardPool(), System.StringComparer.OrdinalIgnoreCase));
+		Assert.Empty(StartingDeckGeneratorService.GetHammerStarterCardPool()
+			.Intersect(StartingDeckGeneratorService.GetHammerSingleCopyStarterCardPool(), System.StringComparer.OrdinalIgnoreCase));
 	}
 
 	[Theory]

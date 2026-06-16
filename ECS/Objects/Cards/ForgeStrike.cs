@@ -8,6 +8,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public ForgeStrike()
         {
             CardId = "forge_strike";
+            Rarity = Rarity.Starter;
             Name = "Forge Strike";
             Target = "Enemy";
             Animation = "Attack";

@@ -11,6 +11,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Exaltation()
         {
             CardId = "exaltation";
+            Rarity = Rarity.Uncommon;
             Name = "Exaltation";
             Target = "Enemy";
             Text = $"As an additional cost, lose {CourageCost} courage.";

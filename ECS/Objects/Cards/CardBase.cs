@@ -16,6 +16,14 @@ namespace Crusaders30XX.ECS.Objects.Cards
         Block,
         Relic
     }
+
+    public enum Rarity
+    {
+        Starter,
+        Common,
+        Uncommon,
+        Rare,
+    }
     public class CardBase : IDisposable
     {
         public EntityManager EntityManager { get; set; }
@@ -44,6 +52,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public bool IsWeapon { get; set; } = false;
         public bool CanDiscardForCost => !IsWeapon && !IsToken;
         public bool IsStarter { get; set; } = false;
+        public Rarity Rarity { get; set; } = Rarity.Starter;
         private string _tooltip = "";
         public string Tooltip 
         {

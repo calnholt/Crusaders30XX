@@ -10,6 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public LitanyOfWrath()
         {
             CardId = "litany_of_wrath";
+            Rarity = Rarity.Starter;
             Name = "Litany of Wrath";
             Target = "Player";
             Text = $"Gain {AggressionGained} aggression.";

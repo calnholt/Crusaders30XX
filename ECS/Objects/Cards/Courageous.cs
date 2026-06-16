@@ -10,6 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Courageous()
         {
             CardId = "courageous";
+            Rarity = Rarity.Starter;
             Name = "Courageous";
             Target = "Player";
             Text = $"Gain {CourageBonus} courage. End your turn.";

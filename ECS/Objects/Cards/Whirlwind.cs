@@ -11,6 +11,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Whirlwind()
         {
             CardId = "whirlwind";
+            Rarity = Rarity.Common;
             Name = "Whirlwind";
             Target = "Enemy";
             Text = $"Attacks {NumOfHits} times.";

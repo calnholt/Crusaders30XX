@@ -14,6 +14,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public StokeTheFurnace()
         {
             CardId = "stoke_the_furnace";
+            Rarity = Rarity.Common;
             Name = "Stoke the Furnace";
             Target = "Player";
             Text = $"Lose {CourageCost} courage, gain {VigorGained} vigor. Repeat up to {MaxRepeats} times if possible.";

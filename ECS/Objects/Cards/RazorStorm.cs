@@ -9,6 +9,7 @@ public class RazorStorm : CardBase
   public RazorStorm()
   {
     CardId = "razor_storm";
+    Rarity = Rarity.Uncommon;
     Name = "Razor Storm";
     Target = "Enemy";
     Text = $"Attacks {NumOfHits} times.";

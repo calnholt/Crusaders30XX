@@ -9,6 +9,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Absolution()
         {
             CardId = "absolution";
+            Rarity = Rarity.Starter;
             Name = "Absolution";
             Target = "Enemy";
             Cost = ["Any", "Any", "Any"];

@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Fervor()
         {
             CardId = "fervor";
+            Rarity = Rarity.Common;
             Name = "Fervor";
             Target = "Enemy";
             Cost = ["Red"];

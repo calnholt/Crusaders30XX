@@ -18,9 +18,7 @@ namespace Crusaders30XX.ECS.Services
 			SaveCache.StartNewRun();
 			SaveCache.ConfigurePrimaryRunSetup(
 				WayStationRunSetupSingleton.WeaponId,
-				GetSelectedTemperanceId(),
-				GetSelectedStarterPool(),
-				GetSelectedSingleCopyPool());
+				GetSelectedTemperanceId());
 
 			PrepareRunEntitiesForBattle(world);
 
@@ -73,28 +71,6 @@ namespace Crusaders30XX.ECS.Services
 
 			hp.Max = WayStationRunSetupSingleton.PlayerMaxHp;
 			hp.Current = hp.Max;
-		}
-
-		private static System.Collections.Generic.IReadOnlyList<string> GetSelectedStarterPool()
-		{
-			return WayStationRunSetupSingleton.SelectedWeapon switch
-			{
-				StartingWeapon.Sword => StartingDeckGeneratorService.GetSwordStarterCardPool(),
-				StartingWeapon.Dagger => StartingDeckGeneratorService.GetDaggerStarterCardPool(),
-				StartingWeapon.Hammer => StartingDeckGeneratorService.GetHammerStarterCardPool(),
-				_ => StartingDeckGeneratorService.GetSwordStarterCardPool()
-			};
-		}
-
-		private static System.Collections.Generic.IReadOnlyList<string> GetSelectedSingleCopyPool()
-		{
-			return WayStationRunSetupSingleton.SelectedWeapon switch
-			{
-				StartingWeapon.Sword => StartingDeckGeneratorService.GetSwordSingleCopyStarterCardPool(),
-				StartingWeapon.Dagger => StartingDeckGeneratorService.GetDaggerSingleCopyStarterCardPool(),
-				StartingWeapon.Hammer => StartingDeckGeneratorService.GetHammerSingleCopyStarterCardPool(),
-				_ => StartingDeckGeneratorService.GetSwordSingleCopyStarterCardPool()
-			};
 		}
 
 		private static string GetSelectedTemperanceId()

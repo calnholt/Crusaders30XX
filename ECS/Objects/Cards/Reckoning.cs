@@ -9,6 +9,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Reckoning()
         {
             CardId = "reckoning";
+            Rarity = Rarity.Starter;
             Name = "Reckoning";
             Target = "Enemy";
             Cost = ["Any", "Any"];

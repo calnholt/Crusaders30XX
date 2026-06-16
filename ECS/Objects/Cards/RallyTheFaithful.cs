@@ -11,6 +11,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public RallyTheFaithful()
         {
             CardId = "rally_the_faithful";
+            Rarity = Rarity.Common;
             Name = "Rally the Faithful";
             Target = "Player";
             Text = $"Gain {MightAmount} might.";

@@ -11,6 +11,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         public Stab()
         {
             CardId = "stab";
+            Rarity = Rarity.Common;
             Name = "Stab";
             Target = "Enemy";
             Text = $"As an additional cost, lose {CourageCost} courage.";
