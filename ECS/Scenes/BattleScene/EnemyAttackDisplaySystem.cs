@@ -472,11 +472,8 @@ namespace Crusaders30XX.ECS.Systems
 				&& !IsAnyBlockAssignmentAnimating()
 				&& tutorialRequirementMet;
 
-			if (GuidedTutorialService.IsActive(EntityManager))
-			{
-				ui.IsInteractable = available;
-				if (!available) ui.Bounds = Rectangle.Empty;
-			}
+			ui.IsInteractable = available;
+			if (!available) ui.Bounds = Rectangle.Empty;
 			if (hotkey != null)
 			{
 				hotkey.IsActive = available && ui.IsInteractable;

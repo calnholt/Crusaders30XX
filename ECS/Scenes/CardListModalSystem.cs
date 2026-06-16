@@ -328,6 +328,7 @@ namespace Crusaders30XX.ECS.Systems
                     var ui = card.GetComponent<UIElement>();
                     if (ui != null)
                     {
+                        ui.LayerType = UILayerType.Default;
                         ui.IsHovered = false;
                         ui.IsClicked = false;
                         ui.Bounds = new Rectangle(0, 0, 0, 0);

@@ -234,6 +234,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiH.IsHovered = false;
                         uiH.IsClicked = false;
                         uiH.EventType = UIElementEventType.CardClicked;
+                        uiH.LayerType = UILayerType.Default;
                     }
                     // Fallback restore of tooltip config if a backup still exists (e.g., if BlockAssignmentRemoved didn't run)
                     {
@@ -276,6 +277,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiS.IsHovered = false;
                         uiS.IsClicked = false;
                         uiS.EventType = UIElementEventType.None;
+                        uiS.LayerType = UILayerType.Default;
                     }
                     break;
                 }
@@ -344,6 +346,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiA.IsHovered = false;
                         uiA.IsClicked = false;
                         uiA.EventType = UIElementEventType.UnassignCardAsBlock;
+                        uiA.LayerType = UILayerType.Default;
                     }
                     EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.Equip, Volume = 0.5f });
                     break;
@@ -359,6 +362,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiD.IsHovered = false;
                         uiD.IsClicked = false;
                         uiD.EventType = UIElementEventType.None;
+                        uiD.LayerType = UILayerType.Default;
                     }
                     var sfpD = evt.Card.GetComponent<SelectedForPayment>();
                     if (sfpD != null)
@@ -385,6 +389,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiDP.IsHovered = false;
                         uiDP.IsClicked = false;
                         uiDP.EventType = UIElementEventType.None;
+                        uiDP.LayerType = UILayerType.Default;
                     }
                     // Reset transform so highlight hit-test uses proper defaults when re-drawn
                     var tdp = evt.Card.GetComponent<Transform>();
@@ -454,6 +459,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiD.IsHovered = false;
                         uiD.IsClicked = false;
                         uiD.EventType = UIElementEventType.None;
+                        uiD.LayerType = UILayerType.Default;
                     }
                     var sfpD = evt.Card.GetComponent<SelectedForPayment>();
                     if (sfpD != null)
@@ -484,6 +490,7 @@ namespace Crusaders30XX.ECS.Systems
                         uiDP.IsHovered = false;
                         uiDP.IsClicked = false;
                         uiDP.EventType = UIElementEventType.None;
+                        uiDP.LayerType = UILayerType.Default;
                     }
                     // Reset transform so highlight hit-test uses proper defaults when re-drawn
                     var tdp = evt.Card.GetComponent<Transform>();
