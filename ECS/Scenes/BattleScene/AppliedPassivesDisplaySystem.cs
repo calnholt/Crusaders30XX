@@ -305,7 +305,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private Boolean ShowStacks(AppliedPassiveType type)
         {
-            return !(new List<AppliedPassiveType> { AppliedPassiveType.Stealth, AppliedPassiveType.MindFog, AppliedPassiveType.Plunder }).Contains(type);
+            return !(new List<AppliedPassiveType> { AppliedPassiveType.Stealth, AppliedPassiveType.MindFog, AppliedPassiveType.Plunder, AppliedPassiveType.CarpeDiem }).Contains(type);
         }
 
         private void OnPassiveTriggered(PassiveTriggered e)

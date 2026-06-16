@@ -72,3 +72,75 @@ GrainFineness=1
 VignetteAmount=0
 
 
+Starter decks:
+
+HAMMER
+• absolution
+• courageous
+• forge_strike
+• litany_of_wrath
+• reckoning
+• smite
+- mantlet
+- stoke_the_furnace
+- steadfast_resolve
+* unburdened_strike
+* increase_faith
+
+
+DAGGER
+• absolution
+• courageous
+• forge_strike
+• litany_of_wrath
+• reckoning
+• smite
+- seize
+- rally_the_faithful
+- whirlwind
+* razor_storm
+* increase_faith
+
+
+SWORD
+• absolution
+• courageous
+• forge_strike
+• litany_of_wrath
+• reckoning
+• smite
+- fervor
+- hold_the_line
+- stab
+* exhaltation
+* increase_faith
+
+
+ALL POOLS
+- strike
+- crusade
+- zealous_vow
+- tempest
+- shield_of_faith
+- increase_faith
+- renounce_and_hone
+- steel_the_spirit
+- iron_covenant
+- whirlwind
+- pouch_of_kunai
+- ravage
+- reap
+- relentless_strike
+- serpent_crush
+- stalwart
+- temper_the_blade
+- vindicate
+- vanguards_promise
+- steadfast_resolve
+- exhaltation
+- deus_vult
+- carpe_diem
+
+HAMMER ONLY CARDS
+- unburdened_strike
+- battering_blow

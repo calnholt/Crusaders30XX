@@ -1113,7 +1113,8 @@ namespace Crusaders30XX.ECS.Components
         Marksman,
         Sharpen,
         Might,
-        Vigor
+        Vigor,
+        CarpeDiem
     }
 
     public class PassiveMeterComponent : IComponent

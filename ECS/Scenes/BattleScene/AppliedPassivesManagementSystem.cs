@@ -79,6 +79,7 @@ namespace Crusaders30XX.ECS.Systems
             }
             if (evt.Current == SubPhase.PlayerEnd)
             {
+                ApplyEndOfTurnPassives(player);
                 RemoveTurnPassives(player);
             }
             else if (evt.Current == SubPhase.EnemyStart)
@@ -382,6 +383,17 @@ namespace Crusaders30XX.ECS.Systems
             ap.Passives.Clear();
         }
 
+        private void ApplyEndOfTurnPassives(Entity owner)
+        {
+            if (owner == null) return;
+            var ap = owner.GetComponent<AppliedPassives>();
+            if (ap == null || ap.Passives == null) return;
+            if (!ap.Passives.TryGetValue(AppliedPassiveType.CarpeDiem, out int stacks) || stacks <= 0) return;
+
+            EventManager.Publish(new PassiveTriggered { Owner = owner, Type = AppliedPassiveType.CarpeDiem });
+            EventManager.Publish(new SetCourageEvent { Amount = 0 });
+        }
+
         private void RemoveTurnPassives(Entity owner)
         {
             foreach (var passive in GetTurnPassives().ToList())
@@ -409,6 +421,7 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Aggression,
                 AppliedPassiveType.Sharpen,
                 AppliedPassiveType.Might,
+                AppliedPassiveType.CarpeDiem,
             };
         }
 

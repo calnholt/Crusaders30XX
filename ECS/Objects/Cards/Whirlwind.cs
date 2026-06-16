@@ -14,7 +14,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Name = "Whirlwind";
             Target = "Enemy";
             Text = $"Attacks {NumOfHits} times.";
-            Cost = ["Black"];
+            Cost = ["Any"];
             Animation = "Attack";
             Damage = 3;
             Block = 3;
