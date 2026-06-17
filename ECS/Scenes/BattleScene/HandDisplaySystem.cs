@@ -32,6 +32,9 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Bottom Margin", Step = 2f, Min = 0f, Max = 1000f)]
         public float HandBottomMargin { get; set; } = 168f;
 
+        [DebugEditable(DisplayName = "Horizontal Screen Padding", Step = 2f, Min = 0f, Max = 500f)]
+        public float HandHorizontalScreenPadding { get; set; } = 124f;
+
         [DebugEditable(DisplayName = "Max Angle (deg)", Step = 0.5f, Min = 0f, Max = 45f)]
         public float HandFanMaxAngleDeg { get; set; } = 5f;
 
@@ -151,6 +154,26 @@ namespace Crusaders30XX.ECS.Systems
 			s.BlockScale = _baseBlockScale * scaled;
 			s.BlockNumberScale = _baseBlockNumberScale * scaled;
 		}
+
+		private float GetClampedCardSpacing(int count, float idealSpacing, float screenWidth, float cardWidth, float cardHeight, float maxAngleRad)
+		{
+			if (count <= 1) return idealSpacing;
+
+			float scale = MathF.Max(0.01f, HandHoverScale);
+			float rotatedFootprint = GetRotatedHorizontalFootprint(cardWidth * scale, cardHeight * scale, maxAngleRad);
+			float availableCenterSpan = MathF.Max(0f, screenWidth - (HandHorizontalScreenPadding * 2f) - rotatedFootprint);
+			float maxSpacing = availableCenterSpan / (count - 1);
+
+			return MathF.Min(idealSpacing, maxSpacing);
+		}
+
+		private static float GetRotatedHorizontalFootprint(float width, float height, float angleRad)
+		{
+			float absAngle = MathF.Abs(angleRad);
+			float cos = MathF.Abs(MathF.Cos(absAngle));
+			float sin = MathF.Abs(MathF.Sin(absAngle));
+			return width * cos + height * sin;
+		}
         
         protected override IEnumerable<Entity> GetRelevantEntities()
         {
@@ -222,8 +245,11 @@ namespace Crusaders30XX.ECS.Systems
 						var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
 						// Apply viewport-aware scaling to card visuals (1080p baseline -> scale down below)
 						ApplyViewportScalingIfNeeded(cvs);
-                        float cardSpacing = (cvs != null) ? (cvs.CardWidth + cvs.CardGap) : 0f;
-                        if (cardSpacing <= 0f) { cardSpacing = 250 + (-20); }
+						float cardWidth = cvs?.CardWidth ?? 250f;
+						float cardHeight = cvs?.CardHeight ?? 350f;
+                        float idealCardSpacing = (cvs != null) ? (cvs.CardWidth + cvs.CardGap) : 0f;
+                        if (idealCardSpacing <= 0f) { idealCardSpacing = 250 + (-20); }
+						float cardSpacing = GetClampedCardSpacing(count, idealCardSpacing, screenWidth, cardWidth, cardHeight, maxAngleRad);
                         float x = pivot.X + indexDelta * cardSpacing;
 
                         // Vertical arc

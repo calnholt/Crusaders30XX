@@ -12,7 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
         {
             CardId = "stalwart";
             Name = "Stalwart";
-            Text = $"As an additional cost when using this card to block, lose {CourageCost} courage.";
+            Text = $"As an additional cost, lose {CourageCost} courage.";
             Type = CardType.Block;
             Block = 7;
             

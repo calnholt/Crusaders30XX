@@ -58,13 +58,12 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 Text = $"As an additional cost, mill {GetMillAmount(IsUpgraded)} cards.";
             };
+        }
 
-            private int GetMillAmount(bool isUpgraded)
-            {
-                Damage += DamageAmountUpgrade;
-                return isUpgraded ? MillAmount + MillAmountUpgrade : MillAmount;
-            }
+        private int GetMillAmount(bool isUpgraded)
+        {
+            Damage += DamageAmountUpgrade;
+            return isUpgraded ? MillAmount + MillAmountUpgrade : MillAmount;
         }
     }
 }
-

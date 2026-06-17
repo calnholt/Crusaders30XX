@@ -50,10 +50,10 @@ public class RazorStorm : CardBase
     {
       Text = $"Attacks {GetNumOfHits(IsUpgraded)} times.";
     };
+  }
 
-    private int GetNumOfHits(bool isUpgraded)
-    {
-      return isUpgraded ? NumOfHits + NumOfHitsUpgrade : NumOfHits;
-    }
+  private int GetNumOfHits(bool isUpgraded)
+  {
+    return isUpgraded ? NumOfHits + NumOfHitsUpgrade : NumOfHits;
   }
 }

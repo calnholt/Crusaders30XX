@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "quick_wit";
             Name = "Quick Wit";
             Target = "Enemy";
-            Text = $"As an additional cost, lose {CourageCost} courage. Draw 1 card.";
+            Text = $"As an additional cost, lose {CourageCost} courage. Draw 1 random card from your discard pile.";
             Animation = "Attack";
             Damage = 2;
             Block = 3;
@@ -33,7 +33,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
                     DamageType = ModifyTypeEnum.Attack
                 });
-                EventManager.Publish(new RequestDrawCardsEvent { Count = 1 });
+                EventManager.Publish(new DrawRandomCardFromDiscardEvent { Amount = 1 });
             };
 
             CanPlay = (entityManager, card) =>

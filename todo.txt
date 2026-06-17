@@ -4,12 +4,9 @@ UX
 Gameplay
 - map needs to feel like worker placement -- think about HOW -- gain resources @ battles, use to buy, time costs to visit places, tableu building? conversions
 - maybe remove istoken/isweapon and make as components?
-- hand display - when have lots of cards in hand, the reach outside bounds of screen, need to clamp the bounds and just make them overlap more
 - make hand display agnostic of carddata, probably involves refactoring some components and data objects
 - fix hand display card uielement bounds
 - make cardlistmodaldisplay not a modal, tinted overlay with floating UI
-- try to move draw effects to drawing random card from discard pile to prevent deck depletion
-
 
 cards
 - if you have dealt 10 or more damage this turn...
@@ -35,3 +32,10 @@ persistent card states:
 - update sealed to reduce on block ONLY, can be pledged
 
 
+cards to delete:
+- mace
+- shroud of turin
+
+keywords
+- indulgence for additional cost?
+- vigor reduction
