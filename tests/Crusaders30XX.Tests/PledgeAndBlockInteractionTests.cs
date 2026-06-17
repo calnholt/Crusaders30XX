@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -62,7 +63,7 @@ public class PledgeAndBlockInteractionTests : IDisposable
     {
         var entityManager = BuildActionHand(out var deck, out _);
         var card = AddCard(entityManager, deck, new CardBase());
-        PledgeAvailabilityService.SetPledgedThisActionPhase(entityManager, true);
+        SetPledgedThisActionPhase(entityManager);
         _ = new PledgeManagementSystem(entityManager);
         string message = null;
         EventManager.Subscribe<CantPlayCardMessage>(evt => message = evt.Message);
@@ -108,6 +109,64 @@ public class PledgeAndBlockInteractionTests : IDisposable
         var result = PledgeAvailabilityService.Evaluate(entityManager);
         Assert.False(result.IsAvailable);
         Assert.Equal(PledgeAvailabilityFailure.AlreadyPledgedThisActionPhase, result.Failure);
+    }
+
+    [Fact]
+    public void Apply_pledge_request_adds_pledge_consumes_phase_and_runs_triggers()
+    {
+        var entityManager = BuildActionHand(out var deck, out _);
+        var cardDefinition = new CountingPledgeCard();
+        var card = AddCard(entityManager, deck, cardDefinition);
+        _ = new PledgeManagementSystem(entityManager);
+        Entity pledgedEventCard = null;
+        EventManager.Subscribe<PledgeAddedEvent>(evt => pledgedEventCard = evt.Card);
+
+        EventManager.Publish(new ApplyPledgeToCardRequested { Card = card });
+
+        var pledge = card.GetComponent<Pledge>();
+        Assert.NotNull(pledge);
+        Assert.Same(card, pledge.Owner);
+        Assert.False(pledge.CanPlay);
+        Assert.Same(card, pledgedEventCard);
+        Assert.Equal(1, cardDefinition.PledgedCount);
+        Assert.True(entityManager.GetEntitiesWithComponent<PhaseState>()
+            .First()
+            .GetComponent<PledgeAvailabilityState>()
+            .PledgedThisActionPhase);
+    }
+
+    [Fact]
+    public void Remove_pledge_request_removes_pledge()
+    {
+        var entityManager = BuildActionHand(out var deck, out _);
+        var card = AddCard(entityManager, deck, new CardBase());
+        entityManager.AddComponent(card, new Pledge { Owner = card, CanPlay = true });
+        _ = new PledgeManagementSystem(entityManager);
+
+        EventManager.Publish(new RemovePledgeFromCardRequested { Card = card });
+
+        Assert.False(card.HasComponent<Pledge>());
+    }
+
+    [Fact]
+    public void Enemy_phase_reset_event_clears_pledge_state_in_pledge_management_system()
+    {
+        var entityManager = BuildActionHand(out var deck, out _);
+        var pledged = AddCard(entityManager, deck, new CardBase());
+        var preview = AddCard(entityManager, deck, new CardBase());
+        entityManager.AddComponent(pledged, new Pledge { Owner = pledged, CanPlay = false });
+        entityManager.AddComponent(preview, new PledgePreview { Owner = preview });
+        SetPledgedThisActionPhase(entityManager);
+        _ = new PledgeManagementSystem(entityManager);
+
+        EventManager.Publish(new EnemyPhaseResetEvent());
+
+        Assert.False(pledged.HasComponent<Pledge>());
+        Assert.False(preview.HasComponent<PledgePreview>());
+        Assert.False(entityManager.GetEntitiesWithComponent<PhaseState>()
+            .First()
+            .GetComponent<PledgeAvailabilityState>()
+            .PledgedThisActionPhase);
     }
 
     [Fact]
@@ -170,6 +229,19 @@ public class PledgeAndBlockInteractionTests : IDisposable
         return entityManager;
     }
 
+    private static void SetPledgedThisActionPhase(EntityManager entityManager)
+    {
+        var phaseEntity = entityManager.GetEntitiesWithComponent<PhaseState>().First();
+        var state = phaseEntity.GetComponent<PledgeAvailabilityState>();
+        if (state == null)
+        {
+            state = new PledgeAvailabilityState { Owner = phaseEntity };
+            entityManager.AddComponent(phaseEntity, state);
+        }
+
+        state.PledgedThisActionPhase = true;
+    }
+
     private static Entity AddCard(EntityManager entityManager, Deck deck, CardBase definition)
     {
         var card = entityManager.CreateEntity("Card");
@@ -188,5 +260,15 @@ public class PledgeAndBlockInteractionTests : IDisposable
             "token" => new CardBase { IsToken = true },
             _ => new CardBase(),
         };
+    }
+
+    private sealed class CountingPledgeCard : CardBase
+    {
+        public int PledgedCount { get; private set; }
+
+        public CountingPledgeCard()
+        {
+            OnPledged = (_, _) => PledgedCount++;
+        }
     }
 }

@@ -463,7 +463,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				if (c.HasComponent<Pledge>())
 				{
-					EntityManager.RemoveComponent<Pledge>(c);
+					EventManager.Publish(new RemovePledgeFromCardRequested { Card = c });
 				}
 			}
 

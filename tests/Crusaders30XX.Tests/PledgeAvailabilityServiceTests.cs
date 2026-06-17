@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Objects.Cards;
@@ -56,7 +57,7 @@ public class PledgeAvailabilityServiceTests : IDisposable
     {
         var entityManager = BuildBattle(SubPhase.Action, out var deck, out _);
         AddCard(entityManager, deck, new CardBase());
-        PledgeAvailabilityService.SetPledgedThisActionPhase(entityManager, true);
+        SetPledgedThisActionPhase(entityManager);
 
         AssertFailure(entityManager, PledgeAvailabilityFailure.AlreadyPledgedThisActionPhase);
     }
@@ -145,6 +146,16 @@ public class PledgeAvailabilityServiceTests : IDisposable
         deck = new Deck();
         entityManager.AddComponent(deckEntity, deck);
         return entityManager;
+    }
+
+    private static void SetPledgedThisActionPhase(EntityManager entityManager)
+    {
+        var phaseEntity = entityManager.GetEntitiesWithComponent<PhaseState>().First();
+        entityManager.AddComponent(phaseEntity, new PledgeAvailabilityState
+        {
+            Owner = phaseEntity,
+            PledgedThisActionPhase = true,
+        });
     }
 
     private static Entity AddCard(EntityManager entityManager, Deck deck, CardBase definition)

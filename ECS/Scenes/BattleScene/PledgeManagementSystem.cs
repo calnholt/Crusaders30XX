@@ -19,6 +19,8 @@ namespace Crusaders30XX.ECS.Systems
         {
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnPhaseChanged);
             EventManager.Subscribe<PledgeCardRequested>(OnPledgeCardRequested);
+            EventManager.Subscribe<ApplyPledgeToCardRequested>(OnApplyPledgeToCardRequested);
+            EventManager.Subscribe<RemovePledgeFromCardRequested>(OnRemovePledgeFromCardRequested);
             EventManager.Subscribe<StartBattleRequested>(_ => ClearAllPledges());
             EventManager.Subscribe<EnemyPhaseResetEvent>(_ => ClearAllPledges());
             EventManager.Subscribe<CardMoved>(OnCardMoved);
@@ -37,6 +39,18 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (evt?.Card == null) return;
             TryPledge(evt.Card);
+        }
+
+        private void OnApplyPledgeToCardRequested(ApplyPledgeToCardRequested evt)
+        {
+            if (evt?.Card == null) return;
+            AddPledgeToCard(evt.Card, evt.MarkPledgedThisActionPhase);
+        }
+
+        private void OnRemovePledgeFromCardRequested(RemovePledgeFromCardRequested evt)
+        {
+            if (evt?.Card == null) return;
+            RemovePledgeFromCard(evt.Card);
         }
 
         private void OnCardMoved(CardMoved evt)
@@ -67,7 +81,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (evt.Current != SubPhase.Action) return;
 
-            PledgeAvailabilityService.SetPledgedThisActionPhase(EntityManager, false);
+            SetPledgedThisActionPhase(false);
 
             // Unlock pledges from prior turns. Previous is rarely set on ChangeBattlePhaseEvent,
             // so we unlock at Action start (Shadow still sees !CanPlay at PlayerEnd entry).
@@ -113,13 +127,22 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
-            AddPledgeToCard(card);
-            PledgeAvailabilityService.SetPledgedThisActionPhase(EntityManager, true);
+            AddPledgeToCard(card, true);
         }
 
-        private void AddPledgeToCard(Entity card)
+        private void AddPledgeToCard(Entity card, bool markPledgedThisActionPhase)
         {
-            PledgeService.ApplyPledgeToHandCard(EntityManager, card, markPledgedThisActionPhase: false);
+            if (card == null) return;
+            if (card.GetComponent<Pledge>() != null) return;
+
+            EntityManager.AddComponent(card, new Pledge { Owner = card, CanPlay = false });
+            EventManager.Publish(new PledgeAddedEvent { Card = card });
+            var cardData = card.GetComponent<CardData>();
+            cardData?.Card?.OnPledged?.Invoke(EntityManager, card);
+
+            if (markPledgedThisActionPhase)
+                SetPledgedThisActionPhase(true);
+
             LoggingService.Append("PledgeManagementSystem.AddPledgeToCard", new System.Text.Json.Nodes.JsonObject
             {
                 ["entityId"] = card.Id,
@@ -133,7 +156,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             if (card == null || card.GetComponent<Pledge>() == null) return;
 
-            PledgeService.RemovePledgeFromCard(EntityManager, card);
+            EntityManager.RemoveComponent<Pledge>(card);
             LoggingService.Append("PledgeManagementSystem.RemovePledgeFromCard", new System.Text.Json.Nodes.JsonObject
             {
                 ["entityId"] = card.Id,
@@ -145,10 +168,28 @@ namespace Crusaders30XX.ECS.Systems
 
         private void ClearAllPledges()
         {
-            PledgeAvailabilityService.SetPledgedThisActionPhase(EntityManager, false);
+            SetPledgedThisActionPhase(false);
 
             foreach (var card in EntityManager.GetEntitiesWithComponent<Pledge>().ToList())
                 RemovePledgeFromCard(card);
+
+            foreach (var card in EntityManager.GetEntitiesWithComponent<PledgePreview>().ToList())
+                EntityManager.RemoveComponent<PledgePreview>(card);
+        }
+
+        private void SetPledgedThisActionPhase(bool value)
+        {
+            var phaseEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
+            if (phaseEntity == null) return;
+
+            var state = phaseEntity.GetComponent<PledgeAvailabilityState>();
+            if (state == null)
+            {
+                state = new PledgeAvailabilityState { Owner = phaseEntity };
+                EntityManager.AddComponent(phaseEntity, state);
+            }
+
+            state.PledgedThisActionPhase = value;
         }
 
         private void LogPledgeHandSnapshot(string reason, Entity card)

@@ -46,7 +46,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Destination = CardZoneType.Hand,
                     Reason = "VanguardsPromise"
                 });
-                PledgeService.ApplyPledgeToHandCard(entityManager, topCard);
+                EventManager.Publish(new ApplyPledgeToCardRequested { Card = topCard });
             };
         }
     }

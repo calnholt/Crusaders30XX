@@ -102,7 +102,7 @@ public class EnemyPhaseResetServiceTests
 		Assert.Equal(3, deck.DrawPile.Count);
 		Assert.DoesNotContain(exhaustedCard, deck.DrawPile);
 		Assert.True(handCard.HasComponent<Frozen>());
-		Assert.False(handCard.HasComponent<Pledge>());
+		Assert.True(handCard.HasComponent<Pledge>());
 		Assert.False(handCard.HasComponent<HotKey>());
 	}
 

@@ -311,6 +311,24 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Request that the pledge owner system applies pledge state to a card.
+    /// Used by card effects that pledge directly rather than by player input.
+    /// </summary>
+    public class ApplyPledgeToCardRequested
+    {
+        public Entity Card { get; set; }
+        public bool MarkPledgedThisActionPhase { get; set; } = true;
+    }
+
+    /// <summary>
+    /// Request that the pledge owner system removes pledge state from a card.
+    /// </summary>
+    public class RemovePledgeFromCardRequested
+    {
+        public Entity Card { get; set; }
+    }
+
+    /// <summary>
     /// Emitted when the player adds a pledge to a card.
     /// </summary>
     public class PledgeAddedEvent

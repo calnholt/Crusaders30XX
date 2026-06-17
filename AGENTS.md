@@ -115,6 +115,7 @@ The `ParallaxLayerSystem` is fully agnostic — external systems cooperate with 
   - NO SLOP; STAY DRY
 - Systems own their outputs exclusively — never duplicate another system's logic or neutralize it (e.g., overwriting its output each frame to suppress it). Fix ordering or initialization issues at the source instead
 - Keep systems self-contained: encode state on components (fields the owning system writes), not public static snapshots (`HashSet`, etc.) that other code must query
+- Services are read-only helpers/calculators. Do not mutate ECS components, publish/enqueue events, or change singleton state from services; route game-state writes through systems via events.
 
 ## Display Systems
 

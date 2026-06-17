@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 if (pledgedCard == null) return;
 
                 var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-                PledgeService.RemovePledgeFromCard(entityManager, pledgedCard);
+                EventManager.Publish(new RemovePledgeFromCardRequested { Card = pledgedCard });
                 EventManager.Publish(new CardMoveRequested
                 {
                     Card = pledgedCard,

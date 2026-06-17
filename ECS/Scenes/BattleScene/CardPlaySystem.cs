@@ -477,7 +477,7 @@ namespace Crusaders30XX.ECS.Systems
             // Remove Pledge if present when playing
             if (evt.Card.HasComponent<Pledge>())
             {
-                EntityManager.RemoveComponent<Pledge>(evt.Card);
+                EventManager.Publish(new RemovePledgeFromCardRequested { Card = evt.Card });
                 LoggingService.Append("CardPlaySystem.OnPlayCardRequested", new System.Text.Json.Nodes.JsonObject
                 {
                     ["reason"] = "PledgeRemoved",

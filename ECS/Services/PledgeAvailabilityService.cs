@@ -107,21 +107,6 @@ namespace Crusaders30XX.ECS.Services
             return EvaluateCard(card).IsEligible;
         }
 
-        public static void SetPledgedThisActionPhase(EntityManager entityManager, bool value)
-        {
-            var phaseEntity = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
-            if (phaseEntity == null) return;
-
-            var state = phaseEntity.GetComponent<PledgeAvailabilityState>();
-            if (state == null)
-            {
-                state = new PledgeAvailabilityState();
-                entityManager.AddComponent(phaseEntity, state);
-            }
-
-            state.PledgedThisActionPhase = value;
-        }
-
         private static PledgeAvailabilityResult Unavailable(PledgeAvailabilityFailure failure)
         {
             return new PledgeAvailabilityResult(false, failure);

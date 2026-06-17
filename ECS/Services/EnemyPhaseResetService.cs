@@ -143,8 +143,6 @@ namespace Crusaders30XX.ECS.Services
 			foreach (var card in entityManager.GetEntitiesWithComponent<CardData>().ToList())
 			{
 				CardTransientStateService.ClearAssignedBlockHotKey(entityManager, card);
-				RemoveIfPresent<Pledge>(entityManager, card);
-				RemoveIfPresent<PledgePreview>(entityManager, card);
 				RemoveIfPresent<SelectedForPayment>(entityManager, card);
 				RemoveIfPresent<MarkedForSpecificDiscard>(entityManager, card);
 				RemoveIfPresent<MarkedForReturnToDeck>(entityManager, card);
