@@ -1,0 +1,20 @@
+[
+  { "id": "berserker", "name": "Berserker" },
+  { "id": "cactus", "name": "Cactus" },
+  { "id": "cinderbolt_demon", "name": "Cinderbolt Demon" },
+  { "id": "demon", "name": "Demon" },
+  { "id": "dust_wuurm", "name": "Dust Wuurm" },
+  { "id": "fire_skeleton", "name": "Fire Skeleton" },
+  { "id": "glacial_guardian", "name": "Glacial Guardian" },
+  { "id": "ice_demon", "name": "Ice Demon" },
+  { "id": "mummy", "name": "Mummy" },
+  { "id": "ogre", "name": "Ogre" },
+  { "id": "sand_golem", "name": "Sand Golem" },
+  { "id": "skeleton", "name": "Skeleton" },
+  { "id": "skeletal_archer", "name": "Skeletal Archer" },
+  { "id": "shadow", "name": "Shadow" },
+  { "id": "sorcerer", "name": "Sorcerer" },
+  { "id": "spider", "name": "Spider" },
+  { "id": "succubus", "name": "Succubus" },
+  { "id": "wyvern", "name": "Wyvern" }
+]

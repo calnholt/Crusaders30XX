@@ -1,0 +1,9 @@
+[
+  { "id": "helm_of_seeing", "name": "Helm of Seeing" },
+  { "id": "knightly_helm", "name": "Knightly Helm" },
+  { "id": "knightly_chest", "name": "Knightly Chest" },
+  { "id": "pierced_heart_plate", "name": "Pierced Heart Plate" },
+  { "id": "knightly_gauntlets", "name": "Knightly Gauntlets" },
+  { "id": "purging_bracers", "name": "Purging Bracers" },
+  { "id": "knightly_grieves", "name": "Knightly Grieves" }
+]

@@ -29,6 +29,8 @@ persistent card states:
 - frozen
 - brittle
 - update sealed to reduce on block ONLY, can be pledged
+- cursed - becomes 3block 1AP prayer - Remove the curse from this card.
+
 
 
 cards to delete:

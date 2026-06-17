@@ -1,0 +1,4 @@
+interface:
+  display_name: "ShaderToy Shader Creation"
+  short_description: "Create structured ShaderToy GLSL prototypes"
+  default_prompt: "Use $shadertoy-shader-creation to create a ShaderToy-style GLSL prototype for a new card or scene effect."

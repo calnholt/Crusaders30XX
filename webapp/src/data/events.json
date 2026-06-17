@@ -1,0 +1,12 @@
+[
+  {
+    "id": "icebound_tithe",
+    "name": "The Icebound Tithe",
+    "text": "A frost-bound reliquary hums at the roadside. It offers coin if you surrender cards to the cold."
+  },
+  {
+    "id": "pruned_vocation",
+    "name": "The Pruned Vocation",
+    "text": "A stern pilgrim offers to carve weakness from your deck by taking cards from your first vows."
+  }
+]
