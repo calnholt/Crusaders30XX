@@ -36,18 +36,14 @@ namespace Crusaders30XX.ECS.Systems
         {
             get
             {
-                var e = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-                var s = e?.GetComponent<CardVisualSettings>();
-                return s?.CardWidth ?? 250;
+                return CardGeometryService.GetSettings(EntityManager)?.CardWidth ?? CardGeometrySettings.DefaultWidth;
             }
         }
         private int GridCellH
         {
             get
             {
-                var e = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-                var s = e?.GetComponent<CardVisualSettings>();
-                return s?.CardHeight ?? 350;
+                return CardGeometryService.GetSettings(EntityManager)?.CardHeight ?? CardGeometrySettings.DefaultHeight;
             }
         }
         private const int GridGap = 12;
@@ -119,8 +115,7 @@ namespace Crusaders30XX.ECS.Systems
                     int cursorY = rect.Y + Padding;
                     cursorY += (int)(_font.LineSpacing * TitleScale) + Padding;
 
-                    var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-                    var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+                    var cvs = CardGeometryService.GetSettings(EntityManager);
                     int topNudge = Math.Max(0, cvs?.CardOffsetYExtra ?? 0);
 
                     int maxCols = Math.Max(1, (rect.Width - Padding * 2 + GridGap) / (GridCellW + GridGap));
@@ -204,8 +199,7 @@ namespace Crusaders30XX.ECS.Systems
             int gridX = rect.X + Padding;
             int gridY = cursorY;
             // Nudge first row down by the card's internal top offset so its top isn't clipped
-            var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-            var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+            var cvs = CardGeometryService.GetSettings(EntityManager);
             int topNudge = Math.Max(0, cvs?.CardOffsetYExtra ?? 0);
             gridY += topNudge;
             int maxCols = Math.Max(1, (rect.Width - Padding * 2 + GridGap) / (GridCellW + GridGap));

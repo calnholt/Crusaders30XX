@@ -23,7 +23,6 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 
         public void Setup(DisplaySnapshotContext ctx, string[] args)
         {
-            CardDisplayToggle.UseV2 = true;
             _variant = QuestRewardSnapshotVariant.Parse(args);
 
             if (_variant.HasCardReward)

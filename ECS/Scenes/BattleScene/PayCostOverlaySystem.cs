@@ -24,7 +24,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font = FontSingleton.TitleFont;
         private readonly Texture2D _pixel;
-        private CardVisualSettings _cardSettings;
+        private CardGeometrySettings _cardSettings;
 
         [DebugEditable(DisplayName = "Fade In (s)", Step = 0.05f, Min = 0.01f, Max = 1.0f)]
         public float FadeInDurationSec { get; set; } = 0.25f;
@@ -883,27 +883,8 @@ namespace Crusaders30XX.ECS.Systems
 
         private Rectangle GetCardVisualRectScaled(Vector2 position, float scale)
         {
-            // Mirror CardDisplaySystem.GetCardVisualRectScaled
-            if (_cardSettings == null)
-            {
-                _cardSettings = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-            }
-            if (_cardSettings == null)
-            {
-                // Fallback reasonable 2:3 card ratio
-                int w = (int)Math.Round(200 * scale);
-                int h = (int)Math.Round(300 * scale);
-                return new Rectangle((int)position.X - w / 2, (int)position.Y - h / 2, w, h);
-            }
-            int rw = (int)Math.Round(_cardSettings.CardWidth * scale);
-            int rh = (int)Math.Round(_cardSettings.CardHeight * scale);
-            int offsetY = (int)Math.Round((_cardSettings.CardOffsetYExtra) * scale);
-            return new Rectangle(
-                (int)position.X - rw / 2,
-                (int)position.Y - (rh / 2 + offsetY),
-                rw,
-                rh
-            );
+            _cardSettings ??= CardGeometryService.GetSettings(EntityManager);
+            return CardGeometryService.GetVisualRect(_cardSettings, position, scale);
         }
 
         private void RestoreHandInteractables()

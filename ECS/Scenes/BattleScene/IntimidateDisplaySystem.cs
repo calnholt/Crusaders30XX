@@ -23,7 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private Texture2D _pixel;
 		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
-		private CardVisualSettings _settings;
+		private CardGeometrySettings _settings;
 		private readonly System.Collections.Generic.Dictionary<int, AnimState> _animByEntityId = new();
 
 		[DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
@@ -136,16 +136,8 @@ namespace Crusaders30XX.ECS.Systems
 
 	private Rectangle ComputeCardBounds(Vector2 position)
 	{
-		_settings ??= EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-		int cw = _settings?.CardWidth ?? 250;
-		int ch = _settings?.CardHeight ?? 350;
-		int offsetYExtra = _settings?.CardOffsetYExtra ?? (int)Math.Round((_settings?.UIScale ?? 1f) * 25);
-		return new Rectangle(
-			(int)position.X - cw / 2,
-			(int)position.Y - (ch / 2 + offsetYExtra),
-			cw,
-			ch
-		);
+		_settings ??= CardGeometryService.GetSettings(EntityManager);
+		return CardGeometryService.GetVisualRect(_settings, position);
 	}
 
 		private void OnCardRenderEvent(CardRenderEvent evt)
@@ -165,8 +157,8 @@ namespace Crusaders30XX.ECS.Systems
 			var textSizeUnscaled = _font.MeasureString(IntimidateText);
 
 			// Get or create rounded rect texture for overlay (match the card's visual radius)
-			_settings ??= EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-			int baseRadius = OverlayCornerRadius > 0 ? OverlayCornerRadius : (_settings?.CardCornerRadius ?? 12);
+			_settings ??= CardGeometryService.GetSettings(EntityManager);
+			int baseRadius = OverlayCornerRadius > 0 ? OverlayCornerRadius : (_settings?.CardCornerRadius ?? CardGeometrySettings.DefaultCornerRadius);
 			var overlayKey = (bounds.Width, bounds.Height, baseRadius);
 			if (!_roundedRectCache.TryGetValue(overlayKey, out var roundedRect))
 			{

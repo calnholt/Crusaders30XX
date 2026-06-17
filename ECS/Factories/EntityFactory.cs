@@ -201,33 +201,17 @@ namespace Crusaders30XX.ECS.Factories
             return entity;
         }
 
-        public static Entity CreateCardVisualSettings(World world)
+        public static Entity CreateCardGeometrySettings(World world)
         {
-            float sU = 1.0f; // starting UI scale
-            bool v2 = CardDisplayToggle.UseV2;
-            int w = v2 ? CardVisualSettings.V2Width : CardVisualSettings.V1Width;
-            int h = v2 ? CardVisualSettings.V2Height : CardVisualSettings.V1Height;
-            int cr = v2 ? CardVisualSettings.V2CornerRadius : CardVisualSettings.V1CornerRadius;
-            var entity = world.CreateEntity("CardVisualSettings");
-            world.AddComponent(entity, new CardVisualSettings
+            var entity = world.CreateEntity("CardGeometrySettings");
+            world.AddComponent(entity, new CardGeometrySettings
             {
-                UIScale = sU,
-                CardWidth = (int)Math.Round(w * sU),
-                CardHeight = (int)Math.Round(h * sU),
-                CardOffsetYExtra = (int)Math.Round(25 * sU),
-                CardGap = (int)Math.Round(-20 * sU),
-                CardBorderThickness = (int)Math.Max(0, Math.Round(0 * sU)),
-                CardCornerRadius = (int)Math.Max(2, Math.Round(cr * sU)),
-                HighlightBorderThickness = (int)Math.Max(1, Math.Round(5 * sU)),
-                TextMarginX = (int)Math.Round(16 * sU),
-                TextMarginY = (int)Math.Round(16 * sU),
-                NameScale = 0.155f * sU,
-                CostScale = 0.6f * sU,
-                DescriptionScale = 0.115f * sU,
-                BlockScale = 0.5f * sU,
-                BlockNumberScale = 0.225f * sU,
-                BlockNumberMarginX = (int)Math.Round(14 * sU),
-                BlockNumberMarginY = (int)Math.Round(12 * sU)
+                CardWidth = CardGeometrySettings.DefaultWidth,
+                CardHeight = CardGeometrySettings.DefaultHeight,
+                CardOffsetYExtra = CardGeometrySettings.DefaultOffsetYExtra,
+                CardGap = CardGeometrySettings.DefaultGap,
+                CardCornerRadius = CardGeometrySettings.DefaultCornerRadius,
+                HighlightBorderThickness = CardGeometrySettings.DefaultHighlightBorderThickness
             });
             return entity;
         }

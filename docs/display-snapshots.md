@@ -38,7 +38,7 @@ to the fixture.
 ### Behavior (all fixtures)
 
 - Virtual resolution 1920×1080; no profiler, tooltips, debug menu, or cursor in the PNG
-- `CardDisplayToggle.UseV2` is set where needed for card rendering
+- Card snapshots use the canonical card renderer
 - Does not publish `LoadSceneEvent` — uses `SceneId.Snapshot` only
 - Optional launch flag `no-shaders` (e.g. `dotnet run -- snapshot card no-shaders`) disables GPU screen effects; PNGs are not comparable to full-effect baselines
 
@@ -48,9 +48,9 @@ to the fixture.
 
 | Fixture id | Display system | Purpose |
 |------------|----------------|---------|
-| `card` | Card display (V2) | Three color variants of one card on a green background |
+| `card` | Card display | Three color variants of one card on a green background |
 | `brittle-card` | Brittle card shader | One brittle card on a patterned backdrop for shader debugging |
-| `colorless-card` | Card display (V2) | Colorless cards across all three printed colors and cost-pip colors |
+| `colorless-card` | Card display | Colorless cards across all three printed colors and cost-pip colors |
 | `quest-reward-modal` | Quest reward modal | Quest complete overlay with deck reward offer lanes |
 | `waystation` | WayStation run setup | Run setup scene with default Sword/Easy selections |
 | `player-hud` | Production player HUD systems | Player HUD geometry and state variants |

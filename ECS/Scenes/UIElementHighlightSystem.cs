@@ -102,7 +102,7 @@ namespace Crusaders30XX.ECS.Systems
                     }
                     else
                     {
-                        targetRect = ComputeCardBounds(e, t.Position);
+                        targetRect = CardGeometryService.GetVisualRect(EntityManager, t.Position);
                     }
                 }
                 else
@@ -142,21 +142,6 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private Rectangle ComputeCardBounds(Entity cardEntity, Vector2 position)
-        {
-            var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-            var s = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
-            int cw = s?.CardWidth ?? 250;
-            int ch = s?.CardHeight ?? 350;
-            int offsetYExtra = s?.CardOffsetYExtra ?? (int)Math.Round((s?.UIScale ?? 1f) * 25);
-            return new Rectangle(
-                (int)position.X - cw / 2,
-                (int)position.Y - (ch / 2 + offsetYExtra),
-                cw,
-                ch
-            );
-        }
-
         private void DrawHighlight(Entity entity, Rectangle targetRect, float rotation, GameTime gameTime)
         {
             var esEntity = EntityManager.GetEntitiesWithComponent<EquipmentHighlightSettings>().FirstOrDefault();
@@ -173,10 +158,9 @@ namespace Crusaders30XX.ECS.Systems
             }
             else
             {
-                var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-                var s = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+                var s = CardGeometryService.GetSettings(EntityManager);
                 th = s?.HighlightBorderThickness ?? 5;
-                cornerRadius = s?.CardCornerRadius ?? 18;
+                cornerRadius = s?.CardCornerRadius ?? CardGeometrySettings.DefaultCornerRadius;
             }
 
             var highlightRect = new Rectangle(

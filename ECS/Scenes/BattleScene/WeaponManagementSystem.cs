@@ -56,8 +56,8 @@ namespace Crusaders30XX.ECS.Systems
 					var transform = weapon.GetComponent<Transform>();
 					if (tween != null && transform != null)
 					{
-						var cvs = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-						float cardW = cvs?.CardWidth ?? 250;
+						var cvs = CardGeometryService.GetSettings(EntityManager);
+						float cardW = cvs?.CardWidth ?? CardGeometrySettings.DefaultWidth;
 						var spawnPos = new Vector2(-(cardW * 1.5f), Game1.VirtualHeight);
 						tween.Current = spawnPos;
 						tween.Target = spawnPos;
@@ -189,8 +189,8 @@ namespace Crusaders30XX.ECS.Systems
 			string name = card.Name ?? card.CardId ?? "Weapon";
 			var e = EntityManager.CreateEntity($"Weapon");
 			// Spawn off-screen left so weapon flies in from the left
-			var cvs = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-			float cardW = cvs?.CardWidth ?? 250;
+			var cvs = CardGeometryService.GetSettings(EntityManager);
+			float cardW = cvs?.CardWidth ?? CardGeometrySettings.DefaultWidth;
 			var spawnPos = new Vector2(-(cardW * 1.5f), Game1.VirtualHeight);
 			var cd = new CardData
 			{
@@ -213,4 +213,3 @@ namespace Crusaders30XX.ECS.Systems
 
 	}
 }
-

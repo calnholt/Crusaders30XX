@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -21,7 +22,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly GraphicsDevice _graphicsDevice;
         private readonly Texture2D _pledgeTexture;
-        private CardVisualSettings _settings;
+        private CardGeometrySettings _settings;
 
         [DebugEditable(DisplayName = "Icon Scale", Step = 0.01f, Min = 0.01f, Max = 1.0f)]
         public float IconScale { get; set; } = 0.09f;
@@ -52,16 +53,8 @@ namespace Crusaders30XX.ECS.Systems
 
         private Rectangle ComputeCardBounds(Vector2 position)
         {
-            _settings ??= EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-            int cw = _settings?.CardWidth ?? 250;
-            int ch = _settings?.CardHeight ?? 350;
-            int offsetYExtra = _settings?.CardOffsetYExtra ?? (int)Math.Round((_settings?.UIScale ?? 1f) * 25);
-            return new Rectangle(
-                (int)position.X - cw / 2,
-                (int)position.Y - (ch / 2 + offsetYExtra),
-                cw,
-                ch
-            );
+            _settings ??= CardGeometryService.GetSettings(EntityManager);
+            return CardGeometryService.GetVisualRect(_settings, position);
         }
 
         private void OnCardRenderEvent(CardRenderEvent evt)
@@ -94,7 +87,7 @@ namespace Crusaders30XX.ECS.Systems
 
         private void DrawPledgeIcon(Entity card, Vector2 position, float cardScale, float cardRotation)
         {
-            var bounds = ComputeCardBounds(position);
+            var bounds = CardGeometryService.GetVisualRect(CardGeometryService.GetSettings(EntityManager), position, cardScale);
             var center = new Vector2(bounds.X + bounds.Width / 2f, bounds.Y + bounds.Height / 2f);
 
             float offsetY = IconOffsetY * cardScale;

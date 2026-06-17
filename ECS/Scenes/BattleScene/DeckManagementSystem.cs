@@ -222,8 +222,8 @@ namespace Crusaders30XX.ECS.Systems
             var transform = card.GetComponent<Transform>();
             if (transform != null)
             {
-                var cvs = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-                float cardW = cvs?.CardWidth ?? 250;
+                var cvs = CardGeometryService.GetSettings(EntityManager);
+                float cardW = cvs?.CardWidth ?? CardGeometrySettings.DefaultWidth;
                 var spawn = new Vector2(Game1.VirtualWidth + (cardW * 1.5f), (float)Game1.VirtualHeight);
                 transform.Position = spawn;
                 transform.Rotation = 0f;

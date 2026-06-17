@@ -21,7 +21,6 @@ public sealed class BrittleCardSnapshotFixture : IDisplaySnapshotFixture
 
     public void Setup(DisplaySnapshotContext ctx, string[] args)
     {
-        CardDisplayToggle.UseV2 = true;
 
         string requestedId = args.Length > 0 ? args[0] : DefaultCardId;
         if (CardFactory.Create(requestedId) == null)

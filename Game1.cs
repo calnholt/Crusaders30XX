@@ -27,7 +27,6 @@ public class Game1 : Game
     private EntityListOverlaySystem _entityListOverlaySystem;
     private TransitionDisplaySystem _transitionDisplaySystem;
     private CardDisplaySystem _cardDisplaySystem;
-    private CardDisplaySystemV2 _cardDisplaySystemV2;
     private BrittleDisplaySystem _brittleDisplaySystem;
     private PlayerInputSystem _playerInputSystem;
     private UIInteractionSystem _uiInteractionSystem;
@@ -168,7 +167,7 @@ public class Game1 : Game
             sceneEntity = _world.CreateEntity("SceneState");
             _world.AddComponent(sceneEntity, new SceneState { Current = SceneId.TitleMenu });
         }
-        EntityFactory.CreateCardVisualSettings(_world);
+        EntityFactory.CreateCardGeometrySettings(_world);
         // Add parent scene systems only
         _drippingBloodDisplaySystem = new DrippingBloodDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _titleMenuDisplaySystem = new TitleMenuDisplaySystem(_world, _spriteBatch);
@@ -181,7 +180,6 @@ public class Game1 : Game
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
-        _cardDisplaySystemV2 = new CardDisplaySystemV2(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _brittleDisplaySystem = new BrittleDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _playerInputSystem = new PlayerInputSystem(
@@ -227,7 +225,6 @@ public class Game1 : Game
         _world.AddSystem(_entityListOverlaySystem);
         _world.AddSystem(_transitionDisplaySystem);
         _world.AddSystem(_cardDisplaySystem);
-        _world.AddSystem(_cardDisplaySystemV2);
         _world.AddSystem(_brittleDisplaySystem);
         _world.AddSystem(_dialogDisplaySystem);
         _world.AddSystem(_playerInputSystem, SystemUpdatePhase.Input);
@@ -289,7 +286,7 @@ public class Game1 : Game
 
         // Mark persistent entities
         _world.AddComponent(sceneEntity, new DontDestroyOnLoad());
-        var cvsEntity = _world.EntityManager.GetEntity("CardVisualSettings");
+        var cvsEntity = _world.EntityManager.GetEntity("CardGeometrySettings");
         if (cvsEntity != null)
         {
             _world.AddComponent(cvsEntity, new DontDestroyOnLoad());

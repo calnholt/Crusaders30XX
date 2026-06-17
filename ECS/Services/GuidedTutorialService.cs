@@ -65,8 +65,6 @@ namespace Crusaders30XX.ECS.Services
 				WillShowDialog = true,
 			});
 			world.AddComponent(queuedEntity, new DontDestroyOnLoad());
-
-			CardDisplayToggle.UseV2 = true;
 			EventManager.Publish(new ShowTransition { Scene = SceneId.Battle, SkipHold = true });
 		}
 

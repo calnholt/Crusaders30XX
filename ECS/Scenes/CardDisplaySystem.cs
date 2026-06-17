@@ -1,177 +1,507 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Objects.Cards;
+using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Singletons;
+using Crusaders30XX.ECS.Utils;
+using Crusaders30XX.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
-using Crusaders30XX.ECS.Rendering;
-using Crusaders30XX.Diagnostics;
-using System.Collections.Generic;
-using System.Linq;
-using Crusaders30XX.ECS.Singletons;
-using Crusaders30XX.ECS.Objects.Cards;
-using Crusaders30XX.ECS.Data.Save;
-using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Systems
 {
-    /// <summary>
-    /// System for rendering individual cards with their visual elements
-    /// </summary>
     [DebugTab("Card Display")]
-    public class CardDisplaySystem : CardDisplayBase
+    public class CardDisplaySystem : Core.System
     {
-        // Adjustable overrides; when nonzero, override settings component
-        [DebugEditable(DisplayName = "Card Corner Radius", Step = 1, Min = 0, Max = 64)]
-        public int CornerRadiusOverride { get; set; } = 0;
-        [DebugEditable(DisplayName = "Card Border Thickness", Step = 1, Min = 0, Max = 32)]
-        public int BorderThicknessOverride { get; set; } = 1;
+        private readonly GraphicsDevice _graphicsDevice;
+        private readonly SpriteBatch _spriteBatch;
+        private readonly ContentManager _content;
+        private readonly Dictionary<string, Texture2D> _textureCache = new();
+        private readonly Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
+        private readonly Dictionary<(int w, int h, int rTL, int rTR, int rBR, int rBL), Texture2D> _perCornerRoundedRectCache = new();
+        private readonly Texture2D _pixelTexture;
+        private SpriteFont _nameFont = FontSingleton.TitleFont;
+        private SpriteFont _bodyFont = FontSingleton.ChakraPetchFont;
+        private CardGeometrySettings _settings;
 
-        // Debug-adjustable shield icon layout
-        [DebugEditable(DisplayName = "Shield Icon Height", Step = 1, Min = 8, Max = 128)]
-        public int ShieldIconHeight { get; set; } = 36;
-        [DebugEditable(DisplayName = "Shield Icon Gap", Step = 1, Min = 0, Max = 64)]
-        public int ShieldIconGap { get; set; } = 4;
-        [DebugEditable(DisplayName = "Shield Icon Offset X", Step = 1, Min = -200, Max = 200)]
-        public int ShieldIconOffsetX { get; set; } = 0;
-        [DebugEditable(DisplayName = "Shield Icon Offset Y", Step = 1, Min = -200, Max = 200)]
-        public int ShieldIconOffsetY { get; set; } = -6;
+        // Stripe
+        [DebugEditable(DisplayName = "Stripe Width", Step = 1, Min = 0, Max = 30)]
+        public int StripeWidth { get; set; } = 6;
 
-        // Debug-adjustable cost pip visuals
-        [DebugEditable(DisplayName = "Cost Pip Diameter", Step = 1, Min = 6, Max = 128)]
-        public int CostPipDiameter { get; set; } = 21;
-        [DebugEditable(DisplayName = "Cost Pip Gap", Step = 1, Min = 0, Max = 64)]
+        // Stat Gutter
+        [DebugEditable(DisplayName = "Gutter X", Step = 1, Min = 0, Max = 60)]
+        public int GutterX { get; set; } = 6;
+        [DebugEditable(DisplayName = "Gutter Width", Step = 1, Min = 10, Max = 120)]
+        public int GutterWidth { get; set; } = 55;
+        [DebugEditable(DisplayName = "Gutter Top Y", Step = 1, Min = 30, Max = 100)]
+        public int GutterTopY { get; set; } = 63;
+
+        // Title Band
+        [DebugEditable(DisplayName = "Title Band Pad Top", Step = 1, Min = 0, Max = 30)]
+        public int TitleBandPadTop { get; set; } = 10;
+        [DebugEditable(DisplayName = "Title Band Pad Left", Step = 1, Min = 0, Max = 30)]
+        public int TitleBandPadLeft { get; set; } = 12;
+        [DebugEditable(DisplayName = "Title Band Pad Right", Step = 1, Min = 0, Max = 30)]
+        public int TitleBandPadRight { get; set; } = 12;
+        [DebugEditable(DisplayName = "Type Row Margin Top", Step = 1, Min = 0, Max = 12)]
+        public int TypeRowMarginTop { get; set; } = 2;
+        [DebugEditable(DisplayName = "Rule Margin Top", Step = 1, Min = 0, Max = 12)]
+        public int RuleMarginTop { get; set; } = 6;
+
+        // Cost Pips (Diamond)
+        [DebugEditable(DisplayName = "Cost Pip Size", Step = 1, Min = 4, Max = 20)]
+        public int CostPipSize { get; set; } = 8;
+        [DebugEditable(DisplayName = "Cost Pip Gap", Step = 1, Min = 0, Max = 12)]
         public int CostPipGap { get; set; } = 6;
-        [DebugEditable(DisplayName = "Cost Pip Outline Fraction", Step = 0.01f, Min = 0f, Max = 0.5f)]
-        public float CostPipOutlineFrac { get; set; } = 0.13f;
+        [DebugEditable(DisplayName = "Cost Label Gap", Step = 1, Min = 0, Max = 20)]
+        public int CostLabelGap { get; set; } = 6;
+        [DebugEditable(DisplayName = "Cost Label Font Scale", Step = 0.01f, Min = 0.02f, Max = 0.2f)]
+        public float CostLabelFontScale { get; set; } = 0.065f;
+        [DebugEditable(DisplayName = "Cost Pip Outline Frac", Step = 0.01f, Min = 0.0f, Max = 0.4f)]
+        public float CostPipOutlineFrac { get; set; } = 0.15f;
+        [DebugEditable(DisplayName = "Cost Pip Flash Min Alpha", Step = 0.01f, Min = 0.2f, Max = 0.5f)]
+        public float CostPipFlashMinAlpha { get; set; } = 0.2f;
+        [DebugEditable(DisplayName = "Cost Pip Flash Max Alpha", Step = 0.01f, Min = 0.2f, Max = 0.5f)]
+        public float CostPipFlashMaxAlpha { get; set; } = 0.5f;
+        [DebugEditable(DisplayName = "Cost Pip Flash Hz", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
+        public float CostPipFlashHz { get; set; } = 0.3f;
 
-        // Debug-adjustable AP text
-        [DebugEditable(DisplayName = "AP Text Scale", Step = 0.05f, Min = 0.3f, Max = 2.0f)]
-        public float APTextScale { get; set; } = 0.125f;
-        [DebugEditable(DisplayName = "AP Bottom Margin Y", Step = 1, Min = 0, Max = 200)]
-        public int APBottomMarginY { get; set; } = 14;
-        [DebugEditable(DisplayName = "AP Offset X", Step = 1, Min = -200, Max = 200)]
-        public int APOffsetX { get; set; } = 0;
+        private float _elapsedTime;
+        private readonly Dictionary<CardType, Texture2D> _typeIconTextures = new();
 
-        // Debug-adjustable block delta text
-        [DebugEditable(DisplayName = "Block Delta Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
-        public float BlockDeltaScale { get; set; } = 0.09f;
-        [DebugEditable(DisplayName = "Block Delta Gap X", Step = 1, Min = -100, Max = 200)]
-        public int BlockDeltaGapX { get; set; } = 1;
-        [DebugEditable(DisplayName = "Block Delta Offset X", Step = 1, Min = -200, Max = 200)]
-        public int BlockDeltaOffsetX { get; set; } = 0;
-        [DebugEditable(DisplayName = "Block Delta Offset Y", Step = 1, Min = -200, Max = 200)]
-        public int BlockDeltaOffsetY { get; set; } = -5;
+        // Chip Layout
+        [DebugEditable(DisplayName = "Chip Size", Step = 1, Min = 20, Max = 80)]
+        public int ChipSize { get; set; } = 38;
+        [DebugEditable(DisplayName = "Chip Corner Radius", Step = 1, Min = 0, Max = 16)]
+        public int ChipCornerRadius { get; set; } = 4;
+        [DebugEditable(DisplayName = "Chip Column X", Step = 1, Min = 0, Max = 60)]
+        public int ChipColumnX { get; set; } = 13;
+        [DebugEditable(DisplayName = "Chip Column Top Y", Step = 1, Min = 0, Max = 100)]
+        public int ChipColumnTopY { get; set; } = 71;
+        [DebugEditable(DisplayName = "Chip Slot Height", Step = 1, Min = 40, Max = 100)]
+        public int ChipSlotHeight { get; set; } = 72;
+        [DebugEditable(DisplayName = "Chip Border Thickness", Step = 1, Min = 1, Max = 6)]
+        public int ChipBorderThickness { get; set; } = 3;
+        [DebugEditable(DisplayName = "Chip Value Font Scale", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
+        public float ChipValueFontScale { get; set; } = 0.22f;
+        [DebugEditable(DisplayName = "Chip Width", Step = 1, Min = 20, Max = 80)]
+        public int ChipWidth { get; set; } = 42;
+        [DebugEditable(DisplayName = "Chip Gap", Step = 1, Min = 0, Max = 20)]
+        public int ChipGap { get; set; } = 4;
+        [DebugEditable(DisplayName = "Chip Column Bottom Pad", Step = 1, Min = 0, Max = 60)]
+        public int ChipColumnBottomPad { get; set; } = 14;
 
-        // Debug-adjustable damage trapezoid and text
-        [DebugEditable(DisplayName = "Damage Trap Width", Step = 1, Min = 10, Max = 400)]
-        public int DamageTrapWidth { get; set; } = 93;
-        [DebugEditable(DisplayName = "Damage Trap Height", Step = 1, Min = 8, Max = 200)]
-        public int DamageTrapHeight { get; set; } = 36;
-        [DebugEditable(DisplayName = "Damage Trap Left Margin X", Step = 1, Min = -200, Max = 200)]
-        public int DamageTrapLeftMarginX { get; set; } = 4;
-        [DebugEditable(DisplayName = "Damage Trap Bottom Margin Y", Step = 1, Min = 0, Max = 200)]
-        public int DamageTrapBottomMarginY { get; set; } = 57;
-        [DebugEditable(DisplayName = "Damage Trap Left Side Offset", Step = 1, Min = -200, Max = 200)]
-        public int DamageTrapLeftSideOffset { get; set; } = 0;
-        [DebugEditable(DisplayName = "Damage Trap Top Angle", Step = 1, Min = -89, Max = 89)]
-        public float DamageTrapTopAngleDeg { get; set; } = 0f;
-        [DebugEditable(DisplayName = "Damage Trap Right Angle", Step = 1, Min = -89, Max = 89)]
-        public float DamageTrapRightAngleDeg { get; set; } = -20f;
-        [DebugEditable(DisplayName = "Damage Trap Bottom Angle", Step = 1, Min = -89, Max = 89)]
-        public float DamageTrapBottomAngleDeg { get; set; } = -5f;
-        [DebugEditable(DisplayName = "Damage Trap Left Angle", Step = 1, Min = -89, Max = 89)]
-        public float DamageTrapLeftAngleDeg { get; set; } = 10f;
-        [DebugEditable(DisplayName = "Damage Text Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
-        public float DamageTextScale { get; set; } = 0.18f;
-        [DebugEditable(DisplayName = "Damage Text Offset X", Step = 1, Min = -200, Max = 200)]
-        public int DamageTextOffsetX { get; set; } = -7;
-        [DebugEditable(DisplayName = "Damage Text Offset Y", Step = 1, Min = -200, Max = 200)]
-        public int DamageTextOffsetY { get; set; } = 0;
-        [DebugEditable(DisplayName = "Damage Delta Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
-        public float DamageDeltaScale { get; set; } = 0.1f;
+        // Label Slab
+        [DebugEditable(DisplayName = "Label Slab Height", Step = 1, Min = 8, Max = 30)]
+        public int LabelSlabHeight { get; set; } = 14;
+        [DebugEditable(DisplayName = "Label Slab Font Scale", Step = 0.001f, Min = 0.02f, Max = 0.2f)]
+        public float LabelSlabFontScale { get; set; } = 0.058f;
 
-        // Debug-adjustable card art settings
-        [DebugEditable(DisplayName = "Card Art Width", Step = 1, Min = 10, Max = 200)]
-        public int CardArtWidth { get; set; } = 60;
-        [DebugEditable(DisplayName = "Card Art Height", Step = 1, Min = 10, Max = 200)]
-        public int CardArtHeight { get; set; } = 60;
-        [DebugEditable(DisplayName = "Card Art Offset X", Step = 1, Min = -200, Max = 200)]
-        public int CardArtOffsetX { get; set; } = 22;
-        [DebugEditable(DisplayName = "Card Art Offset Y", Step = 1, Min = -200, Max = 200)]
-        public int CardArtOffsetY { get; set; } = 17;
+        // Delta Slab
+        [DebugEditable(DisplayName = "Slab Width", Step = 1, Min = 20, Max = 80)]
+        public int SlabWidth { get; set; } = 42;
+        [DebugEditable(DisplayName = "Slab Height", Step = 1, Min = 8, Max = 30)]
+        public int SlabHeight { get; set; } = 16;
+        [DebugEditable(DisplayName = "Slab Corner Radius", Step = 1, Min = 0, Max = 16)]
+        public int SlabCornerRadius { get; set; } = 4;
+        [DebugEditable(DisplayName = "Slab Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.5f)]
+        public float SlabFontScale { get; set; } = 0.08f;
 
-        // Debug-adjustable art trapezoid background
-        [DebugEditable(DisplayName = "Art Trap Width", Step = 1, Min = 10, Max = 400)]
-        public int ArtTrapWidth { get; set; } = 91;
-        [DebugEditable(DisplayName = "Art Trap Height", Step = 1, Min = 10, Max = 400)]
-        public int ArtTrapHeight { get; set; } = 87;
-        [DebugEditable(DisplayName = "Art Trap Offset X", Step = 1, Min = -200, Max = 200)]
-        public int ArtTrapOffsetX { get; set; } = 6;
-        [DebugEditable(DisplayName = "Art Trap Offset Y", Step = 1, Min = -200, Max = 200)]
-        public int ArtTrapOffsetY { get; set; } = 4;
-        [DebugEditable(DisplayName = "Art Trap Left Side Offset", Step = 1, Min = -200, Max = 200)]
-        public int ArtTrapLeftSideOffset { get; set; } = -4;
-        [DebugEditable(DisplayName = "Art Trap Top Angle", Step = 1, Min = -89, Max = 89)]
-        public float ArtTrapTopAngleDeg { get; set; } = -3f;
-        [DebugEditable(DisplayName = "Art Trap Right Angle", Step = 1, Min = -89, Max = 89)]
-        public float ArtTrapRightAngleDeg { get; set; } = -10f;
-        [DebugEditable(DisplayName = "Art Trap Bottom Angle", Step = 1, Min = -89, Max = 89)]
-        public float ArtTrapBottomAngleDeg { get; set; } = -6f;
-        [DebugEditable(DisplayName = "Art Trap Left Angle", Step = 1, Min = -89, Max = 89)]
-        public float ArtTrapLeftAngleDeg { get; set; } = 10f;
+        // Content Area
+        [DebugEditable(DisplayName = "Content Margin Left", Step = 1, Min = 30, Max = 120)]
+        public int ContentMarginLeft { get; set; } = 68;
+        [DebugEditable(DisplayName = "Content Pad Top", Step = 1, Min = 0, Max = 40)]
+        public int ContentPadTop { get; set; } = 4;
+        [DebugEditable(DisplayName = "Content Pad Right", Step = 1, Min = 0, Max = 40)]
+        public int ContentPadRight { get; set; } = 4;
+        [DebugEditable(DisplayName = "Type Icon Scale", Step = 0.01f, Min = 0.01f, Max = 2.0f)]
+        public float TypeIconScale { get; set; } = 0.13f;
+        [DebugEditable(DisplayName = "Type Icon Alpha", Step = 0.01f, Min = 0.0f, Max = 1.0f)]
+        public float TypeIconAlpha { get; set; } = 0.3f;
+        [DebugEditable(DisplayName = "Type Icon Offset Y", Step = 1, Min = 0, Max = 200)]
+        public int TypeIconOffsetY { get; set; } = 20;
 
-        // Debug-adjustable mastery meter settings
-        [DebugEditable(DisplayName = "Mastery Meter Offset X", Step = 1, Min = -200, Max = 200)]
-        public int MasteryMeterOffsetX { get; set; } = 0;
-        [DebugEditable(DisplayName = "Mastery Meter Offset Y", Step = 1, Min = -200, Max = 200)]
-        public int MasteryMeterOffsetY { get; set; } = -4;
-        [DebugEditable(DisplayName = "Mastery Meter Width", Step = 1, Min = 10, Max = 200)]
-        public int MasteryMeterWidth { get; set; } = 60;
-        [DebugEditable(DisplayName = "Mastery Meter Height", Step = 1, Min = 2, Max = 50)]
-        public int MasteryMeterHeight { get; set; } = 6;
-        [DebugEditable(DisplayName = "Mastery Meter Outline", Step = 1, Min = 0, Max = 10)]
-        public int MasteryMeterOutlineThickness { get; set; } = 1;
+        // Name
+        [DebugEditable(DisplayName = "Name Font Scale", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
+        public float NameFontScale { get; set; } = 0.14f;
+
+        // Rule Line
+        [DebugEditable(DisplayName = "Rule Height", Step = 1, Min = 1, Max = 6)]
+        public int RuleHeight { get; set; } = 2;
+
+        // Description
+        [DebugEditable(DisplayName = "Desc Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.5f)]
+        public float DescFontScale { get; set; } = 0.11f;
+
+        // Art
+        [DebugEditable(DisplayName = "Art Width", Step = 1, Min = 50, Max = 300)]
+        public int ArtWidth { get; set; } = 191;
+        [DebugEditable(DisplayName = "Art Height", Step = 1, Min = 50, Max = 300)]
+        public int ArtHeight { get; set; } = 166;
+        [DebugEditable(DisplayName = "Art Offset Right", Step = 1, Min = -60, Max = 60)]
+        public int ArtOffsetRight { get; set; } = -15;
+        [DebugEditable(DisplayName = "Art Offset Bottom", Step = 1, Min = -60, Max = 60)]
+        public int ArtOffsetBottom { get; set; } = -10;
+
+        // Responsive chip scaling
+        [DebugEditable(DisplayName = "Chip Scale With Title")]
+        public bool ChipScaleWithTitle { get; set; } = true;
+
+        [DebugEditable(DisplayName = "Colorless Background R", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessBackgroundR { get; set; } = 92;
+        [DebugEditable(DisplayName = "Colorless Background G", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessBackgroundG { get; set; } = 96;
+        [DebugEditable(DisplayName = "Colorless Background B", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessBackgroundB { get; set; } = 102;
+
+        [DebugEditable(DisplayName = "Colorless Primary Text R", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessPrimaryTextR { get; set; } = 235;
+        [DebugEditable(DisplayName = "Colorless Primary Text G", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessPrimaryTextG { get; set; } = 235;
+        [DebugEditable(DisplayName = "Colorless Primary Text B", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessPrimaryTextB { get; set; } = 235;
+
+        [DebugEditable(DisplayName = "Colorless Muted Text R", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessMutedTextR { get; set; } = 170;
+        [DebugEditable(DisplayName = "Colorless Muted Text G", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessMutedTextG { get; set; } = 170;
+        [DebugEditable(DisplayName = "Colorless Muted Text B", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessMutedTextB { get; set; } = 170;
+
+        [DebugEditable(DisplayName = "Colorless Surface R", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessSurfaceR { get; set; } = 58;
+        [DebugEditable(DisplayName = "Colorless Surface G", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessSurfaceG { get; set; } = 61;
+        [DebugEditable(DisplayName = "Colorless Surface B", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessSurfaceB { get; set; } = 66;
+
+        // Color Palettes
+        private static readonly Dictionary<CardData.CardColor, Color> BgColors = new()
+        {
+            { CardData.CardColor.White, new Color(220, 215, 206) },
+            { CardData.CardColor.Red,   new Color(78, 12, 12) },
+            { CardData.CardColor.Black, new Color(19, 19, 19) },
+        };
+
+        private static readonly Dictionary<CardData.CardColor, Color> StripeColors = new()
+        {
+            { CardData.CardColor.White, new Color(153, 153, 153) },
+            { CardData.CardColor.Red,   new Color(204, 34, 34) },
+            { CardData.CardColor.Black, new Color(51, 51, 51) },  // #333
+        };
+
+        private static readonly Dictionary<CardData.CardColor, Color> GutterColors = new()
+        {
+            { CardData.CardColor.White, Color.Black * 0.05f },
+            { CardData.CardColor.Red,   Color.Black * 0.22f },
+            { CardData.CardColor.Black, Color.White * 0.025f },
+        };
+
+        private static readonly Dictionary<CardData.CardColor, Color> NameTextColors = new()
+        {
+            { CardData.CardColor.White, new Color(26, 26, 26) },
+            { CardData.CardColor.Red,   new Color(240, 224, 216) },
+            { CardData.CardColor.Black, new Color(232, 228, 224) },
+        };
+
+        private static readonly Dictionary<CardData.CardColor, Color> TypeTextColors = new()
+        {
+            { CardData.CardColor.White, new Color(153, 153, 153) },
+            { CardData.CardColor.Red,   new Color(136, 68, 51) },
+            { CardData.CardColor.Black, new Color(85, 85, 85) },
+        };
+
+        private static readonly Dictionary<CardData.CardColor, Color> CostLabelColors = new()
+        {
+            { CardData.CardColor.White, new Color(153, 153, 153) },
+            { CardData.CardColor.Red,   new Color(136, 68, 51) },
+            { CardData.CardColor.Black, new Color(85, 85, 85) },
+        };
+
+        private static readonly Dictionary<CardData.CardColor, Color> CostPipAnyColors = new()
+        {
+            { CardData.CardColor.White, new Color(160, 152, 136) },
+            { CardData.CardColor.Red,   new Color(102, 102, 102) },
+            { CardData.CardColor.Black, new Color(85, 85, 85) },
+        };
+
+        private static readonly Color CostPipRedColor = new Color(204, 34, 34);
+        private static readonly Color CostPipWhiteColor = Color.White;
+        private static readonly Color CostPipBlackColor = new Color(19, 19, 19);
+
+        private static readonly Dictionary<CardData.CardColor, Color> CostPipOutlineColors = new()
+        {
+            { CardData.CardColor.White, Color.Black },
+            { CardData.CardColor.Red,   Color.Black },
+            { CardData.CardColor.Black, Color.White },
+        };
+
+        private static readonly Dictionary<CardData.CardColor, Color> RuleLineColors = new()
+        {
+            { CardData.CardColor.White, new Color(192, 184, 170) },
+            { CardData.CardColor.Red,   new Color(68, 32, 32) },
+            { CardData.CardColor.Black, new Color(51, 51, 51) },
+        };
+
+        // BLK Chip Colors (solid fill)
+        private static readonly Dictionary<CardData.CardColor, Color> BlkChipBgColors = new()
+        {
+            { CardData.CardColor.White, new Color(74, 122, 154) },
+            { CardData.CardColor.Red,   new Color(42, 74, 94) },
+            { CardData.CardColor.Black, new Color(42, 74, 94) },
+        };
+        private static readonly Dictionary<CardData.CardColor, Color> BlkChipTextColors = new()
+        {
+            { CardData.CardColor.White, Color.White },
+            { CardData.CardColor.Red,   new Color(176, 212, 232) },
+            { CardData.CardColor.Black, new Color(176, 212, 232) },
+        };
+
+        // BLK Label Slab Colors
+        private static readonly Dictionary<CardData.CardColor, Color> BlkLabelSlabBgColors = new()
+        {
+            { CardData.CardColor.White, new Color(40, 80, 120) * 0.2f },
+            { CardData.CardColor.Red,   new Color(50, 100, 140) * 0.4f },
+            { CardData.CardColor.Black, new Color(50, 100, 140) * 0.4f },
+        };
+        private static readonly Dictionary<CardData.CardColor, Color> BlkLabelSlabTextColors = new()
+        {
+            { CardData.CardColor.White, new Color(90, 138, 170) },
+            { CardData.CardColor.Red,   new Color(138, 184, 216) },
+            { CardData.CardColor.Black, new Color(138, 184, 216) },
+        };
+
+        // ATK Label Slab Colors (same for all variants)
+        private static readonly Color AtkLabelSlabBgColor = new Color(153, 26, 26);
+        private static readonly Color AtkLabelSlabTextColor = new Color(255, 204, 187);
+
+        // AP Chip Colors
+        private static readonly Dictionary<CardData.CardColor, Color> ApChipBgColors = new()
+        {
+            { CardData.CardColor.White, new Color(68, 68, 68) },
+            { CardData.CardColor.Red,   new Color(51, 14, 14) },
+            { CardData.CardColor.Black, Color.White * 0.15f },
+        };
+        private static readonly Dictionary<CardData.CardColor, Color> ApChipTextColors = new()
+        {
+            { CardData.CardColor.White, new Color(221, 221, 221) },
+            { CardData.CardColor.Red,   new Color(221, 68, 51) },
+            { CardData.CardColor.Black, new Color(224, 224, 224) },
+        };
+
+        // AP Label Slab Colors
+        private static readonly Dictionary<CardData.CardColor, Color> ApLabelSlabBgColors = new()
+        {
+            { CardData.CardColor.White, new Color(85, 85, 85) },
+            { CardData.CardColor.Red,   new Color(74, 26, 26) },
+            { CardData.CardColor.Black, Color.White * 0.06f },
+        };
+        private static readonly Dictionary<CardData.CardColor, Color> ApLabelSlabTextColors = new()
+        {
+            { CardData.CardColor.White, new Color(221, 221, 221) },
+            { CardData.CardColor.Red,   new Color(187, 102, 85) },
+            { CardData.CardColor.Black, new Color(136, 136, 136) },
+        };
+
+        // FREE Chip Colors
+        private static readonly Dictionary<CardData.CardColor, Color> FreeChipBorderColors = new()
+        {
+            { CardData.CardColor.White, new Color(170, 170, 170) },
+            { CardData.CardColor.Red,   new Color(136, 51, 34) },
+            { CardData.CardColor.Black, Color.White * 0.25f },
+        };
+        private static readonly Dictionary<CardData.CardColor, Color> FreeChipTextColors = new()
+        {
+            { CardData.CardColor.White, new Color(136, 136, 136) },
+            { CardData.CardColor.Red,   new Color(204, 85, 68) },
+            { CardData.CardColor.Black, new Color(204, 204, 204) },
+        };
+
+        // FREE Label Slab Colors
+        private static readonly Dictionary<CardData.CardColor, Color> FreeLabelSlabTextColors = new()
+        {
+            { CardData.CardColor.White, new Color(170, 170, 170) },
+            { CardData.CardColor.Red,   new Color(136, 51, 34) },
+            { CardData.CardColor.Black, new Color(136, 136, 136) },
+        };
 
         public CardDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
-            : base(entityManager, graphicsDevice, spriteBatch, content)
+            : base(entityManager)
         {
-            // Subscribe to card render events
+            _graphicsDevice = graphicsDevice;
+            _spriteBatch = spriteBatch;
+            _content = content;
+            _pixelTexture = new Texture2D(_graphicsDevice, 1, 1);
+            _pixelTexture.SetData(new[] { Color.White });
+
+            LoadTypeIconTextures();
             EventManager.Subscribe<CardRenderEvent>(OnCardRenderEvent);
             EventManager.Subscribe<CardRenderScaledEvent>(OnCardRenderScaledEvent);
             EventManager.Subscribe<CardRenderScaledRotatedEvent>(OnCardRenderScaledRotatedEvent);
         }
 
-        // V1 wrapper helpers that forward to base with settings dimensions
+        private void LoadTypeIconTextures()
+        {
+            if (_typeIconTextures.Count > 0) return;
+            _typeIconTextures[CardType.Attack] = GetOrLoadTexture("card_icon_attack");
+            _typeIconTextures[CardType.Prayer] = GetOrLoadTexture("card_icon_prayer");
+            _typeIconTextures[CardType.Block] = GetOrLoadTexture("card_icon_shield");
+            _typeIconTextures[CardType.Relic] = GetOrLoadTexture("card_icon_relic");
+        }
+
+        protected override IEnumerable<Entity> GetRelevantEntities()
+        {
+            return EntityManager.GetEntitiesWithComponent<CardData>();
+        }
+
+        protected override void UpdateEntity(Entity entity, GameTime gameTime)
+        {
+            var ids = EntityManager.GetEntitiesWithComponent<CardData>().Select(e => e.Id).ToList();
+            if (ids.Count == 0 || entity.Id != ids.Min()) return;
+            _elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+        }
+
         private float CW => GetSettings().CardWidth;
         private float CH => GetSettings().CardHeight;
 
-        private void V1DrawRect(Vector2 cardCenter, float rotation, Vector2 localOffset, float w, float h, Color color, float scale)
-            => DrawRectangleRotatedLocalScaled(cardCenter, rotation, localOffset, w, h, color, scale, CW, CH);
-
-        private void V1DrawTexture(Vector2 cardCenter, float rotation, Vector2 localOffset, Texture2D tex, Vector2 size, Color color, float scale)
-            => DrawTextureRotatedLocalScaled(cardCenter, rotation, localOffset, tex, size, color, scale, CW, CH);
-
-        private void V1DrawTextSingle(Vector2 cardCenter, float rotation, Vector2 localOffset, string text, Color color, float scale, float overallScale)
-            => DrawCardTextRotatedSingleScaled(cardCenter, rotation, localOffset, text, color, scale, overallScale, CW, CH);
-
-        private void V1DrawTextWrapped(Vector2 cardCenter, float rotation, Vector2 localOffset, string text, Color color, float scale, float overallScale, SpriteFont font)
+        private CardGeometrySettings GetSettings()
         {
-            var s = GetSettings();
-            float maxWidth = s.CardWidth * overallScale - (s.TextMarginX * overallScale * 2);
-            DrawCardTextWrappedRotatedScaled(cardCenter, rotation, localOffset, text, color, scale, overallScale, font, maxWidth, CW, CH);
+            _settings ??= CardGeometryService.GetSettings(EntityManager) ?? new CardGeometrySettings
+            {
+                CardWidth = CardGeometrySettings.DefaultWidth,
+                CardHeight = CardGeometrySettings.DefaultHeight,
+                CardOffsetYExtra = CardGeometrySettings.DefaultOffsetYExtra,
+                CardGap = CardGeometrySettings.DefaultGap,
+                CardCornerRadius = CardGeometrySettings.DefaultCornerRadius,
+                HighlightBorderThickness = CardGeometrySettings.DefaultHighlightBorderThickness
+            };
+            return _settings;
         }
 
-        private void V1DrawCirclePip(Vector2 cardCenter, float rotation, Vector2 localCenter, float radius, Color fill, Color? outline, float scale)
-            => DrawCirclePipRotatedScaled(cardCenter, rotation, localCenter, radius, fill, outline, scale, CW, CH, CostPipOutlineFrac);
+        private void DrawRectangleLocalScaled(Vector2 cc, float rot, Vector2 off, float w, float h, Color c, float s)
+            => DrawRectangleRotatedLocalScaled(cc, rot, off, w, h, c, s, CW, CH);
 
-        /// <summary>
-        /// Event handler for card render events
-        /// </summary>
+        private void DrawTextureLocalScaled(Vector2 cc, float rot, Vector2 off, Texture2D tex, Vector2 sz, Color c, float s)
+            => DrawTextureRotatedLocalScaled(cc, rot, off, tex, sz, c, s, CW, CH);
+
+        private void DrawTextLocalScaled(Vector2 cc, float rot, Vector2 off, string txt, Color c, float sc, float os, SpriteFont font = null)
+            => DrawCardTextRotatedSingleScaled(cc, rot, off, txt, c, sc, os, CW, CH, font);
+
+        private void DrawWrappedTextLocalScaled(Vector2 cc, float rot, Vector2 off, string txt, Color c, float sc, float os, SpriteFont font, float maxW)
+            => DrawCardTextWrappedRotatedScaled(cc, rot, off, txt, c, sc, os, font, maxW, CW, CH);
+
+        private void DrawRectangleRotatedLocalScaled(Vector2 cardCenter, float rotation, Vector2 localOffsetFromTopLeft, float width, float height, Color color, float visualScale, float cardW, float cardH)
+        {
+            float localX = -cardW * visualScale / 2f + localOffsetFromTopLeft.X;
+            float localY = -cardH * visualScale / 2f + localOffsetFromTopLeft.Y;
+            float cos = (float)Math.Cos(rotation);
+            float sin = (float)Math.Sin(rotation);
+            var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
+            var world = cardCenter + rotated;
+            _spriteBatch.Draw(_pixelTexture, world, null, color, rotation, Vector2.Zero, new Vector2(width, height), SpriteEffects.None, 0f);
+        }
+
+        private void DrawTextureRotatedLocalScaled(Vector2 cardCenter, float rotation, Vector2 localOffsetFromTopLeft, Texture2D texture, Vector2 targetSize, Color color, float visualScale, float cardW, float cardH)
+        {
+            if (texture == null) return;
+            float localX = -cardW * visualScale / 2f + localOffsetFromTopLeft.X;
+            float localY = -cardH * visualScale / 2f + localOffsetFromTopLeft.Y;
+            float cos = (float)Math.Cos(rotation);
+            float sin = (float)Math.Sin(rotation);
+            var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
+            var world = cardCenter + rotated;
+            var scale = new Vector2(targetSize.X / texture.Width, targetSize.Y / texture.Height);
+            _spriteBatch.Draw(texture, world, null, color, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+        }
+
+        private void DrawCardTextRotatedSingleScaled(Vector2 cardCenter, float rotation, Vector2 localOffsetFromTopLeft, string text, Color color, float scale, float overallScale, float cardW, float cardH, SpriteFont font = null)
+        {
+            try
+            {
+                font ??= _nameFont;
+                float localX = -cardW * overallScale / 2f + localOffsetFromTopLeft.X;
+                float localY = -cardH * overallScale / 2f + localOffsetFromTopLeft.Y;
+                float cos = (float)Math.Cos(rotation);
+                float sin = (float)Math.Sin(rotation);
+                var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
+                var world = cardCenter + rotated;
+                _spriteBatch.DrawString(font, text, world, color, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Font rendering error: {ex.Message}");
+            }
+        }
+
+        private void DrawCardTextWrappedRotatedScaled(Vector2 cardCenter, float rotation, Vector2 localOffsetFromTopLeft, string text, Color color, float scale, float overallScale, SpriteFont font, float maxWidth, float cardW, float cardH)
+        {
+            try
+            {
+                float lineHeight = font.LineSpacing * scale;
+                float startLocalX = -cardW * overallScale / 2f + localOffsetFromTopLeft.X;
+                float startLocalY = -cardH * overallScale / 2f + localOffsetFromTopLeft.Y;
+
+                float currentY = startLocalY;
+                foreach (var line in TextUtils.WrapText(font, text, scale, (int)maxWidth))
+                {
+                    var local = new Vector2(startLocalX, currentY);
+                    float cos = (float)Math.Cos(rotation);
+                    float sin = (float)Math.Sin(rotation);
+                    var rotated = new Vector2(local.X * cos - local.Y * sin, local.X * sin + local.Y * cos);
+                    var world = cardCenter + rotated;
+                    _spriteBatch.DrawString(font, line, world, color, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                    currentY += lineHeight;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Font rendering error: {ex.Message}");
+            }
+        }
+
+        private Texture2D GetRoundedRectTexture(int width, int height, int radius)
+        {
+            var key = (width, height, radius);
+            if (_roundedRectCache.TryGetValue(key, out var tex)) return tex;
+            var texture = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, width, height, radius);
+            _roundedRectCache[key] = texture;
+            return texture;
+        }
+
+        private Texture2D GetPerCornerRoundedRectTexture(int width, int height, int rTL, int rTR, int rBR, int rBL)
+        {
+            var key = (width, height, rTL, rTR, rBR, rBL);
+            if (_perCornerRoundedRectCache.TryGetValue(key, out var tex)) return tex;
+            var texture = RoundedRectTextureFactory.CreateRoundedRectPerCorner(_graphicsDevice, width, height, rTL, rTR, rBR, rBL);
+            _perCornerRoundedRectCache[key] = texture;
+            return texture;
+        }
+
+        private Texture2D GetOrLoadTexture(string assetName)
+        {
+            if (string.IsNullOrEmpty(assetName)) return null;
+            if (_textureCache.TryGetValue(assetName, out var tex) && tex != null) return tex;
+            try
+            {
+                var loaded = _content.Load<Texture2D>(assetName);
+                _textureCache[assetName] = loaded;
+                return loaded;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        // Event handlers
         private void OnCardRenderEvent(CardRenderEvent evt)
         {
-            if (CardDisplayToggle.UseV2) return;
             var t = evt.Card.GetComponent<Transform>();
             var ui = evt.Card.GetComponent<UIElement>();
             EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
@@ -180,7 +510,6 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
         {
-            if (CardDisplayToggle.UseV2) return;
             var transform = evt.Card.GetComponent<Transform>();
             Vector2 originalScale = transform?.Scale ?? Vector2.One;
             if (transform != null)
@@ -197,7 +526,7 @@ namespace Crusaders30XX.ECS.Systems
                 transform.Scale = originalScale;
                 transform.Rotation = originalRotation;
                 transform.Position = originalPosition;
-                if (ui != null) ui.Bounds = GetCardVisualRectScaled(evt.Position, evt.Scale);
+                if (ui != null) ui.Bounds = CardGeometryService.GetVisualRect(GetSettings(), evt.Position, evt.Scale);
             }
             else
             {
@@ -210,7 +539,6 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardRenderScaledRotatedEvent(CardRenderScaledRotatedEvent evt)
         {
-            if (CardDisplayToggle.UseV2) return;
             var transform = evt.Card.GetComponent<Transform>();
             Vector2 originalScale = transform?.Scale ?? Vector2.One;
             if (transform != null)
@@ -224,7 +552,7 @@ namespace Crusaders30XX.ECS.Systems
                 DrawCard(evt.Card, evt.Position);
                 transform.Scale = originalScale;
                 transform.Position = originalPosition;
-                if (ui != null) ui.Bounds = GetCardVisualRectScaled(evt.Position, evt.Scale);
+                if (ui != null) ui.Bounds = CardGeometryService.GetVisualRect(GetSettings(), evt.Position, evt.Scale);
             }
             else
             {
@@ -235,593 +563,730 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        /// <summary>
-        /// Draws a single card with all its visual elements
-        /// </summary>
         public void DrawCard(Entity entity, Vector2 position)
         {
             var cardData = entity.GetComponent<CardData>();
             var transform = entity.GetComponent<Transform>();
-
             if (cardData == null) return;
-            float visualScale = transform?.Scale.X ?? 1f;
 
-            var cardColor = GetCardColor(cardData.Color);
+            var settings = GetSettings();
+            float vs = transform?.Scale.X ?? 1f;
+            float rotation = transform?.Rotation ?? 0f;
             CardBase card = cardData.Card;
             bool hasDef = card != null;
+            var cc = cardData.Color;
+            bool isColorless = entity.HasComponent<Colorless>();
 
-            float rotation = transform?.Rotation ?? 0f;
-			Color bgColor = cardColor;
-			bool isWeaponDetected = false;
-            try
+            var rect = CardGeometryService.GetVisualRect(settings, position, vs);
+            var cardCenter = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
+
+            float sw = settings.CardWidth * vs;
+            float sh = settings.CardHeight * vs;
+
+            // 1. Background
+            int bgW = (int)Math.Round(settings.CardWidth * vs);
+            int bgH = (int)Math.Round(settings.CardHeight * vs);
+            var bgTex = GetRoundedRectTexture(bgW, bgH, (int)(settings.CardCornerRadius * vs));
+            var bgColor = isColorless
+                ? ColorlessBackground
+                : GetPaletteColor(BgColors, cc, new Color(220, 215, 206));
+            if ((card.IsWeapon || card.IsToken) && !isColorless)
             {
-                if (hasDef)
-                {
-                    if (card.IsWeapon)
-                    {
-						isWeaponDetected = true;
-                        var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
-                        var ui = entity.GetComponent<UIElement>();
-                        var payStateEntity = EntityManager.GetEntitiesWithComponent<PayCostOverlayState>().FirstOrDefault();
-                        var payState = payStateEntity?.GetComponent<PayCostOverlayState>();
-                        bool overlayActive = payState != null && (payState.IsOpen || payState.IsReturning);
-						if (!overlayActive)
-                        {
-							bgColor = new Color(215, 186, 147);
-                        }
-                    }
-                }
+                bgColor = new Color(215, 186, 147);
             }
-            catch { }
-            DrawCardBackgroundRotatedScaled(position, rotation, bgColor, visualScale);
+            _spriteBatch.Draw(bgTex,
+                position: cardCenter,
+                sourceRectangle: null,
+                color: bgColor,
+                rotation: rotation,
+                origin: new Vector2(bgTex.Width / 2f, bgTex.Height / 2f),
+                scale: Vector2.One,
+                effects: SpriteEffects.None,
+                layerDepth: 0f);
 
-            var cardRectForCenter = GetCardVisualRectScaled(position, visualScale);
-            var cardCenter = new Vector2(cardRectForCenter.X + cardRectForCenter.Width / 2f, cardRectForCenter.Y + cardRectForCenter.Height / 2f);
+            // 2. Stripe (full height, rounded on left to match card corners)
+            // var stripeColor = GetPaletteColor(StripeColors, cc, new Color(153, 153, 153));
+            // int stripeW = (int)(StripeWidth * vs);
+            // int stripeH = (int)sh;
+            // int stripeCR = (int)(settings.CardCornerRadius * vs);
+            // var stripeTex = GetPerCornerRoundedRectTexture(stripeW, stripeH, stripeCR, 0, 0, stripeCR);
+            // DrawTextureLocalScaled(cardCenter, rotation, new Vector2(0, 0), stripeTex, new Vector2(stripeW, stripeH), stripeColor, vs);
 
-            var textColor = isWeaponDetected ? Color.Black : GetCardTextColor(cardData.Color);
-            string displayName = hasDef ? (card.DisplayName ?? string.Empty) : string.Empty;
-            V1DrawTextWrapped(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, _settings.TextMarginY * visualScale), displayName, textColor, _settings.NameScale * visualScale, visualScale, _nameFont);
-
-            var defCosts = hasDef ? card.Cost.ToArray() : [];
-            DrawCostPipsScaled(cardCenter, rotation, (int)(_settings.TextMarginX * visualScale), (int)Math.Round((_settings.TextMarginY + 34 * _settings.UIScale) * visualScale), cardData.Color, defCosts, visualScale);
-
-            string displayText = hasDef ? card.GetDisplayText() : string.Empty;
-            V1DrawTextWrapped(cardCenter, rotation, new Vector2(_settings.TextMarginX * visualScale, (_settings.TextMarginY + (int)Math.Round(84 * _settings.UIScale)) * visualScale), displayText, textColor, _settings.DescriptionScale * visualScale, visualScale, _contentFont);
-
-            int effectiveDamage = 0;
-            int damageDelta = 0;
-            if (hasDef && card.Type == CardType.Attack)
+            // 3. Title Band (full width)
+            float titleBandEndY = 0f;
+            if (hasDef)
             {
-                try
-                {
-                    int baseDamage = Math.Max(0, card.Damage);
-                    try
-                    {
-                        baseDamage = Math.Max(0, baseDamage + card.GetConditionalDamage(EntityManager, entity) + AttackDamageValueService.GetTotalDelta(entity));
-                    }
-                    catch
-                    {
-                        baseDamage = Math.Max(0, card.Damage);
-                    }
-
-                    int finalDamage = baseDamage;
-
-                    try
-                    {
-                        var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
-                        var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
-
-                        if (player != null && enemy != null)
-                        {
-                            var previewEvent = new ModifyHpRequestEvent
-                            {
-                                Source = player,
-                                Target = enemy,
-                                Delta = -baseDamage,
-                                AttackCard = entity,
-                                DamageType = ModifyTypeEnum.Attack
-                            };
-
-                            int passiveDelta = AppliedPassivesService.GetPassiveDelta(previewEvent, ReadOnly: true);
-                            int newDelta = previewEvent.Delta + passiveDelta;
-                            finalDamage = Math.Max(0, -newDelta);
-                        }
-                    }
-                    catch
-                    {
-                        finalDamage = baseDamage;
-                    }
-
-                    effectiveDamage = Math.Max(0, finalDamage);
-                    damageDelta = effectiveDamage - card.Damage;
-                }
-                catch
-                {
-                    effectiveDamage = Math.Max(0, card.Damage);
-                    damageDelta = 0;
-                }
-                DrawDamageTrapezoidAndValue(cardCenter, rotation, visualScale, cardData.Color, effectiveDamage, damageDelta);
+                int vigorStacks = VigorService.GetPlayerVigorStacks(EntityManager);
+                int waivedPipCount = VigorService.GetWaivedPipCount(card, vigorStacks);
+                titleBandEndY = DrawTitleBand(cardCenter, rotation, vs, cc, card, waivedPipCount, isColorless);
             }
 
-            bool isWeapon = hasDef && card.IsWeapon;
-            int blockValueToShow = 0;
-            int printedBlockValue = 0;
-            int blockDeltaValue = 0;
-            bool hasBlockDefinition = hasDef && card != null;
-            if (hasBlockDefinition)
-            {
-                printedBlockValue = card.Block;
-                blockValueToShow = BlockValueService.GetTotalBlockValue(entity);
-                blockDeltaValue = blockValueToShow - printedBlockValue;
-            }
-            if (!isWeapon && blockValueToShow > 0)
-            {
-                string blockText = blockValueToShow.ToString();
-                var textSize = _nameFont.MeasureString(blockText) * (_settings.BlockNumberScale * visualScale);
-                float marginX = _settings.BlockNumberMarginX * visualScale;
-                float marginY = _settings.BlockNumberMarginY * visualScale;
-                float baselineY = _settings.CardHeight * visualScale - marginY;
+            // 4. Stat Gutter (starts below title band)
+            var gutterColor = isColorless
+                ? ColorlessSurface
+                : GetPaletteColor(GutterColors, cc, Color.Black * 0.05f);
+            float gutterY = GutterTopY * vs;
+            DrawRectangleLocalScaled(cardCenter, rotation, new Vector2(GutterX * vs, gutterY),
+                GutterWidth * vs, sh - gutterY, gutterColor, vs);
 
-                float numberLocalX = marginX;
-                float numberLocalY = baselineY - textSize.Y;
-                V1DrawTextSingle(cardCenter, rotation, new Vector2(numberLocalX, numberLocalY), blockText, textColor, _settings.BlockNumberScale * visualScale, visualScale);
-
-                float shieldRightX = numberLocalX + textSize.X;
-                var shield = GetOrLoadTexture("shield");
-                if (shield != null)
-                {
-                    float iconHeight = Math.Max(8f, ShieldIconHeight * _settings.UIScale * visualScale);
-                    float iconWidth = shield.Height > 0 ? iconHeight * (shield.Width / (float)shield.Height) : iconHeight;
-                    float gap = Math.Max(0f, ShieldIconGap * _settings.UIScale * visualScale);
-                    float iconBaseX = numberLocalX + textSize.X;
-                    float iconLocalX = iconBaseX + gap + ShieldIconOffsetX * visualScale;
-                    float iconLocalY = baselineY - iconHeight + ShieldIconOffsetY * visualScale;
-                    V1DrawTexture(cardCenter, rotation, new Vector2(iconLocalX, iconLocalY), shield, new Vector2(iconWidth, iconHeight), Color.White, visualScale);
-                    shieldRightX = iconLocalX + iconWidth;
-                }
-
-                if (hasBlockDefinition && blockDeltaValue != 0)
-                {
-                    string deltaText = blockDeltaValue > 0 ? $"+{blockDeltaValue}" : blockDeltaValue.ToString();
-                    float deltaScale = BlockDeltaScale * visualScale;
-                    var deltaTextSize = _nameFont.MeasureString(deltaText) * deltaScale;
-                    float deltaLocalX = shieldRightX + (BlockDeltaGapX * visualScale) + (BlockDeltaOffsetX * visualScale);
-                    float deltaLocalY = baselineY - deltaTextSize.Y + (BlockDeltaOffsetY * visualScale);
-                    V1DrawTextSingle(cardCenter, rotation, new Vector2(deltaLocalX, deltaLocalY), deltaText, textColor, BlockDeltaScale * visualScale, visualScale);
-                }
-            }
-            else if (isWeapon)
+            // 5. Stat Chips (with label slabs)
+            if (hasDef)
             {
-                var sword = GetOrLoadTexture("sword");
-                if (sword != null)
-                {
-                    float marginX = _settings.BlockNumberMarginX * visualScale;
-                    float marginY = _settings.BlockNumberMarginY * visualScale;
-                    float baselineY = _settings.CardHeight * visualScale - marginY;
-                    float iconHeight = Math.Max(8f, ShieldIconHeight * _settings.UIScale * visualScale);
-                    float iconWidth = sword.Height > 0 ? iconHeight * (sword.Width / (float)sword.Height) : iconHeight;
-                    float iconLocalX = marginX + ShieldIconOffsetX * visualScale;
-                    float iconLocalY = baselineY - iconHeight + ShieldIconOffsetY * visualScale;
-                    V1DrawTexture(cardCenter, rotation, new Vector2(iconLocalX, iconLocalY), sword, new Vector2(iconWidth, iconHeight), Color.White, visualScale);
-                }
+                DrawStatChips(cardCenter, rotation, vs, cc, entity, card, isColorless);
             }
 
-            string bottomText;
-            if (hasDef && card.Type == CardType.Block)
+            // 6. Type icon watermark + description (content area, below rule line, right of chips)
+            float contentX = ContentMarginLeft * vs;
+            float contentWidth = (settings.CardWidth - ContentMarginLeft - ContentPadRight) * vs;
+            float contentTop = titleBandEndY + ContentPadTop * vs;
+            float cursorY = contentTop;
+
+            if (hasDef)
             {
-                bottomText = "Block";
-            }
-            else if (card.Type == CardType.Relic)
-            {
-                bottomText = "Relic";
-            }
-            else
-            {
-                bool isFree = GetIsFreeAction(entity) || hasDef && card.Type == CardType.Block;
-                bottomText = isFree ? "Free" : "1AP";
-            }
-            var apSize = _nameFont.MeasureString(bottomText) * (APTextScale * visualScale);
-            float apLocalX = (_settings.CardWidth * visualScale - apSize.X) / 2f + APOffsetX * visualScale;
-            float apLocalY = _settings.CardHeight * visualScale - (APBottomMarginY * visualScale) - apSize.Y;
-            V1DrawTextSingle(cardCenter, rotation, new Vector2(apLocalX, apLocalY), bottomText, textColor, APTextScale * visualScale, visualScale);
-            string artAssetPath = $"CardArt/{card.CardId}";
-            var artTexture = GetOrLoadTexture(artAssetPath);
-            if (hasDef && !string.IsNullOrEmpty(card.CardId) && artTexture != null)
-            {
-                if (cardData.Color != CardData.CardColor.White)
-                {
-                    float trapWidth = ArtTrapWidth * _settings.UIScale * visualScale;
-                    float trapHeight = ArtTrapHeight * _settings.UIScale * visualScale;
-                    float trapLocalX = _settings.CardWidth * visualScale - trapWidth - (ArtTrapOffsetX * _settings.UIScale * visualScale);
-                    float trapLocalY = _settings.CardHeight * visualScale - trapHeight - (ArtTrapOffsetY * _settings.UIScale * visualScale);
-
-                    var trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoidMask(
-                        _graphicsDevice,
-                        ArtTrapWidth * _settings.UIScale,
-                        ArtTrapHeight * _settings.UIScale,
-                        ArtTrapLeftSideOffset * _settings.UIScale,
-                        ArtTrapTopAngleDeg,
-                        ArtTrapRightAngleDeg,
-                        ArtTrapBottomAngleDeg,
-                        ArtTrapLeftAngleDeg
-                    );
-
-                    if (trapezoidTexture != null)
-                    {
-                        V1DrawTexture(
-                            cardCenter,
-                            rotation,
-                            new Vector2(trapLocalX, trapLocalY),
-                            trapezoidTexture,
-                            new Vector2(trapWidth, trapHeight),
-                            Color.White,
-                            visualScale
-                        );
-                    }
-                }
-
-                float maxWidth = CardArtWidth * _settings.UIScale * visualScale;
-                float maxHeight = CardArtHeight * _settings.UIScale * visualScale;
-
-                float textureAspect = artTexture.Width / (float)artTexture.Height;
-                float boundsAspect = maxWidth / maxHeight;
-
-                float artWidth, artHeight;
-                if (textureAspect > boundsAspect)
-                {
-                    artWidth = maxWidth;
-                    artHeight = maxWidth / textureAspect;
-                }
-                else
-                {
-                    artHeight = maxHeight;
-                    artWidth = maxHeight * textureAspect;
-                }
-
-                float artLocalX = _settings.CardWidth * visualScale - artWidth - (CardArtOffsetX * _settings.UIScale * visualScale);
-                float artLocalY = _settings.CardHeight * visualScale - artHeight - (CardArtOffsetY * _settings.UIScale * visualScale);
-
-                V1DrawTexture(
-                    cardCenter,
-                    rotation,
-                    new Vector2(artLocalX, artLocalY),
-                    artTexture,
-                    new Vector2(artWidth, artHeight),
-                    Color.White,
-                    visualScale
-                );
+                DrawTypeIconWatermark(cardCenter, rotation, vs, card, contentX, contentTop, contentWidth);
             }
 
+            if (hasDef)
+            {
+                string desc = card.GetDisplayText();
+                var descColor = isColorless
+                    ? ColorlessPrimaryText
+                    : GetPaletteColor(NameTextColors, cc, new Color(26, 26, 26));
+                DrawWrappedTextLocalScaled(cardCenter, rotation, new Vector2(contentX, cursorY), desc, descColor, DescFontScale * vs, vs, _bodyFont, contentWidth);
+            }
+
+            // 7. Card Art
             if (hasDef && !string.IsNullOrEmpty(card.CardId))
             {
-                DrawMasteryMeter(cardCenter, rotation, visualScale, cardData.Color, card.CardId, isWeapon);
+                var artTex = GetOrLoadTexture($"CardArt/{card.CardId}");
+                if (artTex != null)
+                {
+                    float artW = ArtWidth * vs;
+                    float artH = ArtHeight * vs;
+
+                    float texAspect = artTex.Width / (float)artTex.Height;
+                    float boxAspect = artW / artH;
+                    if (texAspect > boxAspect) { artH = artW / texAspect; }
+                    else { artW = artH * texAspect; }
+
+                    float artLocalX = sw - artW + ArtOffsetRight * vs;
+                    float artLocalY = sh - artH + ArtOffsetBottom * vs;
+                    DrawTextureLocalScaled(cardCenter, rotation, new Vector2(artLocalX, artLocalY), artTex, new Vector2(artW, artH), Color.White, vs);
+                }
             }
         }
 
-        private void DrawMasteryMeter(Vector2 cardCenter, float rotation, float visualScale, CardData.CardColor cardColor, string cardId, bool isWeapon)
+        private void DrawTypeIconWatermark(Vector2 cardCenter, float rotation, float vs, CardBase card,
+            float contentX, float contentTop, float contentWidth)
         {
-            var mastery = SaveCache.GetMasteryData(cardId);
-            int points = mastery?.points ?? 0;
+            if (!_typeIconTextures.TryGetValue(card.Type, out var tex) || tex == null) return;
 
-            float fillPercent = Math.Clamp(points / 50f, 0f, 1f);
+            float iconW = tex.Width * TypeIconScale * vs;
+            float iconH = tex.Height * TypeIconScale * vs;
+            float iconX = contentX + (contentWidth - iconW) / 2f;
+            float iconY = contentTop + TypeIconOffsetY * vs;
+            var iconColor = Color.White * TypeIconAlpha;
+            DrawTextureLocalScaled(cardCenter, rotation, new Vector2(iconX, iconY), tex, new Vector2(iconW, iconH), iconColor, vs);
+        }
 
-            float meterWidth = MasteryMeterWidth * _settings.UIScale * visualScale;
-            float meterHeight = MasteryMeterHeight * _settings.UIScale * visualScale;
-            float outlineThickness = MasteryMeterOutlineThickness * visualScale;
+        /// <summary>
+        /// Draws full-width title band: centered name, type row (cost left, type right), rule line.
+        /// Returns the Y position where the title band ends (for content positioning below).
+        /// </summary>
+        private float DrawTitleBand(Vector2 cardCenter, float rotation, float vs,
+            CardData.CardColor cc, CardBase card, int waivedPipCount, bool isColorless)
+        {
+            float padLeft = TitleBandPadLeft * vs;
+            float padRight = TitleBandPadRight * vs;
+            float cardWidth = GetSettings().CardWidth * vs;
+            float cursorY = TitleBandPadTop * vs;
 
-            float localX = (_settings.CardWidth * visualScale - meterWidth) / 2f + MasteryMeterOffsetX * visualScale;
-            float localY = _settings.CardHeight * visualScale - meterHeight - (MasteryMeterOutlineThickness * visualScale) + MasteryMeterOffsetY * visualScale;
+            // Card Name — centered across full card width
+            string name = card.DisplayName ?? "";
+            var nameColor = isColorless
+                ? ColorlessPrimaryText
+                : GetPaletteColor(NameTextColors, cc, new Color(26, 26, 26));
+            float nameScale = NameFontScale * vs;
+            var nameSize = _nameFont.MeasureString(name) * nameScale;
+            float nameX = (cardWidth - nameSize.X) / 2f;
+            DrawTextLocalScaled(cardCenter, rotation, new Vector2(nameX, cursorY), name, nameColor, nameScale, vs, _nameFont);
+            cursorY += nameSize.Y + TypeRowMarginTop * vs;
 
-            Color outlineColor;
-            Color fillColor;
-            Color backgroundColor;
+            // Type Row — space-between: cost section (left) | type text (right)
+            string typeLabel = GetTypeLabel(card.Type);
+            var typeColor = isColorless
+                ? ColorlessMutedText
+                : GetPaletteColor(TypeTextColors, cc, new Color(153, 153, 153));
+            float typeScale = CostLabelFontScale * vs;
 
-            if (isWeapon || cardColor == CardData.CardColor.White)
+            // Add letter spacing for type label measurement and drawing
+            float savedTypeSpacing = _bodyFont.Spacing;
+            _bodyFont.Spacing = 2f * vs;
+            var typeSize = _bodyFont.MeasureString(typeLabel) * typeScale;
+
+            var costs = card.Cost.ToArray();
+            bool hasCost = costs != null && costs.Length > 0;
+
+            if (hasCost)
             {
-                outlineColor = Color.Black;
-                fillColor = Color.Black;
-                backgroundColor = cardColor == CardData.CardColor.White ? Color.White : new Color(215, 186, 147);
+                // Left side: "DISCARD" label + diamond pips
+                string costLabel = "DISCARD";
+                var costLabelColor = isColorless
+                    ? ColorlessMutedText
+                    : GetPaletteColor(CostLabelColors, cc, new Color(153, 153, 153));
+                float costLabelScale = CostLabelFontScale * vs;
+
+                // Letter spacing already active from type label setup (2f * vs)
+                var costLabelSize = _bodyFont.MeasureString(costLabel) * costLabelScale;
+
+                float leftX = padLeft;
+                float textCenterY = cursorY + (typeSize.Y - costLabelSize.Y) / 2f;
+                DrawTextLocalScaled(cardCenter, rotation, new Vector2(leftX, textCenterY), costLabel, costLabelColor, costLabelScale, vs, _bodyFont);
+
+                // Diamond pips after label
+                float pipStartX = leftX + costLabelSize.X + CostLabelGap * vs;
+                float pipSize = CostPipSize * vs;
+                float pipGap = CostPipGap * vs;
+                float pipCenterY = cursorY + typeSize.Y / 2f;
+
+                float flashT = (float)Math.Sin(_elapsedTime * MathHelper.TwoPi * CostPipFlashHz) * 0.5f + 0.5f;
+                float flashAlpha = MathHelper.Lerp(CostPipFlashMinAlpha, CostPipFlashMaxAlpha, flashT);
+
+                for (int i = 0; i < costs.Length; i++)
+                {
+                    float pipX = pipStartX + i * (pipSize + pipGap);
+                    Color pipColor = GetCostPipColor(costs[i], cc, isColorless);
+                    bool showOutline = NeedsPipOutline(costs[i], cc, isColorless);
+                    bool isWaived = VigorService.IsWaivedPipIndex(i, costs.Length, waivedPipCount);
+                    float alpha = isWaived ? flashAlpha : 1f;
+                    DrawDiamondPip(cardCenter, rotation, vs, pipX, pipCenterY - pipSize / 2f, pipSize, pipColor, cc, showOutline, isColorless, alpha);
+                }
+
+                // Right side: type text
+                float typeX = cardWidth - padRight - typeSize.X;
+                DrawTextLocalScaled(cardCenter, rotation, new Vector2(typeX, cursorY), typeLabel, typeColor, typeScale, vs, _bodyFont);
             }
             else
             {
-                outlineColor = Color.White;
-                fillColor = Color.White;
-                backgroundColor = GetCardColor(cardColor);
+                // No cost — type text right-aligned only
+                float typeX = cardWidth - padRight - typeSize.X;
+                DrawTextLocalScaled(cardCenter, rotation, new Vector2(typeX, cursorY), typeLabel, typeColor, typeScale, vs, _bodyFont);
             }
 
-            V1DrawRect(cardCenter, rotation, new Vector2(localX, localY), meterWidth, meterHeight, outlineColor, visualScale);
+            cursorY += typeSize.Y + RuleMarginTop * vs;
+            _bodyFont.Spacing = savedTypeSpacing;
 
-            float innerX = localX + outlineThickness;
-            float innerY = localY + outlineThickness;
-            float innerWidth = meterWidth - outlineThickness * 2;
-            float innerHeight = meterHeight - outlineThickness * 2;
-            if (innerWidth > 0 && innerHeight > 0)
-            {
-                V1DrawRect(cardCenter, rotation, new Vector2(innerX, innerY), innerWidth, innerHeight, backgroundColor, visualScale);
-            }
+            // Rule Line — full width with padding
+            var ruleColor = isColorless
+                ? Color.Lerp(ColorlessSurface, ColorlessMutedText, 0.45f)
+                : GetPaletteColor(RuleLineColors, cc, new Color(192, 184, 170));
+            float ruleWidth = cardWidth - padLeft - padRight;
+            DrawRectangleLocalScaled(cardCenter, rotation, new Vector2(padLeft, cursorY), ruleWidth, RuleHeight * vs, ruleColor, vs);
+            cursorY += RuleHeight * vs;
 
-            float fillWidth = innerWidth * fillPercent;
-            if (fillWidth > 0 && innerHeight > 0)
-            {
-                V1DrawRect(cardCenter, rotation, new Vector2(innerX, innerY), fillWidth, innerHeight, fillColor, visualScale);
-            }
+            return cursorY;
         }
 
-        private Color GetCardColor(CardData.CardColor color)
+        /// <summary>
+        /// Draws a diamond-shaped pip (square rotated 45deg) at the given position.
+        /// </summary>
+        private void DrawDiamondPip(Vector2 cardCenter, float rotation, float vs,
+            float x, float y, float size, Color color, CardData.CardColor cc, bool showOutline,
+            bool isColorless, float alpha = 1f)
         {
-            return color switch
-            {
-                CardData.CardColor.Red => Color.DarkRed,
-                CardData.CardColor.White => Color.White,
-                CardData.CardColor.Black => Color.Black,
-                CardData.CardColor.Yellow => Color.LightYellow,
-                _ => Color.Gray
-            };
-        }
+            // Create a small square texture and draw it rotated 45 degrees
+            int texSize = Math.Max(1, (int)Math.Ceiling(size));
+            var tex = GetPerCornerRoundedRectTexture(texSize, texSize, 0, 0, 0, 0);
 
-        private Color GetCostColor(string costType)
-        {
-            if (string.IsNullOrWhiteSpace(costType)) return Color.Gray;
-            switch (costType.Trim().ToLowerInvariant())
-            {
-                case "red": return Color.DarkRed;
-                case "white": return Color.White;
-                case "black": return Color.Black;
-                case "any": return Color.Gray;
-                default: return Color.Gray;
-            }
-        }
+            // Position at center of the pip area, draw with 45deg rotation added to card rotation
+            float halfSize = size / 2f;
+            float centerX = x + halfSize;
+            float centerY = y + halfSize;
 
-        private Color GetCardTextColor(CardData.CardColor color)
-        {
-            switch (color)
-            {
-                case CardData.CardColor.White:
-                    return Color.Black;
-                default:
-                    return Color.White;
-            }
-        }
-
-        private Color GetDamageTrapezoidColor(CardData.CardColor color)
-        {
-            return Color.Red;
-        }
-
-        private void DrawCostPipsScaled(Vector2 cardCenter, float rotation, int localOffsetX, int localOffsetY, CardData.CardColor cardColor, string[] costs, float overallScale)
-        {
-            if (costs == null || costs.Length == 0) return;
-
-            float diameter = Math.Max(6f, CostPipDiameter * _settings.UIScale * overallScale);
-            float radius = diameter / 2f;
-            float gap = Math.Max(0f, CostPipGap * _settings.UIScale * overallScale);
-
-            float startLocalX = localOffsetX;
-            float y = localOffsetY + radius;
-
-            for (int i = 0; i < costs.Length; i++)
-            {
-                float x = startLocalX + i * (diameter + gap) + radius;
-                var costType = costs[i];
-                var outline = GetConditionalOutlineColor(cardColor, costType);
-                if (EqualsIgnoreCase(costType, "any"))
-                {
-                    DrawAnyCostPipRotatedScaled(cardCenter, rotation, new Vector2(x, y), radius, outline, overallScale);
-                }
-                else
-                {
-                    var fill = GetCostColor(costType);
-                    V1DrawCirclePip(cardCenter, rotation, new Vector2(x, y), radius, fill, outline, overallScale);
-                }
-            }
-        }
-
-        private Color? GetConditionalOutlineColor(CardData.CardColor cardColor, string costType)
-        {
-            bool isAny = EqualsIgnoreCase(costType, "any");
-            if (isAny) return Color.Gray;
-            if (cardColor == CardData.CardColor.Red)
-                return Color.Black;
-            if (cardColor == CardData.CardColor.White)
-                return Color.Black;
-            if (cardColor == CardData.CardColor.Black)
-                return Color.White;
-            return null;
-        }
-
-        private void DrawAnyCostPipRotatedScaled(Vector2 cardCenter, float rotation, Vector2 localCenterFromTopLeft, float radius, Color? outlineColor, float overallScale)
-        {
-            int radiusTex = Math.Max(1, (int)Math.Ceiling(radius));
-            var circleTex = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, radiusTex);
-            int textureSize = circleTex.Width;
-
-            float localX = -_settings.CardWidth * overallScale / 2f + localCenterFromTopLeft.X;
-            float localY = -_settings.CardHeight * overallScale / 2f + localCenterFromTopLeft.Y;
+            // Convert to world position using card-local transform
+            float localX = -CW * vs / 2f + centerX;
+            float localY = -CH * vs / 2f + centerY;
             float cos = (float)Math.Cos(rotation);
             float sin = (float)Math.Sin(rotation);
             var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
-            var worldCenter = cardCenter + rotated;
+            var world = cardCenter + rotated;
 
-            float fillScale = 1f;
-            if (outlineColor.HasValue)
+            float diamondRotation = rotation + MathHelper.PiOver4;
+            var drawScale = new Vector2(size / texSize, size / texSize);
+
+            color *= alpha;
+
+            if (showOutline)
             {
-                _spriteBatch.Draw(circleTex, worldCenter, null, outlineColor.Value, rotation, new Vector2(textureSize / 2f, textureSize / 2f), 1f, SpriteEffects.None, 0f);
-                fillScale = Math.Max(0f, 1f - CostPipOutlineFrac * 2f);
-            }
+                // Draw outline at full size, then fill at reduced scale
+                var outlineColor = (isColorless
+                    ? Color.Black
+                    : GetPaletteColor(CostPipOutlineColors, cc, Color.Black)) * alpha;
+                _spriteBatch.Draw(tex, world, null, outlineColor, diamondRotation,
+                    new Vector2(texSize / 2f, texSize / 2f),
+                    drawScale,
+                    SpriteEffects.None, 0f);
 
-            var anyPipTex = PrimitiveTextureFactory.GetAnyCostPipTexture(_graphicsDevice, radiusTex);
-            var origin = new Vector2(textureSize / 2f, textureSize / 2f);
-            _spriteBatch.Draw(anyPipTex, worldCenter, null, Color.White, rotation, origin, fillScale, SpriteEffects.None, 0f);
+                float fillScale = Math.Max(0f, 1f - CostPipOutlineFrac * 2f);
+                _spriteBatch.Draw(tex, world, null, color, diamondRotation,
+                    new Vector2(texSize / 2f, texSize / 2f),
+                    drawScale * fillScale,
+                    SpriteEffects.None, 0f);
+            }
+            else
+            {
+                _spriteBatch.Draw(tex, world, null, color, diamondRotation,
+                    new Vector2(texSize / 2f, texSize / 2f),
+                    drawScale,
+                    SpriteEffects.None, 0f);
+            }
         }
 
-        private void DrawDamageTrapezoidAndValue(Vector2 cardCenter, float rotation, float overallScale, CardData.CardColor cardColor, int damageValue, int damageDelta)
+        private void DrawStatChips(Vector2 cardCenter, float rotation, float vs, CardData.CardColor cc,
+            Entity entity, CardBase card, bool isColorless)
         {
-            if (_settings == null) _settings = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>();
+            float chipX = ChipColumnX * vs;
+            bool suppressDelta = entity.HasComponent<SuppressStatDeltaDisplay>();
 
-            float uiScale = _settings.UIScale;
+            int printedBlock = card.Block;
+            int blackCardBlockBonus = GetBlackCardBlockBonus(entity);
+            int blockValue = suppressDelta
+                ? printedBlock + blackCardBlockBonus
+                : BlockValueService.GetTotalBlockValue(entity);
+            int blockDelta = suppressDelta ? blackCardBlockBonus : blockValue - printedBlock;
+            bool showBlock = blockValue > 0 && !card.IsWeapon && !card.IsToken;
+            bool showAttack = card.Type == CardType.Attack;
+            bool showAp = card.Type != CardType.Block && card.Type != CardType.Relic;
 
-            float baseWidth = DamageTrapWidth * uiScale;
-            float baseHeight = DamageTrapHeight * uiScale;
-            float baseLeftMarginX = DamageTrapLeftMarginX * uiScale;
-            float baseBottomMarginY = DamageTrapBottomMarginY * uiScale;
-
-            float trapWidth = baseWidth * overallScale;
-            float trapHeight = baseHeight * overallScale;
-
-            float localX = baseLeftMarginX * overallScale;
-            float baselineY = _settings.CardHeight * overallScale - (baseBottomMarginY * overallScale);
-            float localY = baselineY - trapHeight;
-
-            var trapezoidTexture = PrimitiveTextureFactory.GetAntialiasedTrapezoidMask(
-                _graphicsDevice,
-                baseWidth,
-                baseHeight,
-                DamageTrapLeftSideOffset * uiScale,
-                DamageTrapTopAngleDeg,
-                DamageTrapRightAngleDeg,
-                DamageTrapBottomAngleDeg,
-                DamageTrapLeftAngleDeg
-            );
-
-            var trapezoidColor = GetDamageTrapezoidColor(cardColor);
-
-            if (trapezoidTexture != null)
+            float effectiveChipSlotHeight = ChipSlotHeight;
+            float effectiveChipSize = ChipSize;
+            if (ChipScaleWithTitle)
             {
-                V1DrawTexture(
-                    cardCenter,
-                    rotation,
-                    new Vector2(localX, localY),
-                    trapezoidTexture,
-                    new Vector2(trapWidth, trapHeight),
-                    trapezoidColor,
-                    overallScale
-                );
+                float availableHeight = GetSettings().CardHeight - ChipColumnTopY - ChipColumnBottomPad;
+                float totalNeeded = EstimateColumnHeight(ChipSize, ChipSlotHeight, showBlock, showAttack, showAp);
+                if (totalNeeded > availableHeight && totalNeeded > 0f)
+                {
+                    float ratio = availableHeight / totalNeeded;
+                    effectiveChipSlotHeight = ChipSlotHeight * ratio;
+                    effectiveChipSize = ChipSize * ratio;
+                }
             }
 
-            var textColor = (trapezoidColor == Color.DarkRed || trapezoidColor == Color.Red)
-                ? Color.White
-                : GetCardTextColor(cardColor);
+            float lastChipBottomY = ChipColumnTopY * vs;
+            bool drewStatChip = false;
 
-            string damageText = damageValue.ToString();
-            float mainScale = DamageTextScale * overallScale;
-            var mainSize = _nameFont.MeasureString(damageText) * mainScale;
-
-            string deltaText = null;
-            float deltaScale = DamageDeltaScale * overallScale;
-            Vector2 deltaSize = Vector2.Zero;
-            float gapX = 4f * overallScale;
-
-            if (damageDelta != 0)
+            // BLK chip (slot 0)
+            if (showBlock)
             {
-                deltaText = damageDelta > 0 ? $"+{damageDelta}" : damageDelta.ToString();
-                deltaSize = _nameFont.MeasureString(deltaText) * deltaScale;
+                float chipY = ChipColumnTopY * vs;
+                bool hasDelta = blockDelta != 0;
+
+                DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, chipY, "BLOCK", ChipVariant.BLK, isColorless);
+                float chipBodyY = chipY + LabelSlabHeight * vs;
+
+                DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, blockValue.ToString(), ChipVariant.BLK, true, hasDelta, isColorless, effectiveChipSize);
+
+                if (hasDelta)
+                {
+                    float slabY = chipBodyY + effectiveChipSize * vs;
+                    DrawDeltaSlab(cardCenter, rotation, vs, cc, chipX, slabY, blockDelta);
+                }
+
+                lastChipBottomY = chipY + GetChipGroupHeight(vs, effectiveChipSize, reserveDeltaSlab: true);
+                drewStatChip = true;
             }
 
-            float totalWidth = (damageDelta != 0)
-                ? mainSize.X + gapX + deltaSize.X
-                : mainSize.X;
-
-            float centerY = localY + (trapHeight - mainSize.Y) / 2f + DamageTextOffsetY * overallScale;
-            float startX = localX + (trapWidth - totalWidth) / 2f + DamageTextOffsetX * overallScale;
-
-            float mainLocalX = startX;
-            float mainLocalY = centerY;
-
-            V1DrawTextSingle(
-                cardCenter,
-                rotation,
-                new Vector2(mainLocalX, mainLocalY),
-                damageText,
-                textColor,
-                mainScale,
-                overallScale
-            );
-
-            if (damageDelta != 0 && deltaText != null)
+            // ATK chip (slot 1)
+            if (showAttack)
             {
-                float deltaLocalX = mainLocalX + mainSize.X + gapX;
-                float deltaLocalY = centerY + (mainSize.Y - deltaSize.Y) / 2f;
+                int damage = suppressDelta ? card.Damage : GetEffectiveDamage(entity, card);
+                int damageDelta = suppressDelta ? 0 : damage - card.Damage;
+                float chipY = (ChipColumnTopY + effectiveChipSlotHeight) * vs;
+                bool hasDelta = damageDelta != 0;
 
-                V1DrawTextSingle(
-                    cardCenter,
-                    rotation,
-                    new Vector2(deltaLocalX, deltaLocalY),
-                    deltaText,
-                    textColor,
-                    deltaScale,
-                    overallScale
-                );
+                DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, chipY, "DAMAGE", ChipVariant.ATK, isColorless);
+                float chipBodyY = chipY + LabelSlabHeight * vs;
+
+                DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, damage.ToString(), ChipVariant.ATK, true, hasDelta, isColorless, effectiveChipSize);
+
+                if (hasDelta)
+                {
+                    float slabY = chipBodyY + effectiveChipSize * vs;
+                    DrawDeltaSlab(cardCenter, rotation, vs, cc, chipX, slabY, damageDelta);
+                }
+
+                // Always reserve delta slab space so AP position is stable when modifiers appear
+                lastChipBottomY = chipY + GetChipGroupHeight(vs, effectiveChipSize, reserveDeltaSlab: true);
+                drewStatChip = true;
+            }
+
+            // AP / FREE chip — flows below last stat chip; skip for Block and Relic cards
+            if (showAp)
+            {
+                float apLabelY = drewStatChip
+                    ? lastChipBottomY + ChipGap * vs
+                    : ChipColumnTopY * vs;
+
+                if (card.IsFreeAction)
+                {
+                    DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, apLabelY, "FREE", ChipVariant.FREE, isColorless);
+                    float chipBodyY = apLabelY + LabelSlabHeight * vs;
+                    DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "0", ChipVariant.FREE, true, false, isColorless, effectiveChipSize);
+                }
+                else
+                {
+                    DrawChipLabelSlab(cardCenter, rotation, vs, cc, chipX, apLabelY, "AP", ChipVariant.AP, isColorless);
+                    float chipBodyY = apLabelY + LabelSlabHeight * vs;
+                    DrawChip(cardCenter, rotation, vs, cc, chipX, chipBodyY, "1", ChipVariant.AP, true, false, isColorless, effectiveChipSize);
+                }
             }
         }
 
-        private bool GetIsFreeAction(Entity card)
+        private float GetChipGroupHeight(float vs, float chipSize, bool reserveDeltaSlab)
+            => (LabelSlabHeight + chipSize + (reserveDeltaSlab ? SlabHeight : 0)) * vs;
+
+        /// <summary>
+        /// Estimates total chip column height from column top, using worst-case delta slabs for scaling.
+        /// </summary>
+        private float EstimateColumnHeight(float chipSize, float slotHeight, bool showBlock, bool showAttack, bool showAp)
+        {
+            if (showAp && !showBlock && !showAttack)
+                return LabelSlabHeight + chipSize;
+
+            float bottom = ChipColumnTopY;
+
+            if (showBlock)
+                bottom = Math.Max(bottom, ChipColumnTopY + LabelSlabHeight + chipSize + SlabHeight);
+
+            if (showAttack)
+            {
+                float atkTop = ChipColumnTopY + slotHeight;
+                bottom = Math.Max(bottom, atkTop + LabelSlabHeight + chipSize + SlabHeight);
+            }
+
+            if (showAp)
+                bottom += ChipGap + LabelSlabHeight + chipSize;
+
+            return bottom - ChipColumnTopY;
+        }
+
+        private enum ChipVariant { BLK, ATK, AP, FREE }
+
+        /// <summary>
+        /// Draws a label slab above a chip (rounded top corners, flat bottom).
+        /// </summary>
+        private void DrawChipLabelSlab(Vector2 cardCenter, float rotation, float vs,
+            CardData.CardColor cc, float x, float y, string label, ChipVariant variant, bool isColorless)
+        {
+            float slabW = ChipWidth * vs;
+            float slabH = LabelSlabHeight * vs;
+            int cr = (int)(ChipCornerRadius * vs);
+
+            // Rounded top, flat bottom
+            var slabTex = GetPerCornerRoundedRectTexture((int)slabW, (int)slabH, cr, cr, 0, 0);
+
+            Color bgColor;
+            Color textColor;
+
+            switch (variant)
+            {
+                case ChipVariant.BLK:
+                    bgColor = GetPaletteColor(BlkLabelSlabBgColors, cc, new Color(50, 100, 140) * 0.4f);
+                    textColor = GetPaletteColor(BlkLabelSlabTextColors, cc, new Color(138, 184, 216));
+                    break;
+                case ChipVariant.ATK:
+                    bgColor = AtkLabelSlabBgColor;
+                    textColor = AtkLabelSlabTextColor;
+                    break;
+                case ChipVariant.AP:
+                    bgColor = GetPaletteColor(ApLabelSlabBgColors, cc, new Color(85, 85, 85));
+                    textColor = GetPaletteColor(ApLabelSlabTextColors, cc, new Color(221, 221, 221));
+                    break;
+                case ChipVariant.FREE:
+                    bgColor = Color.Transparent;
+                    textColor = GetPaletteColor(FreeLabelSlabTextColors, cc, new Color(136, 136, 136));
+                    break;
+                default:
+                    bgColor = Color.Transparent;
+                    textColor = Color.White;
+                    break;
+            }
+            if (isColorless && variant != ChipVariant.ATK)
+            {
+                bgColor = variant == ChipVariant.FREE
+                    ? Color.Transparent
+                    : Color.Lerp(ColorlessSurface, ColorlessBackground, 0.25f);
+                textColor = ColorlessMutedText;
+            }
+
+            DrawTextureLocalScaled(cardCenter, rotation, new Vector2(x, y), slabTex, new Vector2(slabW, slabH), bgColor, vs);
+
+            // Center label text within slab
+            float labelScale = LabelSlabFontScale * vs;
+            var labelSize = _bodyFont.MeasureString(label) * labelScale;
+            float textX = x + (slabW - labelSize.X) / 2f;
+            float textY = y + (slabH - labelSize.Y) / 2f;
+            DrawTextLocalScaled(cardCenter, rotation, new Vector2(textX, textY), label, textColor, labelScale, vs, _bodyFont);
+        }
+
+        /// <summary>
+        /// Draws a stat chip — value-only, no label inside.
+        /// </summary>
+        private void DrawChip(Vector2 cardCenter, float rotation, float vs, CardData.CardColor cc,
+            float x, float y, string value, ChipVariant variant, bool hasLabelAbove, bool hasDeltaBelow,
+            bool isColorless, float chipSizeOverride = -1)
+        {
+            float chipW = ChipWidth * vs;
+            float chipH = (chipSizeOverride > 0 ? chipSizeOverride : ChipSize) * vs;
+            int cr = (int)(ChipCornerRadius * vs);
+
+            // Corner radii: flat top if label above, flat bottom if delta below
+            int rTL = hasLabelAbove ? 0 : cr;
+            int rTR = hasLabelAbove ? 0 : cr;
+            int rBR = hasDeltaBelow ? 0 : cr;
+            int rBL = hasDeltaBelow ? 0 : cr;
+
+            switch (variant)
+            {
+                case ChipVariant.BLK:
+                {
+                    // Solid fill — steel blue tint
+                    Color bgColor = isColorless
+                        ? Color.Lerp(ColorlessSurface, ColorlessMutedText, 0.18f)
+                        : GetPaletteColor(BlkChipBgColors, cc, new Color(42, 74, 94));
+                    Color valColor = isColorless
+                        ? ColorlessPrimaryText
+                        : GetPaletteColor(BlkChipTextColors, cc, new Color(176, 212, 232));
+
+                    var tex = GetPerCornerRoundedRectTexture((int)chipW, (int)chipH, rTL, rTR, rBR, rBL);
+                    DrawTextureLocalScaled(cardCenter, rotation, new Vector2(x, y), tex, new Vector2(chipW, chipH), bgColor, vs);
+                    DrawChipValue(cardCenter, rotation, vs, x, y, chipW, chipH, value, valColor);
+                    break;
+                }
+                case ChipVariant.ATK:
+                {
+                    Color bgColor = new Color(204, 34, 34);
+                    Color valColor = Color.White;
+
+                    var tex = GetPerCornerRoundedRectTexture((int)chipW, (int)chipH, rTL, rTR, rBR, rBL);
+                    DrawTextureLocalScaled(cardCenter, rotation, new Vector2(x, y), tex, new Vector2(chipW, chipH), bgColor, vs);
+                    DrawChipValue(cardCenter, rotation, vs, x, y, chipW, chipH, value, valColor);
+                    break;
+                }
+                case ChipVariant.AP:
+                {
+                    Color bgColor = isColorless
+                        ? ColorlessSurface
+                        : GetPaletteColor(ApChipBgColors, cc, new Color(68, 68, 68));
+                    Color valColor = isColorless
+                        ? ColorlessPrimaryText
+                        : GetPaletteColor(ApChipTextColors, cc, new Color(221, 221, 221));
+
+                    var tex = GetPerCornerRoundedRectTexture((int)chipW, (int)chipH, rTL, rTR, rBR, rBL);
+                    DrawTextureLocalScaled(cardCenter, rotation, new Vector2(x, y), tex, new Vector2(chipW, chipH), bgColor, vs);
+                    DrawChipValue(cardCenter, rotation, vs, x, y, chipW, chipH, value, valColor);
+                    break;
+                }
+                case ChipVariant.FREE:
+                {
+                    // Dashed border — approximate with solid border + card bg fill
+                    Color borderColor = isColorless
+                        ? ColorlessMutedText
+                        : GetPaletteColor(FreeChipBorderColors, cc, new Color(170, 170, 170));
+                    Color valColor = isColorless
+                        ? ColorlessPrimaryText
+                        : GetPaletteColor(FreeChipTextColors, cc, new Color(136, 136, 136));
+
+                    var outerTex = GetPerCornerRoundedRectTexture((int)chipW, (int)chipH, rTL, rTR, rBR, rBL);
+                    DrawTextureLocalScaled(cardCenter, rotation, new Vector2(x, y), outerTex, new Vector2(chipW, chipH), borderColor, vs);
+
+                    int bt = (int)(ChipBorderThickness * vs);
+                    float innerW = chipW - bt * 2;
+                    float innerH = chipH - bt * 2;
+                    if (innerW > 0 && innerH > 0)
+                    {
+                        var innerBg = isColorless
+                            ? ColorlessBackground
+                            : GetPaletteColor(BgColors, cc, new Color(220, 215, 206));
+                        var innerTex = GetPerCornerRoundedRectTexture((int)innerW, (int)innerH,
+                            Math.Max(0, rTL - bt), Math.Max(0, rTR - bt),
+                            Math.Max(0, rBR - bt), Math.Max(0, rBL - bt));
+                        DrawTextureLocalScaled(cardCenter, rotation, new Vector2(x + bt, y + bt), innerTex, new Vector2(innerW, innerH), innerBg, vs);
+                    }
+
+                    DrawChipValue(cardCenter, rotation, vs, x, y, chipW, chipH, value, valColor);
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draws chip value text centered in the chip area.
+        /// </summary>
+        private void DrawChipValue(Vector2 cardCenter, float rotation, float vs,
+            float x, float y, float chipW, float chipH, string value, Color color)
+        {
+            float valScale = ChipValueFontScale * vs;
+            var valSize = _nameFont.MeasureString(value) * valScale;
+            float valX = x + (chipW - valSize.X) / 2f;
+            float valY = y + (chipH - valSize.Y) / 2f;
+            DrawTextLocalScaled(cardCenter, rotation, new Vector2(valX, valY), value, color, valScale, vs, _nameFont);
+        }
+
+        private void DrawDeltaSlab(Vector2 cardCenter, float rotation, float vs, CardData.CardColor cc, float x, float y, int delta)
+        {
+            bool isW = cc == CardData.CardColor.White;
+            bool isPositive = delta > 0;
+
+            float slabW = SlabWidth * vs;
+            float slabH = SlabHeight * vs;
+            int r = (int)(SlabCornerRadius * vs);
+
+            // Bottom corners only
+            var slabTex = GetPerCornerRoundedRectTexture((int)slabW, (int)slabH, 0, 0, r, r);
+
+            Color bgColor;
+            Color textColor;
+            if (isPositive)
+            {
+                bgColor = isW ? new Color(42, 138, 42) : new Color(26, 90, 26);
+                textColor = isW ? Color.White : new Color(94, 255, 94);
+            }
+            else
+            {
+                bgColor = isW ? new Color(122, 98, 16) : new Color(90, 66, 0);
+                textColor = isW ? Color.White : new Color(255, 204, 68);
+            }
+
+            DrawTextureLocalScaled(cardCenter, rotation, new Vector2(x, y), slabTex, new Vector2(slabW, slabH), bgColor, vs);
+
+            string deltaText = delta > 0 ? $"+{delta}" : delta.ToString();
+            var textSize = _bodyFont.MeasureString(deltaText) * (SlabFontScale * vs);
+            float textX = x + (slabW - textSize.X) / 2f;
+            float textY = y + (slabH - textSize.Y) / 2f;
+            DrawTextLocalScaled(cardCenter, rotation, new Vector2(textX, textY), deltaText, textColor, SlabFontScale * vs, vs, _bodyFont);
+        }
+
+        private Color GetCostPipColor(string costType, CardData.CardColor cc, bool isColorless)
+        {
+            return costType.Trim().ToLowerInvariant() switch
+            {
+                "red"   => CostPipRedColor,
+                "white" => CostPipWhiteColor,
+                "black" => CostPipBlackColor,
+                _       => isColorless
+                    ? ColorlessMutedText
+                    : GetPaletteColor(CostPipAnyColors, cc, new Color(160, 152, 136)),
+            };
+        }
+
+        /// <summary>
+        /// Outline when a pip would blend into the card, plus gray Any pips on Colorless cards.
+        /// </summary>
+        private static bool NeedsPipOutline(string costType, CardData.CardColor cc, bool isColorless)
+        {
+            if (isColorless && string.Equals(costType.Trim(), "Any", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            return costType.Trim().ToLowerInvariant() switch
+            {
+                "white" => cc == CardData.CardColor.White,
+                "red"   => cc == CardData.CardColor.Red,
+                "black" => cc == CardData.CardColor.Black,
+                _       => false,
+            };
+        }
+
+        private static string GetTypeLabel(CardType type) => type switch
+        {
+            CardType.Attack => "ATTACK",
+            CardType.Prayer => "PRAYER",
+            CardType.Block => "BLOCK",
+            CardType.Relic => "RELIC",
+            _ => "CARD"
+        };
+
+        private int GetEffectiveDamage(Entity entity, CardBase card)
         {
             try
             {
-                var data = card.GetComponent<CardData>();
-                string id = data?.Card.CardId ?? string.Empty;
-                if (string.IsNullOrEmpty(id)) return false;
-                return data.Card.IsFreeAction;
+                int baseDamage = Math.Max(0, card.Damage);
+                try
+                {
+                    baseDamage = Math.Max(0, baseDamage + card.GetConditionalDamage(EntityManager, entity) + AttackDamageValueService.GetTotalDelta(entity));
+                }
+                catch { baseDamage = Math.Max(0, card.Damage); }
+
+                int finalDamage = baseDamage;
+                try
+                {
+                    var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+                    var enemy = EntityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+                    if (player != null && enemy != null)
+                    {
+                        var preview = new ModifyHpRequestEvent
+                        {
+                            Source = player,
+                            Target = enemy,
+                            AttackCard = entity,
+                            DamageType = ModifyTypeEnum.Attack
+                        };
+                        finalDamage = AppliedPassivesService.GetPreviewAttackDamage(preview, baseDamage, ReadOnly: true);
+                    }
+                }
+                catch { finalDamage = baseDamage; }
+
+                return Math.Max(0, finalDamage);
             }
-            catch { return false; }
+            catch
+            {
+                return Math.Max(0, card.Damage);
+            }
         }
 
-        private static bool EqualsIgnoreCase(string a, string b)
+        private static int GetBlackCardBlockBonus(Entity entity)
         {
-            if (a == null && b == null) return true;
-            if (a == null || b == null) return false;
-            return string.Equals(a.Trim(), b.Trim(), StringComparison.OrdinalIgnoreCase);
+            if (entity.HasComponent<Colorless>()) return 0;
+            var modifiedBlock = entity.GetComponent<ModifiedBlock>();
+            if (modifiedBlock?.Modifications == null) return 0;
+
+            int bonus = 0;
+            foreach (var mod in modifiedBlock.Modifications)
+            {
+                if (mod.Reason == "Black card")
+                {
+                    bonus += mod.Delta;
+                }
+            }
+            return bonus;
         }
 
-        private void DrawCardBackgroundRotatedScaled(Vector2 position, float rotation, Color color, float scale)
+        private static Color GetPaletteColor(Dictionary<CardData.CardColor, Color> palette, CardData.CardColor cc, Color fallback)
         {
-            var rect = GetCardVisualRectScaled(position, scale);
-            var center = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
-
-            int radius = (int)Math.Round((CornerRadiusOverride > 0 ? CornerRadiusOverride : _settings.CardCornerRadius) * scale);
-            int bt = (int)Math.Round((BorderThicknessOverride > 0 ? BorderThicknessOverride : _settings.CardBorderThickness) * scale);
-
-            var outer = GetRoundedRectTexture(rect.Width, rect.Height, Math.Max(0, radius));
-            var inner = GetRoundedRectTexture(
-                Math.Max(1, rect.Width - bt * 2),
-                Math.Max(1, rect.Height - bt * 2),
-                Math.Max(0, radius - bt)
-            );
-
-            _spriteBatch.Draw(
-                outer,
-                position: center,
-                sourceRectangle: null,
-                color: color == Color.Black ? Color.White : Color.Black,
-                rotation: rotation,
-                origin: new Vector2(outer.Width / 2f, outer.Height / 2f),
-                scale: Vector2.One,
-                effects: SpriteEffects.None,
-                layerDepth: 0f
-            );
-
-            _spriteBatch.Draw(
-                inner,
-                position: center,
-                sourceRectangle: null,
-                color: color,
-                rotation: rotation,
-                origin: new Vector2(inner.Width / 2f, inner.Height / 2f),
-                scale: Vector2.One,
-                effects: SpriteEffects.None,
-                layerDepth: 0f
-            );
+            return palette.TryGetValue(cc, out var c) ? c : fallback;
         }
 
-        public void Dispose()
-        {
-            DisposeBase();
-        }
+        private Color ColorlessBackground => new(
+            ClampByte(ColorlessBackgroundR),
+            ClampByte(ColorlessBackgroundG),
+            ClampByte(ColorlessBackgroundB));
 
-        private Rectangle GetCardVisualRectScaled(Vector2 position, float scale)
-        {
-            if (_settings == null) _settings = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().First().GetComponent<CardVisualSettings>();
-            return GetCardVisualRect(position, scale, _settings.CardWidth, _settings.CardHeight, _settings.CardOffsetYExtra);
-        }
+        private Color ColorlessPrimaryText => new(
+            ClampByte(ColorlessPrimaryTextR),
+            ClampByte(ColorlessPrimaryTextG),
+            ClampByte(ColorlessPrimaryTextB));
+
+        private Color ColorlessMutedText => new(
+            ClampByte(ColorlessMutedTextR),
+            ClampByte(ColorlessMutedTextG),
+            ClampByte(ColorlessMutedTextB));
+
+        private Color ColorlessSurface => new(
+            ClampByte(ColorlessSurfaceR),
+            ClampByte(ColorlessSurfaceG),
+            ClampByte(ColorlessSurfaceB));
+
+        private static byte ClampByte(int value) => (byte)Math.Clamp(value, 0, 255);
     }
 }

@@ -327,7 +327,7 @@ namespace Crusaders30XX.ECS.Systems
 		private LayoutSignature CaptureLayoutSignature()
 		{
 			var overlayState = EntityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
-			var settings = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
+			var settings = CardGeometryService.GetSettings(EntityManager);
 			return new LayoutSignature
 			{
 				ModalWidth = ModalWidth,
@@ -361,9 +361,9 @@ namespace Crusaders30XX.ECS.Systems
 				ButtonWidth = ButtonWidth,
 				ButtonHeight = ButtonHeight,
 				ButtonTextScale = ButtonTextScale,
-				CardWidth = settings?.CardWidth ?? 250,
-				CardHeight = settings?.CardHeight ?? 340,
-				CardOffsetYExtra = settings?.CardOffsetYExtra ?? 0
+				CardWidth = settings?.CardWidth ?? CardGeometrySettings.DefaultWidth,
+				CardHeight = settings?.CardHeight ?? CardGeometrySettings.DefaultHeight,
+				CardOffsetYExtra = settings?.CardOffsetYExtra ?? CardGeometrySettings.DefaultOffsetYExtra
 			};
 		}
 
@@ -1673,21 +1673,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private Rectangle GetCardVisualRectScaled(Vector2 position, float scale)
 		{
-			var settings = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-			if (settings == null)
-			{
-				int w = (int)System.Math.Round(200 * scale);
-				int h = (int)System.Math.Round(300 * scale);
-				return new Rectangle((int)position.X - w / 2, (int)position.Y - h / 2, w, h);
-			}
-			int rw = (int)System.Math.Round(settings.CardWidth * scale);
-			int rh = (int)System.Math.Round(settings.CardHeight * scale);
-			int offsetY = (int)System.Math.Round(settings.CardOffsetYExtra * scale);
-			return new Rectangle(
-				(int)position.X - rw / 2,
-				(int)position.Y - (rh / 2 + offsetY),
-				rw,
-				rh);
+			return CardGeometryService.GetVisualRect(EntityManager, position, scale);
 		}
 
 		private Entity CreateRewardCard(string cardKey)

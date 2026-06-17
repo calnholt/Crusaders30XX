@@ -20,7 +20,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font = FontSingleton.ContentFont;
         private readonly GraphicsDevice _graphicsDevice;
-        private CardVisualSettings _settings;
+        private CardGeometrySettings _settings;
 
         [DebugEditable(DisplayName = "Text Scale", Step = 0.05f, Min = 0.1f, Max = 2.0f)]
         public float TextScale { get; set; } = 0.3f;
@@ -68,16 +68,8 @@ namespace Crusaders30XX.ECS.Systems
 
         private Rectangle ComputeCardBounds(Vector2 position)
         {
-            _settings ??= EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-            int cw = _settings?.CardWidth ?? 250;
-            int ch = _settings?.CardHeight ?? 350;
-            int offsetYExtra = _settings?.CardOffsetYExtra ?? (int)System.Math.Round((_settings?.UIScale ?? 1f) * 25);
-            return new Rectangle(
-                (int)position.X - cw / 2,
-                (int)position.Y - (ch / 2 + offsetYExtra),
-                cw,
-                ch
-            );
+            _settings ??= CardGeometryService.GetSettings(EntityManager);
+            return CardGeometryService.GetVisualRect(_settings, position);
         }
 
         private void OnCardRenderEvent(CardRenderEvent evt)

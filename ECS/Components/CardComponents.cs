@@ -874,38 +874,24 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
-    /// Shared visual settings for cards; systems read/write this singleton component to stay in sync.
+    /// Shared card geometry used by rendering, layout, highlights, and overlays.
     /// </summary>
-    public class CardVisualSettings : IComponent
+    public class CardGeometrySettings : IComponent
     {
-        // V1 defaults
-        public const int V1Width = 250;
-        public const int V1Height = 350;
-        public const int V1CornerRadius = 18;
-
-        // V2 defaults
-        public const int V2Width = 268;
-        public const int V2Height = 377;
-        public const int V2CornerRadius = 10;
+        public const int DefaultWidth = 268;
+        public const int DefaultHeight = 377;
+        public const int DefaultCornerRadius = 10;
+        public const int DefaultOffsetYExtra = 25;
+        public const int DefaultGap = -20;
+        public const int DefaultHighlightBorderThickness = 5;
 
         public Entity Owner { get; set; }
-        public float UIScale { get; set; }
         public int CardWidth { get; set; }
         public int CardHeight { get; set; }
         public int CardOffsetYExtra { get; set; }
         public int CardGap { get; set; }
-        public int CardBorderThickness { get; set; }
         public int CardCornerRadius { get; set; }
         public int HighlightBorderThickness { get; set; }
-        public int TextMarginX { get; set; }
-        public int TextMarginY { get; set; }
-        public float NameScale { get; set; }
-        public float CostScale { get; set; }
-        public float DescriptionScale { get; set; }
-        public float BlockScale { get; set; }
-        public float BlockNumberScale { get; set; }
-        public int BlockNumberMarginX { get; set; }
-        public int BlockNumberMarginY { get; set; }
     }
 
     /// <summary>

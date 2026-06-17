@@ -20,7 +20,6 @@ public sealed class ColorlessCardSnapshotFixture : IDisplaySnapshotFixture
 
     public void Setup(DisplaySnapshotContext ctx, string[] args)
     {
-        CardDisplayToggle.UseV2 = true;
         DestroyCards(ctx);
 
         var colors = new[]

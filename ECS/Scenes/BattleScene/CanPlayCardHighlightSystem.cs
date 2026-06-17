@@ -29,9 +29,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         private CanPlayHighlightSettings _cachedSettings;
         private int _cachedCornerRadius;
         private int _cachedBorderThickness;
-        private int _cachedCardWidth;
-        private int _cachedCardHeight;
-        private int _cachedOffsetYExtra;
+        private CardGeometrySettings _cachedGeometrySettings;
         private float _cachedPulseAmount;
         private Color _cachedGlowColor;
 
@@ -68,13 +66,9 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             var settingsEntity = EntityManager.GetEntitiesWithComponent<CanPlayHighlightSettings>().FirstOrDefault();
             _cachedSettings = settingsEntity?.GetComponent<CanPlayHighlightSettings>() ?? new CanPlayHighlightSettings();
 
-            var cvEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-            var cvs = cvEntity?.GetComponent<CardVisualSettings>();
-            _cachedCornerRadius = cvs?.CardCornerRadius ?? 18;
-            _cachedBorderThickness = cvs?.HighlightBorderThickness ?? 5;
-            _cachedCardWidth = cvs?.CardWidth ?? 250;
-            _cachedCardHeight = cvs?.CardHeight ?? 350;
-            _cachedOffsetYExtra = cvs?.CardOffsetYExtra ?? (int)Math.Round((cvs?.UIScale ?? 1f) * 25);
+            _cachedGeometrySettings = CardGeometryService.GetSettings(EntityManager);
+            _cachedCornerRadius = _cachedGeometrySettings?.CardCornerRadius ?? CardGeometrySettings.DefaultCornerRadius;
+            _cachedBorderThickness = _cachedGeometrySettings?.HighlightBorderThickness ?? CardGeometrySettings.DefaultHighlightBorderThickness;
 
             // Pulse animation
             var hs = _cachedSettings;
@@ -142,11 +136,7 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
             var t = evt.Transform;
             if (t == null) return;
 
-            var cardRect = new Rectangle(
-                (int)t.Position.X - _cachedCardWidth / 2,
-                (int)t.Position.Y - (_cachedCardHeight / 2 + _cachedOffsetYExtra),
-                _cachedCardWidth,
-                _cachedCardHeight);
+            var cardRect = CardGeometryService.GetVisualRect(_cachedGeometrySettings, t.Position);
 
             if (cardRect.Width <= 1 || cardRect.Height <= 1) return;
 

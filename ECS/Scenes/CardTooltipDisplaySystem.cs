@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private CardVisualSettings _settings;
+		private CardGeometrySettings _settings;
 		private readonly Dictionary<string, Entity> _tooltipCardCache = new();
 
 		[DebugEditable(DisplayName = "Gap Override (px)", Step = 1, Min = 0, Max = 200)]
@@ -53,8 +53,7 @@ namespace Crusaders30XX.ECS.Systems
 			// Ensure settings
 			if (_settings == null)
 			{
-				var s = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-				_settings = s?.GetComponent<CardVisualSettings>();
+				_settings = CardGeometryService.GetSettings(EntityManager);
 				if (_settings == null) return;
 			}
 
@@ -124,6 +123,5 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 
 

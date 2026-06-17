@@ -74,53 +74,28 @@ namespace Crusaders30XX.ECS.Systems
             : base(entityManager)
         {
             _graphicsDevice = graphicsDevice;
-            EventManager.Subscribe<CardDisplayToggleChangedEvent>(OnCardDisplayToggleChanged);
         }
 
-		private void OnCardDisplayToggleChanged(CardDisplayToggleChangedEvent evt)
-		{
-			_baselineCaptured = false;
-			_lastAppliedScale = -1f;
-
-			LoggingService.Append("HandDisplaySystem.OnCardDisplayToggleChanged", new System.Text.Json.Nodes.JsonObject
-			{
-				["useV2"] = evt.UseV2
-			});
-		}
-
-		// Baseline snapshot of CardVisualSettings captured once to compute scaled values from
+		// Baseline snapshot of CardGeometrySettings captured once to compute scaled values from
 		private bool _baselineCaptured;
-		private int _baseCardWidth, _baseCardHeight, _baseCardGap, _baseCardBorderThickness, _baseCardCornerRadius, _baseHighlightBorderThickness;
-		private int _baseTextMarginX, _baseTextMarginY, _baseBlockNumberMarginX, _baseBlockNumberMarginY, _baseCardOffsetYExtra;
-		private float _baseUIScale, _baseNameScale, _baseCostScale, _baseDescriptionScale, _baseBlockScale, _baseBlockNumberScale;
+		private int _baseCardWidth, _baseCardHeight, _baseCardGap, _baseCardCornerRadius, _baseHighlightBorderThickness, _baseCardOffsetYExtra;
 		private float _lastAppliedScale = -1f;
 		private string _lastHandReconciliationSignature = string.Empty;
 
 
-		private void CaptureBaselineIfNeeded(CardVisualSettings s)
+		private void CaptureBaselineIfNeeded(CardGeometrySettings s)
 		{
 			if (_baselineCaptured || s == null) return;
-			_baseUIScale = s.UIScale;
 			_baseCardWidth = s.CardWidth;
 			_baseCardHeight = s.CardHeight;
 			_baseCardOffsetYExtra = s.CardOffsetYExtra;
 			_baseCardGap = s.CardGap;
-			_baseCardBorderThickness = s.CardBorderThickness;
 			_baseCardCornerRadius = s.CardCornerRadius;
 			_baseHighlightBorderThickness = s.HighlightBorderThickness;
-			_baseTextMarginX = s.TextMarginX;
-			_baseTextMarginY = s.TextMarginY;
-			_baseNameScale = s.NameScale;
-			_baseCostScale = s.CostScale;
-			_baseDescriptionScale = s.DescriptionScale;
-			_baseBlockScale = s.BlockScale;
-			_baseBlockNumberScale = s.BlockNumberScale;
-			_baseBlockNumberMarginX = s.BlockNumberMarginX;
-			_baseBlockNumberMarginY = s.BlockNumberMarginY;
 			_baselineCaptured = true;
 		}
 
-		private void ApplyViewportScalingIfNeeded(CardVisualSettings s)
+		private void ApplyViewportScalingIfNeeded(CardGeometrySettings s)
 		{
 			if (s == null) return;
 			CaptureBaselineIfNeeded(s);
@@ -138,21 +113,8 @@ namespace Crusaders30XX.ECS.Systems
 			s.CardHeight = Math.Max(10, (int)MathF.Round(_baseCardHeight * scaled));
 			s.CardOffsetYExtra = (int)MathF.Round(_baseCardOffsetYExtra * scaled);
 			s.CardGap = (int)MathF.Round(_baseCardGap * scaled);
-			s.CardBorderThickness = Math.Max(0, (int)MathF.Round(_baseCardBorderThickness * scaled));
 			s.CardCornerRadius = Math.Max(0, (int)MathF.Round(_baseCardCornerRadius * scaled));
 			s.HighlightBorderThickness = Math.Max(0, (int)MathF.Round(_baseHighlightBorderThickness * scaled));
-			s.TextMarginX = Math.Max(0, (int)MathF.Round(_baseTextMarginX * scaled));
-			s.TextMarginY = Math.Max(0, (int)MathF.Round(_baseTextMarginY * scaled));
-			s.BlockNumberMarginX = Math.Max(0, (int)MathF.Round(_baseBlockNumberMarginX * scaled));
-			s.BlockNumberMarginY = Math.Max(0, (int)MathF.Round(_baseBlockNumberMarginY * scaled));
-
-			// Scale float text scales and UI scale coherently
-			s.UIScale = _baseUIScale * scaled;
-			s.NameScale = _baseNameScale * scaled;
-			s.CostScale = _baseCostScale * scaled;
-			s.DescriptionScale = _baseDescriptionScale * scaled;
-			s.BlockScale = _baseBlockScale * scaled;
-			s.BlockNumberScale = _baseBlockNumberScale * scaled;
 		}
 
 		private float GetClampedCardSpacing(int count, float idealSpacing, float screenWidth, float cardWidth, float cardHeight, float maxAngleRad)
@@ -241,14 +203,13 @@ namespace Crusaders30XX.ECS.Systems
                         // Use unnormalized index delta so width grows with number of cards
                         float indexDelta = cardIndex - mid; // [-mid, +mid]
                         // Use shared settings for spacing
-                        var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-						var cvs = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+						var cvs = CardGeometryService.GetSettings(EntityManager);
 						// Apply viewport-aware scaling to card visuals (1080p baseline -> scale down below)
 						ApplyViewportScalingIfNeeded(cvs);
-						float cardWidth = cvs?.CardWidth ?? 250f;
-						float cardHeight = cvs?.CardHeight ?? 350f;
+						float cardWidth = cvs?.CardWidth ?? CardGeometrySettings.DefaultWidth;
+						float cardHeight = cvs?.CardHeight ?? CardGeometrySettings.DefaultHeight;
                         float idealCardSpacing = (cvs != null) ? (cvs.CardWidth + cvs.CardGap) : 0f;
-                        if (idealCardSpacing <= 0f) { idealCardSpacing = 250 + (-20); }
+                        if (idealCardSpacing <= 0f) { idealCardSpacing = CardGeometrySettings.DefaultWidth + CardGeometrySettings.DefaultGap; }
 						float cardSpacing = GetClampedCardSpacing(count, idealCardSpacing, screenWidth, cardWidth, cardHeight, maxAngleRad);
                         float x = pivot.X + indexDelta * cardSpacing;
 
@@ -313,18 +274,10 @@ namespace Crusaders30XX.ECS.Systems
                             transform.ZOrder = HandZBase + (cardIndex * HandZStep) + (hovered ? HandZHoverBoost : 0);
                         }
 
-                        // Update UI bounds to original unrotated dimensions
+                        // Update UI bounds to current card geometry.
                         if (ui != null)
                         {
-                            int w = cvs?.CardWidth ?? 250;
-                            int h = cvs?.CardHeight ?? 350;
-
-                            ui.Bounds = new Rectangle(
-                                (int)transform.Position.X - w / 2,
-                                (int)transform.Position.Y - h / 2,
-                                w,
-                                h
-                            );
+                            ui.Bounds = CardGeometryService.GetVisualRect(cvs, transform.Position);
                         }
                     }
                 }

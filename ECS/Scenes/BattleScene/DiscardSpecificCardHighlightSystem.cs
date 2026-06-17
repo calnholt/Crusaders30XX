@@ -1,6 +1,7 @@
 using System.Linq;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -99,33 +100,17 @@ namespace Crusaders30XX.ECS.Systems
                 var t = card.GetComponent<Transform>();
                 var ui = card.GetComponent<UIElement>();
                 if (t == null || ui == null) continue;
-                var rect = ComputeCardBounds(card, t.Position);
+                var rect = CardGeometryService.GetVisualRect(EntityManager, t.Position);
                 DrawSparkles(rect, t.Rotation, t.Scale);
             }
-        }
-
-        private Rectangle ComputeCardBounds(Entity cardEntity, Vector2 position)
-        {
-            var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-            var s = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
-            int cw = s?.CardWidth ?? 250;
-            int ch = s?.CardHeight ?? 350;
-            int offsetYExtra = s?.CardOffsetYExtra ?? (int)System.Math.Round((s?.UIScale ?? 1f) * 25);
-            return new Rectangle(
-                (int)position.X - cw / 2,
-                (int)position.Y - (ch / 2 + offsetYExtra),
-                cw,
-                ch
-            );
         }
 
         private void DrawInsideBorderHighlight(Rectangle rect, float rotation, Vector2 scale)
         {
             // Inside-the-border rounded glow similar to CardHighlightSystem but inset
-            var settingsEntity = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault();
-            var s = settingsEntity != null ? settingsEntity.GetComponent<CardVisualSettings>() : null;
+            var s = CardGeometryService.GetSettings(EntityManager);
             int borderThickness = System.Math.Max(2, (s?.HighlightBorderThickness ?? 5) - 2);
-            int cornerRadius = System.Math.Max(4, (s?.CardCornerRadius ?? 18) - 3);
+            int cornerRadius = System.Math.Max(4, (s?.CardCornerRadius ?? CardGeometrySettings.DefaultCornerRadius) - 3);
             var inner = new Rectangle(
                 rect.X + borderThickness,
                 rect.Y + borderThickness,
@@ -253,5 +238,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
-

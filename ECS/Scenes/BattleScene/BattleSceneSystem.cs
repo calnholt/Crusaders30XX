@@ -59,7 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 		private PoisonSystem _poisonSystem;
 		private PassiveMeterRenderSystem _passiveMeterRenderSystem;
 		private SanguineCurseSystem _sanguineCurseSystem;
-		private CardVisualSettingsDebugSystem _cardVisualSettingsDebugSystem;
+		private CardGeometrySettingsDebugSystem _cardGeometrySettingsDebugSystem;
 		private HpManagementSystem _hpManagementSystem;
 		private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
 		private TestFightHpDisplaySystem _testFightHpDisplaySystem;
@@ -575,7 +575,7 @@ namespace Crusaders30XX.ECS.Systems
 			_poisonSystem = new PoisonSystem(_world.EntityManager);
 			_passiveMeterRenderSystem = new PassiveMeterRenderSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_sanguineCurseSystem = new SanguineCurseSystem(_world.EntityManager);
-			_cardVisualSettingsDebugSystem = new CardVisualSettingsDebugSystem(_world.EntityManager);
+			_cardGeometrySettingsDebugSystem = new CardGeometrySettingsDebugSystem(_world.EntityManager);
 			_hpManagementSystem = new HpManagementSystem(_world.EntityManager);
 			_pledgeManagementSystem = new PledgeManagementSystem(_world.EntityManager);
 			_eventQueueSystem = new EventQueueSystem(_world.EntityManager);
@@ -702,7 +702,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_hpDisplaySystem);
 			_world.AddSystem(_enemyDifficultyDisplaySystem);
 			_world.AddSystem(_appliedPassivesDisplaySystem);
-			_world.AddSystem(_cardVisualSettingsDebugSystem);
+			_world.AddSystem(_cardGeometrySettingsDebugSystem);
 			_world.AddSystem(_hpManagementSystem);
 			_world.AddSystem(_enemyDefeatFlowSystem);
 			_world.AddSystem(_enemyPhaseFlowSystem);

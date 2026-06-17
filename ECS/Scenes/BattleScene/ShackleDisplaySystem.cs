@@ -21,7 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly GraphicsDevice _graphicsDevice;
 		private Texture2D _shackleTexture;
-		private CardVisualSettings _settings;
+		private CardGeometrySettings _settings;
 
 	[DebugEditable(DisplayName = "Min Alpha", Step = 5, Min = 0, Max = 255)]
 	public int MinAlpha { get; set; } = 40;
@@ -74,16 +74,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		private Rectangle ComputeCardBounds(Vector2 position)
 		{
-			_settings ??= EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-			int cw = _settings?.CardWidth ?? 250;
-			int ch = _settings?.CardHeight ?? 350;
-			int offsetYExtra = _settings?.CardOffsetYExtra ?? (int)Math.Round((_settings?.UIScale ?? 1f) * 25);
-			return new Rectangle(
-				(int)position.X - cw / 2,
-				(int)position.Y - (ch / 2 + offsetYExtra),
-				cw,
-				ch
-			);
+			_settings ??= CardGeometryService.GetSettings(EntityManager);
+			return CardGeometryService.GetVisualRect(_settings, position);
 		}
 
 		private void OnCardRenderEvent(CardRenderEvent evt)
@@ -117,17 +109,10 @@ namespace Crusaders30XX.ECS.Systems
 			var transform = evt.Card.GetComponent<Transform>();
 			if (transform == null) return;
 
-			// Get card dimensions and settings
-			_settings ??= EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-			int cardWidth = _settings?.CardWidth ?? 250;
-			int cardHeight = _settings?.CardHeight ?? 350;
-			int cardOffsetYExtra = _settings?.CardOffsetYExtra ?? 0;
-
-			// For scaled rendering, CardDisplaySystem applies CardOffsetYExtra which shifts the card up.
-			// The actual visual center of the card is at position.Y - (CardOffsetYExtra * scale)
-			var center = evt.Position;
-			int offsetY = (int)Math.Round(cardOffsetYExtra * evt.Scale);
-			center.Y -= offsetY;
+			_settings ??= CardGeometryService.GetSettings(EntityManager);
+			int cardWidth = _settings?.CardWidth ?? CardGeometrySettings.DefaultWidth;
+			int cardHeight = _settings?.CardHeight ?? CardGeometrySettings.DefaultHeight;
+			var center = CardGeometryService.GetVisualCenter(_settings, evt.Position, evt.Scale);
 
 			// Apply shackle-specific offsets (scaled by event scale)
 			center.X += ShackleOffsetX * evt.Scale;

@@ -29,7 +29,6 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 
         public void Setup(DisplaySnapshotContext ctx, string[] args)
         {
-            CardDisplayToggle.UseV2 = true;
 
             string requestedId = args.Length > 0 ? args[0] : null;
             var allCards = CardFactory.GetAllCards();
