@@ -21,8 +21,7 @@ weapons
 
 
 tech debt
-- pledge services need to send events to change state not directly manipulate entities
-- remove original card display system
+- 
 
 
 persistent card states:

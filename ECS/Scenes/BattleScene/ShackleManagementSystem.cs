@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Systems
 	{
 		private bool _isProcessing = false;
 		private bool _blockedWithShackledCard = false;
+		private bool _shacklesAppliedThisEnemyTurn = false;
 		public ShackleManagementSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
@@ -45,7 +46,8 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			var handCards = GetComponentHelper.GetHandOfCards(EntityManager);
 			var availableCards = handCards
-				.Where(c => c.GetComponent<Intimidated>() == null)
+				.Where(c => c.GetComponent<Intimidated>() == null
+					&& c.GetComponent<Shackle>() == null)
 				.ToList();
 
 			// Need at least 2 non-intimidated cards to apply shackle
@@ -153,14 +155,23 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnPhaseChanged(ChangeBattlePhaseEvent evt)
 		{
-			if (evt.Current == SubPhase.PreBlock)
+			if (evt.Current == SubPhase.EnemyStart)
 			{
-				ApplyShackleEffect();
+				_shacklesAppliedThisEnemyTurn = false;
+			}
+			else if (evt.Current == SubPhase.PreBlock)
+			{
+				if (!_shacklesAppliedThisEnemyTurn)
+				{
+					ApplyShackleEffect();
+					_shacklesAppliedThisEnemyTurn = true;
+				}
 			}
 			else if (evt.Current == SubPhase.EnemyEnd)
 			{
 				RemoveAllShackles();
 				_blockedWithShackledCard = false;
+				_shacklesAppliedThisEnemyTurn = false;
 			}
 		}
 
@@ -180,6 +191,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_blockedWithShackledCard = false;
 			_isProcessing = false;
+			_shacklesAppliedThisEnemyTurn = false;
 		}
 		private void RemoveAllShackles()
 		{
