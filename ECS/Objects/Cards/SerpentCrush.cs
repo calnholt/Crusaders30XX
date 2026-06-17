@@ -11,12 +11,14 @@ namespace Crusaders30XX.ECS.Objects.Cards
         private int CourageCost = 4;
         private int ActionPointAmount = 1;
         private int DrawAmount = 1;
+
+        private int CourageCostUpgrade = 1;
         public SerpentCrush()
         {
             CardId = "serpent_crush";
             Name = "Serpent Crush";
             Target = "Enemy";
-            Text = $"As an additional cost, lose {CourageCost} courage. Gain {ActionPointAmount} action point and draw {DrawAmount} card.";
+            Text = $"As an additional cost, lose {GetCourageCost(IsUpgraded)} courage. Gain {ActionPointAmount} action point and draw {DrawAmount} random card from your discard pile.";
             IsFreeAction = true;
             Animation = "Attack";
             Damage = 3;
@@ -33,9 +35,9 @@ namespace Crusaders30XX.ECS.Objects.Cards
  
                     DamageType = ModifyTypeEnum.Attack 
                 });
-                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -CourageCost, Type = ModifyCourageType.Spent });
+                EventManager.Publish(new ModifyCourageRequestEvent { Delta = -GetCourageCost(IsUpgraded), Type = ModifyCourageType.Spent });
                 EventManager.Publish(new ModifyActionPointsEvent { Delta = ActionPointAmount });
-                EventManager.Publish(new RequestDrawCardsEvent { Count = DrawAmount });
+                EventManager.Publish(new DrawRandomCardFromDiscardEvent { Amount = DrawAmount });
             };
 
             CanPlay = (entityManager, card) =>
@@ -43,7 +45,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                 var courageCmp = player?.GetComponent<Courage>();
                 int courage = courageCmp?.Amount ?? 0;
-                if (courage < CourageCost) return false;
+                if (courage < GetCourageCost(IsUpgraded)) return false;
                 return true;
             };
             OnCantPlay = (entityManager, card) =>
@@ -51,11 +53,19 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 var player = entityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
                 var courageCmp = player?.GetComponent<Courage>();
                 int courage = courageCmp?.Amount ?? 0;
-                if (courage < CourageCost)
-                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageCost} courage!" });
+                if (courage < GetCourageCost(IsUpgraded))
+                    EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {GetCourageCost(IsUpgraded)} courage!" });
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"As an additional cost, lose {GetCourageCost(IsUpgraded)} courage. Gain {ActionPointAmount} action point and draw {DrawAmount} random card from your discard pile.";
             };
         }
 
-        
+        private int GetCourageCost(bool isUpgraded)
+        {
+            return isUpgraded ? CourageCost - CourageCostUpgrade : CourageCost;
+        }
     }
 }

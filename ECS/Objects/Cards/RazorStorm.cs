@@ -6,13 +6,15 @@ namespace Crusaders30XX.ECS.Objects.Cards;
 public class RazorStorm : CardBase
 {
   private int NumOfHits = 2;
+
+  private int NumOfHitsUpgrade = 1;
   public RazorStorm()
   {
     CardId = "razor_storm";
     Rarity = Rarity.Uncommon;
     Name = "Razor Storm";
     Target = "Enemy";
-    Text = $"Attacks {NumOfHits} times.";
+    Text = $"Attacks {GetNumOfHits(IsUpgraded)} times.";
     Animation = "Attack";
     Damage = 1;
     Block = 2;
@@ -21,7 +23,7 @@ public class RazorStorm : CardBase
     OnPlay = (entityManager, card) =>
     {
       var time = 0.5f;
-      var numOfHits = NumOfHits;
+      var numOfHits = GetNumOfHits(IsUpgraded);
       EventManager.Publish(new EndTurnDisplayEvent { ShowButton = false });
       TimerScheduler.Schedule(time * numOfHits, () =>
       {
@@ -43,5 +45,15 @@ public class RazorStorm : CardBase
         });
       }
     };
+
+    OnUpgrade = (entityManager, card) =>
+    {
+      Text = $"Attacks {GetNumOfHits(IsUpgraded)} times.";
+    };
+
+    private int GetNumOfHits(bool isUpgraded)
+    {
+      return isUpgraded ? NumOfHits + NumOfHitsUpgrade : NumOfHits;
+    }
   }
 }

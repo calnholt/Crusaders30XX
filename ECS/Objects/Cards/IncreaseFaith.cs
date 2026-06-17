@@ -7,6 +7,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
     public class IncreaseFaith : CardBase
     {
         private int PowerGained = 1;
+
+        private int AegisGainedUpgrade = 2;
         public IncreaseFaith()
         {
             CardId = "increase_faith";
@@ -29,6 +31,25 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Type = AppliedPassiveType.Power, 
                     Delta = PowerGained 
                 });
+            };
+
+            OnPledged = (entityManager, card) =>
+            {
+                if (IsUpgraded)
+                {
+                    var player = entityManager.GetEntity("Player");
+                    EventManager.Publish(new ApplyPassiveEvent 
+                    { 
+                        Target = player, 
+                        Type = AppliedPassiveType.Aegis, 
+                        Delta = AegisGainedUpgrade 
+                    });
+                }
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"When this is pledged, gain {AegisGainedUpgrade} aegis.\n\nGain {PowerGained} power.";
             };
         }
     }

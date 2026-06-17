@@ -355,13 +355,12 @@ public class QuestCardRewardServiceTests
 
 	private sealed class TestOnUpgradeCard : CardBase
 	{
-		public const string CardId = "test_on_upgrade_card";
 		public static int SpawnInvokeCount;
 		public static int ApplyInvokeCount;
 
 		public TestOnUpgradeCard()
 		{
-			this.CardId = CardId;
+			CardId = "test_on_upgrade_card";
 			OnUpgrade = (entityManager, card) =>
 			{
 				if (card != null)

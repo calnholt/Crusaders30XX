@@ -161,6 +161,15 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Event to request drawing random cards from the discard pile into the hand.
+    /// Moves up to Amount cards; partial if discard is short.
+    /// </summary>
+    public class DrawRandomCardFromDiscardEvent
+    {
+        public int Amount { get; set; } = 1;
+    }
+
+    /// <summary>
     /// Event to request discarding all cards in the hand
     /// </summary>
     public class DiscardAllCardsEvent

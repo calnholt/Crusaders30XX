@@ -7,23 +7,26 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Ravage : CardBase
     {
-        private int MillAmount = 4;
+        private int MillAmount = 1;
+
+        private int MillAmountUpgrade = 3;
+        private int DamageAmountUpgrade = 3;
         public Ravage()
         {
             CardId = "ravage";
             Name = "Ravage";
             Target = "Enemy";
-            Text = $"As an additional cost, mill {MillAmount} cards.";
+            Text = $"As an additional cost, mill {GetMillAmount(IsUpgraded)} cards.";
             Cost = ["Any"];
             Animation = "Attack";
-            Damage = 10;
+            Damage = 8;
             Block = 3;
 
             OnPlay = (entityManager, card) =>
             {
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
-                for (int j = 0; j < MillAmount; j++)
+                for (int j = 0; j < GetMillAmount(IsUpgraded); j++)
                 {
                     EventManager.Publish(new MillCardEvent { });
                 }
@@ -41,15 +44,26 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 var deck = deckEntity?.GetComponent<Deck>();
-                return deck != null && deck.DrawPile.Count >= MillAmount;
+                return deck != null && deck.DrawPile.Count >= GetMillAmount(IsUpgraded);
             };
             OnCantPlay = (entityManager, card) =>
             {
                 var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 var deck = deckEntity?.GetComponent<Deck>();
-                if (deck == null || deck.DrawPile.Count < MillAmount)
+                if (deck == null || deck.DrawPile.Count < GetMillAmount(IsUpgraded))
                     EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {MillAmount} cards in deck!" });
             };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"As an additional cost, mill {GetMillAmount(IsUpgraded)} cards.";
+            };
+
+            private int GetMillAmount(bool isUpgraded)
+            {
+                Damage += DamageAmountUpgrade;
+                return isUpgraded ? MillAmount + MillAmountUpgrade : MillAmount;
+            }
         }
     }
 }

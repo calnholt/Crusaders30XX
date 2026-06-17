@@ -96,6 +96,61 @@ public class DeckManagementSystemTests
         Assert.Equal(1, after.cardIds.Count(k => SaveCache.IsStarterCardKey(k)));
     }
 
+    [Fact]
+    public void DrawRandomCardFromDiscardEvent_moves_cards_to_hand()
+    {
+        EventManager.Clear();
+        var entityManager = new EntityManager();
+        var deck = CreateDeckEntity(entityManager);
+        deck.DiscardPile.Add(CreateCard(entityManager));
+        deck.DiscardPile.Add(CreateCard(entityManager));
+        deck.DiscardPile.Add(CreateCard(entityManager));
+        _ = new DeckManagementSystem(entityManager);
+
+        EventManager.Publish(new DrawRandomCardFromDiscardEvent { Amount = 2 });
+
+        Assert.Equal(2, deck.Hand.Count);
+        Assert.Single(deck.DiscardPile);
+    }
+
+    [Fact]
+    public void DrawRandomCardFromDiscardEvent_partial_when_insufficient()
+    {
+        EventManager.Clear();
+        var entityManager = new EntityManager();
+        var deck = CreateDeckEntity(entityManager);
+        deck.DiscardPile.Add(CreateCard(entityManager));
+        deck.DiscardPile.Add(CreateCard(entityManager));
+        _ = new DeckManagementSystem(entityManager);
+
+        EventManager.Publish(new DrawRandomCardFromDiscardEvent { Amount = 5 });
+
+        Assert.Equal(2, deck.Hand.Count);
+        Assert.Empty(deck.DiscardPile);
+    }
+
+    [Fact]
+    public void DrawRandomCardFromDiscardEvent_noop_when_empty()
+    {
+        EventManager.Clear();
+        var entityManager = new EntityManager();
+        var deck = CreateDeckEntity(entityManager);
+        _ = new DeckManagementSystem(entityManager);
+
+        EventManager.Publish(new DrawRandomCardFromDiscardEvent { Amount = 3 });
+
+        Assert.Empty(deck.Hand);
+        Assert.Empty(deck.DiscardPile);
+    }
+
+    private static Deck CreateDeckEntity(EntityManager entityManager)
+    {
+        var deckEntity = entityManager.CreateEntity("Deck");
+        var deck = new Deck();
+        entityManager.AddComponent(deckEntity, deck);
+        return deck;
+    }
+
     private static Entity CreateCard(EntityManager entityManager)
     {
         var entity = entityManager.CreateEntity("tempest");

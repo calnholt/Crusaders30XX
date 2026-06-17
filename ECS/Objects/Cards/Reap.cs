@@ -10,17 +10,18 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class Reap : CardBase
     {
-        private int DamageBonus = 3;
+        private int DamageBonus = 2;
+        private int CourageBonusUpgrade = 2;
         public Reap()
         {
             CardId = "reap";
             Name = "Reap";
             Target = "Player";
             Cost = ["Any","Any"];
-            Text = $"This attack gains +{DamageBonus} damage if two red cards are discarded to play this.";
+            Text = $"If two red cards are discarded to play this, this gains +{DamageBonus} damage.";
             Animation = "Attack";
             Block = 3;
-            Damage = 7;
+            Damage = 8;
 
             OnPlay = (entityManager, card) =>
             {
@@ -32,6 +33,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
  
                   DamageType = ModifyTypeEnum.Attack 
                 });
+                if (IsUpgraded)
+                {
+                    EventManager.Publish(new ModifyCourageRequestEvent { Delta = CourageBonusUpgrade, Type = ModifyCourageType.Gain });
+                }
             };
 
             GetConditionalDamage = (entityManager, card) =>
@@ -48,6 +53,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 }
                 
                 return redCards == 2 ? DamageBonus : 0;
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"If two red cards are discarded to play this, this gains +{DamageBonus} damage and gain {CourageBonusUpgrade} courage.";
             };
         }
     }

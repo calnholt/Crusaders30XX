@@ -29,6 +29,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<DiscardAllCardsEvent>(OnDiscardAllCards);
             EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
             EventManager.Subscribe<RemoveRandomCardEvent>(OnRemoveRandomCard);
+            EventManager.Subscribe<DrawRandomCardFromDiscardEvent>(OnDrawRandomCardFromDiscard);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -159,54 +160,107 @@ namespace Crusaders30XX.ECS.Systems
                     });
                     return DrawCard(deck);
                 }
-                // Spawn off-screen right so the card flies into the hand
-                var transform = card.GetComponent<Transform>();
-                if (transform != null)
-                {
-                    var cvs = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
-                    float cardW = cvs?.CardWidth ?? 250;
-                    var spawn = new Vector2(Game1.VirtualWidth + (cardW * 1.5f), (float)Game1.VirtualHeight);
-                    transform.Position = spawn;
-                    transform.Rotation = 0f;
-                    var tween = card.GetComponent<PositionTween>();
-                    if (tween != null)
-                    {
-                        tween.Current = spawn;
-                        tween.Target = spawn;
-                        tween.Initialized = true;
-                    }
-                }
-                deck.Hand.Add(card);
-                // Ensure UI becomes interactable again when a card enters the hand
-                var ui = card.GetComponent<UIElement>();
-                if (ui != null)
-                {
-                    ui.SuppressCount = 0; // clear any phase suppression carried from draw pile
-                    ui.IsInteractable = true;
-                    ui.IsHovered = false;
-                    ui.IsClicked = false;
-                    ui.EventType = UIElementEventType.CardClicked;
-                }
-
-                LoggingService.Append("DeckManagementSystem.DrawCard", new System.Text.Json.Nodes.JsonObject
-                {
-                    ["result"] = "success",
-                    ["cardId"] = card?.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
-                    ["entityId"] = card?.Id ?? -1,
-                    ["handCount"] = deck.Hand.Count,
-                    ["visibleHandCount"] = HandStateLoggingService.CountVisibleHand(deck.Hand),
-                    ["effectiveDrawHandCount"] = HandStateLoggingService.CountEffectiveDrawHand(deck.Hand),
-                    ["drawPileCount"] = deck.DrawPile.Count,
-                    ["discardPileCount"] = deck.DiscardPile.Count,
-                    ["spawnX"] = transform?.Position.X ?? 0,
-                    ["spawnY"] = transform?.Position.Y ?? 0,
-                    ["hasPositionTween"] = card?.HasComponent<PositionTween>() ?? false,
-                    ["card"] = HandStateLoggingService.BuildCardSnapshot(card)
-                });
+                PromoteCardToHand(deck, card);
                 return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Moves up to amount random cards from discard pile to hand.
+        /// Returns the number of cards actually moved.
+        /// </summary>
+        public int DrawRandomCardsFromDiscard(Deck deck, int amount)
+        {
+            if (deck == null || amount <= 0 || deck.DiscardPile.Count == 0) return 0;
+
+            int toDraw = Math.Min(amount, deck.DiscardPile.Count);
+            var picked = deck.DiscardPile
+                .OrderBy(_ => Guid.NewGuid())
+                .Take(toDraw)
+                .ToList();
+
+            int movedCount = 0;
+            foreach (var card in picked)
+            {
+                if (!deck.DiscardPile.Remove(card)) continue;
+                if (card.GetComponent<CardData>()?.Card?.IsWeapon == true)
+                {
+                    deck.DiscardPile.Add(card);
+                    continue;
+                }
+                PromoteCardToHand(deck, card);
+                movedCount++;
+            }
+
+            if (movedCount > 0)
+            {
+                EventManager.Publish(new CardsDrawnEvent
+                {
+                    Deck = deck.Owner,
+                    DrawnCards = deck.Hand.ToList()
+                });
+            }
+
+            LoggingService.Append("DeckManagementSystem.DrawRandomCardsFromDiscard", new System.Text.Json.Nodes.JsonObject
+            {
+                ["requestedAmount"] = amount,
+                ["movedCount"] = movedCount,
+                ["handCount"] = deck.Hand.Count,
+                ["discardPileCount"] = deck.DiscardPile.Count
+            });
+
+            return movedCount;
+        }
+
+        private void PromoteCardToHand(Deck deck, Entity card)
+        {
+            CardTransientStateService.ClearHandVisibilityFilters(EntityManager, card);
+            CardTransientStateService.ClearAssignedBlockHotKey(EntityManager, card);
+
+            var transform = card.GetComponent<Transform>();
+            if (transform != null)
+            {
+                var cvs = EntityManager.GetEntitiesWithComponent<CardVisualSettings>().FirstOrDefault()?.GetComponent<CardVisualSettings>();
+                float cardW = cvs?.CardWidth ?? 250;
+                var spawn = new Vector2(Game1.VirtualWidth + (cardW * 1.5f), (float)Game1.VirtualHeight);
+                transform.Position = spawn;
+                transform.Rotation = 0f;
+                var tween = card.GetComponent<PositionTween>();
+                if (tween != null)
+                {
+                    tween.Current = spawn;
+                    tween.Target = spawn;
+                    tween.Initialized = true;
+                }
+            }
+            deck.Hand.Add(card);
+            var ui = card.GetComponent<UIElement>();
+            if (ui != null)
+            {
+                ui.SuppressCount = 0;
+                ui.IsInteractable = true;
+                ui.IsHovered = false;
+                ui.IsClicked = false;
+                ui.EventType = UIElementEventType.CardClicked;
+            }
+
+            LoggingService.Append("DeckManagementSystem.PromoteCardToHand", new System.Text.Json.Nodes.JsonObject
+            {
+                ["result"] = "success",
+                ["cardId"] = card?.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                ["entityId"] = card?.Id ?? -1,
+                ["handCount"] = deck.Hand.Count,
+                ["visibleHandCount"] = HandStateLoggingService.CountVisibleHand(deck.Hand),
+                ["effectiveDrawHandCount"] = HandStateLoggingService.CountEffectiveDrawHand(deck.Hand),
+                ["drawPileCount"] = deck.DrawPile.Count,
+                ["discardPileCount"] = deck.DiscardPile.Count,
+                ["spawnX"] = transform?.Position.X ?? 0,
+                ["spawnY"] = transform?.Position.Y ?? 0,
+                ["hasPositionTween"] = card?.HasComponent<PositionTween>() ?? false,
+                ["card"] = HandStateLoggingService.BuildCardSnapshot(card)
+            });
         }
 
         /// <summary>
@@ -645,6 +699,18 @@ namespace Crusaders30XX.ECS.Systems
                 ["drawPileCount"] = deck.DrawPile.Count,
                 ["discardPileCount"] = deck.DiscardPile.Count
             });
+        }
+
+        private void OnDrawRandomCardFromDiscard(DrawRandomCardFromDiscardEvent evt)
+        {
+            if (evt == null || evt.Amount <= 0) return;
+
+            var deckEntity = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
+            if (deckEntity == null) return;
+            var deck = deckEntity.GetComponent<Deck>();
+            if (deck == null) return;
+
+            DrawRandomCardsFromDiscard(deck, evt.Amount);
         }
 
         private void OnRemoveRandomCard(RemoveRandomCardEvent evt)

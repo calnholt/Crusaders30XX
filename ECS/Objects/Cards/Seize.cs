@@ -34,6 +34,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 });
             };
 
+            OnUpgrade = (entityManager, card) =>
+            {
+                IsFreeAction = true;
+            };
+
             GetConditionalDamage = (entityManager, card) =>
                 _courageLostThisPhase ? DamageBonus : 0;
         }

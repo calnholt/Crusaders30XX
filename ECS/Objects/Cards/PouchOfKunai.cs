@@ -11,12 +11,14 @@ namespace Crusaders30XX.ECS.Objects.Cards
     {
         private int MinKunai = 2;
         private int MaxKunai = 4;
+
+        private int MinKunaiUpgrade = 3;
         public PouchOfKunai()
         {
             CardId = "pouch_of_kunai";
             Name = "Pouch of Kunai";
             Target = "Player";
-            Text = $"Put {MinKunai} to {MaxKunai} Kunai cards in your hand.";
+            Text = $"Put {GetMinKunai(IsUpgraded)} to {GetMaxKunai(IsUpgraded)} Kunai cards in your hand.";
             Cost = ["White"];
             Animation = "Buff";
             Type = CardType.Prayer;
@@ -24,7 +26,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
             OnPlay = (entityManager, card) =>
             {
-                var count = Random.Shared.Next(MinKunai, MaxKunai + 1);
+                var count = Random.Shared.Next(GetMinKunai(IsUpgraded), GetMaxKunai(IsUpgraded) + 1);
                 var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
                 for (int j = 0; j < count; j++)
                 {
@@ -32,6 +34,21 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     EventManager.Publish(new CardMoveRequested { Card = kunai, Deck = deckEntity, Destination = CardZoneType.Hand, Reason = "PouchOfKunai" });
                 }
             };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Text = $"Put {GetMinKunai(IsUpgraded)} to {GetMaxKunai(IsUpgraded)} Kunai+ cards in your hand.";
+            };
+        }
+
+        private int GetMinKunai(bool isUpgraded)
+        {
+            return isUpgraded ? MinKunai + MinKunaiUpgrade : MinKunai;
+        }
+
+        private int GetMaxKunai(bool isUpgraded)
+        {
+            return MaxKunai;
         }
     }
 }

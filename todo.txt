@@ -35,5 +35,3 @@ persistent card states:
 - update sealed to reduce on block ONLY, can be pledged
 
 
-
-
