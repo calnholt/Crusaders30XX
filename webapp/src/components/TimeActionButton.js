@@ -1,4 +1,6 @@
 import { subscribeTimePreview, setTimePreview, clearTimePreview, isPreviewBlocked, isPreviewSource } from '../utils/timePreviewStore.js';
+import { timeLeavesDisplayMarkup } from '../utils/timeDisplay.js';
+import { timeCostMarkup } from '../utils/timeDisplay.js';
 
 export class TimeActionButton extends HTMLElement {
   static get observedAttributes() {
@@ -92,7 +94,7 @@ export class TimeActionButton extends HTMLElement {
     this.innerHTML = `
       <button class="time-action-button" type="button" ${baseDisabled ? 'disabled' : ''}>
         <span class="time-action-button__label">${label}</span>
-        <span class="time-action-button__cost">+${cost} time</span>
+        <span class="time-action-button__cost">${timeCostMarkup(cost)}</span>
       </button>
     `;
   }
@@ -101,14 +103,20 @@ export class TimeActionButton extends HTMLElement {
 customElements.define('time-action-button', TimeActionButton);
 
 export class DurationIndicator extends HTMLElement {
-  set leaveLabel(value) {
-    this._leaveLabel = value;
+  set leaveTiming(value) {
+    this._leaveTiming = value;
     this.render();
   }
 
-  /** @deprecated use leaveLabel */
+  /** @deprecated use leaveTiming */
+  set leaveLabel(value) {
+    this._leaveTiming = { remaining: 0, expiresAt: 0, gone: value === 'GONE' };
+    this.render();
+  }
+
+  /** @deprecated use leaveTiming */
   set remaining(value) {
-    this._leaveLabel = `leaves in ${value} time`;
+    this._leaveTiming = { remaining: value, expiresAt: value, gone: false };
     this.render();
   }
 
@@ -117,12 +125,12 @@ export class DurationIndicator extends HTMLElement {
   }
 
   render() {
-    const label = this._leaveLabel ?? 'leaves in 0 time (T0)';
-    const gone = label === 'GONE';
+    const timing = this._leaveTiming ?? { remaining: 0, expiresAt: 0, gone: false };
+    const gone = timing.gone;
     this.innerHTML = `
       <div class="duration-indicator ${gone ? 'duration-indicator--gone' : ''}">
         <span class="duration-indicator__label">Duration</span>
-        <span class="duration-indicator__value">${label}</span>
+        <span class="duration-indicator__value">${timeLeavesDisplayMarkup(timing)}</span>
       </div>
     `;
   }

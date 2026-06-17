@@ -7,6 +7,26 @@ import { randInt, pick } from './random.js';
 import { randomCost, randomRewards } from './resources.js';
 
 export const SHOP_SLOT_TYPES = ['medal', 'medal', 'equipment', 'cardUpgrade', 'cardReplace'];
+export const SHOP_REFRESH_INTERVAL = 8;
+
+export function getNextShopRefreshAt(currentTime) {
+  return (Math.floor(currentTime / SHOP_REFRESH_INTERVAL) + 1) * SHOP_REFRESH_INTERVAL;
+}
+
+export function getShopRefreshMarkerTimes(maxTime = 40) {
+  const markers = [];
+  for (let time = SHOP_REFRESH_INTERVAL; time < maxTime; time += SHOP_REFRESH_INTERVAL) {
+    markers.push(time);
+  }
+  return markers;
+}
+
+export function rollShopRefresh() {
+  return {
+    duration: SHOP_REFRESH_INTERVAL,
+    lastRefreshAt: 0,
+  };
+}
 
 let slotCounter = 0;
 
@@ -51,9 +71,12 @@ export function rollShopSlot(slotType, spawnTime = 0) {
     item,
     cost: randomCost(),
     clickCost: randInt(1, 3),
-    duration: randInt(4, 8),
     spawnTime,
   };
+}
+
+export function rollAllShopSlots(spawnTime = 0) {
+  return SHOP_SLOT_TYPES.map((slotType) => rollShopSlot(slotType, spawnTime));
 }
 
 export function rollEnemySlot(spawnTime = 0) {
@@ -100,7 +123,7 @@ export function rollMysterySlot(currentTime = 0) {
 }
 
 export function rollInitialShopSlots() {
-  return SHOP_SLOT_TYPES.map((slotType) => rollShopSlot(slotType, 0));
+  return rollAllShopSlots(0);
 }
 
 export function rollInitialEnemySlots() {

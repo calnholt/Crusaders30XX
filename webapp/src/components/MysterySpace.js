@@ -8,7 +8,7 @@ import {
 import { subscribeTimePreview, getTimePreview, clearTimePreview } from '../utils/timePreviewStore.js';
 import { spaceSlotMarkup } from '../utils/spaceCardMarkup.js';
 import { bindSpaceSlotInteractions } from '../utils/spaceCardInteractions.js';
-import { formatLeavesLabel } from '../utils/slotLeaveLabel.js';
+import { getLeavesTiming } from '../utils/slotLeaveLabel.js';
 import { applyLeaveLabel } from '../utils/spaceLeaveLabel.js';
 import { spaceTimeBlockMarkup } from '../utils/spaceTimeBlock.js';
 
@@ -59,7 +59,7 @@ export class MysterySpace extends HTMLElement {
     const active = isMysteryWindowActive(slot);
     const unavailable = !expired && !active;
     const disabled = expired || !active;
-    const leaveLabel = formatLeavesLabel(slot, state);
+    const leavesTiming = getLeavesTiming(slot, state);
     const windowLabel = `T${slot.windowStart}-${slot.windowEnd}`;
 
     const compactHtml = `
@@ -69,7 +69,7 @@ export class MysterySpace extends HTMLElement {
         <span class="space-card-compact__meta-primary">
           <span class="space-card-compact__window">${windowLabel}</span>
         </span>
-        ${spaceTimeBlockMarkup(slot.clickCost, leaveLabel)}
+        ${spaceTimeBlockMarkup(slot.clickCost, leavesTiming)}
       </span>
     `;
 

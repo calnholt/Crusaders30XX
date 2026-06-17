@@ -1,4 +1,8 @@
-import { subscribe } from '../store/gameStore.js';
+import { subscribe, getAccessibleMysterySlots } from '../store/gameStore.js';
+import { subscribeTimePreview, getTimePreview } from '../utils/timePreviewStore.js';
+import { getRefreshTiming } from '../utils/slotLeaveLabel.js';
+import { timeRefreshDisplayMarkup } from '../utils/timeDisplay.js';
+import { shopIconMarkup } from './ShopIcon.js';
 
 function syncSlots(container, slots, tagName) {
   const ids = slots.map((slot) => slot.id);
@@ -18,20 +22,39 @@ export class ShopColumn extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
       <section class="column column--shop">
-        <h2 class="column__title">Shop</h2>
-        <p class="column__subtitle">Spend resources before offers expire</p>
+        <h2 class="column__title">${shopIconMarkup('title')} Shop</h2>
+        <p class="column__subtitle">Spend resources before the shop refreshes</p>
+        <p class="column__refresh"></p>
         <div class="column__slots"></div>
       </section>
     `;
+    this.refreshEl = this.querySelector('.column__refresh');
     this.slotsEl = this.querySelector('.column__slots');
     this.unsub = subscribe((state) => this.render(state));
+    this.unsubPreview = subscribeTimePreview(() => this.applyPreview());
   }
 
   disconnectedCallback() {
     this.unsub?.();
+    this.unsubPreview?.();
+  }
+
+  applyPreview() {
+    if (!this._state || !this.refreshEl) {
+      return;
+    }
+    this.updateRefreshLabel(this._state, getTimePreview());
+  }
+
+  updateRefreshLabel(state, preview = getTimePreview()) {
+    const timing = getRefreshTiming(state, preview);
+    this.refreshEl.innerHTML = timeRefreshDisplayMarkup(timing);
+    this.refreshEl.classList.toggle('column__refresh--imminent', timing.refreshing);
   }
 
   render(state) {
+    this._state = state;
+    this.updateRefreshLabel(state);
     syncSlots(this.slotsEl, state.shopSlots, 'shop-space');
   }
 }
@@ -80,7 +103,17 @@ export class MysteryColumn extends HTMLElement {
   }
 
   render(state) {
-    syncSlots(this.slotsEl, state.mysterySlots, 'mystery-space');
+    const accessibleSlots = getAccessibleMysterySlots(state);
+    const visible = accessibleSlots.length > 0;
+    this.classList.toggle('mystery-column--visible', visible);
+
+    if (!visible) {
+      this.slotsEl.innerHTML = '';
+      delete this.slotsEl.dataset.slotIds;
+      return;
+    }
+
+    syncSlots(this.slotsEl, accessibleSlots, 'mystery-space');
   }
 }
 

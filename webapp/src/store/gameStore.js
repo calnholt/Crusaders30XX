@@ -3,6 +3,11 @@ import {
   rollEnemySlot,
   rollMysterySlot,
   rollInitialShopSlots,
+  rollAllShopSlots,
+  rollShopRefresh,
+  SHOP_REFRESH_INTERVAL,
+  getNextShopRefreshAt,
+  getShopRefreshMarkerTimes,
   rollInitialEnemySlots,
   rollInitialMysterySlots,
   SHOP_SLOT_TYPES,
@@ -26,6 +31,7 @@ function createInitialState() {
   return {
     currentTime: 0,
     resources: emptyResources(),
+    shopRefresh: rollShopRefresh(),
     shopSlots: rollInitialShopSlots(),
     enemySlots: rollInitialEnemySlots(),
     mysterySlots: rollInitialMysterySlots(0),
@@ -77,14 +83,22 @@ export function advanceTime(amount) {
 
 function processExpirations() {
   let changed = false;
+  let nextShop = state.shopSlots;
+  let lastRefreshAt = state.shopRefresh.lastRefreshAt ?? 0;
 
-  const nextShop = state.shopSlots.map((slot, index) => {
-    if (isExpired(slot)) {
-      changed = true;
-      return rollShopSlot(SHOP_SLOT_TYPES[index], state.currentTime);
-    }
-    return slot;
-  });
+  while (state.currentTime >= lastRefreshAt + SHOP_REFRESH_INTERVAL) {
+    lastRefreshAt += SHOP_REFRESH_INTERVAL;
+    changed = true;
+    nextShop = rollAllShopSlots(lastRefreshAt);
+  }
+
+  let nextShopRefresh = state.shopRefresh;
+  if (changed) {
+    nextShopRefresh = {
+      duration: SHOP_REFRESH_INTERVAL,
+      lastRefreshAt,
+    };
+  }
 
   const nextEnemy = state.enemySlots.map((slot) => {
     if (isExpired(slot)) {
@@ -105,12 +119,23 @@ function processExpirations() {
   if (changed) {
     state = {
       ...state,
+      shopRefresh: nextShopRefresh,
       shopSlots: nextShop,
       enemySlots: nextEnemy,
       mysterySlots: nextMystery,
     };
   }
 }
+
+export function getShopRefreshAtTime(state = getState()) {
+  return getNextShopRefreshAt(state.currentTime);
+}
+
+export function wouldShopRefreshAt(time, state = getState()) {
+  return time >= getNextShopRefreshAt(state.currentTime);
+}
+
+export { getShopRefreshMarkerTimes, getNextShopRefreshAt, SHOP_REFRESH_INTERVAL };
 
 function isExpired(slot) {
   return state.currentTime >= slot.spawnTime + slot.duration;
@@ -131,7 +156,10 @@ export function getAllSlots(state = getState()) {
   return [...state.shopSlots, ...state.enemySlots, ...state.mysterySlots];
 }
 
-export function wouldSlotExpireAt(slot, time) {
+export function wouldSlotExpireAt(slot, time, gameState = getState()) {
+  if (slot.kind === 'shop') {
+    return wouldShopRefreshAt(time, gameState);
+  }
   if (slot.kind === 'mystery') {
     if (time > slot.windowEnd) {
       return true;
@@ -161,7 +189,7 @@ export function getWouldVanishSlotIds(state, preview) {
 
 export function interactShop(slotId) {
   const slot = state.shopSlots.find((s) => s.id === slotId);
-  if (!slot || isExpired(slot)) {
+  if (!slot) {
     return;
   }
 
@@ -246,10 +274,13 @@ export function interactMystery(slotId) {
 }
 
 export function getRemainingTime(slot) {
-  return getRemainingTimeAt(slot, state.currentTime);
+  return getRemainingTimeAt(slot, state.currentTime, state);
 }
 
 export function isSlotExpired(slot) {
+  if (slot.kind === 'shop') {
+    return false;
+  }
   if (slot.kind === 'mystery') {
     return isMysteryExpired(slot);
   }
@@ -258,6 +289,12 @@ export function isSlotExpired(slot) {
 
 export function isMysteryWindowActive(slot) {
   return isMysteryActive(slot);
+}
+
+export function getAccessibleMysterySlots(state = getState()) {
+  return state.mysterySlots.filter(
+    (slot) => isMysteryWindowActive(slot) && !isSlotExpired(slot),
+  );
 }
 
 export function resetGame() {

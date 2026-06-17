@@ -7,7 +7,7 @@ import {
 import { subscribeTimePreview, getTimePreview, clearTimePreview } from '../utils/timePreviewStore.js';
 import { spaceSlotMarkup } from '../utils/spaceCardMarkup.js';
 import { bindSpaceSlotInteractions } from '../utils/spaceCardInteractions.js';
-import { formatLeavesLabel } from '../utils/slotLeaveLabel.js';
+import { getLeavesTiming } from '../utils/slotLeaveLabel.js';
 import { applyLeaveLabel } from '../utils/spaceLeaveLabel.js';
 import { spaceTimeBlockMarkup } from '../utils/spaceTimeBlock.js';
 
@@ -55,7 +55,7 @@ export class EnemySpace extends HTMLElement {
     }
 
     const expired = isSlotExpired(slot);
-    const leaveLabel = formatLeavesLabel(slot, state);
+    const leavesTiming = getLeavesTiming(slot, state);
 
     const compactHtml = `
       <enemy-portrait
@@ -68,7 +68,7 @@ export class EnemySpace extends HTMLElement {
           <span class="space-card-compact__meta-primary">
             <resource-reward class="space-card-compact__rewards" label="GAIN"></resource-reward>
           </span>
-          ${spaceTimeBlockMarkup(slot.clickCost, leaveLabel)}
+          ${spaceTimeBlockMarkup(slot.clickCost, leavesTiming)}
         </span>
       </div>
     `;

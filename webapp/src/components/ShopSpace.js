@@ -1,7 +1,6 @@
 import {
   subscribe,
   interactShop,
-  isSlotExpired,
   getWouldVanishSlotIds,
 } from '../store/gameStore.js';
 import { canAfford } from '../utils/resources.js';
@@ -9,8 +8,6 @@ import { subscribeTimePreview, getTimePreview, clearTimePreview } from '../utils
 import { getProjectedResources } from '../utils/previewResources.js';
 import { spaceSlotMarkup } from '../utils/spaceCardMarkup.js';
 import { bindSpaceSlotInteractions } from '../utils/spaceCardInteractions.js';
-import { formatLeavesLabel } from '../utils/slotLeaveLabel.js';
-import { applyLeaveLabel } from '../utils/spaceLeaveLabel.js';
 import { spaceTimeBlockMarkup } from '../utils/spaceTimeBlock.js';
 
 export class ShopSpace extends HTMLElement {
@@ -45,18 +42,16 @@ export class ShopSpace extends HTMLElement {
     const vanishIds = getWouldVanishSlotIds(this._state, preview);
     slotEl.classList.toggle('space-slot--would-vanish', vanishIds.has(this.slotId));
     slotEl.classList.toggle('space-slot--preview-source', preview?.slotId === this.slotId);
-    applyLeaveLabel(slotEl, slot, this._state);
     this.updateAvailability(slotEl, slot, preview);
   }
 
   getAvailability(slot, preview = getTimePreview()) {
-    const expired = isSlotExpired(slot);
     const resources = getProjectedResources(this._state, preview);
     const affordable = canAfford(resources, slot.cost);
     return {
       affordable,
-      unavailable: !expired && !affordable,
-      disabled: expired || !affordable,
+      unavailable: !affordable,
+      disabled: !affordable,
     };
   }
 
@@ -73,9 +68,7 @@ export class ShopSpace extends HTMLElement {
       return;
     }
 
-    const expired = isSlotExpired(slot);
     const { unavailable, disabled } = this.getAvailability(slot);
-    const leaveLabel = formatLeavesLabel(slot, state);
 
     const compactHtml = `
       <span class="space-card-compact__title">${slot.item.name}</span>
@@ -84,14 +77,14 @@ export class ShopSpace extends HTMLElement {
         <span class="space-card-compact__meta-primary">
           <resource-cost class="space-card-compact__cost" label="PRICE"></resource-cost>
         </span>
-        ${spaceTimeBlockMarkup(slot.clickCost, leaveLabel)}
+        ${spaceTimeBlockMarkup(slot.clickCost)}
       </span>
     `;
 
     this.innerHTML = spaceSlotMarkup({
       slotId: slot.id,
       kind: 'shop',
-      expired,
+      expired: false,
       unavailable,
       compactHtml,
     });
@@ -107,9 +100,6 @@ export class ShopSpace extends HTMLElement {
 
     const compact = slotEl.querySelector('.space-card-compact');
     compact.addEventListener('click', () => {
-      if (expired) {
-        return;
-      }
       clearTimePreview();
       interactShop(this.slotId);
     });
