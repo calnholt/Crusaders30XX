@@ -167,16 +167,27 @@ resource-bar {
   animation: preview-vanish-pulse 2s ease-in-out infinite;
 }
 
-.timeline-lane--preview-source .timeline-lane__track {
-  box-shadow: 0 0 0 1px var(--white-1);
-}
-
 .space-slot--would-vanish:not(.space-slot--preview-source) .space-card-compact {
   animation: preview-vanish-pulse 2s ease-in-out infinite;
 }
 
 .space-slot--preview-source .space-card-compact {
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.space-slot--shop.space-slot--preview-source .space-card-compact {
+  border-color: var(--shop-accent);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.3);
+}
+
+.space-slot--mystery.space-slot--preview-source .space-card-compact {
+  border-color: var(--mystery-border);
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.5);
+}
+
+.space-slot--enemy.space-slot--preview-source .space-card-compact {
+  border-color: var(--enemy-accent);
+  box-shadow: 0 0 14px var(--red-glow);
 }
 
 body.time-preview-active .space-slot--would-vanish:not(.space-slot--preview-source) {
@@ -200,11 +211,13 @@ body.time-preview-active .space-slot--would-vanish:not(.space-slot--preview-sour
 }
 
 .timeline-lane:hover,
-.timeline-lane--highlighted {
+.timeline-lane--highlighted,
+.timeline-lane--preview-source {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.timeline-lane--highlighted .timeline-lane__segment {
+.timeline-lane--highlighted .timeline-lane__segment,
+.timeline-lane--preview-source .timeline-lane__segment {
   filter: brightness(1.2);
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
 }
@@ -491,8 +504,7 @@ body.time-preview-active .space-slot--would-vanish:not(.space-slot--preview-sour
 }
 
 .space-slot--unavailable .space-card-compact__cost,
-.space-slot--unavailable .space-card-compact__time-block,
-.space-slot--unavailable .space-card-compact__window {
+.space-slot--unavailable .space-card-compact__time-block {
   border-color: rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.04);
 }
@@ -789,6 +801,11 @@ body.time-preview-active .space-slot--would-vanish:not(.space-slot--preview-sour
   font-size: 0.65rem;
   color: var(--white-3);
   letter-spacing: 0.5px;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 .enemy-portrait:not(.enemy-portrait--headshot):not(.space-card-compact__portrait) {
