@@ -134,8 +134,33 @@ namespace Crusaders30XX.ECS.Services
 			});
 			queued.IsClimbEncounter = true;
 			queued.ClimbEncounterSlotId = "final";
+			queued.LocationId = "climb";
+			queued.QuestIndex = 0;
+			EnsureFallenShepherdIntroDialog(queuedEntity);
 			EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
 			return true;
+		}
+
+		private static void EnsureFallenShepherdIntroDialog(Entity queuedEntity)
+		{
+			if (queuedEntity == null) return;
+			var pending = queuedEntity.GetComponent<PendingQuestDialog>();
+			if (pending == null)
+			{
+				queuedEntity.AddComponent(new PendingQuestDialog
+				{
+					DialogId = "fallen_shepherd",
+					SegmentId = "intro",
+					RequestId = Guid.NewGuid(),
+					WillShowDialog = true,
+				});
+				return;
+			}
+
+			pending.DialogId = "fallen_shepherd";
+			pending.SegmentId = "intro";
+			pending.RequestId = Guid.NewGuid();
+			pending.WillShowDialog = true;
 		}
 
 		public static bool ResolvePendingEncounterReward(EntityManager entityManager)

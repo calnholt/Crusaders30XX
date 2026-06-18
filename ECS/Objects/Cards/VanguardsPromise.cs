@@ -8,6 +8,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class VanguardsPromise : CardBase
     {
+        private int DamageUpgrade = 1;
         public VanguardsPromise()
         {
             CardId = "vanguards_promise";
@@ -47,6 +48,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Reason = "VanguardsPromise"
                 });
                 EventManager.Publish(new ApplyPledgeToCardRequested { Card = topCard });
+            };
+
+            OnUpgrade = (entityManager, card) =>
+            {
+                Damage += DamageUpgrade;
             };
         }
     }

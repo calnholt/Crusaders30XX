@@ -30,7 +30,12 @@ public abstract class EnemyBase : IDisposable
 
   public void ApplyHealthFromDeckSize(int deckCardCount)
   {
-    MaxHealth = (int)Math.Round(HealthPerCard * deckCardCount);
+    ApplyHealthFromDeckWeight(deckCardCount);
+  }
+
+  public void ApplyHealthFromDeckWeight(float deckWeight)
+  {
+    MaxHealth = (int)Math.Round(HealthPerCard * Math.Max(0f, deckWeight));
     CurrentHealth = MaxHealth - StartingHealthBelowMax;
   }
 

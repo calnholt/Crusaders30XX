@@ -11,6 +11,7 @@ Gameplay
 
 cards
 - if you have dealt 10 or more damage this turn...
+- next attack (this turn?) deal 75% more damage
 
 medals
 - whenever you pledge 6 cards, gain 1 vigor
@@ -34,27 +35,12 @@ persistent card states:
 
 
 
-cards to delete:
-- mace
-- shroud_of_turin
-- anoint_the_sick
-
 keywords
 - indulgence for additional cost?
 - vigor reduction
 
 card upgrades (missing OnUpgrade)
-- RenounceAndHone
-- StokeTheFurnace
-- Strike
 - SuddenThrust
-- Sword
-- TemperTheBlade
-- Tempest
 - UnburdenedStrike
-- VanguardsPromise
-- Vindicate
-- Whirlwind
-- ZealousVow
 
 

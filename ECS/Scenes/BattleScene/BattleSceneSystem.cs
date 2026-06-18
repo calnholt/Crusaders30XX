@@ -189,13 +189,10 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					CreateBattleSceneEntities();
 				}
-				// If a dialog is pending for this quest, wait for DialogEnded before starting battle
+				// Initialize the battle scene before pending dialog, but wait for dialog completion before starting battle rules.
 				bool willShowDialog = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<PendingQuestDialog>()?.WillShowDialog ?? false;
-				if (!willShowDialog)
-				{
-					InitBattle();
-					// EnqueueBattleRules(false);
-				}
+				InitBattle();
+				// EnqueueBattleRules(false);
 			});
 			EventManager.Subscribe<DialogEnded>(_ =>
 			{
@@ -207,7 +204,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					CreateBattleSceneEntities();
 				}
-				InitBattle();
+				EnsureBattleInitialized();
 				TimerScheduler.Schedule(0.3f, () => {
 					EventManager.Publish(new ShowStartOfBattleAnimationEvent());
 				});
@@ -230,7 +227,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					CreateBattleSceneEntities();
 				}
-				InitBattle();
+				EnsureBattleInitialized();
 				TimerScheduler.Schedule(0.3f, () =>
 				{
 					EventManager.Publish(new ShowStartOfBattleAnimationEvent());
@@ -506,6 +503,13 @@ namespace Crusaders30XX.ECS.Systems
 					e.RemoveComponent<CardTooltip>();
 				}
 			}
+		}
+
+		private void EnsureBattleInitialized()
+		{
+			var queued = EntityManager.GetEntity("QueuedEvents")?.GetComponent<QueuedEvents>();
+			if (queued != null && queued.CurrentIndex >= 0) return;
+			InitBattle();
 		}
 
 		public void EnqueueBattleRules(bool isFollowingDialog) 

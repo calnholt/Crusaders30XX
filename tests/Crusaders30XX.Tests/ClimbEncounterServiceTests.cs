@@ -131,6 +131,12 @@ public class ClimbEncounterServiceTests
 			Assert.Equal("final", queued.ClimbEncounterSlotId);
 			Assert.Single(queued.Events);
 			Assert.Equal("fallen_shepherd", queued.Events[0].EventId);
+			var pending = world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().Single().GetComponent<PendingQuestDialog>();
+			Assert.NotNull(pending);
+			Assert.Equal("fallen_shepherd", pending.DialogId);
+			Assert.Equal("intro", pending.SegmentId);
+			Assert.NotEqual(System.Guid.Empty, pending.RequestId);
+			Assert.True(pending.WillShowDialog);
 			Assert.NotNull(transition);
 			Assert.Equal(SceneId.Battle, transition.Scene);
 		}
@@ -167,7 +173,7 @@ public class ClimbEncounterServiceTests
 	}
 
 	[Fact]
-	public void Replenishing_encounters_at_max_time_rolls_final_slots()
+	public void Replenishing_encounters_at_max_time_leaves_existing_slots_unchanged()
 	{
 		var climb = new ClimbSaveState
 		{
@@ -180,17 +186,13 @@ public class ClimbEncounterServiceTests
 			}
 		};
 
-		Assert.True(ClimbRuleService.ReplenishEncounterSlots(climb, 123));
+		Assert.False(ClimbRuleService.ReplenishEncounterSlots(climb, 123));
 
 		Assert.Equal(ClimbRuleService.EncounterSlotCount, climb.encounterSlots.Count);
-		Assert.All(climb.encounterSlots, slot =>
-		{
-			Assert.True(slot.isFinal);
-			Assert.False(slot.isCompleted);
-			Assert.Equal("fallen_shepherd", slot.enemyId);
-			Assert.Equal(0, slot.timeCost);
-			Assert.False(slot.hasDeckReward);
-		});
+		Assert.All(climb.encounterSlots, slot => Assert.False(slot.isFinal));
+		Assert.All(climb.encounterSlots, slot => Assert.True(slot.isCompleted));
+		Assert.DoesNotContain(climb.encounterSlots, slot =>
+			string.Equals(slot.enemyId, "fallen_shepherd", System.StringComparison.OrdinalIgnoreCase));
 	}
 
 	private static void PrepareRunWithEncounter(int timeCost)

@@ -162,9 +162,9 @@ public class ClimbEventServiceTests
 			{
 				id = "event_a",
 				eventTypeId = "icebound_tithe",
-				generatedAtTime = 30,
-				visibleStartTime = 35,
-				visibleEndTime = 40,
+				generatedAtTime = 24,
+				visibleStartTime = 30,
+				visibleEndTime = ClimbRuleService.MaxTime,
 				timeCost = 2,
 			}, time: ClimbRuleService.MaxTime - 1);
 			var world = new World();
@@ -177,11 +177,15 @@ public class ClimbEventServiceTests
 			var climb = SaveCache.GetClimbState();
 			var queued = world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().Single().GetComponent<QueuedEvents>();
 			Assert.Equal(ClimbRuleService.MaxTime, climb.time);
-			Assert.All(climb.encounterSlots, slot => Assert.True(slot.isFinal));
+			Assert.DoesNotContain(climb.encounterSlots, slot => slot.isFinal);
 			Assert.True(queued.IsClimbEncounter);
 			Assert.Equal("final", queued.ClimbEncounterSlotId);
 			Assert.Single(queued.Events);
 			Assert.Equal("fallen_shepherd", queued.Events[0].EventId);
+			var pending = world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().Single().GetComponent<PendingQuestDialog>();
+			Assert.NotNull(pending);
+			Assert.Equal("fallen_shepherd", pending.DialogId);
+			Assert.Equal("intro", pending.SegmentId);
 			Assert.NotNull(transition);
 			Assert.Equal(SceneId.Battle, transition.Scene);
 		}

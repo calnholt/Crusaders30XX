@@ -50,7 +50,7 @@ public class ClimbRuleServiceTests
 		Assert.True(ClimbRuleService.IsEncounterExpired(slot, 7));
 
 		slot.isFinal = true;
-		Assert.False(ClimbRuleService.IsEncounterExpired(slot, 40));
+		Assert.False(ClimbRuleService.IsEncounterExpired(slot, ClimbRuleService.MaxTime));
 	}
 
 	[Fact]
@@ -121,6 +121,7 @@ public class ClimbRuleServiceTests
 
 		int applied = ClimbRuleService.ApplyTime(state, 99);
 
+		Assert.Equal(32, ClimbRuleService.MaxTime);
 		Assert.Equal(ClimbRuleService.MaxTime, state.time);
 		Assert.Equal(ClimbRuleService.MaxTime, applied);
 		Assert.True(ClimbRuleService.HasPendingFinalEncounter(state));
@@ -134,7 +135,9 @@ public class ClimbRuleServiceTests
 		Assert.True(ClimbRuleService.ShouldRefreshShopAtTime(7, 10));
 		Assert.False(ClimbRuleService.ShouldRefreshShopAtTime(8, 9));
 		Assert.True(ClimbRuleService.ShouldRefreshShopAtTime(15, 16));
-		Assert.True(ClimbRuleService.ShouldRefreshShopAtTime(30, 40));
+		Assert.True(ClimbRuleService.ShouldRefreshShopAtTime(23, 24));
+		Assert.False(ClimbRuleService.ShouldRefreshShopAtTime(24, 31));
+		Assert.False(ClimbRuleService.ShouldRefreshShopAtTime(30, ClimbRuleService.MaxTime));
 		Assert.False(ClimbRuleService.ShouldRefreshShopAtTime(32, 40));
 	}
 
@@ -216,6 +219,22 @@ public class ClimbRuleServiceTests
 	}
 
 	[Fact]
+	public void Shop_costs_use_item_specific_resource_pip_ranges()
+	{
+		var state = ClimbRuleService.CreateInitialState(123, TestLoadout());
+
+		var medal = state.shopSlots.SingleOrDefault(slot => slot.kind == ClimbShopSlotKinds.Medal);
+		var equipment = state.shopSlots.SingleOrDefault(slot => slot.kind == ClimbShopSlotKinds.Equipment);
+		var upgrade = state.shopSlots.SingleOrDefault(slot => slot.kind == ClimbShopSlotKinds.Upgrade);
+		var replacement = state.shopSlots.SingleOrDefault(slot => slot.kind == ClimbShopSlotKinds.Replacement);
+
+		if (medal != null) Assert.InRange(ResourcePips(medal.cost), 4, 6);
+		if (equipment != null) Assert.InRange(ResourcePips(equipment.cost), 6, 8);
+		if (upgrade != null) Assert.InRange(ResourcePips(upgrade.cost), 1, 2);
+		if (replacement != null) Assert.InRange(ResourcePips(replacement.cost), 1, 2);
+	}
+
+	[Fact]
 	public void Climb_encounter_pool_excludes_banned_and_image_less_enemies()
 	{
 		var pool = ClimbRuleService.GetClimbEncounterEnemyPool();
@@ -243,5 +262,12 @@ public class ClimbRuleServiceTests
 			weaponId = "sword",
 			medalIds = new List<string>(),
 		};
+	}
+
+	private static int ResourcePips(ClimbResourceSave resources)
+	{
+		return Math.Max(0, resources?.red ?? 0)
+			+ Math.Max(0, resources?.white ?? 0)
+			+ Math.Max(0, resources?.black ?? 0);
 	}
 }

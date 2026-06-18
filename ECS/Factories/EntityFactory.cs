@@ -417,11 +417,11 @@ namespace Crusaders30XX.ECS.Factories
             {
                 throw new InvalidOperationException("Cannot spawn enemy: player deck is missing or empty.");
             }
-            int deckCount = deck.Cards.Count;
-            if (HasEquippedMedal(entityManager, StClare.MedalId))
-            {
-                deckCount = Math.Max(0, deckCount - 4);
-            }
+            int baseCardCountReduction = HasEquippedMedal(entityManager, StClare.MedalId) ? 4 : 0;
+            float deckHealthWeight = RunDeckService.CalculateEnemyHealthDeckWeight(
+                entityManager,
+                deck.Cards.Count,
+                baseCardCountReduction);
             if (isGuidedTutorial)
             {
                 var tutorial = GuidedTutorialService.GetState(entityManager);
@@ -431,7 +431,7 @@ namespace Crusaders30XX.ECS.Factories
             }
             else
             {
-                def.ApplyHealthFromDeckSize(deckCount);
+                def.ApplyHealthFromDeckWeight(deckHealthWeight);
                 ApplyWayStationEnemyHealthModifier(def);
             }
             if (def.MaxHealth <= 0)

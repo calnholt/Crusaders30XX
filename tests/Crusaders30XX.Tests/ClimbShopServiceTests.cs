@@ -103,10 +103,71 @@ public class ClimbShopServiceTests : IDisposable
 		var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
 		var after = SaveCache.GetClimbState();
 		Assert.Equal("strike|Red", loadout.cardIds[1]);
+		Assert.Contains("strike|Red", SaveCache.GetTradedCardKeys());
 		Assert.Equal(2, after.resources.red);
 		Assert.Equal(1, after.time);
 		Assert.True(after.shopSlots[0].isSold);
 		Assert.Null(after.pendingReplacementOffer);
+	}
+
+	[Fact]
+	public void Medal_purchase_equips_medal_on_live_player()
+	{
+		PrepareRun(new List<string> { "smite|White" });
+		var state = BaseState();
+		state.shopSlots[0] = ShopSlot(ClimbShopSlotKinds.Medal, itemId: "st_luke");
+		SaveCache.SaveClimbState(state);
+		var world = new World();
+		RunPlayerService.EnsureRunPlayer(world);
+
+		Assert.True(ClimbShopService.TryPurchaseSlot(world.EntityManager, 0));
+
+		Assert.Contains(world.EntityManager.GetEntitiesWithComponent<EquippedMedal>(), entity =>
+			string.Equals(entity.GetComponent<EquippedMedal>()?.Medal?.Id, "st_luke", StringComparison.OrdinalIgnoreCase));
+	}
+
+	[Fact]
+	public void Equipment_purchase_equips_equipment_on_live_player()
+	{
+		PrepareRun(new List<string> { "smite|White" });
+		var state = BaseState();
+		state.shopSlots[0] = ShopSlot(ClimbShopSlotKinds.Equipment, itemId: "knightly_chest");
+		SaveCache.SaveClimbState(state);
+		var world = new World();
+		RunPlayerService.EnsureRunPlayer(world);
+
+		Assert.True(ClimbShopService.TryPurchaseSlot(world.EntityManager, 0));
+
+		Assert.Contains(world.EntityManager.GetEntitiesWithComponent<EquippedEquipment>(), entity =>
+			string.Equals(entity.GetComponent<EquippedEquipment>()?.Equipment?.Id, "knightly_chest", StringComparison.OrdinalIgnoreCase));
+	}
+
+	[Fact]
+	public void Shop_purchase_that_caps_time_queues_final_encounter()
+	{
+		EventManager.Clear();
+		PrepareRun(new List<string> { "smite|White" });
+		var state = BaseState();
+		state.time = ClimbRuleService.MaxTime - 1;
+		state.shopSlots[0] = ShopSlot(ClimbShopSlotKinds.Medal, itemId: "st_luke");
+		SaveCache.SaveClimbState(state);
+		var world = new World();
+		ShowTransition transition = null;
+		EventManager.Subscribe<ShowTransition>(evt => transition = evt);
+
+		Assert.True(ClimbShopService.TryPurchaseSlot(world.EntityManager, 0));
+
+		var climb = SaveCache.GetClimbState();
+		var queued = world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().Single().GetComponent<QueuedEvents>();
+		var pending = world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().Single().GetComponent<PendingQuestDialog>();
+		Assert.Equal(ClimbRuleService.MaxTime, climb.time);
+		Assert.Equal("final", queued.ClimbEncounterSlotId);
+		Assert.Equal("fallen_shepherd", queued.Events.Single().EventId);
+		Assert.NotNull(pending);
+		Assert.Equal("fallen_shepherd", pending.DialogId);
+		Assert.Equal("intro", pending.SegmentId);
+		Assert.NotNull(transition);
+		Assert.Equal(SceneId.Battle, transition.Scene);
 	}
 
 	[Fact]
@@ -169,6 +230,7 @@ public class ClimbShopServiceTests : IDisposable
 		var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
 		var after = SaveCache.GetClimbState();
 		Assert.Equal("strike|Red", loadout.cardIds[1]);
+		Assert.Contains("strike|Red", SaveCache.GetTradedCardKeys());
 		Assert.Equal(2, after.resources.red);
 		Assert.Equal(1, after.time);
 		Assert.True(after.shopSlots[0].isSold);

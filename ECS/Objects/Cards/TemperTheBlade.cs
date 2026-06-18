@@ -8,6 +8,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
     {
         private int SharpenAmount = 4;
 
+        private int BlockUpgrade = 1;
+
         public TemperTheBlade()
         {
             CardId = "temper_the_blade";
@@ -28,6 +30,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Type = AppliedPassiveType.Sharpen,
                     Delta = SharpenAmount
                 });
+            };
+            OnUpgrade = (entityManager, card) =>
+            {
+                Block += BlockUpgrade;
             };
         }
     }

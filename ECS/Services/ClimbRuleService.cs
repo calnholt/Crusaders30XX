@@ -11,7 +11,7 @@ namespace Crusaders30XX.ECS.Services
 {
 	public static class ClimbRuleService
 	{
-		public const int MaxTime = 40;
+		public const int MaxTime = 32;
 		public const int ShopSlotCount = 4;
 		public const int EncounterSlotCount = 3;
 		public const int EventSlotCount = 3;
@@ -214,20 +214,7 @@ namespace Crusaders30XX.ECS.Services
 			if (state == null) return false;
 			state.encounterSlots ??= new List<ClimbEncounterSlotSave>();
 
-			bool final = ClampTime(state.time) >= MaxTime;
-			if (final)
-			{
-				bool finalReady = state.encounterSlots.Count == EncounterSlotCount
-					&& state.encounterSlots.All(slot =>
-						slot != null
-						&& !slot.isCompleted
-						&& slot.isFinal
-						&& string.Equals(slot.enemyId, "fallen_shepherd", StringComparison.OrdinalIgnoreCase));
-				if (finalReady) return false;
-
-				RefreshEncounterSlots(state, seed);
-				return true;
-			}
+			if (ClampTime(state.time) >= MaxTime) return false;
 
 			var rng = CreateRng(seed, state.time, 23 + state.encounterSlots.Count);
 			bool changed = false;
@@ -376,7 +363,7 @@ namespace Crusaders30XX.ECS.Services
 			{
 				id = $"shop_{slotIndex}",
 				kind = kind,
-				cost = GenerateCost(rng, kind == ClimbShopSlotKinds.Medal ? 2 : 1, kind == ClimbShopSlotKinds.Medal ? 3 : 2),
+				cost = GenerateShopCost(rng, kind),
 				timeCost = rng.Next(1, 4),
 				generatedAtTime = state.time,
 			};
@@ -424,19 +411,27 @@ namespace Crusaders30XX.ECS.Services
 			string slotId,
 			string excludedEnemyId = "")
 		{
-			bool final = ClampTime(state?.time ?? 0) >= MaxTime;
 			return new ClimbEncounterSlotSave
 			{
 				id = slotId ?? string.Empty,
-				enemyId = final ? "fallen_shepherd" : RollClimbEncounterEnemyId(rng, excludedEnemyId),
+				enemyId = RollClimbEncounterEnemyId(rng, excludedEnemyId),
 				generatedAtTime = ClampTime(state?.time ?? 0),
-				duration = final ? 0 : rng.Next(EncounterMinDuration, EncounterMaxDuration + 1),
-				timeCost = final ? 0 : rng.Next(1, 4),
-				rewardResources = final ? new ClimbResourceSave { red = 0, white = 0, black = 0 } : GenerateReward(rng, 1, 3),
-				hasDeckReward = !final,
-				isFinal = final,
+				duration = rng.Next(EncounterMinDuration, EncounterMaxDuration + 1),
+				timeCost = rng.Next(1, 4),
+				rewardResources = GenerateReward(rng, 1, 3),
+				hasDeckReward = true,
+				isFinal = false,
 				isCompleted = false,
 			};
+		}
+
+		private static ClimbResourceSave GenerateShopCost(Random rng, string kind)
+		{
+			if (string.Equals(kind, ClimbShopSlotKinds.Medal, StringComparison.OrdinalIgnoreCase))
+				return GenerateCost(rng, 4, 6);
+			if (string.Equals(kind, ClimbShopSlotKinds.Equipment, StringComparison.OrdinalIgnoreCase))
+				return GenerateCost(rng, 6, 8);
+			return GenerateCost(rng, 1, 2);
 		}
 
 		private static string RollClimbEncounterEnemyId(Random rng, string excludedEnemyId)

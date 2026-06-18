@@ -32,6 +32,8 @@ namespace Crusaders30XX.ECS.Data.Save
 		public Dictionary<string, List<string>> runCardRestrictions { get; set; } = new Dictionary<string, List<string>>();
 		/// <summary>Loadout card keys from the rolled starting deck at new-run creation.</summary>
 		public List<string> starterCardKeys { get; set; } = new List<string>();
+		/// <summary>Current run card keys acquired by encounter reward exchange or climb shop replacement.</summary>
+		public List<string> tradedCardKeys { get; set; } = new List<string>();
 		/// <summary>Exact unresolved deck reward offer shown after a quest reward.</summary>
 		public DeckRewardOfferSave pendingDeckRewardOffer { get; set; }
 		public ClimbSaveState climb { get; set; } = new ClimbSaveState();

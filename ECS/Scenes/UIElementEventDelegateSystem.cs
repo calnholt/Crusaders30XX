@@ -260,7 +260,7 @@ namespace Crusaders30XX.ECS.Systems
 
             if (!string.Equals(slot.kind, ClimbShopSlotKinds.Replacement, StringComparison.OrdinalIgnoreCase))
             {
-                ClimbShopService.TryPurchaseSlot(action.SlotIndex);
+                ClimbShopService.TryPurchaseSlot(entityManager, action.SlotIndex);
                 return;
             }
 

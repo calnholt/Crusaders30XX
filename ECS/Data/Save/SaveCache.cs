@@ -79,6 +79,7 @@ namespace Crusaders30XX.ECS.Data.Save
 					"loadout_1");
 
 				_save.starterCardKeys = new List<string>(loadout.cardIds);
+				_save.tradedCardKeys = new List<string>();
 				var savedLoadout = _save.loadouts[0];
 				savedLoadout.cardIds = new List<string>(loadout.cardIds);
 				savedLoadout.weaponId = resolvedWeaponId;
@@ -336,6 +337,66 @@ namespace Crusaders30XX.ECS.Data.Save
 			}
 		}
 
+		public static List<string> GetTradedCardKeys()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				return CloneStringList(_save?.tradedCardKeys);
+			}
+		}
+
+		public static void MarkTradedCardKey(string cardKey)
+		{
+			if (string.IsNullOrWhiteSpace(cardKey)) return;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				_save.tradedCardKeys ??= new List<string>();
+				_save.tradedCardKeys.Add(cardKey);
+				Persist();
+			}
+		}
+
+		public static bool ReplaceTrackedTradedCardKey(string oldCardKey, string newCardKey)
+		{
+			if (string.IsNullOrWhiteSpace(oldCardKey) || string.IsNullOrWhiteSpace(newCardKey)) return false;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				_save.tradedCardKeys ??= new List<string>();
+				int idx = _save.tradedCardKeys.FindIndex(k =>
+					string.Equals(k, oldCardKey, StringComparison.OrdinalIgnoreCase));
+				if (idx < 0) return false;
+				_save.tradedCardKeys[idx] = newCardKey;
+				Persist();
+				return true;
+			}
+		}
+
+		public static void RemoveTrackedTradedCardKey(string cardKey)
+		{
+			if (string.IsNullOrWhiteSpace(cardKey)) return;
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (!RemoveTrackedTradedCardKeyLocked(cardKey)) return;
+				Persist();
+			}
+		}
+
+		private static bool RemoveTrackedTradedCardKeyLocked(string cardKey)
+		{
+			if (string.IsNullOrWhiteSpace(cardKey) || _save?.tradedCardKeys == null) return false;
+			int idx = _save.tradedCardKeys.FindIndex(k =>
+				string.Equals(k, cardKey, StringComparison.OrdinalIgnoreCase));
+			if (idx < 0) return false;
+			_save.tradedCardKeys.RemoveAt(idx);
+			return true;
+		}
+
 		public static void Reload()
 		{
 			lock (_lock)
@@ -570,6 +631,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				runLongPassives = new Dictionary<string, int>(),
 				runCardRestrictions = new Dictionary<string, List<string>>(),
 				starterCardKeys = new List<string>(),
+				tradedCardKeys = new List<string>(),
 				pendingDeckRewardOffer = null,
 				climb = new ClimbSaveState(),
 				cardMastery = prior?.cardMastery ?? new Dictionary<string, CardMastery>(),
@@ -600,6 +662,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				pendingBattleNodeId = string.Empty,
 				pendingDeckRewardOffer = null,
 				starterCardKeys = new List<string>(startingDeck),
+				tradedCardKeys = new List<string>(),
 				loadouts = new List<LoadoutDefinition>
 				{
 					new LoadoutDefinition
@@ -971,6 +1034,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				{
 					_save.runCardRestrictions?.Remove(cardKey);
 				}
+				RemoveTrackedTradedCardKeyLocked(cardKey);
 				Persist();
 				if (publishChange)
 				{

@@ -23,6 +23,15 @@ namespace Crusaders30XX.ECS.Objects.Cards
             OnPlay = (entityManager, card) =>
             {
                 var player = entityManager.GetEntity("Player");
+                var enemy = entityManager.GetEntity("Enemy");
+                if (IsUpgraded)
+                {
+                    EventManager.Publish(new ModifyHpRequestEvent {
+                        Source = player,
+                        Target = enemy,
+                        Delta = -1,
+                    });
+                }
                 EventManager.Publish(new ApplyPassiveEvent
                 {
                     Target = player,
@@ -40,6 +49,11 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     Type = AppliedPassiveType.Sharpen,
                     Delta = SharpenAmount
                 });
+            };
+            OnUpgrade = (entityManager, card) =>
+            {
+                Type = CardType.Attack;
+                Damage = 1;
             };
         }
     }

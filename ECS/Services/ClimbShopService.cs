@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Factories;
@@ -11,6 +12,11 @@ namespace Crusaders30XX.ECS.Services
 	public static class ClimbShopService
 	{
 		public static bool TryPurchaseSlot(int slotIndex)
+		{
+			return TryPurchaseSlot(null, slotIndex);
+		}
+
+		public static bool TryPurchaseSlot(EntityManager entityManager, int slotIndex)
 		{
 			var climb = SaveCache.GetClimbState();
 			if (!TryGetActiveShopSlot(climb, slotIndex, out var slot)) return false;
@@ -24,11 +30,11 @@ namespace Crusaders30XX.ECS.Services
 			bool applied = false;
 			if (string.Equals(slot.kind, ClimbShopSlotKinds.Medal, StringComparison.OrdinalIgnoreCase))
 			{
-				applied = TryApplyMedal(loadout, slot.itemId);
+				applied = TryApplyMedal(entityManager, loadout, slot.itemId);
 			}
 			else if (string.Equals(slot.kind, ClimbShopSlotKinds.Equipment, StringComparison.OrdinalIgnoreCase))
 			{
-				applied = TryApplyEquipment(loadout, slot.itemId);
+				applied = TryApplyEquipment(entityManager, loadout, slot.itemId);
 			}
 			else if (string.Equals(slot.kind, ClimbShopSlotKinds.Upgrade, StringComparison.OrdinalIgnoreCase))
 			{
@@ -55,6 +61,10 @@ namespace Crusaders30XX.ECS.Services
 				timeCost);
 			SaveCache.SaveLoadout(loadout);
 			SaveCache.SaveClimbState(climb);
+			if (ClimbRuleService.HasPendingFinalEncounter(climb))
+			{
+				ClimbEncounterService.TryQueuePendingFinalEncounter(entityManager);
+			}
 			return true;
 		}
 
@@ -85,6 +95,11 @@ namespace Crusaders30XX.ECS.Services
 
 		public static bool TryFinalizeReplacement(int outgoingLoadoutIndex)
 		{
+			return TryFinalizeReplacement(null, outgoingLoadoutIndex);
+		}
+
+		public static bool TryFinalizeReplacement(EntityManager entityManager, int outgoingLoadoutIndex)
+		{
 			var climb = SaveCache.GetClimbState();
 			var offer = climb.pendingReplacementOffer;
 			if (offer == null || outgoingLoadoutIndex < 0) return false;
@@ -110,6 +125,8 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			SaveCache.SetRunCardRestrictionsForCard(outgoingKey, new List<string>());
+			SaveCache.RemoveTrackedTradedCardKey(outgoingKey);
+			SaveCache.MarkTradedCardKey(offer.incomingCardKey);
 			slot.isSold = true;
 			climb.pendingReplacementOffer = null;
 			ClimbRuleService.AdvanceTimeAndUpdateSlots(
@@ -118,6 +135,10 @@ namespace Crusaders30XX.ECS.Services
 				SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId),
 				timeCost);
 			SaveCache.SaveClimbState(climb);
+			if (ClimbRuleService.HasPendingFinalEncounter(climb))
+			{
+				ClimbEncounterService.TryQueuePendingFinalEncounter(entityManager);
+			}
 			return true;
 		}
 
@@ -156,19 +177,21 @@ namespace Crusaders30XX.ECS.Services
 				&& !string.Equals(slot.kind, ClimbShopSlotKinds.Empty, StringComparison.OrdinalIgnoreCase);
 		}
 
-		private static bool TryApplyMedal(LoadoutDefinition loadout, string medalId)
+		private static bool TryApplyMedal(EntityManager entityManager, LoadoutDefinition loadout, string medalId)
 		{
 			if (string.IsNullOrWhiteSpace(medalId) || MedalFactory.Create(medalId) == null) return false;
 			if (loadout.medalIds.Any(id => string.Equals(id, medalId, StringComparison.OrdinalIgnoreCase))) return false;
 			loadout.medalIds.Add(medalId);
+			RunMedalService.AcquireAndEquip(entityManager, medalId);
 			return true;
 		}
 
-		private static bool TryApplyEquipment(LoadoutDefinition loadout, string equipmentId)
+		private static bool TryApplyEquipment(EntityManager entityManager, LoadoutDefinition loadout, string equipmentId)
 		{
 			if (string.IsNullOrWhiteSpace(equipmentId) || EquipmentFactory.Create(equipmentId) == null) return false;
 			if (SaveCache.IsItemOwned(equipmentId, ForSaleItemType.Equipment)) return false;
 			RunMapEquipmentPoolService.ApplyEquipmentToLoadout(loadout, equipmentId);
+			RunEquipmentService.EquipOnPlayer(entityManager, equipmentId);
 			return true;
 		}
 
@@ -186,6 +209,7 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			loadout.cardIds[slot.deckIndex] = upgraded;
+			SaveCache.ReplaceTrackedTradedCardKey(current, upgraded);
 			CardUpgradeService.InvokeUpgradeConfirmed(upgraded);
 			return true;
 		}

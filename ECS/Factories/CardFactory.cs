@@ -11,14 +11,13 @@ namespace Crusaders30XX.ECS.Factories
         /// <summary>
         /// Creates a CardBase instance from a card ID string
         /// </summary>
-        /// <param name="cardId">The card ID (e.g., "anoint_the_sick")</param>
+        /// <param name="cardId">The card ID (e.g., "absolution")</param>
         /// <returns>The corresponding CardBase instance, or null if not found</returns>
         public static CardBase Create(string cardId)
         {
             return cardId switch
             {
                 "absolution" => new Absolution(),
-                "anoint_the_sick" => new AnointTheSick(),
                 "ark_of_the_covenant" => new ArkOfTheCovenant(),
                 "battering_blow" => new BatteringBlow(),
                 "burn" => new Burn(),
@@ -56,7 +55,6 @@ namespace Crusaders30XX.ECS.Factories
                 "serpent_crush" => new SerpentCrush(),
                 "seize" => new Seize(),
                 "shield_of_faith" => new ShieldOfFaith(),
-                "shroud_of_turin" => new ShroudOfTurin(),
                 "smite" => new Smite(),
                 "stab" => new Stab(),
                 "steadfast_resolve" => new SteadfastResolve(),
@@ -86,7 +84,6 @@ namespace Crusaders30XX.ECS.Factories
             return new Dictionary<string, CardBase>
             {
                 { "absolution", new Absolution() },
-                { "anoint_the_sick", new AnointTheSick() },
                 { "ark_of_the_covenant", new ArkOfTheCovenant() },
                 { "battering_blow", new BatteringBlow() },
                 { "burn", new Burn() },
@@ -124,7 +121,6 @@ namespace Crusaders30XX.ECS.Factories
                 { "serpent_crush", new SerpentCrush() },
                 { "seize", new Seize() },
                 { "shield_of_faith", new ShieldOfFaith() },
-                { "shroud_of_turin", new ShroudOfTurin() },
                 { "smite", new Smite() },
                 { "stab", new Stab() },
                 { "steadfast_resolve", new SteadfastResolve() },

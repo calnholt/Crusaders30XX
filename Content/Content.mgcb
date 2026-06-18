@@ -1113,17 +1113,6 @@
 
 #---------------------------------- Card Art ---------------------------------#
 
-#begin CardArt/anoint_the_sick.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:CardArt/anoint_the_sick.png
-
 #begin CardArt/ark_of_the_covenant.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -1299,17 +1288,6 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:TextureFormat=Color
 /build:CardArt/shield_of_faith.png
-
-#begin CardArt/shroud_of_turin.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:CardArt/shroud_of_turin.png
 
 #begin CardArt/stab.png
 /importer:TextureImporter

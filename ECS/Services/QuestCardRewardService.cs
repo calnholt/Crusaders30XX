@@ -177,8 +177,16 @@ namespace Crusaders30XX.ECS.Services
 
 			if (applied)
 			{
-				if (string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, StringComparison.OrdinalIgnoreCase))
+				if (string.Equals(option.kind, DeckRewardOfferKinds.Exchange, StringComparison.OrdinalIgnoreCase))
+				{
+					SaveCache.RemoveTrackedTradedCardKey(option.outgoingCardKey);
+					SaveCache.MarkTradedCardKey(option.incomingCardKey);
+				}
+				else if (string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, StringComparison.OrdinalIgnoreCase))
+				{
+					SaveCache.ReplaceTrackedTradedCardKey(option.outgoingCardKey, option.upgradedCardKey);
 					CardUpgradeService.InvokeUpgradeConfirmed(option.upgradedCardKey);
+				}
 				SaveCache.ClearPendingDeckRewardOffer();
 			}
 			return applied;

@@ -209,6 +209,28 @@ namespace Crusaders30XX.ECS.Services
 			}
 		}
 
+		public static float CalculateEnemyHealthDeckWeight(
+			EntityManager entityManager,
+			int fallbackDeckCardCount,
+			int baseCardCountReduction = 0)
+		{
+			var cardKeys = BuildDesiredKeys(GetLoadoutForRun());
+			if (cardKeys.Count == 0 && entityManager != null)
+			{
+				cardKeys = entityManager.GetEntitiesWithComponent<RunDeckCard>()
+					.Where(entity => entity != null && entity.IsActive)
+					.Select(entity => entity.GetComponent<RunDeckCard>()?.CardKey)
+					.Where(key => !string.IsNullOrWhiteSpace(key) && !IsWeaponCardKey(key))
+					.ToList();
+			}
+
+			int cardCount = cardKeys.Count > 0 ? cardKeys.Count : Math.Max(0, fallbackDeckCardCount);
+			int upgradedCount = cardKeys.Count(key => IsUpgradedCardKey(key));
+			int tradedCount = CountCurrentTradedCards(cardKeys);
+			int reducedCardCount = Math.Max(0, cardCount - Math.Max(0, baseCardCountReduction));
+			return reducedCardCount + ((upgradedCount + tradedCount) * 0.75f);
+		}
+
 		public static Entity GetRunDeckEntity(EntityManager entityManager)
 		{
 			var byName = entityManager.GetEntity(DeckEntityName);
@@ -303,6 +325,25 @@ namespace Crusaders30XX.ECS.Services
 				keys.Add(key);
 			}
 			return keys;
+		}
+
+		private static int CountCurrentTradedCards(IReadOnlyList<string> cardKeys)
+		{
+			if (cardKeys == null || cardKeys.Count == 0) return 0;
+			var unmatched = cardKeys
+				.Where(key => !string.IsNullOrWhiteSpace(key))
+				.ToList();
+			int count = 0;
+			foreach (var tradedKey in SaveCache.GetTradedCardKeys())
+			{
+				if (string.IsNullOrWhiteSpace(tradedKey)) continue;
+				int idx = unmatched.FindIndex(key =>
+					string.Equals(key, tradedKey, StringComparison.OrdinalIgnoreCase));
+				if (idx < 0) continue;
+				unmatched.RemoveAt(idx);
+				count++;
+			}
+			return count;
 		}
 
 		private static bool IsWeaponCardKey(string cardKey)

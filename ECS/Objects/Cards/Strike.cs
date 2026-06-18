@@ -38,6 +38,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
                     EventManager.Publish(new ModifyCourageRequestEvent { Delta = CourageGained, Type = ModifyCourageType.Gain });
                 }
             };
+            OnUpgrade = (entityManager, card) =>
+            {
+                IsFreeAction = true;
+            };
         }
     }
 }
