@@ -20,6 +20,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Background Dim Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float BackgroundDimAlpha { get; set; } = 0.22f;
 
+		[DebugEditable(DisplayName = "Background Anchor Y", Step = 1, Min = -400, Max = 400)]
+		public int BackgroundAnchorY { get; set; } = 0;
+
 		public ClimbBackgroundDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
 		{
@@ -55,7 +58,7 @@ namespace Crusaders30XX.ECS.Systems
 				float scale = Math.Max(dest.Width / (float)_background.Width, dest.Height / (float)_background.Height);
 				int w = (int)Math.Ceiling(_background.Width * scale);
 				int h = (int)Math.Ceiling(_background.Height * scale);
-				var bgDest = new Rectangle((dest.Width - w) / 2, 0, w, h);
+				var bgDest = new Rectangle((dest.Width - w) / 2, BackgroundAnchorY, w, h);
 				_spriteBatch.Draw(_background, bgDest, Color.White);
 			}
 			else

@@ -43,21 +43,75 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Timeline Slot Gap", Step = 1, Min = 0, Max = 12)]
 		public int TimelineSlotGap { get; set; } = 3;
 		[DebugEditable(DisplayName = "Timeline Label Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.3f)]
-		public float TimelineLabelFontScale { get; set; } = 0.07f;
+		public float TimelineLabelFontScale { get; set; } = 0.058f;
 		[DebugEditable(DisplayName = "Timeline Value Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.4f)]
 		public float TimelineValueFontScale { get; set; } = 0.10f;
 		[DebugEditable(DisplayName = "Resource Label Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.3f)]
-		public float ResourceLabelFontScale { get; set; } = 0.09f;
+		public float ResourceLabelFontScale { get; set; } = 0.075f;
 		[DebugEditable(DisplayName = "Resource Amount Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.4f)]
-		public float ResourceAmountFontScale { get; set; } = 0.14f;
+		public float ResourceAmountFontScale { get; set; } = 0.11f;
 		[DebugEditable(DisplayName = "Resource Icon Size", Step = 1, Min = 6, Max = 48)]
 		public int ResourceIconSize { get; set; } = 18;
 		[DebugEditable(DisplayName = "Resource Fade Seconds", Step = 0.01f, Min = 0.01f, Max = 1f)]
 		public float ResourceFadeSeconds { get; set; } = 0.12f;
+		[DebugEditable(DisplayName = "Resource Bar Border Thickness", Step = 1, Min = 1, Max = 6)]
+		public int ResourceBarBorderThickness { get; set; } = 2;
+		[DebugEditable(DisplayName = "Red Resource Glow Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float RedResourceGlowAlpha { get; set; } = 0.65f;
 		[DebugEditable(DisplayName = "Timeline Hourglass Width", Step = 1, Min = 3, Max = 24)]
 		public int TimelineHourglassWidth { get; set; } = 8;
 		[DebugEditable(DisplayName = "Timeline Hourglass Height", Step = 1, Min = 4, Max = 32)]
 		public int TimelineHourglassHeight { get; set; } = 11;
+		[DebugEditable(DisplayName = "Empty Hourglass Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float EmptyHourglassAlpha { get; set; } = 0.34f;
+		[DebugEditable(DisplayName = "Hourglass Red Glow Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float HourglassRedGlowAlpha { get; set; } = 0.65f;
+		[DebugEditable(DisplayName = "Hourglass White Meter Glow Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float HourglassWhiteMeterGlowAlpha { get; set; } = 0.55f;
+		[DebugEditable(DisplayName = "Hourglass Glow Radius", Step = 1, Min = 1, Max = 8)]
+		public int HourglassGlowRadius { get; set; } = 2;
+		[DebugEditable(DisplayName = "Header Shadow Offset Y", Step = 1, Min = 0, Max = 20)]
+		public int HeaderShadowOffsetY { get; set; } = 4;
+		[DebugEditable(DisplayName = "Header Shadow Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float HeaderShadowAlpha { get; set; } = 0.45f;
+		[DebugEditable(DisplayName = "Header Bottom Border Thickness", Step = 1, Min = 1, Max = 4)]
+		public int HeaderBottomBorderThickness { get; set; } = 1;
+		[DebugEditable(DisplayName = "Timeline Border Thickness", Step = 1, Min = 1, Max = 4)]
+		public int TimelineBorderThickness { get; set; } = 1;
+		[DebugEditable(DisplayName = "Timeline Used Label Offset X", Step = 1, Min = 0, Max = 80)]
+		public int TimelineUsedLabelOffsetX { get; set; } = 28;
+		[DebugEditable(DisplayName = "Timeline Label Offset Y", Step = 1, Min = 0, Max = 20)]
+		public int TimelineLabelOffsetY { get; set; } = 5;
+		[DebugEditable(DisplayName = "Timeline Remaining Value Offset X", Step = 1, Min = 0, Max = 120)]
+		public int TimelineRemainingValueOffsetX { get; set; } = 60;
+		[DebugEditable(DisplayName = "Timeline Remaining Label Offset X", Step = 1, Min = 0, Max = 80)]
+		public int TimelineRemainingLabelOffsetX { get; set; } = 34;
+		[DebugEditable(DisplayName = "Timeline Track Height", Step = 1, Min = 8, Max = 32)]
+		public int TimelineTrackHeight { get; set; } = 16;
+		[DebugEditable(DisplayName = "Timeline Min Slot Width", Step = 1, Min = 1, Max = 16)]
+		public int TimelineMinSlotWidth { get; set; } = 4;
+		[DebugEditable(DisplayName = "Timeline Hourglass Y Offset", Step = 1, Min = 0, Max = 12)]
+		public int TimelineHourglassYOffset { get; set; } = 2;
+		[DebugEditable(DisplayName = "Resource Bar Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float ResourceBarBorderAlpha { get; set; } = 0.85f;
+		[DebugEditable(DisplayName = "Resource Label Padding X", Step = 1, Min = 0, Max = 40)]
+		public int ResourceLabelPaddingX { get; set; } = 12;
+		[DebugEditable(DisplayName = "Resource Label Padding Y", Step = 1, Min = 0, Max = 40)]
+		public int ResourceLabelPaddingY { get; set; } = 8;
+		[DebugEditable(DisplayName = "Resource Icon Bottom Padding", Step = 1, Min = 0, Max = 40)]
+		public int ResourceIconBottomPadding { get; set; } = 8;
+		[DebugEditable(DisplayName = "Resource Row Padding Right", Step = 1, Min = 0, Max = 40)]
+		public int ResourceRowPaddingRight { get; set; } = 12;
+		[DebugEditable(DisplayName = "Resource Group Spacing", Step = 1, Min = 0, Max = 40)]
+		public int ResourceGroupSpacing { get; set; } = 16;
+		[DebugEditable(DisplayName = "Resource Icon Text Gap", Step = 1, Min = 0, Max = 16)]
+		public int ResourceIconTextGap { get; set; } = 4;
+		[DebugEditable(DisplayName = "Resource Amount Text Y Offset", Step = 1, Min = -8, Max = 8)]
+		public int ResourceAmountTextYOffset { get; set; } = -1;
+		[DebugEditable(DisplayName = "Weapon Button Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float WeaponButtonBorderAlpha { get; set; } = 0.85f;
+		[DebugEditable(DisplayName = "Weapon Button Border Thickness", Step = 1, Min = 1, Max = 6)]
+		public int WeaponButtonBorderThickness { get; set; } = 2;
 
 		internal static int HeaderHeightValue { get; private set; } = 90;
 		internal static int HeaderPaddingXValue { get; private set; } = 32;
@@ -73,6 +127,7 @@ namespace Crusaders30XX.ECS.Systems
 			_content = content;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			ClimbSceneDrawHelpers.EnsureHourglassTextures(content);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -113,9 +168,9 @@ namespace Crusaders30XX.ECS.Systems
 			var header = GetBounds(ClimbHeaderLayoutSystem.HeaderName);
 			if (header.Width <= 0) header = new Rectangle(0, 0, Game1.VirtualWidth, HeaderHeight);
 
-			_spriteBatch.Draw(_pixel, new Rectangle(header.X, header.Y + 4, header.Width, header.Height), Color.Black * 0.45f);
-			_spriteBatch.Draw(_pixel, header, ClimbSceneDrawHelpers.Black1 * 0.82f);
-			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, new Rectangle(0, header.Bottom - 1, Game1.VirtualWidth, 1), Color.White * 0.85f, 1);
+			_spriteBatch.Draw(_pixel, new Rectangle(header.X, header.Y + HeaderShadowOffsetY, header.Width, header.Height), Color.Black * HeaderShadowAlpha);
+			_spriteBatch.Draw(_pixel, header, ClimbSceneDrawHelpers.HeaderFill);
+			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, new Rectangle(0, header.Bottom - HeaderBottomBorderThickness, Game1.VirtualWidth, HeaderBottomBorderThickness), ClimbSceneDrawHelpers.Black4, HeaderBottomBorderThickness);
 
 			DrawTimeline(GetBounds(ClimbHeaderLayoutSystem.TimelineName), climb, preview);
 			DrawResources(GetBounds(ClimbHeaderLayoutSystem.ResourceBarName), climb, preview);
@@ -131,42 +186,57 @@ namespace Crusaders30XX.ECS.Systems
 			int remaining = ClimbRuleService.MaxTime - projected;
 			int delta = Math.Max(0, projected - used);
 
-			_spriteBatch.Draw(_pixel, rect, ClimbSceneDrawHelpers.Black0 * 0.66f);
-			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, Color.White * 0.22f, 1);
+			_spriteBatch.Draw(_pixel, rect, ClimbSceneDrawHelpers.Black2);
+			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, ClimbSceneDrawHelpers.Black4, TimelineBorderThickness);
 
 			var labelY = rect.Y + TimelinePaddingY;
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, used.ToString(), new Vector2(rect.X + TimelinePaddingX, labelY), TimelineValueFontScale, ClimbSceneDrawHelpers.White1);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, "used", new Vector2(rect.X + TimelinePaddingX + 28, labelY + 5), TimelineLabelFontScale, ClimbSceneDrawHelpers.White3);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, remaining.ToString(), new Vector2(rect.Right - TimelinePaddingX - 60, labelY), TimelineValueFontScale, ClimbSceneDrawHelpers.White1);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, "remaining", new Vector2(rect.Right - TimelinePaddingX - 34, labelY + 5), TimelineLabelFontScale, ClimbSceneDrawHelpers.White3);
+			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, used.ToString(), new Vector2(rect.X + TimelinePaddingX, labelY), TimelineValueFontScale, ClimbSceneDrawHelpers.White1);
+			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, "used", new Vector2(rect.X + TimelinePaddingX + TimelineUsedLabelOffsetX, labelY + TimelineLabelOffsetY), TimelineLabelFontScale, ClimbSceneDrawHelpers.White3);
+			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, remaining.ToString(), new Vector2(rect.Right - TimelinePaddingX - TimelineRemainingValueOffsetX, labelY), TimelineValueFontScale, ClimbSceneDrawHelpers.White2);
+			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, "remaining", new Vector2(rect.Right - TimelinePaddingX - TimelineRemainingLabelOffsetX, labelY + TimelineLabelOffsetY), TimelineLabelFontScale, ClimbSceneDrawHelpers.White3);
 
 			int trackX = rect.X + TimelinePaddingX;
-			int trackY = rect.Y + rect.Height - TimelinePaddingY - 16;
+			int trackY = rect.Y + rect.Height - TimelinePaddingY - TimelineTrackHeight;
 			int trackW = rect.Width - TimelinePaddingX * 2;
 			int gapTotal = TimelineSlotGap * (ClimbRuleService.MaxTime - 1);
-			int slotW = Math.Max(4, (trackW - gapTotal) / ClimbRuleService.MaxTime);
+			int slotW = Math.Max(TimelineMinSlotWidth, (trackW - gapTotal) / ClimbRuleService.MaxTime);
 			for (int i = 0; i < ClimbRuleService.MaxTime; i++)
 			{
 				int x = trackX + i * (slotW + TimelineSlotGap);
-				var slotRect = new Rectangle(x, trackY, slotW, 16);
+				var slotRect = new Rectangle(x, trackY, slotW, TimelineTrackHeight);
 				bool shopMarker = i > 0 && i % ClimbRuleService.ShopRefreshInterval == 0;
 				if (shopMarker)
 				{
 					bool expiring = delta > 0 && projected >= i && used < i;
-					ClimbSceneDrawHelpers.DrawShopMarkerIcon(_spriteBatch, _pixel, slotRect, expiring ? ClimbSceneDrawHelpers.Red2 : ClimbSceneDrawHelpers.White3);
+					ClimbSceneDrawHelpers.DrawShopMarkerIcon(_spriteBatch, _pixel, slotRect, expiring ? ClimbSceneDrawHelpers.Red2 : ClimbSceneDrawHelpers.White1);
 					continue;
 				}
 
 				bool isUsed = i < used;
 				bool isPreview = delta > 0 && i >= used && i < projected;
-				var iconRect = new Rectangle(slotRect.X + (slotRect.Width - TimelineHourglassWidth) / 2, slotRect.Y + 2, TimelineHourglassWidth, TimelineHourglassHeight);
+				bool isEmpty = !isUsed && !isPreview;
+				float alpha = isEmpty ? EmptyHourglassAlpha : 1f;
+				var iconRect = new Rectangle(slotRect.X + (slotRect.Width - TimelineHourglassWidth) / 2, slotRect.Y + TimelineHourglassYOffset, TimelineHourglassWidth, TimelineHourglassHeight);
+				var style = isPreview
+					? HourglassIconStyle.Red
+					: isUsed
+						? HourglassIconStyle.WhiteMeter
+						: HourglassIconStyle.WhiteFaded;
+				var glow = new HourglassGlowTuning
+				{
+					RedGlowAlpha = HourglassRedGlowAlpha,
+					WhiteMeterGlowAlpha = HourglassWhiteMeterGlowAlpha,
+					GlowRadius = HourglassGlowRadius,
+				};
 				ClimbSceneDrawHelpers.DrawHourglassIcon(
 					_spriteBatch,
-					_pixel,
 					iconRect,
+					style,
 					isPreview ? ClimbSceneDrawHelpers.Red2 : ClimbSceneDrawHelpers.White3,
 					isPreview ? ClimbSceneDrawHelpers.Red2 : ClimbSceneDrawHelpers.White2,
-					isUsed || isPreview);
+					isUsed || isPreview,
+					alpha,
+					glow);
 			}
 		}
 
@@ -176,29 +246,38 @@ namespace Crusaders30XX.ECS.Systems
 			var baseResources = climb?.resources ?? new ClimbResourceSave();
 			var previewResources = _lastPreviewResources ?? baseResources;
 
-			_spriteBatch.Draw(_pixel, rect, ClimbSceneDrawHelpers.Black0 * 0.62f);
-			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, Color.White * 0.28f, 1);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, "Resources", new Vector2(rect.X + 10, rect.Y + 7), ResourceLabelFontScale, ClimbSceneDrawHelpers.White3);
+			_spriteBatch.Draw(_pixel, rect, ClimbSceneDrawHelpers.ResourceBarFill);
+			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, Color.White * ResourceBarBorderAlpha, ResourceBarBorderThickness);
+			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, "RESOURCES", new Vector2(rect.X + ResourceLabelPaddingX, rect.Y + ResourceLabelPaddingY), ResourceLabelFontScale, ClimbSceneDrawHelpers.White3);
 
-			int y = rect.Y + 34;
-			DrawResourceAmount(new Vector2(rect.X + 10, y), ClimbResourceType.Red, baseResources.red, previewResources.red, ClimbSceneDrawHelpers.Red2);
-			DrawResourceAmount(new Vector2(rect.X + 56, y), ClimbResourceType.White, baseResources.white, previewResources.white, ClimbSceneDrawHelpers.White1);
-			DrawResourceAmount(new Vector2(rect.X + 102, y), ClimbResourceType.Black, baseResources.black, previewResources.black, ClimbSceneDrawHelpers.White3);
+			int iconY = rect.Bottom - ResourceIconBottomPadding - ResourceIconSize;
+			int x = rect.Right - ResourceRowPaddingRight;
+			x = DrawResourceAmountRightAligned(x, iconY, ClimbResourceType.Red, baseResources.red, previewResources.red, ClimbSceneDrawHelpers.Red3);
+			x -= ResourceGroupSpacing;
+			x = DrawResourceAmountRightAligned(x, iconY, ClimbResourceType.White, baseResources.white, previewResources.white, ClimbSceneDrawHelpers.White1);
+			x -= ResourceGroupSpacing;
+			DrawResourceAmountRightAligned(x, iconY, ClimbResourceType.Black, baseResources.black, previewResources.black, ClimbSceneDrawHelpers.White3);
 		}
 
-		private void DrawResourceAmount(Vector2 pos, ClimbResourceType type, int amount, int previewAmount, Color color)
+		private int DrawResourceAmountRightAligned(int rightX, int iconY, ClimbResourceType type, int amount, int previewAmount, Color color)
 		{
-			ClimbSceneDrawHelpers.DrawResourceIcon(_spriteBatch, _graphicsDevice, _pixel, pos, type, ResourceIconSize, color);
-			var textPos = new Vector2(pos.X + ResourceIconSize + 4, pos.Y - 1);
+			var amountText = amount.ToString();
+			var amountSize = ClimbSceneDrawHelpers.MeasureBodyText(amountText, ResourceAmountFontScale);
+			int groupW = ResourceIconSize + ResourceIconTextGap + (int)Math.Ceiling(amountSize.X);
+			int iconX = rightX - groupW;
+			var iconPos = new Vector2(iconX, iconY);
+			ClimbSceneDrawHelpers.DrawResourceIcon(_spriteBatch, _graphicsDevice, _pixel, iconPos, type, ResourceIconSize, color, glowAlpha: type == ClimbResourceType.Red ? RedResourceGlowAlpha : 0f);
+			var textPos = new Vector2(iconPos.X + ResourceIconSize + ResourceIconTextGap, iconPos.Y + ResourceAmountTextYOffset);
 			float previewAlpha = MathHelper.Clamp(_resourcePreviewAlpha, 0f, 1f);
 			if (previewAlpha <= 0.001f || amount == previewAmount)
 			{
-				ClimbSceneDrawHelpers.DrawText(_spriteBatch, amount.ToString(), textPos, ResourceAmountFontScale, ClimbSceneDrawHelpers.White1);
-				return;
+				ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, amountText, textPos, ResourceAmountFontScale, ClimbSceneDrawHelpers.White1);
+				return iconX;
 			}
 
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, amount.ToString(), textPos, ResourceAmountFontScale, ClimbSceneDrawHelpers.White1 * (1f - previewAlpha));
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, previewAmount.ToString(), textPos, ResourceAmountFontScale, ClimbSceneDrawHelpers.White1 * previewAlpha);
+			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, amountText, textPos, ResourceAmountFontScale, ClimbSceneDrawHelpers.White1 * (1f - previewAlpha));
+			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, previewAmount.ToString(), textPos, ResourceAmountFontScale, ClimbSceneDrawHelpers.White1 * previewAlpha);
+			return iconX;
 		}
 
 		private void UpdateResourcePreviewFade(GameTime gameTime)
@@ -242,12 +321,15 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (rect.Width <= 0 || rect.Height <= 0) return;
 			var ui = EntityManager.GetEntity(ClimbHeaderLayoutSystem.LoadoutButtonName)?.GetComponent<UIElement>();
-			_spriteBatch.Draw(_pixel, rect, ClimbSceneDrawHelpers.Black0 * 0.80f);
-			if (_weaponArt != null)
-			{
-				_spriteBatch.Draw(_weaponArt, rect, Color.White);
-			}
-			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, ui?.IsHovered == true ? ClimbSceneDrawHelpers.Red2 : Color.White * 0.8f, 2);
+			ClimbSceneDrawHelpers.DrawCircularFramedImage(
+				_spriteBatch,
+				_graphicsDevice,
+				_pixel,
+				_weaponArt,
+				rect,
+				Color.White * WeaponButtonBorderAlpha,
+				WeaponButtonBorderThickness,
+				ui?.IsHovered == true);
 		}
 
 		private Rectangle GetBounds(string name)

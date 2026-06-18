@@ -54,6 +54,12 @@ to the fixture.
 | `quest-reward-modal` | Quest reward modal | Quest complete overlay with deck reward offer lanes |
 | `waystation` | WayStation run setup | Run setup scene with default Sword/Easy selections |
 | `player-hud` | Production player HUD systems | Player HUD geometry and state variants |
+| `climb-no-events` | Climb scene | Shop + Encounters only (no active events column) |
+| `climb-active-events` | Climb scene | Three columns with active event slots at T5 |
+| `climb-hover-preview` | Climb scene | Hover preview on first encounter slot |
+| `climb-sold-shop-slot` | Climb scene | Shop with one sold slot |
+| `climb-encounter-reward-modal` | Climb scene + reward modal | Encounter reward overlay |
+| `climb-replacement-modal` | Climb scene + card list modal | Deck replacement picker |
 
 ---
 
@@ -249,6 +255,24 @@ dotnet run -- snapshot player-hud expanded
 
 The verification script is read-only by default. `--accept` explicitly
 replaces all five approved baselines.
+
+---
+
+## `climb-no-events`, `climb-active-events`, `climb-hover-preview`, `climb-sold-shop-slot`, `climb-encounter-reward-modal`, `climb-replacement-modal`
+
+Renders the Climb scene HUD at 1920x1080 with fixture-specific save state.
+Output PNGs are written under `debug/snapshots/<fixture-id>/<fixture-id>.png`.
+
+```bash
+dotnet run -- snapshot climb-no-events
+dotnet run -- snapshot climb-active-events
+dotnet run -- snapshot climb-hover-preview
+dotnet run -- snapshot climb-sold-shop-slot
+dotnet run -- snapshot climb-encounter-reward-modal
+dotnet run -- snapshot climb-replacement-modal
+```
+
+Modal variants draw the Climb scene plus the open modal overlay.
 
 ---
 

@@ -38,37 +38,175 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Column Subtitle Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.3f)]
 		public float ColumnSubtitleFontScale { get; set; } = 0.09f;
 		[DebugEditable(DisplayName = "Slot Gap", Step = 1, Min = 0, Max = 40)]
-		public int SlotGap { get; set; } = 6;
+		public int SlotGap { get; set; } = 16;
 		[DebugEditable(DisplayName = "Slot Ring Padding", Step = 1, Min = 0, Max = 40)]
 		public int SlotRingPadding { get; set; } = 10;
 		[DebugEditable(DisplayName = "Compact Padding X", Step = 1, Min = 0, Max = 40)]
-		public int CompactPaddingX { get; set; } = 10;
+		public int CompactPaddingX { get; set; } = 14;
 		[DebugEditable(DisplayName = "Compact Padding Y", Step = 1, Min = 0, Max = 40)]
-		public int CompactPaddingY { get; set; } = 8;
+		public int CompactPaddingY { get; set; } = 16;
 		[DebugEditable(DisplayName = "Compact Radius", Step = 1, Min = 0, Max = 24)]
 		public int CompactRadius { get; set; } = 3;
 		[DebugEditable(DisplayName = "Compact Title Font Scale", Step = 0.01f, Min = 0.04f, Max = 0.3f)]
-		public float CompactTitleFontScale { get; set; } = 0.10f;
+		public float CompactTitleFontScale { get; set; } = 0.142f;
 		[DebugEditable(DisplayName = "Compact Badge Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.25f)]
-		public float CompactBadgeFontScale { get; set; } = 0.07f;
+		public float CompactBadgeFontScale { get; set; } = 0.108f;
 		[DebugEditable(DisplayName = "Compact Meta Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.25f)]
-		public float CompactMetaFontScale { get; set; } = 0.08f;
+		public float CompactMetaFontScale { get; set; } = 0.075f;
+		[DebugEditable(DisplayName = "Compact Meta Label Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.25f)]
+		public float CompactMetaLabelFontScale { get; set; } = 0.11f;
 		[DebugEditable(DisplayName = "Enemy Portrait Height", Step = 1, Min = 60, Max = 260)]
 		public int EnemyPortraitHeight { get; set; } = 148;
 		[DebugEditable(DisplayName = "Meta Block Min Height", Step = 1, Min = 20, Max = 100)]
 		public int MetaBlockMinHeight { get; set; } = 36;
+		[DebugEditable(DisplayName = "Meta Block Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float MetaBlockBorderAlpha { get; set; } = 0.45f;
+		[DebugEditable(DisplayName = "Meta Block Fill Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float MetaBlockFillAlpha { get; set; } = 0.08f;
 		[DebugEditable(DisplayName = "Compact Resource Icon Size", Step = 1, Min = 6, Max = 36)]
-		public int CompactResourceIconSize { get; set; } = 12;
+		public int CompactResourceIconSize { get; set; } = 14;
 		[DebugEditable(DisplayName = "Compact Hourglass Width", Step = 1, Min = 4, Max = 32)]
 		public int CompactHourglassWidth { get; set; } = 10;
 		[DebugEditable(DisplayName = "Compact Hourglass Height", Step = 1, Min = 4, Max = 40)]
 		public int CompactHourglassHeight { get; set; } = 14;
+		[DebugEditable(DisplayName = "Event Glyph Size", Step = 1, Min = 16, Max = 48)]
+		public int EventGlyphSize { get; set; } = 28;
+		[DebugEditable(DisplayName = "Shop Title Icon Size", Step = 1, Min = 8, Max = 32)]
+		public int ShopTitleIconSize { get; set; } = 18;
+		[DebugEditable(DisplayName = "Preview Glow Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float PreviewGlowAlpha { get; set; } = 0.30f;
+		[DebugEditable(DisplayName = "Preview Source Offset Y", Step = 1, Min = -8, Max = 8)]
+		public int PreviewSourceOffsetY { get; set; } = -1;
+		[DebugEditable(DisplayName = "Empty Hourglass Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float EmptyHourglassAlpha { get; set; } = 0.34f;
+		[DebugEditable(DisplayName = "Hourglass Red Glow Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float HourglassRedGlowAlpha { get; set; } = 0.65f;
+		[DebugEditable(DisplayName = "Hourglass White Meter Glow Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float HourglassWhiteMeterGlowAlpha { get; set; } = 0.55f;
+		[DebugEditable(DisplayName = "Hourglass Glow Radius", Step = 1, Min = 1, Max = 8)]
+		public int HourglassGlowRadius { get; set; } = 2;
+		[DebugEditable(DisplayName = "Column Gradient Strips", Step = 1, Min = 1, Max = 64)]
+		public int ColumnGradientStrips { get; set; } = 16;
+		[DebugEditable(DisplayName = "Column Border Thickness", Step = 1, Min = 1, Max = 6)]
+		public int ColumnBorderThickness { get; set; } = 2;
+		[DebugEditable(DisplayName = "Shop Column Top Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float ShopColumnTopAlpha { get; set; } = 0.10f;
+		[DebugEditable(DisplayName = "Shop Column Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float ShopColumnBorderAlpha { get; set; } = 0.55f;
+		[DebugEditable(DisplayName = "Event Column Top Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float EventColumnTopAlpha { get; set; } = 0.35f;
+		[DebugEditable(DisplayName = "Event Column Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float EventColumnBorderAlpha { get; set; } = 0.75f;
+		[DebugEditable(DisplayName = "Encounter Column Top Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float EncounterColumnTopAlpha { get; set; } = 0.10f;
+		[DebugEditable(DisplayName = "Encounter Column Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float EncounterColumnBorderAlpha { get; set; } = 0.45f;
+		[DebugEditable(DisplayName = "Shop Title Icon Y Offset", Step = 1, Min = -8, Max = 16)]
+		public int ShopTitleIconYOffset { get; set; } = 2;
+		[DebugEditable(DisplayName = "Shop Title Icon Gap", Step = 1, Min = 0, Max = 24)]
+		public int ShopTitleIconGap { get; set; } = 8;
+		[DebugEditable(DisplayName = "Column Underline Y Offset", Step = 1, Min = 0, Max = 80)]
+		public int ColumnUnderlineYOffset { get; set; } = 31;
+		[DebugEditable(DisplayName = "Column Underline Height", Step = 1, Min = 1, Max = 8)]
+		public int ColumnUnderlineHeight { get; set; } = 2;
+		[DebugEditable(DisplayName = "Column Subtitle Y Offset", Step = 1, Min = 0, Max = 80)]
+		public int ColumnSubtitleYOffset { get; set; } = 37;
+		[DebugEditable(DisplayName = "Event Underline Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float EventUnderlineAlpha { get; set; } = 0.75f;
+		[DebugEditable(DisplayName = "Slot Hover Ring Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float SlotHoverRingAlpha { get; set; } = 0.04f;
+		[DebugEditable(DisplayName = "Slot Unavailable Fill Multiplier", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float SlotUnavailableFillMultiplier { get; set; } = 0.78f;
+		[DebugEditable(DisplayName = "Slot Unaffordable Fill Multiplier", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float SlotUnaffordableFillMultiplier { get; set; } = 0.84f;
+		[DebugEditable(DisplayName = "Slot Border Thickness", Step = 1, Min = 1, Max = 6)]
+		public int SlotBorderThickness { get; set; } = 2;
+		[DebugEditable(DisplayName = "Preview Glow Inflate", Step = 1, Min = 0, Max = 16)]
+		public int PreviewGlowInflate { get; set; } = 4;
+		[DebugEditable(DisplayName = "Event Preview Glow Multiplier", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float EventPreviewGlowMultiplier { get; set; } = 0.5f;
+		[DebugEditable(DisplayName = "Sold Overlay Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float SoldOverlayAlpha { get; set; } = 0.55f;
+		[DebugEditable(DisplayName = "Vanish Overlay Base Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float VanishOverlayBaseAlpha { get; set; } = 0.35f;
+		[DebugEditable(DisplayName = "Vanish Overlay Pulse Amplitude", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float VanishOverlayPulseAmplitude { get; set; } = 0.25f;
+		[DebugEditable(DisplayName = "Vanish Pulse Period Seconds", Step = 0.1f, Min = 0.5f, Max = 6f)]
+		public float VanishPulsePeriodSeconds { get; set; } = 2f;
+		[DebugEditable(DisplayName = "Unaffordable Overlay Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float UnaffordableOverlayAlpha { get; set; } = 0.22f;
+		[DebugEditable(DisplayName = "Unavailable Overlay Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float UnavailableOverlayAlpha { get; set; } = 0.35f;
+		[DebugEditable(DisplayName = "Shop Time Block Width", Step = 1, Min = 40, Max = 160)]
+		public int ShopTimeBlockWidth { get; set; } = 76;
+		[DebugEditable(DisplayName = "Encounter Time Block Width", Step = 1, Min = 40, Max = 160)]
+		public int EncounterTimeBlockWidth { get; set; } = 88;
+		[DebugEditable(DisplayName = "Event Time Block Width", Step = 1, Min = 40, Max = 160)]
+		public int EventTimeBlockWidth { get; set; } = 76;
+		[DebugEditable(DisplayName = "Meta Block Gap", Step = 1, Min = 0, Max = 24)]
+		public int MetaBlockGap { get; set; } = 8;
+		[DebugEditable(DisplayName = "Compact Badge Y Offset", Step = 1, Min = -8, Max = 8)]
+		public int CompactBadgeYOffset { get; set; } = 1;
+		[DebugEditable(DisplayName = "Shop Title Max Length", Step = 1, Min = 8, Max = 80)]
+		public int ShopTitleMaxLength { get; set; } = 30;
+		[DebugEditable(DisplayName = "Portrait Fallback Padding X", Step = 1, Min = 0, Max = 40)]
+		public int PortraitFallbackPaddingX { get; set; } = 14;
+		[DebugEditable(DisplayName = "Portrait Fallback Text Offset Y", Step = 1, Min = -24, Max = 24)]
+		public int PortraitFallbackTextOffsetY { get; set; } = 12;
+		[DebugEditable(DisplayName = "Encounter Title Max Length", Step = 1, Min = 8, Max = 80)]
+		public int EncounterTitleMaxLength { get; set; } = 26;
+		[DebugEditable(DisplayName = "Portrait Bottom Line Height", Step = 1, Min = 1, Max = 8)]
+		public int PortraitBottomLineHeight { get; set; } = 2;
+		[DebugEditable(DisplayName = "Portrait Bottom Line Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float PortraitBottomLineAlpha { get; set; } = 0.45f;
+		[DebugEditable(DisplayName = "Event Glyph Title Scale", Step = 0.01f, Min = 0.03f, Max = 0.4f)]
+		public float EventGlyphTitleScale { get; set; } = 0.18f;
+		[DebugEditable(DisplayName = "Event Glyph Text Gap", Step = 1, Min = 0, Max = 32)]
+		public int EventGlyphTextGap { get; set; } = 10;
+		[DebugEditable(DisplayName = "Muted Meta Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float MutedMetaBorderAlpha { get; set; } = 0.20f;
+		[DebugEditable(DisplayName = "Muted Meta Fill Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float MutedMetaFillAlpha { get; set; } = 0.04f;
+		[DebugEditable(DisplayName = "Resource Icon Text Gap", Step = 1, Min = 0, Max = 16)]
+		public int ResourceIconTextGap { get; set; } = 4;
+		[DebugEditable(DisplayName = "Resource Amount Text Y Offset", Step = 1, Min = -8, Max = 8)]
+		public int ResourceAmountTextYOffset { get; set; } = -2;
+		[DebugEditable(DisplayName = "Resource Group Width", Step = 1, Min = 16, Max = 80)]
+		public int ResourceGroupWidth { get; set; } = 38;
+		[DebugEditable(DisplayName = "Hourglass Row Gap", Step = 1, Min = 0, Max = 12)]
+		public int HourglassRowGap { get; set; } = 3;
+		[DebugEditable(DisplayName = "Time Block Plus Offset X", Step = 1, Min = 0, Max = 16)]
+		public int TimeBlockPlusOffsetX { get; set; } = 2;
+		[DebugEditable(DisplayName = "Time Block Plus Offset Y", Step = 1, Min = -8, Max = 8)]
+		public int TimeBlockPlusOffsetY { get; set; } = -2;
+		[DebugEditable(DisplayName = "Time Block Hourglass Offset X", Step = 1, Min = 0, Max = 32)]
+		public int TimeBlockHourglassOffsetX { get; set; } = 14;
+		[DebugEditable(DisplayName = "Time Block Cost Row Offset Y", Step = 1, Min = 0, Max = 16)]
+		public int TimeBlockCostRowOffsetY { get; set; } = 2;
+		[DebugEditable(DisplayName = "Time Block Duration Row Bottom Padding", Step = 1, Min = 0, Max = 16)]
+		public int TimeBlockDurationRowBottomPadding { get; set; } = 2;
+		[DebugEditable(DisplayName = "Overlay Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.4f)]
+		public float OverlayFontScale { get; set; } = 0.10f;
+		[DebugEditable(DisplayName = "Overlay Text Offset X", Step = 1, Min = 0, Max = 80)]
+		public int OverlayTextOffsetX { get; set; } = 22;
+		[DebugEditable(DisplayName = "Overlay Text Offset Y", Step = 1, Min = -24, Max = 24)]
+		public int OverlayTextOffsetY { get; set; } = 8;
+		[DebugEditable(DisplayName = "Source Border Event Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float SourceBorderEventAlpha { get; set; } = 0.75f;
+		[DebugEditable(DisplayName = "Disabled Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float DisabledBorderAlpha { get; set; } = 0.22f;
+		[DebugEditable(DisplayName = "Encounter Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float EncounterBorderAlpha { get; set; } = 0.45f;
+		[DebugEditable(DisplayName = "Event Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float EventBorderAlpha { get; set; } = 0.55f;
+		[DebugEditable(DisplayName = "Shop Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float ShopBorderAlpha { get; set; } = 0.35f;
 
 		internal static int ColumnsTopValue { get; private set; } = 114;
 		internal static int ColumnsMaxWidthValue { get; private set; } = 1500;
 		internal static int ColumnsGapValue { get; private set; } = 20;
 		internal static int ColumnPaddingValue { get; private set; } = 16;
-		internal static int SlotGapValue { get; private set; } = 6;
+		internal static int SlotGapValue { get; private set; } = 16;
 
 		public ClimbColumnDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
@@ -78,6 +216,7 @@ namespace Crusaders30XX.ECS.Systems
 			_content = content;
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
+			ClimbSceneDrawHelpers.EnsureHourglassTextures(content);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -131,18 +270,42 @@ namespace Crusaders30XX.ECS.Systems
 			var bounds = ui.Bounds;
 			(Color top, Color bottom, Color border) = column.Kind switch
 			{
-				ClimbColumnKind.Shop => (Color.White * 0.10f, new Color(8, 8, 8) * 0.92f, Color.White * 0.55f),
-				ClimbColumnKind.Event => (Color.Black * 0.35f, new Color(8, 8, 8) * 0.92f, Color.Black * 0.75f),
-				_ => (ClimbSceneDrawHelpers.Red3 * 0.10f, new Color(8, 8, 8) * 0.92f, ClimbSceneDrawHelpers.Red3 * 0.45f),
+				ClimbColumnKind.Shop => (Color.White * ShopColumnTopAlpha, ClimbSceneDrawHelpers.CardFill, Color.White * ShopColumnBorderAlpha),
+				ClimbColumnKind.Event => (Color.Black * EventColumnTopAlpha, ClimbSceneDrawHelpers.CardFill, Color.Black * EventColumnBorderAlpha),
+				_ => (ClimbSceneDrawHelpers.Red3 * EncounterColumnTopAlpha, ClimbSceneDrawHelpers.CardFill, ClimbSceneDrawHelpers.Red3 * EncounterColumnBorderAlpha),
 			};
-			ClimbSceneDrawHelpers.DrawVerticalGradient(_spriteBatch, _pixel, bounds, top, bottom, 16);
-			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, bounds, border, 2);
+			ClimbSceneDrawHelpers.DrawVerticalGradient(_spriteBatch, _pixel, bounds, top, bottom, ColumnGradientStrips);
+			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, bounds, border, ColumnBorderThickness);
 
 			var inner = column.InnerBounds;
 			var titleColor = column.Kind == ClimbColumnKind.Encounter ? ClimbSceneDrawHelpers.White1 : ClimbSceneDrawHelpers.White2;
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, column.Title, new Vector2(inner.X, inner.Y), ColumnTitleFontScale, titleColor);
-			_spriteBatch.Draw(_pixel, new Rectangle(inner.X, inner.Y + 31, inner.Width, 2), column.Kind == ClimbColumnKind.Encounter ? ClimbSceneDrawHelpers.Red3 : border);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, column.Subtitle, new Vector2(inner.X, inner.Y + 37), ColumnSubtitleFontScale, ClimbSceneDrawHelpers.White2);
+			if (column.Kind == ClimbColumnKind.Shop)
+			{
+				titleColor = ClimbSceneDrawHelpers.White1;
+			}
+
+			int titleX = inner.X;
+			if (column.Kind == ClimbColumnKind.Shop)
+			{
+				var iconRect = new Rectangle(inner.X, inner.Y + ShopTitleIconYOffset, ShopTitleIconSize, ShopTitleIconSize);
+				ClimbSceneDrawHelpers.DrawShopTitleIcon(_spriteBatch, _pixel, iconRect, ClimbSceneDrawHelpers.White1);
+				titleX += ShopTitleIconSize + ShopTitleIconGap;
+			}
+
+			ClimbSceneDrawHelpers.DrawTitleText(_spriteBatch, column.Title, new Vector2(titleX, inner.Y), ColumnTitleFontScale, titleColor);
+			Color underline = column.Kind switch
+			{
+				ClimbColumnKind.Shop => ClimbSceneDrawHelpers.White1,
+				ClimbColumnKind.Event => Color.Black * EventUnderlineAlpha,
+				_ => ClimbSceneDrawHelpers.Red3,
+			};
+			_spriteBatch.Draw(_pixel, new Rectangle(inner.X, inner.Y + ColumnUnderlineYOffset, inner.Width, ColumnUnderlineHeight), underline);
+			ClimbSceneDrawHelpers.DrawBodyText(
+				_spriteBatch,
+				ClimbSceneDrawHelpers.ToUpperAscii(column.Subtitle),
+				new Vector2(inner.X, inner.Y + ColumnSubtitleYOffset),
+				ColumnSubtitleFontScale,
+				ClimbSceneDrawHelpers.White1);
 		}
 
 		private void DrawSlot(Entity entity, ClimbPreviewState preview)
@@ -153,20 +316,28 @@ namespace Crusaders30XX.ECS.Systems
 
 			bool source = preview?.IsActive == true && string.Equals(preview.SourceSlotId, slot.SlotId, StringComparison.OrdinalIgnoreCase);
 			bool wouldVanish = preview?.IsActive == true && preview.WouldVanishSlotIds.Contains(slot.SlotId) && !source;
+			int offsetY = source ? PreviewSourceOffsetY : 0;
 
 			var ring = Inflate(ui.Bounds, SlotRingPadding);
+			ring.Y += offsetY;
 			if (ui.IsHovered || source)
 			{
-				_spriteBatch.Draw(_pixel, ring, Color.White * 0.04f);
+				_spriteBatch.Draw(_pixel, ring, Color.White * SlotHoverRingAlpha);
 			}
 
 			var rect = ui.Bounds;
+			rect.Y += offsetY;
+			if (source)
+			{
+				DrawPreviewSourceGlow(rect, slot);
+			}
+
 			Color border = ResolveBorder(slot, ui, source);
-			Color fill = new Color(8, 8, 8) * 0.92f;
-			if (slot.IsUnavailable) fill *= 0.78f;
-			else if (slot.Kind == ClimbSlotKind.Shop && !slot.IsAffordable) fill *= 0.84f;
+			Color fill = ClimbSceneDrawHelpers.CardFill;
+			if (slot.IsUnavailable) fill *= SlotUnavailableFillMultiplier;
+			else if (slot.Kind == ClimbSlotKind.Shop && !slot.IsAffordable) fill *= SlotUnaffordableFillMultiplier;
 			_spriteBatch.Draw(_pixel, rect, fill);
-			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, border, 2);
+			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, border, SlotBorderThickness);
 
 			if (slot.Kind == ClimbSlotKind.Encounter)
 			{
@@ -183,141 +354,229 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (slot.IsSold)
 			{
-				DrawOverlay(rect, "SOLD", Color.Black * 0.55f, ClimbSceneDrawHelpers.White2);
+				DrawOverlay(rect, "SOLD", Color.Black * SoldOverlayAlpha, ClimbSceneDrawHelpers.White2);
 			}
 			else if (wouldVanish)
 			{
-				float pulse = 0.35f + 0.25f * (float)Math.Sin(DateTime.UtcNow.TimeOfDay.TotalSeconds * 3.5);
-				_spriteBatch.Draw(_pixel, rect, ClimbSceneDrawHelpers.RedDim * pulse);
-				ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, ClimbSceneDrawHelpers.Red2, 2);
+				float pulse = ClimbSceneDrawHelpers.PreviewVanishPulseAlpha(VanishPulsePeriodSeconds);
+				_spriteBatch.Draw(_pixel, rect, ClimbSceneDrawHelpers.RedDim * (VanishOverlayBaseAlpha + VanishOverlayPulseAmplitude * pulse));
+				ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, ClimbSceneDrawHelpers.Red2, SlotBorderThickness);
 			}
 			else if (slot.Kind == ClimbSlotKind.Shop && !slot.IsAffordable)
 			{
-				_spriteBatch.Draw(_pixel, rect, Color.Black * 0.16f);
+				_spriteBatch.Draw(_pixel, rect, Color.Black * UnaffordableOverlayAlpha);
 			}
 			else if (slot.IsUnavailable)
 			{
-				_spriteBatch.Draw(_pixel, rect, Color.Black * 0.35f);
+				_spriteBatch.Draw(_pixel, rect, Color.Black * UnavailableOverlayAlpha);
 			}
+		}
+
+		private void DrawPreviewSourceGlow(Rectangle rect, ClimbSlotPresentation slot)
+		{
+			var glow = Inflate(rect, PreviewGlowInflate);
+			Color glowColor = slot.Kind switch
+			{
+				ClimbSlotKind.Encounter => ClimbSceneDrawHelpers.RedGlow * PreviewGlowAlpha,
+				ClimbSlotKind.Event => Color.Black * (PreviewGlowAlpha * EventPreviewGlowMultiplier),
+				_ => Color.White * PreviewGlowAlpha,
+			};
+			_spriteBatch.Draw(_pixel, glow, glowColor);
 		}
 
 		private void DrawShopSlot(Rectangle rect, ClimbSlotPresentation slot)
 		{
 			var titlePos = new Vector2(rect.X + CompactPaddingX, rect.Y + CompactPaddingY);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, Trim(slot.Title, 30), titlePos, CompactTitleFontScale, ClimbSceneDrawHelpers.White1);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, slot.Label, new Vector2(rect.Right - 78, rect.Y + CompactPaddingY + 1), CompactBadgeFontScale, ClimbSceneDrawHelpers.White3);
-			Color metaColor = !slot.IsAffordable ? ClimbSceneDrawHelpers.White3 : ClimbSceneDrawHelpers.White2;
-			DrawResourceLine(new Vector2(rect.X + CompactPaddingX, rect.Y + rect.Height - 24), slot.Cost, metaColor);
-			if (slot.TimeCost > 0)
-			{
-				DrawTimeBlock(new Rectangle(rect.Right - 92, rect.Y + rect.Height - 30, 76, 26), slot.TimeCost);
-			}
+			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, Trim(slot.Title, ShopTitleMaxLength), titlePos, CompactTitleFontScale, ClimbSceneDrawHelpers.White1);
+			var badgeSize = ClimbSceneDrawHelpers.MeasureBodyText(ClimbSceneDrawHelpers.ToUpperAscii(slot.Label), CompactBadgeFontScale);
+			ClimbSceneDrawHelpers.DrawBodyText(
+				_spriteBatch,
+				ClimbSceneDrawHelpers.ToUpperAscii(slot.Label),
+				new Vector2(rect.Right - CompactPaddingX - badgeSize.X, rect.Y + CompactPaddingY + CompactBadgeYOffset),
+				CompactBadgeFontScale,
+				ClimbSceneDrawHelpers.White3);
+
+			int metaY = rect.Bottom - CompactPaddingY - MetaBlockMinHeight;
+			var timeRect = new Rectangle(rect.Right - CompactPaddingX - ShopTimeBlockWidth, metaY, ShopTimeBlockWidth, MetaBlockMinHeight);
+			var costRect = new Rectangle(rect.X + CompactPaddingX, metaY, timeRect.X - MetaBlockGap - rect.X - CompactPaddingX, MetaBlockMinHeight);
+			DrawCostMetaBlock(costRect, slot.Cost, slot.Kind == ClimbSlotKind.Shop && !slot.IsAffordable);
+			DrawTimeBlock(timeRect, slot.TimeCost);
 		}
 
 		private void DrawEncounterSlot(Rectangle rect, ClimbSlotPresentation slot, ClimbPreviewState preview, bool source)
 		{
-			var portrait = new Rectangle(rect.X, rect.Y, rect.Width, Math.Min(EnemyPortraitHeight, rect.Height - 60));
+			var portrait = new Rectangle(rect.X, rect.Y, rect.Width, Math.Min(EnemyPortraitHeight, rect.Height - MetaBlockMinHeight - CompactPaddingY * 2));
+			ClimbSceneDrawHelpers.DrawRadialPortraitGradient(_spriteBatch, _pixel, portrait);
 			var texture = GetTexture(slot.PortraitAsset);
 			if (texture != null)
 			{
-				_spriteBatch.Draw(texture, portrait, Color.White);
+				ClimbSceneDrawHelpers.DrawPortraitCropped(_spriteBatch, texture, portrait);
 			}
 			else
 			{
-				_spriteBatch.Draw(_pixel, portrait, ClimbSceneDrawHelpers.Red3 * 0.18f);
-				ClimbSceneDrawHelpers.DrawText(_spriteBatch, Trim(slot.Title, 26), new Vector2(portrait.X + 14, portrait.Center.Y - 12), CompactTitleFontScale, ClimbSceneDrawHelpers.White1);
+				ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, Trim(slot.Title, EncounterTitleMaxLength), new Vector2(portrait.X + PortraitFallbackPaddingX, portrait.Center.Y - PortraitFallbackTextOffsetY), CompactTitleFontScale, ClimbSceneDrawHelpers.White1);
 			}
+			_spriteBatch.Draw(_pixel, new Rectangle(portrait.X, portrait.Bottom - PortraitBottomLineHeight, portrait.Width, PortraitBottomLineHeight), ClimbSceneDrawHelpers.Red3 * PortraitBottomLineAlpha);
 
-			var detail = new Rectangle(rect.X, portrait.Bottom, rect.Width, rect.Bottom - portrait.Bottom);
-			_spriteBatch.Draw(_pixel, detail, Color.Black * 0.45f);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, Trim(slot.Title, 28), new Vector2(detail.X + CompactPaddingX, detail.Y + 8), CompactTitleFontScale, ClimbSceneDrawHelpers.White1);
-			DrawResourceLine(new Vector2(detail.X + CompactPaddingX, detail.Y + 34), slot.Reward, ClimbSceneDrawHelpers.White2);
+			int metaY = rect.Bottom - CompactPaddingY - MetaBlockMinHeight;
+			var timeRect = new Rectangle(rect.Right - CompactPaddingX - EncounterTimeBlockWidth, metaY, EncounterTimeBlockWidth, MetaBlockMinHeight);
+			var rewardRect = new Rectangle(rect.X + CompactPaddingX, metaY, timeRect.X - MetaBlockGap - rect.X - CompactPaddingX, MetaBlockMinHeight);
+			DrawRewardMetaBlock(rewardRect, slot.Reward);
 			int remaining = GetEncounterRemainingDuration(slot, SaveCache.GetClimbState()?.time ?? 0);
 			int activeRemaining = remaining;
 			if (preview?.IsActive == true && !source)
 			{
 				activeRemaining = GetEncounterRemainingDuration(slot, preview.ProjectedUsedTime);
 			}
-			DrawTimeBlock(new Rectangle(detail.Right - 104, detail.Y + 14, 88, 44), slot.TimeCost, remaining, activeRemaining);
+			DrawTimeBlock(timeRect, slot.TimeCost, remaining, activeRemaining);
 		}
 
 		private void DrawEventSlot(Rectangle rect, ClimbSlotPresentation slot)
 		{
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, "?", new Vector2(rect.X + 14, rect.Y + 10), 0.18f, ClimbSceneDrawHelpers.White2);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, slot.Title, new Vector2(rect.X + 48, rect.Y + 8), CompactTitleFontScale, ClimbSceneDrawHelpers.White1);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, slot.Label, new Vector2(rect.X + 48, rect.Y + 28), CompactBadgeFontScale, ClimbSceneDrawHelpers.White3);
-			DrawTimeBlock(new Rectangle(rect.Right - 92, rect.Y + 13, 76, 26), slot.TimeCost);
+			int glyphY = rect.Y + (rect.Height - EventGlyphSize) / 2;
+			var glyphRect = new Rectangle(rect.X + CompactPaddingX, glyphY, EventGlyphSize, EventGlyphSize);
+			ClimbSceneDrawHelpers.DrawGlyphBox(_spriteBatch, _pixel, glyphRect, EventGlyphTitleScale);
+			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, "Event", new Vector2(glyphRect.Right + EventGlyphTextGap, rect.Y + CompactPaddingY), CompactTitleFontScale, ClimbSceneDrawHelpers.White1);
+
+			int metaY = rect.Y + (rect.Height - MetaBlockMinHeight) / 2;
+			var timeRect = new Rectangle(rect.Right - CompactPaddingX - EventTimeBlockWidth, metaY, EventTimeBlockWidth, MetaBlockMinHeight);
+			DrawTimeBlock(timeRect, slot.TimeCost);
 		}
 
-		private void DrawResourceLine(Vector2 position, ClimbResourceSave resources, Color color)
+		private void DrawCostMetaBlock(Rectangle rect, ClimbResourceSave resources, bool muted)
+		{
+			ClimbSceneDrawHelpers.DrawMetaBlock(
+				_spriteBatch,
+				_pixel,
+				rect,
+				"PRICE",
+				CompactMetaLabelFontScale,
+				muted ? MutedMetaBorderAlpha : MetaBlockBorderAlpha,
+				muted ? MutedMetaFillAlpha : MetaBlockFillAlpha,
+				(sb, content) => DrawResourceLine(sb, content, resources, muted ? ClimbSceneDrawHelpers.White3 : ClimbSceneDrawHelpers.White2, compact: true));
+		}
+
+		private void DrawRewardMetaBlock(Rectangle rect, ClimbResourceSave resources)
+		{
+			ClimbSceneDrawHelpers.DrawMetaBlock(
+				_spriteBatch,
+				_pixel,
+				rect,
+				"GAIN",
+				CompactMetaLabelFontScale,
+				MetaBlockBorderAlpha,
+				MetaBlockFillAlpha,
+				(sb, content) => DrawResourceLine(sb, content, resources, ClimbSceneDrawHelpers.White2, compact: true));
+		}
+
+		private void DrawResourceLine(SpriteBatch spriteBatch, Rectangle content, ClimbResourceSave resources, Color color, bool compact = false)
 		{
 			resources ??= new ClimbResourceSave { red = 0, white = 0, black = 0 };
-			int x = (int)position.X;
-			DrawSingleResource(ref x, (int)position.Y, ClimbResourceType.Red, resources.red, ClimbSceneDrawHelpers.Red2);
-			DrawSingleResource(ref x, (int)position.Y, ClimbResourceType.White, resources.white, ClimbSceneDrawHelpers.White1);
-			DrawSingleResource(ref x, (int)position.Y, ClimbResourceType.Black, resources.black, ClimbSceneDrawHelpers.White3);
+			int x = content.X;
+			int y = content.Y + Math.Max(0, (content.Height - CompactResourceIconSize) / 2);
+			DrawSingleResource(spriteBatch, ref x, y, ClimbResourceType.Red, resources.red, ClimbSceneDrawHelpers.Red3, compact);
+			DrawSingleResource(spriteBatch, ref x, y, ClimbResourceType.White, resources.white, ClimbSceneDrawHelpers.White1, compact);
+			DrawSingleResource(spriteBatch, ref x, y, ClimbResourceType.Black, resources.black, ClimbSceneDrawHelpers.White3, compact);
 			if (resources.red == 0 && resources.white == 0 && resources.black == 0)
 			{
-				ClimbSceneDrawHelpers.DrawText(_spriteBatch, "None", position, CompactMetaFontScale, color);
+				ClimbSceneDrawHelpers.DrawBodyText(spriteBatch, "None", new Vector2(content.X, y + ResourceAmountTextYOffset), CompactMetaFontScale, color);
 			}
 		}
 
-		private void DrawSingleResource(ref int x, int y, ClimbResourceType type, int amount, Color color)
+		private void DrawSingleResource(SpriteBatch spriteBatch, ref int x, int y, ClimbResourceType type, int amount, Color color, bool compact)
 		{
 			if (amount <= 0) return;
-			ClimbSceneDrawHelpers.DrawResourceIcon(_spriteBatch, _graphicsDevice, _pixel, new Vector2(x, y), type, CompactResourceIconSize, color);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, amount.ToString(), new Vector2(x + CompactResourceIconSize + 4, y - 2), CompactMetaFontScale, ClimbSceneDrawHelpers.White1);
-			x += 42;
+			int iconSize = compact ? CompactResourceIconSize : CompactResourceIconSize;
+			ClimbSceneDrawHelpers.DrawResourceIcon(spriteBatch, _graphicsDevice, _pixel, new Vector2(x, y), type, iconSize, color, compact: compact);
+			ClimbSceneDrawHelpers.DrawBodyText(spriteBatch, amount.ToString(), new Vector2(x + iconSize + ResourceIconTextGap, y + ResourceAmountTextYOffset), CompactMetaFontScale, ClimbSceneDrawHelpers.White1);
+			x += ResourceGroupWidth;
 		}
 
 		private void DrawTimeBlock(Rectangle rect, int time, int durationRemaining = -1, int activeDurationRemaining = -1)
 		{
-			_spriteBatch.Draw(_pixel, rect, Color.White * 0.05f);
-			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, Color.White * 0.20f, 1);
-			int costY = durationRemaining >= 0 ? rect.Y + 5 : rect.Y + Math.Max(1, (rect.Height - CompactHourglassHeight) / 2);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, "+", new Vector2(rect.X + 7, costY - 3), CompactMetaFontScale, ClimbSceneDrawHelpers.White1);
-			DrawHourglassRow(rect.X + 20, costY, time, time, ClimbSceneDrawHelpers.White3, ClimbSceneDrawHelpers.White2);
-
-			if (durationRemaining >= 0)
-			{
-				int active = activeDurationRemaining < 0 ? durationRemaining : activeDurationRemaining;
-				DrawHourglassRow(rect.X + 8, rect.Y + rect.Height - CompactHourglassHeight - 5, durationRemaining, active, ClimbSceneDrawHelpers.Red2, ClimbSceneDrawHelpers.Red2);
-			}
+			ClimbSceneDrawHelpers.DrawMetaBlock(
+				_spriteBatch,
+				_pixel,
+				rect,
+				string.Empty,
+				CompactMetaLabelFontScale,
+				MetaBlockBorderAlpha,
+				MetaBlockFillAlpha,
+				(sb, content) =>
+				{
+					if (durationRemaining >= 0)
+					{
+						int costY = content.Y + TimeBlockCostRowOffsetY;
+						ClimbSceneDrawHelpers.DrawBodyText(sb, "+", new Vector2(content.X + TimeBlockPlusOffsetX, costY + TimeBlockPlusOffsetY), CompactMetaFontScale, ClimbSceneDrawHelpers.White1);
+						DrawHourglassRow(sb, content.X + TimeBlockHourglassOffsetX, costY, time, time, ClimbSceneDrawHelpers.White3, ClimbSceneDrawHelpers.White2, HourglassIconStyle.WhiteCost, HourglassIconStyle.WhiteFaded);
+						int active = activeDurationRemaining < 0 ? durationRemaining : activeDurationRemaining;
+						DrawHourglassRow(sb, content.X + TimeBlockPlusOffsetX, content.Bottom - CompactHourglassHeight - TimeBlockDurationRowBottomPadding, durationRemaining, active, ClimbSceneDrawHelpers.Red2, ClimbSceneDrawHelpers.Red2, HourglassIconStyle.Red, HourglassIconStyle.RedFaded);
+					}
+					else
+					{
+						int costY = content.Y + Math.Max(0, (content.Height - CompactHourglassHeight) / 2);
+						ClimbSceneDrawHelpers.DrawBodyText(sb, "+", new Vector2(content.X + TimeBlockPlusOffsetX, costY + TimeBlockPlusOffsetY), CompactMetaFontScale, ClimbSceneDrawHelpers.White1);
+						DrawHourglassRow(sb, content.X + TimeBlockHourglassOffsetX, costY, time, time, ClimbSceneDrawHelpers.White3, ClimbSceneDrawHelpers.White2, HourglassIconStyle.WhiteCost, HourglassIconStyle.WhiteFaded);
+					}
+				});
 		}
 
-		private void DrawHourglassRow(int x, int y, int count, int activeCount, Color frame, Color sand)
+		private void DrawHourglassRow(SpriteBatch spriteBatch, int x, int y, int count, int activeCount, Color frame, Color sand, HourglassIconStyle activeStyle, HourglassIconStyle fadedStyle)
 		{
 			count = Math.Max(0, count);
 			activeCount = Math.Clamp(activeCount, 0, count);
+			var glow = new HourglassGlowTuning
+			{
+				RedGlowAlpha = HourglassRedGlowAlpha,
+				WhiteMeterGlowAlpha = HourglassWhiteMeterGlowAlpha,
+				GlowRadius = HourglassGlowRadius,
+			};
 			for (int i = 0; i < count; i++)
 			{
-				float alpha = i < activeCount ? 1f : 0.34f;
+				bool active = i < activeCount;
+				float alpha = active ? 1f : EmptyHourglassAlpha;
 				var icon = new Rectangle(
-					x + i * (CompactHourglassWidth + 3),
+					x + i * (CompactHourglassWidth + HourglassRowGap),
 					y,
 					CompactHourglassWidth,
 					CompactHourglassHeight);
-				ClimbSceneDrawHelpers.DrawHourglassIcon(_spriteBatch, _pixel, icon, frame * alpha, sand * alpha, true);
+				ClimbSceneDrawHelpers.DrawHourglassIcon(
+					spriteBatch,
+					icon,
+					active ? activeStyle : fadedStyle,
+					frame,
+					sand,
+					active,
+					alpha,
+					glow);
 			}
 		}
 
 		private void DrawOverlay(Rectangle rect, string text, Color fill, Color textColor)
 		{
 			_spriteBatch.Draw(_pixel, rect, fill);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, text, new Vector2(rect.Center.X - 22, rect.Center.Y - 8), 0.10f, textColor);
+			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, text, new Vector2(rect.Center.X - OverlayTextOffsetX, rect.Center.Y - OverlayTextOffsetY), OverlayFontScale, textColor);
 		}
 
 		private Color ResolveBorder(ClimbSlotPresentation slot, UIElement ui, bool source)
 		{
-			if (source) return slot.Kind == ClimbSlotKind.Encounter ? ClimbSceneDrawHelpers.Red2 : ClimbSceneDrawHelpers.White1;
-			if (slot.Kind == ClimbSlotKind.Shop && !slot.IsAffordable) return Color.White * 0.22f;
-			if (slot.IsUnavailable) return Color.White * 0.22f;
+			if (source)
+			{
+				return slot.Kind switch
+				{
+					ClimbSlotKind.Encounter => ClimbSceneDrawHelpers.Red3,
+					ClimbSlotKind.Event => Color.Black * SourceBorderEventAlpha,
+					_ => ClimbSceneDrawHelpers.White1,
+				};
+			}
+			if (slot.Kind == ClimbSlotKind.Shop && !slot.IsAffordable) return Color.White * DisabledBorderAlpha;
+			if (slot.IsUnavailable) return Color.White * DisabledBorderAlpha;
 			if (ui.IsHovered) return ClimbSceneDrawHelpers.Red3;
 			return slot.Kind switch
 			{
-				ClimbSlotKind.Encounter => ClimbSceneDrawHelpers.Red3 * 0.45f,
-				ClimbSlotKind.Event => Color.Black * 0.75f,
-				_ => Color.White * 0.35f,
+				ClimbSlotKind.Encounter => ClimbSceneDrawHelpers.Red3 * EncounterBorderAlpha,
+				ClimbSlotKind.Event => Color.Black * EventBorderAlpha,
+				_ => Color.White * ShopBorderAlpha,
 			};
 		}
 

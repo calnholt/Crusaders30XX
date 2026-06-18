@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
@@ -11,15 +12,59 @@ using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Systems
 {
+	[DebugTab("Climb Column Layout")]
 	public class ClimbColumnLayoutSystem : Core.System
 	{
 		private const string ShopColumnName = "Climb_Column_Shop";
 		private const string EncounterColumnName = "Climb_Column_Encounter";
 		private const string EventColumnName = "Climb_Column_Event";
 
+		[DebugEditable(DisplayName = "Columns Bottom Padding", Step = 1, Min = 0, Max = 200)]
+		public int ColumnsBottomPadding { get; set; } = 48;
+		[DebugEditable(DisplayName = "Column Width", Step = 1, Min = 200, Max = 800)]
+		public int ColumnWidth { get; set; } = 486;
+		[DebugEditable(DisplayName = "Slot List Top Offset", Step = 1, Min = 0, Max = 120)]
+		public int SlotListTopOffset { get; set; } = 59;
+		[DebugEditable(DisplayName = "Shop Slot Height", Step = 1, Min = 32, Max = 160)]
+		public int ShopSlotHeight { get; set; } = 104;
+		[DebugEditable(DisplayName = "Encounter Slot Height", Step = 1, Min = 80, Max = 400)]
+		public int EncounterSlotHeight { get; set; } = 217;
+		[DebugEditable(DisplayName = "Event Slot Height", Step = 1, Min = 32, Max = 160)]
+		public int EventSlotHeight { get; set; } = 52;
+		[DebugEditable(DisplayName = "Column Z Order", Step = 1, Min = 0, Max = 5000)]
+		public int ColumnZOrder { get; set; } = 1500;
+		[DebugEditable(DisplayName = "Slot Z Order", Step = 1, Min = 0, Max = 5000)]
+		public int SlotZOrder { get; set; } = 1600;
+		[DebugEditable(DisplayName = "Shop Tooltip Offset Px", Step = 1, Min = 0, Max = 120)]
+		public int ShopTooltipOffsetPx { get; set; } = 30;
+
+		internal static int ColumnsBottomPaddingValue { get; private set; } = 48;
+		internal static int ColumnWidthValue { get; private set; } = 486;
+		internal static int SlotListTopOffsetValue { get; private set; } = 59;
+		internal static int ShopSlotHeightValue { get; private set; } = 104;
+		internal static int EncounterSlotHeightValue { get; private set; } = 217;
+		internal static int EventSlotHeightValue { get; private set; } = 52;
+		internal static int ColumnZOrderValue { get; private set; } = 1500;
+		internal static int SlotZOrderValue { get; private set; } = 1600;
+		internal static int ShopTooltipOffsetPxValue { get; private set; } = 30;
+
 		public ClimbColumnLayoutSystem(EntityManager entityManager)
 			: base(entityManager)
 		{
+		}
+
+		public override void Update(GameTime gameTime)
+		{
+			base.Update(gameTime);
+			ColumnsBottomPaddingValue = ColumnsBottomPadding;
+			ColumnWidthValue = ColumnWidth;
+			SlotListTopOffsetValue = SlotListTopOffset;
+			ShopSlotHeightValue = ShopSlotHeight;
+			EncounterSlotHeightValue = EncounterSlotHeight;
+			EventSlotHeightValue = EventSlotHeight;
+			ColumnZOrderValue = ColumnZOrder;
+			SlotZOrderValue = SlotZOrder;
+			ShopTooltipOffsetPxValue = ShopTooltipOffsetPx;
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -39,9 +84,9 @@ namespace Crusaders30XX.ECS.Systems
 			var climb = SaveCache.GetClimbState();
 			bool showEvents = climb?.eventSlots?.Any(slot => ClimbRuleService.IsEventVisible(slot, climb.time)) == true;
 			var columns = ComputeColumnsLayout(showEvents);
-			SyncColumn(ShopColumnName, ClimbColumnKind.Shop, "Shop", "Spend resources before refresh", columns.Shop);
-			SyncColumn(EncounterColumnName, ClimbColumnKind.Encounter, "Encounters", "Fight foes for red, white, and black", columns.Encounter);
-			SyncColumn(EventColumnName, ClimbColumnKind.Event, "Events", "Timed windows and hidden stories", columns.Events, showEvents);
+			SyncColumn(ShopColumnName, ClimbColumnKind.Shop, "Shop", "Spend resources before the shop refreshes", columns.Shop);
+			SyncColumn(EncounterColumnName, ClimbColumnKind.Encounter, "Encounters", "Fight foes for red, white, and black resources", columns.Encounter);
+			SyncColumn(EventColumnName, ClimbColumnKind.Event, "Events", "Timed windows hide medals, foes, and events", columns.Events, showEvents);
 			SyncSlots(climb, columns, showEvents);
 		}
 
@@ -86,7 +131,7 @@ namespace Crusaders30XX.ECS.Systems
 			column.Subtitle = subtitle;
 			column.IsVisible = visible;
 			column.InnerBounds = new Rectangle(bounds.X + ClimbColumnDisplaySystem.ColumnPaddingValue, bounds.Y + ClimbColumnDisplaySystem.ColumnPaddingValue, Math.Max(0, bounds.Width - ClimbColumnDisplaySystem.ColumnPaddingValue * 2), Math.Max(0, bounds.Height - ClimbColumnDisplaySystem.ColumnPaddingValue * 2));
-			SetBounds(entity, bounds, visible, UIElementEventType.None, 1500);
+			SetBounds(entity, bounds, visible, UIElementEventType.None, ColumnZOrderValue);
 		}
 
 		private void SyncShopSlot(int index, ClimbShopSlotSave slot, Rectangle rect)
@@ -111,7 +156,7 @@ namespace Crusaders30XX.ECS.Systems
 			var action = entity.GetComponent<ClimbShopSlotAction>();
 			if (action == null) EntityManager.AddComponent(entity, new ClimbShopSlotAction { SlotIndex = index });
 			else action.SlotIndex = index;
-			SetBounds(entity, rect, !presentation.IsUnavailable && !presentation.IsSold, UIElementEventType.ClimbShopSlotSelect, 1600);
+			SetBounds(entity, rect, !presentation.IsUnavailable && !presentation.IsSold, UIElementEventType.ClimbShopSlotSelect, SlotZOrderValue);
 			SyncShopTooltip(entity, slot, presentation);
 		}
 
@@ -140,7 +185,7 @@ namespace Crusaders30XX.ECS.Systems
 			var action = entity.GetComponent<ClimbEncounterSlotAction>();
 			if (action == null) EntityManager.AddComponent(entity, new ClimbEncounterSlotAction { SlotId = presentation.SlotId });
 			else action.SlotId = presentation.SlotId;
-			SetBounds(entity, rect, !presentation.IsUnavailable, UIElementEventType.ClimbEncounterSlotSelect, 1600);
+			SetBounds(entity, rect, !presentation.IsUnavailable, UIElementEventType.ClimbEncounterSlotSelect, SlotZOrderValue);
 		}
 
 		private void SyncEventSlot(int index, ClimbEventSlotSave slot, Rectangle rect, bool visible)
@@ -165,7 +210,7 @@ namespace Crusaders30XX.ECS.Systems
 			var action = entity.GetComponent<ClimbEventSlotAction>();
 			if (action == null) EntityManager.AddComponent(entity, new ClimbEventSlotAction { SlotId = presentation.SlotId });
 			else action.SlotId = presentation.SlotId;
-			SetBounds(entity, rect, visible && !presentation.IsUnavailable, UIElementEventType.ClimbEventSlotSelect, 1600, hidden: !visible);
+			SetBounds(entity, rect, visible && !presentation.IsUnavailable, UIElementEventType.ClimbEventSlotSelect, SlotZOrderValue, hidden: !visible);
 		}
 
 		private void SyncShopTooltip(Entity entity, ClimbShopSlotSave slot, ClimbSlotPresentation presentation)
@@ -182,7 +227,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			ui.TooltipPosition = TooltipPosition.Above;
-			ui.TooltipOffsetPx = 30;
+			ui.TooltipOffsetPx = ShopTooltipOffsetPxValue;
 
 			if (string.Equals(slot.kind, ClimbShopSlotKinds.Medal, StringComparison.OrdinalIgnoreCase))
 			{
@@ -326,8 +371,8 @@ namespace Crusaders30XX.ECS.Systems
 			int top = ClimbColumnDisplaySystem.ColumnsTopValue;
 			int maxWidth = ClimbColumnDisplaySystem.ColumnsMaxWidthValue;
 			int gap = ClimbColumnDisplaySystem.ColumnsGapValue;
-			int height = Game1.VirtualHeight - top - 48;
-			int colW = 486;
+			int height = Game1.VirtualHeight - top - ColumnsBottomPaddingValue;
+			int colW = ColumnWidthValue;
 			int groupW = showEvents ? colW * 3 + gap * 2 : colW * 2 + gap;
 			int x = (Game1.VirtualWidth - Math.Min(maxWidth, groupW)) / 2;
 			if (showEvents && groupW <= maxWidth)
@@ -356,17 +401,17 @@ namespace Crusaders30XX.ECS.Systems
 
 		private static Rectangle ComputeShopSlotRect(Rectangle inner, int index)
 		{
-			return new Rectangle(inner.X, inner.Y + 59 + index * (58 + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, 58);
+			return new Rectangle(inner.X, inner.Y + SlotListTopOffsetValue + index * (ShopSlotHeightValue + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, ShopSlotHeightValue);
 		}
 
 		private static Rectangle ComputeEncounterSlotRect(Rectangle inner, int index)
 		{
-			return new Rectangle(inner.X, inner.Y + 59 + index * (210 + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, 210);
+			return new Rectangle(inner.X, inner.Y + SlotListTopOffsetValue + index * (EncounterSlotHeightValue + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, EncounterSlotHeightValue);
 		}
 
 		private static Rectangle ComputeEventSlotRect(Rectangle inner, int index)
 		{
-			return new Rectangle(inner.X, inner.Y + 59 + index * (52 + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, 52);
+			return new Rectangle(inner.X, inner.Y + SlotListTopOffsetValue + index * (EventSlotHeightValue + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, EventSlotHeightValue);
 		}
 
 		private static ClimbResourceSave Clone(ClimbResourceSave resources)

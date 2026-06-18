@@ -6,10 +6,27 @@ using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Crusaders30XX.ECS.Systems
 {
+	internal enum HourglassIconStyle
+	{
+		WhiteMeter,
+		WhiteCost,
+		WhiteFaded,
+		Red,
+		RedFaded,
+	}
+
+	internal struct HourglassGlowTuning
+	{
+		public float RedGlowAlpha;
+		public float WhiteMeterGlowAlpha;
+		public float GlowRadius;
+	}
+
 	internal static class ClimbSceneDrawHelpers
 	{
 		public static readonly Color Black0 = new Color(5, 5, 5);
@@ -23,6 +40,28 @@ namespace Crusaders30XX.ECS.Systems
 		public static readonly Color Red3 = new Color(196, 30, 58);
 		public static readonly Color Red2 = new Color(255, 77, 94);
 		public static readonly Color RedDim = new Color(160, 0, 0);
+		public static readonly Color RedGlow = new Color(255, 77, 94);
+		public static readonly Color CardFill = new Color(8, 8, 8) * 0.92f;
+		public static readonly Color HeaderFill = new Color(10, 10, 10) * 0.82f;
+		public static readonly Color ResourceBarFill = new Color(8, 8, 8) * 0.92f;
+
+		private static Texture2D _hourglassFrame;
+		private static Texture2D _hourglassSand;
+		private static bool _hourglassTexturesLoaded;
+
+		private static readonly (int Dx, int Dy)[] GlowDirections =
+		{
+			(1, 0), (-1, 0), (0, 1), (0, -1),
+			(1, 1), (-1, 1), (1, -1), (-1, -1),
+		};
+
+		public static void EnsureHourglassTextures(ContentManager content)
+		{
+			if (_hourglassTexturesLoaded) return;
+			_hourglassFrame = content.Load<Texture2D>("time_icon_hourglass_frame");
+			_hourglassSand = content.Load<Texture2D>("time_icon_hourglass_sand");
+			_hourglassTexturesLoaded = true;
+		}
 
 		public static void DrawBorder(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect, Color color, int thickness = 1)
 		{
@@ -45,35 +84,306 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		public static void DrawResourceIcon(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice, Texture2D pixel, Vector2 position, ClimbResourceType type, int size, Color color)
+		public static void DrawRadialPortraitGradient(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect)
+		{
+			int strips = Math.Max(8, rect.Height / 8);
+			for (int i = 0; i < strips; i++)
+			{
+				int y0 = rect.Y + rect.Height * i / strips;
+				int y1 = rect.Y + rect.Height * (i + 1) / strips;
+				float t = strips <= 1 ? 0f : i / (float)(strips - 1);
+				float centerWeight = 1f - Math.Abs(t - 0.2f) * 1.4f;
+				centerWeight = MathHelper.Clamp(centerWeight, 0f, 1f);
+				var color = Color.Lerp(Black1, Black3, centerWeight);
+				spriteBatch.Draw(pixel, new Rectangle(rect.X, y0, rect.Width, Math.Max(1, y1 - y0)), color);
+			}
+		}
+
+		public static void DrawTitleText(SpriteBatch spriteBatch, string text, Vector2 position, float scale, Color color)
+		{
+			DrawFontText(spriteBatch, FontSingleton.TitleFont, text, position, scale, color);
+		}
+
+		public static void DrawBodyText(SpriteBatch spriteBatch, string text, Vector2 position, float scale, Color color)
+		{
+			DrawFontText(spriteBatch, FontSingleton.ChakraPetchFont, text, position, scale, color);
+		}
+
+		public static void DrawText(SpriteBatch spriteBatch, string text, Vector2 position, float scale, Color color)
+		{
+			DrawBodyText(spriteBatch, text, position, scale, color);
+		}
+
+		private static void DrawFontText(SpriteBatch spriteBatch, SpriteFont font, string text, Vector2 position, float scale, Color color)
+		{
+			if (string.IsNullOrEmpty(text) || font == null) return;
+			spriteBatch.DrawString(font, ToAscii(text), position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+		}
+
+		public static Vector2 MeasureBodyText(string text, float scale)
+		{
+			if (string.IsNullOrEmpty(text) || FontSingleton.ChakraPetchFont == null) return Vector2.Zero;
+			return FontSingleton.ChakraPetchFont.MeasureString(ToAscii(text)) * scale;
+		}
+
+		public static Vector2 MeasureTitleText(string text, float scale)
+		{
+			if (string.IsNullOrEmpty(text) || FontSingleton.TitleFont == null) return Vector2.Zero;
+			return FontSingleton.TitleFont.MeasureString(ToAscii(text)) * scale;
+		}
+
+		public static string ToUpperAscii(string text)
+		{
+			return ToAscii(text ?? string.Empty).ToUpperInvariant();
+		}
+
+		public static void DrawResourceIcon(
+			SpriteBatch spriteBatch,
+			GraphicsDevice graphicsDevice,
+			Texture2D pixel,
+			Vector2 position,
+			ClimbResourceType type,
+			int size,
+			Color color,
+			bool compact = false,
+			float glowAlpha = 0f)
 		{
 			size = Math.Max(4, size);
-			var rect = new Rectangle((int)position.X, (int)position.Y, size, size);
+			if (type == ClimbResourceType.Red && glowAlpha > 0.001f)
+			{
+				int glowSize = size + 8;
+				var glowRect = new Rectangle((int)position.X - 4, (int)position.Y - 4, glowSize, glowSize);
+				var glowCircle = PrimitiveTextureFactory.GetAntiAliasedCircle(graphicsDevice, Math.Max(2, glowSize / 2));
+				spriteBatch.Draw(glowCircle, glowRect, RedGlow * glowAlpha);
+			}
+
 			switch (type)
 			{
 				case ClimbResourceType.Red:
-					var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(graphicsDevice, size / 2);
-					spriteBatch.Draw(circle, rect, color);
+				{
+					int redSize = compact ? 10 : size;
+					var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(graphicsDevice, Math.Max(2, redSize / 2));
+					var rect = new Rectangle((int)position.X, (int)position.Y + (size - redSize) / 2, redSize, redSize);
+					spriteBatch.Draw(circle, rect, compact ? Red3 : color);
 					break;
+				}
 				case ClimbResourceType.White:
-					var triangle = PrimitiveTextureFactory.GetEquilateralTriangle(graphicsDevice, size);
+				{
+					int triW = compact ? 12 : size;
+					int triH = compact ? 11 : size;
+					var triangle = PrimitiveTextureFactory.GetEquilateralTriangle(graphicsDevice, Math.Max(4, triH));
+					var rect = new Rectangle((int)position.X, (int)position.Y + (size - triH) / 2, triW, triH);
 					spriteBatch.Draw(triangle, rect, color);
 					break;
+				}
 				case ClimbResourceType.Black:
+				{
+					int sq = compact ? 11 : size;
+					var rect = new Rectangle((int)position.X, (int)position.Y + (size - sq) / 2, sq, sq);
 					spriteBatch.Draw(pixel, rect, Black0);
-					DrawBorder(spriteBatch, pixel, rect, color, 2);
+					DrawBorder(spriteBatch, pixel, rect, color, compact ? 1 : 2);
+					break;
+				}
+			}
+		}
+
+		public static void DrawMetaBlock(
+			SpriteBatch spriteBatch,
+			Texture2D pixel,
+			Rectangle rect,
+			string label,
+			float labelScale,
+			float borderAlpha,
+			float fillAlpha,
+			Action<SpriteBatch, Rectangle> drawContent)
+		{
+			if (rect.Width <= 0 || rect.Height <= 0) return;
+			spriteBatch.Draw(pixel, rect, Color.White * fillAlpha);
+			DrawBorder(spriteBatch, pixel, rect, Color.White * borderAlpha, 1);
+
+			int paddingX = 8;
+			int paddingY = 4;
+			var content = new Rectangle(
+				rect.X + paddingX,
+				rect.Y + paddingY,
+				Math.Max(0, rect.Width - paddingX * 2),
+				Math.Max(0, rect.Height - paddingY * 2));
+			if (content.Width <= 0 || content.Height <= 0) return;
+
+			if (!string.IsNullOrWhiteSpace(label))
+			{
+				string upper = ToUpperAscii(label);
+				var labelSize = MeasureBodyText(upper, labelScale);
+				DrawBodyText(spriteBatch, upper, new Vector2(content.X, content.Y + (content.Height - labelSize.Y) / 2f), labelScale, White2);
+				content = new Rectangle(
+					(int)(content.X + labelSize.X + 6),
+					content.Y,
+					Math.Max(0, content.Right - (int)(content.X + labelSize.X + 6)),
+					content.Height);
+			}
+
+			drawContent?.Invoke(spriteBatch, content);
+		}
+
+		public static void DrawGlyphBox(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect, float titleScale)
+		{
+			spriteBatch.Draw(pixel, rect, Black3);
+			DrawBorder(spriteBatch, pixel, rect, Black4, 1);
+			DrawTitleText(spriteBatch, "?", new Vector2(rect.Center.X - 6, rect.Center.Y - 10), titleScale, White2);
+		}
+
+		public static void DrawShopTitleIcon(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect, Color color)
+		{
+			if (rect.Width <= 0 || rect.Height <= 0) return;
+			int x = rect.X;
+			int y = rect.Y;
+			int w = rect.Width;
+			int h = rect.Height;
+			spriteBatch.Draw(pixel, new Rectangle(x, y + h * 5 / 16, w, Math.Max(1, h * 2 / 16)), color);
+			spriteBatch.Draw(pixel, new Rectangle(x + w / 6, y + h / 5, w * 2 / 3, Math.Max(1, h / 5)), color * 0.35f);
+			spriteBatch.Draw(pixel, new Rectangle(x + w / 8, y + h * 9 / 16, w / 5, h * 7 / 16), color);
+			spriteBatch.Draw(pixel, new Rectangle(x + w * 11 / 16, y + h * 9 / 16, w / 5, h * 7 / 16), color);
+			DrawBorder(spriteBatch, pixel, new Rectangle(x + w / 3, y + h * 9 / 16, w / 3, h * 5 / 16), color, 1);
+			spriteBatch.Draw(pixel, new Rectangle(x + w / 3, y + h * 11 / 16, w / 3, 1), color);
+		}
+
+		public static void DrawCircularFramedImage(
+			SpriteBatch spriteBatch,
+			GraphicsDevice graphicsDevice,
+			Texture2D pixel,
+			Texture2D image,
+			Rectangle rect,
+			Color borderColor,
+			int borderThickness,
+			bool hovered)
+		{
+			if (rect.Width <= 0 || rect.Height <= 0) return;
+			int radius = Math.Max(1, Math.Min(rect.Width, rect.Height) / 2);
+			var circle = RoundedRectTextureFactory.CreateRoundedRect(graphicsDevice, rect.Width, rect.Height, radius);
+			spriteBatch.Draw(circle, rect, new Color(8, 8, 8) * 0.92f);
+			if (image != null)
+			{
+				int inset = Math.Max(0, borderThickness);
+				var imageRect = new Rectangle(rect.X + inset, rect.Y + inset, rect.Width - inset * 2, rect.Height - inset * 2);
+				spriteBatch.Draw(image, imageRect, Color.White);
+			}
+
+			var border = hovered ? Red2 : borderColor;
+			DrawBorder(spriteBatch, pixel, rect, border, borderThickness);
+		}
+
+		public static void DrawPortraitCropped(
+			SpriteBatch spriteBatch,
+			Texture2D texture,
+			Rectangle dest,
+			float topCenterBias = 0.15f)
+		{
+			if (texture == null || dest.Width <= 0 || dest.Height <= 0) return;
+			float scale = Math.Max(dest.Width / (float)texture.Width, dest.Height / (float)texture.Height);
+			int srcW = Math.Min(texture.Width, (int)Math.Ceiling(dest.Width / scale));
+			int srcH = Math.Min(texture.Height, (int)Math.Ceiling(dest.Height / scale));
+			int srcX = (texture.Width - srcW) / 2;
+			int srcY = (int)MathHelper.Clamp(texture.Height * topCenterBias, 0, Math.Max(0, texture.Height - srcH));
+			var source = new Rectangle(srcX, srcY, srcW, srcH);
+			spriteBatch.Draw(texture, dest, source, Color.White);
+		}
+
+		public static void DrawHourglassIcon(
+			SpriteBatch spriteBatch,
+			Rectangle dest,
+			HourglassIconStyle style,
+			Color frame,
+			Color sand,
+			bool filled,
+			float alpha,
+			HourglassGlowTuning glow)
+		{
+			if (dest.Width <= 0 || dest.Height <= 0 || _hourglassFrame == null) return;
+
+			DrawHourglassGlow(spriteBatch, dest, style, filled, alpha, glow);
+
+			frame *= alpha;
+			sand *= alpha;
+			spriteBatch.Draw(_hourglassFrame, dest, frame);
+			if (filled && _hourglassSand != null)
+				spriteBatch.Draw(_hourglassSand, dest, sand);
+		}
+
+		private static void DrawHourglassGlow(
+			SpriteBatch spriteBatch,
+			Rectangle dest,
+			HourglassIconStyle style,
+			bool filled,
+			float alpha,
+			HourglassGlowTuning glow)
+		{
+			if (alpha <= 0.001f) return;
+
+			float sizeScale = dest.Height / 64f;
+			int outlineRadius = Math.Max(1, (int)Math.Round(sizeScale));
+			int haloRadius = Math.Max(1, (int)Math.Round(glow.GlowRadius * sizeScale));
+
+			switch (style)
+			{
+				case HourglassIconStyle.WhiteCost:
+				case HourglassIconStyle.WhiteMeter:
+				case HourglassIconStyle.Red:
+					DrawHourglassSilhouetteGlow(spriteBatch, dest, filled, Color.Black * 0.95f, outlineRadius, alpha * 0.95f);
+					break;
+				case HourglassIconStyle.RedFaded:
+					DrawHourglassSilhouetteGlow(spriteBatch, dest, filled, Color.Black * 0.8f, outlineRadius, alpha * 0.8f);
+					break;
+			}
+
+			switch (style)
+			{
+				case HourglassIconStyle.WhiteMeter:
+					DrawHourglassSilhouetteGlow(
+						spriteBatch,
+						dest,
+						filled,
+						Color.White * 0.55f,
+						haloRadius,
+						alpha * glow.WhiteMeterGlowAlpha);
+					break;
+				case HourglassIconStyle.Red:
+					DrawHourglassSilhouetteGlow(
+						spriteBatch,
+						dest,
+						filled,
+						RedGlow * 0.65f,
+						haloRadius,
+						alpha * glow.RedGlowAlpha);
 					break;
 			}
 		}
 
-		public static void DrawHourglassIcon(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect, Color frame, Color sand, bool filled)
+		private static void DrawHourglassSilhouetteGlow(
+			SpriteBatch spriteBatch,
+			Rectangle dest,
+			bool filled,
+			Color color,
+			int radius,
+			float alpha)
 		{
-			DrawBorder(spriteBatch, pixel, rect, frame, 1);
-			int middleY = rect.Y + rect.Height / 2;
-			spriteBatch.Draw(pixel, new Rectangle(rect.X + 1, middleY, Math.Max(1, rect.Width - 2), 1), frame * 0.7f);
-			if (!filled) return;
-			spriteBatch.Draw(pixel, new Rectangle(rect.X + 2, rect.Y + 2, Math.Max(1, rect.Width - 4), Math.Max(1, rect.Height / 2 - 3)), sand);
-			spriteBatch.Draw(pixel, new Rectangle(rect.X + 2, middleY + 2, Math.Max(1, rect.Width - 4), Math.Max(1, rect.Height / 2 - 4)), sand);
+			if (alpha <= 0.001f || radius <= 0) return;
+
+			for (int ring = 1; ring <= radius; ring++)
+			{
+				float ringWeight = 1f - (ring - 1) / (float)Math.Max(1, radius);
+				float layerAlpha = alpha * ringWeight * 0.35f;
+				if (layerAlpha <= 0.001f) continue;
+
+				foreach (var (dx, dy) in GlowDirections)
+				{
+					int offsetX = dx * ring;
+					int offsetY = dy * ring;
+					var glowDest = new Rectangle(dest.X + offsetX, dest.Y + offsetY, dest.Width, dest.Height);
+					spriteBatch.Draw(_hourglassFrame, glowDest, color * layerAlpha);
+					if (filled && _hourglassSand != null)
+						spriteBatch.Draw(_hourglassSand, glowDest, color * layerAlpha);
+				}
+			}
 		}
 
 		public static void DrawShopMarkerIcon(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect, Color color)
@@ -83,10 +393,12 @@ namespace Crusaders30XX.ECS.Systems
 			DrawBorder(spriteBatch, pixel, rect, color, 1);
 		}
 
-		public static void DrawText(SpriteBatch spriteBatch, string text, Vector2 position, float scale, Color color)
+		public static float PreviewVanishPulseAlpha(float periodSeconds = 2f)
 		{
-			if (string.IsNullOrEmpty(text)) return;
-			spriteBatch.DrawString(FontSingleton.ContentFont, ToAscii(text), position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+			float t = (float)(DateTime.UtcNow.TimeOfDay.TotalSeconds % periodSeconds) / periodSeconds;
+			if (t < 0.4f) return MathHelper.Lerp(1f, 0.18f, t / 0.4f);
+			if (t < 0.7f) return MathHelper.Lerp(0.18f, 0.55f, (t - 0.4f) / 0.3f);
+			return MathHelper.Lerp(0.55f, 1f, (t - 0.7f) / 0.3f);
 		}
 
 		public static string ToAscii(string text)
