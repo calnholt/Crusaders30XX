@@ -142,7 +142,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 				time = time,
 				resources = new ClimbResourceSave { red = 2, white = 1, black = 1 },
 				shopSlots = BuildShopSlots(time),
-				encounterSlots = BuildEncounterSlots(),
+				encounterSlots = BuildEncounterSlots(time),
 				eventSlots = BuildEventSlots(time),
 				shownMedalIds = new List<string>(),
 				shownEquipmentIds = new List<string>(),
@@ -205,7 +205,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 			};
 		}
 
-		private List<ClimbEncounterSlotSave> BuildEncounterSlots()
+		private List<ClimbEncounterSlotSave> BuildEncounterSlots(int time)
 		{
 			return new List<ClimbEncounterSlotSave>
 			{
@@ -213,6 +213,8 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 				{
 					id = "encounter_0",
 					enemyId = "skeleton",
+					generatedAtTime = time,
+					duration = 4,
 					timeCost = _variant == ClimbSnapshotVariant.HoverPreview ? 2 : 3,
 					rewardResources = new ClimbResourceSave { red = 2, white = 0, black = 1 },
 					hasDeckReward = true,
@@ -221,6 +223,8 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 				{
 					id = "encounter_1",
 					enemyId = "demon",
+					generatedAtTime = time,
+					duration = 3,
 					timeCost = 1,
 					rewardResources = new ClimbResourceSave { red = 0, white = 2, black = 1 },
 					hasDeckReward = true,
@@ -229,6 +233,8 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 				{
 					id = "encounter_2",
 					enemyId = "cactus",
+					generatedAtTime = time,
+					duration = 5,
 					timeCost = 3,
 					rewardResources = new ClimbResourceSave { red = 1, white = 1, black = 1 },
 					hasDeckReward = true,

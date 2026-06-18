@@ -77,6 +77,8 @@ namespace Crusaders30XX.ECS.Data.Save
 	{
 		public string id { get; set; } = string.Empty;
 		public string enemyId { get; set; } = string.Empty;
+		public int generatedAtTime { get; set; }
+		public int duration { get; set; }
 		public int timeCost { get; set; }
 		public ClimbResourceSave rewardResources { get; set; } = new ClimbResourceSave { red = 0, white = 0, black = 0 };
 		public bool hasDeckReward { get; set; } = true;

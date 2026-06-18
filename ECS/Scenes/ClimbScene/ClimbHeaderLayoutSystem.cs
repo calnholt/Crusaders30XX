@@ -157,6 +157,15 @@ namespace Crusaders30XX.ECS.Systems
 					preview.WouldVanishSlotIds.Add(slot.id);
 				}
 			}
+
+			foreach (var slot in climb?.encounterSlots ?? new List<ClimbEncounterSlotSave>())
+			{
+				if (slot == null || slot.isCompleted || slot.isFinal) continue;
+				if (ClimbRuleService.IsEncounterExpired(slot, projectedTime) && !string.IsNullOrWhiteSpace(slot.id))
+				{
+					preview.WouldVanishSlotIds.Add(slot.id);
+				}
+			}
 		}
 
 		private static void FillAffordableShopIds(ClimbPreviewState preview, ClimbSaveState climb)

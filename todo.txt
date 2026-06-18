@@ -44,10 +44,6 @@ keywords
 - vigor reduction
 
 card upgrades (missing OnUpgrade)
-- Impale
-- IronCovenant
-- QuickWit
-- RallyTheFaithful
 - RelentlessStrike
 - RenounceAndHone
 - Stab

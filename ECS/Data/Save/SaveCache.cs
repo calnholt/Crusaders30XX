@@ -1440,6 +1440,8 @@ namespace Crusaders30XX.ECS.Data.Save
 				{
 					id = slot.id ?? string.Empty,
 					enemyId = slot.enemyId ?? string.Empty,
+					generatedAtTime = ClimbRuleService.ClampTime(slot.generatedAtTime),
+					duration = Math.Max(0, slot.duration),
 					timeCost = Math.Max(0, slot.timeCost),
 					rewardResources = CloneClimbResources(slot.rewardResources),
 					hasDeckReward = slot.hasDeckReward,

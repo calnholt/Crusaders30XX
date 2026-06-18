@@ -24,7 +24,8 @@ namespace Crusaders30XX.ECS.Systems
 		private ClimbHeaderDisplaySystem _headerDisplaySystem;
 		private ClimbColumnLayoutSystem _columnLayoutSystem;
 		private ClimbColumnDisplaySystem _columnDisplaySystem;
-		private ClimbToastDisplaySystem _toastDisplaySystem;
+		private EquipmentTooltipDisplaySystem _equipmentTooltipDisplaySystem;
+		private const string EquipmentTooltipEntityName = "Climb_EquipmentTooltip";
 
 		public ClimbSceneSystem(EntityManager entityManager, SystemManager systemManager, World world, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
@@ -45,6 +46,13 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
+		}
+
+		public override void Update(GameTime gameTime)
+		{
+			base.Update(gameTime);
+			if (!IsClimbScene()) return;
+			_equipmentTooltipDisplaySystem?.Update(gameTime);
 		}
 
 		private void OnLoadScene(LoadSceneEvent evt)
@@ -78,8 +86,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_columnLayoutSystem);
 			_columnDisplaySystem = new ClimbColumnDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_columnDisplaySystem);
-			_toastDisplaySystem = new ClimbToastDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch);
-			_world.AddSystem(_toastDisplaySystem);
+			EnsureEquipmentTooltipEntity();
+			_equipmentTooltipDisplaySystem = new EquipmentTooltipDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _content, EquipmentTooltipEntityName);
 		}
 
 		private void RemoveClimbSystems()
@@ -90,7 +98,9 @@ namespace Crusaders30XX.ECS.Systems
 			_world.RemoveSystem(_headerDisplaySystem);
 			_world.RemoveSystem(_columnLayoutSystem);
 			_world.RemoveSystem(_columnDisplaySystem);
-			_world.RemoveSystem(_toastDisplaySystem);
+			var tooltip = EntityManager.GetEntity(EquipmentTooltipEntityName);
+			if (tooltip != null) EntityManager.DestroyEntity(tooltip.Id);
+			_equipmentTooltipDisplaySystem = null;
 			_firstLoad = true;
 		}
 
@@ -99,7 +109,42 @@ namespace Crusaders30XX.ECS.Systems
 			if (_backgroundDisplaySystem != null) FrameProfiler.Measure("ClimbBackgroundDisplaySystem.Draw", _backgroundDisplaySystem.Draw);
 			if (_headerDisplaySystem != null) FrameProfiler.Measure("ClimbHeaderDisplaySystem.Draw", _headerDisplaySystem.Draw);
 			if (_columnDisplaySystem != null) FrameProfiler.Measure("ClimbColumnDisplaySystem.Draw", _columnDisplaySystem.Draw);
-			if (_toastDisplaySystem != null) FrameProfiler.Measure("ClimbToastDisplaySystem.Draw", _toastDisplaySystem.Draw);
+			if (_equipmentTooltipDisplaySystem != null) FrameProfiler.Measure("ClimbEquipmentTooltipDisplaySystem.Draw", _equipmentTooltipDisplaySystem.Draw);
+		}
+
+		private void EnsureEquipmentTooltipEntity()
+		{
+			var entity = EntityManager.GetEntity(EquipmentTooltipEntityName);
+			if (entity == null)
+			{
+				entity = EntityManager.CreateEntity(EquipmentTooltipEntityName);
+				EntityManager.AddComponent(entity, new EquipmentTooltipState());
+				EntityManager.AddComponent(entity, new Transform { ZOrder = 10002 });
+				EntityManager.AddComponent(entity, new UIElement
+				{
+					Bounds = Rectangle.Empty,
+					IsInteractable = false,
+					IsHidden = true,
+					TooltipType = TooltipType.None,
+				});
+				EntityManager.AddComponent(entity, new OwnedByScene { Scene = SceneId.Climb });
+				return;
+			}
+
+			if (entity.GetComponent<EquipmentTooltipState>() == null) EntityManager.AddComponent(entity, new EquipmentTooltipState());
+			if (entity.GetComponent<Transform>() == null) EntityManager.AddComponent(entity, new Transform { ZOrder = 10002 });
+			if (entity.GetComponent<UIElement>() == null)
+			{
+				EntityManager.AddComponent(entity, new UIElement { Bounds = Rectangle.Empty, IsInteractable = false, IsHidden = true, TooltipType = TooltipType.None });
+			}
+		}
+
+		private bool IsClimbScene()
+		{
+			return EntityManager.GetEntitiesWithComponent<SceneState>()
+				.FirstOrDefault()
+				?.GetComponent<SceneState>()
+				?.Current == SceneId.Climb;
 		}
 
 		public static void DeactivateClimbUiEntities(EntityManager entityManager)
@@ -114,7 +159,9 @@ namespace Crusaders30XX.ECS.Systems
 					|| entity.GetComponent<ClimbResourceBarElement>() != null
 					|| entity.GetComponent<ClimbLoadoutButton>() != null
 					|| entity.GetComponent<ClimbColumnPresentation>() != null
-					|| entity.GetComponent<ClimbSlotPresentation>() != null)
+					|| entity.GetComponent<ClimbSlotPresentation>() != null
+					|| entity.GetComponent<ClimbShopTooltipSource>() != null
+					|| string.Equals(entity.Name, EquipmentTooltipEntityName, System.StringComparison.OrdinalIgnoreCase))
 				.ToList();
 
 			foreach (var entity in climbEntities)

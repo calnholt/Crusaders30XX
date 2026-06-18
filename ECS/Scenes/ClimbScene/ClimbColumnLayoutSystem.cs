@@ -99,6 +99,8 @@ namespace Crusaders30XX.ECS.Systems
 			presentation.Title = ClimbSceneDrawHelpers.ResolveShopTitle(slot);
 			presentation.Label = ClimbSceneDrawHelpers.ResolveShopLabel(slot);
 			presentation.Meta = "PRICE";
+			presentation.GeneratedAtTime = Math.Max(0, slot?.generatedAtTime ?? 0);
+			presentation.Duration = 0;
 			presentation.Cost = Clone(slot?.cost);
 			presentation.Reward = new ClimbResourceSave { red = 0, white = 0, black = 0 };
 			presentation.TimeCost = Math.Max(0, slot?.timeCost ?? 0);
@@ -109,14 +111,8 @@ namespace Crusaders30XX.ECS.Systems
 			var action = entity.GetComponent<ClimbShopSlotAction>();
 			if (action == null) EntityManager.AddComponent(entity, new ClimbShopSlotAction { SlotIndex = index });
 			else action.SlotIndex = index;
-			SetBounds(entity, rect, !presentation.IsUnavailable && !presentation.IsSold && presentation.IsAffordable, UIElementEventType.ClimbShopSlotSelect, 1600);
-			var ui = entity.GetComponent<UIElement>();
-			if (ui != null)
-			{
-				ui.Tooltip = !presentation.IsUnavailable && !presentation.IsSold && !presentation.IsAffordable
-					? "Unavailable"
-					: string.Empty;
-			}
+			SetBounds(entity, rect, !presentation.IsUnavailable && !presentation.IsSold, UIElementEventType.ClimbShopSlotSelect, 1600);
+			SyncShopTooltip(entity, slot, presentation);
 		}
 
 		private void SyncEncounterSlot(int index, ClimbEncounterSlotSave slot, Rectangle rect)
@@ -130,6 +126,8 @@ namespace Crusaders30XX.ECS.Systems
 			presentation.Title = enemy?.Name ?? "Encounter";
 			presentation.Label = slot?.isFinal == true ? "Final" : "Fight";
 			presentation.Meta = "GAIN";
+			presentation.GeneratedAtTime = Math.Max(0, slot?.generatedAtTime ?? 0);
+			presentation.Duration = Math.Max(0, slot?.duration ?? 0);
 			presentation.Cost = new ClimbResourceSave { red = 0, white = 0, black = 0 };
 			presentation.Reward = Clone(slot?.rewardResources);
 			presentation.TimeCost = Math.Max(0, slot?.timeCost ?? 0);
@@ -155,6 +153,8 @@ namespace Crusaders30XX.ECS.Systems
 			presentation.Title = "Event";
 			presentation.Label = slot == null ? string.Empty : $"T{slot.visibleStartTime}-{slot.visibleEndTime}";
 			presentation.Meta = "TIME";
+			presentation.GeneratedAtTime = Math.Max(0, slot?.generatedAtTime ?? 0);
+			presentation.Duration = slot == null ? 0 : Math.Max(0, slot.visibleEndTime - ClimbRuleService.ClampTime(SaveCache.GetClimbState()?.time ?? 0));
 			presentation.Cost = new ClimbResourceSave { red = 0, white = 0, black = 0 };
 			presentation.Reward = new ClimbResourceSave { red = 0, white = 0, black = 0 };
 			presentation.TimeCost = Math.Max(0, slot?.timeCost ?? 0);
@@ -166,6 +166,103 @@ namespace Crusaders30XX.ECS.Systems
 			if (action == null) EntityManager.AddComponent(entity, new ClimbEventSlotAction { SlotId = presentation.SlotId });
 			else action.SlotId = presentation.SlotId;
 			SetBounds(entity, rect, visible && !presentation.IsUnavailable, UIElementEventType.ClimbEventSlotSelect, 1600, hidden: !visible);
+		}
+
+		private void SyncShopTooltip(Entity entity, ClimbShopSlotSave slot, ClimbSlotPresentation presentation)
+		{
+			var ui = entity.GetComponent<UIElement>();
+			if (ui == null) return;
+
+			ui.Tooltip = string.Empty;
+			ui.TooltipType = TooltipType.Text;
+			if (slot == null || presentation.IsUnavailable || presentation.IsSold)
+			{
+				ClearShopTooltip(entity, ui);
+				return;
+			}
+
+			ui.TooltipPosition = TooltipPosition.Above;
+			ui.TooltipOffsetPx = 30;
+
+			if (string.Equals(slot.kind, ClimbShopSlotKinds.Medal, StringComparison.OrdinalIgnoreCase))
+			{
+				RemoveCardTooltip(entity);
+				RemoveEquipmentTooltip(entity);
+				var medal = MedalFactory.Create(slot.itemId);
+				ui.Tooltip = medal == null ? string.Empty : $"{medal.Name}\n\n{medal.Text}";
+				ui.TooltipType = TooltipType.Text;
+				return;
+			}
+
+			if (string.Equals(slot.kind, ClimbShopSlotKinds.Equipment, StringComparison.OrdinalIgnoreCase))
+			{
+				RemoveCardTooltip(entity);
+				SyncEquipmentTooltip(entity, slot.itemId, ui);
+				return;
+			}
+
+			if (string.Equals(slot.kind, ClimbShopSlotKinds.Upgrade, StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(slot.kind, ClimbShopSlotKinds.Replacement, StringComparison.OrdinalIgnoreCase))
+			{
+				RemoveCardTooltip(entity);
+				RemoveEquipmentTooltip(entity);
+				if (!RunDeckService.TryParseCardKey(slot.cardKey, out var cardId, out var color, out bool isUpgraded)) return;
+				EntityManager.AddComponent(entity, new CardTooltip
+				{
+					CardId = cardId,
+					CardColor = color,
+					IsUpgraded = isUpgraded,
+				});
+				ui.TooltipType = TooltipType.Card;
+			}
+		}
+
+		private void SyncEquipmentTooltip(Entity entity, string equipmentId, UIElement ui)
+		{
+			if (string.IsNullOrWhiteSpace(equipmentId)) return;
+			var source = entity.GetComponent<ClimbShopTooltipSource>();
+			var equipped = entity.GetComponent<EquippedEquipment>();
+			if (source == null
+				|| equipped == null
+				|| !string.Equals(source.EquipmentId, equipmentId, StringComparison.OrdinalIgnoreCase))
+			{
+				equipped?.Dispose();
+				if (source != null) EntityManager.RemoveComponent<ClimbShopTooltipSource>(entity);
+				if (equipped != null) EntityManager.RemoveComponent<EquippedEquipment>(entity);
+				if (entity.GetComponent<EquipmentZone>() != null) EntityManager.RemoveComponent<EquipmentZone>(entity);
+
+				var equipment = EquipmentFactory.Create(equipmentId);
+				if (equipment == null) return;
+				equipment.Initialize(EntityManager, entity);
+				EntityManager.AddComponent(entity, new ClimbShopTooltipSource { EquipmentId = equipmentId });
+				EntityManager.AddComponent(entity, new EquippedEquipment { Equipment = equipment });
+				EntityManager.AddComponent(entity, new EquipmentZone { Zone = EquipmentZoneType.Default });
+			}
+
+			ui.TooltipType = TooltipType.Equipment;
+		}
+
+		private void ClearShopTooltip(Entity entity, UIElement ui)
+		{
+			ui.Tooltip = string.Empty;
+			ui.TooltipType = TooltipType.Text;
+
+			RemoveCardTooltip(entity);
+			RemoveEquipmentTooltip(entity);
+		}
+
+		private void RemoveCardTooltip(Entity entity)
+		{
+			if (entity.GetComponent<CardTooltip>() != null) EntityManager.RemoveComponent<CardTooltip>(entity);
+		}
+
+		private void RemoveEquipmentTooltip(Entity entity)
+		{
+			var equipped = entity.GetComponent<EquippedEquipment>();
+			equipped?.Dispose();
+			if (equipped != null) EntityManager.RemoveComponent<EquippedEquipment>(entity);
+			if (entity.GetComponent<EquipmentZone>() != null) EntityManager.RemoveComponent<EquipmentZone>(entity);
+			if (entity.GetComponent<ClimbShopTooltipSource>() != null) EntityManager.RemoveComponent<ClimbShopTooltipSource>(entity);
 		}
 
 		private ClimbSlotPresentation EnsureSlotPresentation(Entity entity)

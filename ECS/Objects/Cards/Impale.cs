@@ -9,6 +9,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
     public class Impale : CardBase
     {
         private int CourageCost = 3;
+
+        private int DamageUpgrade = 1;
         public Impale()
         {
             CardId = "impale";
@@ -49,6 +51,10 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 int courage = courageCmp?.Amount ?? 0;
                 if (courage < CourageCost)
                     EventManager.Publish(new CantPlayCardMessage { Message = $"Requires {CourageCost} courage!" });
+            };
+            OnUpgrade = (entityManager, card) =>
+            {
+                Damage += DamageUpgrade;
             };
         }
     }

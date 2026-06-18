@@ -21,6 +21,8 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Texture2D _pixel;
 		private Texture2D _weaponArt;
 		private string _weaponArtKey = string.Empty;
+		private float _resourcePreviewAlpha;
+		private ClimbResourceSave _lastPreviewResources = new ClimbResourceSave();
 
 		[DebugEditable(DisplayName = "Header Height", Step = 1, Min = 40, Max = 180)]
 		public int HeaderHeight { get; set; } = 90;
@@ -50,6 +52,8 @@ namespace Crusaders30XX.ECS.Systems
 		public float ResourceAmountFontScale { get; set; } = 0.14f;
 		[DebugEditable(DisplayName = "Resource Icon Size", Step = 1, Min = 6, Max = 48)]
 		public int ResourceIconSize { get; set; } = 18;
+		[DebugEditable(DisplayName = "Resource Fade Seconds", Step = 0.01f, Min = 0.01f, Max = 1f)]
+		public float ResourceFadeSeconds { get; set; } = 0.12f;
 		[DebugEditable(DisplayName = "Timeline Hourglass Width", Step = 1, Min = 3, Max = 24)]
 		public int TimelineHourglassWidth { get; set; } = 8;
 		[DebugEditable(DisplayName = "Timeline Hourglass Height", Step = 1, Min = 4, Max = 32)]
@@ -96,6 +100,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (IsClimbScene())
 			{
 				SyncWeaponArt();
+				UpdateResourcePreviewFade(gameTime);
 			}
 		}
 
@@ -132,10 +137,6 @@ namespace Crusaders30XX.ECS.Systems
 			var labelY = rect.Y + TimelinePaddingY;
 			ClimbSceneDrawHelpers.DrawText(_spriteBatch, used.ToString(), new Vector2(rect.X + TimelinePaddingX, labelY), TimelineValueFontScale, ClimbSceneDrawHelpers.White1);
 			ClimbSceneDrawHelpers.DrawText(_spriteBatch, "used", new Vector2(rect.X + TimelinePaddingX + 28, labelY + 5), TimelineLabelFontScale, ClimbSceneDrawHelpers.White3);
-			if (delta > 0)
-			{
-				ClimbSceneDrawHelpers.DrawText(_spriteBatch, $"+{delta}", new Vector2(rect.Center.X - 14, labelY + 2), TimelineValueFontScale, ClimbSceneDrawHelpers.Red2);
-			}
 			ClimbSceneDrawHelpers.DrawText(_spriteBatch, remaining.ToString(), new Vector2(rect.Right - TimelinePaddingX - 60, labelY), TimelineValueFontScale, ClimbSceneDrawHelpers.White1);
 			ClimbSceneDrawHelpers.DrawText(_spriteBatch, "remaining", new Vector2(rect.Right - TimelinePaddingX - 34, labelY + 5), TimelineLabelFontScale, ClimbSceneDrawHelpers.White3);
 
@@ -172,23 +173,69 @@ namespace Crusaders30XX.ECS.Systems
 		private void DrawResources(Rectangle rect, ClimbSaveState climb, ClimbPreviewState preview)
 		{
 			if (rect.Width <= 0 || rect.Height <= 0) return;
-			var resources = preview?.IsActive == true ? preview.ProjectedResources : climb?.resources;
-			resources ??= new ClimbResourceSave();
+			var baseResources = climb?.resources ?? new ClimbResourceSave();
+			var previewResources = _lastPreviewResources ?? baseResources;
 
 			_spriteBatch.Draw(_pixel, rect, ClimbSceneDrawHelpers.Black0 * 0.62f);
 			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, Color.White * 0.28f, 1);
 			ClimbSceneDrawHelpers.DrawText(_spriteBatch, "Resources", new Vector2(rect.X + 10, rect.Y + 7), ResourceLabelFontScale, ClimbSceneDrawHelpers.White3);
 
 			int y = rect.Y + 34;
-			DrawResourceAmount(new Vector2(rect.X + 10, y), ClimbResourceType.Red, resources.red, ClimbSceneDrawHelpers.Red2);
-			DrawResourceAmount(new Vector2(rect.X + 56, y), ClimbResourceType.White, resources.white, ClimbSceneDrawHelpers.White1);
-			DrawResourceAmount(new Vector2(rect.X + 102, y), ClimbResourceType.Black, resources.black, ClimbSceneDrawHelpers.White3);
+			DrawResourceAmount(new Vector2(rect.X + 10, y), ClimbResourceType.Red, baseResources.red, previewResources.red, ClimbSceneDrawHelpers.Red2);
+			DrawResourceAmount(new Vector2(rect.X + 56, y), ClimbResourceType.White, baseResources.white, previewResources.white, ClimbSceneDrawHelpers.White1);
+			DrawResourceAmount(new Vector2(rect.X + 102, y), ClimbResourceType.Black, baseResources.black, previewResources.black, ClimbSceneDrawHelpers.White3);
 		}
 
-		private void DrawResourceAmount(Vector2 pos, ClimbResourceType type, int amount, Color color)
+		private void DrawResourceAmount(Vector2 pos, ClimbResourceType type, int amount, int previewAmount, Color color)
 		{
 			ClimbSceneDrawHelpers.DrawResourceIcon(_spriteBatch, _graphicsDevice, _pixel, pos, type, ResourceIconSize, color);
-			ClimbSceneDrawHelpers.DrawText(_spriteBatch, amount.ToString(), new Vector2(pos.X + ResourceIconSize + 4, pos.Y - 1), ResourceAmountFontScale, ClimbSceneDrawHelpers.White1);
+			var textPos = new Vector2(pos.X + ResourceIconSize + 4, pos.Y - 1);
+			float previewAlpha = MathHelper.Clamp(_resourcePreviewAlpha, 0f, 1f);
+			if (previewAlpha <= 0.001f || amount == previewAmount)
+			{
+				ClimbSceneDrawHelpers.DrawText(_spriteBatch, amount.ToString(), textPos, ResourceAmountFontScale, ClimbSceneDrawHelpers.White1);
+				return;
+			}
+
+			ClimbSceneDrawHelpers.DrawText(_spriteBatch, amount.ToString(), textPos, ResourceAmountFontScale, ClimbSceneDrawHelpers.White1 * (1f - previewAlpha));
+			ClimbSceneDrawHelpers.DrawText(_spriteBatch, previewAmount.ToString(), textPos, ResourceAmountFontScale, ClimbSceneDrawHelpers.White1 * previewAlpha);
+		}
+
+		private void UpdateResourcePreviewFade(GameTime gameTime)
+		{
+			var climb = SaveCache.GetClimbState();
+			var preview = GetPreview();
+			var current = climb?.resources ?? new ClimbResourceSave();
+			bool previewingResources = preview?.IsActive == true && !ResourcesEqual(current, preview.ProjectedResources);
+			if (previewingResources)
+			{
+				_lastPreviewResources = CloneResources(preview.ProjectedResources);
+			}
+
+			float target = previewingResources ? 1f : 0f;
+			float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
+			float delta = ResourceFadeSeconds <= 0f ? 1f : elapsed / ResourceFadeSeconds;
+			_resourcePreviewAlpha = MathHelper.Clamp(
+				_resourcePreviewAlpha + (target > _resourcePreviewAlpha ? delta : -delta),
+				0f,
+				1f);
+		}
+
+		private static bool ResourcesEqual(ClimbResourceSave a, ClimbResourceSave b)
+		{
+			return (a?.red ?? 0) == (b?.red ?? 0)
+				&& (a?.white ?? 0) == (b?.white ?? 0)
+				&& (a?.black ?? 0) == (b?.black ?? 0);
+		}
+
+		private static ClimbResourceSave CloneResources(ClimbResourceSave resources)
+		{
+			return new ClimbResourceSave
+			{
+				red = resources?.red ?? 0,
+				white = resources?.white ?? 0,
+				black = resources?.black ?? 0,
+			};
 		}
 
 		private void DrawWeaponButton(Rectangle rect)

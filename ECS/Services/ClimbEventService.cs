@@ -18,7 +18,8 @@ namespace Crusaders30XX.ECS.Services
 
 			var before = Snapshot(climb);
 			ClimbRuleService.UpdateEventSlots(climb, save?.runMapSeed ?? 0);
-			bool changed = !string.Equals(before, Snapshot(climb), StringComparison.Ordinal);
+			bool encountersChanged = ClimbRuleService.ReplenishEncounterSlots(climb, save?.runMapSeed ?? 0);
+			bool changed = encountersChanged || !string.Equals(before, Snapshot(climb), StringComparison.Ordinal);
 			if (changed) SaveCache.SaveClimbState(climb);
 			return changed;
 		}
@@ -64,6 +65,7 @@ namespace Crusaders30XX.ECS.Services
 				eventTypeId = slot.eventTypeId,
 			};
 			ClimbRuleService.UpdateEventSlots(climb, save?.runMapSeed ?? 0);
+			ClimbRuleService.ReplenishEncounterSlots(climb, save?.runMapSeed ?? 0);
 			SaveCache.SaveClimbState(climb);
 
 			EventManager.Publish(new ShowNarrativeEventOverlay

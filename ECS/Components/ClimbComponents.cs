@@ -95,6 +95,8 @@ namespace Crusaders30XX.ECS.Components
 		public string Title { get; set; } = string.Empty;
 		public string Label { get; set; } = string.Empty;
 		public string Meta { get; set; } = string.Empty;
+		public int GeneratedAtTime { get; set; }
+		public int Duration { get; set; }
 		public int TimeCost { get; set; }
 		public ClimbResourceSave Cost { get; set; } = new ClimbResourceSave { red = 0, white = 0, black = 0 };
 		public ClimbResourceSave Reward { get; set; } = new ClimbResourceSave { red = 0, white = 0, black = 0 };
@@ -116,5 +118,11 @@ namespace Crusaders30XX.ECS.Components
 	{
 		public Entity Owner { get; set; }
 		public string SlotId { get; set; } = string.Empty;
+	}
+
+	public class ClimbShopTooltipSource : IComponent
+	{
+		public Entity Owner { get; set; }
+		public string EquipmentId { get; set; } = string.Empty;
 	}
 }

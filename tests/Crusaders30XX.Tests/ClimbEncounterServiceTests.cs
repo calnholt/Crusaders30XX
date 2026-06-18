@@ -212,12 +212,14 @@ public class ClimbEncounterServiceTests
 			{
 				id = "encounter_a",
 				enemyId = "skeleton",
+				generatedAtTime = 0,
+				duration = 5,
 				timeCost = timeCost,
 				rewardResources = new ClimbResourceSave { red = 1, white = 0, black = 0 },
 				hasDeckReward = false,
 			},
-			new() { id = "encounter_b", enemyId = "demon", timeCost = 3, hasDeckReward = false },
-			new() { id = "encounter_c", enemyId = "skeleton", timeCost = 3, hasDeckReward = false },
+			new() { id = "encounter_b", enemyId = "demon", generatedAtTime = 0, duration = 5, timeCost = 3, hasDeckReward = false },
+			new() { id = "encounter_c", enemyId = "skeleton", generatedAtTime = 0, duration = 5, timeCost = 3, hasDeckReward = false },
 		};
 		SaveCache.SaveClimbState(climb);
 	}

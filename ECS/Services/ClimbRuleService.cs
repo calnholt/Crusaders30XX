@@ -16,6 +16,8 @@ namespace Crusaders30XX.ECS.Services
 		public const int EncounterSlotCount = 3;
 		public const int EventSlotCount = 3;
 		public const int ShopRefreshInterval = 8;
+		public const int EncounterMinDuration = 2;
+		public const int EncounterMaxDuration = 5;
 		private const int RngSalt = unchecked((int)0xC11A1B00);
 
 		private static readonly HashSet<string> BannedClimbEncounterEnemyIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -90,6 +92,13 @@ namespace Crusaders30XX.ECS.Services
 		{
 			if (slot == null || slot.isCompleted || string.IsNullOrWhiteSpace(slot.eventTypeId)) return false;
 			return ClampTime(time) > slot.visibleEndTime;
+		}
+
+		public static bool IsEncounterExpired(ClimbEncounterSlotSave slot, int time)
+		{
+			if (slot == null || slot.isCompleted || slot.isFinal || string.IsNullOrWhiteSpace(slot.enemyId)) return false;
+			if (slot.duration <= 0) return true;
+			return ClampTime(time) >= ClampTime(slot.generatedAtTime + slot.duration);
 		}
 
 		public static void ExpireEvents(ClimbSaveState state)
@@ -235,6 +244,9 @@ namespace Crusaders30XX.ECS.Services
 					&& !slot.isCompleted
 					&& !slot.isFinal
 					&& IsValidClimbEncounterEnemy(slot.enemyId)
+					&& !IsEncounterExpired(slot, state.time)
+					&& slot.duration >= EncounterMinDuration
+					&& slot.duration <= EncounterMaxDuration
 					&& slot.timeCost >= 1
 					&& slot.timeCost <= 3)
 				{
@@ -417,6 +429,8 @@ namespace Crusaders30XX.ECS.Services
 			{
 				id = slotId ?? string.Empty,
 				enemyId = final ? "fallen_shepherd" : RollClimbEncounterEnemyId(rng, excludedEnemyId),
+				generatedAtTime = ClampTime(state?.time ?? 0),
+				duration = final ? 0 : rng.Next(EncounterMinDuration, EncounterMaxDuration + 1),
 				timeCost = final ? 0 : rng.Next(1, 4),
 				rewardResources = final ? new ClimbResourceSave { red = 0, white = 0, black = 0 } : GenerateReward(rng, 1, 3),
 				hasDeckReward = !final,

@@ -28,8 +28,75 @@ public class ClimbRuleServiceTests
 		Assert.All(state.encounterSlots, slot =>
 		{
 			Assert.InRange(slot.timeCost, 1, 3);
+			Assert.Equal(state.time, slot.generatedAtTime);
+			Assert.InRange(slot.duration, ClimbRuleService.EncounterMinDuration, ClimbRuleService.EncounterMaxDuration);
 			Assert.Contains(slot.enemyId, ClimbRuleService.GetClimbEncounterEnemyPool(), StringComparer.OrdinalIgnoreCase);
 		});
+	}
+
+	[Fact]
+	public void Encounter_expiration_uses_rolled_duration_boundary()
+	{
+		var slot = new ClimbEncounterSlotSave
+		{
+			id = "encounter",
+			enemyId = "skeleton",
+			generatedAtTime = 4,
+			duration = 3,
+			timeCost = 1,
+		};
+
+		Assert.False(ClimbRuleService.IsEncounterExpired(slot, 6));
+		Assert.True(ClimbRuleService.IsEncounterExpired(slot, 7));
+
+		slot.isFinal = true;
+		Assert.False(ClimbRuleService.IsEncounterExpired(slot, 40));
+	}
+
+	[Fact]
+	public void Replenish_encounters_rerolls_expired_normal_slots()
+	{
+		var state = new ClimbSaveState
+		{
+			time = 5,
+			encounterSlots = new List<ClimbEncounterSlotSave>
+			{
+				new()
+				{
+					id = "encounter_a",
+					enemyId = "skeleton",
+					generatedAtTime = 0,
+					duration = 2,
+					timeCost = 1,
+					rewardResources = new ClimbResourceSave { red = 1, white = 0, black = 0 },
+				},
+				new()
+				{
+					id = "encounter_b",
+					enemyId = "demon",
+					generatedAtTime = 5,
+					duration = 5,
+					timeCost = 1,
+					rewardResources = new ClimbResourceSave { red = 0, white = 1, black = 0 },
+				},
+				new()
+				{
+					id = "encounter_c",
+					enemyId = "cactus",
+					generatedAtTime = 5,
+					duration = 5,
+					timeCost = 1,
+					rewardResources = new ClimbResourceSave { red = 0, white = 0, black = 1 },
+				},
+			},
+		};
+
+		Assert.True(ClimbRuleService.ReplenishEncounterSlots(state, 123));
+
+		var rerolled = state.encounterSlots.Single(slot => slot.id == "encounter_a");
+		Assert.Equal(state.time, rerolled.generatedAtTime);
+		Assert.InRange(rerolled.duration, ClimbRuleService.EncounterMinDuration, ClimbRuleService.EncounterMaxDuration);
+		Assert.False(ClimbRuleService.IsEncounterExpired(rerolled, state.time));
 	}
 
 	[Fact]

@@ -823,11 +823,12 @@ namespace Crusaders30XX.ECS.Factories
             {
                 entityManager.AddComponent(clonedEntity, new CardTooltip
                 {
-                    Owner = clonedEntity,
-                    CardId = sourceCardTooltip.CardId,
-                    TooltipScale = sourceCardTooltip.TooltipScale,
-                    CardColor = sourceCardTooltip.CardColor,
-                });
+					Owner = clonedEntity,
+					CardId = sourceCardTooltip.CardId,
+					TooltipScale = sourceCardTooltip.TooltipScale,
+					CardColor = sourceCardTooltip.CardColor,
+					IsUpgraded = sourceCardTooltip.IsUpgraded,
+				});
             }
 
             // Copy DontDestroyOnReload

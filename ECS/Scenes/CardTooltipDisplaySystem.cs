@@ -97,10 +97,10 @@ namespace Crusaders30XX.ECS.Systems
 			// Get or create the visualization card entity for this tooltip
 			var color = top.CT.CardColor ?? top.CD?.Color ?? CardData.CardColor.White;
 			bool isColorless = top.E.HasComponent<Colorless>();
-			var key = top.CT.CardId + "|" + color + (isColorless ? "|colorless" : "");
+			var key = top.CT.CardId + "|" + color + (top.CT.IsUpgraded ? "|upgraded" : "") + (isColorless ? "|colorless" : "");
 			if (!_tooltipCardCache.TryGetValue(key, out var cardEntity) || cardEntity == null)
 			{
-				cardEntity = ECS.Factories.EntityFactory.CreateCardFromDefinition(EntityManager, top.CT.CardId, color, allowWeapons: true, index: 0);
+				cardEntity = ECS.Factories.EntityFactory.CreateCardFromDefinition(EntityManager, top.CT.CardId, color, allowWeapons: true, index: 0, isUpgraded: top.CT.IsUpgraded);
 				if (cardEntity != null)
 				{
 					var ui = cardEntity.GetComponent<UIElement>();
@@ -123,5 +123,4 @@ namespace Crusaders30XX.ECS.Systems
 		}
 	}
 }
-
 
