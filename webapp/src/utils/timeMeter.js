@@ -27,11 +27,32 @@ export function getTimeMeterState(currentTime, preview = null) {
   };
 }
 
-function meterHourglassMarkup(index, meter) {
+export function getHourglassPreviewIndices(used, previewAmount, capacity, shopMarkerTimes) {
+  if (previewAmount <= 0) {
+    return new Set();
+  }
+
+  const indices = new Set();
+  let cursor = used;
+
+  while (indices.size < previewAmount && cursor < capacity) {
+    if (shopMarkerTimes.has(cursor)) {
+      cursor += 1;
+      continue;
+    }
+
+    indices.add(cursor);
+    cursor += 1;
+  }
+
+  return indices;
+}
+
+function meterHourglassMarkup(index, meter, previewHourglassIndices) {
   let fillLevel = 'empty';
   if (index < meter.used) {
     fillLevel = 'used';
-  } else if (index < meter.previewEnd) {
+  } else if (meter.previewing && previewHourglassIndices.has(index)) {
     fillLevel = 'preview';
   }
 
@@ -59,6 +80,10 @@ function meterShopMarkerMarkup(refreshAt, meter) {
 
 function buildMeterTrack(meter) {
   const shopMarkerTimes = new Set(getShopRefreshMarkerTimes(meter.capacity));
+  const previewAmount = meter.previewEnd - meter.used;
+  const previewHourglassIndices = meter.previewing
+    ? getHourglassPreviewIndices(meter.used, previewAmount, meter.capacity, shopMarkerTimes)
+    : new Set();
 
   return Array.from({ length: meter.capacity }, (_, index) => {
     if (shopMarkerTimes.has(index)) {
@@ -67,7 +92,7 @@ function buildMeterTrack(meter) {
 
     return `
       <span class="time-meter__slot">
-        ${meterHourglassMarkup(index, meter)}
+        ${meterHourglassMarkup(index, meter, previewHourglassIndices)}
       </span>
     `;
   }).join('');
