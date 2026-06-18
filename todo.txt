@@ -44,12 +44,7 @@ keywords
 - vigor reduction
 
 card upgrades (missing OnUpgrade)
-- RelentlessStrike
 - RenounceAndHone
-- Stab
-- Stalwart
-- SteadfastResolve
-- SteelTheSpirit
 - StokeTheFurnace
 - Strike
 - SuddenThrust

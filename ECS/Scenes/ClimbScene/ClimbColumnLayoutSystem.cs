@@ -26,7 +26,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Slot List Top Offset", Step = 1, Min = 0, Max = 120)]
 		public int SlotListTopOffset { get; set; } = 59;
 		[DebugEditable(DisplayName = "Shop Slot Height", Step = 1, Min = 32, Max = 160)]
-		public int ShopSlotHeight { get; set; } = 104;
+		public int ShopSlotHeight { get; set; } = 131;
 		[DebugEditable(DisplayName = "Encounter Slot Height", Step = 1, Min = 80, Max = 400)]
 		public int EncounterSlotHeight { get; set; } = 217;
 		[DebugEditable(DisplayName = "Event Slot Height", Step = 1, Min = 32, Max = 160)]
@@ -41,7 +41,7 @@ namespace Crusaders30XX.ECS.Systems
 		internal static int ColumnsBottomPaddingValue { get; private set; } = 48;
 		internal static int ColumnWidthValue { get; private set; } = 486;
 		internal static int SlotListTopOffsetValue { get; private set; } = 59;
-		internal static int ShopSlotHeightValue { get; private set; } = 104;
+		internal static int ShopSlotHeightValue { get; private set; } = 131;
 		internal static int EncounterSlotHeightValue { get; private set; } = 217;
 		internal static int EventSlotHeightValue { get; private set; } = 52;
 		internal static int ColumnZOrderValue { get; private set; } = 1500;

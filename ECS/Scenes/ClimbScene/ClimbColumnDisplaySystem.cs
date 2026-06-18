@@ -58,7 +58,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Enemy Portrait Height", Step = 1, Min = 60, Max = 260)]
 		public int EnemyPortraitHeight { get; set; } = 148;
 		[DebugEditable(DisplayName = "Meta Block Min Height", Step = 1, Min = 20, Max = 100)]
-		public int MetaBlockMinHeight { get; set; } = 36;
+		public int MetaBlockMinHeight { get; set; } = 60;
 		[DebugEditable(DisplayName = "Meta Block Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float MetaBlockBorderAlpha { get; set; } = 0.45f;
 		[DebugEditable(DisplayName = "Meta Block Fill Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
@@ -66,9 +66,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Compact Resource Icon Size", Step = 1, Min = 6, Max = 36)]
 		public int CompactResourceIconSize { get; set; } = 14;
 		[DebugEditable(DisplayName = "Compact Hourglass Width", Step = 1, Min = 4, Max = 32)]
-		public int CompactHourglassWidth { get; set; } = 10;
+		public int CompactHourglassWidth { get; set; } = 18;
 		[DebugEditable(DisplayName = "Compact Hourglass Height", Step = 1, Min = 4, Max = 40)]
-		public int CompactHourglassHeight { get; set; } = 14;
+		public int CompactHourglassHeight { get; set; } = 19;
 		[DebugEditable(DisplayName = "Event Glyph Size", Step = 1, Min = 16, Max = 48)]
 		public int EventGlyphSize { get; set; } = 28;
 		[DebugEditable(DisplayName = "Shop Title Icon Size", Step = 1, Min = 8, Max = 32)]

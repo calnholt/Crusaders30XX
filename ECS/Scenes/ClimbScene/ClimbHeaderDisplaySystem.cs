@@ -39,13 +39,13 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Timeline Padding X", Step = 1, Min = 0, Max = 40)]
 		public int TimelinePaddingX { get; set; } = 10;
 		[DebugEditable(DisplayName = "Timeline Padding Y", Step = 1, Min = 0, Max = 40)]
-		public int TimelinePaddingY { get; set; } = 8;
+		public int TimelinePaddingY { get; set; } = 10;
 		[DebugEditable(DisplayName = "Timeline Slot Gap", Step = 1, Min = 0, Max = 12)]
-		public int TimelineSlotGap { get; set; } = 3;
-		[DebugEditable(DisplayName = "Timeline Label Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.3f)]
-		public float TimelineLabelFontScale { get; set; } = 0.058f;
-		[DebugEditable(DisplayName = "Timeline Value Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.4f)]
-		public float TimelineValueFontScale { get; set; } = 0.10f;
+		public int TimelineSlotGap { get; set; } = 0;
+		[DebugEditable(DisplayName = "Timeline Shop Icon Size", Step = 1, Min = 8, Max = 32)]
+		public int TimelineShopIconSize { get; set; } = 18;
+		[DebugEditable(DisplayName = "Timeline Shop Icon Gap", Step = 1, Min = 0, Max = 16)]
+		public int TimelineShopIconGap { get; set; } = 4;
 		[DebugEditable(DisplayName = "Resource Label Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.3f)]
 		public float ResourceLabelFontScale { get; set; } = 0.075f;
 		[DebugEditable(DisplayName = "Resource Amount Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.4f)]
@@ -59,15 +59,15 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Red Resource Glow Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float RedResourceGlowAlpha { get; set; } = 0.65f;
 		[DebugEditable(DisplayName = "Timeline Hourglass Width", Step = 1, Min = 3, Max = 24)]
-		public int TimelineHourglassWidth { get; set; } = 8;
+		public int TimelineHourglassWidth { get; set; } = 18;
 		[DebugEditable(DisplayName = "Timeline Hourglass Height", Step = 1, Min = 4, Max = 32)]
-		public int TimelineHourglassHeight { get; set; } = 11;
+		public int TimelineHourglassHeight { get; set; } = 19;
 		[DebugEditable(DisplayName = "Empty Hourglass Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
-		public float EmptyHourglassAlpha { get; set; } = 0.34f;
+		public float EmptyHourglassAlpha { get; set; } = 0.2f;
 		[DebugEditable(DisplayName = "Hourglass Red Glow Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float HourglassRedGlowAlpha { get; set; } = 0.65f;
 		[DebugEditable(DisplayName = "Hourglass White Meter Glow Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
-		public float HourglassWhiteMeterGlowAlpha { get; set; } = 0.55f;
+		public float HourglassWhiteMeterGlowAlpha { get; set; } = 0.25f;
 		[DebugEditable(DisplayName = "Hourglass Glow Radius", Step = 1, Min = 1, Max = 8)]
 		public int HourglassGlowRadius { get; set; } = 2;
 		[DebugEditable(DisplayName = "Header Shadow Offset Y", Step = 1, Min = 0, Max = 20)]
@@ -78,20 +78,8 @@ namespace Crusaders30XX.ECS.Systems
 		public int HeaderBottomBorderThickness { get; set; } = 1;
 		[DebugEditable(DisplayName = "Timeline Border Thickness", Step = 1, Min = 1, Max = 4)]
 		public int TimelineBorderThickness { get; set; } = 1;
-		[DebugEditable(DisplayName = "Timeline Used Label Offset X", Step = 1, Min = 0, Max = 80)]
-		public int TimelineUsedLabelOffsetX { get; set; } = 28;
-		[DebugEditable(DisplayName = "Timeline Label Offset Y", Step = 1, Min = 0, Max = 20)]
-		public int TimelineLabelOffsetY { get; set; } = 5;
-		[DebugEditable(DisplayName = "Timeline Remaining Value Offset X", Step = 1, Min = 0, Max = 120)]
-		public int TimelineRemainingValueOffsetX { get; set; } = 60;
-		[DebugEditable(DisplayName = "Timeline Remaining Label Offset X", Step = 1, Min = 0, Max = 80)]
-		public int TimelineRemainingLabelOffsetX { get; set; } = 34;
-		[DebugEditable(DisplayName = "Timeline Track Height", Step = 1, Min = 8, Max = 32)]
-		public int TimelineTrackHeight { get; set; } = 16;
 		[DebugEditable(DisplayName = "Timeline Min Slot Width", Step = 1, Min = 1, Max = 16)]
 		public int TimelineMinSlotWidth { get; set; } = 4;
-		[DebugEditable(DisplayName = "Timeline Hourglass Y Offset", Step = 1, Min = 0, Max = 12)]
-		public int TimelineHourglassYOffset { get; set; } = 2;
 		[DebugEditable(DisplayName = "Resource Bar Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float ResourceBarBorderAlpha { get; set; } = 0.85f;
 		[DebugEditable(DisplayName = "Resource Label Padding X", Step = 1, Min = 0, Max = 40)]
@@ -183,51 +171,41 @@ namespace Crusaders30XX.ECS.Systems
 
 			int used = ClimbRuleService.ClampTime(climb?.time ?? 0);
 			int projected = preview?.IsActive == true ? preview.ProjectedUsedTime : used;
-			int remaining = ClimbRuleService.MaxTime - projected;
 			int delta = Math.Max(0, projected - used);
 
 			_spriteBatch.Draw(_pixel, rect, ClimbSceneDrawHelpers.Black2);
 			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, ClimbSceneDrawHelpers.Black4, TimelineBorderThickness);
 
-			var labelY = rect.Y + TimelinePaddingY;
-			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, used.ToString(), new Vector2(rect.X + TimelinePaddingX, labelY), TimelineValueFontScale, ClimbSceneDrawHelpers.White1);
-			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, "used", new Vector2(rect.X + TimelinePaddingX + TimelineUsedLabelOffsetX, labelY + TimelineLabelOffsetY), TimelineLabelFontScale, ClimbSceneDrawHelpers.White3);
-			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, remaining.ToString(), new Vector2(rect.Right - TimelinePaddingX - TimelineRemainingValueOffsetX, labelY), TimelineValueFontScale, ClimbSceneDrawHelpers.White2);
-			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, "remaining", new Vector2(rect.Right - TimelinePaddingX - TimelineRemainingLabelOffsetX, labelY + TimelineLabelOffsetY), TimelineLabelFontScale, ClimbSceneDrawHelpers.White3);
-
-			int trackX = rect.X + TimelinePaddingX;
-			int trackY = rect.Y + rect.Height - TimelinePaddingY - TimelineTrackHeight;
-			int trackW = rect.Width - TimelinePaddingX * 2;
+			int rowX = rect.X + TimelinePaddingX;
+			int hourglassY = rect.Y + TimelinePaddingY;
+			int rowW = rect.Width - TimelinePaddingX * 2;
 			int gapTotal = TimelineSlotGap * (ClimbRuleService.MaxTime - 1);
-			int slotW = Math.Max(TimelineMinSlotWidth, (trackW - gapTotal) / ClimbRuleService.MaxTime);
+			int slotW = Math.Max(TimelineMinSlotWidth, (rowW - gapTotal) / ClimbRuleService.MaxTime);
+			var glow = new HourglassGlowTuning
+			{
+				RedGlowAlpha = HourglassRedGlowAlpha,
+				WhiteMeterGlowAlpha = HourglassWhiteMeterGlowAlpha,
+				GlowRadius = HourglassGlowRadius,
+			};
+
 			for (int i = 0; i < ClimbRuleService.MaxTime; i++)
 			{
-				int x = trackX + i * (slotW + TimelineSlotGap);
-				var slotRect = new Rectangle(x, trackY, slotW, TimelineTrackHeight);
-				bool shopMarker = i > 0 && i % ClimbRuleService.ShopRefreshInterval == 0;
-				if (shopMarker)
-				{
-					bool expiring = delta > 0 && projected >= i && used < i;
-					ClimbSceneDrawHelpers.DrawShopMarkerIcon(_spriteBatch, _pixel, slotRect, expiring ? ClimbSceneDrawHelpers.Red2 : ClimbSceneDrawHelpers.White1);
-					continue;
-				}
+				int slotX = rowX + i * (slotW + TimelineSlotGap);
 
 				bool isUsed = i < used;
 				bool isPreview = delta > 0 && i >= used && i < projected;
 				bool isEmpty = !isUsed && !isPreview;
 				float alpha = isEmpty ? EmptyHourglassAlpha : 1f;
-				var iconRect = new Rectangle(slotRect.X + (slotRect.Width - TimelineHourglassWidth) / 2, slotRect.Y + TimelineHourglassYOffset, TimelineHourglassWidth, TimelineHourglassHeight);
+				var iconRect = new Rectangle(
+					slotX + (slotW - TimelineHourglassWidth) / 2,
+					hourglassY,
+					TimelineHourglassWidth,
+					TimelineHourglassHeight);
 				var style = isPreview
 					? HourglassIconStyle.Red
 					: isUsed
 						? HourglassIconStyle.WhiteMeter
 						: HourglassIconStyle.WhiteFaded;
-				var glow = new HourglassGlowTuning
-				{
-					RedGlowAlpha = HourglassRedGlowAlpha,
-					WhiteMeterGlowAlpha = HourglassWhiteMeterGlowAlpha,
-					GlowRadius = HourglassGlowRadius,
-				};
 				ClimbSceneDrawHelpers.DrawHourglassIcon(
 					_spriteBatch,
 					iconRect,
@@ -237,6 +215,22 @@ namespace Crusaders30XX.ECS.Systems
 					isUsed || isPreview,
 					alpha,
 					glow);
+
+				bool shopMarker = (i + 1) % ClimbRuleService.ShopRefreshInterval == 0 && i + 1 < ClimbRuleService.MaxTime;
+				if (!shopMarker) continue;
+
+				int refreshAt = i + 1;
+				bool expiring = delta > 0 && projected >= refreshAt && used < refreshAt;
+				var shopRect = new Rectangle(
+					slotX + (slotW - TimelineShopIconSize) / 2,
+					hourglassY + TimelineHourglassHeight + TimelineShopIconGap,
+					TimelineShopIconSize,
+					TimelineShopIconSize);
+				ClimbSceneDrawHelpers.DrawShopTitleIcon(
+					_spriteBatch,
+					_pixel,
+					shopRect,
+					expiring ? ClimbSceneDrawHelpers.Red2 : ClimbSceneDrawHelpers.White1);
 			}
 		}
 
