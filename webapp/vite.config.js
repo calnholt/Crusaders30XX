@@ -23,9 +23,21 @@ function syncBackground() {
   }
 }
 
-function syncEnemyPortraits() {
+function syncStaticAssets() {
   fs.mkdirSync(publicPortraitDir, { recursive: true });
   syncBackground();
+
+  for (const fileName of ['crusader_sword.png']) {
+    const source = path.join(contentDir, fileName);
+    const dest = path.join(publicPortraitDir, fileName);
+    if (fs.existsSync(source)) {
+      fs.copyFileSync(source, dest);
+    }
+  }
+}
+
+function syncEnemyPortraits() {
+  syncStaticAssets();
 
   const enemiesPath = path.resolve(__dirname, 'src/data/enemies.json');
   const enemies = JSON.parse(fs.readFileSync(enemiesPath, 'utf-8'));

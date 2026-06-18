@@ -68,18 +68,61 @@ h3,
 .app-header timeline-display {
   flex: 1;
   min-width: 0;
+  display: flex;
 }
 
 resource-bar {
   flex-shrink: 0;
-  align-self: center;
+  display: flex;
+}
+
+.app-header__crusader {
+  flex: 0 0 67px;
+  width: 67px;
+  height: 67px;
+  display: flex;
+  flex-shrink: 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-header__crusader-btn {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 2px solid var(--panel-border);
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(8, 8, 8, 0.92);
+  cursor: default;
+  line-height: 0;
+}
+
+.app-header__crusader-btn-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 67px;
+  object-fit: cover;
+  object-position: center;
 }
 
 .time-meter {
   width: 100%;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
   border: 1px solid var(--black-4);
   background: var(--black-2);
-  padding: 6px 10px 7px;
+  padding: 8px 10px;
+  box-sizing: border-box;
 }
 
 .time-meter__labels {
@@ -87,7 +130,7 @@ resource-bar {
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .time-meter__stat--remaining {
@@ -290,10 +333,13 @@ body.time-preview-active .space-slot--would-vanish:not(.space-slot--preview-sour
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: space-between;
   gap: 6px;
+  height: 100%;
   padding: 8px 12px;
   background: rgba(8, 8, 8, 0.92);
   border: 2px solid var(--panel-border);
+  box-sizing: border-box;
 }
 
 .resource-bar__label {
@@ -601,32 +647,6 @@ mystery-column.mystery-column--visible {
   letter-spacing: 2px;
   color: var(--white-1);
   margin-bottom: 8px;
-}
-
-.column__refresh {
-  margin-bottom: 14px;
-  padding: 5px 8px;
-  background: rgba(0, 0, 0, 0.62);
-  border: 1px solid rgba(255, 77, 94, 0.42);
-  border-radius: 2px;
-}
-
-.column__refresh .time-display {
-  justify-content: flex-start;
-  gap: 3px;
-}
-
-.column__refresh .time-icon__shape {
-  width: 12px;
-  height: 16px;
-}
-
-.column__refresh .time-icon--red {
-  color: #ff5c6b;
-}
-
-.column__refresh--imminent .time-display--imminent {
-  color: var(--red-2);
 }
 
 .column__slots {
@@ -1204,5 +1224,12 @@ mystery-column.mystery-column--visible {
 
   resource-bar {
     align-self: flex-end;
+  }
+
+  .app-header__crusader {
+    align-self: flex-end;
+    width: 67px;
+    height: 67px;
+    aspect-ratio: auto;
   }
 }
