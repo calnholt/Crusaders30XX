@@ -1,3 +1,4 @@
+import './ShopColumn.css';
 import { subscribe, getAccessibleMysterySlots } from '../store/gameStore.js';
 import { shopIconMarkup } from './ShopIcon.js';
 

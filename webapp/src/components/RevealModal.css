@@ -1,0 +1,80 @@
+.reveal-modal--open {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.reveal-modal__backdrop {
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.reveal-modal__panel {
+  width: min(560px, 100%);
+  background: rgba(8, 8, 8, 0.92);
+  border: 2px solid var(--panel-border);
+  padding: 32px;
+}
+
+.reveal-modal__title {
+  font-size: 1.6rem;
+  color: var(--white-1);
+  margin-bottom: 12px;
+}
+
+.reveal-modal__rule {
+  width: 80px;
+  height: 3px;
+  background: var(--red-3);
+  margin: 0 auto 20px;
+}
+
+.reveal-modal__text {
+  font-size: 1rem;
+  line-height: 1.55;
+  margin-bottom: 16px;
+}
+
+.reveal-modal__stub {
+  font-size: 0.85rem;
+  color: var(--white-3);
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.reveal-modal__close {
+  width: 100%;
+  min-height: 48px;
+  border: 2px solid var(--panel-border);
+  background: var(--red-dim);
+  color: var(--white-1);
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.reveal-modal__close:hover {
+  border-color: var(--red-3);
+}
+
+.toast-display {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+}
+
+.toast {
+  background: var(--black-2);
+  border: 2px solid var(--red-3);
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}

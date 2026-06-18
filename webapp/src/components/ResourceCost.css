@@ -1,0 +1,19 @@
+.resource-cost,
+.resource-reward {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.resource-reward {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.resource-reward__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--white-3);
+}

@@ -1,0 +1,60 @@
+.time-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: nowrap;
+}
+
+.time-icon--solo {
+  gap: 0;
+}
+
+.time-display__sign {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--white-1);
+  line-height: 1;
+}
+
+.time-display__label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--white-3);
+  line-height: 1;
+}
+
+.time-display--leaves .time-display__label {
+  color: var(--red-3);
+}
+
+.time-display--refresh .time-display__label {
+  color: var(--shop-accent);
+}
+
+.time-display__tick {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--white-3);
+  letter-spacing: 0.3px;
+  line-height: 1;
+}
+
+.time-display--leaves .time-display__tick {
+  color: var(--red-3);
+  opacity: 0.85;
+}
+
+.time-display--gone,
+.time-display--imminent {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--white-3);
+}
+
+.time-display--imminent {
+  color: var(--red-2);
+}

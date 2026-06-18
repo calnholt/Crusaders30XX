@@ -1,3 +1,4 @@
+import './ResourceBar.css';
 import { subscribe } from '../store/gameStore.js';
 import { RESOURCE_TYPES } from '../utils/resources.js';
 

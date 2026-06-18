@@ -1,3 +1,4 @@
+import './EnemyPortrait.css';
 import { getEnemyPortraitUrl } from '../utils/enemyAssets.js';
 
 export class EnemyPortrait extends HTMLElement {

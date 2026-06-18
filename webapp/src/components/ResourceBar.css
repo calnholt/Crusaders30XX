@@ -1,0 +1,61 @@
+.resource-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6px;
+  height: 100%;
+  padding: 8px 12px;
+  background: rgba(8, 8, 8, 0.92);
+  border: 2px solid var(--panel-border);
+  box-sizing: border-box;
+}
+
+.resource-bar__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--white-3);
+}
+
+.resource-bar__icons {
+  display: flex;
+  gap: 16px;
+}
+
+.resource-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resource-icon__shape {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+}
+
+.resource-icon--red .resource-icon__shape {
+  border-radius: 50%;
+  background: var(--red-3);
+  box-shadow: 0 0 8px var(--red-glow);
+}
+
+.resource-icon--white .resource-icon__shape {
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 16px solid var(--white-1);
+  background: none;
+}
+
+.resource-icon--black .resource-icon__shape {
+  background: var(--black-0);
+  border: 2px solid var(--white-3);
+}
+
+.resource-icon__amount {
+  font-size: 1.1rem;
+  font-weight: 600;
+}

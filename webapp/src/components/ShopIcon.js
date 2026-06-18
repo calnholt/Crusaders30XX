@@ -1,3 +1,5 @@
+import './ShopIcon.css';
+
 const SHOP_ICON_SVG = `
   <svg class="shop-icon__shape" viewBox="0 0 16 16" aria-hidden="true">
     <path d="M1 5.25h14v2.25H1V5.25Z" fill="currentColor"/>

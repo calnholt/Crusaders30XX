@@ -1,3 +1,6 @@
+import './TimeIcon.css';
+import './time-display.css';
+
 function hourglassSvgMarkup(fillLevel) {
   const sandOpacity =
     fillLevel === 'used' ? '1' : fillLevel === 'preview' ? '0.85' : '0';

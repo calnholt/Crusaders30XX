@@ -1,3 +1,4 @@
+import './RevealModal.css';
 import { subscribe, clearReveal } from '../store/gameStore.js';
 
 export class RevealModal extends HTMLElement {

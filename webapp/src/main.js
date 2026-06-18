@@ -1,4 +1,5 @@
 import './styles/global.css';
+import './styles/app-header.css';
 
 import './components/ShopIcon.js';
 import './components/TimelineDisplay.js';

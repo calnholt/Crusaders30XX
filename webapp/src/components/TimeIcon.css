@@ -1,0 +1,74 @@
+.time-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-icon__shape {
+  width: 11px;
+  height: 15px;
+  display: block;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.time-icon__sand {
+  opacity: 1;
+}
+
+.time-icon__frame {
+  vector-effect: non-scaling-stroke;
+}
+
+.time-icon__amount {
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.time-icon--white {
+  color: var(--white-1);
+}
+
+.time-icon--white .time-icon__shape {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.95)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75));
+}
+
+.time-icon--white .time-icon__amount {
+  color: var(--white-1);
+}
+
+.time-icon--red {
+  color: var(--red-2);
+}
+
+.time-icon--red .time-icon__shape {
+  filter:
+    drop-shadow(0 0 2px rgba(0, 0, 0, 0.95))
+    drop-shadow(0 0 5px var(--red-glow))
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.85));
+}
+
+.time-icon--red .time-icon__sand {
+  color: var(--red-2);
+}
+
+.time-icon--red .time-icon__frame {
+  stroke-width: 1.55;
+}
+
+.time-icon--red .time-icon__amount {
+  color: var(--red-2);
+}
+
+.time-icon--faded {
+  opacity: 0.34;
+}
+
+.time-icon--faded.time-icon--red .time-icon__shape {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.8));
+}
+
+.time-icon--faded.time-icon--white .time-icon__shape {
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.85));
+}

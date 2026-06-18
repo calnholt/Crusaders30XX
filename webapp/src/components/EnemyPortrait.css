@@ -1,0 +1,42 @@
+.enemy-portrait:not(.enemy-portrait--headshot):not(.space-card-compact__portrait) {
+  width: 100%;
+  height: 148px;
+  margin-bottom: 12px;
+  border: 2px solid var(--enemy-border);
+  background: radial-gradient(circle at 50% 20%, var(--black-3), var(--black-1));
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.enemy-portrait {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.enemy-portrait:not(.enemy-portrait--headshot):not(.space-card-compact__portrait) .enemy-portrait__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  display: block;
+}
+
+.enemy-portrait--headshot .enemy-portrait__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.enemy-portrait__img {
+  display: block;
+}
+
+.enemy-portrait--placeholder {
+  background: linear-gradient(135deg, var(--black-3), var(--black-2));
+}

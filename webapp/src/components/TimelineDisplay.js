@@ -1,3 +1,4 @@
+import './TimelineDisplay.css';
 import { subscribe } from '../store/gameStore.js';
 import { subscribeTimePreview, getTimePreview } from '../utils/timePreviewStore.js';
 import { buildTimeMeterMarkup } from '../utils/timeMeter.js';

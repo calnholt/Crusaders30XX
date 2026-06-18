@@ -1,3 +1,4 @@
+import './ResourceCost.css';
 import { formatCost } from '../utils/resources.js';
 
 export class ResourceCost extends HTMLElement {

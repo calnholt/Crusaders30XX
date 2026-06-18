@@ -1,0 +1,19 @@
+.shop-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--shop-accent);
+}
+
+.shop-icon__shape {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.shop-icon--title {
+  width: 18px;
+  height: 18px;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.85));
+}
