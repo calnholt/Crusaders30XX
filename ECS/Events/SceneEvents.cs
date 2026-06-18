@@ -29,6 +29,9 @@ namespace Crusaders30XX.ECS.Events
 		public string RewardCardKey;
 		public List<string> RewardCardKeys = new List<string>();
 		public DeckRewardOfferSave DeckRewardOffer;
+		public bool IsEncounterReward;
+		public ClimbResourceSave ClimbResources;
+		public SceneId DismissScene = SceneId.Climb;
 	}
 
 	public class TreasureChestOpened

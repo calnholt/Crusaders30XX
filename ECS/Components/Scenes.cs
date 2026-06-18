@@ -13,6 +13,7 @@ namespace Crusaders30XX.ECS.Components
 		WayStation,
 		Internal_QueueEventsMenu,
 		WorldMap,
+		Climb,
 		Battle,
 		Location,
 		Shop,
@@ -58,7 +59,9 @@ namespace Crusaders30XX.ECS.Components
 		public List<QueuedEvent> Events { get; set; } = new List<QueuedEvent>();
 		public int CurrentIndex = -1;
 		public bool IsFirst = false;
-		// Quest context for dialog lookup
+		public bool IsClimbEncounter { get; set; }
+		public string ClimbEncounterSlotId { get; set; } = string.Empty;
+		// Encounter context for dialog lookup
 		public string LocationId { get; set; } = string.Empty;
 		public int QuestIndex { get; set; } = 0;
 	}
@@ -94,7 +97,7 @@ namespace Crusaders30XX.ECS.Components
 	}
 
 	/// <summary>
-	/// Quest selection overlay state for WorldMap scene.
+	/// Encounter selection overlay state for the legacy WorldMap scene.
 	/// </summary>
 	public class QuestSelectState : IComponent
 	{
@@ -160,7 +163,7 @@ namespace Crusaders30XX.ECS.Components
 	}
 
 		/// <summary>
-		/// Overlay state for the simple quest reward modal shown after the last battle in a quest.
+		/// Overlay state for the encounter reward modal shown after the last battle in an encounter.
 		/// </summary>
 		public class NarrativeEventOverlayState : IComponent
 		{
@@ -174,8 +177,8 @@ namespace Crusaders30XX.ECS.Components
 		{
 			public Entity Owner { get; set; }
 			public bool IsOpen { get; set; } = false;
-			public string Message { get; set; } = "Quest Complete";
-			public string TitleLine1 { get; set; } = "Quest";
+			public string Message { get; set; } = "Encounter Complete";
+			public string TitleLine1 { get; set; } = "Encounter";
 			public string TitleLine2 { get; set; } = "Complete!";
 			public int RewardGold { get; set; } = 0;
 			public bool HasCardReward { get; set; } = false;
@@ -187,7 +190,10 @@ namespace Crusaders30XX.ECS.Components
 			public string RewardMedalId { get; set; } = string.Empty;
 			public bool HasEquipmentReward { get; set; } = false;
 			public string RewardEquipmentId { get; set; } = string.Empty;
+			public bool IsEncounterReward { get; set; } = false;
+			public ClimbResourceSave ClimbResources { get; set; }
 			public bool DismissToLocation { get; set; } = true;
+			public SceneId DismissScene { get; set; } = SceneId.Location;
 			public bool DismissInProgress { get; set; } = false;
 			public bool CardSelectionInProgress { get; set; } = false;
 			public int SelectedRewardCardIndex { get; set; } = -1;

@@ -71,6 +71,7 @@ namespace Crusaders30XX.ECS.Systems
 
             EventManager.Subscribe<OpenCardListModalEvent>(OpenModal);
             EventManager.Subscribe<CloseCardListModalEvent>(_ => CloseModal());
+            EventManager.Subscribe<CardListModalCardSelectedEvent>(OnCardSelected);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -156,7 +157,7 @@ namespace Crusaders30XX.ECS.Systems
                 var ui = card.GetComponent<UIElement>();
                 if (ui != null)
                 {
-                    ui.IsInteractable = true;
+                    ui.IsInteractable = modal.IsSelectable;
                     ui.LayerType = UILayerType.Overlay;
                 }
                 InputContextService.EnsureMember(
@@ -164,6 +165,8 @@ namespace Crusaders30XX.ECS.Systems
                     card,
                     "overlay.card-list");
             }
+            LayoutCards(modal, rect, cursorY: rect.Y + Padding + (int)(_font.LineSpacing * TitleScale) + Padding);
+            TryPublishSelection(modal);
         }
 
         public void Draw()
@@ -189,10 +192,9 @@ namespace Crusaders30XX.ECS.Systems
             cursorY += (int)(_font.LineSpacing * TitleScale) + Padding;
 
             // Fetch and sort provided cards
-            var cards = (modal.Cards ?? new List<Entity>())
+            var cards = GetOrderedCards(modal)
                 .Select(e => e.GetComponent<CardData>())
                 .Where(cd => cd != null)
-                .OrderBy(cd => cd.Card.CardId)
                 .ToList();
 
             // Grid within rect
@@ -289,7 +291,17 @@ namespace Crusaders30XX.ECS.Systems
                     cmp.Cards = evt.Cards ?? new List<Entity>();
                     cmp.IsOpen = true;
                     cmp.ScrollOffset = 0;
+                    cmp.IsSelectable = evt.IsSelectable;
+                    cmp.SelectionContext = evt.SelectionContext ?? string.Empty;
+                    cmp.SelectedCardIndex = -1;
                 }
+            }
+            var createdCmp = modal.GetComponent<CardListModal>();
+            if (createdCmp != null)
+            {
+                createdCmp.IsSelectable = evt.IsSelectable;
+                createdCmp.SelectionContext = evt.SelectionContext ?? string.Empty;
+                createdCmp.SelectedCardIndex = -1;
             }
 
             var modalCmp = modal.GetComponent<CardListModal>();
@@ -298,9 +310,20 @@ namespace Crusaders30XX.ECS.Systems
             {
                 InputContextService.EnsureMember(
                     EntityManager,
-                    card,
-                    "overlay.card-list");
+                card,
+                "overlay.card-list");
             }
+        }
+
+        public void OpenForSnapshot(string title, List<Entity> cards, bool isSelectable = false, string selectionContext = "")
+        {
+            OpenModal(new OpenCardListModalEvent
+            {
+                Title = title,
+                Cards = cards ?? new List<Entity>(),
+                IsSelectable = isSelectable,
+                SelectionContext = selectionContext ?? string.Empty,
+            });
         }
 
         private void CloseModal()
@@ -310,7 +333,12 @@ namespace Crusaders30XX.ECS.Systems
             var cmp = modal.GetComponent<CardListModal>();
             if (cmp != null)
             {
+                bool shouldCancelClimbReplacement =
+                    cmp.IsOpen
+                    && cmp.IsSelectable
+                    && string.Equals(cmp.SelectionContext, CardListSelectionContexts.ClimbReplacement, StringComparison.OrdinalIgnoreCase);
                 cmp.IsOpen = false;
+                cmp.SelectedCardIndex = -1;
                 // Clear UI hover/click/bounds for any cards that were displayed in the modal grid
                 var cards = cmp.Cards ?? new List<Entity>();
                 foreach (var card in cards)
@@ -323,10 +351,21 @@ namespace Crusaders30XX.ECS.Systems
                     if (ui != null)
                     {
                         ui.LayerType = UILayerType.Default;
+                        ui.IsInteractable = false;
                         ui.IsHovered = false;
                         ui.IsClicked = false;
                         ui.Bounds = new Rectangle(0, 0, 0, 0);
                     }
+                    if (card.GetComponent<CardListModalSelectionMetadata>() != null)
+                    {
+                        EntityManager.RemoveComponent<CardListModalSelectionMetadata>(card);
+                    }
+                }
+                cmp.IsSelectable = false;
+                cmp.SelectionContext = string.Empty;
+                if (shouldCancelClimbReplacement)
+                {
+                    ClimbShopService.CancelReplacementOffer();
                 }
             }
             // Destroy any lingering close button entities
@@ -350,6 +389,72 @@ namespace Crusaders30XX.ECS.Systems
                 "overlay.card-list",
                 740,
                 modal?.IsOpen == true);
+        }
+
+        private List<Entity> GetOrderedCards(CardListModal modal)
+        {
+            return (modal?.Cards ?? new List<Entity>())
+                .Where(e => e != null && e.GetComponent<CardData>() != null)
+                .OrderBy(e => e.GetComponent<CardData>().Card.CardId)
+                .ToList();
+        }
+
+        private void LayoutCards(CardListModal modal, Rectangle rect, int cursorY)
+        {
+            if (modal == null) return;
+            var cards = GetOrderedCards(modal);
+            int gridX = rect.X + Padding;
+            int gridY = cursorY;
+            var cvs = CardGeometryService.GetSettings(EntityManager);
+            int topNudge = Math.Max(0, cvs?.CardOffsetYExtra ?? 0);
+            gridY += topNudge;
+            int maxCols = Math.Max(1, (rect.Width - Padding * 2 + GridGap) / (GridCellW + GridGap));
+
+            for (int i = 0; i < cards.Count; i++)
+            {
+                int col = i % maxCols;
+                int row = i / maxCols;
+                var bounds = new Rectangle(
+                    gridX + col * (GridCellW + GridGap),
+                    gridY + row * (GridCellH + GridGap) - modal.ScrollOffset,
+                    GridCellW,
+                    GridCellH);
+                var card = cards[i];
+                var transform = card.GetComponent<Transform>();
+                if (transform != null)
+                {
+                    transform.Position = new Vector2(bounds.Center.X, bounds.Center.Y);
+                    transform.ZOrder = 15000;
+                    transform.Rotation = 0f;
+                }
+
+                var ui = card.GetComponent<UIElement>();
+                if (ui == null) continue;
+                ui.LayerType = UILayerType.Overlay;
+                ui.IsInteractable = modal.IsSelectable && bounds.Bottom >= cursorY && bounds.Y <= rect.Bottom - Padding;
+                ui.Bounds = ui.IsInteractable ? bounds : Rectangle.Empty;
+            }
+        }
+
+        private void TryPublishSelection(CardListModal modal)
+        {
+            if (modal == null || !modal.IsOpen || !modal.IsSelectable) return;
+            var cards = GetOrderedCards(modal);
+            for (int i = 0; i < cards.Count; i++)
+            {
+                var ui = cards[i].GetComponent<UIElement>();
+                if (ui?.IsClicked != true) continue;
+                ui.IsClicked = false;
+                modal.SelectedCardIndex = i;
+                EventManager.Publish(new CardListModalCardSelectedEvent
+                {
+                    Card = cards[i],
+                    CardIndex = i,
+                    SelectionContext = modal.SelectionContext ?? string.Empty,
+                });
+                CloseModal();
+                return;
+            }
         }
 
         private void EnsureCloseButton(Rectangle bounds)
@@ -396,6 +501,34 @@ namespace Crusaders30XX.ECS.Systems
             ui.IsInteractable = active;
             ui.IsHidden = !active;
             if (!active) ui.Bounds = Rectangle.Empty;
+        }
+
+        private void OnCardSelected(CardListModalCardSelectedEvent evt)
+        {
+            if (!string.Equals(evt?.SelectionContext, CardListSelectionContexts.ClimbReplacement, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            TryFinalizeClimbReplacementSelection(evt.Card, EntityManager);
+        }
+
+        internal static bool TryFinalizeClimbReplacementSelection(Entity card, EntityManager entityManager)
+        {
+            var metadata = card?.GetComponent<CardListModalSelectionMetadata>();
+            if (metadata == null
+                || !string.Equals(metadata.SelectionContext, CardListSelectionContexts.ClimbReplacement, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (ClimbShopService.TryFinalizeReplacement(metadata.SourceIndex))
+            {
+                RunDeckService.EnsureRunDeck(entityManager);
+                return true;
+            }
+
+            return false;
         }
     }
 }

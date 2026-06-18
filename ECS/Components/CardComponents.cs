@@ -398,6 +398,9 @@ namespace Crusaders30XX.ECS.Components
         LeaveShop,
         OpenLoadout,
         CardClicked,
+        ClimbShopSlotSelect,
+        ClimbEncounterSlotSelect,
+        ClimbEventSlotSelect,
     }
 
     /// <summary>
@@ -683,6 +686,17 @@ namespace Crusaders30XX.ECS.Components
         public string Title { get; set; } = "";
         public List<Entity> Cards { get; set; } = new();
         public int ScrollOffset { get; set; } = 0;
+        public bool IsSelectable { get; set; } = false;
+        public string SelectionContext { get; set; } = string.Empty;
+        public int SelectedCardIndex { get; set; } = -1;
+    }
+
+    public class CardListModalSelectionMetadata : IComponent
+    {
+        public Entity Owner { get; set; }
+        public string SelectionContext { get; set; } = string.Empty;
+        public string CardKey { get; set; } = string.Empty;
+        public int SourceIndex { get; set; } = -1;
     }
 
     /// <summary>
@@ -691,6 +705,12 @@ namespace Crusaders30XX.ECS.Components
     public class CardListModalClose : IComponent
     {
         public Entity Owner { get; set; }
+    }
+
+    public class ClimbShopSlotAction : IComponent
+    {
+        public Entity Owner { get; set; }
+        public int SlotIndex { get; set; } = -1;
     }
 
     /// <summary>

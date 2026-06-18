@@ -18,6 +18,12 @@ namespace Crusaders30XX.Diagnostics.Snapshots
             Register(new WayStationSnapshotFixture());
             Register(new PlayerHudSnapshotFixture());
             Register(new EquipmentTooltipSnapshotFixture());
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.NoEvents));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.ActiveEvents));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.HoverPreview));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.SoldShopSlot));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.EncounterRewardModal));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.ReplacementModal));
         }
 
         public static void Register(IDisplaySnapshotFixture fixture)

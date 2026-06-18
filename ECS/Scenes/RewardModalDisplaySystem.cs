@@ -44,6 +44,7 @@ namespace Crusaders30XX.ECS.Systems
 		private bool _cachedShowCard;
 		private bool _cachedShowMedal;
 		private bool _cachedShowEquipment;
+		private bool _cachedShowClimbResources;
 		private int _cachedRewardGold;
 		private int _cachedRewardCardCount;
 		private LayoutSignature _layoutSignature;
@@ -55,8 +56,12 @@ namespace Crusaders30XX.ECS.Systems
 		private static readonly Color GoldLabelColor = new Color(160, 128, 48);
 		private static readonly Color GoldAmountColor = new Color(232, 200, 74);
 		private static readonly Color StageLabelColor = new Color(200, 192, 184);
+		private static readonly Color ClimbRedColor = new Color(206, 55, 64);
+		private static readonly Color ClimbWhiteColor = new Color(230, 224, 204);
+		private static readonly Color ClimbBlackColor = new Color(92, 76, 104);
 
 		private const string GoldLabelText = "GOLD";
+		private const string ClimbResourceLabelText = "CLIMB CACHE";
 		private const string StageLabelText = "REWARD";
 		private const string QuestStageLabelText = "CHOOSE YOUR REWARD";
 		private const string ProceedLabelText = "Proceed";
@@ -100,6 +105,14 @@ namespace Crusaders30XX.ECS.Systems
 		public float GoldLabelScale { get; set; } = 0.14f;
 		[DebugEditable(DisplayName = "Gold Amount Scale", Step = 0.01f, Min = 0.1f, Max = 2f)]
 		public float GoldAmountScale { get; set; } = 0.42f;
+		[DebugEditable(DisplayName = "Climb Resource Label Scale", Step = 0.01f, Min = 0.05f, Max = 1f)]
+		public float ClimbResourceLabelScale { get; set; } = 0.10f;
+		[DebugEditable(DisplayName = "Climb Resource Text Scale", Step = 0.01f, Min = 0.05f, Max = 1f)]
+		public float ClimbResourceTextScale { get; set; } = 0.13f;
+		[DebugEditable(DisplayName = "Climb Resource Icon Size", Step = 1, Min = 4, Max = 60)]
+		public int ClimbResourceIconSize { get; set; } = 16;
+		[DebugEditable(DisplayName = "Climb Resource Row Gap", Step = 1, Min = 0, Max = 40)]
+		public int ClimbResourceRowGap { get; set; } = 10;
 		[DebugEditable(DisplayName = "Stage Label Scale", Step = 0.01f, Min = 0.05f, Max = 1f)]
 		public float StageLabelScale { get; set; } = 0.14f;
 
@@ -214,6 +227,10 @@ namespace Crusaders30XX.ECS.Systems
 			public float TitleScale;
 			public float GoldLabelScale;
 			public float GoldAmountScale;
+			public float ClimbResourceLabelScale;
+			public float ClimbResourceTextScale;
+			public int ClimbResourceIconSize;
+			public int ClimbResourceRowGap;
 			public float StageLabelScale;
 			public int RedRuleWidth;
 			public int RedRuleHeight;
@@ -248,6 +265,9 @@ namespace Crusaders30XX.ECS.Systems
 			public Vector2 GoldAmountSize;
 			public Vector2 GoldAmountPos;
 			public bool HasGoldBlock;
+			public Vector2 ClimbResourceLabelPos;
+			public Vector2[] ClimbResourceRowPositions;
+			public bool HasClimbResourceBlock;
 			public Vector2 StageLabelPos;
 			public Vector2 ProceedTextPos;
 			public Vector2 ProceedTextSize;
@@ -283,7 +303,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnLoadScene(LoadSceneEvent e)
 		{
-			if (e.Scene != SceneId.Location) return;
+			if (e.Scene != SceneId.Location && e.Scene != SceneId.Climb) return;
 
 			var state = EntityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
 			if (state != null && state.DismissInProgress)
@@ -293,6 +313,27 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			if (state?.IsOpen == true) return;
+
+			if (e.Scene == SceneId.Climb)
+			{
+				var pendingEncounterReward = SaveCache.GetClimbState()?.pendingEncounterReward;
+				if (pendingEncounterReward != null)
+				{
+					OpenQuestReward(new ShowQuestRewardOverlay
+					{
+						Message = "Encounter Complete!",
+						TitleLine1 = "Encounter",
+						TitleLine2 = "Complete!",
+						HasCardReward = pendingEncounterReward.deckRewardOffer?.options != null
+							&& pendingEncounterReward.deckRewardOffer.options.Count > 0,
+						DeckRewardOffer = pendingEncounterReward.deckRewardOffer,
+						IsEncounterReward = true,
+						ClimbResources = pendingEncounterReward.resources,
+						DismissScene = SceneId.Climb,
+					});
+					return;
+				}
+			}
 
 			var pendingOffer = SaveCache.GetPendingDeckRewardOffer();
 			if (pendingOffer?.options == null || pendingOffer.options.Count == 0) return;
@@ -346,6 +387,10 @@ namespace Crusaders30XX.ECS.Systems
 				TitleScale = TitleScale,
 				GoldLabelScale = GoldLabelScale,
 				GoldAmountScale = GoldAmountScale,
+				ClimbResourceLabelScale = ClimbResourceLabelScale,
+				ClimbResourceTextScale = ClimbResourceTextScale,
+				ClimbResourceIconSize = ClimbResourceIconSize,
+				ClimbResourceRowGap = ClimbResourceRowGap,
 				StageLabelScale = StageLabelScale,
 				RedRuleWidth = RedRuleWidth,
 				RedRuleHeight = RedRuleHeight,
@@ -367,18 +412,18 @@ namespace Crusaders30XX.ECS.Systems
 			};
 		}
 
-		private bool NeedsLayoutRebuild(int vw, int vh, bool showGold, bool showCard, bool showMedal, bool showEquipment, int rewardGold, int rewardCardCount)
+		private bool NeedsLayoutRebuild(int vw, int vh, bool showGold, bool showCard, bool showMedal, bool showEquipment, bool showClimbResources, int rewardGold, int rewardCardCount)
 		{
 			if (!_layoutValid) return true;
 			if (vw != _cachedVw || vh != _cachedVh) return true;
-			if (showGold != _cachedShowGold || showCard != _cachedShowCard || showMedal != _cachedShowMedal || showEquipment != _cachedShowEquipment || rewardGold != _cachedRewardGold || rewardCardCount != _cachedRewardCardCount) return true;
+			if (showGold != _cachedShowGold || showCard != _cachedShowCard || showMedal != _cachedShowMedal || showEquipment != _cachedShowEquipment || showClimbResources != _cachedShowClimbResources || rewardGold != _cachedRewardGold || rewardCardCount != _cachedRewardCardCount) return true;
 			var sig = CaptureLayoutSignature();
 			return !sig.Equals(_layoutSignature);
 		}
 
-		private void EnsureLayout(int vw, int vh, bool showGold, bool showCard, bool showMedal, bool showEquipment, int rewardGold, int rewardCardCount, SceneState scene)
+		private void EnsureLayout(int vw, int vh, bool showGold, bool showCard, bool showMedal, bool showEquipment, bool showClimbResources, int rewardGold, int rewardCardCount, SceneState scene)
 		{
-			if (!NeedsLayoutRebuild(vw, vh, showGold, showCard, showMedal, showEquipment, rewardGold, rewardCardCount)) return;
+			if (!NeedsLayoutRebuild(vw, vh, showGold, showCard, showMedal, showEquipment, showClimbResources, rewardGold, rewardCardCount)) return;
 
 			_cachedVw = vw;
 			_cachedVh = vh;
@@ -386,21 +431,23 @@ namespace Crusaders30XX.ECS.Systems
 			_cachedShowCard = showCard;
 			_cachedShowMedal = showMedal;
 			_cachedShowEquipment = showEquipment;
+			_cachedShowClimbResources = showClimbResources;
 			_cachedRewardGold = rewardGold;
 			_cachedRewardCardCount = rewardCardCount;
 			_layoutSignature = CaptureLayoutSignature();
 			_drawInBattleOrSnapshot = scene != null
 				&& (scene.Current == SceneId.Battle
 					|| scene.Current == SceneId.Location
+					|| scene.Current == SceneId.Climb
 					|| scene.Current == SceneId.Snapshot);
 
-			_layout = ComputeLayout(vw, vh, showGold, showCard, showMedal || showEquipment, rewardCardCount, _layoutSignature);
-			RebuildTextMetrics(rewardGold, showGold);
+			_layout = ComputeLayout(vw, vh, showGold, showCard, showMedal || showEquipment, showClimbResources, rewardCardCount, _layoutSignature);
+			RebuildTextMetrics(rewardGold, showGold, showClimbResources);
 			_layoutValid = true;
 			_textMetricsValid = true;
 		}
 
-		private void RebuildTextMetrics(int rewardGold, bool showGold)
+		private void RebuildTextMetrics(int rewardGold, bool showGold, bool showClimbResources)
 		{
 			int centerX = _layout.LeftInner.Center.X;
 			float cursorY = _layout.LeftInner.Y;
@@ -456,6 +503,39 @@ namespace Crusaders30XX.ECS.Systems
 				metrics.GoldAmountPos = new Vector2(centerX - amountSize.X / 2f, goldStartY + labelH + 4f);
 			}
 
+			if (showClimbResources && _bodyFont != null)
+			{
+				var overlayState = EntityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
+				var parts = GetClimbResourceRewardParts(overlayState?.ClimbResources);
+				if (parts.Length > 0)
+				{
+					float labelH = _bodyFont.MeasureString(ClimbResourceLabelText).Y * ClimbResourceLabelScale;
+					float rowH = System.Math.Max(ClimbResourceIconSize, _bodyFont.MeasureString("+9 BLACK").Y * ClimbResourceTextScale);
+					float totalRowsH = rowH * parts.Length + ClimbResourceRowGap * System.Math.Max(0, parts.Length - 1);
+					float totalH = labelH + 8f + totalRowsH;
+					float blockTop = cursorY + RedRuleHeight + LeftColGap;
+					if (metrics.HasGoldBlock)
+					{
+						blockTop = metrics.GoldAmountPos.Y + metrics.GoldAmountSize.Y + LeftColGap;
+					}
+					else
+					{
+						float availableH = System.Math.Max(1f, _layout.LeftInner.Bottom - blockTop);
+						blockTop += System.Math.Max(0f, (availableH - totalH) / 2f);
+					}
+
+					var labelSize = _bodyFont.MeasureString(ClimbResourceLabelText) * ClimbResourceLabelScale;
+					metrics.ClimbResourceLabelPos = new Vector2(centerX - labelSize.X / 2f, blockTop);
+					metrics.ClimbResourceRowPositions = new Vector2[parts.Length];
+					float rowY = blockTop + labelH + 8f;
+					for (int i = 0; i < parts.Length; i++)
+					{
+						metrics.ClimbResourceRowPositions[i] = new Vector2(centerX - 72f, rowY + i * (rowH + ClimbResourceRowGap));
+					}
+					metrics.HasClimbResourceBlock = true;
+				}
+			}
+
 			if (_bodyFont != null && _layout.ShowRightColumn)
 			{
 				string stageLabel = GetStageLabelText();
@@ -506,7 +586,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			var scene = sceneEntity.GetComponent<SceneState>();
-			StateSingleton.PreventClicking = scene != null && scene.Current == SceneId.Location;
+			StateSingleton.PreventClicking = scene != null && (scene.Current == SceneId.Location || scene.Current == SceneId.Climb);
 
 			int vw = Game1.VirtualWidth;
 			int vh = Game1.VirtualHeight;
@@ -515,7 +595,8 @@ namespace Crusaders30XX.ECS.Systems
 			bool showCard = state.HasCardReward && rewardCardCount > 0;
 			bool showMedal = state.HasMedalReward && !string.IsNullOrEmpty(state.RewardMedalId);
 			bool showEquipment = state.HasEquipmentReward && !string.IsNullOrEmpty(state.RewardEquipmentId);
-			EnsureLayout(vw, vh, showGold, showCard, showMedal, showEquipment, state.RewardGold, rewardCardCount, scene);
+			bool showClimbResources = HasClimbResourceReward(state.ClimbResources);
+			EnsureLayout(vw, vh, showGold, showCard, showMedal, showEquipment, showClimbResources, state.RewardGold, rewardCardCount, scene);
 
 			var overlayT = overlayEntity.GetComponent<Transform>();
 			if (overlayT != null) overlayT.ZOrder = ZOrder;
@@ -580,12 +661,12 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					btnUi.IsClicked = false;
 					bool dismissToLocation = state.DismissToLocation;
-					if (dismissToLocation)
+					if (dismissToLocation && scene?.Current != state.DismissScene)
 					{
 						state.DismissInProgress = true;
 						btnUi.IsInteractable = false;
 						if (btnHotKey != null) btnHotKey.IsActive = false;
-						EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+						EventManager.Publish(new ShowTransition { Scene = state.DismissScene });
 					}
 					else
 					{
@@ -617,7 +698,10 @@ namespace Crusaders30XX.ECS.Systems
 			st.RewardMedalId = string.Empty;
 			st.HasEquipmentReward = false;
 			st.RewardEquipmentId = string.Empty;
-			st.DismissToLocation = true;
+			st.IsEncounterReward = e?.IsEncounterReward == true;
+			st.ClimbResources = e?.ClimbResources;
+			st.DismissScene = e?.DismissScene ?? SceneId.Location;
+			st.DismissToLocation = st.DismissScene == SceneId.Location || st.DismissScene == SceneId.Climb;
 			st.DismissInProgress = false;
 			st.CardSelectionInProgress = false;
 			st.SelectedRewardCardIndex = -1;
@@ -662,6 +746,9 @@ namespace Crusaders30XX.ECS.Systems
 			st.RewardMedalId = e?.RewardMedalId ?? string.Empty;
 			st.HasEquipmentReward = !string.IsNullOrWhiteSpace(e?.RewardEquipmentId);
 			st.RewardEquipmentId = e?.RewardEquipmentId ?? string.Empty;
+			st.IsEncounterReward = false;
+			st.ClimbResources = null;
+			st.DismissScene = SceneId.Location;
 			st.DismissToLocation = false;
 			st.DismissInProgress = false;
 			st.CardSelectionInProgress = false;
@@ -698,10 +785,72 @@ namespace Crusaders30XX.ECS.Systems
 			});
 		}
 
+		public void OpenEncounterRewardForSnapshot(ClimbResourceSave climbResources, DeckRewardOfferSave deckRewardOffer = null)
+		{
+			OpenQuestReward(new ShowQuestRewardOverlay
+			{
+				Message = "Encounter Complete!",
+				TitleLine1 = "Encounter",
+				TitleLine2 = "Complete!",
+				HasCardReward = deckRewardOffer?.options != null && deckRewardOffer.options.Count > 0,
+				DeckRewardOffer = deckRewardOffer,
+				IsEncounterReward = true,
+				ClimbResources = climbResources,
+				DismissScene = SceneId.Climb,
+			});
+		}
+
 		public static bool IsOverlayOpen(EntityManager entityManager)
 		{
 			var st = entityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
 			return st != null && st.IsOpen;
+		}
+
+		internal readonly struct ClimbResourceRewardPart
+		{
+			public ClimbResourceRewardPart(string name, int amount)
+			{
+				Name = name;
+				Amount = amount;
+			}
+
+			public string Name { get; }
+			public int Amount { get; }
+		}
+
+		internal static bool HasClimbResourceReward(ClimbResourceSave resources)
+		{
+			return (resources?.red ?? 0) > 0
+				|| (resources?.white ?? 0) > 0
+				|| (resources?.black ?? 0) > 0;
+		}
+
+		internal static ClimbResourceRewardPart[] GetClimbResourceRewardParts(ClimbResourceSave resources)
+		{
+			if (resources == null) return System.Array.Empty<ClimbResourceRewardPart>();
+			var parts = new List<ClimbResourceRewardPart>(3);
+			if (resources.red > 0) parts.Add(new ClimbResourceRewardPart("RED", resources.red));
+			if (resources.white > 0) parts.Add(new ClimbResourceRewardPart("WHITE", resources.white));
+			if (resources.black > 0) parts.Add(new ClimbResourceRewardPart("BLACK", resources.black));
+			return parts.ToArray();
+		}
+
+		internal static string BuildClimbResourceRewardText(ClimbResourceSave resources)
+		{
+			var parts = GetClimbResourceRewardParts(resources);
+			if (parts.Length == 0) return string.Empty;
+			return string.Join(" | ", parts.Select(p => $"+{p.Amount} {p.Name}"));
+		}
+
+		private static Color GetClimbResourceColor(string name)
+		{
+			return name switch
+			{
+				"RED" => ClimbRedColor,
+				"WHITE" => ClimbWhiteColor,
+				"BLACK" => ClimbBlackColor,
+				_ => StageLabelColor
+			};
 		}
 
 		private static List<string> NormalizeRewardCardKeys(ShowQuestRewardOverlay e)
@@ -761,6 +910,7 @@ namespace Crusaders30XX.ECS.Systems
 			bool showCard = st.HasCardReward && rewardCardCount > 0;
 			bool showMedal = st.HasMedalReward && !string.IsNullOrEmpty(st.RewardMedalId);
 			bool showEquipment = st.HasEquipmentReward && !string.IsNullOrEmpty(st.RewardEquipmentId);
+			bool showClimbResources = HasClimbResourceReward(st.ClimbResources);
 
 			if (st.HasDeckRewardOffer)
 			{
@@ -768,6 +918,7 @@ namespace Crusaders30XX.ECS.Systems
 				bool canDraw = scene != null
 					&& (scene.Current == SceneId.Battle
 						|| scene.Current == SceneId.Location
+						|| scene.Current == SceneId.Climb
 						|| scene.Current == SceneId.Snapshot);
 				if (canDraw)
 				{
@@ -779,7 +930,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (!_layoutValid || !_textMetricsValid)
 			{
 				var scene = EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault()?.GetComponent<SceneState>();
-				EnsureLayout(vw, vh, showGold, showCard, showMedal, showEquipment, st.RewardGold, rewardCardCount, scene);
+				EnsureLayout(vw, vh, showGold, showCard, showMedal, showEquipment, showClimbResources, st.RewardGold, rewardCardCount, scene);
 			}
 
 			if (!_drawInBattleOrSnapshot) return;
@@ -821,14 +972,15 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private QuestRewardLayout ComputeLayout(int vw, int vh, bool showGold, bool showCard, bool showMedal, int rewardCardCount, LayoutSignature sig)
+		private QuestRewardLayout ComputeLayout(int vw, int vh, bool showGold, bool showCard, bool showMedal, bool showClimbResources, int rewardCardCount, LayoutSignature sig)
 		{
 			int modalW = sig.ModalWidth;
-			if (showGold && !showCard && !showMedal)
+			bool showLeftReward = showGold || showClimbResources;
+			if (showLeftReward && !showCard && !showMedal)
 			{
 				modalW = sig.GoldOnlyModalWidth;
 			}
-			else if (!showGold && !showCard && !showMedal)
+			else if (!showLeftReward && !showCard && !showMedal)
 			{
 				modalW = System.Math.Max(sig.LeftColWidth + sig.BorderThickness * 2, 320);
 			}
@@ -964,16 +1116,60 @@ namespace Crusaders30XX.ECS.Systems
 			int centerX = _layout.LeftInner.Center.X;
 			_gradientRuleCache.DrawRule(_spriteBatch, centerX, m.RuleY, RedRuleWidth, RedRuleHeight);
 
-			if (!m.HasGoldBlock) return;
-
-			if (_bodyFont != null)
+			if (m.HasGoldBlock && _bodyFont != null)
 			{
 				_spriteBatch.DrawString(_bodyFont, GoldLabelText, m.GoldLabelPos,
 					GoldLabelColor, 0f, Vector2.Zero, GoldLabelScale, SpriteEffects.None, 0f);
 			}
 
-			DrawGoldGlow(m.GoldAmountText, m.GoldAmountPos, GoldAmountScale);
-			_spriteBatch.DrawString(_titleFont, m.GoldAmountText, m.GoldAmountPos, GoldAmountColor, 0f, Vector2.Zero, GoldAmountScale, SpriteEffects.None, 0f);
+			if (m.HasGoldBlock)
+			{
+				DrawGoldGlow(m.GoldAmountText, m.GoldAmountPos, GoldAmountScale);
+				_spriteBatch.DrawString(_titleFont, m.GoldAmountText, m.GoldAmountPos, GoldAmountColor, 0f, Vector2.Zero, GoldAmountScale, SpriteEffects.None, 0f);
+			}
+
+			DrawClimbResourceBlock();
+		}
+
+		private void DrawClimbResourceBlock()
+		{
+			if (_bodyFont == null || !_textMetrics.HasClimbResourceBlock) return;
+			var state = EntityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
+			var parts = GetClimbResourceRewardParts(state?.ClimbResources);
+			if (parts.Length == 0) return;
+
+			_spriteBatch.DrawString(
+				_bodyFont,
+				ClimbResourceLabelText,
+				_textMetrics.ClimbResourceLabelPos,
+				StageLabelColor,
+				0f,
+				Vector2.Zero,
+				ClimbResourceLabelScale,
+				SpriteEffects.None,
+				0f);
+
+			for (int i = 0; i < parts.Length && i < _textMetrics.ClimbResourceRowPositions.Length; i++)
+			{
+				var part = parts[i];
+				var pos = _textMetrics.ClimbResourceRowPositions[i];
+				int iconSize = System.Math.Max(4, ClimbResourceIconSize);
+				var iconRect = new Rectangle((int)pos.X, (int)pos.Y + 2, iconSize, iconSize);
+				_spriteBatch.Draw(_pixel, iconRect, GetClimbResourceColor(part.Name) * 0.90f);
+				ModalOverlayChrome.DrawBorder(_spriteBatch, _pixel, iconRect, Color.White * 0.22f, 1);
+
+				string text = $"+{part.Amount} {part.Name}";
+				_spriteBatch.DrawString(
+					_bodyFont,
+					text,
+					new Vector2(pos.X + iconSize + 10f, pos.Y),
+					StageLabelColor,
+					0f,
+					Vector2.Zero,
+					ClimbResourceTextScale,
+					SpriteEffects.None,
+					0f);
+			}
 		}
 
 		private void DrawRightColumnCard(bool showCard)
@@ -1067,7 +1263,7 @@ namespace Crusaders30XX.ECS.Systems
 			ModalOverlayChrome.DrawInsetHighlight(_spriteBatch, _pixel, layout.Content);
 			ModalOverlayChrome.DrawBorder(_spriteBatch, _pixel, layout.Modal, ModalOverlayPalette.PanelBorder, BorderThickness);
 
-			DrawDeckRewardMasthead(layout, state.RewardGold);
+			DrawDeckRewardMasthead(layout, state.RewardGold, state.ClimbResources);
 			DrawDeckRewardStageLabel(layout);
 
 			for (int i = 0; i < state.DeckRewardOffer.options.Count && i < layout.Lanes.Length; i++)
@@ -1116,24 +1312,36 @@ namespace Crusaders30XX.ECS.Systems
 				StageLabelColor);
 		}
 
-		private void DrawDeckRewardMasthead(DeckRewardOfferLayout layout, int rewardGold)
+		private void DrawDeckRewardMasthead(DeckRewardOfferLayout layout, int rewardGold, ClimbResourceSave climbResources)
 		{
 			DrawCenteredString(_titleFont, "Quest Complete", new Vector2(layout.Masthead.Center.X, layout.Masthead.Y + 16), 0.24f, ModalOverlayPalette.TitleColor);
 			_gradientRuleCache.DrawRule(_spriteBatch, layout.Masthead.Center.X, layout.Masthead.Y + 56, 64, 2);
 
 			string goldText = rewardGold > 0 ? $"Reward +{rewardGold:N0}" : "Reward";
+			string resourceText = BuildClimbResourceRewardText(climbResources);
 			Vector2 rowCenter = new Vector2(layout.Masthead.Center.X, layout.Masthead.Y + 72);
 			if (_bodyFont != null)
 			{
 				var goldSize = _bodyFont.MeasureString(goldText) * 0.12f;
 				var prompt = "Pick one reward";
 				var promptSize = _bodyFont.MeasureString(prompt) * 0.10f;
+				var resourceSize = !string.IsNullOrWhiteSpace(resourceText)
+					? _bodyFont.MeasureString(resourceText) * 0.10f
+					: Vector2.Zero;
 				float totalW = goldSize.X + 24f + promptSize.X;
+				if (resourceSize.X > 0f) totalW += 24f + resourceSize.X;
 				float x = rowCenter.X - totalW / 2f;
 				_spriteBatch.DrawString(_bodyFont, goldText, new Vector2(x, rowCenter.Y), GoldAmountColor, 0f, Vector2.Zero, 0.12f, SpriteEffects.None, 0f);
 				int dividerX = (int)(x + goldSize.X + 12f);
 				_spriteBatch.Draw(_pixel, new Rectangle(dividerX, (int)rowCenter.Y, 1, 16), ColumnDivider);
-				_spriteBatch.DrawString(_bodyFont, prompt, new Vector2(dividerX + 12f, rowCenter.Y + 1f), StageLabelColor, 0f, Vector2.Zero, 0.10f, SpriteEffects.None, 0f);
+				float promptX = dividerX + 12f;
+				_spriteBatch.DrawString(_bodyFont, prompt, new Vector2(promptX, rowCenter.Y + 1f), StageLabelColor, 0f, Vector2.Zero, 0.10f, SpriteEffects.None, 0f);
+				if (resourceSize.X > 0f)
+				{
+					int resourceDividerX = (int)(promptX + promptSize.X + 12f);
+					_spriteBatch.Draw(_pixel, new Rectangle(resourceDividerX, (int)rowCenter.Y, 1, 16), ColumnDivider);
+					_spriteBatch.DrawString(_bodyFont, resourceText, new Vector2(resourceDividerX + 12f, rowCenter.Y + 1f), GoldAmountColor, 0f, Vector2.Zero, 0.10f, SpriteEffects.None, 0f);
+				}
 			}
 		}
 
@@ -1188,6 +1396,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void CloseOverlay(QuestRewardOverlayState state)
 		{
+			if (state.IsEncounterReward)
+			{
+				ClimbEncounterService.ResolvePendingEncounterReward(EntityManager);
+			}
+
 			state.IsOpen = false;
 			state.DismissInProgress = false;
 			state.RewardGold = 0;
@@ -1199,6 +1412,9 @@ namespace Crusaders30XX.ECS.Systems
 			state.RewardMedalId = string.Empty;
 			state.HasEquipmentReward = false;
 			state.RewardEquipmentId = string.Empty;
+			state.IsEncounterReward = false;
+			state.ClimbResources = null;
+			state.DismissScene = SceneId.Location;
 			state.CardSelectionInProgress = false;
 			state.SelectedRewardCardIndex = -1;
 			state.CardSelectionElapsedSeconds = 0f;
@@ -1209,6 +1425,7 @@ namespace Crusaders30XX.ECS.Systems
 			DestroyRewardMedal();
 			DestroyRewardEquipment();
 			InvalidateCaches();
+
 		}
 
 		private void HideProceedButton()
@@ -1405,7 +1622,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				state.DismissInProgress = true;
 				DisableDeckRewardControls();
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+				EventManager.Publish(new ShowTransition { Scene = state.DismissScene });
 				return;
 			}
 
@@ -1546,7 +1763,7 @@ namespace Crusaders30XX.ECS.Systems
 					state.DismissInProgress = true;
 					if (state.DismissToLocation)
 					{
-						EventManager.Publish(new ShowTransition { Scene = SceneId.Location });
+						EventManager.Publish(new ShowTransition { Scene = state.DismissScene });
 					}
 					else
 					{

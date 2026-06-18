@@ -7,6 +7,7 @@ Gameplay
 - make hand display agnostic of carddata, probably involves refactoring some components and data objects
 - fix hand display card uielement bounds
 - make cardlistmodaldisplay not a modal, tinted overlay with floating UI
+- darkness X - for x turns, one card in hand becomes shrouded in darkess during the enemy turn, lifts during action phase, cards in darkness block for 3 and ignore color gains and play restrictions
 
 cards
 - if you have dealt 10 or more damage this turn...
@@ -35,8 +36,12 @@ persistent card states:
 
 cards to delete:
 - mace
-- shroud of turin
+- shroud_of_turin
+- anoint_the_sick
 
 keywords
 - indulgence for additional cost?
 - vigor reduction
+
+
+

@@ -1,6 +1,8 @@
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Objects.Enemies;
 using Crusaders30XX.ECS.Systems;
 using Xunit;
 
@@ -53,6 +55,45 @@ public class EnemyDefeatFlowSystemTests
 
 			Assert.False(enemy.HasComponent<SuppressPortraitRender>());
 			Assert.False(phaseState.DefeatPresentationActive);
+		}
+		finally
+		{
+			EventManager.Clear();
+			EventQueue.Clear();
+		}
+	}
+
+	[Fact]
+	public void Final_climb_encounter_victory_uses_run_victory_transition_without_reward()
+	{
+		EventManager.Clear();
+		EventQueue.Clear();
+
+		try
+		{
+			var world = BuildWorld(out var phaseState, out var enemy);
+			var queued = world.EntityManager.GetEntity("QueuedEvents").GetComponent<QueuedEvents>();
+			queued.IsClimbEncounter = true;
+			queued.ClimbEncounterSlotId = "final";
+			queued.Events[0].EventId = "fallen_shepherd";
+			var enemyComponent = enemy.GetComponent<Enemy>();
+			enemyComponent.Id = "fallen_shepherd";
+			enemyComponent.Name = "Fallen Shepherd";
+			enemyComponent.EnemyBase = EnemyFactory.Create("fallen_shepherd", EnemyDifficulty.Hard);
+			_ = new EnemyDefeatFlowSystem(world.EntityManager, content: null);
+
+			ShowTransition transition = null;
+			int rewardCount = 0;
+			EventManager.Subscribe<ShowTransition>(evt => transition = evt);
+			EventManager.Subscribe<ShowQuestRewardOverlay>(_ => rewardCount++);
+
+			EventManager.Publish(new BeginDefeatPresentationEvent { Enemy = enemy, IsPreview = false });
+
+			Assert.False(phaseState.DefeatPresentationActive);
+			Assert.Equal(0, rewardCount);
+			Assert.NotNull(transition);
+			Assert.Equal(SceneId.WayStation, transition.Scene);
+			Assert.True(transition.EndRunOnLoad);
 		}
 		finally
 		{

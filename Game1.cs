@@ -40,6 +40,7 @@ public class Game1 : Game
     private WayStationDisplaySystem _wayStationDisplaySystem;
     private BattleSceneSystem _battleSceneSystem;
     private LocationSceneSystem _locationSceneSystem;
+    private ClimbSceneSystem _climbSceneSystem;
     private ShopSceneSystem _shopSceneSystem;
     private AchievementSceneSystem _achievementSceneSystem;
     private TooltipTextDisplaySystem _tooltipTextDisplaySystem;
@@ -174,6 +175,7 @@ public class Game1 : Game
         _wayStationDisplaySystem = new WayStationDisplaySystem(_world, GraphicsDevice, _spriteBatch, Content);
         _battleSceneSystem = new BattleSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _locationSceneSystem = new LocationSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
+        _climbSceneSystem = new ClimbSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _shopSceneSystem = new ShopSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _achievementSceneSystem = new AchievementSceneSystem(_world.EntityManager, _world.SystemManager, _world, GraphicsDevice, _spriteBatch, Content);
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _world.SystemManager);
@@ -210,6 +212,7 @@ public class Game1 : Game
         _world.AddSystem(_wayStationDisplaySystem);
         _world.AddSystem(_battleSceneSystem);
         _world.AddSystem(_locationSceneSystem);
+        _world.AddSystem(_climbSceneSystem);
         _world.AddSystem(_shopSceneSystem);
         _world.AddSystem(_achievementSceneSystem);
         _world.AddSystem(new TimerSchedulerSystem(_world.EntityManager));
@@ -525,6 +528,11 @@ public class Game1 : Game
                 _spriteBatch.End();
                 // Resume normal alpha-blend UI drawing state
                 _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
+                break;
+            }
+            case SceneId.Climb:
+            {
+                MeasureInclusiveSceneDraw("ClimbSceneSystem.Draw", _climbSceneSystem.Draw);
                 break;
             }
             case SceneId.Location:

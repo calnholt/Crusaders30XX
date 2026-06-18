@@ -130,8 +130,9 @@ namespace Crusaders30XX.ECS.Systems
 			Open(e.RunMapEventId, e.EventTypeId, snapshotVisibleOptionCap: 0);
 		}
 
-		private void OnNarrativeEventOverlayClosed(NarrativeEventOverlayClosedEvent _)
+		private void OnNarrativeEventOverlayClosed(NarrativeEventOverlayClosedEvent e)
 		{
+			ClimbEventService.TryCompletePendingEvent(EntityManager, e?.EventTypeId);
 			CloseOverlay();
 		}
 
@@ -197,7 +198,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			var scene = sceneEntity.GetComponent<SceneState>();
 			if (!_forceSnapshotDraw)
-				StateSingleton.PreventClicking = scene != null && scene.Current == SceneId.Location;
+				StateSingleton.PreventClicking = scene != null && (scene.Current == SceneId.Location || scene.Current == SceneId.Climb);
 
 			int vw = Game1.VirtualWidth;
 			int vh = Game1.VirtualHeight;
@@ -354,7 +355,7 @@ namespace Crusaders30XX.ECS.Systems
 			_cachedVh = vh;
 			_cachedVisibleCount = visibleCount;
 			_drawOnLocationOrSnapshot = _forceSnapshotDraw
-				|| (scene != null && (scene.Current == SceneId.Location || scene.Current == SceneId.Snapshot));
+				|| (scene != null && (scene.Current == SceneId.Location || scene.Current == SceneId.Climb || scene.Current == SceneId.Snapshot));
 
 			int footerH = ComputeFooterHeight(visibleCount);
 			var shell = ModalShellLayout.ComputeCentered(vw, vh, ModalWidth, ModalHeight, BorderThickness, footerH);

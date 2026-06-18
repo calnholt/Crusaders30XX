@@ -1,0 +1,120 @@
+using System.Collections.Generic;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Save;
+using Microsoft.Xna.Framework;
+
+namespace Crusaders30XX.ECS.Components
+{
+	public enum ClimbSlotKind
+	{
+		Shop,
+		Encounter,
+		Event,
+	}
+
+	public enum ClimbColumnKind
+	{
+		Shop,
+		Encounter,
+		Event,
+	}
+
+	public enum ClimbResourceType
+	{
+		Red,
+		White,
+		Black,
+	}
+
+	public class ClimbSceneRoot : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
+
+	public class ClimbPreviewState : IComponent
+	{
+		public Entity Owner { get; set; }
+		public bool IsActive { get; set; }
+		public string SourceSlotId { get; set; } = string.Empty;
+		public int Amount { get; set; }
+		public int ProjectedUsedTime { get; set; }
+		public int ProjectedRemainingTime { get; set; }
+		public ClimbResourceSave ProjectedResources { get; set; } = new ClimbResourceSave();
+		public HashSet<string> WouldVanishSlotIds { get; set; } = new HashSet<string>();
+		public HashSet<string> AffordableShopSlotIds { get; set; } = new HashSet<string>();
+
+		public void Clear()
+		{
+			IsActive = false;
+			SourceSlotId = string.Empty;
+			Amount = 0;
+			ProjectedUsedTime = 0;
+			ProjectedRemainingTime = 0;
+			ProjectedResources = new ClimbResourceSave();
+			WouldVanishSlotIds.Clear();
+			AffordableShopSlotIds.Clear();
+		}
+	}
+
+	public class ClimbHeaderElement : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
+
+	public class ClimbTimelineElement : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
+
+	public class ClimbResourceBarElement : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
+
+	public class ClimbLoadoutButton : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
+
+	public class ClimbColumnPresentation : IComponent
+	{
+		public Entity Owner { get; set; }
+		public ClimbColumnKind Kind { get; set; }
+		public string Title { get; set; } = string.Empty;
+		public string Subtitle { get; set; } = string.Empty;
+		public Rectangle InnerBounds { get; set; }
+		public bool IsVisible { get; set; } = true;
+	}
+
+	public class ClimbSlotPresentation : IComponent
+	{
+		public Entity Owner { get; set; }
+		public ClimbSlotKind Kind { get; set; }
+		public string SlotId { get; set; } = string.Empty;
+		public int SlotIndex { get; set; } = -1;
+		public string Title { get; set; } = string.Empty;
+		public string Label { get; set; } = string.Empty;
+		public string Meta { get; set; } = string.Empty;
+		public int TimeCost { get; set; }
+		public ClimbResourceSave Cost { get; set; } = new ClimbResourceSave { red = 0, white = 0, black = 0 };
+		public ClimbResourceSave Reward { get; set; } = new ClimbResourceSave { red = 0, white = 0, black = 0 };
+		public bool IsSold { get; set; }
+		public bool IsCompleted { get; set; }
+		public bool IsUnavailable { get; set; }
+		public bool IsAffordable { get; set; } = true;
+		public bool IsFinal { get; set; }
+		public string PortraitAsset { get; set; } = string.Empty;
+	}
+
+	public class ClimbEncounterSlotAction : IComponent
+	{
+		public Entity Owner { get; set; }
+		public string SlotId { get; set; } = string.Empty;
+	}
+
+	public class ClimbEventSlotAction : IComponent
+	{
+		public Entity Owner { get; set; }
+		public string SlotId { get; set; } = string.Empty;
+	}
+}

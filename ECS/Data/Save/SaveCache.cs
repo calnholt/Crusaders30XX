@@ -93,6 +93,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				savedLoadout.headId ??= string.Empty;
 				savedLoadout.medalIds ??= new List<string>();
 
+				_save.climb = ClimbRuleService.CreateInitialState(_save.runMapSeed, savedLoadout);
 				Persist();
 			}
 		}
@@ -570,6 +571,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				runCardRestrictions = new Dictionary<string, List<string>>(),
 				starterCardKeys = new List<string>(),
 				pendingDeckRewardOffer = null,
+				climb = new ClimbSaveState(),
 				cardMastery = prior?.cardMastery ?? new Dictionary<string, CardMastery>(),
 				achievements = prior?.achievements ?? new Dictionary<string, AchievementProgress>(),
 				seenTutorials = prior?.seenTutorials ?? new List<string>(),
@@ -615,6 +617,7 @@ namespace Crusaders30XX.ECS.Data.Save
 					}
 				}
 			};
+			save.climb = ClimbRuleService.CreateInitialState(seed, save.loadouts[0]);
 			return save;
 		}
 
@@ -655,6 +658,49 @@ namespace Crusaders30XX.ECS.Data.Save
 			EnsureLoaded();
 			EnsureRunMap();
 			return _save?.runMapShops ?? new List<RunMapShop>();
+		}
+
+		public static ClimbSaveState GetClimbState()
+		{
+			EnsureLoaded();
+			EnsureClimbState();
+			lock (_lock)
+			{
+				return CloneClimbState(_save?.climb);
+			}
+		}
+
+		public static void SaveClimbState(ClimbSaveState state)
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				_save.climb = CloneClimbState(state) ?? ClimbRuleService.CreateInitialState(_save.runMapSeed, GetLoadout("loadout_1"));
+				Persist();
+			}
+		}
+
+		public static void EnsureClimbState()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				if (_save == null) _save = new SaveFile();
+				if (!_save.isRunActive) return;
+				if (_save.climb != null
+					&& _save.climb.shopSlots != null
+					&& _save.climb.shopSlots.Count == ClimbRuleService.ShopSlotCount
+					&& _save.climb.encounterSlots != null
+					&& _save.climb.encounterSlots.Count == ClimbRuleService.EncounterSlotCount)
+				{
+					return;
+				}
+
+				EnsurePrimaryLoadout(_save);
+				_save.climb = ClimbRuleService.CreateInitialState(_save.runMapSeed, _save.loadouts[0]);
+				Persist();
+			}
 		}
 
 		public static bool TryGetRunShop(string shopId, out RunMapShop shop, out int index)
@@ -1328,6 +1374,141 @@ namespace Crusaders30XX.ECS.Data.Save
 				}
 				Persist();
 			}
+		}
+
+		private static ClimbSaveState CloneClimbState(ClimbSaveState state)
+		{
+			if (state == null) return null;
+			return new ClimbSaveState
+			{
+				time = ClimbRuleService.ClampTime(state.time),
+				resources = CloneClimbResources(state.resources),
+				shopSlots = CloneClimbShopSlots(state.shopSlots),
+				encounterSlots = CloneClimbEncounterSlots(state.encounterSlots),
+				eventSlots = CloneClimbEventSlots(state.eventSlots),
+				shownMedalIds = CloneStringList(state.shownMedalIds),
+				shownEquipmentIds = CloneStringList(state.shownEquipmentIds),
+				shownEventTypeIds = CloneStringList(state.shownEventTypeIds),
+				nextEventSlotId = Math.Max(0, state.nextEventSlotId),
+				pendingReplacementOffer = CloneClimbReplacementOffer(state.pendingReplacementOffer),
+				pendingEncounterReward = CloneClimbEncounterReward(state.pendingEncounterReward),
+				pendingEvent = CloneClimbPendingEvent(state.pendingEvent),
+			};
+		}
+
+		private static ClimbResourceSave CloneClimbResources(ClimbResourceSave resources)
+		{
+			return new ClimbResourceSave
+			{
+				red = Math.Max(0, resources?.red ?? 0),
+				white = Math.Max(0, resources?.white ?? 0),
+				black = Math.Max(0, resources?.black ?? 0),
+			};
+		}
+
+		private static List<ClimbShopSlotSave> CloneClimbShopSlots(List<ClimbShopSlotSave> slots)
+		{
+			var clone = new List<ClimbShopSlotSave>();
+			if (slots == null) return clone;
+			foreach (var slot in slots)
+			{
+				if (slot == null) continue;
+				clone.Add(new ClimbShopSlotSave
+				{
+					id = slot.id ?? string.Empty,
+					kind = slot.kind ?? ClimbShopSlotKinds.Empty,
+					itemId = slot.itemId ?? string.Empty,
+					cardKey = slot.cardKey ?? string.Empty,
+					deckIndex = slot.deckIndex,
+					cost = CloneClimbResources(slot.cost),
+					isSold = slot.isSold,
+					generatedAtTime = ClimbRuleService.ClampTime(slot.generatedAtTime),
+				});
+			}
+			return clone;
+		}
+
+		private static List<ClimbEncounterSlotSave> CloneClimbEncounterSlots(List<ClimbEncounterSlotSave> slots)
+		{
+			var clone = new List<ClimbEncounterSlotSave>();
+			if (slots == null) return clone;
+			foreach (var slot in slots)
+			{
+				if (slot == null) continue;
+				clone.Add(new ClimbEncounterSlotSave
+				{
+					id = slot.id ?? string.Empty,
+					enemyId = slot.enemyId ?? string.Empty,
+					timeCost = Math.Max(0, slot.timeCost),
+					rewardResources = CloneClimbResources(slot.rewardResources),
+					hasDeckReward = slot.hasDeckReward,
+					isCompleted = slot.isCompleted,
+					isFinal = slot.isFinal,
+				});
+			}
+			return clone;
+		}
+
+		private static List<ClimbEventSlotSave> CloneClimbEventSlots(List<ClimbEventSlotSave> slots)
+		{
+			var clone = new List<ClimbEventSlotSave>();
+			if (slots == null) return clone;
+			foreach (var slot in slots)
+			{
+				if (slot == null) continue;
+				clone.Add(new ClimbEventSlotSave
+				{
+					id = slot.id ?? string.Empty,
+					eventTypeId = slot.eventTypeId ?? string.Empty,
+					generatedAtTime = ClimbRuleService.ClampTime(slot.generatedAtTime),
+					visibleStartTime = ClimbRuleService.ClampTime(slot.visibleStartTime),
+					visibleEndTime = ClimbRuleService.ClampTime(slot.visibleEndTime),
+					timeCost = Math.Max(0, slot.timeCost),
+					seen = slot.seen,
+					isCompleted = slot.isCompleted,
+				});
+			}
+			return clone;
+		}
+
+		private static ClimbReplacementOfferSave CloneClimbReplacementOffer(ClimbReplacementOfferSave offer)
+		{
+			if (offer == null) return null;
+			return new ClimbReplacementOfferSave
+			{
+				shopSlotIndex = offer.shopSlotIndex,
+				incomingCardKey = offer.incomingCardKey ?? string.Empty,
+				cost = CloneClimbResources(offer.cost),
+			};
+		}
+
+		private static ClimbEncounterRewardSave CloneClimbEncounterReward(ClimbEncounterRewardSave reward)
+		{
+			if (reward == null) return null;
+			return new ClimbEncounterRewardSave
+			{
+				encounterSlotId = reward.encounterSlotId ?? string.Empty,
+				resources = CloneClimbResources(reward.resources),
+				deckRewardOffer = CloneDeckRewardOffer(reward.deckRewardOffer),
+				pendingFinalEncounter = reward.pendingFinalEncounter,
+			};
+		}
+
+		private static ClimbPendingEventSave CloneClimbPendingEvent(ClimbPendingEventSave pending)
+		{
+			if (pending == null) return null;
+			return new ClimbPendingEventSave
+			{
+				eventSlotId = pending.eventSlotId ?? string.Empty,
+				eventTypeId = pending.eventTypeId ?? string.Empty,
+			};
+		}
+
+		private static List<string> CloneStringList(List<string> list)
+		{
+			return list == null
+				? new List<string>()
+				: list.Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 		}
 	}
 }

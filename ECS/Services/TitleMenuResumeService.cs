@@ -15,7 +15,7 @@ namespace Crusaders30XX.ECS.Services
 			if (!SaveCache.IsRunActive()) return SceneId.WayStation;
 			if (!SaveCache.IsStartQuestCompleted()) return null;
 			if (SaveCache.TryGetResumableBattleNode(out _)) return null;
-			return SceneId.Location;
+			return SceneId.Climb;
 		}
 
 		public static void OnTitleMenuClicked(World world)
@@ -45,7 +45,7 @@ namespace Crusaders30XX.ECS.Services
 				return;
 			}
 
-			EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
+			EventManager.Publish(new ShowTransition { Scene = SceneId.Climb, SkipHold = true });
 		}
 
 		private static void ApplySkipTutorialsOption()

@@ -113,9 +113,23 @@ namespace Crusaders30XX.ECS.Events
     {
         public string Title { get; set; }
         public List<Entity> Cards { get; set; }
+        public bool IsSelectable { get; set; } = false;
+        public string SelectionContext { get; set; } = string.Empty;
+    }
+
+    public static class CardListSelectionContexts
+    {
+        public const string ClimbReplacement = "climb.replacement";
     }
 
     public class CloseCardListModalEvent { }
+
+    public class CardListModalCardSelectedEvent
+    {
+        public Entity Card { get; set; }
+        public int CardIndex { get; set; } = -1;
+        public string SelectionContext { get; set; } = string.Empty;
+    }
     
     /// <summary>
     /// Event published when deck shuffling and drawing is requested

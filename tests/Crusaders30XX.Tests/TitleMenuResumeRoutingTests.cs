@@ -67,7 +67,7 @@ public class TitleMenuResumeRoutingTests
 	}
 
 	[Fact]
-	public void Active_run_with_completed_start_quest_routes_to_Location()
+	public void Active_run_with_completed_start_quest_routes_to_Climb()
 	{
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.CompleteGuidedTutorial();
@@ -76,7 +76,7 @@ public class TitleMenuResumeRoutingTests
 
 		Assert.True(SaveCache.IsRunActive());
 		Assert.True(SaveCache.IsStartQuestCompleted());
-		Assert.Equal(SceneId.Location, TitleMenuResumeService.ResolveDirectTransitionScene());
+		Assert.Equal(SceneId.Climb, TitleMenuResumeService.ResolveDirectTransitionScene());
 	}
 
 	[Fact]

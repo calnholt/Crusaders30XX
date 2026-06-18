@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Services
 			}
 			else
 			{
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Location, SkipHold = true });
+				EventManager.Publish(new ShowTransition { Scene = SceneId.Climb, SkipHold = true });
 			}
 		}
 
