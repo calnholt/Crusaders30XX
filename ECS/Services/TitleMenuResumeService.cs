@@ -13,7 +13,6 @@ namespace Crusaders30XX.ECS.Services
 			ApplySkipTutorialsOption();
 			if (!SaveCache.IsGuidedTutorialCompleted()) return null;
 			if (!SaveCache.IsRunActive()) return SceneId.WayStation;
-			if (!SaveCache.IsStartQuestCompleted()) return null;
 			if (SaveCache.TryGetResumableBattleNode(out _)) return null;
 			return SceneId.Climb;
 		}
@@ -30,12 +29,6 @@ namespace Crusaders30XX.ECS.Services
 			if (!SaveCache.IsRunActive())
 			{
 				EventManager.Publish(new ShowTransition { Scene = SceneId.WayStation, SkipHold = true });
-				return;
-			}
-
-			if (!SaveCache.IsStartQuestCompleted())
-			{
-				WayStationRunSetupService.BeginStartQuestBattle(world);
 				return;
 			}
 

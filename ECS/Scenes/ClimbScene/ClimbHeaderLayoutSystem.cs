@@ -93,7 +93,13 @@ namespace Crusaders30XX.ECS.Systems
 			int currentTime = ClimbRuleService.ClampTime(climb?.time ?? 0);
 			var hoveredSlot = EntityManager.GetEntitiesWithComponent<ClimbSlotPresentation>()
 				.Select(e => new { Entity = e, Slot = e.GetComponent<ClimbSlotPresentation>(), UI = e.GetComponent<UIElement>() })
-				.FirstOrDefault(x => x.UI?.IsHovered == true && x.Slot != null && x.Slot.TimeCost > 0 && !x.Slot.IsUnavailable && !x.Slot.IsCompleted && !x.Slot.IsSold);
+				.FirstOrDefault(x => x.UI?.IsHovered == true
+					&& x.Slot != null
+					&& x.Slot.TimeCost > 0
+					&& !x.Slot.IsUnavailable
+					&& !x.Slot.IsCompleted
+					&& !x.Slot.IsSold
+					&& (x.Slot.Kind != ClimbSlotKind.Shop || x.Slot.IsAffordable));
 
 			if (hoveredSlot == null)
 			{
@@ -115,6 +121,10 @@ namespace Crusaders30XX.ECS.Systems
 			if (hoveredSlot.Slot.Kind == ClimbSlotKind.Encounter)
 			{
 				ClimbRuleService.AddResources(preview.ProjectedResources, hoveredSlot.Slot.Reward);
+			}
+			else if (hoveredSlot.Slot.Kind == ClimbSlotKind.Shop)
+			{
+				ClimbRuleService.TrySpend(preview.ProjectedResources, hoveredSlot.Slot.Cost);
 			}
 
 			preview.WouldVanishSlotIds.Clear();

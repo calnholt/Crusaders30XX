@@ -39,6 +39,7 @@ public class ClimbShopServiceTests : IDisposable
 		Assert.Contains("st_luke", loadout.medalIds);
 		Assert.True(after.shopSlots[0].isSold);
 		Assert.Equal(2, after.resources.red);
+		Assert.Equal(1, after.time);
 	}
 
 	[Fact]
@@ -84,6 +85,7 @@ public class ClimbShopServiceTests : IDisposable
 		var after = SaveCache.GetClimbState();
 		Assert.Null(after.pendingReplacementOffer);
 		Assert.Equal(3, after.resources.red);
+		Assert.Equal(0, after.time);
 		Assert.Equal(new[] { "smite|White", "fervor|Red" }, SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cardIds);
 	}
 
@@ -102,6 +104,7 @@ public class ClimbShopServiceTests : IDisposable
 		var after = SaveCache.GetClimbState();
 		Assert.Equal("strike|Red", loadout.cardIds[1]);
 		Assert.Equal(2, after.resources.red);
+		Assert.Equal(1, after.time);
 		Assert.True(after.shopSlots[0].isSold);
 		Assert.Null(after.pendingReplacementOffer);
 	}
@@ -140,6 +143,7 @@ public class ClimbShopServiceTests : IDisposable
 		});
 		Assert.NotNull(SaveCache.GetClimbState().pendingReplacementOffer);
 		Assert.Equal(3, SaveCache.GetClimbState().resources.red);
+		Assert.Equal(0, SaveCache.GetClimbState().time);
 	}
 
 	[Fact]
@@ -166,6 +170,7 @@ public class ClimbShopServiceTests : IDisposable
 		var after = SaveCache.GetClimbState();
 		Assert.Equal("strike|Red", loadout.cardIds[1]);
 		Assert.Equal(2, after.resources.red);
+		Assert.Equal(1, after.time);
 		Assert.True(after.shopSlots[0].isSold);
 		Assert.Null(after.pendingReplacementOffer);
 	}
@@ -226,6 +231,7 @@ public class ClimbShopServiceTests : IDisposable
 			cardKey = cardKey,
 			deckIndex = deckIndex,
 			cost = new ClimbResourceSave { red = 1, white = 0, black = 0 },
+			timeCost = string.Equals(kind, ClimbShopSlotKinds.Empty, StringComparison.OrdinalIgnoreCase) ? 0 : 1,
 		};
 	}
 }

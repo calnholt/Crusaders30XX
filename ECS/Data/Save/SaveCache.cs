@@ -1421,6 +1421,7 @@ namespace Crusaders30XX.ECS.Data.Save
 					cardKey = slot.cardKey ?? string.Empty,
 					deckIndex = slot.deckIndex,
 					cost = CloneClimbResources(slot.cost),
+					timeCost = Math.Max(0, slot.timeCost),
 					isSold = slot.isSold,
 					generatedAtTime = ClimbRuleService.ClampTime(slot.generatedAtTime),
 				});

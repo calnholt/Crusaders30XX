@@ -1,6 +1,8 @@
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
@@ -10,6 +12,30 @@ namespace Crusaders30XX.Tests;
 
 public class WayStationRunSetupTests
 {
+	[Fact]
+	public void Depart_starts_new_run_on_climb_without_queueing_battle()
+	{
+		EventManager.Clear();
+		try
+		{
+			SaveCache.DeleteSaveFilesIfPresent();
+			var world = new World();
+			ShowTransition transition = null;
+			EventManager.Subscribe<ShowTransition>(evt => transition = evt);
+
+			WayStationRunSetupService.Depart(world);
+
+			Assert.True(SaveCache.IsRunActive());
+			Assert.NotNull(transition);
+			Assert.Equal(SceneId.Climb, transition.Scene);
+			Assert.Empty(world.EntityManager.GetEntitiesWithComponent<QueuedEvents>());
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
 	[Fact]
 	public void Weapon_starter_pools_only_reference_known_cards()
 	{

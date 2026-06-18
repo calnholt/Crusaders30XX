@@ -101,7 +101,7 @@ namespace Crusaders30XX.ECS.Systems
 			presentation.Meta = "PRICE";
 			presentation.Cost = Clone(slot?.cost);
 			presentation.Reward = new ClimbResourceSave { red = 0, white = 0, black = 0 };
-			presentation.TimeCost = 0;
+			presentation.TimeCost = Math.Max(0, slot?.timeCost ?? 0);
 			presentation.IsSold = slot?.isSold == true;
 			presentation.IsCompleted = false;
 			presentation.IsUnavailable = slot == null || string.Equals(slot.kind, ClimbShopSlotKinds.Empty, StringComparison.OrdinalIgnoreCase);

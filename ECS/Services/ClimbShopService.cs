@@ -14,11 +14,12 @@ namespace Crusaders30XX.ECS.Services
 		{
 			var climb = SaveCache.GetClimbState();
 			if (!TryGetActiveShopSlot(climb, slotIndex, out var slot)) return false;
-			if (!ClimbRuleService.TrySpend(climb.resources, slot.cost)) return false;
 
 			var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
 			if (loadout == null) return false;
 			EnsureLoadoutLists(loadout);
+			if (!ClimbRuleService.TrySpend(climb.resources, slot.cost)) return false;
+			int timeCost = slot.timeCost;
 
 			bool applied = false;
 			if (string.Equals(slot.kind, ClimbShopSlotKinds.Medal, StringComparison.OrdinalIgnoreCase))
@@ -47,6 +48,11 @@ namespace Crusaders30XX.ECS.Services
 
 			if (!applied) return false;
 			slot.isSold = true;
+			ClimbRuleService.AdvanceTimeAndUpdateSlots(
+				climb,
+				SaveCache.GetAll()?.runMapSeed ?? 0,
+				loadout,
+				timeCost);
 			SaveCache.SaveLoadout(loadout);
 			SaveCache.SaveClimbState(climb);
 			return true;
@@ -93,6 +99,7 @@ namespace Crusaders30XX.ECS.Services
 			if (!IsReplacementEligible(outgoingKey)) return false;
 
 			if (!ClimbRuleService.TrySpend(climb.resources, offer.cost)) return false;
+			int timeCost = slot.timeCost;
 			if (!SaveCache.ReplaceCardInLoadoutAtIndex(
 				RunDeckService.PrimaryLoadoutId,
 				outgoingLoadoutIndex,
@@ -105,6 +112,11 @@ namespace Crusaders30XX.ECS.Services
 			SaveCache.SetRunCardRestrictionsForCard(outgoingKey, new List<string>());
 			slot.isSold = true;
 			climb.pendingReplacementOffer = null;
+			ClimbRuleService.AdvanceTimeAndUpdateSlots(
+				climb,
+				SaveCache.GetAll()?.runMapSeed ?? 0,
+				SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId),
+				timeCost);
 			SaveCache.SaveClimbState(climb);
 			return true;
 		}

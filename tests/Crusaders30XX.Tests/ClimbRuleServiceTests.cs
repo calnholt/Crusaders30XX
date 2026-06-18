@@ -24,6 +24,12 @@ public class ClimbRuleServiceTests
 		Assert.Equal(ClimbRuleService.ShopSlotCount, state.shopSlots.Count);
 		Assert.Equal(ClimbRuleService.EncounterSlotCount, state.encounterSlots.Count);
 		Assert.Equal(Math.Min(eventPoolCount, ClimbRuleService.EventSlotCount), state.eventSlots.Count);
+		Assert.All(state.shopSlots.Where(s => s.kind != ClimbShopSlotKinds.Empty), slot => Assert.InRange(slot.timeCost, 1, 3));
+		Assert.All(state.encounterSlots, slot =>
+		{
+			Assert.InRange(slot.timeCost, 1, 3);
+			Assert.Contains(slot.enemyId, ClimbRuleService.GetClimbEncounterEnemyPool(), StringComparer.OrdinalIgnoreCase);
+		});
 	}
 
 	[Fact]
@@ -139,6 +145,25 @@ public class ClimbRuleServiceTests
 		if (!string.IsNullOrWhiteSpace(firstEquipment))
 		{
 			Assert.DoesNotContain(state.shopSlots, s => string.Equals(s.itemId, firstEquipment, StringComparison.OrdinalIgnoreCase));
+		}
+	}
+
+	[Fact]
+	public void Climb_encounter_pool_excludes_banned_and_image_less_enemies()
+	{
+		var pool = ClimbRuleService.GetClimbEncounterEnemyPool();
+
+		Assert.NotEmpty(pool);
+		Assert.DoesNotContain("gleeber", pool);
+		Assert.DoesNotContain("sand_corpse", pool);
+		Assert.DoesNotContain("training_demon", pool);
+		foreach (string enemyId in pool)
+		{
+			var enemy = EnemyFactory.Create(enemyId);
+			Assert.NotNull(enemy);
+			Assert.False(enemy.IsBoss);
+			Assert.False(enemy.IsTutorialOnly);
+			Assert.True(EnemyPortraitContent.HasPortrait(enemyId));
 		}
 	}
 

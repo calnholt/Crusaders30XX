@@ -170,6 +170,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 					kind = ClimbShopSlotKinds.Medal,
 					itemId = "st_luke",
 					cost = new ClimbResourceSave { red = 1, white = 0, black = 0 },
+					timeCost = 1,
 					generatedAtTime = time,
 				},
 				new()
@@ -178,6 +179,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 					kind = ClimbShopSlotKinds.Equipment,
 					itemId = "knightly_helm",
 					cost = new ClimbResourceSave { red = 0, white = 1, black = 0 },
+					timeCost = 2,
 					isSold = _variant == ClimbSnapshotVariant.SoldShopSlot,
 					generatedAtTime = time,
 				},
@@ -188,6 +190,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 					cardKey = "smite|White|Upgraded",
 					deckIndex = 1,
 					cost = new ClimbResourceSave { red = 1, white = 1, black = 0 },
+					timeCost = 2,
 					generatedAtTime = time,
 				},
 				new()
@@ -196,6 +199,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 					kind = ClimbShopSlotKinds.Replacement,
 					cardKey = "zealous_vow|Red",
 					cost = new ClimbResourceSave { red = 1, white = 1, black = 0 },
+					timeCost = 3,
 					generatedAtTime = time,
 				},
 			};
@@ -209,23 +213,23 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 				{
 					id = "encounter_0",
 					enemyId = "skeleton",
-					timeCost = _variant == ClimbSnapshotVariant.HoverPreview ? 4 : 3,
+					timeCost = _variant == ClimbSnapshotVariant.HoverPreview ? 2 : 3,
 					rewardResources = new ClimbResourceSave { red = 2, white = 0, black = 1 },
 					hasDeckReward = true,
 				},
 				new()
 				{
 					id = "encounter_1",
-					enemyId = "gleeber",
-					timeCost = 5,
+					enemyId = "demon",
+					timeCost = 1,
 					rewardResources = new ClimbResourceSave { red = 0, white = 2, black = 1 },
 					hasDeckReward = true,
 				},
 				new()
 				{
 					id = "encounter_2",
-					enemyId = "serpent",
-					timeCost = 6,
+					enemyId = "cactus",
+					timeCost = 3,
 					rewardResources = new ClimbResourceSave { red = 1, white = 1, black = 1 },
 					hasDeckReward = true,
 				},

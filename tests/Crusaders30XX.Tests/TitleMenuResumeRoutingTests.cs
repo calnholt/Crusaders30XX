@@ -22,7 +22,7 @@ public class TitleMenuResumeRoutingTests
 	}
 
 	[Fact]
-	public void Active_run_with_incomplete_start_quest_routes_to_battle_path()
+	public void Active_run_with_incomplete_start_quest_routes_to_climb()
 	{
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.CompleteGuidedTutorial();
@@ -30,7 +30,7 @@ public class TitleMenuResumeRoutingTests
 
 		Assert.True(SaveCache.IsRunActive());
 		Assert.False(SaveCache.IsStartQuestCompleted());
-		Assert.Null(TitleMenuResumeService.ResolveDirectTransitionScene());
+		Assert.Equal(SceneId.Climb, TitleMenuResumeService.ResolveDirectTransitionScene());
 	}
 
 	[Fact]

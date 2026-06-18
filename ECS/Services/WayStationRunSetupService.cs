@@ -20,16 +20,7 @@ namespace Crusaders30XX.ECS.Services
 				WayStationRunSetupSingleton.WeaponId,
 				GetSelectedTemperanceId());
 
-			PrepareRunEntitiesForBattle(world);
-
-			if (!SaveCache.IsStartQuestCompleted())
-			{
-				BeginStartQuestBattle(world);
-			}
-			else
-			{
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Climb, SkipHold = true });
-			}
+			EventManager.Publish(new ShowTransition { Scene = SceneId.Climb, SkipHold = true });
 		}
 
 		public static void BeginStartQuestBattle(World world)

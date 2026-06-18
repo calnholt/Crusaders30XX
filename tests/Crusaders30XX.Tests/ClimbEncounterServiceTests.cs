@@ -18,7 +18,7 @@ public class ClimbEncounterServiceTests
 		EventManager.Clear();
 		try
 		{
-			PrepareRunWithEncounter(timeCost: 4);
+			PrepareRunWithEncounter(timeCost: 3);
 			var world = new World();
 			int battleTransitions = 0;
 			EventManager.Subscribe<ShowTransition>(evt =>
@@ -47,7 +47,7 @@ public class ClimbEncounterServiceTests
 		EventManager.Clear();
 		try
 		{
-			PrepareRunWithEncounter(timeCost: 5);
+			PrepareRunWithEncounter(timeCost: 3);
 			var world = new World();
 			Assert.True(ClimbEncounterService.TryQueueEncounter(world.EntityManager, "encounter_a"));
 			world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().Single().GetComponent<QueuedEvents>().CurrentIndex = 0;
@@ -56,10 +56,11 @@ public class ClimbEncounterServiceTests
 
 			var climb = SaveCache.GetClimbState();
 			Assert.True(result.Completed);
-			Assert.Equal(5, climb.time);
+			Assert.Equal(3, climb.time);
 			Assert.Equal(2, climb.resources.red);
 			Assert.Equal(1, climb.resources.white);
-			Assert.True(climb.encounterSlots.Single(s => s.id == "encounter_a").isCompleted);
+			Assert.False(climb.encounterSlots.Single(s => s.id == "encounter_a").isCompleted);
+			Assert.NotEqual("skeleton", climb.encounterSlots.Single(s => s.id == "encounter_a").enemyId);
 			Assert.NotNull(climb.pendingEncounterReward);
 			Assert.Equal("encounter_a", climb.pendingEncounterReward.encounterSlotId);
 		}
@@ -75,7 +76,7 @@ public class ClimbEncounterServiceTests
 		EventManager.Clear();
 		try
 		{
-			PrepareRunWithEncounter(timeCost: 5);
+			PrepareRunWithEncounter(timeCost: 3);
 			var world = new World();
 			Assert.True(ClimbEncounterService.TryQueueEncounter(world.EntityManager, "encounter_a"));
 			world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().Single().GetComponent<QueuedEvents>().CurrentIndex = 0;
@@ -140,7 +141,7 @@ public class ClimbEncounterServiceTests
 	}
 
 	[Fact]
-	public void Completing_last_available_ordinary_encounter_replenishes_slots_before_final_time()
+	public void Completing_ordinary_encounter_rerolls_that_slot_before_final_time()
 	{
 		EventManager.Clear();
 		try
@@ -149,17 +150,15 @@ public class ClimbEncounterServiceTests
 			var world = new World();
 
 			CompleteEncounter(world, "encounter_a");
-			CompleteEncounter(world, "encounter_b");
-			CompleteEncounter(world, "encounter_c");
 
 			var climb = SaveCache.GetClimbState();
 			Assert.Equal(ClimbRuleService.EncounterSlotCount, climb.encounterSlots.Count);
-			Assert.All(climb.encounterSlots, slot =>
-			{
-				Assert.False(slot.isCompleted);
-				Assert.False(slot.isFinal);
-				Assert.False(string.IsNullOrWhiteSpace(slot.enemyId));
-			});
+			var rerolled = climb.encounterSlots.Single(slot => slot.id == "encounter_a");
+			Assert.False(rerolled.isCompleted);
+			Assert.False(rerolled.isFinal);
+			Assert.False(string.IsNullOrWhiteSpace(rerolled.enemyId));
+			Assert.NotEqual("skeleton", rerolled.enemyId);
+			Assert.InRange(rerolled.timeCost, 1, 3);
 		}
 		finally
 		{
@@ -176,7 +175,7 @@ public class ClimbEncounterServiceTests
 			encounterSlots = new List<ClimbEncounterSlotSave>
 			{
 				new() { id = "encounter_a", enemyId = "skeleton", isCompleted = true },
-				new() { id = "encounter_b", enemyId = "gleeber", isCompleted = true },
+				new() { id = "encounter_b", enemyId = "demon", isCompleted = true },
 				new() { id = "encounter_c", enemyId = "skeleton", isCompleted = true },
 			}
 		};
@@ -217,7 +216,7 @@ public class ClimbEncounterServiceTests
 				rewardResources = new ClimbResourceSave { red = 1, white = 0, black = 0 },
 				hasDeckReward = false,
 			},
-			new() { id = "encounter_b", enemyId = "gleeber", timeCost = 3, hasDeckReward = false },
+			new() { id = "encounter_b", enemyId = "demon", timeCost = 3, hasDeckReward = false },
 			new() { id = "encounter_c", enemyId = "skeleton", timeCost = 3, hasDeckReward = false },
 		};
 		SaveCache.SaveClimbState(climb);

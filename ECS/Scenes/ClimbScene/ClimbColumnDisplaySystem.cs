@@ -203,6 +203,10 @@ namespace Crusaders30XX.ECS.Systems
 			ClimbSceneDrawHelpers.DrawText(_spriteBatch, slot.Label, new Vector2(rect.Right - 78, rect.Y + CompactPaddingY + 1), CompactBadgeFontScale, ClimbSceneDrawHelpers.White3);
 			Color metaColor = affordableAfterPreview || !slot.IsAffordable ? ClimbSceneDrawHelpers.Red2 : ClimbSceneDrawHelpers.White2;
 			DrawResourceLine(new Vector2(rect.X + CompactPaddingX, rect.Y + rect.Height - 24), slot.Cost, metaColor);
+			if (slot.TimeCost > 0)
+			{
+				DrawTimeBlock(new Rectangle(rect.Right - 64, rect.Y + rect.Height - 28, 48, 24), slot.TimeCost);
+			}
 		}
 
 		private void DrawEncounterSlot(Rectangle rect, ClimbSlotPresentation slot)

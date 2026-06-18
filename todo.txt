@@ -43,5 +43,27 @@ keywords
 - indulgence for additional cost?
 - vigor reduction
 
+card upgrades (missing OnUpgrade)
+- Impale
+- IronCovenant
+- QuickWit
+- RallyTheFaithful
+- RelentlessStrike
+- RenounceAndHone
+- Stab
+- Stalwart
+- SteadfastResolve
+- SteelTheSpirit
+- StokeTheFurnace
+- Strike
+- SuddenThrust
+- Sword
+- TemperTheBlade
+- Tempest
+- UnburdenedStrike
+- VanguardsPromise
+- Vindicate
+- Whirlwind
+- ZealousVow
 
 

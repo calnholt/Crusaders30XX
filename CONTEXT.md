@@ -168,7 +168,7 @@ One fightable combat stop in the Climb. Completing a Climb encounter marks it co
 
 ## New run start
 
-WayStation Depart after first launch or after an inactive run. Depart creates and activates the run, applies the selected weapon and difficulty setup, then starts the root Climb encounter.
+WayStation Depart after first launch or after an inactive run. Depart creates and activates the run, applies the selected weapon and difficulty setup, then routes the player to the Climb. Combat starts only after the player selects a Climb encounter.
 
 ## Combat node
 
@@ -186,7 +186,7 @@ The Gate follows normal spatial encounter reveal. Before reveal it has no map ic
 
 ## Root Climb encounter
 
-The first Climb encounter in a run. It is the player's initial battle and the anchor for procedural placement. Its position is near the desert map center with random offset so it is not always at the exact geometric center.
+The first generated Climb encounter in a run and the anchor for procedural placement. It is not auto-started on new-run creation. Its position is near the desert map center with random offset so it is not always at the exact geometric center.
 
 ## Climb tree
 

@@ -7,7 +7,7 @@ namespace Crusaders30XX.ECS.Data.Save
 {
 	public class SaveFile
 	{
-		public const int CURRENT_VERSION = 10;
+		public const int CURRENT_VERSION = 11;
 
 		public int version { get; set; } = 0;
 		public bool isRunActive { get; set; }
@@ -68,6 +68,7 @@ namespace Crusaders30XX.ECS.Data.Save
 		public string cardKey { get; set; } = string.Empty;
 		public int deckIndex { get; set; } = -1;
 		public ClimbResourceSave cost { get; set; } = new ClimbResourceSave { red = 0, white = 0, black = 0 };
+		public int timeCost { get; set; }
 		public bool isSold { get; set; }
 		public int generatedAtTime { get; set; }
 	}

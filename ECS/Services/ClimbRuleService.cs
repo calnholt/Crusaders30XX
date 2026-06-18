@@ -18,13 +18,11 @@ namespace Crusaders30XX.ECS.Services
 		public const int ShopRefreshInterval = 8;
 		private const int RngSalt = unchecked((int)0xC11A1B00);
 
-		private static readonly string[] EncounterEnemyPool =
+		private static readonly HashSet<string> BannedClimbEncounterEnemyIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
-			"skeleton",
 			"gleeber",
-			"paladin",
-			"serpent",
-			"fallen_shepherd"
+			"sand_corpse",
+			"training_demon",
 		};
 
 		private static readonly CardData.CardColor[] ResourceColors =
@@ -198,16 +196,7 @@ namespace Crusaders30XX.ECS.Services
 			var rng = CreateRng(seed, state.time, 23);
 			for (int i = 0; i < EncounterSlotCount; i++)
 			{
-				bool final = ClampTime(state.time) >= MaxTime;
-				state.encounterSlots.Add(new ClimbEncounterSlotSave
-				{
-					id = $"encounter_{i}",
-					enemyId = final ? "fallen_shepherd" : EncounterEnemyPool[rng.Next(Math.Max(1, EncounterEnemyPool.Length - 1))],
-					timeCost = final ? 0 : rng.Next(3, 7),
-					rewardResources = final ? new ClimbResourceSave { red = 0, white = 0, black = 0 } : GenerateReward(rng, 1, 3),
-					hasDeckReward = !final,
-					isFinal = final,
-				});
+				state.encounterSlots.Add(RollEncounterSlot(state, rng, $"encounter_{i}"));
 			}
 		}
 
@@ -217,15 +206,75 @@ namespace Crusaders30XX.ECS.Services
 			state.encounterSlots ??= new List<ClimbEncounterSlotSave>();
 
 			bool final = ClampTime(state.time) >= MaxTime;
-			bool hasAvailable = state.encounterSlots.Any(slot =>
-				slot != null
-				&& !slot.isCompleted
-				&& !string.IsNullOrWhiteSpace(slot.enemyId)
-				&& slot.isFinal == final);
+			if (final)
+			{
+				bool finalReady = state.encounterSlots.Count == EncounterSlotCount
+					&& state.encounterSlots.All(slot =>
+						slot != null
+						&& !slot.isCompleted
+						&& slot.isFinal
+						&& string.Equals(slot.enemyId, "fallen_shepherd", StringComparison.OrdinalIgnoreCase));
+				if (finalReady) return false;
 
-			if (hasAvailable) return false;
-			RefreshEncounterSlots(state, seed);
-			return true;
+				RefreshEncounterSlots(state, seed);
+				return true;
+			}
+
+			var rng = CreateRng(seed, state.time, 23 + state.encounterSlots.Count);
+			bool changed = false;
+			while (state.encounterSlots.Count < EncounterSlotCount)
+			{
+				state.encounterSlots.Add(RollEncounterSlot(state, rng, $"encounter_{state.encounterSlots.Count}"));
+				changed = true;
+			}
+
+			for (int i = 0; i < state.encounterSlots.Count; i++)
+			{
+				var slot = state.encounterSlots[i];
+				if (slot != null
+					&& !slot.isCompleted
+					&& !slot.isFinal
+					&& IsValidClimbEncounterEnemy(slot.enemyId)
+					&& slot.timeCost >= 1
+					&& slot.timeCost <= 3)
+				{
+					continue;
+				}
+
+				string slotId = string.IsNullOrWhiteSpace(slot?.id) ? $"encounter_{i}" : slot.id;
+				state.encounterSlots[i] = RollEncounterSlot(state, rng, slotId, slot?.enemyId);
+				changed = true;
+			}
+
+			if (state.encounterSlots.Count > EncounterSlotCount)
+			{
+				state.encounterSlots = state.encounterSlots.Take(EncounterSlotCount).ToList();
+				changed = true;
+			}
+
+			return changed;
+		}
+
+		public static int AdvanceTimeAndUpdateSlots(ClimbSaveState state, int seed, LoadoutDefinition loadout, int timeCost)
+		{
+			if (state == null) return 0;
+			int previousTime = state.time;
+			int applied = ApplyTime(state, timeCost);
+			if (ShouldRefreshShopAtTime(previousTime, state.time))
+			{
+				RefreshShopSlots(state, seed, loadout);
+			}
+			UpdateEventSlots(state, seed);
+			ReplenishEncounterSlots(state, seed);
+			return applied;
+		}
+
+		public static IReadOnlyList<string> GetClimbEncounterEnemyPool()
+		{
+			return EnemyPortraitContent.GetRunMapEnemyPool()
+				.Where(IsValidClimbEncounterEnemy)
+				.OrderBy(id => id, StringComparer.OrdinalIgnoreCase)
+				.ToList();
 		}
 
 		public static void RefreshEventSlots(ClimbSaveState state, int seed)
@@ -316,6 +365,7 @@ namespace Crusaders30XX.ECS.Services
 				id = $"shop_{slotIndex}",
 				kind = kind,
 				cost = GenerateCost(rng, kind == ClimbShopSlotKinds.Medal ? 2 : 1, kind == ClimbShopSlotKinds.Medal ? 3 : 2),
+				timeCost = rng.Next(1, 4),
 				generatedAtTime = state.time,
 			};
 
@@ -348,7 +398,56 @@ namespace Crusaders30XX.ECS.Services
 				if (string.IsNullOrWhiteSpace(slot.cardKey)) slot.kind = ClimbShopSlotKinds.Empty;
 			}
 
+			if (string.Equals(slot.kind, ClimbShopSlotKinds.Empty, StringComparison.OrdinalIgnoreCase))
+			{
+				slot.timeCost = 0;
+			}
+
 			return slot;
+		}
+
+		private static ClimbEncounterSlotSave RollEncounterSlot(
+			ClimbSaveState state,
+			Random rng,
+			string slotId,
+			string excludedEnemyId = "")
+		{
+			bool final = ClampTime(state?.time ?? 0) >= MaxTime;
+			return new ClimbEncounterSlotSave
+			{
+				id = slotId ?? string.Empty,
+				enemyId = final ? "fallen_shepherd" : RollClimbEncounterEnemyId(rng, excludedEnemyId),
+				timeCost = final ? 0 : rng.Next(1, 4),
+				rewardResources = final ? new ClimbResourceSave { red = 0, white = 0, black = 0 } : GenerateReward(rng, 1, 3),
+				hasDeckReward = !final,
+				isFinal = final,
+				isCompleted = false,
+			};
+		}
+
+		private static string RollClimbEncounterEnemyId(Random rng, string excludedEnemyId)
+		{
+			rng ??= Random.Shared;
+			var pool = GetClimbEncounterEnemyPool().ToList();
+			if (pool.Count == 0) return "skeleton";
+			if (pool.Count > 1 && !string.IsNullOrWhiteSpace(excludedEnemyId))
+			{
+				pool = pool
+					.Where(id => !string.Equals(id, excludedEnemyId, StringComparison.OrdinalIgnoreCase))
+					.ToList();
+			}
+			return pool[rng.Next(pool.Count)];
+		}
+
+		private static bool IsValidClimbEncounterEnemy(string enemyId)
+		{
+			if (string.IsNullOrWhiteSpace(enemyId)) return false;
+			if (BannedClimbEncounterEnemyIds.Contains(enemyId)) return false;
+			var enemy = EnemyFactory.Create(enemyId);
+			return enemy != null
+				&& !enemy.IsBoss
+				&& !enemy.IsTutorialOnly
+				&& EnemyPortraitContent.HasPortrait(enemyId);
 		}
 
 		private static (int index, string cardKey) PickUpgradeableDeckIndex(LoadoutDefinition loadout, Random rng)
