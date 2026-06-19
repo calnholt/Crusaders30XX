@@ -1,0 +1,342 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Objects.Cards;
+using Crusaders30XX.ECS.Objects.EnemyAttacks;
+using Crusaders30XX.ECS.Objects.Enemies;
+using Crusaders30XX.ECS.Systems;
+using Xunit;
+
+namespace Crusaders30XX.Tests;
+
+public class FallenShepherdAttackTests : IDisposable
+{
+    private static readonly HashSet<string> Phase1SmallPool =
+    [
+        "fallen_shepherd_crooks_scar",
+        "fallen_shepherd_break_faith",
+        "fallen_shepherd_bloodletting",
+        "fallen_shepherd_cow_the_flock",
+    ];
+
+    private static readonly HashSet<string> Phase2SmallPool =
+    [
+        "fallen_shepherd_shepherds_vigil",
+        "fallen_shepherd_hush",
+        "fallen_shepherd_crooks_scar",
+        "fallen_shepherd_cow_the_flock",
+    ];
+
+    private static readonly HashSet<string> Phase3Pool =
+    [
+        "fallen_shepherd_purge_the_heretic",
+        "fallen_shepherd_fear_the_shepherd",
+        "fallen_shepherd_final_sermon",
+        "fallen_shepherd_phase_3",
+    ];
+
+    public FallenShepherdAttackTests()
+    {
+        EventManager.Clear();
+    }
+
+    public void Dispose()
+    {
+        EventManager.Clear();
+    }
+
+    [Fact]
+    public void Phase_one_alternates_heavy_with_three_distinct_small_attacks()
+    {
+        var shepherd = new FallenShepherd();
+
+        Assert.Equal(new[] { "fallen_shepherd_phase_1" }, shepherd.GetAttackIds(null, 1));
+        Assert.Equal(new[] { "fallen_shepherd_phase_1" }, shepherd.GetAttackIds(null, 0));
+
+        var selected = shepherd.GetAttackIds(null, 2).ToList();
+        Assert.Equal(3, selected.Count);
+        Assert.Equal(3, selected.Distinct().Count());
+        Assert.All(selected, attackId => Assert.Contains(attackId, Phase1SmallPool));
+    }
+
+    [Fact]
+    public void Phase_two_keeps_global_turn_parity_and_reuses_shared_attacks()
+    {
+        var shepherd = new FallenShepherd { CurrentPhase = 2 };
+
+        Assert.Equal(new[] { "fallen_shepherd_phase_2" }, shepherd.GetAttackIds(null, 7));
+
+        var selected = shepherd.GetAttackIds(null, 8).ToList();
+        Assert.Equal(3, selected.Count);
+        Assert.Equal(3, selected.Distinct().Count());
+        Assert.All(selected, attackId => Assert.Contains(attackId, Phase2SmallPool));
+    }
+
+    [Fact]
+    public void Phase_three_selects_one_registered_attack()
+    {
+        var shepherd = new FallenShepherd { CurrentPhase = 3 };
+
+        for (int turn = 1; turn <= 20; turn++)
+        {
+            string attackId = Assert.Single(shepherd.GetAttackIds(null, turn));
+            Assert.Contains(attackId, Phase3Pool);
+            Assert.NotNull(EnemyAttackFactory.Create(attackId));
+        }
+    }
+
+    [Fact]
+    public void Every_fallen_shepherd_attack_is_registered_in_both_factory_paths()
+    {
+        var attackIds = Phase1SmallPool
+            .Concat(Phase2SmallPool)
+            .Concat(Phase3Pool)
+            .Append("fallen_shepherd_phase_1")
+            .Append("fallen_shepherd_phase_2")
+            .Distinct()
+            .ToList();
+        var allAttacks = EnemyAttackFactory.GetAllAttacks();
+
+        Assert.All(attackIds, attackId =>
+        {
+            Assert.NotNull(EnemyAttackFactory.Create(attackId));
+            Assert.True(allAttacks.ContainsKey(attackId), $"Missing attack registration: {attackId}");
+        });
+    }
+
+    [Fact]
+    public void Cast_out_requires_at_least_one_blocker_and_makes_only_card_blockers_colorless()
+    {
+        var entityManager = new EntityManager();
+        var card = entityManager.CreateEntity("Card");
+        entityManager.AddComponent(card, new CardData());
+        entityManager.AddComponent(card, new AssignedBlockCard { IsEquipment = false });
+        var equipment = entityManager.CreateEntity("Equipment");
+        entityManager.AddComponent(equipment, new CardData());
+        entityManager.AddComponent(equipment, new AssignedBlockCard { IsEquipment = true });
+        var attack = new FallenShepherdPhase1();
+        MustBeBlockedEvent requirement = null;
+        EventManager.Subscribe<MustBeBlockedEvent>(evt => requirement = evt);
+
+        attack.OnAttackReveal(entityManager);
+        attack.OnBlockProcessed(entityManager, card);
+        attack.OnBlockProcessed(entityManager, card);
+        attack.OnBlockProcessed(entityManager, equipment);
+
+        Assert.NotNull(requirement);
+        Assert.Equal(1, requirement.Threshold);
+        Assert.Equal(MustBeBlockedSystem.MustBeBlockedByType.AtLeast, requirement.Type);
+        Assert.True(card.HasComponent<Colorless>());
+        Assert.False(equipment.HasComponent<Colorless>());
+        Assert.Single(card.GetAllComponents().OfType<Colorless>());
+    }
+
+    [Fact]
+    public void Break_faith_makes_only_card_blockers_brittle()
+    {
+        var entityManager = new EntityManager();
+        var card = entityManager.CreateEntity("Card");
+        entityManager.AddComponent(card, new CardData());
+        var equipment = entityManager.CreateEntity("Equipment");
+        entityManager.AddComponent(equipment, new CardData());
+        entityManager.AddComponent(equipment, new AssignedBlockCard { IsEquipment = true });
+        var attack = new FallenShepherdBreakFaith();
+
+        attack.OnBlockProcessed(entityManager, card);
+        attack.OnBlockProcessed(entityManager, card);
+        attack.OnBlockProcessed(entityManager, equipment);
+
+        Assert.True(card.HasComponent<Brittle>());
+        Assert.False(equipment.HasComponent<Brittle>());
+        Assert.Single(card.GetAllComponents().OfType<Brittle>());
+    }
+
+    [Fact]
+    public void On_hit_attacks_publish_expected_passives_to_expected_targets()
+    {
+        var entityManager = CreateOwners(out var player, out var enemy);
+        var applied = new List<ApplyPassiveEvent>();
+        EventManager.Subscribe<ApplyPassiveEvent>(evt => applied.Add(evt));
+
+        new FallenShepherdCrooksScar().OnAttackHit(entityManager);
+        new FallenShepherdBloodletting().OnAttackHit(entityManager);
+        new FallenShepherdShepherdsVigil().OnAttackHit(entityManager);
+        new FallenShepherdHush().OnAttackHit(entityManager);
+
+        Assert.Collection(applied,
+            evt => AssertPassive(evt, player, AppliedPassiveType.Scar, 1),
+            evt => AssertPassive(evt, player, AppliedPassiveType.Bleed, 3),
+            evt => AssertPassive(evt, enemy, AppliedPassiveType.Guard, 3),
+            evt => AssertPassive(evt, player, AppliedPassiveType.Silenced, 1));
+    }
+
+    [Fact]
+    public void Phase_three_reveal_attacks_publish_expected_player_passives()
+    {
+        var entityManager = CreateOwners(out var player, out _);
+        var applied = new List<ApplyPassiveEvent>();
+        EventManager.Subscribe<ApplyPassiveEvent>(evt => applied.Add(evt));
+
+        new FallenShepherdPurgeTheHeretic().OnAttackReveal(entityManager);
+        new FallenShepherdFearTheShepherd().OnAttackReveal(entityManager);
+        new FallenShepherdFinalSermon().OnAttackReveal(entityManager);
+
+        Assert.Collection(applied,
+            evt => AssertPassive(evt, player, AppliedPassiveType.Burn, 1),
+            evt => AssertPassive(evt, player, AppliedPassiveType.Fear, 1),
+            evt => AssertPassive(evt, player, AppliedPassiveType.Silenced, 1));
+    }
+
+    [Fact]
+    public void Cow_the_flock_intimidates_one_card_on_reveal()
+    {
+        var entityManager = new EntityManager();
+        IntimidateEvent intimidated = null;
+        EventManager.Subscribe<IntimidateEvent>(evt => intimidated = evt);
+
+        new FallenShepherdCowTheFlock().OnAttackReveal(entityManager);
+
+        Assert.NotNull(intimidated);
+        Assert.Equal(1, intimidated.Amount);
+    }
+
+    [Theory]
+    [InlineData(5, 2)]
+    [InlineData(6, 0)]
+    public void Binding_sermon_uses_six_block_threshold(int assignedBlock, int expectedShackled)
+    {
+        var attack = new FallenShepherdPhase2();
+        var entityManager = CreateThresholdCombat(attack, assignedBlock, includeHandCard: false, out _, out var player);
+        int shackled = 0;
+        EventManager.Subscribe<ApplyPassiveEvent>(evt =>
+        {
+            if (evt.Target == player && evt.Type == AppliedPassiveType.Shackled) shackled += evt.Delta;
+        });
+
+        ResolveThresholdAttack(entityManager);
+
+        Assert.Equal(expectedShackled, shackled);
+    }
+
+    [Theory]
+    [InlineData(2, 1)]
+    [InlineData(3, 0)]
+    public void Have_no_mercy_discards_selected_card_only_below_three_block(int assignedBlock, int expectedDiscards)
+    {
+        var attack = new FallenShepherdPhase3();
+        var entityManager = CreateThresholdCombat(attack, assignedBlock, includeHandCard: true, out var handCard, out _);
+        _ = new MarkedForSpecificDiscardSystem(entityManager);
+        var discardRequests = new List<CardMoveRequested>();
+        EventManager.Subscribe<CardMoveRequested>(evt =>
+        {
+            if (evt.Reason == "DiscardSpecificCard") discardRequests.Add(evt);
+        });
+
+        attack.OnAttackReveal(entityManager);
+        Assert.Equal("test-context", handCard.GetComponent<MarkedForSpecificDiscard>()?.ContextId);
+
+        ResolveThresholdAttack(entityManager);
+
+        Assert.Equal(expectedDiscards, discardRequests.Count);
+        if (expectedDiscards == 1) Assert.Same(handCard, discardRequests[0].Card);
+        Assert.False(handCard.HasComponent<MarkedForSpecificDiscard>());
+    }
+
+    [Fact]
+    public void Have_no_mercy_handles_an_empty_hand()
+    {
+        var attack = new FallenShepherdPhase3();
+        var entityManager = CreateThresholdCombat(attack, assignedBlock: 0, includeHandCard: false, out _, out _);
+        _ = new MarkedForSpecificDiscardSystem(entityManager);
+        int discardRequests = 0;
+        EventManager.Subscribe<CardMoveRequested>(evt =>
+        {
+            if (evt.Reason == "DiscardSpecificCard") discardRequests++;
+        });
+
+        attack.OnAttackReveal(entityManager);
+        ResolveThresholdAttack(entityManager);
+
+        Assert.Equal(0, discardRequests);
+        Assert.Empty(entityManager.GetEntitiesWithComponent<MarkedForSpecificDiscard>());
+    }
+
+    private static EntityManager CreateOwners(out Entity player, out Entity enemy)
+    {
+        var entityManager = new EntityManager();
+        player = entityManager.CreateEntity("Player");
+        entityManager.AddComponent(player, new Player());
+        enemy = entityManager.CreateEntity("Enemy");
+        return entityManager;
+    }
+
+    private static EntityManager CreateThresholdCombat(
+        EnemyAttackBase attack,
+        int assignedBlock,
+        bool includeHandCard,
+        out Entity handCard,
+        out Entity player)
+    {
+        var entityManager = CreateOwners(out player, out var enemy);
+        var deckEntity = entityManager.CreateEntity("Deck");
+        var deck = new Deck();
+        entityManager.AddComponent(deckEntity, deck);
+        handCard = null;
+        if (includeHandCard)
+        {
+            handCard = entityManager.CreateEntity("SelectedCard");
+            entityManager.AddComponent(handCard, new CardData
+            {
+                Card = new CardBase { Name = "Selected Card" },
+            });
+            deck.Hand.Add(handCard);
+        }
+
+        entityManager.AddComponent(enemy, new AttackIntent
+        {
+            Planned =
+            [
+                new PlannedAttack
+                {
+                    AttackId = attack.Id,
+                    ContextId = "test-context",
+                    AttackDefinition = attack,
+                },
+            ],
+        });
+        var progressEntity = entityManager.CreateEntity("EnemyAttackProgress[test-context]");
+        entityManager.AddComponent(progressEntity, new EnemyAttackProgress
+        {
+            ContextId = "test-context",
+            Enemy = enemy,
+            AttackId = attack.Id,
+            AssignedBlockTotal = assignedBlock,
+            BaseDamage = attack.Damage,
+        });
+
+        _ = new AttackResolutionSystem(entityManager);
+        _ = new EnemyDamageManagerSystem(entityManager);
+        return entityManager;
+    }
+
+    private static void ResolveThresholdAttack(EntityManager entityManager)
+    {
+        EventManager.Publish(new ResolveAttack { ContextId = "test-context" });
+        EventManager.Publish(new EnemyAttackImpactNow { ContextId = "test-context" });
+    }
+
+    private static void AssertPassive(
+        ApplyPassiveEvent evt,
+        Entity target,
+        AppliedPassiveType type,
+        int amount)
+    {
+        Assert.Same(target, evt.Target);
+        Assert.Equal(type, evt.Type);
+        Assert.Equal(amount, evt.Delta);
+    }
+}

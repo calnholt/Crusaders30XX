@@ -123,8 +123,17 @@ namespace Crusaders30XX.ECS.Factories
                 "sniper_shot" => new SniperShot(),
                 // FallenShepherd attacks
                 "fallen_shepherd_phase_1" => new FallenShepherdPhase1(),
+                "fallen_shepherd_crooks_scar" => new FallenShepherdCrooksScar(),
+                "fallen_shepherd_break_faith" => new FallenShepherdBreakFaith(),
+                "fallen_shepherd_bloodletting" => new FallenShepherdBloodletting(),
+                "fallen_shepherd_cow_the_flock" => new FallenShepherdCowTheFlock(),
                 "fallen_shepherd_phase_2" => new FallenShepherdPhase2(),
+                "fallen_shepherd_shepherds_vigil" => new FallenShepherdShepherdsVigil(),
+                "fallen_shepherd_hush" => new FallenShepherdHush(),
                 "fallen_shepherd_phase_3" => new FallenShepherdPhase3(),
+                "fallen_shepherd_purge_the_heretic" => new FallenShepherdPurgeTheHeretic(),
+                "fallen_shepherd_fear_the_shepherd" => new FallenShepherdFearTheShepherd(),
+                "fallen_shepherd_final_sermon" => new FallenShepherdFinalSermon(),
                 _ => null
             };
         }
@@ -242,8 +251,17 @@ namespace Crusaders30XX.ECS.Factories
                 { "sniper_shot", new SniperShot() },
                 // FallenShepherd attacks
                 { "fallen_shepherd_phase_1", new FallenShepherdPhase1() },
+                { "fallen_shepherd_crooks_scar", new FallenShepherdCrooksScar() },
+                { "fallen_shepherd_break_faith", new FallenShepherdBreakFaith() },
+                { "fallen_shepherd_bloodletting", new FallenShepherdBloodletting() },
+                { "fallen_shepherd_cow_the_flock", new FallenShepherdCowTheFlock() },
                 { "fallen_shepherd_phase_2", new FallenShepherdPhase2() },
+                { "fallen_shepherd_shepherds_vigil", new FallenShepherdShepherdsVigil() },
+                { "fallen_shepherd_hush", new FallenShepherdHush() },
                 { "fallen_shepherd_phase_3", new FallenShepherdPhase3() },
+                { "fallen_shepherd_purge_the_heretic", new FallenShepherdPurgeTheHeretic() },
+                { "fallen_shepherd_fear_the_shepherd", new FallenShepherdFearTheShepherd() },
+                { "fallen_shepherd_final_sermon", new FallenShepherdFinalSermon() },
             };
         }
     }
