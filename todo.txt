@@ -2,10 +2,8 @@ UX
 - dialogue transitions, text, name section
 
 Gameplay
-- map needs to feel like worker placement -- think about HOW -- gain resources @ battles, use to buy, time costs to visit places, tableu building? conversions
 - maybe remove istoken/isweapon and make as components?
 - make hand display agnostic of carddata, probably involves refactoring some components and data objects
-- fix hand display card uielement bounds
 - make cardlistmodaldisplay not a modal, tinted overlay with floating UI
 - darkness X - for x turns, one card in hand becomes shrouded in darkess during the enemy turn, lifts during action phase, cards in darkness block for 3 and ignore color gains and play restrictions
 
@@ -39,8 +37,6 @@ keywords
 - indulgence for additional cost?
 - vigor reduction
 
-card upgrades (missing OnUpgrade)
-- SuddenThrust
-- UnburdenedStrike
+
 
 

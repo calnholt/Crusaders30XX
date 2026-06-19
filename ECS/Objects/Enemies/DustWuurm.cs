@@ -49,6 +49,6 @@ public class DustStorm : EnemyAttackBase
   {
     Id = "dust_storm";
     Name = "Dust Storm";
-    Damage = 7;
+    Damage = 8;
   }
 }

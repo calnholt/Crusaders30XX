@@ -101,7 +101,7 @@ public class SoulSiphon : EnemyAttackBase
   {
     Id = "soul_siphon";
     Name = "Soul Siphon";
-    Damage = 4;
+    Damage = 3;
     ConditionType = ConditionType.OnHit;
     BlockingRestrictionType = BlockingRestrictionType.NotRed;
     Text = $"{EnemyAttackTextHelper.GetBlockingRestrictionText(BlockingRestrictionType)}\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Custom, 0, ConditionType, 100, $"Lose {CourageLoss} courage.")}";
