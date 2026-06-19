@@ -38,6 +38,5 @@ keywords
 - vigor reduction
 
 
-- scar - lose 1 stack at the start of battle
 - spider - start battle with x fear, fear stacks lose 1 per battle, attacks can apply slow which also lose 1 per battle or when fear is gone
 - gl

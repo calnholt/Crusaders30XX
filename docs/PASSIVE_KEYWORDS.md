@@ -54,7 +54,7 @@ This document summarizes all passive effects in the game. Each passive has a dur
 
 | Keyword | Effect |
 |---------|--------|
-| **Scar** | Lose X max HP for the run. Remove one scar when leaving battle after completing a quest node |
+| **Scar** | Lose X max HP immediately. At battle start, lose 1 scar, but max HP is not restored until the next battle recalculates from remaining scars |
 | **Fear** | Attacks have X*10% chance to become ambush attacks |
 | **Intimidated** | At the start of the block phase, X cards from your hand are intimidated |
 | **MindFog** | At the end of your action phase, discard all cards in your hand |

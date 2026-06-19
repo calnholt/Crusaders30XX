@@ -188,7 +188,7 @@ public sealed class ColorlessCardTests
 		entityManager.AddComponent(card, new Colorless());
 		deck.Hand.Add(card);
 
-		Assert.Null(Cinderbolt.GetRandomCardColorInPlayerHand(entityManager));
+		Assert.Null(PlayerHandColorService.GetRandomCardColorInPlayerHand(entityManager));
 	}
 
 	[Fact]

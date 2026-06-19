@@ -1511,17 +1511,6 @@
 /processorParam:TextureFormat=Color
 /build:gain-frostbite.png
 
-#begin gain-penance.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:gain-penance.png
-
 #begin gain-slow.png
 /importer:TextureImporter
 /processor:TextureProcessor

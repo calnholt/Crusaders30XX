@@ -126,8 +126,6 @@ namespace Crusaders30XX.ECS.Systems
 		public int PreviewGlowInflate { get; set; } = 4;
 		[DebugEditable(DisplayName = "Event Preview Glow Multiplier", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float EventPreviewGlowMultiplier { get; set; } = 0.5f;
-		[DebugEditable(DisplayName = "Sold Overlay Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
-		public float SoldOverlayAlpha { get; set; } = 0.55f;
 		[DebugEditable(DisplayName = "Vanish Overlay Base Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float VanishOverlayBaseAlpha { get; set; } = 0.18f;
 		[DebugEditable(DisplayName = "Vanish Overlay Pulse Amplitude", Step = 0.01f, Min = 0f, Max = 1f)]
@@ -358,11 +356,7 @@ namespace Crusaders30XX.ECS.Systems
 				DrawShopSlot(rect, slot);
 			}
 
-			if (slot.IsSold)
-			{
-				DrawOverlay(rect, "SOLD", Color.Black * SoldOverlayAlpha, ClimbSceneDrawHelpers.White2);
-			}
-			else if (wouldVanish)
+			if (wouldVanish)
 			{
 				float pulse = ClimbSceneDrawHelpers.PreviewVanishPulseAlpha(VanishPulsePeriodSeconds);
 				float pulseStrength = VanishOverlayBaseAlpha + VanishOverlayPulseAmplitude * pulse;

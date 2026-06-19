@@ -16,11 +16,6 @@ public class BloodMartyr : EnemyBase
     Id = "blood_martyr";
     Name = "Blood Martyr";
     HealthPerCard = 1.76f;
-
-    OnStartOfBattle = (entityManager) =>
-    {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.SanguineCurse, Delta = 1 });
-    };
   }
 
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
@@ -31,7 +26,6 @@ public class BloodMartyr : EnemyBase
 
   public override void Dispose()
   {
-    // No event subscriptions to clean up - SanguineCurseSystem handles the logic
   }
 }
 
@@ -116,29 +110,13 @@ public class Masochism : EnemyAttackBase
 public class BloodTithe : EnemyAttackBase
 {
   private const int BaseDamage = 3;
-  private const int BonusDamage = 2;
 
   public BloodTithe()
   {
     Id = "blood_tithe";
     Name = "Blood Tithe";
     Damage = BaseDamage;
-    Text = $"This attack gains +{BonusDamage} if you have penance.\n\nOn hit - remove all burn and wounded from Blood Martyr.";
-
-    OnAttackReveal = (entityManager) =>
-    {
-      var playerPassives = GetComponentHelper.GetAppliedPassives(entityManager, "Player");
-      if (playerPassives?.Passives != null &&
-          playerPassives.Passives.TryGetValue(AppliedPassiveType.Penance, out int penanceStacks) &&
-          penanceStacks > 0)
-      {
-        Damage = BaseDamage + BonusDamage;
-      }
-      else
-      {
-        Damage = BaseDamage;
-      }
-    };
+    Text = "On hit - remove all burn and wounded from Blood Martyr.";
 
     OnAttackHit = (entityManager) =>
     {

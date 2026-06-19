@@ -57,7 +57,7 @@ to the fixture.
 | `climb-no-events` | Climb scene | Shop + Encounters only (no active events column) |
 | `climb-active-events` | Climb scene | Three columns with active event slots at T5 |
 | `climb-hover-preview` | Climb scene | Hover preview on first encounter slot |
-| `climb-sold-shop-slot` | Climb scene | Shop with one sold slot |
+| `climb-sold-shop-slot` | Climb scene | Shop with one purchased slot hidden (3 visible items) |
 | `climb-encounter-reward-modal` | Climb scene + reward modal | Encounter reward overlay |
 | `climb-replacement-modal` | Climb scene + card list modal | Deck replacement picker |
 

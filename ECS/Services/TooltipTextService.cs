@@ -15,7 +15,6 @@ namespace Crusaders30XX.ECS.Services
 		// --- Constants ---
 		public static readonly int FrostbiteThreshold = 3;
 		public static readonly int FrostbiteDamage = 3;
-		public static readonly int SanguineCurseThreshold = 7;
 
 		// --- Card status tooltips ---
 
@@ -100,9 +99,7 @@ namespace Crusaders30XX.ECS.Services
 				case AppliedPassiveType.Inferno:
 					return $"At the start of your turn, gain {stacks} burn{(stacks == 1 ? "" : "s")}.";
 				case AppliedPassiveType.Scar:
-					return $"Lose {stacks} max HP. Remove one scar at the end of the quest.";
-				case AppliedPassiveType.Penance:
-					return "Your attacks deal 1 less damage if you have 1 or more penance. At the start of the next battle, these are converted to scars.";
+					return $"Lose {stacks} max HP. At the start of battle, lose 1 scar. Max HP is not restored until the next battle recalculates from remaining scars.";
 				case AppliedPassiveType.Aggression:
 					return $"Your next non-weapon attack this turn gains {stacks} damage.";
 				case AppliedPassiveType.Sharpen:
@@ -159,10 +156,8 @@ namespace Crusaders30XX.ECS.Services
 					return "Sealed cards cost HP equal to remaining seals when played or discarded to pay for costs. Seals decrease: -1 per block, -1 per card played. At 0 seals, card is freed.";
 				case AppliedPassiveType.Plunder:
 					return "At the start of the block phase, steals a card from your deck. Deal enough damage to rescue it.";
-				case AppliedPassiveType.SanguineCurse:
-					return $"When this enemy is dealt {SanguineCurseThreshold} or more damage in a single turn, you gain 1 penance.";
 				case AppliedPassiveType.Marksman:
-					return "Each turn a random card in your hand is marked. Playing a marked card removes the mark and applies the negative effect. Blocking with a marked card moves the mark to a different card and changes the negative effect. If you don't play a marked card on your action phase, gain 1 penance.";
+					return "Each turn a random card in your hand is marked. Playing a marked card removes the mark and applies the negative effect. Blocking with a marked card moves the mark to a different card and changes the negative effect.";
 				case AppliedPassiveType.CarpeDiem:
 					return "At the end of the turn, lose all courage.";
 				default:
@@ -203,10 +198,12 @@ namespace Crusaders30XX.ECS.Services
 			if (i >= 0) matches.Add((i, "X Might - Your attacks deal +X damage this turn."));
 			i = lowerText.IndexOf("vigor");
 			if (i >= 0) matches.Add((i, "X Vigor - The next non-weapon card with a cost you play costs X discard less."));
-			i = lowerText.IndexOf("penance");
-			if (i >= 0) matches.Add((i, "X Penance - Your attacks deal -1 less damage. At the start of the next battle, these are converted to scars."));
 			var showScar = lowerText.IndexOf("scar ") >= 0 || lowerText.IndexOf("scars") >= 0 || lowerText.IndexOf("scars ") >= 0 || lowerText.IndexOf("scar.") >= 0;
-			if (showScar) matches.Add((i, "X Scar - Lose X max HP. Remove one scar at the end of the quest."));
+			if (showScar)
+			{
+				i = lowerText.IndexOf("scar");
+				matches.Add((i, "X Scar - Lose X max HP. At the start of battle, lose 1 scar. Max HP is not restored until the next battle recalculates from remaining scars."));
+			}
 			i = lowerText.IndexOf("fear");
 			if (i >= 0) matches.Add((i, "X Fear - Attacks have a (X*10)% chance to become ambush attacks this quest."));
 			i = lowerText.IndexOf("wounded");

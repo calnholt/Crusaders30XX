@@ -47,6 +47,12 @@ namespace Crusaders30XX.ECS.Events
         public int Delta { get; set; }
     }
 
+    public class ApplyBattleMaxHpEvent
+    {
+        public Entity Target { get; set; }
+        public int ScarPenalty { get; set; }
+    }
+
     public class FullyHealEvent
     {
         public Entity Target { get; set; }
@@ -70,5 +76,4 @@ namespace Crusaders30XX.ECS.Events
         public int Delta { get; set; }
     }
 }
-
 

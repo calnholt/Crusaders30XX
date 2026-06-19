@@ -75,7 +75,7 @@ namespace Crusaders30XX.ECS.Systems
                     enemyBase.EnemyBase.OnStartOfBattle(EntityManager);
                 }
                 EnemyShieldsMaintenance(enemy);
-                ConvertPenanceToScar(player);
+                RemoveOneScarAtStartOfBattle(player);
             }
             if (evt.Current == SubPhase.PlayerEnd)
             {
@@ -139,14 +139,6 @@ namespace Crusaders30XX.ECS.Systems
                 EventManager.Publish(new RemovePassive { Owner = player, Type = passive });
             }
 
-            if (@event.PreviousScene == SceneId.Battle && @event.Scene != SceneId.Battle)
-            {
-                if (ap.Passives.TryGetValue(AppliedPassiveType.Scar, out int scarStacks) && scarStacks > 0)
-                {
-                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Scar, Delta = -1 });
-                }
-            }
-
             if (player.HasComponent<Player>())
             {
                 RunScopedStateService.SyncRunLongPassivesFromPlayer(player);
@@ -177,18 +169,17 @@ namespace Crusaders30XX.ECS.Systems
             }, Duration);
         }
 
-        private void ConvertPenanceToScar(Entity player)
+        private void RemoveOneScarAtStartOfBattle(Entity player)
         {
-            var ap = player.GetComponent<AppliedPassives>();
-            if (ap == null) return;
-            if (ap.Passives.TryGetValue(AppliedPassiveType.Penance, out int penanceStacks) && penanceStacks > 0)
+            var ap = player?.GetComponent<AppliedPassives>();
+            if (ap == null || ap.Passives == null) return;
+            if (!ap.Passives.TryGetValue(AppliedPassiveType.Scar, out int scarStacks) || scarStacks <= 0) return;
+
+            EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.RemoveOneScarAtStartOfBattle", () =>
             {
-                EventQueueBridge.EnqueueTriggerAction("AppliedPassivesManagementSystem.ApplyStartOfTurnPassives.Inferno", () =>
-                {
-                    EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Scar, Delta = penanceStacks });
-                    EventManager.Publish(new RemovePassive { Owner = player, Type = AppliedPassiveType.Penance });
-                }, Duration);
-            }
+                EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Scar, Delta = -1 });
+                EventManager.Publish(new PassiveTriggered { Owner = player, Type = AppliedPassiveType.Scar });
+            }, Duration);
         }
         private void ApplyStartOfTurnPassives(Entity owner)
         {
@@ -473,7 +464,6 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Guard,
                 AppliedPassiveType.Anathema,
                 AppliedPassiveType.Plunder,
-                AppliedPassiveType.SanguineCurse,
                 AppliedPassiveType.Vigor
             };
         }
@@ -493,7 +483,6 @@ namespace Crusaders30XX.ECS.Systems
             return new HashSet<AppliedPassiveType>
             {
                 AppliedPassiveType.Webbing,
-                AppliedPassiveType.Penance,
                 AppliedPassiveType.Fear,
                 AppliedPassiveType.Enflamed,
                 AppliedPassiveType.Sealed,
@@ -502,5 +491,4 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-
 

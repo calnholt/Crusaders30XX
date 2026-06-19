@@ -92,7 +92,6 @@ namespace Crusaders30XX.ECS.Systems
                 "gain-power", 
                 "gain-bleed", 
                 "gain-frostbite", 
-                "gain-penance", 
                 "gain-slow", 
                 "gain-sub-zero",
                 "gain-windchill",
@@ -213,7 +212,6 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Power => "gain-power",
                 AppliedPassiveType.Bleed => "gain-bleed",
                 AppliedPassiveType.Frostbite => "gain-frostbite",
-                AppliedPassiveType.Penance => "gain-penance",
                 AppliedPassiveType.Slow => "gain-slow",
                 AppliedPassiveType.SubZero => "gain-sub-zero",
                 AppliedPassiveType.Wounded => "gain-wounded",
@@ -399,4 +397,3 @@ namespace Crusaders30XX.ECS.Systems
         }
     }
 }
-

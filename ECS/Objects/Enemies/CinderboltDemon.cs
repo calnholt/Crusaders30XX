@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -44,7 +43,7 @@ public class Cinderbolt : EnemyAttackBase
         Damage = 10;
         OnAttackReveal = (entityManager) =>
         {
-          Color = Cinderbolt.GetRandomCardColorInPlayerHand(EntityManager);
+          Color = PlayerHandColorService.GetRandomCardColorInPlayerHand(EntityManager);
           Text = Color.HasValue
             ? $"Gain {Burn} burn if at least one {Color.Value.ToString().ToLower()} card blocks this."
             : $"Gain {Burn} burn if a card of the selected color blocks this. No color is selected.";
@@ -59,22 +58,6 @@ public class Cinderbolt : EnemyAttackBase
             AppliedBurn = true;
           }
         };
-    }
-
-    public static CardData.CardColor? GetRandomCardColorInPlayerHand(EntityManager entityManager)
-    {
-      var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-      var deck = deckEntity?.GetComponent<Deck>();
-      var hand = deck?.Hand;
-      if (hand == null) return null;
-      var colors = hand
-        .Select(CardColorQualificationService.GetQualifiedColor)
-        .Where(color => color.HasValue)
-        .Select(color => color.Value)
-        .Distinct()
-        .ToList();
-      if (colors.Count == 0) return null;
-      return colors[Random.Shared.Next(0, colors.Count)];
     }
 }
 
@@ -91,7 +74,7 @@ public class InsidiousBolt : EnemyAttackBase
 
     OnAttackReveal = (entityManager) =>
     {
-      Color = Cinderbolt.GetRandomCardColorInPlayerHand(EntityManager);
+      Color = PlayerHandColorService.GetRandomCardColorInPlayerHand(EntityManager);
       Text = Color.HasValue
         ? $"Gain {Scar} scar if at least one {Color.Value.ToString().ToLower()} card blocks this."
         : $"Gain {Scar} scar if a card of the selected color blocks this. No color is selected.";

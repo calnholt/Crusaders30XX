@@ -92,11 +92,19 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void SyncSlots(ClimbSaveState climb, ClimbColumnsLayout columns, bool showEvents)
 		{
+			int shopVisualIndex = 0;
 			for (int i = 0; i < ClimbRuleService.ShopSlotCount; i++)
 			{
 				var slot = climb?.shopSlots != null && i < climb.shopSlots.Count ? climb.shopSlots[i] : null;
-				var rect = ComputeShopSlotRect(columns.ShopInner, i);
-				SyncShopSlot(i, slot, rect);
+				if (IsSoldShopSlot(slot))
+				{
+					SyncShopSlot(i, slot, Rectangle.Empty, hidden: true);
+				}
+				else
+				{
+					var rect = ComputeShopSlotRect(columns.ShopInner, shopVisualIndex++);
+					SyncShopSlot(i, slot, rect, hidden: false);
+				}
 			}
 
 			for (int i = 0; i < ClimbRuleService.EncounterSlotCount; i++)
@@ -134,7 +142,9 @@ namespace Crusaders30XX.ECS.Systems
 			SetBounds(entity, bounds, visible, UIElementEventType.None, ColumnZOrderValue);
 		}
 
-		private void SyncShopSlot(int index, ClimbShopSlotSave slot, Rectangle rect)
+		private static bool IsSoldShopSlot(ClimbShopSlotSave slot) => slot?.isSold == true;
+
+		private void SyncShopSlot(int index, ClimbShopSlotSave slot, Rectangle rect, bool hidden = false)
 		{
 			var entity = EnsureEntity($"Climb_ShopSlot_{index}");
 			var presentation = EnsureSlotPresentation(entity);
@@ -156,7 +166,7 @@ namespace Crusaders30XX.ECS.Systems
 			var action = entity.GetComponent<ClimbShopSlotAction>();
 			if (action == null) EntityManager.AddComponent(entity, new ClimbShopSlotAction { SlotIndex = index });
 			else action.SlotIndex = index;
-			SetBounds(entity, rect, !presentation.IsUnavailable && !presentation.IsSold, UIElementEventType.ClimbShopSlotSelect, SlotZOrderValue);
+			SetBounds(entity, rect, !hidden && !presentation.IsUnavailable && !presentation.IsSold, UIElementEventType.ClimbShopSlotSelect, SlotZOrderValue, hidden: hidden);
 			SyncShopTooltip(entity, slot, presentation);
 		}
 

@@ -893,6 +893,7 @@ namespace Crusaders30XX.ECS.Components
         public Entity Owner { get; set; }
         public int Max { get; set; } = 40;
         public int Current { get; set; } = 40;
+        public int UnscarredMax { get; set; }
     }
 
     /// <summary>
@@ -1091,7 +1092,6 @@ namespace Crusaders30XX.ECS.Components
         Wounded,
         Webbing,
         Inferno,
-        Penance,
         Aggression,
         Stealth,
         Poison,
@@ -1117,7 +1117,6 @@ namespace Crusaders30XX.ECS.Components
         Silenced,
         Sealed,
         Plunder,
-        SanguineCurse,
         Marksman,
         Sharpen,
         Might,
@@ -1286,7 +1285,6 @@ namespace Crusaders30XX.ECS.Components
     {
         Lose1HP,
         Lose2HP,
-        Gain1Penance,
         Gain2Bleed,
         Gain1Burn
     }

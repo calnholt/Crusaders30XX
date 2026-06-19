@@ -101,7 +101,7 @@ public class StoneBarrage : EnemyAttackBase
 
         OnAttackReveal = (entityManager) =>
         {
-            Color = Cinderbolt.GetRandomCardColorInPlayerHand(EntityManager);
+            Color = PlayerHandColorService.GetRandomCardColorInPlayerHand(EntityManager);
             Text = Color.HasValue
                 ? $"Gain {BleedPerCard} bleed for each {Color.Value.ToString().ToLower()} card that blocks this."
                 : $"Gain {BleedPerCard} bleed for each card of the selected color that blocks this. No color is selected.";

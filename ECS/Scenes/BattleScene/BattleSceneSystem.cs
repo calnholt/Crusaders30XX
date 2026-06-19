@@ -58,7 +58,6 @@ namespace Crusaders30XX.ECS.Systems
 		private AppliedPassivesDisplaySystem _appliedPassivesDisplaySystem;
 		private PoisonSystem _poisonSystem;
 		private PassiveMeterRenderSystem _passiveMeterRenderSystem;
-		private SanguineCurseSystem _sanguineCurseSystem;
 		private CardGeometrySettingsDebugSystem _cardGeometrySettingsDebugSystem;
 		private HpManagementSystem _hpManagementSystem;
 		private BattlePhaseDisplaySystem _battlePhaseDisplaySystem;
@@ -488,11 +487,17 @@ namespace Crusaders30XX.ECS.Systems
 				if (hp != null)
 				{
 					hp.Max = 25;
+					hp.UnscarredMax = 25;
 					hp.Current = tutorial.PlayerHp;
 				}
 			}
 			else
 			{
+				EventManager.Publish(new ApplyBattleMaxHpEvent
+				{
+					Target = player,
+					ScarPenalty = GetScarStacks(player)
+				});
 				EventManager.Publish(new FullyHealEvent { Target = player });
 			}
 			foreach (var e in EntityManager.GetEntitiesWithComponent<CardTooltip>()) {
@@ -503,6 +508,15 @@ namespace Crusaders30XX.ECS.Systems
 					e.RemoveComponent<CardTooltip>();
 				}
 			}
+		}
+
+		private static int GetScarStacks(Entity player)
+		{
+			var passives = player?.GetComponent<AppliedPassives>()?.Passives;
+			if (passives == null) return 0;
+			return passives.TryGetValue(AppliedPassiveType.Scar, out var stacks)
+				? Math.Max(0, stacks)
+				: 0;
 		}
 
 		private void EnsureBattleInitialized()
@@ -578,7 +592,6 @@ namespace Crusaders30XX.ECS.Systems
 			_appliedPassivesDisplaySystem = new AppliedPassivesDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_poisonSystem = new PoisonSystem(_world.EntityManager);
 			_passiveMeterRenderSystem = new PassiveMeterRenderSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_sanguineCurseSystem = new SanguineCurseSystem(_world.EntityManager);
 			_cardGeometrySettingsDebugSystem = new CardGeometrySettingsDebugSystem(_world.EntityManager);
 			_hpManagementSystem = new HpManagementSystem(_world.EntityManager);
 			_pledgeManagementSystem = new PledgeManagementSystem(_world.EntityManager);
@@ -717,7 +730,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_enemyIntentPipsSystem);
 			_world.AddSystem(_poisonSystem);
 			_world.AddSystem(_passiveMeterRenderSystem);
-			_world.AddSystem(_sanguineCurseSystem);
 			_world.AddSystem(_enemyIntentPlanningSystem);
 			_world.AddSystem(_enemyAttackProgressManagementSystem);
 			_world.AddSystem(_markedForSpecificDiscardSystem);

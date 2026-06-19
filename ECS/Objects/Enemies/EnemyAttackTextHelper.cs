@@ -49,8 +49,6 @@ public static class EnemyAttackTextHelper
           return $"This attack must be blocked with exactly {amount} card{(amount > 1 ? "s" : "")}/equipment if possible.";
         case EnemyAttackTextType.Burn:
           return $"Gain {amount} burn.";
-        case EnemyAttackTextType.Penance:
-          return $"Gain {amount} penance.";
         case EnemyAttackTextType.Scar:
           return $"Gain {amount} scar{(amount > 1 ? "s" : "")}.";
         case EnemyAttackTextType.Armor:
@@ -114,7 +112,6 @@ public static class EnemyAttackTextHelper
     Fear,
     Intimidate,
     Wounded,
-    Penance,
     Scar,
     Aggression,
     Stealth,

@@ -572,6 +572,10 @@ public class Game1 : Game
         FrameProfiler.Measure("RewardModalDisplaySystem.Draw", _rewardModalDisplaySystem.Draw);
         FrameProfiler.Measure("NarrativeEventModalDisplaySystem.Draw", _narrativeEventModalDisplaySystem.Draw);
         FrameProfiler.Measure("CardListModalSystem.Draw", _cardListModalSystem.Draw);
+        if (_cardListModalSystem?.IsSelectableOpen() == true)
+        {
+            FrameProfiler.Measure("UIElementHighlightSystem.Draw.CardListModal", _uiElementHighlightSystem.Draw);
+        }
         FrameProfiler.Measure("HowToPlayOverlaySystem.Draw", _howToPlayOverlaySystem.Draw);
         FrameProfiler.Measure("TooltipDisplaySystem.Draw", _tooltipTextDisplaySystem.Draw);
         FrameProfiler.Measure("HintTooltipDisplaySystem.Draw", _hintTooltipDisplaySystem.Draw);

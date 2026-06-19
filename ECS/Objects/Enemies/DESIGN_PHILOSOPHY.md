@@ -288,7 +288,6 @@ Predictable rotation between attack types across turns.
 | Condition | Frequency | Design Role |
 |-----------|-----------|-------------|
 | Burn | Very common | Sustained damage pressure |
-| Penance | Common | Punishes specific behaviors |
 | Intimidate | Common | Restricts card plays |
 | Wounded | Moderate | Reduces card effectiveness |
 | Frozen | Moderate | Temporarily disables cards |

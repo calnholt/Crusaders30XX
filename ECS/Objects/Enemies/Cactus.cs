@@ -19,32 +19,13 @@ public class Cactus : EnemyBase
     Id = "cactus";
     Name = "Cactus";
     HealthPerCard = 1.1f;
-
-
-    OnStartOfBattle = (entityManager) =>
-    {
-      EventManager.Subscribe<ModifyHpEvent>(OnModifyHpEvent);
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Thorns, Delta = Thorns });
-    };
   }
 
-  private void OnModifyHpEvent(ModifyHpEvent evt)
-  {
-    if (evt.Target.Name == "Enemy" && evt.DamageType == ModifyTypeEnum.Attack)
-    {
-      EventManager.Publish(new ApplyPassiveEvent { Target = EntityManager.GetEntity("Player"), Type = AppliedPassiveType.Bleed, Delta = Thorns });
-    }
-  }
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {
     return ["prickly_burst"];
   }
 
-  public override void Dispose()
-  {
-    Console.WriteLine($"[Cactus] Unsubscribed from ModifyHpEvent");
-    EventManager.Unsubscribe<ModifyHpEvent>(OnModifyHpEvent);
-  }
 }
 public class PricklyBurst : EnemyAttackBase
 {
@@ -59,7 +40,7 @@ public class PricklyBurst : EnemyAttackBase
 
     OnAttackReveal = (entityManager) =>
     {
-      Color = Cinderbolt.GetRandomCardColorInPlayerHand(EntityManager);
+      Color = PlayerHandColorService.GetRandomCardColorInPlayerHand(EntityManager);
       Text = Color.HasValue
         ? $"Gain {Bleed} bleed for each {Color.Value.ToString().ToLower()} card that blocks this."
         : $"Gain {Bleed} bleed for each card of the selected color that blocks this. No color is selected.";

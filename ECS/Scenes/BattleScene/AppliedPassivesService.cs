@@ -87,11 +87,6 @@ namespace Crusaders30XX.ECS.Systems
             }
           }
         }
-        if (sourcePassives.ContainsKey(AppliedPassiveType.Penance) && e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
-        {
-          sourcePassives.TryGetValue(AppliedPassiveType.Penance, out var amount);
-          delta -= 1;
-        }
         return -delta;
       }
     }

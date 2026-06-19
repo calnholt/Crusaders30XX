@@ -21,6 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<FullyHealEvent>(OnFullyHeal);
 			EventManager.Subscribe<HealEvent>(OnHeal);
 			EventManager.Subscribe<IncreaseMaxHpEvent>(OnIncreaseMaxHp);
+			EventManager.Subscribe<ApplyBattleMaxHpEvent>(OnApplyBattleMaxHp);
 			EventManager.Subscribe<RemovePassive>(OnRemovePassive);
 		}
 
@@ -173,6 +174,7 @@ namespace Crusaders30XX.ECS.Systems
 				case AppliedPassiveType.Scar:
 					var hp = e.Target.GetComponent<HP>();
 					if (hp == null) return;
+					EnsureUnscarredMax(hp);
 					var atFullHp = hp.Current == hp.Max;
 					if (e.Delta > 0)
 					{
@@ -182,10 +184,6 @@ namespace Crusaders30XX.ECS.Systems
 							hp.Current -= e.Delta;
 						}
 						hp.Current = Math.Max(0, Math.Min(hp.Current, hp.Max));
-					}
-					else if (e.Delta < 0)
-					{
-						RestoreMaxHp(hp, -e.Delta);
 					}
 					break;
 				default:
@@ -247,12 +245,6 @@ namespace Crusaders30XX.ECS.Systems
 				["amount"] = e.Amount,
 				["ownerId"] = e.Owner?.Id ?? -1
 			});
-			RestoreMaxHp(hp, e.Amount);
-		}
-
-		private static void RestoreMaxHp(HP hp, int amount)
-		{
-			hp.Max = Math.Min(25, hp.Max + amount);
 			hp.Current = Math.Max(0, Math.Min(hp.Current, hp.Max));
 		}
 
@@ -267,10 +259,46 @@ namespace Crusaders30XX.ECS.Systems
 			if (target == null) return;
 			var hp = target.GetComponent<HP>();
 			if (hp == null) return;
-			hp.Max = Math.Max(1, hp.Max + e.Delta);
+			EnsureUnscarredMax(hp);
+			hp.UnscarredMax = Math.Max(1, hp.UnscarredMax + e.Delta);
+			int scarPenalty = GetScarStacks(target);
+			hp.Max = Math.Max(1, hp.UnscarredMax - scarPenalty);
 			hp.Current = hp.Max;
+		}
+
+		private void OnApplyBattleMaxHp(ApplyBattleMaxHpEvent e)
+		{
+			LoggingService.Append("HpManagementSystem.OnApplyBattleMaxHp", new System.Text.Json.Nodes.JsonObject
+			{
+				["scarPenalty"] = e.ScarPenalty,
+				["targetId"] = e.Target?.Id ?? -1
+			});
+			var target = ResolveTarget(e.Target);
+			if (target == null) return;
+			var hp = target.GetComponent<HP>();
+			if (hp == null) return;
+			EnsureUnscarredMax(hp);
+			hp.Max = Math.Max(1, hp.UnscarredMax - Math.Max(0, e.ScarPenalty));
+			hp.Current = Math.Max(0, Math.Min(hp.Current, hp.Max));
+		}
+
+		private static void EnsureUnscarredMax(HP hp)
+		{
+			if (hp == null) return;
+			if (hp.UnscarredMax <= 0)
+			{
+				hp.UnscarredMax = Math.Max(1, hp.Max);
+			}
+		}
+
+		private static int GetScarStacks(Entity target)
+		{
+			var passives = target?.GetComponent<AppliedPassives>()?.Passives;
+			if (passives == null) return 0;
+			return passives.TryGetValue(AppliedPassiveType.Scar, out var stacks)
+				? Math.Max(0, stacks)
+				: 0;
 		}
 	}
 
 }
-

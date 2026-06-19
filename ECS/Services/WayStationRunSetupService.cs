@@ -61,6 +61,7 @@ namespace Crusaders30XX.ECS.Services
 			if (hp == null) return;
 
 			hp.Max = WayStationRunSetupSingleton.PlayerMaxHp;
+			hp.UnscarredMax = hp.Max;
 			hp.Current = hp.Max;
 		}
 

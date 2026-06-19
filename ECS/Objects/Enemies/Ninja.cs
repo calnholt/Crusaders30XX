@@ -101,19 +101,11 @@ public class DuskFlick : EnemyAttackBase
 
 public class CloakedReaver : EnemyAttackBase
 {
-  private int Penance = 2;
   public CloakedReaver()
   {
     Id = "cloaked_reaver";
     Name = "Cloaked Reaver";
     Damage = 3;
-    ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Penance, Penance, ConditionType);
-
-    OnAttackHit = (entityManager) =>
-    {
-      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = Penance });
-    };
   }
 }
 
@@ -189,13 +181,12 @@ public class ShadowStep : EnemyAttackBase
 public class NightveilGuillotine : EnemyAttackBase
 {
   private int DamageIncrease = 4;
-  private int Penance = 2;
   public NightveilGuillotine()
   {
     Id = "nightveil_guillotine";
     Name = "Nightveil Guillotine";
     Damage = 4;
-    Text = $"If both Slice and Dice hit this turn, this gains +{DamageIncrease} damage and you gain {Penance} penance on hit.";
+    Text = $"If both Slice and Dice hit this turn, this gains +{DamageIncrease} damage.";
 
     OnAttackReveal = (entityManager) =>
     {
@@ -206,17 +197,7 @@ public class NightveilGuillotine : EnemyAttackBase
       if (sliceCount > 0 && diceCount > 0)
       {
         Damage += DamageIncrease;
-        ConditionType = ConditionType.OnHit;
       }
     };
-
-    OnAttackHit = (entityManager) =>
-    {
-      if (ConditionType == ConditionType.OnHit)
-      {
-        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Penance, Delta = Penance });
-      }
-    };
-
   }
 }

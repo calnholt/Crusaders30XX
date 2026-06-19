@@ -24,6 +24,7 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteFont _font;
         private readonly Texture2D _pixel;
         private readonly RasterizerState _scissorRasterizer;
+        private readonly Dictionary<int, bool> _previousCardHoverHighlight = new();
         [DebugEditable(DisplayName = "Modal Margin", Step = 1, Min = 0, Max = 200)]
         public int ModalMargin { get; set; } = 40;
         [DebugEditable(DisplayName = "Padding", Step = 1, Min = 0, Max = 200)]
@@ -92,6 +93,7 @@ namespace Crusaders30XX.ECS.Systems
             if (!modal.IsOpen || modal.Cards == null)
             {
                 SetCloseButtonActive(false);
+                RestoreModalHoverHighlightState();
                 return;
             }
 
@@ -159,6 +161,7 @@ namespace Crusaders30XX.ECS.Systems
                 {
                     ui.IsInteractable = modal.IsSelectable;
                     ui.LayerType = UILayerType.Overlay;
+                    ApplyModalHoverHighlightState(card, ui, modal);
                 }
                 InputContextService.EnsureMember(
                     EntityManager,
@@ -276,6 +279,8 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OpenModal(OpenCardListModalEvent evt)
         {
+            RestoreModalHoverHighlightState();
+
             var modal = EntityManager.GetEntitiesWithComponent<CardListModal>().FirstOrDefault();
             if (modal == null)
             {
@@ -312,6 +317,11 @@ namespace Crusaders30XX.ECS.Systems
                     EntityManager,
                 card,
                 "overlay.card-list");
+                var ui = card.GetComponent<UIElement>();
+                if (ui != null)
+                {
+                    ApplyModalHoverHighlightState(card, ui, modalCmp);
+                }
             }
         }
 
@@ -361,6 +371,7 @@ namespace Crusaders30XX.ECS.Systems
                         EntityManager.RemoveComponent<CardListModalSelectionMetadata>(card);
                     }
                 }
+                RestoreModalHoverHighlightState();
                 cmp.IsSelectable = false;
                 cmp.SelectionContext = string.Empty;
                 if (shouldCancelClimbReplacement)
@@ -433,7 +444,54 @@ namespace Crusaders30XX.ECS.Systems
                 ui.LayerType = UILayerType.Overlay;
                 ui.IsInteractable = modal.IsSelectable && bounds.Bottom >= cursorY && bounds.Y <= rect.Bottom - Padding;
                 ui.Bounds = ui.IsInteractable ? bounds : Rectangle.Empty;
+                ApplyModalHoverHighlightState(card, ui, modal);
             }
+        }
+
+        public bool IsSelectableOpen()
+        {
+            return EntityManager
+                .GetEntitiesWithComponent<CardListModal>()
+                .FirstOrDefault()
+                ?.GetComponent<CardListModal>()
+                is { IsOpen: true, IsSelectable: true };
+        }
+
+        private void ApplyModalHoverHighlightState(Entity card, UIElement ui, CardListModal modal)
+        {
+            if (card == null || ui == null || !ShouldForceModalHoverHighlight(modal)) return;
+
+            if (!_previousCardHoverHighlight.ContainsKey(card.Id))
+            {
+                _previousCardHoverHighlight[card.Id] = ui.ShowHoverHighlight;
+            }
+
+            ui.ShowHoverHighlight = true;
+        }
+
+        private static bool ShouldForceModalHoverHighlight(CardListModal modal)
+        {
+            return modal?.IsOpen == true
+                && modal.IsSelectable
+                && string.Equals(
+                    modal.SelectionContext,
+                    CardListSelectionContexts.ClimbReplacement,
+                    StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void RestoreModalHoverHighlightState()
+        {
+            foreach (var entry in _previousCardHoverHighlight)
+            {
+                var card = EntityManager.GetEntity(entry.Key);
+                var ui = card?.GetComponent<UIElement>();
+                if (ui != null)
+                {
+                    ui.ShowHoverHighlight = entry.Value;
+                }
+            }
+
+            _previousCardHoverHighlight.Clear();
         }
 
         private void TryPublishSelection(CardListModal modal)

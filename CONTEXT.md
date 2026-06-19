@@ -36,7 +36,7 @@ The persisted state after run victory, run failure, or run abandon. Meta remains
 
 ## Run-long applied passive
 
-A debuff or status on the player that lasts for the whole **run**: it survives leaving battle, visiting the Climb, shopping, and starting other **Climb encounters**, until **run failure**, **run abandon**, or **new run start**. Examples: Frostbite, Scar, Bleed, Shackled (see implementation list `GetRunLongPassives`). Scar stacks persist across Climb encounters; when the player leaves battle after completing a Climb encounter, one scar stack is removed and max HP is restored by that amount.
+A debuff or status on the player that lasts for the whole **run**: it survives leaving battle, visiting the Climb, shopping, and starting other **Climb encounters**, until **run failure**, **run abandon**, or **new run start**. Examples: Frostbite, Scar, Bleed, Shackled (see implementation list `GetRunLongPassives`). Gaining Scar immediately lowers max HP by that amount. At battle start, one Scar stack is removed, but max HP is not restored in that battle; the next battle recalculates max HP from the remaining Scar stacks.
 
 _Avoid_: Quest passive (when meaning run-long; use **run-long applied passive**)
 
@@ -44,7 +44,7 @@ _Avoid_: Quest passive (when meaning run-long; use **run-long applied passive**)
 
 A debuff or status on the player tied to the current **Climb encounter** attempt: it persists across **queued encounters** within that encounter, but is removed when the player leaves the battle scene to the Climb, shop, or other non-battle scene. It is not written to the save file.
 
-Examples: Penance, Webbing, Fear, Enflamed (see implementation list `GetQuestPassives`).
+Examples: Webbing, Fear, Enflamed (see implementation list `GetQuestPassives`).
 
 _Avoid_: Quest passive (when meaning run-long; use **run-long applied passive**)
 

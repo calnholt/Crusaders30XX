@@ -36,6 +36,7 @@ namespace Crusaders30XX.ECS.Services
 			var player = EntityFactory.CreatePlayer(world);
 			player.GetComponent<Player>().DeckEntity = deckEntity;
 			player.GetComponent<HP>().Max = 25;
+			player.GetComponent<HP>().UnscarredMax = 25;
 			player.GetComponent<HP>().Current = 25;
 			player.GetComponent<Intellect>().Value = 4;
 			player.GetComponent<MaxHandSize>().Value = 4;
