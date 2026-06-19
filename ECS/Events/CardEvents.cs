@@ -335,6 +335,11 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Request that the pledge owner system move a random discard card to hand and pledge it.
+    /// </summary>
+    public class PledgeRandomCardFromDiscardRequested { }
+
+    /// <summary>
     /// Request that the pledge owner system removes pledge state from a card.
     /// </summary>
     public class RemovePledgeFromCardRequested

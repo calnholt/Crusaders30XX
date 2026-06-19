@@ -234,7 +234,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 				new()
 				{
 					id = "encounter_2",
-					enemyId = "cactus",
+					enemyId = "thornreaver",
 					generatedAtTime = time,
 					duration = 5,
 					timeCost = 3,

@@ -14,7 +14,7 @@ public class SandGolem : EnemyBase
   {
     Id = "sand_golem";
     Name = "Sand Golem";
-    HealthPerCard = 1.21f;
+    HealthPerCard = 1.51f;
   }
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {
@@ -29,7 +29,7 @@ public class SandPound : EnemyAttackBase
   {
     Id = "sand_pound";
     Name = "Sand Pound";
-    Damage = 6;
+    Damage = 7;
     ConditionType = ConditionType.MustBeBlockedByExactly1Card;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedExactly, Threshold);
 
@@ -47,7 +47,7 @@ public class SandSlam : EnemyAttackBase
   {
     Id = "sand_slam";
     Name = "Sand Slam";
-    Damage = 9;
+    Damage = 10;
     ConditionType = ConditionType.MustBeBlockedByExactly2Cards;
     Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedExactly, Threshold);
 

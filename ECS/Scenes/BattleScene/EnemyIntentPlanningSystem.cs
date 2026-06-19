@@ -155,14 +155,16 @@ namespace Crusaders30XX.ECS.Systems
 				attackDef.Initialize(EntityManager);
 				string ctx = Guid.NewGuid().ToString("N");
 				var passives = EntityManager.GetEntity("Player").GetComponent<AppliedPassives>().Passives;
-				int ambushChance = attackDef.AmbushPercentage + (passives.ContainsKey(AppliedPassiveType.Fear) ? passives[AppliedPassiveType.Fear] * 10 : 0);
+				bool hasFear = passives.TryGetValue(AppliedPassiveType.Fear, out int fear) && fear > 0;
+				bool isAmbush = hasFear
+					|| (attackDef.AmbushPercentage > 0 && Random.Shared.Next(0, 100) < attackDef.AmbushPercentage);
 				target.Planned.Add(new PlannedAttack
 				{
 					AttackId = id,
 					ResolveStep = Math.Max(1, index + 1),
 					ContextId = ctx,
 					WasBlocked = false,
-					IsAmbush = ambushChance > 0 && Random.Shared.Next(0, 100) < ambushChance,
+					IsAmbush = isAmbush,
 					AttackDefinition = attackDef
 				});
 				EventManager.Publish(new IntentPlanned

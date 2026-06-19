@@ -85,7 +85,7 @@ namespace Crusaders30XX.ECS.Services
 				case AppliedPassiveType.Burn:
 					return $"At the start of {(isPlayer ? "your" : "the enemy's")} turn, {(isPlayer ? "you take" : "it takes")} {stacks} damage.";
 				case AppliedPassiveType.Slow:
-					return $"Ambush attacks are {stacks} second{(stacks == 1 ? "" : "s")} faster.";
+					return $"Ambush attacks are {stacks} second{(stacks == 1 ? "" : "s")} faster. At the end of your turn, lose 1 slow.";
 				case AppliedPassiveType.Aegis:
 					return $"Prevents the next {stacks} damage from any source.";
 				case AppliedPassiveType.Stun:
@@ -119,7 +119,7 @@ namespace Crusaders30XX.ECS.Services
 				case AppliedPassiveType.Guard:
 					return $"Prevents the next {stacks} damage from attacks. Any damage removes all guard. At the start of the enemy turn, converts to 1 aggression.";
 				case AppliedPassiveType.Fear:
-					return $"Attacks have a {stacks * 10}% chance to become ambush attacks.";
+					return "All enemy attacks become ambush attacks. At the end of a battle, lose 1 fear.";
 				case AppliedPassiveType.Siphon:
 					return $"For each point of courage this enemy removes from you, it heals {stacks * Succubus.SiphonMultiplier} HP.";
 				case AppliedPassiveType.Thorns:
@@ -183,7 +183,7 @@ namespace Crusaders30XX.ECS.Services
 			i = lowerText.IndexOf("inferno");
 			if (i >= 0) matches.Add((i, "X Inferno- At the start of the turn, gain X burn."));
 			i = lowerText.IndexOf("slow");
-			if (i >= 0) matches.Add((i, "X Slow - Ambush attacks are X second faster."));
+			if (i >= 0) matches.Add((i, "X Slow - Ambush attacks are X second faster. At the end of your turn, lose 1 slow."));
 			i = lowerText.IndexOf("aegis");
 			if (i >= 0) matches.Add((i, " X Aegis - Prevent the next X damage from any source."));
 			i = lowerText.IndexOf("burn");
@@ -205,7 +205,7 @@ namespace Crusaders30XX.ECS.Services
 				matches.Add((i, "X Scar - Lose X max HP. At the start of battle, lose 1 scar. Max HP is not restored until the next battle recalculates from remaining scars."));
 			}
 			i = lowerText.IndexOf("fear");
-			if (i >= 0) matches.Add((i, "X Fear - Attacks have a (X*10)% chance to become ambush attacks this quest."));
+			if (i >= 0) matches.Add((i, "X Fear - All enemy attacks become ambush attacks. At the end of a battle, lose 1 fear."));
 			i = lowerText.IndexOf("wounded");
 			if (i >= 0) matches.Add((i, "X Wounded - Take X more damage from all sources this battle."));
 			i = lowerText.IndexOf("armor");

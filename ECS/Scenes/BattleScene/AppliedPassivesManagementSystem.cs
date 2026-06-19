@@ -27,6 +27,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);
             EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
             EventManager.Subscribe<RemoveAllPassives>(OnRemoveAllPassives);
+            EventManager.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
         }
 
         private void OnApplyEffect(ApplyEffect effect)
@@ -180,6 +181,22 @@ namespace Crusaders30XX.ECS.Systems
                 EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Scar, Delta = -1 });
                 EventManager.Publish(new PassiveTriggered { Owner = player, Type = AppliedPassiveType.Scar });
             }, Duration);
+        }
+
+        private void OnEnemyKilled(EnemyKilledEvent evt)
+        {
+            var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
+            RemoveOneFearAtBattleEnd(player);
+        }
+
+        private void RemoveOneFearAtBattleEnd(Entity player)
+        {
+            var ap = player?.GetComponent<AppliedPassives>();
+            if (ap == null || ap.Passives == null) return;
+            if (!ap.Passives.TryGetValue(AppliedPassiveType.Fear, out int fearStacks) || fearStacks <= 0) return;
+
+            EventManager.Publish(new ApplyPassiveEvent { Target = player, Type = AppliedPassiveType.Fear, Delta = -1 });
+            EventManager.Publish(new PassiveTriggered { Owner = player, Type = AppliedPassiveType.Fear });
         }
         private void ApplyStartOfTurnPassives(Entity owner)
         {
@@ -414,8 +431,8 @@ namespace Crusaders30XX.ECS.Systems
             {
                 var ap = owner.GetComponent<AppliedPassives>();
                 if (ap == null || ap.Passives == null) continue;
-                ap.Passives.TryGetValue(passive, out int stacks);
-                EventManager.Publish(new UpdatePassive { Owner = owner, Type = passive, Delta = -stacks });
+                if (!ap.Passives.TryGetValue(passive, out int stacks) || stacks <= 0) continue;
+                EventManager.Publish(new UpdatePassive { Owner = owner, Type = passive, Delta = -1 });
                 EventManager.Publish(new PassiveTriggered { Owner = owner, Type = passive });
             }
         }
@@ -437,6 +454,7 @@ namespace Crusaders30XX.ECS.Systems
             return new HashSet<AppliedPassiveType>
             {
                 AppliedPassiveType.Silenced,
+                AppliedPassiveType.Slow,
             };
         }
 
@@ -449,6 +467,7 @@ namespace Crusaders30XX.ECS.Systems
                 AppliedPassiveType.Power,
                 AppliedPassiveType.Armor,
                 AppliedPassiveType.Wounded,
+                AppliedPassiveType.Slow,
                 AppliedPassiveType.Inferno,
                 AppliedPassiveType.Stealth,
                 AppliedPassiveType.Poison,

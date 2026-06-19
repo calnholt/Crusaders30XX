@@ -14,13 +14,13 @@ namespace Crusaders30XX.ECS.Services
 		{
 			"demon",
 			"mummy",
-			// "ninja",
+			"earth_demon",
 			"ogre",
 			"skeleton",
 			"skeletal_archer",
 			"spider",
 			"succubus",
-			"cactus",
+			"thornreaver",
 			"dust_wuurm",
 			"sorcerer",
 			"ice_demon",
@@ -29,13 +29,14 @@ namespace Crusaders30XX.ECS.Services
 			"fire_skeleton",
 			"berserker",
 			"shadow",
-			// "medusa",
 			"wyvern",
-			// "blood_martyr",
 			"sand_golem",
 			"fallen_shepherd",
+			// "medusa",
+			// "blood_martyr",
 			// "sniper", // marksman - disabled from run encounters
 			// "training_demon", // test-fight only
+			// "ninja",
 		};
 
 		public static string ToAssetName(string enemyId)

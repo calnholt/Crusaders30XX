@@ -51,7 +51,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
     {
       if (turnNumber % 2 == 0)
       {
-        return ArrayUtils.TakeRandomWithoutReplacement(new List<string> { "snuff_out_the_light", "night_fall", "from_the_shadows" }, 3);
+        return ArrayUtils.TakeRandomWithoutReplacement(new List<string> { "snuff_out_the_light", "night_fall", "from_the_shadows", "umbra_slice" }, 3);
       }
       return ArrayUtils.TakeRandomWithoutReplacement(new List<string> { "shadow_strike", "dissipating_darkness" }, 1);
     }
@@ -70,11 +70,11 @@ public class ShadowStrike : EnemyAttackBase
   {
     Id = "shadow_strike";
     Name = "Shadow Strike";
-    Damage = 9;
-    ConditionType = ConditionType.OnHit;
-    Text = $"On hit - the enemy loses {AnathemaLoss} anathema.";
+    Damage = 10;
+    BlockRequiredToPreventEffect = 7;
+    Text = $"{EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, $"The enemy loses {AnathemaLoss} anathema.")}";
 
-    OnAttackHit = (entityManager) =>
+    OnDamageThresholdMet = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Anathema, Delta = -AnathemaLoss });
     };
@@ -149,6 +149,24 @@ public class NightFall : EnemyAttackBase
     OnAttackHit = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Anathema, Delta = -AnathemaLoss });
+    };
+  }
+}
+
+public class UmbraSlice : EnemyAttackBase
+{
+  private int Scar = 1;
+  public UmbraSlice()
+  {
+    Id = "umbra_slice";
+    Name = "Umbra Slice";
+    Damage = 3;
+    ConditionType = ConditionType.OnHit;
+    Text = $"On hit - gain {Scar} scar{(Scar > 1 ? "s" : "")}.";
+
+    OnAttackHit = (entityManager) =>
+    {
+      EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Scar, Delta = Scar });
     };
   }
 }

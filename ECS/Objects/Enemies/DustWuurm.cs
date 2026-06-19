@@ -50,5 +50,7 @@ public class DustStorm : EnemyAttackBase
     Id = "dust_storm";
     Name = "Dust Storm";
     Damage = 8;
+    ConditionType = ConditionType.MustBeBlockedByAtLeast1Card;
+    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.MustBeBlockedByAtLeast, 1);
   }
 }

@@ -15,7 +15,7 @@ public class Demon : EnemyBase
   {
     Id = "demon";
     Name = "Demon";
-    HealthPerCard = 1.265f;
+    HealthPerCard = 1.465f;
   }
 
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
@@ -40,11 +40,11 @@ public class RazorMaw : EnemyAttackBase
   {
     Id = "razor_maw";
     Name = "Razor Maw";
-    Damage = 7;
-    ConditionType = ConditionType.OnHit;
-    Text = EnemyAttackTextHelper.GetText(EnemyAttackTextType.Burn, 1, ConditionType);
+    Damage = 9;
+    BlockRequiredToPreventEffect = 7;
+    Text = $"{EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, EnemyAttackTextHelper.GetText(EnemyAttackTextType.Burn, Burn, ConditionType))}";
 
-    OnAttackHit = (entityManager) =>
+    OnDamageThresholdMet = (entityManager) =>
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Burn, Delta = Burn });
     };
@@ -53,7 +53,7 @@ public class RazorMaw : EnemyAttackBase
 
 public class ScorchingClaw : EnemyAttackBase
 {
-  private int Burn = 2;
+  private int Burn = 1;
   public ScorchingClaw()
   {
     Id = "scorching_claw";

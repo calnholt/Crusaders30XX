@@ -82,7 +82,7 @@ public class ClimbRuleServiceTests
 				new()
 				{
 					id = "encounter_c",
-					enemyId = "cactus",
+					enemyId = "thornreaver",
 					generatedAtTime = 5,
 					duration = 5,
 					timeCost = 1,

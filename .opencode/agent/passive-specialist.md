@@ -20,7 +20,7 @@ All available passives in the game:
 - **Burn**: Deals X damage to owner at start of their turn
 - **Power**: Owner's attacks deal +X damage (battle passive)
 - **DowseWithHolyWater**: Removes all effects (turn passive)
-- **Slow**: Ambush attacks are X seconds faster
+- **Slow**: Ambush attacks are X seconds faster. At the end of your turn, lose 1 slow (battle passive)
 - **Aegis**: Prevents the next X damage from any source (battle passive)
 - **Stun**: Skips the next X attacks (battle passive)
 - **Armor**: Takes X less damage from attacks (battle passive)
@@ -31,7 +31,7 @@ All available passives in the game:
 - **Stealth**: Cannot see number of attacks planned (battle passive)
 - **Poison**: Every 60 seconds, lose 1 HP (battle passive)
 - **Shield**: Prevent all damage from first source each turn (battle passive)
-- **Fear**: Attacks have X*10% chance to become ambush (quest passive)
+- **Fear**: All enemy attacks become ambush attacks. At the end of a battle, lose 1 fear (quest passive)
 - **Siphon**: Enemy heals X*SuccubusMultiplier HP per courage removed (battle passive)
 - **Thorns**: Attacker gains X bleed when attacking owner (battle passive)
 - **Bleed**: Lose 1 HP at start of turn, then remove 1 bleed (quest passive)

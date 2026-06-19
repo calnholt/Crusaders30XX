@@ -24,7 +24,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
     {
       var cardsInHandEntities = GetComponentHelper.GetHandOfCards(entityManager);
       var frozenCardsInHand = cardsInHandEntities.Select(c => c.GetComponent<Frozen>()).ToList();
-      if (frozenCardsInHand.Count > 0 && Random.Shared.Next(0, 100) <= 50)
+      if (frozenCardsInHand.Count > 1 && Random.Shared.Next(0, 100) <= 75)
       {
         return ["frost_eater"];
       }

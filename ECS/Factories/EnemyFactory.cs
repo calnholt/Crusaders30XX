@@ -25,7 +25,7 @@ namespace Crusaders30XX.ECS.Factories
                 { "skeletal_archer", difficulty => new SkeletalArcher(difficulty) },
                 { "spider", difficulty => new Spider(difficulty) },
                 { "succubus", difficulty => new Succubus(difficulty) },
-                { "cactus", difficulty => new Cactus(difficulty) },
+                { "thornreaver", difficulty => new Thornreaver(difficulty) },
                 { "dust_wuurm", difficulty => new DustWuurm(difficulty) },
                 { "sorcerer", difficulty => new Sorcerer(difficulty) },
                 { "ice_demon", difficulty => new IceDemon(difficulty) },

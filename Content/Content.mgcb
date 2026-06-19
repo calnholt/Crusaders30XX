@@ -313,7 +313,7 @@
 /processorParam:TextureFormat=Color
 /build:Training_Demon.png
 
-#begin Cactus.png
+#begin Thornreaver.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -323,7 +323,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Cactus.png
+/build:Thornreaver.png
 
 #begin Gleeber.png
 /importer:TextureImporter

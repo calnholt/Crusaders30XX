@@ -61,9 +61,6 @@ namespace Crusaders30XX.ECS.Factories
                 // Spider attacks
                 "suffocating_silk" => new SuffocatingSilk(),
                 "mandible_breaker" => new MandibleBreaker(),
-                "rafterfall_ambush" => new RafterfallAmbush(),
-                "eight_limbs_of_death" => new EightLimbsOfDeath(),
-                "fang_feint" => new FangFeint(),
                 // Mummy attacks
                 "entomb" => new Entomb(),
                 "mummify" => new Mummify(),
@@ -73,8 +70,8 @@ namespace Crusaders30XX.ECS.Factories
                 "enthralling_gaze" => new EnthrallingGaze(),
                 "crushing_adoration" => new CrushingAdoration(),
                 "teasing_nip" => new TeasingNip(),
-                // Cactus attacks
-                "prickly_burst" => new PricklyBurst(),
+                // Thornreaver attacks
+                "sawtooth_rend" => new SawtoothRend(),
                 // DustWuurm attacks
                 "dust_storm" => new DustStorm(),
                 // Sorcerer attacks
@@ -99,6 +96,7 @@ namespace Crusaders30XX.ECS.Factories
                 "snuff_out_the_light" => new SnuffOutTheLight(),
                 "night_fall" => new NightFall(),
                 "from_the_shadows" => new FromTheShadows(),
+                "umbra_slice" => new UmbraSlice(),
                 // EarthDemon attacks
                 "tremor_strike" => new TremorStrike(),
                 "stone_barrage" => new StoneBarrage(),
@@ -182,9 +180,6 @@ namespace Crusaders30XX.ECS.Factories
                 // Spider attacks
                 { "suffocating_silk", new SuffocatingSilk() },
                 { "mandible_breaker", new MandibleBreaker() },
-                { "rafterfall_ambush", new RafterfallAmbush() },
-                { "eight_limbs_of_death", new EightLimbsOfDeath() },
-                { "fang_feint", new FangFeint() },
                 // Mummy attacks
                 { "entomb", new Entomb() },
                 { "mummify", new Mummify() },
@@ -194,8 +189,8 @@ namespace Crusaders30XX.ECS.Factories
                 { "enthralling_gaze", new EnthrallingGaze() },
                 { "crushing_adoration", new CrushingAdoration() },
                 { "teasing_nip", new TeasingNip() },
-                // Cactus attacks
-                { "prickly_burst", new PricklyBurst() },
+                // Thornreaver attacks
+                { "sawtooth_rend", new SawtoothRend() },
                 // DustWuurm attacks
                 { "dust_storm", new DustStorm() },
                 // Sorcerer attacks
@@ -220,6 +215,7 @@ namespace Crusaders30XX.ECS.Factories
                 { "snuff_out_the_light", new SnuffOutTheLight() },
                 { "night_fall", new NightFall() },
                 { "from_the_shadows", new FromTheShadows() },
+                { "umbra_slice", new UmbraSlice() },
                 // EarthDemon attacks
                 { "tremor_strike", new TremorStrike() },
                 { "stone_barrage", new StoneBarrage() },
