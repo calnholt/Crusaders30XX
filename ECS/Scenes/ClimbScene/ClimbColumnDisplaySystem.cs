@@ -20,6 +20,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly ContentManager _content;
 		private readonly Texture2D _pixel;
 		private readonly Dictionary<string, Texture2D> _textureCache = new();
+		private float _vanishPreviewAlpha;
 
 		[DebugEditable(DisplayName = "Columns Top", Step = 1, Min = 80, Max = 300)]
 		public int ColumnsTop { get; set; } = 114;
@@ -128,19 +129,23 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Sold Overlay Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float SoldOverlayAlpha { get; set; } = 0.55f;
 		[DebugEditable(DisplayName = "Vanish Overlay Base Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
-		public float VanishOverlayBaseAlpha { get; set; } = 0.35f;
+		public float VanishOverlayBaseAlpha { get; set; } = 0.18f;
 		[DebugEditable(DisplayName = "Vanish Overlay Pulse Amplitude", Step = 0.01f, Min = 0f, Max = 1f)]
-		public float VanishOverlayPulseAmplitude { get; set; } = 0.25f;
+		public float VanishOverlayPulseAmplitude { get; set; } = 0.12f;
 		[DebugEditable(DisplayName = "Vanish Pulse Period Seconds", Step = 0.1f, Min = 0.5f, Max = 6f)]
 		public float VanishPulsePeriodSeconds { get; set; } = 2f;
+		[DebugEditable(DisplayName = "Vanish Fade Seconds", Step = 0.01f, Min = 0f, Max = 2f)]
+		public float VanishFadeSeconds { get; set; } = 0.22f;
+		[DebugEditable(DisplayName = "Vanish Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float VanishBorderAlpha { get; set; } = 0.45f;
 		[DebugEditable(DisplayName = "Unaffordable Overlay Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float UnaffordableOverlayAlpha { get; set; } = 0.22f;
 		[DebugEditable(DisplayName = "Unavailable Overlay Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float UnavailableOverlayAlpha { get; set; } = 0.35f;
 		[DebugEditable(DisplayName = "Shop Time Block Width", Step = 1, Min = 40, Max = 160)]
-		public int ShopTimeBlockWidth { get; set; } = 76;
+		public int ShopTimeBlockWidth { get; set; } = 95;
 		[DebugEditable(DisplayName = "Encounter Time Block Width", Step = 1, Min = 40, Max = 160)]
-		public int EncounterTimeBlockWidth { get; set; } = 88;
+		public int EncounterTimeBlockWidth { get; set; } = 125;
 		[DebugEditable(DisplayName = "Event Time Block Width", Step = 1, Min = 40, Max = 160)]
 		public int EventTimeBlockWidth { get; set; } = 76;
 		[DebugEditable(DisplayName = "Meta Block Gap", Step = 1, Min = 0, Max = 24)]
@@ -238,6 +243,7 @@ namespace Crusaders30XX.ECS.Systems
 			SlotGapValue = SlotGap;
 			if (IsClimbScene())
 			{
+				UpdateVanishPreviewFade(gameTime);
 				foreach (var slot in EntityManager.GetEntitiesWithComponent<ClimbSlotPresentation>()
 					.Select(e => e.GetComponent<ClimbSlotPresentation>())
 					.Where(slot => slot != null && !string.IsNullOrWhiteSpace(slot.PortraitAsset)))
@@ -359,8 +365,17 @@ namespace Crusaders30XX.ECS.Systems
 			else if (wouldVanish)
 			{
 				float pulse = ClimbSceneDrawHelpers.PreviewVanishPulseAlpha(VanishPulsePeriodSeconds);
-				_spriteBatch.Draw(_pixel, rect, ClimbSceneDrawHelpers.RedDim * (VanishOverlayBaseAlpha + VanishOverlayPulseAmplitude * pulse));
-				ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, ClimbSceneDrawHelpers.Red2, SlotBorderThickness);
+				float pulseStrength = VanishOverlayBaseAlpha + VanishOverlayPulseAmplitude * pulse;
+				float overlayAlpha = _vanishPreviewAlpha * pulseStrength;
+				float borderAlpha = _vanishPreviewAlpha * VanishBorderAlpha * pulseStrength;
+				if (overlayAlpha > 0.001f)
+				{
+					_spriteBatch.Draw(_pixel, rect, ClimbSceneDrawHelpers.RedDim * overlayAlpha);
+				}
+				if (borderAlpha > 0.001f)
+				{
+					ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, rect, ClimbSceneDrawHelpers.Red2 * borderAlpha, SlotBorderThickness);
+				}
 			}
 			else if (slot.Kind == ClimbSlotKind.Shop && !slot.IsAffordable)
 			{
@@ -604,6 +619,20 @@ namespace Crusaders30XX.ECS.Systems
 			if (slot == null || slot.Duration <= 0) return 0;
 			int expiresAt = slot.GeneratedAtTime + slot.Duration;
 			return Math.Clamp(expiresAt - ClimbRuleService.ClampTime(time), 0, slot.Duration);
+		}
+
+		private void UpdateVanishPreviewFade(GameTime gameTime)
+		{
+			var preview = GetPreview();
+			bool hasVanishTargets = preview?.IsActive == true
+				&& preview.WouldVanishSlotIds.Any(id => !string.Equals(id, preview.SourceSlotId, StringComparison.OrdinalIgnoreCase));
+			float target = hasVanishTargets ? 1f : 0f;
+			float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
+			float delta = VanishFadeSeconds <= 0f ? 1f : elapsed / VanishFadeSeconds;
+			_vanishPreviewAlpha = MathHelper.Clamp(
+				_vanishPreviewAlpha + (target > _vanishPreviewAlpha ? delta : -delta),
+				0f,
+				1f);
 		}
 
 		private ClimbPreviewState GetPreview()

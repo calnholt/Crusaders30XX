@@ -285,12 +285,22 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnConfirmPressed()
 		{
 			if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
-			if (!BattleInputGate.TryAllowTutorialAction(EntityManager, TutorialAction.ConfirmBlocks)) return;
 			// Determine current context id first
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();
 			var ctx = intent?.Planned?.FirstOrDefault()?.ContextId;
 			if (string.IsNullOrEmpty(ctx)) return;
+			if (!EnemyAttackConfirmAvailabilityService.CanConfirmCurrentAttack(
+				EntityManager,
+				ctx,
+				_confirmedForContext))
+			{
+				if (!BattleInputGate.IsTutorialActionAllowed(EntityManager, TutorialAction.ConfirmBlocks))
+				{
+					BattleInputGate.TryAllowTutorialAction(EntityManager, TutorialAction.ConfirmBlocks);
+				}
+				return;
+			}
 			// Lock confirm for this context immediately to avoid double presses
 			_confirmedForContext.Add(ctx);
 			var confirmBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
@@ -464,13 +474,10 @@ namespace Crusaders30XX.ECS.Systems
 			var hotkey = confirmButton?.GetComponent<HotKey>();
 			if (ui == null) return;
 
-			bool tutorialRequirementMet = BattleInputGate.IsTutorialActionAllowed(
+			bool available = EnemyAttackConfirmAvailabilityService.CanConfirmCurrentAttack(
 				EntityManager,
-				TutorialAction.ConfirmBlocks);
-			bool available = phaseNow == SubPhase.Block
-				&& !_confirmedForContext.Contains(contextId)
-				&& !IsAnyBlockAssignmentAnimating()
-				&& tutorialRequirementMet;
+				contextId,
+				_confirmedForContext);
 
 			ui.IsInteractable = available;
 			if (!available) ui.Bounds = Rectangle.Empty;
@@ -492,16 +499,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private bool IsAnyBlockAssignmentAnimating()
 		{
-			var assignedCards = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>();
-			foreach (var entity in assignedCards)
-			{
-				var abc = entity.GetComponent<AssignedBlockCard>();
-				if (abc != null && abc.Phase != AssignedBlockCard.PhaseState.Idle)
-				{
-					return true;
-				}
-			}
-			return false;
+			return EnemyAttackConfirmAvailabilityService.IsAnyBlockAssignmentAnimating(EntityManager);
 		}
 	}
 }

@@ -50,7 +50,6 @@ namespace Crusaders30XX.ECS.Systems
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
             _content = content;
-            TryLoadWeaponTexture();
 
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
         }
@@ -95,6 +94,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
+			TryLoadWeaponTexture();
 			EnsureRootEntity();
 			var discardRoot = EntityManager.GetEntity("UI_DiscardPileRoot");
 			var discardT = discardRoot?.GetComponent<Transform>();
@@ -116,6 +116,8 @@ namespace Crusaders30XX.ECS.Systems
             var player = GetRelevantEntities().FirstOrDefault();
             if (player == null) return;
 
+            TryLoadWeaponTexture();
+
             int r = System.Math.Max(4, CircleRadius);
             var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, r);
             EnsureRootEntity();
@@ -130,11 +132,6 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.Draw(circle, new Vector2(center.X - r, center.Y - r), gold);
 
             // Draw weapon icon centered if available
-            if (_weaponTex == null)
-            {
-                // Attempt lazy-load if initially null (e.g., player created after system)
-                TryLoadWeaponTexture();
-            }
             if (_weaponTex != null)
             {
                 // Fit within circle with padding, uniform scale
@@ -160,6 +157,11 @@ namespace Crusaders30XX.ECS.Systems
 				rootUi.Bounds = hitRect;
 				rootUi.TooltipPosition = TooltipPosition.Right;
 				rootUi.TooltipType = TooltipType.Card;
+				var tooltip = root.GetComponent<CardTooltip>();
+				if (tooltip != null)
+				{
+					tooltip.CardId = player.GetComponent<EquippedWeapon>()?.WeaponId;
+				}
 			}
         }
 

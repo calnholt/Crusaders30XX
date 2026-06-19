@@ -219,19 +219,23 @@ public class ClimbRuleServiceTests
 	}
 
 	[Fact]
-	public void Shop_costs_use_item_specific_resource_pip_ranges()
+	public void Shop_costs_use_time_adjusted_item_specific_resource_weights()
 	{
-		var state = ClimbRuleService.CreateInitialState(123, TestLoadout());
+		AssertShopCost(ClimbShopSlotKinds.Upgrade, 1, expectedTotal: 3, expectedDominant: "red");
+		AssertShopCost(ClimbShopSlotKinds.Upgrade, 2, expectedTotal: 2, expectedDominant: "red");
+		AssertShopCost(ClimbShopSlotKinds.Upgrade, 3, expectedTotal: 1, expectedDominant: "red");
 
-		var medal = state.shopSlots.SingleOrDefault(slot => slot.kind == ClimbShopSlotKinds.Medal);
-		var equipment = state.shopSlots.SingleOrDefault(slot => slot.kind == ClimbShopSlotKinds.Equipment);
-		var upgrade = state.shopSlots.SingleOrDefault(slot => slot.kind == ClimbShopSlotKinds.Upgrade);
-		var replacement = state.shopSlots.SingleOrDefault(slot => slot.kind == ClimbShopSlotKinds.Replacement);
+		AssertShopCost(ClimbShopSlotKinds.Replacement, 1, expectedTotal: 3, expectedDominant: "red");
+		AssertShopCost(ClimbShopSlotKinds.Replacement, 2, expectedTotal: 2, expectedDominant: "red");
+		AssertShopCost(ClimbShopSlotKinds.Replacement, 3, expectedTotal: 1, expectedDominant: "red");
 
-		if (medal != null) Assert.InRange(ResourcePips(medal.cost), 4, 6);
-		if (equipment != null) Assert.InRange(ResourcePips(equipment.cost), 6, 8);
-		if (upgrade != null) Assert.InRange(ResourcePips(upgrade.cost), 1, 2);
-		if (replacement != null) Assert.InRange(ResourcePips(replacement.cost), 1, 2);
+		AssertShopCost(ClimbShopSlotKinds.Medal, 1, expectedTotal: 6, expectedDominant: "white");
+		AssertShopCost(ClimbShopSlotKinds.Medal, 2, expectedTotal: 4, expectedDominant: "white");
+		AssertShopCost(ClimbShopSlotKinds.Medal, 3, expectedTotal: 2, expectedDominant: "white");
+
+		AssertShopCost(ClimbShopSlotKinds.Equipment, 1, expectedTotal: 8, expectedDominant: "black");
+		AssertShopCost(ClimbShopSlotKinds.Equipment, 2, expectedTotal: 6, expectedDominant: "black");
+		AssertShopCost(ClimbShopSlotKinds.Equipment, 3, expectedTotal: 4, expectedDominant: "black");
 	}
 
 	[Fact]
@@ -269,5 +273,33 @@ public class ClimbRuleServiceTests
 		return Math.Max(0, resources?.red ?? 0)
 			+ Math.Max(0, resources?.white ?? 0)
 			+ Math.Max(0, resources?.black ?? 0);
+	}
+
+	private static void AssertShopCost(string kind, int timeCost, int expectedTotal, string expectedDominant)
+	{
+		var cost = ClimbRuleService.GenerateShopCostForTests(kind, timeCost);
+
+		Assert.Equal(expectedTotal, ResourcePips(cost));
+		AssertDominant(cost, expectedDominant);
+	}
+
+	private static void AssertDominant(ClimbResourceSave cost, string expectedDominant)
+	{
+		if (string.Equals(expectedDominant, "red", StringComparison.OrdinalIgnoreCase))
+		{
+			Assert.True(cost.red > cost.white);
+			Assert.True(cost.red > cost.black);
+			return;
+		}
+
+		if (string.Equals(expectedDominant, "white", StringComparison.OrdinalIgnoreCase))
+		{
+			Assert.True(cost.white > cost.red);
+			Assert.True(cost.white > cost.black);
+			return;
+		}
+
+		Assert.True(cost.black > cost.red);
+		Assert.True(cost.black > cost.white);
 	}
 }

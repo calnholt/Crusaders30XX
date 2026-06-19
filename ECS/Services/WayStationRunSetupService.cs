@@ -19,6 +19,7 @@ namespace Crusaders30XX.ECS.Services
 			SaveCache.ConfigurePrimaryRunSetup(
 				WayStationRunSetupSingleton.WeaponId,
 				GetSelectedTemperanceId());
+			PrepareRunEntities(world);
 
 			EventManager.Publish(new ShowTransition { Scene = SceneId.Climb, SkipHold = true });
 		}
@@ -35,7 +36,7 @@ namespace Crusaders30XX.ECS.Services
 		{
 			if (world == null || string.IsNullOrEmpty(nodeId)) return;
 
-			PrepareRunEntitiesForBattle(world);
+			PrepareRunEntities(world);
 
 			var tempPoi = world.EntityManager.CreateEntity("TempQuestBattleTrigger");
 			world.EntityManager.AddComponent(tempPoi, new PointOfInterest { Id = nodeId });
@@ -43,7 +44,7 @@ namespace Crusaders30XX.ECS.Services
 			world.EntityManager.DestroyEntity(tempPoi.Id);
 		}
 
-		private static void PrepareRunEntitiesForBattle(World world)
+		private static void PrepareRunEntities(World world)
 		{
 			var deckEntity = RunDeckService.EnsureRunDeck(world.EntityManager);
 			var player = RunPlayerService.EnsureRunPlayer(world);
@@ -52,7 +53,6 @@ namespace Crusaders30XX.ECS.Services
 			{
 				playerComponent.DeckEntity = deckEntity;
 			}
-			ApplySelectedPlayerHp(player);
 		}
 
 		public static void ApplySelectedPlayerHp(Entity player)

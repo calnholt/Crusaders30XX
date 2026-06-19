@@ -226,7 +226,7 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
-			ui.TooltipPosition = TooltipPosition.Above;
+			ui.TooltipPosition = TooltipPosition.Right;
 			ui.TooltipOffsetPx = ShopTooltipOffsetPxValue;
 
 			if (string.Equals(slot.kind, ClimbShopSlotKinds.Medal, StringComparison.OrdinalIgnoreCase))
@@ -257,6 +257,7 @@ namespace Crusaders30XX.ECS.Systems
 					CardId = cardId,
 					CardColor = color,
 					IsUpgraded = isUpgraded,
+					TooltipScale = 1.0f,
 				});
 				ui.TooltipType = TooltipType.Card;
 			}

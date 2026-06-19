@@ -363,10 +363,10 @@ namespace Crusaders30XX.ECS.Services
 			{
 				id = $"shop_{slotIndex}",
 				kind = kind,
-				cost = GenerateShopCost(rng, kind),
 				timeCost = rng.Next(1, 4),
 				generatedAtTime = state.time,
 			};
+			slot.cost = GenerateShopCost(rng, kind, slot.timeCost);
 
 			if (kind == ClimbShopSlotKinds.Medal)
 			{
@@ -400,6 +400,7 @@ namespace Crusaders30XX.ECS.Services
 			if (string.Equals(slot.kind, ClimbShopSlotKinds.Empty, StringComparison.OrdinalIgnoreCase))
 			{
 				slot.timeCost = 0;
+				slot.cost = new ClimbResourceSave { red = 0, white = 0, black = 0 };
 			}
 
 			return slot;
@@ -425,13 +426,56 @@ namespace Crusaders30XX.ECS.Services
 			};
 		}
 
-		private static ClimbResourceSave GenerateShopCost(Random rng, string kind)
+		internal static ClimbResourceSave GenerateShopCostForTests(string kind, int timeCost)
 		{
+			return GenerateShopCost(new Random(1), kind, timeCost);
+		}
+
+		private static ClimbResourceSave GenerateShopCost(Random rng, string kind, int timeCost)
+		{
+			rng ??= Random.Shared;
+			var dominant = CardData.CardColor.Red;
+			int baseline = 3;
+			int reductionPerExtraTime = 1;
+
 			if (string.Equals(kind, ClimbShopSlotKinds.Medal, StringComparison.OrdinalIgnoreCase))
-				return GenerateCost(rng, 4, 6);
-			if (string.Equals(kind, ClimbShopSlotKinds.Equipment, StringComparison.OrdinalIgnoreCase))
-				return GenerateCost(rng, 6, 8);
-			return GenerateCost(rng, 1, 2);
+			{
+				dominant = CardData.CardColor.White;
+				baseline = 6;
+				reductionPerExtraTime = 2;
+			}
+			else if (string.Equals(kind, ClimbShopSlotKinds.Equipment, StringComparison.OrdinalIgnoreCase))
+			{
+				dominant = CardData.CardColor.Black;
+				baseline = 8;
+				reductionPerExtraTime = 2;
+			}
+
+			int total = Math.Max(0, baseline - Math.Max(0, timeCost - 1) * reductionPerExtraTime);
+			return GenerateDominantCost(rng, total, dominant);
+		}
+
+		private static ClimbResourceSave GenerateDominantCost(Random rng, int total, CardData.CardColor dominant)
+		{
+			var cost = new ClimbResourceSave { red = 0, white = 0, black = 0 };
+			if (total <= 0) return cost;
+
+			int dominantPips = 1;
+			while (dominantPips < total && dominantPips <= (int)Math.Ceiling((total - dominantPips) / 2f))
+			{
+				dominantPips++;
+			}
+
+			AddColor(cost, dominant, dominantPips);
+
+			var offColors = ResourceColors
+				.Where(color => color != dominant)
+				.OrderBy(_ => rng.Next())
+				.ToArray();
+			int remaining = total - dominantPips;
+			AddColor(cost, offColors[0], remaining / 2 + remaining % 2);
+			AddColor(cost, offColors[1], remaining / 2);
+			return cost;
 		}
 
 		private static string RollClimbEncounterEnemyId(Random rng, string excludedEnemyId)

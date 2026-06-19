@@ -115,9 +115,28 @@ namespace Crusaders30XX.ECS.Services
 		}
 
 		private static List<string> GetCurrentAssignedCardIds(EntityManager entityManager) =>
-			entityManager.GetEntitiesWithComponent<AssignedBlockCard>()
+			GetCurrentAssignedBlockCards(entityManager)
 				.Select(entity => entity.GetComponent<CardData>()?.Card?.CardId)
 				.Where(id => !string.IsNullOrEmpty(id))
 				.ToList();
+
+		private static IEnumerable<Entity> GetCurrentAssignedBlockCards(EntityManager entityManager)
+		{
+			var currentContextId = entityManager.GetEntitiesWithComponent<AttackIntent>()
+				.FirstOrDefault()
+				?.GetComponent<AttackIntent>()
+				?.Planned
+				?.FirstOrDefault()
+				?.ContextId;
+
+			return entityManager.GetEntitiesWithComponent<AssignedBlockCard>()
+				.Where(entity =>
+				{
+					var assignment = entity.GetComponent<AssignedBlockCard>();
+					if (assignment == null || assignment.Phase == AssignedBlockCard.PhaseState.Returning) return false;
+					return string.IsNullOrEmpty(currentContextId)
+						|| assignment.ContextId == currentContextId;
+				});
+		}
 	}
 }

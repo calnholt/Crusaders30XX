@@ -10,7 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Enemies
   public class Berserker : EnemyBase
   {
     private int WoundedAmount = 1;
-    private int ShackledAmount = 4;
+    private int ShackledAmount = 5;
     public Berserker(EnemyDifficulty difficulty = EnemyDifficulty.Easy) : base(difficulty)
     {
       Id = "berserker";

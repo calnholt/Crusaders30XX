@@ -38,6 +38,68 @@ public class WayStationRunSetupTests
 		}
 	}
 
+	[Theory]
+	[InlineData(RunDifficulty.Easy, 25)]
+	[InlineData(RunDifficulty.Normal, 22)]
+	[InlineData(RunDifficulty.Hard, 20)]
+	public void Depart_prepares_run_player_with_selected_difficulty_hp(
+		RunDifficulty difficulty,
+		int expectedMaxHp)
+	{
+		EventManager.Clear();
+		try
+		{
+			SaveCache.DeleteSaveFilesIfPresent();
+			WayStationRunSetupSingleton.SelectedDifficulty = difficulty;
+			var world = new World();
+
+			WayStationRunSetupService.Depart(world);
+
+			var player = world.EntityManager.GetEntity("Player");
+			var hp = player?.GetComponent<HP>();
+			Assert.NotNull(player);
+			Assert.NotNull(hp);
+			Assert.Equal(expectedMaxHp, hp.Max);
+			Assert.Equal(expectedMaxHp, hp.Current);
+			Assert.Same(world.EntityManager.GetEntity("Deck"), player.GetComponent<Player>().DeckEntity);
+			Assert.Empty(world.EntityManager.GetEntitiesWithComponent<QueuedEvents>());
+		}
+		finally
+		{
+			WayStationRunSetupSingleton.SelectedDifficulty = RunDifficulty.Easy;
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void EnsureRunPlayer_applies_selected_difficulty_hp_only_when_creating_player()
+	{
+		try
+		{
+			SaveCache.DeleteSaveFilesIfPresent();
+			SaveCache.StartNewRun();
+			WayStationRunSetupSingleton.SelectedDifficulty = RunDifficulty.Normal;
+			var world = new World();
+
+			var player = RunPlayerService.EnsureRunPlayer(world);
+			var hp = player.GetComponent<HP>();
+			Assert.Equal(22, hp.Max);
+			Assert.Equal(22, hp.Current);
+
+			hp.Max = 27;
+			hp.Current = 13;
+			WayStationRunSetupSingleton.SelectedDifficulty = RunDifficulty.Easy;
+
+			Assert.Same(player, RunPlayerService.EnsureRunPlayer(world));
+			Assert.Equal(27, hp.Max);
+			Assert.Equal(13, hp.Current);
+		}
+		finally
+		{
+			WayStationRunSetupSingleton.SelectedDifficulty = RunDifficulty.Easy;
+		}
+	}
+
 	[Fact]
 	public void Weapon_starter_pools_only_reference_known_cards()
 	{

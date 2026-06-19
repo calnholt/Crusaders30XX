@@ -162,9 +162,6 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
             if (evt.Current != SubPhase.PreBlock) return;
-            var ui = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack").GetComponent<UIElement>();
-            ui.IsInteractable = true;
-            ui.IsHidden = false;
             LoggingService.Append("MustBeBlockedSystem.OnChangeBattlePhaseEvent", new System.Text.Json.Nodes.JsonObject { ["phase"] = evt.Current.ToString() });
             blockCount = 0;
             
@@ -172,22 +169,19 @@ namespace Crusaders30XX.ECS.Systems
             
         }
 
-        protected override void UpdateEntity(Entity entity, GameTime gameTime) 
+        public override void Update(GameTime gameTime)
         {
+            base.Update(gameTime);
             if (requirementType == MustBeBlockedByType.None) return;
             if (string.IsNullOrEmpty(mustBeBlockedContextId)) return;
-            
-            var confirmBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
-            if (confirmBtn == null) return;
-            var ui = confirmBtn.GetComponent<UIElement>();
-            if (ui == null) return;
+
             var progress = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>()
                 .FirstOrDefault(e => e.GetComponent<EnemyAttackProgress>()?.ContextId == mustBeBlockedContextId);
             if (progress == null) return;
             var progressComponent = progress.GetComponent<EnemyAttackProgress>();
             if (progressComponent == null) return;
             
-            var blockCount = progressComponent.PlayedCards;
+            blockCount = progressComponent.PlayedCards;
             
             // Only process if the card count has actually changed (prevents redundant evaluations)
             if (blockCount == previousPlayedCardsCount)
@@ -205,14 +199,14 @@ namespace Crusaders30XX.ECS.Systems
             }
             
             previousFulfilledState = isFullfilled;
-            ui.IsHidden = !isFullfilled;
-            ui.IsInteractable = isFullfilled;
             
             if (mustBeBlockedAttackDefinition != null)
             {
                 // mustBeBlockedAttackDefinition.isTextConditionFulfilled = isFullfilled;
             }
         }
+
+        protected override void UpdateEntity(Entity entity, GameTime gameTime) { }
         private void OnAmbushTimerExpired(AmbushTimerExpired evt)
         {
             try
@@ -313,7 +307,7 @@ namespace Crusaders30XX.ECS.Systems
 
         protected override IEnumerable<Entity> GetRelevantEntities()
         {
-            return new List<Entity> { EntityManager.GetEntity("UIButton_ConfirmEnemyAttack") };
+            return Array.Empty<Entity>();
         }
 
     }

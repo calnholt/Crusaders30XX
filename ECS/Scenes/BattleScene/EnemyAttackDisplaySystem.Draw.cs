@@ -323,17 +323,13 @@ namespace Crusaders30XX.ECS.Systems
 		private void DrawConfirmButton(DrawContext ctx)
 		{
 			Entity primaryBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
-			bool isAnimating = IsAnyBlockAssignmentAnimating();
 			var ui = primaryBtn?.GetComponent<UIElement>();
-			bool tutorialRequirementMet = BattleInputGate.IsTutorialActionAllowed(
-				EntityManager,
-				TutorialAction.ConfirmBlocks);
 			var isInteractable = ui?.IsInteractable ?? false;
-			bool showConfirm = ctx.PhaseNow == SubPhase.Block
-				&& !_confirmedForContext.Contains(ctx.PlannedAttack.ContextId)
-				&& tutorialRequirementMet
-				&& isInteractable
-				&& !isAnimating;
+			bool showConfirm = isInteractable
+				&& EnemyAttackConfirmAvailabilityService.CanConfirmCurrentAttack(
+					EntityManager,
+					ctx.PlannedAttack.ContextId,
+					_confirmedForContext);
 
 			if (showConfirm)
 			{

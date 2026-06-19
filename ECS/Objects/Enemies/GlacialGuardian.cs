@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
@@ -21,7 +20,6 @@ public class GlacialGuardian : EnemyBase
     OnStartOfBattle = (entityManager) =>
     {
       EventManager.Subscribe<CardMoved>(OnCardMoved, priority: 10);
-      EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
       EventQueueBridge.EnqueueTriggerAction("GlacialGuardian.OnCreate", () =>
       {
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Windchill, Delta = 1 });
@@ -39,20 +37,6 @@ public class GlacialGuardian : EnemyBase
     return ArrayUtils.TakeRandomWithoutReplacement(new List<string> { "glacial_strike", "glacial_blast" }, 1);
   }
 
-  private void OnChangeBattlePhase(ChangeBattlePhaseEvent evt)
-  {
-    Console.WriteLine($"[GlacialGuardian] OnChangeBattlePhase - {evt.Current}");
-    if (evt.Current == SubPhase.EnemyStart)
-    {
-      EventManager.Publish(new ApplyCardApplicationEvent
-      {
-        Amount = 1,
-        Type = CardApplicationType.Frozen,
-        Target = CardApplicationTarget.Hand,
-      });
-    }
-  }
-
   private void OnCardMoved(CardMoved evt)
   {
     if ((evt.To == CardZoneType.DiscardPile || evt.To == CardZoneType.ExhaustPile) && evt.From == CardZoneType.AssignedBlock && evt.Card.GetComponent<Frozen>() != null)
@@ -64,7 +48,6 @@ public class GlacialGuardian : EnemyBase
   public override void Dispose()
   {
     EventManager.Unsubscribe<CardMoved>(OnCardMoved);
-    EventManager.Unsubscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhase);
     base.Dispose();
   }
 }

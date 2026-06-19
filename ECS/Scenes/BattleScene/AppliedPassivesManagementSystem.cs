@@ -99,7 +99,23 @@ namespace Crusaders30XX.ECS.Systems
             else if (evt.Current == SubPhase.PreBlock)
             {
                 ApplyStartOfPreBlockPassives(enemy);
+                ApplySubZeroFreeze(player);
             }
+        }
+
+        private void ApplySubZeroFreeze(Entity player)
+        {
+            var ap = player?.GetComponent<AppliedPassives>();
+            if (ap == null || ap.Passives == null) return;
+            if (!ap.Passives.TryGetValue(AppliedPassiveType.SubZero, out int stacks) || stacks <= 0) return;
+
+            EventManager.Publish(new ApplyCardApplicationEvent
+            {
+                Amount = stacks,
+                Type = CardApplicationType.Frozen,
+                Target = CardApplicationTarget.Hand,
+            });
+            EventManager.Publish(new PassiveTriggered { Owner = player, Type = AppliedPassiveType.SubZero });
         }
 
         private void OnLoadScene(LoadSceneEvent @event)

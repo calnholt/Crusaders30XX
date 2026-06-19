@@ -396,9 +396,16 @@ namespace Crusaders30XX.ECS.Systems
 		public static float PreviewVanishPulseAlpha(float periodSeconds = 2f)
 		{
 			float t = (float)(DateTime.UtcNow.TimeOfDay.TotalSeconds % periodSeconds) / periodSeconds;
-			if (t < 0.4f) return MathHelper.Lerp(1f, 0.18f, t / 0.4f);
-			if (t < 0.7f) return MathHelper.Lerp(0.18f, 0.55f, (t - 0.4f) / 0.3f);
-			return MathHelper.Lerp(0.55f, 1f, (t - 0.7f) / 0.3f);
+			if (t < 0.4f) return SmoothStepLerp(1f, 0.18f, t / 0.4f);
+			if (t < 0.7f) return SmoothStepLerp(0.18f, 0.55f, (t - 0.4f) / 0.3f);
+			return SmoothStepLerp(0.55f, 1f, (t - 0.7f) / 0.3f);
+		}
+
+		private static float SmoothStepLerp(float from, float to, float t)
+		{
+			t = MathHelper.Clamp(t, 0f, 1f);
+			float eased = t * t * (3f - 2f * t);
+			return MathHelper.Lerp(from, to, eased);
 		}
 
 		public static string ToAscii(string text)
