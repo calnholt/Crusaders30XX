@@ -5,7 +5,6 @@ using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System;
-using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
@@ -187,19 +186,18 @@ namespace Crusaders30XX.ECS.Systems
             var data = evt.Card.GetComponent<CardData>();
             if (data == null) return;
 
-            // Use CardId directly for lookup
-            string id = data.Card.CardId ?? string.Empty;
-            if (string.IsNullOrEmpty(id)) return;
-            var card = CardFactory.Create(id);
-            if (card == null) return;
+            // The entity's card is the initialized runtime definition. It includes
+            // upgrade mutations and any state captured by its gameplay delegates.
+            var card = data.Card;
+            if (card == null || string.IsNullOrEmpty(card.CardId)) return;
 
 
-            if (data.Card.Type == CardType.Relic)
+            if (card.Type == CardType.Relic)
             {
                 EventManager.Publish(new CantPlayCardMessage { Message = "Relics can only be discarded to pay for costs!" });
                 return;
             }
-            if (data.Card.Type == CardType.Block)
+            if (card.Type == CardType.Block)
             {
                 EventManager.Publish(new CantPlayCardMessage { Message = "Block cards can only be used to block!" });
                 return;
@@ -286,30 +284,8 @@ namespace Crusaders30XX.ECS.Systems
                     List<Entity> handNonWeapons = new List<Entity>();
                     foreach (var e in handOthers)
                     {
-                        var cdOther = e.GetComponent<CardData>();
-                        if (cdOther == null)
-                        {
-                            handNonWeapons.Add(e);
-                            continue;
-                        }
-                        try
-                        {
-                            string oid = cdOther.Card.CardId ?? string.Empty;
-                            var ocard = CardFactory.Create(oid);
-                            if (ocard != null)
-                            {
-                                if (ocard.CanDiscardForCost)
-                                {
-                                    handNonWeapons.Add(e);
-                                }
-                            }
-                            else
-                            {
-                                // If no definition found, treat as eligible to avoid false negatives
-                                handNonWeapons.Add(e);
-                            }
-                        }
-                        catch
+                        var paymentCard = e.GetComponent<CardData>()?.Card;
+                        if (paymentCard == null || paymentCard.CanDiscardForCost)
                         {
                             handNonWeapons.Add(e);
                         }

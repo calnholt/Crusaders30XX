@@ -26,13 +26,13 @@ namespace Crusaders30XX.ECS.Systems
 
         // Visual tuning
         [DebugEditable(DisplayName = "Portrait Height (% of screen height)", Step = 0.01f, Min = 0.05f, Max = 1.0f)]
-        public float ScreenHeightCoverage { get; set; } = 0.30f; // relative to viewport height
+        public float ScreenHeightCoverage { get; set; } = 0.36f; // relative to viewport height
 
         [DebugEditable(DisplayName = "Center Offset X (% of width)", Step = 0.01f, Min = -1.0f, Max = 1.0f)]
         public float CenterOffsetXPct { get; set; } = -0.26f; // negative = left, positive = right
 
         [DebugEditable(DisplayName = "Center Offset Y (% of height)", Step = 0.01f, Min = -1.0f, Max = 1.0f)]
-        public float CenterOffsetYPct { get; set; } = -0.11f; // negative = up, positive = down
+        public float CenterOffsetYPct { get; set; } = -0.15f; // negative = up, positive = down
 
         public PlayerDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
             : base(entityManager)

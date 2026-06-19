@@ -98,6 +98,42 @@ public class EnemyDamageThresholdTests : IDisposable
             EnemyAttackTextHelper.GetDamageThresholdText(5, "Gain 2 burn."));
     }
 
+    [Theory]
+    [InlineData(10, 0, 0, 6, false)]
+    [InlineData(10, 6, 0, 6, true)]
+    [InlineData(10, 5, 5, 6, true)]
+    [InlineData(10, 3, 0, 6, false)]
+    public void Block_threshold_display_condition_reflects_assigned_block_and_final_damage(
+        int damage,
+        int assignedBlock,
+        int aegis,
+        int blockRequired,
+        bool expectedMet)
+    {
+        var progress = new EnemyAttackProgress
+        {
+            AssignedBlockTotal = assignedBlock,
+            AegisTotal = aegis,
+        };
+        int predictedFinalDamage = Math.Max(damage - assignedBlock - aegis, 0);
+
+        Assert.Equal(
+            expectedMet,
+            ConditionService.EvaluateBlockRequiredToPreventEffect(blockRequired, progress, predictedFinalDamage));
+    }
+
+    [Fact]
+    public void Block_threshold_display_condition_met_when_fully_prevented_by_special()
+    {
+        var progress = new EnemyAttackProgress
+        {
+            AssignedBlockTotal = 0,
+            FullyPreventedBySpecial = true,
+        };
+
+        Assert.True(ConditionService.EvaluateBlockRequiredToPreventEffect(6, progress, predictedFinalDamage: 10));
+    }
+
     private static EntityManager CreateCombat(
         ThresholdAttack attack,
         int assignedBlock,

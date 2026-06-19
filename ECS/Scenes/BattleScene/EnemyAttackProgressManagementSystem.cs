@@ -240,6 +240,12 @@ namespace Crusaders30XX.ECS.Systems
 			int reduced = aegis + p.AssignedBlockTotal;
 			int actual = Math.Max(full - reduced, 0);
 
+			if (def.BlockRequiredToPreventEffect is int blockRequired)
+			{
+				isConditionMet = isConditionMet
+					&& ConditionService.EvaluateBlockRequiredToPreventEffect(blockRequired, p, actual);
+			}
+
 			p.IsConditionMet = isConditionMet;
 			p.ActualDamage = actual;
 			p.TotalPreventedDamage = aegis + p.AssignedBlockTotal;
