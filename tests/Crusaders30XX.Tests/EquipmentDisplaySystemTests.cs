@@ -143,7 +143,7 @@ public sealed class EquipmentDisplaySystemTests : IDisposable
 	}
 
 	[Fact]
-	public void Quest_reward_overlay_replenishes_equipment_uses()
+	public void Quest_reward_overlay_does_not_replenish_equipment_uses()
 	{
 		var entityManager = BuildBattle(out var player, SubPhase.Action);
 		var equipment = AddEquipment(entityManager, player, "helm_of_seeing");
@@ -153,7 +153,7 @@ public sealed class EquipmentDisplaySystemTests : IDisposable
 		EventManager.Publish(new ShowQuestRewardOverlay());
 
 		var model = equipment.GetComponent<EquippedEquipment>().Equipment;
-		Assert.Equal(model.Uses, model.RemainingUses);
+		Assert.Equal(0, model.RemainingUses);
 	}
 
 	[Theory]
