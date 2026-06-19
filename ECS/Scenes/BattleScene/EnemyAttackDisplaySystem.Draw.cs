@@ -326,7 +326,7 @@ namespace Crusaders30XX.ECS.Systems
 			var ui = primaryBtn?.GetComponent<UIElement>();
 			var isInteractable = ui?.IsInteractable ?? false;
 			bool showConfirm = isInteractable
-				&& EnemyAttackConfirmAvailabilityService.CanConfirmCurrentAttack(
+				&& EnemyAttackConfirmAvailabilityService.CanRequestCurrentAttackConfirm(
 					EntityManager,
 					ctx.PlannedAttack.ContextId,
 					_confirmedForContext);

@@ -94,6 +94,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnUnassignCardAsBlockRequested(UnassignCardAsBlockRequested evt)
 		{
+			if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
 			LoggingService.Append("AssignedBlockCardsDisplaySystem.OnUnassignCardAsBlockRequested", new System.Text.Json.Nodes.JsonObject { ["entityId"] = evt.CardEntity.Id });
 			var abc = evt.CardEntity.GetComponent<AssignedBlockCard>();
 			// Immediately move B HotKey to the previous assigned (if available)

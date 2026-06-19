@@ -130,6 +130,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnUnassignCardAsBlockRequested(UnassignCardAsBlockRequested evt)
 		{
 			if (_isProcessing) return;
+			if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
 			if (evt.CardEntity == null || evt.CardEntity.GetComponent<Shackle>() == null) return;
 
 			// Find other shackled cards that are currently assigned

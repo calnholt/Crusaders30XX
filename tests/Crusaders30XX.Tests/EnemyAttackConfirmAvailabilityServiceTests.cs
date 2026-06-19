@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
@@ -50,6 +51,28 @@ public class EnemyAttackConfirmAvailabilityServiceTests
 	}
 
 	[Fact]
+	public void Valid_attack_with_animating_blocker_can_be_requested_but_not_resolved()
+	{
+		var entityManager = CreateCombat(ConditionType.MustBeBlockedByAtLeast2Cards);
+		AddBlocker(entityManager, "test-context", AssignedBlockCard.PhaseState.Idle);
+		AddBlocker(entityManager, "test-context", AssignedBlockCard.PhaseState.Launch);
+
+		var canRequest = EnemyAttackConfirmAvailabilityService.CanRequestCurrentAttackConfirm(
+			entityManager,
+			"test-context");
+		var canResolve = EnemyAttackConfirmAvailabilityService.CanResolveCurrentAttackConfirm(
+			entityManager,
+			"test-context");
+		var canConfirm = EnemyAttackConfirmAvailabilityService.CanConfirmCurrentAttack(
+			entityManager,
+			"test-context");
+
+		Assert.True(canRequest);
+		Assert.False(canResolve);
+		Assert.False(canConfirm);
+	}
+
+	[Fact]
 	public void Returning_blocker_does_not_allow_confirm()
 	{
 		var entityManager = CreateCombat(ConditionType.MustBeBlockedByAtLeast2Cards);
@@ -61,6 +84,37 @@ public class EnemyAttackConfirmAvailabilityServiceTests
 			"test-context");
 
 		Assert.False(canConfirm);
+	}
+
+	[Fact]
+	public void Confirmed_context_cannot_be_requested_or_resolved_again()
+	{
+		var entityManager = CreateCombat(ConditionType.None);
+		var confirmed = new HashSet<string> { "test-context" };
+
+		var canRequest = EnemyAttackConfirmAvailabilityService.CanRequestCurrentAttackConfirm(
+			entityManager,
+			"test-context",
+			confirmed);
+		var canResolve = EnemyAttackConfirmAvailabilityService.CanResolveCurrentAttackConfirm(
+			entityManager,
+			"test-context",
+			confirmed);
+
+		Assert.False(canRequest);
+		Assert.False(canResolve);
+	}
+
+	[Fact]
+	public void Pending_block_confirm_freezes_battle_input()
+	{
+		var entityManager = CreateCombat(ConditionType.None);
+		var phase = entityManager.GetEntitiesWithComponent<PhaseState>()
+			.Single()
+			.GetComponent<PhaseState>();
+		phase.PendingBlockConfirmContextId = "test-context";
+
+		Assert.True(BattleInputGate.IsBattleInputFrozen(entityManager));
 	}
 
 	[Theory]

@@ -54,6 +54,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		// Prevent repeated confirm presses for the same attack context
 		private readonly HashSet<string> _confirmedForContext = [];
+		private string _pendingConfirmContextId = string.Empty;
 		private bool _showBanner = false;
 
 		// Absorb tween (panel -> enemy)
@@ -215,6 +216,7 @@ namespace Crusaders30XX.ECS.Systems
 					_absorbElapsedSeconds = 0f;
 					_absorbCompleteFired = false;
 					_lastContextId = null;
+					ClearPendingConfirm();
 					_debris.Clear();
 					_showBanner = false;
 					// Cleanup tooltip entity when leaving enemy phases
@@ -285,12 +287,12 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnConfirmPressed()
 		{
 			if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
-			// Determine current context id first
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();
 			var ctx = intent?.Planned?.FirstOrDefault()?.ContextId;
 			if (string.IsNullOrEmpty(ctx)) return;
-			if (!EnemyAttackConfirmAvailabilityService.CanConfirmCurrentAttack(
+
+			if (!EnemyAttackConfirmAvailabilityService.CanRequestCurrentAttackConfirm(
 				EntityManager,
 				ctx,
 				_confirmedForContext))
@@ -301,18 +303,53 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				return;
 			}
-			// Lock confirm for this context immediately to avoid double presses
-			_confirmedForContext.Add(ctx);
-			var confirmBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
-			if (confirmBtn != null)
+
+			if (EnemyAttackConfirmAvailabilityService.CanResolveCurrentAttackConfirm(
+				EntityManager,
+				ctx,
+				_confirmedForContext))
 			{
-				var ui = confirmBtn.GetComponent<UIElement>();
-				if (ui != null)
-				{
-					ui.IsInteractable = false;
-					ui.Bounds = new Rectangle(0, 0, 0, 0);
-				}
+				ExecuteConfirm(ctx);
+				return;
 			}
+
+			QueueConfirm(ctx);
+		}
+
+		private void QueueConfirm(string contextId)
+		{
+			_pendingConfirmContextId = contextId ?? string.Empty;
+			var phase = GetPhaseState();
+			if (phase != null) phase.PendingBlockConfirmContextId = _pendingConfirmContextId;
+			HideConfirmButton();
+		}
+
+		private bool TryResolvePendingConfirm(string currentContextId)
+		{
+			if (string.IsNullOrEmpty(_pendingConfirmContextId)) return false;
+			if (_pendingConfirmContextId != currentContextId)
+			{
+				ClearPendingConfirm();
+				return false;
+			}
+
+			if (!EnemyAttackConfirmAvailabilityService.CanResolveCurrentAttackConfirm(
+				EntityManager,
+				_pendingConfirmContextId,
+				_confirmedForContext))
+			{
+				return false;
+			}
+
+			ExecuteConfirm(_pendingConfirmContextId);
+			return true;
+		}
+
+		private void ExecuteConfirm(string ctx)
+		{
+			ClearPendingConfirm();
+			_confirmedForContext.Add(ctx);
+			HideConfirmButton();
 			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyAttack, Previous = SubPhase.Block });
 			// Defer resolution/phase to coordinator; enqueue the standard sequence
 			EventQueue.EnqueueRule(new QueuedDiscardAssignedBlocksEvent(EntityManager, ctx));
@@ -321,6 +358,39 @@ namespace Crusaders30XX.ECS.Systems
 			EventQueue.EnqueueRule(new QueuedStartEnemyAttackAnimation(ctx));
 			EventQueue.EnqueueRule(new QueuedWaitImpactEvent(ctx));
 			EventQueue.EnqueueRule(new QueuedAdvanceToNextPlannedAttackEvent(EntityManager, ctx));
+		}
+
+		private void HideConfirmButton()
+		{
+			var confirmBtn = EntityManager.GetEntity("UIButton_ConfirmEnemyAttack");
+			if (confirmBtn == null) return;
+
+			var ui = confirmBtn.GetComponent<UIElement>();
+			if (ui != null)
+			{
+				ui.IsInteractable = false;
+				ui.Bounds = Rectangle.Empty;
+			}
+
+			var hotkey = confirmBtn.GetComponent<HotKey>();
+			if (hotkey != null)
+			{
+				hotkey.IsActive = false;
+			}
+		}
+
+		private void ClearPendingConfirm()
+		{
+			_pendingConfirmContextId = string.Empty;
+			var phase = GetPhaseState();
+			if (phase != null) phase.PendingBlockConfirmContextId = string.Empty;
+		}
+
+		private PhaseState GetPhaseState()
+		{
+			return EntityManager.GetEntitiesWithComponent<PhaseState>()
+				.FirstOrDefault()
+				?.GetComponent<PhaseState>();
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -374,6 +444,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_impactActive = false;
 				_lastContextId = null;
+				ClearPendingConfirm();
 				_debris.Clear();
 				// Cleanup tooltip entity when no attack is planned
 				if (_attackTextTooltipEntity != null)
@@ -390,7 +461,13 @@ namespace Crusaders30XX.ECS.Systems
 				_lastContextId = currentContextId;
 				// New context: reset confirm lock for previous and ensure button can show again
 				_confirmedForContext.RemoveWhere(id => id != currentContextId);
+				if (!string.IsNullOrEmpty(_pendingConfirmContextId) && _pendingConfirmContextId != currentContextId)
+				{
+					ClearPendingConfirm();
+				}
 			}
+
+			if (TryResolvePendingConfirm(currentContextId)) return;
 			UpdateConfirmAvailability(phaseNow, currentContextId);
 
 			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -474,7 +551,8 @@ namespace Crusaders30XX.ECS.Systems
 			var hotkey = confirmButton?.GetComponent<HotKey>();
 			if (ui == null) return;
 
-			bool available = EnemyAttackConfirmAvailabilityService.CanConfirmCurrentAttack(
+			bool pending = string.Equals(_pendingConfirmContextId, contextId, StringComparison.Ordinal);
+			bool available = !pending && EnemyAttackConfirmAvailabilityService.CanRequestCurrentAttackConfirm(
 				EntityManager,
 				contextId,
 				_confirmedForContext);

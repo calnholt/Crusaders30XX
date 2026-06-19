@@ -14,6 +14,7 @@ namespace Crusaders30XX.ECS.Services
 		{
 			var phase = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
 			return (phase != null && phase.DefeatPresentationActive)
+				|| !string.IsNullOrEmpty(phase?.PendingBlockConfirmContextId)
 				|| StateSingleton.IsActive;
 		}
 
