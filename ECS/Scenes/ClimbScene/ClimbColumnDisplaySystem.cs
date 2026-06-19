@@ -271,7 +271,7 @@ namespace Crusaders30XX.ECS.Systems
 			var column = entity.GetComponent<ClimbColumnPresentation>();
 			if (ui == null || column == null || ui.IsHidden || !column.IsVisible) return;
 
-			var bounds = ui.Bounds;
+			var bounds = TransformResolverService.ResolveUIBounds(EntityManager, entity, ui);
 			(Color top, Color bottom, Color border) = column.Kind switch
 			{
 				ClimbColumnKind.Shop => (Color.White * ShopColumnTopAlpha, ClimbSceneDrawHelpers.CardFill, Color.White * ShopColumnBorderAlpha),
@@ -281,7 +281,7 @@ namespace Crusaders30XX.ECS.Systems
 			ClimbSceneDrawHelpers.DrawVerticalGradient(_spriteBatch, _pixel, bounds, top, bottom, ColumnGradientStrips);
 			ClimbSceneDrawHelpers.DrawBorder(_spriteBatch, _pixel, bounds, border, ColumnBorderThickness);
 
-			var inner = column.InnerBounds;
+			var inner = TransformResolverService.ResolveLocalBounds(EntityManager, entity, column.InnerBounds);
 			var titleColor = column.Kind == ClimbColumnKind.Encounter ? ClimbSceneDrawHelpers.White1 : ClimbSceneDrawHelpers.White2;
 			if (column.Kind == ClimbColumnKind.Shop)
 			{
@@ -317,19 +317,20 @@ namespace Crusaders30XX.ECS.Systems
 			var ui = entity.GetComponent<UIElement>();
 			var slot = entity.GetComponent<ClimbSlotPresentation>();
 			if (ui == null || slot == null || ui.IsHidden || ui.Bounds.Width <= 0) return;
+			var resolvedBounds = TransformResolverService.ResolveUIBounds(EntityManager, entity, ui);
 
 			bool source = preview?.IsActive == true && string.Equals(preview.SourceSlotId, slot.SlotId, StringComparison.OrdinalIgnoreCase);
 			bool wouldVanish = preview?.IsActive == true && preview.WouldVanishSlotIds.Contains(slot.SlotId) && !source;
 			int offsetY = source ? PreviewSourceOffsetY : 0;
 
-			var ring = Inflate(ui.Bounds, SlotRingPadding);
+			var ring = Inflate(resolvedBounds, SlotRingPadding);
 			ring.Y += offsetY;
 			if (ui.IsHovered || source)
 			{
 				_spriteBatch.Draw(_pixel, ring, Color.White * SlotHoverRingAlpha);
 			}
 
-			var rect = ui.Bounds;
+			var rect = resolvedBounds;
 			rect.Y += offsetY;
 			if (source)
 			{

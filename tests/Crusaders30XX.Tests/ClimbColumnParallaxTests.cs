@@ -1,0 +1,132 @@
+using System;
+using System.Linq;
+using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Systems;
+using Microsoft.Xna.Framework;
+using Xunit;
+
+namespace Crusaders30XX.Tests;
+
+public class ClimbColumnParallaxTests : IDisposable
+{
+	public ClimbColumnParallaxTests()
+	{
+		EventManager.Clear();
+		SaveCache.StartNewRun();
+	}
+
+	public void Dispose()
+	{
+		EventManager.Clear();
+	}
+
+	[Fact]
+	public void Layout_configures_columns_and_slots_as_distinct_parallax_layers()
+	{
+		var entityManager = BuildWorld();
+		var system = new ClimbColumnLayoutSystem(entityManager);
+
+		system.Update(new GameTime());
+
+		var root = entityManager.GetEntity(ClimbHeaderLayoutSystem.RootName);
+		var columns = entityManager.GetEntitiesWithComponent<ClimbColumnPresentation>().ToList();
+		var slots = entityManager.GetEntitiesWithComponent<ClimbSlotPresentation>().ToList();
+		Assert.Equal(3, columns.Count);
+		Assert.Equal(
+			ClimbRuleService.ShopSlotCount + ClimbRuleService.EncounterSlotCount + ClimbRuleService.EventSlotCount,
+			slots.Count);
+
+		var columnSettings = ParallaxLayer.GetLocationParallaxLayer();
+		Assert.All(columns, entity =>
+		{
+			AssertParallax(columnSettings, entity.GetComponent<ParallaxLayer>());
+			Assert.Same(root, entity.GetComponent<ParentTransform>()?.Parent);
+			Assert.Equal(Point.Zero, entity.GetComponent<UIElement>().Bounds.Location);
+		});
+
+		var slotSettings = ParallaxLayer.GetUIParallaxLayer();
+		Assert.All(slots, entity =>
+		{
+			AssertParallax(slotSettings, entity.GetComponent<ParallaxLayer>());
+			Assert.Same(root, entity.GetComponent<ParentTransform>()?.Parent);
+			Assert.Equal(Point.Zero, entity.GetComponent<UIElement>().Bounds.Location);
+		});
+		Assert.True(slotSettings.MultiplierX > columnSettings.MultiplierX);
+		Assert.True(slotSettings.MultiplierY > columnSettings.MultiplierY);
+		Assert.True(slotSettings.MaxOffset > columnSettings.MaxOffset);
+
+		columns[0].GetComponent<ParallaxLayer>().MultiplierX = -1f;
+		columns[0].GetComponent<ParentTransform>().Parent = null;
+		slots[0].GetComponent<ParallaxLayer>().MaxOffset = -1f;
+		slots[0].GetComponent<ParentTransform>().Parent = null;
+		system.Update(new GameTime());
+
+		AssertParallax(columnSettings, columns[0].GetComponent<ParallaxLayer>());
+		Assert.Same(root, columns[0].GetComponent<ParentTransform>().Parent);
+		AssertParallax(slotSettings, slots[0].GetComponent<ParallaxLayer>());
+		Assert.Same(root, slots[0].GetComponent<ParentTransform>().Parent);
+	}
+
+	[Fact]
+	public void Resolved_bounds_follow_parallax_adjusted_transforms()
+	{
+		var entityManager = BuildWorld();
+		var system = new ClimbColumnLayoutSystem(entityManager);
+		system.Update(new GameTime());
+		var offset = new Vector2(9f, -6f);
+
+		var slot = entityManager.GetEntitiesWithComponent<ClimbSlotPresentation>()
+			.First(entity => entity.GetComponent<UIElement>()?.Bounds.Width > 0);
+		var slotUi = slot.GetComponent<UIElement>();
+		Rectangle slotBoundsBefore = TransformResolverService.ResolveUIBounds(entityManager, slot, slotUi);
+		slot.GetComponent<Transform>().Position += offset;
+		Rectangle slotBoundsAfter = TransformResolverService.ResolveUIBounds(entityManager, slot, slotUi);
+		Assert.Equal(Offset(slotBoundsBefore, offset), slotBoundsAfter);
+
+		var column = entityManager.GetEntitiesWithComponent<ClimbColumnPresentation>().First();
+		var presentation = column.GetComponent<ClimbColumnPresentation>();
+		Rectangle innerBoundsBefore = TransformResolverService.ResolveLocalBounds(
+			entityManager,
+			column,
+			presentation.InnerBounds);
+		column.GetComponent<Transform>().Position += offset;
+		Rectangle innerBoundsAfter = TransformResolverService.ResolveLocalBounds(
+			entityManager,
+			column,
+			presentation.InnerBounds);
+		Assert.Equal(Offset(innerBoundsBefore, offset), innerBoundsAfter);
+	}
+
+	private static EntityManager BuildWorld()
+	{
+		var entityManager = new EntityManager();
+		var scene = entityManager.CreateEntity("Scene");
+		entityManager.AddComponent(scene, new SceneState { Current = SceneId.Climb });
+		var root = entityManager.CreateEntity(ClimbHeaderLayoutSystem.RootName);
+		entityManager.AddComponent(root, new Transform());
+		entityManager.AddComponent(root, new ClimbSceneRoot());
+		return entityManager;
+	}
+
+	private static void AssertParallax(ParallaxLayer expected, ParallaxLayer actual)
+	{
+		Assert.NotNull(actual);
+		Assert.Equal(expected.MultiplierX, actual.MultiplierX);
+		Assert.Equal(expected.MultiplierY, actual.MultiplierY);
+		Assert.Equal(expected.MaxOffset, actual.MaxOffset);
+		Assert.Equal(expected.SmoothTime, actual.SmoothTime);
+	}
+
+	private static Rectangle Offset(Rectangle bounds, Vector2 offset)
+	{
+		return new Rectangle(
+			bounds.X + (int)offset.X,
+			bounds.Y + (int)offset.Y,
+			bounds.Width,
+			bounds.Height);
+	}
+}

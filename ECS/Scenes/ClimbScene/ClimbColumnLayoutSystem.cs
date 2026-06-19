@@ -128,6 +128,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void SyncColumn(string name, ClimbColumnKind kind, string title, string subtitle, Rectangle bounds, bool visible = true)
 		{
 			var entity = EnsureEntity(name);
+			ConfigureParallax(entity, ParallaxLayer.GetLocationParallaxLayer());
 			var column = entity.GetComponent<ClimbColumnPresentation>();
 			if (column == null)
 			{
@@ -138,7 +139,10 @@ namespace Crusaders30XX.ECS.Systems
 			column.Title = title;
 			column.Subtitle = subtitle;
 			column.IsVisible = visible;
-			column.InnerBounds = new Rectangle(bounds.X + ClimbColumnDisplaySystem.ColumnPaddingValue, bounds.Y + ClimbColumnDisplaySystem.ColumnPaddingValue, Math.Max(0, bounds.Width - ClimbColumnDisplaySystem.ColumnPaddingValue * 2), Math.Max(0, bounds.Height - ClimbColumnDisplaySystem.ColumnPaddingValue * 2));
+			int padding = ClimbColumnDisplaySystem.ColumnPaddingValue;
+			column.InnerBounds = entity.HasComponent<ParentTransform>()
+				? new Rectangle(padding, padding, Math.Max(0, bounds.Width - padding * 2), Math.Max(0, bounds.Height - padding * 2))
+				: new Rectangle(bounds.X + padding, bounds.Y + padding, Math.Max(0, bounds.Width - padding * 2), Math.Max(0, bounds.Height - padding * 2));
 			SetBounds(entity, bounds, visible, UIElementEventType.None, ColumnZOrderValue);
 		}
 
@@ -147,6 +151,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void SyncShopSlot(int index, ClimbShopSlotSave slot, Rectangle rect, bool hidden = false)
 		{
 			var entity = EnsureEntity($"Climb_ShopSlot_{index}");
+			ConfigureParallax(entity, ParallaxLayer.GetUIParallaxLayer());
 			var presentation = EnsureSlotPresentation(entity);
 			presentation.Kind = ClimbSlotKind.Shop;
 			presentation.SlotIndex = index;
@@ -173,6 +178,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void SyncEncounterSlot(int index, ClimbEncounterSlotSave slot, Rectangle rect)
 		{
 			var entity = EnsureEntity($"Climb_EncounterSlot_{index}");
+			ConfigureParallax(entity, ParallaxLayer.GetUIParallaxLayer());
 			var presentation = EnsureSlotPresentation(entity);
 			var enemy = EnemyFactory.Create(slot?.enemyId);
 			presentation.Kind = ClimbSlotKind.Encounter;
@@ -201,6 +207,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void SyncEventSlot(int index, ClimbEventSlotSave slot, Rectangle rect, bool visible)
 		{
 			var entity = EnsureEntity($"Climb_EventSlot_{index}");
+			ConfigureParallax(entity, ParallaxLayer.GetUIParallaxLayer());
 			var presentation = EnsureSlotPresentation(entity);
 			presentation.Kind = ClimbSlotKind.Event;
 			presentation.SlotIndex = index;
@@ -347,14 +354,56 @@ namespace Crusaders30XX.ECS.Systems
 			return entity;
 		}
 
+		private void ConfigureParallax(Entity entity, ParallaxLayer settings)
+		{
+			var parallax = entity.GetComponent<ParallaxLayer>();
+			if (parallax == null)
+			{
+				EntityManager.AddComponent(entity, settings);
+			}
+			else
+			{
+				parallax.MultiplierX = settings.MultiplierX;
+				parallax.MultiplierY = settings.MultiplierY;
+				parallax.MaxOffset = settings.MaxOffset;
+				parallax.SmoothTime = settings.SmoothTime;
+			}
+
+			var root = EntityManager.GetEntity(ClimbHeaderLayoutSystem.RootName);
+			if (root == null) return;
+
+			var parent = entity.GetComponent<ParentTransform>();
+			if (parent == null)
+			{
+				EntityManager.AddComponent(entity, new ParentTransform { Parent = root });
+			}
+			else
+			{
+				parent.Parent = root;
+			}
+		}
+
 		private void SetBounds(Entity entity, Rectangle rect, bool interactable, UIElementEventType eventType, int zOrder, bool hidden = false)
 		{
 			var transform = entity.GetComponent<Transform>();
+			var parent = entity.GetComponent<ParentTransform>()?.Parent;
+			bool usesLocalBounds = parent != null;
 			if (transform != null)
 			{
-				transform.Position = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
+				if (usesLocalBounds)
+				{
+					Vector2 parentWorldPosition = TransformResolverService.ResolveWorldPosition(EntityManager, parent);
+					transform.Position = new Vector2(rect.X, rect.Y) - parentWorldPosition;
+				}
+				else
+				{
+					transform.Position = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
+				}
 				transform.ZOrder = zOrder;
 			}
+			Rectangle uiBounds = usesLocalBounds
+				? new Rectangle(0, 0, rect.Width, rect.Height)
+				: rect;
 
 			var preview = EntityManager.GetEntity(ClimbHeaderLayoutSystem.RootName)?.GetComponent<ClimbPreviewState>();
 			var slot = entity.GetComponent<ClimbSlotPresentation>();
@@ -366,11 +415,11 @@ namespace Crusaders30XX.ECS.Systems
 			var ui = entity.GetComponent<UIElement>();
 			if (ui == null)
 			{
-				EntityManager.AddComponent(entity, new UIElement { Bounds = rect, IsInteractable = interactable && !blockedByPreview, EventType = eventType, IsHidden = hidden });
+				EntityManager.AddComponent(entity, new UIElement { Bounds = uiBounds, IsInteractable = interactable && !blockedByPreview, EventType = eventType, IsHidden = hidden });
 			}
 			else
 			{
-				ui.Bounds = rect;
+				ui.Bounds = uiBounds;
 				ui.IsInteractable = interactable && !blockedByPreview;
 				ui.EventType = eventType;
 				ui.IsHidden = hidden;
