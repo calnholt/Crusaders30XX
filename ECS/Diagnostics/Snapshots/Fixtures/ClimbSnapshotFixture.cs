@@ -216,7 +216,9 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 					generatedAtTime = time,
 					duration = 4,
 					timeCost = _variant == ClimbSnapshotVariant.HoverPreview ? 2 : 3,
-					rewardResources = new ClimbResourceSave { red = 2, white = 0, black = 1 },
+					rewardResources = _variant == ClimbSnapshotVariant.HoverPreview
+						? new ClimbResourceSave { red = 1, white = 1, black = 0 }
+						: new ClimbResourceSave { red = 1, white = 1, black = 1 },
 					hasDeckReward = true,
 				},
 				new()
@@ -226,7 +228,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 					generatedAtTime = time,
 					duration = 3,
 					timeCost = 1,
-					rewardResources = new ClimbResourceSave { red = 0, white = 2, black = 1 },
+					rewardResources = new ClimbResourceSave { red = 0, white = 1, black = 0 },
 					hasDeckReward = true,
 				},
 				new()

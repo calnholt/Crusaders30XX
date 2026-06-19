@@ -239,6 +239,31 @@ public class ClimbRuleServiceTests
 	}
 
 	[Fact]
+	public void Encounter_rewards_match_time_cost()
+	{
+		var state = ClimbRuleService.CreateInitialState(123, TestLoadout());
+
+		Assert.All(state.encounterSlots, slot =>
+		{
+			Assert.Equal(slot.timeCost, ResourcePips(slot.rewardResources));
+		});
+	}
+
+	[Theory]
+	[InlineData(0, "Red")]
+	[InlineData(24, "Red")]
+	[InlineData(25, "White")]
+	[InlineData(59, "White")]
+	[InlineData(60, "Black")]
+	[InlineData(99, "Black")]
+	public void Generate_reward_uses_weighted_resource_colors(int roll, string expectedColor)
+	{
+		var color = ClimbRuleService.RollResourceColorForTests(roll);
+
+		Assert.Equal(expectedColor, color.ToString());
+	}
+
+	[Fact]
 	public void Climb_encounter_pool_excludes_banned_and_image_less_enemies()
 	{
 		var pool = ClimbRuleService.GetClimbEncounterEnemyPool();

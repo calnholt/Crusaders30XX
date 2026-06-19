@@ -168,7 +168,7 @@ namespace Crusaders30XX.ECS.Services
 			int pips = rng.Next(Math.Max(1, min), Math.Max(min, max) + 1);
 			for (int i = 0; i < pips; i++)
 			{
-				AddColor(cost, ResourceColors[rng.Next(ResourceColors.Length)], 1);
+				AddColor(cost, RollResourceColor(rng), 1);
 			}
 			return cost;
 		}
@@ -412,18 +412,24 @@ namespace Crusaders30XX.ECS.Services
 			string slotId,
 			string excludedEnemyId = "")
 		{
+			int timeCost = rng.Next(1, 4);
 			return new ClimbEncounterSlotSave
 			{
 				id = slotId ?? string.Empty,
 				enemyId = RollClimbEncounterEnemyId(rng, excludedEnemyId),
 				generatedAtTime = ClampTime(state?.time ?? 0),
 				duration = rng.Next(EncounterMinDuration, EncounterMaxDuration + 1),
-				timeCost = rng.Next(1, 4),
-				rewardResources = GenerateReward(rng, 1, 3),
+				timeCost = timeCost,
+				rewardResources = GenerateReward(rng, timeCost, timeCost),
 				hasDeckReward = true,
 				isFinal = false,
 				isCompleted = false,
 			};
+		}
+
+		internal static CardData.CardColor RollResourceColorForTests(int roll)
+		{
+			return ResolveResourceColorRoll(roll);
 		}
 
 		internal static ClimbResourceSave GenerateShopCostForTests(string kind, int timeCost)
@@ -529,6 +535,18 @@ namespace Crusaders30XX.ECS.Services
 				.OrderBy(_ => rng.Next())
 				.ToList();
 			return pool.Count == 0 ? string.Empty : pool[0];
+		}
+
+		private static CardData.CardColor RollResourceColor(Random rng)
+		{
+			return ResolveResourceColorRoll(rng.Next(100));
+		}
+
+		private static CardData.CardColor ResolveResourceColorRoll(int roll)
+		{
+			if (roll < 25) return CardData.CardColor.Red;
+			if (roll < 60) return CardData.CardColor.White;
+			return CardData.CardColor.Black;
 		}
 
 		private static void AddColor(ClimbResourceSave resources, CardData.CardColor color, int amount)
