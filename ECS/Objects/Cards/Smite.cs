@@ -29,12 +29,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
                     DamageType = ModifyTypeEnum.Attack
                 });
-                if (IsUpgraded)
-                {
-                    EventManager.Publish(new ModifyTemperanceEvent {
-                        Delta = TemperanceUpgradeAmount
-                    });
-                }
             };
 
             OnPledged = (entityManager, card) =>

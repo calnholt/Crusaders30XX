@@ -108,7 +108,37 @@ public class PlayerHudHealthDisplaySystemTests
 	}
 
 	[Fact]
-	public void Legacy_hp_renderer_excludes_only_player_entities()
+	public void Enemy_region_matches_player_health_size_below_stable_portrait()
+	{
+		var playerHealthBounds = new Rectangle(100, 200, 559, 36);
+
+		Rectangle enemyBounds = PlayerHudHealthRendering.CalculateEnemyRegionBounds(
+			playerHealthBounds,
+			new Vector2(1400f, 300f),
+			400,
+			0.5f,
+			10,
+			4);
+
+		Assert.Equal(new Rectangle(1130, 404, 559, 36), enemyBounds);
+	}
+
+	[Fact]
+	public void Enemy_region_is_empty_without_resolved_portrait_geometry()
+	{
+		Rectangle enemyBounds = PlayerHudHealthRendering.CalculateEnemyRegionBounds(
+			new Rectangle(100, 200, 559, 36),
+			new Vector2(1400f, 300f),
+			0,
+			1f,
+			0,
+			4);
+
+		Assert.Equal(Rectangle.Empty, enemyBounds);
+	}
+
+	[Fact]
+	public void Legacy_hp_renderer_includes_only_plundered_entities()
 	{
 		var player = new Entity(1);
 		player.AddComponent(new Player());
@@ -118,10 +148,16 @@ public class PlayerHudHealthDisplaySystemTests
 		enemy.AddComponent(new HP());
 		var temporary = new Entity(3);
 		temporary.AddComponent(new HP());
+		var plundered = new Entity(4);
+		plundered.AddComponent(new Plundered());
+		plundered.AddComponent(new HP());
 
-		Assert.False(HPDisplaySystem.ShouldRenderLegacyHp(player));
-		Assert.True(HPDisplaySystem.ShouldRenderLegacyHp(enemy));
-		Assert.True(HPDisplaySystem.ShouldRenderLegacyHp(temporary));
+		#pragma warning disable CS0618 // The test locks down the deprecated renderer's remaining scope.
+		Assert.False(HPDisplaySystem.ShouldRenderLegacyPlunderHp(player));
+		Assert.False(HPDisplaySystem.ShouldRenderLegacyPlunderHp(enemy));
+		Assert.False(HPDisplaySystem.ShouldRenderLegacyPlunderHp(temporary));
+		Assert.True(HPDisplaySystem.ShouldRenderLegacyPlunderHp(plundered));
+		#pragma warning restore CS0618
 	}
 
 	private static void AddActiveAttack(EntityManager entityManager, string contextId, int damage)

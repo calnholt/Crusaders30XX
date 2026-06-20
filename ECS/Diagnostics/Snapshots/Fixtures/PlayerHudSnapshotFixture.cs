@@ -17,8 +17,11 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 		private PlayerHudSnapshotVariant _variant;
 		private Texture2D _pixel;
 		private Texture2D _portrait;
+		private Texture2D _enemyPortrait;
 		private Entity _player;
+		private Entity _enemy;
 		private float _portraitScale;
+		private float _enemyPortraitScale;
 
 		private PlayerHudRootDisplaySystem _rootDisplay;
 		private PlayerHudHealthDisplaySystem _healthDisplay;
@@ -92,6 +95,19 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 				_portraitScale,
 				SpriteEffects.None,
 				0f);
+			if (_enemy != null && _enemyPortrait != null)
+			{
+				ctx.SpriteBatch.Draw(
+					_enemyPortrait,
+					_enemy.GetComponent<Transform>().Position,
+					null,
+					Color.White,
+					0f,
+					new Vector2(_enemyPortrait.Width / 2f, _enemyPortrait.Height / 2f),
+					_enemyPortraitScale,
+					SpriteEffects.None,
+					0f);
+			}
 
 			_rootDisplay.Draw();
 			_healthDisplay.Draw();
@@ -145,7 +161,29 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 					passives.Passives[AppliedPassiveType.Power] = 10;
 					passives.Passives[AppliedPassiveType.Thorns] = 25;
 					break;
+				case PlayerHudSnapshotVariantId.EnemyHealth:
+					// Keep the cursor-parallax player HUD outside the capture so this enemy baseline is deterministic.
+					_player.GetComponent<Transform>().Position = new Vector2(-1000f, 260f);
+					CreateEnemyHealthSnapshot(ctx);
+					break;
 			}
+		}
+
+		private void CreateEnemyHealthSnapshot(DisplaySnapshotContext ctx)
+		{
+			_enemyPortrait = ctx.Content.Load<Texture2D>("Skeleton");
+			_enemyPortraitScale = Game1.VirtualHeight * 0.36f / _enemyPortrait.Height;
+			_enemy = ctx.World.CreateEntity("EnemyHealthSnapshot");
+			ctx.World.AddComponent(_enemy, new Enemy());
+			ctx.World.AddComponent(_enemy, new Transform { Position = new Vector2(960f, 260f) });
+			ctx.World.AddComponent(_enemy, new HP { Current = 32, Max = 50 });
+			ctx.World.AddComponent(_enemy, new PortraitInfo
+			{
+				TextureWidth = _enemyPortrait.Width,
+				TextureHeight = _enemyPortrait.Height,
+				BaseScale = _enemyPortraitScale,
+				CurrentScale = _enemyPortraitScale,
+			});
 		}
 
 		private static void CreateIncomingAttack(

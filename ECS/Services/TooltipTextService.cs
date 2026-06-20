@@ -125,7 +125,7 @@ namespace Crusaders30XX.ECS.Services
 				case AppliedPassiveType.Thorns:
 					return $"You gain {stacks} bleed whenever you attack this enemy.";
 				case AppliedPassiveType.Bleed:
-					return "While you have bleed, lose 1 HP for each color you block with using 2 or more cards (including equipment), then remove one bleed per trigger.";
+					return "When you block with 2 or more cards of the same color, lose 1HP then remove one bleed stack.";
 				case AppliedPassiveType.Rage:
 					return $"{(isPlayer ? "You" : "The enemy")} gain{(isPlayer ? "" : "s")} {stacks} power at the start of the {(isPlayer ? "action phase" : "block phase")}.";
 				case AppliedPassiveType.Intellect:
@@ -213,7 +213,7 @@ namespace Crusaders30XX.ECS.Services
 			i = lowerText.IndexOf("guard");
 			if (i >= 0) matches.Add((i, "X Guard - Prevents the next X damage from attacks. Any damage removes all guard. At the start of the enemy turn, converts to 1 aggression."));
 			i = lowerText.IndexOf("bleed");
-			if (i >= 0) matches.Add((i, "X Bleed - While you have bleed, lose 1 HP for each color you block with using 2 or more cards (including equipment), then remove one bleed per trigger. Lasts for the rest of the run."));
+			if (i >= 0) matches.Add((i, "X Bleed - While you have bleed, lose 1 HP when you block with 2 or more cards of the same color, then remove one bleed stack. Lasts for the rest of the run."));
 			i = lowerText.IndexOf("mill");
 			if (i >= 0) matches.Add((i, "Mill X - Discard the top X cards of your deck."));
 			i = lowerText.IndexOf("frostbite");

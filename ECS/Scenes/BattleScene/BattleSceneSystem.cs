@@ -53,8 +53,9 @@ namespace Crusaders30XX.ECS.Systems
 		private CourageManagerSystem _courageManagerSystem;
 		private ActionPointManagementSystem _actionPointManagementSystem;
 		private TemperanceManagerSystem _temperanceManagerSystem;
+		#pragma warning disable CS0618 // Intentional until the plunder gauge owns its rendering.
 		private HPDisplaySystem _hpDisplaySystem;
-		private EnemyDifficultyDisplaySystem _enemyDifficultyDisplaySystem;
+		#pragma warning restore CS0618
 		private AppliedPassivesDisplaySystem _appliedPassivesDisplaySystem;
 		private PoisonSystem _poisonSystem;
 		private PassiveMeterRenderSystem _passiveMeterRenderSystem;
@@ -351,8 +352,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("PlayerHudActionPointDisplaySystem.Draw", _playerHudActionPointDisplaySystem.Draw);
 			FrameProfiler.Measure("PlayerHudPledgeDisplaySystem.Draw", _playerHudPledgeDisplaySystem.Draw);
 			FrameProfiler.Measure("QuestTribulationDisplaySystem.Draw", _questTribulationDisplaySystem.Draw);
-			FrameProfiler.Measure("HPDisplaySystem.Draw", _hpDisplaySystem.Draw);
-			if (!guidedTutorial) FrameProfiler.Measure("EnemyDifficultyDisplaySystem.Draw", _enemyDifficultyDisplaySystem.Draw);
+			FrameProfiler.Measure("LegacyPlunderHpDisplaySystem.Draw", _hpDisplaySystem.Draw);
 			FrameProfiler.Measure("AppliedPassivesDisplaySystem.Draw", _appliedPassivesDisplaySystem.Draw);
 			FrameProfiler.Measure("PassiveMeterRenderSystem.Draw", _passiveMeterRenderSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawBackdrop", _payCostOverlaySystem.DrawBackdrop);
@@ -587,8 +587,9 @@ namespace Crusaders30XX.ECS.Systems
 			_actionPointManagementSystem = new ActionPointManagementSystem(_world.EntityManager);
 			_temperanceManagerSystem = new TemperanceManagerSystem(_world.EntityManager);
 			// _threatManagementSystem = new ThreatManagementSystem(_world.EntityManager);
+			#pragma warning disable CS0618 // Intentional until the plunder gauge owns its rendering.
 			_hpDisplaySystem = new HPDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_enemyDifficultyDisplaySystem = new EnemyDifficultyDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			#pragma warning restore CS0618
 			_appliedPassivesDisplaySystem = new AppliedPassivesDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_poisonSystem = new PoisonSystem(_world.EntityManager);
 			_passiveMeterRenderSystem = new PassiveMeterRenderSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -717,7 +718,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_actionPointManagementSystem);
 			_world.AddSystem(_battleBackgroundSystem);
 			_world.AddSystem(_hpDisplaySystem);
-			_world.AddSystem(_enemyDifficultyDisplaySystem);
 			_world.AddSystem(_appliedPassivesDisplaySystem);
 			_world.AddSystem(_cardGeometrySettingsDebugSystem);
 			_world.AddSystem(_hpManagementSystem);

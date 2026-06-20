@@ -10,7 +10,8 @@ namespace Crusaders30XX.ECS.Systems
 {
     /// <summary>
     /// Displays the plundered card to the right of the enemy.
-    /// HPDisplaySystem renders the damage gauge via the HP component.
+    /// The deprecated HPDisplaySystem temporarily renders the damage gauge via the HP component.
+    /// Technical debt: move the gauge rendering into this system and remove HPDisplaySystem.
     /// </summary>
     [DebugTab("Plunder Display")]
     public class PlunderDisplaySystem : Core.System
@@ -81,7 +82,7 @@ namespace Crusaders30XX.ECS.Systems
                 enemyTransform.Position.Y + CardYOffset
             );
 
-            // Update the card's Transform so HPDisplaySystem can render the HP bar
+            // Update the card's Transform for the legacy plunder HP gauge.
             var cardTransform = plunderedCard.GetComponent<Transform>();
             if (cardTransform != null)
             {

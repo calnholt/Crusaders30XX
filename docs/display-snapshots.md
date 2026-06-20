@@ -248,13 +248,16 @@ dotnet run -- snapshot player-hud unavailable
 dotnet run -- snapshot player-hud incoming-damage
 dotnet run -- snapshot player-hud low-health
 dotnet run -- snapshot player-hud expanded
+dotnet run -- snapshot player-hud enemy-health
 
 ./scripts/verify-player-hud-snapshots.sh
 ./scripts/verify-player-hud-snapshots.sh --accept
 ```
 
+The `enemy-health` variant renders the enemy full health region in isolation;
+the player HUD is placed outside the capture to avoid cursor-driven parallax.
 The verification script is read-only by default. `--accept` explicitly
-replaces all five approved baselines.
+replaces all six approved baselines.
 
 ---
 

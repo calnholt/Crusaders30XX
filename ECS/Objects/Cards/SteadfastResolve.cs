@@ -39,6 +39,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
                 VigorGained += VigorGainedUpgrade;
                 IsFreeAction = true;
                 Cost = CostUpgrade;
+                Text = $"Gain {GetVigorGained(IsUpgraded)} vigor.";
             };
         }
         private int GetVigorGained(bool isUpgraded)

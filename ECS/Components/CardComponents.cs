@@ -404,16 +404,7 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
-    /// Marker for the difficulty display entity associated with an enemy.
-    /// </summary>
-    public class DifficultyDisplayMarker : IComponent
-    {
-        public Entity Owner { get; set; }
-        public Entity EnemyEntity { get; set; }
-    }
-
-    /// <summary>
-    /// Anchor published by HPDisplaySystem describing the last drawn HP bar rectangle for an entity.
+    /// Anchor published by health display systems describing an entity's HP track rectangle.
     /// Used by other UI systems to align elements relative to the HP bar.
     /// </summary>
     public class HPBarAnchor : IComponent
@@ -423,7 +414,7 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
-    /// Per-entity override for HP bar positioning and size.
+    /// Per-entity override for the legacy plunder HP gauge positioning and size.
     /// When present, HPDisplaySystem uses these values instead of its global defaults.
     /// </summary>
     public class HPBarOverride : IComponent
