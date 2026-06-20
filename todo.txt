@@ -1,22 +1,19 @@
 UX
 - dialogue transitions, text, name section
-- update enemy HP bar
-- pledge animation
 
 Gameplay
 - maybe remove istoken/isweapon and make as components?
 - make hand display agnostic of carddata, probably involves refactoring some components and data objects
 - make cardlistmodaldisplay not a modal, tinted overlay with floating UI, use shader for cool looking tint effect overlay
 - darkness X - for x turns, one card in hand becomes shrouded in darkess during the enemy turn, lifts during action phase, cards in darkness block for 3 and ignore color gains and play restrictions
-
+- think about changing enemy health scaling to run time
 
 cards
 - if you have dealt 10 or more damage this turn...
 - next attack (this turn?) deal 75% more damage
 
 medals
-- whenever you pledge 6 cards, gain 1 vigor
-- the start of the next x battles, the enemy gains 1 anathema
+- 
 
 weapons
 - rapier? - if fully block attack, gain riposte passive, cards trigger off riposte, temperance is aegis
@@ -25,7 +22,7 @@ weapons
 
 tech debt
 - researching removing isclicked and ishovered from UIElement, handle through PlayerInputEvent + enity ids
-- removing enemy difficulty tiers and chevron display
+- removing enemy difficulty tiers
 
 
 persistent card states:

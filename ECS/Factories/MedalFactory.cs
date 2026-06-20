@@ -27,6 +27,8 @@ namespace Crusaders30XX.ECS.Factories
                 "st_homobonus" => new StHomobonus(),
                 "st_clare" => new StClare(),
                 "st_joan_of_arc" => new StJoanOfArc(),
+                "st_benedict" => new StBenedict(),
+                "st_simon_of_cyrene" => new StSimonOfCyrene(),
                 _ => null
             };
         }
@@ -49,6 +51,8 @@ namespace Crusaders30XX.ECS.Factories
                 { "st_homobonus", new StHomobonus() },
                 { "st_clare", new StClare() },
                 { "st_joan_of_arc", new StJoanOfArc() },
+                { "st_benedict", new StBenedict() },
+                { "st_simon_of_cyrene", new StSimonOfCyrene() },
             };
         }
     }
