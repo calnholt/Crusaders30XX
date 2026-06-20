@@ -833,6 +833,7 @@ namespace Crusaders30XX.ECS.Factories
 					TooltipScale = sourceCardTooltip.TooltipScale,
 					CardColor = sourceCardTooltip.CardColor,
 					IsUpgraded = sourceCardTooltip.IsUpgraded,
+					CrossfadeUpgradePreview = sourceCardTooltip.CrossfadeUpgradePreview,
 				});
             }
 

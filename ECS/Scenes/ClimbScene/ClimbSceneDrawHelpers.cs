@@ -161,25 +161,21 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				case ClimbResourceType.Red:
 				{
-					int redSize = compact ? 10 : size;
-					var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(graphicsDevice, Math.Max(2, redSize / 2));
-					var rect = new Rectangle((int)position.X, (int)position.Y + (size - redSize) / 2, redSize, redSize);
+					var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(graphicsDevice, Math.Max(2, size / 2));
+					var rect = new Rectangle((int)position.X, (int)position.Y, size, size);
 					spriteBatch.Draw(circle, rect, compact ? Red3 : color);
 					break;
 				}
 				case ClimbResourceType.White:
 				{
-					int triW = compact ? 12 : size;
-					int triH = compact ? 11 : size;
-					var triangle = PrimitiveTextureFactory.GetEquilateralTriangle(graphicsDevice, Math.Max(4, triH));
-					var rect = new Rectangle((int)position.X, (int)position.Y + (size - triH) / 2, triW, triH);
+					var triangle = PrimitiveTextureFactory.GetEquilateralTriangle(graphicsDevice, Math.Max(4, size));
+					var rect = new Rectangle((int)position.X, (int)position.Y, size, size);
 					spriteBatch.Draw(triangle, rect, color);
 					break;
 				}
 				case ClimbResourceType.Black:
 				{
-					int sq = compact ? 11 : size;
-					var rect = new Rectangle((int)position.X, (int)position.Y + (size - sq) / 2, sq, sq);
+					var rect = new Rectangle((int)position.X, (int)position.Y, size, size);
 					spriteBatch.Draw(pixel, rect, Black0);
 					DrawBorder(spriteBatch, pixel, rect, color, compact ? 1 : 2);
 					break;

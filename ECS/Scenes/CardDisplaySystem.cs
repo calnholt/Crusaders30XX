@@ -73,6 +73,7 @@ namespace Crusaders30XX.ECS.Systems
         public float CostPipFlashHz { get; set; } = 0.3f;
 
         private float _elapsedTime;
+        private float _drawAlpha = 1f;
         private readonly Dictionary<CardType, Texture2D> _typeIconTextures = new();
 
         // Chip Layout
@@ -370,6 +371,8 @@ namespace Crusaders30XX.ECS.Systems
         private float CW => GetSettings().CardWidth;
         private float CH => GetSettings().CardHeight;
 
+        private Color Tint(Color color) => color * _drawAlpha;
+
         private CardGeometrySettings GetSettings()
         {
             _settings ??= CardGeometryService.GetSettings(EntityManager) ?? new CardGeometrySettings
@@ -404,7 +407,7 @@ namespace Crusaders30XX.ECS.Systems
             float sin = (float)Math.Sin(rotation);
             var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
             var world = cardCenter + rotated;
-            _spriteBatch.Draw(_pixelTexture, world, null, color, rotation, Vector2.Zero, new Vector2(width, height), SpriteEffects.None, 0f);
+            _spriteBatch.Draw(_pixelTexture, world, null, Tint(color), rotation, Vector2.Zero, new Vector2(width, height), SpriteEffects.None, 0f);
         }
 
         private void DrawTextureRotatedLocalScaled(Vector2 cardCenter, float rotation, Vector2 localOffsetFromTopLeft, Texture2D texture, Vector2 targetSize, Color color, float visualScale, float cardW, float cardH)
@@ -417,7 +420,7 @@ namespace Crusaders30XX.ECS.Systems
             var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
             var world = cardCenter + rotated;
             var scale = new Vector2(targetSize.X / texture.Width, targetSize.Y / texture.Height);
-            _spriteBatch.Draw(texture, world, null, color, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            _spriteBatch.Draw(texture, world, null, Tint(color), rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
 
         private void DrawCardTextRotatedSingleScaled(Vector2 cardCenter, float rotation, Vector2 localOffsetFromTopLeft, string text, Color color, float scale, float overallScale, float cardW, float cardH, SpriteFont font = null)
@@ -431,7 +434,7 @@ namespace Crusaders30XX.ECS.Systems
                 float sin = (float)Math.Sin(rotation);
                 var rotated = new Vector2(localX * cos - localY * sin, localX * sin + localY * cos);
                 var world = cardCenter + rotated;
-                _spriteBatch.DrawString(font, text, world, color, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                _spriteBatch.DrawString(font, text, world, Tint(color), rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
             }
             catch (Exception ex)
             {
@@ -455,7 +458,7 @@ namespace Crusaders30XX.ECS.Systems
                     float sin = (float)Math.Sin(rotation);
                     var rotated = new Vector2(local.X * cos - local.Y * sin, local.X * sin + local.Y * cos);
                     var world = cardCenter + rotated;
-                    _spriteBatch.DrawString(font, line, world, color, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                    _spriteBatch.DrawString(font, line, world, Tint(color), rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
                     currentY += lineHeight;
                 }
             }
@@ -510,30 +513,38 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
         {
-            var transform = evt.Card.GetComponent<Transform>();
-            Vector2 originalScale = transform?.Scale ?? Vector2.One;
-            if (transform != null)
+            _drawAlpha = MathHelper.Clamp(evt.Alpha, 0f, 1f);
+            try
             {
-                transform.Scale = new Vector2(evt.Scale, evt.Scale);
-                float originalRotation = transform.Rotation;
-                Vector2 originalPosition = transform.Position;
-                transform.Rotation = 0f;
-                transform.Position = evt.Position;
-                var t = evt.Card.GetComponent<Transform>();
-                var ui = evt.Card.GetComponent<UIElement>();
-                EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
-                DrawCard(evt.Card, evt.Position);
-                transform.Scale = originalScale;
-                transform.Rotation = originalRotation;
-                transform.Position = originalPosition;
-                if (ui != null) ui.Bounds = CardGeometryService.GetVisualRect(GetSettings(), evt.Position, evt.Scale);
+                var transform = evt.Card.GetComponent<Transform>();
+                Vector2 originalScale = transform?.Scale ?? Vector2.One;
+                if (transform != null)
+                {
+                    transform.Scale = new Vector2(evt.Scale, evt.Scale);
+                    float originalRotation = transform.Rotation;
+                    Vector2 originalPosition = transform.Position;
+                    transform.Rotation = 0f;
+                    transform.Position = evt.Position;
+                    var t = evt.Card.GetComponent<Transform>();
+                    var ui = evt.Card.GetComponent<UIElement>();
+                    EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
+                    DrawCard(evt.Card, evt.Position);
+                    transform.Scale = originalScale;
+                    transform.Rotation = originalRotation;
+                    transform.Position = originalPosition;
+                    if (ui != null) ui.Bounds = CardGeometryService.GetVisualRect(GetSettings(), evt.Position, evt.Scale);
+                }
+                else
+                {
+                    var t = evt.Card.GetComponent<Transform>();
+                    var ui = evt.Card.GetComponent<UIElement>();
+                    EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
+                    DrawCard(evt.Card, evt.Position);
+                }
             }
-            else
+            finally
             {
-                var t = evt.Card.GetComponent<Transform>();
-                var ui = evt.Card.GetComponent<UIElement>();
-                EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
-                DrawCard(evt.Card, evt.Position);
+                _drawAlpha = 1f;
             }
         }
 
@@ -597,7 +608,7 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.Draw(bgTex,
                 position: cardCenter,
                 sourceRectangle: null,
-                color: bgColor,
+                color: Tint(bgColor),
                 rotation: rotation,
                 origin: new Vector2(bgTex.Width / 2f, bgTex.Height / 2f),
                 scale: Vector2.One,
@@ -814,12 +825,12 @@ namespace Crusaders30XX.ECS.Systems
             float diamondRotation = rotation + MathHelper.PiOver4;
             var drawScale = new Vector2(size / texSize, size / texSize);
 
-            color *= alpha;
+            color *= alpha * _drawAlpha;
 
             if (showOutline)
             {
                 // Draw outline at full size, then fill at reduced scale
-                var outlineColor = (isColorless
+                var outlineColor = Tint(isColorless
                     ? Color.Black
                     : GetPaletteColor(CostPipOutlineColors, cc, Color.Black)) * alpha;
                 _spriteBatch.Draw(tex, world, null, outlineColor, diamondRotation,

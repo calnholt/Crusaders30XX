@@ -53,7 +53,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Compact Badge Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.25f)]
 		public float CompactBadgeFontScale { get; set; } = 0.108f;
 		[DebugEditable(DisplayName = "Compact Meta Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.25f)]
-		public float CompactMetaFontScale { get; set; } = 0.075f;
+		public float CompactMetaFontScale { get; set; } = 0.105f;
 		[DebugEditable(DisplayName = "Compact Meta Label Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.25f)]
 		public float CompactMetaLabelFontScale { get; set; } = 0.11f;
 		[DebugEditable(DisplayName = "Portrait Region Height", Step = 1, Min = 60, Max = 260)]
@@ -67,7 +67,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Meta Block Fill Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float MetaBlockFillAlpha { get; set; } = 0.08f;
 		[DebugEditable(DisplayName = "Compact Resource Icon Size", Step = 1, Min = 6, Max = 36)]
-		public int CompactResourceIconSize { get; set; } = 14;
+		public int CompactResourceIconSize { get; set; } = 18;
 		[DebugEditable(DisplayName = "Compact Hourglass Width", Step = 1, Min = 4, Max = 32)]
 		public int CompactHourglassWidth { get; set; } = 18;
 		[DebugEditable(DisplayName = "Compact Hourglass Height", Step = 1, Min = 4, Max = 40)]
@@ -450,7 +450,7 @@ namespace Crusaders30XX.ECS.Systems
 			DrawTimeBlock(timeRect, slot.TimeCost, remaining, activeRemaining);
 		}
 
-		private void DrawEventSlot(Rectangle rect, ClimbSlotPresentation slot)
+		private void DrawEventSlot(Rectangle rect, ClimbSlotPresentation slot, ClimbPreviewState preview, bool source)
 		{
 			var portrait = GetPortraitRegion(rect);
 			ClimbSceneDrawHelpers.DrawRadialPortraitGradient(_spriteBatch, _pixel, portrait);
@@ -486,7 +486,12 @@ namespace Crusaders30XX.ECS.Systems
 				DrawRewardMetaBlock(rewardRect, slot.Reward);
 			}
 			int remaining = GetRemainingDuration(slot, SaveCache.GetClimbState()?.time ?? 0);
-			DrawTimeBlock(timeRect, slot.TimeCost, remaining, remaining);
+			int activeRemaining = remaining;
+			if (preview?.IsActive == true && !source)
+			{
+				activeRemaining = GetRemainingDuration(slot, preview.ProjectedUsedTime);
+			}
+			DrawTimeBlock(timeRect, slot.TimeCost, remaining, activeRemaining);
 		}
 
 		private Rectangle GetPortraitRegion(Rectangle rect)
@@ -554,7 +559,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void DrawSingleResource(SpriteBatch spriteBatch, ref int x, int y, ClimbResourceType type, int amount, Color color, bool compact)
 		{
 			if (amount <= 0) return;
-			int iconSize = compact ? CompactResourceIconSize : CompactResourceIconSize;
+			int iconSize = CompactResourceIconSize;
 			ClimbSceneDrawHelpers.DrawResourceIcon(spriteBatch, _graphicsDevice, _pixel, new Vector2(x, y), type, iconSize, color, compact: compact);
 			ClimbSceneDrawHelpers.DrawBodyText(spriteBatch, amount.ToString(), new Vector2(x + iconSize + ResourceIconTextGap, y + ResourceAmountTextYOffset), CompactMetaFontScale, ClimbSceneDrawHelpers.White1);
 			x += ResourceGroupWidth;
@@ -574,11 +579,19 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					if (durationRemaining >= 0)
 					{
-						int costY = content.Y + TimeBlockCostRowOffsetY;
-						ClimbSceneDrawHelpers.DrawBodyText(sb, "+", new Vector2(content.X + TimeBlockPlusOffsetX, costY + TimeBlockPlusOffsetY), CompactMetaFontScale, ClimbSceneDrawHelpers.White1);
-						DrawTimeCost(sb, content.X + TimeBlockHourglassOffsetX, costY, time);
 						int active = activeDurationRemaining < 0 ? durationRemaining : activeDurationRemaining;
-						DrawHourglassRow(sb, content.X + TimeBlockPlusOffsetX, content.Bottom - CompactHourglassHeight - TimeBlockDurationRowBottomPadding, durationRemaining, active, ClimbSceneDrawHelpers.Red2, ClimbSceneDrawHelpers.Red2, HourglassIconStyle.Red, HourglassIconStyle.RedFaded);
+						if (time > 0)
+						{
+							int costY = content.Y + TimeBlockCostRowOffsetY;
+							ClimbSceneDrawHelpers.DrawBodyText(sb, "+", new Vector2(content.X + TimeBlockPlusOffsetX, costY + TimeBlockPlusOffsetY), CompactMetaFontScale, ClimbSceneDrawHelpers.White1);
+							DrawTimeCost(sb, content.X + TimeBlockHourglassOffsetX, costY, time);
+							DrawHourglassRow(sb, content.X + TimeBlockPlusOffsetX, content.Bottom - CompactHourglassHeight - TimeBlockDurationRowBottomPadding, durationRemaining, active, ClimbSceneDrawHelpers.Red2, ClimbSceneDrawHelpers.Red2, HourglassIconStyle.Red, HourglassIconStyle.RedFaded);
+						}
+						else
+						{
+							int durationY = content.Y + Math.Max(0, (content.Height - CompactHourglassHeight) / 2);
+							DrawHourglassRow(sb, content.X + TimeBlockPlusOffsetX, durationY, durationRemaining, active, ClimbSceneDrawHelpers.Red2, ClimbSceneDrawHelpers.Red2, HourglassIconStyle.Red, HourglassIconStyle.RedFaded);
+						}
 					}
 					else
 					{

@@ -276,12 +276,14 @@ namespace Crusaders30XX.ECS.Systems
 				RemoveCardTooltip(entity);
 				RemoveEquipmentTooltip(entity);
 				if (!RunDeckService.TryParseCardKey(slot.cardKey, out var cardId, out var color, out bool isUpgraded)) return;
+				bool isUpgrade = string.Equals(slot.kind, ClimbShopSlotKinds.Upgrade, StringComparison.OrdinalIgnoreCase);
 				EntityManager.AddComponent(entity, new CardTooltip
 				{
 					CardId = cardId,
 					CardColor = color,
 					IsUpgraded = isUpgraded,
 					TooltipScale = 1.0f,
+					CrossfadeUpgradePreview = isUpgrade,
 				});
 				ui.TooltipType = TooltipType.Card;
 			}

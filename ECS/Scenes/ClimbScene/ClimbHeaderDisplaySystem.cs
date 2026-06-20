@@ -246,11 +246,11 @@ namespace Crusaders30XX.ECS.Systems
 
 			int iconY = rect.Bottom - ResourceIconBottomPadding - ResourceIconSize;
 			int x = rect.Right - ResourceRowPaddingRight;
-			x = DrawResourceAmountRightAligned(x, iconY, ClimbResourceType.Red, baseResources.red, previewResources.red, ClimbSceneDrawHelpers.Red3);
+			x = DrawResourceAmountRightAligned(x, iconY, ClimbResourceType.Black, baseResources.black, previewResources.black, ClimbSceneDrawHelpers.White3);
 			x -= ResourceGroupSpacing;
 			x = DrawResourceAmountRightAligned(x, iconY, ClimbResourceType.White, baseResources.white, previewResources.white, ClimbSceneDrawHelpers.White1);
 			x -= ResourceGroupSpacing;
-			DrawResourceAmountRightAligned(x, iconY, ClimbResourceType.Black, baseResources.black, previewResources.black, ClimbSceneDrawHelpers.White3);
+			DrawResourceAmountRightAligned(x, iconY, ClimbResourceType.Red, baseResources.red, previewResources.red, ClimbSceneDrawHelpers.Red3);
 		}
 
 		private int DrawResourceAmountRightAligned(int rightX, int iconY, ClimbResourceType type, int amount, int previewAmount, Color color)
