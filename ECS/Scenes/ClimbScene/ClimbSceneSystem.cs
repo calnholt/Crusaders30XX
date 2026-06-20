@@ -82,10 +82,10 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_headerLayoutSystem);
 			_headerDisplaySystem = new ClimbHeaderDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_headerDisplaySystem);
-			_columnLayoutSystem = new ClimbColumnLayoutSystem(EntityManager);
-			_world.AddSystem(_columnLayoutSystem);
 			_columnDisplaySystem = new ClimbColumnDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_world.AddSystem(_columnDisplaySystem);
+			_columnLayoutSystem = new ClimbColumnLayoutSystem(EntityManager);
+			_world.AddSystem(_columnLayoutSystem);
 			EnsureEquipmentTooltipEntity();
 			_equipmentTooltipDisplaySystem = new EquipmentTooltipDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _content, EquipmentTooltipEntityName);
 		}

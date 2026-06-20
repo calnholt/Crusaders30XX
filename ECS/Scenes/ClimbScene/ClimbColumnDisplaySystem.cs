@@ -57,9 +57,9 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Compact Meta Label Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.25f)]
 		public float CompactMetaLabelFontScale { get; set; } = 0.11f;
 		[DebugEditable(DisplayName = "Portrait Region Height", Step = 1, Min = 60, Max = 260)]
-		public int PortraitRegionHeight { get; set; } = 148;
+		public int PortraitRegionHeight { get; set; } = 172;
 		[DebugEditable(DisplayName = "Portrait Crop Top Bias", Step = 0.01f, Min = 0f, Max = 1f)]
-		public float PortraitCropTopBias { get; set; } = 0f;
+		public float PortraitCropTopBias { get; set; } = 0.07f;
 		[DebugEditable(DisplayName = "Meta Block Min Height", Step = 1, Min = 20, Max = 100)]
 		public int MetaBlockMinHeight { get; set; } = 60;
 		[DebugEditable(DisplayName = "Meta Block Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
@@ -210,6 +210,12 @@ namespace Crusaders30XX.ECS.Systems
 		internal static int ColumnsGapValue { get; private set; } = 20;
 		internal static int ColumnPaddingValue { get; private set; } = 16;
 		internal static int SlotGapValue { get; private set; } = 16;
+		internal static int PortraitRegionHeightValue { get; private set; } = 172;
+		internal static int MetaBlockMinHeightValue { get; private set; } = 60;
+		internal static int CompactPaddingYValue { get; private set; } = 16;
+
+		internal static int ComputePortraitSlotHeight()
+			=> PortraitRegionHeightValue + MetaBlockMinHeightValue + CompactPaddingYValue * 2;
 
 		public ClimbColumnDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager content)
 			: base(entityManager)
@@ -239,6 +245,9 @@ namespace Crusaders30XX.ECS.Systems
 			ColumnsGapValue = ColumnsGap;
 			ColumnPaddingValue = ColumnPadding;
 			SlotGapValue = SlotGap;
+			PortraitRegionHeightValue = PortraitRegionHeight;
+			MetaBlockMinHeightValue = MetaBlockMinHeight;
+			CompactPaddingYValue = CompactPaddingY;
 			if (IsClimbScene())
 			{
 				UpdateVanishPreviewFade(gameTime);
@@ -350,7 +359,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			else if (slot.Kind == ClimbSlotKind.Event)
 			{
-				DrawEventSlot(rect, slot);
+				DrawEventSlot(rect, slot, preview, source);
 			}
 			else
 			{
@@ -428,7 +437,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			_spriteBatch.Draw(_pixel, new Rectangle(portrait.X, portrait.Bottom - PortraitBottomLineHeight, portrait.Width, PortraitBottomLineHeight), ClimbSceneDrawHelpers.Red3 * PortraitBottomLineAlpha);
 
-			int metaY = rect.Bottom - CompactPaddingY - MetaBlockMinHeight;
+			int metaY = portrait.Bottom + CompactPaddingY;
 			var timeRect = new Rectangle(rect.Right - CompactPaddingX - PortraitSlotTimeBlockWidth, metaY, PortraitSlotTimeBlockWidth, MetaBlockMinHeight);
 			var rewardRect = new Rectangle(rect.X + CompactPaddingX, metaY, timeRect.X - MetaBlockGap - rect.X - CompactPaddingX, MetaBlockMinHeight);
 			DrawRewardMetaBlock(rewardRect, slot.Reward);
@@ -465,7 +474,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			_spriteBatch.Draw(_pixel, new Rectangle(portrait.X, portrait.Bottom - PortraitBottomLineHeight, portrait.Width, PortraitBottomLineHeight), ClimbSceneDrawHelpers.Red3 * PortraitBottomLineAlpha);
 
-			int metaY = rect.Bottom - CompactPaddingY - MetaBlockMinHeight;
+			int metaY = portrait.Bottom + CompactPaddingY;
 			var timeRect = new Rectangle(rect.Right - CompactPaddingX - PortraitSlotTimeBlockWidth, metaY, PortraitSlotTimeBlockWidth, MetaBlockMinHeight);
 			var rewardRect = new Rectangle(rect.X + CompactPaddingX, metaY, timeRect.X - MetaBlockGap - rect.X - CompactPaddingX, MetaBlockMinHeight);
 			if (slot.EventKind == ClimbEventKind.Character)
@@ -482,7 +491,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private Rectangle GetPortraitRegion(Rectangle rect)
 		{
-			return new Rectangle(rect.X, rect.Y, rect.Width, Math.Min(PortraitRegionHeight, rect.Height - MetaBlockMinHeight - CompactPaddingY * 2));
+			return new Rectangle(rect.X, rect.Y, rect.Width, PortraitRegionHeight);
 		}
 
 		private void DrawCharacterRewardMetaBlock(Rectangle rect, string line1, string line2)

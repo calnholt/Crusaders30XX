@@ -101,6 +101,37 @@ public class ClimbColumnParallaxTests : IDisposable
 		Assert.Equal(Offset(innerBoundsBefore, offset), innerBoundsAfter);
 	}
 
+	[Fact]
+	public void ComputePortraitSlotHeight_uses_portrait_meta_and_padding_defaults()
+	{
+		Assert.Equal(240, ClimbColumnDisplaySystem.ComputePortraitSlotHeight());
+	}
+
+	[Fact]
+	public void Layout_sizes_encounter_and_event_slots_from_portrait_slot_height()
+	{
+		var entityManager = BuildWorld();
+		var layout = new ClimbColumnLayoutSystem(entityManager);
+		layout.Update(new GameTime());
+
+		int expectedHeight = ClimbColumnDisplaySystem.ComputePortraitSlotHeight();
+		var portraitSlots = entityManager.GetEntitiesWithComponent<ClimbSlotPresentation>()
+			.Where(entity =>
+			{
+				var kind = entity.GetComponent<ClimbSlotPresentation>()?.Kind;
+				return kind == ClimbSlotKind.Encounter || kind == ClimbSlotKind.Event;
+			})
+			.ToList();
+
+		Assert.NotEmpty(portraitSlots);
+		Assert.All(portraitSlots, entity =>
+		{
+			var ui = entity.GetComponent<UIElement>();
+			Assert.NotNull(ui);
+			Assert.Equal(expectedHeight, ui.Bounds.Height);
+		});
+	}
+
 	private static EntityManager BuildWorld()
 	{
 		var entityManager = new EntityManager();

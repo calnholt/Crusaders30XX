@@ -29,8 +29,6 @@ namespace Crusaders30XX.ECS.Systems
 		public int SlotListTopOffset { get; set; } = 59;
 		[DebugEditable(DisplayName = "Shop Slot Height", Step = 1, Min = 32, Max = 160)]
 		public int ShopSlotHeight { get; set; } = 131;
-		[DebugEditable(DisplayName = "Portrait Slot Height", Step = 1, Min = 80, Max = 400)]
-		public int PortraitSlotHeight { get; set; } = 217;
 		[DebugEditable(DisplayName = "Column Z Order", Step = 1, Min = 0, Max = 5000)]
 		public int ColumnZOrder { get; set; } = 1500;
 		[DebugEditable(DisplayName = "Slot Z Order", Step = 1, Min = 0, Max = 5000)]
@@ -42,7 +40,6 @@ namespace Crusaders30XX.ECS.Systems
 		internal static int ColumnWidthValue { get; private set; } = 486;
 		internal static int SlotListTopOffsetValue { get; private set; } = 59;
 		internal static int ShopSlotHeightValue { get; private set; } = 131;
-		internal static int PortraitSlotHeightValue { get; private set; } = 217;
 		internal static int ColumnZOrderValue { get; private set; } = 1500;
 		internal static int SlotZOrderValue { get; private set; } = 1600;
 		internal static int ShopTooltipOffsetPxValue { get; private set; } = 30;
@@ -59,7 +56,6 @@ namespace Crusaders30XX.ECS.Systems
 			ColumnWidthValue = ColumnWidth;
 			SlotListTopOffsetValue = SlotListTopOffset;
 			ShopSlotHeightValue = ShopSlotHeight;
-			PortraitSlotHeightValue = PortraitSlotHeight;
 			ColumnZOrderValue = ColumnZOrder;
 			SlotZOrderValue = SlotZOrder;
 			ShopTooltipOffsetPxValue = ShopTooltipOffsetPx;
@@ -477,12 +473,14 @@ namespace Crusaders30XX.ECS.Systems
 
 		private static Rectangle ComputeEncounterSlotRect(Rectangle inner, int index)
 		{
-			return new Rectangle(inner.X, inner.Y + SlotListTopOffsetValue + index * (PortraitSlotHeightValue + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, PortraitSlotHeightValue);
+			int slotHeight = ClimbColumnDisplaySystem.ComputePortraitSlotHeight();
+			return new Rectangle(inner.X, inner.Y + SlotListTopOffsetValue + index * (slotHeight + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, slotHeight);
 		}
 
 		private static Rectangle ComputeEventSlotRect(Rectangle inner, int index)
 		{
-			return new Rectangle(inner.X, inner.Y + SlotListTopOffsetValue + index * (PortraitSlotHeightValue + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, PortraitSlotHeightValue);
+			int slotHeight = ClimbColumnDisplaySystem.ComputePortraitSlotHeight();
+			return new Rectangle(inner.X, inner.Y + SlotListTopOffsetValue + index * (slotHeight + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, slotHeight);
 		}
 
 		private static ClimbResourceSave Clone(ClimbResourceSave resources)
