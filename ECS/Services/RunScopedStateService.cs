@@ -59,9 +59,9 @@ namespace Crusaders30XX.ECS.Services
 			foreach (var card in entityManager.GetEntitiesWithComponent<RunDeckCard>())
 			{
 				if (!card.IsActive) continue;
-				var key = card.GetComponent<RunDeckCard>()?.CardKey;
-				if (string.IsNullOrWhiteSpace(key)) continue;
-				ApplySavedRestrictionsToCard(entityManager, card, key);
+				var entryId = card.GetComponent<RunDeckCard>()?.EntryId;
+				if (string.IsNullOrWhiteSpace(entryId)) continue;
+				ApplySavedRestrictionsToCard(entityManager, card, entryId);
 			}
 		}
 
@@ -69,14 +69,14 @@ namespace Crusaders30XX.ECS.Services
 		{
 			if (TestFightRuntime.IsActive) return;
 			if (card == null) return;
-			var key = card.GetComponent<RunDeckCard>()?.CardKey;
-			if (string.IsNullOrWhiteSpace(key)) return;
+			var entryId = card.GetComponent<RunDeckCard>()?.EntryId;
+			if (string.IsNullOrWhiteSpace(entryId)) return;
 			var names = new List<string>();
 			if (card.HasComponent<Frozen>()) names.Add(RestrictionFrozen);
 			if (card.HasComponent<Sealed>()) names.Add(RestrictionSealed);
 			if (card.HasComponent<Brittle>()) names.Add(RestrictionBrittle);
 			if (card.HasComponent<Colorless>()) names.Add(RestrictionColorless);
-			SaveCache.SetRunCardRestrictionsForCard(key, names);
+			SaveCache.SetRunDeckEntryRestrictions(RunDeckService.PrimaryLoadoutId, entryId, names);
 		}
 
 		public static void ClearRunCardRestrictionComponents(EntityManager entityManager)
@@ -88,9 +88,9 @@ namespace Crusaders30XX.ECS.Services
 			}
 		}
 
-		private static void ApplySavedRestrictionsToCard(EntityManager entityManager, Entity card, string cardKey)
+		private static void ApplySavedRestrictionsToCard(EntityManager entityManager, Entity card, string entryId)
 		{
-			foreach (var restriction in SaveCache.GetRunCardRestrictions(cardKey))
+			foreach (var restriction in SaveCache.GetRunDeckEntryRestrictions(RunDeckService.PrimaryLoadoutId, entryId))
 			{
 				ApplyRestrictionComponent(entityManager, card, restriction);
 			}

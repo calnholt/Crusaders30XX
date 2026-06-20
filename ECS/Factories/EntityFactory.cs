@@ -284,7 +284,8 @@ namespace Crusaders30XX.ECS.Factories
             string cardKey = null,
             bool persistForRun = false,
             bool suppressStatDeltaDisplay = false,
-            bool isUpgraded = false)
+            bool isUpgraded = false,
+            string runDeckEntryId = null)
         {
             var card = CardFactory.Create(cardId);
             if (card == null) return null;
@@ -340,7 +341,11 @@ namespace Crusaders30XX.ECS.Factories
                 {
                     key = RunDeckService.BuildCardKey(cardId, color, isUpgraded);
                 }
-                entityManager.AddComponent(entity, new RunDeckCard { CardKey = key });
+                entityManager.AddComponent(entity, new RunDeckCard
+                {
+                    EntryId = runDeckEntryId ?? string.Empty,
+                    CardKey = key,
+                });
                 entityManager.AddComponent(entity, new DontDestroyOnLoad());
             }
             else

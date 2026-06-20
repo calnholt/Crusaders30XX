@@ -46,13 +46,13 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Panel Alpha", Step = 5, Min = 0, Max = 255)]
         public int PanelAlpha { get; set; } = 200;
 
-        [DebugEditable(DisplayName = "Body Text Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
+        [DebugEditable(DisplayName = "Body Text Scale", Step = 0.01f, Min = 0.1f, Max = 2f)]
         public float BodyScale { get; set; } = 0.18f;
 
         [DebugEditable(DisplayName = "Nameplate Height", Step = 1, Min = 12, Max = 80)]
         public int NameplateHeight { get; set; } = 28;
 
-        [DebugEditable(DisplayName = "Nameplate Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
+        [DebugEditable(DisplayName = "Nameplate Scale", Step = 0.01f, Min = 0.1f, Max = 2f)]
         public float NameplateScale { get; set; } = 0.22f;
 
         [DebugEditable(DisplayName = "Portrait Width %", Step = 0.01f, Min = 0f, Max = 0.5f)]
@@ -167,7 +167,7 @@ namespace Crusaders30XX.ECS.Systems
             // Prepare/launch dialog via events
             EventManager.Subscribe<QuestSelected>(OnQuestSelected);
             EventManager.Subscribe<TransitionCompleteEvent>(OnTransitionComplete);
-            EventManager.Subscribe<EncounterDialogueRequested>(OnEncounterDialogueRequested);
+            EventManager.Subscribe<DialogueSequenceRequested>(OnDialogueSequenceRequested);
             EventManager.Subscribe<DialogEnded>(_ => ClearPendingDialog());
         }
 
@@ -300,14 +300,15 @@ namespace Crusaders30XX.ECS.Systems
             st.Lines = def.lines;
             st.Index = 0;
             st.IsActive = true;
-            st.IsEncounterDialogue = false;
+            st.IsCorrelatedSequence = false;
+            st.BackgroundOnly = false;
             st.DefinitionId = def.id ?? string.Empty;
             st.SegmentId = string.Empty;
             st.RequestId = Guid.Empty;
             ResetTypewriterForCurrentLine(st);
         }
 
-        private void OnEncounterDialogueRequested(EncounterDialogueRequested request)
+        private void OnDialogueSequenceRequested(DialogueSequenceRequested request)
         {
             if (request == null || request.RequestId == Guid.Empty) return;
             if (!DialogDefinitionCache.TryGet(request.DefinitionId, out var definition) || definition == null) return;
@@ -322,7 +323,8 @@ namespace Crusaders30XX.ECS.Systems
             state.Lines = lines.ToList();
             state.Index = 0;
             state.IsActive = true;
-            state.IsEncounterDialogue = true;
+            state.IsCorrelatedSequence = true;
+            state.BackgroundOnly = request.BackgroundOnly;
             state.DefinitionId = request.DefinitionId ?? string.Empty;
             state.SegmentId = request.SegmentId ?? string.Empty;
             state.RequestId = request.RequestId;
@@ -331,15 +333,16 @@ namespace Crusaders30XX.ECS.Systems
 
         private static void CompleteDialog(DialogOverlayState state)
         {
-            if (state != null && state.IsEncounterDialogue)
+            if (state != null && state.IsCorrelatedSequence)
             {
-                EventManager.Publish(new EncounterDialogueCompleted
+                EventManager.Publish(new DialogueSequenceCompleted
                 {
                     DefinitionId = state.DefinitionId,
                     SegmentId = state.SegmentId,
                     RequestId = state.RequestId,
                 });
-                state.IsEncounterDialogue = false;
+                state.IsCorrelatedSequence = false;
+                state.BackgroundOnly = false;
                 state.DefinitionId = string.Empty;
                 state.SegmentId = string.Empty;
                 state.RequestId = Guid.Empty;
@@ -382,6 +385,7 @@ namespace Crusaders30XX.ECS.Systems
             var line = (st.Index >= 0 && st.Index < (st.Lines?.Count ?? 0)) ? st.Lines[st.Index] : null;
             string actor = line?.actor ?? string.Empty;
             string message = line?.message ?? string.Empty;
+            string safeActor = TextUtils.FilterUnsupportedGlyphs(_font, actor);
 
             // Left portrait box width
             int portraitW = (int)System.Math.Round(vw * MathHelper.Clamp(PortraitWidthPercent, 0f, 0.5f));
@@ -389,11 +393,11 @@ namespace Crusaders30XX.ECS.Systems
             // Nameplate (red box) above text area, anchored to panel top-left (after portrait pad)
             var nameplateRect = new Rectangle(panelRect.X + portraitW + PanelPadding,
                 panelRect.Y + PanelPadding - NameplateHeight,
-                System.Math.Max(60, (int)System.Math.Round(_font.MeasureString(actor).X * NameplateScale) + PanelPadding * 2),
+                System.Math.Max(60, (int)System.Math.Round(_font.MeasureString(safeActor).X * NameplateScale) + PanelPadding * 2),
                 NameplateHeight);
             _spriteBatch.Draw(_pixel, nameplateRect, Color.DarkRed);
-            var namePos = new Vector2(nameplateRect.X + PanelPadding / 2f, nameplateRect.Y + nameplateRect.Height / 2f - (_font.MeasureString(actor).Y * NameplateScale) / 2f);
-            _spriteBatch.DrawString(_font, actor, namePos, Color.White, 0f, Vector2.Zero, NameplateScale, SpriteEffects.None, 0f);
+            var namePos = new Vector2(nameplateRect.X + PanelPadding / 2f, nameplateRect.Y + nameplateRect.Height / 2f - (_font.MeasureString(safeActor).Y * NameplateScale) / 2f);
+            _spriteBatch.DrawString(_font, safeActor, namePos, Color.White, 0f, Vector2.Zero, NameplateScale, SpriteEffects.None, 0f);
 
             // Body text area inside panel, to the right of portrait
             int textX = panelRect.X + portraitW + PanelPadding;
@@ -507,6 +511,10 @@ namespace Crusaders30XX.ECS.Systems
                 "skeleton" => "Skeleton",
                 "sand_corpse" => "Sand_Corpse",
                 "fallen shepherd" => "Fallen_Shepherd",
+                "nun" => "character/nun",
+                "reverent crusader" => "character/reverent_crusader",
+                "revered crusader" => "character/revered_crusader",
+                "smith" => "character/smith",
                 _ => string.Empty,
             };
         }
@@ -658,7 +666,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (!pending.WillShowDialog) return;
                 if (pending.RequestId != Guid.Empty)
                 {
-                    EventManager.Publish(new EncounterDialogueRequested
+                    EventManager.Publish(new DialogueSequenceRequested
                     {
                         DefinitionId = pending.DialogId,
                         SegmentId = pending.SegmentId,

@@ -56,8 +56,10 @@ namespace Crusaders30XX.ECS.Systems
 		public float CompactMetaFontScale { get; set; } = 0.075f;
 		[DebugEditable(DisplayName = "Compact Meta Label Font Scale", Step = 0.01f, Min = 0.03f, Max = 0.25f)]
 		public float CompactMetaLabelFontScale { get; set; } = 0.11f;
-		[DebugEditable(DisplayName = "Enemy Portrait Height", Step = 1, Min = 60, Max = 260)]
-		public int EnemyPortraitHeight { get; set; } = 148;
+		[DebugEditable(DisplayName = "Portrait Region Height", Step = 1, Min = 60, Max = 260)]
+		public int PortraitRegionHeight { get; set; } = 148;
+		[DebugEditable(DisplayName = "Portrait Crop Top Bias", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float PortraitCropTopBias { get; set; } = 0f;
 		[DebugEditable(DisplayName = "Meta Block Min Height", Step = 1, Min = 20, Max = 100)]
 		public int MetaBlockMinHeight { get; set; } = 60;
 		[DebugEditable(DisplayName = "Meta Block Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
@@ -70,8 +72,8 @@ namespace Crusaders30XX.ECS.Systems
 		public int CompactHourglassWidth { get; set; } = 18;
 		[DebugEditable(DisplayName = "Compact Hourglass Height", Step = 1, Min = 4, Max = 40)]
 		public int CompactHourglassHeight { get; set; } = 19;
-		[DebugEditable(DisplayName = "Event Glyph Size", Step = 1, Min = 16, Max = 48)]
-		public int EventGlyphSize { get; set; } = 28;
+		[DebugEditable(DisplayName = "Event Glyph Size", Step = 1, Min = 16, Max = 160)]
+		public int EventGlyphSize { get; set; } = 72;
 		[DebugEditable(DisplayName = "Shop Title Icon Size", Step = 1, Min = 8, Max = 32)]
 		public int ShopTitleIconSize { get; set; } = 18;
 		[DebugEditable(DisplayName = "Preview Glow Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
@@ -142,10 +144,8 @@ namespace Crusaders30XX.ECS.Systems
 		public float UnavailableOverlayAlpha { get; set; } = 0.35f;
 		[DebugEditable(DisplayName = "Shop Time Block Width", Step = 1, Min = 40, Max = 160)]
 		public int ShopTimeBlockWidth { get; set; } = 95;
-		[DebugEditable(DisplayName = "Encounter Time Block Width", Step = 1, Min = 40, Max = 160)]
-		public int EncounterTimeBlockWidth { get; set; } = 125;
-		[DebugEditable(DisplayName = "Event Time Block Width", Step = 1, Min = 40, Max = 160)]
-		public int EventTimeBlockWidth { get; set; } = 76;
+		[DebugEditable(DisplayName = "Portrait Slot Time Block Width", Step = 1, Min = 40, Max = 160)]
+		public int PortraitSlotTimeBlockWidth { get; set; } = 125;
 		[DebugEditable(DisplayName = "Meta Block Gap", Step = 1, Min = 0, Max = 24)]
 		public int MetaBlockGap { get; set; } = 8;
 		[DebugEditable(DisplayName = "Compact Badge Y Offset", Step = 1, Min = -8, Max = 8)]
@@ -156,14 +156,14 @@ namespace Crusaders30XX.ECS.Systems
 		public int PortraitFallbackPaddingX { get; set; } = 14;
 		[DebugEditable(DisplayName = "Portrait Fallback Text Offset Y", Step = 1, Min = -24, Max = 24)]
 		public int PortraitFallbackTextOffsetY { get; set; } = 12;
-		[DebugEditable(DisplayName = "Encounter Title Max Length", Step = 1, Min = 8, Max = 80)]
-		public int EncounterTitleMaxLength { get; set; } = 26;
+		[DebugEditable(DisplayName = "Portrait Slot Title Max Length", Step = 1, Min = 8, Max = 80)]
+		public int PortraitSlotTitleMaxLength { get; set; } = 26;
 		[DebugEditable(DisplayName = "Portrait Bottom Line Height", Step = 1, Min = 1, Max = 8)]
 		public int PortraitBottomLineHeight { get; set; } = 2;
 		[DebugEditable(DisplayName = "Portrait Bottom Line Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float PortraitBottomLineAlpha { get; set; } = 0.45f;
 		[DebugEditable(DisplayName = "Event Glyph Title Scale", Step = 0.01f, Min = 0.03f, Max = 0.4f)]
-		public float EventGlyphTitleScale { get; set; } = 0.18f;
+		public float EventGlyphTitleScale { get; set; } = 0.25f;
 		[DebugEditable(DisplayName = "Event Glyph Text Gap", Step = 1, Min = 0, Max = 32)]
 		public int EventGlyphTextGap { get; set; } = 10;
 		[DebugEditable(DisplayName = "Muted Meta Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
@@ -415,21 +415,21 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void DrawEncounterSlot(Rectangle rect, ClimbSlotPresentation slot, ClimbPreviewState preview, bool source)
 		{
-			var portrait = new Rectangle(rect.X, rect.Y, rect.Width, Math.Min(EnemyPortraitHeight, rect.Height - MetaBlockMinHeight - CompactPaddingY * 2));
+			var portrait = GetPortraitRegion(rect);
 			ClimbSceneDrawHelpers.DrawRadialPortraitGradient(_spriteBatch, _pixel, portrait);
 			var texture = GetTexture(slot.PortraitAsset);
 			if (texture != null)
 			{
-				ClimbSceneDrawHelpers.DrawPortraitCropped(_spriteBatch, texture, portrait);
+				ClimbSceneDrawHelpers.DrawPortraitCropped(_spriteBatch, texture, portrait, PortraitCropTopBias);
 			}
 			else
 			{
-				ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, Trim(slot.Title, EncounterTitleMaxLength), new Vector2(portrait.X + PortraitFallbackPaddingX, portrait.Center.Y - PortraitFallbackTextOffsetY), CompactTitleFontScale, ClimbSceneDrawHelpers.White1);
+				ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, Trim(slot.Title, PortraitSlotTitleMaxLength), new Vector2(portrait.X + PortraitFallbackPaddingX, portrait.Center.Y - PortraitFallbackTextOffsetY), CompactTitleFontScale, ClimbSceneDrawHelpers.White1);
 			}
 			_spriteBatch.Draw(_pixel, new Rectangle(portrait.X, portrait.Bottom - PortraitBottomLineHeight, portrait.Width, PortraitBottomLineHeight), ClimbSceneDrawHelpers.Red3 * PortraitBottomLineAlpha);
 
 			int metaY = rect.Bottom - CompactPaddingY - MetaBlockMinHeight;
-			var timeRect = new Rectangle(rect.Right - CompactPaddingX - EncounterTimeBlockWidth, metaY, EncounterTimeBlockWidth, MetaBlockMinHeight);
+			var timeRect = new Rectangle(rect.Right - CompactPaddingX - PortraitSlotTimeBlockWidth, metaY, PortraitSlotTimeBlockWidth, MetaBlockMinHeight);
 			var rewardRect = new Rectangle(rect.X + CompactPaddingX, metaY, timeRect.X - MetaBlockGap - rect.X - CompactPaddingX, MetaBlockMinHeight);
 			DrawRewardMetaBlock(rewardRect, slot.Reward);
 			int remaining = GetEncounterRemainingDuration(slot, SaveCache.GetClimbState()?.time ?? 0);
@@ -443,14 +443,63 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void DrawEventSlot(Rectangle rect, ClimbSlotPresentation slot)
 		{
-			int glyphY = rect.Y + (rect.Height - EventGlyphSize) / 2;
-			var glyphRect = new Rectangle(rect.X + CompactPaddingX, glyphY, EventGlyphSize, EventGlyphSize);
-			ClimbSceneDrawHelpers.DrawGlyphBox(_spriteBatch, _pixel, glyphRect, EventGlyphTitleScale);
-			ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, "Event", new Vector2(glyphRect.Right + EventGlyphTextGap, rect.Y + CompactPaddingY), CompactTitleFontScale, ClimbSceneDrawHelpers.White1);
+			var portrait = GetPortraitRegion(rect);
+			ClimbSceneDrawHelpers.DrawRadialPortraitGradient(_spriteBatch, _pixel, portrait);
+			if (slot.EventKind == ClimbEventKind.Character)
+			{
+				var texture = GetTexture(slot.PortraitAsset);
+				if (texture != null)
+				{
+					ClimbSceneDrawHelpers.DrawPortraitCropped(_spriteBatch, texture, portrait, PortraitCropTopBias);
+				}
+				else
+				{
+					ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, Trim(slot.Title, PortraitSlotTitleMaxLength), new Vector2(portrait.X + PortraitFallbackPaddingX, portrait.Center.Y - PortraitFallbackTextOffsetY), CompactTitleFontScale, ClimbSceneDrawHelpers.White1);
+				}
+			}
+			else
+			{
+				var glyphRect = new Rectangle(portrait.X + CompactPaddingX, portrait.Center.Y - EventGlyphSize / 2, EventGlyphSize, EventGlyphSize);
+				ClimbSceneDrawHelpers.DrawGlyphBox(_spriteBatch, _pixel, glyphRect, EventGlyphTitleScale);
+				ClimbSceneDrawHelpers.DrawBodyText(_spriteBatch, "Hazard", new Vector2(glyphRect.Right + EventGlyphTextGap, glyphRect.Y), CompactTitleFontScale, ClimbSceneDrawHelpers.White1);
+			}
+			_spriteBatch.Draw(_pixel, new Rectangle(portrait.X, portrait.Bottom - PortraitBottomLineHeight, portrait.Width, PortraitBottomLineHeight), ClimbSceneDrawHelpers.Red3 * PortraitBottomLineAlpha);
 
-			int metaY = rect.Y + (rect.Height - MetaBlockMinHeight) / 2;
-			var timeRect = new Rectangle(rect.Right - CompactPaddingX - EventTimeBlockWidth, metaY, EventTimeBlockWidth, MetaBlockMinHeight);
-			DrawTimeBlock(timeRect, slot.TimeCost);
+			int metaY = rect.Bottom - CompactPaddingY - MetaBlockMinHeight;
+			var timeRect = new Rectangle(rect.Right - CompactPaddingX - PortraitSlotTimeBlockWidth, metaY, PortraitSlotTimeBlockWidth, MetaBlockMinHeight);
+			var rewardRect = new Rectangle(rect.X + CompactPaddingX, metaY, timeRect.X - MetaBlockGap - rect.X - CompactPaddingX, MetaBlockMinHeight);
+			if (slot.EventKind == ClimbEventKind.Character)
+			{
+				DrawCharacterRewardMetaBlock(rewardRect, slot.GainLine1, slot.GainLine2);
+			}
+			else
+			{
+				DrawRewardMetaBlock(rewardRect, slot.Reward);
+			}
+			int remaining = GetRemainingDuration(slot, SaveCache.GetClimbState()?.time ?? 0);
+			DrawTimeBlock(timeRect, slot.TimeCost, remaining, remaining);
+		}
+
+		private Rectangle GetPortraitRegion(Rectangle rect)
+		{
+			return new Rectangle(rect.X, rect.Y, rect.Width, Math.Min(PortraitRegionHeight, rect.Height - MetaBlockMinHeight - CompactPaddingY * 2));
+		}
+
+		private void DrawCharacterRewardMetaBlock(Rectangle rect, string line1, string line2)
+		{
+			ClimbSceneDrawHelpers.DrawMetaBlock(
+				_spriteBatch,
+				_pixel,
+				rect,
+				"GAIN",
+				CompactMetaLabelFontScale,
+				MetaBlockBorderAlpha,
+				MetaBlockFillAlpha,
+				(sb, content) =>
+				{
+					ClimbSceneDrawHelpers.DrawBodyText(sb, ClimbSceneDrawHelpers.ToUpperAscii(line1), new Vector2(content.X, content.Y + 3), CompactMetaFontScale, ClimbSceneDrawHelpers.White2);
+					ClimbSceneDrawHelpers.DrawBodyText(sb, ClimbSceneDrawHelpers.ToUpperAscii(line2), new Vector2(content.X, content.Y + content.Height / 2f), CompactMetaFontScale, ClimbSceneDrawHelpers.White3);
+				});
 		}
 
 		private void DrawCostMetaBlock(Rectangle rect, ClimbResourceSave resources, bool muted)
@@ -518,7 +567,7 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						int costY = content.Y + TimeBlockCostRowOffsetY;
 						ClimbSceneDrawHelpers.DrawBodyText(sb, "+", new Vector2(content.X + TimeBlockPlusOffsetX, costY + TimeBlockPlusOffsetY), CompactMetaFontScale, ClimbSceneDrawHelpers.White1);
-						DrawHourglassRow(sb, content.X + TimeBlockHourglassOffsetX, costY, time, time, ClimbSceneDrawHelpers.White3, ClimbSceneDrawHelpers.White2, HourglassIconStyle.WhiteCost, HourglassIconStyle.WhiteFaded);
+						DrawTimeCost(sb, content.X + TimeBlockHourglassOffsetX, costY, time);
 						int active = activeDurationRemaining < 0 ? durationRemaining : activeDurationRemaining;
 						DrawHourglassRow(sb, content.X + TimeBlockPlusOffsetX, content.Bottom - CompactHourglassHeight - TimeBlockDurationRowBottomPadding, durationRemaining, active, ClimbSceneDrawHelpers.Red2, ClimbSceneDrawHelpers.Red2, HourglassIconStyle.Red, HourglassIconStyle.RedFaded);
 					}
@@ -526,9 +575,19 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						int costY = content.Y + Math.Max(0, (content.Height - CompactHourglassHeight) / 2);
 						ClimbSceneDrawHelpers.DrawBodyText(sb, "+", new Vector2(content.X + TimeBlockPlusOffsetX, costY + TimeBlockPlusOffsetY), CompactMetaFontScale, ClimbSceneDrawHelpers.White1);
-						DrawHourglassRow(sb, content.X + TimeBlockHourglassOffsetX, costY, time, time, ClimbSceneDrawHelpers.White3, ClimbSceneDrawHelpers.White2, HourglassIconStyle.WhiteCost, HourglassIconStyle.WhiteFaded);
+						DrawTimeCost(sb, content.X + TimeBlockHourglassOffsetX, costY, time);
 					}
 				});
+		}
+
+		private void DrawTimeCost(SpriteBatch spriteBatch, int x, int y, int time)
+		{
+			if (time <= 0)
+			{
+				ClimbSceneDrawHelpers.DrawBodyText(spriteBatch, "0", new Vector2(x, y + TimeBlockPlusOffsetY), CompactMetaFontScale, ClimbSceneDrawHelpers.White2);
+				return;
+			}
+			DrawHourglassRow(spriteBatch, x, y, time, time, ClimbSceneDrawHelpers.White3, ClimbSceneDrawHelpers.White2, HourglassIconStyle.WhiteCost, HourglassIconStyle.WhiteFaded);
 		}
 
 		private void DrawHourglassRow(SpriteBatch spriteBatch, int x, int y, int count, int activeCount, Color frame, Color sand, HourglassIconStyle activeStyle, HourglassIconStyle fadedStyle)
@@ -610,6 +669,11 @@ namespace Crusaders30XX.ECS.Systems
 		}
 
 		private static int GetEncounterRemainingDuration(ClimbSlotPresentation slot, int time)
+		{
+			return GetRemainingDuration(slot, time);
+		}
+
+		private static int GetRemainingDuration(ClimbSlotPresentation slot, int time)
 		{
 			if (slot == null || slot.Duration <= 0) return 0;
 			int expiresAt = slot.GeneratedAtTime + slot.Duration;

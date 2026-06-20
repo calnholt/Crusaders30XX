@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
@@ -36,7 +37,6 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
-			ClimbEventService.UpdateLifecycle();
 			var preview = EnsurePreviewState();
 			EnsureHeaderEntities();
 			UpdateBounds();
@@ -95,7 +95,7 @@ namespace Crusaders30XX.ECS.Systems
 				.Select(e => new { Entity = e, Slot = e.GetComponent<ClimbSlotPresentation>(), UI = e.GetComponent<UIElement>() })
 				.FirstOrDefault(x => x.UI?.IsHovered == true
 					&& x.Slot != null
-					&& x.Slot.TimeCost > 0
+					&& (x.Slot.TimeCost > 0 || x.Slot.Kind == ClimbSlotKind.Event)
 					&& !x.Slot.IsUnavailable
 					&& !x.Slot.IsCompleted
 					&& !x.Slot.IsSold
@@ -112,13 +112,18 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			int projected = ClimbRuleService.ClampTime(currentTime + hoveredSlot.Slot.TimeCost);
-			preview.IsActive = projected > currentTime;
+			preview.IsActive = projected > currentTime || hoveredSlot.Slot.Kind == ClimbSlotKind.Event;
 			preview.SourceSlotId = hoveredSlot.Slot.SlotId;
 			preview.Amount = projected - currentTime;
 			preview.ProjectedUsedTime = projected;
 			preview.ProjectedRemainingTime = ClimbRuleService.MaxTime - projected;
 			preview.ProjectedResources = CloneResources(climb?.resources);
 			if (hoveredSlot.Slot.Kind == ClimbSlotKind.Encounter)
+			{
+				ClimbRuleService.AddResources(preview.ProjectedResources, hoveredSlot.Slot.Reward);
+			}
+			else if (hoveredSlot.Slot.Kind == ClimbSlotKind.Event
+				&& hoveredSlot.Slot.EventKind == ClimbEventKind.Hazard)
 			{
 				ClimbRuleService.AddResources(preview.ProjectedResources, hoveredSlot.Slot.Reward);
 			}
@@ -151,8 +156,8 @@ namespace Crusaders30XX.ECS.Systems
 
 			foreach (var slot in climb?.eventSlots ?? new List<ClimbEventSlotSave>())
 			{
-				if (slot == null || slot.isCompleted) continue;
-				if (projectedTime > slot.visibleEndTime && !string.IsNullOrWhiteSpace(slot.id))
+				if (slot == null || slot.status != ClimbEventStatus.Active || slot.activatedAtTime < 0) continue;
+				if (projectedTime >= slot.activatedAtTime + Math.Max(0, slot.duration) && !string.IsNullOrWhiteSpace(slot.id))
 				{
 					preview.WouldVanishSlotIds.Add(slot.id);
 				}

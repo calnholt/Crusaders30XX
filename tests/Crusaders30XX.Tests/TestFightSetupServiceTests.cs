@@ -75,13 +75,16 @@ public class TestFightSetupServiceTests
 			Assert.Empty(firstIds.Intersect(secondIds));
 			Assert.All(deck.Cards, card => Assert.NotNull(card.GetComponent<RunDeckCard>()));
 			Assert.All(deck.Cards, card => Assert.True(card.GetComponent<CardData>().Card.IsStarter));
+			Assert.Equal(
+				deck.Cards.Count,
+				deck.Cards.Select(card => card.GetComponent<RunDeckCard>().EntryId).Distinct().Count());
 
 			var expectedLoadout = StartingDeckGeneratorService.BuildStartingLoadout("hammer", 102, "test_fight");
 			var actualKeys = deck.Cards
 				.Select(card => card.GetComponent<RunDeckCard>().CardKey)
 				.OrderBy(key => key)
 				.ToList();
-			var expectedKeys = expectedLoadout.cardIds.OrderBy(key => key).ToList();
+			var expectedKeys = expectedLoadout.cards.Select(entry => entry.cardKey).OrderBy(key => key).ToList();
 			Assert.Equal(expectedKeys, actualKeys);
 			Assert.Empty(player.GetComponent<AppliedPassives>().Passives);
 			Assert.Equal(20, player.GetComponent<HP>().Max);

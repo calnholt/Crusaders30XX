@@ -80,7 +80,7 @@ namespace Crusaders30XX.ECS.Services
 				ClimbRuleService.RefreshShopSlots(climb, SaveCache.GetAll()?.runMapSeed ?? 0, SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId));
 			}
 			ClimbRuleService.AddResources(climb.resources, slot.rewardResources);
-			ClimbRuleService.UpdateEventSlots(climb, SaveCache.GetAll()?.runMapSeed ?? 0);
+			ClimbRuleService.UpdateEventLifecycle(climb);
 
 			slot.isCompleted = true;
 			ClimbRuleService.ReplenishEncounterSlots(climb, SaveCache.GetAll()?.runMapSeed ?? 0);
@@ -202,6 +202,7 @@ namespace Crusaders30XX.ECS.Services
 					{
 						kind = o.kind ?? string.Empty,
 						loadoutIndex = o.loadoutIndex,
+						outgoingEntryId = o.outgoingEntryId ?? string.Empty,
 						outgoingCardKey = o.outgoingCardKey ?? string.Empty,
 						incomingCardKey = o.incomingCardKey ?? string.Empty,
 						upgradedCardKey = o.upgradedCardKey ?? string.Empty,

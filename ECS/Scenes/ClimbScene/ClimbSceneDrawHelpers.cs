@@ -229,7 +229,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			spriteBatch.Draw(pixel, rect, Black3);
 			DrawBorder(spriteBatch, pixel, rect, Black4, 1);
-			DrawTitleText(spriteBatch, "?", new Vector2(rect.Center.X - 6, rect.Center.Y - 10), titleScale, White2);
+			var glyphSize = MeasureTitleText("?", titleScale);
+			DrawTitleText(spriteBatch, "?", new Vector2(rect.Center.X - glyphSize.X / 2f, rect.Center.Y - glyphSize.Y / 2f), titleScale, White2);
 		}
 
 		public static void DrawShopTitleIcon(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect, Color color)

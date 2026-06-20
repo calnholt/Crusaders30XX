@@ -270,6 +270,7 @@ public class Game1 : Game
         _world.AddComponent(howToPlayEntity, new HowToPlayOverlay());
         _world.AddComponent(howToPlayEntity, new DontDestroyOnLoad());
         _world.AddSystem(new RunDeckLifecycleSystem(_world.EntityManager));
+        _world.AddSystem(new ClimbEventSystem(_world.EntityManager));
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
         // Global sound effect manager
@@ -503,8 +504,20 @@ public class Game1 : Game
             return;
         }
 
-        // Delegate drawing to active parent systems
+        // Character-event dialogue deliberately isolates the dialogue against the
+        // undimmed Climb background. All normal scene and global foreground draws
+        // are skipped until the correlated dialogue completes.
         var scene = _world.EntityManager.GetEntitiesWithComponent<SceneState>().FirstOrDefault().GetComponent<SceneState>();
+        bool backgroundOnlyClimbDialogue = IsBackgroundOnlyClimbDialogue(scene);
+        if (backgroundOnlyClimbDialogue)
+        {
+            MeasureInclusiveSceneDraw("ClimbSceneSystem.DrawBackgroundOnly", _climbSceneSystem.DrawBackgroundOnly);
+            FrameProfiler.Measure("DialogDisplaySystem.Draw", _dialogDisplaySystem.Draw);
+            DrawCursor();
+            return;
+        }
+
+        // Delegate drawing to active parent systems
         switch(scene.Current)
         {
             case SceneId.TitleMenu:
@@ -588,18 +601,31 @@ public class Game1 : Game
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         // Cursor blur trail (additive pass before cursor) — skip in card debug mode
-        _spriteBatch.End();
-        if (_snapshotHost?.ShouldSkipGlobalOverlays != true)
-        {
-            if (ShaderRuntimeOptions.ShadersEnabled)
-            {
-                _cursorTrailDisplaySystem.DrawTrail(_sceneRt);
-            }
+        DrawCursor();
+    }
 
-            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
-            FrameProfiler.Measure("CursorDisplaySystem.Draw", _cursorDisplaySystem.Draw);
-            _spriteBatch.End();
+    private bool IsBackgroundOnlyClimbDialogue(SceneState scene)
+    {
+        if (scene?.Current != SceneId.Climb) return false;
+        var state = _world.EntityManager.GetEntitiesWithComponent<DialogOverlayState>()
+            .FirstOrDefault()
+            ?.GetComponent<DialogOverlayState>();
+        return state?.IsActive == true && state.BackgroundOnly;
+    }
+
+    private void DrawCursor()
+    {
+        _spriteBatch.End();
+        if (_snapshotHost?.ShouldSkipGlobalOverlays == true) return;
+
+        if (ShaderRuntimeOptions.ShadersEnabled)
+        {
+            _cursorTrailDisplaySystem.DrawTrail(_sceneRt);
         }
+
+        _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, _spriteRasterizer);
+        FrameProfiler.Measure("CursorDisplaySystem.Draw", _cursorDisplaySystem.Draw);
+        _spriteBatch.End();
     }
 
 	protected override void UnloadContent()

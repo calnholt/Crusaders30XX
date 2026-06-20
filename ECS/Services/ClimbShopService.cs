@@ -28,6 +28,7 @@ namespace Crusaders30XX.ECS.Services
 			int timeCost = slot.timeCost;
 
 			bool applied = false;
+			bool saveLoadout = true;
 			if (string.Equals(slot.kind, ClimbShopSlotKinds.Medal, StringComparison.OrdinalIgnoreCase))
 			{
 				applied = TryApplyMedal(entityManager, loadout, slot.itemId);
@@ -38,7 +39,8 @@ namespace Crusaders30XX.ECS.Services
 			}
 			else if (string.Equals(slot.kind, ClimbShopSlotKinds.Upgrade, StringComparison.OrdinalIgnoreCase))
 			{
-				applied = TryApplyUpgrade(loadout, slot);
+				applied = TryApplyUpgrade(slot);
+				saveLoadout = false;
 			}
 			else if (string.Equals(slot.kind, ClimbShopSlotKinds.Replacement, StringComparison.OrdinalIgnoreCase))
 			{
@@ -59,7 +61,7 @@ namespace Crusaders30XX.ECS.Services
 				SaveCache.GetAll()?.runMapSeed ?? 0,
 				loadout,
 				timeCost);
-			SaveCache.SaveLoadout(loadout);
+			if (saveLoadout) SaveCache.SaveLoadout(loadout);
 			SaveCache.SaveClimbState(climb);
 			if (ClimbRuleService.HasPendingFinalEncounter(climb))
 			{
@@ -93,40 +95,37 @@ namespace Crusaders30XX.ECS.Services
 			SaveCache.SaveClimbState(climb);
 		}
 
-		public static bool TryFinalizeReplacement(int outgoingLoadoutIndex)
+		public static bool TryFinalizeReplacement(string outgoingEntryId)
 		{
-			return TryFinalizeReplacement(null, outgoingLoadoutIndex);
+			return TryFinalizeReplacement(null, outgoingEntryId);
 		}
 
-		public static bool TryFinalizeReplacement(EntityManager entityManager, int outgoingLoadoutIndex)
+		public static bool TryFinalizeReplacement(EntityManager entityManager, string outgoingEntryId)
 		{
 			var climb = SaveCache.GetClimbState();
 			var offer = climb.pendingReplacementOffer;
-			if (offer == null || outgoingLoadoutIndex < 0) return false;
+			if (offer == null || string.IsNullOrWhiteSpace(outgoingEntryId)) return false;
 			if (!TryGetActiveShopSlot(climb, offer.shopSlotIndex, out var slot)) return false;
 			if (!string.Equals(slot.kind, ClimbShopSlotKinds.Replacement, StringComparison.OrdinalIgnoreCase)) return false;
 			if (slot.isSold || string.IsNullOrWhiteSpace(offer.incomingCardKey)) return false;
 			if (!ClimbRuleService.CanAfford(climb.resources, offer.cost)) return false;
 
 			var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
-			if (loadout?.cardIds == null || outgoingLoadoutIndex >= loadout.cardIds.Count) return false;
-			string outgoingKey = loadout.cardIds[outgoingLoadoutIndex];
-			if (!IsReplacementEligible(outgoingKey)) return false;
+			var outgoingEntry = loadout?.cards?.FirstOrDefault(entry => string.Equals(entry?.entryId, outgoingEntryId, StringComparison.Ordinal));
+			if (outgoingEntry == null || !IsReplacementEligible(outgoingEntry.cardKey)) return false;
 
 			if (!ClimbRuleService.TrySpend(climb.resources, offer.cost)) return false;
 			int timeCost = slot.timeCost;
-			if (!SaveCache.ReplaceCardInLoadoutAtIndex(
+			if (!SaveCache.TryReplaceRunDeckEntry(
 				RunDeckService.PrimaryLoadoutId,
-				outgoingLoadoutIndex,
-				outgoingKey,
-				offer.incomingCardKey))
+				outgoingEntryId,
+				offer.incomingCardKey,
+				out _,
+				countsAsTraded: true))
 			{
 				return false;
 			}
 
-			SaveCache.SetRunCardRestrictionsForCard(outgoingKey, new List<string>());
-			SaveCache.RemoveTrackedTradedCardKey(outgoingKey);
-			SaveCache.MarkTradedCardKey(offer.incomingCardKey);
 			slot.isSold = true;
 			climb.pendingReplacementOffer = null;
 			ClimbRuleService.AdvanceTimeAndUpdateSlots(
@@ -195,10 +194,12 @@ namespace Crusaders30XX.ECS.Services
 			return true;
 		}
 
-		private static bool TryApplyUpgrade(LoadoutDefinition loadout, ClimbShopSlotSave slot)
+		private static bool TryApplyUpgrade(ClimbShopSlotSave slot)
 		{
-			if (loadout?.cardIds == null || slot.deckIndex < 0 || slot.deckIndex >= loadout.cardIds.Count) return false;
-			string current = loadout.cardIds[slot.deckIndex];
+			if (string.IsNullOrWhiteSpace(slot?.deckEntryId)) return false;
+			var entry = SaveCache.GetRunDeckEntry(RunDeckService.PrimaryLoadoutId, slot.deckEntryId);
+			if (entry == null) return false;
+			string current = entry.cardKey;
 			if (RunDeckService.IsUpgradedCardKey(current)) return false;
 			string upgraded = RunDeckService.BuildUpgradedCardKey(current);
 			if (string.IsNullOrWhiteSpace(upgraded)) return false;
@@ -208,8 +209,11 @@ namespace Crusaders30XX.ECS.Services
 				return false;
 			}
 
-			loadout.cardIds[slot.deckIndex] = upgraded;
-			SaveCache.ReplaceTrackedTradedCardKey(current, upgraded);
+			if (!SaveCache.TryUpgradeRunDeckEntry(
+				RunDeckService.PrimaryLoadoutId,
+				slot.deckEntryId,
+				upgraded,
+				out _)) return false;
 			CardUpgradeService.InvokeUpgradeConfirmed(upgraded);
 			return true;
 		}
@@ -225,16 +229,16 @@ namespace Crusaders30XX.ECS.Services
 					&& CardFactory.Create(incomingId) != null;
 			if (string.Equals(slot.kind, ClimbShopSlotKinds.Upgrade, StringComparison.OrdinalIgnoreCase))
 			{
-				if (loadout?.cardIds == null || slot.deckIndex < 0 || slot.deckIndex >= loadout.cardIds.Count) return false;
-				if (RunDeckService.IsUpgradedCardKey(loadout.cardIds[slot.deckIndex])) return false;
-				return !string.IsNullOrWhiteSpace(RunDeckService.BuildUpgradedCardKey(loadout.cardIds[slot.deckIndex]));
+				var entry = loadout?.cards?.FirstOrDefault(candidate => string.Equals(candidate?.entryId, slot.deckEntryId, StringComparison.Ordinal));
+				if (entry == null || RunDeckService.IsUpgradedCardKey(entry.cardKey)) return false;
+				return !string.IsNullOrWhiteSpace(RunDeckService.BuildUpgradedCardKey(entry.cardKey));
 			}
 			return false;
 		}
 
 		private static void EnsureLoadoutLists(LoadoutDefinition loadout)
 		{
-			loadout.cardIds ??= new List<string>();
+			loadout.cards ??= new List<LoadoutCardEntry>();
 			loadout.medalIds ??= new List<string>();
 			loadout.headId ??= string.Empty;
 			loadout.chestId ??= string.Empty;

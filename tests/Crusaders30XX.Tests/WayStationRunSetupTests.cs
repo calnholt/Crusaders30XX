@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
@@ -266,14 +267,25 @@ public class WayStationRunSetupTests
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.StartNewRun();
 		var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
-		loadout.cardIds = cardKeys.ToList();
+		var unmatchedTradedKeys = (tradedKeys ?? Array.Empty<string>()).ToList();
+		loadout.cards = cardKeys.Select((cardKey, index) =>
+		{
+			int tradedIndex = unmatchedTradedKeys.FindIndex(candidate =>
+				string.Equals(candidate, cardKey, StringComparison.OrdinalIgnoreCase));
+			bool countsAsTraded = tradedIndex >= 0;
+			if (countsAsTraded) unmatchedTradedKeys.RemoveAt(tradedIndex);
+			return new LoadoutCardEntry
+			{
+				entryId = $"test_card_{index}",
+				cardKey = cardKey,
+				isStarter = !countsAsTraded,
+				countsAsTraded = countsAsTraded,
+				restrictions = new List<string>(),
+			};
+		}).ToList();
 		loadout.weaponId = "sword";
 		loadout.medalIds = new List<string>();
 		SaveCache.SaveLoadout(loadout);
-		foreach (var tradedKey in tradedKeys ?? Array.Empty<string>())
-		{
-			SaveCache.MarkTradedCardKey(tradedKey);
-		}
 
 		var world = new World();
 		var deckEntity = world.CreateEntity("Deck");

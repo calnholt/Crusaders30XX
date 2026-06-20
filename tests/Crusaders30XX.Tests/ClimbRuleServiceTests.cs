@@ -15,7 +15,6 @@ public class ClimbRuleServiceTests
 	public void Initial_state_has_time_resources_and_required_slots()
 	{
 		var state = ClimbRuleService.CreateInitialState(123, TestLoadout());
-		int eventPoolCount = EventFactory.GetAllEvents().Count;
 
 		Assert.Equal(0, state.time);
 		Assert.Equal(1, state.resources.red);
@@ -23,7 +22,9 @@ public class ClimbRuleServiceTests
 		Assert.Equal(1, state.resources.black);
 		Assert.Equal(ClimbRuleService.ShopSlotCount, state.shopSlots.Count);
 		Assert.Equal(ClimbRuleService.EncounterSlotCount, state.encounterSlots.Count);
-		Assert.Equal(Math.Min(eventPoolCount, ClimbRuleService.EventSlotCount), state.eventSlots.Count);
+		Assert.Equal(ClimbRuleService.EventSlotCount, state.eventSlots.Count);
+		Assert.Equal(3, state.eventSlots.Count(slot => slot.kind == ClimbEventKind.Hazard));
+		Assert.Equal(2, state.eventSlots.Count(slot => slot.kind == ClimbEventKind.Character));
 		Assert.All(state.shopSlots.Where(s => s.kind != ClimbShopSlotKinds.Empty), slot => Assert.InRange(slot.timeCost, 1, 3));
 		Assert.All(state.encounterSlots, slot =>
 		{
@@ -100,18 +101,63 @@ public class ClimbRuleServiceTests
 	}
 
 	[Fact]
-	public void Event_slots_assign_distinct_hidden_events_with_valid_windows()
+	public void Event_slots_assign_complete_deterministic_schedule_in_exact_bands()
 	{
 		var state = ClimbRuleService.CreateInitialState(123, TestLoadout());
+		var repeated = ClimbRuleService.CreateInitialState(123, TestLoadout());
 
-		Assert.Equal(state.eventSlots.Count, state.eventSlots.Select(s => s.eventTypeId).Distinct(StringComparer.OrdinalIgnoreCase).Count());
-		foreach (var slot in state.eventSlots)
+		Assert.Equal(
+			state.eventSlots.Select(ScheduleSnapshot),
+			repeated.eventSlots.Select(ScheduleSnapshot));
+		Assert.Equal(2, state.eventSlots
+			.Where(slot => slot.kind == ClimbEventKind.Character)
+			.Select(slot => slot.definitionId)
+			.Distinct(StringComparer.OrdinalIgnoreCase)
+			.Count());
+		for (int index = 0; index < state.eventSlots.Count; index++)
 		{
-			Assert.False(slot.seen);
-			Assert.InRange(slot.visibleStartTime - slot.generatedAtTime, 3, 8);
-			Assert.InRange(slot.visibleEndTime - slot.visibleStartTime, 3, 6);
-			Assert.InRange(slot.timeCost, 1, 2);
+			var slot = state.eventSlots[index];
+			var band = ClimbRuleService.GetEventAppearanceBand(index);
+			Assert.Equal(ClimbEventStatus.Scheduled, slot.status);
+			Assert.Equal(-1, slot.activatedAtTime);
+			Assert.InRange(slot.scheduledAppearanceTime, band.Start, band.End);
+			if (slot.kind == ClimbEventKind.Hazard)
+			{
+				Assert.Equal(0, slot.timeCost);
+				Assert.InRange(slot.duration, 2, 4);
+				Assert.InRange(ResourcePips(slot.rewardResources), 1, 2);
+			}
+			else
+			{
+				Assert.Equal(1, slot.timeCost);
+				Assert.InRange(slot.duration, 3, 5);
+				Assert.Equal(0, ResourcePips(slot.rewardResources));
+			}
 		}
+		Assert.Equal((1, 6), ClimbRuleService.GetEventAppearanceBand(0));
+		Assert.Equal((7, 12), ClimbRuleService.GetEventAppearanceBand(1));
+		Assert.Equal((13, 19), ClimbRuleService.GetEventAppearanceBand(2));
+		Assert.Equal((20, 25), ClimbRuleService.GetEventAppearanceBand(3));
+		Assert.Equal((26, 32), ClimbRuleService.GetEventAppearanceBand(4));
+	}
+
+	[Fact]
+	public void Generated_schedules_allow_repeated_hazards_and_vary_across_seeds()
+	{
+		var schedules = Enumerable.Range(1, 200)
+			.Select(seed => ClimbRuleService.GenerateEventSchedule(seed))
+			.ToList();
+
+		Assert.Contains(schedules, schedule => schedule
+			.Where(slot => slot.kind == ClimbEventKind.Hazard)
+			.GroupBy(slot => slot.definitionId, StringComparer.OrdinalIgnoreCase)
+			.Any(group => group.Count() > 1));
+		Assert.True(schedules.Select(schedule => string.Join(";", schedule.Select(ScheduleSnapshot))).Distinct().Count() > 1);
+		Assert.True(schedules.SelectMany(schedule => schedule).Select(slot => slot.duration).Distinct().Count() > 1);
+		Assert.True(schedules.SelectMany(schedule => schedule).Select(slot => slot.scheduledAppearanceTime).Distinct().Count() > 1);
+		Assert.True(schedules.SelectMany(schedule => schedule.Where(slot => slot.kind == ClimbEventKind.Hazard))
+			.Select(slot => $"{slot.rewardResources.red},{slot.rewardResources.white},{slot.rewardResources.black}")
+			.Distinct().Count() > 1);
 	}
 
 	[Fact]
@@ -142,45 +188,75 @@ public class ClimbRuleServiceTests
 	}
 
 	[Fact]
-	public void Event_visibility_marks_seen_and_expiration_completes_visible_events()
+	public void Event_lifecycle_activates_on_landing_and_expires_end_exclusive()
 	{
 		var state = new ClimbSaveState
 		{
-			time = 5,
+			time = 7,
 			eventSlots = new List<ClimbEventSlotSave>
 			{
 				new()
 				{
 					id = "event",
-					eventTypeId = "fountain",
-					visibleStartTime = 5,
-					visibleEndTime = 7
+					definitionId = "bleached_standard",
+					scheduledAppearanceTime = 5,
+					duration = 2,
+					status = ClimbEventStatus.Scheduled,
 				}
 			}
 		};
 
-		ClimbRuleService.MarkFirstVisibleEventsSeen(state);
-		Assert.True(state.eventSlots[0].seen);
-		Assert.Contains("fountain", state.shownEventTypeIds);
+		Assert.True(ClimbRuleService.UpdateEventLifecycle(state));
+		Assert.Equal(ClimbEventStatus.Active, state.eventSlots[0].status);
+		Assert.Equal(7, state.eventSlots[0].activatedAtTime);
+		Assert.True(ClimbRuleService.IsEventVisible(state.eventSlots[0], 8));
 
-		state.time = 8;
-		ClimbRuleService.ExpireEvents(state);
-		Assert.True(state.eventSlots[0].isCompleted);
+		state.time = 9;
+		Assert.True(ClimbRuleService.UpdateEventLifecycle(state));
+		Assert.Equal(ClimbEventStatus.Expired, state.eventSlots[0].status);
 	}
 
 	[Fact]
-	public void Replenish_event_slots_stops_at_pool_exhaustion()
+	public void Landing_activates_every_crossed_schedule_at_the_same_time()
 	{
 		var state = new ClimbSaveState
 		{
-			time = 0,
-			eventSlots = new List<ClimbEventSlotSave>(),
-			shownEventTypeIds = EventFactory.GetAllEvents().Keys.ToList(),
+			time = 12,
+			eventSlots = new List<ClimbEventSlotSave>
+			{
+				new() { id = "one", definitionId = "bleached_standard", scheduledAppearanceTime = 4, duration = 2 },
+				new() { id = "two", definitionId = "nun_counsel", scheduledAppearanceTime = 9, duration = 5 },
+			},
 		};
 
-		ClimbRuleService.ReplenishEventSlots(state, 123);
+		Assert.True(ClimbRuleService.UpdateEventLifecycle(state));
 
-		Assert.Empty(state.eventSlots);
+		Assert.All(state.eventSlots, slot =>
+		{
+			Assert.Equal(ClimbEventStatus.Active, slot.status);
+			Assert.Equal(12, slot.activatedAtTime);
+		});
+	}
+
+	[Fact]
+	public void Final_time_preempts_scheduled_and_active_events_but_not_pending()
+	{
+		var state = new ClimbSaveState
+		{
+			time = ClimbRuleService.MaxTime,
+			eventSlots = new List<ClimbEventSlotSave>
+			{
+				new() { id = "scheduled", status = ClimbEventStatus.Scheduled, scheduledAppearanceTime = 30 },
+				new() { id = "active", status = ClimbEventStatus.Active, activatedAtTime = 30, duration = 4 },
+				new() { id = "pending", status = ClimbEventStatus.Pending, activatedAtTime = 30, duration = 4 },
+			},
+		};
+
+		Assert.True(ClimbRuleService.UpdateEventLifecycle(state));
+
+		Assert.Equal(ClimbEventStatus.Expired, state.eventSlots[0].status);
+		Assert.Equal(ClimbEventStatus.Expired, state.eventSlots[1].status);
+		Assert.Equal(ClimbEventStatus.Pending, state.eventSlots[2].status);
 	}
 
 	[Fact]
@@ -287,7 +363,12 @@ public class ClimbRuleServiceTests
 		return new LoadoutDefinition
 		{
 			id = RunDeckService.PrimaryLoadoutId,
-			cardIds = new List<string> { "smite|White", "fervor|Red", "reckoning|Black" },
+			cards = new List<LoadoutCardEntry>
+			{
+				new() { entryId = "test_entry_0", cardKey = "smite|White", isStarter = true },
+				new() { entryId = "test_entry_1", cardKey = "fervor|Red", isStarter = true },
+				new() { entryId = "test_entry_2", cardKey = "reckoning|Black", isStarter = true },
+			},
 			weaponId = "sword",
 			medalIds = new List<string>(),
 		};
@@ -298,6 +379,11 @@ public class ClimbRuleServiceTests
 		return Math.Max(0, resources?.red ?? 0)
 			+ Math.Max(0, resources?.white ?? 0)
 			+ Math.Max(0, resources?.black ?? 0);
+	}
+
+	private static string ScheduleSnapshot(ClimbEventSlotSave slot)
+	{
+		return $"{slot.id}|{slot.definitionId}|{slot.kind}|{slot.hazardEffect}|{slot.characterReward}|{slot.scheduledAppearanceTime}|{slot.duration}|{slot.effectAmount}|{ResourcePips(slot.rewardResources)}";
 	}
 
 	private static void AssertShopCost(string kind, int timeCost, int expectedTotal, string expectedDominant)

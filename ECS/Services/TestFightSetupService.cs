@@ -81,7 +81,7 @@ namespace Crusaders30XX.ECS.Services
 				TestFightRuntime.Options.WeaponId,
 				seed,
 				"test_fight");
-			RunDeckService.ReplaceDeckFromLoadout(entityManager, loadout, loadout.cardIds);
+			RunDeckService.ReplaceDeckFromLoadout(entityManager, loadout);
 		}
 
 		public static void ApplyEnemyHpDelta(Entity enemyEntity)

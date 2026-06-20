@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Data.Climb;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Factories;
@@ -14,11 +15,13 @@ namespace Crusaders30XX.ECS.Services
 		public const int MaxTime = 32;
 		public const int ShopSlotCount = 4;
 		public const int EncounterSlotCount = 3;
-		public const int EventSlotCount = 3;
+		public const int EventSlotCount = 5;
 		public const int ShopRefreshInterval = 8;
 		public const int EncounterMinDuration = 2;
 		public const int EncounterMaxDuration = 5;
 		private const int RngSalt = unchecked((int)0xC11A1B00);
+		private const int ClimbEventRngSalt = unchecked((int)0xE71E5A17);
+		private const int ClimbEventResolutionSalt = unchecked((int)0x4E5A1D0B);
 
 		private static readonly HashSet<string> BannedClimbEncounterEnemyIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
@@ -45,13 +48,13 @@ namespace Crusaders30XX.ECS.Services
 				eventSlots = new List<ClimbEventSlotSave>(),
 				shownMedalIds = new List<string>(),
 				shownEquipmentIds = new List<string>(),
-				shownEventTypeIds = new List<string>(),
-				nextEventSlotId = 0,
+				nextBattleBonus = new ClimbNextBattleBonusSave(),
+				nextBattlePenalty = new ClimbNextBattlePenaltySave(),
 			};
 
 			RefreshShopSlots(state, seed, loadout);
 			RefreshEncounterSlots(state, seed);
-			ReplenishEventSlots(state, seed);
+			RefreshEventSlots(state, seed);
 			return state;
 		}
 
@@ -83,15 +86,20 @@ namespace Crusaders30XX.ECS.Services
 
 		public static bool IsEventVisible(ClimbEventSlotSave slot, int time)
 		{
-			if (slot == null || slot.isCompleted || string.IsNullOrWhiteSpace(slot.eventTypeId)) return false;
-			int clamped = ClampTime(time);
-			return clamped >= slot.visibleStartTime && clamped <= slot.visibleEndTime;
+			return slot != null
+				&& slot.status == ClimbEventStatus.Active
+				&& !string.IsNullOrWhiteSpace(slot.definitionId)
+				&& slot.activatedAtTime >= 0
+				&& ClampTime(time) >= slot.activatedAtTime
+				&& ClampTime(time) < slot.activatedAtTime + Math.Max(0, slot.duration);
 		}
 
 		public static bool IsEventExpired(ClimbEventSlotSave slot, int time)
 		{
-			if (slot == null || slot.isCompleted || string.IsNullOrWhiteSpace(slot.eventTypeId)) return false;
-			return ClampTime(time) > slot.visibleEndTime;
+			return slot != null
+				&& slot.status == ClimbEventStatus.Active
+				&& slot.activatedAtTime >= 0
+				&& ClampTime(time) >= slot.activatedAtTime + Math.Max(0, slot.duration);
 		}
 
 		public static bool IsEncounterExpired(ClimbEncounterSlotSave slot, int time)
@@ -101,38 +109,41 @@ namespace Crusaders30XX.ECS.Services
 			return ClampTime(time) >= ClampTime(slot.generatedAtTime + slot.duration);
 		}
 
-		public static void ExpireEvents(ClimbSaveState state)
+		public static bool UpdateEventLifecycle(ClimbSaveState state)
 		{
-			if (state?.eventSlots == null) return;
-			foreach (var slot in state.eventSlots)
+			if (state?.eventSlots == null) return false;
+			bool changed = false;
+			int currentTime = ClampTime(state.time);
+
+			if (currentTime >= MaxTime)
 			{
-				if (IsPendingEventSlot(state, slot)) continue;
-				if (!IsEventExpired(slot, state.time)) continue;
-				if (!string.IsNullOrWhiteSpace(slot.eventTypeId))
+				foreach (var slot in state.eventSlots)
 				{
-					AddDistinct(state.shownEventTypeIds, slot.eventTypeId);
+					if (slot == null || slot.status == ClimbEventStatus.Pending) continue;
+					if (slot.status != ClimbEventStatus.Scheduled && slot.status != ClimbEventStatus.Active) continue;
+					slot.status = ClimbEventStatus.Expired;
+					changed = true;
 				}
-				slot.isCompleted = true;
+				return changed;
 			}
-		}
 
-		public static void MarkFirstVisibleEventsSeen(ClimbSaveState state)
-		{
-			if (state?.eventSlots == null) return;
 			foreach (var slot in state.eventSlots)
 			{
-				if (slot == null || slot.seen || !IsEventVisible(slot, state.time)) continue;
-				slot.seen = true;
-				AddDistinct(state.shownEventTypeIds, slot.eventTypeId);
+				if (!IsEventExpired(slot, currentTime)) continue;
+				slot.status = ClimbEventStatus.Expired;
+				changed = true;
 			}
-		}
 
-		public static void UpdateEventSlots(ClimbSaveState state, int seed)
-		{
-			if (state == null) return;
-			ExpireEvents(state);
-			MarkFirstVisibleEventsSeen(state);
-			ReplenishEventSlots(state, seed);
+			foreach (var slot in state.eventSlots)
+			{
+				if (slot == null || slot.status != ClimbEventStatus.Scheduled) continue;
+				if (slot.scheduledAppearanceTime > currentTime) continue;
+				slot.status = ClimbEventStatus.Active;
+				slot.activatedAtTime = currentTime;
+				changed = true;
+			}
+
+			return changed;
 		}
 
 		public static bool CanAfford(ClimbResourceSave available, ClimbResourceSave cost)
@@ -263,7 +274,7 @@ namespace Crusaders30XX.ECS.Services
 			{
 				RefreshShopSlots(state, seed, loadout);
 			}
-			UpdateEventSlots(state, seed);
+			UpdateEventLifecycle(state);
 			ReplenishEncounterSlots(state, seed);
 			return applied;
 		}
@@ -279,57 +290,214 @@ namespace Crusaders30XX.ECS.Services
 		public static void RefreshEventSlots(ClimbSaveState state, int seed)
 		{
 			if (state == null) return;
-			state.eventSlots = new List<ClimbEventSlotSave>(EventSlotCount);
-			ReplenishEventSlots(state, seed);
+			state.eventSlots = GenerateEventSchedule(seed).ToList();
 		}
 
-		public static void ReplenishEventSlots(ClimbSaveState state, int seed)
+		public static IReadOnlyList<ClimbEventSlotSave> GenerateEventSchedule(int seed)
 		{
-			if (state == null) return;
-			state.eventSlots ??= new List<ClimbEventSlotSave>();
-			state.shownEventTypeIds ??= new List<string>();
-
-			state.eventSlots = state.eventSlots
-				.Where(slot => slot != null && !slot.isCompleted && !string.IsNullOrWhiteSpace(slot.eventTypeId))
-				.Take(EventSlotCount)
-				.ToList();
-
-			if (state.eventSlots.Count >= EventSlotCount) return;
-			if (ClampTime(state.time) + 6 > MaxTime) return;
-
-			var activeEventIds = new HashSet<string>(
-				state.eventSlots.Select(slot => slot.eventTypeId),
-				StringComparer.OrdinalIgnoreCase);
-			var shownEventIds = new HashSet<string>(state.shownEventTypeIds, StringComparer.OrdinalIgnoreCase);
-			var rng = CreateRng(seed, state.time, 37 + Math.Max(0, state.nextEventSlotId));
-			var pool = EventFactory.GetAllEvents().Keys
-				.Where(id => !string.IsNullOrWhiteSpace(id))
-				.Where(id => !shownEventIds.Contains(id))
-				.Where(id => !activeEventIds.Contains(id))
-				.OrderBy(_ => rng.Next())
-				.ToList();
-
-			while (state.eventSlots.Count < EventSlotCount && pool.Count > 0)
+			var rng = CreateClimbEventRng(seed);
+			var rolled = new List<ClimbEventSlotSave>(EventSlotCount);
+			var hazards = ClimbEventCatalog.GetHazards();
+			for (int i = 0; i < 3; i++)
 			{
-				string eventType = pool[0];
-				pool.RemoveAt(0);
-				int maxStartOffset = Math.Min(8, MaxTime - ClampTime(state.time) - 3);
-				if (maxStartOffset < 3) break;
-
-				int start = ClampTime(state.time + rng.Next(3, maxStartOffset + 1));
-				int maxDuration = Math.Min(6, MaxTime - start);
-				if (maxDuration < 3) break;
-				int duration = rng.Next(3, maxDuration + 1);
-				int end = ClampTime(start + duration);
-				state.eventSlots.Add(new ClimbEventSlotSave
+				var definition = hazards[rng.Next(hazards.Count)];
+				rolled.Add(new ClimbEventSlotSave
 				{
-					id = $"climb_event_{state.nextEventSlotId++}",
-					eventTypeId = eventType,
-					generatedAtTime = state.time,
-					visibleStartTime = start,
-					visibleEndTime = end,
-					timeCost = rng.Next(1, 3),
+					definitionId = definition.DefinitionId,
+					kind = ClimbEventKind.Hazard,
+					hazardEffect = definition.HazardEffect,
+					characterReward = ClimbCharacterRewardType.None,
+					duration = rng.Next(2, 5),
+					timeCost = 0,
+					effectAmount = RollHazardAmount(definition.HazardEffect, rng),
+					rewardResources = GenerateReward(rng, 1, 2),
+					status = ClimbEventStatus.Scheduled,
 				});
+			}
+
+			var characterPool = ClimbEventCatalog.GetCharacters().ToList();
+			for (int i = 0; i < 2; i++)
+			{
+				int selectedIndex = rng.Next(characterPool.Count);
+				var definition = characterPool[selectedIndex];
+				characterPool.RemoveAt(selectedIndex);
+				rolled.Add(new ClimbEventSlotSave
+				{
+					definitionId = definition.DefinitionId,
+					kind = ClimbEventKind.Character,
+					hazardEffect = ClimbHazardEffectType.None,
+					characterReward = definition.CharacterReward,
+					duration = rng.Next(3, 6),
+					timeCost = 1,
+					effectAmount = CharacterRewardAmount(definition.CharacterReward),
+					rewardResources = new ClimbResourceSave { red = 0, white = 0, black = 0 },
+					status = ClimbEventStatus.Scheduled,
+				});
+			}
+
+			for (int i = rolled.Count - 1; i > 0; i--)
+			{
+				int swapIndex = rng.Next(i + 1);
+				(rolled[i], rolled[swapIndex]) = (rolled[swapIndex], rolled[i]);
+			}
+
+			for (int i = 0; i < rolled.Count; i++)
+			{
+				var band = GetEventAppearanceBand(i);
+				rolled[i].id = $"climb_event_{i}";
+				rolled[i].scheduledAppearanceTime = rng.Next(band.Start, band.End + 1);
+				rolled[i].activatedAtTime = -1;
+			}
+
+			return rolled;
+		}
+
+		public static (int Start, int End) GetEventAppearanceBand(int eventPosition)
+		{
+			if (eventPosition < 0 || eventPosition >= EventSlotCount)
+			{
+				throw new ArgumentOutOfRangeException(nameof(eventPosition));
+			}
+
+			int start = (eventPosition * MaxTime / EventSlotCount) + 1;
+			int end = (eventPosition + 1) * MaxTime / EventSlotCount;
+			return (start, end);
+		}
+
+		public static IReadOnlyList<LoadoutCardEntry> GetEligibleRestrictionEntries(
+			LoadoutDefinition loadout,
+			string restrictionName)
+		{
+			if (string.IsNullOrWhiteSpace(restrictionName)) return Array.Empty<LoadoutCardEntry>();
+			return (loadout?.cards ?? new List<LoadoutCardEntry>())
+				.Where(IsEligibleEventCard)
+				.Where(entry => !(entry.restrictions ?? new List<string>()).Contains(restrictionName, StringComparer.OrdinalIgnoreCase))
+				.OrderBy(entry => entry.entryId, StringComparer.Ordinal)
+				.ToList();
+		}
+
+		public static IReadOnlyList<LoadoutCardEntry> GetEligibleSmithEntries(LoadoutDefinition loadout)
+		{
+			return (loadout?.cards ?? new List<LoadoutCardEntry>())
+				.Where(IsEligibleEventCard)
+				.Where(entry => !RunDeckService.IsUpgradedCardKey(entry.cardKey))
+				.Where(entry => !string.IsNullOrWhiteSpace(RunDeckService.BuildUpgradedCardKey(entry.cardKey)))
+				.OrderBy(entry => entry.entryId, StringComparer.Ordinal)
+				.ToList();
+		}
+
+		public static LoadoutCardEntry SelectDeterministicEntry(
+			IReadOnlyList<LoadoutCardEntry> eligibleEntries,
+			int runSeed,
+			string eventSlotId)
+		{
+			if (eligibleEntries == null || eligibleEntries.Count == 0) return null;
+			var ordered = eligibleEntries
+				.Where(entry => entry != null && !string.IsNullOrWhiteSpace(entry.entryId))
+				.OrderBy(entry => entry.entryId, StringComparer.Ordinal)
+				.ToList();
+			if (ordered.Count == 0) return null;
+			var rng = new Random((runSeed == 0 ? 1 : runSeed) ^ ClimbEventResolutionSalt ^ StableHash(eventSlotId));
+			return ordered[rng.Next(ordered.Count)];
+		}
+
+		public static string BuildResourceSummary(ClimbResourceSave resources)
+		{
+			var parts = new List<string>();
+			if ((resources?.red ?? 0) > 0) parts.Add($"{resources.red} Red");
+			if ((resources?.white ?? 0) > 0) parts.Add($"{resources.white} White");
+			if ((resources?.black ?? 0) > 0) parts.Add($"{resources.black} Black");
+			return string.Join(", ", parts);
+		}
+
+		public static string BuildHazardEffectSummary(
+			ClimbHazardEffectType effect,
+			int amount,
+			bool hasEligibleRestrictionTarget = true)
+		{
+			if (IsRestrictionHazard(effect) && !hasEligibleRestrictionTarget)
+			{
+				return "No deck card can be affected.";
+			}
+
+			amount = Math.Max(0, amount);
+			return effect switch
+			{
+				ClimbHazardEffectType.Colorless => "One random deck card becomes Colorless.",
+				ClimbHazardEffectType.Frozen => "One random deck card becomes Frozen.",
+				ClimbHazardEffectType.Brittle => "One random deck card becomes Brittle.",
+				ClimbHazardEffectType.Burn => "Start the next battle with 1 Burn.",
+				ClimbHazardEffectType.Fear => $"Start the next battle with {amount} Fear.",
+				ClimbHazardEffectType.Shackled => $"Gain {amount} Shackled.",
+				ClimbHazardEffectType.Scar when amount == 1 => "Gain 1 Scar.",
+				ClimbHazardEffectType.Scar => $"Gain {amount} Scars.",
+				_ => string.Empty,
+			};
+		}
+
+		public static bool IsRestrictionHazard(ClimbHazardEffectType effect)
+		{
+			return effect == ClimbHazardEffectType.Colorless
+				|| effect == ClimbHazardEffectType.Frozen
+				|| effect == ClimbHazardEffectType.Brittle;
+		}
+
+		public static string GetRestrictionName(ClimbHazardEffectType effect)
+		{
+			return effect switch
+			{
+				ClimbHazardEffectType.Colorless => RunScopedStateService.RestrictionColorless,
+				ClimbHazardEffectType.Frozen => RunScopedStateService.RestrictionFrozen,
+				ClimbHazardEffectType.Brittle => RunScopedStateService.RestrictionBrittle,
+				_ => string.Empty,
+			};
+		}
+
+		private static bool IsEligibleEventCard(LoadoutCardEntry entry)
+		{
+			if (entry == null || string.IsNullOrWhiteSpace(entry.entryId)) return false;
+			if (!RunDeckService.TryParseCardKey(entry.cardKey, out var cardId, out _, out _)) return false;
+			var card = CardFactory.Create(cardId);
+			return card != null && card.CanAddToLoadout && !card.IsWeapon && !card.IsToken;
+		}
+
+		private static int RollHazardAmount(ClimbHazardEffectType effect, Random rng)
+		{
+			return effect switch
+			{
+				ClimbHazardEffectType.Fear => rng.Next(1, 4),
+				ClimbHazardEffectType.Shackled => rng.Next(1, 5),
+				ClimbHazardEffectType.Scar => rng.Next(1, 3),
+				_ => 1,
+			};
+		}
+
+		private static int CharacterRewardAmount(ClimbCharacterRewardType reward)
+		{
+			return reward switch
+			{
+				ClimbCharacterRewardType.Temperance => 2,
+				ClimbCharacterRewardType.Courage => 2,
+				ClimbCharacterRewardType.Vigor => 1,
+				_ => 0,
+			};
+		}
+
+		private static Random CreateClimbEventRng(int seed)
+		{
+			return new Random((seed == 0 ? 1 : seed) ^ ClimbEventRngSalt);
+		}
+
+		private static int StableHash(string value)
+		{
+			unchecked
+			{
+				int hash = 17;
+				foreach (char character in value ?? string.Empty)
+				{
+					hash = hash * 31 + character;
+				}
+				return hash;
 			}
 		}
 
@@ -337,7 +505,7 @@ namespace Crusaders30XX.ECS.Services
 		{
 			rng ??= Random.Shared;
 			var deckIds = new HashSet<string>(
-				(loadout?.cardIds ?? new List<string>()).Select(DeckRules.ParseBaseCardId),
+				(loadout?.cards ?? new List<LoadoutCardEntry>()).Select(entry => DeckRules.ParseBaseCardId(entry.cardKey)),
 				StringComparer.OrdinalIgnoreCase);
 			var pool = CardFactory.GetAllCards().Values
 				.Where(card => card != null && card.CanAddToLoadout && !card.IsWeapon && !card.IsToken)
@@ -388,6 +556,7 @@ namespace Crusaders30XX.ECS.Services
 				else
 				{
 					slot.deckIndex = upgrade.index;
+					slot.deckEntryId = upgrade.entryId;
 					slot.cardKey = RunDeckService.BuildUpgradedCardKey(upgrade.cardKey);
 				}
 			}
@@ -509,21 +678,22 @@ namespace Crusaders30XX.ECS.Services
 				&& EnemyPortraitContent.HasPortrait(enemyId);
 		}
 
-		private static (int index, string cardKey) PickUpgradeableDeckIndex(LoadoutDefinition loadout, Random rng)
+		private static (int index, string entryId, string cardKey) PickUpgradeableDeckIndex(LoadoutDefinition loadout, Random rng)
 		{
-			var eligible = new List<(int index, string cardKey)>();
-			var cards = loadout?.cardIds;
-			if (cards == null) return (-1, string.Empty);
+			var eligible = new List<(int index, string entryId, string cardKey)>();
+			var cards = loadout?.cards;
+			if (cards == null) return (-1, string.Empty, string.Empty);
 			for (int i = 0; i < cards.Count; i++)
 			{
-				if (!RunDeckService.TryParseCardKey(cards[i], out var cardId, out _, out bool isUpgraded)) continue;
+				var entry = cards[i];
+				if (entry == null || !RunDeckService.TryParseCardKey(entry.cardKey, out var cardId, out _, out bool isUpgraded)) continue;
 				if (isUpgraded) continue;
 				var card = CardFactory.Create(cardId);
 				if (card == null || card.IsWeapon || card.IsToken || !card.CanAddToLoadout) continue;
-				eligible.Add((i, cards[i]));
+				eligible.Add((i, entry.entryId, entry.cardKey));
 			}
 
-			if (eligible.Count == 0) return (-1, string.Empty);
+			if (eligible.Count == 0) return (-1, string.Empty, string.Empty);
 			return eligible[rng.Next(eligible.Count)];
 		}
 

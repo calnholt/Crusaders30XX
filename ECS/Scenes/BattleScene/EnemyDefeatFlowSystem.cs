@@ -28,7 +28,7 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<PixelBurstAnimationCompleted>(OnPixelBurstCompleted);
 			EventManager.Subscribe<DeleteCachesEvent>(_ => OnCachesCleared());
 			EventManager.Subscribe<StartBattleRequested>(_ => OnCachesCleared());
-			EventManager.Subscribe<EncounterDialogueCompleted>(OnTutorialDialogueCompleted);
+			EventManager.Subscribe<DialogueSequenceCompleted>(OnTutorialDialogueCompleted);
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -108,7 +108,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (tutorial.Battle == TutorialBattle.Gleeber)
 				{
 					_tutorialDialogueRequestId = Guid.NewGuid();
-					EventManager.Publish(new EncounterDialogueRequested
+					EventManager.Publish(new DialogueSequenceRequested
 					{
 						DefinitionId = "guided_tutorial",
 						SegmentId = "gleeber_victory",
@@ -182,7 +182,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void OnTutorialDialogueCompleted(EncounterDialogueCompleted evt)
+		private void OnTutorialDialogueCompleted(DialogueSequenceCompleted evt)
 		{
 			if (evt == null || evt.RequestId == Guid.Empty || evt.RequestId != _tutorialDialogueRequestId) return;
 			_tutorialDialogueRequestId = Guid.Empty;

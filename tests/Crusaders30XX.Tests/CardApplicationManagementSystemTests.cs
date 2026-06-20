@@ -87,10 +87,20 @@ public class CardApplicationManagementSystemTests
 		SaveCache.DeleteSaveFilesIfPresent();
 		try
 		{
+			SaveCache.StartNewRun();
+			var entry = SaveCache.AddRunDeckEntry(
+				RunDeckService.PrimaryLoadoutId,
+				"tempest|White",
+				publishChange: false);
+			Assert.NotNull(entry);
 			var entityManager = new EntityManager();
 			var deck = CreateDeck(entityManager);
 			var card = AddCard(entityManager, deck, deck.Hand, new Tempest());
-			entityManager.AddComponent(card, new RunDeckCard { CardKey = "tempest|White" });
+			entityManager.AddComponent(card, new RunDeckCard
+			{
+				EntryId = entry.entryId,
+				CardKey = entry.cardKey,
+			});
 			_ = new CardApplicationManagementSystem(entityManager);
 
 			EventManager.Publish(new ApplyCardApplicationEvent
@@ -104,7 +114,7 @@ public class CardApplicationManagementSystemTests
 			Assert.True(card.HasComponent<Colorless>());
 			Assert.Contains(
 				RunScopedStateService.RestrictionColorless,
-				SaveCache.GetRunCardRestrictions("tempest|White"));
+				SaveCache.GetRunDeckEntryRestrictions(RunDeckService.PrimaryLoadoutId, entry.entryId));
 
 			EventManager.Publish(new RemoveCardApplication
 			{
@@ -115,7 +125,7 @@ public class CardApplicationManagementSystemTests
 			Assert.False(card.HasComponent<Colorless>());
 			Assert.DoesNotContain(
 				RunScopedStateService.RestrictionColorless,
-				SaveCache.GetRunCardRestrictions("tempest|White"));
+				SaveCache.GetRunDeckEntryRestrictions(RunDeckService.PrimaryLoadoutId, entry.entryId));
 		}
 		finally
 		{

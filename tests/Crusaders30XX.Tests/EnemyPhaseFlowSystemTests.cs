@@ -24,13 +24,13 @@ public class EnemyPhaseFlowSystemTests
 			var world = BuildWorld(out var phaseState, out var enemy, out var definition);
 			_ = new EnemyPhaseFlowSystem(world.EntityManager);
 
-			EncounterDialogueRequested request = null;
+			DialogueSequenceRequested request = null;
 			int resetCount = 0;
 			int defeatPresentationCount = 0;
 			int enemyKilledCount = 0;
 			int rewardCount = 0;
 			int startBattleCount = 0;
-			EventManager.Subscribe<EncounterDialogueRequested>(evt => request = evt);
+			EventManager.Subscribe<DialogueSequenceRequested>(evt => request = evt);
 			EventManager.Subscribe<EnemyPhaseResetEvent>(_ => resetCount++);
 			EventManager.Subscribe<BeginDefeatPresentationEvent>(_ => defeatPresentationCount++);
 			EventManager.Subscribe<EnemyKilledEvent>(_ => enemyKilledCount++);
@@ -43,7 +43,7 @@ public class EnemyPhaseFlowSystemTests
 			Assert.Equal(1, definition.CurrentPhase);
 			Assert.True(phaseState.DefeatPresentationActive);
 
-			EventManager.Publish(new EncounterDialogueCompleted
+			EventManager.Publish(new DialogueSequenceCompleted
 			{
 				DefinitionId = request.DefinitionId,
 				SegmentId = request.SegmentId,
@@ -85,9 +85,9 @@ public class EnemyPhaseFlowSystemTests
 		}
 	}
 
-	private static void Complete(EncounterDialogueRequested request)
+	private static void Complete(DialogueSequenceRequested request)
 	{
-		EventManager.Publish(new EncounterDialogueCompleted
+		EventManager.Publish(new DialogueSequenceCompleted
 		{
 			DefinitionId = request.DefinitionId,
 			SegmentId = request.SegmentId,

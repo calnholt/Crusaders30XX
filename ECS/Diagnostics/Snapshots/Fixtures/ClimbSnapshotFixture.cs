@@ -15,6 +15,13 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 	public enum ClimbSnapshotVariant
 	{
 		NoEvents,
+		HazardEvent,
+		CharacterEvent,
+		HazardHoverPreview,
+		CharacterHoverPreview,
+		HazardConfirmation,
+		CharacterSummary,
+		CharacterDialog,
 		ActiveEvents,
 		HoverPreview,
 		SoldShopSlot,
@@ -31,6 +38,8 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 		private ClimbColumnLayoutSystem _columnLayout;
 		private RewardModalDisplaySystem _rewardModal;
 		private CardListModalSystem _cardListModal;
+		private NarrativeEventModalDisplaySystem _narrativeModal;
+		private DialogDisplaySystem _dialog;
 		private bool _modalOpened;
 
 		public ClimbSnapshotFixture(ClimbSnapshotVariant variant)
@@ -41,6 +50,13 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 		public string Id => _variant switch
 		{
 			ClimbSnapshotVariant.NoEvents => "climb-no-events",
+			ClimbSnapshotVariant.HazardEvent => "climb-hazard-event",
+			ClimbSnapshotVariant.CharacterEvent => "climb-character-event",
+			ClimbSnapshotVariant.HazardHoverPreview => "climb-hazard-hover-preview",
+			ClimbSnapshotVariant.CharacterHoverPreview => "climb-character-hover-preview",
+			ClimbSnapshotVariant.HazardConfirmation => "climb-hazard-confirmation",
+			ClimbSnapshotVariant.CharacterSummary => "climb-character-summary",
+			ClimbSnapshotVariant.CharacterDialog => "climb-character-dialog",
 			ClimbSnapshotVariant.ActiveEvents => "climb-active-events",
 			ClimbSnapshotVariant.HoverPreview => "climb-hover-preview",
 			ClimbSnapshotVariant.SoldShopSlot => "climb-sold-shop-slot",
@@ -67,6 +83,12 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 			_columnLayout = ctx.World.GetSystem<ClimbColumnLayoutSystem>();
 			_rewardModal = ctx.World.GetSystem<RewardModalDisplaySystem>();
 			_cardListModal = ctx.World.GetSystem<CardListModalSystem>();
+			_narrativeModal = ctx.World.GetSystem<NarrativeEventModalDisplaySystem>();
+			_dialog = ctx.World.GetSystem<DialogDisplaySystem>();
+			if (_variant == ClimbSnapshotVariant.CharacterDialog && _dialog != null)
+			{
+				_dialog.CharsPerSecond = 100000f;
+			}
 
 			if (_climbScene == null || _headerLayout == null || _columnLayout == null)
 			{
@@ -76,7 +98,9 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 
 		public void Draw(DisplaySnapshotContext ctx)
 		{
-			if (_variant == ClimbSnapshotVariant.HoverPreview)
+			if (_variant is ClimbSnapshotVariant.HoverPreview
+				or ClimbSnapshotVariant.HazardHoverPreview
+				or ClimbSnapshotVariant.CharacterHoverPreview)
 			{
 				ForceHoverPreview(ctx.World.EntityManager);
 			}
@@ -90,6 +114,13 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 				OpenReplacementModal(ctx.World.EntityManager);
 			}
 
+			if (_variant == ClimbSnapshotVariant.CharacterDialog)
+			{
+				_climbScene.DrawBackgroundOnly();
+				_dialog?.Draw();
+				return;
+			}
+
 			_climbScene.Draw();
 
 			if (_variant == ClimbSnapshotVariant.EncounterRewardModal)
@@ -99,6 +130,10 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 			else if (_variant == ClimbSnapshotVariant.ReplacementModal)
 			{
 				_cardListModal?.Draw();
+			}
+			else if (_variant is ClimbSnapshotVariant.HazardConfirmation or ClimbSnapshotVariant.CharacterSummary)
+			{
+				_narrativeModal?.Draw();
 			}
 		}
 
@@ -113,7 +148,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 
 			var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId)
 				?? new LoadoutDefinition { id = RunDeckService.PrimaryLoadoutId, name = "Deck" };
-			loadout.cardIds = new List<string>
+			var cardKeys = new List<string>
 			{
 				"strike|White",
 				"smite|White",
@@ -122,6 +157,14 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 				"unburdened_strike|Black",
 				"hold_the_line|White",
 			};
+			loadout.cards = cardKeys.Select((cardKey, index) => new LoadoutCardEntry
+			{
+				entryId = $"run_card_{index}",
+				cardKey = cardKey,
+				isStarter = true,
+				restrictions = new List<string>(),
+			}).ToList();
+			save.nextRunDeckEntryId = loadout.cards.Count;
 			loadout.weaponId = "sword";
 			loadout.temperanceId = "angelic_aura";
 			loadout.chestId = string.Empty;
@@ -136,8 +179,10 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 
 		private ClimbSaveState BuildClimbState()
 		{
-			int time = _variant == ClimbSnapshotVariant.HoverPreview ? 6 : 5;
-			return new ClimbSaveState
+			int time = _variant is ClimbSnapshotVariant.HoverPreview
+				or ClimbSnapshotVariant.HazardHoverPreview
+				or ClimbSnapshotVariant.CharacterHoverPreview ? 6 : 5;
+			var state = new ClimbSaveState
 			{
 				time = time,
 				resources = new ClimbResourceSave { red = 2, white = 1, black = 1 },
@@ -146,8 +191,6 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 				eventSlots = BuildEventSlots(time),
 				shownMedalIds = new List<string>(),
 				shownEquipmentIds = new List<string>(),
-				shownEventTypeIds = new List<string>(),
-				nextEventSlotId = 2,
 				pendingReplacementOffer = _variant == ClimbSnapshotVariant.ReplacementModal
 					? new ClimbReplacementOfferSave
 					{
@@ -157,6 +200,33 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 					}
 					: null,
 				pendingEncounterReward = null,
+			};
+
+			if (_variant == ClimbSnapshotVariant.HazardConfirmation)
+			{
+				MarkPending(state, "event_0", ClimbEventFlowPhase.HazardConfirmation);
+			}
+			else if (_variant == ClimbSnapshotVariant.CharacterSummary)
+			{
+				MarkPending(state, "event_1", ClimbEventFlowPhase.CharacterSummary);
+			}
+			else if (_variant == ClimbSnapshotVariant.CharacterDialog)
+			{
+				MarkPending(state, "event_1", ClimbEventFlowPhase.CharacterDialogue, "72e54b0a-b057-46ce-a58a-30c085b882b0");
+			}
+
+			return state;
+		}
+
+		private static void MarkPending(ClimbSaveState state, string slotId, ClimbEventFlowPhase phase, string requestId = "")
+		{
+			var slot = state.eventSlots.First(eventSlot => string.Equals(eventSlot.id, slotId, StringComparison.Ordinal));
+			slot.status = ClimbEventStatus.Pending;
+			state.pendingEvent = new ClimbPendingEventSave
+			{
+				eventSlotId = slotId,
+				phase = phase,
+				dialogueRequestId = requestId,
 			};
 		}
 
@@ -248,40 +318,87 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 		{
 			if (_variant == ClimbSnapshotVariant.NoEvents)
 			{
-				return new List<ClimbEventSlotSave>();
+				return BuildInactiveEventSlots(time, startIndex: 0);
 			}
 
-			return new List<ClimbEventSlotSave>
+			bool legacyCombined = _variant is ClimbSnapshotVariant.ActiveEvents or ClimbSnapshotVariant.HoverPreview;
+			bool hazardActive = legacyCombined || _variant is ClimbSnapshotVariant.HazardEvent
+				or ClimbSnapshotVariant.HazardHoverPreview or ClimbSnapshotVariant.HazardConfirmation;
+			bool characterActive = legacyCombined || _variant is ClimbSnapshotVariant.CharacterEvent
+				or ClimbSnapshotVariant.CharacterHoverPreview or ClimbSnapshotVariant.CharacterSummary
+				or ClimbSnapshotVariant.CharacterDialog;
+			var slots = new List<ClimbEventSlotSave>
 			{
 				new()
 				{
 					id = "event_0",
-					eventTypeId = "icebound_tithe",
-					generatedAtTime = 0,
-					visibleStartTime = Math.Max(0, time - 1),
-					visibleEndTime = time + 3,
-					timeCost = 2,
-					seen = true,
+					definitionId = "winter_reliquary",
+					kind = ClimbEventKind.Hazard,
+					hazardEffect = ClimbHazardEffectType.Frozen,
+					scheduledAppearanceTime = hazardActive ? Math.Max(1, time - 1) : time + 2,
+					activatedAtTime = hazardActive ? Math.Max(0, time - 1) : -1,
+					duration = 4,
+					timeCost = 0,
+					effectAmount = 1,
+					rewardResources = new ClimbResourceSave { red = 1, white = 0, black = 1 },
+					status = hazardActive ? ClimbEventStatus.Active : ClimbEventStatus.Scheduled,
 				},
 				new()
 				{
 					id = "event_1",
-					eventTypeId = "pruned_vocation",
-					generatedAtTime = 1,
-					visibleStartTime = time,
-					visibleEndTime = time + 4,
-					timeCost = 3,
-					seen = true,
+					definitionId = "nun_counsel",
+					kind = ClimbEventKind.Character,
+					characterReward = ClimbCharacterRewardType.Temperance,
+					scheduledAppearanceTime = characterActive ? time : time + 3,
+					activatedAtTime = characterActive ? time : -1,
+					duration = 4,
+					timeCost = 1,
+					rewardResources = new ClimbResourceSave { red = 0, white = 0, black = 0 },
+					status = characterActive ? ClimbEventStatus.Active : ClimbEventStatus.Scheduled,
 				},
 			};
+			slots.AddRange(BuildInactiveEventSlots(time, startIndex: 2));
+			return slots;
+		}
+
+		private static List<ClimbEventSlotSave> BuildInactiveEventSlots(int time, int startIndex)
+		{
+			var definitions = new[] { "glass_psalm", "smith_forging", "second_footsteps", "nun_counsel", "penitents_chain" };
+			var slots = new List<ClimbEventSlotSave>();
+			for (int index = startIndex; index < ClimbRuleService.EventSlotCount; index++)
+			{
+				bool character = definitions[index].Contains("smith", StringComparison.Ordinal)
+					|| definitions[index].Contains("nun", StringComparison.Ordinal);
+				slots.Add(new ClimbEventSlotSave
+				{
+					id = $"event_{index}",
+					definitionId = definitions[index],
+					kind = character ? ClimbEventKind.Character : ClimbEventKind.Hazard,
+					scheduledAppearanceTime = Math.Min(ClimbRuleService.MaxTime, time + index + 2),
+					activatedAtTime = -1,
+					duration = character ? 4 : 3,
+					timeCost = character ? 1 : 0,
+					rewardResources = character
+						? new ClimbResourceSave { red = 0, white = 0, black = 0 }
+						: new ClimbResourceSave { red = 1, white = 0, black = 0 },
+					status = ClimbEventStatus.Scheduled,
+				});
+			}
+			return slots;
 		}
 
 		private void ForceHoverPreview(EntityManager entityManager)
 		{
+			string targetSlotId = _variant switch
+			{
+				ClimbSnapshotVariant.HazardHoverPreview => "event_0",
+				ClimbSnapshotVariant.CharacterHoverPreview => "event_1",
+				_ => "encounter_0",
+			};
 			var target = entityManager.GetEntitiesWithComponent<ClimbSlotPresentation>()
 				.FirstOrDefault(e => string.Equals(
 					e.GetComponent<ClimbSlotPresentation>()?.SlotId,
-					"encounter_0",
+					targetSlotId,
 					StringComparison.OrdinalIgnoreCase));
 			if (target == null) return;
 
@@ -328,18 +445,20 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 			var deck = RunDeckService.EnsureRunDeck(entityManager)?.GetComponent<Deck>();
 			var cards = new List<Entity>();
 			var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
-			for (int i = 0; i < (loadout?.cardIds?.Count ?? 0); i++)
+			for (int i = 0; i < (loadout?.cards?.Count ?? 0); i++)
 			{
-				string key = loadout.cardIds[i];
+				var entry = loadout.cards[i];
+				string key = entry.cardKey;
 				if (!ClimbShopService.IsReplacementEligible(key)) continue;
 				var card = deck?.Cards.FirstOrDefault(e =>
-					string.Equals(e.GetComponent<RunDeckCard>()?.CardKey, key, StringComparison.OrdinalIgnoreCase));
+					string.Equals(e.GetComponent<RunDeckCard>()?.EntryId, entry.entryId, StringComparison.Ordinal));
 				if (card == null) continue;
 				if (card.GetComponent<CardListModalSelectionMetadata>() == null)
 				{
 					entityManager.AddComponent(card, new CardListModalSelectionMetadata
 					{
 						SelectionContext = CardListSelectionContexts.ClimbReplacement,
+						EntryId = entry.entryId,
 						CardKey = key,
 						SourceIndex = i,
 					});

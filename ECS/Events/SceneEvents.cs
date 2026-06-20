@@ -45,6 +45,8 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public string RunMapEventId;
 		public string EventTypeId;
+		public string ResolutionContextId { get; set; } = string.Empty;
+		public NarrativeModalContent Content { get; set; }
 	}
 
 	public class NarrativeEventOverlayClosedEvent

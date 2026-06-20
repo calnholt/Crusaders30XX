@@ -42,6 +42,18 @@ namespace Crusaders30XX.ECS.Data.Dialog
 						["victory"] = [new() { actor = "Fallen Shepherd", message = "..." }],
 					},
 				},
+				["nun_counsel"] = Segment("nun_counsel", "climb_event",
+					("Nun", "You carry every wound as if suffering were proof of purpose. Take two measured breaths before you draw steel."),
+					("Crusader", "Pain is easier to trust than mercy. But I will take the breaths.")),
+				["reverent_crusader_counsel"] = Segment("reverent_crusader_counsel", "climb_event",
+					("Reverent Crusader", "Your guard is sound, but your heart enters battle after your blade. Courage is command over doubt. Remember that."),
+					("Crusader", "My blade has fewer doubts. I will teach my heart to follow.")),
+				["revered_crusader_training"] = Segment("revered_crusader_training", "climb_event",
+					("Revered Crusader", "You waste strength fighting the weight of your own armor. Set your feet, loosen your shoulders, and let it serve you."),
+					("Crusader", "Armor is meant to be carried. Show me how to carry it well.")),
+				["smith_forging"] = Segment("smith_forging", "climb_event",
+					("Smith", "That card has seen hard use. I cannot mend it, but I can make it worthy of your hand."),
+					("Crusader", "Then strike while the iron still fears you.")),
 				["desert_1"] = Lines("desert_1",
 					("Angel", "We've been in this desert so long I have sand stuck in my halo!"),
 					("Crusader", "...we just got here, Replacement."),
@@ -113,6 +125,20 @@ namespace Crusaders30XX.ECS.Data.Dialog
 			foreach (var line in lines)
 			{
 				definition.lines.Add(new DialogLine { actor = line.Actor, message = line.Message });
+			}
+			return definition;
+		}
+
+		private static DialogDefinition Segment(
+			string id,
+			string segmentId,
+			params (string Actor, string Message)[] lines)
+		{
+			var definition = new DialogDefinition { id = id };
+			definition.segments[segmentId] = new List<DialogLine>();
+			foreach (var line in lines)
+			{
+				definition.segments[segmentId].Add(new DialogLine { actor = line.Actor, message = line.Message });
 			}
 			return definition;
 		}

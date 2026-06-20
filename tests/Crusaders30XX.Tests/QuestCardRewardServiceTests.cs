@@ -36,7 +36,12 @@ public class QuestCardRewardServiceTests
 		"steadfast_resolve",
 		"exaltation",
 		"deus_vult",
-		"carpe_diem"
+		"carpe_diem",
+		"crimson_rite",
+		"consecrate",
+		"ark_of_the_covenant",
+		"dowse_with_holy_water",
+		"fury"
 	};
 
 	[Fact]
@@ -143,13 +148,13 @@ public class QuestCardRewardServiceTests
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.StartNewRun();
 		var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
-		loadout.cardIds = new List<string>
-		{
+		loadout.cards = Entries(
 			"smite|White",
 			"fervor|Red",
-			"fervor|White"
-		};
+			"fervor|White");
+		loadout.cards[0].restrictions.Add(RunScopedStateService.RestrictionFrozen);
 		SaveCache.SaveLoadout(loadout);
+		var outgoingEntryId = loadout.cards[0].entryId;
 
 		SaveCache.SetPendingDeckRewardOffer(new DeckRewardOfferSave
 		{
@@ -160,6 +165,7 @@ public class QuestCardRewardServiceTests
 				{
 					kind = DeckRewardOfferKinds.Exchange,
 					loadoutIndex = 0,
+					outgoingEntryId = outgoingEntryId,
 					outgoingCardKey = "smite|White",
 					incomingCardKey = "fervor|Red"
 				}
@@ -168,9 +174,13 @@ public class QuestCardRewardServiceTests
 
 		Assert.True(QuestCardRewardService.ApplyPendingOfferOption(0));
 
-		var after = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cardIds;
-		Assert.Equal("fervor|Red", after[0]);
-		Assert.Equal(3, DeckRules.CountCardIdInDeck(after, "fervor"));
+		var after = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cards;
+		Assert.Equal("fervor|Red", after[0].cardKey);
+		Assert.NotEqual(outgoingEntryId, after[0].entryId);
+		Assert.False(after[0].isStarter);
+		Assert.True(after[0].countsAsTraded);
+		Assert.Empty(after[0].restrictions);
+		Assert.Equal(3, DeckRules.CountCardIdInDeck(after.Select(entry => entry.cardKey).ToList(), "fervor"));
 		Assert.Null(SaveCache.GetPendingDeckRewardOffer());
 	}
 
@@ -180,8 +190,11 @@ public class QuestCardRewardServiceTests
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.StartNewRun();
 		var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
-		loadout.cardIds = new List<string> { "smite|White" };
+		loadout.cards = Entries("smite|White");
+		loadout.cards[0].countsAsTraded = true;
+		loadout.cards[0].restrictions.Add(RunScopedStateService.RestrictionFrozen);
 		SaveCache.SaveLoadout(loadout);
+		var original = loadout.cards[0];
 
 		SaveCache.SetPendingDeckRewardOffer(new DeckRewardOfferSave
 		{
@@ -191,6 +204,7 @@ public class QuestCardRewardServiceTests
 				{
 					kind = DeckRewardOfferKinds.Upgrade,
 					loadoutIndex = 0,
+					outgoingEntryId = original.entryId,
 					outgoingCardKey = "smite|White",
 					upgradedCardKey = "smite|White|Upgraded"
 				}
@@ -199,8 +213,12 @@ public class QuestCardRewardServiceTests
 
 		Assert.True(QuestCardRewardService.ApplyPendingOfferOption(0));
 
-		var key = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cardIds.Single();
-		Assert.Equal("smite|White|Upgraded", key);
+		var upgradedEntry = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cards.Single();
+		Assert.Equal(original.entryId, upgradedEntry.entryId);
+		Assert.Equal("smite|White|Upgraded", upgradedEntry.cardKey);
+		Assert.True(upgradedEntry.isStarter);
+		Assert.True(upgradedEntry.countsAsTraded);
+		Assert.Contains(RunScopedStateService.RestrictionFrozen, upgradedEntry.restrictions);
 		var baseCard = Crusaders30XX.ECS.Factories.CardFactory.Create("smite");
 		var upgradedCard = Crusaders30XX.ECS.Factories.CardFactory.Create("smite");
 		upgradedCard.IsUpgraded = true;
@@ -213,7 +231,9 @@ public class QuestCardRewardServiceTests
 	{
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.StartNewRun();
-		var before = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cardIds.ToList();
+		var before = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cards
+			.Select(entry => (entry.entryId, entry.cardKey))
+			.ToList();
 		SaveCache.SetPendingDeckRewardOffer(new DeckRewardOfferSave
 		{
 			options = new List<DeckRewardOfferOptionSave>
@@ -222,7 +242,8 @@ public class QuestCardRewardServiceTests
 				{
 					kind = DeckRewardOfferKinds.Exchange,
 					loadoutIndex = 0,
-					outgoingCardKey = before[0],
+					outgoingEntryId = before[0].entryId,
+					outgoingCardKey = before[0].cardKey,
 					incomingCardKey = "fervor|Red"
 				}
 			}
@@ -231,7 +252,11 @@ public class QuestCardRewardServiceTests
 		QuestCardRewardService.SkipPendingOffer();
 
 		Assert.Null(SaveCache.GetPendingDeckRewardOffer());
-		Assert.Equal(before, SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cardIds);
+		Assert.Equal(
+			before,
+			SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cards
+				.Select(entry => (entry.entryId, entry.cardKey))
+				.ToList());
 	}
 
 	[Fact]
@@ -239,6 +264,7 @@ public class QuestCardRewardServiceTests
 	{
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.StartNewRun();
+		var outgoing = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cards[0];
 		SaveCache.SetPendingDeckRewardOffer(new DeckRewardOfferSave
 		{
 			rewardGold = 20,
@@ -248,8 +274,9 @@ public class QuestCardRewardServiceTests
 				{
 					kind = DeckRewardOfferKinds.Upgrade,
 					loadoutIndex = 0,
-					outgoingCardKey = "smite|White",
-					upgradedCardKey = "smite|White|Upgraded"
+					outgoingEntryId = outgoing.entryId,
+					outgoingCardKey = outgoing.cardKey,
+					upgradedCardKey = RunDeckService.BuildUpgradedCardKey(outgoing.cardKey),
 				}
 			}
 		});
@@ -260,7 +287,8 @@ public class QuestCardRewardServiceTests
 		Assert.NotNull(pending);
 		Assert.Equal(20, pending.rewardGold);
 		Assert.Single(pending.options);
-		Assert.Equal("smite|White|Upgraded", pending.options[0].upgradedCardKey);
+		Assert.Equal(outgoing.entryId, pending.options[0].outgoingEntryId);
+		Assert.Equal(RunDeckService.BuildUpgradedCardKey(outgoing.cardKey), pending.options[0].upgradedCardKey);
 	}
 
 	[Fact]
@@ -307,8 +335,9 @@ public class QuestCardRewardServiceTests
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.StartNewRun();
 		var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
-		loadout.cardIds = new List<string> { "smite|White" };
+		loadout.cards = Entries("smite|White");
 		SaveCache.SaveLoadout(loadout);
+		var outgoingEntryId = loadout.cards[0].entryId;
 
 		SaveCache.SetPendingDeckRewardOffer(new DeckRewardOfferSave
 		{
@@ -318,6 +347,7 @@ public class QuestCardRewardServiceTests
 				{
 					kind = DeckRewardOfferKinds.Upgrade,
 					loadoutIndex = 0,
+					outgoingEntryId = outgoingEntryId,
 					outgoingCardKey = "smite|White",
 					upgradedCardKey = "smite|White|Upgraded"
 				}
@@ -325,7 +355,9 @@ public class QuestCardRewardServiceTests
 		});
 
 		Assert.True(QuestCardRewardService.ApplyPendingOfferOption(0));
-		Assert.Equal("smite|White|Upgraded", SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cardIds.Single());
+		var upgraded = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cards.Single();
+		Assert.Equal(outgoingEntryId, upgraded.entryId);
+		Assert.Equal("smite|White|Upgraded", upgraded.cardKey);
 		Assert.Equal(1, CardUpgradeService.UpgradeConfirmedInvokeCountForTests);
 	}
 
@@ -351,6 +383,18 @@ public class QuestCardRewardServiceTests
 				$"Invalid incoming key {option.incomingCardKey}");
 			Assert.Contains(incomingId, allowed);
 		}
+	}
+
+	private static List<LoadoutCardEntry> Entries(params string[] cardKeys)
+	{
+		return cardKeys.Select((cardKey, index) => new LoadoutCardEntry
+		{
+			entryId = $"test_card_{index}",
+			cardKey = cardKey,
+			isStarter = true,
+			countsAsTraded = false,
+			restrictions = new List<string>(),
+		}).ToList();
 	}
 
 	private sealed class TestOnUpgradeCard : CardBase

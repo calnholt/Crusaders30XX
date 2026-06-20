@@ -889,6 +889,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					kind = option.kind ?? string.Empty,
 					loadoutIndex = option.loadoutIndex,
+					outgoingEntryId = option.outgoingEntryId ?? string.Empty,
 					outgoingCardKey = option.outgoingCardKey ?? string.Empty,
 					incomingCardKey = option.incomingCardKey ?? string.Empty,
 					upgradedCardKey = option.upgradedCardKey ?? string.Empty,

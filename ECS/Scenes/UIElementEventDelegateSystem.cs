@@ -78,7 +78,6 @@ namespace Crusaders30XX.ECS.Systems
                     if (action != null)
                     {
                         EventManager.Publish(new ClimbEventSlotSelectedEvent { SlotId = action.SlotId });
-                        ClimbEventService.TryLaunchEvent(entityManager, action.SlotId);
                     }
                     break;
                 }
@@ -289,27 +288,30 @@ namespace Crusaders30XX.ECS.Systems
             var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
             var deckEntity = RunDeckService.EnsureRunDeck(entityManager);
             var deck = deckEntity?.GetComponent<Deck>();
-            if (loadout?.cardIds == null || deck?.Cards == null) return new List<Entity>();
+			if (loadout?.cards == null || deck?.Cards == null) return new List<Entity>();
 
             var usedEntityIds = new HashSet<int>();
             var result = new List<Entity>();
-            for (int i = 0; i < loadout.cardIds.Count; i++)
-            {
-                string cardKey = loadout.cardIds[i];
+			for (int i = 0; i < loadout.cards.Count; i++)
+			{
+				var entry = loadout.cards[i];
+				if (entry == null) continue;
+				string cardKey = entry.cardKey;
                 if (!ClimbShopService.IsReplacementEligible(cardKey)) continue;
 
                 var card = deck.Cards.FirstOrDefault(e =>
                     e != null
                     && e.IsActive
-                    && !usedEntityIds.Contains(e.Id)
-                    && string.Equals(e.GetComponent<RunDeckCard>()?.CardKey, cardKey, StringComparison.OrdinalIgnoreCase));
+					&& !usedEntityIds.Contains(e.Id)
+					&& string.Equals(e.GetComponent<RunDeckCard>()?.EntryId, entry.entryId, StringComparison.Ordinal));
                 if (card == null) continue;
 
                 usedEntityIds.Add(card.Id);
                 entityManager.AddComponent(card, new CardListModalSelectionMetadata
-                {
-                    SelectionContext = CardListSelectionContexts.ClimbReplacement,
-                    CardKey = cardKey,
+				{
+					SelectionContext = CardListSelectionContexts.ClimbReplacement,
+					EntryId = entry.entryId,
+					CardKey = cardKey,
                     SourceIndex = i,
                 });
                 result.Add(card);

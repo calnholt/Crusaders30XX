@@ -687,6 +687,7 @@ namespace Crusaders30XX.ECS.Components
     {
         public Entity Owner { get; set; }
         public string SelectionContext { get; set; } = string.Empty;
+        public string EntryId { get; set; } = string.Empty;
         public string CardKey { get; set; } = string.Empty;
         public int SourceIndex { get; set; } = -1;
     }

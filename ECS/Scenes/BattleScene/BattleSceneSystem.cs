@@ -12,6 +12,7 @@ using Crusaders30XX.ECS.Services;
 using System;
 using Crusaders30XX.ECS.Scenes.BattleScene;
 using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Data.Save;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -210,7 +211,7 @@ namespace Crusaders30XX.ECS.Systems
 				});
 				// EnqueueBattleRules(true);
 			});
-			EventManager.Subscribe<EncounterDialogueCompleted>(completed =>
+			EventManager.Subscribe<DialogueSequenceCompleted>(completed =>
 			{
 				var pending = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()
 					?.GetComponent<PendingQuestDialog>();
@@ -438,6 +439,7 @@ namespace Crusaders30XX.ECS.Systems
 			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
+			bool shouldApplyClimbBattlePackage = IsFirstQueuedClimbEncounter(queued);
 			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
 			EventManager.Publish(new SetActionPointsEvent { Amount = 0 });
 			// Dialog is now handled globally; do not open here
@@ -500,6 +502,7 @@ namespace Crusaders30XX.ECS.Systems
 				});
 				EventManager.Publish(new FullyHealEvent { Target = player });
 			}
+			ApplyPendingClimbBattlePackage(shouldApplyClimbBattlePackage, player);
 			foreach (var e in EntityManager.GetEntitiesWithComponent<CardTooltip>()) {
 				var cardData = e.GetComponent<CardData>();
 				var card = CardFactory.Create(cardData.Card.CardId);
@@ -508,6 +511,62 @@ namespace Crusaders30XX.ECS.Systems
 					e.RemoveComponent<CardTooltip>();
 				}
 			}
+		}
+
+		internal static bool IsFirstQueuedClimbEncounter(QueuedEvents queued)
+		{
+			return queued?.IsClimbEncounter == true && queued.CurrentIndex == -1;
+		}
+
+		internal static bool ApplyPendingClimbBattlePackage(bool shouldApply, Entity player)
+		{
+			if (!shouldApply || player == null) return false;
+
+			var climb = SaveCache.GetClimbState();
+			var bonus = climb?.nextBattleBonus;
+			var penalty = climb?.nextBattlePenalty;
+			int courage = Math.Max(0, bonus?.courage ?? 0);
+			int temperance = Math.Max(0, bonus?.temperance ?? 0);
+			int vigor = Math.Max(0, bonus?.vigor ?? 0);
+			int burn = Math.Max(0, penalty?.burn ?? 0);
+			int fear = Math.Max(0, penalty?.fear ?? 0);
+			if (courage == 0 && temperance == 0 && vigor == 0 && burn == 0 && fear == 0)
+			{
+				return false;
+			}
+
+			if (courage > 0)
+			{
+				EventManager.Publish(new ModifyCourageRequestEvent
+				{
+					Delta = courage,
+					Reason = "Climb next-battle bonus",
+					Type = ModifyCourageType.Gain,
+				});
+			}
+			if (temperance > 0)
+			{
+				EventManager.Publish(new ModifyTemperanceEvent { Delta = temperance });
+			}
+			PublishPassiveGrant(player, AppliedPassiveType.Vigor, vigor);
+			PublishPassiveGrant(player, AppliedPassiveType.Burn, burn);
+			PublishPassiveGrant(player, AppliedPassiveType.Fear, fear);
+
+			climb.nextBattleBonus = new ClimbNextBattleBonusSave();
+			climb.nextBattlePenalty = new ClimbNextBattlePenaltySave();
+			SaveCache.SaveClimbState(climb);
+			return true;
+		}
+
+		private static void PublishPassiveGrant(Entity player, AppliedPassiveType type, int amount)
+		{
+			if (amount <= 0) return;
+			EventManager.Publish(new ApplyPassiveEvent
+			{
+				Target = player,
+				Type = type,
+				Delta = amount,
+			});
 		}
 
 		private static int GetScarStacks(Entity player)

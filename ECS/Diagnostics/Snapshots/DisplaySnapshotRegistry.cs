@@ -19,6 +19,13 @@ namespace Crusaders30XX.Diagnostics.Snapshots
             Register(new PlayerHudSnapshotFixture());
             Register(new EquipmentTooltipSnapshotFixture());
             Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.NoEvents));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.HazardEvent));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.CharacterEvent));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.HazardHoverPreview));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.CharacterHoverPreview));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.HazardConfirmation));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.CharacterSummary));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.CharacterDialog));
             Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.ActiveEvents));
             Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.HoverPreview));
             Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.SoldShopSlot));

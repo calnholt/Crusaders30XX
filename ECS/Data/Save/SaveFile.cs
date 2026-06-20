@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Data.Achievements;
 using Crusaders30XX.ECS.Data.Loadouts;
@@ -7,7 +8,7 @@ namespace Crusaders30XX.ECS.Data.Save
 {
 	public class SaveFile
 	{
-		public const int CURRENT_VERSION = 11;
+		public const int CURRENT_VERSION = 13;
 
 		public int version { get; set; } = 0;
 		public bool isRunActive { get; set; }
@@ -22,18 +23,13 @@ namespace Crusaders30XX.ECS.Data.Save
 		/// <summary>Run-map node id when the player entered battle but has not returned to the location map.</summary>
 		public string pendingBattleNodeId { get; set; } = string.Empty;
 		public List<LoadoutDefinition> loadouts { get; set; } = new List<LoadoutDefinition>();
+		public int nextRunDeckEntryId { get; set; }
 		public List<string> seenTutorials { get; set; } = new List<string>();
 		public bool guidedTutorialCompleted { get; set; }
 		public Dictionary<string, CardMastery> cardMastery { get; set; } = new Dictionary<string, CardMastery>();
 		public Dictionary<string, AchievementProgress> achievements { get; set; } = new Dictionary<string, AchievementProgress>();
 		/// <summary>Run-long applied passive type name to stack count (e.g. Frostbite).</summary>
 		public Dictionary<string, int> runLongPassives { get; set; } = new Dictionary<string, int>();
-		/// <summary>Run deck card key to run-long restriction names (Frozen, Sealed, Brittle, Colorless). Shackle is battle-only and is not persisted.</summary>
-		public Dictionary<string, List<string>> runCardRestrictions { get; set; } = new Dictionary<string, List<string>>();
-		/// <summary>Loadout card keys from the rolled starting deck at new-run creation.</summary>
-		public List<string> starterCardKeys { get; set; } = new List<string>();
-		/// <summary>Current run card keys acquired by encounter reward exchange or climb shop replacement.</summary>
-		public List<string> tradedCardKeys { get; set; } = new List<string>();
 		/// <summary>Exact unresolved deck reward offer shown after a quest reward.</summary>
 		public DeckRewardOfferSave pendingDeckRewardOffer { get; set; }
 		public ClimbSaveState climb { get; set; } = new ClimbSaveState();
@@ -48,11 +44,12 @@ namespace Crusaders30XX.ECS.Data.Save
 		public List<ClimbEventSlotSave> eventSlots { get; set; } = new List<ClimbEventSlotSave>();
 		public List<string> shownMedalIds { get; set; } = new List<string>();
 		public List<string> shownEquipmentIds { get; set; } = new List<string>();
-		public List<string> shownEventTypeIds { get; set; } = new List<string>();
-		public int nextEventSlotId { get; set; }
 		public ClimbReplacementOfferSave pendingReplacementOffer { get; set; }
 		public ClimbEncounterRewardSave pendingEncounterReward { get; set; }
 		public ClimbPendingEventSave pendingEvent { get; set; }
+		public ClimbNextBattleBonusSave nextBattleBonus { get; set; } = new ClimbNextBattleBonusSave();
+		public ClimbNextBattlePenaltySave nextBattlePenalty { get; set; } = new ClimbNextBattlePenaltySave();
+
 	}
 
 	public class ClimbResourceSave
@@ -68,6 +65,7 @@ namespace Crusaders30XX.ECS.Data.Save
 		public string kind { get; set; } = ClimbShopSlotKinds.Empty;
 		public string itemId { get; set; } = string.Empty;
 		public string cardKey { get; set; } = string.Empty;
+		public string deckEntryId { get; set; } = string.Empty;
 		public int deckIndex { get; set; } = -1;
 		public ClimbResourceSave cost { get; set; } = new ClimbResourceSave { red = 0, white = 0, black = 0 };
 		public int timeCost { get; set; }
@@ -91,13 +89,18 @@ namespace Crusaders30XX.ECS.Data.Save
 	public class ClimbEventSlotSave
 	{
 		public string id { get; set; } = string.Empty;
-		public string eventTypeId { get; set; } = string.Empty;
-		public int generatedAtTime { get; set; }
-		public int visibleStartTime { get; set; }
-		public int visibleEndTime { get; set; }
-		public int timeCost { get; set; } = 1;
-		public bool seen { get; set; }
-		public bool isCompleted { get; set; }
+		public string definitionId { get; set; } = string.Empty;
+		public ClimbEventKind kind { get; set; }
+		public ClimbHazardEffectType hazardEffect { get; set; }
+		public ClimbCharacterRewardType characterReward { get; set; }
+		public int scheduledAppearanceTime { get; set; }
+		public int activatedAtTime { get; set; } = -1;
+		public int duration { get; set; }
+		public int timeCost { get; set; }
+		public int effectAmount { get; set; }
+		public ClimbResourceSave rewardResources { get; set; }
+			= new ClimbResourceSave { red = 0, white = 0, black = 0 };
+		public ClimbEventStatus status { get; set; } = ClimbEventStatus.Scheduled;
 	}
 
 	public class ClimbReplacementOfferSave
@@ -118,7 +121,65 @@ namespace Crusaders30XX.ECS.Data.Save
 	public class ClimbPendingEventSave
 	{
 		public string eventSlotId { get; set; } = string.Empty;
-		public string eventTypeId { get; set; } = string.Empty;
+		public ClimbEventFlowPhase phase { get; set; }
+		public string dialogueRequestId { get; set; } = string.Empty;
+	}
+
+	public class ClimbNextBattleBonusSave
+	{
+		public int courage { get; set; }
+		public int temperance { get; set; }
+		public int vigor { get; set; }
+	}
+
+	public class ClimbNextBattlePenaltySave
+	{
+		public int burn { get; set; }
+		public int fear { get; set; }
+	}
+
+	public enum ClimbEventKind
+	{
+		Hazard,
+		Character,
+	}
+
+	public enum ClimbHazardEffectType
+	{
+		None,
+		Colorless,
+		Frozen,
+		Brittle,
+		Burn,
+		Fear,
+		Shackled,
+		Scar,
+	}
+
+	public enum ClimbCharacterRewardType
+	{
+		None,
+		Temperance,
+		Courage,
+		Vigor,
+		RandomCardUpgrade,
+	}
+
+	public enum ClimbEventStatus
+	{
+		Scheduled,
+		Active,
+		Pending,
+		Completed,
+		Expired,
+	}
+
+	public enum ClimbEventFlowPhase
+	{
+		None,
+		HazardConfirmation,
+		CharacterDialogue,
+		CharacterSummary,
 	}
 
 	public static class ClimbShopSlotKinds
@@ -140,6 +201,7 @@ namespace Crusaders30XX.ECS.Data.Save
 	{
 		public string kind { get; set; } = DeckRewardOfferKinds.Exchange;
 		public int loadoutIndex { get; set; } = -1;
+		public string outgoingEntryId { get; set; } = string.Empty;
 		public string outgoingCardKey { get; set; } = string.Empty;
 		public string incomingCardKey { get; set; } = string.Empty;
 		public string upgradedCardKey { get; set; } = string.Empty;

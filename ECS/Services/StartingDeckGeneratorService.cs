@@ -131,14 +131,21 @@ namespace Crusaders30XX.ECS.Services
 
 		public static LoadoutDefinition BuildStartingLoadout(string weaponId, int seed, string loadoutId = "loadout_1")
 		{
-			var cardIds = GenerateStartingDeck(weaponId, seed);
+			var cardKeys = GenerateStartingDeck(weaponId, seed);
 			return new LoadoutDefinition
 			{
 				id = loadoutId,
 				name = loadoutId == "test_fight" ? "Test Fight" : "Deck",
 				weaponId = string.IsNullOrWhiteSpace(weaponId) ? "sword" : weaponId,
 				temperanceId = GetDefaultTemperanceId(weaponId),
-				cardIds = cardIds,
+				cards = cardKeys.Select((cardKey, index) => new LoadoutCardEntry
+				{
+					entryId = $"temporary_card_{index}",
+					cardKey = cardKey,
+					isStarter = true,
+					countsAsTraded = false,
+					restrictions = new List<string>(),
+				}).ToList(),
 				chestId = string.Empty,
 				legsId = string.Empty,
 				armsId = string.Empty,

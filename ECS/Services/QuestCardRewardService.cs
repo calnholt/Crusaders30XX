@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
+using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Objects.Cards;
@@ -71,9 +72,10 @@ namespace Crusaders30XX.ECS.Services
 
 		private readonly struct DeckEntry
 		{
-			public DeckEntry(int index, string cardKey, string cardId, CardData.CardColor color, CardBase card)
+			public DeckEntry(int index, string entryId, string cardKey, string cardId, CardData.CardColor color, CardBase card)
 			{
 				Index = index;
+				EntryId = entryId;
 				CardKey = cardKey;
 				CardId = cardId;
 				Color = color;
@@ -81,6 +83,7 @@ namespace Crusaders30XX.ECS.Services
 			}
 
 			public int Index { get; }
+			public string EntryId { get; }
 			public string CardKey { get; }
 			public string CardId { get; }
 			public CardData.CardColor Color { get; }
@@ -104,17 +107,25 @@ namespace Crusaders30XX.ECS.Services
 		public static DeckRewardOfferSave GenerateDeckRewardOffer(int rewardGold = 0)
 		{
 			var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
-			var deckKeys = loadout?.cardIds ?? new List<string>();
+			var deckEntries = loadout?.cards ?? new List<LoadoutCardEntry>();
 			string weaponId = loadout?.weaponId ?? string.Empty;
-			return GenerateDeckRewardOffer(deckKeys, weaponId, rewardGold);
+			return GenerateDeckRewardOffer(deckEntries, weaponId, rewardGold);
 		}
 
 		internal static DeckRewardOfferSave GenerateDeckRewardOffer(IReadOnlyList<string> deckKeys, string weaponId, int rewardGold = 0)
 		{
+			var entries = (deckKeys ?? Array.Empty<string>())
+				.Select((cardKey, index) => new LoadoutCardEntry { entryId = $"test_entry_{index}", cardKey = cardKey })
+				.ToList();
+			return GenerateDeckRewardOffer(entries, weaponId, rewardGold);
+		}
+
+		internal static DeckRewardOfferSave GenerateDeckRewardOffer(IReadOnlyList<LoadoutCardEntry> deckEntries, string weaponId, int rewardGold = 0)
+		{
 			var offer = new DeckRewardOfferSave { rewardGold = Math.Max(0, rewardGold) };
 			var usedIndices = new HashSet<int>();
 
-			foreach (var entry in PickExchangeOutgoingEntries(deckKeys).Take(PreferredExchangeOptions))
+			foreach (var entry in PickExchangeOutgoingEntries(deckEntries).Take(PreferredExchangeOptions))
 			{
 				string incomingKey = PickIncomingCardKey(entry.CardId, weaponId);
 				if (string.IsNullOrWhiteSpace(incomingKey)) continue;
@@ -123,6 +134,7 @@ namespace Crusaders30XX.ECS.Services
 				{
 					kind = DeckRewardOfferKinds.Exchange,
 					loadoutIndex = entry.Index,
+					outgoingEntryId = entry.EntryId,
 					outgoingCardKey = entry.CardKey,
 					incomingCardKey = incomingKey
 				});
@@ -131,7 +143,7 @@ namespace Crusaders30XX.ECS.Services
 
 			while (offer.options.Count < MaxOfferOptions)
 			{
-				var upgrade = PickUpgradeEntry(deckKeys, usedIndices);
+				var upgrade = PickUpgradeEntry(deckEntries, usedIndices);
 				if (upgrade == null) break;
 				var entry = upgrade.Value;
 				string upgradedKey = RunDeckService.BuildUpgradedCardKey(entry.CardKey);
@@ -141,6 +153,7 @@ namespace Crusaders30XX.ECS.Services
 				{
 					kind = DeckRewardOfferKinds.Upgrade,
 					loadoutIndex = entry.Index,
+					outgoingEntryId = entry.EntryId,
 					outgoingCardKey = entry.CardKey,
 					upgradedCardKey = upgradedKey
 				});
@@ -160,31 +173,29 @@ namespace Crusaders30XX.ECS.Services
 			bool applied = false;
 			if (string.Equals(option.kind, DeckRewardOfferKinds.Exchange, StringComparison.OrdinalIgnoreCase))
 			{
-				applied = SaveCache.ReplaceCardInLoadoutAtIndex(
+				applied = SaveCache.TryReplaceRunDeckEntry(
 					RunDeckService.PrimaryLoadoutId,
-					option.loadoutIndex,
-					option.outgoingCardKey,
-					option.incomingCardKey);
+					option.outgoingEntryId,
+					option.incomingCardKey,
+					out _,
+					countsAsTraded: true);
 			}
 			else if (string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, StringComparison.OrdinalIgnoreCase))
 			{
-				applied = SaveCache.ReplaceCardInLoadoutAtIndex(
+				applied = SaveCache.TryUpgradeRunDeckEntry(
 					RunDeckService.PrimaryLoadoutId,
-					option.loadoutIndex,
-					option.outgoingCardKey,
-					option.upgradedCardKey);
+					option.outgoingEntryId,
+					option.upgradedCardKey,
+					out _);
 			}
 
 			if (applied)
 			{
 				if (string.Equals(option.kind, DeckRewardOfferKinds.Exchange, StringComparison.OrdinalIgnoreCase))
 				{
-					SaveCache.RemoveTrackedTradedCardKey(option.outgoingCardKey);
-					SaveCache.MarkTradedCardKey(option.incomingCardKey);
 				}
 				else if (string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, StringComparison.OrdinalIgnoreCase))
 				{
-					SaveCache.ReplaceTrackedTradedCardKey(option.outgoingCardKey, option.upgradedCardKey);
 					CardUpgradeService.InvokeUpgradeConfirmed(option.upgradedCardKey);
 				}
 				SaveCache.ClearPendingDeckRewardOffer();
@@ -213,7 +224,7 @@ namespace Crusaders30XX.ECS.Services
 		{
 			var result = new QuestCardRewardResult();
 			if (!RunDeckService.TryParseCardKey(cardKey, out var cardId, out var color)) return result;
-			if (!SaveCache.AddCardToLoadout(RunDeckService.PrimaryLoadoutId, cardKey)) return result;
+			if (SaveCache.AddRunDeckEntry(RunDeckService.PrimaryLoadoutId, cardKey) == null) return result;
 
 			result.Granted = true;
 			result.CardId = cardId;
@@ -238,12 +249,12 @@ namespace Crusaders30XX.ECS.Services
 
 		internal static IReadOnlyList<string> GetExchangeOutgoingCardKeysForTests(IReadOnlyList<string> deckKeys)
 		{
-			return PickExchangeOutgoingEntries(deckKeys).Select(e => e.CardKey).ToList();
+			return PickExchangeOutgoingEntries(ToTemporaryEntries(deckKeys)).Select(e => e.CardKey).ToList();
 		}
 
 		internal static IReadOnlyList<string> GetUpgradeCardKeysForTests(IReadOnlyList<string> deckKeys)
 		{
-			return BuildEligibleDeckEntries(deckKeys).Select(e => e.CardKey).ToList();
+			return BuildEligibleDeckEntries(ToTemporaryEntries(deckKeys)).Select(e => e.CardKey).ToList();
 		}
 
 		private static IReadOnlyList<QuestCardRewardResult> ConvertExchangeOptionsToLegacyResults(DeckRewardOfferSave offer, int choiceCount)
@@ -266,9 +277,9 @@ namespace Crusaders30XX.ECS.Services
 			return results;
 		}
 
-		private static IReadOnlyList<DeckEntry> PickExchangeOutgoingEntries(IReadOnlyList<string> deckKeys)
+		private static IReadOnlyList<DeckEntry> PickExchangeOutgoingEntries(IReadOnlyList<LoadoutCardEntry> deckEntries)
 		{
-			var eligible = BuildEligibleDeckEntries(deckKeys);
+			var eligible = BuildEligibleDeckEntries(deckEntries);
 			var picked = new List<DeckEntry>();
 
 			foreach (var starter in eligible.Where(e => e.Card.Rarity == Rarity.Starter))
@@ -292,31 +303,44 @@ namespace Crusaders30XX.ECS.Services
 			return picked;
 		}
 
-		private static DeckEntry? PickUpgradeEntry(IReadOnlyList<string> deckKeys, HashSet<int> usedIndices)
+		private static DeckEntry? PickUpgradeEntry(IReadOnlyList<LoadoutCardEntry> deckEntries, HashSet<int> usedIndices)
 		{
-			var eligible = BuildEligibleDeckEntries(deckKeys)
+			var eligible = BuildEligibleDeckEntries(deckEntries)
 				.Where(e => usedIndices == null || !usedIndices.Contains(e.Index))
 				.ToList();
 			if (eligible.Count == 0) return null;
 			return eligible[Random.Shared.Next(eligible.Count)];
 		}
 
-		private static List<DeckEntry> BuildEligibleDeckEntries(IReadOnlyList<string> deckKeys)
+		private static List<DeckEntry> BuildEligibleDeckEntries(IReadOnlyList<LoadoutCardEntry> deckEntries)
 		{
 			var entries = new List<DeckEntry>();
-			if (deckKeys == null) return entries;
+			if (deckEntries == null) return entries;
 
-			for (int i = 0; i < deckKeys.Count; i++)
+			for (int i = 0; i < deckEntries.Count; i++)
 			{
-				string key = deckKeys[i];
+				var loadoutEntry = deckEntries[i];
+				if (loadoutEntry == null) continue;
+				string key = loadoutEntry.cardKey;
 				if (!RunDeckService.TryParseCardKey(key, out var cardId, out var color, out var isUpgraded)) continue;
 				if (isUpgraded) continue;
 				var card = CardFactory.Create(cardId);
 				if (card == null || card.IsWeapon || card.IsToken || !card.CanAddToLoadout) continue;
-				entries.Add(new DeckEntry(i, key, cardId, color, card));
+				entries.Add(new DeckEntry(i, loadoutEntry.entryId, key, cardId, color, card));
 			}
 
 			return entries;
+		}
+
+		private static List<LoadoutCardEntry> ToTemporaryEntries(IReadOnlyList<string> deckKeys)
+		{
+			return (deckKeys ?? Array.Empty<string>())
+				.Select((cardKey, index) => new LoadoutCardEntry
+				{
+					entryId = $"test_entry_{index}",
+					cardKey = cardKey,
+				})
+				.ToList();
 		}
 
 		private static string PickIncomingCardKey(string outgoingCardId, string weaponId)

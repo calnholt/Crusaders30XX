@@ -38,3 +38,9 @@ keywords
 - indulgence for additional cost?
 - vigor reduction
 
+I want to refactor how events are handled in a climb. There will be two types of events - character events and random events. Random events will NOT advance time, character events advance time by flat 1.
+Random events - When these are rolled, a random 1 to 2 resources will be attributed to it, it will be displayed like the encounter GAIN (keep impl dry, the same debug fields should work for both). We will open up the same narrative modal, but now only one choice is to confirm the effect that's applied and the resource gain. There will be a large pool of random effects each with their own narrative text (you write them appropriately). The pool of affects - random card in deck becomes colorless, random card in deck becomes frozen, random cards in deck becomes brittle, gain 1 burn, gain 1-3 fear, gain 1-4 shackles, gain 1-2 scars. random events can last 2 - 4 time duration.
+
+character events - there will be a pool of character events, these do NOT grant resources. they will be display a character image just like we do for enemy encounters - keep display DRY (same debug fields should work for both). For each of these character events, create a quick dialog exchange between the character in question and the crusader. after the dialog, display the narrative modal with text saying what was gained, with a proceed button to close. when showing the dialog, hide EVERYTHING except the background image. for the character event buttons, display in text below the portrait what will be gained: nun.png -> +2 temperance (for next battle), reverent_crusader.png -> +2 courage (for next battle), revered_crusader.png -> +1 vigor, smith.png -> random card upgrade. character events can last random from 3 - 5 time duration.
+
+have 3 random events, and 2 character events per run.

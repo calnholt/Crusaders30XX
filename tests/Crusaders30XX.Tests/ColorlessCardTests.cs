@@ -211,7 +211,7 @@ public sealed class ColorlessCardTests
 
 		entityManager.RemoveComponent<Colorless>(first);
 
-		Assert.Equal(3, reap.GetConditionalDamage(entityManager, reapEntity));
+		Assert.Equal(2, reap.GetConditionalDamage(entityManager, reapEntity));
 	}
 
 	[Fact]
@@ -279,17 +279,19 @@ public sealed class ColorlessCardTests
 		try
 		{
 			SaveCache.StartNewRun();
-			string key = SaveCache.GetLoadout("loadout_1").cardIds.First();
-			SaveCache.SetRunCardRestrictionsForCard(
-				key,
+			var entry = SaveCache.GetLoadout("loadout_1").cards.First();
+			SaveCache.SetRunDeckEntryRestrictions(
+				"loadout_1",
+				entry.entryId,
 				[RunScopedStateService.RestrictionColorless]);
 			SaveCache.Reload();
 
 			var entityManager = new EntityManager();
 			RunDeckService.EnsureRunDeck(entityManager);
 			var card = entityManager.GetEntitiesWithComponent<RunDeckCard>()
-				.Single(entity => entity.GetComponent<RunDeckCard>().CardKey == key);
+				.Single(entity => entity.GetComponent<RunDeckCard>().EntryId == entry.entryId);
 
+			Assert.Equal(entry.cardKey, card.GetComponent<RunDeckCard>().CardKey);
 			Assert.True(card.HasComponent<Colorless>());
 			Assert.Contains(
 				TooltipTextService.ColorlessStatus,
@@ -310,14 +312,15 @@ public sealed class ColorlessCardTests
 		try
 		{
 			SaveCache.StartNewRun();
-			string key = SaveCache.GetLoadout("loadout_1").cardIds.First();
-			SaveCache.SetRunCardRestrictionsForCard(
-				key,
+			var entry = SaveCache.GetLoadout("loadout_1").cards.First();
+			SaveCache.SetRunDeckEntryRestrictions(
+				"loadout_1",
+				entry.entryId,
 				[RunScopedStateService.RestrictionColorless]);
 			var entityManager = new EntityManager();
 			RunDeckService.EnsureRunDeck(entityManager);
 			var card = entityManager.GetEntitiesWithComponent<RunDeckCard>()
-				.Single(entity => entity.GetComponent<RunDeckCard>().CardKey == key);
+				.Single(entity => entity.GetComponent<RunDeckCard>().EntryId == entry.entryId);
 			_ = new CardApplicationManagementSystem(entityManager);
 
 			EventManager.Publish(new RemoveCardApplication
@@ -328,7 +331,7 @@ public sealed class ColorlessCardTests
 			RunScopedStateService.HydrateRunCardRestrictions(entityManager);
 
 			Assert.False(card.HasComponent<Colorless>());
-			Assert.Empty(SaveCache.GetRunCardRestrictions(key));
+			Assert.Empty(SaveCache.GetRunDeckEntryRestrictions("loadout_1", entry.entryId));
 		}
 		finally
 		{
@@ -338,35 +341,41 @@ public sealed class ColorlessCardTests
 	}
 
 	[Fact]
-	public void Removing_last_card_entry_clears_stale_restrictions()
+	public void Exhaust_removes_only_target_duplicate_entry_and_its_restrictions()
 	{
 		EventManager.Clear();
 		SaveCache.DeleteSaveFilesIfPresent();
 		try
 		{
 			SaveCache.StartNewRun();
-			string key = SaveCache.GetLoadout("loadout_1").cardIds.First();
-			while (SaveCache.GetLoadout("loadout_1").cardIds.Count(entry => entry == key) > 1)
-			{
-				SaveCache.RemoveCardFromLoadout("loadout_1", key, publishChange: false);
-			}
-			SaveCache.SetRunCardRestrictionsForCard(
-				key,
+			var targetEntry = SaveCache.GetLoadout("loadout_1").cards.First();
+			var duplicateEntry = SaveCache.AddRunDeckEntry(
+				"loadout_1",
+				targetEntry.cardKey,
+				publishChange: false);
+			Assert.NotNull(duplicateEntry);
+			Assert.NotEqual(targetEntry.entryId, duplicateEntry.entryId);
+			SaveCache.SetRunDeckEntryRestrictions(
+				"loadout_1",
+				targetEntry.entryId,
 				[RunScopedStateService.RestrictionColorless]);
 			var entityManager = new EntityManager();
 			RunDeckService.EnsureRunDeck(entityManager);
 			var card = entityManager.GetEntitiesWithComponent<RunDeckCard>()
-				.Single(entity => entity.GetComponent<RunDeckCard>().CardKey == key);
+				.Single(entity => entity.GetComponent<RunDeckCard>().EntryId == targetEntry.entryId);
 
 			RunDeckService.ExhaustRunCard(entityManager, card);
 
-			Assert.Empty(SaveCache.GetRunCardRestrictions(key));
+			Assert.Null(SaveCache.GetRunDeckEntry("loadout_1", targetEntry.entryId));
+			Assert.Empty(SaveCache.GetRunDeckEntryRestrictions("loadout_1", targetEntry.entryId));
+			var survivingEntry = SaveCache.GetRunDeckEntry("loadout_1", duplicateEntry.entryId);
+			Assert.NotNull(survivingEntry);
+			Assert.Equal(targetEntry.cardKey, survivingEntry.cardKey);
 
-			SaveCache.AddCardToLoadout("loadout_1", key);
 			RunDeckService.EnsureRunDeck(entityManager);
-			var replacement = entityManager.GetEntitiesWithComponent<RunDeckCard>()
-				.Single(entity => entity.GetComponent<RunDeckCard>().CardKey == key);
-			Assert.False(replacement.HasComponent<Colorless>());
+			var duplicateCard = entityManager.GetEntitiesWithComponent<RunDeckCard>()
+				.Single(entity => entity.GetComponent<RunDeckCard>().EntryId == duplicateEntry.entryId);
+			Assert.False(duplicateCard.HasComponent<Colorless>());
 		}
 		finally
 		{

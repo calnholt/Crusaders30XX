@@ -61,13 +61,25 @@ public class ClimbShopServiceTests : IDisposable
 	public void Upgrade_purchase_replaces_specific_deck_entry()
 	{
 		PrepareRun(new List<string> { "smite|White", "fervor|Red" });
+		var original = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cards[0];
+		Assert.True(SaveCache.AddRunDeckEntryRestriction(
+			RunDeckService.PrimaryLoadoutId,
+			original.entryId,
+			RunScopedStateService.RestrictionFrozen));
 		var state = BaseState();
-		state.shopSlots[0] = ShopSlot(ClimbShopSlotKinds.Upgrade, cardKey: "smite|White|Upgraded", deckIndex: 0);
+		state.shopSlots[0] = ShopSlot(
+			ClimbShopSlotKinds.Upgrade,
+			cardKey: "smite|White|Upgraded",
+			deckEntryId: original.entryId,
+			deckIndex: 0);
 		SaveCache.SaveClimbState(state);
 
 		Assert.True(ClimbShopService.TryPurchaseSlot(0));
 
-		Assert.Equal("smite|White|Upgraded", SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cardIds[0]);
+		var upgraded = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cards[0];
+		Assert.Equal(original.entryId, upgraded.entryId);
+		Assert.Equal("smite|White|Upgraded", upgraded.cardKey);
+		Assert.Contains(RunScopedStateService.RestrictionFrozen, upgraded.restrictions);
 		Assert.True(SaveCache.GetClimbState().shopSlots[0].isSold);
 	}
 
@@ -86,7 +98,9 @@ public class ClimbShopServiceTests : IDisposable
 		Assert.Null(after.pendingReplacementOffer);
 		Assert.Equal(3, after.resources.red);
 		Assert.Equal(0, after.time);
-		Assert.Equal(new[] { "smite|White", "fervor|Red" }, SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cardIds);
+		Assert.Equal(
+			new[] { "smite|White", "fervor|Red" },
+			SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cards.Select(entry => entry.cardKey));
 	}
 
 	[Fact]
@@ -97,13 +111,22 @@ public class ClimbShopServiceTests : IDisposable
 		state.shopSlots[0] = ShopSlot(ClimbShopSlotKinds.Replacement, cardKey: "strike|Red");
 		SaveCache.SaveClimbState(state);
 		Assert.True(ClimbShopService.TryOpenReplacementOffer(0));
+		var outgoing = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cards[1];
+		Assert.True(SaveCache.AddRunDeckEntryRestriction(
+			RunDeckService.PrimaryLoadoutId,
+			outgoing.entryId,
+			RunScopedStateService.RestrictionFrozen));
 
-		Assert.True(ClimbShopService.TryFinalizeReplacement(1));
+		Assert.True(ClimbShopService.TryFinalizeReplacement(outgoing.entryId));
 
 		var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
 		var after = SaveCache.GetClimbState();
-		Assert.Equal("strike|Red", loadout.cardIds[1]);
-		Assert.Contains("strike|Red", SaveCache.GetTradedCardKeys());
+		var replacement = loadout.cards[1];
+		Assert.Equal("strike|Red", replacement.cardKey);
+		Assert.NotEqual(outgoing.entryId, replacement.entryId);
+		Assert.False(replacement.isStarter);
+		Assert.True(replacement.countsAsTraded);
+		Assert.Empty(replacement.restrictions);
 		Assert.Equal(2, after.resources.red);
 		Assert.Equal(1, after.time);
 		Assert.True(after.shopSlots[0].isSold);
@@ -201,6 +224,7 @@ public class ClimbShopServiceTests : IDisposable
 			var metadata = card.GetComponent<CardListModalSelectionMetadata>();
 			Assert.NotNull(metadata);
 			Assert.Equal(CardListSelectionContexts.ClimbReplacement, metadata.SelectionContext);
+			Assert.False(string.IsNullOrWhiteSpace(metadata.EntryId));
 		});
 		Assert.NotNull(SaveCache.GetClimbState().pendingReplacementOffer);
 		Assert.Equal(3, SaveCache.GetClimbState().resources.red);
@@ -216,11 +240,13 @@ public class ClimbShopServiceTests : IDisposable
 		state.shopSlots[0] = ShopSlot(ClimbShopSlotKinds.Replacement, cardKey: "strike|Red");
 		SaveCache.SaveClimbState(state);
 		Assert.True(ClimbShopService.TryOpenReplacementOffer(0));
+		var outgoing = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cards[1];
 		var entityManager = new EntityManager();
 		var selectedCard = entityManager.CreateEntity("SelectedCard");
 		entityManager.AddComponent(selectedCard, new CardListModalSelectionMetadata
 		{
 			SelectionContext = CardListSelectionContexts.ClimbReplacement,
+			EntryId = outgoing.entryId,
 			CardKey = "fervor|Red",
 			SourceIndex = 1,
 		});
@@ -229,8 +255,9 @@ public class ClimbShopServiceTests : IDisposable
 
 		var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
 		var after = SaveCache.GetClimbState();
-		Assert.Equal("strike|Red", loadout.cardIds[1]);
-		Assert.Contains("strike|Red", SaveCache.GetTradedCardKeys());
+		Assert.Equal("strike|Red", loadout.cards[1].cardKey);
+		Assert.NotEqual(outgoing.entryId, loadout.cards[1].entryId);
+		Assert.True(loadout.cards[1].countsAsTraded);
 		Assert.Equal(2, after.resources.red);
 		Assert.Equal(1, after.time);
 		Assert.True(after.shopSlots[0].isSold);
@@ -243,11 +270,18 @@ public class ClimbShopServiceTests : IDisposable
 		var loadout = new LoadoutDefinition
 		{
 			id = RunDeckService.PrimaryLoadoutId,
-			cardIds = new List<string> { "smite|White|Upgraded" },
+			cards = new List<LoadoutCardEntry>
+			{
+				new() { entryId = "test_card_0", cardKey = "smite|White|Upgraded" },
+			},
 			medalIds = new List<string>(),
 		};
 		var state = BaseState();
-		state.shopSlots[0] = ShopSlot(ClimbShopSlotKinds.Upgrade, cardKey: "smite|White|Upgraded", deckIndex: 0);
+		state.shopSlots[0] = ShopSlot(
+			ClimbShopSlotKinds.Upgrade,
+			cardKey: "smite|White|Upgraded",
+			deckEntryId: "test_card_0",
+			deckIndex: 0);
 
 		Assert.True(ClimbShopService.ClearInvalidOffers(state, loadout));
 		Assert.Equal(ClimbShopSlotKinds.Empty, state.shopSlots[0].kind);
@@ -258,7 +292,14 @@ public class ClimbShopServiceTests : IDisposable
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.StartNewRun();
 		var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
-		loadout.cardIds = cards;
+		loadout.cards = cards.Select((cardKey, index) => new LoadoutCardEntry
+		{
+			entryId = $"test_card_{index}",
+			cardKey = cardKey,
+			isStarter = true,
+			countsAsTraded = false,
+			restrictions = new List<string>(),
+		}).ToList();
 		loadout.medalIds = new List<string>();
 		loadout.weaponId = "sword";
 		loadout.headId = string.Empty;
@@ -283,6 +324,7 @@ public class ClimbShopServiceTests : IDisposable
 		string kind,
 		string itemId = "",
 		string cardKey = "",
+		string deckEntryId = "",
 		int deckIndex = -1)
 	{
 		return new ClimbShopSlotSave
@@ -291,6 +333,7 @@ public class ClimbShopServiceTests : IDisposable
 			kind = kind,
 			itemId = itemId,
 			cardKey = cardKey,
+			deckEntryId = deckEntryId,
 			deckIndex = deckIndex,
 			cost = new ClimbResourceSave { red = 1, white = 0, black = 0 },
 			timeCost = string.Equals(kind, ClimbShopSlotKinds.Empty, StringComparison.OrdinalIgnoreCase) ? 0 : 1,

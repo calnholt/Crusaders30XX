@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
@@ -200,7 +201,12 @@ public class ClimbEncounterServiceTests
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.StartNewRun();
 		var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
-		loadout.cardIds = new List<string> { "smite|White", "fervor|Red", "reckoning|Black" };
+		loadout.cards = new List<LoadoutCardEntry>
+		{
+			new() { entryId = "test_entry_0", cardKey = "smite|White", isStarter = true },
+			new() { entryId = "test_entry_1", cardKey = "fervor|Red", isStarter = true },
+			new() { entryId = "test_entry_2", cardKey = "reckoning|Black", isStarter = true },
+		};
 		loadout.weaponId = "sword";
 		loadout.medalIds = new List<string>();
 		SaveCache.SaveLoadout(loadout);

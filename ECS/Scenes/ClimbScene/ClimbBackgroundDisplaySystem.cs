@@ -50,6 +50,11 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
+			Draw(undimmed: false);
+		}
+
+		public void Draw(bool undimmed)
+		{
 			if (!IsClimbScene()) return;
 
 			var dest = new Rectangle(0, 0, Game1.VirtualWidth, Game1.VirtualHeight);
@@ -66,7 +71,10 @@ namespace Crusaders30XX.ECS.Systems
 				_spriteBatch.Draw(_pixel, dest, ClimbSceneDrawHelpers.Black1);
 			}
 
-			_spriteBatch.Draw(_pixel, dest, Color.Black * MathHelper.Clamp(BackgroundDimAlpha, 0f, 1f));
+			if (!undimmed)
+			{
+				_spriteBatch.Draw(_pixel, dest, Color.Black * MathHelper.Clamp(BackgroundDimAlpha, 0f, 1f));
+			}
 		}
 
 		private bool IsClimbScene()

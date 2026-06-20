@@ -38,4 +38,28 @@ public class DialogCatalogTests
 		Assert.Equal("guardian_angel", DialogDisplaySystem.ResolvePortraitAssetName("Remiel"));
 		Assert.Equal("crusader_sword", DialogDisplaySystem.ResolvePortraitAssetName("Crusader"));
 	}
+
+	[Theory]
+	[InlineData("nun_counsel", "Nun", "character/nun")]
+	[InlineData("reverent_crusader_counsel", "Reverent Crusader", "character/reverent_crusader")]
+	[InlineData("revered_crusader_training", "Revered Crusader", "character/revered_crusader")]
+	[InlineData("smith_forging", "Smith", "character/smith")]
+	public void Character_dialogue_has_two_lines_and_mapped_portrait(
+		string definitionId,
+		string actor,
+		string portraitAsset)
+	{
+		Assert.True(DialogCatalog.TryGet(definitionId, out var definition));
+		var lines = definition.ResolveSegment("climb_event");
+
+		Assert.Equal(2, lines.Count);
+		Assert.Equal(actor, lines[0].actor);
+		Assert.Equal("Crusader", lines[1].actor);
+		Assert.Equal(portraitAsset, DialogDisplaySystem.ResolvePortraitAssetName(actor));
+		Assert.All(lines, line =>
+		{
+			Assert.All(line.actor, character => Assert.InRange((int)character, 0, 127));
+			Assert.All(line.message, character => Assert.InRange((int)character, 0, 127));
+		});
+	}
 }

@@ -94,17 +94,21 @@ Progress that survives run failure and new-run creation: achievements, card mast
 
 ## Save
 
-Persistent file for run lifecycle state plus meta. A fresh profile and an inactive profile contain meta only. An active run includes Climb topology, encounter progress, gold, loadouts, inventory, **run-long applied passive** stacks on the player, and **run-long card restriction** markers per deck card entry. Starting a new run replaces run state only; meta is kept.
+Persistent record of run lifecycle state plus meta. A fresh profile and an inactive profile contain meta only. An active run includes current Climb progress and opportunities, gold, loadouts, inventory, **run-long applied passives**, and **run-long card restrictions**. Starting a new run replaces run state only; meta is kept.
 
-The save file has a `version` field. If it does not match the game's current save version, the entire file is replaced with a fresh meta-only profile. There is no migration between versions. Omitting `version` or using an old version number clears all prior progress.
+Saves do not migrate between incompatible versions; an incompatible save becomes a fresh meta-only profile.
 
 ## Loadout
 
-The player's configured battle kit for the run: deck card list, weapon, temperance ability, equipment slots, and medals. Shop card purchases append a card entry to the deck list immediately. Resolving a deck reward offer replaces the selected loadout entry in place. There is no separate owned-cards list. Equipment is one piece per slot (head, chest, arms, legs). Gaining new equipment in a slot replaces whatever was in that slot; the replaced piece cannot be re-equipped later in the run.
+The player's configured battle kit for the run: ordered deck card entries, weapon, Temperance ability, equipment, and medals. Shop card purchases append a deck card entry. Resolving a deck reward exchange replaces the selected entry at the same ordered position, ending the outgoing identity and creating a new identity for the incoming card. There is no separate owned-cards list.
 
 ## Deck
 
-The player's deck for the current run: the ordered set of card entries (card plus color) on the loadout, plus how those cards are distributed in battle (draw pile, hand, discard). A new run begins with a 20-card starting deck; the deck may grow beyond 20 during the run. There is no maximum deck size.
+The player's deck for the current run: the ordered set of **deck card entries** on the loadout, plus how those cards are distributed in battle. Duplicate card keys are valid because each entry has its own run identity.
+
+## Deck card entry
+
+One stable, run-scoped card instance in the ordered loadout. Its card key identifies its content; its entry identity distinguishes it from every other instance, including entries with the same card key. Upgrading a card preserves its entry identity. Replacing or exchanging it ends that identity and creates a new entry at the same ordered position.
 
 ## Printed color
 
@@ -124,7 +128,7 @@ At the start of each battle, all surviving cards (draw pile, hand, and discard) 
 
 ## Run-long card restriction
 
-A combat effect attached to a specific deck card entity (e.g. Frozen, Sealed, Brittle, or Colorless) that lasts for the whole **run** until **run failure**, **run abandon**, or **new run start**. Restrictions survive leaving battle and Climb visits; they are cleared when the run ends, not at each queued encounter.
+A combat effect owned by one **deck card entry** that lasts for the whole **run** until that entry ends, **run failure**, **run abandon**, or **new run start**. Restrictions survive leaving battle and Climb visits. Upgrading preserves them with the entry; replacement, exchange, or exhaustion removes them with the outgoing entry.
 
 The run-long **Shackled** player passive is not a card restriction. Battle-local **Shackle** markers link cards so they are assigned and unassigned as blockers together; those markers are not persisted.
 
@@ -146,63 +150,49 @@ The 20-card deck assigned at new-run creation by random selection from the start
 
 A deck may include at most one copy of a given card identity and color pairing, and at most two copies of the same card identity across all colors. Starting deck construction follows this limit.
 
-Shop purchases and deck reward exchanges are exceptions: either may add a card entry even when it would exceed the normal copy limit. Each shop listing can still only be bought once per run (`isPurchased` on that slot).
+Shop purchases and deck reward exchanges are exceptions: either may add a card entry even when it would exceed the normal copy limit. Each shop listing can still be bought only once per run.
 
 ## Climb
 
-The mid-run progression layer for an active run. The Climb presents fightable encounters, shops, Treasure Chests, and Climb events between WayStation Depart and run victory, run failure, or run abandon.
+The capped time-and-slot progression layer for an active run between WayStation Depart and run victory, run failure, or run abandon. It presents generated Shop, Encounter, and Event columns.
 
-_Avoid_: Run map, world map, location hub (when meaning the mid-run progression layer)
+_Avoid_: Run map, world map, location hub (when meaning the active mid-run progression layer)
 
 ## Climb time
 
-The span of active-run play spent progressing through the Climb. Climb time starts when WayStation Depart creates the active run and ends on run victory, run failure, or run abandon. It includes battle routing, reward resolution, shopping, Treasure Chests, and Climb events.
+A capped progression meter advanced by Climb choices. It represents the run's approach to the Final encounter, not real elapsed time. Reaching maximum Climb time triggers the **Final encounter**.
 
 ## Climb resource
 
-A run-scoped resource gained, spent, or carried while progressing through the Climb. Examples include gold, loadout changes, inventory, run-long applied passives, and run-long card restrictions.
+One of the Red, White, or Black spendable resources used by the Climb economy.
+
+## Climb resource pip
+
+One unit of one **Climb resource** color.
 
 ## Climb encounter
 
-One fightable combat stop in the Climb. Completing a Climb encounter marks it completed, grants an encounter reward unless it is the **Final encounter**, and may reveal other Climb encounters within map fog range.
+One fightable opportunity in the active Climb's Encounter column. Selecting it advances Climb time by its shown cost; completing its battle may grant an **encounter reward**.
 
 ## New run start
 
-WayStation Depart after first launch or after an inactive run. Depart creates and activates the run, applies the selected weapon and difficulty setup, then routes the player to the Climb. Combat starts only after the player selects a Climb encounter.
+WayStation Depart after first launch or after an inactive run. Depart creates and activates the run, applies the selected setup, then routes the player to the Climb. Combat starts only after the player selects a Climb encounter.
 
 ## Combat node
 
-Legacy implementation term for one fightable location in the generated Climb. Prefer **Climb encounter** in docs and player-facing text.
+A legacy implementation term from the dormant `RunMap` and `Location` model. It does not define the active Climb; use **Climb encounter** for canonical behavior.
 
 ## Ordinary Climb encounter
 
-An ordinary fightable encounter in the Climb. Each run has 19 ordinary Climb encounters. Completing one marks it completed, grants an encounter reward, and may reveal other Climb encounters within map fog range.
+A Climb encounter that is not the **Final encounter**. Completing it can grant an **encounter reward**.
 
 ## Final encounter
 
-The run-ending combat encounter. Each run has exactly one Final encounter, named **The Gate**, placed on a deepest leaf with at least six ordinary encounter ancestors. It contains only the Fallen Shepherd encounter and grants no encounter reward.
-
-The Gate follows normal spatial encounter reveal. Before reveal it has no map icon, minimap marker, tooltip, or off-screen indicator. Once revealed it behaves like an ordinary fightable combat marker.
-
-## Root Climb encounter
-
-The first generated Climb encounter in a run and the anchor for procedural placement. It is not auto-started on new-run creation. Its position is near the desert map center with random offset so it is not always at the exact geometric center.
-
-## Climb tree
-
-Internal parent/child links used only when generating the 20 Climb encounter positions. Not shown on the desert map and does not gate which Climb encounters can be revealed or fought.
-
-## Climb coverage
-
-How widely Climb encounters are distributed across the playable desert. Good coverage means the player must pan and zoom to see the whole run; encounters should not sit in one tight cluster. Uneven blobs are acceptable; symmetry across quadrants is not required. A new run is not created until the generator produces a layout that meets minimum spread standards and fog reveal can reach every Climb encounter from the root.
+The run-ending Climb encounter triggered when Climb time reaches its maximum. It grants no encounter reward.
 
 ## Encounter completion
 
-Whether the player has won the battle at that Climb encounter. Stored only on the Climb in save v1; not a separate global encounter-id list. Completed encounters remain visible on the map but cannot be started again in v1.
-
-## Encounter reveal
-
-A Climb encounter becomes fightable when it is **revealed**. The root Climb encounter is revealed at run start. When a Climb encounter is **completed**, up to three other Climb encounters within **map fog range** of that completed encounter can become revealed as its fog circle expands (closest first; see **Reveal cutscene**). Revealed Climb encounters are visible and can be started; they do **not** clear map fog. Only **completed** Climb encounters clear fog. Merely revealing an encounter does not reveal further encounters until a Climb encounter is completed. The player may tackle any revealed, incomplete Climb encounter; branches are not mutually exclusive.
+Winning all queued encounters belonging to one Climb encounter.
 
 ## Boss phase
 
@@ -214,63 +204,33 @@ The transition between boss phases after checkpoint dialogue. It advances `Curre
 
 Courage, Temperance, Guard, battle/encounter/run passives, card restrictions, card modifications, and cumulative turn number persist. A phase reset does not publish StartBattle, rerun start-of-battle abilities, or show the Start of Battle banner. It enters the next EnemyStart flow directly.
 
-## Map fog range
-
-The distance from a **completed** Climb encounter's world position used for revealing other Climb encounters and for the maximum radius of fog that encounter clears. Measured center-to-center; icon size and fog feather are visual only. Uses `DefaultRevealRadius` (~1000 world units on the desert map). Shop enterability uses the same range but only from **completed** Climb encounters whose fog actually covers the shop.
-
-## Map fog
-
-The desert overlay that hides unexplored areas. Only **completed** Climb encounters clear map fog (a circular cleared area centered on the encounter). **Revealed** but incomplete encounters do not clear fog; they only become visible and fightable when reached. `DefaultUnrevealedRadius` is icon-scale (~204px) and is the starting size for the expanding fog circle in the **Reveal cutscene** on the encounter just completed.
-
-## Reveal cutscene
-
-After completing a Climb encounter, returning to the Climb focuses the completed marker, locks player controls, and animates **that completed encounter's** fog circle from icon size to full **map fog range**. Other hidden Climb encounters become **revealed** when the expanding edge reaches them (visible and fightable, no fog clear at their position).
-
-Shop markers are an exception: their map icon and minimap dot are visible from the start of the run. Shops do not clear map fog. Unrevealed shops (not yet enterable) do not show a tooltip or enter prompt on hover.
-
-Treasure Chest markers are also visible from run start and do not clear map fog. A chest becomes enterable only after the player has won battles deeper into the desert (cleared fog from a completed battle far enough along the run). Until then, no tooltip or hold-to-open prompt. When enterable, the tooltip reads **Open Treasure**.
-
-Climb event markers are also visible from run start and do not clear map fog. A Climb event becomes enterable when cleared map fog from a **completed** Climb encounter covers it (same rule as shops). Until then, no tooltip or hold prompt. When enterable, the tooltip reads **Event**.
-
 ## Shop (Climb)
 
-A vendor in the Climb. Three shops exist per run. Shops are **not** Climb encounters: they are not part of the Climb tree and do not replace any of the 20 Climb encounters.
-
-After the 20-encounter Climb is generated, each shop is placed at a world position within completed-encounter fog range of at least one Climb encounter (so completing that battle can unlock the shop). Each shop has three fixed listings generated at run creation and stored in save. Listings are usually cards; one shop per run also lists a medal and one non-medal shop lists equipment.
-
-## Shop reveal (enterable)
-
-A shop becomes enterable when its world position lies inside cleared map fog from at least one **completed** Climb encounter (same center and **map fog range** as that encounter's fog circle). A nearby **revealed** Climb encounter does not unlock shops. The shop icon can be visible before enterable; until cleared fog reaches it, no tooltip or hold-to-enter.
-
-The same card identity may appear in more than one shop in a run; within one shop the three listings use distinct identities and distinct colors.
-
-_Avoid_: Shop node (when meaning the map marker; prefer **shop** vs **Climb encounter**)
-
-## Treasure Chest (Climb)
-
-A one-time loot marker in the Climb. Three exist per run. Treasure Chests are **not** Climb encounters or shops: they are not part of the Climb tree.
-
-After the Climb encounters and shops are generated, each chest is placed so that entering it requires having cleared fog from battles deeper into the desert. Opening a chest (hold-to-open in the Climb) grants a random amount of gold (10-30 per chest, rolled at run creation). Two chests per run also grant one medal the player does not already own (excluding medals still for sale in Climb shops); the medal is added to the loadout and equipped immediately. One chest per run (chosen at random) grants equipment instead of a medal; that equipment is a different slot type than the equipment listed in Climb shops and is equipped immediately. A claimed chest stays on the map as a dimmed icon and cannot be opened again.
-
-_Avoid_: Treasure POI, treasure node (prefer **Treasure Chest** vs **Climb encounter** or **shop**)
+A generated opportunity in the active Climb's Shop column where Climb resources can be spent on its offered benefit.
 
 ## Climb event
 
-A choice landmark in the Climb. Two exist per run. Climb events are **not** Climb encounters, shops, or Treasure Chests: they are not part of the Climb tree.
+A generated, time-scheduled, non-combat opportunity in the active Climb's Event column. It is either a **Hazard event** or a **Character event**.
 
-After the Climb encounters, shops, and chests are generated, each Climb event is placed using the same scatter rules as shops. At run creation each marker rolls a distinct **narrative event** type (stored as `eventTypeId`) from the authored pool. Holding on the marker opens the **narrative event** choice UI. The Climb event is marked completed only after the player selects an option and that choice is resolved.
+## Hazard event
 
-## Climb event reveal (enterable)
+A Climb event that shows a Climb resource reward while hiding a binding harmful effect until selection. Confirming applies the harm and reward together without advancing Climb time.
 
-A Climb event becomes enterable when its world position lies inside cleared map fog from at least one **completed** Climb encounter (same center and **map fog range** as that encounter's fog circle). A nearby **revealed** Climb encounter does not unlock Climb events. The red question-mark icon can be visible before enterable; until cleared fog reaches it, no tooltip or hold prompt.
+## Character event
 
-_Avoid_: Event node (when meaning the map marker; prefer **Climb event** vs **Climb encounter**)
+A Climb event that shows a beneficial reward, presents a character exchange after binding selection, and then applies the reward while advancing Climb time by one.
+
+## Next-battle bonus
+
+Saved Courage, Temperance, or Vigor granted once when the next Climb encounter begins. Bonuses from multiple sources add together.
+
+## Next-battle penalty
+
+Saved Burn or Fear granted once when the next Climb encounter begins. Penalties from multiple sources add together.
 
 ## Narrative event
 
-Authored Climb content with a title, body text, and one to three player choices (`EventBase`). Examples include Icebound Tithe and Pruned Vocation. A Climb event's `eventTypeId` selects which narrative event runs when the player enters that marker.
-
-_Avoid_: Using "event" alone when you mean the map marker or the choice content; use **Climb event** or **Narrative event**
+A legacy UI and implementation term used by dormant `RunMap` and `Location` event code. It is not a canonical Climb event subtype; use **Hazard event** or **Character event** for the active Climb.
 
 ## Encounter reward
 
@@ -278,7 +238,7 @@ On first completion of an ordinary Climb encounter: reward gold and a deck rewar
 
 ## Deck reward offer
 
-A persisted unresolved offer created by an encounter reward. Resolving the offer chooses one exchange or upgrade lane and replaces that lane's targeted loadout entry in place. Deck reward exchanges ignore copy limits.
+A persisted unresolved offer created by an encounter reward. Resolving an exchange chooses one lane and replaces its targeted **deck card entry** at the same ordered position. The outgoing entry ends and the incoming card receives a new run identity. Deck reward exchanges ignore copy limits.
 
 ## Run victory
 

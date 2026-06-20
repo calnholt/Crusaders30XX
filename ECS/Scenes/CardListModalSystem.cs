@@ -580,7 +580,7 @@ namespace Crusaders30XX.ECS.Systems
                 return false;
             }
 
-            if (ClimbShopService.TryFinalizeReplacement(entityManager, metadata.SourceIndex))
+			if (ClimbShopService.TryFinalizeReplacement(entityManager, metadata.EntryId))
             {
                 RunDeckService.EnsureRunDeck(entityManager);
                 return true;

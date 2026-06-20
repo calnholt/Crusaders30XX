@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Data.Climb;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Services;
@@ -27,10 +29,8 @@ namespace Crusaders30XX.ECS.Systems
 		public int SlotListTopOffset { get; set; } = 59;
 		[DebugEditable(DisplayName = "Shop Slot Height", Step = 1, Min = 32, Max = 160)]
 		public int ShopSlotHeight { get; set; } = 131;
-		[DebugEditable(DisplayName = "Encounter Slot Height", Step = 1, Min = 80, Max = 400)]
-		public int EncounterSlotHeight { get; set; } = 217;
-		[DebugEditable(DisplayName = "Event Slot Height", Step = 1, Min = 32, Max = 160)]
-		public int EventSlotHeight { get; set; } = 52;
+		[DebugEditable(DisplayName = "Portrait Slot Height", Step = 1, Min = 80, Max = 400)]
+		public int PortraitSlotHeight { get; set; } = 217;
 		[DebugEditable(DisplayName = "Column Z Order", Step = 1, Min = 0, Max = 5000)]
 		public int ColumnZOrder { get; set; } = 1500;
 		[DebugEditable(DisplayName = "Slot Z Order", Step = 1, Min = 0, Max = 5000)]
@@ -42,8 +42,7 @@ namespace Crusaders30XX.ECS.Systems
 		internal static int ColumnWidthValue { get; private set; } = 486;
 		internal static int SlotListTopOffsetValue { get; private set; } = 59;
 		internal static int ShopSlotHeightValue { get; private set; } = 131;
-		internal static int EncounterSlotHeightValue { get; private set; } = 217;
-		internal static int EventSlotHeightValue { get; private set; } = 52;
+		internal static int PortraitSlotHeightValue { get; private set; } = 217;
 		internal static int ColumnZOrderValue { get; private set; } = 1500;
 		internal static int SlotZOrderValue { get; private set; } = 1600;
 		internal static int ShopTooltipOffsetPxValue { get; private set; } = 30;
@@ -60,8 +59,7 @@ namespace Crusaders30XX.ECS.Systems
 			ColumnWidthValue = ColumnWidth;
 			SlotListTopOffsetValue = SlotListTopOffset;
 			ShopSlotHeightValue = ShopSlotHeight;
-			EncounterSlotHeightValue = EncounterSlotHeight;
-			EventSlotHeightValue = EventSlotHeight;
+			PortraitSlotHeightValue = PortraitSlotHeight;
 			ColumnZOrderValue = ColumnZOrder;
 			SlotZOrderValue = SlotZOrder;
 			ShopTooltipOffsetPxValue = ShopTooltipOffsetPx;
@@ -82,11 +80,11 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			var climb = SaveCache.GetClimbState();
-			bool showEvents = climb?.eventSlots?.Any(slot => ClimbRuleService.IsEventVisible(slot, climb.time)) == true;
+			bool showEvents = climb?.eventSlots?.Any(slot => slot?.status == ClimbEventStatus.Active) == true;
 			var columns = ComputeColumnsLayout(showEvents);
 			SyncColumn(ShopColumnName, ClimbColumnKind.Shop, "Shop", "Spend resources before the shop refreshes", columns.Shop);
 			SyncColumn(EncounterColumnName, ClimbColumnKind.Encounter, "Encounters", "Fight foes for red, white, and black resources", columns.Encounter);
-			SyncColumn(EventColumnName, ClimbColumnKind.Event, "Events", "Timed windows hide medals, foes, and events", columns.Events, showEvents);
+			SyncColumn(EventColumnName, ClimbColumnKind.Event, "Events", "Hazards and characters appear during the climb", columns.Events, showEvents);
 			SyncSlots(climb, columns, showEvents);
 		}
 
@@ -115,8 +113,13 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			var activeEvents = showEvents
-				? climb.eventSlots.Where(slot => ClimbRuleService.IsEventVisible(slot, climb.time)).Take(ClimbRuleService.EventSlotCount).ToList()
+				? climb.eventSlots
+					.Where(slot => slot?.status == ClimbEventStatus.Active)
+					.OrderBy(slot => slot.activatedAtTime)
+					.ThenBy(slot => slot.id, StringComparer.Ordinal)
+					.ToList()
 				: new List<ClimbEventSlotSave>();
+			Debug.Assert(activeEvents.Count <= 2, "Climb event scheduling exceeded the supported adjacent-band concurrency bound.");
 			for (int i = 0; i < ClimbRuleService.EventSlotCount; i++)
 			{
 				var slot = i < activeEvents.Count ? activeEvents[i] : null;
@@ -198,6 +201,9 @@ namespace Crusaders30XX.ECS.Systems
 			presentation.IsAffordable = true;
 			presentation.IsFinal = slot?.isFinal == true;
 			presentation.PortraitAsset = EnemyPortraitContent.ToAssetName(slot?.enemyId ?? string.Empty);
+			presentation.EventKind = ClimbEventKind.Hazard;
+			presentation.GainLine1 = string.Empty;
+			presentation.GainLine2 = string.Empty;
 			var action = entity.GetComponent<ClimbEncounterSlotAction>();
 			if (action == null) EntityManager.AddComponent(entity, new ClimbEncounterSlotAction { SlotId = presentation.SlotId });
 			else action.SlotId = presentation.SlotId;
@@ -212,18 +218,23 @@ namespace Crusaders30XX.ECS.Systems
 			presentation.Kind = ClimbSlotKind.Event;
 			presentation.SlotIndex = index;
 			presentation.SlotId = slot?.id ?? $"event_{index}";
-			presentation.Title = "Event";
-			presentation.Label = slot == null ? string.Empty : $"T{slot.visibleStartTime}-{slot.visibleEndTime}";
-			presentation.Meta = "TIME";
-			presentation.GeneratedAtTime = Math.Max(0, slot?.generatedAtTime ?? 0);
-			presentation.Duration = slot == null ? 0 : Math.Max(0, slot.visibleEndTime - ClimbRuleService.ClampTime(SaveCache.GetClimbState()?.time ?? 0));
+			var definition = ClimbEventCatalog.Get(slot?.definitionId);
+			presentation.EventKind = slot?.kind ?? ClimbEventKind.Hazard;
+			presentation.Title = presentation.EventKind == ClimbEventKind.Hazard ? "Hazard" : definition?.Actor ?? "Character";
+			presentation.Label = presentation.EventKind == ClimbEventKind.Hazard ? "Hazard" : "Character";
+			presentation.Meta = "GAIN";
+			presentation.GeneratedAtTime = Math.Max(0, slot?.activatedAtTime ?? 0);
+			presentation.Duration = Math.Max(0, slot?.duration ?? 0);
 			presentation.Cost = new ClimbResourceSave { red = 0, white = 0, black = 0 };
-			presentation.Reward = new ClimbResourceSave { red = 0, white = 0, black = 0 };
-			presentation.TimeCost = Math.Max(0, slot?.timeCost ?? 0);
+			presentation.Reward = Clone(slot?.rewardResources);
+			presentation.TimeCost = presentation.EventKind == ClimbEventKind.Character ? 1 : 0;
 			presentation.IsSold = false;
-			presentation.IsCompleted = slot?.isCompleted == true;
-			presentation.IsUnavailable = !visible || slot == null || slot.isCompleted;
+			presentation.IsCompleted = slot?.status is ClimbEventStatus.Completed or ClimbEventStatus.Expired;
+			presentation.IsUnavailable = !visible || slot == null || slot.status != ClimbEventStatus.Active;
 			presentation.IsAffordable = true;
+			presentation.PortraitAsset = presentation.EventKind == ClimbEventKind.Character ? definition?.PortraitAsset ?? string.Empty : string.Empty;
+			presentation.GainLine1 = definition?.GainLine1 ?? string.Empty;
+			presentation.GainLine2 = definition?.GainLine2 ?? string.Empty;
 			var action = entity.GetComponent<ClimbEventSlotAction>();
 			if (action == null) EntityManager.AddComponent(entity, new ClimbEventSlotAction { SlotId = presentation.SlotId });
 			else action.SlotId = presentation.SlotId;
@@ -466,12 +477,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		private static Rectangle ComputeEncounterSlotRect(Rectangle inner, int index)
 		{
-			return new Rectangle(inner.X, inner.Y + SlotListTopOffsetValue + index * (EncounterSlotHeightValue + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, EncounterSlotHeightValue);
+			return new Rectangle(inner.X, inner.Y + SlotListTopOffsetValue + index * (PortraitSlotHeightValue + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, PortraitSlotHeightValue);
 		}
 
 		private static Rectangle ComputeEventSlotRect(Rectangle inner, int index)
 		{
-			return new Rectangle(inner.X, inner.Y + SlotListTopOffsetValue + index * (EventSlotHeightValue + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, EventSlotHeightValue);
+			return new Rectangle(inner.X, inner.Y + SlotListTopOffsetValue + index * (PortraitSlotHeightValue + ClimbColumnDisplaySystem.SlotGapValue), inner.Width, PortraitSlotHeightValue);
 		}
 
 		private static ClimbResourceSave Clone(ClimbResourceSave resources)

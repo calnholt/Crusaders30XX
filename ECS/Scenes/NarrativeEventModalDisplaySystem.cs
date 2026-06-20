@@ -28,6 +28,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly HorizontalGradientRuleCache _gradientRuleCache;
 
 		private EventBase _activeEvent;
+		private NarrativeModalContent _suppliedContent;
 		private int _snapshotVisibleOptionCap;
 		private bool _forceSnapshotDraw;
 		private NarrativeEventLayout _layout;
@@ -127,22 +128,26 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnShowNarrativeEventOverlay(ShowNarrativeEventOverlay e)
 		{
 			if (e == null || IsOverlayOpen(EntityManager)) return;
-			Open(e.RunMapEventId, e.EventTypeId, snapshotVisibleOptionCap: 0);
+			if (e.Content != null)
+			{
+				OpenSupplied(e.ResolutionContextId, e.Content);
+				return;
+			}
+			OpenLegacy(e.RunMapEventId, e.EventTypeId, snapshotVisibleOptionCap: 0);
 		}
 
 		private void OnNarrativeEventOverlayClosed(NarrativeEventOverlayClosedEvent e)
 		{
-			ClimbEventService.TryCompletePendingEvent(EntityManager, e?.EventTypeId);
 			CloseOverlay();
 		}
 
 		public void OpenForSnapshot(string eventTypeId, int visibleOptionCount = 0)
 		{
 			_forceSnapshotDraw = true;
-			Open(string.Empty, eventTypeId, visibleOptionCount);
+			OpenLegacy(string.Empty, eventTypeId, visibleOptionCount);
 		}
 
-		private void Open(string runMapEventId, string eventTypeId, int snapshotVisibleOptionCap)
+		private void OpenLegacy(string runMapEventId, string eventTypeId, int snapshotVisibleOptionCap)
 		{
 			if (string.IsNullOrWhiteSpace(eventTypeId)) return;
 
@@ -157,11 +162,35 @@ namespace Crusaders30XX.ECS.Systems
 			var st = EntityManager.GetEntity("NarrativeEventOverlay").GetComponent<NarrativeEventOverlayState>();
 			st.RunMapEventId = runMapEventId ?? string.Empty;
 			st.EventTypeId = eventTypeId;
+			st.ResolutionContextId = string.Empty;
 			st.IsOpen = true;
 
 			_activeEvent = narrativeEvent;
+			_suppliedContent = null;
 			_activeEvent.Initialize(EntityManager);
 			_snapshotVisibleOptionCap = snapshotVisibleOptionCap;
+			InvalidateCaches();
+		}
+
+		private void OpenSupplied(string resolutionContextId, NarrativeModalContent content)
+		{
+			if (content == null || string.IsNullOrWhiteSpace(resolutionContextId)) return;
+
+			EnsureOverlayEntity();
+			var state = EntityManager.GetEntity("NarrativeEventOverlay").GetComponent<NarrativeEventOverlayState>();
+			state.RunMapEventId = string.Empty;
+			state.EventTypeId = string.Empty;
+			state.ResolutionContextId = resolutionContextId;
+			state.IsOpen = true;
+
+			_activeEvent = null;
+			_suppliedContent = new NarrativeModalContent
+			{
+				Title = content.Title ?? string.Empty,
+				Body = content.Body ?? string.Empty,
+				ConfirmLabel = content.ConfirmLabel ?? string.Empty,
+			};
+			_snapshotVisibleOptionCap = 0;
 			InvalidateCaches();
 		}
 
@@ -202,7 +231,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			int vw = Game1.VirtualWidth;
 			int vh = Game1.VirtualHeight;
-			int visibleCount = CountVisibleOptions(_activeEvent, _snapshotVisibleOptionCap);
+			int visibleCount = CountVisibleOptions();
 			EnsureLayout(vw, vh, visibleCount, scene);
 
 			var overlayT = overlayEntity.GetComponent<Transform>();
@@ -250,7 +279,20 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void ResolveOption(NarrativeEventOverlayState state, int optionIndex)
 		{
-			if (_activeEvent == null || !state.IsOpen) return;
+			if (!state.IsOpen) return;
+			if (_suppliedContent != null)
+			{
+				var request = new NarrativeModalChoiceRequested
+				{
+					ResolutionContextId = state.ResolutionContextId,
+					ChoiceIndex = optionIndex,
+				};
+				EventManager.Publish(request);
+				if (request.Handled) CloseOverlay();
+				return;
+			}
+
+			if (_activeEvent == null) return;
 
 			switch (optionIndex)
 			{
@@ -276,7 +318,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			int vw = Game1.VirtualWidth;
 			int vh = Game1.VirtualHeight;
-			int visibleCount = CountVisibleOptions(_activeEvent, _snapshotVisibleOptionCap);
+			int visibleCount = CountVisibleOptions();
 
 			if (!_layoutValid || !_textMetricsValid)
 			{
@@ -297,9 +339,10 @@ namespace Crusaders30XX.ECS.Systems
 		private void DrawBodyColumn()
 		{
 			var m = _textMetrics;
-			if (_activeEvent == null) return;
+			if (_activeEvent == null && _suppliedContent == null) return;
 
-			_spriteBatch.DrawString(_titleFont, _activeEvent.Title, m.TitlePos, ModalOverlayPalette.TitleColor,
+			string safeTitle = TextUtils.FilterUnsupportedGlyphs(_titleFont, GetTitle());
+			_spriteBatch.DrawString(_titleFont, safeTitle, m.TitlePos, ModalOverlayPalette.TitleColor,
 				0f, Vector2.Zero, TitleScale, SpriteEffects.None, 0f);
 
 			int centerX = _layout.BodyInner.Center.X;
@@ -366,7 +409,7 @@ namespace Crusaders30XX.ECS.Systems
 				System.Math.Max(1, shell.Body.Width - BodyPaddingX * 2),
 				System.Math.Max(1, shell.Body.Height - BodyPaddingTop - BodyPaddingBottom));
 
-			BuildVisibleOptionList(_activeEvent, _snapshotVisibleOptionCap);
+			BuildVisibleOptionList();
 
 			_layout = new NarrativeEventLayout
 			{
@@ -391,7 +434,7 @@ namespace Crusaders30XX.ECS.Systems
 				OptionLabels = new List<(string, Vector2, float)>()
 			};
 
-			string title = TextUtils.FilterUnsupportedGlyphs(_titleFont, _activeEvent?.Title ?? string.Empty);
+			string title = TextUtils.FilterUnsupportedGlyphs(_titleFont, GetTitle());
 			metrics.TitleSize = _titleFont.MeasureString(title) * TitleScale;
 			metrics.TitlePos = new Vector2(
 				_layout.BodyInner.Center.X - metrics.TitleSize.X / 2f,
@@ -401,9 +444,9 @@ namespace Crusaders30XX.ECS.Systems
 			_layout.RuleY = (int)cursorY;
 			cursorY += RedRuleHeight + BodyStackGap + BodyOffsetY;
 
-			if (_bodyFont != null && _activeEvent != null)
+			if (_bodyFont != null && (_activeEvent != null || _suppliedContent != null))
 			{
-				string body = TextUtils.FilterUnsupportedGlyphs(_bodyFont, _activeEvent.EventText ?? string.Empty);
+				string body = TextUtils.FilterUnsupportedGlyphs(_bodyFont, GetBody());
 				metrics.BodyLines = TextUtils.WrapText(_bodyFont, body, BodyTextScale, _layout.BodyInner.Width);
 				foreach (var line in metrics.BodyLines)
 				{
@@ -437,29 +480,39 @@ namespace Crusaders30XX.ECS.Systems
 			_textMetrics = metrics;
 		}
 
-		private void BuildVisibleOptionList(EventBase evt, int snapshotCap)
+		private void BuildVisibleOptionList()
 		{
 			_visibleOptions.Clear();
-			if (evt == null) return;
+			if (_suppliedContent != null)
+			{
+				_visibleOptions.Add((0, _suppliedContent.ConfirmLabel));
+				return;
+			}
+			if (_activeEvent == null) return;
 
-			if (!string.IsNullOrWhiteSpace(evt.Option1Text)) _visibleOptions.Add((1, evt.Option1Text));
-			if (!string.IsNullOrWhiteSpace(evt.Option2Text)) _visibleOptions.Add((2, evt.Option2Text));
-			if (!string.IsNullOrWhiteSpace(evt.Option3Text)) _visibleOptions.Add((3, evt.Option3Text));
+			if (!string.IsNullOrWhiteSpace(_activeEvent.Option1Text)) _visibleOptions.Add((1, _activeEvent.Option1Text));
+			if (!string.IsNullOrWhiteSpace(_activeEvent.Option2Text)) _visibleOptions.Add((2, _activeEvent.Option2Text));
+			if (!string.IsNullOrWhiteSpace(_activeEvent.Option3Text)) _visibleOptions.Add((3, _activeEvent.Option3Text));
 
-			if (snapshotCap > 0 && _visibleOptions.Count > snapshotCap)
-				_visibleOptions.RemoveRange(snapshotCap, _visibleOptions.Count - snapshotCap);
+			if (_snapshotVisibleOptionCap > 0 && _visibleOptions.Count > _snapshotVisibleOptionCap)
+				_visibleOptions.RemoveRange(_snapshotVisibleOptionCap, _visibleOptions.Count - _snapshotVisibleOptionCap);
 		}
 
-		private static int CountVisibleOptions(EventBase evt, int snapshotCap)
+		private int CountVisibleOptions()
 		{
-			if (evt == null) return 0;
+			if (_suppliedContent != null) return 1;
+			if (_activeEvent == null) return 0;
 			int count = 0;
-			if (!string.IsNullOrWhiteSpace(evt.Option1Text)) count++;
-			if (!string.IsNullOrWhiteSpace(evt.Option2Text)) count++;
-			if (!string.IsNullOrWhiteSpace(evt.Option3Text)) count++;
-			if (snapshotCap > 0) count = System.Math.Min(count, snapshotCap);
+			if (!string.IsNullOrWhiteSpace(_activeEvent.Option1Text)) count++;
+			if (!string.IsNullOrWhiteSpace(_activeEvent.Option2Text)) count++;
+			if (!string.IsNullOrWhiteSpace(_activeEvent.Option3Text)) count++;
+			if (_snapshotVisibleOptionCap > 0) count = System.Math.Min(count, _snapshotVisibleOptionCap);
 			return count;
 		}
+
+		private string GetTitle() => _suppliedContent?.Title ?? _activeEvent?.Title ?? string.Empty;
+
+		private string GetBody() => _suppliedContent?.Body ?? _activeEvent?.EventText ?? string.Empty;
 
 		private int ComputeFooterHeight(int visibleCount)
 		{
@@ -494,7 +547,9 @@ namespace Crusaders30XX.ECS.Systems
 			st.IsOpen = false;
 			st.RunMapEventId = string.Empty;
 			st.EventTypeId = string.Empty;
+			st.ResolutionContextId = string.Empty;
 			_activeEvent = null;
+			_suppliedContent = null;
 			_snapshotVisibleOptionCap = 0;
 			_forceSnapshotDraw = false;
 			StateSingleton.PreventClicking = false;

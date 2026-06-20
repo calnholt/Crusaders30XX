@@ -36,7 +36,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
             };
             OnUpgrade = (entityManager, card) =>
             {
-                VigorGained += VigorGainedUpgrade;
                 IsFreeAction = true;
                 Cost = CostUpgrade;
                 Text = $"Gain {GetVigorGained(IsUpgraded)} vigor.";

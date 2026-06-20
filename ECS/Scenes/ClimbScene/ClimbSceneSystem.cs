@@ -112,6 +112,14 @@ namespace Crusaders30XX.ECS.Systems
 			if (_equipmentTooltipDisplaySystem != null) FrameProfiler.Measure("ClimbEquipmentTooltipDisplaySystem.Draw", _equipmentTooltipDisplaySystem.Draw);
 		}
 
+		public void DrawBackgroundOnly()
+		{
+			if (_backgroundDisplaySystem != null)
+			{
+				FrameProfiler.Measure("ClimbBackgroundDisplaySystem.DrawBackgroundOnly", () => _backgroundDisplaySystem.Draw(undimmed: true));
+			}
+		}
+
 		private void EnsureEquipmentTooltipEntity()
 		{
 			var entity = EntityManager.GetEntity(EquipmentTooltipEntityName);

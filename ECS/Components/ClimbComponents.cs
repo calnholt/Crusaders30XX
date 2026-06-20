@@ -106,6 +106,9 @@ namespace Crusaders30XX.ECS.Components
 		public bool IsAffordable { get; set; } = true;
 		public bool IsFinal { get; set; }
 		public string PortraitAsset { get; set; } = string.Empty;
+		public ClimbEventKind EventKind { get; set; }
+		public string GainLine1 { get; set; } = string.Empty;
+		public string GainLine2 { get; set; } = string.Empty;
 	}
 
 	public class ClimbEncounterSlotAction : IComponent

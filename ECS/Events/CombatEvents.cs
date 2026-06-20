@@ -122,20 +122,6 @@ namespace Crusaders30XX.ECS.Events
 		
 	}
 
-	public class EncounterDialogueRequested
-	{
-		public string DefinitionId { get; set; } = string.Empty;
-		public string SegmentId { get; set; } = string.Empty;
-		public System.Guid RequestId { get; set; }
-	}
-
-	public class EncounterDialogueCompleted
-	{
-		public string DefinitionId { get; set; } = string.Empty;
-		public string SegmentId { get; set; } = string.Empty;
-		public System.Guid RequestId { get; set; }
-	}
-
 	public class TriggerEnemyAttackDisplayEvent
 	{
 		public string ContextId;

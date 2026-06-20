@@ -21,7 +21,7 @@ namespace Crusaders30XX.ECS.Systems
 		public EnemyPhaseFlowSystem(EntityManager entityManager) : base(entityManager)
 		{
 			EventManager.Subscribe<EnemyPhaseLethalEvent>(OnEnemyPhaseLethal);
-			EventManager.Subscribe<EncounterDialogueCompleted>(OnDialogueCompleted);
+			EventManager.Subscribe<DialogueSequenceCompleted>(OnDialogueCompleted);
 			EventManager.Subscribe<DeleteCachesEvent>(_ => ClearAllPending());
 			EventManager.Subscribe<StartBattleRequested>(_ => ClearAllPending());
 		}
@@ -56,7 +56,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			_pendingRequestId = Guid.NewGuid();
-			EventManager.Publish(new EncounterDialogueRequested
+			EventManager.Publish(new DialogueSequenceRequested
 			{
 				DefinitionId = enemyBase.Id,
 				SegmentId = segmentId,
@@ -64,7 +64,7 @@ namespace Crusaders30XX.ECS.Systems
 			});
 		}
 
-		private void OnDialogueCompleted(EncounterDialogueCompleted evt)
+		private void OnDialogueCompleted(DialogueSequenceCompleted evt)
 		{
 			if (evt == null || evt.RequestId == Guid.Empty || evt.RequestId != _pendingRequestId) return;
 			ContinueFlow();

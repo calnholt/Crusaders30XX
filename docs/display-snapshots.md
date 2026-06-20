@@ -55,6 +55,13 @@ to the fixture.
 | `waystation` | WayStation run setup | Run setup scene with default Sword/Easy selections |
 | `player-hud` | Production player HUD systems | Player HUD geometry and state variants |
 | `climb-no-events` | Climb scene | Shop + Encounters only (no active events column) |
+| `climb-hazard-event` | Climb scene | Active Hazard card with visible resource gain |
+| `climb-character-event` | Climb scene | Active Character card with portrait and visible reward |
+| `climb-hazard-hover-preview` | Climb scene | Zero-time Hazard resource projection |
+| `climb-character-hover-preview` | Climb scene | One-time Character timeline projection |
+| `climb-hazard-confirmation` | Climb scene + narrative modal | Binding Hazard effect and gain confirmation |
+| `climb-character-summary` | Climb scene + narrative modal | Character reward summary |
+| `climb-character-dialog` | Climb background + dialogue | Background-only Character exchange |
 | `climb-active-events` | Climb scene | Three columns with active event slots at T5 |
 | `climb-hover-preview` | Climb scene | Hover preview on first encounter slot |
 | `climb-sold-shop-slot` | Climb scene | Shop with one purchased slot hidden (3 visible items) |
@@ -261,13 +268,20 @@ replaces all six approved baselines.
 
 ---
 
-## `climb-no-events`, `climb-active-events`, `climb-hover-preview`, `climb-sold-shop-slot`, `climb-encounter-reward-modal`, `climb-replacement-modal`
+## Climb fixtures
 
 Renders the Climb scene HUD at 1920x1080 with fixture-specific save state.
 Output PNGs are written under `debug/snapshots/<fixture-id>/<fixture-id>.png`.
 
 ```bash
 dotnet run -- snapshot climb-no-events
+dotnet run -- snapshot climb-hazard-event
+dotnet run -- snapshot climb-character-event
+dotnet run -- snapshot climb-hazard-hover-preview
+dotnet run -- snapshot climb-character-hover-preview
+dotnet run -- snapshot climb-hazard-confirmation
+dotnet run -- snapshot climb-character-summary
+dotnet run -- snapshot climb-character-dialog
 dotnet run -- snapshot climb-active-events
 dotnet run -- snapshot climb-hover-preview
 dotnet run -- snapshot climb-sold-shop-slot
@@ -275,7 +289,8 @@ dotnet run -- snapshot climb-encounter-reward-modal
 dotnet run -- snapshot climb-replacement-modal
 ```
 
-Modal variants draw the Climb scene plus the open modal overlay.
+Modal variants draw the Climb scene plus the open modal overlay. The Character
+dialogue variant draws only the undimmed desert background and dialogue overlay.
 
 ---
 
