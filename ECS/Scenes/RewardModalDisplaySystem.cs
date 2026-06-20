@@ -329,7 +329,7 @@ namespace Crusaders30XX.ECS.Systems
 						DeckRewardOffer = pendingEncounterReward.deckRewardOffer,
 						IsEncounterReward = true,
 						ClimbResources = pendingEncounterReward.resources,
-						DismissScene = SceneId.Climb,
+						DismissScene = pendingEncounterReward.pendingFinalEncounter ? SceneId.Battle : SceneId.Climb,
 					});
 					return;
 				}

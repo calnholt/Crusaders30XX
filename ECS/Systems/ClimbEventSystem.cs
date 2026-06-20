@@ -33,7 +33,9 @@ namespace Crusaders30XX.ECS.Systems
 			SaveCache.TryUpdateClimbEventLifecycle(out var climb);
 			climb ??= SaveCache.GetClimbState();
 			ResumePendingFlow(climb);
-			if (climb?.pendingEvent == null && ClimbRuleService.HasPendingFinalEncounter(climb))
+			if (climb?.pendingEvent == null
+				&& climb?.pendingEncounterReward == null
+				&& ClimbRuleService.HasPendingFinalEncounter(climb))
 			{
 				ClimbEncounterService.TryQueuePendingFinalEncounter(EntityManager);
 			}

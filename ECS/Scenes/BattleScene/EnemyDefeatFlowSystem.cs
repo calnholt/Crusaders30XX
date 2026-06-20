@@ -158,7 +158,7 @@ namespace Crusaders30XX.ECS.Systems
 						DeckRewardOffer = climbCompletion.DeckRewardOffer,
 						IsEncounterReward = true,
 						ClimbResources = climbCompletion.Resources,
-						DismissScene = SceneId.Climb,
+						DismissScene = climbCompletion.PendingFinalEncounter ? SceneId.Battle : SceneId.Climb,
 					});
 					EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.QuestComplete });
 					return;

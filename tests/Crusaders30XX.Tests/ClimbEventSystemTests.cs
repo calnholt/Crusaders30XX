@@ -305,6 +305,70 @@ public class ClimbEventSystemTests
 		Assert.Equal(ClimbEventStatus.Expired, climb.eventSlots.Single(slot => slot.id == "late").status);
 	}
 
+	[Fact]
+	public void Climb_load_with_pending_encounter_reward_does_not_queue_final_encounter()
+	{
+		EventManager.Clear();
+		try
+		{
+			SaveCache.DeleteSaveFilesIfPresent();
+			SaveCache.StartNewRun();
+			var climb = SaveCache.GetClimbState();
+			climb.time = ClimbRuleService.MaxTime;
+			climb.pendingEncounterReward = new ClimbEncounterRewardSave
+			{
+				encounterSlotId = "encounter_a",
+				pendingFinalEncounter = true,
+				resources = new ClimbResourceSave(),
+			};
+			SaveCache.SaveClimbState(climb);
+
+			var world = ClimbWorld();
+			_ = new ClimbEventSystem(world.EntityManager);
+
+			int transitionCount = 0;
+			EventManager.Subscribe<ShowTransition>(_ => transitionCount++);
+
+			EventManager.Publish(new LoadSceneEvent { Scene = SceneId.Climb });
+
+			Assert.Equal(0, transitionCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void Climb_load_at_final_time_without_pending_reward_queues_final_encounter()
+	{
+		EventManager.Clear();
+		try
+		{
+			SaveCache.DeleteSaveFilesIfPresent();
+			SaveCache.StartNewRun();
+			var climb = SaveCache.GetClimbState();
+			climb.time = ClimbRuleService.MaxTime;
+			climb.pendingEncounterReward = null;
+			SaveCache.SaveClimbState(climb);
+
+			var world = ClimbWorld();
+			_ = new ClimbEventSystem(world.EntityManager);
+
+			ShowTransition transition = null;
+			EventManager.Subscribe<ShowTransition>(evt => transition = evt);
+
+			EventManager.Publish(new LoadSceneEvent { Scene = SceneId.Climb });
+
+			Assert.NotNull(transition);
+			Assert.Equal(SceneId.Battle, transition.Scene);
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
 	private static World ClimbWorld()
 	{
 		var world = new World();

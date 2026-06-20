@@ -656,6 +656,11 @@ namespace Crusaders30XX.ECS.Systems
         private void OnTransitionComplete(TransitionCompleteEvent evt)
         {
             if (evt == null || evt.Scene != SceneId.Battle) return;
+            var currentScene = EntityManager.GetEntitiesWithComponent<SceneState>()
+                .FirstOrDefault()
+                ?.GetComponent<SceneState>()
+                ?.Current;
+            if (currentScene != SceneId.Battle) return;
             // Only start dialog after the transition completes into Battle
             var qeEntity = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault();
             var pending = qeEntity?.GetComponent<PendingQuestDialog>();

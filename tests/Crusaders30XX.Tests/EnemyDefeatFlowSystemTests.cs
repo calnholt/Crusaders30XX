@@ -1,9 +1,13 @@
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Loadouts;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Objects.Enemies;
+using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Systems;
+using System.Linq;
 using Xunit;
 
 namespace Crusaders30XX.Tests;
@@ -94,6 +98,80 @@ public class EnemyDefeatFlowSystemTests
 			Assert.NotNull(transition);
 			Assert.Equal(SceneId.WayStation, transition.Scene);
 			Assert.True(transition.EndRunOnLoad);
+		}
+		finally
+		{
+			EventManager.Clear();
+			EventQueue.Clear();
+		}
+	}
+
+	[Fact]
+	public void Final_time_climb_encounter_reward_dismisses_to_battle()
+	{
+		EventManager.Clear();
+		EventQueue.Clear();
+
+		try
+		{
+			SaveCache.DeleteSaveFilesIfPresent();
+			SaveCache.StartNewRun();
+			var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
+			loadout.cards = new System.Collections.Generic.List<LoadoutCardEntry>
+			{
+				new() { entryId = "test_entry_0", cardKey = "smite|White", isStarter = true },
+			};
+			loadout.weaponId = "sword";
+			loadout.medalIds = new System.Collections.Generic.List<string>();
+			SaveCache.SaveLoadout(loadout);
+
+			var climb = SaveCache.GetClimbState();
+			climb.time = ClimbRuleService.MaxTime - 1;
+			climb.encounterSlots[0].timeCost = 1;
+			SaveCache.SaveClimbState(climb);
+
+			var world = new World();
+			var queuedEntity = world.CreateEntity("QueuedEvents");
+			var queued = new QueuedEvents
+			{
+				Events =
+				{
+					new QueuedEvent
+					{
+						EventId = "skeleton",
+						EventType = QueuedEventType.Enemy,
+						Difficulty = EnemyDifficulty.Easy,
+					},
+				},
+				CurrentIndex = 0,
+				IsClimbEncounter = true,
+				ClimbEncounterSlotId = "encounter_0",
+				LocationId = "climb",
+			};
+			world.AddComponent(queuedEntity, queued);
+
+			var phaseEntity = world.CreateEntity("PhaseState");
+			world.AddComponent(phaseEntity, new PhaseState
+			{
+				Main = MainPhase.PlayerTurn,
+				Sub = SubPhase.Action,
+				TurnNumber = 1,
+			});
+
+			var enemy = world.CreateEntity("Enemy");
+			world.AddComponent(enemy, new Enemy { Id = "skeleton", Name = "Skeleton" });
+			world.AddComponent(enemy, new Transform());
+
+			_ = new EnemyDefeatFlowSystem(world.EntityManager, content: null);
+
+			ShowQuestRewardOverlay reward = null;
+			EventManager.Subscribe<ShowQuestRewardOverlay>(evt => reward = evt);
+
+			EventManager.Publish(new BeginDefeatPresentationEvent { Enemy = enemy, IsPreview = false });
+
+			Assert.NotNull(reward);
+			Assert.True(reward.IsEncounterReward);
+			Assert.Equal(SceneId.Battle, reward.DismissScene);
 		}
 		finally
 		{
