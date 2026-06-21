@@ -113,6 +113,9 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Speaker Name Gap", Step = 1, Min = 0, Max = 60)]
         public int SpeakerNameGap { get; set; } = 14;
 
+        [DebugEditable(DisplayName = "Text BG Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+        public float TextBgAlpha { get; set; } = 0.55f;
+
         // Typography
         [DebugEditable(DisplayName = "Speaker Name Scale", Step = 0.01f, Min = 0.05f, Max = 2f)]
         public float SpeakerNameScale { get; set; } = 0.25f;
@@ -754,6 +757,12 @@ namespace Crusaders30XX.ECS.Systems
             {
                 int stageDrawY = layout.Stage.Y;
                 int stageDrawX = layout.Stage.X + (int)stageSlide;
+
+                // Faint black background behind text
+                if (TextBgAlpha > 0f)
+                    _spriteBatch.Draw(_pixel,
+                        new Rectangle(stageDrawX, stageDrawY, layout.Stage.Width, layout.Stage.Height),
+                        Color.Black * TextBgAlpha * stageOpacity);
 
                 // 6a. Speaker dash (scaleX)
                 if (speakerDashProgress > 0f)
