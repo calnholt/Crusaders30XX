@@ -8,7 +8,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 {
     public class SerpentCrush : CardBase
     {
-        private int CourageCost = 4;
+        private int CourageCost = 2;
         private int ActionPointAmount = 1;
         private int DrawAmount = 1;
 

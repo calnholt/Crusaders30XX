@@ -13,10 +13,14 @@ public class Mummy : EnemyBase
   {
     Id = "mummy";
     Name = "Mummy";
-    HealthPerCard = 0.99f;
+    HealthPerCard = 1.3f;
   }
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {
+    if (turnNumber == 5)
+    {
+      return ["leprosy"];
+    }
     int random = Random.Shared.Next(0, 100);
     if (random <= 70)
     {
@@ -37,6 +41,7 @@ public class Entomb : EnemyAttackBase
 
     OnAttackReveal = (entityManager) => 
     {
+      BlockRequiredToPreventEffect = Random.Shared.Next(0, 100) <= 50 ? 6 : 7;
       Text = EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, "Apply brittle to the top card of your draw pile.");
     };
 
@@ -60,10 +65,10 @@ public class Mummify : EnemyAttackBase
     Id = "mummify";
     Name = "Mummify";
     Damage = 10;
-    BlockRequiredToPreventEffect = 6;
 
     OnAttackReveal = (entityManager) => 
     {
+      BlockRequiredToPreventEffect = Random.Shared.Next(0, 100) <= 50 ? 6 : 7;
       Text = EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, $"Gain {Scar} scars.");
     };
 
@@ -71,5 +76,28 @@ public class Mummify : EnemyAttackBase
     {
       EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Scar, Delta = Scar });
     };
+  }
+}
+
+public class Leprosy : EnemyAttackBase
+{
+  private int Brittle = 2;
+  public Leprosy()
+  {
+    Id = "leprosy";
+    Name = "Leprosy";
+    Damage = 9;
+    Text = $"On attack - {Brittle} random cards in your hand become brittle.";
+
+    OnAttackReveal = (entityManager) =>
+    {
+      EventManager.Publish(new ApplyCardApplicationEvent
+      {
+        Amount = Brittle,
+        Type = CardApplicationType.Brittle,
+        Target = CardApplicationTarget.Hand,
+      });
+    };
+    
   }
 }

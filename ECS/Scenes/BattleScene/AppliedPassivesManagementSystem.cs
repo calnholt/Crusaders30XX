@@ -25,7 +25,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
             EventManager.Subscribe<RemovePassive>(OnRemovePassive, priority: 1);
             EventManager.Subscribe<UpdatePassive>(OnUpdatePassive);
-            EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
+		EventManager.Subscribe<LoadSceneEvent>(OnLoadScene, priority: 1);
             EventManager.Subscribe<RemoveAllPassives>(OnRemoveAllPassives);
             EventManager.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
         }

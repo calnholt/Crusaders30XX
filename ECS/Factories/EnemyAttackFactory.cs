@@ -192,6 +192,7 @@ namespace Crusaders30XX.ECS.Factories
                 // Mummy attacks
                 { "entomb", new Entomb() },
                 { "mummify", new Mummify() },
+                { "leprosy", new Leprosy() },
                 // Succubus attacks
                 { "velvet_fangs", new VelvetFangs() },
                 { "soul_siphon", new SoulSiphon() },

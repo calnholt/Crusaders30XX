@@ -211,6 +211,12 @@ namespace Crusaders30XX.ECS.Systems
                     {
                         EntityManager.RemoveComponent<SelectedForPayment>(evt.Card);
                     }
+                    // Defensive: remove any stale HotKey that may have leaked from block assignment
+                    var hk = evt.Card.GetComponent<HotKey>();
+                    if (hk != null)
+                    {
+                        EntityManager.RemoveComponent<HotKey>(evt.Card);
+                    }
                     if (evt.InsertIndex.HasValue)
                     {
                         int idx = evt.InsertIndex.Value;

@@ -110,6 +110,7 @@ namespace Crusaders30XX.ECS.Systems
 		private HighlightSettingsSystem _equipmentHighlightSettingsDebugSystem;
 		private EquipmentBlockInteractionSystem _equipmentBlockInteractionSystem;
 		private AppliedPassivesManagementSystem _appliedPassivesManagementSystem;
+		private AnathemaManagementSystem _anathemaManagementSystem;
 		private BleedManagementSystem _bleedManagementSystem;
 		private BattleStateInfoManagementSystem _battleStateInfoManagementSystem;
 		private DiscardSpecificCardHighlightSystem _discardSpecificCardHighlightSystem;
@@ -704,6 +705,7 @@ namespace Crusaders30XX.ECS.Systems
 			_equipmentHighlightSettingsDebugSystem = new HighlightSettingsSystem(_world.EntityManager);
 			_equipmentBlockInteractionSystem = new EquipmentBlockInteractionSystem(_world.EntityManager);
 			_appliedPassivesManagementSystem = new AppliedPassivesManagementSystem(_world.EntityManager);
+			_anathemaManagementSystem = new AnathemaManagementSystem(_world.EntityManager);
 			_bleedManagementSystem = new BleedManagementSystem(_world.EntityManager);
 			_battleStateInfoManagementSystem = new BattleStateInfoManagementSystem(_world.EntityManager);
 			_discardSpecificCardHighlightSystem = new DiscardSpecificCardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -825,6 +827,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_equipmentHighlightSettingsDebugSystem);
 			_world.AddSystem(_equipmentBlockInteractionSystem);
 			_world.AddSystem(_appliedPassivesManagementSystem);
+			_world.AddSystem(_anathemaManagementSystem);
 			_world.AddSystem(_vigorManagementSystem);
 			_world.AddSystem(_bleedManagementSystem);
 			_world.AddSystem(_battleStateInfoManagementSystem);

@@ -169,6 +169,9 @@ namespace Crusaders30XX.ECS.Systems
                         SaveCache.AddMasteryPoints(cardData.Card.CardId, 1);
                     }
                     CardTransientStateService.ClearAssignedBlockHotKey(EntityManager, entity);
+                    // Mark the block assignment as Returning so MaintainLatestHotKeyForContext
+                    // does not re-add the HotKey during the synchronous CardMoveRequested/CardMoved chain
+                    if (abc != null) { abc.Phase = AssignedBlockCard.PhaseState.Returning; }
                     EventManager.Publish(new CardMoveRequested
                     {
                         Card = entity,

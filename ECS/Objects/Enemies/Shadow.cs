@@ -5,7 +5,6 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.EnemyAttacks;
-using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Utils;
 
 namespace Crusaders30XX.ECS.Objects.Enemies
@@ -23,28 +22,8 @@ namespace Crusaders30XX.ECS.Objects.Enemies
 
       OnStartOfBattle = (entityManager) =>
       {
-        EventManager.Subscribe<PledgeAddedEvent>(OnPledgeAddedEvent);
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Enemy"), Type = AppliedPassiveType.Anathema, Delta = StartAnathema });
       };
-    }
-
-    private void OnPledgeAddedEvent(PledgeAddedEvent evt)
-    {
-      if (evt.Card == null) return;
-
-      var ap = GetComponentHelper.GetAppliedPassives(EntityManager, "Enemy");
-      if (ap == null || ap.Passives == null || ap.Passives.Count == 0) return;
-      if (ap.Passives.TryGetValue(AppliedPassiveType.Anathema, out int darknessStacks) && darknessStacks > 0)
-      {
-        Console.WriteLine($"[Shadow] Anathema triggered at end of action - darknessStacks={darknessStacks}");
-        EventManager.Publish(new ModifyHpRequestEvent
-        {
-          Source = EntityManager.GetEntity("Enemy"),
-          Target = EntityManager.GetEntity("Enemy"),
-          Delta = -darknessStacks,
-          DamageType = ModifyTypeEnum.Effect
-        });
-      }
     }
 
     public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
@@ -54,11 +33,6 @@ namespace Crusaders30XX.ECS.Objects.Enemies
         return ArrayUtils.TakeRandomWithoutReplacement(new List<string> { "snuff_out_the_light", "night_fall", "from_the_shadows", "umbra_slice" }, 3);
       }
       return ArrayUtils.TakeRandomWithoutReplacement(new List<string> { "shadow_strike", "dissipating_darkness" }, 1);
-    }
-
-    public override void Dispose()
-    {
-      EventManager.Unsubscribe<PledgeAddedEvent>(OnPledgeAddedEvent);
     }
   }
 }
