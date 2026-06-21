@@ -147,6 +147,8 @@ namespace Crusaders30XX.ECS.Components
 		public Entity Owner { get; set; }
 	}
 
+	public enum DialogPhase { Idle, Intro, Active, Outro }
+
 	/// <summary>
 	/// Overlay state for battle dialog sequences.
 	/// </summary>
@@ -154,6 +156,7 @@ namespace Crusaders30XX.ECS.Components
 	{
 		public Entity Owner { get; set; }
 		public bool IsActive { get; set; } = false;
+		public DialogPhase Phase { get; set; } = DialogPhase.Idle;
 		public List<DialogLine> Lines { get; set; } = new List<DialogLine>();
 		public int Index { get; set; } = 0;
 		public bool IsCorrelatedSequence { get; set; }
