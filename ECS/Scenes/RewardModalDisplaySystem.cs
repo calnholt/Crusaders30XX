@@ -60,6 +60,26 @@ namespace Crusaders30XX.ECS.Systems
 		private static readonly Color ClimbWhiteColor = new Color(230, 224, 204);
 		private static readonly Color ClimbBlackColor = new Color(92, 76, 104);
 
+		private static readonly Color ExchangeColFillTop = new Color(0, 0, 0) * 0.45f;
+		private static readonly Color ExchangeColFillMid = new Color(30, 0, 0) * 0.15f;
+		private static readonly Color ExchangeColHoverFillTop = new Color(40, 0, 0) * 0.50f;
+		private static readonly Color ExchangeColHoverFillMid = new Color(80, 0, 0) * 0.25f;
+		private static readonly Color ExchangeColBorderTop = new Color(255, 255, 255) * 0.15f;
+		private static readonly Color ExchangeColBorderTopHover = new Color(196, 30, 58);
+		private static readonly Color ExchangeColBorderSide = new Color(255, 255, 255) * 0.12f;
+		private static readonly Color ExchangeColBorderSideHover = new Color(196, 30, 58) * 0.45f;
+		private static readonly Color UpgradeColFillMid = new Color(255, 255, 255) * 0.04f;
+		private static readonly Color UpgradeColHoverFillTop = new Color(20, 20, 20) * 0.50f;
+		private static readonly Color UpgradeColHoverFillMid = new Color(255, 255, 255) * 0.08f;
+		private static readonly Color UpgradeColBorderTop = new Color(255, 255, 255) * 0.25f;
+		private static readonly Color UpgradeColBorderTopHover = new Color(240, 236, 230);
+		private static readonly Color UpgradeColBorderSideHover = new Color(255, 255, 255) * 0.40f;
+		private static readonly Color TradeArrowColor = new Color(196, 30, 58);
+		private static readonly Color UpgradePlusColor = new Color(240, 236, 230);
+		private static readonly Color SkipButtonBgHover = new Color(255, 255, 255) * 0.06f;
+		private static readonly Color SkipButtonBorderDefault = new Color(255, 255, 255) * 0.35f;
+		private static readonly Color SkipButtonBorderHover = new Color(240, 236, 230);
+
 		private const string GoldLabelText = "GOLD";
 		private const string ClimbResourceLabelText = "CLIMB CACHE";
 		private const string StageLabelText = "REWARD";
@@ -158,14 +178,56 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Button Text Scale", Step = 0.01f, Min = 0.1f, Max = 2f)]
 		public float ButtonTextScale { get; set; } = 0.28f;
 
-		[DebugEditable(DisplayName = "Deck Lane Card Scale", Step = 0.01f, Min = 0.1f, Max = 1f)]
-		public float DeckLaneCardScale { get; set; } = 0.64f;
-		[DebugEditable(DisplayName = "Deck Lane Gap", Step = 1, Min = 0, Max = 40)]
-		public int DeckLaneGap { get; set; } = 6;
-		[DebugEditable(DisplayName = "Deck Lane Pair Width", Step = 5, Min = 200, Max = 700)]
-		public int DeckLanePairWidth { get; set; } = 555;
-		[DebugEditable(DisplayName = "Deck Lane Meta Width", Step = 5, Min = 40, Max = 180)]
-		public int DeckLaneMetaWidth { get; set; } = 86;
+		[DebugEditable(DisplayName = "Deck Reward Modal Width", Step = 10, Min = 600, Max = 1600)]
+		public int DeckModalWidth { get; set; } = 1120;
+		[DebugEditable(DisplayName = "Deck Reward Modal Height", Step = 10, Min = 400, Max = 1200)]
+		public int DeckModalHeight { get; set; } = 1080;
+		[DebugEditable(DisplayName = "Masthead Height", Step = 2, Min = 40, Max = 200)]
+		public int DeckMastheadHeight { get; set; } = 90;
+		[DebugEditable(DisplayName = "Masthead Pad Top", Step = 1, Min = 0, Max = 60)]
+		public int DeckMastheadPadTop { get; set; } = 22;
+		[DebugEditable(DisplayName = "Masthead Pad Bottom", Step = 1, Min = 0, Max = 60)]
+		public int DeckMastheadPadBottom { get; set; } = 18;
+		[DebugEditable(DisplayName = "Masthead Title Scale", Step = 0.01f, Min = 0.1f, Max = 1f)]
+		public float DeckMastheadTitleScale { get; set; } = 0.27f;
+		[DebugEditable(DisplayName = "Deck Masthead Title")]
+		public string DeckMastheadTitle { get; set; } = "Quest Complete!";
+		[DebugEditable(DisplayName = "Column Gap", Step = 1, Min = 0, Max = 60)]
+		public int ColumnGap { get; set; } = 14;
+		[DebugEditable(DisplayName = "Column Max Width", Step = 5, Min = 200, Max = 600)]
+		public int ColumnMaxWidth { get; set; } = 340;
+		[DebugEditable(DisplayName = "Column Padding Top", Step = 1, Min = 0, Max = 60)]
+		public int ColumnPaddingTop { get; set; } = 14;
+		[DebugEditable(DisplayName = "Column Padding Bottom", Step = 1, Min = 0, Max = 60)]
+		public int ColumnPaddingBottom { get; set; } = 16;
+		[DebugEditable(DisplayName = "Column Padding X", Step = 1, Min = 0, Max = 60)]
+		public int ColumnPaddingX { get; set; } = 12;
+		[DebugEditable(DisplayName = "Card Stack Gap", Step = 1, Min = 0, Max = 40)]
+		public int CardStackGap { get; set; } = 6;
+		[DebugEditable(DisplayName = "Exchange Stage Pad Top", Step = 1, Min = 0, Max = 60)]
+		public int ExchangeStagePadTop { get; set; } = 16;
+		[DebugEditable(DisplayName = "Exchange Stage Pad Bottom", Step = 1, Min = 0, Max = 60)]
+		public int ExchangeStagePadBottom { get; set; } = 16;
+		[DebugEditable(DisplayName = "Exchange Stage Pad X", Step = 1, Min = 0, Max = 60)]
+		public int ExchangeStagePadX { get; set; } = 24;
+		[DebugEditable(DisplayName = "Deck Footer Height", Step = 2, Min = 40, Max = 200)]
+		public int DeckFooterHeight { get; set; } = 88;
+		[DebugEditable(DisplayName = "Skip Button Width", Step = 5, Min = 60, Max = 600)]
+		public int DeckSkipButtonWidth { get; set; } = 180;
+		[DebugEditable(DisplayName = "Skip Button Height", Step = 2, Min = 30, Max = 120)]
+		public int DeckSkipButtonHeight { get; set; } = 56;
+		[DebugEditable(DisplayName = "Skip Button Text Scale", Step = 0.01f, Min = 0.05f, Max = 0.5f)]
+		public float DeckSkipButtonTextScale { get; set; } = 0.12f;
+		[DebugEditable(DisplayName = "Arrow Scale", Step = 0.01f, Min = 0.25f, Max = 3f)]
+		public float ArrowScale { get; set; } = 1.0f;
+		[DebugEditable(DisplayName = "Trade Arrow Width", Step = 1, Min = 8, Max = 80)]
+		public int TradeArrowWidth { get; set; } = 22;
+		[DebugEditable(DisplayName = "Trade Arrow Height", Step = 1, Min = 8, Max = 80)]
+		public int TradeArrowHeight { get; set; } = 36;
+		[DebugEditable(DisplayName = "Upgrade Plus Size", Step = 1, Min = 8, Max = 80)]
+		public int UpgradePlusSize { get; set; } = 24;
+		[DebugEditable(DisplayName = "Column Top Bar Thickness", Step = 1, Min = 1, Max = 8)]
+		public int ColumnTopBarThickness { get; set; } = 3;
 
 		private struct DeckRewardOptionView
 		{
@@ -179,13 +241,14 @@ namespace Crusaders30XX.ECS.Systems
 			public Rectangle Modal;
 			public Rectangle Content;
 			public Rectangle Masthead;
-			public Rectangle Stage;
+			public Rectangle ExchangeStage;
 			public Rectangle Footer;
 			public Rectangle SkipButton;
-			public Rectangle[] Lanes;
+			public Rectangle[] Columns;
 			public Vector2[] OutgoingCardCenters;
 			public Vector2[] IncomingCardCenters;
 			public Vector2[] ArrowCenters;
+			public bool[] IsUpgrade;
 		}
 
 		private struct QuestRewardLayout
@@ -1252,29 +1315,34 @@ namespace Crusaders30XX.ECS.Systems
 		private void DrawDeckRewardOffer(QuestRewardOverlayState state, int vw, int vh)
 		{
 			if (state?.DeckRewardOffer?.options == null) return;
-			var layout = ComputeDeckRewardOfferLayout(vw, vh, state.DeckRewardOffer.options.Count);
+			int colCount = state.DeckRewardOffer.options.Count;
+			var isUpgradeFlags = new bool[colCount];
+			for (int i = 0; i < colCount; i++)
+				isUpgradeFlags[i] = string.Equals(state.DeckRewardOffer.options[i]?.kind, DeckRewardOfferKinds.Upgrade, System.StringComparison.OrdinalIgnoreCase);
+			var layout = ComputeDeckRewardOfferLayout(vw, vh, colCount, isUpgradeFlags);
 
 			ModalOverlayChrome.DrawDim(_spriteBatch, _pixel, vw, vh, DimAlpha);
 			ModalOverlayChrome.DrawDropShadow(_spriteBatch, _pixel, layout.Modal, DropShadowOffsetY, ModalOverlayPalette.DropShadow);
 			_spriteBatch.Draw(_pixel, layout.Modal, ModalOverlayPalette.ModalFill);
-			_spriteBatch.Draw(_pixel, layout.Masthead, new Color(0, 0, 0) * 0.20f);
 			_spriteBatch.Draw(_pixel, layout.Footer, ModalOverlayPalette.FooterFill);
-			_spriteBatch.Draw(_pixel, new Rectangle(layout.Masthead.X, layout.Masthead.Bottom, layout.Masthead.Width, 1), ModalOverlayPalette.FooterBorderTop);
 			_spriteBatch.Draw(_pixel, new Rectangle(layout.Footer.X, layout.Footer.Y, layout.Footer.Width, 1), ModalOverlayPalette.FooterBorderTop);
+			_spriteBatch.Draw(_pixel, new Rectangle(layout.Masthead.X, layout.Masthead.Bottom - 1, layout.Masthead.Width, 1), new Color(255, 255, 255) * 0.08f);
 			ModalOverlayChrome.DrawInsetHighlight(_spriteBatch, _pixel, layout.Content);
 			ModalOverlayChrome.DrawBorder(_spriteBatch, _pixel, layout.Modal, ModalOverlayPalette.PanelBorder, BorderThickness);
 
-			DrawDeckRewardMasthead(layout, state.RewardGold, state.ClimbResources);
-			DrawDeckRewardStageLabel(layout);
+			string title = !string.IsNullOrWhiteSpace(state.TitleLine1) || !string.IsNullOrWhiteSpace(state.TitleLine2)
+				? $"{state.TitleLine1} {state.TitleLine2}".Trim()
+				: DeckMastheadTitle;
+			DrawDeckRewardMasthead(layout, title);
 
-			for (int i = 0; i < state.DeckRewardOffer.options.Count && i < layout.Lanes.Length; i++)
+			for (int i = 0; i < colCount && i < layout.Columns.Length; i++)
 			{
 				var option = state.DeckRewardOffer.options[i];
 				if (option == null) continue;
-				bool isUpgrade = string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, System.StringComparison.OrdinalIgnoreCase);
+				bool isUpgrade = i < layout.IsUpgrade.Length && layout.IsUpgrade[i];
 				bool hovered = i < _deckRewardOptionViews.Count
 					&& (_deckRewardOptionViews[i].Lane?.GetComponent<UIElement>()?.IsHovered ?? false);
-				DrawDeckRewardLane(layout, option, i, isUpgrade, hovered);
+				DrawDeckRewardColumn(layout, i, isUpgrade, hovered);
 
 				if (i < _deckRewardOptionViews.Count)
 				{
@@ -1283,102 +1351,160 @@ namespace Crusaders30XX.ECS.Systems
 					{
 						Card = view.OutgoingCard,
 						Position = layout.OutgoingCardCenters[i],
-						Scale = DeckLaneCardScale
+						Scale = 1.0f
 					});
+					var outgoingUi = view.OutgoingCard?.GetComponent<UIElement>();
+					if (outgoingUi != null) outgoingUi.Bounds = Rectangle.Empty;
 					EventManager.Publish(new CardRenderScaledRotatedEvent
 					{
 						Card = view.IncomingCard,
 						Position = layout.IncomingCardCenters[i],
-						Scale = DeckLaneCardScale
+						Scale = 1.0f
 					});
+					var incomingUi = view.IncomingCard?.GetComponent<UIElement>();
+					if (incomingUi != null) incomingUi.Bounds = Rectangle.Empty;
 				}
 			}
 
 			var skipUi = _deckRewardSkipButton?.GetComponent<UIElement>();
 			bool skipHovered = skipUi?.IsHovered ?? false;
-			var skipSize = _bodyFont?.MeasureString(SkipRewardLabelText) * 0.15f ?? Vector2.Zero;
-			var skipPos = new Vector2(
-				layout.SkipButton.Center.X - skipSize.X / 2f,
-				layout.SkipButton.Center.Y - skipSize.Y / 2f);
-			ModalOverlayChrome.DrawActionButton(
-				_spriteBatch,
-				_pixel,
-				layout.SkipButton,
-				skipHovered,
-				BorderThickness,
-				_bodyFont,
-				SkipRewardLabelText,
-				skipPos,
-				0.15f,
-				StageLabelColor);
+			DrawDeckRewardSkipButton(layout, skipHovered);
 		}
 
-		private void DrawDeckRewardMasthead(DeckRewardOfferLayout layout, int rewardGold, ClimbResourceSave climbResources)
+		private void DrawDeckRewardMasthead(DeckRewardOfferLayout layout, string titleText)
 		{
-			DrawCenteredString(_titleFont, "Quest Complete", new Vector2(layout.Masthead.Center.X, layout.Masthead.Y + 16), 0.24f, ModalOverlayPalette.TitleColor);
-			_gradientRuleCache.DrawRule(_spriteBatch, layout.Masthead.Center.X, layout.Masthead.Y + 56, 64, 2);
+			var titleSize = _titleFont.MeasureString(titleText) * DeckMastheadTitleScale;
+			float titleX = layout.Masthead.Center.X - titleSize.X / 2f;
+			_spriteBatch.DrawString(_titleFont, titleText,
+				new Vector2(titleX, layout.Masthead.Y + DeckMastheadPadTop),
+				ModalOverlayPalette.TitleColor, 0f, Vector2.Zero,
+				DeckMastheadTitleScale, SpriteEffects.None, 0f);
 
-			string goldText = rewardGold > 0 ? $"Reward +{rewardGold:N0}" : "Reward";
-			string resourceText = BuildClimbResourceRewardText(climbResources);
-			Vector2 rowCenter = new Vector2(layout.Masthead.Center.X, layout.Masthead.Y + 72);
-			if (_bodyFont != null)
+			int ruleY = (int)(layout.Masthead.Y + DeckMastheadPadTop + titleSize.Y + 10);
+			int ruleCenterX = layout.Masthead.Center.X;
+			int ruleHalfW = System.Math.Max(30, RedRuleWidth) / 2;
+			int ruleX = ruleCenterX - ruleHalfW;
+			var ruleRect = new Rectangle(ruleX, ruleY, ruleHalfW * 2, System.Math.Max(1, RedRuleHeight));
+			var ruleCenter = new Color(196, 30, 58);
+			var ruleEdge = new Color(196, 30, 58) * 0.0f;
+			float segmentW = System.Math.Max(1f, ruleRect.Width / 8f);
+			for (int seg = 0; seg < 8; seg++)
 			{
-				var goldSize = _bodyFont.MeasureString(goldText) * 0.12f;
-				var prompt = "Pick one reward";
-				var promptSize = _bodyFont.MeasureString(prompt) * 0.10f;
-				var resourceSize = !string.IsNullOrWhiteSpace(resourceText)
-					? _bodyFont.MeasureString(resourceText) * 0.10f
-					: Vector2.Zero;
-				float totalW = goldSize.X + 24f + promptSize.X;
-				if (resourceSize.X > 0f) totalW += 24f + resourceSize.X;
-				float x = rowCenter.X - totalW / 2f;
-				_spriteBatch.DrawString(_bodyFont, goldText, new Vector2(x, rowCenter.Y), GoldAmountColor, 0f, Vector2.Zero, 0.12f, SpriteEffects.None, 0f);
-				int dividerX = (int)(x + goldSize.X + 12f);
-				_spriteBatch.Draw(_pixel, new Rectangle(dividerX, (int)rowCenter.Y, 1, 16), ColumnDivider);
-				float promptX = dividerX + 12f;
-				_spriteBatch.DrawString(_bodyFont, prompt, new Vector2(promptX, rowCenter.Y + 1f), StageLabelColor, 0f, Vector2.Zero, 0.10f, SpriteEffects.None, 0f);
-				if (resourceSize.X > 0f)
-				{
-					int resourceDividerX = (int)(promptX + promptSize.X + 12f);
-					_spriteBatch.Draw(_pixel, new Rectangle(resourceDividerX, (int)rowCenter.Y, 1, 16), ColumnDivider);
-					_spriteBatch.DrawString(_bodyFont, resourceText, new Vector2(resourceDividerX + 12f, rowCenter.Y + 1f), GoldAmountColor, 0f, Vector2.Zero, 0.10f, SpriteEffects.None, 0f);
-				}
+				float t = seg / 7f;
+				float alphaT = t < 0.5f ? t * 2f : (1f - t) * 2f;
+				var segColor = Color.Lerp(ruleEdge, ruleCenter, alphaT);
+				int segX = (int)(ruleRect.X + seg * segmentW);
+				int segW = ((seg == 7) ? ruleRect.Right : (int)(ruleRect.X + (seg + 1) * segmentW)) - segX;
+				_spriteBatch.Draw(_pixel, new Rectangle(segX, ruleRect.Y, segW, ruleRect.Height), segColor);
 			}
 		}
 
-		private void DrawDeckRewardStageLabel(DeckRewardOfferLayout layout)
+		private void DrawDeckRewardColumn(DeckRewardOfferLayout layout, int index, bool isUpgrade, bool hovered)
 		{
-			DrawCenteredString(_bodyFont, "Deck Reward", new Vector2(layout.Stage.Center.X, layout.Stage.Y + 14), StageLabelScale, StageLabelColor);
+			var col = layout.Columns[index];
+			int topBarH = System.Math.Max(1, ColumnTopBarThickness);
+
+			if (isUpgrade)
+			{
+				var fillTop = hovered ? UpgradeColHoverFillTop : ExchangeColFillTop;
+				var topBar = hovered ? UpgradeColBorderTopHover : UpgradeColBorderTop;
+				var sideBorder = hovered ? UpgradeColBorderSideHover : ExchangeColBorderSide;
+
+				_spriteBatch.Draw(_pixel, col, fillTop);
+				_spriteBatch.Draw(_pixel, new Rectangle(col.X, col.Y, col.Width, topBarH), topBar);
+				ModalOverlayChrome.DrawBorder(_spriteBatch, _pixel, col, sideBorder, 1);
+			}
+			else
+			{
+				var fillTop = hovered ? ExchangeColHoverFillTop : ExchangeColFillTop;
+				var fillMid = hovered ? ExchangeColHoverFillMid : ExchangeColFillMid;
+				var topBar = hovered ? ExchangeColBorderTopHover : ExchangeColBorderTop;
+				var sideBorder = hovered ? ExchangeColBorderSideHover : ExchangeColBorderSide;
+
+				int thirdH = col.Height / 3;
+				_spriteBatch.Draw(_pixel, new Rectangle(col.X, col.Y, col.Width, thirdH), fillTop);
+				_spriteBatch.Draw(_pixel, new Rectangle(col.X, col.Y + thirdH, col.Width, col.Height - thirdH * 2), fillMid);
+				_spriteBatch.Draw(_pixel, new Rectangle(col.X, col.Bottom - thirdH, col.Width, thirdH), fillTop);
+				_spriteBatch.Draw(_pixel, new Rectangle(col.X, col.Y, col.Width, topBarH), topBar);
+				ModalOverlayChrome.DrawBorder(_spriteBatch, _pixel, col, sideBorder, 1);
+			}
+
+			if (isUpgrade)
+				DrawUpgradePlus(layout.ArrowCenters[index], ArrowScale);
+			else
+				DrawTradeArrow(layout.ArrowCenters[index], ArrowScale);
 		}
 
-		private void DrawDeckRewardLane(DeckRewardOfferLayout layout, DeckRewardOfferOptionSave option, int index, bool isUpgrade, bool hovered)
+		private void DrawTradeArrow(Vector2 center, float scale)
 		{
-			var lane = layout.Lanes[index];
-			var fill = isUpgrade
-				? (hovered ? new Color(46, 38, 4) * 0.88f : new Color(22, 18, 2) * 0.88f)
-				: (hovered ? new Color(50, 0, 0) * 0.86f : new Color(12, 0, 0) * 0.80f);
-			var border = isUpgrade
-				? (hovered ? GoldAmountColor * 0.65f : GoldAmountColor * 0.28f)
-				: (hovered ? new Color(196, 30, 58) * 0.70f : ColumnDivider);
-			_spriteBatch.Draw(_pixel, lane, fill);
-			_spriteBatch.Draw(_pixel, new Rectangle(lane.X, lane.Y, 3, lane.Height), isUpgrade ? GoldAmountColor * 0.55f : new Color(196, 30, 58) * 0.55f);
-			ModalOverlayChrome.DrawBorder(_spriteBatch, _pixel, lane, border, 1);
+			float h = TradeArrowHeight * scale;
+			float w = TradeArrowWidth * scale;
+			float halfW = w / 2f;
+			float shaftW = System.Math.Max(2f, w * 0.32f);
+			float headH = h * 0.28f;
 
-			string laneNum = (index + 1).ToString("00");
-			string tag = isUpgrade ? "Upgrade" : "Exchange";
-			float metaX = lane.X + 14;
-			DrawString(_titleFont, laneNum, new Vector2(metaX, lane.Center.Y - 28), 0.18f, ModalOverlayPalette.TitleColor);
-			DrawString(_bodyFont, tag, new Vector2(metaX, lane.Center.Y + 4), 0.08f, isUpgrade ? GoldLabelColor : StageLabelColor);
+			float top = center.Y - h / 2f;
+			float shaftBottom = top + h - headH;
+			_spriteBatch.Draw(_pixel, new Rectangle((int)(center.X - shaftW / 2f), (int)top, (int)shaftW, (int)(shaftBottom - top)), TradeArrowColor);
 
-			string leftLabel = isUpgrade ? "Current" : "Remove";
-			string rightLabel = isUpgrade ? "Upgraded" : "Gain";
-			DrawCenteredString(_bodyFont, leftLabel, new Vector2(layout.OutgoingCardCenters[index].X, lane.Y + 8), 0.08f, StageLabelColor);
-			DrawCenteredString(_bodyFont, rightLabel, new Vector2(layout.IncomingCardCenters[index].X, lane.Y + 8), 0.08f, isUpgrade ? GoldLabelColor : StageLabelColor);
+			Vector2 pLeft = new Vector2(center.X - halfW, shaftBottom);
+			Vector2 pRight = new Vector2(center.X + halfW, shaftBottom);
+			Vector2 pTip = new Vector2(center.X, top + h);
+			DrawTriangle(_pixel, _spriteBatch, pLeft, pRight, pTip, TradeArrowColor);
+		}
 
-			string arrow = isUpgrade ? "^" : ">>";
-			string arrowLabel = isUpgrade ? "Upgrade" : "Trade";
-			DrawCenteredString(_titleFont, arrow, layout.ArrowCenters[index] + new Vector2(0, -18), isUpgrade ? 0.24f : 0.20f, isUpgrade ? GoldAmountColor : new Color(196, 30, 58));
-			DrawCenteredString(_bodyFont, arrowLabel, layout.ArrowCenters[index] + new Vector2(0, 20), 0.09f, isUpgrade ? GoldLabelColor : StageLabelColor);
+		private void DrawUpgradePlus(Vector2 center, float scale)
+		{
+			float size = UpgradePlusSize * scale;
+			float half = size / 2f;
+			float thick = System.Math.Max(2f, size * 0.15f);
+			_spriteBatch.Draw(_pixel, new Rectangle((int)(center.X - half), (int)(center.Y - thick / 2f), (int)size, (int)thick), UpgradePlusColor);
+			_spriteBatch.Draw(_pixel, new Rectangle((int)(center.X - thick / 2f), (int)(center.Y - half), (int)thick, (int)size), UpgradePlusColor);
+		}
+
+		private static void DrawTriangle(Texture2D pixel, SpriteBatch sb, Vector2 a, Vector2 b, Vector2 c, Color color)
+		{
+			Vector2[] verts = { a, b, c };
+			System.Array.Sort(verts, (v1, v2) => v1.Y.CompareTo(v2.Y));
+			Vector2 top = verts[0], mid = verts[1], bot = verts[2];
+			for (int y = (int)top.Y; y <= (int)bot.Y; y++)
+			{
+				if (y < 0) continue;
+				float tY = (bot.Y - top.Y) <= 0f ? 0f : (y - top.Y) / (bot.Y - top.Y);
+				Vector2 leftEdge = Vector2.Lerp(top, bot, tY);
+				Vector2 rightEdge;
+				float midT;
+				if (y <= mid.Y)
+				{
+					midT = (mid.Y - top.Y) <= 0f ? 0f : (y - top.Y) / (mid.Y - top.Y);
+					rightEdge = Vector2.Lerp(top, mid, midT);
+				}
+				else
+				{
+					midT = (bot.Y - mid.Y) <= 0f ? 0f : (y - mid.Y) / (bot.Y - mid.Y);
+					rightEdge = Vector2.Lerp(mid, bot, midT);
+				}
+				float left = System.Math.Min(leftEdge.X, rightEdge.X);
+				float right = System.Math.Max(leftEdge.X, rightEdge.X);
+				sb.Draw(pixel, new Rectangle((int)left, y, (int)(right - left) + 1, 1), color);
+			}
+		}
+
+		private void DrawDeckRewardSkipButton(DeckRewardOfferLayout layout, bool hovered)
+		{
+			var r = layout.SkipButton;
+			var fill = hovered ? SkipButtonBgHover : Color.Transparent;
+			var border = hovered ? SkipButtonBorderHover : SkipButtonBorderDefault;
+			var textColor = hovered ? Color.White : StageLabelColor;
+			int borderThick = System.Math.Max(2, BorderThickness);
+			_spriteBatch.Draw(_pixel, r, fill);
+			ModalOverlayChrome.DrawBorder(_spriteBatch, _pixel, r, border, borderThick);
+			if (_bodyFont != null)
+			{
+				var textSize = _bodyFont.MeasureString(SkipRewardLabelText) * DeckSkipButtonTextScale;
+				var textPos = new Vector2(r.Center.X - textSize.X / 2f, r.Center.Y - textSize.Y / 2f);
+				_spriteBatch.DrawString(_bodyFont, SkipRewardLabelText, textPos, textColor, 0f, Vector2.Zero, DeckSkipButtonTextScale, SpriteEffects.None, 0f);
+			}
 		}
 
 		private void DrawString(SpriteFont font, string text, Vector2 position, float scale, Color color)
@@ -1553,7 +1679,11 @@ namespace Crusaders30XX.ECS.Systems
 		private void UpdateDeckRewardOfferControls(QuestRewardOverlayState state, SceneState scene)
 		{
 			if (state?.DeckRewardOffer?.options == null) return;
-			var layout = ComputeDeckRewardOfferLayout(Game1.VirtualWidth, Game1.VirtualHeight, state.DeckRewardOffer.options.Count);
+			int colCount = state.DeckRewardOffer.options.Count;
+			var isUpgradeFlags = new bool[colCount];
+			for (int i = 0; i < colCount; i++)
+				isUpgradeFlags[i] = string.Equals(state.DeckRewardOffer.options[i]?.kind, DeckRewardOfferKinds.Upgrade, System.StringComparison.OrdinalIgnoreCase);
+			var layout = ComputeDeckRewardOfferLayout(Game1.VirtualWidth, Game1.VirtualHeight, colCount, isUpgradeFlags);
 
 			for (int i = 0; i < _deckRewardOptionViews.Count; i++)
 			{
@@ -1561,7 +1691,7 @@ namespace Crusaders30XX.ECS.Systems
 				var laneUi = view.Lane?.GetComponent<UIElement>();
 				if (laneUi != null)
 				{
-					laneUi.Bounds = i < layout.Lanes.Length ? layout.Lanes[i] : Rectangle.Empty;
+					laneUi.Bounds = i < layout.Columns.Length ? layout.Columns[i] : Rectangle.Empty;
 					laneUi.IsInteractable = state.IsOpen && !state.DismissInProgress;
 					laneUi.LayerType = UILayerType.Overlay;
 					if (laneUi.IsClicked)
@@ -1649,59 +1779,93 @@ namespace Crusaders30XX.ECS.Systems
 			if (hotKey != null) hotKey.IsActive = false;
 		}
 
-		private DeckRewardOfferLayout ComputeDeckRewardOfferLayout(int vw, int vh, int laneCount)
+		private DeckRewardOfferLayout ComputeDeckRewardOfferLayout(int vw, int vh, int columnCount, bool[] isUpgradeFlags)
 		{
-			int modalW = System.Math.Max(600, ModalWidth);
-			int modalH = System.Math.Max(560, QuestRewardModalHeight);
+			int modalW = System.Math.Max(600, DeckModalWidth);
+			int modalH = System.Math.Max(400, DeckModalHeight);
 			int modalX = (vw - modalW) / 2;
 			int modalY = (vh - modalH) / 2;
 			var modal = new Rectangle(modalX, modalY, modalW, modalH);
 			var content = new Rectangle(modal.X + BorderThickness, modal.Y + BorderThickness, modal.Width - BorderThickness * 2, modal.Height - BorderThickness * 2);
-			var masthead = new Rectangle(content.X, content.Y, content.Width, 104);
-			var footer = new Rectangle(content.X, content.Bottom - 88, content.Width, 88);
-			var stage = new Rectangle(content.X, masthead.Bottom, content.Width, footer.Y - masthead.Bottom);
 
-			int count = System.Math.Max(0, laneCount);
-			var lanes = new Rectangle[count];
-			var outgoing = new Vector2[count];
-			var incoming = new Vector2[count];
-			var arrows = new Vector2[count];
-			if (count > 0)
+			int mastheadH = System.Math.Max(40, DeckMastheadHeight);
+			var masthead = new Rectangle(content.X, content.Y, content.Width, mastheadH);
+
+			int footerH = System.Math.Max(40, DeckFooterHeight);
+			var footer = new Rectangle(content.X, content.Bottom - footerH, content.Width, footerH);
+
+			var exchangeStage = new Rectangle(content.X, masthead.Bottom, content.Width, System.Math.Max(1, footer.Y - masthead.Bottom));
+
+			int colCount = System.Math.Max(0, columnCount);
+			var columns = new Rectangle[colCount];
+			var outgoing = new Vector2[colCount];
+			var incoming = new Vector2[colCount];
+			var arrows = new Vector2[colCount];
+			var isUpgrade = new bool[colCount];
+
+			if (colCount > 0)
 			{
-				int gap = System.Math.Max(0, DeckLaneGap);
-				int lanesX = stage.X + 20;
-				int lanesY = stage.Y + 52;
-				int lanesW = stage.Width - 40;
-				int lanesH = System.Math.Max(1, stage.Bottom - 12 - lanesY);
-				int laneH = System.Math.Max(64, (lanesH - gap * (count - 1)) / count);
-				float cardSeparation = System.Math.Max(120, DeckLanePairWidth) / 2f;
-				for (int i = 0; i < count; i++)
+				int stagePadX = System.Math.Max(0, ExchangeStagePadX);
+				int stagePadTop = System.Math.Max(0, ExchangeStagePadTop);
+				int stagePadBottom = System.Math.Max(0, ExchangeStagePadBottom);
+				int areaX = exchangeStage.X + stagePadX;
+				int areaY = exchangeStage.Y + stagePadTop;
+				int areaW = System.Math.Max(1, exchangeStage.Width - stagePadX * 2);
+				int areaH = System.Math.Max(1, exchangeStage.Height - stagePadTop - stagePadBottom);
+
+				int gap = System.Math.Max(0, ColumnGap);
+				int maxColW = System.Math.Max(100, ColumnMaxWidth);
+				int colPadX = System.Math.Max(0, ColumnPaddingX);
+				int colPadTop = System.Math.Max(0, ColumnPaddingTop);
+				int colPadBot = System.Math.Max(0, ColumnPaddingBottom);
+
+				int colW = System.Math.Min(maxColW, (areaW - gap * (colCount - 1)) / colCount);
+				int totalColW = colW * colCount + gap * (colCount - 1);
+				int colStartX = areaX + (areaW - totalColW) / 2;
+
+				var settings = CardGeometryService.GetSettings(EntityManager);
+				int cardW = settings?.CardWidth ?? CardGeometrySettings.DefaultWidth;
+				int cardH = settings?.CardHeight ?? CardGeometrySettings.DefaultHeight;
+				int offsetY = settings?.CardOffsetYExtra ?? CardGeometrySettings.DefaultOffsetYExtra;
+				float cardHalfVisualTop = cardH / 2f + offsetY;
+				float cardHalfVisualBot = cardH / 2f - offsetY;
+
+				for (int i = 0; i < colCount; i++)
 				{
-					lanes[i] = new Rectangle(lanesX, lanesY + i * (laneH + gap), lanesW, laneH);
-					float pairCenterX = lanes[i].Center.X + DeckLaneMetaWidth / 2f;
-					float centerY = lanes[i].Center.Y + 12;
-					outgoing[i] = new Vector2(pairCenterX - cardSeparation / 2f, centerY);
-					incoming[i] = new Vector2(pairCenterX + cardSeparation / 2f, centerY);
-					arrows[i] = new Vector2(pairCenterX, lanes[i].Center.Y + 8);
+					columns[i] = new Rectangle(colStartX + i * (colW + gap), areaY, colW, areaH);
+					float colCenterX = columns[i].Center.X;
+					float outgoingCY = columns[i].Y + colPadTop + cardHalfVisualTop;
+					float incomingCY = columns[i].Bottom - colPadBot - cardHalfVisualBot;
+					float outgoingBottom = outgoingCY + cardHalfVisualBot;
+					float incomingTop = incomingCY - cardHalfVisualTop;
+					float arrowCY = (outgoingBottom + incomingTop) / 2f;
+					outgoing[i] = new Vector2(colCenterX, outgoingCY);
+					incoming[i] = new Vector2(colCenterX, incomingCY);
+					arrows[i] = new Vector2(colCenterX, arrowCY);
+					isUpgrade[i] = isUpgradeFlags != null && i < isUpgradeFlags.Length && isUpgradeFlags[i];
 				}
 			}
 
-			int buttonW = System.Math.Max(120, ButtonWidth - 40);
-			int buttonH = System.Math.Max(40, ButtonHeight - 8);
-			var skip = new Rectangle(content.Center.X - buttonW / 2, footer.Y + (footer.Height - buttonH) / 2, buttonW, buttonH);
+			int skipBtnW = System.Math.Max(60, DeckSkipButtonWidth);
+			int skipBtnH = System.Math.Max(30, DeckSkipButtonHeight);
+			var skipButton = new Rectangle(
+				content.Center.X - skipBtnW / 2,
+				footer.Y + (footer.Height - skipBtnH) / 2,
+				skipBtnW, skipBtnH);
 
 			return new DeckRewardOfferLayout
 			{
 				Modal = modal,
 				Content = content,
 				Masthead = masthead,
-				Stage = stage,
+				ExchangeStage = exchangeStage,
 				Footer = footer,
-				SkipButton = skip,
-				Lanes = lanes,
+				SkipButton = skipButton,
+				Columns = columns,
 				OutgoingCardCenters = outgoing,
 				IncomingCardCenters = incoming,
-				ArrowCenters = arrows
+				ArrowCenters = arrows,
+				IsUpgrade = isUpgrade
 			};
 		}
 
