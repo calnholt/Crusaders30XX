@@ -67,7 +67,6 @@ namespace Crusaders30XX.ECS.Systems
 		private void BeginRunEndOverlay()
 		{
 			if (TestFightRuntime.IsActive) return;
-			if (GuidedTutorialService.IsActive(EntityManager)) return;
 			if (_active) return;
 			LoggingService.Append("GameOverOverlayDisplaySystem.BeginRunEndOverlay", new System.Text.Json.Nodes.JsonObject());
 			_active = true;
@@ -89,11 +88,18 @@ namespace Crusaders30XX.ECS.Systems
 			float total = System.Math.Max(0.0001f, OverlayFadeInSeconds) + System.Math.Max(0.0001f, TextFadeOutSeconds);
 			if (!_sceneSwitched && _elapsed >= total)
 			{
-				RunLifecycleService.EndCurrentRun(EntityManager);
-				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Menu });
-				EventManager.Publish(new ShowTransition { Scene = SceneId.WayStation, SkipWipe = true });
+				if (GuidedTutorialService.IsActive(EntityManager))
+				{
+					GuidedTutorialService.RestartSection(EntityManager);
+				}
+				else
+				{
+					RunLifecycleService.EndCurrentRun(EntityManager);
+					EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Menu });
+					EventManager.Publish(new ShowTransition { Scene = SceneId.WayStation, SkipWipe = true });
+				}
 				_sceneSwitched = true;
-				_active = false; // stop drawing after switch
+				_active = false;
 			}
 		}
 

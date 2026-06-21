@@ -34,7 +34,7 @@ namespace Crusaders30XX.ECS.Systems
 			var deck = deckEntity?.GetComponent<Deck>();
 			if (deck == null) return;
 			var tutorial = GuidedTutorialService.GetState(EntityManager);
-			if (tutorial?.Battle == TutorialBattle.Gleeber)
+			if (tutorial?.Section <= 4)
 			{
 				var hiddenWeapon = GetEquippedWeaponEntityIfSpawned();
 				if (hiddenWeapon != null) deck.Hand.Remove(hiddenWeapon);

@@ -8,11 +8,13 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Singletons;
  
 using System;
 using Crusaders30XX.ECS.Scenes.BattleScene;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Data.Tutorials;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -99,6 +101,7 @@ namespace Crusaders30XX.ECS.Systems
 		private PayCostOverlaySystem _payCostOverlaySystem;
 		private CantPlayCardMessageSystem _cantPlayCardMessageSystem;
 		private GameOverOverlayDisplaySystem _gameOverOverlayDisplaySystem;
+		private TutorialRetryDisplaySystem _tutorialRetryDisplaySystem;
 		private TestFightFlowSystem _testFightFlowSystem;
 		private WeaponManagementSystem _weaponManagementSystem;
 		private EquipmentManagerSystem _equipmentManagerSystem;
@@ -368,11 +371,12 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("EquipmentDisplaySystem.Draw", _equipmentDisplaySystem.Draw);
 			FrameProfiler.Measure("EquipmentTooltipDisplaySystem.Draw", _equipmentTooltipDisplaySystem.Draw);
 			var guidedState = GuidedTutorialService.GetState(EntityManager);
-			if (guidedState == null || guidedState.Battle == TutorialBattle.SandCorpse)
+			bool showDrawPile = !guidedTutorial || (guidedState?.Section == 8);
+			if (guidedState == null || guidedState.Section >= 5)
 				FrameProfiler.Measure("EquippedWeaponDisplaySystem.Draw", _equippedWeaponDisplaySystem.Draw);
 			FrameProfiler.Measure("MedalDisplaySystem.Draw", _medalDisplaySystem.Draw);
-			if (!guidedTutorial) FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
-			if (!guidedTutorial) FrameProfiler.Measure("DrawPileColorCountDisplaySystem.Draw", _drawPileColorCountDisplaySystem.Draw);
+			if (showDrawPile) FrameProfiler.Measure("DrawPileDisplaySystem.Draw", _drawPileDisplaySystem.Draw);
+			if (showDrawPile) FrameProfiler.Measure("DrawPileColorCountDisplaySystem.Draw", _drawPileColorCountDisplaySystem.Draw);
 			if (!guidedTutorial) FrameProfiler.Measure("DiscardPileDisplaySystem.Draw", _discardPileDisplaySystem.Draw);
 			FrameProfiler.Measure("MillCardSystem.Draw", _millCardSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawForeground", _payCostOverlaySystem.DrawForeground);
@@ -382,8 +386,9 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", _battlePhaseDisplaySystem.Draw);
 			FrameProfiler.Measure("TestFightHpDisplaySystem.Draw", _testFightHpDisplaySystem.Draw);
 			FrameProfiler.Measure("DamageModificationDisplaySystem.Draw", _damageModificationDisplaySystem.Draw);
-			if (!guidedTutorial && !TestFightRuntime.IsActive) FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);
-		if (!guidedTutorial && !TestFightRuntime.IsActive && _gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
+			if (!TestFightRuntime.IsActive) FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);
+		if (!TestFightRuntime.IsActive && _gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
+		if (_tutorialRetryDisplaySystem != null) FrameProfiler.Measure("TutorialRetryDisplaySystem.Draw", _tutorialRetryDisplaySystem.Draw);
 		if (_tutorialDisplaySystem != null) FrameProfiler.Measure("TutorialDisplaySystem.Draw", _tutorialDisplaySystem.Draw);
 		}
 
@@ -441,10 +446,7 @@ namespace Crusaders30XX.ECS.Systems
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
 			var queued = queuedEntity.GetComponent<QueuedEvents>();
 			bool shouldApplyClimbBattlePackage = IsFirstQueuedClimbEncounter(queued);
-			EventManager.Publish(new SetCourageEvent{ Amount = 0 });
 			EventManager.Publish(new SetActionPointsEvent { Amount = 0 });
-			// Dialog is now handled globally; do not open here
-			// TODO: should handle through events rather than directly but im lazy right now
 			var player = EntityManager.GetEntity("Player");
 			if (player == null)
 			{
@@ -453,10 +455,8 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			var battleStateInfo = player.GetComponent<BattleStateInfo>();
 			battleStateInfo.EquipmentTriggeredThisBattle.Clear();
-			// Initialize/Reset per-battle applied passives on player
 			var playerPassives = player.GetComponent<AppliedPassives>();
 
-			// Clear all pledges at start of battle
 			var allCards = EntityManager.GetEntitiesWithComponent<CardData>();
 			foreach (var c in allCards)
 			{
@@ -472,13 +472,31 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			EntityManager.DestroyEntity("Enemy");
 			LoggingService.Append("BattleSceneSystem.InitBattle", new System.Text.Json.Nodes.JsonObject { ["eventsCount"] = queued.Events.Count, ["currentIndex"] = queued.CurrentIndex });
-			var nextEvent = queued.Events[++queued.CurrentIndex];
-			var nextEnemy = EntityFactory.CreateEnemyFromId(_world, nextEvent.EventId, EntityManager, nextEvent.Difficulty);
+			Entity nextEnemy;
+			if (guidedTutorial)
+			{
+				var tutorial = GuidedTutorialService.GetState(EntityManager);
+				var sectionDef = GuidedTutorialDefinitions.GetSection(tutorial.Section);
+				EventManager.Publish(new SetCourageEvent { Amount = tutorial.BaselineCourage });
+				EventManager.Publish(new SetTemperanceEvent { Amount = tutorial.BaselineTemperance });
+				player.GetComponent<Intellect>().Value = sectionDef.Turns[0].StockHand.Count;
+				player.GetComponent<MaxHandSize>().Value = sectionDef.Turns[0].StockHand.Count;
+				StateSingleton.IsPledgeEnabled = tutorial.Section >= 8;
+				tutorial.IsRestart = false;
+				queued.CurrentIndex = 0;
+				nextEnemy = EntityFactory.CreateEnemyFromId(_world, "gleeber", EntityManager);
+			}
+			else
+			{
+				EventManager.Publish(new SetCourageEvent { Amount = 0 });
+				StateSingleton.IsPledgeEnabled = true;
+				var nextEvent = queued.Events[++queued.CurrentIndex];
+				nextEnemy = EntityFactory.CreateEnemyFromId(_world, nextEvent.EventId, EntityManager, nextEvent.Difficulty);
+			}
 			TestFightSetupService.ApplyEnemyHpDelta(nextEnemy);
 			if (!guidedTutorial)
 				EventManager.Publish(new ResetDeckEvent { });
 			var phaseState = EntityManager.GetEntity("PhaseState").GetComponent<PhaseState>();
-			// Reset phase state at the start of every battle so we don't inherit the previous battle's sub-phase.
 			phaseState.Main = MainPhase.StartBattle;
 			phaseState.Sub = SubPhase.StartBattle;
 			phaseState.TurnNumber = 1;
@@ -678,6 +696,7 @@ namespace Crusaders30XX.ECS.Systems
 			_payCostOverlaySystem = new PayCostOverlaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_cantPlayCardMessageSystem = new CantPlayCardMessageSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_gameOverOverlayDisplaySystem = new GameOverOverlayDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_tutorialRetryDisplaySystem = new TutorialRetryDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_testFightFlowSystem = new TestFightFlowSystem(_world.EntityManager);
 			_enemyIntentPlanningSystem = new EnemyIntentPlanningSystem(_world.EntityManager);
 			_enemyAttackProgressManagementSystem = new EnemyAttackProgressManagementSystem(_world.EntityManager);
@@ -864,6 +883,7 @@ namespace Crusaders30XX.ECS.Systems
 				_tutorialDisplaySystem = new TutorialDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content, _tutorialManager);
 				_world.AddSystem(_tutorialManager);
 				_world.AddSystem(_tutorialDisplaySystem);
+				_world.AddSystem(_tutorialRetryDisplaySystem);
 			}
 
 			// Pledge system

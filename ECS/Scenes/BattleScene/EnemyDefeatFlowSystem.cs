@@ -4,6 +4,7 @@ using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Data.Tutorials;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.Diagnostics;
@@ -105,19 +106,20 @@ namespace Crusaders30XX.ECS.Systems
 			var tutorial = GuidedTutorialService.GetState(EntityManager);
 			if (tutorial != null)
 			{
-				if (tutorial.Battle == TutorialBattle.Gleeber)
+				var sectionDef = GuidedTutorialDefinitions.GetSection(tutorial.Section);
+				if (!string.IsNullOrEmpty(sectionDef.PendingDialogKey))
 				{
 					_tutorialDialogueRequestId = Guid.NewGuid();
 					EventManager.Publish(new DialogueSequenceRequested
 					{
 						DefinitionId = "guided_tutorial",
-						SegmentId = "gleeber_victory",
+						SegmentId = sectionDef.PendingDialogKey,
 						RequestId = _tutorialDialogueRequestId,
 					});
 				}
 				else
 				{
-					GuidedTutorialService.Complete(EntityManager);
+					GuidedTutorialService.AdvanceToNextSection(EntityManager);
 				}
 				return;
 			}
@@ -186,8 +188,19 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (evt == null || evt.RequestId == Guid.Empty || evt.RequestId != _tutorialDialogueRequestId) return;
 			_tutorialDialogueRequestId = Guid.Empty;
-			GuidedTutorialService.BeginSecondBattle(EntityManager);
-			EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
+
+			var tutorial = GuidedTutorialService.GetState(EntityManager);
+			if (tutorial == null) return;
+
+			var sectionDef = GuidedTutorialDefinitions.GetSection(tutorial.Section);
+			if (sectionDef.PendingDialogKey == "last_of_them")
+			{
+				GuidedTutorialService.Complete(EntityManager);
+			}
+			else
+			{
+				GuidedTutorialService.AdvanceToNextSection(EntityManager);
+			}
 		}
 
 		private void FinishWithoutBurst(Entity enemy, bool isPreview)

@@ -57,7 +57,7 @@ public class TitleMenuResumeRoutingTests
 			Assert.Equal(SceneId.WayStation, TitleMenuResumeService.ResolveDirectTransitionScene());
 			Assert.True(SaveCache.IsGuidedTutorialCompleted());
 			Assert.False(SaveCache.IsRunActive());
-			Assert.Contains("pledge", SaveCache.GetAll().seenTutorials);
+			Assert.Contains("teach_pledge", SaveCache.GetAll().seenTutorials);
 			Assert.Contains("guided_tutorial", SaveCache.GetAll().seenTutorials);
 		}
 		finally

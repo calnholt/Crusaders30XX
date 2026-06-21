@@ -89,17 +89,12 @@ namespace Crusaders30XX.ECS.Systems
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
 		{
-			// Only active when window is active and not during transitions
 			if (!Game1.WindowIsActive || StateSingleton.IsActive) return;
 
-			// Restrict to Battle scene for now
+			if (GuidedTutorialService.IsActive(EntityManager)) return;
+
 			var scene = entity.GetComponent<SceneState>();
 			if (scene == null || scene.Current != SceneId.Battle) return;
-			if (GuidedTutorialService.IsActive(EntityManager))
-			{
-				DismissOverlay();
-				return;
-			}
 
 			PlayerInputFrame input = PlayerInputService.GetFrame(EntityManager);
 			bool edgeEsc = input.WasPressed(PlayerButton.Escape);

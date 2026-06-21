@@ -231,10 +231,13 @@ namespace Crusaders30XX.ECS.Systems
                 return;
             }
 
-            string text = GuidedTutorialDefinitions.ResolveMessageText(
-                _currentTutorial.key,
-                _currentTutorial.text,
-                PlayerInputService.GetFrame(EntityManager).IsGamepadConnected);
+            string text = _currentTutorial.text ?? string.Empty;
+            if (_currentTutorial.key == "teach_pledge")
+            {
+                bool gamepad = PlayerInputService.GetFrame(EntityManager).IsGamepadConnected;
+                string button = gamepad ? "Press X" : "Press Spacebar";
+                text = $"{text}\n{button} while hovering over a card to pledge it.";
+            }
             var lines = TextUtils.WrapText(_font, text, BubbleTextScale, BubbleMaxWidth - BubblePadX * 2);
             _wrappedText = string.Join("\n", lines);
         }

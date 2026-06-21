@@ -427,13 +427,13 @@ namespace Crusaders30XX.ECS.Factories
                 entityManager,
                 deck.Cards.Count,
                 baseCardCountReduction);
-            if (isGuidedTutorial)
-            {
-                var tutorial = GuidedTutorialService.GetState(entityManager);
-                int hp = GuidedTutorialDefinitions.GetBattle(tutorial.Battle).EnemyHp;
-                def.MaxHealth = hp;
-                def.CurrentHealth = hp;
-            }
+			if (isGuidedTutorial)
+			{
+				var tutorial = GuidedTutorialService.GetState(entityManager);
+				int hp = GuidedTutorialDefinitions.GetSection(tutorial.Section).EnemyHp;
+				def.MaxHealth = hp;
+				def.CurrentHealth = hp;
+			}
             else
             {
                 def.ApplyHealthFromDeckWeight(deckHealthWeight);

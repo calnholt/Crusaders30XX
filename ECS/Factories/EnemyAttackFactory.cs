@@ -50,6 +50,12 @@ namespace Crusaders30XX.ECS.Factories
                 // Gleeber attacks
                 "pounce" => new Pounce(),
                 "tutorial_gleeber_strike" => new TutorialGleeberStrike(),
+                "tutorial_gleeber_strike_3" => new TutorialGleeberStrike3(),
+                "tutorial_gleeber_strike_5" => new TutorialGleeberStrike5(),
+                "tutorial_gleeber_strike_6" => new TutorialGleeberStrike6(),
+                "tutorial_gleeber_strike_7" => new TutorialGleeberStrike7(),
+                "tutorial_gleeber_strike_8" => new TutorialGleeberStrike8(),
+                "tutorial_gleeber_strike_9" => new TutorialGleeberStrike9(),
                 // SandCorpse attacks
                 "sand_blast" => new SandBlast(),
                 "sand_storm" => new SandStorm(),
@@ -178,6 +184,11 @@ namespace Crusaders30XX.ECS.Factories
                 // Gleeber attacks
                 { "pounce", new Pounce() },
                 { "tutorial_gleeber_strike", new TutorialGleeberStrike() },
+                { "tutorial_gleeber_strike_3", new TutorialGleeberStrike3() },
+                { "tutorial_gleeber_strike_5", new TutorialGleeberStrike5() },
+                { "tutorial_gleeber_strike_6", new TutorialGleeberStrike6() },
+                { "tutorial_gleeber_strike_8", new TutorialGleeberStrike8() },
+                { "tutorial_gleeber_strike_9", new TutorialGleeberStrike9() },
                 // SandCorpse attacks
                 { "sand_blast", new SandBlast() },
                 { "sand_storm", new SandStorm() },

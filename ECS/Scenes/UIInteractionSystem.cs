@@ -59,7 +59,7 @@ namespace Crusaders30XX.ECS.Systems
             if (!targetUi.IsInteractable
                 || targetUi.IsPreventDefaultClick
                 || gameplayBlocked
-                || StateSingleton.IsTutorialActive)
+                || (StateSingleton.IsTutorialActive && !target.HasComponent<TutorialInteractionPermitted>()))
             {
                 LoggingService.Append("UIInteractionSystem_ClickBlocked", new JsonObject
                 {

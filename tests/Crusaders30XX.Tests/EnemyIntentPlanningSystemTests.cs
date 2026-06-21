@@ -49,60 +49,59 @@ public class EnemyIntentPlanningSystemTests
 		}
 	}
 
-	[Fact]
-	public void Guided_intent_text_uses_the_turn_being_planned()
-	{
-		EventManager.Clear();
-
-		try
-		{
-			var world = new World();
-			var phaseEntity = world.CreateEntity("PhaseState");
-			world.AddComponent(phaseEntity, new PhaseState
-			{
-				Main = MainPhase.PlayerTurn,
-				Sub = SubPhase.PlayerEnd,
-				TurnNumber = 2,
-			});
-			var tutorialEntity = world.CreateEntity("GuidedTutorial");
-			world.AddComponent(tutorialEntity, new GuidedTutorial
-			{
-				Battle = TutorialBattle.SandCorpse,
-				Turn = 2,
-			});
-			var player = world.CreateEntity("Player");
-			world.AddComponent(player, new Player());
-			world.AddComponent(player, new AppliedPassives());
-
-			var definition = new SandCorpse();
-			var enemy = world.CreateEntity("Enemy");
-			world.AddComponent(enemy, new Enemy
-			{
-				Id = definition.Id,
-				Name = definition.Name,
-				EnemyBase = definition,
-			});
-			world.AddComponent(enemy, new EnemyArsenal
-			{
-				AttackIds = definition.GetAttackIds(world.EntityManager, 3).ToList(),
-			});
-			world.AddComponent(enemy, new AppliedPassives());
-			var intent = new AttackIntent();
-			world.AddComponent(enemy, intent);
-			world.AddComponent(enemy, new NextTurnAttackIntent());
-			_ = new EnemyIntentPlanningSystem(world.EntityManager);
-
-			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart });
-
-			Assert.Equal(2, intent.Planned.Count);
-			Assert.Equal("Must be blocked by Smite.", intent.Planned[0].AttackDefinition.Text);
-			Assert.Equal("Must be blocked by Reckoning.", intent.Planned[1].AttackDefinition.Text);
-		}
-		finally
+		[Fact]
+		public void Guided_intent_plans_attacks_for_tutorial_section()
 		{
 			EventManager.Clear();
+
+			try
+			{
+				var world = new World();
+				var phaseEntity = world.CreateEntity("PhaseState");
+				world.AddComponent(phaseEntity, new PhaseState
+				{
+					Main = MainPhase.PlayerTurn,
+					Sub = SubPhase.PlayerEnd,
+					TurnNumber = 2,
+				});
+				var tutorialEntity = world.CreateEntity("GuidedTutorial");
+				world.AddComponent(tutorialEntity, new GuidedTutorial
+				{
+					Section = 8,
+					TurnWithinSection = 2,
+				});
+				var player = world.CreateEntity("Player");
+				world.AddComponent(player, new Player());
+				world.AddComponent(player, new AppliedPassives());
+
+				var definition = new Gleeber();
+				var enemy = world.CreateEntity("Enemy");
+				world.AddComponent(enemy, new Enemy
+				{
+					Id = definition.Id,
+					Name = definition.Name,
+					EnemyBase = definition,
+				});
+				world.AddComponent(enemy, new EnemyArsenal
+				{
+					AttackIds = definition.GetAttackIds(world.EntityManager, 3).ToList(),
+				});
+				world.AddComponent(enemy, new AppliedPassives());
+				var intent = new AttackIntent();
+				world.AddComponent(enemy, intent);
+				world.AddComponent(enemy, new NextTurnAttackIntent());
+				_ = new EnemyIntentPlanningSystem(world.EntityManager);
+
+				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart });
+
+				Assert.Single(intent.Planned);
+				Assert.Equal("tutorial_gleeber_strike_5", intent.Planned[0].AttackId);
+			}
+			finally
+			{
+				EventManager.Clear();
+			}
 		}
-	}
 
 	private static World BuildWorld(
 		out PhaseState phaseState,

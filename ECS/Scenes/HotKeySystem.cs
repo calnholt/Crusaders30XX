@@ -182,6 +182,7 @@ namespace Crusaders30XX.ECS.Systems
             if (frame.WasPressed(PlayerButton.Start)) return FaceButton.Start;
             if (frame.WasPressed(PlayerButton.LeftShoulder)) return FaceButton.LB;
             if (frame.WasPressed(PlayerButton.RightShoulder)) return FaceButton.RB;
+            if (frame.WasPressed(PlayerButton.Escape) || frame.WasPressed(PlayerButton.Back)) return FaceButton.Back;
             return null;
         }
 
@@ -197,6 +198,9 @@ namespace Crusaders30XX.ECS.Systems
                 FaceButton.Start => frame.IsDown(PlayerButton.Start),
                 FaceButton.LB => frame.IsDown(PlayerButton.LeftShoulder),
                 FaceButton.RB => frame.IsDown(PlayerButton.RightShoulder),
+                FaceButton.Back => frame.Device == PlayerInputDevice.KeyboardMouse
+                    ? frame.IsDown(PlayerButton.Escape)
+                    : frame.IsDown(PlayerButton.Back),
                 _ => false,
             };
         }
@@ -290,14 +294,22 @@ namespace Crusaders30XX.ECS.Systems
                 var (cx, cy) = CalculateHintPosition(r, x.HK.Position, HintRadius, HintGapX, HintGapY);
                 var pos = new Vector2(cx - HintRadius, cy - HintRadius);
                 
-                // When gamepad is not connected, show keyboard visuals for FaceButton.X
-                if (!gamepadConnected && x.HK.Button == FaceButton.X)
+                // When gamepad is not connected, show keyboard visuals for FaceButton.X and FaceButton.Back
+                if (!gamepadConnected)
                 {
-                    DrawKeyboardKey(cx, cy);
-                    continue;
+                    if (x.HK.Button == FaceButton.X)
+                    {
+                        DrawKeyboardKey(cx, cy);
+                        continue;
+                    }
+                    if (x.HK.Button == FaceButton.Back)
+                    {
+                        DrawKeyboardEsc(cx, cy);
+                        continue;
+                    }
                 }
-                
-                // Skip drawing if gamepad is not connected and this is not an X button
+
+                // Skip drawing if gamepad is not connected and this is not an X or Back button
                 if (!gamepadConnected) continue;
                 
                 if (x.HK.Button == FaceButton.LB || x.HK.Button == FaceButton.RB)
@@ -432,6 +444,22 @@ namespace Crusaders30XX.ECS.Systems
             
             // Draw "SPACE" text centered inside
             string text = "SPACE";
+            var textSize = _font.MeasureString(text) * TextScale;
+            var textPos = new Vector2(cx - textSize.X / 2f, cy - textSize.Y / 2f - 2f);
+            _spriteBatch.DrawString(_font, text, textPos, Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+        }
+
+        private void DrawKeyboardEsc(int cx, int cy)
+        {
+            int keyHeight = (int)System.Math.Round(HintRadius * 1.2f);
+            int keyWidth = (int)System.Math.Round(keyHeight * 1.5f);
+            int cornerRadius = System.Math.Max(2, keyHeight / 4);
+
+            var keyTex = RoundedRectTextureFactory.CreateRoundedRect(_graphicsDevice, keyWidth, keyHeight, cornerRadius);
+            var keyPos = new Vector2(cx - keyWidth / 2f, cy - keyHeight / 2f);
+            _spriteBatch.Draw(keyTex, keyPos, new Color(200, 200, 200));
+
+            string text = "ESC";
             var textSize = _font.MeasureString(text) * TextScale;
             var textPos = new Vector2(cx - textSize.X / 2f, cy - textSize.Y / 2f - 2f);
             _spriteBatch.DrawString(_font, text, textPos, Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);

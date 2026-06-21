@@ -2,9 +2,6 @@ using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Objects.Enemies;
 using Crusaders30XX.ECS.Utils;
-using Crusaders30XX.ECS.Services;
-using Crusaders30XX.ECS.Data.Tutorials;
-using Crusaders30XX.ECS.Components;
 
 namespace Crusaders30XX.ECS.Objects.EnemyAttacks;
 
@@ -19,8 +16,6 @@ public class SandCorpse : EnemyBase
   }
   public override IEnumerable<string> GetAttackIds(EntityManager entityManager, int turnNumber)
   {
-    if (GuidedTutorialService.IsActive(entityManager))
-      return GuidedTutorialDefinitions.GetTurn(TutorialBattle.SandCorpse, turnNumber).AttackIds;
     return ArrayUtils.Shuffled(["sand_blast", "sand_storm"]);
   }
 }

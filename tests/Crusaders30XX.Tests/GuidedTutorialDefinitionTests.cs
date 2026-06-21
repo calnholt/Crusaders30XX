@@ -14,101 +14,140 @@ namespace Crusaders30XX.Tests;
 public class GuidedTutorialDefinitionTests
 {
 	[Theory]
-	[InlineData(TutorialBattle.Gleeber, 1, "smite:Black,litany_of_wrath:Black,reckoning:Black,absolution:Black")]
-	[InlineData(TutorialBattle.Gleeber, 2, "smite:Black,litany_of_wrath:Black,reckoning:Black,absolution:Black")]
-	[InlineData(TutorialBattle.Gleeber, 3, "smite:Black,litany_of_wrath:Black,reckoning:Black,absolution:Black")]
-	[InlineData(TutorialBattle.SandCorpse, 1, "smite:Black,litany_of_wrath:Black,reckoning:White,absolution:Red")]
-	[InlineData(TutorialBattle.SandCorpse, 2, "fervor:Red,smite:Black,litany_of_wrath:Black,absolution:Red")]
-	[InlineData(TutorialBattle.SandCorpse, 3, "smite:Red,litany_of_wrath:Red,reckoning:Red,absolution:Red")]
-	public void Stock_hands_and_colors_are_exact(TutorialBattle battle, int turn, string expected)
+	[InlineData(1, "colorless_3_block:Black,smite:Black")]
+	[InlineData(2, "colorless_3_block:Black,litany_of_wrath:Black,smite:Black")]
+	[InlineData(3, "hold_the_line:Black,litany_of_wrath:Black,smite:Black,reckoning:Black")]
+	[InlineData(4, "absolution:Black,litany_of_wrath:Black,smite:Black,reckoning:Black")]
+	[InlineData(5, "mantlet:Black,mantlet:Black,mantlet:Black,smite:Black")]
+	[InlineData(6, "stab:Black,hold_the_line:Red,hold_the_line:White,smite:Black")]
+	[InlineData(7, "hold_the_line:White,hold_the_line:White,smite:Black,smite:Black")]
+	public void Stock_hands_are_exact(int section, string expected)
 	{
-		string actual = string.Join(",", GuidedTutorialDefinitions.GetTurn(battle, turn).StockHand
+		string actual = string.Join(",", GuidedTutorialDefinitions.GetTurn(section, 1).StockHand
 			.Select(card => $"{card.CardId}:{card.Color}"));
 		Assert.Equal(expected, actual);
 	}
 
 	[Fact]
-	public void Enemy_hp_attack_order_and_damage_are_exact()
+	public void Section_8_has_two_turns()
 	{
-		Assert.Equal(19, GuidedTutorialDefinitions.GetBattle(TutorialBattle.Gleeber).EnemyHp);
-		Assert.Equal(20, GuidedTutorialDefinitions.GetBattle(TutorialBattle.SandCorpse).EnemyHp);
+		Assert.Equal(2, GuidedTutorialDefinitions.GetTurnCount(8));
 
-		foreach (var turn in GuidedTutorialDefinitions.GetBattle(TutorialBattle.Gleeber).Turns)
-		{
-			Assert.Equal(["tutorial_gleeber_strike"], turn.AttackIds);
-			Assert.Equal(9, EnemyAttackFactory.Create(turn.AttackIds[0]).Damage);
-		}
+		string turn1 = string.Join(",", GuidedTutorialDefinitions.GetTurn(8, 1).StockHand
+			.Select(card => $"{card.CardId}:{card.Color}"));
+		Assert.Equal("courageous:Black,smite:Red,smite:Black,fervor:Black", turn1);
 
-		foreach (var turn in GuidedTutorialDefinitions.GetBattle(TutorialBattle.SandCorpse).Turns)
-		{
-			Assert.Equal(["tutorial_sand_blast", "tutorial_sand_storm"], turn.AttackIds);
-			Assert.Equal(4, EnemyAttackFactory.Create(turn.AttackIds[0]).Damage);
-			Assert.Equal(3, EnemyAttackFactory.Create(turn.AttackIds[1]).Damage);
-		}
+		string turn2 = string.Join(",", GuidedTutorialDefinitions.GetTurn(8, 2).StockHand
+			.Select(card => $"{card.CardId}:{card.Color}"));
+		Assert.Equal("litany_of_wrath:Red,absolution:Black,reckoning:Black,smite:Red", turn2);
 	}
 
 	[Fact]
-	public void Gleeber_final_turn_allows_both_approved_lethal_branches()
+	public void Enemy_hp_and_teach_flags_are_exact()
 	{
-		var absolution = new GuidedTutorial { Battle = TutorialBattle.Gleeber, Turn = 3 };
-		Assert.True(GuidedTutorialDefinitions.IsLegalPlay(absolution, "absolution"));
-		absolution.PlayedCardIds.Add("absolution");
-		Assert.True(GuidedTutorialDefinitions.AreActionRequirementsComplete(absolution));
+		Assert.Equal(3, GuidedTutorialDefinitions.GetSection(1).EnemyHp);
+		Assert.True(GuidedTutorialDefinitions.GetSection(1).IsTeachSection);
 
-		var litanyReckoning = new GuidedTutorial { Battle = TutorialBattle.Gleeber, Turn = 3 };
-		Assert.True(GuidedTutorialDefinitions.IsLegalPlay(litanyReckoning, "litany_of_wrath"));
-		litanyReckoning.PlayedCardIds.Add("litany_of_wrath");
-		Assert.True(GuidedTutorialDefinitions.IsLegalPlay(litanyReckoning, "reckoning"));
-		litanyReckoning.PlayedCardIds.Add("reckoning");
-		Assert.True(GuidedTutorialDefinitions.AreActionRequirementsComplete(litanyReckoning));
+		Assert.Equal(6, GuidedTutorialDefinitions.GetSection(2).EnemyHp);
+		Assert.False(GuidedTutorialDefinitions.GetSection(2).IsTeachSection);
+
+		Assert.Equal(8, GuidedTutorialDefinitions.GetSection(3).EnemyHp);
+
+		Assert.Equal(10, GuidedTutorialDefinitions.GetSection(4).EnemyHp);
+		Assert.Equal(9, GuidedTutorialDefinitions.GetSection(4).PlayerHp);
+
+		Assert.Equal(6, GuidedTutorialDefinitions.GetSection(5).EnemyHp);
+		Assert.True(GuidedTutorialDefinitions.GetSection(5).IsTeachSection);
+
+		Assert.Equal(12, GuidedTutorialDefinitions.GetSection(8).EnemyHp);
+		Assert.True(GuidedTutorialDefinitions.GetSection(8).ShowDrawPile);
 	}
 
 	[Fact]
-	public void Sand_turn_two_requires_pledge_before_smite()
+	public void Section_8_has_pending_dialog()
 	{
-		var state = new GuidedTutorial { Battle = TutorialBattle.SandCorpse, Turn = 2 };
-		Assert.False(GuidedTutorialDefinitions.IsLegalPlay(state, "smite"));
-
-		state.PledgedCardIds.Add("fervor");
-		Assert.True(GuidedTutorialDefinitions.IsLegalPlay(state, "smite"));
+		Assert.Equal("last_of_them", GuidedTutorialDefinitions.GetSection(8).PendingDialogKey);
 	}
 
 	[Fact]
-	public void Sand_corpse_script_builds_five_courage_and_deals_exactly_twenty_damage()
+	public void Section_3_has_catch_breath_dialog()
 	{
-		int courage = 1; // Sword
-		courage += 1; // turn 1 Absolution block
-		courage += 1; // turn 2 Absolution block
-		courage += 2; // turn 3 red blockers
-		Assert.Equal(5, courage);
-
-		int damage = 5; // Sword
-		damage += 3; // Smite
-		damage += 6 + 3 + 3; // Fervor base, Courage bonus, Litany aggression
-		Assert.Equal(20, damage);
+		Assert.Equal("catch_breath", GuidedTutorialDefinitions.GetSection(3).PendingDialogKey);
 	}
 
 	[Fact]
-	public void Every_permitted_block_path_keeps_player_alive()
+	public void Section_4_has_sword_retrieved_dialog()
 	{
-		int hp = 25;
-		hp -= 2; // Gleeber turn 2
-		hp -= 9; // Gleeber turn 3
-		hp -= 2; // Sand Corpse turn 1
-		hp -= 1; // worst turn 2 mapping
-		hp -= 2; // worst turn 3 mapping
-		Assert.Equal(9, hp);
-		Assert.True(hp >= 5);
+		Assert.Equal("sword_retrieved", GuidedTutorialDefinitions.GetSection(4).PendingDialogKey);
+	}
+
+	[Fact]
+	public void Attack_ids_map_to_correct_damage_values()
+	{
+		Assert.Equal(9, EnemyAttackFactory.Create("tutorial_gleeber_strike_9").Damage);
+		Assert.Equal(8, EnemyAttackFactory.Create("tutorial_gleeber_strike_8").Damage);
+		Assert.Equal(6, EnemyAttackFactory.Create("tutorial_gleeber_strike_6").Damage);
+		Assert.Equal(5, EnemyAttackFactory.Create("tutorial_gleeber_strike_5").Damage);
+		Assert.Equal(3, EnemyAttackFactory.Create("tutorial_gleeber_strike_3").Damage);
+	}
+
+	[Fact]
+	public void Teach_section_messages_are_correct()
+	{
+		Assert.Equal(
+			["teach_win", "teach_loss", "teach_enemy_attack"],
+			GuidedTutorialDefinitions.GetMessageKeys(1, 1, SubPhase.Block, 0));
+
+		Assert.Empty(GuidedTutorialDefinitions.GetMessageKeys(2, 1, SubPhase.Block, 0));
+
+		Assert.Equal(
+			["teach_black_block"],
+			GuidedTutorialDefinitions.GetMessageKeys(5, 1, SubPhase.Block, 0));
+		Assert.Equal(
+			["teach_weapon"],
+			GuidedTutorialDefinitions.GetMessageKeys(5, 1, SubPhase.Action, 0));
+
+		Assert.Equal(
+			["teach_red_courage", "teach_courage_hud"],
+			GuidedTutorialDefinitions.GetMessageKeys(6, 1, SubPhase.Block, 0));
+
+		Assert.Equal(
+			["teach_white_temperance", "teach_temperance_hud"],
+			GuidedTutorialDefinitions.GetMessageKeys(7, 1, SubPhase.Block, 0));
+
+		Assert.Equal(
+			["teach_intent_pips", "teach_pledge"],
+			GuidedTutorialDefinitions.GetMessageKeys(8, 1, SubPhase.Block, 0));
+	}
+
+	[Fact]
+	public void Teach_messages_have_correct_targets()
+	{
+		var win = GuidedTutorialDefinitions.GuidedMessages.Single(msg => msg.key == "teach_win");
+		Assert.Equal("entity_name", win.targetType);
+		Assert.Equal("Enemy", win.targetId);
+
+		var loss = GuidedTutorialDefinitions.GuidedMessages.Single(msg => msg.key == "teach_loss");
+		Assert.Equal(PlayerHudLayoutSystem.HealthEntityName, loss.targetId);
+
+		var courageHud = GuidedTutorialDefinitions.GuidedMessages.Single(msg => msg.key == "teach_courage_hud");
+		Assert.Equal(PlayerHudLayoutSystem.CourageEntityName, courageHud.targetId);
+
+		var temperanceHud = GuidedTutorialDefinitions.GuidedMessages.Single(msg => msg.key == "teach_temperance_hud");
+		Assert.Equal(PlayerHudLayoutSystem.TemperanceEntityName, temperanceHud.targetId);
+
+		var intent = GuidedTutorialDefinitions.GuidedMessages.Single(msg => msg.key == "teach_intent_pips");
+		Assert.Equal("EnemyIntentPips", intent.targetId);
+
+		var pledge = GuidedTutorialDefinitions.GuidedMessages.Single(msg => msg.key == "teach_pledge");
+		Assert.Equal("UI_PlayerHudPledge", pledge.targetId);
 	}
 
 	[Fact]
 	public void Tutorial_targets_player_hud_health_and_full_hand_bounds()
 	{
-		var loss = GuidedTutorialDefinitions.GuidedMessages.Single(message => message.key == "guided_loss");
+		var loss = GuidedTutorialDefinitions.GuidedMessages.Single(message => message.key == "teach_loss");
 		Assert.Equal(PlayerHudLayoutSystem.HealthEntityName, loss.targetId);
-
-		var block = GuidedTutorialDefinitions.GuidedMessages.Single(message => message.key == "guided_block");
-		Assert.Contains("blue BLOCK value", block.text);
 
 		var bounds = TutorialManager.UnionBounds(
 		[
@@ -117,48 +156,6 @@ public class GuidedTutorialDefinitionTests
 			new Rectangle(300, 420, 120, 180),
 		]);
 		Assert.Equal(new Rectangle(100, 360, 320, 240), bounds);
-	}
-
-	[Fact]
-	public void Guided_messages_are_scheduled_in_their_authored_battle_turn_and_phase()
-	{
-		Assert.Equal(
-			["guided_draw"],
-			GuidedTutorialDefinitions.GetMessageKeys(TutorialBattle.Gleeber, 2, SubPhase.Block, 0));
-		Assert.Equal(
-			["guided_free"],
-			GuidedTutorialDefinitions.GetMessageKeys(TutorialBattle.Gleeber, 2, SubPhase.Action, 1));
-		Assert.Equal(
-			["guided_cost"],
-			GuidedTutorialDefinitions.GetMessageKeys(TutorialBattle.Gleeber, 3, SubPhase.Action, 1));
-		Assert.Empty(GuidedTutorialDefinitions.GetMessageKeys(
-			TutorialBattle.Gleeber,
-			3,
-			SubPhase.Block,
-			0));
-		Assert.Equal(
-			["guided_red", "guided_white", "guided_black", "guided_intent"],
-			GuidedTutorialDefinitions.GetMessageKeys(TutorialBattle.SandCorpse, 1, SubPhase.Block, 0));
-		Assert.Empty(GuidedTutorialDefinitions.GetMessageKeys(
-			TutorialBattle.SandCorpse,
-			1,
-			SubPhase.Block,
-			1));
-	}
-
-	[Theory]
-	[InlineData(true, "Press X while hovering over Fervor.")]
-	[InlineData(false, "Press Spacebar while hovering over Fervor.")]
-	public void Pledge_message_uses_connected_controller_wording(
-		bool isGamepadConnected,
-		string expected)
-	{
-		string text = GuidedTutorialDefinitions.ResolveMessageText(
-			"guided_pledge",
-			"Pledge Fervor.",
-			isGamepadConnected);
-
-		Assert.Contains(expected, text);
 	}
 
 	[Fact]
@@ -190,46 +187,7 @@ public class GuidedTutorialDefinitionTests
 	}
 
 	[Fact]
-	public void Guided_attack_requirement_copy_and_exact_sand_blockers_are_authored()
-	{
-		var gleeberTurnThree = GuidedTutorialDefinitions.GetTurn(TutorialBattle.Gleeber, 3);
-		Assert.Equal("Can't be blocked by any cards.", gleeberTurnThree.BlockRules[0].RequirementText);
-
-		var sandTurnTwo = GuidedTutorialDefinitions.GetTurn(TutorialBattle.SandCorpse, 2);
-		Assert.Equal(["litany_of_wrath"], sandTurnTwo.BlockRules[0].AllowedCardIds);
-		Assert.Equal(["absolution"], sandTurnTwo.BlockRules[1].AllowedCardIds);
-
-		var sandTurnThree = GuidedTutorialDefinitions.GetTurn(TutorialBattle.SandCorpse, 3);
-		Assert.Equal(["smite"], sandTurnThree.BlockRules[0].AllowedCardIds);
-		Assert.Equal(["reckoning"], sandTurnThree.BlockRules[1].AllowedCardIds);
-
-		var weapon = GuidedTutorialDefinitions.GuidedMessages.Single(message => message.key == "guided_weapon");
-		Assert.EndsWith("Play Sword.", weapon.text);
-
-		var freeAction = GuidedTutorialDefinitions.GuidedMessages.Single(message => message.key == "guided_free");
-		Assert.EndsWith("Play Litany of Wrath, then play Smite.", freeAction.text);
-	}
-
-	[Fact]
-	public void Beginning_second_battle_fully_restores_player_hp()
-	{
-		var manager = new EntityManager();
-		var stateEntity = manager.CreateEntity("GuidedTutorial");
-		var state = new GuidedTutorial { PlayerHp = 9 };
-		manager.AddComponent(stateEntity, state);
-		var player = manager.CreateEntity("Player");
-		var hp = new HP { Current = 9, Max = 25 };
-		manager.AddComponent(player, hp);
-
-		GuidedTutorialService.BeginSecondBattle(manager);
-
-		Assert.Equal(TutorialBattle.SandCorpse, state.Battle);
-		Assert.Equal(25, state.PlayerHp);
-		Assert.Equal(25, hp.Current);
-	}
-
-	[Fact]
-	public void Enemy_start_advances_tutorial_and_prepares_second_turn_stock_hand()
+	public void Enemy_start_advances_turn_for_section_8_without_repreparing_hand()
 	{
 		EventManager.Clear();
 		try
@@ -238,8 +196,8 @@ public class GuidedTutorialDefinitionTests
 			var stateEntity = manager.CreateEntity("GuidedTutorial");
 			var state = new GuidedTutorial
 			{
-				Battle = TutorialBattle.Gleeber,
-				Turn = 1,
+				Section = 8,
+				TurnWithinSection = 1,
 				StockHandPrepared = true,
 			};
 			manager.AddComponent(stateEntity, state);
@@ -249,8 +207,8 @@ public class GuidedTutorialDefinitionTests
 			manager.AddComponent(deckEntity, deck);
 			manager.AddComponent(deckEntity, new StockHand
 			{
-				Battle = TutorialBattle.Gleeber,
-				Turn = 1,
+				Section = 8,
+				TurnWithinSection = 1,
 			});
 
 			var phaseEntity = manager.CreateEntity("PhaseState");
@@ -263,15 +221,81 @@ public class GuidedTutorialDefinitionTests
 			_ = new GuidedTutorialDirectorSystem(manager);
 			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart });
 
-			Assert.Equal(2, state.Turn);
+			Assert.Equal(2, state.TurnWithinSection);
 			Assert.True(state.StockHandPrepared);
-			Assert.Equal(4, deck.DrawPile.Count);
-			Assert.Empty(deck.Hand);
-			Assert.All(deck.DrawPile, card => Assert.NotNull(card.GetComponent<CardData>()));
 		}
 		finally
 		{
 			EventManager.Clear();
 		}
+	}
+
+	[Fact]
+	public void Restart_section_sets_flag_and_resets_turn()
+	{
+		var manager = new EntityManager();
+		var stateEntity = manager.CreateEntity("GuidedTutorial");
+		var state = new GuidedTutorial
+		{
+			Section = 3,
+			TurnWithinSection = 2,
+			StockHandPrepared = true,
+		};
+		manager.AddComponent(stateEntity, state);
+
+		GuidedTutorialService.RestartSection(manager);
+
+		Assert.True(state.IsRestart);
+		Assert.Equal(1, state.TurnWithinSection);
+		Assert.False(state.StockHandPrepared);
+	}
+
+	[Fact]
+	public void Advance_to_next_section_snapshots_courage_and_temperance()
+	{
+		EventManager.Clear();
+		try
+		{
+			var manager = new EntityManager();
+			var stateEntity = manager.CreateEntity("GuidedTutorial");
+			var state = new GuidedTutorial
+			{
+				Section = 1,
+				TurnWithinSection = 1,
+				PlayerHp = 1,
+			};
+			manager.AddComponent(stateEntity, state);
+
+			var player = manager.CreateEntity("Player");
+			manager.AddComponent(player, new Courage { Amount = 2 });
+			manager.AddComponent(player, new Temperance { Amount = 1 });
+			manager.AddComponent(player, new HP { Current = 5, Max = 25 });
+
+			GuidedTutorialService.AdvanceToNextSection(manager);
+
+			Assert.Equal(2, state.Section);
+			Assert.Equal(1, state.TurnWithinSection);
+			Assert.False(state.StockHandPrepared);
+			Assert.False(state.IsRestart);
+			Assert.Equal(2, state.BaselineCourage);
+			Assert.Equal(1, state.BaselineTemperance);
+			Assert.Equal(1, state.PlayerHp); // Section 2 has player HP 1
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void Covered_tutorial_keys_include_all_teach_keys()
+	{
+		Assert.Contains("teach_win", GuidedTutorialDefinitions.CoveredTutorialKeys);
+		Assert.Contains("teach_loss", GuidedTutorialDefinitions.CoveredTutorialKeys);
+		Assert.Contains("teach_black_block", GuidedTutorialDefinitions.CoveredTutorialKeys);
+		Assert.Contains("teach_red_courage", GuidedTutorialDefinitions.CoveredTutorialKeys);
+		Assert.Contains("teach_white_temperance", GuidedTutorialDefinitions.CoveredTutorialKeys);
+		Assert.Contains("teach_intent_pips", GuidedTutorialDefinitions.CoveredTutorialKeys);
+		Assert.Contains("teach_pledge", GuidedTutorialDefinitions.CoveredTutorialKeys);
 	}
 }

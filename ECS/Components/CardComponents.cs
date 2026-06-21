@@ -756,6 +756,11 @@ namespace Crusaders30XX.ECS.Components
         public bool IsActive { get; set; } = true;
     }
 
+    public class TutorialInteractionPermitted : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
     /// <summary>
     /// State for a simple "How To Play" overlay.
     /// </summary>

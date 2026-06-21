@@ -134,10 +134,7 @@ public sealed class CardPlayUpgradeTests : IDisposable
 		entityManager.AddComponent(enemy, new Enemy());
 
 		var tutorial = entityManager.CreateEntity("GuidedTutorial");
-		entityManager.AddComponent(tutorial, new GuidedTutorial
-		{
-			ValidPlayCardIds = [playableCardId],
-		});
+		entityManager.AddComponent(tutorial, new GuidedTutorial { Section = 1 });
 
 		return entityManager;
 	}

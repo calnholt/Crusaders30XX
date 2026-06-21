@@ -24,10 +24,21 @@ namespace Crusaders30XX.ECS.Data.Dialog
 							new() { actor = "Remiel", message = "...Yeah. That is the part keeping me from enjoying being right." },
 							new() { actor = "Crusader", message = "Then it does not need explaining. It needs to be put down." },
 						],
-						["gleeber_victory"] =
+						["catch_breath"] =
 						[
-							new() { actor = "Crusader", message = "One down. One more to go. And now I have my sword. Keep up." },
-							new() { actor = "Remiel", message = "Trying!" },
+							new() { actor = "Remiel", message = "Enough! Stop a moment. You are bleeding badly. Let me tend those wounds." },
+							new() { actor = "Crusader", message = "I can still fight." },
+							new() { actor = "Remiel", message = "You will fight better if you are not half-dead. Trust me. Just breathe." },
+						],
+						["sword_retrieved"] =
+						[
+							new() { actor = "Crusader", message = "There. My sword. Now I remember why I carried it through every campaign." },
+							new() { actor = "Remiel", message = "Good. Then let us finish this properly." },
+						],
+						["last_of_them"] =
+						[
+							new() { actor = "Remiel", message = "I think that was the last of them. For now, at least." },
+							new() { actor = "Crusader", message = "Then we keep moving. Purgatory will not cleanse itself." },
 						],
 					},
 				},
