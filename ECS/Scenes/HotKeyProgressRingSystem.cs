@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Input;
 using Crusaders30XX.ECS.Rendering;
+using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -64,6 +65,11 @@ namespace Crusaders30XX.ECS.Systems
             HotKeySystem hotKeySystem = _systemManager.GetSystem<HotKeySystem>();
             if (hotKeySystem == null) return;
             string contextId = InputContextResolver.ResolveCommandContext(EntityManager);
+            if (StateSingleton.PreventClicking
+                && contextId == InputContextIds.Gameplay)
+            {
+                return;
+            }
 
             foreach ((Entity entity, float elapsed) in hotKeySystem.HoldProgress.ToList())
             {

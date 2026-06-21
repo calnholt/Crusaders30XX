@@ -223,7 +223,7 @@ namespace Crusaders30XX.ECS.Services
 			int climbTime = climbTimeOverride >= 0
 				? ClimbRuleService.ClampTime(climbTimeOverride)
 				: ClimbRuleService.ClampTime(SaveCache.GetClimbState()?.time ?? 0);
-			int timeBonus = (climbTime % ClimbRuleService.ShopRefreshInterval) * EnemyHealthClimbTimeBonusMultiplier;
+			int timeBonus = (climbTime / ClimbRuleService.ShopRefreshInterval) * EnemyHealthClimbTimeBonusMultiplier;
 			return reducedCardCount + timeBonus;
 		}
 

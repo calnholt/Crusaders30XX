@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Animation = "Attack";
             Damage = 3;
             Block = 3;
-
+            Type = CardType.Attack;
             OnPlay = (entityManager, card) =>
             {
                 var player = entityManager.GetEntity("Player");

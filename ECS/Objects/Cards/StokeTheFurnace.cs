@@ -10,7 +10,6 @@ namespace Crusaders30XX.ECS.Objects.Cards
         private int CourageCost = 2;
         private int VigorGained = 1;
         private int MaxRepeats = 3;
-        private int MaxRepeatsUpgrade = 1;
 
         public StokeTheFurnace()
         {
@@ -18,7 +17,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             Rarity = Rarity.Common;
             Name = "Stoke the Furnace";
             Target = "Player";
-            Text = $"Lose {CourageCost} courage, gain {VigorGained} vigor. Repeat up to {GetMaxRepeats(IsUpgraded)} times if possible.";
+            Text = $"Lose {CourageCost} courage, gain {VigorGained} vigor. Repeat up to {MaxRepeats} times if possible.";
             Animation = "Attack";
             Type = CardType.Attack;
             Damage = 2;
@@ -28,7 +27,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             {
                 var player = entityManager.GetEntity("Player");
                 var enemy = entityManager.GetEntity("Enemy");
-                for (int i = 0; i < GetMaxRepeats(IsUpgraded); i++)
+                for (int i = 0; i < MaxRepeats; i++)
                 {
                     var courageCmp = player?.GetComponent<Courage>();
                     int courage = courageCmp?.Amount ?? 0;
@@ -54,12 +53,8 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
             OnUpgrade = (entityManager, card) =>
             {
-                Text = $"Lose {CourageCost} courage, gain {VigorGained} vigor. Repeat up to {GetMaxRepeats(IsUpgraded)} times if possible.";
+                IsFreeAction = true;
             };
-        }
-        private int GetMaxRepeats(bool isUpgraded)
-        {
-            return isUpgraded ? MaxRepeats + MaxRepeatsUpgrade : MaxRepeats;
         }
     }
 }

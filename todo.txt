@@ -8,23 +8,27 @@ Gameplay
 - make cardlistmodaldisplay not a modal, tinted overlay with floating UI, use shader for cool looking tint effect overlay
 - darkness X - for x turns, one card in hand becomes shrouded in darkess during the enemy turn, lifts during action phase, cards in darkness block for 3 and ignore color gains and play restrictions
 
-Tutorial
-- structure like puzzles that force specific solutions that are not spelled out
-- allow "redo" button to bring back to start of the attack
-(TEACH - Enemy hp, player hp, win/loss conditions, show what an attack is)
+Tutorial Refactor - GOAL: less hand-holding, more puzzle-like
+I want to refactor the tutorial to hold the player's hand less, and have them figure out the solutions. Below are each of the different section of the tutorial. there's a TEACH section that goes through the normal highliting that we currently do today to point out some specific things. But we are NOT going to tell players the correct actions they need to take. There will be multiple sections (eight below). Each defines the enemy attack value and the enemy HP. we will use Gleeber for each battle, and just modify it's attack value for each section. If the player dies during this, play the "thy will be done" transition, but then transition back to the current tutorial section. Have the back/esc button restart the current section instead of showing the abandon quest overlay - use a transition without text when this happens. The card ids in parethensis are the solutions (cards that should be played to win) but that info is not conveyed to the player. Currently in the tutorial we hide deck and discard display - keep that functionality, but we actually want to show draw pile for step 8 below. We will NOT explicity teach
+
+(TEACH - Enemy hp, player hp, win/loss conditions, show what an enemy attack is)
 1. colorless 3 block, colorless smite (smite) /// enemy-attack = 9, enemy-hp = 3, player-hp = 1
 2. colorless litany, colorless smite (litany -> smite) /// enemy-attack = 6, enemy-hp = 6, player-hp = 1
 3. colorless 3 block, colorless litany, colorless smite, colorless reckoning (reckoning) /// enemy-attack = 3, enemy-hp = 8, player-hp = 1
+(INSERT DIALOG- between remiel and crusader about having time to catch our breath and heal up to narratively justify the player's HP going to 9)
 4. colorless absolution, colorless litany, colorless smite, colorless reckoning (absolution) /// enemy-attack = 8, enemy-hp = 10, player-hp = 9
-(TEACH - weapon)
+(INSERT DIALOG- between remiel and crusader briefly mentions that he retrieved his sword and is ready to take on more enemies)
+(TEACH - highlight black card - black cards block for +1; highlight weapons and explain like we do currently)
 5. black 4 block, black 4 block, black 4 block, colorless smite (sword) /// enemy-attack = 8, enemy-hp = 6, player-hp = 1
-(TEACH - courage)
+(TEACH - highlight red card - blocking grants 1 courage; highlight courage HUD UI to show count display)
 6. black stab, red 3 block, white 3 block, black smite (stab -> smite) /// enemy-attack = 6, enemy-hp = 8, player-hp = 1
-(TEACH - temperance)
+(TEACH - highlight white card - blocking grants 1 temperance; highlight temperance HUD UI to show meter + that hovering over it shows tooltip description)
 7. white 3 block, white 3 block, black smite, black smite (temperance trigger -> weapon) /// enemy-attack = 6, enemy-hp = 10, player-hp = 1
-(TEACH - pledge)
-8. courageous, red smite, black smite, black fervor (black smite -> pledge fervor -> courageous) /// enemy-attack = 3, enemy-hp = 12, player-hp = 1
-    && red litany, black absolution, black reckoning, red smite (litany -> fervor (discarding smite)) /// enemy-attack = 5
+(TEACH - pledge, enemy intent pips)
+8. black courageous, red smite, black smite, black fervor (black smite -> pledge fervor -> courageous) /// enemy-attack = 3, enemy-hp = 12, player-hp = 1
+    && red litany, black absolution, black reckoning, red smite (litany -> fervor (discarding smite)) /// enemy-attack = 5 (other values persist from previous turn)
+Note that #8 is two turns instead of one.
+(INSERT DIALOG- between remiel and crusader briefly mentions that it looks like the last of them)
 
 
 cards

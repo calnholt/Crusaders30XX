@@ -61,6 +61,7 @@ namespace Crusaders30XX.ECS.Systems
 			_active = false;
 			_elapsed = 0f;
 			_sceneSwitched = false;
+			StateSingleton.PreventClicking = false;
 		}
 
 		private void BeginRunEndOverlay()
@@ -72,6 +73,7 @@ namespace Crusaders30XX.ECS.Systems
 			_active = true;
 			_elapsed = 0f;
 			_sceneSwitched = false;
+			StateSingleton.PreventClicking = true;
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
