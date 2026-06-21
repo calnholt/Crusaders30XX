@@ -11,6 +11,7 @@ using Crusaders30XX.ECS.Objects.Equipment;
 using Crusaders30XX.ECS.Singletons;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Services;
+using Crusaders30XX.ECS.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -1341,7 +1342,9 @@ namespace Crusaders30XX.ECS.Systems
 				if (option == null) continue;
 				bool isUpgrade = i < layout.IsUpgrade.Length && layout.IsUpgrade[i];
 				bool hovered = i < _deckRewardOptionViews.Count
-					&& (_deckRewardOptionViews[i].Lane?.GetComponent<UIElement>()?.IsHovered ?? false);
+					&& ((_deckRewardOptionViews[i].Lane?.GetComponent<UIElement>()?.IsHovered ?? false)
+						|| (_deckRewardOptionViews[i].OutgoingCard?.GetComponent<UIElement>()?.IsHovered ?? false)
+						|| (_deckRewardOptionViews[i].IncomingCard?.GetComponent<UIElement>()?.IsHovered ?? false));
 				DrawDeckRewardColumn(layout, i, isUpgrade, hovered);
 
 				if (i < _deckRewardOptionViews.Count)
@@ -1353,16 +1356,12 @@ namespace Crusaders30XX.ECS.Systems
 						Position = layout.OutgoingCardCenters[i],
 						Scale = 1.0f
 					});
-					var outgoingUi = view.OutgoingCard?.GetComponent<UIElement>();
-					if (outgoingUi != null) outgoingUi.Bounds = Rectangle.Empty;
 					EventManager.Publish(new CardRenderScaledRotatedEvent
 					{
 						Card = view.IncomingCard,
 						Position = layout.IncomingCardCenters[i],
 						Scale = 1.0f
 					});
-					var incomingUi = view.IncomingCard?.GetComponent<UIElement>();
-					if (incomingUi != null) incomingUi.Bounds = Rectangle.Empty;
 				}
 			}
 
@@ -1640,7 +1639,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				int next = _deckRewardLaneEntities.Count;
 				var ent = EntityManager.CreateEntity($"QuestRewardDeckLane_{next}");
-				EntityManager.AddComponent(ent, new Transform { Position = Vector2.Zero, ZOrder = ZOrder + 3 + next });
+				EntityManager.AddComponent(ent, new Transform { Position = Vector2.Zero, ZOrder = ZOrder + 10 + next });
 				EntityManager.AddComponent(ent, new UIElement
 				{
 					Bounds = Rectangle.Empty,
@@ -1709,6 +1708,8 @@ namespace Crusaders30XX.ECS.Systems
 				PreparePreviewCard(view.IncomingCard, i * 2 + 1, state);
 			}
 
+			SyncDeckRewardCardHover(layout);
+
 			var skip = EnsureDeckRewardSkipButton();
 			var skipUi = skip.GetComponent<UIElement>();
 			if (skipUi != null)
@@ -1744,6 +1745,45 @@ namespace Crusaders30XX.ECS.Systems
 				transform.ZOrder = ZOrder + 1 + zOffset;
 			}
 			InputContextService.EnsureMember(EntityManager, card, "overlay.quest-reward");
+		}
+
+		private void SyncDeckRewardCardHover(DeckRewardOfferLayout layout)
+		{
+			var inputState = EntityManager.GetEntitiesWithComponent<PlayerInputState>()
+				.FirstOrDefault()?.GetComponent<PlayerInputState>();
+			if (inputState == null) return;
+			var cursor = inputState.Frame.PointerPosition;
+
+			var settings = CardGeometryService.GetSettings(EntityManager);
+
+			foreach (var view in _deckRewardOptionViews)
+			{
+				var outgoingUi = view.OutgoingCard?.GetComponent<UIElement>();
+				var incomingUi = view.IncomingCard?.GetComponent<UIElement>();
+				if (outgoingUi != null) outgoingUi.IsHovered = false;
+				if (incomingUi != null) incomingUi.IsHovered = false;
+			}
+
+			for (int i = 0; i < _deckRewardOptionViews.Count && i < layout.OutgoingCardCenters.Length; i++)
+			{
+				var outgoingRect = CardGeometryService.GetVisualRect(settings, layout.OutgoingCardCenters[i], 1.0f);
+				if (outgoingRect.Contains(cursor))
+				{
+					var ui = _deckRewardOptionViews[i].OutgoingCard?.GetComponent<UIElement>();
+					if (ui != null) ui.IsHovered = true;
+					return;
+				}
+			}
+			for (int i = 0; i < _deckRewardOptionViews.Count && i < layout.IncomingCardCenters.Length; i++)
+			{
+				var incomingRect = CardGeometryService.GetVisualRect(settings, layout.IncomingCardCenters[i], 1.0f);
+				if (incomingRect.Contains(cursor))
+				{
+					var ui = _deckRewardOptionViews[i].IncomingCard?.GetComponent<UIElement>();
+					if (ui != null) ui.IsHovered = true;
+					return;
+				}
+			}
 		}
 
 		private void CompleteDeckRewardOfferResolution(QuestRewardOverlayState state, SceneState scene)
