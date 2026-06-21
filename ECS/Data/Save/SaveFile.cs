@@ -189,6 +189,24 @@ namespace Crusaders30XX.ECS.Data.Save
 		public const string Equipment = "equipment";
 		public const string Upgrade = "upgrade";
 		public const string Replacement = "replacement";
+
+		public static readonly string[] DisplayOrder =
+		{
+			Upgrade,
+			Replacement,
+			Medal,
+			Equipment,
+		};
+
+		public static int GetDisplayIndex(string kind)
+		{
+			for (int i = 0; i < DisplayOrder.Length; i++)
+			{
+				if (string.Equals(kind, DisplayOrder[i], StringComparison.OrdinalIgnoreCase))
+					return i;
+			}
+			return DisplayOrder.Length - 1;
+		}
 	}
 
 	public class DeckRewardOfferSave

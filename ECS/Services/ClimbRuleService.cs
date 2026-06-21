@@ -194,17 +194,10 @@ namespace Crusaders30XX.ECS.Services
 			if (state == null) return;
 			state.shopSlots = new List<ClimbShopSlotSave>(ShopSlotCount);
 			var rng = CreateRng(seed, state.time, 11);
-			var kinds = new List<string>
-			{
-				ClimbShopSlotKinds.Medal,
-				ClimbShopSlotKinds.Equipment,
-				ClimbShopSlotKinds.Upgrade,
-				ClimbShopSlotKinds.Replacement,
-			}.OrderBy(_ => rng.Next()).ToList();
 
 			for (int i = 0; i < ShopSlotCount; i++)
 			{
-				var slot = RollShopSlot(state, loadout, rng, i, kinds[i]);
+				var slot = RollShopSlot(state, loadout, rng, i, ClimbShopSlotKinds.DisplayOrder[i]);
 				state.shopSlots.Add(slot);
 			}
 		}

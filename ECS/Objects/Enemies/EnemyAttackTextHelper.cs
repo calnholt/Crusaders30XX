@@ -10,9 +10,9 @@ public static class EnemyAttackTextHelper
       return $"{conditionText}{enemyAttackText}{percentageText}";
     }
 
-    public static string GetBlockThresholdText(int blockRequired, string effectText)
+    public static string GetBlockThresholdText(int damageDelta, string effectText)
     {
-      return $"Unless at least {blockRequired} damage is blocked - {effectText}";
+      return $"If this attack deals {damageDelta + 1} or more damage - {effectText}";
     }
 
     public static string GetDamageThresholdText(int minimumDamage, string effectText)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
@@ -172,7 +173,6 @@ public class FallenShepherdCowTheFlock : EnemyAttackBase
 
 public class FallenShepherdPhase2 : EnemyAttackBase
 {
-    private const int BlockRequired = 6;
     private const int ShackledAmount = 2;
 
     public FallenShepherdPhase2()
@@ -180,8 +180,8 @@ public class FallenShepherdPhase2 : EnemyAttackBase
         Id = "fallen_shepherd_phase_2";
         Name = "Binding Sermon";
         Damage = 10;
-        BlockRequiredToPreventEffect = BlockRequired;
-        Text = EnemyAttackTextHelper.GetBlockThresholdText(BlockRequired, $"Gain {ShackledAmount} shackled.");
+        BlockRequiredToPreventEffect = Random.Shared.Next(0, 100) <= 50 ? 6 : 7;
+        Text = EnemyAttackTextHelper.GetBlockThresholdText(Damage - BlockRequiredToPreventEffect.Value, $"Gain {ShackledAmount} shackled.");
 
         OnDamageThresholdMet = entityManager =>
         {
@@ -314,7 +314,6 @@ public class FallenShepherdFinalSermon : EnemyAttackBase
 
 public class FallenShepherdPhase3 : EnemyAttackBase
 {
-    private const int BlockRequired = 3;
     private string _contextId = string.Empty;
 
     public FallenShepherdPhase3()
@@ -322,8 +321,8 @@ public class FallenShepherdPhase3 : EnemyAttackBase
         Id = "fallen_shepherd_phase_3";
         Name = "Have No Mercy";
         Damage = 9;
-        BlockRequiredToPreventEffect = BlockRequired;
-        Text = EnemyAttackTextHelper.GetBlockThresholdText(BlockRequired, "Discard the selected card from your hand.");
+        BlockRequiredToPreventEffect = Random.Shared.Next(0, 100) <= 50 ? 3 : 4;
+        Text = EnemyAttackTextHelper.GetBlockThresholdText(Damage - BlockRequiredToPreventEffect.Value, "Discard the selected card from your hand.");
 
         OnAttackReveal = entityManager =>
         {
@@ -339,7 +338,7 @@ public class FallenShepherdPhase3 : EnemyAttackBase
             string cardName = markedCard?.GetComponent<CardData>()?.Card?.Name;
             if (!string.IsNullOrWhiteSpace(cardName))
             {
-                Text = EnemyAttackTextHelper.GetBlockThresholdText(BlockRequired, $"Discard {cardName} from your hand.");
+                Text = EnemyAttackTextHelper.GetBlockThresholdText(Damage - BlockRequiredToPreventEffect.Value, $"Discard {cardName} from your hand.");
             }
         };
 

@@ -209,7 +209,7 @@ public class FallenShepherdAttackTests : IDisposable
     [InlineData(6, 0)]
     public void Binding_sermon_uses_six_block_threshold(int assignedBlock, int expectedShackled)
     {
-        var attack = new FallenShepherdPhase2();
+        var attack = new BindingSermon();
         var entityManager = CreateThresholdCombat(attack, assignedBlock, includeHandCard: false, out _, out var player);
         int shackled = 0;
         EventManager.Subscribe<ApplyPassiveEvent>(evt =>

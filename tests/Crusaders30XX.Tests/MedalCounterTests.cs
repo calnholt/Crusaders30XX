@@ -36,6 +36,37 @@ public class MedalCounterTests
 	}
 
 	[Fact]
+	public void StPaulMiki_resets_and_triggers_once_per_battle()
+	{
+		EventManager.Clear();
+		try
+		{
+			var entityManager = new EntityManager();
+			var medal = new StPaulMiki();
+			medal.Initialize(entityManager, entityManager.CreateEntity("Medal"));
+
+			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle });
+			Assert.Equal(1, medal.CurrentCount);
+
+			var blackCard = entityManager.CreateEntity("BlackCard");
+			entityManager.AddComponent(blackCard, new CardData { Color = CardData.CardColor.Black });
+
+			EventManager.Publish(new CardBlockedEvent { Card = blackCard });
+			Assert.Equal(0, medal.CurrentCount);
+
+			EventManager.Publish(new CardBlockedEvent { Card = blackCard });
+			Assert.Equal(0, medal.CurrentCount);
+
+			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle });
+			Assert.Equal(1, medal.CurrentCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
 	public void StSimonOfCyrene_decrements_remaining_battles_on_start_battle()
 	{
 		EventManager.Clear();

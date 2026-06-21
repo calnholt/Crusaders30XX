@@ -86,19 +86,15 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void SyncSlots(ClimbSaveState climb, ClimbColumnsLayout columns, bool showEvents)
 		{
-			int shopVisualIndex = 0;
 			for (int i = 0; i < ClimbRuleService.ShopSlotCount; i++)
 			{
 				var slot = climb?.shopSlots != null && i < climb.shopSlots.Count ? climb.shopSlots[i] : null;
-				if (IsSoldShopSlot(slot))
-				{
-					SyncShopSlot(i, slot, Rectangle.Empty, hidden: true);
-				}
-				else
-				{
-					var rect = ComputeShopSlotRect(columns.ShopInner, shopVisualIndex++);
-					SyncShopSlot(i, slot, rect, hidden: false);
-				}
+				bool hidden = slot == null
+					|| IsSoldShopSlot(slot)
+					|| string.Equals(slot.kind, ClimbShopSlotKinds.Empty, StringComparison.OrdinalIgnoreCase);
+				int displayIndex = ClimbShopSlotKinds.GetDisplayIndex(slot?.kind);
+				var rect = hidden ? Rectangle.Empty : ComputeShopSlotRect(columns.ShopInner, displayIndex);
+				SyncShopSlot(i, slot, rect, hidden: hidden);
 			}
 
 			for (int i = 0; i < ClimbRuleService.EncounterSlotCount; i++)

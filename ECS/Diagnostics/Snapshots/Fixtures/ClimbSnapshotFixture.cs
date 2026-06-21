@@ -236,25 +236,6 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 			{
 				new()
 				{
-					id = "shop_medal",
-					kind = ClimbShopSlotKinds.Medal,
-					itemId = "st_luke",
-					cost = new ClimbResourceSave { red = 1, white = 0, black = 0 },
-					timeCost = 1,
-					generatedAtTime = time,
-				},
-				new()
-				{
-					id = "shop_equipment",
-					kind = ClimbShopSlotKinds.Equipment,
-					itemId = "knightly_helm",
-					cost = new ClimbResourceSave { red = 0, white = 1, black = 0 },
-					timeCost = 2,
-					isSold = _variant == ClimbSnapshotVariant.SoldShopSlot,
-					generatedAtTime = time,
-				},
-				new()
-				{
 					id = "shop_upgrade",
 					kind = ClimbShopSlotKinds.Upgrade,
 					cardKey = "smite|White|Upgraded",
@@ -270,6 +251,25 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 					cardKey = "zealous_vow|Red",
 					cost = new ClimbResourceSave { red = 1, white = 1, black = 0 },
 					timeCost = 3,
+					generatedAtTime = time,
+				},
+				new()
+				{
+					id = "shop_medal",
+					kind = ClimbShopSlotKinds.Medal,
+					itemId = "st_luke",
+					cost = new ClimbResourceSave { red = 1, white = 0, black = 0 },
+					timeCost = 1,
+					generatedAtTime = time,
+				},
+				new()
+				{
+					id = "shop_equipment",
+					kind = ClimbShopSlotKinds.Equipment,
+					itemId = "knightly_helm",
+					cost = new ClimbResourceSave { red = 0, white = 1, black = 0 },
+					timeCost = 2,
+					isSold = _variant == ClimbSnapshotVariant.SoldShopSlot,
 					generatedAtTime = time,
 				},
 			};

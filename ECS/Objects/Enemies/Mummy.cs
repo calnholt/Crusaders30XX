@@ -37,11 +37,10 @@ public class Entomb : EnemyAttackBase
     Id = "entomb";
     Name = "Entomb";
     Damage = 10;
-    BlockRequiredToPreventEffect = 6;
+    BlockRequiredToPreventEffect = Random.Shared.Next(0, 100) <= 50 ? 6 : 7;
 
     OnAttackReveal = (entityManager) => 
     {
-      BlockRequiredToPreventEffect = Random.Shared.Next(0, 100) <= 50 ? 6 : 7;
       Text = EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, "Apply brittle to the top card of your draw pile.");
     };
 
@@ -65,10 +64,10 @@ public class Mummify : EnemyAttackBase
     Id = "mummify";
     Name = "Mummify";
     Damage = 10;
+    BlockRequiredToPreventEffect = Random.Shared.Next(0, 100) <= 50 ? 6 : 7;
 
     OnAttackReveal = (entityManager) => 
     {
-      BlockRequiredToPreventEffect = Random.Shared.Next(0, 100) <= 50 ? 6 : 7;
       Text = EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, $"Gain {Scar} scars.");
     };
 

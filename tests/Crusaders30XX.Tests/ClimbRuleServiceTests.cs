@@ -26,6 +26,7 @@ public class ClimbRuleServiceTests
 		Assert.Equal(3, state.eventSlots.Count(slot => slot.kind == ClimbEventKind.Hazard));
 		Assert.Equal(2, state.eventSlots.Count(slot => slot.kind == ClimbEventKind.Character));
 		Assert.All(state.shopSlots.Where(s => s.kind != ClimbShopSlotKinds.Empty), slot => Assert.InRange(slot.timeCost, 1, 3));
+		AssertShopSlotDisplayOrder(state);
 		Assert.All(state.encounterSlots, slot =>
 		{
 			Assert.InRange(slot.timeCost, 1, 3);
@@ -292,6 +293,19 @@ public class ClimbRuleServiceTests
 		{
 			Assert.DoesNotContain(state.shopSlots, s => string.Equals(s.itemId, firstEquipment, StringComparison.OrdinalIgnoreCase));
 		}
+
+		AssertShopSlotDisplayOrder(state);
+	}
+
+	[Fact]
+	public void Shop_slots_use_fixed_display_order()
+	{
+		var state = ClimbRuleService.CreateInitialState(123, TestLoadout());
+		AssertShopSlotDisplayOrder(state);
+
+		state.time = 8;
+		ClimbRuleService.RefreshShopSlots(state, 123, TestLoadout());
+		AssertShopSlotDisplayOrder(state);
 	}
 
 	[Fact]
@@ -384,6 +398,17 @@ public class ClimbRuleServiceTests
 	private static string ScheduleSnapshot(ClimbEventSlotSave slot)
 	{
 		return $"{slot.id}|{slot.definitionId}|{slot.kind}|{slot.hazardEffect}|{slot.characterReward}|{slot.scheduledAppearanceTime}|{slot.duration}|{slot.effectAmount}|{ResourcePips(slot.rewardResources)}";
+	}
+
+	private static void AssertShopSlotDisplayOrder(ClimbSaveState state)
+	{
+		Assert.Equal(ClimbRuleService.ShopSlotCount, state.shopSlots.Count);
+		for (int i = 0; i < ClimbRuleService.ShopSlotCount; i++)
+		{
+			if (string.Equals(state.shopSlots[i].kind, ClimbShopSlotKinds.Empty, StringComparison.OrdinalIgnoreCase))
+				continue;
+			Assert.Equal(ClimbShopSlotKinds.DisplayOrder[i], state.shopSlots[i].kind, ignoreCase: true);
+		}
 	}
 
 	private static void AssertShopCost(string kind, int timeCost, int expectedTotal, string expectedDominant)

@@ -46,8 +46,8 @@ public class SuffocatingSilk : EnemyAttackBase
     Id = "suffocating_silk";
     Name = "Suffocating Silk";
     Damage = 10;
-    BlockRequiredToPreventEffect = 6;
-    Text = $"{EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, EnemyAttackTextHelper.GetText(EnemyAttackTextType.Slow, SlowAmount, ConditionType))}";
+    BlockRequiredToPreventEffect = Random.Shared.Next(0, 100) <= 50 ? 6 : 7;
+    Text = $"{EnemyAttackTextHelper.GetBlockThresholdText(Damage - BlockRequiredToPreventEffect.Value, EnemyAttackTextHelper.GetText(EnemyAttackTextType.Slow, SlowAmount, ConditionType))}";
 
     OnDamageThresholdMet = (entityManager) =>
     {
