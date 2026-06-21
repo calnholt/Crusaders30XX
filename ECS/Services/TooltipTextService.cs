@@ -70,7 +70,7 @@ namespace Crusaders30XX.ECS.Services
 		public static string GetPassiveText(AppliedPassiveType type, bool isPlayer, int stacks)
 		{
 			var text = GetPassiveTooltip(type, isPlayer, stacks);
-			var suffix = " (Quest)";
+			var suffix = " (Climb)";
 			if (AppliedPassivesManagementSystem.GetTurnPassives().Contains(type))
 				suffix = " (Turn)";
 			else if (AppliedPassivesManagementSystem.GetBattlePassives().Contains(type))

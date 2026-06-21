@@ -1,5 +1,7 @@
 UX
 - improve applied passive animations
+- reward option screen - use vertical columns instead to allow for 100% sized cards
+- modals "blipping" into view rather than just appearing
 
 Gameplay
 - maybe remove istoken/isweapon and make as components?

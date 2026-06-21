@@ -193,24 +193,7 @@ public class WayStationRunSetupTests
 	}
 
 	[Fact]
-	public void Enemy_factory_adds_upgraded_card_weight_to_health()
-	{
-		var world = PrepareWorldWithLoadout(new List<string>
-		{
-			"smite|White|Upgraded",
-			"fervor|Red",
-			"reckoning|Black",
-			"strike|Red",
-		});
-		WayStationRunSetupSingleton.SelectedDifficulty = RunDifficulty.Hard;
-
-		var enemyEntity = EntityFactory.CreateEnemyFromId(world, "skeleton", world.EntityManager);
-
-		Assert.Equal(6, enemyEntity.GetComponent<Enemy>().MaxHealth);
-	}
-
-	[Fact]
-	public void Enemy_factory_adds_traded_card_weight_to_health()
+	public void Enemy_factory_adds_climb_time_weight_to_health()
 	{
 		var world = PrepareWorldWithLoadout(new List<string>
 		{
@@ -218,51 +201,43 @@ public class WayStationRunSetupTests
 			"fervor|Red",
 			"reckoning|Black",
 			"strike|Red",
-		}, tradedKeys: new[] { "strike|Red" });
+		}, climbTime: 2);
 		WayStationRunSetupSingleton.SelectedDifficulty = RunDifficulty.Hard;
 
 		var enemyEntity = EntityFactory.CreateEnemyFromId(world, "skeleton", world.EntityManager);
 
-		Assert.Equal(6, enemyEntity.GetComponent<Enemy>().MaxHealth);
-	}
-
-	[Fact]
-	public void Enemy_factory_counts_traded_upgraded_card_in_both_bonus_buckets()
-	{
-		var world = PrepareWorldWithLoadout(new List<string>
-		{
-			"smite|White",
-			"fervor|Red",
-			"reckoning|Black",
-			"strike|Red|Upgraded",
-		}, tradedKeys: new[] { "strike|Red|Upgraded" });
-		WayStationRunSetupSingleton.SelectedDifficulty = RunDifficulty.Hard;
-
-		var enemyEntity = EntityFactory.CreateEnemyFromId(world, "skeleton", world.EntityManager);
-
-		Assert.Equal(7, enemyEntity.GetComponent<Enemy>().MaxHealth);
+		Assert.Equal(10, enemyEntity.GetComponent<Enemy>().MaxHealth);
 	}
 
 	[Fact]
 	public void Enemy_factory_applies_st_clare_to_base_card_count_before_bonuses()
 	{
-		var world = PrepareWorldWithLoadout(new List<string>
-		{
-			"smite|White|Upgraded",
-			"fervor|Red",
-			"reckoning|Black",
-			"strike|Red",
-		}, tradedKeys: new[] { "strike|Red" });
+		var world = PrepareWorldWithLoadout(
+			new List<string>
+			{
+				"smite|White",
+				"fervor|Red",
+				"reckoning|Black",
+				"strike|Red",
+				"smite|White",
+				"fervor|Red",
+				"reckoning|Black",
+				"strike|Red",
+			},
+			climbTime: 3);
 		WayStationRunSetupSingleton.SelectedDifficulty = RunDifficulty.Hard;
 		RunPlayerService.EnsureRunPlayer(world);
 		RunMedalService.AcquireAndEquip(world.EntityManager, "st_clare");
 
 		var enemyEntity = EntityFactory.CreateEnemyFromId(world, "skeleton", world.EntityManager);
 
-		Assert.Equal(2, enemyEntity.GetComponent<Enemy>().MaxHealth);
+		Assert.Equal(13, enemyEntity.GetComponent<Enemy>().MaxHealth);
 	}
 
-	private static World PrepareWorldWithLoadout(IReadOnlyList<string> cardKeys, IReadOnlyList<string> tradedKeys = null)
+	private static World PrepareWorldWithLoadout(
+		IReadOnlyList<string> cardKeys,
+		IReadOnlyList<string> tradedKeys = null,
+		int climbTime = 0)
 	{
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.StartNewRun();
@@ -286,6 +261,10 @@ public class WayStationRunSetupTests
 		loadout.weaponId = "sword";
 		loadout.medalIds = new List<string>();
 		SaveCache.SaveLoadout(loadout);
+
+		var climb = SaveCache.GetClimbState();
+		climb.time = climbTime;
+		SaveCache.SaveClimbState(climb);
 
 		var world = new World();
 		var deckEntity = world.CreateEntity("Deck");

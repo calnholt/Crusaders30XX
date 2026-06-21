@@ -30,6 +30,7 @@ namespace Crusaders30XX.ECS.Factories
                 "st_joan_of_arc" => new StJoanOfArc(),
                 "st_benedict" => new StBenedict(),
                 "st_simon_of_cyrene" => new StSimonOfCyrene(),
+                "st_augustine" => new StAugustine(),
                 _ => null
             };
         }
@@ -55,6 +56,7 @@ namespace Crusaders30XX.ECS.Factories
                 { "st_joan_of_arc", new StJoanOfArc() },
                 { "st_benedict", new StBenedict() },
                 { "st_simon_of_cyrene", new StSimonOfCyrene() },
+                { "st_augustine", new StAugustine() },
             };
         }
     }

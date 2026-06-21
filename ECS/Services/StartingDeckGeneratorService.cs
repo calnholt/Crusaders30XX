@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Singletons;
 
 namespace Crusaders30XX.ECS.Services
@@ -67,6 +68,32 @@ namespace Crusaders30XX.ECS.Services
 		public static bool IsInDefaultStarterPool(string cardId)
 		{
 			return !string.IsNullOrWhiteSpace(cardId) && DefaultStarterCardPoolSet.Contains(cardId);
+		}
+
+		public static HashSet<string> GetAutoUpgradeCardIds(string equippedWeaponId)
+		{
+			var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+			var weaponPools = new Dictionary<string, List<string>>()
+			{
+				["hammer"] = HammerCommonStarterCards.Concat(HammerUncommonSingleCopyStarterCards).ToList(),
+				["dagger"] = DaggerCommonStarterCards.Concat(DaggerUncommonSingleCopyStarterCards).ToList(),
+				["sword"] = SwordCommonStarterCards.Concat(SwordUncommonSingleCopyStarterCards).ToList(),
+			};
+
+			var allCards = CardFactory.GetAllCards();
+
+			foreach (var (weapon, cards) in weaponPools)
+			{
+				if (string.Equals(weapon, equippedWeaponId, StringComparison.OrdinalIgnoreCase)) continue;
+				foreach (var cardId in cards)
+				{
+					if (allCards.TryGetValue(cardId, out var card) && card?.Rarity == Rarity.Starter) continue;
+					result.Add(cardId);
+				}
+			}
+
+			return result;
 		}
 
 		public static IReadOnlyList<string> GetSwordStarterCardPool()

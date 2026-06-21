@@ -128,6 +128,10 @@ namespace Crusaders30XX.ECS.Services
 
 			slot.isSold = true;
 			climb.pendingReplacementOffer = null;
+			if (RunDeckService.IsUpgradedCardKey(offer.incomingCardKey))
+			{
+				CardUpgradeService.InvokeUpgradeConfirmed(offer.incomingCardKey);
+			}
 			ClimbRuleService.AdvanceTimeAndUpdateSlots(
 				climb,
 				SaveCache.GetAll()?.runMapSeed ?? 0,

@@ -1,5 +1,6 @@
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.Medals;
 using Xunit;
@@ -89,6 +90,64 @@ public class MedalCounterTests
 		finally
 		{
 			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void StHomobonus_grants_climb_resources_after_three_encounters()
+	{
+		EventManager.Clear();
+		try
+		{
+			SaveCache.DeleteSaveFilesIfPresent();
+			SaveCache.StartNewRun();
+			var climb = SaveCache.GetClimbState();
+			climb.resources = new ClimbResourceSave { red = 1, white = 1, black = 1 };
+			climb.pendingEncounterReward = new ClimbEncounterRewardSave
+			{
+				resources = new ClimbResourceSave { red = 0, white = 0, black = 0 },
+			};
+			SaveCache.SaveClimbState(climb);
+
+			var entityManager = new EntityManager();
+			var medal = new StHomobonus();
+			medal.Initialize(entityManager, entityManager.CreateEntity("Medal"));
+
+			for (int i = 0; i < 2; i++)
+			{
+				EventManager.Publish(new ShowQuestRewardOverlay { IsEncounterReward = true });
+			}
+
+			Assert.Equal(2, medal.CurrentCount);
+			Assert.Equal(1, SaveCache.GetClimbState().resources.red);
+			Assert.Equal(1, SaveCache.GetClimbState().resources.white);
+			Assert.Equal(1, SaveCache.GetClimbState().resources.black);
+
+			var thirdEncounterReward = new ShowQuestRewardOverlay
+			{
+				IsEncounterReward = true,
+				ClimbResources = new ClimbResourceSave { red = 1, white = 0, black = 0 },
+			};
+			EventManager.Publish(thirdEncounterReward);
+
+			Assert.Equal(0, medal.CurrentCount);
+			Assert.Equal(2, SaveCache.GetClimbState().resources.red);
+			Assert.Equal(2, SaveCache.GetClimbState().resources.white);
+			Assert.Equal(2, SaveCache.GetClimbState().resources.black);
+			Assert.Equal(2, thirdEncounterReward.ClimbResources.red);
+			Assert.Equal(1, thirdEncounterReward.ClimbResources.white);
+			Assert.Equal(1, thirdEncounterReward.ClimbResources.black);
+			Assert.Equal(1, SaveCache.GetClimbState().pendingEncounterReward.resources.red);
+			Assert.Equal(1, SaveCache.GetClimbState().pendingEncounterReward.resources.white);
+			Assert.Equal(1, SaveCache.GetClimbState().pendingEncounterReward.resources.black);
+
+			EventManager.Publish(new ShowQuestRewardOverlay { IsEncounterReward = false });
+			Assert.Equal(0, medal.CurrentCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+			SaveCache.DeleteSaveFilesIfPresent();
 		}
 	}
 }

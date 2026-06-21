@@ -138,7 +138,7 @@ namespace Crusaders30XX.ECS.Systems
 			column.InnerBounds = entity.HasComponent<ParentTransform>()
 				? new Rectangle(padding, padding, Math.Max(0, bounds.Width - padding * 2), Math.Max(0, bounds.Height - padding * 2))
 				: new Rectangle(bounds.X + padding, bounds.Y + padding, Math.Max(0, bounds.Width - padding * 2), Math.Max(0, bounds.Height - padding * 2));
-			SetBounds(entity, bounds, visible, UIElementEventType.None, ColumnZOrderValue);
+			SetBounds(entity, bounds, interactable: false, UIElementEventType.None, ColumnZOrderValue);
 		}
 
 		private static bool IsSoldShopSlot(ClimbShopSlotSave slot) => slot?.isSold == true;

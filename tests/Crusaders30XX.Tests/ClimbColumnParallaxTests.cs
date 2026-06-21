@@ -25,6 +25,34 @@ public class ClimbColumnParallaxTests : IDisposable
 	}
 
 	[Fact]
+	public void Layout_marks_columns_non_interactable_and_slots_interactable_when_available()
+	{
+		var entityManager = BuildWorld();
+		var system = new ClimbColumnLayoutSystem(entityManager);
+
+		system.Update(new GameTime());
+
+		var columns = entityManager.GetEntitiesWithComponent<ClimbColumnPresentation>().ToList();
+		Assert.NotEmpty(columns);
+		Assert.All(columns, entity =>
+		{
+			var ui = entity.GetComponent<UIElement>();
+			Assert.NotNull(ui);
+			Assert.False(ui.IsInteractable);
+		});
+
+		var availableSlots = entityManager.GetEntitiesWithComponent<ClimbSlotPresentation>()
+			.Where(entity =>
+			{
+				var presentation = entity.GetComponent<ClimbSlotPresentation>();
+				return presentation != null && !presentation.IsUnavailable && !presentation.IsSold;
+			})
+			.ToList();
+		Assert.NotEmpty(availableSlots);
+		Assert.Contains(availableSlots, entity => entity.GetComponent<UIElement>()?.IsInteractable == true);
+	}
+
+	[Fact]
 	public void Layout_configures_columns_and_slots_as_distinct_parallax_layers()
 	{
 		var entityManager = BuildWorld();

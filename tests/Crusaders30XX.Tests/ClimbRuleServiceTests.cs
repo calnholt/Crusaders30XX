@@ -372,6 +372,60 @@ public class ClimbRuleServiceTests
 		}
 	}
 
+	[Fact]
+	public void Climb_replacement_auto_upgrades_off_weapon_cards()
+	{
+		var autoUpgradeIds = StartingDeckGeneratorService.GetAutoUpgradeCardIds("sword");
+		var loadout = new LoadoutDefinition
+		{
+			id = RunDeckService.PrimaryLoadoutId,
+			cards = new List<LoadoutCardEntry>(),
+			weaponId = "sword",
+			medalIds = new List<string>(),
+		};
+
+		bool foundUpgradedOffWeapon = false;
+		for (int i = 0; i < 50; i++)
+		{
+			string key = ClimbRuleService.RollReplacementIncomingCardKey(new Random(i), loadout);
+			if (string.IsNullOrWhiteSpace(key)) continue;
+			Assert.True(RunDeckService.TryParseCardKey(key, out var cardId, out _, out var isUpgraded));
+			if (autoUpgradeIds.Contains(cardId))
+			{
+				Assert.True(isUpgraded,
+					$"Off-weapon card '{cardId}' in climb shop should be auto-upgraded but was not: {key}");
+				foundUpgradedOffWeapon = true;
+			}
+		}
+		Assert.True(foundUpgradedOffWeapon,
+			"Expected at least one off-weapon auto-upgraded card to appear in climb shop replacement within 50 iterations");
+	}
+
+	[Fact]
+	public void Climb_replacement_does_not_auto_upgrade_starter_rarity_cards()
+	{
+		var loadout = new LoadoutDefinition
+		{
+			id = RunDeckService.PrimaryLoadoutId,
+			cards = new List<LoadoutCardEntry>(),
+			weaponId = "sword",
+			medalIds = new List<string>(),
+		};
+
+		for (int i = 0; i < 50; i++)
+		{
+			string key = ClimbRuleService.RollReplacementIncomingCardKey(new Random(i), loadout);
+			if (string.IsNullOrWhiteSpace(key)) continue;
+			Assert.True(RunDeckService.TryParseCardKey(key, out var cardId, out _, out var isUpgraded));
+			if (cardId == "smite" || cardId == "absolution" || cardId == "forge_strike"
+				|| cardId == "reckoning" || cardId == "litany_of_wrath" || cardId == "courageous")
+			{
+				Assert.False(isUpgraded,
+					$"Starter rarity card '{cardId}' in climb shop should NOT be auto-upgraded but was: {key}");
+			}
+		}
+	}
+
 	private static LoadoutDefinition TestLoadout()
 	{
 		return new LoadoutDefinition

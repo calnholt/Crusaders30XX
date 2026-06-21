@@ -193,6 +193,10 @@ namespace Crusaders30XX.ECS.Services
 			{
 				if (string.Equals(option.kind, DeckRewardOfferKinds.Exchange, StringComparison.OrdinalIgnoreCase))
 				{
+					if (RunDeckService.IsUpgradedCardKey(option.incomingCardKey))
+					{
+						CardUpgradeService.InvokeUpgradeConfirmed(option.incomingCardKey);
+					}
 				}
 				else if (string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, StringComparison.OrdinalIgnoreCase))
 				{
@@ -360,7 +364,12 @@ namespace Crusaders30XX.ECS.Services
 
 			string incomingId = pool[Random.Shared.Next(pool.Count)];
 			var color = RewardColors[Random.Shared.Next(RewardColors.Length)];
-			return RunDeckService.BuildCardKey(incomingId, color);
+			string key = RunDeckService.BuildCardKey(incomingId, color);
+			if (StartingDeckGeneratorService.GetAutoUpgradeCardIds(weaponId ?? string.Empty).Contains(incomingId))
+			{
+				key = RunDeckService.BuildUpgradedCardKey(key);
+			}
+			return key;
 		}
 
 		private static IEnumerable<string> BuildIncomingPool(string weaponId)
@@ -381,6 +390,11 @@ namespace Crusaders30XX.ECS.Services
 			else if (string.Equals(weaponId, "dagger", StringComparison.OrdinalIgnoreCase))
 			{
 				foreach (var id in DaggerRewardPool) yield return id;
+			}
+
+			foreach (var id in StartingDeckGeneratorService.GetAutoUpgradeCardIds(weaponId ?? string.Empty))
+			{
+				yield return id;
 			}
 		}
 

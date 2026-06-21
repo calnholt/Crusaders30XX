@@ -509,8 +509,14 @@ namespace Crusaders30XX.ECS.Services
 				.OrderBy(_ => rng.Next())
 				.ToList();
 			if (pool.Count == 0) return string.Empty;
+			string cardId = pool[0];
 			var color = ResourceColors[rng.Next(ResourceColors.Length)];
-			return RunDeckService.BuildCardKey(pool[0], color);
+			string key = RunDeckService.BuildCardKey(cardId, color);
+			if (StartingDeckGeneratorService.GetAutoUpgradeCardIds(loadout?.weaponId ?? string.Empty).Contains(cardId))
+			{
+				key = RunDeckService.BuildUpgradedCardKey(key);
+			}
+			return key;
 		}
 
 		private static ClimbShopSlotSave RollShopSlot(
