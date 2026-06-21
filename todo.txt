@@ -1,6 +1,5 @@
 UX
 - improve applied passive animations
-- reward option screen - use vertical columns instead to allow for 100% sized cards
 - modals "blipping" into view rather than just appearing
 
 Gameplay
@@ -8,7 +7,25 @@ Gameplay
 - make hand display agnostic of carddata, probably involves refactoring some components and data objects
 - make cardlistmodaldisplay not a modal, tinted overlay with floating UI, use shader for cool looking tint effect overlay
 - darkness X - for x turns, one card in hand becomes shrouded in darkess during the enemy turn, lifts during action phase, cards in darkness block for 3 and ignore color gains and play restrictions
-- think about changing enemy health scaling to run time
+
+Tutorial
+- structure like puzzles that force specific solutions that are not spelled out
+- allow "redo" button to bring back to start of the attack
+(TEACH - Enemy hp, player hp, win/loss conditions, show what an attack is)
+1. colorless 3 block, colorless smite (smite) /// enemy-attack = 9, enemy-hp = 3, player-hp = 1
+2. colorless litany, colorless smite (litany -> smite) /// enemy-attack = 6, enemy-hp = 6, player-hp = 1
+3. colorless 3 block, colorless litany, colorless smite, colorless reckoning (reckoning) /// enemy-attack = 3, enemy-hp = 8, player-hp = 1
+4. colorless absolution, colorless litany, colorless smite, colorless reckoning (absolution) /// enemy-attack = 8, enemy-hp = 10, player-hp = 9
+(TEACH - weapon)
+5. black 4 block, black 4 block, black 4 block, colorless smite (sword) /// enemy-attack = 8, enemy-hp = 6, player-hp = 1
+(TEACH - courage)
+6. black stab, red 3 block, white 3 block, black smite (stab -> smite) /// enemy-attack = 6, enemy-hp = 8, player-hp = 1
+(TEACH - temperance)
+7. white 3 block, white 3 block, black smite, black smite (temperance trigger -> weapon) /// enemy-attack = 6, enemy-hp = 10, player-hp = 1
+(TEACH - pledge)
+8. courageous, red smite, black smite, black fervor (black smite -> pledge fervor -> courageous) /// enemy-attack = 3, enemy-hp = 12, player-hp = 1
+    && red litany, black absolution, black reckoning, red smite (litany -> fervor (discarding smite)) /// enemy-attack = 5
+
 
 cards
 - if you have dealt 10 or more damage this turn...
@@ -33,8 +50,6 @@ persistent card states:
 - brittle
 - update sealed to reduce on block ONLY, can be pledged
 - cursed - becomes 3block 1AP prayer - Remove the curse from this card.
-
-
 
 keywords
 - indulgence for additional cost?
