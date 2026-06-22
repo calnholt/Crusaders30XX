@@ -27,6 +27,7 @@ public class Game1 : Game
     private EntityListOverlaySystem _entityListOverlaySystem;
     private TransitionDisplaySystem _transitionDisplaySystem;
     private CardDisplaySystem _cardDisplaySystem;
+    private FrozenDisplaySystem _frozenDisplaySystem;
     private BrittleDisplaySystem _brittleDisplaySystem;
     private PlayerInputSystem _playerInputSystem;
     private UIInteractionSystem _uiInteractionSystem;
@@ -182,6 +183,7 @@ public class Game1 : Game
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _frozenDisplaySystem = new FrozenDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _brittleDisplaySystem = new BrittleDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _playerInputSystem = new PlayerInputSystem(
@@ -228,6 +230,7 @@ public class Game1 : Game
         _world.AddSystem(_entityListOverlaySystem);
         _world.AddSystem(_transitionDisplaySystem);
         _world.AddSystem(_cardDisplaySystem);
+        _world.AddSystem(_frozenDisplaySystem);
         _world.AddSystem(_brittleDisplaySystem);
         _world.AddSystem(_dialogDisplaySystem);
         _world.AddSystem(_playerInputSystem, SystemUpdatePhase.Input);

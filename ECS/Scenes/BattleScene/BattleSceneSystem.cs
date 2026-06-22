@@ -730,8 +730,11 @@ namespace Crusaders30XX.ECS.Systems
 			_discardSpecificCardHighlightSystem = new DiscardSpecificCardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_intimidateManagementSystem = new IntimidateManagementSystem(_world.EntityManager);
 			_shackleManagementSystem = new ShackleManagementSystem(_world.EntityManager);
-			var frostTexture = _content.Load<Texture2D>("frost");
-			_frozenCardDisplaySystem = new FrozenCardDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, frostTexture);
+			if (!ShaderRuntimeOptions.ShadersEnabled)
+			{
+				var frostTexture = _content.Load<Texture2D>("frost");
+				_frozenCardDisplaySystem = new FrozenCardDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, frostTexture);
+			}
 			_recoilManagementSystem = new RecoilManagementSystem(_world.EntityManager);
 			_recoilDisplaySystem = new RecoilDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_sealManagementSystem = new SealManagementSystem(_world.EntityManager);
@@ -858,7 +861,10 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_intimidateManagementSystem);
 			_world.AddSystem(_shackleManagementSystem);
 			_world.AddSystem(_intimidateDisplaySystem);
-			_world.AddSystem(_frozenCardDisplaySystem);
+			if (_frozenCardDisplaySystem != null)
+			{
+				_world.AddSystem(_frozenCardDisplaySystem);
+			}
 			_world.AddSystem(_recoilManagementSystem);
 			_world.AddSystem(_recoilDisplaySystem);
 			_world.AddSystem(_sealManagementSystem);

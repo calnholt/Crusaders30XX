@@ -53,6 +53,10 @@ namespace Crusaders30XX.ECS.Systems
 			});
 			FrameProfiler.Measure("FrozenCardDisplaySystem.OnCardRenderScaledEvent", () => OnCardRenderScaledEvent(evt));
 		});
+		EventManager.Subscribe<CardRenderScaledRotatedEvent>(evt =>
+			FrameProfiler.Measure(
+				"FrozenCardDisplaySystem.OnCardRenderScaledRotatedEvent",
+				() => OnCardRenderScaledRotatedEvent(evt)));
 	}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -82,11 +86,10 @@ namespace Crusaders30XX.ECS.Systems
 		if (!ShouldRenderFrost(evt.Card)) return;
 
 		var transform = evt.Card.GetComponent<Transform>();
-		var ui = evt.Card.GetComponent<UIElement>();
-		if (transform == null || ui == null) return;
+		if (transform == null) return;
 
 		// Compute bounds exactly like CardHighlightSystem for consistent alignment
-		var bounds = ComputeCardBounds(transform.Position);
+		var bounds = ComputeCardBounds(evt.Position);
 		var center = new Vector2(bounds.X + bounds.Width / 2f, bounds.Y + bounds.Height / 2f);
 
 		// Apply offset
@@ -94,7 +97,7 @@ namespace Crusaders30XX.ECS.Systems
 		center.Y += FrostOffsetY;
 
 		// Render with card bounds dimensions
-		DrawFrostOverlay(center, bounds.Width, bounds.Height, 1f);
+		DrawFrostOverlay(center, bounds.Width, bounds.Height, 1f, transform.Rotation);
 	}
 
 	private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
@@ -115,17 +118,35 @@ namespace Crusaders30XX.ECS.Systems
 		center.Y += FrostOffsetY * evt.Scale;
 
 		// Render with scaled card dimensions
-		DrawFrostOverlay(center, cardWidth, cardHeight, evt.Scale);
+		DrawFrostOverlay(center, cardWidth, cardHeight, evt.Scale, 0f);
+	}
+
+	private void OnCardRenderScaledRotatedEvent(CardRenderScaledRotatedEvent evt)
+	{
+		if (!ShouldRenderFrost(evt.Card)) return;
+
+		var transform = evt.Card.GetComponent<Transform>();
+		if (transform == null) return;
+
+		_settings ??= CardGeometryService.GetSettings(EntityManager);
+		int cardWidth = _settings?.CardWidth ?? CardGeometrySettings.DefaultWidth;
+		int cardHeight = _settings?.CardHeight ?? CardGeometrySettings.DefaultHeight;
+		var center = CardGeometryService.GetVisualCenter(_settings, evt.Position, evt.Scale);
+		center.X += FrostOffsetX * evt.Scale;
+		center.Y += FrostOffsetY * evt.Scale;
+
+		DrawFrostOverlay(center, cardWidth, cardHeight, evt.Scale, transform.Rotation);
 	}
 
 	private bool ShouldRenderFrost(Entity card)
 	{
-		return card != null 
-			&& card.GetComponent<Frozen>() != null 
+		return !ShaderRuntimeOptions.ShadersEnabled
+			&& card != null
+			&& card.GetComponent<Frozen>() != null
 			&& _frostTexture != null;
 	}
 
-	private void DrawFrostOverlay(Vector2 center, float cardWidth, float cardHeight, float scale)
+	private void DrawFrostOverlay(Vector2 center, float cardWidth, float cardHeight, float scale, float rotation)
 	{
 		// Calculate final alpha
 		float finalAlpha = FrostAlpha / 255f;
@@ -142,7 +163,7 @@ namespace Crusaders30XX.ECS.Systems
 			center,
 			null,
 			Color.White * finalAlpha,
-			0,
+			rotation,
 			new Vector2(_frostTexture.Width / 2f, _frostTexture.Height / 2f),
 			spriteScale,
 			SpriteEffects.None,
@@ -151,4 +172,3 @@ namespace Crusaders30XX.ECS.Systems
 	}
 	}
 }
-

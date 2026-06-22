@@ -50,6 +50,7 @@ to the fixture.
 |------------|----------------|---------|
 | `card` | Card display | Three color variants of one card on a green background |
 | `brittle-card` | Brittle card shader | One brittle card on a patterned backdrop for shader debugging |
+| `frozen-card` | Frozen card shader | One frozen card on a patterned backdrop, optionally composed with Brittle |
 | `colorless-card` | Card display | Colorless cards across all three printed colors and cost-pip colors |
 | `quest-reward-modal` | Quest reward modal | Quest complete overlay with deck reward offer lanes |
 | `waystation` | WayStation run setup | Run setup scene with default Sword/Easy selections |
@@ -131,6 +132,21 @@ Example: `debug/snapshots/brittle-card/strike.png`
 ### Errors
 
 - If `<cardId>` is provided but unknown: exit `1`, no PNG
+
+---
+
+## `frozen-card`
+
+Renders one White card with the `Frozen` component attached on a high-contrast patterned backdrop.
+
+```bash
+dotnet run -- snapshot frozen-card
+dotnet run -- snapshot frozen-card strike --scale 0.6 --rotation -25
+dotnet run -- snapshot frozen-card strike --rotation 20 --brittle
+dotnet run -- snapshot frozen-card strike no-shaders
+```
+
+Transform variants append their scale, rotation, and optional Brittle state to files under `debug/snapshots/frozen-card/`.
 
 ---
 

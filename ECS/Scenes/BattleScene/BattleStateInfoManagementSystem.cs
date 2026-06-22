@@ -27,7 +27,7 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Subscribe<LoadSceneEvent>(OnLoadScene);
             EventManager.Subscribe<TrackingEvent>(OnTrackingEvent);
             EventManager.Subscribe<ModifyCourageRequestEvent>(OnModifyCourage);
-            EventManager.Subscribe<SetCourageEvent>(OnSetCourageEvent);
+            EventManager.Subscribe<SetCourageEvent>(OnSetCourageEvent, priority: 10);
             EventManager.Subscribe<ApplyEffect>(OnApplyEffect);
             EventManager.Subscribe<ModifyHpEvent>(OnModifyHp);
         }
@@ -146,7 +146,7 @@ namespace Crusaders30XX.ECS.Systems
           var player = EntityManager.GetEntitiesWithComponent<Player>().FirstOrDefault();
           var courage = player.GetComponent<Courage>();
           var delta = courage.Amount - e.Amount;
-          OnTrackingEvent(new TrackingEvent { Type = delta > 0 ? TrackingTypeEnum.CourageGained.ToString() : TrackingTypeEnum.CourageLost.ToString(), Delta = Math.Abs(delta) });
+          OnTrackingEvent(new TrackingEvent { Type = delta > 0 ? TrackingTypeEnum.CourageLost.ToString() : TrackingTypeEnum.CourageGained.ToString(), Delta = Math.Abs(delta) });
         }
         private void OnApplyEffect(ApplyEffect e)
         {

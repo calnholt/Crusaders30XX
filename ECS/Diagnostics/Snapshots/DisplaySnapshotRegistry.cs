@@ -12,6 +12,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots
         {
             Register(new CardDisplaySnapshotFixture());
             Register(new BrittleCardSnapshotFixture());
+            Register(new FrozenCardSnapshotFixture());
             Register(new ColorlessCardSnapshotFixture());
             Register(new QuestRewardModalSnapshotFixture());
             Register(new NarrativeEventModalSnapshotFixture());

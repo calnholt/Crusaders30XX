@@ -184,6 +184,17 @@ namespace Crusaders30XX.ECS.Systems
             });
         }
 
+        [DebugAction("Apply Frozen (hand)")]
+        public void Debug_ApplyFrozenHand()
+        {
+            EventManager.Publish(new ApplyCardApplicationEvent
+            {
+                Amount = 1,
+                Type = CardApplicationType.Frozen,
+                Target = CardApplicationTarget.Hand,
+            });
+        }
+
         [DebugAction("Apply Colorless (hand)")]
         public void Debug_ApplyColorlessHand()
         {

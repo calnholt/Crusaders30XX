@@ -4,6 +4,9 @@
 float4x4 MatrixTransform;
 float2 iResolution; // viewport width/height in pixels
 float iTime;        // seconds
+float2 CARD_CENTER; // rendered card center in top-left screen coordinates
+float2 CARD_SIZE;   // rendered card width/height in pixels
+float CARD_ROTATION = 0.0;
 
 // Card region (0..1 shader space, y=0 bottom)
 float CARD_LEFT = 0.40;
@@ -227,29 +230,63 @@ float CardSdf(float2 uv)
     return length(max(delta, 0.0)) + min(max(delta.x, delta.y), 0.0) - radius;
 }
 
-float2 ToTextureUV(float2 shaderUV)
+float2 Rotate(float2 value, float angle)
 {
-    return float2(shaderUV.x, 1.0 - shaderUV.y);
+    float cs = cos(angle);
+    float sn = sin(angle);
+    return float2(cs * value.x - sn * value.y, sn * value.x + cs * value.y);
 }
 
-float3 SampleCard(float2 shaderUV)
+float2 TextureUVToEffectUV(float2 textureUV)
 {
-    float3 textureColor = tex2D(TextureSampler, ToTextureUV(shaderUV)).rgb;
-    float2 grid = abs(frac(shaderUV * 12.0) - 0.5);
-    float gridLine = smoothstep(0.45, 0.5, max(grid.x, grid.y));
-    float3 proceduralColor = lerp(float3(0.20, 0.35, 0.55), float3(0.85, 0.80, 0.55), shaderUV.y);
-    proceduralColor = lerp(proceduralColor, float3(1.0, 1.0, 1.0), gridLine * 0.25);
-    float hasTexture = step(0.01, dot(textureColor, float3(1.0, 1.0, 1.0)));
-    return lerp(proceduralColor, textureColor, hasTexture);
+    float2 size = max(CARD_SIZE, float2(1.0, 1.0));
+    float2 screenPosition = textureUV * max(iResolution, float2(1.0, 1.0));
+    float2 local = Rotate(screenPosition - CARD_CENTER, -CARD_ROTATION);
+    float2 normalized = float2(local.x / size.x + 0.5, 0.5 - local.y / size.y);
+    return float2(
+        lerp(CARD_LEFT, CARD_RIGHT, normalized.x),
+        lerp(CARD_BOTTOM, CARD_TOP, normalized.y));
+}
+
+float2 EffectUVToTextureUV(float2 effectUV)
+{
+    float2 size = max(CARD_SIZE, float2(1.0, 1.0));
+    float cardWidth = max(CARD_RIGHT - CARD_LEFT, 0.0001);
+    float cardHeight = max(CARD_TOP - CARD_BOTTOM, 0.0001);
+    float2 normalized = float2(
+        (effectUV.x - CARD_LEFT) / cardWidth,
+        (effectUV.y - CARD_BOTTOM) / cardHeight);
+    float2 local = float2(
+        (normalized.x - 0.5) * size.x,
+        (0.5 - normalized.y) * size.y);
+    float2 screenPosition = CARD_CENTER + Rotate(local, CARD_ROTATION);
+    return screenPosition / max(iResolution, float2(1.0, 1.0));
+}
+
+float2 EffectAspectPosition(float2 effectUV)
+{
+    float cardWidth = max(CARD_RIGHT - CARD_LEFT, 0.0001);
+    float cardHeight = max(CARD_TOP - CARD_BOTTOM, 0.0001);
+    float2 normalized = float2(
+        (effectUV.x - CARD_LEFT) / cardWidth,
+        (effectUV.y - CARD_BOTTOM) / cardHeight);
+    float2 size = max(CARD_SIZE, float2(1.0, 1.0));
+    return float2(normalized.x * size.x / size.y, normalized.y);
+}
+
+float3 SampleCard(float2 effectUV)
+{
+    return tex2Dlod(TextureSampler, float4(EffectUVToTextureUV(effectUV), 0.0, 0.0)).rgb;
 }
 
 float4 SpritePixelShader(VSOutput input) : COLOR0
 {
     float2 resolution = max(iResolution, float2(1.0, 1.0));
-    float2 uv = float2(input.TexCoord.x, 1.0 - input.TexCoord.y);
-    float aspect = resolution.x / resolution.y;
-    float2 aspectPosition = float2(uv.x * aspect, uv.y);
-    float3 color = BG_COLOR;
+    float2 textureUV = input.TexCoord;
+    float2 uv = TextureUVToEffectUV(textureUV);
+    float2 aspectPosition = EffectAspectPosition(uv);
+    float4 source = tex2Dlod(TextureSampler, float4(textureUV, 0.0, 0.0));
+    float3 color = source.rgb;
 
     // Ice block over the card.
     float signedDistance = CardSdf(uv);
@@ -342,7 +379,7 @@ float4 SpritePixelShader(VSOutput input) : COLOR0
         color = lerp(color, BREATH_COLOR, saturate(breath));
     }
 
-    return float4(saturate(color), 1.0) * input.Color;
+    return float4(saturate(color), source.a) * input.Color;
 }
 
 technique SpriteDrawing

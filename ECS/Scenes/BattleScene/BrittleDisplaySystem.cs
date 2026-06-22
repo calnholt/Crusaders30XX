@@ -142,15 +142,17 @@ public class BrittleDisplaySystem : Core.System
         if (!EnsureLoaded()) return;
         if (!EnsureTargets()) return;
 
-        var currentTargets = _graphicsDevice.GetRenderTargets();
-        if (!TryGetPrimaryRenderTarget(currentTargets, out var currentTarget)) return;
+        if (!SpriteBatchRenderTargetCompositor.TryGetPrimaryRenderTarget(
+                _graphicsDevice,
+                out var currentTargets,
+                out var currentTarget)) return;
 
-        var state = CaptureSpriteBatchState();
+        var state = SpriteBatchRenderTargetCompositor.CaptureState(_graphicsDevice);
         _spriteBatch.End();
 
-        CopyRenderTarget(currentTarget, _beforeCardTarget);
-        RestoreRenderTargets(currentTargets);
-        RestoreSpriteBatchState(state);
+        SpriteBatchRenderTargetCompositor.Copy(_graphicsDevice, _spriteBatch, currentTarget, _beforeCardTarget);
+        SpriteBatchRenderTargetCompositor.RestoreRenderTargets(_graphicsDevice, currentTargets);
+        SpriteBatchRenderTargetCompositor.RestoreSpriteBatch(_graphicsDevice, _spriteBatch, state);
 
         _hasCapture = true;
         _capturedCard = card;
@@ -177,13 +179,15 @@ public class BrittleDisplaySystem : Core.System
             return;
         }
 
-        var currentTargets = _graphicsDevice.GetRenderTargets();
-        if (!TryGetPrimaryRenderTarget(currentTargets, out var currentTarget)) return;
+        if (!SpriteBatchRenderTargetCompositor.TryGetPrimaryRenderTarget(
+                _graphicsDevice,
+                out var currentTargets,
+                out var currentTarget)) return;
 
-        var state = CaptureSpriteBatchState();
+        var state = SpriteBatchRenderTargetCompositor.CaptureState(_graphicsDevice);
         _spriteBatch.End();
 
-        CopyRenderTarget(currentTarget, _afterCardTarget);
+        SpriteBatchRenderTargetCompositor.Copy(_graphicsDevice, _spriteBatch, currentTarget, _afterCardTarget);
 
         _overlay.Time = _timeSeconds;
         _overlay.BackgroundTexture = _beforeCardTarget;
@@ -198,14 +202,14 @@ public class BrittleDisplaySystem : Core.System
         _overlay.EdgeGlowAmount = EdgeGlowAmount;
         _overlay.HoleDarken = HoleDarken;
 
-        RestoreRenderTargets(currentTargets);
+        SpriteBatchRenderTargetCompositor.RestoreRenderTargets(_graphicsDevice, currentTargets);
         _graphicsDevice.Clear(Color.Transparent);
 
         _overlay.Begin(_spriteBatch);
         _overlay.Draw(_spriteBatch, _afterCardTarget);
         _overlay.End(_spriteBatch);
 
-        RestoreSpriteBatchState(state);
+        SpriteBatchRenderTargetCompositor.RestoreSpriteBatch(_graphicsDevice, _spriteBatch, state);
     }
 
     private bool ShouldRender(Entity card)
@@ -274,76 +278,4 @@ public class BrittleDisplaySystem : Core.System
         return true;
     }
 
-    private static bool TryGetPrimaryRenderTarget(RenderTargetBinding[] targets, out RenderTarget2D renderTarget)
-    {
-        renderTarget = null;
-        if (targets == null || targets.Length == 0)
-        {
-            return false;
-        }
-
-        renderTarget = targets[0].RenderTarget as RenderTarget2D;
-        return renderTarget != null;
-    }
-
-    private void CopyRenderTarget(Texture2D source, RenderTarget2D destination)
-    {
-        _graphicsDevice.SetRenderTarget(destination);
-        _graphicsDevice.Clear(Color.Transparent);
-        _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
-        _spriteBatch.Draw(source, _graphicsDevice.Viewport.Bounds, Color.White);
-        _spriteBatch.End();
-    }
-
-    private SpriteBatchState CaptureSpriteBatchState()
-    {
-        return new SpriteBatchState(
-            _graphicsDevice.BlendState,
-            _graphicsDevice.SamplerStates[0],
-            _graphicsDevice.DepthStencilState,
-            _graphicsDevice.RasterizerState,
-            _graphicsDevice.ScissorRectangle);
-    }
-
-    private void RestoreSpriteBatchState(SpriteBatchState state)
-    {
-        _graphicsDevice.ScissorRectangle = state.ScissorRectangle;
-        _spriteBatch.Begin(
-            SpriteSortMode.Immediate,
-            state.BlendState,
-            state.SamplerState,
-            state.DepthStencilState,
-            state.RasterizerState
-        );
-    }
-
-    private void RestoreRenderTargets(RenderTargetBinding[] targets)
-    {
-        if (targets != null && targets.Length > 0)
-        {
-            _graphicsDevice.SetRenderTargets(targets);
-        }
-        else
-        {
-            _graphicsDevice.SetRenderTarget(null);
-        }
-    }
-
-    private readonly struct SpriteBatchState
-    {
-        public SpriteBatchState(BlendState blendState, SamplerState samplerState, DepthStencilState depthStencilState, RasterizerState rasterizerState, Rectangle scissorRectangle)
-        {
-            BlendState = blendState;
-            SamplerState = samplerState;
-            DepthStencilState = depthStencilState;
-            RasterizerState = rasterizerState;
-            ScissorRectangle = scissorRectangle;
-        }
-
-        public BlendState BlendState { get; }
-        public SamplerState SamplerState { get; }
-        public DepthStencilState DepthStencilState { get; }
-        public RasterizerState RasterizerState { get; }
-        public Rectangle ScissorRectangle { get; }
-    }
 }
