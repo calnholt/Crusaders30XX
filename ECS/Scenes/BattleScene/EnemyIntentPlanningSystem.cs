@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Systems
 		public EnemyIntentPlanningSystem(EntityManager em) : base(em)
 		{
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnStartEnemyTurn);
+			EventManager.Subscribe<ApplyPassiveEvent>(OnFearApplied);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -170,6 +171,28 @@ namespace Crusaders30XX.ECS.Systems
 			if (infoEntity == null) return 1;
 			var info = infoEntity.GetComponent<PhaseState>();
 			return info.TurnNumber;
+		}
+
+		private void OnFearApplied(ApplyPassiveEvent evt)
+		{
+			if (evt.Type != AppliedPassiveType.Fear || evt.Delta <= 0) return;
+
+			var enemyEntity = EntityManager.GetEntity("Enemy");
+			if (enemyEntity == null) return;
+
+			var intent = enemyEntity.GetComponent<AttackIntent>();
+			if (intent?.Planned != null)
+			{
+				foreach (var attack in intent.Planned)
+					attack.IsAmbush = true;
+			}
+
+			var nextIntent = enemyEntity.GetComponent<NextTurnAttackIntent>();
+			if (nextIntent?.Planned != null)
+			{
+				foreach (var attack in nextIntent.Planned)
+					attack.IsAmbush = true;
+			}
 		}
 
 	}

@@ -13,6 +13,8 @@ namespace Crusaders30XX.ECS.Objects.Enemies;
 
 public class FallenShepherd : EnemyBase
 {
+    private bool _fearSelected = false;
+
     private static readonly List<string> Phase1SmallAttacks =
     [
         "fallen_shepherd_crooks_scar",
@@ -54,10 +56,21 @@ public class FallenShepherd : EnemyBase
         {
             2 when isHeavyTurn => ["fallen_shepherd_phase_2"],
             2 => ArrayUtils.TakeRandomWithoutReplacement(Phase2SmallAttacks, 3),
-            3 => ArrayUtils.TakeRandomWithoutReplacement(Phase3Attacks, 1),
+            3 => GetPhase3Attacks(),
             _ when isHeavyTurn => ["fallen_shepherd_phase_1"],
             _ => ArrayUtils.TakeRandomWithoutReplacement(Phase1SmallAttacks, 3),
         };
+    }
+
+    private IEnumerable<string> GetPhase3Attacks()
+    {
+        var pool = _fearSelected
+            ? Phase3Attacks.Where(a => a != "fallen_shepherd_fear_the_shepherd").ToList()
+            : Phase3Attacks;
+        var result = ArrayUtils.TakeRandomWithoutReplacement(pool, 1).ToList();
+        if (result.FirstOrDefault() == "fallen_shepherd_fear_the_shepherd")
+            _fearSelected = true;
+        return result;
     }
 }
 

@@ -98,9 +98,7 @@ namespace Crusaders30XX.ECS.Systems
             }
             if (currentPhase == SubPhase.Block)
             {
-                TryQueueTutorial("medal");
                 TryQueueTutorial("equipment");
-                TryQueueTutorial("tribulation");
             }
         }
 
@@ -366,10 +364,6 @@ namespace Crusaders30XX.ECS.Systems
                     return GetCardWithCostBounds();
                 case "equipment":
                     return GetEquipmentBounds();
-                case "medal":
-                    return GetMedalBounds();
-                case "tribulation":
-                    return GetTribulationBounds();
                 default:
                     return Rectangle.Empty;
             }
