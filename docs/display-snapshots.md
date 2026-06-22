@@ -111,13 +111,20 @@ dotnet run -- snapshot brittle-card
 dotnet run -- snapshot brittle-card strike
 dotnet run -- snapshot brittle-card fireball
 
+# Transform-aware shader checks
+dotnet run -- snapshot brittle-card strike --scale 0.6 --rotation -25
+dotnet run -- snapshot brittle-card strike --scale 1.35 --rotation 30
+
+# Include an attached card decoration in the brittle capture
+dotnet run -- snapshot brittle-card strike --rotation 20 --pledge
+
 # Disable shaders to compare against the normal card render
 dotnet run -- snapshot brittle-card strike no-shaders
 ```
 
 ### Output file
 
-`debug/snapshots/brittle-card/<cardId>.png`
+`debug/snapshots/brittle-card/<cardId>.png` for the default transform. Transform variants append their scale, rotation, and optional pledge state to the filename.
 
 Example: `debug/snapshots/brittle-card/strike.png`
 

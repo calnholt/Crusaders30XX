@@ -305,6 +305,44 @@ public sealed class ColorlessCardTests
 	}
 
 	[Fact]
+	public void Colorless_status_tooltip_suppressed_during_guided_tutorial()
+	{
+		var entityManager = new EntityManager();
+		var tutorialEntity = entityManager.CreateEntity("GuidedTutorial");
+		entityManager.AddComponent(tutorialEntity, new GuidedTutorial { Section = 1 });
+
+		var card = CreateCard(entityManager, CardData.CardColor.Black);
+		entityManager.AddComponent(card, new Colorless { Owner = card });
+		entityManager.AddComponent(card, new UIElement { Tooltip = "Strike" });
+
+		var tooltip = TooltipTextService.BuildCardTooltip(card, card.GetComponent<UIElement>().Tooltip, entityManager);
+
+		Assert.DoesNotContain(TooltipTextService.ColorlessStatus, tooltip);
+		Assert.Contains("Strike", tooltip);
+	}
+
+	[Fact]
+	public void Colorless_status_tooltip_suppressed_during_tutorial_bubbles()
+	{
+		var entityManager = new EntityManager();
+		var card = CreateCard(entityManager, CardData.CardColor.Black);
+		entityManager.AddComponent(card, new Colorless { Owner = card });
+		entityManager.AddComponent(card, new UIElement { Tooltip = "Strike" });
+
+		StateSingleton.IsTutorialActive = true;
+		try
+		{
+			var tooltip = TooltipTextService.BuildCardTooltip(card, card.GetComponent<UIElement>().Tooltip, entityManager);
+			Assert.DoesNotContain(TooltipTextService.ColorlessStatus, tooltip);
+			Assert.Contains("Strike", tooltip);
+		}
+		finally
+		{
+			StateSingleton.IsTutorialActive = false;
+		}
+	}
+
+	[Fact]
 	public void Explicit_removal_prevents_later_rehydration()
 	{
 		EventManager.Clear();

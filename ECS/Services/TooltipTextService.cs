@@ -22,7 +22,7 @@ namespace Crusaders30XX.ECS.Services
 		/// Returns the full tooltip text for a card entity: base tooltip text plus any appended
 		/// status-effect descriptions (Frozen, Brittle, Colorless, Intimidated, Shackle, Pledge, Sealed, Recoil).
 		/// </summary>
-		public static string BuildCardTooltip(Entity entity, string baseText)
+		public static string BuildCardTooltip(Entity entity, string baseText, EntityManager entityManager = null)
 		{
 			string text = baseText;
 
@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Services
 			if (entity.GetComponent<Brittle>() != null)
 				text += Sep(text) + "This card is brittle - if you block an attack with only this card, mill 1. Lasts for the rest of the run.";
 
-			if (entity.GetComponent<Colorless>() != null)
+			if (entity.GetComponent<Colorless>() != null && !ShouldSuppressColorlessStatus(entityManager))
 				text += Sep(text) + ColorlessStatus;
 
 			if (entity.GetComponent<Intimidated>() != null)
@@ -64,6 +64,10 @@ namespace Crusaders30XX.ECS.Services
 		}
 
 		private static string Sep(string text) => string.IsNullOrWhiteSpace(text) ? "" : "\n\n";
+
+		private static bool ShouldSuppressColorlessStatus(EntityManager entityManager) =>
+			StateSingleton.IsTutorialActive
+			|| (entityManager != null && GuidedTutorialService.IsActive(entityManager));
 
 		// --- Passive tooltip text ---
 

@@ -29,6 +29,9 @@ public class BrittleDisplaySystem : Core.System
     private bool _failed;
     private bool _hasCapture;
     private Entity _capturedCard;
+    private Vector2 _capturedCardCenter;
+    private float _capturedCardScale = 1f;
+    private float _capturedCardRotation;
     private float _timeSeconds;
 
     [DebugEditable(DisplayName = "Chunk Size Px", Step = 1f, Min = 4f, Max = 80f)]
@@ -40,10 +43,10 @@ public class BrittleDisplaySystem : Core.System
     [DebugEditable(DisplayName = "Fall Fraction", Step = 0.01f, Min = 0f, Max = 1f)]
     public float FallFraction { get; set; } = 0.15f;
 
-    [DebugEditable(DisplayName = "Max Fall", Step = 0.5f, Min = 0f, Max = 40f)]
+    [DebugEditable(DisplayName = "Max Fall", Step = 0.5f, Min = 0f, Max = 12f)]
     public float MaxFall { get; set; } = 12f;
 
-    [DebugEditable(DisplayName = "Max Drift", Step = 0.1f, Min = 0f, Max = 8f)]
+    [DebugEditable(DisplayName = "Max Drift", Step = 0.1f, Min = 0f, Max = 2f)]
     public float MaxDrift { get; set; } = 1.2f;
 
     [DebugEditable(DisplayName = "Edge Glow Amount", Step = 0.05f, Min = 0f, Max = 2f)]
@@ -96,7 +99,12 @@ public class BrittleDisplaySystem : Core.System
 
     private void OnCardRenderPre(CardRenderEvent evt)
     {
-        BeginBrittleRender(evt.Card);
+        var transform = evt.Card?.GetComponent<Transform>();
+        BeginBrittleRender(
+            evt.Card,
+            evt.Position,
+            transform?.Scale.X ?? 1f,
+            transform?.Rotation ?? 0f);
     }
 
     private void OnCardRenderPost(CardRenderEvent evt)
@@ -106,7 +114,7 @@ public class BrittleDisplaySystem : Core.System
 
     private void OnCardRenderScaledPre(CardRenderScaledEvent evt)
     {
-        BeginBrittleRender(evt.Card);
+        BeginBrittleRender(evt.Card, evt.Position, evt.Scale, 0f);
     }
 
     private void OnCardRenderScaledPost(CardRenderScaledEvent evt)
@@ -116,7 +124,8 @@ public class BrittleDisplaySystem : Core.System
 
     private void OnCardRenderScaledRotatedPre(CardRenderScaledRotatedEvent evt)
     {
-        BeginBrittleRender(evt.Card);
+        float rotation = evt.Card?.GetComponent<Transform>()?.Rotation ?? 0f;
+        BeginBrittleRender(evt.Card, evt.Position, evt.Scale, rotation);
     }
 
     private void OnCardRenderScaledRotatedPost(CardRenderScaledRotatedEvent evt)
@@ -124,7 +133,7 @@ public class BrittleDisplaySystem : Core.System
         EndBrittleRender(evt.Card);
     }
 
-    private void BeginBrittleRender(Entity card)
+    private void BeginBrittleRender(Entity card, Vector2 position, float scale, float rotation)
     {
         _hasCapture = false;
         _capturedCard = null;
@@ -145,6 +154,12 @@ public class BrittleDisplaySystem : Core.System
 
         _hasCapture = true;
         _capturedCard = card;
+        _capturedCardScale = Math.Max(0.001f, scale);
+        _capturedCardRotation = rotation;
+        _capturedCardCenter = CardGeometryService.GetVisualCenter(
+            CardGeometryService.GetSettings(EntityManager),
+            position,
+            _capturedCardScale);
     }
 
     private void EndBrittleRender(Entity card)
@@ -172,6 +187,9 @@ public class BrittleDisplaySystem : Core.System
 
         _overlay.Time = _timeSeconds;
         _overlay.BackgroundTexture = _beforeCardTarget;
+        _overlay.CardCenter = _capturedCardCenter;
+        _overlay.CardScale = _capturedCardScale;
+        _overlay.CardRotation = _capturedCardRotation;
         _overlay.ChunkSizePx = ChunkSizePx;
         _overlay.MaskThreshold = MaskThreshold;
         _overlay.FallFraction = FallFraction;

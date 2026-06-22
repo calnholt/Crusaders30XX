@@ -1022,7 +1022,7 @@ namespace Crusaders30XX.ECS.Systems
                     textColor = Color.White;
                     break;
             }
-            if (isColorless && variant != ChipVariant.ATK)
+            if (isColorless && variant is ChipVariant.AP or ChipVariant.FREE)
             {
                 bgColor = variant == ChipVariant.FREE
                     ? Color.Transparent
@@ -1062,12 +1062,8 @@ namespace Crusaders30XX.ECS.Systems
                 case ChipVariant.BLK:
                 {
                     // Solid fill — steel blue tint
-                    Color bgColor = isColorless
-                        ? Color.Lerp(ColorlessSurface, ColorlessMutedText, 0.18f)
-                        : GetPaletteColor(BlkChipBgColors, cc, new Color(42, 74, 94));
-                    Color valColor = isColorless
-                        ? ColorlessPrimaryText
-                        : GetPaletteColor(BlkChipTextColors, cc, new Color(176, 212, 232));
+                    Color bgColor = GetPaletteColor(BlkChipBgColors, cc, new Color(42, 74, 94));
+                    Color valColor = GetPaletteColor(BlkChipTextColors, cc, new Color(176, 212, 232));
 
                     var tex = GetPerCornerRoundedRectTexture((int)chipW, (int)chipH, rTL, rTR, rBR, rBL);
                     DrawTextureLocalScaled(cardCenter, rotation, new Vector2(x, y), tex, new Vector2(chipW, chipH), bgColor, vs);

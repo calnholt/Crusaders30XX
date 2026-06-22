@@ -1,6 +1,14 @@
 UX
 - improve applied passive animations
 - modals "blipping" into view rather than just appearing
+- improve climb resources preview animation when hovering over buttons
+- enemy attack
+- improve remiel in battle text
+
+art
+- incorporate more backgrounds
+- card art
+- 
 
 Gameplay
 - maybe remove istoken/isweapon and make as components?
