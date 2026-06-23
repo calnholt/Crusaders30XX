@@ -29,22 +29,22 @@ public sealed class FrozenDisplaySystem : Core.System
     private float _timeSeconds;
 
     [DebugEditable(DisplayName = "Card Radius", Step = 0.01f, Min = 0f, Max = 0.2f)]
-    public float CardRadius { get; set; } = 0.04f;
+    public float CardRadius { get; set; } = 0.01f;
 
     [DebugEditable(DisplayName = "Ice Tint Strength", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float IceTintStrength { get; set; } = 0.42f;
+    public float IceTintStrength { get; set; } = 0.15f;
 
     [DebugEditable(DisplayName = "Ice Tint R", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float IceTintR { get; set; } = 0.62f;
+    public float IceTintR { get; set; } = 0.5f;
 
     [DebugEditable(DisplayName = "Ice Tint G", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float IceTintG { get; set; } = 0.80f;
+    public float IceTintG { get; set; } = 0.5f;
 
     [DebugEditable(DisplayName = "Ice Tint B", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float IceTintB { get; set; } = 0.95f;
+    public float IceTintB { get; set; } = 1f;
 
     [DebugEditable(DisplayName = "Ice Brighten", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float IceBrighten { get; set; } = 0.06f;
+    public float IceBrighten { get; set; } = 0f;
 
     [DebugEditable(DisplayName = "Refraction Amount", Step = 0.0001f, Min = 0f, Max = 0.05f)]
     public float RefractAmount { get; set; } = 0.0001f;
@@ -59,16 +59,16 @@ public sealed class FrozenDisplaySystem : Core.System
     public float FrostEdge { get; set; } = 0.10f;
 
     [DebugEditable(DisplayName = "Frost Density", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float FrostDensity { get; set; } = 0.55f;
+    public float FrostDensity { get; set; } = 0f;
 
     [DebugEditable(DisplayName = "Frost Scale", Step = 0.01f, Min = 0.01f, Max = 20f)]
-    public float FrostScale { get; set; } = 2f;
+    public float FrostScale { get; set; } = 1.75f;
 
     [DebugEditable(DisplayName = "Frost Color R", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float FrostColorR { get; set; } = 0.88f;
+    public float FrostColorR { get; set; } = 0f;
 
     [DebugEditable(DisplayName = "Frost Color G", Step = 0.01f, Min = 0f, Max = 1f)]
-    public float FrostColorG { get; set; } = 0.94f;
+    public float FrostColorG { get; set; } = 0f;
 
     [DebugEditable(DisplayName = "Frost Color B", Step = 0.01f, Min = 0f, Max = 1f)]
     public float FrostColorB { get; set; } = 1f;
@@ -92,10 +92,10 @@ public sealed class FrozenDisplaySystem : Core.System
     public float CrackScale { get; set; } = 10f;
 
     [DebugEditable(DisplayName = "Crack Seed X", Step = 0.01f, Min = -100f, Max = 100f)]
-    public float CrackSeedX { get; set; } = 3f;
+    public float CrackSeedX { get; set; } = 7.06f;
 
     [DebugEditable(DisplayName = "Crack Seed Y", Step = 0.01f, Min = -100f, Max = 100f)]
-    public float CrackSeedY { get; set; } = 3f;
+    public float CrackSeedY { get; set; } = 7.05f;
 
     [DebugEditable(DisplayName = "Crack Sharpness", Step = 0.01f, Min = 0.01f, Max = 100f)]
     public float CrackSharpness { get; set; } = 43f;
@@ -134,13 +134,13 @@ public sealed class FrozenDisplaySystem : Core.System
     public float FacetTilt { get; set; } = 0.35f;
 
     [DebugEditable(DisplayName = "Facet Refraction", Step = 0.001f, Min = 0f, Max = 0.1f)]
-    public float FacetRefract { get; set; } = 0.018f;
+    public float FacetRefract { get; set; } = 0.004f;
 
     [DebugEditable(DisplayName = "Facet Reflection", Step = 0.01f, Min = 0f, Max = 2f)]
     public float FacetReflect { get; set; } = 0.30f;
 
     [DebugEditable(DisplayName = "Facet Warble", Step = 0.01f, Min = 0f, Max = 3f)]
-    public float FacetWarble { get; set; } = 0.6f;
+    public float FacetWarble { get; set; } = 1f;
 
     [DebugEditable(DisplayName = "Breath Strength", Step = 0.01f, Min = 0f, Max = 1f)]
     public float BreathStrength { get; set; } = 0.85f;

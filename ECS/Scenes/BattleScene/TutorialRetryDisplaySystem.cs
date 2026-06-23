@@ -3,7 +3,6 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
-using Crusaders30XX.ECS.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Crusaders30XX.Diagnostics;
@@ -14,13 +13,12 @@ namespace Crusaders30XX.ECS.Systems
 {
 	internal class TutorialRetryDisplaySystem : Core.System
 	{
+		private const string RetryButtonEntityName = "UIButton_TutorialRetry";
+
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly SpriteFont _font = FontSingleton.ContentFont;
 		private Texture2D _cachedButtonTexture;
 		private string _cachedButtonText;
-		private float _holdElapsed;
-		private bool _holding;
 
 		[DebugEditable(DisplayName = "Button Width", Step = 1, Min = 40, Max = 400)]
 		public int ButtonWidth { get; set; } = 140;
@@ -48,6 +46,13 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
 			EventManager.Subscribe<LoadSceneEvent>(_ => DestroyButton());
+			EventManager.Subscribe<HotKeyHoldCompletedEvent>(OnHotKeyHoldCompleted);
+		}
+
+		private void OnHotKeyHoldCompleted(HotKeyHoldCompletedEvent evt)
+		{
+			if (evt.Entity?.Name != RetryButtonEntityName) return;
+			GuidedTutorialService.RestartSection(EntityManager);
 		}
 
 		public override void Update(GameTime gameTime)
@@ -58,34 +63,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			EnsureButton();
 
-			// Manual hold for Escape/Back (bypasses all input gating)
-			PlayerInputFrame frame = PlayerInputService.GetFrame(EntityManager);
-			bool escDown = frame.IsDown(PlayerButton.Escape);
-			bool backDown = frame.IsDown(PlayerButton.Back);
-
-			if (escDown || backDown)
-			{
-				if (!_holding)
-				{
-					_holding = true;
-					_holdElapsed = 0f;
-				}
-				_holdElapsed += (float)gameTime.ElapsedGameTime.TotalSeconds;
-				if (_holdElapsed >= HoldDuration)
-				{
-					_holding = false;
-					_holdElapsed = 0f;
-					GuidedTutorialService.RestartSection(EntityManager);
-				}
-			}
-			else
-			{
-				_holding = false;
-				_holdElapsed = 0f;
-			}
-
-			// IsClicked for mouse clicks (via UIInteractionSystem) and HotKey hold (via HotKeySystem)
-			var retryBtn = EntityManager.GetEntity("UIButton_TutorialRetry");
+			var retryBtn = EntityManager.GetEntity(RetryButtonEntityName);
 			if (retryBtn?.GetComponent<UIElement>()?.IsClicked == true)
 			{
 				retryBtn.GetComponent<UIElement>().IsClicked = false;
@@ -121,13 +99,19 @@ namespace Crusaders30XX.ECS.Systems
 		private void EnsureButton()
 		{
 			var btnRect = GetButtonRect();
-			var retryBtn = EntityManager.GetEntity("UIButton_TutorialRetry");
+			var retryBtn = EntityManager.GetEntity(RetryButtonEntityName);
 			if (retryBtn == null)
 			{
-				retryBtn = EntityManager.CreateEntity("UIButton_TutorialRetry");
+				retryBtn = EntityManager.CreateEntity(RetryButtonEntityName);
 				EntityManager.AddComponent(retryBtn, new Transform { Position = new Vector2(btnRect.X, btnRect.Y), ZOrder = ButtonZ });
 				EntityManager.AddComponent(retryBtn, new UIElement { Bounds = btnRect, IsInteractable = true, IsHidden = false });
-				EntityManager.AddComponent(retryBtn, new HotKey { Button = FaceButton.Back, RequiresHold = true, Position = HotKeyPosition.Below });
+				EntityManager.AddComponent(retryBtn, new HotKey
+				{
+					Button = FaceButton.View,
+					RequiresHold = true,
+					HoldDurationSeconds = HoldDuration,
+					Position = HotKeyPosition.Below,
+				});
 				EntityManager.AddComponent(retryBtn, new TutorialInteractionPermitted());
 			}
 			else
@@ -137,9 +121,11 @@ namespace Crusaders30XX.ECS.Systems
 
 				var t = retryBtn.GetComponent<Transform>();
 				if (t != null) t.Position = new Vector2(btnRect.X, btnRect.Y);
+
+				var hotKey = retryBtn.GetComponent<HotKey>();
+				if (hotKey != null) hotKey.HoldDurationSeconds = HoldDuration;
 			}
 
-			// Sync context between "gameplay" and "overlay.tutorial" based on tutorial overlay state
 			bool tutorialOverlayActive = EntityManager.GetEntitiesWithComponent<InputContext>()
 				.Any(e =>
 				{
@@ -161,7 +147,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void DestroyButton()
 		{
-			var btn = EntityManager.GetEntity("UIButton_TutorialRetry");
+			var btn = EntityManager.GetEntity(RetryButtonEntityName);
 			if (btn != null)
 				EntityManager.DestroyEntity(btn.Id);
 			_cachedButtonTexture?.Dispose();

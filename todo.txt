@@ -4,6 +4,11 @@ UX
 - improve climb resources preview animation when hovering over buttons
 - enemy attack
 - improve remiel in battle text
+- make fixed buttons used throughout (just a fex styles used consistently)
+- tutorial section transitions a little rough -- take notes on what exactly needs to be fixed to clean up
+- make climb column buttons more thematic
+- frozen shader -- make seeds random per card
+- tutorial bubble - move continue relative to bubble
 
 art
 - incorporate more backgrounds

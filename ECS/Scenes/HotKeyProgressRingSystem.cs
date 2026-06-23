@@ -65,11 +65,8 @@ namespace Crusaders30XX.ECS.Systems
             HotKeySystem hotKeySystem = _systemManager.GetSystem<HotKeySystem>();
             if (hotKeySystem == null) return;
             string contextId = InputContextResolver.ResolveCommandContext(EntityManager);
-            if (StateSingleton.PreventClicking
-                && contextId == InputContextIds.Gameplay)
-            {
-                return;
-            }
+            bool gameplayBlocked = StateSingleton.PreventClicking
+                && contextId == InputContextIds.Gameplay;
 
             foreach ((Entity entity, float elapsed) in hotKeySystem.HoldProgress.ToList())
             {
@@ -78,7 +75,8 @@ namespace Crusaders30XX.ECS.Systems
                 if (hotKey == null
                     || ui == null
                     || !ui.IsInteractable
-                    || !InputContextResolver.IsMember(entity, contextId))
+                    || !InputContextResolver.IsMember(entity, contextId)
+                    || (gameplayBlocked && !entity.HasComponent<TutorialInteractionPermitted>()))
                 {
                     continue;
                 }

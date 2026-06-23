@@ -727,7 +727,7 @@ namespace Crusaders30XX.ECS.Components
         B,
         X,
         Y,
-        Back,
+        View,
         Start,
         LB,
         RB
