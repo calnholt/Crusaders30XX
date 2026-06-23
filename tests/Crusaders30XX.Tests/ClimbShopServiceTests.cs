@@ -175,8 +175,8 @@ public class ClimbShopServiceTests : IDisposable
 		state.shopSlots[0] = ShopSlot(ClimbShopSlotKinds.Medal, itemId: "st_luke");
 		SaveCache.SaveClimbState(state);
 		var world = new World();
-		ShowTransition transition = null;
-		EventManager.Subscribe<ShowTransition>(evt => transition = evt);
+		ClimbEncounterSplashRequested splash = null;
+		EventManager.Subscribe<ClimbEncounterSplashRequested>(evt => splash = evt);
 
 		Assert.True(ClimbShopService.TryPurchaseSlot(world.EntityManager, 0));
 
@@ -189,8 +189,8 @@ public class ClimbShopServiceTests : IDisposable
 		Assert.NotNull(pending);
 		Assert.Equal("fallen_shepherd", pending.DialogId);
 		Assert.Equal("intro", pending.SegmentId);
-		Assert.NotNull(transition);
-		Assert.Equal(SceneId.Battle, transition.Scene);
+		Assert.NotNull(splash);
+		Assert.Equal("fallen_shepherd", splash.EnemyId);
 	}
 
 	[Fact]

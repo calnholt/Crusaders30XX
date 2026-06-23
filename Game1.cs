@@ -26,6 +26,7 @@ public class Game1 : Game
     private DebugMenuSystem _debugMenuSystem;
     private EntityListOverlaySystem _entityListOverlaySystem;
     private TransitionDisplaySystem _transitionDisplaySystem;
+    private ClimbEncounterSplashDisplaySystem _climbSplashDisplaySystem;
     private CardDisplaySystem _cardDisplaySystem;
     private FrozenDisplaySystem _frozenDisplaySystem;
     private BrittleDisplaySystem _brittleDisplaySystem;
@@ -182,6 +183,8 @@ public class Game1 : Game
         _debugMenuSystem = new DebugMenuSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, _world.SystemManager);
         _entityListOverlaySystem = new EntityListOverlaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _climbSplashDisplaySystem = new ClimbEncounterSplashDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _world.AddSystem(_climbSplashDisplaySystem);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _frozenDisplaySystem = new FrozenDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _brittleDisplaySystem = new BrittleDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
@@ -602,6 +605,7 @@ public class Game1 : Game
         FrameProfiler.Measure("EntityListOverlaySystem.Draw", _entityListOverlaySystem.Draw);
         FrameProfiler.Measure("DialogDisplaySystem.Draw", _dialogDisplaySystem.Draw);
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
+        FrameProfiler.Measure("ClimbEncounterSplashDisplaySystem.Draw", _climbSplashDisplaySystem.Draw);
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         // Cursor blur trail (additive pass before cursor) — skip in card debug mode
         DrawCursor();

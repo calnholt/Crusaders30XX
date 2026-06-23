@@ -85,6 +85,13 @@ namespace Crusaders30XX.ECS.Events
 	{
 	}
 
+	public class ClimbEncounterSplashRequested
+	{
+		public string SlotId { get; set; } = string.Empty;
+		public string EnemyId { get; set; } = string.Empty;
+		public string EnemyName { get; set; } = string.Empty;
+	}
+
 	public class ClimbLoadoutOpenRequestedEvent
 	{
 	}

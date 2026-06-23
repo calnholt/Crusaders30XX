@@ -326,12 +326,12 @@ public class ClimbEventSystemTests
 			var world = ClimbWorld();
 			_ = new ClimbEventSystem(world.EntityManager);
 
-			int transitionCount = 0;
-			EventManager.Subscribe<ShowTransition>(_ => transitionCount++);
+			int splashCount = 0;
+			EventManager.Subscribe<ClimbEncounterSplashRequested>(_ => splashCount++);
 
 			EventManager.Publish(new LoadSceneEvent { Scene = SceneId.Climb });
 
-			Assert.Equal(0, transitionCount);
+			Assert.Equal(0, splashCount);
 		}
 		finally
 		{
@@ -355,13 +355,13 @@ public class ClimbEventSystemTests
 			var world = ClimbWorld();
 			_ = new ClimbEventSystem(world.EntityManager);
 
-			ShowTransition transition = null;
-			EventManager.Subscribe<ShowTransition>(evt => transition = evt);
+			ClimbEncounterSplashRequested splash = null;
+			EventManager.Subscribe<ClimbEncounterSplashRequested>(evt => splash = evt);
 
 			EventManager.Publish(new LoadSceneEvent { Scene = SceneId.Climb });
 
-			Assert.NotNull(transition);
-			Assert.Equal(SceneId.Battle, transition.Scene);
+			Assert.NotNull(splash);
+			Assert.Equal("fallen_shepherd", splash.EnemyId);
 		}
 		finally
 		{

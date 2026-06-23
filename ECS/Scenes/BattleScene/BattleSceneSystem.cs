@@ -197,6 +197,7 @@ namespace Crusaders30XX.ECS.Systems
 				// Initialize the battle scene before pending dialog, but wait for dialog completion before starting battle rules.
 				bool willShowDialog = EntityManager.GetEntitiesWithComponent<QueuedEvents>().FirstOrDefault()?.GetComponent<PendingQuestDialog>()?.WillShowDialog ?? false;
 				InitBattle();
+				EventManager.Publish(new BattleSceneInitializedEvent { Scene = SceneId.Battle });
 				// EnqueueBattleRules(false);
 			});
 			EventManager.Subscribe<DialogEnded>(_ =>

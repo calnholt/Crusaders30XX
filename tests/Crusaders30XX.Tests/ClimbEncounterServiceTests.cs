@@ -21,10 +21,10 @@ public class ClimbEncounterServiceTests
 		{
 			PrepareRunWithEncounter(timeCost: 3);
 			var world = new World();
-			int battleTransitions = 0;
-			EventManager.Subscribe<ShowTransition>(evt =>
+			int splashRequests = 0;
+			EventManager.Subscribe<ClimbEncounterSplashRequested>(evt =>
 			{
-				if (evt.Scene == SceneId.Battle) battleTransitions++;
+				if (evt.EnemyId == "skeleton") splashRequests++;
 			});
 
 			Assert.True(ClimbEncounterService.TryQueueEncounter(world.EntityManager, "encounter_a"));
@@ -34,7 +34,7 @@ public class ClimbEncounterServiceTests
 			Assert.Equal("encounter_a", queued.ClimbEncounterSlotId);
 			Assert.Single(queued.Events);
 			Assert.Equal("skeleton", queued.Events[0].EventId);
-			Assert.Equal(1, battleTransitions);
+			Assert.Equal(1, splashRequests);
 		}
 		finally
 		{
@@ -120,8 +120,8 @@ public class ClimbEncounterServiceTests
 			var result = ClimbEncounterService.CompleteQueuedEncounter(world.EntityManager);
 			Assert.True(result.PendingFinalEncounter);
 
-			ShowTransition transition = null;
-			EventManager.Subscribe<ShowTransition>(evt => transition = evt);
+			ClimbEncounterSplashRequested splash = null;
+			EventManager.Subscribe<ClimbEncounterSplashRequested>(evt => splash = evt);
 
 			Assert.True(ClimbEncounterService.ResolvePendingEncounterReward(world.EntityManager));
 
@@ -138,8 +138,8 @@ public class ClimbEncounterServiceTests
 			Assert.Equal("intro", pending.SegmentId);
 			Assert.NotEqual(System.Guid.Empty, pending.RequestId);
 			Assert.True(pending.WillShowDialog);
-			Assert.NotNull(transition);
-			Assert.Equal(SceneId.Battle, transition.Scene);
+			Assert.NotNull(splash);
+			Assert.Equal("fallen_shepherd", splash.EnemyId);
 		}
 		finally
 		{

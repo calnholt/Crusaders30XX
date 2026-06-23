@@ -49,6 +49,11 @@ namespace Crusaders30XX.ECS.Events
 		public NarrativeModalContent Content { get; set; }
 	}
 
+	public class BattleSceneInitializedEvent
+	{
+		public SceneId Scene { get; set; }
+	}
+
 	public class NarrativeEventOverlayClosedEvent
 	{
 		public string RunMapEventId;

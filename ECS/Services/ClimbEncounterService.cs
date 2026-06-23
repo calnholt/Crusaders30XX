@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Objects.Enemies;
 
 namespace Crusaders30XX.ECS.Services
@@ -52,7 +53,13 @@ namespace Crusaders30XX.ECS.Services
 			queued.LocationId = "climb";
 			queued.QuestIndex = 0;
 
-			EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
+			var enemy = EnemyFactory.Create(slot.enemyId);
+			EventManager.Publish(new ClimbEncounterSplashRequested
+			{
+				SlotId = encounterSlotId,
+				EnemyId = slot.enemyId,
+				EnemyName = enemy?.Name ?? slot.enemyId,
+			});
 			return true;
 		}
 
@@ -137,7 +144,13 @@ namespace Crusaders30XX.ECS.Services
 			queued.LocationId = "climb";
 			queued.QuestIndex = 0;
 			EnsureFallenShepherdIntroDialog(queuedEntity);
-			EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
+			var finalEnemy = EnemyFactory.Create("fallen_shepherd");
+			EventManager.Publish(new ClimbEncounterSplashRequested
+			{
+				SlotId = "final",
+				EnemyId = "fallen_shepherd",
+				EnemyName = finalEnemy?.Name ?? "Fallen Shepherd",
+			});
 			return true;
 		}
 
