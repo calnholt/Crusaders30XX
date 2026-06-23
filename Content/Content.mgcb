@@ -814,6 +814,54 @@
 /processorParam:TextureFormat=Color
 /build:cathedral-background.png
 
+#begin Battle_Backgrounds/tundra-battle-background.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Battle_Backgrounds/tundra-battle-background.png
+
+#begin Battle_Backgrounds/jungle-battle-background.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Battle_Backgrounds/jungle-battle-background.png
+
+#begin Battle_Backgrounds/desert-battle-background.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Battle_Backgrounds/desert-battle-background.png
+
+#begin Battle_Backgrounds/the-gate-battle-background.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Battle_Backgrounds/the-gate-battle-background.png
+
 #begin waystation.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -1798,6 +1846,31 @@
 /importer:WavImporter
 /processor:SongProcessor
 /build:Music/ice.wav
+
+#begin Music/desert.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/desert.ogg
+
+#begin Music/jungle.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/jungle.ogg
+
+#begin Music/the-gate.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/the-gate.ogg
+
+#begin Music/tundra.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/tundra.ogg
+
+#begin Music/victory.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/victory.ogg
 
 #---------------------------------- SFX ---------------------------------#
 
