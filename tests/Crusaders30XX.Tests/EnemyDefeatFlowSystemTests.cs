@@ -35,6 +35,10 @@ public class EnemyDefeatFlowSystemTests
 			Assert.True(enemy.HasComponent<SuppressPortraitRender>());
 			Assert.False(phaseState.DefeatPresentationActive);
 			Assert.Equal(1, enemyKilledCount);
+			Assert.Equal(0, questRewardCount);
+
+			CompleteVictoryAnimation();
+
 			Assert.Equal(1, questRewardCount);
 		}
 		finally
@@ -88,12 +92,23 @@ public class EnemyDefeatFlowSystemTests
 
 			ShowTransition transition = null;
 			int rewardCount = 0;
+			int musicCount = 0;
 			EventManager.Subscribe<ShowTransition>(evt => transition = evt);
 			EventManager.Subscribe<ShowQuestRewardOverlay>(_ => rewardCount++);
+			EventManager.Subscribe<ChangeMusicTrack>(evt =>
+			{
+				if (evt.Track == MusicTrack.QuestComplete) musicCount++;
+			});
 
 			EventManager.Publish(new BeginDefeatPresentationEvent { Enemy = enemy, IsPreview = false });
 
 			Assert.False(phaseState.DefeatPresentationActive);
+			Assert.Equal(0, rewardCount);
+			Assert.Equal(0, musicCount);
+			Assert.Null(transition);
+
+			CompleteVictoryAnimation();
+
 			Assert.Equal(0, rewardCount);
 			Assert.NotNull(transition);
 			Assert.Equal(SceneId.WayStation, transition.Scene);
@@ -165,9 +180,19 @@ public class EnemyDefeatFlowSystemTests
 			_ = new EnemyDefeatFlowSystem(world.EntityManager, content: null);
 
 			ShowQuestRewardOverlay reward = null;
+			int musicCount = 0;
 			EventManager.Subscribe<ShowQuestRewardOverlay>(evt => reward = evt);
+			EventManager.Subscribe<ChangeMusicTrack>(evt =>
+			{
+				if (evt.Track == MusicTrack.QuestComplete) musicCount++;
+			});
 
 			EventManager.Publish(new BeginDefeatPresentationEvent { Enemy = enemy, IsPreview = false });
+
+			Assert.Equal(1, musicCount);
+			Assert.Null(reward);
+
+			CompleteVictoryAnimation();
 
 			Assert.NotNull(reward);
 			Assert.True(reward.IsEncounterReward);
@@ -178,6 +203,71 @@ public class EnemyDefeatFlowSystemTests
 			EventManager.Clear();
 			EventQueue.Clear();
 		}
+	}
+
+	[Fact]
+	public void Last_queue_battle_starts_quest_complete_music_at_zero_hp()
+	{
+		EventManager.Clear();
+		EventQueue.Clear();
+
+		try
+		{
+			var world = BuildWorld(out _, out var enemy);
+			_ = new EnemyDefeatFlowSystem(world.EntityManager, content: null);
+
+			int musicCount = 0;
+			EventManager.Subscribe<ChangeMusicTrack>(evt =>
+			{
+				if (evt.Track == MusicTrack.QuestComplete) musicCount++;
+			});
+
+			EventManager.Publish(new BeginDefeatPresentationEvent { Enemy = enemy, IsPreview = false });
+
+			Assert.Equal(1, musicCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+			EventQueue.Clear();
+		}
+	}
+
+	[Fact]
+	public void Mid_queue_battle_does_not_start_quest_complete_music_at_zero_hp()
+	{
+		EventManager.Clear();
+		EventQueue.Clear();
+
+		try
+		{
+			var world = BuildWorld(out _, out var enemy);
+			var queued = world.EntityManager.GetEntity("QueuedEvents").GetComponent<QueuedEvents>();
+			queued.Events.Add(new QueuedEvent { EventId = "skeleton" });
+			queued.CurrentIndex = 0;
+
+			_ = new EnemyDefeatFlowSystem(world.EntityManager, content: null);
+
+			int musicCount = 0;
+			EventManager.Subscribe<ChangeMusicTrack>(evt =>
+			{
+				if (evt.Track == MusicTrack.QuestComplete) musicCount++;
+			});
+
+			EventManager.Publish(new BeginDefeatPresentationEvent { Enemy = enemy, IsPreview = false });
+
+			Assert.Equal(0, musicCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+			EventQueue.Clear();
+		}
+	}
+
+	private static void CompleteVictoryAnimation()
+	{
+		EventManager.Publish(new VictoryAnimationCompleteEvent());
 	}
 
 	private static World BuildWorld(out PhaseState phaseState, out Entity enemy)

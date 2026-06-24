@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
@@ -85,6 +86,38 @@ public sealed class HandDisplaySystemTests : IDisposable
     }
 
     [Fact]
+    public void Weapon_at_index_zero_gets_hover_z_boost_and_stays_behind_neighbors_at_rest()
+    {
+        var entityManager = BuildBattleHand(3, out var cards, weaponAtIndexZero: true);
+        var display = new HandDisplaySystem(entityManager, null)
+        {
+            HandZBase = 100,
+            HandZStep = 1,
+            HandZHoverBoost = 1000,
+        };
+        var weapon = cards[0];
+        var neighbor = cards[1];
+
+        display.Update(Frame());
+
+        int weaponZ = weapon.GetComponent<Transform>().ZOrder;
+        int neighborZ = neighbor.GetComponent<Transform>().ZOrder;
+        Assert.True(weaponZ < neighborZ);
+        Assert.Equal(100, weaponZ);
+        Assert.Equal(101, neighborZ);
+
+        weapon.GetComponent<UIElement>().IsHovered = true;
+        display.Update(Frame());
+
+        weaponZ = weapon.GetComponent<Transform>().ZOrder;
+        Assert.Equal(1100, weaponZ);
+        foreach (var card in cards.Skip(1))
+        {
+            Assert.True(weaponZ > card.GetComponent<Transform>().ZOrder);
+        }
+    }
+
+    [Fact]
     public void Scale_tweens_down_after_hover_clears_without_tweening_up()
     {
         var entityManager = BuildBattleHand(3, out var cards);
@@ -114,7 +147,7 @@ public sealed class HandDisplaySystemTests : IDisposable
         Assert.Equal(0.8f, hovered.GetComponent<Transform>().Scale.X, 2);
     }
 
-    private static EntityManager BuildBattleHand(int cardCount, out List<Entity> cards)
+    private static EntityManager BuildBattleHand(int cardCount, out List<Entity> cards, bool weaponAtIndexZero = false)
     {
         var entityManager = new EntityManager();
         var settingsEntity = entityManager.CreateEntity("CardGeometrySettings");
@@ -143,9 +176,15 @@ public sealed class HandDisplaySystemTests : IDisposable
         for (int i = 0; i < cardCount; i++)
         {
             var card = entityManager.CreateEntity($"Card_{i}");
+            bool isWeapon = weaponAtIndexZero && i == 0;
             entityManager.AddComponent(card, new CardData
             {
-                Card = new CardBase { CardId = $"test_card_{i}", Name = $"Test {i}" },
+                Card = new CardBase
+                {
+                    CardId = isWeapon ? "weapon" : $"test_card_{i}",
+                    Name = isWeapon ? "Weapon" : $"Test {i}",
+                    IsWeapon = isWeapon,
+                },
             });
             entityManager.AddComponent(card, new Transform());
             entityManager.AddComponent(card, new UIElement { IsInteractable = true });

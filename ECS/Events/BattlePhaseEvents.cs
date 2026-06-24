@@ -20,4 +20,8 @@ namespace Crusaders30XX.ECS.Events
 	}
 
 	public class ShowStartOfBattleAnimationEvent { }
+
+	public class ShowVictoryAnimationEvent { }
+
+	public class VictoryAnimationCompleteEvent { }
 }

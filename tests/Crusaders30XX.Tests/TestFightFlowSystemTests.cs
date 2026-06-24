@@ -98,6 +98,10 @@ public class TestFightFlowSystemTests
 			Assert.Equal(1, TestFightRuntime.HpDelta);
 			Assert.Equal(0, rewardCount);
 			Assert.Equal(-1, queued.CurrentIndex);
+			Assert.Null(transition);
+
+			EventManager.Publish(new VictoryAnimationCompleteEvent());
+
 			Assert.Equal(SceneId.Battle, transition.Scene);
 		}
 		finally

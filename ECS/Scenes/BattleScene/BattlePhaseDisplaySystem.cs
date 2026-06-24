@@ -85,6 +85,7 @@ namespace Crusaders30XX.ECS.Systems
 		private SubPhase _lastPhase = SubPhase.StartBattle;
 		private int _lastTurn = 0;
 		private bool _shownBlockAnimationForTurn = false;
+		private bool _isVictoryAnimation = false;
 
 		// Strip Definition
 		private struct Strip
@@ -110,6 +111,10 @@ namespace Crusaders30XX.ECS.Systems
 				LoggingService.Append("BattlePhaseDisplaySystem.OnShowStartOfBattleAnimation", new System.Text.Json.Nodes.JsonObject { ["event"] = "ShowStartOfBattleAnimationEvent" });
 				StartAnimation(SubPhaseToString(SubPhase.StartBattle));
 			});
+			EventManager.Subscribe<ShowVictoryAnimationEvent>(_ => {
+				LoggingService.Append("BattlePhaseDisplaySystem.OnShowVictoryAnimation", new System.Text.Json.Nodes.JsonObject { ["event"] = "ShowVictoryAnimationEvent" });
+				StartVictoryAnimation();
+			});
 			EventManager.Subscribe<DeleteCachesEvent>(_ => {
 				_animState = AnimState.None;
 				_animTimer = 0f;
@@ -117,6 +122,7 @@ namespace Crusaders30XX.ECS.Systems
 				_lastPhase = SubPhase.StartBattle;
 				_lastTurn = 0;
 				_shownBlockAnimationForTurn = false;
+				_isVictoryAnimation = false;
 			});
 		}
 
@@ -199,7 +205,14 @@ namespace Crusaders30XX.ECS.Systems
 					case AnimState.Exiting:
 						if (_animTimer >= PhaseOutDuration)
 						{
-							EventManager.Publish(new BattlePhaseAnimationCompleteEvent{ SubPhase = _lastPhase });
+							if (_isVictoryAnimation)
+							{
+								EventManager.Publish(new VictoryAnimationCompleteEvent());
+							}
+							else
+							{
+								EventManager.Publish(new BattlePhaseAnimationCompleteEvent{ SubPhase = _lastPhase });
+							}
 							StopAnimation();
 						}
 						break;
@@ -209,7 +222,18 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void StartAnimation(string text)
 		{
+			_isVictoryAnimation = false;
 			_transitionText = text;
+			_animState = AnimState.Entering;
+			_animTimer = 0f;
+			GenerateStrips();
+			EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.PhaseChange, Volume = 0.5f });
+		}
+
+		private void StartVictoryAnimation()
+		{
+			_isVictoryAnimation = true;
+			_transitionText = "Victory!";
 			_animState = AnimState.Entering;
 			_animTimer = 0f;
 			GenerateStrips();
@@ -220,6 +244,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			_animState = AnimState.None;
 			_animTimer = 0f;
+			_isVictoryAnimation = false;
 		}
 
 		private void GenerateStrips()

@@ -15,18 +15,40 @@ namespace Crusaders30XX.ECS.Systems
 {
 	public class EnemyDefeatFlowSystem : Core.System
 	{
+		private enum PostVictoryKind
+		{
+			None,
+			RestartTestFight,
+			StartTutorialDialogue,
+			AdvanceTutorial,
+			ShowWayStationTransition,
+			ShowQuestReward,
+			ShowNextBattleTransition,
+		}
+
+		private struct PostVictoryAction
+		{
+			public PostVictoryKind Kind;
+			public ShowQuestRewardOverlay QuestReward;
+			public ShowTransition Transition;
+			public DialogueSequenceRequested TutorialDialogue;
+		}
+
 		private readonly ContentManager _content;
 
 		private Guid? _pendingBurstId;
 		private Entity _pendingEnemy;
 		private bool _pendingIsPreview;
 		private Guid _tutorialDialogueRequestId;
+		private PostVictoryAction _pendingPostVictory;
+		private bool _waitingForVictoryAnimation;
 
 		public EnemyDefeatFlowSystem(EntityManager entityManager, ContentManager content) : base(entityManager)
 		{
 			_content = content;
 			EventManager.Subscribe<BeginDefeatPresentationEvent>(OnBeginDefeatPresentation);
 			EventManager.Subscribe<PixelBurstAnimationCompleted>(OnPixelBurstCompleted);
+			EventManager.Subscribe<VictoryAnimationCompleteEvent>(OnVictoryAnimationComplete);
 			EventManager.Subscribe<DeleteCachesEvent>(_ => OnCachesCleared());
 			EventManager.Subscribe<StartBattleRequested>(_ => OnCachesCleared());
 			EventManager.Subscribe<DialogueSequenceCompleted>(OnTutorialDialogueCompleted);
@@ -47,6 +69,11 @@ namespace Crusaders30XX.ECS.Systems
 			if (!evt.IsPreview)
 			{
 				EventQueue.Clear();
+
+				if (WillOpenQuestRewardModal(evt.Enemy))
+				{
+					EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.QuestComplete });
+				}
 			}
 
 			if (_pendingBurstId.HasValue) return;
@@ -94,12 +121,38 @@ namespace Crusaders30XX.ECS.Systems
 
 			EventManager.Publish(new EnemyKilledEvent { Enemy = enemy });
 
+			var action = ResolvePostVictoryAction(enemy);
+			StageVictoryAnimation(action);
+		}
+
+		private void StageVictoryAnimation(PostVictoryAction action)
+		{
+			_pendingPostVictory = action;
+			_waitingForVictoryAnimation = true;
+			EventManager.Publish(new ShowVictoryAnimationEvent());
+		}
+
+		private void OnVictoryAnimationComplete(VictoryAnimationCompleteEvent evt)
+		{
+			if (!_waitingForVictoryAnimation) return;
+
+			_waitingForVictoryAnimation = false;
+			var action = _pendingPostVictory;
+			_pendingPostVictory = default;
+			ExecutePostVictoryAction(action);
+		}
+
+		private PostVictoryAction ResolvePostVictoryAction(Entity enemy)
+		{
 			if (TestFightRuntime.IsActive)
 			{
 				TestFightRuntime.RecordVictory();
 				TestFightSetupService.ResetEncounterQueue(EntityManager);
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
-				return;
+				return new PostVictoryAction
+				{
+					Kind = PostVictoryKind.RestartTestFight,
+					Transition = new ShowTransition { Scene = SceneId.Battle },
+				};
 			}
 
 			var enemyId = enemy?.GetComponent<Enemy>()?.EnemyBase?.Id;
@@ -109,24 +162,28 @@ namespace Crusaders30XX.ECS.Systems
 				var sectionDef = GuidedTutorialDefinitions.GetSection(tutorial.Section);
 				if (!string.IsNullOrEmpty(sectionDef.PendingDialogKey))
 				{
-					_tutorialDialogueRequestId = Guid.NewGuid();
-					EventManager.Publish(new DialogueSequenceRequested
+					return new PostVictoryAction
 					{
-						DefinitionId = "guided_tutorial",
-						SegmentId = sectionDef.PendingDialogKey,
-						RequestId = _tutorialDialogueRequestId,
-					});
+						Kind = PostVictoryKind.StartTutorialDialogue,
+						TutorialDialogue = new DialogueSequenceRequested
+						{
+							DefinitionId = "guided_tutorial",
+							SegmentId = sectionDef.PendingDialogKey,
+							RequestId = Guid.NewGuid(),
+						},
+					};
 				}
-				else
-				{
-					GuidedTutorialService.AdvanceToNextSection(EntityManager);
-				}
-				return;
+
+				return new PostVictoryAction { Kind = PostVictoryKind.AdvanceTutorial };
 			}
+
 			if (string.Equals(enemyId, "fallen_shepherd", StringComparison.OrdinalIgnoreCase))
 			{
-				EventManager.Publish(new ShowTransition { Scene = SceneId.WayStation, EndRunOnLoad = true });
-				return;
+				return new PostVictoryAction
+				{
+					Kind = PostVictoryKind.ShowWayStationTransition,
+					Transition = new ShowTransition { Scene = SceneId.WayStation, EndRunOnLoad = true },
+				};
 			}
 
 			var queuedEntity = EntityManager.GetEntity("QueuedEvents");
@@ -141,47 +198,93 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					["message"] = "attempting to save quest completion"
 				});
+
 				if (queued.IsClimbEncounter)
 				{
 					var climbCompletion = ClimbEncounterService.CompleteQueuedEncounter(EntityManager);
-					EventManager.Publish(new ShowQuestRewardOverlay
+					return new PostVictoryAction
 					{
-						Message = "Encounter Complete!",
-						TitleLine1 = "Encounter",
-						TitleLine2 = "Complete!",
-						RewardGold = 0,
-						HasCardReward = climbCompletion.DeckRewardOffer?.options != null && climbCompletion.DeckRewardOffer.options.Count > 0,
-						RewardCardKeys = climbCompletion.DeckRewardOffer?.options?
-							.Select(o => string.Equals(o.kind, DeckRewardOfferKinds.Exchange, StringComparison.OrdinalIgnoreCase)
-								? o.incomingCardKey
-								: o.upgradedCardKey)
-							.Where(k => !string.IsNullOrWhiteSpace(k))
-							.ToList() ?? new List<string>(),
-						DeckRewardOffer = climbCompletion.DeckRewardOffer,
-						IsEncounterReward = true,
-						ClimbResources = climbCompletion.Resources,
-						DismissScene = climbCompletion.PendingFinalEncounter ? SceneId.Battle : SceneId.Climb,
-					});
-					EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.QuestComplete });
-					return;
+						Kind = PostVictoryKind.ShowQuestReward,
+						QuestReward = new ShowQuestRewardOverlay
+						{
+							Message = "Encounter Complete!",
+							TitleLine1 = "Encounter",
+							TitleLine2 = "Complete!",
+							RewardGold = 0,
+							HasCardReward = climbCompletion.DeckRewardOffer?.options != null && climbCompletion.DeckRewardOffer.options.Count > 0,
+							RewardCardKeys = climbCompletion.DeckRewardOffer?.options?
+								.Select(o => string.Equals(o.kind, DeckRewardOfferKinds.Exchange, StringComparison.OrdinalIgnoreCase)
+									? o.incomingCardKey
+									: o.upgradedCardKey)
+								.Where(k => !string.IsNullOrWhiteSpace(k))
+								.ToList() ?? new List<string>(),
+							DeckRewardOffer = climbCompletion.DeckRewardOffer,
+							IsEncounterReward = true,
+							ClimbResources = climbCompletion.Resources,
+							DismissScene = climbCompletion.PendingFinalEncounter ? SceneId.Battle : SceneId.Climb,
+						},
+					};
 				}
 
 				var completion = QuestCompleteService.SaveIfCompletedHighest(EntityManager);
-				EventManager.Publish(new ShowQuestRewardOverlay
+				return new PostVictoryAction
 				{
-					Message = "Quest Complete!",
-					RewardGold = completion.IsNewlyCompleted ? completion.RewardGold : 0,
-					HasCardReward = completion.HasCardReward,
-					RewardCardKey = completion.RewardCardKey,
-					RewardCardKeys = completion.RewardCardKeys,
-					DeckRewardOffer = completion.DeckRewardOffer
-				});
-				EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.QuestComplete });
+					Kind = PostVictoryKind.ShowQuestReward,
+					QuestReward = new ShowQuestRewardOverlay
+					{
+						Message = "Quest Complete!",
+						RewardGold = completion.IsNewlyCompleted ? completion.RewardGold : 0,
+						HasCardReward = completion.HasCardReward,
+						RewardCardKey = completion.RewardCardKey,
+						RewardCardKeys = completion.RewardCardKeys,
+						DeckRewardOffer = completion.DeckRewardOffer
+					},
+				};
 			}
-			else
+
+			return new PostVictoryAction
 			{
-				EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
+				Kind = PostVictoryKind.ShowNextBattleTransition,
+				Transition = new ShowTransition { Scene = SceneId.Battle },
+			};
+		}
+
+		private void ExecutePostVictoryAction(PostVictoryAction action)
+		{
+			switch (action.Kind)
+			{
+				case PostVictoryKind.RestartTestFight:
+				case PostVictoryKind.ShowWayStationTransition:
+				case PostVictoryKind.ShowNextBattleTransition:
+					EventManager.Publish(action.Transition);
+					break;
+				case PostVictoryKind.StartTutorialDialogue:
+					_tutorialDialogueRequestId = action.TutorialDialogue.RequestId;
+					EventManager.Publish(action.TutorialDialogue);
+					break;
+				case PostVictoryKind.AdvanceTutorial:
+					GuidedTutorialService.AdvanceToNextSection(EntityManager);
+					break;
+				case PostVictoryKind.ShowQuestReward:
+					EventManager.Publish(action.QuestReward);
+					break;
 			}
+		}
+
+		private bool WillOpenQuestRewardModal(Entity enemy)
+		{
+			if (TestFightRuntime.IsActive) return false;
+			if (GuidedTutorialService.GetState(EntityManager) != null) return false;
+
+			var enemyId = enemy?.GetComponent<Enemy>()?.EnemyBase?.Id;
+			if (string.Equals(enemyId, "fallen_shepherd", StringComparison.OrdinalIgnoreCase)) return false;
+
+			var queued = EntityManager.GetEntity("QueuedEvents")?.GetComponent<QueuedEvents>();
+			return queued != null
+				&& queued.Events != null
+				&& queued.Events.Count > 0
+				&& queued.CurrentIndex >= 0
+				&& queued.CurrentIndex == queued.Events.Count - 1;
 		}
 
 		private void OnTutorialDialogueCompleted(DialogueSequenceCompleted evt)
@@ -255,6 +358,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnCachesCleared()
 		{
 			ResetPending();
+			ClearVictoryStaging();
 			SetDefeatPresentationActive(false);
 		}
 
@@ -264,6 +368,12 @@ namespace Crusaders30XX.ECS.Systems
 			_pendingEnemy = null;
 			_pendingIsPreview = false;
 			_tutorialDialogueRequestId = Guid.Empty;
+		}
+
+		private void ClearVictoryStaging()
+		{
+			_pendingPostVictory = default;
+			_waitingForVictoryAnimation = false;
 		}
 	}
 }

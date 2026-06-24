@@ -8,7 +8,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
-using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Systems
 {
@@ -266,28 +265,7 @@ namespace Crusaders30XX.ECS.Systems
                         transform.Scale = new Vector2(visualScale, visualScale);
 
                         // Z-order (ensures proper overlapping)
-                        // Special case: if this is the equipped weapon at index 0, never allow it to pop above index 1
-                        bool isWeapon = false;
-                        try
-                        {
-                            string id = cardData.Card.CardId ?? string.Empty;
-                            var cardObj = CardFactory.Create(id);
-                            if (!string.IsNullOrEmpty(id) && cardObj != null)
-                            {
-                                isWeapon = cardObj.IsWeapon;
-                            }
-                        }
-                        catch { }
-
-                        if (isWeapon && cardIndex == 0)
-                        {
-                            // Keep weapon behind the next card at all times (no hover boost)
-                            transform.ZOrder = HandZBase - 1;
-                        }
-                        else
-                        {
-                            transform.ZOrder = HandZBase + (cardIndex * HandZStep) + (hovered ? HandZHoverBoost : 0);
-                        }
+                        transform.ZOrder = HandZBase + (cardIndex * HandZStep) + (hovered ? HandZHoverBoost : 0);
 
                         // Update UI bounds to current card geometry.
                         if (ui != null)
