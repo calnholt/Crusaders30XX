@@ -23,6 +23,7 @@ namespace Crusaders30XX.ECS.Services
 			ISet<string> confirmedContextIds = null)
 		{
 			if (entityManager == null || string.IsNullOrEmpty(contextId)) return false;
+			if (BattleInputGate.IsBattleInputFrozen(entityManager)) return false;
 
 			var phase = entityManager.GetEntitiesWithComponent<PhaseState>()
 				.FirstOrDefault()

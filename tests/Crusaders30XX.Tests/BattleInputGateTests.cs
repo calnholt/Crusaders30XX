@@ -59,4 +59,24 @@ public class BattleInputGateTests
 			StateSingleton.IsActive = false;
 		}
 	}
+
+	[Fact]
+	public void IsBattleInputFrozen_returns_true_when_enemy_hp_is_zero()
+	{
+		var entityManager = new EntityManager();
+		var phaseEntity = entityManager.CreateEntity("PhaseState");
+		entityManager.AddComponent(phaseEntity, new PhaseState { DefeatPresentationActive = false });
+		var enemy = entityManager.CreateEntity("Enemy");
+		entityManager.AddComponent(enemy, new Enemy());
+		entityManager.AddComponent(enemy, new HP { Max = 30, Current = 0 });
+
+		try
+		{
+			Assert.True(BattleInputGate.IsBattleInputFrozen(entityManager));
+		}
+		finally
+		{
+			StateSingleton.IsActive = false;
+		}
+	}
 }

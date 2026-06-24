@@ -11,8 +11,16 @@ namespace Crusaders30XX.ECS.Services
 		{
 			var phase = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();
 			return (phase != null && phase.DefeatPresentationActive)
+				|| IsEnemyDefeated(entityManager)
 				|| !string.IsNullOrEmpty(phase?.PendingBlockConfirmContextId)
 				|| StateSingleton.IsActive;
+		}
+
+		private static bool IsEnemyDefeated(EntityManager entityManager)
+		{
+			var enemy = entityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+			var hp = enemy?.GetComponent<HP>();
+			return hp != null && hp.Current <= 0;
 		}
 
 		public static bool TryAllowTutorialAction(

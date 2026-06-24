@@ -192,6 +192,36 @@ public sealed class ColorlessCardTests
 	}
 
 	[Fact]
+	public void Color_selection_returns_null_when_hand_has_only_pledged_cards()
+	{
+		var entityManager = new EntityManager();
+		var deckEntity = entityManager.CreateEntity("Deck");
+		var deck = new Deck();
+		entityManager.AddComponent(deckEntity, deck);
+		var card = CreateCard(entityManager, CardData.CardColor.Red);
+		entityManager.AddComponent(card, new Pledge());
+		deck.Hand.Add(card);
+
+		Assert.Null(PlayerHandColorService.GetRandomCardColorInPlayerHand(entityManager));
+	}
+
+	[Fact]
+	public void Color_selection_ignores_pledged_cards()
+	{
+		var entityManager = new EntityManager();
+		var deckEntity = entityManager.CreateEntity("Deck");
+		var deck = new Deck();
+		entityManager.AddComponent(deckEntity, deck);
+		var pledgedRed = CreateCard(entityManager, CardData.CardColor.Red);
+		entityManager.AddComponent(pledgedRed, new Pledge());
+		var playableWhite = CreateCard(entityManager, CardData.CardColor.White);
+		deck.Hand.Add(pledgedRed);
+		deck.Hand.Add(playableWhite);
+
+		Assert.Equal(CardData.CardColor.White, PlayerHandColorService.GetRandomCardColorInPlayerHand(entityManager));
+	}
+
+	[Fact]
 	public void Color_counting_card_ignores_colorless_payment_cards()
 	{
 		var entityManager = new EntityManager();

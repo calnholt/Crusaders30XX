@@ -9,11 +9,9 @@ namespace Crusaders30XX.ECS.Services
 	{
 		public static CardData.CardColor? GetRandomCardColorInPlayerHand(EntityManager entityManager)
 		{
-			var deckEntity = entityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault();
-			var deck = deckEntity?.GetComponent<Deck>();
-			var hand = deck?.Hand;
-			if (hand == null) return null;
-			var colors = hand
+			var handCards = GetComponentHelper.GetHandOfCards(entityManager);
+			if (handCards == null || handCards.Count == 0) return null;
+			var colors = handCards
 				.Select(CardColorQualificationService.GetQualifiedColor)
 				.Where(color => color.HasValue)
 				.Select(color => color.Value)

@@ -219,6 +219,7 @@ namespace Crusaders30XX.ECS.Systems
 					ClearPendingConfirm();
 					_debris.Clear();
 					_showBanner = false;
+					ResetAnchorBounds();
 					// Cleanup tooltip entity when leaving enemy phases
 					if (_attackTextTooltipEntity != null)
 					{
@@ -229,6 +230,7 @@ namespace Crusaders30XX.ECS.Systems
 				if (evt.Current == SubPhase.Block && evt.Previous != SubPhase.Block)
 				{
 					_showBanner = false;
+					ResetAnchorBounds();
 				}
 			});
 
@@ -386,6 +388,15 @@ namespace Crusaders30XX.ECS.Systems
 			if (phase != null) phase.PendingBlockConfirmContextId = string.Empty;
 		}
 
+		private void ResetAnchorBounds()
+		{
+			var anchorEntity = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault();
+			if (anchorEntity == null) return;
+			var anchorUi = anchorEntity.GetComponent<UIElement>();
+			if (anchorUi != null)
+				anchorUi.Bounds = new Rectangle(0, 0, 1, 1);
+		}
+
 		private PhaseState GetPhaseState()
 		{
 			return EntityManager.GetEntitiesWithComponent<PhaseState>()
@@ -452,6 +463,7 @@ namespace Crusaders30XX.ECS.Systems
 					EntityManager.DestroyEntity(_attackTextTooltipEntity.Id);
 					_attackTextTooltipEntity = null;
 				}
+				ResetAnchorBounds();
 				return;
 			}
 
@@ -487,6 +499,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					EventManager.Publish(new EnemyAbsorbComplete { ContextId = intent.Planned[0].ContextId });
 					_absorbCompleteFired = true;
+					ResetAnchorBounds();
 				}
 			}
 

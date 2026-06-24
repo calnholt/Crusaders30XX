@@ -149,6 +149,21 @@ public class EnemyAttackConfirmAvailabilityServiceTests
 		Assert.False(canConfirm);
 	}
 
+	[Fact]
+	public void Cannot_request_confirm_when_enemy_hp_is_zero()
+	{
+		var entityManager = CreateCombat(ConditionType.None);
+		var enemy = entityManager.GetEntitiesWithComponent<AttackIntent>().First();
+		entityManager.AddComponent(enemy, new Enemy());
+		entityManager.AddComponent(enemy, new HP { Max = 30, Current = 0 });
+
+		var canRequest = EnemyAttackConfirmAvailabilityService.CanRequestCurrentAttackConfirm(
+			entityManager,
+			"test-context");
+
+		Assert.False(canRequest);
+	}
+
 	private static EntityManager CreateCombat(ConditionType conditionType)
 	{
 		var entityManager = new EntityManager();

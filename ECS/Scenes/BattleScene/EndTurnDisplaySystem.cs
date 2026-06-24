@@ -231,9 +231,17 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             var endUi = endBtn?.GetComponent<UIElement>();
-            if (endUi != null && !endUi.IsHidden)
+            if (endUi != null)
             {
-                endUi.IsInteractable = !frozen;
+                if (frozen)
+                {
+                    endUi.IsHidden = true;
+                    endUi.IsInteractable = false;
+                }
+                else if (!endUi.IsHidden)
+                {
+                    endUi.IsInteractable = true;
+                }
             }
         }
     }
