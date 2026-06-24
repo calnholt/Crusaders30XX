@@ -54,7 +54,7 @@ namespace Crusaders30XX.ECS.Systems
         public float HandHoverScale { get; set; } = 0.85f;
 
         [DebugEditable(DisplayName = "Hovered Scale", Step = 0.05f, Min = 0.1f, Max = 2f)]
-        public float HandHoveredScale { get; set; } = 1.0f;
+        public float HandHoveredScale { get; set; } = 1.1f;
 
         [DebugEditable(DisplayName = "Hover Fan Out", Step = 2f, Min = 0f, Max = 500f)]
         public float HandHoverFanOut { get; set; } = 50f;
@@ -75,7 +75,7 @@ namespace Crusaders30XX.ECS.Systems
         public int HandZHoverBoost { get; set; } = 1000;
 
         [DebugEditable(DisplayName = "Tween Speed", Step = 0.5f, Min = 0.1f, Max = 60f)]
-        public float HandTweenSpeed { get; set; } = 12f;
+        public float HandTweenSpeed { get; set; } = 21f;
         
 		// Root entity removed; each card owns its transform base and parallax
 
