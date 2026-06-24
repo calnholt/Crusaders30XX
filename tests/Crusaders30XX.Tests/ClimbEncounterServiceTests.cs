@@ -19,7 +19,7 @@ public class ClimbEncounterServiceTests
 		EventManager.Clear();
 		try
 		{
-			PrepareRunWithEncounter(timeCost: 3);
+			PrepareRunWithEncounter(timeCost: 3, battleLocation: BattleLocation.Tundra);
 			var world = new World();
 			int battleTransitions = 0;
 			EventManager.Subscribe<ShowTransition>(evt =>
@@ -32,6 +32,7 @@ public class ClimbEncounterServiceTests
 			var queued = world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().Single().GetComponent<QueuedEvents>();
 			Assert.True(queued.IsClimbEncounter);
 			Assert.Equal("encounter_a", queued.ClimbEncounterSlotId);
+			Assert.Equal(BattleLocation.Tundra, queued.BattleLocation);
 			Assert.Single(queued.Events);
 			Assert.Equal("skeleton", queued.Events[0].EventId);
 			Assert.Equal(1, battleTransitions);
@@ -130,6 +131,7 @@ public class ClimbEncounterServiceTests
 			Assert.Null(after.pendingEncounterReward);
 			Assert.True(queued.IsClimbEncounter);
 			Assert.Equal("final", queued.ClimbEncounterSlotId);
+			Assert.Equal(BattleLocation.TheGate, queued.BattleLocation);
 			Assert.Single(queued.Events);
 			Assert.Equal("fallen_shepherd", queued.Events[0].EventId);
 			var pending = world.EntityManager.GetEntitiesWithComponent<QueuedEvents>().Single().GetComponent<PendingQuestDialog>();
@@ -196,7 +198,7 @@ public class ClimbEncounterServiceTests
 			string.Equals(slot.enemyId, "fallen_shepherd", System.StringComparison.OrdinalIgnoreCase));
 	}
 
-	private static void PrepareRunWithEncounter(int timeCost)
+	private static void PrepareRunWithEncounter(int timeCost, BattleLocation battleLocation = BattleLocation.Desert)
 	{
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.StartNewRun();
@@ -223,11 +225,12 @@ public class ClimbEncounterServiceTests
 				generatedAtTime = 0,
 				duration = 5,
 				timeCost = timeCost,
+				battleLocation = battleLocation,
 				rewardResources = new ClimbResourceSave { red = 1, white = 0, black = 0 },
 				hasDeckReward = false,
 			},
-			new() { id = "encounter_b", enemyId = "demon", generatedAtTime = 0, duration = 5, timeCost = 3, hasDeckReward = false },
-			new() { id = "encounter_c", enemyId = "skeleton", generatedAtTime = 0, duration = 5, timeCost = 3, hasDeckReward = false },
+			new() { id = "encounter_b", enemyId = "demon", generatedAtTime = 0, duration = 5, timeCost = 3, battleLocation = BattleLocation.Jungle, hasDeckReward = false },
+			new() { id = "encounter_c", enemyId = "skeleton", generatedAtTime = 0, duration = 5, timeCost = 3, battleLocation = BattleLocation.Desert, hasDeckReward = false },
 		};
 		SaveCache.SaveClimbState(climb);
 	}

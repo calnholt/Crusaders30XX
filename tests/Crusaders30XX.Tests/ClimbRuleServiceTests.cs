@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Services;
 using Xunit;
@@ -33,7 +34,25 @@ public class ClimbRuleServiceTests
 			Assert.Equal(state.time, slot.generatedAtTime);
 			Assert.InRange(slot.duration, ClimbRuleService.EncounterMinDuration, ClimbRuleService.EncounterMaxDuration);
 			Assert.Contains(slot.enemyId, ClimbRuleService.GetClimbEncounterEnemyPool(), StringComparer.OrdinalIgnoreCase);
+			Assert.Contains(slot.battleLocation, BattleLocationAssetService.ClimbEncounterLocations);
+			Assert.NotEqual(BattleLocation.TheGate, slot.battleLocation);
 		});
+	}
+
+	[Fact]
+	public void Generated_encounter_locations_are_uniform_rollable_locations_only()
+	{
+		var rolledLocations = Enumerable.Range(1, 200)
+			.Select(seed => ClimbRuleService.CreateInitialState(seed, TestLoadout()))
+			.SelectMany(state => state.encounterSlots)
+			.Select(slot => slot.battleLocation)
+			.ToHashSet();
+
+		Assert.Contains(BattleLocation.Desert, rolledLocations);
+		Assert.Contains(BattleLocation.Tundra, rolledLocations);
+		Assert.Contains(BattleLocation.Jungle, rolledLocations);
+		Assert.DoesNotContain(BattleLocation.TheGate, rolledLocations);
+		Assert.All(rolledLocations, location => Assert.Contains(location, BattleLocationAssetService.ClimbEncounterLocations));
 	}
 
 	[Fact]

@@ -160,6 +160,24 @@ public class ClimbColumnParallaxTests : IDisposable
 		});
 	}
 
+	[Fact]
+	public void Layout_copies_encounter_battle_location_to_slot_presentation()
+	{
+		var climb = SaveCache.GetClimbState();
+		var encounter = climb.encounterSlots.First(slot => !string.IsNullOrWhiteSpace(slot.enemyId));
+		encounter.battleLocation = BattleLocation.Jungle;
+		SaveCache.SaveClimbState(climb);
+		var entityManager = BuildWorld();
+		var layout = new ClimbColumnLayoutSystem(entityManager);
+
+		layout.Update(new GameTime());
+
+		var presentation = entityManager.GetEntitiesWithComponent<ClimbSlotPresentation>()
+			.Select(entity => entity.GetComponent<ClimbSlotPresentation>())
+			.Single(slot => slot.SlotId == encounter.id);
+		Assert.Equal(BattleLocation.Jungle, presentation.BattleLocation);
+	}
+
 	private static EntityManager BuildWorld()
 	{
 		var entityManager = new EntityManager();

@@ -192,6 +192,7 @@ namespace Crusaders30XX.ECS.Systems
 			presentation.IsUnavailable = slot == null || slot.isCompleted || string.IsNullOrWhiteSpace(slot.enemyId);
 			presentation.IsAffordable = true;
 			presentation.IsFinal = slot?.isFinal == true;
+			presentation.BattleLocation = slot?.battleLocation ?? BattleLocation.Desert;
 			presentation.PortraitAsset = EnemyPortraitContent.ToAssetName(slot?.enemyId ?? string.Empty);
 			presentation.EventKind = ClimbEventKind.Hazard;
 			presentation.GainLine1 = string.Empty;

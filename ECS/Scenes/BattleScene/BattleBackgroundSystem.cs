@@ -73,7 +73,7 @@ namespace Crusaders30XX.ECS.Systems
 				string path = ResolveBackgroundPath(evt, battlefield);
                 if (!string.IsNullOrWhiteSpace(path))
                 {
-                    _background = _content.Load<Texture2D>(path);
+					_background = BattleLocationAssetService.TryLoad(_content, path);
                 }
             }
             catch (Exception ex)
@@ -85,7 +85,7 @@ namespace Crusaders30XX.ECS.Systems
 		private static string RemoveExtension(string p)
 		{
 			if (string.IsNullOrWhiteSpace(p)) return p;
-			try { return System.IO.Path.GetFileNameWithoutExtension(p); }
+			try { return System.IO.Path.ChangeExtension(p, null); }
 			catch { return p; }
 		}
 
@@ -118,9 +118,12 @@ namespace Crusaders30XX.ECS.Systems
 			// 3) Fallback per battlefield location
 			return battlefield.Location switch
 			{
-				BattleLocation.Desert => "desert-background",
-				BattleLocation.Forest => "forest-background",
-				BattleLocation.Cathedral => "cathedral-background",
+				BattleLocation.Desert => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Desert),
+				BattleLocation.Tundra => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Tundra),
+				BattleLocation.Jungle => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Jungle),
+				BattleLocation.TheGate => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.TheGate),
+				BattleLocation.Forest => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Forest),
+				BattleLocation.Cathedral => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Cathedral),
 				_ => null
 			};
 		}

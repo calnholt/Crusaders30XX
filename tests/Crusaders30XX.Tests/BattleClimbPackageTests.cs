@@ -86,6 +86,27 @@ public sealed class BattleClimbPackageTests : IDisposable
 		Assert.Empty(player.GetComponent<AppliedPassives>().Passives);
 	}
 
+	[Fact]
+	public void Final_encounter_load_resolves_the_gate_even_after_previous_location()
+	{
+		var previousBattle = new QueuedEvents
+		{
+			IsClimbEncounter = true,
+			BattleLocation = BattleLocation.Jungle,
+		};
+		Assert.Equal(BattleLocation.Jungle, BattleSceneSystem.ResolveBattleLocationForLoad(previousBattle, guidedTutorial: false));
+
+		var finalEncounter = new QueuedEvents
+		{
+			IsClimbEncounter = true,
+			ClimbEncounterSlotId = "final",
+			BattleLocation = BattleLocation.TheGate,
+		};
+
+		Assert.Equal(BattleLocation.TheGate, BattleSceneSystem.ResolveBattleLocationForLoad(finalEncounter, guidedTutorial: false));
+		Assert.Equal(BattleLocation.Desert, BattleSceneSystem.ResolveBattleLocationForLoad(finalEncounter, guidedTutorial: true));
+	}
+
 	private static Entity CreateManagedPlayer(int courage, int temperance)
 	{
 		var entityManager = new EntityManager();

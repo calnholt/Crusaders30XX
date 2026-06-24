@@ -60,6 +60,8 @@ namespace Crusaders30XX.ECS.Systems
 		public int PortraitRegionHeight { get; set; } = 172;
 		[DebugEditable(DisplayName = "Portrait Crop Top Bias", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float PortraitCropTopBias { get; set; } = 0.07f;
+		[DebugEditable(DisplayName = "Encounter Background Dim Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float EncounterBackgroundDimAlpha { get; set; } = 0.28f;
 		[DebugEditable(DisplayName = "Meta Block Min Height", Step = 1, Min = 20, Max = 100)]
 		public int MetaBlockMinHeight { get; set; } = 60;
 		[DebugEditable(DisplayName = "Meta Block Border Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
@@ -253,9 +255,16 @@ namespace Crusaders30XX.ECS.Systems
 				UpdateVanishPreviewFade(gameTime);
 				foreach (var slot in EntityManager.GetEntitiesWithComponent<ClimbSlotPresentation>()
 					.Select(e => e.GetComponent<ClimbSlotPresentation>())
-					.Where(slot => slot != null && !string.IsNullOrWhiteSpace(slot.PortraitAsset)))
+					.Where(slot => slot != null))
 				{
-					EnsureTexture(slot.PortraitAsset);
+					if (!string.IsNullOrWhiteSpace(slot.PortraitAsset))
+					{
+						EnsureTexture(slot.PortraitAsset);
+					}
+					if (slot.Kind == ClimbSlotKind.Encounter)
+					{
+						BattleLocationAssetService.TryLoad(_content, slot.BattleLocation);
+					}
 				}
 			}
 		}
@@ -425,7 +434,16 @@ namespace Crusaders30XX.ECS.Systems
 		private void DrawEncounterSlot(Rectangle rect, ClimbSlotPresentation slot, ClimbPreviewState preview, bool source)
 		{
 			var portrait = GetPortraitRegion(rect);
-			ClimbSceneDrawHelpers.DrawRadialPortraitGradient(_spriteBatch, _pixel, portrait);
+			var background = BattleLocationAssetService.TryLoad(_content, slot.BattleLocation);
+			if (background != null)
+			{
+				DrawCoverCropped(background, portrait, Color.White);
+				_spriteBatch.Draw(_pixel, portrait, Color.Black * EncounterBackgroundDimAlpha);
+			}
+			else
+			{
+				ClimbSceneDrawHelpers.DrawRadialPortraitGradient(_spriteBatch, _pixel, portrait);
+			}
 			var texture = GetTexture(slot.PortraitAsset);
 			if (texture != null)
 			{
@@ -688,6 +706,30 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				_textureCache[asset] = null;
 			}
+		}
+
+		private void DrawCoverCropped(Texture2D texture, Rectangle destination, Color color)
+		{
+			if (texture == null || destination.Width <= 0 || destination.Height <= 0) return;
+
+			float destinationRatio = destination.Width / (float)destination.Height;
+			float textureRatio = texture.Width / (float)texture.Height;
+			var source = new Rectangle(0, 0, texture.Width, texture.Height);
+
+			if (textureRatio > destinationRatio)
+			{
+				int sourceWidth = Math.Max(1, (int)Math.Round(texture.Height * destinationRatio));
+				source.X = Math.Max(0, (texture.Width - sourceWidth) / 2);
+				source.Width = Math.Min(texture.Width - source.X, sourceWidth);
+			}
+			else
+			{
+				int sourceHeight = Math.Max(1, (int)Math.Round(texture.Width / destinationRatio));
+				source.Y = Math.Max(0, (texture.Height - sourceHeight) / 2);
+				source.Height = Math.Min(texture.Height - source.Y, sourceHeight);
+			}
+
+			_spriteBatch.Draw(texture, destination, source, color);
 		}
 
 		private static int GetEncounterRemainingDuration(ClimbSlotPresentation slot, int time)

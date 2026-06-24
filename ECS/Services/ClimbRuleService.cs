@@ -588,6 +588,7 @@ namespace Crusaders30XX.ECS.Services
 				generatedAtTime = ClampTime(state?.time ?? 0),
 				duration = rng.Next(EncounterMinDuration, EncounterMaxDuration + 1),
 				timeCost = timeCost,
+				battleLocation = BattleLocationAssetService.RollClimbEncounterLocation(rng),
 				rewardResources = GenerateReward(rng, timeCost, timeCost),
 				hasDeckReward = true,
 				isFinal = false,

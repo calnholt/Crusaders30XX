@@ -72,6 +72,24 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Cathedral });
         }
 
+        [DebugAction("Set Battlefield: Tundra")]
+        public void Debug_SetBattlefield_Tundra()
+        {
+            EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Tundra });
+        }
+
+        [DebugAction("Set Battlefield: Jungle")]
+        public void Debug_SetBattlefield_Jungle()
+        {
+            EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Jungle });
+        }
+
+        [DebugAction("Set Battlefield: The Gate")]
+        public void Debug_SetBattlefield_TheGate()
+        {
+            EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.TheGate });
+        }
+
         [DebugActionInt("Player: Deal Damage", Step = 1, Min = 1, Max = 999, Default = 999)]
         public void Debug_PlayerDealDamage(int amount)
         {

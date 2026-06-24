@@ -1786,6 +1786,7 @@ namespace Crusaders30XX.ECS.Data.Save
 					generatedAtTime = ClimbRuleService.ClampTime(slot.generatedAtTime),
 					duration = Math.Max(0, slot.duration),
 					timeCost = Math.Max(0, slot.timeCost),
+					battleLocation = slot.battleLocation,
 					rewardResources = CloneClimbResources(slot.rewardResources),
 					hasDeckReward = slot.hasDeckReward,
 					isCompleted = slot.isCompleted,

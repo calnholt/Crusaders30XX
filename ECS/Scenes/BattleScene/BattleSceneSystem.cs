@@ -181,15 +181,26 @@ namespace Crusaders30XX.ECS.Systems
 					return;
 				}
 				var queued = EntityManager.GetEntity("QueuedEvents").GetComponent<QueuedEvents>();
-				LocationDefinitionCache.TryGet(queued.LocationId, out var def);
-				var musicTrack = GuidedTutorialService.IsActive(EntityManager)
-					? MusicTrack.DesertBattle
-					: def?.pointsOfInterest[queued.QuestIndex].musicTrack ?? MusicTrack.DesertBattle;
+				bool guidedTutorial = GuidedTutorialService.IsActive(EntityManager);
+				var musicTrack = MusicTrack.DesertBattle;
+				if (!guidedTutorial && queued?.IsClimbEncounter == true)
+				{
+					musicTrack = BattleLocationAssetService.GetMusicTrack(queued.BattleLocation ?? BattleLocation.Desert);
+				}
+				else if (!guidedTutorial)
+				{
+					LocationDefinitionCache.TryGet(queued.LocationId, out var def);
+					musicTrack = def?.pointsOfInterest[queued.QuestIndex].musicTrack ?? MusicTrack.DesertBattle;
+				}
 				EventManager.Publish(new ChangeMusicTrack { Track = musicTrack });
 				if (!_loadedSystems)
 				{
 					AddBattleSystems();
 				}
+				EventManager.Publish(new ChangeBattleLocationEvent
+				{
+					Location = ResolveBattleLocationForLoad(queued, guidedTutorial),
+				});
 				if (!_loadedEntities)
 				{
 					CreateBattleSceneEntities();
@@ -423,7 +434,6 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				TribulationQuestService.CreateTribulationsForQuest(EntityManager, queued.LocationId, queued.QuestIndex);
 			}
-			EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Desert });
 			_loadedEntities = true;
 		}
 
@@ -535,6 +545,12 @@ namespace Crusaders30XX.ECS.Systems
 		internal static bool IsFirstQueuedClimbEncounter(QueuedEvents queued)
 		{
 			return queued?.IsClimbEncounter == true && queued.CurrentIndex == -1;
+		}
+
+		internal static BattleLocation ResolveBattleLocationForLoad(QueuedEvents queued, bool guidedTutorial)
+		{
+			if (guidedTutorial) return BattleLocation.Desert;
+			return queued?.BattleLocation ?? BattleLocation.Desert;
 		}
 
 		internal static bool ApplyPendingClimbBattlePackage(bool shouldApply, Entity player)

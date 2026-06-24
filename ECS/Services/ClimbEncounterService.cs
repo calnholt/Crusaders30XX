@@ -49,6 +49,7 @@ namespace Crusaders30XX.ECS.Services
 			});
 			queued.IsClimbEncounter = true;
 			queued.ClimbEncounterSlotId = slot.id;
+			queued.BattleLocation = slot.battleLocation;
 			queued.LocationId = "climb";
 			queued.QuestIndex = 0;
 
@@ -134,6 +135,7 @@ namespace Crusaders30XX.ECS.Services
 			});
 			queued.IsClimbEncounter = true;
 			queued.ClimbEncounterSlotId = "final";
+			queued.BattleLocation = BattleLocationAssetService.FinalEncounterLocation;
 			queued.LocationId = "climb";
 			queued.QuestIndex = 0;
 			EnsureFallenShepherdIntroDialog(queuedEntity);

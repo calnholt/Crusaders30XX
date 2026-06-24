@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
 using Microsoft.Xna.Framework;
 
 namespace Crusaders30XX.ECS.Components
@@ -105,6 +106,7 @@ namespace Crusaders30XX.ECS.Components
 		public bool IsUnavailable { get; set; }
 		public bool IsAffordable { get; set; } = true;
 		public bool IsFinal { get; set; }
+		public BattleLocation BattleLocation { get; set; } = BattleLocation.Desert;
 		public string PortraitAsset { get; set; } = string.Empty;
 		public ClimbEventKind EventKind { get; set; }
 		public string GainLine1 { get; set; } = string.Empty;

@@ -2,6 +2,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Dialog;
 using Crusaders30XX.ECS.Data.Locations;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.Enemies;
 using System.Collections.Generic;
 
@@ -61,6 +62,7 @@ namespace Crusaders30XX.ECS.Components
 		public bool IsFirst = false;
 		public bool IsClimbEncounter { get; set; }
 		public string ClimbEncounterSlotId { get; set; } = string.Empty;
+		public BattleLocation? BattleLocation { get; set; }
 		// Encounter context for dialog lookup
 		public string LocationId { get; set; } = string.Empty;
 		public int QuestIndex { get; set; } = 0;

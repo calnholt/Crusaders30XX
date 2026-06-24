@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using Crusaders30XX.ECS.Data.Achievements;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Locations;
+using Crusaders30XX.ECS.Events;
 
 namespace Crusaders30XX.ECS.Data.Save
 {
 	public class SaveFile
 	{
-		public const int CURRENT_VERSION = 13;
+		public const int CURRENT_VERSION = 14;
 
 		public int version { get; set; } = 0;
 		public bool isRunActive { get; set; }
@@ -80,6 +81,7 @@ namespace Crusaders30XX.ECS.Data.Save
 		public int generatedAtTime { get; set; }
 		public int duration { get; set; }
 		public int timeCost { get; set; }
+		public BattleLocation battleLocation { get; set; } = BattleLocation.Desert;
 		public ClimbResourceSave rewardResources { get; set; } = new ClimbResourceSave { red = 0, white = 0, black = 0 };
 		public bool hasDeckReward { get; set; } = true;
 		public bool isCompleted { get; set; }

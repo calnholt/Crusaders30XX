@@ -421,6 +421,9 @@ namespace Crusaders30XX.ECS.Events
         QuestComplete = 5,
         Achievements = 6,
         FrozenBattle = 7,
+        TundraBattle = 8,
+        JungleBattle = 9,
+        TheGateBattle = 10,
     }
 
     /// <summary>
