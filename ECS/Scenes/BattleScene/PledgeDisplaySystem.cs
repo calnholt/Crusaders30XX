@@ -184,10 +184,9 @@ namespace Crusaders30XX.ECS.Systems
         {
             var card = evt.Card;
             if (card == null || card.GetComponent<Pledge>() == null) return;
-            var transform = card.GetComponent<Transform>();
-            if (transform == null) return;
 
-            DrawPledgeForCard(card, transform.Position, 1f, transform.Rotation);
+            var geometry = CardGeometryService.GetVisualGeometry(EntityManager, card, evt.Position);
+            DrawPledgeForCard(card, evt.Position, geometry.Scale, geometry.Rotation);
         }
 
         private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)

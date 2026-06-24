@@ -158,10 +158,12 @@ public class BrittleDisplaySystem : Core.System
         _capturedCard = card;
         _capturedCardScale = Math.Max(0.001f, scale);
         _capturedCardRotation = rotation;
-        _capturedCardCenter = CardGeometryService.GetVisualCenter(
-            CardGeometryService.GetSettings(EntityManager),
+        _capturedCardCenter = CardGeometryService.GetVisualGeometry(
+            EntityManager,
+            card,
             position,
-            _capturedCardScale);
+            _capturedCardScale,
+            rotation).Center;
     }
 
     private void EndBrittleRender(Entity card)

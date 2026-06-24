@@ -133,14 +133,14 @@ namespace Crusaders30XX.ECS.Scenes.BattleScene
         {
             if (!_playableCards.Contains(evt.Entity)) return;
 
-            var t = evt.Transform;
-            if (t == null) return;
-
-            var cardRect = CardGeometryService.GetVisualRect(_cachedGeometrySettings, t.Position);
+            var geometry = CardGeometryService.GetVisualGeometry(EntityManager, evt.Entity, evt.Transform?.Position);
+            var cardRect = geometry.Bounds;
 
             if (cardRect.Width <= 1 || cardRect.Height <= 1) return;
 
-            DrawGlow(cardRect, t.Rotation, _cachedCornerRadius, _cachedBorderThickness, _cachedSettings, _cachedPulseAmount, _cachedGlowColor);
+            int cornerRadius = (int)Math.Round(_cachedCornerRadius * geometry.Scale);
+            int borderThickness = (int)Math.Round(_cachedBorderThickness * geometry.Scale);
+            DrawGlow(cardRect, geometry.Rotation, cornerRadius, borderThickness, _cachedSettings, _cachedPulseAmount, _cachedGlowColor);
         }
 
         // --- Action phase playability check ---

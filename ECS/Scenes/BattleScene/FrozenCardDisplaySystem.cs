@@ -75,67 +75,54 @@ namespace Crusaders30XX.ECS.Systems
 		{
 		}
 
-	private Rectangle ComputeCardBounds(Vector2 position)
-	{
-			_settings ??= CardGeometryService.GetSettings(EntityManager);
-			return CardGeometryService.GetVisualRect(_settings, position);
-	}
-
 	private void OnCardRenderEvent(CardRenderEvent evt)
 	{
 		if (!ShouldRenderFrost(evt.Card)) return;
 
-		var transform = evt.Card.GetComponent<Transform>();
-		if (transform == null) return;
+		var geometry = CardGeometryService.GetVisualGeometry(EntityManager, evt.Card, evt.Position);
+		var center = geometry.Center;
+		center.X += FrostOffsetX * geometry.Scale;
+		center.Y += FrostOffsetY * geometry.Scale;
 
-		// Compute bounds exactly like CardHighlightSystem for consistent alignment
-		var bounds = ComputeCardBounds(evt.Position);
-		var center = new Vector2(bounds.X + bounds.Width / 2f, bounds.Y + bounds.Height / 2f);
-
-		// Apply offset
-		center.X += FrostOffsetX;
-		center.Y += FrostOffsetY;
-
-		// Render with card bounds dimensions
-		DrawFrostOverlay(center, bounds.Width, bounds.Height, 1f, transform.Rotation);
+		DrawFrostOverlay(center, geometry.Bounds.Width, geometry.Bounds.Height, geometry.Scale, geometry.Rotation);
 	}
 
 	private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
 	{
 		if (!ShouldRenderFrost(evt.Card)) return;
 
-		var transform = evt.Card.GetComponent<Transform>();
-		if (transform == null) return;
+		var geometry = CardGeometryService.GetVisualGeometry(
+			EntityManager,
+			evt.Card,
+			evt.Position,
+			evt.Scale);
+		var center = geometry.Center;
+		center.X += FrostOffsetX * geometry.Scale;
+		center.Y += FrostOffsetY * geometry.Scale;
 
-		// Get card dimensions and settings
 		_settings ??= CardGeometryService.GetSettings(EntityManager);
 		int cardWidth = _settings?.CardWidth ?? CardGeometrySettings.DefaultWidth;
 		int cardHeight = _settings?.CardHeight ?? CardGeometrySettings.DefaultHeight;
-		var center = CardGeometryService.GetVisualCenter(_settings, evt.Position, evt.Scale);
-
-		// Apply frost-specific offsets (scaled by event scale)
-		center.X += FrostOffsetX * evt.Scale;
-		center.Y += FrostOffsetY * evt.Scale;
-
-		// Render with scaled card dimensions
-		DrawFrostOverlay(center, cardWidth, cardHeight, evt.Scale, 0f);
+		DrawFrostOverlay(center, cardWidth, cardHeight, geometry.Scale, 0f);
 	}
 
 	private void OnCardRenderScaledRotatedEvent(CardRenderScaledRotatedEvent evt)
 	{
 		if (!ShouldRenderFrost(evt.Card)) return;
 
-		var transform = evt.Card.GetComponent<Transform>();
-		if (transform == null) return;
+		var geometry = CardGeometryService.GetVisualGeometry(
+			EntityManager,
+			evt.Card,
+			evt.Position,
+			evt.Scale);
+		var center = geometry.Center;
+		center.X += FrostOffsetX * geometry.Scale;
+		center.Y += FrostOffsetY * geometry.Scale;
 
 		_settings ??= CardGeometryService.GetSettings(EntityManager);
 		int cardWidth = _settings?.CardWidth ?? CardGeometrySettings.DefaultWidth;
 		int cardHeight = _settings?.CardHeight ?? CardGeometrySettings.DefaultHeight;
-		var center = CardGeometryService.GetVisualCenter(_settings, evt.Position, evt.Scale);
-		center.X += FrostOffsetX * evt.Scale;
-		center.Y += FrostOffsetY * evt.Scale;
-
-		DrawFrostOverlay(center, cardWidth, cardHeight, evt.Scale, transform.Rotation);
+		DrawFrostOverlay(center, cardWidth, cardHeight, geometry.Scale, geometry.Rotation);
 	}
 
 	private bool ShouldRenderFrost(Entity card)

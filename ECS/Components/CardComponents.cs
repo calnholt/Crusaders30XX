@@ -902,8 +902,8 @@ namespace Crusaders30XX.ECS.Components
         public const int DefaultWidth = 268;
         public const int DefaultHeight = 377;
         public const int DefaultCornerRadius = 10;
-        public const int DefaultOffsetYExtra = 25;
-        public const int DefaultGap = -20;
+        public const int DefaultOffsetYExtra = -98;
+        public const int DefaultGap = -77;
         public const int DefaultHighlightBorderThickness = 5;
 
         public Entity Owner { get; set; }

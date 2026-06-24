@@ -146,6 +146,7 @@
   .gate .icon-frame { color: #c8b8a0; }
   .shop .icon-frame { color: var(--gold); }
   .flag .icon-frame { color: var(--ice); }
+  .weather .icon-frame { color: #9aabb8; }
 
   .on-dark svg { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
   .on-light {
@@ -162,7 +163,7 @@
 
 <header class="page-header">
   <h1>SVG Symbol Exploration</h1>
-  <p>Three simple variants each for gate, shop, and flag icons. Stroke-based, filled, and minimal geometric styles at 24&times;24 viewBox.</p>
+  <p>Simple SVG icon sets for gates, shops, flags, and extreme weather at 24&times;24 viewBox.</p>
 </header>
 
 <main class="grid">
@@ -312,6 +313,51 @@
         </div>
         <span class="card-label">Waving</span>
         <p class="card-note">S-curve fabric with top and bottom edge lines.</p>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- WEATHER -->
+  <section class="section weather">
+    <h2 class="section-title">Extreme Weather</h2>
+    <p class="section-desc">Storm events, map hazards, or encounter modifiers. Cloud base with rain, lightning, or wind cues.</p>
+    <div class="variants">
+
+      <article class="card">
+        <div class="icon-frame on-dark">
+          <!-- A: Rain cloud -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 12a3 3 0 0 1 5.1-2.1A4 4 0 0 1 17 9a3 3 0 0 1 .5 6H7a2 2 0 0 1-1-3z"/>
+            <path d="M8 17v3M12 16v4M16 17v3"/>
+          </svg>
+        </div>
+        <span class="card-label">Rain cloud</span>
+        <p class="card-note">Soft cloud bump, three vertical rain streaks below.</p>
+      </article>
+
+      <article class="card">
+        <div class="icon-frame on-dark">
+          <!-- B: Thundercloud -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 10a3.5 3.5 0 0 1 6-2A4.5 4.5 0 0 1 18 8a3.5 3.5 0 0 1 .3 7H6a2.5 2.5 0 0 1-1-5z"/>
+            <path d="M12.5 16.5l-2 3H12.5l-2 3"/>
+          </svg>
+        </div>
+        <span class="card-label">Thundercloud</span>
+        <p class="card-note">Heavier cloud mass, zigzag lightning bolt beneath.</p>
+      </article>
+
+      <article class="card">
+        <div class="icon-frame on-dark">
+          <!-- C: Gale cloud -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 9a3 3 0 0 1 5.2-2.1A4 4 0 0 1 17 7a3 3 0 0 1 .5 5.5H7a2 2 0 0 1-1-2.5z"/>
+            <path d="M4 15c2.5-1.5 4.5 0 7-1M5 18c2.5-1.5 4.5 0 7-1M6 21c2.5-1.5 4.5 0 7-1"/>
+          </svg>
+        </div>
+        <span class="card-label">Gale cloud</span>
+        <p class="card-note">Low cloud with three wind-sweep curves underneath.</p>
       </article>
 
     </div>
