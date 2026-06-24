@@ -62,6 +62,7 @@ namespace Crusaders30XX.ECS.Systems
 			_sealTexture = sealTexture;
 			EventManager.Subscribe<CardRenderEvent>(evt => FrameProfiler.Measure("SealDisplaySystem.OnCardRenderEvent", () => OnCardRenderEvent(evt)));
 			EventManager.Subscribe<CardRenderScaledEvent>(evt => FrameProfiler.Measure("SealDisplaySystem.OnCardRenderScaledEvent", () => OnCardRenderScaledEvent(evt)));
+			EventManager.Subscribe<CardRenderScaledRotatedEvent>(evt => FrameProfiler.Measure("SealDisplaySystem.OnCardRenderScaledRotatedEvent", () => OnCardRenderScaledRotatedEvent(evt)));
 		}
 
 		protected override System.Collections.Generic.IEnumerable<Entity> GetRelevantEntities()
@@ -103,6 +104,26 @@ namespace Crusaders30XX.ECS.Systems
 				["scale"] = evt.Scale,
 				["seals"] = evt.Card?.GetComponent<Sealed>()?.Seals ?? 0
 			});
+			if (!ShouldRenderSeal(evt.Card)) return;
+
+			var geometry = CardGeometryService.GetVisualGeometry(
+				EntityManager,
+				evt.Card,
+				evt.Position,
+				evt.Scale);
+			var center = geometry.Center;
+			center.X += SealOffsetX * geometry.Scale;
+			center.Y += SealOffsetY * geometry.Scale;
+
+			_settings ??= CardGeometryService.GetSettings(EntityManager);
+			int cardWidth = _settings?.CardWidth ?? CardGeometrySettings.DefaultWidth;
+			int cardHeight = _settings?.CardHeight ?? CardGeometrySettings.DefaultHeight;
+			var sealedComp = evt.Card.GetComponent<Sealed>();
+			DrawSealOverlay(center, cardWidth, cardHeight, geometry.Scale, geometry.Rotation, sealedComp?.Seals ?? 0);
+		}
+
+		private void OnCardRenderScaledRotatedEvent(CardRenderScaledRotatedEvent evt)
+		{
 			if (!ShouldRenderSeal(evt.Card)) return;
 
 			var geometry = CardGeometryService.GetVisualGeometry(

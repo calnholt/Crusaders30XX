@@ -424,6 +424,7 @@ namespace Crusaders30XX.ECS.Events
         TundraBattle = 8,
         JungleBattle = 9,
         TheGateBattle = 10,
+        Climb = 11,
     }
 
     /// <summary>

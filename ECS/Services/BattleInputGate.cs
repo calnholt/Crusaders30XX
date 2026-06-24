@@ -16,11 +16,19 @@ namespace Crusaders30XX.ECS.Services
 				|| StateSingleton.IsActive;
 		}
 
-		private static bool IsEnemyDefeated(EntityManager entityManager)
+		public static bool IsEnemyDefeated(EntityManager entityManager)
 		{
 			var enemy = entityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
 			var hp = enemy?.GetComponent<HP>();
 			return hp != null && hp.Current <= 0;
+		}
+
+		public static bool ShouldSuppressEnemyAttackDisplay(EntityManager entityManager)
+		{
+			var enemy = entityManager.GetEntitiesWithComponent<Enemy>().FirstOrDefault();
+			if (enemy == null) return false;
+			if (enemy.HasComponent<SuppressPortraitRender>()) return true;
+			return IsEnemyDefeated(entityManager);
 		}
 
 		public static bool TryAllowTutorialAction(

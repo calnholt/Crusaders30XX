@@ -184,7 +184,7 @@ namespace Crusaders30XX.ECS.Services
 		public static string GetDefaultTemperanceId(string weaponId) => weaponId switch
 		{
 			"sword" => "unsheath",
-			"hammer" => "iron_resolve",
+			"hammer" => "static_surge",
 			"dagger" => "fling_fling",
 			_ => "angelic_aura",
 		};
@@ -192,7 +192,7 @@ namespace Crusaders30XX.ECS.Services
 		public static string GetDefaultTemperanceId(StartingWeapon weapon) => weapon switch
 		{
 			StartingWeapon.Sword => "unsheath",
-			StartingWeapon.Hammer => "iron_resolve",
+			StartingWeapon.Hammer => "static_surge",
 			StartingWeapon.Dagger => "fling_fling",
 			_ => "angelic_aura",
 		};

@@ -88,9 +88,17 @@ namespace Crusaders30XX.ECS.Services
 			}
 		}
 
-		private static void ApplySavedRestrictionsToCard(EntityManager entityManager, Entity card, string entryId)
+		public static void ApplySavedRestrictionsToCard(
+			EntityManager entityManager,
+			Entity card,
+			string entryId,
+			string loadoutId = null)
 		{
-			foreach (var restriction in SaveCache.GetRunDeckEntryRestrictions(RunDeckService.PrimaryLoadoutId, entryId))
+			if (card == null || string.IsNullOrWhiteSpace(entryId)) return;
+			string resolvedLoadoutId = string.IsNullOrWhiteSpace(loadoutId)
+				? RunDeckService.PrimaryLoadoutId
+				: loadoutId;
+			foreach (var restriction in SaveCache.GetRunDeckEntryRestrictions(resolvedLoadoutId, entryId))
 			{
 				ApplyRestrictionComponent(entityManager, card, restriction);
 			}

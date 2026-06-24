@@ -29,6 +29,7 @@ public class Game1 : Game
     private CardDisplaySystem _cardDisplaySystem;
     private FrozenDisplaySystem _frozenDisplaySystem;
     private BrittleDisplaySystem _brittleDisplaySystem;
+    private SealDisplaySystem _sealDisplaySystem;
     private PlayerInputSystem _playerInputSystem;
     private UIInteractionSystem _uiInteractionSystem;
 	private CurrencyDisplaySystem _currencyDisplaySystem;
@@ -185,6 +186,8 @@ public class Game1 : Game
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _frozenDisplaySystem = new FrozenDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _brittleDisplaySystem = new BrittleDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        var sealTexture = Content.Load<Texture2D>("seal");
+        _sealDisplaySystem = new SealDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, sealTexture);
         _dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _playerInputSystem = new PlayerInputSystem(
             _world.EntityManager,
@@ -232,6 +235,7 @@ public class Game1 : Game
         _world.AddSystem(_cardDisplaySystem);
         _world.AddSystem(_frozenDisplaySystem);
         _world.AddSystem(_brittleDisplaySystem);
+        _world.AddSystem(_sealDisplaySystem);
         _world.AddSystem(_dialogDisplaySystem);
         _world.AddSystem(_playerInputSystem, SystemUpdatePhase.Input);
         _world.AddSystem(_uiInteractionSystem, SystemUpdatePhase.Interaction);

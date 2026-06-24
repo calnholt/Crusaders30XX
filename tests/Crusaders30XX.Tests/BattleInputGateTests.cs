@@ -79,4 +79,38 @@ public class BattleInputGateTests
 			StateSingleton.IsActive = false;
 		}
 	}
+
+	[Fact]
+	public void ShouldSuppressEnemyAttackDisplay_returns_true_when_enemy_hp_is_zero()
+	{
+		var entityManager = new EntityManager();
+		var enemy = entityManager.CreateEntity("Enemy");
+		entityManager.AddComponent(enemy, new Enemy());
+		entityManager.AddComponent(enemy, new HP { Max = 30, Current = 0 });
+
+		Assert.True(BattleInputGate.ShouldSuppressEnemyAttackDisplay(entityManager));
+	}
+
+	[Fact]
+	public void ShouldSuppressEnemyAttackDisplay_returns_false_when_enemy_alive()
+	{
+		var entityManager = new EntityManager();
+		var enemy = entityManager.CreateEntity("Enemy");
+		entityManager.AddComponent(enemy, new Enemy());
+		entityManager.AddComponent(enemy, new HP { Max = 30, Current = 15 });
+
+		Assert.False(BattleInputGate.ShouldSuppressEnemyAttackDisplay(entityManager));
+	}
+
+	[Fact]
+	public void ShouldSuppressEnemyAttackDisplay_returns_true_when_portrait_suppressed()
+	{
+		var entityManager = new EntityManager();
+		var enemy = entityManager.CreateEntity("Enemy");
+		entityManager.AddComponent(enemy, new Enemy());
+		entityManager.AddComponent(enemy, new HP { Max = 30, Current = 15 });
+		entityManager.AddComponent(enemy, new SuppressPortraitRender());
+
+		Assert.True(BattleInputGate.ShouldSuppressEnemyAttackDisplay(entityManager));
+	}
 }

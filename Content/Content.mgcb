@@ -1867,6 +1867,11 @@
 /processor:SongProcessor
 /build:Music/tundra.ogg
 
+#begin Music/climb.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/climb.ogg
+
 #begin Music/victory.ogg
 /importer:OggImporter
 /processor:SongProcessor

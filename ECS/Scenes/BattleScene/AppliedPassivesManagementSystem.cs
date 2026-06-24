@@ -443,6 +443,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 AppliedPassiveType.DowseWithHolyWater,
                 AppliedPassiveType.Aggression,
+                AppliedPassiveType.Galvanize,
                 AppliedPassiveType.Sharpen,
                 AppliedPassiveType.Might,
                 AppliedPassiveType.CarpeDiem,

@@ -212,20 +212,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				if (evt.Current != SubPhase.Block && evt.Current != SubPhase.EnemyAttack)
 				{
-					_impactActive = false;
-					_absorbElapsedSeconds = 0f;
-					_absorbCompleteFired = false;
-					_lastContextId = null;
-					ClearPendingConfirm();
-					_debris.Clear();
-					_showBanner = false;
-					ResetAnchorBounds();
-					// Cleanup tooltip entity when leaving enemy phases
-					if (_attackTextTooltipEntity != null)
-					{
-						EntityManager.DestroyEntity(_attackTextTooltipEntity.Id);
-						_attackTextTooltipEntity = null;
-					}
+					ClearAttackDisplayState();
 				}
 				if (evt.Current == SubPhase.Block && evt.Previous != SubPhase.Block)
 				{
@@ -388,6 +375,23 @@ namespace Crusaders30XX.ECS.Systems
 			if (phase != null) phase.PendingBlockConfirmContextId = string.Empty;
 		}
 
+		private void ClearAttackDisplayState()
+		{
+			_impactActive = false;
+			_absorbElapsedSeconds = 0f;
+			_absorbCompleteFired = false;
+			_lastContextId = null;
+			ClearPendingConfirm();
+			_debris.Clear();
+			_showBanner = false;
+			ResetAnchorBounds();
+			if (_attackTextTooltipEntity != null)
+			{
+				EntityManager.DestroyEntity(_attackTextTooltipEntity.Id);
+				_attackTextTooltipEntity = null;
+			}
+		}
+
 		private void ResetAnchorBounds()
 		{
 			var anchorEntity = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault();
@@ -444,6 +448,12 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			if (EntityManager.GetEntity("UIButton_ConfirmEnemyAttack") == null) {
 				CreateConfirmButton();
+			}
+			if (BattleInputGate.ShouldSuppressEnemyAttackDisplay(EntityManager))
+			{
+				ClearAttackDisplayState();
+				HideConfirmButton();
+				return;
 			}
 			var phaseNow = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>().Sub;
 			if (phaseNow == SubPhase.Block) {

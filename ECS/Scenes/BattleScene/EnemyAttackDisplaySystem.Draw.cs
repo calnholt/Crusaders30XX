@@ -47,6 +47,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		private DrawContext? BuildDrawContext()
 		{
+			if (BattleInputGate.ShouldSuppressEnemyAttackDisplay(EntityManager)) return null;
+
 			var enemy = GetRelevantEntities().FirstOrDefault();
 			var intent = enemy?.GetComponent<AttackIntent>();
 			if (intent == null || intent.Planned.Count == 0 || _contentFont == null || _bodyFont == null) return null;

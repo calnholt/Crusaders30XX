@@ -1621,6 +1621,9 @@ namespace Crusaders30XX.ECS.Systems
 					continue;
 				}
 
+				ApplyDeckRewardPreviewRestrictions(outgoing, option, forIncomingCard: false);
+				ApplyDeckRewardPreviewRestrictions(incoming, option, forIncomingCard: true);
+
 				_rewardCardEntities.Add(outgoing);
 				_rewardCardEntities.Add(incoming);
 				var lane = EnsureDeckRewardLaneEntity(i);
@@ -2096,6 +2099,30 @@ namespace Crusaders30XX.ECS.Systems
 		private Rectangle GetCardVisualRectScaled(Vector2 position, float scale)
 		{
 			return CardGeometryService.GetVisualRect(EntityManager, position, scale);
+		}
+
+		internal static void ApplyDeckRewardPreviewRestrictions(
+			EntityManager entityManager,
+			Entity card,
+			DeckRewardOfferOptionSave option,
+			bool forIncomingCard)
+		{
+			if (entityManager == null || card == null || option == null) return;
+			if (forIncomingCard
+				&& !string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, System.StringComparison.OrdinalIgnoreCase))
+			{
+				return;
+			}
+			if (string.IsNullOrWhiteSpace(option.outgoingEntryId)) return;
+			RunScopedStateService.ApplySavedRestrictionsToCard(entityManager, card, option.outgoingEntryId);
+		}
+
+		private void ApplyDeckRewardPreviewRestrictions(
+			Entity card,
+			DeckRewardOfferOptionSave option,
+			bool forIncomingCard)
+		{
+			ApplyDeckRewardPreviewRestrictions(EntityManager, card, option, forIncomingCard);
 		}
 
 		private Entity CreateRewardCard(string cardKey)

@@ -7,6 +7,14 @@ namespace Crusaders30XX.ECS.Systems
 {
     internal static class AppliedPassivesService
     {
+      private const double GalvanizeBonusFraction = 0.8;
+
+      public static int GetGalvanizeBonus(int preGalvanizeDamage)
+      {
+        if (preGalvanizeDamage <= 0) return 0;
+        return (int)Math.Ceiling(preGalvanizeDamage * GalvanizeBonusFraction);
+      }
+
       public static int GetGuardAbsorption(Entity target, int rawAttackDamage)
       {
         if (rawAttackDamage <= 0 || target == null) return 0;
@@ -45,7 +53,6 @@ namespace Crusaders30XX.ECS.Systems
         var isEnemy = e.Source.HasComponent<Enemy>();
         var sourcePassives = e.Source.GetComponent<AppliedPassives>().Passives;
         var targetPassives = e.Target.GetComponent<AppliedPassives>().Passives;
-        // var phaseState = entityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault().GetComponent<PhaseState>();
         if (targetPassives.ContainsKey(AppliedPassiveType.Armor) && e.DamageType == ModifyTypeEnum.Attack)
         {
           targetPassives.TryGetValue(AppliedPassiveType.Armor, out var amount);
@@ -56,15 +63,18 @@ namespace Crusaders30XX.ECS.Systems
           targetPassives.TryGetValue(AppliedPassiveType.Wounded, out var amount);
           delta += amount;
         }
+        var flatSourceBonus = 0;
         if (sourcePassives.ContainsKey(AppliedPassiveType.Power) && e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
         {
           sourcePassives.TryGetValue(AppliedPassiveType.Power, out var amount);
           delta += amount;
+          flatSourceBonus += amount;
         }
         if (sourcePassives.ContainsKey(AppliedPassiveType.Might) && e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
         {
           sourcePassives.TryGetValue(AppliedPassiveType.Might, out var amount);
           delta += amount;
+          flatSourceBonus += amount;
         }
         if (e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
         {
@@ -73,9 +83,20 @@ namespace Crusaders30XX.ECS.Systems
           if (!isWeaponAttack && sourcePassives.TryGetValue(AppliedPassiveType.Aggression, out var aggression) && aggression > 0)
           {
             delta += aggression;
+            flatSourceBonus += aggression;
             if (!ReadOnly)
             {
               EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.Aggression });
+            }
+          }
+          if (!isWeaponAttack && sourcePassives.TryGetValue(AppliedPassiveType.Galvanize, out var galvanize) && galvanize > 0)
+          {
+            int rawAttackDamage = Math.Abs(e.Delta);
+            int preGalvanizeDamage = rawAttackDamage + flatSourceBonus;
+            delta += GetGalvanizeBonus(preGalvanizeDamage);
+            if (!ReadOnly)
+            {
+              EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.Galvanize });
             }
           }
           if (isWeaponAttack && sourcePassives.TryGetValue(AppliedPassiveType.Sharpen, out var sharpen) && sharpen > 0)

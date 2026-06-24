@@ -27,6 +27,8 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<ChangeBattlePhaseEvent>(OnPhaseChanged);
 			EventManager.Subscribe<CardMoved>(OnCardMoved);
 			EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCaches);
+			EventManager.Subscribe<BeginDefeatPresentationEvent>(OnBeginDefeatPresentation);
+			EventManager.Subscribe<EnemyPhaseResetEvent>(_ => ClearEnemyTurnShackles());
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -170,10 +172,21 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			else if (evt.Current == SubPhase.EnemyEnd)
 			{
-				RemoveAllShackles();
-				_blockedWithShackledCard = false;
-				_shacklesAppliedThisEnemyTurn = false;
+				ClearEnemyTurnShackles();
 			}
+		}
+
+		private void OnBeginDefeatPresentation(BeginDefeatPresentationEvent evt)
+		{
+			if (evt?.IsPreview == true) return;
+			ClearEnemyTurnShackles();
+		}
+
+		private void ClearEnemyTurnShackles()
+		{
+			RemoveAllShackles();
+			_blockedWithShackledCard = false;
+			_shacklesAppliedThisEnemyTurn = false;
 		}
 
 		private void OnCardMoved(CardMoved evt)

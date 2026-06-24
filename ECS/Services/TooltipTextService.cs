@@ -106,6 +106,8 @@ namespace Crusaders30XX.ECS.Services
 					return $"Lose {stacks} max HP. At the start of battle, lose 1 scar. Max HP is not restored until the next battle recalculates from remaining scars.";
 				case AppliedPassiveType.Aggression:
 					return $"Your next non-weapon attack this turn gains {stacks} damage.";
+				case AppliedPassiveType.Galvanize:
+					return "The next non-weapon attack this turn deals 80% more damage. Bonus damage is rounded up.";
 				case AppliedPassiveType.Sharpen:
 					return $"Your next weapon attack this turn gains {stacks} damage.";
 				case AppliedPassiveType.Might:
@@ -194,6 +196,8 @@ namespace Crusaders30XX.ECS.Services
 			if (i >= 0) matches.Add((i, "X Burn - At the start of the turn, take X damage."));
 			i = lowerText.IndexOf("aggression");
 			if (i >= 0) matches.Add((i, "X Aggression - Your next non-weapon attack this turn gains +X damage."));
+			i = lowerText.IndexOf("galvanize");
+			if (i >= 0) matches.Add((i, "Galvanize - The next non-weapon attack this turn deals 80% more damage. Bonus damage is rounded up."));
 			i = lowerText.IndexOf("power");
 			if (i >= 0) matches.Add((i, "X Power - Your attacks deal +X damage."));
 			i = lowerText.IndexOf("sharpen");

@@ -25,7 +25,7 @@ public class TestFightSetupServiceTests
 
 			var player = world.EntityManager.GetEntity("Player");
 			Assert.Equal("hammer", player.GetComponent<EquippedWeapon>().WeaponId);
-			Assert.Equal("iron_resolve", player.GetComponent<EquippedTemperanceAbility>().AbilityId);
+			Assert.Equal("static_surge", player.GetComponent<EquippedTemperanceAbility>().AbilityId);
 			Assert.Equal(20, player.GetComponent<HP>().Max);
 
 			var deck = world.EntityManager.GetEntity("Deck").GetComponent<Deck>();

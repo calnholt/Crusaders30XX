@@ -66,7 +66,7 @@ namespace Crusaders30XX.ECS.Systems
 
 			SaveCache.ClearPendingBattle();
 			SaveCache.EnsureClimbState();
-			EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Map });
+			EventManager.Publish(new ChangeMusicTrack { Track = MusicTrack.Climb });
 			EventManager.Publish(new HideLocationNameEvent());
 			AddClimbSystems();
 		}
