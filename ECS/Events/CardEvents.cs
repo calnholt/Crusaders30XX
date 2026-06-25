@@ -669,7 +669,8 @@ namespace Crusaders30XX.ECS.Events
 
     public class CardPlayedEvent
     {
-        public Entity Card {get; set;}
+        public Entity Card { get; set; }
+        public int VigorStacksAtPlay { get; set; }
     }
 
     public class CardBlockedEvent

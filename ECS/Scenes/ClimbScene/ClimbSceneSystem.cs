@@ -24,6 +24,7 @@ namespace Crusaders30XX.ECS.Systems
 		private ClimbHeaderDisplaySystem _headerDisplaySystem;
 		private ClimbColumnLayoutSystem _columnLayoutSystem;
 		private ClimbColumnDisplaySystem _columnDisplaySystem;
+		private ClimbCardUpgradeDisplaySystem _cardUpgradeDisplaySystem;
 		private EquipmentTooltipDisplaySystem _equipmentTooltipDisplaySystem;
 		private const string EquipmentTooltipEntityName = "Climb_EquipmentTooltip";
 
@@ -86,6 +87,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_columnDisplaySystem);
 			_columnLayoutSystem = new ClimbColumnLayoutSystem(EntityManager);
 			_world.AddSystem(_columnLayoutSystem);
+			_cardUpgradeDisplaySystem = new ClimbCardUpgradeDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch);
+			_world.AddSystem(_cardUpgradeDisplaySystem);
 			EnsureEquipmentTooltipEntity();
 			_equipmentTooltipDisplaySystem = new EquipmentTooltipDisplaySystem(EntityManager, _graphicsDevice, _spriteBatch, _content, EquipmentTooltipEntityName);
 		}
@@ -98,6 +101,8 @@ namespace Crusaders30XX.ECS.Systems
 			_world.RemoveSystem(_headerDisplaySystem);
 			_world.RemoveSystem(_columnLayoutSystem);
 			_world.RemoveSystem(_columnDisplaySystem);
+			_world.RemoveSystem(_cardUpgradeDisplaySystem);
+			_cardUpgradeDisplaySystem = null;
 			var tooltip = EntityManager.GetEntity(EquipmentTooltipEntityName);
 			if (tooltip != null) EntityManager.DestroyEntity(tooltip.Id);
 			_equipmentTooltipDisplaySystem = null;
@@ -109,6 +114,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (_backgroundDisplaySystem != null) FrameProfiler.Measure("ClimbBackgroundDisplaySystem.Draw", _backgroundDisplaySystem.Draw);
 			if (_headerDisplaySystem != null) FrameProfiler.Measure("ClimbHeaderDisplaySystem.Draw", _headerDisplaySystem.Draw);
 			if (_columnDisplaySystem != null) FrameProfiler.Measure("ClimbColumnDisplaySystem.Draw", _columnDisplaySystem.Draw);
+			if (_cardUpgradeDisplaySystem != null) FrameProfiler.Measure("ClimbCardUpgradeDisplaySystem.Draw", _cardUpgradeDisplaySystem.Draw);
 			if (_equipmentTooltipDisplaySystem != null) FrameProfiler.Measure("ClimbEquipmentTooltipDisplaySystem.Draw", _equipmentTooltipDisplaySystem.Draw);
 		}
 

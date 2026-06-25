@@ -544,6 +544,113 @@ public class PlayerInputArchitectureTests
     }
 
     [Fact]
+    public void Gamepad_rumbles_on_new_interactable_hover()
+    {
+        EventManager.Clear();
+        var entityManager = CreateSceneEntityManager();
+        CreateUi(
+            entityManager,
+            "Control",
+            10,
+            new Rectangle(0, 0, 200, 200));
+        var source = new FakeInputSource(
+            Frame(sequence: 1, pointer: new Vector2(300, 100)),
+            Frame(
+                sequence: 2,
+                device: PlayerInputDevice.Gamepad,
+                previousDevice: PlayerInputDevice.KeyboardMouse,
+                gamepadConnected: true,
+                leftStick: new Vector2(-1f, 0f)));
+        var input = new PlayerInputSystem(entityManager, source);
+        var rumble = new ControllerRumbleSystem(entityManager, source);
+
+        input.Update(new GameTime());
+        rumble.Update(new GameTime());
+        input.Update(TenthSecondGameTime());
+        rumble.Update(TenthSecondGameTime());
+
+        Assert.Contains(
+            source.VibrationCalls,
+            call => call.Low == 0.3f && call.High == 0.2f);
+        EventManager.Clear();
+    }
+
+    [Fact]
+    public void Gamepad_does_not_rumble_on_tooltip_only_hover()
+    {
+        EventManager.Clear();
+        var entityManager = CreateSceneEntityManager();
+        Entity tooltip = CreateUi(
+            entityManager,
+            "TooltipOnly",
+            10,
+            new Rectangle(0, 0, 200, 200));
+        UIElement ui = tooltip.GetComponent<UIElement>();
+        ui.IsInteractable = false;
+        ui.Tooltip = "Passive description";
+        var source = new FakeInputSource(
+            Frame(sequence: 1, pointer: new Vector2(300, 100)),
+            Frame(
+                sequence: 2,
+                device: PlayerInputDevice.Gamepad,
+                previousDevice: PlayerInputDevice.KeyboardMouse,
+                gamepadConnected: true,
+                leftStick: new Vector2(-1f, 0f)));
+        var input = new PlayerInputSystem(entityManager, source);
+        var rumble = new ControllerRumbleSystem(entityManager, source);
+
+        input.Update(new GameTime());
+        rumble.Update(new GameTime());
+        input.Update(TenthSecondGameTime());
+        rumble.Update(TenthSecondGameTime());
+
+        Assert.Empty(source.VibrationCalls);
+        EventManager.Clear();
+    }
+
+    [Fact]
+    public void Keyboard_mouse_does_not_rumble()
+    {
+        EventManager.Clear();
+        var entityManager = CreateSceneEntityManager();
+        CreateUi(
+            entityManager,
+            "Control",
+            10,
+            new Rectangle(0, 0, 200, 200));
+        var source = new FakeInputSource(
+            Frame(sequence: 1, pointer: new Vector2(300, 100)),
+            Frame(
+                sequence: 2,
+                device: PlayerInputDevice.Gamepad,
+                previousDevice: PlayerInputDevice.KeyboardMouse,
+                gamepadConnected: true,
+                leftStick: new Vector2(-1f, 0f)),
+            Frame(
+                sequence: 3,
+                pointer: new Vector2(155, 100),
+                device: PlayerInputDevice.KeyboardMouse,
+                previousDevice: PlayerInputDevice.Gamepad));
+        var input = new PlayerInputSystem(entityManager, source);
+        var rumble = new ControllerRumbleSystem(entityManager, source);
+
+        input.Update(new GameTime());
+        rumble.Update(new GameTime());
+        input.Update(TenthSecondGameTime());
+        rumble.Update(TenthSecondGameTime());
+        input.Update(new GameTime());
+        rumble.Update(new GameTime());
+
+        Assert.Contains(
+            source.VibrationCalls,
+            call => call.Low == 0.3f && call.High == 0.2f);
+        Assert.Contains(
+            source.VibrationCalls,
+            call => call.Low == 0f && call.High == 0f);
+        EventManager.Clear();
+    }
+
+    [Fact]
     public void MonoGame_input_is_referenced_only_by_the_hardware_adapter()
     {
         string root = FindRepositoryRoot();
@@ -666,6 +773,8 @@ public class PlayerInputArchitectureTests
     {
         private readonly Queue<PlayerInputFrame> _frames;
 
+        public List<(float Low, float High)> VibrationCalls { get; } = new();
+
         public FakeInputSource(params PlayerInputFrame[] frames)
         {
             _frames = new Queue<PlayerInputFrame>(frames);
@@ -682,6 +791,7 @@ public class PlayerInputArchitectureTests
 
         public void SetVibration(float lowFrequency, float highFrequency)
         {
+            VibrationCalls.Add((lowFrequency, highFrequency));
         }
     }
 

@@ -31,7 +31,7 @@ namespace Crusaders30XX.ECS.Systems
         public int HPBarXOffset { get; set; } = 0;
 
         [DebugEditable(DisplayName = "HP Bar Y Offset", Step = 2f, Min = -300f, Max = 300f)]
-        public int HPBarYOffset { get; set; } = 118;
+        public int HPBarYOffset { get; set; } = 192;
 
         [DebugEditable(DisplayName = "HP Bar Width", Step = 2f, Min = 10f, Max = 400f)]
         public int HPBarWidth { get; set; } = 120;

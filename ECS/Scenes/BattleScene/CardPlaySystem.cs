@@ -424,8 +424,9 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             ComponentLoggerService.LogEntity(evt.Card, "Executing card OnPlay effect");
+            int vigorStacksAtPlay = VigorService.GetPlayerVigorStacks(EntityManager);
             card.OnPlay?.Invoke(EntityManager, evt.Card);
-            EventManager.Publish(new CardPlayedEvent { Card = evt.Card });
+            EventManager.Publish(new CardPlayedEvent { Card = evt.Card, VigorStacksAtPlay = vigorStacksAtPlay });
             if (!GuidedTutorialService.IsActive(EntityManager))
                 EventManager.Publish(new TrackingEvent { Type = card.CardId, Delta = 1 });
 

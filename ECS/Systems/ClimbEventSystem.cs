@@ -230,6 +230,15 @@ namespace Crusaders30XX.ECS.Systems
 			RunDeckService.EnsureRunDeck(EntityManager);
 			if (!string.IsNullOrWhiteSpace(result.UpgradedEntryId))
 			{
+				if (RunDeckService.TryParseCardKey(result.UpgradedCardKey, out var cardId, out var color, out _))
+				{
+					string baseKey = RunDeckService.BuildCardKey(cardId, color, isUpgraded: false);
+					EventManager.Publish(new ClimbCardUpgradeAnimationRequested
+					{
+						BaseCardKey = baseKey,
+						UpgradedCardKey = result.UpgradedCardKey,
+					});
+				}
 				CardUpgradeService.InvokeUpgradeConfirmed(result.UpgradedCardKey);
 			}
 			if (result.ReachedFinalTime)

@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 
 namespace Crusaders30XX.ECS.Services
@@ -218,6 +219,11 @@ namespace Crusaders30XX.ECS.Services
 				slot.deckEntryId,
 				upgraded,
 				out _)) return false;
+			EventManager.Publish(new ClimbCardUpgradeAnimationRequested
+			{
+				BaseCardKey = current,
+				UpgradedCardKey = upgraded,
+			});
 			CardUpgradeService.InvokeUpgradeConfirmed(upgraded);
 			return true;
 		}

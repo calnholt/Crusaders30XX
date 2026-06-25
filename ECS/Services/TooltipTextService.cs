@@ -15,6 +15,7 @@ namespace Crusaders30XX.ECS.Services
 		// --- Constants ---
 		public static readonly int FrostbiteThreshold = 3;
 		public static readonly int FrostbiteDamage = 3;
+		public static readonly float GalvanizeBonusFraction = 0.5f;
 
 		// --- Card status tooltips ---
 
@@ -107,7 +108,7 @@ namespace Crusaders30XX.ECS.Services
 				case AppliedPassiveType.Aggression:
 					return $"Your next non-weapon attack this turn gains {stacks} damage.";
 				case AppliedPassiveType.Galvanize:
-					return "The next non-weapon attack this turn deals 80% more damage. Bonus damage is rounded up.";
+					return $"The next non-weapon attack this turn deals {GalvanizeBonusFraction * 100}% more damage. Bonus damage is rounded up.";
 				case AppliedPassiveType.Sharpen:
 					return $"Your next weapon attack this turn gains {stacks} damage.";
 				case AppliedPassiveType.Might:
@@ -197,7 +198,7 @@ namespace Crusaders30XX.ECS.Services
 			i = lowerText.IndexOf("aggression");
 			if (i >= 0) matches.Add((i, "X Aggression - Your next non-weapon attack this turn gains +X damage."));
 			i = lowerText.IndexOf("galvanize");
-			if (i >= 0) matches.Add((i, "Galvanize - The next non-weapon attack this turn deals 80% more damage. Bonus damage is rounded up."));
+			if (i >= 0) matches.Add((i, $"Galvanize - The next non-weapon attack this turn deals {GalvanizeBonusFraction * 100}% more damage. Bonus damage is rounded up."));
 			i = lowerText.IndexOf("power");
 			if (i >= 0) matches.Add((i, "X Power - Your attacks deal +X damage."));
 			i = lowerText.IndexOf("sharpen");

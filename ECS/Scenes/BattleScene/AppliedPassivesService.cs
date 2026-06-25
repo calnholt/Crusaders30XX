@@ -2,17 +2,17 @@ using System;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Services;
 
 namespace Crusaders30XX.ECS.Systems
 {
     internal static class AppliedPassivesService
     {
-      private const double GalvanizeBonusFraction = 0.8;
 
       public static int GetGalvanizeBonus(int preGalvanizeDamage)
       {
         if (preGalvanizeDamage <= 0) return 0;
-        return (int)Math.Ceiling(preGalvanizeDamage * GalvanizeBonusFraction);
+        return (int)Math.Ceiling(preGalvanizeDamage * TooltipTextService.GalvanizeBonusFraction);
       }
 
       public static int GetGuardAbsorption(Entity target, int rawAttackDamage)

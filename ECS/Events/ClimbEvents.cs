@@ -88,4 +88,10 @@ namespace Crusaders30XX.ECS.Events
 	public class ClimbLoadoutOpenRequestedEvent
 	{
 	}
+
+	public class ClimbCardUpgradeAnimationRequested
+	{
+		public string BaseCardKey { get; set; } = string.Empty;
+		public string UpgradedCardKey { get; set; } = string.Empty;
+	}
 }

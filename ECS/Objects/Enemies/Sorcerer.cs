@@ -19,11 +19,11 @@ public class Sorcerer : EnemyBase
 
     OnStartOfBattle = (entityManager) =>
     {
-      EventQueueBridge.EnqueueTriggerAction("Sorcerer.OnCreate", () =>
-      {
-        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Intimidated, Delta = 1 });
+      // EventQueueBridge.EnqueueTriggerAction("Sorcerer.OnCreate", () =>
+      // {
+      //   EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Intimidated, Delta = 1 });
 
-      }, AppliedPassivesManagementSystem.Duration);
+      // }, AppliedPassivesManagementSystem.Duration);
       EventQueueBridge.EnqueueTriggerAction("Sorcerer.OnCreate", () =>
       {
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.MindFog, Delta = 1 });
@@ -45,6 +45,7 @@ public class Sorcerer : EnemyBase
 public class StrangeForce : EnemyAttackBase
 {
   private int DrawCount = 1;
+  private int IntimidateAmount = 1;
 
   public StrangeForce()
   {
@@ -52,11 +53,12 @@ public class StrangeForce : EnemyAttackBase
     Name = "Strange Force";
     Damage = 11;
     ConditionType = ConditionType.OnBlockedByAtLeast2DifferentColors;
-    Text = $"On attack - Draw {DrawCount} {(DrawCount == 1 ? "card" : "cards")}.\n\n{EnemyAttackTextHelper.GetConditionText(ConditionType)}Mill 1.";
+    Text = $"On attack - Draw {DrawCount} {(DrawCount == 1 ? "card" : "cards")}, intimidate {IntimidateAmount}.\n\n{EnemyAttackTextHelper.GetConditionText(ConditionType)}Mill 1.";
 
     OnAttackReveal = (entityManager) =>
     {
       EventManager.Publish(new RequestDrawCardsEvent { Count = DrawCount });
+      EventManager.Publish(new IntimidateEvent { Amount = IntimidateAmount });
     };
 
     OnAttackHit = (entityManager) =>

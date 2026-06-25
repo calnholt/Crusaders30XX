@@ -31,6 +31,7 @@ public class Game1 : Game
     private BrittleDisplaySystem _brittleDisplaySystem;
     private SealDisplaySystem _sealDisplaySystem;
     private PlayerInputSystem _playerInputSystem;
+    private ControllerRumbleSystem _controllerRumbleSystem;
     private UIInteractionSystem _uiInteractionSystem;
 	private CurrencyDisplaySystem _currencyDisplaySystem;
 	private GoldManagementService _goldManagementService;
@@ -189,9 +190,13 @@ public class Game1 : Game
         var sealTexture = Content.Load<Texture2D>("seal");
         _sealDisplaySystem = new SealDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, sealTexture);
         _dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        var playerInputAdapter = new MonoGamePlayerInputAdapter();
         _playerInputSystem = new PlayerInputSystem(
             _world.EntityManager,
-            new MonoGamePlayerInputAdapter());
+            playerInputAdapter);
+        _controllerRumbleSystem = new ControllerRumbleSystem(
+            _world.EntityManager,
+            playerInputAdapter);
         _uiInteractionSystem = new UIInteractionSystem(_world.EntityManager);
         _tooltipTextDisplaySystem = new TooltipTextDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _hintTooltipDisplaySystem = new HintTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
@@ -238,6 +243,7 @@ public class Game1 : Game
         _world.AddSystem(_sealDisplaySystem);
         _world.AddSystem(_dialogDisplaySystem);
         _world.AddSystem(_playerInputSystem, SystemUpdatePhase.Input);
+        _world.AddSystem(_controllerRumbleSystem, SystemUpdatePhase.Input);
         _world.AddSystem(_uiInteractionSystem, SystemUpdatePhase.Interaction);
         _world.AddSystem(_tooltipTextDisplaySystem);
         _world.AddSystem(_hintTooltipDisplaySystem);
