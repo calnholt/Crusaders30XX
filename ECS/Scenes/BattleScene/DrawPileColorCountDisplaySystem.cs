@@ -13,8 +13,9 @@ using Crusaders30XX.ECS.Services;
 namespace Crusaders30XX.ECS.Systems
 {
     /// <summary>
-    /// Renders three vertically-stacked color-coded pills to the left of the draw pile panel,
+    /// Renders vertically-stacked color-coded pills to the left of the draw pile panel,
     /// showing the count of Red, White, and Black cards currently in the draw pile.
+    /// When colorless cards are present, a fourth gray pill is shown at the bottom.
     /// </summary>
     [DebugTab("Draw Pile Color Count")]
     public class DrawPileColorCountDisplaySystem : Core.System
@@ -23,14 +24,16 @@ namespace Crusaders30XX.ECS.Systems
         private readonly SpriteBatch _spriteBatch;
         private readonly SpriteFont _font;
 
-        private const string RedEntityName   = "UI_ColorCount_Red";
-        private const string WhiteEntityName = "UI_ColorCount_White";
-        private const string BlackEntityName = "UI_ColorCount_Black";
+        private const string RedEntityName       = "UI_ColorCount_Red";
+        private const string WhiteEntityName     = "UI_ColorCount_White";
+        private const string BlackEntityName     = "UI_ColorCount_Black";
+        private const string ColorlessEntityName = "UI_ColorCount_Colorless";
 
         // Cached color counts from the last UpdateEntity pass
         private int _redCount;
         private int _whiteCount;
         private int _blackCount;
+        private int _colorlessCount;
 
         // Shared pill texture — all three pills share the same shape, tinted per color
         private Texture2D _pillTex;
@@ -61,10 +64,28 @@ namespace Crusaders30XX.ECS.Systems
         public int DrawPileRefWidth { get; set; } = 60;
 
         [DebugEditable(DisplayName = "Draw Pile Ref Height", Step = 1, Min = 0, Max = 500)]
-        public int DrawPileRefHeight { get; set; } = 80;
+        public int DrawPileRefHeight { get; set; } = 101;
 
         [DebugEditable(DisplayName = "Draw Pile Ref Margin", Step = 1, Min = 0, Max = 500)]
-        public int DrawPileRefMargin { get; set; } = 30;
+        public int DrawPileRefMargin { get; set; } = 74;
+
+        [DebugEditable(DisplayName = "Colorless Background R", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessBackgroundR { get; set; } = 92;
+
+        [DebugEditable(DisplayName = "Colorless Background G", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessBackgroundG { get; set; } = 96;
+
+        [DebugEditable(DisplayName = "Colorless Background B", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessBackgroundB { get; set; } = 102;
+
+        [DebugEditable(DisplayName = "Colorless Foreground R", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessForegroundR { get; set; } = 235;
+
+        [DebugEditable(DisplayName = "Colorless Foreground G", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessForegroundG { get; set; } = 235;
+
+        [DebugEditable(DisplayName = "Colorless Foreground B", Step = 1, Min = 0, Max = 255)]
+        public int ColorlessForegroundB { get; set; } = 235;
 
         public DrawPileColorCountDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
             : base(entityManager)
@@ -84,10 +105,16 @@ namespace Crusaders30XX.ECS.Systems
             var deck = entity.GetComponent<Deck>();
             if (deck == null) return;
 
-            // Count each color in the draw pile
-            _redCount = 0; _whiteCount = 0; _blackCount = 0;
+            // Count each color in the draw pile (colorless cards are excluded from R/W/B totals)
+            _redCount = 0; _whiteCount = 0; _blackCount = 0; _colorlessCount = 0;
             foreach (var cardEntity in deck.DrawPile)
             {
+                if (cardEntity.HasComponent<Colorless>())
+                {
+                    _colorlessCount++;
+                    continue;
+                }
+
                 switch (CardColorQualificationService.GetQualifiedColor(cardEntity))
                 {
                     case CardData.CardColor.Red:   _redCount++;   break;
@@ -104,10 +131,18 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
-            // Top to bottom: Red, White, Black
-            DrawPill(RedEntityName,   Color.Red,             Color.White, _redCount.ToString());
+            // Top to bottom: Red, White, Black, Colorless (when present)
+            DrawPill(RedEntityName,   new Color(78, 12, 12),  Color.White, _redCount.ToString());
             DrawPill(WhiteEntityName, Color.White,           Color.Black, _whiteCount.ToString());
             DrawPill(BlackEntityName, new Color(20, 20, 20), Color.White, _blackCount.ToString());
+            if (_colorlessCount > 0)
+            {
+                DrawPill(
+                    ColorlessEntityName,
+                    ColorlessBackground,
+                    ColorlessForeground,
+                    _colorlessCount.ToString());
+            }
         }
 
         private void DrawPill(string entityName, Color bgColor, Color textColor, string text)
@@ -133,6 +168,10 @@ namespace Crusaders30XX.ECS.Systems
             UpdateUIBoundsForEntity(RedEntityName);
             UpdateUIBoundsForEntity(WhiteEntityName);
             UpdateUIBoundsForEntity(BlackEntityName);
+            if (_colorlessCount > 0)
+                UpdateUIBoundsForEntity(ColorlessEntityName);
+            else
+                ClearUIBoundsForEntity(ColorlessEntityName);
         }
 
         private void UpdateUIBoundsForEntity(string entityName)
@@ -146,7 +185,25 @@ namespace Crusaders30XX.ECS.Systems
             if (ui == null)
                 EntityManager.AddComponent(entity, new UIElement { Bounds = rect, IsInteractable = false });
             else
+            {
                 ui.Bounds = rect;
+                ui.IsInteractable = false;
+            }
+        }
+
+        private void ClearUIBoundsForEntity(string entityName)
+        {
+            var entity = EntityManager.GetEntity(entityName);
+            if (entity == null) return;
+
+            var ui = entity.GetComponent<UIElement>();
+            if (ui == null)
+                EntityManager.AddComponent(entity, new UIElement { Bounds = Rectangle.Empty, IsInteractable = false });
+            else
+            {
+                ui.Bounds = Rectangle.Empty;
+                ui.IsInteractable = false;
+            }
         }
 
         private Rectangle GetPillRect(Transform t) =>
@@ -161,6 +218,7 @@ namespace Crusaders30XX.ECS.Systems
             EnsureEntity(RedEntityName);
             EnsureEntity(WhiteEntityName);
             EnsureEntity(BlackEntityName);
+            EnsureEntity(ColorlessEntityName);
         }
 
         private void EnsureEntity(string name)
@@ -183,6 +241,8 @@ namespace Crusaders30XX.ECS.Systems
             SetPosition(RedEntityName,   new Vector2(stackCenterX, stackCenterY - PillSpacing));
             SetPosition(WhiteEntityName, new Vector2(stackCenterX, stackCenterY));
             SetPosition(BlackEntityName, new Vector2(stackCenterX, stackCenterY + PillSpacing));
+            if (_colorlessCount > 0)
+                SetPosition(ColorlessEntityName, new Vector2(stackCenterX, stackCenterY + PillSpacing * 2));
         }
 
         private void SetPosition(string name, Vector2 position)
@@ -205,5 +265,17 @@ namespace Crusaders30XX.ECS.Systems
             _cachedPillHeight   = PillHeight;
             _cachedCornerRadius = CornerRadius;
         }
+
+        private Color ColorlessBackground => new(
+            ClampByte(ColorlessBackgroundR),
+            ClampByte(ColorlessBackgroundG),
+            ClampByte(ColorlessBackgroundB));
+
+        private Color ColorlessForeground => new(
+            ClampByte(ColorlessForegroundR),
+            ClampByte(ColorlessForegroundG),
+            ClampByte(ColorlessForegroundB));
+
+        private static byte ClampByte(int value) => (byte)Math.Clamp(value, 0, 255);
     }
 }

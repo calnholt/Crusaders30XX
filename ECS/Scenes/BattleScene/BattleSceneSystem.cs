@@ -655,8 +655,8 @@ namespace Crusaders30XX.ECS.Systems
 		_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);
 		_cardHoverDetectionSystem = new CardHoverDetectionSystem(_world.EntityManager);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
-			_drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_discardPileDisplaySystem = new DiscardPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
+			_drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			_discardPileDisplaySystem = new DiscardPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_drawPileColorCountDisplaySystem = new DrawPileColorCountDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_millCardSystem = new MillCardSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_playerDisplaySystem = new PlayerDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);

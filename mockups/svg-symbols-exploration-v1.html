@@ -147,6 +147,7 @@
   .shop .icon-frame { color: var(--gold); }
   .flag .icon-frame { color: var(--ice); }
   .weather .icon-frame { color: #9aabb8; }
+  .tornado .icon-frame { color: #a09484; }
 
   .on-dark svg { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
   .on-light {
@@ -163,7 +164,7 @@
 
 <header class="page-header">
   <h1>SVG Symbol Exploration</h1>
-  <p>Simple SVG icon sets for gates, shops, flags, and extreme weather at 24&times;24 viewBox.</p>
+  <p>Simple SVG icon sets for gates, shops, flags, extreme weather, and tornado hazards at 24&times;24 viewBox.</p>
 </header>
 
 <main class="grid">
@@ -360,6 +361,70 @@
         </div>
         <span class="card-label">Gale cloud</span>
         <p class="card-note">Low cloud with three wind-sweep curves underneath.</p>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- TORNADO -->
+  <section class="section tornado">
+    <h2 class="section-title">Tornado</h2>
+    <p class="section-desc">Localized whirlwind hazards, chase encounters, or map danger nodes. Tapered funnel silhouettes with optional debris or swirl cues.</p>
+    <div class="variants">
+
+      <article class="card">
+        <div class="icon-frame on-dark">
+          <!-- A: Tiered funnel -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 4.5h16"/>
+            <path d="M5.5 7.5h13"/>
+            <path d="M7 10.5h10"/>
+            <path d="M8.5 13.5h7"/>
+            <path d="M10 16.5h4"/>
+            <path d="M11.5 19v3"/>
+          </svg>
+        </div>
+        <span class="card-label">Funnel</span>
+        <p class="card-note">Stacked horizontal bands narrowing to a ground contact point.</p>
+      </article>
+
+      <article class="card">
+        <div class="icon-frame on-dark">
+          <!-- B: Debris funnel -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M7 4a3 3 0 0 1 10 0"/>
+            <path d="M6.5 7.5c2.5-.7 5 0 7.5.3 2.5.3 5 0"/>
+            <path d="M8 11c1.8-.6 3.6 0 5.2.3"/>
+            <path d="M9.5 14.5c1.2-.45 2.4 0 3.5.25"/>
+            <path d="M11 18v3"/>
+            <path d="M3 10l2.5 1"/>
+            <path d="M3 14l2-1"/>
+            <path d="M21 9.5l-2.5 1"/>
+            <path d="M21 13.5l-2 1"/>
+          </svg>
+        </div>
+        <span class="card-label">Debris</span>
+        <p class="card-note">Curved funnel tiers with wind-blown streaks on both flanks.</p>
+      </article>
+
+      <article class="card">
+        <div class="icon-frame on-dark">
+          <!-- C: Swirl funnel -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v1.5"/>
+            <path d="M7 5.5c2.5-.6 5 0 7.5.4 2.5.4 5 0"/>
+            <path d="M8.5 9c2-.7 3.5 0 5 .5"/>
+            <path d="M9.5 12.5c1.5-.55 3 0 4.2.4"/>
+            <path d="M10.5 16c1.2-.4 2.4 0 3.5.3"/>
+            <path d="M11.5 19.5v2"/>
+            <path d="M15 7.5l1.5 2"/>
+            <path d="M16.5 12l1 2"/>
+            <path d="M9 8.5L7.5 10"/>
+            <path d="M8 13l-1.5 1.5"/>
+          </svg>
+        </div>
+        <span class="card-label">Swirl</span>
+        <p class="card-note">Offset wavy tiers with short curl marks hinting at rotation.</p>
       </article>
 
     </div>
