@@ -92,9 +92,6 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Z Order", Step = 100, Min = 0, Max = 100000)]
         public int ZOrder { get; set; } = 50000;
 
-        [DebugEditable(DisplayName = "Continue Button Offset Y", Step = 5, Min = 0, Max = 200)]
-        public int ContinueButtonOffsetY { get; set; } = 100;
-
         public TutorialDisplaySystem(EntityManager entityManager, GraphicsDevice graphicsDevice, 
             SpriteBatch spriteBatch, ContentManager content, TutorialManager tutorialManager)
             : base(entityManager)
@@ -194,15 +191,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private void OnHotKeyHoldCompleted(HotKeyHoldCompletedEvent evt)
         {
-            // Check if the completed hold was our continue button
-            var entity = evt.Entity;
-            if (entity?.Id.ToString() == ContinueEntityName || entity?.GetComponent<Transform>() != null)
+            var continueEntity = EntityManager.GetEntity(ContinueEntityName);
+            if (evt.Entity == continueEntity && _isActive)
             {
-                var continueEntity = EntityManager.GetEntity(ContinueEntityName);
-                if (entity == continueEntity && _isActive)
-                {
-                    EventManager.Publish(new AdvanceTutorialEvent());
-                }
+                EventManager.Publish(new AdvanceTutorialEvent());
             }
         }
 
@@ -275,6 +267,7 @@ namespace Crusaders30XX.ECS.Systems
             // Position bubble based on orientation
             string orientation = _currentTutorial.bubbleOrientation ?? "top";
             _bubbleRect = ComputeBubblePlacement(anchor, new Point(w, h), orientation);
+            UpdateContinueButtonAnchor();
         }
 
         private Rectangle ComputeBubblePlacement(Rectangle anchor, Point size, string orientation)
@@ -324,22 +317,17 @@ namespace Crusaders30XX.ECS.Systems
             // Create a UI entity for the hold-to-continue hotkey
             var entity = EntityManager.CreateEntity(ContinueEntityName);
 
-            // Position at bottom center of screen
-            int btnWidth = 200;
-            int btnHeight = 40;
-            int x = (Game1.VirtualWidth - btnWidth) / 2;
-            int y = 0 + ContinueButtonOffsetY;
-
             EntityManager.AddComponent(entity, new Transform
             {
-                Position = new Vector2(x, y),
+                Position = new Vector2(_bubbleRect.X, _bubbleRect.Y),
                 ZOrder = ZOrder + 100
             });
 
             EntityManager.AddComponent(entity, new UIElement
             {
-                Bounds = new Rectangle(x, y, btnWidth, btnHeight),
-                IsInteractable = true,
+                Bounds = _bubbleRect,
+                IsInteractable = false,
+                IsPreventDefaultClick = true,
                 IsHidden = false,
                 LayerType = UILayerType.Overlay
             });
@@ -349,8 +337,9 @@ namespace Crusaders30XX.ECS.Systems
                 Button = FaceButton.X,
                 RequiresHold = true,
                 HoldDurationSeconds = 0.5f,
-                Position = HotKeyPosition.Below,
-                IsActive = true
+                Position = MapBubbleOrientationToHotKeyPosition(_currentTutorial?.bubbleOrientation),
+                IsActive = true,
+                AllowWhenNonInteractable = true
             });
             InputContextService.EnsureMember(
                 EntityManager,
@@ -358,6 +347,46 @@ namespace Crusaders30XX.ECS.Systems
                 "overlay.tutorial");
 
             LoggingService.Append("TutorialDisplaySystem.CreateContinueButton", new System.Text.Json.Nodes.JsonObject { ["message"] = "created continue button" });
+        }
+
+        private void UpdateContinueButtonAnchor()
+        {
+            var entity = EntityManager.GetEntity(ContinueEntityName);
+            if (entity == null) return;
+
+            var transform = entity.GetComponent<Transform>();
+            if (transform != null)
+            {
+                transform.Position = new Vector2(_bubbleRect.X, _bubbleRect.Y);
+                transform.ZOrder = ZOrder + 100;
+            }
+
+            var ui = entity.GetComponent<UIElement>();
+            if (ui != null)
+            {
+                ui.Bounds = _bubbleRect;
+                ui.IsInteractable = false;
+                ui.IsPreventDefaultClick = true;
+                ui.IsHidden = false;
+                ui.LayerType = UILayerType.Overlay;
+            }
+
+            var hotKey = entity.GetComponent<HotKey>();
+            if (hotKey != null)
+            {
+                hotKey.Position = MapBubbleOrientationToHotKeyPosition(_currentTutorial?.bubbleOrientation);
+            }
+        }
+
+        internal static HotKeyPosition MapBubbleOrientationToHotKeyPosition(string orientation)
+        {
+            return (orientation ?? "top").ToLowerInvariant() switch
+            {
+                "bottom" => HotKeyPosition.Below,
+                "left" => HotKeyPosition.Left,
+                "right" => HotKeyPosition.Right,
+                _ => HotKeyPosition.Top,
+            };
         }
 
         private void DestroyContinueButton()
@@ -398,9 +427,6 @@ namespace Crusaders30XX.ECS.Systems
 
             // Draw guardian angel
             // DrawGuardianAngel();
-
-            // Draw continue hint
-            DrawContinueHint();
         }
 
         private void DrawBubble()
@@ -544,22 +570,5 @@ namespace Crusaders30XX.ECS.Systems
             _spriteBatch.Draw(_angelTexture, angelPos, null, Color.White, 0f, origin, AngelScale, SpriteEffects.None, 0f);
         }
 
-        private void DrawContinueHint()
-        {
-            if (_font == null)
-                return;
-
-            string hint = "Continue";
-            float hintScale = 0.15f;
-            var size = _font.MeasureString(hint) * hintScale;
-
-            int x = (Game1.VirtualWidth - (int)size.X) / 2;
-            int y = 0 + ContinueButtonOffsetY;
-
-            // Draw shadow
-            _spriteBatch.DrawString(_font, hint, new Vector2(x + 1, y + 1), Color.Black * 0.5f, 0f, Vector2.Zero, hintScale, SpriteEffects.None, 0f);
-            // Draw text
-            _spriteBatch.DrawString(_font, hint, new Vector2(x, y), Color.White, 0f, Vector2.Zero, hintScale, SpriteEffects.None, 0f);
-        }
     }
 }

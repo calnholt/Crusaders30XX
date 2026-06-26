@@ -72,11 +72,7 @@ namespace Crusaders30XX.ECS.Systems
             {
                 HotKey hotKey = entity.GetComponent<HotKey>();
                 UIElement ui = entity.GetComponent<UIElement>();
-                if (hotKey == null
-                    || ui == null
-                    || !ui.IsInteractable
-                    || !InputContextResolver.IsMember(entity, contextId)
-                    || (gameplayBlocked && !entity.HasComponent<TutorialInteractionPermitted>()))
+                if (!HotKeySystem.IsHotKeyEligible(entity, hotKey, ui, contextId, gameplayBlocked))
                 {
                     continue;
                 }

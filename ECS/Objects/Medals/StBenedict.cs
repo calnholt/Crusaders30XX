@@ -10,7 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Medals
         {
             Id = "st_benedict";
             Name = "St. Benedict";
-            MaxCount = 6;
+            MaxCount = 3;
             Text = $"Whenever you pledge {MaxCount} cards, gain 1 vigor.";
         }
 

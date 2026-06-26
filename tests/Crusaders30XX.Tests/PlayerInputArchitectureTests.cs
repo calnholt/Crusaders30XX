@@ -544,6 +544,46 @@ public class PlayerInputArchitectureTests
     }
 
     [Fact]
+    public void Hotkey_non_interactable_eligibility_requires_explicit_opt_in()
+    {
+        var entityManager = new EntityManager();
+        Entity entity = CreateUi(
+            entityManager,
+            "HotKeyTarget",
+            10,
+            new Rectangle(0, 0, 100, 100));
+        var hotKey = new HotKey { Button = FaceButton.X };
+        entityManager.AddComponent(entity, hotKey);
+        UIElement ui = entity.GetComponent<UIElement>();
+        ui.IsInteractable = false;
+
+        Assert.False(HotKeySystem.IsHotKeyEligible(
+            entity,
+            hotKey,
+            ui,
+            InputContextIds.Gameplay,
+            gameplayBlocked: false));
+
+        hotKey.AllowWhenNonInteractable = true;
+
+        Assert.True(HotKeySystem.IsHotKeyEligible(
+            entity,
+            hotKey,
+            ui,
+            InputContextIds.Gameplay,
+            gameplayBlocked: false));
+
+        ui.IsHidden = true;
+
+        Assert.False(HotKeySystem.IsHotKeyEligible(
+            entity,
+            hotKey,
+            ui,
+            InputContextIds.Gameplay,
+            gameplayBlocked: false));
+    }
+
+    [Fact]
     public void Gamepad_rumbles_on_new_interactable_hover()
     {
         EventManager.Clear();

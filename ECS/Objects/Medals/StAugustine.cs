@@ -7,12 +7,12 @@ namespace Crusaders30XX.ECS.Objects.Medals
     public class StAugustine : MedalBase
     {
         public int HpIncrease { get; set; } = 1;
-
+        public int MillCount { get; set; } = 1;
         public StAugustine()
         {
             Id = "st_augustine";
             Name = "St. Augustine of Hippo";
-            Text = "At the start of battle, mill 1 card. Increase your max HP by 1 when this is acquired.";
+            Text = $"At the start of battle, mill {MillCount} card. Increase your max HP by {HpIncrease} when this is acquired.";
         }
 
         public override void Initialize(EntityManager entityManager, Entity medalEntity)

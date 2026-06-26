@@ -41,7 +41,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             _graphicsDevice = gd;
             _spriteBatch = sb;
-            _font = FontSingleton.ContentFont;
+            _font = FontSingleton.ChakraPetchFont;
             _circleTexSmall = PrimitiveTextureFactory.GetAntiAliasedCircle(_graphicsDevice, HintRadius);
             EventManager.Subscribe<HotKeyHoldCompletedEvent>(OnHotKeyHoldCompleted);
         }
@@ -131,13 +131,8 @@ namespace Crusaders30XX.ECS.Systems
                     Transform = entity.GetComponent<Transform>(),
                 })
                 .Where(item => item.HotKey != null
-                    && item.HotKey.IsActive
                     && item.HotKey.Button == button
-                    && item.UI != null
-                    && item.UI.IsInteractable
-                    && !item.UI.IsHidden
-                    && InputContextResolver.IsMember(item.Entity, contextId)
-                    && IsHotKeyInputAllowed(item.Entity, gameplayBlocked))
+                    && IsHotKeyEligible(item.Entity, item.HotKey, item.UI, contextId, gameplayBlocked))
                 .OrderByDescending(item => item.Transform?.ZOrder ?? 0)
                 .Select(item => item.Entity)
                 .FirstOrDefault();
@@ -150,12 +145,7 @@ namespace Crusaders30XX.ECS.Systems
                 HotKey hotKey = heldEntity.GetComponent<HotKey>();
                 UIElement ui = heldEntity.GetComponent<UIElement>();
                 bool eligible = hotKey != null
-                    && hotKey.IsActive
-                    && ui != null
-                    && ui.IsInteractable
-                    && !ui.IsHidden
-                    && InputContextResolver.IsMember(heldEntity, contextId)
-                    && IsHotKeyInputAllowed(heldEntity, gameplayBlocked)
+                    && IsHotKeyEligible(heldEntity, hotKey, ui, contextId, gameplayBlocked)
                     && IsButtonDown(frame, _holdTracker.GetButton(heldEntity));
                 if (_holdTracker.Advance(
                     heldEntity,
@@ -166,6 +156,17 @@ namespace Crusaders30XX.ECS.Systems
                     EventManager.Publish(new HotKeyHoldCompletedEvent { Entity = heldEntity });
                 }
             }
+        }
+
+        internal static bool IsHotKeyEligible(Entity entity, HotKey hotKey, UIElement ui, string contextId, bool gameplayBlocked)
+        {
+            return hotKey != null
+                && hotKey.IsActive
+                && ui != null
+                && !ui.IsHidden
+                && (ui.IsInteractable || hotKey.AllowWhenNonInteractable)
+                && InputContextResolver.IsMember(entity, contextId)
+                && IsHotKeyInputAllowed(entity, gameplayBlocked);
         }
 
         private static bool IsHotKeyInputAllowed(Entity entity, bool gameplayBlocked)
@@ -276,12 +277,7 @@ namespace Crusaders30XX.ECS.Systems
             var items = EntityManager.GetEntitiesWithComponent<HotKey>()
                 .Select(e => new { E = e, HK = e.GetComponent<HotKey>(), UI = e.GetComponent<UIElement>(), T = e.GetComponent<Transform>() })
                 .Where(x => x.HK != null
-                    && x.HK.IsActive
-                    && x.UI != null
-                    && x.UI.IsInteractable
-                    && !x.UI.IsHidden
-                    && InputContextResolver.IsMember(x.E, contextId)
-                    && IsHotKeyInputAllowed(x.E, gameplayBlocked))
+                    && IsHotKeyEligible(x.E, x.HK, x.UI, contextId, gameplayBlocked))
                 .OrderByDescending(x => x.T?.ZOrder ?? 0)
                 .ToList();
 

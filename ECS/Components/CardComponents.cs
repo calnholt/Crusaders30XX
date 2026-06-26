@@ -754,6 +754,7 @@ namespace Crusaders30XX.ECS.Components
         public Entity ParentEntity { get; set; }
         public HotKeyPosition Position { get; set; } = HotKeyPosition.Below;
         public bool IsActive { get; set; } = true;
+        public bool AllowWhenNonInteractable { get; set; } = false;
     }
 
     public class TutorialInteractionPermitted : IComponent

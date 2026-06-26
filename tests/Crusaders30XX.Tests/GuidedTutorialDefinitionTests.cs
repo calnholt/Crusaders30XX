@@ -143,6 +143,18 @@ public class GuidedTutorialDefinitionTests
 		Assert.Equal("UI_PlayerHudPledge", pledge.targetId);
 	}
 
+	[Theory]
+	[InlineData("top", HotKeyPosition.Top)]
+	[InlineData("bottom", HotKeyPosition.Below)]
+	[InlineData("left", HotKeyPosition.Left)]
+	[InlineData("right", HotKeyPosition.Right)]
+	[InlineData(null, HotKeyPosition.Top)]
+	[InlineData("unknown", HotKeyPosition.Top)]
+	public void Tutorial_bubble_orientation_maps_to_hotkey_position(string orientation, HotKeyPosition expected)
+	{
+		Assert.Equal(expected, TutorialDisplaySystem.MapBubbleOrientationToHotKeyPosition(orientation));
+	}
+
 	[Fact]
 	public void Tutorial_targets_player_hud_health_and_full_hand_bounds()
 	{

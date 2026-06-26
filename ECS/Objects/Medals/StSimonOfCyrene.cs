@@ -10,8 +10,7 @@ namespace Crusaders30XX.ECS.Objects.Medals
         {
             Id = "st_simon_of_cyrene";
             Name = "St. Simon of Cyrene";
-            MaxCount = 3;
-            Text = $"At the start of the next {MaxCount} battles, the enemy gains 1 anathema.";
+            Text = $"At the start of battle, the enemy gains 1 anathema.";
         }
 
         public override void Initialize(EntityManager entityManager, Entity medalEntity)
@@ -21,15 +20,9 @@ namespace Crusaders30XX.ECS.Objects.Medals
             EventManager.Subscribe<ChangeBattlePhaseEvent>(OnChangeBattlePhaseEvent);
         }
 
-        public override void OnAcquire()
-        {
-            CurrentCount = MaxCount;
-        }
-
         private void OnChangeBattlePhaseEvent(ChangeBattlePhaseEvent evt)
         {
             if (evt.Current != SubPhase.StartBattle) return;
-            if (CurrentCount <= 0) return;
             EmitActivateEvent();
         }
 
@@ -41,7 +34,6 @@ namespace Crusaders30XX.ECS.Objects.Medals
                 Type = AppliedPassiveType.Anathema,
                 Delta = 1
             });
-            CurrentCount--;
         }
 
         public override void Dispose()

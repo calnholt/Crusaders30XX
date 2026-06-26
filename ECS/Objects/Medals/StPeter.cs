@@ -13,7 +13,7 @@ namespace Crusaders30XX.ECS.Objects.Medals
         {
             Id = "st_peter";
             Name = "St. Peter the Apostle";
-            MaxCount = 4;
+            MaxCount = 3;
             Text = $"Each time you block with {MaxCount} black cards this quest, draw a random card from your discard pile.";
         }
 
