@@ -70,6 +70,9 @@ public class Game1 : Game
     private NarrativeEventModalDisplaySystem _narrativeEventModalDisplaySystem;
     private CardListModalSystem _cardListModalSystem;
     private HowToPlayOverlaySystem _howToPlayOverlaySystem;
+    private PauseMenuDisplaySystem _pauseMenuDisplaySystem;
+    private PauseMenuSliderDisplaySystem _pauseMenuSliderDisplaySystem;
+    private GameOverOverlayDisplaySystem _gameOverOverlayDisplaySystem;
     private DisplaySnapshotHost _snapshotHost;
     private readonly DisplaySnapshotLaunchOptions _snapshotOptions;
     private readonly TestFightLaunchOptions _testFightOptions;
@@ -198,6 +201,9 @@ public class Game1 : Game
             _world.EntityManager,
             playerInputAdapter);
         _uiInteractionSystem = new UIInteractionSystem(_world.EntityManager);
+        _pauseMenuDisplaySystem = new PauseMenuDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _pauseMenuSliderDisplaySystem = new PauseMenuSliderDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _gameOverOverlayDisplaySystem = new GameOverOverlayDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _tooltipTextDisplaySystem = new TooltipTextDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _hintTooltipDisplaySystem = new HintTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _cardTooltipDisplaySystem = new CardTooltipDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
@@ -245,6 +251,9 @@ public class Game1 : Game
         _world.AddSystem(_playerInputSystem, SystemUpdatePhase.Input);
         _world.AddSystem(_controllerRumbleSystem, SystemUpdatePhase.Input);
         _world.AddSystem(_uiInteractionSystem, SystemUpdatePhase.Interaction);
+        _world.AddSystem(_pauseMenuDisplaySystem);
+        _world.AddSystem(_pauseMenuSliderDisplaySystem);
+        _world.AddSystem(_gameOverOverlayDisplaySystem);
         _world.AddSystem(_tooltipTextDisplaySystem);
         _world.AddSystem(_hintTooltipDisplaySystem);
         _world.AddSystem(_cardTooltipDisplaySystem);
@@ -513,6 +522,8 @@ public class Game1 : Game
         if (_snapshotHost?.IsActive == true)
         {
             _snapshotHost.DrawScene(_spriteBatch);
+            FrameProfiler.Measure("PauseMenuDisplaySystem.Draw.Snapshot", _pauseMenuDisplaySystem.Draw);
+            FrameProfiler.Measure("PauseMenuSliderDisplaySystem.Draw.Snapshot", _pauseMenuSliderDisplaySystem.Draw);
             _spriteBatch.End();
             return;
         }
@@ -611,6 +622,9 @@ public class Game1 : Game
         FrameProfiler.Measure("DebugMenuSystem.Draw", _debugMenuSystem.Draw);
         FrameProfiler.Measure("EntityListOverlaySystem.Draw", _entityListOverlaySystem.Draw);
         FrameProfiler.Measure("DialogDisplaySystem.Draw", _dialogDisplaySystem.Draw);
+        FrameProfiler.Measure("PauseMenuDisplaySystem.Draw", _pauseMenuDisplaySystem.Draw);
+        FrameProfiler.Measure("PauseMenuSliderDisplaySystem.Draw", _pauseMenuSliderDisplaySystem.Draw);
+        FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
         FrameProfiler.Measure("TransitionDisplaySystem.Draw", _transitionDisplaySystem.Draw);
         FrameProfiler.Measure("UIElementBorderDebugSystem.Draw", _uiElementBorderDebugSystem.Draw);
         // Cursor blur trail (additive pass before cursor) — skip in card debug mode

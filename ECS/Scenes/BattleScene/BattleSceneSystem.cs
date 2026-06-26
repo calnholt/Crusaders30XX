@@ -100,7 +100,6 @@ namespace Crusaders30XX.ECS.Systems
 		private PhaseChangeEventSystem _phaseChangeEventSystem;
 		private PayCostOverlaySystem _payCostOverlaySystem;
 		private CantPlayCardMessageSystem _cantPlayCardMessageSystem;
-		private GameOverOverlayDisplaySystem _gameOverOverlayDisplaySystem;
 		private TutorialRetryDisplaySystem _tutorialRetryDisplaySystem;
 		private TestFightFlowSystem _testFightFlowSystem;
 		private WeaponManagementSystem _weaponManagementSystem;
@@ -130,7 +129,6 @@ namespace Crusaders30XX.ECS.Systems
 		private UIElementHighlightSystem _uiElementHighlightSystem;
 		private TribulationManagerSystem _tribulationManagerSystem;
 		private QuestTribulationDisplaySystem _questTribulationDisplaySystem;
-		private QuitCurrentQuestDisplaySystem _quitCurrentQuestDisplaySystem;
 		private MustBeBlockedSystem _mustBeBlockedSystem;
 		private ActiveCharacterIndicatorDisplaySystem _activeCharacterIndicatorDisplaySystem;
 		private TutorialManager _tutorialManager;
@@ -396,8 +394,6 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("BattlePhaseDisplaySystem.Draw", _battlePhaseDisplaySystem.Draw);
 			FrameProfiler.Measure("TestFightHpDisplaySystem.Draw", _testFightHpDisplaySystem.Draw);
 			FrameProfiler.Measure("DamageModificationDisplaySystem.Draw", _damageModificationDisplaySystem.Draw);
-			if (!TestFightRuntime.IsActive) FrameProfiler.Measure("QuitCurrentQuestDisplaySystem.Draw", _quitCurrentQuestDisplaySystem.Draw);
-		if (!TestFightRuntime.IsActive && _gameOverOverlayDisplaySystem != null) FrameProfiler.Measure("GameOverOverlayDisplaySystem.Draw", _gameOverOverlayDisplaySystem.Draw);
 		if (_tutorialRetryDisplaySystem != null) FrameProfiler.Measure("TutorialRetryDisplaySystem.Draw", _tutorialRetryDisplaySystem.Draw);
 		if (_tutorialDisplaySystem != null) FrameProfiler.Measure("TutorialDisplaySystem.Draw", _tutorialDisplaySystem.Draw);
 		}
@@ -710,7 +706,6 @@ namespace Crusaders30XX.ECS.Systems
 			_exhaustOnBlockDisplaySystem = new ExhaustOnBlockDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_payCostOverlaySystem = new PayCostOverlaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_cantPlayCardMessageSystem = new CantPlayCardMessageSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_gameOverOverlayDisplaySystem = new GameOverOverlayDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_tutorialRetryDisplaySystem = new TutorialRetryDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_testFightFlowSystem = new TestFightFlowSystem(_world.EntityManager);
 			_enemyIntentPlanningSystem = new EnemyIntentPlanningSystem(_world.EntityManager);
@@ -758,7 +753,6 @@ namespace Crusaders30XX.ECS.Systems
 			_shackleDisplaySystem = new ShackleDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, shackleTexture);
 			_intimidateDisplaySystem = new IntimidateDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_uiElementHighlightSystem = new UIElementHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_quitCurrentQuestDisplaySystem = new QuitCurrentQuestDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_mustBeBlockedSystem = new MustBeBlockedSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_activeCharacterIndicatorDisplaySystem = new ActiveCharacterIndicatorDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 
@@ -868,7 +862,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_battleStateInfoManagementSystem);
 			_world.AddSystem(_payCostOverlaySystem);
 			_world.AddSystem(_cantPlayCardMessageSystem);
-			_world.AddSystem(_gameOverOverlayDisplaySystem);
 			_world.AddSystem(_testFightFlowSystem);
 			_world.AddSystem(_discardSpecificCardHighlightSystem);
 			_world.AddSystem(_intimidateManagementSystem);
@@ -887,7 +880,6 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_plunderSnatchDisplaySystem);
 			_world.AddSystem(_markManagementSystem);
 			_world.AddSystem(_markDisplaySystem);
-			_world.AddSystem(_quitCurrentQuestDisplaySystem);
 			_world.AddSystem(_mustBeBlockedSystem);
 			_world.AddSystem(_activeCharacterIndicatorDisplaySystem);
 			_world.AddSystem(_bloodshotDisplaySystem);

@@ -14,8 +14,7 @@
     - Music + SFX sliders: horizontal range, 0-100%, Chakra Petch labels
     - Abandon Climb: destructive quit action (returns to hub / ends run)
     - Fonts: TitleFont (New Rocker) for title; ChakraPetchFont for labels/values
-    - Intro: rail clip reveal 0.55s, accent scale 0.5s delay 0.2s, content stagger 0.28-0.5s
-    - Outro: reverse rail clip 0.45s, dim fade 0.35s
+    - Panel slide + dim fade: 100ms open and close
   */
   :root {
     --black-0: #050505;
@@ -33,8 +32,10 @@
     --slider-fill: #c41e3a;
     --game-w: 1920px;
     --game-h: 1080px;
+    --rail-width: 480px;
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+    --panel-transition-duration: 0.1s;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -143,7 +144,6 @@
     border: 1px solid var(--black-4);
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
     min-height: 320px;
-    cursor: pointer;
   }
 
   .viewport {
@@ -202,6 +202,7 @@
     position: absolute;
     inset: 0;
     z-index: 10;
+    overflow: hidden;
   }
 
   .pause-dim {
@@ -211,11 +212,10 @@
       radial-gradient(ellipse 80% 60% at 18% 50%, rgba(0, 0, 0, 0.35) 0%, transparent 70%),
       rgba(0, 0, 0, 0.65);
     opacity: 0;
-    transition: opacity 0.4s var(--ease-out);
+    transition: opacity var(--panel-transition-duration) var(--ease-out);
     pointer-events: none;
   }
 
-  .pause-root.is-intro .pause-dim,
   .pause-root.is-active .pause-dim {
     opacity: 1;
     pointer-events: auto;
@@ -223,7 +223,7 @@
 
   .pause-root.is-outro .pause-dim {
     opacity: 0;
-    transition-duration: 0.35s;
+    transition-duration: var(--panel-transition-duration);
     transition-timing-function: var(--ease-in);
     pointer-events: none;
   }
@@ -233,25 +233,23 @@
     left: 0;
     top: 0;
     bottom: 0;
-    width: 480px;
+    width: var(--rail-width);
     display: flex;
     flex-direction: column;
     padding: 72px 56px 48px 64px;
-    background: linear-gradient(90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.78) 88%, transparent 100%);
-    clip-path: inset(0 100% 0 0);
-    transition: clip-path 0.55s var(--ease-out);
+    background: rgba(8, 8, 8, 0.92);
+    transform: translateX(-100%);
+    transition: transform var(--panel-transition-duration) var(--ease-out);
     z-index: 12;
-    overflow: hidden;
   }
 
-  .pause-root.is-intro .pause-rail,
   .pause-root.is-active .pause-rail {
-    clip-path: inset(0 0 0 0);
+    transform: translateX(0);
   }
 
   .pause-root.is-outro .pause-rail {
-    clip-path: inset(0 100% 0 0);
-    transition-duration: 0.45s;
+    transform: translateX(-100%);
+    transition-duration: var(--panel-transition-duration);
     transition-timing-function: var(--ease-in);
   }
 
@@ -261,55 +259,18 @@
     top: 80px;
     bottom: 80px;
     width: 3px;
-    background: linear-gradient(to bottom, transparent, var(--red-3) 12%, var(--red-3) 88%, transparent);
-    transform: scaleY(0);
-    transform-origin: center center;
-    transition: transform 0.5s var(--ease-out) 0.2s;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(255, 70, 90, 0.5) 5%,
+      #ff4d62 10%,
+      #ff4d62 90%,
+      rgba(255, 70, 90, 0.5) 95%,
+      transparent 100%
+    );
+    box-shadow: 0 0 14px rgba(255, 55, 80, 0.9);
+    pointer-events: none;
   }
-
-  .pause-root.is-intro .pause-rail-accent,
-  .pause-root.is-active .pause-rail-accent {
-    transform: scaleY(1);
-  }
-
-  .pause-root.is-outro .pause-rail-accent {
-    transform: scaleY(0);
-    transition-delay: 0s;
-    transition-duration: 0.35s;
-    transition-timing-function: var(--ease-in);
-  }
-
-  .rail-reveal {
-    opacity: 0;
-    transform: translateX(-28px);
-    transition:
-      opacity 0.42s var(--ease-out),
-      transform 0.42s var(--ease-out);
-  }
-
-  .pause-root.is-intro .rail-reveal,
-  .pause-root.is-active .rail-reveal {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  .pause-root.is-outro .rail-reveal {
-    opacity: 0;
-    transform: translateX(-20px);
-    transition-duration: 0.28s;
-    transition-timing-function: var(--ease-in);
-    transition-delay: 0s;
-  }
-
-  .rail-reveal-title { transition-delay: 0.18s; }
-  .rail-reveal-sub   { transition-delay: 0.26s; }
-  .rail-reveal-sliders { transition-delay: 0.34s; }
-  .rail-reveal-footer  { transition-delay: 0.42s; }
-
-  .pause-root.is-outro .rail-reveal-title { transition-delay: 0.06s; }
-  .pause-root.is-outro .rail-reveal-sub   { transition-delay: 0.03s; }
-  .pause-root.is-outro .rail-reveal-sliders,
-  .pause-root.is-outro .rail-reveal-footer { transition-delay: 0s; }
 
   .pause-title {
     font-family: 'New Rocker', cursive;
@@ -462,44 +423,33 @@
     width: 100%;
   }
 
-  .btn-abandon {
-    width: 100%;
-    height: 52px;
-    padding: 0 20px 0 20px;
-    background: transparent;
-    border: 1px solid rgba(196, 30, 58, 0.5);
-    color: var(--red-3);
+  /* Matches run-setup / waystation .btn-choice (weapon + difficulty) */
+  .btn-choice {
+    min-width: 120px;
+    min-height: 52px;
+    padding: 12px 20px;
+    background: var(--black-3);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: var(--white-2);
     font-family: 'Chakra Petch', sans-serif;
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-align: left;
+    letter-spacing: 1px;
+    text-transform: capitalize;
     cursor: pointer;
-    position: relative;
-    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, padding-left 0.15s;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s;
   }
 
-  .btn-abandon::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 0;
-    background: var(--red-3);
-    transition: height 0.15s;
+  .pause-footer .btn-choice {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .btn-abandon:hover::before { height: 70%; }
-
-  .btn-abandon:hover {
-    border-color: var(--red-3);
+  .btn-choice:hover {
+    border-color: var(--white-1);
     color: var(--white-1);
-    background: rgba(160, 0, 0, 0.2);
-    padding-left: 28px;
-    box-shadow: 0 0 20px var(--red-glow);
   }
 
   .idle-overlay {
@@ -513,7 +463,6 @@
     transition: opacity 0.35s;
   }
 
-  .pause-root.is-intro .idle-overlay,
   .pause-root.is-active .idle-overlay,
   .pause-root.is-outro .idle-overlay {
     opacity: 0;
@@ -552,7 +501,7 @@
     pointer-events: none;
     z-index: 11;
     opacity: 0;
-    transition: opacity 0.4s var(--ease-out) 0.45s;
+    transition: opacity var(--panel-transition-duration) var(--ease-out);
   }
 
   .pause-root.is-active .resume-hint {
@@ -582,11 +531,11 @@
     <button type="button" class="action-btn is-primary" id="btn-open">Open Pause</button>
     <button type="button" class="action-btn" id="btn-close">Close Pause</button>
     <button type="button" class="action-btn" id="btn-replay">Replay Intro</button>
-    <span class="hint">Click scene when idle to open | Esc toggles in-game</span>
+    <span class="hint">Open Pause / Close Pause or Esc to toggle</span>
   </div>
 
   <p class="design-desc">
-    Rail reveals via clip-path from the left; red accent scales in; title, sliders, and abandon button stagger in with a slight slide.
+    Rail slides in from the left via translateX; title, sliders, accent, and abandon button move with the panel.
     Outro reverses the rail clip and fades the dim. Matches dialog-overlay cinematic rail language.
   </p>
 
@@ -602,12 +551,12 @@
         <div class="pause-dim"></div>
 
         <div class="pause-rail">
-          <div class="pause-rail-accent"></div>
+          <div class="pause-rail-accent" aria-hidden="true"></div>
 
-          <h2 class="pause-title rail-reveal rail-reveal-title">Paused</h2>
-          <p class="pause-sub rail-reveal rail-reveal-sub">Audio settings</p>
+          <h2 class="pause-title">Paused</h2>
+          <p class="pause-sub">Audio settings</p>
 
-          <div class="pause-sliders rail-reveal rail-reveal-sliders">
+          <div class="pause-sliders">
             <div class="slider-row">
               <div class="slider-header">
                 <span class="slider-label">Music</span>
@@ -632,8 +581,8 @@
             </div>
           </div>
 
-          <div class="pause-footer rail-reveal rail-reveal-footer">
-            <button type="button" class="btn-abandon" id="btn-abandon">Abandon Climb</button>
+          <div class="pause-footer">
+            <button type="button" class="btn-choice" id="btn-abandon">Abandon Climb</button>
           </div>
         </div>
 
@@ -641,8 +590,8 @@
 
         <div class="idle-overlay">
           <div class="idle-card">
-            <h2>Click to pause</h2>
-            <p>Side rail slides in from the left</p>
+            <h2>Paused</h2>
+            <p>Use Open Pause or Esc to show the menu</p>
           </div>
         </div>
       </div>
@@ -657,18 +606,16 @@
 <script>
   const GAME_W = 1920;
   const GAME_H = 1080;
-  const INTRO_MS = 580;
-  const OUTRO_MS = 480;
+  const OUTRO_MS = 130;
 
   let state = 'idle';
-  let introTimer = null;
   let outroTimer = null;
 
   const root = document.getElementById('pause-root');
   const statusBar = document.getElementById('status-bar');
-  const scaler = document.getElementById('scaler');
 
   function fitViewport() {
+    const scaler = document.getElementById('scaler');
     const vp = document.querySelector('.viewport');
     if (!scaler || !vp) return;
     const scale = scaler.clientWidth / GAME_W;
@@ -678,24 +625,19 @@
 
   function setState(next) {
     state = next;
-    root.classList.remove('is-idle', 'is-intro', 'is-active', 'is-outro');
+    root.classList.remove('is-idle', 'is-active', 'is-outro');
     root.classList.add(`is-${next}`);
     statusBar.innerHTML = `State: <strong>${next}</strong>`;
   }
 
   function clearTimers() {
-    if (introTimer) { clearTimeout(introTimer); introTimer = null; }
     if (outroTimer) { clearTimeout(outroTimer); outroTimer = null; }
   }
 
   function openPause() {
-    if (state === 'intro' || state === 'active') return;
+    if (state === 'active') return;
     clearTimers();
-    setState('intro');
-    introTimer = setTimeout(() => {
-      if (state === 'intro') setState('active');
-      introTimer = null;
-    }, INTRO_MS);
+    setState('active');
   }
 
   function closePause() {
@@ -737,11 +679,6 @@
   document.getElementById('btn-abandon').addEventListener('click', (e) => {
     e.stopPropagation();
     alert('Abandon Climb: quit run and return to hub.');
-  });
-
-  scaler.addEventListener('click', () => {
-    if (state === 'idle') openPause();
-    else if (state === 'active') closePause();
   });
 
   document.addEventListener('keydown', (e) => {
