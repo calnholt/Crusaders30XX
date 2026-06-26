@@ -5,6 +5,7 @@ using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -21,6 +22,9 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly Texture2D _pixel;
 		private readonly Dictionary<string, Texture2D> _textureCache = new();
 		private float _vanishPreviewAlpha;
+		private Vector2 _cursorPos;
+		private Vector2 _portraitParallaxOffset;
+		private bool _hasCursorPos;
 
 		[DebugEditable(DisplayName = "Columns Top", Step = 1, Min = 80, Max = 300)]
 		public int ColumnsTop { get; set; } = 114;
@@ -60,6 +64,16 @@ namespace Crusaders30XX.ECS.Systems
 		public int PortraitRegionHeight { get; set; } = 172;
 		[DebugEditable(DisplayName = "Portrait Crop Top Bias", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float PortraitCropTopBias { get; set; } = 0.07f;
+		[DebugEditable(DisplayName = "Portrait Parallax Multiplier X", Step = 0.01f, Min = 0f, Max = 0.25f)]
+		public float PortraitParallaxMultiplierX { get; set; } = 0.01f;
+		[DebugEditable(DisplayName = "Portrait Parallax Multiplier Y", Step = 0.01f, Min = 0f, Max = 0.25f)]
+		public float PortraitParallaxMultiplierY { get; set; } = 0.01f;
+		[DebugEditable(DisplayName = "Portrait Parallax Max Offset", Step = 1, Min = 0, Max = 160)]
+		public int PortraitParallaxMaxOffset { get; set; } = 151;
+		[DebugEditable(DisplayName = "Portrait Parallax Smooth Time", Step = 0.01f, Min = 0f, Max = 0.5f)]
+		public float PortraitParallaxSmoothTime { get; set; } = 0f;
+		[DebugEditable(DisplayName = "Portrait Parallax Zoom", Step = 0.01f, Min = 1f, Max = 1.5f)]
+		public float PortraitParallaxZoom { get; set; } = 1.10f;
 		[DebugEditable(DisplayName = "Encounter Background Dim Alpha", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float EncounterBackgroundDimAlpha { get; set; } = 0.28f;
 		[DebugEditable(DisplayName = "Meta Block Min Height", Step = 1, Min = 20, Max = 100)]
@@ -228,6 +242,7 @@ namespace Crusaders30XX.ECS.Systems
 			_pixel = new Texture2D(graphicsDevice, 1, 1);
 			_pixel.SetData(new[] { Color.White });
 			ClimbSceneDrawHelpers.EnsureHourglassTextures(content);
+			EventManager.Subscribe<CursorStateEvent>(OnCursorState);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -239,9 +254,16 @@ namespace Crusaders30XX.ECS.Systems
 		{
 		}
 
+		private void OnCursorState(CursorStateEvent evt)
+		{
+			_cursorPos = evt.Position;
+			_hasCursorPos = true;
+		}
+
 		public override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
+			UpdatePortraitParallax(gameTime);
 			ColumnsTopValue = ColumnsTop;
 			ColumnsMaxWidthValue = ColumnsMaxWidth;
 			ColumnsGapValue = ColumnsGap;
@@ -267,6 +289,25 @@ namespace Crusaders30XX.ECS.Systems
 					}
 				}
 			}
+		}
+
+		private void UpdatePortraitParallax(GameTime gameTime)
+		{
+			Vector2 target = Vector2.Zero;
+			if (_hasCursorPos)
+			{
+				var center = new Vector2(Game1.VirtualWidth / 2f, Game1.VirtualHeight / 2f);
+				Vector2 delta = center - _cursorPos;
+				target = new Vector2(
+					delta.X * PortraitParallaxMultiplierX,
+					delta.Y * PortraitParallaxMultiplierY);
+				target = ClampMagnitude(target, Math.Max(0f, PortraitParallaxMaxOffset));
+			}
+
+			float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+			float smooth = Math.Max(0f, PortraitParallaxSmoothTime);
+			float alpha = smooth <= 0f ? 1f : 1f - (float)Math.Exp(-dt / smooth);
+			_portraitParallaxOffset = Vector2.Lerp(_portraitParallaxOffset, target, MathHelper.Clamp(alpha, 0f, 1f));
 		}
 
 		public void Draw()
@@ -447,7 +488,7 @@ namespace Crusaders30XX.ECS.Systems
 			var texture = GetTexture(slot.PortraitAsset);
 			if (texture != null)
 			{
-				ClimbSceneDrawHelpers.DrawPortraitCropped(_spriteBatch, texture, portrait, PortraitCropTopBias);
+				DrawParallaxPortrait(texture, portrait);
 			}
 			else
 			{
@@ -477,7 +518,7 @@ namespace Crusaders30XX.ECS.Systems
 				var texture = GetTexture(slot.PortraitAsset);
 				if (texture != null)
 				{
-					ClimbSceneDrawHelpers.DrawPortraitCropped(_spriteBatch, texture, portrait, PortraitCropTopBias);
+					DrawParallaxPortrait(texture, portrait);
 				}
 				else
 				{
@@ -515,6 +556,17 @@ namespace Crusaders30XX.ECS.Systems
 		private Rectangle GetPortraitRegion(Rectangle rect)
 		{
 			return new Rectangle(rect.X, rect.Y, rect.Width, PortraitRegionHeight);
+		}
+
+		private void DrawParallaxPortrait(Texture2D texture, Rectangle portrait)
+		{
+			ClimbSceneDrawHelpers.DrawPortraitCropped(
+				_spriteBatch,
+				texture,
+				portrait,
+				PortraitCropTopBias,
+				_portraitParallaxOffset,
+				PortraitParallaxZoom);
 		}
 
 		private void DrawCharacterRewardMetaBlock(Rectangle rect, string line1, string line2)
@@ -742,6 +794,13 @@ namespace Crusaders30XX.ECS.Systems
 			if (slot == null || slot.Duration <= 0) return 0;
 			int expiresAt = slot.GeneratedAtTime + slot.Duration;
 			return Math.Clamp(expiresAt - ClimbRuleService.ClampTime(time), 0, slot.Duration);
+		}
+
+		private static Vector2 ClampMagnitude(Vector2 value, float maxLength)
+		{
+			float length = value.Length();
+			if (length <= maxLength || length <= 0f) return value;
+			return value * (maxLength / length);
 		}
 
 		private void UpdateVanishPreviewFade(GameTime gameTime)

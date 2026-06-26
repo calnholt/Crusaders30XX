@@ -285,6 +285,33 @@ namespace Crusaders30XX.ECS.Systems
 			spriteBatch.Draw(texture, dest, source, Color.White);
 		}
 
+		public static void DrawPortraitCropped(
+			SpriteBatch spriteBatch,
+			Texture2D texture,
+			Rectangle dest,
+			float topCenterBias,
+			Vector2 parallaxOffset,
+			float zoom)
+		{
+			if (texture == null || dest.Width <= 0 || dest.Height <= 0) return;
+
+			zoom = Math.Max(1f, zoom);
+			float scale = Math.Max(dest.Width / (float)texture.Width, dest.Height / (float)texture.Height) * zoom;
+			int srcW = Math.Min(texture.Width, (int)Math.Ceiling(dest.Width / scale));
+			int srcH = Math.Min(texture.Height, (int)Math.Ceiling(dest.Height / scale));
+			float sourcePerScreenPixel = 1f / scale;
+
+			int centeredX = (texture.Width - srcW) / 2;
+			int biasedY = (int)MathHelper.Clamp(texture.Height * topCenterBias, 0, Math.Max(0, texture.Height - srcH));
+			int srcX = (int)Math.Round(centeredX - parallaxOffset.X * sourcePerScreenPixel);
+			int srcY = (int)Math.Round(biasedY - parallaxOffset.Y * sourcePerScreenPixel);
+			srcX = (int)MathHelper.Clamp(srcX, 0, Math.Max(0, texture.Width - srcW));
+			srcY = (int)MathHelper.Clamp(srcY, 0, Math.Max(0, texture.Height - srcH));
+
+			var source = new Rectangle(srcX, srcY, srcW, srcH);
+			spriteBatch.Draw(texture, dest, source, Color.White);
+		}
+
 		public static void DrawHourglassIcon(
 			SpriteBatch spriteBatch,
 			Rectangle dest,
