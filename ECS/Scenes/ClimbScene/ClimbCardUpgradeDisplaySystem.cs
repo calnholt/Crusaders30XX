@@ -4,6 +4,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Services;
@@ -26,12 +27,35 @@ namespace Crusaders30XX.ECS.Systems
 			Exit,
 		}
 
+		private enum ClimbCardAnimMode
+		{
+			Upgrade,
+			Mutation,
+		}
+
+		private class CardAnimRequest
+		{
+			public ClimbCardAnimMode Mode;
+			public string BaseCardKey = string.Empty;
+			public string UpgradedCardKey = string.Empty;
+			public string DeckEntryId = string.Empty;
+			public string MutationCardKey = string.Empty;
+			public string RestrictionName = string.Empty;
+			public List<string> CurrentRestrictionNames = new List<string>();
+			public bool TransitionToBattleOnComplete;
+		}
+
 		private class UpgradeAnim
 		{
+			public ClimbCardAnimMode Mode;
 			public Entity BaseCard;
 			public Entity UpgradedCard;
 			public bool HasSwapped;
 			public bool PulseTriggered;
+			public bool MutationPersisted;
+			public string DeckEntryId = string.Empty;
+			public string RestrictionName = string.Empty;
+			public bool TransitionToBattleOnComplete;
 			public UpgradeAnimStage Stage = UpgradeAnimStage.Enter;
 			public float EnterElapsed;
 			public float PulseElapsed;
@@ -43,7 +67,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
-		private readonly Queue<ClimbCardUpgradeAnimationRequested> _queue = new Queue<ClimbCardUpgradeAnimationRequested>();
+		private readonly Queue<CardAnimRequest> _queue = new Queue<CardAnimRequest>();
 		private UpgradeAnim _active;
 		private Entity _anchor;
 		private bool _inputBlockedByThisSystem;
@@ -105,6 +129,7 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = graphicsDevice;
 			_spriteBatch = spriteBatch;
 			EventManager.Subscribe<ClimbCardUpgradeAnimationRequested>(OnAnimationRequested);
+			EventManager.Subscribe<ClimbCardMutationAnimationRequested>(OnMutationAnimationRequested);
 			EventManager.Subscribe<DeleteCachesEvent>(_ => ClearAll());
 		}
 
@@ -135,6 +160,7 @@ namespace Crusaders30XX.ECS.Systems
 					TrySwapAtPulsePeak(_active);
 					if (_active.PulseElapsed >= Math.Max(0.01f, PulseDurationSeconds))
 					{
+						EnsureSwapped(_active);
 						_active.Stage = UpgradeAnimStage.Hold;
 						_active.HoldElapsed = 0f;
 					}
@@ -230,7 +256,35 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
-			_queue.Enqueue(evt);
+			_queue.Enqueue(new CardAnimRequest
+			{
+				Mode = ClimbCardAnimMode.Upgrade,
+				BaseCardKey = evt.BaseCardKey,
+				UpgradedCardKey = evt.UpgradedCardKey,
+			});
+			if (_active == null) TryStartNext();
+		}
+
+		private void OnMutationAnimationRequested(ClimbCardMutationAnimationRequested evt)
+		{
+			if (!IsClimbScene()) return;
+			if (evt == null
+				|| string.IsNullOrWhiteSpace(evt.DeckEntryId)
+				|| string.IsNullOrWhiteSpace(evt.CardKey)
+				|| string.IsNullOrWhiteSpace(evt.RestrictionName))
+			{
+				return;
+			}
+
+			_queue.Enqueue(new CardAnimRequest
+			{
+				Mode = ClimbCardAnimMode.Mutation,
+				DeckEntryId = evt.DeckEntryId,
+				MutationCardKey = evt.CardKey,
+				RestrictionName = evt.RestrictionName,
+				CurrentRestrictionNames = evt.CurrentRestrictionNames ?? new List<string>(),
+				TransitionToBattleOnComplete = evt.TransitionToBattleOnComplete,
+			});
 			if (_active == null) TryStartNext();
 		}
 
@@ -239,8 +293,8 @@ namespace Crusaders30XX.ECS.Systems
 			if (_active != null || _queue.Count == 0) return;
 
 			var request = _queue.Dequeue();
-			var baseCard = CreateDisplayCard(request.BaseCardKey);
-			var upgradedCard = CreateDisplayCard(request.UpgradedCardKey);
+			var baseCard = CreateBaseDisplayCard(request);
+			var upgradedCard = CreateFinalDisplayCard(request);
 			if (baseCard == null || upgradedCard == null)
 			{
 				DestroyDisplayCard(baseCard);
@@ -254,8 +308,12 @@ namespace Crusaders30XX.ECS.Systems
 
 			_active = new UpgradeAnim
 			{
+				Mode = request.Mode,
 				BaseCard = baseCard,
 				UpgradedCard = upgradedCard,
+				DeckEntryId = request.DeckEntryId,
+				RestrictionName = request.RestrictionName,
+				TransitionToBattleOnComplete = request.TransitionToBattleOnComplete,
 				Stage = UpgradeAnimStage.Enter,
 			};
 
@@ -264,8 +322,10 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void CompleteActiveAnimation()
 		{
+			bool transitionToBattle = false;
 			if (_active != null)
 			{
+				transitionToBattle = _active.TransitionToBattleOnComplete;
 				DestroyDisplayCard(_active.BaseCard);
 				DestroyDisplayCard(_active.UpgradedCard);
 				_active = null;
@@ -278,6 +338,10 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			UnblockInput();
+			if (transitionToBattle)
+			{
+				EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
+			}
 		}
 
 		private void ClearAll()
@@ -337,10 +401,52 @@ namespace Crusaders30XX.ECS.Systems
 			if (s > 0.95f && env > 0.25f)
 			{
 				anim.HasSwapped = true;
+				PersistMutationIfNeeded(anim);
 			}
 		}
 
-		private Entity CreateDisplayCard(string cardKey)
+		private void EnsureSwapped(UpgradeAnim anim)
+		{
+			if (anim == null || anim.HasSwapped) return;
+			anim.HasSwapped = true;
+			PersistMutationIfNeeded(anim);
+		}
+
+		private void PersistMutationIfNeeded(UpgradeAnim anim)
+		{
+			if (anim == null || anim.Mode != ClimbCardAnimMode.Mutation || anim.MutationPersisted) return;
+			anim.MutationPersisted = true;
+			if (SaveCache.AddRunDeckEntryRestriction(
+				RunDeckService.PrimaryLoadoutId,
+				anim.DeckEntryId,
+				anim.RestrictionName))
+			{
+				RunDeckService.EnsureRunDeck(EntityManager);
+			}
+		}
+
+		private Entity CreateBaseDisplayCard(CardAnimRequest request)
+		{
+			if (request == null) return null;
+			return request.Mode == ClimbCardAnimMode.Mutation
+				? CreateDisplayCard(request.MutationCardKey, request.CurrentRestrictionNames)
+				: CreateDisplayCard(request.BaseCardKey);
+		}
+
+		private Entity CreateFinalDisplayCard(CardAnimRequest request)
+		{
+			if (request == null) return null;
+			if (request.Mode != ClimbCardAnimMode.Mutation)
+			{
+				return CreateDisplayCard(request.UpgradedCardKey);
+			}
+
+			var restrictions = new List<string>(request.CurrentRestrictionNames ?? new List<string>());
+			AddRestriction(restrictions, request.RestrictionName);
+			return CreateDisplayCard(request.MutationCardKey, restrictions);
+		}
+
+		private Entity CreateDisplayCard(string cardKey, IReadOnlyList<string> restrictionNames = null)
 		{
 			if (!RunDeckService.TryParseCardKey(cardKey, out var cardId, out var color, out var isUpgraded)) return null;
 			var entity = EntityFactory.CreateCardFromDefinition(
@@ -359,7 +465,42 @@ namespace Crusaders30XX.ECS.Systems
 				ui.TooltipType = TooltipType.None;
 			}
 
+			ApplyRestrictions(entity, restrictionNames);
 			return entity;
+		}
+
+		private void ApplyRestrictions(Entity card, IReadOnlyList<string> restrictionNames)
+		{
+			foreach (var restriction in restrictionNames ?? new List<string>())
+			{
+				switch (restriction)
+				{
+					case RunScopedStateService.RestrictionFrozen:
+						if (!card.HasComponent<Frozen>()) EntityManager.AddComponent(card, new Frozen { Owner = card });
+						break;
+					case RunScopedStateService.RestrictionBrittle:
+						if (!card.HasComponent<Brittle>()) EntityManager.AddComponent(card, new Brittle { Owner = card });
+						break;
+					case RunScopedStateService.RestrictionScorched:
+						if (!card.HasComponent<Scorched>()) EntityManager.AddComponent(card, new Scorched { Owner = card });
+						break;
+					case RunScopedStateService.RestrictionThorned:
+						if (!card.HasComponent<Thorned>()) EntityManager.AddComponent(card, new Thorned { Owner = card });
+						break;
+					case RunScopedStateService.RestrictionColorless:
+						if (!card.HasComponent<Colorless>()) EntityManager.AddComponent(card, new Colorless { Owner = card });
+						break;
+				}
+			}
+		}
+
+		private static void AddRestriction(List<string> restrictions, string restriction)
+		{
+			if (restrictions == null || string.IsNullOrWhiteSpace(restriction)) return;
+			if (!restrictions.Contains(restriction, StringComparer.OrdinalIgnoreCase))
+			{
+				restrictions.Add(restriction);
+			}
 		}
 
 		private void DestroyDisplayCard(Entity card)

@@ -1005,7 +1005,7 @@ namespace Crusaders30XX.ECS.Data.Save
 				slot.status = ClimbEventStatus.Completed;
 				climb.pendingEvent = null;
 				int previousTime = climb.time;
-				ClimbRuleService.ApplyTime(climb, 1);
+				int appliedTime = ClimbRuleService.ApplyTime(climb, 1);
 				EnsurePrimaryLoadout(_save);
 				var primaryLoadout = _save.loadouts.First(loadout => loadout.id == RunDeckService.PrimaryLoadoutId);
 				if (ClimbRuleService.ShouldRefreshShopAtTime(previousTime, climb.time))
@@ -1013,7 +1013,11 @@ namespace Crusaders30XX.ECS.Data.Save
 					ClimbRuleService.RefreshShopSlots(climb, _save.runMapSeed, primaryLoadout);
 				}
 				ClimbRuleService.UpdateEventLifecycle(climb);
-				ClimbRuleService.ReplenishEncounterSlots(climb, _save.runMapSeed);
+				ClimbRuleService.ReplenishEncounterSlots(climb, _save.runMapSeed, primaryLoadout);
+				if (appliedTime > 0)
+				{
+					ClimbRuleService.RerollEncounterMutationTargets(climb, _save.runMapSeed, primaryLoadout);
+				}
 				bool reachedFinalTime = ClimbRuleService.ClampTime(climb.time) >= ClimbRuleService.MaxTime;
 				if (!Persist())
 				{
@@ -1859,6 +1863,9 @@ namespace Crusaders30XX.ECS.Data.Save
 					hasDeckReward = slot.hasDeckReward,
 					isCompleted = slot.isCompleted,
 					isFinal = slot.isFinal,
+					cardMutationRestrictionName = slot.cardMutationRestrictionName ?? string.Empty,
+					cardMutationDeckEntryId = slot.cardMutationDeckEntryId ?? string.Empty,
+					cardMutationCardKey = slot.cardMutationCardKey ?? string.Empty,
 				});
 			}
 			return clone;

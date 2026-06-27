@@ -58,7 +58,7 @@ public sealed class RewardModalDisplaySystemTests
 	}
 
 	[Fact]
-	public void ApplyDeckRewardPreviewRestrictions_exchange_incoming_card_stays_unrestricted()
+	public void ApplyDeckRewardPreviewRestrictions_exchange_incoming_card_copies_outgoing_restrictions()
 	{
 		var entityManager = new EntityManager();
 		string entryId = SeedRestrictedEntry("smite|White", AllPreviewRestrictions);
@@ -76,7 +76,7 @@ public sealed class RewardModalDisplaySystemTests
 		RewardModalDisplaySystem.ApplyDeckRewardPreviewRestrictions(entityManager, incoming, option, forIncomingCard: true);
 
 		AssertHasAllPreviewRestrictions(outgoing);
-		AssertHasNoPreviewRestrictions(incoming);
+		AssertHasAllPreviewRestrictions(incoming);
 	}
 
 	private static string SeedRestrictedEntry(string cardKey, IEnumerable<string> restrictions)
@@ -122,11 +122,4 @@ public sealed class RewardModalDisplaySystemTests
 		Assert.True(card.HasComponent<Brittle>());
 	}
 
-	private static void AssertHasNoPreviewRestrictions(Entity card)
-	{
-		Assert.NotNull(card);
-		Assert.False(card.HasComponent<Frozen>());
-		Assert.False(card.HasComponent<Sealed>());
-		Assert.False(card.HasComponent<Brittle>());
-	}
 }

@@ -89,6 +89,9 @@ namespace Crusaders30XX.ECS.Data.Save
 		public bool hasDeckReward { get; set; } = true;
 		public bool isCompleted { get; set; }
 		public bool isFinal { get; set; }
+		public string cardMutationRestrictionName { get; set; } = string.Empty;
+		public string cardMutationDeckEntryId { get; set; } = string.Empty;
+		public string cardMutationCardKey { get; set; } = string.Empty;
 	}
 
 	public class ClimbEventSlotSave

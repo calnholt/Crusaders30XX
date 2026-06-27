@@ -445,6 +445,7 @@ namespace Crusaders30XX.ECS.Components
         public CardData.CardColor? CardColor { get; set; }
         public bool IsUpgraded { get; set; }
         public bool CrossfadeUpgradePreview { get; set; }
+        public List<string> PreviewRestrictionNames { get; set; } = new();
     }
 
     /// <summary>

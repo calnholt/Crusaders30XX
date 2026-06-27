@@ -53,6 +53,8 @@ namespace Crusaders30XX.ECS.Systems
 
         private void ProcessHotKeyClick(Entity entity)
         {
+            if (GameOverOverlayDisplaySystem.IsOverlayActive(EntityManager)) return;
+
             var ui = entity.GetComponent<UIElement>();
             var hotKey = entity.GetComponent<HotKey>();
 
@@ -92,6 +94,15 @@ namespace Crusaders30XX.ECS.Systems
         protected override void UpdateEntity(Entity entity, GameTime gameTime)
         {
             if (!Game1.WindowIsActive || StateSingleton.IsActive) return;
+            if (GameOverOverlayDisplaySystem.IsOverlayActive(EntityManager))
+            {
+                foreach (Entity heldEntity in _holdTracker.Progress.Keys.ToList())
+                {
+                    _holdTracker.Cancel(heldEntity);
+                }
+                return;
+            }
+
             PlayerInputFrame frame = PlayerInputService.GetFrame(EntityManager);
             string contextId = InputContextResolver.ResolveCommandContext(EntityManager);
             bool gameplayBlocked = StateSingleton.PreventClicking
@@ -268,6 +279,8 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
+            if (GameOverOverlayDisplaySystem.IsOverlayActive(EntityManager)) return;
+
             PlayerInputFrame frame = PlayerInputService.GetFrame(EntityManager);
             bool gamepadConnected = frame.IsGamepadConnected;
             string contextId = InputContextResolver.ResolveCommandContext(EntityManager);

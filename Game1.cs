@@ -299,6 +299,7 @@ public class Game1 : Game
         _world.AddComponent(howToPlayEntity, new DontDestroyOnLoad());
         _world.AddSystem(new RunDeckLifecycleSystem(_world.EntityManager));
         _world.AddSystem(new ClimbEventSystem(_world.EntityManager));
+        _world.AddSystem(new ClimbEncounterSystem(_world.EntityManager));
         // Global music manager
         _world.AddSystem(new MusicManagerSystem(_world.EntityManager, Content));
         // Global sound effect manager

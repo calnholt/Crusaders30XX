@@ -129,12 +129,12 @@ namespace Crusaders30XX.ECS.Systems
 			var center = new Vector2(rx + w / 2f, ry + (h / 2f + offsetY));
 
 			var color = top.CT.CardColor ?? top.CD?.Color ?? CardData.CardColor.White;
-			bool isColorless = top.E.HasComponent<Colorless>();
+			var previewRestrictions = BuildPreviewRestrictions(top.CT, top.E);
 
 			if (top.CT.CrossfadeUpgradePreview)
 			{
-				var baseCard = GetOrCreateTooltipCard(top.CT.CardId, color, isUpgraded: false, isColorless);
-				var upgradedCard = GetOrCreateTooltipCard(top.CT.CardId, color, isUpgraded: true, isColorless);
+				var baseCard = GetOrCreateTooltipCard(top.CT.CardId, color, isUpgraded: false, previewRestrictions);
+				var upgradedCard = GetOrCreateTooltipCard(top.CT.CardId, color, isUpgraded: true, previewRestrictions);
 				if (baseCard == null || upgradedCard == null) return;
 
 				// Draw base card always at full opacity underneath
@@ -163,15 +163,20 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
-			var cardEntity = GetOrCreateTooltipCard(top.CT.CardId, color, top.CT.IsUpgraded, isColorless);
+			var cardEntity = GetOrCreateTooltipCard(top.CT.CardId, color, top.CT.IsUpgraded, previewRestrictions);
 			if (cardEntity == null) return;
 
 			EventManager.Publish(new CardRenderScaledEvent { Card = cardEntity, Position = center, Scale = top.CT.TooltipScale });
 		}
 
-		private Entity GetOrCreateTooltipCard(string cardId, CardData.CardColor color, bool isUpgraded, bool isColorless)
+		private Entity GetOrCreateTooltipCard(
+			string cardId,
+			CardData.CardColor color,
+			bool isUpgraded,
+			IReadOnlyList<string> previewRestrictions)
 		{
-			var key = cardId + "|" + color + (isUpgraded ? "|upgraded" : "") + (isColorless ? "|colorless" : "");
+			var restrictionKey = string.Join(",", NormalizeRestrictions(previewRestrictions));
+			var key = cardId + "|" + color + (isUpgraded ? "|upgraded" : "") + "|" + restrictionKey;
 			if (!_tooltipCardCache.TryGetValue(key, out var cardEntity) || cardEntity == null)
 			{
 				cardEntity = ECS.Factories.EntityFactory.CreateCardFromDefinition(EntityManager, cardId, color, allowWeapons: true, index: 0, isUpgraded: isUpgraded);
@@ -183,14 +188,73 @@ namespace Crusaders30XX.ECS.Systems
 						ui.IsInteractable = false;
 						ui.TooltipType = TooltipType.None;
 					}
-					if (isColorless)
-					{
-						EntityManager.AddComponent(cardEntity, new Colorless { Owner = cardEntity });
-					}
+					ApplyPreviewRestrictions(cardEntity, previewRestrictions);
 					_tooltipCardCache[key] = cardEntity;
 				}
 			}
 			return cardEntity;
+		}
+
+		private static IReadOnlyList<string> BuildPreviewRestrictions(CardTooltip tooltip, Entity sourceEntity)
+		{
+			var restrictions = new List<string>();
+			foreach (var restriction in tooltip?.PreviewRestrictionNames ?? new List<string>())
+			{
+				AddRestriction(restrictions, restriction);
+			}
+
+			if (sourceEntity?.HasComponent<Colorless>() == true)
+			{
+				AddRestriction(restrictions, RunScopedStateService.RestrictionColorless);
+			}
+
+			return NormalizeRestrictions(restrictions);
+		}
+
+		private void ApplyPreviewRestrictions(Entity cardEntity, IReadOnlyList<string> restrictions)
+		{
+			foreach (var restriction in NormalizeRestrictions(restrictions))
+			{
+				switch (restriction)
+				{
+					case RunScopedStateService.RestrictionFrozen:
+						EntityManager.AddComponent(cardEntity, new Frozen { Owner = cardEntity });
+						break;
+					case RunScopedStateService.RestrictionBrittle:
+						EntityManager.AddComponent(cardEntity, new Brittle { Owner = cardEntity });
+						break;
+					case RunScopedStateService.RestrictionScorched:
+						EntityManager.AddComponent(cardEntity, new Scorched { Owner = cardEntity });
+						break;
+					case RunScopedStateService.RestrictionThorned:
+						EntityManager.AddComponent(cardEntity, new Thorned { Owner = cardEntity });
+						break;
+					case RunScopedStateService.RestrictionColorless:
+						EntityManager.AddComponent(cardEntity, new Colorless { Owner = cardEntity });
+						break;
+				}
+			}
+		}
+
+		private static List<string> NormalizeRestrictions(IReadOnlyList<string> restrictions)
+		{
+			var normalized = new List<string>();
+			foreach (var restriction in restrictions ?? new List<string>())
+			{
+				AddRestriction(normalized, restriction);
+			}
+			return normalized
+				.OrderBy(restriction => restriction, System.StringComparer.OrdinalIgnoreCase)
+				.ToList();
+		}
+
+		private static void AddRestriction(List<string> restrictions, string restriction)
+		{
+			if (restrictions == null || string.IsNullOrWhiteSpace(restriction)) return;
+			if (!restrictions.Contains(restriction, System.StringComparer.OrdinalIgnoreCase))
+			{
+				restrictions.Add(restriction);
+			}
 		}
 
 		private static float ComputePulseAlpha(float phase, float upgradedHoldFrac, float baseHoldFrac)

@@ -35,6 +35,8 @@ namespace Crusaders30XX.ECS.Systems
                 ui.IsClicked = false;
             }
 
+            if (GameOverOverlayDisplaySystem.IsOverlayActive(EntityManager)) return;
+
             PlayerInputState input = EntityManager
                 .GetEntitiesWithComponent<PlayerInputState>()
                 .FirstOrDefault()

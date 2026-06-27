@@ -36,7 +36,104 @@ public class ClimbRuleServiceTests
 			Assert.Contains(slot.enemyId, ClimbRuleService.GetClimbEncounterEnemyPool(), StringComparer.OrdinalIgnoreCase);
 			Assert.Contains(slot.battleLocation, BattleLocationAssetService.ClimbEncounterLocations);
 			Assert.NotEqual(BattleLocation.TheGate, slot.battleLocation);
+			Assert.Equal(ClimbRuleService.GetEncounterMutationRestrictionName(slot.battleLocation), slot.cardMutationRestrictionName);
+			Assert.False(string.IsNullOrWhiteSpace(slot.cardMutationDeckEntryId));
+			Assert.False(string.IsNullOrWhiteSpace(slot.cardMutationCardKey));
 		});
+	}
+
+	[Theory]
+	[InlineData(BattleLocation.Desert, RunScopedStateService.RestrictionBrittle)]
+	[InlineData(BattleLocation.Tundra, RunScopedStateService.RestrictionFrozen)]
+	[InlineData(BattleLocation.Jungle, RunScopedStateService.RestrictionThorned)]
+	[InlineData(BattleLocation.Volcano, RunScopedStateService.RestrictionScorched)]
+	public void Encounter_location_maps_to_card_mutation(BattleLocation location, string expectedRestriction)
+	{
+		Assert.Equal(expectedRestriction, ClimbRuleService.GetEncounterMutationRestrictionName(location));
+	}
+
+	[Fact]
+	public void Encounter_mutation_target_filters_cards_that_already_have_status()
+	{
+		var loadout = TestLoadout();
+		loadout.cards[0].restrictions.Add(RunScopedStateService.RestrictionBrittle);
+		loadout.cards[1].restrictions.Add(RunScopedStateService.RestrictionBrittle);
+		var state = new ClimbSaveState
+		{
+			time = 0,
+			encounterSlots = new List<ClimbEncounterSlotSave>
+			{
+				new()
+				{
+					id = "encounter_a",
+					enemyId = "skeleton",
+					generatedAtTime = 0,
+					duration = 5,
+					timeCost = 1,
+					battleLocation = BattleLocation.Desert,
+				},
+			},
+		};
+
+		Assert.True(ClimbRuleService.EnsureEncounterMutationTargets(state, 123, loadout));
+
+		var slot = state.encounterSlots[0];
+		Assert.Equal(RunScopedStateService.RestrictionBrittle, slot.cardMutationRestrictionName);
+		Assert.Equal(loadout.cards[2].entryId, slot.cardMutationDeckEntryId);
+		Assert.Equal(loadout.cards[2].cardKey, slot.cardMutationCardKey);
+	}
+
+	[Fact]
+	public void Encounter_mutation_target_rerolls_when_time_advances()
+	{
+		bool sawChangedTarget = false;
+		for (int seed = 1; seed <= 50 && !sawChangedTarget; seed++)
+		{
+			var loadout = TestLoadout();
+			var state = ClimbRuleService.CreateInitialState(seed, loadout);
+			var before = state.encounterSlots
+				.Select(slot => $"{slot.id}|{slot.cardMutationDeckEntryId}|{slot.cardMutationCardKey}")
+				.ToList();
+
+			ClimbRuleService.AdvanceTimeAndUpdateSlots(state, seed, loadout, 1);
+
+			var after = state.encounterSlots
+				.Select(slot => $"{slot.id}|{slot.cardMutationDeckEntryId}|{slot.cardMutationCardKey}")
+				.ToList();
+			sawChangedTarget = !before.SequenceEqual(after);
+			Assert.All(state.encounterSlots, slot =>
+			{
+				Assert.Equal(ClimbRuleService.GetEncounterMutationRestrictionName(slot.battleLocation), slot.cardMutationRestrictionName);
+				Assert.False(string.IsNullOrWhiteSpace(slot.cardMutationDeckEntryId));
+				Assert.False(string.IsNullOrWhiteSpace(slot.cardMutationCardKey));
+			});
+		}
+
+		Assert.True(sawChangedTarget);
+	}
+
+	[Fact]
+	public void Encounter_tooltip_preview_uses_current_restrictions_plus_new_restriction()
+	{
+		var entry = new LoadoutCardEntry
+		{
+			entryId = "entry_a",
+			cardKey = "smite|White",
+			restrictions = new List<string>
+			{
+				RunScopedStateService.RestrictionFrozen,
+				RunScopedStateService.RestrictionScorched,
+			},
+		};
+
+		var restrictions = ClimbRuleService.BuildPreviewRestrictionNames(
+			entry,
+			RunScopedStateService.RestrictionThorned);
+
+		Assert.Contains(RunScopedStateService.RestrictionFrozen, restrictions);
+		Assert.Contains(RunScopedStateService.RestrictionScorched, restrictions);
+		Assert.Contains(RunScopedStateService.RestrictionThorned, restrictions);
+		Assert.Equal(3, restrictions.Count);
 	}
 
 	[Fact]

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Objects.Enemies;
@@ -24,6 +25,12 @@ namespace Crusaders30XX.ECS.Services
 		{
 			if (entityManager == null || string.IsNullOrWhiteSpace(encounterSlotId)) return false;
 			var climb = SaveCache.GetClimbState();
+			int seed = SaveCache.GetAll()?.runMapSeed ?? 0;
+			var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
+			if (ClimbRuleService.EnsureEncounterMutationTargets(climb, seed, loadout))
+			{
+				SaveCache.SaveClimbState(climb);
+			}
 			var slot = climb?.encounterSlots?.FirstOrDefault(e =>
 				e != null
 				&& !e.isCompleted
@@ -53,6 +60,11 @@ namespace Crusaders30XX.ECS.Services
 			queued.LocationId = "climb";
 			queued.QuestIndex = 0;
 
+			if (TryPublishMutationAnimation(slot, loadout))
+			{
+				return true;
+			}
+
 			EventManager.Publish(new ShowTransition { Scene = SceneId.Battle });
 			return true;
 		}
@@ -75,16 +87,22 @@ namespace Crusaders30XX.ECS.Services
 			if (slot == null || slot.isCompleted) return result;
 
 			int previousTime = climb.time;
-			ClimbRuleService.ApplyTime(climb, slot.timeCost);
+			int seed = SaveCache.GetAll()?.runMapSeed ?? 0;
+			var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
+			int appliedTime = ClimbRuleService.ApplyTime(climb, slot.timeCost);
 			if (ClimbRuleService.ShouldRefreshShopAtTime(previousTime, climb.time))
 			{
-				ClimbRuleService.RefreshShopSlots(climb, SaveCache.GetAll()?.runMapSeed ?? 0, SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId));
+				ClimbRuleService.RefreshShopSlots(climb, seed, loadout);
 			}
 			ClimbRuleService.AddResources(climb.resources, slot.rewardResources);
 			ClimbRuleService.UpdateEventLifecycle(climb);
 
 			slot.isCompleted = true;
-			ClimbRuleService.ReplenishEncounterSlots(climb, SaveCache.GetAll()?.runMapSeed ?? 0);
+			ClimbRuleService.ReplenishEncounterSlots(climb, seed, loadout);
+			if (appliedTime > 0)
+			{
+				ClimbRuleService.RerollEncounterMutationTargets(climb, seed, loadout);
+			}
 			result.Completed = true;
 			result.EncounterSlotId = slot.id;
 			result.Resources = CloneResources(slot.rewardResources);
@@ -190,6 +208,35 @@ namespace Crusaders30XX.ECS.Services
 				white = Math.Max(0, resources?.white ?? 0),
 				black = Math.Max(0, resources?.black ?? 0),
 			};
+		}
+
+		private static bool TryPublishMutationAnimation(ClimbEncounterSlotSave slot, LoadoutDefinition loadout)
+		{
+			if (slot == null
+				|| string.IsNullOrWhiteSpace(slot.cardMutationDeckEntryId)
+				|| string.IsNullOrWhiteSpace(slot.cardMutationCardKey)
+				|| string.IsNullOrWhiteSpace(slot.cardMutationRestrictionName))
+			{
+				return false;
+			}
+
+			var entry = (loadout?.cards ?? new List<LoadoutCardEntry>())
+				.FirstOrDefault(card => string.Equals(card?.entryId, slot.cardMutationDeckEntryId, StringComparison.Ordinal));
+			if (entry == null) return false;
+			if ((entry.restrictions ?? new List<string>()).Contains(slot.cardMutationRestrictionName, StringComparer.OrdinalIgnoreCase)) return false;
+
+			EventManager.Publish(new ClimbCardMutationAnimationRequested
+			{
+				DeckEntryId = entry.entryId,
+				CardKey = entry.cardKey,
+				RestrictionName = slot.cardMutationRestrictionName,
+				CurrentRestrictionNames = (entry.restrictions ?? new List<string>())
+					.Where(name => !string.IsNullOrWhiteSpace(name))
+					.Distinct(StringComparer.OrdinalIgnoreCase)
+					.ToList(),
+				TransitionToBattleOnComplete = true,
+			});
+			return true;
 		}
 
 		private static DeckRewardOfferSave CloneDeckRewardOffer(DeckRewardOfferSave offer)

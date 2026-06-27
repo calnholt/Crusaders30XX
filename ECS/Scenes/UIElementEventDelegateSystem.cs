@@ -66,7 +66,6 @@ namespace Crusaders30XX.ECS.Systems
                     if (action != null)
                     {
                         EventManager.Publish(new ClimbEncounterSlotSelectedEvent { SlotId = action.SlotId });
-                        ClimbEncounterService.TryQueueEncounter(entityManager, action.SlotId);
                     }
                     break;
                 }

@@ -161,7 +161,7 @@ public class QuestCardRewardServiceTests
 	}
 
 	[Fact]
-	public void ApplyPendingOfferOption_replaces_card_at_same_loadout_position_and_allows_copy_limit_bypass()
+	public void ApplyPendingOfferOption_replaces_card_at_same_loadout_position_inherits_restrictions_and_allows_copy_limit_bypass()
 	{
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.StartNewRun();
@@ -197,7 +197,7 @@ public class QuestCardRewardServiceTests
 		Assert.NotEqual(outgoingEntryId, after[0].entryId);
 		Assert.False(after[0].isStarter);
 		Assert.True(after[0].countsAsTraded);
-		Assert.Empty(after[0].restrictions);
+		Assert.Contains(RunScopedStateService.RestrictionFrozen, after[0].restrictions);
 		Assert.Equal(3, DeckRules.CountCardIdInDeck(after.Select(entry => entry.cardKey).ToList(), "fervor"));
 		Assert.Null(SaveCache.GetPendingDeckRewardOffer());
 	}

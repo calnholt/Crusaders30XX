@@ -76,6 +76,11 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			var climb = SaveCache.GetClimbState();
+			var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
+			if (ClimbRuleService.EnsureEncounterMutationTargets(climb, SaveCache.GetAll()?.runMapSeed ?? 0, loadout))
+			{
+				SaveCache.SaveClimbState(climb);
+			}
 			bool showEvents = climb?.eventSlots?.Any(slot => slot?.status == ClimbEventStatus.Active) == true;
 			var columns = ComputeColumnsLayout(showEvents);
 			SyncColumn(ShopColumnName, ClimbColumnKind.Shop, "Shop", "Spend resources before the shop refreshes", columns.Shop);
@@ -201,6 +206,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (action == null) EntityManager.AddComponent(entity, new ClimbEncounterSlotAction { SlotId = presentation.SlotId });
 			else action.SlotId = presentation.SlotId;
 			SetBounds(entity, rect, !presentation.IsUnavailable, UIElementEventType.ClimbEncounterSlotSelect, SlotZOrderValue);
+			SyncEncounterTooltip(entity, slot, presentation);
 		}
 
 		private void SyncEventSlot(int index, ClimbEventSlotSave slot, Rectangle rect, bool visible)
@@ -318,6 +324,53 @@ namespace Crusaders30XX.ECS.Systems
 
 			RemoveCardTooltip(entity);
 			RemoveEquipmentTooltip(entity);
+		}
+
+		private void SyncEncounterTooltip(Entity entity, ClimbEncounterSlotSave slot, ClimbSlotPresentation presentation)
+		{
+			var ui = entity.GetComponent<UIElement>();
+			if (ui == null) return;
+
+			ui.Tooltip = string.Empty;
+			ui.TooltipType = TooltipType.Text;
+			ui.TooltipPosition = TooltipPosition.Right;
+			ui.TooltipOffsetPx = ShopTooltipOffsetPxValue;
+			RemoveEquipmentTooltip(entity);
+
+			if (slot == null
+				|| presentation.IsUnavailable
+				|| string.IsNullOrWhiteSpace(slot.cardMutationDeckEntryId)
+				|| string.IsNullOrWhiteSpace(slot.cardMutationRestrictionName))
+			{
+				RemoveCardTooltip(entity);
+				return;
+			}
+
+			var entry = SaveCache.GetRunDeckEntry(RunDeckService.PrimaryLoadoutId, slot.cardMutationDeckEntryId);
+			if (entry == null
+				|| (entry.restrictions ?? new List<string>()).Contains(slot.cardMutationRestrictionName, StringComparer.OrdinalIgnoreCase)
+				|| !RunDeckService.TryParseCardKey(entry.cardKey, out var cardId, out var color, out bool isUpgraded))
+			{
+				RemoveCardTooltip(entity);
+				return;
+			}
+
+			var tooltip = entity.GetComponent<CardTooltip>();
+			if (tooltip == null)
+			{
+				tooltip = new CardTooltip();
+				EntityManager.AddComponent(entity, tooltip);
+			}
+
+			tooltip.CardId = cardId;
+			tooltip.CardColor = color;
+			tooltip.IsUpgraded = isUpgraded;
+			tooltip.TooltipScale = 1.0f;
+			tooltip.CrossfadeUpgradePreview = false;
+			tooltip.PreviewRestrictionNames = ClimbRuleService
+				.BuildPreviewRestrictionNames(entry, slot.cardMutationRestrictionName)
+				.ToList();
+			ui.TooltipType = TooltipType.Card;
 		}
 
 		private void RemoveCardTooltip(Entity entity)

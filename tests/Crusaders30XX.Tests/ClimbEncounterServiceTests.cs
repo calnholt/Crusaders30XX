@@ -22,10 +22,12 @@ public class ClimbEncounterServiceTests
 			PrepareRunWithEncounter(timeCost: 3, battleLocation: BattleLocation.Tundra);
 			var world = new World();
 			int battleTransitions = 0;
+			ClimbCardMutationAnimationRequested mutationRequest = null;
 			EventManager.Subscribe<ShowTransition>(evt =>
 			{
 				if (evt.Scene == SceneId.Battle) battleTransitions++;
 			});
+			EventManager.Subscribe<ClimbCardMutationAnimationRequested>(evt => mutationRequest = evt);
 
 			Assert.True(ClimbEncounterService.TryQueueEncounter(world.EntityManager, "encounter_a"));
 
@@ -35,7 +37,37 @@ public class ClimbEncounterServiceTests
 			Assert.Equal(BattleLocation.Tundra, queued.BattleLocation);
 			Assert.Single(queued.Events);
 			Assert.Equal("skeleton", queued.Events[0].EventId);
+			Assert.Equal(0, battleTransitions);
+			Assert.NotNull(mutationRequest);
+			Assert.Equal(RunScopedStateService.RestrictionFrozen, mutationRequest.RestrictionName);
+			Assert.True(mutationRequest.TransitionToBattleOnComplete);
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
+
+	[Fact]
+	public void Queue_encounter_transitions_immediately_when_no_mutation_target_exists()
+	{
+		EventManager.Clear();
+		try
+		{
+			PrepareRunWithEncounter(timeCost: 3, allCardsAlreadyBrittle: true);
+			var world = new World();
+			int battleTransitions = 0;
+			ClimbCardMutationAnimationRequested mutationRequest = null;
+			EventManager.Subscribe<ShowTransition>(evt =>
+			{
+				if (evt.Scene == SceneId.Battle) battleTransitions++;
+			});
+			EventManager.Subscribe<ClimbCardMutationAnimationRequested>(evt => mutationRequest = evt);
+
+			Assert.True(ClimbEncounterService.TryQueueEncounter(world.EntityManager, "encounter_a"));
+
 			Assert.Equal(1, battleTransitions);
+			Assert.Null(mutationRequest);
 		}
 		finally
 		{
@@ -198,16 +230,37 @@ public class ClimbEncounterServiceTests
 			string.Equals(slot.enemyId, "fallen_shepherd", System.StringComparison.OrdinalIgnoreCase));
 	}
 
-	private static void PrepareRunWithEncounter(int timeCost, BattleLocation battleLocation = BattleLocation.Desert)
+	private static void PrepareRunWithEncounter(
+		int timeCost,
+		BattleLocation battleLocation = BattleLocation.Desert,
+		bool allCardsAlreadyBrittle = false)
 	{
 		SaveCache.DeleteSaveFilesIfPresent();
 		SaveCache.StartNewRun();
 		var loadout = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId);
 		loadout.cards = new List<LoadoutCardEntry>
 		{
-			new() { entryId = "test_entry_0", cardKey = "smite|White", isStarter = true },
-			new() { entryId = "test_entry_1", cardKey = "fervor|Red", isStarter = true },
-			new() { entryId = "test_entry_2", cardKey = "reckoning|Black", isStarter = true },
+			new()
+			{
+				entryId = "test_entry_0",
+				cardKey = "smite|White",
+				isStarter = true,
+				restrictions = allCardsAlreadyBrittle ? new List<string> { RunScopedStateService.RestrictionBrittle } : new List<string>(),
+			},
+			new()
+			{
+				entryId = "test_entry_1",
+				cardKey = "fervor|Red",
+				isStarter = true,
+				restrictions = allCardsAlreadyBrittle ? new List<string> { RunScopedStateService.RestrictionBrittle } : new List<string>(),
+			},
+			new()
+			{
+				entryId = "test_entry_2",
+				cardKey = "reckoning|Black",
+				isStarter = true,
+				restrictions = allCardsAlreadyBrittle ? new List<string> { RunScopedStateService.RestrictionBrittle } : new List<string>(),
+			},
 		};
 		loadout.weaponId = "sword";
 		loadout.medalIds = new List<string>();

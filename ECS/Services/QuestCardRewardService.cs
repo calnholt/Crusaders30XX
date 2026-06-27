@@ -174,12 +174,22 @@ namespace Crusaders30XX.ECS.Services
 			bool applied = false;
 			if (string.Equals(option.kind, DeckRewardOfferKinds.Exchange, StringComparison.OrdinalIgnoreCase))
 			{
+				var inheritedRestrictions = SaveCache.GetRunDeckEntryRestrictions(
+					RunDeckService.PrimaryLoadoutId,
+					option.outgoingEntryId);
 				applied = SaveCache.TryReplaceRunDeckEntry(
 					RunDeckService.PrimaryLoadoutId,
 					option.outgoingEntryId,
 					option.incomingCardKey,
-					out _,
+					out var replacementEntry,
 					countsAsTraded: true);
+				if (applied && replacementEntry != null && inheritedRestrictions.Count > 0)
+				{
+					SaveCache.SetRunDeckEntryRestrictions(
+						RunDeckService.PrimaryLoadoutId,
+						replacementEntry.entryId,
+						inheritedRestrictions);
+				}
 			}
 			else if (string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, StringComparison.OrdinalIgnoreCase))
 			{

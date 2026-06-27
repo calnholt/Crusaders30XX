@@ -17,7 +17,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "crusade";
             Name = "Crusade";
             Target = "Enemy";
-            Text = $"If this card is pledged when played, gain {ActionPointGain}AP and {MightGain} might.";
+            Text = $"If this card is pledged when played, gain {ActionPointGain} action point and {MightGain} might.";
             Cost = ["Any"];
             Animation = "Attack";
             Damage = 5;

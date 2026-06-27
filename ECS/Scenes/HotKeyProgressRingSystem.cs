@@ -62,6 +62,8 @@ namespace Crusaders30XX.ECS.Systems
 
         public void Draw()
         {
+            if (GameOverOverlayDisplaySystem.IsOverlayActive(EntityManager)) return;
+
             HotKeySystem hotKeySystem = _systemManager.GetSystem<HotKeySystem>();
             if (hotKeySystem == null) return;
             string contextId = InputContextResolver.ResolveCommandContext(EntityManager);

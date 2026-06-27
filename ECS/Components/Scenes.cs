@@ -29,6 +29,14 @@ namespace Crusaders30XX.ECS.Components
 		public SceneId Current { get; set; } = SceneId.Internal_QueueEventsMenu;
 	}
 
+	public class GameOverOverlayState : IComponent
+	{
+		public Entity Owner { get; set; }
+		public bool IsActive { get; set; }
+		public float Elapsed { get; set; }
+		public bool SceneSwitched { get; set; }
+	}
+
 	/// <summary>
 	/// Marks which scene owns an entity for automatic cleanup on scene transitions.
 	/// </summary>

@@ -1,5 +1,6 @@
 using Crusaders30XX.ECS.Data.Save;
 using System;
+using System.Collections.Generic;
 
 namespace Crusaders30XX.ECS.Events
 {
@@ -93,5 +94,14 @@ namespace Crusaders30XX.ECS.Events
 	{
 		public string BaseCardKey { get; set; } = string.Empty;
 		public string UpgradedCardKey { get; set; } = string.Empty;
+	}
+
+	public class ClimbCardMutationAnimationRequested
+	{
+		public string DeckEntryId { get; set; } = string.Empty;
+		public string CardKey { get; set; } = string.Empty;
+		public string RestrictionName { get; set; } = string.Empty;
+		public List<string> CurrentRestrictionNames { get; set; } = new();
+		public bool TransitionToBattleOnComplete { get; set; }
 	}
 }

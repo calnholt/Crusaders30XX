@@ -5,6 +5,7 @@ using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Data.Climb;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
+using Crusaders30XX.ECS.Events;
 using Crusaders30XX.ECS.Factories;
 using Crusaders30XX.ECS.Objects.Cards;
 
@@ -53,7 +54,7 @@ namespace Crusaders30XX.ECS.Services
 			};
 
 			RefreshShopSlots(state, seed, loadout);
-			RefreshEncounterSlots(state, seed);
+			RefreshEncounterSlots(state, seed, loadout);
 			RefreshEventSlots(state, seed);
 			return state;
 		}
@@ -202,18 +203,18 @@ namespace Crusaders30XX.ECS.Services
 			}
 		}
 
-		public static void RefreshEncounterSlots(ClimbSaveState state, int seed)
+		public static void RefreshEncounterSlots(ClimbSaveState state, int seed, LoadoutDefinition loadout = null)
 		{
 			if (state == null) return;
 			state.encounterSlots = new List<ClimbEncounterSlotSave>(EncounterSlotCount);
 			var rng = CreateRng(seed, state.time, 23);
 			for (int i = 0; i < EncounterSlotCount; i++)
 			{
-				state.encounterSlots.Add(RollEncounterSlot(state, rng, $"encounter_{i}"));
+				state.encounterSlots.Add(RollEncounterSlot(state, loadout, seed, rng, $"encounter_{i}"));
 			}
 		}
 
-		public static bool ReplenishEncounterSlots(ClimbSaveState state, int seed)
+		public static bool ReplenishEncounterSlots(ClimbSaveState state, int seed, LoadoutDefinition loadout = null)
 		{
 			if (state == null) return false;
 			state.encounterSlots ??= new List<ClimbEncounterSlotSave>();
@@ -224,7 +225,7 @@ namespace Crusaders30XX.ECS.Services
 			bool changed = false;
 			while (state.encounterSlots.Count < EncounterSlotCount)
 			{
-				state.encounterSlots.Add(RollEncounterSlot(state, rng, $"encounter_{state.encounterSlots.Count}"));
+				state.encounterSlots.Add(RollEncounterSlot(state, loadout, seed, rng, $"encounter_{state.encounterSlots.Count}"));
 				changed = true;
 			}
 
@@ -239,13 +240,14 @@ namespace Crusaders30XX.ECS.Services
 					&& slot.duration >= EncounterMinDuration
 					&& slot.duration <= EncounterMaxDuration
 					&& slot.timeCost >= 1
-					&& slot.timeCost <= 3)
+					&& slot.timeCost <= 3
+					&& IsValidEncounterMutationTarget(slot, loadout))
 				{
 					continue;
 				}
 
 				string slotId = string.IsNullOrWhiteSpace(slot?.id) ? $"encounter_{i}" : slot.id;
-				state.encounterSlots[i] = RollEncounterSlot(state, rng, slotId, slot?.enemyId);
+				state.encounterSlots[i] = RollEncounterSlot(state, loadout, seed, rng, slotId, slot?.enemyId);
 				changed = true;
 			}
 
@@ -268,7 +270,11 @@ namespace Crusaders30XX.ECS.Services
 				RefreshShopSlots(state, seed, loadout);
 			}
 			UpdateEventLifecycle(state);
-			ReplenishEncounterSlots(state, seed);
+			ReplenishEncounterSlots(state, seed, loadout);
+			if (applied > 0)
+			{
+				RerollEncounterMutationTargets(state, seed, loadout);
+			}
 			return applied;
 		}
 
@@ -446,6 +452,64 @@ namespace Crusaders30XX.ECS.Services
 			};
 		}
 
+		public static string GetEncounterMutationRestrictionName(BattleLocation location)
+		{
+			return location switch
+			{
+				BattleLocation.Desert => RunScopedStateService.RestrictionBrittle,
+				BattleLocation.Tundra => RunScopedStateService.RestrictionFrozen,
+				BattleLocation.Jungle => RunScopedStateService.RestrictionThorned,
+				BattleLocation.Volcano => RunScopedStateService.RestrictionScorched,
+				_ => string.Empty,
+			};
+		}
+
+		public static IReadOnlyList<string> BuildPreviewRestrictionNames(
+			LoadoutCardEntry entry,
+			string addedRestrictionName)
+		{
+			var names = new List<string>();
+			foreach (var restriction in entry?.restrictions ?? new List<string>())
+			{
+				AddDistinct(names, restriction);
+			}
+			AddDistinct(names, addedRestrictionName);
+			return names;
+		}
+
+		public static bool IsValidEncounterMutationTarget(ClimbEncounterSlotSave slot, LoadoutDefinition loadout)
+		{
+			if (slot == null || slot.isCompleted || slot.isFinal) return true;
+			string restrictionName = GetEncounterMutationRestrictionName(slot.battleLocation);
+			if (string.IsNullOrWhiteSpace(restrictionName)) return true;
+			if (GetEligibleEncounterMutationEntries(loadout, restrictionName).Count == 0)
+			{
+				return string.IsNullOrWhiteSpace(slot.cardMutationDeckEntryId)
+					&& string.IsNullOrWhiteSpace(slot.cardMutationCardKey);
+			}
+			if (string.IsNullOrWhiteSpace(slot.cardMutationDeckEntryId)
+				|| string.IsNullOrWhiteSpace(slot.cardMutationCardKey)
+				|| !string.Equals(slot.cardMutationRestrictionName, restrictionName, StringComparison.OrdinalIgnoreCase))
+			{
+				return false;
+			}
+
+			var entry = FindLoadoutEntry(loadout, slot.cardMutationDeckEntryId);
+			if (entry == null) return false;
+			if (!string.Equals(entry.cardKey, slot.cardMutationCardKey, StringComparison.OrdinalIgnoreCase)) return false;
+			return IsEligibleEncounterMutationEntry(entry, restrictionName);
+		}
+
+		public static bool EnsureEncounterMutationTargets(ClimbSaveState state, int seed, LoadoutDefinition loadout)
+		{
+			return AssignEncounterMutationTargets(state, seed, loadout, rerollAll: false);
+		}
+
+		public static bool RerollEncounterMutationTargets(ClimbSaveState state, int seed, LoadoutDefinition loadout)
+		{
+			return AssignEncounterMutationTargets(state, seed, loadout, rerollAll: true);
+		}
+
 		private static bool IsEligibleEventCard(LoadoutCardEntry entry)
 		{
 			if (entry == null || string.IsNullOrWhiteSpace(entry.entryId)) return false;
@@ -576,12 +640,14 @@ namespace Crusaders30XX.ECS.Services
 
 		private static ClimbEncounterSlotSave RollEncounterSlot(
 			ClimbSaveState state,
+			LoadoutDefinition loadout,
+			int seed,
 			Random rng,
 			string slotId,
 			string excludedEnemyId = "")
 		{
 			int timeCost = rng.Next(1, 4);
-			return new ClimbEncounterSlotSave
+			var slot = new ClimbEncounterSlotSave
 			{
 				id = slotId ?? string.Empty,
 				enemyId = RollClimbEncounterEnemyId(rng, excludedEnemyId),
@@ -594,6 +660,8 @@ namespace Crusaders30XX.ECS.Services
 				isFinal = false,
 				isCompleted = false,
 			};
+			AssignEncounterMutationTarget(state, slot, seed, loadout, slotId);
+			return slot;
 		}
 
 		internal static CardData.CardColor RollResourceColorForTests(int roll)
@@ -676,6 +744,83 @@ namespace Crusaders30XX.ECS.Services
 				&& !enemy.IsBoss
 				&& !enemy.IsTutorialOnly
 				&& EnemyPortraitContent.HasPortrait(enemyId);
+		}
+
+		private static bool AssignEncounterMutationTargets(
+			ClimbSaveState state,
+			int seed,
+			LoadoutDefinition loadout,
+			bool rerollAll)
+		{
+			if (state?.encounterSlots == null) return false;
+			bool changed = false;
+			for (int i = 0; i < state.encounterSlots.Count; i++)
+			{
+				var slot = state.encounterSlots[i];
+				if (slot == null || slot.isCompleted || slot.isFinal) continue;
+				if (!rerollAll && IsValidEncounterMutationTarget(slot, loadout)) continue;
+				string before = EncounterMutationSnapshot(slot);
+				AssignEncounterMutationTarget(state, slot, seed, loadout, string.IsNullOrWhiteSpace(slot.id) ? $"encounter_{i}" : slot.id);
+				changed |= !string.Equals(before, EncounterMutationSnapshot(slot), StringComparison.Ordinal);
+			}
+			return changed;
+		}
+
+		private static void AssignEncounterMutationTarget(
+			ClimbSaveState state,
+			ClimbEncounterSlotSave slot,
+			int seed,
+			LoadoutDefinition loadout,
+			string slotId)
+		{
+			if (slot == null) return;
+			string restrictionName = GetEncounterMutationRestrictionName(slot.battleLocation);
+			slot.cardMutationRestrictionName = restrictionName;
+			slot.cardMutationDeckEntryId = string.Empty;
+			slot.cardMutationCardKey = string.Empty;
+			if (string.IsNullOrWhiteSpace(restrictionName)) return;
+
+			var eligible = GetEligibleEncounterMutationEntries(loadout, restrictionName);
+			var target = SelectDeterministicEntry(
+				eligible,
+				seed,
+				$"{slotId}|{ClimbRuleService.ClampTime(state?.time ?? 0)}|{slot.battleLocation}|{restrictionName}");
+			if (target == null) return;
+
+			slot.cardMutationDeckEntryId = target.entryId ?? string.Empty;
+			slot.cardMutationCardKey = target.cardKey ?? string.Empty;
+		}
+
+		private static IReadOnlyList<LoadoutCardEntry> GetEligibleEncounterMutationEntries(
+			LoadoutDefinition loadout,
+			string restrictionName)
+		{
+			if (string.IsNullOrWhiteSpace(restrictionName)) return Array.Empty<LoadoutCardEntry>();
+			return (loadout?.cards ?? new List<LoadoutCardEntry>())
+				.Where(entry => IsEligibleEncounterMutationEntry(entry, restrictionName))
+				.OrderBy(entry => entry.entryId, StringComparer.Ordinal)
+				.ToList();
+		}
+
+		private static bool IsEligibleEncounterMutationEntry(LoadoutCardEntry entry, string restrictionName)
+		{
+			if (entry == null || string.IsNullOrWhiteSpace(entry.entryId)) return false;
+			if ((entry.restrictions ?? new List<string>()).Contains(restrictionName, StringComparer.OrdinalIgnoreCase)) return false;
+			if (!RunDeckService.TryParseCardKey(entry.cardKey, out var cardId, out _, out _)) return false;
+			var card = CardFactory.Create(cardId);
+			return card != null && card.CanAddToLoadout && !card.IsWeapon && !card.IsToken;
+		}
+
+		private static LoadoutCardEntry FindLoadoutEntry(LoadoutDefinition loadout, string entryId)
+		{
+			if (string.IsNullOrWhiteSpace(entryId)) return null;
+			return (loadout?.cards ?? new List<LoadoutCardEntry>())
+				.FirstOrDefault(entry => string.Equals(entry?.entryId, entryId, StringComparison.Ordinal));
+		}
+
+		private static string EncounterMutationSnapshot(ClimbEncounterSlotSave slot)
+		{
+			return $"{slot?.cardMutationRestrictionName ?? string.Empty}|{slot?.cardMutationDeckEntryId ?? string.Empty}|{slot?.cardMutationCardKey ?? string.Empty}";
 		}
 
 		private static (int index, string entryId, string cardKey) PickUpgradeableDeckIndex(LoadoutDefinition loadout, Random rng)

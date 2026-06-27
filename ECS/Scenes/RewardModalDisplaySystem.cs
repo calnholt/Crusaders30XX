@@ -2108,11 +2108,6 @@ namespace Crusaders30XX.ECS.Systems
 			bool forIncomingCard)
 		{
 			if (entityManager == null || card == null || option == null) return;
-			if (forIncomingCard
-				&& !string.Equals(option.kind, DeckRewardOfferKinds.Upgrade, System.StringComparison.OrdinalIgnoreCase))
-			{
-				return;
-			}
 			if (string.IsNullOrWhiteSpace(option.outgoingEntryId)) return;
 			RunScopedStateService.ApplySavedRestrictionsToCard(entityManager, card, option.outgoingEntryId);
 		}
