@@ -150,4 +150,69 @@ public class MedalCounterTests
 			SaveCache.DeleteSaveFilesIfPresent();
 		}
 	}
+
+	[Fact]
+	public void StJerome_grants_courage_when_player_gains_aggression()
+	{
+		EventManager.Clear();
+		try
+		{
+			var entityManager = new EntityManager();
+			var player = entityManager.CreateEntity("Player");
+			entityManager.AddComponent(player, new Player());
+			entityManager.AddComponent(player, new Courage());
+
+			var medal = new StJerome();
+			medal.Initialize(entityManager, entityManager.CreateEntity("Medal"));
+
+			var activateCount = 0;
+			EventManager.Subscribe<MedalActivateEvent>(_ => activateCount++);
+
+			EventManager.Publish(new ApplyPassiveEvent
+			{
+				Target = player,
+				Type = AppliedPassiveType.Aggression,
+				Delta = 3
+			});
+			Assert.Equal(1, activateCount);
+
+			var enemy = entityManager.CreateEntity("Enemy");
+			EventManager.Publish(new ApplyPassiveEvent
+			{
+				Target = enemy,
+				Type = AppliedPassiveType.Aggression,
+				Delta = 1
+			});
+			Assert.Equal(1, activateCount);
+
+			EventManager.Publish(new ApplyPassiveEvent
+			{
+				Target = player,
+				Type = AppliedPassiveType.Aggression,
+				Delta = -1
+			});
+			Assert.Equal(1, activateCount);
+
+			ModifyCourageRequestEvent courageEvent = null;
+			EventManager.Subscribe<ModifyCourageRequestEvent>(evt => courageEvent = evt);
+			medal.Activate();
+
+			Assert.NotNull(courageEvent);
+			Assert.Equal(ModifyCourageType.Gain, courageEvent.Type);
+			Assert.Equal(1, courageEvent.Delta);
+			Assert.Equal("st_jerome", courageEvent.Reason);
+
+			EventManager.Publish(new ApplyPassiveEvent
+			{
+				Target = player,
+				Type = AppliedPassiveType.Aggression,
+				Delta = 2
+			});
+			Assert.Equal(2, activateCount);
+		}
+		finally
+		{
+			EventManager.Clear();
+		}
+	}
 }

@@ -496,6 +496,14 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marks a card as scorched. Rendered with the scorched fire shader.
+    /// </summary>
+    public class Scorched : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
     /// Marks a card as colorless. Its printed color remains unchanged, but it does not
     /// qualify as red, white, or black during combat.
     /// </summary>
