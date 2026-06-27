@@ -1827,6 +1827,12 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/Frozen.fx
 
+#begin Shaders/Thorned.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Thorned.fx
+
 #begin Shaders/Scorched.fx
 /importer:EffectImporter
 /processor:EffectProcessor

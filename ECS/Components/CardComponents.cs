@@ -504,6 +504,14 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marks a card as thorned. Rendered with the thorny vines shader.
+    /// </summary>
+    public class Thorned : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
     /// Marks a card as colorless. Its printed color remains unchanged, but it does not
     /// qualify as red, white, or black during combat.
     /// </summary>

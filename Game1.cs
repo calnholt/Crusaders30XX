@@ -28,6 +28,7 @@ public class Game1 : Game
     private TransitionDisplaySystem _transitionDisplaySystem;
     private CardDisplaySystem _cardDisplaySystem;
     private FrozenDisplaySystem _frozenDisplaySystem;
+    private ThornedDisplaySystem _thornedDisplaySystem;
     private BrittleDisplaySystem _brittleDisplaySystem;
     private ScorchedDisplaySystem _scorchedDisplaySystem;
     private SealDisplaySystem _sealDisplaySystem;
@@ -190,6 +191,7 @@ public class Game1 : Game
         _transitionDisplaySystem = new TransitionDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
         _cardDisplaySystem = new CardDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _frozenDisplaySystem = new FrozenDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _thornedDisplaySystem = new ThornedDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _brittleDisplaySystem = new BrittleDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _scorchedDisplaySystem = new ScorchedDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         var sealTexture = Content.Load<Texture2D>("seal");
@@ -247,6 +249,7 @@ public class Game1 : Game
         _world.AddSystem(_transitionDisplaySystem);
         _world.AddSystem(_cardDisplaySystem);
         _world.AddSystem(_frozenDisplaySystem);
+        _world.AddSystem(_thornedDisplaySystem);
         _world.AddSystem(_brittleDisplaySystem);
         _world.AddSystem(_scorchedDisplaySystem);
         _world.AddSystem(_sealDisplaySystem);
