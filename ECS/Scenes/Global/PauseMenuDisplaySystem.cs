@@ -211,8 +211,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			overlay.Phase = PauseMenuPhase.FadingIn;
 			overlay.Progress01 = 0f;
-			ResetSlider(_musicSliderEntity, "Music", 72);
-			ResetSlider(_sfxSliderEntity, "SFX", 85);
+			ResetSlider(_musicSliderEntity, "Music", PauseMenuSliderSetting.MusicVolume, SaveCache.GetMusicVolumeLevel());
+			ResetSlider(_sfxSliderEntity, "SFX", PauseMenuSliderSetting.SfxVolume, SaveCache.GetSfxVolumeLevel());
 			UpdateEntityLayout(overlay);
 			SyncEntitiesActive(true, GetCurrentScene());
 		}
@@ -290,8 +290,18 @@ namespace Crusaders30XX.ECS.Systems
 				EnsureDontDestroy(_blockerEntity);
 			}
 
-			_musicSliderEntity = EnsureSliderEntity(_musicSliderEntity, MusicSliderName, "Music", 72);
-			_sfxSliderEntity = EnsureSliderEntity(_sfxSliderEntity, SfxSliderName, "SFX", 85);
+			_musicSliderEntity = EnsureSliderEntity(
+				_musicSliderEntity,
+				MusicSliderName,
+				"Music",
+				PauseMenuSliderSetting.MusicVolume,
+				SaveCache.GetMusicVolumeLevel());
+			_sfxSliderEntity = EnsureSliderEntity(
+				_sfxSliderEntity,
+				SfxSliderName,
+				"SFX",
+				PauseMenuSliderSetting.SfxVolume,
+				SaveCache.GetSfxVolumeLevel());
 
 			if (_abandonButtonEntity == null || EntityManager.GetEntity(AbandonName) == null)
 			{
@@ -311,7 +321,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private Entity EnsureSliderEntity(Entity current, string name, string label, int value)
+		private Entity EnsureSliderEntity(Entity current, string name, string label, PauseMenuSliderSetting setting, int value)
 		{
 			if (current != null && EntityManager.GetEntity(name) != null) return current;
 			var entity = EntityManager.GetEntity(name) ?? EntityManager.CreateEntity(name);
@@ -325,7 +335,7 @@ namespace Crusaders30XX.ECS.Systems
 				ShowHoverHighlight = false,
 				IsHidden = true,
 			});
-			EnsureComponent(entity, new PauseMenuSlider { Label = label, Value = value, Min = 0, Max = 100 });
+			EnsureComponent(entity, new PauseMenuSlider { Label = label, Setting = setting, Value = value, Min = 0, Max = 100 });
 			InputContextService.EnsureMember(EntityManager, entity, ContextId);
 			EnsureDontDestroy(entity);
 			return entity;
@@ -347,11 +357,12 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void ResetSlider(Entity entity, string label, int value)
+		private void ResetSlider(Entity entity, string label, PauseMenuSliderSetting setting, int value)
 		{
 			var slider = entity?.GetComponent<PauseMenuSlider>();
 			if (slider == null) return;
 			slider.Label = label;
+			slider.Setting = setting;
 			slider.Value = value;
 			slider.Min = 0;
 			slider.Max = 100;

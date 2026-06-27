@@ -9,11 +9,14 @@ namespace Crusaders30XX.ECS.Data.Save
 {
 	public class SaveFile
 	{
-		public const int CURRENT_VERSION = 14;
+		public const int CURRENT_VERSION = 15;
+		public const int DEFAULT_AUDIO_VOLUME_LEVEL = 50;
 
 		public int version { get; set; } = 0;
 		public bool isRunActive { get; set; }
         public int gold { get; set; } = 0;
+		public int musicVolumeLevel { get; set; } = DEFAULT_AUDIO_VOLUME_LEVEL;
+		public int sfxVolumeLevel { get; set; } = DEFAULT_AUDIO_VOLUME_LEVEL;
 		public int runMapSeed { get; set; }
 		public List<RunMapNode> runMapNodes { get; set; } = new List<RunMapNode>();
 		public List<RunMapShop> runMapShops { get; set; } = new List<RunMapShop>();

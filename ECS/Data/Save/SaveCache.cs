@@ -29,6 +29,63 @@ namespace Crusaders30XX.ECS.Data.Save
 			return _save;
 		}
 
+		public static int GetMusicVolumeLevel()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				return ClampAudioVolumeLevel(_save?.musicVolumeLevel ?? SaveFile.DEFAULT_AUDIO_VOLUME_LEVEL);
+			}
+		}
+
+		public static int GetSfxVolumeLevel()
+		{
+			EnsureLoaded();
+			lock (_lock)
+			{
+				return ClampAudioVolumeLevel(_save?.sfxVolumeLevel ?? SaveFile.DEFAULT_AUDIO_VOLUME_LEVEL);
+			}
+		}
+
+		public static void SetMusicVolumeLevel(int value)
+		{
+			SetAudioVolumeLevels(musicVolumeLevel: value, sfxVolumeLevel: null);
+		}
+
+		public static void SetSfxVolumeLevel(int value)
+		{
+			SetAudioVolumeLevels(musicVolumeLevel: null, sfxVolumeLevel: value);
+		}
+
+		private static void SetAudioVolumeLevels(int? musicVolumeLevel, int? sfxVolumeLevel)
+		{
+			bool changed = false;
+			int resolvedMusic = SaveFile.DEFAULT_AUDIO_VOLUME_LEVEL;
+			int resolvedSfx = SaveFile.DEFAULT_AUDIO_VOLUME_LEVEL;
+			lock (_lock)
+			{
+				EnsureLoaded();
+				if (_save == null) _save = new SaveFile();
+
+				resolvedMusic = ClampAudioVolumeLevel(musicVolumeLevel ?? _save.musicVolumeLevel);
+				resolvedSfx = ClampAudioVolumeLevel(sfxVolumeLevel ?? _save.sfxVolumeLevel);
+				if (_save.musicVolumeLevel == resolvedMusic && _save.sfxVolumeLevel == resolvedSfx) return;
+
+				_save.musicVolumeLevel = resolvedMusic;
+				_save.sfxVolumeLevel = resolvedSfx;
+				changed = Persist();
+			}
+
+			if (changed)
+			{
+				EventManager.Publish(new AudioSettingsChangedEvent
+				{
+					MusicVolumeLevel = resolvedMusic,
+					SfxVolumeLevel = resolvedSfx,
+				});
+			}
+		}
+
 		public static LoadoutDefinition GetLoadout(string id)
 		{
 			EnsureLoaded();
@@ -532,11 +589,15 @@ namespace Crusaders30XX.ECS.Data.Save
 			var mastery = prior?.cardMastery;
 			var achievements = prior?.achievements;
 			var seenTutorials = prior?.seenTutorials;
+			int musicVolumeLevel = ClampAudioVolumeLevel(prior?.musicVolumeLevel ?? SaveFile.DEFAULT_AUDIO_VOLUME_LEVEL);
+			int sfxVolumeLevel = ClampAudioVolumeLevel(prior?.sfxVolumeLevel ?? SaveFile.DEFAULT_AUDIO_VOLUME_LEVEL);
 			var save = CreateDefaultRunSave();
 			save.cardMastery = mastery ?? new Dictionary<string, CardMastery>();
 			save.achievements = achievements ?? new Dictionary<string, AchievementProgress>();
 			save.seenTutorials = seenTutorials ?? new List<string>();
 			save.guidedTutorialCompleted = prior?.guidedTutorialCompleted == true;
+			save.musicVolumeLevel = musicVolumeLevel;
+			save.sfxVolumeLevel = sfxVolumeLevel;
 			return save;
 		}
 
@@ -547,6 +608,8 @@ namespace Crusaders30XX.ECS.Data.Save
 				version = SaveFile.CURRENT_VERSION,
 				isRunActive = false,
 				gold = 0,
+				musicVolumeLevel = ClampAudioVolumeLevel(prior?.musicVolumeLevel ?? SaveFile.DEFAULT_AUDIO_VOLUME_LEVEL),
+				sfxVolumeLevel = ClampAudioVolumeLevel(prior?.sfxVolumeLevel ?? SaveFile.DEFAULT_AUDIO_VOLUME_LEVEL),
 				runMapSeed = 0,
 				runMapNodes = new List<RunMapNode>(),
 				runMapShops = new List<RunMapShop>(),
@@ -565,6 +628,11 @@ namespace Crusaders30XX.ECS.Data.Save
 				seenTutorials = prior?.seenTutorials ?? new List<string>(),
 				guidedTutorialCompleted = prior?.guidedTutorialCompleted == true,
 			};
+		}
+
+		private static int ClampAudioVolumeLevel(int value)
+		{
+			return Math.Clamp(value, 0, 100);
 		}
 
 		private static SaveFile CreateDefaultRunSave()

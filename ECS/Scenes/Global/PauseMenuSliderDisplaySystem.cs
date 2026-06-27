@@ -4,6 +4,7 @@ using System.Linq;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
+using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Input;
 using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Singletons;
@@ -81,14 +82,20 @@ namespace Crusaders30XX.ECS.Systems
 			if (ui.IsHovered && input.WasPressed(PlayerButton.Primary))
 			{
 				slider.IsDragging = true;
-				UpdateSliderValue(slider, input.PointerPosition.X);
+				if (UpdateSliderValue(slider, input.PointerPosition.X))
+				{
+					PersistSliderValue(slider);
+				}
 			}
 
 			if (slider.IsDragging)
 			{
 				if (input.IsDown(PlayerButton.Primary))
 				{
-					UpdateSliderValue(slider, input.PointerPosition.X);
+					if (UpdateSliderValue(slider, input.PointerPosition.X))
+					{
+						PersistSliderValue(slider);
+					}
 				}
 				else
 				{
@@ -231,16 +238,32 @@ namespace Crusaders30XX.ECS.Systems
 			return MathHelper.Clamp((slider.Value - slider.Min) / (float)range, 0f, 1f);
 		}
 
-		private static void UpdateSliderValue(PauseMenuSlider slider, float pointerX)
+		private static bool UpdateSliderValue(PauseMenuSlider slider, float pointerX)
 		{
-			if (slider.TrackBounds.Width <= 0) return;
+			if (slider.TrackBounds.Width <= 0) return false;
 			float normalized = MathHelper.Clamp(
 				(pointerX - slider.TrackBounds.X) / slider.TrackBounds.Width,
 				0f,
 				1f);
 			int range = Math.Max(1, slider.Max - slider.Min);
-			slider.Value = slider.Min + (int)MathF.Round(normalized * range);
-			slider.Value = Math.Clamp(slider.Value, slider.Min, slider.Max);
+			int value = slider.Min + (int)MathF.Round(normalized * range);
+			value = Math.Clamp(value, slider.Min, slider.Max);
+			if (slider.Value == value) return false;
+			slider.Value = value;
+			return true;
+		}
+
+		private static void PersistSliderValue(PauseMenuSlider slider)
+		{
+			switch (slider.Setting)
+			{
+				case PauseMenuSliderSetting.MusicVolume:
+					SaveCache.SetMusicVolumeLevel(slider.Value);
+					break;
+				case PauseMenuSliderSetting.SfxVolume:
+					SaveCache.SetSfxVolumeLevel(slider.Value);
+					break;
+			}
 		}
 	}
 }

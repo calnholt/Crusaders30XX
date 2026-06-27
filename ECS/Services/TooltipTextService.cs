@@ -225,6 +225,8 @@ namespace Crusaders30XX.ECS.Services
 			if (i >= 0) matches.Add((i, "X Bleed - While you have bleed, lose 1 HP when you block with 2 or more cards of the same color, then remove one bleed stack. Lasts for the rest of the run."));
 			i = lowerText.IndexOf("mill");
 			if (i >= 0) matches.Add((i, "Mill X - Discard the top X cards of your deck."));
+			i = lowerText.IndexOf("resurrect");
+			if (i >= 0) matches.Add((i, "Resurrect X - draw X random cards from your discard pile."));
 			i = lowerText.IndexOf("frostbite");
 			if (i >= 0) matches.Add((i, $"X Frostbite - When you have 3 stacks of frostbite, take {FrostbiteDamage} damage and lose 3 frostbite."));
 			i = lowerText.IndexOf("frozen");

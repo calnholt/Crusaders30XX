@@ -16,7 +16,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
             CardId = "quick_wit";
             Name = "Quick Wit";
             Target = "Enemy";
-            Text = $"As an additional cost, lose {GetCourageCost(IsUpgraded)} courage. Draw {GetCardDrawAmount(IsUpgraded)} random card from your discard pile.";
+            Text = $"As an additional cost, lose {GetCourageCost(IsUpgraded)} courage. Resurrect {GetCardDrawAmount(IsUpgraded)}.";
             Animation = "Attack";
             Damage = 2;
             Block = 3;
@@ -58,7 +58,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
             OnUpgrade = (entityManager, card) =>
             {
-                Text = $"As an additional cost, lose {GetCourageCost(IsUpgraded)} courage. Draw {GetCardDrawAmount(IsUpgraded)} random card from your discard pile.";
+                Text = $"As an additional cost, lose {GetCourageCost(IsUpgraded)} courage. Resurrect {GetCardDrawAmount(IsUpgraded)}.";
             };
 
         }

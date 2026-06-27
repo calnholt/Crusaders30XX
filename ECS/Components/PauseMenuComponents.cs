@@ -11,6 +11,13 @@ namespace Crusaders30XX.ECS.Components
 		FadingOut
 	}
 
+	public enum PauseMenuSliderSetting
+	{
+		None,
+		MusicVolume,
+		SfxVolume
+	}
+
 	public class PauseMenuOverlay : IComponent
 	{
 		public Entity Owner { get; set; }
@@ -22,6 +29,7 @@ namespace Crusaders30XX.ECS.Components
 	{
 		public Entity Owner { get; set; }
 		public string Label { get; set; } = string.Empty;
+		public PauseMenuSliderSetting Setting { get; set; } = PauseMenuSliderSetting.None;
 		public int Value { get; set; }
 		public int Min { get; set; } = 0;
 		public int Max { get; set; } = 100;

@@ -58,8 +58,8 @@ namespace Crusaders30XX.ECS.Systems
         [DebugEditable(DisplayName = "Hover Fan Out", Step = 2f, Min = 0f, Max = 500f)]
         public float HandHoverFanOut { get; set; } = 50f;
 
-        [DebugEditable(DisplayName = "Hover Bottom Padding", Step = 1f, Min = 0f, Max = 200f)]
-        public float HandHoverBottomPadding { get; set; } = 0f;
+        [DebugEditable(DisplayName = "Hover Bottom Padding", Step = 1f, Min = -100f, Max = 200f)]
+        public float HandHoverBottomPadding { get; set; } = -3f;
 
         [DebugEditable(DisplayName = "Scale Down Speed", Step = 0.5f, Min = 0.1f, Max = 60f)]
         public float HandScaleDownTweenSpeed { get; set; } = 12f;
