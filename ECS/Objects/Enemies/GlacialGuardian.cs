@@ -24,11 +24,6 @@ public class GlacialGuardian : EnemyBase
       {
         EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.Windchill, Delta = 1 });
       }, AppliedPassivesManagementSystem.Duration);
-
-      EventQueueBridge.EnqueueTriggerAction("GlacialGuardian.OnCreate", () =>
-      {
-        EventManager.Publish(new ApplyPassiveEvent { Target = entityManager.GetEntity("Player"), Type = AppliedPassiveType.SubZero, Delta = 1 });
-      }, AppliedPassivesManagementSystem.Duration);
     };
   }
 

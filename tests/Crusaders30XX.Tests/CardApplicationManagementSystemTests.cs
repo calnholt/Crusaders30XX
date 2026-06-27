@@ -68,10 +68,14 @@ public class CardApplicationManagementSystemTests
 
 			Apply(CardApplicationType.Frozen);
 			Apply(CardApplicationType.Brittle);
+			Apply(CardApplicationType.Scorched);
+			Apply(CardApplicationType.Thorned);
 			Apply(CardApplicationType.Colorless);
 
 			Assert.True(card.HasComponent<Frozen>());
 			Assert.True(card.HasComponent<Brittle>());
+			Assert.True(card.HasComponent<Scorched>());
+			Assert.True(card.HasComponent<Thorned>());
 			Assert.True(card.HasComponent<Colorless>());
 		}
 		finally
@@ -80,8 +84,13 @@ public class CardApplicationManagementSystemTests
 		}
 	}
 
-	[Fact]
-	public void Exact_card_apply_and_remove_synchronize_persistence()
+	[Theory]
+	[InlineData(CardApplicationType.Colorless, RunScopedStateService.RestrictionColorless)]
+	[InlineData(CardApplicationType.Scorched, RunScopedStateService.RestrictionScorched)]
+	[InlineData(CardApplicationType.Thorned, RunScopedStateService.RestrictionThorned)]
+	public void Exact_card_apply_and_remove_synchronize_persistence(
+		CardApplicationType type,
+		string restriction)
 	{
 		EventManager.Clear();
 		SaveCache.DeleteSaveFilesIfPresent();
@@ -107,25 +116,59 @@ public class CardApplicationManagementSystemTests
 			{
 				Card = card,
 				Amount = 1,
-				Type = CardApplicationType.Colorless,
+				Type = type,
 				Target = CardApplicationTarget.Deck,
 			});
 
-			Assert.True(card.HasComponent<Colorless>());
+			Assert.True(HasApplication(card, type));
 			Assert.Contains(
-				RunScopedStateService.RestrictionColorless,
+				restriction,
 				SaveCache.GetRunDeckEntryRestrictions(RunDeckService.PrimaryLoadoutId, entry.entryId));
 
 			EventManager.Publish(new RemoveCardApplication
 			{
 				Card = card,
-				Type = CardApplicationType.Colorless,
+				Type = type,
 			});
 
-			Assert.False(card.HasComponent<Colorless>());
+			Assert.False(HasApplication(card, type));
 			Assert.DoesNotContain(
-				RunScopedStateService.RestrictionColorless,
+				restriction,
 				SaveCache.GetRunDeckEntryRestrictions(RunDeckService.PrimaryLoadoutId, entry.entryId));
+		}
+		finally
+		{
+			EventManager.Clear();
+			SaveCache.DeleteSaveFilesIfPresent();
+		}
+	}
+
+	[Theory]
+	[InlineData(RunScopedStateService.RestrictionScorched)]
+	[InlineData(RunScopedStateService.RestrictionThorned)]
+	public void Saved_new_status_restrictions_hydrate_onto_run_deck_cards(string restriction)
+	{
+		EventManager.Clear();
+		SaveCache.DeleteSaveFilesIfPresent();
+		try
+		{
+			SaveCache.StartNewRun();
+			var entry = SaveCache.GetLoadout(RunDeckService.PrimaryLoadoutId).cards.First();
+			SaveCache.SetRunDeckEntryRestrictions(
+				RunDeckService.PrimaryLoadoutId,
+				entry.entryId,
+				[restriction]);
+			SaveCache.Reload();
+
+			var entityManager = new EntityManager();
+			RunDeckService.EnsureRunDeck(entityManager);
+			var card = entityManager.GetEntitiesWithComponent<RunDeckCard>()
+				.Single(entity => entity.GetComponent<RunDeckCard>().EntryId == entry.entryId);
+
+			if (restriction == RunScopedStateService.RestrictionScorched)
+				Assert.True(card.HasComponent<Scorched>());
+			else
+				Assert.True(card.HasComponent<Thorned>());
 		}
 		finally
 		{
@@ -199,40 +242,6 @@ public class CardApplicationManagementSystemTests
 		}
 	}
 
-	[Fact]
-	public void Brittle_sole_blocker_publishes_mill_event()
-	{
-		EventManager.Clear();
-		try
-		{
-			var entityManager = new EntityManager();
-			var brittleCard = entityManager.CreateEntity("BrittleCard");
-			entityManager.AddComponent(brittleCard, new Brittle());
-			entityManager.AddComponent(brittleCard, new AssignedBlockCard { ContextId = "attack-1" });
-			var frozenCard = entityManager.CreateEntity("FrozenCard");
-			entityManager.AddComponent(frozenCard, new Frozen());
-			entityManager.AddComponent(frozenCard, new AssignedBlockCard { ContextId = "attack-1" });
-			var progressEntity = entityManager.CreateEntity("EnemyAttackProgress");
-			entityManager.AddComponent(progressEntity, new EnemyAttackProgress
-			{
-				ContextId = "attack-1",
-				PlayedCards = 1,
-			});
-			_ = new CardApplicationManagementSystem(entityManager);
-			int millEvents = 0;
-			EventManager.Subscribe<MillCardEvent>(_ => millEvents++);
-
-			EventManager.Publish(new CardBlockedEvent { Card = frozenCard });
-			EventManager.Publish(new CardBlockedEvent { Card = brittleCard });
-
-			Assert.Equal(1, millEvents);
-		}
-		finally
-		{
-			EventManager.Clear();
-		}
-	}
-
 	private static void Apply(CardApplicationType type)
 	{
 		EventManager.Publish(new ApplyCardApplicationEvent
@@ -241,6 +250,19 @@ public class CardApplicationManagementSystemTests
 			Type = type,
 			Target = CardApplicationTarget.DrawPile,
 		});
+	}
+
+	private static bool HasApplication(Entity card, CardApplicationType type)
+	{
+		return type switch
+		{
+			CardApplicationType.Frozen => card.HasComponent<Frozen>(),
+			CardApplicationType.Brittle => card.HasComponent<Brittle>(),
+			CardApplicationType.Scorched => card.HasComponent<Scorched>(),
+			CardApplicationType.Thorned => card.HasComponent<Thorned>(),
+			CardApplicationType.Colorless => card.HasComponent<Colorless>(),
+			_ => false,
+		};
 	}
 
 	private static Deck CreateDeck(EntityManager entityManager)

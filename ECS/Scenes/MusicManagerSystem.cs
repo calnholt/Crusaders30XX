@@ -209,6 +209,7 @@ namespace Crusaders30XX.ECS.Systems
                 MusicTrack.FrozenBattle => "Music/ice",
                 MusicTrack.TundraBattle => "Music/tundra",
                 MusicTrack.JungleBattle => "Music/jungle",
+                MusicTrack.VolcanoBattle => "Music/volcano",
                 MusicTrack.TheGateBattle => "Music/the-gate",
                 _ => null
             };

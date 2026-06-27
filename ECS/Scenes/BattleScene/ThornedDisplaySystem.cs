@@ -30,7 +30,7 @@ public sealed class ThornedDisplaySystem : Core.System
     private float _timeSeconds;
 
     [DebugEditable(DisplayName = "Card Radius", Step = 0.01f, Min = 0f, Max = 0.2f)]
-    public float CardRadius { get; set; } = 0.04f;
+    public float CardRadius { get; set; } = 0.01f;
 
     [DebugEditable(DisplayName = "Curse Tint Strength", Step = 0.01f, Min = 0f, Max = 1f)]
     public float CurseTintStrength { get; set; } = 0.10f;

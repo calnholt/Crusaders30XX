@@ -51,6 +51,7 @@ public class ClimbRuleServiceTests
 		Assert.Contains(BattleLocation.Desert, rolledLocations);
 		Assert.Contains(BattleLocation.Tundra, rolledLocations);
 		Assert.Contains(BattleLocation.Jungle, rolledLocations);
+		Assert.Contains(BattleLocation.Volcano, rolledLocations);
 		Assert.DoesNotContain(BattleLocation.TheGate, rolledLocations);
 		Assert.All(rolledLocations, location => Assert.Contains(location, BattleLocationAssetService.ClimbEncounterLocations));
 	}

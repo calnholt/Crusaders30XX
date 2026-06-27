@@ -801,10 +801,22 @@ namespace Crusaders30XX.ECS.Factories
                 entityManager.AddComponent(clonedEntity, clonedModifiedDamage);
             }
 
-            // Copy Frozen status
+            // Copy persistent card statuses
             if (sourceEntity.HasComponent<Frozen>())
             {
                 entityManager.AddComponent(clonedEntity, new Frozen { Owner = clonedEntity });
+            }
+            if (sourceEntity.HasComponent<Brittle>())
+            {
+                entityManager.AddComponent(clonedEntity, new Brittle { Owner = clonedEntity });
+            }
+            if (sourceEntity.HasComponent<Scorched>())
+            {
+                entityManager.AddComponent(clonedEntity, new Scorched { Owner = clonedEntity });
+            }
+            if (sourceEntity.HasComponent<Thorned>())
+            {
+                entityManager.AddComponent(clonedEntity, new Thorned { Owner = clonedEntity });
             }
             if (sourceEntity.HasComponent<Colorless>())
             {

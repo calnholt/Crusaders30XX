@@ -28,6 +28,14 @@ namespace Crusaders30XX.ECS.Systems
 					card => card.HasComponent<Brittle>(),
 					(entityManager, card) => entityManager.AddComponent(card, new Brittle { Owner = card }),
 					(entityManager, card) => entityManager.RemoveComponent<Brittle>(card)),
+				[CardApplicationType.Scorched] = new(
+					card => card.HasComponent<Scorched>(),
+					(entityManager, card) => entityManager.AddComponent(card, new Scorched { Owner = card }),
+					(entityManager, card) => entityManager.RemoveComponent<Scorched>(card)),
+				[CardApplicationType.Thorned] = new(
+					card => card.HasComponent<Thorned>(),
+					(entityManager, card) => entityManager.AddComponent(card, new Thorned { Owner = card }),
+					(entityManager, card) => entityManager.RemoveComponent<Thorned>(card)),
 				[CardApplicationType.Colorless] = new(
 					card => card.HasComponent<Colorless>(),
 					(entityManager, card) => entityManager.AddComponent(card, new Colorless { Owner = card }),
@@ -39,7 +47,6 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<ApplyCardApplicationEvent>(OnApplyCardApplication);
 			EventManager.Subscribe<RemoveCardApplication>(OnRemoveCardApplication);
 			EventManager.Subscribe<RemoveCardApplications>(OnRemoveCardApplications);
-			EventManager.Subscribe<CardBlockedEvent>(OnCardBlocked);
 		}
 
 		protected override IEnumerable<Entity> GetRelevantEntities()
@@ -180,21 +187,5 @@ namespace Crusaders30XX.ECS.Systems
 				&& (card.GetComponent<CardData>()?.Card?.IsWeapon ?? false) == false;
 		}
 
-		private void OnCardBlocked(CardBlockedEvent evt)
-		{
-			if (evt.Card?.GetComponent<Brittle>() == null) return;
-
-			var contextId = evt.Card.GetComponent<AssignedBlockCard>()?.ContextId
-				?? GetComponentHelper.GetContextId(EntityManager);
-			if (string.IsNullOrEmpty(contextId)) return;
-
-			var progress = EntityManager.GetEntitiesWithComponent<EnemyAttackProgress>()
-				.FirstOrDefault(entity =>
-					entity.GetComponent<EnemyAttackProgress>()?.ContextId == contextId)
-				?.GetComponent<EnemyAttackProgress>();
-			if (progress == null || progress.PlayedCards != 1) return;
-
-			EventManager.Publish(new MillCardEvent());
-		}
 	}
 }

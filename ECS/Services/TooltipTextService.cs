@@ -21,7 +21,7 @@ namespace Crusaders30XX.ECS.Services
 
 		/// <summary>
 		/// Returns the full tooltip text for a card entity: base tooltip text plus any appended
-		/// status-effect descriptions (Frozen, Brittle, Colorless, Intimidated, Shackle, Pledge, Sealed, Recoil).
+		/// status-effect descriptions (Frozen, Brittle, Scorched, Thorned, Colorless, Intimidated, Shackle, Pledge, Sealed, Recoil).
 		/// </summary>
 		public static string BuildCardTooltip(Entity entity, string baseText, EntityManager entityManager = null)
 		{
@@ -32,6 +32,12 @@ namespace Crusaders30XX.ECS.Services
 
 			if (entity.GetComponent<Brittle>() != null)
 				text += Sep(text) + "This card is brittle - if you block an attack with only this card, mill 1. Lasts for the rest of the run.";
+
+			if (entity.GetComponent<Scorched>() != null)
+				text += Sep(text) + "This card is scorched - when pledged, lose 1 HP. Lasts for the rest of the run.";
+
+			if (entity.GetComponent<Thorned>() != null)
+				text += Sep(text) + "This card is thorned - when discarded to pay a card cost, gain 1 scar. Lasts for the rest of the run.";
 
 			if (entity.GetComponent<Colorless>() != null && !ShouldSuppressColorlessStatus(entityManager))
 				text += Sep(text) + ColorlessStatus;
@@ -231,6 +237,12 @@ namespace Crusaders30XX.ECS.Services
 			if (i >= 0) matches.Add((i, $"X Frostbite - When you have 3 stacks of frostbite, take {FrostbiteDamage} damage and lose 3 frostbite."));
 			i = lowerText.IndexOf("frozen");
 			if (i >= 0) matches.Add((i, "Frozen - When you play a frozen card, gain 1 frostbite."));
+			i = lowerText.IndexOf("brittle");
+			if (i >= 0) matches.Add((i, "Brittle - If you block an attack with only this card, mill 1."));
+			i = lowerText.IndexOf("scorched");
+			if (i >= 0) matches.Add((i, "Scorched - When pledged, lose 1 HP."));
+			i = lowerText.IndexOf("thorned");
+			if (i >= 0) matches.Add((i, "Thorned - When discarded to pay a card cost, gain 1 scar."));
 			if (matches.Count == 0) return string.Empty;
 			i = lowerText.IndexOf("darkness");
 			if (i >= 0) matches.Add((i, "X Darkness - The enemy loses X damage when you pledge a card."));

@@ -113,6 +113,9 @@ namespace Crusaders30XX.ECS.Systems
 		private EquipmentBlockInteractionSystem _equipmentBlockInteractionSystem;
 		private AppliedPassivesManagementSystem _appliedPassivesManagementSystem;
 		private AnathemaManagementSystem _anathemaManagementSystem;
+		private BrittleManagementSystem _brittleManagementSystem;
+		private ScorchedManagementSystem _scorchedManagementSystem;
+		private ThornedManagementSystem _thornedManagementSystem;
 		private BleedManagementSystem _bleedManagementSystem;
 		private BattleStateInfoManagementSystem _battleStateInfoManagementSystem;
 		private DiscardSpecificCardHighlightSystem _discardSpecificCardHighlightSystem;
@@ -735,6 +738,9 @@ namespace Crusaders30XX.ECS.Systems
 			_equipmentBlockInteractionSystem = new EquipmentBlockInteractionSystem(_world.EntityManager);
 			_appliedPassivesManagementSystem = new AppliedPassivesManagementSystem(_world.EntityManager);
 			_anathemaManagementSystem = new AnathemaManagementSystem(_world.EntityManager);
+			_brittleManagementSystem = new BrittleManagementSystem(_world.EntityManager);
+			_scorchedManagementSystem = new ScorchedManagementSystem(_world.EntityManager);
+			_thornedManagementSystem = new ThornedManagementSystem(_world.EntityManager);
 			_bleedManagementSystem = new BleedManagementSystem(_world.EntityManager);
 			_battleStateInfoManagementSystem = new BattleStateInfoManagementSystem(_world.EntityManager);
 			_discardSpecificCardHighlightSystem = new DiscardSpecificCardHighlightSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -857,6 +863,9 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_equipmentBlockInteractionSystem);
 			_world.AddSystem(_appliedPassivesManagementSystem);
 			_world.AddSystem(_anathemaManagementSystem);
+			_world.AddSystem(_brittleManagementSystem);
+			_world.AddSystem(_scorchedManagementSystem);
+			_world.AddSystem(_thornedManagementSystem);
 			_world.AddSystem(_vigorManagementSystem);
 			_world.AddSystem(_bleedManagementSystem);
 			_world.AddSystem(_battleStateInfoManagementSystem);

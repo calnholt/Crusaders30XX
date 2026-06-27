@@ -14,6 +14,8 @@ namespace Crusaders30XX.ECS.Services
 		public const string RestrictionFrozen = "Frozen";
 		public const string RestrictionSealed = "Sealed";
 		public const string RestrictionBrittle = "Brittle";
+		public const string RestrictionScorched = "Scorched";
+		public const string RestrictionThorned = "Thorned";
 		public const string RestrictionColorless = "Colorless";
 
 		public static void HydrateRunLongPassivesOntoPlayer(Entity player)
@@ -75,6 +77,8 @@ namespace Crusaders30XX.ECS.Services
 			if (card.HasComponent<Frozen>()) names.Add(RestrictionFrozen);
 			if (card.HasComponent<Sealed>()) names.Add(RestrictionSealed);
 			if (card.HasComponent<Brittle>()) names.Add(RestrictionBrittle);
+			if (card.HasComponent<Scorched>()) names.Add(RestrictionScorched);
+			if (card.HasComponent<Thorned>()) names.Add(RestrictionThorned);
 			if (card.HasComponent<Colorless>()) names.Add(RestrictionColorless);
 			SaveCache.SetRunDeckEntryRestrictions(RunDeckService.PrimaryLoadoutId, entryId, names);
 		}
@@ -126,6 +130,18 @@ namespace Crusaders30XX.ECS.Services
 						if (entityManager != null) entityManager.AddComponent(card, new Brittle { Owner = card });
 					}
 					break;
+				case RestrictionScorched:
+					if (card.GetComponent<Scorched>() == null)
+					{
+						if (entityManager != null) entityManager.AddComponent(card, new Scorched { Owner = card });
+					}
+					break;
+				case RestrictionThorned:
+					if (card.GetComponent<Thorned>() == null)
+					{
+						if (entityManager != null) entityManager.AddComponent(card, new Thorned { Owner = card });
+					}
+					break;
 				case RestrictionColorless:
 					if (card.GetComponent<Colorless>() == null)
 					{
@@ -141,6 +157,8 @@ namespace Crusaders30XX.ECS.Services
 			if (card.HasComponent<Shackle>()) entityManager.RemoveComponent<Shackle>(card);
 			if (card.HasComponent<Sealed>()) entityManager.RemoveComponent<Sealed>(card);
 			if (card.HasComponent<Brittle>()) entityManager.RemoveComponent<Brittle>(card);
+			if (card.HasComponent<Scorched>()) entityManager.RemoveComponent<Scorched>(card);
+			if (card.HasComponent<Thorned>()) entityManager.RemoveComponent<Thorned>(card);
 			if (card.HasComponent<Colorless>()) entityManager.RemoveComponent<Colorless>(card);
 		}
 	}

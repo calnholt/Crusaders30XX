@@ -7,6 +7,7 @@ namespace Crusaders30XX.ECS.Events
         Cathedral,
         Tundra,
         Jungle,
+        Volcano,
         TheGate,
     }
 

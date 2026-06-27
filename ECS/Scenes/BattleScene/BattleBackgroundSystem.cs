@@ -121,6 +121,7 @@ namespace Crusaders30XX.ECS.Systems
 				BattleLocation.Desert => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Desert),
 				BattleLocation.Tundra => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Tundra),
 				BattleLocation.Jungle => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Jungle),
+				BattleLocation.Volcano => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Volcano),
 				BattleLocation.TheGate => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.TheGate),
 				BattleLocation.Forest => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Forest),
 				BattleLocation.Cathedral => BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Cathedral),

@@ -160,7 +160,7 @@ public sealed class ColorlessCardTests
 	}
 
 	[Fact]
-	public void Temporary_clone_inherits_colorless_without_run_deck_identity()
+	public void Temporary_clone_inherits_persistent_statuses_without_run_deck_identity()
 	{
 		var entityManager = new EntityManager();
 		var source = EntityFactory.CreateCardFromDefinition(
@@ -169,10 +169,23 @@ public sealed class ColorlessCardTests
 			CardData.CardColor.White,
 			cardKey: "strike|White",
 			persistForRun: true);
+		entityManager.AddComponent(source, new Frozen { Owner = source });
+		entityManager.AddComponent(source, new Brittle { Owner = source });
+		entityManager.AddComponent(source, new Scorched { Owner = source });
+		entityManager.AddComponent(source, new Thorned { Owner = source });
 		entityManager.AddComponent(source, new Colorless());
 
 		var clone = EntityFactory.CloneEntity(entityManager, source);
 
+		Assert.Same(clone, clone.GetComponent<Frozen>().Owner);
+		Assert.Same(clone, clone.GetComponent<Brittle>().Owner);
+		Assert.Same(clone, clone.GetComponent<Scorched>().Owner);
+		Assert.Same(clone, clone.GetComponent<Thorned>().Owner);
+		Assert.Same(clone, clone.GetComponent<Colorless>().Owner);
+		Assert.True(clone.HasComponent<Frozen>());
+		Assert.True(clone.HasComponent<Brittle>());
+		Assert.True(clone.HasComponent<Scorched>());
+		Assert.True(clone.HasComponent<Thorned>());
 		Assert.True(clone.HasComponent<Colorless>());
 		Assert.False(clone.HasComponent<RunDeckCard>());
 	}

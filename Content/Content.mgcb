@@ -886,6 +886,18 @@
 /processorParam:TextureFormat=Color
 /build:Battle_Backgrounds/the-gate-battle-background.png
 
+#begin Battle_Backgrounds/volcano-battle-background.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Battle_Backgrounds/volcano-battle-background.png
+
 #begin waystation.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -1902,6 +1914,11 @@
 /importer:OggImporter
 /processor:SongProcessor
 /build:Music/tundra.ogg
+
+#begin Music/volcano.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/volcano.ogg
 
 #begin Music/climb.ogg
 /importer:OggImporter

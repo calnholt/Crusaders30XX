@@ -29,7 +29,7 @@ public sealed class ScorchedDisplaySystem : Core.System
     private float _timeSeconds;
 
     [DebugEditable(DisplayName = "Card Radius", Step = 0.01f, Min = 0f, Max = 0.2f)]
-    public float CardRadius { get; set; } = 0.05f;
+    public float CardRadius { get; set; } = 0.01f;
 
     [DebugEditable(DisplayName = "Fire Reach", Step = 0.01f, Min = 0.01f, Max = 0.4f)]
     public float FireReach { get; set; } = 0.13f;

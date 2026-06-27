@@ -84,6 +84,12 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Jungle });
         }
 
+        [DebugAction("Set Battlefield: Volcano")]
+        public void Debug_SetBattlefield_Volcano()
+        {
+            EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Volcano });
+        }
+
         [DebugAction("Set Battlefield: The Gate")]
         public void Debug_SetBattlefield_TheGate()
         {
@@ -209,6 +215,28 @@ namespace Crusaders30XX.ECS.Systems
             {
                 Amount = 1,
                 Type = CardApplicationType.Frozen,
+                Target = CardApplicationTarget.Hand,
+            });
+        }
+
+        [DebugAction("Apply Scorched (hand)")]
+        public void Debug_ApplyScorchedHand()
+        {
+            EventManager.Publish(new ApplyCardApplicationEvent
+            {
+                Amount = 1,
+                Type = CardApplicationType.Scorched,
+                Target = CardApplicationTarget.Hand,
+            });
+        }
+
+        [DebugAction("Apply Thorned (hand)")]
+        public void Debug_ApplyThornedHand()
+        {
+            EventManager.Publish(new ApplyCardApplicationEvent
+            {
+                Amount = 1,
+                Type = CardApplicationType.Thorned,
                 Target = CardApplicationTarget.Hand,
             });
         }

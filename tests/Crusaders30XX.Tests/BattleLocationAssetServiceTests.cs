@@ -12,6 +12,7 @@ public class BattleLocationAssetServiceTests
 		Assert.Equal("Battle_Backgrounds/desert-battle-background", BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Desert));
 		Assert.Equal("Battle_Backgrounds/tundra-battle-background", BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Tundra));
 		Assert.Equal("Battle_Backgrounds/jungle-battle-background", BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Jungle));
+		Assert.Equal("Battle_Backgrounds/volcano-battle-background", BattleLocationAssetService.GetBackgroundAsset(BattleLocation.Volcano));
 		Assert.Equal("Battle_Backgrounds/the-gate-battle-background", BattleLocationAssetService.GetBackgroundAsset(BattleLocation.TheGate));
 	}
 
@@ -21,6 +22,7 @@ public class BattleLocationAssetServiceTests
 		Assert.Equal(MusicTrack.DesertBattle, BattleLocationAssetService.GetMusicTrack(BattleLocation.Desert));
 		Assert.Equal(MusicTrack.TundraBattle, BattleLocationAssetService.GetMusicTrack(BattleLocation.Tundra));
 		Assert.Equal(MusicTrack.JungleBattle, BattleLocationAssetService.GetMusicTrack(BattleLocation.Jungle));
+		Assert.Equal(MusicTrack.VolcanoBattle, BattleLocationAssetService.GetMusicTrack(BattleLocation.Volcano));
 		Assert.Equal(MusicTrack.TheGateBattle, BattleLocationAssetService.GetMusicTrack(BattleLocation.TheGate));
 	}
 
@@ -30,6 +32,7 @@ public class BattleLocationAssetServiceTests
 		Assert.Contains(BattleLocation.Desert, BattleLocationAssetService.ClimbEncounterLocations);
 		Assert.Contains(BattleLocation.Tundra, BattleLocationAssetService.ClimbEncounterLocations);
 		Assert.Contains(BattleLocation.Jungle, BattleLocationAssetService.ClimbEncounterLocations);
+		Assert.Contains(BattleLocation.Volcano, BattleLocationAssetService.ClimbEncounterLocations);
 		Assert.DoesNotContain(BattleLocation.TheGate, BattleLocationAssetService.ClimbEncounterLocations);
 		Assert.Equal(BattleLocation.TheGate, BattleLocationAssetService.FinalEncounterLocation);
 	}

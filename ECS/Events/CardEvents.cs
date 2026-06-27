@@ -425,6 +425,7 @@ namespace Crusaders30XX.ECS.Events
         JungleBattle = 9,
         TheGateBattle = 10,
         Climb = 11,
+        VolcanoBattle = 12,
     }
 
     /// <summary>
@@ -610,6 +611,8 @@ namespace Crusaders30XX.ECS.Events
     {
         Frozen,
         Brittle,
+        Scorched,
+        Thorned,
         Colorless,
     }
 
