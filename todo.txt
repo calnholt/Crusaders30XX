@@ -9,7 +9,6 @@ UX
 - make climb column buttons more thematic
 - frozen shader -- make seeds random per card
 - tutorial bubble - move continue relative to bubble
-- upgrade card character event needs to show which card was upgraded somehow - new animation?
 - recoil shader
 - intimidated shader (maybe change name)
 
@@ -50,7 +49,7 @@ persistent card states:
 - update sealed to reduce on block and other cards played, can be pledged
 - penance - becomes 3block free action prayer - Remove penance from this card. Keeps color.
 - vines - when this is discarded to pay for a cost, gain 1 scar
-- scorched - when this is pledged, gain 1 burn
+- scorched - when this is pledged, 1damage
 
 keywords
 - indulgence for additional cost?
@@ -58,4 +57,4 @@ keywords
 
 
 bugs
-- grab session.json from PC to investigate 2 kunai spawning in hand (thought -- dagger starting battle with 3 temperance is gaining 2 kunai which are counting against hand)
+- 

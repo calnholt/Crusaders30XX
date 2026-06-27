@@ -21,6 +21,7 @@ public class QuestCardRewardServiceTests
 		"shield_of_faith",
 		"increase_faith",
 		"renounce_and_hone",
+		"sacrifice",
 		"steel_the_spirit",
 		"iron_covenant",
 		"whirlwind",

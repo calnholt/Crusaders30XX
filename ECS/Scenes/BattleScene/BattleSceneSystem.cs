@@ -72,7 +72,7 @@ namespace Crusaders30XX.ECS.Systems
 		private EnemyAttackDisplaySystem _enemyAttackDisplaySystem;
 		private EnemyDamageMeterDisplaySystem _enemyDamageMeterDisplaySystem;
 		private AmbushDisplaySystem _ambushDisplaySystem;
-		private QueuedEventsDisplaySystem _queuedEventsDisplaySystem;
+		// private QueuedEventsDisplaySystem _queuedEventsDisplaySystem;
 		private DamageModificationDisplaySystem _damageModificationDisplaySystem;
 		private SplashEffectAnimationDisplaySystem _attackAnimationDisplaySystem;
 		private CardPlayedAnimationSystem _cardPlayedAnimationSystem;
@@ -351,7 +351,7 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("EnemyIntentPipsSystem.Draw", _enemyIntentPipsSystem.Draw);
 			FrameProfiler.Measure("AmbushDisplaySystem.Draw", _ambushDisplaySystem.Draw);
 			bool guidedTutorial = GuidedTutorialService.IsActive(EntityManager);
-			if (!guidedTutorial) FrameProfiler.Measure("QueuedEventsDisplaySystem.Draw", _queuedEventsDisplaySystem.Draw);
+			// if (!guidedTutorial) FrameProfiler.Measure("QueuedEventsDisplaySystem.Draw", _queuedEventsDisplaySystem.Draw);
 			FrameProfiler.Measure("AttackAnimationDisplaySystem.Draw", _attackAnimationDisplaySystem.Draw);
 			FrameProfiler.Measure("StunnedOverlaySystem.Draw", _stunnedOverlaySystem.Draw);
 			FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", _assignedBlockCardsDisplaySystem.Draw);
@@ -694,7 +694,7 @@ namespace Crusaders30XX.ECS.Systems
 			_enemyAttackDisplaySystem = new EnemyAttackDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_enemyDamageMeterDisplaySystem = new EnemyDamageMeterDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_ambushDisplaySystem = new AmbushDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
-			_queuedEventsDisplaySystem = new QueuedEventsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			// _queuedEventsDisplaySystem = new QueuedEventsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_damageModificationDisplaySystem = new DamageModificationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_attackAnimationDisplaySystem = new SplashEffectAnimationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_cardPlayedAnimationSystem = new CardPlayedAnimationSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
@@ -829,7 +829,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_enemyAttackDisplaySystem);
 			_world.AddSystem(_enemyDamageMeterDisplaySystem);
 			_world.AddSystem(_ambushDisplaySystem);
-			_world.AddSystem(_queuedEventsDisplaySystem);
+			// _world.AddSystem(_queuedEventsDisplaySystem);
 			_world.AddSystem(_damageModificationDisplaySystem);
 			_world.AddSystem(_attackAnimationDisplaySystem);
 			_world.AddSystem(_cardPlayedAnimationSystem);
