@@ -224,9 +224,9 @@ public sealed class CursedDisplaySystem : Core.System
         _content = content;
 
         EventManager.Subscribe<CardBaseRenderStartedEvent>(OnCardBaseRenderStarted, PreRenderPriority);
-        EventManager.Subscribe<CardBaseRenderCompletedEvent>(
-            evt => FrameProfiler.Measure("CursedDisplaySystem.OnCardBaseRenderCompletedEvent", () => OnCardBaseRenderCompleted(evt)),
-            PostRenderPriority);
+        // EventManager.Subscribe<CardBaseRenderCompletedEvent>(
+            // evt => FrameProfiler.Measure("CursedDisplaySystem.OnCardBaseRenderCompletedEvent", () => OnCardBaseRenderCompleted(evt)),
+            // PostRenderPriority);
     }
 
     protected override IEnumerable<Entity> GetRelevantEntities()
