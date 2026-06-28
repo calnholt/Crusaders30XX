@@ -42,6 +42,28 @@ namespace Crusaders30XX.ECS.Events
     }
 
     /// <summary>
+    /// Event published immediately before the base card art is rendered.
+    /// </summary>
+    public class CardBaseRenderStartedEvent
+    {
+        public Entity Card { get; set; }
+        public Vector2 Position { get; set; }
+        public float Scale { get; set; } = 1f;
+        public float Rotation { get; set; }
+    }
+
+    /// <summary>
+    /// Event published immediately after the base card art is rendered.
+    /// </summary>
+    public class CardBaseRenderCompletedEvent
+    {
+        public Entity Card { get; set; }
+        public Vector2 Position { get; set; }
+        public float Scale { get; set; } = 1f;
+        public float Rotation { get; set; }
+    }
+
+    /// <summary>
     /// Unified highlight render event for both cards and equipment. Carries the UIElement and Transform for accurate bounds/rotation.
     /// </summary>
     public class HighlightRenderEvent

@@ -223,17 +223,9 @@ public sealed class CursedDisplaySystem : Core.System
         _spriteBatch = spriteBatch;
         _content = content;
 
-        EventManager.Subscribe<CardRenderEvent>(OnCardRenderPre, PreRenderPriority);
-        EventManager.Subscribe<CardRenderEvent>(
-            evt => FrameProfiler.Measure("CursedDisplaySystem.OnCardRenderEvent", () => OnCardRenderPost(evt)),
-            PostRenderPriority);
-        EventManager.Subscribe<CardRenderScaledEvent>(OnCardRenderScaledPre, PreRenderPriority);
-        EventManager.Subscribe<CardRenderScaledEvent>(
-            evt => FrameProfiler.Measure("CursedDisplaySystem.OnCardRenderScaledEvent", () => OnCardRenderScaledPost(evt)),
-            PostRenderPriority);
-        EventManager.Subscribe<CardRenderScaledRotatedEvent>(OnCardRenderScaledRotatedPre, PreRenderPriority);
-        EventManager.Subscribe<CardRenderScaledRotatedEvent>(
-            evt => FrameProfiler.Measure("CursedDisplaySystem.OnCardRenderScaledRotatedEvent", () => OnCardRenderScaledRotatedPost(evt)),
+        EventManager.Subscribe<CardBaseRenderStartedEvent>(OnCardBaseRenderStarted, PreRenderPriority);
+        EventManager.Subscribe<CardBaseRenderCompletedEvent>(
+            evt => FrameProfiler.Measure("CursedDisplaySystem.OnCardBaseRenderCompletedEvent", () => OnCardBaseRenderCompleted(evt)),
             PostRenderPriority);
     }
 
@@ -254,32 +246,12 @@ public sealed class CursedDisplaySystem : Core.System
     {
     }
 
-    private void OnCardRenderPre(CardRenderEvent evt)
+    private void OnCardBaseRenderStarted(CardBaseRenderStartedEvent evt)
     {
-        BeginCursedRender(evt.Card, evt.Position, GetScale(evt.Card), GetRotation(evt.Card));
+        BeginCursedRender(evt.Card, evt.Position, evt.Scale, evt.Rotation);
     }
 
-    private void OnCardRenderPost(CardRenderEvent evt)
-    {
-        EndCursedRender(evt.Card);
-    }
-
-    private void OnCardRenderScaledPre(CardRenderScaledEvent evt)
-    {
-        BeginCursedRender(evt.Card, evt.Position, evt.Scale, 0f);
-    }
-
-    private void OnCardRenderScaledPost(CardRenderScaledEvent evt)
-    {
-        EndCursedRender(evt.Card);
-    }
-
-    private void OnCardRenderScaledRotatedPre(CardRenderScaledRotatedEvent evt)
-    {
-        BeginCursedRender(evt.Card, evt.Position, evt.Scale, GetRotation(evt.Card));
-    }
-
-    private void OnCardRenderScaledRotatedPost(CardRenderScaledRotatedEvent evt)
+    private void OnCardBaseRenderCompleted(CardBaseRenderCompletedEvent evt)
     {
         EndCursedRender(evt.Card);
     }
@@ -479,7 +451,4 @@ public sealed class CursedDisplaySystem : Core.System
             DepthFormat.None);
         return true;
     }
-
-    private static float GetScale(Entity card) => card?.GetComponent<Transform>()?.Scale.X ?? 1f;
-    private static float GetRotation(Entity card) => card?.GetComponent<Transform>()?.Rotation ?? 0f;
 }

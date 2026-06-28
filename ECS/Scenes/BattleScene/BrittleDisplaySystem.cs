@@ -62,12 +62,8 @@ public class BrittleDisplaySystem : Core.System
         _spriteBatch = spriteBatch;
         _content = content;
 
-        EventManager.Subscribe<CardRenderEvent>(OnCardRenderPre, PreRenderPriority);
-        EventManager.Subscribe<CardRenderEvent>(OnCardRenderPost, PostRenderPriority);
-        EventManager.Subscribe<CardRenderScaledEvent>(OnCardRenderScaledPre, PreRenderPriority);
-        EventManager.Subscribe<CardRenderScaledEvent>(OnCardRenderScaledPost, PostRenderPriority);
-        EventManager.Subscribe<CardRenderScaledRotatedEvent>(OnCardRenderScaledRotatedPre, PreRenderPriority);
-        EventManager.Subscribe<CardRenderScaledRotatedEvent>(OnCardRenderScaledRotatedPost, PostRenderPriority);
+        EventManager.Subscribe<CardBaseRenderStartedEvent>(OnCardBaseRenderStarted, PreRenderPriority);
+        EventManager.Subscribe<CardBaseRenderCompletedEvent>(OnCardBaseRenderCompleted, PostRenderPriority);
         EventManager.Subscribe<DeleteCachesEvent>(OnDeleteCachesEvent);
     }
 
@@ -97,38 +93,16 @@ public class BrittleDisplaySystem : Core.System
         _capturedCard = null;
     }
 
-    private void OnCardRenderPre(CardRenderEvent evt)
+    private void OnCardBaseRenderStarted(CardBaseRenderStartedEvent evt)
     {
-        var transform = evt.Card?.GetComponent<Transform>();
         BeginBrittleRender(
             evt.Card,
             evt.Position,
-            transform?.Scale.X ?? 1f,
-            transform?.Rotation ?? 0f);
+            evt.Scale,
+            evt.Rotation);
     }
 
-    private void OnCardRenderPost(CardRenderEvent evt)
-    {
-        EndBrittleRender(evt.Card);
-    }
-
-    private void OnCardRenderScaledPre(CardRenderScaledEvent evt)
-    {
-        BeginBrittleRender(evt.Card, evt.Position, evt.Scale, 0f);
-    }
-
-    private void OnCardRenderScaledPost(CardRenderScaledEvent evt)
-    {
-        EndBrittleRender(evt.Card);
-    }
-
-    private void OnCardRenderScaledRotatedPre(CardRenderScaledRotatedEvent evt)
-    {
-        float rotation = evt.Card?.GetComponent<Transform>()?.Rotation ?? 0f;
-        BeginBrittleRender(evt.Card, evt.Position, evt.Scale, rotation);
-    }
-
-    private void OnCardRenderScaledRotatedPost(CardRenderScaledRotatedEvent evt)
+    private void OnCardBaseRenderCompleted(CardBaseRenderCompletedEvent evt)
     {
         EndBrittleRender(evt.Card);
     }

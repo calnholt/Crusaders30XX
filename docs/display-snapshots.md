@@ -117,7 +117,7 @@ dotnet run -- snapshot brittle-card fireball
 dotnet run -- snapshot brittle-card strike --scale 0.6 --rotation -25
 dotnet run -- snapshot brittle-card strike --scale 1.35 --rotation 30
 
-# Include an attached card decoration in the brittle capture
+# Include an attached card decoration outside the brittle source capture
 dotnet run -- snapshot brittle-card strike --rotation 20 --pledge
 
 # Disable shaders to compare against the normal card render

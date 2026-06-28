@@ -505,10 +505,12 @@ namespace Crusaders30XX.ECS.Systems
         // Event handlers
         private void OnCardRenderEvent(CardRenderEvent evt)
         {
-            var t = evt.Card.GetComponent<Transform>();
-            var ui = evt.Card.GetComponent<UIElement>();
-            EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
-            DrawCard(evt.Card, evt.Position);
+            var transform = evt.Card.GetComponent<Transform>();
+            RenderCardWithLifecycle(
+                evt.Card,
+                evt.Position,
+                transform?.Scale.X ?? 1f,
+                transform?.Rotation ?? 0f);
         }
 
         private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
@@ -525,10 +527,8 @@ namespace Crusaders30XX.ECS.Systems
                     Vector2 originalPosition = transform.Position;
                     transform.Rotation = 0f;
                     transform.Position = evt.Position;
-                    var t = evt.Card.GetComponent<Transform>();
                     var ui = evt.Card.GetComponent<UIElement>();
-                    EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
-                    DrawCard(evt.Card, evt.Position);
+                    RenderCardWithLifecycle(evt.Card, evt.Position, evt.Scale, 0f);
                     transform.Scale = originalScale;
                     transform.Rotation = originalRotation;
                     transform.Position = originalPosition;
@@ -536,10 +536,7 @@ namespace Crusaders30XX.ECS.Systems
                 }
                 else
                 {
-                    var t = evt.Card.GetComponent<Transform>();
-                    var ui = evt.Card.GetComponent<UIElement>();
-                    EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
-                    DrawCard(evt.Card, evt.Position);
+                    RenderCardWithLifecycle(evt.Card, evt.Position, evt.Scale, 0f);
                 }
             }
             finally
@@ -557,21 +554,38 @@ namespace Crusaders30XX.ECS.Systems
                 transform.Scale = new Vector2(evt.Scale, evt.Scale);
                 Vector2 originalPosition = transform.Position;
                 transform.Position = evt.Position;
-                var t = evt.Card.GetComponent<Transform>();
                 var ui = evt.Card.GetComponent<UIElement>();
-                EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t, UI = ui });
-                DrawCard(evt.Card, evt.Position);
+                RenderCardWithLifecycle(evt.Card, evt.Position, evt.Scale, transform.Rotation);
                 transform.Scale = originalScale;
                 transform.Position = originalPosition;
                 if (ui != null) ui.Bounds = CardGeometryService.GetVisualRect(GetSettings(), evt.Position, evt.Scale);
             }
             else
             {
-                var t2 = evt.Card.GetComponent<Transform>();
-                var ui2 = evt.Card.GetComponent<UIElement>();
-                EventManager.Publish(new HighlightRenderEvent { Entity = evt.Card, Transform = t2, UI = ui2 });
-                DrawCard(evt.Card, evt.Position);
+                RenderCardWithLifecycle(evt.Card, evt.Position, evt.Scale, 0f);
             }
+        }
+
+        private void RenderCardWithLifecycle(Entity card, Vector2 position, float scale, float rotation)
+        {
+            var transform = card.GetComponent<Transform>();
+            var ui = card.GetComponent<UIElement>();
+            EventManager.Publish(new HighlightRenderEvent { Entity = card, Transform = transform, UI = ui });
+            EventManager.Publish(new CardBaseRenderStartedEvent
+            {
+                Card = card,
+                Position = position,
+                Scale = scale,
+                Rotation = rotation
+            });
+            DrawCard(card, position);
+            EventManager.Publish(new CardBaseRenderCompletedEvent
+            {
+                Card = card,
+                Position = position,
+                Scale = scale,
+                Rotation = rotation
+            });
         }
 
         public void DrawCard(Entity entity, Vector2 position)
