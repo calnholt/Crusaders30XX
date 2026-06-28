@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Save;
@@ -10,7 +11,7 @@ namespace Crusaders30XX.Tests;
 public class MedalCounterTests
 {
 	[Fact]
-	public void StBenedict_resets_counter_after_six_pledges()
+	public void StBenedict_resets_counter_after_three_pledges()
 	{
 		EventManager.Clear();
 		try
@@ -19,14 +20,14 @@ public class MedalCounterTests
 			var medal = new StBenedict();
 			medal.Initialize(entityManager, entityManager.CreateEntity("Medal"));
 
-			for (int i = 0; i < 5; i++)
+			for (int i = 0; i < 2; i++)
 			{
 				EventManager.Publish(new PledgeAddedEvent { Card = entityManager.CreateEntity($"Card_{i}") });
 			}
 
-			Assert.Equal(5, medal.CurrentCount);
+			Assert.Equal(2, medal.CurrentCount);
 
-			EventManager.Publish(new PledgeAddedEvent { Card = entityManager.CreateEntity("Card_5") });
+			EventManager.Publish(new PledgeAddedEvent { Card = entityManager.CreateEntity("Card_2") });
 
 			Assert.Equal(0, medal.CurrentCount);
 		}
@@ -68,24 +69,30 @@ public class MedalCounterTests
 	}
 
 	[Fact]
-	public void StSimonOfCyrene_decrements_remaining_battles_on_start_battle()
+	public void StSimonOfCyrene_applies_anathema_on_start_battle()
 	{
 		EventManager.Clear();
 		try
 		{
 			var entityManager = new EntityManager();
+			var enemy = entityManager.CreateEntity("Enemy");
+			entityManager.AddComponent(enemy, new AppliedPassives());
 			var medal = new StSimonOfCyrene();
 			medal.Initialize(entityManager, entityManager.CreateEntity("Medal"));
-			medal.OnAcquire();
 
-			Assert.Equal(3, medal.CurrentCount);
+			var activateCount = 0;
+			EventManager.Subscribe<MedalActivateEvent>(_ => activateCount++);
+			var applied = new List<ApplyPassiveEvent>();
+			EventManager.Subscribe<ApplyPassiveEvent>(evt => applied.Add(evt));
 
-			for (int expectedRemaining = 2; expectedRemaining >= 0; expectedRemaining--)
-			{
-				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle });
-				medal.Activate();
-				Assert.Equal(expectedRemaining, medal.CurrentCount);
-			}
+			EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.StartBattle });
+			medal.Activate();
+
+			Assert.Equal(1, activateCount);
+			Assert.Single(applied);
+			Assert.Same(enemy, applied[0].Target);
+			Assert.Equal(AppliedPassiveType.Anathema, applied[0].Type);
+			Assert.Equal(1, applied[0].Delta);
 		}
 		finally
 		{

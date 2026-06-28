@@ -95,7 +95,7 @@ public class EnemyIntentPlanningSystemTests
 				EventManager.Publish(new ChangeBattlePhaseEvent { Current = SubPhase.EnemyStart });
 
 				Assert.Single(intent.Planned);
-				Assert.Equal("tutorial_gleeber_strike_5", intent.Planned[0].AttackId);
+				Assert.Equal("tutorial_gleeber_strike_6", intent.Planned[0].AttackId);
 			}
 			finally
 			{

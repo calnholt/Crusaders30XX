@@ -86,7 +86,7 @@ public class EnemyDamageThresholdTests : IDisposable
     public void Block_threshold_text_describes_required_block()
     {
         Assert.Equal(
-            "Unless at least 6 damage is blocked - Freeze the top card of your draw pile.",
+            "If this attack deals 7 or more damage - Freeze the top card of your draw pile.",
             EnemyAttackTextHelper.GetBlockThresholdText(6, "Freeze the top card of your draw pile."));
     }
 

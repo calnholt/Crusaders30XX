@@ -17,6 +17,7 @@ namespace Crusaders30XX.ECS.Services
 		public const string RestrictionScorched = "Scorched";
 		public const string RestrictionThorned = "Thorned";
 		public const string RestrictionColorless = "Colorless";
+		public const string RestrictionCursed = "Cursed";
 
 		public static void HydrateRunLongPassivesOntoPlayer(Entity player)
 		{
@@ -80,6 +81,7 @@ namespace Crusaders30XX.ECS.Services
 			if (card.HasComponent<Scorched>()) names.Add(RestrictionScorched);
 			if (card.HasComponent<Thorned>()) names.Add(RestrictionThorned);
 			if (card.HasComponent<Colorless>()) names.Add(RestrictionColorless);
+			if (card.HasComponent<Cursed>()) names.Add(RestrictionCursed);
 			SaveCache.SetRunDeckEntryRestrictions(RunDeckService.PrimaryLoadoutId, entryId, names);
 		}
 
@@ -148,7 +150,11 @@ namespace Crusaders30XX.ECS.Services
 						if (entityManager != null) entityManager.AddComponent(card, new Colorless { Owner = card });
 					}
 					break;
+				case RestrictionCursed:
+					CardApplicationManagementSystem.ApplyCursedRuntime(entityManager, card);
+					break;
 			}
+			CardApplicationManagementSystem.RefreshCursedCardPresentation(entityManager, card);
 		}
 
 		private static void StripRestrictionComponents(EntityManager entityManager, Entity card)
@@ -160,6 +166,7 @@ namespace Crusaders30XX.ECS.Services
 			if (card.HasComponent<Scorched>()) entityManager.RemoveComponent<Scorched>(card);
 			if (card.HasComponent<Thorned>()) entityManager.RemoveComponent<Thorned>(card);
 			if (card.HasComponent<Colorless>()) entityManager.RemoveComponent<Colorless>(card);
+			if (card.HasComponent<Cursed>()) CardApplicationManagementSystem.RemoveCursedRuntime(entityManager, card);
 		}
 	}
 }

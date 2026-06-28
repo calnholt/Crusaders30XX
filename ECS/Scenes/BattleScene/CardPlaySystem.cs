@@ -427,7 +427,8 @@ namespace Crusaders30XX.ECS.Systems
             int vigorStacksAtPlay = VigorService.GetPlayerVigorStacks(EntityManager);
             card.OnPlay?.Invoke(EntityManager, evt.Card);
             EventManager.Publish(new CardPlayedEvent { Card = evt.Card, VigorStacksAtPlay = vigorStacksAtPlay });
-            if (!GuidedTutorialService.IsActive(EntityManager))
+            bool isCurseCard = string.Equals(card.CardId, Curse.CardIdValue, StringComparison.OrdinalIgnoreCase);
+            if (!isCurseCard && !GuidedTutorialService.IsActive(EntityManager))
                 EventManager.Publish(new TrackingEvent { Type = card.CardId, Delta = 1 });
 
             // If the card was sealed, apply HP cost and remove the seal
@@ -463,7 +464,8 @@ namespace Crusaders30XX.ECS.Systems
             }
 
             // Award mastery points for Attack and Prayer cards on play
-            if (!GuidedTutorialService.IsActive(EntityManager)
+            if (!isCurseCard
+                && !GuidedTutorialService.IsActive(EntityManager)
                 && (card.Type == CardType.Attack || card.Type == CardType.Prayer))
             {
                 SaveCache.AddMasteryPoints(card.CardId, 1);

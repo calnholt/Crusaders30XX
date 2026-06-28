@@ -822,6 +822,22 @@ namespace Crusaders30XX.ECS.Factories
             {
                 entityManager.AddComponent(clonedEntity, new Colorless { Owner = clonedEntity });
             }
+            if (sourceEntity.HasComponent<Cursed>())
+            {
+                entityManager.AddComponent(clonedEntity, new Cursed { Owner = clonedEntity });
+            }
+            var sourceCursedOriginal = sourceEntity.GetComponent<CursedOriginalCard>();
+            if (sourceCursedOriginal != null)
+            {
+                entityManager.AddComponent(clonedEntity, new CursedOriginalCard
+                {
+                    Owner = clonedEntity,
+                    CardId = sourceCursedOriginal.CardId,
+                    Color = sourceCursedOriginal.Color,
+                    IsUpgraded = sourceCursedOriginal.IsUpgraded,
+                    IsStarter = sourceCursedOriginal.IsStarter,
+                });
+            }
 
             // Copy Hint
             var sourceHint = sourceEntity.GetComponent<Hint>();
@@ -846,6 +862,7 @@ namespace Crusaders30XX.ECS.Factories
 					CardColor = sourceCardTooltip.CardColor,
 					IsUpgraded = sourceCardTooltip.IsUpgraded,
 					CrossfadeUpgradePreview = sourceCardTooltip.CrossfadeUpgradePreview,
+					PreviewRestrictionNames = new List<string>(sourceCardTooltip.PreviewRestrictionNames ?? new List<string>()),
 				});
             }
 

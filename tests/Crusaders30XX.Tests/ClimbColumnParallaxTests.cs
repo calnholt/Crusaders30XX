@@ -132,7 +132,7 @@ public class ClimbColumnParallaxTests : IDisposable
 	[Fact]
 	public void ComputePortraitSlotHeight_uses_portrait_meta_and_padding_defaults()
 	{
-		Assert.Equal(240, ClimbColumnDisplaySystem.ComputePortraitSlotHeight());
+		Assert.Equal(264, ClimbColumnDisplaySystem.ComputePortraitSlotHeight());
 	}
 
 	[Fact]

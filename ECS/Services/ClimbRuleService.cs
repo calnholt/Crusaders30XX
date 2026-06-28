@@ -460,6 +460,7 @@ namespace Crusaders30XX.ECS.Services
 				BattleLocation.Tundra => RunScopedStateService.RestrictionFrozen,
 				BattleLocation.Jungle => RunScopedStateService.RestrictionThorned,
 				BattleLocation.Volcano => RunScopedStateService.RestrictionScorched,
+				BattleLocation.Gothic => RunScopedStateService.RestrictionCursed,
 				_ => string.Empty,
 			};
 		}

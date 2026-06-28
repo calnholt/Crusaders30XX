@@ -96,6 +96,12 @@ namespace Crusaders30XX.ECS.Systems
             EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.TheGate });
         }
 
+        [DebugAction("Set Battlefield: Gothic")]
+        public void Debug_SetBattlefield_Gothic()
+        {
+            EventManager.Publish(new ChangeBattleLocationEvent { Location = BattleLocation.Gothic });
+        }
+
         [DebugActionInt("Player: Deal Damage", Step = 1, Min = 1, Max = 999, Default = 999)]
         public void Debug_PlayerDealDamage(int amount)
         {

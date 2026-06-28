@@ -14,6 +14,7 @@ namespace Crusaders30XX.ECS.Services
 			BattleLocation.Tundra,
 			BattleLocation.Jungle,
 			BattleLocation.Volcano,
+			BattleLocation.Gothic,
 		};
 
 		public const BattleLocation FinalEncounterLocation = BattleLocation.TheGate;
@@ -35,6 +36,7 @@ namespace Crusaders30XX.ECS.Services
 				BattleLocation.Jungle => "Battle_Backgrounds/jungle-battle-background",
 				BattleLocation.Volcano => "Battle_Backgrounds/volcano-battle-background",
 				BattleLocation.TheGate => "Battle_Backgrounds/the-gate-battle-background",
+				BattleLocation.Gothic => "Battle_Backgrounds/gothic-battle-background",
 				BattleLocation.Forest => "forest-background",
 				BattleLocation.Cathedral => "cathedral-background",
 				_ => string.Empty,
@@ -50,6 +52,7 @@ namespace Crusaders30XX.ECS.Services
 				BattleLocation.Jungle => MusicTrack.JungleBattle,
 				BattleLocation.Volcano => MusicTrack.VolcanoBattle,
 				BattleLocation.TheGate => MusicTrack.TheGateBattle,
+				BattleLocation.Gothic => MusicTrack.GothicBattle,
 				_ => MusicTrack.DesertBattle,
 			};
 		}

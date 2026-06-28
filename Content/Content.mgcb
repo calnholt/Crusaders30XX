@@ -898,6 +898,18 @@
 /processorParam:TextureFormat=Color
 /build:Battle_Backgrounds/volcano-battle-background.png
 
+#begin Battle_Backgrounds/gothic-battle-background.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Battle_Backgrounds/gothic-battle-background.png
+
 #begin waystation.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -1851,6 +1863,12 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/Scorched.fx
 
+#begin Shaders/Cursed.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/Cursed.fx
+
 #begin Shaders/DrippingBlood.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -1919,6 +1937,11 @@
 /importer:OggImporter
 /processor:SongProcessor
 /build:Music/volcano.ogg
+
+#begin Music/gothic.ogg
+/importer:OggImporter
+/processor:SongProcessor
+/build:Music/gothic.ogg
 
 #begin Music/climb.ogg
 /importer:OggImporter

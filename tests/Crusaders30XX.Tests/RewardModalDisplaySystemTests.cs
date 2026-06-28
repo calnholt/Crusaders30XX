@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Data.Loadouts;
 using Crusaders30XX.ECS.Data.Save;
 using Crusaders30XX.ECS.Factories;
+using Crusaders30XX.ECS.Objects.Cards;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Systems;
 using Xunit;
@@ -17,6 +18,7 @@ public sealed class RewardModalDisplaySystemTests
 		RunScopedStateService.RestrictionFrozen,
 		RunScopedStateService.RestrictionSealed,
 		RunScopedStateService.RestrictionBrittle,
+		RunScopedStateService.RestrictionCursed,
 	};
 
 	[Fact]
@@ -120,6 +122,8 @@ public sealed class RewardModalDisplaySystemTests
 		Assert.True(card.HasComponent<Frozen>());
 		Assert.True(card.HasComponent<Sealed>());
 		Assert.True(card.HasComponent<Brittle>());
+		Assert.True(card.HasComponent<Cursed>());
+		Assert.Equal(Curse.CardIdValue, card.GetComponent<CardData>()?.Card?.CardId);
 	}
 
 }

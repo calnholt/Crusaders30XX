@@ -211,6 +211,7 @@ namespace Crusaders30XX.ECS.Systems
                 MusicTrack.JungleBattle => "Music/jungle",
                 MusicTrack.VolcanoBattle => "Music/volcano",
                 MusicTrack.TheGateBattle => "Music/the-gate",
+                MusicTrack.GothicBattle => "Music/gothic",
                 _ => null
             };
             if (string.IsNullOrEmpty(assetName)) return null;

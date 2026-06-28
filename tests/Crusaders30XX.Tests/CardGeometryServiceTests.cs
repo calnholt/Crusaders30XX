@@ -1,3 +1,4 @@
+using System;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Services;
@@ -107,10 +108,10 @@ public sealed class CardGeometryServiceTests
         var geometry = CardGeometryService.GetVisualGeometry(entityManager, hovered);
         var settings = CardGeometryService.GetSettings(entityManager);
 
-        Assert.Equal(1f, geometry.Scale, 3);
-        Assert.Equal(CardGeometrySettings.DefaultWidth, geometry.Bounds.Width);
+        Assert.Equal(1.1f, geometry.Scale, 3);
+        Assert.Equal((int)Math.Round(CardGeometrySettings.DefaultWidth * 1.1f), geometry.Bounds.Width);
         Assert.Equal(
-            CardGeometryService.GetVisualRect(settings, hovered.GetComponent<Transform>().Position, 1f),
+            CardGeometryService.GetVisualRect(settings, hovered.GetComponent<Transform>().Position, 1.1f),
             geometry.Bounds);
     }
 

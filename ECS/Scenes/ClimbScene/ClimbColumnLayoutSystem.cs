@@ -336,41 +336,7 @@ namespace Crusaders30XX.ECS.Systems
 			ui.TooltipPosition = TooltipPosition.Right;
 			ui.TooltipOffsetPx = ShopTooltipOffsetPxValue;
 			RemoveEquipmentTooltip(entity);
-
-			if (slot == null
-				|| presentation.IsUnavailable
-				|| string.IsNullOrWhiteSpace(slot.cardMutationDeckEntryId)
-				|| string.IsNullOrWhiteSpace(slot.cardMutationRestrictionName))
-			{
-				RemoveCardTooltip(entity);
-				return;
-			}
-
-			var entry = SaveCache.GetRunDeckEntry(RunDeckService.PrimaryLoadoutId, slot.cardMutationDeckEntryId);
-			if (entry == null
-				|| (entry.restrictions ?? new List<string>()).Contains(slot.cardMutationRestrictionName, StringComparer.OrdinalIgnoreCase)
-				|| !RunDeckService.TryParseCardKey(entry.cardKey, out var cardId, out var color, out bool isUpgraded))
-			{
-				RemoveCardTooltip(entity);
-				return;
-			}
-
-			var tooltip = entity.GetComponent<CardTooltip>();
-			if (tooltip == null)
-			{
-				tooltip = new CardTooltip();
-				EntityManager.AddComponent(entity, tooltip);
-			}
-
-			tooltip.CardId = cardId;
-			tooltip.CardColor = color;
-			tooltip.IsUpgraded = isUpgraded;
-			tooltip.TooltipScale = 1.0f;
-			tooltip.CrossfadeUpgradePreview = false;
-			tooltip.PreviewRestrictionNames = ClimbRuleService
-				.BuildPreviewRestrictionNames(entry, slot.cardMutationRestrictionName)
-				.ToList();
-			ui.TooltipType = TooltipType.Card;
+			RemoveCardTooltip(entity);
 		}
 
 		private void RemoveCardTooltip(Entity entity)

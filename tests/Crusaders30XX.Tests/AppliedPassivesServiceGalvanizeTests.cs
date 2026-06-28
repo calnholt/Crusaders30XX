@@ -23,11 +23,11 @@ public class AppliedPassivesServiceGalvanizeTests : IDisposable
     }
 
     [Theory]
-    [InlineData(5, 4)]
-    [InlineData(3, 3)]
-    [InlineData(7, 6)]
+    [InlineData(5, 3)]
+    [InlineData(3, 2)]
+    [InlineData(7, 4)]
     [InlineData(0, 0)]
-    public void GetGalvanizeBonus_rounds_up_eighty_percent(int preGalvanizeDamage, int expectedBonus)
+    public void GetGalvanizeBonus_rounds_up_fifty_percent(int preGalvanizeDamage, int expectedBonus)
     {
         Assert.Equal(expectedBonus, AppliedPassivesService.GetGalvanizeBonus(preGalvanizeDamage));
     }
@@ -40,7 +40,7 @@ public class AppliedPassivesServiceGalvanizeTests : IDisposable
 
         int preview = PreviewAttackDamage(entityManager, player, enemy, 5, isWeapon: false);
 
-        Assert.Equal(9, preview);
+        Assert.Equal(8, preview);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class AppliedPassivesServiceGalvanizeTests : IDisposable
 
         int preview = PreviewAttackDamage(entityManager, player, enemy, 5, isWeapon: false);
 
-        Assert.Equal(13, preview);
+        Assert.Equal(11, preview);
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class AppliedPassivesServiceGalvanizeTests : IDisposable
 
         int preview = PreviewAttackDamage(entityManager, player, enemy, 3, isWeapon: false);
 
-        Assert.Equal(6, preview);
+        Assert.Equal(5, preview);
     }
 
     [Fact]

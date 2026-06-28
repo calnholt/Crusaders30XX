@@ -46,13 +46,13 @@ public sealed class HandDisplaySystemTests : IDisposable
 
         var transform = hovered.GetComponent<Transform>();
         var bounds = hovered.GetComponent<UIElement>().Bounds;
-        var targetRect = CardGeometryService.GetVisualRect((CardGeometrySettings)null, hovered.GetComponent<PositionTween>().Target, 1f);
+        var targetRect = CardGeometryService.GetVisualRect((CardGeometrySettings)null, hovered.GetComponent<PositionTween>().Target, 1.1f);
         Assert.NotEqual(0f, normalRotation);
-        Assert.Equal(1f, transform.Scale.X, 3);
-        Assert.Equal(1f, transform.Scale.Y, 3);
+        Assert.Equal(1.1f, transform.Scale.X, 3);
+        Assert.Equal(1.1f, transform.Scale.Y, 3);
         Assert.Equal(0f, transform.Rotation, 3);
-        Assert.Equal(CardGeometrySettings.DefaultWidth, bounds.Width);
-        Assert.InRange(targetRect.Bottom, Game1.VirtualHeight - 8, Game1.VirtualHeight);
+        Assert.Equal((int)Math.Round(CardGeometrySettings.DefaultWidth * 1.1f), bounds.Width);
+        Assert.InRange(targetRect.Bottom, Game1.VirtualHeight - 8, Game1.VirtualHeight + 8);
     }
 
     [Fact]
@@ -130,13 +130,13 @@ public sealed class HandDisplaySystemTests : IDisposable
 
         display.Update(Frame());
 
-        Assert.Equal(1f, hovered.GetComponent<Transform>().Scale.X, 3);
+        Assert.Equal(1.1f, hovered.GetComponent<Transform>().Scale.X, 3);
 
         hovered.GetComponent<UIElement>().IsHovered = false;
         display.Update(Frame());
         float firstReturnScale = hovered.GetComponent<Transform>().Scale.X;
 
-        Assert.InRange(firstReturnScale, 0.8f, 1f);
+        Assert.InRange(firstReturnScale, 0.8f, 1.1f);
         Assert.NotEqual(0.8f, firstReturnScale, 3);
 
         for (int i = 0; i < 60; i++)

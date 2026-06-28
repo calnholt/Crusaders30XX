@@ -31,6 +31,7 @@ public class Game1 : Game
     private ThornedDisplaySystem _thornedDisplaySystem;
     private BrittleDisplaySystem _brittleDisplaySystem;
     private ScorchedDisplaySystem _scorchedDisplaySystem;
+    private CursedDisplaySystem _cursedDisplaySystem;
     private SealDisplaySystem _sealDisplaySystem;
     private PlayerInputSystem _playerInputSystem;
     private ControllerRumbleSystem _controllerRumbleSystem;
@@ -194,6 +195,7 @@ public class Game1 : Game
         _thornedDisplaySystem = new ThornedDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _brittleDisplaySystem = new BrittleDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _scorchedDisplaySystem = new ScorchedDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
+        _cursedDisplaySystem = new CursedDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         var sealTexture = Content.Load<Texture2D>("seal");
         _sealDisplaySystem = new SealDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, sealTexture);
         _dialogDisplaySystem = new DialogDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
@@ -252,6 +254,7 @@ public class Game1 : Game
         _world.AddSystem(_thornedDisplaySystem);
         _world.AddSystem(_brittleDisplaySystem);
         _world.AddSystem(_scorchedDisplaySystem);
+        _world.AddSystem(_cursedDisplaySystem);
         _world.AddSystem(_sealDisplaySystem);
         _world.AddSystem(_dialogDisplaySystem);
         _world.AddSystem(_playerInputSystem, SystemUpdatePhase.Input);

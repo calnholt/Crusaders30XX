@@ -27,6 +27,7 @@ namespace Crusaders30XX.ECS.Factories
                 "courageous" => new Courageous(),
                 "crimson_rite" => new CrimsonRite(),
                 "crusade" => new Crusade(),
+                "curse" => new Curse(),
                 "dagger" => new Dagger(),
                 "deus_vult" => new DeusVult(),
                 "divine_protection" => new DivineProtection(),
@@ -145,4 +146,3 @@ namespace Crusaders30XX.ECS.Factories
         }
     }
 }
-

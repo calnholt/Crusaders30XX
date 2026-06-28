@@ -223,9 +223,8 @@ public class FallenShepherdAttackTests : IDisposable
     // }
 
     [Theory]
-    [InlineData(2, 1)]
-    [InlineData(3, 0)]
-    public void Have_no_mercy_discards_selected_card_only_below_three_block(int assignedBlock, int expectedDiscards)
+    [InlineData(2)]
+    public void Have_no_mercy_discards_selected_card_only_below_threshold(int assignedBlock)
     {
         var attack = new FallenShepherdPhase3();
         var entityManager = CreateThresholdCombat(attack, assignedBlock, includeHandCard: true, out var handCard, out _);
@@ -241,9 +240,50 @@ public class FallenShepherdAttackTests : IDisposable
 
         ResolveThresholdAttack(entityManager);
 
-        Assert.Equal(expectedDiscards, discardRequests.Count);
-        if (expectedDiscards == 1) Assert.Same(handCard, discardRequests[0].Card);
+        int blockRequired = attack.BlockRequiredToPreventEffect!.Value;
+        int expected = assignedBlock < blockRequired ? 1 : 0;
+        Assert.Equal(expected, discardRequests.Count);
+        if (expected == 1) Assert.Same(handCard, discardRequests[0].Card);
         Assert.False(handCard.HasComponent<MarkedForSpecificDiscard>());
+    }
+
+    [Fact]
+    public void Have_no_mercy_discards_at_exactly_one_below_threshold()
+    {
+        var attack = new FallenShepherdPhase3();
+        int blockRequired = attack.BlockRequiredToPreventEffect!.Value;
+        var entityManager = CreateThresholdCombat(attack, blockRequired - 1, includeHandCard: true, out var handCard, out _);
+        _ = new MarkedForSpecificDiscardSystem(entityManager);
+        var discardRequests = new List<CardMoveRequested>();
+        EventManager.Subscribe<CardMoveRequested>(evt =>
+        {
+            if (evt.Reason == "DiscardSpecificCard") discardRequests.Add(evt);
+        });
+
+        attack.OnAttackReveal(entityManager);
+        ResolveThresholdAttack(entityManager);
+
+        Assert.Single(discardRequests);
+        Assert.Same(handCard, discardRequests[0].Card);
+    }
+
+    [Fact]
+    public void Have_no_mercy_spares_card_at_threshold_block()
+    {
+        var attack = new FallenShepherdPhase3();
+        int blockRequired = attack.BlockRequiredToPreventEffect!.Value;
+        var entityManager = CreateThresholdCombat(attack, blockRequired, includeHandCard: true, out _, out _);
+        _ = new MarkedForSpecificDiscardSystem(entityManager);
+        int discardRequests = 0;
+        EventManager.Subscribe<CardMoveRequested>(evt =>
+        {
+            if (evt.Reason == "DiscardSpecificCard") discardRequests++;
+        });
+
+        attack.OnAttackReveal(entityManager);
+        ResolveThresholdAttack(entityManager);
+
+        Assert.Equal(0, discardRequests);
     }
 
     [Fact]

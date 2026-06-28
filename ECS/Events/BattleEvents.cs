@@ -9,6 +9,7 @@ namespace Crusaders30XX.ECS.Events
         Jungle,
         Volcano,
         TheGate,
+        Gothic,
     }
 
     public class ChangeBattleLocationEvent

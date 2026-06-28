@@ -513,6 +513,27 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Marks a card as cursed. Rendered with the cursed cracks shader.
+    /// </summary>
+    public class Cursed : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
+    /// Stores the original runtime definition for a card that is currently shown
+    /// and played as Curse.
+    /// </summary>
+    public class CursedOriginalCard : IComponent
+    {
+        public Entity Owner { get; set; }
+        public string CardId { get; set; } = "";
+        public CardData.CardColor Color { get; set; } = CardData.CardColor.White;
+        public bool IsUpgraded { get; set; }
+        public bool IsStarter { get; set; }
+    }
+
+    /// <summary>
     /// Marks a card as colorless. Its printed color remains unchanged, but it does not
     /// qualify as red, white, or black during combat.
     /// </summary>

@@ -47,6 +47,7 @@ public class ClimbRuleServiceTests
 	[InlineData(BattleLocation.Tundra, RunScopedStateService.RestrictionFrozen)]
 	[InlineData(BattleLocation.Jungle, RunScopedStateService.RestrictionThorned)]
 	[InlineData(BattleLocation.Volcano, RunScopedStateService.RestrictionScorched)]
+	[InlineData(BattleLocation.Gothic, RunScopedStateService.RestrictionCursed)]
 	public void Encounter_location_maps_to_card_mutation(BattleLocation location, string expectedRestriction)
 	{
 		Assert.Equal(expectedRestriction, ClimbRuleService.GetEncounterMutationRestrictionName(location));

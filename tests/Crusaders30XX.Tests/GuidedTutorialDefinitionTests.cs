@@ -14,13 +14,13 @@ namespace Crusaders30XX.Tests;
 public class GuidedTutorialDefinitionTests
 {
 	[Theory]
-	[InlineData(1, "colorless_3_block:Black,smite:Black")]
-	[InlineData(2, "colorless_3_block:Black,litany_of_wrath:Black,smite:Black")]
-	[InlineData(3, "hold_the_line:Black,litany_of_wrath:Black,smite:Black,reckoning:Black")]
+	[InlineData(1, "smite:Black,smite:Black")]
+	[InlineData(2, "smite:Black,litany_of_wrath:Black,smite:Black")]
+	[InlineData(3, "smite:Black,litany_of_wrath:Black,smite:Black,reckoning:Black")]
 	[InlineData(4, "absolution:Black,litany_of_wrath:Black,smite:Black,reckoning:Black")]
-	[InlineData(5, "mantlet:Black,mantlet:Black,mantlet:Black,smite:Black")]
-	[InlineData(6, "stab:Black,hold_the_line:Red,hold_the_line:White,smite:Black")]
-	[InlineData(7, "hold_the_line:White,hold_the_line:White,smite:Black,smite:Black")]
+	[InlineData(5, "smite:Black,smite:Black,smite:Black,smite:Black")]
+	[InlineData(6, "stab:Black,smite:Red,smite:White,smite:White")]
+	[InlineData(7, "smite:White,smite:White,smite:Black,smite:Black")]
 	public void Stock_hands_are_exact(int section, string expected)
 	{
 		string actual = string.Join(",", GuidedTutorialDefinitions.GetTurn(section, 1).StockHand
@@ -35,11 +35,11 @@ public class GuidedTutorialDefinitionTests
 
 		string turn1 = string.Join(",", GuidedTutorialDefinitions.GetTurn(8, 1).StockHand
 			.Select(card => $"{card.CardId}:{card.Color}"));
-		Assert.Equal("courageous:Black,smite:Red,smite:Black,fervor:Black", turn1);
+		Assert.Equal("courageous:Black,smite:Black,smite:Black,fervor:Black", turn1);
 
 		string turn2 = string.Join(",", GuidedTutorialDefinitions.GetTurn(8, 2).StockHand
 			.Select(card => $"{card.CardId}:{card.Color}"));
-		Assert.Equal("litany_of_wrath:Red,absolution:Black,reckoning:Black,smite:Red", turn2);
+		Assert.Equal("litany_of_wrath:Red,absolution:Red,reckoning:Black,smite:Red", turn2);
 	}
 
 	[Fact]
@@ -56,7 +56,7 @@ public class GuidedTutorialDefinitionTests
 		Assert.Equal(10, GuidedTutorialDefinitions.GetSection(4).EnemyHp);
 		Assert.Equal(9, GuidedTutorialDefinitions.GetSection(4).PlayerHp);
 
-		Assert.Equal(6, GuidedTutorialDefinitions.GetSection(5).EnemyHp);
+		Assert.Equal(5, GuidedTutorialDefinitions.GetSection(5).EnemyHp);
 		Assert.True(GuidedTutorialDefinitions.GetSection(5).IsTeachSection);
 
 		Assert.Equal(12, GuidedTutorialDefinitions.GetSection(8).EnemyHp);
@@ -116,8 +116,11 @@ public class GuidedTutorialDefinitionTests
 			GuidedTutorialDefinitions.GetMessageKeys(7, 1, SubPhase.Block, 0));
 
 		Assert.Equal(
-			["teach_intent_pips", "teach_pledge"],
+			["teach_intent_pips"],
 			GuidedTutorialDefinitions.GetMessageKeys(8, 1, SubPhase.Block, 0));
+		Assert.Equal(
+			["teach_pledge"],
+			GuidedTutorialDefinitions.GetMessageKeys(8, 1, SubPhase.Action, 0));
 	}
 
 	[Fact]

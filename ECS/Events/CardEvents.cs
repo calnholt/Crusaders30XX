@@ -426,6 +426,7 @@ namespace Crusaders30XX.ECS.Events
         TheGateBattle = 10,
         Climb = 11,
         VolcanoBattle = 12,
+        GothicBattle = 13,
     }
 
     /// <summary>
@@ -614,6 +615,7 @@ namespace Crusaders30XX.ECS.Events
         Scorched,
         Thorned,
         Colorless,
+        Cursed,
     }
 
     public class RemoveRandomCardEvent
