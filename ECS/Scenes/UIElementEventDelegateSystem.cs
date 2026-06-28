@@ -112,7 +112,13 @@ namespace Crusaders30XX.ECS.Systems
                     var deck = deckEntity?.GetComponent<Deck>();
                     if (deck?.Cards != null)
                     {
-                        EventManager.Publish(new OpenCardListModalEvent { Title = "Loadout", Cards = deck.Cards.ToList() });
+                        bool isClimb = IsClimbScene(entityManager);
+                        EventManager.Publish(new OpenCardListModalEvent
+                        {
+                            Title = isClimb ? "Run Overview" : "Loadout",
+                            Cards = deck.Cards.ToList(),
+                            Mode = isClimb ? CardListModalMode.Inventory : CardListModalMode.CardList,
+                        });
                     }
                     break;
                 }
@@ -216,7 +222,12 @@ namespace Crusaders30XX.ECS.Systems
                     var deck = deckEntity?.GetComponent<Deck>();
                     if (deck != null)
                     {
-                        EventManager.Publish(new OpenCardListModalEvent { Title = "Draw Pile", Cards = deck.DrawPile.ToList() });
+                        EventManager.Publish(new OpenCardListModalEvent
+                        {
+                            Title = "Draw Pile",
+                            Cards = deck.DrawPile.ToList(),
+                            Mode = CardListModalMode.CardList,
+                        });
                     }
                     break;
                 }
@@ -226,7 +237,12 @@ namespace Crusaders30XX.ECS.Systems
                     var deck = deckEntity?.GetComponent<Deck>();
                     if (deck != null)
                     {
-                        EventManager.Publish(new OpenCardListModalEvent { Title = "Discard Pile", Cards = deck.DiscardPile.ToList() });
+                        EventManager.Publish(new OpenCardListModalEvent
+                        {
+                            Title = "Discard Pile",
+                            Cards = deck.DiscardPile.ToList(),
+                            Mode = CardListModalMode.CardList,
+                        });
                     }
                     break;
                 }
@@ -277,6 +293,7 @@ namespace Crusaders30XX.ECS.Systems
                 Cards = eligibleCards,
                 IsSelectable = true,
                 SelectionContext = CardListSelectionContexts.ClimbReplacement,
+                Mode = CardListModalMode.CardList,
             });
         }
 

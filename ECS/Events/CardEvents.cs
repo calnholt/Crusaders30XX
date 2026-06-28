@@ -138,6 +138,7 @@ namespace Crusaders30XX.ECS.Events
         public List<Entity> Cards { get; set; }
         public bool IsSelectable { get; set; } = false;
         public string SelectionContext { get; set; } = string.Empty;
+        public CardListModalMode Mode { get; set; } = CardListModalMode.Auto;
     }
 
     public static class CardListSelectionContexts

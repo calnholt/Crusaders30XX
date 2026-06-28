@@ -127,7 +127,11 @@ public sealed class ScorchedDisplaySystem : Core.System
             evt => FrameProfiler.Measure("ScorchedDisplaySystem.OnCardRenderEvent", () => Render(evt.Card, evt.Position, GetScale(evt.Card), GetRotation(evt.Card))),
             RenderPriority);
         EventManager.Subscribe<CardRenderScaledEvent>(
-            evt => FrameProfiler.Measure("ScorchedDisplaySystem.OnCardRenderScaledEvent", () => Render(evt.Card, evt.Position, evt.Scale, 0f)),
+            evt => FrameProfiler.Measure("ScorchedDisplaySystem.OnCardRenderScaledEvent", () =>
+            {
+                using var clip = CardRenderClipScope.Apply(_graphicsDevice, evt.ClipRect);
+                Render(evt.Card, evt.Position, evt.Scale, 0f);
+            }),
             RenderPriority);
         EventManager.Subscribe<CardRenderScaledRotatedEvent>(
             evt => FrameProfiler.Measure("ScorchedDisplaySystem.OnCardRenderScaledRotatedEvent", () => Render(evt.Card, evt.Position, evt.Scale, GetRotation(evt.Card))),

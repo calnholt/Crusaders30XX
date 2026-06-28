@@ -35,6 +35,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots
             Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.SoldShopSlot));
             Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.EncounterRewardModal));
             Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.ReplacementModal));
+            Register(new ClimbSnapshotFixture(ClimbSnapshotVariant.InventoryOverlay));
         }
 
         public static void Register(IDisplaySnapshotFixture fixture)

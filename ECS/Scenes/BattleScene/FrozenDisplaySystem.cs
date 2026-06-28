@@ -199,7 +199,11 @@ public sealed class FrozenDisplaySystem : Core.System
             evt => FrameProfiler.Measure("FrozenDisplaySystem.OnCardRenderEvent", () => Render(evt.Card, evt.Position, GetScale(evt.Card), GetRotation(evt.Card))),
             RenderPriority);
         EventManager.Subscribe<CardRenderScaledEvent>(
-            evt => FrameProfiler.Measure("FrozenDisplaySystem.OnCardRenderScaledEvent", () => Render(evt.Card, evt.Position, evt.Scale, 0f)),
+            evt => FrameProfiler.Measure("FrozenDisplaySystem.OnCardRenderScaledEvent", () =>
+            {
+                using var clip = CardRenderClipScope.Apply(_graphicsDevice, evt.ClipRect);
+                Render(evt.Card, evt.Position, evt.Scale, 0f);
+            }),
             RenderPriority);
         EventManager.Subscribe<CardRenderScaledRotatedEvent>(
             evt => FrameProfiler.Measure("FrozenDisplaySystem.OnCardRenderScaledRotatedEvent", () => Render(evt.Card, evt.Position, evt.Scale, GetRotation(evt.Card))),

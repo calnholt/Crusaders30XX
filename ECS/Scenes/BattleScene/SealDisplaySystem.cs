@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
@@ -105,6 +106,7 @@ namespace Crusaders30XX.ECS.Systems
 				["seals"] = evt.Card?.GetComponent<Sealed>()?.Seals ?? 0
 			});
 			if (!ShouldRenderSeal(evt.Card)) return;
+			using var clip = CardRenderClipScope.Apply(_graphicsDevice, evt.ClipRect);
 
 			var geometry = CardGeometryService.GetVisualGeometry(
 				EntityManager,

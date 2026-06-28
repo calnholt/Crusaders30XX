@@ -289,7 +289,7 @@ public class Game1 : Game
         _world.AddSystem(_rewardModalDisplaySystem);
         _narrativeEventModalDisplaySystem = new NarrativeEventModalDisplaySystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _world.AddSystem(_narrativeEventModalDisplaySystem);
-        _cardListModalSystem = new CardListModalSystem(_world.EntityManager, GraphicsDevice, _spriteBatch);
+        _cardListModalSystem = new CardListModalSystem(_world.EntityManager, GraphicsDevice, _spriteBatch, Content);
         _world.AddSystem(_cardListModalSystem);
         _howToPlayOverlaySystem = new HowToPlayOverlaySystem(
             _world.EntityManager,

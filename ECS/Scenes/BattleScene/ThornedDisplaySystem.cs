@@ -182,7 +182,11 @@ public sealed class ThornedDisplaySystem : Core.System
             evt => FrameProfiler.Measure("ThornedDisplaySystem.OnCardRenderEvent", () => Render(evt.Card, evt.Position, GetScale(evt.Card), GetRotation(evt.Card))),
             RenderPriority);
         EventManager.Subscribe<CardRenderScaledEvent>(
-            evt => FrameProfiler.Measure("ThornedDisplaySystem.OnCardRenderScaledEvent", () => Render(evt.Card, evt.Position, evt.Scale, 0f)),
+            evt => FrameProfiler.Measure("ThornedDisplaySystem.OnCardRenderScaledEvent", () =>
+            {
+                using var clip = CardRenderClipScope.Apply(_graphicsDevice, evt.ClipRect);
+                Render(evt.Card, evt.Position, evt.Scale, 0f);
+            }),
             RenderPriority);
         EventManager.Subscribe<CardRenderScaledRotatedEvent>(
             evt => FrameProfiler.Measure("ThornedDisplaySystem.OnCardRenderScaledRotatedEvent", () => Render(evt.Card, evt.Position, evt.Scale, GetRotation(evt.Card))),

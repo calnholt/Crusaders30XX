@@ -27,6 +27,7 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 		SoldShopSlot,
 		EncounterRewardModal,
 		ReplacementModal,
+		InventoryOverlay,
 	}
 
 	public sealed class ClimbSnapshotFixture : IDisplaySnapshotFixture
@@ -62,10 +63,11 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 			ClimbSnapshotVariant.SoldShopSlot => "climb-sold-shop-slot",
 			ClimbSnapshotVariant.EncounterRewardModal => "climb-encounter-reward-modal",
 			ClimbSnapshotVariant.ReplacementModal => "climb-replacement-modal",
+			ClimbSnapshotVariant.InventoryOverlay => "climb-inventory-overlay",
 			_ => "climb",
 		};
 
-		public int WarmupFrames => _variant == ClimbSnapshotVariant.ReplacementModal ? 4 : 3;
+		public int WarmupFrames => _variant is ClimbSnapshotVariant.ReplacementModal or ClimbSnapshotVariant.InventoryOverlay ? 4 : 3;
 		public string OutputFileName => Id;
 
 		public void Setup(DisplaySnapshotContext ctx, string[] args)
@@ -113,6 +115,10 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 			{
 				OpenReplacementModal(ctx.World.EntityManager);
 			}
+			else if (_variant == ClimbSnapshotVariant.InventoryOverlay)
+			{
+				OpenInventoryOverlay(ctx.World.EntityManager);
+			}
 
 			if (_variant == ClimbSnapshotVariant.CharacterDialog)
 			{
@@ -128,6 +134,10 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 				_rewardModal?.Draw();
 			}
 			else if (_variant == ClimbSnapshotVariant.ReplacementModal)
+			{
+				_cardListModal?.Draw();
+			}
+			else if (_variant == ClimbSnapshotVariant.InventoryOverlay)
 			{
 				_cardListModal?.Draw();
 			}
@@ -476,6 +486,25 @@ namespace Crusaders30XX.Diagnostics.Snapshots.Fixtures
 				cards,
 				isSelectable: true,
 				selectionContext: CardListSelectionContexts.ClimbReplacement);
+			_cardListModal.Update(new GameTime(TimeSpan.FromSeconds(1d), TimeSpan.FromSeconds(1d / 60d)));
+		}
+
+		private void OpenInventoryOverlay(EntityManager entityManager)
+		{
+			if (_modalOpened) return;
+			_modalOpened = true;
+			if (_cardListModal == null)
+			{
+				throw new DisplaySnapshotSetupException("Card list modal system was not registered.");
+			}
+
+			var deck = RunDeckService.EnsureRunDeck(entityManager)?.GetComponent<Deck>();
+			if (deck?.Cards == null || deck.Cards.Count == 0)
+			{
+				throw new DisplaySnapshotSetupException("No run deck cards were created.");
+			}
+
+			_cardListModal.OpenInventoryForSnapshot("Run Overview", deck.Cards.ToList());
 			_cardListModal.Update(new GameTime(TimeSpan.FromSeconds(1d), TimeSpan.FromSeconds(1d / 60d)));
 		}
 

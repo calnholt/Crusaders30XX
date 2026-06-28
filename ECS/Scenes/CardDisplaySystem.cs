@@ -516,6 +516,7 @@ namespace Crusaders30XX.ECS.Systems
         private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
         {
             _drawAlpha = MathHelper.Clamp(evt.Alpha, 0f, 1f);
+            using var clip = CardRenderClipScope.Apply(_graphicsDevice, evt.ClipRect);
             try
             {
                 var transform = evt.Card.GetComponent<Transform>();

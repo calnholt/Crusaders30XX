@@ -256,6 +256,28 @@ namespace Crusaders30XX.ECS.Systems
 			RefreshNormalCardPresentation(entityManager, card);
 		}
 
+		public static void RefreshCardTooltipPresentation(
+			EntityManager entityManager,
+			Entity card,
+			TooltipPosition position = TooltipPosition.Above,
+			int offsetPx = 30)
+		{
+			if (entityManager == null || card == null) return;
+			if (card.HasComponent<Cursed>())
+			{
+				RefreshCursedCardPresentation(entityManager, card);
+				var ui = card.GetComponent<UIElement>();
+				if (ui != null)
+				{
+					ui.TooltipPosition = position;
+					ui.TooltipOffsetPx = offsetPx;
+				}
+				return;
+			}
+
+			RefreshNormalCardPresentation(entityManager, card, position, offsetPx);
+		}
+
 		public static void RefreshCursedCardPresentation(EntityManager entityManager, Entity card)
 		{
 			if (entityManager == null || card == null || !card.HasComponent<Cursed>()) return;
@@ -294,7 +316,11 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private static void RefreshNormalCardPresentation(EntityManager entityManager, Entity card)
+		private static void RefreshNormalCardPresentation(
+			EntityManager entityManager,
+			Entity card,
+			TooltipPosition position = TooltipPosition.Above,
+			int offsetPx = 30)
 		{
 			var cardData = card?.GetComponent<CardData>();
 			var definition = cardData?.Card;
@@ -317,8 +343,8 @@ namespace Crusaders30XX.ECS.Systems
 
 			ui.Tooltip = definition.Tooltip ?? string.Empty;
 			ui.TooltipType = TooltipType.Text;
-			ui.TooltipPosition = TooltipPosition.Above;
-			ui.TooltipOffsetPx = 30;
+			ui.TooltipPosition = position;
+			ui.TooltipOffsetPx = offsetPx;
 
 			var existingTooltip = card.GetComponent<CardTooltip>();
 			if (existingTooltip != null && string.IsNullOrWhiteSpace(definition.CardTooltip))

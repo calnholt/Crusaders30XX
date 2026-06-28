@@ -90,6 +90,7 @@ namespace Crusaders30XX.ECS.Systems
 	private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
 	{
 		if (!ShouldRenderFrost(evt.Card)) return;
+		using var clip = CardRenderClipScope.Apply(_graphicsDevice, evt.ClipRect);
 
 		var geometry = CardGeometryService.GetVisualGeometry(
 			EntityManager,

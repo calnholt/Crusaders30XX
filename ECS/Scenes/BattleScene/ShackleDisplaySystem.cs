@@ -89,6 +89,7 @@ namespace Crusaders30XX.ECS.Systems
 		private void OnCardRenderScaledEvent(CardRenderScaledEvent evt)
 		{
 			if (!ShouldRenderShackles(evt.Card)) return;
+			using var clip = CardRenderClipScope.Apply(_graphicsDevice, evt.ClipRect);
 
 			LoggingService.Append("ShackleDisplaySystem.OnCardRenderScaledEvent", new System.Text.Json.Nodes.JsonObject
 			{

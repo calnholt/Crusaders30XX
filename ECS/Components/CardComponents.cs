@@ -710,6 +710,13 @@ namespace Crusaders30XX.ECS.Components
     /// <summary>
     /// Component representing a generic card list modal
     /// </summary>
+    public enum CardListModalMode
+    {
+        Auto,
+        CardList,
+        Inventory,
+    }
+
     public class CardListModal : IComponent
     {
         public Entity Owner { get; set; }
@@ -717,9 +724,11 @@ namespace Crusaders30XX.ECS.Components
         public string Title { get; set; } = "";
         public List<Entity> Cards { get; set; } = new();
         public int ScrollOffset { get; set; } = 0;
+        public int BuildScrollOffset { get; set; } = 0;
         public bool IsSelectable { get; set; } = false;
         public string SelectionContext { get; set; } = string.Empty;
         public int SelectedCardIndex { get; set; } = -1;
+        public CardListModalMode Mode { get; set; } = CardListModalMode.Auto;
     }
 
     public class CardListModalSelectionMetadata : IComponent

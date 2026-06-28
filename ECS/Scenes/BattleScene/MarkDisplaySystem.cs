@@ -4,6 +4,7 @@ using Crusaders30XX.ECS.Core;
 using Crusaders30XX.ECS.Components;
 using Crusaders30XX.Diagnostics;
 using Crusaders30XX.ECS.Events;
+using Crusaders30XX.ECS.Rendering;
 using Crusaders30XX.ECS.Services;
 using Crusaders30XX.ECS.Singletons;
 using Microsoft.Xna.Framework;
@@ -118,6 +119,7 @@ namespace Crusaders30XX.ECS.Systems
                 ["effectType"] = evt.Card?.GetComponent<Marked>()?.EffectType.ToString() ?? "None"
             });
             if (!ShouldRenderMark(evt.Card)) return;
+            using var clip = CardRenderClipScope.Apply(_graphicsDevice, evt.ClipRect);
 
             var geometry = CardGeometryService.GetVisualGeometry(
                 EntityManager,

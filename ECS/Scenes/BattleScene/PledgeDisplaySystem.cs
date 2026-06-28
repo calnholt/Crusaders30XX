@@ -193,6 +193,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var card = evt.Card;
             if (card == null || card.GetComponent<Pledge>() == null) return;
+            using var clip = CardRenderClipScope.Apply(_graphicsDevice, evt.ClipRect);
 
             DrawPledgeForCard(card, evt.Position, evt.Scale, 0f);
         }

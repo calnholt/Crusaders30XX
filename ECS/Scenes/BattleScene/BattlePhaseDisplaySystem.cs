@@ -14,8 +14,7 @@ using Crusaders30XX.ECS.Services;
 namespace Crusaders30XX.ECS.Systems
 {
 	/// <summary>
-	/// Draws the current battle phase in the top-right corner and animates a
-	/// cinematic phase transition with converging trapezoids when the phase changes.
+	/// Animates a cinematic phase transition with converging trapezoids when the phase changes.
 	/// </summary>
 	[DebugTab("Battle Phase Display")]
 	public class BattlePhaseDisplaySystem : Core.System
@@ -23,14 +22,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly GraphicsDevice _graphicsDevice;
 		private readonly SpriteBatch _spriteBatch;
 		private readonly SpriteFont _font = FontSingleton.TitleFont;
-
-		// Small corner label
-		[DebugEditable(DisplayName = "Label Offset X", Step = 2, Min = -2000, Max = 2000)]
-		public int LabelOffsetX { get; set; } = -16;
-		[DebugEditable(DisplayName = "Label Offset Y", Step = 2, Min = -2000, Max = 2000)]
-		public int LabelOffsetY { get; set; } = 14;
-		[DebugEditable(DisplayName = "Label Scale", Step = 0.05f, Min = 0.2f, Max = 3f)]
-		public float LabelScale { get; set; } = 0.2f;
 
 		// --- Animation Timing ---
 		[DebugEditable(DisplayName = "Phase In Duration (s)", Step = 0.05f, Min = 0.05f, Max = 5f)]
@@ -299,31 +290,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
-			DrawCornerLabel();
 			DrawTransition();
-		}
-
-		private void DrawCornerLabel()
-		{
-			if (_font == null) return;
-			var stateEntity = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault();
-			if (stateEntity == null) return;
-			var state = stateEntity.GetComponent<PhaseState>();
-			
-			int vw = Game1.VirtualWidth;
-			int xRight = vw + LabelOffsetX;
-			
-			string label;
-			if (state.Main == MainPhase.StartBattle)
-				label = $"{MainPhaseToString(state.Main)}";
-			else 
-				label = $"{MainPhaseToString(state.Main)} - {SubPhaseToString(state.Sub)} ({state.TurnNumber})";
-
-			var size = _font.MeasureString(label) * LabelScale;
-			var basePos = new Vector2(xRight - size.X, LabelOffsetY);
-			
-			_spriteBatch.DrawString(_font, label, basePos + new Vector2(1, 1), Color.Black * 0.6f, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
-			_spriteBatch.DrawString(_font, label, basePos, Color.White, 0f, Vector2.Zero, LabelScale, SpriteEffects.None, 0f);
 		}
 
 		private void DrawTransition()
@@ -446,16 +413,6 @@ namespace Crusaders30XX.ECS.Systems
 			_spriteBatch.DrawString(_font, _transitionText, textPos, Color.White * alpha, 0f, textOrigin, scale, SpriteEffects.None, 0f);
 		}
 
-		private static string MainPhaseToString(MainPhase p)
-		{
-			return p switch
-			{
-				MainPhase.EnemyTurn => "Enemy Turn",
-				MainPhase.PlayerTurn => "Player Turn",
-				MainPhase.StartBattle => "Start of Battle",
-				_ => p.ToString()
-			};
-		}
 		private static string SubPhaseToString(SubPhase sp)
 		{
 			return sp switch
