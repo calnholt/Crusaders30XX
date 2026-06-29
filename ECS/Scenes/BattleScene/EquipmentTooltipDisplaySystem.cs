@@ -239,7 +239,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var titleFont = FontSingleton.TitleFont;
 			var bodyFont = FontSingleton.ChakraPetchFont;
-			if (titleFont == null || bodyFont == null) return TooltipMinHeight;
+			var flavorFont = FontSingleton.ChakraPetchBoldItalicFont;
+			if (titleFont == null || bodyFont == null || flavorFont == null) return TooltipMinHeight;
 
 			int bodyWidth = Math.Max(
 				1,
@@ -253,7 +254,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				height += 6;
 			}
-			height += MeasureWrappedHeight(bodyFont, equipment.FlavorText, BodyFontScale, bodyWidth);
+			height += MeasureWrappedHeight(flavorFont, equipment.FlavorText, BodyFontScale, bodyWidth);
 			if (equipment.CanActivateDuringActionPhase)
 			{
 				height += TagRowPaddingTop
@@ -360,7 +361,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			var titleFont = FontSingleton.TitleFont;
 			var bodyFont = FontSingleton.ChakraPetchFont;
-			if (titleFont == null || bodyFont == null) return;
+			var flavorFont = FontSingleton.ChakraPetchBoldItalicFont;
+			if (titleFont == null || bodyFont == null || flavorFont == null) return;
 
 			int contentWidth = Math.Max(1, body.Width - BodyPadding * 2);
 			float x = body.X + BodyPadding;
@@ -395,7 +397,7 @@ namespace Crusaders30XX.ECS.Systems
 				y += 6f;
 			}
 			y = DrawWrappedText(
-				bodyFont,
+				flavorFont,
 				equipment.FlavorText,
 				new Vector2(x, y),
 				contentWidth,

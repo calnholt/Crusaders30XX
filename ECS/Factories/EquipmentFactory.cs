@@ -17,13 +17,29 @@ namespace Crusaders30XX.ECS.Factories
         {
             return equipmentId switch
             {
+                "crimson_cuirass" => new CrimsonCuirass(),
+                "crimson_greathelm" => new CrimsonGreathelm(),
+                "crimson_greaves" => new CrimsonGreaves(),
+                "crimson_vambraces" => new CrimsonVambraces(),
                 "helm_of_seeing" => new HelmOfSeeing(),
+                "ivory_coif" => new IvoryCoif(),
+                "ivory_treads" => new IvoryTreads(),
+                "ivory_vest" => new IvoryVest(),
+                "ivory_wraps" => new IvoryWraps(),
                 "knightly_chest" => new KnightlyChest(),
                 "knightly_grieves" => new KnightlyGrieves(),
                 "knightly_gauntlets" => new KnightlyGauntlets(),
                 "knightly_helm" => new KnightlyHelm(),
+                "pale_cuirass" => new PaleCuirass(),
+                "pale_greathelm" => new PaleGreathelm(),
+                "pale_greaves" => new PaleGreaves(),
+                "pale_vambraces" => new PaleVambraces(),
                 "pierced_heart_plate" => new PiercedHeartPlate(),
                 "purging_bracers" => new PurgingBracers(),
+                "scarlet_coif" => new ScarletCoif(),
+                "scarlet_treads" => new ScarletTreads(),
+                "scarlet_vest" => new ScarletVest(),
+                "scarlet_wraps" => new ScarletWraps(),
                 _ => null
             };
         }
@@ -36,13 +52,29 @@ namespace Crusaders30XX.ECS.Factories
         {
             return new Dictionary<string, EquipmentBase>
             {
+                { "crimson_cuirass", new CrimsonCuirass() },
+                { "crimson_greathelm", new CrimsonGreathelm() },
+                { "crimson_greaves", new CrimsonGreaves() },
+                { "crimson_vambraces", new CrimsonVambraces() },
                 { "helm_of_seeing", new HelmOfSeeing() },
+                { "ivory_coif", new IvoryCoif() },
+                { "ivory_treads", new IvoryTreads() },
+                { "ivory_vest", new IvoryVest() },
+                { "ivory_wraps", new IvoryWraps() },
                 { "knightly_chest", new KnightlyChest() },
                 { "knightly_grieves", new KnightlyGrieves() },
                 { "knightly_gauntlets", new KnightlyGauntlets() },
                 { "knightly_helm", new KnightlyHelm() },
+                { "pale_cuirass", new PaleCuirass() },
+                { "pale_greathelm", new PaleGreathelm() },
+                { "pale_greaves", new PaleGreaves() },
+                { "pale_vambraces", new PaleVambraces() },
                 { "pierced_heart_plate", new PiercedHeartPlate() },
                 { "purging_bracers", new PurgingBracers() },
+                { "scarlet_coif", new ScarletCoif() },
+                { "scarlet_treads", new ScarletTreads() },
+                { "scarlet_vest", new ScarletVest() },
+                { "scarlet_wraps", new ScarletWraps() },
             };
         }
     }

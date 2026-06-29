@@ -93,6 +93,14 @@
 /processorParam:Smoothing=Normal
 /build:Fonts/ChakraPetch.spritefont
 
+#begin Fonts/ChakraPetch-BoldItalic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/processorParam:Smoothing=Normal
+/build:Fonts/ChakraPetch-BoldItalic.spritefont
+
 #begin cursor_cross.png
 /importer:TextureImporter
 /processor:TextureProcessor
