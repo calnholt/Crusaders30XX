@@ -13,6 +13,10 @@ namespace Crusaders30XX.Tests;
 
 public sealed class RewardModalDisplaySystemTests
 {
+	private const float AnimDuration = 0.55f;
+	private const float PulseAmplitude = 0.12f;
+	private const float PulseFrequencyHz = 6f;
+
 	private static readonly string[] AllPreviewRestrictions =
 	{
 		RunScopedStateService.RestrictionFrozen,
@@ -79,6 +83,90 @@ public sealed class RewardModalDisplaySystemTests
 
 		AssertHasAllPreviewRestrictions(outgoing);
 		AssertHasAllPreviewRestrictions(incoming);
+	}
+
+	[Fact]
+	public void ComputeDeckColumnSelectionVisual_non_selected_column_fades_out()
+	{
+		RewardModalDisplaySystem.ComputeDeckColumnSelectionVisual(
+			columnIndex: 0,
+			selectedColumnIndex: 1,
+			isOutgoing: true,
+			elapsedSeconds: AnimDuration,
+			durationSeconds: AnimDuration,
+			pulseAmplitude: PulseAmplitude,
+			pulseFrequencyHz: PulseFrequencyHz,
+			out var scale,
+			out var alpha);
+
+		Assert.Equal(1f, scale);
+		Assert.Equal(0f, alpha, 3);
+	}
+
+	[Fact]
+	public void ComputeDeckColumnSelectionVisual_selected_outgoing_shrinks_to_zero()
+	{
+		RewardModalDisplaySystem.ComputeDeckColumnSelectionVisual(
+			columnIndex: 1,
+			selectedColumnIndex: 1,
+			isOutgoing: true,
+			elapsedSeconds: AnimDuration,
+			durationSeconds: AnimDuration,
+			pulseAmplitude: PulseAmplitude,
+			pulseFrequencyHz: PulseFrequencyHz,
+			out var scale,
+			out var alpha);
+
+		Assert.Equal(0f, scale, 3);
+		Assert.Equal(1f, alpha);
+	}
+
+	[Fact]
+	public void ComputeDeckColumnSelectionVisual_selected_incoming_pulses_without_shrinking_at_start()
+	{
+		RewardModalDisplaySystem.ComputeDeckColumnSelectionVisual(
+			columnIndex: 1,
+			selectedColumnIndex: 1,
+			isOutgoing: false,
+			elapsedSeconds: 0f,
+			durationSeconds: AnimDuration,
+			pulseAmplitude: PulseAmplitude,
+			pulseFrequencyHz: PulseFrequencyHz,
+			out var scale,
+			out var alpha);
+
+		Assert.Equal(1f, scale, 3);
+		Assert.Equal(1f, alpha);
+	}
+
+	[Fact]
+	public void GetDeckColumnChromeAlpha_selected_column_stays_opaque()
+	{
+		var state = new QuestRewardOverlayState
+		{
+			DeckColumnSelectionInProgress = true,
+			SelectedDeckRewardColumnIndex = 2,
+			DeckColumnSelectionElapsedSeconds = AnimDuration * 0.5f,
+		};
+
+		float alpha = RewardModalDisplaySystem.GetDeckColumnChromeAlpha(2, state, AnimDuration);
+
+		Assert.Equal(1f, alpha);
+	}
+
+	[Fact]
+	public void GetDeckColumnChromeAlpha_non_selected_column_fades()
+	{
+		var state = new QuestRewardOverlayState
+		{
+			DeckColumnSelectionInProgress = true,
+			SelectedDeckRewardColumnIndex = 1,
+			DeckColumnSelectionElapsedSeconds = AnimDuration,
+		};
+
+		float alpha = RewardModalDisplaySystem.GetDeckColumnChromeAlpha(0, state, AnimDuration);
+
+		Assert.Equal(0f, alpha, 3);
 	}
 
 	private static string SeedRestrictedEntry(string cardKey, IEnumerable<string> restrictions)

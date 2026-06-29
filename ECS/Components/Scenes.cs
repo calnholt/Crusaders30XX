@@ -213,6 +213,9 @@ namespace Crusaders30XX.ECS.Components
 			public bool CardSelectionInProgress { get; set; } = false;
 			public int SelectedRewardCardIndex { get; set; } = -1;
 			public float CardSelectionElapsedSeconds { get; set; } = 0f;
+			public bool DeckColumnSelectionInProgress { get; set; } = false;
+			public int SelectedDeckRewardColumnIndex { get; set; } = -1;
+			public float DeckColumnSelectionElapsedSeconds { get; set; } = 0f;
 		}
 
 	public class PendingQuestDialog : IComponent

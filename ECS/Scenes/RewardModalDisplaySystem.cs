@@ -161,6 +161,12 @@ namespace Crusaders30XX.ECS.Systems
 		public int CardChoiceGap { get; set; } = 32;
 		[DebugEditable(DisplayName = "Card Select Anim (s)", Step = 0.01f, Min = 0.05f, Max = 2f)]
 		public float CardSelectionAnimationSeconds { get; set; } = 0.55f;
+		[DebugEditable(DisplayName = "Deck Column Select Anim (s)", Step = 0.01f, Min = 0.05f, Max = 2f)]
+		public float DeckColumnSelectionAnimationSeconds { get; set; } = 0.55f;
+		[DebugEditable(DisplayName = "Deck Column Pulse Amplitude", Step = 0.01f, Min = 0f, Max = 1f)]
+		public float DeckColumnPulseScaleAmplitude { get; set; } = 0.12f;
+		[DebugEditable(DisplayName = "Deck Column Pulse Frequency Hz", Step = 0.1f, Min = 0.1f, Max = 10f)]
+		public float DeckColumnPulseFrequencyHz { get; set; } = 6f;
 
 		[DebugEditable(DisplayName = "Medal Preview Size", Step = 2, Min = 40, Max = 400)]
 		public int MedalPreviewSize { get; set; } = 180;
@@ -668,7 +674,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (state.HasDeckRewardOffer)
 			{
 				HideProceedButton();
-				UpdateDeckRewardOfferControls(state, scene);
+				UpdateDeckRewardOfferControls(state, scene, gameTime);
 				return;
 			}
 
@@ -770,6 +776,9 @@ namespace Crusaders30XX.ECS.Systems
 			st.CardSelectionInProgress = false;
 			st.SelectedRewardCardIndex = -1;
 			st.CardSelectionElapsedSeconds = 0f;
+			st.DeckColumnSelectionInProgress = false;
+			st.SelectedDeckRewardColumnIndex = -1;
+			st.DeckColumnSelectionElapsedSeconds = 0f;
 			st.IsOpen = true;
 
 			if (st.HasDeckRewardOffer)
@@ -818,6 +827,9 @@ namespace Crusaders30XX.ECS.Systems
 			st.CardSelectionInProgress = false;
 			st.SelectedRewardCardIndex = -1;
 			st.CardSelectionElapsedSeconds = 0f;
+			st.DeckColumnSelectionInProgress = false;
+			st.SelectedDeckRewardColumnIndex = -1;
+			st.DeckColumnSelectionElapsedSeconds = 0f;
 			st.IsOpen = true;
 
 			if (st.HasMedalReward && !string.IsNullOrEmpty(st.RewardMedalId))
@@ -1341,27 +1353,30 @@ namespace Crusaders30XX.ECS.Systems
 				var option = state.DeckRewardOffer.options[i];
 				if (option == null) continue;
 				bool isUpgrade = i < layout.IsUpgrade.Length && layout.IsUpgrade[i];
-				bool hovered = i < _deckRewardOptionViews.Count
+				bool selectionAnimating = state.DeckColumnSelectionInProgress;
+				bool hovered = !selectionAnimating
+					&& i < _deckRewardOptionViews.Count
 					&& ((_deckRewardOptionViews[i].Lane?.GetComponent<UIElement>()?.IsHovered ?? false)
 						|| (_deckRewardOptionViews[i].OutgoingCard?.GetComponent<UIElement>()?.IsHovered ?? false)
 						|| (_deckRewardOptionViews[i].IncomingCard?.GetComponent<UIElement>()?.IsHovered ?? false));
-				DrawDeckRewardColumn(layout, i, isUpgrade, hovered);
+				float columnAlpha = GetDeckColumnChromeAlpha(i, state, DeckColumnSelectionAnimationSeconds);
+				DrawDeckRewardColumn(layout, i, isUpgrade, hovered, columnAlpha);
 
 				if (i < _deckRewardOptionViews.Count)
 				{
 					var view = _deckRewardOptionViews[i];
-					EventManager.Publish(new CardRenderScaledRotatedEvent
-					{
-						Card = view.OutgoingCard,
-						Position = layout.OutgoingCardCenters[i],
-						Scale = 1.0f
-					});
-					EventManager.Publish(new CardRenderScaledRotatedEvent
-					{
-						Card = view.IncomingCard,
-						Position = layout.IncomingCardCenters[i],
-						Scale = 1.0f
-					});
+					DrawDeckRewardPreviewCard(
+						view.OutgoingCard,
+						layout.OutgoingCardCenters[i],
+						i,
+						isOutgoing: true,
+						state);
+					DrawDeckRewardPreviewCard(
+						view.IncomingCard,
+						layout.IncomingCardCenters[i],
+						i,
+						isOutgoing: false,
+						state);
 				}
 			}
 
@@ -1398,16 +1413,16 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		private void DrawDeckRewardColumn(DeckRewardOfferLayout layout, int index, bool isUpgrade, bool hovered)
+		private void DrawDeckRewardColumn(DeckRewardOfferLayout layout, int index, bool isUpgrade, bool hovered, float columnAlpha)
 		{
 			var col = layout.Columns[index];
 			int topBarH = System.Math.Max(1, ColumnTopBarThickness);
 
 			if (isUpgrade)
 			{
-				var fillTop = hovered ? UpgradeColHoverFillTop : ExchangeColFillTop;
-				var topBar = hovered ? UpgradeColBorderTopHover : UpgradeColBorderTop;
-				var sideBorder = hovered ? UpgradeColBorderSideHover : ExchangeColBorderSide;
+				var fillTop = (hovered ? UpgradeColHoverFillTop : ExchangeColFillTop) * columnAlpha;
+				var topBar = (hovered ? UpgradeColBorderTopHover : UpgradeColBorderTop) * columnAlpha;
+				var sideBorder = (hovered ? UpgradeColBorderSideHover : ExchangeColBorderSide) * columnAlpha;
 
 				_spriteBatch.Draw(_pixel, col, fillTop);
 				_spriteBatch.Draw(_pixel, new Rectangle(col.X, col.Y, col.Width, topBarH), topBar);
@@ -1415,10 +1430,10 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			else
 			{
-				var fillTop = hovered ? ExchangeColHoverFillTop : ExchangeColFillTop;
-				var fillMid = hovered ? ExchangeColHoverFillMid : ExchangeColFillMid;
-				var topBar = hovered ? ExchangeColBorderTopHover : ExchangeColBorderTop;
-				var sideBorder = hovered ? ExchangeColBorderSideHover : ExchangeColBorderSide;
+				var fillTop = (hovered ? ExchangeColHoverFillTop : ExchangeColFillTop) * columnAlpha;
+				var fillMid = (hovered ? ExchangeColHoverFillMid : ExchangeColFillMid) * columnAlpha;
+				var topBar = (hovered ? ExchangeColBorderTopHover : ExchangeColBorderTop) * columnAlpha;
+				var sideBorder = (hovered ? ExchangeColBorderSideHover : ExchangeColBorderSide) * columnAlpha;
 
 				int thirdH = col.Height / 3;
 				_spriteBatch.Draw(_pixel, new Rectangle(col.X, col.Y, col.Width, thirdH), fillTop);
@@ -1429,36 +1444,74 @@ namespace Crusaders30XX.ECS.Systems
 			}
 
 			if (isUpgrade)
-				DrawUpgradePlus(layout.ArrowCenters[index], ArrowScale);
+				DrawUpgradePlus(layout.ArrowCenters[index], ArrowScale, columnAlpha);
 			else
-				DrawTradeArrow(layout.ArrowCenters[index], ArrowScale);
+				DrawTradeArrow(layout.ArrowCenters[index], ArrowScale, columnAlpha);
 		}
 
-		private void DrawTradeArrow(Vector2 center, float scale)
+		private void DrawDeckRewardPreviewCard(
+			Entity card,
+			Vector2 position,
+			int columnIndex,
+			bool isOutgoing,
+			QuestRewardOverlayState state)
+		{
+			if (card == null || !card.IsActive) return;
+
+			float scale = 1f;
+			float alpha = 1f;
+			if (state != null && state.DeckColumnSelectionInProgress && state.SelectedDeckRewardColumnIndex >= 0)
+			{
+				ComputeDeckColumnSelectionVisual(
+					columnIndex,
+					state.SelectedDeckRewardColumnIndex,
+					isOutgoing,
+					state.DeckColumnSelectionElapsedSeconds,
+					DeckColumnSelectionAnimationSeconds,
+					DeckColumnPulseScaleAmplitude,
+					DeckColumnPulseFrequencyHz,
+					out scale,
+					out alpha);
+			}
+
+			if (scale <= 0.001f || alpha <= 0.001f) return;
+
+			EventManager.Publish(new CardRenderScaledEvent
+			{
+				Card = card,
+				Position = position,
+				Scale = scale,
+				Alpha = alpha
+			});
+		}
+
+		private void DrawTradeArrow(Vector2 center, float scale, float alpha)
 		{
 			float h = TradeArrowHeight * scale;
 			float w = TradeArrowWidth * scale;
 			float halfW = w / 2f;
 			float shaftW = System.Math.Max(2f, w * 0.32f);
 			float headH = h * 0.28f;
+			var color = TradeArrowColor * alpha;
 
 			float top = center.Y - h / 2f;
 			float shaftBottom = top + h - headH;
-			_spriteBatch.Draw(_pixel, new Rectangle((int)(center.X - shaftW / 2f), (int)top, (int)shaftW, (int)(shaftBottom - top)), TradeArrowColor);
+			_spriteBatch.Draw(_pixel, new Rectangle((int)(center.X - shaftW / 2f), (int)top, (int)shaftW, (int)(shaftBottom - top)), color);
 
 			Vector2 pLeft = new Vector2(center.X - halfW, shaftBottom);
 			Vector2 pRight = new Vector2(center.X + halfW, shaftBottom);
 			Vector2 pTip = new Vector2(center.X, top + h);
-			DrawTriangle(_pixel, _spriteBatch, pLeft, pRight, pTip, TradeArrowColor);
+			DrawTriangle(_pixel, _spriteBatch, pLeft, pRight, pTip, color);
 		}
 
-		private void DrawUpgradePlus(Vector2 center, float scale)
+		private void DrawUpgradePlus(Vector2 center, float scale, float alpha)
 		{
 			float size = UpgradePlusSize * scale;
 			float half = size / 2f;
 			float thick = System.Math.Max(2f, size * 0.15f);
-			_spriteBatch.Draw(_pixel, new Rectangle((int)(center.X - half), (int)(center.Y - thick / 2f), (int)size, (int)thick), UpgradePlusColor);
-			_spriteBatch.Draw(_pixel, new Rectangle((int)(center.X - thick / 2f), (int)(center.Y - half), (int)thick, (int)size), UpgradePlusColor);
+			var color = UpgradePlusColor * alpha;
+			_spriteBatch.Draw(_pixel, new Rectangle((int)(center.X - half), (int)(center.Y - thick / 2f), (int)size, (int)thick), color);
+			_spriteBatch.Draw(_pixel, new Rectangle((int)(center.X - thick / 2f), (int)(center.Y - half), (int)thick, (int)size), color);
 		}
 
 		private static void DrawTriangle(Texture2D pixel, SpriteBatch sb, Vector2 a, Vector2 b, Vector2 c, Color color)
@@ -1544,6 +1597,9 @@ namespace Crusaders30XX.ECS.Systems
 			state.CardSelectionInProgress = false;
 			state.SelectedRewardCardIndex = -1;
 			state.CardSelectionElapsedSeconds = 0f;
+			state.DeckColumnSelectionInProgress = false;
+			state.SelectedDeckRewardColumnIndex = -1;
+			state.DeckColumnSelectionElapsedSeconds = 0f;
 			StateSingleton.PreventClicking = false;
 			HideProceedButton();
 			DestroyRewardCards();
@@ -1678,7 +1734,7 @@ namespace Crusaders30XX.ECS.Systems
 			return _deckRewardSkipButton;
 		}
 
-		private void UpdateDeckRewardOfferControls(QuestRewardOverlayState state, SceneState scene)
+		private void UpdateDeckRewardOfferControls(QuestRewardOverlayState state, SceneState scene, GameTime gameTime)
 		{
 			if (state?.DeckRewardOffer?.options == null) return;
 			int colCount = state.DeckRewardOffer.options.Count;
@@ -1687,6 +1743,45 @@ namespace Crusaders30XX.ECS.Systems
 				isUpgradeFlags[i] = string.Equals(state.DeckRewardOffer.options[i]?.kind, DeckRewardOfferKinds.Upgrade, System.StringComparison.OrdinalIgnoreCase);
 			var layout = ComputeDeckRewardOfferLayout(Game1.VirtualWidth, Game1.VirtualHeight, colCount, isUpgradeFlags);
 
+			if (state.DeckColumnSelectionInProgress)
+			{
+				state.DeckColumnSelectionElapsedSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
+				for (int i = 0; i < _deckRewardOptionViews.Count; i++)
+				{
+					var view = _deckRewardOptionViews[i];
+					PreparePreviewCard(view.OutgoingCard, i * 2, state);
+					PreparePreviewCard(view.IncomingCard, i * 2 + 1, state);
+					var laneUi = view.Lane?.GetComponent<UIElement>();
+					if (laneUi != null)
+					{
+						laneUi.Bounds = i < layout.Columns.Length ? layout.Columns[i] : Rectangle.Empty;
+						laneUi.IsInteractable = false;
+						laneUi.IsClicked = false;
+						laneUi.LayerType = UILayerType.Overlay;
+					}
+				}
+
+				var skipDuringAnim = _deckRewardSkipButton?.GetComponent<UIElement>();
+				if (skipDuringAnim != null)
+				{
+					skipDuringAnim.Bounds = layout.SkipButton;
+					skipDuringAnim.IsInteractable = false;
+					skipDuringAnim.IsClicked = false;
+					skipDuringAnim.LayerType = UILayerType.Overlay;
+				}
+				var hotKeyDuringAnim = _deckRewardSkipButton?.GetComponent<HotKey>();
+				if (hotKeyDuringAnim != null) hotKeyDuringAnim.IsActive = false;
+
+				if (state.DeckColumnSelectionElapsedSeconds >= System.Math.Max(0.05f, DeckColumnSelectionAnimationSeconds)
+					&& !state.DismissInProgress)
+				{
+					CompleteDeckRewardOfferResolution(state, scene);
+				}
+				return;
+			}
+
+			bool canInteract = state.IsOpen && !state.DismissInProgress;
+
 			for (int i = 0; i < _deckRewardOptionViews.Count; i++)
 			{
 				var view = _deckRewardOptionViews[i];
@@ -1694,14 +1789,14 @@ namespace Crusaders30XX.ECS.Systems
 				if (laneUi != null)
 				{
 					laneUi.Bounds = i < layout.Columns.Length ? layout.Columns[i] : Rectangle.Empty;
-					laneUi.IsInteractable = state.IsOpen && !state.DismissInProgress;
+					laneUi.IsInteractable = canInteract;
 					laneUi.LayerType = UILayerType.Overlay;
 					if (laneUi.IsClicked)
 					{
 						laneUi.IsClicked = false;
 						if (QuestCardRewardService.ApplyPendingOfferOption(i))
 						{
-							CompleteDeckRewardOfferResolution(state, scene);
+							SelectDeckRewardColumn(state, i);
 							return;
 						}
 					}
@@ -1718,7 +1813,7 @@ namespace Crusaders30XX.ECS.Systems
 			if (skipUi != null)
 			{
 				skipUi.Bounds = layout.SkipButton;
-				skipUi.IsInteractable = state.IsOpen && !state.DismissInProgress;
+				skipUi.IsInteractable = canInteract;
 				skipUi.LayerType = UILayerType.Overlay;
 				if (skipUi.IsClicked)
 				{
@@ -1728,7 +1823,33 @@ namespace Crusaders30XX.ECS.Systems
 				}
 			}
 			var hotKey = skip.GetComponent<HotKey>();
-			if (hotKey != null) hotKey.IsActive = state.IsOpen && !state.DismissInProgress;
+			if (hotKey != null) hotKey.IsActive = canInteract;
+		}
+
+		private void SelectDeckRewardColumn(QuestRewardOverlayState state, int selectedIndex)
+		{
+			if (state == null || state.DeckColumnSelectionInProgress) return;
+
+			state.DeckColumnSelectionInProgress = true;
+			state.SelectedDeckRewardColumnIndex = selectedIndex;
+			state.DeckColumnSelectionElapsedSeconds = 0f;
+
+			foreach (var lane in _deckRewardLaneEntities)
+			{
+				var ui = lane?.GetComponent<UIElement>();
+				if (ui == null) continue;
+				ui.IsClicked = false;
+				ui.IsInteractable = false;
+			}
+
+			var skipUi = _deckRewardSkipButton?.GetComponent<UIElement>();
+			if (skipUi != null)
+			{
+				skipUi.IsClicked = false;
+				skipUi.IsInteractable = false;
+			}
+			var hotKey = _deckRewardSkipButton?.GetComponent<HotKey>();
+			if (hotKey != null) hotKey.IsActive = false;
 		}
 
 		private void PreparePreviewCard(Entity card, int zOffset, QuestRewardOverlayState state)
@@ -2094,6 +2215,53 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			t = MathHelper.Clamp(t, 0f, 1f);
 			return t * t * (3f - 2f * t);
+		}
+
+		internal static float GetDeckColumnChromeAlpha(int columnIndex, QuestRewardOverlayState state, float durationSeconds)
+		{
+			if (state == null || !state.DeckColumnSelectionInProgress || state.SelectedDeckRewardColumnIndex < 0)
+				return 1f;
+			if (columnIndex == state.SelectedDeckRewardColumnIndex)
+				return 1f;
+
+			float dur = System.Math.Max(0.05f, durationSeconds);
+			float t = MathHelper.Clamp(state.DeckColumnSelectionElapsedSeconds / dur, 0f, 1f);
+			return 1f - SmoothStep(t);
+		}
+
+		internal static void ComputeDeckColumnSelectionVisual(
+			int columnIndex,
+			int selectedColumnIndex,
+			bool isOutgoing,
+			float elapsedSeconds,
+			float durationSeconds,
+			float pulseAmplitude,
+			float pulseFrequencyHz,
+			out float scale,
+			out float alpha)
+		{
+			scale = 1f;
+			alpha = 1f;
+			if (selectedColumnIndex < 0) return;
+
+			float dur = System.Math.Max(0.05f, durationSeconds);
+			float t = MathHelper.Clamp(elapsedSeconds / dur, 0f, 1f);
+
+			if (columnIndex != selectedColumnIndex)
+			{
+				alpha = 1f - SmoothStep(t);
+				return;
+			}
+
+			if (isOutgoing)
+			{
+				scale = 1f - SmoothStep(t);
+				return;
+			}
+
+			float env = (1f - t) * (1f - t);
+			float phase = MathHelper.TwoPi * pulseFrequencyHz * elapsedSeconds;
+			scale = 1f + pulseAmplitude * env * (float)System.Math.Sin(phase);
 		}
 
 		private Rectangle GetCardVisualRectScaled(Vector2 position, float scale)

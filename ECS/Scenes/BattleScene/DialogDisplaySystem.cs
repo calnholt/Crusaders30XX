@@ -32,7 +32,11 @@ namespace Crusaders30XX.ECS.Systems
 
         private Texture2D _skipButtonTexture;
         private Texture2D _roundedCardTexture;
+        private Texture2D _railGradientTexture;
+        private Texture2D _bottomBarGradientTexture;
         private int _cardCachedW, _cardCachedH, _cardCachedR;
+        private int _railGradientTextureWidth;
+        private int _bottomBarGradientTextureWidth;
 
         // Debug-editable layout — phases
         [DebugEditable(DisplayName = "Intro Duration (s)", Step = 0.05f, Min = 0.1f, Max = 5f)]
@@ -745,8 +749,8 @@ namespace Crusaders30XX.ECS.Systems
             // 4. Bottom bar (scaleX from left)
             if (bottomBarProgress > 0f)
             {
-                int barW = (int)(layout.BottomBar.Width * bottomBarProgress);
-                DrawHorizontalGradientStrip(layout.BottomBar.X, layout.BottomBar.Y, barW, layout.BottomBar.Height, BottomBarRed, BottomBarGradientSteps);
+                int barW = (int)System.Math.Ceiling(layout.BottomBar.Width * System.Math.Clamp(bottomBarProgress, 0f, 1f));
+                DrawHorizontalGradientStrip(layout.BottomBar.X, layout.BottomBar.Y, layout.BottomBar.Width, barW, layout.BottomBar.Height, BottomBarRed, BottomBarGradientSteps);
             }
 
             // 5. Portrait
@@ -1060,13 +1064,44 @@ namespace Crusaders30XX.ECS.Systems
 
         private void DrawRail(CinematicLayout layout, float progress)
         {
-            int visibleW = (int)(layout.Rail.Width * progress);
+            int visibleW = (int)System.Math.Ceiling(layout.Rail.Width * System.Math.Clamp(progress, 0f, 1f));
             if (visibleW <= 0) return;
 
-            float stepW = visibleW / (float)RailGradientSteps;
-            for (int i = 0; i < RailGradientSteps; i++)
+            EnsureRailGradientTexture(layout.Rail.Width);
+            visibleW = System.Math.Min(visibleW, _railGradientTextureWidth);
+            _spriteBatch.Draw(
+                _railGradientTexture,
+                new Rectangle(layout.Rail.X, layout.Rail.Y, visibleW, layout.Rail.Height),
+                new Rectangle(0, 0, _railGradientTextureWidth, 1),
+                Color.White);
+        }
+
+        private void DrawHorizontalGradientStrip(int x, int y, int fullWidth, int visibleWidth, int height, Color baseColor, int steps)
+        {
+            if (fullWidth <= 0 || visibleWidth <= 0 || height <= 0) return;
+
+            EnsureBottomBarGradientTexture(fullWidth, baseColor);
+            int drawW = System.Math.Min(visibleWidth, fullWidth);
+            _spriteBatch.Draw(
+                _bottomBarGradientTexture,
+                new Rectangle(x, y, drawW, height),
+                new Rectangle(0, 0, _bottomBarGradientTextureWidth, 1),
+                Color.White);
+        }
+
+        private void EnsureRailGradientTexture(int width)
+        {
+            width = System.Math.Max(1, width);
+            if (_railGradientTexture != null && _railGradientTextureWidth == width) return;
+
+            _railGradientTexture?.Dispose();
+            _railGradientTexture = new Texture2D(_graphicsDevice, width, 1, false, SurfaceFormat.Color);
+            _railGradientTextureWidth = width;
+
+            var data = new Color[width];
+            for (int x = 0; x < width; x++)
             {
-                float t = i / (float)(RailGradientSteps - 1);
+                float t = width <= 1 ? 0f : x / (float)(width - 1);
                 float alpha;
                 if (t <= 0.85f)
                 {
@@ -1078,26 +1113,28 @@ namespace Crusaders30XX.ECS.Systems
                     float localT = (t - 0.85f) / 0.15f;
                     alpha = 0.55f * (1f - localT);
                 }
-                int sx = (int)(i * stepW);
-                int sw = (int)(stepW + 0.5f);
-                if (sw <= 0) sw = 1;
-                var stripColor = Color.Black * alpha;
-                _spriteBatch.Draw(_pixel, new Rectangle(sx, 0, sw, layout.Rail.Height), stripColor);
+                data[x] = Color.Black * alpha;
             }
+            _railGradientTexture.SetData(data);
         }
 
-        private void DrawHorizontalGradientStrip(int x, int y, int width, int height, Color baseColor, int steps)
+        private void EnsureBottomBarGradientTexture(int width, Color baseColor)
         {
-            float stepW = width / (float)steps;
-            for (int i = 0; i < steps; i++)
+            width = System.Math.Max(1, width);
+            if (_bottomBarGradientTexture != null && _bottomBarGradientTextureWidth == width) return;
+
+            _bottomBarGradientTexture?.Dispose();
+            _bottomBarGradientTexture = new Texture2D(_graphicsDevice, width, 1, false, SurfaceFormat.Color);
+            _bottomBarGradientTextureWidth = width;
+
+            var data = new Color[width];
+            for (int x = 0; x < width; x++)
             {
-                float t = i / (float)(steps - 1);
+                float t = width <= 1 ? 0f : x / (float)(width - 1);
                 float alpha = 1f - t;
-                int sx = x + (int)(i * stepW);
-                int sw = (int)(stepW + 0.5f);
-                if (sw <= 0) sw = 1;
-                _spriteBatch.Draw(_pixel, new Rectangle(sx, y, sw, height), baseColor * alpha);
+                data[x] = baseColor * alpha;
             }
+            _bottomBarGradientTexture.SetData(data);
         }
 
         private void DrawPortrait(CinematicLayout layout, float slotOpacity, float stageSlide, string actor)

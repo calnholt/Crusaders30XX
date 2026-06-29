@@ -7,30 +7,34 @@ UX
 - make fixed buttons used throughout (just a fex styles used consistently)
 - tutorial section transitions a little rough -- take notes on what exactly needs to be fixed to clean up
 - make climb column buttons more thematic
-- frozen shader -- make seeds random per card
-- tutorial bubble - move continue relative to bubble
 - recoil shader
 - intimidated shader (maybe change name)
 
 art
-- incorporate more backgrounds
 - card art
 - 
 
 Gameplay
 - maybe remove istoken/isweapon and make as components?
 - make hand display agnostic of carddata, probably involves refactoring some components and data objects
-- make cardlistmodaldisplay not a modal, tinted overlay with floating UI, use shader for cool looking tint effect overlay
 - darkness X - for x turns, one card in hand becomes shrouded in darkess during the enemy turn, lifts during action phase, cards in darkness block for 3 and ignore color gains and play restrictions
-- each "shop" cycle has weather effects - going into a battle has a start of battle (50% change?) trigger for weather (this offsets spamming 1 duration encounters)
 
 
 cards
 - if you have dealt 10 or more damage this turn...
-- next attack (this turn?) deal 75% more damage
+- gain galvanize
+- cards that directly reference negative mods for bonuses
+- if a frozen card was discard to pay for this
+- additional cost, remove 2 frostbite - 
+- 
 
 medals
 - on acquire, X cards gain GOOD card modification
+- whenever you mill 2 cards, resurrect 1
+- your scorched attacks gain +1dmg
+
+equipment
+- 
 
 weapons
 - rapier? - if fully block attack, gain riposte passive, cards trigger off riposte, temperance is aegis
