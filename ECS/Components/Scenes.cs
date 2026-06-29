@@ -37,6 +37,41 @@ namespace Crusaders30XX.ECS.Components
 		public bool SceneSwitched { get; set; }
 	}
 
+	public enum ModalAnimationPhase
+	{
+		Hidden,
+		Entering,
+		Visible,
+		Exiting
+	}
+
+	public class ModalAnimation : IComponent
+	{
+		public Entity Owner { get; set; }
+		public ModalAnimationPhase Phase { get; set; } = ModalAnimationPhase.Hidden;
+		public bool RequestedVisible { get; set; }
+		public float ElapsedSeconds { get; set; }
+		public float EnterDurationSeconds { get; set; } = 0.28f;
+		public float ExitDurationSeconds { get; set; } = 0.28f;
+		public float ShellDurationSeconds { get; set; } = 0.22f;
+		public float StartScale { get; set; } = 0.75f;
+		public float StartBrightness { get; set; } = 1.5f;
+		public float DimExitHoldPercent { get; set; } = 0.58f;
+		public float VisibleShadowAlpha { get; set; } = 0.65f;
+		public string InputContextId { get; set; } = string.Empty;
+		public int ExitSequence { get; set; }
+		public int CompletedExitSequence { get; set; }
+
+		public bool IsHidden => Phase == ModalAnimationPhase.Hidden;
+		public bool IsAnimating => Phase == ModalAnimationPhase.Entering || Phase == ModalAnimationPhase.Exiting;
+	}
+
+	public class ModalInputSuppression : IComponent
+	{
+		public Entity Owner { get; set; }
+		public string ContextId { get; set; } = string.Empty;
+	}
+
 	/// <summary>
 	/// Marks which scene owns an entity for automatic cleanup on scene transitions.
 	/// </summary>

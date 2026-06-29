@@ -257,6 +257,7 @@ public class Game1 : Game
         _world.AddSystem(_cursedDisplaySystem);
         _world.AddSystem(_sealDisplaySystem);
         _world.AddSystem(_dialogDisplaySystem);
+        _world.AddSystem(new ModalAnimationSystem(_world.EntityManager), SystemUpdatePhase.Input);
         _world.AddSystem(_playerInputSystem, SystemUpdatePhase.Input);
         _world.AddSystem(_controllerRumbleSystem, SystemUpdatePhase.Input);
         _world.AddSystem(_uiInteractionSystem, SystemUpdatePhase.Interaction);

@@ -26,6 +26,7 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteFont _bodyFont = FontSingleton.ChakraPetchFont;
 		private readonly Texture2D _pixel;
 		private readonly HorizontalGradientRuleCache _gradientRuleCache;
+		private const string ContextId = "overlay.narrative-event";
 
 		private EventBase _activeEvent;
 		private NarrativeModalContent _suppliedContent;
@@ -41,6 +42,7 @@ namespace Crusaders30XX.ECS.Systems
 		private int _cachedVw;
 		private int _cachedVh;
 		private int _cachedVisibleCount;
+		private int _pendingCloseExitSequence = -1;
 
 		private struct NarrativeEventLayout
 		{
@@ -138,7 +140,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		private void OnNarrativeEventOverlayClosed(NarrativeEventOverlayClosedEvent e)
 		{
-			CloseOverlay();
+			RequestCloseAnimation();
 		}
 
 		public void OpenForSnapshot(string eventTypeId, int visibleOptionCount = 0)
@@ -164,6 +166,7 @@ namespace Crusaders30XX.ECS.Systems
 			st.EventTypeId = eventTypeId;
 			st.ResolutionContextId = string.Empty;
 			st.IsOpen = true;
+			RequestOpenAnimation();
 
 			_activeEvent = narrativeEvent;
 			_suppliedContent = null;
@@ -182,6 +185,7 @@ namespace Crusaders30XX.ECS.Systems
 			state.EventTypeId = string.Empty;
 			state.ResolutionContextId = resolutionContextId;
 			state.IsOpen = true;
+			RequestOpenAnimation();
 
 			_activeEvent = null;
 			_suppliedContent = new NarrativeModalContent
@@ -214,10 +218,10 @@ namespace Crusaders30XX.ECS.Systems
 			InputContextService.EnsureContext(
 				EntityManager,
 				overlayEntity,
-				"overlay.narrative-event",
+				ContextId,
 				730,
 				state.IsOpen);
-
+			CompletePendingCloseIfReady(overlayEntity);
 			if (!state.IsOpen)
 			{
 				if (!_forceSnapshotDraw)
@@ -255,7 +259,7 @@ namespace Crusaders30XX.ECS.Systems
 					btnUi.Bounds = _layout.OptionButtons != null && slot < _layout.OptionButtons.Length
 						? _layout.OptionButtons[slot]
 						: Rectangle.Empty;
-					btnUi.IsInteractable = true;
+					btnUi.IsInteractable = IsModalAnimationInteractive();
 					btnUi.IsHidden = false;
 
 					if (btnUi.IsClicked)
@@ -288,7 +292,7 @@ namespace Crusaders30XX.ECS.Systems
 					ChoiceIndex = optionIndex,
 				};
 				EventManager.Publish(request);
-				if (request.Handled) CloseOverlay();
+				if (request.Handled) RequestCloseAnimation();
 				return;
 			}
 
@@ -315,6 +319,7 @@ namespace Crusaders30XX.ECS.Systems
 		public void Draw()
 		{
 			if (_titleFont == null || !IsOverlayOpen(EntityManager)) return;
+			var overlayEntity = EntityManager.GetEntity("NarrativeEventOverlay");
 
 			int vw = Game1.VirtualWidth;
 			int vh = Game1.VirtualHeight;
@@ -328,35 +333,56 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (!_drawOnLocationOrSnapshot && !_forceSnapshotDraw) return;
 
-			ModalOverlayChrome.DrawDim(_spriteBatch, _pixel, vw, vh, DimAlpha);
-			ModalOverlayChrome.DrawDropShadow(_spriteBatch, _pixel, _layout.Modal, DropShadowOffsetY, ModalOverlayPalette.DropShadow);
-			ModalOverlayChrome.DrawModalRegions(_spriteBatch, _pixel, _layout.Modal, _layout.Content, _layout.Footer, BorderThickness);
+			var render = ModalAnimationRenderState.From(overlayEntity?.GetComponent<ModalAnimation>(), _layout.Modal);
+			if (!render.ShouldDraw) return;
 
-			DrawBodyColumn();
-			DrawOptionButtons();
+			ModalOverlayChrome.DrawDim(_spriteBatch, _pixel, vw, vh, (int)System.Math.Round(DimAlpha * render.DimAlphaMultiplier));
+			ModalOverlayChrome.DrawDropShadow(_spriteBatch, _pixel, _layout.Modal, DropShadowOffsetY, render.ApplyShadow(ModalOverlayPalette.DropShadow));
+			DrawModalRegions(render);
+
+			DrawBodyColumn(render);
+			DrawOptionButtons(render);
 		}
 
-		private void DrawBodyColumn()
+		private void DrawModalRegions(ModalAnimationRenderState render)
+		{
+			_spriteBatch.Draw(_pixel, render.Transform(_layout.Modal), render.ApplyShell(ModalOverlayPalette.ModalFill));
+			if (_layout.Footer.Width > 0 && _layout.Footer.Height > 0)
+			{
+				_spriteBatch.Draw(_pixel, render.Transform(_layout.Footer), render.ApplyShell(ModalOverlayPalette.FooterFill));
+				_spriteBatch.Draw(_pixel, render.Transform(new Rectangle(_layout.Footer.X, _layout.Footer.Y, _layout.Footer.Width, 1)), render.ApplyShell(ModalOverlayPalette.FooterBorderTop));
+			}
+			ModalOverlayChrome.DrawInsetHighlight(_spriteBatch, _pixel, render.Transform(_layout.Content));
+			ModalOverlayChrome.DrawBorder(_spriteBatch, _pixel, render.Transform(_layout.Modal), render.ApplyShell(ModalOverlayPalette.PanelBorder), BorderThickness);
+		}
+
+		private void DrawBodyColumn(ModalAnimationRenderState render)
 		{
 			var m = _textMetrics;
 			if (_activeEvent == null && _suppliedContent == null) return;
 
 			string safeTitle = TextUtils.FilterUnsupportedGlyphs(_titleFont, GetTitle());
-			_spriteBatch.DrawString(_titleFont, safeTitle, m.TitlePos, ModalOverlayPalette.TitleColor,
-				0f, Vector2.Zero, TitleScale, SpriteEffects.None, 0f);
+			_spriteBatch.DrawString(_titleFont, safeTitle, render.Transform(m.TitlePos), render.ApplyShell(ModalOverlayPalette.TitleColor),
+				0f, Vector2.Zero, render.TransformScale(TitleScale), SpriteEffects.None, 0f);
 
-			int centerX = _layout.BodyInner.Center.X;
-			_gradientRuleCache.DrawRule(_spriteBatch, centerX, _layout.RuleY, RedRuleWidth, RedRuleHeight);
+			Vector2 ruleCenter = render.Transform(new Vector2(_layout.BodyInner.Center.X, _layout.RuleY));
+			_gradientRuleCache.DrawRule(
+				_spriteBatch,
+				(int)System.Math.Round(ruleCenter.X),
+				(int)System.Math.Round(ruleCenter.Y),
+				(int)System.Math.Round(RedRuleWidth * render.ShellScale),
+				(int)System.Math.Round(RedRuleHeight * render.ShellScale),
+				render.ApplyShell(Color.White));
 
 			if (_bodyFont == null || m.BodyLines == null) return;
 			for (int i = 0; i < m.BodyLines.Count; i++)
 			{
-				_spriteBatch.DrawString(_bodyFont, m.BodyLines[i], m.BodyLinePositions[i], ModalOverlayPalette.BodyTextColor,
-					0f, Vector2.Zero, BodyTextScale, SpriteEffects.None, 0f);
+				_spriteBatch.DrawString(_bodyFont, m.BodyLines[i], render.Transform(m.BodyLinePositions[i]), render.ApplyShell(ModalOverlayPalette.BodyTextColor),
+					0f, Vector2.Zero, render.TransformScale(BodyTextScale), SpriteEffects.None, 0f);
 			}
 		}
 
-		private void DrawOptionButtons()
+		private void DrawOptionButtons(ModalAnimationRenderState render)
 		{
 			for (int i = 0; i < _visibleOptions.Count; i++)
 			{
@@ -376,14 +402,14 @@ namespace Crusaders30XX.ECS.Systems
 				ModalOverlayChrome.DrawActionButton(
 					_spriteBatch,
 					_pixel,
-					rect,
+					render.Transform(rect),
 					hovered,
 					BorderThickness,
 					_bodyFont,
 					label,
-					pos,
-					scale,
-					Color.White);
+					render.Transform(pos),
+					render.TransformScale(scale),
+					render.ApplyShell(Color.White));
 			}
 		}
 
@@ -538,11 +564,100 @@ namespace Crusaders30XX.ECS.Systems
 			return ellipsis;
 		}
 
+		private ModalAnimation EnsureModalAnimation()
+		{
+			var overlay = EntityManager.GetEntity("NarrativeEventOverlay");
+			if (overlay == null) return null;
+			var animation = overlay.GetComponent<ModalAnimation>();
+			if (animation == null)
+			{
+				animation = new ModalAnimation { InputContextId = ContextId };
+				EntityManager.AddComponent(overlay, animation);
+			}
+			animation.InputContextId = ContextId;
+			return animation;
+		}
+
+		private void RequestOpenAnimation()
+		{
+			var animation = EnsureModalAnimation();
+			if (animation == null) return;
+			animation.RequestedVisible = true;
+			if (_forceSnapshotDraw || IsSnapshotScene())
+			{
+				animation.Phase = ModalAnimationPhase.Visible;
+				animation.ElapsedSeconds = 0f;
+			}
+			_pendingCloseExitSequence = -1;
+		}
+
+		private bool IsSnapshotScene()
+		{
+			return EntityManager.GetEntitiesWithComponent<SceneState>()
+				.FirstOrDefault()
+				?.GetComponent<SceneState>()
+				?.Current == SceneId.Snapshot;
+		}
+
+		private void RequestCloseAnimation()
+		{
+			var overlay = EntityManager.GetEntity("NarrativeEventOverlay");
+			var state = overlay?.GetComponent<NarrativeEventOverlayState>();
+			if (state == null) return;
+			var animation = EnsureModalAnimation();
+			if (animation == null || animation.Phase == ModalAnimationPhase.Hidden)
+			{
+				CloseOverlay();
+				return;
+			}
+
+			DisableOptionButtons();
+			animation.RequestedVisible = false;
+			_pendingCloseExitSequence = animation.Phase == ModalAnimationPhase.Exiting
+				? animation.ExitSequence
+				: animation.ExitSequence + 1;
+		}
+
+		private void CompletePendingCloseIfReady(Entity overlayEntity)
+		{
+			if (_pendingCloseExitSequence < 0) return;
+			var animation = overlayEntity?.GetComponent<ModalAnimation>();
+			if (animation == null || animation.CompletedExitSequence < _pendingCloseExitSequence) return;
+
+			_pendingCloseExitSequence = -1;
+			CloseOverlay();
+		}
+
+		private bool IsModalAnimationInteractive()
+		{
+			var animation = EntityManager.GetEntity("NarrativeEventOverlay")?.GetComponent<ModalAnimation>();
+			return animation == null || animation.Phase == ModalAnimationPhase.Visible;
+		}
+
+		private void DisableOptionButtons()
+		{
+			for (int i = 1; i <= 3; i++)
+			{
+				var btnUi = EntityManager.GetEntity($"NarrativeEventOptionButton{i}")?.GetComponent<UIElement>();
+				if (btnUi == null) continue;
+				btnUi.IsInteractable = false;
+				btnUi.IsClicked = false;
+			}
+		}
+
 		private void CloseOverlay()
 		{
 			var overlayEntity = EntityManager.GetEntity("NarrativeEventOverlay");
 			var st = overlayEntity?.GetComponent<NarrativeEventOverlayState>();
 			if (st == null) return;
+			var animation = overlayEntity.GetComponent<ModalAnimation>();
+			if (animation != null)
+			{
+				animation.RequestedVisible = false;
+				animation.Phase = ModalAnimationPhase.Hidden;
+				animation.ElapsedSeconds = 0f;
+			}
+			_pendingCloseExitSequence = -1;
 
 			st.IsOpen = false;
 			st.RunMapEventId = string.Empty;
@@ -591,9 +706,10 @@ namespace Crusaders30XX.ECS.Systems
 				InputContextService.EnsureContext(
 					EntityManager,
 					e,
-					"overlay.narrative-event",
+					ContextId,
 					730,
 					false);
+				EntityManager.AddComponent(e, new ModalAnimation { InputContextId = ContextId });
 				EntityManager.AddComponent(e, ParallaxLayer.GetUIParallaxLayer());
 				EntityManager.AddComponent(e, new DontDestroyOnLoad());
 			}
@@ -605,6 +721,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				var t = e.GetComponent<Transform>();
 				if (t != null) t.ZOrder = ZOrder;
+				EnsureModalAnimation();
 			}
 		}
 
@@ -627,7 +744,7 @@ namespace Crusaders30XX.ECS.Systems
 				InputContextService.EnsureMember(
 					EntityManager,
 					ent,
-					"overlay.narrative-event");
+					ContextId);
 				EntityManager.AddComponent(ent, new DontDestroyOnLoad());
 			}
 			return ent;
