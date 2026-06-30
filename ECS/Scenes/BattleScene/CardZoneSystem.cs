@@ -151,6 +151,34 @@ namespace Crusaders30XX.ECS.Systems
 
             ClearTransientStateForStableZone(evt.Card, from, evt.Destination);
 
+            if (evt.Destination == CardZoneType.Hand
+                && evt.Reason == "ReturnAfterAssignment"
+                && from == CardZoneType.AssignedBlock
+                && deck.Hand.Contains(evt.Card))
+            {
+                FinalizeReservedAssignedBlockReturn(evt.Card);
+                EventManager.Publish(new CardMoved
+                {
+                    Card = evt.Card,
+                    Deck = deckEntity,
+                    From = from,
+                    To = evt.Destination,
+                    ContextId = evt.ContextId
+                });
+                LoggingService.Append("CardZoneSystem.ReservedAssignedBlockReturn", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["entityId"] = evt.Card.Id,
+                    ["cardId"] = evt.Card.GetComponent<CardData>()?.Card?.CardId ?? "unknown",
+                    ["from"] = from.ToString(),
+                    ["to"] = evt.Destination.ToString(),
+                    ["reason"] = evt.Reason,
+                    ["handCountBefore"] = handCountBefore,
+                    ["handCountAfter"] = deck.Hand.Count,
+                    ["card"] = HandStateLoggingService.BuildCardSnapshot(evt.Card)
+                });
+                return;
+            }
+
             // Intercept Hand -> DrawPile to run animation first; finalize will mutate zones and publish CardMoved
             if (evt.Destination == CardZoneType.DrawPile)
             {
@@ -553,6 +581,63 @@ namespace Crusaders30XX.ECS.Systems
             });
         }
 
+        private void FinalizeReservedAssignedBlockReturn(Entity card)
+        {
+            if (card == null) return;
+
+            if (card.GetComponent<AssignedBlockCard>() != null)
+            {
+                EntityManager.RemoveComponent<AssignedBlockCard>(card);
+            }
+
+            var sfp = card.GetComponent<SelectedForPayment>();
+            if (sfp != null)
+            {
+                EntityManager.RemoveComponent<SelectedForPayment>(card);
+            }
+
+            var hk = card.GetComponent<HotKey>();
+            if (hk != null)
+            {
+                EntityManager.RemoveComponent<HotKey>(card);
+            }
+
+            var ui = card.GetComponent<UIElement>();
+            if (ui != null)
+            {
+                ui.SuppressCount = 0;
+                ui.IsInteractable = true;
+                ui.IsHovered = false;
+                ui.IsClicked = false;
+                ui.EventType = UIElementEventType.CardClicked;
+                ui.LayerType = UILayerType.Default;
+            }
+
+            RestoreTooltipOverride(card);
+        }
+
+        private void RestoreTooltipOverride(Entity card)
+        {
+            var backup = card?.GetComponent<TooltipOverrideBackup>();
+            var ui = card?.GetComponent<UIElement>();
+            if (backup == null || ui == null) return;
+
+            ui.TooltipType = backup.OriginalType;
+            ui.TooltipPosition = backup.OriginalPosition;
+            ui.TooltipOffsetPx = backup.OriginalOffsetPx;
+            var ct = card.GetComponent<CardTooltip>();
+            if (backup.HadCardTooltip)
+            {
+                if (ct == null) { EntityManager.AddComponent(card, new CardTooltip { CardId = backup.OriginalCardTooltipId ?? string.Empty }); }
+                else { ct.CardId = backup.OriginalCardTooltipId ?? string.Empty; }
+            }
+            else
+            {
+                if (ct != null) { EntityManager.RemoveComponent<CardTooltip>(card); }
+            }
+            EntityManager.RemoveComponent<TooltipOverrideBackup>(card);
+        }
+
         private void ClearTransientStateForStableZone(Entity card, CardZoneType source, CardZoneType destination)
         {
             if (!IsStableZone(destination)) return;
@@ -617,10 +702,10 @@ namespace Crusaders30XX.ECS.Systems
 
         private static CardZoneType GetZoneOf(Deck deck, Entity card)
         {
+            if (card.HasComponent<AssignedBlockCard>()) return CardZoneType.AssignedBlock;
             if (deck.Hand.Contains(card)) return CardZoneType.Hand;
             if (deck.DrawPile.Contains(card)) return CardZoneType.DrawPile;
             if (deck.DiscardPile.Contains(card)) return CardZoneType.DiscardPile;
-            if (card.HasComponent<AssignedBlockCard>()) return CardZoneType.AssignedBlock;
             if (deck.ExhaustPile.Contains(card)) return CardZoneType.ExhaustPile;
             return CardZoneType.ExhaustPile;
         }

@@ -397,6 +397,7 @@ namespace Crusaders30XX.ECS.Systems
                     // Only draw cards that are actually in the hand, not animating, and not filtered out by pay-cost overlay
                     var cardsInHand = deck.Hand
                         .Where(CountsForHandLayout)
+                        .Where(e => e.GetComponent<AssignedBlockCard>() == null)
                         .OrderBy(e =>
                     {
                         var transform = e.GetComponent<Transform>();

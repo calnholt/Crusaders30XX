@@ -111,7 +111,7 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			abc.Phase = AssignedBlockCard.PhaseState.Returning;
 			abc.Elapsed = 0f;
-			var cardData = evt.CardEntity.GetComponent<CardData>();
+			ReserveReturningCardAtHandEnd(evt.CardEntity, abc);
 			EventManager.Publish(new BlockAssignmentRemoved
 			{
 				Card = evt.CardEntity,
@@ -378,7 +378,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					float p = ReturnSeconds <= 0f ? 1f : MathHelper.Clamp(abc.Elapsed / ReturnSeconds, 0f, 1f);
 					float ease = 1f - (float)System.Math.Pow(1f - p, 3);
-					Vector2 target = abc.ReturnTargetPos;
+					Vector2 target = ResolveReturnTarget(entity, abc);
 					abc.CurrentPos = Vector2.Lerp(abc.CurrentPos, target, ease);
 					abc.CurrentScale = MathHelper.Lerp(abc.CurrentScale, 1f, ease);
 					if (p >= 1f)
@@ -397,6 +397,38 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			t.Position = abc.CurrentPos;
 			t.Scale = new Vector2(abc.CurrentScale, abc.CurrentScale);
+		}
+
+		private void ReserveReturningCardAtHandEnd(Entity card, AssignedBlockCard assignment)
+		{
+			if (card == null || assignment == null || assignment.IsEquipment) return;
+			var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+			if (deck == null || deck.Hand.Contains(card)) return;
+			deck.Hand.Add(card);
+		}
+
+		private Vector2 ResolveReturnTarget(Entity card, AssignedBlockCard assignment)
+		{
+			if (card != null && assignment != null && !assignment.IsEquipment)
+			{
+				var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
+				if (deck?.Hand.Contains(card) == true)
+				{
+					var tween = card.GetComponent<PositionTween>();
+					if (tween != null && tween.Target != Vector2.Zero)
+					{
+						return tween.Target;
+					}
+
+					var transform = card.GetComponent<Transform>();
+					if (transform != null)
+					{
+						return transform.Position;
+					}
+				}
+			}
+
+			return assignment?.ReturnTargetPos ?? Vector2.Zero;
 		}
 
 		private void OnBlockAssignmentAdded(BlockAssignmentAdded evt)
