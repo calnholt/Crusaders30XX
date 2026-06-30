@@ -642,6 +642,9 @@ namespace Crusaders30XX.ECS.Systems
 			if (ui == null || state == null) return;
 			CompletePendingCloseIfReady(overlayEntity, state);
 			var animation = overlayEntity.GetComponent<ModalAnimation>();
+			if (state.DismissInProgress && animation?.Phase == ModalAnimationPhase.Hidden)
+				return;
+
 			bool overlayBlocksInput = state.IsOpen
 				&& (animation == null || animation.Phase != ModalAnimationPhase.Hidden);
 			InputContextService.EnsureContext(
@@ -895,6 +898,12 @@ namespace Crusaders30XX.ECS.Systems
 			return st != null && st.IsOpen;
 		}
 
+		public static bool ShouldSuppressBattleSceneDisplay(EntityManager entityManager)
+		{
+			var st = entityManager.GetEntity("QuestRewardOverlay")?.GetComponent<QuestRewardOverlayState>();
+			return st != null && (st.IsOpen || st.DismissInProgress);
+		}
+
 		private ModalAnimation EnsureModalAnimation()
 		{
 			var overlay = EntityManager.GetEntity("QuestRewardOverlay");
@@ -981,7 +990,6 @@ namespace Crusaders30XX.ECS.Systems
 
 			if (transition)
 			{
-				CloseOverlay(state);
 				EventManager.Publish(new ShowTransition { Scene = transitionScene });
 				return;
 			}

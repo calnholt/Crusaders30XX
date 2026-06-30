@@ -8,6 +8,17 @@ UX
 - make climb column buttons more thematic
 - recoil shader
 - intimidated shader (maybe change name)
+- maybe just have blocking cards be scaled down versions + number 
+- hold left trigger to view card without mods?
+
+
+bugs
+- rumble not working
+- curse need to apply before brittle
+- reward modal blipping out, need to hide the scene behind except background + background effect
+- UI click sound not playing, related to rumble?
+- intent position bad
+- inventory screen - hp should be full
 
 art
 - card art

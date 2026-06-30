@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
             Block = 2;
             Uses = 1;
             Color = CardData.CardColor.Red;
+            FlavorText = "Weighted steel for feet that refuse to give ground.";
             CanActivate = () => false;
         }
     }

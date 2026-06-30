@@ -208,6 +208,77 @@ public class PlayerInputArchitectureTests
     }
 
     [Fact]
+    public void UI_interaction_publishes_hover_enter_feedback_once_for_interactable_ui()
+    {
+        EventManager.Clear();
+        var entityManager = CreateSceneEntityManager();
+        Entity control = CreateUi(
+            entityManager,
+            "Control",
+            10,
+            new Rectangle(0, 0, 100, 100));
+        var source = new FakeInputSource(
+            Frame(sequence: 1, pointer: new Vector2(50, 50)),
+            Frame(sequence: 2, pointer: new Vector2(50, 50)),
+            Frame(sequence: 3, pointer: new Vector2(150, 50)));
+        var input = new PlayerInputSystem(entityManager, source);
+        var interaction = new UIInteractionSystem(entityManager);
+        var hoverEvents = new List<UIElementHoverEnteredEvent>();
+        var sfxEvents = new List<PlaySfxEvent>();
+        EventManager.Subscribe<UIElementHoverEnteredEvent>(hoverEvents.Add);
+        EventManager.Subscribe<PlaySfxEvent>(sfxEvents.Add);
+
+        input.Update(new GameTime());
+        interaction.Update(new GameTime());
+        input.Update(new GameTime());
+        interaction.Update(new GameTime());
+
+        var hoverEvent = Assert.Single(hoverEvents);
+        Assert.Same(control, hoverEvent.Entity);
+        Assert.Equal(PlayerInputDevice.KeyboardMouse, hoverEvent.Source);
+        var sfxEvent = Assert.Single(sfxEvents);
+        Assert.Equal(SfxTrack.Interface, sfxEvent.Track);
+        Assert.Equal(0.05f, sfxEvent.Volume);
+
+        input.Update(new GameTime());
+        interaction.Update(new GameTime());
+
+        Assert.Single(hoverEvents);
+        Assert.Single(sfxEvents);
+        EventManager.Clear();
+    }
+
+    [Fact]
+    public void UI_interaction_does_not_publish_hover_feedback_for_tooltip_only_ui()
+    {
+        EventManager.Clear();
+        var entityManager = CreateSceneEntityManager();
+        Entity tooltip = CreateUi(
+            entityManager,
+            "TooltipOnly",
+            10,
+            new Rectangle(0, 0, 100, 100));
+        UIElement ui = tooltip.GetComponent<UIElement>();
+        ui.IsInteractable = false;
+        ui.Tooltip = "Passive description";
+        var source = new FakeInputSource(
+            Frame(sequence: 1, pointer: new Vector2(50, 50)));
+        var input = new PlayerInputSystem(entityManager, source);
+        var interaction = new UIInteractionSystem(entityManager);
+        var hoverEvents = new List<UIElementHoverEnteredEvent>();
+        var sfxEvents = new List<PlaySfxEvent>();
+        EventManager.Subscribe<UIElementHoverEnteredEvent>(hoverEvents.Add);
+        EventManager.Subscribe<PlaySfxEvent>(sfxEvents.Add);
+
+        input.Update(new GameTime());
+        interaction.Update(new GameTime());
+
+        Assert.Empty(hoverEvents);
+        Assert.Empty(sfxEvents);
+        EventManager.Clear();
+    }
+
+    [Fact]
     public void Gamepad_cursor_slows_over_interactable_ui()
     {
         EventManager.Clear();
@@ -603,11 +674,14 @@ public class PlayerInputArchitectureTests
                 leftStick: new Vector2(-1f, 0f)));
         var input = new PlayerInputSystem(entityManager, source);
         var rumble = new ControllerRumbleSystem(entityManager, source);
+        var interaction = new UIInteractionSystem(entityManager);
 
         input.Update(new GameTime());
         rumble.Update(new GameTime());
+        interaction.Update(new GameTime());
         input.Update(TenthSecondGameTime());
         rumble.Update(TenthSecondGameTime());
+        interaction.Update(TenthSecondGameTime());
 
         Assert.Contains(
             source.VibrationCalls,
@@ -638,11 +712,14 @@ public class PlayerInputArchitectureTests
                 leftStick: new Vector2(-1f, 0f)));
         var input = new PlayerInputSystem(entityManager, source);
         var rumble = new ControllerRumbleSystem(entityManager, source);
+        var interaction = new UIInteractionSystem(entityManager);
 
         input.Update(new GameTime());
         rumble.Update(new GameTime());
+        interaction.Update(new GameTime());
         input.Update(TenthSecondGameTime());
         rumble.Update(TenthSecondGameTime());
+        interaction.Update(TenthSecondGameTime());
 
         Assert.Empty(source.VibrationCalls);
         EventManager.Clear();
@@ -673,13 +750,17 @@ public class PlayerInputArchitectureTests
                 previousDevice: PlayerInputDevice.Gamepad));
         var input = new PlayerInputSystem(entityManager, source);
         var rumble = new ControllerRumbleSystem(entityManager, source);
+        var interaction = new UIInteractionSystem(entityManager);
 
         input.Update(new GameTime());
         rumble.Update(new GameTime());
+        interaction.Update(new GameTime());
         input.Update(TenthSecondGameTime());
         rumble.Update(TenthSecondGameTime());
+        interaction.Update(TenthSecondGameTime());
         input.Update(new GameTime());
         rumble.Update(new GameTime());
+        interaction.Update(new GameTime());
 
         Assert.Contains(
             source.VibrationCalls,

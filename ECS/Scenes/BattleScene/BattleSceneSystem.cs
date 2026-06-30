@@ -343,7 +343,7 @@ namespace Crusaders30XX.ECS.Systems
 			bool encounterDialogueActive = EntityManager.GetEntitiesWithComponent<DialogOverlayState>()
 				.FirstOrDefault()?.GetComponent<DialogOverlayState>()?.IsActive ?? false;
 			if (willShowDialog || encounterDialogueActive) return;
-			if (RewardModalDisplaySystem.IsOverlayOpen(EntityManager)) return;
+			if (RewardModalDisplaySystem.ShouldSuppressBattleSceneDisplay(EntityManager)) return;
 			FrameProfiler.Measure("PlayerDisplaySystem.Draw", _playerDisplaySystem.Draw);
 			FrameProfiler.Measure("GuardianAngelDisplaySystem.Draw", _guardianAngelDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDisplaySystem.Draw", _enemyDisplaySystem.Draw);
@@ -912,6 +912,7 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void DrawAdditive()
 		{
+			if (RewardModalDisplaySystem.ShouldSuppressBattleSceneDisplay(EntityManager)) return;
 			_cardMoveDisplaySystem?.DrawAdditive();
 		}
 

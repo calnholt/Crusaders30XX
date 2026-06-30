@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
             Block = 1;
             Uses = 2;
             Color = CardData.CardColor.White;
+            FlavorText = "Woven for the long vigil. Keeps the sun from your eyes and doubt from your thoughts.";
             CanActivate = () => false;
         }
     }

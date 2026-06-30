@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
             Block = 1;
             Uses = 2;
             Color = CardData.CardColor.White;
+            FlavorText = "Blessed linen, light enough to march in and strong enough to turn a glancing blow.";
             CanActivate = () => false;
         }
     }

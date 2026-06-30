@@ -255,11 +255,15 @@ namespace Crusaders30XX.ECS.Systems
                 return CardListModalMode.CardList;
             }
 
-            bool isClimb = EntityManager.GetEntitiesWithComponent<SceneState>()
+            return IsClimbScene() ? CardListModalMode.Inventory : CardListModalMode.CardList;
+        }
+
+        private bool IsClimbScene()
+        {
+            return EntityManager.GetEntitiesWithComponent<SceneState>()
                 .FirstOrDefault()
                 ?.GetComponent<SceneState>()
                 ?.Current == SceneId.Climb;
-            return isClimb ? CardListModalMode.Inventory : CardListModalMode.CardList;
         }
 
         private void UpdateScroll(CardListModal modal, CardListModalMode mode, OverlayLayout layout, GameTime gameTime)
@@ -416,7 +420,8 @@ namespace Crusaders30XX.ECS.Systems
             DrawSectionHead("Health", x, y);
             y += 22;
             var hp = player?.GetComponent<HP>();
-            string current = (hp?.Current ?? 0).ToString();
+            int displayCurrent = hp == null ? 0 : (IsClimbScene() ? hp.Max : hp.Current);
+            string current = displayCurrent.ToString();
             string max = (hp?.Max ?? 0).ToString();
             _spriteBatch.DrawString(_titleFont, current, new Vector2(x, y), White1, 0f, Vector2.Zero, 0.28f, SpriteEffects.None, 0f);
             Vector2 currentSize = _titleFont.MeasureString(current) * 0.28f;
@@ -426,7 +431,7 @@ namespace Crusaders30XX.ECS.Systems
             var track = new Rectangle(x + 122, y + 16, Math.Max(1, BuildPanelWidth - 142), 22);
             _spriteBatch.Draw(_pixel, track, Color.Black * 0.6f);
             DrawBorder(track, Red3, 2);
-            float pct = hp == null || hp.Max <= 0 ? 0f : MathHelper.Clamp(hp.Current / (float)hp.Max, 0f, 1f);
+            float pct = hp == null || hp.Max <= 0 ? 0f : MathHelper.Clamp(displayCurrent / (float)hp.Max, 0f, 1f);
             _spriteBatch.Draw(_pixel, new Rectangle(track.X + 2, track.Y + 2, (int)Math.Round((track.Width - 4) * pct), track.Height - 4), Red3);
             y += 70;
         }
@@ -829,8 +834,6 @@ namespace Crusaders30XX.ECS.Systems
                 EntityManager.AddComponent(closeButton, new Transform { Position = new Vector2(bounds.X, bounds.Y), ZOrder = 20000 });
                 EntityManager.AddComponent(closeButton, new UIElement
                 {
-                    Tooltip = "Close",
-                    TooltipType = TooltipType.Text,
                     LayerType = UILayerType.Overlay,
                     EventType = UIElementEventType.CardListModalClose,
                 });
@@ -847,6 +850,8 @@ namespace Crusaders30XX.ECS.Systems
             ui.IsInteractable = true;
             ui.IsHidden = false;
             ui.LayerType = UILayerType.Overlay;
+            ui.Tooltip = string.Empty;
+            ui.TooltipType = TooltipType.None;
         }
 
         private void SetCloseButtonActive(bool active)

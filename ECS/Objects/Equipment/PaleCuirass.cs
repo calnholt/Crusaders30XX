@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
             Block = 2;
             Uses = 1;
             Color = CardData.CardColor.White;
+            FlavorText = "Plate washed pale as bone. It speaks of endurance more than ornament.";
             CanActivate = () => false;
         }
     }

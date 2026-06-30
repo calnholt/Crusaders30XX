@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
             Block = 2;
             Uses = 1;
             Color = CardData.CardColor.White;
+            FlavorText = "Steel shins for a slow advance. Each step is a small promise kept.";
             CanActivate = () => false;
         }
     }

@@ -12,7 +12,6 @@ namespace Crusaders30XX.ECS.Systems
     public class ControllerRumbleSystem : Core.System
     {
         private readonly IPlayerInputSource _inputSource;
-        private Entity _previousTarget;
         private float _rumbleTimeRemaining;
 
         [DebugEditable(DisplayName = "Rumble Duration (s)", Step = 0.01f, Min = 0f, Max = 1f)]
@@ -28,7 +27,8 @@ namespace Crusaders30XX.ECS.Systems
             : base(entityManager)
         {
             _inputSource = inputSource;
-            EventManager.Subscribe<CursorStateEvent>(OnCursorState);
+            EventManager.Subscribe<UIElementHoverEnteredEvent>(OnUIElementHoverEntered);
+            EventManager.Subscribe<PlayerInputEvent>(OnPlayerInput);
         }
 
         protected override IEnumerable<Entity> GetRelevantEntities()
@@ -47,23 +47,20 @@ namespace Crusaders30XX.ECS.Systems
             }
         }
 
-        private void OnCursorState(CursorStateEvent e)
+        private void OnUIElementHoverEntered(UIElementHoverEnteredEvent e)
         {
-            if (e.Source != PlayerInputDevice.Gamepad)
-            {
-                StopRumble();
-                _previousTarget = e.TopEntity;
-                return;
-            }
+            if (e.Source != PlayerInputDevice.Gamepad) return;
+            if (e.Entity?.GetComponent<UIElement>()?.IsInteractable != true) return;
 
-            if (e.TopEntity != _previousTarget
-                && e.TopEntity?.GetComponent<UIElement>()?.IsInteractable == true)
-            {
-                _rumbleTimeRemaining = RumbleDurationSeconds;
-                _inputSource.SetVibration(RumbleLow, RumbleHigh);
-            }
+            _rumbleTimeRemaining = RumbleDurationSeconds;
+            _inputSource.SetVibration(RumbleLow, RumbleHigh);
+        }
 
-            _previousTarget = e.TopEntity;
+        private void OnPlayerInput(PlayerInputEvent e)
+        {
+            if (e.Frame.Device == PlayerInputDevice.Gamepad && e.Frame.IsWindowActive) return;
+
+            StopRumble();
         }
 
         private void StopRumble()

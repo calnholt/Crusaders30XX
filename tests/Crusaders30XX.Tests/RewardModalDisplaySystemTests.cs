@@ -214,4 +214,42 @@ public sealed class RewardModalDisplaySystemTests
 		Assert.Equal(Curse.CardIdValue, card.GetComponent<CardData>()?.Card?.CardId);
 	}
 
+	[Fact]
+	public void ShouldSuppressBattleSceneDisplay_returns_true_when_overlay_open()
+	{
+		var entityManager = new EntityManager();
+		var overlay = entityManager.CreateEntity("QuestRewardOverlay");
+		entityManager.AddComponent(overlay, new QuestRewardOverlayState { IsOpen = true, DismissInProgress = false });
+
+		Assert.True(RewardModalDisplaySystem.ShouldSuppressBattleSceneDisplay(entityManager));
+	}
+
+	[Fact]
+	public void ShouldSuppressBattleSceneDisplay_returns_true_while_dismiss_in_progress()
+	{
+		var entityManager = new EntityManager();
+		var overlay = entityManager.CreateEntity("QuestRewardOverlay");
+		entityManager.AddComponent(overlay, new QuestRewardOverlayState { IsOpen = false, DismissInProgress = true });
+
+		Assert.True(RewardModalDisplaySystem.ShouldSuppressBattleSceneDisplay(entityManager));
+	}
+
+	[Fact]
+	public void ShouldSuppressBattleSceneDisplay_returns_false_when_overlay_fully_closed()
+	{
+		var entityManager = new EntityManager();
+		var overlay = entityManager.CreateEntity("QuestRewardOverlay");
+		entityManager.AddComponent(overlay, new QuestRewardOverlayState { IsOpen = false, DismissInProgress = false });
+
+		Assert.False(RewardModalDisplaySystem.ShouldSuppressBattleSceneDisplay(entityManager));
+	}
+
+	[Fact]
+	public void ShouldSuppressBattleSceneDisplay_returns_false_when_overlay_missing()
+	{
+		var entityManager = new EntityManager();
+
+		Assert.False(RewardModalDisplaySystem.ShouldSuppressBattleSceneDisplay(entityManager));
+	}
+
 }

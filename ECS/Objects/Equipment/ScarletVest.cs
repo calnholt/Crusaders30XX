@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
             Block = 1;
             Uses = 2;
             Color = CardData.CardColor.Red;
+            FlavorText = "Cut close and dyed deep. Worn by crusaders who prefer speed to ceremony.";
             CanActivate = () => false;
         }
     }

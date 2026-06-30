@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
             Block = 2;
             Uses = 1;
             Color = CardData.CardColor.Red;
+            FlavorText = "Forged for the front rank. Meant to be the last thing your enemy sees.";
             CanActivate = () => false;
         }
     }

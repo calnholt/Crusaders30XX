@@ -32,7 +32,7 @@ namespace Crusaders30XX.ECS.Systems
 		// --- Debug Editable Fields ---
 
 		[DebugEditable(DisplayName = "Vertical Offset from Head", Step = 1f, Min = -200f, Max = 200f)]
-		public float VerticalOffset { get; set; } = -80f;
+		public float VerticalOffset { get; set; } = -105f;
 
 		[DebugEditable(DisplayName = "Icon Scale", Step = 0.05f, Min = 0.1f, Max = 3f)]
 		public float IconScale { get; set; } = 0.1f;

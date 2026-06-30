@@ -24,7 +24,7 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Pip Gap", Step = 1, Min = 0, Max = 64)]
 		public int PipGap { get; set; } = 10;
 		[DebugEditable(DisplayName = "Offset Y", Step = 2, Min = -400, Max = 400)]
-		public int OffsetY { get; set; } = -238;
+		public int OffsetY { get; set; } = -292;
 		[DebugEditable(DisplayName = "Row Gap", Step = 1, Min = 0, Max = 64)]
 		public int RowGap { get; set; } = 16;
 		[DebugEditable(DisplayName = "Pip Thickness", Step = 1, Min = 1, Max = 64)]

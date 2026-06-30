@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
             Block = 2;
             Uses = 1;
             Color = CardData.CardColor.Red;
+            FlavorText = "Iron for the forearms that do not lower their guard.";
             CanActivate = () => false;
         }
     }

@@ -61,14 +61,6 @@ namespace Crusaders30XX.ECS.Systems
             {
                 _pulseTimer = 0.06f;
                 _previousTarget = target;
-                if (target?.GetComponent<UIElement>()?.IsInteractable == true)
-                {
-                    EventManager.Publish(new Events.PlaySfxEvent
-                    {
-                        Track = Events.SfxTrack.Interface,
-                        Volume = 0.05f,
-                    });
-                }
             }
 
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;

@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
             Block = 1;
             Uses = 2;
             Color = CardData.CardColor.Red;
+            FlavorText = "Red wrappings that mark the hand before it marks the enemy.";
             CanActivate = () => false;
         }
     }

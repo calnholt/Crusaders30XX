@@ -12,6 +12,7 @@ namespace Crusaders30XX.ECS.Objects.Equipment
             Block = 2;
             Uses = 1;
             Color = CardData.CardColor.White;
+            FlavorText = "Cold iron over the forearm. Heavy, honest, and difficult to ignore.";
             CanActivate = () => false;
         }
     }
