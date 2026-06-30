@@ -1895,6 +1895,12 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/VolcanoEmbers.fx
 
+#begin Shaders/PurpleZaps.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/PurpleZaps.fx
+
 #---------------------------------- Music ---------------------------------#
 
 #begin Music/desert_theme_battle.wav
