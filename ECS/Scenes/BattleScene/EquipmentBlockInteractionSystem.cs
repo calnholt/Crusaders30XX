@@ -27,7 +27,8 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			base.Update(gameTime);
 			if (BattleInputGate.IsBattleInputFrozen(EntityManager)) return;
-			// Ensure all AssignedBlockCard entities have a UIElement so clicks can be detected elsewhere
+			// Ensure all AssignedBlockCard entities have a UIElement so clicks can be detected elsewhere.
+			// AssignedBlockCardsDisplaySystem owns assigned-block bounds and interactability.
 			var assigned = EntityManager.GetEntitiesWithComponent<AssignedBlockCard>();
 			foreach (var e in assigned)
 			{
@@ -37,20 +38,7 @@ namespace Crusaders30XX.ECS.Systems
 					uiAbc = new UIElement { IsInteractable = true };
 					EntityManager.AddComponent(e, uiAbc);
 				}
-				// Best-effort bounds sync for assigned cards (precise sync happens in AssignedBlockCardsDisplaySystem)
-				var abc = e.GetComponent<AssignedBlockCard>();
-				if (abc != null)
-				{
-					const int defaultCardDrawWidth = 80;
-					const int defaultCardDrawHeight = 110;
-					int cw = (int)(defaultCardDrawWidth * abc.CurrentScale);
-					int ch = (int)(defaultCardDrawHeight * abc.CurrentScale);
-					var rectNow = new Microsoft.Xna.Framework.Rectangle((int)(abc.CurrentPos.X - cw / 2f), (int)(abc.CurrentPos.Y - ch / 2f), System.Math.Max(1, cw), System.Math.Max(1, ch));
-					uiAbc.Bounds = rectNow;
-					// Ensure clicks on assigned equipment route to unassign handler via delegate path
-					uiAbc.EventType = UIElementEventType.UnassignCardAsBlock;
-					uiAbc.IsInteractable = true;
-				}
+				uiAbc.EventType = UIElementEventType.UnassignCardAsBlock;
 			}
 			// Only in Block or Action phase
 			var phase = EntityManager.GetEntitiesWithComponent<PhaseState>().FirstOrDefault()?.GetComponent<PhaseState>();

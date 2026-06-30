@@ -21,7 +21,6 @@ namespace Crusaders30XX.ECS.Systems
 		private readonly SpriteBatch _spriteBatch;
 		private readonly ContentManager _content;
 		private readonly SpriteFont _font = FontSingleton.ContentFont;
-		private readonly Texture2D _pixel;
 		private readonly System.Collections.Generic.Dictionary<(int w, int h, int r), Texture2D> _roundedRectCache = new();
 		private readonly List<Entity> _pendingReturn = new();
 		// Logical base point set in UpdateEntity each frame; used by Draw to compute the banner's
@@ -31,15 +30,17 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Anchor Offset X", Step = 2, Min = -1000, Max = 1000)]
 		public int AnchorOffsetX { get; set; } = 0;
 		[DebugEditable(DisplayName = "Anchor Offset Y", Step = 2, Min = -1000, Max = 1000)]
-		public int AnchorOffsetY { get; set; } = -75;
+		public int AnchorOffsetY { get; set; } = -53;
 		[DebugEditable(DisplayName = "Slot Spacing X", Step = 2, Min = 10, Max = 200)]
-		public int SlotSpacingX { get; set; } = 70;
-		[DebugEditable(DisplayName = "Card Draw W", Step = 2, Min = 20, Max = 300)]
+		public int SlotSpacingX { get; set; } = 96;
+		[DebugEditable(DisplayName = "Equipment Draw W", Step = 2, Min = 20, Max = 300)]
 		public int CardDrawWidth { get; set; } = 100;
-		[DebugEditable(DisplayName = "Card Draw H", Step = 2, Min = 20, Max = 400)]
+		[DebugEditable(DisplayName = "Equipment Draw H", Step = 2, Min = 20, Max = 400)]
 		public int CardDrawHeight { get; set; } = 130;
-		[DebugEditable(DisplayName = "Target Scale", Step = 0.02f, Min = 0.1f, Max = 1.0f)]
-		public float TargetScale { get; set; } = 0.43f;
+		[DebugEditable(DisplayName = "Card Scale %", Step = 1f, Min = 10f, Max = 100f)]
+		public float CardScalePercent { get; set; } = 24f;
+		[DebugEditable(DisplayName = "Equipment Scale", Step = 0.02f, Min = 0.1f, Max = 1.0f)]
+		public float EquipmentTargetScale { get; set; } = 0.43f;
 		[DebugEditable(DisplayName = "Pullback Seconds", Step = 0.01f, Min = 0f, Max = 1f)]
 		public float PullbackSeconds { get; set; } = 0.0f;
 		[DebugEditable(DisplayName = "Launch Seconds", Step = 0.01f, Min = 0f, Max = 1f)]
@@ -51,12 +52,18 @@ namespace Crusaders30XX.ECS.Systems
 
 		[DebugEditable(DisplayName = "Above Gap (px)", Step = 1, Min = 0, Max = 100)]
 		public int AboveGap { get; set; } = 8;
-		[DebugEditable(DisplayName = "Block Text Scale", Step = 0.05f, Min = 0.2f, Max = 2.0f)]
-		public float BlockTextScale { get; set; } = 0.2f;
-		[DebugEditable(DisplayName = "Assigned Corner Radius", Step = 1, Min = 0, Max = 64)]
+		[DebugEditable(DisplayName = "Badge Text Scale", Step = 0.01f, Min = 0.05f, Max = 2.0f)]
+		public float BlockTextScale { get; set; } = 1.1f;
+		[DebugEditable(DisplayName = "Badge Size", Step = 1, Min = 8, Max = 80)]
+		public int BadgeSize { get; set; } = 30;
+		[DebugEditable(DisplayName = "Badge Offset X", Step = 1, Min = -80, Max = 80)]
+		public int BadgeOffsetX { get; set; } = 13;
+		[DebugEditable(DisplayName = "Badge Offset Y", Step = 1, Min = -80, Max = 80)]
+		public int BadgeOffsetY { get; set; } = 14;
+		[DebugEditable(DisplayName = "Badge Corner Radius", Step = 1, Min = 0, Max = 64)]
 		public int AssignedCornerRadius { get; set; } = 6;
 		[DebugEditable(DisplayName = "Assigned Background Alpha", Step = 1, Min = 0, Max = 255)]
-		public int AssignedBackgroundAlpha { get; set; } = 225;
+		public int AssignedBackgroundAlpha { get; set; } = 255;
 		[DebugEditable(DisplayName = "Colorless Background R", Step = 1, Min = 0, Max = 255)]
 		public int ColorlessBackgroundR { get; set; } = 92;
 		[DebugEditable(DisplayName = "Colorless Background G", Step = 1, Min = 0, Max = 255)]
@@ -84,8 +91,6 @@ namespace Crusaders30XX.ECS.Systems
 			_graphicsDevice = gd;
 			_spriteBatch = sb;
 			_content = content;
-			_pixel = new Texture2D(gd, 1, 1);
-			_pixel.SetData(new[] { Color.White });
 			EventManager.Subscribe<UnassignCardAsBlockRequested>(OnUnassignCardAsBlockRequested);
 			EventManager.Subscribe<BlockAssignmentAdded>(OnBlockAssignmentAdded);
 			EventManager.Subscribe<BlockAssignmentRemoved>(OnBlockAssignmentRemoved);
@@ -208,9 +213,7 @@ namespace Crusaders30XX.ECS.Systems
 				bool isForCurrentContext = paTip != null && abc.ContextId == paTip.ContextId;
 				bool showDuringPhase = abc.Phase == AssignedBlockCard.PhaseState.Idle || abc.Phase == AssignedBlockCard.PhaseState.Impact || abc.Phase == AssignedBlockCard.PhaseState.Launch || abc.Phase == AssignedBlockCard.PhaseState.Pullback;
 				bool shouldShowTooltip = isForCurrentContext && showDuringPhase;
-				int cw = (int)(CardDrawWidth * abc.CurrentScale);
-				int ch = (int)(CardDrawHeight * abc.CurrentScale);
-				var rectNow = new Rectangle((int)(abc.CurrentPos.X - cw / 2f), (int)(abc.CurrentPos.Y - ch / 2f), cw, ch);
+				var rectNow = GetAssignedBlockRect(entity, abc, abc.CurrentPos, abc.CurrentScale);
 
 				// Always keep bounds in sync for cards in the current context; disable otherwise
 				if (isForCurrentContext)
@@ -330,9 +333,9 @@ namespace Crusaders30XX.ECS.Systems
 			_lastLogicalBasePoint = basePoint;
 			var center = new Vector2(basePoint.X + AnchorOffsetX, basePoint.Y + AnchorOffsetY);
 			float offsetIndex = indexInContext - (countInContext - 1) * 0.5f;
+			float targetScale = GetTargetScale(abc);
 			// Place centers so that cards sit above the banner baseline
-			float targetHalfH = CardDrawHeight * TargetScale * 0.5f;
-			float slotY = center.Y - targetHalfH - AboveGap;
+			float slotY = center.Y - AboveGap - GetVisualBottomOffset(abc, targetScale);
 			var slotTarget = new Vector2(center.X + offsetIndex * SlotSpacingX, slotY);
 			abc.TargetPos = slotTarget;
 
@@ -343,7 +346,7 @@ namespace Crusaders30XX.ECS.Systems
 					float p = PullbackSeconds <= 0f ? 1f : MathHelper.Clamp(abc.Elapsed / PullbackSeconds, 0f, 1f);
 					var back = abc.StartPos + new Vector2(-30, -20);
 					abc.CurrentPos = Vector2.Lerp(abc.StartPos, back, p);
-					abc.CurrentScale = MathHelper.Lerp(abc.StartScale, TargetScale * 0.8f, p);
+					abc.CurrentScale = MathHelper.Lerp(abc.StartScale, targetScale * 0.8f, p);
 					if (p >= 1f) { abc.Phase = AssignedBlockCard.PhaseState.Launch; abc.Elapsed = 0f; }
 					break;
 				}
@@ -352,7 +355,7 @@ namespace Crusaders30XX.ECS.Systems
 					float p = LaunchSeconds <= 0f ? 1f : MathHelper.Clamp(abc.Elapsed / LaunchSeconds, 0f, 1f);
 					float ease = 1f - (float)System.Math.Pow(1f - p, 3);
 					abc.CurrentPos = Vector2.Lerp(abc.CurrentPos, abc.TargetPos, ease);
-					abc.CurrentScale = MathHelper.Lerp(abc.CurrentScale, TargetScale, ease);
+					abc.CurrentScale = MathHelper.Lerp(abc.CurrentScale, targetScale, ease);
 					if (p >= 1f) { abc.Phase = AssignedBlockCard.PhaseState.Impact; abc.Elapsed = 0f; }
 					break;
 				}
@@ -360,7 +363,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					float p = ImpactSeconds <= 0f ? 1f : MathHelper.Clamp(abc.Elapsed / ImpactSeconds, 0f, 1f);
 					abc.CurrentPos = abc.TargetPos + new Vector2(0, (1f - p) * 6f);
-					abc.CurrentScale = TargetScale * (1f + 0.08f * (1f - p));
+					abc.CurrentScale = targetScale * (1f + 0.08f * (1f - p));
 					if (p >= 1f) { abc.Phase = AssignedBlockCard.PhaseState.Idle; abc.Elapsed = 0f; MaintainLatestHotKeyForContext(pa.ContextId); }
 					break;
 				}
@@ -368,7 +371,7 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					float slide = 1f - (float)System.Math.Exp(-10f * dt);
 					abc.CurrentPos = Vector2.Lerp(abc.CurrentPos, abc.TargetPos, slide);
-					abc.CurrentScale = MathHelper.Lerp(abc.CurrentScale, TargetScale, slide);
+					abc.CurrentScale = MathHelper.Lerp(abc.CurrentScale, targetScale, slide);
 					break;
 				}
 				case AssignedBlockCard.PhaseState.Returning:
@@ -557,64 +560,160 @@ namespace Crusaders30XX.ECS.Systems
 			var enemy = EntityManager.GetEntitiesWithComponent<AttackIntent>().FirstOrDefault();
 			var pa = enemy?.GetComponent<AttackIntent>()?.Planned?.FirstOrDefault();
 			if (pa == null) return;
-			var list = GetRelevantEntities().Where(e => e.GetComponent<AssignedBlockCard>()?.ContextId == pa.ContextId).ToList();
+			var list = GetRelevantEntities()
+				.Where(e => e.GetComponent<AssignedBlockCard>()?.ContextId == pa.ContextId)
+				.OrderBy(e => e.GetComponent<AssignedBlockCard>().AssignedAtTicks)
+				.ToList();
 			if (list.Count == 0) return;
 			// Assigned cards keep their visual animation in AssignedBlockCard because PositionTweenSystem
 			// owns card Transform.Position. Add the banner's live parallax delta, then sync bounds to it.
 			var anchorEntity = EntityManager.GetEntitiesWithComponent<EnemyAttackBannerAnchor>().FirstOrDefault();
 			var anchorT = anchorEntity?.GetComponent<Transform>();
 			Vector2 parallaxDelta = anchorT != null ? anchorT.Position - _lastLogicalBasePoint : Vector2.Zero;
-			// Draw newest on top: reverse order for render
-			for (int i = list.Count - 1; i >= 0; i--)
+			// Draw oldest first so newer overlapping assignments appear on top.
+			for (int i = 0; i < list.Count; i++)
 			{
 				var card = list[i];
 				var abc = card.GetComponent<AssignedBlockCard>();
 				if (abc == null) continue;
 				var pos = abc.CurrentPos + parallaxDelta;
-				int cw = (int)(CardDrawWidth * abc.CurrentScale);
-				int ch = (int)(CardDrawHeight * abc.CurrentScale);
-				var rect = new Rectangle((int)(pos.X - cw / 2f), (int)(pos.Y - ch / 2f), cw, ch);
+				var rect = GetAssignedBlockRect(card, abc, pos, abc.CurrentScale);
 				var ui = card.GetComponent<UIElement>();
 				if (ui != null)
 				{
 					ui.Bounds = rect;
 				}
-				bool isColorless = card.HasComponent<Colorless>();
-				Color bg = isColorless
-					? new Color(ClampByte(ColorlessBackgroundR), ClampByte(ColorlessBackgroundG), ClampByte(ColorlessBackgroundB))
-					: abc.DisplayBgColor;
-				Color fg = isColorless
-					? new Color(ClampByte(ColorlessForegroundR), ClampByte(ColorlessForegroundG), ClampByte(ColorlessForegroundB))
-					: abc.DisplayFgColor;
-				bg = new Color(bg.R, bg.G, bg.B, (byte)System.Math.Clamp(AssignedBackgroundAlpha, 0, 255));
-				int radius = System.Math.Max(0, AssignedCornerRadius);
-				var rounded = GetRoundedRectTexture(rect.Width, rect.Height, radius);
-				var center = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
-				_spriteBatch.Draw(rounded, center, null, bg, 0f, new Vector2(rounded.Width / 2f, rounded.Height / 2f), Vector2.One, SpriteEffects.None, 0f);
-				if (_font != null)
+
+				if (!abc.IsEquipment && card.GetComponent<CardData>() != null)
 				{
-					string text = $"{abc.BlockAmount}";
-					float textScale = MathHelper.Clamp(BlockTextScale, 0.2f, 2.0f);
-					var textSize = _font.MeasureString(text) * textScale;
-					float tx = rect.X + (rect.Width - textSize.X) * 0.5f;
-					float ty = rect.Y + (rect.Height - textSize.Y) * 0.5f;
-					_spriteBatch.DrawString(_font, text, new Vector2(tx, ty), fg, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
-					// If this assignment is equipment and idle (not moving), draw the equipment type icon centered above the rect
-					if (abc.IsEquipment && abc.Phase == AssignedBlockCard.PhaseState.Idle && !string.IsNullOrWhiteSpace(abc.EquipmentType))
+					EventManager.Publish(new CardRenderScaledEvent
 					{
-						var tex = SafeLoadIcon(abc.EquipmentType);
-						if (tex != null)
-						{
-							float iconH = System.Math.Max(8, EquipIconHeight) * abc.CurrentScale;
-							float iconW = tex.Height > 0 ? iconH * (tex.Width / (float)tex.Height) : iconH;
-							float gap = System.Math.Max(0, EquipIconGap);
-							float iconX = rect.X + rect.Width * 0.5f - iconW * 0.5f + EquipIconOffsetX;
-							float iconY = rect.Y - gap - iconH + EquipIconOffsetY;
-							_spriteBatch.Draw(tex, new Rectangle((int)iconX, (int)iconY, (int)iconW, (int)iconH), Color.White);
-						}
+						Card = card,
+						Position = pos,
+						Scale = abc.CurrentScale
+					});
+					DrawBlockBadge(rect, card, abc);
+					continue;
+				}
+
+				DrawEquipmentAssignment(rect, card, abc);
+			}
+		}
+
+		private void DrawEquipmentAssignment(Rectangle rect, Entity card, AssignedBlockCard abc)
+		{
+			var (bg, fg) = GetBadgeColors(card, abc);
+			int radius = System.Math.Max(0, AssignedCornerRadius);
+			var rounded = GetRoundedRectTexture(rect.Width, rect.Height, radius);
+			var center = new Vector2(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f);
+			_spriteBatch.Draw(rounded, center, null, bg, 0f, new Vector2(rounded.Width / 2f, rounded.Height / 2f), Vector2.One, SpriteEffects.None, 0f);
+			if (_font != null)
+			{
+				string text = $"{abc.BlockAmount}";
+				float textScale = GetBadgeTextScale(text, rect);
+				var textSize = _font.MeasureString(text) * textScale;
+				float tx = rect.X + (rect.Width - textSize.X) * 0.5f;
+				float ty = rect.Y + (rect.Height - textSize.Y) * 0.5f;
+				_spriteBatch.DrawString(_font, text, new Vector2(tx, ty), fg, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+				if (abc.Phase == AssignedBlockCard.PhaseState.Idle && !string.IsNullOrWhiteSpace(abc.EquipmentType))
+				{
+					var tex = SafeLoadIcon(abc.EquipmentType);
+					if (tex != null)
+					{
+						float iconH = System.Math.Max(8, EquipIconHeight) * abc.CurrentScale;
+						float iconW = tex.Height > 0 ? iconH * (tex.Width / (float)tex.Height) : iconH;
+						float gap = System.Math.Max(0, EquipIconGap);
+						float iconX = rect.X + rect.Width * 0.5f - iconW * 0.5f + EquipIconOffsetX;
+						float iconY = rect.Y - gap - iconH + EquipIconOffsetY;
+						_spriteBatch.Draw(tex, new Rectangle((int)iconX, (int)iconY, (int)iconW, (int)iconH), Color.White);
 					}
 				}
 			}
+		}
+
+		private void DrawBlockBadge(Rectangle cardRect, Entity card, AssignedBlockCard abc)
+		{
+			if (_font == null) return;
+			var (bg, fg) = GetBadgeColors(card, abc);
+			int badgeSize = System.Math.Max(8, BadgeSize);
+			var badgeRect = new Rectangle(
+				cardRect.Right - badgeSize + BadgeOffsetX,
+				cardRect.Bottom - badgeSize + BadgeOffsetY,
+				badgeSize,
+				badgeSize);
+			int radius = System.Math.Clamp(AssignedCornerRadius, 0, badgeSize / 2);
+			var rounded = GetRoundedRectTexture(badgeRect.Width, badgeRect.Height, radius);
+			_spriteBatch.Draw(rounded, badgeRect, bg);
+
+			string text = $"{abc.BlockAmount}";
+			float textScale = GetBadgeTextScale(text, badgeRect);
+			var textSize = _font.MeasureString(text) * textScale;
+			var textPos = new Vector2(
+				badgeRect.X + (badgeRect.Width - textSize.X) * 0.5f,
+				badgeRect.Y + (badgeRect.Height - textSize.Y) * 0.5f);
+			_spriteBatch.DrawString(_font, text, textPos, fg, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+		}
+
+		private float GetBadgeTextScale(string text, Rectangle bounds)
+		{
+			if (_font == null || bounds.Width <= 0 || bounds.Height <= 0) return 0f;
+			var textSizeAtOne = _font.MeasureString(text);
+			if (textSizeAtOne.X <= 0f || textSizeAtOne.Y <= 0f) return 0f;
+
+			float fill = MathHelper.Clamp(BlockTextScale, 0.05f, 1.0f);
+			float maxTextWidth = bounds.Width * fill;
+			float maxTextHeight = bounds.Height * fill;
+			return System.Math.Min(maxTextWidth / textSizeAtOne.X, maxTextHeight / textSizeAtOne.Y);
+		}
+
+		private (Color Background, Color Foreground) GetBadgeColors(Entity card, AssignedBlockCard abc)
+		{
+			bool isColorless = card.HasComponent<Colorless>();
+			Color bg = isColorless
+				? new Color(ClampByte(ColorlessBackgroundR), ClampByte(ColorlessBackgroundG), ClampByte(ColorlessBackgroundB))
+				: abc.DisplayBgColor;
+			Color fg = isColorless
+				? new Color(ClampByte(ColorlessForegroundR), ClampByte(ColorlessForegroundG), ClampByte(ColorlessForegroundB))
+				: abc.DisplayFgColor;
+			bg = new Color(bg.R, bg.G, bg.B, (byte)System.Math.Clamp(AssignedBackgroundAlpha, 0, 255));
+			return (bg, fg);
+		}
+
+		private Rectangle GetAssignedBlockRect(Entity entity, AssignedBlockCard abc, Vector2 position, float scale)
+		{
+			if (!abc.IsEquipment && entity.GetComponent<CardData>() != null)
+			{
+				return CardGeometryService.GetVisualRect(EntityManager, position, scale);
+			}
+
+			int width = System.Math.Max(1, (int)System.Math.Round(CardDrawWidth * scale));
+			int height = System.Math.Max(1, (int)System.Math.Round(CardDrawHeight * scale));
+			return new Rectangle(
+				(int)System.Math.Round(position.X - width / 2f),
+				(int)System.Math.Round(position.Y - height / 2f),
+				width,
+				height);
+		}
+
+		private float GetTargetScale(AssignedBlockCard abc)
+		{
+			if (abc.IsEquipment)
+			{
+				return MathHelper.Clamp(EquipmentTargetScale, 0.1f, 1.0f);
+			}
+
+			return MathHelper.Clamp(CardScalePercent, 10f, 100f) * 0.01f;
+		}
+
+		private float GetVisualBottomOffset(AssignedBlockCard abc, float scale)
+		{
+			if (abc.IsEquipment)
+			{
+				return CardDrawHeight * scale * 0.5f;
+			}
+
+			var rect = CardGeometryService.GetVisualRect(EntityManager, Vector2.Zero, scale);
+			return rect.Bottom;
 		}
 
 		private Texture2D GetRoundedRectTexture(int width, int height, int radius)
