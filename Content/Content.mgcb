@@ -1889,6 +1889,12 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/DesertStorm.fx
 
+#begin Shaders/VolcanoEmbers.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/VolcanoEmbers.fx
+
 #---------------------------------- Music ---------------------------------#
 
 #begin Music/desert_theme_battle.wav
