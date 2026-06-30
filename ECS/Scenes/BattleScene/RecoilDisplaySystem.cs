@@ -70,7 +70,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             var card = evt.Card;
             var recoil = card?.GetComponent<Recoil>();
-            if (recoil == null) return;
+            if (recoil == null || card.GetComponent<SuppressCardVisualEffects>() != null) return;
 
             var ui = card.GetComponent<UIElement>();
             if (ui == null) return;

@@ -698,6 +698,14 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Temporarily hides readability-blocking card overlays while inspecting a hand card.
+    /// </summary>
+    public class SuppressCardVisualEffects : IComponent
+    {
+        public Entity Owner { get; set; }
+    }
+
+    /// <summary>
     /// State for the on-screen profiler overlay
     /// </summary>
     public class ProfilerOverlay : IComponent

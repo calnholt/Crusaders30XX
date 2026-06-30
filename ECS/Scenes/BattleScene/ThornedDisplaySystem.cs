@@ -282,7 +282,8 @@ public sealed class ThornedDisplaySystem : Core.System
     {
         return ShaderRuntimeOptions.ShadersEnabled &&
             !_failed &&
-            card?.GetComponent<Thorned>() != null;
+            card?.GetComponent<Thorned>() != null &&
+            card.GetComponent<SuppressCardVisualEffects>() == null;
     }
 
     private bool HasThornedCards()

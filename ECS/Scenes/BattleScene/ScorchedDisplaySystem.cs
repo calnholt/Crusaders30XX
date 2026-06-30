@@ -219,7 +219,8 @@ public sealed class ScorchedDisplaySystem : Core.System
     {
         return ShaderRuntimeOptions.ShadersEnabled &&
             !_failed &&
-            card?.GetComponent<Scorched>() != null;
+            card?.GetComponent<Scorched>() != null &&
+            card.GetComponent<SuppressCardVisualEffects>() == null;
     }
 
     private bool HasScorchedCards()

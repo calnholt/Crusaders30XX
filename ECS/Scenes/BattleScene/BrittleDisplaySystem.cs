@@ -193,7 +193,8 @@ public class BrittleDisplaySystem : Core.System
         return ShaderRuntimeOptions.ShadersEnabled &&
             !_failed &&
             card != null &&
-            card.GetComponent<Brittle>() != null;
+            card.GetComponent<Brittle>() != null &&
+            card.GetComponent<SuppressCardVisualEffects>() == null;
     }
 
     private bool HasAnyBrittleCards()

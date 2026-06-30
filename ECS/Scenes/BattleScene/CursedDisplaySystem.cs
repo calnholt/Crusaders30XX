@@ -172,7 +172,8 @@ public sealed class CursedDisplaySystem : Core.System
     {
         return ShaderRuntimeOptions.ShadersEnabled &&
             !_failed &&
-            card?.GetComponent<Cursed>() != null;
+            card?.GetComponent<Cursed>() != null &&
+            card.GetComponent<SuppressCardVisualEffects>() == null;
     }
 
     private bool HasCursedCards()

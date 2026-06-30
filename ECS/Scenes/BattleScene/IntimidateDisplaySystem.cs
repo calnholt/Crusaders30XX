@@ -138,7 +138,9 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			// Only draw overlay for intimidated cards
 			var card = evt.Card;
-			if (card == null || card.GetComponent<Intimidated>() == null) return;
+			if (card == null
+				|| card.GetComponent<Intimidated>() == null
+				|| card.GetComponent<SuppressCardVisualEffects>() != null) return;
 			var ui = card.GetComponent<UIElement>();
 			if (ui == null) return;
 

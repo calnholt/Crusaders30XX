@@ -306,7 +306,8 @@ public sealed class FrozenDisplaySystem : Core.System
     {
         return ShaderRuntimeOptions.ShadersEnabled &&
             !_failed &&
-            card?.GetComponent<Frozen>() != null;
+            card?.GetComponent<Frozen>() != null &&
+            card.GetComponent<SuppressCardVisualEffects>() == null;
     }
 
     private bool HasFrozenCards()

@@ -128,6 +128,8 @@ namespace Crusaders30XX.ECS.Components
 		public float StartScale { get; set; } = 1f;
 		public float TargetScale { get; set; } = 0.4f;
 		public float CurrentScale { get; set; } = 1f;
+		public float StartRotation { get; set; } = 0f;
+		public float CurrentRotation { get; set; } = 0f;
 		public float Elapsed { get; set; } = 0f;
 		public bool ImpactPlayed { get; set; } = false;
 	}
@@ -165,5 +167,4 @@ namespace Crusaders30XX.ECS.Components
 		public Entity Owner { get; set; }
 	}
 }
-
 

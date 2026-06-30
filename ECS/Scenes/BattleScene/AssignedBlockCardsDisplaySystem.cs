@@ -109,8 +109,18 @@ namespace Crusaders30XX.ECS.Systems
 				EntityManager.RemoveComponent<HotKey>(evt.CardEntity);
 				AssignHotKeyToPrevious(evt.CardEntity, abc?.ContextId, abc?.AssignedAtTicks ?? long.MaxValue);
 			}
+			abc.StartPos = abc.CurrentPos;
+			abc.StartScale = abc.CurrentScale;
+			abc.StartRotation = abc.CurrentRotation;
 			abc.Phase = AssignedBlockCard.PhaseState.Returning;
 			abc.Elapsed = 0f;
+			var ui = evt.CardEntity.GetComponent<UIElement>();
+			if (ui != null)
+			{
+				ui.IsInteractable = false;
+				ui.IsHovered = false;
+				ui.IsClicked = false;
+			}
 			ReserveReturningCardAtHandEnd(evt.CardEntity, abc);
 			EventManager.Publish(new BlockAssignmentRemoved
 			{
@@ -339,10 +349,12 @@ namespace Crusaders30XX.ECS.Systems
 			var slotTarget = new Vector2(center.X + offsetIndex * SlotSpacingX, slotY);
 			abc.TargetPos = slotTarget;
 
+			int? returnZOrder = null;
 			switch (abc.Phase)
 			{
 				case AssignedBlockCard.PhaseState.Pullback:
 				{
+					abc.CurrentRotation = 0f;
 					float p = PullbackSeconds <= 0f ? 1f : MathHelper.Clamp(abc.Elapsed / PullbackSeconds, 0f, 1f);
 					var back = abc.StartPos + new Vector2(-30, -20);
 					abc.CurrentPos = Vector2.Lerp(abc.StartPos, back, p);
@@ -352,6 +364,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				case AssignedBlockCard.PhaseState.Launch:
 				{
+					abc.CurrentRotation = 0f;
 					float p = LaunchSeconds <= 0f ? 1f : MathHelper.Clamp(abc.Elapsed / LaunchSeconds, 0f, 1f);
 					float ease = 1f - (float)System.Math.Pow(1f - p, 3);
 					abc.CurrentPos = Vector2.Lerp(abc.CurrentPos, abc.TargetPos, ease);
@@ -361,6 +374,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				case AssignedBlockCard.PhaseState.Impact:
 				{
+					abc.CurrentRotation = 0f;
 					float p = ImpactSeconds <= 0f ? 1f : MathHelper.Clamp(abc.Elapsed / ImpactSeconds, 0f, 1f);
 					abc.CurrentPos = abc.TargetPos + new Vector2(0, (1f - p) * 6f);
 					abc.CurrentScale = targetScale * (1f + 0.08f * (1f - p));
@@ -369,6 +383,7 @@ namespace Crusaders30XX.ECS.Systems
 				}
 				case AssignedBlockCard.PhaseState.Idle:
 				{
+					abc.CurrentRotation = 0f;
 					float slide = 1f - (float)System.Math.Exp(-10f * dt);
 					abc.CurrentPos = Vector2.Lerp(abc.CurrentPos, abc.TargetPos, slide);
 					abc.CurrentScale = MathHelper.Lerp(abc.CurrentScale, targetScale, slide);
@@ -378,12 +393,22 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					float p = ReturnSeconds <= 0f ? 1f : MathHelper.Clamp(abc.Elapsed / ReturnSeconds, 0f, 1f);
 					float ease = 1f - (float)System.Math.Pow(1f - p, 3);
-					Vector2 target = ResolveReturnTarget(entity, abc);
-					abc.CurrentPos = Vector2.Lerp(abc.CurrentPos, target, ease);
-					abc.CurrentScale = MathHelper.Lerp(abc.CurrentScale, 1f, ease);
+					var handPose = ResolveReturnHandPose(entity, abc);
+					returnZOrder = handPose.ZOrder;
+					abc.CurrentPos = Vector2.Lerp(abc.StartPos, handPose.Position, ease);
+					abc.CurrentScale = MathHelper.Lerp(abc.StartScale, handPose.Scale, ease);
+					abc.CurrentRotation = MathHelper.Lerp(abc.StartRotation, handPose.Rotation, ease);
 					if (p >= 1f)
 					{
+						abc.CurrentPos = handPose.Position;
+						abc.CurrentScale = handPose.Scale;
+						abc.CurrentRotation = handPose.Rotation;
+						SyncPositionTween(entity, handPose.Position);
 						_pendingReturn.Add(entity);
+					}
+					else
+					{
+						SyncPositionTween(entity, abc.CurrentPos);
 					}
 					break;
 				}
@@ -397,6 +422,11 @@ namespace Crusaders30XX.ECS.Systems
 			}
 			t.Position = abc.CurrentPos;
 			t.Scale = new Vector2(abc.CurrentScale, abc.CurrentScale);
+			t.Rotation = abc.CurrentRotation;
+			if (returnZOrder.HasValue)
+			{
+				t.ZOrder = returnZOrder.Value;
+			}
 		}
 
 		private void ReserveReturningCardAtHandEnd(Entity card, AssignedBlockCard assignment)
@@ -407,28 +437,44 @@ namespace Crusaders30XX.ECS.Systems
 			deck.Hand.Add(card);
 		}
 
-		private Vector2 ResolveReturnTarget(Entity card, AssignedBlockCard assignment)
+		private (Vector2 Position, float Scale, float Rotation, int ZOrder) ResolveReturnHandPose(Entity card, AssignedBlockCard assignment)
 		{
+			var transform = card?.GetComponent<Transform>();
+			Vector2 fallbackPosition = assignment?.ReturnTargetPos ?? transform?.Position ?? Vector2.Zero;
+			float fallbackScale = transform?.Scale.X ?? 1f;
+			float fallbackRotation = transform?.Rotation ?? 0f;
+			int fallbackZOrder = transform?.ZOrder ?? 0;
+
 			if (card != null && assignment != null && !assignment.IsEquipment)
 			{
 				var deck = EntityManager.GetEntitiesWithComponent<Deck>().FirstOrDefault()?.GetComponent<Deck>();
 				if (deck?.Hand.Contains(card) == true)
 				{
 					var tween = card.GetComponent<PositionTween>();
+					Vector2 position = fallbackPosition;
 					if (tween != null && tween.Target != Vector2.Zero)
 					{
-						return tween.Target;
+						position = tween.Target;
 					}
 
-					var transform = card.GetComponent<Transform>();
-					if (transform != null)
-					{
-						return transform.Position;
-					}
+					return (
+						position,
+						transform?.Scale.X ?? fallbackScale,
+						transform?.Rotation ?? fallbackRotation,
+						transform?.ZOrder ?? fallbackZOrder);
 				}
 			}
 
-			return assignment?.ReturnTargetPos ?? Vector2.Zero;
+			return (fallbackPosition, fallbackScale, fallbackRotation, fallbackZOrder);
+		}
+
+		private void SyncPositionTween(Entity card, Vector2 position)
+		{
+			var tween = card?.GetComponent<PositionTween>();
+			if (tween == null) return;
+			tween.Current = position;
+			tween.Target = position;
+			tween.Initialized = true;
 		}
 
 		private void OnBlockAssignmentAdded(BlockAssignmentAdded evt)
@@ -608,6 +654,7 @@ namespace Crusaders30XX.ECS.Systems
 				var card = list[i];
 				var abc = card.GetComponent<AssignedBlockCard>();
 				if (abc == null) continue;
+				if (!abc.IsEquipment && abc.Phase == AssignedBlockCard.PhaseState.Returning) continue;
 				var pos = abc.CurrentPos + parallaxDelta;
 				var rect = GetAssignedBlockRect(card, abc, pos, abc.CurrentScale);
 				var ui = card.GetComponent<UIElement>();

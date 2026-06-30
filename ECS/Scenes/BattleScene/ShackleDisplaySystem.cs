@@ -116,6 +116,7 @@ namespace Crusaders30XX.ECS.Systems
 		{
 			return card != null 
 				&& card.GetComponent<Shackle>() != null 
+				&& card.GetComponent<SuppressCardVisualEffects>() == null
 				&& _shackleTexture != null;
 		}
 

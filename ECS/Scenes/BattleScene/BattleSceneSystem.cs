@@ -34,6 +34,7 @@ namespace Crusaders30XX.ECS.Systems
 
 	private HandDisplaySystem _handDisplaySystem;
 	private CardHoverDetectionSystem _cardHoverDetectionSystem;
+	private CardVisualEffectsSuppressionSystem _cardVisualEffectsSuppressionSystem;
 		private BattleBackgroundSystem _battleBackgroundSystem;
 		private DrawPileDisplaySystem _drawPileDisplaySystem;
 		private DiscardPileDisplaySystem _discardPileDisplaySystem;
@@ -357,6 +358,7 @@ namespace Crusaders30XX.ECS.Systems
 			// if (!guidedTutorial) FrameProfiler.Measure("QueuedEventsDisplaySystem.Draw", _queuedEventsDisplaySystem.Draw);
 			FrameProfiler.Measure("AttackAnimationDisplaySystem.Draw", _attackAnimationDisplaySystem.Draw);
 			FrameProfiler.Measure("StunnedOverlaySystem.Draw", _stunnedOverlaySystem.Draw);
+			FrameProfiler.Measure("UIElementHighlightSystem.Draw", _uiElementHighlightSystem.Draw);
 			FrameProfiler.Measure("AssignedBlockCardsDisplaySystem.Draw", _assignedBlockCardsDisplaySystem.Draw);
 			FrameProfiler.Measure("ExhaustOnBlockDisplaySystem.Draw", _exhaustOnBlockDisplaySystem.Draw);
 			FrameProfiler.Measure("PlayerWispParticleSystem.Draw", _playerWispParticleSystem.Draw);
@@ -372,7 +374,6 @@ namespace Crusaders30XX.ECS.Systems
 			FrameProfiler.Measure("AppliedPassivesDisplaySystem.Draw", _appliedPassivesDisplaySystem.Draw);
 			FrameProfiler.Measure("PassiveMeterRenderSystem.Draw", _passiveMeterRenderSystem.Draw);
 			FrameProfiler.Measure("PayCostOverlaySystem.DrawBackdrop", _payCostOverlaySystem.DrawBackdrop);
-			FrameProfiler.Measure("UIElementHighlightSystem.Draw", _uiElementHighlightSystem.Draw);
 			FrameProfiler.Measure("EnemyAttackDisplaySystem.Draw", _enemyAttackDisplaySystem.Draw);
 			FrameProfiler.Measure("EnemyDamageMeterDisplaySystem.Draw", _enemyDamageMeterDisplaySystem.Draw);
 			FrameProfiler.Measure("EndTurnDisplaySystem.Draw", _endTurnDisplaySystem.Draw);
@@ -653,6 +654,7 @@ namespace Crusaders30XX.ECS.Systems
 		_battleBackgroundSystem = new BattleBackgroundSystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 		_handDisplaySystem = new HandDisplaySystem(_world.EntityManager, _graphicsDevice);
 		_cardHoverDetectionSystem = new CardHoverDetectionSystem(_world.EntityManager);
+		_cardVisualEffectsSuppressionSystem = new CardVisualEffectsSuppressionSystem(_world.EntityManager);
 			_cardZoneSystem = new CardZoneSystem(_world.EntityManager);
 			_drawPileDisplaySystem = new DrawPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_discardPileDisplaySystem = new DiscardPileDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
@@ -785,6 +787,7 @@ namespace Crusaders30XX.ECS.Systems
 		// Register
 		_world.AddSystem(_handDisplaySystem);
 		_world.AddSystem(_cardHoverDetectionSystem);
+		_world.AddSystem(_cardVisualEffectsSuppressionSystem);
 		_world.AddSystem(_cardZoneSystem);
 			_world.AddSystem(_handBlockInteractionSystem);
 			_world.AddSystem(_pledgeManagementSystem);

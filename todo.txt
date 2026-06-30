@@ -10,7 +10,6 @@ UX
 - intimidated shader (maybe change name)
 - maybe just have blocking cards be scaled down versions + number 
 - hold left trigger to view card without mods?
-- assigned bclock use card + badge
 
 bugs
 - curse need to apply before brittle
@@ -23,7 +22,7 @@ Gameplay
 - maybe remove istoken/isweapon and make as components?
 - make hand display agnostic of carddata, probably involves refactoring some components and data objects
 - darkness X - for x turns, one card in hand becomes shrouded in darkess during the enemy turn, lifts during action phase, cards in darkness block for 3 and ignore color gains and play restrictions
-
+- reclaim - return X random cards from graveyard to deck, shuffle deck
 
 cards
 - if you have dealt 10 or more damage this turn...

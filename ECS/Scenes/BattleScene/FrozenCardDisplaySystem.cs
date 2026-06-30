@@ -131,6 +131,7 @@ namespace Crusaders30XX.ECS.Systems
 		return !ShaderRuntimeOptions.ShadersEnabled
 			&& card != null
 			&& card.GetComponent<Frozen>() != null
+			&& card.GetComponent<SuppressCardVisualEffects>() == null
 			&& _frostTexture != null;
 	}
 
