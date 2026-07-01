@@ -46,7 +46,7 @@ namespace Crusaders30XX.ECS.Objects.Cards
 
         public int GetDerivedDamage(EntityManager entityManager, Entity card)
         {
-            return GetConditionalDamage(entityManager, card) + AttackDamageValueService.GetTotalDamageValue(card);
+            return CardStatModifierService.GetCardDamage(entityManager, card, CardStatQueryMode.Resolution).TotalValue;
         }
         
         public string Animation { get; set; } = "";

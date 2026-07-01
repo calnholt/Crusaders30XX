@@ -390,7 +390,7 @@ namespace Crusaders30XX.ECS.Systems
 
                         ComponentLoggerService.LogComponent(cache, $"Auto-pay complete, {solution.Count} cards discarded");
                         
-                        EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true });
+                        EventManager.Publish(new PlayCardRequested { Card = evt.Card, CostsPaid = true, PaymentCards = new List<Entity>(solution) });
                         return;
                     }
                     else
@@ -425,7 +425,15 @@ namespace Crusaders30XX.ECS.Systems
 
             ComponentLoggerService.LogEntity(evt.Card, "Executing card OnPlay effect");
             int vigorStacksAtPlay = VigorService.GetPlayerVigorStacks(EntityManager);
-            card.OnPlay?.Invoke(EntityManager, evt.Card);
+            AttachPlayStatContext(evt.Card, evt.PaymentCards);
+            try
+            {
+                card.OnPlay?.Invoke(EntityManager, evt.Card);
+            }
+            finally
+            {
+                RemovePlayStatContext(evt.Card);
+            }
             EventManager.Publish(new CardPlayedEvent { Card = evt.Card, VigorStacksAtPlay = vigorStacksAtPlay });
             bool isCurseCard = string.Equals(card.CardId, Curse.CardIdValue, StringComparison.OrdinalIgnoreCase);
             if (!isCurseCard && !GuidedTutorialService.IsActive(EntityManager))
@@ -576,6 +584,25 @@ namespace Crusaders30XX.ECS.Systems
 
             // Once costs are paid, proceed to resolve effect by re-publishing play with CostsPaid
             EventManager.Publish(new PlayCardRequested { Card = evt.CardToPlay, CostsPaid = true, PaymentCards = evt.PaymentCards });
+        }
+
+        private void AttachPlayStatContext(Entity card, List<Entity> paymentCards)
+        {
+            if (card == null) return;
+            RemovePlayStatContext(card);
+            EntityManager.AddComponent(card, new CardPlayStatContext
+            {
+                Owner = card,
+                PaymentCards = paymentCards != null
+                    ? new List<Entity>(paymentCards)
+                    : new List<Entity>(),
+            });
+        }
+
+        private void RemovePlayStatContext(Entity card)
+        {
+            if (card?.GetComponent<CardPlayStatContext>() == null) return;
+            EntityManager.RemoveComponent<CardPlayStatContext>(card);
         }
 
         

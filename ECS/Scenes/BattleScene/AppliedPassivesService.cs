@@ -52,8 +52,6 @@ namespace Crusaders30XX.ECS.Systems
         }
         var delta = 0;
         var isEnemy = e.Source?.HasComponent<Enemy>() == true;
-        var sourcePassives = e.Source?.GetComponent<AppliedPassives>()?.Passives
-          ?? new Dictionary<AppliedPassiveType, int>();
         var targetPassives = e.Target?.GetComponent<AppliedPassives>()?.Passives
           ?? new Dictionary<AppliedPassiveType, int>();
         if (targetPassives.ContainsKey(AppliedPassiveType.Armor) && e.DamageType == ModifyTypeEnum.Attack)
@@ -66,48 +64,28 @@ namespace Crusaders30XX.ECS.Systems
           targetPassives.TryGetValue(AppliedPassiveType.Wounded, out var amount);
           delta += amount;
         }
-        var flatSourceBonus = 0;
-        if (sourcePassives.ContainsKey(AppliedPassiveType.Power) && e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
-        {
-          sourcePassives.TryGetValue(AppliedPassiveType.Power, out var amount);
-          delta += amount;
-          flatSourceBonus += amount;
-        }
-        if (sourcePassives.ContainsKey(AppliedPassiveType.Might) && e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
-        {
-          sourcePassives.TryGetValue(AppliedPassiveType.Might, out var amount);
-          delta += amount;
-          flatSourceBonus += amount;
-        }
         if (e.DamageType == ModifyTypeEnum.Attack && !isEnemy)
         {
-          var attackCard = e.AttackCard?.GetComponent<CardData>();
-          bool isWeaponAttack = attackCard?.Card?.IsWeapon == true;
-          if (!isWeaponAttack && sourcePassives.TryGetValue(AppliedPassiveType.Aggression, out var aggression) && aggression > 0)
+          var outgoing = CardStatModifierService.GetOutgoingAttackDamage(new CardStatQuery
           {
-            delta += aggression;
-            flatSourceBonus += aggression;
-            if (!ReadOnly)
-            {
-              EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.Aggression });
-            }
-          }
-          if (!isWeaponAttack && sourcePassives.TryGetValue(AppliedPassiveType.Galvanize, out var galvanize) && galvanize > 0)
+            Kind = CardStatKind.OutgoingAttackDamage,
+            Mode = ReadOnly ? CardStatQueryMode.Preview : CardStatQueryMode.Resolution,
+            Source = e.Source,
+            Owner = e.Source,
+            Target = e.Target,
+            Card = e.AttackCard,
+            BaseValue = Math.Abs(e.Delta),
+          });
+          delta += outgoing.TotalDelta;
+          if (!ReadOnly)
           {
-            int rawAttackDamage = Math.Abs(e.Delta);
-            int preGalvanizeDamage = rawAttackDamage + flatSourceBonus;
-            delta += GetGalvanizeBonus(preGalvanizeDamage);
-            if (!ReadOnly)
+            foreach (var consumption in outgoing.PassiveConsumptions)
             {
-              EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.Galvanize });
-            }
-          }
-          if (isWeaponAttack && sourcePassives.TryGetValue(AppliedPassiveType.Sharpen, out var sharpen) && sharpen > 0)
-          {
-            delta += sharpen;
-            if (!ReadOnly)
-            {
-              EventManager.Publish(new RemovePassive { Owner = e.Source, Type = AppliedPassiveType.Sharpen });
+              EventManager.Publish(new RemovePassive
+              {
+                Owner = consumption.Owner,
+                Type = consumption.Type,
+              });
             }
           }
         }

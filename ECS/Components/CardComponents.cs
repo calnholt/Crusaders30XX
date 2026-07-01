@@ -885,6 +885,15 @@ namespace Crusaders30XX.ECS.Components
     }
 
     /// <summary>
+    /// Exact, short-lived play context attached while a card's OnPlay delegate resolves.
+    /// </summary>
+    public class CardPlayStatContext : IComponent
+    {
+        public Entity Owner { get; set; }
+        public List<Entity> PaymentCards { get; set; } = new();
+    }
+
+    /// <summary>
     /// Singleton-like world component describing the current battlefield location.
     /// Other systems read this instead of subscribing to an event.
     /// </summary>

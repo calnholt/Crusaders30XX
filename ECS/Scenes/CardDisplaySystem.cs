@@ -1233,12 +1233,7 @@ namespace Crusaders30XX.ECS.Systems
         {
             try
             {
-                int baseDamage = Math.Max(0, card.Damage);
-                try
-                {
-                    baseDamage = Math.Max(0, baseDamage + card.GetConditionalDamage(EntityManager, entity) + AttackDamageValueService.GetTotalDelta(entity));
-                }
-                catch { baseDamage = Math.Max(0, card.Damage); }
+                int baseDamage = CardStatModifierService.GetCardDamage(EntityManager, entity, CardStatQueryMode.Preview).TotalValue;
 
                 int finalDamage = baseDamage;
                 try
