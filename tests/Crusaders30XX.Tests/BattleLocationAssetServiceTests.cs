@@ -18,6 +18,17 @@ public class BattleLocationAssetServiceTests
 	}
 
 	[Fact]
+	public void Maps_climb_locations_to_location_background_assets()
+	{
+		Assert.Equal("desert_background_location", BattleLocationAssetService.GetClimbBackgroundAsset(BattleLocation.Desert));
+		Assert.Equal("tundra_background_location", BattleLocationAssetService.GetClimbBackgroundAsset(BattleLocation.Tundra));
+		Assert.Equal("jungle_background_location", BattleLocationAssetService.GetClimbBackgroundAsset(BattleLocation.Jungle));
+		Assert.Equal("volcano_background_location", BattleLocationAssetService.GetClimbBackgroundAsset(BattleLocation.Volcano));
+		Assert.Equal("gothic_background_location", BattleLocationAssetService.GetClimbBackgroundAsset(BattleLocation.Gothic));
+		Assert.Equal("desert_background_location", BattleLocationAssetService.GetClimbBackgroundAsset(BattleLocation.TheGate));
+	}
+
+	[Fact]
 	public void Maps_battle_locations_to_music_tracks()
 	{
 		Assert.Equal(MusicTrack.DesertBattle, BattleLocationAssetService.GetMusicTrack(BattleLocation.Desert));

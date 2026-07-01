@@ -49,6 +49,7 @@ namespace Crusaders30XX.ECS.Systems
 		private VolcanoEmbersDisplaySystem _volcanoEmbersDisplaySystem;
 		private SnowstormDisplaySystem _snowstormDisplaySystem;
 		private PurpleZapsDisplaySystem _purpleZapsDisplaySystem;
+		private FallingLeavesDisplaySystem _fallingLeavesDisplaySystem;
 		private PlayerHudLayoutSystem _playerHudLayoutSystem;
 		private PlayerHudFeedbackSystem _playerHudFeedbackSystem;
 		private PlayerHudRootDisplaySystem _playerHudRootDisplaySystem;
@@ -307,6 +308,7 @@ namespace Crusaders30XX.ECS.Systems
 			bool hasVolcanoEmbers = _volcanoEmbersDisplaySystem?.CanComposite == true;
 			bool hasSnowstorm = _snowstormDisplaySystem?.CanComposite == true;
 			bool hasPurpleZaps = _purpleZapsDisplaySystem?.CanComposite == true;
+			bool hasFallingLeaves = _fallingLeavesDisplaySystem?.CanComposite == true;
 			if (!hasDesertStorm)
 			{
 				FrameProfiler.Measure("DesertBackgroundEffectSystem.Draw", _desertBackgroundEffectSystem.Draw);
@@ -346,6 +348,14 @@ namespace Crusaders30XX.ECS.Systems
 				);
 				backgroundSource = _bgTemp;
 			}
+			// else if (hasFallingLeaves)
+			// {
+			// 	FrameProfiler.Measure(
+			// 		"FallingLeavesDisplaySystem.Composite",
+			// 		() => _fallingLeavesDisplaySystem.Composite(_bgRt, _bgTemp)
+			// 	);
+			// 	backgroundSource = _bgTemp;
+			// }
 			
 			// Apply bloodshot effect to backgrounds if active
 			bool hasBloodshot = ShaderRuntimeOptions.ShadersEnabled &&
@@ -697,6 +707,7 @@ namespace Crusaders30XX.ECS.Systems
 			_volcanoEmbersDisplaySystem = new VolcanoEmbersDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_snowstormDisplaySystem = new SnowstormDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_purpleZapsDisplaySystem = new PurpleZapsDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
+			_fallingLeavesDisplaySystem = new FallingLeavesDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_playerWispParticleSystem = new PlayerWispParticleSystem(_world.EntityManager, _graphicsDevice, _spriteBatch);
 			_playerTemperanceActivationDisplaySystem = new PlayerTemperanceActivationDisplaySystem(_world.EntityManager, _graphicsDevice, _spriteBatch, _content);
 			_playerAnimationSystem = new PlayerAnimationSystem(_world.EntityManager);
@@ -837,6 +848,7 @@ namespace Crusaders30XX.ECS.Systems
 			_world.AddSystem(_volcanoEmbersDisplaySystem);
 			_world.AddSystem(_snowstormDisplaySystem);
 			_world.AddSystem(_purpleZapsDisplaySystem);
+			_world.AddSystem(_fallingLeavesDisplaySystem);
 			_world.AddSystem(_playerWispParticleSystem);
 			_world.AddSystem(_playerAnimationSystem);
 			_world.AddSystem(_playerTemperanceActivationDisplaySystem);

@@ -43,6 +43,19 @@ namespace Crusaders30XX.ECS.Services
 			};
 		}
 
+		public static string GetClimbBackgroundAsset(BattleLocation location)
+		{
+			return location switch
+			{
+				BattleLocation.Desert => "desert_background_location",
+				BattleLocation.Tundra => "tundra_background_location",
+				BattleLocation.Jungle => "jungle_background_location",
+				BattleLocation.Volcano => "volcano_background_location",
+				BattleLocation.Gothic => "gothic_background_location",
+				_ => "desert_background_location",
+			};
+		}
+
 		public static MusicTrack GetMusicTrack(BattleLocation location)
 		{
 			return location switch
@@ -60,6 +73,11 @@ namespace Crusaders30XX.ECS.Services
 		public static Texture2D TryLoad(ContentManager content, BattleLocation location)
 		{
 			return TryLoad(content, GetBackgroundAsset(location));
+		}
+
+		public static Texture2D TryLoadClimbBackground(ContentManager content, BattleLocation location)
+		{
+			return TryLoad(content, GetClimbBackgroundAsset(location));
 		}
 
 		public static Texture2D TryLoad(ContentManager content, string asset)
