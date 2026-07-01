@@ -64,6 +64,13 @@ namespace Crusaders30XX.ECS.Systems
 				return;
 			}
 
+			if (BattleInputGate.ShouldSuppressEnemyAttackDisplay(EntityManager))
+			{
+				targetUi.Bounds = Rectangle.Empty;
+				targetUi.IsHidden = true;
+				return;
+			}
+
 			Rectangle bounds = CalculatePipBounds(
 				transform.Position,
 				intent.Planned.Count,
@@ -79,6 +86,8 @@ namespace Crusaders30XX.ECS.Systems
 
 		public void Draw()
 		{
+			if (BattleInputGate.ShouldSuppressEnemyAttackDisplay(EntityManager)) return;
+
 			// TODO: cache so we dont need to keep fetching
 			var enemyEntity = EntityManager.GetEntity("Enemy");
 			if (enemyEntity == null) return;

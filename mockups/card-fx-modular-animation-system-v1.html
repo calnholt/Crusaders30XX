@@ -449,6 +449,25 @@
     mix-blend-mode: screen;
   }
 
+  .screen-layer.target-player .white-wash {
+    background: radial-gradient(circle at 30% 50%, rgba(255, 245, 223, 0.96), rgba(255, 245, 223, 0.22) 18%, transparent 44%);
+  }
+
+  .screen-layer.target-player .shockwave-screen {
+    left: 30%;
+  }
+
+  .screen-layer.target-player .slash-band {
+    animation-name: slashBandMirror;
+  }
+
+  .screen-layer.target-player .smoke-screen {
+    background:
+      radial-gradient(circle at 32% 50%, rgba(55, 47, 50, 0.86), rgba(12, 10, 12, 0.54) 18%, transparent 35%),
+      radial-gradient(circle at 22% 34%, rgba(85, 16, 28, 0.52), rgba(18, 12, 14, 0.42) 20%, transparent 38%),
+      radial-gradient(circle at 42% 66%, rgba(45, 40, 42, 0.72), rgba(10, 8, 10, 0.45) 18%, transparent 34%);
+  }
+
   .target-point {
     position: absolute;
     left: 72%;
@@ -667,6 +686,10 @@
     clip-path: polygon(0 48%, 88% 8%, 100% 42%, 12% 100%);
   }
 
+  .sword-arc.mirror {
+    animation-name: swordArcMirror;
+  }
+
   .cross-slash {
     --x: 72%;
     --y: 50%;
@@ -702,6 +725,125 @@
     animation: crossSlashB 560ms cubic-bezier(0.12, 0.95, 0.18, 1) forwards;
   }
 
+  .claw-slash {
+    --x: 30%;
+    --y: 50%;
+    width: 230px;
+    height: 190px;
+    margin: -95px 0 0 -115px;
+    opacity: 0;
+    filter: drop-shadow(0 0 14px rgba(239, 52, 72, 0.64));
+    animation: clawSlash 620ms cubic-bezier(0.12, 0.95, 0.18, 1) forwards;
+  }
+
+  .claw-slash span,
+  .claw-slash::before,
+  .claw-slash::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 190px;
+    height: 16px;
+    margin: -8px 0 0 -95px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, rgba(255, 245, 223, 0.98) 38%, rgba(239, 52, 72, 0.72) 62%, transparent);
+    transform-origin: center;
+  }
+
+  .claw-slash::before {
+    transform: translateY(-42px) rotate(24deg) scaleX(0.16);
+    animation: clawSlashA 620ms cubic-bezier(0.12, 0.95, 0.18, 1) forwards;
+  }
+
+  .claw-slash span {
+    transform: rotate(18deg) scaleX(0.16);
+    animation: clawSlashB 620ms cubic-bezier(0.12, 0.95, 0.18, 1) forwards;
+  }
+
+  .claw-slash::after {
+    transform: translateY(42px) rotate(12deg) scaleX(0.16);
+    animation: clawSlashC 620ms cubic-bezier(0.12, 0.95, 0.18, 1) forwards;
+  }
+
+  .bite-impact {
+    --x: 30%;
+    --y: 50%;
+    width: 210px;
+    height: 170px;
+    margin: -85px 0 0 -105px;
+    opacity: 0;
+    border-radius: 50%;
+    border: 4px solid rgba(239, 52, 72, 0.48);
+    box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.34), 0 0 22px rgba(239, 52, 72, 0.34);
+    animation: biteImpact 700ms cubic-bezier(0.12, 0.95, 0.18, 1) forwards;
+  }
+
+  .bite-impact::before,
+  .bite-impact::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    width: 150px;
+    height: 44px;
+    margin-left: -75px;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 13px, rgba(255, 245, 223, 0.95) 13px 23px, transparent 23px 38px);
+    filter: drop-shadow(0 0 8px rgba(255, 245, 223, 0.34));
+  }
+
+  .bite-impact::before {
+    top: 8px;
+    clip-path: polygon(0 0, 100% 0, 88% 100%, 12% 100%);
+    transform: translateY(-42px) scaleY(0.5);
+    animation: biteTop 700ms cubic-bezier(0.12, 0.95, 0.18, 1) forwards;
+  }
+
+  .bite-impact::after {
+    bottom: 8px;
+    clip-path: polygon(12% 0, 88% 0, 100% 100%, 0 100%);
+    transform: translateY(42px) scaleY(0.5);
+    animation: biteBottom 700ms cubic-bezier(0.12, 0.95, 0.18, 1) forwards;
+  }
+
+  .rock-blast {
+    --x: 30%;
+    --y: 50%;
+    width: 190px;
+    height: 190px;
+    margin: -95px 0 0 -95px;
+    opacity: 0;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle, rgba(255, 245, 223, 0.94) 0 8%, rgba(217, 182, 99, 0.72) 9% 19%, rgba(68, 56, 48, 0.74) 20% 38%, transparent 39%),
+      conic-gradient(from 18deg, transparent 0 8%, rgba(143, 150, 160, 0.74) 9% 14%, transparent 15% 22%, rgba(73, 63, 59, 0.82) 23% 30%, transparent 31% 43%, rgba(217, 182, 99, 0.52) 44% 50%, transparent 51% 64%, rgba(92, 82, 76, 0.84) 65% 74%, transparent 75% 100%);
+    filter: drop-shadow(0 0 18px rgba(217, 182, 99, 0.28));
+    animation: rockBlast 760ms cubic-bezier(0.08, 0.88, 0.18, 1) forwards;
+  }
+
+  .rock-blast::before,
+  .rock-blast::after {
+    content: "";
+    position: absolute;
+    width: 42px;
+    height: 38px;
+    background: #2b2421;
+    border: 1px solid rgba(255, 245, 223, 0.12);
+    clip-path: polygon(18% 12%, 76% 0, 100% 42%, 82% 100%, 24% 86%, 0 38%);
+  }
+
+  .rock-blast::before {
+    left: 32px;
+    top: 24px;
+    animation: rockChunkA 760ms cubic-bezier(0.08, 0.88, 0.18, 1) forwards;
+  }
+
+  .rock-blast::after {
+    right: 24px;
+    bottom: 26px;
+    animation: rockChunkB 760ms cubic-bezier(0.08, 0.88, 0.18, 1) forwards;
+  }
+
   .hammer-arc {
     --x: 50%;
     --y: 50%;
@@ -712,6 +854,12 @@
     opacity: 0;
     filter: drop-shadow(0 0 18px rgba(239, 52, 72, 0.34));
     animation: hammerArc 560ms cubic-bezier(0.18, 0.86, 0.16, 1) forwards;
+  }
+
+  .hammer-arc.mirror {
+    margin: -55px 0 0 -240px;
+    transform-origin: 240px 55px;
+    animation-name: hammerArcMirror;
   }
 
   .hammer-arc::before {
@@ -931,6 +1079,12 @@
     100% { opacity: 0; transform: translateX(38%) rotate(-23deg) scaleX(1); }
   }
 
+  @keyframes slashBandMirror {
+    0% { opacity: 0; transform: translateX(38%) rotate(23deg) scaleX(0.28); }
+    26% { opacity: calc(0.95 * var(--fx-intensity)); }
+    100% { opacity: 0; transform: translateX(-42%) rotate(23deg) scaleX(1); }
+  }
+
   @keyframes smokeScreen {
     0% { opacity: 0; transform: scale(0.88) translateY(14px); }
     22%, 68% { opacity: calc(0.78 * var(--fx-intensity)); }
@@ -942,6 +1096,13 @@
     18% { opacity: 1; }
     34%, 46% { opacity: 1; transform: rotate(-28deg) translateX(0) scaleX(1); }
     100% { opacity: 0; transform: rotate(-28deg) translateX(86px) scaleX(0.92); }
+  }
+
+  @keyframes swordArcMirror {
+    0%, 5% { opacity: 0; transform: rotate(28deg) translateX(118px) scaleX(0.20); }
+    18% { opacity: 1; }
+    34%, 46% { opacity: 1; transform: rotate(28deg) translateX(0) scaleX(1); }
+    100% { opacity: 0; transform: rotate(28deg) translateX(-86px) scaleX(0.92); }
   }
 
   @keyframes crossSlash {
@@ -962,11 +1123,76 @@
     100% { transform: rotate(-34deg) translateX(-44px) scaleX(0.92); }
   }
 
+  @keyframes clawSlash {
+    0%, 8% { opacity: 0; transform: scale(0.86); }
+    18%, 56% { opacity: 1; }
+    100% { opacity: 0; transform: scale(1.08); }
+  }
+
+  @keyframes clawSlashA {
+    0%, 8% { transform: translate(78px, -42px) rotate(24deg) scaleX(0.16); }
+    30%, 54% { transform: translate(0, -42px) rotate(24deg) scaleX(1); }
+    100% { transform: translate(-46px, -42px) rotate(24deg) scaleX(0.84); }
+  }
+
+  @keyframes clawSlashB {
+    0%, 14% { transform: translateX(86px) rotate(18deg) scaleX(0.16); }
+    36%, 58% { transform: translateX(0) rotate(18deg) scaleX(1); }
+    100% { transform: translateX(-52px) rotate(18deg) scaleX(0.84); }
+  }
+
+  @keyframes clawSlashC {
+    0%, 20% { transform: translate(94px, 42px) rotate(12deg) scaleX(0.16); }
+    42%, 62% { transform: translate(0, 42px) rotate(12deg) scaleX(1); }
+    100% { transform: translate(-58px, 42px) rotate(12deg) scaleX(0.84); }
+  }
+
+  @keyframes biteImpact {
+    0%, 8% { opacity: 0; transform: scale(1.32); }
+    24%, 58% { opacity: 1; transform: scale(0.98); }
+    100% { opacity: 0; transform: scale(1.08); }
+  }
+
+  @keyframes biteTop {
+    0%, 8% { transform: translateY(-48px) scaleY(0.5); }
+    24%, 58% { transform: translateY(0) scaleY(1); }
+    100% { transform: translateY(-8px) scaleY(0.9); }
+  }
+
+  @keyframes biteBottom {
+    0%, 8% { transform: translateY(48px) scaleY(0.5); }
+    24%, 58% { transform: translateY(0) scaleY(1); }
+    100% { transform: translateY(8px) scaleY(0.9); }
+  }
+
+  @keyframes rockBlast {
+    0%, 10% { opacity: 0; transform: scale(0.22) rotate(-12deg); }
+    24%, 48% { opacity: 1; transform: scale(1.02) rotate(8deg); }
+    100% { opacity: 0; transform: scale(1.9) rotate(22deg); }
+  }
+
+  @keyframes rockChunkA {
+    0%, 14% { transform: translate(0, 0) rotate(0deg) scale(0.5); }
+    100% { transform: translate(-76px, -54px) rotate(-96deg) scale(1.08); }
+  }
+
+  @keyframes rockChunkB {
+    0%, 14% { transform: translate(0, 0) rotate(0deg) scale(0.5); }
+    100% { transform: translate(88px, 62px) rotate(118deg) scale(1.15); }
+  }
+
   @keyframes hammerArc {
     0% { opacity: 0; transform: rotate(-110deg); }
     10% { opacity: 1; }
     72%, 84% { opacity: 1; transform: rotate(0deg); }
     100% { opacity: 0; transform: rotate(3deg); }
+  }
+
+  @keyframes hammerArcMirror {
+    0% { opacity: 0; transform: rotate(110deg); }
+    10% { opacity: 1; }
+    72%, 84% { opacity: 1; transform: rotate(0deg); }
+    100% { opacity: 0; transform: rotate(-3deg); }
   }
 
   @keyframes crossBloom {
@@ -1116,7 +1342,7 @@
         <div class="screen-layer" id="screenLayer"></div>
         <div class="combat-row" id="combatRow">
           <div class="side-wrap">
-            <div class="side-label">Source</div>
+            <div class="side-label" id="playerSideLabel">Source</div>
             <div class="figure player">
               <div class="head"></div>
               <div class="body"></div>
@@ -1136,7 +1362,7 @@
             </div>
           </div>
           <div class="side-wrap">
-            <div class="side-label">Target</div>
+            <div class="side-label" id="enemySideLabel">Target</div>
             <div class="figure enemy">
               <div class="head"></div>
               <div class="body"></div>
@@ -1164,6 +1390,13 @@
               <option value="RitualPulse">RitualPulse</option>
               <option value="DefensiveLock">DefensiveLock</option>
               <option value="FlickerChaos">FlickerChaos</option>
+            </select>
+          </div>
+          <div class="row-control">
+            <label for="targetSelect">Target</label>
+            <select id="targetSelect">
+              <option value="Enemy">Enemy</option>
+              <option value="Player">Player</option>
             </select>
           </div>
           <div class="row-control">
@@ -1219,6 +1452,9 @@
     primitive: {
       swordArc: "Sword arc",
       crossSlash: "Cross slash",
+      clawSlash: "Claw slash",
+      bite: "Bite",
+      rockBlast: "Rock blast",
       hammerArc: "Hammer arc",
       crossBloom: "Cross bloom",
       ring: "Ring",
@@ -1239,9 +1475,15 @@
   };
 
   const initialRecipe = {
+    name: "Enemy Rock Blast",
     timing: "HeavyImpact",
-    tags: ["Martial", "Heavy", "Forge", "Stun"],
-    modules: ["hammerArc", "ring", "debris", "cracks", "hitFlash", "shockwave", "shake", "punch", "hitstop"]
+    target: "Player",
+    cardFamily: "Enemy",
+    cardCost: "!",
+    cardTitle: "Rock Blast",
+    cardText: "Incoming hit. Impact bursts over the player.",
+    tags: ["Enemy", "Rock", "Blast", "Impact"],
+    modules: ["rockBlast", "ring", "debris", "smokeBlobs", "hitFlash", "shockwave", "shake", "punch", "hitstop"]
   };
 
   const state = {
@@ -1253,6 +1495,7 @@
   const motionToggles = document.getElementById("motionToggles");
   const recipeTags = document.getElementById("recipeTags");
   const timingSelect = document.getElementById("timingSelect");
+  const targetSelect = document.getElementById("targetSelect");
   const intensityRange = document.getElementById("intensityRange");
   const particleRange = document.getElementById("particleRange");
   const currentRecipe = document.getElementById("currentRecipe");
@@ -1260,6 +1503,13 @@
   const cardShell = document.getElementById("cardShell");
   const fxLayer = document.getElementById("fxLayer");
   const screenLayer = document.getElementById("screenLayer");
+  const cardFamily = document.getElementById("cardFamily");
+  const cardCost = document.getElementById("cardCost");
+  const cardTitle = document.getElementById("cardTitle");
+  const cardText = document.getElementById("cardText");
+  const playerSideLabel = document.getElementById("playerSideLabel");
+  const enemySideLabel = document.getElementById("enemySideLabel");
+  const playerTargetModules = new Set(["clawSlash", "bite", "rockBlast"]);
 
   function createToggles(target, group) {
     Object.entries(moduleLabels[group]).forEach(([key, label]) => {
@@ -1285,6 +1535,12 @@
 
   function initializeRecipe() {
     timingSelect.value = initialRecipe.timing;
+    targetSelect.value = initialRecipe.target;
+    currentRecipe.textContent = initialRecipe.name;
+    cardFamily.textContent = initialRecipe.cardFamily;
+    cardCost.textContent = initialRecipe.cardCost;
+    cardTitle.textContent = initialRecipe.cardTitle;
+    cardText.textContent = initialRecipe.cardText;
     initialRecipe.modules.forEach((module) => setModuleChecked(module, true));
     renderRecipeTags(initialRecipe.tags);
   }
@@ -1312,6 +1568,9 @@
     el.style.setProperty("--x", `${x}%`);
     el.style.setProperty("--y", `${y}%`);
     Object.entries(vars).forEach(([key, value]) => el.style.setProperty(key, value));
+    if (className === "claw-slash") {
+      el.appendChild(document.createElement("span"));
+    }
     fxLayer.appendChild(el);
     return el;
   }
@@ -1325,12 +1584,38 @@
     return min + seededRandom(state.seed + index * 11.731) * (max - min);
   }
 
+  function targetContext(modules) {
+    const playerForced = [...modules].some((module) => playerTargetModules.has(module));
+    const playerTargeted = targetSelect.value === "Player" || playerForced;
+
+    return {
+      isPlayer: playerTargeted,
+      targetX: playerTargeted ? 30 : 72,
+      targetY: 50,
+      sourceX: playerTargeted ? 72 : 30,
+      sourceY: 48,
+      particleStart: playerTargeted ? 165 : -175,
+      particleEnd: playerTargeted ? 355 : 15,
+      shardStart: playerTargeted ? 170 : -155,
+      shardEnd: playerTargeted ? 335 : 10
+    };
+  }
+
+  function updateSideLabels(context) {
+    playerSideLabel.textContent = context.isPlayer ? "Target" : "Source";
+    enemySideLabel.textContent = context.isPlayer ? "Source" : "Target";
+  }
+
+  function mirroredClass(className, context) {
+    return context.isPlayer ? `${className} mirror` : className;
+  }
+
   function scatterMany(className, count, options = {}) {
-    const originX = options.originX || 72;
-    const originY = options.originY || 52;
+    const originX = options.originX ?? 72;
+    const originY = options.originY ?? 52;
     for (let i = 0; i < count; i++) {
-      const angle = rand(i, options.startAngle || -170, options.endAngle || 40) * Math.PI / 180;
-      const distance = rand(i + 40, options.minDistance || 90, options.maxDistance || 230);
+      const angle = rand(i, options.startAngle ?? -170, options.endAngle ?? 40) * Math.PI / 180;
+      const distance = rand(i + 40, options.minDistance ?? 90, options.maxDistance ?? 230);
       const dx = Math.cos(angle) * distance;
       const dy = Math.sin(angle) * distance + rand(i + 70, -20, 40);
       addFx(className, originX + rand(i + 90, -3, 3), originY + rand(i + 100, -4, 4), {
@@ -1342,22 +1627,23 @@
     }
   }
 
-  function addSmokeBlobs(count) {
+  function addSmokeBlobs(count, context) {
     for (let i = 0; i < count; i++) {
-      addFx("smoke", 72 + rand(i, -5, 6), 52 + rand(i + 10, -5, 6), {
-        "--dx": `${rand(i + 20, -62, 62)}px`,
+      addFx("smoke", context.targetX + rand(i, -5, 6), context.targetY + 2 + rand(i + 10, -5, 6), {
+        "--dx": `${rand(i + 20, context.isPlayer ? 16 : -62, context.isPlayer ? 82 : 62)}px`,
         "--dy": `${rand(i + 30, -82, -24)}px`
       });
     }
   }
 
-  function addCracks() {
+  function addCracks(context) {
     const baseAngles = [-46, -22, 4, 28, 54];
 
     baseAngles.forEach((angle, i) => {
-      const rot = angle + rand(i + 210, -9, 9);
+      const baseRot = context.isPlayer ? 180 - angle : angle;
+      const rot = baseRot + rand(i + 210, -9, 9);
       const len = rand(i + 220, 72, 138);
-      addFx("crack-segment", 72 + rand(i + 230, -0.8, 0.8), 58 + rand(i + 240, -0.5, 0.7), {
+      addFx("crack-segment", context.targetX + rand(i + 230, -0.8, 0.8), context.targetY + 8 + rand(i + 240, -0.5, 0.7), {
         "--rot": `${rot}deg`,
         "--len": `${len}px`,
         "--start": `${rand(i + 250, 0, 8)}px`
@@ -1366,8 +1652,8 @@
       if (i > 0) {
         const branchRot = rot + (i % 2 === 0 ? rand(i + 260, 22, 42) : rand(i + 260, -42, -22));
         const branchOffset = rand(i + 270, 18, 46);
-        const branchX = 72 + Math.cos(rot * Math.PI / 180) * branchOffset * 0.018;
-        const branchY = 58 + Math.sin(rot * Math.PI / 180) * branchOffset * 0.018;
+        const branchX = context.targetX + Math.cos(rot * Math.PI / 180) * branchOffset * 0.018;
+        const branchY = context.targetY + 8 + Math.sin(rot * Math.PI / 180) * branchOffset * 0.018;
         addFx("crack-segment branch", branchX, branchY, {
           "--rot": `${branchRot}deg`,
           "--len": `${rand(i + 280, 34, 64)}px`,
@@ -1379,12 +1665,15 @@
 
   function playFx() {
     const modules = new Set(checkedModules());
+    const context = targetContext(modules);
     const duration = timingDuration(timingSelect.value);
     const intensity = Number(intensityRange.value);
     const particleMult = Number(particleRange.value);
 
     fxLayer.innerHTML = "";
     screenLayer.innerHTML = "";
+    screenLayer.classList.toggle("target-player", context.isPlayer);
+    updateSideLabels(context);
     stage.classList.remove("is-shaking", "is-punching", "is-hitstop");
     cardShell.classList.remove("playing");
     void stage.offsetWidth;
@@ -1410,20 +1699,43 @@
 
     cardShell.classList.add("playing");
 
-    if (modules.has("swordArc")) addFx("sword-arc", 72, 50);
-    if (modules.has("crossSlash")) addFx("cross-slash", 72, 50);
-    if (modules.has("hammerArc")) addFx("hammer-arc", 50, 50);
-    if (modules.has("crossBloom")) addFx("cross-bloom", 30, 48);
-    if (modules.has("ring")) addFx("ring", 72, 50);
-    if (modules.has("halo")) addFx("halo", 30, 35);
-    if (modules.has("beam")) addFx("beam", 72, 50);
-    if (modules.has("rays")) addFx("rays", 72, 50);
-    if (modules.has("cracks")) addCracks();
-    if (modules.has("hitFlash")) addFx("hit-flash", 72, 50);
+    if (modules.has("swordArc")) addFx(mirroredClass("sword-arc", context), context.targetX, context.targetY);
+    if (modules.has("crossSlash")) addFx("cross-slash", context.targetX, context.targetY);
+    if (modules.has("clawSlash")) addFx("claw-slash", 30, 50);
+    if (modules.has("bite")) addFx("bite-impact", 30, 50);
+    if (modules.has("rockBlast")) addFx("rock-blast", 30, 50);
+    if (modules.has("hammerArc")) addFx(mirroredClass("hammer-arc", context), context.isPlayer ? 70 : 50, context.targetY);
+    if (modules.has("crossBloom")) addFx("cross-bloom", context.sourceX, context.sourceY);
+    if (modules.has("ring")) addFx("ring", context.targetX, context.targetY);
+    if (modules.has("halo")) addFx("halo", context.sourceX, 35);
+    if (modules.has("beam")) addFx("beam", context.targetX, context.targetY);
+    if (modules.has("rays")) addFx("rays", context.targetX, context.targetY);
+    if (modules.has("cracks")) addCracks(context);
+    if (modules.has("hitFlash")) addFx("hit-flash", context.targetX, context.targetY);
 
-    if (modules.has("shards")) scatterMany("shard", Math.round(11 * particleMult), { startAngle: -155, endAngle: 10, minDistance: 70, maxDistance: 210 });
-    if (modules.has("debris")) scatterMany("debris", Math.round(12 * particleMult), { startAngle: -175, endAngle: 15, minDistance: 95, maxDistance: 250 });
-    if (modules.has("smokeBlobs")) addSmokeBlobs(Math.round(7 * particleMult));
+    if (modules.has("shards")) {
+      scatterMany("shard", Math.round(11 * particleMult), {
+        originX: context.targetX,
+        originY: context.targetY + 2,
+        startAngle: context.shardStart,
+        endAngle: context.shardEnd,
+        minDistance: 70,
+        maxDistance: 210
+      });
+    }
+
+    if (modules.has("debris")) {
+      scatterMany("debris", Math.round(12 * particleMult), {
+        originX: context.targetX,
+        originY: context.targetY + 2,
+        startAngle: context.particleStart,
+        endAngle: context.particleEnd,
+        minDistance: 95,
+        maxDistance: 250
+      });
+    }
+
+    if (modules.has("smokeBlobs")) addSmokeBlobs(Math.round(7 * particleMult), context);
 
     window.setTimeout(() => {
       stage.classList.remove("is-shaking", "is-punching", "is-hitstop");
@@ -1442,8 +1754,12 @@
     playFx();
   });
 
-  document.querySelectorAll("[data-module], #timingSelect, #intensityRange, #particleRange").forEach((control) => {
+  document.querySelectorAll("[data-module], #timingSelect, #targetSelect, #intensityRange, #particleRange").forEach((control) => {
     control.addEventListener("change", () => {
+      if (playerTargetModules.has(control.dataset.module) && control.checked) {
+        targetSelect.value = "Player";
+      }
+
       currentRecipe.textContent = "Custom Recipe";
       renderRecipeTags(checkedModules().slice(0, 8));
     });

@@ -35,6 +35,12 @@ namespace Crusaders30XX.ECS.Systems
 		public int SlotZOrder { get; set; } = 1600;
 		[DebugEditable(DisplayName = "Shop Tooltip Offset Px", Step = 1, Min = 0, Max = 120)]
 		public int ShopTooltipOffsetPx { get; set; } = 30;
+		[DebugEditable(DisplayName = "Events Enter Seconds", Step = 0.01f, Min = 0.01f, Max = 2f)]
+		public float EventsEnterSeconds { get; set; } = 0.32f;
+		[DebugEditable(DisplayName = "Events Leave Seconds", Step = 0.01f, Min = 0.01f, Max = 2f)]
+		public float EventsLeaveSeconds { get; set; } = 0.42f;
+		[DebugEditable(DisplayName = "Events Leave Split", Step = 0.01f, Min = 0.05f, Max = 0.95f)]
+		public float EventsLeaveSplit { get; set; } = 0.55f;
 
 		internal static int ColumnsBottomPaddingValue { get; private set; } = 48;
 		internal static int ColumnWidthValue { get; private set; } = 486;
@@ -71,6 +77,7 @@ namespace Crusaders30XX.ECS.Systems
 			var scene = entity.GetComponent<SceneState>();
 			if (scene?.Current != SceneId.Climb)
 			{
+				RestoreTransitionInputSuppression();
 				ClimbSceneSystem.DeactivateClimbUiEntities(EntityManager);
 				return;
 			}
@@ -81,15 +88,305 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				SaveCache.SaveClimbState(climb);
 			}
-			bool showEvents = climb?.eventSlots?.Any(slot => slot?.status == ClimbEventStatus.Active) == true;
-			var columns = ComputeColumnsLayout(showEvents);
+			var activeEvents = GetActiveEvents(climb);
+			bool showEvents = activeEvents.Count > 0;
+			var transition = EnsureTransitionState();
+			UpdateTransition(transition, showEvents, activeEvents, gameTime);
+
+			var columns = ComputeAnimatedColumnsLayout(transition);
+			float eventOpacity = ResolveEventOpacity(transition);
+			bool eventsVisible = IsEventsVisuallyPresent(transition);
+			var visibleEvents = transition.Phase == ClimbColumnTransitionPhase.LeavingEvents
+				? transition.CachedEventSlots
+				: activeEvents;
+
 			SyncColumn(ShopColumnName, ClimbColumnKind.Shop, "Shop", "Spend resources before the shop refreshes", columns.Shop);
 			SyncColumn(EncounterColumnName, ClimbColumnKind.Encounter, "Encounters", "Fight foes for red, white, and black resources", columns.Encounter);
-			SyncColumn(EventColumnName, ClimbColumnKind.Event, "Events", "Hazards and characters appear during the climb", columns.Events, showEvents);
-			SyncSlots(climb, columns, showEvents);
+			SyncColumn(EventColumnName, ClimbColumnKind.Event, "Events", "Hazards and characters appear during the climb", columns.Events, eventsVisible, eventOpacity);
+			SyncSlots(climb, columns, eventsVisible, visibleEvents, eventOpacity);
+			SyncTransitionInputSuppression(transition.IsAnimating);
 		}
 
-		private void SyncSlots(ClimbSaveState climb, ClimbColumnsLayout columns, bool showEvents)
+		private ClimbColumnTransitionState EnsureTransitionState()
+		{
+			var root = EntityManager.GetEntity(ClimbHeaderLayoutSystem.RootName);
+			if (root == null)
+			{
+				root = EntityManager.CreateEntity(ClimbHeaderLayoutSystem.RootName);
+				EntityManager.AddComponent(root, new Transform());
+				EntityManager.AddComponent(root, new OwnedByScene { Scene = SceneId.Climb });
+			}
+
+			if (root.GetComponent<ClimbSceneRoot>() == null)
+			{
+				EntityManager.AddComponent(root, new ClimbSceneRoot());
+			}
+
+			var transition = root.GetComponent<ClimbColumnTransitionState>();
+			if (transition == null)
+			{
+				transition = new ClimbColumnTransitionState();
+				EntityManager.AddComponent(root, transition);
+			}
+			return transition;
+		}
+
+		private void UpdateTransition(
+			ClimbColumnTransitionState transition,
+			bool targetShowEvents,
+			IReadOnlyList<ClimbEventSlotSave> activeEvents,
+			GameTime gameTime)
+		{
+			if (!transition.IsInitialized)
+			{
+				transition.IsInitialized = true;
+				transition.CurrentShowEvents = targetShowEvents;
+				transition.TargetShowEvents = targetShowEvents;
+				transition.Phase = ClimbColumnTransitionPhase.Idle;
+				transition.ElapsedSeconds = 0f;
+				if (targetShowEvents) CacheEventSlots(transition, activeEvents);
+				else transition.CachedEventSlots.Clear();
+				return;
+			}
+
+			if (targetShowEvents && activeEvents.Count > 0)
+			{
+				CacheEventSlots(transition, activeEvents);
+			}
+
+			if (targetShowEvents != transition.TargetShowEvents
+				|| (transition.Phase == ClimbColumnTransitionPhase.Idle && targetShowEvents != transition.CurrentShowEvents))
+			{
+				BeginTransition(transition, targetShowEvents, activeEvents);
+			}
+
+			if (!transition.IsAnimating) return;
+
+			float dt = (float)(gameTime?.ElapsedGameTime.TotalSeconds ?? 0);
+			transition.ElapsedSeconds += Math.Max(0f, dt);
+			float duration = GetTransitionDuration(transition.Phase);
+			if (transition.ElapsedSeconds < duration) return;
+
+			transition.CurrentShowEvents = transition.TargetShowEvents;
+			transition.Phase = ClimbColumnTransitionPhase.Idle;
+			transition.ElapsedSeconds = 0f;
+			if (transition.CurrentShowEvents) CacheEventSlots(transition, activeEvents);
+			else transition.CachedEventSlots.Clear();
+		}
+
+		private void BeginTransition(
+			ClimbColumnTransitionState transition,
+			bool targetShowEvents,
+			IReadOnlyList<ClimbEventSlotSave> activeEvents)
+		{
+			transition.TargetShowEvents = targetShowEvents;
+			transition.ElapsedSeconds = 0f;
+
+			if (targetShowEvents == transition.CurrentShowEvents)
+			{
+				transition.Phase = ClimbColumnTransitionPhase.Idle;
+				if (targetShowEvents) CacheEventSlots(transition, activeEvents);
+				else transition.CachedEventSlots.Clear();
+				return;
+			}
+
+			transition.Phase = targetShowEvents
+				? ClimbColumnTransitionPhase.EnteringEvents
+				: ClimbColumnTransitionPhase.LeavingEvents;
+
+			if (targetShowEvents)
+			{
+				CacheEventSlots(transition, activeEvents);
+			}
+		}
+
+		private ClimbColumnsLayout ComputeAnimatedColumnsLayout(ClimbColumnTransitionState transition)
+		{
+			var twoColumn = ComputeColumnsLayout(false);
+			var threeColumn = ComputeColumnsLayout(true);
+			var offscreenEvents = new Rectangle(
+				Game1.VirtualWidth + ClimbColumnDisplaySystem.ColumnsGapValue,
+				threeColumn.Events.Y,
+				threeColumn.Events.Width,
+				threeColumn.Events.Height);
+
+			if (transition.Phase == ClimbColumnTransitionPhase.EnteringEvents)
+			{
+				float t = Ease(Progress(transition, EventsEnterSeconds));
+				return BuildColumnsLayout(
+					Lerp(twoColumn.Shop, threeColumn.Shop, t),
+					Lerp(twoColumn.Encounter, threeColumn.Encounter, t),
+					Lerp(offscreenEvents, threeColumn.Events, t));
+			}
+
+			if (transition.Phase == ClimbColumnTransitionPhase.LeavingEvents)
+			{
+				float split = MathHelper.Clamp(EventsLeaveSplit, 0.05f, 0.95f);
+				float p = Progress(transition, EventsLeaveSeconds);
+				float eventT = Ease(MathHelper.Clamp(p / split, 0f, 1f));
+				float columnT = Ease(MathHelper.Clamp((p - split) / (1f - split), 0f, 1f));
+				return BuildColumnsLayout(
+					Lerp(threeColumn.Shop, twoColumn.Shop, columnT),
+					Lerp(threeColumn.Encounter, twoColumn.Encounter, columnT),
+					Lerp(threeColumn.Events, offscreenEvents, eventT));
+			}
+
+			return transition.CurrentShowEvents
+				? threeColumn
+				: twoColumn;
+		}
+
+		private float ResolveEventOpacity(ClimbColumnTransitionState transition)
+		{
+			if (transition.Phase == ClimbColumnTransitionPhase.EnteringEvents)
+			{
+				return Ease(Progress(transition, EventsEnterSeconds));
+			}
+
+			if (transition.Phase == ClimbColumnTransitionPhase.LeavingEvents)
+			{
+				float split = MathHelper.Clamp(EventsLeaveSplit, 0.05f, 0.95f);
+				float t = Ease(MathHelper.Clamp(Progress(transition, EventsLeaveSeconds) / split, 0f, 1f));
+				return 1f - t;
+			}
+
+			return transition.CurrentShowEvents ? 1f : 0f;
+		}
+
+		private static bool IsEventsVisuallyPresent(ClimbColumnTransitionState transition)
+		{
+			return transition.CurrentShowEvents
+				|| transition.TargetShowEvents
+				|| transition.IsAnimating;
+		}
+
+		private float Progress(ClimbColumnTransitionState transition, float duration)
+		{
+			return MathHelper.Clamp(transition.ElapsedSeconds / Math.Max(0.001f, duration), 0f, 1f);
+		}
+
+		private float GetTransitionDuration(ClimbColumnTransitionPhase phase)
+		{
+			return phase == ClimbColumnTransitionPhase.LeavingEvents
+				? Math.Max(0.001f, EventsLeaveSeconds)
+				: Math.Max(0.001f, EventsEnterSeconds);
+		}
+
+		private static ClimbColumnsLayout BuildColumnsLayout(Rectangle shop, Rectangle encounter, Rectangle events)
+		{
+			int pad = ClimbColumnDisplaySystem.ColumnPaddingValue;
+			return new ClimbColumnsLayout
+			{
+				Shop = shop,
+				Encounter = encounter,
+				Events = events,
+				ShopInner = new Rectangle(shop.X + pad, shop.Y + pad, Math.Max(0, shop.Width - pad * 2), Math.Max(0, shop.Height - pad * 2)),
+				EncounterInner = new Rectangle(encounter.X + pad, encounter.Y + pad, Math.Max(0, encounter.Width - pad * 2), Math.Max(0, encounter.Height - pad * 2)),
+				EventInner = new Rectangle(events.X + pad, events.Y + pad, Math.Max(0, events.Width - pad * 2), Math.Max(0, events.Height - pad * 2)),
+			};
+		}
+
+		private static Rectangle Lerp(Rectangle from, Rectangle to, float amount)
+		{
+			return new Rectangle(
+				(int)Math.Round(MathHelper.Lerp(from.X, to.X, amount)),
+				(int)Math.Round(MathHelper.Lerp(from.Y, to.Y, amount)),
+				(int)Math.Round(MathHelper.Lerp(from.Width, to.Width, amount)),
+				(int)Math.Round(MathHelper.Lerp(from.Height, to.Height, amount)));
+		}
+
+		private static float Ease(float t)
+		{
+			t = MathHelper.Clamp(t, 0f, 1f);
+			return t * t * (3f - 2f * t);
+		}
+
+		private static List<ClimbEventSlotSave> GetActiveEvents(ClimbSaveState climb)
+		{
+			return climb?.eventSlots?
+				.Where(slot => slot?.status == ClimbEventStatus.Active)
+				.OrderBy(slot => slot.activatedAtTime)
+				.ThenBy(slot => slot.id, StringComparer.Ordinal)
+				.ToList()
+				?? new List<ClimbEventSlotSave>();
+		}
+
+		private static void CacheEventSlots(ClimbColumnTransitionState transition, IReadOnlyList<ClimbEventSlotSave> activeEvents)
+		{
+			transition.CachedEventSlots = activeEvents?
+				.Select(CloneEventSlot)
+				.Where(slot => slot != null)
+				.ToList()
+				?? new List<ClimbEventSlotSave>();
+		}
+
+		private static ClimbEventSlotSave CloneEventSlot(ClimbEventSlotSave slot)
+		{
+			if (slot == null) return null;
+			return new ClimbEventSlotSave
+			{
+				id = slot.id,
+				definitionId = slot.definitionId,
+				kind = slot.kind,
+				hazardEffect = slot.hazardEffect,
+				characterReward = slot.characterReward,
+				scheduledAppearanceTime = slot.scheduledAppearanceTime,
+				activatedAtTime = slot.activatedAtTime,
+				duration = slot.duration,
+				timeCost = slot.timeCost,
+				effectAmount = slot.effectAmount,
+				rewardResources = Clone(slot.rewardResources),
+				status = ClimbEventStatus.Active,
+			};
+		}
+
+		private void SyncTransitionInputSuppression(bool suppress)
+		{
+			if (!suppress)
+			{
+				RestoreTransitionInputSuppression();
+				return;
+			}
+
+			foreach (var entity in EntityManager.GetAllEntities().Where(IsClimbUiEntity).ToList())
+			{
+				var ui = entity.GetComponent<UIElement>();
+				if (ui == null) continue;
+
+				if (entity.GetComponent<ClimbColumnTransitionInputSuppression>() == null)
+				{
+					ui.Suppress();
+					EntityManager.AddComponent(entity, new ClimbColumnTransitionInputSuppression());
+				}
+				ui.IsHovered = false;
+				ui.IsClicked = false;
+			}
+		}
+
+		private void RestoreTransitionInputSuppression()
+		{
+			foreach (var entity in EntityManager.GetEntitiesWithComponent<ClimbColumnTransitionInputSuppression>().ToList())
+			{
+				entity.GetComponent<UIElement>()?.Restore();
+				EntityManager.RemoveComponent<ClimbColumnTransitionInputSuppression>(entity);
+			}
+		}
+
+		private static bool IsClimbUiEntity(Entity entity)
+		{
+			if (entity?.GetComponent<UIElement>() == null) return false;
+			return entity.GetComponent<OwnedByScene>()?.Scene == SceneId.Climb
+				|| entity.GetComponent<ClimbSceneRoot>() != null
+				|| entity.GetComponent<ClimbHeaderElement>() != null
+				|| entity.GetComponent<ClimbTimelineElement>() != null
+				|| entity.GetComponent<ClimbResourceBarElement>() != null
+				|| entity.GetComponent<ClimbLoadoutButton>() != null
+				|| entity.GetComponent<ClimbColumnPresentation>() != null
+				|| entity.GetComponent<ClimbSlotPresentation>() != null
+				|| entity.GetComponent<ClimbShopTooltipSource>() != null;
+		}
+
+		private void SyncSlots(ClimbSaveState climb, ClimbColumnsLayout columns, bool showEvents, IReadOnlyList<ClimbEventSlotSave> visibleEvents, float eventOpacity)
 		{
 			for (int i = 0; i < ClimbRuleService.ShopSlotCount; i++)
 			{
@@ -109,23 +406,19 @@ namespace Crusaders30XX.ECS.Systems
 				SyncEncounterSlot(i, slot, rect);
 			}
 
-			var activeEvents = showEvents
-				? climb.eventSlots
-					.Where(slot => slot?.status == ClimbEventStatus.Active)
-					.OrderBy(slot => slot.activatedAtTime)
-					.ThenBy(slot => slot.id, StringComparer.Ordinal)
-					.ToList()
+			var activeEvents = showEvents && visibleEvents != null
+				? visibleEvents.ToList()
 				: new List<ClimbEventSlotSave>();
 			Debug.Assert(activeEvents.Count <= 2, "Climb event scheduling exceeded the supported adjacent-band concurrency bound.");
 			for (int i = 0; i < ClimbRuleService.EventSlotCount; i++)
 			{
 				var slot = i < activeEvents.Count ? activeEvents[i] : null;
 				var rect = ComputeEventSlotRect(columns.EventInner, i);
-				SyncEventSlot(i, slot, rect, showEvents && slot != null);
+				SyncEventSlot(i, slot, rect, showEvents && slot != null, eventOpacity);
 			}
 		}
 
-		private void SyncColumn(string name, ClimbColumnKind kind, string title, string subtitle, Rectangle bounds, bool visible = true)
+		private void SyncColumn(string name, ClimbColumnKind kind, string title, string subtitle, Rectangle bounds, bool visible = true, float opacity = 1f)
 		{
 			var entity = EnsureEntity(name);
 			ConfigureParallax(entity, ParallaxLayer.GetLocationParallaxLayer());
@@ -139,6 +432,7 @@ namespace Crusaders30XX.ECS.Systems
 			column.Title = title;
 			column.Subtitle = subtitle;
 			column.IsVisible = visible;
+			column.Opacity = MathHelper.Clamp(opacity, 0f, 1f);
 			int padding = ClimbColumnDisplaySystem.ColumnPaddingValue;
 			column.InnerBounds = entity.HasComponent<ParentTransform>()
 				? new Rectangle(padding, padding, Math.Max(0, bounds.Width - padding * 2), Math.Max(0, bounds.Height - padding * 2))
@@ -168,6 +462,7 @@ namespace Crusaders30XX.ECS.Systems
 			presentation.IsCompleted = false;
 			presentation.IsUnavailable = slot == null || string.Equals(slot.kind, ClimbShopSlotKinds.Empty, StringComparison.OrdinalIgnoreCase);
 			presentation.IsAffordable = presentation.IsUnavailable || ClimbRuleService.CanAfford(SaveCache.GetClimbState()?.resources, slot?.cost);
+			presentation.Opacity = 1f;
 			var action = entity.GetComponent<ClimbShopSlotAction>();
 			if (action == null) EntityManager.AddComponent(entity, new ClimbShopSlotAction { SlotIndex = index });
 			else action.SlotIndex = index;
@@ -202,6 +497,7 @@ namespace Crusaders30XX.ECS.Systems
 			presentation.EventKind = ClimbEventKind.Hazard;
 			presentation.GainLine1 = string.Empty;
 			presentation.GainLine2 = string.Empty;
+			presentation.Opacity = 1f;
 			var action = entity.GetComponent<ClimbEncounterSlotAction>();
 			if (action == null) EntityManager.AddComponent(entity, new ClimbEncounterSlotAction { SlotId = presentation.SlotId });
 			else action.SlotId = presentation.SlotId;
@@ -209,7 +505,7 @@ namespace Crusaders30XX.ECS.Systems
 			SyncEncounterTooltip(entity, slot, presentation);
 		}
 
-		private void SyncEventSlot(int index, ClimbEventSlotSave slot, Rectangle rect, bool visible)
+		private void SyncEventSlot(int index, ClimbEventSlotSave slot, Rectangle rect, bool visible, float opacity)
 		{
 			var entity = EnsureEntity($"Climb_EventSlot_{index}");
 			ConfigureParallax(entity, ParallaxLayer.GetUIParallaxLayer());
@@ -234,6 +530,7 @@ namespace Crusaders30XX.ECS.Systems
 			presentation.PortraitAsset = presentation.EventKind == ClimbEventKind.Character ? definition?.PortraitAsset ?? string.Empty : string.Empty;
 			presentation.GainLine1 = definition?.GainLine1 ?? string.Empty;
 			presentation.GainLine2 = definition?.GainLine2 ?? string.Empty;
+			presentation.Opacity = MathHelper.Clamp(opacity, 0f, 1f);
 			var action = entity.GetComponent<ClimbEventSlotAction>();
 			if (action == null) EntityManager.AddComponent(entity, new ClimbEventSlotAction { SlotId = presentation.SlotId });
 			else action.SlotId = presentation.SlotId;

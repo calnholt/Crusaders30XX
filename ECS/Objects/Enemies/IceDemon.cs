@@ -59,7 +59,7 @@ public class FrozenClaw : EnemyAttackBase
     Name = "Frozen Claw";
     Damage = 10;
     BlockRequiredToPreventEffect = 6;
-    Text = $"On attack - Intimidate 1 card.\n\n{EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, "Freeze the top card of your draw pile.")}";
+    Text = $"On attack - Intimidate 1 card.\n\n{EnemyAttackTextHelper.GetBlockThresholdText(Damage - BlockRequiredToPreventEffect.Value, "Freeze the top card of your draw pile.")}";
 
     OnAttackReveal = (entityManager) =>
     {

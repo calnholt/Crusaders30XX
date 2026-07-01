@@ -42,7 +42,7 @@ public class RazorMaw : EnemyAttackBase
     Name = "Razor Maw";
     Damage = 9;
     BlockRequiredToPreventEffect = 7;
-    Text = $"{EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, EnemyAttackTextHelper.GetText(EnemyAttackTextType.Burn, Burn, ConditionType))}";
+    Text = $"{EnemyAttackTextHelper.GetBlockThresholdText(Damage - BlockRequiredToPreventEffect.Value, EnemyAttackTextHelper.GetText(EnemyAttackTextType.Burn, Burn, ConditionType))}";
 
     OnDamageThresholdMet = (entityManager) =>
     {

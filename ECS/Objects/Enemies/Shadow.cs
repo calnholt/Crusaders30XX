@@ -46,7 +46,7 @@ public class ShadowStrike : EnemyAttackBase
     Name = "Shadow Strike";
     Damage = 10;
     BlockRequiredToPreventEffect = 7;
-    Text = $"{EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, $"The enemy loses {AnathemaLoss} anathema.")}";
+    Text = $"{EnemyAttackTextHelper.GetBlockThresholdText(Damage - BlockRequiredToPreventEffect.Value, $"The enemy loses {AnathemaLoss} anathema.")}";
 
     OnDamageThresholdMet = (entityManager) =>
     {

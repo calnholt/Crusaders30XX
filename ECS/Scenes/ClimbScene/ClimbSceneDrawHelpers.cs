@@ -84,8 +84,9 @@ namespace Crusaders30XX.ECS.Systems
 			}
 		}
 
-		public static void DrawRadialPortraitGradient(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect)
+		public static void DrawRadialPortraitGradient(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect, float opacity = 1f)
 		{
+			opacity = MathHelper.Clamp(opacity, 0f, 1f);
 			int strips = Math.Max(8, rect.Height / 8);
 			for (int i = 0; i < strips; i++)
 			{
@@ -94,7 +95,7 @@ namespace Crusaders30XX.ECS.Systems
 				float t = strips <= 1 ? 0f : i / (float)(strips - 1);
 				float centerWeight = 1f - Math.Abs(t - 0.2f) * 1.4f;
 				centerWeight = MathHelper.Clamp(centerWeight, 0f, 1f);
-				var color = Color.Lerp(Black1, Black3, centerWeight);
+				var color = Color.Lerp(Black1, Black3, centerWeight) * opacity;
 				spriteBatch.Draw(pixel, new Rectangle(rect.X, y0, rect.Width, Math.Max(1, y1 - y0)), color);
 			}
 		}
@@ -146,15 +147,17 @@ namespace Crusaders30XX.ECS.Systems
 			int size,
 			Color color,
 			bool compact = false,
-			float glowAlpha = 0f)
+			float glowAlpha = 0f,
+			float opacity = 1f)
 		{
 			size = Math.Max(4, size);
+			opacity = MathHelper.Clamp(opacity, 0f, 1f);
 			if (type == ClimbResourceType.Red && glowAlpha > 0.001f)
 			{
 				int glowSize = size + 8;
 				var glowRect = new Rectangle((int)position.X - 4, (int)position.Y - 4, glowSize, glowSize);
 				var glowCircle = PrimitiveTextureFactory.GetAntiAliasedCircle(graphicsDevice, Math.Max(2, glowSize / 2));
-				spriteBatch.Draw(glowCircle, glowRect, RedGlow * glowAlpha);
+				spriteBatch.Draw(glowCircle, glowRect, RedGlow * (glowAlpha * opacity));
 			}
 
 			switch (type)
@@ -163,21 +166,21 @@ namespace Crusaders30XX.ECS.Systems
 				{
 					var circle = PrimitiveTextureFactory.GetAntiAliasedCircle(graphicsDevice, Math.Max(2, size / 2));
 					var rect = new Rectangle((int)position.X, (int)position.Y, size, size);
-					spriteBatch.Draw(circle, rect, compact ? Red3 : color);
+					spriteBatch.Draw(circle, rect, (compact ? Red3 : color) * opacity);
 					break;
 				}
 				case ClimbResourceType.White:
 				{
 					var triangle = PrimitiveTextureFactory.GetEquilateralTriangle(graphicsDevice, Math.Max(4, size));
 					var rect = new Rectangle((int)position.X, (int)position.Y, size, size);
-					spriteBatch.Draw(triangle, rect, color);
+					spriteBatch.Draw(triangle, rect, color * opacity);
 					break;
 				}
 				case ClimbResourceType.Black:
 				{
 					var rect = new Rectangle((int)position.X, (int)position.Y, size, size);
-					spriteBatch.Draw(pixel, rect, Black0);
-					DrawBorder(spriteBatch, pixel, rect, color, compact ? 1 : 2);
+					spriteBatch.Draw(pixel, rect, Black0 * opacity);
+					DrawBorder(spriteBatch, pixel, rect, color * opacity, compact ? 1 : 2);
 					break;
 				}
 			}
@@ -191,11 +194,13 @@ namespace Crusaders30XX.ECS.Systems
 			float labelScale,
 			float borderAlpha,
 			float fillAlpha,
-			Action<SpriteBatch, Rectangle> drawContent)
+			Action<SpriteBatch, Rectangle> drawContent,
+			float opacity = 1f)
 		{
 			if (rect.Width <= 0 || rect.Height <= 0) return;
-			spriteBatch.Draw(pixel, rect, Color.White * fillAlpha);
-			DrawBorder(spriteBatch, pixel, rect, Color.White * borderAlpha, 1);
+			opacity = MathHelper.Clamp(opacity, 0f, 1f);
+			spriteBatch.Draw(pixel, rect, Color.White * (fillAlpha * opacity));
+			DrawBorder(spriteBatch, pixel, rect, Color.White * (borderAlpha * opacity), 1);
 
 			int paddingX = 8;
 			int paddingY = 4;
@@ -210,7 +215,7 @@ namespace Crusaders30XX.ECS.Systems
 			{
 				string upper = ToUpperAscii(label);
 				var labelSize = MeasureBodyText(upper, labelScale);
-				DrawBodyText(spriteBatch, upper, new Vector2(content.X, content.Y + (content.Height - labelSize.Y) / 2f), labelScale, White2);
+				DrawBodyText(spriteBatch, upper, new Vector2(content.X, content.Y + (content.Height - labelSize.Y) / 2f), labelScale, White2 * opacity);
 				content = new Rectangle(
 					(int)(content.X + labelSize.X + 6),
 					content.Y,
@@ -221,12 +226,13 @@ namespace Crusaders30XX.ECS.Systems
 			drawContent?.Invoke(spriteBatch, content);
 		}
 
-		public static void DrawGlyphBox(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect, float titleScale)
+		public static void DrawGlyphBox(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect, float titleScale, float opacity = 1f)
 		{
-			spriteBatch.Draw(pixel, rect, Black3);
-			DrawBorder(spriteBatch, pixel, rect, Black4, 1);
+			opacity = MathHelper.Clamp(opacity, 0f, 1f);
+			spriteBatch.Draw(pixel, rect, Black3 * opacity);
+			DrawBorder(spriteBatch, pixel, rect, Black4 * opacity, 1);
 			var glyphSize = MeasureTitleText("?", titleScale);
-			DrawTitleText(spriteBatch, "?", new Vector2(rect.Center.X - glyphSize.X / 2f, rect.Center.Y - glyphSize.Y / 2f), titleScale, White2);
+			DrawTitleText(spriteBatch, "?", new Vector2(rect.Center.X - glyphSize.X / 2f, rect.Center.Y - glyphSize.Y / 2f), titleScale, White2 * opacity);
 		}
 
 		public static void DrawShopTitleIcon(SpriteBatch spriteBatch, Texture2D pixel, Rectangle rect, Color color)
@@ -273,7 +279,8 @@ namespace Crusaders30XX.ECS.Systems
 			SpriteBatch spriteBatch,
 			Texture2D texture,
 			Rectangle dest,
-			float topCenterBias = 0.15f)
+			float topCenterBias = 0.15f,
+			float opacity = 1f)
 		{
 			if (texture == null || dest.Width <= 0 || dest.Height <= 0) return;
 			float scale = Math.Max(dest.Width / (float)texture.Width, dest.Height / (float)texture.Height);
@@ -282,7 +289,7 @@ namespace Crusaders30XX.ECS.Systems
 			int srcX = (texture.Width - srcW) / 2;
 			int srcY = (int)MathHelper.Clamp(texture.Height * topCenterBias, 0, Math.Max(0, texture.Height - srcH));
 			var source = new Rectangle(srcX, srcY, srcW, srcH);
-			spriteBatch.Draw(texture, dest, source, Color.White);
+			spriteBatch.Draw(texture, dest, source, Color.White * MathHelper.Clamp(opacity, 0f, 1f));
 		}
 
 		public static void DrawPortraitCropped(
@@ -291,7 +298,8 @@ namespace Crusaders30XX.ECS.Systems
 			Rectangle dest,
 			float topCenterBias,
 			Vector2 parallaxOffset,
-			float zoom)
+			float zoom,
+			float opacity = 1f)
 		{
 			if (texture == null || dest.Width <= 0 || dest.Height <= 0) return;
 
@@ -309,7 +317,7 @@ namespace Crusaders30XX.ECS.Systems
 			srcY = (int)MathHelper.Clamp(srcY, 0, Math.Max(0, texture.Height - srcH));
 
 			var source = new Rectangle(srcX, srcY, srcW, srcH);
-			spriteBatch.Draw(texture, dest, source, Color.White);
+			spriteBatch.Draw(texture, dest, source, Color.White * MathHelper.Clamp(opacity, 0f, 1f));
 		}
 
 		public static void DrawHourglassIcon(

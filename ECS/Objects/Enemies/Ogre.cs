@@ -42,13 +42,13 @@ namespace Crusaders30XX.ECS.Objects.EnemyAttacks
   }
   public class PummelIntoSubmission : EnemyAttackBase
   {
-    private int Scar = 2;
+    private int Scar = 1;
     public PummelIntoSubmission()
     {
       Id = "pummel_into_submission";
       Name = "Pummel Into Submission";
       Damage = 6;
-      ConditionType = ConditionType.OnHit;
+      ConditionType = ConditionType.OnBlockedByAtLeast2Cards;
       Text = $"{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Intimidate, 1)}\n\n{EnemyAttackTextHelper.GetText(EnemyAttackTextType.Scar, Scar, ConditionType)}";
       OnAttackReveal = (entityManager) =>
       {

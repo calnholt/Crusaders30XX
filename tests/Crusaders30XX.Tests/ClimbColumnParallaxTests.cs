@@ -178,6 +178,95 @@ public class ClimbColumnParallaxTests : IDisposable
 		Assert.Equal(BattleLocation.Jungle, presentation.BattleLocation);
 	}
 
+	[Fact]
+	public void Events_column_enters_from_right_and_suppresses_climb_input()
+	{
+		var entityManager = BuildWorld();
+		var layout = new ClimbColumnLayoutSystem(entityManager)
+		{
+			EventsEnterSeconds = 1f,
+		};
+		layout.Update(new GameTime());
+		var twoColumn = ClimbColumnLayoutSystem.ComputeColumnsLayout(showEvents: false);
+		var threeColumn = ClimbColumnLayoutSystem.ComputeColumnsLayout(showEvents: true);
+
+		ActivateSingleEvent();
+		layout.Update(new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(0.5)));
+
+		var shopBounds = GetColumnBounds(entityManager, ClimbColumnKind.Shop);
+		var eventBounds = GetColumnBounds(entityManager, ClimbColumnKind.Event);
+		var eventColumn = GetColumn(entityManager, ClimbColumnKind.Event).GetComponent<ClimbColumnPresentation>();
+		Assert.InRange(shopBounds.X, threeColumn.Shop.X + 1, twoColumn.Shop.X - 1);
+		Assert.InRange(eventBounds.X, threeColumn.Events.X + 1, Game1.VirtualWidth + ClimbColumnDisplaySystem.ColumnsGapValue - 1);
+		Assert.InRange(eventColumn.Opacity, 0.01f, 0.99f);
+		Assert.True(eventColumn.IsVisible);
+		Assert.Contains(entityManager.GetEntitiesWithComponent<ClimbColumnTransitionInputSuppression>(), e => e.GetComponent<UIElement>() != null);
+
+		layout.Update(new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(0.6)));
+
+		shopBounds = GetColumnBounds(entityManager, ClimbColumnKind.Shop);
+		eventBounds = GetColumnBounds(entityManager, ClimbColumnKind.Event);
+		eventColumn = GetColumn(entityManager, ClimbColumnKind.Event).GetComponent<ClimbColumnPresentation>();
+		Assert.Equal(threeColumn.Shop, shopBounds);
+		Assert.Equal(threeColumn.Events, eventBounds);
+		Assert.Equal(1f, eventColumn.Opacity, precision: 3);
+		Assert.Empty(entityManager.GetEntitiesWithComponent<ClimbColumnTransitionInputSuppression>());
+	}
+
+	[Fact]
+	public void Events_column_leaves_before_other_columns_move_and_restores_input()
+	{
+		ActivateSingleEvent();
+		var entityManager = BuildWorld();
+		var layout = new ClimbColumnLayoutSystem(entityManager)
+		{
+			EventsLeaveSeconds = 1f,
+			EventsLeaveSplit = 0.5f,
+		};
+		layout.Update(new GameTime());
+		var twoColumn = ClimbColumnLayoutSystem.ComputeColumnsLayout(showEvents: false);
+		var threeColumn = ClimbColumnLayoutSystem.ComputeColumnsLayout(showEvents: true);
+
+		ExpireAllEvents();
+		layout.Update(new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(0.25)));
+
+		var shopBounds = GetColumnBounds(entityManager, ClimbColumnKind.Shop);
+		var eventBounds = GetColumnBounds(entityManager, ClimbColumnKind.Event);
+		var eventColumn = GetColumn(entityManager, ClimbColumnKind.Event).GetComponent<ClimbColumnPresentation>();
+		Assert.Equal(threeColumn.Shop, shopBounds);
+		Assert.InRange(eventBounds.X, threeColumn.Events.X + 1, Game1.VirtualWidth + ClimbColumnDisplaySystem.ColumnsGapValue - 1);
+		Assert.InRange(eventColumn.Opacity, 0.01f, 0.99f);
+		Assert.NotEmpty(entityManager.GetEntitiesWithComponent<ClimbColumnTransitionInputSuppression>());
+		Assert.Contains(entityManager.GetEntitiesWithComponent<ClimbSlotPresentation>(), e =>
+		{
+			var slot = e.GetComponent<ClimbSlotPresentation>();
+			var ui = e.GetComponent<UIElement>();
+			return slot?.Kind == ClimbSlotKind.Event && ui?.IsHidden == false;
+		});
+
+		layout.Update(new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(0.5)));
+
+		shopBounds = GetColumnBounds(entityManager, ClimbColumnKind.Shop);
+		eventBounds = GetColumnBounds(entityManager, ClimbColumnKind.Event);
+		Assert.InRange(shopBounds.X, threeColumn.Shop.X + 1, twoColumn.Shop.X - 1);
+		Assert.Equal(Game1.VirtualWidth + ClimbColumnDisplaySystem.ColumnsGapValue, eventBounds.X);
+
+		layout.Update(new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(0.3)));
+
+		shopBounds = GetColumnBounds(entityManager, ClimbColumnKind.Shop);
+		eventColumn = GetColumn(entityManager, ClimbColumnKind.Event).GetComponent<ClimbColumnPresentation>();
+		Assert.Equal(twoColumn.Shop, shopBounds);
+		Assert.False(eventColumn.IsVisible);
+		Assert.Equal(0f, eventColumn.Opacity, precision: 3);
+		Assert.Empty(entityManager.GetEntitiesWithComponent<ClimbColumnTransitionInputSuppression>());
+		Assert.DoesNotContain(entityManager.GetEntitiesWithComponent<ClimbSlotPresentation>(), e =>
+		{
+			var slot = e.GetComponent<ClimbSlotPresentation>();
+			var ui = e.GetComponent<UIElement>();
+			return slot?.Kind == ClimbSlotKind.Event && ui?.IsHidden == false;
+		});
+	}
+
 	private static EntityManager BuildWorld()
 	{
 		var entityManager = new EntityManager();
@@ -187,6 +276,44 @@ public class ClimbColumnParallaxTests : IDisposable
 		entityManager.AddComponent(root, new Transform());
 		entityManager.AddComponent(root, new ClimbSceneRoot());
 		return entityManager;
+	}
+
+	private static void ActivateSingleEvent()
+	{
+		var climb = SaveCache.GetClimbState();
+		var slot = climb.eventSlots.First();
+		foreach (var eventSlot in climb.eventSlots)
+		{
+			eventSlot.status = ClimbEventStatus.Expired;
+		}
+		slot.id = string.IsNullOrWhiteSpace(slot.id) ? "test_event" : slot.id;
+		slot.status = ClimbEventStatus.Active;
+		slot.activatedAtTime = ClimbRuleService.ClampTime(climb.time);
+		slot.duration = Math.Max(2, slot.duration);
+		slot.rewardResources = new ClimbResourceSave { red = 1, white = 0, black = 0 };
+		SaveCache.SaveClimbState(climb);
+	}
+
+	private static void ExpireAllEvents()
+	{
+		var climb = SaveCache.GetClimbState();
+		foreach (var slot in climb.eventSlots)
+		{
+			slot.status = ClimbEventStatus.Expired;
+		}
+		SaveCache.SaveClimbState(climb);
+	}
+
+	private static Entity GetColumn(EntityManager entityManager, ClimbColumnKind kind)
+	{
+		return entityManager.GetEntitiesWithComponent<ClimbColumnPresentation>()
+			.Single(entity => entity.GetComponent<ClimbColumnPresentation>()?.Kind == kind);
+	}
+
+	private static Rectangle GetColumnBounds(EntityManager entityManager, ClimbColumnKind kind)
+	{
+		var entity = GetColumn(entityManager, kind);
+		return TransformResolverService.ResolveUIBounds(entityManager, entity, entity.GetComponent<UIElement>());
 	}
 
 	private static void AssertParallax(ParallaxLayer expected, ParallaxLayer actual)

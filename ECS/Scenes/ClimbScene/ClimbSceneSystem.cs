@@ -174,6 +174,7 @@ namespace Crusaders30XX.ECS.Systems
 					|| entity.GetComponent<ClimbLoadoutButton>() != null
 					|| entity.GetComponent<ClimbColumnPresentation>() != null
 					|| entity.GetComponent<ClimbSlotPresentation>() != null
+					|| entity.GetComponent<ClimbColumnTransitionInputSuppression>() != null
 					|| entity.GetComponent<ClimbShopTooltipSource>() != null
 					|| string.Equals(entity.Name, EquipmentTooltipEntityName, System.StringComparison.OrdinalIgnoreCase))
 				.ToList();
@@ -183,6 +184,11 @@ namespace Crusaders30XX.ECS.Systems
 				var ui = entity.GetComponent<UIElement>();
 				if (ui != null)
 				{
+					if (entity.GetComponent<ClimbColumnTransitionInputSuppression>() != null)
+					{
+						ui.Restore();
+						entityManager.RemoveComponent<ClimbColumnTransitionInputSuppression>(entity);
+					}
 					ui.Bounds = Rectangle.Empty;
 					ui.IsInteractable = false;
 					ui.IsHidden = true;

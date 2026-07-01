@@ -41,7 +41,7 @@ public class Entomb : EnemyAttackBase
 
     OnAttackReveal = (entityManager) => 
     {
-      Text = EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, "Apply brittle to the top card of your draw pile.");
+      Text = EnemyAttackTextHelper.GetBlockThresholdText(Damage - BlockRequiredToPreventEffect.Value, "Apply brittle to the top card of your draw pile.");
     };
 
     OnDamageThresholdMet = (entityManager) =>
@@ -68,7 +68,7 @@ public class Mummify : EnemyAttackBase
 
     OnAttackReveal = (entityManager) => 
     {
-      Text = EnemyAttackTextHelper.GetBlockThresholdText(BlockRequiredToPreventEffect.Value, $"Gain {Scar} scars.");
+      Text = EnemyAttackTextHelper.GetBlockThresholdText(Damage - BlockRequiredToPreventEffect.Value, $"Gain {Scar} scars.");
     };
 
     OnDamageThresholdMet = (entityManager) =>

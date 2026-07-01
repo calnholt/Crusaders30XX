@@ -20,6 +20,13 @@ namespace Crusaders30XX.ECS.Components
 		Event,
 	}
 
+	public enum ClimbColumnTransitionPhase
+	{
+		Idle,
+		EnteringEvents,
+		LeavingEvents,
+	}
+
 	public enum ClimbResourceType
 	{
 		Red,
@@ -57,6 +64,25 @@ namespace Crusaders30XX.ECS.Components
 		}
 	}
 
+	public class ClimbColumnTransitionState : IComponent
+	{
+		public Entity Owner { get; set; }
+		public bool IsInitialized { get; set; }
+		public bool CurrentShowEvents { get; set; }
+		public bool TargetShowEvents { get; set; }
+		public ClimbColumnTransitionPhase Phase { get; set; } = ClimbColumnTransitionPhase.Idle;
+		public float ElapsedSeconds { get; set; }
+		public List<ClimbEventSlotSave> CachedEventSlots { get; set; } = new List<ClimbEventSlotSave>();
+
+		public bool IsAnimating => Phase == ClimbColumnTransitionPhase.EnteringEvents
+			|| Phase == ClimbColumnTransitionPhase.LeavingEvents;
+	}
+
+	public class ClimbColumnTransitionInputSuppression : IComponent
+	{
+		public Entity Owner { get; set; }
+	}
+
 	public class ClimbHeaderElement : IComponent
 	{
 		public Entity Owner { get; set; }
@@ -85,6 +111,7 @@ namespace Crusaders30XX.ECS.Components
 		public string Subtitle { get; set; } = string.Empty;
 		public Rectangle InnerBounds { get; set; }
 		public bool IsVisible { get; set; } = true;
+		public float Opacity { get; set; } = 1f;
 	}
 
 	public class ClimbSlotPresentation : IComponent
@@ -111,6 +138,7 @@ namespace Crusaders30XX.ECS.Components
 		public ClimbEventKind EventKind { get; set; }
 		public string GainLine1 { get; set; } = string.Empty;
 		public string GainLine2 { get; set; } = string.Empty;
+		public float Opacity { get; set; } = 1f;
 	}
 
 	public class ClimbEncounterSlotAction : IComponent

@@ -69,18 +69,17 @@ public class MarkedForExhaustSystemTests : System.IDisposable
         EventManager.Publish(new BeginDefeatPresentationEvent { Enemy = enemy, IsPreview = true });
 
         Assert.Contains(kunai, deck.Hand);
-        Assert.True(kunai.IsActive);
+        Assert.NotNull(entityManager.GetEntity(kunai.Id));
     }
 
     private static void AssertCardExhausted(EntityManager entityManager, Entity card, Deck deck)
     {
-        Assert.False(card.IsActive);
+        Assert.Null(entityManager.GetEntity(card.Id));
         Assert.DoesNotContain(card, deck.Hand);
         Assert.DoesNotContain(card, deck.DrawPile);
         Assert.DoesNotContain(card, deck.DiscardPile);
         Assert.DoesNotContain(card, deck.ExhaustPile);
         Assert.DoesNotContain(card, deck.Cards);
-        Assert.Null(entityManager.GetEntity(card.Id));
     }
 
     private static EntityManager BuildWorld(out Entity enemy, out Deck deck, out Entity kunai)
