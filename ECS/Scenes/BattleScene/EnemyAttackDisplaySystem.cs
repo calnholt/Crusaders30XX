@@ -164,6 +164,52 @@ namespace Crusaders30XX.ECS.Systems
 		[DebugEditable(DisplayName = "Crater Max Alpha", Step = 5, Min = 0, Max = 255)]
 		public int CraterMaxAlpha { get; set; } = 120;
 
+		// Impact shockwave
+		[DebugEditable(DisplayName = "Impact Shockwave Enabled")]
+		public bool ImpactShockwaveEnabled { get; set; } = true;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Origin Width", Step = 2, Min = 1, Max = 800)]
+		public int ImpactShockwaveOriginWidthPx { get; set; } = 80;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Origin Height", Step = 2, Min = 1, Max = 800)]
+		public int ImpactShockwaveOriginHeightPx { get; set; } = 60;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Duration (s)", Step = 0.01f, Min = 0.01f, Max = 2f)]
+		public float ImpactShockwaveDurationSeconds { get; set; } = 0.5f;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Amp Multiplier", Step = 0.01f, Min = 0f, Max = 5f)]
+		public float ImpactShockwaveAmpMultiplier { get; set; } = 0.12f;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Min Amp", Step = 0.01f, Min = 0f, Max = 10f)]
+		public float ImpactShockwaveMinAmp { get; set; } = 0.35f;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Max Amp", Step = 0.01f, Min = 0f, Max = 20f)]
+		public float ImpactShockwaveMaxAmp { get; set; } = 3f;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Base Radius", Step = 2, Min = 0, Max = 2000)]
+		public int ImpactShockwaveBaseRadiusPx { get; set; } = 110;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Radius Per Amp", Step = 2, Min = 0, Max = 1000)]
+		public int ImpactShockwaveRadiusPerAmpPx { get; set; } = 55;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Base Ripple Width", Step = 1, Min = 1, Max = 200)]
+		public int ImpactShockwaveBaseRippleWidthPx { get; set; } = 8;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Ripple Width Per Amp", Step = 1, Min = 0, Max = 100)]
+		public int ImpactShockwaveRippleWidthPerAmpPx { get; set; } = 3;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Base Strength", Step = 0.01f, Min = 0f, Max = 10f)]
+		public float ImpactShockwaveBaseStrength { get; set; } = 0.55f;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Base Chromatic Amp", Step = 0.001f, Min = 0f, Max = 1f)]
+		public float ImpactShockwaveBaseChromaticAberrationAmp { get; set; } = 0.015f;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Chromatic Freq", Step = 0.01f, Min = 0f, Max = 40f)]
+		public float ImpactShockwaveChromaticAberrationFreq { get; set; } = 3.14f;
+
+		[DebugEditable(DisplayName = "Impact Shockwave Base Shading", Step = 0.01f, Min = 0f, Max = 5f)]
+		public float ImpactShockwaveBaseShadingIntensity { get; set; } = 0.25f;
+
 		// Confirm button tuning
 		[DebugEditable(DisplayName = "Confirm Button Offset Y", Step = 2, Min = -600, Max = 600)]
 		public int ConfirmButtonOffsetY { get; set; } = 8;
@@ -224,33 +270,10 @@ namespace Crusaders30XX.ECS.Systems
 			EventManager.Subscribe<TriggerEnemyAttackDisplayEvent>(evt =>
 			{
 				_showBanner = true;
-				// Spawn centered and trigger immediate impact sequence
-				_impactActive = true;
-				_squashElapsedSeconds = 0f;
-				_flashElapsedSeconds = 0f;
-				_craterElapsedSeconds = 0f;
-				_shakeElapsedSeconds = 0f;
-				_debris.Clear();
-				SpawnDebris();
+				var plannedAttack = FindPlannedAttack(evt.ContextId);
+				int attackDamage = plannedAttack?.AttackDefinition?.Damage ?? 0;
+				StartImpactSequence(attackDamage, evt.ContextId);
 				EventManager.Publish(new PlaySfxEvent { Track = SfxTrack.EnemyAttackIntro });
-				// Publish rectangular shockwave event
-				int vx = Game1.VirtualWidth;
-				int vy = Game1.VirtualHeight;
-				float percent = Math.Clamp(PanelMaxWidthPercent, 0.1f, 1f);
-				int panelW = (int)Math.Round(vx * percent);
-				int panelH = (int)Math.Round(vy * 0.25f);
-				EventManager.Publish(new RectangularShockwaveEvent
-				{
-					BoundsCenterPx = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY),
-					BoundsSizePx = new Vector2(panelW, panelH),
-					DurationSec = 0.5f,
-					MaxRadiusPx = 130f,
-					RippleWidthPx = 6f,
-					Strength = 0.02f,
-					ChromaticAberrationAmp = 0.003f,
-					ChromaticAberrationFreq = 2f,
-					ShadingIntensity = 0.15f
-				});
 			});
 		}
 
@@ -413,10 +436,46 @@ namespace Crusaders30XX.ECS.Systems
 			return EntityManager.GetEntitiesWithComponent<AttackIntent>();
 		}
 
-		[DebugAction("Replay Impact Animation")]
-		public void Debug_ReplayImpactAnimation()
+		private PlannedAttack FindPlannedAttack(string contextId)
 		{
-			// Trigger a fresh impact sequence even if one is currently playing
+			foreach (var entity in GetRelevantEntities())
+			{
+				var intent = entity.GetComponent<AttackIntent>();
+				if (intent?.Planned == null) continue;
+				if (string.IsNullOrEmpty(contextId))
+				{
+					var first = intent.Planned.FirstOrDefault();
+					if (first != null) return first;
+					continue;
+				}
+
+				var planned = intent.Planned.FirstOrDefault(pa => pa.ContextId == contextId);
+				if (planned != null) return planned;
+			}
+
+			return null;
+		}
+
+		private Entity FindEnemyForPlannedAttack(string contextId)
+		{
+			return GetRelevantEntities()
+				.FirstOrDefault(entity =>
+				{
+					var intent = entity.GetComponent<AttackIntent>();
+					if (intent?.Planned == null) return false;
+					if (string.IsNullOrEmpty(contextId)) return intent.Planned.Count > 0;
+					return intent.Planned.Any(pa => pa.ContextId == contextId);
+				});
+		}
+
+		private int GetCurrentAttackDamage()
+		{
+			var plannedAttack = FindPlannedAttack(_lastContextId);
+			return Math.Max(0, plannedAttack?.AttackDefinition?.Damage ?? 0);
+		}
+
+		private void StartImpactSequence(int attackDamage, string contextId = null)
+		{
 			_impactActive = true;
 			_squashElapsedSeconds = 0f;
 			_flashElapsedSeconds = 0f;
@@ -424,24 +483,90 @@ namespace Crusaders30XX.ECS.Systems
 			_shakeElapsedSeconds = 0f;
 			_debris.Clear();
 			SpawnDebris();
-			// Publish rectangular shockwave event
-			int vx = Game1.VirtualWidth;
-			int vy = Game1.VirtualHeight;
-			float percent = Math.Clamp(PanelMaxWidthPercent, 0.1f, 1f);
-			int panelW = (int)Math.Round(vx * percent);
-			int panelH = (int)Math.Round(vy * 0.25f);
+			PublishImpactShockwave(Math.Max(0, attackDamage), contextId);
+		}
+
+		private void PublishImpactShockwave(int attackDamage, string contextId)
+		{
+			if (!ImpactShockwaveEnabled) return;
+
+			float minAmp = Math.Max(0f, ImpactShockwaveMinAmp);
+			float maxAmp = Math.Max(minAmp, ImpactShockwaveMaxAmp);
+			float amp = MathHelper.Clamp(attackDamage * Math.Max(0f, ImpactShockwaveAmpMultiplier), minAmp, maxAmp);
+			Vector2 center = CalculateImpactShockwaveCenter(contextId);
+
 			EventManager.Publish(new RectangularShockwaveEvent
 			{
-				BoundsCenterPx = new Vector2(vx / 2f + OffsetX, vy / 2f + OffsetY),
-				BoundsSizePx = new Vector2(panelW, panelH),
-				DurationSec = 0.5f,
-				MaxRadiusPx = 1300f,
-				RippleWidthPx = 60f,
-				Strength = 10.2f,
-				ChromaticAberrationAmp = 0.3f,
-				ChromaticAberrationFreq = 20f,
-				ShadingIntensity = 1.15f
+				BoundsCenterPx = center,
+				BoundsSizePx = new Vector2(
+					Math.Max(1, ImpactShockwaveOriginWidthPx),
+					Math.Max(1, ImpactShockwaveOriginHeightPx)),
+				DurationSec = Math.Max(0.01f, ImpactShockwaveDurationSeconds),
+				MaxRadiusPx = Math.Max(0f, ImpactShockwaveBaseRadiusPx + ImpactShockwaveRadiusPerAmpPx * amp),
+				RippleWidthPx = Math.Max(1f, ImpactShockwaveBaseRippleWidthPx + ImpactShockwaveRippleWidthPerAmpPx * amp),
+				Strength = Math.Max(0f, ImpactShockwaveBaseStrength * amp),
+				ChromaticAberrationAmp = Math.Max(0f, ImpactShockwaveBaseChromaticAberrationAmp * amp),
+				ChromaticAberrationFreq = Math.Max(0f, ImpactShockwaveChromaticAberrationFreq),
+				ShadingIntensity = Math.Max(0f, ImpactShockwaveBaseShadingIntensity * amp)
 			});
+		}
+
+		private Vector2 CalculateImpactShockwaveCenter(string contextId)
+		{
+			var plannedAttack = FindPlannedAttack(contextId);
+			var enemy = FindEnemyForPlannedAttack(contextId);
+			var phase = GetPhaseState();
+			var def = plannedAttack?.AttackDefinition;
+			if (enemy != null && def != null && phase != null && _contentFont != null && _bodyFont != null)
+			{
+				Rectangle impactRect = CalculateBannerRect(enemy, phase.Sub, def);
+				if (impactRect.Width > 0 && impactRect.Height > 0)
+				{
+					return new Vector2(
+						impactRect.X + impactRect.Width / 2f,
+						impactRect.Y + impactRect.Height / 2f);
+				}
+			}
+
+			return new Vector2(
+				Game1.VirtualWidth / 2f + OffsetX,
+				Game1.VirtualHeight / 2f + OffsetY);
+		}
+
+		[DebugAction("Replay Impact Animation")]
+		public void Debug_ReplayImpactAnimation()
+		{
+			StartImpactSequence(GetCurrentAttackDamage(), _lastContextId);
+		}
+
+		[DebugAction("Test Impact 3")]
+		public void Debug_TestImpact3()
+		{
+			StartImpactSequence(3, _lastContextId);
+		}
+
+		[DebugAction("Test Impact 8")]
+		public void Debug_TestImpact8()
+		{
+			StartImpactSequence(8, _lastContextId);
+		}
+
+		[DebugAction("Test Impact 15")]
+		public void Debug_TestImpact15()
+		{
+			StartImpactSequence(15, _lastContextId);
+		}
+
+		[DebugAction("Test Impact 25")]
+		public void Debug_TestImpact25()
+		{
+			StartImpactSequence(25, _lastContextId);
+		}
+
+		[DebugActionInt("Test Impact Damage", Step = 1, Min = 0, Max = 100, Default = 10)]
+		public void Debug_TestImpactDamage(int damage)
+		{
+			StartImpactSequence(Math.Max(0, damage), _lastContextId);
 		}
 
 		protected override void UpdateEntity(Entity entity, GameTime gameTime)
